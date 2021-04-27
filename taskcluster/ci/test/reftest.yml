@@ -222,26 +222,6 @@ reftest-qr:
             default: virtual
 
 
-reftest-gpu:
-    description: "Reftest GPU run"
-    treeherder-symbol: R(Rg)
-    chunks:
-        by-test-platform:
-            windows.*/opt: 2
-            default: 4
-    run-on-projects:
-        by-variant:
-            fission: []
-            default:
-                by-test-platform:
-                    windows10.*: []
-                    default: built-projects
-    instance-size: default
-    virtualization: virtual-with-gpu
-    max-run-time: 3600
-    mozharness:
-        chunked: true
-
 reftest-no-accel:
     description: "Reftest not accelerated run"
     treeherder-symbol: R(Ru)
@@ -254,7 +234,7 @@ reftest-no-accel:
             fission: []
             default:
                 by-test-platform:
-                    windows10.*: []
+                    windows10-64.*: []
                     default: built-projects
     chunks:
         by-test-platform:

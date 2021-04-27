@@ -16,28 +16,12 @@ add_task(async function() {
   // we're importing to has less than 3 bookmarks in the destination
   // so a "From Safari" folder isn't created.
   let expectedParents = [PlacesUtils.toolbarFolderId];
-  let bookmarkRoots = 0;
-  let bookmarkRootMap = {
-    [PlacesUtils.bookmarks.toolbarGuid]:
-      MigrationUtils.SOURCE_BOOKMARK_ROOTS_BOOKMARKS_TOOLBAR,
-    [PlacesUtils.bookmarks.menuGuid]:
-      MigrationUtils.SOURCE_BOOKMARK_ROOTS_BOOKMARKS_MENU,
-    [PlacesUtils.bookmarks.unfiledGuid]:
-      MigrationUtils.SOURCE_BOOKMARK_ROOTS_UNFILED,
-  };
   let itemCount = 0;
 
   let gotFolder = false;
   let listener = events => {
     for (let event of events) {
       itemCount++;
-      if (
-        event.itemType == PlacesUtils.bookmarks.TYPE_BOOKMARK &&
-        bookmarkRootMap[event.parentGuid]
-      ) {
-        bookmarkRoots |= bookmarkRootMap[event.parentGuid];
-      }
-
       if (
         event.itemType == PlacesUtils.bookmarks.TYPE_FOLDER &&
         event.title == "Stuff"
@@ -80,26 +64,6 @@ add_task(async function() {
     MigrationUtils._importQuantities.bookmarks,
     itemCount,
     "Telemetry reporting correct."
-  );
-  let telemetryRootsMatchesExpectations = await TestUtils.waitForCondition(
-    () => {
-      let snapshot = Services.telemetry.getSnapshotForKeyedHistograms(
-        "main",
-        false
-      ).parent.FX_MIGRATION_BOOKMARKS_ROOTS;
-      if (!snapshot || !snapshot.safari) {
-        return false;
-      }
-      let sum = arr => Object.values(arr).reduce((a, b) => a + b, 0);
-      let sumOfValues = sum(snapshot.safari.values);
-      info(`Expected ${bookmarkRoots}, got ${sumOfValues}`);
-      return sumOfValues == bookmarkRoots;
-    },
-    "Wait until telemetry is updated"
-  );
-  ok(
-    telemetryRootsMatchesExpectations,
-    "The value in the roots histogram should match expectations"
   );
   Assert.ok(observerNotified, "The observer should be notified upon migration");
 });

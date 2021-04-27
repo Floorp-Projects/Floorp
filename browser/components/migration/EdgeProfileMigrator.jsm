@@ -395,10 +395,7 @@ EdgeBookmarksMigrator.prototype = {
       throw new Error("Edge seems to be running - its database is locked.");
     }
     let { toplevelBMs, toolbarBMs } = this._fetchBookmarksFromDB();
-    let histogramBookmarkRoots = 0;
     if (toplevelBMs.length) {
-      histogramBookmarkRoots |=
-        MigrationUtils.SOURCE_BOOKMARK_ROOTS_BOOKMARKS_MENU;
       let parentGuid = PlacesUtils.bookmarks.menuGuid;
       if (
         !Services.prefs.getBoolPref("browser.toolbars.bookmarks.2h2020") &&
@@ -414,8 +411,6 @@ EdgeBookmarksMigrator.prototype = {
       await MigrationUtils.insertManyBookmarksWrapper(toplevelBMs, parentGuid);
     }
     if (toolbarBMs.length) {
-      histogramBookmarkRoots |=
-        MigrationUtils.SOURCE_BOOKMARK_ROOTS_BOOKMARKS_TOOLBAR;
       let parentGuid = PlacesUtils.bookmarks.toolbarGuid;
       if (
         !Services.prefs.getBoolPref("browser.toolbars.bookmarks.2h2020") &&
@@ -431,9 +426,6 @@ EdgeBookmarksMigrator.prototype = {
       await MigrationUtils.insertManyBookmarksWrapper(toolbarBMs, parentGuid);
       PlacesUIUtils.maybeToggleBookmarkToolbarVisibilityAfterMigration();
     }
-    Services.telemetry
-      .getKeyedHistogramById("FX_MIGRATION_BOOKMARKS_ROOTS")
-      .add("edge", histogramBookmarkRoots);
   },
 
   _fetchBookmarksFromDB() {

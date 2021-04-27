@@ -980,7 +980,15 @@ bool HTMLEditor::IsVisibleBRElement(const nsINode* aNode) const {
   // <br> element visible if it just exists.
   // E.g., foo<br><button contenteditable="false">button</button>
   // However, we need to ignore invisible data nodes like comment node.
-  nsIContent* nextContent = GetNextHTMLElementOrTextInBlock(*aNode);
+  Element* editingHost = GetActiveEditingHost();
+  if (NS_WARN_IF(!editingHost)) {
+    return false;
+  }
+  nsIContent* nextContent =
+      HTMLEditUtils::GetNextContent(*aNode,
+                                    {WalkTreeOption::IgnoreDataNodeExceptText,
+                                     WalkTreeOption::StopAtBlockBoundary},
+                                    editingHost);
   if (nextContent && nextContent->IsHTMLElement(nsGkAtoms::br)) {
     return true;
   }
@@ -1003,8 +1011,12 @@ bool HTMLEditor::IsVisibleBRElement(const nsINode* aNode) const {
   // <br> element visible if it just exists.
   // E.g., <button contenteditable="false"><br>foo
   // However, we need to ignore invisible data nodes like comment node.
-  nsCOMPtr<nsINode> priorNode = GetPreviousHTMLElementOrTextInBlock(*aNode);
-  if (priorNode && priorNode->IsHTMLElement(nsGkAtoms::br)) {
+  nsIContent* previousContent = HTMLEditUtils::GetPreviousContent(
+      *aNode,
+      {WalkTreeOption::IgnoreDataNodeExceptText,
+       WalkTreeOption::StopAtBlockBoundary},
+      editingHost);
+  if (previousContent && previousContent->IsHTMLElement(nsGkAtoms::br)) {
     return true;
   }
 
@@ -1014,8 +1026,8 @@ bool HTMLEditor::IsVisibleBRElement(const nsINode* aNode) const {
   if (NS_WARN_IF(!afterBRElement.IsSet())) {
     return false;
   }
-  return !WSRunScanner::ScanNextVisibleNodeOrBlockBoundary(
-              GetActiveEditingHost(), afterBRElement)
+  return !WSRunScanner::ScanNextVisibleNodeOrBlockBoundary(editingHost,
+                                                           afterBRElement)
               .ReachedBlockBoundary();
 }
 
@@ -5000,41 +5012,6 @@ nsIContent* HTMLEditor::GetNextHTMLSibling(nsINode* aNode,
   return content;
 }
 
-nsIContent* HTMLEditor::GetPreviousHTMLElementOrTextInternal(
-    const nsINode& aNode, bool aNoBlockCrossing) const {
-  Element* editingHost = GetActiveEditingHost();
-  if (NS_WARN_IF(!editingHost)) {
-    return nullptr;
-  }
-  return aNoBlockCrossing
-             ? HTMLEditUtils::GetPreviousContent(
-                   aNode,
-                   {WalkTreeOption::IgnoreDataNodeExceptText,
-                    WalkTreeOption::StopAtBlockBoundary},
-                   editingHost)
-             : HTMLEditUtils::GetPreviousContent(
-                   aNode, {WalkTreeOption::IgnoreDataNodeExceptText},
-                   editingHost);
-}
-
-template <typename PT, typename CT>
-nsIContent* HTMLEditor::GetPreviousHTMLElementOrTextInternal(
-    const EditorDOMPointBase<PT, CT>& aPoint, bool aNoBlockCrossing) const {
-  Element* editingHost = GetActiveEditingHost();
-  if (NS_WARN_IF(!editingHost)) {
-    return nullptr;
-  }
-  return aNoBlockCrossing
-             ? HTMLEditUtils::GetPreviousContent(
-                   aPoint,
-                   {WalkTreeOption::IgnoreDataNodeExceptText,
-                    WalkTreeOption::StopAtBlockBoundary},
-                   editingHost)
-             : HTMLEditUtils::GetPreviousContent(
-                   aPoint, {WalkTreeOption::IgnoreDataNodeExceptText},
-                   editingHost);
-}
-
 nsIContent* HTMLEditor::GetPreviousEditableHTMLNodeInternal(
     nsINode& aNode, bool aNoBlockCrossing) const {
   Element* editingHost = GetActiveEditingHost();
@@ -5066,41 +5043,6 @@ nsIContent* HTMLEditor::GetPreviousEditableHTMLNodeInternal(
                           : HTMLEditUtils::GetPreviousContent(
                                 aPoint, {WalkTreeOption::IgnoreNonEditableNode},
                                 editingHost);
-}
-
-nsIContent* HTMLEditor::GetNextHTMLElementOrTextInternal(
-    const nsINode& aNode, bool aNoBlockCrossing) const {
-  Element* editingHost = GetActiveEditingHost();
-  if (NS_WARN_IF(!editingHost)) {
-    return nullptr;
-  }
-  return aNoBlockCrossing
-             ? HTMLEditUtils::GetNextContent(
-                   aNode,
-                   {WalkTreeOption::IgnoreDataNodeExceptText,
-                    WalkTreeOption::StopAtBlockBoundary},
-                   editingHost)
-             : HTMLEditUtils::GetNextContent(
-                   aNode, {WalkTreeOption::IgnoreDataNodeExceptText},
-                   editingHost);
-}
-
-template <typename PT, typename CT>
-nsIContent* HTMLEditor::GetNextHTMLElementOrTextInternal(
-    const EditorDOMPointBase<PT, CT>& aPoint, bool aNoBlockCrossing) const {
-  Element* editingHost = GetActiveEditingHost();
-  if (NS_WARN_IF(!editingHost)) {
-    return nullptr;
-  }
-  return aNoBlockCrossing
-             ? HTMLEditUtils::GetNextContent(
-                   aPoint,
-                   {WalkTreeOption::IgnoreDataNodeExceptText,
-                    WalkTreeOption::StopAtBlockBoundary},
-                   editingHost)
-             : HTMLEditUtils::GetNextContent(
-                   aPoint, {WalkTreeOption::IgnoreDataNodeExceptText},
-                   editingHost);
 }
 
 nsIContent* HTMLEditor::GetNextEditableHTMLNodeInternal(

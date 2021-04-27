@@ -303,9 +303,7 @@ menulist > menupopup > :is(menuitem, menucaption):not(.menuitem-iconic) > .menu-
 
 @media (-moz-proton-contextmenus) {
 @media (-moz-windows-default-theme) and (-moz-os-version: windows-win10) {
-  menulist > menupopup > menuitem,
-  menulist > menupopup > menucaption,
-  menulist > menupopup > menu {
+  menulist > menupopup {
     color: var(--menu-color);
   }
 }

@@ -7,8 +7,6 @@
 "use strict";
 
 add_task(async function() {
-  await pushPref("devtools.testing.enableServerWatcherSupport", true);
-
   const URL_IFRAME = buildURLWithContent(
     "example.net",
     `<h1>iframe</h1>` + `<script>document.cookie = "lorem=ipsum";</script>`

@@ -10,34 +10,35 @@
 
 #include <gdk/gdk.h>
 #include <gtk/gtk.h>
+
+#include "CompositorWidget.h"
+#include "MozContainer.h"
+#include "mozilla/EventForwards.h"
+#include "mozilla/Maybe.h"
+#include "mozilla/RefPtr.h"
+#include "mozilla/TouchEvents.h"
+#include "mozilla/UniquePtr.h"
+#include "mozilla/widget/WindowSurface.h"
+#include "mozilla/widget/WindowSurfaceProvider.h"
+#include "nsBaseWidget.h"
+#include "nsGkAtoms.h"
+#include "nsIDragService.h"
+#include "nsRefPtrHashtable.h"
+#include "IMContextWrapper.h"
+
+#ifdef ACCESSIBILITY
+#  include "mozilla/a11y/LocalAccessible.h"
+#endif
+
 #ifdef MOZ_X11
 #  include <gdk/gdkx.h>
 #  include "X11UndefineNone.h"
-#endif /* MOZ_X11 */
+#endif
 #ifdef MOZ_WAYLAND
 #  include <gdk/gdkwayland.h>
 #  include "base/thread.h"
 #  include "WaylandVsyncSource.h"
 #endif
-#include "MozContainer.h"
-#include "mozilla/RefPtr.h"
-#include "mozilla/UniquePtr.h"
-#include "nsIDragService.h"
-#include "nsGkAtoms.h"
-#include "nsRefPtrHashtable.h"
-#include "nsBaseWidget.h"
-#include "CompositorWidget.h"
-#include "mozilla/widget/WindowSurface.h"
-#include "mozilla/widget/WindowSurfaceProvider.h"
-#include "mozilla/Maybe.h"
-
-#ifdef ACCESSIBILITY
-#  include "mozilla/a11y/LocalAccessible.h"
-#endif
-#include "mozilla/EventForwards.h"
-#include "mozilla/TouchEvents.h"
-
-#include "IMContextWrapper.h"
 
 #undef LOG
 #ifdef MOZ_LOGGING
@@ -229,56 +230,16 @@ class nsWindow final : public nsBaseWidget {
 
   void SetProgress(unsigned long progressPercent);
 
-#ifdef MOZ_WAYLAND
-  bool GetCSDDecorationOffset(int* aDx, int* aDy);
-  void SetEGLNativeWindowSize(const LayoutDeviceIntSize& aEGLWindowSize);
-  static nsWindow* GetFocusedWindow();
-  void WaylandDragWorkaround(GdkEventButton* aEvent);
-#endif
-
   RefPtr<mozilla::gfx::VsyncSource> GetVsyncSource() override;
 
   static void WithSettingsChangesIgnored(const std::function<void()>& aFn);
 
- private:
-  void UpdateAlpha(mozilla::gfx::SourceSurface* aSourceSurface,
-                   nsIntRect aBoundsRect);
-
-  void NativeMove();
-  void NativeResize();
-  void NativeMoveResize();
-
-  void NativeShow(bool aAction);
-  void SetHasMappedToplevel(bool aState);
-  LayoutDeviceIntSize GetSafeWindowSize(LayoutDeviceIntSize aSize);
-
-  void EnsureGrabs(void);
-  void GrabPointer(guint32 aTime);
-  void ReleaseGrabs(void);
-
-  void UpdateClientOffsetFromFrameExtents();
-  void UpdateClientOffsetFromCSDWindow();
-
-  void DispatchContextMenuEventFromMouseEvent(uint16_t domButton,
-                                              GdkEventButton* aEvent);
-#ifdef MOZ_WAYLAND
-  void MaybeResumeCompositor();
-#endif
-
-  void WaylandStartVsync();
-  void WaylandStopVsync();
-
- public:
   void ThemeChanged(void);
   void OnDPIChanged(void);
   void OnCheckResize(void);
   void OnCompositedChanged(void);
   void OnScaleChanged(GtkAllocation* aAllocation);
   void DispatchResized();
-
-#ifdef MOZ_X11
-  Window mOldFocusWindow;
-#endif /* MOZ_X11 */
 
   static guint32 sLastButtonPressTime;
 
@@ -362,14 +323,6 @@ class nsWindow final : public nsBaseWidget {
       TouchpadPinchPhase aEventPhase, float aScale, LayoutDeviceIntPoint aPoint,
       int32_t aModifierFlags) override;
 
-#ifdef MOZ_X11
-  Display* XDisplay() { return mXDisplay; }
-#endif
-#ifdef MOZ_WAYLAND
-  wl_display* GetWaylandDisplay();
-  bool WaylandSurfaceNeedsClear();
-  virtual void CreateCompositorVsyncDispatcher() override;
-#endif
   virtual void GetCompositorWidgetInitData(
       mozilla::widget::CompositorWidgetInitData* aInitData) override;
 
@@ -417,7 +370,24 @@ class nsWindow final : public nsBaseWidget {
   static bool HideTitlebarByDefault();
   static bool GetTopLevelWindowActiveState(nsIFrame* aFrame);
   static bool TitlebarUseShapeMask();
+  bool IsRemoteContent() { return HasRemoteContent(); }
+  static void HideWaylandOpenedPopups();
+  void NativeMoveResizeWaylandPopupCB(const GdkRectangle* aFinalSize,
+                                      bool aFlippedX, bool aFlippedY);
+  static bool IsToplevelWindowTransparent();
+
+#ifdef MOZ_X11
+  Display* XDisplay() { return mXDisplay; }
+#endif
 #ifdef MOZ_WAYLAND
+  bool GetCSDDecorationOffset(int* aDx, int* aDy);
+  void SetEGLNativeWindowSize(const LayoutDeviceIntSize& aEGLWindowSize);
+  static nsWindow* GetFocusedWindow();
+  void WaylandDragWorkaround(GdkEventButton* aEvent);
+
+  wl_display* GetWaylandDisplay();
+  bool WaylandSurfaceNeedsClear();
+  virtual void CreateCompositorVsyncDispatcher() override;
   LayoutDeviceIntPoint GetNativePointerLockCenter() {
     return mNativePointerLockCenter;
   }
@@ -434,11 +404,6 @@ class nsWindow final : public nsBaseWidget {
     mPreferredPopupRectFlushed = true;
   };
 #endif
-  bool IsRemoteContent() { return HasRemoteContent(); }
-  static void HideWaylandOpenedPopups();
-  void NativeMoveResizeWaylandPopupCB(const GdkRectangle* aFinalSize,
-                                      bool aFlippedX, bool aFlippedY);
-  static bool IsToplevelWindowTransparent();
 
  protected:
   virtual ~nsWindow();
@@ -477,16 +442,40 @@ class nsWindow final : public nsBaseWidget {
   bool mHandleTouchEvent;
   // true if this is a drag and drop feedback popup
   bool mIsDragPopup;
+  bool mWindowScaleFactorChanged;
+  int mWindowScaleFactor;
+  bool mCompositedScreen;
+
 #ifdef MOZ_WAYLAND
   bool mNeedsCompositorResume;
   bool mCompositorInitiallyPaused;
   LayoutDeviceIntPoint mNativePointerLockCenter;
 #endif
-  bool mWindowScaleFactorChanged;
-  int mWindowScaleFactor;
-  bool mCompositedScreen;
 
  private:
+  void UpdateAlpha(mozilla::gfx::SourceSurface* aSourceSurface,
+                   nsIntRect aBoundsRect);
+
+  void NativeMove();
+  void NativeResize();
+  void NativeMoveResize();
+
+  void NativeShow(bool aAction);
+  void SetHasMappedToplevel(bool aState);
+  LayoutDeviceIntSize GetSafeWindowSize(LayoutDeviceIntSize aSize);
+
+  void EnsureGrabs(void);
+  void GrabPointer(guint32 aTime);
+  void ReleaseGrabs(void);
+
+  void UpdateClientOffsetFromFrameExtents();
+  void UpdateClientOffsetFromCSDWindow();
+
+  void DispatchContextMenuEventFromMouseEvent(uint16_t domButton,
+                                              GdkEventButton* aEvent);
+
+  void WaylandStartVsync();
+  void WaylandStopVsync();
   void DestroyChildWindows();
   GtkWidget* GetToplevelWidget();
   nsWindow* GetContainerWindow();
@@ -519,13 +508,6 @@ class nsWindow final : public nsBaseWidget {
 
   void AddCSDDecorationSize(int* aWidth, int* aHeight);
 
-#ifdef MOZ_X11
-  typedef enum {GTK_WIDGET_COMPOSIDED_DEFAULT = 0,
-                GTK_WIDGET_COMPOSIDED_DISABLED = 1,
-                GTK_WIDGET_COMPOSIDED_ENABLED = 2} WindowComposeRequest;
-
-  void SetCompositorHint(WindowComposeRequest aState);
-#endif
   nsCString mGtkWindowAppName;
   nsCString mGtkWindowRoleName;
   void RefreshWindowClass();
@@ -533,7 +515,7 @@ class nsWindow final : public nsBaseWidget {
   GtkWidget* mShell;
   MozContainer* mContainer;
   GdkWindow* mGdkWindow;
-  bool mWindowShouldStartDragging = false;
+  bool mWindowShouldStartDragging;
   PlatformCompositorWidgetDelegate* mCompositorWidgetDelegate;
 
   uint32_t mHasMappedToplevel : 1, mRetryPointerGrab : 1;
@@ -550,21 +532,6 @@ class nsWindow final : public nsBaseWidget {
   // for touch event handling
   nsRefPtrHashtable<nsPtrHashKey<GdkEventSequence>, mozilla::dom::Touch>
       mTouches;
-
-#ifdef MOZ_X11
-  Display* mXDisplay;
-  Window mXWindow;
-  Visual* mXVisual;
-  int mXDepth;
-  mozilla::widget::WindowSurfaceProvider mSurfaceProvider;
-
-  bool ConfigureX11GLVisual(bool aUseAlpha);
-#endif
-#ifdef MOZ_WAYLAND
-  RefPtr<mozilla::gfx::VsyncSource> mWaylandVsyncSource;
-  zwp_locked_pointer_v1* mLockedPointer;
-  zwp_relative_pointer_v1* mRelativePointer;
-#endif
 
   // Upper bound on pending ConfigureNotify events to be dispatched to the
   // window. See bug 1225044.
@@ -584,52 +551,6 @@ class nsWindow final : public nsBaseWidget {
   // It's PictureInPicture window.
   bool mIsPIPWindow;
   bool mAlwaysOnTop;
-
-#ifdef ACCESSIBILITY
-  RefPtr<mozilla::a11y::LocalAccessible> mRootAccessible;
-
-  /**
-   * Request to create the accessible for this window if it is top level.
-   */
-  void CreateRootAccessible();
-
-  /**
-   * Dispatch accessible event for the top level window accessible.
-   *
-   * @param  aEventType  [in] the accessible event type to dispatch
-   */
-  void DispatchEventToRootAccessible(uint32_t aEventType);
-
-  /**
-   * Dispatch accessible window activate event for the top level window
-   * accessible.
-   */
-  void DispatchActivateEventAccessible();
-
-  /**
-   * Dispatch accessible window deactivate event for the top level window
-   * accessible.
-   */
-  void DispatchDeactivateEventAccessible();
-
-  /**
-   * Dispatch accessible window maximize event for the top level window
-   * accessible.
-   */
-  void DispatchMaximizeEventAccessible();
-
-  /**
-   * Dispatch accessible window minize event for the top level window
-   * accessible.
-   */
-  void DispatchMinimizeEventAccessible();
-
-  /**
-   * Dispatch accessible window restore event for the top level window
-   * accessible.
-   */
-  void DispatchRestoreEventAccessible();
-#endif
 
   // The cursor cache
   static GdkCursor* gsGtkCursorCache[eCursorCount];
@@ -724,6 +645,74 @@ class nsWindow final : public nsBaseWidget {
   static GtkWindowDecoration sGtkWindowDecoration;
 
   static bool sTransparentMainWindow;
+
+#ifdef ACCESSIBILITY
+  RefPtr<mozilla::a11y::LocalAccessible> mRootAccessible;
+
+  /**
+   * Request to create the accessible for this window if it is top level.
+   */
+  void CreateRootAccessible();
+
+  /**
+   * Dispatch accessible event for the top level window accessible.
+   *
+   * @param  aEventType  [in] the accessible event type to dispatch
+   */
+  void DispatchEventToRootAccessible(uint32_t aEventType);
+
+  /**
+   * Dispatch accessible window activate event for the top level window
+   * accessible.
+   */
+  void DispatchActivateEventAccessible();
+
+  /**
+   * Dispatch accessible window deactivate event for the top level window
+   * accessible.
+   */
+  void DispatchDeactivateEventAccessible();
+
+  /**
+   * Dispatch accessible window maximize event for the top level window
+   * accessible.
+   */
+  void DispatchMaximizeEventAccessible();
+
+  /**
+   * Dispatch accessible window minize event for the top level window
+   * accessible.
+   */
+  void DispatchMinimizeEventAccessible();
+
+  /**
+   * Dispatch accessible window restore event for the top level window
+   * accessible.
+   */
+  void DispatchRestoreEventAccessible();
+#endif
+
+#ifdef MOZ_X11
+  typedef enum {GTK_WIDGET_COMPOSIDED_DEFAULT = 0,
+                GTK_WIDGET_COMPOSIDED_DISABLED = 1,
+                GTK_WIDGET_COMPOSIDED_ENABLED = 2} WindowComposeRequest;
+  void SetCompositorHint(WindowComposeRequest aState);
+
+  Display* mXDisplay;
+  Window mXWindow;
+  Visual* mXVisual;
+  int mXDepth;
+  mozilla::widget::WindowSurfaceProvider mSurfaceProvider;
+
+  bool ConfigureX11GLVisual(bool aUseAlpha);
+#endif
+#ifdef MOZ_WAYLAND
+  void MaybeResumeCompositor();
+
+  RefPtr<mozilla::gfx::VsyncSource> mWaylandVsyncSource;
+  zwp_locked_pointer_v1* mLockedPointer;
+  zwp_relative_pointer_v1* mRelativePointer;
+#endif
 };
 
 #endif /* __nsWindow_h__ */

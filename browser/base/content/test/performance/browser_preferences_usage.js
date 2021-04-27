@@ -183,6 +183,18 @@ add_task(async function open_10_tabs() {
 
 // This navigates to 50 sites and checks pref getters.
 add_task(async function navigate_around() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      // Disable bfcache so that we can measure more accurately the number of
+      // pref accesses in the child processes.
+      // If bfcache is enabled on Fission
+      // dom.ipc.keepProcessesAlive.webIsolated.perOrigin and
+      // security.sandbox.content.force-namespace are accessed only a couple of
+      // times.
+      ["browser.sessionhistory.max_total_viewers", 0],
+    ],
+  });
+
   let max = 40;
 
   let knownProblematicPrefs = {

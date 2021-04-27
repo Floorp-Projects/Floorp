@@ -8007,18 +8007,6 @@
     "releaseChannelCollection": "opt-out",
     "description": "Accumulated timer delay (variance between when the timer was expected to fire and when it actually fired) in milliseconds as an indicator for decreased main-thread responsiveness while importing logins / passwords from a CSV/TSV file. The import is happening on a background thread and should ideally not affect the UI noticeably. The time with the blocking Keychain dialog on macOS can skew this data."
   },
-  "FX_MIGRATION_BOOKMARKS_ROOTS": {
-    "record_in_processes": ["main"],
-    "products": ["firefox"],
-    "bug_numbers": [1656277],
-    "alert_emails": ["jaws@mozilla.com", "rtestard@mozilla.com"],
-    "expires_in_version": "91",
-    "kind": "enumerated",
-    "n_values": 32,
-    "releaseChannelCollection": "opt-out",
-    "keyed": true,
-    "description": "Where bookmarks were stored in the other browser (1=bookmarks toolbar, 2=bookmarks menu, 4=reading list, 8=unfiled), keyed by the name of the browser. Note that migrating the reading list from classic Edge is supported but its root is not reported here."
-  },
   "FX_MIGRATION_BOOKMARKS_QUANTITY": {
     "record_in_processes": ["main"],
     "products": ["firefox"],

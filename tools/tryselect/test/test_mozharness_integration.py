@@ -45,7 +45,6 @@ MOZHARNESS_SCRIPTS = {
             "jittest2",
             "jsreftest",
             "mochitest-valgrind-plain",
-            "reftest-gpu",
             "reftest-no-accel",
         ],
     },

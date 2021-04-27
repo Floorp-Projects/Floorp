@@ -88,7 +88,7 @@
   border: none;
   border-radius: var(--toolbarbutton-border-radius);
   background-color: transparent;
-  background-image: url(chrome://browser/skin/stop.svg);
+  background-image: url(chrome://global/skin/icons/close.svg);
   background-size: 12px;
   background-repeat: no-repeat;
   background-position: center;
@@ -162,7 +162,7 @@ html|img#editBookmarkPanelFavicon[src] {
 
 @media (-moz-proton-doorhangers) {
 #editBookmarkPanel {
-  font-size: var(--panel-font-size);
+  font: caption;
 }
 
 #editBookmarkPanelInfoArea {

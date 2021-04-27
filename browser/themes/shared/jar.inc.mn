@@ -198,7 +198,6 @@
 #ifndef MOZ_WIDGET_GTK
   skin/classic/browser/sort.svg                       (../shared/icons/sort.svg)
 #endif
-  skin/classic/browser/stop.svg                       (../shared/icons/stop.svg)
   skin/classic/browser/stop-to-reload.svg             (../shared/icons/stop-to-reload.svg)
   skin/classic/browser/success-animation.svg          (../shared/icons/success-animation.svg)
   skin/classic/browser/sync.svg                       (../shared/icons/sync.svg)
@@ -223,9 +222,7 @@
   skin/classic/browser/tabbrowser/loading.svg                  (../shared/tabbrowser/loading.svg)
   skin/classic/browser/tabbrowser/loading-burst.svg            (../shared/tabbrowser/loading-burst.svg)
   skin/classic/browser/tabbrowser/pendingpaint.png             (../shared/tabbrowser/pendingpaint.png)
-  skin/classic/browser/tabbrowser/tab-audio-playing.svg        (../shared/tabbrowser/tab-audio-playing.svg)
   skin/classic/browser/tabbrowser/tab-audio-playing-small.svg  (../shared/tabbrowser/tab-audio-playing-small.svg)
-  skin/classic/browser/tabbrowser/tab-audio-muted.svg          (../shared/tabbrowser/tab-audio-muted.svg)
   skin/classic/browser/tabbrowser/tab-audio-muted-small.svg    (../shared/tabbrowser/tab-audio-muted-small.svg)
   skin/classic/browser/tabbrowser/tab-audio-blocked.svg        (../shared/tabbrowser/tab-audio-blocked.svg)
   skin/classic/browser/tabbrowser/tab-audio-blocked-small.svg  (../shared/tabbrowser/tab-audio-blocked-small.svg)

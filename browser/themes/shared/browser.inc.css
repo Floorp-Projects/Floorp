@@ -508,7 +508,7 @@ menupopup::part(drop-indicator) {
   margin: 3px;
   border: none;
   border-radius: 2px;
-  background-image: url(chrome://browser/skin/stop.svg);
+  background-image: url(chrome://global/skin/icons/close.svg);
   background-color: transparent;
   background-repeat: no-repeat;
   background-position: center;
@@ -869,10 +869,6 @@ menupopup::part(drop-indicator) {
 } /** END not Proton **/
 
 @media (-moz-proton-doorhangers) {
-popupnotification {
-  font-size: var(--panel-font-size);
-}
-
 popupnotificationcontent {
   margin-block-start: 8px;
 }

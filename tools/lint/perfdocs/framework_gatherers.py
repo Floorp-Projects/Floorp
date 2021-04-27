@@ -197,7 +197,8 @@ class RaptorGatherer(FrameworkGatherer):
             logger.critical("No url found for test {}".format(title))
             raise Exception("No url found for test")
 
-        result = f".. dropdown:: {title} ({test_description})\n\n"
+        result = f".. dropdown:: {title} ({test_description})\n"
+        result += f"   :container: + anchor-id-{title}-{suite_name[0]}\n\n"
 
         for idx, description in enumerate(matcher):
             if description["name"] != title:

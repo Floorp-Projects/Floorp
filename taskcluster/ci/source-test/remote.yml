@@ -17,7 +17,6 @@ job-defaults:
             - linux64-node
     treeherder:
         kind: test
-        tier: 2
     worker-type: t-linux-xlarge-source
     worker:
         docker-image: {in-tree: ubuntu1804-test}
@@ -39,6 +38,7 @@ puppeteer:
     description: Puppeteer tests against Firefox CDP-based remote protocol
     treeherder:
         symbol: remote(pup)
+        tier: 1
     run:
         using: run-task
         command: >
@@ -51,6 +51,7 @@ puppeteer-fis:
     run-on-projects: []
     treeherder:
         symbol: remote(pup-fis)
+        tier: 2
     run:
         using: run-task
         command: >
