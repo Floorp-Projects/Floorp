@@ -963,6 +963,8 @@ bool NativeObject::changeCustomDataPropAttributes(JSContext* cx,
 /* static */
 bool NativeObject::removeProperty(JSContext* cx, HandleNativeObject obj,
                                   jsid id_) {
+  AutoCheckShapeConsistency check(obj);
+
   RootedId id(cx, id_);
 
   AutoKeepShapeCaches keep(cx);
@@ -1071,7 +1073,6 @@ bool NativeObject::removeProperty(JSContext* cx, HandleNativeObject obj,
     obj->removeLastProperty(cx);
   }
 
-  obj->checkShapeConsistency();
   return true;
 }
 
