@@ -1,0 +1,611 @@
+diff --git a/clang/include/clang/Basic/DiagnosticGroups.td b/clang/include/clang/Basic/DiagnosticGroups.td
+index b91cee9a9e5f..df2a46cecc5d 100644
+--- a/clang/include/clang/Basic/DiagnosticGroups.td
++++ b/clang/include/clang/Basic/DiagnosticGroups.td
+@@ -724,8 +724,6 @@ def UnusedMemberFunction : DiagGroup<"unused-member-function",
+ def UnusedLabel : DiagGroup<"unused-label">;
+ def UnusedLambdaCapture : DiagGroup<"unused-lambda-capture">;
+ def UnusedParameter : DiagGroup<"unused-parameter">;
+-def UnusedButSetParameter : DiagGroup<"unused-but-set-parameter">;
+-def UnusedButSetVariable : DiagGroup<"unused-but-set-variable">;
+ def UnusedResult : DiagGroup<"unused-result">;
+ def PotentiallyEvaluatedExpression : DiagGroup<"potentially-evaluated-expression">;
+ def UnevaluatedExpression : DiagGroup<"unevaluated-expression",
+@@ -867,8 +865,7 @@ def Conversion : DiagGroup<"conversion",
+                  DiagCategory<"Value Conversion Issue">;
+ 
+ def Unused : DiagGroup<"unused",
+-                       [UnusedArgument, UnusedButSetVariable,
+-                        UnusedFunction, UnusedLabel,
++                       [UnusedArgument, UnusedFunction, UnusedLabel,
+                         // UnusedParameter, (matches GCC's behavior)
+                         // UnusedTemplate, (clean-up libc++ before enabling)
+                         // UnusedMemberFunction, (clean-up llvm before enabling)
+@@ -925,7 +922,6 @@ def Extra : DiagGroup<"extra", [
+     SemiBeforeMethodBody,
+     MissingMethodReturnType,
+     SignCompare,
+-    UnusedButSetParameter,
+     UnusedParameter,
+     NullPointerArithmetic,
+     EmptyInitStatement,
+diff --git a/clang/include/clang/Basic/DiagnosticSemaKinds.td b/clang/include/clang/Basic/DiagnosticSemaKinds.td
+index 552a9d349e39..639565feb576 100644
+--- a/clang/include/clang/Basic/DiagnosticSemaKinds.td
++++ b/clang/include/clang/Basic/DiagnosticSemaKinds.td
+@@ -310,12 +310,8 @@ def note_riscv_repeated_interrupt_attribute : Note<
+   "repeated RISC-V 'interrupt' attribute is here">;
+ def warn_unused_parameter : Warning<"unused parameter %0">,
+   InGroup<UnusedParameter>, DefaultIgnore;
+-def warn_unused_but_set_parameter : Warning<"parameter %0 set but not used">,
+-  InGroup<UnusedButSetParameter>, DefaultIgnore;
+ def warn_unused_variable : Warning<"unused variable %0">,
+   InGroup<UnusedVariable>, DefaultIgnore;
+-def warn_unused_but_set_variable : Warning<"variable %0 set but not used">,
+-  InGroup<UnusedButSetVariable>, DefaultIgnore;
+ def warn_unused_local_typedef : Warning<
+   "unused %select{typedef|type alias}0 %1">,
+   InGroup<UnusedLocalTypedef>, DefaultIgnore;
+diff --git a/clang/include/clang/Sema/Sema.h b/clang/include/clang/Sema/Sema.h
+index e0ededea6bca..2d4bdfceff80 100644
+--- a/clang/include/clang/Sema/Sema.h
++++ b/clang/include/clang/Sema/Sema.h
+@@ -2832,13 +2832,6 @@ public:
+   /// ParmVarDecl pointers.
+   void DiagnoseUnusedParameters(ArrayRef<ParmVarDecl *> Parameters);
+ 
+-  /// Diagnose any unused but set parameters in the given sequence of
+-  /// ParmVarDecl pointers.
+-  void DiagnoseUnusedButSetParameters(ArrayRef<ParmVarDecl *> Parameters);
+-
+-  /// Diagnose any unused but set variables declared in this CompoundStmt
+-  void DiagnoseUnusedButSetVariables(CompoundStmt *CS);
+-
+   /// Diagnose whether the size of parameters or return value of a
+   /// function or obj-c method definition is pass-by-value and larger than a
+   /// specified threshold.
+diff --git a/clang/lib/Sema/SemaDecl.cpp b/clang/lib/Sema/SemaDecl.cpp
+index 9c5bc19f2215..f95bd7fe5634 100644
+--- a/clang/lib/Sema/SemaDecl.cpp
++++ b/clang/lib/Sema/SemaDecl.cpp
+@@ -24,7 +24,6 @@
+ #include "clang/AST/Expr.h"
+ #include "clang/AST/ExprCXX.h"
+ #include "clang/AST/NonTrivialTypeVisitor.h"
+-#include "clang/AST/RecursiveASTVisitor.h"
+ #include "clang/AST/StmtCXX.h"
+ #include "clang/Basic/Builtins.h"
+ #include "clang/Basic/PartialDiagnostic.h"
+@@ -44,7 +43,6 @@
+ #include "clang/Sema/ScopeInfo.h"
+ #include "clang/Sema/SemaInternal.h"
+ #include "clang/Sema/Template.h"
+-#include "llvm/ADT/SmallPtrSet.h"
+ #include "llvm/ADT/SmallString.h"
+ #include "llvm/ADT/Triple.h"
+ #include <algorithm>
+@@ -13755,138 +13753,6 @@ void Sema::DiagnoseUnusedParameters(ArrayRef<ParmVarDecl *> Parameters) {
+   }
+ }
+ 
+-using AllUsesSetsPtrSet = llvm::SmallPtrSet<const NamedDecl *, 16>;
+-
+-namespace {
+-
+-struct AllUsesAreSetsVisitor : RecursiveASTVisitor<AllUsesAreSetsVisitor> {
+-  AllUsesSetsPtrSet &S;
+-
+-  AllUsesAreSetsVisitor(AllUsesSetsPtrSet &Set) : S(Set) {}
+-
+-  bool TraverseBinaryOperator(const BinaryOperator *BO) {
+-    auto *LHS = BO->getLHS();
+-    auto *DRE = dyn_cast<DeclRefExpr>(LHS);
+-    if (!BO->isAssignmentOp() || !DRE || !S.count(DRE->getFoundDecl())) {
+-      // This is not an assignment to one of our NamedDecls.
+-      if (!TraverseStmt(LHS))
+-        return false;
+-    }
+-    return TraverseStmt(BO->getRHS());
+-  }
+-
+-  bool VisitDeclRefExpr(const DeclRefExpr *DRE) {
+-    // If we remove all Decls, no need to keep searching.
+-    return !S.erase(DRE->getFoundDecl()) || S.size();
+-  }
+-
+-  bool OverloadedTraverse(Stmt *S) { return TraverseStmt(S); }
+-
+-  bool OverloadedTraverse(Decl *D) { return TraverseDecl(D); }
+-};
+-
+-} // end anonymous namespace
+-
+-/// For any NamedDecl in Decls that is not used in any way other than the LHS of
+-/// an assignment, diagnose with the given DiagId.
+-template <typename R, typename T>
+-static void DiagnoseUnusedButSetDecls(Sema *Se, T *Parent, R Decls,
+-                                      unsigned DiagID) {
+-  // Put the Decls in a set so we only have to traverse the body once for all of
+-  // them.
+-  AllUsesSetsPtrSet AllUsesAreSets;
+-
+-  for (const NamedDecl *ND : Decls) {
+-    AllUsesAreSets.insert(ND);
+-  }
+-
+-  if (!AllUsesAreSets.size())
+-    return;
+-
+-  AllUsesAreSetsVisitor Visitor(AllUsesAreSets);
+-  Visitor.OverloadedTraverse(Parent);
+-
+-  for (const NamedDecl *ND : AllUsesAreSets) {
+-    Se->Diag(ND->getLocation(), DiagID) << ND->getDeclName();
+-  }
+-}
+-
+-void Sema::DiagnoseUnusedButSetParameters(ArrayRef<ParmVarDecl *> Parameters) {
+-  // Don't diagnose unused-but-set-parameter errors in template instantiations;
+-  // we will already have done so in the template itself.
+-  if (inTemplateInstantiation())
+-    return;
+-
+-  bool CPlusPlus = getLangOpts().CPlusPlus;
+-
+-  auto IsCandidate = [&](const ParmVarDecl *P) {
+-    // Check for Ignored here, because if we have no candidates we can avoid
+-    // walking the AST.
+-    if (Diags.getDiagnosticLevel(diag::warn_unused_but_set_parameter,
+-                                 P->getLocation()) ==
+-        DiagnosticsEngine::Ignored)
+-      return false;
+-    if (!P->isReferenced() || !P->getDeclName() || P->hasAttr<UnusedAttr>())
+-      return false;
+-    // Mimic gcc's behavior regarding nonscalar types.
+-    if (CPlusPlus && !P->getType()->isScalarType())
+-      return false;
+-    return true;
+-  };
+-
+-  auto Candidates = llvm::make_filter_range(Parameters, IsCandidate);
+-
+-  if (Parameters.empty())
+-    return;
+-
+-  // Traverse the Decl, not just the body; otherwise we'd miss things like
+-  // CXXCtorInitializer.
+-  if (Decl *D =
+-          Decl::castFromDeclContext((*Parameters.begin())->getDeclContext()))
+-    DiagnoseUnusedButSetDecls(this, D, Candidates,
+-                              diag::warn_unused_but_set_parameter);
+-}
+-
+-void Sema::DiagnoseUnusedButSetVariables(CompoundStmt *CS) {
+-  bool CPlusPlus = getLangOpts().CPlusPlus;
+-
+-  auto IsCandidate = [&](const Stmt *S) {
+-    const DeclStmt *SD = dyn_cast<DeclStmt>(S);
+-    if (!SD || !SD->isSingleDecl())
+-      return false;
+-    const VarDecl *VD = dyn_cast<VarDecl>(SD->getSingleDecl());
+-    // Check for Ignored here, because if we have no candidates we can avoid
+-    // walking the AST.
+-    if (!VD || Diags.getDiagnosticLevel(diag::warn_unused_but_set_variable,
+-                                        VD->getLocation()) ==
+-                   DiagnosticsEngine::Ignored)
+-      return false;
+-    if (!VD->isReferenced() || !VD->getDeclName() || VD->hasAttr<UnusedAttr>())
+-      return false;
+-    // Declarations which are const or constexpr can't be assigned to after
+-    // initialization anyway, and avoiding these cases will prevent false
+-    // positives when uses of a constexpr don't appear in the AST.
+-    if (VD->isConstexpr() || VD->getType().isConstQualified())
+-      return false;
+-    // Mimic gcc's behavior regarding nonscalar types.
+-    if (CPlusPlus && !VD->getType()->isScalarType())
+-      return false;
+-    return true;
+-  };
+-
+-  auto Candidates = llvm::make_filter_range(CS->body(), IsCandidate);
+-
+-  auto ToNamedDecl = [](const Stmt *S) {
+-    const DeclStmt *SD = dyn_cast<const DeclStmt>(S);
+-    return dyn_cast<const NamedDecl>(SD->getSingleDecl());
+-  };
+-
+-  auto CandidateDecls = llvm::map_range(Candidates, ToNamedDecl);
+-
+-  DiagnoseUnusedButSetDecls(this, CS, CandidateDecls,
+-                            diag::warn_unused_but_set_variable);
+-}
+-
+ void Sema::DiagnoseSizeOfParametersAndReturnValue(
+     ArrayRef<ParmVarDecl *> Parameters, QualType ReturnTy, NamedDecl *D) {
+   if (LangOpts.NumLargeByValueCopy == 0) // No check.
+@@ -14589,10 +14455,8 @@ Decl *Sema::ActOnFinishFunctionBody(Decl *dcl, Stmt *Body,
+ 
+     if (!FD->isInvalidDecl()) {
+       // Don't diagnose unused parameters of defaulted or deleted functions.
+-      if (!FD->isDeleted() && !FD->isDefaulted() && !FD->hasSkippedBody()) {
++      if (!FD->isDeleted() && !FD->isDefaulted() && !FD->hasSkippedBody())
+         DiagnoseUnusedParameters(FD->parameters());
+-        DiagnoseUnusedButSetParameters(FD->parameters());
+-      }
+       DiagnoseSizeOfParametersAndReturnValue(FD->parameters(),
+                                              FD->getReturnType(), FD);
+ 
+diff --git a/clang/lib/Sema/SemaExpr.cpp b/clang/lib/Sema/SemaExpr.cpp
+index d400ae193877..4c44295e7e14 100644
+--- a/clang/lib/Sema/SemaExpr.cpp
++++ b/clang/lib/Sema/SemaExpr.cpp
+@@ -15480,9 +15480,6 @@ ExprResult Sema::ActOnBlockStmtExpr(SourceLocation CaretLoc,
+ 
+   BD->setBody(cast<CompoundStmt>(Body));
+ 
+-  // wait to diagnose unused but set parameters until after setBody
+-  DiagnoseUnusedButSetParameters(BD->parameters());
+-
+   if (Body && getCurFunction()->HasPotentialAvailabilityViolations)
+     DiagnoseUnguardedAvailabilityViolations(BD);
+ 
+diff --git a/clang/lib/Sema/SemaStmt.cpp b/clang/lib/Sema/SemaStmt.cpp
+index 074a45414c38..a3b1fa4ab534 100644
+--- a/clang/lib/Sema/SemaStmt.cpp
++++ b/clang/lib/Sema/SemaStmt.cpp
+@@ -434,9 +434,7 @@ StmtResult Sema::ActOnCompoundStmt(SourceLocation L, SourceLocation R,
+       DiagnoseEmptyLoopBody(Elts[i], Elts[i + 1]);
+   }
+ 
+-  CompoundStmt *CS = CompoundStmt::Create(Context, Elts, L, R);
+-  DiagnoseUnusedButSetVariables(CS);
+-  return CS;
++  return CompoundStmt::Create(Context, Elts, L, R);
+ }
+ 
+ ExprResult
+diff --git a/clang/test/CodeGen/X86/x86_32-xsave.c b/clang/test/CodeGen/X86/x86_32-xsave.c
+index 2f16352a193b..e1acdff12407 100644
+--- a/clang/test/CodeGen/X86/x86_32-xsave.c
++++ b/clang/test/CodeGen/X86/x86_32-xsave.c
+@@ -1,17 +1,17 @@
+-// RUN: %clang_cc1 %s -DTEST_XSAVE -O0 -triple=i686-unknown-unknown -target-feature +xsave -emit-llvm -o - -Wall -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Werror | FileCheck %s --check-prefix=XSAVE
+-// RUN: %clang_cc1 %s -DTEST_XSAVE -O0 -triple=i686-unknown-unknown -target-feature +xsave -fno-signed-char -emit-llvm -o - -Wall -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Werror | FileCheck %s --check-prefix=XSAVE
++// RUN: %clang_cc1 %s -DTEST_XSAVE -O0 -triple=i686-unknown-unknown -target-feature +xsave -emit-llvm -o - -Wall -Werror | FileCheck %s --check-prefix=XSAVE
++// RUN: %clang_cc1 %s -DTEST_XSAVE -O0 -triple=i686-unknown-unknown -target-feature +xsave -fno-signed-char -emit-llvm -o - -Wall -Werror | FileCheck %s --check-prefix=XSAVE
+ 
+-// RUN: %clang_cc1 %s -DTEST_XGETBV -O0 -triple=i686-unknown-unknown -target-feature +xsave -emit-llvm -o - -Wall -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Werror | FileCheck %s --check-prefix=XGETBV
+-// RUN: %clang_cc1 %s -DTEST_XSETBV -O0 -triple=i686-unknown-unknown -target-feature +xsave -emit-llvm -o - -Wall -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Werror | FileCheck %s --check-prefix=XSETBV
++// RUN: %clang_cc1 %s -DTEST_XGETBV -O0 -triple=i686-unknown-unknown -target-feature +xsave -emit-llvm -o - -Wall -Werror | FileCheck %s --check-prefix=XGETBV
++// RUN: %clang_cc1 %s -DTEST_XSETBV -O0 -triple=i686-unknown-unknown -target-feature +xsave -emit-llvm -o - -Wall -Werror | FileCheck %s --check-prefix=XSETBV
+ 
+-// RUN: %clang_cc1 %s -DTEST_XSAVEOPT -O0 -triple=i686-unknown-unknown -target-feature +xsave -target-feature +xsaveopt -emit-llvm -o - -Wall -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Werror | FileCheck %s --check-prefix=XSAVEOPT
+-// RUN: %clang_cc1 %s -DTEST_XSAVEOPT -O0 -triple=i686-unknown-unknown -target-feature +xsave -target-feature +xsaveopt -fno-signed-char -emit-llvm -o - -Wall -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Werror | FileCheck %s --check-prefix=XSAVEOPT
++// RUN: %clang_cc1 %s -DTEST_XSAVEOPT -O0 -triple=i686-unknown-unknown -target-feature +xsave -target-feature +xsaveopt -emit-llvm -o - -Wall -Werror | FileCheck %s --check-prefix=XSAVEOPT
++// RUN: %clang_cc1 %s -DTEST_XSAVEOPT -O0 -triple=i686-unknown-unknown -target-feature +xsave -target-feature +xsaveopt -fno-signed-char -emit-llvm -o - -Wall -Werror | FileCheck %s --check-prefix=XSAVEOPT
+ 
+-// RUN: %clang_cc1 %s -DTEST_XSAVEC -O0 -triple=i686-unknown-unknown -target-feature +xsave -target-feature +xsavec -emit-llvm -o - -Wall -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Werror | FileCheck %s --check-prefix=XSAVEC
+-// RUN: %clang_cc1 %s -DTEST_XSAVEC -O0 -triple=i686-unknown-unknown -target-feature +xsave -target-feature +xsavec -fno-signed-char -emit-llvm -o - -Wall -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Werror | FileCheck %s --check-prefix=XSAVEC
++// RUN: %clang_cc1 %s -DTEST_XSAVEC -O0 -triple=i686-unknown-unknown -target-feature +xsave -target-feature +xsavec -emit-llvm -o - -Wall -Werror | FileCheck %s --check-prefix=XSAVEC
++// RUN: %clang_cc1 %s -DTEST_XSAVEC -O0 -triple=i686-unknown-unknown -target-feature +xsave -target-feature +xsavec -fno-signed-char -emit-llvm -o - -Wall -Werror | FileCheck %s --check-prefix=XSAVEC
+ 
+-// RUN: %clang_cc1 %s -DTEST_XSAVES -O0 -triple=i686-unknown-unknown -target-feature +xsave -target-feature +xsaves -emit-llvm -o - -Wall -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Werror | FileCheck %s --check-prefix=XSAVES
+-// RUN: %clang_cc1 %s -DTEST_XSAVES -O0 -triple=i686-unknown-unknown -target-feature +xsave -target-feature +xsaves -fno-signed-char -emit-llvm -o - -Wall -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Werror | FileCheck %s --check-prefix=XSAVES
++// RUN: %clang_cc1 %s -DTEST_XSAVES -O0 -triple=i686-unknown-unknown -target-feature +xsave -target-feature +xsaves -emit-llvm -o - -Wall -Werror | FileCheck %s --check-prefix=XSAVES
++// RUN: %clang_cc1 %s -DTEST_XSAVES -O0 -triple=i686-unknown-unknown -target-feature +xsave -target-feature +xsaves -fno-signed-char -emit-llvm -o - -Wall -Werror | FileCheck %s --check-prefix=XSAVES
+ 
+ // Don't include mm_malloc.h, it's system specific.
+ #define __MM_MALLOC_H
+diff --git a/clang/test/CodeGen/X86/x86_64-xsave.c b/clang/test/CodeGen/X86/x86_64-xsave.c
+index 79523b504466..cfc33cb06721 100644
+--- a/clang/test/CodeGen/X86/x86_64-xsave.c
++++ b/clang/test/CodeGen/X86/x86_64-xsave.c
+@@ -1,17 +1,17 @@
+-// RUN: %clang_cc1 %s -DTEST_XSAVE -O0 -triple=x86_64-unknown-unknown -target-feature +xsave -emit-llvm -o - -Wall -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Werror | FileCheck %s --check-prefix=XSAVE
+-// RUN: %clang_cc1 %s -DTEST_XSAVE -O0 -triple=x86_64-unknown-unknown -target-feature +xsave -fno-signed-char -emit-llvm -o - -Wall -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Werror | FileCheck %s --check-prefix=XSAVE
++// RUN: %clang_cc1 %s -DTEST_XSAVE -O0 -triple=x86_64-unknown-unknown -target-feature +xsave -emit-llvm -o - -Wall -Werror | FileCheck %s --check-prefix=XSAVE
++// RUN: %clang_cc1 %s -DTEST_XSAVE -O0 -triple=x86_64-unknown-unknown -target-feature +xsave -fno-signed-char -emit-llvm -o - -Wall -Werror | FileCheck %s --check-prefix=XSAVE
+ 
+-// RUN: %clang_cc1 %s -DTEST_XGETBV -O0 -triple=x86_64-unknown-unknown -target-feature +xsave -emit-llvm -o - -Wall -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Werror | FileCheck %s --check-prefix=XGETBV
+-// RUN: %clang_cc1 %s -DTEST_XSETBV -O0 -triple=x86_64-unknown-unknown -target-feature +xsave -fno-signed-char -emit-llvm -o - -Wall -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Werror | FileCheck %s --check-prefix=XSETBV
++// RUN: %clang_cc1 %s -DTEST_XGETBV -O0 -triple=x86_64-unknown-unknown -target-feature +xsave -emit-llvm -o - -Wall -Werror | FileCheck %s --check-prefix=XGETBV
++// RUN: %clang_cc1 %s -DTEST_XSETBV -O0 -triple=x86_64-unknown-unknown -target-feature +xsave -fno-signed-char -emit-llvm -o - -Wall -Werror | FileCheck %s --check-prefix=XSETBV
+ 
+-// RUN: %clang_cc1 %s -DTEST_XSAVEOPT -O0 -triple=x86_64-unknown-unknown -target-feature +xsave -target-feature +xsaveopt -emit-llvm -o - -Wall -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Werror | FileCheck %s --check-prefix=XSAVEOPT
+-// RUN: %clang_cc1 %s -DTEST_XSAVEOPT -O0 -triple=x86_64-unknown-unknown -target-feature +xsave -target-feature +xsaveopt -fno-signed-char -emit-llvm -o - -Wall -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Werror | FileCheck %s --check-prefix=XSAVEOPT
++// RUN: %clang_cc1 %s -DTEST_XSAVEOPT -O0 -triple=x86_64-unknown-unknown -target-feature +xsave -target-feature +xsaveopt -emit-llvm -o - -Wall -Werror | FileCheck %s --check-prefix=XSAVEOPT
++// RUN: %clang_cc1 %s -DTEST_XSAVEOPT -O0 -triple=x86_64-unknown-unknown -target-feature +xsave -target-feature +xsaveopt -fno-signed-char -emit-llvm -o - -Wall -Werror | FileCheck %s --check-prefix=XSAVEOPT
+ 
+-// RUN: %clang_cc1 %s -DTEST_XSAVEC -O0 -triple=x86_64-unknown-unknown -target-feature +xsave -target-feature +xsavec -emit-llvm -o - -Wall -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Werror | FileCheck %s --check-prefix=XSAVEC
+-// RUN: %clang_cc1 %s -DTEST_XSAVEC -O0 -triple=x86_64-unknown-unknown -target-feature +xsave -target-feature +xsavec -fno-signed-char -emit-llvm -o - -Wall -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Werror | FileCheck %s --check-prefix=XSAVEC
++// RUN: %clang_cc1 %s -DTEST_XSAVEC -O0 -triple=x86_64-unknown-unknown -target-feature +xsave -target-feature +xsavec -emit-llvm -o - -Wall -Werror | FileCheck %s --check-prefix=XSAVEC
++// RUN: %clang_cc1 %s -DTEST_XSAVEC -O0 -triple=x86_64-unknown-unknown -target-feature +xsave -target-feature +xsavec -fno-signed-char -emit-llvm -o - -Wall -Werror | FileCheck %s --check-prefix=XSAVEC
+ 
+-// RUN: %clang_cc1 %s -DTEST_XSAVES -O0 -triple=x86_64-unknown-unknown -target-feature +xsave -target-feature +xsaves -emit-llvm -o - -Wall -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Werror | FileCheck %s --check-prefix=XSAVES
+-// RUN: %clang_cc1 %s -DTEST_XSAVES -O0 -triple=x86_64-unknown-unknown -target-feature +xsave -target-feature +xsaves -fno-signed-char -emit-llvm -o - -Wall -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Werror | FileCheck %s --check-prefix=XSAVES
++// RUN: %clang_cc1 %s -DTEST_XSAVES -O0 -triple=x86_64-unknown-unknown -target-feature +xsave -target-feature +xsaves -emit-llvm -o - -Wall -Werror | FileCheck %s --check-prefix=XSAVES
++// RUN: %clang_cc1 %s -DTEST_XSAVES -O0 -triple=x86_64-unknown-unknown -target-feature +xsave -target-feature +xsaves -fno-signed-char -emit-llvm -o - -Wall -Werror | FileCheck %s --check-prefix=XSAVES
+ 
+ // Don't include mm_malloc.h, it's system specific.
+ #define __MM_MALLOC_H
+diff --git a/clang/test/CodeGen/builtins-arm.c b/clang/test/CodeGen/builtins-arm.c
+index 4ebca84627e5..8c251754e46c 100644
+--- a/clang/test/CodeGen/builtins-arm.c
++++ b/clang/test/CodeGen/builtins-arm.c
+@@ -1,4 +1,4 @@
+-// RUN: %clang_cc1 -Wall -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Werror -triple thumbv7-eabi -target-cpu cortex-a8 -disable-O0-optnone -emit-llvm -o - %s | opt -S -mem2reg | FileCheck %s
++// RUN: %clang_cc1 -Wall -Werror -triple thumbv7-eabi -target-cpu cortex-a8 -disable-O0-optnone -emit-llvm -o - %s | opt -S -mem2reg | FileCheck %s
+ 
+ #include <stdint.h>
+ 
+diff --git a/clang/test/CodeGen/builtins-riscv.c b/clang/test/CodeGen/builtins-riscv.c
+index 1b9a52e9b837..5297c42ae4e9 100644
+--- a/clang/test/CodeGen/builtins-riscv.c
++++ b/clang/test/CodeGen/builtins-riscv.c
+@@ -1,5 +1,5 @@
+-// RUN: %clang_cc1 -Wall -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Werror -triple riscv32 -disable-O0-optnone -emit-llvm -o - %s | opt -S -mem2reg | FileCheck %s
+-// RUN: %clang_cc1 -Wall -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Werror -triple riscv64 -disable-O0-optnone -emit-llvm -o - %s | opt -S -mem2reg | FileCheck %s
++// RUN: %clang_cc1 -Wall -Werror -triple riscv32 -disable-O0-optnone -emit-llvm -o - %s | opt -S -mem2reg | FileCheck %s
++// RUN: %clang_cc1 -Wall -Werror -triple riscv64 -disable-O0-optnone -emit-llvm -o - %s | opt -S -mem2reg | FileCheck %s
+ 
+ void test_eh_return_data_regno() {
+   // CHECK: store volatile i32 10
+diff --git a/clang/test/FixIt/fixit.cpp b/clang/test/FixIt/fixit.cpp
+index 16e8b99210a5..6e3a41303af9 100644
+--- a/clang/test/FixIt/fixit.cpp
++++ b/clang/test/FixIt/fixit.cpp
+@@ -1,12 +1,12 @@
+-// RUN: %clang_cc1 -pedantic -Wall -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wno-comment -verify -fcxx-exceptions -x c++ -std=c++98 %s
++// RUN: %clang_cc1 -pedantic -Wall -Wno-comment -verify -fcxx-exceptions -x c++ -std=c++98 %s
+ // RUN: cp %s %t-98
+-// RUN: not %clang_cc1 -pedantic -Wall -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wno-comment -fcxx-exceptions -fixit -x c++ -std=c++98 %t-98
+-// RUN: %clang_cc1 -fsyntax-only -pedantic -Wall -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Werror -Wno-comment -fcxx-exceptions -x c++ -std=c++98 %t-98
++// RUN: not %clang_cc1 -pedantic -Wall -Wno-comment -fcxx-exceptions -fixit -x c++ -std=c++98 %t-98
++// RUN: %clang_cc1 -fsyntax-only -pedantic -Wall -Werror -Wno-comment -fcxx-exceptions -x c++ -std=c++98 %t-98
+ // RUN: not %clang_cc1 -fsyntax-only -pedantic -fdiagnostics-parseable-fixits -x c++ -std=c++11 %s 2>&1 | FileCheck %s
+-// RUN: %clang_cc1 -pedantic -Wall -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wno-comment -verify -fcxx-exceptions -x c++ -std=c++11 %s
++// RUN: %clang_cc1 -pedantic -Wall -Wno-comment -verify -fcxx-exceptions -x c++ -std=c++11 %s
+ // RUN: cp %s %t-11
+-// RUN: not %clang_cc1 -pedantic -Wall -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wno-comment -fcxx-exceptions -fixit -x c++ -std=c++11 %t-11
+-// RUN: %clang_cc1 -fsyntax-only -pedantic -Wall -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Werror -Wno-comment -fcxx-exceptions -x c++ -std=c++11 %t-11
++// RUN: not %clang_cc1 -pedantic -Wall -Wno-comment -fcxx-exceptions -fixit -x c++ -std=c++11 %t-11
++// RUN: %clang_cc1 -fsyntax-only -pedantic -Wall -Werror -Wno-comment -fcxx-exceptions -x c++ -std=c++11 %t-11
+ 
+ /* This is a test of the various code modification hints that are
+    provided as part of warning or extension diagnostics. All of the
+diff --git a/clang/test/Misc/warning-wall.c b/clang/test/Misc/warning-wall.c
+index c7606f1f3cc4..ac2b124e3312 100644
+--- a/clang/test/Misc/warning-wall.c
++++ b/clang/test/Misc/warning-wall.c
+@@ -60,7 +60,6 @@ CHECK-NEXT:      -Wuninitialized-const-reference
+ CHECK-NEXT:    -Wunknown-pragmas
+ CHECK-NEXT:    -Wunused
+ CHECK-NEXT:      -Wunused-argument
+-CHECK-NEXT:      -Wunused-but-set-variable
+ CHECK-NEXT:      -Wunused-function
+ CHECK-NEXT:        -Wunneeded-internal-declaration
+ CHECK-NEXT:      -Wunused-label
+diff --git a/clang/test/Sema/shift.c b/clang/test/Sema/shift.c
+index a8b79d9195a9..63c953824925 100644
+--- a/clang/test/Sema/shift.c
++++ b/clang/test/Sema/shift.c
+@@ -1,4 +1,4 @@
+-// RUN: %clang_cc1 -Wall -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wshift-sign-overflow -ffreestanding -fsyntax-only -verify %s
++// RUN: %clang_cc1 -Wall -Wshift-sign-overflow -ffreestanding -fsyntax-only -verify %s
+ 
+ #include <limits.h>
+ 
+diff --git a/clang/test/Sema/vector-gcc-compat.c b/clang/test/Sema/vector-gcc-compat.c
+index 1b322494a3b9..73b56347f1b1 100644
+--- a/clang/test/Sema/vector-gcc-compat.c
++++ b/clang/test/Sema/vector-gcc-compat.c
+@@ -1,4 +1,4 @@
+-// RUN: %clang_cc1 %s -verify -fsyntax-only -Weverything -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -triple x86_64-apple-darwin10
++// RUN: %clang_cc1 %s -verify -fsyntax-only -Weverything -triple x86_64-apple-darwin10
+ 
+ // Test the compatibility of clang's vector extensions with gcc's vector
+ // extensions for C. Notably &&, ||, ?: and ! are not available.
+diff --git a/clang/test/Sema/warn-unused-but-set-parameters.c b/clang/test/Sema/warn-unused-but-set-parameters.c
+deleted file mode 100644
+index 4da4822090f3..000000000000
+--- a/clang/test/Sema/warn-unused-but-set-parameters.c
++++ /dev/null
+@@ -1,26 +0,0 @@
+-// RUN: %clang_cc1 -fblocks -fsyntax-only -Wunused-but-set-parameter -verify %s
+-
+-int f0(int x,
+-       int y, // expected-warning{{parameter 'y' set but not used}}
+-       int z __attribute__((unused))) {
+-  y = 0;
+-  return x;
+-}
+-
+-void f1(void) {
+-  (void)^(int x,
+-          int y, // expected-warning{{parameter 'y' set but not used}}
+-          int z __attribute__((unused))) {
+-    y = 0;
+-    return x;
+-  };
+-}
+-
+-struct S {
+-  int i;
+-};
+-
+-void f3(struct S s) { // expected-warning{{parameter 's' set but not used}}
+-  struct S t;
+-  s = t;
+-}
+diff --git a/clang/test/Sema/warn-unused-but-set-variables.c b/clang/test/Sema/warn-unused-but-set-variables.c
+deleted file mode 100644
+index 5174631517ba..000000000000
+--- a/clang/test/Sema/warn-unused-but-set-variables.c
++++ /dev/null
+@@ -1,32 +0,0 @@
+-// RUN: %clang_cc1 -fblocks -fsyntax-only -Wunused-but-set-variable -verify %s
+-
+-struct S {
+-  int i;
+-};
+-
+-int f0() {
+-  int y; // expected-warning{{variable 'y' set but not used}}
+-  y = 0;
+-
+-  int z __attribute__((unused));
+-  z = 0;
+-
+-  struct S s; // expected-warning{{variable 's' set but not used}}
+-  struct S t;
+-  s = t;
+-
+-  int x;
+-  x = 0;
+-  return x;
+-}
+-
+-void f1(void) {
+-  (void)^() {
+-    int y; // expected-warning{{variable 'y' set but not used}}
+-    y = 0;
+-
+-    int x;
+-    x = 0;
+-    return x;
+-  };
+-}
+diff --git a/clang/test/SemaCXX/goto.cpp b/clang/test/SemaCXX/goto.cpp
+index 1da29a125592..beaf88cf60f1 100644
+--- a/clang/test/SemaCXX/goto.cpp
++++ b/clang/test/SemaCXX/goto.cpp
+@@ -1,4 +1,4 @@
+-// RUN: %clang_cc1 -fsyntax-only -verify -Wall -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -fblocks %s
++// RUN: %clang_cc1 -fsyntax-only -verify -Wall -fblocks %s
+ 
+ // PR9463
+ double *end;
+diff --git a/clang/test/SemaCXX/shift.cpp b/clang/test/SemaCXX/shift.cpp
+index c73a53257fe5..f99b53e358ac 100644
+--- a/clang/test/SemaCXX/shift.cpp
++++ b/clang/test/SemaCXX/shift.cpp
+@@ -1,5 +1,5 @@
+-// RUN: %clang_cc1 -Wall -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wshift-sign-overflow -ffreestanding -fsyntax-only -verify=expected,cxx17 -std=c++17 %s
+-// RUN: %clang_cc1 -Wall -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wshift-sign-overflow -ffreestanding -fsyntax-only -verify=expected,cxx2a -std=c++2a %s
++// RUN: %clang_cc1 -Wall -Wshift-sign-overflow -ffreestanding -fsyntax-only -verify=expected,cxx17 -std=c++17 %s
++// RUN: %clang_cc1 -Wall -Wshift-sign-overflow -ffreestanding -fsyntax-only -verify=expected,cxx2a -std=c++2a %s
+ 
+ #include <limits.h>
+ 
+diff --git a/clang/test/SemaCXX/sizeless-1.cpp b/clang/test/SemaCXX/sizeless-1.cpp
+index aa6daa5e9705..96a3ce7542a7 100644
+--- a/clang/test/SemaCXX/sizeless-1.cpp
++++ b/clang/test/SemaCXX/sizeless-1.cpp
+@@ -1,7 +1,7 @@
+-// RUN: %clang_cc1 -fcxx-exceptions -fsyntax-only -verify -W -Wall -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wrange-loop-analysis -triple arm64-linux-gnu -target-feature +sve -std=c++98 %s
+-// RUN: %clang_cc1 -fcxx-exceptions -fsyntax-only -verify -W -Wall -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wrange-loop-analysis -triple arm64-linux-gnu -target-feature +sve -std=c++11 %s
+-// RUN: %clang_cc1 -fcxx-exceptions -fsyntax-only -verify -W -Wall -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wrange-loop-analysis -triple arm64-linux-gnu -target-feature +sve -std=c++17 %s
+-// RUN: %clang_cc1 -fcxx-exceptions -fsyntax-only -verify -W -Wall -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wrange-loop-analysis -triple arm64-linux-gnu -target-feature +sve -std=gnu++17 %s
++// RUN: %clang_cc1 -fcxx-exceptions -fsyntax-only -verify -W -Wall -Wrange-loop-analysis -triple arm64-linux-gnu -target-feature +sve -std=c++98 %s
++// RUN: %clang_cc1 -fcxx-exceptions -fsyntax-only -verify -W -Wall -Wrange-loop-analysis -triple arm64-linux-gnu -target-feature +sve -std=c++11 %s
++// RUN: %clang_cc1 -fcxx-exceptions -fsyntax-only -verify -W -Wall -Wrange-loop-analysis -triple arm64-linux-gnu -target-feature +sve -std=c++17 %s
++// RUN: %clang_cc1 -fcxx-exceptions -fsyntax-only -verify -W -Wall -Wrange-loop-analysis -triple arm64-linux-gnu -target-feature +sve -std=gnu++17 %s
+ 
+ namespace std {
+ struct type_info;
+diff --git a/clang/test/SemaCXX/warn-unused-but-set-parameters-cpp.cpp b/clang/test/SemaCXX/warn-unused-but-set-parameters-cpp.cpp
+deleted file mode 100644
+index 355ddd3ac7ad..000000000000
+--- a/clang/test/SemaCXX/warn-unused-but-set-parameters-cpp.cpp
++++ /dev/null
+@@ -1,33 +0,0 @@
+-// RUN: %clang_cc1 -fblocks -fsyntax-only -Wunused-but-set-parameter -verify %s
+-
+-int f0(int x,
+-       int y, // expected-warning{{parameter 'y' set but not used}}
+-       int z __attribute__((unused))) {
+-  y = 0;
+-  return x;
+-}
+-
+-void f1(void) {
+-  (void)^(int x,
+-          int y, // expected-warning{{parameter 'y' set but not used}}
+-          int z __attribute__((unused))) {
+-    y = 0;
+-    return x;
+-  };
+-}
+-
+-struct S {
+-  int i;
+-};
+-
+-// In C++, don't warn for a struct (following gcc).
+-void f3(struct S s) {
+-  struct S t;
+-  s = t;
+-}
+-
+-// Make sure this doesn't warn.
+-struct A {
+-  int i;
+-  A(int j) : i(j) {}
+-};
+diff --git a/clang/test/SemaCXX/warn-unused-but-set-variables-cpp.cpp b/clang/test/SemaCXX/warn-unused-but-set-variables-cpp.cpp
+deleted file mode 100644
+index bc7eab65b329..000000000000
+--- a/clang/test/SemaCXX/warn-unused-but-set-variables-cpp.cpp
++++ /dev/null
+@@ -1,41 +0,0 @@
+-// RUN: %clang_cc1 -fblocks -fsyntax-only -Wunused-but-set-variable -verify %s
+-
+-struct S {
+-  int i;
+-};
+-
+-int f0() {
+-  int y; // expected-warning{{variable 'y' set but not used}}
+-  y = 0;
+-
+-  int z __attribute__((unused));
+-  z = 0;
+-
+-  // In C++, don't warn for structs. (following gcc's behavior)
+-  struct S s;
+-  struct S t;
+-  s = t;
+-
+-  int x;
+-  x = 0;
+-  return x + 5;
+-}
+-
+-void f1(void) {
+-  (void)^() {
+-    int y; // expected-warning{{variable 'y' set but not used}}
+-    y = 0;
+-
+-    int x;
+-    x = 0;
+-    return x;
+-  };
+-}
+-
+-void f2() {
+-  // Don't warn for either of these cases.
+-  constexpr int x = 2;
+-  const int y = 1;
+-  char a[x];
+-  char b[y];
+-}
+diff --git a/clang/test/SemaObjC/foreach.m b/clang/test/SemaObjC/foreach.m
+index 95f4cde0357b..477c4fc38363 100644
+--- a/clang/test/SemaObjC/foreach.m
++++ b/clang/test/SemaObjC/foreach.m
+@@ -1,4 +1,4 @@
+-/* RUN: %clang_cc1 -Wall -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -fsyntax-only -verify -std=c89 -pedantic %s
++/* RUN: %clang_cc1 -Wall -fsyntax-only -verify -std=c89 -pedantic %s
+  */
+ 
+ @class NSArray;
