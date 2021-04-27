@@ -243,11 +243,8 @@ Result<UsageInfo, nsresult> CacheQuotaClient::InitOrigin(
       ([dir, cachesSQLiteFile,
         &aOriginMetadata]() -> Result<int64_t, nsresult> {
         if (!DirectoryPaddingFileExists(*dir, DirPaddingFile::TMP_FILE)) {
-          const auto& maybePaddingSize = [dir]() -> Maybe<int64_t> {
-            CACHE_TRY_RETURN(DirectoryPaddingGet(*dir).map(Some<int64_t>),
-                             Nothing{});
-          }();
-
+          QM_WARNONLY_TRY_UNWRAP(const auto maybePaddingSize,
+                                 DirectoryPaddingGet(*dir));
           if (maybePaddingSize) {
             return maybePaddingSize.ref();
           }
