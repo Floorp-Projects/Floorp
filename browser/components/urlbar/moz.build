@@ -5,10 +5,6 @@
 with Files("**"):
     BUG_COMPONENT = ("Firefox", "Address Bar")
 
-DIRS += [
-    "unitconverters",
-]
-
 JAR_MANIFESTS += ["jar.mn"]
 
 EXTRA_JS_MODULES += [
@@ -33,7 +29,6 @@ EXTRA_JS_MODULES += [
     "UrlbarProviderTokenAliasEngines.jsm",
     "UrlbarProviderTopSites.jsm",
     "UrlbarProviderUnifiedComplete.jsm",
-    "UrlbarProviderUnitConversion.jsm",
     "UrlbarQuickSuggest.jsm",
     "UrlbarResult.jsm",
     "UrlbarSearchOneOffs.jsm",

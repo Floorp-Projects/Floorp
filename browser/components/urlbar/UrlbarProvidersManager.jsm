@@ -54,8 +54,6 @@ var localProviderModules = {
   UrlbarProviderTokenAliasEngines:
     "resource:///modules/UrlbarProviderTokenAliasEngines.jsm",
   UrlbarProviderTopSites: "resource:///modules/UrlbarProviderTopSites.jsm",
-  UrlbarProviderUnitConversion:
-    "resource:///modules/UrlbarProviderUnitConversion.jsm",
 };
 
 // List of available local muxers, each is implemented in its own jsm module.
