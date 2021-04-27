@@ -535,6 +535,7 @@ BrowsingContext::BrowsingContext(WindowContext* aParentWindow,
       mUseRemoteTabs(false),
       mUseRemoteSubframes(false),
       mCreatedDynamically(false),
+      mIsInBFCache(false),
       mChildOffset(0) {
   MOZ_RELEASE_ASSERT(!mParentWindow || mParentWindow->Group() == mGroup);
   MOZ_RELEASE_ASSERT(mBrowsingContextId != 0);
@@ -2745,6 +2746,11 @@ void BrowsingContext::DidSet(FieldIndex<IDX_IsInBFCache>) {
   MOZ_DIAGNOSTIC_ASSERT(IsTop());
 
   const bool isInBFCache = GetIsInBFCache();
+  if (!isInBFCache) {
+    PreOrderWalk(
+        [&](BrowsingContext* aContext) { aContext->mIsInBFCache = false; });
+  }
+
   PreOrderWalk([&](BrowsingContext* aContext) {
     nsCOMPtr<nsIDocShell> shell = aContext->GetDocShell();
     if (shell) {
@@ -2752,6 +2758,11 @@ void BrowsingContext::DidSet(FieldIndex<IDX_IsInBFCache>) {
           ->FirePageHideShowNonRecursive(!isInBFCache);
     }
   });
+
+  if (isInBFCache) {
+    PreOrderWalk(
+        [&](BrowsingContext* aContext) { aContext->mIsInBFCache = true; });
+  }
 }
 
 void BrowsingContext::SetCustomPlatform(const nsAString& aPlatform,

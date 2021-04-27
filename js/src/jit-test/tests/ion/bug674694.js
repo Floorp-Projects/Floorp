@@ -1,3 +1,4 @@
+// |jit-test| skip-if: getBuildConfiguration()['wasi']
 // Don't assert in the type analyzer.
 timeout(5);
 function f0(p0,p1,p2,p3) {

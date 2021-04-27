@@ -192,6 +192,12 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // If true, top sites may include sponsored ones.
   ["sponsoredTopSites", false],
 
+  // Whether unit conversion is enabled.
+  ["unitConversion.enabled", false],
+
+  // The index where we show unit conversion results.
+  ["unitConversion.suggestedIndex", 1],
+
   // Results will include a built-in set of popular domains when this is true.
   ["usepreloadedtopurls.enabled", false],
 

@@ -28,6 +28,7 @@
 #include "mozilla/HangDetails.h"
 #include "mozilla/PerfStats.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/ProcessPriorityManager.h"
 #include "mozilla/RemoteDecoderManagerChild.h"
 #include "mozilla/RemoteDecoderManagerParent.h"
 #include "mozilla/ScopeExit.h"
@@ -166,6 +167,9 @@ bool GPUParent::Init(base::ProcessId aParentPid, const char* aParentBuildID,
   if (NS_FAILED(NS_InitMinimalXPCOM())) {
     return false;
   }
+
+  // Ensure the observer service exists.
+  ProcessPriorityManager::Init();
 
   // Init crash reporter support.
   CrashReporterClient::InitSingleton(this);

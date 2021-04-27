@@ -1,4 +1,4 @@
-// |jit-test| exitstatus: 6
+// |jit-test| exitstatus: 6; skip-if: getBuildConfiguration()['wasi']
 
 g = newGlobal({newCompartment: true});
 g.parent = this;

@@ -259,6 +259,14 @@ class Raptor(
                 },
             ],
             [
+                ["--geckoProfileFeatures"],
+                {
+                    "dest": "gecko_profile_features",
+                    "type": "str",
+                    "help": argparse.SUPPRESS,
+                },
+            ],
+            [
                 ["--gecko-profile"],
                 {
                     "dest": "gecko_profile",
@@ -281,6 +289,22 @@ class Raptor(
                     "dest": "gecko_profile_entries",
                     "type": "int",
                     "help": "How many samples to take with the profiler.",
+                },
+            ],
+            [
+                ["--gecko-profile-threads"],
+                {
+                    "dest": "gecko_profile_threads",
+                    "type": "str",
+                    "help": "Comma-separated list of threads to sample.",
+                },
+            ],
+            [
+                ["--gecko-profile-features"],
+                {
+                    "dest": "gecko_profile_features",
+                    "type": "str",
+                    "help": "Features to enable in the profiler.",
                 },
             ],
             [
@@ -587,6 +611,8 @@ class Raptor(
         ) or "--geckoProfile" in self.config.get("raptor_cmd_line_args", [])
         self.gecko_profile_interval = self.config.get("gecko_profile_interval")
         self.gecko_profile_entries = self.config.get("gecko_profile_entries")
+        self.gecko_profile_threads = self.config.get("gecko_profile_threads")
+        self.gecko_profile_features = self.config.get("gecko_profile_features")
         self.test_packages_url = self.config.get("test_packages_url")
         self.test_url_params = self.config.get("test_url_params")
         self.host = self.config.get("host")
@@ -631,14 +657,22 @@ class Raptor(
         gecko_results = []
         # If gecko_profile is set, we add that to Raptor's options
         if self.gecko_profile:
-            gecko_results.append("--geckoProfile")
+            gecko_results.append("--gecko-profile")
             if self.gecko_profile_interval:
                 gecko_results.extend(
-                    ["--geckoProfileInterval", str(self.gecko_profile_interval)]
+                    ["--gecko-profile-interval", str(self.gecko_profile_interval)]
                 )
             if self.gecko_profile_entries:
                 gecko_results.extend(
-                    ["--geckoProfileEntries", str(self.gecko_profile_entries)]
+                    ["--gecko-profile-entries", str(self.gecko_profile_entries)]
+                )
+            if self.gecko_profile_features:
+                gecko_results.extend(
+                    ["--gecko-profile-features", self.gecko_profile_features]
+                )
+            if self.gecko_profile_threads:
+                gecko_results.extend(
+                    ["--gecko-profile-threads", self.gecko_profile_threads]
                 )
         return gecko_results
 

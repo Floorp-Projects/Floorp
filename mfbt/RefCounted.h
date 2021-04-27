@@ -9,7 +9,6 @@
 #ifndef mozilla_RefCounted_h
 #define mozilla_RefCounted_h
 
-#include <atomic>
 #include <utility>
 
 #include "mozilla/AlreadyAddRefed.h"
@@ -17,6 +16,12 @@
 #include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/RefCountType.h"
+
+#ifdef __wasi__
+#  include "mozilla/WasiAtomic.h"
+#else
+#  include <atomic>
+#endif  // __wasi__
 
 #if defined(MOZILLA_INTERNAL_API)
 #  include "nsXPCOM.h"
@@ -165,7 +170,7 @@ class RC<T, AtomicRefCount> {
       // acquire semantics to synchronize with the memory released by
       // the last release on other threads, that is, to ensure that
       // writes prior to that release are now visible on this thread.
-#ifdef MOZ_TSAN
+#if defined(MOZ_TSAN) || defined(__wasi__)
       // TSan doesn't understand std::atomic_thread_fence, so in order
       // to avoid a false positive for every time a refcounted object
       // is deleted, we replace the fence with an atomic operation.

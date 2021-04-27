@@ -1,4 +1,4 @@
-// |jit-test| exitstatus:6
+// |jit-test| exitstatus:6; skip-if: getBuildConfiguration()['wasi']
 timeout(1);
 // Adapted from randomly chosen test: js/src/jit-test/tests/asm.js/testBug975182.js
 (function() {

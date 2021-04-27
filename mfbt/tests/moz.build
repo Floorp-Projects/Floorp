@@ -59,10 +59,8 @@ CppUnitTests(
         "TestSHA1",
         "TestSmallPointerArray",
         "TestSplayTree",
-        "TestSPSCQueue",
         "TestTemplateLib",
         "TestTextUtils",
-        "TestThreadSafeWeakPtr",
         "TestTuple",
         "TestTypedEnum",
         "TestTypeTraits",
@@ -75,6 +73,15 @@ CppUnitTests(
     ]
 )
 
+# We don't support these tests yet because of the lack of thread support for wasi.
+if CONFIG["OS_ARCH"] != "WASI":
+    CppUnitTests(
+        [
+            "TestSPSCQueue",
+            "TestThreadSafeWeakPtr",
+        ]
+    )
+
 # Not to be unified with the rest, because this test
 # sets MOZ_PRETEND_NO_JSRUST, which changes the behavior
 # of the included headers.
@@ -84,7 +91,8 @@ CppUnitTests(
     ]
 )
 
-if not CONFIG["MOZ_ASAN"]:
+# Wasi doesn't support <signal> yet so skip this test.
+if not CONFIG["MOZ_ASAN"] and CONFIG["OS_ARCH"] != "WASI":
     CppUnitTests(
         [
             "TestPoisonArea",

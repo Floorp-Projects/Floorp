@@ -6824,15 +6824,14 @@ bool Document::RemoveFromBFCacheSync() {
 
   if (XRE_IsContentProcess()) {
     if (BrowsingContext* bc = GetBrowsingContext()) {
-      BrowsingContext* top = bc->Top();
-      if (top->GetIsInBFCache()) {
+      if (bc->IsInBFCache()) {
         ContentChild* cc = ContentChild::GetSingleton();
         // IPC is asynchronous but the caller is supposed to check the return
         // value. The reason for 'Sync' in the method name is that the old
         // implementation may run scripts. There is Async variant in
         // the old session history implementation for the cases where
         // synchronous operation isn't safe.
-        cc->SendRemoveFromBFCache(top);
+        cc->SendRemoveFromBFCache(bc->Top());
         removed = true;
       }
     }

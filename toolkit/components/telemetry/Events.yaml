@@ -668,6 +668,7 @@ normandy:
       addonId: The ID of the addon for the rollout when reason=conflict.
       conflictingSlug: The slug for the conflicting rollout.
       enrollmentId: The enrollment ID of the conflicting rollout.
+      prefBranch: For preference_study when reason=invalid-branch, the branch that was invalid.
     bug_numbers: [1443560]
     notification_emails: ["normandy-notifications@mozilla.com"]
     products:
@@ -804,6 +805,28 @@ normandy:
     extra_keys:
       branchSlug: The slug for the branch the user is enrolled in.
       featureId: The type of experiment variant the user was enrolled into.
+
+  expPrefChanged:
+    objects: ["preference_study"]
+    methods: ["expPrefChanged"]
+    release_channel_collection: opt-out
+    products:
+      - "firefox"
+    record_in_processes: [main]
+    description: >
+      This records that a preference that was set by an experiment has been
+      changed away from its experimental value. This can be triggered by a
+      user changing a preference at runtime, by the preference being changed
+      on disk when Firefox is not running, or by the preference already
+      having a user-set value when a user has enrolls in a default branch
+      experiment.
+    bug_numbers: [1698684]
+    notification_emails: ["mcooper@mozilla.com"]
+    expiry_version: never
+    extra_keys:
+      preferenceName: The preference that changed
+      reason: The way that the preference change was detected ("observer", "sideload", or "onEnroll")
+      enrollmentId: A unique ID for this enrollment that will be included in all related Telemetry.
 
 pwmgr:
   open_management:

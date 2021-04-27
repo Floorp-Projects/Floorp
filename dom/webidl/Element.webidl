@@ -130,14 +130,14 @@ interface Element : Node {
    * element.
    *
    */
-  [UseCounter]
+  [Deprecated=ElementSetCapture, Pref="dom.mouse_capture.enabled"]
   void setCapture(optional boolean retargetToElement = false);
 
   /**
    * If this element has captured the mouse, release the capture. If another
    * element has captured the mouse, this method has no effect.
    */
-  [UseCounter]
+  [Deprecated=ElementReleaseCapture, Pref="dom.mouse_capture.enabled"]
   void releaseCapture();
 
   /*
