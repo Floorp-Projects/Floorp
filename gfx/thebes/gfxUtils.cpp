@@ -1399,6 +1399,7 @@ class GetFeatureStatusWorkerRunnable final
 };
 
 #define GFX_SHADER_CHECK_BUILD_VERSION_PREF "gfx-shader-check.build-version"
+#define GFX_SHADER_CHECK_PTR_SIZE_PREF "gfx-shader-check.ptr-size"
 #define GFX_SHADER_CHECK_DEVICE_ID_PREF "gfx-shader-check.device-id"
 #define GFX_SHADER_CHECK_DRIVER_VERSION_PREF "gfx-shader-check.driver-version"
 
@@ -1412,6 +1413,7 @@ void gfxUtils::RemoveShaderCacheFromDiskIfNecessary() {
 
   // Get current values
   nsCString buildID(mozilla::PlatformBuildID());
+  int ptrSize = sizeof(void*);
   nsString deviceID, driverVersion;
   gfxInfo->GetAdapterDeviceID(deviceID);
   gfxInfo->GetAdapterDriverVersion(driverVersion);
@@ -1419,13 +1421,14 @@ void gfxUtils::RemoveShaderCacheFromDiskIfNecessary() {
   // Get pref stored values
   nsAutoCString buildIDChecked;
   Preferences::GetCString(GFX_SHADER_CHECK_BUILD_VERSION_PREF, buildIDChecked);
+  int ptrSizeChecked = Preferences::GetInt(GFX_SHADER_CHECK_PTR_SIZE_PREF, 0);
   nsAutoString deviceIDChecked, driverVersionChecked;
   Preferences::GetString(GFX_SHADER_CHECK_DEVICE_ID_PREF, deviceIDChecked);
   Preferences::GetString(GFX_SHADER_CHECK_DRIVER_VERSION_PREF,
                          driverVersionChecked);
 
-  if (buildID == buildIDChecked && deviceID == deviceIDChecked &&
-      driverVersion == driverVersionChecked) {
+  if (buildID == buildIDChecked && ptrSize == ptrSizeChecked &&
+      deviceID == deviceIDChecked && driverVersion == driverVersionChecked) {
     return;
   }
 
@@ -1439,6 +1442,7 @@ void gfxUtils::RemoveShaderCacheFromDiskIfNecessary() {
   }
 
   Preferences::SetCString(GFX_SHADER_CHECK_BUILD_VERSION_PREF, buildID);
+  Preferences::SetInt(GFX_SHADER_CHECK_PTR_SIZE_PREF, ptrSize);
   Preferences::SetString(GFX_SHADER_CHECK_DEVICE_ID_PREF, deviceID);
   Preferences::SetString(GFX_SHADER_CHECK_DRIVER_VERSION_PREF, driverVersion);
 }
