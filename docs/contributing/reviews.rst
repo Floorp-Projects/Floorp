@@ -8,6 +8,16 @@ Every patch must be reviewed by the module owner of the code, or one of their de
 To request a review, you will need to specify a review group (starts with #). If there is not, you should select one or more usernames either when you submit the patch, or afterward in the UI.
 If you have a mentor, the mentor can usually either also review or find a suitable reviewer on your behalf.
 
+For example, the syntax to request review from a group should be:
+
+.. code-block::
+
+     Bug xxxx - explain what you are doing and why r?#group-name
+
+     or
+
+     Bug xxxx - explain what you are doing and why r?developer-nickname
+
 Getting attention: If a reviewer doesn't respond within a week, or so of the review request:
 
   * Contact the reviewer directly (either via e-mail or on Matrix).
