@@ -5013,69 +5013,44 @@ nsIContent* HTMLEditor::GetNextHTMLSibling(nsINode* aNode,
 }
 
 nsIContent* HTMLEditor::GetPreviousEditableHTMLNodeInternal(
-    nsINode& aNode, bool aNoBlockCrossing) const {
+    nsINode& aNode) const {
   Element* editingHost = GetActiveEditingHost();
   if (NS_WARN_IF(!editingHost)) {
     return nullptr;
   }
-  return aNoBlockCrossing
-             ? HTMLEditUtils::GetPreviousContent(
-                   aNode,
-                   {WalkTreeOption::IgnoreNonEditableNode,
-                    WalkTreeOption::StopAtBlockBoundary},
-                   editingHost)
-             : HTMLEditUtils::GetPreviousContent(
-                   aNode, {WalkTreeOption::IgnoreNonEditableNode}, editingHost);
+  return HTMLEditUtils::GetPreviousContent(
+      aNode, {WalkTreeOption::IgnoreNonEditableNode}, editingHost);
 }
 
 template <typename PT, typename CT>
 nsIContent* HTMLEditor::GetPreviousEditableHTMLNodeInternal(
-    const EditorDOMPointBase<PT, CT>& aPoint, bool aNoBlockCrossing) const {
+    const EditorDOMPointBase<PT, CT>& aPoint) const {
   Element* editingHost = GetActiveEditingHost();
   if (NS_WARN_IF(!editingHost)) {
     return nullptr;
   }
-  return aNoBlockCrossing ? HTMLEditUtils::GetPreviousContent(
-                                aPoint,
-                                {WalkTreeOption::IgnoreNonEditableNode,
-                                 WalkTreeOption::StopAtBlockBoundary},
-                                editingHost)
-                          : HTMLEditUtils::GetPreviousContent(
-                                aPoint, {WalkTreeOption::IgnoreNonEditableNode},
-                                editingHost);
+  return HTMLEditUtils::GetPreviousContent(
+      aPoint, {WalkTreeOption::IgnoreNonEditableNode}, editingHost);
 }
 
-nsIContent* HTMLEditor::GetNextEditableHTMLNodeInternal(
-    nsINode& aNode, bool aNoBlockCrossing) const {
+nsIContent* HTMLEditor::GetNextEditableHTMLNodeInternal(nsINode& aNode) const {
   Element* editingHost = GetActiveEditingHost();
   if (NS_WARN_IF(!editingHost)) {
     return nullptr;
   }
-  return aNoBlockCrossing
-             ? HTMLEditUtils::GetNextContent(
-                   aNode,
-                   {WalkTreeOption::IgnoreNonEditableNode,
-                    WalkTreeOption::StopAtBlockBoundary},
-                   editingHost)
-             : HTMLEditUtils::GetNextContent(
-                   aNode, {WalkTreeOption::IgnoreNonEditableNode}, editingHost);
+  return HTMLEditUtils::GetNextContent(
+      aNode, {WalkTreeOption::IgnoreNonEditableNode}, editingHost);
 }
 
 template <typename PT, typename CT>
 nsIContent* HTMLEditor::GetNextEditableHTMLNodeInternal(
-    const EditorDOMPointBase<PT, CT>& aPoint, bool aNoBlockCrossing) const {
+    const EditorDOMPointBase<PT, CT>& aPoint) const {
   Element* editingHost = GetActiveEditingHost();
   if (NS_WARN_IF(!editingHost)) {
     return nullptr;
   }
-  return aNoBlockCrossing ? HTMLEditUtils::GetNextContent(
-                                aPoint,
-                                {WalkTreeOption::IgnoreNonEditableNode,
-                                 WalkTreeOption::StopAtBlockBoundary},
-                                editingHost)
-                          : HTMLEditUtils::GetNextContent(
-                                aPoint, {WalkTreeOption::IgnoreNonEditableNode},
-                                editingHost);
+  return HTMLEditUtils::GetNextContent(
+      aPoint, {WalkTreeOption::IgnoreNonEditableNode}, editingHost);
 }
 
 bool HTMLEditor::IsFirstEditableChild(nsINode* aNode) const {
