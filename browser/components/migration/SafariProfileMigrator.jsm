@@ -70,9 +70,6 @@ Bookmarks.prototype = {
       ) {
         PlacesUIUtils.maybeToggleBookmarkToolbarVisibilityAfterMigration();
       }
-      Services.telemetry
-        .getKeyedHistogramById("FX_MIGRATION_BOOKMARKS_ROOTS")
-        .add("safari", this._histogramBookmarkRoots);
     })().then(
       () => aCallback(true),
       e => {
