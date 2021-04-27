@@ -21,7 +21,10 @@
 
 <!-- Dock menu -->
 <popupset>
-  <menupopup id="menu_mac_dockmenu">
+  <!-- Hide this menupopup from the accessibility tree so that we don't fire
+       any unintended accessibility notifications for it. Accessibility for the
+       Dock menu is handled natively by macOS. -->
+  <menupopup id="menu_mac_dockmenu" aria-hidden="true">
     <!-- The command cannot be cmd_newNavigator because we need to activate
          the application. -->
     <menuitem label="&newNavigatorCmd.label;" oncommand="OpenBrowserWindowFromDockMenu();"
