@@ -5832,7 +5832,7 @@ var SessionStoreInternal = {
    * This mirrors ContentRestore.restoreHistory() for parent process session
    * history restores, but we're not actually restoring history here.
    */
-  async _restoreTabState(browser, data) {
+  _restoreHistory(browser, data) {
     if (!Services.appinfo.sessionHistoryInParent) {
       throw new Error("This function should only be used with SHIP");
     }
@@ -5840,33 +5840,36 @@ var SessionStoreInternal = {
     // In case about:blank isn't done yet.
     browser.stop();
 
-    let win = browser.ownerGlobal;
-    let tab = win?.gBrowser.getTabForBrowser(browser);
+    let uri = data.tabData?.entries[data.tabData.index - 1]?.url;
+    let disallow = data.tabData?.disallow;
+    let storage = data.tabData?.storage || {};
+    delete data.tabData?.storage;
 
-    browser.messageManager.sendAsyncMessage(
-      "SessionStore:restoreDocShellState",
-      {
-        epoch: data.epoch,
-        tabData: {
-          uri: data.tabData?.entries[data.tabData.index - 1]?.url ?? null,
-          disallow: data.tabData?.disallow,
-          storage: data.tabData?.storage,
-        },
-      }
+    // We'll likely make multiple calls to _restoreHistory() with the same
+    // browser element during a single restore, so this promise may be replaced
+    // in a subsequent call.
+    data.historyPromise = SessionStoreUtils.restoreDocShellState(
+      browser.browsingContext,
+      uri,
+      disallow,
+      storage
     );
-    // For the non-remote case, the above will restore, but asynchronously.
-    // However, we need to restore DocShellState synchronously in the
-    // parent to avoid a test failure.
-    if (tab.linkedBrowser.docShell) {
-      SessionStoreUtils.restoreDocShellCapabilities(
-        tab.linkedBrowser.docShell,
-        data.tabData.disallow
-      );
-    }
 
-    if (data.tabData?.storage) {
-      delete data.tabData.storage;
-    }
+    data.historyPromise.finally(() => {
+      // We only want to call _restoreHistoryComplete() here if we *haven't*
+      // already begun restoring tab content. If we have started restoring tab
+      // content, then _restoreTabContent() will handle calling the completion
+      // function.
+      //
+      // Calling _restoreHistoryComplete() here dispatches the "SSTabRestoring"
+      // event, which tells tabbrowser to call browser.reload(), which will
+      // trigger the onHistoryReload callback below, where we'll proceed with
+      // the tab content restore.
+      if (TAB_STATE_FOR_BROWSER.get(browser) === TAB_STATE_NEEDS_RESTORE) {
+        delete data.historyPromise;
+        this._restoreHistoryComplete(browser, data);
+      }
+    });
 
     this._shistoryToRestore.set(browser.permanentKey, data);
 
@@ -5910,42 +5913,65 @@ var SessionStoreInternal = {
 
     this._restoreTabContentStarted(browser, restoreData);
 
-    let { tabData } = restoreData;
-    let uri = "about:blank";
-    let loadFlags = Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_HISTORY;
+    let tabData = restoreData.tabData || {};
+    let promises = [restoreData.historyPromise];
 
-    if (tabData?.userTypedValue && tabData?.userTypedClear) {
+    let uri = null;
+    let loadFlags = null;
+
+    if (tabData.userTypedValue && tabData.userTypedClear) {
       uri = tabData.userTypedValue;
       loadFlags = Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP;
-    } else if (tabData?.entries.length) {
-      let promise = SessionStoreUtils.initializeRestore(
-        browser.browsingContext,
-        this.buildRestoreData(tabData.formdata, tabData.scroll)
+    } else if (tabData.entries.length) {
+      promises.push(
+        SessionStoreUtils.initializeRestore(
+          browser.browsingContext,
+          this.buildRestoreData(tabData.formdata, tabData.scroll)
+        )
       );
-      promise.then(() => {
-        if (TAB_STATE_FOR_BROWSER.get(browser) === TAB_STATE_RESTORING) {
-          this._restoreTabContentComplete(browser, restoreData);
-        }
-      });
-      return;
+    } else {
+      uri = "about:blank";
+      loadFlags = Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_HISTORY;
     }
 
-    this.addProgressListenerForRestore(browser, {
-      onStopRequest: (request, listener) => {
-        let requestURI = request.QueryInterface(Ci.nsIChannel)?.originalURI;
-        // FIXME: We sometimes see spurious STATE_STOP events for about:blank
-        // URIs, so we have to manually drop those here (unless we're actually
-        // expecting an about:blank load).
-        if (requestURI?.spec !== "about:blank" || uri === "about:blank") {
-          listener.uninstall();
-          this._restoreTabContentComplete(browser, restoreData);
-        }
-      },
-    });
+    if (uri && loadFlags) {
+      let deferred = PromiseUtils.defer();
+      promises.push(deferred.promise);
 
-    browser.browsingContext.loadURI(uri, {
-      loadFlags,
-      triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+      this.addProgressListenerForRestore(browser, {
+        onStopRequest: (request, listener) => {
+          let requestURI = request.QueryInterface(Ci.nsIChannel)?.originalURI;
+          // FIXME: We sometimes see spurious STATE_STOP events for about:blank
+          // URIs, so we have to manually drop those here (unless we're actually
+          // expecting an about:blank load).
+          if (requestURI?.spec !== "about:blank" || uri === "about:blank") {
+            listener.uninstall();
+            deferred.resolve();
+          }
+        },
+      });
+
+      browser.browsingContext.loadURI(uri, {
+        loadFlags,
+        triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+      });
+    }
+
+    Promise.allSettled(promises).then(() => {
+      // We may have stopped or restarted the restore for this browser prior to
+      // the resolution of these promises, so this ensures that we're only
+      // calling the completion functions for browsers that are actively being
+      // restored.
+      if (TAB_STATE_FOR_BROWSER.get(browser) === TAB_STATE_RESTORING) {
+        // We would have already called _restoreHistoryComplete() if the browser
+        // element was reloaded while a restore was in progress. This avoids
+        // calling it twice. See the comment in _restoreHistory() for more
+        // context.
+        if (restoreData.historyPromise) {
+          this._restoreHistoryComplete(browser, restoreData);
+        }
+        this._restoreTabContentComplete(browser, restoreData);
+      }
     });
   },
 
@@ -6139,7 +6165,7 @@ var SessionStoreInternal = {
     }
 
     if (Services.appinfo.sessionHistoryInParent) {
-      this._restoreTabState(browser, options);
+      this._restoreHistory(browser, options);
     } else {
       browser.messageManager.sendAsyncMessage(
         "SessionStore:restoreHistory",
