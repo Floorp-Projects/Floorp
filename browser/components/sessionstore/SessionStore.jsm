@@ -454,6 +454,10 @@ var SessionStore = {
     }
   },
 
+  getCurrentEpoch(browser) {
+    return SessionStoreInternal.getCurrentEpoch(browser);
+  },
+
   /**
    * Determines whether the passed version number is compatible with
    * the current version number of the SessionStore.
