@@ -3896,8 +3896,9 @@ HTMLEditor::AutoDeleteRangesHandler::ComputeRangesToDeleteRangesWithTransaction(
     if (howToHandleCollapsedRange ==
             EditorBase::HowToHandleCollapsedRange::ExtendBackward &&
         caretPoint.IsStartOfContainer()) {
-      nsIContent* previousEditableContent =
-          aHTMLEditor.GetPreviousEditableNode(*caretPoint.GetContainer());
+      nsIContent* previousEditableContent = aHTMLEditor.GetPreviousContent(
+          *caretPoint.GetContainer(),
+          {EditorBase::WalkTreeOption::IgnoreNonEditableNode});
       if (!previousEditableContent) {
         continue;
       }
@@ -3918,8 +3919,9 @@ HTMLEditor::AutoDeleteRangesHandler::ComputeRangesToDeleteRangesWithTransaction(
     if (howToHandleCollapsedRange ==
             EditorBase::HowToHandleCollapsedRange::ExtendForward &&
         caretPoint.IsEndOfContainer()) {
-      nsIContent* nextEditableContent =
-          aHTMLEditor.GetNextEditableNode(*caretPoint.GetContainer());
+      nsIContent* nextEditableContent = aHTMLEditor.GetNextContent(
+          *caretPoint.GetContainer(),
+          {EditorBase::WalkTreeOption::IgnoreNonEditableNode});
       if (!nextEditableContent) {
         continue;
       }
@@ -3954,8 +3956,12 @@ HTMLEditor::AutoDeleteRangesHandler::ComputeRangesToDeleteRangesWithTransaction(
     nsIContent* editableContent =
         howToHandleCollapsedRange ==
                 EditorBase::HowToHandleCollapsedRange::ExtendBackward
-            ? aHTMLEditor.GetPreviousEditableNode(caretPoint)
-            : aHTMLEditor.GetNextEditableNode(caretPoint);
+            ? aHTMLEditor.GetPreviousContent(
+                  caretPoint,
+                  {EditorBase::WalkTreeOption::IgnoreNonEditableNode})
+            : aHTMLEditor.GetNextContent(
+                  caretPoint,
+                  {EditorBase::WalkTreeOption::IgnoreNonEditableNode});
     if (!editableContent) {
       continue;
     }
@@ -3964,8 +3970,10 @@ HTMLEditor::AutoDeleteRangesHandler::ComputeRangesToDeleteRangesWithTransaction(
       editableContent =
           howToHandleCollapsedRange ==
                   EditorBase::HowToHandleCollapsedRange::ExtendBackward
-              ? aHTMLEditor.GetPreviousEditableNode(*editableContent)
-              : aHTMLEditor.GetNextEditableNode(*editableContent);
+              ? aHTMLEditor.GetPreviousContent(
+                    *editableContent, {WalkTreeOption::IgnoreNonEditableNode})
+              : aHTMLEditor.GetNextContent(
+                    *editableContent, {WalkTreeOption::IgnoreNonEditableNode});
     }
     if (!editableContent) {
       continue;
@@ -5185,7 +5193,8 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::AutoDeleteRangesHandler::
       // if there is.  Otherwise, to after the empty block.
       EditorRawDOMPoint atEmptyBlock(mEmptyInclusiveAncestorBlockElement);
       if (nsIContent* previousContentOfEmptyBlock =
-              aHTMLEditor.GetPreviousEditableNode(atEmptyBlock)) {
+              aHTMLEditor.GetPreviousContent(
+                  atEmptyBlock, {WalkTreeOption::IgnoreNonEditableNode})) {
         EditorDOMPoint pt = aHTMLEditor.GetGoodCaretPointFor(
             *previousContentOfEmptyBlock, aDirectionAndAmount);
         if (!pt.IsSet()) {

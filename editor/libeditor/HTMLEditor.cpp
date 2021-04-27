@@ -5034,7 +5034,8 @@ nsIContent* HTMLEditor::GetPreviousEditableHTMLNodeInternal(
   return aNoBlockCrossing
              ? GetPreviousContent(aNode, {WalkTreeOption::IgnoreNonEditableNode,
                                           WalkTreeOption::StopAtBlockBoundary})
-             : GetPreviousEditableNode(aNode);
+             : GetPreviousContent(aNode,
+                                  {WalkTreeOption::IgnoreNonEditableNode});
 }
 
 template <typename PT, typename CT>
@@ -5043,10 +5044,12 @@ nsIContent* HTMLEditor::GetPreviousEditableHTMLNodeInternal(
   if (NS_WARN_IF(!GetActiveEditingHost())) {
     return nullptr;
   }
-  return aNoBlockCrossing ? GetPreviousContent(
-                                aPoint, {WalkTreeOption::IgnoreNonEditableNode,
-                                         WalkTreeOption::StopAtBlockBoundary})
-                          : GetPreviousEditableNode(aPoint);
+  return aNoBlockCrossing
+             ? GetPreviousContent(aPoint,
+                                  {WalkTreeOption::IgnoreNonEditableNode,
+                                   WalkTreeOption::StopAtBlockBoundary})
+             : GetPreviousContent(aPoint,
+                                  {WalkTreeOption::IgnoreNonEditableNode});
 }
 
 nsIContent* HTMLEditor::GetNextHTMLElementOrTextInternal(
@@ -5082,7 +5085,7 @@ nsIContent* HTMLEditor::GetNextEditableHTMLNodeInternal(
   return aNoBlockCrossing
              ? GetNextContent(aNode, {WalkTreeOption::IgnoreNonEditableNode,
                                       WalkTreeOption::StopAtBlockBoundary})
-             : GetNextEditableNode(aNode);
+             : GetNextContent(aNode, {WalkTreeOption::IgnoreNonEditableNode});
 }
 
 template <typename PT, typename CT>
@@ -5094,7 +5097,7 @@ nsIContent* HTMLEditor::GetNextEditableHTMLNodeInternal(
   return aNoBlockCrossing
              ? GetNextContent(aPoint, {WalkTreeOption::IgnoreNonEditableNode,
                                        WalkTreeOption::StopAtBlockBoundary})
-             : GetNextEditableNode(aPoint);
+             : GetNextContent(aPoint, {WalkTreeOption::IgnoreNonEditableNode});
 }
 
 bool HTMLEditor::IsFirstEditableChild(nsINode* aNode) const {
