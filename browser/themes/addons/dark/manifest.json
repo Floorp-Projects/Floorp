@@ -33,7 +33,7 @@
       "toolbar_field_border": "transparent",
       "toolbar_field_text": "rgb(251,251,254)",
       "toolbar_field_focus": "rgb(66,65,77)",
-      "toolbar_text": "#BFBFC9",
+      "toolbar_text": "rgb(251, 251, 254)",
       "ntp_background": "rgb(28, 27, 34)",
       "ntp_text": "rgb(251, 251, 254)",
       "sidebar": "#38383D",

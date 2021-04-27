@@ -76,16 +76,19 @@ add_task(async function test_support_toolbar_properties_on_findbar() {
     "Findbar background color should be the same as toolbar background color."
   );
 
-  info("Checking findbar and button text color is set as toolbar text color");
+  info("Checking findbar and checkbox text color use toolbar text color");
+  const rgbColor = hexToCSS(TOOLBAR_TEXT_COLOR);
   Assert.equal(
     window.getComputedStyle(gFindBar).color,
-    hexToCSS(TOOLBAR_TEXT_COLOR),
+    rgbColor,
     "Findbar text color should be the same as toolbar text color."
   );
   Assert.equal(
     window.getComputedStyle(findbar_button).color,
-    hexToCSS(TOOLBAR_TEXT_COLOR),
-    "Findbar button text color should be the same as toolbar text color."
+    gProton ? rgbColor.replace(/(\([^)]+)/, "a$1, 0.7") : rgbColor,
+    gProton
+      ? "Findbar checkbox text color should be faded toolbar text color."
+      : "Findbar checkbox text color should be same as toolbar text color."
   );
 
   // Open a new window to check frame_inactive
