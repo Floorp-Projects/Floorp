@@ -354,6 +354,13 @@ pref("browser.urlbar.suggest.calculator",           false);
 // Whether the QuickSuggest experiment is enabled.
 pref("browser.urlbar.quicksuggest.enabled", false);
 
+// Whether unit conversion is enabled.
+#ifdef NIGHTLY_BUILD
+pref("browser.urlbar.unitConversion.enabled", true);
+#else
+pref("browser.urlbar.unitConversion.enabled", false);
+#endif
+
 // Whether to show search suggestions before general results like history and
 // bookmarks.
 pref("browser.urlbar.showSearchSuggestionsFirst", true);
