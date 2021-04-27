@@ -4,12 +4,6 @@
 
 %include ../../../shared/in-content/common.inc.css
 
-@media (-moz-proton) {
-:root {
-  --subdialog-font-size: 1.05em;
-}
-}
-
 @media (-moz-toolbar-prefers-color-scheme: dark) {
   /* Don't apply scrollbar-color since it removes the native scrollbar style on Linux */
   :root {
