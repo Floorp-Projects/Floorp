@@ -128,6 +128,7 @@ using namespace widget;
 
 using LeafNodeType = HTMLEditUtils::LeafNodeType;
 using LeafNodeTypes = HTMLEditUtils::LeafNodeTypes;
+using WalkTreeOption = HTMLEditUtils::WalkTreeOption;
 
 /*****************************************************************************
  * mozilla::EditorBase
@@ -2802,231 +2803,6 @@ nsresult EditorBase::DeleteTextWithTransaction(Text& aTextNode,
   return rv;
 }
 
-// static
-nsIContent* EditorBase::GetPreviousContent(
-    const nsINode& aNode, const WalkTreeOptions& aOptions,
-    const Element* aAncestorLimiter /* = nullptr */) {
-  if (&aNode == aAncestorLimiter ||
-      (aAncestorLimiter && !aNode.IsInclusiveDescendantOf(aAncestorLimiter))) {
-    return nullptr;
-  }
-  return EditorBase::GetAdjacentContent(aNode, WalkTreeDirection::Backward,
-                                        aOptions, aAncestorLimiter);
-}
-
-// static
-nsIContent* EditorBase::GetPreviousContent(
-    const EditorRawDOMPoint& aPoint, const WalkTreeOptions& aOptions,
-    const Element* aAncestorLimiter /* = nullptr */) {
-  MOZ_ASSERT(aPoint.IsSetAndValid());
-  NS_WARNING_ASSERTION(
-      !aPoint.IsInDataNode() || aPoint.IsInTextNode(),
-      "GetPreviousContent() doesn't assume that the start point is a "
-      "data node except text node");
-
-  // If we are at the beginning of the node, or it is a text node, then just
-  // look before it.
-  if (aPoint.IsStartOfContainer() || aPoint.IsInTextNode()) {
-    if (aOptions.contains(WalkTreeOption::StopAtBlockBoundary) &&
-        aPoint.IsInContentNode() &&
-        HTMLEditUtils::IsBlockElement(*aPoint.ContainerAsContent())) {
-      // If we aren't allowed to cross blocks, don't look before this block.
-      return nullptr;
-    }
-    return EditorBase::GetPreviousContent(*aPoint.GetContainer(), aOptions,
-                                          aAncestorLimiter);
-  }
-
-  // else look before the child at 'aOffset'
-  if (aPoint.GetChild()) {
-    return EditorBase::GetPreviousContent(*aPoint.GetChild(), aOptions,
-                                          aAncestorLimiter);
-  }
-
-  // unless there isn't one, in which case we are at the end of the node
-  // and want the deep-right child.
-  nsIContent* lastLeafContent = HTMLEditUtils::GetLastLeafChild(
-      *aPoint.GetContainer(),
-      {aOptions.contains(WalkTreeOption::StopAtBlockBoundary)
-           ? LeafNodeType::LeafNodeOrChildBlock
-           : LeafNodeType::OnlyLeafNode});
-  if (!lastLeafContent) {
-    return nullptr;
-  }
-
-  if ((!aOptions.contains(WalkTreeOption::IgnoreNonEditableNode) ||
-       EditorUtils::IsEditableContent(*lastLeafContent, EditorType::HTML)) &&
-      (!aOptions.contains(WalkTreeOption::IgnoreDataNodeExceptText) ||
-       EditorUtils::IsElementOrText(*lastLeafContent))) {
-    return lastLeafContent;
-  }
-
-  // restart the search from the non-editable node we just found
-  return EditorBase::GetPreviousContent(*lastLeafContent, aOptions,
-                                        aAncestorLimiter);
-}
-
-// static
-nsIContent* EditorBase::GetNextContent(
-    const nsINode& aNode, const WalkTreeOptions& aOptions,
-    const Element* aAncestorLimiter /* = nullptr */) {
-  if (&aNode == aAncestorLimiter ||
-      (aAncestorLimiter && !aNode.IsInclusiveDescendantOf(aAncestorLimiter))) {
-    return nullptr;
-  }
-  return EditorBase::GetAdjacentContent(aNode, WalkTreeDirection::Forward,
-                                        aOptions, aAncestorLimiter);
-}
-
-// static
-nsIContent* EditorBase::GetNextContent(
-    const EditorRawDOMPoint& aPoint, const WalkTreeOptions& aOptions,
-    const Element* aAncestorLimiter /* = nullptr */) {
-  MOZ_ASSERT(aPoint.IsSetAndValid());
-  NS_WARNING_ASSERTION(
-      !aPoint.IsInDataNode() || aPoint.IsInTextNode(),
-      "GetNextContent() doesn't assume that the start point is a "
-      "data node except text node");
-
-  EditorRawDOMPoint point(aPoint);
-
-  // if the container is a text node, use its location instead
-  if (point.IsInTextNode()) {
-    point.SetAfter(point.GetContainer());
-    if (NS_WARN_IF(!point.IsSet())) {
-      return nullptr;
-    }
-  }
-
-  if (point.GetChild()) {
-    if (aOptions.contains(WalkTreeOption::StopAtBlockBoundary) &&
-        HTMLEditUtils::IsBlockElement(*point.GetChild())) {
-      return point.GetChild();
-    }
-
-    nsIContent* firstLeafContent = HTMLEditUtils::GetFirstLeafChild(
-        *point.GetChild(),
-        {aOptions.contains(WalkTreeOption::StopAtBlockBoundary)
-             ? LeafNodeType::LeafNodeOrChildBlock
-             : LeafNodeType::OnlyLeafNode});
-    if (!firstLeafContent) {
-      return point.GetChild();
-    }
-
-    // XXX Why do we need to do this check?  The leaf node must be a descendant
-    //     of `point.GetChild()`.
-    if (aAncestorLimiter &&
-        (firstLeafContent == aAncestorLimiter ||
-         !firstLeafContent->IsInclusiveDescendantOf(aAncestorLimiter))) {
-      return nullptr;
-    }
-
-    if ((!aOptions.contains(WalkTreeOption::IgnoreNonEditableNode) ||
-         EditorUtils::IsEditableContent(*firstLeafContent, EditorType::HTML)) &&
-        (!aOptions.contains(WalkTreeOption::IgnoreDataNodeExceptText) ||
-         EditorUtils::IsElementOrText(*firstLeafContent))) {
-      return firstLeafContent;
-    }
-
-    // restart the search from the non-editable node we just found
-    return EditorBase::GetNextContent(*firstLeafContent, aOptions,
-                                      aAncestorLimiter);
-  }
-
-  // unless there isn't one, in which case we are at the end of the node
-  // and want the next one.
-  if (aOptions.contains(WalkTreeOption::StopAtBlockBoundary) &&
-      point.IsInContentNode() &&
-      HTMLEditUtils::IsBlockElement(*point.ContainerAsContent())) {
-    // don't cross out of parent block
-    return nullptr;
-  }
-
-  return EditorBase::GetNextContent(*point.GetContainer(), aOptions,
-                                    aAncestorLimiter);
-}
-
-// static
-nsIContent* EditorBase::GetAdjacentLeafContent(
-    const nsINode& aNode, WalkTreeDirection aWalkTreeDirection,
-    const WalkTreeOptions& aOptions,
-    const Element* aAncestorLimiter /* = nullptr */) {
-  // called only by GetPriorNode so we don't need to check params.
-  MOZ_ASSERT(&aNode != aAncestorLimiter);
-  MOZ_ASSERT_IF(aAncestorLimiter,
-                aAncestorLimiter->IsInclusiveDescendantOf(aAncestorLimiter));
-
-  const nsINode* node = &aNode;
-  for (;;) {
-    // if aNode has a sibling in the right direction, return
-    // that sibling's closest child (or itself if it has no children)
-    nsIContent* sibling = aWalkTreeDirection == WalkTreeDirection::Forward
-                              ? node->GetNextSibling()
-                              : node->GetPreviousSibling();
-    if (sibling) {
-      if (aOptions.contains(WalkTreeOption::StopAtBlockBoundary) &&
-          HTMLEditUtils::IsBlockElement(*sibling)) {
-        // don't look inside prevsib, since it is a block
-        return sibling;
-      }
-      const LeafNodeTypes leafNodeTypes = {
-          aOptions.contains(WalkTreeOption::StopAtBlockBoundary)
-              ? LeafNodeType::LeafNodeOrChildBlock
-              : LeafNodeType::OnlyLeafNode};
-      nsIContent* leafContent =
-          aWalkTreeDirection == WalkTreeDirection::Forward
-              ? HTMLEditUtils::GetFirstLeafChild(*sibling, leafNodeTypes)
-              : HTMLEditUtils::GetLastLeafChild(*sibling, leafNodeTypes);
-      return leafContent ? leafContent : sibling;
-    }
-
-    nsIContent* parent = node->GetParent();
-    if (!parent) {
-      return nullptr;
-    }
-
-    if (parent == aAncestorLimiter ||
-        (aOptions.contains(WalkTreeOption::StopAtBlockBoundary) &&
-         HTMLEditUtils::IsBlockElement(*parent))) {
-      return nullptr;
-    }
-
-    node = parent;
-  }
-
-  MOZ_ASSERT_UNREACHABLE("What part of for(;;) do you not understand?");
-  return nullptr;
-}
-
-// static
-nsIContent* EditorBase::GetAdjacentContent(
-    const nsINode& aNode, WalkTreeDirection aWalkTreeDirection,
-    const WalkTreeOptions& aOptions,
-    const Element* aAncestorLimiter /* = nullptr */) {
-  if (&aNode == aAncestorLimiter) {
-    // Don't allow traversal above the root node! This helps
-    // prevent us from accidentally editing browser content
-    // when the editor is in a text widget.
-    return nullptr;
-  }
-
-  nsIContent* leafContent = EditorBase::GetAdjacentLeafContent(
-      aNode, aWalkTreeDirection, aOptions, aAncestorLimiter);
-  if (!leafContent) {
-    return nullptr;
-  }
-
-  if ((!aOptions.contains(WalkTreeOption::IgnoreNonEditableNode) ||
-       EditorUtils::IsEditableContent(*leafContent, EditorType::HTML)) &&
-      (!aOptions.contains(WalkTreeOption::IgnoreDataNodeExceptText) ||
-       EditorUtils::IsElementOrText(*leafContent))) {
-    return leafContent;
-  }
-
-  return EditorBase::GetAdjacentContent(*leafContent, aWalkTreeDirection,
-                                        aOptions, aAncestorLimiter);
-}
-
 bool EditorBase::IsRoot(const nsINode* inNode) const {
   if (NS_WARN_IF(!inNode)) {
     return false;
@@ -3509,7 +3285,7 @@ EditorBase::CreateTransactionForCollapsedRange(
     MOZ_ASSERT(IsHTMLEditor());
     // We're backspacing from the beginning of a node.  Delete the last thing
     // of previous editable content.
-    nsIContent* previousEditableContent = EditorBase::GetPreviousContent(
+    nsIContent* previousEditableContent = HTMLEditUtils::GetPreviousContent(
         *point.GetContainer(), {WalkTreeOption::IgnoreNonEditableNode},
         GetEditorRoot());
     if (!previousEditableContent) {
@@ -3553,7 +3329,7 @@ EditorBase::CreateTransactionForCollapsedRange(
     MOZ_ASSERT(IsHTMLEditor());
     // We're deleting from the end of a node.  Delete the first thing of
     // next editable content.
-    nsIContent* nextEditableContent = EditorBase::GetNextContent(
+    nsIContent* nextEditableContent = HTMLEditUtils::GetNextContent(
         *point.GetContainer(), {WalkTreeOption::IgnoreNonEditableNode},
         GetEditorRoot());
     if (!nextEditableContent) {
@@ -3616,10 +3392,10 @@ EditorBase::CreateTransactionForCollapsedRange(
   if (IsHTMLEditor()) {
     editableContent =
         aHowToHandleCollapsedRange == HowToHandleCollapsedRange::ExtendBackward
-            ? EditorBase::GetPreviousContent(
+            ? HTMLEditUtils::GetPreviousContent(
                   point, {WalkTreeOption::IgnoreNonEditableNode},
                   GetEditorRoot())
-            : EditorBase::GetNextContent(
+            : HTMLEditUtils::GetNextContent(
                   point, {WalkTreeOption::IgnoreNonEditableNode},
                   GetEditorRoot());
     if (!editableContent) {
@@ -3632,10 +3408,10 @@ EditorBase::CreateTransactionForCollapsedRange(
       editableContent =
           aHowToHandleCollapsedRange ==
                   HowToHandleCollapsedRange::ExtendBackward
-              ? EditorBase::GetPreviousContent(
+              ? HTMLEditUtils::GetPreviousContent(
                     *editableContent, {WalkTreeOption::IgnoreNonEditableNode},
                     GetEditorRoot())
-              : EditorBase::GetNextContent(
+              : HTMLEditUtils::GetNextContent(
                     *editableContent, {WalkTreeOption::IgnoreNonEditableNode},
                     GetEditorRoot());
     }

@@ -72,6 +72,7 @@ using namespace widget;
 using EmptyCheckOption = HTMLEditUtils::EmptyCheckOption;
 using LeafNodeType = HTMLEditUtils::LeafNodeType;
 using LeafNodeTypes = HTMLEditUtils::LeafNodeTypes;
+using WalkTreeOption = HTMLEditUtils::WalkTreeOption;
 
 const char16_t kNBSP = 160;
 
@@ -5006,12 +5007,12 @@ nsIContent* HTMLEditor::GetPreviousHTMLElementOrTextInternal(
     return nullptr;
   }
   return aNoBlockCrossing
-             ? EditorBase::GetPreviousContent(
+             ? HTMLEditUtils::GetPreviousContent(
                    aNode,
                    {WalkTreeOption::IgnoreDataNodeExceptText,
                     WalkTreeOption::StopAtBlockBoundary},
                    editingHost)
-             : EditorBase::GetPreviousContent(
+             : HTMLEditUtils::GetPreviousContent(
                    aNode, {WalkTreeOption::IgnoreDataNodeExceptText},
                    editingHost);
 }
@@ -5024,12 +5025,12 @@ nsIContent* HTMLEditor::GetPreviousHTMLElementOrTextInternal(
     return nullptr;
   }
   return aNoBlockCrossing
-             ? EditorBase::GetPreviousContent(
+             ? HTMLEditUtils::GetPreviousContent(
                    aPoint,
                    {WalkTreeOption::IgnoreDataNodeExceptText,
                     WalkTreeOption::StopAtBlockBoundary},
                    editingHost)
-             : EditorBase::GetPreviousContent(
+             : HTMLEditUtils::GetPreviousContent(
                    aPoint, {WalkTreeOption::IgnoreDataNodeExceptText},
                    editingHost);
 }
@@ -5041,12 +5042,12 @@ nsIContent* HTMLEditor::GetPreviousEditableHTMLNodeInternal(
     return nullptr;
   }
   return aNoBlockCrossing
-             ? EditorBase::GetPreviousContent(
+             ? HTMLEditUtils::GetPreviousContent(
                    aNode,
                    {WalkTreeOption::IgnoreNonEditableNode,
                     WalkTreeOption::StopAtBlockBoundary},
                    editingHost)
-             : EditorBase::GetPreviousContent(
+             : HTMLEditUtils::GetPreviousContent(
                    aNode, {WalkTreeOption::IgnoreNonEditableNode}, editingHost);
 }
 
@@ -5057,12 +5058,12 @@ nsIContent* HTMLEditor::GetPreviousEditableHTMLNodeInternal(
   if (NS_WARN_IF(!editingHost)) {
     return nullptr;
   }
-  return aNoBlockCrossing ? EditorBase::GetPreviousContent(
+  return aNoBlockCrossing ? HTMLEditUtils::GetPreviousContent(
                                 aPoint,
                                 {WalkTreeOption::IgnoreNonEditableNode,
                                  WalkTreeOption::StopAtBlockBoundary},
                                 editingHost)
-                          : EditorBase::GetPreviousContent(
+                          : HTMLEditUtils::GetPreviousContent(
                                 aPoint, {WalkTreeOption::IgnoreNonEditableNode},
                                 editingHost);
 }
@@ -5074,12 +5075,12 @@ nsIContent* HTMLEditor::GetNextHTMLElementOrTextInternal(
     return nullptr;
   }
   return aNoBlockCrossing
-             ? EditorBase::GetNextContent(
+             ? HTMLEditUtils::GetNextContent(
                    aNode,
                    {WalkTreeOption::IgnoreDataNodeExceptText,
                     WalkTreeOption::StopAtBlockBoundary},
                    editingHost)
-             : EditorBase::GetNextContent(
+             : HTMLEditUtils::GetNextContent(
                    aNode, {WalkTreeOption::IgnoreDataNodeExceptText},
                    editingHost);
 }
@@ -5092,12 +5093,12 @@ nsIContent* HTMLEditor::GetNextHTMLElementOrTextInternal(
     return nullptr;
   }
   return aNoBlockCrossing
-             ? EditorBase::GetNextContent(
+             ? HTMLEditUtils::GetNextContent(
                    aPoint,
                    {WalkTreeOption::IgnoreDataNodeExceptText,
                     WalkTreeOption::StopAtBlockBoundary},
                    editingHost)
-             : EditorBase::GetNextContent(
+             : HTMLEditUtils::GetNextContent(
                    aPoint, {WalkTreeOption::IgnoreDataNodeExceptText},
                    editingHost);
 }
@@ -5109,12 +5110,12 @@ nsIContent* HTMLEditor::GetNextEditableHTMLNodeInternal(
     return nullptr;
   }
   return aNoBlockCrossing
-             ? EditorBase::GetNextContent(
+             ? HTMLEditUtils::GetNextContent(
                    aNode,
                    {WalkTreeOption::IgnoreNonEditableNode,
                     WalkTreeOption::StopAtBlockBoundary},
                    editingHost)
-             : EditorBase::GetNextContent(
+             : HTMLEditUtils::GetNextContent(
                    aNode, {WalkTreeOption::IgnoreNonEditableNode}, editingHost);
 }
 
@@ -5125,12 +5126,12 @@ nsIContent* HTMLEditor::GetNextEditableHTMLNodeInternal(
   if (NS_WARN_IF(!editingHost)) {
     return nullptr;
   }
-  return aNoBlockCrossing ? EditorBase::GetNextContent(
+  return aNoBlockCrossing ? HTMLEditUtils::GetNextContent(
                                 aPoint,
                                 {WalkTreeOption::IgnoreNonEditableNode,
                                  WalkTreeOption::StopAtBlockBoundary},
                                 editingHost)
-                          : EditorBase::GetNextContent(
+                          : HTMLEditUtils::GetNextContent(
                                 aPoint, {WalkTreeOption::IgnoreNonEditableNode},
                                 editingHost);
 }
