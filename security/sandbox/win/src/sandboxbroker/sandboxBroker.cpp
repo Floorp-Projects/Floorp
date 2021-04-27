@@ -18,6 +18,7 @@
 #include "mozilla/Logging.h"
 #include "mozilla/NSPRLogModulesParser.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/SandboxSettings.h"
 #include "mozilla/StaticPrefs_security.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Telemetry.h"
@@ -659,7 +660,13 @@ void SandboxBroker::SetSecurityLevelForContentProcess(int32_t aSandboxLevel,
   MOZ_RELEASE_ASSERT(sandbox::SBOX_ALL_OK == result,
                      "Invalid flags for SetProcessMitigations.");
 
-  if (StaticPrefs::security_sandbox_content_win32k_disable()) {
+  // The file content process has some win32k usage particular to it, for
+  // example at least moz-icon usage, but we don't want to block enabling for
+  // other content processes. We might want to use moz-icon in the privileged
+  // about content process in the future, so we would need to exclude that as
+  // well or remote moz-icon.
+  if (!aIsFileProcess &&
+      StaticPrefs::security_sandbox_content_win32k_disable()) {
     result = AddWin32kLockdownPolicy(mPolicy, false);
     MOZ_RELEASE_ASSERT(result == sandbox::SBOX_ALL_OK,
                        "Failed to add the win32k lockdown policy");
