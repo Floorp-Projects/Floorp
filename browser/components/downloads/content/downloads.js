@@ -602,11 +602,6 @@ var DownloadsView = {
   kItemCountLimit: 5,
 
   /**
-   * Indicates whether there is an open contextMenu for a download item.
-   */
-  contextMenuOpen: false,
-
-  /**
    * Indicates whether there is a DownloadsBlockedSubview open.
    */
   subViewOpen: false,
@@ -875,28 +870,20 @@ var DownloadsView = {
     }
   },
 
-  /**
-   * Event handlers to keep track of context menu state (open/closed) for
-   * download items.
-   */
-  onContextPopupShown(aEvent) {
-    // Ignore events raised by nested popups.
-    if (aEvent.target != aEvent.currentTarget) {
-      return;
+  get contextMenu() {
+    let menu = document.getElementById("downloadsContextMenu");
+    if (menu) {
+      delete this.contextMenu;
+      this.contextMenu = menu;
     }
-
-    DownloadsCommon.log("Context menu has shown.");
-    this.contextMenuOpen = true;
+    return menu;
   },
 
-  onContextPopupHidden(aEvent) {
-    // Ignore events raised by nested popups.
-    if (aEvent.target != aEvent.currentTarget) {
-      return;
-    }
-
-    DownloadsCommon.log("Context menu has hidden.");
-    this.contextMenuOpen = false;
+  /**
+   * Indicates whether there is an open contextMenu for a download item.
+   */
+  get contextMenuOpen() {
+    return this.contextMenu.state != "closed";
   },
 
   /**
@@ -951,7 +938,7 @@ var DownloadsView = {
     let { preferredAction, useSystemDefault } = mimeInfo ? mimeInfo : {};
 
     // Set the state attribute so that only the appropriate items are displayed.
-    let contextMenu = document.getElementById("downloadsContextMenu");
+    let { contextMenu } = this;
     contextMenu.setAttribute("state", element.getAttribute("state"));
     if (element.hasAttribute("exists")) {
       contextMenu.setAttribute("exists", "true");
