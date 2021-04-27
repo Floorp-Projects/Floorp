@@ -260,16 +260,6 @@ static void FitRectToVisibleAreaForScreen(DesktopIntRect& aRect, NSScreen* aScre
   }
 }
 
-// Some applications use native popup windows
-// (native context menus, native tooltips)
-static bool UseNativePopupWindows() {
-#ifdef MOZ_USE_NATIVE_POPUP_WINDOWS
-  return true;
-#else
-  return false;
-#endif /* MOZ_USE_NATIVE_POPUP_WINDOWS */
-}
-
 DesktopToLayoutDeviceScale ParentBackingScaleFactor(nsIWidget* aParent, NSView* aParentView) {
   if (aParent) {
     return aParent->GetDesktopToDeviceScale();
@@ -336,9 +326,6 @@ nsresult nsCocoaWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
   mParent = aParent;
   mAncestorLink = aParent;
   mAlwaysOnTop = aInitData->mAlwaysOnTop;
-
-  // Applications that use native popups don't want us to create popup windows.
-  if ((mWindowType == eWindowType_popup) && UseNativePopupWindows()) return NS_OK;
 
   // If we have a parent widget, the new widget will be offset from the
   // parent widget by aRect.{x,y}. Otherwise, we'll use aRect for the
