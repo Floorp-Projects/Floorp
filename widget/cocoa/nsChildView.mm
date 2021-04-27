@@ -115,6 +115,7 @@
 #include "UnitTransforms.h"
 #include "mozilla/UniquePtrExtensions.h"
 #include "CustomCocoaEvents.h"
+#include "NativeMenuSupport.h"
 
 using namespace mozilla;
 using namespace mozilla::layers;
@@ -2504,9 +2505,9 @@ NSEvent* gLastDragMouseDownEvent = nil;  // [strong]
 - (void)maybeInitContextMenuTracking {
   NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
-#ifdef MOZ_USE_NATIVE_POPUP_WINDOWS
-  return;
-#endif /* MOZ_USE_NATIVE_POPUP_WINDOWS */
+  if (mozilla::widget::NativeMenuSupport::ShouldUseNativeContextMenus()) {
+    return;
+  }
 
   nsIRollupListener* rollupListener = nsBaseWidget::GetActiveRollupListener();
   NS_ENSURE_TRUE_VOID(rollupListener);
