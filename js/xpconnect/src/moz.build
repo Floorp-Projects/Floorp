@@ -45,6 +45,14 @@ UNIFIED_SOURCES += [
     "XPCWrapper.cpp",
 ]
 
+
+if CONFIG["FUZZING_INTERFACES"]:
+    UNIFIED_SOURCES += ["xpcrtfuzzing/xpcrtfuzzing.cpp"]
+    USE_LIBS += [
+        "static:fuzzer",
+    ]
+
+
 XPCOM_MANIFESTS += [
     "components.conf",
 ]

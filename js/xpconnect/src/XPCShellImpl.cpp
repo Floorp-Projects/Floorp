@@ -81,6 +81,13 @@
 #  include "xpctest_private.h"
 #endif
 
+// Fuzzing support for XPC runtime fuzzing
+#ifdef FUZZING_INTERFACES
+#  include "xpcrtfuzzing/xpcrtfuzzing.h"
+static bool fuzzDoDebug = !!getenv("MOZ_FUZZ_DEBUG");
+static bool fuzzHaveModule = !!getenv("FUZZER");
+#endif  // FUZZING_INTERFACES
+
 using namespace mozilla;
 using namespace JS;
 using mozilla::dom::AutoEntryScript;
@@ -278,6 +285,15 @@ static bool ReadLine(JSContext* cx, unsigned argc, Value* vp) {
 static bool Print(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   args.rval().setUndefined();
+
+#ifdef FUZZING_INTERFACES
+  if (fuzzHaveModule && !fuzzDoDebug) {
+    // When fuzzing and not debugging, suppress any print() output,
+    // as it slows down fuzzing and makes libFuzzer's output hard
+    // to read.
+    return true;
+  }
+#endif  // FUZZING_INTERFACES
 
   RootedString str(cx);
   nsAutoCString utf8output;
@@ -1343,22 +1359,34 @@ int XRE_XPCShellMain(int argc, char** argv, char** envp,
                         0);
 
       {
-        // We are almost certainly going to run script here, so we need an
-        // AutoEntryScript. This is Gecko-specific and not in any spec.
-        AutoEntryScript aes(backstagePass, "xpcshell argument processing");
+#ifdef FUZZING_INTERFACES
+        if (fuzzHaveModule) {
+          // argv[0] was removed previously, but libFuzzer expects it
+          argc++;
+          argv--;
 
-        // If an exception is thrown, we'll set our return code
-        // appropriately, and then let the AutoEntryScript destructor report
-        // the error to the console.
-        if (!ProcessArgs(aes, argv, argc, &dirprovider)) {
-          if (gExitCode) {
-            result = gExitCode;
-          } else if (gQuitting) {
-            result = 0;
-          } else {
-            result = EXITCODE_RUNTIME_ERROR;
+          result = FuzzXPCRuntimeStart(&jsapi, &argc, &argv);
+        } else {
+#endif
+          // We are almost certainly going to run script here, so we need an
+          // AutoEntryScript. This is Gecko-specific and not in any spec.
+          AutoEntryScript aes(backstagePass, "xpcshell argument processing");
+
+          // If an exception is thrown, we'll set our return code
+          // appropriately, and then let the AutoEntryScript destructor report
+          // the error to the console.
+          if (!ProcessArgs(aes, argv, argc, &dirprovider)) {
+            if (gExitCode) {
+              result = gExitCode;
+            } else if (gQuitting) {
+              result = 0;
+            } else {
+              result = EXITCODE_RUNTIME_ERROR;
+            }
           }
+#ifdef FUZZING_INTERFACES
         }
+#endif
       }
 
       // Signal that we're now shutting down.
