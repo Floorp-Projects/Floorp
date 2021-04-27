@@ -4,12 +4,6 @@
 
 %include ../../../shared/in-content/common.inc.css
 
-@media (-moz-proton) {
-:root {
-  --subdialog-font-size: 1.25em;
-}
-}
-
 xul|tabs {
   padding-inline: 0;
   position: static;
