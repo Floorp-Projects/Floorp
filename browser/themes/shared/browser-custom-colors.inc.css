@@ -53,7 +53,7 @@
 
     --autocomplete-popup-separator-color: rgb(240,240,244);
     --toolbar-field-border-color: transparent;
-    --arrowpanel-border-color: transparent;
+    --arrowpanel-border-color: rgb(240,240,244);
     --chrome-content-separator-color: rgb(204,204,204);
 
     --toolbar-field-non-lwt-bgcolor: rgb(240,240,244);
