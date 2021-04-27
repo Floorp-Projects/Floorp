@@ -1,0 +1,39 @@
+<html>
+  <head>
+    <script>
+    onpageshow = function(pageShowEvent) {
+      if (location.hostname == "example.com" ||
+          location.hostname == "test1.mochi.test") {
+        // BroadcastChannel doesn't work across domains, so just go to the
+        // previous page explicitly.
+        history.back();
+        return;
+      }
+
+      var bc = new BroadcastChannel("bug1706090");
+      bc.onmessage = function(event) {
+        if (event.data == "close") {
+          bc.postMessage("closed");
+          bc.close();
+          window.close();
+        } else if (event.data == "sameOrigin") {
+          bc.close();
+          location.href = location.href + "?foo"
+        } else if (event.data == "back") {
+          history.back();
+        } else if (event.data == "crossOrigin") {
+          bc.close();
+          location.href = "https://example.com:443" + location.pathname;
+        } else if (event.data == "sameSite") {
+          bc.close();
+          location.href = "http://test1.mochi.test:8888" + location.pathname;
+        }
+      }
+
+      bc.postMessage({type: pageShowEvent.type, persisted: pageShowEvent.persisted});
+    }
+    </script>
+  </head>
+  <body onunload="/* dummy listener*/">
+  </body>
+</html>
