@@ -869,10 +869,6 @@ menupopup::part(drop-indicator) {
 } /** END not Proton **/
 
 @media (-moz-proton-doorhangers) {
-popupnotification {
-  font-size: var(--panel-font-size);
-}
-
 popupnotificationcontent {
   margin-block-start: 8px;
 }
