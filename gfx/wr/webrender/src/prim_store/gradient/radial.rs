@@ -166,7 +166,7 @@ impl From<RadialGradientKey> for RadialGradientTemplate {
             extend_mode: item.extend_mode,
             params,
             stretch_size,
-            task_size: task_size.to_i32(),
+            task_size: task_size.ceil().to_i32(),
             tile_spacing: item.tile_spacing.into(),
             brush_segments,
             stops_opacity,
