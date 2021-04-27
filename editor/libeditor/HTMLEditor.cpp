@@ -5031,8 +5031,10 @@ nsIContent* HTMLEditor::GetPreviousEditableHTMLNodeInternal(
   if (NS_WARN_IF(!GetActiveEditingHost())) {
     return nullptr;
   }
-  return aNoBlockCrossing ? GetPreviousEditableNodeInBlock(aNode)
-                          : GetPreviousEditableNode(aNode);
+  return aNoBlockCrossing
+             ? GetPreviousContent(aNode, {WalkTreeOption::IgnoreNonEditableNode,
+                                          WalkTreeOption::StopAtBlockBoundary})
+             : GetPreviousEditableNode(aNode);
 }
 
 template <typename PT, typename CT>
@@ -5041,7 +5043,9 @@ nsIContent* HTMLEditor::GetPreviousEditableHTMLNodeInternal(
   if (NS_WARN_IF(!GetActiveEditingHost())) {
     return nullptr;
   }
-  return aNoBlockCrossing ? GetPreviousEditableNodeInBlock(aPoint)
+  return aNoBlockCrossing ? GetPreviousContent(
+                                aPoint, {WalkTreeOption::IgnoreNonEditableNode,
+                                         WalkTreeOption::StopAtBlockBoundary})
                           : GetPreviousEditableNode(aPoint);
 }
 
@@ -5075,8 +5079,10 @@ nsIContent* HTMLEditor::GetNextEditableHTMLNodeInternal(
   if (NS_WARN_IF(!GetActiveEditingHost())) {
     return nullptr;
   }
-  return aNoBlockCrossing ? GetNextEditableNodeInBlock(aNode)
-                          : GetNextEditableNode(aNode);
+  return aNoBlockCrossing
+             ? GetNextContent(aNode, {WalkTreeOption::IgnoreNonEditableNode,
+                                      WalkTreeOption::StopAtBlockBoundary})
+             : GetNextEditableNode(aNode);
 }
 
 template <typename PT, typename CT>
@@ -5085,8 +5091,10 @@ nsIContent* HTMLEditor::GetNextEditableHTMLNodeInternal(
   if (NS_WARN_IF(!GetActiveEditingHost())) {
     return nullptr;
   }
-  return aNoBlockCrossing ? GetNextEditableNodeInBlock(aPoint)
-                          : GetNextEditableNode(aPoint);
+  return aNoBlockCrossing
+             ? GetNextContent(aPoint, {WalkTreeOption::IgnoreNonEditableNode,
+                                       WalkTreeOption::StopAtBlockBoundary})
+             : GetNextEditableNode(aPoint);
 }
 
 bool HTMLEditor::IsFirstEditableChild(nsINode* aNode) const {
