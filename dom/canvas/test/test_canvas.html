@@ -47,7 +47,7 @@ function IsAzureSkia() {
   var enabled = false;
 
   try {
-    var backend = Cc["@mozilla.org/gfx/info;1"].getService(SpecialPowers.Ci.nsIGfxInfo).getInfo().AzureCanvasBackend;
+    var backend = Cc["@mozilla.org/gfx/info;1"].getService(SpecialPowers.Ci.nsIGfxInfo).AzureCanvasBackend;
     enabled = (backend == "skia");
   } catch (e) { }
 
@@ -58,7 +58,7 @@ function IsAzureCairo() {
   var enabled = false;
 
   try {
-    var backend = Cc["@mozilla.org/gfx/info;1"].getService(SpecialPowers.Ci.nsIGfxInfo).getInfo().AzureCanvasBackend;
+    var backend = Cc["@mozilla.org/gfx/info;1"].getService(SpecialPowers.Ci.nsIGfxInfo).AzureCanvasBackend;
     enabled = (backend == "cairo");
   } catch (e) { }
 

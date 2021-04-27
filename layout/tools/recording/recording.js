@@ -34,9 +34,8 @@ this.OnRecordingLoad = function OnRecordingLoad(win) {
   var gfxInfo =
     NS_GFXINFO_CONTRACTID in Cc &&
     Cc[NS_GFXINFO_CONTRACTID].getService(Ci.nsIGfxInfo);
-  var info = gfxInfo.getInfo();
-  dump(info.AzureContentBackend + "\n");
-  if (info.AzureContentBackend == "none") {
+  dump(gfxInfo.AzureContentBackend + "\n");
+  if (gfxInfo.AzureContentBackend == "none") {
     alert("Page recordings may only be made with Azure content enabled.");
     gContainingWindow.close();
     return;
