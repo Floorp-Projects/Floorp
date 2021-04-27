@@ -6,8 +6,6 @@
 
 #include "mozilla/Types.h"
 
-// Only define the following workaround when using GTK3, which we detect
-// by checking if GTK3 stubs are not provided.
 #include <X11/Xlib.h>
 // Bug 1271100
 // We need to trick system Cairo into not using the XShm extension due to
@@ -16,4 +14,8 @@
 // So we define our own stub that always indicates XShm not being present.
 // mozgtk loads before libXext/libcairo and so this stub will take priority.
 // Our tree usage goes through xcb and remains unaffected by this.
-MFBT_API Bool XShmQueryExtension(Display* aDisplay) { return False; }
+//
+// This is also used to force libxul to depend on the mozgtk library. If we
+// ever can remove this workaround for system Cairo, we'll need something
+// to replace it for that purpose.
+MOZ_EXPORT Bool XShmQueryExtension(Display* aDisplay) { return False; }
