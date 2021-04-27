@@ -1213,7 +1213,11 @@ nsHttpTransaction::PrepareFastFallbackConnInfo(bool aEchConfigUsed) {
       return nullptr;
     }
 
-    fallbackConnInfo = mOrigConnInfo;
+    if (mOrigConnInfo->IsHttp3()) {
+      mOrigConnInfo->CloneAsDirectRoute(getter_AddRefs(fallbackConnInfo));
+    } else {
+      fallbackConnInfo = mOrigConnInfo;
+    }
     return fallbackConnInfo.forget();
   }
 
@@ -1233,13 +1237,27 @@ void nsHttpTransaction::PrepareConnInfoForRetry(nsresult aReason) {
 
   if (mFastFallbackTriggered) {
     mFastFallbackTriggered = false;
-    mConnInfo = PrepareFastFallbackConnInfo(echConfigUsed);
+    MOZ_ASSERT(mBackupConnInfo);
+    mConnInfo.swap(mBackupConnInfo);
     return;
   }
 
+  auto useOrigConnInfoToRetry = [&]() {
+    mOrigConnInfo.swap(mConnInfo);
+    if (mConnInfo->IsHttp3() &&
+        ((mCaps & NS_HTTP_DISALLOW_HTTP3) ||
+         gHttpHandler->IsHttp3Excluded(mConnInfo->GetRoutedHost().IsEmpty()
+                                           ? mConnInfo->GetOrigin()
+                                           : mConnInfo->GetRoutedHost()))) {
+      RefPtr<nsHttpConnectionInfo> ci;
+      mConnInfo->CloneAsDirectRoute(getter_AddRefs(ci));
+      mConnInfo = ci;
+    }
+  };
+
   if (!echConfigUsed) {
     LOG((" echConfig is not used, fallback to origin conn info"));
-    mOrigConnInfo.swap(mConnInfo);
+    useOrigConnInfoToRetry();
     return;
   }
 
@@ -1303,7 +1321,7 @@ void nsHttpTransaction::PrepareConnInfoForRetry(nsresult aReason) {
                allRecordsHaveEchConfig));
           if (gHttpHandler->FallbackToOriginIfConfigsAreECHAndAllFailed() ||
               !allRecordsHaveEchConfig) {
-            mOrigConnInfo.swap(mConnInfo);
+            useOrigConnInfoToRetry();
           }
           return;
         }
@@ -1314,7 +1332,7 @@ void nsHttpTransaction::PrepareConnInfoForRetry(nsresult aReason) {
              mAllRecordsInH3ExcludedListBefore));
         if (gHttpHandler->FallbackToOriginIfConfigsAreECHAndAllFailed() &&
             !mAllRecordsInH3ExcludedListBefore) {
-          mOrigConnInfo.swap(mConnInfo);
+          useOrigConnInfoToRetry();
         }
         return;
       }
@@ -2529,6 +2547,8 @@ void nsHttpTransaction::DisableSpdy() {
 void nsHttpTransaction::DisableHttp3() {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
+  mCaps |= NS_HTTP_DISALLOW_HTTP3;
+
   // mOrigConnInfo is an indicator that HTTPS RR is used, so don't mess up the
   // connection info.
   // When HTTPS RR is used, PrepareConnInfoForRetry() could select other h3
@@ -2539,7 +2559,6 @@ void nsHttpTransaction::DisableHttp3() {
     return;
   }
 
-  mCaps |= NS_HTTP_DISALLOW_HTTP3;
   MOZ_ASSERT(mConnInfo);
   if (mConnInfo) {
     // After CloneAsDirectRoute(), http3 will be disabled.
@@ -3190,12 +3209,17 @@ void nsHttpTransaction::MaybeCancelFallbackTimer() {
   }
 }
 
-void nsHttpTransaction::OnBackupConnectionReady(bool aHTTPSRRUsed) {
+void nsHttpTransaction::OnBackupConnectionReady(bool aTriggeredByHTTPSRR) {
   LOG(
       ("nsHttpTransaction::OnBackupConnectionReady [%p] mConnected=%d "
-       "aHTTPSRRUsed=%d",
-       this, mConnected, aHTTPSRRUsed));
+       "aTriggeredByHTTPSRR=%d",
+       this, mConnected, aTriggeredByHTTPSRR));
   if (mConnected || mClosed || mRestarted) {
+    return;
+  }
+
+  // If HTTPS RR is in play, don't mess up the fallback mechansim of HTTPS RR.
+  if (!aTriggeredByHTTPSRR && mOrigConnInfo) {
     return;
   }
 
@@ -3203,9 +3227,12 @@ void nsHttpTransaction::OnBackupConnectionReady(bool aHTTPSRRUsed) {
     // The transaction will only be restarted when we already have a connection.
     // When there is no connection, this transaction will be moved to another
     // connection entry.
-    SetRestartReason(aHTTPSRRUsed ? TRANSACTION_RESTART_HTTPS_RR_FAST_FALLBACK
-                                  : TRANSACTION_RESTART_HTTP3_FAST_FALLBACK);
+    SetRestartReason(aTriggeredByHTTPSRR
+                         ? TRANSACTION_RESTART_HTTPS_RR_FAST_FALLBACK
+                         : TRANSACTION_RESTART_HTTP3_FAST_FALLBACK);
   }
+
+  mCaps |= NS_HTTP_DISALLOW_HTTP3;
 
   // Need to backup the origin conn info, since UpdateConnectionInfo() will be
   // called in HandleFallback() and mOrigConnInfo will be
@@ -3214,18 +3241,22 @@ void nsHttpTransaction::OnBackupConnectionReady(bool aHTTPSRRUsed) {
   HandleFallback(mBackupConnInfo);
   mOrigConnInfo.swap(backup);
 
-  // When we have HTTPS RR, we could fallback to other records that have http3
-  // alpn. So, we should not disallow this transaction to use http3.
-  if (!aHTTPSRRUsed) {
-    mCaps |= NS_HTTP_DISALLOW_HTTP3;
-  }
   RemoveAlternateServiceUsedHeader(mRequestHead);
 
-  if (mResolver && mBackupConnInfo) {
-    const nsCString& host = mBackupConnInfo->GetRoutedHost().IsEmpty()
-                                ? mBackupConnInfo->GetOrigin()
-                                : mBackupConnInfo->GetRoutedHost();
-    mResolver->PrefetchAddrRecord(host, Caps() & NS_HTTP_REFRESH_DNS);
+  if (mResolver) {
+    if (mBackupConnInfo) {
+      const nsCString& host = mBackupConnInfo->GetRoutedHost().IsEmpty()
+                                  ? mBackupConnInfo->GetOrigin()
+                                  : mBackupConnInfo->GetRoutedHost();
+      mResolver->PrefetchAddrRecord(host, Caps() & NS_HTTP_REFRESH_DNS);
+    }
+
+    if (!aTriggeredByHTTPSRR) {
+      // We are about to use this backup connection. We shoud not try to use
+      // HTTPS RR at this point.
+      mResolver->Close();
+      mResolver = nullptr;
+    }
   }
 }
 
