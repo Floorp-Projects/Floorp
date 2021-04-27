@@ -244,6 +244,7 @@ exports.ANIMATION_TYPE_FOR_LONGHANDS = [
       "border-left-color",
       "border-right-color",
       "border-top-color",
+      "accent-color",
       "caret-color",
       "color",
       "column-rule-color",

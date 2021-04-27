@@ -2621,6 +2621,29 @@ exports.CSS_PROPERTIES = {
       "unset"
     ]
   },
+  "accent-color": {
+    "isInherited": true,
+    "subproperties": [
+      "accent-color"
+    ],
+    "supports": [
+      "color"
+    ],
+    "values": [
+      "COLOR",
+      "auto",
+      "currentColor",
+      "hsl",
+      "hsla",
+      "inherit",
+      "initial",
+      "revert",
+      "rgb",
+      "rgba",
+      "transparent",
+      "unset"
+    ]
+  },
   "align-content": {
     "isInherited": false,
     "subproperties": [
@@ -2976,6 +2999,7 @@ exports.CSS_PROPERTIES = {
       "-moz-user-modify",
       "-moz-user-focus",
       "caret-color",
+      "accent-color",
       "scrollbar-color",
       "list-style-position",
       "list-style-type",
@@ -10970,6 +10994,10 @@ exports.PREFERENCES = [
   [
     "overscroll-behavior-y",
     "layout.css.overscroll-behavior.enabled"
+  ],
+  [
+    "accent-color",
+    "layout.css.accent-color.enabled"
   ],
   [
     "align-tracks",
