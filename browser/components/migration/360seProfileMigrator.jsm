@@ -144,6 +144,7 @@ Bookmarks.prototype = {
         path: this._file.path,
       });
 
+      let histogramBookmarkRoots = 0;
       try {
         let rows = await connection.execute(
           `WITH RECURSIVE
@@ -201,6 +202,8 @@ Bookmarks.prototype = {
       }
 
       if (toolbarBMs.length) {
+        histogramBookmarkRoots |=
+          MigrationUtils.SOURCE_BOOKMARK_ROOTS_BOOKMARKS_TOOLBAR;
         let parentGuid = PlacesUtils.bookmarks.toolbarGuid;
         if (
           !Services.prefs.getBoolPref("browser.toolbars.bookmarks.2h2020") &&
@@ -217,6 +220,9 @@ Bookmarks.prototype = {
         await MigrationUtils.insertManyBookmarksWrapper(toolbarBMs, parentGuid);
         PlacesUIUtils.maybeToggleBookmarkToolbarVisibilityAfterMigration();
       }
+      Services.telemetry
+        .getKeyedHistogramById("FX_MIGRATION_BOOKMARKS_ROOTS")
+        .add("360se", histogramBookmarkRoots);
     })().then(
       () => aCallback(true),
       e => {
