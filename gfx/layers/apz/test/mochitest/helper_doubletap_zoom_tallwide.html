@@ -1,0 +1,85 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=2100"/>
+  <title>Check that double tapping on a tall element that is >90% width of viewport doesn't scroll to the top of it when scrolled down</title>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <script type="application/javascript">
+
+async function test() {
+  let useTouchpad = (location.search == "?touchpad");
+
+  var resolution = getResolution();
+  ok(resolution > 0,
+     "The initial_resolution is " + resolution + ", which is some sane value");
+
+  // Check that double-tapping once on a small element zooms in
+  await doubleTapOn(document.getElementById("target2"), 10, 10, useTouchpad);
+  let prev_resolution = resolution;
+  resolution = getResolution();
+  ok(resolution > prev_resolution, "The first double-tap has increased the resolution to " + resolution);
+
+  // instant scroll to the bottom of the page
+  window.scrollTo({
+    top: 40000,
+    left: 0,
+    behavior: 'auto'
+  });
+
+  await promiseApzFlushedRepaints();
+
+  let scrollPos = window.scrollY;
+  ok(scrollPos > 1500, "window scrolled down (1)");
+  ok(scrollPos > window.innerHeight * 2, "window scrolled down (2)")
+
+  info("window.scrollY " + window.scrollY);
+  info("window.innerHeight " + window.innerHeight);
+  info("visualViewport.pageTop " + visualViewport.pageTop);
+
+  let target = document.getElementById("target");
+
+  let x = 20;
+  let y = visualViewport.pageTop + 20;
+
+  // Check that double-tapping on the big element zooms out
+  await doubleTapOn(target, x, y, useTouchpad);
+  prev_resolution = resolution;
+  resolution = getResolution();
+  ok(resolution < prev_resolution, "The second double-tap has decreased the resolution to " + resolution);
+
+  info("scrollPos " + scrollPos);
+  info("window.scrollY " + window.scrollY);
+  ok(window.scrollY > 1500, "window is still scrolled down (1)");
+  ok(window.scrollY >= scrollPos - window.innerHeight, "window is still scrolled down (2)");
+}
+
+waitUntilApzStable()
+.then(test)
+.then(subtestDone, subtestFailed);
+
+  </script>
+  <style>
+    .container {
+      background-color: #eee;
+      width: 95vw;
+      height: 400vh;
+    }
+    .smallcontainer {
+      background-color: #aaa;
+      width: 40px;
+      height: 40px;
+    }
+</style>
+</head>
+<body>
+
+<div id="target" class="container">
+  <div id="target2" class="smallcontainer">
+  </div>
+</div>
+
+</body>
+</html>
