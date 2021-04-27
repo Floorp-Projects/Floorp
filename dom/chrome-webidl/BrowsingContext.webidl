@@ -287,6 +287,8 @@ interface CanonicalBrowsingContext : BrowsingContext {
   // The current URI loaded in this BrowsingContext according to nsDocShell.
   // This may not match the current window global's document URI in some cases.
   readonly attribute URI? currentURI;
+
+  void clearRestoreState();
 };
 
 [Exposed=Window, ChromeOnly]

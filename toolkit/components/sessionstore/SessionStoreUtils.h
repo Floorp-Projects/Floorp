@@ -113,11 +113,9 @@ class SessionStoreUtils {
   static already_AddRefed<nsISessionStoreRestoreData>
   ConstructSessionStoreRestoreData(const GlobalObject& aGlobal);
 
-  static bool SetRestoreData(const GlobalObject& aGlobal,
-                             CanonicalBrowsingContext& aContext,
-                             nsISessionStoreRestoreData* aData);
-
-  static nsresult CallRestoreTabContentComplete(Element* aBrowser);
+  static already_AddRefed<Promise> InitializeRestore(
+      const GlobalObject& aGlobal, CanonicalBrowsingContext& aContext,
+      nsISessionStoreRestoreData* aData, ErrorResult& aError);
 
   static nsresult ConstructFormDataValues(
       JSContext* aCx, const nsTArray<sessionstore::FormEntry>& aValues,

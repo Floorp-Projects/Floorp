@@ -10,6 +10,7 @@
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/MediaControlKeySource.h"
 #include "mozilla/dom/BrowsingContextWebProgress.h"
+#include "mozilla/dom/Promise.h"
 #include "mozilla/dom/SessionStoreRestoreData.h"
 #include "mozilla/dom/SessionStoreUtils.h"
 #include "mozilla/dom/ipc/IdType.h"
@@ -286,8 +287,10 @@ class CanonicalBrowsingContext final : public BrowsingContext {
     return mContainerFeaturePolicy;
   }
 
-  void SetRestoreData(SessionStoreRestoreData* aData);
+  void SetRestoreData(SessionStoreRestoreData* aData, ErrorResult& aError);
+  void ClearRestoreState();
   void RequestRestoreTabContent(WindowGlobalParent* aWindow);
+  already_AddRefed<Promise> GetRestorePromise();
 
   // Called when a BrowserParent for this BrowsingContext has been fully
   // destroyed (i.e. `ActorDestroy` was called).
@@ -349,6 +352,20 @@ class CanonicalBrowsingContext final : public BrowsingContext {
     RemotenessChangeOptions mOptions;
   };
 
+  struct RestoreState {
+    NS_INLINE_DECL_REFCOUNTING(RestoreState)
+
+    void ClearData() { mData = nullptr; }
+
+    RefPtr<SessionStoreRestoreData> mData;
+    RefPtr<Promise> mPromise;
+    uint32_t mRequests = 0;
+    uint32_t mResolves = 0;
+
+   private:
+    ~RestoreState() = default;
+  };
+
   friend class net::DocumentLoadListener;
   // Called when a DocumentLoadListener is created to start a load for
   // this browsing context. Returns false if a higher priority load is
@@ -375,6 +392,8 @@ class CanonicalBrowsingContext final : public BrowsingContext {
   // Called when we want to show the subframe crashed UI as our previous browser
   // has become unloaded for one reason or another.
   void ShowSubframeCrashedUI(BrowserBridgeParent* aBridge);
+
+  void ResolveAndClearRestoreState(RestoreState* aState);
 
   // XXX(farre): Store a ContentParent pointer here rather than mProcessId?
   // Indicates which process owns the docshell.
@@ -424,9 +443,7 @@ class CanonicalBrowsingContext final : public BrowsingContext {
 
   RefPtr<FeaturePolicy> mContainerFeaturePolicy;
 
-  RefPtr<SessionStoreRestoreData> mRestoreData;
-  uint32_t mRequestedContentRestores = 0;
-  uint32_t mCompletedContentRestores = 0;
+  RefPtr<RestoreState> mRestoreState;
 };
 
 }  // namespace dom
