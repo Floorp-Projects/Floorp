@@ -950,31 +950,22 @@ class HTMLEditor final : public TextEditor,
    * outside active editing host.
    */
   nsIContent* GetPreviousHTMLElementOrText(const nsINode& aNode) const {
-    return GetPreviousHTMLElementOrTextInternal(aNode, false);
-  }
-  nsIContent* GetPreviousHTMLElementOrTextInBlock(const nsINode& aNode) const {
-    return GetPreviousHTMLElementOrTextInternal(aNode, true);
+    return GetPreviousHTMLElementOrTextInternal(aNode);
   }
   template <typename PT, typename CT>
   nsIContent* GetPreviousHTMLElementOrText(
       const EditorDOMPointBase<PT, CT>& aPoint) const {
-    return GetPreviousHTMLElementOrTextInternal(aPoint, false);
-  }
-  template <typename PT, typename CT>
-  nsIContent* GetPreviousHTMLElementOrTextInBlock(
-      const EditorDOMPointBase<PT, CT>& aPoint) const {
-    return GetPreviousHTMLElementOrTextInternal(aPoint, true);
+    return GetPreviousHTMLElementOrTextInternal(aPoint);
   }
 
   /**
    * GetPreviousHTMLElementOrTextInternal() methods are common implementation
    * of above methods.  Please don't use this method directly.
    */
-  nsIContent* GetPreviousHTMLElementOrTextInternal(const nsINode& aNode,
-                                                   bool aNoBlockCrossing) const;
+  nsIContent* GetPreviousHTMLElementOrTextInternal(const nsINode& aNode) const;
   template <typename PT, typename CT>
   nsIContent* GetPreviousHTMLElementOrTextInternal(
-      const EditorDOMPointBase<PT, CT>& aPoint, bool aNoBlockCrossing) const;
+      const EditorDOMPointBase<PT, CT>& aPoint) const;
 
   /**
    * GetPreviousEditableHTMLNode*() methods are similar to
@@ -1019,31 +1010,22 @@ class HTMLEditor final : public TextEditor,
    * next node of aNode.
    */
   nsIContent* GetNextHTMLElementOrText(const nsINode& aNode) const {
-    return GetNextHTMLElementOrTextInternal(aNode, false);
-  }
-  nsIContent* GetNextHTMLElementOrTextInBlock(const nsINode& aNode) const {
-    return GetNextHTMLElementOrTextInternal(aNode, true);
+    return GetNextHTMLElementOrTextInternal(aNode);
   }
   template <typename PT, typename CT>
   nsIContent* GetNextHTMLElementOrText(
       const EditorDOMPointBase<PT, CT>& aPoint) const {
-    return GetNextHTMLElementOrTextInternal(aPoint, false);
-  }
-  template <typename PT, typename CT>
-  nsIContent* GetNextHTMLElementOrTextInBlock(
-      const EditorDOMPointBase<PT, CT>& aPoint) const {
-    return GetNextHTMLElementOrTextInternal(aPoint, true);
+    return GetNextHTMLElementOrTextInternal(aPoint);
   }
 
   /**
    * GetNextHTMLNodeInternal() methods are common implementation
    * of above methods.  Please don't use this method directly.
    */
-  nsIContent* GetNextHTMLElementOrTextInternal(const nsINode& aNode,
-                                               bool aNoBlockCrossing) const;
+  nsIContent* GetNextHTMLElementOrTextInternal(const nsINode& aNode) const;
   template <typename PT, typename CT>
   nsIContent* GetNextHTMLElementOrTextInternal(
-      const EditorDOMPointBase<PT, CT>& aPoint, bool aNoBlockCrossing) const;
+      const EditorDOMPointBase<PT, CT>& aPoint) const;
 
   /**
    * GetNextEditableHTMLNode*() methods are similar to
