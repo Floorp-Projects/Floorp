@@ -225,11 +225,14 @@ class AboutWelcomeChild extends JSWindowActorChild {
     } else {
       log.debug("Loading about:welcome without experiment");
       let attributionData = await this.sendQuery("AWPage:GET_ATTRIBUTION_DATA");
-      if (attributionData) {
-        log.debug("Loading about:welcome with attribution data");
+
+      if (attributionData && attributionData.template) {
+        log.debug("Loading about:welcome with RTAMO attribution data");
         featureConfig = { ...attributionData, ...featureConfig };
       } else {
-        log.debug("Loading about:welcome with default data");
+        log.debug("Loading about:welcome with default data and UA attribution");
+        let ua = attributionData ? attributionData.ua : "";
+        featureConfig = { ...featureConfig, ua };
         let defaults = await AboutWelcomeDefaults.getDefaults(featureConfig);
         // FeatureConfig (from prefs or experiments) has higher precendence
         // to defaults. But the `screens` property isn't defined we shouldn't
@@ -244,11 +247,11 @@ class AboutWelcomeChild extends JSWindowActorChild {
     }
 
     return Cu.cloneInto(
-      {
+      AboutWelcomeDefaults.prepareContentForReact({
         ...experimentMetadata,
         ...featureConfig,
         design: featureConfig.isProton ? "proton" : "",
-      },
+      }),
       this.contentWindow
     );
   }

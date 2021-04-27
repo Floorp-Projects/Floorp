@@ -32,6 +32,19 @@ add_task(async function test_handleAddonInfoNotFound() {
   sandbox.restore();
 });
 
+add_task(async function test_UAAttribution() {
+  let sandbox = sinon.createSandbox();
+  const stub = sandbox
+    .stub(AttributionCode, "getAttrDataAsync")
+    .resolves({ ua: "test" });
+  let result = await AboutWelcomeDefaults.getAttributionContent();
+  equal(stub.callCount, 1, "Call was made");
+  equal(result.template, undefined, "Template was not returned");
+  equal(result.ua, "test", "UA was returned");
+
+  sandbox.restore();
+});
+
 add_task(async function test_formatAttributionData() {
   let sandbox = sinon.createSandbox();
   const TEST_ADDON_INFO = {
