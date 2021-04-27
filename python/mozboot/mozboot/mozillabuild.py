@@ -51,7 +51,7 @@ def get_is_windefender_disabled():
             )
             # is_antivirus_disabled is either 0 (False) or 1 (True)
             return bool(is_antivirus_disabled)
-    except (FileNotFoundError, OSError):
+    except FileNotFoundError:
         return True
 
 
@@ -68,7 +68,7 @@ def get_windefender_exclusion_paths():
             for i in range(0, values_count):
                 path, _, __ = winreg.EnumValue(exclusions_key, i)
                 paths.append(path)
-    except (FileNotFoundError, OSError):
+    except FileNotFoundError:
         pass
 
     return paths
