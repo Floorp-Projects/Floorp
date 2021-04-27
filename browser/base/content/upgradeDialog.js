@@ -4,6 +4,7 @@
 
 const {
   AddonManager,
+  AppConstants,
   document: gDoc,
   getShellService,
   Services,
@@ -105,6 +106,9 @@ CLEANUP.push(() => Services.obs.removeObserver(QUIT_OBSERVER, QUIT_TOPIC));
 
 // Hook up dynamic behaviors of the dialog.
 function onLoad(ready) {
+  // Change content for Windows 7 because non-light themes aren't quite right.
+  const win7Content = AppConstants.isPlatformAndVersionAtMost("win", "6.1");
+
   const title = document.getElementById("title");
   const subtitle = document.getElementById("subtitle");
   const items = document.querySelector(".items");
@@ -127,6 +131,22 @@ function onLoad(ready) {
         // Wait for main button clicks on each screen.
         primary.addEventListener("click", advance);
         secondary.addEventListener("click", advance);
+
+        // Windows 7 has a single screen so hide steps.
+        if (win7Content) {
+          steps.style.visibility = "hidden";
+
+          // If already default, reuse "Okay" for primary and hide secondary.
+          if (IS_DEFAULT) {
+            const { head } = document;
+            head.appendChild(
+              head.querySelector("[rel=localization]").cloneNode()
+            ).href = "browser/newtab/asrouter.ftl";
+            SCREEN_STRINGS[current].primary =
+              "cfr-doorhanger-doh-primary-button-2";
+            secondary.style.display = "none";
+          }
+        }
         break;
 
       case 1:
@@ -138,6 +158,12 @@ function onLoad(ready) {
           SHELL.pinToTaskbar();
         } else if (target === secondary && IS_DEFAULT && !(await NEED_PIN)) {
           closeDialog("early");
+          return;
+        }
+
+        // First screen is the only screen for Windows 7.
+        if (win7Content) {
+          closeDialog("win7");
           return;
         }
 
