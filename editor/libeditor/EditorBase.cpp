@@ -2845,7 +2845,7 @@ nsIContent* EditorBase::GetPreviousNodeInternal(
 
   if ((!aOptions.contains(WalkTreeOption::IgnoreNonEditableNode) ||
        EditorUtils::IsEditableContent(*lastLeafContent, GetEditorType())) &&
-      (aOptions.contains(WalkTreeOption::FindAnyDataNode) ||
+      (!aOptions.contains(WalkTreeOption::IgnoreDataNodeExceptText) ||
        EditorUtils::IsElementOrText(*lastLeafContent))) {
     return lastLeafContent;
   }
@@ -2901,7 +2901,7 @@ nsIContent* EditorBase::GetNextNodeInternal(
 
     if ((!aOptions.contains(WalkTreeOption::IgnoreNonEditableNode) ||
          EditorUtils::IsEditableContent(*firstLeafContent, GetEditorType())) &&
-        (aOptions.contains(WalkTreeOption::FindAnyDataNode) ||
+        (!aOptions.contains(WalkTreeOption::IgnoreDataNodeExceptText) ||
          EditorUtils::IsElementOrText(*firstLeafContent))) {
       return firstLeafContent;
     }
@@ -2993,7 +2993,7 @@ nsIContent* EditorBase::FindNode(const nsINode* aCurrentNode, bool aGoForward,
 
   if ((!aOptions.contains(WalkTreeOption::IgnoreNonEditableNode) ||
        EditorUtils::IsEditableContent(*candidate, GetEditorType())) &&
-      (aOptions.contains(WalkTreeOption::FindAnyDataNode) ||
+      (!aOptions.contains(WalkTreeOption::IgnoreDataNodeExceptText) ||
        EditorUtils::IsElementOrText(*candidate))) {
     return candidate;
   }
