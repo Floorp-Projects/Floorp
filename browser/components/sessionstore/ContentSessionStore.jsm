@@ -504,7 +504,6 @@ class MessageQueue extends Handler {
  */
 const MESSAGES = [
   "SessionStore:restoreHistory",
-  "SessionStore:restoreDocShellState",
   "SessionStore:restoreTabContent",
   "SessionStore:resetRestore",
   "SessionStore:flush",
@@ -558,9 +557,6 @@ class ContentSessionStore {
     switch (name) {
       case "SessionStore:restoreHistory":
         this.restoreHistory(data);
-        break;
-      case "SessionStore:restoreDocShellState":
-        this.restoreDocShellState(data);
         break;
       case "SessionStore:restoreTabContent":
         this.restoreTabContent(data);
@@ -641,31 +637,6 @@ class ContentSessionStore {
         isRemotenessUpdate,
       });
     }
-  }
-
-  // SHIP only
-  restoreDocShellState(data) {
-    let { epoch, tabData } = data;
-
-    if (!Services.appinfo.sessionHistoryInParent) {
-      throw new Error("This function should only be used with SHIP");
-    }
-    let { docShell } = this.mm;
-
-    if (tabData.uri) {
-      docShell.setCurrentURI(Services.io.newURI(tabData.uri));
-    }
-
-    if (tabData.disallow) {
-      SessionStoreUtils.restoreDocShellCapabilities(docShell, tabData.disallow);
-    }
-
-    if (tabData.storage) {
-      SessionStoreUtils.restoreSessionStorage(docShell, tabData.storage);
-    }
-    // Since we don't send restoreHistory, we need to tell the parent when
-    // to call SSTabRestoring (via restoreHistoryComplete)
-    this.mm.sendAsyncMessage("SessionStore:restoreHistoryComplete", { epoch });
   }
 
   restoreTabContent({ loadArguments, isRemotenessUpdate, reason }) {
