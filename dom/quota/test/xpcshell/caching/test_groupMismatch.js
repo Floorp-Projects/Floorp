@@ -36,7 +36,7 @@ async function testSteps() {
   //    "mozilla-iot.org".
   // 3. Remove the folder "storage/temporary".
   // 4. Remove the file "storage/ls-archive.sqlite".
-  installPackage("caching_groupMismatch_profile");
+  installPackage("groupMismatch_profile");
 
   request = getOriginUsage(principal, /* fromMemory */ true);
   await requestFinished(request);

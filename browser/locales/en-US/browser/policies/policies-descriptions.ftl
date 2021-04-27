@@ -19,6 +19,8 @@ policy-AppUpdateURL = Set custom app update URL.
 
 policy-Authentication = Configure integrated authentication for websites that support it.
 
+policy-AutoLaunchProtocolsFromOrigins = Define a list of external protocols that can be used from listed origins without prompting the user.
+
 policy-BackgroundAppUpdate2 = Enable or disable the background updater.
 
 policy-BlockAboutAddons = Block access to the Add-ons Manager (about:addons).

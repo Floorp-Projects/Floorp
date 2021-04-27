@@ -1,4 +1,4 @@
-// |jit-test| exitstatus: 6
+// |jit-test| exitstatus: 6; skip-if: getBuildConfiguration()['wasi']
 timeout(0.5)
 
 var proxy = new Proxy({}, {

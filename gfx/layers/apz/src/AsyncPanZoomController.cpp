@@ -2675,23 +2675,26 @@ nsEventStatus AsyncPanZoomController::OnPan(
   auto [logicalPanDisplacement, physicalPanDisplacement] =
       GetDisplacementsForPanGesture(aEvent);
 
-  if (mState == OVERSCROLL_ANIMATION &&
+  MOZ_ASSERT_IF(mState == OVERSCROLL_ANIMATION, mAnimation);
+  if (mState == OVERSCROLL_ANIMATION && mAnimation &&
       aFingersOnTouchpad == FingersOnTouchpad::No) {
     // If there is an on-going overscroll animation, we tell the animation
     // whether the displacements should be handled by the animation or not.
-    OverscrollAnimation* overscrollAnimation =
-        mAnimation->AsOverscrollAnimation();
-    overscrollAnimation->HandlePanMomentum(logicalPanDisplacement);
-    // And then as a result of the above call, if the animation is currently
-    // affecting on the axis, drop the displacement value on the axis so that we
-    // stop further oversrolling on the axis.
-    if (overscrollAnimation->IsManagingXAxis()) {
-      logicalPanDisplacement.x = 0;
-      physicalPanDisplacement.x = 0;
-    }
-    if (overscrollAnimation->IsManagingYAxis()) {
-      logicalPanDisplacement.y = 0;
-      physicalPanDisplacement.y = 0;
+    MOZ_ASSERT(mAnimation->AsOverscrollAnimation());
+    if (OverscrollAnimation* overscrollAnimation =
+            mAnimation->AsOverscrollAnimation()) {
+      overscrollAnimation->HandlePanMomentum(logicalPanDisplacement);
+      // And then as a result of the above call, if the animation is currently
+      // affecting on the axis, drop the displacement value on the axis so that
+      // we stop further oversrolling on the axis.
+      if (overscrollAnimation->IsManagingXAxis()) {
+        logicalPanDisplacement.x = 0;
+        physicalPanDisplacement.x = 0;
+      }
+      if (overscrollAnimation->IsManagingYAxis()) {
+        logicalPanDisplacement.y = 0;
+        physicalPanDisplacement.y = 0;
+      }
     }
   }
 
@@ -4406,8 +4409,8 @@ bool AsyncPanZoomController::UpdateAnimation(
     bool wantsRepaints = mAnimation->WantsRepaints();
     *aOutDeferredTasks = mAnimation->TakeDeferredTasks();
     if (!continueAnimation) {
-      mAnimation = nullptr;
       SetState(NOTHING);
+      mAnimation = nullptr;
     }
     // Request a repaint at the end of the animation in case something such as a
     // call to NotifyLayersUpdated was invoked during the animation and Gecko's

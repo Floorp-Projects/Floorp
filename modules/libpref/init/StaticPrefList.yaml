@@ -1839,6 +1839,11 @@
   value: false
   mirror: always
 
+- name: dom.mouse_capture.enabled
+  type: bool
+  value: true
+  mirror: always
+
 # Is support for Performance.mozMemory enabled?
 - name: dom.enable_memory_stats
   type: bool
@@ -2655,6 +2660,19 @@
 # Should we try to load origin information from the cache?
 # See bug 1563023 for more details.
 - name: dom.quotaManager.loadQuotaFromCache
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
+# Should we check build ID as part of the cache validation?
+# When enabled, the cache is invalidated on any upgrade (or downgrade),
+# ensuring that changes in how quota usage is calculated can't cause
+# inconsistencies at the cost of a slower initialization. Currently, this
+# should only be set to false in tests using a packaged profile that inherently
+# includes a build id different from the building running the tests. In the
+# future this may be set to false if we are confident that we have sufficiently
+# thorough schema versioning.
+- name: dom.quotaManager.caching.checkBuildId
   type: RelaxedAtomicBool
   value: true
   mirror: always
@@ -5658,7 +5676,7 @@
     mirror: always
 #endif  // NIGHTLY_BUILD
 
-  # Experimental support for the egonomic brand check proposal. 
+  # Experimental support for the ergonomic brand check proposal.
 - name: javascript.options.experimental.ergonomic_brand_checks
   type: bool
   value: false
@@ -6119,9 +6137,9 @@
   type: RelaxedAtomicInt32
 #if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
   #if defined(NIGHTLY_BUILD)
-  value: 3
+  value: 6
   #else
-  value: 1
+  value: 3
   #endif
 #else
   value: 1

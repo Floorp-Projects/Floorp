@@ -83,6 +83,25 @@
       }
     },
 
+    "AutoLaunchProtocolsFromOrigins": {
+      "type": ["JSON", "array"],
+      "items": {
+        "type": "object",
+        "properties": {
+          "allowed_origins": {
+            "type": "array",
+            "items": {
+              "type": "origin"
+            }
+          },
+          "protocol": {
+            "type": "string"
+          },
+          "required": ["allowed_origins", "protocol"]
+        }
+      }
+    },
+
     "BackgroundAppUpdate": {
       "type": "boolean"
     },

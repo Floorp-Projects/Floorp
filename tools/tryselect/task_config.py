@@ -328,6 +328,39 @@ class GeckoProfile(TryConfig):
                 "help": "Create and upload a gecko profile during talos/raptor tasks.",
             },
         ],
+        [
+            ["--gecko-profile-interval"],
+            {
+                "dest": "gecko_profile_interval",
+                "type": float,
+                "help": "How frequently to take samples (ms)",
+            },
+        ],
+        [
+            ["--gecko-profile-entries"],
+            {
+                "dest": "gecko_profile_entries",
+                "type": int,
+                "help": "How many samples to take with the profiler",
+            },
+        ],
+        [
+            ["--gecko-profile-features"],
+            {
+                "dest": "gecko_profile_features",
+                "type": str,
+                "default": None,
+                "help": "Set the features enabled for the profiler.",
+            },
+        ],
+        [
+            ["--gecko-profile-threads"],
+            {
+                "dest": "gecko_profile_threads",
+                "type": str,
+                "help": "Comma-separated list of threads to sample.",
+            },
+        ],
         # For backwards compatibility
         [
             ["--talos-profile"],
@@ -350,11 +383,27 @@ class GeckoProfile(TryConfig):
         ],
     ]
 
-    def try_config(self, profile, **kwargs):
-        if profile:
-            return {
+    def try_config(
+        self,
+        profile,
+        gecko_profile_interval,
+        gecko_profile_entries,
+        gecko_profile_features,
+        gecko_profile_threads,
+        **kwargs
+    ):
+        if profile or not all(
+            kwargs.get(s) is None
+            for s in (gecko_profile_features, gecko_profile_threads)
+        ):
+            cfg = {
                 "gecko-profile": True,
+                "gecko-profile-interval": gecko_profile_interval,
+                "gecko-profile-entries": gecko_profile_entries,
+                "gecko-profile-features": gecko_profile_features,
+                "gecko-profile-threads": gecko_profile_threads,
             }
+            return {key: value for key, value in cfg.items() if value is not None}
 
 
 class Browsertime(TryConfig):

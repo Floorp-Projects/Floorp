@@ -71,7 +71,9 @@ class PreferenceRollbackAction extends BaseAction {
         this.log.info(`Rolling back ${rolloutSlug}`);
         rollout.state = PreferenceRollouts.STATE_ROLLED_BACK;
         for (const { preferenceName, previousValue } of rollout.preferences) {
-          PrefUtils.setPref("default", preferenceName, previousValue);
+          PrefUtils.setPref(preferenceName, previousValue, {
+            branch: "default",
+          });
         }
         await PreferenceRollouts.update(rollout);
         TelemetryEvents.sendEvent(

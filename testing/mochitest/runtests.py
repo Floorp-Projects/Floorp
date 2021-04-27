@@ -2551,7 +2551,7 @@ toolbar#nav-bar {
             # record post-test information
             if status:
                 self.message_logger.dump_buffered()
-                msg = ("application terminated with exit code %s" % status,)
+                msg = "application terminated with exit code %s" % status
                 # self.message_logger.is_test_running indicates we need to send a test_end
                 if crashAsPass and self.message_logger.is_test_running:
                     # this works for browser-chrome, mochitest-plain has status=0
@@ -2570,7 +2570,9 @@ toolbar#nav-bar {
                     # this requires a custom message vs log.error/log.warning/etc.
                     self.message_logger.process_message(message)
                 else:
-                    self.log.error(msg)
+                    self.log.error(
+                        "TEST-UNEXPECTED-FAIL | %s | %s" % (self.lastTestSeen, msg)
+                    )
             else:
                 self.lastTestSeen = "Main app process exited normally"
 
