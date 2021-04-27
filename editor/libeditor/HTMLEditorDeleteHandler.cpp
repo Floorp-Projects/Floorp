@@ -2764,12 +2764,20 @@ bool HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::
     return false;
   }
 
+  Element* editingHost = aHTMLEditor.GetActiveEditingHost();
+  if (NS_WARN_IF(!editingHost)) {
+    return false;
+  }
+
   if (aDirectionAndAmount == nsIEditor::ePrevious) {
-    mLeftContent =
-        aHTMLEditor.GetPreviousEditableHTMLNode(aCurrentBlockElement);
+    mLeftContent = HTMLEditUtils::GetPreviousContent(
+        aCurrentBlockElement, {WalkTreeOption::IgnoreNonEditableNode},
+        editingHost);
     mRightContent = aCaretPoint.GetContainerAsContent();
   } else {
-    mRightContent = aHTMLEditor.GetNextEditableHTMLNode(aCurrentBlockElement);
+    mRightContent = HTMLEditUtils::GetNextContent(
+        aCurrentBlockElement, {WalkTreeOption::IgnoreNonEditableNode},
+        editingHost);
     mLeftContent = aCaretPoint.GetContainerAsContent();
   }
 
