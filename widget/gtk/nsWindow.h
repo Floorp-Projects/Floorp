@@ -378,7 +378,6 @@ class nsWindow final : public nsBaseWidget {
 
 #ifdef MOZ_X11
   Display* XDisplay() { return mXDisplay; }
-  Window mOldFocusWindow;
 #endif
 #ifdef MOZ_WAYLAND
   bool GetCSDDecorationOffset(int* aDx, int* aDy);
@@ -516,7 +515,7 @@ class nsWindow final : public nsBaseWidget {
   GtkWidget* mShell;
   MozContainer* mContainer;
   GdkWindow* mGdkWindow;
-  bool mWindowShouldStartDragging = false;
+  bool mWindowShouldStartDragging;
   PlatformCompositorWidgetDelegate* mCompositorWidgetDelegate;
 
   uint32_t mHasMappedToplevel : 1, mRetryPointerGrab : 1;

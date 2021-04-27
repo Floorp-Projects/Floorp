@@ -428,49 +428,71 @@ void GetWindowOrigin(GdkWindow* aWindow, int* aX, int* aY) {
 #endif
 }
 
-nsWindow::nsWindow() {
-  mIsTopLevel = false;
-  mIsDestroyed = false;
-  mListenForResizes = false;
-  mNeedsDispatchResized = false;
-  mIsShown = false;
-  mNeedsShow = false;
-  mEnabled = true;
-  mCreated = false;
-  mHandleTouchEvent = false;
-  mIsDragPopup = false;
-  mContainer = nullptr;
-  mGdkWindow = nullptr;
-  mShell = nullptr;
-  mCompositorWidgetDelegate = nullptr;
-  mHasMappedToplevel = false;
-  mRetryPointerGrab = false;
-  mWindowType = eWindowType_child;
-  mSizeState = nsSizeMode_Normal;
-  mBoundsAreValid = true;
-  mAspectRatio = 0.0f;
-  mAspectRatioSaved = 0.0f;
-  mLastSizeMode = nsSizeMode_Normal;
-  mSizeConstraints.mMaxSize = GetSafeWindowSize(mSizeConstraints.mMaxSize);
-
-#ifdef MOZ_X11
-  mOldFocusWindow = 0;
-
-  mXDisplay = nullptr;
-  mXWindow = X11None;
-  mXVisual = nullptr;
-  mXDepth = 0;
-#endif /* MOZ_X11 */
-
+nsWindow::nsWindow()
+    : mIsTopLevel(false),
+      mIsDestroyed(false),
+      mListenForResizes(false),
+      mNeedsDispatchResized(false),
+      mIsShown(false),
+      mNeedsShow(false),
+      mEnabled(true),
+      mCreated(false),
+      mHandleTouchEvent(false),
+      mIsDragPopup(false),
+      mWindowScaleFactorChanged(true),
+      mWindowScaleFactor(1),
+      mCompositedScreen(gdk_screen_is_composited(gdk_screen_get_default())),
 #ifdef MOZ_WAYLAND
-  mNeedsCompositorResume = false;
-  mCompositorInitiallyPaused = false;
-  mNativePointerLockCenter = LayoutDeviceIntPoint();
-  mRelativePointer = nullptr;
-  mLockedPointer = nullptr;
+      mNeedsCompositorResume(false),
+      mCompositorInitiallyPaused(false),
+      mNativePointerLockCenter(LayoutDeviceIntPoint()),
 #endif
-  mWaitingForMoveToRectCB = false;
-  mPendingSizeRect = LayoutDeviceIntRect(0, 0, 0, 0);
+      mShell(nullptr),
+      mContainer(nullptr),
+      mGdkWindow(nullptr),
+      mWindowShouldStartDragging(false),
+      mCompositorWidgetDelegate(nullptr),
+      mHasMappedToplevel(false),
+      mRetryPointerGrab(false),
+      mSizeState(nsSizeMode_Normal),
+      mAspectRatio(0.0f),
+      mAspectRatioSaved(0.0f),
+      mLastScrollEventTime(GDK_CURRENT_TIME),
+      mPendingConfigures(0),
+      mGtkWindowDecoration(GTK_DECORATION_NONE),
+      mDrawToContainer(false),
+      mDrawInTitlebar(false),
+      mTitlebarBackdropState(false),
+      mIsPIPWindow(false),
+      mAlwaysOnTop(false),
+      mIsTransparent(false),
+      mTransparencyBitmap(nullptr),
+      mTransparencyBitmapWidth(0),
+      mTransparencyBitmapHeight(0),
+      mTransparencyBitmapForTitlebar(false),
+      mHasAlphaVisual(false),
+      mLastMotionPressure(0),
+      mLastSizeMode(nsSizeMode_Normal),
+      mBoundsAreValid(true),
+      mPreferredPopupRectFlushed(false),
+      mWaitingForMoveToRectCB(false),
+      mPendingSizeRect(LayoutDeviceIntRect(0, 0, 0, 0)),
+#ifdef ACCESSIBILITY
+      mRootAccessible(nullptr),
+#endif
+#ifdef MOZ_X11
+      mXDisplay(nullptr),
+      mXWindow(X11None),
+      mXVisual(nullptr),
+      mXDepth(0),
+#endif
+#ifdef MOZ_WAYLAND
+      mLockedPointer(nullptr),
+      mRelativePointer(nullptr)
+#endif
+{
+  mWindowType = eWindowType_child;
+  mSizeConstraints.mMaxSize = GetSafeWindowSize(mSizeConstraints.mMaxSize);
 
   if (!gGlobalsInitialized) {
     gGlobalsInitialized = true;
@@ -489,36 +511,6 @@ nsWindow::nsWindow() {
     }
 #endif
   }
-
-  mLastMotionPressure = 0;
-
-#ifdef ACCESSIBILITY
-  mRootAccessible = nullptr;
-#endif
-
-  mIsTransparent = false;
-  mTransparencyBitmap = nullptr;
-  mTransparencyBitmapForTitlebar = false;
-
-  mTransparencyBitmapWidth = 0;
-  mTransparencyBitmapHeight = 0;
-
-  mLastScrollEventTime = GDK_CURRENT_TIME;
-
-  mPendingConfigures = 0;
-  mGtkWindowDecoration = GTK_DECORATION_NONE;
-  mDrawToContainer = false;
-  mDrawInTitlebar = false;
-  mTitlebarBackdropState = false;
-
-  mHasAlphaVisual = false;
-  mIsPIPWindow = false;
-  mAlwaysOnTop = false;
-
-  mWindowScaleFactorChanged = true;
-  mWindowScaleFactor = 1;
-
-  mCompositedScreen = gdk_screen_is_composited(gdk_screen_get_default());
 }
 
 nsWindow::~nsWindow() {
