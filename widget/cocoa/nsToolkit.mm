@@ -36,6 +36,8 @@ extern "C" {
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
 
+#include "NativeMenuSupport.h"
+
 using namespace mozilla;
 
 static io_connect_t gRootPort = MACH_PORT_NULL;
@@ -135,10 +137,10 @@ void nsToolkit::RemoveSleepWakeNotifications() {
 void nsToolkit::MonitorAllProcessMouseEvents() {
   NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
-  // Don't do this for apps that use native context menus.
-#ifdef MOZ_USE_NATIVE_POPUP_WINDOWS
-  return;
-#endif /* MOZ_USE_NATIVE_POPUP_WINDOWS */
+  if (mozilla::widget::NativeMenuSupport::ShouldUseNativeContextMenus()) {
+    // Don't do this if we are using native context menus.
+    return;
+  }
 
   if (getenv("MOZ_NO_GLOBAL_MOUSE_MONITOR")) return;
 
