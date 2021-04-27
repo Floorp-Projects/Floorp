@@ -103,6 +103,14 @@ class MockGfxInfo final : public nsIGfxInfo {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
+  NS_IMETHOD GetAzureCanvasBackend(nsAString& aBackend) override {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  NS_IMETHOD GetAzureContentBackend(nsAString& aBackend) override {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
   // The following methods we don't need for testing gfxConfigManager.
   NS_IMETHOD GetFeatureSuggestedDriverVersion(int32_t aFeature,
                                               nsAString& _retval) override {
