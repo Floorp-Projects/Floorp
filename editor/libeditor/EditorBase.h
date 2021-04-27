@@ -1743,22 +1743,26 @@ class EditorBase : public nsIEditor,
     StopAtBlockBoundary,       // Stop waking the tree at a block boundary.
   };
   using WalkTreeOptions = EnumSet<WalkTreeOption>;
-  nsIContent* GetPreviousContent(const nsINode& aNode,
-                                 const WalkTreeOptions& aOptions) const;
+  static nsIContent* GetPreviousContent(
+      const nsINode& aNode, const WalkTreeOptions& aOptions,
+      EditorType aEditorType, const Element* aAncestorLimiter = nullptr);
 
   /**
    * And another version that takes a point in DOM tree rather than a node.
    */
-  nsIContent* GetPreviousContent(const EditorRawDOMPoint& aPoint,
-                                 const WalkTreeOptions& aOptions) const;
+  static nsIContent* GetPreviousContent(
+      const EditorRawDOMPoint& aPoint, const WalkTreeOptions& aOptions,
+      EditorType aEditorType, const Element* aAncestorLimiter = nullptr);
 
   /**
    * Get next content node of aNode if there is.
    *
    * @param aNode       The node from which we start to walk the DOM tree.
    */
-  nsIContent* GetNextContent(const nsINode& aNode,
-                             const WalkTreeOptions& aOptions) const;
+  static nsIContent* GetNextContent(const nsINode& aNode,
+                                    const WalkTreeOptions& aOptions,
+                                    EditorType aEditorType,
+                                    const Element* aAncestorLimiter = nullptr);
 
   /**
    * And another version that takes a point in DOM tree rather than a node.
@@ -1783,8 +1787,10 @@ class EditorBase : public nsIEditor,
    *   point.Set(point.GetChild());
    * }
    */
-  nsIContent* GetNextContent(const EditorRawDOMPoint& aPoint,
-                             const WalkTreeOptions& aOptions) const;
+  static nsIContent* GetNextContent(const EditorRawDOMPoint& aPoint,
+                                    const WalkTreeOptions& aOptions,
+                                    EditorType aEditorType,
+                                    const Element* aAncestorLimiter = nullptr);
 
   /**
    * Returns true if aNode is our root node.
