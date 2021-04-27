@@ -2799,21 +2799,16 @@ nsresult EditorBase::DeleteTextWithTransaction(Text& aTextNode,
   return rv;
 }
 
-nsIContent* EditorBase::GetPreviousNodeInternal(const nsINode& aNode,
-                                                bool aFindEditableNode,
-                                                bool aFindAnyDataNode,
-                                                bool aNoBlockCrossing) const {
+nsIContent* EditorBase::GetPreviousNodeInternal(
+    const nsINode& aNode, const WalkTreeOptions& aOptions) const {
   if (!IsDescendantOfEditorRoot(&aNode)) {
     return nullptr;
   }
-  return FindNode(&aNode, false, aFindEditableNode, aFindAnyDataNode,
-                  aNoBlockCrossing);
+  return FindNode(&aNode, false, aOptions);
 }
 
-nsIContent* EditorBase::GetPreviousNodeInternal(const EditorRawDOMPoint& aPoint,
-                                                bool aFindEditableNode,
-                                                bool aFindAnyDataNode,
-                                                bool aNoBlockCrossing) const {
+nsIContent* EditorBase::GetPreviousNodeInternal(
+    const EditorRawDOMPoint& aPoint, const WalkTreeOptions& aOptions) const {
   MOZ_ASSERT(aPoint.IsSetAndValid());
   NS_WARNING_ASSERTION(
       !aPoint.IsInDataNode() || aPoint.IsInTextNode(),
@@ -2823,57 +2818,52 @@ nsIContent* EditorBase::GetPreviousNodeInternal(const EditorRawDOMPoint& aPoint,
   // If we are at the beginning of the node, or it is a text node, then just
   // look before it.
   if (aPoint.IsStartOfContainer() || aPoint.IsInTextNode()) {
-    if (aNoBlockCrossing && aPoint.IsInContentNode() &&
+    if (aOptions.contains(WalkTreeOption::StopAtBlockBoundary) &&
+        aPoint.IsInContentNode() &&
         HTMLEditUtils::IsBlockElement(*aPoint.ContainerAsContent())) {
       // If we aren't allowed to cross blocks, don't look before this block.
       return nullptr;
     }
-    return GetPreviousNodeInternal(*aPoint.GetContainer(), aFindEditableNode,
-                                   aFindAnyDataNode, aNoBlockCrossing);
+    return GetPreviousNodeInternal(*aPoint.GetContainer(), aOptions);
   }
 
   // else look before the child at 'aOffset'
   if (aPoint.GetChild()) {
-    return GetPreviousNodeInternal(*aPoint.GetChild(), aFindEditableNode,
-                                   aFindAnyDataNode, aNoBlockCrossing);
+    return GetPreviousNodeInternal(*aPoint.GetChild(), aOptions);
   }
 
   // unless there isn't one, in which case we are at the end of the node
   // and want the deep-right child.
   nsIContent* lastLeafContent = HTMLEditUtils::GetLastLeafChild(
       *aPoint.GetContainer(),
-      {aNoBlockCrossing ? LeafNodeType::LeafNodeOrChildBlock
-                        : LeafNodeType::OnlyLeafNode});
+      {aOptions.contains(WalkTreeOption::StopAtBlockBoundary)
+           ? LeafNodeType::LeafNodeOrChildBlock
+           : LeafNodeType::OnlyLeafNode});
   if (!lastLeafContent) {
     return nullptr;
   }
 
-  if ((!aFindEditableNode ||
+  if ((!aOptions.contains(WalkTreeOption::IgnoreNonEditableNode) ||
        EditorUtils::IsEditableContent(*lastLeafContent, GetEditorType())) &&
-      (aFindAnyDataNode || EditorUtils::IsElementOrText(*lastLeafContent))) {
+      (aOptions.contains(WalkTreeOption::FindAnyDataNode) ||
+       EditorUtils::IsElementOrText(*lastLeafContent))) {
     return lastLeafContent;
   }
 
   // restart the search from the non-editable node we just found
-  return GetPreviousNodeInternal(*lastLeafContent, aFindEditableNode,
-                                 aFindAnyDataNode, aNoBlockCrossing);
+  return GetPreviousNodeInternal(*lastLeafContent, aOptions);
 }
 
-nsIContent* EditorBase::GetNextNodeInternal(const nsINode& aNode,
-                                            bool aFindEditableNode,
-                                            bool aFindAnyDataNode,
-                                            bool aNoBlockCrossing) const {
+nsIContent* EditorBase::GetNextNodeInternal(
+    const nsINode& aNode, const WalkTreeOptions& aOptions) const {
   if (!IsDescendantOfEditorRoot(&aNode)) {
     return nullptr;
   }
-  return FindNode(&aNode, true, aFindEditableNode, aFindAnyDataNode,
-                  aNoBlockCrossing);
+  return FindNode(&aNode, true, aOptions);
 }
 
-nsIContent* EditorBase::GetNextNodeInternal(const EditorRawDOMPoint& aPoint,
-                                            bool aFindEditableNode,
-                                            bool aFindAnyDataNode,
-                                            bool aNoBlockCrossing) const {
+nsIContent* EditorBase::GetNextNodeInternal(
+    const EditorRawDOMPoint& aPoint, const WalkTreeOptions& aOptions) const {
   MOZ_ASSERT(aPoint.IsSetAndValid());
   NS_WARNING_ASSERTION(
       !aPoint.IsInDataNode() || aPoint.IsInTextNode(),
@@ -2891,14 +2881,16 @@ nsIContent* EditorBase::GetNextNodeInternal(const EditorRawDOMPoint& aPoint,
   }
 
   if (point.GetChild()) {
-    if (aNoBlockCrossing && HTMLEditUtils::IsBlockElement(*point.GetChild())) {
+    if (aOptions.contains(WalkTreeOption::StopAtBlockBoundary) &&
+        HTMLEditUtils::IsBlockElement(*point.GetChild())) {
       return point.GetChild();
     }
 
     nsIContent* firstLeafContent = HTMLEditUtils::GetFirstLeafChild(
         *point.GetChild(),
-        {aNoBlockCrossing ? LeafNodeType::LeafNodeOrChildBlock
-                          : LeafNodeType::OnlyLeafNode});
+        {aOptions.contains(WalkTreeOption::StopAtBlockBoundary)
+             ? LeafNodeType::LeafNodeOrChildBlock
+             : LeafNodeType::OnlyLeafNode});
     if (!firstLeafContent) {
       return point.GetChild();
     }
@@ -2907,32 +2899,32 @@ nsIContent* EditorBase::GetNextNodeInternal(const EditorRawDOMPoint& aPoint,
       return nullptr;
     }
 
-    if ((!aFindEditableNode ||
+    if ((!aOptions.contains(WalkTreeOption::IgnoreNonEditableNode) ||
          EditorUtils::IsEditableContent(*firstLeafContent, GetEditorType())) &&
-        (aFindAnyDataNode || EditorUtils::IsElementOrText(*firstLeafContent))) {
+        (aOptions.contains(WalkTreeOption::FindAnyDataNode) ||
+         EditorUtils::IsElementOrText(*firstLeafContent))) {
       return firstLeafContent;
     }
 
     // restart the search from the non-editable node we just found
-    return GetNextNodeInternal(*firstLeafContent, aFindEditableNode,
-                               aFindAnyDataNode, aNoBlockCrossing);
+    return GetNextNodeInternal(*firstLeafContent, aOptions);
   }
 
   // unless there isn't one, in which case we are at the end of the node
   // and want the next one.
-  if (aNoBlockCrossing && point.IsInContentNode() &&
+  if (aOptions.contains(WalkTreeOption::StopAtBlockBoundary) &&
+      point.IsInContentNode() &&
       HTMLEditUtils::IsBlockElement(*point.ContainerAsContent())) {
     // don't cross out of parent block
     return nullptr;
   }
 
-  return GetNextNodeInternal(*point.GetContainer(), aFindEditableNode,
-                             aFindAnyDataNode, aNoBlockCrossing);
+  return GetNextNodeInternal(*point.GetContainer(), aOptions);
 }
 
-nsIContent* EditorBase::FindNextLeafNode(const nsINode* aCurrentNode,
-                                         bool aGoForward,
-                                         bool bNoBlockCrossing) const {
+nsIContent* EditorBase::FindNextLeafNode(
+    const nsINode* aCurrentNode, bool aGoForward,
+    const WalkTreeOptions& aOptions) const {
   // called only by GetPriorNode so we don't need to check params.
   MOZ_ASSERT(
       IsDescendantOfEditorRoot(aCurrentNode) && !IsEditorRoot(aCurrentNode),
@@ -2945,13 +2937,15 @@ nsIContent* EditorBase::FindNextLeafNode(const nsINode* aCurrentNode,
     nsIContent* sibling =
         aGoForward ? cur->GetNextSibling() : cur->GetPreviousSibling();
     if (sibling) {
-      if (bNoBlockCrossing && HTMLEditUtils::IsBlockElement(*sibling)) {
+      if (aOptions.contains(WalkTreeOption::StopAtBlockBoundary) &&
+          HTMLEditUtils::IsBlockElement(*sibling)) {
         // don't look inside prevsib, since it is a block
         return sibling;
       }
       const LeafNodeTypes leafNodeTypes = {
-          bNoBlockCrossing ? LeafNodeType::LeafNodeOrChildBlock
-                           : LeafNodeType::OnlyLeafNode};
+          aOptions.contains(WalkTreeOption::StopAtBlockBoundary)
+              ? LeafNodeType::LeafNodeOrChildBlock
+              : LeafNodeType::OnlyLeafNode};
       nsIContent* leafContent =
           aGoForward ? HTMLEditUtils::GetFirstLeafChild(*sibling, leafNodeTypes)
                      : HTMLEditUtils::GetLastLeafChild(*sibling, leafNodeTypes);
@@ -2968,7 +2962,8 @@ nsIContent* EditorBase::FindNextLeafNode(const nsINode* aCurrentNode,
                  "if we ever hit the root, so we better have a descendant of "
                  "root now!");
     if (IsEditorRoot(parent) ||
-        (bNoBlockCrossing && parent->IsContent() &&
+        (aOptions.contains(WalkTreeOption::StopAtBlockBoundary) &&
+         parent->IsContent() &&
          HTMLEditUtils::IsBlockElement(*parent->AsContent()))) {
       return nullptr;
     }
@@ -2981,8 +2976,7 @@ nsIContent* EditorBase::FindNextLeafNode(const nsINode* aCurrentNode,
 }
 
 nsIContent* EditorBase::FindNode(const nsINode* aCurrentNode, bool aGoForward,
-                                 bool aEditableNode, bool aFindAnyDataNode,
-                                 bool bNoBlockCrossing) const {
+                                 const WalkTreeOptions& aOptions) const {
   if (IsEditorRoot(aCurrentNode)) {
     // Don't allow traversal above the root node! This helps
     // prevent us from accidentally editing browser content
@@ -2991,21 +2985,20 @@ nsIContent* EditorBase::FindNode(const nsINode* aCurrentNode, bool aGoForward,
     return nullptr;
   }
 
-  nsIContent* candidate =
-      FindNextLeafNode(aCurrentNode, aGoForward, bNoBlockCrossing);
+  nsIContent* candidate = FindNextLeafNode(aCurrentNode, aGoForward, aOptions);
 
   if (!candidate) {
     return nullptr;
   }
 
-  if ((!aEditableNode ||
+  if ((!aOptions.contains(WalkTreeOption::IgnoreNonEditableNode) ||
        EditorUtils::IsEditableContent(*candidate, GetEditorType())) &&
-      (aFindAnyDataNode || EditorUtils::IsElementOrText(*candidate))) {
+      (aOptions.contains(WalkTreeOption::FindAnyDataNode) ||
+       EditorUtils::IsElementOrText(*candidate))) {
     return candidate;
   }
 
-  return FindNode(candidate, aGoForward, aEditableNode, aFindAnyDataNode,
-                  bNoBlockCrossing);
+  return FindNode(candidate, aGoForward, aOptions);
 }
 
 bool EditorBase::IsRoot(const nsINode* inNode) const {
