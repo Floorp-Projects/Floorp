@@ -474,4 +474,38 @@ using convert_base_types_t =
                                                        T_LongLongType,
                                                        T_PointerType>::type;
 
+namespace unsigned_int_of_size_t_detail {
+  template<typename T, typename T_Enable = void>
+  struct unsigned_int_of_size_t_helper;
+
+  template<typename T>
+  struct unsigned_int_of_size_t_helper<T, std::enable_if_t<sizeof(T) == 1>>
+  {
+    using type = uint8_t;
+  };
+
+  template<typename T>
+  struct unsigned_int_of_size_t_helper<T, std::enable_if_t<sizeof(T) == 2>>
+  {
+    using type = uint16_t;
+  };
+
+  template<typename T>
+  struct unsigned_int_of_size_t_helper<T, std::enable_if_t<sizeof(T) == 4>>
+  {
+    using type = uint32_t;
+  };
+
+  template<typename T>
+  struct unsigned_int_of_size_t_helper<T, std::enable_if_t<sizeof(T) == 8>>
+  {
+    using type = uint64_t;
+  };
+}
+
+template<typename T>
+using unsigned_int_of_size_t =
+  typename unsigned_int_of_size_t_detail::unsigned_int_of_size_t_helper<
+    T>::type;
+
 }

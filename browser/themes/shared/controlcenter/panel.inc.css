@@ -13,7 +13,9 @@
 #identity-popup,
 #permission-popup,
 #protections-popup {
-  font-size: var(--panel-font-size);
+%if defined(XP_MACOSX) || defined(XP_WIN)
+  font-size: 1.18em;
+%endif
   --popup-width: 30.81em;
   /* Set default fill for icons in the identity popup.
      Individual icons can override this. */
@@ -22,16 +24,6 @@
   --vertical-section-padding: 0.9em;
   --height-offset: 0px;
 }
-
-@media not (-moz-proton-doorhangers) {
-#identity-popup,
-#permission-popup,
-#protections-popup {
-%if defined(XP_MACOSX) || defined(XP_WIN)
-  font-size: 1.18em;
-%endif
-}
-} /** END not PROTON **/
 
 #protections-popup {
   --protections-popup-switch-off-background: #f9f9fa;
@@ -962,8 +954,8 @@ description#identity-popup-content-verifier,
 
 .permission-popup-permission-remove-button > .button-box > .button-icon {
   margin: 0;
-  width: 16px;
-  height: 16px;
+  width: 12px;
+  height: 12px;
   list-style-image: url(chrome://global/skin/icons/close.svg);
   -moz-context-properties: fill;
   fill: currentColor;

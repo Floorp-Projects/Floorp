@@ -296,8 +296,48 @@ windows-qr-tests:
     - reftest
     - test-verify
 
-windows-reftest-gpu:
-    - reftest-gpu
+windows7-qr-tests:
+    - mochitest-browser-chrome
+    - mochitest-media
+    - mochitest-webgl1-core
+    - mochitest-webgl2-core
+    - reftest
+
+windows32-qr-tests:
+    - crashtest
+    - marionette
+    - mochitest-chrome-gpu
+    - mochitest-plain
+    - mochitest-plain-gpu
+    - test-verify
+
+windows-7-tests:
+    - cppunit
+    - gtest
+    - mochitest-browser-chrome
+    - mochitest-media
+    - mochitest-webgpu
+    - reftest
+    - reftest-no-accel
+    - xpcshell
+
+windows32-tests:
+    - crashtest
+    - firefox-ui-functional-local
+    - firefox-ui-functional-remote
+    # - jittest  # See comment in windows-ccov-tests set.
+    - jsreftest
+    - marionette
+    - mochitest-a11y
+    - mochitest-chrome
+    - mochitest-chrome-gpu
+    - mochitest-plain
+    - mochitest-plain-gpu
+    - mochitest-remote
+    - telemetry-tests-client
+    - test-verify
+    - test-verify-gpu
+    - test-verify-wpt
 
 windows-tests:
     - cppunit

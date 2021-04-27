@@ -930,6 +930,7 @@ class NativeObject : public JSObject {
     return found.isSome() && *found == prop;
   }
 
+ private:
   /*
    * Allocate and free an object slot.
    *
@@ -939,9 +940,9 @@ class NativeObject : public JSObject {
    */
   static bool allocDictionarySlot(JSContext* cx, HandleNativeObject obj,
                                   uint32_t* slotp);
-  void freeSlot(JSContext* cx, uint32_t slot);
 
- private:
+  void freeDictionarySlot(ShapeTable* table, uint32_t slot);
+
   static MOZ_ALWAYS_INLINE Shape* getChildProperty(
       JSContext* cx, HandleNativeObject obj, HandleShape parent,
       MutableHandle<StackShape> child);
@@ -955,6 +956,10 @@ class NativeObject : public JSObject {
   static bool maybeToDictionaryModeForChange(JSContext* cx,
                                              HandleNativeObject obj,
                                              MutableHandleShape shape);
+
+  void removeDictionaryPropertyWithoutReshape(ShapeTable* table,
+                                              ShapeTable::Ptr ptr,
+                                              Shape* shape);
 
  public:
   // Add a new property. Must only be used when the |id| is not already present
@@ -986,7 +991,8 @@ class NativeObject : public JSObject {
                                              HandleId id, unsigned attrs);
 
   // Remove the property named by id from this object.
-  static bool removeProperty(JSContext* cx, HandleNativeObject obj, jsid id);
+  static bool removeProperty(JSContext* cx, HandleNativeObject obj,
+                             HandleId id);
 
  protected:
   [[nodiscard]] static bool fillInAfterSwap(JSContext* cx,
@@ -1446,6 +1452,7 @@ class NativeObject : public JSObject {
    */
   static DenseElementResult maybeDensifySparseElements(JSContext* cx,
                                                        HandleNativeObject obj);
+  static bool densifySparseElements(JSContext* cx, HandleNativeObject obj);
 
   inline HeapSlot* fixedElements() const {
     static_assert(2 * sizeof(Value) == sizeof(ObjectElements),

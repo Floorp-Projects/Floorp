@@ -226,7 +226,7 @@
 
 .cui-widget-panel,
 #widget-overflow {
-  font-size: var(--panel-font-size);
+  font: menu;
 }
 
 panelview {

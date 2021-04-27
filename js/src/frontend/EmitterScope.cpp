@@ -1007,7 +1007,8 @@ bool EmitterScope::lookupPrivate(BytecodeEmitter* bce,
   //
   // See also Bug 793345 which argues that we should remove the
   // DebugEnvironmentProxy.
-  if (loc.kind() != NameLocation::Kind::EnvironmentCoordinate) {
+  if (loc.kind() != NameLocation::Kind::EnvironmentCoordinate &&
+      loc.kind() != NameLocation::Kind::FrameSlot) {
     MOZ_ASSERT(loc.kind() == NameLocation::Kind::Dynamic ||
                loc.kind() == NameLocation::Kind::Global);
     // Private fields don't require brand checking and can be correctly
@@ -1029,8 +1030,18 @@ bool EmitterScope::lookupPrivate(BytecodeEmitter* bce,
   }
 
   if (loc.bindingKind() == BindingKind::PrivateMethod) {
+    uint32_t hops = 0;
+    if (loc.kind() == NameLocation::Kind::EnvironmentCoordinate) {
+      hops = loc.environmentCoordinate().hops();
+    } else {
+      // If we have a FrameSlot, then our innermost emitter scope must be a
+      // class body scope, and we can generate an environment coordinate with
+      // hops=0 to find the associated brand location.
+      MOZ_ASSERT(bce->innermostScope().is<ClassBodyScope>());
+    }
+
     brandLoc = Some(NameLocation::EnvironmentCoordinate(
-        BindingKind::Synthetic, loc.environmentCoordinate().hops(),
+        BindingKind::Synthetic, hops,
         JSSLOT_FREE(&ClassBodyLexicalEnvironmentObject::class_)));
   } else {
     brandLoc = Nothing();

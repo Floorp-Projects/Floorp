@@ -2517,9 +2517,14 @@ StorageActors.createActor(
     populateStoresForHosts() {},
 
     getNamesForHost(host) {
+      const storesForHost = this.hostVsStores.get(host);
+      if (!storesForHost) {
+        return [];
+      }
+
       const names = [];
 
-      for (const [dbName, { objectStores }] of this.hostVsStores.get(host)) {
+      for (const [dbName, { objectStores }] of storesForHost) {
         if (objectStores.size) {
           for (const objectStore of objectStores.keys()) {
             names.push(JSON.stringify([dbName, objectStore]));
@@ -2528,6 +2533,7 @@ StorageActors.createActor(
           names.push(JSON.stringify([dbName]));
         }
       }
+
       return names;
     },
 
@@ -3468,14 +3474,10 @@ const StorageActor = protocol.ActorClassWithSpec(specs.storageSpec, {
       "devtools.storage.test.forceLegacyActors",
       false
     );
-    const isServerWatcherSupportEnabled = Services.prefs.getBoolPref(
-      "devtools.testing.enableServerWatcherSupport",
-      false
-    );
     const resourcesInWatcher = {
       Cache: isWatcherEnabled,
-      cookies: isWatcherEnabled && isServerWatcherSupportEnabled,
-      indexedDB: isWatcherEnabled && isServerWatcherSupportEnabled,
+      cookies: isWatcherEnabled,
+      indexedDB: isWatcherEnabled,
       localStorage: isWatcherEnabled,
       sessionStorage: isWatcherEnabled,
     };

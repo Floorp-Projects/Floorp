@@ -177,4 +177,108 @@ public:
   }
 };
 
+template<typename T, typename T_Sbx>
+class app_pointer
+{
+  KEEP_CLASSES_FRIENDLY
+
+private:
+  app_pointer_map<typename T_Sbx::T_PointerType>* map;
+  typename T_Sbx::T_PointerType idx;
+  T idx_unsandboxed;
+
+  inline void move_obj(app_pointer&& other)
+  {
+    map = other.map;
+    idx = other.idx;
+    idx_unsandboxed = other.idx_unsandboxed;
+    other.map = nullptr;
+    other.idx = 0;
+    other.idx_unsandboxed = nullptr;
+  }
+
+  inline T get_raw_value() const noexcept
+  {
+    return to_tainted().get_raw_value();
+  }
+  inline typename T_Sbx::T_PointerType get_raw_sandbox_value() const noexcept
+  {
+    return idx;
+  }
+  inline T get_raw_value() noexcept { return to_tainted().get_raw_value(); }
+  inline typename T_Sbx::T_PointerType get_raw_sandbox_value() noexcept
+  {
+    return idx;
+  }
+
+  app_pointer(app_pointer_map<typename T_Sbx::T_PointerType>* a_map,
+              typename T_Sbx::T_PointerType a_idx,
+              T a_idx_unsandboxed)
+    : map(a_map)
+    , idx(a_idx)
+    , idx_unsandboxed(a_idx_unsandboxed)
+  {}
+
+public:
+  app_pointer()
+    : map(nullptr)
+    , idx(0)
+    , idx_unsandboxed(0)
+  {}
+
+  ~app_pointer() { unregister(); }
+
+  app_pointer(app_pointer&& other)
+  {
+    move_obj(std::forward<app_pointer>(other));
+  }
+
+  inline app_pointer& operator=(app_pointer&& other)
+  {
+    if (this != &other) {
+      move_obj(std::forward<app_pointer>(other));
+    }
+    return *this;
+  }
+
+  void unregister()
+  {
+    if (idx != 0) {
+      map->remove_app_ptr(idx);
+      map = nullptr;
+      idx = 0;
+      idx_unsandboxed = nullptr;
+    }
+  }
+
+  tainted<T, T_Sbx> to_tainted()
+  {
+    return tainted<T, T_Sbx>::internal_factory(
+      reinterpret_cast<T>(idx_unsandboxed));
+  }
+
+  /**
+   * @brief Unwrap a callback without verification. This is an unsafe operation
+   * and should be used with care.
+   */
+  inline auto UNSAFE_unverified() const noexcept { return get_raw_value(); }
+  /**
+   * @brief Like UNSAFE_unverified, but get the underlying sandbox
+   * representation.
+   *
+   * @param sandbox Reference to sandbox.
+   */
+  inline auto UNSAFE_sandboxed(rlbox_sandbox<T_Sbx>& sandbox) const noexcept
+  {
+    RLBOX_UNUSED(sandbox);
+    return get_raw_sandbox_value();
+  }
+  inline auto UNSAFE_unverified() noexcept { return get_raw_value(); }
+  inline auto UNSAFE_sandboxed(rlbox_sandbox<T_Sbx>& sandbox) noexcept
+  {
+    RLBOX_UNUSED(sandbox);
+    return get_raw_sandbox_value();
+  }
+};
+
 }

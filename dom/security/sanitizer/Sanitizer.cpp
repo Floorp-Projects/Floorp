@@ -83,9 +83,17 @@ already_AddRefed<DocumentFragment> Sanitizer::InputToNewFragment(
         window->GetDoc()->CreateDocumentFragment();
     return emptyFragment.forget();
   }
+  // Create an inert HTML document, loaded as data.
+  // this ensures we do not cause any requests.
+  RefPtr<Document> emptyDoc =
+      nsContentUtils::CreateInertHTMLDocument(window->GetDoc());
+  if (!emptyDoc) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
   // We don't have a context element yet. let's create a mock HTML body element
   RefPtr<mozilla::dom::NodeInfo> info =
-      window->GetDoc()->NodeInfoManager()->GetNodeInfo(
+      emptyDoc->NodeInfoManager()->GetNodeInfo(
           nsGkAtoms::body, nullptr, kNameSpaceID_XHTML, nsINode::ELEMENT_NODE);
 
   nsCOMPtr<nsINode> context = NS_NewHTMLBodyElement(
