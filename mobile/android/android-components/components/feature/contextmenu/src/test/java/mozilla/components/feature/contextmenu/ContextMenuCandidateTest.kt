@@ -16,10 +16,12 @@ import mozilla.components.browser.session.engine.EngineMiddleware
 import mozilla.components.browser.state.selector.selectedTab
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.ContentState
+import mozilla.components.browser.state.state.EngineState
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.content.ShareInternetResourceState
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.HitResult
 import mozilla.components.feature.app.links.AppLinkRedirect
 import mozilla.components.feature.app.links.AppLinksUseCases
@@ -39,6 +41,7 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.anyBoolean
+import org.mockito.Mockito
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.times
@@ -833,6 +836,7 @@ class ContextMenuCandidateTest {
 
     @Test
     fun `Candidate 'Open in external app'`() {
+        val tab = createTab("https://www.mozilla.org")
         val getAppLinkRedirectMock: AppLinksUseCases.GetAppLinkRedirect = mock()
 
         doReturn(
@@ -861,52 +865,52 @@ class ContextMenuCandidateTest {
         // showFor
 
         assertTrue(openLinkInExternalApp.showFor(
-            mock(),
+            tab,
             HitResult.UNKNOWN("https://www.example.com")
         ))
 
         assertTrue(openLinkInExternalApp.showFor(
-            mock(),
+            tab,
             HitResult.UNKNOWN("intent:www.example.com#Intent;scheme=https;package=org.mozilla.fenix;end")
         ))
 
         assertTrue(openLinkInExternalApp.showFor(
-            mock(),
+            tab,
             HitResult.VIDEO("https://www.example.com")
         ))
 
         assertTrue(openLinkInExternalApp.showFor(
-            mock(),
+            tab,
             HitResult.AUDIO("https://www.example.com")
         ))
 
         assertFalse(openLinkInExternalApp.showFor(
-            mock(),
+            tab,
             HitResult.UNKNOWN("https://www.otherexample.com")
         ))
 
         assertFalse(openLinkInExternalApp.showFor(
-            mock(),
+            tab,
             HitResult.VIDEO("https://www.otherexample.com")
         ))
 
         assertFalse(openLinkInExternalApp.showFor(
-            mock(),
+            tab,
             HitResult.AUDIO("https://www.otherexample.com")
         ))
 
         // action
 
         openLinkInExternalApp.action.invoke(
-            mock(),
+            tab,
             HitResult.UNKNOWN("https://www.example.com"))
 
         openLinkInExternalApp.action.invoke(
-            mock(),
+            tab,
             HitResult.UNKNOWN("intent:www.example.com#Intent;scheme=https;package=org.mozilla.fenix;end"))
 
         openLinkInExternalApp.action.invoke(
-            mock(),
+            tab,
             HitResult.UNKNOWN("https://www.otherexample.com"))
 
         verify(openAppLinkRedirectMock, times(2)).invoke(any(), anyBoolean(), any())
@@ -1028,6 +1032,59 @@ class ContextMenuCandidateTest {
             HitResult.UNKNOWN("mailto:example@example.com"))
 
         verify(context).startActivity(any())
+    }
+
+    @Test
+    fun `GIVEN SessionState with null EngineSession WHEN isUrlSchemeAllowed is called THEN it returns true`() {
+        val sessionState = TabSessionState(
+            content = mock(),
+            engineState = EngineState(engineSession = null)
+        )
+
+        assertTrue(sessionState.isUrlSchemeAllowed("http://mozilla.org"))
+    }
+
+    @Test
+    fun `GIVEN SessionState with no blocked url schemes WHEN isUrlSchemeAllowed is called THEN it returns true`() {
+        val noBlockedUrlSchemesEngineSession = Mockito.mock(EngineSession::class.java)
+        doReturn(emptyList<String>()).`when`(noBlockedUrlSchemesEngineSession).getBlockedSchemes()
+        val sessionState = TabSessionState(
+            content = mock(),
+            engineState = EngineState(engineSession = noBlockedUrlSchemesEngineSession)
+        )
+
+        assertTrue(sessionState.isUrlSchemeAllowed("http://mozilla.org"))
+    }
+
+    @Test
+    fun `GIVEN SessionState with blocked url schemes WHEN isUrlSchemeAllowed is called THEN it returns false if the url has that scheme`() {
+        val engineSessionWithBlockedUrlScheme = Mockito.mock(EngineSession::class.java)
+        doReturn(listOf("http")).`when`(engineSessionWithBlockedUrlScheme).getBlockedSchemes()
+        val sessionState = TabSessionState(
+            content = mock(),
+            engineState = EngineState(engineSession = engineSessionWithBlockedUrlScheme)
+        )
+
+        assertFalse(sessionState.isUrlSchemeAllowed("http://mozilla.org"))
+        assertFalse(sessionState.isUrlSchemeAllowed("hTtP://mozilla.org"))
+        assertFalse(sessionState.isUrlSchemeAllowed("HttP://www.mozilla.org"))
+        assertTrue(sessionState.isUrlSchemeAllowed("www.mozilla.org"))
+        assertTrue(sessionState.isUrlSchemeAllowed("https://mozilla.org"))
+        assertTrue(sessionState.isUrlSchemeAllowed("mozilla.org"))
+        assertTrue(sessionState.isUrlSchemeAllowed("/mozilla.org"))
+        assertTrue(sessionState.isUrlSchemeAllowed("content://http://mozilla.org"))
+    }
+
+    @Test
+    fun `GIVEN SessionState with blocked url schemes WHEN isUrlSchemeAllowed is called THEN it returns true if the url does not have that scheme`() {
+        val engineSessionWithBlockedUrlScheme = Mockito.mock(EngineSession::class.java)
+        doReturn(listOf("http")).`when`(engineSessionWithBlockedUrlScheme).getBlockedSchemes()
+        val sessionState = TabSessionState(
+            content = mock(),
+            engineState = EngineState(engineSession = engineSessionWithBlockedUrlScheme)
+        )
+
+        assertTrue(sessionState.isUrlSchemeAllowed("https://mozilla.org"))
     }
 }
 

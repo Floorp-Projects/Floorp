@@ -12,6 +12,9 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/.config.yml)
 
+* **feature-contextmenu**:
+  * ⚠️ Long pressing on web content won't show a contextual menu if the URL of the touch target is one blocked from loading in the browser.
+
 * **concept-engine**
   * 🌟️ `getBlockedSchemes()` now exposes the list of url shemes that the engine won't load.
 
