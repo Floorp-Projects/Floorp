@@ -215,7 +215,8 @@ pub unsafe extern "C" fn wgpu_server_buffer_get_mapped_range(
         start,
         size
     ))
-    .unwrap().0
+    .unwrap()
+    .0
 }
 
 #[no_mangle]

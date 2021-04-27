@@ -91,8 +91,7 @@ impl NeqoHttp3Conn {
             Rc::new(RefCell::new(RandomConnectionIdGenerator::new(3))),
             local,
             remote,
-            ConnectionParameters::default()
-                .quic_version(quic_version),
+            ConnectionParameters::default().quic_version(quic_version),
             &http3_settings,
             Instant::now(),
         ) {
