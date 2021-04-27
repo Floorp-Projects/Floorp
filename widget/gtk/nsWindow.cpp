@@ -4644,6 +4644,7 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
       // popup window position.
       GtkWindowType type = GTK_WINDOW_TOPLEVEL;
       if (mWindowType == eWindowType_popup) {
+        MOZ_ASSERT(aInitData);
         type = (GdkIsX11Display() && aInitData->mNoAutoHide)
                    ? GTK_WINDOW_TOPLEVEL
                    : GTK_WINDOW_POPUP;
@@ -4724,6 +4725,7 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
         }
 
       } else if (mWindowType == eWindowType_popup) {
+        MOZ_ASSERT(aInitData);
         mGtkWindowRoleName = "Popup";
 
         if (aInitData->mNoAutoHide) {
@@ -4894,6 +4896,7 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
 #endif
 
       if (mWindowType == eWindowType_popup) {
+        MOZ_ASSERT(aInitData);
         // gdk does not automatically set the cursor for "temporary"
         // windows, which are what gtk uses for popups.
 
