@@ -10,23 +10,6 @@ const { TestUtils } = ChromeUtils.import(
   "resource://testing-common/TestUtils.jsm"
 );
 
-const { Ajv } = ChromeUtils.import("resource://testing-common/ajv-4.1.1.js");
-const { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
-);
-Cu.importGlobalProperties(["fetch"]);
-
-XPCOMUtils.defineLazyGetter(this, "fetchSchema", async () => {
-  const response = await fetch(
-    "resource://testing-common/ExperimentFeatureManifest.schema.json"
-  );
-  const schema = await response.json();
-  if (!schema) {
-    throw new Error("Failed to load NimbusSchema");
-  }
-  return schema.definitions.Feature;
-});
-
 async function setupForExperimentFeature() {
   const sandbox = sinon.createSandbox();
   const manager = ExperimentFakes.manager();
@@ -57,23 +40,6 @@ const FAKE_FEATURE_REMOTE_VALUE = {
   enabled: true,
   targeting: "true",
 };
-
-add_task(async function test_feature_manifest_is_valid() {
-  const ajv = new Ajv({ allErrors: true });
-  const validate = ajv.compile(await fetchSchema);
-
-  // Validate each entry in the feature manifest.
-  // See tookit/components/messaging-system/experiments/ExperimentAPI.jsm
-  Object.keys(ExperimentFeature.MANIFEST).forEach(featureId => {
-    const valid = validate(ExperimentFeature.MANIFEST[featureId]);
-    if (!valid) {
-      throw new Error(
-        `The manfinifest entry for ${featureId} not valid in tookit/components/messaging-system/experiments/ExperimentAPI.jsm: ` +
-          JSON.stringify(validate.errors, undefined, 2)
-      );
-    }
-  });
-});
 
 /**
  * # ExperimentFeature.getValue

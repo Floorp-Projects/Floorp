@@ -310,6 +310,9 @@ class gfxPlatform : public mozilla::layers::MemoryPressureListener {
 
   static bool AsyncPanZoomEnabled();
 
+  const char* GetAzureCanvasBackend() const;
+  const char* GetAzureContentBackend() const;
+
   virtual void GetAzureBackendInfo(mozilla::widget::InfoObject& aObj);
   void GetApzSupportInfo(mozilla::widget::InfoObject& aObj);
   void GetTilesSupportInfo(mozilla::widget::InfoObject& aObj);

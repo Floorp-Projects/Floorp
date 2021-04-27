@@ -29,10 +29,14 @@ class SwapChain final : public ObjectBase, public ChildOf<Device> {
             const dom::GPUExtent3DDict& aExtent3D,
             wr::ExternalImageId aExternalImageId, gfx::SurfaceFormat aFormat);
 
-  WebGPUChild* GetGpuBridge() const;
+  RefPtr<Device> GetParent() const;
   void Destroy(wr::ExternalImageId aExternalImageId);
 
-  const gfx::SurfaceFormat mFormat;
+  const gfx::SurfaceFormat mGfxFormat;
+  const uint8_t
+      mFormat;  // This is `dom::GPUTextureFormat` but without the includes
+  const uint32_t mUsage;
+  const nsIntSize mSize;
 
  private:
   virtual ~SwapChain();

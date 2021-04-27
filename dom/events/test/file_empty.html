@@ -1,1 +1,15 @@
-<!DOCTYPE html><html><body></body></html>
+<!DOCTYPE html>
+<html>
+<head>
+<script src="/tests/SimpleTest/paint_listener.js"></script>
+<script src="/tests/gfx/layers/apz/test/mochitest/apz_test_utils.js"></script>
+<script>
+window.addEventListener("load", async function() {
+  await promiseApzFlushedRepaints();
+  parent.postMessage("ready", "*");
+}, { once: true });
+</script>
+</head>
+<body>
+</body>
+</html>

@@ -46,6 +46,7 @@
     --tabs-border-color: transparent;
     --toolbar-color: rgb(21,20,26);
     --toolbar-non-lwt-bgcolor: #f9f9fb;
+    --toolbar-non-lwt-textcolor: rgb(21, 20, 26);
     --toolbarbutton-icon-fill: rgb(91,91,102);
 
     --urlbar-popup-action-color: rgb(21,20,26);
@@ -53,7 +54,7 @@
 
     --autocomplete-popup-separator-color: rgb(240,240,244);
     --toolbar-field-border-color: transparent;
-    --arrowpanel-border-color: transparent;
+    --arrowpanel-border-color: rgb(240,240,244);
     --chrome-content-separator-color: rgb(204,204,204);
 
     --toolbar-field-non-lwt-bgcolor: rgb(240,240,244);

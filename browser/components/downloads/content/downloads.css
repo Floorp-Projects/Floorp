@@ -140,7 +140,7 @@
 @media (-moz-proton-doorhangers) {
 #downloadsPanel-blockedSubview,
 #downloadsPanel-mainView {
-  font-size: var(--panel-font-size);
+  font: caption;
   width: 35em;
   padding: 0.62em;
 }

@@ -265,7 +265,7 @@ a.hidden,
   height: var(--exit-icon-size);
   top: var(--exit-icon-position);
   inset-inline-end: var(--exit-icon-position);
-  background-image: url(chrome://browser/skin/stop.svg);
+  background-image: url(chrome://global/skin/icons/close.svg);
   background-size: calc(var(--exit-icon-size) - 2px);
   background-color: transparent;
   background-position: center;

@@ -33,7 +33,7 @@
 }
 
 #context-stop {
-  list-style-image: url("chrome://browser/skin/stop.svg");
+  list-style-image: url("chrome://global/skin/icons/close.svg");
 }
 
 #context-bookmarkpage {

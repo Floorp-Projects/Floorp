@@ -66,6 +66,8 @@ class GfxInfoBase : public nsIGfxInfo,
   NS_IMETHOD GetActiveCrashGuards(JSContext*,
                                   JS::MutableHandle<JS::Value>) override;
   NS_IMETHOD GetContentBackend(nsAString& aContentBackend) override;
+  NS_IMETHOD GetAzureCanvasBackend(nsAString& aBackend) override;
+  NS_IMETHOD GetAzureContentBackend(nsAString& aBackend) override;
   NS_IMETHOD GetUsingGPUProcess(bool* aOutValue) override;
   NS_IMETHOD GetWebRenderEnabled(bool* aWebRenderEnabled) override;
   NS_IMETHOD GetIsHeadless(bool* aIsHeadless) override;

@@ -1488,8 +1488,4 @@ xul|*.addons-icon {
   margin: 0 4px;
   min-width: auto;
 }
-
-:host(dialog[subdialog]) {
-  font-size: var(--subdialog-font-size);
-}
 }

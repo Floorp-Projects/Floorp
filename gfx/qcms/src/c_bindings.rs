@@ -359,8 +359,9 @@ pub unsafe extern "C" fn qcms_transform_data(
 }
 
 pub type icColorSpaceSignature = u32;
-pub const icSigGrayData: icColorSpaceSignature = 1196573017;
-pub const icSigRgbData: icColorSpaceSignature = 1380401696;
+pub const icSigGrayData: icColorSpaceSignature = 0x47524159; // 'GRAY'
+pub const icSigRgbData: icColorSpaceSignature = 0x52474220; // 'RGB '
+pub const icSigCmykData: icColorSpaceSignature = 0x434d594b; // 'CMYK'
 
 pub use crate::iccread::qcms_profile_is_bogus;
 pub use crate::iccread::Profile as qcms_profile;
