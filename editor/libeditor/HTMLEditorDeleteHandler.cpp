@@ -3899,8 +3899,7 @@ HTMLEditor::AutoDeleteRangesHandler::ComputeRangesToDeleteRangesWithTransaction(
         caretPoint.IsStartOfContainer()) {
       nsIContent* previousEditableContent = EditorBase::GetPreviousContent(
           *caretPoint.GetContainer(),
-          {EditorBase::WalkTreeOption::IgnoreNonEditableNode}, EditorType::HTML,
-          editingHost);
+          {EditorBase::WalkTreeOption::IgnoreNonEditableNode}, editingHost);
       if (!previousEditableContent) {
         continue;
       }
@@ -3923,8 +3922,7 @@ HTMLEditor::AutoDeleteRangesHandler::ComputeRangesToDeleteRangesWithTransaction(
         caretPoint.IsEndOfContainer()) {
       nsIContent* nextEditableContent = EditorBase::GetNextContent(
           *caretPoint.GetContainer(),
-          {EditorBase::WalkTreeOption::IgnoreNonEditableNode}, EditorType::HTML,
-          editingHost);
+          {EditorBase::WalkTreeOption::IgnoreNonEditableNode}, editingHost);
       if (!nextEditableContent) {
         continue;
       }
@@ -3962,11 +3960,11 @@ HTMLEditor::AutoDeleteRangesHandler::ComputeRangesToDeleteRangesWithTransaction(
             ? EditorBase::GetPreviousContent(
                   caretPoint,
                   {EditorBase::WalkTreeOption::IgnoreNonEditableNode},
-                  EditorType::HTML, editingHost)
+                  editingHost)
             : EditorBase::GetNextContent(
                   caretPoint,
                   {EditorBase::WalkTreeOption::IgnoreNonEditableNode},
-                  EditorType::HTML, editingHost);
+                  editingHost);
     if (!editableContent) {
       continue;
     }
@@ -3977,10 +3975,10 @@ HTMLEditor::AutoDeleteRangesHandler::ComputeRangesToDeleteRangesWithTransaction(
                   EditorBase::HowToHandleCollapsedRange::ExtendBackward
               ? EditorBase::GetPreviousContent(
                     *editableContent, {WalkTreeOption::IgnoreNonEditableNode},
-                    EditorType::HTML, editingHost)
+                    editingHost)
               : EditorBase::GetNextContent(
                     *editableContent, {WalkTreeOption::IgnoreNonEditableNode},
-                    EditorType::HTML, editingHost);
+                    editingHost);
     }
     if (!editableContent) {
       continue;
@@ -4434,7 +4432,7 @@ nsresult HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::
                     *atStart.ContainerAsContent(),
                     {WalkTreeOption::IgnoreDataNodeExceptText,
                      WalkTreeOption::StopAtBlockBoundary},
-                    EditorType::HTML, aHTMLEditor.GetActiveEditingHost())
+                    aHTMLEditor.GetActiveEditingHost())
               : nullptr;
       if (!nextContent || nextContent != range.StartRef().GetChild()) {
         noNeedToChangeStart = true;
@@ -5179,9 +5177,8 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::AutoDeleteRangesHandler::
       EditorDOMPoint afterEmptyBlock(
           EditorRawDOMPoint::After(mEmptyInclusiveAncestorBlockElement));
       MOZ_ASSERT(afterEmptyBlock.IsSet());
-      if (nsIContent* nextContentOfEmptyBlock =
-              EditorBase::GetNextContent(afterEmptyBlock, {}, EditorType::HTML,
-                                         aHTMLEditor.GetActiveEditingHost())) {
+      if (nsIContent* nextContentOfEmptyBlock = EditorBase::GetNextContent(
+              afterEmptyBlock, {}, aHTMLEditor.GetActiveEditingHost())) {
         EditorDOMPoint pt = aHTMLEditor.GetGoodCaretPointFor(
             *nextContentOfEmptyBlock, aDirectionAndAmount);
         if (!pt.IsSet()) {
@@ -5204,7 +5201,7 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::AutoDeleteRangesHandler::
       if (nsIContent* previousContentOfEmptyBlock =
               EditorBase::GetPreviousContent(
                   atEmptyBlock, {WalkTreeOption::IgnoreNonEditableNode},
-                  EditorType::HTML, aHTMLEditor.GetActiveEditingHost())) {
+                  aHTMLEditor.GetActiveEditingHost())) {
         EditorDOMPoint pt = aHTMLEditor.GetGoodCaretPointFor(
             *previousContentOfEmptyBlock, aDirectionAndAmount);
         if (!pt.IsSet()) {
