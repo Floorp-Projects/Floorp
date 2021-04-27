@@ -198,7 +198,6 @@
 #ifndef MOZ_WIDGET_GTK
   skin/classic/browser/sort.svg                       (../shared/icons/sort.svg)
 #endif
-  skin/classic/browser/stop.svg                       (../shared/icons/stop.svg)
   skin/classic/browser/stop-to-reload.svg             (../shared/icons/stop-to-reload.svg)
   skin/classic/browser/success-animation.svg          (../shared/icons/success-animation.svg)
   skin/classic/browser/sync.svg                       (../shared/icons/sync.svg)
