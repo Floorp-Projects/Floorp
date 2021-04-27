@@ -114,7 +114,7 @@ dialog[subdialog] #iconContainer {
 
 /* Fix padding/spacing */
 dialog[subdialog] {
-  --grid-padding: 1.16em;
+  --grid-padding: 16px;
   /* All the inner items should have 4px inline margin, leading to 1.16em spacing
    * between the dialog and its contents, and 8px horizontal spacing between items. */
   padding: var(--grid-padding) calc(var(--grid-padding) - 4px);

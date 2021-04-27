@@ -4,12 +4,6 @@
 
 %include ../../../shared/in-content/common.inc.css
 
-@media (-moz-proton) {
-:root {
-  --subdialog-font-size: 1.15em;
-}
-}
-
 xul|menulist::part(dropmarker) {
   margin-block: 1px;
 }

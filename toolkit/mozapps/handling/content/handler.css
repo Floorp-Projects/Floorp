@@ -14,7 +14,7 @@
 
 @media (-moz-proton) {
 dialog {
-  padding: 1.16em calc(1.16em - 4px);
+  padding: 16px calc(16px - 4px);
 }
 
 #items,
@@ -30,7 +30,7 @@ label, description {
 #description-box,
 #rememberContainer,
 #chooser {
-  margin: 0 4px 1.16em;
+  margin: 0 4px 16px;
 }
 
 /* avoid double inline margins when #description is nested: */
