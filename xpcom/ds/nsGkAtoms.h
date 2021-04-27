@@ -149,6 +149,13 @@ class nsGkAtoms {
     return const_cast<nsStaticAtom*>(&sAtoms[aIndex]);
   }
 
+  static size_t IndexOf(const nsStaticAtom* atom) {
+    nsStaticAtom* firstAtom = GetAtomByIndex(0);
+    size_t ret = atom - firstAtom;
+    MOZ_ASSERT(ret < sAtomsLen);
+    return ret;
+  }
+
 // The definition of the pointer to each static atom.
 //
 // These types are not `static constexpr <type>* const` -- even though these

@@ -68,6 +68,8 @@ template <typename T>
 class Optional;
 }
 
+class nsAtom;
+
 namespace IPC {
 
 template <>
@@ -885,6 +887,15 @@ struct ParamTraits<mozilla::dom::Optional<T>> {
 
     return true;
   }
+};
+
+template <>
+struct ParamTraits<nsAtom*> {
+  typedef nsAtom paramType;
+
+  static void Write(Message* aMsg, const paramType* aParam);
+  static bool Read(const Message* aMsg, PickleIterator* aIter,
+                   RefPtr<paramType>* aResult);
 };
 
 struct CrossOriginOpenerPolicyValidator {

@@ -160,6 +160,7 @@ UNIFIED_SOURCES += [
     "IdleSchedulerParent.cpp",
     "InputStreamUtils.cpp",
     "IPCMessageUtils.cpp",
+    "IPCMessageUtilsSpecializations.cpp",
     "IPCStreamChild.cpp",
     "IPCStreamDestination.cpp",
     "IPCStreamParent.cpp",
