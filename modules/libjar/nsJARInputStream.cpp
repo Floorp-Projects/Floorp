@@ -20,16 +20,6 @@
 #  include <windows.h>
 #endif
 
-// When accessing data inside the MMAP_FAULT_HANDLER_{BEGIN_HANDLE}/{CATCH}
-// we can't use the C memcpy because that's guaranteed not to throw
-// any exceptions, so the exception handling gets optimized out.
-// We use the Windows specific CopyMemory which doesn't have this problem.
-#if defined(HAVE_SEH_EXCEPTIONS)
-#  define CatchableMemcpy CopyMemory
-#else
-#  define CatchableMemcpy memcpy
-#endif
-
 /*---------------------------------------------
  *  nsISupports implementation
  *--------------------------------------------*/
@@ -234,7 +224,8 @@ nsJARInputStream::Read(char* aBuffer, uint32_t aCount, uint32_t* aBytesRead) {
                               "Did we read more than expected?");
         uint32_t count = std::min(aCount, mOutSize - uint32_t(mZs.total_out));
         if (count) {
-          CatchableMemcpy(aBuffer, mZs.next_in + mZs.total_out, count);
+          std::copy(mZs.next_in + mZs.total_out,
+                    mZs.next_in + mZs.total_out + count, aBuffer);
           mZs.total_out += count;
         }
         *aBytesRead = count;
@@ -410,7 +401,8 @@ uint32_t nsJARInputStream::CopyDataToBuffer(char*& aBuffer, uint32_t& aCount) {
   const uint32_t writeLength = std::min(aCount, mBuffer.Length() - mCurPos);
 
   if (writeLength > 0) {
-    CatchableMemcpy(aBuffer, mBuffer.get() + mCurPos, writeLength);
+    std::copy(mBuffer.get() + mCurPos, mBuffer.get() + mCurPos + writeLength,
+              aBuffer);
     mCurPos += writeLength;
     aCount -= writeLength;
     aBuffer += writeLength;
