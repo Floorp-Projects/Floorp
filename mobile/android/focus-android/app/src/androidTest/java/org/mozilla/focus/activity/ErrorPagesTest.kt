@@ -4,6 +4,7 @@
 package org.mozilla.focus.activity
 
 import androidx.test.internal.runner.junit4.AndroidJUnit4ClassRunner
+import org.junit.After
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -18,6 +19,11 @@ import org.mozilla.focus.helpers.TestHelper.setNetworkEnabled
 class ErrorPagesTest {
     @get: Rule
     val mActivityTestRule = MainActivityFirstrunTestRule(showFirstRun = false)
+
+    @After
+    fun tearDown() {
+        setNetworkEnabled(true)
+    }
 
     @Test
     fun badURLCheckTest() {
