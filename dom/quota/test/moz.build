@@ -11,6 +11,7 @@ BROWSER_CHROME_MANIFESTS += ["browser/browser.ini"]
 MOCHITEST_MANIFESTS += ["mochitest/mochitest.ini"]
 
 XPCSHELL_TESTS_MANIFESTS += [
+    "xpcshell/caching/xpcshell.ini",
     "xpcshell/telemetry/xpcshell.ini",
     "xpcshell/upgrades/xpcshell.ini",
     "xpcshell/xpcshell.ini",
