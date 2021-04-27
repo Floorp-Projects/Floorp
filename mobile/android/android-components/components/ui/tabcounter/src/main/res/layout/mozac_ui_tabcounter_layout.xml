@@ -30,6 +30,7 @@
             android:layout_gravity="center"
             android:textAlignment="center"
             android:textColor="@color/mozac_ui_tabcounter_default_tint"
+            android:layout_marginBottom="0.5dp"
             android:textSize="12sp"
             android:textStyle="bold"
             tools:text="16" />
