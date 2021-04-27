@@ -48,7 +48,7 @@ class CanvasContext final : public nsICanvasRenderingContextInternal,
   bool UpdateWebRenderLocalCanvasData(
       layers::WebRenderLocalCanvasData* aCanvasData);
 
-  const wr::ExternalImageId mExternalImageId;
+  wr::ExternalImageId mExternalImageId;
 
  public:  // nsICanvasRenderingContextInternal
   int32_t GetWidth() override { return mWidth; }

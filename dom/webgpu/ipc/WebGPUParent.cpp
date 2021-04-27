@@ -525,11 +525,15 @@ static void PresentCallback(ffi::WGPUBufferMapAsyncStatus status,
     const auto bufferSize = data->mRowCount * data->mSourcePitch;
     const uint8_t* ptr = ffi::wgpu_server_buffer_get_mapped_range(
         req->mContext, bufferId, 0, bufferSize);
-    uint8_t* dst = data->mTextureHost->GetBuffer();
-    for (uint32_t row = 0; row < data->mRowCount; ++row) {
-      memcpy(dst, ptr, data->mTargetPitch);
-      dst += data->mTargetPitch;
-      ptr += data->mSourcePitch;
+    if (data->mTextureHost) {
+      uint8_t* dst = data->mTextureHost->GetBuffer();
+      for (uint32_t row = 0; row < data->mRowCount; ++row) {
+        memcpy(dst, ptr, data->mTargetPitch);
+        dst += data->mTargetPitch;
+        ptr += data->mSourcePitch;
+      }
+    } else {
+      NS_WARNING("WebGPU present skipped: the swapchain is resized!");
     }
     wgpu_server_buffer_unmap(req->mContext, bufferId);
   } else {

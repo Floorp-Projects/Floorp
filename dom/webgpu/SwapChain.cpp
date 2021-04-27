@@ -19,7 +19,10 @@ SwapChain::SwapChain(const dom::GPUSwapChainDescriptor& aDesc,
                      wr::ExternalImageId aExternalImageId,
                      gfx::SurfaceFormat aFormat)
     : ChildOf(aDesc.mDevice),
-      mFormat(aFormat),
+      mGfxFormat(aFormat),
+      mFormat(static_cast<uint8_t>(aDesc.mFormat)),
+      mUsage(aDesc.mUsage),
+      mSize(aExtent3D.mWidth, aExtent3D.mHeight),
       mTexture(aDesc.mDevice->InitSwapChain(aDesc, aExtent3D, aExternalImageId,
                                             aFormat)) {}
 
@@ -31,9 +34,7 @@ void SwapChain::Cleanup() {
   }
 }
 
-WebGPUChild* SwapChain::GetGpuBridge() const {
-  return mParent ? mParent->GetBridge().get() : nullptr;
-}
+RefPtr<Device> SwapChain::GetParent() const { return mParent; }
 
 void SwapChain::Destroy(wr::ExternalImageId aExternalImageId) {
   if (mValid && mParent && mParent->GetBridge()) {
