@@ -20,50 +20,50 @@ enum class StyleSystemColor : uint8_t;
 
 namespace widget {
 
-static const gfx::sRGBColor sColorWhite(gfx::sRGBColor::OpaqueWhite());
-static const gfx::sRGBColor sColorWhiteAlpha50(gfx::sRGBColor::White(0.5f));
-static const gfx::sRGBColor sColorWhiteAlpha80(gfx::sRGBColor::White(0.8f));
-static const gfx::sRGBColor sColorBlack(gfx::sRGBColor::OpaqueBlack());
+static constexpr gfx::sRGBColor sColorWhite(gfx::sRGBColor::OpaqueWhite());
+static constexpr gfx::sRGBColor sColorWhiteAlpha50(gfx::sRGBColor::White(0.5f));
+static constexpr gfx::sRGBColor sColorWhiteAlpha80(gfx::sRGBColor::White(0.8f));
+static constexpr gfx::sRGBColor sColorBlack(gfx::sRGBColor::OpaqueBlack());
 
-static const gfx::sRGBColor sColorGrey10(
+static constexpr gfx::sRGBColor sColorGrey10(
     gfx::sRGBColor::UnusualFromARGB(0xffe9e9ed));
-static const gfx::sRGBColor sColorGrey10Alpha50(
+static constexpr gfx::sRGBColor sColorGrey10Alpha50(
     gfx::sRGBColor::UnusualFromARGB(0x7fe9e9ed));
-static const gfx::sRGBColor sColorGrey20(
+static constexpr gfx::sRGBColor sColorGrey20(
     gfx::sRGBColor::UnusualFromARGB(0xffd0d0d7));
-static const gfx::sRGBColor sColorGrey30(
+static constexpr gfx::sRGBColor sColorGrey30(
     gfx::sRGBColor::UnusualFromARGB(0xffb1b1b9));
-static const gfx::sRGBColor sColorGrey40(
+static constexpr gfx::sRGBColor sColorGrey40(
     gfx::sRGBColor::UnusualFromARGB(0xff8f8f9d));
-static const gfx::sRGBColor sColorGrey40Alpha50(
+static constexpr gfx::sRGBColor sColorGrey40Alpha50(
     gfx::sRGBColor::UnusualFromARGB(0x7f8f8f9d));
-static const gfx::sRGBColor sColorGrey50(
+static constexpr gfx::sRGBColor sColorGrey50(
     gfx::sRGBColor::UnusualFromARGB(0xff676774));
-static const gfx::sRGBColor sColorGrey50Alpha50(
+static constexpr gfx::sRGBColor sColorGrey50Alpha50(
     gfx::sRGBColor::UnusualFromARGB(0x7f676774));
-static const gfx::sRGBColor sColorGrey60(
+static constexpr gfx::sRGBColor sColorGrey60(
     gfx::sRGBColor::UnusualFromARGB(0xff484851));
-static const gfx::sRGBColor sColorGrey60Alpha50(
+static constexpr gfx::sRGBColor sColorGrey60Alpha50(
     gfx::sRGBColor::UnusualFromARGB(0x7f484851));
 
-static const gfx::sRGBColor sColorMeterGreen10(
+static constexpr gfx::sRGBColor sColorMeterGreen10(
     gfx::sRGBColor::UnusualFromARGB(0xff00ab60));
-static const gfx::sRGBColor sColorMeterGreen20(
+static constexpr gfx::sRGBColor sColorMeterGreen20(
     gfx::sRGBColor::UnusualFromARGB(0xff056139));
-static const gfx::sRGBColor sColorMeterYellow10(
+static constexpr gfx::sRGBColor sColorMeterYellow10(
     gfx::sRGBColor::UnusualFromARGB(0xffffbd4f));
-static const gfx::sRGBColor sColorMeterYellow20(
+static constexpr gfx::sRGBColor sColorMeterYellow20(
     gfx::sRGBColor::UnusualFromARGB(0xffd2811e));
-static const gfx::sRGBColor sColorMeterRed10(
+static constexpr gfx::sRGBColor sColorMeterRed10(
     gfx::sRGBColor::UnusualFromARGB(0xffe22850));
-static const gfx::sRGBColor sColorMeterRed20(
+static constexpr gfx::sRGBColor sColorMeterRed20(
     gfx::sRGBColor::UnusualFromARGB(0xff810220));
 
-static const gfx::sRGBColor sScrollbarColor(
+static constexpr gfx::sRGBColor sScrollbarColor(
     gfx::sRGBColor::UnusualFromARGB(0xfff0f0f0));
-static const gfx::sRGBColor sScrollbarBorderColor(gfx::sRGBColor(1.0f, 1.0f,
-                                                                 1.0f));
-static const gfx::sRGBColor sScrollbarThumbColor(
+static constexpr gfx::sRGBColor sScrollbarBorderColor(gfx::sRGBColor(1.0f, 1.0f,
+                                                                     1.0f));
+static constexpr gfx::sRGBColor sScrollbarThumbColor(
     gfx::sRGBColor::UnusualFromARGB(0xffcdcdcd));
 
 static const CSSCoord kMinimumColorPickerHeight = 32.0f;
