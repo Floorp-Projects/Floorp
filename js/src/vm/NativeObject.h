@@ -957,6 +957,10 @@ class NativeObject : public JSObject {
                                              HandleNativeObject obj,
                                              MutableHandleShape shape);
 
+  void removeDictionaryPropertyWithoutReshape(ShapeTable* table,
+                                              ShapeTable::Ptr ptr,
+                                              Shape* shape);
+
  public:
   // Add a new property. Must only be used when the |id| is not already present
   // in the object's shape. Checks for non-extensibility must be done by the

@@ -960,6 +960,44 @@ bool NativeObject::changeCustomDataPropAttributes(JSContext* cx,
   return true;
 }
 
+void NativeObject::removeDictionaryPropertyWithoutReshape(ShapeTable* table,
+                                                          ShapeTable::Ptr ptr,
+                                                          Shape* shape) {
+  // Removes a property from a dictionary object. The caller is responsible for
+  // generating a new shape for the object.
+
+  AutoCheckCannotGC nogc;
+  MOZ_ASSERT(inDictionaryMode());
+  MOZ_ASSERT(lastProperty()->maybeTable(nogc) == table);
+  MOZ_ASSERT(*ptr == shape);
+
+  // If shape has a slot, free its slot number.
+  if (shape->hasSlot()) {
+    freeDictionarySlot(table, shape->slot());
+  }
+
+  // A dictionary-mode object owns mutable, unique shapes on a non-circular
+  // doubly linked list, hashed by lastProperty()->table. So we can edit the
+  // list and table in place.
+  table->remove(ptr);
+
+  // Remove shape from its non-circular doubly linked list.
+  bool removingLastProperty = (shape == lastProperty());
+  shape->removeFromDictionary(this);
+
+  // If we just removed the object's last property, move its ShapeTable,
+  // BaseShape and object flags to the new last property. Information in
+  // (Base)Shapes for non-last properties may be out of sync with the
+  // object's state. Updating the shape's BaseShape is sound because we
+  // generate a new shape for the object right after this.
+  if (removingLastProperty) {
+    MOZ_ASSERT(lastProperty() != shape);
+    shape->handoffTableTo(lastProperty());
+    lastProperty()->setBase(shape->base());
+    lastProperty()->setObjectFlags(shape->objectFlags());
+  }
+}
+
 /* static */
 bool NativeObject::removeProperty(JSContext* cx, HandleNativeObject obj,
                                   jsid id_) {
@@ -995,10 +1033,8 @@ bool NativeObject::removeProperty(JSContext* cx, HandleNativeObject obj,
     }
   }
 
-  const bool removingLastProperty = (shape == obj->lastProperty());
-
   if (!obj->inDictionaryMode()) {
-    if (removingLastProperty && obj->canRemoveLastProperty()) {
+    if (shape == obj->lastProperty() && obj->canRemoveLastProperty()) {
       // Non-dictionary-mode shape tables are shared immutables, so all we
       // need do is retract the last property and we'll either get (or else
       // lazily make via a later hashify) the exact table for the new property
@@ -1034,32 +1070,7 @@ bool NativeObject::removeProperty(JSContext* cx, HandleNativeObject obj,
   }
   new (spare) Shape(shape->base(), ObjectFlags(), 0);
 
-  // If shape has a slot, free its slot number.
-  if (shape->hasSlot()) {
-    obj->freeDictionarySlot(table, shape->slot());
-  }
-
-  // A dictionary-mode object owns mutable, unique shapes on a non-circular
-  // doubly linked list, hashed by lastProperty()->table. So we can edit the
-  // list and table in place.
-  MOZ_ASSERT(obj->lastProperty()->maybeTable(keep) == table);
-  table->remove(ptr);
-
-  // Remove shape from its non-circular doubly linked list.
-  MOZ_ASSERT(removingLastProperty == (shape == obj->lastProperty()));
-  shape->removeFromDictionary(obj);
-
-  // If we just removed the object's last property, move its ShapeTable,
-  // BaseShape and object flags to the new last property. Information in
-  // (Base)Shapes for non-last properties may be out of sync with the
-  // object's state. Updating the shape's BaseShape is sound because we
-  // generate a new shape for the object right after this.
-  if (removingLastProperty) {
-    MOZ_ASSERT(obj->lastProperty() != shape);
-    shape->handoffTableTo(obj->lastProperty());
-    obj->lastProperty()->setBase(shape->base());
-    obj->lastProperty()->setObjectFlags(shape->objectFlags());
-  }
+  obj->removeDictionaryPropertyWithoutReshape(table, ptr, shape);
 
   // Generate a new shape for the object, infallibly.
   MOZ_ALWAYS_TRUE(NativeObject::generateOwnShape(cx, obj, spare));
