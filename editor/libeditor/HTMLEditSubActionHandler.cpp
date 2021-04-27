@@ -76,6 +76,7 @@ using EmptyCheckOption = HTMLEditUtils::EmptyCheckOption;
 using LeafNodeType = HTMLEditUtils::LeafNodeType;
 using LeafNodeTypes = HTMLEditUtils::LeafNodeTypes;
 using StyleDifference = HTMLEditUtils::StyleDifference;
+using WalkTreeOption = HTMLEditUtils::WalkTreeOption;
 
 /********************************************************
  *  first some helpful functors we will use
@@ -3167,20 +3168,28 @@ nsresult HTMLEditor::FormatBlockContainerWithTransaction(nsAtom& blockType) {
     }
 
     // We are making a block.  Consume a br, if needed.
-    nsCOMPtr<nsIContent> brNode =
-        GetNextEditableHTMLNodeInBlock(pointToInsertBlock);
-    if (brNode && brNode->IsHTMLElement(nsGkAtoms::br)) {
-      AutoEditorDOMPointChildInvalidator lockOffset(pointToInsertBlock);
-      rv = DeleteNodeWithTransaction(*brNode);
-      if (NS_WARN_IF(Destroyed())) {
-        return NS_ERROR_EDITOR_DESTROYED;
+    // XXX Perhaps, we should stop handling this method when there is no
+    //     editing host.
+    if (Element* editingHost = GetActiveEditingHost()) {
+      if (nsCOMPtr<nsIContent> maybeBRContent = HTMLEditUtils::GetNextContent(
+              pointToInsertBlock,
+              {WalkTreeOption::IgnoreNonEditableNode,
+               WalkTreeOption::StopAtBlockBoundary},
+              editingHost)) {
+        if (maybeBRContent->IsHTMLElement(nsGkAtoms::br)) {
+          AutoEditorDOMPointChildInvalidator lockOffset(pointToInsertBlock);
+          rv = DeleteNodeWithTransaction(*maybeBRContent);
+          if (NS_WARN_IF(Destroyed())) {
+            return NS_ERROR_EDITOR_DESTROYED;
+          }
+          if (NS_FAILED(rv)) {
+            NS_WARNING("HTMLEditor::DeleteNodeWithTransaction() failed");
+            return rv;
+          }
+          // We don't need to act on this node any more
+          arrayOfContents.RemoveElement(maybeBRContent);
+        }
       }
-      if (NS_FAILED(rv)) {
-        NS_WARNING("HTMLEditor::DeleteNodeWithTransaction() failed");
-        return rv;
-      }
-      // We don't need to act on this node any more
-      arrayOfContents.RemoveElement(brNode);
     }
     // Make sure we can put a block here.
     SplitNodeResult splitNodeResult =
@@ -4950,24 +4959,30 @@ EditActionResult HTMLEditor::AlignContentsAtSelectionWithEmptyDivElement(
 
   // Consume a trailing br, if any.  This is to keep an alignment from
   // creating extra lines, if possible.
-  if (nsCOMPtr<nsIContent> maybeBRContent =
-          GetNextEditableHTMLNodeInBlock(splitNodeResult.SplitPoint())) {
-    if (maybeBRContent->IsHTMLElement(nsGkAtoms::br) &&
-        pointToInsertDiv.GetChild()) {
-      // Making use of html structure... if next node after where we are
-      // putting our div is not a block, then the br we found is in same block
-      // we are, so it's safe to consume it.
-      if (nsIContent* nextEditableSibling =
-              GetNextHTMLSibling(pointToInsertDiv.GetChild())) {
-        if (!HTMLEditUtils::IsBlockElement(*nextEditableSibling)) {
-          AutoEditorDOMPointChildInvalidator lockOffset(pointToInsertDiv);
-          nsresult rv = DeleteNodeWithTransaction(*maybeBRContent);
-          if (NS_WARN_IF(Destroyed())) {
-            return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
-          }
-          if (NS_FAILED(rv)) {
-            NS_WARNING("HTMLEditor::DeleteNodeWithTransaction() failed");
-            return EditActionResult(rv);
+  // XXX Perhaps, we should stop handling this if there is no editing host.
+  if (Element* editingHost = GetActiveEditingHost()) {
+    if (nsCOMPtr<nsIContent> maybeBRContent = HTMLEditUtils::GetNextContent(
+            splitNodeResult.SplitPoint(),
+            {WalkTreeOption::IgnoreNonEditableNode,
+             WalkTreeOption::StopAtBlockBoundary},
+            editingHost)) {
+      if (maybeBRContent->IsHTMLElement(nsGkAtoms::br) &&
+          pointToInsertDiv.GetChild()) {
+        // Making use of html structure... if next node after where we are
+        // putting our div is not a block, then the br we found is in same block
+        // we are, so it's safe to consume it.
+        if (nsIContent* nextEditableSibling =
+                GetNextHTMLSibling(pointToInsertDiv.GetChild())) {
+          if (!HTMLEditUtils::IsBlockElement(*nextEditableSibling)) {
+            AutoEditorDOMPointChildInvalidator lockOffset(pointToInsertDiv);
+            nsresult rv = DeleteNodeWithTransaction(*maybeBRContent);
+            if (NS_WARN_IF(Destroyed())) {
+              return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
+            }
+            if (NS_FAILED(rv)) {
+              NS_WARNING("HTMLEditor::DeleteNodeWithTransaction() failed");
+              return EditActionResult(rv);
+            }
           }
         }
       }
@@ -5529,15 +5544,28 @@ EditorDOMPoint HTMLEditor::GetCurrentHardLineStartPoint(
     point.Set(point.GetContainer());
   }
 
+  Element* editingHost = GetActiveEditingHost();
+  if (!editingHost) {
+    NS_WARNING(
+        "No editing host, HTMLEditor::GetCurrentHardLineStartPoint() returned "
+        "given point");
+    return point;
+  }
+
   // Look back through any further inline nodes that aren't across a <br>
   // from us, and that are enclosed in the same block.
   // I.e., looking for start of current hard line.
-  for (nsIContent* previousEditableContent =
-           GetPreviousEditableHTMLNodeInBlock(point);
+  constexpr HTMLEditUtils::WalkTreeOptions
+      ignoreNonEditableNodeAndStopAtBlockBoundary{
+          WalkTreeOption::IgnoreNonEditableNode,
+          WalkTreeOption::StopAtBlockBoundary};
+  for (nsIContent* previousEditableContent = HTMLEditUtils::GetPreviousContent(
+           point, ignoreNonEditableNodeAndStopAtBlockBoundary, editingHost);
        previousEditableContent && previousEditableContent->GetParentNode() &&
        !IsVisibleBRElement(previousEditableContent) &&
        !HTMLEditUtils::IsBlockElement(*previousEditableContent);
-       previousEditableContent = GetPreviousEditableHTMLNodeInBlock(point)) {
+       previousEditableContent = HTMLEditUtils::GetPreviousContent(
+           point, ignoreNonEditableNodeAndStopAtBlockBoundary, editingHost)) {
     point.Set(previousEditableContent);
     // XXX Why don't we check \n in pre-formated text node here?
   }
@@ -5546,10 +5574,12 @@ EditorDOMPoint HTMLEditor::GetCurrentHardLineStartPoint(
   // <br> element.  Look up the tree for as long as we are the first node in
   // the container (typically, start of nearest block ancestor), and as long
   // as we haven't hit the body node.
-  for (nsIContent* nearContent = GetPreviousEditableHTMLNodeInBlock(point);
+  for (nsIContent* nearContent = HTMLEditUtils::GetPreviousContent(
+           point, ignoreNonEditableNodeAndStopAtBlockBoundary, editingHost);
        !nearContent && !point.IsContainerHTMLElement(nsGkAtoms::body) &&
        point.GetContainer()->GetParentNode();
-       nearContent = GetPreviousEditableHTMLNodeInBlock(point)) {
+       nearContent = HTMLEditUtils::GetPreviousContent(
+           point, ignoreNonEditableNodeAndStopAtBlockBoundary, editingHost)) {
     // Don't keep looking up if we have found a blockquote element to act on
     // when we handle outdent.
     // XXX Sounds like this is hacky.  If possible, it should be check in
@@ -5604,6 +5634,14 @@ EditorDOMPoint HTMLEditor::GetCurrentHardLineEndPoint(
     NS_WARNING_ASSERTION(point.IsSet(), "Failed to set to after the text node");
   }
 
+  Element* editingHost = GetActiveEditingHost();
+  if (!editingHost) {
+    NS_WARNING(
+        "No editing host, HTMLEditor::GetCurrentHardLineEndPoint() returned "
+        "given point");
+    return point;
+  }
+
   // Look ahead through any further inline nodes that aren't across a <br> from
   // us, and that are enclosed in the same block.
   // XXX Currently, we stop block-extending when finding visible <br> element.
@@ -5618,11 +5656,17 @@ EditorDOMPoint HTMLEditor::GetCurrentHardLineEndPoint(
   //     * <div contenteditable>foo[]<b contenteditable="false">bar</b>baz</div>
   //     Only in the first case, after the caret position isn't wrapped with
   //     new <div> element.
-  for (nsIContent* nextEditableContent = GetNextEditableHTMLNodeInBlock(point);
+  constexpr HTMLEditUtils::WalkTreeOptions
+      ignoreNonEditableNodeAndStopAtBlockBoundary{
+          WalkTreeOption::IgnoreNonEditableNode,
+          WalkTreeOption::StopAtBlockBoundary};
+  for (nsIContent* nextEditableContent = HTMLEditUtils::GetNextContent(
+           point, ignoreNonEditableNodeAndStopAtBlockBoundary, editingHost);
        nextEditableContent &&
        !HTMLEditUtils::IsBlockElement(*nextEditableContent) &&
        nextEditableContent->GetParent();
-       nextEditableContent = GetNextEditableHTMLNodeInBlock(point)) {
+       nextEditableContent = HTMLEditUtils::GetNextContent(
+           point, ignoreNonEditableNodeAndStopAtBlockBoundary, editingHost)) {
     point.SetAfter(nextEditableContent);
     if (NS_WARN_IF(!point.IsSet())) {
       break;
@@ -5651,10 +5695,12 @@ EditorDOMPoint HTMLEditor::GetCurrentHardLineEndPoint(
   // element.  Look up the tree for as long as we are the last node in the
   // container (typically, block node), and as long as we haven't hit the body
   // node.
-  for (nsIContent* nearContent = GetNextEditableHTMLNodeInBlock(point);
+  for (nsIContent* nearContent = HTMLEditUtils::GetNextContent(
+           point, ignoreNonEditableNodeAndStopAtBlockBoundary, editingHost);
        !nearContent && !point.IsContainerHTMLElement(nsGkAtoms::body) &&
        point.GetContainer()->GetParentNode();
-       nearContent = GetNextEditableHTMLNodeInBlock(point)) {
+       nearContent = HTMLEditUtils::GetNextContent(
+           point, ignoreNonEditableNodeAndStopAtBlockBoundary, editingHost)) {
     // Don't walk past the editable section. Note that we need to check before
     // walking up to a parent because we need to return the parent object, so
     // the parent itself might not be in the editable area, but it's OK.
@@ -7987,15 +8033,21 @@ void HTMLEditor::SetSelectionInterlinePosition() {
   // XXX Although I don't understand "interline position", if caret is
   //     immediately after non-editable contents, but previous editable
   //     content is `<br>`, does this do right thing?
-  if (nsIContent* previousEditableContentInBlock =
-          GetPreviousEditableHTMLNodeInBlock(atCaret)) {
-    if (previousEditableContentInBlock->IsHTMLElement(nsGkAtoms::br)) {
-      IgnoredErrorResult ignoredError;
-      SelectionRef().SetInterlinePosition(true, ignoredError);
-      NS_WARNING_ASSERTION(
-          !ignoredError.Failed(),
-          "Selection::SetInterlinePosition(true) failed, but ignored");
-      return;
+  if (Element* editingHost = GetActiveEditingHost()) {
+    if (nsIContent* previousEditableContentInBlock =
+            HTMLEditUtils::GetPreviousContent(
+                atCaret,
+                {WalkTreeOption::IgnoreNonEditableNode,
+                 WalkTreeOption::StopAtBlockBoundary},
+                editingHost)) {
+      if (previousEditableContentInBlock->IsHTMLElement(nsGkAtoms::br)) {
+        IgnoredErrorResult ignoredError;
+        SelectionRef().SetInterlinePosition(true, ignoredError);
+        NS_WARNING_ASSERTION(
+            !ignoredError.Failed(),
+            "Selection::SetInterlinePosition(true) failed, but ignored");
+        return;
+      }
     }
   }
 
@@ -8099,7 +8151,7 @@ nsresult HTMLEditor::AdjustCaretPositionAndEnsurePaddingBRElement(
   // 1) prior node is in same block where selection is AND
   // 2) prior node is a br AND
   // 3) that br is not visible
-
+  RefPtr<Element> editingHost = GetActiveEditingHost();
   if (nsCOMPtr<nsIContent> previousEditableContent =
           GetPreviousEditableHTMLNode(point)) {
     RefPtr<Element> blockElementAtCaret =
@@ -8143,41 +8195,57 @@ nsresult HTMLEditor::AdjustCaretPositionAndEnsurePaddingBRElement(
       }
       // If it's a visible `<br>` element and next editable content is a
       // padding `<br>` element, we need to set interline position.
-      else if (nsIContent* nextEditableContentInBlock =
-                   GetNextEditableHTMLNodeInBlock(*previousEditableContent)) {
-        if (EditorUtils::IsPaddingBRElementForEmptyLastLine(
-                *nextEditableContentInBlock)) {
-          // Make it stick to the padding `<br>` element so that it will be
-          // on blank line.
-          IgnoredErrorResult ignoredError;
-          SelectionRef().SetInterlinePosition(true, ignoredError);
-          NS_WARNING_ASSERTION(
-              !ignoredError.Failed(),
-              "Selection::SetInterlinePosition(true) failed, but ignored");
+      else if (editingHost) {
+        if (nsIContent* nextEditableContentInBlock =
+                HTMLEditUtils::GetNextContent(
+                    *previousEditableContent,
+                    {WalkTreeOption::IgnoreNonEditableNode,
+                     WalkTreeOption::StopAtBlockBoundary},
+                    editingHost)) {
+          if (EditorUtils::IsPaddingBRElementForEmptyLastLine(
+                  *nextEditableContentInBlock)) {
+            // Make it stick to the padding `<br>` element so that it will be
+            // on blank line.
+            IgnoredErrorResult ignoredError;
+            SelectionRef().SetInterlinePosition(true, ignoredError);
+            NS_WARNING_ASSERTION(
+                !ignoredError.Failed(),
+                "Selection::SetInterlinePosition(true) failed, but ignored");
+          }
         }
       }
     }
   }
 
-  // If previous editable content in same block is `<br>`, text node, `<img>`
-  //  or `<hr>`, current caret position is fine.
-  if (nsIContent* previousEditableContentInBlock =
-          GetPreviousEditableHTMLNodeInBlock(point)) {
-    if (previousEditableContentInBlock->IsHTMLElement(nsGkAtoms::br) ||
-        previousEditableContentInBlock->IsText() ||
-        HTMLEditUtils::IsImage(previousEditableContentInBlock) ||
-        previousEditableContentInBlock->IsHTMLElement(nsGkAtoms::hr)) {
-      return NS_OK;
+  if (editingHost) {
+    // If previous editable content in same block is `<br>`, text node, `<img>`
+    //  or `<hr>`, current caret position is fine.
+    if (nsIContent* previousEditableContentInBlock =
+            HTMLEditUtils::GetPreviousContent(
+                point,
+                {WalkTreeOption::IgnoreNonEditableNode,
+                 WalkTreeOption::StopAtBlockBoundary},
+                editingHost)) {
+      if (previousEditableContentInBlock->IsHTMLElement(nsGkAtoms::br) ||
+          previousEditableContentInBlock->IsText() ||
+          HTMLEditUtils::IsImage(previousEditableContentInBlock) ||
+          previousEditableContentInBlock->IsHTMLElement(nsGkAtoms::hr)) {
+        return NS_OK;
+      }
     }
-  }
-  // If next editable content in same block is `<br>`, text node, `<img>` or
-  // `<hr>`, current caret position is fine.
-  if (nsIContent* nextEditableContentInBlock =
-          GetNextEditableHTMLNodeInBlock(point)) {
-    if (nextEditableContentInBlock->IsText() ||
-        nextEditableContentInBlock->IsAnyOfHTMLElements(
-            nsGkAtoms::br, nsGkAtoms::img, nsGkAtoms::hr)) {
-      return NS_OK;
+
+    // If next editable content in same block is `<br>`, text node, `<img>` or
+    // `<hr>`, current caret position is fine.
+    if (nsIContent* nextEditableContentInBlock = HTMLEditUtils::GetNextContent(
+            point,
+            {WalkTreeOption::IgnoreNonEditableNode,
+             WalkTreeOption::StopAtBlockBoundary},
+            editingHost)) {
+      if (nextEditableContentInBlock->IsText() ||
+          nextEditableContentInBlock->IsAnyOfHTMLElements(
+              nsGkAtoms::br, nsGkAtoms::img, nsGkAtoms::hr)) {
+        return NS_OK;
+      }
     }
   }
 
