@@ -660,4 +660,9 @@ abstract class EngineSession(
      */
     @CallSuper
     open fun close() = delegate.unregisterObservers()
+
+    /**
+     * Returns the list of URL schemes that are blocked from loading.
+     */
+    open fun getBlockedSchemes(): List<String> = emptyList()
 }

@@ -441,6 +441,10 @@ class GeckoEngineSession(
         geckoSession.close()
     }
 
+    override fun getBlockedSchemes(): List<String> {
+        return BLOCKED_SCHEMES
+    }
+
     /**
      * NavigationDelegate implementation for forwarding callbacks to observers of the session.
      */

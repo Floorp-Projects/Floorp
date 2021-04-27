@@ -12,6 +12,9 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/.config.yml)
 
+* **concept-engine**
+  * 🌟️ `getBlockedSchemes()` now exposes the list of url shemes that the engine won't load.
+
 * **browser-menu**:
   * 🚒 Bug fixed [issue #10032](https://github.com/mozilla-mobile/android-components/issues/10032) - A BrowserMenuCompoundButton used in our BrowserMenu setup with a DynamicWidthRecyclerView is not clipped anymore.
 

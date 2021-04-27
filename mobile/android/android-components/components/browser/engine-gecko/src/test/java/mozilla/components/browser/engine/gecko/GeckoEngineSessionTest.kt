@@ -2974,6 +2974,13 @@ class GeckoEngineSessionTest {
         assertFalse(observedOnNavigateBack)
     }
 
+    @Test
+    fun `GIVEN a list of blocked schemes set WHEN getBlockedSchemes is called THEN it returns that list`() {
+        val engineSession = GeckoEngineSession(mock(), geckoSessionProvider = geckoSessionProvider)
+
+        assertSame(GeckoEngineSession.BLOCKED_SCHEMES, engineSession.getBlockedSchemes())
+    }
+
     private fun mockGeckoSession(): GeckoSession {
         val session = mock<GeckoSession>()
         whenever(session.settings).thenReturn(
