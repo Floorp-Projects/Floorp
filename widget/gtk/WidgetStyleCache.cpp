@@ -515,16 +515,8 @@ static void LoadWidgetIconPixbuf(GtkWidget* aWidgetIcon) {
   gtk_icon_size_lookup(gtkIconSize, &iconWidth, &iconHeight);
 
   /* Those are available since Gtk+ 3.10 as well as GtkHeaderBar */
-  static auto sGtkIconThemeLookupIconForScalePtr =
-      (GtkIconInfo *
-       (*)(GtkIconTheme*, const gchar*, gint, gint, GtkIconLookupFlags))
-          dlsym(RTLD_DEFAULT, "gtk_icon_theme_lookup_icon_for_scale");
-  static auto sGdkCairoSurfaceCreateFromPixbufPtr =
-      (cairo_surface_t * (*)(const GdkPixbuf*, int, GdkWindow*))
-          dlsym(RTLD_DEFAULT, "gdk_cairo_surface_create_from_pixbuf");
-
   for (int scale = 1; scale < ICON_SCALE_VARIANTS + 1; scale++) {
-    GtkIconInfo* gtkIconInfo = sGtkIconThemeLookupIconForScalePtr(
+    GtkIconInfo* gtkIconInfo = gtk_icon_theme_lookup_icon_for_scale(
         gtk_icon_theme_get_default(), iconName, iconWidth, scale,
         (GtkIconLookupFlags)0);
 
@@ -539,7 +531,7 @@ static void LoadWidgetIconPixbuf(GtkWidget* aWidgetIcon) {
     g_object_unref(G_OBJECT(gtkIconInfo));
 
     cairo_surface_t* iconSurface =
-        sGdkCairoSurfaceCreateFromPixbufPtr(iconPixbuf, scale, nullptr);
+        gdk_cairo_surface_create_from_pixbuf(iconPixbuf, scale, nullptr);
     g_object_unref(iconPixbuf);
 
     nsAutoCString surfaceName;
