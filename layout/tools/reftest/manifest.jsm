@@ -473,9 +473,8 @@ function BuildConditionSandbox(aURL) {
       sandbox.embeddedInFirefoxReality = false;
     }
 
-    var info = gfxInfo.getInfo();
-    var canvasBackend = readGfxInfo(info, "AzureCanvasBackend");
-    var contentBackend = readGfxInfo(info, "AzureContentBackend");
+    var canvasBackend = readGfxInfo(gfxInfo, "AzureCanvasBackend");
+    var contentBackend = readGfxInfo(gfxInfo, "AzureContentBackend");
 
     sandbox.gpuProcess = gfxInfo.usingGPUProcess;
     sandbox.azureCairo = canvasBackend == "cairo";
