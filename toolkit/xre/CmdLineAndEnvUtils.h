@@ -444,7 +444,10 @@ inline bool SetArgv0ToFullBinaryPath(wchar_t* aArgv[]) {
 // This class converts a command line string into an array of the arguments.
 // It's basically the opposite of MakeCommandLine.  However, the behavior is
 // different from ::CommandLineToArgvW in several ways, such as escaping a
-// backslash or quoting an argument containing whitespaces.
+// backslash or quoting an argument containing whitespaces.  This satisfies
+// the examples at:
+// https://docs.microsoft.com/en-us/cpp/cpp/main-function-command-line-args#results-of-parsing-command-lines
+// https://docs.microsoft.com/en-us/previous-versions/17w5ykft(v=vs.85)
 template <typename T>
 class CommandLineParserWin final {
   int mArgc;
@@ -472,37 +475,44 @@ class CommandLineParserWin final {
   int Argc() const { return mArgc; }
   const T* const* Argv() const { return mArgv; }
 
-  void HandleCommandLine(const T* aCmdLineString) {
+  // Returns the number of characters handled
+  int HandleCommandLine(const nsTSubstring<T>& aCmdLineString) {
     Release();
+
+    if (aCmdLineString.IsEmpty()) {
+      return 0;
+    }
 
     int justCounting = 1;
     // Flags, etc.
     int init = 1;
     int between, quoted, bSlashCount;
     const T* p;
+    const T* const pEnd = aCmdLineString.EndReading();
     nsTAutoString<T> arg;
 
-    // Parse command line args according to MS spec
-    // (see "Parsing C++ Command-Line Arguments" at
-    // http://msdn.microsoft.com/library/devprods/vs6/visualc/vclang/_pluslang_parsing_c.2b2b_.command.2d.line_arguments.htm).
     // We loop if we've not finished the second pass through.
     while (1) {
       // Initialize if required.
       if (init) {
-        p = aCmdLineString;
+        p = aCmdLineString.BeginReading();
         between = 1;
         mArgc = quoted = bSlashCount = 0;
 
         init = 0;
       }
+
+      const T charCurr = (p < pEnd) ? *p : 0;
+      const T charNext = (p + 1 < pEnd) ? *(p + 1) : 0;
+
       if (between) {
         // We are traversing whitespace between args.
         // Check for start of next arg.
-        if (*p != 0 && !wcschr(kCommandLineDelimiter, *p)) {
+        if (charCurr != 0 && !wcschr(kCommandLineDelimiter, charCurr)) {
           // Start of another arg.
           between = 0;
           arg.Truncate();
-          switch (*p) {
+          switch (charCurr) {
             case '\\':
               // Count the backslash.
               bSlashCount = 1;
@@ -513,7 +523,7 @@ class CommandLineParserWin final {
               break;
             default:
               // Add character to arg.
-              arg += *p;
+              arg += charCurr;
               break;
           }
         } else {
@@ -522,7 +532,8 @@ class CommandLineParserWin final {
       } else {
         // We are processing the contents of an argument.
         // Check for whitespace or end.
-        if (*p == 0 || (!quoted && wcschr(kCommandLineDelimiter, *p))) {
+        if (charCurr == 0 ||
+            (!quoted && wcschr(kCommandLineDelimiter, charCurr))) {
           // Process pending backslashes (interpret them
           // literally since they're not followed by a ").
           while (bSlashCount) {
@@ -539,7 +550,7 @@ class CommandLineParserWin final {
           between = 1;
         } else {
           // Still inside argument, process the character.
-          switch (*p) {
+          switch (charCurr) {
             case '"':
               // First, digest preceding backslashes (if any).
               while (bSlashCount > 1) {
@@ -556,7 +567,7 @@ class CommandLineParserWin final {
                 if (quoted) {
                   // Check for special case of consecutive double
                   // quotes inside a quoted section.
-                  if (*(p + 1) == '"') {
+                  if (charNext == '"') {
                     // This implies a literal double-quote.  Fake that
                     // out by causing next double-quote to look as
                     // if it was preceded by a backslash.
@@ -580,13 +591,14 @@ class CommandLineParserWin final {
                 bSlashCount--;
               }
               // Just add next char to the current arg.
-              arg += *p;
+              arg += charCurr;
               break;
           }
         }
       }
+
       // Check for end of input.
-      if (*p) {
+      if (charCurr) {
         // Go to next character.
         p++;
       } else {
@@ -604,6 +616,8 @@ class CommandLineParserWin final {
         }
       }
     }
+
+    return p - aCmdLineString.BeginReading();
   }
 };
 #  endif  // defined(MOZILLA_INTERNAL_API)
