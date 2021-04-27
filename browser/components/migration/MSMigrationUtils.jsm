@@ -411,20 +411,11 @@ Bookmarks.prototype = {
     return this.__toolbarFolderName;
   },
 
-  _histogramBookmarkRoots: 0,
   migrate: function B_migrate(aCallback) {
     return (async () => {
       // Import to the bookmarks menu.
       let folderGuid = PlacesUtils.bookmarks.menuGuid;
       await this._migrateFolder(this._favoritesFolder, folderGuid);
-      Services.telemetry
-        .getKeyedHistogramById("FX_MIGRATION_BOOKMARKS_ROOTS")
-        .add(
-          this._migrationType == MSMigrationUtils.MIGRATION_TYPE_IE
-            ? "ie"
-            : "edge",
-          this._histogramBookmarkRoots
-        );
     })().then(
       () => aCallback(true),
       e => {
@@ -438,14 +429,6 @@ Bookmarks.prototype = {
     let bookmarks = await this._getBookmarksInFolder(aSourceFolder);
     if (!bookmarks.length) {
       return;
-    }
-
-    if (aDestFolderGuid == PlacesUtils.bookmarks.menuGuid) {
-      this._histogramBookmarkRoots |=
-        MigrationUtils.SOURCE_BOOKMARK_ROOTS_BOOKMARKS_MENU;
-    } else if (aDestFolderGuid == PlacesUtils.bookmarks.toolbarGuid) {
-      this._histogramBookmarkRoots |=
-        MigrationUtils.SOURCE_BOOKMARK_ROOTS_BOOKMARKS_TOOLBAR;
     }
 
     if (
