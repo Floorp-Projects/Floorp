@@ -7,8 +7,8 @@ package org.mozilla.focus.activity.robots
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.matches
-import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
+import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.uiautomator.UiSelector
 import org.mozilla.focus.R
 import org.mozilla.focus.helpers.TestHelper.mDevice
@@ -48,19 +48,41 @@ class ThreeDotMainMenuRobot {
             AddToHomeScreenRobot().interact()
             return AddToHomeScreenRobot.Transition()
         }
+
+        fun clickWhatsNewLink(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
+            whatsNewMenuLink
+                .check(matches(isDisplayed()))
+                .perform(click())
+
+            BrowserRobot().interact()
+            return BrowserRobot.Transition()
+        }
+
+        fun clickHelpPageLink(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
+            helpPageMenuLink
+                .check(matches(isDisplayed()))
+                .perform(click())
+
+            BrowserRobot().interact()
+            return BrowserRobot.Transition()
+        }
     }
 }
 
-private val settingsMenuButton = onView(ViewMatchers.withId(R.id.settings))
+private val settingsMenuButton = onView(withId(R.id.settings))
 
 private val shareBtn = mDevice.findObject(
     UiSelector()
         .resourceId("$packageName:id/share")
 )
 
-private val threeDotMenuButton = onView(ViewMatchers.withId(R.id.menuView))
+private val threeDotMenuButton = onView(withId(R.id.menuView))
 
 private val addToHSmenuItem = mDevice.findObject(
     UiSelector()
         .resourceId("$packageName:id/add_to_homescreen")
 )
+
+private val whatsNewMenuLink = onView(withId(R.id.whats_new))
+
+private val helpPageMenuLink = onView(withId(R.id.help))
