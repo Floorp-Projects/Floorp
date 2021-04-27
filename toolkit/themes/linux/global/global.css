@@ -15,8 +15,6 @@
 }
 
 :root {
-  appearance: auto;
-  -moz-default-appearance: dialog;
   background-color: -moz-Dialog;
   color: -moz-DialogText;
   font: message-box;
