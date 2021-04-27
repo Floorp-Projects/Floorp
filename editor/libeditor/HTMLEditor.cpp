@@ -5012,47 +5012,6 @@ nsIContent* HTMLEditor::GetNextHTMLSibling(nsINode* aNode,
   return content;
 }
 
-nsIContent* HTMLEditor::GetPreviousEditableHTMLNodeInternal(
-    nsINode& aNode) const {
-  Element* editingHost = GetActiveEditingHost();
-  if (NS_WARN_IF(!editingHost)) {
-    return nullptr;
-  }
-  return HTMLEditUtils::GetPreviousContent(
-      aNode, {WalkTreeOption::IgnoreNonEditableNode}, editingHost);
-}
-
-template <typename PT, typename CT>
-nsIContent* HTMLEditor::GetPreviousEditableHTMLNodeInternal(
-    const EditorDOMPointBase<PT, CT>& aPoint) const {
-  Element* editingHost = GetActiveEditingHost();
-  if (NS_WARN_IF(!editingHost)) {
-    return nullptr;
-  }
-  return HTMLEditUtils::GetPreviousContent(
-      aPoint, {WalkTreeOption::IgnoreNonEditableNode}, editingHost);
-}
-
-nsIContent* HTMLEditor::GetNextEditableHTMLNodeInternal(nsINode& aNode) const {
-  Element* editingHost = GetActiveEditingHost();
-  if (NS_WARN_IF(!editingHost)) {
-    return nullptr;
-  }
-  return HTMLEditUtils::GetNextContent(
-      aNode, {WalkTreeOption::IgnoreNonEditableNode}, editingHost);
-}
-
-template <typename PT, typename CT>
-nsIContent* HTMLEditor::GetNextEditableHTMLNodeInternal(
-    const EditorDOMPointBase<PT, CT>& aPoint) const {
-  Element* editingHost = GetActiveEditingHost();
-  if (NS_WARN_IF(!editingHost)) {
-    return nullptr;
-  }
-  return HTMLEditUtils::GetNextContent(
-      aPoint, {WalkTreeOption::IgnoreNonEditableNode}, editingHost);
-}
-
 bool HTMLEditor::IsFirstEditableChild(nsINode* aNode) const {
   MOZ_ASSERT(aNode);
   // find first editable child and compare it to aNode
@@ -5090,32 +5049,36 @@ nsIContent* HTMLEditor::GetLastEditableChild(nsINode& aNode) const {
 }
 
 nsIContent* HTMLEditor::GetFirstEditableLeaf(nsINode& aNode) const {
+  Element* editingHost = GetActiveEditingHost();
+  if (NS_WARN_IF(!editingHost) ||
+      editingHost->IsInclusiveDescendantOf(&aNode)) {
+    return nullptr;
+  }
   nsIContent* child =
       HTMLEditUtils::GetFirstLeafChild(aNode, {LeafNodeType::OnlyLeafNode});
   while (child && (!EditorUtils::IsEditableContent(*child, EditorType::HTML) ||
                    child->HasChildren())) {
-    child = GetNextEditableHTMLNode(*child);
-
-    // Only accept nodes that are descendants of aNode
-    if (!aNode.Contains(child)) {
-      return nullptr;
-    }
+    child = HTMLEditUtils::GetNextContent(
+        *child, {WalkTreeOption::IgnoreNonEditableNode},
+        aNode.IsElement() ? aNode.AsElement() : editingHost);
   }
 
   return child;
 }
 
 nsIContent* HTMLEditor::GetLastEditableLeaf(nsINode& aNode) const {
+  Element* editingHost = GetActiveEditingHost();
+  if (NS_WARN_IF(!editingHost) ||
+      editingHost->IsInclusiveDescendantOf(&aNode)) {
+    return nullptr;
+  }
   nsIContent* child =
       HTMLEditUtils::GetLastLeafChild(aNode, {LeafNodeType::OnlyLeafNode});
   while (child && (!EditorUtils::IsEditableContent(*child, EditorType::HTML) ||
                    child->HasChildren())) {
-    child = GetPreviousEditableHTMLNode(*child);
-
-    // Only accept nodes that are descendants of aNode
-    if (!aNode.Contains(child)) {
-      return nullptr;
-    }
+    child = HTMLEditUtils::GetPreviousContent(
+        *child, {WalkTreeOption::IgnoreNonEditableNode},
+        aNode.IsElement() ? aNode.AsElement() : editingHost);
   }
 
   return child;
@@ -5664,6 +5627,11 @@ nsresult HTMLEditor::CopyLastEditableChildStylesWithTransaction(
     }
   }
 
+  RefPtr<Element> editingHost = GetActiveEditingHost();
+  if (!editingHost) {
+    return NS_OK;
+  }
+
   // XXX aNewBlock may be moved or removed.  Even in such case, we should
   //     keep cloning the styles?
 
@@ -5676,8 +5644,9 @@ nsresult HTMLEditor::CopyLastEditableChildStylesWithTransaction(
   }
   while (deepestEditableContent &&
          deepestEditableContent->IsHTMLElement(nsGkAtoms::br)) {
-    deepestEditableContent =
-        GetPreviousEditableHTMLNode(*deepestEditableContent);
+    deepestEditableContent = HTMLEditUtils::GetPreviousContent(
+        *deepestEditableContent, {WalkTreeOption::IgnoreNonEditableNode},
+        editingHost);
   }
   if (!deepestEditableContent) {
     return NS_OK;
