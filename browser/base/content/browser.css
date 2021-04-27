@@ -670,7 +670,6 @@ toolbar:not(#TabsToolbar) > #personal-bookmarks {
 #urlbar[actiontype="switchtab"][actionoverride] > #urlbar-input-container > #urlbar-label-box,
 #urlbar:not([actiontype="switchtab"], [actiontype="extension"], [searchmode]) > #urlbar-input-container > #urlbar-label-box,
 #urlbar:not([actiontype="switchtab"]) > #urlbar-input-container > #urlbar-label-box > #urlbar-label-switchtab,
-#urlbar[searchmode] > #urlbar-input-container > #urlbar-label-box > #urlbar-label-switchtab,
 #urlbar:not([actiontype="extension"]) > #urlbar-input-container > #urlbar-label-box > #urlbar-label-extension,
 #urlbar[searchmode][breakout-extend] > #urlbar-input-container > #urlbar-label-box,
 #urlbar:not([searchmode]) > #urlbar-input-container > #urlbar-label-box > #urlbar-label-search-mode,
