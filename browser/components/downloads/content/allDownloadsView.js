@@ -724,44 +724,11 @@ DownloadsPlacesView.prototype = {
       return false;
     }
 
-    // Set the state attribute so that only the appropriate items are displayed.
-    let contextMenu = document.getElementById("downloadsContextMenu");
-    let download = element._shell.download;
-    let mimeInfo = DownloadsCommon.getMimeInfo(download);
-    let { preferredAction, useSystemDefault } = mimeInfo ? mimeInfo : {};
-
-    contextMenu.setAttribute(
-      "state",
-      DownloadsCommon.stateOfDownload(download)
+    DownloadsViewUI.updateContextMenuForElement(
+      document.getElementById("downloadsContextMenu"),
+      element
     );
-    contextMenu.setAttribute("exists", "true");
-    contextMenu.classList.toggle("temporary-block", !!download.hasBlockedData);
-
-    if (element.hasAttribute("viewable-internally")) {
-      contextMenu.setAttribute("viewable-internally", "true");
-      let alwaysUseSystemViewerItem = contextMenu.querySelector(
-        ".downloadAlwaysUseSystemDefaultMenuItem"
-      );
-      if (preferredAction === useSystemDefault) {
-        alwaysUseSystemViewerItem.setAttribute("checked", "true");
-      } else {
-        alwaysUseSystemViewerItem.removeAttribute("checked");
-      }
-      alwaysUseSystemViewerItem.toggleAttribute(
-        "enabled",
-        DownloadsCommon.alwaysOpenInSystemViewerItemEnabled
-      );
-      let useSystemViewerItem = contextMenu.querySelector(
-        ".downloadUseSystemDefaultMenuItem"
-      );
-      useSystemViewerItem.toggleAttribute(
-        "enabled",
-        DownloadsCommon.openInSystemViewerItemEnabled
-      );
-    } else {
-      contextMenu.removeAttribute("viewable-internally");
-    }
-
+    let download = element._shell.download;
     if (!download.stopped) {
       // The hasPartialData property of a download may change at any time after
       // it has started, so ensure we update the related command now.

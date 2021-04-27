@@ -135,6 +135,92 @@ var DownloadsViewUI = {
     let [size, unit] = DownloadUtils.convertByteUnits(download.target.size);
     return DownloadsCommon.strings.sizeWithUnits(size, unit);
   },
+
+  /**
+   * Given a context menu and a download element on which it is invoked,
+   * update items in the context menu to reflect available options for
+   * that download element.
+   */
+  updateContextMenuForElement(contextMenu, element) {
+    // Get the state and ensure only the appropriate items are displayed.
+    let state = parseInt(element.getAttribute("state"), 10);
+
+    const {
+      DOWNLOAD_NOTSTARTED,
+      DOWNLOAD_DOWNLOADING,
+      DOWNLOAD_FINISHED,
+      DOWNLOAD_FAILED,
+      DOWNLOAD_CANCELED,
+      DOWNLOAD_PAUSED,
+      DOWNLOAD_BLOCKED_PARENTAL,
+      DOWNLOAD_DIRTY,
+      DOWNLOAD_BLOCKED_POLICY,
+    } = DownloadsCommon;
+
+    contextMenu.querySelector(".downloadPauseMenuItem").hidden =
+      state != DOWNLOAD_DOWNLOADING;
+
+    contextMenu.querySelector(".downloadResumeMenuItem").hidden =
+      state != DOWNLOAD_PAUSED;
+
+    // Only show "unblock" for blocked (dirty) items that have not been
+    // confirmed and have temporary data:
+    contextMenu.querySelector(".downloadUnblockMenuItem").hidden =
+      state != DOWNLOAD_DIRTY || !element.classList.contains("temporary-block");
+
+    // Can only remove finished/failed/canceled/blocked downloads.
+    contextMenu.querySelector(".downloadRemoveFromHistoryMenuItem").hidden = ![
+      DOWNLOAD_FINISHED,
+      DOWNLOAD_FAILED,
+      DOWNLOAD_CANCELED,
+      DOWNLOAD_BLOCKED_PARENTAL,
+      DOWNLOAD_DIRTY,
+      DOWNLOAD_BLOCKED_POLICY,
+    ].includes(state);
+
+    // Can reveal downloads with data on the file system using the relevant OS
+    // tool (Explorer, Finder, appropriate Linux file system viewer):
+    contextMenu.querySelector(".downloadShowMenuItem").hidden =
+      ![
+        DOWNLOAD_NOTSTARTED,
+        DOWNLOAD_DOWNLOADING,
+        DOWNLOAD_FINISHED,
+        DOWNLOAD_PAUSED,
+      ].includes(state) ||
+      (state == DOWNLOAD_FINISHED && !element.hasAttribute("exists"));
+
+    // Show the separator if we're showing either unblock or reveal menu items.
+    contextMenu.querySelector(".downloadCommandsSeparator").hidden =
+      contextMenu.querySelector(".downloadUnblockMenuItem").hidden &&
+      contextMenu.querySelector(".downloadShowMenuItem").hidden;
+
+    // Hide the "use system viewer" and "always use system viewer" items
+    // if the feature is disabled or this download doesn't support it:
+    let useSystemViewerItem = contextMenu.querySelector(
+      ".downloadUseSystemDefaultMenuItem"
+    );
+    let alwaysUseSystemViewerItem = contextMenu.querySelector(
+      ".downloadAlwaysUseSystemDefaultMenuItem"
+    );
+    let canViewInternally = element.hasAttribute("viewable-internally");
+    useSystemViewerItem.hidden =
+      !DownloadsCommon.openInSystemViewerItemEnabled || !canViewInternally;
+
+    alwaysUseSystemViewerItem.hidden =
+      !DownloadsCommon.alwaysOpenInSystemViewerItemEnabled ||
+      !canViewInternally;
+    if (!alwaysUseSystemViewerItem.hidden) {
+      let download = element._shell.download;
+      let mimeInfo = DownloadsCommon.getMimeInfo(download);
+      let { preferredAction, useSystemDefault } = mimeInfo ? mimeInfo : {};
+
+      if (preferredAction === useSystemDefault) {
+        alwaysUseSystemViewerItem.setAttribute("checked", "true");
+      } else {
+        alwaysUseSystemViewerItem.removeAttribute("checked");
+      }
+    }
+  },
 };
 
 DownloadsViewUI.BaseView = class {
