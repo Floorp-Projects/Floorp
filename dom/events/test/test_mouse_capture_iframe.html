@@ -13,7 +13,7 @@
 }
 </style>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1680405">Mozilla Bug 1680405</a>
-<iframe id="target" frameborder="0" scrolling="no" src="http://example.com/tests/dom/events/test/file_empty.html"></iframe>
+<iframe id="target" frameborder="0" scrolling="no"></iframe>
 <script>
 
 function waitForMessage(aEventType) {
@@ -34,6 +34,9 @@ add_task(async function init() {
   SimpleTest.registerCleanupFunction(() => {
     disableNonTestMouseEvents(false);
   });
+
+  iframe.src = "http://example.com/tests/dom/events/test/file_empty.html";
+  await waitForMessage("ready");
 
   await SpecialPowers.spawn(iframe, [], () => {
     let handler = function(e) {
