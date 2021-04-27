@@ -10,6 +10,7 @@ platform(linux,mac) == premultiplied-conic-2.yaml premultiplied-conic-2.png
 
 == linear.yaml linear-ref.png
 == linear-reverse.yaml linear-ref.png
+fuzzy(255,1200) == linear-reverse-2.yaml linear-reverse-2-ref.yaml
 platform(linux,mac) fuzzy(1,35000) == linear-stops.yaml linear-stops-ref.png
 
 == linear-clamp-1a.yaml linear-clamp-1-ref.yaml

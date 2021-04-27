@@ -217,21 +217,24 @@ pub fn optimize_linear_gradient(
 
     let reverse_stops = start.x > end.x;
 
+    // Handle reverse stops so we can assume stops are arranged in increasing x.
+    if reverse_stops {
+        stops.reverse();
+        swap(start, end);
+    }
+
     // Use fake gradient stop to emulate the potential constant color sections
     // before and after the gradient endpoints.
     let mut prev = *stops.first().unwrap();
     let mut last = *stops.last().unwrap();
 
-    // Handle reverse stops so we can assume stops are arranged in increasing x.
-    if reverse_stops {
-        stops.reverse();
-        swap(&mut prev, &mut last);
-        swap(start, end);
-    }
-
     // Set the offsets of the fake stops to position them at the edges of the primitive.
     prev.offset = -start.x / length;
     last.offset = (tile_size.width - start.x) / length;
+    if reverse_stops {
+        prev.offset = 1.0 - prev.offset;
+        last.offset = 1.0 - last.offset;
+    }
 
     for stop in stops.iter().chain((&[last]).iter()) {
         let prev_stop = prev;
