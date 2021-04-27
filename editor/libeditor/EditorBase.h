@@ -1810,11 +1810,6 @@ class EditorBase : public nsIEditor,
   uint32_t CountEditableChildren(nsINode* aNode);
 
   /**
-   * Find the deep first and last children.
-   */
-  nsINode* GetFirstEditableNode(nsINode* aRoot);
-
-  /**
    * Returns true when inserting text should be a part of current composition.
    */
   bool ShouldHandleIMEComposition() const;

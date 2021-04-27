@@ -1119,8 +1119,23 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHODIMP EditorBase::BeginningOfDocument() {
   }
 
   // find first editable thingy
-  nsCOMPtr<nsINode> firstNode = GetFirstEditableNode(rootElement);
-  if (!firstNode) {
+  nsCOMPtr<nsIContent> firstEditableLeaf;
+  if (IsTextEditor()) {
+    // If we're `TextEditor`, the first editable leaf node is a text node or
+    // padding `<br>` element.  In the first case, we need to collapse selection
+    // into it.
+    if (rootElement->GetFirstChild() &&
+        rootElement->GetFirstChild()->IsText()) {
+      firstEditableLeaf = rootElement->GetFirstChild();
+    }
+  } else {
+    MOZ_ASSERT(IsHTMLEditor());
+    // XXX Why not the editing host?  This scans all nodes until meeting first
+    //     editing host.
+    firstEditableLeaf =
+        HTMLEditUtils::GetFirstEditableLeafContent(*rootElement);
+  }
+  if (!firstEditableLeaf) {
     // just the root node, set selection to inside the root
     nsresult rv = SelectionRef().CollapseInLimiter(rootElement, 0);
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
@@ -1128,22 +1143,23 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHODIMP EditorBase::BeginningOfDocument() {
     return rv;
   }
 
-  if (firstNode->IsText()) {
-    // If firstNode is text, set selection to beginning of the text node.
-    nsresult rv = SelectionRef().CollapseInLimiter(firstNode, 0);
+  if (firstEditableLeaf->IsText()) {
+    // If firstEditableLeaf is text, set selection to beginning of the text
+    // node.
+    nsresult rv = SelectionRef().CollapseInLimiter(firstEditableLeaf, 0);
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                          "Selection::CollapseInLimiter() failed");
     return rv;
   }
 
   // Otherwise, it's a leaf node and we set the selection just in front of it.
-  nsCOMPtr<nsIContent> parent = firstNode->GetParent();
+  nsCOMPtr<nsIContent> parent = firstEditableLeaf->GetParent();
   if (NS_WARN_IF(!parent)) {
     return NS_ERROR_NULL_POINTER;
   }
 
   MOZ_ASSERT(
-      parent->ComputeIndexOf(firstNode) == 0,
+      parent->ComputeIndexOf(firstEditableLeaf) == 0,
       "How come the first node isn't the left most child in its parent?");
   nsresult rv = SelectionRef().CollapseInLimiter(parent, 0);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
@@ -2590,21 +2606,6 @@ nsresult EditorBase::InsertTextIntoTextNodeWithTransaction(
   }
 
   return rv;
-}
-
-nsINode* EditorBase::GetFirstEditableNode(nsINode* aRoot) {
-  MOZ_ASSERT(aRoot);
-
-  EditorType editorType = GetEditorType();
-  nsIContent* content =
-      HTMLEditUtils::GetFirstLeafChild(*aRoot, {LeafNodeType::OnlyLeafNode});
-  if (content && !EditorUtils::IsEditableContent(*content, editorType)) {
-    content = EditorBase::GetNextContent(
-        *content, {WalkTreeOption::IgnoreNonEditableNode}, editorType,
-        GetEditorRoot());
-  }
-
-  return (content != aRoot) ? content : nullptr;
 }
 
 nsresult EditorBase::NotifyDocumentListeners(
