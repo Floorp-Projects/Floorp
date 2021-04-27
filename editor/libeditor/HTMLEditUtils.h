@@ -7,6 +7,7 @@
 #define HTMLEditUtils_h
 
 #include "mozilla/Attributes.h"
+#include "mozilla/EditorBase.h"
 #include "mozilla/EditorDOMPoint.h"
 #include "mozilla/EditorUtils.h"
 #include "mozilla/EnumSet.h"
@@ -408,7 +409,7 @@ class HTMLEditUtils final {
    * aLeafNodeTypes whether this scans into a block child or treat
    * block as a leaf.
    */
-  static nsIContent* GetFirstLeafChild(nsINode& aNode,
+  static nsIContent* GetFirstLeafChild(const nsINode& aNode,
                                        const LeafNodeTypes& aLeafNodeTypes) {
     for (nsIContent* content = aNode.GetFirstChild(); content;
          content = content->GetFirstChild()) {
@@ -683,6 +684,24 @@ class HTMLEditUtils final {
     }
     // Else return the node itself
     return previousContent;
+  }
+
+  /**
+   * GetFirstEditableLeafContent() returns first editable leaf node in
+   * aRootElement.  When there is no editable leaf element in it, this returns
+   * nullptr.
+   */
+  static nsIContent* GetFirstEditableLeafContent(const Element& aRootElement) {
+    nsIContent* leafContent = HTMLEditUtils::GetFirstLeafChild(
+        aRootElement, {LeafNodeType::OnlyLeafNode});
+    if (leafContent && !EditorUtils::IsEditableContent(
+                           *leafContent, EditorBase::EditorType::HTML)) {
+      leafContent = EditorBase::GetNextContent(
+          *leafContent, {EditorBase::WalkTreeOption::IgnoreNonEditableNode},
+          EditorBase::EditorType::HTML, &aRootElement);
+    }
+    MOZ_ASSERT(leafContent != &aRootElement);
+    return leafContent;
   }
 
   /**
