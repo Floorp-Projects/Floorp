@@ -991,7 +991,8 @@ class NativeObject : public JSObject {
                                              HandleId id, unsigned attrs);
 
   // Remove the property named by id from this object.
-  static bool removeProperty(JSContext* cx, HandleNativeObject obj, jsid id);
+  static bool removeProperty(JSContext* cx, HandleNativeObject obj,
+                             HandleId id);
 
  protected:
   [[nodiscard]] static bool fillInAfterSwap(JSContext* cx,
