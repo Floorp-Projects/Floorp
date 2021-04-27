@@ -9,7 +9,6 @@
 #include "mozilla/Assertions.h"          // for MOZ_ASSERT, etc.
 #include "mozilla/EditAction.h"          // for EditAction and EditSubAction
 #include "mozilla/EditorDOMPoint.h"      // for EditorDOMPoint
-#include "mozilla/EnumSet.h"             // for EnumSet
 #include "mozilla/EventForwards.h"       // for InputEventTargetRanges
 #include "mozilla/Maybe.h"               // for Maybe
 #include "mozilla/OwningNonNull.h"       // for OwningNonNull
@@ -1724,73 +1723,6 @@ class EditorBase : public nsIEditor,
   DoTransactionInternal(nsITransaction* aTransaction);
 
   /**
-   * Get the next node.
-   *
-   *
-   * On the other hand, the methods taking nsINode behavior must be what
-   * you want.  They start to search the result from next node of the given
-   * node.
-   */
-
-  /**
-   * Get previous content node of aNode if there is.
-   *
-   * @param aNode       The node from which we start to walk the DOM tree.
-   */
-  enum class WalkTreeOption {
-    IgnoreNonEditableNode,     // Ignore non-editable nodes and their children.
-    IgnoreDataNodeExceptText,  // Ignore data nodes which are not text node.
-    StopAtBlockBoundary,       // Stop waking the tree at a block boundary.
-  };
-  using WalkTreeOptions = EnumSet<WalkTreeOption>;
-  static nsIContent* GetPreviousContent(
-      const nsINode& aNode, const WalkTreeOptions& aOptions,
-      const Element* aAncestorLimiter = nullptr);
-
-  /**
-   * And another version that takes a point in DOM tree rather than a node.
-   */
-  static nsIContent* GetPreviousContent(
-      const EditorRawDOMPoint& aPoint, const WalkTreeOptions& aOptions,
-      const Element* aAncestorLimiter = nullptr);
-
-  /**
-   * Get next content node of aNode if there is.
-   *
-   * @param aNode       The node from which we start to walk the DOM tree.
-   */
-  static nsIContent* GetNextContent(const nsINode& aNode,
-                                    const WalkTreeOptions& aOptions,
-                                    const Element* aAncestorLimiter = nullptr);
-
-  /**
-   * And another version that takes a point in DOM tree rather than a node.
-   *
-   * Note that this may return the child at the offset.  E.g., following code
-   * causes infinite loop.
-   *
-   * EditorRawDOMPoint point(aEditableNode);
-   * while (nsIContent* content =
-   *          GetNextContent(point, {WalkTreeOption::IgnoreNonEditableNode})) {
-   *   // Do something...
-   *   point.Set(content);
-   * }
-   *
-   * Following code must be you expected:
-   *
-   * while (nsIContent* content =
-   *          GetNextContent(point, {WalkTreeOption::IgnoreNonEditableNode}) {
-   *   // Do something...
-   *   DebugOnly<bool> advanced = point.Advanced();
-   *   MOZ_ASSERT(advanced);
-   *   point.Set(point.GetChild());
-   * }
-   */
-  static nsIContent* GetNextContent(const EditorRawDOMPoint& aPoint,
-                                    const WalkTreeOptions& aOptions,
-                                    const Element* aAncestorLimiter = nullptr);
-
-  /**
    * Returns true if aNode is our root node.
    */
   bool IsRoot(const nsINode* inNode) const;
@@ -2153,19 +2085,6 @@ class EditorBase : public nsIEditor,
    * match.
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult ScrollSelectionFocusIntoView();
-
-  /**
-   * Helper for GetPreviousContent() and GetNextContent().
-   */
-  enum class WalkTreeDirection { Forward, Backward };
-  static nsIContent* GetAdjacentLeafContent(
-      const nsINode& aNode, WalkTreeDirection aWalkTreeDirection,
-      const WalkTreeOptions& aOptions,
-      const Element* aAncestorLimiter = nullptr);
-  static nsIContent* GetAdjacentContent(
-      const nsINode& aNode, WalkTreeDirection aWalkTreeDirection,
-      const WalkTreeOptions& aOptions,
-      const Element* aAncestorLimiter = nullptr);
 
   virtual nsresult InstallEventListeners();
   virtual void CreateEventListeners();
