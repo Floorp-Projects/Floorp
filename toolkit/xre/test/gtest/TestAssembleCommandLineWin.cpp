@@ -92,7 +92,7 @@ TEST(CommandLineParserWin, HandleCommandLine)
   CommandLineParserWin<char> parser;
   for (const auto& testCase : testCases) {
     NS_ConvertUTF16toUTF8 utf8(testCase.mExpected);
-    parser.HandleCommandLine(utf8.get());
+    parser.HandleCommandLine(utf8);
 
     if (utf8.Length() == 0) {
       EXPECT_EQ(parser.Argc(), 0);
