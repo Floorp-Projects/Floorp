@@ -10,34 +10,35 @@
 
 #include <gdk/gdk.h>
 #include <gtk/gtk.h>
+
+#include "CompositorWidget.h"
+#include "MozContainer.h"
+#include "mozilla/EventForwards.h"
+#include "mozilla/Maybe.h"
+#include "mozilla/RefPtr.h"
+#include "mozilla/TouchEvents.h"
+#include "mozilla/UniquePtr.h"
+#include "mozilla/widget/WindowSurface.h"
+#include "mozilla/widget/WindowSurfaceProvider.h"
+#include "nsBaseWidget.h"
+#include "nsGkAtoms.h"
+#include "nsIDragService.h"
+#include "nsRefPtrHashtable.h"
+#include "IMContextWrapper.h"
+
+#ifdef ACCESSIBILITY
+#  include "mozilla/a11y/LocalAccessible.h"
+#endif
+
 #ifdef MOZ_X11
 #  include <gdk/gdkx.h>
 #  include "X11UndefineNone.h"
-#endif /* MOZ_X11 */
+#endif
 #ifdef MOZ_WAYLAND
 #  include <gdk/gdkwayland.h>
 #  include "base/thread.h"
 #  include "WaylandVsyncSource.h"
 #endif
-#include "MozContainer.h"
-#include "mozilla/RefPtr.h"
-#include "mozilla/UniquePtr.h"
-#include "nsIDragService.h"
-#include "nsGkAtoms.h"
-#include "nsRefPtrHashtable.h"
-#include "nsBaseWidget.h"
-#include "CompositorWidget.h"
-#include "mozilla/widget/WindowSurface.h"
-#include "mozilla/widget/WindowSurfaceProvider.h"
-#include "mozilla/Maybe.h"
-
-#ifdef ACCESSIBILITY
-#  include "mozilla/a11y/LocalAccessible.h"
-#endif
-#include "mozilla/EventForwards.h"
-#include "mozilla/TouchEvents.h"
-
-#include "IMContextWrapper.h"
 
 #undef LOG
 #ifdef MOZ_LOGGING

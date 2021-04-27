@@ -7,14 +7,46 @@
 
 #include "nsWindow.h"
 
+#include <algorithm>
+#include <dlfcn.h>
+#include <gdk/gdkkeysyms.h>
+#include <wchar.h>
+
+#include "ClientLayerManager.h"
+#include "gfx2DGlue.h"
+#include "gfxContext.h"
+#include "gfxImageSurface.h"
+#include "gfxPlatformGtk.h"
+#include "gfxUtils.h"
+#include "GLContextProvider.h"
+#include "GLContext.h"
+#include "GtkCompositorWidget.h"
+#include "gtkdrawing.h"
+#include "imgIContainer.h"
+#include "InputData.h"
+#include "Layers.h"
 #include "mozilla/ArrayUtils.h"
-#include "mozilla/EventForwards.h"
-#include "mozilla/Maybe.h"
+#include "mozilla/Assertions.h"
+#include "mozilla/dom/Document.h"
+#include "mozilla/dom/WheelEventBinding.h"
+#include "mozilla/gfx/2D.h"
+#include "mozilla/gfx/gfxVars.h"
+#include "mozilla/gfx/GPUProcessManager.h"
+#include "mozilla/gfx/HelpersCairo.h"
+#include "mozilla/layers/LayersTypes.h"
+#include "mozilla/layers/CompositorBridgeParent.h"
+#include "mozilla/layers/CompositorThread.h"
+#include "mozilla/layers/KnowsCompositor.h"
+#include "mozilla/layers/WebRenderBridgeChild.h"
+#include "mozilla/layers/WebRenderLayerManager.h"
+#include "mozilla/layers/APZInputBridge.h"
+#include "mozilla/layers/IAPZCTreeManager.h"
+#include "mozilla/Likely.h"
 #include "mozilla/MiscEvents.h"
 #include "mozilla/MouseEvents.h"
+#include "mozilla/Preferences.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/ProfilerLabels.h"
-#include "mozilla/RefPtr.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/StaticPrefs_apz.h"
 #include "mozilla/StaticPrefs_ui.h"
@@ -22,140 +54,69 @@
 #include "mozilla/TextEventDispatcher.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/TimeStamp.h"
-#include "mozilla/TouchEvents.h"
 #include "mozilla/UniquePtrExtensions.h"
 #include "mozilla/WidgetUtils.h"
 #include "mozilla/WritingModes.h"
 #include "mozilla/X11Util.h"
 #include "mozilla/XREAppData.h"
-#include "mozilla/dom/Document.h"
-#include "mozilla/dom/WheelEventBinding.h"
-#include "InputData.h"
+#include "NativeKeyBindings.h"
+#include "nsAppDirectoryServiceDefs.h"
 #include "nsAppRunner.h"
-#include <algorithm>
-
-#include "prlink.h"
-#include "nsGTKToolkit.h"
-#include "nsIRollupListener.h"
-#include "nsINode.h"
-
-#include "nsWidgetsCID.h"
 #include "nsDragService.h"
-#include "nsIWidgetListener.h"
-#include "nsIScreenManager.h"
-#include "SystemTimeConverter.h"
-#include "nsViewManager.h"
-#include "nsMenuPopupFrame.h"
-#include "nsXPLookAndFeel.h"
-
+#include "nsGTKToolkit.h"
 #include "nsGtkKeyUtils.h"
 #include "nsGtkCursors.h"
-#include "ScreenHelperGTK.h"
-#include "WidgetUtilsGtk.h"
-
-#include <gtk/gtk.h>
-#include <gtk/gtkx.h>
-
-#ifdef MOZ_WAYLAND
-#  include <gdk/gdkwayland.h>
-#endif /* MOZ_WAYLAND */
-
-#ifdef MOZ_X11
-#  include <gdk/gdkx.h>
-#  include <X11/Xatom.h>
-#  include <X11/extensions/XShm.h>
-#  include <X11/extensions/shape.h>
-#  include <gdk/gdkkeysyms-compat.h>
-#endif /* MOZ_X11 */
-
-#include <gdk/gdkkeysyms.h>
-
-#if defined(MOZ_WAYLAND)
-#  include <gdk/gdkwayland.h>
-#  include "nsView.h"
-#endif
-
-#include "nsGkAtoms.h"
-
-#include "mozilla/Assertions.h"
-#include "mozilla/Likely.h"
-#include "mozilla/Preferences.h"
 #include "nsGfxCIID.h"
 #include "nsGtkUtils.h"
-#include "nsLayoutUtils.h"
-#include "mozilla/layers/LayersTypes.h"
+#include "nsIFile.h"
+#include "nsIGSettingsService.h"
+#include "nsIInterfaceRequestorUtils.h"
+#include "nsImageToPixbuf.h"
+#include "nsINode.h"
+#include "nsIRollupListener.h"
+#include "nsIScreenManager.h"
 #include "nsIUserIdleServiceInternal.h"
-#include "GLContext.h"
-#include "gfx2DGlue.h"
+#include "nsIWidgetListener.h"
+#include "nsLayoutUtils.h"
+#include "nsMenuPopupFrame.h"
+#include "nsPresContext.h"
+#include "nsShmImage.h"
+#include "nsString.h"
+#include "nsWidgetsCID.h"
+#include "nsViewManager.h"
+#include "nsXPLookAndFeel.h"
+#include "prlink.h"
+#include "ScreenHelperGTK.h"
+#include "SystemTimeConverter.h"
+#include "WidgetUtilsGtk.h"
 
 #ifdef ACCESSIBILITY
 #  include "mozilla/a11y/LocalAccessible.h"
 #  include "mozilla/a11y/Platform.h"
 #  include "nsAccessibilityService.h"
-
-using namespace mozilla;
-using namespace mozilla::widget;
 #endif
 
-/* For SetIcon */
-#include "nsAppDirectoryServiceDefs.h"
-#include "nsString.h"
-#include "nsIFile.h"
-
-/* SetCursor(imgIContainer*) */
-#include <gdk/gdk.h>
-#include <wchar.h>
-#include "imgIContainer.h"
-#include "nsGfxCIID.h"
-#include "nsImageToPixbuf.h"
-#include "nsIInterfaceRequestorUtils.h"
-#include "ClientLayerManager.h"
-#include "nsIGSettingsService.h"
-
-#include "gfxPlatformGtk.h"
-#include "gfxContext.h"
-#include "gfxImageSurface.h"
-#include "gfxUtils.h"
-#include "Layers.h"
-#include "GLContextProvider.h"
-#include "mozilla/gfx/2D.h"
-#include "mozilla/gfx/HelpersCairo.h"
-#include "mozilla/gfx/GPUProcessManager.h"
-#include "mozilla/layers/CompositorBridgeParent.h"
-#include "mozilla/layers/CompositorThread.h"
-#include "mozilla/layers/KnowsCompositor.h"
-#include "mozilla/layers/WebRenderBridgeChild.h"
-#include "mozilla/layers/WebRenderLayerManager.h"
-
-#include "mozilla/layers/APZInputBridge.h"
-#include "mozilla/layers/IAPZCTreeManager.h"
-
 #ifdef MOZ_X11
-#  include "mozilla/gfx/gfxVars.h"
+#  include <gdk/gdkkeysyms-compat.h>
+#  include <X11/Xatom.h>
+#  include <X11/extensions/XShm.h>
+#  include <X11/extensions/shape.h>
+#  include "gfxXlibSurface.h"
 #  include "GLContextGLX.h"  // for GLContextGLX::FindVisual()
 #  include "GLContextEGL.h"  // for GLContextEGL::FindVisual()
-#  include "GtkCompositorWidget.h"
-#  include "gfxXlibSurface.h"
 #  include "WindowSurfaceX11Image.h"
 #  include "WindowSurfaceX11SHM.h"
 #  include "WindowSurfaceXRender.h"
-#endif  // MOZ_X11
+#endif
 #ifdef MOZ_WAYLAND
 #  include "nsIClipboard.h"
+#  include "nsView.h"
 #endif
-
-#include "nsShmImage.h"
-#include "gtkdrawing.h"
-
-#include "NativeKeyBindings.h"
-
-#include <dlfcn.h>
-#include "nsPresContext.h"
 
 using namespace mozilla;
 using namespace mozilla::gfx;
-using namespace mozilla::widget;
 using namespace mozilla::layers;
+using namespace mozilla::widget;
 using mozilla::gl::GLContextEGL;
 using mozilla::gl::GLContextGLX;
 
