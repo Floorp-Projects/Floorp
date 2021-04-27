@@ -59,17 +59,13 @@ const ThemeVariableMap = [
       lwtProperty: "toolbarColor",
       processColor(rgbaChannels, element) {
         if (!rgbaChannels) {
-          Services.prefs.setBoolPref(
-            "browser.theme.dark-toolbar-theme",
-            element.ownerGlobal.matchMedia("(prefers-color-scheme: dark)")
-              .matches
-          );
+          Services.prefs.setIntPref("browser.theme.toolbar-theme", 2);
           return null;
         }
         const { r, g, b, a } = rgbaChannels;
-        Services.prefs.setBoolPref(
-          "browser.theme.dark-toolbar-theme",
-          _isColorDark(r, g, b)
+        Services.prefs.setIntPref(
+          "browser.theme.toolbar-theme",
+          _isColorDark(r, g, b) ? 0 : 1
         );
         return `rgba(${r}, ${g}, ${b}, ${a})`;
       },

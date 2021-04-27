@@ -1144,11 +1144,14 @@
   value: false
   mirror: always
 
-# Whether the toolbar is dark/light/auto.
 # Controls @media -moz-toolbar-prefers-color-scheme.
-- name: browser.theme.dark-toolbar-theme
-  type: RelaxedAtomicBool
-  value: false
+#
+# Returns whether the toolbar is dark (0), light (1), or system (2).
+#
+# Default to "system", the theming code sets it appropriately.
+- name: browser.theme.toolbar-theme
+  type: RelaxedAtomicUint32
+  value: 2
   mirror: always
   rust: true
 
