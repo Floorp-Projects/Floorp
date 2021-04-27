@@ -107,39 +107,3 @@
   margin: 0 .4em;
   opacity: 0.6;
 }
-
-/** UrlbarProviderUnitConversion **/
-.urlbarView-row[dynamicType=unitConversion] > .urlbarView-row-inner:hover {
-  background: var(--autocomplete-popup-hover-background);
-}
-
-.urlbarView-row[dynamicType=unitConversion] > .urlbarView-row-inner[selected] {
-  background: var(--autocomplete-popup-highlight-background);
-  color: var(--autocomplete-popup-highlight-color);
-  fill-opacity: 1;
-}
-
-.urlbarView-dynamic-unitConversion-action {
-	font-size: .85em;
-	font-weight: normal;
-	visibility: collapse;
-}
-
-.urlbarView-dynamic-unitConversion-action::before {
-	content: "\2014";
-	margin: 0 .4em;
-	opacity: 0.6;
-}
-
-.urlbarView-row[dynamicType=unitConversion] > .urlbarView-row-inner:hover .urlbarView-dynamic-unitConversion-action,
-.urlbarView-row[dynamicType=unitConversion] > .urlbarView-row-inner[selected] .urlbarView-dynamic-unitConversion-action {
-	visibility: visible;
-}
-
-.urlbarView-row[dynamicType=unitConversion] > .urlbarView-row-inner:hover .urlbarView-dynamic-unitConversion-action {
-	color: var(--urlbar-popup-action-color);
-}
-
-.urlbarView-row[dynamicType=unitConversion] > .urlbarView-row-inner[selected] .urlbarView-dynamic-unitConversion-action {
-  color: var(--autocomplete-popup-highlight-color);
-}
