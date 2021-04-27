@@ -51,7 +51,12 @@ function ReadManifest(aURL, aFilter, aManifestID)
     var listURL = aURL;
     var channel = NetUtil.newChannel({uri: aURL,
                                       loadUsingSystemPrincipal: true});
-    var inputStream = channel.open();
+    try {
+        var inputStream = channel.open();
+    } catch (e) {
+        g.logger.error("failed to open manifest at : " + aURL.spec);
+        throw e;
+    }
     if (channel instanceof Ci.nsIHttpChannel
         && channel.responseStatus != 200) {
       g.logger.error("HTTP ERROR : " + channel.responseStatus);
