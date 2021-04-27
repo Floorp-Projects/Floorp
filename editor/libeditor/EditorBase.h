@@ -1745,14 +1745,14 @@ class EditorBase : public nsIEditor,
   using WalkTreeOptions = EnumSet<WalkTreeOption>;
   static nsIContent* GetPreviousContent(
       const nsINode& aNode, const WalkTreeOptions& aOptions,
-      EditorType aEditorType, const Element* aAncestorLimiter = nullptr);
+      const Element* aAncestorLimiter = nullptr);
 
   /**
    * And another version that takes a point in DOM tree rather than a node.
    */
   static nsIContent* GetPreviousContent(
       const EditorRawDOMPoint& aPoint, const WalkTreeOptions& aOptions,
-      EditorType aEditorType, const Element* aAncestorLimiter = nullptr);
+      const Element* aAncestorLimiter = nullptr);
 
   /**
    * Get next content node of aNode if there is.
@@ -1761,7 +1761,6 @@ class EditorBase : public nsIEditor,
    */
   static nsIContent* GetNextContent(const nsINode& aNode,
                                     const WalkTreeOptions& aOptions,
-                                    EditorType aEditorType,
                                     const Element* aAncestorLimiter = nullptr);
 
   /**
@@ -1789,7 +1788,6 @@ class EditorBase : public nsIEditor,
    */
   static nsIContent* GetNextContent(const EditorRawDOMPoint& aPoint,
                                     const WalkTreeOptions& aOptions,
-                                    EditorType aEditorType,
                                     const Element* aAncestorLimiter = nullptr);
 
   /**
@@ -2166,7 +2164,7 @@ class EditorBase : public nsIEditor,
       const Element* aAncestorLimiter = nullptr);
   static nsIContent* GetAdjacentContent(
       const nsINode& aNode, WalkTreeDirection aWalkTreeDirection,
-      const WalkTreeOptions& aOptions, EditorType aEditorType,
+      const WalkTreeOptions& aOptions,
       const Element* aAncestorLimiter = nullptr);
 
   virtual nsresult InstallEventListeners();

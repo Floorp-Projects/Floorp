@@ -5010,10 +5010,10 @@ nsIContent* HTMLEditor::GetPreviousHTMLElementOrTextInternal(
                    aNode,
                    {WalkTreeOption::IgnoreDataNodeExceptText,
                     WalkTreeOption::StopAtBlockBoundary},
-                   EditorType::HTML, editingHost)
+                   editingHost)
              : EditorBase::GetPreviousContent(
                    aNode, {WalkTreeOption::IgnoreDataNodeExceptText},
-                   EditorType::HTML, editingHost);
+                   editingHost);
 }
 
 template <typename PT, typename CT>
@@ -5028,10 +5028,10 @@ nsIContent* HTMLEditor::GetPreviousHTMLElementOrTextInternal(
                    aPoint,
                    {WalkTreeOption::IgnoreDataNodeExceptText,
                     WalkTreeOption::StopAtBlockBoundary},
-                   EditorType::HTML, editingHost)
+                   editingHost)
              : EditorBase::GetPreviousContent(
                    aPoint, {WalkTreeOption::IgnoreDataNodeExceptText},
-                   EditorType::HTML, editingHost);
+                   editingHost);
 }
 
 nsIContent* HTMLEditor::GetPreviousEditableHTMLNodeInternal(
@@ -5040,14 +5040,14 @@ nsIContent* HTMLEditor::GetPreviousEditableHTMLNodeInternal(
   if (NS_WARN_IF(!editingHost)) {
     return nullptr;
   }
-  return aNoBlockCrossing ? EditorBase::GetPreviousContent(
-                                aNode,
-                                {WalkTreeOption::IgnoreNonEditableNode,
-                                 WalkTreeOption::StopAtBlockBoundary},
-                                EditorType::HTML, editingHost)
-                          : EditorBase::GetPreviousContent(
-                                aNode, {WalkTreeOption::IgnoreNonEditableNode},
-                                EditorType::HTML, editingHost);
+  return aNoBlockCrossing
+             ? EditorBase::GetPreviousContent(
+                   aNode,
+                   {WalkTreeOption::IgnoreNonEditableNode,
+                    WalkTreeOption::StopAtBlockBoundary},
+                   editingHost)
+             : EditorBase::GetPreviousContent(
+                   aNode, {WalkTreeOption::IgnoreNonEditableNode}, editingHost);
 }
 
 template <typename PT, typename CT>
@@ -5061,10 +5061,10 @@ nsIContent* HTMLEditor::GetPreviousEditableHTMLNodeInternal(
                                 aPoint,
                                 {WalkTreeOption::IgnoreNonEditableNode,
                                  WalkTreeOption::StopAtBlockBoundary},
-                                EditorType::HTML, editingHost)
+                                editingHost)
                           : EditorBase::GetPreviousContent(
                                 aPoint, {WalkTreeOption::IgnoreNonEditableNode},
-                                EditorType::HTML, editingHost);
+                                editingHost);
 }
 
 nsIContent* HTMLEditor::GetNextHTMLElementOrTextInternal(
@@ -5078,10 +5078,10 @@ nsIContent* HTMLEditor::GetNextHTMLElementOrTextInternal(
                    aNode,
                    {WalkTreeOption::IgnoreDataNodeExceptText,
                     WalkTreeOption::StopAtBlockBoundary},
-                   EditorType::HTML, editingHost)
+                   editingHost)
              : EditorBase::GetNextContent(
                    aNode, {WalkTreeOption::IgnoreDataNodeExceptText},
-                   EditorType::HTML, editingHost);
+                   editingHost);
 }
 
 template <typename PT, typename CT>
@@ -5096,10 +5096,10 @@ nsIContent* HTMLEditor::GetNextHTMLElementOrTextInternal(
                    aPoint,
                    {WalkTreeOption::IgnoreDataNodeExceptText,
                     WalkTreeOption::StopAtBlockBoundary},
-                   EditorType::HTML, editingHost)
+                   editingHost)
              : EditorBase::GetNextContent(
                    aPoint, {WalkTreeOption::IgnoreDataNodeExceptText},
-                   EditorType::HTML, editingHost);
+                   editingHost);
 }
 
 nsIContent* HTMLEditor::GetNextEditableHTMLNodeInternal(
@@ -5108,14 +5108,14 @@ nsIContent* HTMLEditor::GetNextEditableHTMLNodeInternal(
   if (NS_WARN_IF(!editingHost)) {
     return nullptr;
   }
-  return aNoBlockCrossing ? EditorBase::GetNextContent(
-                                aNode,
-                                {WalkTreeOption::IgnoreNonEditableNode,
-                                 WalkTreeOption::StopAtBlockBoundary},
-                                EditorType::HTML, editingHost)
-                          : EditorBase::GetNextContent(
-                                aNode, {WalkTreeOption::IgnoreNonEditableNode},
-                                EditorType::HTML, editingHost);
+  return aNoBlockCrossing
+             ? EditorBase::GetNextContent(
+                   aNode,
+                   {WalkTreeOption::IgnoreNonEditableNode,
+                    WalkTreeOption::StopAtBlockBoundary},
+                   editingHost)
+             : EditorBase::GetNextContent(
+                   aNode, {WalkTreeOption::IgnoreNonEditableNode}, editingHost);
 }
 
 template <typename PT, typename CT>
@@ -5129,10 +5129,10 @@ nsIContent* HTMLEditor::GetNextEditableHTMLNodeInternal(
                                 aPoint,
                                 {WalkTreeOption::IgnoreNonEditableNode,
                                  WalkTreeOption::StopAtBlockBoundary},
-                                EditorType::HTML, editingHost)
+                                editingHost)
                           : EditorBase::GetNextContent(
                                 aPoint, {WalkTreeOption::IgnoreNonEditableNode},
-                                EditorType::HTML, editingHost);
+                                editingHost);
 }
 
 bool HTMLEditor::IsFirstEditableChild(nsINode* aNode) const {
