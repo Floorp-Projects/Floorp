@@ -163,8 +163,7 @@ char16_t RemoteLookAndFeel::GetPasswordCharacterImpl() {
 
 bool RemoteLookAndFeel::GetEchoPasswordImpl() { return mTables.passwordEcho(); }
 
-static bool AddIDsToMap(nsXPLookAndFeel* aImpl, FullLookAndFeel* aLf,
-                        bool aDifferentTheme, bool aFromParentTheme) {
+static bool AddIDsToMap(nsXPLookAndFeel* aImpl, FullLookAndFeel* aLf) {
   using IntID = LookAndFeel::IntID;
   using FontID = LookAndFeel::FontID;
   using FloatID = LookAndFeel::FloatID;
@@ -176,10 +175,6 @@ static bool AddIDsToMap(nsXPLookAndFeel* aImpl, FullLookAndFeel* aLf,
     if (!IsNeededInChildProcess(id)) {
       continue;
     }
-    if (aDifferentTheme && aImpl->FromParentTheme(id) != aFromParentTheme) {
-      anyFromOtherTheme = true;
-      continue;
-    }
     int32_t theInt;
     nsresult rv = aImpl->NativeGetInt(id, theInt);
     AddToMap(aLf->tables().ints(), aLf->tables().intMap(), id,
@@ -187,10 +182,6 @@ static bool AddIDsToMap(nsXPLookAndFeel* aImpl, FullLookAndFeel* aLf,
   }
 
   for (auto id : MakeEnumeratedRange(ColorID::End)) {
-    if (aDifferentTheme && aImpl->FromParentTheme(id) != aFromParentTheme) {
-      anyFromOtherTheme = true;
-      continue;
-    }
     nscolor theColor;
     nsresult rv = aImpl->NativeGetColor(id, ColorScheme::Light, theColor);
     AddToMap(aLf->tables().lightColors(), aLf->tables().lightColorMap(), id,
@@ -198,11 +189,6 @@ static bool AddIDsToMap(nsXPLookAndFeel* aImpl, FullLookAndFeel* aLf,
     rv = aImpl->NativeGetColor(id, ColorScheme::Dark, theColor);
     AddToMap(aLf->tables().darkColors(), aLf->tables().darkColorMap(), id,
              NS_SUCCEEDED(rv) ? Some(theColor) : Nothing{});
-  }
-
-  // The rest of IDs only come from the child content theme.
-  if (aFromParentTheme) {
-    return anyFromOtherTheme;
   }
 
   for (auto id : MakeEnumeratedRange(FloatID::End)) {
@@ -247,23 +233,11 @@ const FullLookAndFeel* RemoteLookAndFeel::ExtractData() {
   FullLookAndFeel* lf = new FullLookAndFeel{};
   nsXPLookAndFeel* impl = nsXPLookAndFeel::GetInstance();
 
-  bool anyFromParent = false;
-  impl->WithThemeConfiguredForContent([&](const LookAndFeelTheme& aTheme,
-                                          bool aDifferentTheme) {
-    anyFromParent =
-        AddIDsToMap(impl, lf, aDifferentTheme, /* aFromParentTheme = */ false);
-    MOZ_ASSERT_IF(anyFromParent, aDifferentTheme);
-    lf->tables().passwordChar() = impl->GetPasswordCharacterImpl();
-    lf->tables().passwordEcho() = impl->GetEchoPasswordImpl();
 #ifdef MOZ_WIDGET_GTK
-    lf->theme() = aTheme;
+  impl->GetGtkContentTheme(lf->theme());
 #endif
-  });
 
-  if (anyFromParent) {
-    AddIDsToMap(impl, lf, /* aDifferentTheme = */ true,
-                /* aFromParentTheme = */ true);
-  }
+  AddIDsToMap(impl, lf);
 
   // This assignment to sCachedLookAndFeelData must be done after the
   // WithThemeConfiguredForContent call, since it can end up calling RefreshImpl
