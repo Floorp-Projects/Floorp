@@ -200,6 +200,9 @@ const TEST_GLOBAL = {
     importGlobalProperties() {},
     now: () => window.performance.now(),
     reportError() {},
+    cloneInto: a => {
+      return a;
+    },
   },
   dump() {},
   EveryWindow: {

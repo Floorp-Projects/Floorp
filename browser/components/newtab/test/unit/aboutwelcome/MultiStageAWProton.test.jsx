@@ -72,4 +72,62 @@ describe("MultiStageAboutWelcomeProton module", () => {
       assert.notProperty(data.screens[0].content, "help_text");
     });
   });
+  describe("AboutWelcomeDefaults prepareContentForReact", () => {
+    it("should not set action without screens", async () => {
+      const data = AboutWelcomeDefaults.prepareContentForReact({
+        ua: "test",
+      });
+      assert.propertyVal(data, "ua", "test");
+      assert.notProperty(data, "screens");
+    });
+    it("should set action for import action", async () => {
+      const TEST_CONTENT = {
+        ua: "test",
+        screens: [
+          {
+            id: "AW_IMPORT_SETTINGS",
+            content: {
+              primary_button: {
+                action: {
+                  type: "SHOW_MIGRATION_WIZARD",
+                },
+              },
+            },
+          },
+        ],
+      };
+      const data = AboutWelcomeDefaults.prepareContentForReact(TEST_CONTENT);
+      assert.propertyVal(data, "ua", "test");
+      assert.propertyVal(
+        data.screens[0].content.primary_button.action.data,
+        "source",
+        "test"
+      );
+    });
+    it("should not set action if the action type != SHOW_MIGRATION_WIZARD", async () => {
+      const TEST_CONTENT = {
+        ua: "test",
+        screens: [
+          {
+            id: "AW_IMPORT_SETTINGS",
+            content: {
+              primary_button: {
+                action: {
+                  type: "SHOW_FIREFOX_ACCOUNTS",
+                  data: {},
+                },
+              },
+            },
+          },
+        ],
+      };
+      const data = AboutWelcomeDefaults.prepareContentForReact(TEST_CONTENT);
+      assert.propertyVal(data, "ua", "test");
+      assert.notPropertyVal(
+        data.screens[0].content.primary_button.action.data,
+        "source",
+        "test"
+      );
+    });
+  });
 });
