@@ -2664,6 +2664,19 @@
   value: true
   mirror: always
 
+# Should we check build ID as part of the cache validation?
+# When enabled, the cache is invalidated on any upgrade (or downgrade),
+# ensuring that changes in how quota usage is calculated can't cause
+# inconsistencies at the cost of a slower initialization. Currently, this
+# should only be set to false in tests using a packaged profile that inherently
+# includes a build id different from the building running the tests. In the
+# future this may be set to false if we are confident that we have sufficiently
+# thorough schema versioning.
+- name: dom.quotaManager.caching.checkBuildId
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
 # Preference that users can set to override temporary storage smart limit
 # calculation.
 - name: dom.quotaManager.temporaryStorage.fixedLimit
