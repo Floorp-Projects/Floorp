@@ -2388,15 +2388,19 @@ gboolean nsWindow::OnPropertyNotifyEvent(GtkWidget* aWidget,
   return FALSE;
 }
 
-static GdkCursor* GetCursorForImage(const nsIWidget::Cursor& aCursor) {
+static GdkCursor* GetCursorForImage(const nsIWidget::Cursor& aCursor,
+                                    int32_t aWidgetScaleFactor) {
   if (!aCursor.IsCustom()) {
     return nullptr;
   }
   nsIntSize size = nsIWidget::CustomCursorSize(aCursor);
 
-  // NOTE: GTK only allows integer scale factors, so we ceil to the closest
-  // scale factor and then tell gtk to scale it down.
-  int32_t gtkScale = std::ceil(aCursor.mResolution);
+  // NOTE: GTK only allows integer scale factors, so we ceil to the larger scale
+  // factor and then tell gtk to scale it down. We ensure to scale at least to
+  // the GDK scale factor, so that cursors aren't downsized in HiDPI on wayland,
+  // see bug 1707533.
+  int32_t gtkScale =
+      std::max(aWidgetScaleFactor, int32_t(std::ceil(aCursor.mResolution)));
 
   // Reject cursors greater than 128 pixels in some direction, to prevent
   // spoofing.
@@ -2464,7 +2468,7 @@ void nsWindow::SetCursor(const Cursor& aCursor) {
 
   // Try to set the cursor image first, and fall back to the numeric cursor.
   bool fromImage = true;
-  GdkCursor* newCursor = GetCursorForImage(aCursor);
+  GdkCursor* newCursor = GetCursorForImage(aCursor, GdkScaleFactor());
   if (!newCursor) {
     fromImage = false;
     newCursor = get_gtk_cursor(aCursor.mDefaultCursor);
@@ -4256,6 +4260,11 @@ void nsWindow::OnScaleChanged(GtkAllocation* aAllocation) {
     moz_container_wayland_set_scale_factor(mContainer);
   }
 #endif
+
+  if (mCursor.IsCustom()) {
+    mUpdateCursor = true;
+    SetCursor(Cursor{mCursor});
+  }
 }
 
 void nsWindow::DispatchDragEvent(EventMessage aMsg,
