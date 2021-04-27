@@ -5137,6 +5137,9 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
       // vblank.
       SetCompositorHint(GTK_WIDGET_COMPOSIDED_ENABLED);
     }
+    // Dummy call to a function in mozgtk to prevent the linker from removing
+    // the dependency with --as-needed.
+    XShmQueryExtension(mXDisplay);
   }
 #  ifdef MOZ_WAYLAND
   else if (GdkIsWaylandDisplay()) {
