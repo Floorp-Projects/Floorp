@@ -5005,7 +5005,9 @@ nsIContent* HTMLEditor::GetPreviousHTMLElementOrTextInternal(
     return nullptr;
   }
   return aNoBlockCrossing
-             ? GetPreviousElementOrTextInBlock(aNode)
+             ? GetPreviousContent(aNode,
+                                  {WalkTreeOption::IgnoreDataNodeExceptText,
+                                   WalkTreeOption::StopAtBlockBoundary})
              : GetPreviousContent(aNode,
                                   {WalkTreeOption::IgnoreDataNodeExceptText});
 }
@@ -5017,7 +5019,9 @@ nsIContent* HTMLEditor::GetPreviousHTMLElementOrTextInternal(
     return nullptr;
   }
   return aNoBlockCrossing
-             ? GetPreviousElementOrTextInBlock(aPoint)
+             ? GetPreviousContent(aPoint,
+                                  {WalkTreeOption::IgnoreDataNodeExceptText,
+                                   WalkTreeOption::StopAtBlockBoundary})
              : GetPreviousContent(aPoint,
                                   {WalkTreeOption::IgnoreDataNodeExceptText});
 }
@@ -5047,7 +5051,8 @@ nsIContent* HTMLEditor::GetNextHTMLElementOrTextInternal(
     return nullptr;
   }
   return aNoBlockCrossing
-             ? GetNextElementOrTextInBlock(aNode)
+             ? GetNextContent(aNode, {WalkTreeOption::IgnoreDataNodeExceptText,
+                                      WalkTreeOption::StopAtBlockBoundary})
              : GetNextContent(aNode,
                               {WalkTreeOption::IgnoreDataNodeExceptText});
 }
@@ -5059,7 +5064,8 @@ nsIContent* HTMLEditor::GetNextHTMLElementOrTextInternal(
     return nullptr;
   }
   return aNoBlockCrossing
-             ? GetNextElementOrTextInBlock(aPoint)
+             ? GetNextContent(aPoint, {WalkTreeOption::IgnoreDataNodeExceptText,
+                                       WalkTreeOption::StopAtBlockBoundary})
              : GetNextContent(aPoint,
                               {WalkTreeOption::IgnoreDataNodeExceptText});
 }
