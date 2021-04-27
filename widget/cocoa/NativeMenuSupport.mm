@@ -6,6 +6,8 @@
 #include "mozilla/widget/NativeMenuSupport.h"
 
 #include "MainThreadUtils.h"
+#include "mozilla/StaticPrefs_browser.h"
+#include "mozilla/StaticPrefs_widget.h"
 #include "NativeMenuMac.h"
 #include "nsCocoaWindow.h"
 #include "nsMenuBarX.h"
@@ -21,6 +23,10 @@ void NativeMenuSupport::CreateNativeMenuBar(nsIWidget* aParent, dom::Element* aM
 
 already_AddRefed<NativeMenu> NativeMenuSupport::CreateNativeContextMenu(dom::Element* aPopup) {
   return MakeAndAddRef<NativeMenuMac>(aPopup);
+}
+
+bool NativeMenuSupport::ShouldUseNativeContextMenus() {
+  return StaticPrefs::widget_macos_native_context_menus() && StaticPrefs::browser_proton_enabled();
 }
 
 }  // namespace mozilla::widget
