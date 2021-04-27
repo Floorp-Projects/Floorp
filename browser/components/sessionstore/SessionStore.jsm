@@ -3432,14 +3432,19 @@ var SessionStoreInternal = {
 
     let activePageData = tabData.entries[tabData.index - 1] || null;
 
-    // If the page has a title, set it.
-    if (activePageData) {
-      if (activePageData.title && activePageData.title != activePageData.url) {
-        win.gBrowser.setInitialTabTitle(tab, activePageData.title, {
-          isContentTitle: true,
-        });
-      } else {
-        win.gBrowser.setInitialTabTitle(tab, activePageData.url);
+    // If the page has a title and it hasn't yet been updated, set it.
+    if (!tab._labelIsContentTitle) {
+      if (activePageData) {
+        if (
+          activePageData.title &&
+          activePageData.title != activePageData.url
+        ) {
+          win.gBrowser.setInitialTabTitle(tab, activePageData.title, {
+            isContentTitle: true,
+          });
+        } else {
+          win.gBrowser.setInitialTabTitle(tab, activePageData.url);
+        }
       }
     }
 
