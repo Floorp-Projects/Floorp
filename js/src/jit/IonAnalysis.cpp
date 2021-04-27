@@ -1432,6 +1432,10 @@ bool TypeAnalyzer::shouldSpecializeOsrPhis() const {
   //
   //     * TypeAnalyzer::replaceRedundantPhi: adds a type guard for values that
   //       can't be unboxed (null/undefined/magic Values).
+  if (!mir->graph().osrBlock()) {
+    return false;
+  }
+
   return !mir->outerInfo().hadSpeculativePhiBailout();
 }
 
@@ -1654,7 +1658,7 @@ bool TypeAnalyzer::specializePhis() {
     return false;
   }
 
-  if (shouldSpecializeOsrPhis() && graph.osrBlock()) {
+  if (shouldSpecializeOsrPhis()) {
     // See shouldSpecializeOsrPhis comment. This is the second step, propagating
     // loop header phi types to preheader phis.
     MBasicBlock* preHeader = graph.osrPreHeaderBlock();
@@ -1849,16 +1853,14 @@ void TypeAnalyzer::replaceRedundantPhi(MPhi* phi) {
   if (shouldSpecializeOsrPhis()) {
     // See shouldSpecializeOsrPhis comment. This is part of the third step,
     // guard the incoming MOsrValue is of this type.
-    MBasicBlock* osrBlock = graph.osrBlock();
     for (uint32_t i = 0; i < phi->numOperands(); i++) {
       MDefinition* def = phi->getOperand(i);
-      if (def->isOsrValue()) {
-        MOZ_ASSERT(def->block() == osrBlock);
+      if (def->type() != phi->type()) {
+        MOZ_ASSERT(def->isOsrValue() || def->isPhi());
+        MOZ_ASSERT(def->type() == MIRType::Value);
         MGuardValue* guard = MGuardValue::New(alloc(), def, v);
         guard->setBailoutKind(BailoutKind::SpeculativePhi);
-        osrBlock->insertBefore(osrBlock->lastIns(), guard);
-      } else {
-        MOZ_ASSERT(def->type() == phi->type());
+        def->block()->insertBefore(def->block()->lastIns(), guard);
       }
     }
   }
