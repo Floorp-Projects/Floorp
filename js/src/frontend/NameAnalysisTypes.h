@@ -98,6 +98,9 @@ enum class DeclarationKind : uint8_t {
   PrivateMethod,  // slot to store nonstatic private method
 };
 
+// Class field kind.
+enum class FieldPlacement : uint8_t { Unspecified, Instance, Static };
+
 static inline BindingKind DeclarationKindToBindingKind(DeclarationKind kind) {
   switch (kind) {
     case DeclarationKind::PositionalFormalParameter:
@@ -164,13 +167,20 @@ class DeclaredNameInfo {
 
   PrivateNameKind privateNameKind_;
 
+  // Only updated for private names (see noteDeclaredPrivateName),
+  // tracks if declaration was instance or static to allow issuing
+  // early errors in the case where we mismatch instance and static
+  // private getter/setters.
+  FieldPlacement placement_;
+
  public:
   explicit DeclaredNameInfo(DeclarationKind kind, uint32_t pos,
                             ClosedOver closedOver = ClosedOver::No)
       : pos_(pos),
         kind_(kind),
         closedOver_(bool(closedOver)),
-        privateNameKind_(PrivateNameKind::None) {}
+        privateNameKind_(PrivateNameKind::None),
+        placement_(FieldPlacement::Unspecified) {}
 
   // Needed for InlineMap.
   DeclaredNameInfo() = default;
@@ -191,7 +201,14 @@ class DeclaredNameInfo {
     privateNameKind_ = privateNameKind;
   }
 
+  void setFieldPlacement(FieldPlacement placement) {
+    MOZ_ASSERT(placement != FieldPlacement::Unspecified);
+    placement_ = placement;
+  }
+
   PrivateNameKind privateNameKind() const { return privateNameKind_; }
+
+  FieldPlacement placement() const { return placement_; }
 };
 
 // Used in BytecodeEmitter to map names to locations.
