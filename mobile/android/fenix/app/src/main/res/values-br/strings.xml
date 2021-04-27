@@ -173,6 +173,8 @@
     <string name="browser_menu_open_app_link">Digeriñ en arload</string>
     <!-- Browser menu button to configure reader mode appearance e.g. the used font type and size -->
     <string name="browser_menu_read_appearance">Neuz</string>
+    <!-- Browser menu button to show reader view appearance controls e.g. the used font type and size -->
+    <string name="browser_menu_customize_reader_view">Personelaat ar mod lenn</string>
     <!-- Browser menu label for adding a bookmark -->
     <string name="browser_menu_add">Ouzhpennañ</string>
     <!-- Browser menu label for editing a bookmark -->
@@ -597,12 +599,16 @@
     <string name="tabs_header_private_title">Estez prevez</string>
     <!-- Title for the list of tabs in the current private session -->
     <string name="tabs_header_private_tabs_title">Ivinelloù prevez</string>
+    <!-- Title for the list of tabs in the synced tabs -->
+    <string name="tabs_header_synced_tabs_title">Ivinelloù goubredet</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
     <string name="add_tab">Ouzhpennañ un ivinell</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
     <string name="add_private_tab">Ouzhpennañ un ivinell prevez</string>
     <!-- Text for the new tab button to indicate adding a new private tab in the tab -->
     <string name="tab_drawer_fab_content">Prevez</string>
+    <!-- Text for the new tab button to indicate syncing command on the synced tabs page -->
+    <string name="tab_drawer_fab_sync">Goubredañ</string>
     <!-- Text shown as the title of the open tab tray -->
     <string name="tab_tray_title">Ivinelloù digor</string>
     <!-- Text shown in the menu for saving tabs to a collection -->
@@ -968,6 +974,8 @@
     <string name="share_link_all_apps_subheader">An holl oberennoù</string>
     <!-- Sub-header in the dialog to share a link to an app from the most-recent sorted list -->
     <string name="share_link_recent_apps_subheader">Arveret da ziwezhañ</string>
+    <!-- An option from the three dot menu to into sync -->
+    <string name="sync_menu_sign_in">Kennaskañ evit goubredañ</string>
     <!-- An option from the share dialog to sign into sync -->
     <string name="sync_sign_in">Kennaskañ ouzh Sync</string>
     <!-- An option from the share dialog to send link to all other sync devices -->
@@ -1170,6 +1178,10 @@
     <string name="onboarding_whats_new_description">Goulennoù hoc’h eus a-zivout ar %s nevez? Fellout a ra deoc’h gouzout pezh a zo bet cheñchet?</string>
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
     <string name="onboarding_whats_new_description_linktext">Amañ emañ ar respontoù</string>
+    <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
+    <string name="onboarding_account_sign_in_header_1">Goubredañ Firefox etre an trevnadoù</string>
+    <!-- Text for the button to learn more about signing in to your Firefox account -->
+    <string name="onboarding_manual_sign_in_description">Degasit sinedoù, ur roll-istor ha gerioù-tremen evit Firefox war an trevnad-mañ.</string>
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
         another Firefox browser. (The word `Firefox` should not be translated)
         The first parameter is the email of the detected user's account -->
@@ -1178,18 +1190,32 @@
     <string name="onboarding_firefox_account_auto_signin_confirm">Ya, kennaskit ac’hanon</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
     <string name="onboarding_firefox_account_signing_in">O kennaskañ…</string>
+    <!-- text for the button to manually sign into Firefox account. -->
+    <string name="onboarding_firefox_account_sign_in_1">En em rollañ</string>
     <!-- text for the button to stay signed out when presented with an option to automatically sign-in. -->
     <string name="onboarding_firefox_account_stay_signed_out">Chom kennasket</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">Enaouet eo Sync</string>
     <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
     <string name="onboarding_firefox_account_automatic_signin_failed">C’hwitadenn war ar c’hennaskañ</string>
+    <!-- text for the tracking protection onboarding card header -->
+    <string name="onboarding_tracking_protection_header_3">Prevezded gweredekaet bepred</string>
+    <!-- text for the tracking protection card description. 'Firefox' intentionally hardcoded here -->
+    <string name="onboarding_tracking_protection_description_3">Firefox a harz en un doare emgefreek ouzh an embregerezhioù d’ho heuliañ dre guzh war ar web.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">Skoueriek (dre ziouer)</string>
+    <!-- text for standard blocking option button description -->
+    <string name="onboarding_tracking_protection_standard_button_description_3">Kempouezet evit prevezded hag efedusted. Ar pajennoù a garg en un doare ordinal.</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_button">Strizh (erbedet)</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_option">Strizh</string>
+    <!-- text for strict blocking option button description -->
+    <string name="onboarding_tracking_protection_strict_button_description_3">Stankañ muioc’h a heulierien hag ar pajennoù da gargañ buanoc’h, met arc’hweladurioù zo a c’hallo mont a-dreuz.</string>
+    <!-- text for the toolbar position card header  -->
+    <string name="onboarding_toolbar_placement_header_1">Dibabit e pelec’h lakaat ho parrenn ostilhoù</string>
+    <!-- text for the toolbar position card description -->
+    <string name="onboarding_toolbar_placement_description_1">Lakait ar varrenn ostilhoù en ul lec’h aes da dizhout. Dalc’hit hi en traoñ pe diblasit anezhi e-krec’h.</string>
     <!-- text for the private browsing onboarding card header -->
     <string name="onboarding_private_browsing_header">Merdeiñ prevez</string>
     <!-- text for the private browsing onboarding card description
@@ -1216,6 +1242,8 @@
     <!-- text for the theme picker onboarding card header -->
     <string name="onboarding_theme_picker_header">Dibabit an neuz</string>
 
+    <!-- text for the theme picker onboarding card description -->
+    <string name="onboarding_theme_picker_description_2">Espernit batiri hag ho sell gant ar mod teñval.</string>
     <!-- Automatic theme setting (will follow device setting) -->
     <string name="onboarding_theme_automatic_title">Emgefreek</string>
     <!-- Summary of automatic theme setting (will follow device setting) -->
@@ -1269,10 +1297,14 @@
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Gouzout hiroc’h</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">Skoueriek (dre ziouer)</string>
+    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_description_4">Kempouezet evit prevezded hag efedusted. Ar pajennoù a garg en un doare ordinal.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">Ar pezh a zo stanket gant ar gwarez heuliañ skoueriek</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Strizh</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict_description_3">Stankañ muioc’h a heulierien hag ar pajennoù da gargañ buanoc’h, met arc’hweladurioù zo a c’hallo mont a-dreuz.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">Ar pezh a zo stanket gant ar gwarez heuliañ strizh</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -1513,6 +1545,8 @@
     <string name="preferences_credit_cards_save_and_autofill_cards">Enrollañ ha leuniañ ar c’hartennoù en un doare emgefreek</string>
     <!-- Preference summary for saving and autofilling credit card data -->
     <string name="preferences_credit_cards_save_and_autofill_cards_summary">Rineget eo ar roadennoù</string>
+    <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
+    <string name="preferences_credit_cards_sync_cards_across_devices">Goubredañ ar c’hartennoù kred etre ho trevnadoù</string>
     <!-- Preference option for adding a credit card -->
     <string name="preferences_credit_cards_add_credit_card">Ouzhpennañ ur gartenn gred</string>
     <!-- Preference option for managing saved credit cards -->

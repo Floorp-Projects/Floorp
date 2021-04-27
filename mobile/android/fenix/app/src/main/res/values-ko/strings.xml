@@ -1418,7 +1418,7 @@
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
     <string name="etp_panel_off">이 사이트에서 보호 꺼짐</string>
     <!-- Header for exceptions list for which sites enhanced tracking protection is always off -->
-    <string name="enhanced_tracking_protection_exceptions">이 웹 사이트에 대해 향상된 추적 방지 기능이 꺼져 있습니다</string>
+    <string name="enhanced_tracking_protection_exceptions">이 웹 사이트에 향상된 추적 방지 기능이 꺼짐</string>
     <!-- Content description (not visible, for screen readers etc.): Navigate
     back from ETP details (Ex: Tracking content) -->
     <string name="etp_back_button_content_description">뒤로</string>
