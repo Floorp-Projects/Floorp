@@ -16,6 +16,8 @@ interface nsIGfxInfo : nsISupports
   readonly attribute boolean D2DEnabled;
   readonly attribute boolean DWriteEnabled;
   readonly attribute boolean EmbeddedInFirefoxReality;
+  readonly attribute AString AzureCanvasBackend;
+  readonly attribute AString AzureContentBackend;
   readonly attribute boolean usingGPUProcess;
   readonly attribute boolean hasBattery;
   readonly attribute AString DWriteVersion;

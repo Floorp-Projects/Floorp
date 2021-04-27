@@ -1803,6 +1803,22 @@ GfxInfoBase::GetContentBackend(nsAString& aContentBackend) {
 }
 
 NS_IMETHODIMP
+GfxInfoBase::GetAzureCanvasBackend(nsAString& aBackend) {
+  CopyASCIItoUTF16(mozilla::MakeStringSpan(
+                       gfxPlatform::GetPlatform()->GetAzureCanvasBackend()),
+                   aBackend);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+GfxInfoBase::GetAzureContentBackend(nsAString& aBackend) {
+  CopyASCIItoUTF16(mozilla::MakeStringSpan(
+                       gfxPlatform::GetPlatform()->GetAzureContentBackend()),
+                   aBackend);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 GfxInfoBase::GetUsingGPUProcess(bool* aOutValue) {
   GPUProcessManager* gpu = GPUProcessManager::Get();
   if (!gpu) {
