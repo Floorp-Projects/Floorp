@@ -290,6 +290,11 @@ Shape* Shape::replaceLastProperty(JSContext* cx, ObjectFlags objectFlags,
     }
     child.setSlot(slot);
   } else {
+    // If the caller passes in a slot number, it must be either a reserved slot
+    // or the slot of a property we're changing. In both cases the slot must be
+    // valid for our slot span.
+    MOZ_ASSERT(child.slot() < obj->slotSpan());
+
     /*
      * Slots can only be allocated out of order on objects in
      * dictionary mode.  Otherwise the child's slot must be after the
@@ -317,21 +322,16 @@ Shape* Shape::replaceLastProperty(JSContext* cx, ObjectFlags objectFlags,
     if (!shape) {
       return nullptr;
     }
-    // First try to add the shape to the table. If allocating slots below fails,
-    // we have to remove the entry again.
-    if (!table->add(cx, child.propid(), shape)) {
-      new (shape) Shape(obj->lastProperty()->base(), ObjectFlags(), 0);
-      return nullptr;
-    }
-    if (child.slot() >= obj->slotSpan()) {
-      if (!obj->ensureSlotsForDictionaryObject(cx, child.slot() + 1)) {
-        new (shape) Shape(obj->lastProperty()->base(), ObjectFlags(), 0);
-        table->remove(child.propid());
-        return nullptr;
-      }
-    }
+
+    MOZ_ASSERT(child.slot() < obj->slotSpan());
+
     shape->initDictionaryShape(child, obj->numFixedSlots(),
                                DictionaryShapeLink(obj));
+
+    if (!table->add(cx, child.propid(), shape)) {
+      shape->removeFromDictionary(obj);
+      return nullptr;
+    }
 
     // Pass the table along to the new last property.
     MOZ_ASSERT(shape->previous()->maybeTable(keep) == table);
@@ -374,12 +374,13 @@ Shape* Shape::replaceLastProperty(JSContext* cx, ObjectFlags objectFlags,
     if (!shape) {
       return nullptr;
     }
-    if (!table->add(cx, child.propid(), shape)) {
-      new (shape) Shape(obj->lastProperty()->base(), ObjectFlags(), 0);
-      return nullptr;
-    }
     shape->initDictionaryShape(child, obj->numFixedSlots(),
                                DictionaryShapeLink(obj));
+
+    if (!table->add(cx, child.propid(), shape)) {
+      shape->removeFromDictionary(obj);
+      return nullptr;
+    }
 
     // Pass the table along to the new last property.
     MOZ_ASSERT(shape->previous()->maybeTable(keep) == table);
@@ -691,21 +692,16 @@ bool NativeObject::addEnumerableDataProperty(JSContext* cx,
     if (!shape) {
       return false;
     }
-    // First try to add the shape to the table. If allocating slots below fails,
-    // we have to remove the entry again.
-    if (!table->add(cx, id, shape)) {
-      new (shape) Shape(obj->lastProperty()->base(), ObjectFlags(), 0);
-      return false;
-    }
-    if (slot >= obj->slotSpan()) {
-      if (MOZ_UNLIKELY(!obj->ensureSlotsForDictionaryObject(cx, slot + 1))) {
-        new (shape) Shape(obj->lastProperty()->base(), ObjectFlags(), 0);
-        table->remove(id);
-        return false;
-      }
-    }
+
+    MOZ_ASSERT(slot < obj->slotSpan());
+
     shape->initDictionaryShape(child, obj->numFixedSlots(),
                                DictionaryShapeLink(obj));
+
+    if (!table->add(cx, id, shape)) {
+      shape->removeFromDictionary(obj);
+      return false;
+    }
 
     // Pass the table along to the new last property.
     MOZ_ASSERT(shape->previous()->maybeTable(keep) == table);
