@@ -102,7 +102,8 @@ const test = new SearchConfigTest({
         },
       ],
       searchUrlCode: "tag=mozillaaustra-22",
-      noSuggestionsURL: true,
+      suggestionUrlBase: "https://completion.amazon.com.au/search/complete",
+      suggestUrlCode: "mkt=111172",
     },
     {
       domain: "amazon.ca",
