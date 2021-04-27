@@ -5162,7 +5162,7 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::AutoDeleteRangesHandler::
           EditorRawDOMPoint::After(mEmptyInclusiveAncestorBlockElement));
       MOZ_ASSERT(afterEmptyBlock.IsSet());
       if (nsIContent* nextContentOfEmptyBlock =
-              aHTMLEditor.GetNextNode(afterEmptyBlock)) {
+              aHTMLEditor.GetNextContent(afterEmptyBlock, {})) {
         EditorDOMPoint pt = aHTMLEditor.GetGoodCaretPointFor(
             *nextContentOfEmptyBlock, aDirectionAndAmount);
         if (!pt.IsSet()) {
