@@ -4406,8 +4406,8 @@ bool AsyncPanZoomController::UpdateAnimation(
     bool wantsRepaints = mAnimation->WantsRepaints();
     *aOutDeferredTasks = mAnimation->TakeDeferredTasks();
     if (!continueAnimation) {
-      mAnimation = nullptr;
       SetState(NOTHING);
+      mAnimation = nullptr;
     }
     // Request a repaint at the end of the animation in case something such as a
     // call to NotifyLayersUpdated was invoked during the animation and Gecko's
