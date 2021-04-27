@@ -34,7 +34,7 @@
     --arrowpanel-dimmed-further: color-mix(in srgb, currentColor 20%, transparent);
     --arrowpanel-dimmed-even-further: color-mix(in srgb, currentColor 27%, transparent);
 
-    --error-text-color: #C50042;
+    --error-text-color: rgb(197,0,66);
 
     --input-color: rgb(21,20,26);
     --input-bgcolor: rgb(255,255,255);
