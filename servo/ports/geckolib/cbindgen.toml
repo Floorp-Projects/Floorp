@@ -158,6 +158,7 @@ include = [
   "OwnedOrNull",
   "Strong",
   "ScrollbarColor",
+  "CaretColor",
   "Color",
   "ColorOrAuto",
   "SystemColor",
