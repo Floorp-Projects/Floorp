@@ -511,6 +511,7 @@ function isPacketPrivate(packet) {
 function createWarningGroupMessage(id, type, firstMessage) {
   return new ConsoleMessage({
     id,
+    allowRepeating: false,
     level: MESSAGE_LEVEL.WARN,
     source: MESSAGE_SOURCE.CONSOLE_FRONTEND,
     type,
