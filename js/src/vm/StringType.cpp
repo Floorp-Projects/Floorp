@@ -764,10 +764,10 @@ JSLinearString* JSRope::flattenInternal(JSRope* root) {
     }
   }
 
-  JSString* str = root;
+  JSRope* str = root;
   CharT* pos = wholeChars;
 
-  JSString* parent = nullptr;
+  JSRope* parent = nullptr;
   uint32_t parentFlag = 0;
 
 first_visit_node : {
@@ -786,7 +786,7 @@ first_visit_node : {
     /* Return to this node when 'left' done, then goto visit_right_child. */
     parent = str;
     parentFlag = FLATTEN_VISIT_RIGHT;
-    str = &left;
+    str = &left.asRope();
     goto first_visit_node;
   }
   if (!(reuseLeftmostBuffer && &left == leftmostChild)) {
@@ -801,7 +801,7 @@ visit_right_child : {
     /* Return to this node when 'right' done, then goto finish_node. */
     parent = str;
     parentFlag = FLATTEN_FINISH_NODE;
-    str = &right;
+    str = &right.asRope();
     goto first_visit_node;
   }
   CopyChars(pos, right.asLinear());
@@ -815,7 +815,7 @@ finish_node : {
 
   MOZ_ASSERT(pos >= wholeChars);
   CharT* chars = pos - str->length();
-  JSString* strParent = str->d.s.u2.parent;
+  JSRope* strParent = str->d.s.u2.parent;
   str->setNonInlineChars(chars);
 
   MOZ_ASSERT(str->asRope().isBeingFlattened());
@@ -826,7 +826,8 @@ finish_node : {
   // This also clears the flags related to flattening.
   str->setLengthAndFlags(str->length(),
                          StringFlagsForCharType<CharT>(INIT_DEPENDENT_FLAGS));
-  str->d.s.u3.base = (JSLinearString*)root; /* will be true on exit */
+  str->d.s.u3.base =
+      reinterpret_cast<JSLinearString*>(root); /* will be true on exit */
 
   // Every interior (rope) node in the rope's tree will be visited during
   // the traversal and post-barriered here, so earlier additions of
@@ -887,14 +888,11 @@ finish_root:
 
 template <JSRope::UsingBarrier usingBarrier>
 /* static */
-inline void JSRope::ropeBarrierDuringFlattening(JSString* str) {
-  // |str| is a rope but its flags maybe have been overwritten by temporary data
-  // at this point.
-  MOZ_ASSERT(str->isRope());
-  MOZ_ASSERT(!str->asRope().isBeingFlattened());
+inline void JSRope::ropeBarrierDuringFlattening(JSRope* rope) {
+  MOZ_ASSERT(!rope->isBeingFlattened());
   if constexpr (usingBarrier) {
-    gc::PreWriteBarrierDuringFlattening(str->d.s.u2.left);
-    gc::PreWriteBarrierDuringFlattening(str->d.s.u3.right);
+    gc::PreWriteBarrierDuringFlattening(rope->leftChild());
+    gc::PreWriteBarrierDuringFlattening(rope->rightChild());
   }
 }
 
