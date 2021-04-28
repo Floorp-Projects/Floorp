@@ -160,7 +160,7 @@ html|img#editBookmarkPanelFavicon[src] {
   margin-bottom: 0;
 }
 
-@media (-moz-proton) {
+@media (-moz-proton-doorhangers) {
 #editBookmarkPanel {
   font: caption;
 }
@@ -277,7 +277,7 @@ html|img#editBookmarkPanelFavicon[src] {
 }
 } /** END Proton **/
 
-@media not (-moz-proton) {
+@media not (-moz-proton-doorhangers) {
 #editBookmarkPanelInfoArea {
   margin: 6px 8px 0;
 }

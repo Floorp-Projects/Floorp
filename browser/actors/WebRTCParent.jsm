@@ -47,8 +47,8 @@ XPCOMUtils.defineLazyServiceGetter(
 
 XPCOMUtils.defineLazyPreferenceGetter(
   this,
-  "gProtonEnabled",
-  "browser.proton.enabled",
+  "gProtonDoorhangersEnabled",
+  "browser.proton.doorhangers.enabled",
   false
 );
 
@@ -1112,7 +1112,7 @@ function prompt(aActor, aBrowser, aRequest) {
         "webRTC-selectMicrophone-menupopup"
       );
       let describedByIDs = ["webRTC-shareDevices-notification-description"];
-      let describedBySuffix = gProtonEnabled ? "icon" : "label";
+      let describedBySuffix = gProtonDoorhangersEnabled ? "icon" : "label";
 
       if (sharingScreen) {
         listScreenShareDevices(windowMenupopup, videoDevices);
@@ -1324,7 +1324,7 @@ function prompt(aActor, aBrowser, aRequest) {
   }
   let anchorId = "webRTC-share" + iconType + "-notification-icon";
 
-  if (!gProtonEnabled) {
+  if (!gProtonDoorhangersEnabled) {
     let iconClass = iconType.toLowerCase();
     if (iconClass == "devices") {
       iconClass = "camera";
@@ -1339,7 +1339,7 @@ function prompt(aActor, aBrowser, aRequest) {
     );
   }
 
-  if (gProtonEnabled) {
+  if (gProtonDoorhangersEnabled) {
     mainAction.disableHighlight = true;
   }
 

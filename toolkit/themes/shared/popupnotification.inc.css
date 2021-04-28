@@ -76,7 +76,7 @@
   flex: 1;
 }
 
-@media not (-moz-proton) {
+@media not (-moz-proton-doorhangers) {
 .popup-notification-dropmarker {
   flex: none;
   padding: 0 15px !important;
@@ -112,7 +112,11 @@
 }
 
 /** PopupNotifications **/
-@media (-moz-proton) {
+@media (-moz-proton-doorhangers) {
+popupnotification {
+  font: caption;
+}
+
 .panel-footer {
   justify-content: flex-end;
   margin: 8px 16px 16px;

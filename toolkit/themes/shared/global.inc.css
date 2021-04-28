@@ -33,7 +33,7 @@
   --toolbarbutton-icon-fill: currentColor;
 }
 
-@media not (-moz-proton) {
+@media not (-moz-proton-doorhangers) {
 :root {
   --popup-notification-body-width: 25em;
 }
@@ -161,7 +161,7 @@ xul|label[disabled="true"] {
 
 /* Panel footers */
 
-@media not (-moz-proton) {
+@media not (-moz-proton-doorhangers) {
 .panel-footer {
   background-color: var(--arrowpanel-dimmed);
 }
