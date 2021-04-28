@@ -17,7 +17,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 /**
  * Internal database for saving downloads.
  */
-@Database(entities = [DownloadEntity::class], version = 3)
+@Database(entities = [DownloadEntity::class], version = 4)
 @TypeConverters(StatusConverter::class)
 internal abstract class DownloadsDatabase : RoomDatabase() {
     abstract fun downloadDao(): DownloadDao
@@ -36,7 +36,8 @@ internal abstract class DownloadsDatabase : RoomDatabase() {
                 "mozac_downloads_database"
             ).addMigrations(
                 Migrations.migration_1_2,
-                Migrations.migration_2_3
+                Migrations.migration_2_3,
+                Migrations.migration_3_4
             ).build().also {
                 instance = it
             }
@@ -62,6 +63,13 @@ internal object Migrations {
             database.execSQL("DROP TABLE downloads")
             // Rename the table name to the correct one
             database.execSQL("ALTER TABLE temp_downloads RENAME TO downloads")
+        }
+    }
+
+    val migration_3_4 = object : Migration(3, 4) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            // Clear any data urls.
+            database.execSQL("UPDATE downloads SET url='' WHERE url LIKE 'data:%' ")
         }
     }
 }
