@@ -491,7 +491,7 @@ class WebGLContext : public VRefCounted, public SupportsWeakPtr {
  public:
   void Present(WebGLFramebuffer*, layers::TextureType, const bool webvr);
   RefPtr<gfx::DataSourceSurface> GetFrontBufferSnapshot();
-  Maybe<uvec2> FrontBufferSnapshotInto(Maybe<Range<uint8_t>>);
+  bool FrontBufferSnapshotInto(Range<uint8_t>);
   Maybe<layers::SurfaceDescriptor> GetFrontBuffer(WebGLFramebuffer*,
                                                   const bool webvr);
 
