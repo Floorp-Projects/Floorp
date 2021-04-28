@@ -858,18 +858,13 @@ finish_root:
                           StringFlagsForCharType<CharT>(EXTENSIBLE_FLAGS));
   root->setNonInlineChars(wholeChars);
   root->d.s.u3.capacity = wholeCapacity;
-  if (root->isTenured()) {
-    AddCellMemory(root, root->asLinear().allocSize(),
-                  MemoryUse::StringContents);
-  }
+  AddCellMemory(root, root->asLinear().allocSize(), MemoryUse::StringContents);
 
   if (reuseLeftmostBuffer) {
     // Remove memory association for left node we're about to make into a
     // dependent string.
     JSString& left = *leftmostChild;
-    if (left.isTenured()) {
-      RemoveCellMemory(&left, left.allocSize(), MemoryUse::StringContents);
-    }
+    RemoveCellMemory(&left, left.allocSize(), MemoryUse::StringContents);
 
     uint32_t flags = INIT_DEPENDENT_FLAGS;
     if (left.inStringToAtomCache()) {
