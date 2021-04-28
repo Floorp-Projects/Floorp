@@ -1439,7 +1439,8 @@ static void draw_perspective(int nump, Interpolants interp_outs[4],
   vec3_scalar offset =
       make_vec3(make_vec2(ctx->viewport.origin() - colortex.offset), 0.0f) +
       scale;
-  if (test_none(pos.z <= -pos.w || pos.z >= pos.w)) {
+  // Verify if point is between near and far planes, rejecting NaN.
+  if (test_all(pos.z > -pos.w && pos.z < pos.w)) {
     // No points cross the near or far planes, so no clipping required.
     // Just divide coords by W and convert to viewport. We assume the W
     // coordinate is non-zero and the reciprocal is finite since it would
