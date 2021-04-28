@@ -9,7 +9,7 @@ import { SecondaryCTA, StepsIndicator } from "./MultiStageAboutWelcome";
 
 export class MultiStageProtonScreen extends React.PureComponent {
   render() {
-    const { content } = this.props;
+    const { content, totalNumberOfScreens: total } = this.props;
     const isWelcomeScreen = this.props.order === 0;
 
     return (
@@ -82,13 +82,13 @@ export class MultiStageProtonScreen extends React.PureComponent {
                 handleAction={this.props.handleAction}
               />
             ) : null}
-            {!isWelcomeScreen ? (
+            {!isWelcomeScreen && total > 1 ? (
               <nav
                 className="steps"
                 data-l10n-id={"onboarding-welcome-steps-indicator"}
                 data-l10n-args={JSON.stringify({
                   current: this.props.order,
-                  total: this.props.totalNumberOfScreens,
+                  total,
                 })}
               >
                 {/* These empty elements are here to help trigger the nav for screen readers. */}
@@ -96,7 +96,7 @@ export class MultiStageProtonScreen extends React.PureComponent {
                 <p />
                 <StepsIndicator
                   order={this.props.order - 1}
-                  totalNumberOfScreens={this.props.totalNumberOfScreens}
+                  totalNumberOfScreens={total}
                 />
               </nav>
             ) : null}
