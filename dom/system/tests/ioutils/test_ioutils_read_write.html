@@ -438,6 +438,55 @@
 
       ok(!await IOUtils.exists(PathUtils.join(fileName, PathUtils.filename(tmpPath))));
     });
+
+    add_task(async function test_read_offset() {
+      const tmpDir = await PathUtils.getTempDir();
+      const tmpFileName = PathUtils.join(tmpDir, "test_ioutils_read_offset.tmp");
+
+      const bytes = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+      const byteArray = Uint8Array.of(...bytes);
+
+      await IOUtils.write(tmpFileName, byteArray);
+
+      for (const offset of [0, 5]) {
+        info(`Reading bytes from offset ${offset}`);
+
+        const readBytes = await IOUtils.read(tmpFileName, { offset });
+        Assert.deepEqual(
+          Array.from(readBytes),
+          bytes.slice(offset),
+          `should have read bytes from offset ${offset}`
+        );
+      }
+
+      for (const offset of [0, 5]) {
+        info(`Reading up to 5 bytes from offset ${offset}`);
+
+        const readBytes = await IOUtils.read(tmpFileName, {offset, maxBytes: 5});
+        Assert.deepEqual(
+          Array.from(readBytes),
+          bytes.slice(offset, offset + 5),
+          `should have read 5 bytes from offset ${offset}`
+        );
+      }
+
+      {
+        info(`Reading bytes from offset 10`);
+        const readBytes = await IOUtils.read(tmpFileName, {offset: 10});
+        is(readBytes.length, 0, "should have read 0 bytes");
+      }
+
+      {
+        info(`Reading up to 10 bytes from offset 5`);
+        const readBytes = await IOUtils.read(tmpFileName, {offset: 5, maxBytes: 10});
+        is(readBytes.length, 5, "should have read 5 bytes");
+        Assert.deepEqual(
+          Array.from(readBytes),
+          bytes.slice(5, 10),
+          "should have read last 5 bytes"
+        );
+      }
+    });
   </script>
 </head>
 
