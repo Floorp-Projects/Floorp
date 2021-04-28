@@ -211,7 +211,7 @@ function checkPopup(popup, notifyObj) {
   // With Proton enabled, PopupNotifications are not expected to show icons
   // unless popupIconURL or popupIconClass is passed in the options object.
   if (
-    !gProton ||
+    !gProtonDoorhangers ||
     notifyObj.options.popupIconURL ||
     notifyObj.options.popupIconClass
   ) {
