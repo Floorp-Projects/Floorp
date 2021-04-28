@@ -811,11 +811,15 @@ SubDialog.prototype = {
     // Handle focus ourselves. Try to move the focus to the first element in
     // the content window.
     let fm = Services.focus;
+
+    // We're intentionally hiding the focus ring here for now per bug 1704882,
+    // but we aim to have a better fix that retains the focus ring for users
+    // that had brought up the dialog by keyboard in bug 1708261.
     let focusedElement = fm.moveFocus(
       this._frame.contentWindow,
       null,
       fm.MOVEFOCUS_FIRST,
-      0
+      fm.FLAG_NOSHOWRING
     );
     if (!focusedElement) {
       // Ensure the focus is pulled out of the content document even if there's
