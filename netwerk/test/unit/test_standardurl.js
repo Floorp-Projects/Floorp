@@ -1287,7 +1287,7 @@ add_task(async function test_fuzz() {
 
   Assert.throws(() => {
     let url = makeURL("/");
-    url = url
+    url
       .mutate()
       .setHost("(")
       .finalize();
