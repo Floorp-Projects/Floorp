@@ -13,9 +13,6 @@
 #identity-popup,
 #permission-popup,
 #protections-popup {
-%if defined(XP_MACOSX) || defined(XP_WIN)
-  font-size: 1.18em;
-%endif
   --popup-width: 30.81em;
   /* Set default fill for icons in the identity popup.
      Individual icons can override this. */
@@ -23,6 +20,24 @@
   --horizontal-padding: 1.78em;
   --vertical-section-padding: 0.9em;
   --height-offset: 0px;
+}
+
+@media (-moz-proton-doorhangers) {
+#identity-popup,
+#permission-popup,
+#protections-popup {
+  font: menu;
+}
+}
+
+@media not (-moz-proton-doorhangers) {
+#identity-popup,
+#permission-popup,
+#protections-popup {
+%if defined(XP_MACOSX) || defined(XP_WIN)
+  font-size: 1.18em;
+%endif
+}
 }
 
 #protections-popup {
