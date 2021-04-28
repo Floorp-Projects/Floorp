@@ -136,7 +136,6 @@ linux64-clang-11:
             - 'build/build-clang/clang-11-linux64.json'
         resources:
             - 'build/build-clang/clang-11-linux64.json'
-        toolchain-alias: linux64-clang
         toolchain-artifact: public/build/clang.tar.zst
     fetches:
         fetch:
@@ -182,7 +181,6 @@ linux64-clang-11-android-cross:
             - 'build/build-clang/clang-11-android.json'
         resources:
             - 'build/build-clang/clang-11-android.json'
-        toolchain-alias: linux64-clang-android-cross
         toolchain-artifact: public/build/clang.tar.zst
     fetches:
         fetch:
@@ -202,7 +200,6 @@ linux64-clang-11-aarch64-cross:
         max-run-time: 600
     run:
         script: repack-clang-linux-cross.sh
-        toolchain-alias: linux64-clang-aarch64-cross
         toolchain-artifact: public/build/clang.tar.zst
     dependencies:
         linux64-aarch64-compiler-rt-11: toolchain-linux64-aarch64-compiler-rt-11
@@ -221,7 +218,6 @@ linux64-clang-11-macosx-cross:
         max-run-time: 600
     run:
         script: repack-clang-linux-macosx-cross.sh
-        toolchain-alias: linux64-clang-macosx-cross
         toolchain-artifact: public/build/clang.tar.zst
     dependencies:
         macosx64-aarch64-compiler-rt-11: toolchain-macosx64-aarch64-compiler-rt-11
@@ -246,7 +242,6 @@ linux64-clang-11-win-cross:
         max-run-time: 600
     run:
         script: repack-clang-linux-win-cross.sh
-        toolchain-alias: linux64-clang-win-cross
         toolchain-artifact: public/build/clang.tar.zst
     dependencies:
         win64-clang-11-2stage: toolchain-win64-clang-11-2stage
@@ -276,7 +271,6 @@ macosx64-clang-11:
             - 'build/build-clang/clang-11-macosx64.json'
         resources:
             - 'build/build-clang/clang-11-macosx64.json'
-        toolchain-alias: macosx64-clang
         toolchain-artifact: public/build/clang.tar.zst
     fetches:
         fetch:
@@ -307,7 +301,6 @@ macosx64-aarch64-clang-11:
             - 'build/build-clang/clang-11-macosx64.json'
         resources:
             - 'build/build-clang/clang-11-macosx64.json'
-        toolchain-alias: macosx64-aarch64-clang
         toolchain-artifact: public/build/clang.tar.zst
     fetches:
         fetch:
@@ -339,7 +332,6 @@ win64-clang-11:
         resources:
             - 'build/build-clang/clang-11-win64.json'
             - 'taskcluster/scripts/misc/tooltool-download.sh'
-        toolchain-alias: win64-clang
         toolchain-artifact: public/build/clang.tar.zst
         tooltool-downloads: internal
     fetches:
@@ -363,7 +355,6 @@ win64-clang-11-2stage:
         resources:
             - 'build/build-clang/clang-11-win64-2stage.json'
             - 'taskcluster/scripts/misc/tooltool-download.sh'
-        toolchain-alias: win64-clang-2stage
         toolchain-artifact: public/build/clang.tar.zst
         tooltool-downloads: internal
     fetches:
@@ -386,6 +377,7 @@ linux64-clang-12:
             - 'build/build-clang/clang-12-linux64.json'
         resources:
             - 'build/build-clang/clang-12-linux64.json'
+        toolchain-alias: linux64-clang
         toolchain-artifact: public/build/clang.tar.zst
     fetches:
         fetch:
@@ -407,6 +399,7 @@ linux64-clang-12-android-cross:
             - 'build/build-clang/clang-12-android.json'
         resources:
             - 'build/build-clang/clang-12-android.json'
+        toolchain-alias: linux64-clang-android-cross
         toolchain-artifact: public/build/clang.tar.zst
     fetches:
         fetch:
@@ -426,6 +419,7 @@ linux64-clang-12-aarch64-cross:
         max-run-time: 600
     run:
         script: repack-clang-linux-cross.sh
+        toolchain-alias: linux64-clang-aarch64-cross
         toolchain-artifact: public/build/clang.tar.zst
     dependencies:
         linux64-aarch64-compiler-rt-12: toolchain-linux64-aarch64-compiler-rt-12
@@ -444,6 +438,7 @@ linux64-clang-12-macosx-cross:
         max-run-time: 600
     run:
         script: repack-clang-linux-macosx-cross.sh
+        toolchain-alias: linux64-clang-macosx-cross
         toolchain-artifact: public/build/clang.tar.zst
     dependencies:
         macosx64-aarch64-compiler-rt-12: toolchain-macosx64-aarch64-compiler-rt-12
@@ -468,6 +463,7 @@ linux64-clang-12-win-cross:
         max-run-time: 600
     run:
         script: repack-clang-linux-win-cross.sh
+        toolchain-alias: linux64-clang-win-cross
         toolchain-artifact: public/build/clang.tar.zst
     dependencies:
         win64-clang-12-2stage: toolchain-win64-clang-12-2stage
@@ -497,6 +493,7 @@ macosx64-clang-12:
             - 'build/build-clang/clang-12-macosx64.json'
         resources:
             - 'build/build-clang/clang-12-macosx64.json'
+        toolchain-alias: macosx64-clang
         toolchain-artifact: public/build/clang.tar.zst
     fetches:
         fetch:
@@ -527,6 +524,7 @@ macosx64-aarch64-clang-12:
             - 'build/build-clang/clang-12-macosx64.json'
         resources:
             - 'build/build-clang/clang-12-macosx64.json'
+        toolchain-alias: macosx64-aarch64-clang
         toolchain-artifact: public/build/clang.tar.zst
     fetches:
         fetch:
@@ -558,6 +556,7 @@ win64-clang-12:
         resources:
             - 'build/build-clang/clang-12-win64.json'
             - 'taskcluster/scripts/misc/tooltool-download.sh'
+        toolchain-alias: win64-clang
         toolchain-artifact: public/build/clang.tar.zst
         tooltool-downloads: internal
     fetches:
@@ -581,6 +580,7 @@ win64-clang-12-2stage:
         resources:
             - 'build/build-clang/clang-12-win64-2stage.json'
             - 'taskcluster/scripts/misc/tooltool-download.sh'
+        toolchain-alias: win64-clang-2stage
         toolchain-artifact: public/build/clang.tar.zst
         tooltool-downloads: internal
     fetches:
