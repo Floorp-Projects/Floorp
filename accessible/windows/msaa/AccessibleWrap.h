@@ -39,9 +39,6 @@ class AccessibleWrap : public LocalAccessible, public MsaaAccessible {
  public:  // IUnknown methods - see iunknown.h for documentation
   STDMETHODIMP QueryInterface(REFIID, void**) override;
 
-  // Return the registered OLE class ID of this object's CfDataObj.
-  CLSID GetClassID() const;
-
   // LocalAccessible
   virtual nsresult HandleAccEvent(AccEvent* aEvent) override;
   virtual void Shutdown() override;
@@ -79,11 +76,6 @@ class AccessibleWrap : public LocalAccessible, public MsaaAccessible {
 
  protected:
   virtual ~AccessibleWrap() = default;
-
-  /**
-   * Return the wrapper for the document's proxy.
-   */
-  DocRemoteAccessibleWrap* DocProxyWrapper() const;
 
   struct HandlerControllerData final {
     HandlerControllerData(DWORD aPid, RefPtr<IHandlerControl>&& aCtrl)
