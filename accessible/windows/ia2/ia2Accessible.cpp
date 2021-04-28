@@ -339,7 +339,7 @@ ia2Accessible::get_uniqueID(long* aUniqueID) {
   if (!aUniqueID) return E_INVALIDARG;
 
   AccessibleWrap* acc = static_cast<AccessibleWrap*>(this);
-  *aUniqueID = AccessibleWrap::GetChildIDFor(acc);
+  *aUniqueID = MsaaAccessible::GetChildIDFor(acc);
   return S_OK;
 }
 

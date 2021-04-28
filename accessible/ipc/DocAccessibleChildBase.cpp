@@ -17,7 +17,7 @@ void DocAccessibleChildBase::SerializeTree(LocalAccessible* aRoot,
                                            nsTArray<AccessibleData>& aTree) {
   uint64_t id = reinterpret_cast<uint64_t>(aRoot->UniqueID());
 #if defined(XP_WIN)
-  int32_t msaaId = AccessibleWrap::GetChildIDFor(aRoot);
+  int32_t msaaId = MsaaAccessible::GetChildIDFor(aRoot);
 #endif
   a11y::role role = aRoot->Role();
   uint32_t childCount = aRoot->ChildCount();

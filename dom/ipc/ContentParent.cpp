@@ -1679,7 +1679,7 @@ void ContentParent::Init() {
     if (!mozilla::a11y::Compatibility::IsOldJAWS()) {
       Unused << SendActivateA11y(
           ::GetCurrentThreadId(),
-          a11y::AccessibleWrap::GetContentProcessIdFor(ChildID()));
+          a11y::MsaaAccessible::GetContentProcessIdFor(ChildID()));
     }
 #  else
     Unused << SendActivateA11y(0, 0);
@@ -2125,7 +2125,7 @@ void ContentParent::ActorDestroy(ActorDestroyReason why) {
   mBlobURLs.Clear();
 
 #if defined(XP_WIN) && defined(ACCESSIBILITY)
-  a11y::AccessibleWrap::ReleaseContentProcessIdFor(ChildID());
+  a11y::MsaaAccessible::ReleaseContentProcessIdFor(ChildID());
 #endif
 
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
@@ -3610,7 +3610,7 @@ ContentParent::Observe(nsISupports* aSubject, const char* aTopic,
       if (!mozilla::a11y::Compatibility::IsOldJAWS()) {
         Unused << SendActivateA11y(
             ::GetCurrentThreadId(),
-            a11y::AccessibleWrap::GetContentProcessIdFor(ChildID()));
+            a11y::MsaaAccessible::GetContentProcessIdFor(ChildID()));
       }
 #  else
       Unused << SendActivateA11y(0, 0);
@@ -5884,7 +5884,7 @@ ContentParent::RecvUnstoreAndBroadcastBlobURLUnregistration(
 mozilla::ipc::IPCResult ContentParent::RecvGetA11yContentId(
     uint32_t* aContentId) {
 #if defined(XP_WIN) && defined(ACCESSIBILITY)
-  *aContentId = a11y::AccessibleWrap::GetContentProcessIdFor(ChildID());
+  *aContentId = a11y::MsaaAccessible::GetContentProcessIdFor(ChildID());
   MOZ_ASSERT(*aContentId);
   return IPC_OK();
 #else
