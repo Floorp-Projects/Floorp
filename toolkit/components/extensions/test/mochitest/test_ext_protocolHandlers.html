@@ -447,7 +447,6 @@ add_task(async function test_protocolHandler_duplicate() {
 add_task(async function test_ftp_protocolHandler() {
   await SpecialPowers.pushPrefEnv({
     set: [
-      ["network.ftp.enabled", false],
       // Disabling the external protocol permission prompt. We don't need it
       // for this test.
       ["security.external_protocol_requires_permission", false],

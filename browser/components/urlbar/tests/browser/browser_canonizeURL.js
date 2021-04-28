@@ -40,12 +40,6 @@ add_task(async function checkCtrlWorks() {
     ],
   ];
 
-  if (Services.prefs.getBoolPref("network.ftp.enabled")) {
-    // Include FTP testcase only if FTP protocol handler is enabled, otherwise
-    // the test would hang on external application chooser popup.
-    testcases.push(["ftp://example", "ftp://example/", { ctrlKey: true }]);
-  }
-
   // Disable autoFill for this test, since it could mess up the results.
   await SpecialPowers.pushPrefEnv({
     set: [
