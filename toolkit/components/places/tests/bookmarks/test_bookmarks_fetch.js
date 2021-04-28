@@ -544,3 +544,34 @@ add_task(async function fetch_by_parent() {
 
   await PlacesUtils.bookmarks.remove(folder1);
 });
+
+add_task(async function fetch_with_bookmark_path() {
+  let folder1 = await PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+    type: PlacesUtils.bookmarks.TYPE_FOLDER,
+    title: "Parent",
+  });
+  checkBookmarkObject(folder1);
+
+  let bm1 = await PlacesUtils.bookmarks.insert({
+    parentGuid: folder1.guid,
+    url: "http://bookmarkpath.example.com/",
+    title: "Child Bookmark",
+  });
+  checkBookmarkObject(bm1);
+
+  let bm2 = await PlacesUtils.bookmarks.fetch(
+    { guid: bm1.guid },
+    gAccumulator.callback,
+    { includePath: true }
+  );
+  checkBookmarkObject(bm2);
+  Assert.equal(gAccumulator.results.length, 1);
+  Assert.equal(bm2.path.length, 2);
+  Assert.equal(bm2.path[0].guid, PlacesUtils.bookmarks.unfiledGuid);
+  Assert.equal(bm2.path[0].title, "unfiled");
+  Assert.equal(bm2.path[1].guid, folder1.guid);
+  Assert.equal(bm2.path[1].title, folder1.title);
+
+  await PlacesUtils.bookmarks.remove(folder1);
+});

@@ -1456,6 +1456,11 @@ var Bookmarks = Object.freeze({
    *         - concurrent: fetches concurrently to any writes, returning results
    *                       faster. On the negative side, it may return stale
    *                       information missing the currently ongoing write.
+   *         - includePath: additionally fetches the path for the bookmarks.
+   *                        This is a potentially expensive operation.  When
+   *                        set to true, the path property is set on results
+   *                        containing an array of {title, guid} objects
+   *                        ordered from root to leaf.
    *
    * @return {Promise} resolved when the fetch is complete.
    * @resolves to an object representing the found item, as described above, or
@@ -1506,6 +1511,7 @@ var Bookmarks = Object.freeze({
     // we may augment it and hand it down to other methods.
     options = {
       concurrent: !!options.concurrent,
+      includePath: !!options.includePath,
     };
 
     let behavior = {};
@@ -1555,6 +1561,15 @@ var Bookmarks = Object.freeze({
       }
       // Remove non-enumerable properties.
       results = results.map(r => Object.assign({}, r));
+
+      if (options.includePath) {
+        for (let result of results) {
+          let folderPath = await retrieveFullBookmarkPath(result.parentGuid);
+          if (folderPath) {
+            result.path = folderPath;
+          }
+        }
+      }
 
       // Ideally this should handle an incremental behavior and thus be invoked
       // while we fetch.  Though, the likelihood of 2 or more bookmarks for the
@@ -3427,4 +3442,55 @@ function adjustSeparatorsSyncCounter(
  */
 function sqlBindPlaceholders(values, prefix = "", suffix = "") {
   return new Array(values.length).fill(prefix + "?" + suffix).join(",");
+}
+
+/**
+ * Return the full path, from parent to root folder, of a bookmark.
+ *
+ * @param guid
+ *        The globally unique identifier of the item to determine the full
+ *        bookmark path for.
+ * @param options [optional]
+ *        an optional object whose properties describe options for the query:
+ *         - concurrent:  Queries concurrently to any writes, returning results
+ *                        faster. On the negative side, it may return stale
+ *                        information missing the currently ongoing write.
+ *         - db:          A specific connection to be used.
+ * @return {Promise} resolved when the query is complete.
+ * @resolves to an array of {guid, title} objects that represent the full path
+ *           from parent to root for the passed in bookmark.
+ * @rejects if an error happens while querying.
+ */
+async function retrieveFullBookmarkPath(guid, options = {}) {
+  let query = async function(db) {
+    let rows = await db.executeCached(
+      `WITH RECURSIVE parents(guid, _id, _parent, title) AS
+          (SELECT guid, id AS _id, parent AS _parent,
+                  IFNULL(title, '') AS title
+           FROM moz_bookmarks
+           WHERE guid = :pguid
+           UNION ALL
+           SELECT b.guid, b.id AS _id, b.parent AS _parent,
+                  IFNULL(b.title, '') AS title
+           FROM moz_bookmarks b
+           INNER JOIN parents ON b.id=parents._parent)
+        SELECT * FROM parents WHERE guid != :rootGuid;
+      `,
+      { pguid: guid, rootGuid: PlacesUtils.bookmarks.rootGuid }
+    );
+
+    return rows.reverse().map(r => ({
+      guid: r.getResultByName("guid"),
+      title: r.getResultByName("title"),
+    }));
+  };
+
+  if (options.concurrent) {
+    let db = await PlacesUtils.promiseDBConnection();
+    return query(db);
+  }
+  return PlacesUtils.withConnectionWrapper(
+    "Bookmarks.jsm: retrieveFullBookmarkPath",
+    query
+  );
 }
