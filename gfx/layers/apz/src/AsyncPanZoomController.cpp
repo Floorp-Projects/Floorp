@@ -658,7 +658,7 @@ class ZoomAnimation : public AsyncPanZoomAnimation {
     return true;
   }
 
-  virtual bool WantsRepaints() override { return false; }
+  virtual bool WantsRepaints() override { return true; }
 
  private:
   AsyncPanZoomController& mApzc;
