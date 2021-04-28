@@ -6696,8 +6696,21 @@ nsTransparencyMode nsLayoutUtils::GetFrameTransparency(
   if (aCSSRootFrame->StyleEffects()->mOpacity < 1.0f)
     return eTransparencyTransparent;
 
-  if (HasNonZeroCorner(aCSSRootFrame->StyleBorder()->mBorderRadius))
-    return eTransparencyTransparent;
+  {
+    auto& border = *aCSSRootFrame->StyleBorder();
+    if (HasNonZeroCorner(border.mBorderRadius)) {
+      return eTransparencyTransparent;
+    }
+
+    if (border.HasBorder()) {
+      if (border.mBorderTopColor.MaybeTransparent() ||
+          border.mBorderRightColor.MaybeTransparent() ||
+          border.mBorderBottomColor.MaybeTransparent() ||
+          border.mBorderLeftColor.MaybeTransparent()) {
+        return eTransparencyTransparent;
+      }
+    }
+  }
 
   StyleAppearance appearance =
       aCSSRootFrame->StyleDisplay()->EffectiveAppearance();
