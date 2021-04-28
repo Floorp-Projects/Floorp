@@ -867,14 +867,6 @@ static bool UsesExternalProtocolHandler(const char* aScheme) {
     return false;
   }
 
-  // When ftp protocol is disabled, return true if external protocol handler was
-  // not explicitly disabled by the prererence.
-  if ("ftp"_ns.Equals(aScheme) &&
-      !Preferences::GetBool("network.ftp.enabled", true) &&
-      Preferences::GetBool("network.protocol-handler.external.ftp", true)) {
-    return true;
-  }
-
   for (const auto& forcedExternalScheme : gForcedExternalSchemes) {
     if (!nsCRT::strcasecmp(forcedExternalScheme, aScheme)) {
       return true;
