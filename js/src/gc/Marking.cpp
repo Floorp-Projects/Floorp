@@ -4158,7 +4158,6 @@ void BarrierTracer::performBarrier(JS::GCCellPtr cell) {
   MOZ_ASSERT(CurrentThreadCanAccessRuntime(runtime()));
   MOZ_ASSERT(!runtime()->gc.isBackgroundMarking());
   MOZ_ASSERT(!cell.asCell()->isForwarded());
-  MOZ_ASSERT(!cell.asCell()->hasTempHeaderData());
 
   // Mark the cell here to prevent us recording it again.
   if (!cell.asCell()->asTenured().markIfUnmarked()) {
@@ -4215,7 +4214,7 @@ void GCMarker::traceBarrieredCell(JS::GCCellPtr cell) {
     MOZ_ASSERT(thing->isMarkedBlack());
 
     if constexpr (std::is_same_v<decltype(thing), JSString*>) {
-      if (thing->isBeingFlattened()) {
+      if (thing->isRope() && thing->asRope().isBeingFlattened()) {
         // This string is an interior node of a rope that is currently being
         // flattened. The flattening process invokes the barrier on all nodes in
         // the tree, so interior nodes need not be traversed.
