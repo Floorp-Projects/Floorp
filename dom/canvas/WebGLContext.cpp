@@ -959,14 +959,9 @@ Maybe<layers::SurfaceDescriptor> WebGLContext::GetFrontBuffer(
   return front->ToSurfaceDescriptor();
 }
 
-Maybe<uvec2> WebGLContext::FrontBufferSnapshotInto(
-    const Maybe<Range<uint8_t>> maybeDest) {
+bool WebGLContext::FrontBufferSnapshotInto(Range<uint8_t> dest) {
   const auto& front = mSwapChain.FrontBuffer();
-  if (!front) return {};
-  const auto& size = front->mDesc.size;
-  const auto ret = Some(*uvec2::FromSize(size));
-  if (!maybeDest) return ret;
-  const auto& dest = *maybeDest;
+  if (!front) return false;
 
   // -
 
@@ -1017,19 +1012,14 @@ Maybe<uvec2> WebGLContext::FrontBufferSnapshotInto(
 
   // -
 
+  const auto& size = front->mDesc.size;
   const size_t stride = size.width * 4;
-  const size_t srcByteCount = stride * size.height;
-  const auto dstByteCount = dest.length();
-  if (srcByteCount != dstByteCount) {
-    gfxCriticalError() << "FrontBufferSnapshotInto: srcByteCount:"
-                       << srcByteCount << " != dstByteCount:" << dstByteCount;
-    return {};
-  }
+  MOZ_ASSERT(dest.length() == stride * size.height);
   gl->fReadPixels(0, 0, size.width, size.height, LOCAL_GL_RGBA,
                   LOCAL_GL_UNSIGNED_BYTE, dest.begin().get());
-  gfxUtils::ConvertBGRAtoRGBA(dest.begin().get(), dstByteCount);
+  gfxUtils::ConvertBGRAtoRGBA(dest.begin().get(), stride * size.height);
 
-  return ret;
+  return true;
 }
 
 void WebGLContext::ClearVRSwapChain() { mWebVRSwapChain.ClearPool(); }

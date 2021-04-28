@@ -178,7 +178,8 @@ class HostWebGLContext final : public SupportsWeakPtr {
 
   // -
 
-  Maybe<uvec2> FrontBufferSnapshotInto(Maybe<Range<uint8_t>> dest) const {
+  uvec2 GetFrontBufferSize() const { return mContext->DrawingBufferSize(); }
+  bool FrontBufferSnapshotInto(Range<uint8_t> dest) const {
     return mContext->FrontBufferSnapshotInto(dest);
   }
 
