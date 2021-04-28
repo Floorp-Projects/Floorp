@@ -154,7 +154,7 @@ panelview[mainview] > .panel-header {
   transition: height var(--panelui-subview-transition-duration);
 }
 
-@media (-moz-proton) {
+@media (-moz-proton-doorhangers) {
 :is(panel, menupopup)::part(arrow) {
   display: none;
 }
@@ -1662,7 +1662,7 @@ toolbar[keyNav=true]:not([collapsed=true], [customizing=true]) toolbartabstop {
  * End Dialogs
  */
 
-@media not (-moz-proton) {
+@media not (-moz-proton-doorhangers) {
 /* Password update/save doorhanger */
 #password-notification-username,
 #password-notification-password {

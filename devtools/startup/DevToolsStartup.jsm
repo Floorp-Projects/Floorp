@@ -561,10 +561,9 @@ DevToolsStartup.prototype = {
       return;
     }
 
-    const protonEnabled = Services.prefs.getBoolPref(
-      "browser.proton.enabled",
-      false
-    );
+    const protonEnabled =
+      Services.prefs.getBoolPref("browser.proton.doorhangers.enabled", false) &&
+      Services.prefs.getBoolPref("browser.proton.enabled", false);
     const panelviewId = protonEnabled
       ? "appmenu-moreTools"
       : "PanelUI-developer";

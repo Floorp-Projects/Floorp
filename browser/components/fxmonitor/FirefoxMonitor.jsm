@@ -37,7 +37,7 @@ this.FirefoxMonitor = {
   strings: null,
 
   kEnabledPref: "extensions.fxmonitor.enabled",
-  kProtonPref: "browser.proton.enabled",
+  kProtonPref: "browser.proton.doorhangers.enabled",
 
   // This is here for documentation, will be redefined to a pref getter
   // using XPCOMUtils.defineLazyPreferenceGetter in delayedInit().

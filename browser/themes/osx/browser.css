@@ -376,7 +376,7 @@ moz-input-box > menupopup .context-menu-add-engine > .menu-iconic-left {
   text-align: start;
 }
 
-@media not (-moz-proton) {
+@media not (-moz-proton-doorhangers) {
 #editBookmarkPanelRows > vbox > html|input,
 #editBookmarkPanelRows > vbox > hbox > html|input {
   appearance: none;

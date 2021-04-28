@@ -851,7 +851,7 @@ menupopup::part(drop-indicator) {
   flex: 1;
 }
 
-@media not (-moz-proton) {
+@media not (-moz-proton-doorhangers) {
 .webRTC-selectDevice-label {
   margin-top: 6px;
   font-weight: 600;
@@ -868,11 +868,7 @@ menupopup::part(drop-indicator) {
 }
 } /** END not Proton **/
 
-@media (-moz-proton) {
-popupnotification {
-  font-size: var(--panel-font-size);
-}
-
+@media (-moz-proton-doorhangers) {
 popupnotificationcontent {
   margin-block-start: 8px;
 }
