@@ -23,7 +23,7 @@ job-defaults:
             - 'build/build-clang/build-clang.py'
     fetches:
         fetch:
-            - clang-11
+            - clang-12
 
 linux64-clang-tidy:
     index:
@@ -61,8 +61,8 @@ macosx64-clang-tidy:
     fetches:
         toolchain:
             - linux64-binutils
-            - linux64-cctools-port-clang-11
-            - linux64-clang-11-macosx-cross
+            - linux64-cctools-port-clang-12
+            - linux64-clang-12-macosx-cross
             - linux64-gcc-7
             - macosx64-sdk-10.12
 
@@ -86,8 +86,8 @@ macosx64-arch64-clang-tidy:
     fetches:
         toolchain:
             - linux64-binutils
-            - linux64-cctools-port-clang-11
-            - linux64-clang-11-macosx-cross
+            - linux64-cctools-port-clang-12
+            - linux64-clang-12-macosx-cross
             - linux64-gcc-7
             - macosx64-sdk-11.0
 
