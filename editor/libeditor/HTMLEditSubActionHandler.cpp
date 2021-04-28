@@ -6770,7 +6770,7 @@ EditActionResult HTMLEditor::HandleInsertParagraphInParagraph(
     NS_WARNING_ASSERTION(
         brContent,
         "HTMLEditor::InsertBRElementWithTransaction() failed, but ignored");
-    if (splitAfterNewBR) {
+    if (splitAfterNewBR && brContent) {
       // We split the parent after the br we've just inserted.
       pointToSplitParentDivOrP.SetAfter(brContent);
       NS_WARNING_ASSERTION(pointToSplitParentDivOrP.IsSet(),
