@@ -71,8 +71,11 @@ typedef struct cairo_quartz_surface {
     cairo_surface_t *imageSurfaceEquiv;
 
     cairo_surface_clipper_t clipper;
+
     cairo_rectangle_int_t extents;
     cairo_rectangle_int_t virtual_extents;
+
+    cairo_bool_t ownsData;
 } cairo_quartz_surface_t;
 
 typedef struct cairo_quartz_image_surface {
