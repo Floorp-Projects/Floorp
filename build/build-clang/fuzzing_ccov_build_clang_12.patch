@@ -1,0 +1,27 @@
+From 98bf90ef5ea3dd848ce7d81a662eb7499d11c91c Mon Sep 17 00:00:00 2001
+From: Calixte Denizet <calixte.denizet@gmail.com>
+Date: Fri, 16 Apr 2021 10:05:34 +0200
+Subject: [PATCH] [Gcov] Don't run global destructor in ccov builds when env
+ MOZ_FUZZING_CCOV is existing
+
+---
+ compiler-rt/lib/profile/GCDAProfiling.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/compiler-rt/lib/profile/GCDAProfiling.c b/compiler-rt/lib/profile/GCDAProfiling.c
+index 4293e8f7b5bf..6cda4bc7601f 100644
+--- a/compiler-rt/lib/profile/GCDAProfiling.c
++++ b/compiler-rt/lib/profile/GCDAProfiling.c
+@@ -586,6 +586,9 @@ void llvm_writeout_files(void) {
+ __attribute__((destructor(100)))
+ #endif
+ static void llvm_writeout_and_clear(void) {
++  if (getenv("MOZ_FUZZING_CCOV")) {
++    return;
++  }
+   llvm_writeout_files();
+   fn_list_remove(&writeout_fn_list);
+ }
+-- 
+2.30.2
+
