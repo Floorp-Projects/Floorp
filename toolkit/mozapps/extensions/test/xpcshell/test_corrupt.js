@@ -194,7 +194,10 @@ add_task(async function test_after_corruption() {
     checkAddon(id, addons.get(id), addon.desiredState);
   }
 
-  await Assert.rejects(promiseShutdownManager(), OS.File.Error);
+  await Assert.rejects(
+    promiseShutdownManager(),
+    /NotAllowedError: Could not open the file at .+ for writing/
+  );
 });
 
 add_task(async function test_after_second_restart() {
@@ -206,5 +209,8 @@ add_task(async function test_after_second_restart() {
     checkAddon(id, addons.get(id), addon.desiredState);
   }
 
-  await Assert.rejects(promiseShutdownManager(), OS.File.Error);
+  await Assert.rejects(
+    promiseShutdownManager(),
+    /NotAllowedError: Could not open the file at .+ for writing/
+  );
 });
