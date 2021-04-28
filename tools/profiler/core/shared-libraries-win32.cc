@@ -137,25 +137,9 @@ SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf() {
       continue;
     }
 
-    // Load the module again to make sure that its handle will remain valid
-    // as we attempt to read the PDB information from it.  We load the DLL as
-    // a datafile so that if the module actually gets unloaded between the call
-    // to EnumProcessModules and the following LoadLibraryEx, we don't end up
-    // running the now newly loaded module's DllMain function.  If the module
-    // is already loaded, LoadLibraryEx just increments its refcount.
-    nsModuleHandle handleLock(
-        LoadLibraryEx(modulePath, NULL, LOAD_LIBRARY_AS_DATAFILE));
-    if (!handleLock) {
-      continue;
-    }
-
     MODULEINFO module = {0};
     if (!GetModuleInformation(hProcess, hMods[i], &module,
                               sizeof(MODULEINFO))) {
-      // If the module was unloaded before LoadLibraryEx, LoadLibraryEx
-      // loads the module onto an address different from hMods[i] and
-      // thus GetModuleInformation fails with ERROR_INVALID_HANDLE.
-      // We skip that case.
       continue;
     }
 
@@ -203,12 +187,29 @@ SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf() {
                           !moduleNameStr.LowerCaseEqualsLiteral("ntdll.dll"));
 
     nsCString breakpadId;
+    // Load the module again to make sure that its handle will remain
+    // valid as we attempt to read the PDB information from it.  We load the
+    // DLL as a datafile so that if the module actually gets unloaded between
+    // the call to EnumProcessModules and the following LoadLibraryEx, we don't
+    // end up running the now newly loaded module's DllMain function.  If the
+    // module is already loaded, LoadLibraryEx just increments its refcount.
+    //
+    // Note that because of the race condition above, merely loading the DLL
+    // again is not safe enough, therefore we also need to make sure that we
+    // can read the memory mapped at the base address before we can safely
+    // proceed to actually access those pages.
+    HMODULE handleLock =
+        LoadLibraryEx(modulePath, NULL, LOAD_LIBRARY_AS_DATAFILE);
+    MEMORY_BASIC_INFORMATION vmemInfo = {0};
     nsID pdbSig;
     uint32_t pdbAge;
     nsAutoString pdbPathStr;
     nsAutoString pdbNameStr;
     char* pdbName = nullptr;
-    if (canGetPdbInfo &&
+    if (handleLock &&
+        sizeof(vmemInfo) ==
+            VirtualQuery(module.lpBaseOfDll, &vmemInfo, sizeof(vmemInfo)) &&
+        vmemInfo.State == MEM_COMMIT && canGetPdbInfo &&
         GetPdbInfo((uintptr_t)module.lpBaseOfDll, pdbSig, pdbAge, &pdbName)) {
       MOZ_ASSERT(breakpadId.IsEmpty());
       breakpadId.AppendPrintf(
@@ -234,6 +235,8 @@ SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf() {
                         breakpadId, moduleNameStr, modulePathStr, pdbNameStr,
                         pdbPathStr, GetVersion(modulePath), "");
     sharedLibraryInfo.AddSharedLibrary(shlib);
+
+    FreeLibrary(handleLock);  // ok to free null handles
   }
 
   return sharedLibraryInfo;
