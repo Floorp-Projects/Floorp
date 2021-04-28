@@ -50,7 +50,7 @@ add_task(async function check_history_not_persisted() {
 
   // Load a new URL into the tab, it should replace the about:blank history entry
   BrowserTestUtils.loadURI(browser, "about:robots");
-  await promiseBrowserLoaded(browser);
+  await promiseBrowserLoaded(browser, false, "about:robots");
   if (!SpecialPowers.Services.appinfo.sessionHistoryInParent) {
     await SpecialPowers.spawn(browser, [], function() {
       let sessionHistory =
@@ -124,7 +124,7 @@ add_task(async function check_history_default_persisted() {
 
   // Load a new URL into the tab, it should replace the about:blank history entry
   BrowserTestUtils.loadURI(browser, "about:robots");
-  await promiseBrowserLoaded(browser);
+  await promiseBrowserLoaded(browser, false, "about:robots");
   if (!SpecialPowers.Services.appinfo.sessionHistoryInParent) {
     await SpecialPowers.spawn(browser, [], function() {
       let sessionHistory =
