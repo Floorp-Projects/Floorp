@@ -3502,62 +3502,6 @@ _cairo_surface_is_quartz (const cairo_surface_t *surface)
     return surface->backend == &cairo_quartz_surface_backend;
 }
 
-CGContextRef
-cairo_quartz_get_cg_context_with_clip (cairo_t *cr)
-{
-
-    cairo_surface_t *surface = cr->gstate->target;
-    cairo_clip_t *clip = &cr->gstate->clip;
-    cairo_status_t status;
-
-    cairo_quartz_surface_t *quartz = (cairo_quartz_surface_t*)surface;
-
-    if (cairo_surface_get_type(surface) != CAIRO_SURFACE_TYPE_QUARTZ)
-	return NULL;
-
-    if (!clip->path) {
-	if (clip->all_clipped) {
-	    /* Save the state before we set an empty clip rect so that
-	     * our previous clip will be restored */
-
-	    /* _cairo_surface_clipper_set_clip doesn't deal with
-	     * clip->all_clipped because drawing is normally discarded earlier */
-	    CGRect empty = {{0,0}, {0,0}};
-	    CGContextClipToRect (quartz->cgContext, empty);
-	    CGContextSaveGState (quartz->cgContext);
-
-	    return quartz->cgContext;
-	}
-
-	/* an empty clip is represented by NULL */
-	clip = NULL;
-    }
-
-    status = _cairo_surface_clipper_set_clip (&quartz->clipper, clip);
-
-    /* Save the state after we set the clip so that it persists
-     * after we restore */
-    CGContextSaveGState (quartz->cgContext);
-
-    if (unlikely (status))
-	return NULL;
-
-    return quartz->cgContext;
-}
-
-void
-cairo_quartz_finish_cg_context_with_clip (cairo_t *cr)
-{
-    cairo_surface_t *surface = cr->gstate->target;
-
-    cairo_quartz_surface_t *quartz = (cairo_quartz_surface_t*)surface;
-
-    if (cairo_surface_get_type(surface) != CAIRO_SURFACE_TYPE_QUARTZ)
-	return;
-
-    CGContextRestoreGState (quartz->cgContext);
-}
-
 cairo_surface_t *
 cairo_quartz_surface_get_image (cairo_surface_t *surface)
 {
