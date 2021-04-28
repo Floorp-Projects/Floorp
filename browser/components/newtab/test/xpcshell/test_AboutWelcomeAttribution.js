@@ -19,7 +19,7 @@ const TEST_ATTRIBUTION_DATA = {
   source: "addons.mozilla.org",
   medium: "referral",
   campaign: "non-fx-button",
-  content: "iridium%40particlecore.github.io",
+  content: "rta:iridium%40particlecore.github.io",
 };
 
 add_task(async function test_handleAddonInfoNotFound() {
