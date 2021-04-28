@@ -180,10 +180,6 @@ class WindowGlobalChild final : public WindowGlobalActor,
   mozilla::ipc::IPCResult RecvSetContainerFeaturePolicy(
       dom::FeaturePolicy* aContainerFeaturePolicy);
 
-  mozilla::ipc::IPCResult RecvRestoreDocShellState(
-      const dom::sessionstore::DocShellRestoreState& aState,
-      RestoreDocShellStateResolver&& aResolve);
-
   mozilla::ipc::IPCResult RecvRestoreTabContent(
       dom::SessionStoreRestoreData* aData,
       RestoreTabContentResolver&& aResolve);
