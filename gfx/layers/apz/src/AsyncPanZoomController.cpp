@@ -2705,7 +2705,7 @@ nsEventStatus AsyncPanZoomController::OnPan(
                           fabs(physicalPanDisplacement.y));
   OverscrollHandoffState handoffState(
       *GetCurrentPanGestureBlock()->GetOverscrollHandoffChain(), panDistance,
-      ScrollSource::Wheel);
+      ScrollSource::Touchpad);
 
   // Create fake "touch" positions that will result in the desired scroll
   // motion. Note that the pan displacement describes the change in scroll
@@ -3885,7 +3885,7 @@ void AsyncPanZoomController::TrackTouch(const MultiTouchInput& aEvent) {
     MOZ_ASSERT(GetCurrentTouchBlock());
     OverscrollHandoffState handoffState(
         *GetCurrentTouchBlock()->GetOverscrollHandoffChain(), panVector,
-        ScrollSource::Touch);
+        ScrollSource::Touchscreen);
     RecordScrollPayload(aEvent.mTimeStamp);
     CallDispatchScroll(prevTouchPoint, touchPoint, handoffState);
   }
