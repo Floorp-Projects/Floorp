@@ -12617,7 +12617,7 @@ nsresult QuotaClient::UpgradeStorageFrom1_0To2_0(nsIFile* aDirectory) {
         nsDependentSubstring subdirNameBase;
         if (GetFilenameBase(subdirName, kFileManagerDirectoryNameSuffix,
                             subdirNameBase)) {
-          IDB_TRY(OkIf(databaseFilenames.Contains(subdirNameBase)), Ok{});
+          QM_WARNONLY_TRY(OkIf(databaseFilenames.Contains(subdirNameBase)));
           return Ok{};
         }
 
