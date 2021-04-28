@@ -13,17 +13,13 @@ loader.lazyRequireGetter(
   true
 );
 
-// Highlighter style used for preventing transitions and applying transparency
-// when calculating colour contrast.
-const HIGHLIGHTER_STYLES_SHEET = `data:text/css;charset=utf-8,
+// Style used for preventing transitions and applying transparency when
+// calculating colour contrast.
+const BACKGROUND_CALCULATION_STYLE_SHEET = `data:text/css;charset=utf-8,
 * {
   transition: none !important;
 }
-
-:-moz-devtools-highlighted {
-  color: transparent !important;
-  text-shadow: none !important;
-}`;
+`;
 
 /**
  * Helper function that determines if nsIAccessible object is in defunct state.
@@ -63,7 +59,7 @@ function isDefunct(accessible) {
  *         Window where highlighting happens.
  */
 function loadSheetForBackgroundCalculation(win) {
-  loadSheet(win, HIGHLIGHTER_STYLES_SHEET);
+  loadSheet(win, BACKGROUND_CALCULATION_STYLE_SHEET);
 }
 
 /**
@@ -74,7 +70,7 @@ function loadSheetForBackgroundCalculation(win) {
  *         Window where highlighting was happenning.
  */
 function removeSheetForBackgroundCalculation(win) {
-  removeSheet(win, HIGHLIGHTER_STYLES_SHEET);
+  removeSheet(win, BACKGROUND_CALCULATION_STYLE_SHEET);
 }
 
 /**

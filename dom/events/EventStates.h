@@ -274,10 +274,8 @@ class EventStates {
 #define NS_EVENT_STATE_MOZINERT NS_DEFINE_EVENT_STATE_MACRO(43)
 // Topmost Modal <dialog> element in top layer
 #define NS_EVENT_STATE_TOPMOST_MODAL_DIALOG NS_DEFINE_EVENT_STATE_MACRO(44)
-// Devtools highlighter (but it's used for something else atm).
-#define NS_EVENT_STATE_DEVTOOLS_HIGHLIGHTED NS_DEFINE_EVENT_STATE_MACRO(45)
 // Devtools style inspector stuff.
-#define NS_EVENT_STATE_STYLEEDITOR_TRANSITIONING NS_DEFINE_EVENT_STATE_MACRO(46)
+#define NS_EVENT_STATE_STYLEEDITOR_TRANSITIONING NS_DEFINE_EVENT_STATE_MACRO(45)
 /**
  * NOTE: do not go over 63 without updating EventStates::InternalType!
  */

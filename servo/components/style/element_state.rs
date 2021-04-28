@@ -122,11 +122,9 @@ bitflags! {
         const IN_MOZINERT_STATE = 1 << 43;
         /// State for the topmost dialog element in top layer
         const IN_TOPMOST_MODAL_DIALOG_STATE = 1 << 44;
-        /// Initially used for the devtools highlighter, but now somehow only
-        /// used for the devtools accessibility inspector.
-        const IN_DEVTOOLS_HIGHLIGHTED_STATE = 1 << 45;
-        /// Used for the devtools style editor. Probably should go away.
-        const IN_STYLEEDITOR_TRANSITIONING_STATE = 1 << 46;
+        /// Used for the devtools style editor.
+        /// Probably should go away, see bug 1707611.
+        const IN_STYLEEDITOR_TRANSITIONING_STATE = 1 << 45;
     }
 }
 
