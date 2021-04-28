@@ -615,6 +615,7 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
         browsertime_json,
         json_name="browsertime.json",
         extra_options=[],
+        accept_zero_vismet=False,
     ):
         # The visual metrics task expects posix paths.
         def _normalized_join(*args):
@@ -628,6 +629,7 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
             "browsertime_json_path": _normalized_join(reldir, json_name),
             "test_name": test_name,
             "extra_options": extra_options,
+            "accept_zero_vismet": accept_zero_vismet,
         }
 
     def summarize_and_output(self, test_config, tests, test_names):
@@ -663,6 +665,8 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
 
         for test in tests:
             test_name = test["name"]
+            accept_zero_vismet = test.get("accept_zero_vismet", False)
+
             bt_res_json = os.path.join(
                 self.result_dir_for_test(test), "browsertime.json"
             )
@@ -711,6 +715,7 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
                             cold_path,
                             json_name="cold-browsertime.json",
                             extra_options=list(extra_options),
+                            accept_zero_vismet=accept_zero_vismet,
                         )
                     )
 
@@ -722,12 +727,16 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
                             warm_path,
                             json_name="warm-browsertime.json",
                             extra_options=list(extra_options),
+                            accept_zero_vismet=accept_zero_vismet,
                         )
                     )
                 else:
                     video_jobs.append(
                         self._extract_vmetrics(
-                            test_name, bt_res_json, extra_options=list(extra_options)
+                            test_name,
+                            bt_res_json,
+                            extra_options=list(extra_options),
+                            accept_zero_vismet=accept_zero_vismet,
                         )
                     )
 
