@@ -16,6 +16,10 @@ const { TelemetryTestUtils } = ChromeUtils.import(
 const ABOUT_WELCOME_OVERRIDE_CONTENT_PREF = "browser.aboutwelcome.screens";
 const DID_SEE_ABOUT_WELCOME_PREF = "trailhead.firstrun.didSeeAboutWelcome";
 
+// Test differently for windows 7 as theme screens are removed.
+const win7Content = AppConstants.isPlatformAndVersionAtMost("win", "6.1");
+const condSelect = (cond, select) => (cond ? [select] : []);
+
 const TEST_MULTISTAGE_CONTENT = [
   {
     id: "AW_STEP1",
@@ -400,37 +404,40 @@ add_task(async function test_multistage_aboutwelcome_experimentAPI() {
     sandbox.restore();
   });
 
-  await test_screen_content(
-    browser,
-    "multistage step 1",
-    // Expected selectors:
-    [
-      "div.onboardingContainer",
-      "main.AW_STEP1",
-      "h1.welcomeZap",
-      "span.zap.short",
-      "div.secondary-cta",
-      "div.secondary-cta.top",
-      "button[value='secondary_button']",
-      "button[value='secondary_button_top']",
-      "label.theme",
-      "input[type='radio']",
-      "div.indicator.current",
-    ],
-    // Unexpected selectors:
-    ["main.AW_STEP2", "main.AW_STEP3", "div.tiles-container.info"]
-  );
+  // Test first (theme) screen for non-win7.
+  if (!win7Content) {
+    await test_screen_content(
+      browser,
+      "multistage step 1",
+      // Expected selectors:
+      [
+        "div.onboardingContainer",
+        "main.AW_STEP1",
+        "h1.welcomeZap",
+        "span.zap.short",
+        "div.secondary-cta",
+        "div.secondary-cta.top",
+        "button[value='secondary_button']",
+        "button[value='secondary_button_top']",
+        "label.theme",
+        "input[type='radio']",
+        "div.indicator.current",
+      ],
+      // Unexpected selectors:
+      ["main.AW_STEP2", "main.AW_STEP3", "div.tiles-container.info"]
+    );
 
-  await onButtonClick(browser, "button.primary");
+    await onButtonClick(browser, "button.primary");
 
-  Assert.ok(
-    aboutWelcomeActor.onContentMessage.args.find(
-      args =>
-        args[1].event === "CLICK_BUTTON" &&
-        args[1].message_id === "MY-MOCHITEST-EXPERIMENT_AW_STEP1"
-    ),
-    "Telemetry should join id defined in feature value with screen"
-  );
+    Assert.ok(
+      aboutWelcomeActor.onContentMessage.args.find(
+        args =>
+          args[1].event === "CLICK_BUTTON" &&
+          args[1].message_id === "MY-MOCHITEST-EXPERIMENT_AW_STEP1"
+      ),
+      "Telemetry should join id defined in feature value with screen"
+    );
+  }
 
   await test_screen_content(
     browser,
@@ -495,28 +502,32 @@ add_task(async function test_multistage_aboutwelcome_experimentAPI() {
 add_task(async function test_Multistage_About_Welcome_branches() {
   let browser = await openAboutWelcome();
 
-  await test_screen_content(
-    browser,
-    "multistage step 1",
-    // Expected selectors:
-    [
-      "div.onboardingContainer",
-      "main.AW_STEP1",
-      "h1.welcomeZap",
-      "span.zap.short",
-      "div.secondary-cta",
-      "div.secondary-cta.top",
-      "button[value='secondary_button']",
-      "button[value='secondary_button_top']",
-      "label.theme",
-      "input[type='radio']",
-      "div.indicator.current",
-    ],
-    // Unexpected selectors:
-    ["main.AW_STEP2", "main.AW_STEP3", "div.tiles-container.info"]
-  );
+  // Test first (theme) screen for non-win7.
+  if (!win7Content) {
+    await test_screen_content(
+      browser,
+      "multistage step 1",
+      // Expected selectors:
+      [
+        "div.onboardingContainer",
+        "main.AW_STEP1",
+        "h1.welcomeZap",
+        "span.zap.short",
+        "div.secondary-cta",
+        "div.secondary-cta.top",
+        "button[value='secondary_button']",
+        "button[value='secondary_button_top']",
+        "label.theme",
+        "input[type='radio']",
+        "div.indicator.current",
+      ],
+      // Unexpected selectors:
+      ["main.AW_STEP2", "main.AW_STEP3", "div.tiles-container.info"]
+    );
 
-  await onButtonClick(browser, "button.primary");
+    await onButtonClick(browser, "button.primary");
+  }
+
   await test_screen_content(
     browser,
     "multistage step 2",
@@ -567,24 +578,28 @@ add_task(async function test_Multistage_About_Welcome_navigation() {
   await TestUtils.waitForCondition(() => browser.canGoBack);
   browser.goBack();
 
-  await test_screen_content(
-    browser,
-    "multistage step 1",
-    // Expected selectors:
-    [
-      "div.onboardingContainer",
-      "main.AW_STEP1",
-      "div.secondary-cta",
-      "div.secondary-cta.top",
-      "button[value='secondary_button']",
-      "button[value='secondary_button_top']",
-      "div.indicator.current",
-    ],
-    // Unexpected selectors:
-    ["main.AW_STEP2", "main.AW_STEP3"]
-  );
+  // Test first (theme) screen for non-win7.
+  if (!win7Content) {
+    await test_screen_content(
+      browser,
+      "multistage step 1",
+      // Expected selectors:
+      [
+        "div.onboardingContainer",
+        "main.AW_STEP1",
+        "div.secondary-cta",
+        "div.secondary-cta.top",
+        "button[value='secondary_button']",
+        "button[value='secondary_button_top']",
+        "div.indicator.current",
+      ],
+      // Unexpected selectors:
+      ["main.AW_STEP2", "main.AW_STEP3"]
+    );
 
-  await document.getElementById("forward-button").click();
+    await document.getElementById("forward-button").click();
+  }
+
   await test_screen_content(
     browser,
     "multistage step 2",
@@ -723,12 +738,17 @@ add_task(async function test_AWMultistage_Primary_Action() {
   );
   Assert.equal(
     clickCall.args[1].message_id,
-    `DEFAULT_ABOUTWELCOME_${TEST_MULTISTAGE_CONTENT[0].id}`.toUpperCase(),
+    `DEFAULT_ABOUTWELCOME_${
+      TEST_MULTISTAGE_CONTENT[win7Content ? 1 : 0].id
+    }`.toUpperCase(),
     "MessageId sent in click event telemetry"
   );
 });
 
 add_task(async function test_AWMultistage_Secondary_Open_URL_Action() {
+  // First (theme) screen with secondary_button_top is removed for win7.
+  if (win7Content) return;
+
   let { doExperimentCleanup } = ExperimentFakes.enrollmentHelper();
   await doExperimentCleanup();
   let browser = await openAboutWelcome();
@@ -801,6 +821,9 @@ add_task(async function test_AWMultistage_Secondary_Open_URL_Action() {
 });
 
 add_task(async function test_AWMultistage_Themes() {
+  // No theme screen to test for win7.
+  if (win7Content) return;
+
   let browser = await openAboutWelcome();
   let aboutWelcomeActor = await getAboutWelcomeParent(browser);
 
@@ -872,8 +895,8 @@ add_task(async function test_AWMultistage_Import() {
   let browser = await openAboutWelcome();
   let aboutWelcomeActor = await getAboutWelcomeParent(browser);
 
-  // click twice to advance to screen 3
-  await onButtonClick(browser, "button.primary");
+  // Click twice to advance to screen 3 - once for win7.
+  if (!win7Content) await onButtonClick(browser, "button.primary");
   await onButtonClick(browser, "button.primary");
 
   const sandbox = sinon.createSandbox();
@@ -1030,13 +1053,21 @@ add_task(async function test_multistage_aboutwelcome_proton() {
       "div.onboardingContainer",
       "div.proton[style*='.webp']",
       "div.section-main",
-      "nav.steps",
+      ...condSelect(!win7Content, "nav.steps"),
     ],
     // Unexpected selectors:
-    ["main.AW_STEP1", "main.AW_STEP3", "div.section-left"]
+    [
+      "main.AW_STEP1",
+      "main.AW_STEP3",
+      "div.section-left",
+      ...condSelect(win7Content, "nav.steps"),
+    ]
   );
 
   await onButtonClick(browser, "button.primary");
+
+  // No 3rd screen to go to for win7.
+  if (win7Content) return;
 
   await test_screen_content(
     browser,

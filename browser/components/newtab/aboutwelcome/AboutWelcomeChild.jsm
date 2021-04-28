@@ -250,7 +250,6 @@ class AboutWelcomeChild extends JSWindowActorChild {
       AboutWelcomeDefaults.prepareContentForReact({
         ...experimentMetadata,
         ...featureConfig,
-        design: featureConfig.isProton ? "proton" : "",
       }),
       this.contentWindow
     );

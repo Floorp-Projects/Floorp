@@ -11,6 +11,7 @@ const { XPCOMUtils } = ChromeUtils.import(
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   AddonRepository: "resource://gre/modules/addons/AddonRepository.jsm",
+  AppConstants: "resource://gre/modules/AppConstants.jsm",
   AttributionCode: "resource:///modules/AttributionCode.jsm",
   Services: "resource://gre/modules/Services.jsm",
   ShellService: "resource:///modules/ShellService.jsm",
@@ -535,11 +536,16 @@ const RULES = [
 ];
 
 function prepareContentForReact(content) {
-  if (content?.template === "return_to_amo") {
+  if (content.isProton) {
+    content.design = "proton";
+  }
+
+  if (content.template === "return_to_amo") {
     return content;
   }
+
   // Set the primary import button source based on attribution.
-  if (content?.ua) {
+  if (content.ua) {
     // This check will make sure that we add the source correctly
     // whether or not 'data: {source: ""}' is in the JSON
     const { action } =
@@ -547,11 +553,26 @@ function prepareContentForReact(content) {
         screen =>
           screen?.content?.primary_button?.action?.type ===
           "SHOW_MIGRATION_WIZARD"
-      )?.content?.primary_button ?? {};
+      )?.content.primary_button ?? {};
     if (action) {
       action.data = { ...action.data, source: content.ua };
     }
   }
+
+  // Change content for Windows 7 because non-light themes aren't quite right.
+  if (AppConstants.isPlatformAndVersionAtMost("win", "6.1")) {
+    const { screens } = content;
+    let removed = 0;
+    for (let i = 0; i < screens?.length; i++) {
+      if (screens[i].content?.tiles?.type === "theme") {
+        screens.splice(i--, 1);
+        removed++;
+      } else if (screens[i].order) {
+        screens[i].order -= removed;
+      }
+    }
+  }
+
   return content;
 }
 
