@@ -18,6 +18,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   ClientEnvironmentBase:
     "resource://gre/modules/components-utils/ClientEnvironment.jsm",
   AppConstants: "resource://gre/modules/AppConstants.jsm",
+  TelemetryEnvironment: "resource://gre/modules/TelemetryEnvironment.jsm",
 });
 
 var EXPORTED_SYMBOLS = ["TargetingContext"];
@@ -52,7 +53,8 @@ const TargetingEnvironment = {
   },
 
   get channel() {
-    return AppConstants.MOZ_UPDATE_CHANNEL;
+    const { settings } = TelemetryEnvironment.currentEnvironment;
+    return settings.update.channel;
   },
 
   get platform() {
