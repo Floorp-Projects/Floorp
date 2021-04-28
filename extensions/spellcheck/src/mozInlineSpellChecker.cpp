@@ -96,10 +96,11 @@ static const PRTime kMaxSpellCheckTimeInUsec =
 
 mozInlineSpellStatus::mozInlineSpellStatus(
     mozInlineSpellChecker* aSpellChecker, const Operation aOp,
-    const bool aForceNavigationWordCheck,
+    RefPtr<nsRange>&& aAnchorRange, const bool aForceNavigationWordCheck,
     const int32_t aNewNavigationPositionOffset)
     : mSpellChecker(aSpellChecker),
       mOp(aOp),
+      mAnchorRange(std::move(aAnchorRange)),
       mForceNavigationWordCheck(aForceNavigationWordCheck),
       mNewNavigationPositionOffset(aNewNavigationPositionOffset) {}
 
@@ -130,17 +131,18 @@ mozInlineSpellStatus::CreateForEditorChange(
     deleted = !aPreviousNode->IsInComposedDoc();
   }
 
-  UniquePtr<mozInlineSpellStatus> status{
-      /* The constructor is `private`, hence the explicit allocation. */
-      new mozInlineSpellStatus{
-          &aSpellChecker, deleted ? eOpChangeDelete : eOpChange, false, 0}};
-
   // save the anchor point as a range so we can find the current word later
-  status->mAnchorRange = mozInlineSpellStatus::PositionToCollapsedRange(
+  RefPtr<nsRange> anchorRange = mozInlineSpellStatus::PositionToCollapsedRange(
       aAnchorNode, aAnchorOffset);
-  if (NS_WARN_IF(!status->mAnchorRange)) {
+  if (NS_WARN_IF(!anchorRange)) {
     return Err(NS_ERROR_FAILURE);
   }
+
+  UniquePtr<mozInlineSpellStatus> status{
+      /* The constructor is `private`, hence the explicit allocation. */
+      new mozInlineSpellStatus{&aSpellChecker,
+                               deleted ? eOpChangeDelete : eOpChange,
+                               std::move(anchorRange), false, 0}};
 
   if (deleted) {
     // Deletes are easy, the range is just the current anchor. We set the range
@@ -229,9 +231,16 @@ mozInlineSpellStatus::CreateForNavigation(
     uint32_t aNewAnchorOffset, bool* aContinue) {
   MOZ_LOG(sInlineSpellCheckerLog, LogLevel::Verbose, ("%s", __FUNCTION__));
 
+  RefPtr<nsRange> anchorRange = mozInlineSpellStatus::PositionToCollapsedRange(
+      aNewAnchorNode, aNewAnchorOffset);
+  if (NS_WARN_IF(!anchorRange)) {
+    return Err(NS_ERROR_FAILURE);
+  }
+
   UniquePtr<mozInlineSpellStatus> status{
       /* The constructor is `private`, hence the explicit allocation. */
-      new mozInlineSpellStatus{&aSpellChecker, eOpNavigation, aForceCheck,
+      new mozInlineSpellStatus{&aSpellChecker, eOpNavigation,
+                               std::move(anchorRange), aForceCheck,
                                aNewPositionOffset}};
 
   // get the root node for checking
@@ -256,11 +265,6 @@ mozInlineSpellStatus::CreateForNavigation(
   if (NS_WARN_IF(!status->mOldNavigationAnchorRange)) {
     return Err(NS_ERROR_FAILURE);
   }
-  status->mAnchorRange = mozInlineSpellStatus::PositionToCollapsedRange(
-      aNewAnchorNode, aNewAnchorOffset);
-  if (NS_WARN_IF(!status->mAnchorRange)) {
-    return Err(NS_ERROR_FAILURE);
-  }
 
   *aContinue = true;
   return status;
@@ -278,7 +282,8 @@ UniquePtr<mozInlineSpellStatus> mozInlineSpellStatus::CreateForSelection(
 
   UniquePtr<mozInlineSpellStatus> status{
       /* The constructor is `private`, hence the explicit allocation. */
-      new mozInlineSpellStatus{&aSpellChecker, eOpSelection, false, 0}};
+      new mozInlineSpellStatus{&aSpellChecker, eOpSelection, nullptr, false,
+                               0}};
   return status;
 }
 
@@ -295,7 +300,7 @@ UniquePtr<mozInlineSpellStatus> mozInlineSpellStatus::CreateForRange(
 
   UniquePtr<mozInlineSpellStatus> status{
       /* The constructor is `private`, hence the explicit allocation. */
-      new mozInlineSpellStatus{&aSpellChecker, eOpChange, false, 0}};
+      new mozInlineSpellStatus{&aSpellChecker, eOpChange, nullptr, false, 0}};
 
   status->mRange = aRange;
   return status;
@@ -1379,7 +1384,7 @@ nsresult mozInlineSpellChecker::DoSpellCheck(
           sInlineSpellCheckerLog, LogLevel::Verbose,
           ("%s: we have run out of time, schedule next round.", __FUNCTION__));
 
-      CheckCurrentWordsNoSuggest(aSpellCheckSelection, std::move(words),
+      CheckCurrentWordsNoSuggest(aSpellCheckSelection, words,
                                  std::move(checkRanges));
 
       // move the range to encompass the stuff that needs checking.
@@ -1447,16 +1452,16 @@ nsresult mozInlineSpellChecker::DoSpellCheck(
     checkRanges.AppendElement(wordNodeOffsetRange);
     wordsChecked++;
     if (words.Length() >= requestChunkSize) {
-      CheckCurrentWordsNoSuggest(aSpellCheckSelection, std::move(words),
+      CheckCurrentWordsNoSuggest(aSpellCheckSelection, words,
                                  std::move(checkRanges));
-      // Set new empty data for spellcheck words and range in DOM to avoid
+      // Set new empty data for spellcheck range in DOM to avoid
       // clang-tidy detection.
-      words = nsTArray<nsString>();
+      words.Clear();
       checkRanges = nsTArray<NodeOffsetRange>();
     }
   }
 
-  CheckCurrentWordsNoSuggest(aSpellCheckSelection, std::move(words),
+  CheckCurrentWordsNoSuggest(aSpellCheckSelection, words,
                              std::move(checkRanges));
 
   return NS_OK;
@@ -1479,7 +1484,7 @@ class MOZ_RAII AutoChangeNumPendingSpellChecks final {
 };
 
 void mozInlineSpellChecker::CheckCurrentWordsNoSuggest(
-    Selection* aSpellCheckSelection, nsTArray<nsString>&& aWords,
+    Selection* aSpellCheckSelection, const nsTArray<nsString>& aWords,
     nsTArray<NodeOffsetRange>&& aRanges) {
   MOZ_ASSERT(aWords.Length() == aRanges.Length());
 
@@ -1492,8 +1497,7 @@ void mozInlineSpellChecker::CheckCurrentWordsNoSuggest(
   RefPtr<mozInlineSpellChecker> self = this;
   RefPtr<Selection> spellCheckerSelection = aSpellCheckSelection;
   uint32_t token = mDisabledAsyncToken;
-  nsTArray<nsString> words = std::move(aWords);
-  mSpellCheck->CheckCurrentWordsNoSuggest(words)->Then(
+  mSpellCheck->CheckCurrentWordsNoSuggest(aWords)->Then(
       GetMainThreadSerialEventTarget(), __func__,
       [self, spellCheckerSelection, ranges = std::move(aRanges),
        token](const nsTArray<bool>& aIsMisspelled) {

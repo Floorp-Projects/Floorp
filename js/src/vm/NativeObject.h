@@ -1559,9 +1559,6 @@ class NativeObject : public JSObject {
   /* Return the allocKind we would use if we were to tenure this object. */
   inline js::gc::AllocKind allocKindForTenure() const;
 
-  void sweepDictionaryListPointer();
-  void updateDictionaryListPointerAfterMinorGC(NativeObject* old);
-
   // Native objects are never wrappers, so a native object always has a realm
   // and global.
   JS::Realm* realm() const { return nonCCWRealm(); }

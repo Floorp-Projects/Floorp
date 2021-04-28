@@ -309,3 +309,20 @@ add_task(async function test_cname_flag() {
   dns.clearCache(false);
   override.clearOverrides();
 });
+
+add_task(async function test_nxdomain() {
+  override.addIPOverride(DOMAIN, "N/A");
+  let listener = new Listener();
+  dns.asyncResolve(
+    DOMAIN,
+    Ci.nsIDNSService.RESOLVE_TYPE_DEFAULT,
+    Ci.nsIDNSService.RESOLVE_CANONICAL_NAME,
+    null,
+    listener,
+    mainThread,
+    defaultOriginAttributes
+  );
+
+  let [, , inStatus] = await listener;
+  equal(inStatus, Cr.NS_ERROR_UNKNOWN_HOST);
+});

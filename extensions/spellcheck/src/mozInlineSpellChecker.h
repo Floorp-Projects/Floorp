@@ -85,10 +85,12 @@ class mozInlineSpellStatus {
  private:
   // @param aSpellChecker must be non-nullptr.
   // @param aOp see mOp.
+  // @param aAnchorRange see mAnchorRange.
   // @param aForceNavigationWordCheck see mForceNavigationWordCheck.
   // @param aNewNavigationPositionOffset see mNewNavigationPositionOffset.
   explicit mozInlineSpellStatus(mozInlineSpellChecker* aSpellChecker,
-                                Operation aOp, bool aForceNavigationWordCheck,
+                                Operation aOp, RefPtr<nsRange>&& aAnchorRange,
+                                bool aForceNavigationWordCheck,
                                 int32_t aNewNavigationPositionOffset);
 
   // For resuming a previously started check.
@@ -108,7 +110,7 @@ class mozInlineSpellStatus {
   // position (such as for the intial check of everything).
   //
   // For mOp == eOpNavigation, this is the NEW position of the cursor
-  RefPtr<nsRange> mAnchorRange;
+  const RefPtr<const nsRange> mAnchorRange;
 
   // -----
   // The following members are only for navigation events and are only
@@ -307,7 +309,7 @@ class mozInlineSpellChecker final : public nsIInlineSpellChecker,
   void EndListeningToEditSubActions() { mIsListeningToEditSubActions = false; }
 
   void CheckCurrentWordsNoSuggest(mozilla::dom::Selection* aSpellCheckSelection,
-                                  nsTArray<nsString>&& aWords,
+                                  const nsTArray<nsString>& aWords,
                                   nsTArray<NodeOffsetRange>&& aRanges);
 };
 
