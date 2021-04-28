@@ -38,9 +38,9 @@ class RenderCompositorD3D11SWGL;
 class RenderCompositor {
  public:
   static UniquePtr<RenderCompositor> Create(
-      RefPtr<widget::CompositorWidget>&& aWidget, nsACString& aError);
+      const RefPtr<widget::CompositorWidget>& aWidget, nsACString& aError);
 
-  RenderCompositor(RefPtr<widget::CompositorWidget>&& aWidget);
+  RenderCompositor(const RefPtr<widget::CompositorWidget>& aWidget);
   virtual ~RenderCompositor();
 
   virtual bool BeginFrame() = 0;

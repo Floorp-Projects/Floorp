@@ -14,12 +14,11 @@
 #include "mozilla/webrender/RenderThread.h"
 #include "mozilla/widget/CompositorWidget.h"
 
-namespace mozilla {
-namespace wr {
+namespace mozilla::wr {
 
 /* static */
 UniquePtr<RenderCompositor> RenderCompositorOGL::Create(
-    RefPtr<widget::CompositorWidget>&& aWidget, nsACString& aError) {
+    const RefPtr<widget::CompositorWidget>& aWidget, nsACString& aError) {
   RefPtr<gl::GLContext> gl = RenderThread::Get()->SingletonGL();
   if (!gl) {
     gl = gl::GLContextProvider::CreateForCompositorWidget(
@@ -31,12 +30,13 @@ UniquePtr<RenderCompositor> RenderCompositorOGL::Create(
                     << gfx::hexa(gl.get());
     return nullptr;
   }
-  return MakeUnique<RenderCompositorOGL>(std::move(gl), std::move(aWidget));
+  return MakeUnique<RenderCompositorOGL>(std::move(gl), aWidget);
 }
 
 RenderCompositorOGL::RenderCompositorOGL(
-    RefPtr<gl::GLContext>&& aGL, RefPtr<widget::CompositorWidget>&& aWidget)
-    : RenderCompositor(std::move(aWidget)), mGL(aGL) {
+    RefPtr<gl::GLContext>&& aGL,
+    const RefPtr<widget::CompositorWidget>& aWidget)
+    : RenderCompositor(aWidget), mGL(aGL) {
   MOZ_ASSERT(mGL);
 
   mIsEGL = aGL->GetContextType() == mozilla::gl::GLContextType::EGL;
@@ -119,5 +119,4 @@ size_t RenderCompositorOGL::GetBufferAge() const {
   return gl()->GetBufferAge();
 }
 
-}  // namespace wr
-}  // namespace mozilla
+}  // namespace mozilla::wr

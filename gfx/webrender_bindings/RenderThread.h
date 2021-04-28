@@ -178,14 +178,14 @@ class RenderThread final {
   void SetClearColor(wr::WindowId aWindowId, wr::ColorF aColor);
 
   /// Automatically forwarded to the render thread.
-  void SetProfilerUI(wr::WindowId aWindowId, nsCString aUI);
+  void SetProfilerUI(wr::WindowId aWindowId, const nsCString& aUI);
 
   /// Automatically forwarded to the render thread.
   void PipelineSizeChanged(wr::WindowId aWindowId, uint64_t aPipelineId,
                            float aWidth, float aHeight);
 
   /// Automatically forwarded to the render thread.
-  void RunEvent(wr::WindowId aWindowId, UniquePtr<RendererEvent> aCallBack);
+  void RunEvent(wr::WindowId aWindowId, UniquePtr<RendererEvent> aEvent);
 
   /// Can only be called from the render thread.
   void UpdateAndRender(wr::WindowId aWindowId, const VsyncId& aStartId,

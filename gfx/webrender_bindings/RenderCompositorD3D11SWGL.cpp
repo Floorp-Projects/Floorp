@@ -37,7 +37,7 @@ RenderCompositorD3D11SWGL::GetUploadMode() {
 }
 
 UniquePtr<RenderCompositor> RenderCompositorD3D11SWGL::Create(
-    RefPtr<widget::CompositorWidget>&& aWidget, nsACString& aError) {
+    const RefPtr<widget::CompositorWidget>& aWidget, nsACString& aError) {
   if (!aWidget->GetCompositorOptions().AllowSoftwareWebRenderD3D11() ||
       !gfx::gfxConfig::IsEnabled(gfx::Feature::D3D11_COMPOSITING)) {
     return nullptr;
@@ -59,14 +59,13 @@ UniquePtr<RenderCompositor> RenderCompositorD3D11SWGL::Create(
   }
   compositor->UseForSoftwareWebRender();
 
-  return MakeUnique<RenderCompositorD3D11SWGL>(compositor, std::move(aWidget),
-                                               ctx);
+  return MakeUnique<RenderCompositorD3D11SWGL>(compositor, aWidget, ctx);
 }
 
 RenderCompositorD3D11SWGL::RenderCompositorD3D11SWGL(
-    CompositorD3D11* aCompositor, RefPtr<widget::CompositorWidget>&& aWidget,
-    void* aContext)
-    : RenderCompositorLayersSWGL(aCompositor, std::move(aWidget), aContext) {
+    CompositorD3D11* aCompositor,
+    const RefPtr<widget::CompositorWidget>& aWidget, void* aContext)
+    : RenderCompositorLayersSWGL(aCompositor, aWidget, aContext) {
   mSyncObject = GetCompositorD3D11()->GetSyncObject();
 }
 

@@ -43,7 +43,7 @@ namespace wr {
 
 /* static */
 UniquePtr<RenderCompositor> RenderCompositorANGLE::Create(
-    RefPtr<widget::CompositorWidget>&& aWidget, nsACString& aError) {
+    const RefPtr<widget::CompositorWidget>& aWidget, nsACString& aError) {
   const auto& gl = RenderThread::Get()->SingletonGL(aError);
   if (!gl) {
     if (aError.IsEmpty()) {
@@ -55,7 +55,7 @@ UniquePtr<RenderCompositor> RenderCompositorANGLE::Create(
   }
 
   UniquePtr<RenderCompositorANGLE> compositor =
-      MakeUnique<RenderCompositorANGLE>(std::move(aWidget));
+      MakeUnique<RenderCompositorANGLE>(aWidget);
   if (!compositor->Initialize(aError)) {
     return nullptr;
   }
@@ -63,8 +63,8 @@ UniquePtr<RenderCompositor> RenderCompositorANGLE::Create(
 }
 
 RenderCompositorANGLE::RenderCompositorANGLE(
-    RefPtr<widget::CompositorWidget>&& aWidget)
-    : RenderCompositor(std::move(aWidget)),
+    const RefPtr<widget::CompositorWidget>& aWidget)
+    : RenderCompositor(aWidget),
       mEGLConfig(nullptr),
       mEGLSurface(nullptr),
       mUseTripleBuffering(false),
