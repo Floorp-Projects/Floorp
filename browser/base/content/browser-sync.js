@@ -1045,6 +1045,7 @@ var gSync = {
     const status = state.status;
     // Reset the status bar to its original state.
     appMenuLabel.setAttribute("label", defaultLabel);
+    appMenuLabel.removeAttribute("aria-labelledby");
     appMenuStatus.removeAttribute("fxastatus");
     appMenuAvatar.style.removeProperty("list-style-image");
 
@@ -1077,12 +1078,19 @@ var gSync = {
         "account-disconnected2"
       );
       appMenuStatus.setAttribute("tooltiptext", tooltipDescription);
-      appMenuLabel.setAttribute("label", errorLabel);
       if (PanelUI.protonAppMenuEnabled) {
         appMenuLabel.classList.add("subviewbutton-nav");
         appMenuHeaderTitle.hidden = false;
         appMenuHeaderTitle.value = errorLabel;
         appMenuHeaderDescription.value = state.email;
+
+        appMenuLabel.removeAttribute("label");
+        appMenuLabel.setAttribute(
+          "aria-labelledby",
+          `${appMenuHeaderTitle.id},${appMenuHeaderDescription.id}`
+        );
+      } else {
+        appMenuLabel.setAttribute("label", errorLabel);
       }
       return;
     } else if (status == UIState.STATUS_NOT_VERIFIED) {
@@ -1095,12 +1103,19 @@ var gSync = {
         "account-finish-account-setup"
       );
       appMenuStatus.setAttribute("tooltiptext", tooltipDescription);
-      appMenuLabel.setAttribute("label", unverifiedLabel);
       if (PanelUI.protonAppMenuEnabled) {
         appMenuLabel.classList.add("subviewbutton-nav");
         appMenuHeaderTitle.hidden = false;
         appMenuHeaderTitle.value = unverifiedLabel;
         appMenuHeaderDescription.value = state.email;
+
+        appMenuLabel.removeAttribute("label");
+        appMenuLabel.setAttribute(
+          "aria-labelledby",
+          `${appMenuHeaderTitle.id},${appMenuHeaderDescription.id}`
+        );
+      } else {
+        appMenuLabel.setAttribute("label", unverifiedLabel);
       }
       return;
     }
