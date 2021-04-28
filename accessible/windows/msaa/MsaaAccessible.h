@@ -16,6 +16,7 @@
 
 namespace mozilla {
 namespace a11y {
+class AccessibleWrap;
 class LocalAccessible;
 class sdnAccessible;
 
@@ -25,6 +26,8 @@ class MsaaAccessible : public ia2Accessible,
                        public ia2AccessibleValue {
  public:
   MsaaAccessible();
+
+  AccessibleWrap* LocalAcc();
 
   uint32_t GetExistingID() const { return mID; }
   static const uint32_t kNoID = 0;
@@ -36,11 +39,27 @@ class MsaaAccessible : public ia2Accessible,
   static void AssignChildIDTo(NotNull<sdnAccessible*> aSdnAcc);
   static void ReleaseChildID(NotNull<sdnAccessible*> aSdnAcc);
 
+  /**
+   * Find an accessible by the given child ID in cached documents.
+   */
+  [[nodiscard]] already_AddRefed<IAccessible> GetIAccessibleFor(
+      const VARIANT& aVarChild, bool* aIsDefunct);
+
  protected:
   virtual ~MsaaAccessible();
 
   uint32_t mID;
   static MsaaIdGenerator sIDGen;
+
+  HRESULT
+  ResolveChild(const VARIANT& aVarChild, IAccessible** aOutInterface);
+
+ private:
+  /**
+   * Find a remote accessible by the given child ID.
+   */
+  [[nodiscard]] already_AddRefed<IAccessible> GetRemoteIAccessibleFor(
+      const VARIANT& aVarChild);
 };
 
 }  // namespace a11y
