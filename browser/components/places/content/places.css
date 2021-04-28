@@ -15,7 +15,7 @@
 
 #bookmarkpropertiesdialog #editBookmarkPanelContent label[control] {
   margin-inline-start: 0;
-  margin-block-start: 0;
+  margin-block: 0 4px;
 }
 
 #bookmarkpropertiesdialog #editBookmarkPanelRows {
@@ -28,7 +28,6 @@
   -moz-context-properties: fill;
   fill: currentColor;
   margin: 0;
-  margin-inline-start: 4px;
   min-width: 32px;
   min-height: 32px;
   padding: 0;
@@ -61,8 +60,36 @@
   padding-top: 0;
 }
 
-#bookmarkpropertiesdialog #editBookmarkPanelRows #editBMPanel_tagsField {
-  margin-inline-end: var(--editbookmarkdialog-padding);
+#bookmarkpropertiesdialog #editBookmarkPanelRows #editBMPanel_tagsField,
+#bookmarkpropertiesdialog #editBookmarkPanelRows #editBMPanel_folderMenuList {
+  margin-inline-end: 16px;
+}
+
+#bookmarkpropertiesdialog .caption-label {
+  margin: 4px;
+  color: var(--in-content-deemphasized-text);
+}
+
+/* Tags table */
+
+#bookmarkpropertiesdialog #editBMPanel_tagsSelector {
+  border-color: var(--in-content-border-color);
+  padding: 12px;
+}
+
+/* Reset default margins for tags so we can apply custom ones */
+#bookmarkpropertiesdialog #editBMPanel_tagsSelector > richlistitem > image,
+#bookmarkpropertiesdialog #editBMPanel_tagsSelector > richlistitem > label {
+  margin: 0;
+}
+
+/* Set spacing between tags */
+#bookmarkpropertiesdialog #editBMPanel_tagsSelector > richlistitem:not(:last-child) {
+  margin-bottom: 8px;
+}
+
+#bookmarkpropertiesdialog #editBMPanel_tagsSelector > richlistitem > image {
+  margin-inline-end: 8px;
 }
 } /** END Proton **/
 
