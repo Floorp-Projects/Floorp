@@ -463,8 +463,8 @@ class nsDocumentViewer final : public nsIContentViewer,
 #endif  // NS_PRINTING
 
   /* character set member data */
-  int32_t mHintCharsetSource;
-  const Encoding* mHintCharset;
+  int32_t mReloadEncodingSource;
+  const Encoding* mReloadEncoding;
 
   bool mIsPageMode;
   bool mInitializedForPrintPreview;
@@ -527,8 +527,8 @@ nsDocumentViewer::nsDocumentViewer()
 #ifdef NS_PRINTING
       mClosingWhilePrinting(false),
 #endif  // NS_PRINTING
-      mHintCharsetSource(kCharsetUninitialized),
-      mHintCharset(nullptr),
+      mReloadEncodingSource(kCharsetUninitialized),
+      mReloadEncoding(nullptr),
       mIsPageMode(false),
       mInitializedForPrintPreview(false),
       mHidden(false) {
@@ -2564,83 +2564,27 @@ nsDocumentViewer::GetAuthorStyleDisabled(bool* aStyleDisabled) {
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDocumentViewer::GetHintCharacterSet(
-    nsACString& aHintCharacterSet) {
-  auto encoding = nsDocumentViewer::GetHintCharset();
-  if (encoding) {
-    encoding->Name(aHintCharacterSet);
-  } else {
-    aHintCharacterSet.Truncate();
-  }
-  return NS_OK;
-}
-
 /* [noscript,notxpcom] Encoding getHintCharset (); */
 NS_IMETHODIMP_(const Encoding*)
-nsDocumentViewer::GetHintCharset() {
-  if (kCharsetUninitialized == mHintCharsetSource) {
+nsDocumentViewer::GetReloadEncodingAndSource(int32_t* aSource) {
+  *aSource = mReloadEncodingSource;
+  if (kCharsetUninitialized == mReloadEncodingSource) {
     return nullptr;
   }
-  // this can't possibly be right.  we can't set a value just because somebody
-  // got a related value!
-  // mHintCharsetSource = kCharsetUninitialized;
-  return mHintCharset;
+  return mReloadEncoding;
 }
 
-NS_IMETHODIMP nsDocumentViewer::GetHintCharacterSetSource(
-    int32_t* aHintCharacterSetSource) {
-  NS_ENSURE_ARG_POINTER(aHintCharacterSetSource);
-  *aHintCharacterSetSource = mHintCharsetSource;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocumentViewer::SetHintCharacterSetSource(int32_t aHintCharacterSetSource) {
-  mHintCharsetSource = aHintCharacterSetSource;
-
-  // now set the force char set on all children of mContainer
-  if (RefPtr docShell = nsDocShell::Cast(mContainer)) {
-    int32_t n = docShell->GetInProcessChildCount();
-    for (int32_t i = 0; i < n; i++) {
-      if (RefPtr<nsDocShell> child = docShell->GetInProcessChildAt(i)) {
-        if (nsCOMPtr<nsIContentViewer> childCV = child->GetContentViewer()) {
-          childCV->SetHintCharacterSetSource(aHintCharacterSetSource);
-        }
-      }
-    }
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocumentViewer::SetHintCharacterSet(const nsACString& aHintCharacterSet) {
-  // The empty string means no hint.
-  const Encoding* encoding = nullptr;
-  if (!aHintCharacterSet.IsEmpty()) {
-    if (!(encoding = Encoding::ForLabel(aHintCharacterSet))) {
-      // Reject unknown labels
-      return NS_ERROR_INVALID_ARG;
-    }
-  }
-  nsDocumentViewer::SetHintCharset(encoding);
-  return NS_OK;
-}
-
-/* [noscript,notxpcom] void setHintCharset (in Encoding aEncoding); */
 NS_IMETHODIMP_(void)
-nsDocumentViewer::SetHintCharset(const Encoding* aEncoding) {
-  mHintCharset = aEncoding;
-  // now set the force char set on all children of mContainer
-  if (RefPtr docShell = nsDocShell::Cast(mContainer)) {
-    int32_t n = docShell->GetInProcessChildCount();
-    for (int32_t i = 0; i < n; i++) {
-      if (RefPtr<nsDocShell> child = docShell->GetInProcessChildAt(i)) {
-        if (nsCOMPtr<nsIContentViewer> childCV = child->GetContentViewer()) {
-          childCV->SetHintCharset(aEncoding);
-        }
-      }
-    }
-  }
+nsDocumentViewer::SetReloadEncodingAndSource(const Encoding* aEncoding,
+                                             int32_t aSource) {
+  mReloadEncoding = aEncoding;
+  mReloadEncodingSource = aSource;
+}
+
+NS_IMETHODIMP_(void)
+nsDocumentViewer::ForgetReloadEncoding() {
+  mReloadEncoding = nullptr;
+  mReloadEncodingSource = kCharsetUninitialized;
 }
 
 nsresult nsDocumentViewer::GetContentSizeInternal(int32_t* aWidth,
