@@ -909,7 +909,7 @@ void NotificationController::WillRefresh(mozilla::TimeStamp aTime) {
 
 #if defined(XP_WIN)
       parentIPCDoc->ConstructChildDocInParentProcess(
-          ipcDoc, id, AccessibleWrap::GetChildIDFor(childDoc));
+          ipcDoc, id, MsaaAccessible::GetChildIDFor(childDoc));
 #else
       nsCOMPtr<nsIBrowserChild> browserChild =
           do_GetInterface(mDocument->DocumentNode()->GetDocShell());

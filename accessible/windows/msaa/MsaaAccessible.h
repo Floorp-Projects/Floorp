@@ -11,14 +11,37 @@
 #include "ia2AccessibleComponent.h"
 #include "ia2AccessibleHyperlink.h"
 #include "ia2AccessibleValue.h"
+#include "mozilla/a11y/MsaaIdGenerator.h"
+#include "mozilla/dom/ipc/IdType.h"
 
 namespace mozilla {
 namespace a11y {
+class LocalAccessible;
+class sdnAccessible;
 
 class MsaaAccessible : public ia2Accessible,
                        public ia2AccessibleComponent,
                        public ia2AccessibleHyperlink,
-                       public ia2AccessibleValue {};
+                       public ia2AccessibleValue {
+ public:
+  MsaaAccessible();
+
+  uint32_t GetExistingID() const { return mID; }
+  static const uint32_t kNoID = 0;
+  void SetID(uint32_t aID);
+
+  static int32_t GetChildIDFor(LocalAccessible* aAccessible);
+  static uint32_t GetContentProcessIdFor(dom::ContentParentId aIPCContentId);
+  static void ReleaseContentProcessIdFor(dom::ContentParentId aIPCContentId);
+  static void AssignChildIDTo(NotNull<sdnAccessible*> aSdnAcc);
+  static void ReleaseChildID(NotNull<sdnAccessible*> aSdnAcc);
+
+ protected:
+  virtual ~MsaaAccessible();
+
+  uint32_t mID;
+  static MsaaIdGenerator sIDGen;
+};
 
 }  // namespace a11y
 }  // namespace mozilla
