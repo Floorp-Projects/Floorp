@@ -6,7 +6,6 @@
 
 UNIFIED_SOURCES += [
     "FuzzingStreamListener.cpp",
-    "TestFtpFuzzing.cpp",
     "TestHttpFuzzing.cpp",
     "TestURIFuzzing.cpp",
     "TestWebsocketFuzzing.cpp",
@@ -15,7 +14,6 @@ UNIFIED_SOURCES += [
 LOCAL_INCLUDES += [
     "/caps",
     "/netwerk/base",
-    "/netwerk/protocol/ftp",
     "/netwerk/protocol/http",
     "/xpcom/tests/gtest",
 ]
