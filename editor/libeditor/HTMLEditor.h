@@ -698,10 +698,11 @@ class HTMLEditor final : public TextEditor,
    *                            If ePrevious, selection will be collapsed at
    *                            the <br> element.
    * @return                    The new <br> node.  If failed to create new
-   *                            <br> node, returns nullptr.
+   *                            <br> node, returns error.
    */
-  MOZ_CAN_RUN_SCRIPT already_AddRefed<Element> InsertBRElementWithTransaction(
-      const EditorDOMPoint& aPointToInsert, EDirection aSelect = eNone);
+  MOZ_CAN_RUN_SCRIPT Result<RefPtr<Element>, nsresult>
+  InsertBRElementWithTransaction(const EditorDOMPoint& aPointToInsert,
+                                 EDirection aSelect = eNone);
 
   /**
    * DeleteNodeWithTransaction() removes aContent from the DOM tree if it's
