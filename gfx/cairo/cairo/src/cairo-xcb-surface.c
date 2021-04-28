@@ -912,7 +912,8 @@ _cairo_xcb_fallback_compositor_glyphs (const cairo_compositor_t     *compositor,
 				       cairo_scaled_font_t          *scaled_font,
 				       cairo_glyph_t                *glyphs,
 				       int                           num_glyphs,
-				       cairo_bool_t                  overlap)
+				       cairo_bool_t                  overlap,
+				       cairo_bool_t                  permit_subpixel_antialiasing)
 {
     cairo_xcb_surface_t *surface = (cairo_xcb_surface_t *) extents->surface;
     cairo_surface_t *fallback = _cairo_xcb_surface_fallback (surface, extents);
