@@ -400,12 +400,12 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
   /* Runs off a message on the graph when input audio from aID is not needed
    * anymore, for a particular track. It can be that other tracks still need
    * audio from this audio input device. */
-  void CloseAudioInputImpl(Maybe<CubebUtils::AudioDeviceID>& aID,
+  void CloseAudioInputImpl(CubebUtils::AudioDeviceID aID,
                            AudioDataListener* aListener);
   /* Called on the main thread when input audio from aID is not needed
    * anymore, for a particular track. It can be that other tracks still need
    * audio from this audio input device. */
-  virtual void CloseAudioInput(Maybe<CubebUtils::AudioDeviceID>& aID,
+  virtual void CloseAudioInput(CubebUtils::AudioDeviceID aID,
                                AudioDataListener* aListener) override;
 
   /* Add or remove an audio output for this track. All tracks that have an
