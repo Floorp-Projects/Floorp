@@ -2698,28 +2698,6 @@ nsEventStatus AsyncPanZoomController::OnPan(
     }
   }
 
-  // We need to update the axis velocity in order to get a useful display port
-  // size and position. We need to do so even if this is a momentum pan (i.e.
-  // aFingersOnTouchpad == No); in that case the "with touch" part is not
-  // really appropriate, so we may want to rethink this at some point.
-  // Note that we have to make all simulated positions relative to
-  // Axis::GetPos(), because the current position is an invented position, and
-  // because resetting the position to the mouse position (e.g.
-  // aEvent.mLocalStartPoint) would mess up velocity calculation. (This is
-  // the only caller of UpdateWithTouchAtDevicePoint() for pan events, so
-  // there is no risk of other calls resetting the position.)
-  // Also note that if there is an on-going overscroll animation in the axis,
-  // we shouldn't call UpdateWithTouchAtDevicePoint because the call changes
-  // the velocity which should be managed by the overscroll animation.
-  if (logicalPanDisplacement.x != 0) {
-    mX.UpdateWithTouchAtDevicePoint(mX.GetPos() - logicalPanDisplacement.x,
-                                    aEvent.mTimeStamp);
-  }
-  if (logicalPanDisplacement.y != 0) {
-    mY.UpdateWithTouchAtDevicePoint(mY.GetPos() - logicalPanDisplacement.y,
-                                    aEvent.mTimeStamp);
-  }
-
   HandlePanningUpdate(physicalPanDisplacement);
 
   MOZ_ASSERT(GetCurrentPanGestureBlock());
@@ -2746,6 +2724,35 @@ nsEventStatus AsyncPanZoomController::OnPan(
 
   const ParentLayerPoint velocity = GetVelocityVector();
   bool consumed = CallDispatchScroll(startPoint, endPoint, handoffState);
+
+  const ParentLayerPoint visualDisplacement = ToParentLayerCoordinates(
+      handoffState.mTotalMovement, aEvent.mPanStartPoint);
+  // We need to update the axis velocity in order to get a useful display port
+  // size and position. We need to do so even if this is a momentum pan (i.e.
+  // aFingersOnTouchpad == No); in that case the "with touch" part is not
+  // really appropriate, so we may want to rethink this at some point.
+  // Note that we have to make all simulated positions relative to
+  // Axis::GetPos(), because the current position is an invented position, and
+  // because resetting the position to the mouse position (e.g.
+  // aEvent.mLocalStartPoint) would mess up velocity calculation. (This is
+  // the only caller of UpdateWithTouchAtDevicePoint() for pan events, so
+  // there is no risk of other calls resetting the position.)
+  // Also note that if there is an on-going overscroll animation in the axis,
+  // we shouldn't call UpdateWithTouchAtDevicePoint because the call changes
+  // the velocity which should be managed by the overscroll animation.
+  // Finally, note that we do this *after* CallDispatchScroll(), so that the
+  // position we use reflects the actual amount of movement that occurred
+  // (in particular, if we're in overscroll, if reflects the amount of movement
+  // *after* applying resistance). This is important because we want the axis
+  // velocity to track the visual movement speed of the page.
+  if (visualDisplacement.x != 0) {
+    mX.UpdateWithTouchAtDevicePoint(mX.GetPos() - visualDisplacement.x,
+                                    aEvent.mTimeStamp);
+  }
+  if (visualDisplacement.y != 0) {
+    mY.UpdateWithTouchAtDevicePoint(mY.GetPos() - visualDisplacement.y,
+                                    aEvent.mTimeStamp);
+  }
 
   if (aFingersOnTouchpad == FingersOnTouchpad::No) {
     if (IsOverscrolled() && mState != OVERSCROLL_ANIMATION) {
@@ -3393,6 +3400,7 @@ bool AsyncPanZoomController::AttemptScroll(
         !block->GetScrolledApzc() || block->IsDownchainOfScrolledApzc(this);
   }
 
+  ParentLayerPoint adjustedDisplacement;
   if (scrollThisApzc) {
     RecursiveMutexAutoLock lock(mRecursiveMutex);
     bool respectDisregardedDirections =
@@ -3406,7 +3414,6 @@ bool AsyncPanZoomController::AttemptScroll(
         mScrollMetadata.GetDisregardedDirection() ==
             Some(ScrollDirection::eHorizontal);
 
-    ParentLayerPoint adjustedDisplacement;
     bool yChanged =
         mY.AdjustDisplacement(displacement.y, adjustedDisplacement.y,
                               overscroll.y, forcesVerticalOverscroll);
@@ -3454,6 +3461,14 @@ bool AsyncPanZoomController::AttemptScroll(
     overscroll = displacement;
   }
 
+  // Accumulate the amount of actual scrolling that occurred into the handoff
+  // state. Note that ToScreenCoordinates() needs to be called outside the
+  // mutex.
+  if (!IsZero(adjustedDisplacement)) {
+    aOverscrollHandoffState.mTotalMovement +=
+        ToScreenCoordinates(adjustedDisplacement, aEndPoint);
+  }
+
   // If we consumed the entire displacement as a normal scroll, great.
   if (IsZero(overscroll)) {
     return true;
@@ -3480,7 +3495,23 @@ bool AsyncPanZoomController::AttemptScroll(
   // overscroll, try to accept it ourselves. We only accept it if we
   // are pannable.
   APZC_LOG("%p taking overscroll during panning\n", this);
+
+  ParentLayerPoint prevVisualOverscroll = GetOverscrollAmount();
+
   OverscrollForPanning(overscroll, aOverscrollHandoffState.mPanDistance);
+
+  // Accumulate the amount of change to the overscroll that occurred into the
+  // handoff state. Note that the input amount, |overscroll|, is turned into
+  // some smaller visual overscroll amount (queried via GetOverscrollAmount())
+  // by applying resistance (Axis::ApplyResistance()), and it's the latter we
+  // want to count towards OverscrollHandoffState::mTotalMovement.
+  ParentLayerPoint visualOverscrollChange =
+      GetOverscrollAmount() - prevVisualOverscroll;
+  if (!IsZero(visualOverscrollChange)) {
+    aOverscrollHandoffState.mTotalMovement +=
+        ToScreenCoordinates(visualOverscrollChange, aEndPoint);
+  }
+
   aStartPoint = aEndPoint + overscroll;
 
   return IsZero(overscroll);
