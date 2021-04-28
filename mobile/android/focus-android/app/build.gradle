@@ -261,7 +261,23 @@ android.applicationVariants.all { variant ->
 }
 
 // -------------------------------------------------------------------------------------------------
-// Adjust: Read token from locale file if it exists (Only release builds)
+// MLS: Read token from local file if it exists (Only release builds)
+// -------------------------------------------------------------------------------------------------
+
+android.applicationVariants.all {
+    print("MLS token: ")
+    try {
+        def token = new File("${rootDir}/.mls_token").text.trim()
+        buildConfigField 'String', 'MLS_TOKEN', '"' + token + '"'
+        println "(Added from .mls_token file)"
+    } catch (FileNotFoundException ignored) {
+        buildConfigField 'String', 'MLS_TOKEN', '""'
+        println("X_X")
+    }
+}
+
+// -------------------------------------------------------------------------------------------------
+// Adjust: Read token from local file if it exists (Only release builds)
 // -------------------------------------------------------------------------------------------------
 
 android.applicationVariants.all { variant ->
@@ -285,7 +301,7 @@ android.applicationVariants.all { variant ->
 }
 
 // -------------------------------------------------------------------------------------------------
-// Sentry: Read token from locale file if it exists (Only release builds)
+// Sentry: Read token from local file if it exists (Only release builds)
 // -------------------------------------------------------------------------------------------------
 
 android.applicationVariants.all {

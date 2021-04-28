@@ -54,6 +54,7 @@ def generate_build_task(apks, tag):
         command=(checkout +
                  ' && python tools/taskcluster/get-adjust-token.py'
                  ' && python tools/taskcluster/get-sentry-token.py'
+                 ' && python tools/taskcluster/get-mls-token.py'
                  ' && ./gradlew --no-daemon clean test ' + assemble_task),
         features = {
             "chainOfTrust": True
