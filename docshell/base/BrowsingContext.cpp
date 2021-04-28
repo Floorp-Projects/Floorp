@@ -3372,16 +3372,17 @@ void BrowsingContext::RemoveFromSessionHistory(const nsID& aChangeID) {
 
 void BrowsingContext::HistoryGo(int32_t aOffset, uint64_t aHistoryEpoch,
                                 bool aRequireUserInteraction,
+                                bool aUserActivation,
                                 std::function<void(int32_t&&)>&& aResolver) {
   if (XRE_IsContentProcess()) {
     ContentChild::GetSingleton()->SendHistoryGo(
-        this, aOffset, aHistoryEpoch, aRequireUserInteraction,
+        this, aOffset, aHistoryEpoch, aRequireUserInteraction, aUserActivation,
         std::move(aResolver),
         [](mozilla::ipc::
                ResponseRejectReason) { /* FIXME Is ignoring this fine? */ });
   } else {
     Canonical()->HistoryGo(
-        aOffset, aHistoryEpoch, aRequireUserInteraction,
+        aOffset, aHistoryEpoch, aRequireUserInteraction, aUserActivation,
         Canonical()->GetContentParent()
             ? Some(Canonical()->GetContentParent()->ChildID())
             : Nothing(),
