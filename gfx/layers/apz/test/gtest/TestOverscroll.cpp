@@ -1402,6 +1402,41 @@ TEST_F(APZCOverscrollTester, NoOverscrollForMousewheel) {
 }
 #endif
 
+#ifndef MOZ_WIDGET_ANDROID  // Only applies to GenericOverscrollEffect
+TEST_F(APZCOverscrollTester, DynamicallyLoadingContent) {
+  SCOPED_GFX_PREF_BOOL("apz.overscroll.enabled", true);
+
+  ScrollMetadata metadata;
+  FrameMetrics& metrics = metadata.GetMetrics();
+  metrics.SetCompositionBounds(ParentLayerRect(0, 0, 100, 100));
+  metrics.SetScrollableRect(CSSRect(0, 0, 100, 1000));
+  metrics.SetVisualScrollOffset(CSSPoint(0, 0));
+  apzc->SetFrameMetrics(metrics);
+
+  // Pan to the bottom of the page, and further, into overscroll.
+  ScreenIntPoint panPoint(50, 50);
+  PanGesture(PanGestureInput::PANGESTURE_START, apzc, panPoint,
+             ScreenPoint(0, -1), mcc->Time());
+  for (int i = 0; i < 12; ++i) {
+    mcc->AdvanceByMillis(10);
+    PanGesture(PanGestureInput::PANGESTURE_PAN, apzc, panPoint,
+               ScreenPoint(0, 100), mcc->Time());
+  }
+  EXPECT_TRUE(apzc->IsOverscrolled());
+  EXPECT_TRUE(apzc->GetOverscrollAmount().y > 0);  // overscrolled at bottom
+
+  // Grow the scrollable rect at the bottom, simulating the page loading content
+  // dynamically.
+  CSSRect scrollableRect = metrics.GetScrollableRect();
+  scrollableRect.height += 500;
+  metrics.SetScrollableRect(scrollableRect);
+  apzc->NotifyLayersUpdated(metadata, false, true);
+
+  // Check that the modified scrollable rect cleared the overscroll.
+  EXPECT_FALSE(apzc->IsOverscrolled());
+}
+#endif
+
 class APZCOverscrollTesterForLayersOnly : public APZCTreeManagerTester {
  public:
   APZCOverscrollTesterForLayersOnly() { mLayersOnly = true; }
