@@ -1593,12 +1593,21 @@ EditorBase::InsertPaddingBRElementForEmptyLastLineWithTransaction(
   MOZ_ASSERT(IsEditActionDataAvailable());
   MOZ_ASSERT(IsHTMLEditor() || !aPointToInsert.IsInTextNode());
 
-  EditorDOMPoint pointToInsert =
-      IsTextEditor() ? aPointToInsert
-                     : MOZ_KnownLive(AsHTMLEditor())
-                           ->PrepareToInsertBRElement(aPointToInsert);
-  if (NS_WARN_IF(!pointToInsert.IsSet())) {
+  if (!aPointToInsert.IsSet()) {
     return CreateElementResult(NS_ERROR_FAILURE);
+  }
+
+  EditorDOMPoint pointToInsert;
+  if (IsTextEditor()) {
+    pointToInsert = aPointToInsert;
+  } else {
+    Result<EditorDOMPoint, nsresult> maybePointToInsert =
+        MOZ_KnownLive(AsHTMLEditor())->PrepareToInsertBRElement(aPointToInsert);
+    if (maybePointToInsert.isErr()) {
+      return CreateElementResult(maybePointToInsert.unwrapErr());
+    }
+    MOZ_ASSERT(maybePointToInsert.inspect().IsSetAndValid());
+    pointToInsert = maybePointToInsert.unwrap();
   }
 
   RefPtr<Element> newBRElement = CreateHTMLContent(nsGkAtoms::br);
