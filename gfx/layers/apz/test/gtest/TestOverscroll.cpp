@@ -1319,6 +1319,64 @@ TEST_F(APZCOverscrollTester, OverscrollByPanGesturesInterruptedByReflowZoom) {
 }
 #endif
 
+#ifndef MOZ_WIDGET_ANDROID  // Only applies to GenericOverscrollEffect
+TEST_F(APZCOverscrollTester, SmoothTransitionFromPanToAnimation) {
+  SCOPED_GFX_PREF_BOOL("apz.overscroll.enabled", true);
+
+  ScrollMetadata metadata;
+  FrameMetrics& metrics = metadata.GetMetrics();
+  metrics.SetCompositionBounds(ParentLayerRect(0, 0, 100, 100));
+  metrics.SetScrollableRect(CSSRect(0, 0, 100, 1000));
+  // Start scrolled down to y=500px.
+  metrics.SetVisualScrollOffset(CSSPoint(0, 500));
+  apzc->SetFrameMetrics(metrics);
+
+  int frameLength = 10;    // milliseconds; 10 to keep the math simple
+  float panVelocity = 10;  // pixels per millisecond
+  int panPixelsPerFrame = frameLength * panVelocity;  // 100 pixels per frame
+
+  ScreenIntPoint panPoint(50, 50);
+  PanGesture(PanGestureInput::PANGESTURE_START, apzc, panPoint,
+             ScreenPoint(0, -1), mcc->Time());
+  // Pan up for 6 frames at 100 pixels per frame. This should reduce
+  // the vertical scroll offset from 500 to 0, and get us into overscroll.
+  for (int i = 0; i < 6; ++i) {
+    mcc->AdvanceByMillis(frameLength);
+    PanGesture(PanGestureInput::PANGESTURE_PAN, apzc, panPoint,
+               ScreenPoint(0, -panPixelsPerFrame), mcc->Time());
+  }
+  EXPECT_TRUE(apzc->IsOverscrolled());
+
+  // Pan further into overscroll at the same input velocity, enough
+  // for the frames while we are in overscroll to dominate the computation
+  // in the velocity tracker.
+  // Importantly, while the input velocity is still 100 pixels per frame,
+  // in the overscrolled state the page only visual moves by at most 8 pixels
+  // per frame.
+  int frames = StaticPrefs::apz_velocity_relevance_time_ms() / frameLength;
+  for (int i = 0; i < frames; ++i) {
+    mcc->AdvanceByMillis(frameLength);
+    PanGesture(PanGestureInput::PANGESTURE_PAN, apzc, panPoint,
+               ScreenPoint(0, -panPixelsPerFrame), mcc->Time());
+  }
+  EXPECT_TRUE(apzc->IsOverscrolled());
+
+  // End the pan, allowing an overscroll animation to start.
+  mcc->AdvanceByMillis(frameLength);
+  PanGesture(PanGestureInput::PANGESTURE_END, apzc, panPoint, ScreenPoint(0, 0),
+             mcc->Time());
+  EXPECT_TRUE(apzc->IsOverscrollAnimationRunning());
+
+  // Check that the velocity reflects the actual movement (no more than 8
+  // pixels/frame ==> 0.8 pixels per millisecond), not the input velocity
+  // (100 pixels/frame ==> 10 pixels per millisecond). This ensures that
+  // the transition from the pan to the animation appears smooth.
+  // (Note: velocities are negative since they are upwards.)
+  EXPECT_LT(apzc->GetVelocityVector().y, 0);
+  EXPECT_GT(apzc->GetVelocityVector().y, -0.8);
+}
+#endif
+
 class APZCOverscrollTesterForLayersOnly : public APZCTreeManagerTester {
  public:
   APZCOverscrollTesterForLayersOnly() { mLayersOnly = true; }
