@@ -179,6 +179,7 @@ class IOUtils final {
    * Attempts to read the entire file at |aPath| into a buffer.
    *
    * @param aFile       The location of the file.
+   * @param aOffset     The offset to start reading from.
    * @param aMaxBytes   If |Some|, then only read up this this number of bytes,
    *                    otherwise attempt to read the whole file.
    * @param aDecompress If true, decompress the bytes read from disk before
@@ -189,7 +190,8 @@ class IOUtils final {
    *         error.
    */
   static Result<JsBuffer, IOError> ReadSync(nsIFile* aFile,
-                                            const Maybe<uint32_t>& aMaxBytes,
+                                            const uint32_t aOffset,
+                                            const Maybe<uint32_t> aMaxBytes,
                                             const bool aDecompress,
                                             BufferKind aBufferKind);
 
