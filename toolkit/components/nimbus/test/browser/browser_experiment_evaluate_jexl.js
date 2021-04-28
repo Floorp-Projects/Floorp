@@ -30,7 +30,7 @@ const FAKE_CONTEXT = {
 add_task(async function test_throws_if_no_experiment_in_context() {
   await Assert.rejects(
     RemoteSettingsExperimentLoader.evaluateJexl("true", { customThing: 1 }),
-    /Expected an .experiment property/,
+    /Expected an .experiment or .activeRemoteDefaults/,
     "should throw if experiment is not passed to the custom context"
   );
 });
