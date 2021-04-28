@@ -37,6 +37,14 @@ object Config {
     }
 
     @JvmStatic
+    fun nightlyVersionName(): String {
+        // Nightly versions use the Gecko/A-C major version and append "0.a1", e.g. with A-C 90.0.20210426143115
+        // the Nightly version will be 90.0a1
+        val majorVersion = AndroidComponents.VERSION.split(".")[0]
+        return "$majorVersion.0a1"
+    }
+
+    @JvmStatic
     fun generateBuildDate(): String {
         val dateTime = LocalDateTime.now()
         val timeFormatter = DateTimeFormatter.ofPattern("h:mm a")
