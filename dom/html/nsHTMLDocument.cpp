@@ -182,22 +182,21 @@ void nsHTMLDocument::ResetToURI(nsIURI* aURI, nsILoadGroup* aLoadGroup,
   SetContentTypeInternal(nsDependentCString("text/html"));
 }
 
-void nsHTMLDocument::TryHintCharset(nsIContentViewer* aCv,
-                                    int32_t& aCharsetSource,
-                                    NotNull<const Encoding*>& aEncoding) {
+void nsHTMLDocument::TryReloadCharset(nsIContentViewer* aCv,
+                                      int32_t& aCharsetSource,
+                                      NotNull<const Encoding*>& aEncoding) {
   if (aCv) {
-    int32_t requestCharsetSource;
-    nsresult rv = aCv->GetHintCharacterSetSource(&requestCharsetSource);
+    int32_t reloadEncodingSource;
+    const auto reloadEncoding =
+        aCv->GetReloadEncodingAndSource(&reloadEncodingSource);
+    if (kCharsetUninitialized != reloadEncodingSource) {
+      aCv->ForgetReloadEncoding();
 
-    if (NS_SUCCEEDED(rv) && kCharsetUninitialized != requestCharsetSource) {
-      auto requestCharset = aCv->GetHintCharset();
-      aCv->SetHintCharacterSetSource((int32_t)(kCharsetUninitialized));
+      if (reloadEncodingSource <= aCharsetSource) return;
 
-      if (requestCharsetSource <= aCharsetSource) return;
-
-      if (requestCharset && IsAsciiCompatible(requestCharset)) {
-        aCharsetSource = requestCharsetSource;
-        aEncoding = WrapNotNull(requestCharset);
+      if (reloadEncoding && IsAsciiCompatible(reloadEncoding)) {
+        aCharsetSource = reloadEncodingSource;
+        aEncoding = WrapNotNull(reloadEncoding);
       }
     }
   }
@@ -464,7 +463,7 @@ nsresult nsHTMLDocument::StartDocumentLoad(const char* aCommand,
     // The following will try to get the character encoding from various
     // sources. Each Try* function will return early if the source is already
     // at least as large as any of the sources it might look at.  Some of
-    // these functions (like TryHintCharset and TryParentCharset) can set
+    // these functions (like TryReloadCharset and TryParentCharset) can set
     // charsetSource to various values depending on where the charset they
     // end up finding originally comes from.
 
@@ -480,7 +479,7 @@ nsresult nsHTMLDocument::StartDocumentLoad(const char* aCommand,
 
     TryUserForcedCharset(cv, docShell, charsetSource, encoding);
 
-    TryHintCharset(cv, charsetSource, encoding);  // For encoding reload
+    TryReloadCharset(cv, charsetSource, encoding);  // For encoding reload
     TryParentCharset(docShell, charsetSource, encoding);
   }
 

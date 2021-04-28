@@ -8,7 +8,9 @@
 #define nsDocShell_h__
 
 #include "Units.h"
+#include "mozilla/Encoding.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/NotNull.h"
 #include "mozilla/ScrollbarPreferences.h"
 #include "mozilla/TimelineConsumers.h"
 #include "mozilla/UniquePtr.h"
@@ -333,8 +335,8 @@ class nsDocShell final : public nsDocLoader,
   nsresult SetHTMLEditorInternal(mozilla::HTMLEditor* aHTMLEditor);
 
   // Handle page navigation due to charset changes
-  nsresult CharsetChangeReloadDocument(const char* aCharset = nullptr,
-                                       int32_t aSource = kCharsetUninitialized);
+  nsresult CharsetChangeReloadDocument(
+      mozilla::NotNull<const mozilla::Encoding*> aEncoding, int32_t aSource);
   nsresult CharsetChangeStopDocumentLoad();
 
   nsDOMNavigationTiming* GetNavigationTiming() const;
