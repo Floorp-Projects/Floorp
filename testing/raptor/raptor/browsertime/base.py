@@ -198,13 +198,14 @@ class Browsertime(Perftest):
                 )
             ]
         else:
+            # Custom scripts are treated as pageload tests for now
             browsertime_script = [
                 os.path.join(
                     os.path.dirname(__file__),
                     "..",
                     "..",
                     "browsertime",
-                    "browsertime_pageload.js",
+                    test.get("test_script", "browsertime_pageload.js"),
                 )
             ]
 
@@ -341,6 +342,26 @@ class Browsertime(Perftest):
                     value = ",".join(value.split(",") + extra)
                 if value is not None:
                     browsertime_options.extend([browser_time_option, str(value)])
+
+        # Add custom test-specific options and allow them to
+        # overwrite our presets.
+        if test.get("browsertime_args", None):
+            split_args = test.get("browsertime_args").strip().split()
+            for split_arg in split_args:
+                pairing = split_arg.split("=")
+                if len(pairing) not in (1, 2):
+                    raise Exception(
+                        "One of the browsertime_args from the test was not split properly. "
+                        f"Expecting a --flag, or a --option=value pairing. Found: {split_arg}"
+                    )
+
+                if pairing[0] in browsertime_options:
+                    # If it's a flag, don't re-add it
+                    if len(pairing) > 1:
+                        ind = browsertime_options.index(pairing[0])
+                        browsertime_options[ind + 1] = pairing[1]
+                else:
+                    browsertime_options.extend(pairing)
 
         return (
             [self.browsertime_node, self.browsertime_browsertimejs]
