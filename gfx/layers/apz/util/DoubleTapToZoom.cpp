@@ -184,15 +184,19 @@ ZoomTarget CalculateRectToZoomTo(
   if (!rect.Contains(documentRelativePoint)) {
     if (nsIFrame* scrolledFrame = rootScrollFrame->GetScrolledFrame()) {
       if (nsIFrame* f = element->GetPrimaryFrame()) {
-        CSSRect overflowRect =
-            CSSRect::FromAppUnits(nsLayoutUtils::TransformFrameRectToAncestor(
-                f, f->ScrollableOverflowRect(),
-                RelativeTo{scrolledFrame, ViewportType::Layout}));
-        if (nearestScrollClip.isSome()) {
-          overflowRect = nearestScrollClip->Intersect(overflowRect);
-        }
-        if (overflowRect.Contains(documentRelativePoint)) {
-          rect = overflowRect;
+        nsRect overflowRect = f->ScrollableOverflowRect();
+        nsLayoutUtils::TransformResult res =
+            nsLayoutUtils::TransformRect(f, scrolledFrame, overflowRect);
+        MOZ_ASSERT(res == nsLayoutUtils::TRANSFORM_SUCCEEDED ||
+                   res == nsLayoutUtils::NONINVERTIBLE_TRANSFORM);
+        if (res == nsLayoutUtils::TRANSFORM_SUCCEEDED) {
+          CSSRect overflowRectCSS = CSSRect::FromAppUnits(overflowRect);
+          if (nearestScrollClip.isSome()) {
+            overflowRectCSS = nearestScrollClip->Intersect(overflowRectCSS);
+          }
+          if (overflowRectCSS.Contains(documentRelativePoint)) {
+            rect = overflowRectCSS;
+          }
         }
       }
     }
