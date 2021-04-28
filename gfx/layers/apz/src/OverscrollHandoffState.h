@@ -147,6 +147,11 @@ struct OverscrollHandoffState {
   const ScreenPoint mPanDistance;
 
   ScrollSource mScrollSource;
+
+  // The total amount of actual movement that this scroll caused, including
+  // scrolling and changes to overscroll. This starts at zero and is accumulated
+  // over the course of the handoff.
+  ScreenPoint mTotalMovement;
 };
 
 /*
