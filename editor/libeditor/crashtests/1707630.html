@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script>
+      window.addEventListener('load', () => {
+        document = document
+        document.documentElement = document.documentElement
+        document.addEventListener('DOMNodeInserted', (e) => {
+          e.currentTarget.removeChild(e.currentTarget.childNodes[(2731378636 % e.currentTarget.childNodes.length)])
+        }, {})
+        document.documentElement.contentEditable = true
+        document.execCommand('insertParagraph', false, null)
+      })
+    </script>
+</head>
+</html>
