@@ -11,11 +11,13 @@ checkbox {
   -moz-box-align: center;
   margin: 4px 2px;
 }
+} /*** END Proton ***/
 
-.checkbox-icon {
+.checkbox-icon[src] {
   margin-inline-end: 2px;
 }
 
+@media (-moz-proton) {
 .checkbox-label {
   margin: 1px 0;
 }

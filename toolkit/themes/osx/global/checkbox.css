@@ -18,10 +18,6 @@ checkbox[native] {
   margin: 4px 2px;
 }
 
-.checkbox-icon[native] {
-  margin-inline-end: 2px;
-}
-
 .checkbox-label[native] {
   margin: 1px 0;
 }
@@ -52,10 +48,6 @@ checkbox {
   -moz-default-appearance: checkbox-container;
   -moz-box-align: center;
   margin: 4px 2px;
-}
-
-.checkbox-icon {
-  margin-inline-end: 2px;
 }
 
 .checkbox-label {

@@ -113,7 +113,10 @@ button > hbox > label {
 }
 
 .indent {
-  margin-inline-start: 28px !important;
+  /* This should match the checkboxes/radiobuttons' width and inline margin,
+     such that when we have a toggle with a label followed by another element
+     with this class, the other element's text aligns with the toggle label. */
+  margin-inline-start: 22px !important;
 }
 
 checkbox {
@@ -426,10 +429,10 @@ checkbox {
   margin-inline-end: 0;
 }
 
-#homeContentsGroup checkbox[src] .checkbox-icon {
+#homeContentsGroup .checkbox-icon[src] {
   -moz-context-properties: fill;
   fill: currentColor;
-  margin-inline: 4px 8px;
+  margin-inline: 2px 8px;
   width: 16px;
 }
 
@@ -762,7 +765,7 @@ dialog > .sync-engines-list + hbox {
 
 .sync-engines-list checkbox .checkbox-icon,
 .sync-engine-image {
-  margin-inline: 4px 8px;
+  margin-inline: 2px 8px;
   width: 16px;
   height: 16px;
   -moz-context-properties: fill;
