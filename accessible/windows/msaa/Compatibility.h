@@ -7,6 +7,7 @@
 #ifndef COMPATIBILITY_MANAGER_H
 #define COMPATIBILITY_MANAGER_H
 
+#include <windows.h>
 #include "mozilla/Maybe.h"
 #include "nsString.h"
 #include <stdint.h>
