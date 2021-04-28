@@ -622,15 +622,15 @@ static bool UpdateNurseryBuffersOnTransfer(js::Nursery& nursery, JSString* from,
   return true;
 }
 
-static bool CanReuseLeftmostBuffer(JSRope* leftmostRope, size_t wholeLength,
+static bool CanReuseLeftmostBuffer(JSString* leftmostChild, size_t wholeLength,
                                    bool hasTwoByteChars) {
-  if (!leftmostRope->leftChild()->isExtensible()) {
+  if (!leftmostChild->isExtensible()) {
     return false;
   }
 
-  JSExtensibleString& leftmostChild = leftmostRope->leftChild()->asExtensible();
-  return leftmostChild.capacity() >= wholeLength &&
-         leftmostChild.hasTwoByteChars() == hasTwoByteChars;
+  JSExtensibleString& str = leftmostChild->asExtensible();
+  return str.capacity() >= wholeLength &&
+         str.hasTwoByteChars() == hasTwoByteChars;
 }
 
 JSLinearString* JSRope::flatten(JSContext* maybecx) {
@@ -733,17 +733,15 @@ JSLinearString* JSRope::flattenInternal(JSRope* root) {
   while (leftmostRope->leftChild()->isRope()) {
     leftmostRope = &leftmostRope->leftChild()->asRope();
   }
+  JSString* leftmostChild = leftmostRope->leftChild();
 
   bool reuseLeftmostBuffer = CanReuseLeftmostBuffer(
-      leftmostRope, wholeLength, std::is_same_v<CharT, char16_t>);
-
-  uint32_t leftmostChildLength = 0;  // Only set if we reuse leftmost buffer.
+      leftmostChild, wholeLength, std::is_same_v<CharT, char16_t>);
 
   if (reuseLeftmostBuffer) {
-    JSExtensibleString& left = leftmostRope->leftChild()->asExtensible();
-    size_t capacity = left.capacity();
+    JSExtensibleString& left = leftmostChild->asExtensible();
+    wholeCapacity = left.capacity();
     wholeChars = const_cast<CharT*>(left.nonInlineChars<CharT>(nogc));
-    wholeCapacity = capacity;
 
     // Nursery::registerMallocedBuffer is fallible, so attempt it first before
     // doing anything irreversible.
@@ -751,31 +749,8 @@ JSLinearString* JSRope::flattenInternal(JSRope* root) {
                                         wholeCapacity * sizeof(CharT))) {
       return nullptr;
     }
-
-    ropeBarrierDuringFlattening<usingBarrier>(leftmostRope);
-    leftmostRope->setNonInlineChars(wholeChars);
-    leftmostChildLength = left.length();
-
-    // Remove memory association for left node we're about to make into a
-    // dependent string.
-    if (left.isTenured()) {
-      RemoveCellMemory(&left, left.allocSize(), MemoryUse::StringContents);
-    }
-
-    uint32_t flags = INIT_DEPENDENT_FLAGS;
-    if (left.inStringToAtomCache()) {
-      flags |= IN_STRING_TO_ATOM_CACHE;
-    }
-    left.setLengthAndFlags(leftmostChildLength,
-                           StringFlagsForCharType<CharT>(flags));
-    left.d.s.u3.base = (JSLinearString*)root; /* will be true on exit */
-    if (left.isTenured() && !root->isTenured()) {
-      // leftmost child -> root is a tenured -> nursery edge.
-      root->storeBuffer()->putWholeCell(&left);
-    }
   } else {
     // If we can't reuse the leftmost child's buffer, allocate a new one.
-
     if (!AllocChars(root, wholeLength, &wholeChars, &wholeCapacity)) {
       return nullptr;
     }
@@ -807,11 +782,6 @@ first_visit_node : {
   parent = nullptr;
   parentFlag = 0;
 
-  if (reuseLeftmostBuffer && str == leftmostRope) {
-    // Left child has already been overwritten.
-    pos += leftmostChildLength;
-    goto visit_right_child;
-  }
   if (left.isRope()) {
     /* Return to this node when 'left' done, then goto visit_right_child. */
     parent = str;
@@ -819,7 +789,9 @@ first_visit_node : {
     str = &left;
     goto first_visit_node;
   }
-  CopyChars(pos, left.asLinear());
+  if (!(reuseLeftmostBuffer && &left == leftmostChild)) {
+    CopyChars(pos, left.asLinear());
+  }
   pos += left.length();
 }
 
@@ -881,12 +853,33 @@ finish_root:
   MOZ_ASSERT(str == root);
   MOZ_ASSERT(pos == wholeChars + wholeLength);
 
-  str->setLengthAndFlags(wholeLength,
-                         StringFlagsForCharType<CharT>(EXTENSIBLE_FLAGS));
-  str->setNonInlineChars(wholeChars);
-  str->d.s.u3.capacity = wholeCapacity;
-  if (str->isTenured()) {
-    AddCellMemory(str, str->asLinear().allocSize(), MemoryUse::StringContents);
+  root->setLengthAndFlags(wholeLength,
+                          StringFlagsForCharType<CharT>(EXTENSIBLE_FLAGS));
+  root->setNonInlineChars(wholeChars);
+  root->d.s.u3.capacity = wholeCapacity;
+  if (root->isTenured()) {
+    AddCellMemory(root, root->asLinear().allocSize(),
+                  MemoryUse::StringContents);
+  }
+
+  if (reuseLeftmostBuffer) {
+    // Remove memory association for left node we're about to make into a
+    // dependent string.
+    JSString& left = *leftmostChild;
+    if (left.isTenured()) {
+      RemoveCellMemory(&left, left.allocSize(), MemoryUse::StringContents);
+    }
+
+    uint32_t flags = INIT_DEPENDENT_FLAGS;
+    if (left.inStringToAtomCache()) {
+      flags |= IN_STRING_TO_ATOM_CACHE;
+    }
+    left.setLengthAndFlags(left.length(), StringFlagsForCharType<CharT>(flags));
+    left.d.s.u3.base = &root->asLinear();
+    if (left.isTenured() && !root->isTenured()) {
+      // leftmost child -> root is a tenured -> nursery edge.
+      root->storeBuffer()->putWholeCell(&left);
+    }
   }
 
   return &root->asLinear();
