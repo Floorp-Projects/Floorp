@@ -12,11 +12,28 @@ throughout the source files themselves by looking for comments labelled with
 `[SMDOC]`_. Information about the team, our processes, and about embedding
 *SpiderMonkey* in your own projects can be found at https://spidermonkey.dev.
 
+Specific documentation on a few topics is available at:
+
+.. toctree::
+   :maxdepth: 1
+
+   build
+   Debugger/index
+   SavedFrame/index
+
 Components of SpiderMonkey
 ##########################
 
 🧹 Garbage Collector
 *********************
+
+.. toctree::
+   :maxdepth: 2
+   :hidden:
+
+   Overview <gc>
+   Rooting Hazard Analysis <HazardAnalysis/index>
+   Running the Analysis <HazardAnalysis/running>
 
 *JavaScript* is a garbage collected language and at the core of *SpiderMonkey*
 we manage a garbage-collected memory heap. Elements of this heap have a base
@@ -86,6 +103,12 @@ their implementation.
 
 ⚡ JavaScript JITs
 *******************
+
+.. toctree::
+   :maxdepth: 1
+   :hidden:
+
+   MIR-optimizations/index
 
 In order to speed up execution of *bytecode*, we use a series of Just-In-Time
 (JIT) compilers to generate specialized machine code (eg. x86, ARM, etc)
@@ -169,19 +192,6 @@ written in Rust. This currently is used on ARM64-based platforms (which do
 not support *BaldrMonkey*).
 
 
-Other documentation
-###################
-
-.. toctree::
-   :maxdepth: 1
-
-   build
-   gc
-   Debugger/index
-   SavedFrame/index
-   MIR-optimizations/index
-
-
 .. _gc::Cell: https://searchfox.org/mozilla-central/search?q=[SMDOC]+GC+Cell
 .. _JSObject: https://searchfox.org/mozilla-central/search?q=[SMDOC]+JSObject+layout
 .. _JS::Value: https://searchfox.org/mozilla-central/search?q=[SMDOC]+JS%3A%3AValue+type&path=js%2F
@@ -193,4 +203,4 @@ Other documentation
 .. _Bytecode: https://en.wikipedia.org/wiki/Bytecode
 .. _Abstract Syntax Tree: https://en.wikipedia.org/wiki/Abstract_syntax_tree
 .. _Intermediate Representation: https://en.wikipedia.org/wiki/Intermediate_representation
-.. _MIR Optimizations: ./MIR-optimizations/index.html
+.. _MIR Optimizations: ./MIR-optimizations/index
