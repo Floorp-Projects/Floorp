@@ -142,17 +142,9 @@ struct Cell {
   // compacting GC and is now a RelocationOverlay.
   static constexpr uintptr_t FORWARD_BIT = Bit(0);
 
-  // Indicates whether the cell header has been temporarily replaced by calling
-  // setTemporaryGCUnsafeData(). This is currently only used during rope
-  // flattening.
-  static constexpr uintptr_t TEMP_DATA_BIT = Bit(1);
-
-  // For use by derived cell classes. This is currently only used during rope
-  // flattening.
-  static constexpr uintptr_t USER_BIT = Bit(2);
+  // Bits 1 and 2 are reserved for future use by the GC.
 
   bool isForwarded() const { return header_ & FORWARD_BIT; }
-  bool hasTempHeaderData() const { return header_ & TEMP_DATA_BIT; }
   uintptr_t flags() const { return header_ & RESERVED_MASK; }
 
   MOZ_ALWAYS_INLINE bool isTenured() const { return !IsInsideNursery(this); }
@@ -647,23 +639,6 @@ class alignas(gc::CellAlignBytes) CellWithLengthAndFlags : public Cell {
 #else
     header_ = (uint64_t(len) << 32) | uint64_t(flags);
 #endif
-  }
-
-  // Subclasses can store temporary data in the flags word. This is not GC safe
-  // and users must ensure flags/length are never checked (including by asserts)
-  // while this data is stored. Use of this method is strongly discouraged!
-  void setTemporaryGCUnsafeData(uintptr_t data) {
-    MOZ_ASSERT((data & TEMP_DATA_BIT) == 0);
-    header_ = data | TEMP_DATA_BIT;
-  }
-
-  // To get back the data, values to safely re-initialize clobbered length and
-  // flags must be provided.
-  uintptr_t unsetTemporaryGCUnsafeData(uint32_t len, uint32_t flags) {
-    MOZ_ASSERT(hasTempHeaderData());
-    uintptr_t data = header_;
-    setHeaderLengthAndFlags(len, flags);
-    return data & ~TEMP_DATA_BIT;
   }
 
  public:

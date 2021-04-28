@@ -1388,7 +1388,6 @@ void js::Nursery::sweep(JSTracer* trc) {
     zone->sweepAfterMinorGC(trc);
   }
 
-  sweepDictionaryModeObjects();
   sweepMapAndSetObjects();
 }
 
@@ -1760,11 +1759,6 @@ void js::Nursery::shrinkAllocableSpace(size_t newCapacity) {
   }
 }
 
-bool js::Nursery::queueDictionaryModeObjectToSweep(NativeObject* obj) {
-  MOZ_ASSERT(IsInsideNursery(obj));
-  return dictionaryModeObjects_.append(obj);
-}
-
 uintptr_t js::Nursery::currentEnd() const {
   // These are separate asserts because it can be useful to see which one
   // failed.
@@ -1784,17 +1778,6 @@ MOZ_ALWAYS_INLINE const js::gc::GCSchedulingTunables& js::Nursery::tunables()
 
 bool js::Nursery::isSubChunkMode() const {
   return capacity() <= NurseryChunkUsableSize;
-}
-
-void js::Nursery::sweepDictionaryModeObjects() {
-  for (auto obj : dictionaryModeObjects_) {
-    if (!IsForwarded(obj)) {
-      obj->sweepDictionaryListPointer();
-    } else {
-      Forwarded(obj)->updateDictionaryListPointerAfterMinorGC(obj);
-    }
-  }
-  dictionaryModeObjects_.clear();
 }
 
 void js::Nursery::sweepMapAndSetObjects() {
