@@ -129,5 +129,32 @@ describe("MultiStageAboutWelcomeProton module", () => {
         "test"
       );
     });
+    it("should remove theme screens on win7", async () => {
+      sandbox.stub(AppConstants, "isPlatformAndVersionAtMost").returns(true);
+
+      const { screens } = AboutWelcomeDefaults.prepareContentForReact({
+        screens: [
+          {
+            order: 0,
+            content: {
+              tiles: { type: "theme" },
+            },
+          },
+          { id: "hello", order: 1 },
+          {
+            order: 2,
+            content: {
+              tiles: { type: "theme" },
+            },
+          },
+          { id: "world", order: 3 },
+        ],
+      });
+
+      assert.deepEqual(screens, [
+        { id: "hello", order: 0 },
+        { id: "world", order: 1 },
+      ]);
+    });
   });
 });
