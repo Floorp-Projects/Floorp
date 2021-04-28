@@ -8,6 +8,7 @@
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Casting.h"
+#include "mozilla/DebugOnly.h"
 #include "mozilla/EndianUtils.h"
 #include "mozilla/HashFunctions.h"
 #include "mozilla/Latin1.h"
@@ -723,11 +724,6 @@ JSLinearString* JSRope::flattenInternal(JSRope* root) {
   size_t wholeCapacity;
   CharT* wholeChars;
 
-  // JSString::setFlattenData() is used to store a tagged pointer to the parent
-  // node. These flags indicates what to do when we return to the parent.
-  static constexpr uintptr_t Flag_FinishNode = 0;
-  static constexpr uintptr_t Flag_VisitRightChild = Cell::USER_BIT;
-
   AutoCheckCannotGC nogc;
 
   Nursery& nursery = root->runtimeFromMainThread()->gc.nursery();
@@ -796,19 +792,30 @@ JSLinearString* JSRope::flattenInternal(JSRope* root) {
   JSString* str = root;
   CharT* pos = wholeChars;
 
+  JSString* parent = nullptr;
+  uint32_t parentFlag = 0;
+
 first_visit_node : {
+  MOZ_ASSERT_IF(str != root, parent && parentFlag);
+  MOZ_ASSERT(!str->asRope().isBeingFlattened());
+
+  ropeBarrierDuringFlattening<usingBarrier>(str);
+
+  JSString& left = *str->d.s.u2.left;
+  str->d.s.u2.parent = parent;
+  str->setFlagBit(parentFlag);
+  parent = nullptr;
+  parentFlag = 0;
+
   if (reuseLeftmostBuffer && str == leftmostRope) {
     // Left child has already been overwritten.
     pos += leftmostChildLength;
     goto visit_right_child;
   }
-
-  JSString& left = *str->d.s.u2.left;
-  ropeBarrierDuringFlattening<usingBarrier>(str);
-  str->setNonInlineChars(pos);
   if (left.isRope()) {
     /* Return to this node when 'left' done, then goto visit_right_child. */
-    left.setFlattenData(str, Flag_VisitRightChild);
+    parent = str;
+    parentFlag = FLATTEN_VISIT_RIGHT;
     str = &left;
     goto first_visit_node;
   }
@@ -820,7 +827,8 @@ visit_right_child : {
   JSString& right = *str->d.s.u3.right;
   if (right.isRope()) {
     /* Return to this node when 'right' done, then goto finish_node. */
-    right.setFlattenData(str, Flag_FinishNode);
+    parent = str;
+    parentFlag = FLATTEN_FINISH_NODE;
     str = &right;
     goto first_visit_node;
   }
@@ -833,11 +841,19 @@ finish_node : {
     goto finish_root;
   }
 
-  JSString* parent;
-  uintptr_t flattenFlags;
-  uint32_t len = pos - str->nonInlineCharsRaw<CharT>();
-  parent = str->unsetFlattenData(
-      len, StringFlagsForCharType<CharT>(INIT_DEPENDENT_FLAGS), &flattenFlags);
+  MOZ_ASSERT(pos >= wholeChars);
+  CharT* chars = pos - str->length();
+  JSString* strParent = str->d.s.u2.parent;
+  str->setNonInlineChars(chars);
+
+  MOZ_ASSERT(str->asRope().isBeingFlattened());
+  mozilla::DebugOnly<bool> visitRight = str->flags() & FLATTEN_VISIT_RIGHT;
+  bool finishNode = str->flags() & FLATTEN_FINISH_NODE;
+  MOZ_ASSERT(visitRight != finishNode);
+
+  // This also clears the flags related to flattening.
+  str->setLengthAndFlags(str->length(),
+                         StringFlagsForCharType<CharT>(INIT_DEPENDENT_FLAGS));
   str->d.s.u3.base = (JSLinearString*)root; /* will be true on exit */
 
   // Every interior (rope) node in the rope's tree will be visited during
@@ -852,12 +868,12 @@ finish_node : {
     root->storeBuffer()->putWholeCell(str);
   }
 
-  str = parent;
-  if (flattenFlags == Flag_VisitRightChild) {
-    goto visit_right_child;
+  str = strParent;
+  if (finishNode) {
+    goto finish_node;
   }
-  MOZ_ASSERT(flattenFlags == Flag_FinishNode);
-  goto finish_node;
+  MOZ_ASSERT(visitRight);
+  goto visit_right_child;
 }
 
 finish_root:
@@ -881,6 +897,8 @@ template <JSRope::UsingBarrier usingBarrier>
 inline void JSRope::ropeBarrierDuringFlattening(JSString* str) {
   // |str| is a rope but its flags maybe have been overwritten by temporary data
   // at this point.
+  MOZ_ASSERT(str->isRope());
+  MOZ_ASSERT(!str->asRope().isBeingFlattened());
   if constexpr (usingBarrier) {
     gc::PreWriteBarrierDuringFlattening(str->d.s.u2.left);
     gc::PreWriteBarrierDuringFlattening(str->d.s.u3.right);
