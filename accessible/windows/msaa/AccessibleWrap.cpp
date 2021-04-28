@@ -39,7 +39,6 @@
 #include "nsTextFormatter.h"
 #include "nsView.h"
 #include "nsViewManager.h"
-#include "nsEventMap.h"
 #include "nsArrayUtils.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/ReverseIterator.h"
@@ -982,63 +981,6 @@ void AccessibleWrap::GetNativeInterface(void** aOutAccessible) {
   NS_ADDREF_THIS();
 }
 
-static bool IsHandlerInvalidationNeeded(uint32_t aEvent) {
-  // We want to return true for any events that would indicate that something
-  // in the handler cache is out of date.
-  switch (aEvent) {
-    case EVENT_OBJECT_STATECHANGE:
-    case EVENT_OBJECT_LOCATIONCHANGE:
-    case EVENT_OBJECT_NAMECHANGE:
-    case EVENT_OBJECT_DESCRIPTIONCHANGE:
-    case EVENT_OBJECT_VALUECHANGE:
-    case EVENT_OBJECT_FOCUS:
-    case IA2_EVENT_ACTION_CHANGED:
-    case IA2_EVENT_DOCUMENT_LOAD_COMPLETE:
-    case IA2_EVENT_DOCUMENT_LOAD_STOPPED:
-    case IA2_EVENT_DOCUMENT_ATTRIBUTE_CHANGED:
-    case IA2_EVENT_DOCUMENT_CONTENT_CHANGED:
-    case IA2_EVENT_PAGE_CHANGED:
-    case IA2_EVENT_TEXT_ATTRIBUTE_CHANGED:
-    case IA2_EVENT_TEXT_CHANGED:
-    case IA2_EVENT_TEXT_INSERTED:
-    case IA2_EVENT_TEXT_REMOVED:
-    case IA2_EVENT_TEXT_UPDATED:
-    case IA2_EVENT_OBJECT_ATTRIBUTE_CHANGED:
-      return true;
-    default:
-      return false;
-  }
-}
-
-void AccessibleWrap::FireWinEvent(LocalAccessible* aTarget,
-                                  uint32_t aEventType) {
-  MOZ_ASSERT(XRE_IsParentProcess());
-  static_assert(sizeof(gWinEventMap) / sizeof(gWinEventMap[0]) ==
-                    nsIAccessibleEvent::EVENT_LAST_ENTRY,
-                "MSAA event map skewed");
-
-  NS_ASSERTION(aEventType > 0 && aEventType < ArrayLength(gWinEventMap),
-               "invalid event type");
-
-  uint32_t winEvent = gWinEventMap[aEventType];
-  if (!winEvent) return;
-
-  int32_t childID = MsaaAccessible::GetChildIDFor(aTarget);
-  if (!childID) return;  // Can't fire an event without a child ID
-
-  HWND hwnd = GetHWNDFor(aTarget);
-  if (!hwnd) {
-    return;
-  }
-
-  if (IsHandlerInvalidationNeeded(winEvent)) {
-    InvalidateHandlers();
-  }
-
-  // Fire MSAA event for client area window.
-  ::NotifyWinEvent(winEvent, hwnd, OBJID_CLIENT, childID);
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 // LocalAccessible
 
@@ -1063,7 +1005,7 @@ nsresult AccessibleWrap::HandleAccEvent(AccEvent* aEvent) {
     UpdateSystemCaretFor(accessible);
   }
 
-  FireWinEvent(accessible, eventType);
+  MsaaAccessible::FireWinEvent(accessible, eventType);
 
   return NS_OK;
 }
@@ -1087,69 +1029,6 @@ DocRemoteAccessibleWrap* AccessibleWrap::DocProxyWrapper() const {
 
 //------- Helper methods ---------
 
-HWND AccessibleWrap::GetHWNDFor(LocalAccessible* aAccessible) {
-  if (!aAccessible) {
-    return nullptr;
-  }
-
-  if (aAccessible->IsProxy()) {
-    RemoteAccessible* proxy = aAccessible->Proxy();
-    if (!proxy) {
-      return nullptr;
-    }
-
-    // If window emulation is enabled, retrieve the emulated window from the
-    // containing document document proxy.
-    if (nsWinUtils::IsWindowEmulationStarted()) {
-      DocAccessibleParent* doc = proxy->Document();
-      HWND hWnd = doc->GetEmulatedWindowHandle();
-      if (hWnd) {
-        return hWnd;
-      }
-    }
-
-    // Accessibles in child processes are said to have the HWND of the window
-    // their tab is within.  Popups are always in the parent process, and so
-    // never proxied, which means this is basically correct.
-    LocalAccessible* outerDoc = proxy->OuterDocOfRemoteBrowser();
-    if (!outerDoc) {
-      // In some cases, the outer document accessible may be unattached from its
-      // document at this point, if it is scheduled for removal. Do not assert
-      // in such case. An example: putting aria-hidden="true" on HTML:iframe
-      // element will destroy iframe's document asynchroniously, but
-      // the document may be a target of selection events until then, and thus
-      // it may attempt to deliever these events to MSAA clients.
-      return nullptr;
-    }
-
-    return GetHWNDFor(outerDoc);
-  }
-
-  DocAccessible* document = aAccessible->Document();
-  if (!document) return nullptr;
-
-  // Popup lives in own windows, use its HWND until the popup window is
-  // hidden to make old JAWS versions work with collapsed comboboxes (see
-  // discussion in bug 379678).
-  nsIFrame* frame = aAccessible->GetFrame();
-  if (frame) {
-    nsIWidget* widget = frame->GetNearestWidget();
-    if (widget && widget->IsVisible()) {
-      if (nsViewManager* vm = document->PresShellPtr()->GetViewManager()) {
-        nsCOMPtr<nsIWidget> rootWidget;
-        vm->GetRootWidget(getter_AddRefs(rootWidget));
-        // Make sure the accessible belongs to popup. If not then use
-        // document HWND (which might be different from root widget in the
-        // case of window emulation).
-        if (rootWidget != widget)
-          return static_cast<HWND>(widget->GetNativeData(NS_NATIVE_WINDOW));
-      }
-    }
-  }
-
-  return static_cast<HWND>(document->GetNativeWindow());
-}
-
 IDispatch* AccessibleWrap::NativeAccessible(LocalAccessible* aAccessible) {
   if (!aAccessible) {
     NS_WARNING("Not passing in an aAccessible");
@@ -1165,10 +1044,10 @@ bool AccessibleWrap::IsRootForHWND() {
   if (IsRoot()) {
     return true;
   }
-  HWND thisHwnd = GetHWNDFor(this);
+  HWND thisHwnd = MsaaAccessible::GetHWNDFor(this);
   AccessibleWrap* parent = static_cast<AccessibleWrap*>(LocalParent());
   MOZ_ASSERT(parent);
-  HWND parentHwnd = GetHWNDFor(parent);
+  HWND parentHwnd = MsaaAccessible::GetHWNDFor(parent);
   return thisHwnd != parentHwnd;
 }
 
@@ -1200,7 +1079,7 @@ void AccessibleWrap::UpdateSystemCaretFor(
   // The HWND should be the real widget HWND, not an emulated HWND.
   // We get the HWND from the proxy's outer doc to bypass window emulation.
   LocalAccessible* outerDoc = aProxy->OuterDocOfRemoteBrowser();
-  UpdateSystemCaretFor(GetHWNDFor(outerDoc), aCaretRect);
+  UpdateSystemCaretFor(MsaaAccessible::GetHWNDFor(outerDoc), aCaretRect);
 }
 
 /* static */
@@ -1298,7 +1177,7 @@ bool AccessibleWrap::DispatchTextChangeToHandler(bool aIsInsert,
     return false;
   }
 
-  HWND hwnd = GetHWNDFor(this);
+  HWND hwnd = MsaaAccessible::GetHWNDFor(this);
   MOZ_ASSERT(hwnd);
   if (!hwnd) {
     return false;

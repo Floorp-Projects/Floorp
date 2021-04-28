@@ -152,10 +152,6 @@ class AccessibleWrap : public LocalAccessible, public MsaaAccessible {
   virtual void Shutdown() override;
 
   // Helper methods
-  static HWND GetHWNDFor(LocalAccessible* aAccessible);
-
-  static void FireWinEvent(LocalAccessible* aTarget, uint32_t aEventType);
-
   /**
    * System caret support: update the Windows caret position.
    * The system caret works more universally than the MSAA caret
