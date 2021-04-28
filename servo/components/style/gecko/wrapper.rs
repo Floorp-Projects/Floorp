@@ -2074,6 +2074,7 @@ impl<'le> ::selectors::Element for GeckoElement<'le> {
             NonTSPseudoClass::FocusWithin |
             NonTSPseudoClass::FocusVisible |
             NonTSPseudoClass::MozDragOver |
+            NonTSPseudoClass::MozDevtoolsHighlighted |
             NonTSPseudoClass::MozStyleeditorTransitioning |
             NonTSPseudoClass::MozMathIncrementScriptLevel |
             NonTSPseudoClass::InRange |
