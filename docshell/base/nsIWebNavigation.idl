@@ -62,11 +62,15 @@ interface nsIWebNavigation : nsISupports
    *        If no items have user interaction, the function will fall back
    *        to the first session history entry.
    *
+   * @param {boolean} aUserActivation
+   *        Tells goBack that the call was triggered by a user action (e.g.:
+   *        The user clicked the back button).
+   *
    * @throw NS_ERROR_UNEXPECTED
    *        Indicates that the call was unexpected at this time, which implies
    *        that canGoBack is false.
    */
-  void goBack([optional] in boolean aRequireUserInteraction);
+  void goBack([optional] in boolean aRequireUserInteraction, [optional] in boolean aUserActivation);
 
   /**
    * Tells the object to navigate to the next session history item.  When a
@@ -82,20 +86,28 @@ interface nsIWebNavigation : nsISupports
    *        If no items have user interaction, the function will fall back
    *        to the latest session history entry.
    *
+   * @param {boolean} aUserActivation
+   *        Tells goForward that the call was triggered by a user action (e.g.:
+   *        The user clicked the forward button).
+   *
    * @throw NS_ERROR_UNEXPECTED
    *        Indicates that the call was unexpected at this time, which implies
    *        that canGoForward is false.
    */
-  void goForward([optional] in boolean aRequireUserInteraction);
+  void goForward([optional] in boolean aRequireUserInteraction, [optional] in boolean aUserActivation);
 
   /**
    * Tells the object to navigate to the session history item at a given index.
+   *
+   * @param {boolean} aUserActivation
+   *        Tells goForward that the call was triggered by a user action (e.g.:
+   *        The user clicked the forward button).
    *
    * @throw NS_ERROR_UNEXPECTED
    *        Indicates that the call was unexpected at this time, which implies
    *        that session history entry at the given index does not exist.
    */
-  void gotoIndex(in long index);
+  void gotoIndex(in long index, [optional] in boolean aUserActivation);
 
   /****************************************************************************
    * The following flags may be bitwise combined to form the load flags
@@ -250,6 +262,11 @@ interface nsIWebNavigation : nsISupports
    * This load should bypass the LoadURIDelegate.loadUri.
    */
   const unsigned long LOAD_FLAGS_BYPASS_LOAD_URI_DELEGATE = 0x4000000;
+
+  /**
+   * This load has a user activation. (e.g: reload button was clicked)
+   */
+  const unsigned long LOAD_FLAGS_USER_ACTIVATION = 0x8000000;
 
   /**
    * Loads a given URI.  This will give priority to loading the requested URI

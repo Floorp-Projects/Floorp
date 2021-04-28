@@ -59,7 +59,8 @@ class RemoteWebNavigation {
     );
     this._browser.browsingContext.goBack(
       cancelContentJSEpoch,
-      requireUserInteraction
+      requireUserInteraction,
+      true
     );
   }
   goForward(requireUserInteraction = false) {
@@ -68,7 +69,8 @@ class RemoteWebNavigation {
     );
     this._browser.browsingContext.goForward(
       cancelContentJSEpoch,
-      requireUserInteraction
+      requireUserInteraction,
+      true
     );
   }
   gotoIndex(aIndex) {
@@ -76,7 +78,7 @@ class RemoteWebNavigation {
       Ci.nsIRemoteTab.NAVIGATE_INDEX,
       { index: aIndex }
     );
-    this._browser.browsingContext.goToIndex(aIndex, cancelContentJSEpoch);
+    this._browser.browsingContext.goToIndex(aIndex, cancelContentJSEpoch, true);
   }
   loadURI(aURI, aLoadURIOptions) {
     let uri;

@@ -166,7 +166,7 @@ class CanonicalBrowsingContext final : public BrowsingContext {
   void RemoveFromSessionHistory(const nsID& aChangeID);
 
   void HistoryGo(int32_t aIndex, uint64_t aHistoryEpoch,
-                 bool aRequireUserInteraction,
+                 bool aRequireUserInteraction, bool aUserActivation,
                  Maybe<ContentParentId> aContentId,
                  std::function<void(int32_t&&)>&& aResolver);
 
@@ -203,11 +203,11 @@ class CanonicalBrowsingContext final : public BrowsingContext {
                ErrorResult& aError);
 
   void GoBack(const Optional<int32_t>& aCancelContentJSEpoch,
-              bool aRequireUserInteraction);
+              bool aRequireUserInteraction, bool aUserActivation);
   void GoForward(const Optional<int32_t>& aCancelContentJSEpoch,
-                 bool aRequireUserInteraction);
-  void GoToIndex(int32_t aIndex,
-                 const Optional<int32_t>& aCancelContentJSEpoch);
+                 bool aRequireUserInteraction, bool aUserActivation);
+  void GoToIndex(int32_t aIndex, const Optional<int32_t>& aCancelContentJSEpoch,
+                 bool aUserActivation);
   void Reload(uint32_t aReloadFlags);
   void Stop(uint32_t aStopFlags);
 

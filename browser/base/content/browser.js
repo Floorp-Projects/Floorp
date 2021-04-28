@@ -3517,7 +3517,7 @@ function BrowserReloadWithFlags(reloadFlags) {
   gIdentityHandler.hidePopup();
   gPermissionPanel.hidePopup();
 
-  let handlingUserInput = window.windowUtils.isHandlingUserInput;
+  let handlingUserInput = document.hasValidTransientUserGestureActivation;
 
   for (let tab of unchangedRemoteness) {
     if (tab.linkedPanel) {

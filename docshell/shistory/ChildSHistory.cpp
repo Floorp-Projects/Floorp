@@ -125,7 +125,7 @@ bool ChildSHistory::CanGo(int32_t aOffset) {
 }
 
 void ChildSHistory::Go(int32_t aOffset, bool aRequireUserInteraction,
-                       ErrorResult& aRv) {
+                       bool aUserActivation, ErrorResult& aRv) {
   CheckedInt<int32_t> index = Index();
   MOZ_LOG(
       gSHLog, LogLevel::Debug,
@@ -156,11 +156,13 @@ void ChildSHistory::Go(int32_t aOffset, bool aRequireUserInteraction,
     }
   }
 
-  GotoIndex(index.value(), aOffset, aRequireUserInteraction, aRv);
+  GotoIndex(index.value(), aOffset, aRequireUserInteraction, aUserActivation,
+            aRv);
 }
 
 void ChildSHistory::AsyncGo(int32_t aOffset, bool aRequireUserInteraction,
-                            CallerType aCallerType, ErrorResult& aRv) {
+                            bool aUserActivation, CallerType aCallerType,
+                            ErrorResult& aRv) {
   CheckedInt<int32_t> index = Index();
   MOZ_LOG(gSHLog, LogLevel::Debug,
           ("ChildSHistory::AsyncGo(%d), current index = %d", aOffset,
@@ -173,13 +175,15 @@ void ChildSHistory::AsyncGo(int32_t aOffset, bool aRequireUserInteraction,
   }
 
   RefPtr<PendingAsyncHistoryNavigation> asyncNav =
-      new PendingAsyncHistoryNavigation(this, aOffset, aRequireUserInteraction);
+      new PendingAsyncHistoryNavigation(this, aOffset, aRequireUserInteraction,
+                                        aUserActivation);
   mPendingNavigations.insertBack(asyncNav);
   NS_DispatchToCurrentThread(asyncNav.forget());
 }
 
 void ChildSHistory::GotoIndex(int32_t aIndex, int32_t aOffset,
-                              bool aRequireUserInteraction, ErrorResult& aRv) {
+                              bool aRequireUserInteraction,
+                              bool aUserActivation, ErrorResult& aRv) {
   MOZ_LOG(gSHLog, LogLevel::Debug,
           ("ChildSHistory::GotoIndex(%d, %d), epoch %" PRIu64, aIndex, aOffset,
            mHistoryEpoch));
@@ -196,7 +200,7 @@ void ChildSHistory::GotoIndex(int32_t aIndex, int32_t aOffset,
 
     nsCOMPtr<nsISHistory> shistory = mHistory;
     mBrowsingContext->HistoryGo(
-        aOffset, mHistoryEpoch, aRequireUserInteraction,
+        aOffset, mHistoryEpoch, aRequireUserInteraction, aUserActivation,
         [shistory](int32_t&& aRequestedIndex) {
           // FIXME Should probably only do this for non-fission.
           if (shistory) {
@@ -204,7 +208,7 @@ void ChildSHistory::GotoIndex(int32_t aIndex, int32_t aOffset,
           }
         });
   } else {
-    aRv = mHistory->GotoIndex(aIndex);
+    aRv = mHistory->GotoIndex(aIndex, aUserActivation);
   }
 }
 
