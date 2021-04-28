@@ -399,7 +399,7 @@ panelmultiview[transitioning] > .panel-viewcontainer > .panel-viewstack > panelv
   max-width: @standaloneSubviewWidth@;
 }
 
-@media (-moz-proton) {
+@media (-moz-proton-doorhangers) {
 #BMB_bookmarksPopup::part(arrowscrollbox) {
   border: 0;
 }
@@ -414,7 +414,7 @@ panelmultiview[transitioning] > .panel-viewcontainer > .panel-viewstack > panelv
 }
 } /** END Proton **/
 
-@media not (-moz-proton) {
+@media not (-moz-proton-doorhangers) {
 #BMB_bookmarksPopup::part(arrowscrollbox) {
   padding: 0;
 }
@@ -1816,7 +1816,7 @@ menuitem.panel-subview-footer@menuStateActive@,
   margin-inline-end: 3px;
 }
 
-@media not (-moz-proton) {
+@media not (-moz-proton-doorhangers) {
 #BMB_bookmarksPopup menupopup > .bookmarks-actions-menuseparator {
   /* Hide bottom separator as the styled footer includes a top border serving the same purpose */
   display: none;
@@ -2472,7 +2472,7 @@ panelview:not([mainview]) #PanelUI-whatsNew-title {
   margin: 0 calc(-10px + var(--horizontal-padding)) var(--vertical-section-padding);
 }
 
-@media (-moz-proton) {
+@media (-moz-proton-doorhangers) {
 #protections-popup-message .whatsNew-message-body {
   margin-inline: 6px;
 }

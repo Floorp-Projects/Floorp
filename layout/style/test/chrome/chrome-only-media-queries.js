@@ -29,6 +29,7 @@ const CHROME_ONLY_TOGGLES = [
   "-moz-proton",
   "-moz-proton-contextmenus",
   "-moz-proton-modals",
+  "-moz-proton-doorhangers",
   "-moz-proton-places-tooltip",
 ];
 
