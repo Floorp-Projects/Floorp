@@ -182,9 +182,7 @@ this.main = (function() {
     canvas.height = imageData.height;
     canvas.getContext("2d").putImageData(imageData, 0, 0);
     let dataUrl = canvas.toDataURL();
-    if (
-      dataUrl.length > pngToJpegCutoff
-    ) {
+    if (dataUrl.length > pngToJpegCutoff) {
       const jpegDataUrl = canvas.toDataURL("image/jpeg");
       if (jpegDataUrl.length < dataUrl.length) {
         // Only use the JPEG if it is actually smaller
