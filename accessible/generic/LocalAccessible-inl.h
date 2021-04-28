@@ -72,7 +72,7 @@ inline bool LocalAccessible::HasNumericValue() const {
 
 inline bool LocalAccessible::IsDefunct() const {
   MOZ_ASSERT(mStateFlags & eIsDefunct || IsApplication() || IsDoc() ||
-                 mStateFlags & eSharedNode || mContent,
+                 IsProxy() || mStateFlags & eSharedNode || mContent,
              "No content");
   return mStateFlags & eIsDefunct;
 }
