@@ -121,7 +121,7 @@ _cairo_xcb_init_screen_font_options (cairo_xcb_screen_t *screen)
     cairo_font_options_set_hint_style (&screen->font_options, hint_style);
     cairo_font_options_set_antialias (&screen->font_options, antialias);
     cairo_font_options_set_subpixel_order (&screen->font_options, subpixel_order);
-    _cairo_font_options_set_lcd_filter (&screen->font_options, lcd_filter);
+    cairo_font_options_set_lcd_filter (&screen->font_options, lcd_filter);
     cairo_font_options_set_hint_metrics (&screen->font_options, CAIRO_HINT_METRICS_ON);
 }
 
