@@ -66,9 +66,10 @@ class SignOutFragment : AppCompatDialogFragment() {
                 accountManager.logout()
             }.invokeOnCompletion {
                 runIfFragmentIsAttached {
-                    if (!findNavController().popBackStack(R.id.settingsFragment, false)) {
+                    if (this.isVisible) {
                         dismiss()
                     }
+                    findNavController().popBackStack()
                 }
             }
         }
