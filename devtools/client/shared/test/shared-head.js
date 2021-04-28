@@ -491,8 +491,10 @@ async function navigateTo(uri, { isErrorPage = false } = {}) {
   const currentBrowsingContextID = browser.browsingContext.id;
   const onBrowserLoaded = BrowserTestUtils.browserLoaded(
     browser,
+    // includeSubFrames
     false,
-    null,
+    // resolve on this specific page to load (if null, it would be any page load)
+    uri,
     isErrorPage
   );
   BrowserTestUtils.loadURI(browser, uri);
