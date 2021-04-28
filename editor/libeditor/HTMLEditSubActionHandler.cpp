@@ -997,17 +997,16 @@ EditActionResult HTMLEditor::HandleInsertText(
 
         // is it a return?
         if (subStr.Equals(newlineStr)) {
-          RefPtr<Element> brElement =
+          Result<RefPtr<Element>, nsresult> resultOfInsertingBRElement =
               InsertBRElementWithTransaction(currentPoint, nsIEditor::eNone);
-          if (NS_WARN_IF(Destroyed())) {
-            return EditActionHandled(NS_ERROR_EDITOR_DESTROYED);
-          }
-          if (!brElement) {
+          if (resultOfInsertingBRElement.isErr()) {
             NS_WARNING(
                 "HTMLEditor::InsertBRElementWithTransaction(eNone) failed");
-            return EditActionHandled(NS_ERROR_FAILURE);
+            return EditActionHandled(resultOfInsertingBRElement.unwrapErr());
           }
           pos++;
+          RefPtr<Element> brElement(
+              resultOfInsertingBRElement.unwrap().forget());
           if (brElement->GetNextSibling()) {
             pointToInsert.Set(brElement->GetNextSibling());
           } else {
@@ -1393,15 +1392,13 @@ EditActionResult HTMLEditor::InsertParagraphSeparatorAsSubAction() {
     AutoEditorDOMPointChildInvalidator lockOffset(atStartOfSelection);
     EditorDOMPoint endOfBlockParent;
     endOfBlockParent.SetToEndOf(blockElement);
-    RefPtr<Element> brElement =
+    Result<RefPtr<Element>, nsresult> resultOfInsertingBRElement =
         InsertBRElementWithTransaction(endOfBlockParent);
-    if (NS_WARN_IF(Destroyed())) {
-      return EditActionIgnored(NS_ERROR_EDITOR_DESTROYED);
-    }
-    if (!brElement) {
+    if (resultOfInsertingBRElement.isErr()) {
       NS_WARNING("HTMLEditor::InsertBRElementWithTransaction() failed");
-      return EditActionIgnored(NS_ERROR_FAILURE);
+      return EditActionIgnored(resultOfInsertingBRElement.unwrapErr());
     }
+    MOZ_ASSERT(resultOfInsertingBRElement.inspect());
   }
 
   RefPtr<Element> listItem = GetNearestAncestorListItemElement(*blockElement);
@@ -1487,14 +1484,14 @@ nsresult HTMLEditor::InsertBRElement(const EditorDOMPoint& aPointToBreak) {
   // First, insert a <br> element.
   RefPtr<Element> brElement;
   if (IsPlaintextEditor()) {
-    brElement = InsertBRElementWithTransaction(aPointToBreak);
-    if (NS_WARN_IF(Destroyed())) {
-      return NS_ERROR_EDITOR_DESTROYED;
-    }
-    if (!brElement) {
+    Result<RefPtr<Element>, nsresult> resultOfInsertingBRElement =
+        InsertBRElementWithTransaction(aPointToBreak);
+    if (resultOfInsertingBRElement.isErr()) {
       NS_WARNING("HTMLEditor::InsertBRElementWithTransaction() failed");
-      return NS_ERROR_FAILURE;
+      return resultOfInsertingBRElement.unwrapErr();
     }
+    MOZ_ASSERT(resultOfInsertingBRElement.inspect());
+    brElement = resultOfInsertingBRElement.unwrap().forget();
   } else {
     EditorDOMPoint pointToBreak(aPointToBreak);
     WSRunScanner wsRunScanner(editingHost, pointToBreak);
@@ -1694,14 +1691,14 @@ EditActionResult HTMLEditor::SplitMailCiteElements(
       // We ignore the result here.
       EditorDOMPoint endOfPreviousNodeOfSplitPoint;
       endOfPreviousNodeOfSplitPoint.SetToEndOf(previousNodeOfSplitPoint);
-      RefPtr<Element> invisibleBRElement =
+      Result<RefPtr<Element>, nsresult> resultOfInsertingInvisibleBRElement =
           InsertBRElementWithTransaction(endOfPreviousNodeOfSplitPoint);
-      if (NS_WARN_IF(Destroyed())) {
-        return EditActionIgnored(NS_ERROR_EDITOR_DESTROYED);
+      if (resultOfInsertingInvisibleBRElement.isErr()) {
+        NS_WARNING("HTMLEditor::InsertBRElementWithTransaction() failed");
+        return EditActionIgnored(
+            resultOfInsertingInvisibleBRElement.unwrapErr());
       }
-      NS_WARNING_ASSERTION(
-          invisibleBRElement,
-          "HTMLEditor::InsertBRElementWithTransaction() failed, but ignored");
+      MOZ_ASSERT(resultOfInsertingInvisibleBRElement.inspect());
     }
   }
 
@@ -1709,20 +1706,18 @@ EditActionResult HTMLEditor::SplitMailCiteElements(
   // left cite hasn't been created because the split point was start of the
   // cite node, <br> should be inserted before the current cite.
   EditorDOMPoint pointToInsertBRNode(splitCiteNodeResult.SplitPoint());
-  RefPtr<Element> brElement =
+  Result<RefPtr<Element>, nsresult> resultOfInsertingBRElement =
       InsertBRElementWithTransaction(pointToInsertBRNode);
-  if (NS_WARN_IF(Destroyed())) {
-    return EditActionIgnored(NS_ERROR_EDITOR_DESTROYED);
-  }
-  if (!brElement) {
+  if (resultOfInsertingBRElement.isErr()) {
     NS_WARNING("HTMLEditor::InsertBRElementWithTransaction() failed");
-    return EditActionIgnored(NS_ERROR_FAILURE);
+    return EditActionIgnored(resultOfInsertingBRElement.unwrapErr());
   }
+  MOZ_ASSERT(resultOfInsertingBRElement.inspect());
   // Now, offset of pointToInsertBRNode is invalid.  Let's clear it.
   pointToInsertBRNode.Clear();
 
   // Want selection before the break, and on same line.
-  EditorDOMPoint atBRElement(brElement);
+  EditorDOMPoint atBRElement(resultOfInsertingBRElement.inspect());
   {
     AutoEditorDOMPointChildInvalidator lockOffset(atBRElement);
     IgnoredErrorResult ignoredError;
@@ -1774,14 +1769,13 @@ EditActionResult HTMLEditor::SplitMailCiteElements(
           // In case we're at the very end.
           forwardScanFromPointAfterNewBRElementResult
               .ReachedCurrentBlockBoundary()) {
-        brElement = InsertBRElementWithTransaction(pointToCreateNewBRElement);
-        if (NS_WARN_IF(Destroyed())) {
-          return EditActionIgnored(NS_ERROR_EDITOR_DESTROYED);
-        }
-        if (!brElement) {
+        Result<RefPtr<Element>, nsresult> resultOfInsertingBRElement =
+            InsertBRElementWithTransaction(pointToCreateNewBRElement);
+        if (resultOfInsertingBRElement.isErr()) {
           NS_WARNING("HTMLEditor::InsertBRElementWithTransaction() failed");
-          return EditActionIgnored(NS_ERROR_FAILURE);
+          return EditActionIgnored(resultOfInsertingBRElement.unwrapErr());
         }
+        MOZ_ASSERT(resultOfInsertingBRElement.inspect());
         // Now, those points may be invalid.
         pointToCreateNewBRElement.Clear();
         pointAfterNewBRElement.Clear();
@@ -2318,14 +2312,14 @@ nsresult HTMLEditor::InsertBRElementIfHardLineIsEmptyAndEndsWithBlockBoundary(
     return NS_OK;
   }
 
-  RefPtr<Element> brElement =
+  Result<RefPtr<Element>, nsresult> resultOfInsertingBRElement =
       InsertBRElementWithTransaction(aPointToInsert, nsIEditor::ePrevious);
-  if (NS_WARN_IF(Destroyed())) {
-    return NS_ERROR_EDITOR_DESTROYED;
+  if (resultOfInsertingBRElement.isErr()) {
+    NS_WARNING("HTMLEditor::InsertBRElementWithTransaction() failed");
+    return resultOfInsertingBRElement.unwrapErr();
   }
-  NS_WARNING_ASSERTION(brElement,
-                       "HTMLEditor::InsertBRElementWithTransaction() failed");
-  return brElement ? NS_OK : NS_ERROR_FAILURE;
+  MOZ_ASSERT(resultOfInsertingBRElement.inspect());
+  return NS_OK;
 }
 
 EditorDOMPoint HTMLEditor::GetGoodCaretPointFor(
@@ -3163,19 +3157,18 @@ nsresult HTMLEditor::FormatBlockContainerWithTransaction(nsAtom& blockType) {
       }
       EditorDOMPoint pointToInsertBRNode(splitNodeResult.SplitPoint());
       // Put a <br> element at the split point
-      RefPtr<Element> brElement =
+      Result<RefPtr<Element>, nsresult> resultOfInsertingBRElement =
           InsertBRElementWithTransaction(pointToInsertBRNode);
-      if (NS_WARN_IF(Destroyed())) {
-        return NS_ERROR_EDITOR_DESTROYED;
-      }
-      if (!brElement) {
+      if (resultOfInsertingBRElement.isErr()) {
         NS_WARNING("HTMLEditor::InsertBRElementWithTransaction() failed");
-        return NS_ERROR_FAILURE;
+        return resultOfInsertingBRElement.unwrapErr();
       }
+      MOZ_ASSERT(resultOfInsertingBRElement.inspect());
       // Don't restore the selection
       restoreSelectionLater.Abort();
       // Put selection at the split point
-      nsresult rv = CollapseSelectionTo(EditorRawDOMPoint(brElement));
+      nsresult rv = CollapseSelectionTo(
+          EditorRawDOMPoint(resultOfInsertingBRElement.inspect()));
       NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                            "HTMLEditor::CollapseSelectionTo() failed");
       return rv;
@@ -6558,15 +6551,13 @@ nsresult HTMLEditor::HandleInsertParagraphInHeadingElement(Element& aHeader,
       }
 
       // Append a <br> to it
-      RefPtr<Element> brElement =
+      Result<RefPtr<Element>, nsresult> resultOfInsertingBRElement =
           InsertBRElementWithTransaction(EditorDOMPoint(pOrDivElement, 0));
-      if (NS_WARN_IF(Destroyed())) {
-        return NS_ERROR_EDITOR_DESTROYED;
-      }
-      if (!brElement) {
+      if (resultOfInsertingBRElement.isErr()) {
         NS_WARNING("HTMLEditor::InsertBRElementWithTransaction() failed");
-        return NS_ERROR_FAILURE;
+        return resultOfInsertingBRElement.unwrapErr();
       }
+      MOZ_ASSERT(resultOfInsertingBRElement.inspect());
 
       // Set selection to before the break
       nsresult rv = CollapseSelectionToStartOf(*pOrDivElement);
@@ -6763,19 +6754,20 @@ EditActionResult HTMLEditor::HandleInsertParagraphInParagraph(
       return EditActionResult(NS_OK);
     }
 
-    brContent = InsertBRElementWithTransaction(pointToInsertBR);
-    if (NS_WARN_IF(Destroyed())) {
-      return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
+    Result<RefPtr<Element>, nsresult> resultOfInsertingBRElement =
+        InsertBRElementWithTransaction(pointToInsertBR);
+    if (resultOfInsertingBRElement.isErr()) {
+      NS_WARNING("HTMLEditor::InsertBRElementWithTransaction() failed");
+      return EditActionResult(resultOfInsertingBRElement.unwrapErr());
     }
-    NS_WARNING_ASSERTION(
-        brContent,
-        "HTMLEditor::InsertBRElementWithTransaction() failed, but ignored");
-    if (splitAfterNewBR && brContent) {
+    MOZ_ASSERT(resultOfInsertingBRElement.inspect());
+    if (splitAfterNewBR) {
       // We split the parent after the br we've just inserted.
-      pointToSplitParentDivOrP.SetAfter(brContent);
+      pointToSplitParentDivOrP.SetAfter(resultOfInsertingBRElement.inspect());
       NS_WARNING_ASSERTION(pointToSplitParentDivOrP.IsSet(),
                            "Failed to set after the new <br>");
     }
+    brContent = resultOfInsertingBRElement.unwrap().forget();
   }
   EditActionResult result(
       SplitParagraph(aParentDivOrP, pointToSplitParentDivOrP, brContent));
@@ -6976,15 +6968,13 @@ nsresult HTMLEditor::HandleInsertParagraphInListItemElement(Element& aListItem,
     }
 
     // Append a <br> to it
-    RefPtr<Element> brElement =
+    Result<RefPtr<Element>, nsresult> resultOfInsertingBRElement =
         InsertBRElementWithTransaction(EditorDOMPoint(pOrDivElement, 0));
-    if (NS_WARN_IF(Destroyed())) {
-      return NS_ERROR_EDITOR_DESTROYED;
-    }
-    if (!brElement) {
+    if (resultOfInsertingBRElement.isErr()) {
       NS_WARNING("HTMLEditor::InsertBRElementWithTransaction() failed");
-      return NS_ERROR_FAILURE;
+      return resultOfInsertingBRElement.unwrapErr();
     }
+    MOZ_ASSERT(resultOfInsertingBRElement.inspect());
 
     // Set selection to before the break
     rv = CollapseSelectionToStartOf(*pOrDivElement);
@@ -8511,15 +8501,13 @@ nsresult HTMLEditor::RemoveEmptyNodesIn(nsRange& aRange) {
                         EmptyCheckOption::TreatTableCellAsVisible})) {
       // We are deleting a cite that has just a `<br>`.  We want to delete cite,
       // but preserve `<br>`.
-      RefPtr<Element> brElement =
+      Result<RefPtr<Element>, nsresult> resultOfInsertingBRElement =
           InsertBRElementWithTransaction(EditorDOMPoint(emptyCite));
-      if (NS_WARN_IF(Destroyed())) {
-        return NS_ERROR_EDITOR_DESTROYED;
-      }
-      if (!brElement) {
+      if (resultOfInsertingBRElement.isErr()) {
         NS_WARNING("HTMLEditor::InsertBRElementWithTransaction() failed");
-        return NS_ERROR_FAILURE;
+        return resultOfInsertingBRElement.unwrapErr();
       }
+      MOZ_ASSERT(resultOfInsertingBRElement.inspect());
     }
     // MOZ_KnownLive because 'arrayOfEmptyCites' is guaranteed to keep it alive.
     rv = DeleteNodeWithTransaction(MOZ_KnownLive(emptyCite));
@@ -8839,14 +8827,14 @@ nsresult HTMLEditor::InsertBRElementIfEmptyBlockElement(Element& aElement) {
     return NS_OK;
   }
 
-  RefPtr<Element> brElement =
+  Result<RefPtr<Element>, nsresult> resultOfInsertingBRElement =
       InsertBRElementWithTransaction(EditorDOMPoint(&aElement, 0));
-  if (NS_WARN_IF(Destroyed())) {
-    return NS_ERROR_EDITOR_DESTROYED;
+  if (resultOfInsertingBRElement.isErr()) {
+    NS_WARNING("HTMLEditor::InsertBRElementWithTransaction() failed");
+    return resultOfInsertingBRElement.unwrapErr();
   }
-  NS_WARNING_ASSERTION(brElement,
-                       "HTMELditor::InsertBRElementWithTransaction() failed");
-  return brElement ? NS_OK : NS_ERROR_FAILURE;
+  MOZ_ASSERT(resultOfInsertingBRElement.inspect());
+  return NS_OK;
 }
 
 nsresult HTMLEditor::RemoveAlignFromDescendants(Element& aElement,
@@ -9009,14 +8997,15 @@ nsresult HTMLEditor::EnsureHardLineBeginsWithFirstChildOf(
     return NS_OK;
   }
 
-  RefPtr<Element> brElement = InsertBRElementWithTransaction(
-      EditorDOMPoint(&aRemovingContainerElement, 0));
-  if (NS_WARN_IF(Destroyed())) {
-    return NS_ERROR_EDITOR_DESTROYED;
+  Result<RefPtr<Element>, nsresult> resultOfInsertingBRElement =
+      InsertBRElementWithTransaction(
+          EditorDOMPoint(&aRemovingContainerElement, 0));
+  if (resultOfInsertingBRElement.isErr()) {
+    NS_WARNING("HTMLEditor::InsertBRElementWithTransaction() failed");
+    return resultOfInsertingBRElement.unwrapErr();
   }
-  NS_WARNING_ASSERTION(brElement,
-                       "HTMLEditor::InsertBRElementWithTransaction() failed");
-  return brElement ? NS_OK : NS_ERROR_FAILURE;
+  MOZ_ASSERT(resultOfInsertingBRElement.inspect());
+  return NS_OK;
 }
 
 nsresult HTMLEditor::EnsureHardLineEndsWithLastChildOf(
@@ -9045,14 +9034,15 @@ nsresult HTMLEditor::EnsureHardLineEndsWithLastChildOf(
     return NS_OK;
   }
 
-  RefPtr<Element> brElement = InsertBRElementWithTransaction(
-      EditorDOMPoint::AtEndOf(aRemovingContainerElement));
-  if (NS_WARN_IF(Destroyed())) {
-    return NS_ERROR_EDITOR_DESTROYED;
+  Result<RefPtr<Element>, nsresult> resultOfInsertingBRElement =
+      InsertBRElementWithTransaction(
+          EditorDOMPoint::AtEndOf(aRemovingContainerElement));
+  if (resultOfInsertingBRElement.isErr()) {
+    NS_WARNING("HTMLEditor::InsertBRElementWithTransaction() failed");
+    return resultOfInsertingBRElement.unwrapErr();
   }
-  NS_WARNING_ASSERTION(brElement,
-                       "HTMLEditor::InsertBRElementWithTransaction() failed");
-  return brElement ? NS_OK : NS_ERROR_FAILURE;
+  MOZ_ASSERT(resultOfInsertingBRElement.inspect());
+  return NS_OK;
 }
 
 nsresult HTMLEditor::SetBlockElementAlign(Element& aBlockOrHRElement,

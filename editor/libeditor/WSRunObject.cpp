@@ -714,16 +714,15 @@ Result<RefPtr<Element>, nsresult> WhiteSpaceVisibilityKeeper::InsertBRElement(
     }
   }
 
-  RefPtr<Element> newBRElement = aHTMLEditor.InsertBRElementWithTransaction(
-      pointToInsert, nsIEditor::eNone);
-  if (NS_WARN_IF(aHTMLEditor.Destroyed())) {
-    return Err(NS_ERROR_EDITOR_DESTROYED);
-  }
-  if (!newBRElement) {
-    NS_WARNING("HTMLEditor::InsertBRElementWithTransaction() failed");
-    return Err(NS_ERROR_FAILURE);
-  }
-  return newBRElement;
+  Result<RefPtr<Element>, nsresult> resultOfInsertingBRElement =
+      aHTMLEditor.InsertBRElementWithTransaction(pointToInsert,
+                                                 nsIEditor::eNone);
+  NS_WARNING_ASSERTION(
+      resultOfInsertingBRElement.isOk(),
+      "HTMLEditor::InsertBRElementWithTransaction(eNone) failed");
+  MOZ_ASSERT_IF(resultOfInsertingBRElement.isOk(),
+                resultOfInsertingBRElement.inspect());
+  return resultOfInsertingBRElement;
 }
 
 // static
@@ -2790,16 +2789,14 @@ nsresult WhiteSpaceVisibilityKeeper::NormalizeVisibleWhiteSpacesAt(
           // the beginning of soft wrapped lines, and lets the user see 2 spaces
           // when they type 2 spaces.
 
-          RefPtr<Element> brElement =
+          Result<RefPtr<Element>, nsresult> resultOfInsertingBRElement =
               aHTMLEditor.InsertBRElementWithTransaction(
                   atEndOfVisibleWhiteSpaces);
-          if (NS_WARN_IF(aHTMLEditor.Destroyed())) {
-            return NS_ERROR_EDITOR_DESTROYED;
-          }
-          if (!brElement) {
+          if (resultOfInsertingBRElement.isErr()) {
             NS_WARNING("HTMLEditor::InsertBRElementWithTransaction() failed");
-            return NS_ERROR_FAILURE;
+            return resultOfInsertingBRElement.unwrapErr();
           }
+          MOZ_ASSERT(resultOfInsertingBRElement.inspect());
 
           atPreviousCharOfEndOfVisibleWhiteSpaces =
               textFragmentData.GetPreviousEditableCharPoint(

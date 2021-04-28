@@ -698,11 +698,14 @@ nsresult HTMLEditor::SetPositionToAbsolute(Element& aElement) {
   if (parentNode->GetChildCount() != 1) {
     return NS_OK;
   }
-  RefPtr<Element> newBRElement =
+  Result<RefPtr<Element>, nsresult> resultOfInsertingBRElement =
       InsertBRElementWithTransaction(EditorDOMPoint(parentNode, 0));
-  NS_WARNING_ASSERTION(newBRElement,
-                       "HTMLEditor::InsertBRElementWithTransaction() failed");
-  return newBRElement ? NS_OK : NS_ERROR_FAILURE;
+  if (resultOfInsertingBRElement.isErr()) {
+    NS_WARNING("HTMLEditor::InsertBRElementWithTransaction() failed");
+    return resultOfInsertingBRElement.unwrapErr();
+  }
+  MOZ_ASSERT(resultOfInsertingBRElement.inspect());
+  return NS_OK;
 }
 
 nsresult HTMLEditor::SetPositionToStatic(Element& aElement) {
