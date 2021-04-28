@@ -102,6 +102,10 @@ Result<UsageInfo, nsresult> GetBodyUsage(nsIFile& aMorgueDir,
 
           return false;
         };
+
+        // QM_OR_ELSE_WARN is not used here since we want ignore
+        // NS_ERROR_FILE_FS_CORRUPTED completely (even a warning is not
+        // desired).
         CACHE_TRY(ToResult(BodyTraverseFiles(QuotaInfo{}, *bodyDir, getUsage,
                                              /* aCanRemoveFiles */ true,
                                              /* aTrackQuota */ false))
