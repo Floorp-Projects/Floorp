@@ -780,6 +780,8 @@ var DownloadsView = {
     );
 
     let element = document.createXULElement("richlistitem");
+    element.setAttribute("align", "center");
+
     let viewItem = new DownloadsViewItem(download, element);
     this._visibleViewItems.set(download, viewItem);
     this._itemsForElements.set(element, viewItem);
