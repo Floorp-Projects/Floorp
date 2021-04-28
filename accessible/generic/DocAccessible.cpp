@@ -1763,7 +1763,7 @@ void DocAccessible::DoInitialUpdate() {
           IAccessibleHolder holder(
               CreateHolderFromAccessible(WrapNotNull(this)));
           MOZ_ASSERT(!holder.IsNull());
-          int32_t childID = AccessibleWrap::GetChildIDFor(this);
+          int32_t childID = MsaaAccessible::GetChildIDFor(this);
 #else
           int32_t holder = 0, childID = 0;
 #endif

@@ -11,7 +11,6 @@
 #include "LocalAccessible.h"
 #include "MsaaAccessible.h"
 #include "mozilla/a11y/AccessibleHandler.h"
-#include "mozilla/a11y/MsaaIdGenerator.h"
 #include "mozilla/a11y/RemoteAccessible.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/mscom/Utils.h"
@@ -153,7 +152,6 @@ class AccessibleWrap : public LocalAccessible, public MsaaAccessible {
   virtual void Shutdown() override;
 
   // Helper methods
-  static int32_t GetChildIDFor(LocalAccessible* aAccessible);
   static HWND GetHWNDFor(LocalAccessible* aAccessible);
 
   static void FireWinEvent(LocalAccessible* aTarget, uint32_t aEventType);
@@ -203,13 +201,6 @@ class AccessibleWrap : public LocalAccessible, public MsaaAccessible {
 
   static IDispatch* NativeAccessible(LocalAccessible* aAccessible);
 
-  uint32_t GetExistingID() const { return mID; }
-  static const uint32_t kNoID = 0;
-  void SetID(uint32_t aID);
-
-  static uint32_t GetContentProcessIdFor(dom::ContentParentId aIPCContentId);
-  static void ReleaseContentProcessIdFor(dom::ContentParentId aIPCContentId);
-
   static void SetHandlerControl(DWORD aPid, RefPtr<IHandlerControl> aCtrl);
 
   static void InvalidateHandlers();
@@ -217,13 +208,8 @@ class AccessibleWrap : public LocalAccessible, public MsaaAccessible {
   bool DispatchTextChangeToHandler(bool aIsInsert, const nsString& aText,
                                    int32_t aStart, uint32_t aLen);
 
-  static void AssignChildIDTo(NotNull<sdnAccessible*> aSdnAcc);
-  static void ReleaseChildID(NotNull<sdnAccessible*> aSdnAcc);
-
  protected:
-  virtual ~AccessibleWrap();
-
-  uint32_t mID;
+  virtual ~AccessibleWrap() = default;
 
   HRESULT
   ResolveChild(const VARIANT& aVarChild, IAccessible** aOutInterface);
@@ -245,8 +231,6 @@ class AccessibleWrap : public LocalAccessible, public MsaaAccessible {
   static ITypeInfo* GetTI(LCID lcid);
 
   static ITypeInfo* gTypeInfo;
-
-  static MsaaIdGenerator sIDGen;
 
   enum navRelations {
     NAVRELATION_CONTROLLED_BY = 0x1000,

@@ -15,7 +15,7 @@
 namespace mozilla {
 namespace a11y {
 
-class AccessibleWrap;
+class MsaaAccessible;
 class sdnAccessible;
 
 /**
@@ -34,7 +34,7 @@ class MsaaIdGenerator {
   constexpr MsaaIdGenerator();
 
   uint32_t GetID();
-  void ReleaseID(NotNull<AccessibleWrap*> aAccWrap);
+  void ReleaseID(NotNull<MsaaAccessible*> aMsaaAcc);
   void ReleaseID(NotNull<sdnAccessible*> aSdnAcc);
   bool IsChromeID(uint32_t aID);
   bool IsIDForThisContentProcess(uint32_t aID);

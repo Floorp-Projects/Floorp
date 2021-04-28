@@ -29,7 +29,7 @@ using namespace mozilla::a11y;
 
 sdnAccessible::~sdnAccessible() {
   if (mUniqueId.isSome()) {
-    AccessibleWrap::ReleaseChildID(WrapNotNull(this));
+    MsaaAccessible::ReleaseChildID(WrapNotNull(this));
   }
 }
 
@@ -107,10 +107,10 @@ sdnAccessible::get_nodeInfo(BSTR __RPC_FAR* aNodeName,
   // model.
   AccessibleWrap* accessible = GetAccessible();
   if (accessible) {
-    *aUniqueID = AccessibleWrap::GetChildIDFor(accessible);
+    *aUniqueID = MsaaAccessible::GetChildIDFor(accessible);
   } else {
     if (mUniqueId.isNothing()) {
-      AccessibleWrap::AssignChildIDTo(WrapNotNull(this));
+      MsaaAccessible::AssignChildIDTo(WrapNotNull(this));
     }
     MOZ_ASSERT(mUniqueId.isSome());
     *aUniqueID = mUniqueId.value();
