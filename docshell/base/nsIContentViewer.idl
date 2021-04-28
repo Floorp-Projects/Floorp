@@ -264,16 +264,6 @@ interface nsIContentViewer : nsISupports
   attribute boolean authorStyleDisabled;
 
   /**
-   * XXX comm-central only: bug 829543.
-   */
-  attribute ACString hintCharacterSet;
-
-  /**
-   * XXX comm-central only: bug 829543.
-   */
-  attribute int32_t hintCharacterSetSource;
-
-  /**
    * Requests the size of the content to the container.
    */
   void getContentSize(out long width, out long height);
@@ -288,8 +278,9 @@ interface nsIContentViewer : nsISupports
   void getContentSizeConstrained(in long maxWidth, in long maxHeight,
                                  out long width, out long height);
 
-  [noscript, notxpcom] Encoding getHintCharset();
-  [noscript, notxpcom] void setHintCharset(in Encoding aEncoding);
+  [noscript, notxpcom] Encoding getReloadEncodingAndSource(out int32_t aSource);
+  [noscript, notxpcom] void setReloadEncodingAndSource(in Encoding aEncoding, in int32_t aSource);
+  [noscript, notxpcom] void forgetReloadEncoding();
 };
 
 %{C++

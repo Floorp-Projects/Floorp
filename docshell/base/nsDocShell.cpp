@@ -8209,8 +8209,8 @@ nsresult nsDocShell::SetupNewViewer(nsIContentViewer* aNewViewer,
                     NS_ERROR_FAILURE);
   nsCOMPtr<nsIDocShell> parent(do_QueryInterface(parentAsItem));
 
-  const Encoding* hintCharset = nullptr;
-  int32_t hintCharsetSource = kCharsetUninitialized;
+  const Encoding* reloadEncoding = nullptr;
+  int32_t reloadEncodingSource = kCharsetUninitialized;
   // |newMUDV| also serves as a flag to set the data from the above vars
   nsCOMPtr<nsIContentViewer> newCv;
 
@@ -8239,9 +8239,8 @@ nsresult nsDocShell::SetupNewViewer(nsIContentViewer* aNewViewer,
     if (oldCv) {
       newCv = aNewViewer;
       if (newCv) {
-        hintCharset = oldCv->GetHintCharset();
-        NS_ENSURE_SUCCESS(oldCv->GetHintCharacterSetSource(&hintCharsetSource),
-                          NS_ERROR_FAILURE);
+        reloadEncoding =
+            oldCv->GetReloadEncodingAndSource(&reloadEncodingSource);
       }
     }
   }
@@ -8295,9 +8294,7 @@ nsresult nsDocShell::SetupNewViewer(nsIContentViewer* aNewViewer,
   // If we have old state to copy, set the old state onto the new content
   // viewer
   if (newCv) {
-    newCv->SetHintCharset(hintCharset);
-    NS_ENSURE_SUCCESS(newCv->SetHintCharacterSetSource(hintCharsetSource),
-                      NS_ERROR_FAILURE);
+    newCv->SetReloadEncodingAndSource(reloadEncoding, reloadEncodingSource);
   }
 
   NS_ENSURE_TRUE(mContentViewer, NS_ERROR_FAILURE);
@@ -13069,18 +13066,16 @@ bool nsDocShell::PluginsAllowedInCurrentDoc() {
 
 // This functions is only called when a new charset is detected in loading a
 // document.
-nsresult nsDocShell::CharsetChangeReloadDocument(const char* aCharset,
-                                                 int32_t aSource) {
+nsresult nsDocShell::CharsetChangeReloadDocument(
+    mozilla::NotNull<const mozilla::Encoding*> aEncoding, int32_t aSource) {
   // XXX hack. keep the aCharset and aSource wait to pick it up
   nsCOMPtr<nsIContentViewer> cv;
   NS_ENSURE_SUCCESS(GetContentViewer(getter_AddRefs(cv)), NS_ERROR_FAILURE);
   if (cv) {
-    int32_t hint;
-    cv->GetHintCharacterSetSource(&hint);
-    if (aSource > hint) {
-      nsCString charset(aCharset);
-      cv->SetHintCharacterSet(charset);
-      cv->SetHintCharacterSetSource(aSource);
+    int32_t source;
+    Unused << cv->GetReloadEncodingAndSource(&source);
+    if (aSource > source) {
+      cv->SetReloadEncodingAndSource(aEncoding, aSource);
       if (eCharsetReloadRequested != mCharsetReloadState) {
         mCharsetReloadState = eCharsetReloadRequested;
         switch (mLoadType) {
