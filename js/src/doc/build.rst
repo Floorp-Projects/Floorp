@@ -1,20 +1,21 @@
 Building SpiderMonkey
 =====================
 
-**Before you begin, make sure you have the right build tools for your
-computer:**
+**The first step is to run our “bootstrap” script to help ensure you have the
+right build tools for your operating system. This will also help you get a copy
+of the source code. You do not need to run the “mach build” command just yet
+though.**
 
 * :ref:`Building Firefox On Linux`
 * :ref:`Building Firefox On Windows`
 * :ref:`Building Firefox On MacOS`
-* `Others <https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Build_Instructions>`__
 
-This guide shows you how to build SpiderMonkey using ``mach``, which is Mozilla's multipurpose build tool.
-For builds using ``configure && make``, and translations into other languages see
-:ref:`these instructions on MDN <Building SpiderMonkey>`.
+This guide shows you how to build SpiderMonkey using ``mach``, which is
+Mozilla's multipurpose build tool. This replaces old guides that advised
+running the "configure" script directly.
 
-These instructions assume you have a clone of `mozilla-central` and are interested
-in building the JS shell.
+These instructions assume you have a clone of `mozilla-unified` and are
+interested in building the JS shell.
 
 Developer (debug) build
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -39,10 +40,12 @@ A basic ``MOZCONFIG`` file for doing a debug build, put into ``$HOME/mozconfigs/
     # Build only the JS shell
     ac_add_options --enable-application=js
 
-    # Disable Optimization, for the most accurate debugging experience
-    ac_add_options --disable-optimize
     # Enable the debugging tools: Assertions, debug only code etc.
     ac_add_options --enable-debug
+
+    # Enable optimizations as well so that the test suite runs much faster. If
+    # you are having trouble using a debugger, you should disable optimization.
+    ac_add_options --enable-optimize
 
     # Use a dedicated objdir for SpiderMonkey debug builds to avoid
     # conflicting with Firefox build with default configuration.
@@ -102,9 +105,9 @@ Once built, you can then use ``mach`` to run the ``jit-tests``:
 Optimized Builds
 ~~~~~~~~~~~~~~~~
 
-To switch to an optimized build, one need only have an optimized build ``MOZCONFIG``,
-and then activate it. An example ``$HOME/mozconfigs/optimized`` ``MOZCONFIG``
-looks like this:
+To switch to an optimized build, such as for performance testing, one need only
+have an optimized build ``MOZCONFIG``, and then activate it. An example
+``$HOME/mozconfigs/optimized`` ``MOZCONFIG`` looks like this:
 
 .. code::
 
@@ -113,10 +116,9 @@ looks like this:
 
     # Enable optimization for speed
     ac_add_options --enable-optimize
-    # Enable the debugging tools: Assertions, debug only code etc.
-    # For performance testing you would probably want to change this
-    # to --disable-debug.
-    ac_add_options --enable-debug
+
+    # Disable debug checks to better match a release build of Firefox.
+    ac_add_options --disable-debug
 
     # Use a separate objdir for optimized builds to allow easy
     # switching between optimized and debug builds while developing.
