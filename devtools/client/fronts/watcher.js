@@ -128,7 +128,7 @@ class WatcherFront extends FrontClassWithSpec(watcherSpec) {
     // This code could go away or be simplified if the Descriptor starts fetch all
     // the targets, including the top level one via the Watcher. i.e. drop Descriptor.getTarget().
     const topLevelTarget = await this.parentFront.getTarget();
-    if (topLevelTarget.browsingContextID == id) {
+    if (topLevelTarget?.browsingContextID == id) {
       return topLevelTarget;
     }
 
