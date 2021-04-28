@@ -27,7 +27,7 @@
 }
 
 @media (-moz-windows-default-theme) {
-  @media not (-moz-proton-doorhangers) {
+  @media not (-moz-proton) {
   @item@[verdict="Malware"]:not(:hover) {
     color: #aa1b08;
   }

@@ -33,8 +33,8 @@ XPCOMUtils.defineLazyGetter(this, "strBundle", () => {
 
 XPCOMUtils.defineLazyPreferenceGetter(
   this,
-  "gProtonDoorhangersEnabled",
-  "browser.proton.doorhangers.enabled",
+  "gProtonEnabled",
+  "browser.proton.enabled",
   false
 );
 
@@ -778,7 +778,7 @@ class LoginManagerPrompter {
       showOptions
     );
 
-    if (gProtonDoorhangersEnabled) {
+    if (gProtonEnabled) {
       mainAction.disableHighlight = true;
     }
 

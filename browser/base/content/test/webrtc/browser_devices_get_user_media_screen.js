@@ -46,7 +46,7 @@ var gTests = [
       let notification = PopupNotifications.panel.firstElementChild;
 
       // With Proton enabled, the icon does not appear in the panel.
-      if (!gProtonDoorhangers) {
+      if (!gProton) {
         let iconclass = notification.getAttribute("iconclass");
         ok(iconclass.includes("screen-icon"), "panel using screen icon");
       }
@@ -220,7 +220,7 @@ var gTests = [
       let notification = PopupNotifications.panel.firstElementChild;
 
       // With Proton enabled, the icon does not appear in the panel.
-      if (!gProtonDoorhangers) {
+      if (!gProton) {
         let iconclass = notification.getAttribute("iconclass");
         ok(iconclass.includes("screen-icon"), "panel using screen icon");
       }
@@ -433,7 +433,7 @@ var gTests = [
       checkDeviceSelectors(true, false, true);
 
       // With Proton enabled, the icon does not appear in the panel.
-      if (!gProtonDoorhangers) {
+      if (!gProton) {
         let iconclass = PopupNotifications.panel.firstElementChild.getAttribute(
           "iconclass"
         );
