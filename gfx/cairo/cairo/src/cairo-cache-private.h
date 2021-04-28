@@ -43,7 +43,7 @@
 #include "cairo-types-private.h"
 
 /**
- * cairo_cache_entry_t:
+ * _cairo_cache_entry:
  *
  * A #cairo_cache_entry_t contains both a key and a value for
  * #cairo_cache_t. User-derived types for #cairo_cache_entry_t must
@@ -84,7 +84,7 @@
  * not be initialized if so desired.
  **/
 typedef struct _cairo_cache_entry {
-    uintptr_t hash;
+    unsigned long hash;
     unsigned long size;
 } cairo_cache_entry_t;
 

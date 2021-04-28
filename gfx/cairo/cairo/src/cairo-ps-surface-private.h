@@ -49,6 +49,21 @@
 
 #include <time.h>
 
+typedef struct _cairo_ps_form {
+    cairo_hash_entry_t base;
+    unsigned char *unique_id;
+    unsigned long unique_id_length;
+    cairo_bool_t is_image;
+    int id;
+    cairo_surface_t *src_surface;
+    cairo_rectangle_int_t src_surface_extents;
+    cairo_bool_t src_surface_bounded;
+    cairo_filter_t filter;
+
+    /* Union of source extents required for all operations using this form */
+    cairo_rectangle_int_t required_extents;
+} cairo_ps_form_t;
+
 typedef struct cairo_ps_surface {
     cairo_surface_t base;
 
@@ -63,19 +78,15 @@ typedef struct cairo_ps_surface {
     cairo_output_stream_t *stream;
 
     cairo_bool_t eps;
+    cairo_bool_t contains_eps;
     cairo_content_t content;
     double width;
     double height;
-    cairo_rectangle_int_t page_bbox;
-    int bbox_x1, bbox_y1, bbox_x2, bbox_y2;
+    cairo_point_int_t document_bbox_p1, document_bbox_p2; /* in PS coordinates */
+    cairo_rectangle_int_t surface_extents;
+    cairo_bool_t surface_bounded;
     cairo_matrix_t cairo_to_ps;
-
-    /* XXX These 3 are used as temporary storage whilst emitting patterns */
-    cairo_image_surface_t *image;
-    cairo_image_surface_t *acquired_image;
-    void *image_extra;
-
-    cairo_bool_t use_string_datasource;
+    cairo_bool_t paint_proc; /* TRUE if surface will be used in a PaintProc */
 
     cairo_bool_t current_pattern_is_solid_color;
     cairo_color_t current_color;
@@ -95,6 +106,8 @@ typedef struct cairo_ps_surface {
     cairo_array_t dsc_setup_comments;
     cairo_array_t dsc_page_setup_comments;
 
+    cairo_array_t recording_surf_stack;
+
     cairo_array_t *dsc_comment_target;
 
     cairo_ps_level_t ps_level;
@@ -104,6 +117,9 @@ typedef struct cairo_ps_surface {
 
     cairo_pdf_operators_t pdf_operators;
     cairo_surface_t *paginated_surface;
+    cairo_hash_table_t *forms;
+    int num_forms;
+    long total_form_size;
 } cairo_ps_surface_t;
 
 #endif /* CAIRO_PS_SURFACE_PRIVATE_H */

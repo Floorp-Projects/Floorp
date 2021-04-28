@@ -1,4 +1,4 @@
-/* vim:set ts=8 sw=2 noet cin: */
+/* vim:set ts=8 sw=4 noet cin: */
 /* cairo - a vector graphics library with display and print output
  *
  * Copyright © 2005 Christian Biesinger <cbiesinger@web.de>
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the LGPL along with this library
  * in the file COPYING-LGPL-2.1; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ * Foundation, Inc., 51 Franklin Street, Suite 500, Boston, MA 02110-1335, USA
  * You should have received a copy of the MPL along with this library
  * in the file COPYING-MPL-1.1
  *
@@ -40,6 +40,9 @@
 
 #include "cairo-beos.h"
 
+#include "cairo-error-private.h"
+#include "cairo-image-surface-inline.h"
+
 #include <new>
 
 #include <Bitmap.h>
@@ -51,10 +54,22 @@
 #include <Window.h>
 #include <Locker.h>
 
+/**
+ * SECTION:beos-surface
+ * @Title: BeOS Surfaces
+ * @Short_Description: BeOS surface support
+ * @See_Also: #cairo_surface_t
+ *
+ * The BeOS surface is used to render cairo graphics to BeOS views 
+ * and bitmaps.
+ **/
+
 #define CAIRO_INT_STATUS_SUCCESS (cairo_int_status_t)(CAIRO_STATUS_SUCCESS)
 
 struct cairo_beos_surface_t {
     cairo_surface_t base;
+
+    cairo_region_t *clip_region;
 
     BView* view;
 
@@ -69,7 +84,6 @@ struct cairo_beos_surface_t {
      */
 
     BBitmap* bitmap;
-
 
     // If true, surface and view should be deleted when this surface is
     // destroyed
@@ -101,27 +115,28 @@ _cairo_beos_surface_create_internal (BView*   view,
 				     BBitmap* bmp,
 				     bool     owns_bitmap_view = false);
 
-static BRect
-_cairo_rect_to_brect (const cairo_rectangle_int16_t* rect)
+static inline BRect
+_cairo_rectangle_to_brect (const cairo_rectangle_int_t* rect)
 {
     // A BRect is one pixel wider than you'd think
-    return BRect(rect->x, rect->y, rect->x + rect->width - 1,
-	    	 rect->y + rect->height - 1);
+    return BRect (rect->x, rect->y,
+		  rect->x + rect->width - 1,
+		  rect->y + rect->height - 1);
 }
 
-static cairo_rectangle_int16_t
-_brect_to_cairo_rect (const BRect& rect)
+static inline cairo_rectangle_int_t
+_brect_to_cairo_rectangle (const BRect &rect)
 {
-    cairo_rectangle_int16_t retval;
-    retval.x = int(rect.left + 0.5);
-    retval.y = int(rect.top + 0.5);
-    retval.width = rect.IntegerWidth() + 1;
-    retval.height = rect.IntegerHeight() + 1;
+    cairo_rectangle_int_t retval;
+    retval.x = floor (rect.left);
+    retval.y = floor (rect.top);
+    retval.width = ceil (rect.right) - retval.x + 1;
+    retval.height = ceil (rect.bottom) - rectval.y + 1;
     return retval;
 }
 
-static rgb_color
-_cairo_color_to_be_color (const cairo_color_t* color)
+static inline rgb_color
+_cairo_color_to_be_color (const cairo_color_t *color)
 {
     // This factor ensures a uniform distribution of numbers
     const float factor = 256 - 1e-5;
@@ -199,32 +214,8 @@ _cairo_beos_view_to_bitmap (BView*       view,
     return ERROR;
 }
 
-inline unsigned char
-unpremultiply (unsigned char color,
-	       unsigned char alpha)
-{
-    if (alpha == 0)
-	return 0;
-    // plus alpha/2 to round instead of truncate
-    return (color * 255 + alpha / 2) / alpha;
-}
-
-inline unsigned char
-premultiply (unsigned char color,
-	     unsigned char alpha)
-{
-    // + 127 to round, instead of truncate
-    return (color * alpha + 127) / 255;
-}
-
-/**
- * unpremultiply_rgba:
- *
- * Takes an input in ABGR premultiplied image data and unmultiplies it.
- * The result is stored in retdata.
- **/
 static void
-unpremultiply_rgba (unsigned char* data,
+unpremultiply_bgra (unsigned char* data,
 		    int            width,
 		    int            height,
 		    int            stride,
@@ -235,51 +226,107 @@ unpremultiply_rgba (unsigned char* data,
 	 in < end;
 	 in += stride, out += stride)
     {
-	for (int i = 0; i < width; ++i) {
-	    // XXX for a big-endian platform this'd have to change
-	    int idx = 4 * i;
-	    unsigned char alpha = in[idx + 3];
-	    out[idx + 0] = unpremultiply(in[idx + 0], alpha); // B
-	    out[idx + 1] = unpremultiply(in[idx + 1], alpha); // G
-	    out[idx + 2] = unpremultiply(in[idx + 2], alpha); // R
-	    out[idx + 3] = in[idx + 3]; // Alpha
+	for (int i = 0; i < width; i ++) {
+	    uint8_t *b = &out[4*i];
+	    uint32_t pixel;
+	    uint8_t  alpha;
+
+	    memcpy (&pixel, &data[4*i], sizeof (uint32_t));
+	    alpha = pixel & 0xff;
+	    if (alpha == 0) {
+		b[0] = b[1] = b[2] = b[3] = 0;
+	    } else {
+		b[0] = (((pixel >> 24) & 0xff) * 255 + alpha / 2) / alpha;
+		b[1] = (((pixel >> 16) & 0xff) * 255 + alpha / 2) / alpha;
+		b[2] = (((pixel >>  8) & 0xff) * 255 + alpha / 2) / alpha;
+		b[3] = alpha;
+	    }
 	}
     }
 }
 
-/**
- * premultiply_rgba:
- *
- * Takes an input in ABGR non-premultiplied image data and premultiplies it.
- * The returned data must be freed with free().
- **/
+static inline int
+multiply_alpha (int alpha, int color)
+{
+    int temp = (alpha * color) + 0x80;
+    return ((temp + (temp >> 8)) >> 8);
+}
+
 static unsigned char*
-premultiply_rgba (unsigned char* data,
+premultiply_bgra (unsigned char* data,
 		  int            width,
 		  int            height,
 		  int            stride)
 {
-    unsigned char* retdata = reinterpret_cast<unsigned char*>(_cairo_malloc_ab(height, stride));
+    uint8_t * retdata = reinterpret_cast<unsigned char*>(_cairo_malloc_ab(height, stride));
     if (!retdata)
 	return NULL;
 
-    unsigned char* end = data + stride * height;
-    for (unsigned char* in = data, *out = retdata;
+    uint8_t * end = data + stride * height;
+    for (uint8_t * in = data, *out = retdata;
 	 in < end;
 	 in += stride, out += stride)
     {
-	for (int i = 0; i < width; ++i) {
-	    // XXX for a big-endian platform this'd have to change
-	    int idx = 4 * i;
-	    unsigned char alpha = in[idx + 3];
-	    out[idx + 0] = premultiply(in[idx + 0], alpha); // B
-	    out[idx + 1] = premultiply(in[idx + 1], alpha); // G
-	    out[idx + 2] = premultiply(in[idx + 2], alpha); // R
-	    out[idx + 3] = in[idx + 3]; // Alpha
+	for (int i = 0; i < width; i ++) {
+	    uint8_t *base  = &in[4*i];
+	    uint8_t  alpha = base[3];
+	    uint32_t p;
+
+	    if (alpha == 0) {
+		p = 0;
+	    } else {
+		uint8_t  blue  = base[0];
+		uint8_t  green = base[1];
+		uint8_t  red   = base[2];
+
+		if (alpha != 0xff) {
+		    blue  = multiply_alpha (alpha, blue);
+		    green = multiply_alpha (alpha, green);
+		    red   = multiply_alpha (alpha, red);
+		}
+		p = (alpha << 0) | (red << 8) | (green << 16) | ((uint32_t)blue << 24);
+	    }
+	    memcpy (&out[4*i], &p, sizeof (uint32_t));
 	}
     }
     return retdata;
 }
+
+static cairo_int_status_t
+_cairo_beos_surface_set_clip_region (cairo_beos_surface_t *surface,
+				     cairo_region_t	*region)
+{
+    cairo_beos_surface_t *surface = reinterpret_cast<cairo_beos_surface_t*>(
+							abstract_surface);
+    AutoLockView locker(surface->view);
+    assert (locker);
+
+    if (region == surface->clip_region)
+	return CAIRO_INT_STATUS_SUCCESS;
+
+    cairo_region_destroy (surface->clip_region);
+    surface->clip_region = cairo_region_reference (region);
+
+    if (region == NULL) {
+	// No clipping
+	surface->view->ConstrainClippingRegion(NULL);
+	return CAIRO_INT_STATUS_SUCCESS;
+    }
+
+    int count = cairo_region_num_rectangles (region);
+    BRegion bregion;
+    for (int i = 0; i < count; ++i) {
+	cairo_rectangle_int_t rect;
+
+	cairo_region_get_rectangle (region, i, &rect);
+	// Have to subtract one, because for pixman, the second coordinate
+	// lies outside the rectangle.
+	bregion.Include (_cairo_rectangle_to_brect (&rect));
+    }
+    surface->view->ConstrainClippingRegion(&bregion);
+    return CAIRO_INT_STATUS_SUCCESS;
+}
+
 
 /**
  * _cairo_beos_bitmap_to_surface:
@@ -309,8 +356,8 @@ _cairo_beos_bitmap_to_surface (BBitmap* bitmap)
 	return imgsurf;
     }
 
-    cairo_format_t cformat = format == B_RGB32 ? CAIRO_FORMAT_RGB24
-						: CAIRO_FORMAT_ARGB32;
+    cairo_format_t cformat = format == B_RGB32 ?
+	                     CAIRO_FORMAT_RGB24 : CAIRO_FORMAT_ARGB32;
 
     BRect bounds(bitmap->Bounds());
     unsigned char* bits = reinterpret_cast<unsigned char*>(bitmap->Bits());
@@ -318,8 +365,8 @@ _cairo_beos_bitmap_to_surface (BBitmap* bitmap)
     int height = bounds.IntegerHeight() + 1;
     unsigned char* premultiplied;
     if (cformat == CAIRO_FORMAT_ARGB32) {
-       premultiplied = premultiply_rgba(bits, width, height,
-					bitmap->BytesPerRow());
+       premultiplied = premultiply_bgra (bits, width, height,
+					 bitmap->BytesPerRow());
     } else {
 	premultiplied = reinterpret_cast<unsigned char*>(
 					_cairo_malloc_ab(bitmap->BytesPerRow(), height));
@@ -327,7 +374,7 @@ _cairo_beos_bitmap_to_surface (BBitmap* bitmap)
 	    memcpy(premultiplied, bits, bitmap->BytesPerRow() * height);
     }
     if (!premultiplied)
-	return NULL;
+	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
 
     cairo_image_surface_t* surf = reinterpret_cast<cairo_image_surface_t*>
 	(cairo_image_surface_create_for_data(premultiplied,
@@ -355,11 +402,11 @@ _cairo_image_surface_to_bitmap (cairo_image_surface_t* surface)
     switch (surface->format) {
 	case CAIRO_FORMAT_ARGB32: {
 	    BBitmap* data = new BBitmap(size, B_RGBA32);
-	    unpremultiply_rgba(surface->data,
-			       surface->width,
-			       surface->height,
-			       surface->stride,
-			       reinterpret_cast<unsigned char*>(data->Bits()));
+	    unpremultiply_bgra (surface->data,
+				surface->width,
+				surface->height,
+				surface->stride,
+				reinterpret_cast<unsigned char*>(data->Bits()));
 	    return data;
         }
 	case CAIRO_FORMAT_RGB24: {
@@ -384,44 +431,44 @@ _cairo_op_to_be_op (cairo_operator_t cairo_op,
 		    drawing_mode*    beos_op)
 {
     switch (cairo_op) {
+    case CAIRO_OPERATOR_SOURCE:
+	*beos_op = B_OP_COPY;
+	return true;
+    case CAIRO_OPERATOR_OVER:
+	*beos_op = B_OP_ALPHA;
+	return true;
 
-	case CAIRO_OPERATOR_SOURCE:
-	    *beos_op = B_OP_COPY;
-	    return true;
-	case CAIRO_OPERATOR_OVER:
-	    *beos_op = B_OP_ALPHA;
-	    return true;
-
-	case CAIRO_OPERATOR_ADD:
-	    // Does not actually work
+    case CAIRO_OPERATOR_ADD:
+	// Does not actually work
+	// XXX This is a fundamental compositing operator, it has to work!
 #if 1
-	    return false;
+	return false;
 #else
-	    *beos_op = B_OP_ADD;
-	    return true;
+	*beos_op = B_OP_ADD;
+	return true;
 #endif
 
-	case CAIRO_OPERATOR_CLEAR:
-	    // Does not map to B_OP_ERASE - it replaces the dest with the low
-	    // color, instead of transparency; could be done by setting low
-	    // color appropriately.
+    case CAIRO_OPERATOR_CLEAR:
+	// Does not map to B_OP_ERASE - it replaces the dest with the low
+	// color, instead of transparency; could be done by setting low
+	// color appropriately.
 
-	case CAIRO_OPERATOR_IN:
-	case CAIRO_OPERATOR_OUT:
-	case CAIRO_OPERATOR_ATOP:
+    case CAIRO_OPERATOR_IN:
+    case CAIRO_OPERATOR_OUT:
+    case CAIRO_OPERATOR_ATOP:
 
-	case CAIRO_OPERATOR_DEST:
-	case CAIRO_OPERATOR_DEST_OVER:
-	case CAIRO_OPERATOR_DEST_IN:
-	case CAIRO_OPERATOR_DEST_OUT:
-	case CAIRO_OPERATOR_DEST_ATOP:
+    case CAIRO_OPERATOR_DEST:
+    case CAIRO_OPERATOR_DEST_OVER:
+    case CAIRO_OPERATOR_DEST_IN:
+    case CAIRO_OPERATOR_DEST_OUT:
+    case CAIRO_OPERATOR_DEST_ATOP:
 
-	case CAIRO_OPERATOR_XOR:
-	case CAIRO_OPERATOR_SATURATE:
+    case CAIRO_OPERATOR_XOR:
+    case CAIRO_OPERATOR_SATURATE:
 
-	default:
-	    return false;
-    };
+    default:
+	return false;
+    }
 }
 
 static cairo_surface_t *
@@ -430,8 +477,6 @@ _cairo_beos_surface_create_similar (void            *abstract_surface,
 				    int              width,
 				    int              height)
 {
-    fprintf(stderr, "Creating similar\n");
-
     cairo_beos_surface_t *surface = reinterpret_cast<cairo_beos_surface_t*>(
 							abstract_surface);
 
@@ -444,9 +489,7 @@ _cairo_beos_surface_create_similar (void            *abstract_surface,
     BBitmap* bmp;
     switch (content) {
 	case CAIRO_CONTENT_ALPHA:
-	    // Can't support this natively
-	    return _cairo_image_surface_create_with_content(content, width,
-							    height);
+	    return NULL;
 	case CAIRO_CONTENT_COLOR_ALPHA:
 	    bmp = new BBitmap(rect, B_RGBA32, true);
 	    break;
@@ -470,10 +513,9 @@ _cairo_beos_surface_create_similar (void            *abstract_surface,
 	    }
 	    break;
 	default:
-	    assert(0);
+	    ASSERT_NOT_REACHED;
 	    return NULL;
-	    
-    };
+    }
     BView* view = new BView(rect, "Cairo bitmap view", B_FOLLOW_ALL_SIDES, 0);
     bmp->AddChild(view);
     return _cairo_beos_surface_create_internal(view, bmp, true);
@@ -495,6 +537,8 @@ _cairo_beos_surface_finish (void *abstract_surface)
 	surface->bitmap = NULL;
     }
 
+    cairo_region_destroy (surface->clip_region);
+
     return CAIRO_STATUS_SUCCESS;
 }
 
@@ -503,7 +547,6 @@ _cairo_beos_surface_acquire_source_image (void                   *abstract_surfa
 					  cairo_image_surface_t **image_out,
 					  void                  **image_extra)
 {
-    fprintf(stderr, "Getting source image\n");
     cairo_beos_surface_t *surface = reinterpret_cast<cairo_beos_surface_t*>(
 							abstract_surface);
     AutoLockView locker(surface->view);
@@ -514,9 +557,9 @@ _cairo_beos_surface_acquire_source_image (void                   *abstract_surfa
     surface->view->Sync();
 
     if (surface->bitmap) {
-	*image_out = _cairo_beos_bitmap_to_surface(surface->bitmap);
-	if (!*image_out)
-	    return CAIRO_STATUS_NO_MEMORY;
+	*image_out = _cairo_beos_bitmap_to_surface (surface->bitmap);
+	if (unlikely ((*image_out)->base.status))
+	    return (*image_out)->base.status;
 
 	*image_extra = NULL;
 	return CAIRO_STATUS_SUCCESS;
@@ -526,10 +569,10 @@ _cairo_beos_surface_acquire_source_image (void                   *abstract_surfa
     if (_cairo_beos_view_to_bitmap(surface->view, &bmp) != OK)
 	return CAIRO_STATUS_NO_MEMORY; /// XXX incorrect if the error was NOT_VISIBLE
 
-    *image_out = _cairo_beos_bitmap_to_surface(bmp);
-    if (!*image_out) {
+    *image_out = _cairo_beos_bitmap_to_surface (bmp);
+    if (unlikely ((*image_out)->base.status)) {
 	delete bmp;
-	return CAIRO_STATUS_NO_MEMORY;
+	return (*image_out)->base.status;
     }
     *image_extra = bmp;
 
@@ -543,17 +586,17 @@ _cairo_beos_surface_release_source_image (void                  *abstract_surfac
 {
     cairo_surface_destroy (&image->base);
 
-    BBitmap* bmp = static_cast<BBitmap*>(image_extra);
-    delete bmp;
+    if (image_extra != NULL) {
+	BBitmap* bmp = static_cast<BBitmap*>(image_extra);
+	delete bmp;
+    }
 }
-
-
 
 static cairo_status_t
 _cairo_beos_surface_acquire_dest_image (void			 *abstract_surface,
-                                        cairo_rectangle_int16_t	 *interest_rect,
+                                        cairo_rectangle_int_t	 *interest_rect,
                                         cairo_image_surface_t	**image_out,
-                                        cairo_rectangle_int16_t	 *image_rect,
+                                        cairo_rectangle_int_t	 *image_rect,
                                         void			**image_extra)
 {
     cairo_beos_surface_t *surface = reinterpret_cast<cairo_beos_surface_t*>(
@@ -563,14 +606,14 @@ _cairo_beos_surface_acquire_dest_image (void			 *abstract_surface,
     if (!locker) {
 	*image_out = NULL;
 	*image_extra = NULL;
-	return CAIRO_STATUS_SUCCESS;
+	return (cairo_status_t) CAIRO_INT_STATUS_NOTHING_TO_DO;
     }
 
     if (surface->bitmap) {
 	surface->view->Sync();
 	*image_out = _cairo_beos_bitmap_to_surface(surface->bitmap);
-	if (!*image_out)
-	    return CAIRO_STATUS_NO_MEMORY;
+	if (unlikely ((*image_out)->base.status))
+	    return (*image_out)->base.status;
 
 	image_rect->x = 0;
 	image_rect->y = 0;
@@ -581,7 +624,7 @@ _cairo_beos_surface_acquire_dest_image (void			 *abstract_surface,
 	return CAIRO_STATUS_SUCCESS;
     }
 
-    BRect b_interest_rect(_cairo_rect_to_brect(interest_rect));
+    BRect b_interest_rect (_cairo_rectangle_to_brect (interest_rect));
 
     BRect rect;
     BBitmap* bitmap;
@@ -595,18 +638,11 @@ _cairo_beos_surface_acquire_dest_image (void			 *abstract_surface,
     if (status == ERROR)
 	return CAIRO_STATUS_NO_MEMORY;
 
-    *image_rect = _brect_to_cairo_rect(rect);
-
-#if 0
-    fprintf(stderr, "Requested: (cairo rects) (%ix%i) dim (%u, %u) returning (%ix%i) dim (%u, %u)\n",
-	    interest_rect->x, interest_rect->y, interest_rect->width, interest_rect->height,
-	    image_rect->x, image_rect->y, image_rect->width, image_rect->height);
-#endif
-
+    *image_rect = _brect_to_cairo_rectangle(rect);
     *image_out = _cairo_beos_bitmap_to_surface(bitmap);
     delete bitmap;
-    if (!*image_out)
-	return CAIRO_STATUS_NO_MEMORY;
+    if (unlikely ((*image_out)->base.status))
+	return (*image_out)->base.status;
 
     *image_extra = NULL;
 
@@ -616,13 +652,11 @@ _cairo_beos_surface_acquire_dest_image (void			 *abstract_surface,
 
 static void
 _cairo_beos_surface_release_dest_image (void			*abstract_surface,
-                                        cairo_rectangle_int16_t	*intersect_rect,
+                                        cairo_rectangle_int_t	*intersect_rect,
                                         cairo_image_surface_t	*image,
-                                        cairo_rectangle_int16_t	*image_rect,
+                                        cairo_rectangle_int_t	*image_rect,
                                         void			*image_extra)
 {
-    fprintf(stderr, "Fallback drawing\n");
-
     cairo_beos_surface_t *surface = reinterpret_cast<cairo_beos_surface_t*>(
 							abstract_surface);
 
@@ -634,9 +668,9 @@ _cairo_beos_surface_release_dest_image (void			*abstract_surface,
     surface->view->PushState();
 
 	surface->view->SetDrawingMode(B_OP_COPY);
-	BRect rect(_cairo_rect_to_brect(image_rect));
 
-	surface->view->DrawBitmap(bitmap_to_draw, rect);
+	surface->view->DrawBitmap (bitmap_to_draw,
+				   _cairo_rectangle_to_brect (image_rect));
 
     surface->view->PopState();
 
@@ -649,17 +683,19 @@ _cairo_beos_surface_composite (cairo_operator_t		op,
 			       cairo_pattern_t	       *src,
 			       cairo_pattern_t	       *mask,
 			       void		       *dst,
-			       int		 	src_x,
+			       int			src_x,
 			       int			src_y,
 			       int			mask_x,
 			       int			mask_y,
 			       int			dst_x,
 			       int			dst_y,
 			       unsigned int		width,
-			       unsigned int		height)
+			       unsigned int		height,
+			       cairo_region_t		*clip_region)
 {
     cairo_beos_surface_t *surface = reinterpret_cast<cairo_beos_surface_t*>(
 							dst);
+    cairo_int_status_t status;
     AutoLockView locker(surface->view);
     if (!locker)
 	return CAIRO_INT_STATUS_SUCCESS;
@@ -683,6 +719,10 @@ _cairo_beos_surface_composite (cairo_operator_t		op,
     int itx, ity;
     if (!_cairo_matrix_is_integer_translation(&src->matrix, &itx, &ity))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    status = _cairo_beos_surface_set_clip_region (surface, clip_region);
+    if (unlikely (status))
+	return status;
 
     BRect srcRect(src_x + itx,
 		  src_y + ity,
@@ -731,8 +771,6 @@ _cairo_beos_surface_composite (cairo_operator_t		op,
 	return CAIRO_INT_STATUS_UNSUPPORTED;
     }
 
-    fprintf(stderr, "Composite\n");
-
     // Draw it on screen.
     surface->view->PushState();
 
@@ -767,24 +805,17 @@ _cairo_beos_surface_composite (cairo_operator_t		op,
 }
 
 
-static void
-_cairo_beos_surface_fill_rectangle (cairo_beos_surface_t	*surface,
-				    cairo_rectangle_int16_t	*rect)
-{
-    BRect brect(_cairo_rect_to_brect(rect));
-    surface->view->FillRect(brect);
-}
-
 static cairo_int_status_t
 _cairo_beos_surface_fill_rectangles (void			*abstract_surface,
 				     cairo_operator_t		 op,
 				     const cairo_color_t	*color,
-				     cairo_rectangle_int16_t	*rects,
-				     int			 num_rects)
+				     cairo_rectangle_int_t	*rects,
+				     int			 num_rects,
+				     cairo_region_t		*clip_region)
 {
-    fprintf(stderr, "Drawing %i rectangles\n", num_rects);
     cairo_beos_surface_t *surface = reinterpret_cast<cairo_beos_surface_t*>(
 							abstract_surface);
+    cairo_int_status_t status;
 
     if (num_rects <= 0)
 	return CAIRO_INT_STATUS_SUCCESS;
@@ -797,6 +828,10 @@ _cairo_beos_surface_fill_rectangles (void			*abstract_surface,
     if (!_cairo_op_to_be_op(op, &mode))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
+    status = _cairo_beos_surface_set_clip_region (surface, clip_region);
+    if (unlikely (status))
+	return status;
+
     rgb_color be_color = _cairo_color_to_be_color(color);
 
     if (mode == B_OP_ALPHA && be_color.alpha == 0xFF)
@@ -808,9 +843,9 @@ _cairo_beos_surface_fill_rectangles (void			*abstract_surface,
     if (mode == B_OP_COPY && be_color.alpha != 0xFF &&
 	(!surface->bitmap || surface->bitmap->ColorSpace() != B_RGBA32))
     {
-	be_color.red = premultiply(be_color.red, be_color.alpha);
-	be_color.green = premultiply(be_color.green, be_color.alpha);
-	be_color.blue = premultiply(be_color.blue, be_color.alpha);
+	be_color.red   = color->red_short  >> 8;
+	be_color.green = color->green_short >> 8;
+	be_color.blue  = color->blue_short  >> 8;
     }
 
     surface->view->PushState();
@@ -822,65 +857,26 @@ _cairo_beos_surface_fill_rectangles (void			*abstract_surface,
 	else
 	    surface->view->SetBlendingMode(B_CONSTANT_ALPHA, B_ALPHA_OVERLAY);
 
-	for (int i = 0; i < num_rects; ++i) {
-	    _cairo_beos_surface_fill_rectangle(surface, &rects[i]);
-	}
+	for (int i = 0; i < num_rects; ++i)
+	    surface->view->FillRect (_cairo_rectangle_to_brect (&rects[i]));
 
     surface->view->PopState();
 
     return CAIRO_INT_STATUS_SUCCESS;
 }
 
-
-
-static cairo_int_status_t
-_cairo_beos_surface_set_clip_region (void              *abstract_surface,
-                                     pixman_region16_t *region)
-{
-    fprintf(stderr, "Setting clip region\n");
-    cairo_beos_surface_t *surface = reinterpret_cast<cairo_beos_surface_t*>(
-							abstract_surface);
-    AutoLockView locker(surface->view);
-    if (!locker)
-	return CAIRO_INT_STATUS_SUCCESS;
-
-    if (region == NULL) {
-	// No clipping
-	surface->view->ConstrainClippingRegion(NULL);
-	return CAIRO_INT_STATUS_SUCCESS;
-    }
-
-    int count = pixman_region_num_rects(region);
-    pixman_box16_t* rects = pixman_region_rects(region);
-    BRegion bregion;
-    for (int i = 0; i < count; ++i) {
-	// Have to substract one, because for pixman, the second coordinate
-	// lies outside the rectangle.
-	bregion.Include(BRect(rects[i].x1, rects[i].y1, rects[i].x2 - 1, rects[i].y2  - 1));
-    }
-    surface->view->ConstrainClippingRegion(&bregion);
-    return CAIRO_INT_STATUS_SUCCESS;
-}
-
-static cairo_int_status_t
+static cairo_bool_t
 _cairo_beos_surface_get_extents (void				*abstract_surface,
-				 cairo_rectangle_int16_t	*rectangle)
+				 cairo_rectangle_int_t	*rectangle)
 {
     cairo_beos_surface_t *surface = reinterpret_cast<cairo_beos_surface_t*>(
 							abstract_surface);
     AutoLockView locker(surface->view);
     if (!locker)
-	return CAIRO_INT_STATUS_UNSUPPORTED;
+	return FALSE;
 
-    BRect size = surface->view->Bounds();
-
-    *rectangle = _brect_to_cairo_rect(size);
-
-    // Make sure to have our upperleft edge as (0,0)
-    rectangle->x = 0;
-    rectangle->y = 0;
-
-    return CAIRO_INT_STATUS_SUCCESS;
+    *rectangle = _brect_to_cairo_rectangle (surface->view->Bounds());
+    return TRUE;
 }
 
 static const struct _cairo_surface_backend cairo_beos_surface_backend = {
@@ -899,8 +895,6 @@ static const struct _cairo_surface_backend cairo_beos_surface_backend = {
     NULL, /* check_span_renderer */
     NULL, /* copy_page */
     NULL, /* show_page */
-    _cairo_beos_surface_set_clip_region,
-    NULL, /* intersect_clip_path */
     _cairo_beos_surface_get_extents,
     NULL,  /* old_show_glyphs */
     NULL, /* get_font_options */
@@ -932,13 +926,18 @@ _cairo_beos_surface_create_internal (BView*   view,
     cairo_content_t content = CAIRO_CONTENT_COLOR;
     if (bmp && (bmp->ColorSpace() == B_RGBA32 || bmp->ColorSpace() == B_RGBA15))
 	content = CAIRO_CONTENT_COLOR_ALPHA;
-    _cairo_surface_init(&surface->base, &cairo_beos_surface_backend, content);
+    _cairo_surface_init (&surface->base,
+			 &cairo_beos_surface_backend,
+			 NULL, /* device */
+			 content);
 
     surface->view = view;
     surface->bitmap = bmp;
     surface->owns_bitmap_view = owns_bitmap_view;
 
-    return (cairo_surface_t *) surface;
+    surface->clip_region = NULL;
+
+    return &surface->base;
 }
 
 /**
@@ -949,6 +948,8 @@ _cairo_beos_surface_create_internal (BView*   view,
  * The caller must ensure that the view does not get deleted before the surface.
  * If the view is attached to a bitmap rather than an on-screen window, use
  * cairo_beos_surface_create_for_bitmap() instead of this function.
+ *
+ * Since: TBD
  **/
 cairo_surface_t *
 cairo_beos_surface_create (BView* view)
@@ -972,6 +973,8 @@ cairo_beos_surface_create (BView* view)
  *
  * For now, only views that draw to the entire area of bmp are supported.
  * The view must already be attached to the bitmap.
+ *
+ * Since: TBD
  **/
 cairo_surface_t *
 cairo_beos_surface_create_for_bitmap (BView*   view,

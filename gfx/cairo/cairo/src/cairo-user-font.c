@@ -49,7 +49,7 @@
  * in a font.  This is most useful in implementing fonts in non-standard
  * formats, like SVG fonts and Flash fonts, but can also be used by games and
  * other application to draw "funky" fonts.
- */
+ **/
 
 /**
  * CAIRO_HAS_USER_FONT:
@@ -59,8 +59,8 @@
  * The user font backend is always built in versions of cairo that support
  * this feature (1.8 and later).
  *
- * @Since: 1.8
- */
+ * Since: 1.8
+ **/
 
 typedef struct _cairo_user_scaled_font_methods {
     cairo_user_scaled_font_init_func_t			init;
@@ -158,7 +158,7 @@ _cairo_user_scaled_glyph_init (void			 *abstract_font,
 	    status = face->scaled_font_methods.render_glyph ((cairo_scaled_font_t *)scaled_font,
 							     _cairo_scaled_glyph_index(scaled_glyph),
 							     cr, &extents);
-	    if (status == CAIRO_STATUS_SUCCESS)
+	    if (status == CAIRO_INT_STATUS_SUCCESS)
 	        status = cairo_status (cr);
 
 	    cairo_destroy (cr);
@@ -229,8 +229,11 @@ _cairo_user_scaled_glyph_init (void			 *abstract_font,
 	switch (scaled_font->base.options.antialias) {
 	default:
 	case CAIRO_ANTIALIAS_DEFAULT:
+	case CAIRO_ANTIALIAS_FAST:
+	case CAIRO_ANTIALIAS_GOOD:
 	case CAIRO_ANTIALIAS_GRAY:	format = CAIRO_FORMAT_A8;	break;
 	case CAIRO_ANTIALIAS_NONE:	format = CAIRO_FORMAT_A1;	break;
+	case CAIRO_ANTIALIAS_BEST:
 	case CAIRO_ANTIALIAS_SUBPIXEL:	format = CAIRO_FORMAT_ARGB32;	break;
 	}
 	surface = cairo_image_surface_create (format, width, height);
@@ -328,11 +331,12 @@ _cairo_user_text_to_glyphs (void		      *abstract_font,
 							   glyphs, num_glyphs,
 							   clusters, num_clusters, cluster_flags);
 
-	if (status != CAIRO_STATUS_SUCCESS &&
-	    status != CAIRO_STATUS_USER_FONT_NOT_IMPLEMENTED)
+	if (status != CAIRO_INT_STATUS_SUCCESS &&
+	    status != CAIRO_INT_STATUS_USER_FONT_NOT_IMPLEMENTED)
 	    return status;
 
-	if (status == CAIRO_STATUS_USER_FONT_NOT_IMPLEMENTED || *num_glyphs < 0) {
+	if (status == CAIRO_INT_STATUS_USER_FONT_NOT_IMPLEMENTED ||
+	    *num_glyphs < 0) {
 	    if (orig_glyphs != *glyphs) {
 		cairo_glyph_free (*glyphs);
 		*glyphs = orig_glyphs;
@@ -398,7 +402,7 @@ _cairo_user_font_face_scaled_font_create (void                        *abstract_
 
     font_face->immutable = TRUE;
 
-    user_scaled_font = malloc (sizeof (cairo_user_scaled_font_t));
+    user_scaled_font = _cairo_malloc (sizeof (cairo_user_scaled_font_t));
     if (unlikely (user_scaled_font == NULL))
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
@@ -503,7 +507,7 @@ _cairo_user_font_face_scaled_font_create (void                        *abstract_
 const cairo_font_face_backend_t _cairo_user_font_face_backend = {
     CAIRO_FONT_TYPE_USER,
     _cairo_user_font_face_create_for_toy,
-    NULL,	/* destroy */
+    _cairo_font_face_destroy,
     _cairo_user_font_face_scaled_font_create
 };
 
@@ -540,7 +544,7 @@ cairo_user_font_face_create (void)
 {
     cairo_user_font_face_t *font_face;
 
-    font_face = malloc (sizeof (cairo_user_font_face_t));
+    font_face = _cairo_malloc (sizeof (cairo_user_font_face_t));
     if (!font_face) {
 	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
 	return (cairo_font_face_t *)&_cairo_font_face_nil;

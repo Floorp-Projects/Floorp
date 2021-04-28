@@ -1,3 +1,4 @@
+/* -*- Mode: c; c-basic-offset: 4; indent-tabs-mode: t; tab-width: 8; -*- */
 /* cairo - a vector graphics library with display and print output
  *
  * Copyright © 2004 Red Hat, Inc
@@ -36,6 +37,7 @@
  */
 
 #include "cairoint.h"
+#include "cairo-array-private.h"
 #include "cairo-error-private.h"
 
 /**
@@ -53,39 +55,12 @@
  * called to free resources allocated during use of the array.
  **/
 void
-_cairo_array_init (cairo_array_t *array, int element_size)
+_cairo_array_init (cairo_array_t *array, unsigned int element_size)
 {
     array->size = 0;
     array->num_elements = 0;
     array->element_size = element_size;
     array->elements = NULL;
-
-    array->is_snapshot = FALSE;
-
-}
-
-/**
- * _cairo_array_init_snapshot:
- * @array: A #cairo_array_t to be initialized as a snapshot
- * @other: The #cairo_array_t from which to create the snapshot
- *
- * Initialize @array as an immutable copy of @other. It is an error to
- * call an array-modifying function (other than _cairo_array_fini) on
- * @array after calling this function.
- **/
-void
-_cairo_array_init_snapshot (cairo_array_t	*array,
-			    const cairo_array_t *other)
-{
-    array->size = other->size;
-    array->num_elements = other->num_elements;
-    array->element_size = other->element_size;
-    array->elements = other->elements;
-
-    array->is_snapshot = TRUE;
-
-    if (array->num_elements != 0 && *array->elements == NULL)
-        abort();
 }
 
 /**
@@ -99,18 +74,7 @@ _cairo_array_init_snapshot (cairo_array_t	*array,
 void
 _cairo_array_fini (cairo_array_t *array)
 {
-    if (array->is_snapshot)
-	return;
-
-    if (array->num_elements != 0 && *array->elements == NULL)
-        abort();
-
-    if (array->elements) {
-	free (* array->elements);
-	free (array->elements);
-	array->elements = NULL;
-	array->num_elements = 0;
-    }
+    free (array->elements);
 }
 
 /**
@@ -128,8 +92,6 @@ _cairo_array_grow_by (cairo_array_t *array, unsigned int additional)
     unsigned int old_size = array->size;
     unsigned int required_size = array->num_elements + additional;
     unsigned int new_size;
-
-    assert (! array->is_snapshot);
 
     /* check for integer overflow */
     if (required_size > INT_MAX || required_size < array->num_elements)
@@ -149,16 +111,8 @@ _cairo_array_grow_by (cairo_array_t *array, unsigned int additional)
     while (new_size < required_size)
 	new_size = new_size * 2;
 
-    if (array->elements == NULL) {
-	array->elements = malloc (sizeof (char *));
-	if (unlikely (array->elements == NULL))
-	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
-
-	*array->elements = NULL;
-    }
-
     array->size = new_size;
-    new_elements = _cairo_realloc_ab (*array->elements,
+    new_elements = _cairo_realloc_ab (array->elements,
 			              array->size, array->element_size);
 
     if (unlikely (new_elements == NULL)) {
@@ -166,10 +120,7 @@ _cairo_array_grow_by (cairo_array_t *array, unsigned int additional)
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
     }
 
-    *array->elements = new_elements;
-
-    if (array->num_elements != 0 && *array->elements == NULL)
-        abort();
+    array->elements = new_elements;
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -185,13 +136,8 @@ _cairo_array_grow_by (cairo_array_t *array, unsigned int additional)
 void
 _cairo_array_truncate (cairo_array_t *array, unsigned int num_elements)
 {
-    assert (! array->is_snapshot);
-
     if (num_elements < array->num_elements)
 	array->num_elements = num_elements;
-
-    if (array->num_elements != 0 && *array->elements == NULL)
-        abort();
 }
 
 /**
@@ -222,7 +168,7 @@ _cairo_array_index (cairo_array_t *array, unsigned int index)
     /* We allow an index of 0 for the no-elements case.
      * This makes for cleaner calling code which will often look like:
      *
-     *    elements = _cairo_array_index (array, num_elements);
+     *    elements = _cairo_array_index (array, 0);
      *	  for (i=0; i < num_elements; i++) {
      *        ... use elements[i] here ...
      *    }
@@ -235,10 +181,51 @@ _cairo_array_index (cairo_array_t *array, unsigned int index)
 
     assert (index < array->num_elements);
 
-    if (array->num_elements != 0 && *array->elements == NULL)
-        abort();
+    return array->elements + index * array->element_size;
+}
 
-    return (void *) &(*array->elements)[index * array->element_size];
+/**
+ * _cairo_array_index_const:
+ * @array: a #cairo_array_t
+ * Returns: A pointer to the object stored at @index.
+ *
+ * If the resulting value is assigned to a pointer to an object of the same
+ * element_size as initially passed to _cairo_array_init() then that
+ * pointer may be used for further direct indexing with []. For
+ * example:
+ *
+ * <informalexample><programlisting>
+ *	cairo_array_t array;
+ *	const double *values;
+ *
+ *	_cairo_array_init (&array, sizeof(double));
+ *	... calls to _cairo_array_append() here ...
+ *
+ *	values = _cairo_array_index_const (&array, 0);
+ *      for (i = 0; i < _cairo_array_num_elements (&array); i++)
+ *	    ... read values[i] here ...
+ * </programlisting></informalexample>
+ **/
+const void *
+_cairo_array_index_const (const cairo_array_t *array, unsigned int index)
+{
+    /* We allow an index of 0 for the no-elements case.
+     * This makes for cleaner calling code which will often look like:
+     *
+     *    elements = _cairo_array_index_const (array, 0);
+     *	  for (i=0; i < num_elements; i++) {
+     *        ... read elements[i] here ...
+     *    }
+     *
+     * which in the num_elements==0 case gets the NULL pointer here,
+     * but never dereferences it.
+     */
+    if (index == 0 && array->num_elements == 0)
+	return NULL;
+
+    assert (index < array->num_elements);
+
+    return array->elements + index * array->element_size;
 }
 
 /**
@@ -249,9 +236,11 @@ _cairo_array_index (cairo_array_t *array, unsigned int index)
  * location pointed to by @dst.
  **/
 void
-_cairo_array_copy_element (cairo_array_t *array, int index, void *dst)
+_cairo_array_copy_element (const cairo_array_t *array,
+			   unsigned int         index,
+			   void                *dst)
 {
-    memcpy (dst, _cairo_array_index (array, index), array->element_size);
+    memcpy (dst, _cairo_array_index_const (array, index), array->element_size);
 }
 
 /**
@@ -273,8 +262,6 @@ cairo_status_t
 _cairo_array_append (cairo_array_t	*array,
 		     const void		*element)
 {
-    assert (! array->is_snapshot);
-
     return _cairo_array_append_multiple (array, element, 1);
 }
 
@@ -293,21 +280,16 @@ _cairo_array_append (cairo_array_t	*array,
 cairo_status_t
 _cairo_array_append_multiple (cairo_array_t	*array,
 			      const void	*elements,
-			      int		 num_elements)
+			      unsigned int	 num_elements)
 {
     cairo_status_t status;
     void *dest;
-
-    assert (! array->is_snapshot);
 
     status = _cairo_array_allocate (array, num_elements, &dest);
     if (unlikely (status))
 	return status;
 
     memcpy (dest, elements, num_elements * array->element_size);
-
-    if (array->num_elements != 0 && *array->elements == NULL)
-        abort();
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -318,7 +300,7 @@ _cairo_array_append_multiple (cairo_array_t	*array,
  *
  * Allocate space at the end of the array for @num_elements additional
  * elements, providing the address of the new memory chunk in
- * @elements. This memory will be unitialized, but will be accounted
+ * @elements. This memory will be uninitialized, but will be accounted
  * for in the return value of _cairo_array_num_elements().
  *
  * Return value: %CAIRO_STATUS_SUCCESS if successful or
@@ -332,20 +314,15 @@ _cairo_array_allocate (cairo_array_t	 *array,
 {
     cairo_status_t status;
 
-    assert (! array->is_snapshot);
-
     status = _cairo_array_grow_by (array, num_elements);
     if (unlikely (status))
 	return status;
 
     assert (array->num_elements + num_elements <= array->size);
 
-    *elements = &(*array->elements)[array->num_elements * array->element_size];
+    *elements = array->elements + array->num_elements * array->element_size;
 
     array->num_elements += num_elements;
-
-    if (array->num_elements != 0 && *array->elements == NULL)
-        abort();
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -357,8 +334,8 @@ _cairo_array_allocate (cairo_array_t	 *array,
  *
  * This space was left intentionally blank, but gtk-doc filled it.
  **/
-int
-_cairo_array_num_elements (cairo_array_t *array)
+unsigned int
+_cairo_array_num_elements (const cairo_array_t *array)
 {
     return array->num_elements;
 }
@@ -371,8 +348,8 @@ _cairo_array_num_elements (cairo_array_t *array)
  *
  * This space was left intentionally blank, but gtk-doc filled it.
  **/
-int
-_cairo_array_size (cairo_array_t *array)
+unsigned int
+_cairo_array_size (const cairo_array_t *array)
 {
     return array->size;
 }
@@ -404,23 +381,17 @@ _cairo_user_data_array_fini (cairo_user_data_array_t *array)
 {
     unsigned int num_slots;
 
-    if (array->num_elements != 0 && *array->elements == NULL)
-        abort();
-
     num_slots = array->num_elements;
     if (num_slots) {
 	cairo_user_data_slot_t *slots;
 
 	slots = _cairo_array_index (array, 0);
-	do {
-	    if (slots->user_data != NULL && slots->destroy != NULL)
-		slots->destroy (slots->user_data);
-	    slots++;
-	} while (--num_slots);
+	while (num_slots--) {
+	    cairo_user_data_slot_t *s = &slots[num_slots];
+	    if (s->user_data != NULL && s->destroy != NULL)
+		s->destroy (s->user_data);
+	}
     }
-
-    if (array->num_elements != 0 && *array->elements == NULL)
-        abort();
 
     _cairo_array_fini (array);
 }
@@ -447,9 +418,6 @@ _cairo_user_data_array_get_data (cairo_user_data_array_t     *array,
     /* We allow this to support degenerate objects such as cairo_surface_nil. */
     if (array == NULL)
 	return NULL;
-
-    if (array->num_elements != 0 && *array->elements == NULL)
-        abort();
 
     num_slots = array->num_elements;
     slots = _cairo_array_index (array, 0);
@@ -512,13 +480,13 @@ _cairo_user_data_array_set_data (cairo_user_data_array_t     *array,
 	}
     }
 
-    if (array->num_elements != 0 && *array->elements == NULL)
-        abort();
-
     if (slot) {
 	*slot = new_slot;
 	return CAIRO_STATUS_SUCCESS;
     }
+
+    if (user_data == NULL)
+	return CAIRO_STATUS_SUCCESS;
 
     status = _cairo_array_append (array, &new_slot);
     if (unlikely (status))
@@ -529,7 +497,7 @@ _cairo_user_data_array_set_data (cairo_user_data_array_t     *array,
 
 cairo_status_t
 _cairo_user_data_array_copy (cairo_user_data_array_t	*dst,
-			     cairo_user_data_array_t	*src)
+			     const cairo_user_data_array_t	*src)
 {
     /* discard any existing user-data */
     if (dst->num_elements != 0) {
@@ -537,11 +505,13 @@ _cairo_user_data_array_copy (cairo_user_data_array_t	*dst,
 	_cairo_user_data_array_init (dst);
     }
 
+    /* don't call _cairo_array_append_multiple if there's nothing to do,
+     * as it assumes at least 1 element is to be appended */
     if (src->num_elements == 0)
-	return CAIRO_STATUS_SUCCESS;
+        return CAIRO_STATUS_SUCCESS;
 
     return _cairo_array_append_multiple (dst,
-					 _cairo_array_index (src, 0),
+					 _cairo_array_index_const (src, 0),
 					 src->num_elements);
 }
 

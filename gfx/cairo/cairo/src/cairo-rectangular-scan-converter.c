@@ -33,7 +33,7 @@
 
 #include "cairoint.h"
 
-#include "cairo-combsort-private.h"
+#include "cairo-combsort-inline.h"
 #include "cairo-error-private.h"
 #include "cairo-freelist-private.h"
 #include "cairo-list-private.h"
@@ -379,18 +379,20 @@ _active_edges_to_spans (sweep_line_t	*sweep)
     for (cell = sweep->coverage.head.next; cell != &sweep->coverage.tail; cell = cell->next) {
 	if (cell->x != prev_x && coverage != prev_coverage) {
 	    int n = sweep->num_spans++;
+	    int c = coverage >> (CAIRO_FIXED_FRAC_BITS * 2 - 8);
 	    sweep->spans[n].x = prev_x;
-	    sweep->spans[n].coverage = coverage >> (CAIRO_FIXED_FRAC_BITS * 2 - 8);
-	    sweep->spans[n].coverage -= sweep->spans[n].coverage >> 8;
+	    sweep->spans[n].inverse = 0;
+	    sweep->spans[n].coverage = c - (c >> 8);
 	    prev_coverage = coverage;
 	}
 
 	coverage += cell->covered;
 	if (coverage != prev_coverage) {
 	    int n = sweep->num_spans++;
+	    int c = coverage >> (CAIRO_FIXED_FRAC_BITS * 2 - 8);
 	    sweep->spans[n].x = cell->x;
-	    sweep->spans[n].coverage = coverage >> (CAIRO_FIXED_FRAC_BITS * 2 - 8);
-	    sweep->spans[n].coverage -= sweep->spans[n].coverage >> 8;
+	    sweep->spans[n].inverse = 0;
+	    sweep->spans[n].coverage = c - (c >> 8);
 	    prev_coverage = coverage;
 	}
 	coverage += cell->uncovered;
@@ -401,13 +403,16 @@ _active_edges_to_spans (sweep_line_t	*sweep)
     if (sweep->num_spans) {
 	if (prev_x <= sweep->xmax) {
 	    int n = sweep->num_spans++;
+	    int c = coverage >> (CAIRO_FIXED_FRAC_BITS * 2 - 8);
 	    sweep->spans[n].x = prev_x;
-	    sweep->spans[n].coverage = coverage;
+	    sweep->spans[n].inverse = 0;
+	    sweep->spans[n].coverage = c - (c >> 8);
 	}
 
 	if (coverage && prev_x < sweep->xmax) {
 	    int n = sweep->num_spans++;
 	    sweep->spans[n].x = sweep->xmax;
+	    sweep->spans[n].inverse = 1;
 	    sweep->spans[n].coverage = 0;
 	}
     }
@@ -489,13 +494,13 @@ generate (cairo_rectangular_scan_converter_t *self,
     cairo_status_t status;
 
     sweep_line_init (&sweep_line);
-    sweep_line.xmin = self->xmin;
-    sweep_line.xmax = self->xmax;
+    sweep_line.xmin = _cairo_fixed_integer_part (self->extents.p1.x);
+    sweep_line.xmax = _cairo_fixed_integer_part (self->extents.p2.x);
     sweep_line.start = rectangles;
     if ((status = setjmp (sweep_line.jmpbuf)))
-	goto BAIL;
+	goto out;
 
-    sweep_line.current_y = self->ymin;
+    sweep_line.current_y = _cairo_fixed_integer_part (self->extents.p1.y);
     start = *sweep_line.start++;
     do {
 	if (start->top_y != sweep_line.current_y) {
@@ -554,9 +559,7 @@ generate (cairo_rectangular_scan_converter_t *self,
 	    goto out;
     }
 
-    sweep_line.current_y++;
-
-    do {
+    while (++sweep_line.current_y < _cairo_fixed_integer_part (self->extents.p2.y)) {
 	if (stop->bottom_y != sweep_line.current_y) {
 	    render_rows (&sweep_line, renderer,
 			 stop->bottom_y - sweep_line.current_y);
@@ -572,19 +575,80 @@ generate (cairo_rectangular_scan_converter_t *self,
 		goto out;
 	} while (stop->bottom_y == sweep_line.current_y);
 
-	sweep_line.current_y++;
-    } while (TRUE);
+    }
 
   out:
-    status =  renderer->render_rows (renderer,
-				     sweep_line.current_y,
-				     self->ymax - sweep_line.current_y,
-				     NULL, 0);
-
-  BAIL:
     sweep_line_fini (&sweep_line);
 
     return status;
+}
+static void generate_row(cairo_span_renderer_t *renderer,
+			 const rectangle_t *r,
+			 int y, int h,
+			 uint16_t coverage)
+{
+    cairo_half_open_span_t spans[4];
+    unsigned int num_spans = 0;
+    int x1 = _cairo_fixed_integer_part (r->left);
+    int x2 = _cairo_fixed_integer_part (r->right);
+    if (x2 > x1) {
+	if (! _cairo_fixed_is_integer (r->left)) {
+	    spans[num_spans].x = x1;
+	    spans[num_spans].coverage =
+		coverage * (256 - _cairo_fixed_fractional_part (r->left)) >> 8;
+	    num_spans++;
+	    x1++;
+	}
+
+	if (x2 > x1) {
+	    spans[num_spans].x = x1;
+	    spans[num_spans].coverage = coverage - (coverage >> 8);
+	    num_spans++;
+	}
+
+	if (! _cairo_fixed_is_integer (r->right)) {
+	    spans[num_spans].x = x2++;
+	    spans[num_spans].coverage =
+		coverage * _cairo_fixed_fractional_part (r->right) >> 8;
+	    num_spans++;
+	}
+    } else {
+	spans[num_spans].x = x2++;
+	spans[num_spans].coverage = coverage * (r->right - r->left) >> 8;
+	num_spans++;
+    }
+
+    spans[num_spans].x = x2;
+    spans[num_spans].coverage = 0;
+    num_spans++;
+
+    renderer->render_rows (renderer, y, h, spans, num_spans);
+}
+
+static cairo_status_t
+generate_box (cairo_rectangular_scan_converter_t *self,
+	      cairo_span_renderer_t	*renderer)
+{
+    const rectangle_t *r = self->chunks.base;
+    int y1 = _cairo_fixed_integer_part (r->top);
+    int y2 = _cairo_fixed_integer_part (r->bottom);
+    if (y2 > y1) {
+	if (! _cairo_fixed_is_integer (r->top)) {
+	    generate_row(renderer, r, y1, 1,
+			 256 - _cairo_fixed_fractional_part (r->top));
+	    y1++;
+	}
+
+	if (y2 > y1)
+	    generate_row(renderer, r, y1, y2-y1, 256);
+
+	if (! _cairo_fixed_is_integer (r->bottom))
+	    generate_row(renderer, r, y2, 1,
+			 _cairo_fixed_fractional_part (r->bottom));
+    } else
+	generate_row(renderer, r, y1, 1, r->bottom - r->top);
+
+    return CAIRO_STATUS_SUCCESS;
 }
 
 static cairo_status_t
@@ -600,9 +664,13 @@ _cairo_rectangular_scan_converter_generate (void			*converter,
 
     if (unlikely (self->num_rectangles == 0)) {
 	return renderer->render_rows (renderer,
-				      self->ymin, self->ymax - self->ymin,
+				      _cairo_fixed_integer_part (self->extents.p1.y),
+				      _cairo_fixed_integer_part (self->extents.p2.y - self->extents.p1.y),
 				      NULL, 0);
     }
+
+    if (self->num_rectangles == 1)
+	return generate_box (self, renderer);
 
     rectangles = rectangles_stack;
     if (unlikely (self->num_rectangles >= ARRAY_LENGTH (rectangles_stack))) {
@@ -672,17 +740,22 @@ _cairo_rectangular_scan_converter_add_box (cairo_rectangular_scan_converter_t *s
     if (unlikely (rectangle == NULL))
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
-    rectangle->left  = box->p1.x;
-    rectangle->right = box->p2.x;
     rectangle->dir = dir;
+    rectangle->left  = MAX (box->p1.x, self->extents.p1.x);
+    rectangle->right = MIN (box->p2.x, self->extents.p2.x);
+    if (unlikely (rectangle->right <= rectangle->left)) {
+	self->tail->count--;
+	return CAIRO_STATUS_SUCCESS;
+    }
 
-    rectangle->top = box->p1.y;
-    rectangle->top_y  = _cairo_fixed_integer_floor (box->p1.y);
-    rectangle->bottom = box->p2.y;
-    rectangle->bottom_y = _cairo_fixed_integer_floor (box->p2.y);
-    assert (rectangle->bottom_y >= rectangle->top_y);
-
-    self->num_rectangles++;
+    rectangle->top = MAX (box->p1.y, self->extents.p1.y);
+    rectangle->top_y  = _cairo_fixed_integer_floor (rectangle->top);
+    rectangle->bottom = MIN (box->p2.y, self->extents.p2.y);
+    rectangle->bottom_y = _cairo_fixed_integer_floor (rectangle->bottom);
+    if (likely (rectangle->bottom > rectangle->top))
+	self->num_rectangles++;
+    else
+	self->tail->count--;
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -704,14 +777,9 @@ _cairo_rectangular_scan_converter_init (cairo_rectangular_scan_converter_t *self
 					const cairo_rectangle_int_t *extents)
 {
     self->base.destroy = _cairo_rectangular_scan_converter_destroy;
-    self->base.add_edge = NULL;
-    self->base.add_polygon = NULL;
     self->base.generate = _cairo_rectangular_scan_converter_generate;
 
-    self->xmin = extents->x;
-    self->xmax = extents->x + extents->width;
-    self->ymin = extents->y;
-    self->ymax = extents->y + extents->height;
+    _cairo_box_from_rectangle (&self->extents, extents);
 
     self->chunks.base = self->buf;
     self->chunks.next = NULL;

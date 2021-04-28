@@ -84,6 +84,38 @@ uint64_shift32 (cairo_uint64_t i)
 static const cairo_uint64_t uint64_carry32 = { 0, 1 };
 
 cairo_uint64_t
+_cairo_double_to_uint64 (double i)
+{
+    cairo_uint64_t	q;
+
+    q.hi = i * (1. / 4294967296.);
+    q.lo = i - q.hi * 4294967296.;
+    return q;
+}
+
+double
+_cairo_uint64_to_double (cairo_uint64_t i)
+{
+    return i.hi * 4294967296. + i.lo;
+}
+
+cairo_int64_t
+_cairo_double_to_int64 (double i)
+{
+    cairo_uint64_t	q;
+
+    q.hi = i * (1. / INT32_MAX);
+    q.lo = i - q.hi * (double)INT32_MAX;
+    return q;
+}
+
+double
+_cairo_int64_to_double (cairo_int64_t i)
+{
+    return i.hi * INT32_MAX + i.lo;
+}
+
+cairo_uint64_t
 _cairo_uint32_to_uint64 (uint32_t i)
 {
     cairo_uint64_t	q;
@@ -622,16 +654,16 @@ _cairo_uint128_divrem (cairo_uint128_t num, cairo_uint128_t den)
     return qr;
 }
 
-cairo_int128_t
-_cairo_int128_negate (cairo_int128_t a)
+cairo_uint128_t
+_cairo_uint128_negate (cairo_uint128_t a)
 {
     a.lo = _cairo_uint64_not (a.lo);
     a.hi = _cairo_uint64_not (a.hi);
     return _cairo_uint128_add (a, _cairo_uint32_to_uint128 (1));
 }
 
-cairo_int128_t
-_cairo_int128_not (cairo_int128_t a)
+cairo_uint128_t
+_cairo_uint128_not (cairo_uint128_t a)
 {
     a.lo = _cairo_uint64_not (a.lo);
     a.hi = _cairo_uint64_not (a.hi);
@@ -672,7 +704,8 @@ _cairo_int128_divrem (cairo_int128_t num, cairo_int128_t den)
  * bits then the returned remainder is equal to the divisor, and the
  * quotient is the largest representable 64 bit integer.  It is an
  * error to call this function with the high 32 bits of @num being
- * non-zero. */
+ * non-zero.
+ **/
 cairo_uquorem64_t
 _cairo_uint_96by64_32x64_divrem (cairo_uint128_t num,
 				 cairo_uint64_t den)

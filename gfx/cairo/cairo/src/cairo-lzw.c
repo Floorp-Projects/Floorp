@@ -73,7 +73,7 @@ _lzw_buf_init (lzw_buf_t *buf, int size)
     buf->pending = 0;
     buf->pending_bits = 0;
 
-    buf->data = malloc (size);
+    buf->data = _cairo_malloc (size);
     if (unlikely (buf->data == NULL)) {
 	buf->data_size = 0;
 	buf->status = _cairo_error (CAIRO_STATUS_NO_MEMORY);

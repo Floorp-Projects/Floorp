@@ -77,32 +77,14 @@ _cairo_stock_color (cairo_stock_t stock)
     }
 }
 
-void
-_cairo_color_init (cairo_color_t *color)
-{
-    *color = cairo_color_white;
-}
-
-void
-_cairo_color_init_rgb (cairo_color_t *color,
-		       double red, double green, double blue)
-{
-    _cairo_color_init_rgba (color, red, green, blue, 1.0);
-}
-
 /* Convert a double in [0.0, 1.0] to an integer in [0, 65535]
- * The conversion is designed to divide the input range into 65536
- * equally-sized regions. This is achieved by multiplying by 65536 and
- * then special-casing the result of an input value of 1.0 so that it
- * maps to 65535 instead of 65536.
+ * The conversion is designed to choose the integer i such that
+ * i / 65535.0 is as close as possible to the input value.
  */
 uint16_t
 _cairo_color_double_to_short (double d)
 {
-    uint32_t i;
-    i = (uint32_t) (d * 65536);
-    i -= (i >> 16);
-    return i;
+    return d * 65535.0 + 0.5;
 }
 
 static void

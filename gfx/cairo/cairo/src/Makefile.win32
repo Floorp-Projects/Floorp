@@ -1,0 +1,28 @@
+top_srcdir = ..
+include $(top_srcdir)/build/Makefile.win32.common
+include Makefile.win32.features
+
+SOURCES = $(enabled_cairo_sources)
+
+STATIC_SOURCES = cairo-system.c
+
+OBJECTS = $(patsubst %.c, $(CFG)/%.obj, $(SOURCES))
+OBJECTS_STATIC = $(patsubst %cairo-system.obj, %cairo-system-static.obj, $(OBJECTS))
+
+static: inform $(CFG)/cairo-static.lib
+dynamic: inform $(CFG)/cairo.dll
+
+$(CFG)/cairo.dll: $(OBJECTS)
+	@$(LD) $(CAIRO_LDFLAGS) -DLL -OUT:$@ $(CAIRO_LIBS) $(PIXMAN_LIBS) $(OBJECTS)
+
+$(CFG)/cairo-static.lib: $(OBJECTS_STATIC)
+	@$(AR) $(CAIRO_ARFLAGS) -OUT:$@ $(PIXMAN_LIBS) $(OBJECTS_STATIC)
+
+all: inform $(CFG)/cairo.dll $(CFG)/cairo-static.lib
+	@echo "Built successfully!"
+	@echo "You should copy the following files to a proper place now:"
+	@echo ""
+	@echo "	src/cairo-features.h"
+	@for x in $(enabled_cairo_headers); do echo "	src/$$x"; done
+	@echo "	src/$(CFG)/cairo.dll"
+	@echo "	src/$(CFG)/cairo-static.lib"

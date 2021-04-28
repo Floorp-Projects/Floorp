@@ -1,0 +1,35 @@
+
+SPARSE = sparse
+sparse:
+	@echo Checking enabled sources with sparse checker
+	@status=true; for f in $(enabled_cairo_sources) $(enabled_cairo_cxx_sources); do \
+		echo $(SPARSE) $(PREPROCESS_ARGS) $(srcdir)/$$f; \
+		$(SPARSE) $(PREPROCESS_ARGS) $(srcdir)/$$f || status=false; \
+	done; $$status
+
+SPLINT = splint -badflag
+splint:
+	@echo Checking enabled sources with splint checker
+	@status=true; for f in $(enabled_cairo_sources) $(enabled_cairo_cxx_sources); do \
+		echo $(SPLINT) $(PREPROCESS_ARGS) $(srcdir)/$$f; \
+		$(SPLINT) $(PREPROCESS_ARGS) $(srcdir)/$$f || status=false; \
+	done; $$status
+
+UNO = uno
+uno:
+	@echo Checking enabled sources with uno checker
+	cd $(srcdir); $(UNO) $(PREPROCESS_ARGS) -DHAVE_CONFIG_H -U__GNUC__ $(enabled_cairo_sources)
+
+headers-standalone: $(enabled_cairo_headers) $(enabled_cairo_private)
+	@echo Checking that enabled public/private headers can be compiled standalone
+	@status=true; for f in $(enabled_cairo_headers) $(enabled_cairo_private); do \
+		echo "  CHECK $$f"; \
+		echo "#include \"$(srcdir)/$$f\"" > headers-standalone-tmp.c; \
+		echo "int main(int argc, char * argv[]) { return 0; }" >> headers-standalone-tmp.c; \
+		$(COMPILE) -o headers-standalone-tmp headers-standalone-tmp.c || status=false; \
+		$(RM) headers-standalone-tmp headers-standalone-tmp.c; \
+	done; $$status
+	@touch $@
+CLEANFILES += headers-standalone
+
+analysis: all headers-standalone sparse splint uno

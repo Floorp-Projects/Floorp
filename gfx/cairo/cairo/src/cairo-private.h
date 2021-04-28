@@ -36,22 +36,29 @@
 #ifndef CAIRO_PRIVATE_H
 #define CAIRO_PRIVATE_H
 
+#include "cairo-types-private.h"
 #include "cairo-reference-count-private.h"
-#include "cairo-gstate-private.h"
-#include "cairo-path-fixed-private.h"
+
+CAIRO_BEGIN_DECLS
 
 struct _cairo {
     cairo_reference_count_t ref_count;
-
     cairo_status_t status;
-
     cairo_user_data_array_t user_data;
 
-    cairo_gstate_t *gstate;
-    cairo_gstate_t  gstate_tail[2];
-    cairo_gstate_t *gstate_freelist;
-
-    cairo_path_fixed_t path[1];
+    const cairo_backend_t *backend;
 };
+
+cairo_private cairo_t *
+_cairo_create_in_error (cairo_status_t status);
+
+cairo_private void
+_cairo_init (cairo_t *cr,
+	     const cairo_backend_t *backend);
+
+cairo_private void
+_cairo_fini (cairo_t *cr);
+
+CAIRO_END_DECLS
 
 #endif /* CAIRO_PRIVATE_H */
