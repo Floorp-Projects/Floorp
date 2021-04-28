@@ -24,10 +24,6 @@ checkbox[native] {
   padding-inline-end: 2px;
 }
 
-.checkbox-icon[native][src] {
-  margin-inline-end: 2px;
-}
-
 .checkbox-label[native] {
   margin: 0;
 }
@@ -75,10 +71,6 @@ checkbox {
   padding-bottom: 1px;
   padding-inline-start: 4px;
   padding-inline-end: 2px;
-}
-
-.checkbox-icon[src] {
-  margin-inline-end: 2px;
 }
 
 .checkbox-label {

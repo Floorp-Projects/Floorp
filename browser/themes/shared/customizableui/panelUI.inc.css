@@ -2411,10 +2411,6 @@ panelview:not([mainview]) #PanelUI-whatsNew-title {
 #PanelUI-whatsNew checkbox:hover .checkbox-check {
   border-color: #0a84ff;
 }
-
-#PanelUI-whatsNew .checkbox-icon {
-  display: none;
-}
 } /*** END !proton ***/
 
 #PanelUI-whatsNew .whatsNew-message {
