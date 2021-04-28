@@ -1395,14 +1395,6 @@ bool NativeObject::fillInAfterSwap(JSContext* cx, HandleNativeObject obj,
   return true;
 }
 
-void JSObject::fixDictionaryShapeAfterSwap() {
-  // Dictionary shapes can point back to their containing objects, so after
-  // swapping the guts of those objects fix the pointers up.
-  if (is<NativeObject>() && as<NativeObject>().inDictionaryMode()) {
-    shape()->dictNext.setObject(this);
-  }
-}
-
 bool js::ObjectMayBeSwapped(const JSObject* obj) {
   const JSClass* clasp = obj->getClass();
 
@@ -1559,9 +1551,6 @@ void JSObject::swap(JSContext* cx, HandleObject a, HandleObject b,
     js_memcpy(a, b, size);
     js_memcpy(b, tmp, size);
 
-    a->fixDictionaryShapeAfterSwap();
-    b->fixDictionaryShapeAfterSwap();
-
     if (aIsProxyWithInlineValues) {
       b->as<ProxyObject>().setInlineValueArray();
     }
@@ -1624,9 +1613,6 @@ void JSObject::swap(JSContext* cx, HandleObject a, HandleObject b,
     js_memcpy(&tmp, a, sizeof tmp);
     js_memcpy(a, b, sizeof tmp);
     js_memcpy(b, &tmp, sizeof tmp);
-
-    a->fixDictionaryShapeAfterSwap();
-    b->fixDictionaryShapeAfterSwap();
 
     if (na) {
       if (!NativeObject::fillInAfterSwap(cx, b.as<NativeObject>(), na, avals,
