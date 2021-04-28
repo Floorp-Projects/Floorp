@@ -26,7 +26,7 @@
   pointer-events: none;
 }
 
-@media (-moz-proton-doorhangers) {
+@media (-moz-proton) {
 #emptyDownloads {
   padding: 1.5em 0.62em 2.1em;
 }
@@ -130,7 +130,7 @@ button.downloadButton {
 }
 }/** END Proton **/
 
-@media not (-moz-proton-doorhangers) {
+@media not (-moz-proton) {
 @item@ {
   height: var(--downloads-item-height);
   border-bottom: 1px solid var(--panel-separator-color);
@@ -224,7 +224,7 @@ button.downloadButton {
   padding-inline-end: 59px;
 }
 
-@media not (-moz-proton-doorhangers) {
+@media not (-moz-proton) {
 #downloadsHistory {
   padding-inline: 14px;
 }

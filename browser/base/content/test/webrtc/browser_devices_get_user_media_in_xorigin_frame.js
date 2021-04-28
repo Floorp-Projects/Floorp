@@ -99,7 +99,7 @@ async function promptNoDelegateScreenSharing(aThirdPartyOrgin) {
   const notification = PopupNotifications.panel.firstElementChild;
 
   // With Proton enabled, the icon does not appear in the panel.
-  if (!gProtonDoorhangers) {
+  if (!gProton) {
     const iconclass = notification.getAttribute("iconclass");
     ok(iconclass.includes("screen-icon"), "panel using screen icon");
   }
@@ -228,7 +228,7 @@ var gTests = [
       const notification = PopupNotifications.panel.firstElementChild;
 
       // With Proton enabled, the icon does not appear in the panel.
-      if (!gProtonDoorhangers) {
+      if (!gProton) {
         const iconclass = notification.getAttribute("iconclass");
         ok(iconclass.includes("screen-icon"), "panel using screen icon");
       }
