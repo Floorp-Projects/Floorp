@@ -573,7 +573,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
 XPCOMUtils.defineLazyPreferenceGetter(
   this,
   "gProtonDoorhangers",
-  "browser.proton.doorhangers.enabled",
+  "browser.proton.enabled",
   false
 );
 
@@ -7513,7 +7513,7 @@ var IndexedDBPromptHelper = {
           Ci.nsIPermissionManager.ALLOW_ACTION
         );
       },
-      disableHighlight: gProtonDoorhangers,
+      disableHighlight: gProton,
     };
 
     var secondaryActions = [
@@ -7612,7 +7612,7 @@ var CanvasPermissionPromptHelper = {
           state && state.checkboxChecked
         );
       },
-      disableHighlight: gProtonDoorhangers,
+      disableHighlight: gProton,
     };
 
     let secondaryActions = [
@@ -7786,7 +7786,7 @@ var WebAuthnPromptHelper = {
       }
     };
 
-    if (gProtonDoorhangers) {
+    if (gProton) {
       mainAction.disableHighlight = true;
     }
 

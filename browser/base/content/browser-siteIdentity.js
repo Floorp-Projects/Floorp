@@ -423,7 +423,7 @@ var gIdentityHandler = {
     XPCOMUtils.defineLazyPreferenceGetter(
       this,
       "_protonEnabled",
-      "browser.proton.doorhangers.enabled",
+      "browser.proton.enabled",
       false
     );
     return this._protonEnabled;

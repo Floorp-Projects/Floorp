@@ -5,7 +5,7 @@
 %endif
 %include ../../shared/popupnotification.inc.css
 
-@media not (-moz-proton-doorhangers) {
+@media not (-moz-proton) {
 .popup-notification-secondary-button:not([hidden="true"]) ~ .popup-notification-primary-button:not([default]) {
   border-inline-start: 1px solid var(--panel-separator-color);
 }
