@@ -2038,10 +2038,6 @@ void CCGraphBuilder::DoneAddingRoots() {
 }
 
 MOZ_NEVER_INLINE bool CCGraphBuilder::BuildGraph(SliceBudget& aBudget) {
-  const intptr_t kNumNodesBetweenTimeChecks = 1000;
-  const intptr_t kStep =
-      SliceBudget::StepsPerTimeCheck / kNumNodesBetweenTimeChecks;
-
   MOZ_ASSERT(mCurrNode);
 
   while (!aBudget.isOverBudget() && !mCurrNode->IsDone()) {
@@ -2068,7 +2064,7 @@ MOZ_NEVER_INLINE bool CCGraphBuilder::BuildGraph(SliceBudget& aBudget) {
       SetLastChild();
     }
 
-    aBudget.step(kStep * (mNoteChildCount + 1));
+    aBudget.step(mNoteChildCount + 1);
   }
 
   if (!mCurrNode->IsDone()) {
@@ -3446,8 +3442,7 @@ bool nsCycleCollector::Collect(ccType aCCType, SliceBudget& aBudget,
         break;
     }
     if (continueSlice) {
-      // Force SliceBudget::isOverBudget to check the time.
-      aBudget.step(SliceBudget::StepsPerTimeCheck);
+      aBudget.stepAndForceCheck();
       continueSlice = !aBudget.isOverBudget();
     }
   } while (continueSlice);
