@@ -74,15 +74,10 @@ void ReverbAccumulationBuffer::readAndClear(float* destination,
   m_readTimeFrame += numberOfFrames;
 }
 
-void ReverbAccumulationBuffer::updateReadIndex(int* readIndex,
-                                               size_t numberOfFrames) const {
-  // Update caller's readIndex
-  *readIndex = (*readIndex + numberOfFrames) % m_buffer.Length();
-}
-
-int ReverbAccumulationBuffer::accumulate(const float* source,
-                                         size_t numberOfFrames, int* readIndex,
-                                         size_t delayFrames) {
+void ReverbAccumulationBuffer::accumulate(const float* source,
+                                          size_t numberOfFrames,
+                                          size_t* readIndex,
+                                          size_t delayFrames) {
   size_t bufferLength = m_buffer.Length();
 
   size_t writeIndex = (*readIndex + delayFrames) % bufferLength;
@@ -100,7 +95,7 @@ int ReverbAccumulationBuffer::accumulate(const float* source,
                 numberOfFrames1 + writeIndex <= bufferLength &&
                 numberOfFrames2 <= bufferLength;
   MOZ_ASSERT(isSafe);
-  if (!isSafe) return 0;
+  if (!isSafe) return;
 
   AudioBufferAddWithScale(source, 1.0f, destination + writeIndex,
                           numberOfFrames1);
@@ -108,8 +103,6 @@ int ReverbAccumulationBuffer::accumulate(const float* source,
     AudioBufferAddWithScale(source + numberOfFrames1, 1.0f, destination,
                             numberOfFrames2);
   }
-
-  return writeIndex;
 }
 
 void ReverbAccumulationBuffer::reset() {
