@@ -312,6 +312,7 @@ class TestAsyncPanZoomController : public AsyncPanZoomController {
     return mScrollMetadata.GetMetrics();
   }
 
+  using AsyncPanZoomController::GetOverscrollAmount;
   using AsyncPanZoomController::GetVelocityVector;
 
   void AssertStateIsReset() const {
