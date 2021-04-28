@@ -42,6 +42,9 @@ when a GC could occur.
 
 For details of stack rooting, see: https://github.com/mozilla-spidermonkey/spidermonkey-embedding-examples/blob/esr78/docs/GC%20Rooting%20Guide.md
 
+We also have a :doc:`static analysis <HazardAnalysis/index>` for detecting
+errors in rooting. It can be :doc:`run locally or in CI <HazardAnalysis/running>`.
+
 .. _incremental-gc:
 
 Incremental collection
