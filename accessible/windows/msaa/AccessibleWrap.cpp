@@ -44,7 +44,6 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/ReverseIterator.h"
 #include "mozilla/mscom/AsyncInvoker.h"
-#include "mozilla/mscom/Interceptor.h"
 
 #include "oleacc.h"
 
@@ -81,37 +80,7 @@ ITypeInfo* AccessibleWrap::gTypeInfo = nullptr;
 NS_IMPL_ISUPPORTS_INHERITED0(AccessibleWrap, LocalAccessible)
 
 void AccessibleWrap::Shutdown() {
-  if (mID != kNoID) {
-    auto doc = static_cast<DocAccessibleWrap*>(mDoc.get());
-    // Accessibles can be shut down twice in some cases. When this happens,
-    // doc will be null.
-    if (doc) {
-      doc->RemoveID(mID);
-    }
-  }
-
-  if (XRE_IsContentProcess()) {
-    // Bug 1434822: To improve performance for cross-process COM, we disable COM
-    // garbage collection. However, this means we never receive Release calls
-    // from clients, so defunct accessibles can never be deleted. Since we
-    // know when an accessible is shutting down, we can work around this by
-    // forcing COM to disconnect this object from all of its remote clients,
-    // which will cause associated references to be released.
-    IUnknown* unk = static_cast<IAccessible*>(this);
-    mscom::Interceptor::DisconnectRemotesForTarget(unk);
-    // If an accessible was retrieved via IAccessibleHypertext::hyperlink*,
-    // it will have a different Interceptor that won't be matched by the above
-    // call, even though it's the same object. Therefore, call it again with
-    // the IAccessibleHyperlink pointer. We can remove this horrible hack once
-    // bug 1440267 is fixed.
-    unk = static_cast<IAccessibleHyperlink*>(this);
-    mscom::Interceptor::DisconnectRemotesForTarget(unk);
-    for (auto& assocUnk : mAssociatedCOMObjectsForDisconnection) {
-      mscom::Interceptor::DisconnectRemotesForTarget(assocUnk);
-    }
-    mAssociatedCOMObjectsForDisconnection.Clear();
-  }
-
+  MsaaShutdown();
   LocalAccessible::Shutdown();
 }
 
