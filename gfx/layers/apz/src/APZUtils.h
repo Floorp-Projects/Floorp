@@ -66,6 +66,11 @@ inline bool ScrollSourceRespectsDisregardedDirections(ScrollSource aSource) {
   return aSource == ScrollSource::Wheel || aSource == ScrollSource::Touchpad;
 }
 
+inline bool ScrollSourceAllowsOverscroll(ScrollSource aSource) {
+  return aSource == ScrollSource::Touchpad ||
+         aSource == ScrollSource::Touchscreen;
+}
+
 // Epsilon to be used when comparing 'float' coordinate values
 // with FuzzyEqualsAdditive. The rationale is that 'float' has 7 decimal
 // digits of precision, and coordinate values should be no larger than in the

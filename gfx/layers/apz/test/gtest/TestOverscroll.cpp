@@ -1377,6 +1377,31 @@ TEST_F(APZCOverscrollTester, SmoothTransitionFromPanToAnimation) {
 }
 #endif
 
+#ifndef MOZ_WIDGET_ANDROID  // Only applies to GenericOverscrollEffect
+TEST_F(APZCOverscrollTester, NoOverscrollForMousewheel) {
+  SCOPED_GFX_PREF_BOOL("apz.overscroll.enabled", true);
+
+  ScrollMetadata metadata;
+  FrameMetrics& metrics = metadata.GetMetrics();
+  metrics.SetCompositionBounds(ParentLayerRect(0, 0, 100, 100));
+  metrics.SetScrollableRect(CSSRect(0, 0, 100, 1000));
+  // Start scrolled down just a few pixels from the top.
+  metrics.SetVisualScrollOffset(CSSPoint(0, 3));
+  // Set line and page scroll amounts. Otherwise, even though Wheel() uses
+  // SCROLLDELTA_PIXEL, the wheel handling code will get confused by things
+  // like the "don't scroll more than one page" check.
+  metadata.SetPageScrollAmount(LayoutDeviceIntSize(50, 100));
+  metadata.SetLineScrollAmount(LayoutDeviceIntSize(5, 10));
+  apzc->SetScrollMetadata(metadata);
+
+  // Send a wheel with enough delta to scrollto y=0 *and* overscroll.
+  Wheel(apzc, ScreenIntPoint(10, 10), ScreenPoint(0, -10), mcc->Time());
+
+  // Check that we did not actually go into overscroll.
+  EXPECT_FALSE(apzc->IsOverscrolled());
+}
+#endif
+
 class APZCOverscrollTesterForLayersOnly : public APZCTreeManagerTester {
  public:
   APZCOverscrollTesterForLayersOnly() { mLayersOnly = true; }
