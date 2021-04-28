@@ -85,6 +85,10 @@ class BrowserTabChild extends JSWindowActorChild {
         } catch (e) {}
 
         let reloadFlags = message.data.flags;
+        if (message.data.handlingUserInput) {
+          reloadFlags |= Ci.nsIWebNavigation.LOAD_FLAGS_USER_ACTIVATION;
+        }
+
         try {
           E10SUtils.wrapHandlingUserInput(
             this.document.defaultView,

@@ -130,7 +130,7 @@ interface nsISHistory: nsISupports
    * Load the entry at the particular index.
    */
   [noscript]
-  void gotoIndex(in long aIndex);
+  void gotoIndex(in long aIndex, in boolean aUserActivation);
 
   /**
    * If an element exists at the particular index and

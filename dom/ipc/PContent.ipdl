@@ -889,9 +889,9 @@ child:
 
     async DisplayLoadError(MaybeDiscardedBrowsingContext aContext, nsString aURI);
 
-    async GoBack(MaybeDiscardedBrowsingContext aContext, int32_t? aCancelContentJSEpoch, bool aRequireUserInteraction);
-    async GoForward(MaybeDiscardedBrowsingContext aContext, int32_t? aCancelContentJSEpoch, bool aRequireUserInteraction);
-    async GoToIndex(MaybeDiscardedBrowsingContext aContext, int32_t aIndex, int32_t? aCancelContentJSEpoch);
+    async GoBack(MaybeDiscardedBrowsingContext aContext, int32_t? aCancelContentJSEpoch, bool aRequireUserInteraction, bool aUserActivation);
+    async GoForward(MaybeDiscardedBrowsingContext aContext, int32_t? aCancelContentJSEpoch, bool aRequireUserInteraction, bool aUserActivation);
+    async GoToIndex(MaybeDiscardedBrowsingContext aContext, int32_t aIndex, int32_t? aCancelContentJSEpoch, bool aUserActivation);
     async Reload(MaybeDiscardedBrowsingContext aContext, uint32_t aReloadFlags);
     async StopLoad(MaybeDiscardedBrowsingContext aContext, uint32_t aStopFlags);
 
@@ -1680,8 +1680,9 @@ parent:
                         uint64_t aLoadID, nsID aChangeID, uint32_t aLoadType,
                         bool aPersist, bool aCloneEntryChildren);
 
-    async HistoryGo(MaybeDiscardedBrowsingContext aContext,
-                    int32_t aOffset, uint64_t aHistoryEpoch, bool aRequireUserInteraction) returns(int32_t requestedIndex);
+    async HistoryGo(MaybeDiscardedBrowsingContext aContext, int32_t aOffset,
+                    uint64_t aHistoryEpoch, bool aRequireUserInteraction,
+                    bool aUserActivation) returns(int32_t requestedIndex);
 
     async BlobURLDataRequest(nsCString aBlobURL,
                              nsIPrincipal aTriggeringPrincipal,
