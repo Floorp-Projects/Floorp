@@ -224,7 +224,7 @@
   margin-inline-end: 0;
 }
 
-@media (-moz-proton-doorhangers) {
+@media (-moz-proton) {
 #webRTC-preview:not([hidden]) {
   min-width: 368px;
   min-height: 10em;
@@ -276,7 +276,7 @@
 }
 } /** END not Proton **/
 
-@media not (-moz-proton-doorhangers) {
+@media not (-moz-proton) {
 #webRTC-preview:not([hidden]) {
   border-radius: 4px;
   border: 1px solid var(--panel-separator-color);
@@ -492,7 +492,7 @@
 %endif
 
 /* UPDATE */
-@media (-moz-proton-doorhangers) {
+@media (-moz-proton) {
 .popup-notification-icon[popupid="update-available"],
 .popup-notification-icon[popupid="update-downloading"],
 .popup-notification-icon[popupid="update-manual"],
@@ -510,7 +510,7 @@
 }
 } /** END Proton **/
 
-@media not (-moz-proton-doorhangers) {
+@media not (-moz-proton) {
 .popup-notification-icon[popupid="update-available"],
 .popup-notification-icon[popupid="update-downloading"],
 .popup-notification-icon[popupid="update-manual"],
