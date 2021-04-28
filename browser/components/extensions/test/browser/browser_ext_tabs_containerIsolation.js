@@ -23,7 +23,10 @@ server.registerPathHandler("/", (request, response) => {
 
 add_task(async function containerIsolation_restricted() {
   await SpecialPowers.pushPrefEnv({
-    set: [["extensions.userContextIsolation.enabled", true]],
+    set: [
+      ["extensions.userContextIsolation.enabled", true],
+      ["privacy.userContext.enabled", true],
+    ],
   });
 
   let helperExtension = ExtensionTestUtils.loadExtension({
