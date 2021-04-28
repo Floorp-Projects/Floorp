@@ -101,9 +101,6 @@ HTMLFormElement::HTMLFormElement(
     already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
     : nsGenericHTMLElement(std::move(aNodeInfo)),
       mControls(new HTMLFormControlsCollection(this)),
-      mSelectedRadioButtons(2),
-      mRequiredRadioButtonCounts(2),
-      mValueMissingRadioGroups(2),
       mPendingSubmission(nullptr),
       mDefaultSubmitElement(nullptr),
       mFirstSubmitInElements(nullptr),
@@ -142,13 +139,14 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(HTMLFormElement,
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mControls)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mImageNameLookupTable)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPastNameLookupTable)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSelectedRadioButtons)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTargetContext)
+  RadioGroupManager::Traverse(tmp, cb);
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(HTMLFormElement,
                                                 nsGenericHTMLElement)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mTargetContext)
+  RadioGroupManager::Unlink(tmp);
   tmp->Clear();
   tmp->mExpandoAndGeneration.OwnerUnlinked();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
@@ -2028,12 +2026,12 @@ HTMLFormElement::IndexOfControl(nsIFormControl* aControl) {
 
 void HTMLFormElement::SetCurrentRadioButton(const nsAString& aName,
                                             HTMLInputElement* aRadio) {
-  mSelectedRadioButtons.InsertOrUpdate(aName, RefPtr{aRadio});
+  RadioGroupManager::SetCurrentRadioButton(aName, aRadio);
 }
 
 HTMLInputElement* HTMLFormElement::GetCurrentRadioButton(
     const nsAString& aName) {
-  return mSelectedRadioButtons.GetWeak(aName);
+  return RadioGroupManager::GetCurrentRadioButton(aName);
 }
 
 NS_IMETHODIMP
@@ -2041,165 +2039,42 @@ HTMLFormElement::GetNextRadioButton(const nsAString& aName,
                                     const bool aPrevious,
                                     HTMLInputElement* aFocusedRadio,
                                     HTMLInputElement** aRadioOut) {
-  // Return the radio button relative to the focused radio button.
-  // If no radio is focused, get the radio relative to the selected one.
-  *aRadioOut = nullptr;
-
-  RefPtr<HTMLInputElement> currentRadio;
-  if (aFocusedRadio) {
-    currentRadio = aFocusedRadio;
-  } else {
-    mSelectedRadioButtons.Get(aName, getter_AddRefs(currentRadio));
-  }
-
-  nsCOMPtr<nsISupports> itemWithName = DoResolveName(aName, true);
-  nsCOMPtr<nsINodeList> radioGroup(do_QueryInterface(itemWithName));
-
-  if (!radioGroup) {
-    return NS_ERROR_FAILURE;
-  }
-
-  int32_t index = radioGroup->IndexOf(currentRadio);
-  if (index < 0) {
-    return NS_ERROR_FAILURE;
-  }
-
-  uint32_t numRadios = radioGroup->Length();
-  RefPtr<HTMLInputElement> radio;
-
-  bool isRadio = false;
-  do {
-    if (aPrevious) {
-      if (--index < 0) {
-        index = numRadios - 1;
-      }
-    } else if (++index >= (int32_t)numRadios) {
-      index = 0;
-    }
-    radio = HTMLInputElement::FromNodeOrNull(radioGroup->Item(index));
-    isRadio = radio && radio->ControlType() == NS_FORM_INPUT_RADIO;
-    if (!isRadio) {
-      continue;
-    }
-
-    nsAutoString name;
-    radio->GetName(name);
-    isRadio = aName.Equals(name);
-  } while (!isRadio || (radio->Disabled() && radio != currentRadio));
-
-  NS_IF_ADDREF(*aRadioOut = radio);
-  return NS_OK;
+  return RadioGroupManager::GetNextRadioButton(aName, aPrevious, aFocusedRadio,
+                                               aRadioOut);
 }
 
 NS_IMETHODIMP
 HTMLFormElement::WalkRadioGroup(const nsAString& aName,
                                 nsIRadioVisitor* aVisitor, bool aFlushContent) {
-  if (aName.IsEmpty()) {
-    //
-    // XXX If the name is empty, it's not stored in the control list.  There
-    // *must* be a more efficient way to do this.
-    //
-    nsCOMPtr<nsIFormControl> control;
-    uint32_t len = GetElementCount();
-    for (uint32_t i = 0; i < len; i++) {
-      control = GetElementAt(i);
-      if (control->ControlType() == NS_FORM_INPUT_RADIO) {
-        nsCOMPtr<Element> controlElement = do_QueryInterface(control);
-        if (controlElement &&
-            controlElement->AttrValueIs(kNameSpaceID_None, nsGkAtoms::name,
-                                        u""_ns, eCaseMatters) &&
-            !aVisitor->Visit(control)) {
-          break;
-        }
-      }
-    }
-    return NS_OK;
-  }
-
-  // Get the control / list of controls from the form using form["name"]
-  nsCOMPtr<nsISupports> item = DoResolveName(aName, aFlushContent);
-  if (!item) {
-    return NS_ERROR_FAILURE;
-  }
-
-  // If it's just a lone radio button, then select it.
-  nsCOMPtr<nsIFormControl> formControl = do_QueryInterface(item);
-  if (formControl) {
-    if (formControl->ControlType() == NS_FORM_INPUT_RADIO) {
-      aVisitor->Visit(formControl);
-    }
-    return NS_OK;
-  }
-
-  nsCOMPtr<nsINodeList> nodeList = do_QueryInterface(item);
-  if (!nodeList) {
-    return NS_OK;
-  }
-  uint32_t length = nodeList->Length();
-  for (uint32_t i = 0; i < length; i++) {
-    nsIContent* node = nodeList->Item(i);
-    nsCOMPtr<nsIFormControl> formControl = do_QueryInterface(node);
-    if (formControl && formControl->ControlType() == NS_FORM_INPUT_RADIO &&
-        !aVisitor->Visit(formControl)) {
-      break;
-    }
-  }
-  return NS_OK;
+  return RadioGroupManager::WalkRadioGroup(aName, aVisitor, aFlushContent);
 }
 
 void HTMLFormElement::AddToRadioGroup(const nsAString& aName,
                                       HTMLInputElement* aRadio) {
-  if (aRadio->IsRequired()) {
-    uint32_t& value = mRequiredRadioButtonCounts.LookupOrInsert(aName, 0);
-    ++value;
-  }
+  RadioGroupManager::AddToRadioGroup(aName, aRadio);
 }
 
 void HTMLFormElement::RemoveFromRadioGroup(const nsAString& aName,
                                            HTMLInputElement* aRadio) {
-  if (aRadio->IsRequired()) {
-    auto entry = mRequiredRadioButtonCounts.Lookup(aName);
-    if (!entry) {
-      MOZ_ASSERT_UNREACHABLE("At least one radio button has to be required!");
-    } else {
-      MOZ_ASSERT(entry.Data() >= 1,
-                 "At least one radio button has to be required!");
-      if (entry.Data() <= 1) {
-        entry.Remove();
-      } else {
-        --entry.Data();
-      }
-    }
-  }
+  RadioGroupManager::RemoveFromRadioGroup(aName, aRadio);
 }
 
 uint32_t HTMLFormElement::GetRequiredRadioCount(const nsAString& aName) const {
-  return mRequiredRadioButtonCounts.Get(aName);
+  return RadioGroupManager::GetRequiredRadioCount(aName);
 }
 
 void HTMLFormElement::RadioRequiredWillChange(const nsAString& aName,
                                               bool aRequiredAdded) {
-  if (aRequiredAdded) {
-    mRequiredRadioButtonCounts.LookupOrInsert(aName, 0) += 1;
-  } else {
-    auto requiredNb = mRequiredRadioButtonCounts.Lookup(aName);
-    NS_ASSERTION(requiredNb && *requiredNb >= 1,
-                 "At least one radio button has to be required!");
-    if (*requiredNb == 1) {
-      requiredNb.Remove();
-    } else {
-      *requiredNb -= 1;
-    }
-  }
+  RadioGroupManager::RadioRequiredWillChange(aName, aRequiredAdded);
 }
 
 bool HTMLFormElement::GetValueMissingState(const nsAString& aName) const {
-  return mValueMissingRadioGroups.Get(aName);
+  return RadioGroupManager::GetValueMissingState(aName);
 }
 
 void HTMLFormElement::SetValueMissingState(const nsAString& aName,
                                            bool aValue) {
-  mValueMissingRadioGroups.InsertOrUpdate(aName, aValue);
+  RadioGroupManager::SetValueMissingState(aName, aValue);
 }
 
 EventStates HTMLFormElement::IntrinsicState() const {
