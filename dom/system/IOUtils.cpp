@@ -263,8 +263,10 @@ already_AddRefed<Promise> IOUtils::Read(GlobalObject& aGlobal,
 
     DispatchAndResolve<JsBuffer>(
         state.ref()->mEventQueue, promise,
-        [file = std::move(file), toRead, decompress = aOptions.mDecompress]() {
-          return ReadSync(file, toRead, decompress, BufferKind::Uint8Array);
+        [file = std::move(file), offset = aOptions.mOffset, toRead,
+         decompress = aOptions.mDecompress]() {
+          return ReadSync(file, offset, toRead, decompress,
+                          BufferKind::Uint8Array);
         });
   } else {
     RejectShuttingDown(promise);
@@ -744,8 +746,8 @@ already_AddRefed<Promise> IOUtils::CreateJSPromise(GlobalObject& aGlobal) {
 
 /* static */
 Result<IOUtils::JsBuffer, IOUtils::IOError> IOUtils::ReadSync(
-    nsIFile* aFile, const Maybe<uint32_t>& aMaxBytes, const bool aDecompress,
-    IOUtils::BufferKind aBufferKind) {
+    nsIFile* aFile, const uint32_t aOffset, const Maybe<uint32_t> aMaxBytes,
+    const bool aDecompress, IOUtils::BufferKind aBufferKind) {
   MOZ_ASSERT(!NS_IsMainThread());
 
   if (aMaxBytes.isSome() && aDecompress) {
@@ -785,8 +787,22 @@ Result<IOUtils::JsBuffer, IOUtils::IOError> IOUtils::ReadSync(
                            aFile->HumanReadablePath().get(), streamSize));
     }
     bufSize = static_cast<uint32_t>(streamSize);
+
+    if (aOffset >= bufSize) {
+      bufSize = 0;
+    } else {
+      bufSize = bufSize - aOffset;
+    }
   } else {
     bufSize = aMaxBytes.value();
+  }
+
+  if (aOffset > 0) {
+    if (nsresult rv = stream->Seek(PR_SEEK_SET, aOffset); NS_FAILED(rv)) {
+      return Err(IOError(rv).WithMessage(
+          "Could not seek to position %" PRId64 " in file %s", aOffset,
+          aFile->HumanReadablePath().get()));
+    }
   }
 
   JsBuffer buffer = JsBuffer::CreateEmpty(aBufferKind);
@@ -831,7 +847,7 @@ Result<IOUtils::JsBuffer, IOUtils::IOError> IOUtils::ReadSync(
 /* static */
 Result<IOUtils::JsBuffer, IOUtils::IOError> IOUtils::ReadUTF8Sync(
     nsIFile* aFile, bool aDecompress) {
-  auto result = ReadSync(aFile, Nothing{}, aDecompress, BufferKind::String);
+  auto result = ReadSync(aFile, 0, Nothing{}, aDecompress, BufferKind::String);
   if (result.isErr()) {
     return result.propagateErr();
   }
