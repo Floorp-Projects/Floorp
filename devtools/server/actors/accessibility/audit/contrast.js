@@ -19,18 +19,6 @@ loader.lazyRequireGetter(
 );
 loader.lazyRequireGetter(
   this,
-  "addPseudoClassLock",
-  "devtools/server/actors/highlighters/utils/markup",
-  true
-);
-loader.lazyRequireGetter(
-  this,
-  "removePseudoClassLock",
-  "devtools/server/actors/highlighters/utils/markup",
-  true
-);
-loader.lazyRequireGetter(
-  this,
   "getContrastRatioAgainstBackground",
   "devtools/shared/accessibility",
   true
@@ -54,12 +42,16 @@ loader.lazyRequireGetter(
 );
 
 const WORKER_URL = "resource://devtools/server/actors/accessibility/worker.js";
-const HIGHLIGHTED_PSEUDO_CLASS = ":-moz-devtools-highlighted";
 const {
   LARGE_TEXT: { BOLD_LARGE_TEXT_MIN_PIXELS, LARGE_TEXT_MIN_PIXELS },
 } = require("devtools/shared/accessibility");
 
 loader.lazyGetter(this, "worker", () => new DevToolsWorker(WORKER_URL));
+
+const RESET_PROPERTIES = {
+  color: "transparent",
+  "text-shadow": "none",
+};
 
 /**
  * Get canvas rendering context for the current target window bound by the bounds of the
@@ -89,9 +81,18 @@ function getImageCtx(win, bounds, zoom, scale, node) {
   ctx.imageSmoothingEnabled = false;
   ctx.scale(scale, scale);
 
+  const stylePropertiesToRestore = {};
+  const nodeHadStyle = node && node.getAttribute("style") !== null;
+
   // If node is passed, make its color related text properties invisible.
-  if (node) {
-    addPseudoClassLock(node, HIGHLIGHTED_PSEUDO_CLASS);
+  if (node && node.style) {
+    for (const property in RESET_PROPERTIES) {
+      stylePropertiesToRestore[property] = {
+        value: node.style.getPropertyValue(property),
+        priority: node.style.getPropertyPriority(property),
+      };
+      node.style.setProperty(property, RESET_PROPERTIES[property], "important");
+    }
   }
 
   ctx.drawWindow(
@@ -106,7 +107,14 @@ function getImageCtx(win, bounds, zoom, scale, node) {
 
   // Restore all inline styling.
   if (node) {
-    removePseudoClassLock(node, HIGHLIGHTED_PSEUDO_CLASS);
+    if (nodeHadStyle) {
+      for (const property in stylePropertiesToRestore) {
+        const { value, priority } = stylePropertiesToRestore[property];
+        node.style.setProperty(property, value, priority);
+      }
+    } else {
+      node.removeAttribute("style");
+    }
   }
 
   return ctx;
