@@ -10,6 +10,10 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   SessionStore: "resource:///modules/sessionstore/SessionStore.jsm",
 });
 
+function RestoreTabContentComplete(aBrowser) {
+  SessionStore.restoreTabContentComplete(aBrowser, {});
+}
+
 function UpdateSessionStore(
   aBrowser,
   aBrowsingContext,
@@ -40,7 +44,11 @@ function UpdateSessionStoreForWindow(
   );
 }
 
-var EXPORTED_SYMBOLS = ["UpdateSessionStore", "UpdateSessionStoreForWindow"];
+var EXPORTED_SYMBOLS = [
+  "RestoreTabContentComplete",
+  "UpdateSessionStore",
+  "UpdateSessionStoreForWindow",
+];
 
 var SessionStoreFuncInternal = {
   updateStorage: function SSF_updateStorage(aOrigins, aKeys, aValues) {

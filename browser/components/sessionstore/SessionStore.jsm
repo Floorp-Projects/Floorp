@@ -454,10 +454,6 @@ var SessionStore = {
     }
   },
 
-  getCurrentEpoch(browser) {
-    return SessionStoreInternal.getCurrentEpoch(browser);
-  },
-
   /**
    * Determines whether the passed version number is compatible with
    * the current version number of the SessionStore.
@@ -522,6 +518,10 @@ var SessionStore = {
 
   finishTabRemotenessChange(aTab, aSwitchId) {
     SessionStoreInternal.finishTabRemotenessChange(aTab, aSwitchId);
+  },
+
+  restoreTabContentComplete(aBrowser, aData) {
+    SessionStoreInternal._restoreTabContentComplete(aBrowser, aData);
   },
 };
 
@@ -3432,19 +3432,14 @@ var SessionStoreInternal = {
 
     let activePageData = tabData.entries[tabData.index - 1] || null;
 
-    // If the page has a title and it hasn't yet been updated, set it.
-    if (!tab._labelIsContentTitle) {
-      if (activePageData) {
-        if (
-          activePageData.title &&
-          activePageData.title != activePageData.url
-        ) {
-          win.gBrowser.setInitialTabTitle(tab, activePageData.title, {
-            isContentTitle: true,
-          });
-        } else {
-          win.gBrowser.setInitialTabTitle(tab, activePageData.url);
-        }
+    // If the page has a title, set it.
+    if (activePageData) {
+      if (activePageData.title && activePageData.title != activePageData.url) {
+        win.gBrowser.setInitialTabTitle(tab, activePageData.title, {
+          isContentTitle: true,
+        });
+      } else {
+        win.gBrowser.setInitialTabTitle(tab, activePageData.url);
       }
     }
 
@@ -5625,7 +5620,7 @@ var SessionStoreInternal = {
           .get(browser.permanentKey)
           .uninstall();
       }
-      browser.browsingContext.clearRestoreState();
+      SessionStoreUtils.setRestoreData(browser.browsingContext, null);
     }
 
     // Keep the tab's previous state for later in this method
@@ -5837,7 +5832,7 @@ var SessionStoreInternal = {
    * This mirrors ContentRestore.restoreHistory() for parent process session
    * history restores, but we're not actually restoring history here.
    */
-  _restoreHistory(browser, data) {
+  async _restoreTabState(browser, data) {
     if (!Services.appinfo.sessionHistoryInParent) {
       throw new Error("This function should only be used with SHIP");
     }
@@ -5845,36 +5840,33 @@ var SessionStoreInternal = {
     // In case about:blank isn't done yet.
     browser.stop();
 
-    let uri = data.tabData?.entries[data.tabData.index - 1]?.url;
-    let disallow = data.tabData?.disallow;
-    let storage = data.tabData?.storage || {};
-    delete data.tabData?.storage;
+    let win = browser.ownerGlobal;
+    let tab = win?.gBrowser.getTabForBrowser(browser);
 
-    // We'll likely make multiple calls to _restoreHistory() with the same
-    // browser element during a single restore, so this promise may be replaced
-    // in a subsequent call.
-    data.historyPromise = SessionStoreUtils.restoreDocShellState(
-      browser.browsingContext,
-      uri,
-      disallow,
-      storage
-    );
-
-    data.historyPromise.finally(() => {
-      // We only want to call _restoreHistoryComplete() here if we *haven't*
-      // already begun restoring tab content. If we have started restoring tab
-      // content, then _restoreTabContent() will handle calling the completion
-      // function.
-      //
-      // Calling _restoreHistoryComplete() here dispatches the "SSTabRestoring"
-      // event, which tells tabbrowser to call browser.reload(), which will
-      // trigger the onHistoryReload callback below, where we'll proceed with
-      // the tab content restore.
-      if (TAB_STATE_FOR_BROWSER.get(browser) === TAB_STATE_NEEDS_RESTORE) {
-        delete data.historyPromise;
-        this._restoreHistoryComplete(browser, data);
+    browser.messageManager.sendAsyncMessage(
+      "SessionStore:restoreDocShellState",
+      {
+        epoch: data.epoch,
+        tabData: {
+          uri: data.tabData?.entries[data.tabData.index - 1]?.url ?? null,
+          disallow: data.tabData?.disallow,
+          storage: data.tabData?.storage,
+        },
       }
-    });
+    );
+    // For the non-remote case, the above will restore, but asynchronously.
+    // However, we need to restore DocShellState synchronously in the
+    // parent to avoid a test failure.
+    if (tab.linkedBrowser.docShell) {
+      SessionStoreUtils.restoreDocShellCapabilities(
+        tab.linkedBrowser.docShell,
+        data.tabData.disallow
+      );
+    }
+
+    if (data.tabData?.storage) {
+      delete data.tabData.storage;
+    }
 
     this._shistoryToRestore.set(browser.permanentKey, data);
 
@@ -5918,66 +5910,58 @@ var SessionStoreInternal = {
 
     this._restoreTabContentStarted(browser, restoreData);
 
-    let tabData = restoreData.tabData || {};
-    let promises = [restoreData.historyPromise];
-
+    let { tabData } = restoreData;
     let uri = null;
     let loadFlags = null;
 
-    if (tabData.userTypedValue && tabData.userTypedClear) {
+    if (tabData?.userTypedValue && tabData?.userTypedClear) {
       uri = tabData.userTypedValue;
       loadFlags = Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP;
-    } else if (tabData.entries.length) {
-      promises.push(
-        SessionStoreUtils.initializeRestore(
-          browser.browsingContext,
-          this.buildRestoreData(tabData.formdata, tabData.scroll)
-        )
+    } else if (tabData?.entries.length) {
+      uri = tabData.entries[tabData.index - 1].url;
+      let willRestoreContent = SessionStoreUtils.setRestoreData(
+        browser.browsingContext,
+        this.buildRestoreData(tabData.formdata, tabData.scroll)
       );
+      // We'll manually call RestoreTabContentComplete when the restore is done,
+      // so we only want to create the listener below if we're not restoring tab
+      // content.
+      if (willRestoreContent) {
+        return;
+      }
     } else {
       uri = "about:blank";
       loadFlags = Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_HISTORY;
     }
 
-    if (uri && loadFlags) {
-      let deferred = PromiseUtils.defer();
-      promises.push(deferred.promise);
-
+    if (uri) {
       this.addProgressListenerForRestore(browser, {
         onStopRequest: (request, listener) => {
           let requestURI = request.QueryInterface(Ci.nsIChannel)?.originalURI;
           // FIXME: We sometimes see spurious STATE_STOP events for about:blank
           // URIs, so we have to manually drop those here (unless we're actually
           // expecting an about:blank load).
+          //
+          // In the case where we're firing _restoreTabContentComplete due to
+          // a normal load (i.e. !willRestoreContent), we could perhaps just not
+          // wait for the load here, and instead fix tests that depend on this
+          // behavior.
           if (requestURI?.spec !== "about:blank" || uri === "about:blank") {
             listener.uninstall();
-            deferred.resolve();
+            this._restoreTabContentComplete(browser, restoreData);
           }
         },
       });
 
-      browser.browsingContext.loadURI(uri, {
-        loadFlags,
-        triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
-      });
-    }
-
-    Promise.allSettled(promises).then(() => {
-      // We may have stopped or restarted the restore for this browser prior to
-      // the resolution of these promises, so this ensures that we're only
-      // calling the completion functions for browsers that are actively being
-      // restored.
-      if (TAB_STATE_FOR_BROWSER.get(browser) === TAB_STATE_RESTORING) {
-        // We would have already called _restoreHistoryComplete() if the browser
-        // element was reloaded while a restore was in progress. This avoids
-        // calling it twice. See the comment in _restoreHistory() for more
-        // context.
-        if (restoreData.historyPromise) {
-          this._restoreHistoryComplete(browser, restoreData);
-        }
-        this._restoreTabContentComplete(browser, restoreData);
+      if (loadFlags) {
+        browser.browsingContext.loadURI(uri, {
+          loadFlags,
+          triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+        });
+      } else {
+        browser.browsingContext.sessionHistory.reloadCurrentEntry();
       }
-    });
+    }
   },
 
   _sendRestoreTabContent(browser, options) {
@@ -6170,7 +6154,7 @@ var SessionStoreInternal = {
     }
 
     if (Services.appinfo.sessionHistoryInParent) {
-      this._restoreHistory(browser, options);
+      this._restoreTabState(browser, options);
     } else {
       browser.messageManager.sendAsyncMessage(
         "SessionStore:restoreHistory",
