@@ -918,7 +918,7 @@ xul|radio:not([disabled="true"])[selected]:hover:active > xul|*.radio-check {
 }
 
 xul|*.radio-label-box {
-  margin-inline: -1px 8px; /* the negative margin-inline-start for the transparent border */
+  margin-inline: 0 8px;
   padding-inline-start: 0;
 }
 

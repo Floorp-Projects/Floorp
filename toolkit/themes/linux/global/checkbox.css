@@ -25,10 +25,6 @@ checkbox[native] {
   -moz-default-appearance: checkbox-label;
 }
 
-.checkbox-icon[native][src] {
-  margin-inline-end: 2px;
-}
-
 .checkbox-label[native] {
   margin: 0;
 }
@@ -69,10 +65,6 @@ checkbox {
 .checkbox-label-box {
   appearance: auto;
   -moz-default-appearance: checkbox-label;
-}
-
-.checkbox-icon[src] {
-  margin-inline-end: 2px;
 }
 
 .checkbox-label {
