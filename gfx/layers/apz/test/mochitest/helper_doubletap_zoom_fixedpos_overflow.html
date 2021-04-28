@@ -1,0 +1,113 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=2100"/>
+  <title>Check that double tapping elements with large overflow inside active scrollable elements in fixed pos work</title>
+  <script src="apz_test_native_event_utils.js"></script>
+  <script src="apz_test_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <script>
+
+async function makeActive(x, y, targetId) {
+  let theTarget = document.getElementById(targetId);
+  await promiseNativeMouseEventWithAPZAndWaitForEvent({
+    type: "click",
+    target: theTarget,
+    offsetX: x,
+    offsetY: y,
+  });
+
+  await promiseApzFlushedRepaints();
+
+  ok(isLayerized(targetId), "target should be layerized at this point");
+  let utils = SpecialPowers.getDOMWindowUtils(window);
+  let targetScrollId = utils.getViewId(theTarget);
+  ok(targetScrollId > 0, "target should have a scroll id");
+}
+
+async function test() {
+  let useTouchpad = (location.search == "?touchpad");
+
+  let resolution = getResolution();
+  ok(resolution > 0,
+     "The initial_resolution is " + resolution + ", which is some sane value");
+
+  await makeActive(25, 25, "scrollertarget");
+
+  let target = document.getElementById("target");
+
+  // Check that double-tapping once zooms in
+  // Coords outside of the main rect but inside the overflow to trigger the
+  // bug we are testing.
+  await doubleTapOn(target, 25, 120, useTouchpad);
+  let prev_resolution = resolution;
+  resolution = getResolution();
+  ok(resolution > prev_resolution, "The first double-tap has increased the resolution to " + resolution);
+
+  // Check that double-tapping again on the same spot zooms out
+  await doubleTapOn(target, 25, 120, useTouchpad);
+  prev_resolution = resolution;
+  resolution = getResolution();
+  ok(resolution < prev_resolution, "The second double-tap has decreased the resolution to " + resolution);
+}
+
+waitUntilApzStable()
+.then(test)
+.then(subtestDone, subtestFailed);
+
+  </script>
+<style>
+.fixed {
+  top: 100px;
+  width: 500px;
+  height: 300px;
+  background: blue;
+  position: fixed;
+}
+.abox {
+  width: 200px;
+  height: 200px;
+  background: yellow;
+  overflow: auto;
+}
+.spacer {
+  height: 400vh;
+  background: lightgrey;
+}
+</style>
+</head>
+<body>
+
+<div class="fixed">
+  <div id="scrollertarget" class="abox">
+    <div class="spacer" style="width: 150px;">
+      <div id="target" style="background-color: #eee; width: 145px; height: 50px; border: 1px dotted black; overflow: visible;">
+      Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+      Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+      Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
+      Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+      Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+      Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+      Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
+      Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+      Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+      Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+      Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
+      Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+      Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+      Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+      Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
+      Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+      Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+      Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+      Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
+      Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+      </div>
+    </div>
+  </div>
+</div>
+<div class="spacer" style="width: 100px;"></div>
+
+</body>
+</html>
