@@ -46,12 +46,12 @@ import mozilla.components.ui.autocomplete.InlineAutocompleteEditText.Autocomplet
 import org.mozilla.focus.R
 import org.mozilla.focus.ext.isSearch
 import org.mozilla.focus.ext.requireComponents
-import org.mozilla.focus.locale.LocaleAwareAppCompatActivity
 import org.mozilla.focus.locale.LocaleAwareFragment
 import org.mozilla.focus.menu.home.HomeMenu
 import org.mozilla.focus.searchsuggestions.SearchSuggestionsViewModel
 import org.mozilla.focus.searchsuggestions.ui.SearchSuggestionsFragment
 import org.mozilla.focus.state.AppAction
+import org.mozilla.focus.state.Screen
 import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.tips.Tip
 import org.mozilla.focus.tips.TipManager
@@ -444,7 +444,11 @@ class UrlInputFragment :
                 requireComponents.tabsUseCases.addPrivateTab(url, source = SessionState.Source.MENU)
             }
 
-            R.id.settings -> (activity as LocaleAwareAppCompatActivity).openPreferences()
+            R.id.settings -> {
+                requireComponents.appStore.dispatch(
+                    AppAction.OpenSettings(page = Screen.Settings.Page.Start)
+                )
+            }
 
             R.id.help -> {
                 requireComponents.tabsUseCases.addPrivateTab(

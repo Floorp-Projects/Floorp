@@ -7,7 +7,10 @@ package org.mozilla.focus.autocomplete
 import android.content.SharedPreferences
 import android.os.Bundle
 import org.mozilla.focus.R
+import org.mozilla.focus.ext.requireComponents
 import org.mozilla.focus.settings.BaseSettingsFragment
+import org.mozilla.focus.state.AppAction
+import org.mozilla.focus.state.Screen
 import org.mozilla.focus.telemetry.TelemetryWrapper
 
 /**
@@ -21,9 +24,7 @@ class AutocompleteSettingsFragment : BaseSettingsFragment(), SharedPreferences.O
     override fun onResume() {
         super.onResume()
 
-        val updater = activity as BaseSettingsFragment.ActionBarUpdater
-        updater.updateTitle(R.string.preference_subitem_autocomplete)
-        updater.updateIcon(R.drawable.ic_back)
+        updateTitle(R.string.preference_subitem_autocomplete)
 
         preferenceManager.sharedPreferences.registerOnSharedPreferenceChangeListener(this)
     }
@@ -37,7 +38,9 @@ class AutocompleteSettingsFragment : BaseSettingsFragment(), SharedPreferences.O
     override fun onPreferenceTreeClick(preference: androidx.preference.Preference?): Boolean {
         preference?.let {
             if (it.key == getString(R.string.pref_key_screen_custom_domains)) {
-                navigateToFragment(AutocompleteListFragment())
+                requireComponents.appStore.dispatch(
+                    AppAction.OpenSettings(page = Screen.Settings.Page.SearchAutocompleteList)
+                )
             }
         }
         return super.onPreferenceTreeClick(preference)

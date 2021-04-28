@@ -17,7 +17,6 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import mozilla.components.browser.domains.CustomDomains
 import org.mozilla.focus.R
-import org.mozilla.focus.settings.BaseSettingsFragment
 import org.mozilla.focus.telemetry.TelemetryWrapper
 import kotlin.coroutines.CoroutineContext
 
@@ -63,9 +62,7 @@ class AutocompleteRemoveFragment : AutocompleteListFragment(), CoroutineScope {
             job = Job()
         }
 
-        val updater = activity as BaseSettingsFragment.ActionBarUpdater
-        updater.updateTitle(R.string.preference_autocomplete_title_remove)
-        updater.updateIcon(R.drawable.ic_back)
+        updateTitle(R.string.preference_autocomplete_title_remove)
     }
 
     override fun onPause() {

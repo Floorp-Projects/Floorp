@@ -16,6 +16,8 @@ import mozilla.components.feature.search.SearchUseCases
 import org.mozilla.focus.R
 import org.mozilla.focus.ext.requireComponents
 import org.mozilla.focus.search.RadioSearchEngineListPreference
+import org.mozilla.focus.state.AppAction
+import org.mozilla.focus.state.Screen
 import org.mozilla.focus.telemetry.TelemetryWrapper
 
 class InstalledSearchEnginesSettingsFragment : BaseSettingsFragment() {
@@ -30,10 +32,8 @@ class InstalledSearchEnginesSettingsFragment : BaseSettingsFragment() {
 
     override fun onResume() {
         super.onResume()
-        getActionBarUpdater().apply {
-            updateTitle(R.string.preference_search_installed_search_engines)
-            updateIcon(R.drawable.ic_back)
-        }
+
+        updateTitle(R.string.preference_search_installed_search_engines)
 
         if (languageChanged)
             restoreSearchEngines()
@@ -56,7 +56,9 @@ class InstalledSearchEnginesSettingsFragment : BaseSettingsFragment() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.menu_remove_search_engines -> {
-                navigateToFragment(RemoveSearchEnginesSettingsFragment())
+                requireComponents.appStore.dispatch(
+                    AppAction.OpenSettings(Screen.Settings.Page.SearchRemove)
+                )
                 TelemetryWrapper.menuRemoveEnginesEvent()
                 true
             }
@@ -78,7 +80,9 @@ class InstalledSearchEnginesSettingsFragment : BaseSettingsFragment() {
     override fun onPreferenceTreeClick(preference: Preference): Boolean {
         return when (preference.key) {
             resources.getString(R.string.pref_key_manual_add_search_engine) -> {
-                navigateToFragment(ManualAddSearchEngineSettingsFragment())
+                requireComponents.appStore.dispatch(
+                    AppAction.OpenSettings(page = Screen.Settings.Page.SearchAdd)
+                )
                 TelemetryWrapper.menuAddSearchEngineEvent()
                 return true
             }

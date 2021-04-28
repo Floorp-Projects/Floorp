@@ -17,7 +17,6 @@ import android.view.ViewGroup
 import android.widget.CheckBox
 import android.widget.CompoundButton
 import android.widget.TextView
-import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.ItemTouchHelper.SimpleCallback
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -32,7 +31,9 @@ import org.mozilla.focus.R
 import org.mozilla.focus.autocomplete.AutocompleteDomainFormatter
 import org.mozilla.focus.ext.components
 import org.mozilla.focus.ext.requireComponents
-import org.mozilla.focus.settings.BaseSettingsFragment
+import org.mozilla.focus.settings.BaseSettingsLikeFragment
+import org.mozilla.focus.state.AppAction
+import org.mozilla.focus.state.Screen
 import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.utils.ViewUtils
 import java.util.Collections
@@ -43,7 +44,7 @@ typealias DomainFormatter = (String) -> String
 /**
  * Fragment showing settings UI listing all exception domains.
  */
-open class ExceptionsListFragment : Fragment(), CoroutineScope {
+open class ExceptionsListFragment : BaseSettingsLikeFragment(), CoroutineScope {
     private var job = Job()
     override val coroutineContext: CoroutineContext
         get() = job + Dispatchers.Main
@@ -105,6 +106,8 @@ open class ExceptionsListFragment : Fragment(), CoroutineScope {
     ): View = inflater.inflate(R.layout.fragment_exceptions_domains, container, false)
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
         exceptionList.layoutManager =
                 LinearLayoutManager(activity, RecyclerView.VERTICAL, false)
         exceptionList.adapter = DomainListAdapter()
@@ -120,8 +123,9 @@ open class ExceptionsListFragment : Fragment(), CoroutineScope {
             val exceptions = (exceptionList.adapter as DomainListAdapter).selection()
             TelemetryWrapper.removeAllExceptionDomains(exceptions.count())
 
-            @Suppress("DEPRECATION")
-            fragmentManager!!.popBackStack()
+            requireComponents.appStore.dispatch(AppAction.NavigateUp(
+                requireComponents.store.state.selectedTabId
+            ))
         }
     }
 
@@ -130,10 +134,7 @@ open class ExceptionsListFragment : Fragment(), CoroutineScope {
 
         job = Job()
 
-        (activity as BaseSettingsFragment.ActionBarUpdater).apply {
-            updateTitle(R.string.preference_exceptions)
-            updateIcon(R.drawable.ic_back)
-        }
+        updateTitle(R.string.preference_exceptions)
 
         (exceptionList.adapter as DomainListAdapter).refresh(requireActivity()) {
             if ((exceptionList.adapter as DomainListAdapter).itemCount == 0) {
@@ -166,12 +167,9 @@ open class ExceptionsListFragment : Fragment(), CoroutineScope {
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean = when (item.itemId) {
         R.id.remove -> {
-            @Suppress("DEPRECATION")
-            requireFragmentManager()
-                .beginTransaction()
-                .replace(R.id.container, ExceptionsRemoveFragment())
-                .addToBackStack(null)
-                .commit()
+            requireComponents.appStore.dispatch(
+                AppAction.OpenSettings(page = Screen.Settings.Page.PrivacyExceptionsRemove)
+            )
             true
         }
         else -> super.onOptionsItemSelected(item)

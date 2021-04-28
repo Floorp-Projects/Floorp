@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+@file:Suppress("TooManyFunctions")
+
 package org.mozilla.focus.state
 
 import mozilla.components.lib.state.Reducer
@@ -22,6 +24,8 @@ object AppReducer : Reducer<AppState, AppAction> {
             is AppAction.FinishFirstRun -> finishFirstRun(state, action)
             is AppAction.Lock -> lock(state)
             is AppAction.Unlock -> unlock(state, action)
+            is AppAction.OpenSettings -> openSettings(state, action)
+            is AppAction.NavigateUp -> navigateUp(state, action)
         }
     }
 }
@@ -134,4 +138,49 @@ private fun unlock(state: AppState, action: AppAction.Unlock): AppState {
     } else {
         state.copy(screen = Screen.Home)
     }
+}
+
+private fun openSettings(state: AppState, action: AppAction.OpenSettings): AppState {
+    return state.copy(
+        screen = Screen.Settings(page = action.page)
+    )
+}
+
+@Suppress("ComplexMethod")
+private fun navigateUp(state: AppState, action: AppAction.NavigateUp): AppState {
+    if (state.screen !is Screen.Settings) {
+        return state
+    }
+
+    val screen = when (state.screen.page) {
+        Screen.Settings.Page.Start -> if (action.tabId != null) {
+            Screen.Browser(tabId = action.tabId, showTabs = false)
+        } else {
+            Screen.Home
+        }
+
+        Screen.Settings.Page.General -> Screen.Settings(page = Screen.Settings.Page.Start)
+        Screen.Settings.Page.Privacy -> Screen.Settings(page = Screen.Settings.Page.Start)
+        Screen.Settings.Page.Search -> Screen.Settings(page = Screen.Settings.Page.Start)
+        Screen.Settings.Page.Advanced -> Screen.Settings(page = Screen.Settings.Page.Start)
+        Screen.Settings.Page.Mozilla -> Screen.Settings(page = Screen.Settings.Page.Start)
+
+        Screen.Settings.Page.PrivacyExceptions -> Screen.Settings(page = Screen.Settings.Page.Privacy)
+        Screen.Settings.Page.PrivacyExceptionsRemove -> Screen.Settings(page = Screen.Settings.Page.PrivacyExceptions)
+
+        Screen.Settings.Page.SearchList -> Screen.Settings(page = Screen.Settings.Page.Search)
+        Screen.Settings.Page.SearchRemove -> Screen.Settings(page = Screen.Settings.Page.SearchList)
+        Screen.Settings.Page.SearchAdd -> Screen.Settings(page = Screen.Settings.Page.SearchList)
+        Screen.Settings.Page.SearchAutocomplete -> Screen.Settings(page = Screen.Settings.Page.Search)
+        Screen.Settings.Page.SearchAutocompleteList -> Screen.Settings(page = Screen.Settings.Page.Search)
+
+        Screen.Settings.Page.SearchAutocompleteAdd -> Screen.Settings(
+            page = Screen.Settings.Page.SearchAutocompleteList
+        )
+        Screen.Settings.Page.SearchAutocompleteRemove -> Screen.Settings(
+            page = Screen.Settings.Page.SearchAutocompleteList
+        )
+    }
+
+    return state.copy(screen = screen)
 }

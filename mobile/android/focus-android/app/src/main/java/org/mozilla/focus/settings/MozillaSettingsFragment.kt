@@ -26,10 +26,7 @@ class MozillaSettingsFragment : BaseSettingsFragment(),
 
         preferenceManager.sharedPreferences.registerOnSharedPreferenceChangeListener(this)
 
-        // Update title and icons when returning to fragments.
-        val updater = activity as BaseSettingsFragment.ActionBarUpdater
-        updater.updateTitle(R.string.preference_category_mozilla)
-        updater.updateIcon(R.drawable.ic_back)
+        updateTitle(R.string.preference_category_mozilla)
     }
 
     override fun onPause() {

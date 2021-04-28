@@ -7,11 +7,6 @@ package org.mozilla.focus.autocomplete
 import android.content.Context
 import android.graphics.Color
 import android.os.Bundle
-import androidx.fragment.app.Fragment
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
-import androidx.recyclerview.widget.ItemTouchHelper
-import androidx.recyclerview.widget.ItemTouchHelper.SimpleCallback
 import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuInflater
@@ -22,6 +17,10 @@ import android.view.ViewGroup
 import android.widget.CheckBox
 import android.widget.CompoundButton
 import android.widget.TextView
+import androidx.recyclerview.widget.ItemTouchHelper
+import androidx.recyclerview.widget.ItemTouchHelper.SimpleCallback
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.fragment_autocomplete_customdomains.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -32,7 +31,10 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import mozilla.components.browser.domains.CustomDomains
 import org.mozilla.focus.R
-import org.mozilla.focus.settings.BaseSettingsFragment
+import org.mozilla.focus.ext.requireComponents
+import org.mozilla.focus.settings.BaseSettingsLikeFragment
+import org.mozilla.focus.state.AppAction
+import org.mozilla.focus.state.Screen
 import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.utils.ViewUtils
 import java.util.Collections
@@ -42,7 +44,7 @@ typealias DomainFormatter = (String) -> String
 /**
  * Fragment showing settings UI listing all custom autocomplete domains entered by the user.
  */
-open class AutocompleteListFragment : Fragment(), CoroutineScope {
+open class AutocompleteListFragment : BaseSettingsLikeFragment(), CoroutineScope {
     private var job = Job()
     override val coroutineContext: CoroutineContext
         get() = job + Dispatchers.Main
@@ -119,6 +121,8 @@ open class AutocompleteListFragment : Fragment(), CoroutineScope {
             inflater.inflate(R.layout.fragment_autocomplete_customdomains, container, false)
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
         domainList.layoutManager = LinearLayoutManager(activity, RecyclerView.VERTICAL, false)
         domainList.adapter = DomainListAdapter()
         domainList.setHasFixedSize(true)
@@ -135,10 +139,7 @@ open class AutocompleteListFragment : Fragment(), CoroutineScope {
             job = Job()
         }
 
-        (activity as BaseSettingsFragment.ActionBarUpdater).apply {
-            updateTitle(R.string.preference_autocomplete_subitem_manage_sites)
-            updateIcon(R.drawable.ic_back)
-        }
+        updateTitle(R.string.preference_autocomplete_subitem_manage_sites)
 
         (domainList.adapter as DomainListAdapter).refresh(requireActivity()) {
             activity?.invalidateOptionsMenu()
@@ -166,12 +167,9 @@ open class AutocompleteListFragment : Fragment(), CoroutineScope {
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean = when (item.itemId) {
         R.id.remove -> {
-            @Suppress("DEPRECATION")
-            requireFragmentManager()
-                    .beginTransaction()
-                    .replace(R.id.container, AutocompleteRemoveFragment())
-                    .addToBackStack(null)
-                    .commit()
+            requireComponents.appStore.dispatch(
+                AppAction.OpenSettings(page = Screen.Settings.Page.SearchAutocompleteRemove)
+            )
             true
         }
         else -> super.onOptionsItemSelected(item)
@@ -318,12 +316,9 @@ open class AutocompleteListFragment : Fragment(), CoroutineScope {
     ) : RecyclerView.ViewHolder(itemView) {
         init {
             itemView.setOnClickListener {
-                @Suppress("DEPRECATION")
-                fragment.requireFragmentManager()
-                        .beginTransaction()
-                        .replace(R.id.container, AutocompleteAddFragment())
-                        .addToBackStack(null)
-                        .commit()
+                fragment.requireComponents.appStore.dispatch(
+                    AppAction.OpenSettings(page = Screen.Settings.Page.SearchAutocompleteAdd)
+                )
             }
         }
 

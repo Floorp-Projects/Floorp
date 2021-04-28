@@ -6,15 +6,19 @@ package org.mozilla.focus.settings
 
 import android.os.Bundle
 import android.view.View
-import android.widget.ListView
 import androidx.annotation.StringRes
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
+import androidx.fragment.app.Fragment
 import androidx.preference.PreferenceFragmentCompat
 import org.mozilla.focus.R
 import org.mozilla.focus.utils.StatusBarUtils
 
-abstract class BaseSettingsFragment : PreferenceFragmentCompat() {
+/**
+ * Similar behavior as [BaseSettingsFragment], but doesn't extend [PreferenceFragmentCompat] and is
+ * a regular [Fragment] instead.
+ */
+open class BaseSettingsLikeFragment : Fragment() {
     fun updateTitle(title: String) {
         (requireActivity() as AppCompatActivity).supportActionBar?.title = title
     }
@@ -25,9 +29,6 @@ abstract class BaseSettingsFragment : PreferenceFragmentCompat() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
-        val list = view.findViewById<View>(android.R.id.list) as? ListView
-        list?.divider = null
 
         val statusBarView = view.findViewById<View>(R.id.status_bar_background)
         StatusBarUtils.getStatusBarHeight(statusBarView) { statusBarHeight ->

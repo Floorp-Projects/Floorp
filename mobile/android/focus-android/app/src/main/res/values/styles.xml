@@ -13,7 +13,13 @@
         <item name="popupMenuStyle">@style/PopupMenu</item>
 
         <item name="android:statusBarColor">@android:color/transparent</item>
-        <item name="preferenceTheme">@style/PreferenceThemeOverlay.v14.Material</item>
+        <item name="preferenceTheme">@style/PreferenceTheme</item>
+    </style>
+
+    <style name="PreferenceTheme" parent="PreferenceThemeOverlay.v14.Material">
+        <item name="android:layout">@layout/fragment_settings</item>
+        <item name="android:listPreferredItemPaddingLeft">@dimen/activity_horizontal_margin</item>
+        <item name="android:listPreferredItemPaddingRight">@dimen/activity_horizontal_margin</item>
     </style>
 
     <style name="DialogTitleStyle" parent="TextAppearance.AppCompat.Title">

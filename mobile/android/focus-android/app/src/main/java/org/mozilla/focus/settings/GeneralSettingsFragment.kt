@@ -6,8 +6,6 @@ package org.mozilla.focus.settings
 
 import android.content.SharedPreferences
 import android.os.Bundle
-import androidx.preference.ListPreference
-import androidx.preference.Preference
 import android.text.TextUtils
 import android.view.Gravity
 import android.view.ViewGroup
@@ -16,8 +14,9 @@ import android.view.WindowManager.LayoutParams.MATCH_PARENT
 import android.view.WindowManager.LayoutParams.WRAP_CONTENT
 import android.widget.FrameLayout
 import android.widget.ProgressBar
+import androidx.preference.ListPreference
+import androidx.preference.Preference
 import org.mozilla.focus.R
-import org.mozilla.focus.activity.SettingsActivity
 import org.mozilla.focus.locale.LocaleManager
 import org.mozilla.focus.locale.Locales
 import org.mozilla.focus.telemetry.TelemetryWrapper
@@ -43,10 +42,7 @@ class GeneralSettingsFragment : BaseSettingsFragment(),
 
         preferenceManager.sharedPreferences.registerOnSharedPreferenceChangeListener(this)
 
-        // Update title and icons when returning to fragments.
-        val updater = activity as BaseSettingsFragment.ActionBarUpdater
-        updater.updateTitle(R.string.preference_category_general)
-        updater.updateIcon(R.drawable.ic_back)
+        updateTitle(R.string.preference_category_general)
     }
 
     override fun onPause() {
@@ -82,21 +78,7 @@ class GeneralSettingsFragment : BaseSettingsFragment(),
             }
             localeManager.updateConfiguration(activity, locale)
 
-            // Manually notify SettingsActivity of locale changes (in most other cases activities
-            // will detect changes in onActivityResult(), but that doesn't apply to SettingsActivity).
-            requireActivity().onConfigurationChanged(requireActivity().resources.configuration)
-
-            // And ensure that the calling LocaleAware*Activity knows that the locale changed:
-            requireActivity().setResult(SettingsActivity.ACTIVITY_RESULT_LOCALE_CHANGED)
-
-            // The easiest way to ensure we update the language is by replacing the entire fragment
-            // We have to pop the main Settings Fragment as well and then navigate here
-            @Suppress("DEPRECATION")
-            requireFragmentManager().popBackStack()
-            @Suppress("DEPRECATION")
-            requireFragmentManager().beginTransaction()
-                .replace(R.id.container, SettingsFragment.newInstance()).commit()
-            navigateToFragment(GeneralSettingsFragment.newInstance())
+            requireActivity().recreate()
         }
     }
 

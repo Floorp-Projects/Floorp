@@ -4,7 +4,6 @@
 
 package org.mozilla.focus.tips
 
-import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -12,8 +11,9 @@ import android.os.Build
 import mozilla.components.browser.state.state.SessionState
 import org.mozilla.focus.R
 import org.mozilla.focus.ext.components
-import org.mozilla.focus.locale.LocaleAwareAppCompatActivity
 import org.mozilla.focus.locale.LocaleManager
+import org.mozilla.focus.state.AppAction
+import org.mozilla.focus.state.Screen
 import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.utils.Browsers
 import org.mozilla.focus.utils.Settings
@@ -201,8 +201,9 @@ class Tip(val id: Int, val text: String, val shouldDisplay: () -> Boolean, val d
             }
 
             val deepLinkDisableTips = {
-                val activity = context as Activity
-                (activity as LocaleAwareAppCompatActivity).openMozillaSettings()
+                context.components.appStore.dispatch(AppAction.OpenSettings(
+                    page = Screen.Settings.Page.Mozilla
+                ))
                 TelemetryWrapper.pressTipEvent(id)
             }
 

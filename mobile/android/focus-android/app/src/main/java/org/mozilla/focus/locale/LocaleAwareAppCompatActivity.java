@@ -13,7 +13,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.view.View;
 import android.view.WindowManager;
 
-import org.mozilla.focus.activity.SettingsActivity;
 import org.mozilla.focus.utils.Settings;
 
 import java.util.Locale;
@@ -81,42 +80,11 @@ public abstract class LocaleAwareAppCompatActivity
         }
     }
 
-    /**
-     * Open the app preferences. Activities must not open SettingsActivity themselves, or any
-     * locale changes performed by SettingsActivity might not be correctly detected.
-     */
-    public void openPreferences() {
-        final Intent settingsIntent = new Intent(this, SettingsActivity.class);
-        startActivityForResult(settingsIntent, 0);
-    }
-
-    public void openPrivacySecuritySettings() {
-        final Intent settingsIntent = new Intent(this, SettingsActivity.class);
-        settingsIntent.putExtra(SettingsActivity.SHOULD_OPEN_PRIVACY_EXTRA, true);
-        startActivityForResult(settingsIntent, 0);
-    }
-
-    public void openGeneralSettings() {
-        final Intent settingsIntent = new Intent(this, SettingsActivity.class);
-        settingsIntent.putExtra(SettingsActivity.SHOULD_OPEN_GENERAL_EXTRA, true);
-        startActivityForResult(settingsIntent, 0);
-    }
-
-    public void openMozillaSettings() {
-        final Intent settingsIntent = new Intent(this, SettingsActivity.class);
-        settingsIntent.putExtra(SettingsActivity.SHOULD_OPEN_MOZILLA_EXTRA, true);
-        startActivityForResult(settingsIntent, 0);
-    }
-
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
         onConfigurationChanged(getResources().getConfiguration());
-
-        if (resultCode == SettingsActivity.ACTIVITY_RESULT_LOCALE_CHANGED) {
-            applyLocale();
-        }
     }
 
     @Override

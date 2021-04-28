@@ -6,11 +6,27 @@ package org.mozilla.focus.navigation
 
 import org.mozilla.focus.R
 import org.mozilla.focus.activity.MainActivity
+import org.mozilla.focus.autocomplete.AutocompleteAddFragment
+import org.mozilla.focus.autocomplete.AutocompleteListFragment
+import org.mozilla.focus.autocomplete.AutocompleteRemoveFragment
+import org.mozilla.focus.autocomplete.AutocompleteSettingsFragment
 import org.mozilla.focus.biometrics.BiometricAuthenticationDialogFragment
+import org.mozilla.focus.exceptions.ExceptionsListFragment
+import org.mozilla.focus.exceptions.ExceptionsRemoveFragment
 import org.mozilla.focus.fragment.BrowserFragment
 import org.mozilla.focus.fragment.FirstrunFragment
 import org.mozilla.focus.fragment.UrlInputFragment
 import org.mozilla.focus.session.ui.TabSheetFragment
+import org.mozilla.focus.settings.AdvancedSettingsFragment
+import org.mozilla.focus.settings.GeneralSettingsFragment
+import org.mozilla.focus.settings.InstalledSearchEnginesSettingsFragment
+import org.mozilla.focus.settings.ManualAddSearchEngineSettingsFragment
+import org.mozilla.focus.settings.MozillaSettingsFragment
+import org.mozilla.focus.settings.PrivacySecuritySettingsFragment
+import org.mozilla.focus.settings.RemoveSearchEnginesSettingsFragment
+import org.mozilla.focus.settings.SearchSettingsFragment
+import org.mozilla.focus.settings.SettingsFragment
+import org.mozilla.focus.state.Screen
 import org.mozilla.focus.utils.ViewUtils
 
 /**
@@ -147,5 +163,37 @@ class MainActivityNavigation(
 
         BiometricAuthenticationDialogFragment()
             .show(transaction, BiometricAuthenticationDialogFragment.FRAGMENT_TAG)
+    }
+
+    @Suppress("ComplexMethod")
+    fun settings(page: Screen.Settings.Page) {
+        val fragment = when (page) {
+            Screen.Settings.Page.Start -> SettingsFragment()
+            Screen.Settings.Page.General -> GeneralSettingsFragment()
+            Screen.Settings.Page.Privacy -> PrivacySecuritySettingsFragment()
+            Screen.Settings.Page.Search -> SearchSettingsFragment()
+            Screen.Settings.Page.Advanced -> AdvancedSettingsFragment()
+            Screen.Settings.Page.Mozilla -> MozillaSettingsFragment()
+            Screen.Settings.Page.PrivacyExceptions -> ExceptionsListFragment()
+            Screen.Settings.Page.PrivacyExceptionsRemove -> ExceptionsRemoveFragment()
+            Screen.Settings.Page.SearchList -> InstalledSearchEnginesSettingsFragment()
+            Screen.Settings.Page.SearchRemove -> RemoveSearchEnginesSettingsFragment()
+            Screen.Settings.Page.SearchAdd -> ManualAddSearchEngineSettingsFragment()
+            Screen.Settings.Page.SearchAutocomplete -> AutocompleteSettingsFragment()
+            Screen.Settings.Page.SearchAutocompleteList -> AutocompleteListFragment()
+            Screen.Settings.Page.SearchAutocompleteAdd -> AutocompleteAddFragment()
+            Screen.Settings.Page.SearchAutocompleteRemove -> AutocompleteRemoveFragment()
+        }
+
+        val tag = "settings_" + fragment::class.java.simpleName
+
+        val fragmentManager = activity.supportFragmentManager
+        if (fragmentManager.findFragmentByTag(tag) != null) {
+            return
+        }
+
+        fragmentManager.beginTransaction()
+            .replace(R.id.container, fragment, tag)
+            .commit()
     }
 }

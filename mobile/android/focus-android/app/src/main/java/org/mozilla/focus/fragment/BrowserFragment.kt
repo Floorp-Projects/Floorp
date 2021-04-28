@@ -70,16 +70,15 @@ import org.mozilla.focus.browser.binding.UrlBinding
 import org.mozilla.focus.browser.integration.FindInPageIntegration
 import org.mozilla.focus.browser.integration.FullScreenIntegration
 import org.mozilla.focus.downloads.DownloadService
-import org.mozilla.focus.ext.components
 import org.mozilla.focus.ext.ifCustomTab
 import org.mozilla.focus.ext.isCustomTab
 import org.mozilla.focus.ext.isSearch
 import org.mozilla.focus.ext.requireComponents
-import org.mozilla.focus.locale.LocaleAwareAppCompatActivity
 import org.mozilla.focus.locale.LocaleAwareFragment
 import org.mozilla.focus.open.OpenWithFragment
 import org.mozilla.focus.popup.PopupUtils
 import org.mozilla.focus.state.AppAction
+import org.mozilla.focus.state.Screen
 import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.utils.AppPermissionCodes.REQUEST_CODE_DOWNLOAD_PERMISSIONS
 import org.mozilla.focus.utils.AppPermissionCodes.REQUEST_CODE_PROMPT_PERMISSIONS
@@ -756,7 +755,11 @@ class BrowserFragment :
                 shareCurrentUrl()
             }
 
-            R.id.settings -> (activity as LocaleAwareAppCompatActivity).openPreferences()
+            R.id.settings -> {
+                requireComponents.appStore.dispatch(
+                    AppAction.OpenSettings(page = Screen.Settings.Page.Start)
+                )
+            }
 
             R.id.open_default -> {
                 val browsers = Browsers(requireContext(), tab.content.url)

@@ -28,10 +28,8 @@ class RemoveSearchEnginesSettingsFragment : BaseSettingsFragment() {
 
     override fun onResume() {
         super.onResume()
-        getActionBarUpdater().apply {
-            updateTitle(R.string.preference_search_remove_title)
-            updateIcon(R.drawable.ic_back)
-        }
+
+        updateTitle(R.string.preference_search_remove_title)
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {

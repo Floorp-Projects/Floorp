@@ -21,10 +21,7 @@ class AdvancedSettingsFragment : BaseSettingsFragment(),
 
         preferenceManager.sharedPreferences.registerOnSharedPreferenceChangeListener(this)
 
-        // Update title and icons when returning to fragments.
-        val updater = activity as BaseSettingsFragment.ActionBarUpdater
-        updater.updateTitle(R.string.preference_category_advanced)
-        updater.updateIcon(R.drawable.ic_back)
+        updateTitle(R.string.preference_category_advanced)
     }
 
     override fun onPause() {

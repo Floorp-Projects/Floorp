@@ -66,4 +66,29 @@ sealed class Screen {
      * The application is locked (and requires unlocking).
      */
     object Locked : Screen()
+
+    data class Settings(
+        val page: Page = Page.Start
+    ) : Screen() {
+        enum class Page {
+            Start,
+
+            General,
+            Privacy,
+            Search,
+            Advanced,
+            Mozilla,
+
+            PrivacyExceptions,
+            PrivacyExceptionsRemove,
+
+            SearchList,
+            SearchRemove,
+            SearchAdd,
+            SearchAutocomplete,
+            SearchAutocompleteList,
+            SearchAutocompleteAdd,
+            SearchAutocompleteRemove,
+        }
+    }
 }

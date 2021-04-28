@@ -8,6 +8,7 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.util.AttributeSet
+import android.view.MenuItem
 import android.view.View
 import androidx.preference.PreferenceManager
 import mozilla.components.concept.engine.EngineView
@@ -24,6 +25,8 @@ import org.mozilla.focus.navigation.Navigator
 import org.mozilla.focus.session.IntentProcessor
 import org.mozilla.focus.session.ui.TabSheetFragment
 import org.mozilla.focus.shortcut.HomeScreen
+import org.mozilla.focus.state.AppAction
+import org.mozilla.focus.state.Screen
 import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.utils.Settings
 import org.mozilla.focus.utils.SupportUtils
@@ -113,7 +116,9 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
         val intent = SafeIntent(unsafeIntent)
 
         if (intent.dataString.equals(SupportUtils.OPEN_WITH_DEFAULT_BROWSER_URL)) {
-            openGeneralSettings()
+            components.appStore.dispatch(AppAction.OpenSettings(
+                page = Screen.Settings.Page.General
+            ))
             super.onNewIntent(unsafeIntent)
             return
         }
@@ -188,7 +193,28 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
             return
         }
 
+        val appStore = components.appStore
+        if (appStore.state.screen is Screen.Settings) {
+            // When on a settings screen we want the same behavior as navigating "up" via the toolbar
+            // and therefore dispatch the `NavigateUp` action on the app store.
+            val selectedTabId = components.store.state.selectedTabId
+            appStore.dispatch(AppAction.NavigateUp(selectedTabId))
+            return
+        }
+
         super.onBackPressed()
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        if (item.itemId == android.R.id.home) {
+            // We forward an up action to the app store with the NavigateUp action to let the reducer
+            // decide to show a different screen.
+            val selectedTabId = components.store.state.selectedTabId
+            components.appStore.dispatch(AppAction.NavigateUp(selectedTabId))
+            return true
+        }
+
+        return super.onOptionsItemSelected(item)
     }
 
     // Handles the edge case of a user removing all enrolled prints while auth was enabled

@@ -53,12 +53,7 @@ class ManualAddSearchEngineSettingsFragment : BaseSettingsFragment() {
     override fun onResume() {
         super.onResume()
 
-        // We've checked that this cast is legal in super.onAttach.
-        (activity as? ActionBarUpdater)?.updateIcon(R.drawable.ic_close)
-
-        val updater = getActionBarUpdater()
-        updater.updateTitle(R.string.action_option_add_search_engine)
-        updater.updateIcon(R.drawable.ic_close)
+        updateTitle(R.string.action_option_add_search_engine)
     }
 
     override fun onPause() {

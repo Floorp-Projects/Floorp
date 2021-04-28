@@ -8,6 +8,9 @@ package org.mozilla.focus.settings
 import android.content.SharedPreferences
 import android.os.Bundle
 import org.mozilla.focus.R
+import org.mozilla.focus.ext.requireComponents
+import org.mozilla.focus.state.AppAction
+import org.mozilla.focus.state.Screen
 import org.mozilla.focus.telemetry.TelemetryWrapper
 
 class SettingsFragment : BaseSettingsFragment(), SharedPreferences.OnSharedPreferenceChangeListener {
@@ -21,10 +24,7 @@ class SettingsFragment : BaseSettingsFragment(), SharedPreferences.OnSharedPrefe
 
         preferenceManager.sharedPreferences.registerOnSharedPreferenceChangeListener(this)
 
-        // Update title and icons when returning to fragments.
-        val updater = activity as BaseSettingsFragment.ActionBarUpdater?
-        updater!!.updateTitle(R.string.menu_settings)
-        updater.updateIcon(R.drawable.ic_back)
+        updateTitle(R.string.menu_settings)
     }
 
     override fun onPause() {
@@ -35,18 +35,18 @@ class SettingsFragment : BaseSettingsFragment(), SharedPreferences.OnSharedPrefe
     override fun onPreferenceTreeClick(preference: androidx.preference.Preference): Boolean {
         val resources = resources
 
-        when {
-            preference.key == resources.getString(R.string
-                .pref_key_general_screen) -> navigateToFragment(GeneralSettingsFragment())
-            preference.key == resources.getString(R.string
-                    .pref_key_privacy_security_screen) -> navigateToFragment(PrivacySecuritySettingsFragment())
-            preference.key == resources.getString(R.string
-                    .pref_key_search_screen) -> navigateToFragment(SearchSettingsFragment())
-            preference.key == resources.getString(R.string
-                    .pref_key_advanced_screen) -> navigateToFragment(AdvancedSettingsFragment())
-            preference.key == resources.getString(R.string
-                    .pref_key_mozilla_screen) -> navigateToFragment(MozillaSettingsFragment())
+        val page = when (preference.key) {
+            resources.getString(R.string.pref_key_general_screen) -> Screen.Settings.Page.General
+            resources.getString(R.string.pref_key_privacy_security_screen) -> Screen.Settings.Page.Privacy
+            resources.getString(R.string.pref_key_search_screen) -> Screen.Settings.Page.Search
+            resources.getString(R.string.pref_key_advanced_screen) -> Screen.Settings.Page.Advanced
+            resources.getString(R.string.pref_key_mozilla_screen) -> Screen.Settings.Page.Mozilla
+            else -> throw IllegalStateException("Unknown preference: ${preference.key}")
         }
+
+        requireComponents.appStore.dispatch(
+            AppAction.OpenSettings(page)
+        )
 
         return super.onPreferenceTreeClick(preference)
     }
@@ -56,6 +56,7 @@ class SettingsFragment : BaseSettingsFragment(), SharedPreferences.OnSharedPrefe
     }
 
     companion object {
+        const val TAG = "settings"
 
         fun newInstance(): SettingsFragment {
             return SettingsFragment()

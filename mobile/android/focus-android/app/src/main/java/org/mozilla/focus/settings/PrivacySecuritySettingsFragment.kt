@@ -11,8 +11,9 @@ import androidx.preference.Preference
 import androidx.preference.SwitchPreferenceCompat
 import org.mozilla.focus.R
 import org.mozilla.focus.biometrics.Biometrics
-import org.mozilla.focus.exceptions.ExceptionsListFragment
 import org.mozilla.focus.ext.requireComponents
+import org.mozilla.focus.state.AppAction
+import org.mozilla.focus.state.Screen
 import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.widget.CookiesPreference
 
@@ -49,9 +50,7 @@ class PrivacySecuritySettingsFragment : BaseSettingsFragment(),
         preferenceManager.sharedPreferences.registerOnSharedPreferenceChangeListener(this)
 
         // Update title and icons when returning to fragments.
-        val updater = activity as BaseSettingsFragment.ActionBarUpdater
-        updater.updateTitle(R.string.preference_privacy_and_security_header)
-        updater.updateIcon(R.drawable.ic_back)
+        updateTitle(R.string.preference_privacy_and_security_header)
     }
 
     override fun onPause() {
@@ -93,7 +92,9 @@ class PrivacySecuritySettingsFragment : BaseSettingsFragment(),
         when (preference.key) {
             resources.getString(R.string.pref_key_screen_exceptions) -> {
                 TelemetryWrapper.openExceptionsListSetting()
-                navigateToFragment(ExceptionsListFragment())
+                requireComponents.appStore.dispatch(
+                    AppAction.OpenSettings(page = Screen.Settings.Page.PrivacyExceptions)
+                )
             }
         }
         return super.onPreferenceTreeClick(preference)

@@ -13,7 +13,6 @@ import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.launch
 import org.mozilla.focus.R
 import org.mozilla.focus.ext.components
-import org.mozilla.focus.settings.BaseSettingsFragment
 import org.mozilla.focus.telemetry.TelemetryWrapper
 
 class ExceptionsRemoveFragment : ExceptionsListFragment() {
@@ -50,8 +49,6 @@ class ExceptionsRemoveFragment : ExceptionsListFragment() {
     override fun onResume() {
         super.onResume()
 
-        val updater = activity as BaseSettingsFragment.ActionBarUpdater
-        updater.updateTitle(R.string.preference_autocomplete_title_remove)
-        updater.updateIcon(R.drawable.ic_back)
+        updateTitle(R.string.preference_autocomplete_title_remove)
     }
 }

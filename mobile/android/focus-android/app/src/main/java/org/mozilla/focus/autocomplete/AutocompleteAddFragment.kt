@@ -6,7 +6,6 @@ package org.mozilla.focus.autocomplete
 
 import android.content.Context
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuInflater
@@ -22,7 +21,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import mozilla.components.browser.domains.CustomDomains
 import org.mozilla.focus.R
-import org.mozilla.focus.settings.BaseSettingsFragment
+import org.mozilla.focus.settings.BaseSettingsLikeFragment
 import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.utils.ViewUtils
 import kotlin.coroutines.CoroutineContext
@@ -30,7 +29,7 @@ import kotlin.coroutines.CoroutineContext
 /**
  * Fragment showing settings UI to add custom autocomplete domains.
  */
-class AutocompleteAddFragment : Fragment(), CoroutineScope {
+class AutocompleteAddFragment : BaseSettingsLikeFragment(), CoroutineScope {
     private var job = Job()
     override val coroutineContext: CoroutineContext
         get() = job + Dispatchers.Main
@@ -47,15 +46,14 @@ class AutocompleteAddFragment : Fragment(), CoroutineScope {
             job = Job()
         }
 
-        val updater = activity as BaseSettingsFragment.ActionBarUpdater
-        updater.updateTitle(R.string.preference_autocomplete_title_add)
-        updater.updateIcon(R.drawable.ic_close)
+        updateTitle(R.string.preference_autocomplete_title_add)
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View =
             inflater.inflate(R.layout.fragment_autocomplete_add_domain, container, false)
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
         ViewUtils.showKeyboard(domainView)
     }
 

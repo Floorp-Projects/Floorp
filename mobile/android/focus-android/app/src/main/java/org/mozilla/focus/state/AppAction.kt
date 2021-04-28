@@ -65,6 +65,10 @@ sealed class AppAction : Action {
      */
     data class Unlock(val tabId: String?) : AppAction()
 
+    data class OpenSettings(val page: Screen.Settings.Page) : AppAction()
+
+    data class NavigateUp(val tabId: String?) : AppAction()
+
     /**
      * Forces showing the first run screen (for tests).
      */
