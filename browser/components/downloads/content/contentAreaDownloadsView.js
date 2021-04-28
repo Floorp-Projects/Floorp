@@ -15,7 +15,10 @@ var ContentAreaDownloadsView = {
       "InitialDownloadsLoaded",
       () => {
         // Set focus to Downloads list once it is created
-        document.getElementById("downloadsRichListBox").focus();
+        // And prevent it from showing the focus ring around the richlistbox (Bug 1702694)
+        document
+          .getElementById("downloadsRichListBox")
+          .focus({ preventFocusRing: true });
       },
       { once: true }
     );
