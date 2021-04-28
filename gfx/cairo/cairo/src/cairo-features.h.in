@@ -51,10 +51,6 @@
 # define cairo_public
 #endif
 
-#define CAIRO_VERSION_MAJOR 1
-#define CAIRO_VERSION_MINOR 9
-#define CAIRO_VERSION_MICRO 5
-
 @PS_SURFACE_FEATURE@
 
 @PDF_SURFACE_FEATURE@
