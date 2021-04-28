@@ -30,8 +30,8 @@ XPCOMUtils.defineLazyGetter(this, "gFluentStrings", function() {
 
 XPCOMUtils.defineLazyPreferenceGetter(
   this,
-  "gProtonDoorhangersEnabled",
-  "browser.proton.doorhangers.enabled",
+  "gProtonEnabled",
+  "browser.proton.enabled",
   false
 );
 
@@ -246,7 +246,7 @@ class EncryptedMediaParent extends JSWindowActorParent {
         aBrowser.ownerGlobal.openPreferences("general-drm");
       },
       dismiss: true,
-      disableHighlight: gProtonDoorhangersEnabled,
+      disableHighlight: gProtonEnabled,
     };
 
     let secondaryActions = [
