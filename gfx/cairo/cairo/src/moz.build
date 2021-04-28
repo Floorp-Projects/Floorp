@@ -25,8 +25,12 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] not in ('cocoa', 'uikit'):
         'cairo-base85-stream.c',
         'cairo-cff-subset.c',
         'cairo-deflate-stream.c',
+        'cairo-pdf-interchange.c',
         'cairo-pdf-operators.c',
+        'cairo-pdf-shading.c',
         'cairo-pdf-surface.c',
+        'cairo-tag-attributes.c',
+        'cairo-tag-stack.c',
         'cairo-truetype-subset.c',
         # cairo-type1-subset.c should be here, but it's only supported on freetype platforms
         'cairo-type1-fallback.c',
@@ -39,17 +43,17 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
         'cairo-win32.h',
     ]
     SOURCES += [
-        'cairo-dwrite-font.cpp',
+        'win32/cairo-dwrite-font.cpp',
     ]
     SOURCES += [
-        'cairo-win32-font.c',
-        'cairo-win32-surface.c',
+        'win32/cairo-win32-font.c',
+        'win32/cairo-win32-surface.c',
     ]
     DEFINES['DISABLE_SOME_FLOATING_POINT'] = True
     DEFINES['CAIRO_WIN32_STATIC_BUILD'] = True
     if CONFIG['NS_PRINTING']:
         SOURCES += [
-            'cairo-win32-printing-surface.c',
+            'win32/cairo-win32-printing-surface.c',
         ]
     else:
         DEFINES['CAIRO_OMIT_WIN32_PRINTING'] = True
@@ -84,10 +88,16 @@ if CONFIG['MOZ_X11']:
         'cairo-xlib.h',
     ]
     SOURCES += [
+        'cairo-xlib-core-compositor.c',
         'cairo-xlib-display.c',
+        'cairo-xlib-fallback-compositor.c',
+        'cairo-xlib-render-compositor.c',
         'cairo-xlib-screen.c',
+        'cairo-xlib-source.c',
+        'cairo-xlib-surface-shm.c',
         'cairo-xlib-surface.c',
         'cairo-xlib-visual.c',
+        'cairo-xlib-xcb-surface.c',
     ]
 
 if CONFIG['MOZ_ENABLE_CAIRO_FT']:
@@ -96,6 +106,7 @@ if CONFIG['MOZ_ENABLE_CAIRO_FT']:
     ]
     SOURCES += [
         'cairo-ft-font.c',
+        'cairo-type1-glyph-names.c',
         'cairo-type1-subset.c',
     ]
 
@@ -103,7 +114,18 @@ SOURCES += [
     'cairo-bentley-ottmann-rectangular.c', # redefinition of '_cairo_bo_trap'
     'cairo-bentley-ottmann-rectilinear.c', # redefinition of '_cairo_bo_trap'
     'cairo-bentley-ottmann.c', # redefinition of '_cairo_bo_trap'
+    'cairo-boxes-intersect.c', # a bunch of redefinitions
+    'cairo-clip-surface.c', #  redefinition of '_cairo_path_fixed_add_box'
+    'cairo-image-source.c', #  redefinition of 'fill'
+    'cairo-mask-compositor.c', #  redefinition of 'fill'
+    'cairo-path-stroke-traps.c', #  redefinition of 'stroker'
+    'cairo-path-stroke-tristrip.c', #  redefinition of 'stroker'
+    'cairo-polygon-intersect.c',  #  redefinition of 'edge_compare_for_y_against_x'
+    'cairo-polygon-reduce.c',  #  redefinition of 'edge_compare_for_y_against_x'
+    'cairo-rectangular-scan-converter.c', #  redefinition of '_pqueue'
     'cairo-surface-wrapper.c', #  redefinition of '_copy_transformed_pattern'
+    'cairo-tor-scan-converter.c', #  redefinition of 'struct cell'
+    'cairo-traps-compositor.c', #  redefinition of 'is_recording_pattern'
 ]
 
 UNIFIED_SOURCES += [
@@ -115,11 +137,20 @@ UNIFIED_SOURCES += [
     'cairo-botor-scan-converter.c',
     'cairo-boxes.c',
     'cairo-cache.c',
+    'cairo-clip-boxes.c',
+    'cairo-clip-polygon.c',
+    'cairo-clip-region.c',
     'cairo-clip.c',
     'cairo-color.c',
     'cairo-composite-rectangles.c',
+    'cairo-compositor.c',
+    'cairo-contour.c',
+    'cairo-damage.c',
     'cairo-debug.c',
+    'cairo-default-context.c',
     'cairo-device.c',
+    'cairo-error.c',
+    'cairo-fallback-compositor.c',
     'cairo-fixed.c',
     'cairo-font-face-twin-data.c',
     'cairo-font-face-twin.c',
@@ -130,12 +161,17 @@ UNIFIED_SOURCES += [
     'cairo-gstate.c',
     'cairo-hash.c',
     'cairo-hull.c',
+    'cairo-image-compositor.c',
     'cairo-image-info.c',
     'cairo-image-surface.c',
+    'cairo-line.c',
     'cairo-lzw.c',
     'cairo-matrix.c',
+    'cairo-mesh-pattern-rasterizer.c',
     'cairo-misc.c',
+    'cairo-mono-scan-converter.c',
     'cairo-mutex.c',
+    'cairo-no-compositor.c',
     'cairo-observer.c',
     'cairo-output-stream.c',
     'cairo-paginated-surface.c',
@@ -143,20 +179,25 @@ UNIFIED_SOURCES += [
     'cairo-path-fill.c',
     'cairo-path-fixed.c',
     'cairo-path-in-fill.c',
+    'cairo-path-stroke-boxes.c',
+    'cairo-path-stroke-polygon.c',
     'cairo-path-stroke.c',
     'cairo-path.c',
     'cairo-pattern.c',
     'cairo-pen.c',
     'cairo-polygon.c',
+    'cairo-raster-source-pattern.c',
     'cairo-recording-surface.c',
     'cairo-rectangle.c',
-    'cairo-rectangular-scan-converter.c',
     'cairo-region.c',
     'cairo-scaled-font-subsets.c',
     'cairo-scaled-font.c',
+    'cairo-shape-mask-compositor.c',
     'cairo-slope.c',
+    'cairo-spans-compositor.c',
     'cairo-spans.c',
     'cairo-spline.c',
+    'cairo-stroke-dash.c',
     'cairo-stroke-style.c',
     'cairo-surface-clipper.c',
     'cairo-surface-fallback.c',
@@ -165,9 +206,10 @@ UNIFIED_SOURCES += [
     'cairo-surface-subsurface.c',
     'cairo-surface.c',
     'cairo-tee-surface.c',
-    'cairo-tor-scan-converter.c',
+    'cairo-tor22-scan-converter.c',
     'cairo-toy-font-face.c',
     'cairo-traps.c',
+    'cairo-tristrip.c',
     'cairo-unicode.c',
     'cairo-user-font.c',
     'cairo-version.c',
