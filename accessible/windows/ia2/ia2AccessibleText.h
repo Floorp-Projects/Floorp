@@ -126,6 +126,7 @@ class ia2AccessibleText : public IAccessibleText {
   HRESULT GetModifiedText(bool aGetInsertedText, IA2TextSegment* aNewText);
   AccessibleTextBoundary GetGeckoTextBoundary(
       enum IA2TextBoundaryType coordinateType);
+  HyperTextAccessibleWrap* TextAcc();
 };
 
 }  // namespace a11y
