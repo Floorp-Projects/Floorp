@@ -1099,7 +1099,7 @@
   font-weight: bold;
 }
 
-@media not (-moz-proton) {
+@media not (-moz-proton-doorhangers) {
 .all-tabs-item[selected] {
   box-shadow: inset 4px 0 var(--blue-40);
 }

@@ -420,6 +420,7 @@ static constexpr nsLiteralCString kMediaQueryPrefs[] = {
     "browser.proton.enabled"_ns,
     "browser.proton.contextmenus.enabled"_ns,
     "browser.proton.modals.enabled"_ns,
+    "browser.proton.doorhangers.enabled"_ns,
     "browser.proton.places-tooltip.enabled"_ns,
     "browser.theme.toolbar-theme"_ns,
 };
