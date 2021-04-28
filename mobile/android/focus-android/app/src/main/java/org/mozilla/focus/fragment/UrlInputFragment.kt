@@ -22,7 +22,7 @@ import android.webkit.URLUtil
 import android.widget.FrameLayout
 import android.widget.TextView
 import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProviders
+import androidx.lifecycle.ViewModelProvider
 import androidx.preference.PreferenceManager
 import kotlinx.android.synthetic.main.fragment_urlinput.*
 import kotlinx.android.synthetic.main.fragment_urlinput.view.*
@@ -170,7 +170,7 @@ class UrlInputFragment :
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        searchSuggestionsViewModel = ViewModelProviders.of(this).get(SearchSuggestionsViewModel::class.java)
+        searchSuggestionsViewModel = ViewModelProvider(this).get(SearchSuggestionsViewModel::class.java)
 
         PreferenceManager.getDefaultSharedPreferences(context)
             .registerOnSharedPreferenceChangeListener(this)

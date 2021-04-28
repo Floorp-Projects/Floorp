@@ -6,7 +6,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:mozac="http://schemas.android.com/apk/res-auto">
+    xmlns:mozac="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <LinearLayout
         android:id="@+id/browser_container"
@@ -30,6 +31,7 @@
             android:clipChildren="false">
 
             <mozilla.components.concept.engine.EngineView
+                tools:ignore="Instantiatable"
                 android:id="@+id/webview"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"

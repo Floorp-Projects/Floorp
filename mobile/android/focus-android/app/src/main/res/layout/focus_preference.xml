@@ -18,6 +18,7 @@
   ~ limitations under the License
   -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:minHeight="?android:attr/listPreferredItemHeightSmall"
@@ -36,9 +37,9 @@
             android:layout_width="24dp"
             android:layout_height="24dp"
             android:layout_marginEnd="16dp"
-            android:tint="@color/colorSettingsTint"
             android:alpha="0.8"
-            android:importantForAccessibility="no"/>
+            android:importantForAccessibility="no"
+            app:tint="@color/colorSettingsTint" />
     </LinearLayout>
 
     <RelativeLayout
