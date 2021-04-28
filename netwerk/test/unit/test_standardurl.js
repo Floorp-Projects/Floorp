@@ -1272,6 +1272,28 @@ add_task(async function test_emptyHostWithURLType() {
   );
 });
 
+add_task(async function test_fuzz() {
+  let makeURL = str => {
+    return (
+      Cc["@mozilla.org/network/standard-url-mutator;1"]
+        .createInstance(Ci.nsIStandardURLMutator)
+        .QueryInterface(Ci.nsIURIMutator)
+        // .init(type, 80, str, "UTF-8", null)
+        .setSpec(str)
+        .finalize()
+        .QueryInterface(Ci.nsIURL)
+    );
+  };
+
+  Assert.throws(() => {
+    let url = makeURL("/");
+    url
+      .mutate()
+      .setHost("(")
+      .finalize();
+  }, /NS_ERROR_MALFORMED_URI/);
+});
+
 add_task(async function test_bug1648493() {
   let url = stringToURL("https://example.com/");
   url = url

@@ -26,6 +26,9 @@ const {
   stubPreparedMessages,
 } = require("devtools/client/webconsole/test/node/fixtures/stubs/index");
 const { MESSAGE_TYPE } = require("devtools/client/webconsole/constants");
+const {
+  createWarningGroupMessage,
+} = require("devtools/client/webconsole/utils/messages");
 
 const expect = require("expect");
 
@@ -244,6 +247,42 @@ describe("Message reducer:", () => {
       const repeat = getAllRepeatById(getState());
       expect(repeat[getFirstMessage(getState()).id]).toBe(3);
       expect(repeat[getLastMessage(getState()).id]).toBe(undefined);
+    });
+
+    it("does not increment repeat after adding similar warning group", () => {
+      const { dispatch, getState } = setupStore();
+
+      // Mocking a warning message that would create a warning group
+      const warningMessage = stubPreparedMessages.get(
+        "ReferenceError: asdf is not defined"
+      );
+      warningMessage.messageText =
+        "The resource at “https://evil.com” was blocked.";
+      warningMessage.category = "cookieBlockedPermission";
+
+      const type = MESSAGE_TYPE.CONTENT_BLOCKING_GROUP;
+      const firstMessageId = `${warningMessage.type}-${warningMessage.innerWindowID}`;
+      const message1 = createWarningGroupMessage(
+        firstMessageId,
+        type,
+        warningMessage
+      );
+      const secondMessageId = `${
+        warningMessage.type
+      }-${warningMessage.innerWindowID + 10}`;
+      const message2 = createWarningGroupMessage(
+        secondMessageId,
+        type,
+        warningMessage
+      );
+
+      dispatch(actions.messagesAdd([message1, message2]));
+
+      const messages = getAllMessagesById(getState());
+      expect(messages.size).toBe(2);
+
+      const repeat = getAllRepeatById(getState());
+      expect(Object.keys(repeat).length).toBe(0);
     });
 
     it("adds a message in response to console.clear()", () => {

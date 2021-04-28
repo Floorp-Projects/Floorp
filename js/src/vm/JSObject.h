@@ -431,10 +431,6 @@ class JSObject
   static void swap(JSContext* cx, JS::HandleObject a, JS::HandleObject b,
                    js::AutoEnterOOMUnsafeRegion& oomUnsafe);
 
- private:
-  void fixDictionaryShapeAfterSwap();
-
- public:
   /*
    * In addition to the generic object interface provided by JSObject,
    * specific types of objects may provide additional operations. To access,

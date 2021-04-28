@@ -219,6 +219,7 @@ class JSString : public js::gc::CellWithLengthAndFlags {
           const char16_t* nonInlineCharsTwoByte;      /* JSLinearString, except
                                                          JS(Fat)InlineString */
           JSString* left;                             /* JSRope */
+          JSRope* parent;                             /* Used in flattening */
         } u2;
         union {
           JSLinearString* base; /* JSDependentString */
@@ -333,6 +334,13 @@ class JSString : public js::gc::CellWithLengthAndFlags {
   // clearing this bit.
   static const uint32_t IN_STRING_TO_ATOM_CACHE = js::Bit(13);
 
+  // Flags used during rope flattening that indicate what action to perform when
+  // returning to the rope's parent rope.
+  static const uint32_t FLATTEN_VISIT_RIGHT = js::Bit(14);
+  static const uint32_t FLATTEN_FINISH_NODE = js::Bit(15);
+  static const uint32_t FLATTEN_MASK =
+      FLATTEN_VISIT_RIGHT | FLATTEN_FINISH_NODE;
+
   static const uint32_t MAX_LENGTH = JS::MaxStringLength;
 
   static const JS::Latin1Char MAX_LATIN1_CHAR = 0xff;
@@ -420,19 +428,6 @@ class JSString : public js::gc::CellWithLengthAndFlags {
 #ifdef MOZ_DEBUG
     js::AssertJSStringBufferInCorrectArena(chars);
 #endif
-  }
-
-  void setFlattenData(JSString* parent, uintptr_t flags) {
-    MOZ_ASSERT((uintptr_t(parent) & RESERVED_MASK) == 0);
-    MOZ_ASSERT((flags & ~RESERVED_MASK) == 0);
-    setTemporaryGCUnsafeData(uintptr_t(parent) | flags);
-  }
-
-  JSString* unsetFlattenData(uint32_t len, uint32_t newFlags,
-                             uintptr_t* oldFlagsOut) {
-    uintptr_t data = unsetTemporaryGCUnsafeData(len, newFlags);
-    *oldFlagsOut = data & RESERVED_MASK;
-    return reinterpret_cast<JSString*>(data & ~RESERVED_MASK);
   }
 
   // Get correct non-inline chars enum arm for given type
@@ -615,8 +610,6 @@ class JSString : public js::gc::CellWithLengthAndFlags {
   mozilla::Maybe<mozilla::Tuple<size_t, size_t>> encodeUTF8Partial(
       const JS::AutoRequireNoGC& nogc, mozilla::Span<char> buffer) const;
 
-  bool isBeingFlattened() const { return hasTempHeaderData(); }
-
  private:
   // To help avoid writing Spectre-unsafe code, we only allow MacroAssembler
   // to call the method below.
@@ -730,7 +723,7 @@ class JSRope : public JSString {
   static JSLinearString* flattenInternal(JSRope* root);
 
   template <UsingBarrier usingBarrier>
-  static void ropeBarrierDuringFlattening(JSString* str);
+  static void ropeBarrierDuringFlattening(JSRope* rope);
 
   void init(JSContext* cx, JSString* left, JSString* right, size_t length);
 
@@ -758,8 +751,13 @@ class JSRope : public JSString {
   // Returns the same value as if this were a linear string being hashed.
   [[nodiscard]] bool hash(uint32_t* outhHash) const;
 
+  // The process of flattening a rope temporarily overwrites the left pointer of
+  // interior nodes in the rope DAG with the parent pointer.
+  bool isBeingFlattened() const { return flags() & FLATTEN_MASK; }
+
   JSString* leftChild() const {
     MOZ_ASSERT(isRope());
+    MOZ_ASSERT(!isBeingFlattened());  // Flattening overwrites this field.
     return d.s.u2.left;
   }
 
