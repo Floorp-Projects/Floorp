@@ -286,8 +286,8 @@ _have_cleartype_quality (void)
 	     version_info.dwMinorVersion >= 1));	/* XP or newer */
 }
 
-static BYTE
-_get_system_quality (void)
+BYTE
+cairo_win32_get_system_text_quality (void)
 {
     BOOL font_smoothing;
     UINT smoothing_type;
@@ -354,7 +354,7 @@ _win32_scaled_font_create (LOGFONTW                   *logfont,
      *      here is the hint_metrics options.
      */
     if (options->antialias == CAIRO_ANTIALIAS_DEFAULT)
-	f->quality = _get_system_quality ();
+	f->quality = cairo_win32_get_system_text_quality ();
     else {
 	switch (options->antialias) {
 	case CAIRO_ANTIALIAS_NONE:

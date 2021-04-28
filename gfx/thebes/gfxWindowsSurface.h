@@ -25,9 +25,6 @@ class gfxWindowsSurface : public gfxASurface {
 
   explicit gfxWindowsSurface(HDC dc, uint32_t flags = 0);
 
-  // Create from a shared d3d9surface
-  explicit gfxWindowsSurface(IDirect3DSurface9* surface, uint32_t flags = 0);
-
   // Create a DIB surface
   explicit gfxWindowsSurface(const mozilla::gfx::IntSize& size,
                              gfxImageFormat imageFormat =
