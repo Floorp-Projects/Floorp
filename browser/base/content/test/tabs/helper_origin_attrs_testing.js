@@ -78,28 +78,51 @@ async function openURIInContainer(uri, win, userContextId) {
 }
 
 async function openURIInPrivateTab(uri) {
-  info(`Opening url ${uri} in a private browsing tab`);
+  info(
+    `Opening url ${
+      uri ? uri : "about:privatebrowsing"
+    } in a private browsing tab`
+  );
   let win = await BrowserTestUtils.openNewBrowserWindow({
     private: true,
+    waitForTabURL: "about:privatebrowsing",
   });
+  if (!uri) {
+    return { tab: win.gBrowser.selectedTab, uri: "about:privatebrowsing" };
+  }
   initXulFrameLoaderListenerInfo();
   win.gBrowser.addEventListener("XULFrameLoaderCreated", handleEvent);
 
   const browser = win.gBrowser.selectedTab.linkedBrowser;
   let prevRemoteType = browser.remoteType;
+  let loaded = BrowserTestUtils.browserLoaded(browser, false, uri);
   BrowserTestUtils.loadURI(browser, uri);
-  await BrowserTestUtils.browserLoaded(browser, false, uri);
+  await loaded;
   let currRemoteType = browser.remoteType;
 
   info(
     `XULFrameLoaderCreated was fired ${xulFrameLoaderCreatedListenerInfo.numCalledSoFar} time(s) for ${uri} in private tab`
   );
 
-  is(
-    xulFrameLoaderCreatedListenerInfo.numCalledSoFar,
-    currRemoteType == prevRemoteType ? 0 : 1,
-    "XULFrameLoaderCreated fired correct number of times"
-  );
+  if (
+    SpecialPowers.Services.prefs.getBoolPref("fission.bfcacheInParent") &&
+    currRemoteType == prevRemoteType &&
+    uri == "about:blank"
+  ) {
+    // about:blank page gets flagged for being eligible to go into bfcache
+    // and thus we create a new XULFrameLoader for these pages
+    is(
+      xulFrameLoaderCreatedListenerInfo.numCalledSoFar,
+      1,
+      "XULFrameLoaderCreated fired correct number of times"
+    );
+  } else {
+    is(
+      xulFrameLoaderCreatedListenerInfo.numCalledSoFar,
+      currRemoteType == prevRemoteType ? 0 : 1,
+      "XULFrameLoaderCreated fired correct number of times"
+    );
+  }
 
   win.gBrowser.removeEventListener("XULFrameLoaderCreated", handleEvent);
   return { tab: win.gBrowser.selectedTab, uri };
