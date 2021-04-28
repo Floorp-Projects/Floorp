@@ -70,15 +70,6 @@ ExtensionPreferencesManager.addSetting("contextMenuShowEvent", {
   },
 });
 
-ExtensionPreferencesManager.addSetting("ftpProtocolEnabled", {
-  permission: "browserSettings",
-  prefNames: ["network.ftp.enabled"],
-
-  setCallback(value) {
-    return { [this.prefNames[0]]: value };
-  },
-});
-
 ExtensionPreferencesManager.addSetting("imageAnimationBehavior", {
   permission: "browserSettings",
   prefNames: ["image.animation_mode"],
@@ -256,7 +247,7 @@ this.browserSettings = class extends ExtensionAPI {
           name: "ftpProtocolEnabled",
           readOnly: true,
           callback() {
-            return Services.prefs.getBoolPref("network.ftp.enabled");
+            return false;
           },
         }),
         homepageOverride: getSettingsAPI({
