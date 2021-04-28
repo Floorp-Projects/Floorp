@@ -58,19 +58,6 @@ this.ui = (function() {
     );
   }
 
-  function highContrastCheck(win) {
-    const doc = win.document;
-    const el = doc.createElement("div");
-    el.style.backgroundImage = "url('#')";
-    el.style.display = "none";
-    doc.body.appendChild(el);
-    const computed = win.getComputedStyle(el);
-    doc.body.removeChild(el);
-    // When Windows is in High Contrast mode, Firefox replaces background
-    // image URLs with the string "none".
-    return computed && computed.backgroundImage === "none";
-  }
-
   function initializeIframe() {
     const el = document.createElement("iframe");
     el.src = browser.extension.getURL("blank.html");
@@ -150,9 +137,6 @@ this.ui = (function() {
       catcher.watchPromise(
         callBackground("sendEvent", "internal", "unhide-selection-frame")
       );
-      if (highContrastCheck(this.element.contentWindow)) {
-        this.element.contentDocument.body.classList.add("hcm");
-      }
       this.initSizeWatch();
       this.element.focus();
     },
@@ -362,9 +346,6 @@ this.ui = (function() {
       catcher.watchPromise(
         callBackground("sendEvent", "internal", "unhide-preselection-frame")
       );
-      if (highContrastCheck(this.element.contentWindow)) {
-        this.element.contentDocument.body.classList.add("hcm");
-      }
       this.element.focus();
     },
 
