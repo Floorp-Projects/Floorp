@@ -119,19 +119,12 @@ add_task(async function test_match_url_filters() {
     // Port filter: standard (implicit) ports.
     { shouldPass, filters: [{ ports: [443] }], url: "https://mozilla.org" },
     { shouldPass, filters: [{ ports: [80] }], url: "http://mozilla.org" },
-    {
-      shouldPass,
-      filters: [{ ports: [21] }],
-      url: "ftp://ftp.mozilla.org",
-      prefs: [["network.ftp.enabled", true]],
-    },
 
     // Port matching unknown protocols will fail.
     {
       shouldFail,
       filters: [{ ports: [21] }],
       url: "ftp://ftp.mozilla.org",
-      prefs: [["network.ftp.enabled", false]],
     },
 
     // Port filter: schemes without a default port.

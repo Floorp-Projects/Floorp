@@ -1264,61 +1264,7 @@ add_task(async function avoid_remote_url_suggestions_2() {
     ],
   });
 
-  // Check FTP enabled
-  Services.prefs.setBoolPref("network.ftp.enabled", true);
-  registerCleanupFunction(() =>
-    Services.prefs.clearUserPref("network.ftp.enabled")
-  );
-
-  context = createContext("ftp:", { isPrivate: false });
-  await check_results({
-    context,
-    matches: [
-      makeSearchResult(context, {
-        engineName: SUGGESTIONS_ENGINE_NAME,
-        heuristic: true,
-      }),
-    ],
-  });
-
-  context = createContext("ftp:/", { isPrivate: false });
-  await check_results({
-    context,
-    matches: [
-      makeSearchResult(context, {
-        engineName: SUGGESTIONS_ENGINE_NAME,
-        heuristic: true,
-      }),
-    ],
-  });
-
-  context = createContext("ftp://", { isPrivate: false });
-  await check_results({
-    context,
-    matches: [
-      makeSearchResult(context, {
-        engineName: SUGGESTIONS_ENGINE_NAME,
-        heuristic: true,
-      }),
-    ],
-  });
-
-  context = createContext("ftp://test", { isPrivate: false });
-  await check_results({
-    context,
-    matches: [
-      makeVisitResult(context, {
-        source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
-        uri: "ftp://test/",
-        title: "ftp://test/",
-        iconUri: "",
-        heuristic: true,
-      }),
-    ],
-  });
-
   // Check FTP disabled
-  Services.prefs.setBoolPref("network.ftp.enabled", false);
   context = createContext("ftp:", { isPrivate: false });
   await check_results({
     context,
