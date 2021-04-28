@@ -3403,12 +3403,14 @@ bool AsyncPanZoomController::AttemptScroll(
   ParentLayerPoint adjustedDisplacement;
   if (scrollThisApzc) {
     RecursiveMutexAutoLock lock(mRecursiveMutex);
-    bool forcesVerticalOverscroll =
-        ScrollSource::Wheel == aOverscrollHandoffState.mScrollSource &&
-        mScrollMetadata.GetDisregardedDirection() ==
-            Some(ScrollDirection::eVertical);
+    bool respectDisregardedDirections =
+        ScrollSourceRespectsDisregardedDirections(
+            aOverscrollHandoffState.mScrollSource);
+    bool forcesVerticalOverscroll = respectDisregardedDirections &&
+                                    mScrollMetadata.GetDisregardedDirection() ==
+                                        Some(ScrollDirection::eVertical);
     bool forcesHorizontalOverscroll =
-        ScrollSource::Wheel == aOverscrollHandoffState.mScrollSource &&
+        respectDisregardedDirections &&
         mScrollMetadata.GetDisregardedDirection() ==
             Some(ScrollDirection::eHorizontal);
 
