@@ -4,6 +4,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "RemoteBackbuffer.h"
+#include "GeckoProfiler.h"
+#include "nsThreadUtils.h"
 #include "mozilla/Span.h"
 #include <algorithm>
 #include <type_traits>
@@ -327,16 +329,16 @@ Provider::Provider()
       mResponseReadyEvent(nullptr),
       mSharedDataPtr(nullptr),
       mStopServiceThread(false),
-      mServiceThread(),
+      mServiceThread(nullptr),
       mBackbuffer() {}
 
 Provider::~Provider() {
   mBackbuffer.reset();
 
-  if (mServiceThread.joinable()) {
+  if (mServiceThread) {
     mStopServiceThread = true;
     MOZ_ALWAYS_TRUE(::SetEvent(mRequestReadyEvent));
-    mServiceThread.join();
+    MOZ_ALWAYS_TRUE(PR_JoinThread(mServiceThread) == PR_SUCCESS);
   }
 
   if (mSharedDataPtr) {
@@ -396,7 +398,17 @@ bool Provider::Initialize(HWND aWindowHandle, DWORD aTargetProcessId,
 
   mStopServiceThread = false;
 
-  mServiceThread = std::thread([this] { this->ThreadMain(); });
+  // Use a raw NSPR OS-level thread here instead of nsThread because we are
+  // performing low-level synchronization across processes using Win32 Events,
+  // and nsThread is designed around an incompatible "in-process task queue"
+  // model
+  mServiceThread = PR_CreateThread(
+      PR_USER_THREAD, [](void* p) { static_cast<Provider*>(p)->ThreadMain(); },
+      this, PR_PRIORITY_NORMAL, PR_GLOBAL_THREAD, PR_JOINABLE_THREAD,
+      0 /*default stack size*/);
+  if (!mServiceThread) {
+    return false;
+  }
 
   mTransparencyMode = aTransparencyMode;
 
@@ -435,6 +447,9 @@ void Provider::UpdateTransparencyMode(nsTransparencyMode aTransparencyMode) {
 }
 
 void Provider::ThreadMain() {
+  AUTO_PROFILER_REGISTER_THREAD("RemoteBackbuffer");
+  NS_SetCurrentThreadName("RemoteBackbuffer");
+
   while (true) {
     MOZ_ALWAYS_TRUE(::WaitForSingleObject(mRequestReadyEvent, INFINITE) ==
                     WAIT_OBJECT_0);

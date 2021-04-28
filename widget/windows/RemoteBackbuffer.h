@@ -9,7 +9,7 @@
 #include "nsIWidget.h"
 #include "mozilla/widget/PCompositorWidgetParent.h"
 #include "mozilla/Maybe.h"
-#include <thread>
+#include "prthread.h"
 #include <windows.h>
 
 namespace mozilla {
@@ -56,7 +56,7 @@ class Provider {
   HANDLE mResponseReadyEvent;
   SharedData* mSharedDataPtr;
   bool mStopServiceThread;
-  std::thread mServiceThread;
+  PRThread* mServiceThread;
   std::unique_ptr<PresentableSharedImage> mBackbuffer;
   mozilla::Atomic<nsTransparencyMode, MemoryOrdering::Relaxed>
       mTransparencyMode;
