@@ -48,8 +48,11 @@ enum class ScrollSource {
   // scrollTo() or something similar.
   DOM,
 
-  // Touch-screen or trackpad with gesture support.
-  Touch,
+  // Touch-screen.
+  Touchscreen,
+
+  // Touchpad with gesture support.
+  Touchpad,
 
   // Mouse wheel.
   Wheel,
@@ -60,7 +63,7 @@ enum class ScrollSource {
 // clang-format on
 
 inline bool ScrollSourceRespectsDisregardedDirections(ScrollSource aSource) {
-  return aSource == ScrollSource::Wheel;
+  return aSource == ScrollSource::Wheel || aSource == ScrollSource::Touchpad;
 }
 
 // Epsilon to be used when comparing 'float' coordinate values
