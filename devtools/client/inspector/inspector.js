@@ -231,9 +231,8 @@ Inspector.prototype = {
       return;
     }
 
-    await this.initInspectorFront(targetFront);
-
     targetFront.on("will-navigate", this._onBeforeNavigate);
+    await this.initInspectorFront(targetFront);
 
     await Promise.all([
       this._getCssProperties(),
