@@ -107,7 +107,7 @@ interface nsIProtocolHandler : nsISupports
 
     /**
      * standard full URI with authority component and concept of relative
-     * URIs (http, ftp, ...)
+     * URIs (http, ...)
      */
     const unsigned long URI_STD = 0;
 
@@ -136,7 +136,7 @@ interface nsIProtocolHandler : nsISupports
 
     /**
      * This protocol handler can be proxied using a http proxy (e.g., http,
-     * ftp, etc.).  nsIIOService::newChannelFromURI will feed URIs from this
+     * etc.).  nsIIOService::newChannelFromURI will feed URIs from this
      * protocol handler to the HTTP protocol handler instead.  This flag is
      * ignored if ALLOWS_PROXY is not set.
      */

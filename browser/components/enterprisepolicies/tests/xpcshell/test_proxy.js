@@ -79,7 +79,6 @@ add_task(async function test_proxy_addresses() {
     policies: {
       Proxy: {
         HTTPProxy: "http.proxy.example.com:10",
-        FTPProxy: "ftp.proxy.example.com:20",
         SSLProxy: "ssl.proxy.example.com:30",
         SOCKSProxy: "socks.proxy.example.com:40",
       },
@@ -87,7 +86,6 @@ add_task(async function test_proxy_addresses() {
   });
 
   checkProxyPref("http", "http.proxy.example.com", 10);
-  checkProxyPref("ftp", "ftp.proxy.example.com", 20);
   checkProxyPref("ssl", "ssl.proxy.example.com", 30);
   checkProxyPref("socks", "socks.proxy.example.com", 40);
 
@@ -97,6 +95,8 @@ add_task(async function test_proxy_addresses() {
     policies: {
       Proxy: {
         HTTPProxy: "http.proxy.example.com:10",
+        // FTP support was removed in bug 1574475
+        // Setting an FTPProxy should result in a warning but should not fail
         FTPProxy: "ftp.proxy.example.com:20",
         SSLProxy: "ssl.proxy.example.com:30",
         SOCKSProxy: "socks.proxy.example.com:40",
@@ -106,7 +106,18 @@ add_task(async function test_proxy_addresses() {
   });
 
   checkProxyPref("http", "http.proxy.example.com", 10);
-  checkProxyPref("ftp", "http.proxy.example.com", 10);
   checkProxyPref("ssl", "http.proxy.example.com", 10);
   checkProxyPref("socks", "http.proxy.example.com", 10);
+
+  // Make sure the FTPProxy setting did nothing
+  Assert.equal(
+    Preferences.has("network.proxy.ftp"),
+    false,
+    "network.proxy.ftp should not be set"
+  );
+  Assert.equal(
+    Preferences.has("network.proxy.ftp_port"),
+    false,
+    "network.proxy.ftp_port should not be set"
+  );
 });
