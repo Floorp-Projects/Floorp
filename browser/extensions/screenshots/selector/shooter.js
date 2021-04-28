@@ -3,7 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* globals global, browser, documentMetadata, util, uicontrol, ui, catcher */
-/* globals buildSettings, domainFromUrl, randomString, shot, blobConverters */
+/* globals domainFromUrl, randomString, shot, blobConverters */
 
 "use strict";
 

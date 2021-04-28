@@ -3,7 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* globals log, catcher, util, ui, slides, global */
-/* globals shooter, callBackground, selectorLoader, assertIsTrusted, buildSettings, selection */
+/* globals shooter, callBackground, selectorLoader, assertIsTrusted, selection */
 
 "use strict";
 
@@ -49,8 +49,8 @@ this.uicontrol = (function() {
 
   const { watchFunction, watchPromise } = catcher;
 
-  const MAX_PAGE_HEIGHT = buildSettings.maxImageHeight;
-  const MAX_PAGE_WIDTH = buildSettings.maxImageWidth;
+  const MAX_PAGE_HEIGHT = 10000;
+  const MAX_PAGE_WIDTH = 10000;
   // An autoselection smaller than these will be ignored entirely:
   const MIN_DETECT_ABSOLUTE_HEIGHT = 10;
   const MIN_DETECT_ABSOLUTE_WIDTH = 30;

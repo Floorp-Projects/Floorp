@@ -38,7 +38,6 @@ FINAL_TARGET_FILES.features["screenshots@mozilla.org"]["background"] += [
 ]
 
 FINAL_TARGET_FILES.features["screenshots@mozilla.org"]["build"] += [
-    "build/buildSettings.js",
     "build/inlineSelectionCss.js",
     "build/raven.js",
     "build/selection.js",
