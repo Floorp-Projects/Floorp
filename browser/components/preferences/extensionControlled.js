@@ -44,8 +44,6 @@ const API_PROXY_PREFS = [
   "network.proxy.http",
   "network.proxy.http_port",
   "network.proxy.share_proxy_settings",
-  "network.proxy.ftp",
-  "network.proxy.ftp_port",
   "network.proxy.ssl",
   "network.proxy.ssl_port",
   "network.proxy.socks",
