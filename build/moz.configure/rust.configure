@@ -120,6 +120,12 @@ set_config(
 )
 
 
+set_config(
+    "RUSTC_LLVM_VERSION",
+    depends(rustc_info)(lambda info: str(info.llvm_version) if info else None),
+)
+
+
 @depends_if(cargo)
 @checking("cargo version", lambda info: info.version)
 @imports("re")
