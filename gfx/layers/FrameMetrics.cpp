@@ -123,6 +123,30 @@ void FrameMetrics::KeepLayoutViewportEnclosingVisualViewport(
   aLayoutViewport = aLayoutViewport.MoveInsideAndClamp(aScrollableRect);
 }
 
+/* static */
+CSSRect FrameMetrics::CalculateScrollRange(
+    const CSSRect& aScrollableRect, const ParentLayerRect& aCompositionBounds,
+    const CSSToParentLayerScale2D& aZoom) {
+  CSSSize scrollPortSize =
+      CalculateCompositedSizeInCssPixels(aCompositionBounds, aZoom);
+  CSSRect scrollRange = aScrollableRect;
+  scrollRange.SetWidth(
+      std::max(scrollRange.Width() - scrollPortSize.width, 0.0f));
+  scrollRange.SetHeight(
+      std::max(scrollRange.Height() - scrollPortSize.height, 0.0f));
+  return scrollRange;
+}
+
+/* static */
+CSSSize FrameMetrics::CalculateCompositedSizeInCssPixels(
+    const ParentLayerRect& aCompositionBounds,
+    const CSSToParentLayerScale2D& aZoom) {
+  if (aZoom == CSSToParentLayerScale2D(0, 0)) {
+    return CSSSize();  // avoid division by zero
+  }
+  return aCompositionBounds.Size() / aZoom;
+}
+
 bool FrameMetrics::ApplyScrollUpdateFrom(const ScrollPositionUpdate& aUpdate) {
   // In applying a main-thread scroll update, try to preserve the relative
   // offset between the visual and layout viewports.
