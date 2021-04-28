@@ -76,7 +76,7 @@ add_task(async function setup() {
   // There is a test later in this file that checks that the panel doesn't appear
   // with Proton enabled.
   await SpecialPowers.pushPrefEnv({
-    set: [["browser.proton.enabled", false]],
+    set: [["browser.proton.doorhangers.enabled", false]],
   });
 });
 
@@ -310,7 +310,7 @@ add_task(async function test_proton_disabled() {
 
   // Enable proton
   await SpecialPowers.pushPrefEnv({
-    set: [["browser.proton.enabled", true]],
+    set: [["browser.proton.doorhangers.enabled", true]],
   });
 
   // Open a tab and wait for the alert.
