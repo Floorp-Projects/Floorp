@@ -9,10 +9,7 @@
 
 #include "nsCOMPtr.h"
 #include "LocalAccessible.h"
-#include "ia2Accessible.h"
-#include "ia2AccessibleComponent.h"
-#include "ia2AccessibleHyperlink.h"
-#include "ia2AccessibleValue.h"
+#include "MsaaAccessible.h"
 #include "mozilla/a11y/AccessibleHandler.h"
 #include "mozilla/a11y/MsaaIdGenerator.h"
 #include "mozilla/a11y/RemoteAccessible.h"
@@ -33,11 +30,7 @@ namespace mozilla {
 namespace a11y {
 class DocRemoteAccessibleWrap;
 
-class AccessibleWrap : public LocalAccessible,
-                       public ia2Accessible,
-                       public ia2AccessibleComponent,
-                       public ia2AccessibleHyperlink,
-                       public ia2AccessibleValue {
+class AccessibleWrap : public LocalAccessible, public MsaaAccessible {
  public:  // construction, destruction
   AccessibleWrap(nsIContent* aContent, DocAccessible* aDoc);
 
@@ -316,14 +309,5 @@ static inline AccessibleWrap* WrapperFor(const RemoteAccessible* aProxy) {
 
 }  // namespace a11y
 }  // namespace mozilla
-
-#ifdef XP_WIN
-// Undo the windows.h damage
-#  undef GetMessage
-#  undef CreateEvent
-#  undef GetClassName
-#  undef GetBinaryType
-#  undef RemoveDirectory
-#endif
 
 #endif
