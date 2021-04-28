@@ -10,6 +10,7 @@
 #include "mozilla/WindowsVersion.h"
 #include "nsCoreUtils.h"
 #include "nsWinUtils.h"
+#include "Relation.h"
 
 using namespace mozilla;
 using namespace mozilla::a11y;
