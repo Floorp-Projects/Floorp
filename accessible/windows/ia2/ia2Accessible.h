@@ -8,8 +8,11 @@
 #define mozilla_a11y_ia2Accessible_h_
 
 #include "nsISupports.h"
+#include "nsTArray.h"
 
 #include "Accessible2_3.h"
+
+class nsIPersistentProperties;
 
 namespace mozilla {
 namespace a11y {
