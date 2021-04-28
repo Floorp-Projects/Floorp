@@ -223,7 +223,7 @@ internal class ReleaseMetricController(
             metadata?.get("enabled")?.let { enabledAddons ->
                 if (enabledAddons is List<*>) {
                     settings.enabledAddonsCount = enabledAddons.size
-                    settings.enabledAddonsList = enabledAddons.joinToString()
+                    settings.enabledAddonsList = enabledAddons.joinToString(",")
                 }
             }
 
