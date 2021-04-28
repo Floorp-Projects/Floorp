@@ -395,27 +395,28 @@ async function getAddonInfo(attrbObj) {
         break;
       }
     }
-    // return_to_amo embeds the addon id in the content
-    // param, prefixed with "rta:".  Translating that
-    // happens in AddonRepository, however we can avoid
-    // an API call if we check up front here.
-    if (content.startsWith("rta:")) {
-      return await getAddonFromRepository(content);
-    }
+    return await getAddonFromRepository(content);
   } catch (e) {
     Cu.reportError("Failed to get the latest add-on version for Return to AMO");
+    return null;
   }
-  return null;
 }
 
-async function getAttributionContent() {
-  let attribution = await AttributionCode.getAttrDataAsync();
-  if (attribution?.source === "addons.mozilla.org") {
+function hasAMOAttribution(attributionData) {
+  return (
+    attributionData &&
+    attributionData.campaign === "non-fx-button" &&
+    attributionData.source === "addons.mozilla.org"
+  );
+}
+
+async function formatAttributionData(attribution) {
+  if (hasAMOAttribution(attribution)) {
     let addonInfo = await getAddonInfo(attribution);
     if (addonInfo) {
       return {
+        hasAMOAttribution: true,
         ...addonInfo,
-        template: "return_to_amo",
       };
     }
   }
@@ -424,6 +425,20 @@ async function getAttributionContent() {
       ua: decodeURIComponent(attribution.ua),
     };
   }
+  return null;
+}
+
+async function getAttributionContent() {
+  let attributionContent = await formatAttributionData(
+    await AttributionCode.getAttrDataAsync()
+  );
+  // We check for AMO attribution here to add the right template
+  if (attributionContent) {
+    return attributionContent.hasAMOAttribution
+      ? { ...attributionContent, template: "return_to_amo" }
+      : attributionContent;
+  }
+
   return null;
 }
 
