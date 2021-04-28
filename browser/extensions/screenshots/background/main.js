@@ -2,12 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* globals browser, getStrings, selectorLoader, analytics, communication, catcher, log, makeUuid, auth, senderror, startBackground, blobConverters buildSettings, startSelectionWithOnboarding */
+/* globals browser, getStrings, selectorLoader, analytics, communication, catcher, log, makeUuid, auth, senderror, startBackground, blobConverters, startSelectionWithOnboarding */
 
 "use strict";
 
 this.main = (function() {
   const exports = {};
+  const pngToJpegCutoff = 2500000;
 
   const { sendEvent, incrementCount } = analytics;
 
@@ -182,8 +183,7 @@ this.main = (function() {
     canvas.getContext("2d").putImageData(imageData, 0, 0);
     let dataUrl = canvas.toDataURL();
     if (
-      buildSettings.pngToJpegCutoff &&
-      dataUrl.length > buildSettings.pngToJpegCutoff
+      dataUrl.length > pngToJpegCutoff
     ) {
       const jpegDataUrl = canvas.toDataURL("image/jpeg");
       if (jpegDataUrl.length < dataUrl.length) {

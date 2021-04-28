@@ -3,7 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* globals log */
-/* globals main, makeUuid, deviceInfo, analytics, catcher, buildSettings, communication, browser */
+/* globals main, makeUuid, deviceInfo, analytics, catcher, communication, browser */
 
 "use strict";
 
@@ -177,7 +177,7 @@ this.auth = (function() {
   };
 
   exports.getSentryPublicDSN = function() {
-    return sentryPublicDSN || buildSettings.defaultSentryDsn;
+    return sentryPublicDSN;
   };
 
   exports.getAbTests = function() {
