@@ -1,0 +1,158 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=2100"/>
+  <title>Check that double tapping zoom out animation is smooth</title>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <script type="application/javascript">
+
+let hasPrev = false;
+let zoomingIn = true;
+let lastVVLeft = 0, lastVVTop = 0, lastVVWidth = 0, lastVVHeight = 0;
+let lastScrollX = 0, lastScrollY = 0;
+let lastResolution = 0;
+
+function within(a, b, tolerance) {
+  return (Math.abs(a-b) < tolerance);
+}
+
+function afterpaint() {
+  info("vv pos " + visualViewport.pageLeft + "," + visualViewport.pageTop);
+  info("vv size " + visualViewport.width + "," + visualViewport.height);
+  info("win scroll " + window.scrollX + "," + window.scrollY);
+  info("res " + getResolution());
+  if (hasPrev) {
+    ok(zoomingIn ?
+         lastVVLeft <= visualViewport.pageLeft :
+         lastVVLeft >= visualViewport.pageLeft,
+         "vvleft monotonic");
+    // When zooming in pageTop stays 0, when zooming out (at least on mac)
+    // the final value of pageTop is 2.5. Hence why the direction of these
+    // inequalities.
+    ok(zoomingIn ?
+         lastVVTop >= visualViewport.pageTop :
+         lastVVTop <= visualViewport.pageTop,
+         "vvtop monotonic");
+    ok(zoomingIn ?
+         lastVVWidth >= visualViewport.width :
+         lastVVWidth <= visualViewport.width,
+         "vvwidth monotonic");
+    ok(zoomingIn ?
+         lastVVHeight >= visualViewport.height :
+         lastVVHeight <= visualViewport.height,
+         "vvheight monotonic");
+    ok(zoomingIn ?
+         lastScrollX <= window.scrollX :
+         lastScrollX >= window.scrollX,
+         "scrollx monotonic");
+    ok(zoomingIn ?
+         lastScrollY >= window.scrollY :
+         lastScrollY <= window.scrollY,
+         "scrolly monotonic");
+
+    // At the upper and lower limits of zoom constraints we can briefly go over
+    // the limit and then back because of floating point inaccuracies.
+    // In apzc callback helper we set the new content resolution to
+    // (last presshell resolution that apz knows about) * (apz async zoom)
+    // and (apz async zoom) is calculated as (apz zoom) / (last content resolution that apz knows about)
+    // and (last content resolution that apz knows about) = (dev pixels per css pixel) * (ps resolution) * (resolution induced by transforms)
+    // For simplicity we can assume that (dev pixels per css pixel) == (resolution induced by transforms) == 1
+    // and (ps resolution) == (last presshell resolution that apz knows about).
+    // The calculation then boils down to
+    // (ps resolution) * ((apz zoom) / (ps resolution))
+    // The fact that we divide by (ps resolution) first, and then multiply by
+    // it means the result is not quite equal to (apz zoom).
+    const utils = SpecialPowers.getDOMWindowUtils(window);
+    const deviceScale = utils.screenPixelsPerCSSPixelNoOverride;
+    const maxZoom = 10.0;
+    if (!within(lastResolution, maxZoom/deviceScale, 0.0001) &&
+        !within(getResolution(), maxZoom/deviceScale, 0.0001) &&
+        !within(lastResolution, 1, 0.0001) &&
+        !within(getResolution(), 1, 0.0001)) {
+      ok(zoomingIn ?
+           lastResolution <= getResolution() :
+           lastResolution >= getResolution(),
+           "resolution monotonic");
+    }
+
+  } else {
+    hasPrev = true;
+  }
+  lastVVLeft = visualViewport.pageLeft;
+  lastVVTop = visualViewport.pageTop;
+  lastVVWidth = visualViewport.width;
+  lastVVHeight = visualViewport.height;
+  lastScrollX = window.scrollX;
+  lastScrollY = window.scrollY;
+  lastResolution = getResolution();
+}
+
+async function test() {
+  let useTouchpad = (location.search == "?touchpad");
+
+  info("screenPixelsPerCSSPixelNoOverride " + SpecialPowers.getDOMWindowUtils(window).screenPixelsPerCSSPixelNoOverride);
+
+  window.addEventListener("MozAfterPaint", afterpaint);
+  let intervalID = setInterval(afterpaint, 16);
+
+  let resolution = getResolution();
+  ok(resolution > 0,
+     "The initial_resolution is " + resolution + ", which is some sane value");
+
+  // Check that double-tapping once on a small element zooms in
+  info("sending first double tap");
+  await doubleTapOn(document.getElementById("target2"), 10, 10, useTouchpad);
+  let prev_resolution = resolution;
+  resolution = getResolution();
+  ok(resolution > prev_resolution, "The first double-tap has increased the resolution to " + resolution);
+
+  await promiseApzFlushedRepaints();
+
+  hasPrev = false;
+  zoomingIn = false;
+
+  // Double tap, this won't hit anything but the body/html, and so will zoom us out.
+  info("sending second double tap");
+  await doubleTapOn(document.getElementById("target2"), 5, 65, useTouchpad);
+  await promiseApzFlushedRepaints();
+  prev_resolution = resolution;
+  resolution = getResolution();
+  ok(resolution < prev_resolution, "The second double-tap has decreased the resolution to " + resolution);
+
+  clearInterval(intervalID);
+  window.removeEventListener("MozAfterPaint", afterpaint);
+}
+
+waitUntilApzStable()
+.then(test)
+.then(subtestDone, subtestFailed);
+
+  </script>
+  <style>
+    .container {
+      background-color: #eee;
+      width: 95vw;
+      height: 400vh;
+    }
+    .smallcontainer {
+      background-color: #aaa;
+      width: 40px;
+      height: 40px;
+      position: absolute;
+      right: 0;
+      top: 20px;
+    }
+</style>
+</head>
+<body>
+
+<div id="target" class="container">
+</div>
+<div id="target2" class="smallcontainer">
+</div>
+
+</body>
+</html>
