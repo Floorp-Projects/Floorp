@@ -9,6 +9,37 @@ Benchmarks
 Standard benchmarks are third-party tests (i.e. Speedometer) that we have integrated into Raptor to run per-commit in our production CI. 
 
 
+Custom
+------
+Browsertime tests that use a custom pageload test script. These use the pageload type, but may have other intentions.
+
+.. dropdown:: process-switch (Measures process switch time)
+   :container: + anchor-id-process-switch-c
+
+   * **alert on**: fcp, loadtime
+   * **alert threshold**: 2.0
+   * **apps**: firefox, chrome, chromium
+   * **browser cycles**: 25
+   * **browsertime args**: --pageCompleteWaitTime=1000 --pageCompleteCheckInactivity=true
+   * **expected**: pass
+   * **gecko profile entries**: 14000000
+   * **gecko profile interval**: 1
+   * **lower is better**: true
+   * **measure**: fnbpaint, fcp, dcf, loadtime
+   * **page cycles**: 25
+   * **page timeout**: 60000
+   * **playback**: mitmproxy
+   * **playback pageset manifest**: mitm5-linux-firefox-proc-switch.manifest
+   * **playback recordings**: mitm5-linux-firefox-seanfeng.mp mitm5-linux-firefox-pettay.mp
+   * **playback version**: 5.1.1
+   * **test script**: process_switch.js
+   * **test url**: `<https://mozilla.seanfeng.dev/files/red.html,https://mozilla.pettay.fi/moztests/blue.html>`__
+   * **type**: pageload
+   * **unit**: ms
+   * **use live sites**: false
+
+
+
 Desktop
 -------
 Tests for page-load performance. The links direct to the actual websites that are being tested. (WX: WebExtension, BT: Browsertime, FF: Firefox, CH: Chrome, CU: Chromium)
