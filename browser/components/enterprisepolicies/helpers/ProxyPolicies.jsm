@@ -72,6 +72,10 @@ var ProxyPolicies = {
       );
     }
 
+    if (param.FTPProxy) {
+      log.warn("FTPProxy support was removed in bug 1574475");
+    }
+
     function setProxyHostAndPort(type, address) {
       let url;
       try {
@@ -96,12 +100,8 @@ var ProxyPolicies = {
       // network code. That pref only controls if the checkbox is checked, and
       // then we must manually set the other values.
       if (param.UseHTTPProxyForAllProtocols) {
-        param.FTPProxy = param.SSLProxy = param.SOCKSProxy = param.HTTPProxy;
+        param.SSLProxy = param.SOCKSProxy = param.HTTPProxy;
       }
-    }
-
-    if (param.FTPProxy) {
-      setProxyHostAndPort("ftp", param.FTPProxy);
     }
 
     if (param.SSLProxy) {

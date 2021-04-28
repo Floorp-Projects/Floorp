@@ -769,7 +769,6 @@ nsProtocolProxyService::nsProtocolProxyService()
     : mFilterLocalHosts(false),
       mProxyConfig(PROXYCONFIG_DIRECT),
       mHTTPProxyPort(-1),
-      mFTPProxyPort(-1),
       mHTTPSProxyPort(-1),
       mSOCKSProxyPort(-1),
       mSOCKSProxyVersion(4),
@@ -1003,12 +1002,6 @@ void nsProtocolProxyService::PrefsChanged(nsIPrefBranch* prefBranch,
 
   if (!pref || !strcmp(pref, PROXY_PREF("ssl_port")))
     proxy_GetIntPref(prefBranch, PROXY_PREF("ssl_port"), mHTTPSProxyPort);
-
-  if (!pref || !strcmp(pref, PROXY_PREF("ftp")))
-    proxy_GetStringPref(prefBranch, PROXY_PREF("ftp"), mFTPProxyHost);
-
-  if (!pref || !strcmp(pref, PROXY_PREF("ftp_port")))
-    proxy_GetIntPref(prefBranch, PROXY_PREF("ftp_port"), mFTPProxyPort);
 
   if (!pref || !strcmp(pref, PROXY_PREF("socks")))
     proxy_GetStringPref(prefBranch, PROXY_PREF("socks"), mSOCKSProxyTarget);
@@ -2206,12 +2199,6 @@ nsresult nsProtocolProxyService::Resolve_Internal(nsIChannel* channel,
     host = &mHTTPSProxyHost;
     type = kProxyType_HTTP;
     port = mHTTPSProxyPort;
-  } else if (!mFTPProxyHost.IsEmpty() && mFTPProxyPort > 0 &&
-             !(flags & RESOLVE_IGNORE_URI_SCHEME) &&
-             info.scheme.EqualsLiteral("ftp")) {
-    host = &mFTPProxyHost;
-    type = kProxyType_HTTP;
-    port = mFTPProxyPort;
   } else if (!mSOCKSProxyTarget.IsEmpty() &&
              (IsHostLocalTarget(mSOCKSProxyTarget) || mSOCKSProxyPort > 0)) {
     host = &mSOCKSProxyTarget;
