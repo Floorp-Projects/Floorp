@@ -465,7 +465,7 @@ var gEditItemOverlay = {
       menupopup.removeChild(menupopup.lastElementChild);
     }
 
-    if (!this.protonDoorhangersEnabled) {
+    if (!this.protonEnabled) {
       this._folderMenuList.classList.add("panel-button");
     }
 
@@ -1341,8 +1341,8 @@ XPCOMUtils.defineLazyGetter(gEditItemOverlay, "_folderTree", () => {
 
 XPCOMUtils.defineLazyPreferenceGetter(
   gEditItemOverlay,
-  "protonDoorhangersEnabled",
-  "browser.proton.doorhangers.enabled",
+  "protonEnabled",
+  "browser.proton.enabled",
   false
 );
 

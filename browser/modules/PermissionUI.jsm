@@ -99,8 +99,8 @@ XPCOMUtils.defineLazyGetter(this, "gBrowserBundle", function() {
 
 XPCOMUtils.defineLazyPreferenceGetter(
   this,
-  "protonDoorhangersEnabled",
-  "browser.proton.doorhangers.enabled",
+  "protonEnabled",
+  "browser.doorhangers.enabled",
   false
 );
 
@@ -596,10 +596,7 @@ var PermissionPromptPrototype = {
       options.hideClose = true;
     }
 
-    if (
-      protonDoorhangersEnabled &&
-      !mainAction.hasOwnProperty("disableHighlight")
-    ) {
+    if (protonEnabled && !mainAction.hasOwnProperty("disableHighlight")) {
       mainAction.disableHighlight = true;
     }
 
