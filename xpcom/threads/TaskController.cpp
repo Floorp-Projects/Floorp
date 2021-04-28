@@ -25,6 +25,9 @@
 #include "nsThread.h"
 #include "prenv.h"
 #include "prsystem.h"
+#ifdef XP_WIN
+#  include "objbase.h"
+#endif
 
 #ifdef XP_WIN
 typedef HRESULT(WINAPI* SetThreadDescriptionPtr)(HANDLE hThread,
@@ -214,7 +217,9 @@ void TaskController::RunPoolThread() {
         ::GetCurrentThread(),
         reinterpret_cast<const WCHAR*>(threadWName.BeginReading()));
   }
+  ::CoInitializeEx(nullptr, COINIT_MULTITHREADED);
 #endif
+
   nsAutoCString threadName;
   threadName.AppendLiteral("TaskController Thread #");
   threadName.AppendInt(static_cast<int64_t>(mThreadPoolIndex));
@@ -317,6 +322,10 @@ void TaskController::RunPoolThread() {
       mThreadPoolCV.Wait();
     }
   }
+
+#ifdef XP_WIN
+  ::CoUninitialize();
+#endif
 }
 
 void TaskController::AddTask(already_AddRefed<Task>&& aTask) {
