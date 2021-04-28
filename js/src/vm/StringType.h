@@ -219,7 +219,7 @@ class JSString : public js::gc::CellWithLengthAndFlags {
           const char16_t* nonInlineCharsTwoByte;      /* JSLinearString, except
                                                          JS(Fat)InlineString */
           JSString* left;                             /* JSRope */
-          JSString* parent;                           /* Used in flattening */
+          JSRope* parent;                             /* Used in flattening */
         } u2;
         union {
           JSLinearString* base; /* JSDependentString */
@@ -723,7 +723,7 @@ class JSRope : public JSString {
   static JSLinearString* flattenInternal(JSRope* root);
 
   template <UsingBarrier usingBarrier>
-  static void ropeBarrierDuringFlattening(JSString* str);
+  static void ropeBarrierDuringFlattening(JSRope* rope);
 
   void init(JSContext* cx, JSString* left, JSString* right, size_t length);
 
