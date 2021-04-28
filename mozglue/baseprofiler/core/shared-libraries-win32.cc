@@ -19,8 +19,6 @@
 
 #define CV_SIGNATURE 0x53445352  // 'SDSR'
 
-namespace {
-
 struct CodeViewRecord70 {
   uint32_t signature;
   GUID pdbSignature;
@@ -29,13 +27,6 @@ struct CodeViewRecord70 {
   // https://github.com/Microsoft/microsoft-pdb/blob/082c5290e5aff028ae84e43affa8be717aa7af73/PDB/dbi/locator.cpp#L785
   char pdbFileName[1];
 };
-
-struct HModuleFreer {
-  using pointer = HMODULE;
-  void operator()(pointer aModule) { ::FreeLibrary(aModule); }
-};
-
-}  // anonymous namespace
 
 static constexpr char digits[16] = {'0', '1', '2', '3', '4', '5', '6', '7',
                                     '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
@@ -179,19 +170,6 @@ SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf() {
                               std::size(modulePath))) {
       continue;
     }
-
-    // Load the module again to make sure that its handle will remain valid
-    // as we attempt to read the PDB information from it.  We load the DLL as
-    // a datafile so that if the module actually gets unloaded between the call
-    // to EnumProcessModules and the following LoadLibraryEx, we don't end up
-    // running the now newly loaded module's DllMain function.  If the module
-    // is already loaded, LoadLibraryEx just increments its refcount.
-    mozilla::UniquePtr<HMODULE, HModuleFreer> handleLock(
-        LoadLibraryExW(modulePath, NULL, LOAD_LIBRARY_AS_DATAFILE));
-    if (!handleLock) {
-      continue;
-    }
-
     mozilla::UniquePtr<char[]> utf8ModulePath(
         mozilla::glue::WideToUTF8(modulePath));
     if (!utf8ModulePath) {
@@ -201,10 +179,6 @@ SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf() {
     MODULEINFO module = {0};
     if (!GetModuleInformation(hProcess, hMods[i], &module,
                               sizeof(MODULEINFO))) {
-      // If the module was unloaded before LoadLibraryEx, LoadLibraryEx
-      // loads the module onto an address different from hMods[i] and
-      // thus GetModuleInformation fails with ERROR_INVALID_HANDLE.
-      // We skip that case.
       continue;
     }
 
@@ -251,12 +225,31 @@ SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf() {
 #endif  // !defined(_M_ARM64)
 
     std::string breakpadId;
+    // Load the module again to make sure that its handle will remain
+    // valid as we attempt to read the PDB information from it.  We load the
+    // DLL as a datafile so that if the module actually gets unloaded between
+    // the call to EnumProcessModules and the following LoadLibraryEx, we
+    // don't end up running the now newly loaded module's DllMain function. If
+    // the module is already loaded, LoadLibraryEx just increments its
+    // refcount.
+    //
+    // Note that because of the race condition above, merely loading the DLL
+    // again is not safe enough, therefore we also need to make sure that we
+    // can read the memory mapped at the base address before we can safely
+    // proceed to actually access those pages.
+    HMODULE handleLock =
+        LoadLibraryExW(modulePath, NULL, LOAD_LIBRARY_AS_DATAFILE);
+    MEMORY_BASIC_INFORMATION vmemInfo = {0};
     std::string pdbSig;
     uint32_t pdbAge;
     std::string pdbPathStr;
     std::string pdbNameStr;
     char* pdbName = nullptr;
-    if (GetPdbInfo((uintptr_t)module.lpBaseOfDll, pdbSig, pdbAge, &pdbName)) {
+    if (handleLock &&
+        sizeof(vmemInfo) ==
+            VirtualQuery(module.lpBaseOfDll, &vmemInfo, sizeof(vmemInfo)) &&
+        vmemInfo.State == MEM_COMMIT &&
+        GetPdbInfo((uintptr_t)module.lpBaseOfDll, pdbSig, pdbAge, &pdbName)) {
       MOZ_ASSERT(breakpadId.empty());
       breakpadId += pdbSig;
       AppendHex(pdbAge, breakpadId, WITHOUT_PADDING);
@@ -273,6 +266,8 @@ SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf() {
                         breakpadId, moduleNameStr, modulePathStr, pdbNameStr,
                         pdbPathStr, GetVersion(modulePath), "");
     sharedLibraryInfo.AddSharedLibrary(shlib);
+
+    FreeLibrary(handleLock);  // ok to free null handles
   }
 
   return sharedLibraryInfo;
