@@ -5,13 +5,20 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 UNIFIED_SOURCES += [
+    "AudioDecoderInputTrack.cpp",
     "AudioSink.cpp",
     "AudioSinkWrapper.cpp",
     "DecodedStream.cpp",
     "VideoSink.cpp",
 ]
 
-EXPORTS += ["MediaSink.h"]
+EXPORTS += [
+    "MediaSink.h",
+]
+
+LOCAL_INCLUDES += [
+    "/dom/media",
+]
 
 DEFINES["TRACING"] = True
 
