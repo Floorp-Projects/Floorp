@@ -33,6 +33,7 @@
 }
 
 .textLayer .highlight {
+  position: relative;
   margin: -1px;
   padding: 1px;
   background-color: rgba(180, 0, 170, 1);
@@ -671,7 +672,7 @@
   --secondaryToolbarButton-documentProperties-icon: url(images/secondaryToolbarButton-documentProperties.svg);
 }
 
-@media (-moz-toolbar-prefers-color-scheme: dark) {
+@media (prefers-color-scheme: dark) {
   :root {
     --main-color: rgba(249, 249, 250, 1);
     --body-bg-color: rgba(42, 42, 46, 1);
