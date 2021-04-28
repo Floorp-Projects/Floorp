@@ -6,7 +6,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 include protocol PHttpChannel;
-include protocol PFTPChannel;
 include protocol PChildToParentStream;
 include BlobTypes;
 include ClientIPCTypes;
@@ -385,31 +384,6 @@ struct ConsoleReportCollected {
   uint32_t columnNumber;
   nsCString messageName;
   nsString[] stringParams;
-};
-
-//-----------------------------------------------------------------------------
-// FTP IPDL structs
-//-----------------------------------------------------------------------------
-
-struct FTPChannelOpenArgs
-{
-  URIParams                 uri;
-  uint64_t                  startPos;
-  nsCString                 entityID;
-  IPCStream?                uploadStream;
-  LoadInfoArgs?             loadInfo;
-  uint32_t                  loadFlags;
-};
-
-struct FTPChannelConnectArgs
-{
-  uint32_t channelId;
-};
-
-union FTPChannelCreationArgs
-{
-  FTPChannelOpenArgs;      // For AsyncOpen: the common case.
-  FTPChannelConnectArgs;   // Used for redirected-to channels
 };
 
 struct CookieStruct

@@ -110,14 +110,6 @@ class NeckoParent : public PNeckoParent {
   bool DeallocPAltDataOutputStreamParent(PAltDataOutputStreamParent* aActor);
 
   bool DeallocPCookieServiceParent(PCookieServiceParent*);
-  PFTPChannelParent* AllocPFTPChannelParent(
-      PBrowserParent* aBrowser, const SerializedLoadContext& aSerialized,
-      const FTPChannelCreationArgs& aOpenArgs);
-  virtual mozilla::ipc::IPCResult RecvPFTPChannelConstructor(
-      PFTPChannelParent* aActor, PBrowserParent* aBrowser,
-      const SerializedLoadContext& aSerialized,
-      const FTPChannelCreationArgs& aOpenArgs) override;
-  bool DeallocPFTPChannelParent(PFTPChannelParent*);
   PWebSocketParent* AllocPWebSocketParent(
       PBrowserParent* browser, const SerializedLoadContext& aSerialized,
       const uint32_t& aSerial);
