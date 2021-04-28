@@ -548,7 +548,17 @@ import java.lang.reflect.Proxy;
 
     @Override // InputConnection
     public void closeConnection() {
-        // Not supported at the moment.
+        if (mBatchEditCount != 0) {
+            // GBoard may call this into batch edit mode then it doesn't call endBatchEdit.
+            // Since we are recycle GeckoInputConnection, we have to reset
+            // batch count even if IME/keyboard bug.
+            if (DEBUG) {
+                Log.d(LOGTAG, "resetting with mBatchEditCount = " + mBatchEditCount);
+            }
+            mBatchEditCount = 0;
+            // setBatchMode will call onTextChange and/or onSelectionChange for us.
+            mEditableClient.setBatchMode(false);
+        }
         super.closeConnection();
     }
 
