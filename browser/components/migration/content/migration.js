@@ -380,6 +380,7 @@ var MigrationWizard = {
       if (items & itemValue) {
         let checkbox = document.createXULElement("checkbox");
         checkbox.id = itemValue;
+        checkbox.setAttribute("native", true);
         document.l10n.setAttributes(
           checkbox,
           kDataToStringMap.get(itemType) + "-checkbox",

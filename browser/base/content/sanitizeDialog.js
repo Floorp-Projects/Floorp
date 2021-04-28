@@ -44,6 +44,16 @@ var gSanitizePromptDialog = {
 
     this.registerSyncFromPrefListeners();
 
+    // Only apply the following if the dialog is opened outside of the Preferences.
+    // This block is separated from the other non-Preferences block below
+    // because it must run before layout.
+    if (!this._dialog.hasAttribute("subdialog")) {
+      let checkboxes = this._dialog.querySelectorAll("checkbox");
+      for (let checkbox of checkboxes) {
+        checkbox.setAttribute("native", true);
+      }
+    }
+
     if (this.selectedTimespan === Sanitizer.TIMESPAN_EVERYTHING) {
       this.prepareWarning();
       this.warningBox.hidden = false;
