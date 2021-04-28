@@ -3494,22 +3494,24 @@ bool AsyncPanZoomController::AttemptScroll(
   // If there is no APZC later in the handoff chain that accepted the
   // overscroll, try to accept it ourselves. We only accept it if we
   // are pannable.
-  APZC_LOG("%p taking overscroll during panning\n", this);
+  if (ScrollSourceAllowsOverscroll(aOverscrollHandoffState.mScrollSource)) {
+    APZC_LOG("%p taking overscroll during panning\n", this);
 
-  ParentLayerPoint prevVisualOverscroll = GetOverscrollAmount();
+    ParentLayerPoint prevVisualOverscroll = GetOverscrollAmount();
 
-  OverscrollForPanning(overscroll, aOverscrollHandoffState.mPanDistance);
+    OverscrollForPanning(overscroll, aOverscrollHandoffState.mPanDistance);
 
-  // Accumulate the amount of change to the overscroll that occurred into the
-  // handoff state. Note that the input amount, |overscroll|, is turned into
-  // some smaller visual overscroll amount (queried via GetOverscrollAmount())
-  // by applying resistance (Axis::ApplyResistance()), and it's the latter we
-  // want to count towards OverscrollHandoffState::mTotalMovement.
-  ParentLayerPoint visualOverscrollChange =
-      GetOverscrollAmount() - prevVisualOverscroll;
-  if (!IsZero(visualOverscrollChange)) {
-    aOverscrollHandoffState.mTotalMovement +=
-        ToScreenCoordinates(visualOverscrollChange, aEndPoint);
+    // Accumulate the amount of change to the overscroll that occurred into the
+    // handoff state. Note that the input amount, |overscroll|, is turned into
+    // some smaller visual overscroll amount (queried via GetOverscrollAmount())
+    // by applying resistance (Axis::ApplyResistance()), and it's the latter we
+    // want to count towards OverscrollHandoffState::mTotalMovement.
+    ParentLayerPoint visualOverscrollChange =
+        GetOverscrollAmount() - prevVisualOverscroll;
+    if (!IsZero(visualOverscrollChange)) {
+      aOverscrollHandoffState.mTotalMovement +=
+          ToScreenCoordinates(visualOverscrollChange, aEndPoint);
+    }
   }
 
   aStartPoint = aEndPoint + overscroll;
