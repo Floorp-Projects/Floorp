@@ -13,7 +13,7 @@ const L10N = new LocalizationHelper(STRINGS_URI);
 // These values are used to truncate the resulting image if the captured area is bigger.
 // This is to avoid failing to produce a screenshot at all.
 // It is recommended to keep these values in sync with the corresponding screenshots addon
-// values in /browser/extensions/screenshots/build/buildSettings.js
+// values in /browser/extensions/screenshots/selector/uicontrol.js
 const MAX_IMAGE_WIDTH = 10000;
 const MAX_IMAGE_HEIGHT = 10000;
 

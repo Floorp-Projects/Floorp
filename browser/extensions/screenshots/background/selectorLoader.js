@@ -15,7 +15,6 @@ this.selectorLoader = (function() {
   // These modules are loaded in order, first standardScripts and then selectorScripts
   // The order is important due to dependencies
   const standardScripts = [
-    "build/buildSettings.js",
     "log.js",
     "catcher.js",
     "assertIsTrusted.js",

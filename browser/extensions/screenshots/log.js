@@ -9,17 +9,15 @@
 
 this.log = (function() {
   const exports = {};
+  const logLevel = "warn";
 
   const levels = ["debug", "info", "warn", "error"];
-  if (!levels.includes(buildSettings.logLevel)) {
-    console.warn("Invalid buildSettings.logLevel:", buildSettings.logLevel);
-  }
   const shouldLog = {};
 
   {
     let startLogging = false;
     for (const level of levels) {
-      if (buildSettings.logLevel === level) {
+      if (logLevel === level) {
         startLogging = true;
       }
       if (startLogging) {

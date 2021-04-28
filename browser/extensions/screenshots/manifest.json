@@ -15,7 +15,6 @@
   "l10n_resources": [ "browser/screenshots.ftl" ],
   "background": {
     "scripts": [
-      "build/buildSettings.js",
       "background/startBackground.js"
     ]
   },
@@ -31,7 +30,6 @@
     {
       "matches": ["https://screenshots.firefox.com/*"],
       "js": [
-        "build/buildSettings.js",
         "log.js",
         "catcher.js",
         "selector/callBackground.js",
