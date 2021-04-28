@@ -16,6 +16,7 @@ Browsertime tests that use a custom pageload test script. These use the pageload
 .. dropdown:: process-switch (Measures process switch time)
    :container: + anchor-id-process-switch-c
 
+   * **accept zero vismet**: true
    * **alert on**: fcp, loadtime
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium
