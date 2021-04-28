@@ -55,7 +55,8 @@ CAIRO_BEGIN_DECLS
 cairo_public cairo_font_face_t *
 cairo_ft_font_face_create_for_ft_face (FT_Face         face,
 				       int             load_flags,
-				       unsigned int    synth_flags);
+				       unsigned int    synth_flags,
+				       void           *face_context);
 
 /**
  * cairo_ft_synthesize_t:
