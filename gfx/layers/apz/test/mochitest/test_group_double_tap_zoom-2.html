@@ -23,13 +23,20 @@ var longeranimation_visualviewport_and_doubletap_prefs = [
   ["apz.zoom_animation_duration_ms", 1000],
 ];
 
+var logging_and_doubletap_prefs = [
+  ...doubletap_prefs,
+  ["apz.test.logging_enabled", true],
+];
+
 var subtests = [
   {"file": "helper_doubletap_zoom_smooth.html", "prefs": longeranimation_visualviewport_and_doubletap_prefs},
+  {"file": "helper_doubletap_zoom_fixedpos_overflow.html", "prefs": logging_and_doubletap_prefs},
 ];
 
 if (getPlatform() == "mac") {
   subtests.push(
     {"file": "helper_doubletap_zoom_smooth.html?touchpad", "prefs": longeranimation_visualviewport_and_doubletap_prefs},
+    {"file": "helper_doubletap_zoom_fixedpos_overflow.html?touchpad", "prefs": logging_and_doubletap_prefs},
   );
 }
 
