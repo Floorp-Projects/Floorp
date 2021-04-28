@@ -109,8 +109,8 @@ Reverb::Reverb(const AudioChunk& impulseResponse, size_t maxFFTSize,
     }
   }
 
-  initialize(irChannels, impulseResponseBufferLength, maxFFTSize,
-             useBackgroundThreads);
+  *aAllocationFailure = !initialize(irChannels, impulseResponseBufferLength,
+                                    maxFFTSize, useBackgroundThreads);
 }
 
 size_t Reverb::sizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const {
@@ -126,7 +126,7 @@ size_t Reverb::sizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const {
   return amount;
 }
 
-void Reverb::initialize(const nsTArray<const float*>& impulseResponseBuffer,
+bool Reverb::initialize(const nsTArray<const float*>& impulseResponseBuffer,
                         size_t impulseResponseBufferLength, size_t maxFFTSize,
                         bool useBackgroundThreads) {
   m_impulseResponseLength = impulseResponseBufferLength;
@@ -148,9 +148,13 @@ void Reverb::initialize(const nsTArray<const float*>& impulseResponseBuffer,
     const float* channel = impulseResponseBuffer[channelIndex];
     size_t length = impulseResponseBufferLength;
 
+    bool allocationFailure;
     UniquePtr<ReverbConvolver> convolver(
         new ReverbConvolver(channel, length, maxFFTSize, convolverRenderPhase,
-                            useBackgroundThreads));
+                            useBackgroundThreads, &allocationFailure));
+    if (allocationFailure) {
+      return false;
+    }
     m_convolvers.AppendElement(std::move(convolver));
 
     convolverRenderPhase += WEBAUDIO_BLOCK_SIZE;
@@ -163,6 +167,7 @@ void Reverb::initialize(const nsTArray<const float*>& impulseResponseBuffer,
     m_tempBuffer.AllocateChannels(2);
     WriteZeroesToAudioBlock(&m_tempBuffer, 0, WEBAUDIO_BLOCK_SIZE);
   }
+  return true;
 }
 
 void Reverb::process(const AudioBlock* sourceBus, AudioBlock* destinationBus) {

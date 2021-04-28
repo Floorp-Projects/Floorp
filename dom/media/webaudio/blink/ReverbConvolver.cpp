@@ -59,15 +59,21 @@ const size_t MaxRealtimeFFTSize = 4096;
 ReverbConvolver::ReverbConvolver(const float* impulseResponseData,
                                  size_t impulseResponseLength,
                                  size_t maxFFTSize, size_t convolverRenderPhase,
-                                 bool useBackgroundThreads)
+                                 bool useBackgroundThreads,
+                                 bool* aAllocationFailure)
     : m_impulseResponseLength(impulseResponseLength),
-      m_accumulationBuffer(impulseResponseLength + WEBAUDIO_BLOCK_SIZE),
+      m_accumulationBuffer(),
       m_inputBuffer(InputBufferSize),
       m_backgroundThread("ConvolverWorker"),
       m_backgroundThreadMonitor("ConvolverMonitor"),
       m_useBackgroundThreads(useBackgroundThreads),
       m_wantsToExit(false),
       m_moreInputBuffered(false) {
+  *aAllocationFailure = !m_accumulationBuffer.allocate(impulseResponseLength +
+                                                       WEBAUDIO_BLOCK_SIZE);
+  if (*aAllocationFailure) {
+    return;
+  }
   // For the moment, a good way to know if we have real-time constraint is to
   // check if we're using background threads. Otherwise, assume we're being run
   // from a command-line tool.

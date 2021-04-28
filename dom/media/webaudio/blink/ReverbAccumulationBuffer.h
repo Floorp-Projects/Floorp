@@ -41,7 +41,9 @@ namespace WebCore {
 // around.
 class ReverbAccumulationBuffer {
  public:
-  explicit ReverbAccumulationBuffer(size_t length);
+  ReverbAccumulationBuffer();
+  // Returns false on failure.
+  bool allocate(size_t length);
 
   // This will read from, then clear-out numberOfFrames
   void readAndClear(float* destination, size_t numberOfFrames);

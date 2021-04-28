@@ -63,7 +63,7 @@ class Reverb {
   size_t sizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
  private:
-  void initialize(const nsTArray<const float*>& impulseResponseBuffer,
+  bool initialize(const nsTArray<const float*>& impulseResponseBuffer,
                   size_t impulseResponseBufferLength, size_t maxFFTSize,
                   bool useBackgroundThreads);
 

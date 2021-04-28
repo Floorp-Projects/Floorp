@@ -35,10 +35,15 @@ using namespace mozilla;
 
 namespace WebCore {
 
-ReverbAccumulationBuffer::ReverbAccumulationBuffer(size_t length)
-    : m_readIndex(0), m_readTimeFrame(0) {
-  m_buffer.SetLength(length);
+ReverbAccumulationBuffer::ReverbAccumulationBuffer()
+    : m_readIndex(0), m_readTimeFrame(0) {}
+
+bool ReverbAccumulationBuffer::allocate(size_t length) {
+  if (!m_buffer.SetLength(length, fallible)) {
+    return false;
+  }
   PodZero(m_buffer.Elements(), length);
+  return true;
 }
 
 void ReverbAccumulationBuffer::readAndClear(float* destination,
