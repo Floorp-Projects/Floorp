@@ -900,7 +900,6 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
   }
 
   #appMenu-fxa-status2[fxastatus] > #appMenu-fxa-label2 {
-    padding-block: 16px;
     -moz-box-flex: 1;
   }
 
