@@ -61,6 +61,10 @@ ia2Accessible::QueryInterface(REFIID iid, void** ppv) {
   return E_NOINTERFACE;
 }
 
+AccessibleWrap* ia2Accessible::LocalAcc() {
+  return static_cast<MsaaAccessible*>(this)->LocalAcc();
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // IAccessible2
 
@@ -69,8 +73,8 @@ ia2Accessible::get_nRelations(long* aNRelations) {
   if (!aNRelations) return E_INVALIDARG;
   *aNRelations = 0;
 
-  AccessibleWrap* acc = static_cast<AccessibleWrap*>(this);
-  if (acc->IsDefunct()) return CO_E_OBJNOTCONNECTED;
+  AccessibleWrap* acc = LocalAcc();
+  if (!acc) return CO_E_OBJNOTCONNECTED;
 
   MOZ_ASSERT(!acc->IsProxy());
 
@@ -89,8 +93,8 @@ ia2Accessible::get_relation(long aRelationIndex,
   if (!aRelation || aRelationIndex < 0) return E_INVALIDARG;
   *aRelation = nullptr;
 
-  AccessibleWrap* acc = static_cast<AccessibleWrap*>(this);
-  if (acc->IsDefunct()) return CO_E_OBJNOTCONNECTED;
+  AccessibleWrap* acc = LocalAcc();
+  if (!acc) return CO_E_OBJNOTCONNECTED;
 
   MOZ_ASSERT(!acc->IsProxy());
 
@@ -104,7 +108,8 @@ ia2Accessible::get_relation(long aRelationIndex,
         new ia2AccessibleRelation(relationType, &rel);
     if (ia2Relation->HasTargets()) {
       if (relIdx == aRelationIndex) {
-        acc->AssociateCOMObjectForDisconnection(ia2Relation);
+        MsaaAccessible* msaa = static_cast<MsaaAccessible*>(this);
+        msaa->AssociateCOMObjectForDisconnection(ia2Relation);
         ia2Relation.forget(aRelation);
         return S_OK;
       }
@@ -123,8 +128,8 @@ ia2Accessible::get_relations(long aMaxRelations,
   if (!aRelation || !aNRelations || aMaxRelations <= 0) return E_INVALIDARG;
   *aNRelations = 0;
 
-  AccessibleWrap* acc = static_cast<AccessibleWrap*>(this);
-  if (acc->IsDefunct()) return CO_E_OBJNOTCONNECTED;
+  AccessibleWrap* acc = LocalAcc();
+  if (!acc) return CO_E_OBJNOTCONNECTED;
 
   MOZ_ASSERT(!acc->IsProxy());
 
@@ -138,7 +143,8 @@ ia2Accessible::get_relations(long aMaxRelations,
     RefPtr<ia2AccessibleRelation> ia2Rel =
         new ia2AccessibleRelation(relationType, &rel);
     if (ia2Rel->HasTargets()) {
-      acc->AssociateCOMObjectForDisconnection(ia2Rel);
+      MsaaAccessible* msaa = static_cast<MsaaAccessible*>(this);
+      msaa->AssociateCOMObjectForDisconnection(ia2Rel);
       ia2Rel.forget(aRelation + (*aNRelations));
       (*aNRelations)++;
     }
@@ -151,8 +157,8 @@ ia2Accessible::role(long* aRole) {
   if (!aRole) return E_INVALIDARG;
   *aRole = 0;
 
-  AccessibleWrap* acc = static_cast<AccessibleWrap*>(this);
-  if (acc->IsDefunct()) return CO_E_OBJNOTCONNECTED;
+  AccessibleWrap* acc = LocalAcc();
+  if (!acc) return CO_E_OBJNOTCONNECTED;
 
 #define ROLE(_geckoRole, stringRole, atkRole, macRole, macSubrole, msaaRole, \
              ia2Role, androidClass, nameRule)                                \
@@ -186,8 +192,8 @@ ia2Accessible::role(long* aRole) {
 // XXX Use MOZ_CAN_RUN_SCRIPT_BOUNDARY for now due to bug 1543294.
 MOZ_CAN_RUN_SCRIPT_BOUNDARY STDMETHODIMP
 ia2Accessible::scrollTo(enum IA2ScrollType aScrollType) {
-  AccessibleWrap* acc = static_cast<AccessibleWrap*>(this);
-  if (acc->IsDefunct()) return CO_E_OBJNOTCONNECTED;
+  AccessibleWrap* acc = LocalAcc();
+  if (!acc) return CO_E_OBJNOTCONNECTED;
 
   MOZ_ASSERT(!acc->IsProxy());
   RefPtr<PresShell> presShell = acc->Document()->PresShellPtr();
@@ -200,8 +206,8 @@ ia2Accessible::scrollTo(enum IA2ScrollType aScrollType) {
 STDMETHODIMP
 ia2Accessible::scrollToPoint(enum IA2CoordinateType aCoordType, long aX,
                              long aY) {
-  AccessibleWrap* acc = static_cast<AccessibleWrap*>(this);
-  if (acc->IsDefunct()) return CO_E_OBJNOTCONNECTED;
+  AccessibleWrap* acc = LocalAcc();
+  if (!acc) return CO_E_OBJNOTCONNECTED;
 
   uint32_t geckoCoordType =
       (aCoordType == IA2_COORDTYPE_SCREEN_RELATIVE)
@@ -224,8 +230,8 @@ ia2Accessible::get_groupPosition(long* aGroupLevel, long* aSimilarItemsInGroup,
   *aSimilarItemsInGroup = 0;
   *aPositionInGroup = 0;
 
-  AccessibleWrap* acc = static_cast<AccessibleWrap*>(this);
-  if (acc->IsDefunct()) return CO_E_OBJNOTCONNECTED;
+  AccessibleWrap* acc = LocalAcc();
+  if (!acc) return CO_E_OBJNOTCONNECTED;
 
   GroupPos groupPos = acc->GroupPosition();
 
@@ -248,8 +254,8 @@ ia2Accessible::get_states(AccessibleStates* aStates) {
 
   // XXX: bug 344674 should come with better approach that we have here.
 
-  AccessibleWrap* acc = static_cast<AccessibleWrap*>(this);
-  if (acc->IsDefunct()) {
+  AccessibleWrap* acc = LocalAcc();
+  if (!acc) {
     *aStates = IA2_STATE_DEFUNCT;
     return S_OK;
   }
@@ -338,7 +344,7 @@ STDMETHODIMP
 ia2Accessible::get_uniqueID(long* aUniqueID) {
   if (!aUniqueID) return E_INVALIDARG;
 
-  AccessibleWrap* acc = static_cast<AccessibleWrap*>(this);
+  AccessibleWrap* acc = LocalAcc();
   *aUniqueID = MsaaAccessible::GetChildIDFor(acc);
   return S_OK;
 }
@@ -348,10 +354,10 @@ ia2Accessible::get_windowHandle(HWND* aWindowHandle) {
   if (!aWindowHandle) return E_INVALIDARG;
   *aWindowHandle = 0;
 
-  AccessibleWrap* acc = static_cast<AccessibleWrap*>(this);
-  if (acc->IsDefunct()) return CO_E_OBJNOTCONNECTED;
+  AccessibleWrap* acc = LocalAcc();
+  if (!acc) return CO_E_OBJNOTCONNECTED;
 
-  *aWindowHandle = AccessibleWrap::GetHWNDFor(acc);
+  *aWindowHandle = MsaaAccessible::GetHWNDFor(acc);
   return S_OK;
 }
 
@@ -360,8 +366,8 @@ ia2Accessible::get_indexInParent(long* aIndexInParent) {
   if (!aIndexInParent) return E_INVALIDARG;
   *aIndexInParent = -1;
 
-  AccessibleWrap* acc = static_cast<AccessibleWrap*>(this);
-  if (acc->IsDefunct()) return CO_E_OBJNOTCONNECTED;
+  AccessibleWrap* acc = LocalAcc();
+  if (!acc) return CO_E_OBJNOTCONNECTED;
 
   MOZ_ASSERT(!acc->IsProxy());
   *aIndexInParent = acc->IndexInParent();
@@ -380,8 +386,8 @@ ia2Accessible::get_locale(IA2Locale* aLocale) {
   // Two-letter primary codes are reserved for [ISO639] language abbreviations.
   // Any two-letter subcode is understood to be a [ISO3166] country code.
 
-  AccessibleWrap* acc = static_cast<AccessibleWrap*>(this);
-  if (acc->IsDefunct()) return CO_E_OBJNOTCONNECTED;
+  AccessibleWrap* acc = LocalAcc();
+  if (!acc) return CO_E_OBJNOTCONNECTED;
 
   nsAutoString lang;
   acc->Language(lang);
@@ -420,8 +426,8 @@ ia2Accessible::get_attributes(BSTR* aAttributes) {
   if (!aAttributes) return E_INVALIDARG;
   *aAttributes = nullptr;
 
-  AccessibleWrap* acc = static_cast<AccessibleWrap*>(this);
-  if (acc->IsDefunct()) return CO_E_OBJNOTCONNECTED;
+  AccessibleWrap* acc = LocalAcc();
+  if (!acc) return CO_E_OBJNOTCONNECTED;
 
   // The format is name:value;name:value; with \ for escaping these
   // characters ":;=,\".
@@ -452,8 +458,8 @@ ia2Accessible::get_accessibleWithCaret(IUnknown** aAccessible,
   *aAccessible = nullptr;
   *aCaretOffset = -1;
 
-  AccessibleWrap* acc = static_cast<AccessibleWrap*>(this);
-  if (acc->IsDefunct()) return CO_E_OBJNOTCONNECTED;
+  AccessibleWrap* acc = LocalAcc();
+  if (!acc) return CO_E_OBJNOTCONNECTED;
 
   int32_t caretOffset = -1;
   LocalAccessible* accWithCaret =
@@ -466,9 +472,9 @@ ia2Accessible::get_accessibleWithCaret(IUnknown** aAccessible,
 
   if (child != acc) return S_FALSE;
 
-  *aAccessible =
-      static_cast<IAccessible2*>(static_cast<AccessibleWrap*>(accWithCaret));
-  (*aAccessible)->AddRef();
+  RefPtr<IAccessible2> ia2WithCaret;
+  accWithCaret->GetNativeInterface(getter_AddRefs(ia2WithCaret));
+  ia2WithCaret.forget(aAccessible);
   *aCaretOffset = caretOffset;
   return S_OK;
 }
@@ -489,8 +495,8 @@ ia2Accessible::get_relationTargetsOfType(BSTR aType, long aMaxTargets,
   }
   if (!relationType) return E_INVALIDARG;
 
-  AccessibleWrap* acc = static_cast<AccessibleWrap*>(this);
-  if (acc->IsDefunct()) return CO_E_OBJNOTCONNECTED;
+  AccessibleWrap* acc = LocalAcc();
+  if (!acc) return CO_E_OBJNOTCONNECTED;
 
   nsTArray<LocalAccessible*> targets;
   MOZ_ASSERT(!acc->IsProxy());
@@ -508,9 +514,9 @@ ia2Accessible::get_relationTargetsOfType(BSTR aType, long aMaxTargets,
   if (!*aTargets) return E_OUTOFMEMORY;
 
   for (int32_t i = 0; i < *aNTargets; i++) {
-    AccessibleWrap* target = static_cast<AccessibleWrap*>(targets[i]);
-    (*aTargets)[i] = static_cast<IAccessible2*>(target);
-    (*aTargets)[i]->AddRef();
+    RefPtr<IAccessible2> target;
+    targets[i]->GetNativeInterface(getter_AddRefs(target));
+    target.forget(&(*aTargets)[i]);
   }
 
   return S_OK;
@@ -522,8 +528,8 @@ ia2Accessible::get_selectionRanges(IA2Range** aRanges, long* aNRanges) {
 
   *aNRanges = 0;
 
-  AccessibleWrap* acc = static_cast<AccessibleWrap*>(this);
-  if (acc->IsDefunct()) return CO_E_OBJNOTCONNECTED;
+  AccessibleWrap* acc = LocalAcc();
+  if (!acc) return CO_E_OBJNOTCONNECTED;
 
   AutoTArray<TextRange, 1> ranges;
   acc->Document()->SelectionRanges(&ranges);
@@ -535,17 +541,15 @@ ia2Accessible::get_selectionRanges(IA2Range** aRanges, long* aNRanges) {
   if (!*aRanges) return E_OUTOFMEMORY;
 
   for (uint32_t idx = 0; idx < static_cast<uint32_t>(*aNRanges); idx++) {
-    AccessibleWrap* anchor =
-        static_cast<AccessibleWrap*>(ranges[idx].StartContainer());
-    (*aRanges)[idx].anchor = static_cast<IAccessible2*>(anchor);
-    anchor->AddRef();
+    RefPtr<IAccessible2> anchor;
+    ranges[idx].StartContainer()->GetNativeInterface(getter_AddRefs(anchor));
+    anchor.forget(&(*aRanges)[idx].anchor);
 
     (*aRanges)[idx].anchorOffset = ranges[idx].StartOffset();
 
-    AccessibleWrap* active =
-        static_cast<AccessibleWrap*>(ranges[idx].EndContainer());
-    (*aRanges)[idx].active = static_cast<IAccessible2*>(active);
-    active->AddRef();
+    RefPtr<IAccessible2> active;
+    ranges[idx].EndContainer()->GetNativeInterface(getter_AddRefs(active));
+    active.forget(&(*aRanges)[idx].active);
 
     (*aRanges)[idx].activeOffset = ranges[idx].EndOffset();
   }
