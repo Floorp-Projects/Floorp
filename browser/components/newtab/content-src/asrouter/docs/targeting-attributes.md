@@ -125,16 +125,18 @@ interface AttributionCode {
 
 ### `browserSettings`
 
-Includes two properties:
-* `attribution`, which indicates how Firefox was downloaded - DEPRECATED - please use [attributionData](#attributiondata)
-* `update`, which has information about how Firefox updates
-
-Note that attribution can be `undefined`, so you should check that it exists first.
+* `update`, which has information about Firefox update channel
 
 #### Examples
+
 * Is updating enabled?
 ```java
 browserSettings.update.enabled
+```
+
+* Is beta channel?
+```js
+browserSettings.update.channel == 'beta'
 ```
 
 #### Definition

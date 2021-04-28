@@ -399,8 +399,6 @@ const TargetingGetters = {
   get browserSettings() {
     const { settings } = TelemetryEnvironment.currentEnvironment;
     return {
-      // This way of getting attribution is deprecated - use atttributionData instead
-      attribution: settings.attribution,
       update: settings.update,
     };
   },
