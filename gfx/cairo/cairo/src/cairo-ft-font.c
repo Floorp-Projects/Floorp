@@ -3736,7 +3736,8 @@ cairo_ft_font_face_create_for_pattern (FcPattern *pattern)
  **/
 cairo_font_face_t *
 cairo_ft_font_face_create_for_ft_face (FT_Face         face,
-				       int             load_flags)
+				       int             load_flags,
+				       unsigned int    synth_flags)
 {
     cairo_ft_unscaled_font_t *unscaled;
     cairo_font_face_t *font_face;
@@ -3748,7 +3749,7 @@ cairo_ft_font_face_create_for_ft_face (FT_Face         face,
 	return (cairo_font_face_t *)&_cairo_font_face_nil;
 
     ft_options.load_flags = load_flags;
-    ft_options.synth_flags = 0;
+    ft_options.synth_flags = synth_flags;
     _cairo_font_options_init_default (&ft_options.base);
 
     font_face = _cairo_ft_font_face_create (unscaled, &ft_options);
