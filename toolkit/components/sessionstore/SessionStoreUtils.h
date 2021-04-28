@@ -27,10 +27,8 @@ class GlobalObject;
 struct SSScrollPositionDict;
 
 namespace sessionstore {
-class DocShellRestoreState;
 class FormData;
 class FormEntry;
-class StorageEntry;
 }  // namespace sessionstore
 
 class SessionStoreUtils {
@@ -55,12 +53,8 @@ class SessionStoreUtils {
                                           nsCString& aRetVal);
 
   static void RestoreDocShellCapabilities(
-      nsIDocShell* aDocShell, const nsCString& aDisallowCapabilities);
-  static void RestoreDocShellCapabilities(
       const GlobalObject& aGlobal, nsIDocShell* aDocShell,
-      const nsCString& aDisallowCapabilities) {
-    return RestoreDocShellCapabilities(aDocShell, aDisallowCapabilities);
-  }
+      const nsCString& aDisallowCapabilities);
 
   static void CollectScrollPosition(const GlobalObject& aGlobal,
                                     WindowProxyHolder& aWindow,
@@ -119,18 +113,11 @@ class SessionStoreUtils {
   static already_AddRefed<nsISessionStoreRestoreData>
   ConstructSessionStoreRestoreData(const GlobalObject& aGlobal);
 
-  static already_AddRefed<Promise> InitializeRestore(
-      const GlobalObject& aGlobal, CanonicalBrowsingContext& aContext,
-      nsISessionStoreRestoreData* aData, ErrorResult& aError);
+  static bool SetRestoreData(const GlobalObject& aGlobal,
+                             CanonicalBrowsingContext& aContext,
+                             nsISessionStoreRestoreData* aData);
 
-  static void RestoreDocShellState(
-      nsIDocShell* aDocShell, const sessionstore::DocShellRestoreState& aState);
-
-  static already_AddRefed<Promise> RestoreDocShellState(
-      const GlobalObject& aGlobal, CanonicalBrowsingContext& aContext,
-      const nsACString& aURL, const nsCString& aDocShellCaps,
-      const Record<nsCString, Record<nsString, nsString>>& aSessionStorage,
-      ErrorResult& aError);
+  static nsresult CallRestoreTabContentComplete(Element* aBrowser);
 
   static nsresult ConstructFormDataValues(
       JSContext* aCx, const nsTArray<sessionstore::FormEntry>& aValues,

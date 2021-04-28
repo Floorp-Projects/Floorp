@@ -93,9 +93,6 @@ child:
 
   async SetContainerFeaturePolicy(FeaturePolicy aContainerFeaturePolicy);
 
-  async RestoreDocShellState(DocShellRestoreState aState)
-    returns (bool success);
-
   async RestoreTabContent(SessionStoreRestoreData aData) returns (bool success);
 
 both:
@@ -178,7 +175,7 @@ parent:
   async AccumulatePageUseCounters(UseCounters aUseCounters);
 
   async RequestRestoreTabContent();
-
+  
   async UpdateSessionStore(FormData? aFormData, nsPoint? aScrollPosition,
                            uint32_t aEpoch);
 
