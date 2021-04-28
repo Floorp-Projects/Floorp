@@ -1191,10 +1191,6 @@ SyncEngine.prototype = {
     this._tracker.clearChangedIDs();
     this._tracker.resetScore();
 
-    this._log.info(
-      this._modified.count() + " outgoing items pre-reconciliation"
-    );
-
     // Keep track of what to delete at the end of sync
     this._delete = {};
   },
@@ -1836,9 +1832,8 @@ SyncEngine.prototype = {
       modifiedIDs.add(id);
     }
     let counts = { failed: 0, sent: 0 };
+    this._log.info(`Uploading ${modifiedIDs.size} outgoing records`);
     if (modifiedIDs.size) {
-      this._log.trace("Preparing " + modifiedIDs.size + " outgoing records");
-
       counts.sent = modifiedIDs.size;
 
       let failed = [];
