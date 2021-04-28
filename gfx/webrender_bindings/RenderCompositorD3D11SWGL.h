@@ -21,10 +21,10 @@ class SurfaceD3D11SWGL;
 class RenderCompositorD3D11SWGL : public RenderCompositorLayersSWGL {
  public:
   static UniquePtr<RenderCompositor> Create(
-      RefPtr<widget::CompositorWidget>&& aWidget, nsACString& aError);
+      const RefPtr<widget::CompositorWidget>& aWidget, nsACString& aError);
 
   RenderCompositorD3D11SWGL(layers::CompositorD3D11* aCompositor,
-                            RefPtr<widget::CompositorWidget>&& aWidget,
+                            const RefPtr<widget::CompositorWidget>& aWidget,
                             void* aContext);
   virtual ~RenderCompositorD3D11SWGL();
 

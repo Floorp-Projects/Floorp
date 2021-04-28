@@ -29,20 +29,21 @@ using namespace layers;
 namespace wr {
 
 UniquePtr<RenderCompositor> RenderCompositorLayersSWGL::Create(
-    RefPtr<widget::CompositorWidget>&& aWidget, nsACString& aError) {
+    const RefPtr<widget::CompositorWidget>& aWidget, nsACString& aError) {
 #ifdef XP_WIN
-  return RenderCompositorD3D11SWGL::Create(std::move(aWidget), aError);
+  return RenderCompositorD3D11SWGL::Create(aWidget, aError);
 #else
-  return RenderCompositorOGLSWGL::Create(std::move(aWidget), aError);
+  return RenderCompositorOGLSWGL::Create(aWidget, aError);
 #endif
 }
 
 RenderCompositorLayersSWGL::RenderCompositorLayersSWGL(
-    Compositor* aCompositor, RefPtr<widget::CompositorWidget>&& aWidget,
+    Compositor* aCompositor, const RefPtr<widget::CompositorWidget>& aWidget,
     void* aContext)
-    : RenderCompositor(std::move(aWidget)),
+    : RenderCompositor(aWidget),
       mCompositor(aCompositor),
-      mContext(aContext) {
+      mContext(aContext),
+      mCurrentTileId(wr::NativeTileId()) {
   MOZ_ASSERT(mCompositor);
   MOZ_ASSERT(mContext);
 }

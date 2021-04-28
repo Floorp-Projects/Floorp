@@ -17,9 +17,9 @@ namespace wr {
 class RenderCompositorSWGL : public RenderCompositor {
  public:
   static UniquePtr<RenderCompositor> Create(
-      RefPtr<widget::CompositorWidget>&& aWidget, nsACString& aError);
+      const RefPtr<widget::CompositorWidget>& aWidget, nsACString& aError);
 
-  RenderCompositorSWGL(RefPtr<widget::CompositorWidget>&& aWidget,
+  RenderCompositorSWGL(const RefPtr<widget::CompositorWidget>& aWidget,
                        void* aContext);
   virtual ~RenderCompositorSWGL();
 

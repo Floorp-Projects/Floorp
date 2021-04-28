@@ -81,8 +81,9 @@ class RenderCompositorNative : public RenderCompositor {
   };
 
  protected:
-  explicit RenderCompositorNative(RefPtr<widget::CompositorWidget>&& aWidget,
-                                  gl::GLContext* aGL = nullptr);
+  explicit RenderCompositorNative(
+      const RefPtr<widget::CompositorWidget>& aWidget,
+      gl::GLContext* aGL = nullptr);
 
   virtual bool InitDefaultFramebuffer(const gfx::IntRect& aBounds) = 0;
   virtual void DoSwap() = 0;
@@ -149,9 +150,9 @@ static inline bool operator==(const RenderCompositorNative::TileKey& a0,
 class RenderCompositorNativeOGL : public RenderCompositorNative {
  public:
   static UniquePtr<RenderCompositor> Create(
-      RefPtr<widget::CompositorWidget>&& aWidget, nsACString& aError);
+      const RefPtr<widget::CompositorWidget>& aWidget, nsACString& aError);
 
-  RenderCompositorNativeOGL(RefPtr<widget::CompositorWidget>&& aWidget,
+  RenderCompositorNativeOGL(const RefPtr<widget::CompositorWidget>& aWidget,
                             RefPtr<gl::GLContext>&& aGL);
   virtual ~RenderCompositorNativeOGL();
 
@@ -183,9 +184,9 @@ class RenderCompositorNativeOGL : public RenderCompositorNative {
 class RenderCompositorNativeSWGL : public RenderCompositorNative {
  public:
   static UniquePtr<RenderCompositor> Create(
-      RefPtr<widget::CompositorWidget>&& aWidget, nsACString& aError);
+      const RefPtr<widget::CompositorWidget>& aWidget, nsACString& aError);
 
-  RenderCompositorNativeSWGL(RefPtr<widget::CompositorWidget>&& aWidget,
+  RenderCompositorNativeSWGL(const RefPtr<widget::CompositorWidget>& aWidget,
                              void* aContext);
   virtual ~RenderCompositorNativeSWGL();
 
