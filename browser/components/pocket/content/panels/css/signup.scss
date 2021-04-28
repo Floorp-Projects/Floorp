@@ -67,6 +67,11 @@
 .pkt_ext_containersignup a:hover {
     color: #3076b9;
 }
+.pkt_ext_containersignup .pkt_ext_introdetail {
+    background-color: #fbfbfb;
+    border: 1px solid #c1c1c1;
+    border-width: 0 0 1px;
+}
 .pkt_ext_containersignup .pkt_ext_logo {
     background: url(../img/pocketlogo@1x.png) center bottom no-repeat;
     display: block;
@@ -394,6 +399,12 @@
 .pkt_ext_signup_es .pkt_ext_logo,
 .pkt_ext_signup_ru .pkt_ext_logo {
     padding-top: 15px;
+}
+.pkt_ext_signup_de .pkt_ext_introdetailhero .pkt_ext_tagline,
+.pkt_ext_signup_es .pkt_ext_introdetailhero .pkt_ext_tagline,
+.pkt_ext_signup_ja .pkt_ext_introdetailhero .pkt_ext_tagline,
+.pkt_ext_signup_ru .pkt_ext_introdetailhero .pkt_ext_tagline {
+    font-size: 13px;
 }
 .pkt_ext_signup_overflow.pkt_ext_signup_de .signup-btn-firefox .logo,
 .pkt_ext_signup_overflow.pkt_ext_signup_es .signup-btn-firefox .logo,

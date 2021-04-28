@@ -705,6 +705,10 @@ PKT_PANEL_OVERLAY.prototype = {
       $("body .pkt_ext_subshell").prepend(
         Handlebars.templates.saved_premiumshell(this.dictJSON)
       );
+
+      $(".pkt_ext_initload").append(
+        Handlebars.templates.saved_premiumextras(this.dictJSON)
+      );
     }
   },
 };
