@@ -28,7 +28,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   DeferredTask: "resource://gre/modules/DeferredTask.jsm",
   ExtensionUtils: "resource://gre/modules/ExtensionUtils.jsm",
   FileUtils: "resource://gre/modules/FileUtils.jsm",
-  OS: "resource://gre/modules/osfile.jsm",
   PermissionsUtils: "resource://gre/modules/PermissionsUtils.jsm",
   Services: "resource://gre/modules/Services.jsm",
 
@@ -1551,9 +1550,8 @@ this.XPIDatabase = {
 
   async _saveNow() {
     try {
-      let json = JSON.stringify(this);
       let path = this.jsonFile.path;
-      await OS.File.writeAtomic(path, json, { tmpPath: `${path}.tmp` });
+      await IOUtils.writeJSON(path, this, { tmpPath: `${path}.tmp` });
 
       if (!this._schemaVersionSet) {
         // Update the XPIDB schema version preference the first time we
@@ -1571,7 +1569,10 @@ this.XPIDatabase = {
     } catch (error) {
       logger.warn("Failed to save XPI database", error);
       this._saveError = error;
-      throw error;
+
+      if (!(error instanceof DOMException) || error.name !== "AbortError") {
+        throw error;
+      }
     }
   },
 
@@ -1665,34 +1666,35 @@ this.XPIDatabase = {
   /**
    * Parse loaded data, reconstructing the database if the loaded data is not valid
    *
-   * @param {string} aData
-   *        The stringified add-on JSON to parse.
+   * @param {object} aInputAddons
+   *        The add-on JSON to parse.
    * @param {boolean} aRebuildOnError
    *        If true, synchronously reconstruct the database from installed add-ons
    */
-  async parseDB(aData, aRebuildOnError) {
+  async parseDB(aInputAddons, aRebuildOnError) {
     try {
       let parseTimer = AddonManagerPrivate.simpleTimer("XPIDB_parseDB_MS");
-      let inputAddons = JSON.parse(aData);
 
-      if (!("schemaVersion" in inputAddons) || !("addons" in inputAddons)) {
+      if (!("schemaVersion" in aInputAddons) || !("addons" in aInputAddons)) {
         let error = new Error("Bad JSON file contents");
         error.rebuildReason = "XPIDB_rebuildBadJSON_MS";
         throw error;
       }
 
-      if (inputAddons.schemaVersion <= 27) {
+      if (aInputAddons.schemaVersion <= 27) {
         // Types were translated in bug 857456.
-        for (let addon of inputAddons.addons) {
+        for (let addon of aInputAddons.addons) {
           migrateAddonLoader(addon);
         }
-      } else if (inputAddons.schemaVersion != DB_SCHEMA) {
+      } else if (aInputAddons.schemaVersion != DB_SCHEMA) {
         // For now, we assume compatibility for JSON data with a
         // mismatched schema version, though we throw away any fields we
         // don't know about (bug 902956)
-        this._recordStartupError(`schemaMismatch-${inputAddons.schemaVersion}`);
+        this._recordStartupError(
+          `schemaMismatch-${aInputAddons.schemaVersion}`
+        );
         logger.debug(
-          `JSON schema mismatch: expected ${DB_SCHEMA}, actual ${inputAddons.schemaVersion}`
+          `JSON schema mismatch: expected ${DB_SCHEMA}, actual ${aInputAddons.schemaVersion}`
         );
       }
 
@@ -1701,7 +1703,7 @@ this.XPIDatabase = {
       // If we got here, we probably have good data
       // Make AddonInternal instances from the loaded data and save them
       let addonDB = new Map();
-      await forEach(inputAddons.addons, loadedAddon => {
+      await forEach(aInputAddons.addons, loadedAddon => {
         if (loadedAddon.path) {
           try {
             loadedAddon._sourceBundle = new nsIFile(loadedAddon.path);
@@ -1772,16 +1774,13 @@ this.XPIDatabase = {
     logger.debug(`Starting async load of XPI database ${this.jsonFile.path}`);
     this._dbPromise = (async () => {
       try {
-        let byteArray = await OS.File.read(this.jsonFile.path, null);
+        let json = await IOUtils.readJSON(this.jsonFile.path);
 
         logger.debug("Finished async read of XPI database, parsing...");
         await this.maybeIdleDispatch();
-        let text = new TextDecoder().decode(byteArray);
-
-        await this.maybeIdleDispatch();
-        await this.parseDB(text, true);
+        await this.parseDB(json, true);
       } catch (error) {
-        if (error.becauseNoSuchFile) {
+        if (error instanceof DOMException && error.name === "NotFoundError") {
           if (Services.prefs.getIntPref(PREF_DB_SCHEMA, 0)) {
             this._recordStartupError("dbMissing");
           }
