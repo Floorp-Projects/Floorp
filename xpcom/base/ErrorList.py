@@ -362,14 +362,6 @@ with modules["NETWORK"]:
     # probably in the process of being torn down.
     errors["NS_ERROR_DOCSHELL_DYING"] = FAILURE(78)
 
-    # FTP specific error codes:
-
-    errors["NS_ERROR_FTP_LOGIN"] = FAILURE(21)
-    errors["NS_ERROR_FTP_CWD"] = FAILURE(22)
-    errors["NS_ERROR_FTP_PASV"] = FAILURE(23)
-    errors["NS_ERROR_FTP_PWD"] = FAILURE(24)
-    errors["NS_ERROR_FTP_LIST"] = FAILURE(28)
-
     # DNS specific error codes:
 
     # The lookup of a hostname failed.  This generally refers to the hostname
@@ -425,10 +417,6 @@ with modules["NETWORK"]:
     # observer is taking over responsibility for the data buffer, and the loader
     # should NOT free it.
     errors["NS_SUCCESS_ADOPTED_DATA"] = SUCCESS(90)
-
-    # FTP
-    errors["NS_NET_STATUS_BEGIN_FTP_TRANSACTION"] = SUCCESS(27)
-    errors["NS_NET_STATUS_END_FTP_TRANSACTION"] = SUCCESS(28)
 
     # This success code may be returned by nsIAuthModule::getNextToken to
     # indicate that the authentication is finished and thus there's no need
