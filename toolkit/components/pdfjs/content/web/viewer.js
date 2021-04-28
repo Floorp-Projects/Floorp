@@ -471,7 +471,6 @@ const PDFViewerApplication = {
   metadata: null,
   _contentDispositionFilename: null,
   _contentLength: null,
-  triggerDelayedFallback: null,
   _saveInProgress: false,
   _wheelUnusedTicks: 0,
   _idleCallbacks: new Set(),
@@ -611,13 +610,13 @@ const PDFViewerApplication = {
       for (let i = 0, ii = cssRules.length; i < ii; i++) {
         const rule = cssRules[i];
 
-        if (rule instanceof CSSMediaRule && rule.media?.[0] === "(-moz-toolbar-prefers-color-scheme: dark)") {
+        if (rule instanceof CSSMediaRule && rule.media?.[0] === "(prefers-color-scheme: dark)") {
           if (cssTheme === ViewerCssTheme.LIGHT) {
             styleSheet.deleteRule(i);
             return;
           }
 
-          const darkRules = /^@media \(-moz-toolbar-prefers-color-scheme: dark\) {\n\s*([\w\s-.,:;/\\{}()]+)\n}$/.exec(rule.cssText);
+          const darkRules = /^@media \(prefers-color-scheme: dark\) {\n\s*([\w\s-.,:;/\\{}()]+)\n}$/.exec(rule.cssText);
 
           if (darkRules?.[1]) {
             styleSheet.deleteRule(i);
@@ -945,7 +944,6 @@ const PDFViewerApplication = {
     this.metadata = null;
     this._contentDispositionFilename = null;
     this._contentLength = null;
-    this.triggerDelayedFallback = null;
     this._saveInProgress = false;
 
     this._cancelIdleCallbacks();
@@ -1124,31 +1122,11 @@ const PDFViewerApplication = {
     }
   },
 
-  _delayedFallback(featureId) {
-    this.externalServices.reportTelemetry({
-      type: "unsupportedFeature",
-      featureId
-    });
-
-    if (!this.triggerDelayedFallback) {
-      this.triggerDelayedFallback = () => {
-        this.fallback(featureId);
-        this.triggerDelayedFallback = null;
-      };
-    }
-  },
-
   fallback(featureId) {
     this.externalServices.reportTelemetry({
       type: "unsupportedFeature",
       featureId
     });
-
-    switch (featureId) {
-      case _pdfjsLib.UNSUPPORTED_FEATURES.errorFontLoadNative:
-      case _pdfjsLib.UNSUPPORTED_FEATURES.errorFontMissing:
-        return;
-    }
 
     if (this._fellback) {
       return;
@@ -1490,10 +1468,8 @@ const PDFViewerApplication = {
           return false;
         }
 
-        console.warn("Warning: JavaScript is not supported");
-
-        this._delayedFallback(_pdfjsLib.UNSUPPORTED_FEATURES.javaScript);
-
+        console.warn("Warning: JavaScript support is not enabled");
+        this.fallback(_pdfjsLib.UNSUPPORTED_FEATURES.javaScript);
         return true;
       });
 
@@ -1546,12 +1522,10 @@ const PDFViewerApplication = {
 
     if (info.IsXFAPresent && !info.IsAcroFormPresent && !pdfDocument.isPureXfa) {
       console.warn("Warning: XFA is not supported");
-
-      this._delayedFallback(_pdfjsLib.UNSUPPORTED_FEATURES.forms);
+      this.fallback(_pdfjsLib.UNSUPPORTED_FEATURES.forms);
     } else if ((info.IsAcroFormPresent || info.IsXFAPresent) && !this.pdfViewer.renderInteractiveForms) {
       console.warn("Warning: Interactive form support is not enabled");
-
-      this._delayedFallback(_pdfjsLib.UNSUPPORTED_FEATURES.forms);
+      this.fallback(_pdfjsLib.UNSUPPORTED_FEATURES.forms);
     }
 
     if (info.IsSignaturesPresent) {
@@ -1971,7 +1945,6 @@ const PDFViewerApplication = {
     });
     window.addEventListener("click", webViewerClick);
     window.addEventListener("keydown", webViewerKeyDown);
-    window.addEventListener("keyup", webViewerKeyUp);
     window.addEventListener("resize", _boundEvents.windowResize);
     window.addEventListener("hashchange", _boundEvents.windowHashChange);
     window.addEventListener("beforeprint", _boundEvents.windowBeforePrint);
@@ -2086,7 +2059,6 @@ const PDFViewerApplication = {
     });
     window.removeEventListener("click", webViewerClick);
     window.removeEventListener("keydown", webViewerKeyDown);
-    window.removeEventListener("keyup", webViewerKeyUp);
     window.removeEventListener("resize", _boundEvents.windowResize);
     window.removeEventListener("hashchange", _boundEvents.windowHashChange);
     window.removeEventListener("beforeprint", _boundEvents.windowBeforePrint);
@@ -2649,10 +2621,6 @@ function webViewerTouchStart(evt) {
 }
 
 function webViewerClick(evt) {
-  if (PDFViewerApplication.triggerDelayedFallback && PDFViewerApplication.pdfViewer.containsElement(evt.target)) {
-    PDFViewerApplication.triggerDelayedFallback();
-  }
-
   if (!PDFViewerApplication.secondaryToolbar.isOpen) {
     return;
   }
@@ -2661,14 +2629,6 @@ function webViewerClick(evt) {
 
   if (PDFViewerApplication.pdfViewer.containsElement(evt.target) || appConfig.toolbar.container.contains(evt.target) && evt.target !== appConfig.secondaryToolbar.toggleButton) {
     PDFViewerApplication.secondaryToolbar.close();
-  }
-}
-
-function webViewerKeyUp(evt) {
-  if (evt.keyCode === 9) {
-    if (PDFViewerApplication.triggerDelayedFallback) {
-      PDFViewerApplication.triggerDelayedFallback();
-    }
   }
 }
 
@@ -3539,27 +3499,29 @@ class EventBus {
 
     const args = Array.prototype.slice.call(arguments, 1);
     let externalListeners;
-    eventListeners.slice(0).forEach(({
+
+    for (const {
       listener,
       external,
       once
-    }) => {
+    } of eventListeners.slice(0)) {
       if (once) {
         this._off(eventName, listener);
       }
 
       if (external) {
         (externalListeners ||= []).push(listener);
-        return;
+        continue;
       }
 
       listener.apply(null, args);
-    });
+    }
 
     if (externalListeners) {
-      externalListeners.forEach(listener => {
+      for (const listener of externalListeners) {
         listener.apply(null, args);
-      });
+      }
+
       externalListeners = null;
     }
 
@@ -9705,7 +9667,7 @@ class BaseViewer {
       throw new Error("Cannot initialize BaseViewer.");
     }
 
-    const viewerVersion = '2.9.44';
+    const viewerVersion = '2.9.142';
 
     if (_pdfjsLib.version !== viewerVersion) {
       throw new Error(`The API version "${_pdfjsLib.version}" does not match the Viewer version "${viewerVersion}".`);
@@ -11223,8 +11185,7 @@ const DEFAULT_L10N_STRINGS = {
   unexpected_response_error: "Unexpected server response.",
   printing_not_supported: "Warning: Printing is not fully supported by this browser.",
   printing_not_ready: "Warning: The PDF is not fully loaded for printing.",
-  web_fonts_disabled: "Web fonts are disabled: unable to use embedded PDF fonts.",
-  unsupported_feature_signatures: "This PDF document contains digital signatures. Validation of signatures is not supported."
+  web_fonts_disabled: "Web fonts are disabled: unable to use embedded PDF fonts."
 };
 
 function getL10nFallback(key, args) {
@@ -14155,8 +14116,8 @@ var _app_options = __webpack_require__(1);
 
 var _app = __webpack_require__(3);
 
-const pdfjsVersion = '2.9.44';
-const pdfjsBuild = '6cf307000';
+const pdfjsVersion = '2.9.142';
+const pdfjsBuild = 'd10da907d';
 window.PDFViewerApplication = _app.PDFViewerApplication;
 window.PDFViewerApplicationOptions = _app_options.AppOptions;
 ;
