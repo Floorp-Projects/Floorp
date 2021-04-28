@@ -3425,12 +3425,12 @@ nsresult HTMLEditor::InsertTextWithTransaction(
   return rv;
 }
 
-EditorDOMPoint HTMLEditor::PrepareToInsertBRElement(
+Result<EditorDOMPoint, nsresult> HTMLEditor::PrepareToInsertBRElement(
     const EditorDOMPoint& aPointToInsert) {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
   if (NS_WARN_IF(!aPointToInsert.IsSet())) {
-    return EditorDOMPoint();
+    return Err(NS_ERROR_FAILURE);
   }
 
   if (!aPointToInsert.IsInTextNode()) {
@@ -3440,8 +3440,10 @@ EditorDOMPoint HTMLEditor::PrepareToInsertBRElement(
   if (aPointToInsert.IsStartOfContainer()) {
     // Insert before the text node.
     EditorDOMPoint pointInContainer(aPointToInsert.GetContainer());
-    NS_WARNING_ASSERTION(pointInContainer.IsSet(),
-                         "Failed to climb up the DOM tree from text node");
+    if (!pointInContainer.IsSet()) {
+      NS_WARNING("Failed to climb up the DOM tree from text node");
+      return Err(NS_ERROR_FAILURE);
+    }
     return pointInContainer;
   }
 
@@ -3449,30 +3451,30 @@ EditorDOMPoint HTMLEditor::PrepareToInsertBRElement(
     // Insert after the text node.
     EditorDOMPoint pointInContainer(aPointToInsert.GetContainer());
     if (NS_WARN_IF(!pointInContainer.IsSet())) {
-      return pointInContainer;
+      NS_WARNING("Failed to climb up the DOM tree from text node");
+      return Err(NS_ERROR_FAILURE);
     }
-    DebugOnly<bool> advanced = pointInContainer.AdvanceOffset();
-    NS_WARNING_ASSERTION(advanced,
-                         "Failed to advance offset to after the text node");
+    MOZ_ALWAYS_TRUE(pointInContainer.AdvanceOffset());
     return pointInContainer;
   }
 
   MOZ_DIAGNOSTIC_ASSERT(aPointToInsert.IsSetAndValid());
 
   // Unfortunately, we need to split the text node at the offset.
-  IgnoredErrorResult ignoredError;
+  ErrorResult error;
   nsCOMPtr<nsIContent> newLeftNode =
-      SplitNodeWithTransaction(aPointToInsert, ignoredError);
-  NS_WARNING_ASSERTION(!ignoredError.Failed(),
-                       "HTMLEditor::SplitNodeWithTransaction() failed");
-  if (ignoredError.Failed()) {
-    return EditorDOMPoint();
+      SplitNodeWithTransaction(aPointToInsert, error);
+  if (error.Failed()) {
+    NS_WARNING("HTMLEditor::SplitNodeWithTransaction() failed");
+    return Err(error.StealNSResult());
   }
   Unused << newLeftNode;
   // Insert new <br> before the right node.
   EditorDOMPoint pointInContainer(aPointToInsert.GetContainer());
-  NS_WARNING_ASSERTION(pointInContainer.IsSet(),
-                       "Failed to split the text node");
+  if (!pointInContainer.IsSet()) {
+    NS_WARNING("Failed to climb up the tree");
+    return Err(NS_ERROR_FAILURE);
+  }
   return pointInContainer;
 }
 
@@ -3480,14 +3482,16 @@ Result<RefPtr<Element>, nsresult> HTMLEditor::InsertBRElementWithTransaction(
     const EditorDOMPoint& aPointToInsert, EDirection aSelect /* = eNone */) {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
-  EditorDOMPoint pointToInsert = PrepareToInsertBRElement(aPointToInsert);
-  if (NS_WARN_IF(!pointToInsert.IsSet())) {
+  Result<EditorDOMPoint, nsresult> maybePointToInsert =
+      PrepareToInsertBRElement(aPointToInsert);
+  if (maybePointToInsert.isErr()) {
     NS_WARNING("HTMLEditor::PrepareToInsertBRElement() failed");
-    return Err(NS_ERROR_FAILURE);
+    return Err(maybePointToInsert.unwrapErr());
   }
+  MOZ_ASSERT(maybePointToInsert.inspect().IsSetAndValid());
 
   RefPtr<Element> newBRElement =
-      CreateNodeWithTransaction(*nsGkAtoms::br, pointToInsert);
+      CreateNodeWithTransaction(*nsGkAtoms::br, maybePointToInsert.inspect());
   if (NS_WARN_IF(!newBRElement)) {
     NS_WARNING("EditorBase::CreateNodeWithTransaction() failed");
     return Err(NS_ERROR_FAILURE);

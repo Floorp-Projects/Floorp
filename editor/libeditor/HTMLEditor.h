@@ -3484,10 +3484,10 @@ class HTMLEditor final : public TextEditor,
    *
    * @param aPointToInsert      Candidate point to insert new <br> element.
    * @return                    Computed point to insert new <br> element.
-   *                            If something failed, this is unset.
+   *                            If something failed, this return error.
    */
-  MOZ_CAN_RUN_SCRIPT EditorDOMPoint
-  PrepareToInsertBRElement(const EditorDOMPoint& aPointToInsert);
+  MOZ_CAN_RUN_SCRIPT Result<EditorDOMPoint, nsresult> PrepareToInsertBRElement(
+      const EditorDOMPoint& aPointToInsert);
 
   /**
    * IndentAsSubAction() indents the content around Selection.
