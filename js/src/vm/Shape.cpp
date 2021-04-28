@@ -59,43 +59,65 @@ bool ShapeTable::init(JSContext* cx, Shape* lastProp) {
 void Shape::removeFromDictionary(NativeObject* obj) {
   MOZ_ASSERT(inDictionary());
   MOZ_ASSERT(obj->inDictionaryMode());
-  MOZ_ASSERT(!dictNext.isNone());
 
   MOZ_ASSERT(obj->shape()->inDictionary());
-  MOZ_ASSERT(obj->shape()->dictNext.toObject() == obj);
+  MOZ_ASSERT(obj->shape()->dictNext.isNone());
 
+  // Update parent's next pointer.
   if (parent) {
     parent->setDictionaryNextPtr(dictNext);
   }
-  dictNext.setPrev(parent);
+
+  // Update next shape's parent pointer, or change the object's shape if this is
+  // the last property.
+  if (dictNext.isShape()) {
+    dictNext.toShape()->setParent(parent);
+  } else {
+    MOZ_ASSERT(obj->lastProperty() == this);
+    obj->setShape(parent);
+  }
+
   clearDictionaryNextPtr();
 
   obj->shape()->clearCachedBigEnoughForShapeTable();
 }
 
-void Shape::insertIntoDictionaryBefore(DictionaryShapeLink next) {
-  // Don't assert inDictionaryMode() here because we may be called from
-  // NativeObject::toDictionaryMode via Shape::initDictionaryShape.
-  MOZ_ASSERT(inDictionary());
+void Shape::initDictionaryShapeAtEnd(const StackShape& child,
+                                     NativeObject* obj) {
+  new (this) Shape(child, obj->numFixedSlots());
+  this->immutableFlags |= IN_DICTIONARY;
+
+  MOZ_ASSERT(!parent);
   MOZ_ASSERT(dictNext.isNone());
 
-  Shape* prev = next.prev();
+  Shape* prev = obj->lastProperty();
+  MOZ_ASSERT(prev->inDictionary());
+  MOZ_ASSERT(zone() == prev->zone());
+  MOZ_ASSERT(prev->dictNext.isNone());
 
-#ifdef DEBUG
-  if (prev) {
-    MOZ_ASSERT(prev->inDictionary());
-    MOZ_ASSERT(prev->dictNext == next);
-    MOZ_ASSERT(zone() == prev->zone());
+  this->setParent(prev);
+  prev->setNextDictionaryShape(this);
+  obj->setShape(this);
+}
+
+void Shape::initDictionaryShapeAtFront(const StackShape& child, uint32_t nfixed,
+                                       Shape* next) {
+  new (this) Shape(child, nfixed);
+  this->immutableFlags |= IN_DICTIONARY;
+
+  // Note: this is used by toDictionaryMode where we don't want to change
+  // obj->shape until we've allocated all dictionary shapes.
+
+  MOZ_ASSERT(!parent);
+  MOZ_ASSERT(dictNext.isNone());
+
+  if (next) {
+    MOZ_ASSERT(next->inDictionary());
+    MOZ_ASSERT(zone() == next->zone());
+    MOZ_ASSERT(!next->parent);
+    this->setNextDictionaryShape(next);
+    next->setParent(this);
   }
-#endif
-
-  setParent(prev);
-  if (parent) {
-    parent->setNextDictionaryShape(this);
-  }
-
-  setDictionaryNextPtr(next);
-  dictNext.setPrev(this);
 }
 
 void Shape::handoffTableTo(Shape* shape) {
@@ -325,8 +347,7 @@ Shape* Shape::replaceLastProperty(JSContext* cx, ObjectFlags objectFlags,
 
     MOZ_ASSERT(child.slot() < obj->slotSpan());
 
-    shape->initDictionaryShape(child, obj->numFixedSlots(),
-                               DictionaryShapeLink(obj));
+    shape->initDictionaryShapeAtEnd(child, obj);
 
     if (!table->add(cx, child.propid(), shape)) {
       shape->removeFromDictionary(obj);
@@ -374,8 +395,7 @@ Shape* Shape::replaceLastProperty(JSContext* cx, ObjectFlags objectFlags,
     if (!shape) {
       return nullptr;
     }
-    shape->initDictionaryShape(child, obj->numFixedSlots(),
-                               DictionaryShapeLink(obj));
+    shape->initDictionaryShapeAtEnd(child, obj);
 
     if (!table->add(cx, child.propid(), shape)) {
       shape->removeFromDictionary(obj);
@@ -426,12 +446,9 @@ bool js::NativeObject::toDictionaryMode(JSContext* cx, HandleNativeObject obj) {
       return false;
     }
 
-    DictionaryShapeLink next;
-    if (dictionaryShape) {
-      next.setShape(dictionaryShape);
-    }
     StackShape child(shape);
-    dprop->initDictionaryShape(child, obj->numFixedSlots(), next);
+    dprop->initDictionaryShapeAtFront(child, obj->numFixedSlots(),
+                                      dictionaryShape);
 
     if (!dictionaryShape) {
       root = dprop;
@@ -447,14 +464,7 @@ bool js::NativeObject::toDictionaryMode(JSContext* cx, HandleNativeObject obj) {
     return false;
   }
 
-  if (IsInsideNursery(obj) &&
-      !cx->nursery().queueDictionaryModeObjectToSweep(obj)) {
-    ReportOutOfMemory(cx);
-    return false;
-  }
-
   MOZ_ASSERT(root->dictNext.isNone());
-  root->setDictionaryObject(obj);
   obj->setShape(root);
 
   MOZ_ASSERT(obj->inDictionaryMode());
@@ -695,8 +705,7 @@ bool NativeObject::addEnumerableDataProperty(JSContext* cx,
 
     MOZ_ASSERT(slot < obj->slotSpan());
 
-    shape->initDictionaryShape(child, obj->numFixedSlots(),
-                               DictionaryShapeLink(obj));
+    shape->initDictionaryShapeAtEnd(child, obj);
 
     if (!table->add(cx, id, shape)) {
       shape->removeFromDictionary(obj);
@@ -1151,8 +1160,7 @@ bool NativeObject::generateOwnShape(JSContext* cx, HandleNativeObject obj,
 
   // Replace the old last-property shape with the new one.
   StackShape nshape(oldShape);
-  newShape->initDictionaryShape(nshape, obj->numFixedSlots(),
-                                DictionaryShapeLink(obj));
+  newShape->initDictionaryShapeAtEnd(nshape, obj);
 
   MOZ_ASSERT(newShape->parent == oldShape);
   oldShape->removeFromDictionary(obj);
@@ -1583,11 +1591,6 @@ void Shape::fixupDictionaryShapeAfterMovingGC() {
     Shape* shape = dictNext.toShape();
     if (gc::IsForwarded(shape)) {
       dictNext.setShape(gc::Forwarded(shape));
-    }
-  } else if (dictNext.isObject()) {
-    JSObject* obj = dictNext.toObject();
-    if (gc::IsForwarded(obj)) {
-      dictNext.setObject(gc::Forwarded(obj));
     }
   } else {
     MOZ_ASSERT(dictNext.isNone());
