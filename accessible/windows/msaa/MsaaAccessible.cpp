@@ -8,6 +8,8 @@
 #include "mozilla/dom/BrowserBridgeParent.h"
 #include "mozilla/dom/BrowserParent.h"
 #include "mozilla/mscom/Interceptor.h"
+#include "nsEventMap.h"
+#include "nsWinUtils.h"
 #include "sdnAccessible.h"
 
 using namespace mozilla;
@@ -113,6 +115,126 @@ void MsaaAccessible::AssignChildIDTo(NotNull<sdnAccessible*> aSdnAcc) {
 /* static */
 void MsaaAccessible::ReleaseChildID(NotNull<sdnAccessible*> aSdnAcc) {
   sIDGen.ReleaseID(aSdnAcc);
+}
+
+HWND MsaaAccessible::GetHWNDFor(LocalAccessible* aAccessible) {
+  if (!aAccessible) {
+    return nullptr;
+  }
+
+  if (aAccessible->IsProxy()) {
+    RemoteAccessible* proxy = aAccessible->Proxy();
+    if (!proxy) {
+      return nullptr;
+    }
+
+    // If window emulation is enabled, retrieve the emulated window from the
+    // containing document document proxy.
+    if (nsWinUtils::IsWindowEmulationStarted()) {
+      DocAccessibleParent* doc = proxy->Document();
+      HWND hWnd = doc->GetEmulatedWindowHandle();
+      if (hWnd) {
+        return hWnd;
+      }
+    }
+
+    // Accessibles in child processes are said to have the HWND of the window
+    // their tab is within.  Popups are always in the parent process, and so
+    // never proxied, which means this is basically correct.
+    LocalAccessible* outerDoc = proxy->OuterDocOfRemoteBrowser();
+    if (!outerDoc) {
+      // In some cases, the outer document accessible may be unattached from its
+      // document at this point, if it is scheduled for removal. Do not assert
+      // in such case. An example: putting aria-hidden="true" on HTML:iframe
+      // element will destroy iframe's document asynchroniously, but
+      // the document may be a target of selection events until then, and thus
+      // it may attempt to deliever these events to MSAA clients.
+      return nullptr;
+    }
+
+    return GetHWNDFor(outerDoc);
+  }
+
+  DocAccessible* document = aAccessible->Document();
+  if (!document) return nullptr;
+
+  // Popup lives in own windows, use its HWND until the popup window is
+  // hidden to make old JAWS versions work with collapsed comboboxes (see
+  // discussion in bug 379678).
+  nsIFrame* frame = aAccessible->GetFrame();
+  if (frame) {
+    nsIWidget* widget = frame->GetNearestWidget();
+    if (widget && widget->IsVisible()) {
+      if (nsViewManager* vm = document->PresShellPtr()->GetViewManager()) {
+        nsCOMPtr<nsIWidget> rootWidget;
+        vm->GetRootWidget(getter_AddRefs(rootWidget));
+        // Make sure the accessible belongs to popup. If not then use
+        // document HWND (which might be different from root widget in the
+        // case of window emulation).
+        if (rootWidget != widget)
+          return static_cast<HWND>(widget->GetNativeData(NS_NATIVE_WINDOW));
+      }
+    }
+  }
+
+  return static_cast<HWND>(document->GetNativeWindow());
+}
+
+static bool IsHandlerInvalidationNeeded(uint32_t aEvent) {
+  // We want to return true for any events that would indicate that something
+  // in the handler cache is out of date.
+  switch (aEvent) {
+    case EVENT_OBJECT_STATECHANGE:
+    case EVENT_OBJECT_LOCATIONCHANGE:
+    case EVENT_OBJECT_NAMECHANGE:
+    case EVENT_OBJECT_DESCRIPTIONCHANGE:
+    case EVENT_OBJECT_VALUECHANGE:
+    case EVENT_OBJECT_FOCUS:
+    case IA2_EVENT_ACTION_CHANGED:
+    case IA2_EVENT_DOCUMENT_LOAD_COMPLETE:
+    case IA2_EVENT_DOCUMENT_LOAD_STOPPED:
+    case IA2_EVENT_DOCUMENT_ATTRIBUTE_CHANGED:
+    case IA2_EVENT_DOCUMENT_CONTENT_CHANGED:
+    case IA2_EVENT_PAGE_CHANGED:
+    case IA2_EVENT_TEXT_ATTRIBUTE_CHANGED:
+    case IA2_EVENT_TEXT_CHANGED:
+    case IA2_EVENT_TEXT_INSERTED:
+    case IA2_EVENT_TEXT_REMOVED:
+    case IA2_EVENT_TEXT_UPDATED:
+    case IA2_EVENT_OBJECT_ATTRIBUTE_CHANGED:
+      return true;
+    default:
+      return false;
+  }
+}
+
+void MsaaAccessible::FireWinEvent(LocalAccessible* aTarget,
+                                  uint32_t aEventType) {
+  MOZ_ASSERT(XRE_IsParentProcess());
+  static_assert(sizeof(gWinEventMap) / sizeof(gWinEventMap[0]) ==
+                    nsIAccessibleEvent::EVENT_LAST_ENTRY,
+                "MSAA event map skewed");
+
+  NS_ASSERTION(aEventType > 0 && aEventType < ArrayLength(gWinEventMap),
+               "invalid event type");
+
+  uint32_t winEvent = gWinEventMap[aEventType];
+  if (!winEvent) return;
+
+  int32_t childID = MsaaAccessible::GetChildIDFor(aTarget);
+  if (!childID) return;  // Can't fire an event without a child ID
+
+  HWND hwnd = GetHWNDFor(aTarget);
+  if (!hwnd) {
+    return;
+  }
+
+  if (IsHandlerInvalidationNeeded(winEvent)) {
+    AccessibleWrap::InvalidateHandlers();
+  }
+
+  // Fire MSAA event for client area window.
+  ::NotifyWinEvent(winEvent, hwnd, OBJID_CLIENT, childID);
 }
 
 AccessibleWrap* MsaaAccessible::LocalAcc() {
