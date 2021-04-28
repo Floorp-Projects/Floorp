@@ -244,7 +244,7 @@ _cairo_win32_printing_surface_acquire_image_pattern (
     case CAIRO_PATTERN_TYPE_MESH:
     default:
 	ASSERT_NOT_REACHED;
-	break;
+	return CAIRO_INT_STATUS_UNSUPPORTED;
     }
 
     _cairo_pattern_init_for_surface (image_pattern, &image->base);
@@ -1808,6 +1808,7 @@ _cairo_win32_printing_surface_show_glyphs (void                 *abstract_surfac
     cairo_solid_pattern_t clear;
     cairo_composite_rectangles_t extents;
     cairo_bool_t overlap;
+    cairo_scaled_font_t *local_scaled_font = NULL;
 
     status = _cairo_composite_rectangles_init_for_glyphs (&extents,
 							  &surface->win32.base,
@@ -1851,6 +1852,13 @@ _cairo_win32_printing_surface_show_glyphs (void                 *abstract_surfac
 	}
 #endif
 
+#if CAIRO_HAS_DWRITE_FONT
+        if (cairo_scaled_font_get_type (scaled_font) == CAIRO_FONT_TYPE_DWRITE) {
+            status = _cairo_win32_printing_surface_analyze_operation (surface, op, source, &extents.bounded);
+            goto cleanup_composite;
+        }
+#endif
+
 	/* For non win32 fonts we need to check that each glyph has a
 	 * path available. If a path is not available,
 	 * _cairo_scaled_glyph_lookup() will return
@@ -1889,6 +1897,23 @@ _cairo_win32_printing_surface_show_glyphs (void                 *abstract_surfac
 	}
 	source = opaque;
     }
+
+#if CAIRO_HAS_DWRITE_FONT
+    /* For a printer, the dwrite path is not desirable as it goes through the
+     * bitmap-blitting GDI interop route. Better to create a win32 (GDI) font
+     * so that ExtTextOut can be used, giving the printer driver the chance
+     * to do the right thing with the text.
+     */
+    if (cairo_scaled_font_get_type (scaled_font) == CAIRO_FONT_TYPE_DWRITE) {
+        status = _cairo_dwrite_scaled_font_create_win32_scaled_font (scaled_font, &local_scaled_font);
+        if (status == CAIRO_STATUS_SUCCESS) {
+            scaled_font = local_scaled_font;
+        } else {
+            /* Reset status; we'll fall back to drawing glyphs as paths */
+            status = CAIRO_STATUS_SUCCESS;
+        }
+    }
+#endif
 
 #if CAIRO_HAS_WIN32_FONT
     if (cairo_scaled_font_get_type (scaled_font) == CAIRO_FONT_TYPE_WIN32 &&
@@ -1948,6 +1973,10 @@ _cairo_win32_printing_surface_show_glyphs (void                 *abstract_surfac
 
 cleanup_composite:
     _cairo_composite_rectangles_fini (&extents);
+
+    if (local_scaled_font)
+        cairo_scaled_font_destroy (local_scaled_font);
+
     return status;
 }
 
@@ -2179,6 +2208,12 @@ cairo_win32_printing_surface_create (HDC hdc)
     cairo_surface_destroy (&surface->win32.base);
 
     return paginated;
+}
+
+cairo_bool_t
+_cairo_surface_is_win32_printing (const cairo_surface_t *surface)
+{
+    return surface->backend && surface->backend->type == CAIRO_SURFACE_TYPE_WIN32_PRINTING;
 }
 
 static const cairo_surface_backend_t cairo_win32_printing_surface_backend = {

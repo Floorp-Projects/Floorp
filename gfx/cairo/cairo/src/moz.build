@@ -32,8 +32,9 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] not in ('cocoa', 'uikit'):
         'cairo-tag-attributes.c',
         'cairo-tag-stack.c',
         'cairo-truetype-subset.c',
-        # cairo-type1-subset.c should be here, but it's only supported on freetype platforms
         'cairo-type1-fallback.c',
+        'cairo-type1-glyph-names.c',
+        'cairo-type1-subset.c',
         'cairo-type3-glyph-surface.c',
     ]
 
@@ -44,9 +45,10 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     ]
     SOURCES += [
         'win32/cairo-dwrite-font.cpp',
-    ]
-    SOURCES += [
+        'win32/cairo-win32-device.c',
+        'win32/cairo-win32-display-surface.c',
         'win32/cairo-win32-font.c',
+        'win32/cairo-win32-gdi-compositor.c',
         'win32/cairo-win32-surface.c',
     ]
     DEFINES['DISABLE_SOME_FLOATING_POINT'] = True
@@ -106,8 +108,6 @@ if CONFIG['MOZ_ENABLE_CAIRO_FT']:
     ]
     SOURCES += [
         'cairo-ft-font.c',
-        'cairo-type1-glyph-names.c',
-        'cairo-type1-subset.c',
     ]
 
 SOURCES += [
