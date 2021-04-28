@@ -1679,7 +1679,7 @@ var BookmarkingUI = {
       entry: "subviewbutton",
     };
 
-    if (!gProton) {
+    if (!gProtonDoorhangers) {
       extraClasses.footer = "panel-subview-footer";
     }
 
