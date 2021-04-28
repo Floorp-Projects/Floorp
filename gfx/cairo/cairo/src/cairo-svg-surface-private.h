@@ -48,6 +48,13 @@
 
 typedef struct cairo_svg_document cairo_svg_document_t;
 
+typedef struct _cairo_svg_source_surface {
+    cairo_hash_entry_t base;
+    unsigned int id;
+    unsigned char *unique_id;
+    unsigned long unique_id_length;
+} cairo_svg_source_surface_t;
+
 typedef struct cairo_svg_surface {
     cairo_surface_t base;
 
@@ -55,11 +62,13 @@ typedef struct cairo_svg_surface {
 
     double width;
     double height;
+    cairo_bool_t surface_bounded;
 
     cairo_svg_document_t *document;
 
     cairo_output_stream_t *xml_node;
     cairo_array_t	   page_set;
+    cairo_hash_table_t    *source_surfaces;
 
     cairo_surface_clipper_t clipper;
     unsigned int clip_level;

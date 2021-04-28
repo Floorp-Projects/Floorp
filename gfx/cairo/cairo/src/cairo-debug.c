@@ -34,6 +34,7 @@
  */
 
 #include "cairoint.h"
+#include "cairo-image-surface-private.h"
 
 /**
  * cairo_debug_reset_static_data:
@@ -55,6 +56,8 @@
  * functions have been called as necessary). If there are active cairo
  * objects, this call is likely to cause a crash, (eg. an assertion
  * failure due to a hash table being destroyed when non-empty).
+ *
+ * Since: 1.0
  **/
 void
 cairo_debug_reset_static_data (void)
@@ -83,11 +86,13 @@ cairo_debug_reset_static_data (void)
 
     _cairo_image_reset_static_data ();
 
+    _cairo_image_compositor_reset_static_data ();
+
 #if CAIRO_HAS_DRM_SURFACE
     _cairo_drm_device_reset_static_data ();
 #endif
 
-    _cairo_reset_static_data ();
+    _cairo_default_context_reset_static_data ();
 
     CAIRO_MUTEX_FINALIZE ();
 }
@@ -118,8 +123,15 @@ _cairo_debug_check_image_surface_is_defined (const cairo_surface_t *surface)
 	width = image->width*2;
 	break;
     case CAIRO_FORMAT_RGB24:
+    case CAIRO_FORMAT_RGB30:
     case CAIRO_FORMAT_ARGB32:
 	width = image->width*4;
+	break;
+    case CAIRO_FORMAT_RGB96F:
+	width = image->width*12;
+	break;
+    case CAIRO_FORMAT_RGBA128F:
+	width = image->width*16;
 	break;
     case CAIRO_FORMAT_INVALID:
     default:
@@ -229,18 +241,19 @@ _print_close (void *closure)
 }
 
 void
-_cairo_debug_print_path (FILE *stream, cairo_path_fixed_t *path)
+_cairo_debug_print_path (FILE *stream, const cairo_path_fixed_t *path)
 {
     cairo_status_t status;
+    cairo_box_t box;
 
-    printf ("path: extents=(%f, %f), (%f, %f)\n",
+    fprintf (stream,
+	     "path: extents=(%f, %f), (%f, %f)\n",
 	    _cairo_fixed_to_double (path->extents.p1.x),
 	    _cairo_fixed_to_double (path->extents.p1.y),
 	    _cairo_fixed_to_double (path->extents.p2.x),
 	    _cairo_fixed_to_double (path->extents.p2.y));
 
     status = _cairo_path_fixed_interpret (path,
-					  CAIRO_DIRECTION_FORWARD,
 					  _print_move_to,
 					  _print_line_to,
 					  _print_curve_to,
@@ -248,5 +261,65 @@ _cairo_debug_print_path (FILE *stream, cairo_path_fixed_t *path)
 					  stream);
     assert (status == CAIRO_STATUS_SUCCESS);
 
-    printf ("\n");
+    if (_cairo_path_fixed_is_box (path, &box)) {
+	fprintf (stream, "[box (%d, %d), (%d, %d)]",
+		 box.p1.x, box.p1.y, box.p2.x, box.p2.y);
+    }
+
+    fprintf (stream, "\n");
+}
+
+void
+_cairo_debug_print_polygon (FILE *stream, cairo_polygon_t *polygon)
+{
+    int n;
+
+    fprintf (stream,
+	     "polygon: extents=(%f, %f), (%f, %f)\n",
+	    _cairo_fixed_to_double (polygon->extents.p1.x),
+	    _cairo_fixed_to_double (polygon->extents.p1.y),
+	    _cairo_fixed_to_double (polygon->extents.p2.x),
+	    _cairo_fixed_to_double (polygon->extents.p2.y));
+    if (polygon->num_limits) {
+	fprintf (stream,
+		 "       : limit=(%f, %f), (%f, %f) x %d\n",
+		 _cairo_fixed_to_double (polygon->limit.p1.x),
+		 _cairo_fixed_to_double (polygon->limit.p1.y),
+		 _cairo_fixed_to_double (polygon->limit.p2.x),
+		 _cairo_fixed_to_double (polygon->limit.p2.y),
+		 polygon->num_limits);
+    }
+
+    for (n = 0; n < polygon->num_edges; n++) {
+	cairo_edge_t *edge = &polygon->edges[n];
+
+	fprintf (stream,
+		 "  [%d] = [(%f, %f), (%f, %f)], top=%f, bottom=%f, dir=%d\n",
+		 n,
+		 _cairo_fixed_to_double (edge->line.p1.x),
+		 _cairo_fixed_to_double (edge->line.p1.y),
+		 _cairo_fixed_to_double (edge->line.p2.x),
+		 _cairo_fixed_to_double (edge->line.p2.y),
+		 _cairo_fixed_to_double (edge->top),
+		 _cairo_fixed_to_double (edge->bottom),
+		 edge->dir);
+
+    }
+}
+
+void
+_cairo_debug_print_matrix (FILE *file, const cairo_matrix_t *matrix)
+{
+    fprintf (file, "[%g %g %g %g %g %g]\n",
+	     matrix->xx, matrix->yx,
+	     matrix->xy, matrix->yy,
+	     matrix->x0, matrix->y0);
+}
+
+void
+_cairo_debug_print_rect (FILE *file, const cairo_rectangle_int_t *rect)
+{
+    fprintf (file, "x: %d y: %d width: %d height: %d\n",
+	     rect->x, rect->y,
+	     rect->width, rect->height);
 }

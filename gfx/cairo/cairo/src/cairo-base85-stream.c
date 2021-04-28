@@ -53,7 +53,7 @@ _expand_four_tuple_to_five (unsigned char four_tuple[4],
     uint32_t value;
     int digit, i;
 
-    value = four_tuple[0] << 24 | four_tuple[1] << 16 | four_tuple[2] << 8 | four_tuple[3];
+    value = (uint32_t)four_tuple[0] << 24 | four_tuple[1] << 16 | four_tuple[2] << 8 | four_tuple[3];
     if (all_zero)
 	*all_zero = TRUE;
     for (i = 0; i < 5; i++) {
@@ -114,7 +114,7 @@ _cairo_base85_stream_create (cairo_output_stream_t *output)
     if (output->status)
 	return _cairo_output_stream_create_in_error (output->status);
 
-    stream = malloc (sizeof (cairo_base85_stream_t));
+    stream = _cairo_malloc (sizeof (cairo_base85_stream_t));
     if (unlikely (stream == NULL)) {
 	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
 	return (cairo_output_stream_t *) &_cairo_output_stream_nil;

@@ -41,6 +41,7 @@
 struct _cairo_gstate {
     cairo_operator_t op;
 
+    double opacity;
     double tolerance;
     cairo_antialias_t antialias;
 
@@ -54,7 +55,7 @@ struct _cairo_gstate {
     cairo_matrix_t font_matrix;
     cairo_font_options_t font_options;
 
-    cairo_clip_t clip;
+    cairo_clip_t *clip;
 
     cairo_surface_t *target;		/* The target to which all rendering is directed */
     cairo_surface_t *parent_target;	/* The previous target which was receiving rendering */
@@ -88,16 +89,13 @@ cairo_private cairo_status_t
 _cairo_gstate_restore (cairo_gstate_t **gstate, cairo_gstate_t **freelist);
 
 cairo_private cairo_bool_t
-_cairo_gstate_is_redirected (cairo_gstate_t *gstate);
+_cairo_gstate_is_group (cairo_gstate_t *gstate);
 
 cairo_private cairo_status_t
 _cairo_gstate_redirect_target (cairo_gstate_t *gstate, cairo_surface_t *child);
 
 cairo_private cairo_surface_t *
 _cairo_gstate_get_target (cairo_gstate_t *gstate);
-
-cairo_private cairo_surface_t *
-_cairo_gstate_get_parent_target (cairo_gstate_t *gstate);
 
 cairo_private cairo_surface_t *
 _cairo_gstate_get_original_target (cairo_gstate_t *gstate);
@@ -116,6 +114,12 @@ _cairo_gstate_set_operator (cairo_gstate_t *gstate, cairo_operator_t op);
 
 cairo_private cairo_operator_t
 _cairo_gstate_get_operator (cairo_gstate_t *gstate);
+
+cairo_private cairo_status_t
+_cairo_gstate_set_opacity (cairo_gstate_t *gstate, double opacity);
+
+cairo_private double
+_cairo_gstate_get_opacity (cairo_gstate_t *gstate);
 
 cairo_private cairo_status_t
 _cairo_gstate_set_tolerance (cairo_gstate_t *gstate, double tolerance);
@@ -205,6 +209,16 @@ _cairo_gstate_user_to_backend (cairo_gstate_t *gstate, double *x, double *y)
 }
 
 cairo_private void
+_do_cairo_gstate_user_to_backend_distance (cairo_gstate_t *gstate, double *x, double *y);
+
+static inline void
+_cairo_gstate_user_to_backend_distance (cairo_gstate_t *gstate, double *x, double *y)
+{
+    if (! gstate->is_identity)
+	_do_cairo_gstate_user_to_backend_distance (gstate, x, y);
+}
+
+cairo_private void
 _do_cairo_gstate_backend_to_user (cairo_gstate_t *gstate, double *x, double *y);
 
 static inline void
@@ -212,6 +226,16 @@ _cairo_gstate_backend_to_user (cairo_gstate_t *gstate, double *x, double *y)
 {
     if (! gstate->is_identity)
 	_do_cairo_gstate_backend_to_user (gstate, x, y);
+}
+
+cairo_private void
+_do_cairo_gstate_backend_to_user_distance (cairo_gstate_t *gstate, double *x, double *y);
+
+static inline void
+_cairo_gstate_backend_to_user_distance (cairo_gstate_t *gstate, double *x, double *y)
+{
+    if (! gstate->is_identity)
+	_do_cairo_gstate_backend_to_user_distance (gstate, x, y);
 }
 
 cairo_private void
@@ -300,10 +324,13 @@ _cairo_gstate_show_surface (cairo_gstate_t	*gstate,
 			    double		height);
 
 cairo_private cairo_status_t
-_cairo_gstate_select_font_face (cairo_gstate_t *gstate,
-				const char *family,
-				cairo_font_slant_t slant,
-				cairo_font_weight_t weight);
+_cairo_gstate_tag_begin (cairo_gstate_t	*gstate,
+			 const char     *tag_name,
+			 const char     *attributes);
+
+cairo_private cairo_status_t
+_cairo_gstate_tag_end (cairo_gstate_t	*gstate,
+		       const char       *tag_name);
 
 cairo_private cairo_status_t
 _cairo_gstate_set_font_size (cairo_gstate_t *gstate,
@@ -342,18 +369,6 @@ _cairo_gstate_set_font_face (cairo_gstate_t    *gstate,
 			     cairo_font_face_t *font_face);
 
 cairo_private cairo_status_t
-_cairo_gstate_text_to_glyphs (cairo_gstate_t	         *gstate,
-			      double		          x,
-			      double		          y,
-			      const char	         *utf8,
-			      int		          utf8_len,
-			      cairo_glyph_t	        **glyphs,
-			      int		         *num_glyphs,
-			      cairo_text_cluster_t      **clusters,
-			      int		         *num_clusters,
-			      cairo_text_cluster_flags_t *cluster_flags);
-
-cairo_private cairo_status_t
 _cairo_gstate_glyph_extents (cairo_gstate_t *gstate,
 			     const cairo_glyph_t *glyphs,
 			     int num_glyphs,
@@ -361,13 +376,9 @@ _cairo_gstate_glyph_extents (cairo_gstate_t *gstate,
 
 cairo_private cairo_status_t
 _cairo_gstate_show_text_glyphs (cairo_gstate_t		   *gstate,
-				const char		   *utf8,
-				int			    utf8_len,
 				const cairo_glyph_t	   *glyphs,
 				int			    num_glyphs,
-				const cairo_text_cluster_t *clusters,
-				int			    num_clusters,
-			        cairo_text_cluster_flags_t  cluster_flags);
+				cairo_glyph_text_info_t    *info);
 
 cairo_private cairo_status_t
 _cairo_gstate_glyph_path (cairo_gstate_t      *gstate,

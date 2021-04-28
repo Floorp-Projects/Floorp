@@ -47,6 +47,7 @@ typedef struct _cairo_scaled_font_subsets_glyph {
     unsigned int subset_glyph_index;
     cairo_bool_t is_scaled;
     cairo_bool_t is_composite;
+    cairo_bool_t is_latin;
     double       x_advance;
     double       y_advance;
     cairo_bool_t utf8_is_mapped;
@@ -123,6 +124,18 @@ _cairo_scaled_font_subsets_create_composite (void);
  **/
 cairo_private void
 _cairo_scaled_font_subsets_destroy (cairo_scaled_font_subsets_t *font_subsets);
+
+/**
+ * _cairo_scaled_font_subsets_enable_latin_subset:
+ * @font_subsets: a #cairo_scaled_font_subsets_t object to be destroyed
+ * @use_latin: a #cairo_bool_t indicating if a latin subset is to be used
+ *
+ * If enabled, all CP1252 characters will be placed in a separate
+ * 8-bit latin subset.
+ **/
+cairo_private void
+_cairo_scaled_font_subsets_enable_latin_subset (cairo_scaled_font_subsets_t *font_subsets,
+						cairo_bool_t                 use_latin);
 
 /**
  * _cairo_scaled_font_subsets_map_glyph:
@@ -203,16 +216,16 @@ cairo_private cairo_status_t
 _cairo_scaled_font_subsets_map_glyph (cairo_scaled_font_subsets_t	*font_subsets,
 				      cairo_scaled_font_t		*scaled_font,
 				      unsigned long			 scaled_font_glyph_index,
-				      const char * 			 utf8,
+				      const char *			 utf8,
 				      int				 utf8_len,
                                       cairo_scaled_font_subsets_glyph_t *subset_glyph_ret);
 
-typedef cairo_status_t
+typedef cairo_int_status_t
 (*cairo_scaled_font_subset_callback_func_t) (cairo_scaled_font_subset_t	*font_subset,
 					     void			*closure);
 
 /**
- * _cairo_scaled_font_subsets_foreach:
+ * _cairo_scaled_font_subsets_foreach_scaled:
  * @font_subsets: a #cairo_scaled_font_subsets_t
  * @font_subset_callback: a function to be called for each font subset
  * @closure: closure data for the callback function
@@ -332,7 +345,7 @@ cairo_private cairo_int_status_t
 _cairo_scaled_font_subset_create_glyph_names (cairo_scaled_font_subset_t *subset);
 
 typedef struct _cairo_cff_subset {
-    char *font_name;
+    char *family_name_utf8;
     char *ps_name;
     double *widths;
     double x_min, y_min, x_max, y_max;
@@ -374,6 +387,15 @@ cairo_private void
 _cairo_cff_subset_fini (cairo_cff_subset_t *cff_subset);
 
 /**
+ * _cairo_cff_scaled_font_is_cid_cff:
+ * @scaled_font: a #cairo_scaled_font_t
+ *
+ * Return %TRUE if @scaled_font is a CID CFF font, otherwise return %FALSE.
+ **/
+cairo_private cairo_bool_t
+_cairo_cff_scaled_font_is_cid_cff (cairo_scaled_font_t *scaled_font);
+
+/**
  * _cairo_cff_fallback_init:
  * @cff_subset: a #cairo_cff_subset_t to initialize
  * @font_subset: the #cairo_scaled_font_subset_t to initialize from
@@ -405,7 +427,7 @@ cairo_private void
 _cairo_cff_fallback_fini (cairo_cff_subset_t *cff_subset);
 
 typedef struct _cairo_truetype_subset {
-    char *font_name;
+    char *family_name_utf8;
     char *ps_name;
     double *widths;
     double x_min, y_min, x_max, y_max;
@@ -417,7 +439,7 @@ typedef struct _cairo_truetype_subset {
 } cairo_truetype_subset_t;
 
 /**
- * _cairo_truetype_subset_init:
+ * _cairo_truetype_subset_init_ps:
  * @truetype_subset: a #cairo_truetype_subset_t to initialize
  * @font_subset: the #cairo_scaled_font_subset_t to initialize from
  *
@@ -425,7 +447,8 @@ typedef struct _cairo_truetype_subset {
  * #cairo_scaled_font_t and the font backend in use) generate a
  * truetype file corresponding to @font_subset and initialize
  * @truetype_subset with information about the subset and the truetype
- * data.
+ * data. The generated font will be suitable for embedding in
+ * PostScript.
  *
  * Return value: %CAIRO_STATUS_SUCCESS if successful,
  * %CAIRO_INT_STATUS_UNSUPPORTED if the font can't be subset as a
@@ -433,8 +456,29 @@ typedef struct _cairo_truetype_subset {
  * errors include %CAIRO_STATUS_NO_MEMORY.
  **/
 cairo_private cairo_status_t
-_cairo_truetype_subset_init (cairo_truetype_subset_t    *truetype_subset,
-			     cairo_scaled_font_subset_t	*font_subset);
+_cairo_truetype_subset_init_ps (cairo_truetype_subset_t    *truetype_subset,
+				cairo_scaled_font_subset_t *font_subset);
+
+/**
+ * _cairo_truetype_subset_init_pdf:
+ * @truetype_subset: a #cairo_truetype_subset_t to initialize
+ * @font_subset: the #cairo_scaled_font_subset_t to initialize from
+ *
+ * If possible (depending on the format of the underlying
+ * #cairo_scaled_font_t and the font backend in use) generate a
+ * truetype file corresponding to @font_subset and initialize
+ * @truetype_subset with information about the subset and the truetype
+ * data. The generated font will be suitable for embedding in
+ * PDF.
+ *
+ * Return value: %CAIRO_STATUS_SUCCESS if successful,
+ * %CAIRO_INT_STATUS_UNSUPPORTED if the font can't be subset as a
+ * truetype file, or an non-zero value indicating an error.  Possible
+ * errors include %CAIRO_STATUS_NO_MEMORY.
+ **/
+cairo_private cairo_status_t
+_cairo_truetype_subset_init_pdf (cairo_truetype_subset_t    *truetype_subset,
+				 cairo_scaled_font_subset_t *font_subset);
 
 /**
  * _cairo_truetype_subset_fini:
@@ -447,7 +491,14 @@ _cairo_truetype_subset_init (cairo_truetype_subset_t    *truetype_subset,
 cairo_private void
 _cairo_truetype_subset_fini (cairo_truetype_subset_t *truetype_subset);
 
+cairo_private const char *
+_cairo_ps_standard_encoding_to_glyphname (int glyph);
 
+cairo_private int
+_cairo_unicode_to_winansi (unsigned long unicode);
+
+cairo_private const char *
+_cairo_winansi_to_glyphname (int glyph);
 
 typedef struct _cairo_type1_subset {
     char *base_font;
@@ -460,8 +511,6 @@ typedef struct _cairo_type1_subset {
     unsigned long trailer_length;
 } cairo_type1_subset_t;
 
-
-#if CAIRO_HAS_FT_FONT
 
 /**
  * _cairo_type1_subset_init:
@@ -496,9 +545,6 @@ _cairo_type1_subset_init (cairo_type1_subset_t		*type_subset,
 cairo_private void
 _cairo_type1_subset_fini (cairo_type1_subset_t *subset);
 
-#endif /* CAIRO_HAS_FT_FONT */
-
-
 /**
  * _cairo_type1_scaled_font_is_type1:
  * @scaled_font: a #cairo_scaled_font_t
@@ -530,7 +576,7 @@ _cairo_type1_fallback_init_binary (cairo_type1_subset_t	      *type_subset,
                                    cairo_scaled_font_subset_t *font_subset);
 
 /**
- * _cairo_type1_fallback_init_hexencode:
+ * _cairo_type1_fallback_init_hex:
  * @type1_subset: a #cairo_type1_subset_t to initialize
  * @font_subset: the #cairo_scaled_font_subset_t to initialize from
  *
@@ -599,23 +645,6 @@ cairo_private void
 _cairo_type2_charstrings_fini (cairo_type2_charstrings_t *charstrings);
 
 /**
- * _cairo_truetype_create_glyph_to_unicode_map:
- * @font_subset: the #cairo_scaled_font_subset_t to initialize from
- *
- * If possible (depending on the format of the underlying
- * #cairo_scaled_font_t and the font backend in use) assign
- * the unicode character of each glyph in font_subset to
- * fontsubset->to_unicode.
- *
- * Return value: %CAIRO_STATUS_SUCCESS if successful,
- * %CAIRO_INT_STATUS_UNSUPPORTED if the unicode encoding of
- * the glyphs is not available.  Possible  errors include
- * %CAIRO_STATUS_NO_MEMORY.
- **/
-cairo_private cairo_int_status_t
-_cairo_truetype_create_glyph_to_unicode_map (cairo_scaled_font_subset_t	*font_subset);
-
-/**
  * _cairo_truetype_index_to_ucs4:
  * @scaled_font: the #cairo_scaled_font_t
  * @index: the glyph index
@@ -662,6 +691,49 @@ cairo_private cairo_int_status_t
 _cairo_truetype_read_font_name (cairo_scaled_font_t   *scaled_font,
 				char		     **ps_name,
 				char		     **font_name);
+
+/**
+ * _cairo_truetype_get_style:
+ * @scaled_font: the #cairo_scaled_font_t
+ * @weight: returns the font weight from the OS/2 table
+ * @bold: returns true if font is bold
+ * @italic: returns true if font is italic
+ *
+ * If the font is a truetype/opentype font with an OS/2 table, get the
+ * weight, bold, and italic data from the OS/2 table.  The weight
+ * values have the same meaning as the lfWeight field of the Windows
+ * LOGFONT structure.  Refer to the TrueType Specification for
+ * definition of the weight values.
+ *
+ * Return value: %CAIRO_STATUS_SUCCESS if successful,
+ * %CAIRO_INT_STATUS_UNSUPPORTED if the font is not TrueType/OpenType
+ * or the OS/2 table is not present.
+ **/
+cairo_private cairo_int_status_t
+_cairo_truetype_get_style (cairo_scaled_font_t  	 *scaled_font,
+			   int				 *weight,
+			   cairo_bool_t			 *bold,
+			   cairo_bool_t			 *italic);
+
+/**
+ * _cairo_escape_ps_name:
+ * @ps_name: returns the PostScript name with all invalid characters escaped
+ *
+ * Ensure that PostSript name is a valid PDF/PostSript name object.
+ * In PDF names are treated as UTF8 and non ASCII bytes, ' ',
+ * and '#' are encoded as '#' followed by 2 hex digits that
+ * encode the byte.
+ *
+ * Return value: %CAIRO_STATUS_SUCCESS if successful. Possible errors include
+ * %CAIRO_STATUS_NO_MEMORY.
+ **/
+cairo_private cairo_int_status_t
+_cairo_escape_ps_name (char **ps_name);
+
+#if DEBUG_SUBSETS
+cairo_private void
+dump_scaled_font_subsets (cairo_scaled_font_subsets_t *font_subsets);
+#endif
 
 #endif /* CAIRO_HAS_FONT_SUBSET */
 

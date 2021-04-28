@@ -1,4 +1,4 @@
-/* vim: set sw=2 sts=2 et cin: */
+/* vim: set sw=4 sts=4 et cin: */
 /* cairo - a vector graphics library with display and print output
  *
  * Copyright (c) 2005-2006 netlabs.org
@@ -39,7 +39,10 @@
 #include "cairoint.h"
 
 #include "cairo-os2-private.h"
+#include "cairo-default-context-private.h"
 #include "cairo-error-private.h"
+#include "cairo-surface-fallback-private.h"
+#include "cairo-image-surface-private.h"
 
 #if CAIRO_HAS_FC_FONT
 #include <fontconfig/fontconfig.h>
@@ -195,7 +198,7 @@ void *_buffer_alloc (size_t a, size_t b, const unsigned int size)
         return NULL;
 #else
     /* Clear the malloc'd buffer the way DosAllocMem() does. */
-    buffer = malloc (nbytes);
+    buffer = _cairo_malloc (nbytes);
     if (buffer) {
         memset (buffer, 0, nbytes);
     }
@@ -550,25 +553,17 @@ _cairo_os2_surface_acquire_source_image (void                   *abstract_surfac
                                          cairo_image_surface_t **image_out,
                                          void                  **image_extra)
 {
-    cairo_os2_surface_t *local_os2_surface;
+    cairo_os2_surface_t *surface = (cairo_os2_surface_t *) abstract_surface;
 
-    local_os2_surface = (cairo_os2_surface_t *) abstract_surface;
-    if ((!local_os2_surface) ||
-        (local_os2_surface->base.backend != &cairo_os2_surface_backend))
-    {
-        /* Invalid parameter (wrong surface)! */
-        return _cairo_error (CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
-    }
-
-    DosRequestMutexSem (local_os2_surface->hmtx_use_private_fields, SEM_INDEFINITE_WAIT);
+    DosRequestMutexSem (surface->hmtx_use_private_fields, SEM_INDEFINITE_WAIT);
 
     /* Increase lend counter */
-    local_os2_surface->pixel_array_lend_count++;
+    surface->pixel_array_lend_count++;
 
-    *image_out = local_os2_surface->image_surface;
+    *image_out = surface->image_surface;
     *image_extra = NULL;
 
-    DosReleaseMutexSem (local_os2_surface->hmtx_use_private_fields);
+    DosReleaseMutexSem (surface->hmtx_use_private_fields);
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -578,156 +573,110 @@ _cairo_os2_surface_release_source_image (void                  *abstract_surface
                                          cairo_image_surface_t *image,
                                          void                  *image_extra)
 {
-    cairo_os2_surface_t *local_os2_surface;
-
-    local_os2_surface = (cairo_os2_surface_t *) abstract_surface;
-    if ((!local_os2_surface) ||
-        (local_os2_surface->base.backend != &cairo_os2_surface_backend))
-    {
-        /* Invalid parameter (wrong surface)! */
-        return;
-    }
+    cairo_os2_surface_t *surface = (cairo_os2_surface_t *) abstract_surface;
 
     /* Decrease Lend counter! */
-    DosRequestMutexSem (local_os2_surface->hmtx_use_private_fields, SEM_INDEFINITE_WAIT);
+    DosRequestMutexSem (surface->hmtx_use_private_fields, SEM_INDEFINITE_WAIT);
 
-    if (local_os2_surface->pixel_array_lend_count > 0)
-        local_os2_surface->pixel_array_lend_count--;
-    DosPostEventSem (local_os2_surface->hev_pixel_array_came_back);
+    if (surface->pixel_array_lend_count > 0)
+        surface->pixel_array_lend_count--;
+    DosPostEventSem (surface->hev_pixel_array_came_back);
 
-    DosReleaseMutexSem (local_os2_surface->hmtx_use_private_fields);
-    return;
+    DosReleaseMutexSem (surface->hmtx_use_private_fields);
 }
 
-static cairo_status_t
-_cairo_os2_surface_acquire_dest_image (void                     *abstract_surface,
-                                       cairo_rectangle_int_t    *interest_rect,
-                                       cairo_image_surface_t   **image_out,
-                                       cairo_rectangle_int_t    *image_rect,
-                                       void                    **image_extra)
+static cairo_image_surface_t *
+_cairo_os2_surface_map_to_image (void *abstract_surface,
+				 const cairo_rectangle_int_t *extents)
 {
-    cairo_os2_surface_t *local_os2_surface;
+    cairo_os2_surface_t *surface = (cairo_os2_surface_t *) abstract_surface;
 
-    local_os2_surface = (cairo_os2_surface_t *) abstract_surface;
-    if ((!local_os2_surface) ||
-        (local_os2_surface->base.backend != &cairo_os2_surface_backend))
-    {
-        /* Invalid parameter (wrong surface)! */
-        return _cairo_error (CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
-    }
-
-    DosRequestMutexSem (local_os2_surface->hmtx_use_private_fields, SEM_INDEFINITE_WAIT);
-
+    DosRequestMutexSem (surface->hmtx_use_private_fields, SEM_INDEFINITE_WAIT);
     /* Increase lend counter */
-    local_os2_surface->pixel_array_lend_count++;
-
-    *image_out = local_os2_surface->image_surface;
-    *image_extra = NULL;
-
-    image_rect->x = 0;
-    image_rect->y = 0;
-    image_rect->width = local_os2_surface->bitmap_info.cx;
-    image_rect->height = local_os2_surface->bitmap_info.cy;
-
+    surface->pixel_array_lend_count++;
     DosReleaseMutexSem (local_os2_surface->hmtx_use_private_fields);
+
+    /* XXX: BROKEN! */
+    *image_out = _cairo_surface_create_for_rectangle_int (surface->image_surface,
+							  extents);
 
     return CAIRO_STATUS_SUCCESS;
 }
 
-static void
-_cairo_os2_surface_release_dest_image (void                    *abstract_surface,
-                                       cairo_rectangle_int_t   *interest_rect,
-                                       cairo_image_surface_t   *image,
-                                       cairo_rectangle_int_t   *image_rect,
-                                       void                    *image_extra)
+static cairo_int_status_t
+_cairo_os2_surface_unmap_image (void *abstract_surface,
+				cairo_image_surface_t *image)
 {
-    cairo_os2_surface_t *local_os2_surface;
-    RECTL rclToBlit;
-
-    local_os2_surface = (cairo_os2_surface_t *) abstract_surface;
-    if ((!local_os2_surface) ||
-        (local_os2_surface->base.backend != &cairo_os2_surface_backend))
-    {
-        /* Invalid parameter (wrong surface)! */
-        return;
-    }
+    cairo_os2_surface_t *surface = (cairo_os2_surface_t *) abstract_surface;
 
     /* So, we got back the image, and if all goes well, then
      * something has been changed inside the interest_rect.
      * So, we blit it to the screen!
      */
+    if (surface->blit_as_changes) {
+	RECTL rclToBlit;
 
-    if (local_os2_surface->blit_as_changes) {
         /* Get mutex, we'll work with the pixel array! */
-        if (DosRequestMutexSem (local_os2_surface->hmtx_use_private_fields, SEM_INDEFINITE_WAIT)!=NO_ERROR) {
+        if (DosRequestMutexSem (surface->hmtx_use_private_fields,
+				SEM_INDEFINITE_WAIT) != NO_ERROR)
+	{
             /* Could not get mutex! */
             return;
         }
 
-        if (local_os2_surface->hwnd_client_window) {
+	rclToBlit.xLeft = image->base.device_transform_inverse.x0;
+	rclToBlit.xRight = rclToBlit.xLeft + image->width; /* Noninclusive */
+	rclToBlit.yTop = image->base.device_transform_inverse.y0;
+	rclToBlit.yBottom = rclToBlit.yTop + image->height; /* Noninclusive */
+
+        if (surface->hwnd_client_window) {
             /* We know the HWND, so let's invalidate the window region,
              * so the application will redraw itself, using the
              * cairo_os2_surface_refresh_window () API from its own PM thread.
              *
              * This is the safe method, which should be preferred every time.
              */
-            rclToBlit.xLeft = interest_rect->x;
-            rclToBlit.xRight = interest_rect->x+interest_rect->width; /* Noninclusive */
-            rclToBlit.yTop = local_os2_surface->bitmap_info.cy - (interest_rect->y);
-            rclToBlit.yBottom = local_os2_surface->bitmap_info.cy - (interest_rect->y+interest_rect->height); /* Noninclusive */
-
-            WinInvalidateRect (local_os2_surface->hwnd_client_window,
+	    rclToBlit.yTop = surface->bitmap_info.cy - rclToBlit.yTop;
+	    rclToBlit.yBottom = surface->bitmap_info.cy - rclToBlit.yTop;
+            WinInvalidateRect (surface->hwnd_client_window,
                                &rclToBlit,
                                FALSE);
         } else {
             /* We don't know the HWND, so try to blit the pixels from here!
              * Please note that it can be problematic if this is not the PM thread!
              *
-             * It can cause internal PM stuffs to be scewed up, for some reason.
+             * It can cause internal PM stuffs to be screwed up, for some reason.
              * Please always tell the HWND to the surface using the
              * cairo_os2_surface_set_hwnd () API, and call cairo_os2_surface_refresh_window ()
              * from your WM_PAINT, if it's possible!
              */
-            rclToBlit.xLeft = interest_rect->x;
-            rclToBlit.xRight = interest_rect->x+interest_rect->width; /* Noninclusive */
-            rclToBlit.yBottom = interest_rect->y;
-            rclToBlit.yTop = interest_rect->y+interest_rect->height; /* Noninclusive */
-            /* Now blit there the stuffs! */
-            _cairo_os2_surface_blit_pixels (local_os2_surface,
-                                            local_os2_surface->hps_client_window,
+            _cairo_os2_surface_blit_pixels (surface,
+                                            surface->hps_client_window,
                                             &rclToBlit);
         }
 
-        DosReleaseMutexSem (local_os2_surface->hmtx_use_private_fields);
+        DosReleaseMutexSem (surface->hmtx_use_private_fields);
     }
     /* Also decrease Lend counter! */
-    DosRequestMutexSem (local_os2_surface->hmtx_use_private_fields, SEM_INDEFINITE_WAIT);
+    DosRequestMutexSem (surface->hmtx_use_private_fields, SEM_INDEFINITE_WAIT);
 
-    if (local_os2_surface->pixel_array_lend_count > 0)
-        local_os2_surface->pixel_array_lend_count--;
-    DosPostEventSem (local_os2_surface->hev_pixel_array_came_back);
+    if (surface->pixel_array_lend_count > 0)
+        surface->pixel_array_lend_count--;
+    DosPostEventSem (surface->hev_pixel_array_came_back);
 
-    DosReleaseMutexSem (local_os2_surface->hmtx_use_private_fields);
+    DosReleaseMutexSem (surface->hmtx_use_private_fields);
 }
 
 static cairo_bool_t
 _cairo_os2_surface_get_extents (void                    *abstract_surface,
                                 cairo_rectangle_int_t   *rectangle)
 {
-    cairo_os2_surface_t *local_os2_surface;
-
-    local_os2_surface = (cairo_os2_surface_t *) abstract_surface;
-    if ((!local_os2_surface) ||
-        (local_os2_surface->base.backend != &cairo_os2_surface_backend))
-    {
-        /* Invalid parameter (wrong surface)! */
-        return _cairo_error (CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
-    }
+    cairo_os2_surface_t *surface = (cairo_os2_surface_t *) abstract_surface;
 
     rectangle->x = 0;
     rectangle->y = 0;
-    rectangle->width  = local_os2_surface->bitmap_info.cx;
-    rectangle->height = local_os2_surface->bitmap_info.cy;
+    rectangle->width  = surface->bitmap_info.cx;
+    rectangle->height = surface->bitmap_info.cy;
 
     return TRUE;
 }
@@ -769,7 +718,7 @@ cairo_os2_surface_create (HPS hps_client_window,
     }
 
     /* Allocate an OS/2 surface structure. */
-    local_os2_surface = (cairo_os2_surface_t *) malloc (sizeof (cairo_os2_surface_t));
+    local_os2_surface = (cairo_os2_surface_t *) _cairo_malloc (sizeof (cairo_os2_surface_t));
     if (!local_os2_surface) {
         status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
         goto error_exit;
@@ -831,14 +780,15 @@ cairo_os2_surface_create (HPS hps_client_window,
     _cairo_surface_init (&local_os2_surface->base,
                          &cairo_os2_surface_backend,
                          NULL, /* device */
-                         _cairo_content_from_format (CAIRO_FORMAT_ARGB32));
+                         _cairo_content_from_format (CAIRO_FORMAT_ARGB32),
+			 FALSE); /* is_vector */
 
     /* Successful exit */
     return (cairo_surface_t *)local_os2_surface;
 
  error_exit:
 
-    /* This point will only be reached if an error occured */
+    /* This point will only be reached if an error occurred */
 
     if (local_os2_surface) {
         if (local_os2_surface->pixels)
@@ -1438,37 +1388,29 @@ _cairo_os2_surface_mark_dirty_rectangle (void *surface,
 
 static const cairo_surface_backend_t cairo_os2_surface_backend = {
     CAIRO_SURFACE_TYPE_OS2,
-    NULL, /* create_similar */
     _cairo_os2_surface_finish,
+    _cairo_default_context_create,
+
+    NULL, /* create_similar */
+    NULL, /* create_similar_image */
+    _cairo_os2_surface_map_to_image,
+    _cairo_os2_surface_unmap_image,
+
+    _cairo_surface_default_source,
     _cairo_os2_surface_acquire_source_image,
     _cairo_os2_surface_release_source_image,
-    _cairo_os2_surface_acquire_dest_image,
-    _cairo_os2_surface_release_dest_image,
-    NULL, /* clone_similar */
-    NULL, /* composite */
-    NULL, /* fill_rectangles */
-    NULL, /* composite_trapezoids */
-    NULL, /* create_span_renderer */
-    NULL, /* check_span_renderer */
-    NULL, /* copy_page */
-    NULL, /* show_page */
+    NULL, /* snapshot */
+
     _cairo_os2_surface_get_extents,
-    NULL, /* old_show_glyphs */
     NULL, /* get_font_options */
+
     NULL, /* flush */
     _cairo_os2_surface_mark_dirty_rectangle,
-    NULL, /* scaled_font_fini */
-    NULL, /* scaled_glyph_fini */
-    NULL, /* paint */
-    NULL, /* mask */
-    NULL, /* stroke */
-    NULL, /* fill */
-    NULL, /* show_glyphs */
-    NULL, /* snapshot */
-    NULL, /* is_similar */
-    NULL, /* fill_stroke */
-    NULL, /* create_solid_pattern_surface */
-    NULL, /* can_repaint_solid_pattern_surface */
-    NULL, /* has_show_text_glyphs */
-    NULL  /* show_text_glyphs */
+
+    _cairo_surface_fallback_paint,
+    _cairo_surface_fallback_mask,
+    _cairo_surface_fallback_fill,
+    _cairo_surface_fallback_stroke,
+    NULL, /* fill/stroke */
+    _cairo_surface_fallback_glyphs,
 };

@@ -66,34 +66,33 @@ More detailed build instructions
 	(NOTE: On Mac OS X, at least, use DYLD_LIBRARY_PATH in place
 	       of LD_LIBRARY_PATH above.)
 
-    --enable-quartz
-    --enable-atsui
-    --enable-xcb
-    --enable-glitz
-    --enable-beos
-    --enable-os2
-    --enable-directfb
+    --enable-XYZ
+    --enable-XYZ=yes
+    --enable-XYZ=auto
+    --enable-XYZ=no
+    --disable-XYZ
 
-	Some of cairo's backends are marked as experimental and will
-	not be built by default. If you would like to build and
-	experiment with these backends, you will need to pass one of
-	the above options to the configure script. You may need to
-	have certain libraries installed first as discussed in the
-	dependencies section of the README file.
+   Cairo's various font and surface backends and other features can be
+   enabled or disabled at configure time.  Features can be divided into
+   three categories based on their default state:
 
-    --disable-xlib
-    --disable-win32
-    --disable-png
-    --disable-freetype
-    --disable-ps
-    --disable-pdf
-    --disable-svg
+     * default=yes: These are the recommended features like PNG functions
+       and PS/PDF/SVG backends.  It is highly recommended to not disable
+       these features but if that's really what one wants, they can be
+       disabled using --disable-XYZ.
 
-	Cairo's configure script detects the libraries needed to build
-	each stable backend, and when it finds them, enables each
-	backend. If you would like to override this detection and
-	disable a backend, (even when it would be possible to build
-	it), use one of the options above to disable the backend.
+     * default=auto: These are the "native" features, that is, they are
+       platform specific, like the Xlib surface backend.  You probably
+       want one or two of these.  They will be automatically enabled if
+       all their required facilities are available.  Or you can use
+       --enable-XYZ or --disable-XYZ to make your desire clear, and then
+       cairo errs during configure if your intention cannot be followed.
+
+     * default=no: These are the "experimental" features, and hence by
+       default off.  Use --enable-XYZ to enable them.
+
+   The list of all features and their default state can be seen in the
+   output of ./configure --help.
 
 2) Compile the package:
 
@@ -141,11 +140,11 @@ itself), then you're in the right place and should read on.
 However, if you don't need such a bleeding-edge version of cairo, then
 you might prefer to start by building the latest stable cairo release:
 
-	http://cairographics.org/releases
+	https://cairographics.org/releases
 
 or perhaps the latest (unstable) development snapshot:
 
-	http://cairographics.org/snapshots
+	https://cairographics.org/snapshots
 
 There you'll find nicely packaged tar files that include a configure
 script so you can go back the the simpler instructions above.
@@ -156,26 +155,24 @@ contributions to cairo. Since you're not using a packaged tar file,
 you're going to need some additional tools beyond just a C compiler in
 order to compile cairo. Specifically, you need the following utilities:
 
-	automake (1.8 or newer)
+	automake
 	autoconf
-	libtool
+	autoheader
+	aclocal
+	libtoolize
+	pkg-config [at least version 0.16]
+	gtk-doc (recommended)
 
 Hopefully your platform of choice has packages readily available so
 that you can easily install things with your system's package
 management tool, (such as "apt-get install automake" on Debian or "yum
-install automake" on Fedora, etc.). Note that Mac OS X ships with it's
-own utility called libtool which is not what you want, (the one you do
-want goes by the name of glibtool).
+install automake" on Fedora, etc.). Note that Mac OS X ships with
+glibtoolize instead of libtoolize.
 
 Once you have all of those packages installed, the next step is to run
 the autogen.sh script. That can be as simple as:
 
 	./autogen.sh
-
-Or, if you're using Mac OS X, you'll have to let it know to use
-glibtool by instead doing:
-
-	LIBTOOLIZE=glibtoolize ./autogen.sh
 
 But before you run that command, note that the autogen.sh script
 accepts all the same arguments as the configure script, (and in fact,

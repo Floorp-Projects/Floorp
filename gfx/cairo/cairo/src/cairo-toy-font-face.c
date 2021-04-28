@@ -39,7 +39,7 @@
  *      Behdad Esfahbod <behdad@behdad.org>
  */
 
-#define _BSD_SOURCE /* for strdup() */
+#define _DEFAULT_SOURCE /* for strdup() */
 #include "cairoint.h"
 #include "cairo-error-private.h"
 
@@ -148,7 +148,6 @@ _cairo_toy_font_face_init_key (cairo_toy_font_face_t *key,
     hash += ((unsigned long) slant) * 1607;
     hash += ((unsigned long) weight) * 1451;
 
-    assert (hash != 0);
     key->base.hash_entry.hash = hash;
 }
 
@@ -209,7 +208,7 @@ static void
 _cairo_toy_font_face_fini (cairo_toy_font_face_t *font_face)
 {
     /* We assert here that we own font_face->family before casting
-     * away the const qualifer. */
+     * away the const qualifier. */
     assert (font_face->owns_family);
     free ((char*) font_face->family);
 
@@ -303,20 +302,17 @@ cairo_toy_font_face_create (const char          *family,
 					  &key.base.hash_entry);
     if (font_face != NULL) {
 	if (font_face->base.status == CAIRO_STATUS_SUCCESS) {
-	    /* We increment the reference count here manually to avoid
-	       double-locking. */
-	    _cairo_reference_count_inc (&font_face->base.ref_count);
+	    cairo_font_face_reference (&font_face->base);
 	    _cairo_toy_font_face_hash_table_unlock ();
 	    return &font_face->base;
 	}
 
 	/* remove the bad font from the hash table */
 	_cairo_hash_table_remove (hash_table, &font_face->base.hash_entry);
-	font_face->base.hash_entry.hash = 0;
     }
 
     /* Otherwise create it and insert into hash table. */
-    font_face = malloc (sizeof (cairo_toy_font_face_t));
+    font_face = _cairo_malloc (sizeof (cairo_toy_font_face_t));
     if (unlikely (font_face == NULL)) {
 	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	goto UNWIND_HASH_TABLE_LOCK;
@@ -346,32 +342,34 @@ cairo_toy_font_face_create (const char          *family,
 }
 slim_hidden_def (cairo_toy_font_face_create);
 
-static void
+static cairo_bool_t
 _cairo_toy_font_face_destroy (void *abstract_face)
 {
     cairo_toy_font_face_t *font_face = abstract_face;
     cairo_hash_table_t *hash_table;
 
-    if (font_face == NULL ||
-	    CAIRO_REFERENCE_COUNT_IS_INVALID (&font_face->base.ref_count))
-	return;
-
     hash_table = _cairo_toy_font_face_hash_table_lock ();
     /* All created objects must have been mapped in the hash table. */
     assert (hash_table != NULL);
 
-    if (CAIRO_REFERENCE_COUNT_HAS_REFERENCE (&font_face->base.ref_count)) {
+    if (! _cairo_reference_count_dec_and_test (&font_face->base.ref_count)) {
 	/* somebody recreated the font whilst we waited for the lock */
 	_cairo_toy_font_face_hash_table_unlock ();
-	return;
+	return FALSE;
     }
 
-    if (font_face->base.hash_entry.hash != 0)
+    /* Font faces in SUCCESS status are guaranteed to be in the
+     * hashtable. Font faces in an error status are removed from the
+     * hashtable if they are found during a lookup, thus they should
+     * only be removed if they are in the hashtable. */
+    if (likely (font_face->base.status == CAIRO_STATUS_SUCCESS) ||
+	_cairo_hash_table_lookup (hash_table, &font_face->base.hash_entry) == font_face)
 	_cairo_hash_table_remove (hash_table, &font_face->base.hash_entry);
 
     _cairo_toy_font_face_hash_table_unlock ();
 
     _cairo_toy_font_face_fini (font_face);
+    return TRUE;
 }
 
 static cairo_status_t
@@ -422,7 +420,7 @@ _cairo_font_face_is_toy (cairo_font_face_t *font_face)
  * cairo_toy_font_face_get_family:
  * @font_face: A toy font face
  *
- * Gets the familly name of a toy font.
+ * Gets the family name of a toy font.
  *
  * Return value: The family name.  This string is owned by the font face
  * and remains valid as long as the font face is alive (referenced).

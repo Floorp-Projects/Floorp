@@ -1,6 +1,6 @@
 /* cairo - a vector graphics library with display and print output
  *
- * Copyright � 2006, 2007 Mozilla Corporation
+ * Copyright © 2006, 2007 Mozilla Corporation
  *
  * This library is free software; you can redistribute it and/or
  * modify it either under the terms of the GNU Lesser General Public
@@ -39,14 +39,8 @@
 #include "cairo.h"
 
 #if CAIRO_HAS_QUARTZ_SURFACE
-#include "TargetConditionals.h"
 
-#if !TARGET_OS_IPHONE
 #include <ApplicationServices/ApplicationServices.h>
-#else
-#include <CoreGraphics/CoreGraphics.h>
-#include <CoreText/CoreText.h>
-#endif
 
 CAIRO_BEGIN_DECLS
 
@@ -56,22 +50,12 @@ cairo_quartz_surface_create (cairo_format_t format,
                              unsigned int height);
 
 cairo_public cairo_surface_t *
-cairo_quartz_surface_create_for_data (unsigned char *data,
-				      cairo_format_t format,
-				      unsigned int width,
-				      unsigned int height,
-				      unsigned int stride);
-
-cairo_public cairo_surface_t *
 cairo_quartz_surface_create_for_cg_context (CGContextRef cgContext,
                                             unsigned int width,
                                             unsigned int height);
 
 cairo_public CGContextRef
 cairo_quartz_surface_get_cg_context (cairo_surface_t *surface);
-
-cairo_public cairo_surface_t *
-cairo_quartz_surface_get_image (cairo_surface_t *surface);
 
 #if CAIRO_HAS_QUARTZ_FONT
 
@@ -82,10 +66,8 @@ cairo_quartz_surface_get_image (cairo_surface_t *surface);
 cairo_public cairo_font_face_t *
 cairo_quartz_font_face_create_for_cgfont (CGFontRef font);
 
-#if !defined(__LP64__) && !TARGET_OS_IPHONE
 cairo_public cairo_font_face_t *
 cairo_quartz_font_face_create_for_atsu_font_id (ATSUFontID font_id);
-#endif
 
 #endif /* CAIRO_HAS_QUARTZ_FONT */
 

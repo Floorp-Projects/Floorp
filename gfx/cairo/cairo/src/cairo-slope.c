@@ -89,9 +89,9 @@ _cairo_slope_compare (const cairo_slope_t *a, const cairo_slope_t *b)
      */
     if ((a->dx ^ b->dx) < 0 || (a->dy ^ b->dy) < 0) {
 	if (a->dx > 0 || (a->dx == 0 && a->dy > 0))
-	    return +1;
-	else
 	    return -1;
+	else
+	    return +1;
     }
 
     /* Finally, for identical slopes, we obviously return 0. */

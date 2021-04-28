@@ -39,7 +39,8 @@
 
 #include "cairoint.h"
 #include "cairo-path-fixed-private.h"
-#include "cairo-clip-private.h"
+#include "cairo-pattern-private.h"
+#include "cairo-surface-backend-private.h"
 
 typedef enum {
     /* The 5 basic drawing operations. */
@@ -48,6 +49,9 @@ typedef enum {
     CAIRO_COMMAND_STROKE,
     CAIRO_COMMAND_FILL,
     CAIRO_COMMAND_SHOW_TEXT_GLYPHS,
+
+    /* cairo_tag_begin()/cairo_tag_end() */
+    CAIRO_COMMAND_TAG,
 } cairo_command_type_t;
 
 typedef enum {
@@ -58,9 +62,13 @@ typedef enum {
 
 typedef struct _cairo_command_header {
     cairo_command_type_t	 type;
-    cairo_recording_region_type_t     region;
+    cairo_recording_region_type_t region;
     cairo_operator_t		 op;
-    cairo_clip_t		 clip;
+    cairo_rectangle_int_t	 extents;
+    cairo_clip_t		*clip;
+
+    int index;
+    struct _cairo_command_header *chain;
 } cairo_command_header_t;
 
 typedef struct _cairo_command_paint {
@@ -107,6 +115,17 @@ typedef struct _cairo_command_show_text_glyphs {
     cairo_scaled_font_t		*scaled_font;
 } cairo_command_show_text_glyphs_t;
 
+typedef struct _cairo_command_tag {
+    cairo_command_header_t       header;
+    cairo_bool_t                 begin;
+    char                        *tag_name;
+    char                        *attributes;
+    cairo_pattern_union_t	 source;
+    cairo_stroke_style_t	 style;
+    cairo_matrix_t		 ctm;
+    cairo_matrix_t		 ctm_inverse;
+} cairo_command_tag_t;
+
 typedef union _cairo_command {
     cairo_command_header_t      header;
 
@@ -115,12 +134,11 @@ typedef union _cairo_command {
     cairo_command_stroke_t			stroke;
     cairo_command_fill_t			fill;
     cairo_command_show_text_glyphs_t		show_text_glyphs;
+    cairo_command_tag_t                         tag;
 } cairo_command_t;
 
 typedef struct _cairo_recording_surface {
     cairo_surface_t base;
-
-    cairo_content_t content;
 
     /* A recording-surface is logically unbounded, but when used as a
      * source we need to render it to an image, so we need a size at
@@ -129,11 +147,18 @@ typedef struct _cairo_recording_surface {
     cairo_rectangle_int_t extents;
     cairo_bool_t unbounded;
 
-    cairo_clip_t clip;
-
     cairo_array_t commands;
+    unsigned int *indices;
+    unsigned int num_indices;
+    cairo_bool_t optimize_clears;
+    cairo_bool_t has_bilevel_alpha;
+    cairo_bool_t has_only_op_over;
 
-    int replay_start_idx;
+    struct bbtree {
+	cairo_box_t extents;
+	struct bbtree *left, *right;
+	cairo_command_header_t *chain;
+    } bbtree;
 } cairo_recording_surface_t;
 
 slim_hidden_proto (cairo_recording_surface_create);
@@ -143,17 +168,25 @@ _cairo_recording_surface_get_path (cairo_surface_t	 *surface,
 				   cairo_path_fixed_t *path);
 
 cairo_private cairo_status_t
+_cairo_recording_surface_replay_one (cairo_recording_surface_t	*surface,
+				     long unsigned index,
+				     cairo_surface_t *target);
+
+cairo_private cairo_status_t
 _cairo_recording_surface_replay (cairo_surface_t *surface,
 				 cairo_surface_t *target);
 
-
 cairo_private cairo_status_t
-_cairo_recording_surface_replay_analyze_recording_pattern (cairo_surface_t *surface,
-							   cairo_surface_t *target);
+_cairo_recording_surface_replay_with_clip (cairo_surface_t *surface,
+					   const cairo_matrix_t *surface_transform,
+					   cairo_surface_t *target,
+					   const cairo_clip_t *target_clip);
 
 cairo_private cairo_status_t
 _cairo_recording_surface_replay_and_create_regions (cairo_surface_t *surface,
-						    cairo_surface_t *target);
+						    const cairo_matrix_t *surface_transform,
+						    cairo_surface_t *target,
+						    cairo_bool_t surface_is_unbounded);
 cairo_private cairo_status_t
 _cairo_recording_surface_replay_region (cairo_surface_t			*surface,
 					const cairo_rectangle_int_t *surface_extents,
@@ -165,7 +198,15 @@ _cairo_recording_surface_get_bbox (cairo_recording_surface_t *recording,
 				   cairo_box_t *bbox,
 				   const cairo_matrix_t *transform);
 
+cairo_private cairo_status_t
+_cairo_recording_surface_get_ink_bbox (cairo_recording_surface_t *surface,
+				       cairo_box_t *bbox,
+				       const cairo_matrix_t *transform);
+
 cairo_private cairo_bool_t
-_cairo_surface_is_recording (const cairo_surface_t *surface);
+_cairo_recording_surface_has_only_bilevel_alpha (cairo_recording_surface_t *surface);
+
+cairo_private cairo_bool_t
+_cairo_recording_surface_has_only_op_over (cairo_recording_surface_t *surface);
 
 #endif /* CAIRO_RECORDING_SURFACE_H */
