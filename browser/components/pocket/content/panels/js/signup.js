@@ -111,53 +111,44 @@ var PKT_PANEL_OVERLAY = function(options) {
       elBody.classList.add(`pkt_ext_signup_${this.locale}`);
     }
 
-    // Create actual content
-    if (this.variant == "overflow") {
-      elBody.append(
-        parser.parseFromString(
-          Handlebars.templates.signup_shell(this.dictJSON),
-          `text/html`
-        ).documentElement
-      );
-    } else {
-      // Logged Out Display Variants for MV Testing
-      let variants = {
-        control: "signupstoryboard_shell",
-        variant_a: "variant_a",
-        variant_b: "variant_b",
-        variant_c: "variant_c",
-        button_variant: "signupstoryboard_shell",
-        button_control: "signupstoryboard_shell",
-      };
+    // Logged Out Display Variants for MV Testing
+    let variants = {
+      control: "signup_shell",
+      variant_a: "variant_a",
+      variant_b: "variant_b",
+      variant_c: "variant_c",
+      button_variant: "signup_shell",
+      button_control: "signup_shell",
+    };
 
-      let loggedOutVariantTemplate = variants[this.loggedOutVariant];
-      if (
-        this.loggedOutVariant === "button_variant" ||
-        this.loggedOutVariant === "button_control"
-      ) {
-        this.dictJSON.buttonVariant = true;
-        this.dictJSON.utmCampaign = "logged_out_button_test";
-        this.dictJSON.utmSource = "button_control";
-        if (this.loggedOutVariant === "button_variant") {
-          this.dictJSON.oneButton = true;
-          this.dictJSON.utmSource = "button_variant";
-        }
+    let loggedOutVariantTemplate = variants[this.loggedOutVariant];
+    if (
+      this.loggedOutVariant === "button_variant" ||
+      this.loggedOutVariant === "button_control"
+    ) {
+      this.dictJSON.buttonVariant = true;
+      this.dictJSON.utmCampaign = "logged_out_button_test";
+      this.dictJSON.utmSource = "button_control";
+      if (this.loggedOutVariant === "button_variant") {
+        this.dictJSON.oneButton = true;
+        this.dictJSON.utmSource = "button_variant";
       }
-
-      if (loggedOutVariantTemplate !== `signupstoryboard_shell`) {
-        elBody.classList.add(`los_variant`);
-        elBody.classList.add(`los_${loggedOutVariantTemplate}`);
-      }
-
-      elBody.append(
-        parser.parseFromString(
-          Handlebars.templates[loggedOutVariantTemplate || variants.control](
-            this.dictJSON
-          ),
-          `text/html`
-        ).documentElement
-      );
     }
+
+    if (loggedOutVariantTemplate !== `signup_shell`) {
+      elBody.classList.add(`los_variant`);
+      elBody.classList.add(`los_${loggedOutVariantTemplate}`);
+    }
+
+    // Create actual content
+    elBody.append(
+      parser.parseFromString(
+        Handlebars.templates[loggedOutVariantTemplate || variants.control](
+          this.dictJSON
+        ),
+        `text/html`
+      ).documentElement
+    );
 
     // close events
     this.initCloseTabEvents();
