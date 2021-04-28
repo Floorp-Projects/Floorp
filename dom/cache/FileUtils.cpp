@@ -381,6 +381,10 @@ nsresult BodyDeleteOrphanedFiles(const QuotaInfo& aQuotaInfo, nsIFile& aBaseDir,
 
               return false;
             };
+
+            // QM_OR_ELSE_WARN is not used here since we want ignore
+            // NS_ERROR_FILE_FS_CORRUPTED completely (even a warning is not
+            // desired).
             CACHE_TRY(
                 ToResult(BodyTraverseFiles(aQuotaInfo, *subdir,
                                            removeOrphanedFiles,
