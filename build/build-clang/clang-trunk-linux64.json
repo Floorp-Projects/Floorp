@@ -19,7 +19,6 @@
     "revert-llvmorg-12-init-7827-g2a078c307204.patch",
     "loosen-msvc-detection.patch",
     "clang-trunk-missing-define.patch",
-    "revert_D79714.patch",
-    "revert_D100581.patch"
+    "revert_D79714.patch"
   ]
 }
