@@ -24,8 +24,8 @@ namespace mozilla {
 namespace wr {
 
 RenderCompositorNative::RenderCompositorNative(
-    RefPtr<widget::CompositorWidget>&& aWidget, gl::GLContext* aGL)
-    : RenderCompositor(std::move(aWidget)),
+    const RefPtr<widget::CompositorWidget>& aWidget, gl::GLContext* aGL)
+    : RenderCompositor(aWidget),
       mNativeLayerRoot(GetWidget()->GetNativeLayerRoot()) {
 #ifdef XP_MACOSX
   auto pool = RenderThread::Get()->SharedSurfacePool();
@@ -414,7 +414,7 @@ void RenderCompositorNative::AddSurface(
 
 /* static */
 UniquePtr<RenderCompositor> RenderCompositorNativeOGL::Create(
-    RefPtr<widget::CompositorWidget>&& aWidget, nsACString& aError) {
+    const RefPtr<widget::CompositorWidget>& aWidget, nsACString& aError) {
   RefPtr<gl::GLContext> gl = RenderThread::Get()->SingletonGL();
   if (!gl) {
     gl = gl::GLContextProvider::CreateForCompositorWidget(
@@ -426,13 +426,13 @@ UniquePtr<RenderCompositor> RenderCompositorNativeOGL::Create(
                     << gfx::hexa(gl.get());
     return nullptr;
   }
-  return MakeUnique<RenderCompositorNativeOGL>(std::move(aWidget),
-                                               std::move(gl));
+  return MakeUnique<RenderCompositorNativeOGL>(aWidget, std::move(gl));
 }
 
 RenderCompositorNativeOGL::RenderCompositorNativeOGL(
-    RefPtr<widget::CompositorWidget>&& aWidget, RefPtr<gl::GLContext>&& aGL)
-    : RenderCompositorNative(std::move(aWidget), aGL), mGL(aGL) {
+    const RefPtr<widget::CompositorWidget>& aWidget,
+    RefPtr<gl::GLContext>&& aGL)
+    : RenderCompositorNative(aWidget, aGL), mGL(aGL) {
   MOZ_ASSERT(mGL);
 }
 
@@ -530,18 +530,18 @@ void RenderCompositorNativeOGL::Unbind() {
 
 /* static */
 UniquePtr<RenderCompositor> RenderCompositorNativeSWGL::Create(
-    RefPtr<widget::CompositorWidget>&& aWidget, nsACString& aError) {
+    const RefPtr<widget::CompositorWidget>& aWidget, nsACString& aError) {
   void* ctx = wr_swgl_create_context();
   if (!ctx) {
     gfxCriticalNote << "Failed SWGL context creation for WebRender";
     return nullptr;
   }
-  return MakeUnique<RenderCompositorNativeSWGL>(std::move(aWidget), ctx);
+  return MakeUnique<RenderCompositorNativeSWGL>(aWidget, ctx);
 }
 
 RenderCompositorNativeSWGL::RenderCompositorNativeSWGL(
-    RefPtr<widget::CompositorWidget>&& aWidget, void* aContext)
-    : RenderCompositorNative(std::move(aWidget)), mContext(aContext) {
+    const RefPtr<widget::CompositorWidget>& aWidget, void* aContext)
+    : RenderCompositorNative(aWidget), mContext(aContext) {
   MOZ_ASSERT(mContext);
 }
 

@@ -33,9 +33,10 @@ class DCLayerTree;
 class RenderCompositorANGLE : public RenderCompositor {
  public:
   static UniquePtr<RenderCompositor> Create(
-      RefPtr<widget::CompositorWidget>&& aWidget, nsACString& aError);
+      const RefPtr<widget::CompositorWidget>& aWidget, nsACString& aError);
 
-  explicit RenderCompositorANGLE(RefPtr<widget::CompositorWidget>&& aWidget);
+  explicit RenderCompositorANGLE(
+      const RefPtr<widget::CompositorWidget>& aWidget);
   virtual ~RenderCompositorANGLE();
   bool Initialize(nsACString& aError);
 

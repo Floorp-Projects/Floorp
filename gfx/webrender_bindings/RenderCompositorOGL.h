@@ -16,10 +16,10 @@ namespace wr {
 class RenderCompositorOGL : public RenderCompositor {
  public:
   static UniquePtr<RenderCompositor> Create(
-      RefPtr<widget::CompositorWidget>&& aWidget, nsACString& aError);
+      const RefPtr<widget::CompositorWidget>& aWidget, nsACString& aError);
 
   RenderCompositorOGL(RefPtr<gl::GLContext>&& aGL,
-                      RefPtr<widget::CompositorWidget>&& aWidget);
+                      const RefPtr<widget::CompositorWidget>& aWidget);
   virtual ~RenderCompositorOGL();
 
   bool BeginFrame() override;

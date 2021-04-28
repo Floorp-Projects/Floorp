@@ -16,18 +16,18 @@ namespace wr {
 
 /* static */
 UniquePtr<RenderCompositor> RenderCompositorSWGL::Create(
-    RefPtr<widget::CompositorWidget>&& aWidget, nsACString& aError) {
+    const RefPtr<widget::CompositorWidget>& aWidget, nsACString& aError) {
   void* ctx = wr_swgl_create_context();
   if (!ctx) {
     gfxCriticalNote << "Failed SWGL context creation for WebRender";
     return nullptr;
   }
-  return MakeUnique<RenderCompositorSWGL>(std::move(aWidget), ctx);
+  return MakeUnique<RenderCompositorSWGL>(aWidget, ctx);
 }
 
 RenderCompositorSWGL::RenderCompositorSWGL(
-    RefPtr<widget::CompositorWidget>&& aWidget, void* aContext)
-    : RenderCompositor(std::move(aWidget)), mContext(aContext) {
+    const RefPtr<widget::CompositorWidget>& aWidget, void* aContext)
+    : RenderCompositor(aWidget), mContext(aContext) {
   MOZ_ASSERT(mContext);
 }
 
