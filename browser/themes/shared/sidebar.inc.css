@@ -105,44 +105,6 @@ toolbarseparator + #sidebar-extensions-separator {
   display: none;
 }
 
-#sidebarMenu-popup > .subviewbutton[checked="true"] {
-  list-style-image: none;
-  background: url(chrome://global/skin/icons/check.svg) no-repeat transparent;
-  background-size: 11px 11px;
-}
-
-%ifdef XP_MACOSX
-
-#sidebarMenu-popup > .subviewbutton[checked="true"] {
-  background-position: left 4px top 7px;
-}
-
-#sidebarMenu-popup > .subviewbutton[checked="true"]:-moz-locale-dir(rtl) {
-  background-position-x: right 4px;
-}
-
-%else
-
-#sidebarMenu-popup > .subviewbutton[checked="true"] {
-  background-position: left 7px center;
-}
-
-#sidebarMenu-popup > .subviewbutton[checked="true"]:-moz-locale-dir(rtl) {
-  background-position-x: right 7px;
-}
-
-/* Allow room for the checkbox drawn as a background image at the start of the toolbarbutton */
-#sidebarMenu-popup > .subviewbutton-iconic > .toolbarbutton-icon {
-  margin-inline-start: 16px;
-}
-/* Align items without icons to the start of the icons: */
-#sidebarMenu-popup > .subviewbutton:not(.subviewbutton-iconic) > .toolbarbutton-text {
-  padding-inline-start: 16px;
-}
-
-%endif
-
-#sidebar-switcher-bookmarks > .toolbarbutton-icon,
 #sidebar-box[sidebarcommand="viewBookmarksSidebar"] > #sidebar-header > #sidebar-switcher-target > #sidebar-icon {
   list-style-image: url(chrome://browser/skin/bookmark.svg);
   -moz-context-properties: fill;
@@ -150,7 +112,6 @@ toolbarseparator + #sidebar-extensions-separator {
   opacity: 0.8;
 }
 
-#sidebar-switcher-history > .toolbarbutton-icon,
 #sidebar-box[sidebarcommand="viewHistorySidebar"] > #sidebar-header > #sidebar-switcher-target > #sidebar-icon {
   list-style-image: url(chrome://browser/skin/history.svg);
   -moz-context-properties: fill;
@@ -158,7 +119,6 @@ toolbarseparator + #sidebar-extensions-separator {
   opacity: 0.8;
 }
 
-#sidebar-switcher-tabs > .toolbarbutton-icon,
 #sidebar-box[sidebarcommand="viewTabsSidebar"] > #sidebar-header > #sidebar-switcher-target > #sidebar-icon {
   list-style-image: url(chrome://browser/skin/tab.svg);
   -moz-context-properties: fill;
