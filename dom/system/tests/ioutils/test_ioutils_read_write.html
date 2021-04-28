@@ -420,6 +420,24 @@
 
       await cleanup(tmpFileName);
     });
+
+    add_task(async function test_write_directory() {
+      const tmpDir = await PathUtils.getTempDir();
+      const fileName = PathUtils.join(tmpDir, "test_ioutils_write_directory.tmp");
+      const tmpPath = `${fileName}.tmp`;
+      const bytes = Uint8Array.of(1, 2, 3, 4);
+
+      await IOUtils.makeDirectory(fileName);
+      await Assert.rejects(
+        IOUtils.write(fileName, bytes),
+        /NotAllowedError: Could not open the file at .+ for writing/);
+
+      await Assert.rejects(
+        IOUtils.write(fileName, bytes, { tmpPath }),
+        /NotAllowedError: Could not open the file at .+ for writing/);
+
+      ok(!await IOUtils.exists(PathUtils.join(fileName, PathUtils.filename(tmpPath))));
+    });
   </script>
 </head>
 
