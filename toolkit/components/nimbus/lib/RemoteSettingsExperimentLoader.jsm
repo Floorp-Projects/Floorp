@@ -79,7 +79,6 @@ const RemoteDefaultsLoader = {
 
     if (remoteDefaults.length) {
       await ExperimentManager.store.ready();
-      const targetingContext = new TargetingContext();
 
       // Iterate over remote defaults: at most 1 per feature
       for (let remoteDefault of remoteDefaults) {
@@ -90,7 +89,10 @@ const RemoteDefaultsLoader = {
         for (let configuration of remoteDefault.configurations) {
           let result;
           try {
-            result = await targetingContext.eval(configuration.targeting);
+            result = await RemoteSettingsExperimentLoader.evaluateJexl(
+              configuration.targeting,
+              { activeRemoteDefaults: existingConfigIds }
+            );
           } catch (e) {
             Cu.reportError(e);
           }
@@ -216,9 +218,13 @@ class _RemoteSettingsExperimentLoader {
   }
 
   async evaluateJexl(jexlString, customContext) {
-    if (customContext && !customContext.experiment) {
+    if (
+      customContext &&
+      !customContext.experiment &&
+      !customContext.activeRemoteDefaults
+    ) {
       throw new Error(
-        "Expected an .experiment property in second param of this function"
+        "Expected an .experiment or .activeRemoteDefaults property in second param of this function"
       );
     }
 
