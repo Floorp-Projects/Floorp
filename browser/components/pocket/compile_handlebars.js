@@ -9,22 +9,15 @@ const { exec } = require("child_process");
 const basePath = `./content/panels/tmpl/`;
 
 let templates = [
-  `ho2/ho2_articleinfo`,
-  `ho2/ho2_download`,
-  `ho2/ho2_download_error`,
-  `ho2/ho2_sharebutton`,
   `loggedoutvariants/variant_a`,
   `loggedoutvariants/variant_b`,
   `loggedoutvariants/variant_c`,
-  `saved_premiumextras`,
   `saved_premiumshell`,
   `saved_shell`,
-  `saved_tmplogin`,
   `signup_shell`,
   `home_shell`,
   `popular_topics`,
   `explore_more`,
-  `signupstoryboard_shell`,
   `item_recs`,
 ];
 

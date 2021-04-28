@@ -457,8 +457,7 @@
 
 /*=Recent/suggested tags
 --------------------------------------------------------------------------------------- */
-.pkt_ext_containersaved .pkt_ext_suggestedtag_detail,
-.pkt_ext_containersaved .pkt_ext_suggestedtag_detailshown {
+.pkt_ext_containersaved .pkt_ext_suggestedtag_detail {
     box-sizing: border-box;
     clear: both;
     inset-inline-start: 0;
@@ -467,13 +466,9 @@
     visibility: hidden;
     width: 100%;
 }
-.pkt_ext_container_detailactive .pkt_ext_suggestedtag_detail,
-.pkt_ext_containersaved .pkt_ext_suggestedtag_detailshown {
+.pkt_ext_container_detailactive .pkt_ext_suggestedtag_detail {
     opacity: 1;
     visibility: visible;
-}
-.pkt_ext_containersaved .pkt_ext_suggestedtag_detailshown {
-    padding: 4px 0;
 }
 .pkt_ext_container_finalstate .pkt_ext_suggestedtag_detail {
     opacity: 0;
@@ -819,32 +814,6 @@ button {
     background-image: url(../img/signup_firefoxlogo@2x.png);
     background-size: 22px 22px;
     background-repeat: no-repeat;
-}
-
-
-/*=Tmp Account Login
---------------------------------------------------------------------------------------- */
-.pkt_shaded_background {
-    background-color: #EBEBEB;
-    border-top: 1px solid #C3C3C3;
-    padding: 0 15px;
-}
-
-.pkt_ext_saved_tmplogin {
-    height: 146px;
-}
-
-.pkt_ext_indent_bordered {
-    margin: 15px 0;
-    padding: 0 7px;
-    border-inline-start: 4px solid rgba(68, 68, 68, .15);
-    text-align: start;
-    font-size: 13px;
-    color: #313131;
-}
-
-.pkt_ext_indent_bordered > p {
-    margin-bottom: 3px;
 }
 
 .pkt_ext_subshell {
