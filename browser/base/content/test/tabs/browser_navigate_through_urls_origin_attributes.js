@@ -79,7 +79,7 @@ function setupRemoteTypes() {
 async function testNavigate() {
   setupRemoteTypes();
   /**
-   * Open a regular tab, 3 container tabs and a private window, load about:blank
+   * Open a regular tab, 3 container tabs and a private window, load about:blank or about:privatebrowsing
    * For each test case
    *  load the uri
    *  verify correct remote type
@@ -104,7 +104,7 @@ async function testNavigate() {
     containerPages.push(containerPage);
   }
 
-  let privatePage = await openURIInPrivateTab("about:blank");
+  let privatePage = await openURIInPrivateTab();
   gPrevRemoteTypePrivateTab = privatePage.tab.linkedBrowser.remoteType;
 
   for (const testCase of TEST_CASES) {
