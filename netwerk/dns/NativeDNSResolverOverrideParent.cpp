@@ -48,8 +48,9 @@ NS_IMETHODIMP NativeDNSResolverOverrideParent::AddIPOverride(
   // the output buffer in the case of IPv6 input. See bug 223145.
   memset(&tempAddr, 0, sizeof(PRNetAddr));
 
-  if (PR_StringToNetAddr(nsCString(aIPLiteral).get(), &tempAddr) !=
-      PR_SUCCESS) {
+  if (!aIPLiteral.Equals("N/A"_ns) &&
+      PR_StringToNetAddr(nsCString(aIPLiteral).get(), &tempAddr) !=
+          PR_SUCCESS) {
     return NS_ERROR_UNEXPECTED;
   }
 
