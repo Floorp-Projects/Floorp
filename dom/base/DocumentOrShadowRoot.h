@@ -15,6 +15,7 @@
 #include "nsContentListDeclarations.h"
 #include "nsTArray.h"
 #include "nsTHashSet.h"
+#include "RadioGroupManager.h"
 
 class nsContentList;
 class nsCycleCollectionTraversalCallback;
@@ -35,7 +36,6 @@ class Element;
 class Document;
 class DocumentOrShadowRoot;
 class HTMLInputElement;
-struct nsRadioGroupStruct;
 class StyleSheetList;
 class ShadowRoot;
 template <typename T>
@@ -48,7 +48,7 @@ class Sequence;
  * TODO(emilio, bug 1418159): In the future this should hold most of the
  * relevant style state, this should allow us to fix bug 548397.
  */
-class DocumentOrShadowRoot {
+class DocumentOrShadowRoot : public RadioGroupManager {
   enum class Kind {
     Document,
     ShadowRoot,
@@ -207,25 +207,6 @@ class DocumentOrShadowRoot {
   MOZ_CAN_RUN_SCRIPT
   void GetAnimations(nsTArray<RefPtr<Animation>>& aAnimations);
 
-  // nsIRadioGroupContainer
-  NS_IMETHOD WalkRadioGroup(const nsAString& aName, nsIRadioVisitor* aVisitor,
-                            bool aFlushContent);
-  void SetCurrentRadioButton(const nsAString& aName, HTMLInputElement* aRadio);
-  HTMLInputElement* GetCurrentRadioButton(const nsAString& aName);
-  nsresult GetNextRadioButton(const nsAString& aName, const bool aPrevious,
-                              HTMLInputElement* aFocusedRadio,
-                              HTMLInputElement** aRadioOut);
-  void AddToRadioGroup(const nsAString& aName, HTMLInputElement* aRadio);
-  void RemoveFromRadioGroup(const nsAString& aName, HTMLInputElement* aRadio);
-  uint32_t GetRequiredRadioCount(const nsAString& aName) const;
-  void RadioRequiredWillChange(const nsAString& aName, bool aRequiredAdded);
-  bool GetValueMissingState(const nsAString& aName) const;
-  void SetValueMissingState(const nsAString& aName, bool aValue);
-
-  // for radio group
-  nsRadioGroupStruct* GetRadioGroup(const nsAString& aName) const;
-  nsRadioGroupStruct* GetOrCreateRadioGroup(const nsAString& aName);
-
   nsIContent* Retarget(nsIContent* aContent) const;
 
   void SetAdoptedStyleSheets(
@@ -296,8 +277,6 @@ class DocumentOrShadowRoot {
    *    new ones for IDs.
    */
   nsTHashtable<IdentifierMapEntry> mIdentifierMap;
-
-  nsClassHashtable<nsStringHashKey, nsRadioGroupStruct> mRadioGroups;
 
   // Always non-null, see comment in the constructor as to why a pointer instead
   // of a reference.
