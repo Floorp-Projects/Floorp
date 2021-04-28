@@ -41,11 +41,6 @@
 #include "cairo-error-private.h"
 #include "cairo-slope-private.h"
 
-static int
-_cairo_pen_vertices_needed (double tolerance,
-			    double radius,
-			    const cairo_matrix_t *matrix);
-
 static void
 _cairo_pen_compute_slopes (cairo_pen_t *pen);
 
@@ -88,10 +83,12 @@ _cairo_pen_init (cairo_pen_t	*pen,
      * is reflecting
      */
     for (i=0; i < pen->num_vertices; i++) {
-	double theta = 2 * M_PI * i / (double) pen->num_vertices;
-	double dx = radius * cos (reflect ? -theta : theta);
-	double dy = radius * sin (reflect ? -theta : theta);
 	cairo_pen_vertex_t *v = &pen->vertices[i];
+	double theta = 2 * M_PI * i / (double) pen->num_vertices, dx, dy;
+	if (reflect)
+	    theta = -theta;
+	dx = radius * cos (theta);
+	dy = radius * sin (theta);
 	cairo_matrix_transform_distance (ctm, &dx, &dy);
 	v->point.x = _cairo_fixed_from_double (dx);
 	v->point.y = _cairo_fixed_from_double (dy);
@@ -109,7 +106,7 @@ _cairo_pen_fini (cairo_pen_t *pen)
 	free (pen->vertices);
 
 
-    VG (VALGRIND_MAKE_MEM_NOACCESS (pen, sizeof (cairo_pen_t)));
+    VG (VALGRIND_MAKE_MEM_UNDEFINED (pen, sizeof (cairo_pen_t)));
 }
 
 cairo_status_t
@@ -273,7 +270,7 @@ Note that this also equation works for M == m (a circle) as it
 doesn't matter where on the circle the error is computed.
 */
 
-static int
+int
 _cairo_pen_vertices_needed (double	    tolerance,
 			    double	    radius,
 			    const cairo_matrix_t  *matrix)
@@ -283,21 +280,16 @@ _cairo_pen_vertices_needed (double	    tolerance,
      * compute major axis length for a pen with the specified radius.
      * we don't need the minor axis length.
      */
+    double major_axis = _cairo_matrix_transformed_circle_major_axis (matrix,
+								     radius);
+    int num_vertices;
 
-    double  major_axis = _cairo_matrix_transformed_circle_major_axis (matrix,
-								      radius);
-
-    /*
-     * compute number of vertices needed
-     */
-    int	    num_vertices;
-
-    /* Where tolerance / M is > 1, we use 4 points */
-    if (tolerance >= major_axis) {
+    if (tolerance >= 4*major_axis) { /* XXX relaxed from 2*major for inkscape */
+	num_vertices = 1;
+    } else if (tolerance >= major_axis) {
 	num_vertices = 4;
     } else {
-	double delta = acos (1 - tolerance / major_axis);
-	num_vertices = ceil (M_PI / delta);
+	num_vertices = ceil (2*M_PI / acos (1 - tolerance / major_axis));
 
 	/* number of vertices must be even */
 	if (num_vertices % 2)
@@ -395,4 +387,89 @@ _cairo_pen_find_active_ccw_vertex_index (const cairo_pen_t *pen,
 	i = pen->num_vertices - 1;
 
     return i;
+}
+
+void
+_cairo_pen_find_active_cw_vertices (const cairo_pen_t *pen,
+				    const cairo_slope_t *in,
+				    const cairo_slope_t *out,
+				    int *start, int *stop)
+{
+
+    int lo = 0, hi = pen->num_vertices;
+    int i;
+
+    i = (lo + hi) >> 1;
+    do {
+	if (_cairo_slope_compare (&pen->vertices[i].slope_cw, in) < 0)
+	    lo = i;
+	else
+	    hi = i;
+	i = (lo + hi) >> 1;
+    } while (hi - lo > 1);
+    if (_cairo_slope_compare (&pen->vertices[i].slope_cw, in) < 0)
+	if (++i == pen->num_vertices)
+	    i = 0;
+    *start = i;
+
+    if (_cairo_slope_compare (out, &pen->vertices[i].slope_ccw) >= 0) {
+	lo = i;
+	hi = i + pen->num_vertices;
+	i = (lo + hi) >> 1;
+	do {
+	    int j = i;
+	    if (j >= pen->num_vertices)
+		j -= pen->num_vertices;
+	    if (_cairo_slope_compare (&pen->vertices[j].slope_cw, out) > 0)
+		hi = i;
+	    else
+		lo = i;
+	    i = (lo + hi) >> 1;
+	} while (hi - lo > 1);
+	if (i >= pen->num_vertices)
+	    i -= pen->num_vertices;
+    }
+    *stop = i;
+}
+
+void
+_cairo_pen_find_active_ccw_vertices (const cairo_pen_t *pen,
+				     const cairo_slope_t *in,
+				     const cairo_slope_t *out,
+				     int *start, int *stop)
+{
+    int lo = 0, hi = pen->num_vertices;
+    int i;
+
+    i = (lo + hi) >> 1;
+    do {
+	if (_cairo_slope_compare (in, &pen->vertices[i].slope_ccw) < 0)
+	    lo = i;
+	else
+	    hi = i;
+	i = (lo + hi) >> 1;
+    } while (hi - lo > 1);
+    if (_cairo_slope_compare (in, &pen->vertices[i].slope_ccw) < 0)
+	if (++i == pen->num_vertices)
+	    i = 0;
+    *start = i;
+
+    if (_cairo_slope_compare (&pen->vertices[i].slope_cw, out) <= 0) {
+	lo = i;
+	hi = i + pen->num_vertices;
+	i = (lo + hi) >> 1;
+	do {
+	    int j = i;
+	    if (j >= pen->num_vertices)
+		j -= pen->num_vertices;
+	    if (_cairo_slope_compare (out, &pen->vertices[j].slope_ccw) > 0)
+		hi = i;
+	    else
+		lo = i;
+	    i = (lo + hi) >> 1;
+	} while (hi - lo > 1);
+	if (i >= pen->num_vertices)
+	    i -= pen->num_vertices;
+    }
+    *stop = i;
 }

@@ -39,8 +39,9 @@
 #include "cairoint.h"
 
 #include "cairo-boxes-private.h"
-#include "cairo-combsort-private.h"
+#include "cairo-combsort-inline.h"
 #include "cairo-error-private.h"
+#include "cairo-traps-private.h"
 
 typedef struct _cairo_bo_edge cairo_bo_edge_t;
 typedef struct _cairo_bo_trap cairo_bo_trap_t;
@@ -237,7 +238,7 @@ _cairo_bo_edge_end_trap (cairo_bo_edge_t	*left,
 	    box.p1.y = trap->top;
 	    box.p2.x = trap->right->edge.line.p1.x;
 	    box.p2.y = bot;
-	    status = _cairo_boxes_add (container, &box);
+	    status = _cairo_boxes_add (container, CAIRO_ANTIALIAS_DEFAULT, &box);
 	}
     }
 
@@ -434,74 +435,6 @@ _cairo_bentley_ottmann_tessellate_rectilinear (cairo_bo_event_t   **start_events
     }
 
     return CAIRO_STATUS_SUCCESS;
-}
-
-cairo_status_t
-_cairo_bentley_ottmann_tessellate_rectilinear_polygon (cairo_traps_t	 *traps,
-						       const cairo_polygon_t *polygon,
-						       cairo_fill_rule_t	  fill_rule)
-{
-    cairo_status_t status;
-    cairo_bo_event_t stack_events[CAIRO_STACK_ARRAY_LENGTH (cairo_bo_event_t)];
-    cairo_bo_event_t *events;
-    cairo_bo_event_t *stack_event_ptrs[ARRAY_LENGTH (stack_events) + 1];
-    cairo_bo_event_t **event_ptrs;
-    cairo_bo_edge_t stack_edges[ARRAY_LENGTH (stack_events)];
-    cairo_bo_edge_t *edges;
-    int num_events;
-    int i, j;
-
-    if (unlikely (polygon->num_edges == 0))
-	return CAIRO_STATUS_SUCCESS;
-
-    num_events = 2 * polygon->num_edges;
-
-    events = stack_events;
-    event_ptrs = stack_event_ptrs;
-    edges = stack_edges;
-    if (num_events > ARRAY_LENGTH (stack_events)) {
-	events = _cairo_malloc_ab_plus_c (num_events,
-					  sizeof (cairo_bo_event_t) +
-					  sizeof (cairo_bo_edge_t) +
-					  sizeof (cairo_bo_event_t *),
-					  sizeof (cairo_bo_event_t *));
-	if (unlikely (events == NULL))
-	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
-
-	event_ptrs = (cairo_bo_event_t **) (events + num_events);
-	edges = (cairo_bo_edge_t *) (event_ptrs + num_events + 1);
-    }
-
-    for (i = j = 0; i < polygon->num_edges; i++) {
-	edges[i].edge = polygon->edges[i];
-	edges[i].deferred_trap.right = NULL;
-	edges[i].prev = NULL;
-	edges[i].next = NULL;
-
-	event_ptrs[j] = &events[j];
-	events[j].type = CAIRO_BO_EVENT_TYPE_START;
-	events[j].point.y = polygon->edges[i].top;
-	events[j].point.x = polygon->edges[i].line.p1.x;
-	events[j].edge = &edges[i];
-	j++;
-
-	event_ptrs[j] = &events[j];
-	events[j].type = CAIRO_BO_EVENT_TYPE_STOP;
-	events[j].point.y = polygon->edges[i].bottom;
-	events[j].point.x = polygon->edges[i].line.p1.x;
-	events[j].edge = &edges[i];
-	j++;
-    }
-
-    status = _cairo_bentley_ottmann_tessellate_rectilinear (event_ptrs, j,
-							    fill_rule,
-							    TRUE, traps);
-    if (events != stack_events)
-	free (events);
-
-    traps->is_rectilinear = TRUE;
-
-    return status;
 }
 
 cairo_status_t

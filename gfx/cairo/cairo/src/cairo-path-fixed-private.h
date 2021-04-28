@@ -59,6 +59,20 @@ typedef char cairo_path_op_t;
 #define CAIRO_PATH_BUF_SIZE ((512 - sizeof (cairo_path_buf_t)) \
 			   / (2 * sizeof (cairo_point_t) + sizeof (cairo_path_op_t)))
 
+#define cairo_path_head(path__) (&(path__)->buf.base)
+#define cairo_path_tail(path__) cairo_path_buf_prev (cairo_path_head (path__))
+
+#define cairo_path_buf_next(pos__) \
+    cairo_list_entry ((pos__)->link.next, cairo_path_buf_t, link)
+#define cairo_path_buf_prev(pos__) \
+    cairo_list_entry ((pos__)->link.prev, cairo_path_buf_t, link)
+
+#define cairo_path_foreach_buf_start(pos__, path__) \
+    pos__ = cairo_path_head (path__); do
+#define cairo_path_foreach_buf_end(pos__, path__) \
+    while ((pos__ = cairo_path_buf_next (pos__)) !=  cairo_path_head (path__))
+
+
 typedef struct _cairo_path_buf {
     cairo_list_t link;
     unsigned int num_ops;
@@ -77,15 +91,24 @@ typedef struct _cairo_path_buf_fixed {
     cairo_point_t points[2 * CAIRO_PATH_BUF_SIZE];
 } cairo_path_buf_fixed_t;
 
+/*
+  NOTES:
+  has_curve_to => !stroke_is_rectilinear
+  fill_is_rectilinear => stroke_is_rectilinear
+  fill_is_empty => fill_is_rectilinear
+  fill_maybe_region => fill_is_rectilinear
+*/
 struct _cairo_path_fixed {
     cairo_point_t last_move_point;
     cairo_point_t current_point;
     unsigned int has_current_point	: 1;
-    unsigned int has_last_move_point	: 1;
+    unsigned int needs_move_to		: 1;
+    unsigned int has_extents		: 1;
     unsigned int has_curve_to		: 1;
-    unsigned int is_rectilinear		: 1;
-    unsigned int maybe_fill_region	: 1;
-    unsigned int is_empty_fill		: 1;
+    unsigned int stroke_is_rectilinear	: 1;
+    unsigned int fill_is_rectilinear	: 1;
+    unsigned int fill_maybe_region	: 1;
+    unsigned int fill_is_empty		: 1;
 
     cairo_box_t extents;
 
@@ -100,7 +123,6 @@ _cairo_path_fixed_translate (cairo_path_fixed_t *path,
 cairo_private cairo_status_t
 _cairo_path_fixed_append (cairo_path_fixed_t		    *path,
 			  const cairo_path_fixed_t	    *other,
-			  cairo_direction_t		     dir,
 			  cairo_fixed_t			     tx,
 			  cairo_fixed_t			     ty);
 
@@ -135,16 +157,16 @@ _cairo_path_fixed_iter_at_end (const cairo_path_fixed_iter_t *iter);
 static inline cairo_bool_t
 _cairo_path_fixed_fill_is_empty (const cairo_path_fixed_t *path)
 {
-    return path->is_empty_fill;
+    return path->fill_is_empty;
 }
 
 static inline cairo_bool_t
-_cairo_path_fixed_is_rectilinear_fill (const cairo_path_fixed_t *path)
+_cairo_path_fixed_fill_is_rectilinear (const cairo_path_fixed_t *path)
 {
-    if (! path->is_rectilinear)
+    if (! path->fill_is_rectilinear)
 	return 0;
 
-    if (! path->has_current_point)
+    if (! path->has_current_point || path->needs_move_to)
 	return 1;
 
     /* check whether the implicit close preserves the rectilinear property */
@@ -153,13 +175,32 @@ _cairo_path_fixed_is_rectilinear_fill (const cairo_path_fixed_t *path)
 }
 
 static inline cairo_bool_t
-_cairo_path_fixed_maybe_fill_region (const cairo_path_fixed_t *path)
+_cairo_path_fixed_stroke_is_rectilinear (const cairo_path_fixed_t *path)
 {
-#if WATCH_PATH
-    fprintf (stderr, "_cairo_path_fixed_maybe_fill_region () = %s\n",
-	     path->maybe_fill_region ? "true" : "false");
-#endif
-    return path->maybe_fill_region;
+    return path->stroke_is_rectilinear;
 }
+
+static inline cairo_bool_t
+_cairo_path_fixed_fill_maybe_region (const cairo_path_fixed_t *path)
+{
+    if (! path->fill_maybe_region)
+	return 0;
+
+    if (! path->has_current_point || path->needs_move_to)
+	return 1;
+
+    /* check whether the implicit close preserves the rectilinear property
+     * (the integer point property is automatically preserved)
+     */
+    return path->current_point.x == path->last_move_point.x ||
+	   path->current_point.y == path->last_move_point.y;
+}
+
+cairo_private cairo_bool_t
+_cairo_path_fixed_is_stroke_box (const cairo_path_fixed_t *path,
+				 cairo_box_t *box);
+
+cairo_private cairo_bool_t
+_cairo_path_fixed_is_simple_quad (const cairo_path_fixed_t *path);
 
 #endif /* CAIRO_PATH_FIXED_PRIVATE_H */

@@ -38,6 +38,8 @@
 
 #include "cairo-arc-private.h"
 
+#define MAX_FULL_CIRCLES 65536
+
 /* Spline deviation from the circle in radius would be given by:
 
 	error = sqrt (x**2 + y**2) - 1
@@ -131,13 +133,13 @@ _arc_segments_needed (double	      angle,
 
    for some value of h.
 
-   "Approximation of circular arcs by cubic poynomials", Michael
+   "Approximation of circular arcs by cubic polynomials", Michael
    Goldapp, Computer Aided Geometric Design 8 (1991) 227-238, provides
    various values of h along with error analysis for each.
 
    From that paper, a very practical value of h is:
 
-	h = 4/3 * tan(angle/4)
+	h = 4/3 * R * tan(angle/4)
 
    This value does not give the spline with minimal error, but it does
    provide a very good approximation, (6th-order convergence), and the
@@ -184,8 +186,13 @@ _cairo_arc_in_direction (cairo_t	  *cr,
     if (cairo_status (cr))
         return;
 
-    while (angle_max - angle_min > 4 * M_PI)
-	angle_max -= 2 * M_PI;
+    assert (angle_max >= angle_min);
+
+    if (angle_max - angle_min > 2 * M_PI * MAX_FULL_CIRCLES) {
+	angle_max = fmod (angle_max - angle_min, 2 * M_PI);
+	angle_min = fmod (angle_min, 2 * M_PI);
+	angle_max += angle_min + 2 * M_PI * MAX_FULL_CIRCLES;
+    }
 
     /* Recurse if drawing arc larger than pi */
     if (angle_max - angle_min > M_PI) {
@@ -210,32 +217,45 @@ _cairo_arc_in_direction (cairo_t	  *cr,
     } else if (angle_max != angle_min) {
 	cairo_matrix_t ctm;
 	int i, segments;
-	double angle, angle_step;
+	double step;
 
 	cairo_get_matrix (cr, &ctm);
 	segments = _arc_segments_needed (angle_max - angle_min,
 					 radius, &ctm,
 					 cairo_get_tolerance (cr));
-	angle_step = (angle_max - angle_min) / (double) segments;
+	step = (angle_max - angle_min) / segments;
+	segments -= 1;
 
-	if (dir == CAIRO_DIRECTION_FORWARD) {
-	    angle = angle_min;
-	} else {
-	    angle = angle_max;
-	    angle_step = - angle_step;
+	if (dir == CAIRO_DIRECTION_REVERSE) {
+	    double t;
+
+	    t = angle_min;
+	    angle_min = angle_max;
+	    angle_max = t;
+
+	    step = -step;
 	}
 
-	for (i = 0; i < segments; i++, angle += angle_step) {
-	    _cairo_arc_segment (cr, xc, yc,
-				radius,
-				angle,
-				angle + angle_step);
+	cairo_line_to (cr,
+		       xc + radius * cos (angle_min),
+		       yc + radius * sin (angle_min));
+
+	for (i = 0; i < segments; i++, angle_min += step) {
+	    _cairo_arc_segment (cr, xc, yc, radius,
+				angle_min, angle_min + step);
 	}
+
+	_cairo_arc_segment (cr, xc, yc, radius,
+			    angle_min, angle_max);
+    } else {
+	cairo_line_to (cr,
+		       xc + radius * cos (angle_min),
+		       yc + radius * sin (angle_min));
     }
 }
 
 /**
- * _cairo_arc_path
+ * _cairo_arc_path:
  * @cr: a cairo context
  * @xc: X position of the center of the arc
  * @yc: Y position of the center of the arc

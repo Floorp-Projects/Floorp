@@ -1,8 +1,8 @@
 /* -*- Mode: c; tab-width: 8; c-basic-offset: 4; indent-tabs-mode: t; -*- */
 /* cairo - a vector graphics library with display and print output
  *
- * Copyright © 2007 * Mozilla Corporation
- * Copyright © 2009 Chris Wilson
+ * Copyright Â© 2007 * Mozilla Corporation
+ * Copyright Â© 2009 Chris Wilson
  *
  * This library is free software; you can redistribute it and/or
  * modify it either under the terms of the GNU Lesser General Public

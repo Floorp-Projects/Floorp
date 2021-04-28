@@ -41,11 +41,11 @@
 
 cairo_private cairo_path_t *
 _cairo_path_create (cairo_path_fixed_t *path,
-		    cairo_gstate_t     *gstate);
+		    cairo_t		*cr);
 
 cairo_private cairo_path_t *
 _cairo_path_create_flat (cairo_path_fixed_t *path,
-			 cairo_gstate_t     *gstate);
+			 cairo_t	    *cr);
 
 cairo_private cairo_path_t *
 _cairo_path_create_in_error (cairo_status_t status);
