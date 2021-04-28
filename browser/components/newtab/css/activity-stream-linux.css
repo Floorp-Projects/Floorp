@@ -1317,7 +1317,9 @@ main {
     .outer-wrapper.newtab-experience .search-wrapper input:dir(rtl) {
       background-position-x: right 16px; }
   .outer-wrapper.newtab-experience .search-wrapper .search-handoff-button {
-    padding-inline-end: 15px; }
+    padding-inline-end: 15px;
+    fill: currentColor;
+    -moz-context-properties: fill; }
     .outer-wrapper.newtab-experience .search-wrapper .search-handoff-button .fake-caret {
       top: 18px;
       inset-inline-start: 52px; }

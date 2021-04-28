@@ -80,6 +80,8 @@ $glyph-forward: url('chrome://browser/skin/forward.svg');
 
     .search-handoff-button {
       padding-inline-end: 15px;
+      fill: currentColor;
+      -moz-context-properties: fill;
 
       .fake-caret {
         top: 18px;
