@@ -185,7 +185,6 @@ this.sidebarAction = class extends ExtensionAPI {
     // Insert a toolbarbutton for the sidebar dropdown selector.
     let toolbarbutton = document.createXULElement("toolbarbutton");
     toolbarbutton.setAttribute("id", this.buttonId);
-    toolbarbutton.setAttribute("type", "checkbox");
     toolbarbutton.setAttribute("label", details.title);
     toolbarbutton.setAttribute("oncommand", `SidebarUI.show("${this.id}");`);
     toolbarbutton.setAttribute(
