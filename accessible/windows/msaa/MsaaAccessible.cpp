@@ -5,6 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "MsaaAccessible.h"
+#include "mozilla/dom/BrowserBridgeParent.h"
+#include "mozilla/dom/BrowserParent.h"
 #include "sdnAccessible.h"
 
 using namespace mozilla;
@@ -77,4 +79,344 @@ void MsaaAccessible::AssignChildIDTo(NotNull<sdnAccessible*> aSdnAcc) {
 /* static */
 void MsaaAccessible::ReleaseChildID(NotNull<sdnAccessible*> aSdnAcc) {
   sIDGen.ReleaseID(aSdnAcc);
+}
+
+AccessibleWrap* MsaaAccessible::LocalAcc() {
+  return static_cast<AccessibleWrap*>(this);
+}
+
+/**
+ * This function is a helper for implementing IAccessible methods that accept
+ * a Child ID as a parameter. If the child ID is CHILDID_SELF, the function
+ * returns S_OK but a null *aOutInterface. Otherwise, *aOutInterface points
+ * to the resolved IAccessible.
+ *
+ * The CHILDID_SELF case is special because in that case we actually execute
+ * the implementation of the IAccessible method, whereas in the non-self case,
+ * we delegate the method call to that object for execution.
+ *
+ * A sample invocation of this would look like:
+ *
+ *  RefPtr<IAccessible> accessible;
+ *  HRESULT hr = ResolveChild(varChild, getter_AddRefs(accessible));
+ *  if (FAILED(hr)) {
+ *    return hr;
+ *  }
+ *
+ *  if (accessible) {
+ *    return accessible->get_accFoo(kVarChildIdSelf, pszName);
+ *  }
+ *
+ *  // Implementation for CHILDID_SELF case goes here
+ */
+HRESULT
+MsaaAccessible::ResolveChild(const VARIANT& aVarChild,
+                             IAccessible** aOutInterface) {
+  MOZ_ASSERT(aOutInterface);
+  *aOutInterface = nullptr;
+
+  if (aVarChild.vt != VT_I4) {
+    return E_INVALIDARG;
+  }
+
+  if (LocalAcc()->IsDefunct()) {
+    return CO_E_OBJNOTCONNECTED;
+  }
+
+  if (aVarChild.lVal == CHILDID_SELF) {
+    return S_OK;
+  }
+
+  bool isDefunct = false;
+  RefPtr<IAccessible> accessible = GetIAccessibleFor(aVarChild, &isDefunct);
+  if (!accessible) {
+    return E_INVALIDARG;
+  }
+
+  if (isDefunct) {
+    return CO_E_OBJNOTCONNECTED;
+  }
+
+  accessible.forget(aOutInterface);
+  return S_OK;
+}
+
+static LocalAccessible* GetAccessibleInSubtree(DocAccessible* aDoc,
+                                               uint32_t aID) {
+  LocalAccessible* child =
+      static_cast<DocAccessibleWrap*>(aDoc)->GetAccessibleByID(aID);
+  if (child) return child;
+
+  uint32_t childDocCount = aDoc->ChildDocumentCount();
+  for (uint32_t i = 0; i < childDocCount; i++) {
+    child = GetAccessibleInSubtree(aDoc->GetChildDocumentAt(i), aID);
+    if (child) return child;
+  }
+
+  return nullptr;
+}
+
+static already_AddRefed<IDispatch> GetProxiedAccessibleInSubtree(
+    const DocAccessibleParent* aDoc, const VARIANT& aVarChild) {
+  auto wrapper = static_cast<DocRemoteAccessibleWrap*>(WrapperFor(aDoc));
+  RefPtr<IAccessible> comProxy;
+  int32_t docWrapperChildId = MsaaAccessible::GetChildIDFor(wrapper);
+  // Only document accessible proxies at the top level of their content process
+  // are created with a pointer to their COM proxy.
+  if (aDoc->IsTopLevelInContentProcess()) {
+    wrapper->GetNativeInterface(getter_AddRefs(comProxy));
+  } else {
+    auto tab = static_cast<dom::BrowserParent*>(aDoc->Manager());
+    MOZ_ASSERT(tab);
+    DocAccessibleParent* topLevelDoc = tab->GetTopLevelDocAccessible();
+    MOZ_ASSERT(topLevelDoc && topLevelDoc->IsTopLevelInContentProcess());
+    VARIANT docId = {{{VT_I4}}};
+    docId.lVal = docWrapperChildId;
+    RefPtr<IDispatch> disp = GetProxiedAccessibleInSubtree(topLevelDoc, docId);
+    if (!disp) {
+      return nullptr;
+    }
+
+    DebugOnly<HRESULT> hr =
+        disp->QueryInterface(IID_IAccessible, getter_AddRefs(comProxy));
+    MOZ_ASSERT(SUCCEEDED(hr));
+  }
+
+  MOZ_ASSERT(comProxy);
+  if (!comProxy) {
+    return nullptr;
+  }
+
+  if (docWrapperChildId == aVarChild.lVal) {
+    return comProxy.forget();
+  }
+
+  RefPtr<IDispatch> disp;
+  if (FAILED(comProxy->get_accChild(aVarChild, getter_AddRefs(disp)))) {
+    return nullptr;
+  }
+
+  return disp.forget();
+}
+
+already_AddRefed<IAccessible> MsaaAccessible::GetIAccessibleFor(
+    const VARIANT& aVarChild, bool* aIsDefunct) {
+  if (aVarChild.vt != VT_I4) return nullptr;
+
+  VARIANT varChild = aVarChild;
+
+  MOZ_ASSERT(aIsDefunct);
+  *aIsDefunct = false;
+
+  RefPtr<IAccessible> result;
+
+  AccessibleWrap* localAcc = LocalAcc();
+  if (varChild.lVal == CHILDID_SELF) {
+    *aIsDefunct = localAcc->IsDefunct();
+    if (*aIsDefunct) {
+      return nullptr;
+    }
+    localAcc->GetNativeInterface(getter_AddRefs(result));
+    if (result) {
+      return result.forget();
+    }
+    // If we're not a proxy, there's nothing more we can do to attempt to
+    // resolve the IAccessible, so we just fail.
+    if (!localAcc->IsProxy()) {
+      return nullptr;
+    }
+    // Otherwise, since we're a proxy and we have a null native interface, this
+    // indicates that we need to obtain a COM proxy. To do this, we'll replace
+    // CHILDID_SELF with our real MSAA ID and continue the search from there.
+    varChild.lVal = GetExistingID();
+  }
+
+  if (varChild.ulVal != GetExistingID() &&
+      (localAcc->IsProxy() ? nsAccUtils::MustPrune(localAcc->Proxy())
+                           : nsAccUtils::MustPrune(localAcc))) {
+    // This accessible should have no subtree in platform, return null for its
+    // children.
+    return nullptr;
+  }
+
+  // If the MSAA ID is not a chrome id then we already know that we won't
+  // find it here and should look remotely instead. This handles the case when
+  // accessible is part of the chrome process and is part of the xul browser
+  // window and the child id points in the content documents. Thus we need to
+  // make sure that it is never called on proxies.
+  // Bug 1422674: We must only handle remote ids here (< 0), not child indices.
+  // Child indices (> 0) are handled below for both local and remote children.
+  if (XRE_IsParentProcess() && !localAcc->IsProxy() && varChild.lVal < 0 &&
+      !sIDGen.IsChromeID(varChild.lVal)) {
+    if (!localAcc->IsRootForHWND()) {
+      // Bug 1422201, 1424657: accChild with a remote id is only valid on the
+      // root accessible for an HWND.
+      // Otherwise, we might return remote accessibles which aren't descendants
+      // of this accessible. This would confuse clients which use accChild to
+      // check whether something is a descendant of a document.
+      return nullptr;
+    }
+    return GetRemoteIAccessibleFor(varChild);
+  }
+
+  if (varChild.lVal > 0) {
+    // Gecko child indices are 0-based in contrast to indices used in MSAA.
+    MOZ_ASSERT(!localAcc->IsProxy());
+    LocalAccessible* xpAcc = localAcc->LocalChildAt(varChild.lVal - 1);
+    if (!xpAcc) {
+      return nullptr;
+    }
+    *aIsDefunct = xpAcc->IsDefunct();
+    static_cast<AccessibleWrap*>(xpAcc)->GetNativeInterface(
+        getter_AddRefs(result));
+    return result.forget();
+  }
+
+  // If lVal negative then it is treated as child ID and we should look for
+  // accessible through whole accessible subtree including subdocuments.
+  // Otherwise we treat lVal as index in parent.
+  // First handle the case that both this accessible and the id'd one are in
+  // this process.
+  if (!localAcc->IsProxy()) {
+    DocAccessible* document = localAcc->Document();
+    LocalAccessible* child =
+        GetAccessibleInSubtree(document, static_cast<uint32_t>(varChild.lVal));
+
+    // If it is a document then just return an accessible.
+    if (child && localAcc->IsDoc()) {
+      *aIsDefunct = child->IsDefunct();
+      static_cast<AccessibleWrap*>(child)->GetNativeInterface(
+          getter_AddRefs(result));
+      return result.forget();
+    }
+
+    // Otherwise check whether the accessible is a child (this path works for
+    // ARIA documents and popups).
+    LocalAccessible* parent = child;
+    while (parent && parent != document) {
+      if (parent == localAcc) {
+        *aIsDefunct = child->IsDefunct();
+        static_cast<AccessibleWrap*>(child)->GetNativeInterface(
+            getter_AddRefs(result));
+        return result.forget();
+      }
+
+      parent = parent->LocalParent();
+    }
+  }
+
+  // Now see about the case that both this accessible and the target one are
+  // proxied.
+  if (localAcc->IsProxy()) {
+    DocAccessibleParent* proxyDoc = localAcc->Proxy()->Document();
+    RefPtr<IDispatch> disp = GetProxiedAccessibleInSubtree(proxyDoc, varChild);
+    if (!disp) {
+      return nullptr;
+    }
+
+    MOZ_ASSERT(mscom::IsProxy(disp));
+    DebugOnly<HRESULT> hr =
+        disp->QueryInterface(IID_IAccessible, getter_AddRefs(result));
+    MOZ_ASSERT(SUCCEEDED(hr));
+    return result.forget();
+  }
+
+  return nullptr;
+}
+
+/**
+ * Visit DocAccessibleParent descendants of `aBrowser` that are at the top
+ * level of their content process.
+ * That is, IsTopLevelInContentProcess() will be true for each visited actor.
+ * Each visited actor will be an embedded document in a different content
+ * process to its embedder.
+ * The DocAccessibleParent for `aBrowser` itself is excluded.
+ * `aCallback` will be called for each DocAccessibleParent.
+ * The callback should return true to continue traversal, false to cease.
+ */
+template <typename Callback>
+static bool VisitDocAccessibleParentDescendantsAtTopLevelInContentProcess(
+    dom::BrowserParent* aBrowser, Callback aCallback) {
+  // We can't use BrowserBridgeParent::VisitAllDescendants because it doesn't
+  // provide a way to stop the search.
+  const auto& bridges = aBrowser->ManagedPBrowserBridgeParent();
+  return std::all_of(bridges.cbegin(), bridges.cend(), [&](const auto& key) {
+    auto* bridge = static_cast<dom::BrowserBridgeParent*>(key);
+    dom::BrowserParent* childBrowser = bridge->GetBrowserParent();
+    DocAccessibleParent* childDocAcc = childBrowser->GetTopLevelDocAccessible();
+    if (!childDocAcc || childDocAcc->IsShutdown()) {
+      return true;
+    }
+    if (!aCallback(childDocAcc)) {
+      return false;  // Stop traversal.
+    }
+    if (!VisitDocAccessibleParentDescendantsAtTopLevelInContentProcess(
+            childBrowser, aCallback)) {
+      return false;  // Stop traversal.
+    }
+    return true;  // Continue traversal.
+  });
+}
+
+already_AddRefed<IAccessible> MsaaAccessible::GetRemoteIAccessibleFor(
+    const VARIANT& aVarChild) {
+  a11y::RootAccessible* root = LocalAcc()->RootAccessible();
+  const nsTArray<DocAccessibleParent*>* remoteDocs =
+      DocManager::TopLevelRemoteDocs();
+  if (!remoteDocs) {
+    return nullptr;
+  }
+
+  RefPtr<IAccessible> result;
+
+  // We intentionally leave the call to remoteDocs->Length() inside the loop
+  // condition because it is possible for reentry to occur in the call to
+  // GetProxiedAccessibleInSubtree() such that remoteDocs->Length() is mutated.
+  for (size_t i = 0; i < remoteDocs->Length(); i++) {
+    DocAccessibleParent* topRemoteDoc = remoteDocs->ElementAt(i);
+
+    LocalAccessible* outerDoc = topRemoteDoc->OuterDocOfRemoteBrowser();
+    if (!outerDoc) {
+      continue;
+    }
+
+    if (outerDoc->RootAccessible() != root) {
+      continue;
+    }
+
+    RefPtr<IDispatch> disp;
+    auto checkDoc = [&aVarChild,
+                     &disp](DocAccessibleParent* aRemoteDoc) -> bool {
+      uint32_t remoteDocMsaaId = WrapperFor(aRemoteDoc)->GetExistingID();
+      if (!sIDGen.IsSameContentProcessFor(aVarChild.lVal, remoteDocMsaaId)) {
+        return true;  // Continue the search.
+      }
+      if ((disp = GetProxiedAccessibleInSubtree(aRemoteDoc, aVarChild))) {
+        return false;  // Found it! Stop traversal!
+      }
+      return true;  // Continue the search.
+    };
+
+    // Check the top level document for this id.
+    checkDoc(topRemoteDoc);
+    if (!disp) {
+      // The top level document doesn't contain this id. Recursively check any
+      // out-of-process iframe documents it embeds.
+      VisitDocAccessibleParentDescendantsAtTopLevelInContentProcess(
+          static_cast<dom::BrowserParent*>(topRemoteDoc->Manager()), checkDoc);
+    }
+
+    if (!disp) {
+      continue;
+    }
+
+    DebugOnly<HRESULT> hr =
+        disp->QueryInterface(IID_IAccessible, getter_AddRefs(result));
+    // QI can fail on rare occasions if the LocalAccessible dies after we
+    // fetched disp but before we QI.
+    NS_WARNING_ASSERTION(SUCCEEDED(hr), "QI failed on remote IDispatch");
+    return result.forget();
+  }
+
+  return nullptr;
 }
