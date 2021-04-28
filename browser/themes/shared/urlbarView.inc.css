@@ -650,6 +650,7 @@
   padding: 6px 8px;
   margin-block: -6px;
   margin-inline-start: 8px;
+  color: inherit;
 }
 
 :root[uidensity=compact] .urlbarView-row:is([type=switchtab], [type=remotetab]) > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-action {
@@ -657,8 +658,15 @@
   margin-block: -3px;
 }
 
+/* On hover and selected the chiclet background would fade into the row style,
+   thus we invert the background, using the panel color, instead. */
 .urlbarView-row:is([type=switchtab], [type=remotetab]):is([selected], :hover) > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-action {
-  background-color: var(--urlbar-box-active-bgcolor);
+  background-color: Field;
+  color: FieldText;
+}
+.urlbarView-row:is([type=switchtab], [type=remotetab]):is([selected], :hover) > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-action:-moz-lwtheme {
+  background-color: var(--lwt-toolbar-field-focus);
+  color: var(--lwt-toolbar-field-focus-color);
 }
 
 .urlbarView-row[type=remotetab]:not([selected], :hover) > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-title-separator::before,
