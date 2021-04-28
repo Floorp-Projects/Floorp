@@ -680,21 +680,11 @@ nsresult MediaTrackGraphImpl::OpenAudioInput(CubebUtils::AudioDeviceID aID,
   return NS_OK;
 }
 
-void MediaTrackGraphImpl::CloseAudioInputImpl(
-    Maybe<CubebUtils::AudioDeviceID>& aID, AudioDataListener* aListener) {
+void MediaTrackGraphImpl::CloseAudioInputImpl(CubebUtils::AudioDeviceID aID,
+                                              AudioDataListener* aListener) {
   MOZ_ASSERT(OnGraphThread());
-  // It is possible to not know the ID here, find it first.
-  if (aID.isNothing()) {
-    for (const auto& entry : mInputDeviceUsers) {
-      if (entry.GetData().Contains(aListener)) {
-        aID = Some(entry.GetKey());
-      }
-    }
-    MOZ_ASSERT(aID.isSome(), "Closing an audio input that was not opened.");
-  }
 
-  auto listeners = mInputDeviceUsers.Lookup(aID.value());
-
+  auto listeners = mInputDeviceUsers.Lookup(aID);
   MOZ_ASSERT(listeners);
   bool wasPresent = listeners->RemoveElement(aListener);
   MOZ_ASSERT(wasPresent);
@@ -712,7 +702,7 @@ void MediaTrackGraphImpl::CloseAudioInputImpl(
   }
 
   mInputDeviceID = nullptr;  // reset to default
-  mInputDeviceUsers.Remove(aID.value());
+  Unused << mInputDeviceUsers.Remove(aID);
 
   // Switch Drivers since we're adding or removing an input (to nothing/system
   // or output only)
@@ -773,12 +763,12 @@ void MediaTrackGraphImpl::UnregisterAudioOutput(MediaTrack* aTrack,
       });
 }
 
-void MediaTrackGraphImpl::CloseAudioInput(Maybe<CubebUtils::AudioDeviceID>& aID,
+void MediaTrackGraphImpl::CloseAudioInput(CubebUtils::AudioDeviceID aID,
                                           AudioDataListener* aListener) {
   MOZ_ASSERT(NS_IsMainThread());
   class Message : public ControlMessage {
    public:
-    Message(MediaTrackGraphImpl* aGraph, Maybe<CubebUtils::AudioDeviceID>& aID,
+    Message(MediaTrackGraphImpl* aGraph, CubebUtils::AudioDeviceID aID,
             AudioDataListener* aListener)
         : ControlMessage(nullptr),
           mGraph(aGraph),
@@ -786,7 +776,7 @@ void MediaTrackGraphImpl::CloseAudioInput(Maybe<CubebUtils::AudioDeviceID>& aID,
           mListener(aListener) {}
     void Run() override { mGraph->CloseAudioInputImpl(mID, mListener); }
     MediaTrackGraphImpl* mGraph;
-    Maybe<CubebUtils::AudioDeviceID> mID;
+    CubebUtils::AudioDeviceID mID;
     RefPtr<AudioDataListener> mListener;
   };
   this->AppendMessage(MakeUnique<Message>(this, aID, aListener));

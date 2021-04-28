@@ -260,6 +260,9 @@ class AudioInputTrack : public ProcessedMediaTrack {
   // copyable (opaque pointers)
   RefPtr<AudioDataListener> mInputListener;
 
+  // Only accessed on the main thread.
+  Maybe<CubebUtils::AudioDeviceID> mDeviceId;
+
   explicit AudioInputTrack(TrackRate aSampleRate)
       : ProcessedMediaTrack(aSampleRate, MediaSegment::AUDIO,
                             new AudioSegment()) {}
@@ -273,7 +276,8 @@ class AudioInputTrack : public ProcessedMediaTrack {
   // input. Main thread only.
   nsresult OpenAudioInput(CubebUtils::AudioDeviceID aId,
                           AudioDataListener* aListener);
-  void CloseAudioInput(Maybe<CubebUtils::AudioDeviceID>& aId);
+  void CloseAudioInput();
+  Maybe<CubebUtils::AudioDeviceID> DeviceId() const;
   void Destroy() override;
   void SetInputProcessing(RefPtr<AudioInputProcessing> aInputProcessing);
   static AudioInputTrack* Create(MediaTrackGraph* aGraph);

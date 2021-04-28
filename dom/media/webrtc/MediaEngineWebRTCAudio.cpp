@@ -599,9 +599,8 @@ nsresult MediaEngineWebRTCMicrophoneSource::Stop() {
 
         track->GraphImpl()->AppendMessage(MakeUnique<StartStopMessage>(
             that->mInputProcessing, StartStopMessage::Stop));
-        CubebUtils::AudioDeviceID deviceID = that->mDeviceInfo->DeviceID();
-        Maybe<CubebUtils::AudioDeviceID> id = Some(deviceID);
-        track->CloseAudioInput(id);
+        MOZ_ASSERT(track->DeviceId().value() == that->mDeviceInfo->DeviceID());
+        track->CloseAudioInput();
       }));
 
   MOZ_ASSERT(mState == kStarted, "Should be started when stopping");
@@ -1204,8 +1203,7 @@ TrackTime AudioInputProcessing::NumBufferedFrames(
 
 void AudioInputTrack::Destroy() {
   MOZ_ASSERT(NS_IsMainThread());
-  Maybe<CubebUtils::AudioDeviceID> id = Nothing();
-  CloseAudioInput(id);
+  CloseAudioInput();
 
   MediaTrack::Destroy();
 }
@@ -1272,18 +1270,26 @@ nsresult AudioInputTrack::OpenAudioInput(CubebUtils::AudioDeviceID aId,
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(GraphImpl());
   MOZ_ASSERT(!mInputListener);
+  MOZ_ASSERT(mDeviceId.isNothing());
   mInputListener = aListener;
+  mDeviceId.emplace(aId);
   return GraphImpl()->OpenAudioInput(aId, aListener);
 }
 
-void AudioInputTrack::CloseAudioInput(Maybe<CubebUtils::AudioDeviceID>& aId) {
+void AudioInputTrack::CloseAudioInput() {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(GraphImpl());
   if (!mInputListener) {
     return;
   }
-  GraphImpl()->CloseAudioInput(aId, mInputListener);
+  MOZ_ASSERT(mDeviceId.isSome());
+  GraphImpl()->CloseAudioInput(mDeviceId.extract(), mInputListener);
   mInputListener = nullptr;
+}
+
+Maybe<CubebUtils::AudioDeviceID> AudioInputTrack::DeviceId() const {
+  MOZ_ASSERT(NS_IsMainThread());
+  return mDeviceId;
 }
 
 nsString MediaEngineWebRTCAudioCaptureSource::GetName() const {
