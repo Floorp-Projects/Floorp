@@ -170,6 +170,7 @@ browsertime:
     - browsertime-benchmark
     - browsertime-benchmark-wasm
     - browsertime-tp6-profiling
+    - browsertime-custom
 
 browsertime-high-priority:
     - browsertime-benchmark

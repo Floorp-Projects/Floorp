@@ -363,3 +363,27 @@ browsertime-tp6-profiling:
             fission: 2
             default: 3
     treeherder-symbol: Btime-Prof(tp6)
+
+browsertime-custom:
+    apps: [firefox]
+    description: Raptor (browsertime) custom pageload tests
+    run-visual-metrics: true
+    max-run-time: 2700
+    mozharness:
+        extra-options:
+            - --chimera
+    raptor-subtests: [[process-switch, ps]]
+    run-on-projects:
+        by-variant:
+            fission:
+                by-test-platform:
+                    windows.*-32.*: []
+                    default: [mozilla-central]
+            default:
+                by-test-platform:
+                    linux.*shippable.*: [mozilla-central]
+                    macos.*shippable-qr.*: [mozilla-central]
+                    windows10-64.*shippable.*: [mozilla-central]
+                    default: []
+    tier: 2
+    treeherder-symbol: Btime(ps)
