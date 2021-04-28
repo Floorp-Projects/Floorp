@@ -122,23 +122,8 @@ inline void Shape::updateBaseShapeAfterMovingGC() {
   }
 }
 
-inline void Shape::initDictionaryShape(const StackShape& child, uint32_t nfixed,
-                                       DictionaryShapeLink next) {
-  new (this) Shape(child, nfixed);
-  this->immutableFlags |= IN_DICTIONARY;
-
-  MOZ_ASSERT(dictNext.isNone());
-  if (!next.isNone()) {
-    insertIntoDictionaryBefore(next);
-  }
-}
-
 inline void Shape::setNextDictionaryShape(Shape* shape) {
   setDictionaryNextPtr(DictionaryShapeLink(shape));
-}
-
-inline void Shape::setDictionaryObject(JSObject* obj) {
-  setDictionaryNextPtr(DictionaryShapeLink(obj));
 }
 
 inline void Shape::clearDictionaryNextPtr() {
@@ -147,35 +132,8 @@ inline void Shape::clearDictionaryNextPtr() {
 
 inline void Shape::setDictionaryNextPtr(DictionaryShapeLink next) {
   MOZ_ASSERT(inDictionary());
-  dictNextPreWriteBarrier();
+  // Note: we don't need a pre-barrier here because this field isn't traced.
   dictNext = next;
-}
-
-inline void Shape::dictNextPreWriteBarrier() {
-  // Only object pointers are traced, so we only need to barrier those.
-  if (dictNext.isObject()) {
-    gc::PreWriteBarrier(dictNext.toObject());
-  }
-}
-
-inline Shape* DictionaryShapeLink::prev() {
-  MOZ_ASSERT(!isNone());
-
-  if (isShape()) {
-    return toShape()->parent;
-  }
-
-  return toObject()->as<NativeObject>().shape();
-}
-
-inline void DictionaryShapeLink::setPrev(Shape* shape) {
-  MOZ_ASSERT(!isNone());
-
-  if (isShape()) {
-    toShape()->parent = shape;
-  } else {
-    toObject()->as<NativeObject>().setShape(shape);
-  }
 }
 
 template <class ObjectSubclass>
