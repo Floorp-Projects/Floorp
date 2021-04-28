@@ -283,14 +283,16 @@ face_props_parse (twin_face_properties_t *props,
 	    parse_field (props, start, end - start);
 }
 
-static twin_face_properties_t *
-twin_font_face_create_properties (cairo_font_face_t *twin_face)
+static cairo_status_t
+twin_font_face_create_properties (cairo_font_face_t *twin_face,
+				  twin_face_properties_t **props_out)
 {
     twin_face_properties_t *props;
+    cairo_status_t status;
 
-    props = _cairo_malloc (sizeof (twin_face_properties_t));
+    props = malloc (sizeof (twin_face_properties_t));
     if (unlikely (props == NULL))
-	return NULL;
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     props->stretch  = TWIN_STRETCH_NORMAL;
     props->slant = CAIRO_FONT_SLANT_NORMAL;
@@ -298,25 +300,30 @@ twin_font_face_create_properties (cairo_font_face_t *twin_face)
     props->monospace = FALSE;
     props->smallcaps = FALSE;
 
-    if (unlikely (cairo_font_face_set_user_data (twin_face,
+    status = cairo_font_face_set_user_data (twin_face,
 					    &twin_properties_key,
-					    props, free))) {
+					    props, free);
+    if (unlikely (status)) {
 	free (props);
-	return NULL;
+	return status;
     }
 
-    return props;
+    if (props_out)
+	*props_out = props;
+
+    return CAIRO_STATUS_SUCCESS;
 }
 
 static cairo_status_t
 twin_font_face_set_properties_from_toy (cairo_font_face_t *twin_face,
 					cairo_toy_font_face_t *toy_face)
 {
+    cairo_status_t status;
     twin_face_properties_t *props;
 
-    props = twin_font_face_create_properties (twin_face);
-    if (unlikely (props == NULL))
-	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+    status = twin_font_face_create_properties (twin_face, &props);
+    if (unlikely (status))
+	return status;
 
     props->slant = toy_face->slant;
     props->weight = toy_face->weight == CAIRO_FONT_WEIGHT_NORMAL ?
@@ -412,7 +419,7 @@ twin_scaled_font_compute_properties (cairo_scaled_font_t *scaled_font,
     cairo_status_t status;
     twin_scaled_properties_t *props;
 
-    props = _cairo_malloc (sizeof (twin_scaled_properties_t));
+    props = malloc (sizeof (twin_scaled_properties_t));
     if (unlikely (props == NULL))
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
@@ -722,9 +729,11 @@ cairo_font_face_t *
 _cairo_font_face_twin_create_fallback (void)
 {
     cairo_font_face_t *twin_font_face;
+    cairo_status_t status;
 
     twin_font_face = _cairo_font_face_twin_create_internal ();
-    if (! twin_font_face_create_properties (twin_font_face)) {
+    status = twin_font_face_create_properties (twin_font_face, NULL);
+    if (status) {
 	cairo_font_face_destroy (twin_font_face);
 	return (cairo_font_face_t *) &_cairo_font_face_nil;
     }

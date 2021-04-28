@@ -1,7 +1,0 @@
-Name: @FEATURE_PC@
-Description: @FEATURE_NAME@ for cairo graphics library
-Version: @VERSION@
-
-Requires: @FEATURE_BASE@ @FEATURE_REQUIRES@
-Libs: @FEATURE_NONPKGCONFIG_LIBS@ @FEATURE_NONPKGCONFIG_EXTRA_LIBS@
-Cflags: -I${pc_top_builddir}/${pcfiledir}/@srcdir@/src @FEATURE_NONPKGCONFIG_CFLAGS@

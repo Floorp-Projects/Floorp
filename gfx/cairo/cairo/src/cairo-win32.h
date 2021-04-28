@@ -49,8 +49,7 @@ cairo_public cairo_surface_t *
 cairo_win32_surface_create (HDC hdc);
 
 cairo_public cairo_surface_t *
-cairo_win32_surface_create_with_format (HDC hdc,
-                                        cairo_format_t format);
+cairo_win32_surface_create_with_alpha (HDC hdc);
 
 cairo_public cairo_surface_t *
 cairo_win32_printing_surface_create (HDC hdc);
@@ -65,7 +64,6 @@ cairo_public cairo_surface_t *
 cairo_win32_surface_create_with_dib (cairo_format_t format,
                                      int width,
                                      int height);
-
 cairo_public HDC
 cairo_win32_surface_get_dc (cairo_surface_t *surface);
 
@@ -76,7 +74,18 @@ cairo_public cairo_surface_t *
 cairo_win32_surface_get_image (cairo_surface_t *surface);
 
 cairo_public cairo_status_t
-cairo_win32_surface_get_size (const cairo_surface_t *surface, int *width, int *height);
+cairo_win32_surface_set_can_convert_to_dib (cairo_surface_t *surface, cairo_bool_t can_convert);
+
+cairo_public cairo_status_t
+cairo_win32_surface_get_can_convert_to_dib (cairo_surface_t *surface, cairo_bool_t *can_convert);
+
+BYTE cairo_win32_get_system_text_quality (void);
+
+cairo_public int
+cairo_win32_surface_get_width (cairo_surface_t *surface);
+
+cairo_public int
+cairo_win32_surface_get_height (cairo_surface_t *surface);
 
 #if CAIRO_HAS_WIN32_FONT
 
@@ -111,9 +120,6 @@ cairo_public void
 cairo_win32_scaled_font_get_device_to_logical (cairo_scaled_font_t *scaled_font,
 					       cairo_matrix_t *device_to_logical);
 
-cairo_public BYTE
-cairo_win32_get_system_text_quality (void);
-
 #endif /* CAIRO_HAS_WIN32_FONT */
 
 #if CAIRO_HAS_DWRITE_FONT
@@ -122,21 +128,28 @@ cairo_win32_get_system_text_quality (void);
  * Win32 DirectWrite font support
  */
 cairo_public cairo_font_face_t *
-cairo_dwrite_font_face_create_for_dwrite_fontface (void *dwrite_font, void *dwrite_font_face);
+cairo_dwrite_font_face_create_for_dwrite_fontface(void *dwrite_font, void *dwrite_font_face);
 
 void
-cairo_dwrite_scaled_font_set_force_GDI_classic (cairo_scaled_font_t *dwrite_scaled_font, cairo_bool_t allowed);
+cairo_dwrite_scaled_font_allow_manual_show_glyphs(cairo_scaled_font_t *dwrite_scaled_font, cairo_bool_t allowed);
+
+void
+cairo_dwrite_scaled_font_set_force_GDI_classic(cairo_scaled_font_t *dwrite_scaled_font, cairo_bool_t force);
 
 cairo_bool_t
-cairo_dwrite_scaled_font_get_force_GDI_classic (cairo_scaled_font_t *dwrite_scaled_font);
+cairo_dwrite_scaled_font_get_force_GDI_classic(cairo_scaled_font_t *dwrite_scaled_font);
 
 void
-cairo_dwrite_set_cleartype_params (FLOAT gamma, FLOAT contrast, FLOAT level, int geometry, int mode);
+cairo_dwrite_set_cleartype_params(FLOAT gamma, FLOAT contrast, FLOAT level, int geometry, int mode);
 
 int
-cairo_dwrite_get_cleartype_rendering_mode ();
+cairo_dwrite_get_cleartype_rendering_mode();
 
 #endif /* CAIRO_HAS_DWRITE_FONT */
+
+struct IDirect3DSurface9;
+cairo_public cairo_surface_t *
+cairo_win32_surface_create_with_d3dsurface9 (struct IDirect3DSurface9 *surface);
 
 CAIRO_END_DECLS
 

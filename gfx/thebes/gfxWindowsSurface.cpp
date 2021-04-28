@@ -20,6 +20,12 @@ gfxWindowsSurface::gfxWindowsSurface(HDC dc, uint32_t flags)
   InitWithDC(flags);
 }
 
+gfxWindowsSurface::gfxWindowsSurface(IDirect3DSurface9* surface, uint32_t flags)
+    : mOwnsDC(false), mDC(0), mWnd(nullptr) {
+  cairo_surface_t* surf = cairo_win32_surface_create_with_d3dsurface9(surface);
+  Init(surf);
+}
+
 void gfxWindowsSurface::MakeInvalid(mozilla::gfx::IntSize& size) {
   size = mozilla::gfx::IntSize(-1, -1);
 }
@@ -59,7 +65,7 @@ gfxWindowsSurface::gfxWindowsSurface(cairo_surface_t* csurf)
 
 void gfxWindowsSurface::InitWithDC(uint32_t flags) {
   if (flags & FLAG_IS_TRANSPARENT) {
-    Init(cairo_win32_surface_create_with_format(mDC, CAIRO_FORMAT_ARGB32));
+    Init(cairo_win32_surface_create_with_alpha(mDC));
   } else {
     Init(cairo_win32_surface_create(mDC));
   }
@@ -148,11 +154,6 @@ const mozilla::gfx::IntSize gfxWindowsSurface::GetSize() const {
       mSurface != nullptr,
       "CairoSurface() shouldn't be nullptr when mSurfaceValid is TRUE!");
 
-  int width, height;
-  if (cairo_win32_surface_get_size(mSurface, &width, &height) !=
-      CAIRO_STATUS_SUCCESS) {
-    return mozilla::gfx::IntSize(-1, -1);
-  }
-
-  return mozilla::gfx::IntSize(width, height);
+  return mozilla::gfx::IntSize(cairo_win32_surface_get_width(mSurface),
+                               cairo_win32_surface_get_height(mSurface));
 }
