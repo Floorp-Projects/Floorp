@@ -52,47 +52,16 @@
 
 CAIRO_BEGIN_DECLS
 
-cairo_public cairo_font_face_t *
-cairo_ft_font_face_create_for_ft_face (FT_Face         face,
-				       int             load_flags,
-				       unsigned int    synth_flags,
-				       void           *face_context);
-
-/**
- * cairo_ft_synthesize_t:
- * @CAIRO_FT_SYNTHESIZE_BOLD: Embolden the glyphs (redraw with a pixel offset)
- * @CAIRO_FT_SYNTHESIZE_OBLIQUE: Slant the glyph outline by 12 degrees to the
- * right.
- *
- * A set of synthesis options to control how FreeType renders the glyphs
- * for a particular font face.
- *
- * Individual synthesis features of a #cairo_ft_font_face_t can be set
- * using cairo_ft_font_face_set_synthesize(), or disabled using
- * cairo_ft_font_face_unset_synthesize(). The currently enabled set of
- * synthesis options can be queried with cairo_ft_font_face_get_synthesize().
- *
- * Note: that when synthesizing glyphs, the font metrics returned will only
- * be estimates.
- *
- * Since: 1.12
- **/
 typedef enum {
     CAIRO_FT_SYNTHESIZE_BOLD = 1 << 0,
     CAIRO_FT_SYNTHESIZE_OBLIQUE = 1 << 1
 } cairo_ft_synthesize_t;
 
-cairo_public void
-cairo_ft_font_face_set_synthesize (cairo_font_face_t *font_face,
-				   unsigned int synth_flags);
-
-cairo_public void
-cairo_ft_font_face_unset_synthesize (cairo_font_face_t *font_face,
-				     unsigned int synth_flags);
-
-cairo_public unsigned int
-cairo_ft_font_face_get_synthesize (cairo_font_face_t *font_face);
-
+cairo_public cairo_font_face_t *
+cairo_ft_font_face_create_for_ft_face (FT_Face         face,
+				       int             load_flags,
+				       unsigned int    synth_flags,
+				       void	      *face_context);
 
 cairo_public FT_Face
 cairo_ft_scaled_font_lock_face (cairo_scaled_font_t *scaled_font);
@@ -103,7 +72,7 @@ cairo_ft_scaled_font_unlock_face (cairo_scaled_font_t *scaled_font);
 #if CAIRO_HAS_FC_FONT
 
 cairo_public cairo_font_face_t *
-cairo_ft_font_face_create_for_pattern (FcPattern *pattern);
+cairo_ft_font_face_create_for_pattern (FcPattern      *pattern);
 
 cairo_public void
 cairo_ft_font_options_substitute (const cairo_font_options_t *options,

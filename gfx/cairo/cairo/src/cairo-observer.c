@@ -36,8 +36,6 @@
 
 #include "cairoint.h"
 
-#include "cairo-list-inline.h"
-
 void
 _cairo_observers_notify (cairo_list_t *observers, void *arg)
 {

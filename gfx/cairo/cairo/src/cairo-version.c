@@ -36,7 +36,13 @@
  *	Carl D. Worth <cworth@cworth.org>
  */
 
+#define CAIRO_VERSION_H 1
+
 #include "cairoint.h"
+
+/* get the "real" version info instead of dummy cairo-version.h */
+#undef CAIRO_VERSION_H
+#include "cairo-features.h"
 
 /**
  * SECTION:cairo-version
@@ -48,35 +54,35 @@
  * vs. in-progress development, (such as from git instead of a tar file,
  * or as a "snapshot" tar file as opposed to a "release" tar file).
  *
- * <informalexample><screen>
+ * <informalexample><programlisting>
  *  _____ Major. Always 1, until we invent a new scheme.
  * /  ___ Minor. Even/Odd = Release/Snapshot (tar files) or Branch/Head (git)
  * | /  _ Micro. Even/Odd = Tar-file/git
  * | | /
  * 1.0.0
- * </screen></informalexample>
+ * </programlisting></informalexample>
  *
  * Here are a few examples of versions that one might see.
- * <informalexample><screen>
+ * <informalexample><programlisting>
  * Releases
  * --------
  * 1.0.0 - A major release
  * 1.0.2 - A subsequent maintenance release
  * 1.2.0 - Another major release
- * &nbsp;
+ *
  * Snapshots
  * ---------
  * 1.1.2 - A snapshot (working toward the 1.2.0 release)
- * &nbsp;
+ *
  * In-progress development (eg. from git)
  * --------------------------------------
  * 1.0.1 - Development on a maintenance branch (toward 1.0.2 release)
  * 1.1.1 - Development on head (toward 1.1.2 snapshot and 1.2.0 release)
- * </screen></informalexample>
- *
+ * </programlisting></informalexample>
+ * </para>
  * <refsect2>
  * <title>Compatibility</title>
- *
+ * <para>
  * The API/ABI compatibility guarantees for various versions are as
  * follows. First, let's assume some cairo-using application code that is
  * successfully using the API/ABI "from" one version of cairo. Then let's
@@ -96,27 +102,27 @@
  * with the same in-development version number. This is because these
  * numbers don't correspond to any fixed state of the software, but
  * rather the many states between snapshots and releases.
- *
+ * </para>
  * </refsect2>
  * <refsect2>
  * <title>Examining the version</title>
- *
+ * <para>
  * Cairo provides the ability to examine the version at either
  * compile-time or run-time and in both a human-readable form as well as
  * an encoded form suitable for direct comparison. Cairo also provides the
  * macro CAIRO_VERSION_ENCODE() to perform the encoding.
  *
- * <informalexample><screen>
+ * <informalexample><programlisting>
  * Compile-time
  * ------------
- * #CAIRO_VERSION_STRING   Human-readable
- * #CAIRO_VERSION          Encoded, suitable for comparison
- * &nbsp;
+ * CAIRO_VERSION_STRING    Human-readable
+ * CAIRO_VERSION           Encoded, suitable for comparison
+ *
  * Run-time
  * --------
  * cairo_version_string()  Human-readable
  * cairo_version()         Encoded, suitable for comparison
- * </screen></informalexample>
+ * </programlisting></informalexample>
  *
  * For example, checking that the cairo version is greater than or equal
  * to 1.0.0 could be achieved at compile-time or run-time as follows:
@@ -129,68 +135,55 @@
  * if (cairo_version() >= CAIRO_VERSION_ENCODE(1, 0, 0))
  *     printf ("Running with suitable cairo version: %s\n", cairo_version_string ());
  * </programlisting></informalexample>
- *
+ * </para>
  * </refsect2>
- *
- **/
+ */
 
 /**
  * CAIRO_VERSION:
  *
  * The version of cairo available at compile-time, encoded using
  * CAIRO_VERSION_ENCODE().
- *
- * Since: 1.0
- **/
+ */
 
 /**
  * CAIRO_VERSION_MAJOR:
  *
  * The major component of the version of cairo available at compile-time.
- *
- * Since: 1.0
- **/
+ */
 
 /**
  * CAIRO_VERSION_MINOR:
  *
  * The minor component of the version of cairo available at compile-time.
- *
- * Since: 1.0
- **/
+ */
 
 /**
  * CAIRO_VERSION_MICRO:
  *
  * The micro component of the version of cairo available at compile-time.
- *
- * Since: 1.0
- **/
+ */
 
 /**
  * CAIRO_VERSION_STRING:
  *
  * A human-readable string literal containing the version of cairo available
  * at compile-time, in the form of "X.Y.Z".
- *
- * Since: 1.8
- **/
+ */
 
 /**
  * CAIRO_VERSION_ENCODE:
  * @major: the major component of the version number
  * @minor: the minor component of the version number
  * @micro: the micro component of the version number
- *
+ * 
  * This macro encodes the given cairo version into an integer.  The numbers
  * returned by %CAIRO_VERSION and cairo_version() are encoded using this macro.
  * Two encoded version numbers can be compared as integers.  The encoding ensures
  * that later versions compare greater than earlier versions.
  *
- * Returns: the encoded version.
- *
- * Since: 1.0
- **/
+ * @Returns: the encoded version.
+ */
 
 /**
  * CAIRO_VERSION_STRINGIZE:
@@ -202,10 +195,10 @@
  * returned by %CAIRO_VERSION_STRING and cairo_version_string() are encoded using this macro.
  * The parameters to this macro must expand to numerical literals.
  *
- * Returns: a string literal containing the version.
+ * @Returns: a string literal containing the version.
  *
- * Since: 1.8
- **/
+ * @Since: 1.8
+ */
 
 /**
  * cairo_version:
@@ -225,8 +218,6 @@
  * equivalents %CAIRO_VERSION and %CAIRO_VERSION_STRING.
  *
  * Return value: the encoded version.
- *
- * Since: 1.0
  **/
 int
 cairo_version (void)
@@ -244,8 +235,6 @@ cairo_version (void)
  * %CAIRO_VERSION_STRING and %CAIRO_VERSION.
  *
  * Return value: a string containing the version.
- *
- * Since: 1.0
  **/
 const char*
 cairo_version_string (void)

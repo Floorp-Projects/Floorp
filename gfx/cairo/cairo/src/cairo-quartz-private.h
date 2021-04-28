@@ -44,19 +44,11 @@
 #include "cairo-quartz.h"
 #include "cairo-surface-clipper-private.h"
 
-#ifndef CGFLOAT_DEFINED
-/* On 10.4, Quartz APIs used float instead of CGFloat */
-typedef float CGFloat;
-#endif
-
+#ifdef CGFLOAT_DEFINED
 typedef CGFloat cairo_quartz_float_t;
-
-typedef enum {
-    DO_DIRECT,
-    DO_SHADING,
-    DO_IMAGE,
-    DO_TILED_IMAGE
-} cairo_quartz_action_t;
+#else
+typedef float cairo_quartz_float_t;
+#endif
 
 /* define CTFontRef for pre-10.5 SDKs */
 typedef const struct __CTFont *CTFontRef;
@@ -72,8 +64,19 @@ typedef struct cairo_quartz_surface {
 
     cairo_surface_clipper_t clipper;
 
+    /**
+     * If non-null, this is a CGImage representing the contents of the surface.
+     * We clear this out before any painting into the surface, so that we
+     * don't force a copy to be created.
+     */
+    CGImageRef bitmapContextImage;
+
+    /**
+     * If non-null, this is the CGLayer for the surface.
+     */
+    CGLayerRef cgLayer;
+
     cairo_rectangle_int_t extents;
-    cairo_rectangle_int_t virtual_extents;
 
     cairo_bool_t ownsData;
 } cairo_quartz_surface_t;
@@ -81,20 +84,17 @@ typedef struct cairo_quartz_surface {
 typedef struct cairo_quartz_image_surface {
     cairo_surface_t base;
 
-    int width, height;
+    cairo_rectangle_int_t extents;
 
     CGImageRef image;
     cairo_image_surface_t *imageSurface;
 } cairo_quartz_image_surface_t;
 
-cairo_private cairo_bool_t
+cairo_bool_t
 _cairo_quartz_verify_surface_size(int width, int height);
 
-cairo_private cairo_bool_t
-_cairo_surface_is_quartz (const cairo_surface_t *surface);
-
-cairo_private CGImageRef
-CairoQuartzCreateCGImage (cairo_format_t format,
+CGImageRef
+_cairo_quartz_create_cgimage (cairo_format_t format,
 			      unsigned int width,
 			      unsigned int height,
 			      unsigned int stride,
@@ -104,8 +104,11 @@ CairoQuartzCreateCGImage (cairo_format_t format,
 			      CGDataProviderReleaseDataCallback releaseCallback,
 			      void *releaseInfo);
 
-cairo_private CGFontRef
+CGFontRef
 _cairo_quartz_scaled_font_get_cg_font_ref (cairo_scaled_font_t *sfont);
+
+CTFontRef
+_cairo_quartz_scaled_font_get_ct_font_ref (cairo_scaled_font_t *sfont);
 
 #else
 
