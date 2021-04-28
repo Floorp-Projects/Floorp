@@ -1681,10 +1681,10 @@ class EditorBase : public nsIEditor,
    *                        will append the element to the container.
    *                        Otherwise, will insert the element before the
    *                        child node referred by this.
-   * @return                The created new element node.
+   * @return                The created new element node or an error.
    */
-  MOZ_CAN_RUN_SCRIPT already_AddRefed<Element> CreateNodeWithTransaction(
-      nsAtom& aTag, const EditorDOMPoint& aPointToInsert);
+  MOZ_CAN_RUN_SCRIPT Result<RefPtr<Element>, nsresult>
+  CreateNodeWithTransaction(nsAtom& aTag, const EditorDOMPoint& aPointToInsert);
 
   /**
    * DeleteTextWithTransaction() removes text in the range from aTextNode.

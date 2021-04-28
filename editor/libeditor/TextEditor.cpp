@@ -183,6 +183,11 @@ NS_IMETHODIMP TextEditor::SetDocumentCharacterSet(
     return NS_OK;
   }
 
+  // Set attributes to the created element
+  if (characterSet.IsEmpty()) {
+    return NS_OK;
+  }
+
   RefPtr<nsContentList> headElementList =
       document->GetElementsByTagName(u"head"_ns);
   if (NS_WARN_IF(!headElementList)) {
@@ -195,28 +200,25 @@ NS_IMETHODIMP TextEditor::SetDocumentCharacterSet(
   }
 
   // Create a new meta charset tag
-  RefPtr<Element> metaElement = CreateNodeWithTransaction(
-      *nsGkAtoms::meta, EditorDOMPoint(primaryHeadElement, 0));
-  if (!metaElement) {
+  Result<RefPtr<Element>, nsresult> maybeNewMetaElement =
+      CreateNodeWithTransaction(*nsGkAtoms::meta,
+                                EditorDOMPoint(primaryHeadElement, 0));
+  if (maybeNewMetaElement.isErr()) {
     NS_WARNING(
         "EditorBase::CreateNodeWithTransaction(nsGkAtoms::meta) failed, but "
         "ignored");
     return NS_OK;
   }
-
-  // Set attributes to the created element
-  if (characterSet.IsEmpty()) {
-    return NS_OK;
-  }
+  MOZ_ASSERT(maybeNewMetaElement.inspect());
 
   // not undoable, undo should undo CreateNodeWithTransaction().
   DebugOnly<nsresult> rvIgnored = NS_OK;
-  rvIgnored = metaElement->SetAttr(kNameSpaceID_None, nsGkAtoms::httpEquiv,
-                                   u"Content-Type"_ns, true);
+  rvIgnored = maybeNewMetaElement.inspect()->SetAttr(
+      kNameSpaceID_None, nsGkAtoms::httpEquiv, u"Content-Type"_ns, true);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
                        "Element::SetAttr(nsGkAtoms::httpEquiv, Content-Type) "
                        "failed, but ignored");
-  rvIgnored = metaElement->SetAttr(
+  rvIgnored = maybeNewMetaElement.inspect()->SetAttr(
       kNameSpaceID_None, nsGkAtoms::content,
       u"text/html;charset="_ns + NS_ConvertASCIItoUTF16(characterSet), true);
   NS_WARNING_ASSERTION(

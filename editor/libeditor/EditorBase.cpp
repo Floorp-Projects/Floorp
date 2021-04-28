@@ -1465,10 +1465,9 @@ NS_IMETHODIMP EditorBase::SetSpellcheckUserOverride(bool enable) {
   return NS_OK;
 }
 
-already_AddRefed<Element> EditorBase::CreateNodeWithTransaction(
+Result<RefPtr<Element>, nsresult> EditorBase::CreateNodeWithTransaction(
     nsAtom& aTagName, const EditorDOMPoint& aPointToInsert) {
   MOZ_ASSERT(IsEditActionDataAvailable());
-
   MOZ_ASSERT(aPointToInsert.IsSetAndValid());
 
   // XXX We need offset at new node for RangeUpdaterRef().  Therefore, we need
@@ -1480,7 +1479,7 @@ already_AddRefed<Element> EditorBase::CreateNodeWithTransaction(
   AutoEditSubActionNotifier startToHandleEditSubAction(
       *this, EditSubAction::eCreateNode, nsIEditor::eNext, ignoredError);
   if (NS_WARN_IF(ignoredError.ErrorCodeIs(NS_ERROR_EDITOR_DESTROYED))) {
-    return nullptr;
+    return Err(NS_ERROR_EDITOR_DESTROYED);
   }
   NS_WARNING_ASSERTION(
       !ignoredError.Failed(),
@@ -1491,6 +1490,14 @@ already_AddRefed<Element> EditorBase::CreateNodeWithTransaction(
   RefPtr<CreateElementTransaction> transaction =
       CreateElementTransaction::Create(*this, aTagName, aPointToInsert);
   nsresult rv = DoTransactionInternal(transaction);
+  if (NS_WARN_IF(Destroyed())) {
+    rv = NS_ERROR_EDITOR_DESTROYED;
+  } else if (transaction->GetNewElement() &&
+             transaction->GetNewElement()->GetParentNode() !=
+                 aPointToInsert.GetContainer()) {
+    NS_WARNING("The new element was not inserted into the expected node");
+    rv = NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE;
+  }
   if (NS_FAILED(rv)) {
     NS_WARNING("EditorBase::DoTransactionInternal() failed");
     // XXX Why do we do this even when DoTransaction() returned error?
@@ -1521,7 +1528,11 @@ already_AddRefed<Element> EditorBase::CreateNodeWithTransaction(
     TopLevelEditSubActionDataRef().DidCreateElement(*this, *newElement);
   }
 
-  return newElement.forget();
+  if (NS_FAILED(rv)) {
+    return Err(rv);
+  }
+
+  return newElement;
 }
 
 NS_IMETHODIMP EditorBase::InsertNode(nsINode* aNodeToInsert,
