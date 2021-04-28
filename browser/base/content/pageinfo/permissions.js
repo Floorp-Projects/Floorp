@@ -181,6 +181,7 @@ function createRow(aPartId) {
   let checkbox = document.createXULElement("checkbox");
   checkbox.setAttribute("id", aPartId + "Def");
   checkbox.setAttribute("oncommand", "onCheckboxClick('" + aPartId + "');");
+  checkbox.setAttribute("native", true);
   document.l10n.setAttributes(checkbox, "permissions-use-default");
   controls.appendChild(checkbox);
 
