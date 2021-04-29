@@ -143,7 +143,7 @@ void InputTaskManager::InputPriorityController::EnterPendingVsyncState(
   mRunInputStartTime = TimeStamp::Now();
 }
 
-void InputTaskManager::InputPriorityController::DidVsync() {
+void InputTaskManager::InputPriorityController::WillRunVsync() {
   MOZ_ASSERT(StaticPrefs::dom_input_events_strict_input_vsync_alignment());
 
   if (mInputVsyncState == InputVsyncState::RunVsync ||
