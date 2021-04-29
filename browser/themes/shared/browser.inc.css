@@ -863,6 +863,10 @@ menupopup::part(drop-indicator) {
   display: none;
 }
 
+#webRTC-selectWindow-menulist {
+  margin-inline: 2px;
+}
+
 .ac-has-end-icon {
   /* Password manager's username field icon width + icon end margin */
   padding-inline-end: calc(12px + 8px);
@@ -872,6 +876,10 @@ menupopup::part(drop-indicator) {
 @media (-moz-proton-doorhangers) {
 popupnotificationcontent {
   margin-block-start: 8px;
+}
+
+.popup-notification-body menulist {
+  margin-inline: 0;
 }
 
 .popup-notification-checkbox {
@@ -961,6 +969,7 @@ popupnotificationcontent {
 
 .popup-notification-description {
   font-weight: 600;
+  margin-top: 0;
 }
 } /** END Proton **/
 
