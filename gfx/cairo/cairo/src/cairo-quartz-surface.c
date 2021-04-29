@@ -1643,17 +1643,6 @@ _cairo_quartz_setup_surface_source (cairo_quartz_surface_t *surface,
         cairo_matrix_invert(&m);
         _cairo_quartz_cairo_matrix_to_quartz (&m, &state->transform);
 
-        /* Draw nonrepeating CGLayer surface using DO_LAYER */
-        if (!repeat && cairo_surface_get_type (pat_surf) == CAIRO_SURFACE_TYPE_QUARTZ) {
-            cairo_quartz_surface_t *quartz_surf = (cairo_quartz_surface_t *) pat_surf;
-            if (quartz_surf->cgLayer) {
-         	state->imageRect = CGRectMake (0, 0, quartz_surf->extents.width, quartz_surf->extents.height);
-                state->layer = quartz_surf->cgLayer;
-                state->action = DO_LAYER;
-                return;
-            }
-        }
-
 	status = _cairo_surface_to_cgimage (pat_surf, &img);
         if (status) {
             state->action = DO_UNSUPPORTED;
@@ -2055,10 +2044,6 @@ _cairo_quartz_surface_finish (void *abstract_surface)
 
     surface->imageData = NULL;
 
-    if (surface->cgLayer) {
-        CGLayerRelease (surface->cgLayer);
-    }
-
     return CAIRO_STATUS_SUCCESS;
 }
 
@@ -2075,38 +2060,6 @@ _cairo_quartz_surface_acquire_image (void *abstract_surface,
     /* ND((stderr, "%p _cairo_quartz_surface_acquire_image\n", surface)); */
 
     status = _cairo_quartz_get_image (surface, image_out);
-
-    if (status == CAIRO_INT_STATUS_UNSUPPORTED && surface->cgLayer) {
-        /* copy the layer into a Quartz bitmap context so we can get the data */
-        cairo_surface_t *tmp =
-            cairo_quartz_surface_create (CAIRO_FORMAT_ARGB32,
-                                         surface->extents.width,
-                                         surface->extents.height);
-        cairo_quartz_surface_t *tmp_surface = (cairo_quartz_surface_t *) tmp;
-
-        /* if surface creation failed, we won't have a Quartz surface here */
-        if (cairo_surface_get_type (tmp) == CAIRO_SURFACE_TYPE_QUARTZ &&
-            tmp_surface->imageSurfaceEquiv) {
-            CGContextSaveGState (tmp_surface->cgContext);
-            CGContextTranslateCTM (tmp_surface->cgContext, 0, surface->extents.height);
-            CGContextScaleCTM (tmp_surface->cgContext, 1, -1);
-            /* Note that according to Apple docs it's completely legal
-             * to draw a CGLayer to any CGContext, even one it wasn't
-             * created for.
-             */
-            CGContextDrawLayerAtPoint (tmp_surface->cgContext,
-                                       CGPointMake (0.0, 0.0),
-                                       surface->cgLayer);
-            CGContextRestoreGState (tmp_surface->cgContext);
-
-            *image_out = (cairo_image_surface_t*)
-                cairo_surface_reference(tmp_surface->imageSurfaceEquiv);
-            *image_extra = tmp;
-            status = CAIRO_STATUS_SUCCESS;
-        } else {
-            cairo_surface_destroy (tmp);
-        }
-    }
 
     if (status)
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
@@ -2189,10 +2142,6 @@ _cairo_quartz_surface_create_similar (void *abstract_surface,
 {
     cairo_quartz_surface_t *surface = (cairo_quartz_surface_t *) abstract_surface;
     cairo_format_t format;
-
-    if (surface->cgLayer)
-        return cairo_quartz_surface_create_cg_layer (abstract_surface, content,
-                                                     width, height);
 
     if (content == CAIRO_CONTENT_COLOR_ALPHA)
 	format = CAIRO_FORMAT_ARGB32;
@@ -3288,7 +3237,6 @@ _cairo_quartz_surface_create_internal (CGContextRef cgContext,
     surface->imageData = NULL;
     surface->imageSurfaceEquiv = NULL;
     surface->bitmapContextImage = NULL;
-    surface->cgLayer = NULL;
     surface->ownsData = TRUE;
 
     return surface;
@@ -3337,79 +3285,6 @@ cairo_quartz_surface_create_for_cg_context (CGContextRef cgContext,
 	// create_internal will have set an error
 	return (cairo_surface_t*) surf;
     }
-
-    return (cairo_surface_t *) surf;
-}
-
-/**
- * cairo_quartz_cglayer_surface_create_similar
- * @surface: The returned surface can be efficiently drawn into this
- * destination surface (if tiling is not used)."
- * @content: the content type of the surface
- * @width: width of the surface, in pixels
- * @height: height of the surface, in pixels
- *
- * Creates a Quartz surface backed by a CGLayer, if the given surface
- * is a Quartz surface; the CGLayer is created to match the surface's
- * Quartz context. Otherwise just calls cairo_surface_create_similar.
- * The returned surface can be efficiently blitted to the given surface,
- * but tiling and 'extend' modes other than NONE are not so efficient.
- *
- * Return value: the newly created surface.
- *
- * Since: 1.10
- **/
-cairo_surface_t *
-cairo_quartz_surface_create_cg_layer (cairo_surface_t *surface,
-                                      cairo_content_t content,
-                                      unsigned int width,
-                                      unsigned int height)
-{
-    cairo_quartz_surface_t *surf;
-    CGLayerRef layer;
-    CGContextRef ctx;
-    CGContextRef cgContext;
-
-    cgContext = cairo_quartz_surface_get_cg_context (surface);
-    if (!cgContext)
-        return cairo_surface_create_similar (surface, content,
-                                             width, height);
-
-    if (!_cairo_quartz_verify_surface_size(width, height))
-        return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_INVALID_SIZE));
-
-    /* If we pass zero width or height into CGLayerCreateWithContext below,
-     * it will fail.
-     */
-    if (width == 0 || height == 0) {
-        return (cairo_surface_t*)
-            _cairo_quartz_surface_create_internal (NULL, content,
-                                                   width, height);
-    }
-
-    layer = CGLayerCreateWithContext (cgContext,
-                                      CGSizeMake (width, height),
-                                      NULL);
-    if (!layer)
-      return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
-
-    ctx = CGLayerGetContext (layer);
-    /* Flip it when we draw into it, so that when we finally composite it
-     * to a flipped target, the directions match and Quartz will optimize
-     * the composition properly
-     */
-    CGContextTranslateCTM (ctx, 0, height);
-    CGContextScaleCTM (ctx, 1, -1);
-
-    CGContextRetain (ctx);
-    surf = _cairo_quartz_surface_create_internal (ctx, content,
-                                                  width, height);
-    if (surf->base.status) {
-        CGLayerRelease (layer);
-        // create_internal will have set an error
-        return (cairo_surface_t*) surf;
-    }
-    surf->cgLayer = layer;
 
     return (cairo_surface_t *) surf;
 }

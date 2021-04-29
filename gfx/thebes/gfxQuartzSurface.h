@@ -25,9 +25,6 @@ class gfxQuartzSurface : public gfxASurface {
 
   virtual ~gfxQuartzSurface();
 
-  virtual already_AddRefed<gfxASurface> CreateSimilarSurface(
-      gfxContentType aType, const mozilla::gfx::IntSize& aSize);
-
   virtual const mozilla::gfx::IntSize GetSize() const {
     return mozilla::gfx::IntSize(mSize.width, mSize.height);
   }
