@@ -205,7 +205,7 @@ android {
             // instead. :)
             maxParallelForks = 2
             forkEvery = 80
-            maxHeapSize = "2048m"
+            maxHeapSize = "3072m"
             minHeapSize = "1024m"
         }
     }
