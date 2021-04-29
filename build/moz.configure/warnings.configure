@@ -12,20 +12,6 @@ option(
 )
 
 
-@depends("--enable-warnings-as-errors")
-def rust_warning_flags(warnings_as_errors):
-    flags = []
-
-    # Note that cargo passes --cap-lints warn to rustc for third-party code, so
-    # we don't need a very complicated setup.
-    if warnings_as_errors:
-        flags.append("-Dwarnings")
-    else:
-        flags.extend(("--cap-lints", "warn"))
-
-    return flags
-
-
 c_warning_flag = dependable("-Werror")
 
 
