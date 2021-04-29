@@ -19,7 +19,8 @@ async function openRTAMOWelcomePage() {
     source: "addons.mozilla.org",
     medium: "referral",
     campaign: "non-fx-button",
-    content: "iridium@particlecore.github.io",
+    // with the sinon override, the id doesn't matter
+    content: "rta:whatever",
     experiment: "ua-onboarding",
     variation: "chrome",
     ua: "Google Chrome 123",
