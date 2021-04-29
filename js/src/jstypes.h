@@ -29,9 +29,6 @@
 
 // jstypes.h is (or should be!) included by every file in SpiderMonkey.
 // js-config.h also should be included by every file. So include it here.
-// XXX: including it in js/RequiredDefines.h should be a better option, since
-// that is by definition the header file that should be included in all
-// SpiderMonkey code.  However, Gecko doesn't do this!  See bug 909576.
 #include "js-config.h"
 
 /*
