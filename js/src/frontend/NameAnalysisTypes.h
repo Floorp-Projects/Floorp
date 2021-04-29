@@ -281,7 +281,9 @@ class NameLocation {
   // Default constructor for InlineMap.
   NameLocation() = default;
 
-  static NameLocation Dynamic() { return NameLocation(); }
+  static NameLocation Dynamic() {
+    return NameLocation(Kind::Dynamic, BindingKind::Import);
+  }
 
   static NameLocation Global(BindingKind bindKind) {
     MOZ_ASSERT(bindKind != BindingKind::FormalParameter);
