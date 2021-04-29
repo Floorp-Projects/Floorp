@@ -9,6 +9,7 @@ import mozilla.components.support.base.observer.ObserverRegistry
 import mozilla.components.support.base.utils.NamedThreadFactory
 import mozilla.components.support.locale.getLocaleTag
 import org.mozilla.experiments.nimbus.EnrolledExperiment
+import org.mozilla.experiments.nimbus.ErrorReporter
 import org.mozilla.experiments.nimbus.NimbusAppInfo
 import org.mozilla.experiments.nimbus.NimbusDelegate
 import org.mozilla.experiments.nimbus.NimbusDeviceInfo
@@ -27,6 +28,14 @@ private val logger = Logger("service/Nimbus")
  */
 interface NimbusApi : NimbusInterface, Observable<NimbusInterface.Observer>
 
+// Re-export these classes which were in this package previously.
+// Clients which used these classes do not need to change.
+typealias NimbusAppInfo = NimbusAppInfo
+typealias NimbusServerSettings = NimbusServerSettings
+
+// Default error reporter.
+val loggingErrorReporter: ErrorReporter = { message, e -> logger.error(message, e) }
+
 /**
  * This is the main entry point to the Nimbus experiment subsystem.
  *
@@ -37,6 +46,7 @@ class Nimbus(
     context: Context,
     appInfo: NimbusAppInfo,
     server: NimbusServerSettings?,
+    errorReporter: ErrorReporter = loggingErrorReporter,
     private val observable: Observable<NimbusInterface.Observer> = ObserverRegistry()
 ) : ApplicationServicesNimbus(
     context = context,
@@ -53,7 +63,7 @@ class Nimbus(
         fetchScope = CoroutineScope(Executors.newSingleThreadExecutor(
             NamedThreadFactory("NimbusFetchScope")
         ).asCoroutineDispatcher()),
-        errorReporter = { message, e -> logger.error(message, e) },
+        errorReporter = errorReporter,
         logger = { logger.info(it) }
     )
 ), NimbusApi, Observable<NimbusInterface.Observer> by observable {
