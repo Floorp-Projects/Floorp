@@ -894,6 +894,10 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
     padding: 0;
   }
 
+  #appMenu-fxa-status2:not([fxastatus]) {
+    padding-block: 0 2px;
+  }
+
   #appMenu-fxa-status2[fxastatus] > #appMenu-fxa-label2 > vbox > #appMenu-header-description,
   #appMenu-fxa-text {
     font-weight: 600;
@@ -906,7 +910,7 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
   #appMenu-fxa-status2:not([fxastatus]) > #appMenu-fxa-label2 {
     padding: 6px 12px;
     background-color: var(--button-bgcolor);
-    font-size: 11px;
+    font-size: 0.8em;
     font-weight: 600;
   }
 
