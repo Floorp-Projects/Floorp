@@ -6,5 +6,3 @@ toolkit.jar:
   content/global/httpsonlyerror/errorpage.html                    (content/errorpage.html)
   content/global/httpsonlyerror/errorpage.js                      (content/errorpage.js)
   content/global/httpsonlyerror/secure-broken.svg                 (content/secure-broken.svg)
-  content/global/httpsonlyerror/recommendation.svg                (content/recommendation.svg)
-  
