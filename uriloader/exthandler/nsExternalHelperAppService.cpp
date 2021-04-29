@@ -2338,26 +2338,32 @@ nsresult nsExternalAppHandler::CreateFailedTransfer() {
       do_CreateInstance(NS_TRANSFER_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // If we don't have a download directory we're kinda screwed but it's OK
-  // we'll still report the error via the prompter.
-  nsCOMPtr<nsIFile> pseudoFile;
-  rv = GetDownloadDirectory(getter_AddRefs(pseudoFile), true);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   // We won't pass the temp file to the transfer, so if we have one it needs to
   // get deleted now.
   if (mTempFile) {
     mTempFile->Remove(false);
   }
 
-  // Append the default suggested filename. If the user restarts the transfer
-  // we will re-trigger a filename check anyway to ensure that it is unique.
-  rv = pseudoFile->Append(mSuggestedFileName);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   nsCOMPtr<nsIURI> pseudoTarget;
-  rv = NS_NewFileURI(getter_AddRefs(pseudoTarget), pseudoFile);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (!mFinalFileDestination) {
+    // If we don't have a download directory we're kinda screwed but it's OK
+    // we'll still report the error via the prompter.
+    nsCOMPtr<nsIFile> pseudoFile;
+    rv = GetDownloadDirectory(getter_AddRefs(pseudoFile), true);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // Append the default suggested filename. If the user restarts the transfer
+    // we will re-trigger a filename check anyway to ensure that it is unique.
+    rv = pseudoFile->Append(mSuggestedFileName);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = NS_NewFileURI(getter_AddRefs(pseudoTarget), pseudoFile);
+    NS_ENSURE_SUCCESS(rv, rv);
+  } else {
+    // Initialize the target, if present
+    rv = NS_NewFileURI(getter_AddRefs(pseudoTarget), mFinalFileDestination);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   nsCOMPtr<nsIChannel> channel = do_QueryInterface(mRequest);
   if (mBrowsingContext) {
