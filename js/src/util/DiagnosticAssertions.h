@@ -10,7 +10,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Likely.h"
 
-#include "js-config.h"
+#include "jstypes.h"
 
 /* Crash diagnostics by default in debug and on nightly channel. */
 #if defined(DEBUG) || defined(NIGHTLY_BUILD)

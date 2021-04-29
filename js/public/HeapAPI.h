@@ -20,11 +20,6 @@
 #include "js/TraceKind.h"
 #include "js/TypeDecls.h"
 
-#ifndef JS_BITS_PER_WORD
-#  error \
-      "JS_BITS_PER_WORD must be defined. Did you forget to include js-config.h?"
-#endif
-
 /* These values are private to the JS engine. */
 namespace js {
 
