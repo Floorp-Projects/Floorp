@@ -141,6 +141,21 @@
 
       await cleanup(filename);
     });
+
+    add_task(async function test_append_json() {
+      const tmpDir = await PathUtils.getTempDir();
+      const filename = PathUtils.join(tmpDir, "test_ioutils_append_json.tmp");
+
+      await IOUtils.writeJSON(filename, OBJECT);
+
+      await Assert.rejects(
+        IOUtils.writeJSON(filename, OBJECT, {mode: "append"}),
+        /NotSupportedError: IOUtils.writeJSON does not support appending to files/,
+        "IOUtils.writeJSON() cannot append"
+      );
+
+      await cleanup(filename);
+    });
   </script>
 </head>
 

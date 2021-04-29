@@ -60,7 +60,7 @@
       const newContents = "Nah nah nah!\n";
       await Assert.rejects(
         IOUtils.writeUTF8(tmpFileName, newContents, {
-          noOverwrite: true,
+          mode: "create",
         }),
         /Refusing to overwrite the file at */,
         "IOUtils::writeUTF8 rejects writing to existing file if overwrites are disabled"
@@ -73,7 +73,7 @@
       const bytesWritten = await IOUtils.writeUTF8(
         tmpFileName,
         newContents,
-        { noOverwrite: false /* Default. */ }
+        { mode: "overwrite" }
       );
       is(
         bytesWritten,

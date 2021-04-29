@@ -229,9 +229,8 @@ class IOUtils final {
    *
    * @param aSourceFile  The location of the file to move.
    * @param aDestFile    The destination for the file.
-   * @param noOverWrite If true, abort with an error if a file already exists at
-   *                    |aDestFile|. Otherwise, the file will be overwritten by
-   *                    the move.
+   * @param aNoOverWrite If true, abort with an error if a file already exists
+   * at |aDestFile|. Otherwise, the file will be overwritten by the move.
    *
    * @return Ok if the file was moved successfully, or an error.
    */
@@ -504,8 +503,8 @@ struct IOUtils::InternalFileInfo {
 struct IOUtils::InternalWriteOpts {
   RefPtr<nsIFile> mBackupFile;
   RefPtr<nsIFile> mTmpFile;
+  WriteMode mMode;
   bool mFlush = false;
-  bool mNoOverwrite = false;
   bool mCompress = false;
 
   static Result<InternalWriteOpts, IOUtils::IOError> FromBinding(
