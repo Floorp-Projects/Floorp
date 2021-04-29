@@ -39,6 +39,15 @@
 
 #include "cairoint.h"
 
+#include "cairo-box-inline.h"
+
+const cairo_rectangle_int_t _cairo_empty_rectangle = { 0, 0, 0, 0 };
+const cairo_rectangle_int_t _cairo_unbounded_rectangle = {
+     CAIRO_RECT_INT_MIN, CAIRO_RECT_INT_MIN,
+     CAIRO_RECT_INT_MAX - CAIRO_RECT_INT_MIN,
+     CAIRO_RECT_INT_MAX - CAIRO_RECT_INT_MIN,
+};
+
 cairo_private void
 _cairo_box_from_doubles (cairo_box_t *box,
 			 double *x1, double *y1,
@@ -76,42 +85,10 @@ _cairo_boxes_get_extents (const cairo_box_t *boxes,
 			  int num_boxes,
 			  cairo_box_t *extents)
 {
-    int n;
-
     assert (num_boxes > 0);
     *extents = *boxes;
-
-    for (n = 1; n < num_boxes; n++) {
-	if (boxes[n].p1.x < extents->p1.x)
-	    extents->p1.x = boxes[n].p1.x;
-	if (boxes[n].p2.x > extents->p2.x)
-	    extents->p2.x = boxes[n].p2.x;
-
-	if (boxes[n].p1.y < extents->p1.y)
-	    extents->p1.y = boxes[n].p1.y;
-	if (boxes[n].p2.y > extents->p2.y)
-	    extents->p2.y = boxes[n].p2.y;
-    }
-}
-
-/* This function will return 'true' if the containing_rectangle contains the
- * contained_rectangle, and false otherwise.
- */ 
-cairo_bool_t
-_cairo_rectangle_contains (const cairo_rectangle_int_t *containing_rectangle,
-			   const cairo_rectangle_int_t *contained_rectangle)
-{
-    if (containing_rectangle->x > contained_rectangle->x ||
-	containing_rectangle->y > contained_rectangle->y)
-	return FALSE;
-    
-    if (containing_rectangle->x + containing_rectangle->width <
-	contained_rectangle->x + contained_rectangle->width ||
-	containing_rectangle->y + containing_rectangle->height <
-	contained_rectangle->y + contained_rectangle->height)
-	return FALSE;
-
-    return TRUE;
+    while (--num_boxes)
+	_cairo_box_add_box (extents, ++boxes);
 }
 
 /* XXX We currently have a confusing mix of boxes and rectangles as
@@ -169,6 +146,29 @@ _cairo_rectangle_intersect (cairo_rectangle_int_t *dst,
     }
 }
 
+/* Extends the dst rectangle to also contain src.
+ * If one of the rectangles is empty, the result is undefined
+ */
+void
+_cairo_rectangle_union (cairo_rectangle_int_t *dst,
+			const cairo_rectangle_int_t *src)
+{
+    int x1, y1, x2, y2;
+
+    x1 = MIN (dst->x, src->x);
+    y1 = MIN (dst->y, src->y);
+    /* Beware the unsigned promotion, fortunately we have bits to spare
+     * as (CAIRO_RECT_INT_MAX - CAIRO_RECT_INT_MIN) < UINT_MAX
+     */
+    x2 = MAX (dst->x + (int) dst->width,  src->x + (int) src->width);
+    y2 = MAX (dst->y + (int) dst->height, src->y + (int) src->height);
+
+    dst->x = x1;
+    dst->y = y1;
+    dst->width  = x2 - x1;
+    dst->height = y2 - y1;
+}
+
 #define P1x (line->p1.x)
 #define P1y (line->p1.y)
 #define P2x (line->p2.x)
@@ -189,7 +189,7 @@ _cairo_rectangle_intersect (cairo_rectangle_int_t *dst,
  */
 
 cairo_bool_t
-_cairo_box_intersects_line_segment (cairo_box_t *box, cairo_line_t *line)
+_cairo_box_intersects_line_segment (const cairo_box_t *box, cairo_line_t *line)
 {
     cairo_fixed_t t1=0, t2=0, t3=0, t4=0;
     cairo_int64_t t1y, t2y, t3x, t4x;
@@ -213,7 +213,8 @@ _cairo_box_intersects_line_segment (cairo_box_t *box, cairo_line_t *line)
 	    xlen = - xlen;
 	}
 
-        if (t1 > xlen || t2 < 0)
+	if ((t1 < 0 || t1 > xlen) &&
+	    (t2 < 0 || t2 > xlen))
 	    return FALSE;
     } else {
 	/* Fully vertical line -- check that X is in bounds */
@@ -231,7 +232,8 @@ _cairo_box_intersects_line_segment (cairo_box_t *box, cairo_line_t *line)
 	    ylen = - ylen;
 	}
 
-        if (t3 > ylen || t4 < 0)
+	if ((t3 < 0 || t3 > ylen) &&
+	    (t4 < 0 || t4 > ylen))
 	    return FALSE;
     } else {
 	/* Fully horizontal line -- check Y */
@@ -256,11 +258,42 @@ _cairo_box_intersects_line_segment (cairo_box_t *box, cairo_line_t *line)
     return FALSE;
 }
 
-cairo_bool_t
-_cairo_box_contains_point (cairo_box_t *box, const cairo_point_t *point)
+static cairo_status_t
+_cairo_box_add_spline_point (void *closure,
+			     const cairo_point_t *point,
+			     const cairo_slope_t *tangent)
 {
-    if (point->x < box->p1.x || point->x > box->p2.x ||
-	point->y < box->p1.y || point->y > box->p2.y)
-	return FALSE;
-    return TRUE;
+    _cairo_box_add_point (closure, point);
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+/* assumes a has been previously added */
+void
+_cairo_box_add_curve_to (cairo_box_t *extents,
+			 const cairo_point_t *a,
+			 const cairo_point_t *b,
+			 const cairo_point_t *c,
+			 const cairo_point_t *d)
+{
+    _cairo_box_add_point (extents, d);
+    if (!_cairo_box_contains_point (extents, b) ||
+	!_cairo_box_contains_point (extents, c))
+    {
+	cairo_status_t status;
+
+	status = _cairo_spline_bound (_cairo_box_add_spline_point,
+				      extents, a, b, c, d);
+	assert (status == CAIRO_STATUS_SUCCESS);
+    }
+}
+
+void
+_cairo_rectangle_int_from_double (cairo_rectangle_int_t *recti,
+				  const cairo_rectangle_t *rectf)
+{
+	recti->x = floor (rectf->x);
+	recti->y = floor (rectf->y);
+	recti->width  = ceil (rectf->x + rectf->width) - floor (rectf->x);
+	recti->height = ceil (rectf->y + rectf->height) - floor (rectf->y);
 }

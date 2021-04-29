@@ -42,19 +42,45 @@
  * without having to copy and hold the data in memory.
  */
 
+/**
+ * SECTION:cairo-script
+ * @Title: Script Surfaces
+ * @Short_Description: Rendering to replayable scripts
+ * @See_Also: #cairo_surface_t
+ *
+ * The script surface provides the ability to render to a native
+ * script that matches the cairo drawing model. The scripts can
+ * be replayed using tools under the util/cairo-script directory,
+ * or with cairo-perf-trace.
+ **/
+
+/**
+ * CAIRO_HAS_SCRIPT_SURFACE:
+ *
+ * Defined if the script surface backend is available.
+ * The script surface backend is always built in since 1.12.
+ *
+ * Since: 1.12
+ **/
+
+
 #include "cairoint.h"
 
 #include "cairo-script.h"
+#include "cairo-script-private.h"
 
 #include "cairo-analysis-surface-private.h"
+#include "cairo-default-context-private.h"
 #include "cairo-device-private.h"
 #include "cairo-error-private.h"
-#include "cairo-list-private.h"
-#include "cairo-recording-surface-private.h"
+#include "cairo-list-inline.h"
+#include "cairo-image-surface-private.h"
 #include "cairo-output-stream-private.h"
+#include "cairo-pattern-private.h"
+#include "cairo-recording-surface-inline.h"
 #include "cairo-scaled-font-private.h"
 #include "cairo-surface-clipper-private.h"
-#include "cairo-surface-snapshot-private.h"
+#include "cairo-surface-snapshot-inline.h"
 #include "cairo-surface-subsurface-private.h"
 #include "cairo-surface-wrapper-private.h"
 
@@ -78,7 +104,7 @@
 typedef struct _cairo_script_context cairo_script_context_t;
 typedef struct _cairo_script_surface cairo_script_surface_t;
 typedef struct _cairo_script_implicit_context cairo_script_implicit_context_t;
-typedef struct _cairo_script_surface_font_private cairo_script_surface_font_private_t;
+typedef struct _cairo_script_font cairo_script_font_t;
 
 typedef struct _operand {
     enum {
@@ -98,7 +124,9 @@ struct _cairo_script_context {
     cairo_device_t base;
 
     int active;
+    int attach_snapshots;
 
+    cairo_bool_t owns_stream;
     cairo_output_stream_t *stream;
     cairo_script_mode_t mode;
 
@@ -116,8 +144,9 @@ struct _cairo_script_context {
     cairo_list_t defines;
 };
 
-struct _cairo_script_surface_font_private {
-    cairo_script_context_t *ctx;
+struct _cairo_script_font {
+    cairo_scaled_font_private_t base;
+
     cairo_bool_t has_sfnt;
     unsigned long id;
     unsigned long subset_glyph_index;
@@ -164,12 +193,12 @@ static const cairo_surface_backend_t _cairo_script_surface_backend;
 static cairo_script_surface_t *
 _cairo_script_surface_create_internal (cairo_script_context_t *ctx,
 				       cairo_content_t content,
-				       double width,
-				       double height,
+				       cairo_rectangle_t *extents,
 				       cairo_surface_t *passthrough);
 
 static void
-_cairo_script_surface_scaled_font_fini (cairo_scaled_font_t *scaled_font);
+_cairo_script_scaled_font_fini (cairo_scaled_font_private_t *abstract_private,
+				cairo_scaled_font_t *scaled_font);
 
 static void
 _cairo_script_implicit_context_init (cairo_script_implicit_context_t *cr);
@@ -233,8 +262,9 @@ _bitmap_next_id (struct _bitmap *b,
 	prev = &b->next;
 	b = b->next;
     } while (b != NULL);
+    assert (prev != NULL);
 
-    bb = malloc (sizeof (struct _bitmap));
+    bb = _cairo_malloc (sizeof (struct _bitmap));
     if (unlikely (bb == NULL))
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
@@ -317,8 +347,8 @@ _extend_to_string (cairo_extend_t extend)
 {
     static const char *names[] = {
 	"EXTEND_NONE",		/* CAIRO_EXTEND_NONE */
-	"ExtendMode::REPEAT",	/* CAIRO_EXTEND_REPEAT */
-	"ExtendMode::REFLECT",	/* CAIRO_EXTEND_REFLECT */
+	"EXTEND_REPEAT",	/* CAIRO_EXTEND_REPEAT */
+	"EXTEND_REFLECT",	/* CAIRO_EXTEND_REFLECT */
 	"EXTEND_PAD"		/* CAIRO_EXTEND_PAD */
     };
     assert (extend < ARRAY_LENGTH (names));
@@ -330,7 +360,7 @@ _filter_to_string (cairo_filter_t filter)
 {
     static const char *names[] = {
 	"FILTER_FAST",		/* CAIRO_FILTER_FAST */
-	"SamplingFilter::GOOD",	/* CAIRO_FILTER_GOOD */
+	"FILTER_GOOD",		/* CAIRO_FILTER_GOOD */
 	"FILTER_BEST",		/* CAIRO_FILTER_BEST */
 	"FILTER_NEAREST",	/* CAIRO_FILTER_NEAREST */
 	"FILTER_BILINEAR",	/* CAIRO_FILTER_BILINEAR */
@@ -358,7 +388,10 @@ _antialias_to_string (cairo_antialias_t antialias)
 	"ANTIALIAS_DEFAULT",	/* CAIRO_ANTIALIAS_DEFAULT */
 	"ANTIALIAS_NONE",	/* CAIRO_ANTIALIAS_NONE */
 	"ANTIALIAS_GRAY",	/* CAIRO_ANTIALIAS_GRAY */
-	"ANTIALIAS_SUBPIXEL"	/* CAIRO_ANTIALIAS_SUBPIXEL */
+	"ANTIALIAS_SUBPIXEL",	/* CAIRO_ANTIALIAS_SUBPIXEL */
+	"ANTIALIAS_FAST",	/* CAIRO_ANTIALIAS_FAST */
+	"ANTIALIAS_GOOD",	/* CAIRO_ANTIALIAS_GOOD */
+	"ANTIALIAS_BEST"	/* CAIRO_ANTIALIAS_BEST */
     };
     assert (antialias < ARRAY_LENGTH (names));
     return names[antialias];
@@ -427,29 +460,32 @@ _get_target (cairo_script_surface_t *surface)
 {
     cairo_script_context_t *ctx = to_context (surface);
 
+    if (target_is_active (surface)) {
+	_cairo_output_stream_puts (ctx->stream, "dup ");
+	return;
+    }
+
     if (surface->defined) {
 	_cairo_output_stream_printf (ctx->stream, "s%u ",
 				     surface->base.unique_id);
     } else {
+	int depth = target_depth (surface);
+
 	assert (! cairo_list_is_empty (&surface->operand.link));
-	if (! target_is_active (surface)) {
-	    int depth = target_depth (surface);
-	    if (ctx->active) {
-		_cairo_output_stream_printf (ctx->stream, "%d index ", depth);
-		_cairo_output_stream_puts (ctx->stream, "/target get exch pop ");
-	    } else {
-		if (depth == 1) {
-		    _cairo_output_stream_puts (ctx->stream,
-					       "exch\n");
-		} else {
-		    _cairo_output_stream_printf (ctx->stream,
-						 "%d -1 roll\n",
-						 depth);
-		}
-		_cairo_output_stream_puts (ctx->stream, "/target get ");
-	    }
+	assert (! target_is_active (surface));
+
+	if (ctx->active) {
+	    _cairo_output_stream_printf (ctx->stream, "%d index ", depth);
+	    _cairo_output_stream_puts (ctx->stream, "/target get exch pop ");
 	} else {
-	    _cairo_output_stream_puts (ctx->stream, "/target get ");
+	    if (depth == 1) {
+		_cairo_output_stream_puts (ctx->stream, "exch ");
+	    } else {
+		_cairo_output_stream_printf (ctx->stream,
+					     "%d -1 roll ", depth);
+	    }
+	    target_push (surface);
+	    _cairo_output_stream_puts (ctx->stream, "dup ");
 	}
     }
 }
@@ -777,10 +813,8 @@ _emit_dash (cairo_script_surface_t *surface,
 	memcpy (surface->cr.current_style.dash, dash,
 		sizeof (double) * num_dashes);
     } else {
-	if (surface->cr.current_style.dash != NULL) {
-	    free (surface->cr.current_style.dash);
-	    surface->cr.current_style.dash = NULL;
-	}
+	free (surface->cr.current_style.dash);
+	surface->cr.current_style.dash = NULL;
     }
 
     surface->cr.current_style.num_dashes = num_dashes;
@@ -837,7 +871,10 @@ static const char *
 _format_to_string (cairo_format_t format)
 {
     switch (format) {
+    case CAIRO_FORMAT_RGBA128F: return "RGBA128F";
+    case CAIRO_FORMAT_RGB96F: return "RGB96F";
     case CAIRO_FORMAT_ARGB32:  return "ARGB32";
+    case CAIRO_FORMAT_RGB30:   return "RGB30";
     case CAIRO_FORMAT_RGB24:   return "RGB24";
     case CAIRO_FORMAT_RGB16_565: return "RGB16_565";
     case CAIRO_FORMAT_A8:      return "A8";
@@ -929,10 +966,8 @@ _emit_linear_pattern (cairo_script_surface_t *surface,
 
     _cairo_output_stream_printf (ctx->stream,
 				 "%f %f %f %f linear",
-				 _cairo_fixed_to_double (linear->p1.x),
-				 _cairo_fixed_to_double (linear->p1.y),
-				 _cairo_fixed_to_double (linear->p2.x),
-				 _cairo_fixed_to_double (linear->p2.y));
+				 linear->pd1.x, linear->pd1.y,
+				 linear->pd2.x, linear->pd2.y);
     return _emit_gradient_color_stops (&linear->base, ctx->stream);
 }
 
@@ -947,13 +982,147 @@ _emit_radial_pattern (cairo_script_surface_t *surface,
 
     _cairo_output_stream_printf (ctx->stream,
 				 "%f %f %f %f %f %f radial",
-				 _cairo_fixed_to_double (radial->c1.x),
-				 _cairo_fixed_to_double (radial->c1.y),
-				 _cairo_fixed_to_double (radial->r1),
-				 _cairo_fixed_to_double (radial->c2.x),
-				 _cairo_fixed_to_double (radial->c2.y),
-				 _cairo_fixed_to_double (radial->r2));
+				 radial->cd1.center.x,
+				 radial->cd1.center.y,
+				 radial->cd1.radius,
+				 radial->cd2.center.x,
+				 radial->cd2.center.y,
+				 radial->cd2.radius);
     return _emit_gradient_color_stops (&radial->base, ctx->stream);
+}
+
+static cairo_status_t
+_emit_mesh_pattern (cairo_script_surface_t *surface,
+		    const cairo_pattern_t *pattern)
+{
+    cairo_script_context_t *ctx = to_context (surface);
+    cairo_pattern_t *mesh;
+    cairo_status_t status;
+    unsigned int i, n;
+
+    mesh = (cairo_pattern_t *) pattern;
+    status = cairo_mesh_pattern_get_patch_count (mesh, &n);
+    if (unlikely (status))
+	return status;
+
+    _cairo_output_stream_printf (ctx->stream, "mesh");
+    for (i = 0; i < n; i++) {
+	cairo_path_t *path;
+	cairo_path_data_t *data;
+	int j;
+
+	_cairo_output_stream_printf (ctx->stream, "\n  begin-patch");
+
+	path = cairo_mesh_pattern_get_path (mesh, i);
+	if (unlikely (path->status))
+	    return path->status;
+
+	for (j = 0; j < path->num_data; j+=data[0].header.length) {
+	    data = &path->data[j];
+	    switch (data->header.type) {
+	    case CAIRO_PATH_MOVE_TO:
+		_cairo_output_stream_printf (ctx->stream,
+					     "\n  %f %f m",
+					     data[1].point.x, data[1].point.y);
+		break;
+	    case CAIRO_PATH_LINE_TO:
+		_cairo_output_stream_printf (ctx->stream,
+					     "\n  %f %f l",
+					     data[1].point.x, data[1].point.y);
+		break;
+	    case CAIRO_PATH_CURVE_TO:
+		_cairo_output_stream_printf (ctx->stream,
+					     "\n  %f %f %f %f %f %f c",
+					     data[1].point.x, data[1].point.y,
+					     data[2].point.x, data[2].point.y,
+					     data[3].point.x, data[3].point.y);
+		break;
+	    case CAIRO_PATH_CLOSE_PATH:
+		break;
+	    }
+	}
+	cairo_path_destroy (path);
+
+	for (j = 0; j < 4; j++) {
+	    double x, y;
+
+	    status = cairo_mesh_pattern_get_control_point (mesh, i, j, &x, &y);
+	    if (unlikely (status))
+		return status;
+	    _cairo_output_stream_printf (ctx->stream,
+					 "\n  %d %f %f set-control-point",
+					 j, x, y);
+	}
+
+	for (j = 0; j < 4; j++) {
+	    double r, g, b, a;
+
+	    status = cairo_mesh_pattern_get_corner_color_rgba (mesh, i, j, &r, &g, &b, &a);
+	    if (unlikely (status))
+		return status;
+
+	    _cairo_output_stream_printf (ctx->stream,
+					 "\n  %d %f %f %f %f set-corner-color",
+					 j, r, g, b, a);
+	}
+
+	_cairo_output_stream_printf (ctx->stream, "\n  end-patch");
+    }
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+struct script_snapshot {
+    cairo_surface_t base;
+};
+
+static cairo_status_t
+script_snapshot_finish (void *abstract_surface)
+{
+    return CAIRO_STATUS_SUCCESS;
+}
+
+static const cairo_surface_backend_t script_snapshot_backend = {
+    CAIRO_SURFACE_TYPE_SCRIPT,
+    script_snapshot_finish,
+};
+
+static void
+detach_snapshot (cairo_surface_t *abstract_surface)
+{
+    cairo_script_surface_t *surface = (cairo_script_surface_t *)abstract_surface;
+    cairo_script_context_t *ctx = to_context (surface);
+
+    _cairo_output_stream_printf (ctx->stream,
+				 "/s%d undef\n",
+				 surface->base.unique_id);
+}
+
+static void
+attach_snapshot (cairo_script_context_t *ctx,
+		 cairo_surface_t *source)
+{
+    struct script_snapshot *surface;
+
+    if (! ctx->attach_snapshots)
+	return;
+
+    surface = _cairo_malloc (sizeof (*surface));
+    if (unlikely (surface == NULL))
+	return;
+
+    _cairo_surface_init (&surface->base,
+			 &script_snapshot_backend,
+			 &ctx->base,
+			 source->content,
+			 source->is_vector);
+
+    _cairo_output_stream_printf (ctx->stream,
+				 "dup /s%d exch def ",
+				 surface->base.unique_id);
+
+    _cairo_surface_attach_snapshot (source, &surface->base, detach_snapshot);
+    cairo_surface_destroy (&surface->base);
 }
 
 static cairo_status_t
@@ -961,37 +1130,48 @@ _emit_recording_surface_pattern (cairo_script_surface_t *surface,
 				 cairo_recording_surface_t *source)
 {
     cairo_script_implicit_context_t old_cr;
+    cairo_script_context_t *ctx = to_context (surface);
     cairo_script_surface_t *similar;
+    cairo_surface_t *snapshot;
+    cairo_rectangle_t r, *extents;
     cairo_status_t status;
-    cairo_box_t bbox;
-    cairo_rectangle_int_t rect;
 
-    /* first measure the extents */
-    status = _cairo_recording_surface_get_bbox (source, &bbox, NULL);
-    if (unlikely (status))
-	return status;
+    snapshot = _cairo_surface_has_snapshot (&source->base, &script_snapshot_backend);
+    if (snapshot) {
+	_cairo_output_stream_printf (ctx->stream, "s%d", snapshot->unique_id);
+	return CAIRO_INT_STATUS_SUCCESS;
+    }
 
-    /* convert to extents so that it matches the public api */
-    _cairo_box_round_to_rectangle (&bbox, &rect);
+    extents = NULL;
+    if (_cairo_recording_surface_get_bounds (&source->base, &r))
+	extents = &r;
 
-    similar = _cairo_script_surface_create_internal (to_context (surface),
-						     source->content,
-						     rect.width,
-						     rect.height,
+    similar = _cairo_script_surface_create_internal (ctx,
+						     source->base.content,
+						     extents,
 						     NULL);
     if (unlikely (similar->base.status))
 	return similar->base.status;
 
-    cairo_surface_set_device_offset (&similar->base, -rect.x, -rect.y);
     similar->base.is_clear = TRUE;
 
-    _get_target (surface);
-    _cairo_output_stream_printf (to_context (surface)->stream,
-				 "%d %d //%s similar dup context\n",
-				 rect.width, rect.height,
-				 _content_to_string (source->content));
+    _cairo_output_stream_printf (ctx->stream, "//%s ",
+				 _content_to_string (source->base.content));
+    if (extents) {
+	_cairo_output_stream_printf (ctx->stream, "[%f %f %f %f]",
+				     extents->x, extents->y,
+				     extents->width, extents->height);
+    } else
+	_cairo_output_stream_puts (ctx->stream, "[]");
+    _cairo_output_stream_puts (ctx->stream, " record\n");
+
+    attach_snapshot (ctx, &source->base);
+
+    _cairo_output_stream_puts (ctx->stream, "dup context\n");
+
     target_push (similar);
     similar->emitted = TRUE;
+
 
     old_cr = surface->cr;
     _cairo_script_implicit_context_init (&surface->cr);
@@ -1006,7 +1186,7 @@ _emit_recording_surface_pattern (cairo_script_surface_t *surface,
     cairo_list_del (&similar->operand.link);
     assert (target_is_active (surface));
 
-    _cairo_output_stream_puts (to_context (surface)->stream, "pop ");
+    _cairo_output_stream_puts (ctx->stream, "pop ");
     cairo_surface_destroy (&similar->base);
 
     return CAIRO_STATUS_SUCCESS;
@@ -1025,7 +1205,8 @@ static cairo_status_t
 _write_image_surface (cairo_output_stream_t *output,
 		      const cairo_image_surface_t *image)
 {
-    int stride, row, width;
+    int row, width;
+    ptrdiff_t stride;
     uint8_t row_stack[CAIRO_STACK_BUFFER_SIZE];
     uint8_t *rowdata;
     uint8_t *data;
@@ -1077,7 +1258,7 @@ _write_image_surface (cairo_output_stream_t *output,
     }
 #else
     if (stride > ARRAY_LENGTH (row_stack)) {
-	rowdata = malloc (stride);
+	rowdata = _cairo_malloc (stride);
 	if (unlikely (rowdata == NULL))
 	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
     } else
@@ -1124,6 +1305,7 @@ _write_image_surface (cairo_output_stream_t *output,
 	    data += stride;
 	}
 	break;
+    case CAIRO_FORMAT_RGB30:
     case CAIRO_FORMAT_ARGB32:
 	for (row = image->height; row--; ) {
 	    uint32_t *src = (uint32_t *) data;
@@ -1132,6 +1314,18 @@ _write_image_surface (cairo_output_stream_t *output,
 	    for (col = 0; col < width; col++)
 		dst[col] = bswap_32 (src[col]);
 	    _cairo_output_stream_write (output, rowdata, 4*width);
+	    data += stride;
+	}
+	break;
+    case CAIRO_FORMAT_RGB96F:
+	for (row = image->height; row--; ) {
+	    _cairo_output_stream_write (output, data, 12*width);
+	    data += stride;
+	}
+	break;
+    case CAIRO_FORMAT_RGBA128F:
+	for (row = image->height; row--; ) {
+	    _cairo_output_stream_write (output, data, 16*width);
 	    data += stride;
 	}
 	break;
@@ -1182,46 +1376,27 @@ _emit_png_surface (cairo_script_surface_t *surface,
     return CAIRO_STATUS_SUCCESS;
 }
 
-struct def {
-    cairo_script_context_t *ctx;
-    cairo_user_data_array_t *user_data;
-    unsigned int tag;
-    cairo_list_t link;
-};
-
-static void
-_undef (void *data)
-{
-    struct def *def = data;
-
-    cairo_list_del (&def->link);
-    _cairo_output_stream_printf (def->ctx->stream, "/s%u undef\n", def->tag);
-    free (def);
-}
-
-static cairo_status_t
+static cairo_int_status_t
 _emit_image_surface (cairo_script_surface_t *surface,
 		     cairo_image_surface_t *image)
 {
     cairo_script_context_t *ctx = to_context (surface);
     cairo_output_stream_t *base85_stream;
     cairo_output_stream_t *zlib_stream;
-    cairo_status_t status, status2;
+    cairo_int_status_t status, status2;
+    cairo_surface_t *snapshot;
     const uint8_t *mime_data;
     unsigned long mime_data_length;
-    struct def *tag;
 
-    if (_cairo_user_data_array_get_data (&image->base.user_data,
-					 (cairo_user_data_key_t *) ctx))
-    {
-	_cairo_output_stream_printf (ctx->stream,
-				     "s%u ",
-				     image->base.unique_id);
-	return CAIRO_STATUS_SUCCESS;
+    snapshot = _cairo_surface_has_snapshot (&image->base,
+					    &script_snapshot_backend);
+    if (snapshot) {
+	_cairo_output_stream_printf (ctx->stream, "s%u ", snapshot->unique_id);
+	return CAIRO_INT_STATUS_SUCCESS;
     }
 
     status = _emit_png_surface (surface, image);
-    if (_cairo_status_is_error (status)) {
+    if (_cairo_int_status_is_error (status)) {
 	return status;
     } else if (status == CAIRO_INT_STATUS_UNSUPPORTED) {
 	cairo_image_surface_t *clone;
@@ -1256,11 +1431,20 @@ _emit_image_surface (cairo_script_surface_t *surface,
 	case CAIRO_FORMAT_RGB24:
 	    len = clone->width * 3;
 	    break;
+	case CAIRO_FORMAT_RGB30:
 	case CAIRO_FORMAT_ARGB32:
 	    len = clone->width * 4;
 	    break;
+	case CAIRO_FORMAT_RGB96F:
+	    len = clone->width * 12;
+	    break;
+	case CAIRO_FORMAT_RGBA128F:
+	    len = clone->width * 16;
+	    break;
 	case CAIRO_FORMAT_INVALID:
+	default:
 	    ASSERT_NOT_REACHED;
+	    len = 0;
 	    break;
 	}
 	len *= clone->height;
@@ -1277,10 +1461,10 @@ _emit_image_surface (cairo_script_surface_t *surface,
 	    status = _write_image_surface (zlib_stream, clone);
 
 	    status2 = _cairo_output_stream_destroy (zlib_stream);
-	    if (status == CAIRO_STATUS_SUCCESS)
+	    if (status == CAIRO_INT_STATUS_SUCCESS)
 		status = status2;
 	    status2 = _cairo_output_stream_destroy (base85_stream);
-	    if (status == CAIRO_STATUS_SUCCESS)
+	    if (status == CAIRO_INT_STATUS_SUCCESS)
 		status = status2;
 	    if (unlikely (status))
 		return status;
@@ -1290,7 +1474,7 @@ _emit_image_surface (cairo_script_surface_t *surface,
 	    base85_stream = _cairo_base85_stream_create (ctx->stream);
 	    status = _write_image_surface (base85_stream, clone);
 	    status2 = _cairo_output_stream_destroy (base85_stream);
-	    if (status == CAIRO_STATUS_SUCCESS)
+	    if (status == CAIRO_INT_STATUS_SUCCESS)
 		status = status2;
 	    if (unlikely (status))
 		return status;
@@ -1299,26 +1483,6 @@ _emit_image_surface (cairo_script_surface_t *surface,
 
 	cairo_surface_destroy (&clone->base);
     }
-
-    tag = malloc (sizeof (*tag));
-    if (unlikely (tag == NULL))
-	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
-
-    tag->ctx = ctx;
-    tag->tag = image->base.unique_id;
-    tag->user_data = &image->base.user_data;
-    cairo_list_add (&tag->link, &ctx->defines);
-    status = _cairo_user_data_array_set_data (&image->base.user_data,
-					      (cairo_user_data_key_t *) ctx,
-					      tag, _undef);
-    if (unlikely (status)) {
-	free (tag);
-	return status;
-    }
-
-    _cairo_output_stream_printf (ctx->stream,
-				 "dup /s%u exch def ",
-				 image->base.unique_id);
 
     cairo_surface_get_mime_data (&image->base, CAIRO_MIME_TYPE_JPEG,
 				 &mime_data, &mime_data_length);
@@ -1352,38 +1516,32 @@ _emit_image_surface (cairo_script_surface_t *surface,
 	_cairo_output_stream_puts (ctx->stream, "~> set-mime-data\n");
     }
 
-    return CAIRO_STATUS_SUCCESS;
+    return CAIRO_INT_STATUS_SUCCESS;
 }
 
-static cairo_status_t
+static cairo_int_status_t
 _emit_image_surface_pattern (cairo_script_surface_t *surface,
 			     cairo_surface_t *source)
 {
-    cairo_surface_t *snapshot;
     cairo_image_surface_t *image;
     cairo_status_t status;
     void *extra;
 
-    /* XXX keeping a copy is nasty, but we want to hook into the surface's
-     * lifetime. Using a snapshot is a convenient method.
-     */
-    snapshot = _cairo_surface_snapshot (source);
-    status = _cairo_surface_acquire_source_image (snapshot, &image, &extra);
+    status = _cairo_surface_acquire_source_image (source, &image, &extra);
     if (likely (status == CAIRO_STATUS_SUCCESS)) {
 	status = _emit_image_surface (surface, image);
-	_cairo_surface_release_source_image (snapshot, image, extra);
+	_cairo_surface_release_source_image (source, image, extra);
     }
-    cairo_surface_destroy (snapshot);
 
     return status;
 }
 
-static cairo_status_t
+static cairo_int_status_t
 _emit_subsurface_pattern (cairo_script_surface_t *surface,
 			  cairo_surface_subsurface_t *sub)
 {
     cairo_surface_t *source = sub->target;
-    cairo_status_t status;
+    cairo_int_status_t status;
 
     switch ((int) source->backend->type) {
     case CAIRO_SURFACE_TYPE_RECORDING:
@@ -1405,22 +1563,36 @@ _emit_subsurface_pattern (cairo_script_surface_t *surface,
 				 sub->extents.y,
 				 sub->extents.width,
 				 sub->extents.height);
-    return CAIRO_STATUS_SUCCESS;
+    return CAIRO_INT_STATUS_SUCCESS;
 }
 
-static cairo_status_t
+static cairo_int_status_t
 _emit_surface_pattern (cairo_script_surface_t *surface,
 		       const cairo_pattern_t *pattern)
 {
+    cairo_script_context_t *ctx = to_context (surface);
     cairo_surface_pattern_t *surface_pattern;
-    cairo_surface_t *source;
-    cairo_status_t status;
+    cairo_surface_t *source, *snapshot, *free_me = NULL;
+    cairo_surface_t *take_snapshot = NULL;
+    cairo_int_status_t status;
 
     surface_pattern = (cairo_surface_pattern_t *) pattern;
     source = surface_pattern->surface;
 
-    if (source->backend->type == CAIRO_INTERNAL_SURFACE_TYPE_SNAPSHOT)
-	source = ((cairo_surface_snapshot_t *) source)->target;
+    if (_cairo_surface_is_snapshot (source)) {
+	snapshot = _cairo_surface_has_snapshot (source, &script_snapshot_backend);
+	if (snapshot) {
+	    _cairo_output_stream_printf (ctx->stream,
+					 "s%d pattern ",
+					 snapshot->unique_id);
+	    return CAIRO_INT_STATUS_SUCCESS;
+	}
+
+	if (_cairo_surface_snapshot_is_reused (source))
+	    take_snapshot = source;
+
+	free_me = source = _cairo_surface_snapshot_get_target (source);
+    }
 
     switch ((int) source->backend->type) {
     case CAIRO_SURFACE_TYPE_RECORDING:
@@ -1436,19 +1608,47 @@ _emit_surface_pattern (cairo_script_surface_t *surface,
 	status = _emit_image_surface_pattern (surface, source);
 	break;
     }
+    cairo_surface_destroy (free_me);
     if (unlikely (status))
 	return status;
 
-    _cairo_output_stream_puts (to_context (surface)->stream, "pattern");
-    return CAIRO_STATUS_SUCCESS;
+    if (take_snapshot)
+	attach_snapshot (ctx, take_snapshot);
+
+    _cairo_output_stream_puts (ctx->stream, "pattern");
+    return CAIRO_INT_STATUS_SUCCESS;
 }
 
-static cairo_status_t
+static cairo_int_status_t
+_emit_raster_pattern (cairo_script_surface_t *surface,
+		      const cairo_pattern_t *pattern)
+{
+    cairo_surface_t *source;
+    cairo_int_status_t status;
+
+    source = _cairo_raster_source_pattern_acquire (pattern, &surface->base, NULL);
+    if (unlikely (source == NULL)) {
+	ASSERT_NOT_REACHED;
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+    }
+    if (unlikely (source->status))
+	return source->status;
+
+    status = _emit_image_surface_pattern (surface, source);
+    _cairo_raster_source_pattern_release (pattern, source);
+    if (unlikely (status))
+	return status;
+
+    _cairo_output_stream_puts (to_context(surface)->stream, "pattern");
+    return CAIRO_INT_STATUS_SUCCESS;
+}
+
+static cairo_int_status_t
 _emit_pattern (cairo_script_surface_t *surface,
 	       const cairo_pattern_t *pattern)
 {
     cairo_script_context_t *ctx = to_context (surface);
-    cairo_status_t status;
+    cairo_int_status_t status;
     cairo_bool_t is_default_extend;
     cairo_bool_t need_newline = TRUE;
 
@@ -1465,8 +1665,16 @@ _emit_pattern (cairo_script_surface_t *surface,
 	status = _emit_radial_pattern (surface, pattern);
 	is_default_extend = pattern->extend == CAIRO_EXTEND_GRADIENT_DEFAULT;
 	break;
+    case CAIRO_PATTERN_TYPE_MESH:
+	status = _emit_mesh_pattern (surface, pattern);
+	is_default_extend = TRUE;
+	break;
     case CAIRO_PATTERN_TYPE_SURFACE:
 	status = _emit_surface_pattern (surface, pattern);
+	is_default_extend = pattern->extend == CAIRO_EXTEND_SURFACE_DEFAULT;
+	break;
+    case CAIRO_PATTERN_TYPE_RASTER_SOURCE:
+	status = _emit_raster_pattern (surface, pattern);
 	is_default_extend = pattern->extend == CAIRO_EXTEND_SURFACE_DEFAULT;
 	break;
 
@@ -1515,17 +1723,17 @@ _emit_pattern (cairo_script_surface_t *surface,
     if (need_newline)
 	_cairo_output_stream_puts (ctx->stream, "\n ");
 
-    return CAIRO_STATUS_SUCCESS;
+    return CAIRO_INT_STATUS_SUCCESS;
 }
 
-static cairo_status_t
+static cairo_int_status_t
 _emit_identity (cairo_script_surface_t *surface,
 		cairo_bool_t *matrix_updated)
 {
     assert (target_is_active (surface));
 
     if (_cairo_matrix_is_identity (&surface->cr.current_ctm))
-	return CAIRO_STATUS_SUCCESS;
+	return CAIRO_INT_STATUS_SUCCESS;
 
     _cairo_output_stream_puts (to_context (surface)->stream,
 			       "identity set-matrix\n");
@@ -1533,26 +1741,26 @@ _emit_identity (cairo_script_surface_t *surface,
     *matrix_updated = TRUE;
     cairo_matrix_init_identity (&surface->cr.current_ctm);
 
-    return CAIRO_STATUS_SUCCESS;
+    return CAIRO_INT_STATUS_SUCCESS;
 }
 
-static cairo_status_t
+static cairo_int_status_t
 _emit_source (cairo_script_surface_t *surface,
 	      cairo_operator_t op,
 	      const cairo_pattern_t *source)
 {
     cairo_bool_t matrix_updated = FALSE;
-    cairo_status_t status;
+    cairo_int_status_t status;
 
     assert (target_is_active (surface));
 
     if (op == CAIRO_OPERATOR_CLEAR) {
 	/* the source is ignored, so don't change it */
-	return CAIRO_STATUS_SUCCESS;
+	return CAIRO_INT_STATUS_SUCCESS;
     }
 
     if (_cairo_pattern_equal (&surface->cr.current_source.base, source))
-	return CAIRO_STATUS_SUCCESS;
+	return CAIRO_INT_STATUS_SUCCESS;
 
     _cairo_pattern_fini (&surface->cr.current_source.base);
     status = _cairo_pattern_init_copy (&surface->cr.current_source.base,
@@ -1571,7 +1779,7 @@ _emit_source (cairo_script_surface_t *surface,
     assert (target_is_active (surface));
     _cairo_output_stream_puts (to_context (surface)->stream,
 			       " set-source\n");
-    return CAIRO_STATUS_SUCCESS;
+    return CAIRO_INT_STATUS_SUCCESS;
 }
 
 static cairo_status_t
@@ -1626,12 +1834,61 @@ _path_close (void *closure)
 }
 
 static cairo_status_t
+_emit_path_boxes (cairo_script_surface_t *surface,
+		  const cairo_path_fixed_t *path)
+{
+    cairo_script_context_t *ctx = to_context (surface);
+    cairo_path_fixed_iter_t iter;
+    cairo_status_t status = CAIRO_STATUS_SUCCESS;
+    struct _cairo_boxes_chunk *chunk;
+    cairo_boxes_t boxes;
+    cairo_box_t box;
+    int i;
+
+    _cairo_boxes_init (&boxes);
+    _cairo_path_fixed_iter_init (&iter, path);
+    while (_cairo_path_fixed_iter_is_fill_box (&iter, &box)) {
+	if (box.p1.y == box.p2.y || box.p1.x == box.p2.x)
+	    continue;
+
+	status = _cairo_boxes_add (&boxes, CAIRO_ANTIALIAS_DEFAULT, &box);
+	if (unlikely (status)) {
+	    _cairo_boxes_fini (&boxes);
+	    return status;
+	}
+    }
+
+    if (! _cairo_path_fixed_iter_at_end (&iter)) {
+	_cairo_boxes_fini (&boxes);
+	return CAIRO_STATUS_INVALID_PATH_DATA;
+    }
+
+    for (chunk = &boxes.chunks; chunk; chunk = chunk->next) {
+	for (i = 0; i < chunk->count; i++) {
+	    const cairo_box_t *b = &chunk->base[i];
+	    double x1 = _cairo_fixed_to_double (b->p1.x);
+	    double y1 = _cairo_fixed_to_double (b->p1.y);
+	    double x2 = _cairo_fixed_to_double (b->p2.x);
+	    double y2 = _cairo_fixed_to_double (b->p2.y);
+
+	    _cairo_output_stream_printf (ctx->stream,
+					 "\n  %f %f %f %f rectangle",
+					 x1, y1, x2 - x1, y2 - y1);
+	}
+    }
+
+    _cairo_boxes_fini (&boxes);
+    return status;
+}
+
+static cairo_status_t
 _emit_path (cairo_script_surface_t *surface,
-	    cairo_path_fixed_t *path)
+	    const cairo_path_fixed_t *path,
+	    cairo_bool_t is_fill)
 {
     cairo_script_context_t *ctx = to_context (surface);
     cairo_box_t box;
-    cairo_status_t status;
+    cairo_int_status_t status;
 
     assert (target_is_active (surface));
     assert (_cairo_matrix_is_identity (&surface->cr.current_ctm));
@@ -1645,40 +1902,43 @@ _emit_path (cairo_script_surface_t *surface,
 
     if (path == NULL) {
 	_cairo_path_fixed_init (&surface->cr.current_path);
-    } else if (_cairo_path_fixed_is_box (path, &box)) {
+	_cairo_output_stream_puts (ctx->stream, "\n");
+	return CAIRO_STATUS_SUCCESS;
+    }
+
+    status = _cairo_path_fixed_init_copy (&surface->cr.current_path, path);
+    if (unlikely (status))
+	return status;
+
+    status = CAIRO_INT_STATUS_UNSUPPORTED;
+    if (_cairo_path_fixed_is_rectangle (path, &box)) {
 	double x1 = _cairo_fixed_to_double (box.p1.x);
 	double y1 = _cairo_fixed_to_double (box.p1.y);
 	double x2 = _cairo_fixed_to_double (box.p2.x);
 	double y2 = _cairo_fixed_to_double (box.p2.y);
 
-	status = _cairo_path_fixed_init_copy (&surface->cr.current_path, path);
-	if (unlikely (status))
-	    return status;
+	assert (x1 > -9999);
 
 	_cairo_output_stream_printf (ctx->stream,
 				     " %f %f %f %f rectangle",
 				     x1, y1, x2 - x1, y2 - y1);
-    } else {
-	cairo_status_t status;
+	status = CAIRO_INT_STATUS_SUCCESS;
+    } else if (is_fill && _cairo_path_fixed_fill_is_rectilinear (path)) {
+	status = _emit_path_boxes (surface, path);
+    }
 
-	status = _cairo_path_fixed_init_copy (&surface->cr.current_path, path);
-	if (unlikely (status))
-	    return status;
-
+    if (status == CAIRO_INT_STATUS_UNSUPPORTED) {
 	status = _cairo_path_fixed_interpret (path,
-					      CAIRO_DIRECTION_FORWARD,
 					      _path_move_to,
 					      _path_line_to,
 					      _path_curve_to,
 					      _path_close,
 					      ctx->stream);
-	if (unlikely (status))
-	    return status;
     }
 
     _cairo_output_stream_puts (ctx->stream, "\n");
 
-    return CAIRO_STATUS_SUCCESS;
+    return status;
 }
 static cairo_bool_t
 _scaling_matrix_equal (const cairo_matrix_t *a,
@@ -1765,6 +2025,7 @@ _cairo_script_surface_create_similar (void	       *abstract_surface,
     cairo_script_surface_t *surface, *other = abstract_surface;
     cairo_surface_t *passthrough = NULL;
     cairo_script_context_t *ctx;
+    cairo_rectangle_t extents;
     cairo_status_t status;
 
     ctx = to_context (other);
@@ -1793,10 +2054,11 @@ _cairo_script_surface_create_similar (void	       *abstract_surface,
 	}
     }
 
-    surface = _cairo_script_surface_create_internal (ctx,
-						     content,
-						     width, height,
-						     passthrough);
+    extents.x = extents.y = 0;
+    extents.width = width;
+    extents.height = height;
+    surface = _cairo_script_surface_create_internal (ctx, content,
+						     &extents, passthrough);
     cairo_surface_destroy (passthrough);
 
     if (unlikely (surface->base.status)) {
@@ -1810,6 +2072,7 @@ _cairo_script_surface_create_similar (void	       *abstract_surface,
 				 width, height,
 				 _content_to_string (content),
 				 surface->base.unique_id);
+
     surface->emitted = TRUE;
     surface->defined = TRUE;
     surface->base.is_clear = TRUE;
@@ -1819,13 +2082,12 @@ _cairo_script_surface_create_similar (void	       *abstract_surface,
     return &surface->base;
 }
 
-static void
+static cairo_status_t
 _device_flush (void *abstract_device)
 {
     cairo_script_context_t *ctx = abstract_device;
-    cairo_status_t status;
 
-    status = _cairo_output_stream_flush (ctx->stream);
+    return _cairo_output_stream_flush (ctx->stream);
 }
 
 static void
@@ -1835,33 +2097,36 @@ _device_destroy (void *abstract_device)
     cairo_status_t status;
 
     while (! cairo_list_is_empty (&ctx->fonts)) {
-	cairo_script_surface_font_private_t *font;
+	cairo_script_font_t *font;
 
-	font = cairo_list_first_entry (&ctx->fonts,
-				       cairo_script_surface_font_private_t,
-				       link);
+	font = cairo_list_first_entry (&ctx->fonts, cairo_script_font_t, link);
+	cairo_list_del (&font->base.link);
 	cairo_list_del (&font->link);
-	if (font->parent->surface_private == font)
-	    font->parent->surface_private = NULL;
 	free (font);
-    }
-
-    while (! cairo_list_is_empty (&ctx->defines)) {
-	struct def *def = cairo_list_first_entry (&ctx->defines,
-						  struct def, link);
-
-	status = _cairo_user_data_array_set_data (def->user_data,
-						  (cairo_user_data_key_t *) ctx,
-						  NULL, NULL);
-	assert (status == CAIRO_STATUS_SUCCESS);
     }
 
     _bitmap_fini (ctx->surface_id.next);
     _bitmap_fini (ctx->font_id.next);
 
-    status = _cairo_output_stream_destroy (ctx->stream);
+    if (ctx->owns_stream)
+	status = _cairo_output_stream_destroy (ctx->stream);
 
     free (ctx);
+}
+
+static cairo_surface_t *
+_cairo_script_surface_source (void                    *abstract_surface,
+			      cairo_rectangle_int_t	*extents)
+{
+    cairo_script_surface_t *surface = abstract_surface;
+
+    if (extents) {
+	extents->x = extents->y = 0;
+	extents->width  = surface->width;
+	extents->height = surface->height;
+    }
+
+    return &surface->base;
 }
 
 static cairo_status_t
@@ -1902,10 +2167,9 @@ _cairo_script_surface_finish (void *abstract_surface)
 
     _cairo_surface_wrapper_fini (&surface->wrapper);
 
-    if (surface->cr.current_style.dash != NULL) {
-	free (surface->cr.current_style.dash);
-	surface->cr.current_style.dash = NULL;
-    }
+    free (surface->cr.current_style.dash);
+    surface->cr.current_style.dash = NULL;
+
     _cairo_pattern_fini (&surface->cr.current_source.base);
     _cairo_path_fixed_fini (&surface->cr.current_path);
     _cairo_surface_clipper_reset (&surface->clipper);
@@ -1935,7 +2199,7 @@ _cairo_script_surface_finish (void *abstract_surface)
 		}
 		cairo_list_del (&surface->operand.link);
 	    } else {
-		struct deferred_finish *link = malloc (sizeof (*link));
+		struct deferred_finish *link = _cairo_malloc (sizeof (*link));
 		if (link == NULL) {
 		    status2 = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 		    if (status == CAIRO_STATUS_SUCCESS)
@@ -2035,12 +2299,12 @@ _cairo_script_surface_clipper_intersect_clip_path (cairo_surface_clipper_t *clip
     }
 
     /* skip the trivial clip covering the surface extents */
-    if (surface->width >=0 && surface->height >= 0 &&
+    if (surface->width >= 0 && surface->height >= 0 &&
 	_cairo_path_fixed_is_box (path, &box))
     {
 	if (box.p1.x <= 0 && box.p1.y <= 0 &&
-	    box.p2.x - box.p1.x >= _cairo_fixed_from_double (surface->width) &&
-	    box.p2.y - box.p1.y >= _cairo_fixed_from_double (surface->height))
+	    box.p2.x >= _cairo_fixed_from_double (surface->width) &&
+	    box.p2.y >= _cairo_fixed_from_double (surface->height))
 	{
 	    return CAIRO_STATUS_SUCCESS;
 	}
@@ -2054,19 +2318,19 @@ _cairo_script_surface_clipper_intersect_clip_path (cairo_surface_clipper_t *clip
     if (unlikely (status))
 	return status;
 
-    if (! path->is_rectilinear) {
+    if (path->has_curve_to) {
 	status = _emit_tolerance (surface, tolerance, matrix_updated);
 	if (unlikely (status))
 	    return status;
     }
 
-    if (! path->maybe_fill_region) {
+    if (! _cairo_path_fixed_fill_maybe_region (path)) {
 	status = _emit_antialias (surface, antialias);
 	if (unlikely (status))
 	    return status;
     }
 
-    status = _emit_path (surface, path);
+    status = _emit_path (surface, path, TRUE);
     if (unlikely (status))
 	return status;
 
@@ -2181,7 +2445,7 @@ static cairo_int_status_t
 _cairo_script_surface_paint (void			*abstract_surface,
 			     cairo_operator_t		 op,
 			     const cairo_pattern_t	*source,
-			     cairo_clip_t		*clip)
+			     const cairo_clip_t		*clip)
 {
     cairo_script_surface_t *surface = abstract_surface;
     cairo_status_t status;
@@ -2228,7 +2492,7 @@ _cairo_script_surface_mask (void			*abstract_surface,
 			    cairo_operator_t		 op,
 			    const cairo_pattern_t	*source,
 			    const cairo_pattern_t	*mask,
-			    cairo_clip_t		*clip)
+			    const cairo_clip_t		*clip)
 {
     cairo_script_surface_t *surface = abstract_surface;
     cairo_status_t status;
@@ -2284,13 +2548,13 @@ static cairo_int_status_t
 _cairo_script_surface_stroke (void				*abstract_surface,
 			      cairo_operator_t			 op,
 			      const cairo_pattern_t		*source,
-			      cairo_path_fixed_t		*path,
+			      const cairo_path_fixed_t		*path,
 			      const cairo_stroke_style_t	*style,
 			      const cairo_matrix_t		*ctm,
 			      const cairo_matrix_t		*ctm_inverse,
 			      double				 tolerance,
 			      cairo_antialias_t			 antialias,
-			      cairo_clip_t			*clip)
+			      const cairo_clip_t		*clip)
 {
     cairo_script_surface_t *surface = abstract_surface;
     cairo_bool_t matrix_updated = FALSE;
@@ -2312,7 +2576,7 @@ _cairo_script_surface_stroke (void				*abstract_surface,
     if (unlikely (status))
 	goto BAIL;
 
-    status = _emit_path (surface, path);
+    status = _emit_path (surface, path, FALSE);
     if (unlikely (status))
 	goto BAIL;
 
@@ -2343,11 +2607,9 @@ _cairo_script_surface_stroke (void				*abstract_surface,
     if (unlikely (status))
 	goto BAIL;
 
-    if (! path->is_rectilinear) {
-	status = _emit_tolerance (surface, tolerance, matrix_updated);
-	if (unlikely (status))
-	    goto BAIL;
-    }
+    status = _emit_tolerance (surface, tolerance, matrix_updated);
+    if (unlikely (status))
+	goto BAIL;
 
     status = _emit_antialias (surface, antialias);
     if (unlikely (status))
@@ -2377,11 +2639,11 @@ static cairo_int_status_t
 _cairo_script_surface_fill (void			*abstract_surface,
 			    cairo_operator_t		 op,
 			    const cairo_pattern_t	*source,
-			    cairo_path_fixed_t		*path,
+			    const cairo_path_fixed_t	*path,
 			    cairo_fill_rule_t		 fill_rule,
 			    double			 tolerance,
 			    cairo_antialias_t		 antialias,
-			    cairo_clip_t		*clip)
+			    const cairo_clip_t		*clip)
 {
     cairo_script_surface_t *surface = abstract_surface;
     cairo_bool_t matrix_updated = FALSE;
@@ -2414,19 +2676,19 @@ _cairo_script_surface_fill (void			*abstract_surface,
 	    goto BAIL;
     }
 
-    if (! path->is_rectilinear) {
+    if (path->has_curve_to) {
 	status = _emit_tolerance (surface, tolerance, matrix_updated);
 	if (unlikely (status))
 	    goto BAIL;
     }
 
-    if (! path->maybe_fill_region) {
+    if (! _cairo_path_fixed_fill_maybe_region (path)) {
 	status = _emit_antialias (surface, antialias);
 	if (unlikely (status))
 	    goto BAIL;
     }
 
-    status = _emit_path (surface, path);
+    status = _emit_path (surface, path, TRUE);
     if (unlikely (status))
 	goto BAIL;
 
@@ -2558,31 +2820,39 @@ _emit_font_options (cairo_script_surface_t *surface,
 }
 
 static void
-_cairo_script_surface_scaled_font_fini (cairo_scaled_font_t *scaled_font)
+_cairo_script_scaled_font_fini (cairo_scaled_font_private_t *abstract_private,
+				cairo_scaled_font_t *scaled_font)
 {
-    cairo_script_surface_font_private_t *font_private;
+    cairo_script_font_t *priv = (cairo_script_font_t *)abstract_private;
+    cairo_script_context_t *ctx = (cairo_script_context_t *)abstract_private->key;
+    cairo_status_t status;
 
-    font_private = scaled_font->surface_private;
-    if (font_private != NULL) {
-	cairo_status_t status;
-	cairo_device_t *device;
+    status = cairo_device_acquire (&ctx->base);
+    if (likely (status == CAIRO_STATUS_SUCCESS)) {
+	_cairo_output_stream_printf (ctx->stream,
+				     "/f%lu undef /sf%lu undef\n",
+				     priv->id,
+				     priv->id);
 
-	status = cairo_device_acquire (device = &font_private->ctx->base);
-	if (likely (status == CAIRO_STATUS_SUCCESS)) {
-	    _cairo_output_stream_printf (font_private->ctx->stream,
-					 "/f%lu undef /sf%lu undef\n",
-					 font_private->id,
-					 font_private->id);
-
-	    _bitmap_release_id (&font_private->ctx->font_id, font_private->id);
-	    cairo_list_del (&font_private->link);
-	    free (font_private);
-
-	    cairo_device_release (device);
-	}
-
-	scaled_font->surface_private = NULL;
+	_bitmap_release_id (&ctx->font_id, priv->id);
+	cairo_device_release (&ctx->base);
     }
+
+    cairo_list_del (&priv->link);
+    cairo_list_del (&priv->base.link);
+    free (priv);
+}
+
+static cairo_script_font_t *
+_cairo_script_font_get (cairo_script_context_t *ctx, cairo_scaled_font_t *font)
+{
+    return (cairo_script_font_t *) _cairo_scaled_font_find_private (font, ctx);
+}
+
+static long unsigned
+_cairo_script_font_id (cairo_script_context_t *ctx, cairo_scaled_font_t *font)
+{
+    return _cairo_script_font_get (ctx, font)->id;
 }
 
 static cairo_status_t
@@ -2591,7 +2861,6 @@ _emit_type42_font (cairo_script_surface_t *surface,
 {
     cairo_script_context_t *ctx = to_context (surface);
     const cairo_scaled_font_backend_t *backend;
-    cairo_script_surface_font_private_t *font_private;
     cairo_output_stream_t *base85_stream;
     cairo_output_stream_t *zlib_stream;
     cairo_status_t status, status2;
@@ -2609,7 +2878,7 @@ _emit_type42_font (cairo_script_surface_t *surface,
     if (unlikely (status))
 	return status;
 
-    buf = malloc (size);
+    buf = _cairo_malloc (size);
     if (unlikely (buf == NULL))
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
@@ -2649,27 +2918,29 @@ _emit_type42_font (cairo_script_surface_t *surface,
     if (status == CAIRO_STATUS_SUCCESS)
 	status = status2;
 
-    font_private = scaled_font->surface_private;
     _cairo_output_stream_printf (ctx->stream,
 				 "~> >> font dup /f%lu exch def set-font-face",
-				 font_private->id);
+				 _cairo_script_font_id (ctx, scaled_font));
 
     return status;
 }
 
 static cairo_status_t
 _emit_scaled_font_init (cairo_script_surface_t *surface,
-			cairo_scaled_font_t *scaled_font)
+			cairo_scaled_font_t *scaled_font,
+			cairo_script_font_t **font_out)
 {
     cairo_script_context_t *ctx = to_context (surface);
-    cairo_script_surface_font_private_t *font_private;
-    cairo_status_t status;
+    cairo_script_font_t *font_private;
+    cairo_int_status_t status;
 
-    font_private = malloc (sizeof (cairo_script_surface_font_private_t));
+    font_private = _cairo_malloc (sizeof (cairo_script_font_t));
     if (unlikely (font_private == NULL))
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
-    font_private->ctx = ctx;
+    _cairo_scaled_font_attach_private (scaled_font, &font_private->base, ctx,
+				       _cairo_script_scaled_font_fini);
+
     font_private->parent = scaled_font;
     font_private->subset_glyph_index = 0;
     font_private->has_sfnt = TRUE;
@@ -2683,16 +2954,17 @@ _emit_scaled_font_init (cairo_script_surface_t *surface,
 	return status;
     }
 
-    scaled_font->surface_private = font_private;
-    scaled_font->surface_backend = &_cairo_script_surface_backend;
-
     status = _emit_context (surface);
-    if (unlikely (status))
+    if (unlikely (status)) {
+	free (font_private);
 	return status;
+    }
 
     status = _emit_type42_font (surface, scaled_font);
-    if (status != CAIRO_INT_STATUS_UNSUPPORTED)
+    if (status != CAIRO_INT_STATUS_UNSUPPORTED) {
+	*font_out = font_private;
 	return status;
+    }
 
     font_private->has_sfnt = FALSE;
     _cairo_output_stream_printf (ctx->stream,
@@ -2708,6 +2980,7 @@ _emit_scaled_font_init (cairo_script_surface_t *surface,
 				 scaled_font->fs_extents.max_y_advance,
 				 font_private->id);
 
+    *font_out = font_private;
     return CAIRO_STATUS_SUCCESS;
 }
 
@@ -2720,7 +2993,7 @@ _emit_scaled_font (cairo_script_surface_t *surface,
     cairo_font_options_t options;
     cairo_bool_t matrix_updated = FALSE;
     cairo_status_t status;
-    cairo_script_surface_font_private_t *font_private;
+    cairo_script_font_t *font_private;
 
     cairo_scaled_font_get_ctm (scaled_font, &matrix);
     status = _emit_scaling_matrix (surface, &matrix, &matrix_updated);
@@ -2732,13 +3005,7 @@ _emit_scaled_font (cairo_script_surface_t *surface,
 
     surface->cr.current_scaled_font = scaled_font;
 
-    if (! (scaled_font->surface_backend == NULL ||
-	   scaled_font->surface_backend == &_cairo_script_surface_backend))
-    {
-	_cairo_scaled_font_revoke_ownership (scaled_font);
-    }
-
-    font_private = scaled_font->surface_private;
+    font_private = _cairo_script_font_get (ctx, scaled_font);
     if (font_private == NULL) {
 	cairo_scaled_font_get_font_matrix (scaled_font, &matrix);
 	status = _emit_font_matrix (surface, &matrix);
@@ -2750,12 +3017,9 @@ _emit_scaled_font (cairo_script_surface_t *surface,
 	if (unlikely (status))
 	    return status;
 
-	status = _emit_scaled_font_init (surface, scaled_font);
+	status = _emit_scaled_font_init (surface, scaled_font, &font_private);
 	if (unlikely (status))
 	    return status;
-
-	font_private = scaled_font->surface_private;
-	assert (font_private != NULL);
 
 	assert (target_is_active (surface));
 	_cairo_output_stream_printf (ctx->stream,
@@ -2773,17 +3037,17 @@ _emit_scaled_font (cairo_script_surface_t *surface,
 static cairo_status_t
 _emit_scaled_glyph_vector (cairo_script_surface_t *surface,
 			   cairo_scaled_font_t *scaled_font,
+			   cairo_script_font_t *font_private,
 			   cairo_scaled_glyph_t *scaled_glyph)
 {
     cairo_script_context_t *ctx = to_context (surface);
-    cairo_script_surface_font_private_t *font_private;
     cairo_script_implicit_context_t old_cr;
     cairo_status_t status;
     unsigned long index;
 
-    font_private = scaled_font->surface_private;
     index = ++font_private->subset_glyph_index;
-    scaled_glyph->surface_private = (void *) index;
+    scaled_glyph->dev_private_key = ctx;
+    scaled_glyph->dev_private = (void *) index;
 
     _cairo_output_stream_printf (ctx->stream,
 				 "%lu <<\n"
@@ -2822,16 +3086,16 @@ _emit_scaled_glyph_vector (cairo_script_surface_t *surface,
 static cairo_status_t
 _emit_scaled_glyph_bitmap (cairo_script_surface_t *surface,
 			   cairo_scaled_font_t *scaled_font,
+			   cairo_script_font_t *font_private,
 			   cairo_scaled_glyph_t *scaled_glyph)
 {
     cairo_script_context_t *ctx = to_context (surface);
-    cairo_script_surface_font_private_t *font_private;
     cairo_status_t status;
     unsigned long index;
 
-    font_private = scaled_font->surface_private;
     index = ++font_private->subset_glyph_index;
-    scaled_glyph->surface_private = (void *) index;
+    scaled_glyph->dev_private_key = ctx;
+    scaled_glyph->dev_private = (void *) index;
 
     _cairo_output_stream_printf (ctx->stream,
 				 "%lu <<\n"
@@ -2874,15 +3138,10 @@ static cairo_status_t
 _emit_scaled_glyph_prologue (cairo_script_surface_t *surface,
 			     cairo_scaled_font_t *scaled_font)
 {
-    cairo_script_surface_font_private_t *font_private;
+    cairo_script_context_t *ctx = to_context (surface);
 
-    assert (scaled_font->surface_backend == &_cairo_script_surface_backend);
-
-    font_private = scaled_font->surface_private;
-
-    _cairo_output_stream_printf (to_context (surface)->stream,
-				 "f%lu /glyphs get\n",
-				 font_private->id);
+    _cairo_output_stream_printf (ctx->stream, "f%lu /glyphs get\n",
+				 _cairo_script_font_id (ctx, scaled_font));
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -2893,7 +3152,8 @@ _emit_scaled_glyphs (cairo_script_surface_t *surface,
 		     cairo_glyph_t *glyphs,
 		     unsigned int num_glyphs)
 {
-    cairo_script_surface_font_private_t *font_private;
+    cairo_script_context_t *ctx = to_context (surface);
+    cairo_script_font_t *font_private;
     cairo_status_t status;
     unsigned int n;
     cairo_bool_t have_glyph_prologue = FALSE;
@@ -2901,7 +3161,7 @@ _emit_scaled_glyphs (cairo_script_surface_t *surface,
     if (num_glyphs == 0)
 	return CAIRO_STATUS_SUCCESS;
 
-    font_private = scaled_font->surface_private;
+    font_private = _cairo_script_font_get (ctx, scaled_font);
     if (font_private->has_sfnt)
 	return CAIRO_STATUS_SUCCESS;
 
@@ -2916,7 +3176,7 @@ _emit_scaled_glyphs (cairo_script_surface_t *surface,
 	if (unlikely (status))
 	    break;
 
-	if (scaled_glyph->surface_private != NULL)
+	if (scaled_glyph->dev_private_key == ctx)
 	    continue;
 
 	status = _cairo_scaled_glyph_lookup (scaled_font,
@@ -2936,7 +3196,7 @@ _emit_scaled_glyphs (cairo_script_surface_t *surface,
 	    }
 
 	    status = _emit_scaled_glyph_vector (surface,
-						scaled_font,
+						scaled_font, font_private,
 						scaled_glyph);
 	    if (unlikely (status))
 		break;
@@ -2962,6 +3222,7 @@ _emit_scaled_glyphs (cairo_script_surface_t *surface,
 
 	    status = _emit_scaled_glyph_bitmap (surface,
 						scaled_font,
+						font_private,
 						scaled_glyph);
 	    if (unlikely (status))
 		break;
@@ -3055,11 +3316,11 @@ _cairo_script_surface_show_text_glyphs (void			    *abstract_surface,
 					int			     num_clusters,
 					cairo_text_cluster_flags_t   backward,
 					cairo_scaled_font_t	    *scaled_font,
-					cairo_clip_t		    *clip)
+					const cairo_clip_t	    *clip)
 {
     cairo_script_surface_t *surface = abstract_surface;
     cairo_script_context_t *ctx = to_context (surface);
-    cairo_script_surface_font_private_t *font_private;
+    cairo_script_font_t *font_private;
     cairo_scaled_glyph_t *scaled_glyph;
     cairo_matrix_t matrix;
     cairo_status_t status;
@@ -3114,7 +3375,7 @@ _cairo_script_surface_show_text_glyphs (void			    *abstract_surface,
     iy -= scaled_font->font_matrix.y0;
 
     _cairo_scaled_font_freeze_cache (scaled_font);
-    font_private = scaled_font->surface_private;
+    font_private = _cairo_script_font_get (ctx, scaled_font);
 
     _cairo_output_stream_printf (ctx->stream,
 				 "[%f %f ",
@@ -3134,7 +3395,7 @@ _cairo_script_surface_show_text_glyphs (void			    *abstract_surface,
 		goto BAIL;
 	    }
 
-	    if ((long unsigned) scaled_glyph->surface_private > 256)
+	    if ((long unsigned) scaled_glyph->dev_private > 256)
 		break;
 	}
     }
@@ -3152,8 +3413,10 @@ _cairo_script_surface_show_text_glyphs (void			    *abstract_surface,
 					     glyphs[n].index,
 					     CAIRO_SCALED_GLYPH_INFO_METRICS,
 					     &scaled_glyph);
-	if (unlikely (status))
+	if (unlikely (status)) {
+	    _cairo_scaled_font_thaw_cache (scaled_font);
 	    goto BAIL;
+	}
 
 	if (fabs (glyphs[n].x - x) > 1e-5 || fabs (glyphs[n].y - y) > 1e-5) {
 	    if (fabs (glyphs[n].y - y) < 1e-5) {
@@ -3203,7 +3466,7 @@ _cairo_script_surface_show_text_glyphs (void			    *abstract_surface,
 	    if (font_private->has_sfnt)
 		c = glyphs[n].index;
 	    else
-		c = (uint8_t) (long unsigned) scaled_glyph->surface_private;
+		c = (uint8_t) (long unsigned) scaled_glyph->dev_private;
 
 	    _cairo_output_stream_write (base85_stream, &c, 1);
 	} else {
@@ -3212,7 +3475,7 @@ _cairo_script_surface_show_text_glyphs (void			    *abstract_surface,
 					     glyphs[n].index);
 	    else
 		_cairo_output_stream_printf (ctx->stream, " %lu",
-					     (long unsigned) scaled_glyph->surface_private);
+					     (long unsigned) scaled_glyph->dev_private);
 	}
 
         dx = scaled_glyph->metrics.x_advance;
@@ -3326,44 +3589,35 @@ _cairo_script_surface_get_extents (void *abstract_surface,
 static const cairo_surface_backend_t
 _cairo_script_surface_backend = {
     CAIRO_SURFACE_TYPE_SCRIPT,
-    _cairo_script_surface_create_similar,
     _cairo_script_surface_finish,
+
+    _cairo_default_context_create,
+
+    _cairo_script_surface_create_similar,
+    NULL, /* create similar image */
+    NULL, /* map to image */
+    NULL, /* unmap image */
+
+    _cairo_script_surface_source,
     _cairo_script_surface_acquire_source_image,
     _cairo_script_surface_release_source_image,
-    NULL, /* acquire_dest_image */
-    NULL, /* release_dest_image */
-    NULL, /* clone_similar */
-    NULL, /* composite */
-    NULL, /* fill_rectangles */
-    NULL, /* composite_trapezoids */
-    NULL, /* create_span_renderer */
-    NULL, /* check_span_renderer */
+    _cairo_script_surface_snapshot,
+
     _cairo_script_surface_copy_page,
     _cairo_script_surface_show_page,
+
     _cairo_script_surface_get_extents,
-    NULL, /* old_show_glyphs */
     NULL, /* get_font_options */
+
     NULL, /* flush */
     NULL, /* mark_dirty_rectangle */
-    _cairo_script_surface_scaled_font_fini,
-    NULL, /* scaled_glyph_fini */
 
-    /* The 5 high level operations */
     _cairo_script_surface_paint,
     _cairo_script_surface_mask,
     _cairo_script_surface_stroke,
     _cairo_script_surface_fill,
-    NULL,
-
-    _cairo_script_surface_snapshot,
-
-    NULL, /* is_similar */
-    /* XXX need fill-stroke for passthrough */
-    NULL, /* fill_stroke */
-    NULL, /* create_solid_pattern_surface */
-    NULL, /* can_repaint_solid_pattern_surface */
-
-    /* The alternate high-level text operation */
+    NULL, /* fill/stroke */
+    NULL, /* glyphs */
     _cairo_script_surface_has_show_text_glyphs,
     _cairo_script_surface_show_text_glyphs
 };
@@ -3390,10 +3644,9 @@ _cairo_script_implicit_context_init (cairo_script_implicit_context_t *cr)
 static void
 _cairo_script_implicit_context_reset (cairo_script_implicit_context_t *cr)
 {
-    if (cr->current_style.dash != NULL) {
-	free (cr->current_style.dash);
-	cr->current_style.dash = NULL;
-    }
+    free (cr->current_style.dash);
+    cr->current_style.dash = NULL;
+
     _cairo_pattern_fini (&cr->current_source.base);
     _cairo_path_fixed_fini (&cr->current_path);
 
@@ -3403,8 +3656,7 @@ _cairo_script_implicit_context_reset (cairo_script_implicit_context_t *cr)
 static cairo_script_surface_t *
 _cairo_script_surface_create_internal (cairo_script_context_t *ctx,
 				       cairo_content_t content,
-				       double width,
-				       double height,
+				       cairo_rectangle_t *extents,
 				       cairo_surface_t *passthrough)
 {
     cairo_script_surface_t *surface;
@@ -3412,22 +3664,28 @@ _cairo_script_surface_create_internal (cairo_script_context_t *ctx,
     if (unlikely (ctx == NULL))
 	return (cairo_script_surface_t *) _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NULL_POINTER));
 
-    surface = malloc (sizeof (cairo_script_surface_t));
+    surface = _cairo_malloc (sizeof (cairo_script_surface_t));
     if (unlikely (surface == NULL))
 	return (cairo_script_surface_t *) _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
 
     _cairo_surface_init (&surface->base,
 			 &_cairo_script_surface_backend,
 			 &ctx->base,
-			 content);
+			 content,
+			 TRUE); /* is_vector */
 
     _cairo_surface_wrapper_init (&surface->wrapper, passthrough);
 
     _cairo_surface_clipper_init (&surface->clipper,
 				 _cairo_script_surface_clipper_intersect_clip_path);
 
-    surface->width = width;
-    surface->height = height;
+    surface->width = surface->height = -1;
+    if (extents) {
+	surface->width = extents->width;
+	surface->height = extents->height;
+	cairo_surface_set_device_offset (&surface->base,
+					 -extents->x, -extents->y);
+    }
 
     surface->emitted = FALSE;
     surface->defined = FALSE;
@@ -3450,12 +3708,12 @@ static const cairo_device_backend_t _cairo_script_device_backend = {
     _device_destroy
 };
 
-static cairo_device_t *
+cairo_device_t *
 _cairo_script_context_create_internal (cairo_output_stream_t *stream)
 {
     cairo_script_context_t *ctx;
 
-    ctx = malloc (sizeof (cairo_script_context_t));
+    ctx = _cairo_malloc (sizeof (cairo_script_context_t));
     if (unlikely (ctx == NULL))
 	return _cairo_device_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
 
@@ -3471,11 +3729,53 @@ _cairo_script_context_create_internal (cairo_output_stream_t *stream)
     cairo_list_init (&ctx->fonts);
     cairo_list_init (&ctx->defines);
 
-    _cairo_output_stream_puts (ctx->stream, "%!CairoScript\n");
+    ctx->attach_snapshots = TRUE;
 
     return &ctx->base;
 }
 
+void
+_cairo_script_context_attach_snapshots (cairo_device_t *device,
+					cairo_bool_t enable)
+{
+    cairo_script_context_t *ctx;
+
+    ctx = (cairo_script_context_t *) device;
+    ctx->attach_snapshots = enable;
+}
+
+static cairo_device_t *
+_cairo_script_context_create (cairo_output_stream_t *stream)
+{
+    cairo_script_context_t *ctx;
+
+    ctx = (cairo_script_context_t *)
+	_cairo_script_context_create_internal (stream);
+    if (unlikely (ctx->base.status))
+	return &ctx->base;
+
+    ctx->owns_stream = TRUE;
+    _cairo_output_stream_puts (ctx->stream, "%!CairoScript\n");
+    return &ctx->base;
+}
+
+/**
+ * cairo_script_create:
+ * @filename: the name (path) of the file to write the script to
+ *
+ * Creates a output device for emitting the script, used when
+ * creating the individual surfaces.
+ *
+ * Return value: a pointer to the newly created device. The caller
+ * owns the surface and should call cairo_device_destroy() when done
+ * with it.
+ *
+ * This function always returns a valid pointer, but it will return a
+ * pointer to a "nil" device if an error such as out of memory
+ * occurs. You can use cairo_device_status() to check for this.
+ *
+ * Since: 1.12
+ **/
 cairo_device_t *
 cairo_script_create (const char *filename)
 {
@@ -3486,9 +3786,27 @@ cairo_script_create (const char *filename)
     if ((status = _cairo_output_stream_get_status (stream)))
 	return _cairo_device_create_in_error (status);
 
-    return _cairo_script_context_create_internal (stream);
+    return _cairo_script_context_create (stream);
 }
 
+/**
+ * cairo_script_create_for_stream:
+ * @write_func: callback function passed the bytes written to the script
+ * @closure: user data to be passed to the callback
+ *
+ * Creates a output device for emitting the script, used when
+ * creating the individual surfaces.
+ *
+ * Return value: a pointer to the newly created device. The caller
+ * owns the surface and should call cairo_device_destroy() when done
+ * with it.
+ *
+ * This function always returns a valid pointer, but it will return a
+ * pointer to a "nil" device if an error such as out of memory
+ * occurs. You can use cairo_device_status() to check for this.
+ *
+ * Since: 1.12
+ **/
 cairo_device_t *
 cairo_script_create_for_stream (cairo_write_func_t	 write_func,
 				void			*closure)
@@ -3500,15 +3818,25 @@ cairo_script_create_for_stream (cairo_write_func_t	 write_func,
     if ((status = _cairo_output_stream_get_status (stream)))
 	return _cairo_device_create_in_error (status);
 
-    return _cairo_script_context_create_internal (stream);
+    return _cairo_script_context_create (stream);
 }
 
+/**
+ * cairo_script_write_comment:
+ * @script: the script (output device)
+ * @comment: the string to emit
+ * @len:the length of the string to write, or -1 to use strlen()
+ *
+ * Emit a string verbatim into the script.
+ *
+ * Since: 1.12
+ **/
 void
-cairo_script_write_comment (cairo_device_t *device,
+cairo_script_write_comment (cairo_device_t *script,
 			    const char *comment,
 			    int len)
 {
-    cairo_script_context_t *context = (cairo_script_context_t *) device;
+    cairo_script_context_t *context = (cairo_script_context_t *) script;
 
     if (len < 0)
 	len = strlen (comment);
@@ -3518,80 +3846,158 @@ cairo_script_write_comment (cairo_device_t *device,
     _cairo_output_stream_puts (context->stream, "\n");
 }
 
+/**
+ * cairo_script_set_mode:
+ * @script: The script (output device)
+ * @mode: the new mode
+ *
+ * Change the output mode of the script
+ *
+ * Since: 1.12
+ **/
 void
-cairo_script_set_mode (cairo_device_t *device,
+cairo_script_set_mode (cairo_device_t *script,
 		       cairo_script_mode_t mode)
 {
-    cairo_script_context_t *context = (cairo_script_context_t *) device;
+    cairo_script_context_t *context = (cairo_script_context_t *) script;
 
     context->mode = mode;
 }
 
+/**
+ * cairo_script_get_mode:
+ * @script: The script (output device) to query
+ *
+ * Queries the script for its current output mode.
+ *
+ * Return value: the current output mode of the script
+ *
+ * Since: 1.12
+ **/
 cairo_script_mode_t
-cairo_script_get_mode (cairo_device_t *device)
+cairo_script_get_mode (cairo_device_t *script)
 {
-    cairo_script_context_t *context = (cairo_script_context_t *) device;
+    cairo_script_context_t *context = (cairo_script_context_t *) script;
 
     return context->mode;
 }
 
+/**
+ * cairo_script_surface_create:
+ * @script: the script (output device)
+ * @content: the content of the surface
+ * @width: width in pixels
+ * @height: height in pixels
+ *
+ * Create a new surface that will emit its rendering through @script
+ *
+ * Return value: a pointer to the newly created surface. The caller
+ * owns the surface and should call cairo_surface_destroy() when done
+ * with it.
+ *
+ * This function always returns a valid pointer, but it will return a
+ * pointer to a "nil" surface if an error such as out of memory
+ * occurs. You can use cairo_surface_status() to check for this.
+ *
+ * Since: 1.12
+ **/
 cairo_surface_t *
-cairo_script_surface_create (cairo_device_t *device,
+cairo_script_surface_create (cairo_device_t *script,
 			     cairo_content_t content,
 			     double width,
 			     double height)
 {
-    if (unlikely (device->backend->type != CAIRO_DEVICE_TYPE_SCRIPT))
+    cairo_rectangle_t *extents, r;
+
+    if (unlikely (script->backend->type != CAIRO_DEVICE_TYPE_SCRIPT))
 	return _cairo_surface_create_in_error (CAIRO_STATUS_DEVICE_TYPE_MISMATCH);
 
-    if (unlikely (device->status))
-	return _cairo_surface_create_in_error (device->status);
+    if (unlikely (script->status))
+	return _cairo_surface_create_in_error (script->status);
 
-    return &_cairo_script_surface_create_internal ((cairo_script_context_t *) device,
-						   content,
-						   width, height,
+    extents = NULL;
+    if (width > 0 && height > 0) {
+	r.x = r.y = 0;
+	r.width  = width;
+	r.height = height;
+	extents = &r;
+    }
+    return &_cairo_script_surface_create_internal ((cairo_script_context_t *) script,
+						   content, extents,
 						   NULL)->base;
 }
+slim_hidden_def (cairo_script_surface_create);
 
+/**
+ * cairo_script_surface_create_for_target:
+ * @script: the script (output device)
+ * @target: a target surface to wrap
+ *
+ * Create a pxoy surface that will render to @target and record
+ * the operations to @device.
+ *
+ * Return value: a pointer to the newly created surface. The caller
+ * owns the surface and should call cairo_surface_destroy() when done
+ * with it.
+ *
+ * This function always returns a valid pointer, but it will return a
+ * pointer to a "nil" surface if an error such as out of memory
+ * occurs. You can use cairo_surface_status() to check for this.
+ *
+ * Since: 1.12
+ **/
 cairo_surface_t *
-cairo_script_surface_create_for_target (cairo_device_t *device,
+cairo_script_surface_create_for_target (cairo_device_t *script,
 					cairo_surface_t *target)
 {
     cairo_rectangle_int_t extents;
+    cairo_rectangle_t rect, *r;
 
-    if (unlikely (device->backend->type != CAIRO_DEVICE_TYPE_SCRIPT))
+    if (unlikely (script->backend->type != CAIRO_DEVICE_TYPE_SCRIPT))
 	return _cairo_surface_create_in_error (CAIRO_STATUS_DEVICE_TYPE_MISMATCH);
 
-    if (unlikely (device->status))
-	return _cairo_surface_create_in_error (device->status);
+    if (unlikely (script->status))
+	return _cairo_surface_create_in_error (script->status);
 
     if (unlikely (target->status))
 	return _cairo_surface_create_in_error (target->status);
 
-    if (! _cairo_surface_get_extents (target, &extents))
-	extents.width = extents.height = -1;
-
-    return &_cairo_script_surface_create_internal ((cairo_script_context_t *) device,
-						   target->content,
-						   extents.width,
-						   extents.height,
+    r = NULL;
+    if (_cairo_surface_get_extents (target, &extents)) {
+	rect.x = rect.y = 0;
+	rect.width = extents.width;
+	rect.height = extents.height;
+	r= &rect;
+    }
+    return &_cairo_script_surface_create_internal ((cairo_script_context_t *) script,
+						   target->content, r,
 						   target)->base;
 }
 
+/**
+ * cairo_script_from_recording_surface:
+ * @script: the script (output device)
+ * @recording_surface: the recording surface to replay
+ *
+ * Converts the record operations in @recording_surface into a script.
+ *
+ * Return value: #CAIRO_STATUS_SUCCESS on successful completion or an error code.
+ *
+ * Since: 1.12
+ **/
 cairo_status_t
-cairo_script_from_recording_surface (cairo_device_t *device,
+cairo_script_from_recording_surface (cairo_device_t *script,
 				     cairo_surface_t *recording_surface)
 {
-    cairo_box_t bbox;
-    cairo_rectangle_int_t extents;
+    cairo_rectangle_t r, *extents;
     cairo_surface_t *surface;
     cairo_status_t status;
 
-    if (unlikely (device->backend->type != CAIRO_DEVICE_TYPE_SCRIPT))
+    if (unlikely (script->backend->type != CAIRO_DEVICE_TYPE_SCRIPT))
 	return _cairo_error (CAIRO_STATUS_DEVICE_TYPE_MISMATCH);
 
-    if (unlikely (device->status))
-	return _cairo_error (device->status);
+    if (unlikely (script->status))
+	return _cairo_error (script->status);
 
     if (unlikely (recording_surface->status))
 	return recording_surface->status;
@@ -3599,22 +4005,17 @@ cairo_script_from_recording_surface (cairo_device_t *device,
     if (unlikely (! _cairo_surface_is_recording (recording_surface)))
 	return _cairo_error (CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
 
-    status = _cairo_recording_surface_get_bbox ((cairo_recording_surface_t *) recording_surface,
-					   &bbox, NULL);
-    if (unlikely (status))
-	return status;
+    extents = NULL;
+    if (_cairo_recording_surface_get_bounds (recording_surface, &r))
+	extents = &r;
 
-    _cairo_box_round_to_rectangle (&bbox, &extents);
-
-    surface = &_cairo_script_surface_create_internal ((cairo_script_context_t *) device,
+    surface = &_cairo_script_surface_create_internal ((cairo_script_context_t *) script,
 						      recording_surface->content,
-						      extents.width,
-						      extents.height,
+						      extents,
 						      NULL)->base;
     if (unlikely (surface->status))
 	return surface->status;
 
-    cairo_surface_set_device_offset (surface, -extents.x, -extents.y);
     status = _cairo_recording_surface_replay (recording_surface, surface);
     cairo_surface_destroy (surface);
 

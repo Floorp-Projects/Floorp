@@ -35,95 +35,20 @@
 
 #include "cairoint.h"
 
+#if !CAIRO_HAS_XLIB_XCB_FUNCTIONS
+
 #include "cairo-xlib-private.h"
 #include "cairo-xlib-xrender-private.h"
 #include "cairo-freelist-private.h"
 #include "cairo-error-private.h"
+#include "cairo-list-inline.h"
 
 #include <X11/Xlibint.h>	/* For XESetCloseDisplay */
 
 typedef int (*cairo_xlib_error_func_t) (Display     *display,
 					XErrorEvent *event);
 
-struct _cairo_xlib_job {
-    cairo_xlib_job_t *next;
-    enum {
-	RESOURCE,
-	WORK
-    } type;
-    union {
-	struct {
-	    cairo_xlib_notify_resource_func notify;
-	    XID xid;
-	} resource;
-	struct {
-	    cairo_xlib_notify_func notify;
-	    void *data;
-	    void (*destroy) (void *);
-	} work;
-    } func;
-};
-
 static cairo_xlib_display_t *_cairo_xlib_display_list;
-
-static void
-_cairo_xlib_remove_close_display_hook_internal (cairo_xlib_display_t *display,
-						cairo_xlib_hook_t *hook);
-
-static void
-_cairo_xlib_call_close_display_hooks (cairo_xlib_display_t *display)
-{
-    cairo_xlib_screen_t *screen;
-    cairo_xlib_hook_t *hook;
-
-    cairo_list_foreach_entry (screen, cairo_xlib_screen_t, &display->screens, link)
-	_cairo_xlib_screen_close_display (display, screen);
-
-    while (TRUE) {
-	hook = display->close_display_hooks;
-	if (hook == NULL)
-	    break;
-
-	_cairo_xlib_remove_close_display_hook_internal (display, hook);
-
-	hook->func (display, hook);
-    }
-    display->closed = TRUE;
-}
-
-static void
-_cairo_xlib_display_finish (void *abstract_display)
-{
-    cairo_xlib_display_t *display = abstract_display;
-
-    display->display = NULL;
-}
-
-static void
-_cairo_xlib_display_destroy (void *abstract_display)
-{
-    cairo_xlib_display_t *display = abstract_display;
-
-    /* destroy all outstanding notifies */
-    while (display->workqueue != NULL) {
-	cairo_xlib_job_t *job = display->workqueue;
-	display->workqueue = job->next;
-
-	if (job->type == WORK && job->func.work.destroy != NULL)
-	    job->func.work.destroy (job->func.work.data);
-
-	_cairo_freelist_free (&display->wq_freelist, job);
-    }
-    _cairo_freelist_fini (&display->wq_freelist);
-
-    while (! cairo_list_is_empty (&display->screens)) {
-	_cairo_xlib_screen_destroy (cairo_list_first_entry (&display->screens,
-                                                            cairo_xlib_screen_t,
-                                                            link));
-    }
-
-    free (display);
-}
 
 static int
 _noop_error_handler (Display     *display,
@@ -133,63 +58,52 @@ _noop_error_handler (Display     *display,
 }
 
 static void
-_cairo_xlib_display_notify (cairo_xlib_display_t *display)
+_cairo_xlib_display_finish (void *abstract_display)
 {
-    cairo_xlib_job_t *jobs, *job, *freelist;
+    cairo_xlib_display_t *display = abstract_display;
     Display *dpy = display->display;
 
-    /* Optimistic atomic pointer read -- don't care if it is wrong due to
-     * contention as we will check again very shortly.
-     */
-    if (display->workqueue == NULL)
-	return;
+    _cairo_xlib_display_fini_shm (display);
 
-    jobs = display->workqueue;
-    while (jobs != NULL) {
-	display->workqueue = NULL;
+    if (! cairo_device_acquire (&display->base)) {
+	cairo_xlib_error_func_t old_handler;
 
-	/* reverse the list to obtain FIFO order */
-	job = NULL;
-	do {
-	    cairo_xlib_job_t *next = jobs->next;
-	    jobs->next = job;
-	    job = jobs;
-	    jobs = next;
-	} while (jobs != NULL);
-	freelist = jobs = job;
+	/* protect the notifies from triggering XErrors */
+	XSync (dpy, False);
+	old_handler = XSetErrorHandler (_noop_error_handler);
 
-	do {
-	    job = jobs;
-	    jobs = job->next;
+	while (! cairo_list_is_empty (&display->fonts)) {
+	    _cairo_xlib_font_close (cairo_list_first_entry (&display->fonts,
+							    cairo_xlib_font_t,
+							    link));
+	}
 
-	    switch (job->type){
-	    case WORK:
-		job->func.work.notify (dpy, job->func.work.data);
-		if (job->func.work.destroy != NULL)
-		    job->func.work.destroy (job->func.work.data);
-		break;
+	while (! cairo_list_is_empty (&display->screens)) {
+	    _cairo_xlib_screen_destroy (display,
+					cairo_list_first_entry (&display->screens,
+								cairo_xlib_screen_t,
+								link));
+	}
 
-	    case RESOURCE:
-		job->func.resource.notify (dpy, job->func.resource.xid);
-		break;
-	    }
-	} while (jobs != NULL);
+	XSync (dpy, False);
+	XSetErrorHandler (old_handler);
 
-	do {
-	    job = freelist;
-	    freelist = job->next;
-	    _cairo_freelist_free (&display->wq_freelist, job);
-	} while (freelist != NULL);
-
-	jobs = display->workqueue;
+	cairo_device_release (&display->base);
     }
+}
+
+static void
+_cairo_xlib_display_destroy (void *abstract_display)
+{
+    cairo_xlib_display_t *display = abstract_display;
+
+    free (display);
 }
 
 static int
 _cairo_xlib_close_display (Display *dpy, XExtCodes *codes)
 {
     cairo_xlib_display_t *display, **prev, *next;
-    cairo_xlib_error_func_t old_handler;
 
     CAIRO_MUTEX_LOCK (_cairo_xlib_display_mutex);
     for (display = _cairo_xlib_display_list; display; display = display->next)
@@ -199,22 +113,7 @@ _cairo_xlib_close_display (Display *dpy, XExtCodes *codes)
     if (display == NULL)
 	return 0;
 
-    if (! cairo_device_acquire (&display->base)) {
-      /* protect the notifies from triggering XErrors */
-      XSync (dpy, False);
-      old_handler = XSetErrorHandler (_noop_error_handler);
-
-      _cairo_xlib_display_notify (display);
-      _cairo_xlib_call_close_display_hooks (display);
-
-      /* catch any that arrived before marking the display as closed */
-      _cairo_xlib_display_notify (display);
-
-      XSync (dpy, False);
-      XSetErrorHandler (old_handler);
-
-      cairo_device_release (&display->base);
-    }
+    cairo_device_finish (&display->base);
 
     /*
      * Unhook from the global list
@@ -231,9 +130,7 @@ _cairo_xlib_close_display (Display *dpy, XExtCodes *codes)
     }
     CAIRO_MUTEX_UNLOCK (_cairo_xlib_display_mutex);
 
-    assert (display != NULL);
-
-    cairo_device_finish (&display->base);
+    display->display = NULL; /* catch any later invalid access */
     cairo_device_destroy (&display->base);
 
     /* Return value in accordance with requirements of
@@ -252,8 +149,22 @@ static const cairo_device_backend_t _cairo_xlib_device_backend = {
     _cairo_xlib_display_destroy,
 };
 
+static void _cairo_xlib_display_select_compositor (cairo_xlib_display_t *display)
+{
+#if 1
+    if (display->render_major > 0 || display->render_minor >= 4)
+	display->compositor = _cairo_xlib_traps_compositor_get ();
+    else if (display->render_major > 0 || display->render_minor >= 0)
+	display->compositor = _cairo_xlib_mask_compositor_get ();
+    else
+	display->compositor = _cairo_xlib_core_compositor_get ();
+#else
+    display->compositor = _cairo_xlib_fallback_compositor_get ();
+#endif
+}
+
 /**
- * cairo_xlib_device_create:
+ * _cairo_xlib_device_create:
  * @dpy: the display to create the device for
  *
  * Gets the device belonging to @dpy, or creates it if it doesn't exist yet.
@@ -268,8 +179,6 @@ _cairo_xlib_device_create (Display *dpy)
     cairo_device_t *device;
     XExtCodes *codes;
     const char *env;
-
-    static int buggy_repeat_force = -1;
 
     CAIRO_MUTEX_INITIALIZE ();
 
@@ -298,11 +207,18 @@ _cairo_xlib_device_create (Display *dpy)
 	}
     }
 
-    display = malloc (sizeof (cairo_xlib_display_t));
+    display = _cairo_malloc (sizeof (cairo_xlib_display_t));
     if (unlikely (display == NULL)) {
 	device = _cairo_device_create_in_error (CAIRO_STATUS_NO_MEMORY);
 	goto UNLOCK;
     }
+
+    _cairo_device_init (&display->base, &_cairo_xlib_device_backend);
+
+    display->display = dpy;
+    cairo_list_init (&display->screens);
+    cairo_list_init (&display->fonts);
+    display->closed = FALSE;
 
     /* Xlib calls out to the extension close_display hooks in LIFO
      * order. So we have to ensure that all extensions that we depend
@@ -329,28 +245,20 @@ _cairo_xlib_device_create (Display *dpy)
 	}
     }
 
-    codes = XAddExtension (dpy);
-    if (unlikely (codes == NULL)) {
-	device = _cairo_device_create_in_error (CAIRO_STATUS_NO_MEMORY);
-	free (display);
-	goto UNLOCK;
-    }
+    _cairo_xlib_display_select_compositor (display);
 
-    _cairo_device_init (&display->base, &_cairo_xlib_device_backend);
-
-    XESetCloseDisplay (dpy, codes->extension, _cairo_xlib_close_display);
-
-    _cairo_freelist_init (&display->wq_freelist, sizeof (cairo_xlib_job_t));
-
-    cairo_device_reference (&display->base); /* add one for the CloseDisplay */
-    display->display = dpy;
-    cairo_list_init (&display->screens);
-    display->workqueue = NULL;
-    display->close_display_hooks = NULL;
-    display->closed = FALSE;
+    display->white = NULL;
+    memset (display->alpha, 0, sizeof (display->alpha));
+    memset (display->solid, 0, sizeof (display->solid));
+    memset (display->solid_cache, 0, sizeof (display->solid_cache));
+    memset (display->last_solid_cache, 0, sizeof (display->last_solid_cache));
 
     memset (display->cached_xrender_formats, 0,
 	    sizeof (display->cached_xrender_formats));
+
+    display->force_precision = -1;
+
+    _cairo_xlib_display_init_shm (display);
 
     /* Prior to Render 0.10, there is no protocol support for gradients and
      * we call function stubs instead, which would silently consume the drawing.
@@ -383,7 +291,7 @@ _cairo_xlib_device_create (Display *dpy)
      *
      *    1. The original bug that led to the buggy_repeat
      *    workaround. This was a bug that Owen Taylor investigated,
-     *    understood well, and characterized against carious X
+     *    understood well, and characterized against various X
      *    servers. Confirmed X servers with this bug include:
      *
      *		"XFree86" <= 40500000
@@ -407,7 +315,7 @@ _cairo_xlib_device_create (Display *dpy)
      *    safest to just blacklist all old-versioning-scheme X servers,
      *    (just using VendorRelease < 70000000), as buggy_repeat=TRUE.
      */
-    if (strstr (ServerVendor (dpy), "X.Org") != NULL) {
+    if (_cairo_xlib_vendor_is_xorg (dpy)) {
 	if (VendorRelease (dpy) >= 60700000) {
 	    if (VendorRelease (dpy) < 70000000)
 		display->buggy_repeat = TRUE;
@@ -434,29 +342,15 @@ _cairo_xlib_device_create (Display *dpy)
 	display->buggy_pad_reflect = TRUE;
     }
 
-    /* gradients don't seem to work */
-    display->buggy_gradients = TRUE;
-
-
-    /* XXX workaround; see https://bugzilla.mozilla.org/show_bug.cgi?id=413583 */
-    /* If buggy_repeat_force == -1, then initialize.
-     *    - set to -2, meaning "nothing was specified", and we trust the above detection.
-     *    - if MOZ_CAIRO_BUGGY_REPEAT is '0' (exactly), then force buggy repeat off
-     *    - if MOZ_CAIRO_BUGGY_REPEAT is '1' (exactly), then force buggy repeat on
-     */
-    if (buggy_repeat_force == -1) {
-        const char *flag = getenv("MOZ_CAIRO_FORCE_BUGGY_REPEAT");
-
-        buggy_repeat_force = -2;
-
-        if (flag && flag[0] == '0')
-            buggy_repeat_force = 0;
-        else if (flag && flag[0] == '1')
-            buggy_repeat_force = 1;
+    codes = XAddExtension (dpy);
+    if (unlikely (codes == NULL)) {
+	device = _cairo_device_create_in_error (CAIRO_STATUS_NO_MEMORY);
+	free (display);
+	goto UNLOCK;
     }
 
-    if (buggy_repeat_force != -2)
-        display->buggy_repeat = (buggy_repeat_force == 1);
+    XESetCloseDisplay (dpy, codes->extension, _cairo_xlib_close_display);
+    cairo_device_reference (&display->base); /* add one for the CloseDisplay */
 
     display->next = _cairo_xlib_display_list;
     _cairo_xlib_display_list = display;
@@ -466,92 +360,6 @@ _cairo_xlib_device_create (Display *dpy)
 UNLOCK:
     CAIRO_MUTEX_UNLOCK (_cairo_xlib_display_mutex);
     return device;
-}
-
-void
-_cairo_xlib_add_close_display_hook (cairo_xlib_display_t	*display,
-				    cairo_xlib_hook_t		*hook)
-{
-    hook->prev = NULL;
-    hook->next = display->close_display_hooks;
-    if (hook->next != NULL)
-	hook->next->prev = hook;
-    display->close_display_hooks = hook;
-}
-
-static void
-_cairo_xlib_remove_close_display_hook_internal (cairo_xlib_display_t *display,
-						cairo_xlib_hook_t *hook)
-{
-    if (display->close_display_hooks == hook)
-	display->close_display_hooks = hook->next;
-    else if (hook->prev != NULL)
-	hook->prev->next = hook->next;
-
-    if (hook->next != NULL)
-	hook->next->prev = hook->prev;
-
-    hook->prev = NULL;
-    hook->next = NULL;
-}
-
-void
-_cairo_xlib_remove_close_display_hook (cairo_xlib_display_t	*display,
-				       cairo_xlib_hook_t	*hook)
-{
-    _cairo_xlib_remove_close_display_hook_internal (display, hook);
-}
-
-cairo_status_t
-_cairo_xlib_display_queue_resource (cairo_xlib_display_t *display,
-	                            cairo_xlib_notify_resource_func notify,
-				    XID xid)
-{
-    cairo_xlib_job_t *job;
-    cairo_status_t status = CAIRO_STATUS_NO_MEMORY;
-
-    if (display->closed == FALSE) {
-	job = _cairo_freelist_alloc (&display->wq_freelist);
-	if (job != NULL) {
-	    job->type = RESOURCE;
-	    job->func.resource.xid = xid;
-	    job->func.resource.notify = notify;
-
-	    job->next = display->workqueue;
-	    display->workqueue = job;
-
-	    status = CAIRO_STATUS_SUCCESS;
-	}
-    }
-
-    return status;
-}
-
-cairo_status_t
-_cairo_xlib_display_queue_work (cairo_xlib_display_t *display,
-	                        cairo_xlib_notify_func notify,
-				void *data,
-				void (*destroy) (void *))
-{
-    cairo_xlib_job_t *job;
-    cairo_status_t status = CAIRO_STATUS_NO_MEMORY;
-
-    if (display->closed == FALSE) {
-	job = _cairo_freelist_alloc (&display->wq_freelist);
-	if (job != NULL) {
-	    job->type = WORK;
-	    job->func.work.data    = data;
-	    job->func.work.notify  = notify;
-	    job->func.work.destroy = destroy;
-
-	    job->next = display->workqueue;
-	    display->workqueue = job;
-
-	    status = CAIRO_STATUS_SUCCESS;
-	}
-    }
-
-    return status;
 }
 
 cairo_status_t
@@ -564,8 +372,121 @@ _cairo_xlib_display_acquire (cairo_device_t *device, cairo_xlib_display_t **disp
         return status;
 
     *display = (cairo_xlib_display_t *) device;
-    _cairo_xlib_display_notify (*display);
-    return status;
+    return CAIRO_STATUS_SUCCESS;
+}
+
+XRenderPictFormat *
+_cairo_xlib_display_get_xrender_format_for_pixman(cairo_xlib_display_t *display,
+						  pixman_format_code_t format)
+{
+    Display *dpy = display->display;
+    XRenderPictFormat tmpl;
+    int mask;
+
+    /* No equivalent in X11 yet. */
+    if (format == PIXMAN_rgba_float || format == PIXMAN_rgb_float)
+	return NULL;
+
+#define MASK(x) ((1<<(x))-1)
+
+    tmpl.depth = PIXMAN_FORMAT_DEPTH(format);
+    mask = PictFormatType | PictFormatDepth;
+
+    switch (PIXMAN_FORMAT_TYPE(format)) {
+    case PIXMAN_TYPE_ARGB:
+	tmpl.type = PictTypeDirect;
+
+	tmpl.direct.alphaMask = MASK(PIXMAN_FORMAT_A(format));
+	if (PIXMAN_FORMAT_A(format))
+	    tmpl.direct.alpha = (PIXMAN_FORMAT_R(format) +
+				 PIXMAN_FORMAT_G(format) +
+				 PIXMAN_FORMAT_B(format));
+
+	tmpl.direct.redMask = MASK(PIXMAN_FORMAT_R(format));
+	tmpl.direct.red = (PIXMAN_FORMAT_G(format) +
+			   PIXMAN_FORMAT_B(format));
+
+	tmpl.direct.greenMask = MASK(PIXMAN_FORMAT_G(format));
+	tmpl.direct.green = PIXMAN_FORMAT_B(format);
+
+	tmpl.direct.blueMask = MASK(PIXMAN_FORMAT_B(format));
+	tmpl.direct.blue = 0;
+
+	mask |= PictFormatRed | PictFormatRedMask;
+	mask |= PictFormatGreen | PictFormatGreenMask;
+	mask |= PictFormatBlue | PictFormatBlueMask;
+	mask |= PictFormatAlpha | PictFormatAlphaMask;
+	break;
+
+    case PIXMAN_TYPE_ABGR:
+	tmpl.type = PictTypeDirect;
+
+	tmpl.direct.alphaMask = MASK(PIXMAN_FORMAT_A(format));
+	if (tmpl.direct.alphaMask)
+	    tmpl.direct.alpha = (PIXMAN_FORMAT_B(format) +
+				 PIXMAN_FORMAT_G(format) +
+				 PIXMAN_FORMAT_R(format));
+
+	tmpl.direct.blueMask = MASK(PIXMAN_FORMAT_B(format));
+	tmpl.direct.blue = (PIXMAN_FORMAT_G(format) +
+			    PIXMAN_FORMAT_R(format));
+
+	tmpl.direct.greenMask = MASK(PIXMAN_FORMAT_G(format));
+	tmpl.direct.green = PIXMAN_FORMAT_R(format);
+
+	tmpl.direct.redMask = MASK(PIXMAN_FORMAT_R(format));
+	tmpl.direct.red = 0;
+
+	mask |= PictFormatRed | PictFormatRedMask;
+	mask |= PictFormatGreen | PictFormatGreenMask;
+	mask |= PictFormatBlue | PictFormatBlueMask;
+	mask |= PictFormatAlpha | PictFormatAlphaMask;
+	break;
+
+    case PIXMAN_TYPE_BGRA:
+	tmpl.type = PictTypeDirect;
+
+	tmpl.direct.blueMask = MASK(PIXMAN_FORMAT_B(format));
+	tmpl.direct.blue = (PIXMAN_FORMAT_BPP(format) - PIXMAN_FORMAT_B(format));
+
+	tmpl.direct.greenMask = MASK(PIXMAN_FORMAT_G(format));
+	tmpl.direct.green = (PIXMAN_FORMAT_BPP(format) - PIXMAN_FORMAT_B(format) -
+			     PIXMAN_FORMAT_G(format));
+
+	tmpl.direct.redMask = MASK(PIXMAN_FORMAT_R(format));
+	tmpl.direct.red = (PIXMAN_FORMAT_BPP(format) - PIXMAN_FORMAT_B(format) -
+			   PIXMAN_FORMAT_G(format) - PIXMAN_FORMAT_R(format));
+
+	tmpl.direct.alphaMask = MASK(PIXMAN_FORMAT_A(format));
+	tmpl.direct.alpha = 0;
+
+	mask |= PictFormatRed | PictFormatRedMask;
+	mask |= PictFormatGreen | PictFormatGreenMask;
+	mask |= PictFormatBlue | PictFormatBlueMask;
+	mask |= PictFormatAlpha | PictFormatAlphaMask;
+	break;
+
+    case PIXMAN_TYPE_A:
+	tmpl.type = PictTypeDirect;
+
+	tmpl.direct.alpha = 0;
+	tmpl.direct.alphaMask = MASK(PIXMAN_FORMAT_A(format));
+
+	mask |= PictFormatAlpha | PictFormatAlphaMask;
+	break;
+
+    case PIXMAN_TYPE_COLOR:
+    case PIXMAN_TYPE_GRAY:
+	/* XXX Find matching visual/colormap */
+	tmpl.type = PictTypeIndexed;
+	//tmpl.colormap = screen->visuals[PIXMAN_FORMAT_VIS(format)].vid;
+	//mask |= PictFormatColormap;
+	return NULL;
+    }
+#undef MASK
+
+    /* XXX caching? */
+    return XRenderFindFormat(dpy, mask, &tmpl, 0);
 }
 
 XRenderPictFormat *
@@ -574,15 +495,9 @@ _cairo_xlib_display_get_xrender_format (cairo_xlib_display_t	*display,
 {
     XRenderPictFormat *xrender_format;
 
-#if ! ATOMIC_OP_NEEDS_MEMORY_BARRIER
-    xrender_format = display->cached_xrender_formats[format];
-    if (likely (xrender_format != NULL))
-	return xrender_format;
-#endif
-
     xrender_format = display->cached_xrender_formats[format];
     if (xrender_format == NULL) {
-	int pict_format;
+	int pict_format = PictStandardNUM;
 
 	switch (format) {
 	case CAIRO_FORMAT_A1:
@@ -591,34 +506,31 @@ _cairo_xlib_display_get_xrender_format (cairo_xlib_display_t	*display,
 	    pict_format = PictStandardA8; break;
 	case CAIRO_FORMAT_RGB24:
 	    pict_format = PictStandardRGB24; break;
-	case CAIRO_FORMAT_RGB16_565: {
-	    Visual *visual = NULL;
-	    Screen *screen = DefaultScreenOfDisplay(display->display);
-	    int j;
-	    for (j = 0; j < screen->ndepths; j++) {
-	        Depth *d = &screen->depths[j];
-	        if (d->depth == 16 && d->nvisuals && &d->visuals[0]) {
-	            if (d->visuals[0].red_mask   == 0xf800 &&
-	                d->visuals[0].green_mask == 0x7e0 &&
-	                d->visuals[0].blue_mask  == 0x1f)
-	                visual = &d->visuals[0];
-	            break;
-	        }
-	    }
-	    if (!visual)
-	        return NULL;
-	    xrender_format = XRenderFindVisualFormat(display->display, visual);
+	case CAIRO_FORMAT_RGB16_565:
+	    xrender_format = _cairo_xlib_display_get_xrender_format_for_pixman(display,
+									       PIXMAN_r5g6b5);
 	    break;
-	}
+	case CAIRO_FORMAT_RGB30:
+	    xrender_format = _cairo_xlib_display_get_xrender_format_for_pixman(display,
+									       PIXMAN_x2r10g10b10);
+	    break;
+	case CAIRO_FORMAT_RGBA128F:
+	    xrender_format = _cairo_xlib_display_get_xrender_format_for_pixman(display,
+									       PIXMAN_rgba_float);
+	    break;
+	case CAIRO_FORMAT_RGB96F:
+	    xrender_format = _cairo_xlib_display_get_xrender_format_for_pixman(display,
+									       PIXMAN_rgb_float);
+	    break;
 	case CAIRO_FORMAT_INVALID:
 	default:
 	    ASSERT_NOT_REACHED;
 	case CAIRO_FORMAT_ARGB32:
 	    pict_format = PictStandardARGB32; break;
 	}
-	if (!xrender_format)
-	    xrender_format = XRenderFindStandardFormat (display->display,
-		                                        pict_format);
+	if (pict_format != PictStandardNUM)
+	    xrender_format =
+		XRenderFindStandardFormat (display->display, pict_format);
 	display->cached_xrender_formats[format] = xrender_format;
     }
 
@@ -642,14 +554,6 @@ _cairo_xlib_display_get_screen (cairo_xlib_display_t *display,
     return NULL;
 }
 
-void
-_cairo_xlib_display_get_xrender_version (cairo_xlib_display_t *display,
-					 int *major, int *minor)
-{
-    *major = display->render_major;
-    *minor = display->render_minor;
-}
-
 cairo_bool_t
 _cairo_xlib_display_has_repeat (cairo_device_t *device)
 {
@@ -667,3 +571,97 @@ _cairo_xlib_display_has_gradients (cairo_device_t *device)
 {
     return ! ((cairo_xlib_display_t *) device)->buggy_gradients;
 }
+
+/**
+ * cairo_xlib_device_debug_cap_xrender_version:
+ * @device: a #cairo_device_t for the Xlib backend
+ * @major_version: major version to restrict to
+ * @minor_version: minor version to restrict to
+ *
+ * Restricts all future Xlib surfaces for this devices to the specified version
+ * of the RENDER extension. This function exists solely for debugging purpose.
+ * It lets you find out how cairo would behave with an older version of
+ * the RENDER extension.
+ *
+ * Use the special values -1 and -1 for disabling the RENDER extension.
+ *
+ * Since: 1.12
+ **/
+void
+cairo_xlib_device_debug_cap_xrender_version (cairo_device_t *device,
+					     int major_version,
+					     int minor_version)
+{
+    cairo_xlib_display_t *display = (cairo_xlib_display_t *) device;
+
+    if (device == NULL || device->status)
+	return;
+
+    if (device->backend->type != CAIRO_DEVICE_TYPE_XLIB)
+	return;
+
+    if (major_version < display->render_major ||
+	(major_version == display->render_major &&
+	 minor_version < display->render_minor))
+    {
+	display->render_major = major_version;
+	display->render_minor = minor_version;
+    }
+
+    _cairo_xlib_display_select_compositor (display);
+}
+
+/**
+ * cairo_xlib_device_debug_set_precision:
+ * @device: a #cairo_device_t for the Xlib backend
+ * @precision: the precision to use
+ *
+ * Render supports two modes of precision when rendering trapezoids. Set
+ * the precision to the desired mode.
+ *
+ * Since: 1.12
+ **/
+void
+cairo_xlib_device_debug_set_precision (cairo_device_t *device,
+				       int precision)
+{
+    if (device == NULL || device->status)
+	return;
+    if (device->backend->type != CAIRO_DEVICE_TYPE_XLIB) {
+	cairo_status_t status;
+
+	status = _cairo_device_set_error (device, CAIRO_STATUS_DEVICE_TYPE_MISMATCH);
+	(void) status;
+	return;
+    }
+
+    ((cairo_xlib_display_t *) device)->force_precision = precision;
+}
+
+/**
+ * cairo_xlib_device_debug_get_precision:
+ * @device: a #cairo_device_t for the Xlib backend
+ *
+ * Get the Xrender precision mode.
+ *
+ * Returns: the render precision mode
+ *
+ * Since: 1.12
+ **/
+int
+cairo_xlib_device_debug_get_precision (cairo_device_t *device)
+{
+    if (device == NULL || device->status)
+	return -1;
+    if (device->backend->type != CAIRO_DEVICE_TYPE_XLIB) {
+	cairo_status_t status;
+
+	status = _cairo_device_set_error (device, CAIRO_STATUS_DEVICE_TYPE_MISMATCH);
+	(void) status;
+	return -1;
+    }
+
+    return ((cairo_xlib_display_t *) device)->force_precision;
+}
+
+#endif /* !CAIRO_HAS_XLIB_XCB_FUNCTIONS */

@@ -52,6 +52,11 @@ typedef struct _cairo_glx_context {
     Display *display;
     Window dummy_window;
     GLXContext context;
+
+    GLXDrawable previous_drawable;
+    GLXContext previous_context;
+
+    cairo_bool_t has_multithread_makecurrent;
 } cairo_glx_context_t;
 
 typedef struct _cairo_glx_surface {
@@ -60,19 +65,50 @@ typedef struct _cairo_glx_surface {
     Window win;
 } cairo_glx_surface_t;
 
+static cairo_bool_t
+_context_acquisition_changed_glx_state (cairo_glx_context_t *ctx,
+					GLXDrawable current_drawable)
+{
+    return ctx->previous_drawable != current_drawable ||
+	   ctx->previous_context != ctx->context;
+}
+
+static GLXDrawable
+_glx_get_current_drawable (cairo_glx_context_t *ctx)
+{
+    if (ctx->base.current_target == NULL ||
+	_cairo_gl_surface_is_texture (ctx->base.current_target)) {
+	return ctx->dummy_window;
+    }
+
+    return ((cairo_glx_surface_t *) ctx->base.current_target)->win;
+}
+
+static void
+_glx_query_current_state (cairo_glx_context_t * ctx)
+{
+    ctx->previous_drawable = glXGetCurrentDrawable ();
+    ctx->previous_context = glXGetCurrentContext ();
+
+    /* If any of the values were none, assume they are all none. Not all
+       drivers seem well behaved when it comes to using these values across
+       multiple threads. */
+    if (ctx->previous_drawable == None ||
+	ctx->previous_context == None) {
+	ctx->previous_drawable = None;
+	ctx->previous_context = None;
+    }
+}
+
 static void
 _glx_acquire (void *abstract_ctx)
 {
     cairo_glx_context_t *ctx = abstract_ctx;
-    GLXDrawable current_drawable;
+    GLXDrawable current_drawable = _glx_get_current_drawable (ctx);
 
-    if (ctx->base.current_target == NULL ||
-        _cairo_gl_surface_is_texture (ctx->base.current_target)) {
-        current_drawable = ctx->dummy_window;
-    } else {
-        cairo_glx_surface_t *surface = (cairo_glx_surface_t *) ctx->base.current_target;
-        current_drawable = surface->win;
-    }
+    _glx_query_current_state (ctx);
+    if (!_context_acquisition_changed_glx_state (ctx, current_drawable))
+	return;
 
     glXMakeCurrent (ctx->display, current_drawable, ctx->context);
 }
@@ -91,6 +127,12 @@ static void
 _glx_release (void *abstract_ctx)
 {
     cairo_glx_context_t *ctx = abstract_ctx;
+
+    if (ctx->has_multithread_makecurrent || !ctx->base.thread_aware ||
+	!_context_acquisition_changed_glx_state (ctx,
+						_glx_get_current_drawable (ctx))) {
+	return;
+    }
 
     glXMakeCurrent (ctx->display, None, None);
 }
@@ -113,11 +155,11 @@ _glx_destroy (void *abstract_ctx)
     if (ctx->dummy_window != None)
 	XDestroyWindow (ctx->display, ctx->dummy_window);
 
-    glXMakeCurrent (ctx->display, 0, 0);
+    glXMakeCurrent (ctx->display, None, None);
 }
 
 static cairo_status_t
-_glx_dummy_ctx (Display *dpy, GLXContext gl_ctx, Window *dummy)
+_glx_dummy_window (Display *dpy, GLXContext gl_ctx, Window *dummy)
 {
     int attr[3] = { GLX_FBCONFIG_ID, 0, None };
     GLXFBConfig *config;
@@ -174,14 +216,21 @@ cairo_glx_device_create (Display *dpy, GLXContext gl_ctx)
     cairo_glx_context_t *ctx;
     cairo_status_t status;
     Window dummy = None;
-
-    status = _glx_dummy_ctx (dpy, gl_ctx, &dummy);
-    if (unlikely (status))
-	return _cairo_gl_context_create_in_error (status);
+    const char *glx_extensions;
 
     ctx = calloc (1, sizeof (cairo_glx_context_t));
     if (unlikely (ctx == NULL))
 	return _cairo_gl_context_create_in_error (CAIRO_STATUS_NO_MEMORY);
+
+    /* glx_dummy_window will call glXMakeCurrent, so we need to
+     *  query the current state of the context now. */
+    _glx_query_current_state (ctx);
+
+    status = _glx_dummy_window (dpy, gl_ctx, &dummy);
+    if (unlikely (status)) {
+	free (ctx);
+	return _cairo_gl_context_create_in_error (status);
+    }
 
     ctx->display = dpy;
     ctx->dummy_window = dummy;
@@ -193,10 +242,22 @@ cairo_glx_device_create (Display *dpy, GLXContext gl_ctx)
     ctx->base.swap_buffers = _glx_swap_buffers;
     ctx->base.destroy = _glx_destroy;
 
+    status = _cairo_gl_dispatch_init (&ctx->base.dispatch,
+				      (cairo_gl_get_proc_addr_func_t) glXGetProcAddress);
+    if (unlikely (status)) {
+	free (ctx);
+	return _cairo_gl_context_create_in_error (status);
+    }
+
     status = _cairo_gl_context_init (&ctx->base);
     if (unlikely (status)) {
 	free (ctx);
 	return _cairo_gl_context_create_in_error (status);
+    }
+
+    glx_extensions = glXQueryExtensionsString (dpy, DefaultScreen (dpy));
+    if (strstr(glx_extensions, "GLX_MESA_multithread_makecurrent")) {
+	ctx->has_multithread_makecurrent = TRUE;
     }
 
     ctx->base.release (ctx);
@@ -247,6 +308,9 @@ cairo_gl_surface_create_for_window (cairo_device_t	*device,
 
     if (device->backend->type != CAIRO_DEVICE_TYPE_GL)
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_SURFACE_TYPE_MISMATCH));
+
+    if (width <= 0 || height <= 0)
+	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_INVALID_SIZE));
 
     surface = calloc (1, sizeof (cairo_glx_surface_t));
     if (unlikely (surface == NULL))

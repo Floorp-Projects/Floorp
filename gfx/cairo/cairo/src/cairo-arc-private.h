@@ -38,6 +38,8 @@
 
 #include "cairoint.h"
 
+CAIRO_BEGIN_DECLS
+
 cairo_private void
 _cairo_arc_path (cairo_t *cr,
 		 double	  xc,
@@ -53,5 +55,7 @@ _cairo_arc_path_negative (cairo_t *cr,
 			  double   radius,
 			  double   angle1,
 			  double   angle2);
+
+CAIRO_END_DECLS
 
 #endif /* CAIRO_ARC_PRIVATE_H */

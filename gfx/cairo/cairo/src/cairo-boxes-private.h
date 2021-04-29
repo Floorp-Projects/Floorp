@@ -37,13 +37,19 @@
 #include "cairo-types-private.h"
 #include "cairo-compiler-private.h"
 
+#include <stdio.h>
+#include <stdlib.h>
+
 struct _cairo_boxes_t {
     cairo_status_t status;
+
     cairo_box_t limit;
     const cairo_box_t *limits;
     int num_limits;
+
     int num_boxes;
-    unsigned int is_pixel_aligned : 1;
+
+    unsigned int is_pixel_aligned;
 
     struct _cairo_boxes_chunk {
 	struct _cairo_boxes_chunk *next;
@@ -58,9 +64,17 @@ cairo_private void
 _cairo_boxes_init (cairo_boxes_t *boxes);
 
 cairo_private void
+_cairo_boxes_init_with_clip (cairo_boxes_t *boxes,
+			     cairo_clip_t *clip);
+
+cairo_private void
 _cairo_boxes_init_for_array (cairo_boxes_t *boxes,
 			     cairo_box_t *array,
 			     int num_boxes);
+
+cairo_private void
+_cairo_boxes_init_from_rectangle (cairo_boxes_t *boxes,
+				  int x, int y, int w, int h);
 
 cairo_private void
 _cairo_boxes_limit (cairo_boxes_t	*boxes,
@@ -69,16 +83,40 @@ _cairo_boxes_limit (cairo_boxes_t	*boxes,
 
 cairo_private cairo_status_t
 _cairo_boxes_add (cairo_boxes_t *boxes,
+		  cairo_antialias_t antialias,
 		  const cairo_box_t *box);
 
 cairo_private void
 _cairo_boxes_extents (const cairo_boxes_t *boxes,
-		      cairo_rectangle_int_t *extents);
+		      cairo_box_t *box);
+
+cairo_private cairo_box_t *
+_cairo_boxes_to_array (const cairo_boxes_t *boxes,
+		       int *num_boxes);
+
+cairo_private cairo_status_t
+_cairo_boxes_intersect (const cairo_boxes_t *a,
+			const cairo_boxes_t *b,
+			cairo_boxes_t *out);
 
 cairo_private void
 _cairo_boxes_clear (cairo_boxes_t *boxes);
 
+cairo_private_no_warn cairo_bool_t
+_cairo_boxes_for_each_box (cairo_boxes_t *boxes,
+			   cairo_bool_t (*func) (cairo_box_t *box, void *data),
+			   void *data);
+
+cairo_private cairo_status_t
+_cairo_rasterise_polygon_to_boxes (cairo_polygon_t			*polygon,
+				   cairo_fill_rule_t			 fill_rule,
+				   cairo_boxes_t *boxes);
+
 cairo_private void
 _cairo_boxes_fini (cairo_boxes_t *boxes);
+
+cairo_private void
+_cairo_debug_print_boxes (FILE *stream,
+			  const cairo_boxes_t *boxes);
 
 #endif /* CAIRO_BOXES_H */
