@@ -75,8 +75,6 @@ const BUILT_IN_SECTIONS = ({
         message: { id: "newtab-pocket-learn-more" },
       },
     },
-    privacyNoticeURL:
-      "https://www.mozilla.org/privacy/firefox/#suggest-relevant-content",
     compactCards: false,
     rowsPref: "section.topstories.rows",
     maxRows: 4,
