@@ -32,6 +32,7 @@ UNIFIED_SOURCES += [
     "ImageAccessibleWrap.cpp",
     "IUnknownImpl.cpp",
     "MsaaAccessible.cpp",
+    "MsaaDocAccessible.cpp",
     "MsaaIdGenerator.cpp",
     "nsWinUtils.cpp",
     "Platform.cpp",
