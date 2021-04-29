@@ -108,7 +108,7 @@ if test "$echo_libdir" = "yes"; then
 fi
 
 if test "$echo_cflags" = "yes"; then
-    echo "-std=gnu++11 -include $includedir/$JS_LIBRARY_NAME/js/RequiredDefines.h -isystem $includedir/$JS_LIBRARY_NAME $NSPR_CFLAGS"
+    echo "-std=gnu++11 -isystem $includedir/$JS_LIBRARY_NAME $NSPR_CFLAGS"
 fi
 
 if test "$echo_libs" = "yes"; then
