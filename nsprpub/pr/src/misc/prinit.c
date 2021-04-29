@@ -771,10 +771,15 @@ PR_IMPLEMENT(PRStatus) PR_CallOnce(
         _PR_ImplicitInitialization();
     }
 
-    if (!once->initialized) {
+    PR_Lock(mod_init.ml);
+    PRIntn initialized = once->initialized;
+    PRStatus status = once->status;
+    PR_Unlock(mod_init.ml);
+    if (!initialized) {
         if (PR_ATOMIC_SET(&once->inProgress, 1) == 0) {
-            once->status = (*func)();
+            status = (*func)();
             PR_Lock(mod_init.ml);
+            once->status = status;
             once->initialized = 1;
             PR_NotifyAllCondVar(mod_init.cv);
             PR_Unlock(mod_init.ml);
@@ -783,14 +788,18 @@ PR_IMPLEMENT(PRStatus) PR_CallOnce(
             while (!once->initialized) {
                 PR_WaitCondVar(mod_init.cv, PR_INTERVAL_NO_TIMEOUT);
             }
+            status = once->status;
             PR_Unlock(mod_init.ml);
+            if (PR_SUCCESS != status) {
+                PR_SetError(PR_CALL_ONCE_ERROR, 0);
+            }
         }
-    } else {
-        if (PR_SUCCESS != once->status) {
-            PR_SetError(PR_CALL_ONCE_ERROR, 0);
-        }
+        return status;
     }
-    return once->status;
+    if (PR_SUCCESS != status) {
+        PR_SetError(PR_CALL_ONCE_ERROR, 0);
+    }
+    return status;
 }
 
 PR_IMPLEMENT(PRStatus) PR_CallOnceWithArg(
@@ -802,10 +811,15 @@ PR_IMPLEMENT(PRStatus) PR_CallOnceWithArg(
         _PR_ImplicitInitialization();
     }
 
-    if (!once->initialized) {
+    PR_Lock(mod_init.ml);
+    PRIntn initialized = once->initialized;
+    PRStatus status = once->status;
+    PR_Unlock(mod_init.ml);
+    if (!initialized) {
         if (PR_ATOMIC_SET(&once->inProgress, 1) == 0) {
-            once->status = (*func)(arg);
+            status = (*func)(arg);
             PR_Lock(mod_init.ml);
+            once->status = status;
             once->initialized = 1;
             PR_NotifyAllCondVar(mod_init.cv);
             PR_Unlock(mod_init.ml);
@@ -814,14 +828,18 @@ PR_IMPLEMENT(PRStatus) PR_CallOnceWithArg(
             while (!once->initialized) {
                 PR_WaitCondVar(mod_init.cv, PR_INTERVAL_NO_TIMEOUT);
             }
+            status = once->status;
             PR_Unlock(mod_init.ml);
+            if (PR_SUCCESS != status) {
+                PR_SetError(PR_CALL_ONCE_ERROR, 0);
+            }
         }
-    } else {
-        if (PR_SUCCESS != once->status) {
-            PR_SetError(PR_CALL_ONCE_ERROR, 0);
-        }
+        return status;
     }
-    return once->status;
+    if (PR_SUCCESS != status) {
+        PR_SetError(PR_CALL_ONCE_ERROR, 0);
+    }
+    return status;
 }
 
 PRBool _PR_Obsolete(const char *obsolete, const char *preferred)
