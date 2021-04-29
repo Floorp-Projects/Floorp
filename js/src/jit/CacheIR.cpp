@@ -11131,17 +11131,19 @@ void NewObjectIRGenerator::trackAttached(const char* name) {
 }
 
 AttachDecision NewObjectIRGenerator::tryAttachPlainObject() {
+  // Don't optimize allocations with too many dynamic slots. We use an unrolled
+  // loop when initializing slots and this avoids generating too much code.
+  static const uint32_t MaxDynamicSlotsToOptimize = 64;
+
   NativeObject* nativeObj = &templateObject_->as<NativeObject>();
   MOZ_ASSERT(nativeObj->is<PlainObject>());
 
-  // We use an unrolled loop when initializing slots. To avoid generating
-  // too much code, put a limit on the number of dynamic slots.
-  if (nativeObj->numDynamicSlots() > NativeObject::MAX_FIXED_SLOTS) {
+  // Stub doesn't support metadata builder
+  if (cx_->realm()->hasAllocationMetadataBuilder()) {
     return AttachDecision::NoAction;
   }
 
-  // Stub doesn't support metadata builder
-  if (cx_->realm()->hasAllocationMetadataBuilder()) {
+  if (nativeObj->numDynamicSlots() > MaxDynamicSlotsToOptimize) {
     return AttachDecision::NoAction;
   }
 
