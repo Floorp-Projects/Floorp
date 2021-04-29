@@ -5715,6 +5715,17 @@ void AsyncPanZoomController::ResetTouchInputState() {
   }
 }
 
+void AsyncPanZoomController::ResetPanGestureInputState() {
+  // No point sending a PANGESTURE_INTERRUPTED as all it does is
+  // call CancelAnimation(), which we also do here.
+  CancelAnimationAndGestureState();
+  // Clear overscroll along the entire handoff chain, in case an APZC
+  // later in the chain is overscrolled.
+  if (PanGestureBlockState* block = GetCurrentPanGestureBlock()) {
+    block->GetOverscrollHandoffChain()->ClearOverscroll();
+  }
+}
+
 void AsyncPanZoomController::CancelAnimationAndGestureState() {
   mX.CancelGesture();
   mY.CancelGesture();

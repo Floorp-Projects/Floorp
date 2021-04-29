@@ -430,6 +430,15 @@ APZEventResult InputQueue::ReceivePanGestureInput(
   result.SetStatusAsConsumeDoDefault(aTarget);
 
   if (!block || block->WasInterrupted()) {
+    if (event.mType == PanGestureInput::PANGESTURE_MOMENTUMSTART ||
+        event.mType == PanGestureInput::PANGESTURE_MOMENTUMPAN ||
+        event.mType == PanGestureInput::PANGESTURE_MOMENTUMEND) {
+      // If there are momentum events after an interruption, discard them.
+      // However, if there is a non-momentum event (indicating the user
+      // continued scrolling on the touchpad), a new input block is started
+      // by turning the event into a pan-start below.
+      return result;
+    }
     if (event.mType != PanGestureInput::PANGESTURE_START) {
       // Only PANGESTURE_START events are allowed to start a new pan gesture
       // block, but we really want to start a new block here, so we magically
@@ -958,6 +967,8 @@ void InputQueue::ProcessQueue() {
       if (curBlock->ShouldDropEvents()) {
         if (curBlock->AsTouchBlock()) {
           target->ResetTouchInputState();
+        } else if (curBlock->AsPanGestureBlock()) {
+          target->ResetPanGestureInputState();
         }
       } else {
         UpdateActiveApzc(target);
