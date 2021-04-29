@@ -20,7 +20,6 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include "js-config.h"
 #include "jstypes.h"
 
 typedef uint8_t jsbytecode;

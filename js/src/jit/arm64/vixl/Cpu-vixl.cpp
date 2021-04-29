@@ -26,7 +26,7 @@
 
 #include "jit/arm64/vixl/Cpu-vixl.h"
 
-#include "js-config.h"
+#include "jstypes.h"
 
 #if defined(__aarch64__) && (defined(__ANDROID__) || defined(__linux__))
 #include <sys/auxv.h>

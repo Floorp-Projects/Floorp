@@ -27,7 +27,7 @@
 #ifndef VIXL_A64_SIMULATOR_A64_H_
 #define VIXL_A64_SIMULATOR_A64_H_
 
-#include "js-config.h"
+#include "jstypes.h"
 
 #ifdef JS_SIMULATOR_ARM64
 
