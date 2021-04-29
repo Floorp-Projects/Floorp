@@ -52,7 +52,7 @@ extern "C" {
 #include <stdint.h>
 }
 
-#include "js-config.h"
+#include "jstypes.h"
 
 #include "jit/arm64/vixl/Platform-vixl.h"
 #include "js/Utility.h"
