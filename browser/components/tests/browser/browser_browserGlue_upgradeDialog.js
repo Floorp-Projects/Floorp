@@ -13,6 +13,18 @@ const { NimbusFeatures, ExperimentFeature } = ChromeUtils.import(
 const BROWSER_GLUE = Cc["@mozilla.org/browser/browserglue;1"].getService()
   .wrappedJSObject;
 
+function mockAppConstants({ isWin7 }) {
+  if (mockAppConstants.value === undefined) {
+    const stub = sinon.stub(window, "AppConstants").value({
+      isPlatformAndVersionAtMost() {
+        return mockAppConstants.value;
+      },
+    });
+    registerCleanupFunction(() => stub.restore());
+  }
+  mockAppConstants.value = isWin7;
+}
+
 function waitForDialog(callback = win => win.close()) {
   return BrowserTestUtils.promiseAlertDialog(
     null,
@@ -44,6 +56,7 @@ add_task(async function open_close_dialog() {
 });
 
 add_task(async function set_as_default() {
+  mockAppConstants({ isWin7: false });
   const mock = mockShell();
 
   await showAndWaitForDialog(async win => {
@@ -211,7 +224,42 @@ add_task(async function exit_early() {
   );
 });
 
+add_task(async function win7_okay() {
+  mockAppConstants({ isWin7: true });
+
+  await showAndWaitForDialog(async win => {
+    await BrowserTestUtils.waitForEvent(win, "ready");
+    win.document.getElementById("primary").click();
+  });
+
+  AssertEvents(
+    "Dialog uses special windows 7 primary button",
+    ["content", "show", "0"],
+    ["content", "show", "cfr-doorhanger-doh-primary-button-2"],
+    ["content", "button", "cfr-doorhanger-doh-primary-button-2"],
+    ["content", "close", "win7"]
+  );
+});
+
+add_task(async function win7_1screen() {
+  mockShell();
+
+  await showAndWaitForDialog(async win => {
+    await BrowserTestUtils.waitForEvent(win, "ready");
+    win.document.getElementById("secondary").click();
+  });
+
+  AssertEvents(
+    "Dialog closed after Windows 7's only screen",
+    ["content", "show", "0"],
+    ["content", "show", "upgrade-dialog-new-primary-default-button"],
+    ["content", "button", "upgrade-dialog-new-secondary-button"],
+    ["content", "close", "win7"]
+  );
+});
+
 add_task(async function quit_app() {
+  mockAppConstants({ isWin7: false });
   mockShell();
 
   await showAndWaitForDialog(async win => {
