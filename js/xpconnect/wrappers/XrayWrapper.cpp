@@ -758,10 +758,11 @@ bool JSXrayTraits::delete_(JSContext* cx, HandleObject wrapper, HandleId id,
   return result.succeed();
 }
 
-bool JSXrayTraits::defineProperty(JSContext* cx, HandleObject wrapper,
-                                  HandleId id, Handle<PropertyDescriptor> desc,
-                                  Handle<PropertyDescriptor> existingDesc,
-                                  ObjectOpResult& result, bool* defined) {
+bool JSXrayTraits::defineProperty(
+    JSContext* cx, HandleObject wrapper, HandleId id,
+    Handle<PropertyDescriptor> desc,
+    Handle<Maybe<PropertyDescriptor>> existingDesc,
+    Handle<JSObject*> existingHolder, ObjectOpResult& result, bool* defined) {
   *defined = false;
   RootedObject holder(cx, ensureHolder(cx, wrapper));
   if (!holder) {
@@ -798,17 +799,19 @@ bool JSXrayTraits::defineProperty(JSContext* cx, HandleObject wrapper,
                           "property on [Object] or [Array] XrayWrapper");
       return false;
     }
-    if (existingDesc.hasGetterOrSetter()) {
-      JS_ReportErrorASCII(cx,
-                          "Not allowed to overwrite accessor property on "
-                          "[Object] or [Array] XrayWrapper");
-      return false;
-    }
-    if (existingDesc.object() && existingDesc.object() != wrapper) {
-      JS_ReportErrorASCII(cx,
-                          "Not allowed to shadow non-own Xray-resolved "
-                          "property on [Object] or [Array] XrayWrapper");
-      return false;
+    if (existingDesc.isSome()) {
+      if (existingDesc->hasGetterOrSetter()) {
+        JS_ReportErrorASCII(cx,
+                            "Not allowed to overwrite accessor property on "
+                            "[Object] or [Array] XrayWrapper");
+        return false;
+      }
+      if (existingHolder != wrapper) {
+        JS_ReportErrorASCII(cx,
+                            "Not allowed to shadow non-own Xray-resolved "
+                            "property on [Object] or [Array] XrayWrapper");
+        return false;
+      }
     }
 
     Rooted<PropertyDescriptor> wrappedDesc(cx, desc);
@@ -1716,12 +1719,13 @@ bool DOMXrayTraits::delete_(JSContext* cx, JS::HandleObject wrapper,
   return XrayDeleteNamedProperty(cx, wrapper, target, id, result);
 }
 
-bool DOMXrayTraits::defineProperty(JSContext* cx, HandleObject wrapper,
-                                   HandleId id, Handle<PropertyDescriptor> desc,
-                                   Handle<PropertyDescriptor> existingDesc,
-                                   JS::ObjectOpResult& result, bool* done) {
+bool DOMXrayTraits::defineProperty(
+    JSContext* cx, HandleObject wrapper, HandleId id,
+    Handle<PropertyDescriptor> desc,
+    Handle<Maybe<PropertyDescriptor>> existingDesc,
+    Handle<JSObject*> existingHolder, JS::ObjectOpResult& result, bool* done) {
   // Check for an indexed property on a Window.  If that's happening, do
-  // nothing but set done to tru so it won't get added as an expando.
+  // nothing but set done to true so it won't get added as an expando.
   if (IsWindow(cx, wrapper)) {
     if (IsArrayIndex(GetArrayIndexFromId(id))) {
       *done = true;
@@ -1955,8 +1959,10 @@ bool XrayWrapper<Base, Traits>::defineProperty(JSContext* cx,
                                                ObjectOpResult& result) const {
   assertEnteredPolicy(cx, wrapper, id, BaseProxyHandler::SET);
 
-  Rooted<PropertyDescriptor> existing_desc(cx);
-  if (!JS_GetPropertyDescriptorById(cx, wrapper, id, &existing_desc)) {
+  Rooted<Maybe<PropertyDescriptor>> existingDesc(cx);
+  Rooted<JSObject*> existingHolder(cx);
+  if (!JS_GetPropertyDescriptorById(cx, wrapper, id, &existingDesc,
+                                    &existingHolder)) {
     return false;
   }
 
@@ -1964,28 +1970,29 @@ bool XrayWrapper<Base, Traits>::defineProperty(JSContext* cx,
   // non-own properties, since the above lookup is not limited to own
   // properties. At present, this may not always do the right thing because
   // we often lie (sloppily) about where we found properties and set
-  // desc.object() to |wrapper|. Once we fully fix our Xray prototype semantics,
-  // this should work as intended.
-  if (existing_desc.object() == wrapper && !existing_desc.configurable()) {
+  // existingHolder to |wrapper|. Once we fully fix our Xray prototype
+  // semantics, this should work as intended.
+  if (existingDesc.isSome() && existingHolder == wrapper &&
+      !existingDesc->configurable()) {
     // We have a non-configurable property. See if the caller is trying to
     // re-configure it in any way other than making it non-writable.
-    if (existing_desc.isAccessorDescriptor() || desc.isAccessorDescriptor() ||
+    if (existingDesc->isAccessorDescriptor() || desc.isAccessorDescriptor() ||
         (desc.hasEnumerable() &&
-         existing_desc.enumerable() != desc.enumerable()) ||
-        (desc.hasWritable() && !existing_desc.writable() && desc.writable())) {
+         existingDesc->enumerable() != desc.enumerable()) ||
+        (desc.hasWritable() && !existingDesc->writable() && desc.writable())) {
       // We should technically report non-configurability in strict mode, but
       // doing that via JSAPI used to be a lot of trouble. See bug 1135997.
       return result.succeed();
     }
-    if (!existing_desc.writable()) {
+    if (!existingDesc->writable()) {
       // Same as the above for non-writability.
       return result.succeed();
     }
   }
 
   bool done = false;
-  if (!Traits::singleton.defineProperty(cx, wrapper, id, desc, existing_desc,
-                                        result, &done)) {
+  if (!Traits::singleton.defineProperty(cx, wrapper, id, desc, existingDesc,
+                                        existingHolder, result, &done)) {
     return false;
   }
   if (done) {
