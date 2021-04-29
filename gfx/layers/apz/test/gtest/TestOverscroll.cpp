@@ -1478,3 +1478,90 @@ TEST_F(APZCOverscrollTesterForLayersOnly, OverscrollHandoff) {
   EXPECT_TRUE(rootApzc->IsOverscrolled());
 }
 #endif
+
+#ifndef MOZ_WIDGET_ANDROID  // Only applies to GenericOverscrollEffect
+TEST_F(APZCOverscrollTesterForLayersOnly, OverscrollIntoPreventDefault) {
+  SCOPED_GFX_PREF_BOOL("apz.overscroll.enabled", true);
+
+  const char* layerTreeSyntax = "c";
+  nsIntRegion layerVisibleRegions[] = {nsIntRegion(IntRect(0, 0, 100, 100))};
+  root = CreateLayerTree(layerTreeSyntax, layerVisibleRegions, nullptr, lm,
+                         layers);
+  SetScrollableFrameMetrics(root, ScrollableLayerGuid::START_SCROLL_ID,
+                            CSSRect(0, 0, 100, 200));
+  EventRegions regions(nsIntRegion(IntRect(0, 0, 100, 100)));
+  // make top 20 pixels dispatch-to-content
+  regions.mDispatchToContentHitRegion = nsIntRegion(IntRect(0, 0, 100, 20));
+  root->SetEventRegions(regions);
+
+  registration =
+      MakeUnique<ScopedLayerTreeRegistration>(LayersId{0}, root, mcc);
+  UpdateHitTestingTree();
+  rootApzc = ApzcOf(root);
+
+  // Start a pan gesture a few pixels below the 20px DTC region.
+  ScreenIntPoint cursorLocation(10, 25);
+  APZEventResult result =
+      PanGesture(PanGestureInput::PANGESTURE_START, manager, cursorLocation,
+                 ScreenPoint(0, -2), mcc->Time());
+
+  // At this point, we should be overscrolled.
+  EXPECT_TRUE(rootApzc->IsOverscrolled());
+
+  // Pan further, until the DTC region is under the cursor.
+  // Note that, due to ApplyResistance(), we need a large input delta to cause a
+  // visual transform enough to bridge the 5px to the DTC region.
+  mcc->AdvanceByMillis(10);
+  PanGesture(PanGestureInput::PANGESTURE_PAN, manager, cursorLocation,
+             ScreenPoint(0, -100), mcc->Time());
+
+  // At this point, we are still overscrolled. Record the overscroll amount.
+  EXPECT_TRUE(rootApzc->IsOverscrolled());
+  float overscrollY = rootApzc->GetOverscrollAmount().y;
+
+  // Send a content response with preventDefault = true.
+  manager->SetAllowedTouchBehavior(result.mInputBlockId,
+                                   {AllowedTouchBehavior::VERTICAL_PAN});
+  manager->SetTargetAPZC(result.mInputBlockId, {result.mTargetGuid});
+  manager->ContentReceivedInputBlock(result.mInputBlockId,
+                                     /*aPreventDefault=*/true);
+
+  // The content response has the effect of interrupting the input block
+  // but no processing happens yet (as there are no events in the block).
+  EXPECT_TRUE(rootApzc->IsOverscrolled());
+  EXPECT_EQ(overscrollY, rootApzc->GetOverscrollAmount().y);
+
+  // Send one more pan event. This starts a new, *unconfirmed* input block
+  // (via the "transmogrify" codepath).
+  mcc->AdvanceByMillis(10);
+  result = PanGesture(PanGestureInput::PANGESTURE_PAN, manager, cursorLocation,
+                      ScreenPoint(0, -10), mcc->Time());
+
+  // No overscroll occurs (the event is waiting in the queue for confirmation).
+  EXPECT_TRUE(rootApzc->IsOverscrolled());
+  EXPECT_EQ(overscrollY, rootApzc->GetOverscrollAmount().y);
+
+  // preventDefault the new event as well
+  manager->SetAllowedTouchBehavior(result.mInputBlockId,
+                                   {AllowedTouchBehavior::VERTICAL_PAN});
+  manager->SetTargetAPZC(result.mInputBlockId, {result.mTargetGuid});
+  manager->ContentReceivedInputBlock(result.mInputBlockId,
+                                     /*aPreventDefault=*/true);
+
+  // This should trigger clearing the overscrolling and resetting the state.
+  EXPECT_FALSE(rootApzc->IsOverscrolled());
+  rootApzc->AssertStateIsReset();
+
+  // If there are momentum events after this point, they should not cause
+  // further scrolling or overscorll.
+  mcc->AdvanceByMillis(10);
+  result = PanGesture(PanGestureInput::PANGESTURE_MOMENTUMSTART, manager,
+                      cursorLocation, ScreenPoint(0, -100), mcc->Time());
+  mcc->AdvanceByMillis(10);
+  result = PanGesture(PanGestureInput::PANGESTURE_MOMENTUMPAN, manager,
+                      cursorLocation, ScreenPoint(0, -100), mcc->Time());
+  EXPECT_FALSE(rootApzc->IsOverscrolled());
+  EXPECT_EQ(rootApzc->GetFrameMetrics().GetVisualScrollOffset(),
+            CSSPoint(0, 0));
+}
+#endif
