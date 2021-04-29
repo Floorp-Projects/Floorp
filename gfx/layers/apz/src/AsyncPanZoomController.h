@@ -1398,6 +1398,11 @@ class AsyncPanZoomController {
   void ResetTouchInputState();
 
   /**
+     Clear internal state relating to pan gesture input handling.
+   */
+  void ResetPanGestureInputState();
+
+  /**
    * Gets a ref to the input queue that is shared across the entire tree
    * manager.
    */
