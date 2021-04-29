@@ -1207,7 +1207,7 @@ JS_PUBLIC_API bool JS::ClearRegExpStatics(JSContext* cx, HandleObject obj) {
 }
 
 JS_PUBLIC_API bool JS::ExecuteRegExp(JSContext* cx, HandleObject obj,
-                                     HandleObject reobj, char16_t* chars,
+                                     HandleObject reobj, const char16_t* chars,
                                      size_t length, size_t* indexp, bool test,
                                      MutableHandleValue rval) {
   AssertHeapIsIdle();
