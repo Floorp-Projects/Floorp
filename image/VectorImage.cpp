@@ -38,6 +38,7 @@
 #include "LookupResult.h"
 #include "Orientation.h"
 #include "SVGDocumentWrapper.h"
+#include "SVGDrawingCallback.h"
 #include "SVGDrawingParameters.h"
 #include "nsIDOMEventListener.h"
 #include "SurfaceCache.h"
@@ -228,26 +229,16 @@ class SVGLoadEventListener final : public nsIDOMEventListener {
 
 NS_IMPL_ISUPPORTS(SVGLoadEventListener, nsIDOMEventListener)
 
-// Helper-class: SVGDrawingCallback
-class SVGDrawingCallback : public gfxDrawingCallback {
- public:
-  SVGDrawingCallback(SVGDocumentWrapper* aSVGDocumentWrapper,
-                     const IntSize& aViewportSize, const IntSize& aSize,
-                     uint32_t aImageFlags)
-      : mSVGDocumentWrapper(aSVGDocumentWrapper),
-        mViewportSize(aViewportSize),
-        mSize(aSize),
-        mImageFlags(aImageFlags) {}
-  virtual bool operator()(gfxContext* aContext, const gfxRect& aFillRect,
-                          const SamplingFilter aSamplingFilter,
-                          const gfxMatrix& aTransform) override;
+SVGDrawingCallback::SVGDrawingCallback(SVGDocumentWrapper* aSVGDocumentWrapper,
+                                       const IntSize& aViewportSize,
+                                       const IntSize& aSize,
+                                       uint32_t aImageFlags)
+    : mSVGDocumentWrapper(aSVGDocumentWrapper),
+      mViewportSize(aViewportSize),
+      mSize(aSize),
+      mImageFlags(aImageFlags) {}
 
- private:
-  RefPtr<SVGDocumentWrapper> mSVGDocumentWrapper;
-  const IntSize mViewportSize;
-  const IntSize mSize;
-  uint32_t mImageFlags;
-};
+SVGDrawingCallback::~SVGDrawingCallback() = default;
 
 // Based loosely on SVGIntegrationUtils' PaintFrameCallback::operator()
 bool SVGDrawingCallback::operator()(gfxContext* aContext,
