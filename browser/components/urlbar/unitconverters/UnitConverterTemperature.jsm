@@ -74,7 +74,7 @@ class UnitConverterTemperature {
   }
 
   c2f(t) {
-    return (t + 32) * 1.8;
+    return t * 1.8 + 32;
   }
 
   k2c(t) {
