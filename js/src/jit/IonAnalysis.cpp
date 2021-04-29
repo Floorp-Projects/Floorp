@@ -2852,6 +2852,7 @@ static bool IsResumableMIRType(MIRType type) {
     case MIRType::Symbol:
     case MIRType::BigInt:
     case MIRType::Object:
+    case MIRType::Shape:
     case MIRType::MagicOptimizedArguments:
     case MIRType::MagicOptimizedOut:
     case MIRType::MagicUninitializedLexical:
@@ -2865,7 +2866,6 @@ static bool IsResumableMIRType(MIRType type) {
     case MIRType::Slots:
     case MIRType::Elements:
     case MIRType::Pointer:
-    case MIRType::Shape:
     case MIRType::Int64:
     case MIRType::RefOrNull:
     case MIRType::StackResults:
