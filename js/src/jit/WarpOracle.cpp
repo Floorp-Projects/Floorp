@@ -521,19 +521,6 @@ AbortReasonOr<WarpScriptSnapshot*> WarpScriptOracle::createScriptSnapshot() {
         break;
       }
 
-      case JSOp::NewObject:
-      case JSOp::NewInit: {
-        const ICEntry& entry = getICEntry(loc);
-        auto* stub = entry.fallbackStub()->toNewObject_Fallback();
-        if (JSObject* templateObj = stub->templateObject()) {
-          if (!AddOpSnapshot<WarpNewObject>(alloc_, opSnapshots, offset,
-                                            templateObj)) {
-            return abort(AbortReason::Alloc);
-          }
-        }
-        break;
-      }
-
       case JSOp::BindGName: {
         RootedGlobalObject global(cx_, &script_->global());
         RootedPropertyName name(cx_, loc.getPropertyName(script_));
@@ -612,6 +599,8 @@ AbortReasonOr<WarpScriptSnapshot*> WarpScriptOracle::createScriptSnapshot() {
       case JSOp::OptimizeSpreadCall:
       case JSOp::Typeof:
       case JSOp::TypeofExpr:
+      case JSOp::NewObject:
+      case JSOp::NewInit:
         MOZ_TRY(maybeInlineIC(opSnapshots, loc));
         break;
 

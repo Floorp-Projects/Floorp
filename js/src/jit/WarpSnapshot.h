@@ -41,7 +41,6 @@ class WarpScriptSnapshot;
   _(WarpLambda)                  \
   _(WarpRest)                    \
   _(WarpNewArray)                \
-  _(WarpNewObject)               \
   _(WarpBindGName)               \
   _(WarpBailout)                 \
   _(WarpCacheIR)                 \
@@ -416,25 +415,6 @@ class WarpNewArray : public WarpOpSnapshot {
 
   ArrayObject* templateObject() const { return templateObject_; }
   bool useVMCall() const { return useVMCall_; }
-
-  void traceData(JSTracer* trc);
-
-#ifdef JS_JITSPEW
-  void dumpData(GenericPrinter& out) const;
-#endif
-};
-
-// Template object for JSOp::NewObject or JSOp::NewInit.
-class WarpNewObject : public WarpOpSnapshot {
-  WarpGCPtr<JSObject*> templateObject_;
-
- public:
-  static constexpr Kind ThisKind = Kind::WarpNewObject;
-
-  WarpNewObject(uint32_t offset, JSObject* templateObject)
-      : WarpOpSnapshot(ThisKind, offset), templateObject_(templateObject) {}
-
-  JSObject* templateObject() const { return templateObject_; }
 
   void traceData(JSTracer* trc);
 
