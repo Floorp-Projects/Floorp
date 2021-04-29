@@ -164,9 +164,6 @@ class ia2AccessibleTable : public IAccessibleTable, public IAccessibleTable2 {
   ia2AccessibleTable(TableAccessible* aTable) : mTable(aTable) {}
 
   TableAccessible* mTable;
-
- private:
-  TableAccessible* TableAcc() { return mTable; }
 };
 
 }  // namespace a11y
