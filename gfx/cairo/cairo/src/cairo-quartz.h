@@ -54,8 +54,18 @@ cairo_quartz_surface_create_for_cg_context (CGContextRef cgContext,
                                             unsigned int width,
                                             unsigned int height);
 
+cairo_surface_t *
+cairo_quartz_surface_create_for_data (unsigned char *data,
+                                      cairo_format_t format,
+                                      unsigned int width,
+                                      unsigned int height,
+                                      unsigned int stride);
+
 cairo_public CGContextRef
 cairo_quartz_surface_get_cg_context (cairo_surface_t *surface);
+
+cairo_public cairo_surface_t *
+cairo_quartz_surface_get_image (cairo_surface_t *surface);
 
 #if CAIRO_HAS_QUARTZ_FONT
 
