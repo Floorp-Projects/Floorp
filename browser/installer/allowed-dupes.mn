@@ -113,6 +113,9 @@ chrome/toolkit/skin/classic/global/icons/check.svg
 browser/chrome/browser/skin/classic/browser/notification-icons/indexedDB.svg
 browser/chrome/browser/skin/classic/browser/notification-icons/persistent-storage.svg
 
+# Bug 1708018 - De-duplicate lightbulb icon
+browser/extensions/report-site-issue/icons/lightbulb.svg
+toolkit/themes/shared/icons/lightbulb.svg
 # Bug 1707690 - De-duplicate folder icons
 browser/chrome/browser/skin/classic/browser/places/folder.svg
 chrome/toolkit/skin/classic/global/icons/folder.svg
