@@ -1489,7 +1489,15 @@ panelview .toolbarbutton-1,
 #appMenu-zoomReduce-button2 > .toolbarbutton-icon,
 #appMenu-zoomEnlarge-button2 > .toolbarbutton-icon {
   border-radius: 500px;
+}
+
+#appMenu-zoomReduce-button2 > .toolbarbutton-icon {
   padding: 2px;
+}
+
+#appMenu-zoomEnlarge-button2 > .toolbarbutton-icon {
+  padding-block: 0 1px;
+  padding-inline: 0 1px;
 }
 
 #appMenu-zoomReset-button2 > .toolbarbutton-text,
@@ -1498,7 +1506,7 @@ panelview .toolbarbutton-1,
 }
 
 #appMenu-fullscreen-button2 > .toolbarbutton-icon {
-  padding: 2px;
+  padding: 1px;
 }
 
 #appMenu-zoomReduce-button2 > .toolbarbutton-icon,
