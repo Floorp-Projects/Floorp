@@ -800,31 +800,6 @@ function SyncEngine(name, service) {
   );
   // Async initializations can be made in the initialize() method.
 
-  // The map of ids => metadata for records needing a weak upload.
-  //
-  // Currently the "metadata" fields are:
-  //
-  // - forceTombstone: whether or not we should ignore the local information
-  //   about the record, and write a tombstone for it anyway -- e.g. in the case
-  //   of records that should exist locally, but should never be uploaded to the
-  //   server (note that not all sync engines support tombstones)
-  //
-  // The difference between this and a "normal" upload is that these records
-  // are only tracked in memory, and if the upload attempt fails (shutdown,
-  // 412, etc), we abort uploading the "weak" set (by clearing the map).
-  //
-  // The rationale here is for the cases where we receive a record from the
-  // server that we know is wrong in some (small) way. For example, the
-  // dateAdded field on bookmarks -- maybe we have a better date, or the server
-  // record is entirely missing the date, etc.
-  //
-  // In these cases, we fix our local copy of the record, and mark it for
-  // weak upload. A normal ("strong") upload is problematic here because
-  // in the case of a conflict from the server, there's a window where our
-  // record would be marked as modified more recently than a change that occurs
-  // on another device change, and we lose data from the user.
-  this._needWeakUpload = new Map();
-
   this.asyncObserver = Async.asyncObserver(this, this._log);
 }
 
@@ -1135,10 +1110,6 @@ SyncEngine.prototype = {
     tombstone.collection = this.name;
     tombstone.deleted = true;
     return tombstone;
-  },
-
-  addForWeakUpload(id, { forceTombstone = false } = {}) {
-    this._needWeakUpload.set(id, { forceTombstone });
   },
 
   // Any setup that needs to happen at the beginning of each sync.
@@ -1828,9 +1799,6 @@ SyncEngine.prototype = {
     // collection we'll upload
     let up = new Collection(this.engineURL, null, this.service);
     let modifiedIDs = new Set(this._modified.ids());
-    for (let id of this._needWeakUpload.keys()) {
-      modifiedIDs.add(id);
-    }
     let counts = { failed: 0, sent: 0 };
     this._log.info(`Uploading ${modifiedIDs.size} outgoing records`);
     if (modifiedIDs.size) {
@@ -1896,12 +1864,7 @@ SyncEngine.prototype = {
         let out;
         let ok = false;
         try {
-          let { forceTombstone = false } = this._needWeakUpload.get(id) || {};
-          if (forceTombstone) {
-            out = await this._createTombstone(id);
-          } else {
-            out = await this._createRecord(id);
-          }
+          out = await this._createRecord(id);
           if (this._log.level <= Log.Level.Trace) {
             this._log.trace("Outgoing: " + out);
           }
@@ -1943,7 +1906,6 @@ SyncEngine.prototype = {
       }
       await postQueue.flush(true);
     }
-    this._needWeakUpload.clear();
 
     if (counts.sent || counts.failed) {
       Observers.notify("weave:engine:sync:uploaded", counts, this.name);
@@ -1987,7 +1949,6 @@ SyncEngine.prototype = {
   },
 
   async _syncCleanup() {
-    this._needWeakUpload.clear();
     try {
       // Mark failed WBOs as changed again so they are reuploaded next time.
       await this.trackRemainingChanges();
@@ -2159,7 +2120,6 @@ SyncEngine.prototype = {
     this.hasSyncedThisSession = false;
     this.previousFailed = new SerializableSet();
     this.toFetch = new SerializableSet();
-    this._needWeakUpload.clear();
   },
 
   /**

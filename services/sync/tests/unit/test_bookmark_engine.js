@@ -1026,9 +1026,6 @@ add_task(async function test_buffer_hasDupe() {
 
     await PlacesUtils.bookmarks.remove(guid1);
 
-    // Make sure it works for weakly uploaded records
-    engine.addForWeakUpload(guid2);
-
     await sync_engine_and_validate_telem(engine, false);
 
     let tombstone = JSON.parse(

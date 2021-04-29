@@ -64,7 +64,6 @@ function promiseSpinningly(promise) {
 
 async function cleanup() {
   await engine.setLastSync(0);
-  engine._needWeakUpload.clear();
   await store.wipe();
   await resetTracker();
   await tracker.stop();
