@@ -52,7 +52,7 @@ sdnAccessible::QueryInterface(REFIID aREFIID, void** aInstancePtr) {
     return S_OK;
   }
 
-  MsaaAccessible* accessible = GetMsaa();
+  AccessibleWrap* accessible = GetAccessible();
   if (accessible) return accessible->QueryInterface(aREFIID, aInstancePtr);
 
   // IUnknown* is the canonical one if and only if this accessible doesn't have
@@ -105,9 +105,9 @@ sdnAccessible::get_nodeInfo(BSTR __RPC_FAR* aNodeName,
   // application can compare this to the childID we return for events such as
   // focus events, to correlate back to data nodes in their internal object
   // model.
-  MsaaAccessible* accessible = GetMsaa();
+  AccessibleWrap* accessible = GetAccessible();
   if (accessible) {
-    *aUniqueID = MsaaAccessible::GetChildIDFor(accessible->LocalAcc());
+    *aUniqueID = MsaaAccessible::GetChildIDFor(accessible);
   } else {
     if (mUniqueId.isNothing()) {
       MsaaAccessible::AssignChildIDTo(WrapNotNull(this));

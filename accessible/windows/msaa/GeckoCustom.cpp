@@ -4,7 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "AccessibleWrap.h"
 #include "GeckoCustom.h"
 
 using namespace mozilla;
@@ -12,18 +11,18 @@ using namespace mozilla::a11y;
 
 IMPL_IUNKNOWN_QUERY_HEAD(GeckoCustom)
 IMPL_IUNKNOWN_QUERY_IFACE(IGeckoCustom)
-IMPL_IUNKNOWN_QUERY_TAIL_AGGREGATED(mMsaa)
+IMPL_IUNKNOWN_QUERY_TAIL_AGGREGATED(mAcc)
 
 HRESULT
 GeckoCustom::get_anchorCount(long* aCount) {
-  *aCount = mMsaa->LocalAcc()->AnchorCount();
+  *aCount = mAcc->AnchorCount();
   return S_OK;
 }
 
 HRESULT
 GeckoCustom::get_boundsInCSSPixels(int32_t* aX, int32_t* aY, int32_t* aWidth,
                                    int32_t* aHeight) {
-  nsIntRect bounds = mMsaa->LocalAcc()->BoundsInCSSPixels();
+  nsIntRect bounds = mAcc->BoundsInCSSPixels();
   if (!bounds.IsEmpty()) {
     *aWidth = bounds.Width();
     *aHeight = bounds.Height();
@@ -38,7 +37,7 @@ GeckoCustom::get_boundsInCSSPixels(int32_t* aX, int32_t* aY, int32_t* aWidth,
 
 HRESULT
 GeckoCustom::get_DOMNodeID(BSTR* aID) {
-  nsIContent* content = mMsaa->LocalAcc()->GetContent();
+  nsIContent* content = mAcc->GetContent();
   if (!content) {
     return S_OK;
   }
@@ -54,19 +53,18 @@ GeckoCustom::get_DOMNodeID(BSTR* aID) {
 
 STDMETHODIMP
 GeckoCustom::get_ID(uint64_t* aID) {
-  AccessibleWrap* acc = mMsaa->LocalAcc();
-  *aID = acc->IsDoc() ? 0 : reinterpret_cast<uintptr_t>(acc);
+  *aID = mAcc->IsDoc() ? 0 : reinterpret_cast<uintptr_t>(mAcc.get());
   return S_OK;
 }
 
 STDMETHODIMP
 GeckoCustom::get_minimumIncrement(double* aIncrement) {
-  *aIncrement = mMsaa->LocalAcc()->Step();
+  *aIncrement = mAcc->Step();
   return S_OK;
 }
 
 STDMETHODIMP
 GeckoCustom::get_mozState(uint64_t* aState) {
-  *aState = mMsaa->LocalAcc()->State();
+  *aState = mAcc->State();
   return S_OK;
 }

@@ -10,7 +10,7 @@
 #include "ISimpleDOM.h"
 #include "IUnknownImpl.h"
 
-#include "MsaaAccessible.h"
+#include "AccessibleWrap.h"
 
 class nsIFrame;
 struct nsPoint;
@@ -20,7 +20,8 @@ namespace a11y {
 
 class sdnTextAccessible final : public ISimpleDOMText {
  public:
-  explicit sdnTextAccessible(MsaaAccessible* aMsaa) : mMsaa(aMsaa){};
+  explicit sdnTextAccessible(AccessibleWrap* aAccessible)
+      : mAccessible(aAccessible){};
   ~sdnTextAccessible() {}
 
   DECL_IUNKNOWN
@@ -60,7 +61,7 @@ class sdnTextAccessible final : public ISimpleDOMText {
   nsIFrame* GetPointFromOffset(nsIFrame* aContainingFrame, int32_t aOffset,
                                bool aPreferNext, nsPoint& aOutPoint);
 
-  RefPtr<MsaaAccessible> mMsaa;
+  RefPtr<AccessibleWrap> mAccessible;
 };
 
 }  // namespace a11y
