@@ -344,7 +344,6 @@ int32_t DesktopCaptureImpl::Init() {
     DesktopCapturer::SourceId sourceId = atoi(_deviceUniqueId.c_str());
     pScreenCapturer->SelectSource(sourceId);
 
-    DesktopCaptureOptions options;
     desktop_capturer_cursor_composer_ =
         std::unique_ptr<DesktopAndCursorComposer>(
             new DesktopAndCursorComposer(std::move(pScreenCapturer), options));
@@ -358,7 +357,6 @@ int32_t DesktopCaptureImpl::Init() {
     DesktopCapturer::SourceId sourceId = atoi(_deviceUniqueId.c_str());
     pWindowCapturer->SelectSource(sourceId);
 
-    DesktopCaptureOptions options;
     desktop_capturer_cursor_composer_ =
         std::unique_ptr<DesktopAndCursorComposer>(
             new DesktopAndCursorComposer(std::move(pWindowCapturer), options));
