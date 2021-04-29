@@ -27,7 +27,7 @@ def query(key, query, p_params):
         resp = requests.get(url=poll_url, headers=headers)
         status = resp.json()["job"]["status"]
         if status > 2:
-            print(resp.json())
+            # print(resp.json())
             poll = False
             qresultid = resp.json()["job"]["query_result_id"]
         else:

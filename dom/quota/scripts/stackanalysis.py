@@ -48,6 +48,7 @@ def constructHGLinks(buildids, rows):
 
 
 topmost_stackframes = set()
+delta_frames = {}
 
 
 def isTopmostFrame(frame):
@@ -63,14 +64,59 @@ def addTopmostFrame(frame):
         frame["topmost"] = True
 
 
-# A topmost frame is considered to initiate a new
-# raw stack. We collect all candidates before we
-# actually apply them. This implies, that we should
-# run this function on a "large enough" sample of rows
-# to be more accurate.
-# As a side effect, we mark all rows that are part of
-# a "complete" session (a session, that started within
-# our data scope).
+def addFrameDelta(frame1, frame2):
+    if frame1["client_id"] != frame2["client_id"]:
+        return
+    if frame1["session_id"] != frame2["session_id"]:
+        return
+
+    fkey = "{}:{}-{}:{}".format(
+        frame2["location"], frame2["result"], frame1["location"], frame1["result"]
+    )
+    if fkey not in delta_frames:
+        fdelta = {"delta_sum": 0, "delta_cnt": 0}
+        fdelta["prev_row"] = frame1
+        fdelta["candidate"] = frame2
+        delta_frames[fkey] = fdelta
+
+    fdelta = delta_frames[fkey]
+    etv1 = frame1["event_timestamp"]
+    etv2 = frame2["event_timestamp"]
+    if isinstance(etv1, int) and isinstance(etv2, int) and etv2 > etv1:
+        delta = etv2 - etv1
+        fdelta["delta_sum"] = fdelta["delta_sum"] + delta
+        fdelta["delta_cnt"] = fdelta["delta_cnt"] + 1
+
+
+# There can be outliers in terms of time distance between two stack frames
+# that belong to the same propagation stack. In order to not increase the
+# risk that one outlier breaks thousands of stacks, we check for the average
+# time distance.
+def checkAverageFrameTimeDeltas(rows, max_delta):
+    # print("checkAverageFrameTimeDeltas")
+    prev_row = None
+    for row in rows:
+        if "topmost" in row or not row["session_complete"]:
+            prev_row = None
+            continue
+
+        if prev_row:
+            addFrameDelta(prev_row, row)
+        prev_row = row
+
+    for fd in delta_frames:
+        sum = delta_frames[fd]["delta_sum"]
+        cnt = delta_frames[fd]["delta_cnt"]
+        if cnt > 0 and (sum / cnt) > max_delta:
+            # print(delta_frames[fd])
+            addTopmostFrame(delta_frames[fd]["candidate"])
+
+
+# A topmost frame is considered to initiate a new raw stack. We collect all
+# candidates before we actually apply them. This implies, that we should run
+# this function on a "large enough" sample of rows to be more accurate.
+# As a side effect, we mark all rows that are part of a "complete" session
+# (a session, that started within our data scope).
 def collectTopmostFrames(rows):
     prev_cid = "unset"
     prev_sid = "unset"
@@ -112,22 +158,13 @@ def collectTopmostFrames(rows):
         prev_ctx = ctx
         prev_sev = sev
 
-    # Should be ms. We've seen quite some runtime between stackframes
-    # in the wild. We might want to consider to make this configurable.
-    # In general we prefer local context over letting slip through some
-    # topmost frame unrecognized, assuming that fixing the issues one by
-    # one they will uncover succesively. This is achieved by a rather
-    # high delta value.
-    delta = 800
-    prev_event_time = -99999
-    for row in rows:
-        et = int(row["event_timestamp"])
-        if row["session_complete"]:
-            if "topmost" not in row and et - prev_event_time >= delta:
-                addTopmostFrame(row)
-            prev_event_time = et
-        else:
-            prev_event_time = -99999
+    # Should be ms. We've seen quite some runtime between stackframes in the
+    # wild. We might want to consider to make this configurable. In general
+    # we prefer local context over letting slip through some topmost frame
+    # unrecognized, assuming that fixing the issues one by one they will
+    # uncover them succesively. This is achieved by a rather high delta value.
+    max_avg_delta = 200
+    checkAverageFrameTimeDeltas(rows, max_avg_delta)
 
 
 def getFrameKey(frame):
@@ -219,7 +256,7 @@ def mergeEqualStacks(raw_stacks):
             merged_stacks[stack_key] = merged_stack
 
     merged_list = list(merged_stacks.values())
-    merged_list.sort(key=lambda x: x.get("client_count"), reverse=True)
+    merged_list.sort(key=lambda x: x.get("hit_count"), reverse=True)
     return merged_list
 
 
