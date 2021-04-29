@@ -311,9 +311,9 @@ const TEST_DATA = [
       { queryString: "0 c to kelvin", expected: "273.15 kelvin" },
       { queryString: "0 c to k", expected: "273.15 kelvin" },
       { queryString: "10 c to k", expected: "283.15 kelvin" },
-      { queryString: "0 c to fahrenheit", expected: `${32 * 1.8}°F` },
-      { queryString: "0 c to f", expected: `${32 * 1.8}°F` },
-      { queryString: "10 c to f", expected: `${round((10 + 32) * 1.8)}°F` },
+      { queryString: "0 c to fahrenheit", expected: "32°F" },
+      { queryString: "0 c to f", expected: "32°F" },
+      { queryString: "10 c to f", expected: `${round(10 * 1.8 + 32)}°F` },
       {
         queryString: "10 f to kelvin",
         expected: `${round((10 - 32) / 1.8 + 273.15)} kelvin`,
