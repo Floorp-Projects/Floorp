@@ -13,13 +13,16 @@ const { NimbusFeatures, ExperimentFeature } = ChromeUtils.import(
 const BROWSER_GLUE = Cc["@mozilla.org/browser/browserglue;1"].getService()
   .wrappedJSObject;
 
-function mockAppConstants() {
-  const stub = sinon.stub(window, "AppConstants").value({
-    isPlatformAndVersionAtMost() {
-      return true;
-    },
-  });
-  mockAppConstants.restore = () => stub.restore();
+function mockAppConstants({ isWin7 }) {
+  if (mockAppConstants.value === undefined) {
+    const stub = sinon.stub(window, "AppConstants").value({
+      isPlatformAndVersionAtMost() {
+        return mockAppConstants.value;
+      },
+    });
+    registerCleanupFunction(() => stub.restore());
+  }
+  mockAppConstants.value = isWin7;
 }
 
 function waitForDialog(callback = win => win.close()) {
@@ -53,6 +56,7 @@ add_task(async function open_close_dialog() {
 });
 
 add_task(async function set_as_default() {
+  mockAppConstants({ isWin7: false });
   const mock = mockShell();
 
   await showAndWaitForDialog(async win => {
@@ -221,7 +225,7 @@ add_task(async function exit_early() {
 });
 
 add_task(async function win7_okay() {
-  mockAppConstants();
+  mockAppConstants({ isWin7: true });
 
   await showAndWaitForDialog(async win => {
     await BrowserTestUtils.waitForEvent(win, "ready");
@@ -252,11 +256,10 @@ add_task(async function win7_1screen() {
     ["content", "button", "upgrade-dialog-new-secondary-button"],
     ["content", "close", "win7"]
   );
-
-  mockAppConstants.restore();
 });
 
 add_task(async function quit_app() {
+  mockAppConstants({ isWin7: false });
   mockShell();
 
   await showAndWaitForDialog(async win => {
