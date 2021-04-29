@@ -475,7 +475,7 @@
 
     <!-- Turn On Sync Preferences -->
     <!-- Header of the Turn on Sync preference view -->
-    <string name="preferences_sync">Ativar o Sync</string>
+    <string name="preferences_sync">Ativar a sincronização</string>
     <!-- Preference for pairing -->
     <string name="preferences_sync_pair">Digitalizar código de pareamento no Firefox de computador</string>
     <!-- Preference for account login -->
@@ -1195,7 +1195,7 @@
     <!-- text for the automatic sign-in button while signing in is in process -->
     <string name="onboarding_firefox_account_signing_in">Entrando…</string>
     <!-- text for the button to manually sign into Firefox account. -->
-    <string name="onboarding_firefox_account_sign_in_1">Criar uma conta</string>
+    <string name="onboarding_firefox_account_sign_in_1">Conectar Conta Firefox</string>
     <!-- text for the button to stay signed out when presented with an option to automatically sign-in. -->
     <string name="onboarding_firefox_account_stay_signed_out">Permanecer desconectado</string>
     <!-- text to display in the snackbar once account is signed-in -->
@@ -1274,11 +1274,11 @@
     <!-- Text shown for sign in pairing when ready -->
     <string name="sign_in_ready_for_scan">Pronto para digitalizar</string>
     <!-- Text shown for settings option for sign with pairing -->
-    <string name="sign_in_with_camera">Entre com sua câmera</string>
+    <string name="sign_in_with_camera">Conecte usando sua câmera</string>
     <!-- Text shown for settings option for sign with email -->
     <string name="sign_in_with_email">Usar email</string>
     <!-- Text shown for settings option for create new account text.'Firefox' intentionally hardcoded here.-->
-    <string name="sign_in_create_account_text"><![CDATA[Não tem conta? <u>Crie uma</u> para sincronizar o Firefox entre dispositivos.]]></string>
+    <string name="sign_in_create_account_text"><![CDATA[Ainda não tem conta? <u>Crie uma</u> para sincronizar o Firefox entre dispositivos.]]></string>
     <!-- Text shown in confirmation dialog to sign out of account -->
     <string name="sign_out_confirmation_message">O Firefox deixará de sincronizar com sua conta, mas não excluirá seus dados de navegação neste dispositivo.</string>
     <!-- Text shown in confirmation dialog to sign out of account. The first parameter is the name of the app (e.g. Firefox Preview) -->
@@ -1300,7 +1300,7 @@
     <string name="preference_enhanced_tracking_protection_explanation_title">Navegue sem ser seguido</string>
 
     <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="preference_enhanced_tracking_protection_explanation">Mantenha seus dados consigo. O %s lhe protege de muitos dos rastreadores mais comuns que seguem o que você faz online.</string>
+    <string name="preference_enhanced_tracking_protection_explanation">Mantenha seus dados com você. O %s te protege de muitos dos rastreadores mais comuns que tentam seguir o que você faz online.</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Saiba mais</string>
 
@@ -1347,7 +1347,7 @@
     <string name="preference_enhanced_tracking_protection_custom_fingerprinters">Fingerprinters</string>
     <string name="enhanced_tracking_protection_blocked">Bloqueado:</string>
     <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
-    <string name="enhanced_tracking_protection_allowed">Permitido</string>
+    <string name="enhanced_tracking_protection_allowed">Permitido:</string>
     <!-- Category of trackers (social media trackers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_social_media_trackers_title">Rastreadores de mídias sociais</string>
     <!-- Description of social media trackers that can be blocked by Enhanced Tracking Protection -->
