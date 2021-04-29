@@ -84,7 +84,7 @@ class InputTaskManager : public TaskManager {
 
   void NotifyVsync() {
     MOZ_ASSERT(StaticPrefs::dom_input_events_strict_input_vsync_alignment());
-    mInputPriorityController.DidVsync();
+    mInputPriorityController.WillRunVsync();
   }
 
  private:
@@ -97,7 +97,7 @@ class InputTaskManager : public TaskManager {
     // tasks
     bool ShouldUseHighestPriority(InputTaskManager*);
 
-    void DidVsync();
+    void WillRunVsync();
 
     // Gets called when a input task is finished to run; If the current
     // input vsync state is `HasPendingVsync`, determines whether we

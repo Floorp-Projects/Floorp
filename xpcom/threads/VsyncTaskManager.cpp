@@ -15,8 +15,8 @@ void VsyncTaskManager::Init() {
   gHighPriorityTaskManager = new VsyncTaskManager();
 }
 
-void VsyncTaskManager::DidRunTask() {
-  TaskManager::DidRunTask();
+void VsyncTaskManager::WillRunTask() {
+  TaskManager::WillRunTask();
 
   if (StaticPrefs::dom_input_events_strict_input_vsync_alignment()) {
     InputTaskManager::Get()->NotifyVsync();
