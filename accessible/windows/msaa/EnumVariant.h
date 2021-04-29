@@ -7,8 +7,8 @@
 #ifndef mozilla_a11y_EnumVariant_h__
 #define mozilla_a11y_EnumVariant_h__
 
-#include "AccessibleWrap.h"
 #include "IUnknownImpl.h"
+#include "MsaaAccessible.h"
 
 namespace mozilla {
 namespace a11y {
@@ -18,9 +18,9 @@ namespace a11y {
  */
 class ChildrenEnumVariant final : public IEnumVARIANT {
  public:
-  explicit ChildrenEnumVariant(AccessibleWrap* aAnchor)
-      : mAnchorAcc(aAnchor),
-        mCurAcc(mAnchorAcc->LocalChildAt(0)),
+  explicit ChildrenEnumVariant(MsaaAccessible* aAnchor)
+      : mAnchorMsaa(aAnchor),
+        mCurAcc(mAnchorMsaa->LocalAcc()->LocalChildAt(0)),
         mCurIndex(0) {}
 
   // IUnknown
@@ -45,13 +45,13 @@ class ChildrenEnumVariant final : public IEnumVARIANT {
   ChildrenEnumVariant& operator=(const ChildrenEnumVariant&) = delete;
 
   ChildrenEnumVariant(const ChildrenEnumVariant& aEnumVariant)
-      : mAnchorAcc(aEnumVariant.mAnchorAcc),
+      : mAnchorMsaa(aEnumVariant.mAnchorMsaa),
         mCurAcc(aEnumVariant.mCurAcc),
         mCurIndex(aEnumVariant.mCurIndex) {}
   virtual ~ChildrenEnumVariant() {}
 
  protected:
-  RefPtr<AccessibleWrap> mAnchorAcc;
+  RefPtr<MsaaAccessible> mAnchorMsaa;
   LocalAccessible* mCurAcc;
   uint32_t mCurIndex;
 };
