@@ -27,7 +27,13 @@ bool PrivateOpEmitter::init() {
     return false;
   }
 
-  return bce_->lookupPrivate(name_, loc_, brandLoc_);
+  // Static analysis needs us to initialise this to something, so use Dynamic()
+  NameLocation loc = NameLocation::Dynamic();
+  bool result = bce_->lookupPrivate(name_, loc, brandLoc_);
+  if (result) {
+    loc_ = mozilla::Some(loc);
+  }
+  return result;
 }
 
 bool PrivateOpEmitter::emitLoad(TaggedParserAtomIndex name,
@@ -38,7 +44,7 @@ bool PrivateOpEmitter::emitLoad(TaggedParserAtomIndex name,
 
 bool PrivateOpEmitter::emitLoadPrivateBrand() {
   // Call this only if the binding kind guarantees a private brand exists.
-  MOZ_ASSERT(loc_.bindingKind() == BindingKind::PrivateMethod);
+  MOZ_ASSERT(loc_->bindingKind() == BindingKind::PrivateMethod);
   return emitLoad(TaggedParserAtomIndex::WellKnown::dotPrivateBrand(),
                   *brandLoc_);
 }
@@ -75,13 +81,13 @@ bool PrivateOpEmitter::emitReference() {
     return false;
   }
 
-  if (loc_.bindingKind() == BindingKind::PrivateMethod) {
+  if (loc_->bindingKind() == BindingKind::PrivateMethod) {
     if (!emitLoadPrivateBrand()) {
       //            [stack] OBJ BRAND
       return false;
     }
   } else {
-    if (!emitLoad(name_, loc_)) {
+    if (!emitLoad(name_, loc_.ref())) {
       //            [stack] OBJ NAME
       return false;
     }
@@ -110,9 +116,9 @@ bool PrivateOpEmitter::emitGet() {
 
   //                [stack] OBJ NAME
 
-  if (loc_.bindingKind() == BindingKind::PrivateMethod) {
+  if (loc_->bindingKind() == BindingKind::PrivateMethod) {
     // Note that the decision of what we leave on the stack depends on kind_,
-    // not loc_.bindingKind().  We can't emit code for a call just because this
+    // not loc_->bindingKind().  We can't emit code for a call just because this
     // private member is a method. `obj.#method` is allowed without a call,
     // just fetching the function object (it's useful in code like
     // `obj.#method.bind(...)`). Even if the user says `obj.#method += 7`, we
@@ -140,7 +146,7 @@ bool PrivateOpEmitter::emitGet() {
       }
     }
 
-    if (!emitLoad(name_, loc_)) {
+    if (!emitLoad(name_, loc_.ref())) {
       //            [stack] OBJ BRAND METHOD  # if isCompoundAssignment
       //            [stack] OBJ METHOD        # if call
       //            [stack] METHOD            # otherwise
@@ -208,7 +214,7 @@ bool PrivateOpEmitter::emitAssignment() {
 
   //                [stack] OBJ KEY RHS
 
-  if (loc_.bindingKind() == BindingKind::PrivateMethod) {
+  if (loc_->bindingKind() == BindingKind::PrivateMethod) {
     if (!bce_->emit2(JSOp::ThrowMsg,
                      uint8_t(ThrowMsgKind::AssignToPrivateMethod))) {
       return false;

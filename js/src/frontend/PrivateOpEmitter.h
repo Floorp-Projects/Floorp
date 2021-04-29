@@ -98,7 +98,7 @@ class MOZ_STACK_CLASS PrivateOpEmitter {
 
   // Location of the slot containing the private name symbol; or, for a
   // non-static private method, the slot containing the method.
-  NameLocation loc_;
+  mozilla::Maybe<NameLocation> loc_;
 
   // For non-static private method accesses, the location of the relevant
   // `.privateBrand` binding. Otherwise, `Nothing`.
