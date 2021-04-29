@@ -722,6 +722,10 @@ VectorImage::GetFrameInternal(const IntSize& aSize,
                      RefPtr<SourceSurface>());
   }
 
+  float animTime = (aWhichFrame == FRAME_FIRST)
+                       ? 0.0f
+                       : mSVGDocumentWrapper->GetCurrentTimeAsFloat();
+
   // By using a null gfxContext, we ensure that we will always attempt to
   // create a surface, even if we aren't capable of caching it (e.g. due to our
   // flags, having an animation, etc). Otherwise CreateSurface will assume that
@@ -729,8 +733,7 @@ VectorImage::GetFrameInternal(const IntSize& aSize,
   // cannot cache.
   SVGDrawingParameters params(
       nullptr, decodeSize, aSize, ImageRegion::Create(decodeSize),
-      SamplingFilter::POINT, aSVGContext,
-      mSVGDocumentWrapper->GetCurrentTimeAsFloat(), aFlags, 1.0);
+      SamplingFilter::POINT, aSVGContext, animTime, aFlags, 1.0);
 
   bool didCache;  // Was the surface put into the cache?
   bool contextPaint = aSVGContext && aSVGContext->GetContextPaint();
