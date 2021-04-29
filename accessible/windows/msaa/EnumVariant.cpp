@@ -31,7 +31,7 @@ ChildrenEnumVariant::Next(ULONG aCount, VARIANT FAR* aItems,
   while (mCurAcc && countFetched < aCount) {
     VariantInit(aItems + countFetched);
 
-    IDispatch* accNative = MsaaAccessible::NativeAccessible(mCurAcc);
+    IDispatch* accNative = AccessibleWrap::NativeAccessible(mCurAcc);
 
     ++mCurIndex;
     mCurAcc = mAnchorAcc->LocalChildAt(mCurIndex);

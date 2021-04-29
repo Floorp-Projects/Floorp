@@ -59,9 +59,6 @@ class ia2AccessibleTableCell : public IAccessibleTableCell {
       : mTableCell(aTableCell) {}
 
   TableCellAccessible* mTableCell;
-
- private:
-  TableCellAccessible* CellAcc() { return mTableCell; }
 };
 
 }  // namespace a11y
