@@ -5,13 +5,13 @@
 
 #include "VectorImage.h"
 
+#include "AutoRestoreSVGState.h"
 #include "gfx2DGlue.h"
 #include "gfxContext.h"
 #include "gfxDrawable.h"
 #include "gfxPlatform.h"
 #include "gfxUtils.h"
 #include "imgFrame.h"
-#include "mozilla/AutoRestore.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/MediaFeatureChange.h"
 #include "mozilla/dom/Event.h"
@@ -304,39 +304,6 @@ bool SVGDrawingCallback::operator()(gfxContext* aContext,
 
   return true;
 }
-
-class MOZ_STACK_CLASS AutoRestoreSVGState final {
- public:
-  AutoRestoreSVGState(const SVGDrawingParameters& aParams,
-                      SVGDocumentWrapper* aSVGDocumentWrapper, bool& aIsDrawing,
-                      bool aContextPaint)
-      : mIsDrawing(aIsDrawing)
-        // Apply any 'preserveAspectRatio' override (if specified) to the root
-        // element:
-        ,
-        mPAR(aParams.svgContext, aSVGDocumentWrapper->GetRootSVGElem())
-        // Set the animation time:
-        ,
-        mTime(aSVGDocumentWrapper->GetRootSVGElem(), aParams.animationTime) {
-    MOZ_ASSERT(!aIsDrawing);
-    MOZ_ASSERT(aSVGDocumentWrapper->GetDocument());
-
-    aIsDrawing = true;
-
-    // Set context paint (if specified) on the document:
-    if (aContextPaint) {
-      MOZ_ASSERT(aParams.svgContext->GetContextPaint());
-      mContextPaint.emplace(*aParams.svgContext->GetContextPaint(),
-                            *aSVGDocumentWrapper->GetDocument());
-    }
-  }
-
- private:
-  AutoRestore<bool> mIsDrawing;
-  AutoPreserveAspectRatioOverride mPAR;
-  AutoSVGTimeSetRestore mTime;
-  Maybe<AutoSetRestoreSVGContextPaint> mContextPaint;
-};
 
 // Implement VectorImage's nsISupports-inherited methods
 NS_IMPL_ISUPPORTS(VectorImage, imgIContainer, nsIStreamListener,
