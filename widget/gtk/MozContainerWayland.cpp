@@ -569,8 +569,8 @@ struct wl_egl_window* moz_container_wayland_get_egl_window(
   if (!wl_container->eglwindow) {
     GdkWindow* window = gtk_widget_get_window(GTK_WIDGET(container));
     wl_container->eglwindow = wl_egl_window_create(
-        wl_container->surface, round(gdk_window_get_width(window) * scale),
-        round(gdk_window_get_height(window) * scale));
+        wl_container->surface, (int)round(gdk_window_get_width(window) * scale),
+        (int)round(gdk_window_get_height(window) * scale));
 
     LOGWAYLAND(("%s [%p] created eglwindow %p\n", __FUNCTION__,
                 (void*)container, (void*)wl_container->eglwindow));
@@ -579,7 +579,7 @@ struct wl_egl_window* moz_container_wayland_get_egl_window(
 }
 
 gboolean moz_container_wayland_has_egl_window(MozContainer* container) {
-  return container->wl_container.eglwindow ? true : false;
+  return container->wl_container.eglwindow != nullptr;
 }
 
 gboolean moz_container_wayland_surface_needs_clear(MozContainer* container) {
