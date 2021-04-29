@@ -97,6 +97,10 @@ async function checkRevealLink(actionFn, inspector, node) {
     !inspector.selection.isSlotted(),
     "The selection is not the slotted version"
   );
+  // wait until the selected container isn't the one we had before.
+  await waitFor(
+    () => inspector.markup.getSelectedContainer() !== slottedContainer
+  );
   ok(
     !inspector.markup.getSelectedContainer().isSlotted(),
     "The selected container is not slotted"

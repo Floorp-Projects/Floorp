@@ -4,7 +4,6 @@
 
 "use strict";
 
-const promise = require("promise");
 const Services = require("Services");
 const flags = require("devtools/shared/flags");
 const nodeConstants = require("devtools/shared/dom-node-constants");
@@ -993,7 +992,7 @@ MarkupView.prototype = {
       .then(() => {
         // We could be destroyed by now.
         if (this._destroyed) {
-          return promise.reject("markupview destroyed");
+          return Promise.reject("markupview destroyed");
         }
 
         // Mark the node as selected.
@@ -1006,7 +1005,7 @@ MarkupView.prototype = {
       })
       .catch(this._handleRejectionIfNotDestroyed);
 
-    promise.all([onShowBoxModel, onShow]).then(done);
+    Promise.all([onShowBoxModel, onShow]).then(done);
   },
 
   /**
@@ -1611,7 +1610,7 @@ MarkupView.prototype = {
     return this._waitForChildren()
       .then(() => {
         if (this._destroyed) {
-          return promise.reject("markupview destroyed");
+          return Promise.reject("markupview destroyed");
         }
         return this._ensureVisible(node);
       })
@@ -1669,7 +1668,7 @@ MarkupView.prototype = {
           promises.push(this._expandAll(child.container));
           child = child.nextSibling;
         }
-        return promise.all(promises);
+        return Promise.all(promises);
       })
       .catch(console.error);
   },
@@ -1850,7 +1849,7 @@ MarkupView.prototype = {
   updateNodeOuterHTML: function(node, newValue) {
     const container = this.getContainer(node);
     if (!container) {
-      return promise.reject();
+      return Promise.reject();
     }
 
     // Changing the outerHTML removes the node which outerHTML was changed.
@@ -1875,7 +1874,7 @@ MarkupView.prototype = {
   updateNodeInnerHTML: function(node, newValue, oldValue) {
     const container = this.getContainer(node);
     if (!container) {
-      return promise.reject();
+      return Promise.reject();
     }
 
     return new Promise((resolve, reject) => {
@@ -1906,7 +1905,7 @@ MarkupView.prototype = {
   insertAdjacentHTMLToNode: function(node, position, value) {
     const container = this.getContainer(node);
     if (!container) {
-      return promise.reject();
+      return Promise.reject();
     }
 
     let injectedNodes = [];
@@ -2138,7 +2137,7 @@ MarkupView.prototype = {
   _updateChildren: function(container, options) {
     // Slotted containers do not display any children.
     if (container.isSlotted()) {
-      return promise.resolve(container);
+      return Promise.resolve(container);
     }
 
     const expand = options?.expand;
@@ -2158,7 +2157,7 @@ MarkupView.prototype = {
     }
 
     if (!container.childrenDirty) {
-      return promise.resolve(container);
+      return Promise.resolve(container);
     }
 
     if (
@@ -2187,7 +2186,7 @@ MarkupView.prototype = {
 
       this.setContainer(container.node.inlineTextChild, container);
       container.childrenDirty = false;
-      return promise.resolve(container);
+      return Promise.resolve(container);
     }
 
     if (!container.hasChildren) {
@@ -2196,14 +2195,14 @@ MarkupView.prototype = {
       }
       container.childrenDirty = false;
       container.setExpanded(false);
-      return promise.resolve(container);
+      return Promise.resolve(container);
     }
 
     // If we're not expanded (or asked to update anyway), we're done for
     // now.  Note that this will leave the childrenDirty flag set, so when
     // expanded we'll refresh the child list.
     if (!(container.expanded || expand)) {
-      return promise.resolve(container);
+      return Promise.resolve(container);
     }
 
     // We're going to issue a children request, make sure it includes the
@@ -2219,7 +2218,7 @@ MarkupView.prototype = {
     const updatePromise = this._getVisibleChildren(container, centered)
       .then(children => {
         if (!this._containers) {
-          return promise.reject("markup view destroyed");
+          return Promise.reject("markup view destroyed");
         }
         this._queuedChildUpdates.delete(container);
 
@@ -2290,10 +2289,10 @@ MarkupView.prototype = {
 
   _waitForChildren: function() {
     if (!this._queuedChildUpdates) {
-      return promise.resolve(undefined);
+      return Promise.resolve(undefined);
     }
 
-    return promise.all([...this._queuedChildUpdates.values()]);
+    return Promise.all([...this._queuedChildUpdates.values()]);
   },
 
   /**
