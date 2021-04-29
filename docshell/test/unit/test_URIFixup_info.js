@@ -256,7 +256,7 @@ var testcases = [
   {
     input: ".test",
     fixedURI: "http://.test/",
-    alternateURI: "https://www..test/",
+    alternateURI: "https://www.test/",
     keywordLookup: true,
     protocolChange: true,
     affectedByDNSForSingleWordHosts: true,
@@ -662,6 +662,47 @@ var testcases = [
   {
     input: "www.mozilla",
     fixedURI: "http://www.mozilla/",
+    protocolChange: true,
+  },
+  {
+    input: "https://sub.www..mozilla...org/",
+    fixedURI: "https://sub.www.mozilla.org/",
+  },
+  {
+    input: "sub.www..mozilla...org/",
+    fixedURI: "http://sub.www.mozilla.org/",
+    protocolChange: true,
+  },
+  {
+    input: "sub.www..mozilla...org",
+    fixedURI: "http://sub.www.mozilla.org/",
+    protocolChange: true,
+  },
+  {
+    input: "www...mozilla",
+    fixedURI: "http://www.mozilla/",
+    keywordLookup: true,
+    protocolChange: true,
+    shouldRunTest: flags =>
+      !gSingleWordDNSLookup &&
+      flags & Services.uriFixup.FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP,
+  },
+  {
+    input: "www...mozilla",
+    fixedURI: "http://www.mozilla/",
+    protocolChange: true,
+    shouldRunTest: flags =>
+      gSingleWordDNSLookup ||
+      !(flags & Services.uriFixup.FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP),
+  },
+  {
+    input: "mozilla...org",
+    fixedURI: "http://mozilla.org/",
+    protocolChange: true,
+  },
+  {
+    input: "モジラ...org",
+    fixedURI: "http://xn--yck6dwa.org/",
     protocolChange: true,
   },
   {
