@@ -62,17 +62,16 @@ add_task(async function test_changeUPLoginOnPUpdateForm_accept() {
   Services.logins.addLogin(login1);
   Services.logins.addLogin(login1B);
 
+  let selectDialogPromise = TestUtils.topicObserved("select-dialog-loaded");
+
   await testSubmittingLoginForm(
     "subtst_notifications_change_p.html",
     async function(fieldValues) {
       is(fieldValues.username, "null", "Checking submitted username");
       is(fieldValues.password, "pass2", "Checking submitted password");
 
-      await ContentTaskUtils.waitForCondition(() => {
-        return getSelectDialogDoc();
-      }, "Wait for selection dialog to be accessible.");
-
-      let doc = getSelectDialogDoc();
+      info("Waiting for select dialog to appear.");
+      let doc = (await selectDialogPromise)[0].document;
       let dialog = doc.getElementsByTagName("dialog")[0];
       let listbox = doc.getElementById("list");
 
@@ -122,17 +121,16 @@ add_task(async function test_changeUPLoginOnPUpdateForm_cancel() {
   Services.logins.addLogin(login1);
   Services.logins.addLogin(login1B);
 
+  let selectDialogPromise = TestUtils.topicObserved("select-dialog-loaded");
+
   await testSubmittingLoginForm(
     "subtst_notifications_change_p.html",
     async function(fieldValues) {
       is(fieldValues.username, "null", "Checking submitted username");
       is(fieldValues.password, "pass2", "Checking submitted password");
 
-      await ContentTaskUtils.waitForCondition(() => {
-        return getSelectDialogDoc();
-      }, "Wait for selection dialog to be accessible.");
-
-      let doc = getSelectDialogDoc();
+      info("Waiting for select dialog to appear.");
+      let doc = (await selectDialogPromise)[0].document;
       let dialog = doc.getElementsByTagName("dialog")[0];
       let listbox = doc.getElementById("list");
 
