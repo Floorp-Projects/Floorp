@@ -63,7 +63,8 @@
     "properties": {
       "panel_hover": "color-mix(in srgb, currentColor 12%, transparent)",
       "panel_active": "color-mix(in srgb, currentColor 20%, transparent)",
-      "panel_active_darker": "color-mix(in srgb, currentColor 27%, transparent)"
+      "panel_active_darker": "color-mix(in srgb, currentColor 27%, transparent)",
+      "toolbar_field_icon_opacity": "0.72"
     }
   },
 
@@ -96,7 +97,8 @@
     "properties": {
       "panel_hover": "--arrowpanel-dimmed",
       "panel_active": "-arrowpanel-dimmed-further",
-      "panel_active_darker": "--arrowpanel-dimmed-even-further"
+      "panel_active_darker": "--arrowpanel-dimmed-even-further",
+      "toolbar_field_icon_opacity": "--urlbar-icon-fill-opacity"
     }
   }
 }
