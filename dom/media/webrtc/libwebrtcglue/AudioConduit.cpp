@@ -58,7 +58,6 @@ void WebrtcAudioConduit::DeleteStreams() {
  */
 WebrtcAudioConduit::~WebrtcAudioConduit() {
   CSFLogDebug(LOGTAG, "%s ", __FUNCTION__);
-  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!mSendStream && !mRecvStream,
              "Call DeleteStreams prior to ~WebrtcAudioConduit.");
 }
