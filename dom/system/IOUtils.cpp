@@ -462,6 +462,12 @@ already_AddRefed<Promise> IOUtils::WriteJSON(GlobalObject& aGlobal,
       return promise.forget();
     }
 
+    if (opts.inspect().mMode == WriteMode::Append) {
+      promise->MaybeRejectWithNotSupportedError(
+          "IOUtils.writeJSON does not support appending to files."_ns);
+      return promise.forget();
+    }
+
     JSContext* cx = aGlobal.Context();
     JS::Rooted<JS::Value> rootedValue(cx, aValue);
     nsCString utf8Str;
@@ -876,7 +882,7 @@ Result<uint32_t, IOUtils::IOError> IOUtils::WriteSync(
   bool exists = false;
   MOZ_TRY(aFile->Exists(&exists));
 
-  if (exists && aOptions.mNoOverwrite) {
+  if (exists && aOptions.mMode == WriteMode::Create) {
     return Err(IOError(NS_ERROR_DOM_TYPE_MISMATCH_ERR)
                    .WithMessage("Refusing to overwrite the file at %s\n"
                                 "Specify `noOverwrite: false` to allow "
@@ -895,7 +901,9 @@ Result<uint32_t, IOUtils::IOError> IOUtils::WriteSync(
     nsCOMPtr<nsIFile> toMove;
     MOZ_ALWAYS_SUCCEEDS(aFile->Clone(getter_AddRefs(toMove)));
 
-    if (MoveSync(toMove, backupFile, aOptions.mNoOverwrite).isErr()) {
+    bool noOverwrite = aOptions.mMode != WriteMode::Create;
+
+    if (MoveSync(toMove, backupFile, noOverwrite).isErr()) {
       return Err(IOError(NS_ERROR_FILE_COPY_OR_MOVE_FAILED)
                      .WithMessage("Failed to backup the source file(%s) to %s",
                                   aFile->HumanReadablePath().get(),
@@ -913,7 +921,25 @@ Result<uint32_t, IOUtils::IOError> IOUtils::WriteSync(
     writeFile = aFile;
   }
 
-  int32_t flags = PR_WRONLY | PR_TRUNCATE | PR_CREATE_FILE;
+  int32_t flags = PR_WRONLY;
+
+  switch (aOptions.mMode) {
+    case WriteMode::Overwrite:
+      flags |= PR_TRUNCATE | PR_CREATE_FILE;
+      break;
+
+    case WriteMode::Append:
+      flags |= PR_APPEND;
+      break;
+
+    case WriteMode::Create:
+      flags |= PR_CREATE_FILE | PR_EXCL;
+      break;
+
+    default:
+      MOZ_CRASH("IOUtils: unknown write mode");
+  }
+
   if (aOptions.mFlush) {
     flags |= PR_SYNC;
   }
@@ -1777,7 +1803,7 @@ Result<IOUtils::InternalWriteOpts, IOUtils::IOError>
 IOUtils::InternalWriteOpts::FromBinding(const WriteOptions& aOptions) {
   InternalWriteOpts opts;
   opts.mFlush = aOptions.mFlush;
-  opts.mNoOverwrite = aOptions.mNoOverwrite;
+  opts.mMode = aOptions.mMode;
 
   if (aOptions.mBackupFile.WasPassed()) {
     opts.mBackupFile = new nsLocalFile();

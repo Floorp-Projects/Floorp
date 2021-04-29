@@ -75,6 +75,7 @@ namespace IOUtils {
    *
    * @param path      An absolute file path.
    * @param string    A string to write to the file at path.
+   * @param options   Options for writing the file.
    *
    * @return Resolves with the number of bytes successfully written to the file,
    *         otherwise rejects with a DOMException.
@@ -85,8 +86,9 @@ namespace IOUtils {
    * UTF-8 string, then safely write the result to a file at |path|. Works
    * exactly like |write|.
    *
-   * @param path   An absolute file path
-   * @param value  The value to be serialized.
+   * @param path      An absolute file path
+   * @param value     The value to be serialized.
+   * @param options   Options for writing the file. The "append" mode is not supported.
    *
    * @return Resolves with the number of bytes successfully written to the file,
    *         otherwise rejects with a DOMException.
@@ -242,6 +244,30 @@ dictionary ReadOptions : ReadUTF8Options {
 };
 
 /**
+ * Modes for writing to a file.
+ */
+enum WriteMode {
+  /**
+   * Overwrite the contents of the file.
+   *
+   * The file will be created if it does not exist.
+   */
+  "overwrite",
+  /**
+   * Append to the end of the file.
+   *
+   * The file will be created if it does not exist.
+   */
+  "append",
+  /**
+   * Create a new file.
+   *
+   * This mode will refuse to overwrite an existing file.
+   */
+  "create",
+};
+
+/**
  * Options to be passed to the |IOUtils.write| and |writeUTF8|
  * methods.
  */
@@ -258,9 +284,9 @@ dictionary WriteOptions {
    */
   DOMString tmpPath;
   /**
-   * If true, fail if the destination already exists.
+   * The mode used to write to the file.
    */
-  boolean noOverwrite = false;
+  WriteMode mode = "overwrite";
   /**
    * If true, force the OS to write its internal buffers to the disk.
    * This is considerably slower for the whole system, but safer in case of
