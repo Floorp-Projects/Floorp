@@ -1609,7 +1609,8 @@ typedef enum _cairo_font_type {
     CAIRO_FONT_TYPE_FT,
     CAIRO_FONT_TYPE_WIN32,
     CAIRO_FONT_TYPE_QUARTZ,
-    CAIRO_FONT_TYPE_USER
+    CAIRO_FONT_TYPE_USER,
+    CAIRO_FONT_TYPE_DWRITE
 } cairo_font_type_t;
 
 cairo_public cairo_font_type_t

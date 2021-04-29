@@ -53,6 +53,8 @@
 
 #define WIN32_FONT_LOGICAL_SCALE 32
 
+CAIRO_BEGIN_DECLS
+
 /* Surface DC flag values */
 enum {
     /* If this is a surface created for printing or not */
@@ -199,6 +201,12 @@ _cairo_win32_gdi_compositor_get (void);
 cairo_status_t
 _cairo_win32_print_gdi_error (const char *context);
 
+cairo_bool_t
+_cairo_surface_is_win32 (const cairo_surface_t *surface);
+
+cairo_bool_t
+_cairo_surface_is_win32_printing (const cairo_surface_t *surface);
+
 cairo_private void
 _cairo_win32_display_surface_discard_fallback (cairo_win32_display_surface_t *surface);
 
@@ -244,5 +252,24 @@ _cairo_win32_scaled_font_is_type1 (cairo_scaled_font_t *scaled_font);
 
 cairo_bool_t
 _cairo_win32_scaled_font_is_bitmap (cairo_scaled_font_t *scaled_font);
+
+#ifdef CAIRO_HAS_DWRITE_FONT
+
+cairo_int_status_t
+_cairo_dwrite_show_glyphs_on_surface (void *surface,
+                                      cairo_operator_t op,
+                                      const cairo_pattern_t *source,
+                                      cairo_glyph_t *glyphs,
+                                      int num_glyphs,
+                                      cairo_scaled_font_t *scaled_font,
+                                      cairo_clip_t *clip);
+
+cairo_int_status_t
+_cairo_dwrite_scaled_font_create_win32_scaled_font (cairo_scaled_font_t *scaled_font,
+                                                    cairo_scaled_font_t **new_font);
+
+#endif /* CAIRO_HAS_DWRITE_FONT */
+
+CAIRO_END_DECLS
 
 #endif /* CAIRO_WIN32_PRIVATE_H */
