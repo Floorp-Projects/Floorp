@@ -8,4 +8,3 @@
     style="@style/NeutralButton"
     android:layout_marginHorizontal="16dp"
     android:text="@string/preferences_tracking_protection_exceptions_turn_on_for_all" />
-

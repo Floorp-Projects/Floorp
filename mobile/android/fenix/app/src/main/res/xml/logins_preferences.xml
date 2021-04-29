@@ -24,4 +24,3 @@
         android:title="@string/preferences_passwords_exceptions"
         app:icon="@drawable/ic_internet" />
 </PreferenceScreen>
-

@@ -20,4 +20,3 @@
     app:browserToolbarProgressBarGravity="bottom"
     app:browserToolbarSecureColor="?primaryText"
     app:browserToolbarTrackingProtectionAndSecurityIndicatorSeparatorColor="?toolbarDivider" />
-

@@ -28,4 +28,3 @@
         android:paddingTop="19dp"
         tools:listitem="@layout/history_list_item" />
 </androidx.constraintlayout.widget.ConstraintLayout>
-
