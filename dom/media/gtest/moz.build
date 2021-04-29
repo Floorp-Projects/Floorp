@@ -9,6 +9,7 @@ include("/dom/media/webrtc/third_party_build/webrtc.mozbuild")
 DEFINES["ENABLE_SET_CUBEB_BACKEND"] = True
 
 LOCAL_INCLUDES += [
+    "/dom/media/mediasink",
     "/dom/media/webrtc/common/",
     "/third_party/libwebrtc",
     "/third_party/libwebrtc/webrtc",
@@ -20,6 +21,7 @@ UNIFIED_SOURCES += [
     "TestAudioBuffers.cpp",
     "TestAudioCallbackDriver.cpp",
     "TestAudioCompactor.cpp",
+    "TestAudioDecoderInputTrack.cpp",
     "TestAudioDriftCorrection.cpp",
     "TestAudioMixer.cpp",
     "TestAudioPacketizer.cpp",
