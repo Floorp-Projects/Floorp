@@ -11,7 +11,6 @@ use moz_task::{Task, TaskRunnable, ThreadPtrHandle, ThreadPtrHolder};
 use nserror::{nsresult, NS_ERROR_NOT_AVAILABLE, NS_OK};
 use nsstring::nsString;
 use storage::Conn;
-use thin_vec::ThinVec;
 use xpcom::{
     interfaces::{
         mozIPlacesPendingOperation, mozIServicesLogSink, mozIStorageConnection,
@@ -74,7 +73,6 @@ impl SyncedBookmarksMerger {
         merge => Merge(
             local_time_seconds: i64,
             remote_time_seconds: i64,
-            weak_uploads: *const ThinVec<::nsstring::nsString>,
             callback: *const mozISyncedBookmarksMirrorCallback
         ) -> *const mozIPlacesPendingOperation
     );
@@ -82,7 +80,6 @@ impl SyncedBookmarksMerger {
         &self,
         local_time_seconds: i64,
         remote_time_seconds: i64,
-        weak_uploads: Option<&ThinVec<nsString>>,
         callback: &mozISyncedBookmarksMirrorCallback,
     ) -> Result<RefPtr<mozIPlacesPendingOperation>, nsresult> {
         let callback = RefPtr::new(callback);
@@ -99,9 +96,6 @@ impl SyncedBookmarksMerger {
             logger.as_ref().cloned(),
             local_time_seconds,
             remote_time_seconds,
-            weak_uploads
-                .map(|w| w.as_slice().to_vec())
-                .unwrap_or_default(),
             callback,
         )?;
         let runnable = TaskRunnable::new(
@@ -128,7 +122,6 @@ struct MergeTask {
     logger: Option<ThreadPtrHandle<mozIServicesLogSink>>,
     local_time_millis: i64,
     remote_time_millis: i64,
-    weak_uploads: Vec<nsString>,
     progress: Option<ThreadPtrHandle<mozISyncedBookmarksMirrorProgressListener>>,
     callback: ThreadPtrHandle<mozISyncedBookmarksMirrorCallback>,
     result: AtomicRefCell<error::Result<store::ApplyStatus>>,
@@ -141,7 +134,6 @@ impl MergeTask {
         logger: Option<RefPtr<mozIServicesLogSink>>,
         local_time_seconds: i64,
         remote_time_seconds: i64,
-        weak_uploads: Vec<nsString>,
         callback: RefPtr<mozISyncedBookmarksMirrorCallback>,
     ) -> Result<MergeTask, nsresult> {
         let max_log_level = logger
@@ -175,7 +167,6 @@ impl MergeTask {
             logger,
             local_time_millis: local_time_seconds * 1000,
             remote_time_millis: remote_time_seconds * 1000,
-            weak_uploads,
             progress,
             callback: ThreadPtrHolder::new(cstr!("mozISyncedBookmarksMirrorCallback"), callback)?,
             result: AtomicRefCell::new(Err(error::Error::DidNotRun)),
@@ -203,7 +194,6 @@ impl MergeTask {
             &self.controller,
             self.local_time_millis,
             self.remote_time_millis,
-            &self.weak_uploads,
         );
         store.validate()?;
         store.prepare()?;

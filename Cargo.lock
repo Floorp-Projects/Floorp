@@ -420,7 +420,6 @@ dependencies = [
  "nsstring",
  "storage",
  "storage_variant",
- "thin-vec",
  "url",
  "xpcom",
 ]

@@ -52,7 +52,6 @@ pub struct Store<'s> {
 
     local_time_millis: i64,
     remote_time_millis: i64,
-    weak_uploads: &'s [nsString],
 }
 
 impl<'s> Store<'s> {
@@ -62,7 +61,6 @@ impl<'s> Store<'s> {
         controller: &'s AbortController,
         local_time_millis: i64,
         remote_time_millis: i64,
-        weak_uploads: &'s [nsString],
     ) -> Store<'s> {
         Store {
             db,
@@ -71,7 +69,6 @@ impl<'s> Store<'s> {
             total_sync_changes: total_sync_changes(),
             local_time_millis,
             remote_time_millis,
-            weak_uploads,
         }
     }
 
@@ -453,7 +450,7 @@ impl<'s> dogear::Store for Store<'s> {
     fn apply<'t>(&mut self, root: MergedRoot<'t>) -> Result<ApplyStatus> {
         let ops = root.completion_ops_with_signal(self.controller)?;
 
-        if ops.is_empty() && self.weak_uploads.is_empty() {
+        if ops.is_empty() {
             // If we don't have any items to apply, upload, or delete,
             // no need to open a transaction at all.
             return Ok(ApplyStatus::Skipped);
@@ -486,7 +483,6 @@ impl<'s> dogear::Store for Store<'s> {
             &self.controller,
             &ops.upload_items,
             &ops.upload_tombstones,
-            &self.weak_uploads,
         )?;
 
         cleanup(&tx)?;
@@ -1080,30 +1076,10 @@ fn stage_items_to_upload(
     controller: &AbortController,
     upload_items: &[UploadItem],
     upload_tombstones: &[UploadTombstone],
-    weak_upload: &[nsString],
 ) -> Result<()> {
     debug!(driver, "Cleaning up staged items left from last sync");
     controller.err_if_aborted()?;
     db.exec("DELETE FROM itemsToUpload")?;
-
-    debug!(driver, "Staging weak uploads");
-    for chunk in weak_upload.chunks(db.variable_limit()?) {
-        let mut statement = db.prepare(format!(
-            "INSERT INTO itemsToUpload(id, guid, syncChangeCounter, parentGuid,
-                                       parentTitle, dateAdded, type, title,
-                                       placeId, isQuery, url, keyword, position,
-                                       tagFolderName)
-             {}
-             WHERE b.guid IN ({})",
-            UploadItemsFragment("b"),
-            repeat_sql_vars(chunk.len()),
-        ))?;
-        for (index, guid) in chunk.iter().enumerate() {
-            controller.err_if_aborted()?;
-            statement.bind_by_index(index as u32, nsString::from(guid.as_ref()))?;
-        }
-        statement.execute()?;
-    }
 
     // Stage remotely changed items with older local creation dates. These are
     // tracked "weakly": if the upload is interrupted or fails, we won't
