@@ -73,9 +73,11 @@ const TEST_DATA = [
   },
   {
     selector: "#noevents",
-    beforeTest: async function(inspector, testActor) {
+    beforeTest: async function(inspector) {
       const nodeMutated = inspector.once("markupmutation");
-      await testActor.eval("window.wrappedJSObject.addNoeventsClickHandler();");
+      await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () =>
+        content.wrappedJSObject.addNoeventsClickHandler()
+      );
       await nodeMutated;
     },
     expected: [
@@ -92,10 +94,10 @@ const TEST_DATA = [
   },
   {
     selector: "#noevents",
-    beforeTest: async function(inspector, testActor) {
+    beforeTest: async function(inspector) {
       const nodeMutated = inspector.once("markupmutation");
-      await testActor.eval(
-        "window.wrappedJSObject.removeNoeventsClickHandler();"
+      await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () =>
+        content.wrappedJSObject.removeNoeventsClickHandler()
       );
       await nodeMutated;
     },

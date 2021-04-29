@@ -17,7 +17,7 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  const { inspector, view, testActor } = await openRuleView();
+  const { inspector, view } = await openRuleView();
   const HIGHLIGHTER_TYPE = inspector.highlighters.TYPES.FLEXBOX;
   const {
     getNodeForActiveHighlighter,
@@ -44,7 +44,9 @@ add_task(async function() {
 
   info("Remove the #flex container in the content page.");
   const onHighlighterHidden = waitForHighlighterTypeHidden(HIGHLIGHTER_TYPE);
-  testActor.eval(`document.querySelector("#flex").remove();`);
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () =>
+    content.document.querySelector("#flex").remove()
+  );
   await onHighlighterHidden;
   ok(
     !getNodeForActiveHighlighter(HIGHLIGHTER_TYPE),

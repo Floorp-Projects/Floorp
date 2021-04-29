@@ -23,7 +23,7 @@ const TEST_URI = `
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
 
-  const { inspector, gridInspector, testActor } = await openLayoutView();
+  const { inspector, gridInspector } = await openLayoutView();
   const { document: doc } = gridInspector;
   const { highlighters, store } = inspector;
 
@@ -50,11 +50,11 @@ add_task(async function() {
   const onReflow = inspector.once("reflow-in-selected-target");
   const onGridOutlineChanged = waitForDOM(doc, ".grid-outline-cell", 4);
 
-  testActor.eval(`
-    const div = document.createElement("div");
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
+    const div = content.document.createElement("div");
     div.textContent = "item 3";
-    document.querySelector(".container").appendChild(div);
-  `);
+    content.document.querySelector(".container").appendChild(div);
+  });
 
   await onReflow;
   elements = await onGridOutlineChanged;

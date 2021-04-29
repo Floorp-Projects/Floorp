@@ -18,7 +18,7 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  const { inspector, flexboxInspector, testActor } = await openLayoutView();
+  const { inspector, flexboxInspector } = await openLayoutView();
   const { document: doc } = flexboxInspector;
 
   const onFlexItemSizingRendered = waitForDOM(doc, "ul.flex-item-sizing");
@@ -38,9 +38,11 @@ add_task(async function() {
     "ul.flex-item-sizing > li",
     3
   );
-  testActor.eval(`
-    document.getElementById("item").style.minWidth = "100px";
-  `);
+  SpecialPowers.spawn(
+    gBrowser.selectedBrowser,
+    [],
+    () => (content.document.getElementById("item").style.minWidth = "100px")
+  );
   const elements = await onFlexItemSizingChanged;
 
   info("Checking the flex item sizing info is correct.");

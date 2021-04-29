@@ -140,16 +140,8 @@ async function testHead(inspector, testActor) {
   await onReselected;
   await onUpdated;
 
-  is(
-    await testActor.eval("document.title"),
-    "New Title",
-    "New title has been added"
-  );
-  is(
-    await testActor.eval("window.foo"),
-    undefined,
-    "Script has not been executed"
-  );
+  is(await getDocumentTitle(), "New Title", "New title has been added");
+  is(await getWindowFoo(), undefined, "Script has not been executed");
   is(
     await testActor.getProperty("head", "outerHTML"),
     headHTML,
@@ -163,9 +155,7 @@ async function testHead(inspector, testActor) {
 }
 
 async function testDocumentElement(inspector, testActor) {
-  const currentDocElementOuterHMTL = await testActor.eval(
-    "document.documentElement.outerHMTL"
-  );
+  const currentDocElementOuterHMTL = await getDocumentOuterHTML();
   const docElementHTML =
     '<html id="updated" foo="bar"><head>' +
     "<title>Updated from document element</title>" +
@@ -182,15 +172,11 @@ async function testDocumentElement(inspector, testActor) {
   await onReselected;
 
   is(
-    await testActor.eval("document.title"),
+    await getDocumentTitle(),
     "Updated from document element",
     "New title has been added"
   );
-  is(
-    await testActor.eval("window.foo"),
-    undefined,
-    "Script has not been executed"
-  );
+  is(await getWindowFoo(), undefined, "Script has not been executed");
   is(
     await getAttributeInBrowser(gBrowser.selectedBrowser, "html", "id"),
     "updated",
@@ -229,9 +215,7 @@ async function testDocumentElement(inspector, testActor) {
 }
 
 async function testDocumentElement2(inspector, testActor) {
-  const currentDocElementOuterHMTL = await testActor.eval(
-    "document.documentElement.outerHMTL"
-  );
+  const currentDocElementOuterHMTL = await getDocumentOuterHTML();
   const docElementHTML =
     '<html id="somethingelse" class="updated"><head>' +
     "<title>Updated again from document element</title>" +
@@ -248,15 +232,11 @@ async function testDocumentElement2(inspector, testActor) {
   await onReselected;
 
   is(
-    await testActor.eval("document.title"),
+    await getDocumentTitle(),
     "Updated again from document element",
     "New title has been added"
   );
-  is(
-    await testActor.eval("window.foo"),
-    undefined,
-    "Script has not been executed"
-  );
+  is(await getWindowFoo(), undefined, "Script has not been executed");
   is(
     await getAttributeInBrowser(gBrowser.selectedBrowser, "html", "id"),
     "somethingelse",
@@ -291,5 +271,29 @@ async function testDocumentElement2(inspector, testActor) {
     await testActor.getProperty("body", "textContent"),
     "Hello again",
     "document.body.textContent has been updated"
+  );
+}
+
+function getDocumentTitle() {
+  return SpecialPowers.spawn(
+    gBrowser.selectedBrowser,
+    [],
+    () => content.document.title
+  );
+}
+
+function getDocumentOuterHTML() {
+  return SpecialPowers.spawn(
+    gBrowser.selectedBrowser,
+    [],
+    () => content.document.documentElement.outerHTML
+  );
+}
+
+function getWindowFoo() {
+  return SpecialPowers.spawn(
+    gBrowser.selectedBrowser,
+    [],
+    () => content.wrappedJSObject.foo
   );
 }

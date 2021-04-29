@@ -11,7 +11,7 @@ const TEST_URI = URL_ROOT + "doc_iframe_reloaded.html";
 
 add_task(async function() {
   await addTab(TEST_URI);
-  const { gridInspector, inspector, testActor } = await openLayoutView();
+  const { gridInspector, inspector } = await openLayoutView();
   const { document: doc } = gridInspector;
   const { highlighters, store } = inspector;
   const gridList = doc.getElementById("grid-list");
@@ -46,7 +46,9 @@ add_task(async function() {
       !state.grids[0].highlighted
   );
   const onHighlighterHidden = highlighters.once("grid-highlighter-hidden");
-  testActor.eval("window.wrappedJSObject.reloadIFrame();");
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [], () =>
+    content.wrappedJSObject.reloadIFrame()
+  );
   await onNewListUnchecked;
   await onHighlighterHidden;
 

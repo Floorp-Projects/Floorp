@@ -34,21 +34,6 @@ registerCleanupFunction(() => {
 });
 
 /**
- * Get an element's inline style property value.
- * @param {TestActor} testActor
- * @param {String} selector
- *        The selector used to obtain the element.
- * @param {String} name
- *        name of the property.
- */
-function getStyle(testActor, selector, propName) {
-  return testActor.eval(`
-    document.querySelector("${selector}")
-            .style.getPropertyValue("${propName}");
-  `);
-}
-
-/**
  * When a tooltip is closed, this ends up "commiting" the value changed within
  * the tooltip (e.g. the color in case of a colorpicker) which, in turn, ends up
  * setting the value of the corresponding css property in the rule-view.

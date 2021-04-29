@@ -12,13 +12,11 @@ const TEST_DATA = [
     desc: "Hiding a node by creating a new stylesheet",
     selector: "#normal-div",
     before: true,
-    changeStyle: async function(testActor) {
-      await testActor.eval(`
-        let div = document.createElement("div");
-        div.id = "new-style";
-        div.innerHTML = "<style>#normal-div {display:none;}</style>";
-        document.body.appendChild(div);
-      `);
+    changeStyle: () => {
+      const div = content.document.createElement("div");
+      div.id = "new-style";
+      div.innerHTML = "<style>#normal-div {display:none;}</style>";
+      content.document.body.appendChild(div);
     },
     after: false,
   },
@@ -26,22 +24,16 @@ const TEST_DATA = [
     desc: "Showing a node by deleting an existing stylesheet",
     selector: "#normal-div",
     before: false,
-    changeStyle: async function(testActor) {
-      await testActor.eval(`
-        document.getElementById("new-style").remove();
-      `);
-    },
+    changeStyle: () => content.document.getElementById("new-style").remove(),
     after: true,
   },
   {
     desc: "Hiding a node by changing its style property",
     selector: "#display-none",
     before: false,
-    changeStyle: async function(testActor) {
-      await testActor.eval(`
-        let node = document.querySelector("#display-none");
-        node.style.display = "block";
-      `);
+    changeStyle: () => {
+      const node = content.document.querySelector("#display-none");
+      node.style.display = "block";
     },
     after: true,
   },
@@ -49,38 +41,29 @@ const TEST_DATA = [
     desc: "Showing a node by removing its hidden attribute",
     selector: "#hidden-true",
     before: false,
-    changeStyle: async function(testActor) {
-      await testActor.eval(`
-        document.querySelector("#hidden-true")
-                .removeAttribute("hidden");
-      `);
-    },
+    changeStyle: () =>
+      content.document.querySelector("#hidden-true").removeAttribute("hidden"),
     after: true,
   },
   {
     desc: "Hiding a node by adding a hidden attribute",
     selector: "#hidden-true",
     before: true,
-    changeStyle: async function(testActor) {
-      await setAttributeInBrowser(
-        gBrowser.selectedBrowser,
-        "#hidden-true",
-        "hidden",
-        "true"
-      );
-    },
+    changeStyle: () =>
+      content.document
+        .querySelector("#hidden-true")
+        .setAttribute("hidden", true),
     after: false,
   },
   {
     desc: "Showing a node by changin a stylesheet's rule",
     selector: "#hidden-via-stylesheet",
     before: false,
-    changeStyle: async function(testActor) {
-      await testActor.eval(`
-        document.styleSheets[0]
-                .cssRules[0].style
-                .setProperty("display", "inline");
-      `);
+    changeStyle: () => {
+      content.document.styleSheets[0].cssRules[0].style.setProperty(
+        "display",
+        "inline"
+      );
     },
     after: true,
   },
@@ -88,11 +71,11 @@ const TEST_DATA = [
     desc: "Hiding a node by adding a new rule to a stylesheet",
     selector: "#hidden-via-stylesheet",
     before: true,
-    changeStyle: async function(testActor) {
-      await testActor.eval(`
-        document.styleSheets[0].insertRule(
-          "#hidden-via-stylesheet {display: none;}", 1);
-      `);
+    changeStyle: () => {
+      content.document.styleSheets[0].insertRule(
+        "#hidden-via-stylesheet {display: none;}",
+        1
+      );
     },
     after: false,
   },
@@ -100,30 +83,30 @@ const TEST_DATA = [
     desc: "Hiding a node by adding a class that matches an existing rule",
     selector: "#normal-div",
     before: true,
-    changeStyle: async function(testActor) {
-      await testActor.eval(`
-        document.styleSheets[0].insertRule(
-          ".a-new-class {display: none;}", 2);
-        document.querySelector("#normal-div")
-                .classList.add("a-new-class");
-      `);
+    changeStyle: () => {
+      content.document.styleSheets[0].insertRule(
+        ".a-new-class {display: none;}",
+        2
+      );
+      content.document
+        .querySelector("#normal-div")
+        .classList.add("a-new-class");
     },
     after: false,
   },
 ];
 
 add_task(async function() {
-  const { inspector, testActor } = await openInspectorForURL(TEST_URL);
+  const { inspector } = await openInspectorForURL(TEST_URL);
 
   for (const data of TEST_DATA) {
     info("Running test case: " + data.desc);
-    await runTestData(inspector, testActor, data);
+    await runTestData(inspector, data);
   }
 });
 
 async function runTestData(
   inspector,
-  testActor,
   { selector, before, changeStyle, after }
 ) {
   info("Getting the " + selector + " test node");
@@ -141,7 +124,7 @@ async function runTestData(
   });
 
   info("Making style changes");
-  await changeStyle(testActor);
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], changeStyle);
   const nodes = await onDisplayChanged;
 
   info("Verifying that the list of changed nodes include our container");
