@@ -55,7 +55,7 @@ checkbox[native][disabled="true"] {
   -moz-box-align: center;
   min-width: 13px;
   min-height: 13px;
-  margin-inline-end: 3px;
+  margin-inline-end: 5px;
 }
 } /** END Proton **/
 
