@@ -32,15 +32,9 @@ add_task(async function() {
   info(
     "Clear the selection and wait for the selection-changed event to be fired."
   );
-  inspector.selection.setNodeFront(undefined, {
-    reason: "browser-context-menu",
-  });
+  inspector.selection.setNodeFront(null);
 
   await onClearSelectionChanged;
 
-  is(
-    inspector.selection.nodeFront,
-    undefined,
-    "The selection is undefined as expected"
-  );
+  is(inspector.selection.nodeFront, null, "The selection is null as expected");
 });
