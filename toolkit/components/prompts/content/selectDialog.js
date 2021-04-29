@@ -7,7 +7,7 @@
 
 var propBag, listBox, args;
 
-function dialogOnLoad() {
+function onDCL() {
   propBag = window.arguments[0]
     .QueryInterface(Ci.nsIWritablePropertyBag2)
     .QueryInterface(Ci.nsIWritablePropertyBag);
@@ -44,6 +44,9 @@ function dialogOnLoad() {
     listBox.getItemAtIndex(i).addEventListener("dblclick", dialogDoubleClick);
   }
   listBox.selectedIndex = 0;
+}
+
+function onLoad() {
   listBox.focus();
 
   document.addEventListener("dialogaccept", dialogOK);
@@ -73,3 +76,6 @@ function dialogDoubleClick() {
   dialogOK();
   window.close();
 }
+
+document.addEventListener("DOMContentLoaded", onDCL);
+document.addEventListener("load", onLoad);
