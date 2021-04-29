@@ -1520,6 +1520,103 @@ _cairo_quartz_surface_unmap_image (void *abstract_surface,
 
 
 /*
+ * get source/dest image implementation
+ */
+
+/* Read the image from the surface's front buffer */
+static cairo_int_status_t
+_cairo_quartz_get_image (cairo_quartz_surface_t *surface,
+			 cairo_image_surface_t **image_out)
+{
+    unsigned char *imageData;
+    cairo_image_surface_t *isurf;
+
+    if (IS_EMPTY(surface)) {
+	*image_out = (cairo_image_surface_t*) cairo_image_surface_create (CAIRO_FORMAT_ARGB32, 0, 0);
+	return CAIRO_STATUS_SUCCESS;
+    }
+
+    if (surface->imageSurfaceEquiv) {
+	CGContextFlush(surface->cgContext);
+	*image_out = (cairo_image_surface_t*) cairo_surface_reference(surface->imageSurfaceEquiv);
+	return CAIRO_STATUS_SUCCESS;
+    }
+
+    if (_cairo_quartz_is_cgcontext_bitmap_context(surface->cgContext)) {
+	unsigned int stride;
+	unsigned int bitinfo;
+	unsigned int bpc, bpp;
+	CGColorSpaceRef colorspace;
+	unsigned int color_comps;
+
+	CGContextFlush(surface->cgContext);
+	imageData = (unsigned char *) CGBitmapContextGetData(surface->cgContext);
+
+#ifdef USE_10_3_WORKAROUNDS
+	bitinfo = CGBitmapContextGetAlphaInfo (surface->cgContext);
+#else
+	bitinfo = CGBitmapContextGetBitmapInfo (surface->cgContext);
+#endif
+	stride = CGBitmapContextGetBytesPerRow (surface->cgContext);
+	bpp = CGBitmapContextGetBitsPerPixel (surface->cgContext);
+	bpc = CGBitmapContextGetBitsPerComponent (surface->cgContext);
+
+	// let's hope they don't add YUV under us
+	colorspace = CGBitmapContextGetColorSpace (surface->cgContext);
+	color_comps = CGColorSpaceGetNumberOfComponents(colorspace);
+
+	// XXX TODO: We can handle all of these by converting to
+	// pixman masks, including non-native-endian masks
+	if (bpc != 8)
+	    return CAIRO_INT_STATUS_UNSUPPORTED;
+
+	if (bpp != 32 && bpp != 8)
+	    return CAIRO_INT_STATUS_UNSUPPORTED;
+
+	if (color_comps != 3 && color_comps != 1)
+	    return CAIRO_INT_STATUS_UNSUPPORTED;
+
+	if (bpp == 32 && color_comps == 3 &&
+	    (bitinfo & kCGBitmapAlphaInfoMask) == kCGImageAlphaPremultipliedFirst &&
+	    (bitinfo & kCGBitmapByteOrderMask) == kCGBitmapByteOrder32Host)
+	{
+	    isurf = (cairo_image_surface_t *)
+		cairo_image_surface_create_for_data (imageData,
+						     CAIRO_FORMAT_ARGB32,
+						     surface->extents.width,
+						     surface->extents.height,
+						     stride);
+	} else if (bpp == 32 && color_comps == 3 &&
+		   (bitinfo & kCGBitmapAlphaInfoMask) == kCGImageAlphaNoneSkipFirst &&
+		   (bitinfo & kCGBitmapByteOrderMask) == kCGBitmapByteOrder32Host)
+	{
+	    isurf = (cairo_image_surface_t *)
+		cairo_image_surface_create_for_data (imageData,
+						     CAIRO_FORMAT_RGB24,
+						     surface->extents.width,
+						     surface->extents.height,
+						     stride);
+	} else if (bpp == 8 && color_comps == 1)
+	{
+	    isurf = (cairo_image_surface_t *)
+		cairo_image_surface_create_for_data (imageData,
+						     CAIRO_FORMAT_A8,
+						     surface->extents.width,
+						     surface->extents.height,
+						     stride);
+	} else {
+	    return CAIRO_INT_STATUS_UNSUPPORTED;
+	}
+    } else {
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+    }
+
+    *image_out = isurf;
+    return CAIRO_STATUS_SUCCESS;
+}
+
+
+/*
  * Cairo surface backend implementations
  */
 
@@ -1542,11 +1639,14 @@ _cairo_quartz_surface_finish (void *abstract_surface)
     surface->cgContext = NULL;
 
     if (surface->imageSurfaceEquiv) {
+        if (surface->ownsData)
+            _cairo_image_surface_assume_ownership_of_data (surface->imageSurfaceEquiv);
 	cairo_surface_destroy (surface->imageSurfaceEquiv);
 	surface->imageSurfaceEquiv = NULL;
+    } else if (surface->imageData && surface->ownsData) {
+        free (surface->imageData);
     }
 
-    free (surface->imageData);
     surface->imageData = NULL;
 
     return CAIRO_STATUS_SUCCESS;
@@ -2298,6 +2398,8 @@ _cairo_quartz_surface_create_internal (CGContextRef cgContext,
     surface->cgContext = cgContext;
     surface->cgContextBaseCTM = CGContextGetCTM (cgContext);
 
+    surface->ownsData = TRUE;
+
     return surface;
 }
 
@@ -2452,7 +2554,121 @@ cairo_quartz_surface_create (cairo_format_t format,
     surf->imageData = imageData;
     surf->imageSurfaceEquiv = cairo_image_surface_create_for_data (imageData, format, width, height, stride);
 
+    // We created this data, so we can delete it.
+    surf->ownsData = TRUE;
+
     return &surf->base;
+}
+
+/**
+ * cairo_quartz_surface_create_for_data
+ * @data: a pointer to a buffer supplied by the application in which
+ *     to write contents. This pointer must be suitably aligned for any
+ *     kind of variable, (for example, a pointer returned by malloc).
+ * @format: format of pixels in the surface to create
+ * @width: width of the surface, in pixels
+ * @height: height of the surface, in pixels
+ *
+ * Creates a Quartz surface backed by a CGBitmap.  The surface is
+ * created using the Device RGB (or Device Gray, for A8) color space.
+ * All Cairo operations, including those that require software
+ * rendering, will succeed on this surface.
+ *
+ * Return value: the newly created surface.
+ *
+ * Since: 1.12 [Mozilla addition]
+ **/
+cairo_surface_t *
+cairo_quartz_surface_create_for_data (unsigned char *data,
+				      cairo_format_t format,
+				      unsigned int width,
+				      unsigned int height,
+				      unsigned int stride)
+{
+    cairo_quartz_surface_t *surf;
+    CGContextRef cgc;
+    CGColorSpaceRef cgColorspace;
+    CGBitmapInfo bitinfo;
+    void *imageData = data;
+    int bitsPerComponent;
+    unsigned int i;
+
+    // verify width and height of surface
+    if (!_cairo_quartz_verify_surface_size(width, height))
+	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_INVALID_SIZE));
+
+    if (width == 0 || height == 0) {
+	return (cairo_surface_t*) _cairo_quartz_surface_create_internal (NULL, _cairo_content_from_format (format),
+									 width, height);
+    }
+
+    if (format == CAIRO_FORMAT_ARGB32 ||
+	format == CAIRO_FORMAT_RGB24)
+    {
+	cgColorspace = CGColorSpaceCreateDeviceRGB();
+	bitinfo = kCGBitmapByteOrder32Host;
+	if (format == CAIRO_FORMAT_ARGB32)
+	    bitinfo |= kCGImageAlphaPremultipliedFirst;
+	else
+	    bitinfo |= kCGImageAlphaNoneSkipFirst;
+	bitsPerComponent = 8;
+    } else if (format == CAIRO_FORMAT_A8) {
+	cgColorspace = NULL;
+	bitinfo = kCGImageAlphaOnly;
+	bitsPerComponent = 8;
+    } else if (format == CAIRO_FORMAT_A1) {
+	/* I don't think we can usefully support this, as defined by
+	 * cairo_format_t -- these are 1-bit pixels stored in 32-bit
+	 * quantities.
+	 */
+	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_INVALID_FORMAT));
+    } else {
+	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_INVALID_FORMAT));
+    }
+
+    cgc = CGBitmapContextCreate (imageData,
+				 width,
+				 height,
+				 bitsPerComponent,
+				 stride,
+				 cgColorspace,
+				 bitinfo);
+    CGColorSpaceRelease (cgColorspace);
+
+    if (!cgc) {
+	free (imageData);
+	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
+    }
+
+    /* flip the Y axis */
+    CGContextTranslateCTM (cgc, 0.0, height);
+    CGContextScaleCTM (cgc, 1.0, -1.0);
+
+    surf = _cairo_quartz_surface_create_internal (cgc, _cairo_content_from_format (format),
+						  width, height);
+    if (surf->base.status) {
+	CGContextRelease (cgc);
+	free (imageData);
+	// create_internal will have set an error
+	return (cairo_surface_t*) surf;
+    }
+
+    surf->imageData = imageData;
+
+    cairo_surface_t* tmpImageSurfaceEquiv =
+      cairo_image_surface_create_for_data (imageData, format,
+                                           width, height, stride);
+
+    if (cairo_surface_status (tmpImageSurfaceEquiv)) {
+        // Tried & failed to create an imageSurfaceEquiv!
+        cairo_surface_destroy (tmpImageSurfaceEquiv);
+        surf->imageSurfaceEquiv = NULL;
+    } else {
+        surf->imageSurfaceEquiv = tmpImageSurfaceEquiv;
+        surf->ownsData = FALSE;
+    }
+
+    return (cairo_surface_t *) surf;
 }
 
 /**
@@ -2495,6 +2711,18 @@ cairo_bool_t
 _cairo_surface_is_quartz (const cairo_surface_t *surface)
 {
     return surface->backend == &cairo_quartz_surface_backend;
+}
+
+cairo_surface_t *
+cairo_quartz_surface_get_image (cairo_surface_t *surface)
+{
+    cairo_quartz_surface_t *quartz = (cairo_quartz_surface_t *)surface;
+    cairo_image_surface_t *image;
+
+    if (_cairo_quartz_get_image(quartz, &image))
+        return NULL;
+
+    return (cairo_surface_t *)image;
 }
 
 /* Debug stuff */
