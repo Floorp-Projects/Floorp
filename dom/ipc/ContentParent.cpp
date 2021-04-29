@@ -6772,7 +6772,6 @@ mozilla::ipc::IPCResult ContentParent::RecvWindowFocus(
         ("ParentIPC: Trying to send a message to dead or detached context"));
     return IPC_OK();
   }
-  LOGFOCUS(("ContentParent::RecvWindowFocus actionid: %lu", aActionId));
   CanonicalBrowsingContext* context = aContext.get_canonical();
 
   ContentProcessManager* cpm = ContentProcessManager::GetSingleton();
@@ -6808,7 +6807,6 @@ mozilla::ipc::IPCResult ContentParent::RecvRaiseWindow(
         ("ParentIPC: Trying to send a message to dead or detached context"));
     return IPC_OK();
   }
-  LOGFOCUS(("ContentParent::RecvRaiseWindow actionid: %lu", aActionId));
 
   CanonicalBrowsingContext* context = aContext.get_canonical();
 
@@ -6828,9 +6826,6 @@ mozilla::ipc::IPCResult ContentParent::RecvAdjustWindowFocus(
         ("ParentIPC: Trying to send a message to dead or detached context"));
     return IPC_OK();
   }
-  LOGFOCUS(("ContentParent::RecvAdjustWindowFocus isVisible %d actionid: %lu",
-            aIsVisible, aActionId));
-
   nsTHashMap<nsPtrHashKey<ContentParent>, bool> processes(2);
   processes.InsertOrUpdate(this, true);
 
@@ -6879,8 +6874,6 @@ mozilla::ipc::IPCResult ContentParent::RecvSetFocusedBrowsingContext(
         ("ParentIPC: Trying to send a message to dead or detached context"));
     return IPC_OK();
   }
-  LOGFOCUS(("ContentParent::RecvSetFocusedBrowsingContext actionid: %lu",
-            aActionId));
   CanonicalBrowsingContext* context = aContext.get_canonical();
 
   nsFocusManager* fm = nsFocusManager::GetFocusManager();
@@ -6916,8 +6909,6 @@ mozilla::ipc::IPCResult ContentParent::RecvSetActiveBrowsingContext(
         ("ParentIPC: Trying to send a message to dead or detached context"));
     return IPC_OK();
   }
-  LOGFOCUS(
-      ("ContentParent::RecvSetActiveBrowsingContext actionid: %lu", aActionId));
   CanonicalBrowsingContext* context = aContext.get_canonical();
 
   nsFocusManager* fm = nsFocusManager::GetFocusManager();
@@ -6951,8 +6942,6 @@ mozilla::ipc::IPCResult ContentParent::RecvUnsetActiveBrowsingContext(
         ("ParentIPC: Trying to send a message to dead or detached context"));
     return IPC_OK();
   }
-  LOGFOCUS(("ContentParent::RecvUnsetActiveBrowsingContext actionid: %lu",
-            aActionId));
   CanonicalBrowsingContext* context = aContext.get_canonical();
 
   nsFocusManager* fm = nsFocusManager::GetFocusManager();
@@ -6986,7 +6975,6 @@ mozilla::ipc::IPCResult ContentParent::RecvSetFocusedElement(
         ("ParentIPC: Trying to send a message to dead or detached context"));
     return IPC_OK();
   }
-  LOGFOCUS(("ContentParent::RecvSetFocusedElement"));
   CanonicalBrowsingContext* context = aContext.get_canonical();
 
   ContentProcessManager* cpm = ContentProcessManager::GetSingleton();
@@ -7007,7 +6995,6 @@ mozilla::ipc::IPCResult ContentParent::RecvFinalizeFocusOuter(
         ("ParentIPC: Trying to send a message to dead or detached context"));
     return IPC_OK();
   }
-  LOGFOCUS(("ContentParent::RecvFinalizeFocusOuter"));
   CanonicalBrowsingContext* context = aContext.get_canonical();
   ContentProcessManager* cpm = ContentProcessManager::GetSingleton();
 
@@ -7021,8 +7008,6 @@ mozilla::ipc::IPCResult ContentParent::RecvFinalizeFocusOuter(
 
 mozilla::ipc::IPCResult ContentParent::RecvInsertNewFocusActionId(
     uint64_t aActionId) {
-  LOGFOCUS(
-      ("ContentParent::RecvInsertNewFocusActionId actionid: %lu", aActionId));
   nsFocusManager* fm = nsFocusManager::GetFocusManager();
   if (fm) {
     fm->InsertNewFocusActionId(aActionId);
@@ -7043,13 +7028,6 @@ mozilla::ipc::IPCResult ContentParent::RecvBlurToParent(
         ("ParentIPC: Trying to send a message to dead or detached context"));
     return IPC_OK();
   }
-
-  LOGFOCUS(
-      ("ContentParent::RecvBlurToParent isLeavingDocument %d adjustWidget %d "
-       "browsingContextToClearHandled %d ancestorBrowsingContextToFocusHandled "
-       "%d actionid: %lu",
-       aIsLeavingDocument, aAdjustWidget, aBrowsingContextToClearHandled,
-       aAncestorBrowsingContextToFocusHandled, aActionId));
 
   CanonicalBrowsingContext* focusedBrowsingContext =
       aFocusedBrowsingContext.get_canonical();
