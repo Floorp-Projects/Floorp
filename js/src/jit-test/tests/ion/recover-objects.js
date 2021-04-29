@@ -146,6 +146,9 @@ function unknownLoad(i) {
 }
 
 // Check with dynamic slots.
+//
+// This test assumes that creation of an object with 50 slots is optimized;
+// see MaxDynamicSlotsToOptimize.
 function dynamicSlots(i) {
     var obj = {
         p0: i + 0, p1: i + 1, p2: i + 2, p3: i + 3, p4: i + 4, p5: i + 5, p6: i + 6, p7: i + 7, p8: i + 8, p9: i + 9, p10: i + 10,
