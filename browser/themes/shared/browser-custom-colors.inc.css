@@ -51,6 +51,7 @@
 
     --urlbar-popup-action-color: rgb(91,91,102);
     --urlbar-popup-url-color: rgb(0,97,224);
+    --urlbar-icon-fill-opacity: 0.72;
 
     --autocomplete-popup-separator-color: rgb(240,240,244);
     --toolbar-field-border-color: transparent;
