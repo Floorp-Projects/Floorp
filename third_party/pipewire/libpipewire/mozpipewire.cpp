@@ -328,3 +328,32 @@ pw_thread_loop_stop(struct pw_thread_loop *loop)
   }
   return pw_thread_loop_stop_fn(loop);
 }
+
+void
+pw_thread_loop_lock(struct pw_thread_loop *loop)
+{
+  if (!LoadPWLibrary()) {
+    return;
+  }
+  return pw_thread_loop_lock(loop);
+}
+
+void
+pw_thread_loop_unlock(struct pw_thread_loop *loop)
+{
+  if (!LoadPWLibrary()) {
+    return;
+  }
+  return pw_thread_loop_unlock(loop);
+}
+
+
+struct pw_properties *
+pw_properties_new_string(const char *args)
+{
+  if (!LoadPWLibrary()) {
+    return nullptr;
+  }
+  return pw_properties_new_string(args);
+}
+
