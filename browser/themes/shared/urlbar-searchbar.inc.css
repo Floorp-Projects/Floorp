@@ -153,38 +153,44 @@
 } /*** END proton ***/
 
 #urlbar:-moz-lwtheme,
-#navigator-toolbox #searchbar:-moz-lwtheme {
+#searchbar:-moz-lwtheme {
   color: var(--lwt-toolbar-field-color, black);
 }
 
 #urlbar:-moz-lwtheme > #urlbar-background,
-#navigator-toolbox #searchbar:-moz-lwtheme {
+#searchbar:-moz-lwtheme {
   background-color: var(--lwt-toolbar-field-background-color, hsla(0,0%,100%,.8));
 }
 
 #urlbar:not([focused="true"], [open]):-moz-lwtheme > #urlbar-background,
-#navigator-toolbox #searchbar:not(:focus-within):-moz-lwtheme {
+#searchbar:not(:focus-within):-moz-lwtheme {
   border-color: var(--lwt-toolbar-field-border-color, var(--toolbar-field-border-color));
 }
 
 #urlbar:not([focused="true"], [open]):-moz-lwtheme:hover > #urlbar-background,
-#navigator-toolbox #searchbar:not(:focus-within):-moz-lwtheme:hover {
+#searchbar:not(:focus-within):-moz-lwtheme:hover {
   border-color: var(--lwt-toolbar-field-border-color, @fieldHoverBorderColor@);
 }
 
 #urlbar:-moz-lwtheme:hover > #urlbar-background,
-#navigator-toolbox #searchbar:-moz-lwtheme:hover {
+#searchbar:-moz-lwtheme:hover {
   background-color: var(--lwt-toolbar-field-background-color, white);
 }
 
 #urlbar:is([focused="true"], [open]):-moz-lwtheme,
-#navigator-toolbox #searchbar:focus-within:-moz-lwtheme {
+#searchbar:focus-within:-moz-lwtheme {
   color: var(--lwt-toolbar-field-focus-color);
 }
 
 #urlbar:is([focused="true"], [open]):-moz-lwtheme > #urlbar-background,
-#navigator-toolbox #searchbar:focus-within:-moz-lwtheme {
+#searchbar:focus-within:-moz-lwtheme {
   background-color: var(--lwt-toolbar-field-focus);
+}
+
+#TabsToolbar #searchbar:not(:focus-within) {
+  /* The tabs toolbar is usually a different color than the other toolbars, and
+     we can't predict it, to avoid a transparent field we enforce a border. */
+  border-color: color-mix(in srgb, currentColor 20%, transparent);
 }
 
 :root[lwt-selection] #urlbar-input:-moz-lwtheme::selection,
