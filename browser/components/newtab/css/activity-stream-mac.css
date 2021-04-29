@@ -31,7 +31,7 @@ input {
   display: none !important; }
 
 body {
-  --newtab-background-color: #F9F9FB;
+  --newtab-background-color: #FFF;
   --newtab-border-primary-color: #B1B1B3;
   --newtab-border-secondary-color: #D7D7DB;
   --newtab-element-active-color: rgba(215, 215, 219, 0.6);
