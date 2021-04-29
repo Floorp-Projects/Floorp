@@ -1,6 +1,6 @@
 /* cairo - a vector graphics library with display and print output
  *
- * Copyright © 2006, 2007 Mozilla Corporation
+ * Copyright ï¿½ 2006, 2007 Mozilla Corporation
  *
  * This library is free software; you can redistribute it and/or
  * modify it either under the terms of the GNU Lesser General Public
@@ -61,12 +61,6 @@ cairo_quartz_surface_create_for_data (unsigned char *data,
 				      unsigned int width,
 				      unsigned int height,
 				      unsigned int stride);
-
-cairo_public cairo_surface_t *
-cairo_quartz_surface_create_cg_layer (cairo_surface_t *surface,
-                                      cairo_content_t content,
-                                      unsigned int width,
-                                      unsigned int height);
 
 cairo_public cairo_surface_t *
 cairo_quartz_surface_create_for_cg_context (CGContextRef cgContext,
