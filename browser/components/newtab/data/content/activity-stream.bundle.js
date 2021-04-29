@@ -3260,7 +3260,9 @@ class _DiscoveryStreamBase extends react__WEBPACK_IMPORTED_MODULE_13___default.a
           alignment: component.properties.alignment,
           display_variant: component.properties.display_variant,
           explore_topics: component.properties.explore_topics,
-          header: component.header
+          header: component.header,
+          locale: this.props.App.locale,
+          privacyNoticeURL: component.properties.privacyNoticeURL
         });
 
       case "CollectionCardGrid":
@@ -3454,7 +3456,8 @@ const DiscoveryStreamBase = Object(react_redux__WEBPACK_IMPORTED_MODULE_3__["con
   DiscoveryStream: state.DiscoveryStream,
   Prefs: state.Prefs,
   Sections: state.Sections,
-  document: global.document
+  document: global.document,
+  App: state.App
 }))(_DiscoveryStreamBase);
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(3)))
 
@@ -9994,9 +9997,11 @@ class Navigation extends react__WEBPACK_IMPORTED_MODULE_1___default.a.PureCompon
     const links = this.props.links || [];
     const alignment = this.props.alignment || "centered";
     const header = this.props.header || {};
+    const english = this.props.locale.startsWith("en-");
+    const privacyNotice = this.props.privacyNoticeURL || {};
     return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("div", {
       className: `ds-navigation ds-navigation-${alignment}`
-    }, header.title ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(content_src_components_FluentOrText_FluentOrText__WEBPACK_IMPORTED_MODULE_3__["FluentOrText"], {
+    }, header.title && english ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(content_src_components_FluentOrText_FluentOrText__WEBPACK_IMPORTED_MODULE_3__["FluentOrText"], {
       message: header.title
     }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("span", {
       className: "ds-navigation-header"
@@ -10006,7 +10011,15 @@ class Navigation extends react__WEBPACK_IMPORTED_MODULE_1___default.a.PureCompon
       url: t.url,
       name: t.name,
       dispatch: this.props.dispatch
-    })))));
+    })))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(_SafeAnchor_SafeAnchor__WEBPACK_IMPORTED_MODULE_2__["SafeAnchor"], {
+      onLinkClick: this.onLinkClick,
+      className: this.props.className,
+      url: privacyNotice.url
+    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(content_src_components_FluentOrText_FluentOrText__WEBPACK_IMPORTED_MODULE_3__["FluentOrText"], {
+      message: privacyNotice.title
+    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("span", {
+      className: "ds-navigation-privacy"
+    }))));
   }
 
 }
@@ -10106,10 +10119,6 @@ const selectLayoutRender = ({
 
   if (!prefs["feeds.topsites"]) {
     filterArray.push("TopSites");
-  }
-
-  if (!locale.startsWith("en-")) {
-    filterArray.push("Navigation");
   }
 
   const pocketEnabled = prefs["feeds.section.topstories"] && prefs["feeds.system.topstories"];
