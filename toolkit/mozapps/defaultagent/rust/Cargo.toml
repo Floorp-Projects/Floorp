@@ -9,6 +9,7 @@ license = "MPL-2.0"
 
 [dependencies]
 log = { version = "0.4", features = ["std"] }
+mozilla-central-workspace-hack = { path = "../../../../build/workspace-hack" }
 serde = "1.0"
 serde_derive = "1.0"
 serde_json = "1.0"
