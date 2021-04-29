@@ -73,7 +73,10 @@ static bool ShouldExposeChildWindow(const nsString& aNameBeingResolved,
 
 bool WindowNamedPropertiesHandler::getOwnPropDescriptor(
     JSContext* aCx, JS::Handle<JSObject*> aProxy, JS::Handle<jsid> aId,
-    bool /* unused */, JS::MutableHandle<JS::PropertyDescriptor> aDesc) const {
+    bool /* unused */,
+    JS::MutableHandle<Maybe<JS::PropertyDescriptor>> aDesc) const {
+  aDesc.reset();
+
   if (!JSID_IS_STRING(aId)) {
     if (aId.isWellKnownSymbol(JS::SymbolCode::toStringTag)) {
       JS::Rooted<JSString*> toStringTagStr(
@@ -83,7 +86,8 @@ bool WindowNamedPropertiesHandler::getOwnPropDescriptor(
       }
 
       JS::Rooted<JS::Value> v(aCx, JS::StringValue(toStringTagStr));
-      FillPropertyDescriptor(aDesc, aProxy, JSPROP_READONLY, v);
+      FillPropertyDescriptor(aCx, aDesc, aProxy, v, /* readonly = */ true,
+                             /* enumerable = */ false);
       return true;
     }
 
@@ -120,7 +124,8 @@ bool WindowNamedPropertiesHandler::getOwnPropDescriptor(
       if (!ToJSValue(aCx, WindowProxyHolder(std::move(child)), &v)) {
         return false;
       }
-      FillPropertyDescriptor(aDesc, aProxy, 0, v);
+      FillPropertyDescriptor(aCx, aDesc, aProxy, v, /* readonly = */ false,
+                             /* enumerable = */ false);
       return true;
     }
   }
@@ -138,7 +143,8 @@ bool WindowNamedPropertiesHandler::getOwnPropDescriptor(
     if (!ToJSValue(aCx, element, &v)) {
       return false;
     }
-    FillPropertyDescriptor(aDesc, aProxy, 0, v);
+    FillPropertyDescriptor(aCx, aDesc, aProxy, v, /* readonly = */ false,
+                           /* enumerable = */ false);
     return true;
   }
 
@@ -149,7 +155,8 @@ bool WindowNamedPropertiesHandler::getOwnPropDescriptor(
   }
 
   if (found) {
-    FillPropertyDescriptor(aDesc, aProxy, 0, v);
+    FillPropertyDescriptor(aCx, aDesc, aProxy, v, /* readonly = */ false,
+                           /* enumerable = */ false);
   }
   return true;
 }
