@@ -33,7 +33,7 @@ migration:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: 2021-04-01
+    expires: 2021-11-01
     lifetime: ping
 
 migration.telemetry_identifiers:
@@ -52,7 +52,7 @@ migration.telemetry_identifiers:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: 2021-04-01
+    expires: 2021-11-01
     lifetime: ping
   fennec_profile_creation_date:
     type: datetime
@@ -70,7 +70,7 @@ migration.telemetry_identifiers:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: 2021-04-01
+    expires: 2021-11-01
     lifetime: ping
   any_failures:
     type: boolean
@@ -87,7 +87,7 @@ migration.telemetry_identifiers:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: 2021-04-01
+    expires: 2021-11-01
     lifetime: ping
   success_reason:
     type: counter
@@ -103,7 +103,7 @@ migration.telemetry_identifiers:
       - technical
     notification_emails:
       - fenix-core@mozilla.com
-    expires: 2021-04-01
+    expires: 2021-11-01
     lifetime: ping
   failure_reason:
     type: counter
@@ -119,7 +119,7 @@ migration.telemetry_identifiers:
       - technical
     notification_emails:
       - fenix-core@mozilla.com
-    expires: 2021-04-01
+    expires: 2021-11-01
     lifetime: ping
   total_duration:
     type: timespan
@@ -137,7 +137,7 @@ migration.telemetry_identifiers:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: 2021-04-01
+    expires: 2021-11-01
     lifetime: ping
 
 migration.history:
@@ -160,7 +160,7 @@ migration.history:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: 2021-04-01
+    expires: 2021-11-01
     lifetime: ping
   detected:
     type: counter
@@ -177,7 +177,7 @@ migration.history:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: 2021-04-01
+    expires: 2021-11-01
     lifetime: ping
   duration:
     type: timespan
@@ -195,7 +195,7 @@ migration.history:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: 2021-04-01
+    expires: 2021-11-01
     lifetime: ping
   total_duration:
     type: timespan
@@ -213,7 +213,7 @@ migration.history:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: 2021-04-01
+    expires: 2021-11-01
     lifetime: ping
   any_failures:
     type: boolean
@@ -230,7 +230,7 @@ migration.history:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: 2021-04-01
+    expires: 2021-11-01
     lifetime: ping
   success_reason:
     type: counter
@@ -246,7 +246,7 @@ migration.history:
       - technical
     notification_emails:
       - fenix-core@mozilla.com
-    expires: 2021-04-01
+    expires: 2021-11-01
     lifetime: ping
   failure_reason:
     type: counter
@@ -262,7 +262,7 @@ migration.history:
       - technical
     notification_emails:
       - fenix-core@mozilla.com
-    expires: 2021-04-01
+    expires: 2021-11-01
     lifetime: ping
 
 migration.bookmarks:
@@ -285,7 +285,7 @@ migration.bookmarks:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: 2021-04-01
+    expires: 2021-11-01
     lifetime: ping
   detected:
     type: counter
@@ -302,7 +302,7 @@ migration.bookmarks:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: 2021-04-01
+    expires: 2021-11-01
     lifetime: ping
   duration:
     type: timespan
@@ -320,7 +320,7 @@ migration.bookmarks:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: 2021-04-01
+    expires: 2021-11-01
     lifetime: ping
   total_duration:
     type: timespan
@@ -338,7 +338,7 @@ migration.bookmarks:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: 2021-04-01
+    expires: 2021-11-01
     lifetime: ping
   any_failures:
     type: boolean
@@ -355,7 +355,7 @@ migration.bookmarks:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: 2021-04-01
+    expires: 2021-11-01
     lifetime: ping
   success_reason:
     type: counter
@@ -371,7 +371,7 @@ migration.bookmarks:
       - technical
     notification_emails:
       - fenix-core@mozilla.com
-    expires: 2021-04-01
+    expires: 2021-11-01
     lifetime: ping
   failure_reason:
     type: counter
@@ -387,7 +387,7 @@ migration.bookmarks:
       - technical
     notification_emails:
       - fenix-core@mozilla.com
-    expires: 2021-04-01
+    expires: 2021-11-01
     lifetime: ping
 
 migration.open_tabs:
@@ -406,7 +406,7 @@ migration.open_tabs:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: 2021-04-01
+    expires: 2021-11-01
     lifetime: ping
   migrated:
     type: counter
@@ -423,7 +423,7 @@ migration.open_tabs:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: 2021-04-01
+    expires: 2021-11-01
     lifetime: ping
   any_failures:
     type: boolean
@@ -440,7 +440,7 @@ migration.open_tabs:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: 2021-04-01
+    expires: 2021-11-01
     lifetime: ping
   success_reason:
     type: counter
@@ -456,7 +456,7 @@ migration.open_tabs:
       - technical
     notification_emails:
       - fenix-core@mozilla.com
-    expires: 2021-04-01
+    expires: 2021-11-01
     lifetime: ping
   failure_reason:
     type: counter
@@ -472,7 +472,7 @@ migration.open_tabs:
       - technical
     notification_emails:
       - fenix-core@mozilla.com
-    expires: 2021-04-01
+    expires: 2021-11-01
     lifetime: ping
   total_duration:
     type: timespan
@@ -490,7 +490,7 @@ migration.open_tabs:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: 2021-04-01
+    expires: 2021-11-01
     lifetime: ping
 
 migration.fxa:
@@ -509,7 +509,7 @@ migration.fxa:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: 2021-04-01
+    expires: 2021-11-01
     lifetime: ping
   failure_reason:
     type: counter
@@ -526,7 +526,7 @@ migration.fxa:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: 2021-04-01
+    expires: 2021-11-01
     lifetime: ping
   success_reason:
     type: counter
@@ -543,7 +543,7 @@ migration.fxa:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: 2021-04-01
+    expires: 2021-11-01
     lifetime: ping
   bad_auth_state:
     type: string
@@ -560,7 +560,7 @@ migration.fxa:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: 2021-04-01
+    expires: 2021-11-01
     lifetime: ping
   has_custom_token_server:
     type: boolean
@@ -577,7 +577,7 @@ migration.fxa:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: 2021-04-01
+    expires: 2021-11-01
     lifetime: ping
   has_custom_idp_server:
     type: boolean
@@ -594,7 +594,7 @@ migration.fxa:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: 2021-04-01
+    expires: 2021-11-01
     lifetime: ping
   unsupported_account_version:
     type: string
@@ -611,7 +611,7 @@ migration.fxa:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: 2021-04-01
+    expires: 2021-11-01
     lifetime: ping
   unsupported_pickle_version:
     type: string
@@ -628,7 +628,7 @@ migration.fxa:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: 2021-04-01
+    expires: 2021-11-01
     lifetime: ping
   unsupported_state_version:
     type: string
@@ -645,7 +645,7 @@ migration.fxa:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: 2021-04-01
+    expires: 2021-11-01
     lifetime: ping
   total_duration:
     type: timespan
@@ -663,7 +663,7 @@ migration.fxa:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: 2021-04-01
+    expires: 2021-11-01
     lifetime: ping
 
 migration.gecko:
@@ -682,7 +682,7 @@ migration.gecko:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: 2021-04-01
+    expires: 2021-11-01
     lifetime: ping
   success_reason:
     type: counter
@@ -698,7 +698,7 @@ migration.gecko:
       - technical
     notification_emails:
       - fenix-core@mozilla.com
-    expires: 2021-04-01
+    expires: 2021-11-01
     lifetime: ping
   failure_reason:
     type: counter
@@ -714,7 +714,7 @@ migration.gecko:
       - technical
     notification_emails:
       - fenix-core@mozilla.com
-    expires: 2021-04-01
+    expires: 2021-11-01
     lifetime: ping
   total_duration:
     type: timespan
@@ -732,7 +732,7 @@ migration.gecko:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: 2021-04-01
+    expires: 2021-11-01
     lifetime: ping
 
 migration.logins:
@@ -751,7 +751,7 @@ migration.logins:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: 2021-04-01
+    expires: 2021-11-01
     lifetime: ping
   failure_reason:
     type: counter
@@ -768,7 +768,7 @@ migration.logins:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: 2021-04-01
+    expires: 2021-11-01
     lifetime: ping
   unsupported_db_version:
     type: counter
@@ -785,7 +785,7 @@ migration.logins:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: 2021-04-01
+    expires: 2021-11-01
     lifetime: ping
   success_reason:
     type: counter
@@ -802,7 +802,7 @@ migration.logins:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: 2021-04-01
+    expires: 2021-11-01
     lifetime: ping
   detected:
     type: counter
@@ -819,7 +819,7 @@ migration.logins:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: 2021-04-01
+    expires: 2021-11-01
     lifetime: ping
   failure_counts:
     type: labeled_counter
@@ -839,7 +839,7 @@ migration.logins:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: 2021-04-01
+    expires: 2021-11-01
     lifetime: ping
   total_duration:
     type: timespan
@@ -857,7 +857,7 @@ migration.logins:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: 2021-04-01
+    expires: 2021-11-01
     lifetime: ping
 
 migration.settings:
@@ -876,7 +876,7 @@ migration.settings:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: 2021-04-01
+    expires: 2021-11-01
     lifetime: ping
   failure_reason:
     type: counter
@@ -893,7 +893,7 @@ migration.settings:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: 2021-04-01
+    expires: 2021-11-01
     lifetime: ping
   success_reason:
     type: counter
@@ -910,7 +910,7 @@ migration.settings:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: 2021-04-01
+    expires: 2021-11-01
     lifetime: ping
   telemetry_enabled:
     type: boolean
@@ -927,7 +927,7 @@ migration.settings:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: 2021-04-01
+    expires: 2021-11-01
     lifetime: ping
   total_duration:
     type: timespan
@@ -945,7 +945,7 @@ migration.settings:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: 2021-04-01
+    expires: 2021-11-01
     lifetime: ping
 
 migration.addons:
@@ -964,7 +964,7 @@ migration.addons:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: 2021-04-01
+    expires: 2021-11-01
     lifetime: ping
   failure_reason:
     type: counter
@@ -981,7 +981,7 @@ migration.addons:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: 2021-04-01
+    expires: 2021-11-01
     lifetime: ping
   success_reason:
     type: counter
@@ -998,7 +998,7 @@ migration.addons:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: 2021-04-01
+    expires: 2021-11-01
     lifetime: ping
   failed_addons:
     type: counter
@@ -1015,7 +1015,7 @@ migration.addons:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: 2021-04-01
+    expires: 2021-11-01
     lifetime: ping
   migrated_addons:
     type: counter
@@ -1032,7 +1032,7 @@ migration.addons:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: 2021-04-01
+    expires: 2021-11-01
     lifetime: ping
   total_duration:
     type: timespan
@@ -1050,7 +1050,7 @@ migration.addons:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: 2021-04-01
+    expires: 2021-11-01
     lifetime: ping
 
 migration.search:
@@ -1068,7 +1068,7 @@ migration.search:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: 2021-04-01
+    expires: 2021-11-01
     lifetime: ping
   failure_reason:
     type: counter
@@ -1084,7 +1084,7 @@ migration.search:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: 2021-04-01
+    expires: 2021-11-01
     lifetime: ping
   success_reason:
     type: counter
@@ -1100,7 +1100,7 @@ migration.search:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: 2021-04-01
+    expires: 2021-11-01
     lifetime: ping
   total_duration:
     type: timespan
@@ -1118,7 +1118,7 @@ migration.search:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: 2021-04-01
+    expires: 2021-11-01
     lifetime: ping
 
 migration.pinned_sites:
@@ -1137,7 +1137,7 @@ migration.pinned_sites:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: 2021-04-01
+    expires: 2021-11-01
     lifetime: ping
   failure_reason:
     type: counter
@@ -1154,7 +1154,7 @@ migration.pinned_sites:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: 2021-04-01
+    expires: 2021-11-01
     lifetime: ping
   success_reason:
     type: counter
@@ -1171,7 +1171,7 @@ migration.pinned_sites:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: 2021-04-01
+    expires: 2021-11-01
     lifetime: ping
   detected_pinned_sites:
     type: counter
@@ -1188,7 +1188,7 @@ migration.pinned_sites:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: 2021-04-01
+    expires: 2021-11-01
     lifetime: ping
   migrated_pinned_sites:
     type: counter
@@ -1205,7 +1205,7 @@ migration.pinned_sites:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: 2021-04-01
+    expires: 2021-11-01
     lifetime: ping
   total_duration:
     type: timespan
@@ -1223,5 +1223,5 @@ migration.pinned_sites:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: 2021-04-01
+    expires: 2021-11-01
     lifetime: ping
