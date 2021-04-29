@@ -423,6 +423,16 @@ var PrintEventHandler = {
       Cu.reportError(e);
     }
 
+    if (settings.printerName == PrintUtils.SAVE_TO_PDF_PRINTER) {
+      // Clear the file name from the preference value since it may potentially
+      // contain sensitive information from the page title (Bug 1675965)
+      let prefName =
+        "print.printer_" +
+        settings.printerName.replace(/ /g, "_") +
+        ".print_to_filename";
+      Services.prefs.clearUserPref(prefName);
+    }
+
     window.close();
     return true;
   },
