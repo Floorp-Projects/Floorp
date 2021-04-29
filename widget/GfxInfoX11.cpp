@@ -231,7 +231,7 @@ void GfxInfo::GetData() {
 
   // only useful for Linux kernel version check for FGLRX driver.
   // assumes X client == X server, which is sad.
-  struct utsname unameobj;
+  struct utsname unameobj {};
   if (uname(&unameobj) >= 0) {
     mOS.Assign(unameobj.sysname);
     mOSRelease.Assign(unameobj.release);
@@ -338,7 +338,7 @@ void GfxInfo::GetData() {
     while (loc != kNotFound) {
       int isDefault = 0;
       nsCString line(screenInfo.get() + start, loc - start);
-      ScreenInfo info;
+      ScreenInfo info{};
       if (sscanf(line.get(), "%ux%u:%u", &info.mWidth, &info.mHeight,
                  &isDefault) == 3) {
         info.mIsDefault = isDefault != 0;
