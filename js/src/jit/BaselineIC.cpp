@@ -610,12 +610,6 @@ void ICFallbackStub::trace(JSTracer* trc) {
                         "baseline-newarray-template");
       break;
     }
-    case ICStub::NewObject_Fallback: {
-      ICNewObject_Fallback* stub = toNewObject_Fallback();
-      TraceNullableEdge(trc, &stub->templateObject(),
-                        "baseline-newobject-template");
-      break;
-    }
     case ICStub::Rest_Fallback: {
       ICRest_Fallback* stub = toRest_Fallback();
       TraceEdge(trc, &stub->templateObject(), "baseline-rest-template");
@@ -2664,32 +2658,16 @@ bool DoNewObjectFallback(JSContext* cx, BaselineFrame* frame,
   MaybeNotifyWarp(frame->outerScript(), stub);
   FallbackICSpew(cx, stub, "NewObject");
 
-  RootedObject obj(cx);
+  RootedScript script(cx, frame->script());
+  jsbytecode* pc = stub->icEntry()->pc(script);
 
-  RootedObject templateObject(cx, stub->templateObject());
-  if (templateObject) {
-    obj = NewObjectOperationWithTemplate(cx, templateObject);
-  } else {
-    RootedScript script(cx, frame->script());
-    jsbytecode* pc = stub->icEntry()->pc(script);
-    obj = NewObjectOperation(cx, script, pc);
-
-    if (obj) {
-      templateObject = NewObjectOperation(cx, script, pc, TenuredObject);
-      if (!templateObject) {
-        return false;
-      }
-
-      TryAttachStub<NewObjectIRGenerator>("NewObject", cx, frame, stub,
-                                          JSOp(*pc), templateObject);
-
-      stub->setTemplateObject(templateObject);
-    }
-  }
-
+  RootedObject obj(cx, NewObjectOperation(cx, script, pc));
   if (!obj) {
     return false;
   }
+
+  TryAttachStub<NewObjectIRGenerator>("NewObject", cx, frame, stub, JSOp(*pc),
+                                      obj);
 
   res.setObject(*obj);
   return true;

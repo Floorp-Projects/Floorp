@@ -11153,7 +11153,7 @@ AttachDecision NewObjectIRGenerator::tryAttachPlainObject() {
 
   uint32_t numFixedSlots = nativeObj->numUsedFixedSlots();
   uint32_t numDynamicSlots = nativeObj->numDynamicSlots();
-  gc::AllocKind allocKind = nativeObj->asTenured().getAllocKind();
+  gc::AllocKind allocKind = nativeObj->allocKindForTenure();
   Shape* shape = nativeObj->lastProperty();
 
   writer.guardNoAllocationMetadataBuilder(

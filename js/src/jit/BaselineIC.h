@@ -755,16 +755,8 @@ class ICNewArray_Fallback : public ICFallbackStub {
 class ICNewObject_Fallback : public ICFallbackStub {
   friend class ICStubSpace;
 
-  GCPtrObject templateObject_;
-
   explicit ICNewObject_Fallback(TrampolinePtr stubCode)
-      : ICFallbackStub(ICStub::NewObject_Fallback, stubCode),
-        templateObject_(nullptr) {}
-
- public:
-  GCPtrObject& templateObject() { return templateObject_; }
-
-  void setTemplateObject(JSObject* obj) { templateObject_ = obj; }
+      : ICFallbackStub(ICStub::NewObject_Fallback, stubCode) {}
 };
 
 struct IonOsrTempData;
