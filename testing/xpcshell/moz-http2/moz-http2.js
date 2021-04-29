@@ -124,6 +124,12 @@ var m = {
     if (end < this.buf.length) {
       setTimeout(this.send.bind(this, res, end), 10);
     } else {
+      // Clear these variables so we can run the test again with --verify
+      if (res == this.mp1res) {
+        this.mp1res = null;
+      } else {
+        this.mp2res = null;
+      }
       res.end();
     }
   },
@@ -691,11 +697,17 @@ function handleRequest(req, res) {
     }
 
     if (rstConnection === null || rstConnection !== req.stream.connection) {
-      res.setHeader("Connection", "close");
+      if (req.httpVersionMajor != 2) {
+        res.setHeader("Connection", "close");
+      }
       res.writeHead(400);
       res.end("WRONG CONNECTION, HOMIE!");
       return;
     }
+
+    // Clear these variables so we can run the test again with --verify
+    didRst = false;
+    rstConnection = null;
 
     if (req.httpVersionMajor != 2) {
       res.setHeader("Connection", "close");
