@@ -23,6 +23,8 @@ const AdjustableTitle = {
       margin-inline: 4px;
       /* Ensure we don't exceed the bounds of the dialog: */
       max-width: calc(100vw - 32px);
+
+      --icon-size: 16px;
     }
 
     #titleContainer[noicon] > .titleIcon {
@@ -30,11 +32,10 @@ const AdjustableTitle = {
     }
 
     .titleIcon {
-      width: 16px;
-      height: 16px;
+      width: var(--icon-size);
+      height: var(--icon-size);
       padding-inline-end: 4px;
       flex-shrink: 0;
-      translate: 0 calc(-0.35 * max(1em - 100%, 0px) + 1px);
 
       background-image: var(--icon-url, url("chrome://global/skin/icons/defaultFavicon.svg"));
       background-size: 16px 16px;
@@ -56,6 +57,11 @@ const AdjustableTitle = {
       mask-repeat: no-repeat;
       /* go from left to right with the mask: */
       --mask-dir: right;
+    }
+
+    #titleContainer:not([noicon]) > #titleCropper {
+      /* Align the icon and text: */
+      translate: 0 calc(-1px - max(.6 * var(--icon-size) - .6em, 0px));
     }
 
     #titleCropper[rtlorigin] {
