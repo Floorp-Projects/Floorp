@@ -13,10 +13,6 @@ dialog {
   padding: 0;
 }
 
-:root {
-  padding: 6px;
-}
-
 .contentPane {
   -moz-box-flex: 1;
 }
