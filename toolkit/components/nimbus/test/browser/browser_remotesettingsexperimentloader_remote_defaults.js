@@ -442,6 +442,27 @@ add_task(async function remote_defaults_resolve_timeout() {
   Assert.ok(true, "Resolves waitForRemote");
 });
 
+// If the remote config data returned from the store is not modified
+// this test should not throw
+add_task(async function remote_defaults_no_mutation() {
+  let sandbox = sinon.createSandbox();
+  sandbox
+    .stub(ExperimentAPI._store, "getRemoteConfig")
+    .returns(
+      Cu.cloneInto(
+        { targeting: "true", variables: { remoteStub: true } },
+        {},
+        { deepFreeze: true }
+      )
+    );
+
+  let config = NimbusFeatures.aboutwelcome.getValue();
+
+  Assert.ok(config.remoteStub, "Got back the expected value");
+
+  sandbox.restore();
+});
+
 add_task(async function remote_defaults_active_experiments_check() {
   let barFeature = new ExperimentFeature("bar", {
     bar: { description: "mochitest" },

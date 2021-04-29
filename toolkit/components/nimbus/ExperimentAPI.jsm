@@ -483,8 +483,6 @@ class ExperimentFeature {
     if (!remoteConfig) {
       return null;
     }
-    // Used to select a matching client config
-    delete remoteConfig.targeting;
 
     return remoteConfig;
   }
