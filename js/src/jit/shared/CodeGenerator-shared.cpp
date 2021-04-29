@@ -393,6 +393,7 @@ void CodeGeneratorShared::encodeAllocation(LSnapshot* snapshot,
     case MIRType::Symbol:
     case MIRType::BigInt:
     case MIRType::Object:
+    case MIRType::Shape:
     case MIRType::Boolean:
     case MIRType::Double: {
       LAllocation* payload = snapshot->payloadOfSlot(*allocIndex);

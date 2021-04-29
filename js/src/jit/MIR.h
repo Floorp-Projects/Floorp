@@ -1312,6 +1312,7 @@ class MConstant : public MNullaryInstruction {
       JS::Symbol* sym;
       BigInt* bi;
       JSObject* obj;
+      Shape* shape;
       uint64_t asBits;
     };
     Payload() : asBits(0) {}
@@ -1330,6 +1331,7 @@ class MConstant : public MNullaryInstruction {
 
   MConstant(TempAllocator& alloc, const Value& v);
   explicit MConstant(JSObject* obj);
+  explicit MConstant(Shape* shape);
   explicit MConstant(float f);
   explicit MConstant(MIRType type, int64_t i);
 
@@ -1342,6 +1344,7 @@ class MConstant : public MNullaryInstruction {
   static MConstant* NewInt64(TempAllocator& alloc, int64_t i);
   static MConstant* NewIntPtr(TempAllocator& alloc, intptr_t i);
   static MConstant* NewObject(TempAllocator& alloc, JSObject* v);
+  static MConstant* NewShape(TempAllocator& alloc, Shape* s);
   static MConstant* Copy(TempAllocator& alloc, MConstant* src) {
     return new (alloc) MConstant(*src);
   }
@@ -1434,6 +1437,10 @@ class MConstant : public MNullaryInstruction {
     }
     MOZ_ASSERT(type() == MIRType::Null);
     return nullptr;
+  }
+  Shape* toShape() const {
+    MOZ_ASSERT(type() == MIRType::Shape);
+    return payload_.shape;
   }
 
   bool isTypeRepresentableAsDouble() const {
@@ -2097,35 +2104,45 @@ class MNewObject : public MUnaryInstruction, public NoTypePolicy::Data {
   }
 };
 
-class MNewPlainObject : public MNullaryInstruction {
+class MNewPlainObject : public MUnaryInstruction, public NoTypePolicy::Data {
  private:
-  CompilerShape shape_;
   uint32_t numFixedSlots_;
   uint32_t numDynamicSlots_;
   gc::AllocKind allocKind_;
   gc::InitialHeap initialHeap_;
 
-  MNewPlainObject(TempAllocator& alloc, uint32_t numFixedSlots,
-                  uint32_t numDynamicSlots, gc::AllocKind allocKind,
-                  Shape* shape, gc::InitialHeap initialHeap)
-      : MNullaryInstruction(classOpcode),
-        shape_(shape),
+  MNewPlainObject(TempAllocator& alloc, MConstant* shapeConst,
+                  uint32_t numFixedSlots, uint32_t numDynamicSlots,
+                  gc::AllocKind allocKind, gc::InitialHeap initialHeap)
+      : MUnaryInstruction(classOpcode, shapeConst),
         numFixedSlots_(numFixedSlots),
         numDynamicSlots_(numDynamicSlots),
         allocKind_(allocKind),
         initialHeap_(initialHeap) {
     setResultType(MIRType::Object);
+
+    // The shape constant is kept separated in a MConstant. This way we can
+    // safely mark it during GC if we recover the object allocation. Otherwise,
+    // by making it emittedAtUses, we do not produce register allocations for it
+    // and inline its content inside the code produced by the CodeGenerator.
+    MOZ_ASSERT(shapeConst->toConstant()->type() == MIRType::Shape);
+    shapeConst->setEmittedAtUses();
   }
 
  public:
   INSTRUCTION_HEADER(NewPlainObject)
   TRIVIAL_NEW_WRAPPERS_WITH_ALLOC
 
+  const Shape* shape() const { return getOperand(0)->toConstant()->toShape(); }
+
   uint32_t numFixedSlots() const { return numFixedSlots_; }
   uint32_t numDynamicSlots() const { return numDynamicSlots_; }
   gc::AllocKind allocKind() const { return allocKind_; }
-  const Shape* shape() const { return shape_; }
   gc::InitialHeap initialHeap() const { return initialHeap_; }
+
+  [[nodiscard]] bool writeRecoverData(
+      CompactBufferWriter& writer) const override;
+  bool canRecoverOnBailout() const override { return true; }
 };
 
 class MNewIterator : public MUnaryInstruction, public NoTypePolicy::Data {
@@ -2171,6 +2188,7 @@ class MObjectState : public MVariadicInstruction,
   uint32_t numFixedSlots_;
 
   explicit MObjectState(JSObject* templateObject);
+  explicit MObjectState(const Shape* shape);
   explicit MObjectState(MObjectState* state);
 
   [[nodiscard]] bool init(TempAllocator& alloc, MDefinition* obj);
