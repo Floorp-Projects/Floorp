@@ -10,14 +10,15 @@
 #include "ISimpleDOM.h"
 #include "IUnknownImpl.h"
 
-#include "MsaaDocAccessible.h"
+#include "DocAccessibleWrap.h"
 
 namespace mozilla {
 namespace a11y {
 
 class sdnDocAccessible final : public ISimpleDOMDocument {
  public:
-  explicit sdnDocAccessible(MsaaDocAccessible* aMsaa) : mMsaa(aMsaa){};
+  explicit sdnDocAccessible(DocAccessibleWrap* aAccessible)
+      : mAccessible(aAccessible){};
   ~sdnDocAccessible(){};
 
   DECL_IUNKNOWN
@@ -43,7 +44,7 @@ class sdnDocAccessible final : public ISimpleDOMDocument {
       /* [in] */ BSTR __RPC_FAR* commaSeparatedMediaTypes);
 
  protected:
-  RefPtr<MsaaDocAccessible> mMsaa;
+  RefPtr<DocAccessibleWrap> mAccessible;
 };
 
 }  // namespace a11y

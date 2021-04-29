@@ -19,9 +19,9 @@ inline DocAccessible* sdnAccessible::GetDocument() const {
   return GetExistingDocAccessible(mNode->OwnerDoc());
 }
 
-inline MsaaAccessible* sdnAccessible::GetMsaa() {
-  if (mMsaa) {
-    return mMsaa;
+inline AccessibleWrap* sdnAccessible::GetAccessible() {
+  if (mWrap) {
+    return mWrap;
   }
 
   DocAccessible* document = GetDocument();
@@ -31,10 +31,9 @@ inline MsaaAccessible* sdnAccessible::GetMsaa() {
 
   // Once we have an accessible, we should hold a reference to it so that we
   // may preserve object identity.
-  AccessibleWrap* wrap = static_cast<AccessibleWrap*>(
+  mWrap = static_cast<AccessibleWrap*>(
       document->GetAccessibleEvenIfNotInMap(mNode));
-  wrap->GetNativeInterface(getter_AddRefs(mMsaa));
-  return mMsaa;
+  return mWrap;
 }
 
 }  // namespace a11y
