@@ -19,7 +19,8 @@ class HTMLDialogElement final : public nsGenericHTMLElement {
  public:
   explicit HTMLDialogElement(
       already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
-      : nsGenericHTMLElement(std::move(aNodeInfo)) {}
+      : nsGenericHTMLElement(std::move(aNodeInfo)),
+        mPreviouslyFocusedElement(nullptr) {}
 
   NS_IMPL_FROMNODE_HTML_WITH_TAG(HTMLDialogElement, dialog)
 
@@ -58,6 +59,9 @@ class HTMLDialogElement final : public nsGenericHTMLElement {
  private:
   void AddToTopLayerIfNeeded();
   void RemoveFromTopLayerIfNeeded();
+  void StorePreviouslyFocusedElement();
+
+  nsWeakPtr mPreviouslyFocusedElement;
 };
 
 }  // namespace dom
