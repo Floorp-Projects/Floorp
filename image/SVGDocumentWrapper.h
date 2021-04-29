@@ -31,10 +31,11 @@ class SVGDocument;
 }  // namespace dom
 
 namespace image {
+class AutoRestoreSVGState;
 
 class SVGDocumentWrapper final : public nsIStreamListener,
                                  public nsIObserver,
-                                 nsSupportsWeakReference {
+                                 public nsSupportsWeakReference {
  public:
   SVGDocumentWrapper();
 
@@ -102,6 +103,13 @@ class SVGDocumentWrapper final : public nsIStreamListener,
   bool ShouldIgnoreInvalidation() { return mIgnoreInvalidation; }
 
   /**
+   * Returns a bool indicating whether the document is currently drawing.
+   *
+   * @return true if the document is drawing. Else, false.
+   */
+  bool IsDrawing() const { return mIsDrawing; }
+
+  /**
    * Methods to control animation.
    */
   void StartAnimation();
@@ -117,6 +125,8 @@ class SVGDocumentWrapper final : public nsIStreamListener,
   void FlushLayout();
 
  private:
+  friend class AutoRestoreSVGState;
+
   ~SVGDocumentWrapper();
 
   nsresult SetupViewer(nsIRequest* aRequest, nsIContentViewer** aViewer,
@@ -130,9 +140,18 @@ class SVGDocumentWrapper final : public nsIStreamListener,
   nsCOMPtr<nsIStreamListener> mListener;
   bool mIgnoreInvalidation;
   bool mRegisteredForXPCOMShutdown;
+  bool mIsDrawing;
 };
 
 }  // namespace image
 }  // namespace mozilla
+
+/**
+ * Casting SVGDocumentWrapper to nsISupports is ambiguous. This method handles
+ * that.
+ */
+inline nsISupports* ToSupports(mozilla::image::SVGDocumentWrapper* p) {
+  return NS_ISUPPORTS_CAST(nsSupportsWeakReference*, p);
+}
 
 #endif  // mozilla_image_SVGDocumentWrapper_h
