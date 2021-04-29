@@ -61,22 +61,18 @@ const TEST_DATA = [
 ];
 
 add_task(async function() {
-  const { inspector, testActor } = await openInspectorForURL(TEST_URL);
+  const { inspector } = await openInspectorForURL(TEST_URL);
 
   for (const data of TEST_DATA) {
-    await checkNode(inspector, testActor, data);
+    await checkNode(inspector, data);
   }
 });
 
-async function checkNode(
-  inspector,
-  testActor,
-  { desc, selector, inline, value }
-) {
+async function checkNode(inspector, { desc, selector, inline, value }) {
   info(desc);
 
   const container = await getContainerForSelector(selector, inspector);
-  const nodeValue = await getFirstChildNodeValue(selector, testActor);
+  const nodeValue = await getFirstChildNodeValue(selector);
   is(nodeValue, value, "The test node's text content is correct");
 
   is(

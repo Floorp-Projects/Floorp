@@ -34,11 +34,11 @@ const TEST_DATA = [
       textContent: "grid",
       visible: true,
     },
-    changeStyle: async function(testActor) {
-      await testActor.eval(`
-        let node = document.getElementById("grid");
+    changeStyle: async function() {
+      await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
+        const node = content.document.getElementById("grid");
         node.style.display = "block";
-      `);
+      });
     },
     after: {
       visible: false,
@@ -50,11 +50,11 @@ const TEST_DATA = [
     before: {
       visible: false,
     },
-    changeStyle: async function(testActor) {
-      await testActor.eval(`
-        let node = document.getElementById("grid");
+    changeStyle: async function() {
+      await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
+        const node = content.document.getElementById("grid");
         node.style.display = "grid";
-      `);
+      });
     },
     after: {
       textContent: "grid",
@@ -67,11 +67,11 @@ const TEST_DATA = [
     before: {
       visible: false,
     },
-    changeStyle: async function(testActor) {
-      await testActor.eval(`
-        let node = document.getElementById("block");
+    changeStyle: async function() {
+      await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
+        const node = content.document.getElementById("block");
         node.style.display = "grid";
-      `);
+      });
     },
     after: {
       textContent: "grid",
@@ -84,10 +84,10 @@ const TEST_DATA = [
     before: {
       visible: false,
     },
-    changeStyle: async function(testActor) {
-      await testActor.eval(`
-        document.getElementById("flex").removeAttribute("hidden");
-      `);
+    changeStyle: async function() {
+      await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () =>
+        content.document.getElementById("flex").removeAttribute("hidden")
+      );
     },
     after: {
       textContent: "flex",
@@ -97,19 +97,18 @@ const TEST_DATA = [
 ];
 
 add_task(async function() {
-  const { inspector, testActor } = await openInspectorForURL(
+  const { inspector } = await openInspectorForURL(
     "data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI)
   );
 
   for (const data of TEST_DATA) {
     info("Running test case: " + data.desc);
-    await runTestData(inspector, testActor, data);
+    await runTestData(inspector, data);
   }
 });
 
 async function runTestData(
   inspector,
-  testActor,
   { selector, before, changeStyle, after }
 ) {
   await selectNode(selector, inspector);
@@ -134,7 +133,7 @@ async function runTestData(
   info("Listening for the display-change event");
   const onDisplayChanged = inspector.markup.walker.once("display-change");
   info("Making style changes");
-  await changeStyle(testActor);
+  await changeStyle();
   const nodes = await onDisplayChanged;
 
   info("Verifying that the list of changed nodes include our container");

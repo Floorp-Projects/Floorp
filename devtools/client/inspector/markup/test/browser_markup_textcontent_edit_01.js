@@ -11,19 +11,19 @@ const {
 } = require("devtools/server/actors/inspector/walker");
 
 add_task(async function() {
-  const { inspector, testActor } = await openInspectorForURL(TEST_URL);
+  const { inspector } = await openInspectorForURL(TEST_URL);
 
   info("Expanding all nodes");
   await inspector.markup.expandAll();
   await waitForMultipleChildrenUpdates(inspector);
 
-  await editContainer(inspector, testActor, {
+  await editContainer(inspector, {
     selector: ".node6",
     newValue: "New text",
     oldValue: "line6",
   });
 
-  await editContainer(inspector, testActor, {
+  await editContainer(inspector, {
     selector: "#node17",
     newValue:
       "LOREM IPSUM DOLOR SIT AMET, CONSECTETUR ADIPISCING ELIT. " +
@@ -33,7 +33,7 @@ add_task(async function() {
       "Donec posuere placerat magna et imperdiet.",
   });
 
-  await editContainer(inspector, testActor, {
+  await editContainer(inspector, {
     selector: "#node17",
     newValue: "New value",
     oldValue:
@@ -41,7 +41,7 @@ add_task(async function() {
       "DONEC POSUERE PLACERAT MAGNA ET IMPERDIET.",
   });
 
-  await editContainer(inspector, testActor, {
+  await editContainer(inspector, {
     selector: "#node17",
     newValue:
       "LOREM IPSUM DOLOR SIT AMET, CONSECTETUR ADIPISCING ELIT. " +
@@ -50,12 +50,8 @@ add_task(async function() {
   });
 });
 
-async function editContainer(
-  inspector,
-  testActor,
-  { selector, newValue, oldValue }
-) {
-  let nodeValue = await getFirstChildNodeValue(selector, testActor);
+async function editContainer(inspector, { selector, newValue, oldValue }) {
+  let nodeValue = await getFirstChildNodeValue(selector);
   is(nodeValue, oldValue, "The test node's text content is correct");
 
   info("Changing the text content");
@@ -85,7 +81,7 @@ async function editContainer(
   info("Listening to the markupmutation event");
   await onMutated;
 
-  nodeValue = await getFirstChildNodeValue(selector, testActor);
+  nodeValue = await getFirstChildNodeValue(selector);
   is(nodeValue, newValue, "The test node's text content has changed");
 
   const isNewValueInline = newValue.length <= DEFAULT_VALUE_SUMMARY_LENGTH;

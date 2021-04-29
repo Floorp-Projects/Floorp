@@ -16,12 +16,15 @@ const TEST_DATA = [
     validate: async function({ pageNodeFront, selectedNodeFront, testActor }) {
       is(pageNodeFront, selectedNodeFront, "Original element is selected");
 
-      const textNodeName = await testActor.eval(`
-        document.querySelector("#badMarkup1").nextSibling.nodeName
-      `);
-      const textNodeData = await testActor.eval(`
-        document.querySelector("#badMarkup1").nextSibling.data
-      `);
+      const [textNodeName, textNodeData] = await SpecialPowers.spawn(
+        gBrowser.selectedBrowser,
+        [],
+        () => {
+          const node = content.document.querySelector("#badMarkup1")
+            .nextSibling;
+          return [node.nodeName, node.data];
+        }
+      );
       is(textNodeName, "#text", "Sibling is a text element");
       is(textNodeData, " hanging", "New text node has expected text content");
     },
@@ -35,12 +38,15 @@ const TEST_DATA = [
     validate: async function({ pageNodeFront, selectedNodeFront, testActor }) {
       is(pageNodeFront, selectedNodeFront, "Original element is selected");
 
-      const textNodeName = await testActor.eval(`
-        document.querySelector("#badMarkup2").nextSibling.nodeName
-      `);
-      const textNodeData = await testActor.eval(`
-        document.querySelector("#badMarkup2").nextSibling.data
-      `);
+      const [textNodeName, textNodeData] = await SpecialPowers.spawn(
+        gBrowser.selectedBrowser,
+        [],
+        () => {
+          const node = content.document.querySelector("#badMarkup2")
+            .nextSibling;
+          return [node.nodeName, node.data];
+        }
+      );
       is(textNodeName, "#text", "Sibling is a text element");
       is(textNodeData, " hanging", "New text node has expected text content");
     },

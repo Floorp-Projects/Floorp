@@ -19,7 +19,7 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  const { inspector, flexboxInspector, testActor } = await openLayoutView();
+  const { inspector, flexboxInspector } = await openLayoutView();
   const { document: doc } = flexboxInspector;
 
   const onFlexItemListRendered = waitForDOM(doc, ".flex-item-list");
@@ -36,10 +36,10 @@ add_task(async function() {
 
   info("Changing the flexbox in the page.");
   const onFlexItemListChanged = waitForDOM(doc, ".flex-item-list > button", 2);
-  testActor.eval(`
-    const div = document.createElement("div");
-    document.getElementById("container").appendChild(div);
-  `);
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
+    const div = content.document.createElement("div");
+    content.document.getElementById("container").appendChild(div);
+  });
   const elements = await onFlexItemListChanged;
 
   info("Checking the flex item list is correct.");

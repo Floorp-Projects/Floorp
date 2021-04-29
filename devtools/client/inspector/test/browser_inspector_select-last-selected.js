@@ -54,7 +54,7 @@ var TEST_DATA = [
 ];
 
 add_task(async function() {
-  const { inspector, toolbox, testActor } = await openInspectorForURL(PAGE_1);
+  const { inspector, toolbox } = await openInspectorForURL(PAGE_1);
 
   for (const { url, nodeToSelect, selectedNode } of TEST_DATA) {
     if (nodeToSelect) {
@@ -76,7 +76,11 @@ add_task(async function() {
   async function navigateToAndWaitForNewRoot(url) {
     info("Navigating and waiting for new-root event after navigation.");
 
-    const current = await testActor.eval("location.href");
+    const current = await SpecialPowers.spawn(
+      gBrowser.selectedBrowser,
+      [],
+      () => content.location.href
+    );
     if (url == current) {
       info("Reloading page.");
       const markuploaded = inspector.once("markuploaded");

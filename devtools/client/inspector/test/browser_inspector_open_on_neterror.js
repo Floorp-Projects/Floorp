@@ -14,10 +14,14 @@ add_task(async function() {
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, TEST_URL_1);
   await BrowserTestUtils.waitForErrorPage(gBrowser.selectedBrowser);
 
-  const { inspector, testActor } = await openInspector();
+  const { inspector } = await openInspector();
   ok(true, "Inspector loaded on the already opened net error");
 
-  const documentURI = await testActor.eval("document.documentURI;");
+  const documentURI = await SpecialPowers.spawn(
+    gBrowser.selectedBrowser,
+    [],
+    () => content.document.documentURI
+  );
   ok(
     documentURI.startsWith("about:neterror"),
     "content is really a net error page."

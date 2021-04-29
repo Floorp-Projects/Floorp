@@ -44,7 +44,8 @@ add_task(async function() {
   ok(inspector.markup, "There is a markup view");
 
   // Select an element while the tab is in the middle of a slow reload.
-  testActor.eval("location.reload()");
+  // Do not await here because we interact with the page during navigation.
+  const onToolboxNavigated = navigateTo(TEST_URL);
 
   info("Wait for DOMContentLoaded");
   await domContentLoaded;
@@ -55,6 +56,9 @@ add_task(async function() {
 
   info("Wait for load");
   await pageLoaded;
+
+  info("Wait for toolbox navigation");
+  await onToolboxNavigated;
 
   info("Wait for markup-loaded after element inspection");
   await markupLoaded;

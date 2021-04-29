@@ -10,7 +10,7 @@
 const TEST_URL = URL_ROOT + "doc_inspector_search.html";
 
 add_task(async function() {
-  const { inspector, testActor } = await openInspectorForURL(TEST_URL);
+  const { inspector } = await openInspectorForURL(TEST_URL);
 
   info("Searching for test node #d1");
   await focusSearchBoxUsingShortcut(inspector.panelWin);
@@ -23,10 +23,8 @@ add_task(async function() {
   // Expect an inspector-updated event here, because removing #d1 causes the
   // breadcrumbs to update (since #d1 is displayed in it).
   const onUpdated = inspector.once("inspector-updated");
-  await mutatePage(
-    inspector,
-    testActor,
-    'document.getElementById("d1").remove()'
+  await mutatePage(inspector, () =>
+    content.document.getElementById("d1").remove()
   );
   await onUpdated;
 
@@ -54,11 +52,10 @@ add_task(async function() {
   info("Create the #d3 node in the page");
   // No need to expect an inspector-updated event here, Creating #d3 isn't going
   // to update the breadcrumbs in any ways.
-  await mutatePage(
-    inspector,
-    testActor,
-    `document.getElementById("d2").insertAdjacentHTML(
-                    "afterend", "<div id=d3></div>")`
+  await mutatePage(inspector, () =>
+    content.document
+      .getElementById("d2")
+      .insertAdjacentHTML("afterend", "<div id=d3></div>")
   );
 
   info("Pressing return button to search again for node #d3.");
@@ -97,8 +94,8 @@ function assertHasResult(inspector, expectResult) {
   );
 }
 
-async function mutatePage(inspector, testActor, expression) {
+async function mutatePage(inspector, mutationFn) {
   const onMutation = inspector.once("markupmutation");
-  await testActor.eval(expression);
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], mutationFn);
   await onMutation;
 }

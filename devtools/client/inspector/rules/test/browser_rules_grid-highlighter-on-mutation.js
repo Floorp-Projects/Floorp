@@ -20,7 +20,7 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  const { inspector, view, testActor } = await openRuleView();
+  const { inspector, view } = await openRuleView();
   const highlighters = inspector.highlighters;
   const HIGHLIGHTER_TYPE = inspector.highlighters.TYPES.GRID;
   const {
@@ -40,9 +40,9 @@ add_task(async function() {
 
   const onHighlighterHidden = waitForHighlighterTypeHidden(HIGHLIGHTER_TYPE);
   info("Remove the #grid container in the content page");
-  testActor.eval(`
-    document.querySelector("#grid").remove();
-  `);
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () =>
+    content.document.querySelector("#grid").remove()
+  );
   await onHighlighterHidden;
   ok(!highlighters.gridHighlighters.size, "CSS grid highlighter is hidden.");
 });

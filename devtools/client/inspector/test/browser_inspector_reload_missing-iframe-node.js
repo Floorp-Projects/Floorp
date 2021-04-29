@@ -44,7 +44,7 @@ add_task(async function() {
   const markupLoaded = inspector.once("markuploaded");
 
   info("Reloading page.");
-  await testActor.eval("location.reload()");
+  await navigateTo(TEST_URI);
 
   info("Waiting for markupview to load after reload.");
   await markupLoaded;
