@@ -77,7 +77,7 @@ private fun assertDataCollectionOptions() {
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
     val marketingDataText =
-        "Shares data about what features you use in Firefox Preview with Leanplum, our mobile marketing vendor."
+        "Shares basic usage data with Adjust, our mobile marketing vendor"
 
     onView(withText(marketingDataText))
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
