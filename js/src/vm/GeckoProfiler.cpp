@@ -460,6 +460,11 @@ JS_PUBLIC_API JSScript* ProfilingStackFrame::script() const {
   return script;
 }
 
+JS_PUBLIC_API JSFunction* ProfilingStackFrame::function() const {
+  JSScript* script = this->script();
+  return script ? script->function() : nullptr;
+}
+
 JS_FRIEND_API jsbytecode* ProfilingStackFrame::pc() const {
   MOZ_ASSERT(isJsFrame());
   if (pcOffsetIfJS_ == NullPCOffset) {

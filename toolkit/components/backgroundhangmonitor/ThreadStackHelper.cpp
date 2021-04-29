@@ -327,8 +327,19 @@ void ThreadStackHelper::CollectProfilingStackFrame(
   // Rather than using the profiler's dynamic string, we compute our own string.
   // This is because we want to do some size-saving strategies, and throw out
   // information which won't help us as much.
-  // XXX: We currently don't collect the function name which hung.
   const char* filename = JS_GetScriptFilename(aFrame.script());
+
+  nsAutoCString funcName;
+  JSFunction* func = aFrame.function();
+  if (func) {
+    JSString* str = JS_GetFunctionDisplayId(func);
+    if (str) {
+      JSLinearString* linear = JS_ASSERT_STRING_IS_LINEAR(str);
+      AssignJSLinearString(funcName, linear);
+      funcName.AppendLiteral(" ");
+    }
+  }
+
   unsigned lineno = JS_PCToLineNumber(aFrame.script(), aFrame.pc());
 
   // Some script names are in the form "foo -> bar -> baz".
@@ -359,8 +370,9 @@ void ThreadStackHelper::CollectProfilingStackFrame(
     }
   }
 
-  char buffer[128];  // Enough to fit longest js file name from the tree
-  size_t len = SprintfLiteral(buffer, "%s:%u", basename, lineno);
+  char buffer[256];  // Enough to fit our longest js function and file names.
+  size_t len =
+      SprintfLiteral(buffer, "%s%s:%u", funcName.get(), basename, lineno);
   if (len > sizeof(buffer)) {
     buffer[sizeof(buffer) - 1] = kTruncationIndicator;
     len = sizeof(buffer);
