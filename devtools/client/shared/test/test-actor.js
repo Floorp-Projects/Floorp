@@ -6,7 +6,7 @@
 "use strict";
 
 // A helper actor for inspector and markupview tests.
-const { Ci, Cu, Cc } = require("chrome");
+const { Ci, Cc } = require("chrome");
 const Services = require("Services");
 const {
   getRect,
@@ -213,14 +213,6 @@ var testSpec = protocol.generateActorSpec({
         selector: Arg(0, "string"),
       },
       response: {},
-    },
-    eval: {
-      request: {
-        js: Arg(0, "string"),
-      },
-      response: {
-        value: RetVal("nullable:json"),
-      },
     },
     scrollWindow: {
       request: {
@@ -677,25 +669,6 @@ var TestActor = protocol.ActorClassWithSpec(testSpec, {
 
       node.contentWindow.location.reload();
     });
-  },
-
-  /**
-   * Evaluate a JS string in the context of the content document.
-   * @param {String} js JS string to evaluate
-   * @return {json} The evaluation result
-   */
-  eval: function(js) {
-    // We have to use a sandbox, as CSP prevent us from using eval on apps...
-    const sb = Cu.Sandbox(this.content, { sandboxPrototype: this.content });
-    const result = Cu.evalInSandbox(js, sb);
-
-    // Ensure passing only serializable data to RDP
-    if (typeof result == "function") {
-      return null;
-    } else if (typeof result == "object") {
-      return JSON.parse(JSON.stringify(result));
-    }
-    return result;
   },
 
   /**
