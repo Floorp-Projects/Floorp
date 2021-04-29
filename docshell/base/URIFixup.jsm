@@ -358,6 +358,7 @@ URIFixup.prototype = {
         maybeSetAlternateFixedURI(info, fixupFlags);
         info.preferredURI = info.fixedURI;
       }
+      fixupConsecutiveDotsHost(info);
       return info;
     }
 
@@ -385,6 +386,7 @@ URIFixup.prototype = {
         // Check if it's a forced visit. The user can enforce a visit by
         // appending a slash, but the string must be in a valid uri format.
         if (uriString.endsWith("/")) {
+          fixupConsecutiveDotsHost(info);
           return info;
         }
       }
@@ -418,6 +420,7 @@ URIFixup.prototype = {
       !checkSuffix(info).suffix &&
       keywordURIFixup(uriString, info, isPrivateContext)
     ) {
+      fixupConsecutiveDotsHost(info);
       return info;
     }
 
@@ -425,6 +428,7 @@ URIFixup.prototype = {
       info.fixedURI &&
       (!info.fixupChangedProtocol || !checkSuffix(info).hasUnknownSuffix)
     ) {
+      fixupConsecutiveDotsHost(info);
       return info;
     }
 
@@ -442,6 +446,7 @@ URIFixup.prototype = {
       );
     }
 
+    fixupConsecutiveDotsHost(info);
     return info;
   },
 
@@ -1057,4 +1062,34 @@ function fixupViewSource(uriString, fixupFlags) {
     preferredURI: Services.io.newURI("view-source:" + info.preferredURI.spec),
     postData: info.postData,
   };
+}
+
+/**
+ * Fixup the host of fixedURI if it contains consecutive dots.
+ * @param {URIFixupInfo} info an URIInfo object
+ */
+function fixupConsecutiveDotsHost(fixupInfo) {
+  const uri = fixupInfo.fixedURI;
+  if (!uri || !uri.asciiHost.includes("..")) {
+    return;
+  }
+
+  try {
+    const isPreferredEqualsToFixed = fixupInfo.preferredURI?.equals(
+      fixupInfo.fixedURI
+    );
+
+    fixupInfo.fixedURI = uri
+      .mutate()
+      .setHost(uri.host.replace(/\.+/g, "."))
+      .finalize();
+
+    if (isPreferredEqualsToFixed) {
+      fixupInfo.preferredURI = fixupInfo.fixedURI;
+    }
+  } catch (e) {
+    if (e.result !== Cr.NS_ERROR_MALFORMED_URI) {
+      throw e;
+    }
+  }
 }
