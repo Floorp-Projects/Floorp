@@ -114,23 +114,6 @@ class AwakeTimeDuration {
   uint64_t mValueUs;
 };
 
-MFBT_API AwakeTimeDuration
-AwakeTimeStamp::operator-(AwakeTimeStamp const& aOther) const {
-  return AwakeTimeDuration(mValueUs - aOther.mValueUs);
-}
-MFBT_API AwakeTimeStamp
-AwakeTimeStamp::operator+(const AwakeTimeDuration& aDuration) const {
-  return AwakeTimeStamp(mValueUs + aDuration.mValueUs);
-}
-
-MFBT_API void AwakeTimeStamp::operator+=(const AwakeTimeDuration& aOther) {
-  mValueUs += aOther.mValueUs;
-}
-MFBT_API void AwakeTimeStamp::operator-=(const AwakeTimeDuration& aOther) {
-  MOZ_ASSERT(mValueUs >= aOther.mValueUs);
-  mValueUs -= aOther.mValueUs;
-}
-
-}  // namespace mozilla
+};  // namespace mozilla
 
 #endif  // mozilla_AwakeTimeStamp_h

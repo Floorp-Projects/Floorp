@@ -33,6 +33,25 @@ double AwakeTimeDuration::ToMicroseconds() const {
   return static_cast<double>(mValueUs);
 }
 
+AwakeTimeDuration AwakeTimeStamp::operator-(
+    AwakeTimeStamp const& aOther) const {
+  return AwakeTimeDuration(mValueUs - aOther.mValueUs);
+}
+
+AwakeTimeStamp AwakeTimeStamp::operator+(
+    const AwakeTimeDuration& aDuration) const {
+  return AwakeTimeStamp(mValueUs + aDuration.mValueUs);
+}
+
+void AwakeTimeStamp::operator+=(const AwakeTimeDuration& aOther) {
+  mValueUs += aOther.mValueUs;
+}
+
+void AwakeTimeStamp::operator-=(const AwakeTimeDuration& aOther) {
+  MOZ_ASSERT(mValueUs >= aOther.mValueUs);
+  mValueUs -= aOther.mValueUs;
+}
+
 // Apple things
 #if defined(__APPLE__) && defined(__MACH__)
 #  include <time.h>
