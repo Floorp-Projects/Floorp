@@ -17,35 +17,7 @@ job-defaults:
                     default: 1800
     suite: raptor
     test-manifest-loader: null  # don't load tests in the taskgraph
-    run-on-projects:
-        by-variant:
-            fission:
-                by-test-platform:
-                    windows.*-32.*: []
-                    default: [mozilla-central]
-            default:
-                by-app:
-                    firefox:
-                        by-test-platform:
-                            windows.*-32.*/opt: []
-                            macosx.*64(?:-qr)?/opt: ["mozilla-central"]
-                            (linux|windows.*64|macos)(?!.*shippable).*: []
-                            default: ["trunk", "mozilla-beta"]
-                    chrome: []
-                    chromium: []
-                    default:  # tests that dont have "apps: []"
-                        by-test-name:
-                            raptor-.*-profiling.*:
-                                by-test-platform:
-                                    windows.*-32.*/opt: []
-                                    (linux|windows.*64|macos)(?!.*shippable).*: []
-                                    default: ["mozilla-central"]
-                            default:
-                                by-test-platform:
-                                    windows.*-32.*/opt: []
-                                    macosx.*64(?:-qr)?/opt: ["mozilla-central"]
-                                    (linux|windows.*64|macos)(?!.*shippable).*: []
-                                    default: ["trunk", "mozilla-beta"]
+    run-on-projects: []
     limit-platforms:
         by-app:
             chrome:
@@ -105,7 +77,6 @@ raptor-speedometer-firefox-profiling:
     description: "Raptor Speedometer on Firefox with Gecko Profiling"
     try-name: raptor-speedometer-firefox-profiling
     treeherder-symbol: Rap-Prof(sp)
-    run-on-projects: []
     max-run-time: 900
     mozharness:
         extra-options:
@@ -124,7 +95,6 @@ raptor-stylebench-firefox-profiling:
     description: "Raptor StyleBench on Firefox with Gecko Profiling"
     try-name: raptor-stylebench-firefox-profiling
     treeherder-symbol: Rap-Prof(sb)
-    run-on-projects: []
     max-run-time: 900
     mozharness:
         extra-options:
@@ -143,7 +113,6 @@ raptor-motionmark-htmlsuite-firefox-profiling:
     description: "Raptor MotionMark HtmlSuite on Firefox with Gecko Profiling"
     try-name: raptor-motionmark-htmlsuite-firefox-profiling
     treeherder-symbol: Rap-Prof(mm-h)
-    run-on-projects: []
     mozharness:
         extra-options:
             - --test=raptor-motionmark-htmlsuite
@@ -165,7 +134,6 @@ raptor-motionmark-animometer-firefox-profiling:
     description: "Raptor MotionMark Animometer on Firefox with Gecko Profiling"
     try-name: raptor-motionmark-animometer-firefox-profiling
     treeherder-symbol: Rap-Prof(mm-a)
-    run-on-projects: []
     max-run-time: 900
     mozharness:
         extra-options:
@@ -188,7 +156,6 @@ raptor-webaudio-firefox-profiling:
     description: "Raptor WebAudio on Firefox with Gecko Profiling"
     try-name: raptor-webaudio-firefox
     treeherder-symbol: Rap-Prof(wa)
-    run-on-projects: []
     max-run-time: 900
     mozharness:
         extra-options:
@@ -207,7 +174,6 @@ raptor-sunspider-firefox-profiling:
     description: "Raptor SunSpider on Firefox with Gecko Profiling"
     try-name: raptor-sunspider-firefox-profiling
     treeherder-symbol: Rap-Prof(ss)
-    run-on-projects: []
     max-run-time: 900
     mozharness:
         extra-options:
@@ -218,13 +184,6 @@ raptor-unity-webgl-firefox:
     description: "Raptor Unity WebGL on Firefox"
     try-name: raptor-unity-webgl-firefox
     treeherder-symbol: Rap(ugl)
-    run-on-projects:
-        by-variant:
-            fission: []
-            default:
-                by-test-platform:
-                    (linux|windows.*64|macos)(?!.*shippable).*: []
-                    default: ["autoland"]
     tier:
         by-variant:
             fission: 2
@@ -240,7 +199,6 @@ raptor-unity-webgl-firefox-profiling:
     description: "Raptor Unity WebGL on Firefox with Gecko Profiling"
     try-name: raptor-unity-webgl-firefox-profiling
     treeherder-symbol: Rap-Prof(ugl)
-    run-on-projects: []
     mozharness:
         extra-options:
             - --test=raptor-unity-webgl
@@ -264,7 +222,6 @@ raptor-wasm-misc-firefox-profiling:
     description: "Raptor WASM Misc on Firefox with Gecko Profiling"
     try-name: raptor-wasm-misc-firefox-profiling
     treeherder-symbol: Rap-Prof(wm)
-    run-on-projects: []
     max-run-time: 900
     mozharness:
         extra-options:
@@ -289,7 +246,6 @@ raptor-wasm-misc-baseline-firefox-profiling:
     description: "Raptor WASM Misc on Firefox with baseline JIT and Gecko Profiling"
     try-name: raptor-wasm-misc-baseline-firefox-profiling
     treeherder-symbol: Rap-Prof(wm-b)
-    run-on-projects: []
     max-run-time: 900
     mozharness:
         extra-options:
@@ -314,7 +270,6 @@ raptor-wasm-misc-optimizing-firefox-profiling:
     description: "Raptor WASM Misc on Firefox with optimizing JIT and Gecko Profiling"
     try-name: raptor-wasm-misc-optimizing-firefox-profiling
     treeherder-symbol: Rap-Prof(wm-i)
-    run-on-projects: []
     max-run-time: 900
     mozharness:
         extra-options:
@@ -344,7 +299,6 @@ raptor-assorted-dom-firefox-profiling:
     description: "Raptor Assorted-Dom on Firefox with Gecko Profiling"
     try-name: raptor-assorted-dom-firefox-profiling
     treeherder-symbol: Rap-Prof(dom)
-    run-on-projects: []
     max-run-time: 900
     mozharness:
         extra-options:
@@ -371,7 +325,6 @@ raptor-wasm-godot-firefox-profiling:
     description: "Raptor Wasm Godot on Firefox with Gecko Profiling"
     try-name: raptor-wasm-godot-firefox-profiling
     treeherder-symbol: Rap-Prof(godot)
-    run-on-projects: []
     max-run-time: 900
     mozharness:
         extra-options:
@@ -395,7 +348,6 @@ raptor-wasm-godot-baseline-firefox-profiling:
     description: "Raptor Wasm Godot on Firefox with baseline JIT and Gecko Profiling"
     try-name: raptor-wasm-godot-baseline-firefox-profiling
     treeherder-symbol: Rap-Prof(godot-b)
-    run-on-projects: []
     max-run-time: 900
     mozharness:
         extra-options:
@@ -419,7 +371,6 @@ raptor-wasm-godot-optimizing-firefox-profiling:
     description: "Raptor WASM godot on Firefox with optimizing JIT and Gecko Profiling"
     try-name: raptor-wasm-godot-optimizing-firefox-profiling
     treeherder-symbol: Rap-Prof(godot-i)
-    run-on-projects: []
     max-run-time: 900
     mozharness:
         extra-options:
@@ -639,7 +590,6 @@ raptor-ares6-firefox-profiling:
     description: "Raptor Ares6 on Firefox with Gecko Profiling"
     try-name: raptor-ares6-firefox-profiling
     treeherder-symbol: Rap-Prof(ares6)
-    run-on-projects: []
     tier:
         by-variant:
             fission: 2
@@ -653,17 +603,6 @@ raptor-jetstream2-firefox:
     description: "Raptor Jetstream2 on Firefox"
     try-name: raptor-jetstream2-firefox
     treeherder-symbol: Rap(js2)
-    run-on-projects:
-        by-variant:
-            fission:
-                by-test-platform:
-                    windows.*-32.*: []
-                    default: [mozilla-central]
-            default:
-                by-test-platform:
-                    windows.*-32.*/opt: []
-                    (linux|windows.*64|macos)(?!.*shippable).*: []
-                    default: ['mozilla-central']
     tier:
         by-variant:
             fission: 2
@@ -680,7 +619,6 @@ raptor-jetstream2-firefox-profiling:
     description: "Raptor Jetstream2 on Firefox with Gecko Profiling"
     try-name: raptor-jetstream2-firefox-profiling
     treeherder-symbol: Rap-Prof(js2)
-    run-on-projects: []
     max-run-time: 8000
     tier:
         by-variant:
