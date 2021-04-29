@@ -19,14 +19,6 @@
 
   --urlbar-popup-action-color: hsl(178, 100%, 28%);
 
-  /* Colors copied from in-content button styling */
-  --urlbarView-button-background: rgba(12, 12, 13, 0.1);
-  --urlbarView-button-background-hover: rgba(12, 12, 13, 0.2);
-  --urlbarView-button-background-active: rgba(12, 12, 13, 0.3);
-  --urlbarView-primary-button-text: white;
-  --urlbarView-primary-button-background: #0060df;
-  --urlbarView-primary-button-background-hover: #003eaa;
-  --urlbarView-primary-button-background-active: #002275;
   --urlbarView-action-slide-in-distance: 200px;
 
   --urlbarView-item-inline-padding: calc(var(--urlbar-icon-padding) / 2 + 3px);
@@ -47,11 +39,6 @@
 :root[lwt-toolbar-field-focus-brighttext] {
   --urlbar-popup-url-color: var(--lwt-popup-brighttext-url-color);
   --urlbar-popup-action-color: #30e60b;
-
-  /* Colors copied from in-content button styling */
-  --urlbarView-button-background: rgba(249, 249, 250, 0.24);
-  --urlbarView-button-background-hover: rgba(249, 249, 250, 0.15);
-  --urlbarView-button-background-active: rgba(249, 249, 250, 0.2);
 }
 
 @media (-moz-proton) {
@@ -403,7 +390,7 @@
 
 /* Help button */
 
-/* Help buttons are a standard Photon ghost buttons. */
+/* Help buttons are ghost buttons. */
 .urlbarView-help {
   flex-grow: 0;
   flex-shrink: 0;
@@ -416,6 +403,7 @@
   padding-inline: 8px;
   margin-inline-start: 8px;
   margin-inline-end: 4px;
+  fill-opacity: var(--urlbar-icon-fill-opacity);
   -moz-context-properties: fill, fill-opacity;
 }
 
@@ -426,15 +414,16 @@
 } /*** END proton ***/
 
 .urlbarView-help[selected] {
-  box-shadow: 0 0 0 1px #0a84ff inset, 0 0 0 1px #0a84ff, 0 0 0 4px rgba(10, 132, 255, 0.3);
+  outline: var(--focus-outline);
+  outline-offset: 2px;
 }
 
 .urlbarView-help:hover {
-  background-color: var(--urlbarView-button-background-hover);
+  background-color: var(--button-hover-bgcolor);
 }
 
 .urlbarView-help:hover:active {
-  background-color: var(--urlbarView-button-background-active);
+  background-color: var(--button-active-bgcolor);
 }
 
 /* Tip rows */
@@ -476,11 +465,10 @@
 .urlbarView-tip-button {
   min-height: 16px;
   padding: 7px;
-  border: 1px solid var(--urlbarView-button-border, var(--urlbarView-button-background));
-  border-radius: 2px;
+  border-radius: var(--toolbarbutton-border-radius);
   font-size: 0.93em;
-  color: var(--urlbarView-button-text, inherit);
-  background-color: var(--urlbarView-button-background);
+  background-color: var(--button-bgcolor);
+  font-weight: 600;
   background-clip: padding-box;
   min-width: 8.75em;
   text-align: center;
@@ -496,26 +484,26 @@
 } /*** END proton ***/
 
 .urlbarView-tip-button:hover {
-  background-color: var(--urlbarView-button-background-hover);
+  background-color: var(--button-hover-bgcolor);
 }
 
 .urlbarView-tip-button:hover:active {
-  background-color: var(--urlbarView-button-background-active);
+  background-color: var(--button-active-bgcolor);
 }
 
 .urlbarView-tip-button[selected] {
-  color: var(--urlbarView-primary-button-text);
-  background-color: var(--urlbarView-primary-button-background);
-  border-color: #0a84ff;
-  box-shadow: 0 0 0 1px #0a84ff, 0 0 0 4px rgba(10, 132, 255, 0.3);
+  color: var(--buttons-primary-button-color, var(--autocomplete-popup-highlight-color));
+  background-color: var(--buttons-primary-button-bgcolor, var(--autocomplete-popup-highlight-background));
+  outline: var(--focus-outline);
+  outline-offset: 2px;
 }
 
 .urlbarView-tip-button[selected]:hover {
-  background-color: var(--urlbarView-primary-button-background-hover);
+  background-color: var(--buttons-primary-button-hover-bgcolor, color-mix(in srgb, black 10%, var(--autocomplete-popup-highlight-background)));
 }
 
 .urlbarView-tip-button[selected]:hover:active {
-  background-color: var(--urlbarView-primary-button-background-active);
+  background-color: var(--buttons-primary-button-active-bgcolor, color-mix(in srgb, black 20%, var(--autocomplete-popup-highlight-background)));
 }
 
 .urlbarView-tip-button-spacer {
