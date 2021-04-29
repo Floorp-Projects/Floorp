@@ -17,7 +17,7 @@ describe("<Navigation>", () => {
   let wrapper;
 
   beforeEach(() => {
-    wrapper = mount(<Navigation header={{}} />);
+    wrapper = mount(<Navigation header={{}} locale="en-US" />);
   });
 
   it("should render", () => {

@@ -111,6 +111,9 @@ describe("<DiscoveryStreamBase>", () => {
             "feeds.topsites": true,
           },
         }}
+        App={{
+          locale: "en-US",
+        }}
         document={{
           documentElement: { lang: "en-US" },
         }}
