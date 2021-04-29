@@ -150,7 +150,6 @@ class VectorImage final : public ImageResource, public nsIStreamListener {
   bool mDiscardable;             // Are we discardable?
   bool mIsFullyLoaded;           // Has the SVG document finished
                                  // loading?
-  bool mIsDrawing;               // Are we currently drawing?
   bool mHaveAnimations;          // Is our SVG content SMIL-animated?
                                  // (Only set after mIsFullyLoaded.)
   bool mHasPendingInvalidation;  // Invalidate observers next refresh
