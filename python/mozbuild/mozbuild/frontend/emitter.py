@@ -622,8 +622,6 @@ class TreeMetadataEmitter(LoggingMixin):
                 "crate-type %s is not permitted for %s" % (crate_type, libname), context
             )
 
-        cargo_target_dir = context.config.topobjdir
-
         dependencies = set(six.iterkeys(config.get("dependencies", {})))
 
         features = context.get(cls.FEATURES_VAR, [])
@@ -642,7 +640,6 @@ class TreeMetadataEmitter(LoggingMixin):
             crate_type,
             dependencies,
             features,
-            cargo_target_dir,
             is_gkrust,
             **static_args
         )
