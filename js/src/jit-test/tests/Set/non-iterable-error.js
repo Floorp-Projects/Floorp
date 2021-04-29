@@ -5,6 +5,3 @@ try {
 } catch (e) {
   assertEq(e.message, "1 is not iterable");
 }
-
-if (typeof reportCompare === "function")
-  reportCompare(0, 0);
