@@ -28,18 +28,19 @@ using namespace mozilla::a11y;
 
 IMPL_IUNKNOWN_QUERY_HEAD(sdnTextAccessible)
 IMPL_IUNKNOWN_QUERY_IFACE(ISimpleDOMText)
-IMPL_IUNKNOWN_QUERY_TAIL_AGGREGATED(mAccessible)
+IMPL_IUNKNOWN_QUERY_TAIL_AGGREGATED(mMsaa)
 
 STDMETHODIMP
 sdnTextAccessible::get_domText(BSTR __RPC_FAR* aText) {
   if (!aText) return E_INVALIDARG;
   *aText = nullptr;
 
-  if (mAccessible->IsDefunct()) return CO_E_OBJNOTCONNECTED;
+  AccessibleWrap* acc = mMsaa->LocalAcc();
+  if (!acc) return CO_E_OBJNOTCONNECTED;
 
   nsAutoString nodeValue;
 
-  mAccessible->GetContent()->GetNodeValue(nodeValue);
+  acc->GetContent()->GetNodeValue(nodeValue);
   if (nodeValue.IsEmpty()) return S_FALSE;
 
   *aText = ::SysAllocStringLen(nodeValue.get(), nodeValue.Length());
@@ -55,7 +56,7 @@ sdnTextAccessible::get_clippedSubstringBounds(
                                             &width, &height);
   if (FAILED(rv)) return rv;
 
-  DocAccessible* document = mAccessible->Document();
+  DocAccessible* document = mMsaa->LocalAcc()->Document();
   NS_ASSERTION(
       document,
       "There must always be a doc accessible, but there isn't. Crash!");
@@ -80,9 +81,10 @@ sdnTextAccessible::get_unclippedSubstringBounds(
   if (!aX || !aY || !aWidth || !aHeight) return E_INVALIDARG;
   *aX = *aY = *aWidth = *aHeight = 0;
 
-  if (mAccessible->IsDefunct()) return CO_E_OBJNOTCONNECTED;
+  AccessibleWrap* acc = mMsaa->LocalAcc();
+  if (!acc) return CO_E_OBJNOTCONNECTED;
 
-  nsIFrame* frame = mAccessible->GetFrame();
+  nsIFrame* frame = acc->GetFrame();
   NS_ENSURE_TRUE(frame, E_FAIL);
 
   nsPoint startPoint, endPoint;
@@ -103,7 +105,7 @@ sdnTextAccessible::get_unclippedSubstringBounds(
     sum.UnionRect(sum, rect);
   }
 
-  nsPresContext* presContext = mAccessible->Document()->PresContext();
+  nsPresContext* presContext = acc->Document()->PresContext();
   *aX = presContext->AppUnitsToDevPixels(sum.X());
   *aY = presContext->AppUnitsToDevPixels(sum.Y());
   *aWidth = presContext->AppUnitsToDevPixels(sum.Width());
@@ -115,18 +117,16 @@ sdnTextAccessible::get_unclippedSubstringBounds(
 STDMETHODIMP
 sdnTextAccessible::scrollToSubstring(unsigned int aStartIndex,
                                      unsigned int aEndIndex) {
-  if (mAccessible->IsDefunct()) return CO_E_OBJNOTCONNECTED;
+  AccessibleWrap* acc = mMsaa->LocalAcc();
+  if (!acc) return CO_E_OBJNOTCONNECTED;
 
-  RefPtr<nsRange> range = nsRange::Create(mAccessible->GetContent());
-  if (NS_FAILED(range->SetStart(mAccessible->GetContent(), aStartIndex)))
-    return E_FAIL;
+  RefPtr<nsRange> range = nsRange::Create(acc->GetContent());
+  if (NS_FAILED(range->SetStart(acc->GetContent(), aStartIndex))) return E_FAIL;
 
-  if (NS_FAILED(range->SetEnd(mAccessible->GetContent(), aEndIndex)))
-    return E_FAIL;
+  if (NS_FAILED(range->SetEnd(acc->GetContent(), aEndIndex))) return E_FAIL;
 
   nsresult rv = nsCoreUtils::ScrollSubstringTo(
-      mAccessible->GetFrame(), range,
-      nsIAccessibleScrollType::SCROLL_TYPE_ANYWHERE);
+      acc->GetFrame(), range, nsIAccessibleScrollType::SCROLL_TYPE_ANYWHERE);
   return GetHRESULT(rv);
 }
 
@@ -135,9 +135,10 @@ sdnTextAccessible::get_fontFamily(BSTR __RPC_FAR* aFontFamily) {
   if (!aFontFamily) return E_INVALIDARG;
   *aFontFamily = nullptr;
 
-  if (mAccessible->IsDefunct()) return CO_E_OBJNOTCONNECTED;
+  AccessibleWrap* acc = mMsaa->LocalAcc();
+  if (!acc) return CO_E_OBJNOTCONNECTED;
 
-  nsIFrame* frame = mAccessible->GetFrame();
+  nsIFrame* frame = acc->GetFrame();
   if (!frame) return E_FAIL;
 
   RefPtr<nsFontMetrics> fm = nsLayoutUtils::GetFontMetricsForFrame(frame, 1.0f);
