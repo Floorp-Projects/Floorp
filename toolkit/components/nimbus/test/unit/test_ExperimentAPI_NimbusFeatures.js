@@ -195,3 +195,25 @@ add_task(async function update_remote_defaults_enabled() {
   manager.store._deleteForTests("aboutwelcome");
   sandbox.restore();
 });
+
+// If the branch data returned from the store is not modified
+// this test should not throw
+add_task(async function test_getValue_no_mutation() {
+  let { sandbox, manager } = await setupForExperimentFeature();
+  sandbox.stub(manager.store, "getExperimentForFeature").returns(
+    Cu.cloneInto(
+      {
+        branch: {
+          feature: { value: { mochitest: true } },
+        },
+      },
+      {},
+      { deepFreeze: true }
+    )
+  );
+  let feature = new ExperimentFeature("aboutwelcome");
+
+  Assert.ok(feature.getValue().mochitest, "Got back the expected feature");
+
+  sandbox.restore();
+});
