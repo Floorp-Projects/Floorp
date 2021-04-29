@@ -20,18 +20,17 @@ using namespace mozilla::a11y;
 
 IMPL_IUNKNOWN_QUERY_HEAD(sdnDocAccessible)
 IMPL_IUNKNOWN_QUERY_IFACE(ISimpleDOMDocument)
-IMPL_IUNKNOWN_QUERY_TAIL_AGGREGATED(mMsaa)
+IMPL_IUNKNOWN_QUERY_TAIL_AGGREGATED(mAccessible)
 
 STDMETHODIMP
 sdnDocAccessible::get_URL(BSTR __RPC_FAR* aURL) {
   if (!aURL) return E_INVALIDARG;
   *aURL = nullptr;
 
-  DocAccessible* acc = mMsaa->DocAcc();
-  if (!acc) return CO_E_OBJNOTCONNECTED;
+  if (mAccessible->IsDefunct()) return CO_E_OBJNOTCONNECTED;
 
   nsAutoString URL;
-  acc->URL(URL);
+  mAccessible->URL(URL);
   if (URL.IsEmpty()) return S_FALSE;
 
   *aURL = ::SysAllocStringLen(URL.get(), URL.Length());
@@ -43,11 +42,10 @@ sdnDocAccessible::get_title(BSTR __RPC_FAR* aTitle) {
   if (!aTitle) return E_INVALIDARG;
   *aTitle = nullptr;
 
-  DocAccessible* acc = mMsaa->DocAcc();
-  if (!acc) return CO_E_OBJNOTCONNECTED;
+  if (mAccessible->IsDefunct()) return CO_E_OBJNOTCONNECTED;
 
   nsAutoString title;
-  acc->Title(title);
+  mAccessible->Title(title);
   *aTitle = ::SysAllocStringLen(title.get(), title.Length());
   return *aTitle ? S_OK : E_OUTOFMEMORY;
 }
@@ -57,11 +55,10 @@ sdnDocAccessible::get_mimeType(BSTR __RPC_FAR* aMimeType) {
   if (!aMimeType) return E_INVALIDARG;
   *aMimeType = nullptr;
 
-  DocAccessible* acc = mMsaa->DocAcc();
-  if (!acc) return CO_E_OBJNOTCONNECTED;
+  if (mAccessible->IsDefunct()) return CO_E_OBJNOTCONNECTED;
 
   nsAutoString mimeType;
-  acc->MimeType(mimeType);
+  mAccessible->MimeType(mimeType);
   if (mimeType.IsEmpty()) return S_FALSE;
 
   *aMimeType = ::SysAllocStringLen(mimeType.get(), mimeType.Length());
@@ -73,11 +70,10 @@ sdnDocAccessible::get_docType(BSTR __RPC_FAR* aDocType) {
   if (!aDocType) return E_INVALIDARG;
   *aDocType = nullptr;
 
-  DocAccessible* acc = mMsaa->DocAcc();
-  if (!acc) return CO_E_OBJNOTCONNECTED;
+  if (mAccessible->IsDefunct()) return CO_E_OBJNOTCONNECTED;
 
   nsAutoString docType;
-  acc->DocType(docType);
+  mAccessible->DocType(docType);
   if (docType.IsEmpty()) return S_FALSE;
 
   *aDocType = ::SysAllocStringLen(docType.get(), docType.Length());
@@ -90,7 +86,7 @@ sdnDocAccessible::get_nameSpaceURIForID(short aNameSpaceID,
   if (!aNameSpaceURI) return E_INVALIDARG;
   *aNameSpaceURI = nullptr;
 
-  if (!mMsaa->DocAcc()) return CO_E_OBJNOTCONNECTED;
+  if (mAccessible->IsDefunct()) return CO_E_OBJNOTCONNECTED;
 
   if (aNameSpaceID < 0) return E_INVALIDARG;  // -1 is kNameSpaceID_Unknown
 
@@ -113,5 +109,5 @@ sdnDocAccessible::put_alternateViewMediaTypes(
   if (!aCommaSeparatedMediaTypes) return E_INVALIDARG;
   *aCommaSeparatedMediaTypes = nullptr;
 
-  return !mMsaa->DocAcc() ? CO_E_OBJNOTCONNECTED : E_NOTIMPL;
+  return mAccessible->IsDefunct() ? CO_E_OBJNOTCONNECTED : E_NOTIMPL;
 }
