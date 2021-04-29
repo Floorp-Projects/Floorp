@@ -108,10 +108,12 @@ add_task(async function() {
       executeSoon(resolve);
     });
 
-    ok(
-      await testActor.eval("!!document.documentElement"),
-      "Document element still alive."
+    const hasDocumentElement = await SpecialPowers.spawn(
+      gBrowser.selectedBrowser,
+      [],
+      () => !!content.document.documentElement
     );
+    ok(hasDocumentElement, "Document element still alive.");
   }
 
   async function testShowDOMProperties() {

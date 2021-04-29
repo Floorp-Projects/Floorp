@@ -17,7 +17,7 @@ add_task(async function() {
 
   const markupLoaded = inspector.once("markuploaded");
 
-  const y = await testActor.eval("window.pageYOffset");
+  const y = await getPageYOffset();
   isnot(y, 0, "window scrolled vertically.");
 
   info("Reloading page.");
@@ -26,6 +26,14 @@ add_task(async function() {
   info("Waiting for markupview to load after reload.");
   await markupLoaded;
 
-  const newY = await testActor.eval("window.pageYOffset");
+  const newY = await getPageYOffset();
   is(y, newY, "window remember the previous scroll position.");
 });
+
+async function getPageYOffset() {
+  return SpecialPowers.spawn(
+    gBrowser.selectedBrowser,
+    [],
+    () => content.pageYOffset
+  );
+}

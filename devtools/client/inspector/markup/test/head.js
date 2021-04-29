@@ -111,14 +111,16 @@ var getContainerForSelector = async function(
  * Retrieve the nodeValue for the firstChild of a provided selector on the content page.
  *
  * @param {String} selector
- * @param {TestActorFront} testActor The current TestActorFront instance.
  * @return {String} the nodeValue of the first
  */
-async function getFirstChildNodeValue(selector, testActor) {
-  const nodeValue = await testActor.eval(`
-    document.querySelector("${selector}").firstChild.nodeValue;
-  `);
-  return nodeValue;
+function getFirstChildNodeValue(selector) {
+  return SpecialPowers.spawn(
+    gBrowser.selectedBrowser,
+    [selector],
+    _selector => {
+      return content.document.querySelector(_selector).firstChild.nodeValue;
+    }
+  );
 }
 
 /**

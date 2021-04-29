@@ -24,7 +24,7 @@ const TEST_URI = `
 add_task(async function() {
   await pushPref("devtools.gridinspector.maxHighlighters", 1);
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  const { inspector, gridInspector, testActor } = await openLayoutView();
+  const { inspector, gridInspector } = await openLayoutView();
   const { document: doc } = gridInspector;
   const { highlighters, store } = inspector;
 
@@ -55,9 +55,9 @@ add_task(async function() {
       state.grids[0].highlighted &&
       !state.grids[1].highlighted
   );
-  testActor.eval(`
-    document.getElementById("grid2").classList.add("grid");
-  `);
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [], () =>
+    content.document.getElementById("grid2").classList.add("grid")
+  );
   await onGridListUpdate;
 
   info("Checking the new Grid Inspector state.");

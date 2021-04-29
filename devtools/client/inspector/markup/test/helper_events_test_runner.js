@@ -15,12 +15,12 @@ loadHelperScript("helper_diff.js");
  * TEST_DATA array.
  */
 async function runEventPopupTests(url, tests) {
-  const { inspector, testActor } = await openInspectorForURL(url);
+  const { inspector } = await openInspectorForURL(url);
 
   await inspector.markup.expandAll();
 
   for (const test of tests) {
-    await checkEventsForNode(test, inspector, testActor);
+    await checkEventsForNode(test, inspector);
   }
 
   // Wait for promises to avoid leaks when running this as a single test.
@@ -47,14 +47,13 @@ async function runEventPopupTests(url, tests) {
  *        is source-mapped, requiring some extra delay before the checks
  * @param {InspectorPanel} inspector The instance of InspectorPanel currently
  * opened
- * @param {TestActorFront} testActor
  */
-async function checkEventsForNode(test, inspector, testActor) {
+async function checkEventsForNode(test, inspector) {
   const { selector, expected, beforeTest, isSourceMapped } = test;
   const container = await getContainerForSelector(selector, inspector);
 
   if (typeof beforeTest === "function") {
-    await beforeTest(inspector, testActor);
+    await beforeTest(inspector);
   }
 
   const evHolder = container.elt.querySelector(

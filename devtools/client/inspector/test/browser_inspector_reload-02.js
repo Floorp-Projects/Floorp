@@ -23,12 +23,12 @@ const TEST_URI =
   "</svg>";
 
 add_task(async function() {
-  const { inspector, testActor } = await openInspectorForURL(TEST_URI);
+  const { inspector } = await openInspectorForURL(TEST_URI);
 
   const markupLoaded = inspector.once("markuploaded");
 
   info("Reloading page.");
-  await testActor.eval("location.reload()");
+  await navigateTo(TEST_URI);
 
   info("Waiting for markupview to load after reload.");
   await markupLoaded;
@@ -40,7 +40,7 @@ add_task(async function() {
   await selectNode("rect", inspector);
 
   info("Reloading page.");
-  await testActor.eval("location.reload");
+  await navigateTo(TEST_URI);
 
   const rectFront = await getNodeFront("rect", inspector);
   is(inspector.selection.nodeFront, rectFront, "<rect> selected after reload.");

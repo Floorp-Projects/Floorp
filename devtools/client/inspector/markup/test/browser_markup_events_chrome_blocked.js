@@ -22,7 +22,7 @@ add_task(async function() {
   waitForExplicitFinish();
   await pushPref("devtools.chrome.enabled", false);
 
-  const { tab, inspector, testActor } = await openInspectorForURL(TEST_URL);
+  const { tab, inspector } = await openInspectorForURL(TEST_URL);
   const browser = tab.linkedBrowser;
 
   const badgeEventAdded = inspector.markup.once("badge-added-event");
@@ -41,6 +41,6 @@ add_task(async function() {
   is(result, "timeout", "Ensure that no event badges were added");
 
   for (const test of TEST_DATA) {
-    await checkEventsForNode(test, inspector, testActor);
+    await checkEventsForNode(test, inspector);
   }
 });

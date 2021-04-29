@@ -76,20 +76,19 @@ add_task(async function() {
 });
 
 async function testAllStylesheets(inspector, view, toolbox) {
-  const testActor = await getTestActor(toolbox);
   await selectNode("div", inspector);
   await testRuleViewLinkLabel(view);
   await testDisabledStyleEditor(view, toolbox);
-  await testFirstInlineStyleSheet(view, toolbox, testActor);
-  await testSecondInlineStyleSheet(view, toolbox, testActor);
-  await testExternalStyleSheet(view, toolbox, testActor);
+  await testFirstInlineStyleSheet(view, toolbox);
+  await testSecondInlineStyleSheet(view, toolbox);
+  await testExternalStyleSheet(view, toolbox);
 
   info("Switch back to the inspector panel");
   await toolbox.selectTool("inspector");
   await selectNode("body", inspector);
 }
 
-async function testFirstInlineStyleSheet(view, toolbox, testActor) {
+async function testFirstInlineStyleSheet(view, toolbox) {
   info("Testing inline stylesheet");
 
   info("Listening for toolbox switch to the styleeditor");
@@ -101,10 +100,10 @@ async function testFirstInlineStyleSheet(view, toolbox, testActor) {
 
   ok(true, "Switched to the style-editor panel in the toolbox");
 
-  await validateStyleEditorSheet(toolbox, editor, 0, testActor);
+  await validateStyleEditorSheet(toolbox, editor, 0);
 }
 
-async function testSecondInlineStyleSheet(view, toolbox, testActor) {
+async function testSecondInlineStyleSheet(view, toolbox) {
   info("Testing second inline stylesheet");
 
   const styleEditorPanel = toolbox.getCurrentPanel();
@@ -126,10 +125,10 @@ async function testSecondInlineStyleSheet(view, toolbox, testActor) {
     "styleeditor",
     "The style editor is selected again"
   );
-  await validateStyleEditorSheet(toolbox, editor, 1, testActor);
+  await validateStyleEditorSheet(toolbox, editor, 1);
 }
 
-async function testExternalStyleSheet(view, toolbox, testActor) {
+async function testExternalStyleSheet(view, toolbox) {
   info("Testing external stylesheet");
   const styleEditorPanel = toolbox.getCurrentPanel();
   const onEditorSelected = styleEditorPanel.UI.once("editor-selected");
@@ -150,15 +149,10 @@ async function testExternalStyleSheet(view, toolbox, testActor) {
     "styleeditor",
     "The style editor is selected again"
   );
-  await validateStyleEditorSheet(toolbox, editor, 2, testActor);
+  await validateStyleEditorSheet(toolbox, editor, 2);
 }
 
-async function validateStyleEditorSheet(
-  toolbox,
-  editor,
-  expectedSheetIndex,
-  testActor
-) {
+async function validateStyleEditorSheet(toolbox, editor, expectedSheetIndex) {
   info("validating style editor stylesheet");
   is(
     editor.styleSheet.styleSheetIndex,
@@ -168,9 +162,15 @@ async function validateStyleEditorSheet(
 
   const href = editor.styleSheet.href || editor.styleSheet.nodeHref;
 
-  const expectedHref = await testActor.eval(
-    `document.styleSheets[${expectedSheetIndex}].href ||
-     document.location.href`
+  const expectedHref = await SpecialPowers.spawn(
+    gBrowser.selectedBrowser,
+    [expectedSheetIndex],
+    _expectedSheetIndex => {
+      return (
+        content.document.styleSheets[_expectedSheetIndex].href ||
+        content.document.location.href
+      );
+    }
   );
 
   is(href, expectedHref, "loaded stylesheet href matches document stylesheet");

@@ -11,13 +11,13 @@
 const TEST_URI = "data:text/html,<p id='1'>p</p>";
 
 add_task(async function() {
-  const { inspector, testActor } = await openInspectorForURL(TEST_URI);
+  const { inspector } = await openInspectorForURL(TEST_URI);
   await selectNode("p", inspector);
 
   const markupLoaded = inspector.once("markuploaded");
 
   info("Reloading page.");
-  await testActor.eval("location.reload()");
+  await navigateTo(TEST_URI);
 
   info("Waiting for markupview to load after reload.");
   await markupLoaded;

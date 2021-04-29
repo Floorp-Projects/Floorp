@@ -27,8 +27,10 @@ add_task(async function() {
 });
 
 async function testDocumentElement(inspector, testActor) {
-  const currentDocElementOuterHTML = await testActor.eval(
-    "document.documentElement.outerHTML"
+  const currentDocElementOuterHTML = await SpecialPowers.spawn(
+    gBrowser.selectedBrowser,
+    [],
+    () => content.document.documentElement.outerHTML
   );
   const docElementSVG =
     '<svg width="200" height="200" xmlns="http://www.w3.org/2000/svg">' +
@@ -62,8 +64,10 @@ async function testDocumentElement(inspector, testActor) {
 }
 
 async function testDocumentElement2(inspector, testActor) {
-  const currentDocElementOuterHTML = await testActor.eval(
-    "document.documentElement.outerHTML"
+  const currentDocElementOuterHTML = await SpecialPowers.spawn(
+    gBrowser.selectedBrowser,
+    [],
+    () => content.document.documentElement.outerHTML
   );
   const docElementSVG =
     '<svg width="300" height="300" xmlns="http://www.w3.org/2000/svg">' +

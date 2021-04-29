@@ -45,13 +45,13 @@ const DOCUMENT_URL =
 
 add_task(async function() {
   await addTab(DOCUMENT_URL);
-  const { toolbox, inspector, view, testActor } = await openComputedView();
+  const { toolbox, inspector, view } = await openComputedView();
   await selectNode("span", inspector);
 
   await testInlineStyle(view);
-  await testFirstInlineStyleSheet(view, toolbox, testActor);
-  await testSecondInlineStyleSheet(view, toolbox, testActor);
-  await testExternalStyleSheet(view, toolbox, testActor);
+  await testFirstInlineStyleSheet(view, toolbox);
+  await testSecondInlineStyleSheet(view, toolbox);
+  await testExternalStyleSheet(view, toolbox);
 });
 
 async function testInlineStyle(view) {
@@ -71,7 +71,7 @@ async function testInlineStyle(view) {
   gBrowser.removeTab(tab);
 }
 
-async function testFirstInlineStyleSheet(view, toolbox, testActor) {
+async function testFirstInlineStyleSheet(view, toolbox) {
   info("Testing inline stylesheet");
 
   info("Listening for toolbox switch to the styleeditor");
@@ -83,10 +83,10 @@ async function testFirstInlineStyleSheet(view, toolbox, testActor) {
 
   ok(true, "Switched to the style-editor panel in the toolbox");
 
-  await validateStyleEditorSheet(editor, 0, testActor);
+  await validateStyleEditorSheet(editor, 0);
 }
 
-async function testSecondInlineStyleSheet(view, toolbox, testActor) {
+async function testSecondInlineStyleSheet(view, toolbox) {
   info("Testing second inline stylesheet");
 
   info("Waiting for the stylesheet editor to be selected");
@@ -105,10 +105,10 @@ async function testSecondInlineStyleSheet(view, toolbox, testActor) {
     "styleeditor",
     "The style editor is selected again"
   );
-  await validateStyleEditorSheet(editor, 1, testActor);
+  await validateStyleEditorSheet(editor, 1);
 }
 
-async function testExternalStyleSheet(view, toolbox, testActor) {
+async function testExternalStyleSheet(view, toolbox) {
   info("Testing external stylesheet");
 
   info("Waiting for the stylesheet editor to be selected");
@@ -127,14 +127,17 @@ async function testExternalStyleSheet(view, toolbox, testActor) {
     "styleeditor",
     "The style editor is selected again"
   );
-  await validateStyleEditorSheet(editor, 2, testActor);
+  await validateStyleEditorSheet(editor, 2);
 }
 
-async function validateStyleEditorSheet(editor, expectedSheetIndex, testActor) {
+async function validateStyleEditorSheet(editor, expectedSheetIndex) {
   info("Validating style editor stylesheet");
-  const expectedHref = await testActor.eval(`
-    document.styleSheets[${expectedSheetIndex}].href;
-  `);
+  const expectedHref = await SpecialPowers.spawn(
+    gBrowser.selectedBrowser,
+    [expectedSheetIndex],
+    _expectedSheetIndex =>
+      content.document.styleSheets[_expectedSheetIndex].href
+  );
   is(
     editor.styleSheet.href,
     expectedHref,

@@ -12,20 +12,20 @@ const IFRAME2 = URL_ROOT + "doc_boxmodel_iframe2.html";
 add_task(async function() {
   const tab = await addTab(IFRAME1);
   const browser = tab.linkedBrowser;
-  const { inspector, boxmodel, testActor } = await openLayoutView();
+  const { inspector, boxmodel } = await openLayoutView();
 
   await testFirstPage(inspector, boxmodel, browser);
 
   info("Navigate to the second page");
   let onMarkupLoaded = waitForMarkupLoaded(inspector);
-  await testActor.eval(`location.href="${IFRAME2}"`);
+  await navigateTo(IFRAME2);
   await onMarkupLoaded;
 
   await testSecondPage(inspector, boxmodel, browser);
 
   info("Go back to the first page");
   onMarkupLoaded = waitForMarkupLoaded(inspector);
-  await testActor.eval("history.back();");
+  gBrowser.goBack();
   await onMarkupLoaded;
 
   await testBackToFirstPage(inspector, boxmodel, browser);

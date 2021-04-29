@@ -21,7 +21,7 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  const { inspector, flexboxInspector, testActor } = await openLayoutView();
+  const { inspector, flexboxInspector } = await openLayoutView();
   const { document: doc } = flexboxInspector;
 
   const onFlexItemSizingRendered = waitForDOM(doc, "ul.flex-item-sizing");
@@ -32,9 +32,11 @@ add_task(async function() {
 
   info("Changing the flexbox in the page.");
   const onAccordionsChanged = waitForDOM(doc, ".accordion-item", 4);
-  testActor.eval(`
-    document.getElementById("item").className = "container";
-  `);
+  await SpecialPowers.spawn(
+    gBrowser.selectedBrowser,
+    [],
+    () => (content.document.getElementById("item").className = "container")
+  );
   const [flexItemPane, flexContainerPane] = await onAccordionsChanged;
 
   ok(flexItemPane, "The flex item accordion pane is rendered.");

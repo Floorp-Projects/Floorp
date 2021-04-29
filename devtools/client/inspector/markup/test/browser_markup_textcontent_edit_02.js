@@ -10,13 +10,13 @@ const TEST_URL = URL_ROOT + "doc_markup_edit.html";
 const SELECTOR = ".node6";
 
 add_task(async function() {
-  const { inspector, testActor } = await openInspectorForURL(TEST_URL);
+  const { inspector } = await openInspectorForURL(TEST_URL);
 
   info("Expanding all nodes");
   await inspector.markup.expandAll();
   await waitForMultipleChildrenUpdates(inspector);
 
-  let nodeValue = await getFirstChildNodeValue(SELECTOR, testActor);
+  let nodeValue = await getFirstChildNodeValue(SELECTOR);
   let expectedValue = "line6";
   is(nodeValue, expectedValue, "The test node's text content is correct");
 
@@ -83,7 +83,7 @@ add_task(async function() {
   await sendKey("VK_RETURN", {}, editor, inspector.panelWin);
   await onMutated;
 
-  nodeValue = await getFirstChildNodeValue(SELECTOR, testActor);
+  nodeValue = await getFirstChildNodeValue(SELECTOR);
   is(nodeValue, expectedValue, "The test node's text content is correct");
 });
 
