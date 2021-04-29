@@ -89,7 +89,7 @@ class BaseDOMProxyHandler : public js::BaseProxyHandler {
   virtual bool getOwnPropDescriptor(
       JSContext* cx, JS::Handle<JSObject*> proxy, JS::Handle<jsid> id,
       bool ignoreNamedProps,
-      JS::MutableHandle<JS::PropertyDescriptor> desc) const = 0;
+      JS::MutableHandle<Maybe<JS::PropertyDescriptor>> desc) const = 0;
 };
 
 class DOMProxyHandler : public BaseDOMProxyHandler {

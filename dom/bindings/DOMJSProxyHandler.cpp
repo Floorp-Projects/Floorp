@@ -197,18 +197,8 @@ bool DOMProxyHandler::isExtensible(JSContext* cx, JS::Handle<JSObject*> proxy,
 bool BaseDOMProxyHandler::getOwnPropertyDescriptor(
     JSContext* cx, Handle<JSObject*> proxy, Handle<jsid> id,
     MutableHandle<Maybe<PropertyDescriptor>> desc) const {
-  Rooted<PropertyDescriptor> ownDesc(cx);
-  if (!getOwnPropDescriptor(cx, proxy, id, /* ignoreNamedProps = */ false,
-                            &ownDesc)) {
-    return false;
-  }
-
-  if (ownDesc.object()) {
-    desc.set(Some(ownDesc.get()));
-  } else {
-    desc.reset();
-  }
-  return true;
+  return getOwnPropDescriptor(cx, proxy, id, /* ignoreNamedProps = */ false,
+                              desc);
 }
 
 bool DOMProxyHandler::defineProperty(JSContext* cx, JS::Handle<JSObject*> proxy,
@@ -248,17 +238,10 @@ bool DOMProxyHandler::set(JSContext* cx, Handle<JSObject*> proxy,
 
   // Make sure to ignore our named properties when checking for own
   // property descriptors for a set.
-  Rooted<PropertyDescriptor> ownDesc_(cx);
-  if (!getOwnPropDescriptor(cx, proxy, id, /* ignoreNamedProps = */ true,
-                            &ownDesc_)) {
-    return false;
-  }
-
   Rooted<Maybe<PropertyDescriptor>> ownDesc(cx);
-  if (ownDesc_.object()) {
-    ownDesc.set(mozilla::Some(ownDesc_.get()));
-  } else {
-    ownDesc.reset();
+  if (!getOwnPropDescriptor(cx, proxy, id, /* ignoreNamedProps = */ true,
+                            &ownDesc)) {
+    return false;
   }
 
   return js::SetPropertyIgnoringNamedGetter(cx, proxy, id, v, receiver, ownDesc,
