@@ -17,6 +17,3 @@ for (var thisv of [null, undefined, false, true, 0, ""]) {
   test(Set.prototype.keys, thisv);
   test(Set.prototype[Symbol.iterator], thisv);
 }
-
-if (typeof reportCompare === "function")
-  reportCompare(0, 0);
