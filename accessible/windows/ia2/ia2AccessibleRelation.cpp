@@ -69,9 +69,10 @@ ia2AccessibleRelation::get_target(long aTargetIndex, IUnknown** aTarget) {
       !aTarget)
     return E_INVALIDARG;
 
-  RefPtr<IAccessible> target;
-  mTargets[aTargetIndex]->GetNativeInterface(getter_AddRefs(target));
-  target.forget(aTarget);
+  AccessibleWrap* target =
+      static_cast<AccessibleWrap*>(mTargets[aTargetIndex].get());
+  *aTarget = static_cast<IAccessible*>(target);
+  (*aTarget)->AddRef();
 
   return S_OK;
 }
