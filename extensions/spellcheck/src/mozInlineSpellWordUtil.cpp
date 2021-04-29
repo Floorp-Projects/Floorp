@@ -1072,7 +1072,8 @@ int32_t mozInlineSpellWordUtil::FindRealWordContaining(
              "Soft text must be valid if we're to map out of it");
   if (!mSoftText.mIsValid) return -1;
 
-  // Find the last word, if any, such that mSoftTextOffset <= aSoftTextOffset
+  // Find the last word, if any, such that mRealWords[index].mSoftTextOffset
+  // <= aSoftTextOffset
   size_t index;
   bool found = FindLastNongreaterOffset(mRealWords, aSoftTextOffset, &index);
   if (!found) {
@@ -1085,12 +1086,13 @@ int32_t mozInlineSpellWordUtil::FindRealWordContaining(
   // the previous word instead of the start of this word
   if (aHint == HINT_END && index > 0) {
     const RealWord& word = mRealWords[index - 1];
-    if (word.mSoftTextOffset + word.mLength == aSoftTextOffset)
+    if (word.EndOffset() == aSoftTextOffset) {
       return index - 1;
+    }
   }
 
   // We allow ourselves to return the end of this word even if we're
-  // doing HINT_START. This will only happen if there is no word which this
+  // doing HINT_BEGIN. This will only happen if there is no word which this
   // point is the start of. I'm not 100% sure this is OK...
   const RealWord& word = mRealWords[index];
   int32_t offset = aSoftTextOffset - word.mSoftTextOffset;
