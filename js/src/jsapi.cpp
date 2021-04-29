@@ -2044,31 +2044,43 @@ JS_PUBLIC_API bool JS_GetOwnUCPropertyDescriptor(
 
 JS_PUBLIC_API bool JS_GetPropertyDescriptorById(
     JSContext* cx, HandleObject obj, HandleId id,
-    MutableHandle<Maybe<PropertyDescriptor>> desc, MutableHandleObject holder) {
+    MutableHandle<PropertyDescriptor> desc) {
   cx->check(obj, id);
-  return GetPropertyDescriptor(cx, obj, id, desc, holder);
+
+  Rooted<Maybe<PropertyDescriptor>> desc_(cx);
+  RootedObject holder(cx);
+  if (!GetPropertyDescriptor(cx, obj, id, &desc_, &holder)) {
+    return false;
+  }
+
+  if (desc_.isNothing()) {
+    desc.object().set(nullptr);
+  } else {
+    desc.set(*desc_);
+  }
+  return true;
 }
 
 JS_PUBLIC_API bool JS_GetPropertyDescriptor(
     JSContext* cx, HandleObject obj, const char* name,
-    MutableHandle<Maybe<PropertyDescriptor>> desc, MutableHandleObject holder) {
+    MutableHandle<PropertyDescriptor> desc) {
   JSAtom* atom = Atomize(cx, name, strlen(name));
   if (!atom) {
     return false;
   }
   RootedId id(cx, AtomToId(atom));
-  return JS_GetPropertyDescriptorById(cx, obj, id, desc, holder);
+  return JS_GetPropertyDescriptorById(cx, obj, id, desc);
 }
 
 JS_PUBLIC_API bool JS_GetUCPropertyDescriptor(
     JSContext* cx, HandleObject obj, const char16_t* name, size_t namelen,
-    MutableHandle<Maybe<PropertyDescriptor>> desc, MutableHandleObject holder) {
+    MutableHandle<PropertyDescriptor> desc) {
   JSAtom* atom = AtomizeChars(cx, name, namelen);
   if (!atom) {
     return false;
   }
   RootedId id(cx, AtomToId(atom));
-  return JS_GetPropertyDescriptorById(cx, obj, id, desc, holder);
+  return JS_GetPropertyDescriptorById(cx, obj, id, desc);
 }
 
 static bool DefinePropertyByDescriptor(JSContext* cx, HandleObject obj,

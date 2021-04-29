@@ -2512,7 +2512,7 @@ bool js::GetPropertyDescriptor(
   }
 
   MOZ_ASSERT(desc.isNothing());
-  holder.set(nullptr);
+  MOZ_ASSERT(!holder);
   return true;
 }
 
