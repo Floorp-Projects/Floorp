@@ -47,7 +47,7 @@ label, description {
 .toggle-container-with-text > html|input[type="checkbox"] {
   margin-inline-end: 8px;
   /* Ensure the checkbox is properly aligned with the text: */
-  translate: 0 calc(-0.35 * max(1em - 100%, 0px) + 1px);
+  translate: 0 calc(1px + max(60% - .6em, 0px));
 }
 
 #rememberContainer:not([hidden]) {
