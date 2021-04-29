@@ -9,6 +9,4 @@
 // Expands to all the defines from configure.
 #undef ALLDEFINES
 
-#include "js/RequiredDefines.h"
-
 #endif /* js_confdefs_h */
