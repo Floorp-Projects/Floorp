@@ -1,15 +1,254 @@
 {
   "data": [
     {
-      "schema": 1619087600557,
+      "schema": 1619432100208,
+      "appliesTo": [
+        {
+          "included": {
+            "everywhere": true
+          }
+        }
+      ],
+      "extraParams": [
+        {
+          "name": "t",
+          "value": "ffcm",
+          "purpose": "contextmenu",
+          "condition": "purpose"
+        },
+        {
+          "name": "t",
+          "value": "ffab",
+          "purpose": "keyword",
+          "condition": "purpose"
+        },
+        {
+          "name": "t",
+          "value": "ffsb",
+          "purpose": "searchbar",
+          "condition": "purpose"
+        },
+        {
+          "name": "t",
+          "value": "ffhp",
+          "purpose": "homepage",
+          "condition": "purpose"
+        },
+        {
+          "name": "t",
+          "value": "ffnt",
+          "purpose": "newtab",
+          "condition": "purpose"
+        }
+      ],
+      "telemetryId": "ddg",
+      "webExtension": {
+        "id": "ddg@search.mozilla.org"
+      },
+      "id": "c0b26c0e-63e6-4235-b2ce-5f16b6a8bf87",
+      "last_modified": 1619450717295
+    },
+    {
+      "schema": 1619432096166,
       "appliesTo": [
         {
           "excluded": {
             "regions": [
               "au",
-              "ca"
+              "ca",
+              "fr",
+              "gb"
             ]
           },
+          "included": {
+            "locales": {
+              "matches": [
+                "ach",
+                "af",
+                "ar",
+                "az",
+                "bg",
+                "cak",
+                "en-US",
+                "eo",
+                "es-AR",
+                "fa",
+                "gn",
+                "hy-AM",
+                "ia",
+                "is",
+                "ka",
+                "km",
+                "lt",
+                "mk",
+                "ms",
+                "my",
+                "ro",
+                "si",
+                "th",
+                "tl",
+                "trs",
+                "uz"
+              ]
+            }
+          }
+        },
+        {
+          "excluded": {
+            "regions": [
+              "au",
+              "ca",
+              "fr",
+              "gb"
+            ]
+          },
+          "included": {
+            "locales": {
+              "matches": [
+                "ach",
+                "af",
+                "ar",
+                "az",
+                "bg",
+                "cak",
+                "en-US",
+                "eo",
+                "es-AR",
+                "fa",
+                "gn",
+                "hy-AM",
+                "ia",
+                "is",
+                "ka",
+                "km",
+                "lt",
+                "mk",
+                "ms",
+                "my",
+                "ro",
+                "si",
+                "th",
+                "tl",
+                "trs",
+                "uz"
+              ]
+            }
+          },
+          "experiment": "amazondotcom-adm",
+          "telemetryId": "amazondotcom-adm",
+          "webExtension": {
+            "locales": [
+              "en-adm"
+            ]
+          },
+          "sendAttributionRequest": true
+        }
+      ],
+      "telemetryId": "amazondotcom",
+      "webExtension": {
+        "id": "amazondotcom@search.mozilla.org"
+      },
+      "id": "071c671c-7c1b-469d-a771-ab16ff6e8beb",
+      "last_modified": 1619450717293
+    },
+    {
+      "params": {
+        "searchUrlGetParams": [
+          {
+            "name": "tn",
+            "value": "monline_7_dg"
+          },
+          {
+            "name": "ie",
+            "value": "utf-8"
+          },
+          {
+            "name": "wd",
+            "value": "{searchTerms}"
+          }
+        ],
+        "suggestUrlGetParams": [
+          {
+            "name": "tn",
+            "value": "monline_7_dg"
+          },
+          {
+            "name": "ie",
+            "value": "utf-8"
+          },
+          {
+            "name": "action",
+            "value": "opensearch"
+          },
+          {
+            "name": "wd",
+            "value": "{searchTerms}"
+          }
+        ]
+      },
+      "schema": 1619106893528,
+      "appliesTo": [
+        {
+          "params": {
+            "searchUrlGetParams": [
+              {
+                "name": "ie",
+                "value": "utf-8"
+              },
+              {
+                "name": "wd",
+                "value": "{searchTerms}"
+              }
+            ],
+            "suggestUrlGetParams": [
+              {
+                "name": "tn",
+                "value": "monline_4_dg"
+              },
+              {
+                "name": "ie",
+                "value": "utf-8"
+              },
+              {
+                "name": "action",
+                "value": "opensearch"
+              },
+              {
+                "name": "wd",
+                "value": "{searchTerms}"
+              }
+            ]
+          },
+          "default": "yes",
+          "override": true,
+          "orderHint": 3000,
+          "application": {
+            "distributions": [
+              "MozillaOnline"
+            ]
+          },
+          "extraParams": [
+            {
+              "name": "tn",
+              "value": "monline_4_dg",
+              "purpose": "searchbar",
+              "condition": "purpose"
+            },
+            {
+              "name": "tn",
+              "value": "monline_3_dg",
+              "purpose": "homepage",
+              "condition": "purpose"
+            },
+            {
+              "name": "tn",
+              "value": "monline_3_dg",
+              "purpose": "newtab",
+              "condition": "purpose"
+            }
+          ]
+        },
+        {
           "included": {
             "locales": {
               "matches": [
@@ -19,75 +258,39 @@
           }
         },
         {
-          "override": true,
-          "orderHint": 1500,
-          "application": {
-            "distributions": [
-              "MozillaOnline"
-            ]
-          },
-          "webExtension": {
-            "locales": [
-              "mozillaonline"
+          "default": "yes",
+          "included": {
+            "locales": {
+              "matches": [
+                "zh-CN"
+              ]
+            },
+            "regions": [
+              "cn"
             ]
           }
         },
         {
-          "params": {
-            "searchUrlGetParams": [
-              {
-                "name": "ix",
-                "value": "sunray"
-              },
-              {
-                "name": "pageletid",
-                "value": "headsearch"
-              },
-              {
-                "name": "searchType",
-                "value": ""
-              },
-              {
-                "name": "Go.x",
-                "value": "0"
-              },
-              {
-                "name": "Go.y",
-                "value": "0"
-              },
-              {
-                "name": "bestSaleNum",
-                "value": "0"
-              },
-              {
-                "name": "tag",
-                "value": "wwwcanoniccom-20"
-              },
-              {
-                "name": "keywords",
-                "value": "{searchTerms}"
-              }
-            ]
-          },
+          "default": "no",
           "override": true,
           "application": {
             "distributions": [
-              "canonical",
-              "canonical-001",
-              "canonical-002"
+              "acer-001",
+              "acer-002",
+              "acer-g-003"
             ]
           }
         }
       ],
-      "telemetryId": "amazondotcn",
+      "telemetryId": "baidu",
       "webExtension": {
-        "id": "amazondotcn@search.mozilla.org"
+        "id": "baidu@search.mozilla.org"
       },
-      "id": "ccb137f1-7733-464c-bb70-037be4ba2529",
-      "last_modified": 1619106893467
+      "id": "52dd490a-89e8-45f2-96b0-f2c72e157526",
+      "last_modified": 1619450717290
     },
     {
-      "schema": 1619023005238,
+      "schema": 1619432102508,
       "appliesTo": [
         {
           "included": {
@@ -413,47 +616,53 @@
               "au"
             ]
           }
-        },
-        {
-          "params": {
-            "searchUrlGetParams": [
-              {
-                "name": "field-keywords",
-                "value": "{searchTerms}"
-              },
-              {
-                "name": "ie",
-                "value": "{inputEncoding}"
-              },
-              {
-                "name": "mode",
-                "value": "blended"
-              },
-              {
-                "name": "tag",
-                "value": "wwwcanoniccom-20"
-              },
-              {
-                "name": "sourceid",
-                "value": "Mozilla-search"
-              }
-            ]
-          },
-          "override": true,
-          "application": {
-            "distributions": [
-              "canonical",
-              "canonical-001",
-              "canonical-002"
-            ]
-          }
         }
       ],
       "webExtension": {
         "id": "amazon@search.mozilla.org"
       },
       "id": "a620b506-c3ae-4332-97bb-190a73868580",
-      "last_modified": 1619106893464
+      "last_modified": 1619450717287
+    },
+    {
+      "schema": 1619433211498,
+      "appliesTo": [
+        {
+          "excluded": {
+            "regions": [
+              "au",
+              "ca"
+            ]
+          },
+          "included": {
+            "locales": {
+              "matches": [
+                "zh-CN"
+              ]
+            }
+          }
+        },
+        {
+          "override": true,
+          "orderHint": 1500,
+          "application": {
+            "distributions": [
+              "MozillaOnline"
+            ]
+          },
+          "webExtension": {
+            "locales": [
+              "mozillaonline"
+            ]
+          }
+        }
+      ],
+      "telemetryId": "amazondotcn",
+      "webExtension": {
+        "id": "amazondotcn@search.mozilla.org"
+      },
+      "id": "ccb137f1-7733-464c-bb70-037be4ba2529",
+      "last_modified": 1619450717283
     },
     {
       "schema": 1613395976252,
@@ -1552,364 +1761,6 @@
       "last_modified": 1605203142486
     },
     {
-      "params": {
-        "searchUrlGetParams": [
-          {
-            "name": "tn",
-            "value": "monline_7_dg"
-          },
-          {
-            "name": "ie",
-            "value": "utf-8"
-          },
-          {
-            "name": "wd",
-            "value": "{searchTerms}"
-          }
-        ],
-        "suggestUrlGetParams": [
-          {
-            "name": "tn",
-            "value": "monline_7_dg"
-          },
-          {
-            "name": "ie",
-            "value": "utf-8"
-          },
-          {
-            "name": "action",
-            "value": "opensearch"
-          },
-          {
-            "name": "wd",
-            "value": "{searchTerms}"
-          }
-        ]
-      },
-      "schema": 1604950920293,
-      "appliesTo": [
-        {
-          "params": {
-            "searchUrlGetParams": [
-              {
-                "name": "ie",
-                "value": "utf-8"
-              },
-              {
-                "name": "wd",
-                "value": "{searchTerms}"
-              }
-            ],
-            "suggestUrlGetParams": [
-              {
-                "name": "tn",
-                "value": "monline_4_dg"
-              },
-              {
-                "name": "ie",
-                "value": "utf-8"
-              },
-              {
-                "name": "action",
-                "value": "opensearch"
-              },
-              {
-                "name": "wd",
-                "value": "{searchTerms}"
-              }
-            ]
-          },
-          "default": "yes",
-          "override": true,
-          "orderHint": 3000,
-          "application": {
-            "distributions": [
-              "MozillaOnline"
-            ]
-          },
-          "extraParams": [
-            {
-              "name": "tn",
-              "value": "monline_4_dg",
-              "purpose": "searchbar",
-              "condition": "purpose"
-            },
-            {
-              "name": "tn",
-              "value": "monline_3_dg",
-              "purpose": "homepage",
-              "condition": "purpose"
-            },
-            {
-              "name": "tn",
-              "value": "monline_3_dg",
-              "purpose": "newtab",
-              "condition": "purpose"
-            }
-          ]
-        },
-        {
-          "included": {
-            "locales": {
-              "matches": [
-                "zh-CN"
-              ]
-            }
-          }
-        },
-        {
-          "default": "yes",
-          "included": {
-            "locales": {
-              "matches": [
-                "zh-CN"
-              ]
-            },
-            "regions": [
-              "cn"
-            ]
-          }
-        },
-        {
-          "params": {
-            "searchUrlGetParams": [
-              {
-                "name": "tn",
-                "value": "ubuntuu_cb"
-              },
-              {
-                "name": "ie",
-                "value": "utf-8"
-              },
-              {
-                "name": "wd",
-                "value": "{searchTerms}"
-              }
-            ],
-            "suggestUrlGetParams": [
-              {
-                "name": "tn",
-                "value": "ubuntuu_cb"
-              },
-              {
-                "name": "ie",
-                "value": "utf-8"
-              },
-              {
-                "name": "action",
-                "value": "opensearch"
-              },
-              {
-                "name": "wd",
-                "value": "{searchTerms}"
-              }
-            ]
-          },
-          "override": true,
-          "application": {
-            "distributions": [
-              "canonical",
-              "canonical-001",
-              "canonical-002"
-            ]
-          }
-        },
-        {
-          "default": "no",
-          "override": true,
-          "application": {
-            "distributions": [
-              "acer-001",
-              "acer-002",
-              "acer-g-003"
-            ]
-          }
-        }
-      ],
-      "telemetryId": "baidu",
-      "webExtension": {
-        "id": "baidu@search.mozilla.org"
-      },
-      "id": "52dd490a-89e8-45f2-96b0-f2c72e157526",
-      "last_modified": 1605203142482
-    },
-    {
-      "schema": 1599421304249,
-      "appliesTo": [
-        {
-          "excluded": {
-            "regions": [
-              "au",
-              "ca",
-              "fr",
-              "gb"
-            ]
-          },
-          "included": {
-            "locales": {
-              "matches": [
-                "ach",
-                "af",
-                "ar",
-                "az",
-                "bg",
-                "cak",
-                "en-US",
-                "eo",
-                "es-AR",
-                "fa",
-                "gn",
-                "hy-AM",
-                "ia",
-                "is",
-                "ka",
-                "km",
-                "lt",
-                "mk",
-                "ms",
-                "my",
-                "ro",
-                "si",
-                "th",
-                "tl",
-                "trs",
-                "uz"
-              ]
-            }
-          }
-        },
-        {
-          "excluded": {
-            "regions": [
-              "au",
-              "ca",
-              "fr",
-              "gb"
-            ]
-          },
-          "included": {
-            "locales": {
-              "matches": [
-                "ach",
-                "af",
-                "ar",
-                "az",
-                "bg",
-                "cak",
-                "en-US",
-                "eo",
-                "es-AR",
-                "fa",
-                "gn",
-                "hy-AM",
-                "ia",
-                "is",
-                "ka",
-                "km",
-                "lt",
-                "mk",
-                "ms",
-                "my",
-                "ro",
-                "si",
-                "th",
-                "tl",
-                "trs",
-                "uz"
-              ]
-            }
-          },
-          "experiment": "amazondotcom-adm",
-          "telemetryId": "amazondotcom-adm",
-          "webExtension": {
-            "locales": [
-              "en-adm"
-            ]
-          },
-          "sendAttributionRequest": true
-        },
-        {
-          "params": {
-            "searchUrlGetParams": [
-              {
-                "name": "field-keywords",
-                "value": "{searchTerms}"
-              },
-              {
-                "name": "ie",
-                "value": "{inputEncoding}"
-              },
-              {
-                "name": "mode",
-                "value": "blended"
-              },
-              {
-                "name": "tag",
-                "value": "wwwcanoniccom-20"
-              },
-              {
-                "name": "sourceid",
-                "value": "Mozilla-search"
-              }
-            ]
-          },
-          "excluded": {
-            "regions": [
-              "au",
-              "ca",
-              "fr",
-              "gb"
-            ]
-          },
-          "included": {
-            "locales": {
-              "matches": [
-                "ach",
-                "af",
-                "ar",
-                "az",
-                "bg",
-                "cak",
-                "en-US",
-                "eo",
-                "es-AR",
-                "fa",
-                "gn",
-                "hy-AM",
-                "ia",
-                "is",
-                "ka",
-                "km",
-                "lt",
-                "mk",
-                "ms",
-                "my",
-                "ro",
-                "si",
-                "th",
-                "tl",
-                "trs",
-                "uz"
-              ]
-            }
-          },
-          "application": {
-            "distributions": [
-              "canonical",
-              "canonical-001",
-              "canonical-002"
-            ]
-          }
-        }
-      ],
-      "telemetryId": "amazondotcom",
-      "webExtension": {
-        "id": "amazondotcom@search.mozilla.org"
-      },
-      "id": "071c671c-7c1b-469d-a771-ab16ff6e8beb",
-      "last_modified": 1599574471320
-    },
-    {
       "schema": 1596483697391,
       "appliesTo": [
         {
@@ -1983,70 +1834,6 @@
       },
       "id": "1571e5fc-17e4-492b-b6d2-106d8669b6c8",
       "last_modified": 1597327602800
-    },
-    {
-      "schema": 1594312388385,
-      "appliesTo": [
-        {
-          "included": {
-            "everywhere": true
-          }
-        },
-        {
-          "override": true,
-          "application": {
-            "distributions": [
-              "canonical",
-              "canonical-001",
-              "canonical-002"
-            ]
-          },
-          "extraParams": [
-            {
-              "name": "t",
-              "value": "canonical"
-            }
-          ]
-        }
-      ],
-      "extraParams": [
-        {
-          "name": "t",
-          "value": "ffcm",
-          "purpose": "contextmenu",
-          "condition": "purpose"
-        },
-        {
-          "name": "t",
-          "value": "ffab",
-          "purpose": "keyword",
-          "condition": "purpose"
-        },
-        {
-          "name": "t",
-          "value": "ffsb",
-          "purpose": "searchbar",
-          "condition": "purpose"
-        },
-        {
-          "name": "t",
-          "value": "ffhp",
-          "purpose": "homepage",
-          "condition": "purpose"
-        },
-        {
-          "name": "t",
-          "value": "ffnt",
-          "purpose": "newtab",
-          "condition": "purpose"
-        }
-      ],
-      "telemetryId": "ddg",
-      "webExtension": {
-        "id": "ddg@search.mozilla.org"
-      },
-      "id": "c0b26c0e-63e6-4235-b2ce-5f16b6a8bf87",
-      "last_modified": 1595254832054
     },
     {
       "params": {
