@@ -35,6 +35,7 @@ UNIFIED_SOURCES += [
     "MsaaDocAccessible.cpp",
     "MsaaIdGenerator.cpp",
     "MsaaRootAccessible.cpp",
+    "MsaaXULMenuAccessible.cpp",
     "nsWinUtils.cpp",
     "Platform.cpp",
     "RootAccessibleWrap.cpp",
