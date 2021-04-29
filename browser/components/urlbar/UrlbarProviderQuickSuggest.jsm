@@ -252,8 +252,6 @@ class ProviderQuickSuggest extends UrlbarProvider {
   /**
    * Called when a urlbar pref changes.  We use this to listen for changes to
    * `browser.urlbar.suggest.quicksuggest` so we can record a telemetry event.
-   * We also need to listen for `browser.urlbar.quicksuggest.enabled` so we can
-   * enable/disable the event telemetry.
    *
    * @param {string} pref
    *   The name of the pref relative to `browser.urlbar`.
