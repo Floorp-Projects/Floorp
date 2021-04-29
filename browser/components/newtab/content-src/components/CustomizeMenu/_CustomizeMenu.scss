@@ -15,6 +15,10 @@
   visibility: hidden;
   cursor: default;
 
+  @media (forced-colors: active) {
+    border-inline-start: solid 1px;
+  }
+
   &:dir(rtl) {
     transform: translateX(-435px);
   }
@@ -129,6 +133,9 @@
       fill: var(--customize-menu-check-fill);
       background: url('chrome://global/skin/icons/check.svg') center no-repeat;
       background-color: var(--newtab-primary-action-background);
+      @media (forced-colors: active) {
+        fill: var(--customize-menu-check-fill-contrast);
+      }
     }
 
     .sponsored-checkbox:active + .checkmark {
@@ -275,6 +282,11 @@
     background-size: 16px;
     padding-inline-start: 21px;
     margin-bottom: 20px;
+
+    @media (forced-colors: active) {
+      padding: 8px 10px;
+      padding-inline-start: 21px;
+    }
 
     &:dir(rtl) {
       background-position-x: right;

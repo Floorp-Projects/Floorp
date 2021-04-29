@@ -93,6 +93,7 @@ body {
   --newtab-primary-action-background-off: #E9E9E9;
   --customize-menu-primary-text-color: #20123A;
   --customize-menu-check-fill: #FFF;
+  --customize-menu-check-fill-contrast: #000;
   --customize-menu-background: #FFF;
   --customize-menu-secondary-action-background: #F9F9FA;
   --customize-menu-secondary-action-background-hover: #EDEDF0;
@@ -1695,6 +1696,9 @@ main {
   transform: translateX(435px);
   visibility: hidden;
   cursor: default; }
+  @media (forced-colors: active) {
+    .customize-menu {
+      border-inline-start: solid 1px; } }
   .customize-menu:dir(rtl) {
     transform: translateX(-435px); }
   .customize-menu.customize-animate-enter-done {
@@ -1773,6 +1777,9 @@ main {
       fill: var(--customize-menu-check-fill);
       background: url("chrome://global/skin/icons/check.svg") center no-repeat;
       background-color: var(--newtab-primary-action-background); }
+      @media (forced-colors: active) {
+        .home-section .section .sponsored-checkbox:checked {
+          fill: var(--customize-menu-check-fill-contrast); } }
     .home-section .section .sponsored-checkbox:active + .checkmark {
       fill: rgba(0, 0, 0, 0.15); }
     .home-section .section .selector {
@@ -1875,6 +1882,10 @@ main {
     background-size: 16px;
     padding-inline-start: 21px;
     margin-bottom: 20px; }
+    @media (forced-colors: active) {
+      .home-section .external-link {
+        padding: 8px 10px;
+        padding-inline-start: 21px; } }
     .home-section .external-link:dir(rtl) {
       background-position-x: right; }
   .home-section .external-link:hover {
