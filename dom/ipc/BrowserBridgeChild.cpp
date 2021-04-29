@@ -28,11 +28,6 @@
 
 using namespace mozilla::ipc;
 
-mozilla::LazyLogModule gBrowserChildFocusLog("BrowserChildFocus");
-
-#define LOGBROWSERCHILDFOCUS(args) \
-  MOZ_LOG(gBrowserChildFocusLog, mozilla::LogLevel::Debug, args)
-
 namespace mozilla::dom {
 
 BrowserBridgeChild::BrowserBridgeChild(BrowsingContext* aBrowsingContext,
@@ -82,8 +77,6 @@ void BrowserBridgeChild::NavigateByKey(bool aForward,
 }
 
 void BrowserBridgeChild::Activate(uint64_t aActionId) {
-  LOGBROWSERCHILDFOCUS(
-      ("BrowserBridgeChild::Activate actionid: %lu", aActionId));
   Unused << SendActivate(aActionId);
 }
 
