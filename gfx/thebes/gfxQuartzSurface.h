@@ -25,9 +25,7 @@ class gfxQuartzSurface : public gfxASurface {
 
   virtual ~gfxQuartzSurface();
 
-  virtual const mozilla::gfx::IntSize GetSize() const {
-    return mozilla::gfx::IntSize(mSize.width, mSize.height);
-  }
+  virtual const mozilla::gfx::IntSize GetSize() const { return mSize; }
 
   CGContextRef GetCGContext() { return mCGContext; }
 
