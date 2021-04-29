@@ -157,7 +157,7 @@
   flex-shrink: 1;
   overflow: hidden;
   border-radius: 2px;
-  padding-inline-start: var(--urlbarView-item-inline-padding);
+  padding-inline: var(--urlbarView-item-inline-padding);
   padding-block: 6px;
 }
 
@@ -191,6 +191,7 @@
 } /*** END proton ***/
 
 .urlbarView-no-wrap {
+  max-width: 100%;
   flex-grow: 0;
   flex-shrink: 0;
 }
