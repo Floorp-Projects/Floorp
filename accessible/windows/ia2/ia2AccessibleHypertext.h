@@ -15,7 +15,6 @@
 
 namespace mozilla {
 namespace a11y {
-class HyperTextAccessibleWrap;
 
 class ia2AccessibleHypertext : public ia2AccessibleText,
                                public IAccessibleHypertext2 {
@@ -39,9 +38,6 @@ class ia2AccessibleHypertext : public ia2AccessibleText,
   virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_hyperlinks(
       /* [out, size_is(,*nHyperlinks)] */ IAccessibleHyperlink*** hyperlinks,
       /* [out, retval] */ long* nHyperlinks);
-
- private:
-  HyperTextAccessibleWrap* TextAcc();
 };
 
 }  // namespace a11y
