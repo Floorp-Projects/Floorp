@@ -11936,8 +11936,10 @@ gsj.bz
 
 // GitHub, Inc.
 // Submitted by Patrick Toomey <security@github.com>
-github.io
 githubusercontent.com
+github.dev
+githubpreview.dev
+github.io
 
 // GitLab, Inc.
 // Submitted by Alex Hanselka <alex@gitlab.com>
@@ -13034,8 +13036,8 @@ pubtls.org
 
 // PythonAnywhere LLP: https://www.pythonanywhere.com
 // Submitted by Giles Thomas <giles@pythonanywhere.com>
-*.pythonanywhere.com
-*.eu.pythonanywhere.com
+pythonanywhere.com
+eu.pythonanywhere.com
 
 // QOTO, Org.
 // Submitted by Jeffrey Phillips Freeman <jeffrey.freeman@qoto.org>
@@ -13271,6 +13273,10 @@ stackhero-network.com
 static.land
 dev.static.land
 sites.static.land
+
+// Storebase : https://www.storebase.io
+// Submitted by Tony Schirmer <tony@storebase.io>
+storebase.store
 
 // Strategic System Consulting (eApps Hosting): https://www.eapps.com/
 // Submitted by Alex Oancea <aoancea@cloudscale365.com>
