@@ -94,6 +94,7 @@ class AudioDecoderInputTrack final : public ProcessedMediaTrack {
   void SetPreservesPitch(bool aPreservesPitch);
   // After calling this, the track are not expected to receive any new data.
   void Close();
+  bool HasBatchedData() const;
 
   MediaEventSource<int64_t>& OnOutput() { return mOnOutput; }
   MediaEventSource<void>& OnEnd() { return mOnEnd; }
@@ -102,6 +103,16 @@ class AudioDecoderInputTrack final : public ProcessedMediaTrack {
   void DestroyImpl() override;
   void ProcessInput(GraphTime aFrom, GraphTime aTo, uint32_t aFlags) override;
   uint32_t NumberOfChannels() const override;
+
+  // The functions below are only used for testing.
+  TrackTime WrittenFrames() const {
+    AssertOnGraphThread();
+    return mWrittenFrames;
+  }
+  float Volume() const {
+    AssertOnGraphThread();
+    return mVolume;
+  }
 
  protected:
   ~AudioDecoderInputTrack();
@@ -123,7 +134,6 @@ class AudioDecoderInputTrack final : public ProcessedMediaTrack {
   bool HasSentAllData() const;
 
   bool ShouldBatchData() const;
-  bool HasBatchedData() const;
   void BatchData(AudioData* aAudio, const PrincipalHandle& aPrincipalHandle);
   void DispatchPushBatchedDataIfNeeded();
   void PushBatchedDataIfNeeded();
