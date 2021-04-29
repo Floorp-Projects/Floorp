@@ -31,14 +31,12 @@ var logging_and_doubletap_prefs = [
 var subtests = [
   {"file": "helper_doubletap_zoom_smooth.html", "prefs": longeranimation_visualviewport_and_doubletap_prefs},
   {"file": "helper_doubletap_zoom_fixedpos_overflow.html", "prefs": logging_and_doubletap_prefs},
-  {"file": "helper_doubletap_zoom_scrolled_overflowhidden.html", "prefs": doubletap_prefs},
 ];
 
 if (getPlatform() == "mac") {
   subtests.push(
     {"file": "helper_doubletap_zoom_smooth.html?touchpad", "prefs": longeranimation_visualviewport_and_doubletap_prefs},
     {"file": "helper_doubletap_zoom_fixedpos_overflow.html?touchpad", "prefs": logging_and_doubletap_prefs},
-    {"file": "helper_doubletap_zoom_scrolled_overflowhidden.html?touchpad", "prefs": doubletap_prefs},
   );
 }
 
