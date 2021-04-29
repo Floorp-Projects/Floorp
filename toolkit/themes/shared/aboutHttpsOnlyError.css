@@ -53,8 +53,7 @@ ul > li {
 .suggestion-box {
   position: absolute;
   margin-top: 3em;
-  background-image: url("chrome://global/skin/icons/lightbulb.svg");
-  background-size: 64px;
+  background-image: url("chrome://global/content/httpsonlyerror/recommendation.svg");
   background-repeat: no-repeat;
   -moz-context-properties: fill;
   fill: currentColor;
