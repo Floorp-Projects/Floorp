@@ -10,6 +10,12 @@ const { ASRouter } = ChromeUtils.import(
 const { BrowserWindowTracker } = ChromeUtils.import(
   "resource:///modules/BrowserWindowTracker.jsm"
 );
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "PROTON_ENABLED",
+  "browser.proton.enabled",
+  false
+);
 
 add_task(async function show_and_send_telemetry() {
   let message = (await CFRMessageProvider.getMessages()).find(
@@ -21,7 +27,13 @@ add_task(async function show_and_send_telemetry() {
   let dispatchStub = sinon.stub();
   let infobar = InfoBar.showInfoBarMessage(
     BrowserWindowTracker.getTopWindow().gBrowser.selectedBrowser,
-    message,
+    {
+      ...message,
+      content: {
+        priority: window.gNotificationBox.PRIORITY_WARNING_HIGH,
+        ...message.content,
+      },
+    },
     dispatchStub
   );
 
@@ -32,6 +44,11 @@ add_task(async function show_and_send_telemetry() {
   // This is the telemetry ping
   Assert.equal(dispatchStub.secondCall.args[0].data.event, "IMPRESSION");
   Assert.equal(dispatchStub.secondCall.args[0].data.message_id, message.id);
+  Assert.equal(
+    infobar.notification.priority,
+    window.gNotificationBox.PRIORITY_WARNING_HIGH,
+    "Has the priority level set in the message definition"
+  );
 
   let primaryBtn = infobar.notification.buttonContainer.querySelector(
     ".notification-button.primary"
@@ -81,6 +98,14 @@ add_task(async function react_to_trigger() {
     notificationStack.currentNotification.getAttribute("value"),
     message.id,
     "Notification id should match"
+  );
+
+  let defaultPriority = PROTON_ENABLED
+    ? notificationStack.PRIORITY_SYSTEM
+    : notificationStack.PRIORITY_INFO_MEDIUM;
+  Assert.ok(
+    notificationStack.currentNotification.priority === defaultPriority,
+    "Notification has default priority"
   );
 });
 

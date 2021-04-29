@@ -39,6 +39,12 @@
         }
       ]
     },
+    "priority": {
+      "description": "Infobar priority level https://searchfox.org/mozilla-central/rev/3aef835f6cb12e607154d56d68726767172571e4/toolkit/content/widgets/notificationbox.js#387",
+      "type": "number",
+      "minumum": 0,
+      "exclusiveMaximum": 10
+    },
     "buttons": {
       "type": "array",
       "items": {
