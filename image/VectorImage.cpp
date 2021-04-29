@@ -309,7 +309,6 @@ VectorImage::VectorImage(nsIURI* aURI /* = nullptr */)
       mIsInitialized(false),
       mDiscardable(false),
       mIsFullyLoaded(false),
-      mIsDrawing(false),
       mHaveAnimations(false),
       mHasPendingInvalidation(false) {}
 
@@ -717,7 +716,7 @@ VectorImage::GetFrameInternal(const IntSize& aSize,
                      std::move(sourceSurface));
   }
 
-  if (mIsDrawing) {
+  if (mSVGDocumentWrapper->IsDrawing()) {
     NS_WARNING("Refusing to make re-entrant call to VectorImage::Draw");
     return MakeTuple(ImgDrawResult::TEMPORARY_ERROR, decodeSize,
                      RefPtr<SourceSurface>());
@@ -736,8 +735,7 @@ VectorImage::GetFrameInternal(const IntSize& aSize,
   bool didCache;  // Was the surface put into the cache?
   bool contextPaint = aSVGContext && aSVGContext->GetContextPaint();
 
-  AutoRestoreSVGState autoRestore(params, mSVGDocumentWrapper, mIsDrawing,
-                                  contextPaint);
+  AutoRestoreSVGState autoRestore(params, mSVGDocumentWrapper, contextPaint);
 
   RefPtr<gfxDrawable> svgDrawable = CreateSVGDrawable(params);
   RefPtr<SourceSurface> surface = CreateSurface(params, svgDrawable, didCache);
@@ -935,13 +933,12 @@ VectorImage::Draw(gfxContext* aContext, const nsIntSize& aSize,
 
   // else, we need to paint the image:
 
-  if (mIsDrawing) {
+  if (mSVGDocumentWrapper->IsDrawing()) {
     NS_WARNING("Refusing to make re-entrant call to VectorImage::Draw");
     return ImgDrawResult::TEMPORARY_ERROR;
   }
 
-  AutoRestoreSVGState autoRestore(params, mSVGDocumentWrapper, mIsDrawing,
-                                  contextPaint);
+  AutoRestoreSVGState autoRestore(params, mSVGDocumentWrapper, contextPaint);
 
   bool didCache;  // Was the surface put into the cache?
   RefPtr<gfxDrawable> svgDrawable = CreateSVGDrawable(params);
@@ -1014,7 +1011,7 @@ Tuple<RefPtr<SourceSurface>, IntSize> VectorImage::LookupCachedSurface(
 already_AddRefed<SourceSurface> VectorImage::CreateSurface(
     const SVGDrawingParameters& aParams, gfxDrawable* aSVGDrawable,
     bool& aWillCache) {
-  MOZ_ASSERT(mIsDrawing);
+  MOZ_ASSERT(mSVGDocumentWrapper->IsDrawing());
 
   mSVGDocumentWrapper->UpdateViewportBounds(aParams.viewportSize);
   mSVGDocumentWrapper->FlushImageTransformInvalidation();

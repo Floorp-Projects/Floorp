@@ -42,7 +42,9 @@ NS_IMPL_ISUPPORTS(SVGDocumentWrapper, nsIStreamListener, nsIRequestObserver,
                   nsIObserver, nsISupportsWeakReference)
 
 SVGDocumentWrapper::SVGDocumentWrapper()
-    : mIgnoreInvalidation(false), mRegisteredForXPCOMShutdown(false) {}
+    : mIgnoreInvalidation(false),
+      mRegisteredForXPCOMShutdown(false),
+      mIsDrawing(false) {}
 
 SVGDocumentWrapper::~SVGDocumentWrapper() {
   DestroyViewer();
