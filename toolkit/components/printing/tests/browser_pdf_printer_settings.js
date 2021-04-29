@@ -110,6 +110,15 @@ add_task(async function testPDFFile() {
       EventUtils.sendKey("return", helper.win);
     });
 
+    try {
+      Services.prefs.getStringPref(
+        "print.printer_Mozilla_Save_to_PDF.print_to_filename"
+      );
+      ok(false, "Should have cleared the filename pref");
+    } catch (ex) {
+      ok(true, "Cleared the filename pref");
+    }
+
     is(await IOUtils.exists(filePath), true, "Saved pdf file exists");
     ok(await IOUtils.read(filePath), "Saved pdf file is not empty");
   });
