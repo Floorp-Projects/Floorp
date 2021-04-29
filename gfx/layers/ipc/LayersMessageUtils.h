@@ -215,6 +215,7 @@ struct ParamTraits<mozilla::layers::FrameMetrics>
     WriteParam(aMsg, aParam.mScrollId);
     WriteParam(aMsg, aParam.mPresShellResolution);
     WriteParam(aMsg, aParam.mCompositionBounds);
+    WriteParam(aMsg, aParam.mCompositionBoundsWidthIgnoringScrollbars);
     WriteParam(aMsg, aParam.mDisplayPort);
     WriteParam(aMsg, aParam.mCriticalDisplayPort);
     WriteParam(aMsg, aParam.mScrollableRect);
@@ -243,6 +244,8 @@ struct ParamTraits<mozilla::layers::FrameMetrics>
     return (ReadParam(aMsg, aIter, &aResult->mScrollId) &&
             ReadParam(aMsg, aIter, &aResult->mPresShellResolution) &&
             ReadParam(aMsg, aIter, &aResult->mCompositionBounds) &&
+            ReadParam(aMsg, aIter,
+                      &aResult->mCompositionBoundsWidthIgnoringScrollbars) &&
             ReadParam(aMsg, aIter, &aResult->mDisplayPort) &&
             ReadParam(aMsg, aIter, &aResult->mCriticalDisplayPort) &&
             ReadParam(aMsg, aIter, &aResult->mScrollableRect) &&

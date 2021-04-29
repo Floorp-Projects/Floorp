@@ -5026,8 +5026,10 @@ void AsyncPanZoomController::NotifyLayersUpdated(
 
     // TODO: Rely entirely on |aScrollMetadata.IsResolutionUpdated()| to
     //       determine which branch to take, and drop the other conditions.
-    if (FuzzyEqualsAdditive(Metrics().GetCompositionBounds().Width(),
-                            aLayerMetrics.GetCompositionBounds().Width()) &&
+    if (FuzzyEqualsAdditive(
+            Metrics().GetCompositionBoundsWidthIgnoringScrollbars().value,
+            aLayerMetrics.GetCompositionBoundsWidthIgnoringScrollbars()
+                .value) &&
         Metrics().GetDevPixelsPerCSSPixel() ==
             aLayerMetrics.GetDevPixelsPerCSSPixel() &&
         !viewportSizeUpdated && !aScrollMetadata.IsResolutionUpdated()) {
@@ -5077,6 +5079,8 @@ void AsyncPanZoomController::NotifyLayersUpdated(
       Metrics().SetCompositionBounds(aLayerMetrics.GetCompositionBounds());
       needToReclampScroll = true;
     }
+    Metrics().SetCompositionBoundsWidthIgnoringScrollbars(
+        aLayerMetrics.GetCompositionBoundsWidthIgnoringScrollbars());
 
     if (Metrics().IsRootContent() &&
         Metrics().GetCompositionSizeWithoutDynamicToolbar() !=

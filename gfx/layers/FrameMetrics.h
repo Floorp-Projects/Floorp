@@ -84,6 +84,7 @@ struct FrameMetrics {
       : mScrollId(ScrollableLayerGuid::NULL_SCROLL_ID),
         mPresShellResolution(1),
         mCompositionBounds(0, 0, 0, 0),
+        mCompositionBoundsWidthIgnoringScrollbars(0),
         mDisplayPort(0, 0, 0, 0),
         mCriticalDisplayPort(0, 0, 0, 0),
         mScrollableRect(0, 0, 0, 0),
@@ -111,6 +112,8 @@ struct FrameMetrics {
     return mScrollId == aOther.mScrollId &&
            mPresShellResolution == aOther.mPresShellResolution &&
            mCompositionBounds.IsEqualEdges(aOther.mCompositionBounds) &&
+           mCompositionBoundsWidthIgnoringScrollbars ==
+               aOther.mCompositionBoundsWidthIgnoringScrollbars &&
            mDisplayPort.IsEqualEdges(aOther.mDisplayPort) &&
            mCriticalDisplayPort.IsEqualEdges(aOther.mCriticalDisplayPort) &&
            mScrollableRect.IsEqualEdges(aOther.mScrollableRect) &&
@@ -280,6 +283,16 @@ struct FrameMetrics {
 
   const ParentLayerRect& GetCompositionBounds() const {
     return mCompositionBounds;
+  }
+
+  void SetCompositionBoundsWidthIgnoringScrollbars(
+      const ParentLayerCoord aCompositionBoundsWidthIgnoringScrollbars) {
+    mCompositionBoundsWidthIgnoringScrollbars =
+        aCompositionBoundsWidthIgnoringScrollbars;
+  }
+
+  const ParentLayerCoord GetCompositionBoundsWidthIgnoringScrollbars() const {
+    return mCompositionBoundsWidthIgnoringScrollbars;
   }
 
   void SetDisplayPort(const CSSRect& aDisplayPort) {
@@ -506,6 +519,13 @@ struct FrameMetrics {
   //
   // This value is provided by Gecko at layout/paint time.
   ParentLayerRect mCompositionBounds;
+
+  // For RCD-RSF this is the width of the composition bounds ignoring
+  // scrollbars. For everything else this will be the same as the width of the
+  // composition bounds. Only needed for the "resolution changed" check in
+  // NotifyLayersUpdated, once that switches to using IsResolutionUpdated we can
+  // remove this.
+  ParentLayerCoord mCompositionBoundsWidthIgnoringScrollbars;
 
   // The area of a scroll frame's contents that has been painted, relative to
   // GetLayoutScrollOffset().
