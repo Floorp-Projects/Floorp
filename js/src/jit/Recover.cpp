@@ -1530,6 +1530,40 @@ bool RNewObject::recover(JSContext* cx, SnapshotIterator& iter) const {
   return true;
 }
 
+bool MNewPlainObject::writeRecoverData(CompactBufferWriter& writer) const {
+  MOZ_ASSERT(canRecoverOnBailout());
+  writer.writeUnsigned(uint32_t(RInstruction::Recover_NewPlainObject));
+
+  MOZ_ASSERT(gc::AllocKind(uint8_t(allocKind_)) == allocKind_);
+  writer.writeByte(uint8_t(allocKind_));
+  MOZ_ASSERT(gc::InitialHeap(uint8_t(initialHeap_)) == initialHeap_);
+  writer.writeByte(uint8_t(initialHeap_));
+  return true;
+}
+
+RNewPlainObject::RNewPlainObject(CompactBufferReader& reader) {
+  allocKind_ = gc::AllocKind(reader.readByte());
+  MOZ_ASSERT(gc::IsValidAllocKind(allocKind_));
+  initialHeap_ = gc::InitialHeap(reader.readByte());
+  MOZ_ASSERT(initialHeap_ == gc::DefaultHeap ||
+             initialHeap_ == gc::TenuredHeap);
+}
+
+bool RNewPlainObject::recover(JSContext* cx, SnapshotIterator& iter) const {
+  RootedShape shape(cx, &iter.read().toGCCellPtr().as<Shape>());
+
+  // See CodeGenerator::visitNewPlainObject.
+  JSObject* resultObject = NewPlainObject(cx, shape, allocKind_, initialHeap_);
+  if (!resultObject) {
+    return false;
+  }
+
+  RootedValue result(cx);
+  result.setObject(*resultObject);
+  iter.storeInstructionResult(result);
+  return true;
+}
+
 bool MNewTypedArray::writeRecoverData(CompactBufferWriter& writer) const {
   MOZ_ASSERT(canRecoverOnBailout());
   writer.writeUnsigned(uint32_t(RInstruction::Recover_NewTypedArray));

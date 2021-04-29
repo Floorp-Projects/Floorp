@@ -180,6 +180,30 @@ function createThisWithTemplate(i)
     assertRecoveredOnBailout(p, true);
 }
 
+function testNewObject1(i) {
+    var o = { a: 1 };
+    assertRecoveredOnBailout(o, true);
+    return o.a;
+}
+
+var objIdx = 0;
+var uceFault_notSoEmpty3 = eval(`(${uceFault})`.replace('uceFault', 'uceFault_notSoEmpty3'));
+function testNewObjectWithBranchPruning(i) {
+    let obj = {};
+    let idx = objIdx++;
+    if (uceFault_notSoEmpty3(i) || uceFault_notSoEmpty3(i)) {
+        // Branch content removed because never taken. Thus, no uses of obj,
+        // which can then be marked as recovered-on-bailout if foo is ever
+        // called with false.
+        obj.idx = idx;
+        obj.a = 1;
+        obj.b = 2;
+        return obj;
+    }
+    assertRecoveredOnBailout(obj, true);
+    return idx;
+}
+
 for (var i = 0; i < max; i++) {
     notSoEmpty1(i);
     notSoEmpty2(i);
@@ -187,6 +211,8 @@ for (var i = 0; i < max; i++) {
     complexPhi(i);
     withinIf(i);
     dynamicSlots(i);
+    testNewObject1(i);
+    testNewObjectWithBranchPruning(i);
 
     // TODO: support undefined properties in scalar replacement (bug 1701711)
     // unknownLoad(i);
@@ -194,3 +220,7 @@ for (var i = 0; i < max; i++) {
     // TODO: support constructors in scalar replacement (bug 1700422)
     // createThisWithTemplate(i);
 }
+
+let o = testNewObjectWithBranchPruning(-1);
+assertEq(o.a, 1);
+assertEq(o.b, 2);

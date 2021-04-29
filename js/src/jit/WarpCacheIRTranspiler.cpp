@@ -4794,8 +4794,15 @@ bool WarpCacheIRTranspiler::emitNewPlainObjectResult(uint32_t numFixedSlots,
   // TODO: support pre-tenuring.
   gc::InitialHeap heap = gc::DefaultHeap;
 
-  auto* obj = MNewPlainObject::New(alloc(), numFixedSlots, numDynamicSlots,
-                                   allocKind, shape, heap);
+  auto* shapeConstant = MConstant::NewShape(alloc(), shape);
+  if (!shapeConstant) {
+    return false;
+  }
+
+  add(shapeConstant);
+
+  auto* obj = MNewPlainObject::New(alloc(), shapeConstant, numFixedSlots,
+                                   numDynamicSlots, allocKind, heap);
   addEffectful(obj);
 
   pushResult(obj);
