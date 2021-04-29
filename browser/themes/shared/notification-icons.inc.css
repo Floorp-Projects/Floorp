@@ -14,7 +14,7 @@
   fill: currentColor;
   fill-opacity: var(--urlbar-icon-fill-opacity);
   color: inherit;
-  border-radius: var(--toolbarbutton-border-radius);
+  border-radius: var(--urlbar-icon-border-radius);
 }
 #notification-popup-box:hover {
   background-color: hsla(0,0%,70%,.2);

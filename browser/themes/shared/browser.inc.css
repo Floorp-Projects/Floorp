@@ -42,6 +42,9 @@
   --urlbar-min-height: 32px;
   --urlbar-icon-fill-opacity: 0.9;
   --urlbar-icon-padding: 6px; /* (32px - 2px border - 2px padding - 16px icon) / 2 */
+  /* This should be used for icons and chiclets inside the input field. It makes
+     the gap around them more uniform when they are close to the field edges */
+  --urlbar-icon-border-radius: calc(var(--toolbarbutton-border-radius) - 1px);
   --urlbar-popup-url-color: -moz-nativehyperlinktext;
 
   --lwt-additional-images: none;
@@ -63,6 +66,7 @@
     --identity-box-margin-inline: 3px;
     --identity-box-label-opacity: .6;
     --urlbar-icon-fill-opacity: .6;
+    --urlbar-icon-border-radius: 0;
   }
 } /*** END !proton ***/
 
