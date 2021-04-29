@@ -132,3 +132,30 @@ browser/chrome/browser/skin/classic/browser/notification-icons/webauthn.svg
 # Bug 1708008 - De-duplicate extension icons
 chrome/toolkit/skin/classic/mozapps/extensions/extension.svg
 chrome/toolkit/skin/classic/mozapps/extensions/extensionGeneric.svg
+
+
+# Bug 1708502 - De-duplicate about:newtab icons
+browser/chrome/browser/content/activity-stream/data/content/assets/glyph-arrow.svg
+browser/chrome/browser/content/activity-stream/data/content/assets/glyph-arrowhead-down-12.svg
+browser/chrome/browser/content/activity-stream/data/content/assets/glyph-arrowhead-down-16.svg
+browser/chrome/browser/content/activity-stream/data/content/assets/glyph-caret-right.svg
+browser/chrome/browser/content/activity-stream/data/content/assets/glyph-dismiss-16.svg
+browser/chrome/browser/content/activity-stream/data/content/assets/glyph-help-24.svg
+browser/chrome/browser/content/activity-stream/data/content/assets/glyph-highlights-16.svg
+browser/chrome/browser/content/activity-stream/data/content/assets/glyph-info-16.svg
+browser/chrome/browser/content/activity-stream/data/content/assets/glyph-pin-12.svg
+browser/chrome/browser/content/activity-stream/data/content/assets/glyph-pocket-16.svg
+browser/chrome/browser/content/activity-stream/data/content/assets/glyph-pocket-save-16.svg
+browser/chrome/browser/content/activity-stream/data/content/assets/glyph-search-16.svg
+browser/chrome/browser/content/activity-stream/data/content/assets/glyph-star-17.svg
+browser/chrome/browser/content/activity-stream/data/content/assets/topic-show-more-12.svg
+browser/chrome/browser/skin/classic/browser/bookmark.svg
+browser/chrome/browser/skin/classic/browser/pin-12.svg
+browser/chrome/browser/skin/classic/browser/pocket-outline.svg
+chrome/toolkit/skin/classic/global/icons/close.svg
+chrome/toolkit/skin/classic/global/icons/help.svg
+chrome/toolkit/skin/classic/global/icons/info.svg
+chrome/toolkit/skin/classic/global/icons/pocket.svg
+chrome/toolkit/skin/classic/global/icons/search-glass.svg
+chrome/toolkit/skin/classic/global/icons/twisty-collapsed.svg
+chrome/toolkit/skin/classic/mozapps/extensions/category-discover.svg
