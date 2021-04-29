@@ -1919,6 +1919,13 @@ getHardcodedLayout = isBasicLayout => ({
                 url: "https://getpocket.com/explore?utm_source=pocket-newtab",
               },
             ],
+            privacyNoticeURL: {
+              url:
+                "https://www.mozilla.org/privacy/firefox/#suggest-relevant-content",
+              title: {
+                id: "newtab-section-menu-privacy-notice",
+              },
+            },
           },
           header: {
             title: {

@@ -48,13 +48,17 @@ export class Navigation extends React.PureComponent {
     const links = this.props.links || [];
     const alignment = this.props.alignment || "centered";
     const header = this.props.header || {};
+    const english = this.props.locale.startsWith("en-");
+    const privacyNotice = this.props.privacyNoticeURL || {};
+
     return (
       <div className={`ds-navigation ds-navigation-${alignment}`}>
-        {header.title ? (
+        {header.title && english ? (
           <FluentOrText message={header.title}>
             <span className="ds-navigation-header" />
           </FluentOrText>
         ) : null}
+
         <ul>
           {links &&
             links.map(t => (
@@ -67,6 +71,16 @@ export class Navigation extends React.PureComponent {
               </li>
             ))}
         </ul>
+
+        <SafeAnchor
+          onLinkClick={this.onLinkClick}
+          className={this.props.className}
+          url={privacyNotice.url}
+        >
+          <FluentOrText message={privacyNotice.title}>
+            <span className="ds-navigation-privacy" />
+          </FluentOrText>
+        </SafeAnchor>
       </div>
     );
   }
