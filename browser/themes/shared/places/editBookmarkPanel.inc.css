@@ -156,8 +156,10 @@ html|img#editBookmarkPanelFavicon[src] {
   display: flex;
 }
 
+#editBookmarkPanel > #editBookmarkHeaderSeparator,
 #editBookmarkPanel > .panel-subview-body > #editBookmarkSeparator {
   margin-bottom: 0;
+  margin-inline: 16px;
 }
 
 @media (-moz-proton-doorhangers) {
@@ -166,7 +168,7 @@ html|img#editBookmarkPanelFavicon[src] {
 }
 
 #editBookmarkPanelInfoArea {
-  padding: 6px var(--arrowpanel-padding) 0;
+  padding: 4px var(--arrowpanel-padding) 0;
 }
 
 #editBookmarkPanelRows > vbox:not(#editBMPanel_nameRow) {
