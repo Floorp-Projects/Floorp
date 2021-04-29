@@ -200,6 +200,12 @@ void LIRGenerator::visitNewObject(MNewObject* ins) {
   assignSafepoint(lir, ins);
 }
 
+void LIRGenerator::visitNewPlainObject(MNewPlainObject* ins) {
+  LNewPlainObject* lir = new (alloc()) LNewPlainObject(temp(), temp(), temp());
+  define(lir, ins);
+  assignSafepoint(lir, ins);
+}
+
 void LIRGenerator::visitNewNamedLambdaObject(MNewNamedLambdaObject* ins) {
   LNewNamedLambdaObject* lir = new (alloc()) LNewNamedLambdaObject(temp());
   define(lir, ins);

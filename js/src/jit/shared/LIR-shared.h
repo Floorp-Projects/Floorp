@@ -415,6 +415,25 @@ class LNewObject : public LInstructionHelper<1, 0, 1> {
   MNewObject* mir() const { return mir_->toNewObject(); }
 };
 
+class LNewPlainObject : public LInstructionHelper<1, 0, 3> {
+ public:
+  LIR_HEADER(NewPlainObject)
+
+  explicit LNewPlainObject(const LDefinition& temp0, const LDefinition& temp1,
+                           const LDefinition& temp2)
+      : LInstructionHelper(classOpcode) {
+    setTemp(0, temp0);
+    setTemp(1, temp1);
+    setTemp(2, temp2);
+  }
+
+  const LDefinition* temp0() { return getTemp(0); }
+  const LDefinition* temp1() { return getTemp(1); }
+  const LDefinition* temp2() { return getTemp(2); }
+
+  MNewPlainObject* mir() const { return mir_->toNewPlainObject(); }
+};
+
 // Allocates a new NamedLambdaObject.
 //
 // This instruction generates two possible instruction sets:

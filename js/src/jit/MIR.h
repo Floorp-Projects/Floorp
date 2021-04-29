@@ -2097,6 +2097,37 @@ class MNewObject : public MUnaryInstruction, public NoTypePolicy::Data {
   }
 };
 
+class MNewPlainObject : public MNullaryInstruction {
+ private:
+  CompilerShape shape_;
+  uint32_t numFixedSlots_;
+  uint32_t numDynamicSlots_;
+  gc::AllocKind allocKind_;
+  gc::InitialHeap initialHeap_;
+
+  MNewPlainObject(TempAllocator& alloc, uint32_t numFixedSlots,
+                  uint32_t numDynamicSlots, gc::AllocKind allocKind,
+                  Shape* shape, gc::InitialHeap initialHeap)
+      : MNullaryInstruction(classOpcode),
+        shape_(shape),
+        numFixedSlots_(numFixedSlots),
+        numDynamicSlots_(numDynamicSlots),
+        allocKind_(allocKind),
+        initialHeap_(initialHeap) {
+    setResultType(MIRType::Object);
+  }
+
+ public:
+  INSTRUCTION_HEADER(NewPlainObject)
+  TRIVIAL_NEW_WRAPPERS_WITH_ALLOC
+
+  uint32_t numFixedSlots() const { return numFixedSlots_; }
+  uint32_t numDynamicSlots() const { return numDynamicSlots_; }
+  gc::AllocKind allocKind() const { return allocKind_; }
+  const Shape* shape() const { return shape_; }
+  gc::InitialHeap initialHeap() const { return initialHeap_; }
+};
+
 class MNewIterator : public MUnaryInstruction, public NoTypePolicy::Data {
  public:
   enum Type {
