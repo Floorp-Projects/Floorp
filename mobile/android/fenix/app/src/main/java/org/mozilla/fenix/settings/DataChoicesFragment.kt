@@ -67,13 +67,6 @@ class DataChoicesFragment : PreferenceFragmentCompat() {
 
         requirePreference<SwitchPreference>(R.string.pref_key_marketing_telemetry).apply {
             isChecked = context.settings().isMarketingTelemetryEnabled
-
-            val appName = context.getString(R.string.app_name)
-            summary = String.format(
-                context.getString(R.string.preferences_marketing_data_description),
-                appName
-            )
-
             onPreferenceChangeListener = SharedPreferenceUpdater()
         }
 

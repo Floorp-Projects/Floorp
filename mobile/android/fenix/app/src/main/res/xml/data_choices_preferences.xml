@@ -9,7 +9,7 @@
         android:title="@string/preference_usage_data" />
     <SwitchPreference
         android:key="@string/pref_key_marketing_telemetry"
-        android:summary="@string/preferences_marketing_data_description"
+        android:summary="@string/preferences_marketing_data_description2"
         android:title="@string/preferences_marketing_data" />
     <SwitchPreference
         android:key="@string/pref_key_experimentation"
