@@ -59,18 +59,20 @@ export class Navigation extends React.PureComponent {
           </FluentOrText>
         ) : null}
 
-        <ul>
-          {links &&
-            links.map(t => (
-              <li key={t.name}>
-                <Topic
-                  url={t.url}
-                  name={t.name}
-                  dispatch={this.props.dispatch}
-                />
-              </li>
-            ))}
-        </ul>
+        {english ? (
+          <ul>
+            {links &&
+              links.map(t => (
+                <li key={t.name}>
+                  <Topic
+                    url={t.url}
+                    name={t.name}
+                    dispatch={this.props.dispatch}
+                  />
+                </li>
+              ))}
+          </ul>
+        ) : null}
 
         <SafeAnchor
           onLinkClick={this.onLinkClick}
