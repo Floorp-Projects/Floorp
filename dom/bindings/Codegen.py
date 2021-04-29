@@ -14449,7 +14449,7 @@ class CGDOMJSProxyHandler_getOwnPropDescriptor(ClassMethod):
             Argument("JS::Handle<JSObject*>", "proxy"),
             Argument("JS::Handle<jsid>", "id"),
             Argument("bool", "ignoreNamedProps"),
-            Argument("JS::MutableHandle<Maybe<JS::PropertyDescriptor>>", "desc"),
+            Argument("JS::MutableHandle<JS::PropertyDescriptor>", "desc"),
         ]
         ClassMethod.__init__(
             self,
@@ -14485,11 +14485,11 @@ class CGDOMJSProxyHandler_getOwnPropDescriptor(ClassMethod):
         if self.descriptor.supportsIndexedProperties():
             readonly = toStringBool(indexedSetter is None)
             fillDescriptor = (
-                "FillPropertyDescriptor(cx, desc, proxy, value, %s);\nreturn true;\n" % readonly
+                "FillPropertyDescriptor(desc, proxy, %s);\nreturn true;\n" % readonly
             )
             templateValues = {
-                "jsvalRef": "value",
-                "jsvalHandle": "&value",
+                "jsvalRef": "desc.value()",
+                "jsvalHandle": "desc.value()",
                 "obj": "proxy",
                 "successCode": fillDescriptor,
             }
@@ -14497,7 +14497,6 @@ class CGDOMJSProxyHandler_getOwnPropDescriptor(ClassMethod):
                 """
                 uint32_t index = GetArrayIndexFromId(id);
                 if (IsArrayIndex(index)) {
-                  JS::Rooted<JS::Value> value(cx);
                   $*{callGetter}
                 }
 
@@ -14515,13 +14514,13 @@ class CGDOMJSProxyHandler_getOwnPropDescriptor(ClassMethod):
             operations = self.descriptor.operations
             readonly = toStringBool(operations["NamedSetter"] is None)
             fillDescriptor = (
-                "FillPropertyDescriptor(cx, desc, proxy, value, %s, %s);\n"
+                "FillPropertyDescriptor(desc, proxy, %s, %s);\n"
                 "return true;\n"
                 % (readonly, toStringBool(self.descriptor.namedPropertiesEnumerable))
             )
             templateValues = {
-                "jsvalRef": "value",
-                "jsvalHandle": "&value",
+                "jsvalRef": "desc.value()",
+                "jsvalHandle": "desc.value()",
                 "obj": "proxy",
                 "successCode": fillDescriptor,
             }
@@ -14559,7 +14558,6 @@ class CGDOMJSProxyHandler_getOwnPropDescriptor(ClassMethod):
                   $*{computeCondition}
                 }
                 if (callNamedGetter) {
-                  JS::Rooted<JS::Value> value(cx);
                   $*{namedGetCode}
                 }
                 """,
@@ -14581,13 +14579,15 @@ class CGDOMJSProxyHandler_getOwnPropDescriptor(ClassMethod):
               if (!JS_GetOwnPropertyDescriptorById(cx, expando, id, desc)) {
                 return false;
               }
-              if (desc.isSome()) {
+              if (desc.object()) {
+                // Pretend the property lives on the wrapper.
+                desc.object().set(proxy);
                 return true;
               }
             }
 
             $*{namedGet}
-            desc.reset();
+            desc.object().set(nullptr);
             return true;
             """,
             xrayDecl=xrayDecl,
