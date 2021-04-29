@@ -7,7 +7,6 @@ package org.mozilla.fenix.tabstray
 import android.content.Context
 import androidx.navigation.NavController
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
 import mozilla.components.browser.state.selector.getNormalOrPrivateTabs
@@ -25,6 +24,7 @@ import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.ext.navigateBlockingForAsyncNavGraph
 import org.mozilla.fenix.home.HomeFragment
 import org.mozilla.fenix.tabstray.ext.getTabSessionState
+import kotlin.coroutines.CoroutineContext
 
 /**
  * An interactor that helps with navigating to different parts of the app from the tabs tray.
@@ -91,7 +91,8 @@ class DefaultNavigationInteractor(
     private val bookmarksUseCase: BookmarksUseCase,
     private val tabsTrayStore: TabsTrayStore,
     private val collectionStorage: TabCollectionStorage,
-    private val accountManager: FxaAccountManager
+    private val accountManager: FxaAccountManager,
+    private val ioDispatcher: CoroutineContext
 ) : NavigationInteractor {
 
     override fun onTabTrayDismissed() {
@@ -181,8 +182,9 @@ class DefaultNavigationInteractor(
     override fun onSaveToBookmarks(tabs: Collection<Tab>) {
         tabs.forEach { tab ->
             // We don't combine the context with lifecycleScope so that our jobs are not cancelled
-            // if we leave the fragment, i.e. we still want the bookmarks to be added.
-            CoroutineScope(Dispatchers.IO).launch {
+            // if we leave the fragment, i.e. we still want the bookmarks to be added if the
+            // tabs tray closes before the job is done.
+            CoroutineScope(ioDispatcher).launch {
                 bookmarksUseCase.addBookmark(tab.url, tab.title)
             }
         }

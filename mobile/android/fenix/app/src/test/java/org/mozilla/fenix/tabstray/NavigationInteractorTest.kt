@@ -14,6 +14,7 @@ import io.mockk.verify
 import io.mockk.mockkStatic
 import io.mockk.unmockkStatic
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.TestCoroutineDispatcher
 import kotlinx.coroutines.test.runBlockingTest
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.TabSessionState
@@ -21,6 +22,7 @@ import mozilla.components.browser.state.state.createTab as createStateTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.tabstray.Tab
 import mozilla.components.service.fxa.manager.FxaAccountManager
+import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
@@ -34,6 +36,7 @@ import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.tabstray.browser.createTab as createTrayTab
 
+@ExperimentalCoroutinesApi
 class NavigationInteractorTest {
     private lateinit var store: BrowserStore
     private lateinit var tabsTrayStore: TabsTrayStore
@@ -48,8 +51,13 @@ class NavigationInteractorTest {
     private val collectionStorage: TabCollectionStorage = mockk(relaxed = true)
     private val accountManager: FxaAccountManager = mockk(relaxed = true)
 
+    private val testDispatcher = TestCoroutineDispatcher()
+
     @get:Rule
     val disableNavGraphProviderAssertionRule = DisableNavGraphProviderAssertionRule()
+
+    @get:Rule
+    val coroutinesTestRule = MainCoroutineRule(testDispatcher)
 
     @Before
     fun setup() {
@@ -65,7 +73,8 @@ class NavigationInteractorTest {
             bookmarksUseCase,
             tabsTrayStore,
             collectionStorage,
-            accountManager
+            accountManager,
+            testDispatcher
         )
     }
 
@@ -206,9 +215,21 @@ class NavigationInteractorTest {
         unmockkStatic("org.mozilla.fenix.collections.CollectionsDialogKt")
     }
 
-    @OptIn(ExperimentalCoroutinesApi::class)
     @Test
     fun `onBookmarkTabs calls navigation on DefaultNavigationInteractor`() = runBlockingTest {
+        navigationInteractor = DefaultNavigationInteractor(
+            context,
+            store,
+            navController,
+            metrics,
+            dismissTabTray,
+            dismissTabTrayAndNavigateHome,
+            bookmarksUseCase,
+            tabsTrayStore,
+            collectionStorage,
+            accountManager,
+            coroutineContext
+        )
         navigationInteractor.onSaveToBookmarks(listOf(createTrayTab()))
         coVerify(exactly = 1) { bookmarksUseCase.addBookmark(any(), any(), any()) }
     }

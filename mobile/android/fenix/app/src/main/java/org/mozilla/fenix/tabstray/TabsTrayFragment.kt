@@ -119,7 +119,8 @@ class TabsTrayFragment : AppCompatDialogFragment(), TabsTrayInteractor {
                 dismissTabTrayAndNavigateHome = ::dismissTabsTrayAndNavigateHome,
                 bookmarksUseCase = requireComponents.useCases.bookmarksUseCases,
                 collectionStorage = requireComponents.core.tabCollectionStorage,
-                accountManager = requireComponents.backgroundServices.accountManager
+                accountManager = requireComponents.backgroundServices.accountManager,
+                ioDispatcher = Dispatchers.IO
             )
 
         tabsTrayController = DefaultTabsTrayController(
