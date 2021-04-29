@@ -14,14 +14,15 @@ const TEST_ATTRIBUTION_DATA = {
   source: "addons.mozilla.org",
   medium: "referral",
   campaign: "non-fx-button",
-  content: "iridium@particlecore.github.io",
+  // with the sinon override, the id doesn't matter
+  content: "rta:whatever",
 };
 
 const TEST_ADDON_INFO = [
   {
     name: "Test Add-on",
     sourceURI: { scheme: "https", spec: "https://test.xpi" },
-    icons: { 32: "https://test.png", 64: "https://test.png" },
+    icons: { 32: "test.png", 64: "test.png" },
   },
 ];
 
