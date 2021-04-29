@@ -408,9 +408,10 @@
 } /*** END !proton ***/
 
 @media (-moz-proton) {
+:root[uidensity=compact] .tab-icon-stack@tabIndicatorReplacesIcon@ > :not(.tab-icon-overlay),
 #tabbrowser-tabs[secondarytext-unsupported] .tab-icon-stack@tabIndicatorReplacesIcon@ > :not(.tab-icon-overlay),
-#toolbar-menubar:not(:hover) + #TabsToolbar:not(:hover) #tabbrowser-tabs:not([secondarytext-unsupported]) .tab-icon-image[src] ~ .tab-icon-overlay@tabIndicatorReplacesIcon@,
-:is(#toolbar-menubar:hover + #TabsToolbar, #TabsToolbar:hover) .tab-icon-stack@tabIndicatorReplacesIcon@ > :not(.tab-icon-overlay) {
+:root:not([uidensity=compact]) #tabbrowser-tabs:not([secondarytext-unsupported]) .tabbrowser-tab:not(:hover) .tab-icon-overlay@tabIndicatorReplacesIcon@,
+:root:not([uidensity=compact]) #tabbrowser-tabs:not([secondarytext-unsupported]) .tabbrowser-tab:hover .tab-icon-stack@tabIndicatorReplacesIcon@ > :not(.tab-icon-overlay) {
   opacity: 0;
 }
 } /*** END proton ***/
