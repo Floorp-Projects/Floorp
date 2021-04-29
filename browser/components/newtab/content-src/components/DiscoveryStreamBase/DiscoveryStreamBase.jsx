@@ -172,6 +172,8 @@ export class _DiscoveryStreamBase extends React.PureComponent {
             display_variant={component.properties.display_variant}
             explore_topics={component.properties.explore_topics}
             header={component.header}
+            locale={this.props.App.locale}
+            privacyNoticeURL={component.properties.privacyNoticeURL}
           />
         );
       case "CollectionCardGrid":
@@ -390,4 +392,5 @@ export const DiscoveryStreamBase = connect(state => ({
   Prefs: state.Prefs,
   Sections: state.Sections,
   document: global.document,
+  App: state.App,
 }))(_DiscoveryStreamBase);

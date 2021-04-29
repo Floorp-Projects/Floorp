@@ -10,10 +10,10 @@
   }
 
   color: $grey-50;
-  padding: 4px 0;
-  font-weight: 600;
-  line-height: 22px;
   font-size: 11.5px;
+  font-weight: 500;
+  line-height: 22px;
+  padding: 4px 0;
 
   @media (min-width: $break-point-widest) {
     line-height: 32px;
@@ -60,5 +60,10 @@
 
   .ds-navigation-header {
     padding-inline-end: 6px;
+  }
+
+  .ds-navigation-privacy {
+    padding-inline-start: 6px;
+    float: inline-end;
   }
 }

@@ -514,35 +514,6 @@ describe("selectLayoutRender", () => {
     assert.equal(layoutRender[0].components[0].type, "TopSites");
     assert.equal(layoutRender[0].components[1], undefined);
   });
-  it("should not render a Navigation if not en-*", () => {
-    const fakeLayout = [
-      {
-        width: 3,
-        components: [
-          { type: "Navigation" },
-          { type: "Message" },
-          { type: "TopSites" },
-        ],
-      },
-    ];
-    store.dispatch({
-      type: at.DISCOVERY_STREAM_LAYOUT_UPDATE,
-      data: { layout: fakeLayout },
-    });
-
-    const { layoutRender } = selectLayoutRender({
-      state: store.getState().DiscoveryStream,
-      prefs: {
-        "feeds.topsites": true,
-        "feeds.system.topstories": true,
-        "feeds.section.topstories": true,
-      },
-    });
-
-    assert.equal(layoutRender[0].components[0].type, "Message");
-    assert.equal(layoutRender[0].components[1].type, "TopSites");
-    assert.equal(layoutRender[0].components[2], undefined);
-  });
   it("should skip rendering a spoc in position if that spoc is blocked for that session", () => {
     const fakeLayout = [
       {

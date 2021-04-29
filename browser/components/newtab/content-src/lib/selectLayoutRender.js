@@ -68,10 +68,6 @@ export const selectLayoutRender = ({ state = {}, prefs = {}, locale = "" }) => {
     filterArray.push("TopSites");
   }
 
-  if (!locale.startsWith("en-")) {
-    filterArray.push("Navigation");
-  }
-
   const pocketEnabled =
     prefs["feeds.section.topstories"] && prefs["feeds.system.topstories"];
   if (!pocketEnabled) {
