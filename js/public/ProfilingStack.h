@@ -328,6 +328,8 @@ class ProfilingStackFrame {
 
   JS_PUBLIC_API JSScript* script() const;
 
+  JS_PUBLIC_API JSFunction* function() const;
+
   // Note that the pointer returned might be invalid.
   JSScript* rawScript() const {
     MOZ_ASSERT(isJsFrame());
