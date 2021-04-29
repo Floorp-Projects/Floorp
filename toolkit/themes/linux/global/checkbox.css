@@ -49,6 +49,7 @@ checkbox[native][disabled="true"] {
   appearance: auto;
   -moz-default-appearance: checkbox;
   margin: 2px;
+  margin-inline-end: 4px;
 }
 } /** END Proton **/
 

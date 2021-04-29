@@ -33,7 +33,8 @@ checkbox[native][disabled="true"] {
 .checkbox-check[native] {
   appearance: auto;
   -moz-default-appearance: checkbox;
-  margin: 1px 1px 0;
+  margin-block: 1px 0;
+  margin-inline: 1px 3px;
   /* vertical-align tells native theming where to snap to. However, this doesn't
    * always work reliably because of bug 503833. */
   vertical-align: top;

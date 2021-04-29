@@ -32,13 +32,16 @@ checkbox[disabled="true"] {
 
 .checkbox-check {
   appearance: none;
-  height: 16px;
-  width: 16px;
   color: var(--checkbox-border-color, ThreeDDarkShadow);
   background-color: var(--checkbox-unchecked-bgcolor, Field);
   border: 1px solid currentColor;
   border-radius: 2px;
   margin-inline-end: 6px;
+}
+
+.checkbox-check:not([native]) {
+  height: 16px;
+  width: 16px;
 }
 
 checkbox:not([disabled="true"]):hover > .checkbox-check {
