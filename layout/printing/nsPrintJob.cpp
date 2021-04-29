@@ -840,7 +840,9 @@ nsresult nsPrintJob::Print(Document* aSourceDoc,
       nsCOMPtr<nsIPrintSettingsService> printSettingsService =
           do_GetService("@mozilla.org/gfx/printsettings-service;1");
       printSettingsService->SavePrintSettingsToPrefs(
-          aPrintSettings, true, nsIPrintSettings::kInitSaveAll);
+          aPrintSettings, true,
+          nsIPrintSettings::kInitSaveAll &
+              ~nsIPrintSettings::kInitSaveToFileName);
       printSettingsService->SavePrintSettingsToPrefs(
           aPrintSettings, false, nsIPrintSettings::kInitSavePrinterName);
     }
