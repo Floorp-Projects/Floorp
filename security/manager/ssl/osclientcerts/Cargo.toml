@@ -12,6 +12,7 @@ byteorder = "1.3"
 env_logger = {version = "0.8", default-features = false } # disable `regex` to reduce code size
 lazy_static = "1"
 log = "0.4"
+mozilla-central-workspace-hack = { path = "../../../../build/workspace-hack" }
 pkcs11 = "0.4"
 sha2 = "0.8"
 

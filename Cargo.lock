@@ -1116,6 +1116,7 @@ name = "defaultagent-static"
 version = "0.1.0"
 dependencies = [
  "log",
+ "mozilla-central-workspace-hack",
  "serde",
  "serde_derive",
  "serde_json",
@@ -1788,6 +1789,7 @@ dependencies = [
  "log",
  "marionette",
  "mozdevice",
+ "mozilla-central-workspace-hack",
  "mozprofile",
  "mozrunner",
  "mozversion",
@@ -3687,6 +3689,7 @@ dependencies = [
  "lazy_static",
  "libloading 0.5.2",
  "log",
+ "mozilla-central-workspace-hack",
  "pkcs11",
  "rental",
  "sha2",
