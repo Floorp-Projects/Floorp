@@ -110,11 +110,15 @@
           "additionalProperties": false,
           "anyOf": [
             {"required": ["applied"]},
-            {"required": ["failed"]}
+            {"required": ["failed"]},
+            {"required": ["newFailed"]},
+            {"required": ["reconciled"]}
           ],
           "properties": {
             "applied": { "type": "integer", "minimum": 1 },
-            "failed": { "type": "integer", "minimum": 1 }
+            "failed": { "type": "integer", "minimum": 1 },
+            "newFailed": { "type": "integer", "minimum": 1 },
+            "reconciled": { "type": "integer", "minimum": 1 }
           }
         },
         "outgoing": {
