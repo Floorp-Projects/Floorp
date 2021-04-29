@@ -3134,10 +3134,10 @@ main {
 
 .ds-navigation {
   color: #737373;
-  padding: 4px 0;
-  font-weight: 600;
+  font-size: 11.5px;
+  font-weight: 500;
   line-height: 22px;
-  font-size: 11.5px; }
+  padding: 4px 0; }
   [lwt-newtab-brighttext] .ds-navigation {
     color: #D7D7DB; }
   @media (min-width: 1122px) {
@@ -3165,6 +3165,9 @@ main {
       color: #003EAA; }
   .ds-navigation .ds-navigation-header {
     padding-inline-end: 6px; }
+  .ds-navigation .ds-navigation-privacy {
+    padding-inline-start: 6px;
+    float: inline-end; }
 
 .ds-section-title {
   text-align: center;
