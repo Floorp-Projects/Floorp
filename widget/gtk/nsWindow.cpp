@@ -468,17 +468,20 @@ nsWindow::nsWindow()
       mBoundsAreValid(true),
       mPreferredPopupRectFlushed(false),
       mWaitingForMoveToRectCB(false),
-      mPendingSizeRect(LayoutDeviceIntRect(0, 0, 0, 0)),
+      mPendingSizeRect(LayoutDeviceIntRect(0, 0, 0, 0))
 #ifdef ACCESSIBILITY
-      mRootAccessible(nullptr),
+      ,
+      mRootAccessible(nullptr)
 #endif
 #ifdef MOZ_X11
+      ,
       mXDisplay(nullptr),
       mXWindow(X11None),
       mXVisual(nullptr),
-      mXDepth(0),
+      mXDepth(0)
 #endif
 #ifdef MOZ_WAYLAND
+      ,
       mLockedPointer(nullptr),
       mRelativePointer(nullptr)
 #endif
