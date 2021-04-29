@@ -289,7 +289,7 @@ checkbox {
 }
 
 #useDocumentColors {
-  margin: 0;
+  margin: 4px 0;
 }
 
 #translationAttributionImage {
@@ -610,7 +610,7 @@ checkbox {
 }
 
 .dialogFrame {
-  margin: 20px;
+  margin: 10px;
   -moz-box-flex: 1;
   /* Default dialog dimensions */
   width: 66ch;
