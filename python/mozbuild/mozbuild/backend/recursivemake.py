@@ -1402,8 +1402,7 @@ class RecursiveMakeBackend(MakeBackend):
         # possible invocations of Cargo with this CARGO_TARGET_DIR.  Otherwise,
         # Cargo's dependency calculations don't work as we expect and we wind
         # up recompiling lots of things.
-        target_dir = mozpath.join(backend_file.objdir, libdef.target_dir)
-        target_dir = mozpath.normpath(target_dir)
+        target_dir = mozpath.normpath(backend_file.environment.topobjdir)
         backend_file.write("CARGO_TARGET_DIR := %s\n" % target_dir)
         if libdef.features:
             backend_file.write(
