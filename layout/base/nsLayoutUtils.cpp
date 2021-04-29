@@ -8717,6 +8717,8 @@ ScrollMetadata nsLayoutUtils::ComputeScrollMetadata(
     }
   }
 
+  metrics.SetCompositionBoundsWidthIgnoringScrollbars(frameBounds.width);
+
   nsMargin sizes = ScrollbarAreaToExcludeFromCompositionBoundsFor(aScrollFrame);
   // Scrollbars are not subject to resolution scaling, so LD pixels = layer
   // pixels for them.
