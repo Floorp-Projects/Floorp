@@ -1342,7 +1342,9 @@ var current_test = 0;
 
 function run_next_test() {
   if (current_test < tests.length) {
-    dump("starting test number " + current_test + "\n");
+    dump(
+      `starting test number ${current_test} - ${tests[current_test].name}\n`
+    );
     tests[current_test]();
     current_test++;
     do_test_pending();
