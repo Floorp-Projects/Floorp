@@ -155,7 +155,7 @@ ZoomTarget CalculateRectToZoomTo(
   }
 
   while (element && !ShouldZoomToElement(element, aRootContentDocument)) {
-    element = element->GetParentElement();
+    element = element->GetFlattenedTreeParentElement();
   }
 
   if (!element) {
