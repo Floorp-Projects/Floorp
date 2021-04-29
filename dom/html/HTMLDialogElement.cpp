@@ -52,6 +52,18 @@ void HTMLDialogElement::Close(
 
   RemoveFromTopLayerIfNeeded();
 
+  RefPtr<Element> previouslyFocusedElement =
+      do_QueryReferent(mPreviouslyFocusedElement);
+
+  if (previouslyFocusedElement) {
+    mPreviouslyFocusedElement = nullptr;
+
+    FocusOptions options;
+    options.mPreventScroll = true;
+    previouslyFocusedElement->Focus(options, CallerType::NonSystem,
+                                    IgnoredErrorResult());
+  }
+
   RefPtr<AsyncEventDispatcher> eventDispatcher =
       new AsyncEventDispatcher(this, u"close"_ns, CanBubble::eNo);
   eventDispatcher->PostDOMEvent();
@@ -62,6 +74,9 @@ void HTMLDialogElement::Show() {
     return;
   }
   SetOpen(true, IgnoreErrors());
+
+  StorePreviouslyFocusedElement();
+
   FocusDialog();
 }
 
@@ -93,6 +108,14 @@ void HTMLDialogElement::RemoveFromTopLayerIfNeeded() {
   doc->UnsetBlockedByModalDialog(*this);
 }
 
+void HTMLDialogElement::StorePreviouslyFocusedElement() {
+  if (nsIContent* unretargetedFocus =
+          GetComposedDoc()->GetUnretargetedFocusedContent()) {
+    mPreviouslyFocusedElement =
+        do_GetWeakReference(unretargetedFocus->AsElement());
+  }
+}
+
 void HTMLDialogElement::UnbindFromTree(bool aNullParent) {
   RemoveFromTopLayerIfNeeded();
   nsGenericHTMLElement::UnbindFromTree(aNullParent);
@@ -113,6 +136,8 @@ void HTMLDialogElement::ShowModal(ErrorResult& aError) {
   AddToTopLayerIfNeeded();
 
   SetOpen(true, aError);
+
+  StorePreviouslyFocusedElement();
 
   FocusDialog();
 
