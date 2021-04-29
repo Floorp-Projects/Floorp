@@ -133,6 +133,9 @@ browser/chrome/browser/skin/classic/browser/notification-icons/webauthn.svg
 # Bug 1708008 - De-duplicate extension icons
 chrome/toolkit/skin/classic/mozapps/extensions/extension.svg
 chrome/toolkit/skin/classic/mozapps/extensions/extensionGeneric.svg
+
+# Bug 1700124 - De-duplicate browser/themes/shared icons
+browser/themes/shared/icons/zoom-in.svg
 chrome/toolkit/skin/classic/mozapps/extensions/themeGeneric.svg
 browser/chrome/browser/skin/classic/browser/customize.svg
 
