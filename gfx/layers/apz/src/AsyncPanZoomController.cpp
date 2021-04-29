@@ -5551,23 +5551,29 @@ void AsyncPanZoomController::ZoomToRect(const ZoomTarget& aZoomTarget,
                 (currentZoom == localMinZoom && targetZoom <= localMinZoom);
     }
 
+    FrameMetrics endZoomToMetrics = Metrics();
     if (zoomOut) {
-      CSSSize compositedSize = Metrics().CalculateCompositedSizeInCssPixels();
-      float y = scrollOffset.y;
-      float newHeight =
-          cssPageRect.Width() * (compositedSize.height / compositedSize.width);
-      float dh = compositedSize.height - newHeight;
+      // Set our zoom to the min zoom and then calculate what the after-zoom
+      // composited size is, and then calculate the new scroll offset so that we
+      // center what the old composited size displayed.
+      targetZoom = localMinZoom;
+      endZoomToMetrics.SetZoom(CSSToParentLayerScale2D(targetZoom));
 
-      rect = CSSRect(0.0f, y + dh / 2, cssPageRect.Width(), newHeight);
+      CSSSize sizeAfterZoom =
+          endZoomToMetrics.CalculateCompositedSizeInCssPixels();
+
+      CSSSize sizeBeforeZoom = Metrics().CalculateCompositedSizeInCssPixels();
+
+      rect = CSSRect(
+          scrollOffset.x + (sizeBeforeZoom.width - sizeAfterZoom.width) / 2,
+          scrollOffset.y + (sizeBeforeZoom.height - sizeAfterZoom.height) / 2,
+          sizeAfterZoom.Width(), sizeAfterZoom.Height());
+
       rect = rect.Intersect(cssPageRect);
-      targetZoom = CSSToParentLayerScale(
-          std::min(compositionBounds.Width() / rect.Width(),
-                   compositionBounds.Height() / rect.Height()));
     }
 
     targetZoom.scale =
         clamped(targetZoom.scale, localMinZoom.scale, localMaxZoom.scale);
-    FrameMetrics endZoomToMetrics = Metrics();
     if (aFlags & PAN_INTO_VIEW_ONLY) {
       targetZoom = currentZoom;
     } else if (aFlags & ONLY_ZOOM_TO_DEFAULT_SCALE) {
