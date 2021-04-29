@@ -372,7 +372,7 @@
   background-color: var(--urlbar-box-bgcolor);
   margin-inline-end: 8px;
   align-items: center;
-  border-radius: var(--toolbarbutton-border-radius);
+  border-radius: var(--urlbar-icon-border-radius);
   padding-inline: 8px 3px;
 }
 
@@ -382,7 +382,6 @@
   background-color: #d6ebff;
   outline: 1px solid #0060df; /* Blue 60 */
   color: #0060df; /* Blue 60 */
-  border-radius: 0;
   padding-inline: 0;
 }
 
@@ -444,7 +443,7 @@
 @media (-moz-proton) {
 #urlbar-search-mode-indicator-close {
   height: 16px;
-  border-radius: var(--toolbarbutton-border-radius);
+  border-radius: var(--urlbar-icon-border-radius);
 }
 #urlbar-search-mode-indicator-close:hover {
   background-color: hsla(0,0%,70%,.2);
@@ -643,7 +642,7 @@
 
 .urlbar-icon,
 .urlbar-icon-wrapper {
-  border-radius: var(--toolbarbutton-border-radius);
+  border-radius: var(--urlbar-icon-border-radius);
 }
 
 :root[uidensity=compact] .urlbar-icon {
@@ -655,11 +654,6 @@
   width: calc(var(--urlbar-min-height) - 2px);
   height: calc(var(--urlbar-min-height) - 2px);
   margin-inline: 0;
-}
-
-.urlbar-icon,
-.urlbar-icon-wrapper {
-  border-radius: 0;
 }
 
 .urlbar-page-action[disabled] {
@@ -851,7 +845,7 @@
   color: inherit;
   font-size: .8em;
   padding: 3px 7px;
-  border-radius: var(--toolbarbutton-border-radius);
+  border-radius: var(--urlbar-icon-border-radius);
   background-color: var(--urlbar-box-bgcolor);
   margin-block: calc((var(--urlbar-min-height) - 20px) / 2 - 1px /* border */ - var(--urlbar-container-padding));
   overflow: hidden;
