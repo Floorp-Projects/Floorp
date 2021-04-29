@@ -301,11 +301,6 @@ toolbar[brighttext] {
   list-style-image: url("chrome://browser/skin/zoom-in.svg");
 }
 
-#zoom-in-button > .toolbarbutton-icon {
-  /* This padding is used to center the icon */
-  padding-inline-start: 7px;
-}
-
 #PlacesChevron,
 #nav-bar-overflow-button {
   list-style-image: url("chrome://global/skin/icons/chevron.svg");
