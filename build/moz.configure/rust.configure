@@ -723,8 +723,17 @@ def cargo_incremental(
 set_config("CARGO_INCREMENTAL", cargo_incremental)
 
 
-@depends(rust_compile_flags, rust_warning_flags)
-def rust_flags(compile_flags, warning_flags):
+@depends(rust_compile_flags, "--enable-warnings-as-errors")
+def rust_flags(compile_flags, warnings_as_errors):
+    warning_flags = []
+
+    # Note that cargo passes --cap-lints warn to rustc for third-party code, so
+    # we don't need a very complicated setup.
+    if warnings_as_errors:
+        warning_flags.append("-Dwarnings")
+    else:
+        warning_flags.extend(("--cap-lints", "warn"))
+
     return compile_flags + warning_flags
 
 
