@@ -745,7 +745,6 @@ class BaseRustLibrary(object):
         "dependencies",
         "deps_path",
         "features",
-        "target_dir",
         "output_category",
         "is_gkrust",
     )
@@ -758,7 +757,6 @@ class BaseRustLibrary(object):
         crate_type,
         dependencies,
         features,
-        target_dir,
         is_gkrust,
     ):
         self.is_gkrust = is_gkrust
@@ -776,7 +774,6 @@ class BaseRustLibrary(object):
         )
         self.dependencies = dependencies
         self.features = features
-        self.target_dir = target_dir
         self.output_category = context.get("RUST_LIBRARY_OUTPUT_CATEGORY")
         # Skip setting properties below which depend on cargo
         # when we don't have a compile environment. The required
@@ -786,7 +783,8 @@ class BaseRustLibrary(object):
         if not context.config.substs.get("COMPILE_ENVIRONMENT"):
             return
         build_dir = mozpath.join(
-            target_dir, cargo_output_directory(context, self.TARGET_SUBST_VAR)
+            context.config.topobjdir,
+            cargo_output_directory(context, self.TARGET_SUBST_VAR),
         )
         self.import_name = mozpath.join(build_dir, self.lib_name)
         self.deps_path = mozpath.join(build_dir, "deps")
@@ -809,7 +807,6 @@ class RustLibrary(StaticLibrary, BaseRustLibrary):
         crate_type,
         dependencies,
         features,
-        target_dir,
         is_gkrust=False,
         link_into=None,
     ):
@@ -830,7 +827,6 @@ class RustLibrary(StaticLibrary, BaseRustLibrary):
             crate_type,
             dependencies,
             features,
-            target_dir,
             is_gkrust,
         )
 
@@ -986,7 +982,6 @@ class HostRustLibrary(HostLibrary, BaseRustLibrary):
         crate_type,
         dependencies,
         features,
-        target_dir,
         is_gkrust,
     ):
         HostLibrary.__init__(self, context, basename)
@@ -998,7 +993,6 @@ class HostRustLibrary(HostLibrary, BaseRustLibrary):
             crate_type,
             dependencies,
             features,
-            target_dir,
             is_gkrust,
         )
 
