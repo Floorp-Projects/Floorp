@@ -7,7 +7,7 @@
 
 var propBag, listBox, args;
 
-function dialogOnLoad() {
+function onDCL() {
   propBag = window.arguments[0]
     .QueryInterface(Ci.nsIWritablePropertyBag2)
     .QueryInterface(Ci.nsIWritablePropertyBag);
@@ -44,6 +44,9 @@ function dialogOnLoad() {
     listBox.getItemAtIndex(i).addEventListener("dblclick", dialogDoubleClick);
   }
   listBox.selectedIndex = 0;
+}
+
+function onLoad() {
   listBox.focus();
 
   document.addEventListener("dialogaccept", dialogOK);
@@ -62,6 +65,9 @@ function dialogOnLoad() {
         .playEventSound(Ci.nsISound.EVENT_SELECT_DIALOG_OPEN);
     }
   } catch (e) {}
+
+  let { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+  Services.obs.notifyObservers(window, "select-dialog-loaded");
 }
 
 function dialogOK() {
@@ -73,3 +79,6 @@ function dialogDoubleClick() {
   dialogOK();
   window.close();
 }
+
+document.addEventListener("DOMContentLoaded", onDCL);
+window.addEventListener("load", onLoad, { once: true });
