@@ -1,0 +1,85 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=2100"/>
+  <title>Check that tall element wider than the viewport doesn't scroll to the top</title>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <script type="application/javascript">
+
+// Although this test has hscrollable in the name, it does not test any
+// horizontal scrolling. Rather it is the mere presence of horizontally
+// scrollable content that triggers this bug (it confused the code that
+// picked a rect to zoom to).
+
+async function test() {
+  let useTouchpad = (location.search == "?touchpad");
+
+  let resolution = getResolution();
+  ok(resolution > 0,
+     "The initial_resolution is " + resolution + ", which is some sane value");
+
+  // instant scroll down
+  window.scrollTo({
+    top: window.innerHeight * 2,
+    left: 0,
+    behavior: 'auto'
+  });
+
+  await promiseApzFlushedRepaints();
+
+  let scrollPos = window.scrollY;
+  ok(scrollPos > window.innerHeight * 2 - 50, "window scrolled down");
+
+  info("window.scrollY " + window.scrollY);
+
+  info("window.innerHeight " + window.innerHeight);
+
+  info("document.documentElement.scrollHeight " + document.documentElement.scrollHeight);
+
+  let target = document.getElementById("target");
+
+  let x = 20;
+  let y = scrollPos + window.innerHeight / 2;
+
+  // Check that second double tap does not scroll up
+  info("sending second double tap");
+  await doubleTapOn(target, x, y, useTouchpad);
+  prev_resolution = resolution;
+  resolution = getResolution();
+  ok(resolution == prev_resolution, "After double-tap the resolution is the same: " + resolution);
+
+  ok(window.scrollY > window.innerHeight * 2 - 50, "window is still scrolled down");
+  ok(Math.abs(window.scrollY - scrollPos) < 1, "window didnt scroll");
+  info("window.scrollY " + window.scrollY);
+}
+
+waitUntilApzStable()
+.then(test)
+.then(subtestDone, subtestFailed);
+
+  </script>
+  <style>
+    .spacer {
+      background-color: #eee;
+      height: 800vh;
+      width: 200vw;
+    }
+    .rect {
+      width: 90vw;
+      height: 30px;
+      background-color: #aaa;
+    }
+</style>
+</head>
+<body>
+<div id="firsttarget" class="rect">
+</div>
+
+<div id="target" class="spacer">
+</div>
+
+</body>
+</html>
