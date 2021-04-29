@@ -63,6 +63,11 @@ add_task(async function show_and_send_telemetry() {
     dispatchStub.lastCall.args[0].data.event,
     "CLICK_PRIMARY_BUTTON"
   );
+
+  await BrowserTestUtils.waitForCondition(
+    () => !InfoBar._activeInfobar,
+    "Wait for notification to be dismissed by primary btn click."
+  );
 });
 
 add_task(async function react_to_trigger() {
@@ -107,6 +112,8 @@ add_task(async function react_to_trigger() {
     notificationStack.currentNotification.priority === defaultPriority,
     "Notification has default priority"
   );
+  // Dismiss the notification
+  notificationStack.currentNotification.closeButton.click();
 });
 
 add_task(async function dismiss_telemetry() {
@@ -175,4 +182,48 @@ add_task(async function dismiss_telemetry() {
     "DISMISSED",
     "Called with dismissed"
   );
+});
+
+add_task(async function prevent_multiple_messages() {
+  let message = (await CFRMessageProvider.getMessages()).find(
+    m => m.id === "INFOBAR_ACTION_86"
+  );
+
+  Assert.ok(message.id, "Found the message");
+
+  let dispatchStub = sinon.stub();
+  let infobar = InfoBar.showInfoBarMessage(
+    BrowserWindowTracker.getTopWindow().gBrowser.selectedBrowser,
+    message,
+    dispatchStub
+  );
+
+  Assert.equal(dispatchStub.callCount, 2, "Called twice with IMPRESSION");
+
+  // Try to stack 2 notifications
+  InfoBar.showInfoBarMessage(
+    BrowserWindowTracker.getTopWindow().gBrowser.selectedBrowser,
+    message,
+    dispatchStub
+  );
+
+  Assert.equal(dispatchStub.callCount, 2, "Impression count did not increase");
+
+  // Dismiss the first notification
+  infobar.notification.closeButton.click();
+  Assert.equal(InfoBar._activeInfobar, null, "Cleared the active notification");
+
+  // Reset impressions count
+  dispatchStub.reset();
+  // Try show the message again
+  infobar = InfoBar.showInfoBarMessage(
+    BrowserWindowTracker.getTopWindow().gBrowser.selectedBrowser,
+    message,
+    dispatchStub
+  );
+  Assert.ok(InfoBar._activeInfobar, "activeInfobar is set");
+  Assert.equal(dispatchStub.callCount, 2, "Called twice with IMPRESSION");
+  // Dismiss the notification again
+  infobar.notification.closeButton.click();
+  Assert.equal(InfoBar._activeInfobar, null, "Cleared the active notification");
 });
