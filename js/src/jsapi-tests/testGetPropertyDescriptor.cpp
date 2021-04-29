@@ -12,16 +12,15 @@ BEGIN_TEST(test_GetPropertyDescriptor) {
   CHECK(v.isObject());
 
   JS::RootedObject obj(cx, &v.toObject());
-  JS::Rooted<JS::PropertyDescriptor> desc(cx);
+  JS::Rooted<mozilla::Maybe<JS::PropertyDescriptor>> desc(cx);
+  JS::RootedObject holder(cx);
 
-  CHECK(JS_GetPropertyDescriptor(cx, obj, "somename", &desc));
-  CHECK_EQUAL(desc.object(), obj);
-  CHECK_SAME(desc.value(), JS::Int32Value(123));
+  CHECK(JS_GetPropertyDescriptor(cx, obj, "somename", &desc, &holder));
+  CHECK(desc.isSome());
+  CHECK_SAME(desc->value(), JS::Int32Value(123));
 
   JS::RootedValue descValue(cx);
-  JS::Rooted<mozilla::Maybe<JS::PropertyDescriptor>> descriptor(cx);
-  descriptor.set(mozilla::Some(desc.get()));
-  CHECK(JS::FromPropertyDescriptor(cx, descriptor, &descValue));
+  CHECK(JS::FromPropertyDescriptor(cx, desc, &descValue));
   CHECK(descValue.isObject());
   JS::RootedObject descObj(cx, &descValue.toObject());
   JS::RootedValue value(cx);
@@ -38,15 +37,15 @@ BEGIN_TEST(test_GetPropertyDescriptor) {
   CHECK(JS_GetProperty(cx, descObj, "enumerable", &value));
   CHECK(value.isTrue());
 
-  CHECK(JS_GetPropertyDescriptor(cx, obj, "not-here", &desc));
-  CHECK_EQUAL(desc.object(), nullptr);
+  CHECK(JS_GetPropertyDescriptor(cx, obj, "not-here", &desc, &holder));
+  CHECK(desc.isNothing());
 
-  CHECK(JS_GetPropertyDescriptor(cx, obj, "toString", &desc));
+  CHECK(JS_GetPropertyDescriptor(cx, obj, "toString", &desc, &holder));
   JS::RootedObject objectProto(cx, JS::GetRealmObjectPrototype(cx));
   CHECK(objectProto);
-  CHECK_EQUAL(desc.object(), objectProto);
-  CHECK(desc.value().isObject());
-  CHECK(JS::IsCallable(&desc.value().toObject()));
+  CHECK_EQUAL(holder, objectProto);
+  CHECK(desc->value().isObject());
+  CHECK(JS::IsCallable(&desc->value().toObject()));
 
   return true;
 }
