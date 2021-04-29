@@ -7063,6 +7063,32 @@ void CodeGenerator::visitOutOfLineNewObject(OutOfLineNewObject* ool) {
   masm.jump(ool->rejoin());
 }
 
+void CodeGenerator::visitNewPlainObject(LNewPlainObject* lir) {
+  Register objReg = ToRegister(lir->output());
+  Register temp0Reg = ToRegister(lir->temp0());
+  Register temp1Reg = ToRegister(lir->temp1());
+  Register shapeReg = ToRegister(lir->temp2());
+
+  auto* mir = lir->mir();
+  const Shape* shape = mir->shape();
+  gc::InitialHeap initialHeap = mir->initialHeap();
+  gc::AllocKind allocKind = mir->allocKind();
+
+  using Fn =
+      JSObject* (*)(JSContext*, HandleShape, gc::AllocKind, gc::InitialHeap);
+  OutOfLineCode* ool = oolCallVM<Fn, NewPlainObject>(
+      lir,
+      ArgList(ImmGCPtr(shape), Imm32(int32_t(allocKind)), Imm32(initialHeap)),
+      StoreRegisterTo(objReg));
+
+  masm.movePtr(ImmGCPtr(shape), shapeReg);
+  masm.createPlainGCObject(objReg, shapeReg, temp0Reg, temp1Reg,
+                           mir->numFixedSlots(), mir->numDynamicSlots(),
+                           allocKind, initialHeap, ool->entry());
+
+  masm.bind(ool->rejoin());
+}
+
 void CodeGenerator::visitNewNamedLambdaObject(LNewNamedLambdaObject* lir) {
   Register objReg = ToRegister(lir->output());
   Register tempReg = ToRegister(lir->temp());

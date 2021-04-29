@@ -608,7 +608,7 @@
 
 - name: GuardNoAllocationMetadataBuilder
   shared: true
-  transpile: false
+  transpile: true
   cost_estimate: 1
   args:
     builderAddr: RawPointerField
@@ -2462,7 +2462,7 @@
 
 - name: NewPlainObjectResult
   shared: false
-  transpile: false
+  transpile: true
   cost_estimate: 4
   args:
     numFixedSlots: UInt32Imm
