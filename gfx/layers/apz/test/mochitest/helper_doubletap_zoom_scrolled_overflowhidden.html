@@ -1,0 +1,82 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=2100"/>
+  <title>Check that double tapping when the page is overflow hidden and has been scrolled down by js works</title>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <script type="application/javascript">
+
+async function test() {
+  let useTouchpad = (location.search == "?touchpad");
+
+  var resolution = getResolution();
+  ok(resolution > 0,
+     "The initial_resolution is " + resolution + ", which is some sane value");
+
+  // instant scroll down
+  window.scrollTo({
+    top: window.innerHeight * 2 - 50,
+    left: 0,
+    behavior: 'auto'
+  });
+
+  await promiseApzFlushedRepaints();
+
+  let scrollPos = window.scrollY;
+  ok(scrollPos > window.innerHeight + 100, "window scrolled down");
+
+  info("window.scrollY " + window.scrollY);
+
+  info("window.innerHeight " + window.innerHeight);
+
+  info("document.documentElement.scrollHeight " + document.documentElement.scrollHeight);
+
+  let target = document.getElementById("target");
+
+  // Check that double-tapping once zooms in
+  info("sending double tap");
+  await doubleTapOn(target, 10, 10, useTouchpad);
+  var prev_resolution = resolution;
+  resolution = getResolution();
+  ok(resolution > prev_resolution, "The first double-tap has increased the resolution to " + resolution);
+
+  ok(window.scrollY > window.innerHeight + 100, "window is still scrolled down");
+  ok(Math.abs(window.scrollY - scrollPos) < 2, "window didnt scroll");
+  info("window.scrollY " + window.scrollY);
+}
+
+waitUntilApzStable()
+.then(test)
+.then(subtestDone, subtestFailed);
+
+  </script>
+  <style>
+    html, body {
+      overflow: hidden;
+    }
+    .spacer {
+      background-color: #eee;
+
+      height: 200vh;
+    }
+    .rect {
+      background-color: #aaa;
+      width: 100px;
+      height: 100px;
+    }
+</style>
+</head>
+<body>
+
+<div class="spacer">
+</div>
+<div id="target" class="rect">
+</div>
+<div class="spacer">
+</div>
+
+</body>
+</html>
