@@ -5625,13 +5625,22 @@ void AsyncPanZoomController::ZoomToRect(const ZoomTarget& aZoomTarget,
       }
     }
 
-    // If either of these conditions are met, the page will be
-    // overscrolled after zoomed
-    if (rect.Y() + sizeAfterZoom.height > cssPageRect.Height()) {
-      rect.MoveToY(std::max(0.f, cssPageRect.Height() - sizeAfterZoom.height));
+    // If any of these conditions are met, the page will be overscrolled after
+    // zoomed. Attempting to scroll outside of the valid scroll range will cause
+    // problems.
+    if (rect.Y() + sizeAfterZoom.height > cssPageRect.YMost()) {
+      rect.MoveToY(std::max(cssPageRect.Y(),
+                            cssPageRect.YMost() - sizeAfterZoom.height));
     }
-    if (rect.X() + sizeAfterZoom.width > cssPageRect.Width()) {
-      rect.MoveToX(std::max(0.f, cssPageRect.Width() - sizeAfterZoom.width));
+    if (rect.Y() < cssPageRect.Y()) {
+      rect.MoveToY(cssPageRect.Y());
+    }
+    if (rect.X() + sizeAfterZoom.width > cssPageRect.XMost()) {
+      rect.MoveToX(
+          std::max(cssPageRect.X(), cssPageRect.XMost() - sizeAfterZoom.width));
+    }
+    if (rect.X() < cssPageRect.X()) {
+      rect.MoveToY(cssPageRect.X());
     }
 
     endZoomToMetrics.SetVisualScrollOffset(rect.TopLeft());
