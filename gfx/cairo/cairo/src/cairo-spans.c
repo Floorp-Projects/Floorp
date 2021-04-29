@@ -27,92 +27,15 @@
 #include "cairoint.h"
 
 #include "cairo-composite-rectangles-private.h"
+#include "cairo-clip-private.h"
+#include "cairo-error-private.h"
 #include "cairo-fixed-private.h"
-
-static cairo_scan_converter_t *
-_create_scan_converter (cairo_fill_rule_t			 fill_rule,
-			cairo_antialias_t			 antialias,
-			const cairo_composite_rectangles_t	*rects)
-{
-    if (antialias == CAIRO_ANTIALIAS_NONE) {
-	ASSERT_NOT_REACHED;
-	return NULL;
-    }
-
-    return _cairo_tor_scan_converter_create (rects->bounded.x,
-					     rects->bounded.y,
-					     rects->bounded.x + rects->bounded.width,
-					     rects->bounded.y + rects->bounded.height,
-					     fill_rule);
-}
-
-/* XXX Add me to the compositor interface. Ok, first create the compositor
- * interface, and then add this with associated fallback!
- */
-cairo_status_t
-_cairo_surface_composite_polygon (cairo_surface_t	*surface,
-				  cairo_operator_t	 op,
-				  const cairo_pattern_t	*pattern,
-				  cairo_fill_rule_t	fill_rule,
-				  cairo_antialias_t	antialias,
-				  const cairo_composite_rectangles_t *rects,
-				  cairo_polygon_t	*polygon,
-				  cairo_region_t	*clip_region)
-{
-    cairo_span_renderer_t *renderer;
-    cairo_scan_converter_t *converter;
-    cairo_status_t status;
-
-    converter = _create_scan_converter (fill_rule, antialias, rects);
-    status = converter->add_polygon (converter, polygon);
-    if (unlikely (status))
-	goto CLEANUP_CONVERTER;
-
-    renderer = _cairo_surface_create_span_renderer (op, pattern, surface,
-						    antialias, rects,
-						    clip_region);
-    status = converter->generate (converter, renderer);
-    if (unlikely (status))
-	goto CLEANUP_RENDERER;
-
-    status = renderer->finish (renderer);
-
- CLEANUP_RENDERER:
-    renderer->destroy (renderer);
- CLEANUP_CONVERTER:
-    converter->destroy (converter);
-    return status;
-}
+#include "cairo-types-private.h"
 
 static void
 _cairo_nil_destroy (void *abstract)
 {
     (void) abstract;
-}
-
-static cairo_status_t
-_cairo_nil_scan_converter_add_polygon (void *abstract_converter,
-				       const cairo_polygon_t *polygon)
-{
-    (void) abstract_converter;
-    (void) polygon;
-    return _cairo_scan_converter_status (abstract_converter);
-}
-
-static cairo_status_t
-_cairo_nil_scan_converter_add_edge (void *abstract_converter,
-				    const cairo_point_t *p1,
-				    const cairo_point_t *p2,
-				    int top, int bottom,
-				    int dir)
-{
-    (void) abstract_converter;
-    (void) p1;
-    (void) p2;
-    (void) top;
-    (void) bottom;
-    (void) dir;
-    return _cairo_scan_converter_status (abstract_converter);
 }
 
 static cairo_status_t
@@ -139,8 +62,6 @@ _cairo_scan_converter_set_error (void *abstract_converter,
     if (error == CAIRO_STATUS_SUCCESS)
 	ASSERT_NOT_REACHED;
     if (converter->status == CAIRO_STATUS_SUCCESS) {
-	converter->add_polygon = _cairo_nil_scan_converter_add_polygon;
-	converter->add_edge = _cairo_nil_scan_converter_add_edge;
 	converter->generate = _cairo_nil_scan_converter_generate;
 	converter->status = error;
     }
@@ -204,6 +125,13 @@ _cairo_scan_converter_create_in_error (cairo_status_t status)
     case CAIRO_STATUS_USER_FONT_NOT_IMPLEMENTED: RETURN_NIL;
     case CAIRO_STATUS_DEVICE_TYPE_MISMATCH: RETURN_NIL;
     case CAIRO_STATUS_DEVICE_ERROR: RETURN_NIL;
+    case CAIRO_STATUS_INVALID_MESH_CONSTRUCTION: RETURN_NIL;
+    case CAIRO_STATUS_DEVICE_FINISHED: RETURN_NIL;
+    case CAIRO_STATUS_JBIG2_GLOBAL_MISSING:
+    case CAIRO_STATUS_PNG_ERROR:
+    case CAIRO_STATUS_FREETYPE_ERROR:
+    case CAIRO_STATUS_WIN32_GDI_ERROR:
+    case CAIRO_STATUS_TAG_ERROR:
     default:
 	break;
     }
@@ -314,6 +242,13 @@ _cairo_span_renderer_create_in_error (cairo_status_t status)
     case CAIRO_STATUS_USER_FONT_NOT_IMPLEMENTED: RETURN_NIL;
     case CAIRO_STATUS_DEVICE_TYPE_MISMATCH: RETURN_NIL;
     case CAIRO_STATUS_DEVICE_ERROR: RETURN_NIL;
+    case CAIRO_STATUS_INVALID_MESH_CONSTRUCTION: RETURN_NIL;
+    case CAIRO_STATUS_DEVICE_FINISHED: RETURN_NIL;
+    case CAIRO_STATUS_JBIG2_GLOBAL_MISSING: RETURN_NIL;
+    case CAIRO_STATUS_PNG_ERROR: RETURN_NIL;
+    case CAIRO_STATUS_FREETYPE_ERROR: RETURN_NIL;
+    case CAIRO_STATUS_WIN32_GDI_ERROR: RETURN_NIL;
+    case CAIRO_STATUS_TAG_ERROR: RETURN_NIL;
     default:
 	break;
     }

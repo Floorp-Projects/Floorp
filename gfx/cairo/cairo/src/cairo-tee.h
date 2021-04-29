@@ -55,7 +55,7 @@ cairo_tee_surface_remove (cairo_surface_t *surface,
 
 cairo_public cairo_surface_t *
 cairo_tee_surface_index (cairo_surface_t *surface,
-			 int index);
+			 unsigned int index);
 
 CAIRO_END_DECLS
 

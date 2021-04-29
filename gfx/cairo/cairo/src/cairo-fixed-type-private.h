@@ -50,7 +50,7 @@ typedef cairo_int128_t	cairo_fixed_64_64_t;
 typedef cairo_int128_t	cairo_fixed_96_32_t;
 
 /* Eventually, we should allow changing this, but I think
- * there are some assumptions in the tesselator about the
+ * there are some assumptions in the tessellator about the
  * size of a fixed type.  For now, it must be 32.
  */
 #define CAIRO_FIXED_BITS	32

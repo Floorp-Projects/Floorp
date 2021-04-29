@@ -40,7 +40,7 @@
  *	Adrian Johnson <ajohnson@redneon.com>
  */
 
-#define _BSD_SOURCE /* for snprintf(), strdup() */
+#define _DEFAULT_SOURCE /* for snprintf(), strdup() */
 #include "cairoint.h"
 #include "cairo-error-private.h"
 
@@ -70,13 +70,17 @@ typedef struct _cairo_sub_font {
     cairo_bool_t is_scaled;
     cairo_bool_t is_composite;
     cairo_bool_t is_user;
+    cairo_bool_t use_latin_subset;
+    cairo_bool_t reserve_notdef;
     cairo_scaled_font_subsets_t *parent;
     cairo_scaled_font_t *scaled_font;
     unsigned int font_id;
 
     int current_subset;
     int num_glyphs_in_current_subset;
+    int num_glyphs_in_latin_subset;
     int max_glyphs_per_subset;
+    char latin_char_map[256];
 
     cairo_hash_table_t *sub_font_glyphs;
     struct _cairo_sub_font *next;
@@ -84,6 +88,7 @@ typedef struct _cairo_sub_font {
 
 struct _cairo_scaled_font_subsets {
     cairo_subsets_type_t type;
+    cairo_bool_t use_latin_subset;
 
     int max_glyphs_per_unscaled_subset_used;
     cairo_hash_table_t *unscaled_sub_fonts;
@@ -106,6 +111,8 @@ typedef struct _cairo_sub_font_glyph {
     double       x_advance;
     double       y_advance;
 
+    cairo_bool_t is_latin;
+    int		 latin_character;
     cairo_bool_t is_mapped;
     uint32_t     unicode;
     char  	*utf8;
@@ -116,6 +123,8 @@ typedef struct _cairo_sub_font_collection {
     unsigned long *glyphs; /* scaled_font_glyph_index */
     char       **utf8;
     unsigned int glyphs_size;
+    int           *to_latin_char;
+    unsigned long *latin_to_subset_glyph_index;
     unsigned int max_glyph;
     unsigned int num_glyphs;
 
@@ -145,25 +154,20 @@ _cairo_sub_font_glyph_init_key (cairo_sub_font_glyph_t  *sub_font_glyph,
     sub_font_glyph->base.hash = scaled_font_glyph_index;
 }
 
-static cairo_bool_t
-_cairo_sub_font_glyphs_equal (const void *key_a, const void *key_b)
-{
-    const cairo_sub_font_glyph_t *sub_font_glyph_a = key_a;
-    const cairo_sub_font_glyph_t *sub_font_glyph_b = key_b;
-
-    return sub_font_glyph_a->base.hash == sub_font_glyph_b->base.hash;
-}
-
 static cairo_sub_font_glyph_t *
 _cairo_sub_font_glyph_create (unsigned long	scaled_font_glyph_index,
 			      unsigned int	subset_id,
 			      unsigned int	subset_glyph_index,
                               double            x_advance,
-                              double            y_advance)
+                              double            y_advance,
+			      int	        latin_character,
+			      uint32_t          unicode,
+			      char             *utf8,
+			      int          	utf8_len)
 {
     cairo_sub_font_glyph_t *sub_font_glyph;
 
-    sub_font_glyph = malloc (sizeof (cairo_sub_font_glyph_t));
+    sub_font_glyph = _cairo_malloc (sizeof (cairo_sub_font_glyph_t));
     if (unlikely (sub_font_glyph == NULL)) {
 	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
 	return NULL;
@@ -174,10 +178,12 @@ _cairo_sub_font_glyph_create (unsigned long	scaled_font_glyph_index,
     sub_font_glyph->subset_glyph_index = subset_glyph_index;
     sub_font_glyph->x_advance = x_advance;
     sub_font_glyph->y_advance = y_advance;
+    sub_font_glyph->is_latin = (latin_character >= 0);
+    sub_font_glyph->latin_character = latin_character;
     sub_font_glyph->is_mapped = FALSE;
-    sub_font_glyph->unicode = -1;
-    sub_font_glyph->utf8 = NULL;
-    sub_font_glyph->utf8_len = 0;
+    sub_font_glyph->unicode = unicode;
+    sub_font_glyph->utf8 = utf8;
+    sub_font_glyph->utf8_len = utf8_len;
 
     return sub_font_glyph;
 }
@@ -185,8 +191,7 @@ _cairo_sub_font_glyph_create (unsigned long	scaled_font_glyph_index,
 static void
 _cairo_sub_font_glyph_destroy (cairo_sub_font_glyph_t *sub_font_glyph)
 {
-    if (sub_font_glyph->utf8 != NULL)
-	free (sub_font_glyph->utf8);
+    free (sub_font_glyph->utf8);
 
     free (sub_font_glyph);
 }
@@ -220,6 +225,10 @@ _cairo_sub_font_glyph_collect (void *entry, void *closure)
 
     collection->glyphs[subset_glyph_index] = scaled_font_glyph_index;
     collection->utf8[subset_glyph_index] = sub_font_glyph->utf8;
+    collection->to_latin_char[subset_glyph_index] = sub_font_glyph->latin_character;
+    if (sub_font_glyph->is_latin)
+	collection->latin_to_subset_glyph_index[sub_font_glyph->latin_character] = subset_glyph_index;
+
     if (subset_glyph_index > collection->max_glyph)
 	collection->max_glyph = subset_glyph_index;
 
@@ -266,44 +275,48 @@ _cairo_sub_font_create (cairo_scaled_font_subsets_t	*parent,
 			cairo_sub_font_t               **sub_font_out)
 {
     cairo_sub_font_t *sub_font;
-    cairo_status_t status;
-    cairo_scaled_font_subsets_glyph_t subset_glyph;
+    int i;
 
-    sub_font = malloc (sizeof (cairo_sub_font_t));
+    sub_font = _cairo_malloc (sizeof (cairo_sub_font_t));
     if (unlikely (sub_font == NULL))
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     sub_font->is_scaled = is_scaled;
     sub_font->is_composite = is_composite;
     sub_font->is_user = _cairo_font_face_is_user (scaled_font->font_face);
+    sub_font->reserve_notdef = !sub_font->is_user;
     _cairo_sub_font_init_key (sub_font, scaled_font);
 
     sub_font->parent = parent;
     sub_font->scaled_font = scaled_font;
     sub_font->font_id = font_id;
 
-    sub_font->current_subset = 0;
-    sub_font->num_glyphs_in_current_subset = 0;
-    sub_font->max_glyphs_per_subset = max_glyphs_per_subset;
+    sub_font->use_latin_subset = parent->use_latin_subset;
 
-    sub_font->sub_font_glyphs = _cairo_hash_table_create (_cairo_sub_font_glyphs_equal);
+    /* latin subsets of Type 3 and CID CFF fonts are not supported */
+    if (sub_font->is_user || sub_font->is_scaled ||
+	_cairo_cff_scaled_font_is_cid_cff (scaled_font) )
+    {
+	sub_font->use_latin_subset = FALSE;
+    }
+
+    if (sub_font->use_latin_subset)
+	sub_font->current_subset = 1; /* reserve subset 0 for latin glyphs */
+    else
+	sub_font->current_subset = 0;
+
+    sub_font->num_glyphs_in_current_subset = 0;
+    sub_font->num_glyphs_in_latin_subset = 0;
+    sub_font->max_glyphs_per_subset = max_glyphs_per_subset;
+    for (i = 0; i < 256; i++)
+	sub_font->latin_char_map[i] = FALSE;
+
+    sub_font->sub_font_glyphs = _cairo_hash_table_create (NULL);
     if (unlikely (sub_font->sub_font_glyphs == NULL)) {
 	free (sub_font);
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
     }
     sub_font->next = NULL;
-
-    /* Reserve first glyph in subset for the .notdef glyph except for
-     * Type 3 fonts */
-    if (! is_scaled) {
-	status = _cairo_sub_font_map_glyph (sub_font, 0, NULL, -1, &subset_glyph);
-	if (unlikely (status)) {
-	    _cairo_hash_table_destroy (sub_font->sub_font_glyphs);
-	    free (sub_font);
-	    return status;
-	}
-    }
-
     *sub_font_out = sub_font;
     return CAIRO_STATUS_SUCCESS;
 }
@@ -329,10 +342,39 @@ _cairo_sub_font_pluck (void *entry, void *closure)
     _cairo_sub_font_destroy (sub_font);
 }
 
+/* Characters 0x80 to 0x9f in the winansi encoding.
+ * All other characters in the range 0x00 to 0xff map 1:1 to unicode */
+static unsigned int _winansi_0x80_to_0x9f[] = {
+    0x20ac, 0x0000, 0x201a, 0x0192, 0x201e, 0x2026, 0x2020, 0x2021,
+    0x02c6, 0x2030, 0x0160, 0x2039, 0x0152, 0x0000, 0x017d, 0x0000,
+    0x0000, 0x2018, 0x2019, 0x201c, 0x201d, 0x2022, 0x2013, 0x2014,
+    0x02dc, 0x2122, 0x0161, 0x203a, 0x0153, 0x0000, 0x017e, 0x0178
+};
+
+int
+_cairo_unicode_to_winansi (unsigned long uni)
+{
+    int i;
+
+    /* exclude the extra "hyphen" at 0xad to avoid duplicate glyphnames */
+    if ((uni >= 0x20 && uni <= 0x7e) ||
+	(uni >= 0xa1 && uni <= 0xff && uni != 0xad) ||
+	uni == 0)
+        return uni;
+
+    for (i = 0; i < 32; i++)
+	if (_winansi_0x80_to_0x9f[i] == uni)
+	    return i + 0x80;
+
+    return -1;
+}
+
 static cairo_status_t
-_cairo_sub_font_glyph_lookup_unicode (cairo_sub_font_glyph_t *sub_font_glyph,
-				      cairo_scaled_font_t    *scaled_font,
-				      unsigned long	      scaled_font_glyph_index)
+_cairo_sub_font_glyph_lookup_unicode (cairo_scaled_font_t    *scaled_font,
+				      unsigned long	      scaled_font_glyph_index,
+				      uint32_t     	     *unicode_out,
+				      char  		    **utf8_out,
+				      int          	     *utf8_len_out)
 {
     uint32_t unicode;
     char buf[8];
@@ -356,19 +398,19 @@ _cairo_sub_font_glyph_lookup_unicode (cairo_sub_font_glyph_t *sub_font_glyph,
 	    return status;
     }
 
-    sub_font_glyph->unicode = unicode;
-    sub_font_glyph->utf8 = NULL;
-    sub_font_glyph->utf8_len = 0;
+    *unicode_out = unicode;
+    *utf8_out = NULL;
+    *utf8_len_out = 0;
     if (unicode != (uint32_t) -1) {
 	len = _cairo_ucs4_to_utf8 (unicode, buf);
 	if (len > 0) {
-	    sub_font_glyph->utf8 = malloc (len + 1);
-	    if (unlikely (sub_font_glyph->utf8 == NULL))
+	    *utf8_out = _cairo_malloc (len + 1);
+	    if (unlikely (*utf8_out == NULL))
 		return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
-	    memcpy (sub_font_glyph->utf8, buf, len);
-	    sub_font_glyph->utf8[len] = 0;
-	    sub_font_glyph->utf8_len = len;
+	    memcpy (*utf8_out, buf, len);
+	    (*utf8_out)[len] = 0;
+	    *utf8_len_out = len;
 	}
     }
 
@@ -399,7 +441,7 @@ _cairo_sub_font_glyph_map_to_unicode (cairo_sub_font_glyph_t *sub_font_glyph,
 	    }
 	} else {
 	    /* No existing mapping. Use the requested mapping */
-	    sub_font_glyph->utf8 = malloc (utf8_len + 1);
+	    sub_font_glyph->utf8 = _cairo_malloc (utf8_len + 1);
 	    if (unlikely (sub_font_glyph->utf8 == NULL))
 		return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
@@ -429,9 +471,14 @@ _cairo_sub_font_lookup_glyph (cairo_sub_font_t	                *sub_font,
     if (sub_font_glyph != NULL) {
         subset_glyph->font_id = sub_font->font_id;
         subset_glyph->subset_id = sub_font_glyph->subset_id;
-        subset_glyph->subset_glyph_index = sub_font_glyph->subset_glyph_index;
+	if (sub_font_glyph->is_latin)
+	    subset_glyph->subset_glyph_index = sub_font_glyph->latin_character;
+	else
+	    subset_glyph->subset_glyph_index = sub_font_glyph->subset_glyph_index;
+
         subset_glyph->is_scaled = sub_font->is_scaled;
         subset_glyph->is_composite = sub_font->is_composite;
+	subset_glyph->is_latin = sub_font_glyph->is_latin;
         subset_glyph->x_advance = sub_font_glyph->x_advance;
         subset_glyph->y_advance = sub_font_glyph->y_advance;
 	status = _cairo_sub_font_glyph_map_to_unicode (sub_font_glyph,
@@ -446,10 +493,89 @@ _cairo_sub_font_lookup_glyph (cairo_sub_font_t	                *sub_font,
 }
 
 static cairo_status_t
+_cairo_sub_font_add_glyph (cairo_sub_font_t	   *sub_font,
+			   unsigned long	    scaled_font_glyph_index,
+			   cairo_bool_t		    is_latin,
+			   int			    latin_character,
+			   uint32_t 		    unicode,
+			   char 		   *utf8,
+			   int 			    utf8_len,
+			   cairo_sub_font_glyph_t **sub_font_glyph_out)
+{
+    cairo_scaled_glyph_t *scaled_glyph;
+    cairo_sub_font_glyph_t *sub_font_glyph;
+    int *num_glyphs_in_subset_ptr;
+    double x_advance;
+    double y_advance;
+    cairo_int_status_t status;
+
+    _cairo_scaled_font_freeze_cache (sub_font->scaled_font);
+    status = _cairo_scaled_glyph_lookup (sub_font->scaled_font,
+					 scaled_font_glyph_index,
+					 CAIRO_SCALED_GLYPH_INFO_METRICS,
+					 &scaled_glyph);
+    assert (status != CAIRO_INT_STATUS_UNSUPPORTED);
+    if (unlikely (status)) {
+	_cairo_scaled_font_thaw_cache (sub_font->scaled_font);
+	return status;
+    }
+
+    x_advance = scaled_glyph->metrics.x_advance;
+    y_advance = scaled_glyph->metrics.y_advance;
+    _cairo_scaled_font_thaw_cache (sub_font->scaled_font);
+
+    if (!is_latin && sub_font->num_glyphs_in_current_subset == sub_font->max_glyphs_per_subset)
+    {
+	sub_font->current_subset++;
+	sub_font->num_glyphs_in_current_subset = 0;
+    }
+
+    if (is_latin)
+	num_glyphs_in_subset_ptr = &sub_font->num_glyphs_in_latin_subset;
+    else
+	num_glyphs_in_subset_ptr = &sub_font->num_glyphs_in_current_subset;
+
+    if ((*num_glyphs_in_subset_ptr == 0) && sub_font->reserve_notdef)
+	(*num_glyphs_in_subset_ptr)++;
+
+    sub_font_glyph = _cairo_sub_font_glyph_create (scaled_font_glyph_index,
+						   is_latin ? 0 : sub_font->current_subset,
+						   *num_glyphs_in_subset_ptr,
+						   x_advance,
+						   y_advance,
+						   is_latin ? latin_character : -1,
+						   unicode,
+						   utf8,
+						   utf8_len);
+
+    if (unlikely (sub_font_glyph == NULL))
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+
+    status = _cairo_hash_table_insert (sub_font->sub_font_glyphs, &sub_font_glyph->base);
+    if (unlikely (status)) {
+	_cairo_sub_font_glyph_destroy (sub_font_glyph);
+	return status;
+    }
+
+    (*num_glyphs_in_subset_ptr)++;
+    if (sub_font->is_scaled) {
+	if (*num_glyphs_in_subset_ptr > sub_font->parent->max_glyphs_per_scaled_subset_used)
+	    sub_font->parent->max_glyphs_per_scaled_subset_used = *num_glyphs_in_subset_ptr;
+    } else {
+	if (*num_glyphs_in_subset_ptr > sub_font->parent->max_glyphs_per_unscaled_subset_used)
+	    sub_font->parent->max_glyphs_per_unscaled_subset_used = *num_glyphs_in_subset_ptr;
+    }
+
+    *sub_font_glyph_out = sub_font_glyph;
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+static cairo_status_t
 _cairo_sub_font_map_glyph (cairo_sub_font_t	*sub_font,
 			   unsigned long	 scaled_font_glyph_index,
-			   const char		*utf8,
-			   int			 utf8_len,
+			   const char		*text_utf8,
+			   int			 text_utf8_len,
                            cairo_scaled_font_subsets_glyph_t *subset_glyph)
 {
     cairo_sub_font_glyph_t key, *sub_font_glyph;
@@ -459,79 +585,88 @@ _cairo_sub_font_map_glyph (cairo_sub_font_t	*sub_font,
     sub_font_glyph = _cairo_hash_table_lookup (sub_font->sub_font_glyphs,
 					       &key.base);
     if (sub_font_glyph == NULL) {
-	cairo_scaled_glyph_t *scaled_glyph;
+	uint32_t font_unicode;
+	char *font_utf8;
+	int font_utf8_len;
+	cairo_bool_t is_latin;
+	int latin_character;
 
-	if (sub_font->num_glyphs_in_current_subset == sub_font->max_glyphs_per_subset)
-	{
-	    cairo_scaled_font_subsets_glyph_t tmp_subset_glyph;
+	status = _cairo_sub_font_glyph_lookup_unicode (sub_font->scaled_font,
+							   scaled_font_glyph_index,
+							   &font_unicode,
+							   &font_utf8,
+							   &font_utf8_len);
+	if (unlikely(status))
+	    return status;
 
-	    sub_font->current_subset++;
-	    sub_font->num_glyphs_in_current_subset = 0;
+	/* If the supplied utf8 is a valid single character, use it
+	 * instead of the font lookup */
+	if (text_utf8 != NULL && text_utf8_len > 0) {
+	    uint32_t  *ucs4;
+	    int	ucs4_len;
 
-	    /* Reserve first glyph in subset for the .notdef glyph
-	     * except for Type 3 fonts */
-	    if (! _cairo_font_face_is_user (sub_font->scaled_font->font_face)) {
-		status = _cairo_sub_font_map_glyph (sub_font, 0, NULL, -1, &tmp_subset_glyph);
-		if (unlikely (status))
-		    return status;
+	    status = _cairo_utf8_to_ucs4 (text_utf8, text_utf8_len,
+					  &ucs4, &ucs4_len);
+	    if (status == CAIRO_STATUS_SUCCESS) {
+		if (ucs4_len == 1) {
+		    font_unicode = ucs4[0];
+		    free (font_utf8);
+		    font_utf8 = _cairo_malloc (text_utf8_len + 1);
+		    if (font_utf8 == NULL) {
+			free (ucs4);
+			return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+		    }
+		    memcpy (font_utf8, text_utf8, text_utf8_len);
+		    font_utf8[text_utf8_len] = 0;
+		    font_utf8_len = text_utf8_len;
+		}
+		free (ucs4);
 	    }
 	}
 
-	_cairo_scaled_font_freeze_cache (sub_font->scaled_font);
-        status = _cairo_scaled_glyph_lookup (sub_font->scaled_font,
-                                             scaled_font_glyph_index,
-                                             CAIRO_SCALED_GLYPH_INFO_METRICS,
-                                             &scaled_glyph);
-	assert (status != CAIRO_INT_STATUS_UNSUPPORTED);
-	if (unlikely (status)) {
-	    _cairo_scaled_font_thaw_cache (sub_font->scaled_font);
-	    return status;
+	/* If glyph is in the winansi encoding and font is not a user
+	 * font, put glyph in the latin subset. */
+	is_latin = FALSE;
+	latin_character = -1;
+	if (sub_font->use_latin_subset &&
+	    (! _cairo_font_face_is_user (sub_font->scaled_font->font_face)))
+	{
+	    latin_character = _cairo_unicode_to_winansi (font_unicode);
+	    if (latin_character > 0)
+	    {
+		if (!sub_font->latin_char_map[latin_character]) {
+		    sub_font->latin_char_map[latin_character] = TRUE;
+		    is_latin = TRUE;
+		}
+	    }
 	}
 
-        sub_font_glyph = _cairo_sub_font_glyph_create (scaled_font_glyph_index,
-						       sub_font->current_subset,
-						       sub_font->num_glyphs_in_current_subset,
-                                                       scaled_glyph->metrics.x_advance,
-                                                       scaled_glyph->metrics.y_advance);
-	_cairo_scaled_font_thaw_cache (sub_font->scaled_font);
-
-	if (unlikely (sub_font_glyph == NULL))
-	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
-
-	status = _cairo_sub_font_glyph_lookup_unicode (sub_font_glyph,
-						       sub_font->scaled_font,
-						       scaled_font_glyph_index);
-	if (unlikely (status)) {
-	    _cairo_sub_font_glyph_destroy (sub_font_glyph);
+	status = _cairo_sub_font_add_glyph (sub_font,
+					    scaled_font_glyph_index,
+					    is_latin,
+					    latin_character,
+					    font_unicode,
+					    font_utf8,
+					    font_utf8_len,
+					    &sub_font_glyph);
+	if (unlikely(status))
 	    return status;
-	}
-
-	status = _cairo_hash_table_insert (sub_font->sub_font_glyphs, &sub_font_glyph->base);
-	if (unlikely (status)) {
-	    _cairo_sub_font_glyph_destroy (sub_font_glyph);
-	    return status;
-	}
-
-	sub_font->num_glyphs_in_current_subset++;
-
-        if (sub_font->is_scaled) {
-            if (sub_font->num_glyphs_in_current_subset > sub_font->parent->max_glyphs_per_scaled_subset_used)
-                sub_font->parent->max_glyphs_per_scaled_subset_used = sub_font->num_glyphs_in_current_subset;
-        } else {
-            if (sub_font->num_glyphs_in_current_subset > sub_font->parent->max_glyphs_per_unscaled_subset_used)
-                sub_font->parent->max_glyphs_per_unscaled_subset_used = sub_font->num_glyphs_in_current_subset;
-        }
     }
 
     subset_glyph->font_id = sub_font->font_id;
     subset_glyph->subset_id = sub_font_glyph->subset_id;
-    subset_glyph->subset_glyph_index = sub_font_glyph->subset_glyph_index;
+    if (sub_font_glyph->is_latin)
+	subset_glyph->subset_glyph_index = sub_font_glyph->latin_character;
+    else
+	subset_glyph->subset_glyph_index = sub_font_glyph->subset_glyph_index;
+
     subset_glyph->is_scaled = sub_font->is_scaled;
     subset_glyph->is_composite = sub_font->is_composite;
+    subset_glyph->is_latin = sub_font_glyph->is_latin;
     subset_glyph->x_advance = sub_font_glyph->x_advance;
     subset_glyph->y_advance = sub_font_glyph->y_advance;
     status = _cairo_sub_font_glyph_map_to_unicode (sub_font_glyph,
-						   utf8, utf8_len,
+						   text_utf8, text_utf8_len,
 						   &subset_glyph->utf8_is_mapped);
     subset_glyph->unicode = sub_font_glyph->unicode;
 
@@ -558,12 +693,26 @@ _cairo_sub_font_collect (void *entry, void *closure)
 	collection->subset_id = i;
 	collection->num_glyphs = 0;
 	collection->max_glyph = 0;
+	memset (collection->latin_to_subset_glyph_index, 0, 256*sizeof(unsigned long));
+
+	if (sub_font->reserve_notdef) {
+	    // add .notdef
+	    collection->glyphs[0] = 0;
+	    collection->utf8[0] = 0;
+	    collection->to_latin_char[0] = 0;
+	    collection->latin_to_subset_glyph_index[0] = 0;
+	    collection->num_glyphs++;
+	}
 
 	_cairo_hash_table_foreach (sub_font->sub_font_glyphs,
 				   _cairo_sub_font_glyph_collect, collection);
 	if (collection->status)
 	    break;
+
 	if (collection->num_glyphs == 0)
+	    continue;
+
+	if (sub_font->reserve_notdef && collection->num_glyphs == 1)
 	    continue;
 
         /* Ensure the resulting array has no uninitialized holes */
@@ -578,20 +727,19 @@ _cairo_sub_font_collect (void *entry, void *closure)
 	subset.utf8 = collection->utf8;
 	subset.num_glyphs = collection->num_glyphs;
         subset.glyph_names = NULL;
-        /* No need to check for out of memory here. If to_unicode is NULL, the PDF
-         * surface does not emit an ToUnicode stream */
-        subset.to_unicode = _cairo_malloc_ab (collection->num_glyphs, sizeof (unsigned long));
-        if (subset.to_unicode) {
-            for (j = 0; j < collection->num_glyphs; j++) {
-                /* default unicode character required when mapping fails */
-                subset.to_unicode[j] = 0xfffd;
-            }
-        }
+
+	subset.is_latin = FALSE;
+	if (sub_font->use_latin_subset && i == 0) {
+	    subset.is_latin = TRUE;
+	    subset.to_latin_char = collection->to_latin_char;
+	    subset.latin_to_subset_glyph_index = collection->latin_to_subset_glyph_index;
+	} else {
+	    subset.to_latin_char = NULL;
+	    subset.latin_to_subset_glyph_index = NULL;
+	}
+
         collection->status = (collection->font_subset_callback) (&subset,
 					    collection->font_subset_callback_closure);
-
-        if (subset.to_unicode != NULL)
-            free (subset.to_unicode);
 
 	if (subset.glyph_names != NULL) {
             for (j = 0; j < collection->num_glyphs; j++)
@@ -609,13 +757,14 @@ _cairo_scaled_font_subsets_create_internal (cairo_subsets_type_t type)
 {
     cairo_scaled_font_subsets_t *subsets;
 
-    subsets = malloc (sizeof (cairo_scaled_font_subsets_t));
+    subsets = _cairo_malloc (sizeof (cairo_scaled_font_subsets_t));
     if (unlikely (subsets == NULL)) {
 	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
 	return NULL;
     }
 
     subsets->type = type;
+    subsets->use_latin_subset = FALSE;
     subsets->max_glyphs_per_unscaled_subset_used = 0;
     subsets->max_glyphs_per_scaled_subset_used = 0;
     subsets->num_sub_fonts = 0;
@@ -670,6 +819,13 @@ _cairo_scaled_font_subsets_destroy (cairo_scaled_font_subsets_t *subsets)
     free (subsets);
 }
 
+void
+_cairo_scaled_font_subsets_enable_latin_subset (cairo_scaled_font_subsets_t *font_subsets,
+						cairo_bool_t                 use_latin)
+{
+    font_subsets->use_latin_subset = use_latin;
+}
+
 cairo_status_t
 _cairo_scaled_font_subsets_map_glyph (cairo_scaled_font_subsets_t	*subsets,
 				      cairo_scaled_font_t		*scaled_font,
@@ -684,7 +840,7 @@ _cairo_scaled_font_subsets_map_glyph (cairo_scaled_font_subsets_t	*subsets,
     cairo_matrix_t identity;
     cairo_font_options_t font_options;
     cairo_scaled_font_t	*unscaled_font;
-    cairo_status_t status;
+    cairo_int_status_t status;
     int max_glyphs;
     cairo_bool_t type1_font;
 
@@ -737,10 +893,10 @@ _cairo_scaled_font_subsets_map_glyph (cairo_scaled_font_subsets_t	*subsets,
 					     &scaled_glyph);
 	_cairo_scaled_font_thaw_cache (scaled_font);
     }
-    if (_cairo_status_is_error (status))
+    if (_cairo_int_status_is_error (status))
         return status;
 
-    if (status == CAIRO_STATUS_SUCCESS &&
+    if (status == CAIRO_INT_STATUS_SUCCESS &&
 	subsets->type != CAIRO_SUBSETS_SCALED &&
 	! _cairo_font_face_is_user (scaled_font->font_face))
     {
@@ -763,10 +919,7 @@ _cairo_scaled_font_subsets_map_glyph (cairo_scaled_font_subsets_t	*subsets,
 		return unscaled_font->status;
 
             subset_glyph->is_scaled = FALSE;
-            type1_font = FALSE;
-#if CAIRO_HAS_FT_FONT
             type1_font = _cairo_type1_scaled_font_is_type1 (unscaled_font);
-#endif
             if (subsets->type == CAIRO_SUBSETS_COMPOSITE && !type1_font) {
                 max_glyphs = MAX_GLYPHS_PER_COMPOSITE_FONT;
                 subset_glyph->is_composite = TRUE;
@@ -881,11 +1034,16 @@ _cairo_scaled_font_subsets_foreach_internal (cairo_scaled_font_subsets_t        
 
     collection.glyphs = _cairo_malloc_ab (collection.glyphs_size, sizeof(unsigned long));
     collection.utf8 = _cairo_malloc_ab (collection.glyphs_size, sizeof(char *));
-    if (unlikely (collection.glyphs == NULL || collection.utf8 == NULL)) {
-	if (collection.glyphs != NULL)
-	    free (collection.glyphs);
-	if (collection.utf8 != NULL)
-	    free (collection.utf8);
+    collection.to_latin_char = _cairo_malloc_ab (collection.glyphs_size, sizeof(int));
+    collection.latin_to_subset_glyph_index = _cairo_malloc_ab (256, sizeof(unsigned long));
+    if (unlikely (collection.glyphs == NULL ||
+		  collection.utf8 == NULL ||
+		  collection.to_latin_char == NULL ||
+		  collection.latin_to_subset_glyph_index == NULL)) {
+	free (collection.glyphs);
+	free (collection.utf8);
+	free (collection.to_latin_char);
+	free (collection.latin_to_subset_glyph_index);
 
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
     }
@@ -907,6 +1065,8 @@ _cairo_scaled_font_subsets_foreach_internal (cairo_scaled_font_subsets_t        
     }
     free (collection.utf8);
     free (collection.glyphs);
+    free (collection.to_latin_char);
+    free (collection.latin_to_subset_glyph_index);
 
     return collection.status;
 }
@@ -956,6 +1116,87 @@ _cairo_string_equal (const void *key_a, const void *key_b)
 	return FALSE;
 }
 
+#if DEBUG_SUBSETS
+
+static void
+dump_glyph (void *entry, void *closure)
+{
+    cairo_sub_font_glyph_t *glyph = entry;
+    char buf[10];
+    int i;
+
+    printf("    font_glyph_index: %ld\n", glyph->base.hash);
+    printf("      subset_id: %d\n", glyph->subset_id);
+    printf("      subset_glyph_index: %d\n", glyph->subset_glyph_index);
+    printf("      x_advance: %f\n", glyph->x_advance);
+    printf("      y_advance: %f\n", glyph->y_advance);
+    printf("      is_latin: %d\n", glyph->is_latin);
+    printf("      latin_character: '%c' (0x%02x)\n", glyph->latin_character, glyph->latin_character);
+    printf("      is_latin: %d\n", glyph->is_latin);
+    printf("      is_mapped: %d\n", glyph->is_mapped);
+    printf("      unicode: U+%04x\n", glyph->unicode);
+    memset(buf, 0, sizeof(buf));
+    memcpy(buf, glyph->utf8, glyph->utf8_len);
+    printf("      utf8: '%s'\n", buf);
+    printf("      utf8 (hex):");
+    for (i = 0; i < glyph->utf8_len; i++)
+	printf(" 0x%02x", glyph->utf8[i]);
+    printf("\n\n");
+}
+
+static void
+dump_subfont (cairo_sub_font_t *sub_font)
+{
+    while (sub_font) {
+	printf("    font_id: %d\n", sub_font->font_id);
+	printf("    current_subset: %d\n", sub_font->current_subset);
+	printf("    is_scaled: %d\n", sub_font->is_scaled);
+	printf("    is_composite: %d\n", sub_font->is_composite);
+	printf("    is_user: %d\n", sub_font->is_user);
+	printf("    use_latin_subset: %d\n", sub_font->use_latin_subset);
+	printf("    reserve_notdef: %d\n", sub_font->reserve_notdef);
+	printf("    num_glyphs_in_current_subset: %d\n", sub_font->num_glyphs_in_current_subset);
+	printf("    num_glyphs_in_latin_subset: %d\n", sub_font->num_glyphs_in_latin_subset);
+	printf("    max_glyphs_per_subset: %d\n\n", sub_font->max_glyphs_per_subset);
+
+	_cairo_hash_table_foreach (sub_font->sub_font_glyphs, dump_glyph, NULL);
+
+	printf("\n");
+	sub_font = sub_font->next;
+    }
+}
+
+void
+dump_scaled_font_subsets (cairo_scaled_font_subsets_t *font_subsets)
+{
+    printf("font subsets\n");
+    switch (font_subsets->type)
+    {
+	case CAIRO_SUBSETS_SCALED:
+	    printf("  type: CAIRO_SUBSETS_SCALED\n");
+	    break;
+	case CAIRO_SUBSETS_SIMPLE:
+	    printf("  type: CAIRO_SUBSETS_SIMPLE\n");
+	    break;
+	case CAIRO_SUBSETS_COMPOSITE:
+	    printf("  type: CAIRO_SUBSETS_COMPOSITE\n");
+	    break;
+    }
+    printf("  use_latin_subset: %d\n", font_subsets->use_latin_subset);
+    printf("  max_glyphs_per_unscaled_subset_used: %d\n", font_subsets->max_glyphs_per_unscaled_subset_used);
+    printf("  max_glyphs_per_scaled_subset_used: %d\n", font_subsets->max_glyphs_per_scaled_subset_used);
+    printf("  num_sub_fonts: %d\n\n", font_subsets->num_sub_fonts);
+
+    printf("  scaled subsets:\n");
+    dump_subfont (font_subsets->scaled_sub_fonts_list);
+
+    printf("\n  unscaled subsets:\n");
+    dump_subfont (font_subsets->unscaled_sub_fonts_list);
+}
+
+#endif
+
+
 static void
 _cairo_string_init_key (cairo_string_entry_t *key, char *s)
 {
@@ -971,7 +1212,7 @@ _cairo_string_init_key (cairo_string_entry_t *key, char *s)
 static cairo_status_t
 create_string_entry (char *s, cairo_string_entry_t **entry)
 {
-    *entry = malloc (sizeof (cairo_string_entry_t));
+    *entry = _cairo_malloc (sizeof (cairo_string_entry_t));
     if (unlikely (*entry == NULL))
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
@@ -1035,12 +1276,23 @@ _cairo_scaled_font_subset_create_glyph_names (cairo_scaled_font_subset_t *subset
 	utf16_len = 0;
 	if (utf8 && *utf8) {
 	    status = _cairo_utf8_to_utf16 (utf8, -1, &utf16, &utf16_len);
-	    if (unlikely (status))
+	    if (status == CAIRO_STATUS_INVALID_STRING) {
+		utf16 = NULL;
+		utf16_len = 0;
+	    } else if (unlikely (status)) {
 		goto CLEANUP_HASH;
+	    }
 	}
 
 	if (utf16_len == 1) {
-	    snprintf (buf, sizeof (buf), "uni%04X", (int) utf16[0]);
+	    int ch = _cairo_unicode_to_winansi (utf16[0]);
+	    if (ch > 0 && _cairo_winansi_to_glyphname (ch)) {
+		strncpy (buf, _cairo_winansi_to_glyphname (ch), sizeof (buf));
+		buf[sizeof (buf)-1] = '\0';
+	    } else {
+		snprintf (buf, sizeof (buf), "uni%04X", (int) utf16[0]);
+	    }
+
 	    _cairo_string_init_key (&key, buf);
 	    entry = _cairo_hash_table_lookup (names, &key.base);
 	    if (entry != NULL)
@@ -1048,8 +1300,7 @@ _cairo_scaled_font_subset_create_glyph_names (cairo_scaled_font_subset_t *subset
 	} else {
 	    snprintf (buf, sizeof (buf), "g%d", i);
 	}
-	if (utf16)
-	    free (utf16);
+	free (utf16);
 
 	subset->glyph_names[i] = strdup (buf);
 	if (unlikely (subset->glyph_names[i] == NULL)) {
@@ -1077,12 +1328,51 @@ CLEANUP_HASH:
 
     if (subset->glyph_names != NULL) {
 	for (i = 0; i < subset->num_glyphs; i++) {
-	    if (subset->glyph_names[i] != NULL)
-		free (subset->glyph_names[i]);
+	    free (subset->glyph_names[i]);
 	}
 
 	free (subset->glyph_names);
 	subset->glyph_names = NULL;
+    }
+
+    return status;
+}
+
+cairo_int_status_t
+_cairo_escape_ps_name (char **ps_name)
+{
+    cairo_status_t status = CAIRO_STATUS_SUCCESS;
+
+    /* Ensure PS name is a valid PDF/PS name object. In PDF names are
+     * treated as UTF8 and non ASCII bytes, ' ', and '#' are encoded
+     * as '#' followed by 2 hex digits that encode the byte. By also
+     * encoding the characters in the reserved string we ensure the
+     * name is also PS compatible. */
+    if (*ps_name) {
+	static const char *reserved = "()<>[]{}/%#\\";
+	char buf[128]; /* max name length is 127 bytes */
+	char *src = *ps_name;
+	char *dst = buf;
+
+	while (*src && dst < buf + 127) {
+	    unsigned char c = *src;
+	    if (c < 0x21 || c > 0x7e || strchr (reserved, c)) {
+		if (dst + 4 > buf + 127)
+		    break;
+
+		snprintf (dst, 4, "#%02X", c);
+		src++;
+		dst += 3;
+	    } else {
+		*dst++ = *src++;
+	    }
+	}
+	*dst = 0;
+	free (*ps_name);
+	*ps_name = strdup (buf);
+	if (*ps_name == NULL) {
+	    status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	}
     }
 
     return status;
