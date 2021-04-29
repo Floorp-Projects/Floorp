@@ -704,24 +704,24 @@ bool SandboxProxyHandler::getPropertyDescriptorImpl(
 
   MOZ_ASSERT(JS::GetCompartment(obj) == JS::GetCompartment(proxy));
 
+  Rooted<PropertyDescriptor> desc(cx);
   if (getOwn) {
-    if (!JS_GetOwnPropertyDescriptorById(cx, obj, id, desc_)) {
+    if (!JS_GetOwnPropertyDescriptorById(cx, obj, id, &desc)) {
       return false;
     }
   } else {
-    Rooted<JSObject*> holder(cx);
-    if (!JS_GetPropertyDescriptorById(cx, obj, id, desc_, &holder)) {
+    if (!JS_GetPropertyDescriptorById(cx, obj, id, &desc)) {
       return false;
     }
   }
 
-  if (desc_.isNothing()) {
+  if (!desc.object()) {
+    // No property, nothing to do
+    desc_.reset();
     return true;
   }
 
-  Rooted<PropertyDescriptor> desc(cx, *desc_);
-
-  // Now fix up the getter/setter/value as needed.
+  // Now fix up the getter/setter/value as needed to be bound to desc->obj.
   if (desc.hasGetterObject() &&
       !WrapAccessorFunction(cx, desc.getterObject(), proxy)) {
     return false;
