@@ -17,7 +17,3 @@ storage = { path = "../../../../storage/rust" }
 storage_variant = { path = "../../../../storage/variant" }
 url = "2.0"
 xpcom = { path = "../../../../xpcom/rust/xpcom" }
-
-[dependencies.thin-vec]
-version = "0.2.1"
-features = ["gecko-ffi"]

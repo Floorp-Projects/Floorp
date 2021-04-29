@@ -91,7 +91,6 @@ interface mozISyncedBookmarksMerger : nsISupports {
   mozIPlacesPendingOperation merge(
     in long long localTimeSeconds,
     in long long remoteTimeSeconds,
-    in Array<AString> weakUploads,
     in mozISyncedBookmarksMirrorCallback callback
   );
 

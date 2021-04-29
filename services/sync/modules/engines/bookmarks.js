@@ -510,7 +510,6 @@ BookmarksEngine.prototype = {
     try {
       let recordsToUpload = await buf.apply({
         remoteTimeSeconds: Resource.serverTime,
-        weakUpload: [...this._needWeakUpload.keys()],
         signal: watchdog.signal,
       });
       this._modified.replace(recordsToUpload);
@@ -519,7 +518,6 @@ BookmarksEngine.prototype = {
       if (watchdog.abortReason) {
         this._log.warn(`Aborting bookmark merge: ${watchdog.abortReason}`);
       }
-      this._needWeakUpload.clear();
     }
   },
 
@@ -546,9 +544,6 @@ BookmarksEngine.prototype = {
   },
 
   async _doCreateRecord(id) {
-    if (this._needWeakUpload.has(id)) {
-      return this._store.createRecord(id, this.name);
-    }
     let change = this._modified.changes[id];
     if (!change) {
       this._log.error(
