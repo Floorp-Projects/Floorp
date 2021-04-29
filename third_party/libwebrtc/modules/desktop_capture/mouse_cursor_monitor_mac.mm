@@ -77,7 +77,7 @@ class MouseCursorMonitorMac : public MouseCursorMonitor {
   ScreenId screen_id_;
   Callback* callback_;
   Mode mode_;
-  __strong NSImage* last_cursor_;
+  __strong NSImage* last_cursor_ = NULL;
 };
 
 MouseCursorMonitorMac::MouseCursorMonitorMac(const DesktopCaptureOptions& options,
