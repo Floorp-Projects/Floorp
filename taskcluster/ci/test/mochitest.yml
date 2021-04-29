@@ -44,6 +44,7 @@ job-defaults:
                     - unittests/mac_unittest.py
                 windows.*:
                     - unittests/win_unittest.py
+    python-3: true
 
 mochitest-plain:
     description: "Mochitest plain run"
