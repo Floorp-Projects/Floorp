@@ -1,6 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/licenses/publicdomain/ */
 
+load(libdir + "asserts.js");
+
 var s = new Set;
 
 // Symbols can be stored in Sets.
@@ -22,6 +24,3 @@ var s2  = "how much wood would a woodchuck chuck if could";
 var arr = str.split(" ").map(Symbol.for);
 s = new Set(arr);
 assertDeepEq([...s], s2.split(" ").map(Symbol.for));
-
-if (typeof reportCompare === "function")
-  reportCompare(0, 0);
