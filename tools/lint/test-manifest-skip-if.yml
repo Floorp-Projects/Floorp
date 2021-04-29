@@ -1,0 +1,18 @@
+---
+multiline-skip-if:
+    description: Conditions joined by || should be on separate lines
+    hint: |
+        skip-if =
+            <condition one>  # reason
+            <condition two>  # reason
+    exclude:
+        - "**/application.ini"
+        - "**/l10n.ini"
+        - dom/canvas/test/webgl-conf/mochitest-errata.ini
+        - testing/mozbase/manifestparser/tests
+        - testing/web-platform
+        - xpcom/tests/unit/data
+    extensions: ['ini']
+    level: warning
+    type: regex
+    payload: '^\s*(skip|fail)-if\s*=[^(]*\|\|'

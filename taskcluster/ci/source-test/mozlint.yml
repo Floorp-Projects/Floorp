@@ -243,7 +243,7 @@ test-manifest:
     treeherder:
         symbol: misc(tm)
     run:
-        mach: lint -v -l test-disable -f treeherder -f json:/builds/worker/mozlint.json *
+        mach: lint -v -l test-manifest-disable -l test-manifest-skip-if -f treeherder -f json:/builds/worker/mozlint.json *
     when:
         files-changed:
             - '**/*.ini'
