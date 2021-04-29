@@ -33,6 +33,7 @@
 
 #include "cairoint.h"
 
+#include "cairo-box-inline.h"
 #include "cairo-boxes-private.h"
 #include "cairo-error-private.h"
 
@@ -50,6 +51,25 @@ _cairo_boxes_init (cairo_boxes_t *boxes)
     boxes->chunks.count = 0;
 
     boxes->is_pixel_aligned = TRUE;
+}
+
+void
+_cairo_boxes_init_from_rectangle (cairo_boxes_t *boxes,
+				  int x, int y, int w, int h)
+{
+    _cairo_boxes_init (boxes);
+
+    _cairo_box_from_integers (&boxes->chunks.base[0], x, y, w, h);
+    boxes->num_boxes = 1;
+}
+
+void
+_cairo_boxes_init_with_clip (cairo_boxes_t *boxes,
+			     cairo_clip_t *clip)
+{
+    _cairo_boxes_init (boxes);
+    if (clip)
+	_cairo_boxes_limit (boxes, clip->boxes, clip->num_boxes);
 }
 
 void
@@ -82,6 +102,17 @@ _cairo_boxes_init_for_array (cairo_boxes_t *boxes,
     boxes->is_pixel_aligned = n == num_boxes;
 }
 
+/** _cairo_boxes_limit:
+ *
+ * Computes the minimum bounding box of the given list of boxes and assign
+ * it to the given boxes set. It also assigns that list as the list of
+ * limiting boxes in the box set.
+ *
+ * @param boxes        the box set to be filled (return buffer)
+ * @param limits       array of the limiting boxes to compute the bounding
+ *                     box from
+ * @param num_limits   length of the limits array
+ */
 void
 _cairo_boxes_limit (cairo_boxes_t	*boxes,
 		    const cairo_box_t	*limits,
@@ -145,19 +176,25 @@ _cairo_boxes_add_internal (cairo_boxes_t *boxes,
     chunk->base[chunk->count++] = *box;
     boxes->num_boxes++;
 
-    if (boxes->is_pixel_aligned) {
-	boxes->is_pixel_aligned =
-	    _cairo_fixed_is_integer (box->p1.x) &&
-	    _cairo_fixed_is_integer (box->p1.y) &&
-	    _cairo_fixed_is_integer (box->p2.x) &&
-	    _cairo_fixed_is_integer (box->p2.y);
-    }
+    if (boxes->is_pixel_aligned)
+	boxes->is_pixel_aligned = _cairo_box_is_pixel_aligned (box);
 }
 
 cairo_status_t
 _cairo_boxes_add (cairo_boxes_t *boxes,
+		  cairo_antialias_t antialias,
 		  const cairo_box_t *box)
 {
+    cairo_box_t b;
+
+    if (antialias == CAIRO_ANTIALIAS_NONE) {
+	b.p1.x = _cairo_fixed_round_down (box->p1.x);
+	b.p1.y = _cairo_fixed_round_down (box->p1.y);
+	b.p2.x = _cairo_fixed_round_down (box->p2.x);
+	b.p2.y = _cairo_fixed_round_down (box->p2.y);
+	box = &b;
+    }
+
     if (box->p1.y == box->p2.y)
 	return CAIRO_STATUS_SUCCESS;
 
@@ -239,35 +276,44 @@ _cairo_boxes_add (cairo_boxes_t *boxes,
     return boxes->status;
 }
 
+/** _cairo_boxes_extents:
+ *
+ * Computes the minimum bounding box of the given box set and stores
+ * it in the given box.
+ *
+ * @param boxes      The box set whose minimum bounding is computed.
+ * @param box        Return buffer for the computed result.
+ */
 void
 _cairo_boxes_extents (const cairo_boxes_t *boxes,
-		      cairo_rectangle_int_t *extents)
+		      cairo_box_t *box)
 {
     const struct _cairo_boxes_chunk *chunk;
-    cairo_box_t box;
+    cairo_box_t b;
     int i;
 
-    box.p1.y = box.p1.x = INT_MAX;
-    box.p2.y = box.p2.x = INT_MIN;
-
-    for (chunk = &boxes->chunks; chunk != NULL; chunk = chunk->next) {
-	const cairo_box_t *b = chunk->base;
-	for (i = 0; i < chunk->count; i++) {
-	    if (b[i].p1.x < box.p1.x)
-		box.p1.x = b[i].p1.x;
-
-	    if (b[i].p1.y < box.p1.y)
-		box.p1.y = b[i].p1.y;
-
-	    if (b[i].p2.x > box.p2.x)
-		box.p2.x = b[i].p2.x;
-
-	    if (b[i].p2.y > box.p2.y)
-		box.p2.y = b[i].p2.y;
-	}
+    if (boxes->num_boxes == 0) {
+	box->p1.x = box->p1.y = box->p2.x = box->p2.y = 0;
+	return;
     }
 
-    _cairo_box_round_to_rectangle (&box, extents);
+    b = boxes->chunks.base[0];
+    for (chunk = &boxes->chunks; chunk != NULL; chunk = chunk->next) {
+	for (i = 0; i < chunk->count; i++) {
+	    if (chunk->base[i].p1.x < b.p1.x)
+		b.p1.x = chunk->base[i].p1.x;
+
+	    if (chunk->base[i].p1.y < b.p1.y)
+		b.p1.y = chunk->base[i].p1.y;
+
+	    if (chunk->base[i].p2.x > b.p2.x)
+		b.p2.x = chunk->base[i].p2.x;
+
+	    if (chunk->base[i].p2.y > b.p2.y)
+		b.p2.y = chunk->base[i].p2.y;
+	}
+    }
+    *box = b;
 }
 
 void
@@ -283,9 +329,46 @@ _cairo_boxes_clear (cairo_boxes_t *boxes)
     boxes->tail = &boxes->chunks;
     boxes->chunks.next = 0;
     boxes->chunks.count = 0;
+    boxes->chunks.base = boxes->boxes_embedded;
+    boxes->chunks.size = ARRAY_LENGTH (boxes->boxes_embedded);
     boxes->num_boxes = 0;
 
     boxes->is_pixel_aligned = TRUE;
+}
+
+/** _cairo_boxes_to_array:
+ *
+ * Linearize a box set of possibly multiple chunks into one big chunk
+ * and returns an array of boxes
+ *
+ * @param boxes      The box set to be converted.
+ * @param num_boxes  Return buffer for the number of boxes (array count).
+ * @return           Pointer to the newly allocated array of boxes
+ *                   (the number o elements is given in num_boxes).
+ */
+cairo_box_t *
+_cairo_boxes_to_array (const cairo_boxes_t *boxes,
+		       int *num_boxes)
+{
+    const struct _cairo_boxes_chunk *chunk;
+    cairo_box_t *box;
+    int i, j;
+
+    *num_boxes = boxes->num_boxes;
+
+    box = _cairo_malloc_ab (boxes->num_boxes, sizeof (cairo_box_t));
+    if (box == NULL) {
+	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
+	return NULL;
+    }
+
+    j = 0;
+    for (chunk = &boxes->chunks; chunk != NULL; chunk = chunk->next) {
+	for (i = 0; i < chunk->count; i++)
+	    box[j++] = chunk->base[i];
+    }
+
+    return box;
 }
 
 void
@@ -296,5 +379,108 @@ _cairo_boxes_fini (cairo_boxes_t *boxes)
     for (chunk = boxes->chunks.next; chunk != NULL; chunk = next) {
 	next = chunk->next;
 	free (chunk);
+    }
+}
+
+cairo_bool_t
+_cairo_boxes_for_each_box (cairo_boxes_t *boxes,
+			   cairo_bool_t (*func) (cairo_box_t *box, void *data),
+			   void *data)
+{
+    struct _cairo_boxes_chunk *chunk;
+    int i;
+
+    for (chunk = &boxes->chunks; chunk != NULL; chunk = chunk->next) {
+	for (i = 0; i < chunk->count; i++)
+	    if (! func (&chunk->base[i], data))
+		return FALSE;
+    }
+
+    return TRUE;
+}
+
+struct cairo_box_renderer {
+    cairo_span_renderer_t base;
+    cairo_boxes_t *boxes;
+};
+
+static cairo_status_t
+span_to_boxes (void *abstract_renderer, int y, int h,
+	       const cairo_half_open_span_t *spans, unsigned num_spans)
+{
+    struct cairo_box_renderer *r = abstract_renderer;
+    cairo_status_t status = CAIRO_STATUS_SUCCESS;
+    cairo_box_t box;
+
+    if (num_spans == 0)
+	return CAIRO_STATUS_SUCCESS;
+
+    box.p1.y = _cairo_fixed_from_int (y);
+    box.p2.y = _cairo_fixed_from_int (y + h);
+    do {
+	if (spans[0].coverage) {
+	    box.p1.x = _cairo_fixed_from_int(spans[0].x);
+	    box.p2.x = _cairo_fixed_from_int(spans[1].x);
+	    status = _cairo_boxes_add (r->boxes, CAIRO_ANTIALIAS_DEFAULT, &box);
+	}
+	spans++;
+    } while (--num_spans > 1 && status == CAIRO_STATUS_SUCCESS);
+
+    return status;
+}
+
+cairo_status_t
+_cairo_rasterise_polygon_to_boxes (cairo_polygon_t			*polygon,
+				   cairo_fill_rule_t			 fill_rule,
+				   cairo_boxes_t *boxes)
+{
+    struct cairo_box_renderer renderer;
+    cairo_scan_converter_t *converter;
+    cairo_int_status_t status;
+    cairo_rectangle_int_t r;
+
+    TRACE ((stderr, "%s: fill_rule=%d\n", __FUNCTION__, fill_rule));
+
+    _cairo_box_round_to_rectangle (&polygon->extents, &r);
+    converter = _cairo_mono_scan_converter_create (r.x, r.y,
+						   r.x + r.width,
+						   r.y + r.height,
+						   fill_rule);
+    status = _cairo_mono_scan_converter_add_polygon (converter, polygon);
+    if (unlikely (status))
+	goto cleanup_converter;
+
+    renderer.boxes = boxes;
+    renderer.base.render_rows = span_to_boxes;
+
+    status = converter->generate (converter, &renderer.base);
+cleanup_converter:
+    converter->destroy (converter);
+    return status;
+}
+
+void
+_cairo_debug_print_boxes (FILE *stream, const cairo_boxes_t *boxes)
+{
+    const struct _cairo_boxes_chunk *chunk;
+    cairo_box_t extents;
+    int i;
+
+    _cairo_boxes_extents (boxes, &extents);
+    fprintf (stream, "boxes x %d: (%f, %f) x (%f, %f)\n",
+	     boxes->num_boxes,
+	     _cairo_fixed_to_double (extents.p1.x),
+	     _cairo_fixed_to_double (extents.p1.y),
+	     _cairo_fixed_to_double (extents.p2.x),
+	     _cairo_fixed_to_double (extents.p2.y));
+
+    for (chunk = &boxes->chunks; chunk != NULL; chunk = chunk->next) {
+	for (i = 0; i < chunk->count; i++) {
+	    fprintf (stderr, "  box[%d]: (%f, %f), (%f, %f)\n", i,
+		     _cairo_fixed_to_double (chunk->base[i].p1.x),
+		     _cairo_fixed_to_double (chunk->base[i].p1.y),
+		     _cairo_fixed_to_double (chunk->base[i].p2.x),
+		     _cairo_fixed_to_double (chunk->base[i].p2.y));
+	}
     }
 }

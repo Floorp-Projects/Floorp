@@ -38,6 +38,8 @@
 #define CAIRO_COMPOSITE_RECTANGLES_PRIVATE_H
 
 #include "cairo-types-private.h"
+#include "cairo-error-private.h"
+#include "cairo-pattern-private.h"
 
 CAIRO_BEGIN_DECLS
 
@@ -51,55 +53,107 @@ CAIRO_BEGIN_DECLS
  *
  */
 struct _cairo_composite_rectangles {
+    cairo_surface_t *surface;
+    cairo_operator_t op;
+
     cairo_rectangle_int_t source;
     cairo_rectangle_int_t mask;
-    cairo_rectangle_int_t bounded; /* dst */
-    cairo_rectangle_int_t unbounded; /* clip */
+    cairo_rectangle_int_t destination;
+
+    cairo_rectangle_int_t bounded; /* source? IN mask? IN unbounded */
+    cairo_rectangle_int_t unbounded; /* destination IN clip */
     uint32_t is_bounded;
+
+    cairo_rectangle_int_t source_sample_area;
+    cairo_rectangle_int_t mask_sample_area;
+
+    cairo_pattern_union_t source_pattern;
+    cairo_pattern_union_t mask_pattern;
+    const cairo_pattern_t *original_source_pattern;
+    const cairo_pattern_t *original_mask_pattern;
+
+    cairo_clip_t *clip; /* clip will be reduced to the minimal container */
 };
 
 cairo_private cairo_int_status_t
 _cairo_composite_rectangles_init_for_paint (cairo_composite_rectangles_t *extents,
-					 const cairo_rectangle_int_t *surface_extents,
-					 cairo_operator_t	 op,
-					 const cairo_pattern_t	*source,
-					 cairo_clip_t		*clip);
+					    cairo_surface_t *surface,
+					    cairo_operator_t	 op,
+					    const cairo_pattern_t	*source,
+					    const cairo_clip_t		*clip);
 
 cairo_private cairo_int_status_t
 _cairo_composite_rectangles_init_for_mask (cairo_composite_rectangles_t *extents,
-					const cairo_rectangle_int_t *surface_extents,
-					cairo_operator_t	 op,
-					const cairo_pattern_t	*source,
-					const cairo_pattern_t	*mask,
-					cairo_clip_t		*clip);
+					   cairo_surface_t *surface,
+					   cairo_operator_t	 op,
+					   const cairo_pattern_t	*source,
+					   const cairo_pattern_t	*mask,
+					   const cairo_clip_t		*clip);
 
 cairo_private cairo_int_status_t
 _cairo_composite_rectangles_init_for_stroke (cairo_composite_rectangles_t *extents,
-					     const cairo_rectangle_int_t *surface_extents,
+					     cairo_surface_t *surface,
 					     cairo_operator_t	 op,
 					     const cairo_pattern_t	*source,
-					     cairo_path_fixed_t	*path,
+					     const cairo_path_fixed_t	*path,
 					     const cairo_stroke_style_t	*style,
 					     const cairo_matrix_t	*ctm,
-					     cairo_clip_t		*clip);
+					     const cairo_clip_t		*clip);
 
 cairo_private cairo_int_status_t
 _cairo_composite_rectangles_init_for_fill (cairo_composite_rectangles_t *extents,
-					   const cairo_rectangle_int_t *surface_extents,
+					   cairo_surface_t *surface,
 					   cairo_operator_t	 op,
 					   const cairo_pattern_t	*source,
-					   cairo_path_fixed_t	*path,
-					   cairo_clip_t		*clip);
+					   const cairo_path_fixed_t	*path,
+					   const cairo_clip_t		*clip);
+
+cairo_private cairo_int_status_t
+_cairo_composite_rectangles_init_for_boxes (cairo_composite_rectangles_t *extents,
+					      cairo_surface_t		*surface,
+					      cairo_operator_t		 op,
+					      const cairo_pattern_t	*source,
+					      const cairo_boxes_t	*boxes,
+					      const cairo_clip_t		*clip);
+
+cairo_private cairo_int_status_t
+_cairo_composite_rectangles_init_for_polygon (cairo_composite_rectangles_t *extents,
+					      cairo_surface_t		*surface,
+					      cairo_operator_t		 op,
+					      const cairo_pattern_t	*source,
+					      const cairo_polygon_t	*polygon,
+					      const cairo_clip_t		*clip);
 
 cairo_private cairo_int_status_t
 _cairo_composite_rectangles_init_for_glyphs (cairo_composite_rectangles_t *extents,
-					     const cairo_rectangle_int_t *surface_extents,
+					     cairo_surface_t *surface,
 					     cairo_operator_t		 op,
 					     const cairo_pattern_t	*source,
 					     cairo_scaled_font_t	*scaled_font,
 					     cairo_glyph_t		*glyphs,
 					     int			 num_glyphs,
-					     cairo_clip_t		*clip,
+					     const cairo_clip_t		*clip,
 					     cairo_bool_t		*overlap);
+
+cairo_private cairo_int_status_t
+_cairo_composite_rectangles_intersect_source_extents (cairo_composite_rectangles_t *extents,
+						      const cairo_box_t *box);
+
+cairo_private cairo_int_status_t
+_cairo_composite_rectangles_intersect_mask_extents (cairo_composite_rectangles_t *extents,
+						    const cairo_box_t *box);
+
+cairo_private cairo_bool_t
+_cairo_composite_rectangles_can_reduce_clip (cairo_composite_rectangles_t *composite,
+					     cairo_clip_t *clip);
+
+cairo_private cairo_int_status_t
+_cairo_composite_rectangles_add_to_damage (cairo_composite_rectangles_t *composite,
+					   cairo_boxes_t *damage);
+
+cairo_private void
+_cairo_composite_rectangles_fini (cairo_composite_rectangles_t *extents);
+
+CAIRO_END_DECLS
 
 #endif /* CAIRO_COMPOSITE_RECTANGLES_PRIVATE_H */

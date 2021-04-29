@@ -43,9 +43,9 @@
 #include "cairoint.h"
 
 #include "cairo-error-private.h"
-#include "cairo-list-private.h"
+#include "cairo-list-inline.h"
 #include "cairo-freelist-private.h"
-#include "cairo-combsort-private.h"
+#include "cairo-combsort-inline.h"
 
 #include <setjmp.h>
 
@@ -456,7 +456,7 @@ edges_compare_x_for_y (const cairo_edge_t *a,
        HAVE_BX      = 0x2,
        HAVE_BOTH    = HAVE_AX | HAVE_BX
     } have_ax_bx = HAVE_BOTH;
-    int32_t ax, bx;
+    int32_t ax = 0, bx = 0;
 
     /* XXX given we have x and dx? */
 
@@ -1072,7 +1072,7 @@ coverage_reset (struct coverage *cells)
     coverage_rewind (cells);
 }
 
-inline static struct cell *
+static struct cell *
 coverage_alloc (sweep_line_t *sweep_line,
 		struct cell *tail,
 		int x)
@@ -1397,6 +1397,7 @@ render_rows (cairo_botor_scan_converter_t *self,
 
 	if (x > prev_x) {
 	    spans[num_spans].x = prev_x;
+	    spans[num_spans].inverse = 0;
 	    spans[num_spans].coverage = AREA_TO_ALPHA (cover);
 	    ++num_spans;
 	}
@@ -1413,12 +1414,14 @@ render_rows (cairo_botor_scan_converter_t *self,
 
     if (prev_x <= self->xmax) {
 	spans[num_spans].x = prev_x;
+	spans[num_spans].inverse = 0;
 	spans[num_spans].coverage = AREA_TO_ALPHA (cover);
 	++num_spans;
     }
 
     if (cover && prev_x < self->xmax) {
 	spans[num_spans].x = self->xmax;
+	spans[num_spans].inverse = 1;
 	spans[num_spans].coverage = 0;
 	++num_spans;
     }
@@ -2125,6 +2128,7 @@ botor_add_edge (cairo_botor_scan_converter_t *self,
     return CAIRO_STATUS_SUCCESS;
 }
 
+#if 0
 static cairo_status_t
 _cairo_botor_scan_converter_add_edge (void		*converter,
 				      const cairo_point_t *p1,
@@ -2143,9 +2147,10 @@ _cairo_botor_scan_converter_add_edge (void		*converter,
 
     return botor_add_edge (self, &edge);
 }
+#endif
 
-static cairo_status_t
-_cairo_botor_scan_converter_add_polygon (void		*converter,
+cairo_status_t
+_cairo_botor_scan_converter_add_polygon (cairo_botor_scan_converter_t *converter,
 					 const cairo_polygon_t *polygon)
 {
     cairo_botor_scan_converter_t *self = converter;
@@ -2179,8 +2184,6 @@ _cairo_botor_scan_converter_init (cairo_botor_scan_converter_t *self,
 				  cairo_fill_rule_t fill_rule)
 {
     self->base.destroy     = _cairo_botor_scan_converter_destroy;
-    self->base.add_edge    = _cairo_botor_scan_converter_add_edge;
-    self->base.add_polygon = _cairo_botor_scan_converter_add_polygon;
     self->base.generate    = _cairo_botor_scan_converter_generate;
 
     self->extents   = *extents;

@@ -45,14 +45,14 @@ CAIRO_BEGIN_DECLS
 
 /**
  * cairo_pdf_version_t:
- * @CAIRO_PDF_VERSION_1_4: The version 1.4 of the PDF specification.
- * @CAIRO_PDF_VERSION_1_5: The version 1.5 of the PDF specification.
+ * @CAIRO_PDF_VERSION_1_4: The version 1.4 of the PDF specification. (Since 1.10)
+ * @CAIRO_PDF_VERSION_1_5: The version 1.5 of the PDF specification. (Since 1.10)
  *
  * #cairo_pdf_version_t is used to describe the version number of the PDF
  * specification that a generated PDF file will conform to.
  *
- * Since 1.10
- */
+ * Since: 1.10
+ **/
 typedef enum _cairo_pdf_version {
     CAIRO_PDF_VERSION_1_4,
     CAIRO_PDF_VERSION_1_5
@@ -84,6 +84,73 @@ cairo_public void
 cairo_pdf_surface_set_size (cairo_surface_t	*surface,
 			    double		 width_in_points,
 			    double		 height_in_points);
+
+/**
+ * cairo_pdf_outline_flags_t:
+ * @CAIRO_PDF_OUTLINE_FLAG_OPEN: The outline item defaults to open in the PDF viewer (Since 1.16)
+ * @CAIRO_PDF_OUTLINE_FLAG_BOLD: The outline item is displayed by the viewer in bold text (Since 1.16)
+ * @CAIRO_PDF_OUTLINE_FLAG_ITALIC: The outline item is displayed by the viewer in italic text (Since 1.16)
+ *
+ * #cairo_pdf_outline_flags_t is used by the
+ * cairo_pdf_surface_add_outline() function specify the attributes of
+ * an outline item. These flags may be bitwise-or'd to produce any
+ * combination of flags.
+ *
+ * Since: 1.16
+ **/
+typedef enum _cairo_pdf_outline_flags {
+    CAIRO_PDF_OUTLINE_FLAG_OPEN   = 0x1,
+    CAIRO_PDF_OUTLINE_FLAG_BOLD   = 0x2,
+    CAIRO_PDF_OUTLINE_FLAG_ITALIC = 0x4,
+} cairo_pdf_outline_flags_t;
+
+#define CAIRO_PDF_OUTLINE_ROOT 0
+
+cairo_public int
+cairo_pdf_surface_add_outline (cairo_surface_t	          *surface,
+			       int                         parent_id,
+			       const char                 *utf8,
+			       const char                 *link_attribs,
+			       cairo_pdf_outline_flags_t  flags);
+
+/**
+ * cairo_pdf_metadata_t:
+ * @CAIRO_PDF_METADATA_TITLE: The document title (Since 1.16)
+ * @CAIRO_PDF_METADATA_AUTHOR: The document author (Since 1.16)
+ * @CAIRO_PDF_METADATA_SUBJECT: The document subject (Since 1.16)
+ * @CAIRO_PDF_METADATA_KEYWORDS: The document keywords (Since 1.16)
+ * @CAIRO_PDF_METADATA_CREATOR: The document creator (Since 1.16)
+ * @CAIRO_PDF_METADATA_CREATE_DATE: The document creation date (Since 1.16)
+ * @CAIRO_PDF_METADATA_MOD_DATE: The document modification date (Since 1.16)
+ *
+ * #cairo_pdf_metadata_t is used by the
+ * cairo_pdf_surface_set_metadata() function specify the metadata to set.
+ *
+ * Since: 1.16
+ **/
+typedef enum _cairo_pdf_metadata {
+    CAIRO_PDF_METADATA_TITLE,
+    CAIRO_PDF_METADATA_AUTHOR,
+    CAIRO_PDF_METADATA_SUBJECT,
+    CAIRO_PDF_METADATA_KEYWORDS,
+    CAIRO_PDF_METADATA_CREATOR,
+    CAIRO_PDF_METADATA_CREATE_DATE,
+    CAIRO_PDF_METADATA_MOD_DATE,
+} cairo_pdf_metadata_t;
+
+cairo_public void
+cairo_pdf_surface_set_metadata (cairo_surface_t	     *surface,
+				cairo_pdf_metadata_t  metadata,
+                                const char           *utf8);
+
+cairo_public void
+cairo_pdf_surface_set_page_label (cairo_surface_t *surface,
+                                  const char      *utf8);
+
+cairo_public void
+cairo_pdf_surface_set_thumbnail_size (cairo_surface_t *surface,
+				      int              width,
+				      int              height);
 
 CAIRO_END_DECLS
 

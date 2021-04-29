@@ -66,6 +66,12 @@ _cairo_region_init_rectangle (cairo_region_t *region,
 cairo_private void
 _cairo_region_fini (cairo_region_t *region);
 
+cairo_private cairo_region_t *
+_cairo_region_create_from_boxes (const cairo_box_t *boxes, int count);
+
+cairo_private cairo_box_t *
+_cairo_region_get_boxes (const cairo_region_t *region, int *nbox);
+
 CAIRO_END_DECLS
 
 #endif /* CAIRO_REGION_PRIVATE_H */

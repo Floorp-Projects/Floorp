@@ -135,6 +135,11 @@ _cairo_output_stream_printf (cairo_output_stream_t *stream,
 			     const char *fmt,
 			     ...) CAIRO_PRINTF_FORMAT (2, 3);
 
+/* Print matrix element values with rounding of insignificant digits. */
+cairo_private void
+_cairo_output_stream_print_matrix (cairo_output_stream_t *stream,
+				   const cairo_matrix_t  *matrix);
+
 cairo_private long
 _cairo_output_stream_get_position (cairo_output_stream_t *stream);
 

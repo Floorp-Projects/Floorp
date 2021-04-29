@@ -1,13 +1,13 @@
 Cairo - Multi-platform 2D graphics library
-http://cairographics.org
+https://cairographics.org
 
 What is cairo
 =============
 Cairo is a 2D graphics library with support for multiple output
 devices. Currently supported output targets include the X Window
-System, win32, and image buffers, as well as PDF, PostScript, and SVG
-file output. Experimental backends include OpenGL (through glitz),
-Quartz, XCB, BeOS, OS/2, and DirectFB.
+System (via both Xlib and XCB), quartz, win32, and image buffers,
+as well as PDF, PostScript, and SVG file output. Experimental backends
+include OpenGL, BeOS, OS/2, and DirectFB.
 
 Cairo is designed to produce consistent output on all output media
 while taking advantage of display hardware acceleration when available
@@ -35,25 +35,25 @@ Where to get more information about cairo
 =========================================
 The primary source of information about cairo is:
 
-	http://cairographics.org/
+	https://cairographics.org/
 
 The latest versions of cairo can always be found at:
 
-	http://cairographics.org/download
+	https://cairographics.org/download
 
 Documentation on using cairo and frequently-asked questions:
 
-	http://cairographics.org/documentation
-	http://cairographics.org/FAQ
+	https://cairographics.org/documentation
+	https://cairographics.org/FAQ
 
 Mailing lists for contacting cairo users and developers:
 
-	http://cairographics.org/lists
+	https://cairographics.org/lists
 
 Roadmap and unscheduled things to do, (please feel free to help out):
 
-	http://cairographics.org/roadmap
-	http://cairographics.org/todo
+	https://cairographics.org/roadmap
+	https://cairographics.org/todo
 
 Dependencies
 ============
@@ -67,29 +67,31 @@ backends. Further, the supported backends can be divided into the
 "platform" backends which depend on some underlying platform-specific
 system, (such as the X Window System or some other window system).
 
-As an example, for a standard Linux build, (with image, png, pdf,
-PostScript, svg, and xlib surface backends, and the freetype font
-backend), the following sample commands will install necessary
-dependencies:
+As an example, for a standard Linux build similar to what's shipped by
+your distro, (with image, png, pdf, PostScript, svg, and xlib surface
+backends, and the freetype font backend), the following sample commands
+will install necessary dependencies:
 
     Debian (and similar):
 
-	apt-get install libpng12-dev libz-dev libxrender-dev libfontconfig1-dev
+	apt-get build-dep cairo
 
     Fedora (and similar):
 
 	yum install libpng-devel zlib-devel libXrender-devel fontconfig-devel
 
-(Those commands intentionally don't install pixman from a distribution
-package since if you're manually compiling cairo, then you likely want
-to grab pixman from the same place at the same time and compile it as
-well.)
+Technically you probably don't need pixman from the distribution since
+if you're manually compiling Cairo you probably want an updated pixman
+as well.  However, if you follow the default settings and install pixman
+to /usr/local, your Cairo build should properly use it in preference to
+the system pixman.
+
 
 Supported, "standard" surface backends
 ------------------------------------
 	image backend (required)
 	------------------------
-	pixman >= 0.10.0	http://cairographics.org/releases
+	pixman >= 0.30.0	https://cairographics.org/releases
 
 	png support (can be left out if desired, but many
 	-----------  applications expect it to be present)
@@ -111,19 +113,23 @@ Supported, "platform" surface backends
 -----------------------------------
 	xlib backend
 	------------
-	X11			http://freedesktop.org/Software/xlibs
+	X11			https://freedesktop.org/Software/xlibs
 
 	xlib-xrender backend
 	--------------------
-	Xrender >= 0.6		http://freedesktop.org/Software/xlibs
+	Xrender >= 0.6		https://freedesktop.org/Software/xlibs
 
 	quartz backend
 	--------------
-	MacOS X >= 10.4 with Xcode >= 2.4
+	MacOS X >= 10.4 with Xcode >= 2.5
 
 	win32 backend
 	-------------
 	Microsoft Windows 2000 or newer[*].
+
+	xcb backend
+	-----------
+	XCB			https://xcb.freedesktop.org
 
 Font backends (required to have at least one)
 ---------------------------------------------
@@ -163,14 +169,6 @@ Font backends (required to have at least one)
 
 Experimental surface backends
 -----------------------------
-	glitz
-	-------------
-	glitz >= 0.4.4 		http://freedesktop.org/Software/glitz
-
-	xcb backend
-	-----------
-	XCB			http://xcb.freedesktop.org
-
 	beos backend
 	------------
 	No dependencies in itself other than an installed BeOS system, but cairo
@@ -183,9 +181,11 @@ Experimental surface backends
 	packages and developer dependencies are available at Netlabs:
 				ftp://ftp.netlabs.org/pub/cairo
 
+
 Compiling
 =========
 See the INSTALL document for build instructions.
+
 
 History
 =======

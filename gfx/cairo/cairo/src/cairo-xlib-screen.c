@@ -54,11 +54,14 @@
 
 #include "cairoint.h"
 
+#if !CAIRO_HAS_XLIB_XCB_FUNCTIONS
+
 #include "cairo-xlib-private.h"
 #include "cairo-xlib-xrender-private.h"
 
 #include "cairo-xlib-surface-private.h"
 #include "cairo-error-private.h"
+#include "cairo-list-inline.h"
 
 #include "cairo-fontconfig-private.h"
 
@@ -262,29 +265,35 @@ _cairo_xlib_init_screen_font_options (Display *dpy,
     cairo_font_options_set_hint_style (&info->font_options, hint_style);
     cairo_font_options_set_antialias (&info->font_options, antialias);
     cairo_font_options_set_subpixel_order (&info->font_options, subpixel_order);
-    cairo_font_options_set_lcd_filter (&info->font_options, lcd_filter);
+    _cairo_font_options_set_lcd_filter (&info->font_options, lcd_filter);
     cairo_font_options_set_hint_metrics (&info->font_options, CAIRO_HINT_METRICS_ON);
 }
 
 void
-_cairo_xlib_screen_close_display (cairo_xlib_display_t *display,
-                                  cairo_xlib_screen_t  *info)
+_cairo_xlib_screen_destroy (cairo_xlib_display_t *display,
+			    cairo_xlib_screen_t *info)
 {
     Display *dpy;
     int i;
 
     dpy = display->display;
 
-    for (i = 0; i < ARRAY_LENGTH (info->gc); i++) {
-	if ((info->gc_depths >> (8*i)) & 0xff)
-	    XFreeGC (dpy, info->gc[i]);
-    }
-    info->gc_depths = 0;
-}
+    while (! cairo_list_is_empty (&info->surfaces)) {
+	cairo_xlib_surface_t *surface;
 
-void
-_cairo_xlib_screen_destroy (cairo_xlib_screen_t *info)
-{
+	surface = cairo_list_first_entry (&info->surfaces,
+					  cairo_xlib_surface_t,
+					  link);
+	cairo_surface_finish (&surface->base);
+    }
+
+    for (i = 0; i < ARRAY_LENGTH (info->gc); i++) {
+	if (info->gc_depths[i] != 0) {
+	    XFreeGC (dpy, info->gc[i]);
+	    info->gc_depths[i] = 0;
+	}
+    }
+
     while (! cairo_list_is_empty (&info->visuals)) {
         _cairo_xlib_visual_info_destroy (cairo_list_first_entry (&info->visuals,
                                                                  cairo_xlib_visual_info_t,
@@ -321,7 +330,7 @@ _cairo_xlib_screen_get (Display *dpy,
 	goto CLEANUP_DISPLAY;
     }
 
-    info = malloc (sizeof (cairo_xlib_screen_t));
+    info = _cairo_malloc (sizeof (cairo_xlib_screen_t));
     if (unlikely (info == NULL)) {
 	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	goto CLEANUP_DISPLAY;
@@ -330,9 +339,10 @@ _cairo_xlib_screen_get (Display *dpy,
     info->device = device;
     info->screen = screen;
     info->has_font_options = FALSE;
-    info->gc_depths = 0;
+    memset (info->gc_depths, 0, sizeof (info->gc_depths));
     memset (info->gc, 0, sizeof (info->gc));
 
+    cairo_list_init (&info->surfaces);
     cairo_list_init (&info->visuals);
     cairo_list_add (&info->link, &display->screens);
 
@@ -356,8 +366,8 @@ _cairo_xlib_screen_get_gc (cairo_xlib_display_t *display,
     int i;
 
     for (i = 0; i < ARRAY_LENGTH (info->gc); i++) {
-	if (((info->gc_depths >> (8*i)) & 0xff) == depth) {
-	    info->gc_depths &= ~(0xff << (8*i));
+	if (info->gc_depths[i] == depth) {
+	    info->gc_depths[i] = 0;
 	    gc = info->gc[i];
 	    break;
 	}
@@ -385,29 +395,18 @@ _cairo_xlib_screen_put_gc (cairo_xlib_display_t *display,
     int i;
 
     for (i = 0; i < ARRAY_LENGTH (info->gc); i++) {
-	if (((info->gc_depths >> (8*i)) & 0xff) == 0)
+	if (info->gc_depths[i] == 0)
 	    break;
     }
 
     if (i == ARRAY_LENGTH (info->gc)) {
-	cairo_status_t status;
-
 	/* perform random substitution to ensure fair caching over depths */
 	i = rand () % ARRAY_LENGTH (info->gc);
-	status =
-	    _cairo_xlib_display_queue_work (display,
-					    (cairo_xlib_notify_func) XFreeGC,
-					    info->gc[i],
-					    NULL);
-	if (unlikely (status)) {
-	    /* leak the server side resource... */
-	    XFree ((char *) info->gc[i]);
-	}
+	XFreeGC(display->display, info->gc[i]);
     }
 
     info->gc[i] = gc;
-    info->gc_depths &= ~(0xff << (8*i));
-    info->gc_depths |= depth << (8*i);
+    info->gc_depths[i] = depth;
 }
 
 cairo_status_t
@@ -464,3 +463,5 @@ _cairo_xlib_screen_get_font_options (cairo_xlib_screen_t *info)
 
     return &info->font_options;
 }
+
+#endif /* !CAIRO_HAS_XLIB_XCB_FUNCTIONS */

@@ -36,7 +36,7 @@
 
 /* This surface is intended to produce a verbose, hierarchical, DAG XML file
  * representing a single surface. It is intended to be used by debuggers,
- * such as cairo-sphinx, or by application test-suites that what a log of
+ * such as cairo-sphinx, or by application test-suites that want a log of
  * operations.
  */
 
@@ -46,9 +46,11 @@
 
 #include "cairo-clip-private.h"
 #include "cairo-device-private.h"
+#include "cairo-default-context-private.h"
+#include "cairo-image-surface-private.h"
 #include "cairo-error-private.h"
 #include "cairo-output-stream-private.h"
-#include "cairo-recording-surface-private.h"
+#include "cairo-recording-surface-inline.h"
 
 #define static cairo_warn static
 
@@ -118,8 +120,8 @@ _extend_to_string (cairo_extend_t extend)
 {
     static const char *names[] = {
 	"EXTEND_NONE",		/* CAIRO_EXTEND_NONE */
-	"ExtendMode::REPEAT",	/* CAIRO_EXTEND_REPEAT */
-	"ExtendMode::REFLECT",	/* CAIRO_EXTEND_REFLECT */
+	"EXTEND_REPEAT",	/* CAIRO_EXTEND_REPEAT */
+	"EXTEND_REFLECT",	/* CAIRO_EXTEND_REFLECT */
 	"EXTEND_PAD"		/* CAIRO_EXTEND_PAD */
     };
     assert (extend < ARRAY_LENGTH (names));
@@ -131,7 +133,7 @@ _filter_to_string (cairo_filter_t filter)
 {
     static const char *names[] = {
 	"FILTER_FAST",		/* CAIRO_FILTER_FAST */
-	"SamplingFilter::GOOD",	/* CAIRO_FILTER_GOOD */
+	"FILTER_GOOD",		/* CAIRO_FILTER_GOOD */
 	"FILTER_BEST",		/* CAIRO_FILTER_BEST */
 	"FILTER_NEAREST",	/* CAIRO_FILTER_NEAREST */
 	"FILTER_BILINEAR",	/* CAIRO_FILTER_BILINEAR */
@@ -156,10 +158,13 @@ static const char *
 _antialias_to_string (cairo_antialias_t antialias)
 {
     static const char *names[] = {
-	"ANTIALIAS_DEFAULT",	/* CAIRO_ANTIALIAS_DEFAULT */
-	"ANTIALIAS_NONE",	/* CAIRO_ANTIALIAS_NONE */
-	"ANTIALIAS_GRAY",	/* CAIRO_ANTIALIAS_GRAY */
-	"ANTIALIAS_SUBPIXEL"	/* CAIRO_ANTIALIAS_SUBPIXEL */
+	"DEFAULT",	/* CAIRO_ANTIALIAS_DEFAULT */
+	"NONE",         /* CAIRO_ANTIALIAS_NONE */
+	"GRAY",         /* CAIRO_ANTIALIAS_GRAY */
+	"SUBPIXEL",	/* CAIRO_ANTIALIAS_SUBPIXEL */
+	"FAST",         /* CAIRO_ANTIALIAS_FAST */
+	"GOOD",         /* CAIRO_ANTIALIAS_GOOD */
+	"BEST",         /* CAIRO_ANTIALIAS_BEST */
     };
     assert (antialias < ARRAY_LENGTH (names));
     return names[antialias];
@@ -205,6 +210,7 @@ _format_to_string (cairo_format_t format)
 {
     switch (format) {
     case CAIRO_FORMAT_ARGB32:  return "ARGB32";
+    case CAIRO_FORMAT_RGB30:   return "RGB30";
     case CAIRO_FORMAT_RGB24:   return "RGB24";
     case CAIRO_FORMAT_RGB16_565:   return "RGB16_565";
     case CAIRO_FORMAT_A8:      return "A8";
@@ -252,7 +258,7 @@ _cairo_xml_create_internal (cairo_output_stream_t *stream)
 {
     cairo_xml_t *xml;
 
-    xml = malloc (sizeof (cairo_xml_t));
+    xml = _cairo_malloc (sizeof (cairo_xml_t));
     if (unlikely (xml == NULL))
 	return _cairo_device_create_in_error (CAIRO_STATUS_NO_MEMORY);
 
@@ -415,13 +421,12 @@ _cairo_xml_close_path (void *closure)
 
 static void
 _cairo_xml_emit_path (cairo_xml_t *xml,
-		      cairo_path_fixed_t *path)
+		      const cairo_path_fixed_t *path)
 {
     cairo_status_t status;
 
     _cairo_xml_printf_start (xml, "<path>");
     status = _cairo_path_fixed_interpret (path,
-					CAIRO_DIRECTION_FORWARD,
 					_cairo_xml_move_to,
 					_cairo_xml_line_to,
 					_cairo_xml_curve_to,
@@ -454,19 +459,79 @@ to_xml (cairo_xml_surface_t *surface)
 }
 
 static cairo_status_t
+_cairo_xml_surface_emit_clip_boxes (cairo_xml_surface_t *surface,
+				    const cairo_clip_t *clip)
+{
+    cairo_box_t *box;
+    cairo_xml_t *xml;
+    int n;
+
+    if (clip->num_boxes == 0)
+	return CAIRO_STATUS_SUCCESS;
+
+    /* skip the trivial clip covering the surface extents */
+    if (surface->width >= 0 && surface->height >= 0 && clip->num_boxes == 1) {
+	box = &clip->boxes[0];
+	if (box->p1.x <= 0 && box->p1.y <= 0 &&
+	    box->p2.x - box->p1.x >= _cairo_fixed_from_double (surface->width) &&
+	    box->p2.y - box->p1.y >= _cairo_fixed_from_double (surface->height))
+	{
+	    return CAIRO_STATUS_SUCCESS;
+	}
+    }
+
+    xml = to_xml (surface);
+
+    _cairo_xml_printf (xml, "<clip>");
+    _cairo_xml_indent (xml, 2);
+
+    _cairo_xml_printf (xml, "<path>");
+    _cairo_xml_indent (xml, 2);
+    for (n = 0; n < clip->num_boxes; n++) {
+	box = &clip->boxes[n];
+
+	_cairo_xml_printf_start (xml, "%f %f m",
+				 _cairo_fixed_to_double (box->p1.x),
+				 _cairo_fixed_to_double (box->p1.y));
+	_cairo_xml_printf_continue (xml, " %f %f l",
+				    _cairo_fixed_to_double (box->p2.x),
+				    _cairo_fixed_to_double (box->p1.y));
+	_cairo_xml_printf_continue (xml, " %f %f l",
+				    _cairo_fixed_to_double (box->p2.x),
+				    _cairo_fixed_to_double (box->p2.y));
+	_cairo_xml_printf_continue (xml, " %f %f l",
+				    _cairo_fixed_to_double (box->p1.x),
+				    _cairo_fixed_to_double (box->p2.y));
+	_cairo_xml_printf_end (xml, " h");
+    }
+    _cairo_xml_indent (xml, -2);
+    _cairo_xml_printf (xml, "</path>");
+    _cairo_xml_emit_double (xml, "tolerance", 1.0);
+    _cairo_xml_emit_string (xml, "antialias",
+			    _antialias_to_string (CAIRO_ANTIALIAS_NONE));
+    _cairo_xml_emit_string (xml, "fill-rule",
+			    _fill_rule_to_string (CAIRO_FILL_RULE_WINDING));
+
+    _cairo_xml_indent (xml, -2);
+    _cairo_xml_printf (xml, "</clip>");
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+static cairo_status_t
 _cairo_xml_surface_emit_clip_path (cairo_xml_surface_t *surface,
-				   cairo_clip_path_t *clip_path)
+				   const cairo_clip_path_t *clip_path)
 {
     cairo_box_t box;
     cairo_status_t status;
     cairo_xml_t *xml;
 
-    if (clip_path->prev != NULL) {
-	status = _cairo_xml_surface_emit_clip_path (surface, clip_path->prev);
-	if (unlikely (status))
-	    return status;
-    }
+    if (clip_path == NULL)
+	return CAIRO_STATUS_SUCCESS;
 
+    status = _cairo_xml_surface_emit_clip_path (surface, clip_path->prev);
+    if (unlikely (status))
+	return status;
 
     /* skip the trivial clip covering the surface extents */
     if (surface->width >= 0 && surface->height >= 0 &&
@@ -500,10 +565,16 @@ _cairo_xml_surface_emit_clip_path (cairo_xml_surface_t *surface,
 
 static cairo_status_t
 _cairo_xml_surface_emit_clip (cairo_xml_surface_t *surface,
-			      cairo_clip_t *clip)
+			      const cairo_clip_t *clip)
 {
+    cairo_status_t status;
+
     if (clip == NULL)
 	return CAIRO_STATUS_SUCCESS;
+
+    status = _cairo_xml_surface_emit_clip_boxes (surface, clip);
+    if (unlikely (status))
+	return status;
 
     return _cairo_xml_surface_emit_clip_path (surface, clip->path);
 }
@@ -555,10 +626,8 @@ _cairo_xml_emit_linear (cairo_xml_t *xml,
 {
     _cairo_xml_printf (xml,
 		       "<linear x1='%f' y1='%f' x2='%f' y2='%f'>",
-		       _cairo_fixed_to_double (linear->p1.x),
-		       _cairo_fixed_to_double (linear->p1.y),
-		       _cairo_fixed_to_double (linear->p2.x),
-		       _cairo_fixed_to_double (linear->p2.y));
+		       linear->pd1.x, linear->pd1.y,
+		       linear->pd2.x, linear->pd2.y);
     _cairo_xml_indent (xml, 2);
     _cairo_xml_emit_gradient (xml, &linear->base);
     _cairo_xml_indent (xml, -2);
@@ -572,12 +641,8 @@ _cairo_xml_emit_radial (cairo_xml_t *xml,
 {
     _cairo_xml_printf (xml,
 		       "<radial x1='%f' y1='%f' r1='%f' x2='%f' y2='%f' r2='%f'>",
-		       _cairo_fixed_to_double (radial->c1.x),
-		       _cairo_fixed_to_double (radial->c1.y),
-		       _cairo_fixed_to_double (radial->r1),
-		       _cairo_fixed_to_double (radial->c2.x),
-		       _cairo_fixed_to_double (radial->c2.y),
-		       _cairo_fixed_to_double (radial->r2));
+		       radial->cd1.center.x, radial->cd1.center.y, radial->cd1.radius,
+		       radial->cd2.center.x, radial->cd2.center.y, radial->cd2.radius);
     _cairo_xml_indent (xml, 2);
     _cairo_xml_emit_gradient (xml, &radial->base);
     _cairo_xml_indent (xml, -2);
@@ -692,7 +757,7 @@ static cairo_int_status_t
 _cairo_xml_surface_paint (void			*abstract_surface,
 			  cairo_operator_t	 op,
 			  const cairo_pattern_t	*source,
-			  cairo_clip_t		*clip)
+			  const cairo_clip_t	*clip)
 {
     cairo_xml_surface_t *surface = abstract_surface;
     cairo_xml_t *xml = to_xml (surface);
@@ -719,10 +784,10 @@ _cairo_xml_surface_paint (void			*abstract_surface,
 
 static cairo_int_status_t
 _cairo_xml_surface_mask (void			*abstract_surface,
-			  cairo_operator_t	 op,
-			  const cairo_pattern_t	*source,
-			  const cairo_pattern_t	*mask,
-			  cairo_clip_t		*clip)
+			 cairo_operator_t	 op,
+			 const cairo_pattern_t	*source,
+			 const cairo_pattern_t	*mask,
+			 const cairo_clip_t	*clip)
 {
     cairo_xml_surface_t *surface = abstract_surface;
     cairo_xml_t *xml = to_xml (surface);
@@ -755,13 +820,13 @@ static cairo_int_status_t
 _cairo_xml_surface_stroke (void				*abstract_surface,
 			   cairo_operator_t		 op,
 			   const cairo_pattern_t	*source,
-			   cairo_path_fixed_t		*path,
+			   const cairo_path_fixed_t		*path,
 			   const cairo_stroke_style_t		*style,
 			   const cairo_matrix_t		*ctm,
 			   const cairo_matrix_t		*ctm_inverse,
 			   double			 tolerance,
 			   cairo_antialias_t		 antialias,
-			   cairo_clip_t			*clip)
+			   const cairo_clip_t		*clip)
 {
     cairo_xml_surface_t *surface = abstract_surface;
     cairo_xml_t *xml = to_xml (surface);
@@ -811,11 +876,11 @@ static cairo_int_status_t
 _cairo_xml_surface_fill (void			*abstract_surface,
 			 cairo_operator_t	 op,
 			 const cairo_pattern_t	*source,
-			 cairo_path_fixed_t	*path,
+			 const cairo_path_fixed_t*path,
 			 cairo_fill_rule_t	 fill_rule,
 			 double			 tolerance,
 			 cairo_antialias_t	 antialias,
-			 cairo_clip_t		*clip)
+			 const cairo_clip_t	*clip)
 {
     cairo_xml_surface_t *surface = abstract_surface;
     cairo_xml_t *xml = to_xml (surface);
@@ -868,11 +933,11 @@ _cairo_xml_emit_type42_font (cairo_xml_t *xml,
     if (unlikely (status))
 	return status;
 
-    buf = malloc (size);
+    buf = _cairo_malloc (size);
     if (unlikely (buf == NULL))
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
-    status = backend->load_truetype_table (scaled_font, 0, 0, buf, NULL);
+    status = backend->load_truetype_table (scaled_font, 0, 0, buf, &size);
     if (unlikely (status)) {
 	free (buf);
 	return status;
@@ -930,7 +995,7 @@ _cairo_xml_emit_scaled_font (cairo_xml_t *xml,
 			     cairo_glyph_t *glyphs,
 			     int num_glyphs)
 {
-    cairo_status_t status;
+    cairo_int_status_t status;
 
     _cairo_xml_printf (xml, "<scaled-font>");
     _cairo_xml_indent (xml, 2);
@@ -942,7 +1007,7 @@ _cairo_xml_emit_scaled_font (cairo_xml_t *xml,
     }
 
     _cairo_xml_indent (xml, -2);
-    _cairo_xml_printf (xml, "<scaled-font>");
+    _cairo_xml_printf (xml, "</scaled-font>");
 
     return status;
 }
@@ -954,8 +1019,7 @@ _cairo_xml_surface_glyphs (void			    *abstract_surface,
 			   cairo_glyph_t	    *glyphs,
 			   int			     num_glyphs,
 			   cairo_scaled_font_t	    *scaled_font,
-			   cairo_clip_t		    *clip,
-			   int			    *remaining_glyphs)
+			   const cairo_clip_t       *clip)
 {
     cairo_xml_surface_t *surface = abstract_surface;
     cairo_xml_t *xml = to_xml (surface);
@@ -989,48 +1053,41 @@ _cairo_xml_surface_glyphs (void			    *abstract_surface,
     _cairo_xml_indent (xml, -2);
     _cairo_xml_printf (xml, "</glyphs>");
 
-    *remaining_glyphs = 0;
     return CAIRO_STATUS_SUCCESS;
 }
 
 static const cairo_surface_backend_t
 _cairo_xml_surface_backend = {
     CAIRO_SURFACE_TYPE_XML,
-    _cairo_xml_surface_create_similar,
     NULL,
-    NULL, NULL, /* source image */
-    NULL, NULL, /* dst image */
-    NULL, /* clone_similar */
-    NULL, /* composite */
-    NULL, /* fill_rectangles */
-    NULL, /* composite_trapezoids */
-    NULL, /* create_span_renderer */
-    NULL, /* check_span_renderer */
-    NULL, NULL, /* copy/show page */
+
+    _cairo_default_context_create,
+
+    _cairo_xml_surface_create_similar,
+    NULL, /* create_similar_image */
+    NULL, /* map_to_image */
+    NULL, /* unmap_image */
+
+    _cairo_surface_default_source,
+    NULL, /* acquire source image */
+    NULL, /* release source image */
+    NULL, /* snapshot */
+
+    NULL, /* copy page */
+    NULL, /* show page */
+
     _cairo_xml_surface_get_extents,
-    NULL, /* old_show_glyphs */
     NULL, /* get_font_options */
+
     NULL, /* flush */
     NULL, /* mark_dirty_rectangle */
-    NULL, /* font fini */
-    NULL, /* scaled_glyph_fini */
 
-    /* The 5 high level operations */
     _cairo_xml_surface_paint,
     _cairo_xml_surface_mask,
     _cairo_xml_surface_stroke,
     _cairo_xml_surface_fill,
-    _cairo_xml_surface_glyphs,
-
-    NULL, /* snapshot */
-
-    NULL, /* is_similar */
     NULL, /* fill_stroke */
-    NULL, /* create_solid_pattern_surface */
-    NULL, /* can_repaint_solid_pattern_surface */
-
-    /* The alternate high-level text operation */
-    NULL, NULL, /* has, show_text_glyphs */
+    _cairo_xml_surface_glyphs,
 };
 
 static cairo_surface_t *
@@ -1041,14 +1098,15 @@ _cairo_xml_surface_create_internal (cairo_device_t *device,
 {
     cairo_xml_surface_t *surface;
 
-    surface = malloc (sizeof (cairo_xml_surface_t));
+    surface = _cairo_malloc (sizeof (cairo_xml_surface_t));
     if (unlikely (surface == NULL))
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
 
     _cairo_surface_init (&surface->base,
 			 &_cairo_xml_surface_backend,
 			 device,
-			 content);
+			 content,
+			 TRUE); /* is_vector */
 
     surface->width = width;
     surface->height = height;

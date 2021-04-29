@@ -1,4 +1,4 @@
-/* vim: set sw=2 sts=2 et cin: */
+/* vim: set sw=4 sts=4 et cin: */
 /* cairo - a vector graphics library with display and print output
  *
  * Copyright (c) 2005-2006 netlabs.org

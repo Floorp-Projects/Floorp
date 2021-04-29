@@ -1,3 +1,4 @@
+/* -*- Mode: c; c-basic-offset: 4; indent-tabs-mode: t; tab-width: 8; -*- */
 /* cairo - a vector graphics library with display and print output
  *
  * Copyright © 2002 University of Southern California
@@ -36,33 +37,52 @@
 
 #include "cairoint.h"
 
+#include "cairo-boxes-private.h"
+#include "cairo-contour-private.h"
 #include "cairo-error-private.h"
-#include "cairo-slope-private.h"
 
-void
-_cairo_polygon_init (cairo_polygon_t *polygon)
+#define DEBUG_POLYGON 0
+
+#if DEBUG_POLYGON && !NDEBUG
+static void
+assert_last_edge_is_valid(cairo_polygon_t *polygon,
+			  const cairo_box_t *limit)
 {
-    VG (VALGRIND_MAKE_MEM_UNDEFINED (polygon, sizeof (cairo_polygon_t)));
+    cairo_edge_t *edge;
+    cairo_fixed_t x;
 
-    polygon->status = CAIRO_STATUS_SUCCESS;
+    edge = &polygon->edges[polygon->num_edges-1];
 
-    polygon->num_edges = 0;
+    assert (edge->bottom > edge->top);
+    assert (edge->top >= limit->p1.y);
+    assert (edge->bottom <= limit->p2.y);
 
-    polygon->edges = polygon->edges_embedded;
-    polygon->edges_size = ARRAY_LENGTH (polygon->edges_embedded);
+    x = _cairo_edge_compute_intersection_x_for_y (&edge->line.p1,
+						  &edge->line.p2,
+						  edge->top);
+    assert (x >= limit->p1.x);
+    assert (x <= limit->p2.x);
 
-    polygon->has_current_point = FALSE;
-    polygon->has_current_edge = FALSE;
-    polygon->num_limits = 0;
-
-    polygon->extents.p1.x = polygon->extents.p1.y = INT32_MAX;
-    polygon->extents.p2.x = polygon->extents.p2.y = INT32_MIN;
+    x = _cairo_edge_compute_intersection_x_for_y (&edge->line.p1,
+						  &edge->line.p2,
+						  edge->bottom);
+    assert (x >= limit->p1.x);
+    assert (x <= limit->p2.x);
 }
+#else
+#define assert_last_edge_is_valid(p, l)
+#endif
+
+static void
+_cairo_polygon_add_edge (cairo_polygon_t *polygon,
+			 const cairo_point_t *p1,
+			 const cairo_point_t *p2,
+			 int dir);
 
 void
-_cairo_polygon_limit (cairo_polygon_t	*polygon,
-		      const cairo_box_t *limits,
-		      int num_limits)
+_cairo_polygon_limit (cairo_polygon_t *polygon,
+		     const cairo_box_t *limits,
+		     int num_limits)
 {
     int n;
 
@@ -88,12 +108,147 @@ _cairo_polygon_limit (cairo_polygon_t	*polygon,
 }
 
 void
+_cairo_polygon_limit_to_clip (cairo_polygon_t *polygon,
+			      const cairo_clip_t *clip)
+{
+    if (clip)
+	_cairo_polygon_limit (polygon, clip->boxes, clip->num_boxes);
+    else
+	_cairo_polygon_limit (polygon, 0, 0);
+}
+
+void
+_cairo_polygon_init (cairo_polygon_t *polygon,
+		     const cairo_box_t *limits,
+		     int num_limits)
+{
+    VG (VALGRIND_MAKE_MEM_UNDEFINED (polygon, sizeof (cairo_polygon_t)));
+
+    polygon->status = CAIRO_STATUS_SUCCESS;
+
+    polygon->num_edges = 0;
+
+    polygon->edges = polygon->edges_embedded;
+    polygon->edges_size = ARRAY_LENGTH (polygon->edges_embedded);
+
+    polygon->extents.p1.x = polygon->extents.p1.y = INT32_MAX;
+    polygon->extents.p2.x = polygon->extents.p2.y = INT32_MIN;
+
+    _cairo_polygon_limit (polygon, limits, num_limits);
+}
+
+void
+_cairo_polygon_init_with_clip (cairo_polygon_t *polygon,
+			       const cairo_clip_t *clip)
+{
+    if (clip)
+	_cairo_polygon_init (polygon, clip->boxes, clip->num_boxes);
+    else
+	_cairo_polygon_init (polygon, 0, 0);
+}
+
+cairo_status_t
+_cairo_polygon_init_boxes (cairo_polygon_t *polygon,
+			   const cairo_boxes_t *boxes)
+{
+    const struct _cairo_boxes_chunk *chunk;
+    int i;
+
+    VG (VALGRIND_MAKE_MEM_UNDEFINED (polygon, sizeof (cairo_polygon_t)));
+
+    polygon->status = CAIRO_STATUS_SUCCESS;
+
+    polygon->num_edges = 0;
+
+    polygon->edges = polygon->edges_embedded;
+    polygon->edges_size = ARRAY_LENGTH (polygon->edges_embedded);
+    if (boxes->num_boxes > ARRAY_LENGTH (polygon->edges_embedded)/2) {
+	polygon->edges_size = 2 * boxes->num_boxes;
+	polygon->edges = _cairo_malloc_ab (polygon->edges_size,
+					   2*sizeof(cairo_edge_t));
+	if (unlikely (polygon->edges == NULL))
+	    return polygon->status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
+    }
+
+    polygon->extents.p1.x = polygon->extents.p1.y = INT32_MAX;
+    polygon->extents.p2.x = polygon->extents.p2.y = INT32_MIN;
+
+    polygon->limits = NULL;
+    polygon->num_limits = 0;
+
+    for (chunk = &boxes->chunks; chunk != NULL; chunk = chunk->next) {
+	for (i = 0; i < chunk->count; i++) {
+	    cairo_point_t p1, p2;
+
+	    p1 = chunk->base[i].p1;
+	    p2.x = p1.x;
+	    p2.y = chunk->base[i].p2.y;
+	    _cairo_polygon_add_edge (polygon, &p1, &p2, 1);
+
+	    p1 = chunk->base[i].p2;
+	    p2.x = p1.x;
+	    p2.y = chunk->base[i].p1.y;
+	    _cairo_polygon_add_edge (polygon, &p1, &p2, 1);
+	}
+    }
+
+    return polygon->status;
+}
+
+cairo_status_t
+_cairo_polygon_init_box_array (cairo_polygon_t *polygon,
+			       cairo_box_t *boxes,
+			       int num_boxes)
+{
+    int i;
+
+    VG (VALGRIND_MAKE_MEM_UNDEFINED (polygon, sizeof (cairo_polygon_t)));
+
+    polygon->status = CAIRO_STATUS_SUCCESS;
+
+    polygon->num_edges = 0;
+
+    polygon->edges = polygon->edges_embedded;
+    polygon->edges_size = ARRAY_LENGTH (polygon->edges_embedded);
+    if (num_boxes > ARRAY_LENGTH (polygon->edges_embedded)/2) {
+	polygon->edges_size = 2 * num_boxes;
+	polygon->edges = _cairo_malloc_ab (polygon->edges_size,
+					   2*sizeof(cairo_edge_t));
+	if (unlikely (polygon->edges == NULL))
+	    return polygon->status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
+    }
+
+    polygon->extents.p1.x = polygon->extents.p1.y = INT32_MAX;
+    polygon->extents.p2.x = polygon->extents.p2.y = INT32_MIN;
+
+    polygon->limits = NULL;
+    polygon->num_limits = 0;
+
+    for (i = 0; i < num_boxes; i++) {
+	cairo_point_t p1, p2;
+
+	p1 = boxes[i].p1;
+	p2.x = p1.x;
+	p2.y = boxes[i].p2.y;
+	_cairo_polygon_add_edge (polygon, &p1, &p2, 1);
+
+	p1 = boxes[i].p2;
+	p2.x = p1.x;
+	p2.y = boxes[i].p1.y;
+	_cairo_polygon_add_edge (polygon, &p1, &p2, 1);
+    }
+
+    return polygon->status;
+}
+
+
+void
 _cairo_polygon_fini (cairo_polygon_t *polygon)
 {
     if (polygon->edges != polygon->edges_embedded)
 	free (polygon->edges);
 
-    VG (VALGRIND_MAKE_MEM_NOACCESS (polygon, sizeof (cairo_polygon_t)));
+    VG (VALGRIND_MAKE_MEM_UNDEFINED (polygon, sizeof (cairo_polygon_t)));
 }
 
 /* make room for at least one more edge */
@@ -185,156 +340,156 @@ _add_clipped_edge (cairo_polygon_t *polygon,
 		   const int top, const int bottom,
 		   const int dir)
 {
-    cairo_point_t p[2];
-    int top_y, bot_y;
+    cairo_point_t bot_left, top_right;
+    cairo_fixed_t top_y, bot_y;
     int n;
 
     for (n = 0; n < polygon->num_limits; n++) {
 	const cairo_box_t *limits = &polygon->limits[n];
+	cairo_fixed_t pleft, pright;
 
 	if (top >= limits->p2.y)
 	    continue;
 	if (bottom <= limits->p1.y)
 	    continue;
 
-	if (p1->x >= limits->p1.x && p2->x >= limits->p1.x &&
-	    p1->x <= limits->p2.x && p2->x <= limits->p2.x)
-	{
-	    top_y = top;
-	    if (top_y < limits->p1.y)
-		top_y = limits->p1.y;
+	bot_left.x = limits->p1.x;
+	bot_left.y = limits->p2.y;
 
-	    bot_y = bottom;
-	    if (bot_y > limits->p2.y)
-		bot_y = limits->p2.y;
+	top_right.x = limits->p2.x;
+	top_right.y = limits->p1.y;
+
+	/* The useful region */
+	top_y = MAX (top, limits->p1.y);
+	bot_y = MIN (bottom, limits->p2.y);
+
+	/* The projection of the edge on the horizontal axis */
+	pleft = MIN (p1->x, p2->x);
+	pright = MAX (p1->x, p2->x);
+
+	if (limits->p1.x <= pleft && pright <= limits->p2.x) {
+	    /* Projection of the edge completely contained in the box:
+	     * clip vertically by restricting top and bottom */
 
 	    _add_edge (polygon, p1, p2, top_y, bot_y, dir);
-	}
-	else if (p1->x <= limits->p1.x && p2->x <= limits->p1.x)
-	{
-	    p[0].x = limits->p1.x;
-	    p[0].y = limits->p1.y;
-	    top_y = top;
-	    if (top_y < p[0].y)
-		top_y = p[0].y;
+	    assert_last_edge_is_valid (polygon, limits);
+	} else if (pright <= limits->p1.x) {
+	    /* Projection of the edge to the left of the box:
+	     * replace with the left side of the box (clipped top/bottom) */
 
-	    p[1].x = limits->p1.x;
-	    p[1].y = limits->p2.y;
-	    bot_y = bottom;
-	    if (bot_y > p[1].y)
-		bot_y = p[1].y;
+	    _add_edge (polygon, &limits->p1, &bot_left, top_y, bot_y, dir);
+	    assert_last_edge_is_valid (polygon, limits);
+	} else if (limits->p2.x <= pleft) {
+	    /* Projection of the edge to the right of the box:
+	     * replace with the right side of the box (clipped top/bottom) */
 
-	    _add_edge (polygon, &p[0], &p[1], top_y, bot_y, dir);
-	}
-	else if (p1->x >= limits->p2.x && p2->x >= limits->p2.x)
-	{
-	    p[0].x = limits->p2.x;
-	    p[0].y = limits->p1.y;
-	    top_y = top;
-	    if (top_y < p[0].y)
-		top_y = p[0].y;
+	    _add_edge (polygon, &top_right, &limits->p2, top_y, bot_y, dir);
+	    assert_last_edge_is_valid (polygon, limits);
+	} else {
+	    /* The edge and the box intersect in a generic way */
+	    cairo_fixed_t left_y, right_y;
+	    cairo_bool_t top_left_to_bottom_right;
 
-	    p[1].x = limits->p2.x;
-	    p[1].y = limits->p2.y;
-	    bot_y = bottom;
-	    if (bot_y > p[1].y)
-		bot_y = p[1].y;
+	    /*
+	     * The edge intersects the lines corresponding to the left
+	     * and right sides of the limit box at left_y and right_y,
+	     * but we need to add edges for the range from top_y to
+	     * bot_y.
+	     *
+	     * For both intersections, there are three cases:
+	     *
+	     *  1) It is outside the vertical range of the limit
+	     *     box. In this case we can simply further clip the
+	     *     edge we will be emitting (i.e. restrict its
+	     *     top/bottom limits to those of the limit box).
+	     *
+	     *  2) It is inside the vertical range of the limit
+	     *     box. In this case, we need to add the vertical edge
+	     *     connecting the correct vertex to the intersection,
+	     *     in order to preserve the winding count.
+	     *
+	     *  3) It is exactly on the box. In this case, do nothing.
+	     *
+	     * These operations restrict the active range (stored in
+	     * top_y/bot_y) so that the p1-p2 edge is completely
+	     * inside the box if it is clipped to this vertical range.
+	     */
 
-	    _add_edge (polygon, &p[0], &p[1], top_y, bot_y, dir);
-	}
-	else
-	{
-	    int left_y, right_y;
-	    int p1_y, p2_y;
-
-	    left_y = _cairo_edge_compute_intersection_y_for_x (p1, p2,
-							       limits->p1.x);
-	    right_y = _cairo_edge_compute_intersection_y_for_x (p1, p2,
-								limits->p2.x);
-
-	    p1_y = top;
-	    p2_y = bottom;
-
-	    if (p1->x < p2->x) {
-		if (p1->x < limits->p1.x && left_y > limits->p1.y) {
-		    p[0].x = limits->p1.x;
-		    p[0].y = limits->p1.y;
-		    top_y = p1_y;
-		    if (top_y < p[0].y)
-			top_y = p[0].y;
-
-		    p[1].x = limits->p1.x;
-		    p[1].y = limits->p2.y;
-		    bot_y = left_y;
-		    if (bot_y > p[1].y)
-			bot_y = p[1].y;
-
-		    if (bot_y > top_y)
-			_add_edge (polygon, &p[0], &p[1], top_y, bot_y, dir);
-		    p1_y = bot_y;
+	    top_left_to_bottom_right = (p1->x <= p2->x) == (p1->y <= p2->y);
+	    if (top_left_to_bottom_right) {
+		if (pleft >= limits->p1.x) {
+		    left_y = top_y;
+		} else {
+		    left_y = _cairo_edge_compute_intersection_y_for_x (p1, p2,
+								       limits->p1.x);
+		    if (_cairo_edge_compute_intersection_x_for_y (p1, p2, left_y) < limits->p1.x)
+			left_y++;
 		}
 
-		if (p2->x > limits->p2.x && right_y < limits->p2.y) {
-		    p[0].x = limits->p2.x;
-		    p[0].y = limits->p1.y;
-		    top_y = right_y;
-		    if (top_y < p[0].y)
-			top_y = p[0].y;
+		left_y = MIN (left_y, bot_y);
+		if (top_y < left_y) {
+		    _add_edge (polygon, &limits->p1, &bot_left,
+			       top_y, left_y, dir);
+		    assert_last_edge_is_valid (polygon, limits);
+		    top_y = left_y;
+		}
 
-		    p[1].x = limits->p2.x;
-		    p[1].y = limits->p2.y;
-		    bot_y = p2_y;
-		    if (bot_y > p[1].y)
-			bot_y = p[1].y;
+		if (pright <= limits->p2.x) {
+		    right_y = bot_y;
+		} else {
+		    right_y = _cairo_edge_compute_intersection_y_for_x (p1, p2,
+									limits->p2.x);
+		    if (_cairo_edge_compute_intersection_x_for_y (p1, p2, right_y) > limits->p2.x)
+			right_y--;
+		}
 
-		    if (bot_y > top_y)
-			_add_edge (polygon, &p[0], &p[1], top_y, bot_y, dir);
-		    p2_y = top_y;
+		right_y = MAX (right_y, top_y);
+		if (bot_y > right_y) {
+		    _add_edge (polygon, &top_right, &limits->p2,
+			       right_y, bot_y, dir);
+		    assert_last_edge_is_valid (polygon, limits);
+		    bot_y = right_y;
 		}
 	    } else {
-		if (p1->x > limits->p2.x && right_y > limits->p1.y) {
-		    p[0].x = limits->p2.x;
-		    p[0].y = limits->p1.y;
-		    top_y = p1_y;
-		    if (top_y < p[0].y)
-			top_y = p[0].y;
-
-		    p[1].x = limits->p2.x;
-		    p[1].y = limits->p2.y;
-		    bot_y = right_y;
-		    if (bot_y > p[1].y)
-			bot_y = p[1].y;
-
-		    if (bot_y > top_y)
-			_add_edge (polygon, &p[0], &p[1], top_y, bot_y, dir);
-		    p1_y = bot_y;
+		if (pright <= limits->p2.x) {
+		    right_y = top_y;
+		} else {
+		    right_y = _cairo_edge_compute_intersection_y_for_x (p1, p2,
+									limits->p2.x);
+		    if (_cairo_edge_compute_intersection_x_for_y (p1, p2, right_y) > limits->p2.x)
+			right_y++;
 		}
 
-		if (p2->x < limits->p1.x && left_y < limits->p2.y) {
-		    p[0].x = limits->p1.x;
-		    p[0].y = limits->p1.y;
-		    top_y = left_y;
-		    if (top_y < p[0].y)
-			top_y = p[0].y;
+		right_y = MIN (right_y, bot_y);
+		if (top_y < right_y) {
+		    _add_edge (polygon, &top_right, &limits->p2,
+			       top_y, right_y, dir);
+		    assert_last_edge_is_valid (polygon, limits);
+		    top_y = right_y;
+		}
 
-		    p[1].x = limits->p1.x;
-		    p[1].y = limits->p2.y;
-		    bot_y = p2_y;
-		    if (bot_y > p[1].y)
-			bot_y = p[1].y;
+		if (pleft >= limits->p1.x) {
+		    left_y = bot_y;
+		} else {
+		    left_y = _cairo_edge_compute_intersection_y_for_x (p1, p2,
+								       limits->p1.x);
+		    if (_cairo_edge_compute_intersection_x_for_y (p1, p2, left_y) < limits->p1.x)
+			left_y--;
+		}
 
-		    if (bot_y > top_y)
-			_add_edge (polygon, &p[0], &p[1], top_y, bot_y, dir);
-		    p2_y = top_y;
+		left_y = MAX (left_y, top_y);
+		if (bot_y > left_y) {
+		    _add_edge (polygon, &limits->p1, &bot_left,
+			       left_y, bot_y, dir);
+		    assert_last_edge_is_valid (polygon, limits);
+		    bot_y = left_y;
 		}
 	    }
 
-	    if (p1_y < limits->p1.y)
-		p1_y = limits->p1.y;
-	    if (p2_y > limits->p2.y)
-		p2_y = limits->p2.y;
-	    if (p2_y > p1_y)
-		_add_edge (polygon, p1, p2, p1_y, p2_y, dir);
+	    if (top_y != bot_y) {
+		_add_edge (polygon, p1, p2, top_y, bot_y, dir);
+		assert_last_edge_is_valid (polygon, limits);
+	    }
 	}
     }
 }
@@ -342,20 +497,17 @@ _add_clipped_edge (cairo_polygon_t *polygon,
 static void
 _cairo_polygon_add_edge (cairo_polygon_t *polygon,
 			 const cairo_point_t *p1,
-			 const cairo_point_t *p2)
+			 const cairo_point_t *p2,
+			 int dir)
 {
-    int dir;
-
     /* drop horizontal edges */
     if (p1->y == p2->y)
 	return;
 
-    if (p1->y < p2->y) {
-	dir = 1;
-    } else {
+    if (p1->y > p2->y) {
 	const cairo_point_t *t;
 	t = p1, p1 = p2, p2 = t;
-	dir = -1;
+	dir = -dir;
     }
 
     if (polygon->num_limits) {
@@ -375,7 +527,7 @@ _cairo_polygon_add_external_edge (void *polygon,
 				  const cairo_point_t *p1,
 				  const cairo_point_t *p2)
 {
-    _cairo_polygon_add_edge (polygon, p1, p2);
+    _cairo_polygon_add_edge (polygon, p1, p2, 1);
     return _cairo_polygon_status (polygon);
 }
 
@@ -406,87 +558,51 @@ _cairo_polygon_add_line (cairo_polygon_t *polygon,
     return polygon->status;
 }
 
-/* flattened path operations */
-
 cairo_status_t
-_cairo_polygon_move_to (cairo_polygon_t *polygon,
-			const cairo_point_t *point)
+_cairo_polygon_add_contour (cairo_polygon_t *polygon,
+			    const cairo_contour_t *contour)
 {
-    if (polygon->has_current_edge) {
-	_cairo_polygon_add_edge (polygon,
-				 &polygon->last_point,
-				 &polygon->current_point);
-	polygon->has_current_edge = FALSE;
+    const struct _cairo_contour_chain *chain;
+    const cairo_point_t *prev = NULL;
+    int i;
+
+    if (contour->chain.num_points <= 1)
+	return CAIRO_INT_STATUS_SUCCESS;
+
+    prev = &contour->chain.points[0];
+    for (chain = &contour->chain; chain; chain = chain->next) {
+	for (i = 0; i < chain->num_points; i++) {
+	    _cairo_polygon_add_edge (polygon, prev, &chain->points[i],
+				     contour->direction);
+	    prev = &chain->points[i];
+	}
     }
 
-    if (! polygon->has_current_point) {
-	polygon->first_point = *point;
-	polygon->has_current_point = TRUE;
-    }
-
-    polygon->current_point = *point;
     return polygon->status;
 }
 
-cairo_status_t
-_cairo_polygon_line_to (cairo_polygon_t *polygon,
-			const cairo_point_t *point)
+void
+_cairo_polygon_translate (cairo_polygon_t *polygon, int dx, int dy)
 {
-    /* squash collinear edges */
-    if (polygon->has_current_edge) {
-	if (polygon->current_point.x != point->x ||
-	    polygon->current_point.y != point->y)
-	{
-	    cairo_slope_t this;
+    int n;
 
-	    _cairo_slope_init (&this, &polygon->current_point, point);
-	    if (_cairo_slope_equal (&polygon->current_edge, &this)) {
-		polygon->current_point = *point;
-		return CAIRO_STATUS_SUCCESS;
-	    }
+    dx = _cairo_fixed_from_int (dx);
+    dy = _cairo_fixed_from_int (dy);
 
-	    _cairo_polygon_add_edge (polygon,
-				     &polygon->last_point,
-				     &polygon->current_point);
+    polygon->extents.p1.x += dx;
+    polygon->extents.p2.x += dx;
+    polygon->extents.p1.y += dy;
+    polygon->extents.p2.y += dy;
 
-	    polygon->last_point = polygon->current_point;
-	    polygon->current_edge = this;
-	}
-    } else if (polygon->has_current_point) {
-	if (polygon->current_point.x != point->x ||
-	    polygon->current_point.y != point->y)
-	{
-	    polygon->last_point = polygon->current_point;
-	    _cairo_slope_init (&polygon->current_edge,
-			       &polygon->last_point,
-			       point);
-	    polygon->has_current_edge = TRUE;
-	}
-    } else {
-	polygon->first_point = *point;
-	polygon->has_current_point = TRUE;
+    for (n = 0; n < polygon->num_edges; n++) {
+	cairo_edge_t *e = &polygon->edges[n];
+
+	e->top += dy;
+	e->bottom += dy;
+
+	e->line.p1.x += dx;
+	e->line.p2.x += dx;
+	e->line.p1.y += dy;
+	e->line.p2.y += dy;
     }
-
-    polygon->current_point = *point;
-    return polygon->status;
-}
-
-cairo_status_t
-_cairo_polygon_close (cairo_polygon_t *polygon)
-{
-    cairo_status_t status;
-
-    if (polygon->has_current_point) {
-	status = _cairo_polygon_line_to (polygon, &polygon->first_point);
-	polygon->has_current_point = FALSE;
-    }
-
-    if (polygon->has_current_edge) {
-	_cairo_polygon_add_edge (polygon,
-				 &polygon->last_point,
-				 &polygon->current_point);
-	polygon->has_current_edge = FALSE;
-    }
-
-    return polygon->status;
 }

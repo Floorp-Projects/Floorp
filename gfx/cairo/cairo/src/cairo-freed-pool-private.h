@@ -40,11 +40,15 @@
 #include "cairoint.h"
 #include "cairo-atomic-private.h"
 
-#if HAS_ATOMIC_OPS
+CAIRO_BEGIN_DECLS
+
+#define DISABLE_FREED_POOLS 0
+
+#if HAS_ATOMIC_OPS && ! DISABLE_FREED_POOLS
 /* Keep a stash of recently freed clip_paths, since we need to
  * reallocate them frequently.
  */
-#define MAX_FREED_POOL_SIZE 4
+#define MAX_FREED_POOL_SIZE 16
 typedef struct {
     void *pool[MAX_FREED_POOL_SIZE];
     cairo_atomic_int_t top;
@@ -118,6 +122,10 @@ _freed_pool_reset (freed_pool_t *pool);
 
 #else
 
+/* A warning about an unused freed-pool in a build without atomics
+ * enabled usually indicates a missing _freed_pool_reset() in the
+ * static reset function */
+
 typedef int freed_pool_t;
 
 #define _freed_pool_get(pool) NULL
@@ -125,5 +133,7 @@ typedef int freed_pool_t;
 #define _freed_pool_reset(ptr)
 
 #endif
+
+CAIRO_END_DECLS
 
 #endif /* CAIRO_FREED_POOL_PRIVATE_H */

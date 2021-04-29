@@ -1,0 +1,8 @@
+Name: cairo
+Description: Multi-platform 2D graphics library
+Version: @VERSION@
+
+@PKGCONFIG_REQUIRES@: @CAIRO_REQUIRES@
+Libs: ${pc_top_builddir}/${pcfiledir}/src/libcairo.la
+Libs.private: @CAIRO_NONPKGCONFIG_LIBS@
+Cflags: -I${pc_top_builddir}/${pcfiledir}/@srcdir@/src
