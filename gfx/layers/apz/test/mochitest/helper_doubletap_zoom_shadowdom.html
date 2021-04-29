@@ -1,0 +1,69 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=2100"/>
+  <title>Check that double tapping shadow dom works</title>
+  <script src="apz_test_native_event_utils.js"></script>
+  <script src="apz_test_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <script>
+
+async function attach() {
+  let attachpoint = document.getElementById('attachpoint');
+  attachpoint.attachShadow({mode: 'open'}).innerHTML = "<span>some text</span>";
+
+  // flush layout
+  attachpoint.getBoundingClientRect();
+  await promiseApzFlushedRepaints();
+}
+
+async function test() {
+  let useTouchpad = (location.search == "?touchpad");
+
+  await attach();
+
+  var resolution = getResolution();
+  ok(resolution > 0,
+     "The initial_resolution is " + resolution + ", which is some sane value");
+
+  // Check that double-tapping once zooms in
+  // This will hit the span inside the shadow dom, inline elements are not
+  // suitable zoom targets, so we will walk up, if you fail to walk out of
+  // the shadow tree we won't get an element and fail to zoom. If we succeed
+  // we'll hit the div with id target and zoom.
+  info("sending first double tap");
+  await doubleTapOn(document.getElementById("target"), 10, 10, useTouchpad);
+  var prev_resolution = resolution;
+  resolution = getResolution();
+  ok(resolution > prev_resolution, "The first double-tap has increased the resolution to " + resolution);
+
+  // Check that double-tapping again on the same spot zooms out
+  info("sending second double tap");
+  await doubleTapOn(document.getElementById("target"), 10, 10, useTouchpad);
+  prev_resolution = resolution;
+  resolution = getResolution();
+  ok(resolution < prev_resolution, "The second double-tap has decreased the resolution to " + resolution);
+}
+
+waitUntilApzStable()
+.then(test)
+.then(subtestDone, subtestFailed);
+
+  </script>
+  <style>
+    .outer {
+      width: 200px;
+      height: 200px;
+      background: yellow;
+    }
+  </style>
+</head>
+<body>
+
+<div id="target" class="outer">
+  <div id="attachpoint"></div>
+</div>
+
+</body>
+</html>
