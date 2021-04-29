@@ -288,6 +288,15 @@ checkbox {
   font-size: 90%;
 }
 
+#FontsDialog menulist:empty {
+  /* When there's no menupopup, while the font builder is running,
+   * the height of the menulist would otherwise shrink. This throws
+   * off the height determination SubDialog.jsm does, which then
+   * leads to content being cut off. Fix by enforcing a minimum height
+   * when there's no content: */
+  min-height: max(32px, calc(1.4em + 16px));
+}
+
 #useDocumentColors {
   margin: 4px 0;
 }
