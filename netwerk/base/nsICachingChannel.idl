@@ -37,15 +37,6 @@ interface nsICachingChannel : nsICacheInfoChannel
     attribute nsISupports cacheToken;
 
     /**
-     * The same as above but accessing the offline app cache token if there
-     * is any.
-     *
-     * @throws
-     *      NS_ERROR_NOT_AVAILABLE when there is not offline cache token
-     */
-    attribute nsISupports offlineCacheToken;
-
-    /**
      * Instructs the channel to only store the metadata of the entry, and not
      * the content. When reading an existing entry, this automatically sets
      * LOAD_ONLY_IF_MODIFIED flag.

@@ -1000,22 +1000,6 @@ nsresult nsOfflineManifestItem::CheckNewManifestContentHash(
     mNeedsUpdate = false;
   }
 
-  // Store the manifest content hash value to the new
-  // offline cache token
-  nsCOMPtr<nsICachingChannel> cachingChannel = do_QueryInterface(aRequest, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsISupports> cacheToken;
-  cachingChannel->GetOfflineCacheToken(getter_AddRefs(cacheToken));
-  if (cacheToken) {
-    nsCOMPtr<nsICacheEntry> cacheDescriptor(do_QueryInterface(cacheToken, &rv));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = cacheDescriptor->SetMetaDataElement("offline-manifest-hash",
-                                             mManifestHashValue.get());
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
   return NS_OK;
 }
 
