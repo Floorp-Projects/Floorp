@@ -21,7 +21,7 @@ These steps only work in Firefox 75+.
 
 When enabled, the profiler toolbar button is not recording by default.
 Recording can be done by clicking on the toolbar icon to open its panel.
-Make sure to choose an appropriate setting for the recording (if you\'re
+Make sure to choose an appropriate setting for the recording (if you're
 not sure, choose Firefox Platform), and then choosing **Start
 Recording**. The toolbar icon turns blue when it is recording.
 
@@ -58,7 +58,7 @@ mouse to interact with the UI:
     will allow you to upload this profile and once completed will write
     out a link. Before uploading, the publish button asks you what data
     you'd like to publish to our servers.
-5.  Note that while it\'s possible to strip profiles of potentially
+5.  Note that while it's possible to strip profiles of potentially
     privacy sensitive information, the less information a profile
     contains, *the harder it is to analyze and turn into actionable
     data.*
