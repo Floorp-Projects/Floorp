@@ -28,16 +28,8 @@ using namespace mozilla::a11y;
  * see http://lxr.mozilla.org/seamonkey/source/accessible/accessible-docs.html
  */
 
-//#define DEBUG_LEAKS
-
-#ifdef DEBUG_LEAKS
-static gAccessibles = 0;
-#endif
-
 StaticAutoPtr<nsTArray<AccessibleWrap::HandlerControllerData>>
     AccessibleWrap::sHandlerControllers;
-
-static const int32_t kIEnumVariantDisconnected = -1;
 
 ////////////////////////////////////////////////////////////////////////////////
 // AccessibleWrap
@@ -152,20 +144,6 @@ nsresult AccessibleWrap::HandleAccEvent(AccEvent* aEvent) {
   MsaaAccessible::FireWinEvent(accessible, eventType);
 
   return NS_OK;
-}
-
-DocRemoteAccessibleWrap* AccessibleWrap::DocProxyWrapper() const {
-  MOZ_ASSERT(IsProxy());
-
-  RemoteAccessible* proxy = Proxy();
-  if (!proxy) {
-    return nullptr;
-  }
-
-  AccessibleWrap* acc = WrapperFor(proxy->Document());
-  MOZ_ASSERT(acc->IsDoc());
-
-  return static_cast<DocRemoteAccessibleWrap*>(acc);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
