@@ -199,7 +199,7 @@ const DEFAULT_PROTON_WELCOME_CONTENT = {
   id: "DEFAULT_ABOUTWELCOME_PROTON",
   template: "multistage",
   background_url:
-    "chrome://activity-stream/content/data/content/assets/proton-bkg.webp",
+    "chrome://activity-stream/content/data/content/assets/proton-bkg.jpg",
   screens: [
     {
       id: "AW_SET_DEFAULT",
@@ -213,8 +213,8 @@ const DEFAULT_PROTON_WELCOME_CONTENT = {
         },
         // This is dynamically removed for non-en locales below.
         help_text: {
-          text: "Photograph by Sam Moqadam via Unsplash",
           deleteIfNotEn: true,
+          text: "Soraya Osorio — Furniture designer, Firefox fan",
         },
         primary_button: {
           label: {
