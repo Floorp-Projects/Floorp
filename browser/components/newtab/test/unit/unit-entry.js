@@ -455,6 +455,9 @@ const TEST_GLOBAL = {
         stringsIds.map(({ id, args }) => ({ value: { string_id: id, args } }))
       );
     }
+    async formatValue(stringId) {
+      return Promise.resolve(stringId);
+    }
   },
   FxAccountsConfig: {
     promiseConnectAccountURI(id) {
