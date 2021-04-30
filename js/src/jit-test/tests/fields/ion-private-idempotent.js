@@ -1,5 +1,3 @@
-// |jit-test| --enable-private-fields;
-
 var acc = 0;
 const loopCount = 100;
 

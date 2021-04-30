@@ -1,4 +1,4 @@
-// |reftest| shell-option(--enable-private-fields) skip-if(!xulRuntime.shell) async -- requires shell-options
+// |reftest| async
 // This file was procedurally generated from the following sources:
 // - src/class-elements/rs-privatename-identifier-alt.case
 // - src/class-elements/productions/cls-decl-after-same-line-async-method.template

@@ -1,4 +1,3 @@
-// |reftest| shell-option(--enable-private-fields) skip-if(!xulRuntime.shell) -- requires shell-options
 'use strict';
 // Copyright (C) 2019 Caio Lima. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.

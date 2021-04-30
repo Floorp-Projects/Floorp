@@ -1,4 +1,4 @@
-// |jit-test| skip-if: !('oomTest' in this); --enable-private-fields
+// |jit-test| skip-if: !('oomTest' in this);
 // Check for proxy expando OOM issues.
 
 function assertThrowsTypeError(f) {
