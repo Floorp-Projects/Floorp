@@ -1,0 +1,89 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=2100"/>
+  <title>Check that double tapping small table cells does not zoom</title>
+  <script src="apz_test_native_event_utils.js"></script>
+  <script src="apz_test_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <script>
+
+async function test() {
+  let useTouchpad = (location.search == "?touchpad");
+
+  var resolution = getResolution();
+  ok(resolution > 0,
+     "The initial_resolution is " + resolution + ", which is some sane value");
+
+  // Check that double-tapping does not zoom in
+  info("sending first double tap");
+  await doubleTapOn(document.getElementById("target1"), 10, 10, useTouchpad);
+  var prev_resolution = resolution;
+  resolution = getResolution();
+  ok(resolution == prev_resolution, "The first double-tap did not change the resolution: " + resolution);
+
+  // Check that double-tapping does zoom in
+  info("sending second double tap");
+  await doubleTapOn(document.getElementById("target2"), 10, 10, useTouchpad);
+  prev_resolution = resolution;
+  resolution = getResolution();
+  ok(resolution > prev_resolution, "The second double-tap has increased the resolution to " + resolution);
+}
+
+waitUntilApzStable()
+.then(test)
+.then(subtestDone, subtestFailed);
+
+  </script>
+  <style>
+    table {
+      width: 100%;
+    }
+    table,
+    td {
+        border: 1px solid #333;
+    }
+    td {
+      height: 25px;
+    }
+    .small {
+      width: 15vw;
+    }
+    .big {
+      width: 50vw;
+    }
+  </style>
+</head>
+<body>
+<table>
+    <thead>
+        <tr>
+            <th colspan="2">The table header</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td class="small"><div id="target1" class="small">The table body</div></td>
+            <td>with two columns</td>
+        </tr>
+    </tbody>
+</table>
+
+<table>
+    <thead>
+        <tr>
+            <th colspan="2">The table header</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td id="target2" class="big">The table body</td>
+            <td>with two columns</td>
+        </tr>
+    </tbody>
+</table>
+
+
+</body>
+</html>
