@@ -8,9 +8,6 @@
 #define nsDOMOfflineResourceList_h___
 
 #include "nscore.h"
-#include "nsIApplicationCache.h"
-#include "nsIApplicationCacheContainer.h"
-#include "nsIApplicationCacheService.h"
 #include "nsTArray.h"
 #include "nsString.h"
 #include "nsIURI.h"
@@ -89,9 +86,6 @@ class nsDOMOfflineResourceList final : public mozilla::DOMEventTargetHelper,
 
  private:
   void SendEvent(const nsAString& aEventName);
-
-  already_AddRefed<nsIApplicationCacheContainer> GetDocumentAppCacheContainer();
-  already_AddRefed<nsIApplicationCache> GetDocumentAppCache();
 
   nsresult GetCacheKey(const nsAString& aURI, nsCString& aKey);
   nsresult GetCacheKey(nsIURI* aURI, nsCString& aKey);
