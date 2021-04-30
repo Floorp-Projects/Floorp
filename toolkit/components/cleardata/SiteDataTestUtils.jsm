@@ -246,8 +246,6 @@ var SiteDataTestUtils = {
         return Services.cache2.diskCacheStorage(lci, false);
       case "memory":
         return Services.cache2.memoryCacheStorage(lci);
-      case "appcache":
-        return Services.cache2.appCacheStorage(lci, null);
       case "pin":
         return Services.cache2.pinningCacheStorage(lci);
     }
