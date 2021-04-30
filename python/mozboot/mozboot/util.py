@@ -20,6 +20,12 @@ here = os.path.join(os.path.dirname(__file__))
 MINIMUM_RUST_VERSION = "1.47.0"
 
 
+def get_tools_dir(srcdir=False):
+    if os.environ.get("MOZ_AUTOMATION") and "MOZ_FETCHES_DIR" in os.environ:
+        return os.environ["MOZ_FETCHES_DIR"]
+    return get_state_dir(srcdir)
+
+
 def get_state_dir(srcdir=False):
     """Obtain path to a directory to hold state.
 
