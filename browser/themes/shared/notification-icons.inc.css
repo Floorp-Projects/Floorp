@@ -327,6 +327,16 @@
   list-style-image: url("chrome://browser/skin/notification-icons/popup.svg");
 }
 
+/**
+ * Bug 1708716: The blocked popup icon is just slightly vertically offset from
+ * the other icons that can appear alongside it in the URL bar due to how it's
+ * placed in the SVG file. We nudge it a little here to make it line up in a
+ * more aesthetically pleasing way.
+ */
+#blocked-permissions-container > .popup-icon {
+  transform: translateY(2px);
+}
+
 .popup-subitem {
   width: 16px;
   height: 16px;
