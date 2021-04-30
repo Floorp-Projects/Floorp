@@ -989,8 +989,7 @@ nsresult nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
     }
 
     nsresult operator()(const opProcessOfflineManifest& aOperation) {
-      nsDependentString dependentString(aOperation.mUrl);
-      mBuilder->ProcessOfflineManifest(dependentString);
+      // TODO: remove this
       return NS_OK;
     }
 
