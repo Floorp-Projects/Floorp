@@ -600,11 +600,6 @@ class nsHttpChannel final : public HttpBaseChannel,
   // telemetry in nsHttpChannel::OnStartRequest().
   uint32_t mSuspendTotalTime;
 
-  // If the channel is associated with a cache, and the URI matched
-  // a fallback namespace, this will hold the key for the fallback
-  // cache entry.
-  nsCString mFallbackKey;
-
   friend class AutoRedirectVetoNotifier;
   friend class HttpAsyncAborter<nsHttpChannel>;
 
