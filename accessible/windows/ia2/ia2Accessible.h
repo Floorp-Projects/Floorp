@@ -17,6 +17,7 @@ class nsIPersistentProperties;
 namespace mozilla {
 namespace a11y {
 class Attribute;
+class AccessibleWrap;
 
 class ia2Accessible : public IAccessible2_3 {
  public:
@@ -115,6 +116,9 @@ class ia2Accessible : public IAccessible2_3 {
                                         BSTR* aIA2Attributes);
   static HRESULT ConvertToIA2Attributes(nsTArray<Attribute>* aAttributes,
                                         BSTR* aIA2Attributes);
+
+ private:
+  AccessibleWrap* LocalAcc();
 };
 
 }  // namespace a11y

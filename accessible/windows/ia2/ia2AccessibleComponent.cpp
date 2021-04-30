@@ -17,6 +17,10 @@
 
 using namespace mozilla::a11y;
 
+AccessibleWrap* ia2AccessibleComponent::LocalAcc() {
+  return static_cast<MsaaAccessible*>(this)->LocalAcc();
+}
+
 // IUnknown
 
 STDMETHODIMP
@@ -43,8 +47,8 @@ ia2AccessibleComponent::get_locationInParent(long* aX, long* aY) {
   *aX = 0;
   *aY = 0;
 
-  AccessibleWrap* acc = static_cast<AccessibleWrap*>(this);
-  if (acc->IsDefunct()) return CO_E_OBJNOTCONNECTED;
+  AccessibleWrap* acc = LocalAcc();
+  if (!acc) return CO_E_OBJNOTCONNECTED;
 
   // If the object is not on any screen the returned position is (0,0).
   uint64_t state = acc->State();
@@ -75,8 +79,8 @@ ia2AccessibleComponent::get_foreground(IA2Color* aForeground) {
 
   *aForeground = 0;
 
-  AccessibleWrap* acc = static_cast<AccessibleWrap*>(this);
-  if (acc->IsDefunct()) return CO_E_OBJNOTCONNECTED;
+  AccessibleWrap* acc = LocalAcc();
+  if (!acc) return CO_E_OBJNOTCONNECTED;
 
   nsIFrame* frame = acc->GetFrame();
   if (frame) *aForeground = frame->StyleText()->mColor.ToColor();
@@ -90,8 +94,8 @@ ia2AccessibleComponent::get_background(IA2Color* aBackground) {
 
   *aBackground = 0;
 
-  AccessibleWrap* acc = static_cast<AccessibleWrap*>(this);
-  if (acc->IsDefunct()) return CO_E_OBJNOTCONNECTED;
+  AccessibleWrap* acc = LocalAcc();
+  if (!acc) return CO_E_OBJNOTCONNECTED;
 
   nsIFrame* frame = acc->GetFrame();
   if (frame) {
