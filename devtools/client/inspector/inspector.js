@@ -1739,20 +1739,14 @@ Inspector.prototype = {
   },
 
   _destroyMarkup: function() {
-    let destroyPromise;
-
     if (this.markup) {
-      destroyPromise = this.markup.destroy();
+      this.markup.destroy();
       this.markup = null;
-    } else {
-      destroyPromise = promise.resolve();
     }
 
     if (this._markupBox) {
       this._markupBox.style.visibility = "hidden";
     }
-
-    return destroyPromise;
   },
 
   onEyeDropperButtonClicked: function() {
