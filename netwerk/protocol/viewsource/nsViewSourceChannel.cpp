@@ -36,8 +36,6 @@ NS_INTERFACE_MAP_BEGIN(nsViewSourceChannel)
                                      mHttpChannelInternal)
   NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsICachingChannel, mCachingChannel)
   NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsICacheInfoChannel, mCacheInfoChannel)
-  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIApplicationCacheChannel,
-                                     mApplicationCacheChannel)
   NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIUploadChannel, mUploadChannel)
   NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIFormPOSTActionChannel, mPostChannel)
   NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIChildChannel, mChildChannel)
@@ -119,7 +117,6 @@ void nsViewSourceChannel::UpdateChannelInterfaces() {
   mHttpChannelInternal = do_QueryInterface(mChannel);
   mCachingChannel = do_QueryInterface(mChannel);
   mCacheInfoChannel = do_QueryInterface(mChannel);
-  mApplicationCacheChannel = do_QueryInterface(mChannel);
   mUploadChannel = do_QueryInterface(mChannel);
   mPostChannel = do_QueryInterface(mChannel);
   mChildChannel = do_QueryInterface(mChannel);

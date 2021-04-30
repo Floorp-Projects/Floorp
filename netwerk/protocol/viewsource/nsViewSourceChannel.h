@@ -9,7 +9,6 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/net/NeckoChannelParams.h"
 #include "nsCOMPtr.h"
-#include "nsIApplicationCacheChannel.h"
 #include "nsICachingChannel.h"
 #include "nsIChannelEventSink.h"
 #include "nsIFormPOSTActionChannel.h"
@@ -27,7 +26,6 @@ class nsViewSourceChannel final : public nsIViewSourceChannel,
                                   public nsIHttpChannel,
                                   public nsIHttpChannelInternal,
                                   public nsICachingChannel,
-                                  public nsIApplicationCacheChannel,
                                   public nsIFormPOSTActionChannel,
                                   public nsIChildChannel,
                                   public nsIInterfaceRequestor,
@@ -46,8 +44,6 @@ class nsViewSourceChannel final : public nsIViewSourceChannel,
   NS_DECL_NSICHANNELEVENTSINK
   NS_FORWARD_SAFE_NSICACHEINFOCHANNEL(mCacheInfoChannel)
   NS_FORWARD_SAFE_NSICACHINGCHANNEL(mCachingChannel)
-  NS_FORWARD_SAFE_NSIAPPLICATIONCACHECHANNEL(mApplicationCacheChannel)
-  NS_FORWARD_SAFE_NSIAPPLICATIONCACHECONTAINER(mApplicationCacheChannel)
   NS_FORWARD_SAFE_NSIUPLOADCHANNEL(mUploadChannel)
   NS_FORWARD_SAFE_NSIFORMPOSTACTIONCHANNEL(mPostChannel)
   NS_FORWARD_SAFE_NSIHTTPCHANNELINTERNAL(mHttpChannelInternal)
@@ -88,7 +84,6 @@ class nsViewSourceChannel final : public nsIViewSourceChannel,
   nsCOMPtr<nsIHttpChannelInternal> mHttpChannelInternal;
   nsCOMPtr<nsICachingChannel> mCachingChannel;
   nsCOMPtr<nsICacheInfoChannel> mCacheInfoChannel;
-  nsCOMPtr<nsIApplicationCacheChannel> mApplicationCacheChannel;
   nsCOMPtr<nsIUploadChannel> mUploadChannel;
   nsCOMPtr<nsIFormPOSTActionChannel> mPostChannel;
   nsCOMPtr<nsIChildChannel> mChildChannel;
