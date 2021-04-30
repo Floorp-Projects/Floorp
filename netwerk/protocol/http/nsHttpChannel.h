@@ -381,7 +381,6 @@ class nsHttpChannel final : public HttpBaseChannel,
   [[nodiscard]] nsresult OnNormalCacheEntryAvailable(nsICacheEntry* aEntry,
                                                      bool aNew,
                                                      nsresult aResult);
-  [[nodiscard]] nsresult OpenOfflineCacheEntryForWriting();
   [[nodiscard]] nsresult OnCacheEntryAvailableInternal(
       nsICacheEntry* entry, bool aNew, nsIApplicationCache* aAppCache,
       nsresult status);
@@ -389,7 +388,6 @@ class nsHttpChannel final : public HttpBaseChannel,
   [[nodiscard]] nsresult UpdateExpirationTime();
   [[nodiscard]] nsresult CheckPartial(nsICacheEntry* aEntry, int64_t* aSize,
                                       int64_t* aContentLength);
-  bool ShouldUpdateOfflineCacheEntry();
   [[nodiscard]] nsresult ReadFromCache(bool alreadyMarkedValid);
   void CloseCacheEntry(bool doomOnFailure);
   [[nodiscard]] nsresult InitCacheEntry();
@@ -397,7 +395,6 @@ class nsHttpChannel final : public HttpBaseChannel,
   [[nodiscard]] nsresult AddCacheEntryHeaders(nsICacheEntry* entry);
   [[nodiscard]] nsresult FinalizeCacheEntry();
   [[nodiscard]] nsresult InstallCacheListener(int64_t offset = 0);
-  [[nodiscard]] nsresult InstallOfflineCacheListener(int64_t offset = 0);
   void MaybeInvalidateCacheEntryForSubsequentGet();
   void AsyncOnExamineCachedResponse();
 
@@ -589,9 +586,6 @@ class nsHttpChannel final : public HttpBaseChannel,
   nsCOMPtr<nsISupports> mCachedSecurityInfo;
   uint32_t mPostID;
   uint32_t mRequestTime;
-
-  nsCOMPtr<nsICacheEntry> mOfflineCacheEntry;
-  uint32_t mOfflineCacheLastModifiedTime;
 
   nsTArray<StreamFilterRequest> mStreamFilterRequests;
 
