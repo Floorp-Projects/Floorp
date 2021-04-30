@@ -221,13 +221,13 @@ class TabDescriptorFront extends DescriptorMixin(
         const targetForm = await super.getTarget();
         newTargetFront = this._createTabTarget(targetForm);
         await newTargetFront.attach();
+        this.setTarget(newTargetFront);
       } catch (e) {
         console.log(
           `Request to connect to TabDescriptor "${this.id}" failed: ${e}`
         );
       }
 
-      this.setTarget(newTargetFront);
       this._targetFrontPromise = null;
       return newTargetFront;
     })();
