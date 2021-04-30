@@ -205,12 +205,24 @@ already_AddRefed<FileList> DataTransferItemList::Files(
   // checked by DataTransferItem::Data(), however with files, we keep a cached
   // live copy of the files list for spec compliance.
   //
-  // A DataTransfer is only exposed to one webpage, and chrome code. The chrome
-  // code should be able to see all files on the DataTransfer, while the webpage
-  // should only be able to see the files it can see. As chrome code doesn't
-  // need as strict spec compliance as web visible code, we generate a new
-  // FileList object every time you access the Files list from chrome code, but
-  // re-use the cached one when accessing from non-chrome code.
+  // A DataTransfer is only exposed to one webpage, chrome code and expanded
+  // principals related to WebExtensions content scripts or user scripts.
+  // The chrome code should be able to see all files on the DataTransfer, while
+  // the webpage and WebExtensions content scripts and user scripts should only
+  // be able to see the files they can see.
+  //
+  // As chrome code doesn't need as strict spec compliance as web visible code,
+  // we generate a new FileList object every time you access the Files list from
+  // chrome code, but re-use the cached one when accessing from content code.
+  //
+  // For WebExtensions content scripts (expanded principals subsuming both
+  // the attached web page principal and the extension principal) and
+  // WebExtensions user scripts (expanded principals subsuming the attached
+  // web page principal but not the extension principal) we also don't cache
+  // the FileList as for chrome code (because the webpage principal and other
+  // extension content scripts/user scripts principals would not be able to
+  // access the cached FileList when accessed by a different expanded principal
+  // first, see Bug 1707214).
   //
   // It is not legal to expose an identical DataTransfer object is to multiple
   // different principals without using the `Clone` method or similar to copy it
@@ -218,7 +230,9 @@ already_AddRefed<FileList> DataTransferItemList::Files(
   // release builds. If this functionality is required in the future, a more
   // advanced caching mechanism for the FileList objects will be required.
   RefPtr<FileList> files;
-  if (aPrincipal->IsSystemPrincipal()) {
+  if (aPrincipal->IsSystemPrincipal() ||
+      // WebExtensions content scripts and user scripts.
+      nsContentUtils::IsExpandedPrincipal(aPrincipal)) {
     files = new FileList(mDataTransfer);
     GenerateFiles(files, aPrincipal);
     return files.forget();

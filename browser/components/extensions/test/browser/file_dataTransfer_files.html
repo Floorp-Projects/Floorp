@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  </head>
+  <body>
+    <div id="result-content-script"></div>
+    <div id="result-user-script"></div>
+    <div id="result-page-script"></div>
+    <script>
+      "use strict";
+
+      document.body.addEventListener('drop', function(e) {
+        const files = e.dataTransfer.files || [];
+        document.querySelector("#result-page-script").textContent = files[0]?.name;
+        window.testDone();
+      }, { once: true });
+
+      const dataTransfer = new DataTransfer();
+      dataTransfer.dropEffect = "move";
+      dataTransfer.items.add(new File(
+        ['<b>test file</b>'],
+        "testfile.html",
+        {type: "text/html"}
+      ));
+      const event = document.createEvent("DragEvent");
+      event.initDragEvent(
+        "drop", true, true, window,
+        0, 0, 0, 0, 0,
+        false, false, false, false,
+        0, document.body,
+        dataTransfer
+      );
+      document.body.dispatchEvent(event);
+    </script>
+  </body>
+</html>
