@@ -16,12 +16,10 @@ UNIFIED_SOURCES += [
     "mozTXTToHTMLConv.cpp",
     "nsDirIndex.cpp",
     "nsDirIndexParser.cpp",
-    "nsFTPDirListingConv.cpp",
     "nsHTTPCompressConv.cpp",
     "nsIndexedToHTML.cpp",
     "nsMultiMixedConv.cpp",
     "nsUnknownDecoder.cpp",
-    "ParseFTPList.cpp",
 ]
 
 FINAL_LIBRARY = "xul"

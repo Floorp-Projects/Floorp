@@ -17,6 +17,7 @@
 #include "mozilla/Logging.h"
 #include "nsIForcePendingChannel.h"
 #include "nsIRequest.h"
+#include "mozilla/UniquePtrExtensions.h"
 
 // brotli headers
 #include "state.h"
