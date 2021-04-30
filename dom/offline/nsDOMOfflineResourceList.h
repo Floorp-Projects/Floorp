@@ -11,7 +11,6 @@
 #include "nsIApplicationCache.h"
 #include "nsIApplicationCacheContainer.h"
 #include "nsIApplicationCacheService.h"
-#include "nsIOfflineCacheUpdate.h"
 #include "nsTArray.h"
 #include "nsString.h"
 #include "nsIURI.h"
@@ -35,14 +34,12 @@ class Event;
 
 class nsDOMOfflineResourceList final : public mozilla::DOMEventTargetHelper,
                                        public nsIObserver,
-                                       public nsIOfflineCacheUpdateObserver,
                                        public nsSupportsWeakReference {
   typedef mozilla::ErrorResult ErrorResult;
 
  public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIOBSERVER
-  NS_DECL_NSIOFFLINECACHEUPDATEOBSERVER
 
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsDOMOfflineResourceList,
                                            mozilla::DOMEventTargetHelper)
@@ -92,9 +89,6 @@ class nsDOMOfflineResourceList final : public mozilla::DOMEventTargetHelper,
 
  private:
   void SendEvent(const nsAString& aEventName);
-
-  void UpdateAdded(nsIOfflineCacheUpdate* aUpdate);
-  void UpdateCompleted(nsIOfflineCacheUpdate* aUpdate);
 
   already_AddRefed<nsIApplicationCacheContainer> GetDocumentAppCacheContainer();
   already_AddRefed<nsIApplicationCache> GetDocumentAppCache();
