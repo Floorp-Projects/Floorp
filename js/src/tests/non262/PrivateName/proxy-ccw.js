@@ -1,4 +1,4 @@
-// |reftest| 
+// |reftest| shell-option(--enable-private-fields) skip-if(!xulRuntime.shell) -- requires shell-options
 
 // Validate CCWs and proxies
 class Base {

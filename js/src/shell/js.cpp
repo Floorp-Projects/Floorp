@@ -11019,8 +11019,9 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
   enablePropertyErrorMessageFix =
       !op.getBoolOption("disable-property-error-message-fix");
   enableIteratorHelpers = op.getBoolOption("enable-iterator-helpers");
-  enablePrivateClassFields = !op.getBoolOption("disable-private-fields");
-  enablePrivateClassMethods = !op.getBoolOption("disable-private-methods");
+  enablePrivateClassFields = op.getBoolOption("enable-private-fields") ||
+                             op.getBoolOption("enable-private-methods");
+  enablePrivateClassMethods = op.getBoolOption("enable-private-methods");
   enableErgonomicBrandChecks =
       op.getBoolOption("enable-ergonomic-brand-checks");
   enableTopLevelAwait = op.getBoolOption("enable-top-level-await");
@@ -11992,10 +11993,10 @@ int main(int argc, char** argv) {
                         "property of null or undefined") ||
       !op.addBoolOption('\0', "enable-iterator-helpers",
                         "Enable iterator helpers") ||
-      !op.addBoolOption('\0', "disable-private-fields",
-                        "Disable private class fields") ||
-      !op.addBoolOption('\0', "disable-private-methods",
-                        "Disable private class methods") ||
+      !op.addBoolOption('\0', "enable-private-fields",
+                        "Enable private class fields") ||
+      !op.addBoolOption('\0', "enable-private-methods",
+                        "Enable private class methods") ||
       !op.addBoolOption(
           '\0', "enable-ergonomic-brand-checks",
           "Enable ergonomic brand checks for private class fields") ||

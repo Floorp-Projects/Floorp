@@ -1,3 +1,4 @@
+// |reftest| shell-option(--enable-private-methods) skip-if(!xulRuntime.shell) -- requires shell-options
 // This file was procedurally generated from the following sources:
 // - src/class-elements/grammar-static-private-gen-meth-prototype.case
 // - src/class-elements/syntax/valid/cls-expr-elements-valid-syntax.template

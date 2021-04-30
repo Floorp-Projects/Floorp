@@ -1,4 +1,4 @@
-// |reftest| error:SyntaxError
+// |reftest| shell-option(--enable-private-fields) shell-option(--enable-private-methods) skip-if(!xulRuntime.shell) error:SyntaxError -- requires shell-options
 // This file was procedurally generated from the following sources:
 // - src/class-elements/err-delete-call-expression-private-method-async-gen.case
 // - src/class-elements/delete-error/cls-expr-method-delete.template

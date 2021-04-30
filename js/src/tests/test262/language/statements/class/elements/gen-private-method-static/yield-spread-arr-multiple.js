@@ -1,3 +1,4 @@
+// |reftest| shell-option(--enable-private-methods) skip-if(!xulRuntime.shell) -- requires shell-options
 // This file was procedurally generated from the following sources:
 // - src/generators/yield-spread-arr-multiple.case
 // - src/generators/default/class-decl-static-private-method.template

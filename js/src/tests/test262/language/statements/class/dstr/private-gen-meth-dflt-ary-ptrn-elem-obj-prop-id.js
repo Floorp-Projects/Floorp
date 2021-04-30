@@ -1,3 +1,4 @@
+// |reftest| shell-option(--enable-private-methods) skip-if(!xulRuntime.shell) -- requires shell-options
 // This file was procedurally generated from the following sources:
 // - src/dstr-binding/ary-ptrn-elem-obj-prop-id.case
 // - src/dstr-binding/default/cls-decl-private-gen-meth-dflt.template

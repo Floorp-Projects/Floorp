@@ -1,4 +1,4 @@
-// |reftest| async
+// |reftest| shell-option(--enable-private-methods) skip-if(!xulRuntime.shell) async -- requires shell-options
 // This file was procedurally generated from the following sources:
 // - src/async-generators/yield-star-getiter-async-undefined-sync-get-abrupt.case
 // - src/async-generators/default/async-class-expr-static-private-method.template

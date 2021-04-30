@@ -1,4 +1,5 @@
-// |reftest| 
+// |reftest| shell-option(--enable-private-fields) skip-if(!xulRuntime.shell) -- requires shell-options
+
 var C = class {
   static #field = () => 'Test262';
   static field = () => 'Test262';
