@@ -22,6 +22,17 @@ class gfxPlatformMac : public gfxPlatform {
   gfxPlatformMac();
   virtual ~gfxPlatformMac();
 
+  // Call early in startup to register the macOS supplemental language fonts
+  // so that they're usable by the browser. This is intended to be called as
+  // early as possible, before most services etc are initialized; it starts
+  // a separate thread to register the fonts, because this is quite slow.
+  static void RegisterSupplementalFonts();
+
+  // Call from the main thread at the point where we need to start using the
+  // font list; this will wait (if necessary) for the registration thread to
+  // finish.
+  static void WaitForFontRegistration();
+
   static gfxPlatformMac* GetPlatform() {
     return (gfxPlatformMac*)gfxPlatform::GetPlatform();
   }
@@ -85,6 +96,8 @@ class gfxPlatformMac : public gfxPlatform {
   static uint32_t ReadAntiAliasingThreshold();
 
   uint32_t mFontAntiAliasingThreshold;
+
+  static PRThread* sFontRegistrationThread;
 };
 
 #endif /* GFX_PLATFORM_MAC_H */

@@ -41,6 +41,7 @@
 #if defined(XP_MACOSX)
 #  include "nsVersionComparator.h"
 #  include "chrome/common/mach_ipc_mac.h"
+#  include "gfxPlatformMac.h"
 #endif
 #include "nsGDKErrorHandler.h"
 #include "base/at_exit.h"
@@ -398,6 +399,10 @@ nsresult XRE_InitChildProcess(int aArgc, char* aArgv[],
                            OTHER);
   AUTO_PROFILER_INIT;
   AUTO_PROFILER_LABEL("XRE_InitChildProcess", OTHER);
+
+#ifdef XP_MACOSX
+  gfxPlatformMac::RegisterSupplementalFonts();
+#endif
 
   // Ensure AbstractThread is minimally setup, so async IPC messages
   // work properly.
