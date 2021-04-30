@@ -629,11 +629,6 @@ bool NS_IsSafeMethodNav(nsIChannel* aChannel);
   "about.ef2a7dd5-93bc-417f-a698-142c3116864f.mozilla"
 
 /**
- * Determines whether appcache should be checked for a given principal.
- */
-bool NS_ShouldCheckAppCache(nsIPrincipal* aPrincipal);
-
-/**
  * Wraps an nsIAuthPrompt so that it can be used as an nsIAuthPrompt2. This
  * method is provided mainly for use by other methods in this file.
  *
