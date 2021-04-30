@@ -1,5 +1,3 @@
-// |jit-test| --enable-private-fields;
-
 function assertThrows(fun, errorType) {
   try {
     fun();
