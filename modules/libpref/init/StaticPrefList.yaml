@@ -1602,13 +1602,13 @@
 # If true, pages with an opener won't be bfcached.
 - name: docshell.shistory.bfcache.require_no_opener
   type: bool
-  value: @IS_ANDROID@
+  value: false
   mirror: always
 
 # If true, page with beforeunload or unload event listeners can be bfcached.
 - name: docshell.shistory.bfcache.allow_unload_listeners
   type: bool
-  value: @IS_ANDROID@
+  value: false
   mirror: always
 
 #---------------------------------------------------------------------------
