@@ -1,11 +1,12 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
-  <path fill="#1C1B22" d="M2 2h14v13H2z"/>
-  <path fill="#2B2A33" d="M16 2v13H2v15h28V2H16z"/>
-  <rect x="1" y="1" width="30" height="30" rx="2" ry="2" fill="none" stroke="#08091a" stroke-opacity=".35" stroke-width="2"/>
-  <path d="M12.5 22H7.707l2.146-2.146a.5.5 0 0 0-.707-.707l-3 3a.5.5 0 0 0 0 .708l3 3a.5.5 0 1 0 .707-.707L7.707 23H12.5a.5.5 0 0 0 0-1z" fill="#f9f9fa" fill-opacity=".8"/>
-  <path d="M20.5 20h4a.5.5 0 0 0 0-1h-4a.5.5 0 0 0 0 1zm4 2h-4a.5.5 0 0 0 0 1h4a.5.5 0 0 0 0-1zm0 3h-4a.5.5 0 0 0 0 1h4a.5.5 0 0 0 0-1z" fill="#f9f9fa" fill-opacity=".8"/>
-  <path fill="#08091a" d="M15 2v12H2v1h14V2h-1z"/>
+<svg width="63" height="62" viewBox="0 0 63 62" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <circle cx="31.5" cy="31" r="31" fill="url(#paint0_linear)"/>
+  <defs>
+    <linearGradient id="paint0_linear" x1="44.4829" y1="19" x2="10.4829" y2="53" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#42414D"/>
+      <stop offset="1" stop-color="#1C1B22"/>
+    </linearGradient>
+  </defs>
 </svg>
