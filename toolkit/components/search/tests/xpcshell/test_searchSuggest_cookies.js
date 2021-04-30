@@ -24,8 +24,7 @@ function countCacheEntries() {
   info("Enumerating cache entries");
   return new Promise(resolve => {
     let storage = Services.cache2.diskCacheStorage(
-      Services.loadContextInfo.default,
-      false
+      Services.loadContextInfo.default
     );
     storage.asyncVisitStorage(
       {

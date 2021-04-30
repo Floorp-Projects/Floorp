@@ -261,7 +261,7 @@ var loadContextInfo = Services.loadContextInfo.fromLoadContext(
   window.docShell.QueryInterface(Ci.nsILoadContext),
   false
 );
-var diskStorage = cacheService.diskCacheStorage(loadContextInfo, false);
+var diskStorage = cacheService.diskCacheStorage(loadContextInfo);
 
 const nsICookiePermission = Ci.nsICookiePermission;
 

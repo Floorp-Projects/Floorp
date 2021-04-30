@@ -3440,7 +3440,7 @@ nsresult nsHttpChannel::OpenCacheEntryInternal(bool isHttps) {
   } else {
     // Try to race only if we use disk cache storage
     maybeRCWN = mRequestHead.IsSafeMethod();
-    rv = cacheStorageService->DiskCacheStorage(info, /* lookupAppcache */ false,
+    rv = cacheStorageService->DiskCacheStorage(info,
                                                getter_AddRefs(cacheStorage));
   }
   NS_ENSURE_SUCCESS(rv, rv);
@@ -4534,7 +4534,7 @@ void nsHttpChannel::MaybeCreateCacheEntryWhenRCWN() {
 
   nsCOMPtr<nsICacheStorage> cacheStorage;
   RefPtr<LoadContextInfo> info = GetLoadContextInfo(this);
-  Unused << cacheStorageService->DiskCacheStorage(info, false,
+  Unused << cacheStorageService->DiskCacheStorage(info,
                                                   getter_AddRefs(cacheStorage));
   if (!cacheStorage) {
     return;
@@ -8317,7 +8317,7 @@ void nsHttpChannel::DoInvalidateCacheEntry(nsIURI* aURI) {
   nsCOMPtr<nsICacheStorage> cacheStorage;
   if (NS_SUCCEEDED(rv)) {
     RefPtr<LoadContextInfo> info = GetLoadContextInfo(this);
-    rv = cacheStorageService->DiskCacheStorage(info, false,
+    rv = cacheStorageService->DiskCacheStorage(info,
                                                getter_AddRefs(cacheStorage));
   }
 

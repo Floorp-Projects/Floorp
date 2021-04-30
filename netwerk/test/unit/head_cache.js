@@ -29,7 +29,7 @@ function evict_cache_entries(where) {
   }
 
   if (clearDisk) {
-    storage = svc.diskCacheStorage(Services.loadContextInfo.default, false);
+    storage = svc.diskCacheStorage(Services.loadContextInfo.default);
     storage.asyncEvictStorage(null);
   }
 }
@@ -48,7 +48,7 @@ function getCacheStorage(where, lci) {
   var svc = get_cache_service();
   switch (where) {
     case "disk":
-      return svc.diskCacheStorage(lci, false);
+      return svc.diskCacheStorage(lci);
     case "memory":
       return svc.memoryCacheStorage(lci);
     case "pin":

@@ -949,7 +949,7 @@ const AboutHomeStartupCacheCleaner = {
 
     return new Promise((aResolve, aReject) => {
       let lci = Services.loadContextInfo.default;
-      let storage = Services.cache2.diskCacheStorage(lci, false);
+      let storage = Services.cache2.diskCacheStorage(lci);
       let uri = Services.io.newURI("about:home");
       try {
         storage.asyncDoomURI(uri, "", {

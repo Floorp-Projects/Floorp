@@ -11,11 +11,9 @@
 #include "CacheIndex.h"
 #include "CacheIndexIterator.h"
 #include "CacheStorage.h"
-#include "AppCacheStorage.h"
 #include "CacheEntry.h"
 #include "CacheFileUtils.h"
 
-#include "OldWrappers.h"
 #include "nsCacheService.h"
 #include "nsDeleteDir.h"
 
@@ -672,7 +670,7 @@ nsresult ClearStorage(bool const aPrivate, bool const aAnonymous,
   NS_ENSURE_TRUE(service, NS_ERROR_FAILURE);
 
   // Clear disk storage
-  rv = service->DiskCacheStorage(info, false, getter_AddRefs(storage));
+  rv = service->DiskCacheStorage(info, getter_AddRefs(storage));
   NS_ENSURE_SUCCESS(rv, rv);
   rv = storage->AsyncEvictStorage(nullptr);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -711,14 +709,13 @@ NS_IMETHODIMP CacheStorageService::MemoryCacheStorage(
   NS_ENSURE_ARG(_retval);
 
   nsCOMPtr<nsICacheStorage> storage =
-      new CacheStorage(aLoadContextInfo, false, false, false, false);
+      new CacheStorage(aLoadContextInfo, false, false, false);
   storage.forget(_retval);
   return NS_OK;
 }
 
 NS_IMETHODIMP CacheStorageService::DiskCacheStorage(
-    nsILoadContextInfo* aLoadContextInfo, bool aLookupAppCache,
-    nsICacheStorage** _retval) {
+    nsILoadContextInfo* aLoadContextInfo, nsICacheStorage** _retval) {
   NS_ENSURE_ARG(_retval);
 
   // TODO save some heap granularity - cache commonly used storages.
@@ -727,9 +724,8 @@ NS_IMETHODIMP CacheStorageService::DiskCacheStorage(
   // in memory.
   bool useDisk = CacheObserver::UseDiskCache();
 
-  nsCOMPtr<nsICacheStorage> storage =
-      new CacheStorage(aLoadContextInfo, useDisk, aLookupAppCache,
-                       false /* size limit */, false /* don't pin */);
+  nsCOMPtr<nsICacheStorage> storage = new CacheStorage(
+      aLoadContextInfo, useDisk, false /* size limit */, false /* don't pin */);
   storage.forget(_retval);
   return NS_OK;
 }
@@ -744,9 +740,9 @@ NS_IMETHODIMP CacheStorageService::PinningCacheStorage(
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  nsCOMPtr<nsICacheStorage> storage = new CacheStorage(
-      aLoadContextInfo, true /* use disk */, false /* no appcache */,
-      true /* ignore size checks */, true /* pin */);
+  nsCOMPtr<nsICacheStorage> storage =
+      new CacheStorage(aLoadContextInfo, true /* use disk */,
+                       true /* ignore size checks */, true /* pin */);
   storage.forget(_retval);
   return NS_OK;
 }
@@ -757,7 +753,7 @@ NS_IMETHODIMP CacheStorageService::SynthesizedCacheStorage(
   NS_ENSURE_ARG(_retval);
 
   nsCOMPtr<nsICacheStorage> storage =
-      new CacheStorage(aLoadContextInfo, false, false,
+      new CacheStorage(aLoadContextInfo, false,
                        true /* skip size checks for synthesized cache */,
                        false /* no pinning */);
   storage.forget(_retval);
