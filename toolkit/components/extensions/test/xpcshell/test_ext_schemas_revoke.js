@@ -151,6 +151,7 @@ class APIImplementation extends SchemaAPIInterface {
 }
 
 let context = {
+  manifestVersion: 2,
   cloneScope: global,
 
   permissionsChanged: null,

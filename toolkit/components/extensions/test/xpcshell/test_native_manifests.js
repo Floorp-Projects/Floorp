@@ -103,6 +103,7 @@ let context = {
   extension: {
     id: "extension@tests.mozilla.org",
   },
+  manifestVersion: 2,
   envType: "addon_parent",
   url: null,
   jsonStringify(...args) {
@@ -117,7 +118,7 @@ let context = {
 
 class MockContext extends ExtensionCommon.BaseContext {
   constructor(extensionId) {
-    let fakeExtension = { id: extensionId };
+    let fakeExtension = { id: extensionId, manifestVersion: 2 };
     super("addon_parent", fakeExtension);
     this.sandbox = Cu.Sandbox(global);
   }

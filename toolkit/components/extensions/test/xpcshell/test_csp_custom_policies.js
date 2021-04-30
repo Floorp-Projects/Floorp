@@ -233,14 +233,6 @@ add_task(async function test_extension_csp() {
       expectedPolicy: aps.defaultCSP,
     },
     {
-      name: "manifest_v3 used with v2 syntax",
-      manifest: {
-        manifest_version: 3,
-        content_security_policy: extension_pages,
-      },
-      expectedPolicy: extension_pages,
-    },
-    {
       name: "manifest_v3 syntax used",
       manifest: {
         manifest_version: 3,

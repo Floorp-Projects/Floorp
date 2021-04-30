@@ -79,6 +79,7 @@ add_task(async function testRestrictions() {
   await Schemas.load(url);
   let results = {};
   let localWrapper = {
+    manifestVersion: 2,
     cloneScope: global,
     shouldInject(ns, name, allowedContexts) {
       name = ns ? ns + "." + name : name;

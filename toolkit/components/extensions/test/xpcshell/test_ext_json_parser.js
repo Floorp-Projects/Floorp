@@ -9,6 +9,7 @@ add_task(async function test_json_parser() {
     files: {
       "manifest.json": String.raw`{
         // This is a manifest.
+        "manifest_version": 2,
         "applications": {"gecko": {"id": "${ID}"}},
         "name": "This \" is // not a comment",
         "version": "0.1\\" // , "description": "This is not a description"
@@ -17,6 +18,7 @@ add_task(async function test_json_parser() {
   });
 
   let expectedManifest = {
+    manifest_version: 2,
     applications: { gecko: { id: ID } },
     name: 'This " is // not a comment',
     version: "0.1\\",

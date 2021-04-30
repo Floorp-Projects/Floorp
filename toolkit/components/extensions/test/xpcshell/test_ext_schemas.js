@@ -1,9 +1,5 @@
 "use strict";
 
-const { Schemas } = ChromeUtils.import("resource://gre/modules/Schemas.jsm");
-
-let { LocalAPIImplementation, SchemaAPIInterface } = ExtensionCommon;
-
 const global = this;
 
 let json = [
@@ -431,119 +427,14 @@ let json = [
   },
 ];
 
-let tallied = null;
-
-function tally(kind, ns, name, args) {
-  tallied = [kind, ns, name, args];
-}
-
-function verify(...args) {
-  Assert.equal(JSON.stringify(tallied), JSON.stringify(args));
-  tallied = null;
-}
-
-let talliedErrors = [];
-
-function checkErrors(errors) {
-  Assert.equal(
-    talliedErrors.length,
-    errors.length,
-    "Got expected number of errors"
-  );
-  for (let [i, error] of errors.entries()) {
-    Assert.ok(
-      i in talliedErrors && String(talliedErrors[i]).includes(error),
-      `${JSON.stringify(error)} is a substring of error ${JSON.stringify(
-        talliedErrors[i]
-      )}`
-    );
-  }
-
-  talliedErrors.length = 0;
-}
-
-let permissions = new Set();
-
-class TallyingAPIImplementation extends SchemaAPIInterface {
-  constructor(namespace, name) {
-    super();
-    this.namespace = namespace;
-    this.name = name;
-  }
-
-  callFunction(args) {
-    tally("call", this.namespace, this.name, args);
-    if (this.name === "sub_foo") {
-      return 13;
-    }
-  }
-
-  callFunctionNoReturn(args) {
-    tally("call", this.namespace, this.name, args);
-  }
-
-  getProperty() {
-    tally("get", this.namespace, this.name);
-  }
-
-  setProperty(value) {
-    tally("set", this.namespace, this.name, value);
-  }
-
-  addListener(listener, args) {
-    tally("addListener", this.namespace, this.name, [listener, args]);
-  }
-
-  removeListener(listener) {
-    tally("removeListener", this.namespace, this.name, [listener]);
-  }
-
-  hasListener(listener) {
-    tally("hasListener", this.namespace, this.name, [listener]);
-  }
-}
-
-let wrapper = {
-  url: "moz-extension://b66e3509-cdb3-44f6-8eb8-c8b39b3a1d27/",
-
-  cloneScope: global,
-
-  checkLoadURL(url) {
-    return !url.startsWith("chrome:");
-  },
-
-  preprocessors: {
-    localize(value, context) {
-      return value.replace(/__MSG_(.*?)__/g, (m0, m1) => `${m1.toUpperCase()}`);
-    },
-  },
-
-  logError(message) {
-    talliedErrors.push(message);
-  },
-
-  hasPermission(permission) {
-    return permissions.has(permission);
-  },
-
-  shouldInject(ns, name) {
-    return name != "do-not-inject";
-  },
-
-  getImplementation(namespace, name) {
-    return new TallyingAPIImplementation(namespace, name);
-  },
-};
-
 add_task(async function() {
+  let wrapper = getContextWrapper();
   let url = "data:," + JSON.stringify(json);
   Schemas._rootSchema = null;
   await Schemas.load(url);
 
   let root = {};
-  tallied = null;
   Schemas.inject(root, wrapper);
-  Assert.equal(tallied, null);
 
   Assert.equal(root.testing.PROP1, 20, "simple value property");
   Assert.equal(root.testing.type1.VALUE1, "value1", "enum type");
@@ -557,19 +448,19 @@ add_task(async function() {
   );
 
   root.testing.foo(11, true);
-  verify("call", "testing", "foo", [11, true]);
+  wrapper.verify("call", "testing", "foo", [11, true]);
 
   root.testing.foo(true);
-  verify("call", "testing", "foo", [99, true]);
+  wrapper.verify("call", "testing", "foo", [99, true]);
 
   root.testing.foo(null, true);
-  verify("call", "testing", "foo", [99, true]);
+  wrapper.verify("call", "testing", "foo", [99, true]);
 
   root.testing.foo(undefined, true);
-  verify("call", "testing", "foo", [99, true]);
+  wrapper.verify("call", "testing", "foo", [99, true]);
 
   root.testing.foo(11);
-  verify("call", "testing", "foo", [11, null]);
+  wrapper.verify("call", "testing", "foo", [11, null]);
 
   Assert.throws(
     () => root.testing.bar(11),
@@ -584,16 +475,16 @@ add_task(async function() {
   );
 
   root.testing.bar(true);
-  verify("call", "testing", "bar", [null, true]);
+  wrapper.verify("call", "testing", "bar", [null, true]);
 
   root.testing.baz({ prop1: "hello", prop2: 22 });
-  verify("call", "testing", "baz", [{ prop1: "hello", prop2: 22 }]);
+  wrapper.verify("call", "testing", "baz", [{ prop1: "hello", prop2: 22 }]);
 
   root.testing.baz({ prop1: "hello" });
-  verify("call", "testing", "baz", [{ prop1: "hello", prop2: null }]);
+  wrapper.verify("call", "testing", "baz", [{ prop1: "hello", prop2: null }]);
 
   root.testing.baz({ prop1: "hello", prop2: null });
-  verify("call", "testing", "baz", [{ prop1: "hello", prop2: null }]);
+  wrapper.verify("call", "testing", "baz", [{ prop1: "hello", prop2: null }]);
 
   Assert.throws(
     () => root.testing.baz({ prop2: 12 }),
@@ -620,7 +511,7 @@ add_task(async function() {
   );
 
   root.testing.qux("value2");
-  verify("call", "testing", "qux", ["value2"]);
+  wrapper.verify("call", "testing", "qux", ["value2"]);
 
   Assert.throws(
     () => root.testing.qux("value4"),
@@ -629,7 +520,7 @@ add_task(async function() {
   );
 
   root.testing.quack({ prop1: 12, prop2: ["value1", "value3"] });
-  verify("call", "testing", "quack", [
+  wrapper.verify("call", "testing", "quack", [
     { prop1: 12, prop2: ["value1", "value3"] },
   ]);
 
@@ -643,23 +534,23 @@ add_task(async function() {
   function f() {}
   root.testing.quora(f);
   Assert.equal(
-    JSON.stringify(tallied.slice(0, -1)),
+    JSON.stringify(wrapper.tallied.slice(0, -1)),
     JSON.stringify(["call", "testing", "quora"])
   );
-  Assert.equal(tallied[3][0], f);
-  tallied = null;
+  Assert.equal(wrapper.tallied[3][0], f);
+  wrapper.tallied = null;
 
   let g = () => 0;
   root.testing.quora(g);
   Assert.equal(
-    JSON.stringify(tallied.slice(0, -1)),
+    JSON.stringify(wrapper.tallied.slice(0, -1)),
     JSON.stringify(["call", "testing", "quora"])
   );
-  Assert.equal(tallied[3][0], g);
-  tallied = null;
+  Assert.equal(wrapper.tallied[3][0], g);
+  wrapper.tallied = null;
 
   root.testing.quileute(10);
-  verify("call", "testing", "quileute", [null, 10]);
+  wrapper.verify("call", "testing", "quileute", [null, 10]);
 
   Assert.throws(
     () => root.testing.queets(),
@@ -668,7 +559,7 @@ add_task(async function() {
   );
 
   root.testing.quintuplets({ a: 10, b: 20, c: 30 });
-  verify("call", "testing", "quintuplets", [{ a: 10, b: 20, c: 30 }]);
+  wrapper.verify("call", "testing", "quintuplets", [{ a: 10, b: 20, c: 30 }]);
 
   Assert.throws(
     () => root.testing.quintuplets({ a: 10, b: 20, c: 30, d: "hi" }),
@@ -678,15 +569,13 @@ add_task(async function() {
 
   root.testing.quasar({ func: f });
   Assert.equal(
-    JSON.stringify(tallied.slice(0, -1)),
+    JSON.stringify(wrapper.tallied.slice(0, -1)),
     JSON.stringify(["call", "testing", "quasar"])
   );
-  Assert.equal(tallied[3][0].func, f);
-  tallied = null;
+  Assert.equal(wrapper.tallied[3][0].func, f);
 
   root.testing.quosimodo({ a: 10, b: 20, c: 30 });
-  verify("call", "testing", "quosimodo", [{ a: 10, b: 20, c: 30 }]);
-  tallied = null;
+  wrapper.verify("call", "testing", "quosimodo", [{ a: 10, b: 20, c: 30 }]);
 
   Assert.throws(
     () => root.testing.quosimodo(10),
@@ -700,14 +589,12 @@ add_task(async function() {
     Prop3: "43",
     foo1: "x",
   });
-  verify("call", "testing", "patternprop", [
+  wrapper.verify("call", "testing", "patternprop", [
     { prop1: "12", prop2: "42", Prop3: "43", foo1: "x" },
   ]);
-  tallied = null;
 
   root.testing.patternprop({ prop1: "12" });
-  verify("call", "testing", "patternprop", [{ prop1: "12" }]);
-  tallied = null;
+  wrapper.verify("call", "testing", "patternprop", [{ prop1: "12" }]);
 
   Assert.throws(
     () => root.testing.patternprop({ prop1: "12", foo1: null }),
@@ -746,8 +633,7 @@ add_task(async function() {
   );
 
   root.testing.pattern("DEADbeef");
-  verify("call", "testing", "pattern", ["DEADbeef"]);
-  tallied = null;
+  wrapper.verify("call", "testing", "pattern", ["DEADbeef"]);
 
   Assert.throws(
     () => root.testing.pattern("DEADcow"),
@@ -756,7 +642,7 @@ add_task(async function() {
   );
 
   root.testing.format({ hostname: "foo" });
-  verify("call", "testing", "format", [
+  wrapper.verify("call", "testing", "format", [
     {
       hostname: "foo",
       imageDataOrStrictRelativeUrl: null,
@@ -765,7 +651,6 @@ add_task(async function() {
       url: null,
     },
   ]);
-  tallied = null;
 
   for (let invalid of ["", " ", "http://foo", "foo/bar", "foo.com/", "foo?"]) {
     Assert.throws(
@@ -776,7 +661,7 @@ add_task(async function() {
   }
 
   root.testing.format({ url: "http://foo/bar", relativeUrl: "http://foo/bar" });
-  verify("call", "testing", "format", [
+  wrapper.verify("call", "testing", "format", [
     {
       hostname: null,
       imageDataOrStrictRelativeUrl: null,
@@ -785,13 +670,12 @@ add_task(async function() {
       url: "http://foo/bar",
     },
   ]);
-  tallied = null;
 
   root.testing.format({
     relativeUrl: "foo.html",
     strictRelativeUrl: "foo.html",
   });
-  verify("call", "testing", "format", [
+  wrapper.verify("call", "testing", "format", [
     {
       hostname: null,
       imageDataOrStrictRelativeUrl: null,
@@ -800,12 +684,11 @@ add_task(async function() {
       url: null,
     },
   ]);
-  tallied = null;
 
   root.testing.format({
     imageDataOrStrictRelativeUrl: "data:image/png;base64,A",
   });
-  verify("call", "testing", "format", [
+  wrapper.verify("call", "testing", "format", [
     {
       hostname: null,
       imageDataOrStrictRelativeUrl: "data:image/png;base64,A",
@@ -814,12 +697,11 @@ add_task(async function() {
       url: null,
     },
   ]);
-  tallied = null;
 
   root.testing.format({
     imageDataOrStrictRelativeUrl: "data:image/jpeg;base64,A",
   });
-  verify("call", "testing", "format", [
+  wrapper.verify("call", "testing", "format", [
     {
       hostname: null,
       imageDataOrStrictRelativeUrl: "data:image/jpeg;base64,A",
@@ -828,10 +710,9 @@ add_task(async function() {
       url: null,
     },
   ]);
-  tallied = null;
 
   root.testing.format({ imageDataOrStrictRelativeUrl: "foo.html" });
-  verify("call", "testing", "format", [
+  wrapper.verify("call", "testing", "format", [
     {
       hostname: null,
       imageDataOrStrictRelativeUrl: `${wrapper.url}foo.html`,
@@ -840,8 +721,6 @@ add_task(async function() {
       url: null,
     },
   ]);
-
-  tallied = null;
 
   for (let format of ["url", "relativeUrl"]) {
     Assert.throws(
@@ -881,7 +760,7 @@ add_task(async function() {
   ];
   dates.forEach(str => {
     root.testing.formatDate({ date: str });
-    verify("call", "testing", "formatDate", [{ date: str }]);
+    wrapper.verify("call", "testing", "formatDate", [{ date: str }]);
   });
 
   // Make sure that a trivial change to a valid date invalidates it.
@@ -914,10 +793,9 @@ add_task(async function() {
   root.testing.deep({
     foo: { bar: [{ baz: { required: 12, optional: "42" } }] },
   });
-  verify("call", "testing", "deep", [
+  wrapper.verify("call", "testing", "deep", [
     { foo: { bar: [{ baz: { optional: "42", required: 12 } }] } },
   ]);
-  tallied = null;
 
   Assert.throws(
     () => root.testing.deep({ foo: { bar: [{ baz: { optional: "42" } }] } }),
@@ -934,52 +812,52 @@ add_task(async function() {
     "should throw with the correct object path"
   );
 
-  talliedErrors.length = 0;
+  wrapper.talliedErrors.length = 0;
 
   root.testing.errors({ default: "0123", ignore: "0123", warn: "0123" });
-  verify("call", "testing", "errors", [
+  wrapper.verify("call", "testing", "errors", [
     { default: "0123", ignore: "0123", warn: "0123" },
   ]);
-  checkErrors([]);
+  wrapper.checkErrors([]);
 
   root.testing.errors({ default: "0123", ignore: "x123", warn: "0123" });
-  verify("call", "testing", "errors", [
+  wrapper.verify("call", "testing", "errors", [
     { default: "0123", ignore: null, warn: "0123" },
   ]);
-  checkErrors([]);
+  wrapper.checkErrors([]);
 
   ExtensionTestUtils.failOnSchemaWarnings(false);
   root.testing.errors({ default: "0123", ignore: "0123", warn: "x123" });
   ExtensionTestUtils.failOnSchemaWarnings(true);
-  verify("call", "testing", "errors", [
+  wrapper.verify("call", "testing", "errors", [
     { default: "0123", ignore: "0123", warn: null },
   ]);
-  checkErrors(['String "x123" must match /^\\d+$/']);
+  wrapper.checkErrors(['String "x123" must match /^\\d+$/']);
 
   root.testing.onFoo.addListener(f);
   Assert.equal(
-    JSON.stringify(tallied.slice(0, -1)),
+    JSON.stringify(wrapper.tallied.slice(0, -1)),
     JSON.stringify(["addListener", "testing", "onFoo"])
   );
-  Assert.equal(tallied[3][0], f);
-  Assert.equal(JSON.stringify(tallied[3][1]), JSON.stringify([]));
-  tallied = null;
+  Assert.equal(wrapper.tallied[3][0], f);
+  Assert.equal(JSON.stringify(wrapper.tallied[3][1]), JSON.stringify([]));
+  wrapper.tallied = null;
 
   root.testing.onFoo.removeListener(f);
   Assert.equal(
-    JSON.stringify(tallied.slice(0, -1)),
+    JSON.stringify(wrapper.tallied.slice(0, -1)),
     JSON.stringify(["removeListener", "testing", "onFoo"])
   );
-  Assert.equal(tallied[3][0], f);
-  tallied = null;
+  Assert.equal(wrapper.tallied[3][0], f);
+  wrapper.tallied = null;
 
   root.testing.onFoo.hasListener(f);
   Assert.equal(
-    JSON.stringify(tallied.slice(0, -1)),
+    JSON.stringify(wrapper.tallied.slice(0, -1)),
     JSON.stringify(["hasListener", "testing", "onFoo"])
   );
-  Assert.equal(tallied[3][0], f);
-  tallied = null;
+  Assert.equal(wrapper.tallied[3][0], f);
+  wrapper.tallied = null;
 
   Assert.throws(
     () => root.testing.onFoo.addListener(10),
@@ -989,21 +867,21 @@ add_task(async function() {
 
   root.testing.onBar.addListener(f, 10);
   Assert.equal(
-    JSON.stringify(tallied.slice(0, -1)),
+    JSON.stringify(wrapper.tallied.slice(0, -1)),
     JSON.stringify(["addListener", "testing", "onBar"])
   );
-  Assert.equal(tallied[3][0], f);
-  Assert.equal(JSON.stringify(tallied[3][1]), JSON.stringify([10]));
-  tallied = null;
+  Assert.equal(wrapper.tallied[3][0], f);
+  Assert.equal(JSON.stringify(wrapper.tallied[3][1]), JSON.stringify([10]));
+  wrapper.tallied = null;
 
   root.testing.onBar.addListener(f);
   Assert.equal(
-    JSON.stringify(tallied.slice(0, -1)),
+    JSON.stringify(wrapper.tallied.slice(0, -1)),
     JSON.stringify(["addListener", "testing", "onBar"])
   );
-  Assert.equal(tallied[3][0], f);
-  Assert.equal(JSON.stringify(tallied[3][1]), JSON.stringify([1]));
-  tallied = null;
+  Assert.equal(wrapper.tallied[3][0], f);
+  Assert.equal(JSON.stringify(wrapper.tallied[3][1]), JSON.stringify([1]));
+  wrapper.tallied = null;
 
   Assert.throws(
     () => root.testing.onBar.addListener(f, "hi"),
@@ -1035,10 +913,9 @@ add_task(async function() {
     bar: "__MSG_foo__",
     url: "__MSG_http://example.com/__",
   });
-  verify("call", "testing", "localize", [
+  wrapper.verify("call", "testing", "localize", [
     { bar: "__MSG_foo__", foo: "FOO", url: "http://example.com/" },
   ]);
-  tallied = null;
 
   Assert.throws(
     () => root.testing.localize({ url: "__MSG_/foo/bar__" }),
@@ -1047,8 +924,9 @@ add_task(async function() {
   );
 
   root.testing.extended1({ prop1: "foo", prop2: "bar" });
-  verify("call", "testing", "extended1", [{ prop1: "foo", prop2: "bar" }]);
-  tallied = null;
+  wrapper.verify("call", "testing", "extended1", [
+    { prop1: "foo", prop2: "bar" },
+  ]);
 
   Assert.throws(
     () => root.testing.extended1({ prop1: "foo", prop2: 12 }),
@@ -1069,12 +947,10 @@ add_task(async function() {
   );
 
   root.testing.extended2("foo");
-  verify("call", "testing", "extended2", ["foo"]);
-  tallied = null;
+  wrapper.verify("call", "testing", "extended2", ["foo"]);
 
   root.testing.extended2(12);
-  verify("call", "testing", "extended2", [12]);
-  tallied = null;
+  wrapper.verify("call", "testing", "extended2", [12]);
 
   Assert.throws(
     () => root.testing.extended2(true),
@@ -1083,8 +959,7 @@ add_task(async function() {
   );
 
   root.testing.prop3.sub_foo();
-  verify("call", "testing.prop3", "sub_foo", []);
-  tallied = null;
+  wrapper.verify("call", "testing.prop3", "sub_foo", []);
 
   Assert.throws(
     () => root.testing.prop4.sub_foo(),
@@ -1093,14 +968,12 @@ add_task(async function() {
   );
 
   root.foreign.foreignRef.sub_foo();
-  verify("call", "foreign.foreignRef", "sub_foo", []);
-  tallied = null;
+  wrapper.verify("call", "foreign.foreignRef", "sub_foo", []);
 
   root.testing.callderived1({ baseprop: "s1", derivedprop: "s2" });
-  verify("call", "testing", "callderived1", [
+  wrapper.verify("call", "testing", "callderived1", [
     { baseprop: "s1", derivedprop: "s2" },
   ]);
-  tallied = null;
 
   Assert.throws(
     () => root.testing.callderived1({ baseprop: "s1", derivedprop: 42 }),
@@ -1119,10 +992,9 @@ add_task(async function() {
   );
 
   root.testing.callderived2({ baseprop: "s1", derivedprop: 42 });
-  verify("call", "testing", "callderived2", [
+  wrapper.verify("call", "testing", "callderived2", [
     { baseprop: "s1", derivedprop: 42 },
   ]);
-  tallied = null;
 
   Assert.throws(
     () => root.testing.callderived2({ baseprop: "s1", derivedprop: "s2" }),
@@ -1251,6 +1123,7 @@ let deprecatedJson = [
 ];
 
 add_task(async function testDeprecation() {
+  let wrapper = getContextWrapper();
   // This whole test expects deprecation warnings.
   ExtensionTestUtils.failOnSchemaWarnings(false);
 
@@ -1261,53 +1134,51 @@ add_task(async function testDeprecation() {
   let root = {};
   Schemas.inject(root, wrapper);
 
-  talliedErrors.length = 0;
-
   root.deprecated.property({ foo: "bar", xxx: "any", yyy: "property" });
-  verify("call", "deprecated", "property", [
+  wrapper.verify("call", "deprecated", "property", [
     { foo: "bar", xxx: "any", yyy: "property" },
   ]);
-  checkErrors([
+  wrapper.checkErrors([
     "Warning processing xxx: Unknown property",
     "Warning processing yyy: Unknown property",
   ]);
 
   root.deprecated.value(12);
-  verify("call", "deprecated", "value", [12]);
-  checkErrors([]);
+  wrapper.verify("call", "deprecated", "value", [12]);
+  wrapper.checkErrors([]);
 
   root.deprecated.value("12");
-  verify("call", "deprecated", "value", ["12"]);
-  checkErrors(['Please use an integer, not "12"']);
+  wrapper.verify("call", "deprecated", "value", ["12"]);
+  wrapper.checkErrors(['Please use an integer, not "12"']);
 
   root.deprecated.choices(12);
-  verify("call", "deprecated", "choices", [12]);
-  checkErrors(["You have no choices"]);
+  wrapper.verify("call", "deprecated", "choices", [12]);
+  wrapper.checkErrors(["You have no choices"]);
 
   root.deprecated.ref("12");
-  verify("call", "deprecated", "ref", ["12"]);
-  checkErrors(["Deprecated alias"]);
+  wrapper.verify("call", "deprecated", "ref", ["12"]);
+  wrapper.checkErrors(["Deprecated alias"]);
 
   root.deprecated.method();
-  verify("call", "deprecated", "method", []);
-  checkErrors(["Do not call this method"]);
+  wrapper.verify("call", "deprecated", "method", []);
+  wrapper.checkErrors(["Do not call this method"]);
 
   void root.deprecated.accessor;
-  verify("get", "deprecated", "accessor", null);
-  checkErrors(["This is not the property you are looking for"]);
+  wrapper.verify("get", "deprecated", "accessor", null);
+  wrapper.checkErrors(["This is not the property you are looking for"]);
 
   root.deprecated.accessor = "x";
-  verify("set", "deprecated", "accessor", "x");
-  checkErrors(["This is not the property you are looking for"]);
+  wrapper.verify("set", "deprecated", "accessor", "x");
+  wrapper.checkErrors(["This is not the property you are looking for"]);
 
   root.deprecated.onDeprecated.addListener(() => {});
-  checkErrors(["This event does not work"]);
+  wrapper.checkErrors(["This event does not work"]);
 
   root.deprecated.onDeprecated.removeListener(() => {});
-  checkErrors(["This event does not work"]);
+  wrapper.checkErrors(["This event does not work"]);
 
   root.deprecated.onDeprecated.hasListener(() => {});
-  checkErrors(["This event does not work"]);
+  wrapper.checkErrors(["This event does not work"]);
 
   ExtensionTestUtils.failOnSchemaWarnings(true);
 
@@ -1416,14 +1287,13 @@ let choicesJson = [
 ];
 
 add_task(async function testChoices() {
+  let wrapper = getContextWrapper();
   let url = "data:," + JSON.stringify(choicesJson);
   Schemas._rootSchema = null;
   await Schemas.load(url);
 
   let root = {};
   Schemas.inject(root, wrapper);
-
-  talliedErrors.length = 0;
 
   Assert.throws(
     () => root.choices.meh("frog"),
@@ -1527,6 +1397,8 @@ add_task(async function testPermissions() {
   Schemas._rootSchema = null;
   await Schemas.load(url);
 
+  let wrapper = getContextWrapper();
+
   let root = {};
   Schemas.inject(root, wrapper);
 
@@ -1546,7 +1418,7 @@ add_task(async function testPermissions() {
   equal(root.fooPerm, undefined, "fooPerm namespace should not exist");
 
   info('Add "foo" permission');
-  permissions.add("foo");
+  wrapper.permissions.add("foo");
 
   root = {};
   Schemas.inject(root, wrapper);
@@ -1577,7 +1449,7 @@ add_task(async function testPermissions() {
   );
 
   info('Add "foo.bar" permission');
-  permissions.add("foo.bar");
+  wrapper.permissions.add("foo.bar");
 
   root = {};
   Schemas.inject(root, wrapper);
@@ -1661,14 +1533,13 @@ let nestedNamespaceJson = [
 
 add_task(async function testNestedNamespace() {
   let url = "data:," + JSON.stringify(nestedNamespaceJson);
+  let wrapper = getContextWrapper();
 
   Schemas._rootSchema = null;
   await Schemas.load(url);
 
   let root = {};
   Schemas.inject(root, wrapper);
-
-  talliedErrors.length = 0;
 
   ok(root.nested, "The root object contains the first namespace level");
   ok(
@@ -1704,7 +1575,7 @@ add_task(async function testNestedNamespace() {
   );
 
   instanceOfCustomType.functionOnCustomType("param_value");
-  verify(
+  wrapper.verify(
     "call",
     "nested.namespace.instanceOfCustomType",
     "functionOnCustomType",
@@ -1713,14 +1584,19 @@ add_task(async function testNestedNamespace() {
 
   let fakeListener = () => {};
   instanceOfCustomType.onEvent.addListener(fakeListener);
-  verify("addListener", "nested.namespace.instanceOfCustomType", "onEvent", [
-    fakeListener,
-    [],
-  ]);
+  wrapper.verify(
+    "addListener",
+    "nested.namespace.instanceOfCustomType",
+    "onEvent",
+    [fakeListener, []]
+  );
   instanceOfCustomType.onEvent.removeListener(fakeListener);
-  verify("removeListener", "nested.namespace.instanceOfCustomType", "onEvent", [
-    fakeListener,
-  ]);
+  wrapper.verify(
+    "removeListener",
+    "nested.namespace.instanceOfCustomType",
+    "onEvent",
+    [fakeListener]
+  );
 
   // TODO: test support properties in a SubModuleType defined in the schema,
   // once implemented, e.g.:
@@ -1771,14 +1647,13 @@ let $importJson = [
 ];
 
 add_task(async function test_$import() {
+  let wrapper = getContextWrapper();
   let url = "data:," + JSON.stringify($importJson);
   Schemas._rootSchema = null;
   await Schemas.load(url);
 
   let root = {};
-  tallied = null;
   Schemas.inject(root, wrapper);
-  equal(tallied, null);
 
   equal(root.from_the.PROP1, "original value", "imported property");
   equal(root.from_the.PROP2, "second original", "second imported property");
@@ -1786,7 +1661,7 @@ add_task(async function test_$import() {
   equal(typeof root.from_the.dye, "function", "imported function");
 
   root.from_the.dye("white");
-  verify("call", "from_the", "dye", ["white"]);
+  wrapper.verify("call", "from_the", "dye", ["white"]);
 
   Assert.throws(
     () => root.from_the.dye("orange"),
@@ -1800,7 +1675,7 @@ add_task(async function test_$import() {
   equal(typeof root.embrace.dye, "function", "imported function");
 
   root.embrace.dye("orange");
-  verify("call", "embrace", "dye", ["orange"]);
+  wrapper.verify("call", "embrace", "dye", ["orange"]);
 
   Assert.throws(
     () => root.embrace.dye("white"),
@@ -1842,6 +1717,7 @@ add_task(async function testLocalAPIImplementation() {
   };
 
   let localWrapper = {
+    manifestVersion: 2,
     cloneScope: global,
     shouldInject(ns, name) {
       return name == "testing" || ns == "testing" || ns == "testing.prop3";
@@ -1944,6 +1820,7 @@ add_task(async function testDefaults() {
   };
 
   let localWrapper = {
+    manifestVersion: 2,
     cloneScope: global,
     shouldInject(ns) {
       return true;
@@ -2018,6 +1895,7 @@ add_task(async function testReturns() {
   };
 
   const localWrapper = {
+    manifestVersion: 2,
     cloneScope: global,
     shouldInject(ns) {
       return true;
@@ -2074,18 +1952,18 @@ let booleanEnumJson = [
 ];
 
 add_task(async function testBooleanEnum() {
+  let wrapper = getContextWrapper();
+
   let url = "data:," + JSON.stringify(booleanEnumJson);
   Schemas._rootSchema = null;
   await Schemas.load(url);
 
   let root = {};
-  tallied = null;
   Schemas.inject(root, wrapper);
-  Assert.equal(tallied, null);
 
   ok(root.booleanEnum, "namespace exists");
   root.booleanEnum.paramMustBeTrue(true);
-  verify("call", "booleanEnum", "paramMustBeTrue", [true]);
+  wrapper.verify("call", "booleanEnum", "paramMustBeTrue", [true]);
   Assert.throws(
     () => root.booleanEnum.paramMustBeTrue(false),
     /Type error for parameter arg \(Invalid value false\) for booleanEnum\.paramMustBeTrue\./,

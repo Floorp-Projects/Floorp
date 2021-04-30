@@ -109,6 +109,7 @@ let context;
 function generateAPIs(extraWrapper, apiObj) {
   context = new StubContext();
   let localWrapper = {
+    manifestVersion: 2,
     cloneScope: global,
     shouldInject() {
       return true;

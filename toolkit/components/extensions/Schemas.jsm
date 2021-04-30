@@ -62,6 +62,9 @@ var EXPORTED_SYMBOLS = ["SchemaRoot", "Schemas"];
 const KEY_CONTENT_SCHEMAS = "extensions-framework/schemas/content";
 const KEY_PRIVILEGED_SCHEMAS = "extensions-framework/schemas/privileged";
 
+const MIN_MANIFEST_VERSION = 2;
+const MAX_MANIFEST_VERSION = 3;
+
 const { DEBUG } = AppConstants;
 
 const isParentProcess =
@@ -370,6 +373,12 @@ class Context {
   constructor(params, overridableMethods = CONTEXT_FOR_VALIDATION) {
     this.params = params;
 
+    if (typeof params.manifestVersion !== "number") {
+      throw new Error(
+        `Unexpected params.manifestVersion value: ${params.manifestVersion}`
+      );
+    }
+
     this.path = [];
     this.preprocessors = {
       localize(value, context) {
@@ -632,6 +641,14 @@ class Context {
       this.path.pop();
     }
   }
+
+  matchManifestVersion(entry) {
+    let { manifestVersion } = this;
+    return (
+      manifestVersion >= entry.min_manifest_version &&
+      manifestVersion <= entry.max_manifest_version
+    );
+  }
 }
 
 /**
@@ -709,10 +726,13 @@ class InjectionEntry {
    *        context, without respect to permissions.
    */
   get shouldInject() {
-    return this.context.shouldInject(
-      this.path.join("."),
-      this.name,
-      this.allowedContexts
+    return (
+      this.context.matchManifestVersion(this.entry) &&
+      this.context.shouldInject(
+        this.path.join("."),
+        this.name,
+        this.allowedContexts
+      )
     );
   }
 
@@ -1195,6 +1215,11 @@ class Entry {
      * These are not parsed by the schema, but passed to `shouldInject`.
      */
     this.allowedContexts = schema.allowedContexts || [];
+
+    this.min_manifest_version =
+      schema.min_manifest_version ?? MIN_MANIFEST_VERSION;
+    this.max_manifest_version =
+      schema.max_manifest_version ?? MAX_MANIFEST_VERSION;
   }
 
   /**
@@ -1325,6 +1350,8 @@ class Type extends Entry {
       "preprocess",
       "postprocess",
       "allowedContexts",
+      "min_manifest_version",
+      "max_manifest_version",
     ];
   }
 
@@ -1472,6 +1499,12 @@ class ChoiceType extends Type {
     let error;
     let { choices, result } = context.withChoices(() => {
       for (let choice of this.choices) {
+        // Ignore a possible choice if it is not supported by
+        // the manifest version we are normalizing.
+        if (!context.matchManifestVersion(choice)) {
+          continue;
+        }
+
         let r = choice.normalize(value, context);
         if (!r.error) {
           return r;
@@ -1922,7 +1955,14 @@ class ObjectType extends Type {
     let { type, optional, unsupported, onError } = propType;
     let error = null;
 
-    if (unsupported) {
+    if (!context.matchManifestVersion(type)) {
+      if (prop in properties) {
+        error = context.error(
+          `Property "${prop}" is unsupported in Manifest Version ${context.manifestVersion}`,
+          `not contain an unsupported "${prop}" property`
+        );
+      }
+    } else if (unsupported) {
       if (prop in properties) {
         error = context.error(
           `Property "${prop}" is unsupported by Firefox`,
@@ -2091,11 +2131,14 @@ SubModuleType = class SubModuleType extends Type {
         .map(event => Event.parseSchema(root, event, path));
     }
 
-    return new this(functions, events);
+    return new this(schema, functions, events);
   }
 
-  constructor(functions, events) {
-    super();
+  constructor(schema, functions, events) {
+    // schema contains properties such as min/max_manifest_version needed
+    // in the base class so that the Context class can version compare
+    // any entries against the manifest version.
+    super(schema);
     this.functions = functions;
     this.events = events;
   }
@@ -2391,6 +2434,11 @@ class ValueProperty extends Entry {
   }
 
   getDescriptor(path, context) {
+    // Prevent injection if not a supported version.
+    if (!context.matchManifestVersion(this)) {
+      return;
+    }
+
     return {
       descriptor: { value: this.value },
     };
@@ -2414,7 +2462,7 @@ class TypeProperty extends Entry {
   }
 
   getDescriptor(path, context) {
-    if (this.unsupported) {
+    if (this.unsupported || !context.matchManifestVersion(this)) {
       return;
     }
 
@@ -2483,6 +2531,10 @@ class SubModuleProperty extends Entry {
       let [namespaceName, ref] = this.reference.split(".");
       ns = this.root.getNamespace(namespaceName);
       type = ns.get(ref);
+    }
+    // Prevent injection if not a supported version.
+    if (!context.matchManifestVersion(type)) {
+      return;
     }
 
     if (DEBUG) {
@@ -2895,6 +2947,9 @@ class Namespace extends Map {
 
     this.superNamespace = null;
 
+    this.min_manifest_version = MIN_MANIFEST_VERSION;
+    this.max_manifest_version = MAX_MANIFEST_VERSION;
+
     this.permissions = null;
     this.allowedContexts = [];
     this.defaultContexts = [];
@@ -2911,7 +2966,13 @@ class Namespace extends Map {
   addSchema(schema) {
     this._lazySchemas.push(schema);
 
-    for (let prop of ["permissions", "allowedContexts", "defaultContexts"]) {
+    for (let prop of [
+      "permissions",
+      "allowedContexts",
+      "defaultContexts",
+      "min_manifest_version",
+      "max_manifest_version",
+    ]) {
       if (schema[prop]) {
         this[prop] = schema[prop];
       }
@@ -3097,6 +3158,15 @@ class Namespace extends Map {
    */
   injectInto(dest, context) {
     for (let name of this.keys()) {
+      // If the entry does not match the manifest version do not
+      // inject the property.  This prevents the item from being
+      // enumerable in the namespace object.  We cannot accomplish
+      // this inside exportLazyProperty, it specifically injects
+      // an enumerable object.
+      let entry = this.get(name);
+      if (!context.matchManifestVersion(entry)) {
+        continue;
+      }
       exportLazyProperty(dest, name, () => {
         let entry = this.get(name);
 
