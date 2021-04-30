@@ -103,15 +103,6 @@ void HTMLFormControlsCollection::Clear() {
   mNameLookupTable.Clear();
 }
 
-void HTMLFormControlsCollection::FlushPendingNotifications() {
-  if (mForm) {
-    Document* doc = mForm->GetUncomposedDoc();
-    if (doc) {
-      doc->FlushPendingNotifications(FlushType::Content);
-    }
-  }
-}
-
 NS_IMPL_CYCLE_COLLECTION_CLASS(HTMLFormControlsCollection)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(HTMLFormControlsCollection)
@@ -140,17 +131,10 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(HTMLFormControlsCollection)
 
 // nsIHTMLCollection interface
 
-uint32_t HTMLFormControlsCollection::Length() {
-  FlushPendingNotifications();
-  return mElements.Length();
-}
+uint32_t HTMLFormControlsCollection::Length() { return mElements.Length(); }
 
 nsISupports* HTMLFormControlsCollection::NamedItemInternal(
-    const nsAString& aName, bool aFlushContent) {
-  if (aFlushContent) {
-    FlushPendingNotifications();
-  }
-
+    const nsAString& aName) {
   return mNameLookupTable.GetWeak(aName);
 }
 
@@ -255,8 +239,6 @@ nsresult HTMLFormControlsCollection::GetSortedControls(
 }
 
 Element* HTMLFormControlsCollection::GetElementAt(uint32_t aIndex) {
-  FlushPendingNotifications();
-
   return mElements.SafeElementAt(aIndex, nullptr);
 }
 
@@ -287,7 +269,7 @@ Element* HTMLFormControlsCollection::GetFirstNamedElement(
 void HTMLFormControlsCollection::NamedGetter(
     const nsAString& aName, bool& aFound,
     Nullable<OwningRadioNodeListOrElement>& aResult) {
-  nsISupports* item = NamedItemInternal(aName, true);
+  nsISupports* item = NamedItemInternal(aName);
   if (!item) {
     aFound = false;
     return;
@@ -305,7 +287,6 @@ void HTMLFormControlsCollection::NamedGetter(
 }
 
 void HTMLFormControlsCollection::GetSupportedNames(nsTArray<nsString>& aNames) {
-  FlushPendingNotifications();
   // Just enumerate mNameLookupTable.  This won't guarantee order, but
   // that's OK, because the HTML5 spec doesn't define an order for
   // this enumeration.
