@@ -158,16 +158,6 @@ nsresult nsDOMOfflineResourceList::GetCacheKey(const nsAString& aURI,
   return GetCacheKey(requestedURI, aKey);
 }
 
-already_AddRefed<nsIApplicationCacheContainer>
-nsDOMOfflineResourceList::GetDocumentAppCacheContainer() {
-  return nullptr;
-}
-
-already_AddRefed<nsIApplicationCache>
-nsDOMOfflineResourceList::GetDocumentAppCache() {
-  return nullptr;
-}
-
 nsresult nsDOMOfflineResourceList::GetCacheKey(nsIURI* aURI, nsCString& aKey) {
   nsresult rv = aURI->GetAsciiSpec(aKey);
   NS_ENSURE_SUCCESS(rv, rv);
