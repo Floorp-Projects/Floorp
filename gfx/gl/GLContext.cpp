@@ -16,6 +16,11 @@
 #ifdef MOZ_WIDGET_ANDROID
 #  include <sys/mman.h>
 #endif
+#if defined(XP_LINUX) && !defined(ANDROID)
+// For MesaMemoryLeakWorkaround
+#  include <dlfcn.h>
+#  include <link.h>
+#endif
 
 #include "GLBlitHelper.h"
 #include "GLReadTexImageHelper.h"
@@ -44,6 +49,7 @@
 #include "OGLShaderProgram.h"  // for ShaderProgramType
 
 #include "mozilla/DebugOnly.h"
+#include "mozilla/Maybe.h"
 
 #ifdef XP_MACOSX
 #  include <CoreServices/CoreServices.h>
@@ -2539,6 +2545,37 @@ void GLContext::OnImplicitMakeCurrentFailure(const char* const funcName) {
 bool GLContext::CreateOffscreenDefaultFb(const gfx::IntSize& size) {
   mOffscreenDefaultFb = MozFramebuffer::Create(this, size, 0, true);
   return bool(mOffscreenDefaultFb);
+}
+
+// Some of Mesa's drivers allocate heap memory when loaded and don't
+// free it when unloaded; this causes Leak Sanitizer to detect leaks and
+// fail to unwind the stack, so suppressions don't work.  This
+// workaround leaks a reference to the driver library so that it's never
+// unloaded.  Because the leak isn't significant for real usage, only
+// ASan runs in CI, this is applied only to the software renderer.
+//
+// See bug 1702394 for more details.
+void MesaMemoryLeakWorkaround() {
+#if defined(XP_LINUX) && !defined(ANDROID)
+  Maybe<nsAutoCString> foundPath;
+
+  dl_iterate_phdr(
+      [](dl_phdr_info* info, size_t size, void* data) {
+        auto& foundPath = *reinterpret_cast<Maybe<nsAutoCString>*>(data);
+        nsDependentCString thisPath(info->dlpi_name);
+        if (StringEndsWith(thisPath, "/swrast_dri.so"_ns)) {
+          foundPath.emplace(thisPath);
+          return 1;
+        }
+        return 0;
+      },
+      &foundPath);
+
+  if (foundPath) {
+    // Deliberately leak to prevent unload
+    Unused << dlopen(foundPath->get(), RTLD_LAZY);
+  }
+#endif  // XP_LINUX but not ANDROID
 }
 
 } /* namespace gl */
