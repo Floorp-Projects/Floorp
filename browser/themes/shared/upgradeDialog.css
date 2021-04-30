@@ -130,6 +130,7 @@ spacer {
   height: 62px;
   margin: 0 auto 10px;
   outline: 1px solid var(--in-content-border-color);
+  outline-offset: -0.5px;
   width: 62px;
 }
 
@@ -139,19 +140,19 @@ spacer {
 }
 
 .themes > :nth-child(1)::before {
-  background: linear-gradient(45deg, #F0F0F4 50%, #23222B 50%);
+  background-image:  url("resource://default-theme/icon.svg");
 }
 
 .themes > :nth-child(2)::before {
-  background: linear-gradient(45deg, #F0F0F4, #F9F9FB);
+  background-image: url("resource://builtin-themes/light/icon.svg");
 }
 
 .themes > :nth-child(3)::before {
-  background: linear-gradient(45deg, #1C1B22 50%, #42414D);
+  background-image: url("resource://builtin-themes/dark/icon.svg");
 }
 
 .themes > :nth-child(4)::before {
-  background: linear-gradient(45deg, #9059FF, #FF4AA2, #FFBD4F);
+  background-image: url("resource://builtin-themes/alpenglow/icon.svg");
 }
 
 /* Zoom in to the corner of the ltr theme preview image without buttons. */

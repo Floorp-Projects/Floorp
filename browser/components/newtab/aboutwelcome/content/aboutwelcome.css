@@ -444,17 +444,18 @@ body {
         height: 40px;
         border-radius: 40px;
         margin-inline-start: 12px;
-        outline: 1px solid var(--in-content-border-color); }
+        outline: 1px solid var(--in-content-border-color);
+        outline-offset: -0.5px; }
         .onboardingContainer.proton .theme .icon:focus, .onboardingContainer.proton .theme .icon:active, .onboardingContainer.proton .theme .icon.selected {
           outline: 2px solid var(--in-content-primary-button-background); }
         .onboardingContainer.proton .theme .icon.light {
-          background: linear-gradient(45deg, #F0F0F4, #F9F9FB); }
+          background-image: url("resource://builtin-themes/light/icon.svg"); }
         .onboardingContainer.proton .theme .icon.dark {
-          background: linear-gradient(45deg, #1C1B22 50%, #42414D); }
+          background-image: url("resource://builtin-themes/dark/icon.svg"); }
         .onboardingContainer.proton .theme .icon.alpenglow {
-          background: linear-gradient(45deg, #9059FF, #FF4AA2, #FFBD4F); }
+          background-image: url("resource://builtin-themes/alpenglow/icon.svg"); }
         .onboardingContainer.proton .theme .icon.automatic {
-          background: linear-gradient(45deg, #F0F0F4 50%, #23222B 50%); }
+          background-image: url("resource://default-theme/icon.svg"); }
     .onboardingContainer.proton .noodle {
       display: block;
       background-repeat: no-repeat;
