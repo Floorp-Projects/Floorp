@@ -624,6 +624,7 @@ const Localized = ({
     props = { ...props
     };
     props["data-l10n-id"] = text[MS_STRING_PROP];
+    if (text.args) props["data-l10n-args"] = JSON.stringify(text.args);
   } else if (typeof text === "string") {
     textNode = text;
   }
