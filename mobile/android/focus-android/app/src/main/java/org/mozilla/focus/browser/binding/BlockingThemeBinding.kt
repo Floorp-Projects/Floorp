@@ -51,9 +51,11 @@ class BlockingThemeBinding(
         if (tab.content.loading) {
             backgroundTransitionGroup?.resetTransition()
         } else {
-            // We start a transition only if a page was just loading before allowing to avoid issue #1179
+            // We start a transition animation only if a page was just loading before, avoiding issue #1179
             if (hasLoadedOnce) {
                 backgroundTransitionGroup?.startTransition(ANIMATION_DURATION)
+            } else {
+                backgroundTransitionGroup?.transitionImmediately()
             }
             hasLoadedOnce = true
         }
