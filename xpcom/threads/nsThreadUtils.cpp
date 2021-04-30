@@ -818,6 +818,13 @@ nsresult NS_DispatchBackgroundTask(nsIRunnable* aEvent,
 
 nsresult NS_CreateBackgroundTaskQueue(const char* aName,
                                       nsISerialEventTarget** aTarget) {
+  if (gXPCOMThreadsShutDown) {
+    // The background thread pool cannot create new threads
+    // to service background TaskQueue after this point, so fail on
+    // the creation of new task queues.
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
   nsCOMPtr<nsISerialEventTarget> target =
       nsThreadManager::get().CreateBackgroundTaskQueue(aName);
   if (!target) {

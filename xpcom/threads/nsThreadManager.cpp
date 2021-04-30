@@ -195,6 +195,10 @@ void BackgroundEventTarget::FinishShutdown() {
 already_AddRefed<nsISerialEventTarget>
 BackgroundEventTarget::CreateBackgroundTaskQueue(const char* aName) {
   MutexAutoLock lock(mMutex);
+  // NS_CreateBackgroundTaskQueue already fails when you attempt to
+  // create a background TaskQueue after we cancel our delayed runnables.
+  // This assertion ensures that we do not attempt to bypass this pattern.
+  MOZ_RELEASE_ASSERT(!mIsBackgroundDelayedRunnablesCanceled);
 
   RefPtr<TaskQueue> queue = new TaskQueue(do_AddRef(this), aName);
   mTaskQueues.AppendElement(queue);
