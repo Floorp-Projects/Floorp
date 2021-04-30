@@ -206,8 +206,7 @@ class nsHttpChannel final : public HttpBaseChannel,
   void AsyncOpenFinal(TimeStamp aTimeStamp);
 
   [[nodiscard]] nsresult OpenCacheEntry(bool usingSSL);
-  [[nodiscard]] nsresult OpenCacheEntryInternal(
-      bool isHttps, nsIApplicationCache* applicationCache, bool noAppCache);
+  [[nodiscard]] nsresult OpenCacheEntryInternal(bool isHttps);
   [[nodiscard]] nsresult ContinueConnect();
 
   [[nodiscard]] nsresult StartRedirectChannelToURI(nsIURI*, uint32_t);

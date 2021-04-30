@@ -3359,14 +3359,10 @@ nsresult nsHttpChannel::OpenCacheEntry(bool isHttps) {
     return NS_OK;
   }
 
-  return OpenCacheEntryInternal(isHttps, /*mApplicationCache */ nullptr, true);
+  return OpenCacheEntryInternal(isHttps);
 }
 
-nsresult nsHttpChannel::OpenCacheEntryInternal(
-    bool isHttps, nsIApplicationCache* applicationCache,
-    bool allowApplicationCache) {
-  MOZ_ASSERT_IF(!allowApplicationCache, !applicationCache);
-
+nsresult nsHttpChannel::OpenCacheEntryInternal(bool isHttps) {
   nsresult rv;
 
   if (LoadResuming()) {
@@ -3420,8 +3416,7 @@ nsresult nsHttpChannel::OpenCacheEntryInternal(
     }
     cacheEntryOpenFlags = nsICacheStorage::OPEN_READONLY;
     StoreCacheEntryIsReadOnly(true);
-  } else if (BYPASS_LOCAL_CACHE(mLoadFlags, LoadPreferCacheLoadOverBypass()) &&
-             !applicationCache) {
+  } else if (BYPASS_LOCAL_CACHE(mLoadFlags, LoadPreferCacheLoadOverBypass())) {
     cacheEntryOpenFlags = nsICacheStorage::OPEN_TRUNCATE;
   } else {
     cacheEntryOpenFlags =
