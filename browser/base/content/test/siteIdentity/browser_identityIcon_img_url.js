@@ -30,7 +30,7 @@ const TEST_CASES = [
   {
     type: "non-chrome about page",
     testURL: "about:about",
-    img_url: `url("chrome://global/skin/icons/document.svg")`,
+    img_url: `url("chrome://global/skin/icons/page-portrait.svg")`,
   },
   {
     type: "chrome about page",
@@ -44,12 +44,12 @@ const TEST_CASES = [
   {
     type: "file",
     testURL: "dummy_page.html",
-    img_url: `url("chrome://global/skin/icons/document.svg")`,
+    img_url: `url("chrome://global/skin/icons/page-portrait.svg")`,
   },
   {
     type: "resource",
     testURL: "resource://gre/modules/Log.jsm",
-    img_url: `url("chrome://global/skin/icons/document.svg")`,
+    img_url: `url("chrome://global/skin/icons/page-portrait.svg")`,
   },
   {
     type: "mixedPassiveContent",
@@ -69,12 +69,12 @@ const TEST_CASES = [
   {
     type: "localhost",
     testURL: "http://127.0.0.1",
-    img_url: `url("chrome://global/skin/icons/document.svg")`,
+    img_url: `url("chrome://global/skin/icons/page-portrait.svg")`,
   },
   {
     type: "localhost + http frame",
     testURL: kBaseURILocalhost + "file_csp_block_all_mixedcontent.html",
-    img_url: `url("chrome://global/skin/icons/document.svg")`,
+    img_url: `url("chrome://global/skin/icons/page-portrait.svg")`,
   },
   {
     type: "data URI",

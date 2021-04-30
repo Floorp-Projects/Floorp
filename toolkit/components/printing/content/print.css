@@ -118,7 +118,7 @@ select:not([size], [multiple])[iconic] {
 }
 
 #printer-picker[output="pdf"] {
-  background-image: url("chrome://global/skin/icons/arrow-dropdown-12.svg"), url("chrome://global/content/portrait.svg");
+  background-image: url("chrome://global/skin/icons/arrow-dropdown-12.svg"), url("chrome://global/skin/icons/page-portrait.svg");
 }
 
 input[type="number"],
@@ -247,10 +247,10 @@ input[type="text"] {
 }
 
 .toggle-group #landscape + .toggle-group-label::before {
-  content: url("chrome://global/content/landscape.svg");
+  content: url("chrome://global/skin/icons/page-landscape.svg");
 }
 .toggle-group #portrait + .toggle-group-label::before {
-  content: url("chrome://global/content/portrait.svg");
+  content: url("chrome://global/skin/icons/page-portrait.svg");
 }
 
 .error-message {
