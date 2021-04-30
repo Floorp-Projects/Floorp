@@ -1,4 +1,4 @@
-// |reftest| shell-option(--enable-private-methods) skip-if(!xulRuntime.shell) error:SyntaxError -- requires shell-options
+// |reftest| error:SyntaxError
 // This file was procedurally generated from the following sources:
 // - src/dstr-binding/ary-ptrn-rest-not-final-id.case
 // - src/dstr-binding/default/cls-expr-private-gen-meth.template

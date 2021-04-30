@@ -1,4 +1,4 @@
-// |reftest| shell-option(--enable-private-methods) skip-if(!xulRuntime.shell) async -- requires shell-options
+// |reftest| async
 // This file was procedurally generated from the following sources:
 // - src/dstr-binding/obj-ptrn-id-init-fn-name-gen.case
 // - src/dstr-binding/default/cls-expr-async-private-gen-meth-dflt.template

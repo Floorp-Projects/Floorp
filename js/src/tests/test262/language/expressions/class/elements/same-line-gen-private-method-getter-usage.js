@@ -1,4 +1,3 @@
-// |reftest| shell-option(--enable-private-methods) skip-if(!xulRuntime.shell) -- requires shell-options
 // This file was procedurally generated from the following sources:
 // - src/class-elements/private-method-getter-usage.case
 // - src/class-elements/productions/cls-expr-same-line-generator.template

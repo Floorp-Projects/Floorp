@@ -1,4 +1,3 @@
-// |reftest| shell-option(--enable-private-methods) skip-if(!xulRuntime.shell) -- requires shell-options
 // This file was procedurally generated from the following sources:
 // - src/arguments/args-trailing-comma-undefined.case
 // - src/arguments/default/cls-expr-private-gen-meth.template
