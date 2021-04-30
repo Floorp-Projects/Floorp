@@ -6,6 +6,8 @@
 
 "use strict";
 
+requestLongerTimeout(3);
+
 add_task(async function() {
   const URL1 = URL_ROOT_COM + "storage-indexeddb-simple.html";
   const URL2 = URL_ROOT_NET + "storage-indexeddb-simple-alt.html";
