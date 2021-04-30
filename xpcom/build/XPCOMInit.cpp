@@ -150,6 +150,8 @@ nsComponentManagerImpl* nsComponentManagerImpl::gComponentManager = nullptr;
 bool gXPCOMShuttingDown = false;
 mozilla::Atomic<bool, mozilla::SequentiallyConsistent> gXPCOMThreadsShutDown(
     false);
+mozilla::Atomic<bool, mozilla::SequentiallyConsistent> gXPCOMTimersShutDown(
+    false);
 bool gXPCOMMainThreadEventsAreDoomed = false;
 char16_t* gGREBinPath = nullptr;
 
@@ -628,6 +630,7 @@ nsresult ShutdownXPCOM(nsIServiceManager* aServMgr) {
     // Shutdown the timer thread and all timers that might still be alive before
     // shutting down the component manager
     nsTimerImpl::Shutdown();
+    gXPCOMTimersShutDown = true;
 
     NS_ProcessPendingEvents(thread);
 
