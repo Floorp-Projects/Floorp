@@ -44,8 +44,6 @@ RELEASE_OR_BETA = set(
     ]
 )
 SHELL_OPTIONS = {
-    "class-fields-private": "--enable-private-fields",
-    "class-static-fields-private": "--enable-private-fields",
     "class-methods-private": "--enable-private-methods",
     "class-static-methods-private": "--enable-private-methods",
     "class-fields-private-in": "--enable-ergonomic-brand-checks",
