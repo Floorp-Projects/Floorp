@@ -1,4 +1,4 @@
-// |reftest| shell-option(--enable-private-fields) skip-if(!xulRuntime.shell) -- requires shell-options
+// |reftest| skip-if(!xulRuntime.shell) -- needs newGlobal()
 
 class A {
   #x = {a: 1};

@@ -1,4 +1,4 @@
-// |jit-test| --enable-private-fields; --enable-ergonomic-brand-checks;
+// |jit-test| --enable-ergonomic-brand-checks;
 class Base {
   constructor(o) {
     return o;

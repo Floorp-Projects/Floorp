@@ -1,4 +1,3 @@
-// |reftest| shell-option(--enable-private-fields) skip-if(!xulRuntime.shell) -- requires shell-options
 // This file was procedurally generated from the following sources:
 // - src/class-elements/eval-err-contains-arguments.case
 // - src/class-elements/initializer-direct-eval-arguments/cls-expr-private-fields-eval-nested.template

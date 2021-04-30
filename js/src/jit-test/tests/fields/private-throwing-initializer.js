@@ -1,5 +1,3 @@
-// |jit-test| --enable-private-fields;
-
 // Ensure private fields are stamped in order and that
 // we can successfully partially initialize objects.
 
