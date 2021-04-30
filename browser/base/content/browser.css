@@ -1274,6 +1274,13 @@ toolbarpaletteitem[dragover] {
   display: -moz-box;
 }
 
+@media (-moz-proton) {
+#customization-lwtheme-button > .box-inherit > .button-menu-dropmarker,
+#customization-uidensity-button > .box-inherit > .button-menu-dropmarker {
+  display: -moz-box;
+}
+} /*** END proton ***/
+
 toolbarpaletteitem[place="palette"] {
   -moz-box-orient: vertical;
   width: 7em;
