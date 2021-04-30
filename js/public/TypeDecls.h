@@ -34,6 +34,8 @@ struct JS_PUBLIC_API JSRuntime;
 class JS_PUBLIC_API JSScript;
 class JS_PUBLIC_API JSString;
 
+struct JSPrincipals;
+
 namespace js {
 class JS_PUBLIC_API TempAllocPolicy;
 };  // namespace js

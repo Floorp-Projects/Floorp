@@ -42,6 +42,7 @@
 #include "js/PropertyDescriptor.h"
 #include "js/PropertySpec.h"
 #include "js/Realm.h"
+#include "js/RealmIterators.h"
 #include "js/RealmOptions.h"
 #include "js/RefCounted.h"
 #include "js/RootingAPI.h"
@@ -464,64 +465,7 @@ extern JS_PUBLIC_API JS::Realm* EnterRealm(JSContext* cx, JSObject* target);
 
 extern JS_PUBLIC_API void LeaveRealm(JSContext* cx, JS::Realm* oldRealm);
 
-using IterateRealmCallback = void (*)(JSContext* cx, void* data, Realm* realm,
-                                      const AutoRequireNoGC& nogc);
-
-/**
- * This function calls |realmCallback| on every realm. Beware that there is no
- * guarantee that the realm will survive after the callback returns. Also,
- * barriers are disabled via the TraceSession.
- */
-extern JS_PUBLIC_API void IterateRealms(JSContext* cx, void* data,
-                                        IterateRealmCallback realmCallback);
-
-/**
- * Like IterateRealms, but only call the callback for realms using |principals|.
- */
-extern JS_PUBLIC_API void IterateRealmsWithPrincipals(
-    JSContext* cx, JSPrincipals* principals, void* data,
-    IterateRealmCallback realmCallback);
-
-/**
- * Like IterateRealms, but only iterates realms in |compartment|.
- */
-extern JS_PUBLIC_API void IterateRealmsInCompartment(
-    JSContext* cx, JS::Compartment* compartment, void* data,
-    IterateRealmCallback realmCallback);
-
 }  // namespace JS
-
-/**
- * An enum that JSIterateCompartmentCallback can return to indicate
- * whether to keep iterating.
- */
-namespace JS {
-enum class CompartmentIterResult { KeepGoing, Stop };
-}  // namespace JS
-
-using JSIterateCompartmentCallback =
-    JS::CompartmentIterResult (*)(JSContext*, void*, JS::Compartment*);
-
-/**
- * This function calls |compartmentCallback| on every compartment until either
- * all compartments have been iterated or CompartmentIterResult::Stop is
- * returned. Beware that there is no guarantee that the compartment will survive
- * after the callback returns. Also, barriers are disabled via the TraceSession.
- */
-extern JS_PUBLIC_API void JS_IterateCompartments(
-    JSContext* cx, void* data,
-    JSIterateCompartmentCallback compartmentCallback);
-
-/**
- * This function calls |compartmentCallback| on every compartment in the given
- * zone until either all compartments have been iterated or
- * CompartmentIterResult::Stop is returned. Beware that there is no guarantee
- * that the compartment will survive after the callback returns. Also, barriers
- * are disabled via the TraceSession.
- */
-extern JS_PUBLIC_API void JS_IterateCompartmentsInZone(
-    JSContext* cx, JS::Zone* zone, void* data,
-    JSIterateCompartmentCallback compartmentCallback);
 
 /**
  * Mark a jsid after entering a new compartment. Different zones separately
