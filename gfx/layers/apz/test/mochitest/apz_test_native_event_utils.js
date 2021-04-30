@@ -377,6 +377,87 @@ function synthesizeNativeWheel(aTarget, aX, aY, aDeltaX, aDeltaY, aObserver) {
   return true;
 }
 
+// Synthesizes a native pan gesture event and returns immediately.
+// NOTE: This works only on Mac.
+// You can specify kCGScrollPhaseBegan = 1, kCGScrollPhaseChanged = 2 and
+// kCGScrollPhaseEnded = 4 for |aPhase|.
+function synthesizeNativePanGestureEvent(
+  aTarget,
+  aX,
+  aY,
+  aDeltaX,
+  aDeltaY,
+  aPhase,
+  aObserver
+) {
+  if (getPlatform() != "mac") {
+    throw new Error(
+      `synthesizeNativePanGestureEvent doesn't work on ${getPlatform()}`
+    );
+  }
+
+  var pt = coordinatesRelativeToScreen({
+    offsetX: aX,
+    offsetY: aY,
+    target: aTarget,
+  });
+  if (aDeltaX && aDeltaY) {
+    throw new Error(
+      "Simultaneous panning of horizontal and vertical is not supported."
+    );
+  }
+
+  aDeltaX = nativeScrollUnits(aTarget, aDeltaX);
+  aDeltaY = nativeScrollUnits(aTarget, aDeltaY);
+
+  var element = elementForTarget(aTarget);
+  var utils = utilsForTarget(aTarget);
+  utils.sendNativeMouseScrollEvent(
+    pt.x,
+    pt.y,
+    aPhase,
+    aDeltaX,
+    aDeltaY,
+    0 /* deltaZ */,
+    0 /* modifiers */,
+    0 /* scroll event unit pixel */,
+    element,
+    aObserver
+  );
+
+  return true;
+}
+
+// Synthesizes a native pan gesture event and resolve the returned promise once the
+// request has been successfully made to the OS.
+function promiseNativePanGestureEventAndWaitForObserver(
+  aElement,
+  aX,
+  aY,
+  aDeltaX,
+  aDeltaY,
+  aPhase
+) {
+  return new Promise(resolve => {
+    var observer = {
+      observe(aSubject, aTopic, aData) {
+        if (aTopic == "mousescrollevent") {
+          resolve();
+        }
+      },
+    };
+    synthesizeNativePanGestureEvent(
+      aElement,
+      aX,
+      aY,
+      aDeltaX,
+      aDeltaY,
+      aPhase,
+      observer
+    );
+  });
+}
+
 // Synthesizes a native mousewheel event and resolve the returned promise once the
 // request has been successfully made to the OS. This does not necessarily
 // guarantee that the OS generates the event we requested. See
