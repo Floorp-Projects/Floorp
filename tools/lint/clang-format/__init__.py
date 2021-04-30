@@ -7,7 +7,7 @@ import signal
 import re
 
 from buildconfig import substs
-from mozboot.util import get_state_dir
+from mozboot.util import get_tools_dir
 from mozlint import result
 from mozlint.pathutils import expand_exclusions
 from mozprocess import ProcessHandler
@@ -79,7 +79,7 @@ def get_clang_format_binary():
     if binary:
         return binary
 
-    clang_tools_path = os.path.join(get_state_dir(), "clang-tools")
+    clang_tools_path = os.path.join(get_tools_dir(), "clang-tools")
     bin_path = os.path.join(clang_tools_path, "clang-tidy", "bin")
     return os.path.join(bin_path, "clang-format" + substs.get("HOST_BIN_SUFFIX", ""))
 
