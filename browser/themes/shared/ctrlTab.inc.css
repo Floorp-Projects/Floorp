@@ -23,8 +23,7 @@
 .ctrlTab-preview,
 #ctrlTab-showAll {
   appearance: none;
-  /* !important overrides the :hover color from button.css on Linux */
-  color: inherit !important;
+  color: inherit;
   /* remove the :-moz-focusring outline from button.css on Windows */
   outline: none !important;
   margin: 0;

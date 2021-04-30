@@ -74,8 +74,7 @@
 
 .customizationmode-checkbox:not(:-moz-lwtheme, [disabled]),
 .customizationmode-button {
-  /* !important overrides :hover:active color from button.css on Mac */
-  color: rgb(71, 71, 71) !important;
+  color: rgb(71, 71, 71);
 }
 
 .customizationmode-checkbox[disabled]:-moz-lwtheme {
