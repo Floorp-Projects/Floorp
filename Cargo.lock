@@ -1789,7 +1789,6 @@ dependencies = [
  "log",
  "marionette",
  "mozdevice",
- "mozilla-central-workspace-hack",
  "mozprofile",
  "mozrunner",
  "mozversion",
