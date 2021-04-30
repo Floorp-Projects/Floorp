@@ -605,7 +605,7 @@ class TargetCommand extends EventEmitter {
    */
   async onLocalTabRemotenessChange(targetFront) {
     if (this.isServerTargetSwitchingEnabled()) {
-      // For server-side target switchting, everything will be handled by the
+      // For server-side target switching, everything will be handled by the
       // _onTargetAvailable callback.
       return;
     }
@@ -619,6 +619,16 @@ class TargetCommand extends EventEmitter {
 
     // Fetch the new target from the descriptor.
     const newTarget = await this.descriptorFront.getTarget();
+
+    // If a navigation happens while we try to get the target for the page that triggered
+    // the remoteness change, `getTarget` will return null. In such case, we'll get the
+    // "next" target through onTargetAvailable so it's safe to bail here.
+    if (!newTarget) {
+      console.warn(
+        `Couldn't get the target for descriptor ${this.descriptorFront.actorID}`
+      );
+      return;
+    }
 
     this.switchToTarget(newTarget);
   }
