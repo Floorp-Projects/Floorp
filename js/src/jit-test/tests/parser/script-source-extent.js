@@ -1,3 +1,5 @@
+// |jit-test| --enable-private-fields; --enable-private-methods
+
 // Test that the sourceStart/sourceEnd values of scripts match the current
 // expectations. These values are internal details and slightly arbitrary so
 // these tests expectations can be updated as needed.

@@ -5660,19 +5660,19 @@
     type: bool
     value: false
     mirror: always
-#endif  // NIGHTLY_BUILD
 
-  # Support for Private Fields in JavaScript.
-- name: javascript.options.experimental.private_fields
-  type: bool
-  value: true
-  mirror: always
+  # Experimental support for Private Fields in JavaScript.
+-   name: javascript.options.experimental.private_fields
+    type: bool
+    value: false
+    mirror: always
 
   # Experimental support for Private Methods in JavaScript.
-- name: javascript.options.experimental.private_methods
-  type: bool
-  value: true
-  mirror: always
+-   name: javascript.options.experimental.private_methods
+    type: bool
+    value: false
+    mirror: always
+#endif  // NIGHTLY_BUILD
 
   # Experimental support for the ergonomic brand check proposal.
 - name: javascript.options.experimental.ergonomic_brand_checks

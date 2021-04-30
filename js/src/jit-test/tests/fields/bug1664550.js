@@ -1,3 +1,5 @@
+// |jit-test| --enable-private-methods;
+
 class OverrideBase {
   constructor(o30) {
     return o30;

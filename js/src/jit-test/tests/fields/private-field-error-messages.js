@@ -1,3 +1,5 @@
+// |jit-test| --enable-private-fields;
+
 load(libdir + "asserts.js");
 
 class C {

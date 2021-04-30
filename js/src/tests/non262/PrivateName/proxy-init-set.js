@@ -1,4 +1,5 @@
-// |reftest| 
+// |reftest| shell-option(--enable-private-fields) skip-if(!xulRuntime.shell) -- requires shell-options
+
 // Ensure that the distinction between Proxy Init and Proxy Set holds
 
 function assertThrowsTypeError(f) {

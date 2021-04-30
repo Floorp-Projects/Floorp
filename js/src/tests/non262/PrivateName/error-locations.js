@@ -1,4 +1,5 @@
-// |reftest|
+// |reftest| shell-option(--enable-private-fields) skip-if(!xulRuntime.shell) -- requires shell-options
+
 function assertLineAndColumn(str, line, column) {
   try {
     eval(str);

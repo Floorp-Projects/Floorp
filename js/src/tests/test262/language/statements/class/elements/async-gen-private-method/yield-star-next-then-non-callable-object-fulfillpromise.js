@@ -1,4 +1,4 @@
-// |reftest| async
+// |reftest| shell-option(--enable-private-methods) skip-if(!xulRuntime.shell) async -- requires shell-options
 // This file was procedurally generated from the following sources:
 // - src/async-generators/yield-star-next-then-non-callable-object-fulfillpromise.case
 // - src/async-generators/default/async-class-decl-private-method.template

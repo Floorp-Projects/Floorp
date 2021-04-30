@@ -1,3 +1,5 @@
+// |jit-test| --enable-private-fields;
+
 function rp(x) {
   return Reflect.parse(x);
 };

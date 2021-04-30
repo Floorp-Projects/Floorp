@@ -1,3 +1,4 @@
+// |jit-test| --enable-private-methods;
 load(libdir + "asserts.js");
 
 // Ensure BytecodeGeneration respects stack depth assertions: Private Methods

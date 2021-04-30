@@ -1,3 +1,6 @@
+// |jit-test| --enable-private-fields;
+
+
 class A {
   #x = 10
 

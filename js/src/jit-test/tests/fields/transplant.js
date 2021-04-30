@@ -1,3 +1,6 @@
+// |jit-test| --enable-private-fields;
+
+
 class Base {
   constructor(o) {
     return o;

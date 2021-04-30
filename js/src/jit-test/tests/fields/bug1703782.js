@@ -1,3 +1,5 @@
+// |jit-test| --enable-private-methods;
+//
 // Bug 1703782 - Assertion failure: this->is<T>(), at vm/JSObject.h:467
 var g7 = newGlobal({ newCompartment: true });
 g7.parent = this;

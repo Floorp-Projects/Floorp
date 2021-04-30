@@ -1,3 +1,4 @@
+// |reftest| shell-option(--enable-private-methods) skip-if(!xulRuntime.shell) -- requires shell-options
 // This file was procedurally generated from the following sources:
 // - src/dstr-binding/ary-name-iter-val.case
 // - src/dstr-binding/default/cls-expr-private-meth.template

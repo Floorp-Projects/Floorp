@@ -1,4 +1,4 @@
-// |reftest| error:SyntaxError
+// |reftest| shell-option(--enable-private-methods) skip-if(!xulRuntime.shell) error:SyntaxError -- requires shell-options
 // This file was procedurally generated from the following sources:
 // - src/async-functions/await-as-label-identifier-escaped.case
 // - src/async-functions/syntax/async-class-expr-private-method.template

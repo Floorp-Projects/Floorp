@@ -1,3 +1,4 @@
+// |reftest| shell-option(--enable-private-fields) skip-if(!xulRuntime.shell) -- requires shell-options
 // This file was procedurally generated from the following sources:
 // - src/class-elements/eval-err-contains-newtarget.case
 // - src/class-elements/initializer-eval-newtarget/cls-expr-private-fields-indirect-eval-nested.template
