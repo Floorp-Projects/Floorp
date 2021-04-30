@@ -54,8 +54,6 @@ class nsDOMOfflineResourceList final : public mozilla::DOMEventTargetHelper,
   void FirePendingEvents();
   void Disconnect();
 
-  nsresult Init();
-
   nsPIDOMWindowInner* GetParentObject() const { return GetOwner(); }
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;
@@ -106,25 +104,6 @@ class nsDOMOfflineResourceList final : public mozilla::DOMEventTargetHelper,
 
   nsresult CacheKeys();
   void ClearCachedKeys();
-
-  bool mInitialized;
-
-  nsCOMPtr<nsIURI> mManifestURI;
-  // AsciiSpec of mManifestURI
-  nsCString mManifestSpec;
-
-  nsCOMPtr<nsIURI> mDocumentURI;
-  nsCOMPtr<nsIPrincipal> mLoadingPrincipal;
-  nsCOMPtr<nsIApplicationCacheService> mApplicationCacheService;
-  nsCOMPtr<nsIApplicationCache> mAvailableApplicationCache;
-  nsCOMPtr<nsIOfflineCacheUpdate> mCacheUpdate;
-  bool mExposeCacheUpdateStatus;
-  uint16_t mStatus;
-
-  // The set of dynamic keys for this application cache object.
-  mozilla::Maybe<nsTArray<nsCString>> mCachedKeys;
-
-  nsCOMArray<mozilla::dom::Event> mPendingEvents;
 };
 
 #endif

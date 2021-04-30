@@ -3235,8 +3235,6 @@ nsDOMOfflineResourceList* nsGlobalWindowInner::GetApplicationCache(
         new nsDOMOfflineResourceList(manifestURI, uri, mDoc->NodePrincipal(),
                                      this);
 
-    applicationCache->Init();
-
     mApplicationCache = applicationCache;
   }
 
