@@ -20,7 +20,6 @@ import mozilla.components.browser.state.selector.privateTabs
 import mozilla.components.lib.state.ext.flowScoped
 import org.mozilla.focus.R
 import org.mozilla.focus.ext.components
-import org.mozilla.focus.ext.requireComponents
 import org.mozilla.focus.locale.LocaleAwareFragment
 import org.mozilla.focus.state.AppAction
 import org.mozilla.focus.telemetry.TelemetryWrapper
@@ -113,7 +112,9 @@ class TabSheetFragment : LocaleAwareFragment(), View.OnClickListener {
 
         animator.addListener(object : AnimatorListenerAdapter() {
             override fun onAnimationEnd(animation: Animator) {
-                requireComponents.appStore.dispatch(AppAction.HideTabs)
+                // Use nullable Components reference: At the end of the animation the fragment
+                // may already be detached if a navigation happened in the meantime.
+                components?.appStore?.dispatch(AppAction.HideTabs)
             }
         })
 
