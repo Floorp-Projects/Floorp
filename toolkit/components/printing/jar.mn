@@ -13,8 +13,6 @@ toolkit.jar:
    content/global/printProgress.js                  (content/printProgress.js)
    content/global/printProgress.xhtml               (content/printProgress.xhtml)
 #endif
-   content/global/landscape.svg                     (content/landscape.svg)
-   content/global/portrait.svg                      (content/portrait.svg)
    content/global/printPreviewPagination.js         (content/printPreviewPagination.js)
    content/global/printPreviewToolbar.js            (content/printPreviewToolbar.js)
    content/global/printUtils.js                     (content/printUtils.js)
