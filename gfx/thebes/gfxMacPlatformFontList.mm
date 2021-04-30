@@ -822,33 +822,10 @@ gfxMacPlatformFontList::gfxMacPlatformFontList()
     : gfxPlatformFontList(false), mDefaultFont(nullptr), mUseSizeSensitiveSystemFont(false) {
   CheckFamilyList(kBaseFonts, ArrayLength(kBaseFonts));
 
-  // On Catalina+, it appears to be sufficient to activate fonts in the parent process;
-  // they are then also usable in child processes. But on pre-Catalina systems we need
-  // to explicitly activate them in each child process (per bug 1704273).
-  if (XRE_IsParentProcess() || !nsCocoaFeatures::OnCatalinaOrLater()) {
-#ifdef MOZ_BUNDLED_FONTS
-    // We activate bundled fonts if the pref is > 0 (on) or < 0 (auto), only an
-    // explicit value of 0 (off) will disable them.
-    if (StaticPrefs::gfx_bundled_fonts_activate_AtStartup() != 0) {
-      TimeStamp start = TimeStamp::Now();
-      ActivateBundledFonts();
-      TimeStamp end = TimeStamp::Now();
-      Telemetry::Accumulate(Telemetry::FONTLIST_BUNDLEDFONTS_ACTIVATE,
-                            (end - start).ToMilliseconds());
-    }
-#endif
-
-    for (const auto& dir : kLangFontsDirs) {
-      nsresult rv;
-      nsCOMPtr<nsIFile> langFonts(do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv));
-      if (NS_SUCCEEDED(rv)) {
-        rv = langFonts->InitWithNativePath(dir);
-        if (NS_SUCCEEDED(rv)) {
-          ActivateFontsFromDir(langFonts);
-        }
-      }
-    }
-  }
+  // The font registration thread was created early in startup, to give the
+  // system a head start on activating all the supplemental-language fonts.
+  // Here, we need to wait until it has finished its work.
+  gfxPlatformMac::WaitForFontRegistration();
 
   // Only the parent process listens for OS font-changed notifications;
   // after rebuilding its list, it will update the content processes.
@@ -1729,44 +1706,6 @@ gfxFontEntry* gfxMacPlatformFontList::CreateFontEntry(fontlist::Face* aFace,
   return fe;
 }
 
-void gfxMacPlatformFontList::ActivateFontsFromDir(nsIFile* aDir) {
-  bool isDir;
-  if (NS_FAILED(aDir->IsDirectory(&isDir)) || !isDir) {
-    return;
-  }
-
-  nsCOMPtr<nsIDirectoryEnumerator> e;
-  if (NS_FAILED(aDir->GetDirectoryEntries(getter_AddRefs(e)))) {
-    return;
-  }
-
-  AutoCFRelease<CFMutableArrayRef> urls =
-      ::CFArrayCreateMutable(kCFAllocatorDefault, 0, &kCFTypeArrayCallBacks);
-
-  bool hasMore;
-  while (NS_SUCCEEDED(e->HasMoreElements(&hasMore)) && hasMore) {
-    nsCOMPtr<nsISupports> entry;
-    if (NS_FAILED(e->GetNext(getter_AddRefs(entry)))) {
-      break;
-    }
-    nsCOMPtr<nsIFile> file = do_QueryInterface(entry);
-    if (!file) {
-      continue;
-    }
-    nsCString path;
-    if (NS_FAILED(file->GetNativePath(path))) {
-      continue;
-    }
-    AutoCFRelease<CFURLRef> fontURL = ::CFURLCreateFromFileSystemRepresentation(
-        kCFAllocatorDefault, (uint8_t*)path.get(), path.Length(), false);
-    if (fontURL) {
-      ::CFArrayAppendValue(urls, fontURL);
-    }
-  }
-
-  ::CTFontManagerRegisterFontsForURLs(urls, kCTFontManagerScopeProcess, nullptr);
-}
-
 void gfxMacPlatformFontList::GetFacesInitDataForFamily(const fontlist::Family* aFamily,
                                                        nsTArray<fontlist::Face::InitData>& aFaces,
                                                        bool aLoadCmaps) const {
@@ -1902,19 +1841,3 @@ void gfxMacPlatformFontList::ReadFaceNamesForFamily(fontlist::Family* aFamily,
     }
   }
 }
-
-#ifdef MOZ_BUNDLED_FONTS
-
-void gfxMacPlatformFontList::ActivateBundledFonts() {
-  nsCOMPtr<nsIFile> localDir;
-  if (NS_FAILED(NS_GetSpecialDirectory(NS_GRE_DIR, getter_AddRefs(localDir)))) {
-    return;
-  }
-  if (NS_FAILED(localDir->Append(u"fonts"_ns))) {
-    return;
-  }
-
-  ActivateFontsFromDir(localDir);
-}
-
-#endif
