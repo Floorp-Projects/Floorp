@@ -12,6 +12,7 @@ import androidx.recyclerview.widget.RecyclerView
 import mozilla.components.browser.state.state.TabSessionState
 import org.mozilla.focus.R
 import org.mozilla.focus.ext.beautifyUrl
+import org.mozilla.focus.ext.components
 import org.mozilla.focus.ext.requireComponents
 import org.mozilla.focus.telemetry.TelemetryWrapper
 import java.lang.ref.WeakReference
@@ -64,7 +65,7 @@ class TabViewHolder internal constructor(
     private fun selectSession(tab: TabSessionState) {
         fragment.animateAndDismiss().addListener(object : AnimatorListenerAdapter() {
             override fun onAnimationEnd(animation: Animator) {
-                fragment.requireComponents.tabsUseCases.selectTab(tab.id)
+                fragment.components?.tabsUseCases?.selectTab?.invoke(tab.id)
 
                 TelemetryWrapper.switchTabInTabsTrayEvent()
             }
