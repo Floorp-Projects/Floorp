@@ -37,9 +37,6 @@ with Files("browser/browser_test_focus_after_modal_state.js"):
 with Files("mochitest/ajax/**"):
     BUG_COMPONENT = ("Testing", "Mochitest")
 
-with Files("mochitest/ajax/offline/**"):
-    BUG_COMPONENT = ("Core", "Networking: Cache")
-
 with Files("mochitest/beacon/**"):
     BUG_COMPONENT = ("Core", "DOM: Networking")
 
@@ -151,7 +148,6 @@ with Files("unit/test_PromiseDebugging.js"):
 MOCHITEST_MANIFESTS += [
     "mochitest/ajax/jquery/mochitest.ini",
     "mochitest/ajax/mochikit/mochitest.ini",
-    "mochitest/ajax/offline/mochitest.ini",
     "mochitest/ajax/prototype/mochitest.ini",
     "mochitest/ajax/scriptaculous/mochitest.ini",
     "mochitest/beacon/mochitest.ini",
@@ -192,7 +188,6 @@ XPCSHELL_TESTS_MANIFESTS += ["unit/xpcshell.ini"]
 BROWSER_CHROME_MANIFESTS += [
     "browser/browser.ini",
     "browser/perfmetrics/browser.ini",
-    "mochitest/ajax/offline/browser.ini",
 ]
 
 TEST_HARNESS_FILES.testing.mochitest.tests.dom.tests.mochitest.ajax.lib += [

@@ -225,7 +225,6 @@
     "dom/serviceworkers/test/browser.ini": 12.26,
     "dom/tests/browser/browser.ini": 314.8,
     "dom/tests/browser/perfmetrics/browser.ini": 4.07,
-    "dom/tests/mochitest/ajax/offline/browser.ini": 0.55,
     "dom/u2f/tests/browser/browser.ini": 4.16,
     "dom/url/tests/browser.ini": 1.2,
     "dom/webauthn/tests/browser/browser.ini": 13.18,

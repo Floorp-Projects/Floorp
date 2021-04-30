@@ -1,6 +1,0 @@
-CACHE MANIFEST
-https://example.com/tests/SimpleTest/SimpleTest.js
-https://example.com/tests/dom/tests/mochitest/ajax/offline/offlineTests.js
-
-# The following item doesn't exist, and will cause an update error.
-https://example.com/tests/dom/tests/mochitest/ajax/offline/doesntExist.html
