@@ -11,7 +11,6 @@
 
 #include <stdio.h>  // fflush, fprintf, fputs
 
-#include "FuzzerDefs.h"
 #include "FuzzingInterface.h"
 #include "jsapi.h"  // JS_ClearPendingException, JS_IsExceptionPending, JS_SetProperty
 
@@ -38,7 +37,8 @@ static void CrashOnPendingException() {
   }
 }
 
-int FuzzXPCRuntimeStart(AutoJSAPI* jsapi, int* argc, char*** argv) {
+int FuzzXPCRuntimeStart(AutoJSAPI* jsapi, int* argc, char*** argv,
+                        LibFuzzerDriver fuzzerDriver) {
   gFuzzModuleName = getenv("FUZZER");
   gJsapi = jsapi;
 
@@ -48,11 +48,7 @@ int FuzzXPCRuntimeStart(AutoJSAPI* jsapi, int* argc, char*** argv) {
     return ret;
   }
 
-#ifdef LIBFUZZER
-  return fuzzer::FuzzerDriver(argc, argv, FuzzXPCRuntimeFuzz);
-#elif __AFL_COMPILER
-  MOZ_CRASH("AFL is unsupported for XPC runtime fuzzing integration");
-#endif
+  return fuzzerDriver(argc, argv, FuzzXPCRuntimeFuzz);
 }
 
 int FuzzXPCRuntimeInit() {

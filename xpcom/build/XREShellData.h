@@ -7,6 +7,10 @@
 #ifndef XREShellData_h
 #define XREShellData_h
 
+#if defined(LIBFUZZER)
+#  include "FuzzerRegistry.h"  // LibFuzzerDriver
+#endif
+
 #if defined(XP_WIN) && defined(MOZ_SANDBOX)
 namespace sandbox {
 class BrokerServices;
@@ -26,6 +30,9 @@ struct XREShellData {
 #if defined(ANDROID)
   FILE* outFile;
   FILE* errFile;
+#endif
+#if defined(LIBFUZZER)
+  LibFuzzerDriver fuzzerDriver;
 #endif
 };
 

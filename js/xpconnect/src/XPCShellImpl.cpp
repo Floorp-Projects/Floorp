@@ -84,6 +84,7 @@
 // Fuzzing support for XPC runtime fuzzing
 #ifdef FUZZING_INTERFACES
 #  include "xpcrtfuzzing/xpcrtfuzzing.h"
+#  include "XREShellData.h"
 static bool fuzzDoDebug = !!getenv("MOZ_FUZZ_DEBUG");
 static bool fuzzHaveModule = !!getenv("FUZZER");
 #endif  // FUZZING_INTERFACES
@@ -1361,11 +1362,16 @@ int XRE_XPCShellMain(int argc, char** argv, char** envp,
       {
 #ifdef FUZZING_INTERFACES
         if (fuzzHaveModule) {
+#  ifdef LIBFUZZER
           // argv[0] was removed previously, but libFuzzer expects it
           argc++;
           argv--;
 
-          result = FuzzXPCRuntimeStart(&jsapi, &argc, &argv);
+          result = FuzzXPCRuntimeStart(&jsapi, &argc, &argv,
+                                       aShellData->fuzzerDriver);
+#  elif __AFL_COMPILER
+          MOZ_CRASH("AFL is unsupported for XPC runtime fuzzing integration");
+#  endif
         } else {
 #endif
           // We are almost certainly going to run script here, so we need an
