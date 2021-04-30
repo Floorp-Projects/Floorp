@@ -266,6 +266,8 @@ checkbox {
   margin: 2px 0 6px;
   vertical-align: middle;
   width: 20px;
+  -moz-context-properties: fill;
+  fill: currentColor;
 }
 
 .extension-controlled-disabled {
