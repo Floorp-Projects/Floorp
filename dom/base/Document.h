@@ -63,7 +63,6 @@
 #include "nsExpirationTracker.h"
 #include "nsGkAtoms.h"
 #include "nsHashKeys.h"
-#include "nsIApplicationCacheContainer.h"
 #include "nsIChannel.h"
 #include "nsIChannelEventSink.h"
 #include "nsIContentViewer.h"
@@ -145,7 +144,6 @@ class nsHTMLDocument;
 class nsHTMLStyleSheet;
 class nsHtml5TreeOpExecutor;
 class nsIAppWindow;
-class nsIApplicationCache;
 class nsIAsyncVerifyRedirectCallback;
 class nsIBFCacheEntry;
 class nsIContent;
@@ -507,7 +505,6 @@ class ExternalResourceMap {
     DECL_SHIM(nsILoadContext, NSILOADCONTEXT)
     DECL_SHIM(nsIProgressEventSink, NSIPROGRESSEVENTSINK)
     DECL_SHIM(nsIChannelEventSink, NSICHANNELEVENTSINK)
-    DECL_SHIM(nsIApplicationCacheContainer, NSIAPPLICATIONCACHECONTAINER)
 #undef DECL_SHIM
   };
 
@@ -546,7 +543,6 @@ class Document : public nsINode,
                  public nsSupportsWeakReference,
                  public nsIRadioGroupContainer,
                  public nsIScriptObjectPrincipal,
-                 public nsIApplicationCacheContainer,
                  public DispatcherTrait,
                  public SupportsWeakPtr {
   friend class DocumentOrShadowRoot;
@@ -591,9 +587,6 @@ class Document : public nsINode,
       presShell->func_ params_;                                               \
     }                                                                         \
   } while (0)
-
-  // nsIApplicationCacheContainer
-  NS_DECL_NSIAPPLICATIONCACHECONTAINER
 
   // nsIRadioGroupContainer
   NS_IMETHOD WalkRadioGroup(const nsAString& aName, nsIRadioVisitor* aVisitor,
@@ -3878,10 +3871,6 @@ class Document : public nsINode,
   already_AddRefed<mozilla::dom::FeaturePolicy> GetParentFeaturePolicy();
 
   FlashClassification DocumentFlashClassificationInternal();
-
-  // The application cache that this document is associated with, if
-  // any.  This can change during the lifetime of the document.
-  nsCOMPtr<nsIApplicationCache> mApplicationCache;
 
  public:
   bool IsThirdPartyForFlashClassifier();

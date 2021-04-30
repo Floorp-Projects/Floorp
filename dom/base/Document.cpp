@@ -290,7 +290,6 @@
 #include "nsHtml5Module.h"
 #include "nsHtml5Parser.h"
 #include "nsHtml5TreeOpExecutor.h"
-#include "nsIApplicationCache.h"
 #include "nsIAsyncShutdown.h"
 #include "nsIAuthPrompt.h"
 #include "nsIAuthPrompt2.h"
@@ -1133,7 +1132,6 @@ NS_IMPL_ISUPPORTS(ExternalResourceMap::LoadgroupCallbacks,
 IMPL_SHIM(nsILoadContext)
 IMPL_SHIM(nsIProgressEventSink)
 IMPL_SHIM(nsIChannelEventSink)
-IMPL_SHIM(nsIApplicationCacheContainer)
 
 #undef IMPL_SHIM
 
@@ -1165,7 +1163,6 @@ ExternalResourceMap::LoadgroupCallbacks::GetInterface(const nsIID& aIID,
   TRY_SHIM(nsILoadContext);
   TRY_SHIM(nsIProgressEventSink);
   TRY_SHIM(nsIChannelEventSink);
-  TRY_SHIM(nsIApplicationCacheContainer);
 
   return NS_NOINTERFACE;
 }
@@ -2265,7 +2262,6 @@ NS_INTERFACE_TABLE_HEAD(Document)
     NS_INTERFACE_TABLE_ENTRY(Document, EventTarget)
     NS_INTERFACE_TABLE_ENTRY(Document, nsISupportsWeakReference)
     NS_INTERFACE_TABLE_ENTRY(Document, nsIRadioGroupContainer)
-    NS_INTERFACE_TABLE_ENTRY(Document, nsIApplicationCacheContainer)
   NS_INTERFACE_TABLE_END
   NS_INTERFACE_TABLE_TO_MAP_SEGUE_CYCLE_COLLECTION(Document)
 NS_INTERFACE_MAP_END
@@ -4098,18 +4094,6 @@ bool Document::IsScriptTracking(JSContext* aCx) const {
     return false;
   }
   return mTrackingScripts.Contains(nsDependentCString(filename.get()));
-}
-
-NS_IMETHODIMP
-Document::GetApplicationCache(nsIApplicationCache** aApplicationCache) {
-  NS_IF_ADDREF(*aApplicationCache = mApplicationCache);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-Document::SetApplicationCache(nsIApplicationCache* aApplicationCache) {
-  mApplicationCache = aApplicationCache;
-  return NS_OK;
 }
 
 void Document::GetContentType(nsAString& aContentType) {
