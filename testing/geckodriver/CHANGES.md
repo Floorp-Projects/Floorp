@@ -22,8 +22,8 @@ All notable changes to this program are documented in this file.
 
   Marionette will only be enabled in GeckoView based applications when the
   Firefox preference `devtools.debugger.remote-enabled` is set to `True` via
-  [`moz:firefoxOptions`]. This will be fixed in one of the upcoming Firefox
-  for Android releases.
+  [`moz:firefoxOptions`]. This will be fixed in the Firefox 90 release for
+  Android.
 
 ### Added
 
