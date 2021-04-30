@@ -15,8 +15,6 @@ job-defaults:
             linux1804-64.*:
                 docker-image: {in-tree: "lint"}
                 max-run-time: 3600
-                env:
-                    CLANG_FORMAT: /builds/worker/fetches/clang-tidy/bin/clang-format
             macosx.*:
                 max-run-time: 3600
                 env:
@@ -207,21 +205,27 @@ mozlint:
     run:
         using: python-test
         subsuite: mozlint
+    dependencies:
+        clang-tidy:
+            by-platform:
+                linux1804-64/opt: toolchain-linux64-clang-tidy
+                macosx1014-64/opt: toolchain-macosx64-clang-tidy
+                windows10-64/opt: toolchain-win64-clang-tidy
     fetches:
         toolchain:
             by-platform:
                 linux1804-64/opt:
-                    - linux64-clang-tidy
                     - linux64-node
                     - linux64-rust
                 macosx1014-64/opt:
-                    - macosx64-clang-tidy
                     - macosx64-node
                     - macosx64-rust
                 windows10-64/opt:
-                    - win64-clang-tidy
                     - win64-node
                     - win64-rust
+        clang-tidy:
+            - artifact: clang-tidy.tar.zst
+              dest: clang-tools
     when:
         files-changed:
             - 'python/mozlint/**'

@@ -18,8 +18,6 @@ job-defaults:
             - type: file
               name: public/code-review/mozlint.json
               path: /builds/worker/mozlint.json
-        env:
-            CLANG_FORMAT: /builds/worker/fetches/clang-tidy/bin/clang-format
     run:
         using: mach
     when:
@@ -344,9 +342,12 @@ clang-format:
             - '**/*.m'
             - '**/*.mm'
             - 'tools/lint/clang-format.yml'
+    dependencies:
+        linux64-clang-tidy: toolchain-linux64-clang-tidy
     fetches:
-        toolchain:
-            - linux64-clang-tidy
+        linux64-clang-tidy:
+            - artifact: clang-tidy.tar.zst
+              dest: clang-tools
 
 
 rustfmt:
