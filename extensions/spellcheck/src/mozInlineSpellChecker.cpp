@@ -1384,8 +1384,8 @@ nsresult mozInlineSpellChecker::DoSpellCheck(
           sInlineSpellCheckerLog, LogLevel::Verbose,
           ("%s: we have run out of time, schedule next round.", __FUNCTION__));
 
-      CheckCurrentWordsNoSuggest(aSpellCheckSelection, words,
-                                 std::move(checkRanges));
+      CheckWordsAndAddRangesForMisspellings(aSpellCheckSelection, words,
+                                            std::move(checkRanges));
 
       // move the range to encompass the stuff that needs checking.
       nsresult rv = aStatus->mRange->SetStart(beginNode, beginOffset);
@@ -1452,8 +1452,8 @@ nsresult mozInlineSpellChecker::DoSpellCheck(
     checkRanges.AppendElement(wordNodeOffsetRange);
     wordsChecked++;
     if (words.Length() >= requestChunkSize) {
-      CheckCurrentWordsNoSuggest(aSpellCheckSelection, words,
-                                 std::move(checkRanges));
+      CheckWordsAndAddRangesForMisspellings(aSpellCheckSelection, words,
+                                            std::move(checkRanges));
       // Set new empty data for spellcheck range in DOM to avoid
       // clang-tidy detection.
       words.Clear();
@@ -1461,8 +1461,8 @@ nsresult mozInlineSpellChecker::DoSpellCheck(
     }
   }
 
-  CheckCurrentWordsNoSuggest(aSpellCheckSelection, words,
-                             std::move(checkRanges));
+  CheckWordsAndAddRangesForMisspellings(aSpellCheckSelection, words,
+                                        std::move(checkRanges));
 
   return NS_OK;
 }
@@ -1483,7 +1483,7 @@ class MOZ_RAII AutoChangeNumPendingSpellChecks final {
   int32_t mDelta;
 };
 
-void mozInlineSpellChecker::CheckCurrentWordsNoSuggest(
+void mozInlineSpellChecker::CheckWordsAndAddRangesForMisspellings(
     Selection* aSpellCheckSelection, const nsTArray<nsString>& aWords,
     nsTArray<NodeOffsetRange>&& aRanges) {
   MOZ_ASSERT(aWords.Length() == aRanges.Length());
