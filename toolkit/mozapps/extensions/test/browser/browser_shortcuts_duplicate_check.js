@@ -149,3 +149,105 @@ add_task(async function testDuplicateShortcutsWarnings() {
   await extension.unload();
   await extension2.unload();
 });
+
+add_task(async function testDuplicateShortcutOnMacOSCtrlKey() {
+  if (AppConstants.platform !== "macosx") {
+    ok(
+      true,
+      `Skipping macos specific test on platform ${AppConstants.platform}`
+    );
+    return;
+  }
+
+  const extension = ExtensionTestUtils.loadExtension({
+    useAddonManager: "temporary",
+    manifest: {
+      name: "Extension 1",
+      applications: {
+        gecko: { id: "extension1@mochi.test" },
+      },
+      commands: {
+        commandOne: {
+          // Cover expected mac normalized shortcut on default shortcut.
+          suggested_key: { default: "Ctrl+Shift+1" },
+        },
+        commandTwo: {
+          suggested_key: {
+            default: "Alt+Shift+2",
+            // Cover expected mac normalized shortcut on mac-specific shortcut.
+            mac: "Ctrl+Shift+2",
+          },
+        },
+      },
+    },
+  });
+
+  const extension2 = ExtensionTestUtils.loadExtension({
+    useAddonManager: "temporary",
+    manifest: {
+      name: "Extension 2",
+      applications: {
+        gecko: { id: "extension2@mochi.test" },
+      },
+      commands: {
+        anotherCommand: {},
+      },
+    },
+  });
+
+  await extension.startup();
+  await extension2.startup();
+
+  const win = await loadShortcutsView();
+  const doc = win.document;
+  const errorEl = doc.querySelector("addon-shortcuts .error-message");
+  const errorLabel = errorEl.querySelector(".error-message-label");
+
+  ok(
+    BrowserTestUtils.is_hidden(errorEl),
+    "Expect shortcut error element to be initially hidden"
+  );
+
+  const getShortcutInput = commandName =>
+    doc.querySelector(`input.shortcut-input[name="${commandName}"]`);
+
+  const assertDuplicateShortcutWarning = async msg => {
+    await TestUtils.waitForCondition(
+      () => BrowserTestUtils.is_visible(errorEl),
+      `Wait for the shortcut-duplicate error to be visible on ${msg}`
+    );
+    Assert.deepEqual(
+      document.l10n.getAttributes(errorLabel),
+      {
+        id: "shortcuts-exists",
+        args: { addon: "Extension 1" },
+      },
+      `Got the expected warning message on duplicate shortcut on ${msg}`
+    );
+  };
+
+  const clearWarning = async inputEl => {
+    anotherCommandInput.blur();
+    await TestUtils.waitForCondition(
+      () => BrowserTestUtils.is_hidden(errorEl),
+      "Wait for the shortcut-duplicate error to be hidden"
+    );
+  };
+
+  const anotherCommandInput = getShortcutInput("anotherCommand");
+  anotherCommandInput.focus();
+  EventUtils.synthesizeKey("1", { metaKey: true, shiftKey: true });
+
+  await assertDuplicateShortcutWarning("shortcut conflict with commandOne");
+  await clearWarning(anotherCommandInput);
+
+  anotherCommandInput.focus();
+  EventUtils.synthesizeKey("2", { metaKey: true, shiftKey: true });
+
+  await assertDuplicateShortcutWarning("shortcut conflict with commandTwo");
+  await clearWarning(anotherCommandInput);
+
+  await closeView(win);
+  await extension.unload();
+  await extension2.unload();
+});
