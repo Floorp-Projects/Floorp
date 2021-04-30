@@ -232,20 +232,7 @@ NS_IMETHODIMP CacheStorage::AsyncVisitStorage(nsICacheStorageVisitor* aVisitor,
 
 nsresult CacheStorage::ChooseApplicationCache(nsIURI* aURI,
                                               nsIApplicationCache** aCache) {
-  nsresult rv;
-
-  nsCOMPtr<nsIApplicationCacheService> appCacheService =
-      do_GetService(NS_APPLICATIONCACHESERVICE_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsAutoCString cacheKey;
-  rv = aURI->GetAsciiSpec(cacheKey);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = appCacheService->ChooseApplicationCache(cacheKey, LoadInfo(), aCache);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 }  // namespace mozilla::net

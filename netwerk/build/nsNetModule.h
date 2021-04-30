@@ -28,9 +28,6 @@ nsresult CreateNewBinaryDetectorFactory(nsISupports* aOuter, const nsIID& aIID,
 nsresult nsLoadGroupConstructor(nsISupports* aOuter, const nsIID& aIID,
                                 void** aResult);
 
-nsresult nsCacheServiceConstructor(nsISupports* aOuter, const nsIID& aIID,
-                                   void** aResult);
-
 extern nsresult net_NewIncrementalDownload(nsISupports*, const nsIID&, void**);
 
 namespace mozilla {
