@@ -373,7 +373,7 @@
   margin-inline-end: 8px;
   align-items: center;
   border-radius: var(--urlbar-icon-border-radius);
-  padding-inline: 8px 3px;
+  padding-inline: 8px 6px;
 }
 
 @media not (-moz-proton) {
@@ -419,7 +419,7 @@
 }
 
 #urlbar-search-mode-indicator-title {
-  padding-inline: 0 4px;
+  padding-inline: 0 1px;
   opacity: var(--identity-box-label-opacity);
 }
 @media not (-moz-proton) {
@@ -431,7 +431,7 @@
 
 #urlbar-search-mode-indicator-close {
   background: url(chrome://global/skin/icons/close.svg) no-repeat center;
-  background-size: 14px 14px;
+  background-size: 10px 10px;
   width: 16px;
   height: 100%;
   -moz-context-properties: fill, fill-opacity;
