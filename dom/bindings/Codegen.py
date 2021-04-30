@@ -2670,7 +2670,6 @@ class PropertyDefiner:
         specType = "const " + specType
         arrays = fill(
             """
-            // We deliberately use brace-elision to make Visual Studio produce better initalization code.
             static ${specType} ${name}_specs[] = {
             ${specs}
             };
@@ -5107,7 +5106,6 @@ class CGCrossOriginProperties(CGThing):
         )
         return fill(
             """
-            // We deliberately use brace-elision to make Visual Studio produce better initalization code.
             static const JSPropertySpec sCrossOriginAttributes[] = {
               $*{attributeSpecs}
             };
