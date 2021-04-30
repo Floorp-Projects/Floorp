@@ -240,49 +240,6 @@ nsresult Hash(const char* buf, nsACString& hash) {
   return NS_OK;
 }
 
-bool IsInSubpathOfAppCacheManifest(nsIApplicationCache* cache,
-                                   nsACString const& uriSpec) {
-  MOZ_ASSERT(cache);
-
-  nsresult rv;
-
-  nsCOMPtr<nsIURI> uri;
-  rv = NS_NewURI(getter_AddRefs(uri), uriSpec);
-  if (NS_FAILED(rv)) {
-    return false;
-  }
-
-  nsCOMPtr<nsIURL> url(do_QueryInterface(uri, &rv));
-  if (NS_FAILED(rv)) {
-    return false;
-  }
-
-  nsAutoCString directory;
-  rv = url->GetDirectory(directory);
-  if (NS_FAILED(rv)) {
-    return false;
-  }
-
-  nsCOMPtr<nsIURI> manifestURI;
-  rv = cache->GetManifestURI(getter_AddRefs(manifestURI));
-  if (NS_FAILED(rv)) {
-    return false;
-  }
-
-  nsCOMPtr<nsIURL> manifestURL(do_QueryInterface(manifestURI, &rv));
-  if (NS_FAILED(rv)) {
-    return false;
-  }
-
-  nsAutoCString manifestDirectory;
-  rv = manifestURL->GetDirectory(manifestDirectory);
-  if (NS_FAILED(rv)) {
-    return false;
-  }
-
-  return StringBeginsWith(directory, manifestDirectory);
-}
-
 }  // unnamed namespace
 
 // We only treat 3xx responses as redirects if they have a Location header and
@@ -948,9 +905,10 @@ void nsHttpChannel::SpeculativeConnect() {
   // if we are offline, when doing http upgrade (i.e.
   // websockets bootstrap), or if we can't do keep-alive (because then we
   // couldn't reuse the speculative connection anyhow).
-  if (mApplicationCache || gIOService->IsOffline() ||
-      mUpgradeProtocolCallback || !(mCaps & NS_HTTP_ALLOW_KEEPALIVE))
+  if (gIOService->IsOffline() || mUpgradeProtocolCallback ||
+      !(mCaps & NS_HTTP_ALLOW_KEEPALIVE)) {
     return;
+  }
 
   // LOAD_ONLY_FROM_CACHE and LOAD_NO_NETWORK_IO must not hit network.
   // LOAD_FROM_CACHE and LOAD_CHECK_OFFLINE_CACHE are unlikely to hit network,
@@ -1751,24 +1709,6 @@ nsresult nsHttpChannel::CallOnStartRequest() {
         !(mRaceCacheWithNetwork &&
           mFirstResponseSource == RESPONSE_FROM_CACHE)) {
       CloseCacheEntry(false);
-    }
-  }
-
-  if (!mCanceled) {
-    // create offline cache entry if offline caching was requested
-    if (ShouldUpdateOfflineCacheEntry()) {
-      LOG(("writing to the offline cache"));
-      rv = InitOfflineCacheEntry();
-      if (NS_FAILED(rv)) return rv;
-
-      // InitOfflineCacheEntry may have closed mOfflineCacheEntry
-      if (mOfflineCacheEntry) {
-        rv = InstallOfflineCacheListener();
-        if (NS_FAILED(rv)) return rv;
-      }
-    } else if (mApplicationCacheForWrite) {
-      LOG(("offline cache is up to date, not updating"));
-      CloseOfflineCacheEntry();
     }
   }
 
@@ -2653,12 +2593,6 @@ nsresult nsHttpChannel::ContinueProcessResponse4(nsresult rv) {
            static_cast<uint32_t>(rv)));
     }
     CloseCacheEntry(false);
-
-    if (mApplicationCacheForWrite) {
-      // Store response in the offline cache
-      Unused << InitOfflineCacheEntry();
-      CloseOfflineCacheEntry();
-    }
     return NS_OK;
   }
 
@@ -3484,92 +3418,10 @@ nsresult nsHttpChannel::ProcessNotModified(
 
 nsresult nsHttpChannel::ProcessFallback(bool* waitingForRedirectCallback) {
   LOG(("nsHttpChannel::ProcessFallback [this=%p]\n", this));
-  nsresult rv;
 
   *waitingForRedirectCallback = false;
   StoreFallingBack(false);
 
-  // At this point a load has failed (either due to network problems
-  // or an error returned on the server).  Perform an application
-  // cache fallback if we have a URI to fall back to.
-  if (!mApplicationCache || mFallbackKey.IsEmpty() || LoadFallbackChannel()) {
-    LOG(("  choosing not to fallback [%p,%s,%d]", mApplicationCache.get(),
-         mFallbackKey.get(), LoadFallbackChannel()));
-    return NS_OK;
-  }
-
-  // Make sure the fallback entry hasn't been marked as a foreign
-  // entry.
-  uint32_t fallbackEntryType;
-  rv = mApplicationCache->GetTypes(mFallbackKey, &fallbackEntryType);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (fallbackEntryType & nsIApplicationCache::ITEM_FOREIGN) {
-    // This cache points to a fallback that refers to a different
-    // manifest.  Refuse to fall back.
-    return NS_OK;
-  }
-
-  if (!IsInSubpathOfAppCacheManifest(mApplicationCache, mFallbackKey)) {
-    // Refuse to fallback if the fallback key is not contained in the same
-    // path as the cache manifest.
-    return NS_OK;
-  }
-
-  MOZ_ASSERT(fallbackEntryType & nsIApplicationCache::ITEM_FALLBACK,
-             "Fallback entry not marked correctly!");
-
-  // Kill any offline cache entry, and disable offline caching for the
-  // fallback.
-  if (mOfflineCacheEntry) {
-    mOfflineCacheEntry->AsyncDoom(nullptr);
-    mOfflineCacheEntry = nullptr;
-  }
-
-  mApplicationCacheForWrite = nullptr;
-  mOfflineCacheEntry = nullptr;
-
-  // Close the current cache entry.
-  CloseCacheEntry(true);
-
-  // Create a new channel to load the fallback entry.
-  RefPtr<nsIChannel> newChannel;
-  rv = gHttpHandler->NewChannel(mURI, mLoadInfo, getter_AddRefs(newChannel));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  uint32_t redirectFlags = nsIChannelEventSink::REDIRECT_INTERNAL;
-  rv = SetupReplacementChannel(mURI, newChannel, true, redirectFlags);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Make sure the new channel loads from the fallback key.
-  nsCOMPtr<nsIHttpChannelInternal> httpInternal =
-      do_QueryInterface(newChannel, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = httpInternal->SetupFallbackChannel(mFallbackKey.get());
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // ... and fallbacks should only load from the cache.
-  uint32_t newLoadFlags = mLoadFlags | LOAD_REPLACE | LOAD_ONLY_FROM_CACHE;
-  rv = newChannel->SetLoadFlags(newLoadFlags);
-
-  // Inform consumers about this fake redirect
-  mRedirectChannel = newChannel;
-
-  PushRedirectAsyncFunc(&nsHttpChannel::ContinueProcessFallback);
-  rv = gHttpHandler->AsyncOnChannelRedirect(this, newChannel, redirectFlags);
-
-  if (NS_SUCCEEDED(rv)) rv = WaitForRedirectCallback();
-
-  if (NS_FAILED(rv)) {
-    AutoRedirectVetoNotifier notifier(this);
-    PopRedirectAsyncFunc(&nsHttpChannel::ContinueProcessFallback);
-    return rv;
-  }
-
-  // Indicate we are now waiting for the asynchronous redirect callback
-  // if all went OK.
-  *waitingForRedirectCallback = true;
   return NS_OK;
 }
 
@@ -3617,8 +3469,6 @@ nsresult nsHttpChannel::OpenCacheEntry(bool isHttps) {
   // Drop this flag here
   StoreConcurrentCacheAccess(0);
 
-  StoreLoadedFromApplicationCache(false);
-
   LOG(("nsHttpChannel::OpenCacheEntry [this=%p]", this));
 
   // make sure we're not abusing this function
@@ -3634,18 +3484,7 @@ nsresult nsHttpChannel::OpenCacheEntry(bool isHttps) {
     return NS_OK;
   }
 
-  // Pick up an application cache from the notification
-  // callbacks if available and if we are not an intercepted channel.
-  if (!mApplicationCache && LoadInheritApplicationCache()) {
-    nsCOMPtr<nsIApplicationCacheContainer> appCacheContainer;
-    GetCallback(appCacheContainer);
-
-    if (appCacheContainer) {
-      appCacheContainer->GetApplicationCache(getter_AddRefs(mApplicationCache));
-    }
-  }
-
-  return OpenCacheEntryInternal(isHttps, mApplicationCache, true);
+  return OpenCacheEntryInternal(isHttps, /*mApplicationCache */ nullptr, true);
 }
 
 nsresult nsHttpChannel::OpenCacheEntryInternal(
@@ -3667,7 +3506,7 @@ nsresult nsHttpChannel::OpenCacheEntryInternal(
     return NS_OK;
   }
 
-  // Handle correctly CacheEntriesToWaitFor
+  // Handle correctly WaitForCacheEntry
   AutoCacheWaitFlags waitFlags(this);
 
   nsAutoCString cacheKey;
@@ -3702,13 +3541,13 @@ nsresult nsHttpChannel::OpenCacheEntryInternal(
                                    cacheControlRequestHeader);
   CacheControlParser cacheControlRequest(cacheControlRequestHeader);
   if (cacheControlRequest.NoStore()) {
-    goto bypassCacheEntryOpen;
+    return NS_OK;
   }
 
   if (offline || (mLoadFlags & INHIBIT_CACHING)) {
     if (BYPASS_LOCAL_CACHE(mLoadFlags, LoadPreferCacheLoadOverBypass()) &&
         !offline) {
-      goto bypassCacheEntryOpen;
+      return NS_OK;
     }
     cacheEntryOpenFlags = nsICacheStorage::OPEN_READONLY;
     StoreCacheEntryIsReadOnly(true);
@@ -3729,10 +3568,7 @@ nsresult nsHttpChannel::OpenCacheEntryInternal(
       mRequestHead.HasHeader(nsHttp::If_Match) ||
       mRequestHead.HasHeader(nsHttp::If_Range));
 
-  if (!mPostID && applicationCache) {
-    rv = cacheStorageService->AppCacheStorage(info, applicationCache,
-                                              getter_AddRefs(cacheStorage));
-  } else if (mLoadFlags & INHIBIT_PERSISTENT_CACHING) {
+  if (mLoadFlags & INHIBIT_PERSISTENT_CACHING) {
     rv = cacheStorageService->MemoryCacheStorage(
         info,  // ? choose app cache as well...
         getter_AddRefs(cacheStorage));
@@ -3740,13 +3576,9 @@ nsresult nsHttpChannel::OpenCacheEntryInternal(
     rv = cacheStorageService->PinningCacheStorage(info,
                                                   getter_AddRefs(cacheStorage));
   } else {
-    bool lookupAppCache = (LoadChooseApplicationCache() ||
-                           (mLoadFlags & LOAD_CHECK_OFFLINE_CACHE)) &&
-                          !mPostID && MOZ_LIKELY(allowApplicationCache);
-    // Try to race only if we use disk cache storage and we don't lookup
-    // app cache first
-    maybeRCWN = (!lookupAppCache) && mRequestHead.IsSafeMethod();
-    rv = cacheStorageService->DiskCacheStorage(info, lookupAppCache,
+    // Try to race only if we use disk cache storage
+    maybeRCWN = mRequestHead.IsSafeMethod();
+    rv = cacheStorageService->DiskCacheStorage(info, /* lookupAppcache */ false,
                                                getter_AddRefs(cacheStorage));
   }
   NS_ENSURE_SUCCESS(rv, rv);
@@ -3814,39 +3646,6 @@ nsresult nsHttpChannel::OpenCacheEntryInternal(
   NS_ENSURE_SUCCESS(rv, rv);
 
   waitFlags.Keep(WAIT_FOR_CACHE_ENTRY);
-
-bypassCacheEntryOpen:
-  if (!mApplicationCacheForWrite || !allowApplicationCache) return NS_OK;
-
-  // If there is an app cache to write to, open the entry right now in parallel.
-
-  // make sure we're not abusing this function
-  MOZ_ASSERT(!mOfflineCacheEntry, "cache entry already open");
-
-  if (offline) {
-    // only put things in the offline cache while online
-    return NS_OK;
-  }
-
-  if (mLoadFlags & INHIBIT_CACHING) {
-    // respect demand not to cache
-    return NS_OK;
-  }
-
-  if (!mRequestHead.IsGet()) {
-    // only cache complete documents offline
-    return NS_OK;
-  }
-
-  rv = cacheStorageService->AppCacheStorage(info, mApplicationCacheForWrite,
-                                            getter_AddRefs(cacheStorage));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = cacheStorage->AsyncOpenURI(mURI, ""_ns, nsICacheStorage::OPEN_TRUNCATE,
-                                  this);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  waitFlags.Keep(WAIT_FOR_OFFLINE_CACHE_ENTRY);
 
   return NS_OK;
 }
@@ -4252,10 +4051,8 @@ nsHttpChannel::OnCacheEntryAvailable(nsICacheEntry* entry, bool aNew,
 
   LOG(
       ("nsHttpChannel::OnCacheEntryAvailable [this=%p entry=%p "
-       "new=%d appcache=%p status=%" PRIx32
-       " mAppCache=%p mAppCacheForWrite=%p]\n",
-       this, entry, aNew, aAppCache, static_cast<uint32_t>(status),
-       mApplicationCache.get(), mApplicationCacheForWrite.get()));
+       "new=%d appcache=%p status=%" PRIx32 "]\n",
+       this, entry, aNew, aAppCache, static_cast<uint32_t>(status)));
 
   // if the channel's already fired onStopRequest, then we should ignore
   // this event.
@@ -4306,18 +4103,7 @@ nsresult nsHttpChannel::OnCacheEntryAvailableInternal(
     status = NS_ERROR_NOT_AVAILABLE;
   }
 
-  if (aAppCache) {
-    if (mApplicationCache == aAppCache && !mCacheEntry) {
-      rv = OnOfflineCacheEntryAvailable(entry, aNew, aAppCache, status);
-    } else if (mApplicationCacheForWrite == aAppCache && aNew &&
-               !mOfflineCacheEntry) {
-      rv = OnOfflineCacheEntryForWritingAvailable(entry, aAppCache, status);
-    } else {
-      rv = OnOfflineCacheEntryAvailable(entry, aNew, aAppCache, status);
-    }
-  } else {
-    rv = OnNormalCacheEntryAvailable(entry, aNew, status);
-  }
+  rv = OnNormalCacheEntryAvailable(entry, aNew, status);
 
   if (NS_FAILED(rv) && (mLoadFlags & LOAD_ONLY_FROM_CACHE)) {
     // If we have a fallback URI (and we're not already
@@ -4357,8 +4143,7 @@ nsresult nsHttpChannel::OnCacheEntryAvailableInternal(
 nsresult nsHttpChannel::OnNormalCacheEntryAvailable(nsICacheEntry* aEntry,
                                                     bool aNew,
                                                     nsresult aEntryStatus) {
-  StoreCacheEntriesToWaitFor(LoadCacheEntriesToWaitFor() &
-                             ~WAIT_FOR_CACHE_ENTRY);
+  StoreWaitForCacheEntry(LoadWaitForCacheEntry() & ~WAIT_FOR_CACHE_ENTRY);
 
   if (NS_FAILED(aEntryStatus) || aNew) {
     // Make sure this flag is dropped.  It may happen the entry is doomed
@@ -4414,118 +4199,6 @@ nsresult nsHttpChannel::OnNormalCacheEntryAvailable(nsICacheEntry* aEntry,
   }
 
   return NS_OK;
-}
-
-nsresult nsHttpChannel::OnOfflineCacheEntryAvailable(
-    nsICacheEntry* aEntry, bool aNew, nsIApplicationCache* aAppCache,
-    nsresult aEntryStatus) {
-  MOZ_ASSERT(!mApplicationCache || aAppCache == mApplicationCache);
-  MOZ_ASSERT(!aNew || !aEntry || mApplicationCacheForWrite);
-
-  StoreCacheEntriesToWaitFor(LoadCacheEntriesToWaitFor() &
-                             ~WAIT_FOR_CACHE_ENTRY);
-
-  nsresult rv;
-
-  if (NS_SUCCEEDED(aEntryStatus)) {
-    if (!mApplicationCache) {
-      mApplicationCache = aAppCache;
-    }
-
-    // We successfully opened an offline cache session and the entry,
-    // so indicate we will load from the offline cache.
-    StoreLoadedFromApplicationCache(true);
-    StoreCacheEntryIsReadOnly(true);
-    mCacheEntry = aEntry;
-    StoreCacheEntryIsWriteOnly(false);
-
-    if (mLoadFlags & LOAD_INITIAL_DOCUMENT_URI && !mApplicationCacheForWrite) {
-      MaybeWarnAboutAppCache();
-    }
-
-    return NS_OK;
-  }
-
-  if (!mApplicationCacheForWrite && !LoadFallbackChannel()) {
-    if (!mApplicationCache) {
-      mApplicationCache = aAppCache;
-    }
-
-    // Check for namespace match.
-    nsCOMPtr<nsIApplicationCacheNamespace> namespaceEntry;
-    rv = mApplicationCache->GetMatchingNamespace(
-        mSpec, getter_AddRefs(namespaceEntry));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    uint32_t namespaceType = 0;
-    if (!namespaceEntry ||
-        NS_FAILED(namespaceEntry->GetItemType(&namespaceType)) ||
-        (namespaceType & (nsIApplicationCacheNamespace::NAMESPACE_FALLBACK |
-                          nsIApplicationCacheNamespace::NAMESPACE_BYPASS)) ==
-            0) {
-      // When loading from an application cache, only items
-      // on the whitelist or matching a
-      // fallback namespace should hit the network...
-      mLoadFlags |= LOAD_ONLY_FROM_CACHE;
-
-      // ... and if there were an application cache entry,
-      // we would have found it earlier.
-      return NS_ERROR_CACHE_KEY_NOT_FOUND;
-    }
-
-    if (namespaceType & nsIApplicationCacheNamespace::NAMESPACE_FALLBACK) {
-      nsAutoCString namespaceSpec;
-      rv = namespaceEntry->GetNamespaceSpec(namespaceSpec);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      // This prevents fallback attacks injected by an insecure subdirectory
-      // for the whole origin (or a parent directory).
-      if (!IsInSubpathOfAppCacheManifest(mApplicationCache, namespaceSpec)) {
-        return NS_OK;
-      }
-
-      rv = namespaceEntry->GetData(mFallbackKey);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
-
-    if (namespaceType & nsIApplicationCacheNamespace::NAMESPACE_BYPASS) {
-      LOG(
-          ("nsHttpChannel::OnOfflineCacheEntryAvailable this=%p, URL matches "
-           "NETWORK,"
-           " looking for a regular cache entry",
-           this));
-
-      bool isHttps = mURI->SchemeIs("https");
-      rv = OpenCacheEntryInternal(isHttps, nullptr,
-                                  false /* don't allow appcache lookups */);
-      if (NS_FAILED(rv)) {
-        // Don't let this fail when cache entry can't be synchronously open.
-        // We want to go forward even without a regular cache entry.
-        return NS_OK;
-      }
-    }
-  }
-
-  return NS_OK;
-}
-
-nsresult nsHttpChannel::OnOfflineCacheEntryForWritingAvailable(
-    nsICacheEntry* aEntry, nsIApplicationCache* aAppCache,
-    nsresult aEntryStatus) {
-  MOZ_ASSERT(mApplicationCacheForWrite &&
-             aAppCache == mApplicationCacheForWrite);
-
-  StoreCacheEntriesToWaitFor(LoadCacheEntriesToWaitFor() &
-                             ~WAIT_FOR_OFFLINE_CACHE_ENTRY);
-
-  if (NS_SUCCEEDED(aEntryStatus)) {
-    mOfflineCacheEntry = aEntry;
-    if (NS_FAILED(aEntry->GetLastModified(&mOfflineCacheLastModifiedTime))) {
-      mOfflineCacheLastModifiedTime = 0;
-    }
-  }
-
-  return aEntryStatus;
 }
 
 // Generates the proper cache-key for this instance of nsHttpChannel
@@ -4685,12 +4358,8 @@ nsresult nsHttpChannel::OpenCacheInputStream(nsICacheEntry* cacheEntry,
       return rv;
     }
 
-    // XXX: We should not be skilling this check in the offline cache
-    // case, but we have to do so now to work around bug 794507.
-    bool mustHaveSecurityInfo =
-        !LoadLoadedFromApplicationCache() && !checkingAppCacheEntry;
-    MOZ_ASSERT(mCachedSecurityInfo || !mustHaveSecurityInfo);
-    if (!mCachedSecurityInfo && mustHaveSecurityInfo) {
+    MOZ_ASSERT(mCachedSecurityInfo);
+    if (!mCachedSecurityInfo) {
       LOG(
           ("mCacheEntry->GetSecurityInfo returned success but did not "
            "return the security info [channel=%p, entry=%p]",
@@ -5061,22 +4730,6 @@ void nsHttpChannel::CloseCacheEntry(bool doomOnFailure) {
   StoreInitedCacheEntry(false);
 }
 
-void nsHttpChannel::CloseOfflineCacheEntry() {
-  if (!mOfflineCacheEntry) return;
-
-  LOG(("nsHttpChannel::CloseOfflineCacheEntry [this=%p]", this));
-
-  if (NS_FAILED(mStatus)) {
-    mOfflineCacheEntry->AsyncDoom(nullptr);
-  } else {
-    bool succeeded;
-    if (NS_SUCCEEDED(GetRequestSucceeded(&succeeded)) && !succeeded)
-      mOfflineCacheEntry->AsyncDoom(nullptr);
-  }
-
-  mOfflineCacheEntry = nullptr;
-}
-
 void nsHttpChannel::MaybeCreateCacheEntryWhenRCWN() {
   mozilla::MutexAutoLock lock(mRCWNLock);
 
@@ -5198,41 +4851,6 @@ void nsHttpChannel::UpdateInhibitPersistentCachingFlag() {
       mURI->SchemeIs("https")) {
     mLoadFlags |= INHIBIT_PERSISTENT_CACHING;
   }
-}
-
-nsresult nsHttpChannel::InitOfflineCacheEntry() {
-  // This function can be called even when we fail to connect (bug 551990)
-
-  if (!mOfflineCacheEntry) {
-    return NS_OK;
-  }
-
-  if (!mResponseHead || mResponseHead->NoStore()) {
-    if (mResponseHead && mResponseHead->NoStore()) {
-      mOfflineCacheEntry->AsyncDoom(nullptr);
-    }
-
-    CloseOfflineCacheEntry();
-
-    if (mResponseHead && mResponseHead->NoStore()) {
-      return NS_ERROR_NOT_AVAILABLE;
-    }
-
-    return NS_OK;
-  }
-
-  // This entry's expiration time should match the main entry's expiration
-  // time.  UpdateExpirationTime() will keep it in sync once the offline
-  // cache entry has been created.
-  if (mCacheEntry) {
-    uint32_t expirationTime;
-    nsresult rv = mCacheEntry->GetExpirationTime(&expirationTime);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    mOfflineCacheEntry->SetExpirationTime(expirationTime);
-  }
-
-  return AddCacheEntryHeaders(mOfflineCacheEntry);
 }
 
 nsresult DoAddCacheEntryHeaders(nsHttpChannel* self, nsICacheEntry* entry,
@@ -5618,21 +5236,6 @@ nsresult nsHttpChannel::AsyncProcessRedirection(uint32_t redirectType) {
     return NS_ERROR_CORRUPTED_CONTENT;
   }
 
-  if (mApplicationCache) {
-    // if we are redirected to a different origin check if there is a fallback
-    // cache entry to fall back to. we don't care about file strict
-    // checking, at least mURI is not a file URI.
-    if (!NS_SecurityCompareURIs(mURI, mRedirectURI, false)) {
-      PushRedirectAsyncFunc(
-          &nsHttpChannel::ContinueProcessRedirectionAfterFallback);
-      bool waitingForRedirectCallback;
-      Unused << ProcessFallback(&waitingForRedirectCallback);
-      if (waitingForRedirectCallback) return NS_OK;
-      PopRedirectAsyncFunc(
-          &nsHttpChannel::ContinueProcessRedirectionAfterFallback);
-    }
-  }
-
   return ContinueProcessRedirectionAfterFallback(NS_OK);
 }
 
@@ -5878,8 +5481,6 @@ NS_INTERFACE_MAP_BEGIN(nsHttpChannel)
   NS_INTERFACE_MAP_ENTRY(nsIProtocolProxyCallback)
   NS_INTERFACE_MAP_ENTRY(nsIProxiedChannel)
   NS_INTERFACE_MAP_ENTRY(nsIHttpAuthenticableChannel)
-  NS_INTERFACE_MAP_ENTRY(nsIApplicationCacheContainer)
-  NS_INTERFACE_MAP_ENTRY(nsIApplicationCacheChannel)
   NS_INTERFACE_MAP_ENTRY(nsIAsyncVerifyRedirectCallback)
   NS_INTERFACE_MAP_ENTRY(nsIThreadRetargetableRequest)
   NS_INTERFACE_MAP_ENTRY(nsIThreadRetargetableStreamListener)
@@ -8058,8 +7659,6 @@ nsresult nsHttpChannel::ContinueOnStopRequest(nsresult aStatus, bool aIsFromNet,
 
   CloseCacheEntry(!aContentComplete);
 
-  if (mOfflineCacheEntry) CloseOfflineCacheEntry();
-
   if (mLoadGroup) {
     mLoadGroup->RemoveRequest(this, nullptr, aStatus);
   }
@@ -8753,109 +8352,6 @@ nsresult nsHttpChannel::ContinueDoAuthRetry(
 }
 
 //-----------------------------------------------------------------------------
-// nsHttpChannel::nsIApplicationCacheChannel
-//-----------------------------------------------------------------------------
-
-NS_IMETHODIMP
-nsHttpChannel::GetApplicationCache(nsIApplicationCache** out) {
-  NS_IF_ADDREF(*out = mApplicationCache);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHttpChannel::SetApplicationCache(nsIApplicationCache* appCache) {
-  ENSURE_CALLED_BEFORE_CONNECT();
-
-  mApplicationCache = appCache;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHttpChannel::GetApplicationCacheForWrite(nsIApplicationCache** out) {
-  NS_IF_ADDREF(*out = mApplicationCacheForWrite);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHttpChannel::SetApplicationCacheForWrite(nsIApplicationCache* appCache) {
-  ENSURE_CALLED_BEFORE_CONNECT();
-
-  mApplicationCacheForWrite = appCache;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHttpChannel::GetLoadedFromApplicationCache(
-    bool* aLoadedFromApplicationCache) {
-  *aLoadedFromApplicationCache = LoadLoadedFromApplicationCache();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHttpChannel::GetInheritApplicationCache(bool* aInherit) {
-  *aInherit = LoadInheritApplicationCache();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHttpChannel::SetInheritApplicationCache(bool aInherit) {
-  ENSURE_CALLED_BEFORE_CONNECT();
-
-  StoreInheritApplicationCache(aInherit);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHttpChannel::GetChooseApplicationCache(bool* aChoose) {
-  *aChoose = LoadChooseApplicationCache();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHttpChannel::SetChooseApplicationCache(bool aChoose) {
-  ENSURE_CALLED_BEFORE_CONNECT();
-
-  StoreChooseApplicationCache(aChoose);
-  return NS_OK;
-}
-
-nsHttpChannel::OfflineCacheEntryAsForeignMarker*
-nsHttpChannel::GetOfflineCacheEntryAsForeignMarker() {
-  if (!mApplicationCache) return nullptr;
-
-  return new OfflineCacheEntryAsForeignMarker(mApplicationCache, mURI);
-}
-
-nsresult nsHttpChannel::OfflineCacheEntryAsForeignMarker::MarkAsForeign() {
-  nsresult rv;
-
-  nsCOMPtr<nsIURI> noRefURI;
-  rv = NS_GetURIWithoutRef(mCacheURI, getter_AddRefs(noRefURI));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsAutoCString spec;
-  rv = noRefURI->GetAsciiSpec(spec);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return mApplicationCache->MarkEntry(spec, nsIApplicationCache::ITEM_FOREIGN);
-}
-
-NS_IMETHODIMP
-nsHttpChannel::MarkOfflineCacheEntryAsForeign() {
-  nsresult rv;
-
-  UniquePtr<OfflineCacheEntryAsForeignMarker> marker(
-      GetOfflineCacheEntryAsForeignMarker());
-
-  if (!marker) return NS_ERROR_NOT_AVAILABLE;
-
-  rv = marker->MarkAsForeign();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
-}
-
-//-----------------------------------------------------------------------------
 // nsHttpChannel::nsIAsyncVerifyRedirectCallback
 //-----------------------------------------------------------------------------
 
@@ -9154,7 +8650,7 @@ nsHttpChannel::SetNotificationCallbacks(nsIInterfaceRequestor* aCallbacks) {
 }
 
 bool nsHttpChannel::AwaitingCacheCallbacks() {
-  return LoadCacheEntriesToWaitFor() != 0;
+  return LoadWaitForCacheEntry() != 0;
 }
 
 void nsHttpChannel::SetPushedStreamTransactionAndId(

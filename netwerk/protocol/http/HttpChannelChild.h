@@ -22,8 +22,6 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIProgressEventSink.h"
 #include "nsICacheInfoChannel.h"
-#include "nsIApplicationCache.h"
-#include "nsIApplicationCacheChannel.h"
 #include "nsIResumableChannel.h"
 #include "nsIProxiedChannel.h"
 #include "nsIAsyncVerifyRedirectCallback.h"
@@ -57,7 +55,6 @@ class HttpChannelChild final : public PHttpChannelChild,
                                public HttpAsyncAborter<HttpChannelChild>,
                                public nsICacheInfoChannel,
                                public nsIProxiedChannel,
-                               public nsIApplicationCacheChannel,
                                public nsIAsyncVerifyRedirectCallback,
                                public nsIChildChannel,
                                public nsIHttpChannelChild,
@@ -70,8 +67,6 @@ class HttpChannelChild final : public PHttpChannelChild,
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSICACHEINFOCHANNEL
   NS_DECL_NSIPROXIEDCHANNEL
-  NS_DECL_NSIAPPLICATIONCACHECONTAINER
-  NS_DECL_NSIAPPLICATIONCACHECHANNEL
   NS_DECL_NSIASYNCVERIFYREDIRECTCALLBACK
   NS_DECL_NSICHILDCHANNEL
   NS_DECL_NSIHTTPCHANNELCHILD
@@ -391,8 +386,6 @@ class HttpChannelChild final : public PHttpChannelChild,
   // true after successful AsyncOpen until OnStopRequest completes.
   bool RemoteChannelExists() { return CanSend() && !mKeptAlive; }
 
-  void AssociateApplicationCache(const nsCString& groupID,
-                                 const nsCString& clientID);
   void OnStartRequest(const nsHttpResponseHead& aResponseHead,
                       const bool& aUseResponseHead,
                       const nsHttpHeaderArray& aRequestHeaders,

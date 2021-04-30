@@ -628,7 +628,6 @@ class HttpBaseChannel : public nsHashPropertyBag,
   nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
   nsCOMPtr<nsIProgressEventSink> mProgressSink;
   nsCOMPtr<nsIReferrerInfo> mReferrerInfo;
-  nsCOMPtr<nsIApplicationCache> mApplicationCache;
   nsCOMPtr<nsIURI> mAPIRedirectToURI;
   nsCOMPtr<nsIURI> mProxyURI;
   nsCOMPtr<nsIPrincipal> mPrincipal;
@@ -777,9 +776,6 @@ class HttpBaseChannel : public nsHashPropertyBag,
     (uint32_t, AllowSTS, 1),
     (uint32_t, ThirdPartyFlags, 3),
     (uint32_t, UploadStreamHasHeaders, 1),
-    (uint32_t, InheritApplicationCache, 1),
-    (uint32_t, ChooseApplicationCache, 1),
-    (uint32_t, LoadedFromApplicationCache, 1),
     (uint32_t, ChannelIsForDownload, 1),
     (uint32_t, TracingEnabled, 1),
     // True if timing collection is enabled
