@@ -897,9 +897,12 @@ var ExtensionTestUtils = {
   ) {
     await Management.lazyInit();
 
+    manifest = Object.assign({}, baseManifest, manifest);
+
     let errors = [];
     let context = {
       url: null,
+      manifestVersion: manifest.manifest_version,
 
       logError: error => {
         errors.push(error);
@@ -907,8 +910,6 @@ var ExtensionTestUtils = {
 
       preprocessors: {},
     };
-
-    manifest = Object.assign({}, baseManifest, manifest);
 
     let normalized = Schemas.normalize(manifest, manifestType, context);
     normalized.errors = errors;

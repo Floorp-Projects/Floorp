@@ -486,6 +486,10 @@ class BrowserExtensionContent extends EventEmitter {
     return this._manifest;
   }
 
+  get manifestVersion() {
+    return this.manifest.manifest_version;
+  }
+
   get privateBrowsingAllowed() {
     return this.policy.privateBrowsingAllowed;
   }
@@ -904,6 +908,10 @@ class ChildAPIManager {
 
   get principal() {
     return this.context.principal;
+  }
+
+  get manifestVersion() {
+    return this.context.manifestVersion;
   }
 
   shouldInject(namespace, name, allowedContexts) {

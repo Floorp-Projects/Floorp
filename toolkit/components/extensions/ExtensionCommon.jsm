@@ -458,6 +458,7 @@ class BaseContext {
     this.contextId = getUniqueId();
     this.unloaded = false;
     this.extension = extension;
+    this.manifestVersion = extension.manifestVersion;
     this.jsonSandbox = null;
     this.active = true;
     this.incognito = null;
