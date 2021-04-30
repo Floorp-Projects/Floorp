@@ -17,6 +17,7 @@
 #include "nsIFrame.h"
 #include "nsIFrameInlines.h"
 #include "nsIScrollableFrame.h"
+#include "nsTableCellFrame.h"
 #include "nsLayoutUtils.h"
 #include "nsStyleConsts.h"
 #include "mozilla/ViewportUtils.h"
@@ -63,9 +64,26 @@ static already_AddRefed<dom::Element> ElementFromPoint(
   return nullptr;
 }
 
+// Get table cell from element or parent.
+static dom::Element* GetNearbyTableCell(
+    const nsCOMPtr<dom::Element>& aElement) {
+  if (nsTableCellFrame* tableCell =
+          do_QueryFrame(aElement->GetPrimaryFrame())) {
+    return aElement.get();
+  }
+  if (dom::Element* parent = aElement->GetFlattenedTreeParentElement()) {
+    if (nsTableCellFrame* tableCell =
+            do_QueryFrame(parent->GetPrimaryFrame())) {
+      return parent;
+    }
+  }
+  return nullptr;
+}
+
 static bool ShouldZoomToElement(
     const nsCOMPtr<dom::Element>& aElement,
-    const RefPtr<dom::Document>& aRootContentDocument) {
+    const RefPtr<dom::Document>& aRootContentDocument,
+    nsIScrollableFrame* aRootScrollFrame, const FrameMetrics& aMetrics) {
   if (nsIFrame* frame = aElement->GetPrimaryFrame()) {
     if (frame->StyleDisplay()->IsInlineFlow() &&
         // Replaced elements are suitable zoom targets because they act like
@@ -85,6 +103,20 @@ static bool ShouldZoomToElement(
   if (aElement->IsAnyOfHTMLElements(nsGkAtoms::li, nsGkAtoms::q)) {
     return false;
   }
+
+  // Ignore elements who are table cells or their parents are table cells, and
+  // they take up less than 30% of page rect width because they are likely cells
+  // in data tables (as opposed to tables used for layout purposes), and we
+  // don't want to zoom to them. This heuristic is quite naive and leaves a lot
+  // to be desired.
+  if (dom::Element* tableCell = GetNearbyTableCell(aElement)) {
+    CSSRect rect =
+        nsLayoutUtils::GetBoundingContentRect(tableCell, aRootScrollFrame);
+    if (rect.width < 0.3 * aMetrics.GetScrollableRect().width) {
+      return false;
+    }
+  }
+
   return true;
 }
 
@@ -154,7 +186,11 @@ ZoomTarget CalculateRectToZoomTo(
     return ZoomTarget{zoomOut, Nothing()};
   }
 
-  while (element && !ShouldZoomToElement(element, aRootContentDocument)) {
+  FrameMetrics metrics =
+      nsLayoutUtils::CalculateBasicFrameMetrics(rootScrollFrame);
+
+  while (element && !ShouldZoomToElement(element, aRootContentDocument,
+                                         rootScrollFrame, metrics)) {
     element = element->GetFlattenedTreeParentElement();
   }
 
@@ -162,8 +198,6 @@ ZoomTarget CalculateRectToZoomTo(
     return ZoomTarget{zoomOut, Nothing()};
   }
 
-  FrameMetrics metrics =
-      nsLayoutUtils::CalculateBasicFrameMetrics(rootScrollFrame);
   CSSPoint visualScrollOffset = metrics.GetVisualScrollOffset();
   CSSRect compositedArea(visualScrollOffset,
                          metrics.CalculateCompositedSizeInCssPixels());
