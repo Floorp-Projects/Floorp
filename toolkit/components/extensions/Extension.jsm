@@ -849,6 +849,10 @@ class ExtensionData {
     return this.experimentsAllowed && manifest.experiment_apis;
   }
 
+  get manifestVersion() {
+    return this.manifest.manifest_version;
+  }
+
   /**
    * Load a locale and return a localized manifest.  The extension must
    * be initialized, and manifest parsed prior to calling.
@@ -897,7 +901,7 @@ class ExtensionData {
         this.manifestWarning(error);
       },
       preprocessors: {},
-      manifestVersion: this.manifest.manifest_version,
+      manifestVersion: this.manifestVersion,
     };
 
     if (this.fluentL10n || this.localeData) {
@@ -2194,10 +2198,6 @@ class Extension extends ExtensionData {
     this.ensureNoErrors();
 
     return manifest;
-  }
-
-  get manifestVersion() {
-    return this.manifest.manifest_version;
   }
 
   get extensionPageCSP() {
