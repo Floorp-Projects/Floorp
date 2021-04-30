@@ -3780,6 +3780,8 @@ UniquePtr<Texture> CreateTexture(GLContext&, const gfx::IntSize& size);
  */
 uint32_t GetBytesPerTexel(GLenum format, GLenum type);
 
+void MesaMemoryLeakWorkaround();
+
 } /* namespace gl */
 } /* namespace mozilla */
 
