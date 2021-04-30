@@ -144,6 +144,7 @@
 }
 %endif /* defined(XP_MACOSX) || defined(XP_WIN) */
 
+@media not (-moz-proton) {
 .customizationmode-button > .box-inherit > .box-inherit > .button-icon,
 .customizationmode-button > .button-box > .button-icon {
   height: 16px;
@@ -169,6 +170,7 @@
 #customization-uidensity-button > .box-inherit > .box-inherit > .button-icon {
   background-image: url("chrome://browser/skin/customizableui/density-normal.svg");
 }
+} /*** END !proton ***/
 
 #widget-overflow-fixed-list > toolbarpaletteitem:not([notransition])[place="menu-panel"],
 toolbarpaletteitem:not([notransition])[place="toolbar"] {
@@ -410,6 +412,18 @@ toolbarpaletteitem > #search-container > #searchbar > .searchbar-textbox {
 }
 
 @media (-moz-proton) {
+#customization-lwtheme-menu,
+#customization-uidensity-menu {
+  margin-inline: 0;
+}
+
+/* Builtin themes use a round gradient image that look better with a border. */
+.customization-lwtheme-menu-theme[image^="resource:"] > .toolbarbutton-icon {
+  border-radius: 100%;
+  outline: 1px solid var(--checkbox-border-color);
+  outline-offset: -0.5px;
+}
+
 .customization-lwtheme-menu-footeritem {
   font-weight: 600;
   border-radius: 4px;
