@@ -1,4 +1,4 @@
-// |jit-test| --enable-private-fields; --enable-private-methods;
+// |jit-test| --enable-private-methods;
 load(libdir + 'asserts.js');
 load(libdir + 'evalInFrame.js');
 

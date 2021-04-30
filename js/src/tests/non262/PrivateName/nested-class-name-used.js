@@ -1,5 +1,4 @@
-// |reftest| shell-option(--enable-private-fields) skip-if(!xulRuntime.shell) -- requires shell-options
-
+// |reftest| 
 // AllPrivateIdentifiersValid uses only lexical string names, not
 // the dynamic private names; which means the below is not a syntax
 // error but is instead a TypeError on access.

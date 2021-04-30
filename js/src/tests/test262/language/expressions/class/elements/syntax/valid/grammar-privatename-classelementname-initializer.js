@@ -1,4 +1,3 @@
-// |reftest| shell-option(--enable-private-fields) skip-if(!xulRuntime.shell) -- requires shell-options
 // This file was procedurally generated from the following sources:
 // - src/class-elements/grammar-privatename-classelementname-initializer.case
 // - src/class-elements/syntax/valid/cls-expr-elements-valid-syntax.template

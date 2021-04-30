@@ -1,4 +1,4 @@
-// |reftest| shell-option(--enable-private-fields) skip-if(!xulRuntime.shell) -- requires shell-options
+// |reftest| 
 
 // Verify that private fields are enabled.
 class A {
@@ -29,7 +29,7 @@ with (new class A { #x; }) {
 `);
 
 // Make sure we don't create a generic binding for #x.
-with(new class {
+with (new class {
   #x = 12;
 }) {
   assertEq('#x' in this, false);
