@@ -10,6 +10,7 @@
 #include "mozilla/Telemetry.h"
 #include "mozilla/UniquePtrExtensions.h"
 #include "mozilla/WindowsVersion.h"
+#include "nspr/prenv.h"
 
 #include "nsTHashMap.h"
 #include "nsTHashSet.h"
