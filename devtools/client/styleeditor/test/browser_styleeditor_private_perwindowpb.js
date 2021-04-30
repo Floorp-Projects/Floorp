@@ -53,7 +53,7 @@ function checkDiskCacheFor(host) {
       onCacheEntryInfo: function(uri) {
         const urispec = uri.asciiSpec;
         info(urispec);
-        foundPrivateData |= urispec.includes(host);
+        foundPrivateData = foundPrivateData || urispec.includes(host);
       },
       onCacheEntryVisitCompleted: function() {
         is(foundPrivateData, false, "web content present in disk cache");
@@ -63,8 +63,7 @@ function checkDiskCacheFor(host) {
     function Visitor() {}
 
     const storage = Services.cache2.diskCacheStorage(
-      Services.loadContextInfo.default,
-      false
+      Services.loadContextInfo.default
     );
     storage.asyncVisitStorage(
       new Visitor(),

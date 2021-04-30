@@ -173,10 +173,7 @@ var prepListener = {
 };
 
 function open_and_continue(uris, continueCallback) {
-  var ds = Services.cache2.diskCacheStorage(
-    Services.loadContextInfo.default,
-    false
-  );
+  var ds = Services.cache2.diskCacheStorage(Services.loadContextInfo.default);
 
   prepListener.init(uris.length, continueCallback);
   for (var i = 0; i < uris.length; ++i) {

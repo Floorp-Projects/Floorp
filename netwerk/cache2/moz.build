@@ -47,7 +47,6 @@ UNIFIED_SOURCES += [
     "CacheLog.cpp",
     "CacheObserver.cpp",
     "CacheStorageService.cpp",
-    "OldWrappers.cpp",
 ]
 
 LOCAL_INCLUDES += [

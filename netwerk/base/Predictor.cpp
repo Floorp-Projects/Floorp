@@ -589,7 +589,7 @@ Predictor::PredictNative(nsIURI* targetURI, nsIURI* sourceURI,
   RefPtr<LoadContextInfo> lci = new LoadContextInfo(false, originAttributes);
 
   nsresult rv = mCacheStorageService->DiskCacheStorage(
-      lci, false, getter_AddRefs(cacheDiskStorage));
+      lci, getter_AddRefs(cacheDiskStorage));
   NS_ENSURE_SUCCESS(rv, rv);
 
   uint32_t openFlags =
@@ -738,7 +738,7 @@ bool Predictor::PredictForPageload(nsICacheEntry* entry, nsIURI* targetURI,
     nsCOMPtr<nsICacheStorage> cacheDiskStorage;
 
     rv = mCacheStorageService->DiskCacheStorage(
-        lci, false, getter_AddRefs(cacheDiskStorage));
+        lci, getter_AddRefs(cacheDiskStorage));
     NS_ENSURE_SUCCESS(rv, false);
 
     PREDICTOR_LOG(("    Predict redirect uri=%s action=%p",
@@ -1352,7 +1352,7 @@ Predictor::LearnNative(nsIURI* targetURI, nsIURI* sourceURI,
 
   RefPtr<LoadContextInfo> lci = new LoadContextInfo(false, originAttributes);
 
-  rv = mCacheStorageService->DiskCacheStorage(lci, false,
+  rv = mCacheStorageService->DiskCacheStorage(lci,
                                               getter_AddRefs(cacheDiskStorage));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1841,7 +1841,7 @@ Predictor::Resetter::OnCacheEntryInfo(nsIURI* uri, const nsACString& idEnhance,
     nsCOMPtr<nsICacheStorage> cacheDiskStorage;
 
     rv = mPredictor->mCacheStorageService->DiskCacheStorage(
-        aInfo, false, getter_AddRefs(cacheDiskStorage));
+        aInfo, getter_AddRefs(cacheDiskStorage));
 
     NS_ENSURE_SUCCESS(rv, rv);
     cacheDiskStorage->AsyncDoomURI(uri, idEnhance, nullptr);
@@ -1884,7 +1884,7 @@ Predictor::Resetter::OnCacheEntryVisitCompleted() {
     nsCOMPtr<nsICacheStorage> cacheDiskStorage;
 
     rv = mPredictor->mCacheStorageService->DiskCacheStorage(
-        infosToVisit[i], false, getter_AddRefs(cacheDiskStorage));
+        infosToVisit[i], getter_AddRefs(cacheDiskStorage));
     NS_ENSURE_SUCCESS(rv, rv);
 
     urisToVisit[i]->GetAsciiSpec(u);
@@ -2277,7 +2277,7 @@ void Predictor::UpdateCacheabilityInternal(
 
   RefPtr<LoadContextInfo> lci = new LoadContextInfo(false, originAttributes);
 
-  rv = mCacheStorageService->DiskCacheStorage(lci, false,
+  rv = mCacheStorageService->DiskCacheStorage(lci,
                                               getter_AddRefs(cacheDiskStorage));
   if (NS_FAILED(rv)) {
     PREDICTOR_LOG(("    cannot get disk cache storage"));

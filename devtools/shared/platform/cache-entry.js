@@ -38,7 +38,7 @@ exports.CacheEntry = {
           // Get default load context if we can't fetch.
           loadContext = Services.loadContextInfo.default;
         }
-        this.cacheSession = cacheService.diskCacheStorage(loadContext, false);
+        this.cacheSession = cacheService.diskCacheStorage(loadContext);
         this.isCacheSessionInitialized = true;
       }
     } catch (e) {

@@ -8,12 +8,8 @@
 #include "CacheEntry.h"
 #include "CacheObserver.h"
 
-#include "OldWrappers.h"
-
 #include "nsICacheEntryDoomCallback.h"
 
-#include "nsIApplicationCache.h"
-#include "nsIApplicationCacheService.h"
 #include "nsIURI.h"
 #include "nsNetCID.h"
 #include "nsNetUtil.h"
@@ -24,11 +20,9 @@ namespace mozilla::net {
 NS_IMPL_ISUPPORTS(CacheStorage, nsICacheStorage)
 
 CacheStorage::CacheStorage(nsILoadContextInfo* aInfo, bool aAllowDisk,
-                           bool aLookupAppCache, bool aSkipSizeCheck,
-                           bool aPinning)
+                           bool aSkipSizeCheck, bool aPinning)
     : mLoadContextInfo(aInfo ? GetLoadContextInfo(aInfo) : nullptr),
       mWriteToDisk(aAllowDisk),
-      mLookupAppCache(aLookupAppCache),
       mSkipSizeCheck(aSkipSizeCheck),
       mPinning(aPinning) {}
 
@@ -64,32 +58,6 @@ NS_IMETHODIMP CacheStorage::AsyncOpenURI(nsIURI* aURI,
   nsAutoCString asciiSpec;
   rv = noRefURI->GetAsciiSpec(asciiSpec);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIApplicationCache> appCache;
-  if (LookupAppCache()) {
-    rv = ChooseApplicationCache(noRefURI, getter_AddRefs(appCache));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (appCache) {
-      // From a chosen appcache open only as readonly
-      aFlags &= ~nsICacheStorage::OPEN_TRUNCATE;
-    }
-  }
-
-  if (appCache) {
-    nsAutoCString scheme;
-    rv = noRefURI->GetScheme(scheme);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    RefPtr<_OldCacheLoad> appCacheLoad =
-        new _OldCacheLoad(scheme, asciiSpec, aCallback, appCache, LoadInfo(),
-                          WriteToDisk(), aFlags);
-    rv = appCacheLoad->Start();
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    LOG(("CacheStorage::AsyncOpenURI loading from appcache"));
-    return NS_OK;
-  }
 
   RefPtr<CacheEntryHandle> entry;
   rv = CacheStorageService::Self()->AddStorageEntry(
@@ -226,13 +194,6 @@ NS_IMETHODIMP CacheStorage::AsyncVisitStorage(nsICacheStorageVisitor* aVisitor,
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
-}
-
-// Internal
-
-nsresult CacheStorage::ChooseApplicationCache(nsIURI* aURI,
-                                              nsIApplicationCache** aCache) {
-  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 }  // namespace mozilla::net

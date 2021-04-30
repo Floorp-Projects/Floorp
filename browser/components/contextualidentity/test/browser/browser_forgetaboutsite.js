@@ -81,7 +81,7 @@ function getCacheStorage(where, lci) {
   }
   switch (where) {
     case "disk":
-      return Services.cache2.diskCacheStorage(lci, false);
+      return Services.cache2.diskCacheStorage(lci);
     case "memory":
       return Services.cache2.memoryCacheStorage(lci);
     case "pin":
