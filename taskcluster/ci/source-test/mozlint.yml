@@ -19,9 +19,6 @@ job-defaults:
               name: public/code-review/mozlint.json
               path: /builds/worker/mozlint.json
         env:
-            RUSTFMT: /build/rust/bin/rustfmt
-            RUSTUP_HOME: /build/rust
-            CARGO_HOME: /build/rust
             CLANG_FORMAT: /builds/worker/fetches/clang-tidy/bin/clang-format
     run:
         using: mach
@@ -362,6 +359,9 @@ rustfmt:
         files-changed:
             - '**/*.rs'
             - 'tools/lint/rustfmt.yml'
+    fetches:
+        toolchain:
+            - linux64-rust
 
 
 clippy:
@@ -375,6 +375,9 @@ clippy:
             - '**/*.rs'
             - '**/Cargo.toml'
             - 'tools/lint/clippy.yml'
+    fetches:
+        toolchain:
+            - linux64-rust
 
 
 file-whitespace:

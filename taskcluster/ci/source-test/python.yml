@@ -16,9 +16,6 @@ job-defaults:
                 docker-image: {in-tree: "lint"}
                 max-run-time: 3600
                 env:
-                    RUSTFMT: /build/rust/bin/rustfmt
-                    RUSTUP_HOME: /build/rust
-                    CARGO_HOME: /build/rust
                     CLANG_FORMAT: /builds/worker/fetches/clang-tidy/bin/clang-format
             macosx.*:
                 max-run-time: 3600
@@ -216,12 +213,15 @@ mozlint:
                 linux1804-64/opt:
                     - linux64-clang-tidy
                     - linux64-node
+                    - linux64-rust
                 macosx1014-64/opt:
                     - macosx64-clang-tidy
                     - macosx64-node
+                    - macosx64-rust
                 windows10-64/opt:
                     - win64-clang-tidy
                     - win64-node
+                    - win64-rust
     when:
         files-changed:
             - 'python/mozlint/**'
