@@ -24,8 +24,6 @@
 #include "nsIInputStream.h"
 #include "nsIMultiPartChannel.h"
 #include "nsIHttpChannel.h"
-#include "nsIApplicationCache.h"
-#include "nsIApplicationCacheChannel.h"
 #include "nsMimeTypes.h"
 
 #include "nsIInterfaceRequestorUtils.h"
@@ -564,66 +562,6 @@ void imgRequest::SetCacheValidation(imgCacheEntry* aCacheEntry,
   }
 }
 
-namespace {
-
-already_AddRefed<nsIApplicationCache> GetApplicationCache(
-    nsIRequest* aRequest) {
-  nsresult rv;
-
-  nsCOMPtr<nsIApplicationCacheChannel> appCacheChan =
-      do_QueryInterface(aRequest);
-  if (!appCacheChan) {
-    return nullptr;
-  }
-
-  bool fromAppCache;
-  rv = appCacheChan->GetLoadedFromApplicationCache(&fromAppCache);
-  NS_ENSURE_SUCCESS(rv, nullptr);
-
-  if (!fromAppCache) {
-    return nullptr;
-  }
-
-  nsCOMPtr<nsIApplicationCache> appCache;
-  rv = appCacheChan->GetApplicationCache(getter_AddRefs(appCache));
-  NS_ENSURE_SUCCESS(rv, nullptr);
-
-  return appCache.forget();
-}
-
-}  // namespace
-
-bool imgRequest::CacheChanged(nsIRequest* aNewRequest) {
-  nsCOMPtr<nsIApplicationCache> newAppCache = GetApplicationCache(aNewRequest);
-
-  // Application cache not involved at all or the same app cache involved
-  // in both of the loads (original and new).
-  if (newAppCache == mApplicationCache) {
-    return false;
-  }
-
-  // In a rare case it may happen that two objects still refer
-  // the same application cache version.
-  if (newAppCache && mApplicationCache) {
-    nsresult rv;
-
-    nsAutoCString oldAppCacheClientId, newAppCacheClientId;
-    rv = mApplicationCache->GetClientID(oldAppCacheClientId);
-    NS_ENSURE_SUCCESS(rv, true);
-    rv = newAppCache->GetClientID(newAppCacheClientId);
-    NS_ENSURE_SUCCESS(rv, true);
-
-    if (oldAppCacheClientId == newAppCacheClientId) {
-      return false;
-    }
-  }
-
-  // When we get here, app caches differ or app cache is involved
-  // just in one of the loads what we also consider as a change
-  // in a loading cache.
-  return true;
-}
-
 bool imgRequest::GetMultipart() const {
   MutexAutoLock lock(mMutex);
   return mIsMultiPartChannel;
@@ -700,8 +638,6 @@ imgRequest::OnStartRequest(nsIRequest* aRequest) {
   }
 
   SetCacheValidation(mCacheEntry, aRequest);
-
-  mApplicationCache = GetApplicationCache(aRequest);
 
   // Shouldn't we be dead already if this gets hit?
   // Probably multipart/x-mixed-replace...
