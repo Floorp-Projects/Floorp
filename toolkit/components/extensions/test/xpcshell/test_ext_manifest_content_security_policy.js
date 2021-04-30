@@ -38,10 +38,42 @@ add_task(async function test_manifest_csp() {
     null,
     "Invalid policy string should be omitted"
   );
+
+  ExtensionTestUtils.failOnSchemaWarnings(false);
+  normalized = await ExtensionTestUtils.normalizeManifest({
+    manifest_version: 2,
+    content_security_policy: {
+      extension_pages: "script-src 'self'; object-src 'none'",
+    },
+  });
+  ExtensionTestUtils.failOnSchemaWarnings(true);
+
+  Assert.deepEqual(
+    normalized.errors,
+    [
+      `Error processing content_security_policy: Expected string instead of {"extension_pages":"script-src 'self'; object-src 'none'"}`,
+    ],
+    "Should have the expected warning"
+  );
 });
 
 add_task(async function test_manifest_csp_v3() {
+  ExtensionTestUtils.failOnSchemaWarnings(false);
   let normalized = await ExtensionTestUtils.normalizeManifest({
+    manifest_version: 3,
+    content_security_policy: "script-src 'self'; object-src 'none'",
+  });
+  ExtensionTestUtils.failOnSchemaWarnings(true);
+
+  Assert.deepEqual(
+    normalized.errors,
+    [
+      `Error processing content_security_policy: Expected object instead of "script-src 'self'; object-src 'none'"`,
+    ],
+    "Should have the expected warning"
+  );
+
+  normalized = await ExtensionTestUtils.normalizeManifest({
     manifest_version: 3,
     content_security_policy: {
       extension_pages: "script-src 'self' 'unsafe-eval'; object-src 'none'",

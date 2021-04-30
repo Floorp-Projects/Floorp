@@ -190,10 +190,12 @@
             "onError": "warn",
             "choices": [
               {
+                "max_manifest_version": 2,
                 "type": "string",
                 "format": "contentSecurityPolicy"
               },
               {
+                "min_manifest_version": 3,
                 "type": "object",
                 "additionalProperties": {
                   "$ref": "UnrecognizedProperty"
