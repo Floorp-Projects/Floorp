@@ -5,6 +5,7 @@
 #include "AudioDecoderInputTrack.h"
 
 #include "MediaData.h"
+#include "mozilla/ScopeExit.h"
 
 namespace mozilla {
 
