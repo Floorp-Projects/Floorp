@@ -51,10 +51,7 @@ describe("MultiStageAboutWelcomeProton module", () => {
     it("should have 'primary' button if we need to pin", async () => {
       sandbox.stub(global.ShellService, "doesAppNeedPin").resolves(true);
 
-      const data = await AboutWelcomeDefaults.prepareContentForReact({
-        ...(await getData()),
-        isProton: true,
-      });
+      const data = await getData();
 
       assert.propertyVal(
         data.screens[0].content.primary_button.label,
@@ -63,30 +60,23 @@ describe("MultiStageAboutWelcomeProton module", () => {
       );
     });
     it("should keep caption for en-*", async () => {
-      const data = await AboutWelcomeDefaults.prepareContentForReact({
-        ...(await getData()),
-        isProton: true,
-      });
+      const data = await getData();
 
       assert.property(data.screens[0].content, "help_text");
     });
     it("should remove caption for not-en", async () => {
       sandbox.stub(global.Services.locale, "appLocaleAsBCP47").value("de");
 
-      const data = await AboutWelcomeDefaults.prepareContentForReact({
-        ...(await getData()),
-        isProton: true,
-      });
+      const data = await getData();
 
-      assert.notProperty(data.screens[0].content.help_text, "text");
+      assert.notProperty(data.screens[0].content, "help_text");
     });
   });
   describe("AboutWelcomeDefaults prepareContentForReact", () => {
     it("should not set action without screens", async () => {
-      const data = await AboutWelcomeDefaults.prepareContentForReact({
+      const data = AboutWelcomeDefaults.prepareContentForReact({
         ua: "test",
       });
-
       assert.propertyVal(data, "ua", "test");
       assert.notProperty(data, "screens");
     });
@@ -106,9 +96,7 @@ describe("MultiStageAboutWelcomeProton module", () => {
           },
         ],
       };
-      const data = await AboutWelcomeDefaults.prepareContentForReact(
-        TEST_CONTENT
-      );
+      const data = AboutWelcomeDefaults.prepareContentForReact(TEST_CONTENT);
       assert.propertyVal(data, "ua", "test");
       assert.propertyVal(
         data.screens[0].content.primary_button.action.data,
@@ -133,9 +121,7 @@ describe("MultiStageAboutWelcomeProton module", () => {
           },
         ],
       };
-      const data = await AboutWelcomeDefaults.prepareContentForReact(
-        TEST_CONTENT
-      );
+      const data = AboutWelcomeDefaults.prepareContentForReact(TEST_CONTENT);
       assert.propertyVal(data, "ua", "test");
       assert.notPropertyVal(
         data.screens[0].content.primary_button.action.data,
@@ -146,7 +132,7 @@ describe("MultiStageAboutWelcomeProton module", () => {
     it("should remove theme screens on win7", async () => {
       sandbox.stub(AppConstants, "isPlatformAndVersionAtMost").returns(true);
 
-      const { screens } = await AboutWelcomeDefaults.prepareContentForReact({
+      const { screens } = AboutWelcomeDefaults.prepareContentForReact({
         screens: [
           {
             order: 0,

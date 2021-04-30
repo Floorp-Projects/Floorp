@@ -247,7 +247,7 @@ class AboutWelcomeChild extends JSWindowActorChild {
     }
 
     return Cu.cloneInto(
-      await AboutWelcomeDefaults.prepareContentForReact({
+      AboutWelcomeDefaults.prepareContentForReact({
         ...experimentMetadata,
         ...featureConfig,
       }),

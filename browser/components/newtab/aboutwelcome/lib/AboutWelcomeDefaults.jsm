@@ -214,7 +214,6 @@ const DEFAULT_PROTON_WELCOME_CONTENT = {
         // This is dynamically removed for non-en locales below.
         help_text: {
           text: "Photograph by Sam Moqadam via Unsplash",
-          deleteIfNotEn: true,
         },
         primary_button: {
           label: {
@@ -431,10 +430,24 @@ async function getAttributionContent() {
 const RULES = [
   {
     description: "Proton Default AW content",
-    getDefaults(featureConfig) {
+    async getDefaults(featureConfig) {
       if (featureConfig?.isProton) {
-        return Cu.cloneInto(DEFAULT_PROTON_WELCOME_CONTENT, {});
+        let content = Cu.cloneInto(DEFAULT_PROTON_WELCOME_CONTENT, {});
+        // Switch to "primary" if we also need to pin.
+        if (await ShellService.doesAppNeedPin()) {
+          content.screens[0].content.primary_button.label.string_id =
+            "mr1-onboarding-set-default-pin-primary-button-label";
+          content.screens[0].id = "AW_PIN_AND_DEFAULT";
+        }
+
+        // Remove the English-only image caption.
+        if (Services.locale.appLocaleAsBCP47.split("-")[0] !== "en") {
+          delete content.screens[0].content.help_text;
+        }
+
+        return content;
       }
+
       return null;
     },
   },
@@ -507,39 +520,28 @@ const RULES = [
   },
 ];
 
-async function getDefaults(featureConfig) {
-  for (const rule of RULES) {
-    const result = await rule.getDefaults(featureConfig);
-    if (result) {
-      return result;
-    }
+function prepareContentForReact(content) {
+  if (content.isProton) {
+    content.design = "proton";
   }
-  return null;
-}
 
-let gSourceL10n = null;
-
-// Localize Firefox download source from user agent attribution to show inside
-// import primary button label such as 'Import from <localized browser name>'.
-// no firefox as import wizard doesn't show it
-const allowedUAs = ["chrome", "edge", "ie"];
-function getLocalizedUA(ua) {
-  if (!gSourceL10n) {
-    gSourceL10n = new Localization(["browser/migration.ftl"]);
-  }
-  if (allowedUAs.includes(ua)) {
-    return gSourceL10n.formatValue(`source-name-${ua.toLowerCase()}`);
-  }
-  return null;
-}
-
-async function prepareContentForReact(content) {
-  if (content?.template === "return_to_amo") {
+  if (content.template === "return_to_amo") {
     return content;
   }
 
-  if (content.isProton) {
-    content.design = "proton";
+  // Set the primary import button source based on attribution.
+  if (content.ua) {
+    // This check will make sure that we add the source correctly
+    // whether or not 'data: {source: ""}' is in the JSON
+    const { action } =
+      content.screens?.find(
+        screen =>
+          screen?.content?.primary_button?.action?.type ===
+          "SHOW_MIGRATION_WIZARD"
+      )?.content.primary_button ?? {};
+    if (action) {
+      action.data = { ...action.data, source: content.ua };
+    }
   }
 
   // Change content for Windows 7 because non-light themes aren't quite right.
@@ -556,64 +558,17 @@ async function prepareContentForReact(content) {
     }
   }
 
-  // Set the primary import button source based on attribution.
-  if (content?.ua) {
-    // If available, add the browser source to action data
-    // and localized browser string args to primary button label
-    const { label, action } =
-      content?.screens?.find(
-        screen =>
-          screen?.content?.primary_button?.action?.type ===
-          "SHOW_MIGRATION_WIZARD"
-      )?.content?.primary_button ?? {};
-
-    if (action) {
-      action.data = { ...action.data, source: content.ua };
-    }
-
-    let browserStr = await getLocalizedUA(content.ua);
-
-    if (label?.string_id) {
-      label.string_id = browserStr
-        ? "mr1-onboarding-import-primary-button-label-attribution"
-        : "mr1-onboarding-import-primary-button-label-no-attribution";
-
-      label.args = browserStr ? { previous: browserStr } : {};
-    }
-  }
-
-  // Switch to "primary" if we also need to pin.
-  if (await ShellService.doesAppNeedPin()) {
-    const defaultScreenIndex = content.screens?.findIndex(screen =>
-      screen.id.startsWith("AW_SET_DEFAULT")
-    );
-
-    // Check for string_id to avoid replacing hardcoded text for experiments
-    if (
-      content.screens[defaultScreenIndex]?.content?.primary_button?.label
-        ?.string_id
-    ) {
-      content.screens[defaultScreenIndex].id = "AW_PIN_AND_DEFAULT";
-
-      content.screens[
-        defaultScreenIndex
-      ].content.primary_button.label.string_id =
-        "mr1-onboarding-set-default-pin-primary-button-label";
-    }
-  }
-
-  // Remove the English-only image caption.
-  if (Services.locale.appLocaleAsBCP47.split("-")[0] !== "en") {
-    const { help_text } =
-      content.screens?.find(screen => screen.content?.help_text?.deleteIfNotEn)
-        ?.content ?? {};
-
-    if (help_text?.text) {
-      delete help_text.text;
-    }
-  }
-
   return content;
+}
+
+async function getDefaults(featureConfig) {
+  for (const rule of RULES) {
+    const result = await rule.getDefaults(featureConfig);
+    if (result) {
+      return result;
+    }
+  }
+  return null;
 }
 
 const AboutWelcomeDefaults = {
