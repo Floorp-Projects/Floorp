@@ -73,13 +73,19 @@ const TEST_MULTISTAGE_CONTENT = [
         info: true,
       },
       primary_button: {
-        label: "Next",
+        label: {
+          string_id: "onboarding-multistage-import-primary-button-label",
+        },
         action: {
-          navigate: true,
+          type: "SHOW_MIGRATION_WIZARD",
+          data: {},
         },
       },
       secondary_button: {
         label: "link",
+        action: {
+          navigate: true,
+        },
       },
     },
   },
@@ -192,7 +198,7 @@ const TEST_PROTON_CONTENT = [
         label: "Import",
         action: {
           type: "SHOW_MIGRATION_WIZARD",
-          data: { source: "chrome" },
+          data: {},
         },
       },
     },
@@ -373,6 +379,7 @@ add_task(async function test_multistage_aboutwelcome_experimentAPI() {
             featureId: "aboutwelcome",
             value: {
               id: "my-mochitest-experiment",
+              ua: "chrome",
               screens: TEST_MULTISTAGE_CONTENT,
             },
           },
@@ -450,11 +457,12 @@ add_task(async function test_multistage_aboutwelcome_experimentAPI() {
       "h1.welcomeZap",
       "span.zap.long",
       "div.tiles-container.info",
+      "button.primary[data-l10n-args*='Google Chrome']",
     ],
     // Unexpected selectors:
     ["main.AW_STEP1", "main.AW_STEP3", "div.secondary-cta.top", "div.test-img"]
   );
-  await onButtonClick(browser, "button.primary");
+  await onButtonClick(browser, "button.secondary");
   await test_screen_content(
     browser,
     "multistage step 3",
@@ -543,7 +551,7 @@ add_task(async function test_Multistage_About_Welcome_branches() {
     // Unexpected selectors:
     ["main.AW_STEP1", "main.AW_STEP3", "div.secondary-cta.top"]
   );
-  await onButtonClick(browser, "button.primary");
+  await onButtonClick(browser, "button.secondary");
   await test_screen_content(
     browser,
     "multistage step 3",
@@ -897,7 +905,7 @@ add_task(async function test_AWMultistage_Import() {
 
   // Click twice to advance to screen 3 - once for win7.
   if (!win7Content) await onButtonClick(browser, "button.primary");
-  await onButtonClick(browser, "button.primary");
+  await onButtonClick(browser, "button.secondary");
 
   const sandbox = sinon.createSandbox();
   // Stub AboutWelcomeParent Content Message Handler
