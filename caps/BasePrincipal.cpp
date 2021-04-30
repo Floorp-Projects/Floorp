@@ -835,7 +835,7 @@ BasePrincipal::GetExposableSpec(nsACString& aSpec) {
 }
 
 NS_IMETHODIMP
-BasePrincipal::GetPrepath(nsACString& aPath) {
+BasePrincipal::GetPrePath(nsACString& aPath) {
   aPath.Truncate();
   nsCOMPtr<nsIURI> prinURI;
   nsresult rv = GetURI(getter_AddRefs(prinURI));
