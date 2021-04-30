@@ -8,28 +8,13 @@ with Files("**"):
     BUG_COMPONENT = ("Core", "Networking: Cache")
 
 XPIDL_SOURCES += [
-    "nsIOfflineCacheUpdate.idl",
     "nsIPrefetchService.idl",
 ]
 
 XPIDL_MODULE = "prefetch"
 
-EXPORTS.mozilla.docshell += [
-    "OfflineCacheUpdateChild.h",
-    "OfflineCacheUpdateParent.h",
-]
-
 UNIFIED_SOURCES += [
-    "nsOfflineCacheUpdate.cpp",
-    "nsOfflineCacheUpdateService.cpp",
     "nsPrefetchService.cpp",
-    "OfflineCacheUpdateChild.cpp",
-    "OfflineCacheUpdateGlue.cpp",
-    "OfflineCacheUpdateParent.cpp",
-]
-
-IPDL_SOURCES += [
-    "POfflineCacheUpdate.ipdl",
 ]
 
 include("/ipc/chromium/chromium-config.mozbuild")

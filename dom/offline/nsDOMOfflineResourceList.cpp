@@ -19,7 +19,6 @@
 #include "nsIObserverService.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIWebNavigation.h"
-#include "nsOfflineCacheUpdate.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/OfflineResourceListBinding.h"

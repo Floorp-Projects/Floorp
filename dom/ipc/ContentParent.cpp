@@ -83,7 +83,6 @@
 #include "mozilla/Unused.h"
 #include "mozilla/WebBrowserPersistDocumentParent.h"
 #include "mozilla/devtools/HeapSnapshotTempFileHelperParent.h"
-#include "mozilla/docshell/OfflineCacheUpdateParent.h"
 #include "mozilla/dom/BlobURLProtocolHandler.h"
 #include "mozilla/dom/BrowserHost.h"
 #include "mozilla/dom/BrowsingContext.h"
@@ -1796,14 +1795,6 @@ void ContentParent::ShutDownProcess(ShutDownMethod aMethod) {
     // sequence.
     mCalledClose = true;
     Close();
-  }
-
-  const ManagedContainer<POfflineCacheUpdateParent>& ocuParents =
-      ManagedPOfflineCacheUpdateParent();
-  for (auto* key : ocuParents) {
-    RefPtr<mozilla::docshell::OfflineCacheUpdateParent> ocuParent =
-        static_cast<mozilla::docshell::OfflineCacheUpdateParent*>(key);
-    ocuParent->StopSendingMessagesToChild();
   }
 
   // A ContentParent object might not get freed until after XPCOM shutdown has
@@ -5027,36 +5018,6 @@ void ContentParent::NotifyUpdatedFonts(bool aFullRebuild) {
   }
 }
 
-already_AddRefed<mozilla::docshell::POfflineCacheUpdateParent>
-ContentParent::AllocPOfflineCacheUpdateParent(
-    nsIURI* aManifestURI, nsIURI* aDocumentURI,
-    const PrincipalInfo& aLoadingPrincipalInfo, const bool& aStickDocument,
-    const CookieJarSettingsArgs& aCookieJarSettingsArgs) {
-  RefPtr<mozilla::docshell::OfflineCacheUpdateParent> update =
-      new mozilla::docshell::OfflineCacheUpdateParent();
-  return update.forget();
-}
-
-mozilla::ipc::IPCResult ContentParent::RecvPOfflineCacheUpdateConstructor(
-    POfflineCacheUpdateParent* aActor, nsIURI* aManifestURI,
-    nsIURI* aDocumentURI, const PrincipalInfo& aLoadingPrincipal,
-    const bool& aStickDocument,
-    const CookieJarSettingsArgs& aCookieJarSettingsArgs) {
-  MOZ_ASSERT(aActor);
-
-  RefPtr<mozilla::docshell::OfflineCacheUpdateParent> update =
-      static_cast<mozilla::docshell::OfflineCacheUpdateParent*>(aActor);
-
-  nsresult rv = update->Schedule(aManifestURI, aDocumentURI, aLoadingPrincipal,
-                                 aStickDocument, aCookieJarSettingsArgs);
-  if (NS_FAILED(rv) && IsAlive()) {
-    // Inform the child of failure.
-    Unused << update->SendFinish(false, false);
-  }
-
-  return IPC_OK();
-}
-
 PWebrtcGlobalParent* ContentParent::AllocPWebrtcGlobalParent() {
 #ifdef MOZ_WEBRTC
   return WebrtcGlobalParent::Alloc();
@@ -5076,17 +5037,6 @@ bool ContentParent::DeallocPWebrtcGlobalParent(PWebrtcGlobalParent* aActor) {
 
 mozilla::ipc::IPCResult ContentParent::RecvSetOfflinePermission(
     const Principal& aPrincipal) {
-  if (!ValidatePrincipal(aPrincipal)) {
-    LogAndAssertFailedPrincipalValidationInfo(aPrincipal, __func__);
-  }
-  nsCOMPtr<nsIOfflineCacheUpdateService> updateService =
-      components::OfflineCacheUpdate::Service();
-  if (!updateService) {
-    return IPC_FAIL_NO_REASON(this);
-  }
-  nsresult rv = updateService->AllowOfflineApp(aPrincipal);
-  NS_ENSURE_SUCCESS(rv, IPC_FAIL_NO_REASON(this));
-
   return IPC_OK();
 }
 
