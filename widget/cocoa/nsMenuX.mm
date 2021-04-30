@@ -13,6 +13,7 @@
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/MouseEvents.h"
 
+#include "MOZMenuOpeningCoordinator.h"
 #include "nsMenuItemX.h"
 #include "nsMenuUtilsX.h"
 #include "nsMenuItemIconX.h"
@@ -513,8 +514,23 @@ void nsMenuX::MenuClosed(bool aEntireMenuClosingDueToActivateItem) {
    private:
     nsMenuX* mMenu;  // weak, cleared by Cancel() and Run()
   };
+
   mPendingAsyncMenuCloseRunnable = new MenuClosedAsyncRunnable(this);
-  NS_DispatchToCurrentThread(mPendingAsyncMenuCloseRunnable);
+
+  if (aEntireMenuClosingDueToActivateItem) {
+    // Delay the call to MenuClosedAsync until after the menu's event loop has been exited, by using
+    // -[MOZMenuOpeningCoordinator runAfterMenuClosed:]. Otherwise, the runnable might potentially
+    // run before the event loop has been exited, and MenuClosedAsync() would flush the pending
+    // command runnable for the menu activation, and then the command event would run inside the
+    // menu's event loop which is what we're trying to avoid.
+    [MOZMenuOpeningCoordinator.sharedInstance runAfterMenuClosed:mPendingAsyncMenuCloseRunnable];
+  } else {
+    // Just dispatch to the Gecko event queue.
+    // One way to get here is if a submenu is closed but the rest of the menu stays open; in that
+    // case, we really can't use runAfterMenuClosed because the submenu's MenuClosedAsync method
+    // would run way too late.
+    NS_DispatchToCurrentThread(mPendingAsyncMenuCloseRunnable);
+  }
 }
 
 void nsMenuX::FlushMenuClosedRunnable() {
@@ -571,7 +587,6 @@ void nsMenuX::ActivateItemAfterClosing(RefPtr<nsMenuItemX>&& aItem, NSEventModif
                                        int16_t aButton) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  // Run the command asynchronously so that the menu can hide before the command runs.
   class DoCommandRunnable final : public mozilla::Runnable {
    public:
     explicit DoCommandRunnable(RefPtr<nsMenuItemX>&& aItem, NSEventModifierFlags aModifiers,
@@ -596,7 +611,13 @@ void nsMenuX::ActivateItemAfterClosing(RefPtr<nsMenuItemX>&& aItem, NSEventModif
   };
   RefPtr<Runnable> doCommandAsync = new DoCommandRunnable(std::move(aItem), aModifiers, aButton);
   mPendingCommandRunnables.AppendElement(doCommandAsync);
-  NS_DispatchToCurrentThread(doCommandAsync);
+
+  // Delay the command event until after the menu's event loop has been exited, by using
+  // -[MOZMenuOpeningCoordinator runAfterMenuClosed:]. Otherwise, the runnable might potentially
+  // run inside the menu's nested event loop, and command event handlers can do arbitrary things
+  // like opening modal windows which spawn more nested event loops. This repeated nesting of event
+  // loops is something we'd like to avoid.
+  [MOZMenuOpeningCoordinator.sharedInstance runAfterMenuClosed:std::move(doCommandAsync)];
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
