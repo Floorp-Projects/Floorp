@@ -33,8 +33,8 @@ add_task(async function test_default_additional_backgrounds_alignment() {
 
     Assert.equal(
       rootCS.getPropertyValue("background-position"),
-      RIGHT_TOP,
-      "root only contains theme_frame alignment property"
+      `${RIGHT_TOP}, ${RIGHT_TOP}`,
+      "root contains theme_frame and lwt-background-alignment properties"
     );
     Assert.equal(
       toolboxCS.getPropertyValue("background-position"),
@@ -98,8 +98,8 @@ add_task(async function test_additional_backgrounds_alignment() {
     let rootCS = window.getComputedStyle(docEl);
     Assert.equal(
       rootCS.getPropertyValue("background-position"),
-      RIGHT_TOP,
-      "root only contains theme_frame alignment property"
+      `${RIGHT_TOP}, ${LEFT_BOTTOM}, ${CENTER_CENTER}, ${RIGHT_TOP}`,
+      "root contains theme_frame and additional_backgrounds alignment properties"
     );
     Assert.equal(
       toolboxCS.getPropertyValue("background-position"),

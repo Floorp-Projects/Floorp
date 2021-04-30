@@ -156,7 +156,7 @@ add_task(async function test_support_backgrounds_repeat() {
     );
     Assert.equal(
       rootCS.backgroundPosition,
-      "100% 0%",
+      "100% 0%, 100% 0%",
       "The backgroundPosition should use the default value for root."
     );
     Assert.equal(
@@ -166,7 +166,7 @@ add_task(async function test_support_backgrounds_repeat() {
     );
     Assert.equal(
       rootCS.backgroundRepeat,
-      "no-repeat",
+      "no-repeat, repeat-x, repeat-y, repeat",
       "The backgroundRepeat should use the default values for root."
     );
     Assert.equal(
@@ -253,13 +253,13 @@ add_task(async function test_additional_images_check() {
     );
     Assert.equal(
       rootCS.backgroundPosition,
-      "100% 0%",
+      "100% 0%, 100% 0%",
       "The backgroundPosition should use the default value."
     );
     Assert.equal(
       rootCS.backgroundRepeat,
-      "no-repeat",
-      "The backgroundPosition should use only one (default) value."
+      "no-repeat, no-repeat",
+      "The backgroundPosition should use only one (default) value for the header and the default additional images."
     );
   } else {
     let bgImage = toolboxCS.backgroundImage.split(",")[0].trim();
