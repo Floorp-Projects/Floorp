@@ -383,8 +383,7 @@ html|input[type="color"],
 xul|menulist {
   appearance: none;
   min-height: 32px;
-  /* !important overrides button.css for disabled and default XUL buttons: */
-  color: inherit !important;
+  color: inherit;
   border: 1px solid transparent; /* shows up in high-contrast mode */
   border-radius: var(--in-content-button-border-radius);
   background-color: var(--in-content-button-background);

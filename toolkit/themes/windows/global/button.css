@@ -52,12 +52,12 @@ button:-moz-focusring {
 
 /* .......... disabled state .......... */
 
-button[disabled="true"] {
+button:where([disabled="true"]) {
   color: GrayText;
 }
 
 @media (-moz-windows-classic) {
-  button[disabled="true"] {
+  button:where([disabled="true"]) {
     color: ThreeDShadow;
     text-shadow: 1px 1px ThreeDHighlight;
   }

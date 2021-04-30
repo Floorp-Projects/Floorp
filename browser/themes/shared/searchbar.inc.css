@@ -111,7 +111,7 @@
 
 .searchbar-engine-one-off-item[selected] {
   background-color: var(--autocomplete-popup-highlight-background);
-  color: var(--autocomplete-popup-highlight-color) !important; /* Override button.css on Linux */
+  color: var(--autocomplete-popup-highlight-color);
 }
 
 .searchbar-engine-one-off-item > .button-box {

@@ -174,7 +174,7 @@ popupnotification {
 }
 
 .panel-footer > button {
-  color: var(--button-color);
+  color: var(--button-color, inherit);
 }
 
 .panel-footer:not(.panel-footer-menulike) > button {
@@ -195,16 +195,11 @@ popupnotification {
 }
 
 .panel-footer > button:not([disabled]):hover:active {
-  /**
-   * We override the colour here because on macOS, buttons default to
-   * having :hover:active buttons have color -moz-mac-buttonactivetext
-   */
-  color: var(--button-color);
   background-color: var(--button-active-bgcolor, color-mix(in srgb, currentColor 30%, transparent));
 }
 
 .panel-footer > button:not([disabled])[default] {
-  color: var(--buttons-primary-button-color, -moz-accent-color-foreground) !important;
+  color: var(--buttons-primary-button-color, -moz-accent-color-foreground);
   background-color: var(--buttons-primary-button-bgcolor, -moz-accent-color);
 }
 

@@ -147,8 +147,7 @@ notification[type="critical"] > hbox > .messageImage {
   border: 1px solid transparent;
   border-radius: 4px;
   background-color: var(--notification-button-background);
-  /* Override button.css hover & active styles */
-  color: var(--notification-button-text) !important;
+  color: var(--notification-button-text);
   padding: 0 6px;
   margin: 4px 8px;
   height: 24px;

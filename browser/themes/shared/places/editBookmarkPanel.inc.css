@@ -222,7 +222,7 @@ html|img#editBookmarkPanelFavicon[src] {
   margin-inline-start: 4px;
   min-width: 32px;
   min-height: 32px;
-  color: var(--button-color, ButtonText);
+  color: var(--button-color);
   background-color: var(--button-bgcolor);
 }
 

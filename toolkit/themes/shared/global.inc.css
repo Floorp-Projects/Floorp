@@ -169,8 +169,7 @@ xul|label[disabled="true"] {
 .panel-footer > xul|button {
   appearance: none;
   border-top: 1px solid var(--panel-separator-color);
-  /* !important overrides :hover and :active colors from button.css: */
-  color: inherit !important;
+  color: inherit;
   min-width: 0;
   margin: 0;
   padding: .9em 2px;
