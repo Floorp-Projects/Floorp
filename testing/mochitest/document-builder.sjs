@@ -35,7 +35,18 @@ function loadHTMLFromFile(path) {
   return testHTML;
 }
 
-// eslint-disable-next-line no-unused-vars
+/**
+ * document-builder.sjs can be used to dynamically build documents that will be used in
+ * mochitests. It does handle the following GET parameters:
+ * - file: The path to an (X)HTML file whose content will be used as a response.
+ *        Example: document-builder.sjs?file=/tests/dom/security/test/csp/file_web_manifest_mixed_content.html
+ * - html: A string representation of the HTML document you want to get.
+ *        Example: document-builder.sjs?html=<h1>Hello</h1>
+ * - headers: A <key:value> string representation of headers that will be set on the response
+ *            This is only applied when the html GET parameter is passed as well
+ *        Example: document-builder.sjs?headers=Cross-Origin-Opener-Policy:same-origin&html=<h1>Hello</h1>
+ *                 document-builder.sjs?headers=X-Header1:a&headers=X-Header2:b&html=<h1>Multiple headers</h1>
+ */
 function handleRequest(request, response) {
   const queryString = new URLSearchParams(request.queryString);
   const html = queryString.get("html");
@@ -43,6 +54,14 @@ function handleRequest(request, response) {
   response.setHeader("Cache-Control", "no-cache", false);
   if (html) {
     response.setHeader("Content-Type", "text/html", false);
+
+    if (queryString.has("headers")) {
+      for (const header of queryString.getAll("headers")) {
+        const [key, value] = header.split(":");
+        response.setHeader(key, value, false);
+      }
+    }
+
     response.write(html);
     return;
   }
