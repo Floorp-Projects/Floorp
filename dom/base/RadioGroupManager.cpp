@@ -50,8 +50,7 @@ void RadioGroupManager::Unlink(RadioGroupManager* tmp) {
 }
 
 nsresult RadioGroupManager::WalkRadioGroup(const nsAString& aName,
-                                           nsIRadioVisitor* aVisitor,
-                                           bool aFlushContent) {
+                                           nsIRadioVisitor* aVisitor) {
   nsRadioGroupStruct* radioGroup = GetOrCreateRadioGroup(aName);
 
   for (int i = 0; i < radioGroup->mRadioButtons.Count(); i++) {
