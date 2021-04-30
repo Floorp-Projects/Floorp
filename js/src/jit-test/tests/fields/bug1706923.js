@@ -1,5 +1,3 @@
-// |jit-test| --enable-private-methods;
-
 var error = undefined;
 try {
     eval(`class a {

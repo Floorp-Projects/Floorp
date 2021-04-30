@@ -1,4 +1,4 @@
-// |reftest| shell-option(--enable-private-methods) skip-if(!xulRuntime.shell) error:SyntaxError -- requires shell-options
+// |reftest| error:SyntaxError
 // This file was procedurally generated from the following sources:
 // - src/generators/yield-as-binding-identifier.case
 // - src/generators/syntax/class-decl-static-private-method.template
