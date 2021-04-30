@@ -113,7 +113,7 @@
   display: flex;
   flex-wrap: nowrap;
   fill: currentColor;
-  fill-opacity: .6;
+  fill-opacity: var(--urlbar-icon-fill-opacity);
   padding-block: 3px;
 }
 
@@ -274,7 +274,6 @@
 .urlbarView-row-inner[selected] {
   background-color: var(--autocomplete-popup-highlight-background);
   color: var(--autocomplete-popup-highlight-color);
-  fill-opacity: 1;
 }
 
 /* Favicon */
@@ -329,30 +328,31 @@
   background-repeat: no-repeat;
   background-size: contain;
   -moz-context-properties: fill, stroke;
+  stroke: Field;
+}
+
+.urlbarView-type-icon:-moz-lwtheme {
+  stroke: var(--lwt-toolbar-field-focus);
 }
 
 /* Favicon badges have this priority: pinned > bookmark. */
 
 .urlbarView-row[type=bookmark] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-type-icon {
   background-image: url(chrome://browser/skin/bookmark-12.svg);
-  color: rgb(0,97,224);
-  stroke: #fff;
+  fill: rgb(0,97,224);
 }
 
 .urlbarView-row[pinned] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-type-icon {
   background-image: url(chrome://browser/skin/pin-12.svg);
-  color: rgb(191,191,201);
-  stroke: #fff;
+  fill: rgb(91,91,102);
 }
 
 :root[lwt-toolbar-field-focus-brighttext] .urlbarView-row[type=bookmark] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-type-icon {
-  color: rgb(0,221,255);
-  stroke: rgb(50,49,60);
+  fill: rgb(0,221,255);
 }
 
 :root[lwt-toolbar-field-focus-brighttext] .urlbarView-row[pinned] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-type-icon {
-  color: rgb(224,224,230);
-  stroke: rgb(50,49,60);
+  fill: rgb(251,251,254);
 }
 
 @media not (-moz-proton) {
@@ -783,12 +783,16 @@
   fill: rgb(0,221,255);
 }
 
+/**
+ * We remove the blue fill from the bookmark icon when it is selected. We use
+ * a blue color as the selection background-color in some instances (Linux with
+ * blue system color; fallback for third-party themes) and we want to ensure
+ * contrast.
+ */
 .urlbarView-row[source="bookmarks"][selected] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-favicon,
-.urlbarView-row[source="tabs"][selected] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-favicon,
-#urlbar-engine-one-off-item-bookmarks[selected],
-#urlbar-engine-one-off-item-tabs[selected] {
+#urlbar-engine-one-off-item-bookmarks[selected] {
   fill: currentColor;
-  fill-opacity: .9;
+  fill-opacity: var(--urlbar-icon-fill-opacity);
 }
 
 @media not (-moz-proton) {
