@@ -891,52 +891,7 @@ NS_IMETHODIMP _OldStorage::AsyncDoomURI(nsIURI* aURI,
 
 NS_IMETHODIMP _OldStorage::AsyncEvictStorage(
     nsICacheEntryDoomCallback* aCallback) {
-  LOG(("_OldStorage::AsyncEvictStorage"));
-
-  nsresult rv;
-
-  if (!mAppCache && mOfflineStorage) {
-    nsCOMPtr<nsIApplicationCacheService> appCacheService =
-        do_GetService(NS_APPLICATIONCACHESERVICE_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = appCacheService->Evict(mLoadInfo);
-    NS_ENSURE_SUCCESS(rv, rv);
-  } else if (mAppCache) {
-    nsCOMPtr<nsICacheSession> session;
-    rv = GetCacheSession(""_ns, mWriteToDisk, mLoadInfo, mAppCache,
-                         getter_AddRefs(session));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = session->EvictEntries();
-    NS_ENSURE_SUCCESS(rv, rv);
-  } else {
-    // Oh, I'll be so happy when session names are gone...
-    nsCOMPtr<nsICacheSession> session;
-    rv = GetCacheSession("http"_ns, mWriteToDisk, mLoadInfo, mAppCache,
-                         getter_AddRefs(session));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = session->EvictEntries();
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // This clears any data from schemes other than http or ftp.
-    rv = GetCacheSession(""_ns, mWriteToDisk, mLoadInfo, mAppCache,
-                         getter_AddRefs(session));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = session->EvictEntries();
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  if (aCallback) {
-    RefPtr<DoomCallbackSynchronizer> sync =
-        new DoomCallbackSynchronizer(aCallback);
-    rv = sync->Dispatch();
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  return NS_OK;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP _OldStorage::AsyncVisitStorage(nsICacheStorageVisitor* aVisitor,
@@ -1021,16 +976,7 @@ nsresult _OldStorage::AssembleCacheKey(nsIURI* aURI,
 
 nsresult _OldStorage::ChooseApplicationCache(const nsACString& cacheKey,
                                              nsIApplicationCache** aCache) {
-  nsresult rv;
-
-  nsCOMPtr<nsIApplicationCacheService> appCacheService =
-      do_GetService(NS_APPLICATIONCACHESERVICE_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = appCacheService->ChooseApplicationCache(cacheKey, mLoadInfo, aCache);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 }  // namespace net
