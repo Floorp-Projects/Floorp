@@ -1605,10 +1605,11 @@ static nscoord PartiallyResolveAutoMinSize(
   }
 
   // Compute the transferred size suggestion, which is the cross size converted
-  // through the aspect ratio (if the item has an aspect ratio and a definite
-  // cross size).
+  // through the aspect ratio (if the item is replaced, and it has an aspect
+  // ratio and a definite cross size).
   if (const auto& aspectRatio = aFlexItem.GetAspectRatio();
-      aspectRatio && aFlexItem.IsCrossSizeDefinite(aItemReflowInput)) {
+      aFlexItem.Frame()->IsFrameOfType(nsIFrame::eReplaced) && aspectRatio &&
+      aFlexItem.IsCrossSizeDefinite(aItemReflowInput)) {
     // We have a usable aspect ratio. (not going to divide by 0)
     nscoord transferredSizeSuggestion = aspectRatio.ComputeRatioDependentSize(
         aFlexItem.MainAxis(), cbWM, aFlexItem.CrossSize(), boxSizingAdjust);
