@@ -271,6 +271,12 @@
   margin-top: 0;
 }
 
+.content-blocking-extra-blocking-desc {
+  margin-inline-start: 0.5em;
+  position: relative;
+  top: 0.65em;
+}
+
 .content-blocking-label {
   display: list-item;
   line-height: 1.2em;
