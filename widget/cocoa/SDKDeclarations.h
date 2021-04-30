@@ -76,6 +76,13 @@ typedef NS_ENUM(NSInteger, NSTitlebarSeparatorStyle) {
 @property NSTitlebarSeparatorStyle titlebarSeparatorStyle;
 @end
 
+@interface NSMenu (NSMenu11_0)
+// In reality, NSMenu implements the NSAppearanceCustomization protocol, and picks up the appearance
+// property from that protocol. But we can't tack on protocol implementations, so we just declare
+// the property setter here.
+- (void)setAppearance:(NSAppearance*)appearance;
+@end
+
 #endif
 
 #endif  // SDKDefines_h

@@ -37,6 +37,7 @@ UNIFIED_SOURCES += [
     "AppearanceOverride.mm",
     "GfxInfo.mm",
     "MOZIconHelper.mm",
+    "MOZMenuOpeningCoordinator.mm",
     "NativeKeyBindings.mm",
     "NativeMenuMac.mm",
     "NativeMenuSupport.mm",
