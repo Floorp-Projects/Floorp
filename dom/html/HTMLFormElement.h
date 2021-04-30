@@ -485,8 +485,7 @@ class HTMLFormElement final : public nsGenericHTMLElement,
    * Find form controls in this form with the correct value in the name
    * attribute.
    */
-  already_AddRefed<nsISupports> DoResolveName(const nsAString& aName,
-                                              bool aFlushContent);
+  already_AddRefed<nsISupports> DoResolveName(const nsAString& aName);
 
   /**
    * Check the form validity following this algorithm:
