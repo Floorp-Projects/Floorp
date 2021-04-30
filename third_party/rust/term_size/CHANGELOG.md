@@ -1,3 +1,33 @@
+<a name="v1.0.0-beta1"></a>
+## v1.0.0-beta1 (2017-12-07)
+
+
+#### Documentation
+
+*   updates the docs and copyright notices for 1.0 by adding examples sections ([86819dc5](https://github.com/kbknapp/term_size-rs/commit/86819dc5f1f80f3d9172bf3fa70781294762252e))
+*   adds a CONTRIBUTORS.md file and just target to update it ([36d82b7a](https://github.com/kbknapp/term_size-rs/commit/36d82b7a094e02eb76d26bb987a53ac85f3dc407))
+* **README.md:**  updates the docs location to point to docs.rs ([0f4160fc](https://github.com/kbknapp/term_size-rs/commit/0f4160fc37c2311ff2e02f97cb252b2d09a87629))
+
+#### Features
+
+*   allows getting the terminal size of all standard streams, or just particular ones ([19f5b91e](https://github.com/kbknapp/term_size-rs/commit/19f5b91eed0b6486983b80fe713ad18e34afb70a))
+
+<a name="v0.3.2"></a>
+##  (2020-05-02)
+
+
+#### Features
+
+*   allows getting the terminal size of all standard streams, or just particular ones ([19f5b91e](https://github.com/kbknapp/term_size-rs/commit/19f5b91eed0b6486983b80fe713ad18e34afb70a))
+
+#### Documentation
+
+*   updates the docs and copyright notices for 1.0 by adding examples sections ([86819dc5](https://github.com/kbknapp/term_size-rs/commit/86819dc5f1f80f3d9172bf3fa70781294762252e))
+*   adds a CONTRIBUTORS.md file and just target to update it ([36d82b7a](https://github.com/kbknapp/term_size-rs/commit/36d82b7a094e02eb76d26bb987a53ac85f3dc407))
+* **README.md:**
+  *  updates the readme with minimum version of Rust and Breaking Changes policies ([e99990e8](https://github.com/kbknapp/term_size-rs/commit/e99990e89622e988865f16b308571e35f7b39d01))
+  *  updates the docs location to point to docs.rs ([0f4160fc](https://github.com/kbknapp/term_size-rs/commit/0f4160fc37c2311ff2e02f97cb252b2d09a87629))
+
 <a name="v0.3.0"></a>
 ## v0.3.0 (2017-04-09)
 
