@@ -1,5 +1,3 @@
-// |jit-test| --enable-private-methods;
-
 class C {
   #x() { }
   constructor() { this.#x = 1; }

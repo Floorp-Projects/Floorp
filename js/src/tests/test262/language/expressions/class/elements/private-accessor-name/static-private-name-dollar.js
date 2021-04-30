@@ -1,4 +1,3 @@
-// |reftest| shell-option(--enable-private-methods) skip-if(!xulRuntime.shell) -- requires shell-options
 // This file was procedurally generated from the following sources:
 // - src/accessor-names/private-name-dollar.case
 // - src/accessor-names/private/cls-private-expr-static.template
