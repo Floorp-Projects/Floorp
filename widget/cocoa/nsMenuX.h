@@ -236,7 +236,7 @@ class nsMenuX final : public nsMenuParentX,
   // Any runnables for running asynchronous command events.
   // These are only used during automated tests, via ActivateItemAndClose.
   // We keep track of them here so that we can ensure they're run before popuphiding/popuphidden.
-  nsTArray<RefPtr<mozilla::CancelableRunnable>> mPendingCommandRunnables;
+  nsTArray<RefPtr<mozilla::Runnable>> mPendingCommandRunnables;
 
   GeckoNSMenu* mNativeMenu = nil;     // [strong]
   MenuDelegate* mMenuDelegate = nil;  // [strong]
