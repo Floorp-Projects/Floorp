@@ -784,6 +784,7 @@ class SandboxPolicyCommon : public SandboxPolicyBase {
 #ifdef MOZ_ASAN
             .ElseIf(advice == MADV_DONTDUMP, Allow())
 #endif
+            .ElseIf(advice == MADV_MERGEABLE, Error(EPERM))  // bug 1705045
             .Else(InvalidSyscall());
       }
 
@@ -1673,6 +1674,7 @@ class GMPSandboxPolicy : public SandboxPolicyCommon {
 #ifdef MOZ_ASAN
             .ElseIf(advice == MADV_DONTDUMP, Allow())
 #endif
+            .ElseIf(advice == MADV_MERGEABLE, Error(EPERM))  // bug 1705045
             .Else(Error(ENOSYS));
       }
 
