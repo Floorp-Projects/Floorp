@@ -1,13 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- The default document title of an error page (i.e., the contents of the `<title>` tag). -->
-    <string name="mozac_browser_errorpages_page_title">ಪುಟವನ್ನು ಲೋಡ್‍ ಮಾಡುವಲ್ಲಿ ತೊಂದರೆ ಎದುರಾಗಿದೆ</string>
 
     <!-- The button that appears at the bottom of an error page. -->
     <string name="mozac_browser_errorpages_page_refresh">ಮತ್ತೆ ಪ್ರಯತ್ನಿಸು</string>
-
-    <!-- The button that appears at the bottom of an error page. -->
-    <string name="mozac_browser_errorpages_page_go_back">ಹಿಂದಕ್ಕೆ ತೆರಳು</string>
 
     <!-- The document title and heading of an error page shown when a website cannot be loaded for an unknown reason. -->
     <string name="mozac_browser_errorpages_generic_title">ಮನವಿಯನ್ನು ಪೂರ್ಣಗೊಳಿಸಲಾಗಿಲ್ಲ</string>
@@ -41,6 +36,9 @@
 
     <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
     <string name="mozac_browser_errorpages_net_interrupt_title">ಸಂಪರ್ಕಕ್ಕೆ ಅಡಚಣೆಯಾಗಿದೆ</string>
+
+    <!-- The error message shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_message"><![CDATA[]]></string>
 
     <!-- The document title and heading of the error page shown when a website takes too long to load. -->
     <string name="mozac_browser_errorpages_net_timeout_title">ಸಂಪರ್ಕದ ಕಾಲಾವಧಿ ಮುಗಿದಿದೆ</string>

@@ -69,7 +69,7 @@
     <!-- The version on of add-on. -->
     <string name="mozac_feature_addons_version">버전</string>
     <!-- The authors of an add-on. -->
-    <string name="mozac_feature_addons_authors">제작</string>
+    <string name="mozac_feature_addons_authors">제작자</string>
     <!-- The last date that the add-on was updated. -->
     <string name="mozac_feature_addons_last_updated">마지막 업데이트</string>
     <!-- The developer website (Homepage) of the add-on. -->

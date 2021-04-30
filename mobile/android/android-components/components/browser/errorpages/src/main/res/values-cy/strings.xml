@@ -1,13 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- The default document title of an error page (i.e., the contents of the `<title>` tag). -->
-    <string name="mozac_browser_errorpages_page_title">Anhawster llwytho tudalen</string>
 
     <!-- The button that appears at the bottom of an error page. -->
     <string name="mozac_browser_errorpages_page_refresh">Ceisiwch Eto</string>
-
-    <!-- The button that appears at the bottom of an error page. -->
-    <string name="mozac_browser_errorpages_page_go_back">Ewch Nôl</string>
 
     <!-- The document title and heading of an error page shown when a website cannot be loaded for an unknown reason. -->
     <string name="mozac_browser_errorpages_generic_title">Methu Cyflawni’r Cais</string>
@@ -55,7 +50,7 @@
     <string name="mozac_browser_errorpages_net_interrupt_message"><![CDATA[<p>Cysylltodd y porwr yn llwyddiannus, ond amharwyd ar y cysylltiad wrth drosglwyddo gwybodaeth. Rhowch gynnig arall arni.</p>
       <ul>
         <li>Gallai’r wefan fod ar gael dros dro neu’n rhy brysur. Rhowch gynnig arall arni mewn ychydig eiliadau.</li>
-        <li>Os na allwch lwytho unrhyw dudalennau, gwiriwch ddata neu gysylltiad diwifr eich dyfais.</li>
+        <li>Os na allwch lwytho unrhyw dudalennau, gwiriwch ddata neu gysylltiad Wi-Fi eich dyfais.</li>
       </ul>]]></string>
 
     <!-- The document title and heading of the error page shown when a website takes too long to load. -->
@@ -74,7 +69,7 @@
     <!-- The error message shown when a website could not be reached. -->
     <string name="mozac_browser_errorpages_connection_failure_message"><![CDATA[<ul>
      <li>Mae’n bosib fod y wefan yn rhy brysur neu ddim ar gael dros dro. Ceisiwch eto cyn bo hir.</li>
-     <li>Os nad oes modd i chi lwytho unrhyw dudalennau, gwiriwch gysylltiad data neu ddiwifr eich dyfais.</li>
+     <li>Os nad oes modd i chi lwytho unrhyw dudalennau, gwiriwch gysylltiad data neu Wi-Fi eich dyfais.</li>
       </ul>]]></string>
 
     <!-- The document title and heading of the error page shown when a website responds in an unexpected way and the browser cannot continue. -->
@@ -118,7 +113,7 @@
       <p>Amharwyd ar y cysylltiad rhwydwaith wrth negodi cysylltiad. Rhowch gynnig arall arni.</p>
       <ul>
         <li>Gallai’r wefan fod ar gael dros dro neu’n rhy brysur. Rhowch gynnig arall arni mewn ychydig eiliadau.</li>
-        <li>Os na allwch lwytho unrhyw dudalennau, gwiriwch ddata neu gysylltiad diwifr eich dyfais.</li>
+        <li>Os na allwch lwytho unrhyw dudalennau, gwiriwch ddata neu gysylltiad Wi-Fi eich dyfais.</li>
       </ul>
     ]]></string>
 
@@ -169,7 +164,7 @@
         <li>Gwiriwch y cyfeiriad am wallau teipio fel
           <strong>ww</strong>.example.com yn lle
           <strong>www</strong>.example.com.</li>
-        <li> Os na allwch lwytho unrhyw dudalennau, gwiriwch ddata neu gysylltiad diwifr eich dyfais</li>
+        <li> Os na allwch lwytho unrhyw dudalennau, gwiriwch ddata neu gysylltiad Wi-Fi eich dyfais</li>
       </ul>
     ]]></string>
 

@@ -42,4 +42,6 @@
     <string name="mozac_feature_downloads_third_party_app_chooser_dialog_title">Kenderc’hel gant</string>
     <!-- Message that appears when trying to download with an external app fails. %1$s will be replaced with the name the external app. -->--&gt;
     <string name="mozac_feature_downloads_unable_to_open_third_party_app">N’haller ket digeriñ %1$s</string>
+    <!-- Text for the info dialog when write to storage permissions have been denied but user tries to download a file. -->
+    <string name="mozac_feature_downloads_write_external_storage_permissions_needed_message">Aotreoù haeziñ ar restroù ha mediaoù a zo ret kaout a-benn pellgargañ restroù. Mont da arventennoù Android, pouezit war an aotreoù ha pouezit war aotren.</string>
 </resources>
