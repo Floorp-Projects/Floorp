@@ -1,4 +1,3 @@
-// |reftest| shell-option(--enable-private-methods) skip-if(!xulRuntime.shell) -- requires shell-options
 // Copyright (C) 2019 Kubilay Kahveci (Bloomberg LP). All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 

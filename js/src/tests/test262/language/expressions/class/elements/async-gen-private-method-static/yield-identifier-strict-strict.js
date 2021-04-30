@@ -1,4 +1,4 @@
-// |reftest| shell-option(--enable-private-methods) skip-if(!xulRuntime.shell) error:SyntaxError -- requires shell-options
+// |reftest| error:SyntaxError
 'use strict';
 // This file was procedurally generated from the following sources:
 // - src/async-generators/yield-identifier-strict.case
