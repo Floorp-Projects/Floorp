@@ -446,9 +446,6 @@
     <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
     <string name="exceptions_empty_message_learn_more_link">Ne saber mai</string>
 
-    <!-- Description in Quick Settings that tells user tracking protection is off globally for all sites, and links to Settings to turn it on -->
-    <string name="preferences_tracking_protection_turned_off_globally">Desactivada globalament, anatz als Paramètres per l’activar.</string>
-
     <!-- Preference switch for Telemetry -->
     <string name="preferences_telemetry">Telemetria</string>
     <!-- Preference switch for usage and technical data collection -->
@@ -459,6 +456,8 @@
     <string name="preferences_marketing_data">Donadas marketing</string>
     <!-- Preference description for marketing data collection, parameter is the app name (e.g. Firefox) -->
     <string name="preferences_marketing_data_description">Parteja de donadas sus las foncionalitats qu’utilizatz amb Leanplum, nòstre provesidor de marketing mobil.</string>
+    <!-- Preference description for marketing data collection -->
+    <string name="preferences_marketing_data_description2">Parteja de donadas basicas d’utilizacion amb Adjust, nòstre prestatari de marketing mobil</string>
     <!-- Title for studies preferences -->
     <string name="preference_experiments_2">Estudis</string>
     <!-- Summary for studies preferences -->
@@ -801,8 +800,6 @@
     <string name="bookmark_delete_folder_snackbar">%1$s suprimit</string>
     <!-- Screen title for adding a bookmarks folder -->
     <string name="bookmark_add_folder">Apondre un dossièr</string>
-    <!-- deprecated: Snackbar title shown after a bookmark has been created. -->
-    <string name="bookmark_created_snackbar">Marcapagina creat.</string>
     <!-- Snackbar title shown after a bookmark has been created. -->
     <string name="bookmark_saved_snackbar">Marcapagina apondut !</string>
     <!-- Snackbar edit button shown after a bookmark has been created. -->
@@ -1775,19 +1772,7 @@
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Suprimir</string>
 
-    <!-- Deprecated: text for the firefox account onboarding card header
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_firefox_account_header">Ne fasètz mai amb %s.</string>
-
     <!-- Content description radio buttons with a link to more information -->
     <string name="radio_preference_info_content_description">Clicatz per aver de detalhs</string>
 
-    <!-- Deprecated: No Open Tabs Message Header -->
-    <string name="no_collections_header1">Amassatz çò que compta per vos</string>
-    <!-- Deprecated: Label to describe what collections are to a new user without any collections -->
-    <string name="no_collections_description1">Agropatz de recèrcas, de sites e d’onglets similaris per i accedir rapidament mai tard.</string>
-    <!-- Deprecated: text for the firefox account onboarding card header when we detect you're already signed in to -->
-    <string name="onboarding_firefox_account_auto_signin_header_2">Sètz connectat coma %s sus un autre navegador Firefox sus aqueste telefòn. Volètz vos connectar amb aqueste compte ?</string>
-    <!-- Deprecated: Describes the add to homescreen functionality -->
-    <string name="add_to_homescreen_description">Podètz facilament apondre aqueste site a vòstre ecran d’acuèlh de telefòn per i accedir e navigar mai rapidament coma se foguèssetz dins l’aplicacion.</string>
-</resources>
+    </resources>

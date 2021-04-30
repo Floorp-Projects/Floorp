@@ -453,9 +453,6 @@
     <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
     <string name="exceptions_empty_message_learn_more_link">Weitere Informationen</string>
 
-    <!-- Description in Quick Settings that tells user tracking protection is off globally for all sites, and links to Settings to turn it on -->
-    <string name="preferences_tracking_protection_turned_off_globally">Global ausgeschaltet. Öffnen Sie die Einstellungen, um diesen einzuschalten.</string>
-
     <!-- Preference switch for Telemetry -->
     <string name="preferences_telemetry">Telemetrie</string>
     <!-- Preference switch for usage and technical data collection -->
@@ -466,6 +463,8 @@
     <string name="preferences_marketing_data">Marketing-Daten</string>
     <!-- Preference description for marketing data collection, parameter is the app name (e.g. Firefox) -->
     <string name="preferences_marketing_data_description">Gibt Daten darüber, welche Funktionen Sie in %1$s verwenden, an Leanplum weiter, unseren Anbieter für mobiles Marketing.</string>
+    <!-- Preference description for marketing data collection -->
+    <string name="preferences_marketing_data_description2">Teilt grundlegende Nutzungsdaten mit Adjust, unserem mobilen Marketing-Anbieter</string>
     <!-- Title for studies preferences -->
     <string name="preference_experiments_2">Studien</string>
     <!-- Summary for studies preferences -->
@@ -807,8 +806,6 @@
     <string name="bookmark_delete_folder_snackbar">%1$s gelöscht</string>
     <!-- Screen title for adding a bookmarks folder -->
     <string name="bookmark_add_folder">Ordner hinzufügen</string>
-    <!-- deprecated: Snackbar title shown after a bookmark has been created. -->
-    <string name="bookmark_created_snackbar">Lesezeichen erstellt</string>
     <!-- Snackbar title shown after a bookmark has been created. -->
     <string name="bookmark_saved_snackbar">Lesezeichen gespeichert</string>
     <!-- Snackbar edit button shown after a bookmark has been created. -->
@@ -1782,20 +1779,7 @@
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Entfernen</string>
 
-    <!-- Deprecated: text for the firefox account onboarding card header
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_firefox_account_header">Machen Sie das Beste aus %s.</string>
-
     <!-- Content description radio buttons with a link to more information -->
     <string name="radio_preference_info_content_description">Klicken Sie hier für weitere Details</string>
-
-    <!-- Deprecated: No Open Tabs Message Header -->
-    <string name="no_collections_header1">Sammeln Sie die Dinge, die Ihnen wichtig sind</string>
-    <!-- Deprecated: Label to describe what collections are to a new user without any collections -->
-    <string name="no_collections_description1">Gruppieren Sie ähnliche Suchanfragen, Websites und Tabs, um später schnell darauf zugreifen zu können.</string>
-    <!-- Deprecated: text for the firefox account onboarding card header when we detect you're already signed in to -->
-    <string name="onboarding_firefox_account_auto_signin_header_2">Sie sind in einem anderen Firefox-Browser auf diesem Handy als %s angemeldet. Möchten Sie sich mit diesem Konto anmelden?</string>
-    <!-- Deprecated: Describes the add to homescreen functionality -->
-    <string name="add_to_homescreen_description">Sie können diese Website einfach zum Startbildschirm Ihres Handys hinzufügen, um unmittelbaren Zugriff darauf zu haben und sie wie eine App zu nutzen.</string>
 
     </resources>

@@ -458,9 +458,6 @@
     <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
     <string name="exceptions_empty_message_learn_more_link">详细了解</string>
 
-    <!-- Description in Quick Settings that tells user tracking protection is off globally for all sites, and links to Settings to turn it on -->
-    <string name="preferences_tracking_protection_turned_off_globally">已全局关闭，请前往“设置”开启。</string>
-
     <!-- Preference switch for Telemetry -->
     <string name="preferences_telemetry">遥测技术</string>
     <!-- Preference switch for usage and technical data collection -->
@@ -471,6 +468,8 @@
     <string name="preferences_marketing_data">营销数据</string>
     <!-- Preference description for marketing data collection, parameter is the app name (e.g. Firefox) -->
     <string name="preferences_marketing_data_description">与我们的移动营销供应商 Leanplum 分享您使用 %1$s 的哪些功能。</string>
+    <!-- Preference description for marketing data collection -->
+    <string name="preferences_marketing_data_description2">与我们的移动营销服务商 Adjust 分享基本使用数据</string>
     <!-- Title for studies preferences -->
     <string name="preference_experiments_2">研究</string>
     <!-- Summary for studies preferences -->
@@ -814,8 +813,6 @@
     <string name="bookmark_delete_folder_snackbar">已删除 %1$s</string>
     <!-- Screen title for adding a bookmarks folder -->
     <string name="bookmark_add_folder">新建文件夹</string>
-    <!-- deprecated: Snackbar title shown after a bookmark has been created. -->
-    <string name="bookmark_created_snackbar">书签已创建。</string>
     <!-- Snackbar title shown after a bookmark has been created. -->
     <string name="bookmark_saved_snackbar">书签已保存！</string>
     <!-- Snackbar edit button shown after a bookmark has been created. -->
@@ -1791,20 +1788,7 @@
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">移除</string>
 
-    <!-- Deprecated: text for the firefox account onboarding card header
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_firefox_account_header">全面体验 %s。</string>
-
     <!-- Content description radio buttons with a link to more information -->
     <string name="radio_preference_info_content_description">点击了解更多信息</string>
-
-    <!-- Deprecated: No Open Tabs Message Header -->
-    <string name="no_collections_header1">有用的东西收藏在这</string>
-    <!-- Deprecated: Label to describe what collections are to a new user without any collections -->
-    <string name="no_collections_description1">将相似的搜索查询、网站和标签页归入一组，方便以后快速访问。</string>
-    <!-- Deprecated: text for the firefox account onboarding card header when we detect you're already signed in to -->
-    <string name="onboarding_firefox_account_auto_signin_header_2">您已在此手机上的其他 Firefox 浏览器上以 %s 身份登录。也要使用此账号登录吗？</string>
-    <!-- Deprecated: Describes the add to homescreen functionality -->
-    <string name="add_to_homescreen_description">您可以轻松将此网站添加到手机主屏幕，以便迅捷访问并以类似应用的体验畅享浏览。</string>
 
     </resources>

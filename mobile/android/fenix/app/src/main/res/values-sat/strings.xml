@@ -17,10 +17,6 @@
     <string name="no_open_tabs_description">ᱟᱢᱟᱜ ᱠᱷᱩᱞᱟᱹ ᱟᱠᱟᱱ ᱴᱮᱵ ᱠᱚ ᱫᱚ ᱱᱚᱰᱮ ᱫᱮᱠᱷᱟᱣᱜᱼᱟ ᱾</string>
     <!-- No Private Tabs Message Description -->
     <string name="no_private_tabs_description">ᱟᱢᱟᱜ ᱱᱤᱡᱚᱨᱟᱜ ᱴᱮᱵᱽ ᱠᱚ ᱫᱚ ᱱᱚᱰᱮ ᱩᱫᱩᱜ ᱦᱩᱭᱩᱜ-ᱟ ᱾</string>
-    <!-- Default title for pinned Baidu top site that links to Baidu home page  -->
-    <string name="default_top_site_baidu">ᱵᱟᱭᱰᱩ</string>
-    <!-- Default title for pinned JD top site that links to JD home page  -->
-    <string name="default_top_site_jd">JD</string>
     <!-- Message announced to the user when tab tray is selected with 1 tab -->
     <string name="open_tab_tray_single">1 ᱴᱮᱵᱽ ᱠᱷᱩᱞᱟᱹᱭ ᱢᱮ ᱾ ᱴᱮᱵᱽ ᱵᱚᱫᱚᱞ ᱞᱟᱹᱜᱤᱫ ᱴᱤᱯᱟᱹᱣ ᱢᱮ ᱾</string>
     <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
@@ -175,6 +171,11 @@
 
     <!-- Browser menu button to configure reader mode appearance e.g. the used font type and size -->
     <string name="browser_menu_read_appearance">ᱧᱮᱞ ᱵᱤᱰᱟᱹᱣ</string>
+
+    <!-- Browser menu label for adding a bookmark -->
+    <string name="browser_menu_add">ᱥᱮᱞᱮᱫᱽ</string>
+    <!-- Browser menu label for editing a bookmark -->
+    <string name="browser_menu_edit">ᱥᱟᱯᱲᱟᱣ</string>
 
     <!-- Error message to show when the user tries to access a scheme not
         handled by the app (Ex: blob, tel etc) -->
@@ -871,15 +872,15 @@
     <string name="tracking_protection_on">ᱪᱟᱹᱞᱩ</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">ᱵᱚᱸᱫᱚ</string>
-    <!-- Label that indicates that all video and audio autoplay is allowed -->
+    <!-- Label for global setting that indicates that all video and audio autoplay is allowed -->
     <string name="preference_option_autoplay_allowed2">ᱟᱰᱤᱭᱳ ᱟᱨ ᱣᱤᱰᱤᱭᱳ ᱦᱮᱥᱟᱨᱤᱭᱟᱹ ᱢᱮ</string>
     <!-- Label that indicates that video and audio autoplay is only allowed over Wi-Fi -->
     <string name="preference_option_autoplay_allowed_wifi_only2">ᱥᱮᱞᱩᱞᱟᱹᱨ ᱰᱟᱴᱟ ᱨᱮᱜᱤ ᱟᱰᱤᱭᱳ ᱟᱨ ᱣᱤᱰᱤᱭᱳ ᱟᱴᱠᱟᱣ ᱢᱮ</string>
     <!-- Subtext that explains 'autoplay on Wi-Fi only' option -->
     <string name="preference_option_autoplay_allowed_wifi_subtext">ᱟᱰᱤᱭᱳ ᱟᱨ ᱣᱤᱰᱤᱭᱳ Wi-Fi ᱨᱮ ᱮᱱᱮᱡᱚᱣᱟ</string>
-    <!-- Label that indicates that video autoplay is allowed, but audio autoplay is blocked -->
+    <!-- Label for global setting that indicates that video autoplay is allowed, but audio autoplay is blocked -->
     <string name="preference_option_autoplay_block_audio2">ᱟᱰᱤᱭᱳ ᱜᱤ ᱟᱴᱠᱟᱣ ᱢᱮ</string>
-    <!-- Label that indicates that all video and audio autoplay is blocked -->
+    <!-- Label for global setting that indicates that all video and audio autoplay is blocked -->
     <string name="preference_option_autoplay_blocked3">ᱟᱰᱤᱭᱳ ᱟᱨ ᱣᱤᱰᱤᱭᱳ ᱟᱴᱠᱟᱣ ᱢᱮ</string>
     <!-- Summary of delete browsing data on quit preference if it is set to on -->
     <string name="delete_browsing_data_quit_on">ᱪᱚᱞᱩ</string>
@@ -1140,9 +1141,6 @@
     <string name="onboarding_header">%s ᱨᱮ ᱥᱟᱹᱜᱩᱱ ᱫᱟᱨᱟᱢ!</string>
     <!-- text for the Firefox Accounts section header -->
     <string name="onboarding_fxa_section_header">ᱞᱟᱦᱟ ᱠᱷᱚᱱ ᱠᱷᱟᱛᱟ ᱢᱮᱱᱟᱜ ᱛᱟᱢᱟ?</string>
-    <!-- text for the Firefox Preview feature section header
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_feature_section_header">%s ᱵᱟᱵᱚᱛ ᱵᱟᱲᱟᱭ ᱢᱮ</string>
     <!-- text for the "What's New" onboarding card header -->
     <string name="onboarding_whats_new_header1">ᱧᱮᱞ ᱢᱮ ᱪᱮᱫ ᱱᱟᱶᱟ ᱢᱮᱱᱟᱜ-ᱟ</string>
     <!-- text for the "what's new" onboarding card description
@@ -1150,10 +1148,6 @@
     <string name="onboarding_whats_new_description">ᱨᱤᱰᱤᱡᱟᱭᱤᱱ %s ᱵᱟᱵᱚᱛ ᱠᱩᱞᱤ ᱢᱮᱱᱟᱜᱼᱟ? ᱵᱚᱫᱚᱞ ᱠᱚ ᱵᱟᱰᱟᱭ ᱥᱟᱱᱟᱢ ᱠᱟᱱᱟ ᱥᱮ?</string>
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
     <string name="onboarding_whats_new_description_linktext">ᱱᱚᱰᱮ ᱛᱮᱞᱟ ᱠᱚ ᱧᱟᱢ ᱟᱢ</string>
-    <!-- text for the Firefox account onboarding sign in card header -->
-    <string name="onboarding_account_sign_in_header">ᱵᱩᱠᱢᱟᱨᱠ, ᱫᱟᱱᱟᱝ ᱥᱟᱵᱟᱫ ᱟᱨ ᱵᱟᱹᱲᱛᱤ ᱠᱚ ᱞᱟᱹᱜᱤᱛ ᱟᱢᱟᱜ Firefox ᱠᱷᱟᱛᱟ ᱨᱮ ᱥᱭᱸᱠ ᱮᱦᱚᱵᱽ ᱢᱮ ᱾</string>
-    <!-- Text for the button to learn more about signing in to your Firefox account -->
-    <string name="onboarding_manual_sign_in_learn_more">ᱰᱷᱮᱨ ᱥᱮᱬᱟᱭ ᱢᱮ</string>
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
         another Firefox browser. (The word `Firefox` should not be translated)
         The first parameter is the email of the detected user's account -->
@@ -1162,35 +1156,18 @@
     <string name="onboarding_firefox_account_auto_signin_confirm">ᱦᱮᱸ, ᱵᱚᱞᱚ ᱪᱷᱚᱭᱤᱧ ᱢᱮ</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
     <string name="onboarding_firefox_account_signing_in">ᱵᱚᱞᱚᱱᱟ ᱠᱟᱹᱱᱟᱹᱧ…</string>
-    <!-- text for the button to manually sign into Firefox account. The word "Firefox" should not be translated -->
-    <string name="onboarding_firefox_account_sign_in">Firefox ᱨᱮ ᱵᱚᱞᱚᱱ ᱥᱩᱦᱤ ᱢᱮ</string>
     <!-- text for the button to stay signed out when presented with an option to automatically sign-in. -->
     <string name="onboarding_firefox_account_stay_signed_out">ᱵᱟᱦᱨᱮ ᱨᱮᱜᱮ ᱛᱟᱦᱮᱸ ᱠᱚᱜ ᱢᱮ</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">ᱥᱭᱸᱠ ᱪᱟᱹᱞᱩ ᱢᱮᱱᱟᱜ-ᱟ</string>
     <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
     <string name="onboarding_firefox_account_automatic_signin_failed">ᱵᱚᱞᱚᱱ ᱥᱩᱦᱤ ᱰᱤᱜᱟᱹᱣᱮᱱᱟ</string>
-    <!-- text for the tracking protection onboarding card header -->
-    <string name="onboarding_tracking_protection_header_2">ᱟᱡ ᱛᱮᱭᱟᱜ ᱱᱤᱥᱚᱱ</string>
-    <!-- text for the tracking protection card description
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_tracking_protection_description_2">ᱯᱨᱭᱣᱮᱥᱭ ᱟᱨ ᱨᱩᱠᱷᱤᱭᱟᱹ ᱥᱟᱡᱟᱣ ᱯᱟᱧᱡᱟ ᱫᱟᱱᱟᱲ, ᱢᱟᱞᱣᱮᱨ ᱟᱨ ᱠᱚᱢᱯᱟᱭ ᱠᱚ ᱮᱢᱟᱱ ᱵᱞᱚᱠ ᱠᱚᱣᱟ ᱠᱚ ᱚᱠᱚᱭ ᱫᱚ ᱟᱢ ᱯᱟᱧᱡᱟ ᱠᱟᱫ ᱢᱮᱭᱟ ᱾</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">ᱵᱮᱥᱟᱜ (ᱢᱩᱞ ᱯᱷᱮᱲᱟᱛ)</string>
-    <!-- text for standard blocking option button description -->
-    <string name="onboarding_tracking_protection_standard_button_description_2">ᱯᱟᱧᱡᱟ ᱫᱟᱱᱟᱲ ᱠᱚ ᱵᱞᱚᱠ ᱠᱚᱣᱟᱭ ᱾ ᱥᱟᱦᱴᱟ ᱫᱚ ᱢᱟᱲᱟᱝ ᱞᱮᱠᱷᱟ ᱜᱮ ᱞᱟᱫᱮᱜᱼᱟ ᱾</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_button">ᱱᱤᱦᱟᱹᱛ (ᱵᱟᱛᱟᱣᱮᱢᱠᱟᱱᱟ)</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_option">ᱱᱤᱦᱟᱹᱛ</string>
-    <!-- text for strict blocking option button description -->
-    <string name="onboarding_tracking_protection_strict_button_description_2">ᱡᱟᱹᱥᱛᱤ ᱯᱟᱧᱡᱟ ᱫᱟᱱᱟᱲ, ᱰᱷᱟᱣᱨᱟ ᱟᱨ ᱴᱟᱴᱠᱟ ᱚᱰᱚᱠ ᱠᱚ ᱟᱴᱠᱟᱣ ᱟᱭ , ᱥᱟᱠᱟᱢ ᱞᱚᱜᱚᱱ ᱞᱚᱰᱚᱜᱼᱟ ᱦᱮᱞᱮ ᱠᱤᱪᱷᱤ ᱡᱤᱱᱤᱥ ᱴᱷᱤᱠ ᱥᱮ ᱵᱟᱭ ᱠᱟᱹᱢᱤᱟᱭ ᱾</string>
-    <!-- text for the toolbar position card header
-        In English this is an idiom for "choose a side as in an argument or fight"
-        but it is ok to make this more literally about "choosing a position in a physical space -->
-    <string name="onboarding_toolbar_position_header">ᱡᱟᱭᱜᱟ ᱦᱟᱛᱟᱣ ᱢᱮ</string>
-    <!-- text for the toolbar position card description -->
-    <string name="onboarding_toolbar_position_description">ᱞᱟᱛᱟᱨ ᱴᱩᱞᱵᱟᱨ ᱥᱟᱞᱟᱜ ᱢᱤᱫ ᱛᱤ ᱵᱨᱟᱣᱡᱤᱝ ᱥᱟᱞᱟᱜ ᱪᱮᱛᱟᱱ ᱥᱮᱱ ᱨᱟᱠᱟᱵ ᱨᱮᱭᱟᱜ ᱪᱮᱥᱴᱟᱭ ᱢᱮ ᱾</string>
     <!-- text for the private browsing onboarding card header -->
     <string name="onboarding_private_browsing_header">ᱱᱤᱡᱮᱨᱟᱜ ᱨᱮ ᱵᱨᱟᱩᱡ ᱢᱮ</string>
     <!-- text for the private browsing onboarding card description
@@ -1214,8 +1191,6 @@
     <!-- Onboarding theme -->
     <!-- text for the theme picker onboarding card header -->
     <string name="onboarding_theme_picker_header">ᱩᱭᱦᱟᱹᱨ ᱵᱟᱪᱷᱟᱣ ᱛᱟᱢ</string>
-    <!-- text for the theme picker onboarding card description -->
-    <string name="onboarding_theme_picker_description1">ᱛᱤᱱᱟᱹᱜ ᱜᱟᱱ ᱵᱮᱴᱨᱭ ᱵᱚᱪᱚᱛ ᱢᱮ ᱟᱨ ᱟᱢᱟᱜ ᱢᱮᱫ ᱵᱟᱸᱪᱟᱣ ᱛᱟᱢ ᱧᱩᱛ ᱩᱭᱦᱟᱹᱨ ᱪᱟᱹᱞᱩ ᱠᱟᱛᱮ ᱾</string>
     <!-- Automatic theme setting (will follow device setting) -->
     <string name="onboarding_theme_automatic_title">ᱟᱪᱛᱮ</string>
     <!-- Summary of automatic theme setting (will follow device setting) -->
@@ -1269,14 +1244,10 @@
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">ᱰᱷᱮᱨ ᱥᱮᱬᱟᱭ ᱢᱮ</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">ᱱᱟᱯ (ᱢᱩᱞ ᱯᱷᱮᱲᱟᱛ)</string>
-    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_3">ᱠᱚᱢ ᱯᱟᱧᱡᱟ ᱫᱟᱱᱟᱲ ᱠᱚ ᱵᱚᱸᱫᱚᱭᱮᱟ ᱾ ᱥᱟᱦᱴᱟ ᱢᱟᱲᱟᱝ ᱞᱮᱠᱷᱟ ᱞᱟᱫᱮᱜᱼᱟ ᱾</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">ᱢᱩᱞ ᱜᱷᱮᱨ ᱮᱥᱮᱫ ᱨᱚᱠᱷᱭᱟ ᱫᱚ ᱪᱮᱫ ᱮ ᱵᱞᱚᱠ ᱪᱷᱚ ᱠᱮᱜᱼᱟᱭ</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">ᱱᱤᱦᱟᱹᱛ</string>
-    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description_2">ᱡᱟᱹᱥᱛᱤ ᱯᱟᱧᱡᱟ ᱫᱟᱱᱟᱲ, ᱰᱷᱟᱣᱨᱟ ᱟᱨ ᱴᱟᱴᱠᱟ ᱚᱰᱚᱠ ᱠᱚ ᱟᱴᱠᱟᱣ ᱟᱭ , ᱥᱟᱠᱟᱢ ᱞᱚᱜᱚᱱ ᱞᱚᱰᱚᱜᱼᱟ ᱦᱮᱞᱮ ᱠᱤᱪᱷᱤ ᱡᱤᱱᱤᱥ ᱴᱷᱤᱠ ᱥᱮ ᱵᱟᱭ ᱠᱟᱹᱢᱤᱟᱭ ᱾</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">ᱴᱷᱤᱴ ᱜᱷᱮᱨ ᱮᱥᱮᱫ ᱨᱩᱠᱷᱭᱟ ᱫᱚ ᱪᱮᱫ ᱵᱞᱚᱠ ᱠᱮᱜᱼᱟᱭ</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
