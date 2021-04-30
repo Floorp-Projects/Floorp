@@ -35,7 +35,12 @@ MsaaAccessible::~MsaaAccessible() {
 
 void MsaaAccessible::MsaaShutdown() {
   if (mID != kNoID) {
-    auto doc = static_cast<DocAccessibleWrap*>(LocalAcc()->Document());
+    // Don't use LocalAcc() here because it requires that the Accessible is
+    // not defunct. When shutting down, the Accessible might already be
+    // marked defunct. It's safe for us to call LocalAccessible::Document() here
+    // regardless.
+    auto localAcc = static_cast<AccessibleWrap*>(this);
+    auto doc = static_cast<DocAccessibleWrap*>(localAcc->Document());
     // Accessibles can be shut down twice in some cases. When this happens,
     // doc will be null.
     if (doc) {
@@ -246,7 +251,8 @@ void MsaaAccessible::FireWinEvent(LocalAccessible* aTarget,
 }
 
 AccessibleWrap* MsaaAccessible::LocalAcc() {
-  return static_cast<AccessibleWrap*>(this);
+  auto acc = static_cast<AccessibleWrap*>(this);
+  return acc->IsDefunct() ? nullptr : acc;
 }
 
 /**
@@ -283,7 +289,7 @@ MsaaAccessible::ResolveChild(const VARIANT& aVarChild,
     return E_INVALIDARG;
   }
 
-  if (LocalAcc()->IsDefunct()) {
+  if (!LocalAcc()) {
     return CO_E_OBJNOTCONNECTED;
   }
 
@@ -375,11 +381,12 @@ already_AddRefed<IAccessible> MsaaAccessible::GetIAccessibleFor(
   RefPtr<IAccessible> result;
 
   AccessibleWrap* localAcc = LocalAcc();
+  if (!localAcc) {
+    *aIsDefunct = true;
+    return nullptr;
+  }
+
   if (varChild.lVal == CHILDID_SELF) {
-    *aIsDefunct = localAcc->IsDefunct();
-    if (*aIsDefunct) {
-      return nullptr;
-    }
     localAcc->GetNativeInterface(getter_AddRefs(result));
     if (result) {
       return result.forget();
@@ -620,7 +627,7 @@ MsaaAccessible::get_accParent(IDispatch __RPC_FAR* __RPC_FAR* ppdispParent) {
   *ppdispParent = nullptr;
 
   LocalAccessible* localAcc = LocalAcc();
-  if (localAcc->IsDefunct()) return CO_E_OBJNOTCONNECTED;
+  if (!localAcc) return CO_E_OBJNOTCONNECTED;
 
   LocalAccessible* xpParentAcc = localAcc->LocalParent();
   if (!xpParentAcc) return S_FALSE;
@@ -636,7 +643,7 @@ MsaaAccessible::get_accChildCount(long __RPC_FAR* pcountChildren) {
   *pcountChildren = 0;
 
   LocalAccessible* localAcc = LocalAcc();
-  if (localAcc->IsDefunct()) return CO_E_OBJNOTCONNECTED;
+  if (!localAcc) return CO_E_OBJNOTCONNECTED;
 
   if (nsAccUtils::MustPrune(localAcc)) return S_OK;
 
@@ -651,7 +658,7 @@ MsaaAccessible::get_accChild(
   if (!ppdispChild) return E_INVALIDARG;
 
   *ppdispChild = nullptr;
-  if (LocalAcc()->IsDefunct()) return CO_E_OBJNOTCONNECTED;
+  if (!LocalAcc()) return CO_E_OBJNOTCONNECTED;
 
   // IAccessible::accChild is used to return this accessible or child accessible
   // at the given index or to get an accessible by child ID in the case of
@@ -959,7 +966,7 @@ MsaaAccessible::get_accFocus(
   //              for the child object with the keyboard focus.
   // clang-format on
   LocalAccessible* localAcc = LocalAcc();
-  if (localAcc->IsDefunct()) return CO_E_OBJNOTCONNECTED;
+  if (!localAcc) return CO_E_OBJNOTCONNECTED;
 
   // Return the current IAccessible child that has focus
   LocalAccessible* focusedAccessible = localAcc->FocusedChild();
@@ -1091,7 +1098,7 @@ MsaaAccessible::get_accSelection(VARIANT __RPC_FAR* pvarChildren) {
   pvarChildren->vt = VT_EMPTY;
 
   LocalAccessible* localAcc = LocalAcc();
-  if (localAcc->IsDefunct()) return CO_E_OBJNOTCONNECTED;
+  if (!localAcc) return CO_E_OBJNOTCONNECTED;
 
   if (!localAcc->IsSelect()) {
     return S_OK;
@@ -1216,7 +1223,7 @@ MsaaAccessible::accLocation(
   }
 
   LocalAccessible* localAcc = LocalAcc();
-  if (localAcc->IsDefunct()) {
+  if (!localAcc) {
     return CO_E_OBJNOTCONNECTED;
   }
 
@@ -1327,7 +1334,7 @@ MsaaAccessible::accHitTest(
   VariantInit(pvarChild);
 
   LocalAccessible* localAcc = LocalAcc();
-  if (localAcc->IsDefunct()) return CO_E_OBJNOTCONNECTED;
+  if (!localAcc) return CO_E_OBJNOTCONNECTED;
 
   LocalAccessible* accessible = localAcc->LocalChildAtPoint(
       xLeft, yTop, Accessible::EWhichChildAtPoint::DirectChild);
