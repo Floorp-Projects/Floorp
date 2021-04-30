@@ -8,6 +8,12 @@
 
 #import <Cocoa/Cocoa.h>
 
+#include "mozilla/RefPtr.h"
+
+namespace mozilla {
+class Runnable;
+}
+
 /*
  * MOZMenuOpeningCoordinator is a workaround for the fact that opening an NSMenu creates a nested
  * event loop. This event loop is only exited after the menu is closed. The caller of
@@ -31,6 +37,10 @@
 // If the menu opening request for aHandle hasn't been processed yet, cancel it.
 // Can only be called on the main thread.
 - (void)cancelAsynchronousOpening:(NSInteger)aHandle;
+
+// Run aRunnable once the nested event loop of the currently open menu has been exited.
+// If no menu is currently open, post the runnable with NS_DispatchToCurrentThread.
+- (void)runAfterMenuClosed:(RefPtr<mozilla::Runnable>&&)aRunnable;
 
 @end
 
