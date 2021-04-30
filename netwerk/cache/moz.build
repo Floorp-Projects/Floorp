@@ -7,37 +7,13 @@
 with Files("**"):
     BUG_COMPONENT = ("Core", "Networking: Cache")
 
-XPIDL_SOURCES += [
-    "nsICache.idl",
-    "nsICacheEntryDescriptor.idl",
-    "nsICacheListener.idl",
-    "nsICacheService.idl",
-    "nsICacheSession.idl",
-    "nsICacheVisitor.idl",
-]
-
-XPIDL_MODULE = "necko_cache"
-
 EXPORTS += [
-    "nsApplicationCache.h",
-    "nsApplicationCacheService.h",
-    "nsCacheDevice.h",
-    "nsCacheService.h",
     "nsDeleteDir.h",
-    "nsDiskCacheDeviceSQL.h",
 ]
 
 UNIFIED_SOURCES += [
-    "nsApplicationCacheService.cpp",
-    "nsCache.cpp",
-    "nsCacheEntry.cpp",
-    "nsCacheEntryDescriptor.cpp",
-    "nsCacheMetaData.cpp",
-    "nsCacheService.cpp",
-    "nsCacheSession.cpp",
     "nsCacheUtils.cpp",
     "nsDeleteDir.cpp",
-    "nsDiskCacheDeviceSQL.cpp",
 ]
 
 FINAL_LIBRARY = "xul"
