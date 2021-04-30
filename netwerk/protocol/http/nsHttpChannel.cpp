@@ -1035,54 +1035,6 @@ void nsHttpChannel::HandleAsyncNotModified() {
   if (mLoadGroup) mLoadGroup->RemoveRequest(this, nullptr, mStatus);
 }
 
-void nsHttpChannel::HandleAsyncFallback() {
-  MOZ_ASSERT(!mCallOnResume, "How did that happen?");
-
-  if (mSuspendCount) {
-    LOG(("Waiting until resume to do async fallback [this=%p]\n", this));
-    mCallOnResume = [](nsHttpChannel* self) {
-      self->HandleAsyncFallback();
-      return NS_OK;
-    };
-    return;
-  }
-
-  nsresult rv = NS_OK;
-
-  LOG(("nsHttpChannel::HandleAsyncFallback [this=%p]\n", this));
-
-  // since this event is handled asynchronously, it is possible that this
-  // channel could have been canceled, in which case there would be no point
-  // in processing the fallback.
-  if (!mCanceled) {
-    PushRedirectAsyncFunc(&nsHttpChannel::ContinueHandleAsyncFallback);
-    bool waitingForRedirectCallback;
-    rv = ProcessFallback(&waitingForRedirectCallback);
-    if (waitingForRedirectCallback) return;
-    PopRedirectAsyncFunc(&nsHttpChannel::ContinueHandleAsyncFallback);
-  }
-
-  rv = ContinueHandleAsyncFallback(rv);
-  MOZ_ASSERT(NS_SUCCEEDED(rv));
-}
-
-nsresult nsHttpChannel::ContinueHandleAsyncFallback(nsresult rv) {
-  if (!mCanceled && (NS_FAILED(rv) || !LoadFallingBack())) {
-    // If ProcessFallback fails, then we have to send out the
-    // OnStart/OnStop notifications.
-    LOG(("ProcessFallback failed [rv=%" PRIx32 ", %d]\n",
-         static_cast<uint32_t>(rv), LoadFallingBack()));
-    mStatus = NS_FAILED(rv) ? rv : NS_ERROR_DOCUMENT_NOT_CACHED;
-    DoNotifyListener();
-  }
-
-  StoreIsPending(false);
-
-  if (mLoadGroup) mLoadGroup->RemoveRequest(this, nullptr, mStatus);
-
-  return rv;
-}
-
 nsresult nsHttpChannel::SetupTransaction() {
   LOG(("nsHttpChannel::SetupTransaction [this=%p, cos=%u, prio=%d]\n", this,
        mClassOfService, mPriority));
@@ -2594,22 +2546,7 @@ nsresult nsHttpChannel::ContinueProcessResponse4(nsresult rv) {
 }
 
 nsresult nsHttpChannel::ProcessNormal() {
-  nsresult rv;
-
   LOG(("nsHttpChannel::ProcessNormal [this=%p]\n", this));
-
-  bool succeeded;
-  rv = GetRequestSucceeded(&succeeded);
-  if (NS_SUCCEEDED(rv) && !succeeded) {
-    PushRedirectAsyncFunc(&nsHttpChannel::ContinueProcessNormal);
-    bool waitingForRedirectCallback;
-    Unused << ProcessFallback(&waitingForRedirectCallback);
-    if (waitingForRedirectCallback) {
-      // The transaction has been suspended by ProcessFallback.
-      return NS_OK;
-    }
-    PopRedirectAsyncFunc(&nsHttpChannel::ContinueProcessNormal);
-  }
 
   return ContinueProcessNormal(NS_OK);
 }
@@ -2623,12 +2560,6 @@ nsresult nsHttpChannel::ContinueProcessNormal(nsresult rv) {
     mStatus = rv;
     DoNotifyListener();
     return rv;
-  }
-
-  if (LoadFallingBack()) {
-    // Do not continue with normal processing, fallback is in
-    // progress now.
-    return NS_OK;
   }
 
   // if we're here, then any byte-range requests failed to result in a partial
@@ -3400,45 +3331,6 @@ nsresult nsHttpChannel::ProcessNotModified(
   });
 }
 
-nsresult nsHttpChannel::ProcessFallback(bool* waitingForRedirectCallback) {
-  LOG(("nsHttpChannel::ProcessFallback [this=%p]\n", this));
-
-  *waitingForRedirectCallback = false;
-  StoreFallingBack(false);
-
-  return NS_OK;
-}
-
-nsresult nsHttpChannel::ContinueProcessFallback(nsresult rv) {
-  AutoRedirectVetoNotifier notifier(this);
-
-  if (NS_FAILED(rv)) return rv;
-
-  MOZ_ASSERT(mRedirectChannel, "No redirect channel?");
-
-  // Make sure to do this after we received redirect veto answer,
-  // i.e. after all sinks had been notified
-  mRedirectChannel->SetOriginalURI(mOriginalURI);
-
-  rv = mRedirectChannel->AsyncOpen(mListener);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (mLoadFlags & LOAD_INITIAL_DOCUMENT_URI) {
-    MaybeWarnAboutAppCache();
-  }
-
-  // close down this channel
-  Cancel(NS_BINDING_REDIRECTED);
-
-  notifier.RedirectSucceeded();
-
-  ReleaseListeners();
-
-  StoreFallingBack(true);
-
-  return NS_OK;
-}
-
 // Determines if a request is a byte range request for a subrange,
 // i.e. is a byte range request, but not a 0- byte range request.
 static bool IsSubRangeRequest(nsHttpRequestHead& aRequestHead) {
@@ -3742,24 +3634,19 @@ nsHttpChannel::OnCacheEntryCheck(nsICacheEntry* entry,
   }
 
   // Don't bother to validate items that are read-only,
-  // unless they are read-only because of INHIBIT_CACHING or because
-  // we're updating the offline cache.
-  // Don't bother to validate if this is a fallback entry.
-  if (!mApplicationCacheForWrite &&
-      (appCache || (LoadCacheEntryIsReadOnly() &&
-                    !(mLoadFlags & nsIRequest::INHIBIT_CACHING)))) {
-    if (!appCache) {
-      int64_t size, contentLength;
-      rv = CheckPartial(entry, &size, &contentLength);
-      NS_ENSURE_SUCCESS(rv, rv);
+  // unless they are read-only because of INHIBIT_CACHING
+  if ((LoadCacheEntryIsReadOnly() &&
+       !(mLoadFlags & nsIRequest::INHIBIT_CACHING))) {
+    int64_t size, contentLength;
+    rv = CheckPartial(entry, &size, &contentLength);
+    NS_ENSURE_SUCCESS(rv, rv);
 
-      if (contentLength != int64_t(-1) && contentLength != size) {
-        *aResult = ENTRY_NOT_WANTED;
-        return NS_OK;
-      }
+    if (contentLength != int64_t(-1) && contentLength != size) {
+      *aResult = ENTRY_NOT_WANTED;
+      return NS_OK;
     }
 
-    rv = OpenCacheInputStream(entry, true, !!appCache);
+    rv = OpenCacheInputStream(entry, true, false);
     if (NS_SUCCEEDED(rv)) {
       mCachedContentIsValid = true;
       entry->MaybeMarkValid();
@@ -5136,12 +5023,6 @@ nsresult nsHttpChannel::AsyncProcessRedirection(uint32_t redirectType) {
 }
 
 nsresult nsHttpChannel::ContinueProcessRedirectionAfterFallback(nsresult rv) {
-  if (NS_SUCCEEDED(rv) && LoadFallingBack()) {
-    // do not continue with redirect processing, fallback is in
-    // progress now.
-    return NS_OK;
-  }
-
   // Kill the current cache entry if we are redirecting
   // back to ourself.
   bool redirectingBackToSameURI = false;
@@ -6982,22 +6863,11 @@ nsresult nsHttpChannel::ContinueOnStartRequest3(nsresult result) {
     return NS_OK;
   }
 
-  // on other request errors, try to fall back
-  if (NS_FAILED(mStatus)) {
-    PushRedirectAsyncFunc(&nsHttpChannel::ContinueOnStartRequest4);
-    bool waitingForRedirectCallback;
-    Unused << ProcessFallback(&waitingForRedirectCallback);
-    if (waitingForRedirectCallback) return NS_OK;
-    PopRedirectAsyncFunc(&nsHttpChannel::ContinueOnStartRequest4);
-  }
-
   return ContinueOnStartRequest4(NS_OK);
 }
 
 nsresult nsHttpChannel::ContinueOnStartRequest4(nsresult result) {
   LOG(("nsHttpChannel::ContinueOnStartRequest4 [this=%p]", this));
-
-  if (LoadFallingBack()) return NS_OK;
 
   if (NS_SUCCEEDED(mStatus) && mResponseHead && mAuthProvider) {
     uint32_t httpStatus = mResponseHead->Status();
@@ -8654,19 +8524,6 @@ nsresult nsHttpChannel::CallOrWaitForResume(
   }
 
   return aFunc(this);
-}
-
-void nsHttpChannel::MaybeWarnAboutAppCache() {
-  // First, accumulate a telemetry ping about appcache usage.
-  Telemetry::Accumulate(Telemetry::HTTP_OFFLINE_CACHE_DOCUMENT_LOAD, true);
-
-  // Then, issue a deprecation warning.
-  nsCOMPtr<nsIDeprecationWarner> warner;
-  GetCallback(warner);
-  if (warner) {
-    warner->IssueWarning(static_cast<uint32_t>(DeprecatedOperations::eAppCache),
-                         false);
-  }
 }
 
 // Step 10 of HTTP-network-or-cache fetch
