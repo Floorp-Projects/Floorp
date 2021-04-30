@@ -872,6 +872,12 @@ void PrintProcessState(const ProcessState& process_state,
     printf("Process uptime: not available\n");
   }
 
+  if (!process_state.mac_crash_info().empty()) {
+    printf("\n");
+    printf("Application-specific information:\n");
+    printf("%s", process_state.mac_crash_info().c_str());
+  }
+
   // If the thread that requested the dump is known, print it first.
   int requesting_thread = process_state.requesting_thread();
   if (requesting_thread != -1) {
@@ -953,6 +959,44 @@ void PrintProcessStateMachineReadable(const ProcessState& process_state) {
     printf("%d\n", requesting_thread);
   } else {
     printf("\n");
+  }
+
+  const crash_info_record_t* crash_info_records =
+    process_state.mac_crash_info_records();
+  size_t num_records =
+    process_state.mac_crash_info_records_count();
+  for (size_t i = 0; i < num_records; ++i) {
+    char thread_str[32];
+    if (crash_info_records[i].thread) {
+      snprintf(thread_str, sizeof(thread_str), "0x%llx",
+               crash_info_records[i].thread);
+    } else {
+      strncpy(thread_str, "0", sizeof(thread_str));
+    }
+    char dialog_mode_str[32];
+    if (crash_info_records[i].dialog_mode) {
+      snprintf(dialog_mode_str, sizeof(dialog_mode_str), "0x%x",
+               crash_info_records[i].dialog_mode);
+    } else {
+      strncpy(dialog_mode_str, "0", sizeof(dialog_mode_str));
+    }
+    char abort_cause_str[32];
+    if (crash_info_records[i].abort_cause) {
+      snprintf(abort_cause_str, sizeof(abort_cause_str), "%lld",
+               crash_info_records[i].abort_cause);
+    } else {
+      strncpy(abort_cause_str, "0", sizeof(abort_cause_str));
+    }
+    printf("MacCrashInfo%c%s%c%lu%c%s%c%s%c%s%c%s%c%s%c%s%c%s\n",
+           kOutputSeparator, crash_info_records[i].module_path.c_str(),
+           kOutputSeparator, crash_info_records[i].version,
+           kOutputSeparator, crash_info_records[i].message.c_str(),
+           kOutputSeparator, crash_info_records[i].signature_string.c_str(),
+           kOutputSeparator, crash_info_records[i].backtrace.c_str(),
+           kOutputSeparator, crash_info_records[i].message2.c_str(),
+           kOutputSeparator, thread_str,
+           kOutputSeparator, dialog_mode_str,
+           kOutputSeparator, abort_cause_str);
   }
 
   PrintModulesMachineReadable(process_state.modules());

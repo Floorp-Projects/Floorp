@@ -1151,6 +1151,57 @@ class MinidumpCrashpadInfo : public MinidumpStream {
   std::map<std::string, std::string> simple_annotations_;
 };
 
+// MinidumpMacCrashInfo wraps MDRawMacCrashInfo. It's an optional stream
+// in a minidump that records information from the __DATA,__crash_info
+// section of every module in the crashing process that contains one, and
+// which isn't empty of useful information. Only present on macOS.
+
+// Friendly wrapper for the information in MDRawMacCrashInfoRecord.
+typedef struct crash_info_record {
+  string module_path;
+  unsigned long version;
+  string message;
+  string signature_string;
+  string backtrace;
+  string message2;
+  unsigned long long thread;
+  unsigned int dialog_mode;
+  long long abort_cause; // Only valid when 'version' > 4
+  crash_info_record()
+      : version(0), thread(0), dialog_mode(0), abort_cause(0)
+    {}
+} crash_info_record_t;
+
+class MinidumpMacCrashInfo : public MinidumpStream {
+ public:
+  // A human-readable representation of the data from the __DATA,__crash_info
+  // sections in all of the crashing process's modules that have one, if
+  // it's not empty of useful data. Suitable for use by "minidump_stackwalk".
+  string description() const { return description_; }
+  // A "machine-readable" copy of the same information, suitable for use by
+  // "minidump_stalkwalk -m".
+  vector<crash_info_record_t> const records() {
+    return records_;
+  }
+
+  // Print a human-readable representation of the object to stdout.
+  void Print();
+
+ private:
+  friend class Minidump;
+
+  static const uint32_t kStreamType = MOZ_MACOS_CRASH_INFO_STREAM;
+
+  explicit MinidumpMacCrashInfo(Minidump* minidump_);
+
+  bool ReadCrashInfoRecord(MDLocationDescriptor location,
+                           uint32_t record_start_size);
+  bool Read(uint32_t expected_size);
+
+  string description_;
+  vector<crash_info_record_t> records_;
+};
+
 
 // Minidump is the user's interface to a minidump file.  It wraps MDRawHeader
 // and provides access to the minidump's top-level stream directory.
@@ -1214,6 +1265,7 @@ class Minidump {
   virtual MinidumpBreakpadInfo* GetBreakpadInfo();
   virtual MinidumpMemoryInfoList* GetMemoryInfoList();
   MinidumpCrashpadInfo* GetCrashpadInfo();
+  MinidumpMacCrashInfo* GetMacCrashInfo();
 
   // The next method also calls GetStream, but is exclusive for Linux dumps.
   virtual MinidumpLinuxMapsList *GetLinuxMapsList();
