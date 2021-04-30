@@ -1440,6 +1440,11 @@ impl Compositor for SwCompositor {
         if self.use_native_compositor {
             self.compositor.end_frame();
         } else if let Some(ref composite_thread) = self.composite_thread {
+            // If not actually compositing anything, just bail out.
+            if !composite_thread.is_busy_compositing() {
+                return;
+            }
+
             // Need to wait for the SwComposite thread to finish any queued jobs.
             composite_thread.wait_for_composites(false);
 

@@ -4617,10 +4617,12 @@ impl Renderer {
             // we have already invalidated any tiles that such surfaces may depend upon, so
             // the native render compositor can keep track of when to actually schedule
             // composition as surfaces are updated.
-            frame.composite_state.composite_native(
-                &results.dirty_rects,
-                &mut **compositor,
-            );
+            if device_size.is_some() {
+                frame.composite_state.composite_native(
+                    &results.dirty_rects,
+                    &mut **compositor,
+                );
+            }
         }
 
         for (_pass_index, pass) in frame.passes.iter_mut().enumerate() {
