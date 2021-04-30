@@ -727,26 +727,17 @@ static ALWAYS_INLINE auto perpDot(T a, T b) {
 }
 
 // Check if the winding of the initial edges is flipped, requiring us to swap
-// the edges to avoid spans having negative lengths.
+// the edges to avoid spans having negative lengths. Assume that l0.y == r0.y
+// due to the initial edge scan in draw_quad/perspective_spans.
 template <typename T>
 static ALWAYS_INLINE bool checkIfEdgesFlipped(T l0, T l1, T r0, T r1) {
   // If the starting point of the left edge is to the right of the starting
-  // point of the right edge, then just assume the edges are flipped.
-  if (l0.x > r0.x) {
-    return true;
-  }
-  // The left starting point is either at or to the left of the right starting
-  // point. Now we need to check if the edges possibly intersect at some point.
-  float side = perpDot(l1 - l0, r1 - r0);
-  if (side <= 0.0f) {
-    // If the edges are simply facing away from each other, then they won't
-    // intersect.
-    return false;
-  }
-  // If the lines intersect inside an edge but before the end, we assume they
-  // crossed each other and require flipping any resulting spans.
-  float t = perpDot(r0 - l0, r1 - r0);
-  return t >= 0.0f && t < side;
+  // point of the right edge, then just assume the edges are flipped. If the
+  // left and right starting points are the same, then check the sign of the
+  // cross-product of the edges to see if the edges are flipped. Otherwise,
+  // if the left starting point is actually just to the left of the right
+  // starting point, then assume no edge flip.
+  return l0.x > r0.x || (l0.x == r0.x && perpDot(l1 - l0, r1 - r0) > 0.0f);
 }
 
 // Draw spans for each row of a given quad (or triangle) with a constant Z
