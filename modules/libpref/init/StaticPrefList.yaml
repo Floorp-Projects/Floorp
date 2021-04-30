@@ -11168,6 +11168,20 @@
   value: false
   mirror: always
 
+# Whether system colors follow the document theme rather than the system on
+# chrome documents.
+- name: widget.system-colors-follow-theme
+  type: RelaxedAtomicBool
+#ifdef XP_MACOSX
+  value: true
+#else
+  # TODO(emilio): In order to enable this on GTK we need to teach
+  # nsNativeThemeGTK to draw non-system-themed widgets, which seems a bit hard,
+  # or alternatively do this only for documents which use the non-native theme.
+  value: false
+#endif
+  mirror: always
+
 - name: widget.window-transforms.disabled
   type: RelaxedAtomicBool
   value: false
@@ -11191,33 +11205,32 @@
   value: false
   mirror: always
 
-# Whether selection colors get passed from the real GTK theme even if
-# allow-gtk-dark-theme is false.
-- name: widget.content.allow-gtk-dark-theme.selection
+# Whether selection colors for the non-system theme get passed from the system
+# GTK theme.
+- name: widget.gtk.alt-theme.selection
   type: bool
   value: true
   mirror: always
 
-# Whether form control accent colors get passed from the real GTK theme even if
-# allow-gtk-dark-theme is false.
-- name: widget.content.allow-gtk-dark-theme.accent
+# Whether form control accent colors for the non-system theme get passed from
+# the system GTK theme.
+- name: widget.gtk.alt-theme.accent
   type: bool
   value: true
   mirror: always
 
-# Whether the scrollbar thumb active color gets passed from the real GTK theme
-# even if allow-gtk-dark-theme is false.
-- name: widget.content.allow-gtk-dark-theme.scrollbar_active
+# Whether the scrollbar thumb active color from the non-system theme gets
+# passed from the system GTK theme.
+- name: widget.gtk.alt-theme.scrollbar_active
   type: bool
   value: true
   mirror: always
 
-# Whether other scrollbar colors get passed from the real GTK theme even if
-# allow-gtk-dark-theme is false.
+# Whether other scrollbar colors get passed from the real GTK theme.
 #
 # This is default false because light scrollbars usually match better websites,
 # and we have automatic scrollbar darkening.
-- name: widget.content.allow-gtk-dark-theme.scrollbar
+- name: widget.gtk.alt-theme.scrollbar
   type: bool
   value: false
   mirror: always

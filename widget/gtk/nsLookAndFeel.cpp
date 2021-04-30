@@ -7,6 +7,7 @@
 
 // for strtod()
 #include <stdlib.h>
+#include <dlfcn.h>
 
 #include "nsLookAndFeel.h"
 
@@ -296,11 +297,12 @@ static bool IsSelectionColorBackground(LookAndFeel::ColorID aID) {
   }
 }
 
-nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme,
+nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme,
                                        nscolor& aColor) {
   EnsureInit();
 
-  return mSystemTheme.GetColor(aID, aColor);
+  auto& theme = aScheme == ColorScheme::Light ? LightTheme() : DarkTheme();
+  return theme.GetColor(aID, aColor);
 }
 
 nsresult nsLookAndFeel::PerThemeData::GetColor(ColorID aID,
@@ -966,6 +968,18 @@ static bool GetPreferDarkTheme() {
   return preferDarkTheme == TRUE;
 }
 
+// It seems GTK doesn't have an API to query if the current theme is "light" or
+// "dark", so we synthesize it from the CSS2 Window/WindowText colors instead,
+// by comparing their luminosity.
+static bool GetThemeIsDark() {
+  GdkRGBA bg, fg;
+  GtkStyleContext* style = GetStyleContext(MOZ_GTK_WINDOW);
+  gtk_style_context_get_background_color(style, GTK_STATE_FLAG_NORMAL, &bg);
+  gtk_style_context_get_color(style, GTK_STATE_FLAG_NORMAL, &fg);
+  return RelativeLuminanceUtils::Compute(GDK_RGBA_TO_NS_RGBA(bg)) <
+         RelativeLuminanceUtils::Compute(GDK_RGBA_TO_NS_RGBA(fg));
+}
+
 void nsLookAndFeel::ConfigureTheme(const LookAndFeelTheme& aTheme) {
   MOZ_ASSERT(XRE_IsContentProcess());
   GtkSettings* settings = gtk_settings_get_default();
@@ -974,131 +988,73 @@ void nsLookAndFeel::ConfigureTheme(const LookAndFeelTheme& aTheme) {
                aTheme.preferDarkTheme() ? TRUE : FALSE, nullptr);
 }
 
-void nsLookAndFeel::WithThemeConfiguredForContent(
-    const std::function<void(const LookAndFeelTheme&, bool)>& aFn) {
+void nsLookAndFeel::WithAltThemeConfigured(
+    const std::function<void(bool)>& aFn) {
   nsWindow::WithSettingsChangesIgnored([&]() {
     // Available on Gtk 3.20+.
     static auto sGtkSettingsResetProperty =
         (void (*)(GtkSettings*, const gchar*))dlsym(
             RTLD_DEFAULT, "gtk_settings_reset_property");
 
-    nsCString themeName;
-    bool preferDarkTheme = false;
+    GtkSettings* settings = gtk_settings_get_default();
 
-    if (!sGtkSettingsResetProperty) {
-      // When gtk_settings_reset_property is not available, we instead
-      // record the current theme name and variant and explicitly restore
-      // them afterwards.  This means we won't respond to any subsequent
-      // theme settings changes, which is unfortunate.  (It's possible we
-      // could listen to xsettings changes and update the GtkSettings object
-      // ourselves in response, if we wanted to fix this.)
-      themeName = GetGtkTheme();
-      preferDarkTheme = GetPreferDarkTheme();
-    }
+    bool fellBackToDefaultTheme = false;
 
-    bool changed = ConfigureContentGtkTheme();
-    if (changed) {
-      RefreshImpl();
-    }
+    // Try to select the opposite variant of the current theme first...
+    LOG(("    toggling gtk-application-prefer-dark-theme\n"));
+    g_object_set(settings, "gtk-application-prefer-dark-theme",
+                 !mSystemTheme.mIsDark, nullptr);
+    moz_gtk_refresh();
 
-    LookAndFeelTheme theme;
-    theme.themeName() = GetGtkTheme();
-    theme.preferDarkTheme() = GetPreferDarkTheme();
-
-    aFn(theme, changed);
-
-    if (changed) {
-      GtkSettings* settings = gtk_settings_get_default();
-      if (sGtkSettingsResetProperty) {
-        sGtkSettingsResetProperty(settings, "gtk-theme-name");
-        sGtkSettingsResetProperty(settings,
-                                  "gtk-application-prefer-dark-theme");
-      } else {
-        g_object_set(settings, "gtk-theme-name", themeName.get(),
-                     "gtk-application-prefer-dark-theme",
-                     preferDarkTheme ? TRUE : FALSE, nullptr);
+    // Toggling gtk-application-prefer-dark-theme is not enough generally to
+    // switch from dark to light theme.  If the theme didn't change, and we have
+    // a dark theme, try to first remove -Dark{,er,est} from the theme name to
+    // find the light variant.
+    if (mSystemTheme.mIsDark && mSystemTheme.mIsDark == GetThemeIsDark()) {
+      nsCString potentialLightThemeName = mSystemTheme.mName;
+      constexpr nsLiteralCString kSubstringsToRemove[] = {
+          "-dark"_ns,    "-darker"_ns,  "-darkest"_ns, "-Dark"_ns,
+          "-Darker"_ns,  "-Darkest"_ns, "_dark"_ns,    "_darker"_ns,
+          "_darkest"_ns, "_Dark"_ns,    "_Darker"_ns,  "_Darkest"_ns,
+      };
+      bool found = false;
+      for (auto& s : kSubstringsToRemove) {
+        potentialLightThemeName = mSystemTheme.mName;
+        potentialLightThemeName.ReplaceSubstring(s, ""_ns);
+        if (potentialLightThemeName.Length() != mSystemTheme.mName.Length()) {
+          found = true;
+          break;
+        }
       }
-      RefreshImpl();
+      if (found) {
+        g_object_set(settings, "gtk-theme-name", potentialLightThemeName.get(),
+                     nullptr);
+        moz_gtk_refresh();
+      }
     }
+
+    if (mSystemTheme.mIsDark == GetThemeIsDark()) {
+      // If the theme still didn't change enough, fall back to either Adwaita or
+      // Adwaita Dark.
+      g_object_set(settings, "gtk-theme-name",
+                   mSystemTheme.mIsDark ? "Adwaita" : "Adwaita Dark", nullptr);
+      moz_gtk_refresh();
+      fellBackToDefaultTheme = true;
+    }
+
+    aFn(fellBackToDefaultTheme);
+
+    // Restore the system theme.
+    if (sGtkSettingsResetProperty) {
+      sGtkSettingsResetProperty(settings, "gtk-theme-name");
+      sGtkSettingsResetProperty(settings, "gtk-application-prefer-dark-theme");
+    } else {
+      g_object_set(settings, "gtk-theme-name", mSystemTheme.mName.get(),
+                   "gtk-application-prefer-dark-theme",
+                   mSystemTheme.mPreferDarkTheme, nullptr);
+    }
+    moz_gtk_refresh();
   });
-}
-
-bool nsLookAndFeel::FromParentTheme(IntID aID) {
-  switch (aID) {
-    case IntID::SystemUsesDarkTheme:
-    case IntID::UseAccessibilityTheme:
-      // We want to take SystemUsesDarkTheme and UseAccessibilityTheme from the
-      // parent process theme rather than the content configured theme.
-      //
-      // This ensures that media queries like (prefers-color-scheme: dark) will
-      // match correctly in content processes.
-      return true;
-    default:
-      return false;
-  }
-}
-
-bool nsLookAndFeel::FromParentTheme(ColorID aID) {
-  if (IsSelectionColorBackground(aID) || IsSelectionColorForeground(aID)) {
-    return StaticPrefs::widget_content_allow_gtk_dark_theme_selection();
-  }
-  switch (aID) {
-    case ColorID::ThemedScrollbar:
-    case ColorID::ThemedScrollbarInactive:
-    case ColorID::ThemedScrollbarThumb:
-    case ColorID::ThemedScrollbarThumbHover:
-    case ColorID::ThemedScrollbarThumbInactive:
-      return StaticPrefs::widget_content_allow_gtk_dark_theme_scrollbar();
-    case ColorID::ThemedScrollbarThumbActive:
-      return StaticPrefs::
-          widget_content_allow_gtk_dark_theme_scrollbar_active();
-    case ColorID::MozAccentColor:
-    case ColorID::MozAccentColorForeground:
-      return StaticPrefs::widget_content_allow_gtk_dark_theme_accent();
-    default:
-      return false;
-  }
-}
-
-bool nsLookAndFeel::ConfigureContentGtkTheme() {
-  bool changed = false;
-
-  GtkSettings* settings = gtk_settings_get_default();
-
-  nsAutoCString themeOverride;
-  mozilla::Preferences::GetCString("widget.content.gtk-theme-override",
-                                   themeOverride);
-  if (!themeOverride.IsEmpty()) {
-    g_object_set(settings, "gtk-theme-name", themeOverride.get(), nullptr);
-    changed = true;
-    LOG(("ConfigureContentGtkTheme(%s)\n", themeOverride.get()));
-  } else {
-    LOG(("ConfigureContentGtkTheme(%s)\n", GetGtkTheme().get()));
-  }
-
-  // Dark theme is active but user explicitly enables it, or we're on
-  // high-contrast (in which case we prevent content to mess up with the colors
-  // of the page), so we're done now.
-  if (!themeOverride.IsEmpty() || mSystemTheme.mHighContrast ||
-      StaticPrefs::widget_content_allow_gtk_dark_theme()) {
-    return changed;
-  }
-
-  // Try to select the light variant of the current theme first...
-  if (GetPreferDarkTheme()) {
-    LOG(("    disabling gtk-application-prefer-dark-theme\n"));
-    g_object_set(settings, "gtk-application-prefer-dark-theme", FALSE, nullptr);
-    changed = true;
-  }
-
-  // ...and use a default Gtk theme as a fallback.
-  if (!IsGtkThemeCompatibleWithHTMLColors()) {
-    LOG(("    Non-compatible dark theme, default to Adwaita\n"));
-    g_object_set(settings, "gtk-theme-name", "Adwaita", nullptr);
-    changed = true;
-  }
-
-  return changed;
 }
 
 static bool AnyColorChannelIsDifferent(nscolor aColor) {
@@ -1185,7 +1141,57 @@ void nsLookAndFeel::EnsureInit() {
     }
   }
 
+  WithAltThemeConfigured([&](bool aFellBackToDefaultTheme) {
+    mAltTheme.Init();
+    // Some of the alt theme colors we can grab from the system theme, if we
+    // fell back to the default light / dark themes.
+    if (aFellBackToDefaultTheme) {
+      if (StaticPrefs::widget_gtk_alt_theme_selection()) {
+        mAltTheme.mTextSelectedText = mSystemTheme.mTextSelectedText;
+        mAltTheme.mTextSelectedBackground =
+            mSystemTheme.mTextSelectedBackground;
+      }
+
+      if (StaticPrefs::widget_gtk_alt_theme_scrollbar()) {
+        mAltTheme.mThemedScrollbar = mSystemTheme.mThemedScrollbar;
+        mAltTheme.mThemedScrollbarInactive =
+            mSystemTheme.mThemedScrollbarInactive;
+        mAltTheme.mThemedScrollbarThumb = mSystemTheme.mThemedScrollbarThumb;
+        mAltTheme.mThemedScrollbarThumbHover =
+            mSystemTheme.mThemedScrollbarThumbHover;
+        mAltTheme.mThemedScrollbarThumbInactive =
+            mSystemTheme.mThemedScrollbarThumbInactive;
+      }
+
+      if (StaticPrefs::widget_gtk_alt_theme_scrollbar_active()) {
+        mAltTheme.mThemedScrollbarThumbActive =
+            mSystemTheme.mThemedScrollbarThumbActive;
+      }
+
+      if (StaticPrefs::widget_gtk_alt_theme_selection()) {
+        mAltTheme.mAccentColor = mSystemTheme.mAccentColor;
+        mAltTheme.mAccentColorForeground = mSystemTheme.mAccentColorForeground;
+      }
+    }
+  });
+
+  LOG(("System Theme: %s. Alt Theme: %s\n", mSystemTheme.mName.get(),
+       mAltTheme.mName.get()));
+
   RecordTelemetry();
+}
+
+void nsLookAndFeel::GetGtkContentTheme(LookAndFeelTheme& aTheme) {
+  if (NS_SUCCEEDED(Preferences::GetCString("widget.content.gtk-theme-override",
+                                           aTheme.themeName()))) {
+    return;
+  }
+
+  auto& theme = StaticPrefs::widget_content_allow_gtk_dark_theme()
+                    ? mSystemTheme
+                    : LightTheme();
+  aTheme.preferDarkTheme() = theme.mPreferDarkTheme;
+  aTheme.themeName() = theme.mName;
 }
 
 void nsLookAndFeel::PerThemeData::Init() {
@@ -1198,17 +1204,10 @@ void nsLookAndFeel::PerThemeData::Init() {
 
   mPreferDarkTheme = GetPreferDarkTheme();
 
-  // It seems GTK doesn't have an API to query if the current theme is
-  // "light" or "dark", so we synthesize it from the CSS2 Window/WindowText
-  // colors instead, by comparing their luminosity.
-  {
-    GdkRGBA bg, fg;
-    style = GetStyleContext(MOZ_GTK_WINDOW);
-    gtk_style_context_get_background_color(style, GTK_STATE_FLAG_NORMAL, &bg);
-    gtk_style_context_get_color(style, GTK_STATE_FLAG_NORMAL, &fg);
-    mIsDark = (RelativeLuminanceUtils::Compute(GDK_RGBA_TO_NS_RGBA(bg)) <
-               RelativeLuminanceUtils::Compute(GDK_RGBA_TO_NS_RGBA(fg)));
-  }
+  mIsDark = GetThemeIsDark();
+
+  mCompatibleWithHTMLLightColors =
+      !mIsDark && IsGtkThemeCompatibleWithHTMLColors();
 
   GdkRGBA color;
   // Colors that we pass to content processes through RemoteLookAndFeel.
