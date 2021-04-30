@@ -9,10 +9,13 @@
 importScripts("chrome://mochikit/content/tests/SimpleTest/WorkerSimpleTest.js");
 importScripts("resource://gre/modules/ObjectUtils.jsm");
 
+// TODO: Remove this import for OS.File. It is currently being used as a
+//       stop gap for missing IOUtils functionality.
+importScripts("resource://gre/modules/osfile.jsm");
 importScripts("file_ioutils_test_fixtures.js");
 
 self.onmessage = async function(msg) {
-  const tmpDir = await PathUtils.getTempDir();
+  const tmpDir = OS.Constants.Path.tmpDir;
 
   // IOUtils functionality is the same when called from the main thread, or a
   // web worker. These tests are a modified subset of the main thread tests, and
@@ -32,7 +35,7 @@ self.onmessage = async function(msg) {
 
   async function test_full_read_and_write() {
     // Write a file.
-    const tmpFileName = PathUtils.join(tmpDir, "test_ioutils_numbers.tmp");
+    const tmpFileName = OS.Path.join(tmpDir, "test_ioutils_numbers.tmp");
     const bytes = Uint8Array.of(...new Array(50).keys());
     const bytesWritten = await IOUtils.write(tmpFileName, bytes);
     is(bytesWritten, 50, "IOUtils::write can write entire byte array to file");
@@ -57,8 +60,8 @@ self.onmessage = async function(msg) {
   }
 
   async function test_move_file() {
-    const src = PathUtils.join(tmpDir, "test_move_file_src.tmp");
-    const dest = PathUtils.join(tmpDir, "test_move_file_dest.tmp");
+    const src = OS.Path.join(tmpDir, "test_move_file_src.tmp");
+    const dest = OS.Path.join(tmpDir, "test_move_file_dest.tmp");
     const bytes = Uint8Array.of(...new Array(50).keys());
     await IOUtils.write(src, bytes);
 
@@ -72,8 +75,8 @@ self.onmessage = async function(msg) {
   }
 
   async function test_copy_file() {
-    const tmpFileName = PathUtils.join(tmpDir, "test_ioutils_orig.tmp");
-    const destFileName = PathUtils.join(tmpDir, "test_ioutils_copy.tmp");
+    const tmpFileName = OS.Path.join(tmpDir, "test_ioutils_orig.tmp");
+    const destFileName = OS.Path.join(tmpDir, "test_ioutils_copy.tmp");
     await createFile(tmpFileName, "original");
 
     await IOUtils.copy(tmpFileName, destFileName);
@@ -87,12 +90,10 @@ self.onmessage = async function(msg) {
   }
 
   async function test_make_directory() {
-    const dir = PathUtils.join(tmpDir, "test_make_dir.tmp.d");
+    const dir = OS.Path.join(tmpDir, "test_make_dir.tmp.d");
     await IOUtils.makeDirectory(dir);
-    const stat = await IOUtils.stat(dir);
-    is(
-      stat.type,
-      "directory",
+    ok(
+      OS.File.stat(dir).isDir,
       "IOUtils::makeDirectory can make a new directory from a worker"
     );
 
