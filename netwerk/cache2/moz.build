@@ -25,7 +25,6 @@ EXPORTS += [
 ]
 
 SOURCES += [
-    "AppCacheStorage.cpp",
     "CacheStorage.cpp",
 ]
 

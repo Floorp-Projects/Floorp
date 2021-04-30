@@ -52,19 +52,6 @@ interface nsICacheStorageService : nsISupports
   nsICacheStorage pinningCacheStorage(in nsILoadContextInfo aLoadContextInfo);
 
   /**
-   * Get storage for a specified application cache obtained using some different
-   * mechanism.
-   *
-   * @param aLoadContextInfo
-   *    Mandatory reference to a load context information.
-   * @param aApplicationCache
-   *    Optional reference to an existing appcache.  When left null, this will
-   *    work with offline cache as a whole.
-   */
-  nsICacheStorage appCacheStorage(in nsILoadContextInfo aLoadContextInfo,
-                                  in nsIApplicationCache aApplicationCache);
-
-  /**
    * Get storage for synthesized cache entries that we currently use for ServiceWorker interception in non-e10s mode.
    *
    * This cache storage has no limits on file size to allow the ServiceWorker to intercept large files.

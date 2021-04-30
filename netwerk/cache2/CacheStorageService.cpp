@@ -751,21 +751,6 @@ NS_IMETHODIMP CacheStorageService::PinningCacheStorage(
   return NS_OK;
 }
 
-NS_IMETHODIMP CacheStorageService::AppCacheStorage(
-    nsILoadContextInfo* aLoadContextInfo,
-    nsIApplicationCache* aApplicationCache, nsICacheStorage** _retval) {
-  NS_ENSURE_ARG(_retval);
-
-  nsCOMPtr<nsICacheStorage> storage;
-  // Using classification since cl believes we want to instantiate this method
-  // having the same name as the desired class...
-  storage =
-      new mozilla::net::AppCacheStorage(aLoadContextInfo, aApplicationCache);
-
-  storage.forget(_retval);
-  return NS_OK;
-}
-
 NS_IMETHODIMP CacheStorageService::SynthesizedCacheStorage(
     nsILoadContextInfo* aLoadContextInfo, nsICacheStorage** _retval) {
   NS_ENSURE_ARG(aLoadContextInfo);
