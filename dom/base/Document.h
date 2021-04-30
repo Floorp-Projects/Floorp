@@ -589,9 +589,9 @@ class Document : public nsINode,
   } while (0)
 
   // nsIRadioGroupContainer
-  NS_IMETHOD WalkRadioGroup(const nsAString& aName, nsIRadioVisitor* aVisitor,
-                            bool aFlushContent) final {
-    return DocumentOrShadowRoot::WalkRadioGroup(aName, aVisitor, aFlushContent);
+  NS_IMETHOD WalkRadioGroup(const nsAString& aName,
+                            nsIRadioVisitor* aVisitor) final {
+    return DocumentOrShadowRoot::WalkRadioGroup(aName, aVisitor);
   }
 
   void SetCurrentRadioButton(const nsAString& aName,
@@ -2091,7 +2091,7 @@ class Document : public nsINode,
    * Another variant of the above FlushPendingNotifications.  This function
    * takes a ChangesToFlush to specify whether throttled animations are flushed
    * or not.
-   * If in doublt, use the above FlushPendingNotifications.
+   * If in doubt, use the above FlushPendingNotifications.
    */
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
   void FlushPendingNotifications(ChangesToFlush aFlush);

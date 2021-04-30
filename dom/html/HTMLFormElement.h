@@ -66,8 +66,8 @@ class HTMLFormElement final : public nsGenericHTMLElement,
   NS_IMETHOD GetNextRadioButton(const nsAString& aName, const bool aPrevious,
                                 HTMLInputElement* aFocusedRadio,
                                 HTMLInputElement** aRadioOut) override;
-  NS_IMETHOD WalkRadioGroup(const nsAString& aName, nsIRadioVisitor* aVisitor,
-                            bool aFlushContent) override;
+  NS_IMETHOD WalkRadioGroup(const nsAString& aName,
+                            nsIRadioVisitor* aVisitor) override;
   void AddToRadioGroup(const nsAString& aName,
                        HTMLInputElement* aRadio) override;
   void RemoveFromRadioGroup(const nsAString& aName,
