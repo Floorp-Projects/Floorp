@@ -112,6 +112,14 @@ class ProcessState {
     return &thread_memory_regions_;
   }
   const SystemInfo* system_info() const { return &system_info_; }
+  string mac_crash_info() const { return mac_crash_info_; }
+  size_t mac_crash_info_records_count() const {
+    return mac_crash_info_records_.size();
+  }
+  const crash_info_record_t* mac_crash_info_records() const {
+    return reinterpret_cast<const crash_info_record_t*>(
+      &mac_crash_info_records_[0]);
+  }
   const CodeModules* modules() const { return modules_; }
   const CodeModules* unloaded_modules() const { return unloaded_modules_; }
   const vector<linked_ptr<const CodeModule> >* shrunk_range_modules() const {
@@ -178,6 +186,10 @@ class ProcessState {
 
   // OS and CPU information.
   SystemInfo system_info_;
+
+  // Information from __DATA,__crash_info sections.  Only present on macOS.
+  string mac_crash_info_;
+  vector<crash_info_record_t> mac_crash_info_records_;
 
   // The modules that were loaded into the process represented by the
   // ProcessState.
