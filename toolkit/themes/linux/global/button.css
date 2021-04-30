@@ -30,19 +30,19 @@ button {
 
 /* .......... hover state .......... */
 
-button:hover:not(:active,[disabled="true"],[open="true"],[checked="true"],[default="true"]) {
+button:where(:hover:not([checked="true"], [default="true"])) {
   color: -moz-buttonhovertext;
 }
 
 /* .......... active state .......... */
 
-button:is(:hover:active, [open="true"]):not([default="true"], [disabled="true"]) {
+button:where(:hover:active, [open="true"]):where(:not([default="true"])) {
   color: -moz-gtk-buttonactivetext;
 }
 
 /* .......... disabled state .......... */
 
-button[disabled="true"] {
+button:where([disabled="true"]) {
   color: GrayText;
 }
 
