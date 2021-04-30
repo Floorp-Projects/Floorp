@@ -10,12 +10,10 @@
 #include "DelayHttpChannelQueue.h"
 #include "HttpBaseChannel.h"
 #include "nsTArray.h"
-#include "nsIApplicationCache.h"
 #include "nsICachingChannel.h"
 #include "nsICacheEntry.h"
 #include "nsICacheEntryOpenCallback.h"
 #include "nsIDNSListener.h"
-#include "nsIApplicationCacheChannel.h"
 #include "nsIProtocolProxyCallback.h"
 #include "nsIHttpAuthenticableChannel.h"
 #include "nsIAsyncVerifyRedirectCallback.h"
@@ -360,8 +358,6 @@ class nsHttpChannel final : public HttpBaseChannel,
   void HandleAsyncAPIRedirect();
   [[nodiscard]] nsresult ContinueHandleAsyncRedirect(nsresult);
   void HandleAsyncNotModified();
-  void HandleAsyncFallback();
-  [[nodiscard]] nsresult ContinueHandleAsyncFallback(nsresult);
   [[nodiscard]] nsresult PromptTempRedirect();
   [[nodiscard]] virtual nsresult SetupReplacementChannel(
       nsIURI*, nsIChannel*, bool preserveMethod,

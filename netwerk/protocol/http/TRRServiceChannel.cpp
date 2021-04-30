@@ -1362,8 +1362,7 @@ TRRServiceChannel::GetLoadFlags(nsLoadFlags* aLoadFlags) {
 NS_IMETHODIMP
 TRRServiceChannel::SetLoadFlags(nsLoadFlags aLoadFlags) {
   if (aLoadFlags & (nsICachingChannel::LOAD_ONLY_FROM_CACHE | LOAD_FROM_CACHE |
-                    nsICachingChannel::LOAD_NO_NETWORK_IO |
-                    nsICachingChannel::LOAD_CHECK_OFFLINE_CACHE)) {
+                    nsICachingChannel::LOAD_NO_NETWORK_IO)) {
     MOZ_ASSERT(false, "Wrong load flags!");
     return NS_ERROR_FAILURE;
   }
