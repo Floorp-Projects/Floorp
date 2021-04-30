@@ -9,6 +9,7 @@
 #include "Compatibility.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/dom/BrowserChild.h"
+#include "mozilla/dom/Document.h"
 #include "DocAccessibleChild.h"
 #include "nsWinUtils.h"
 #include "Role.h"
