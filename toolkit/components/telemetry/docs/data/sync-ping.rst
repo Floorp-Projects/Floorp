@@ -66,8 +66,6 @@ Structure:
                 applied: <integer>, // Number of records applied
                 succeeded: <integer>, // Number of records that applied without error
                 failed: <integer>, // Number of records that failed to apply
-                newFailed: <integer>, // Number of records that failed for the first time this sync
-                reconciled: <integer>, // Number of records that were reconciled
               },
 
               // Optional, excluded if it would be empty. Records that would be

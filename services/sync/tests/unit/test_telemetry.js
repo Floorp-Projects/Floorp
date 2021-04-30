@@ -300,7 +300,6 @@ add_task(async function test_upload_failed() {
     ping = await sync_engine_and_validate_telem(engine, true);
     ok(!!ping);
     equal(ping.engines.length, 1);
-    equal(ping.engines[0].incoming.reconciled, 1);
     deepEqual(ping.engines[0].outgoing, [{ sent: 2, failed: 2 }]);
   } finally {
     await cleanAndGo(engine, server);
@@ -392,8 +391,6 @@ add_task(async function test_sync_partialUpload() {
     equal(ping.engines[0].name, "rotary");
     deepEqual(ping.engines[0].incoming, {
       failed: 1,
-      newFailed: 1,
-      reconciled: 232,
     });
     ok(!ping.engines[0].outgoing);
     deepEqual(ping.engines[0].failureReason, uploadFailureError);
