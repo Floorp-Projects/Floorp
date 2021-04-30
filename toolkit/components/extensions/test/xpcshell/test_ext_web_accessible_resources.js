@@ -67,14 +67,14 @@ add_task(async function test_web_accessible_resources_csp() {
       window.removeEventListener("message", rcv);
     });
 
-    testImageLoading(browser.extension.getURL("image.png"), "loaded");
+    testImageLoading(browser.runtime.getURL("image.png"), "loaded");
 
     let testScriptElement = document.createElement("script");
     // Set the src via wrappedJSObject so the load is triggered with the
     // content page's principal rather than ours.
     testScriptElement.wrappedJSObject.setAttribute(
       "src",
-      browser.extension.getURL("test_script.js")
+      browser.runtime.getURL("test_script.js")
     );
     document.head.appendChild(testScriptElement);
     browser.runtime.sendMessage("script-loaded");
