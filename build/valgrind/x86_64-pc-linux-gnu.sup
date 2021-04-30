@@ -223,9 +223,19 @@
    fun:dlopen@@GLIBC_2.2.5
    ...
 }
+{
+    gtk leak triggered by bug 1707957. Relatively minor, and seems fixed in newer GTK versions.
+    Memcheck:Leak
+    match-leak-kinds: definite
+    ...
+    fun:gtk_css_keyframes_new
+    ...
+    fun:settings_update_theme
+    ...
+}
 
 ###################################
-#  Leaks in short lived precesses #
+#  Leaks in short lived processes #
 ###################################
 
 {
