@@ -8,6 +8,7 @@
 XPCOMUtils.defineLazyModuleGetters(this, {
   AppConstants: "resource://gre/modules/AppConstants.jsm",
   ShortcutUtils: "resource://gre/modules/ShortcutUtils.jsm",
+  ExtensionShortcutKeyMap: "resource://gre/modules/ExtensionShortcuts.jsm",
 });
 
 {
@@ -16,10 +17,9 @@ XPCOMUtils.defineLazyModuleGetters(this, {
     limit: 5, // We only want to show 5 when collapsed.
     allowOver: 1, // Avoid collapsing to hide 1 row.
   };
-  const SHORTCUT_KEY_SEPARATOR = "|";
 
   let templatesLoaded = false;
-  let shortcutKeyMap = new Map();
+  let shortcutKeyMap = new ExtensionShortcutKeyMap();
   const templates = {};
 
   function loadTemplates() {
@@ -285,49 +285,20 @@ XPCOMUtils.defineLazyModuleGetters(this, {
       .join("+");
   }
 
-  function buildDuplicateShortcutsMap(addons) {
-    return Promise.all(
-      addons.map(async addon => {
-        let extension = extensionForAddonId(addon.id);
-        if (extension && extension.shortcuts) {
-          let commands = await extension.shortcuts.allCommands();
-          for (let command of commands) {
-            recordShortcut(command.shortcut, addon.name, command.name);
-          }
-        }
-      })
-    );
+  async function buildDuplicateShortcutsMap(addons) {
+    await shortcutKeyMap.buildForAddonIds(addons.map(addon => addon.id));
   }
 
   function recordShortcut(shortcut, addonName, commandName) {
-    if (!shortcut) {
-      return;
-    }
-    let addons = shortcutKeyMap.get(shortcut);
-    let addonString = `${addonName}${SHORTCUT_KEY_SEPARATOR}${commandName}`;
-    if (addons) {
-      addons.add(addonString);
-    } else {
-      shortcutKeyMap.set(shortcut, new Set([addonString]));
-    }
+    shortcutKeyMap.recordShortcut(shortcut, addonName, commandName);
   }
 
   function removeShortcut(shortcut, addonName, commandName) {
-    let addons = shortcutKeyMap.get(shortcut);
-    let addonString = `${addonName}${SHORTCUT_KEY_SEPARATOR}${commandName}`;
-    if (addons) {
-      addons.delete(addonString);
-      if (addons.size === 0) {
-        shortcutKeyMap.delete(shortcut);
-      }
-    }
+    shortcutKeyMap.removeShortcut(shortcut, addonName, commandName);
   }
 
   function getAddonName(shortcut) {
-    let addons = shortcutKeyMap.get(shortcut);
-    // Get the first addon name with given shortcut.
-    let name = addons.values().next().value;
-    return name.split(SHORTCUT_KEY_SEPARATOR)[0];
+    return shortcutKeyMap.getFirstAddonName(shortcut);
   }
 
   function setDuplicateWarnings() {
