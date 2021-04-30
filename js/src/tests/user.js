@@ -32,6 +32,5 @@ user_pref("browser.webapps.checkForUpdates", 0);
 user_pref("javascript.options.weakrefs", true);
 user_pref("javascript.options.experimental.weakrefs.expose_cleanupSome", true);
 user_pref("javascript.options.experimental.iterator_helpers", true);
-user_pref("javascript.options.experimental.private_fields", true);
 user_pref("javascript.options.experimental.top_level_await", true);
 user_pref("javascript.options.experimental.ergonomic_brand_checks", true);
