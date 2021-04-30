@@ -116,9 +116,6 @@ WEB_SOCKET_HANDLER_CONSTRUCTOR(WebSocketSSLChannel, true)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-#include "nsFTPDirListingConv.h"
-nsresult NS_NewFTPDirListingConv(nsFTPDirListingConv** result);
-
 #include "nsStreamConverterService.h"
 #include "nsMultiMixedConv.h"
 #include "nsHTTPCompressConv.h"
@@ -134,7 +131,6 @@ nsresult MOZ_NewTXTToHTMLConv(mozTXTToHTMLConv** result);
 nsresult NS_NewHTTPCompressConv(mozilla::net::nsHTTPCompressConv** result);
 nsresult NS_NewStreamConv(nsStreamConverterService** aStreamConv);
 
-#define FTP_TO_INDEX "?from=text/ftp-dir&to=application/http-index-format"
 #define INDEX_TO_HTML "?from=application/http-index-format&to=text/html"
 #define MULTI_MIXED_X "?from=multipart/x-mixed-replace&to=*/*"
 #define MULTI_MIXED "?from=multipart/mixed&to=*/*"
@@ -148,7 +144,6 @@ nsresult NS_NewStreamConv(nsStreamConverterService** aStreamConv);
 #define DEFLATE_TO_UNCOMPRESSED "?from=deflate&to=uncompressed"
 
 static const mozilla::Module::CategoryEntry kNeckoCategories[] = {
-    {NS_ISTREAMCONVERTER_KEY, FTP_TO_INDEX, ""},
     {NS_ISTREAMCONVERTER_KEY, INDEX_TO_HTML, ""},
     {NS_ISTREAMCONVERTER_KEY, MULTI_MIXED_X, ""},
     {NS_ISTREAMCONVERTER_KEY, MULTI_MIXED, ""},
@@ -174,28 +169,6 @@ nsresult CreateNewStreamConvServiceFactory(nsISupports* aOuter, REFNSIID aIID,
   }
   RefPtr<nsStreamConverterService> inst;
   nsresult rv = NS_NewStreamConv(getter_AddRefs(inst));
-  if (NS_FAILED(rv)) {
-    *aResult = nullptr;
-    return rv;
-  }
-  rv = inst->QueryInterface(aIID, aResult);
-  if (NS_FAILED(rv)) {
-    *aResult = nullptr;
-  }
-  return rv;
-}
-
-nsresult CreateNewFTPDirListingConv(nsISupports* aOuter, REFNSIID aIID,
-                                    void** aResult) {
-  if (!aResult) {
-    return NS_ERROR_INVALID_POINTER;
-  }
-  if (aOuter) {
-    *aResult = nullptr;
-    return NS_ERROR_NO_AGGREGATION;
-  }
-  RefPtr<nsFTPDirListingConv> inst;
-  nsresult rv = NS_NewFTPDirListingConv(getter_AddRefs(inst));
   if (NS_FAILED(rv)) {
     *aResult = nullptr;
     return rv;
