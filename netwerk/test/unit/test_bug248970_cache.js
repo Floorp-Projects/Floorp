@@ -7,7 +7,6 @@
 // names for cache devices
 const kDiskDevice = "disk";
 const kMemoryDevice = "memory";
-const kOfflineDevice = "appcache";
 
 const kCacheA = "http://cache/A";
 const kCacheA2 = "http://cache/A2";
@@ -28,12 +27,10 @@ const entries = [
   [kCacheA, kTestContent, kMemoryDevice, true],
   [kCacheA2, kTestContent, kDiskDevice, false],
   [kCacheB, kTestContent, kDiskDevice, true],
-  [kCacheC, kTestContent, kOfflineDevice, true],
 ];
 
 var store_idx;
 var store_cb = null;
-var appCache = null;
 
 function store_entries(cb) {
   if (cb) {
@@ -53,8 +50,7 @@ function store_entries(cb) {
     Services.loadContextInfo.custom(false, {
       privateBrowsingId: entries[store_idx][3] ? 0 : 1,
     }),
-    store_data,
-    appCache
+    store_data
   );
 }
 
@@ -102,8 +98,7 @@ function check_entries(cb, pbExited) {
     Services.loadContextInfo.custom(false, {
       privateBrowsingId: entries[check_idx][3] ? 0 : 1,
     }),
-    check_data,
-    appCache
+    check_data
   );
 }
 
@@ -130,13 +125,6 @@ var check_data = function(status, entry) {
 function run_test() {
   // Simulate a profile dir for xpcshell
   do_get_profile();
-
-  Services.prefs.setBoolPref("browser.cache.offline.enable", true);
-  Services.prefs.setBoolPref("browser.cache.offline.storage.enable", true);
-
-  appCache = Cc["@mozilla.org/network/application-cache-service;1"]
-    .getService(Ci.nsIApplicationCacheService)
-    .getApplicationCache("fake-client-id|fake-group-id");
 
   // Start off with an empty cache
   evict_cache_entries();
