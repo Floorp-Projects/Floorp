@@ -47,7 +47,6 @@
 #include "nsGlobalWindowOuter.h"
 #include "nsHttpChannel.h"
 #include "nsHttpHandler.h"
-#include "nsIApplicationCacheChannel.h"
 #include "nsICacheInfoChannel.h"
 #include "nsICachingChannel.h"
 #include "nsIChannelEventSink.h"
@@ -209,7 +208,6 @@ HttpBaseChannel::HttpBaseChannel()
       mCheckIsOpaqueResponseAllowedAfterSniff(false) {
   StoreApplyConversion(true);
   StoreAllowSTS(true);
-  StoreInheritApplicationCache(true);
   StoreTracingEnabled(true);
   StoreReportTiming(true);
   StoreAllowSpdy(true);
@@ -277,7 +275,6 @@ void HttpBaseChannel::ReleaseMainThreadOnlyReferences() {
   arrayToRelease.AppendElement(mLoadInfo.forget());
   arrayToRelease.AppendElement(mCallbacks.forget());
   arrayToRelease.AppendElement(mProgressSink.forget());
-  arrayToRelease.AppendElement(mApplicationCache.forget());
   arrayToRelease.AppendElement(mPrincipal.forget());
   arrayToRelease.AppendElement(mListener.forget());
   arrayToRelease.AppendElement(mCompressListener.forget());
@@ -4541,15 +4538,6 @@ nsresult HttpBaseChannel::SetupReplacementChannel(nsIURI* newURI,
     if (LoadDisableAltDataCache()) {
       httpInternal->DisableAltDataCache();
     }
-  }
-
-  // transfer application cache information
-  nsCOMPtr<nsIApplicationCacheChannel> appCacheChannel =
-      do_QueryInterface(newChannel);
-  if (appCacheChannel) {
-    appCacheChannel->SetApplicationCache(mApplicationCache);
-    appCacheChannel->SetInheritApplicationCache(LoadInheritApplicationCache());
-    // We purposely avoid transfering ChooseApplicationCache.
   }
 
   // transfer any properties

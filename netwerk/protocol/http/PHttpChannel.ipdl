@@ -44,28 +44,12 @@ parent:
                         ChildLoadInfoForwarderArgs? targetLoadInfoForwarder,
                         uint32_t loadFlags, nsIReferrerInfo referrerInfo,
                         URIParams? apiRedirectTo,
-                        CorsPreflightArgs? corsPreflightArgs,
-                        bool chooseAppcache);
+                        CorsPreflightArgs? corsPreflightArgs);
 
   // For document loads we keep this protocol open after child's
   // OnStopRequest, and send this msg (instead of __delete__) to allow
   // partial cleanup on parent.
   async DocumentChannelCleanup(bool clearCacheEntry);
-
-  // This might have to be sync. If this fails we must fail the document load
-  // to avoid endless loop.
-  //
-  // Explanation: the document loaded was loaded from the offline cache. But
-  // the cache group id (the manifest URL) of the cache group it was loaded
-  // from is different then the manifest the document refers to in the html
-  // tag. If we detect this during the cache selection algorithm, we must not
-  // load this document from the offline cache group it was just loaded from.
-  // Marking the cache entry as foreign in its cache group will prevent
-  // the document to load from the bad offline cache group. After it is marked,
-  // we reload the document to take the effect. If we fail to mark the entry
-  // as foreign, we will end up in the same situation and reload again and
-  // again, indefinitely.
-  async MarkOfflineCacheEntryAsForeign();
 
   // Child has detected a CORS check failure, so needs to tell the parent
   // to remove any matching entry from the CORS preflight cache.
