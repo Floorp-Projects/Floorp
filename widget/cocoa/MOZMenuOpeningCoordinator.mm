@@ -10,6 +10,8 @@
 
 #include "MOZMenuOpeningCoordinator.h"
 
+#include "mozilla/ClearOnShutdown.h"
+
 #include "nsCocoaFeatures.h"
 #include "nsCocoaUtils.h"
 #include "nsObjCExceptions.h"
@@ -41,8 +43,18 @@
   static MOZMenuOpeningCoordinator* sInstance = nil;
   if (!sInstance) {
     sInstance = [[MOZMenuOpeningCoordinator alloc] init];
+    mozilla::RunOnShutdown([&]() {
+      [sInstance release];
+      sInstance = nil;
+    });
   }
   return sInstance;
+}
+
+- (void)dealloc {
+  MOZ_RELEASE_ASSERT(!mPendingOpening, "should be empty at shutdown");
+  MOZ_RELEASE_ASSERT(mPendingAfterMenuCloseRunnables.GetSize() == 0, "should be empty at shutdown");
+  [super dealloc];
 }
 
 - (NSInteger)asynchronouslyOpenMenu:(NSMenu*)aMenu
