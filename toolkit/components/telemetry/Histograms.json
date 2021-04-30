@@ -11744,11 +11744,12 @@
   },
   "BROWSER_IS_USER_DEFAULT": {
     "record_in_processes": ["main"],
-    "products": ["firefox", "fennec"],
+    "products": ["firefox"],
     "expires_in_version": "never",
     "kind": "boolean",
     "releaseChannelCollection": "opt-out",
-    "description": "The result of the startup default desktop browser check."
+    "bug_numbers": [855928, 1641713],
+    "description": "Whether Firefox is the system default browser on startup. A true value is also recorded here, and a false value is recorded to BROWSER_SET_DEFAULT_ERROR, if a user clicked 'Use Firefox as my default browser' on an in-product prompt. (Note that on Windows 8+ the latter action opens the right settings dialog but does not actually change the default browser without further user action.) On Windows, 'system default browser' is operationalized as whether Firefox is the default HTTP protocol handler."
   },
   "BROWSER_IS_USER_DEFAULT_ERROR": {
     "record_in_processes": ["main"],
