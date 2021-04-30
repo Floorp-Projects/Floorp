@@ -177,6 +177,7 @@ EXPORTS.js += [
     "../public/ProtoKey.h",
     "../public/Proxy.h",
     "../public/Realm.h",
+    "../public/RealmIterators.h",
     "../public/RealmOptions.h",
     "../public/RefCounted.h",
     "../public/RegExp.h",
