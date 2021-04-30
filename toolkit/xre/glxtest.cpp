@@ -536,6 +536,7 @@ static bool get_gles_status(EGLDisplay dpy,
         } else {
           record_warning("Can't find render node name for DRM device");
         }
+        free(renderDeviceName);
 #endif
       }
     }
