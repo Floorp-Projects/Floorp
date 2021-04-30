@@ -800,7 +800,6 @@ HTMLContentSink::OpenContainer(ElementType aElementType) {
         if (!mNotifiedRootInsertion) {
           NotifyRootInsertion();
         }
-        ProcessOfflineManifest(mRoot);
       }
       break;
   }

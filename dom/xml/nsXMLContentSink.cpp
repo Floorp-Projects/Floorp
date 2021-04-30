@@ -875,10 +875,6 @@ bool nsXMLContentSink::SetDocElement(int32_t aNameSpaceID, nsAtom* aTagName,
     return false;
   }
 
-  if (aTagName == nsGkAtoms::html && aNameSpaceID == kNameSpaceID_XHTML) {
-    ProcessOfflineManifest(aContent);
-  }
-
   return true;
 }
 
