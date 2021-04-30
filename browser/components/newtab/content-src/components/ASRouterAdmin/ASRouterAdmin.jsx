@@ -523,7 +523,7 @@ export class ASRouterAdminInner extends React.PureComponent {
         source: "addons.mozilla.org",
         medium: "referral",
         campaign: "non-fx-button",
-        content: "iridium@particlecore.github.io",
+        content: `rta:${btoa("uBlock0@raymondhill.net")}`,
         experiment: "ua-onboarding",
         variation: "chrome",
         ua: "Google Chrome 123",
@@ -1453,10 +1453,12 @@ export class ASRouterAdminInner extends React.PureComponent {
           This forces the browser to set some attribution parameters, useful for
           testing the Return To AMO feature. Clicking on 'Force Attribution',
           with the default values in each field, will demo the Return To AMO
-          flow with the addon called 'Iridium for Youtube'. If you wish to try
+          flow with the addon called 'uBlock Origin'. If you wish to try
           different attribution parameters, enter them in the text boxes. If you
           wish to try a different addon with the Return To AMO flow, make sure
-          the 'content' text box has the addon GUID, then click 'Force
+          the 'content' text box has a string that is 'rta:base64(addonID)', the
+          base64 string of the addonID prefixed with 'rta:'. The addon must
+          currently be a recommended addon on AMO. Then click 'Force
           Attribution'. Clicking on 'Force Attribution' with blank text boxes
           reset attribution data.
         </p>
@@ -1515,7 +1517,7 @@ export class ASRouterAdminInner extends React.PureComponent {
               <input
                 type="text"
                 name="content"
-                placeholder="iridium@particlecore.github.io"
+                placeholder={`rta:${btoa("uBlock0@raymondhill.net")}`}
                 value={this.state.attributionParameters.content}
                 onChange={this.onChangeAttributionParameters}
               />{" "}
