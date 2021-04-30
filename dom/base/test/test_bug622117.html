@@ -7,6 +7,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=622117
   <title>Test for Bug 622117</title>
   <script src="/tests/SimpleTest/SimpleTest.js"></script>
   <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <script src="/tests/gfx/layers/apz/test/mochitest/apz_test_utils.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
 <body>
@@ -17,7 +19,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=622117
   </iframe>
 </p>
 <div id="content" style="display: none">
-  
+
 </div>
 <pre id="test">
 <script type="application/javascript">
@@ -27,11 +29,13 @@ SimpleTest.waitForExplicitFinish();
 
 const PASSURL = "data:text/plain,PASS";
 
-SimpleTest.waitForFocus(function() {
+SimpleTest.waitForFocus(async () => {
   $("testframe").onload = function() {
     is(this.contentDocument.documentElement.innerText, "PASS", "Should have loaded link");
     SimpleTest.finish();
   };
+
+  await waitUntilApzStable();
 
   var win = $("testframe").contentWindow;
   var a = win.document.getElementsByTagName("a")[0];
