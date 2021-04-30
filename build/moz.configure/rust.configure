@@ -670,7 +670,7 @@ option("--disable-cargo-incremental", help="Disable incremental rust compilation
 )
 @imports("os")
 def cargo_incremental(
-    opt_level,
+    developer_options,
     debug_rust,
     automation,
     code_coverage,
@@ -708,12 +708,9 @@ def cargo_incremental(
     if debug_rust:
         return
 
-    # --enable-release automatically sets -O2 for Rust code, and people can
-    # set RUSTC_OPT_LEVEL to 2 or even 3 if they want to profile Rust code.
-    # Let's assume that if Rust code is using -O2 or higher, we shouldn't
-    # be using incremental compilation, because we'd be imposing a
-    # significant runtime cost.
-    if opt_level not in ("0", "1"):
+    # Don't enable on --enable-release builds, because of the runtime
+    # performance cost.
+    if not developer_options:
         return
 
     # We're clear to use incremental compilation!
