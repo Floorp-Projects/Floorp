@@ -26,6 +26,42 @@ const TEST_ADDON_INFO = [
   },
 ];
 
+const TEST_UA_ATTRIBUTION_DATA = {
+  ua: "chrome",
+};
+
+const TEST_PROTON_CONTENT = [
+  {
+    id: "AW_STEP1",
+    order: 0,
+    content: {
+      title: "Step 1",
+      primary_button: {
+        label: "Next",
+        action: {
+          navigate: true,
+        },
+      },
+    },
+  },
+  {
+    id: "AW_STEP2",
+    order: 1,
+    content: {
+      title: "Step 2",
+      primary_button: {
+        label: {
+          string_id: "onboarding-multistage-import-primary-button-label",
+        },
+        action: {
+          type: "SHOW_MIGRATION_WIZARD",
+          data: {},
+        },
+      },
+    },
+  },
+];
+
 async function openRTAMOWithAttribution() {
   const sandbox = sinon.createSandbox();
   sandbox.stub(AddonRepository, "getAddonsByIDs").resolves(TEST_ADDON_INFO);
@@ -110,5 +146,70 @@ add_task(async function test_rtamo_attribution() {
       "main.AW_STEP3",
       "div.tiles-container.info",
     ]
+  );
+});
+
+async function openMultiStageWithUserAgentAttribution() {
+  const sandbox = sinon.createSandbox();
+  await ASRouter.forceAttribution(TEST_UA_ATTRIBUTION_DATA);
+  const TEST_PROTON_JSON = JSON.stringify(TEST_PROTON_CONTENT);
+
+  await setAboutWelcomePref(true);
+  await setProton(true);
+  await pushPrefs(["browser.aboutwelcome.screens", TEST_PROTON_JSON]);
+
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "about:welcome",
+    true
+  );
+  registerCleanupFunction(async () => {
+    BrowserTestUtils.removeTab(tab);
+    await ASRouter.forceAttribution("");
+    sandbox.restore();
+  });
+  return tab.linkedBrowser;
+}
+
+async function onButtonClick(browser, elementId) {
+  await ContentTask.spawn(
+    browser,
+    { elementId },
+    async ({ elementId: buttonId }) => {
+      await ContentTaskUtils.waitForCondition(
+        () => content.document.querySelector(buttonId),
+        buttonId
+      );
+      let button = content.document.querySelector(buttonId);
+      button.click();
+    }
+  );
+}
+
+add_task(async function test_ua_attribution() {
+  let browser = await openMultiStageWithUserAgentAttribution();
+
+  await test_screen_content(
+    browser,
+    "multistage step 1 with ua attribution",
+    // Expected selectors:
+    ["div.onboardingContainer", "main.AW_STEP1", "button.primary"],
+    // Unexpected selectors:
+    ["main.AW_STEP2"]
+  );
+
+  await onButtonClick(browser, "button.primary");
+
+  await test_screen_content(
+    browser,
+    "multistage step 2 with ua attribution",
+    // Expected selectors:
+    [
+      "div.onboardingContainer",
+      "main.AW_STEP2",
+      "button.primary[data-l10n-args*='Google Chrome']",
+    ],
+    // Unexpected selectors:
+    ["main.AW_STEP1"]
   );
 });
