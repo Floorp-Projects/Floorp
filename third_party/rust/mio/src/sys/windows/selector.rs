@@ -9,7 +9,8 @@ use std::time::Duration;
 
 use lazycell::AtomicLazyCell;
 
-use winapi::*;
+use winapi::shared::winerror::WAIT_TIMEOUT;
+use winapi::um::minwinbase::{OVERLAPPED, OVERLAPPED_ENTRY};
 use miow;
 use miow::iocp::{CompletionPort, CompletionStatus};
 
