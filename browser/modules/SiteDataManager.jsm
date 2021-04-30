@@ -24,18 +24,13 @@ XPCOMUtils.defineLazyGetter(this, "gBrandBundle", function() {
 });
 
 var SiteDataManager = {
-  _appCache: Cc["@mozilla.org/network/application-cache-service;1"].getService(
-    Ci.nsIApplicationCacheService
-  ),
-
-  // A Map of sites and their disk usage according to Quota Manager and appcache
+  // A Map of sites and their disk usage according to Quota Manager
   // Key is host (group sites based on host across scheme, port, origin atttributes).
   // Value is one object holding:
   //   - principals: instances of nsIPrincipal (only when the site has
-  //     quota storage or AppCache).
+  //     quota storage).
   //   - persisted: the persistent-storage status.
   //   - quotaUsage: the usage of indexedDB and localStorage.
-  //   - appCacheList: an array of app cache; instances of nsIApplicationCache
   _sites: new Map(),
 
   _getCacheSizeObserver: null,
@@ -68,7 +63,6 @@ var SiteDataManager = {
     this._sites.clear();
     this._getAllCookies(entryUpdatedCallback);
     await this._getQuotaUsage(entryUpdatedCallback);
-    this._updateAppCache(entryUpdatedCallback);
     Services.obs.notifyObservers(null, "sitedatamanager:sites-updated");
   },
 
@@ -102,7 +96,6 @@ var SiteDataManager = {
         quotaUsage: 0,
         lastAccessed: 0,
         principals: [],
-        appCacheList: [],
       };
       this._sites.set(host, site);
     }
@@ -215,79 +208,10 @@ var SiteDataManager = {
     }
   },
 
-  _updateAppCache(entryUpdatedCallback) {
-    let groups;
-    try {
-      groups = this._appCache.getGroups();
-    } catch (e) {
-      // NS_ERROR_NOT_AVAILABLE means that appCache is not initialized,
-      // which probably means the user has disabled it. Otherwise, log an
-      // error. Either way, there's nothing we can do here.
-      if (e.result != Cr.NS_ERROR_NOT_AVAILABLE) {
-        Cu.reportError(e);
-      }
-      return;
-    }
-
-    for (let group of groups) {
-      let cache = this._appCache.getActiveCache(group);
-      if (cache.usage <= 0) {
-        // A site with 0 byte appcache usage is redundant for us so skip it.
-        continue;
-      }
-      let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-        group
-      );
-      let site = this._getOrInsertSite(principal.host);
-      if (!site.principals.some(p => p.origin == principal.origin)) {
-        site.principals.push(principal);
-      }
-      site.appCacheList.push(cache);
-      if (entryUpdatedCallback) {
-        entryUpdatedCallback(principal.host, site);
-      }
-    }
-  },
-
-  /**
-   * Gets the current AppCache usage by host. This is using asciiHost to compare
-   * against the provided host.
-   *
-   * @param {String} the ascii host to check usage for
-   * @returns the usage in bytes
-   */
-  getAppCacheUsageByHost(host) {
-    let usage = 0;
-
-    let groups;
-    try {
-      groups = this._appCache.getGroups();
-    } catch (e) {
-      // NS_ERROR_NOT_AVAILABLE means that appCache is not initialized,
-      // which probably means the user has disabled it. Otherwise, log an
-      // error. Either way, there's nothing we can do here.
-      if (e.result != Cr.NS_ERROR_NOT_AVAILABLE) {
-        Cu.reportError(e);
-      }
-      return usage;
-    }
-
-    for (let group of groups) {
-      let uri = Services.io.newURI(group);
-      if (uri.asciiHost == host) {
-        let cache = this._appCache.getActiveCache(group);
-        usage += cache.usage;
-      }
-    }
-
-    return usage;
-  },
-
   /**
    * Checks if the site with the provided ASCII host is using any site data at all.
    * This will check for:
    *   - Cookies (incl. subdomains)
-   *   - AppCache
    *   - Quota Usage
    * in that order. This function is meant to be fast, and thus will
    * end searching and return true once the first trace of site data is found.
@@ -297,11 +221,6 @@ var SiteDataManager = {
    */
   async hasSiteData(asciiHost) {
     if (Services.cookies.countCookiesFromHost(asciiHost)) {
-      return true;
-    }
-
-    let appCacheUsage = this.getAppCacheUsageByHost(asciiHost);
-    if (appCacheUsage > 0) {
       return true;
     }
 
@@ -341,9 +260,6 @@ var SiteDataManager = {
     return this._getQuotaUsagePromise.then(() => {
       let usage = 0;
       for (let site of this._sites.values()) {
-        for (let cache of site.appCacheList) {
-          usage += cache.usage;
-        }
         usage += site.quotaUsage;
       }
       return usage;
@@ -373,9 +289,6 @@ var SiteDataManager = {
         }
 
         let usage = site.quotaUsage;
-        for (let cache of site.appCacheList) {
-          usage += cache.usage;
-        }
         list.push({
           baseDomain: site.baseDomain,
           cookies: site.cookies,
@@ -436,12 +349,6 @@ var SiteDataManager = {
       );
     }
     return Promise.all(promises);
-  },
-
-  _removeAppCache(site) {
-    for (let cache of site.appCacheList) {
-      cache.discard();
-    }
   },
 
   _removeCookies(site) {
