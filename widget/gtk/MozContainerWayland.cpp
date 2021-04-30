@@ -183,6 +183,7 @@ static void moz_container_wayland_destroy(GtkWidget* widget) {
   MozContainerWayland* container = &MOZ_CONTAINER(widget)->wl_container;
   delete container->container_lock;
   container->container_lock = nullptr;
+  container->initial_draw_cbs.clear();
 }
 
 void moz_container_wayland_add_initial_draw_callback(
