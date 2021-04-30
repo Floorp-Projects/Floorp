@@ -77,12 +77,15 @@ body {
        (-moz-os-version: windows-win8) {
   :root:-moz-lwtheme {
     background-color: var(--lwt-accent-color);
+    background-image: var(--lwt-additional-images);
+    background-repeat: var(--lwt-background-tiling);
+    background-position: var(--lwt-background-alignment);
   }
 
   :root[lwtheme-image] {
-    background-image: var(--lwt-header-image) !important;
-    background-repeat: no-repeat;
-    background-position: right top !important;
+    background-image: var(--lwt-header-image, linear-gradient(transparent, transparent)),  var(--lwt-additional-images) !important;
+    background-repeat: no-repeat, var(--lwt-background-tiling);
+    background-position: right top, var(--lwt-background-alignment) !important;
   }
 
   :root:-moz-lwtheme:-moz-window-inactive {
