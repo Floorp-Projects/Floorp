@@ -33,7 +33,7 @@ use std::net::SocketAddr;
 
 const MAX_TABLE_SIZE: u64 = 65536;
 const MAX_BLOCKED_STREAMS: u16 = 10;
-const PROTOCOLS: &[&str] = &["h3-27"];
+const PROTOCOLS: &[&str] = &["h3-27", "h3"];
 const TIMER_TOKEN: Token = Token(0xffff);
 
 const HTTP_RESPONSE_WITH_WRONG_FRAME: &[u8] = &[
