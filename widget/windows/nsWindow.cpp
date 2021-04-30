@@ -563,6 +563,12 @@ WindowsDllInterceptor::FuncHookType<decltype(&SendMessageTimeoutW)>
     TIPMessageHandler::sSendMessageTimeoutWStub;
 StaticAutoPtr<TIPMessageHandler> TIPMessageHandler::sInstance;
 
+}  // namespace mozilla
+
+#endif  // defined(ACCESSIBILITY)
+
+namespace mozilla {
+
 // This task will get the VirtualDesktopManager from the generic thread pool
 // since doing this on the main thread on startup causes performance issues.
 //
@@ -576,7 +582,7 @@ class InitializeVirtualDesktopManagerTask : public Task {
   InitializeVirtualDesktopManagerTask() : Task(false, kDefaultPriorityValue) {}
 
   virtual bool Run() override {
-#  ifndef __MINGW32__
+#ifndef __MINGW32__
     if (!IsWin10OrLater()) {
       return true;
     }
@@ -590,14 +596,12 @@ class InitializeVirtualDesktopManagerTask : public Task {
     }
 
     gVirtualDesktopManager = desktopManager;
-#  endif
+#endif
     return true;
   }
 };
 
 }  // namespace mozilla
-
-#endif  // defined(ACCESSIBILITY)
 
 /**************************************************************
  **************************************************************
