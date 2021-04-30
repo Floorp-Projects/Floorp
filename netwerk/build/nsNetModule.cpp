@@ -72,13 +72,6 @@ NS_IMPL_COMPONENT_FACTORY(net::nsHttpsHandler) {
   return handler.forget().downcast<nsIHttpProtocolHandler>();
 }
 
-#include "nsCacheService.h"
-
-nsresult nsCacheServiceConstructor(nsISupports* aOuter, const nsIID& aIID,
-                                   void** aResult) {
-  return nsCacheService::Create(aOuter, aIID, aResult);
-}
-
 #include "WebSocketChannel.h"
 #include "WebSocketChannelChild.h"
 namespace mozilla::net {
