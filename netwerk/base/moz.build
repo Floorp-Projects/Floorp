@@ -6,10 +6,6 @@
 
 XPIDL_SOURCES += [
     "mozIThirdPartyUtil.idl",
-    "nsIApplicationCache.idl",
-    "nsIApplicationCacheChannel.idl",
-    "nsIApplicationCacheContainer.idl",
-    "nsIApplicationCacheService.idl",
     "nsIArrayBufferInputStream.idl",
     "nsIAsyncStreamCopier.idl",
     "nsIAsyncStreamCopier2.idl",
