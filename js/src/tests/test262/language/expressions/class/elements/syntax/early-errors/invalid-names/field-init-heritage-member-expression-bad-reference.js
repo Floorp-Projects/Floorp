@@ -1,4 +1,4 @@
-// |reftest| shell-option(--enable-private-fields) skip-if(!xulRuntime.shell) error:SyntaxError -- requires shell-options
+// |reftest| error:SyntaxError
 // This file was procedurally generated from the following sources:
 // - src/invalid-private-names/member-expression-bad-reference.case
 // - src/invalid-private-names/default/cls-expr-field-initializer-heritage.template

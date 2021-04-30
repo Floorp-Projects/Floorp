@@ -1,4 +1,4 @@
-// |reftest| shell-option(--enable-ergonomic-brand-checks) shell-option(--enable-private-fields) skip-if(!xulRuntime.shell) -- requires shell-options
+// |reftest| shell-option(--enable-ergonomic-brand-checks) skip-if(!xulRuntime.shell) -- requires shell-options
 // Copyright 2021 the V8 project authors.  All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 

@@ -1,5 +1,3 @@
-// |jit-test| --enable-private-fields;
-
 let hit = false;
 
 function f() {
@@ -15,6 +13,6 @@ class C {
 
 try {
   C.m({});  // throws a TypeError
-} catch {}
+} catch { }
 
 assertEq(hit, true);
