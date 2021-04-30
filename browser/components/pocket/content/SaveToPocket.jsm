@@ -51,22 +51,22 @@ var PocketCustomizableWidget = {
           ".PanelUI-savetopocket-container"
         );
         let doc = panelNode.ownerDocument;
-        let frame = doc.createXULElement("browser");
+        let iframe = doc.createXULElement("iframe");
 
-        frame.setAttribute("type", "content");
-        panelNode.appendChild(frame);
+        iframe.setAttribute("type", "content");
+        panelNode.appendChild(iframe);
 
-        SaveToPocket.onShownInToolbarPanel(panelNode, frame);
+        SaveToPocket.onShownInToolbarPanel(panelNode, iframe);
       },
       onViewHiding(aEvent) {
         let panelView = aEvent.target;
         let panelNode = panelView.querySelector(
           ".PanelUI-savetopocket-container"
         );
-        let frame = panelNode.querySelector("browser");
+        let iframe = panelNode.querySelector("iframe");
         let browser = panelNode.ownerGlobal.gBrowser.selectedBrowser;
 
-        if (frame.getAttribute("itemAdded") == "true") {
+        if (iframe.getAttribute("itemAdded") == "true") {
           SaveToPocket.innerWindowIDsByBrowser.set(
             browser,
             browser.innerWindowID
@@ -250,9 +250,9 @@ var SaveToPocket = {
   /**
    * Functions related to the Pocket panel UI.
    */
-  onShownInToolbarPanel(panel, frame) {
+  onShownInToolbarPanel(panel, iframe) {
     let window = panel.ownerGlobal;
-    window.pktUI.setToolbarPanelFrame(frame);
+    window.pktUI.setToolbarPanelFrame(iframe);
     Pocket._initPanelView(window);
   },
 
