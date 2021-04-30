@@ -45,8 +45,6 @@ struct HttpChannelOnStartRequestArgs
   uint32_t? multiPartID;
   bool isLastPartOfMultiPart;
   CrossOriginOpenerPolicy openerPolicy;
-  nsCString appCacheGroupId;
-  nsCString appCacheClientId;
   nsIReferrerInfo overrideReferrerInfo;
   bool shouldWaitForOnStartRequestSent;
   nsCString cookie;
