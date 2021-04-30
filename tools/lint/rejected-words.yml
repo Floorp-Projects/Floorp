@@ -454,7 +454,6 @@ avoid-blacklist-and-whitelist:
         - tools/profiler/core/platform.cpp
         - tools/tryselect/selectors/chooser/__init__.py
         - tools/tryselect/task_config.py
-        - uriloader/prefetch/nsOfflineCacheUpdate.cpp
         - widget/android/GfxInfo.cpp
         - widget/GfxInfoBase.cpp
         - widget/gtk/IMContextWrapper.cpp

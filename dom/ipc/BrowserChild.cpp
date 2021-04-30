@@ -162,7 +162,6 @@ using namespace mozilla::dom::ipc;
 using namespace mozilla::ipc;
 using namespace mozilla::layers;
 using namespace mozilla::layout;
-using namespace mozilla::docshell;
 using namespace mozilla::widget;
 using mozilla::layers::GeckoContentController;
 
