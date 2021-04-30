@@ -732,7 +732,7 @@ _OldCacheLoad::Run() {
     mCacheThread = nullptr;
     nsCOMPtr<nsICacheEntry> entry = std::move(mCacheEntry);
 
-    rv = cb->OnCacheEntryAvailable(entry, mNew, mAppCache, mStatus);
+    rv = cb->OnCacheEntryAvailable(entry, mNew, mStatus);
 
     if (NS_FAILED(rv) && entry) {
       LOG(("  cb->OnCacheEntryAvailable failed with rv=0x%08" PRIx32,
@@ -780,7 +780,7 @@ void _OldCacheLoad::Check() {
   if (mNew) return;
 
   uint32_t result;
-  nsresult rv = mCallback->OnCacheEntryCheck(mCacheEntry, mAppCache, &result);
+  nsresult rv = mCallback->OnCacheEntryCheck(mCacheEntry, &result);
   LOG(("  OnCacheEntryCheck result ent=%p, cb=%p, appcache=%p, rv=0x%08" PRIx32
        ", result=%d",
        mCacheEntry.get(), mCallback.get(), mAppCache.get(),

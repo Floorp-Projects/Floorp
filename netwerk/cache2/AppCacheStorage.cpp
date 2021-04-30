@@ -57,7 +57,7 @@ NS_IMETHODIMP AppCacheStorage::AsyncOpenURI(
     LOG(
         ("AppCacheStorage::AsyncOpenURI entry not found in any appcache, "
          "giving up"));
-    aCallback->OnCacheEntryAvailable(nullptr, false, nullptr,
+    aCallback->OnCacheEntryAvailable(nullptr, false,
                                      NS_ERROR_CACHE_KEY_NOT_FOUND);
     return NS_OK;
   }

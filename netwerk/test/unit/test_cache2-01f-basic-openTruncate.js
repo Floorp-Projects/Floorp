@@ -18,7 +18,7 @@ function run_test() {
         finish_cache2_test();
       })
     );
-  }).onCacheEntryAvailable(entry, true, null, 0);
+  }).onCacheEntryAvailable(entry, true, 0);
 
   do_test_pending();
 }

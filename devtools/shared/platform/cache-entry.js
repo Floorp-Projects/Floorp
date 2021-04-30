@@ -98,10 +98,10 @@ exports.CacheEntry = {
         "",
         Ci.nsICacheStorage.OPEN_SECRETLY,
         {
-          onCacheEntryCheck: (entry, appcache) => {
+          onCacheEntryCheck: entry => {
             return Ci.nsICacheEntryOpenCallback.ENTRY_WANTED;
           },
-          onCacheEntryAvailable: (descriptor, isnew, appcache, status) => {
+          onCacheEntryAvailable: (descriptor, isnew, status) => {
             if (descriptor) {
               const descriptorObj = this.parseCacheDescriptor(descriptor);
               onCacheDescriptorAvailable(descriptorObj);

@@ -71,9 +71,7 @@ nsresult CachePushChecker::DoCheck() {
 }
 
 NS_IMETHODIMP
-CachePushChecker::OnCacheEntryCheck(nsICacheEntry* entry,
-                                    nsIApplicationCache* appCache,
-                                    uint32_t* result) {
+CachePushChecker::OnCacheEntryCheck(nsICacheEntry* entry, uint32_t* result) {
   MOZ_ASSERT(XRE_IsParentProcess());
 
   // We never care to fully open the entry, since we won't actually use it.
@@ -225,7 +223,6 @@ CachePushChecker::OnCacheEntryCheck(nsICacheEntry* entry,
 
 NS_IMETHODIMP
 CachePushChecker::OnCacheEntryAvailable(nsICacheEntry* entry, bool isNew,
-                                        nsIApplicationCache* appCache,
                                         nsresult result) {
   // Nothing to do here, all the work is in OnCacheEntryCheck.
   return NS_OK;

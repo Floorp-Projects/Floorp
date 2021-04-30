@@ -738,8 +738,8 @@ bool CacheEntry::InvokeCallback(Callback& aCallback) {
 
           RefPtr<CacheEntryHandle> handle = NewHandle();
 
-          nsresult rv = aCallback.mCallback->OnCacheEntryCheck(handle, nullptr,
-                                                               &checkResult);
+          nsresult rv =
+              aCallback.mCallback->OnCacheEntryCheck(handle, &checkResult);
           LOG(("  OnCacheEntryCheck: rv=0x%08" PRIx32 ", result=%" PRId32,
                static_cast<uint32_t>(rv), static_cast<uint32_t>(checkResult)));
 
@@ -848,7 +848,7 @@ void CacheEntry::InvokeAvailableCallback(Callback const& aCallback) {
     LOG(
         ("  doomed or not wanted, notifying OCEA with "
          "NS_ERROR_CACHE_KEY_NOT_FOUND"));
-    aCallback.mCallback->OnCacheEntryAvailable(nullptr, false, nullptr,
+    aCallback.mCallback->OnCacheEntryAvailable(nullptr, false,
                                                NS_ERROR_CACHE_KEY_NOT_FOUND);
     return;
   }
@@ -864,7 +864,7 @@ void CacheEntry::InvokeAvailableCallback(Callback const& aCallback) {
     OnFetched(aCallback);
 
     RefPtr<CacheEntryHandle> handle = NewHandle();
-    aCallback.mCallback->OnCacheEntryAvailable(handle, false, nullptr, NS_OK);
+    aCallback.mCallback->OnCacheEntryAvailable(handle, false, NS_OK);
     return;
   }
 
@@ -873,7 +873,7 @@ void CacheEntry::InvokeAvailableCallback(Callback const& aCallback) {
     LOG(
         ("  r/o and not ready, notifying OCEA with "
          "NS_ERROR_CACHE_KEY_NOT_FOUND"));
-    aCallback.mCallback->OnCacheEntryAvailable(nullptr, false, nullptr,
+    aCallback.mCallback->OnCacheEntryAvailable(nullptr, false,
                                                NS_ERROR_CACHE_KEY_NOT_FOUND);
     return;
   }
@@ -891,7 +891,7 @@ void CacheEntry::InvokeAvailableCallback(Callback const& aCallback) {
 
   RefPtr<CacheEntryHandle> handle = NewWriteHandle();
   rv = aCallback.mCallback->OnCacheEntryAvailable(handle, state == WRITING,
-                                                  nullptr, NS_OK);
+                                                  NS_OK);
 
   if (NS_FAILED(rv)) {
     LOG(("  writing/revalidating failed (0x%08" PRIx32 ")",

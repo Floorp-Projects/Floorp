@@ -33,7 +33,7 @@ function run_test() {
                   "22m",
                   "22d",
                   function() {}
-                ).onCacheEntryAvailable(entry2, true, null, Cr.NS_OK);
+                ).onCacheEntryAvailable(entry2, true, Cr.NS_OK);
               });
             })
           );

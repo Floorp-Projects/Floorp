@@ -3532,9 +3532,7 @@ void nsHttpChannel::UntieValidationRequest() {
 }
 
 NS_IMETHODIMP
-nsHttpChannel::OnCacheEntryCheck(nsICacheEntry* entry,
-                                 nsIApplicationCache* appCache,
-                                 uint32_t* aResult) {
+nsHttpChannel::OnCacheEntryCheck(nsICacheEntry* entry, uint32_t* aResult) {
   nsresult rv = NS_OK;
 
   LOG(("nsHttpChannel::OnCacheEntryCheck enter [channel=%p entry=%p]", this,
@@ -3639,7 +3637,7 @@ nsHttpChannel::OnCacheEntryCheck(nsICacheEntry* entry,
       return NS_OK;
     }
 
-    rv = OpenCacheInputStream(entry, true, false);
+    rv = OpenCacheInputStream(entry, true);
     if (NS_SUCCEEDED(rv)) {
       mCachedContentIsValid = true;
       entry->MaybeMarkValid();
@@ -3700,7 +3698,7 @@ nsHttpChannel::OnCacheEntryCheck(nsICacheEntry* entry,
       rv = MaybeSetupByteRangeRequest(size, contentLength);
       StoreCachedContentIsPartial(NS_SUCCEEDED(rv) && LoadIsPartialRequest());
       if (LoadCachedContentIsPartial()) {
-        rv = OpenCacheInputStream(entry, false, !!appCache);
+        rv = OpenCacheInputStream(entry, false);
         if (NS_FAILED(rv)) {
           UntieByteRangeRequest();
           return rv;
@@ -3864,7 +3862,7 @@ nsHttpChannel::OnCacheEntryCheck(nsICacheEntry* entry,
   }
 
   if (mCachedContentIsValid || mDidReval) {
-    rv = OpenCacheInputStream(entry, mCachedContentIsValid, !!appCache);
+    rv = OpenCacheInputStream(entry, mCachedContentIsValid);
     if (NS_FAILED(rv)) {
       // If we can't get the entity then we have to act as though we
       // don't have the cache entry.
@@ -3901,7 +3899,6 @@ nsHttpChannel::OnCacheEntryCheck(nsICacheEntry* entry,
 
 NS_IMETHODIMP
 nsHttpChannel::OnCacheEntryAvailable(nsICacheEntry* entry, bool aNew,
-                                     nsIApplicationCache* aAppCache,
                                      nsresult status) {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -3909,8 +3906,8 @@ nsHttpChannel::OnCacheEntryAvailable(nsICacheEntry* entry, bool aNew,
 
   LOG(
       ("nsHttpChannel::OnCacheEntryAvailable [this=%p entry=%p "
-       "new=%d appcache=%p status=%" PRIx32 "]\n",
-       this, entry, aNew, aAppCache, static_cast<uint32_t>(status)));
+       "new=%d status=%" PRIx32 "]\n",
+       this, entry, aNew, static_cast<uint32_t>(status)));
 
   // if the channel's already fired onStopRequest, then we should ignore
   // this event.
@@ -3919,7 +3916,7 @@ nsHttpChannel::OnCacheEntryAvailable(nsICacheEntry* entry, bool aNew,
     return NS_OK;
   }
 
-  rv = OnCacheEntryAvailableInternal(entry, aNew, aAppCache, status);
+  rv = OnCacheEntryAvailableInternal(entry, aNew, status);
   if (NS_FAILED(rv)) {
     CloseCacheEntry(false);
     if (mRaceCacheWithNetwork && mNetworkTriggered &&
@@ -3939,9 +3936,9 @@ nsHttpChannel::OnCacheEntryAvailable(nsICacheEntry* entry, bool aNew,
   return NS_OK;
 }
 
-nsresult nsHttpChannel::OnCacheEntryAvailableInternal(
-    nsICacheEntry* entry, bool aNew, nsIApplicationCache* aAppCache,
-    nsresult status) {
+nsresult nsHttpChannel::OnCacheEntryAvailableInternal(nsICacheEntry* entry,
+                                                      bool aNew,
+                                                      nsresult status) {
   nsresult rv;
 
   if (mCanceled) {
@@ -4157,8 +4154,7 @@ nsresult nsHttpChannel::UpdateExpirationTime() {
 }
 
 nsresult nsHttpChannel::OpenCacheInputStream(nsICacheEntry* cacheEntry,
-                                             bool startBuffering,
-                                             bool checkingAppCacheEntry) {
+                                             bool startBuffering) {
   nsresult rv;
 
   if (mURI->SchemeIs("https")) {
