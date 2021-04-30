@@ -349,11 +349,6 @@ ClassifierDummyChannel::SetCookie(const nsACString& aCookieHeader) {
 }
 
 NS_IMETHODIMP
-ClassifierDummyChannel::SetupFallbackChannel(const char* aFallbackKey) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
 ClassifierDummyChannel::GetIsAuthChannel(bool* aIsAuthChannel) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
