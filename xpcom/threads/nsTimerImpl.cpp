@@ -394,6 +394,13 @@ nsresult nsTimerImpl::Cancel() {
 }
 
 void nsTimerImpl::CancelImpl(bool aClearITimer) {
+  if (gXPCOMTimersShutDown) {
+    // Some timers are created during XPCOM shutdown. But if we have already
+    // undergone timer thread shutdown, we will not have a timer to cancel here.
+    MOZ_ASSERT_UNREACHABLE(
+        "Tried to cancel a timer after timers have been freed.");
+    return;
+  }
   Callback cbTrash;
   RefPtr<nsITimer> timerTrash;
 
