@@ -137,6 +137,12 @@ ProcessResult MinidumpProcessor::Process(
     }
   }
 
+  MinidumpMacCrashInfo *crash_info = dump->GetMacCrashInfo();
+  if (crash_info) {
+    process_state->mac_crash_info_ = crash_info->description();
+    process_state->mac_crash_info_records_ = crash_info->records();
+  }
+
   // This will just return an empty string if it doesn't exist.
   process_state->assertion_ = GetAssertion(dump);
 

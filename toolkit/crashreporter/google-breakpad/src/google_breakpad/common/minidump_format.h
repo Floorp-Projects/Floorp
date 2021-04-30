@@ -351,6 +351,10 @@ typedef enum {
   /* Crashpad extension types. 0x4350 = "CP"
    * See Crashpad's minidump/minidump_extensions.h. */
   MD_CRASHPAD_INFO_STREAM        = 0x43500001,  /* MDRawCrashpadInfo  */
+
+  /* Data from the __DATA,__crash_info section of every module which contains
+   * one that has useful data. Only available on macOS. 0x4D7A = "Mz". */
+  MOZ_MACOS_CRASH_INFO_STREAM    = 0x4d7a0001,
 } MDStreamType;  /* MINIDUMP_STREAM_TYPE */
 
 
@@ -1093,6 +1097,52 @@ typedef struct {
   MDLocationDescriptor simple_annotations;  /* MDRawSimpleStringDictionary */
   MDLocationDescriptor module_list;  /* MDRawModuleCrashpadInfoList */
 } MDRawCrashpadInfo;
+
+/* macOS __DATA,__crash_info data */
+
+typedef struct {
+  uint64_t stream_type; /* MOZ_MACOS_CRASH_INFO_STREAM */
+  uint64_t version;
+  uint64_t thread;
+  uint64_t dialog_mode;
+  uint64_t abort_cause; /* Only valid when 'version' > 4 */
+  /* If/when Apple adds more fields to crashreporter_annotations_t, add
+   * numerical fields here and change (MDRawMacCrashInfo).record_start_size
+   * accordingly. Make them all uint64_t, to keep this structure the same size
+   * on all platforms. 'data' should always be the last field. Add new string
+   * fields to the end of 'data'. */
+  /* 'data' currently contains five null-terminated uint8_t arrays, each
+   * possibly empty (containing only a single terminal null), stored one after
+   * the other:
+   *   module_path;
+   *   message;
+   *   signature_string;
+   *   backtrace;
+   *   message2; */
+  uint8_t data[0];
+} MDRawMacCrashInfoRecord;
+
+/* This is the maximum supported size for each string in
+ * (MDRawMacCrashInfoRecord).data. If we encounter a string in the
+ * __crash_info section which seems larger than this, that's a sign of data
+ * corruption. */
+#define MACCRASHINFO_STRING_MAXSIZE 8192
+
+/* In principle there should only be one or two non-empty __DATA,__crash_info
+ * sections per process. But the __crash_info section is almost entirely
+ * undocumented, so just in case we set a large maximum. */
+#define MAC_CRASH_INFOS_MAX 20
+
+typedef struct {
+  uint32_t stream_type; /* MOZ_MACOS_CRASH_INFO_STREAM */
+  uint32_t record_count;
+  /* The size of the "fixed-size" part of MDRawMacCrashInfoRecord, before the
+   * 'data' field. This will always be 'sizeof(MDRawMacCrashInfoRecord)'. But
+   * that value may change if more numerical fields are added to
+   * MDRawMacCrashInfoRecord in the future. */
+  uint32_t record_start_size;
+  MDLocationDescriptor records[MAC_CRASH_INFOS_MAX];
+} MDRawMacCrashInfo;
 
 #if defined(_MSC_VER)
 #pragma warning(pop)

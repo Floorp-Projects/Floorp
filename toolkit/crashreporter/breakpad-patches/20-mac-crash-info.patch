@@ -1,0 +1,516 @@
+# HG changeset patch
+# User Steven Michaud <smichaud@pobox.com>
+# Date 1619800781 18000
+#      Fri Apr 30 11:39:41 2021 -0500
+# Node ID 9f89eb3d68316e8c3a469d1c058ad40c1807d7bc
+# Parent  0db412525773fff333e8d338551021e083c25619
+Bug 1577886 - Add support to for macOS __crash_info data to Breakpad. r=gsvelto
+Differential Revision: https://phabricator.services.mozilla.com/D112871
+
+diff --git a/src/google_breakpad/common/minidump_format.h b/src/google_breakpad/common/minidump_format.h
+--- a/src/google_breakpad/common/minidump_format.h
++++ b/src/google_breakpad/common/minidump_format.h
+@@ -351,6 +351,10 @@ typedef enum {
+   /* Crashpad extension types. 0x4350 = "CP"
+    * See Crashpad's minidump/minidump_extensions.h. */
+   MD_CRASHPAD_INFO_STREAM        = 0x43500001,  /* MDRawCrashpadInfo  */
++
++  /* Data from the __DATA,__crash_info section of every module which contains
++   * one that has useful data. Only available on macOS. 0x4D7A = "Mz". */
++  MOZ_MACOS_CRASH_INFO_STREAM    = 0x4d7a0001,
+ } MDStreamType;  /* MINIDUMP_STREAM_TYPE */
+ 
+ 
+@@ -1094,6 +1098,52 @@ typedef struct {
+   MDLocationDescriptor module_list;  /* MDRawModuleCrashpadInfoList */
+ } MDRawCrashpadInfo;
+ 
++/* macOS __DATA,__crash_info data */
++
++typedef struct {
++  uint64_t stream_type; /* MOZ_MACOS_CRASH_INFO_STREAM */
++  uint64_t version;
++  uint64_t thread;
++  uint64_t dialog_mode;
++  uint64_t abort_cause; /* Only valid when 'version' > 4 */
++  /* If/when Apple adds more fields to crashreporter_annotations_t, add
++   * numerical fields here and change (MDRawMacCrashInfo).record_start_size
++   * accordingly. Make them all uint64_t, to keep this structure the same size
++   * on all platforms. 'data' should always be the last field. Add new string
++   * fields to the end of 'data'. */
++  /* 'data' currently contains five null-terminated uint8_t arrays, each
++   * possibly empty (containing only a single terminal null), stored one after
++   * the other:
++   *   module_path;
++   *   message;
++   *   signature_string;
++   *   backtrace;
++   *   message2; */
++  uint8_t data[0];
++} MDRawMacCrashInfoRecord;
++
++/* This is the maximum supported size for each string in
++ * (MDRawMacCrashInfoRecord).data. If we encounter a string in the
++ * __crash_info section which seems larger than this, that's a sign of data
++ * corruption. */
++#define MACCRASHINFO_STRING_MAXSIZE 8192
++
++/* In principle there should only be one or two non-empty __DATA,__crash_info
++ * sections per process. But the __crash_info section is almost entirely
++ * undocumented, so just in case we set a large maximum. */
++#define MAC_CRASH_INFOS_MAX 20
++
++typedef struct {
++  uint32_t stream_type; /* MOZ_MACOS_CRASH_INFO_STREAM */
++  uint32_t record_count;
++  /* The size of the "fixed-size" part of MDRawMacCrashInfoRecord, before the
++   * 'data' field. This will always be 'sizeof(MDRawMacCrashInfoRecord)'. But
++   * that value may change if more numerical fields are added to
++   * MDRawMacCrashInfoRecord in the future. */
++  uint32_t record_start_size;
++  MDLocationDescriptor records[MAC_CRASH_INFOS_MAX];
++} MDRawMacCrashInfo;
++
+ #if defined(_MSC_VER)
+ #pragma warning(pop)
+ #endif  /* _MSC_VER */
+diff --git a/src/google_breakpad/processor/minidump.h b/src/google_breakpad/processor/minidump.h
+--- a/src/google_breakpad/processor/minidump.h
++++ b/src/google_breakpad/processor/minidump.h
+@@ -1151,6 +1151,57 @@ class MinidumpCrashpadInfo : public Mini
+   std::map<std::string, std::string> simple_annotations_;
+ };
+ 
++// MinidumpMacCrashInfo wraps MDRawMacCrashInfo. It's an optional stream
++// in a minidump that records information from the __DATA,__crash_info
++// section of every module in the crashing process that contains one, and
++// which isn't empty of useful information. Only present on macOS.
++
++// Friendly wrapper for the information in MDRawMacCrashInfoRecord.
++typedef struct crash_info_record {
++  string module_path;
++  unsigned long version;
++  string message;
++  string signature_string;
++  string backtrace;
++  string message2;
++  unsigned long long thread;
++  unsigned int dialog_mode;
++  long long abort_cause; // Only valid when 'version' > 4
++  crash_info_record()
++      : version(0), thread(0), dialog_mode(0), abort_cause(0)
++    {}
++} crash_info_record_t;
++
++class MinidumpMacCrashInfo : public MinidumpStream {
++ public:
++  // A human-readable representation of the data from the __DATA,__crash_info
++  // sections in all of the crashing process's modules that have one, if
++  // it's not empty of useful data. Suitable for use by "minidump_stackwalk".
++  string description() const { return description_; }
++  // A "machine-readable" copy of the same information, suitable for use by
++  // "minidump_stalkwalk -m".
++  vector<crash_info_record_t> const records() {
++    return records_;
++  }
++
++  // Print a human-readable representation of the object to stdout.
++  void Print();
++
++ private:
++  friend class Minidump;
++
++  static const uint32_t kStreamType = MOZ_MACOS_CRASH_INFO_STREAM;
++
++  explicit MinidumpMacCrashInfo(Minidump* minidump_);
++
++  bool ReadCrashInfoRecord(MDLocationDescriptor location,
++                           uint32_t record_start_size);
++  bool Read(uint32_t expected_size);
++
++  string description_;
++  vector<crash_info_record_t> records_;
++};
++
+ 
+ // Minidump is the user's interface to a minidump file.  It wraps MDRawHeader
+ // and provides access to the minidump's top-level stream directory.
+@@ -1214,6 +1265,7 @@ class Minidump {
+   virtual MinidumpBreakpadInfo* GetBreakpadInfo();
+   virtual MinidumpMemoryInfoList* GetMemoryInfoList();
+   MinidumpCrashpadInfo* GetCrashpadInfo();
++  MinidumpMacCrashInfo* GetMacCrashInfo();
+ 
+   // The next method also calls GetStream, but is exclusive for Linux dumps.
+   virtual MinidumpLinuxMapsList *GetLinuxMapsList();
+diff --git a/src/google_breakpad/processor/process_state.h b/src/google_breakpad/processor/process_state.h
+--- a/src/google_breakpad/processor/process_state.h
++++ b/src/google_breakpad/processor/process_state.h
+@@ -112,6 +112,14 @@ class ProcessState {
+     return &thread_memory_regions_;
+   }
+   const SystemInfo* system_info() const { return &system_info_; }
++  string mac_crash_info() const { return mac_crash_info_; }
++  size_t mac_crash_info_records_count() const {
++    return mac_crash_info_records_.size();
++  }
++  const crash_info_record_t* mac_crash_info_records() const {
++    return reinterpret_cast<const crash_info_record_t*>(
++      &mac_crash_info_records_[0]);
++  }
+   const CodeModules* modules() const { return modules_; }
+   const CodeModules* unloaded_modules() const { return unloaded_modules_; }
+   const vector<linked_ptr<const CodeModule> >* shrunk_range_modules() const {
+@@ -179,6 +187,10 @@ class ProcessState {
+   // OS and CPU information.
+   SystemInfo system_info_;
+ 
++  // Information from __DATA,__crash_info sections.  Only present on macOS.
++  string mac_crash_info_;
++  vector<crash_info_record_t> mac_crash_info_records_;
++
+   // The modules that were loaded into the process represented by the
+   // ProcessState.
+   const CodeModules *modules_;
+diff --git a/src/processor/minidump.cc b/src/processor/minidump.cc
+--- a/src/processor/minidump.cc
++++ b/src/processor/minidump.cc
+@@ -5116,6 +5116,230 @@ void MinidumpCrashpadInfo::Print() {
+   printf("\n");
+ }
+ 
++//
++// MinidumpMacCrashInfo
++//
++
++MinidumpMacCrashInfo::MinidumpMacCrashInfo(Minidump* minidump)
++    : MinidumpStream(minidump),
++      description_(),
++      records_() {
++}
++
++bool MinidumpMacCrashInfo::ReadCrashInfoRecord(MDLocationDescriptor location,
++                                               uint32_t record_start_size) {
++  if (!minidump_->SeekSet(location.rva)) {
++    BPLOG(ERROR) << "ReadCrashInfoRecord could not seek to record";
++    return false;
++  }
++
++  // We may be reading a minidump 1) created by (newer) code that defines more
++  // fields than we do in the fixed-size part of MDRawMacCrashInfoRecord
++  // (before 'data'), or 2) created by (older) code that defines fewer fields.
++  // In the first case we read in the newer fields but ignore them. In the
++  // second case we read in only the older fields, and leave the newer fields
++  // (in 'raw_record_start') set to zero.
++  uint32_t raw_record_size = sizeof(MDRawMacCrashInfoRecord);
++  if (record_start_size > raw_record_size) {
++    raw_record_size = record_start_size;
++  }
++  scoped_ptr< vector<uint8_t> > raw_record(
++    new vector<uint8_t>(raw_record_size));
++  if (!minidump_->ReadBytes(&(*raw_record)[0], record_start_size)) {
++     BPLOG(ERROR) << "ReadCrashInfoRecord could not read " <<
++                     record_start_size << " bytes of record";
++     return false;
++  }
++  MDRawMacCrashInfoRecord* raw_record_start =
++    (MDRawMacCrashInfoRecord*) &(*raw_record)[0];
++
++  if (minidump_->swap()) {
++    Swap(&raw_record_start->stream_type);
++    Swap(&raw_record_start->version);
++    Swap(&raw_record_start->thread);
++    Swap(&raw_record_start->dialog_mode);
++    Swap(&raw_record_start->abort_cause);
++  }
++
++  if (raw_record_start->stream_type != MOZ_MACOS_CRASH_INFO_STREAM) {
++    BPLOG(ERROR) << "ReadCrashInfoRecord stream type mismatch, " <<
++                    raw_record_start->stream_type << " != " <<
++                    MOZ_MACOS_CRASH_INFO_STREAM;
++    return false;
++  }
++
++  uint32_t string_data_size = location.data_size - record_start_size;
++  scoped_ptr< vector<uint8_t> > data(new vector<uint8_t>(string_data_size));
++  if (!minidump_->ReadBytes(&(*data)[0], string_data_size)) {
++     BPLOG(ERROR) << "ReadCrashInfoRecord could not read " <<
++                     string_data_size << " bytes of record data";
++     return false;
++  }
++
++  crash_info_record_t record;
++
++  record.version = (unsigned long) raw_record_start->version;
++  record.thread = (unsigned long long) raw_record_start->thread;
++  record.dialog_mode = (unsigned int) raw_record_start->dialog_mode;
++  record.abort_cause = (long long) raw_record_start->abort_cause;
++
++  // Once again, we may be reading a minidump created by newer code that
++  // stores more strings than we expect in (MDRawMacCrashInfoRecord).data,
++  // or one created by older code that contains fewer strings than we
++  // expect. In the first case we ignore the "extra" strings. To deal with
++  // the second case we bail when 'offset > string_data_size'.
++  const char* string_data = (const char*) &(*data)[0];
++  size_t offset = 0;
++  for (int i = 1; (i <= 5) && (string_data != nullptr); ++i) {
++    switch (i) {
++      case 1:
++        record.module_path.append(string_data);
++        break;
++      case 2:
++        record.message.append(string_data);
++        break;
++      case 3:
++        record.signature_string.append(string_data);
++        break;
++      case 4:
++        record.backtrace.append(string_data);
++        break;
++      case 5:
++        record.message2.append(string_data);
++        break;
++    }
++    size_t char_array_size = strlen(string_data) + 1;
++    offset += char_array_size;
++    if (offset > string_data_size) {
++      break;
++    }
++    string_data += char_array_size;
++  }
++
++  records_.push_back(record);
++
++  description_.append(" Module \"");
++  description_.append(record.module_path);
++  description_.append("\":\n");
++
++  int num_fields = 6;
++  if (record.version > 4) {
++    num_fields = 7;
++  }
++  for (int i = 1; i <= num_fields; ++i) {
++    switch (i) {
++      case 1:
++        if (!record.message.empty()) {
++          description_.append("  message: \"");
++          description_.append(record.message);
++          description_.append("\"\n");
++        }
++        break;
++      case 2:
++        if (!record.signature_string.empty()) {
++          description_.append("  signature_string: \"");
++          description_.append(record.signature_string);
++          description_.append("\"\n");
++        }
++        break;
++      case 3:
++        if (!record.backtrace.empty()) {
++          description_.append("  backtrace: \"");
++          description_.append(record.backtrace);
++          description_.append("\"\n");
++        }
++        break;
++      case 4:
++        if (!record.message2.empty()) {
++          description_.append("  message2: \"");
++          description_.append(record.message2);
++          description_.append("\"\n");
++        }
++        break;
++      case 5:
++        if (record.thread) {
++          char thread[128];
++          snprintf(thread, sizeof(thread), "  thread: 0x%llx\n",
++                   record.thread);
++          description_.append(thread);
++        }
++        break;
++      case 6:
++        if (record.dialog_mode) {
++          char dialog_mode[128];
++          snprintf(dialog_mode, sizeof(dialog_mode), "  dialog_mode: 0x%x\n",
++                   record.dialog_mode);
++          description_.append(dialog_mode);
++        }
++        break;
++      case 7:
++        if (record.abort_cause) {
++          char abort_cause[128];
++          snprintf(abort_cause, sizeof(abort_cause), "  abort_cause: %lld\n",
++                   record.abort_cause);
++          description_.append(abort_cause);
++        }
++        break;
++      default:
++        break;
++    }
++  }
++
++  return true;
++}
++
++bool MinidumpMacCrashInfo::Read(uint32_t expected_size) {
++  description_.clear();
++  records_.clear();
++  valid_ = false;
++
++  MDRawMacCrashInfo crash_info;
++  if (expected_size != sizeof(crash_info)) {
++    BPLOG(ERROR) << "MinidumpMacCrashInfo size mismatch, " <<
++                    expected_size << " != " << sizeof(crash_info);
++    return false;
++  }
++  if (!minidump_->ReadBytes(&crash_info, sizeof(crash_info))) {
++    BPLOG(ERROR) << "MinidumpMacCrashInfo could not read " <<
++                    sizeof(crash_info) << " bytes";
++    return false;
++  }
++  if (minidump_->swap()) {
++    Swap(&crash_info.stream_type);
++    Swap(&crash_info.record_count);
++    Swap(&crash_info.record_start_size);
++    for (uint32_t i = 0; i < crash_info.record_count; ++i) {
++      Swap(&crash_info.records[i].data_size);
++      Swap(&crash_info.records[i].rva);
++    }
++  }
++  if (crash_info.stream_type != MOZ_MACOS_CRASH_INFO_STREAM) {
++    BPLOG(ERROR) << "MinidumpMacCrashInfo stream type mismatch, " <<
++                    crash_info.stream_type << " != " <<
++                    MOZ_MACOS_CRASH_INFO_STREAM;
++    return false;
++  }
++
++  for (uint32_t i = 0; i < crash_info.record_count; ++i) {
++    if (!ReadCrashInfoRecord(crash_info.records[i],
++                             crash_info.record_start_size)) {
++      return false;
++    }
++  }
++
++  valid_ = true;
++  return true;
++}
++
++void MinidumpMacCrashInfo::Print() {
++  if (!valid_) {
++    BPLOG(ERROR) << "MinidumpMacCrashInfo cannot print invalid data";
++    return;
++  }
++
++  printf("MinidumpMacCrashInfo:\n\n");
++  printf("%s", description_.c_str());
++}
+ 
+ //
+ // Minidump
+@@ -5378,7 +5602,8 @@ bool Minidump::Read() {
+         case MD_SYSTEM_INFO_STREAM:
+         case MD_MISC_INFO_STREAM:
+         case MD_BREAKPAD_INFO_STREAM:
+-        case MD_CRASHPAD_INFO_STREAM: {
++        case MD_CRASHPAD_INFO_STREAM:
++        case MOZ_MACOS_CRASH_INFO_STREAM: {
+           if (stream_map_->find(stream_type) != stream_map_->end()) {
+             // Another stream with this type was already found.  A minidump
+             // file should contain at most one of each of these stream types.
+@@ -5499,6 +5724,11 @@ MinidumpCrashpadInfo* Minidump::GetCrash
+   return GetStream(&crashpad_info);
+ }
+ 
++MinidumpMacCrashInfo* Minidump::GetMacCrashInfo() {
++  MinidumpMacCrashInfo* mac_crash_info;
++  return GetStream(&mac_crash_info);
++}
++
+ static const char* get_stream_name(uint32_t stream_type) {
+   switch (stream_type) {
+   case MD_UNUSED_STREAM:
+@@ -5571,6 +5801,8 @@ static const char* get_stream_name(uint3
+     return "MD_LINUX_DSO_DEBUG";
+   case MD_CRASHPAD_INFO_STREAM:
+     return "MD_CRASHPAD_INFO_STREAM";
++  case MOZ_MACOS_CRASH_INFO_STREAM:
++    return "MOZ_MACOS_CRASH_INFO_STREAM";
+   default:
+     return "unknown";
+   }
+diff --git a/src/processor/minidump_processor.cc b/src/processor/minidump_processor.cc
+--- a/src/processor/minidump_processor.cc
++++ b/src/processor/minidump_processor.cc
+@@ -137,6 +137,12 @@ ProcessResult MinidumpProcessor::Process
+     }
+   }
+ 
++  MinidumpMacCrashInfo *crash_info = dump->GetMacCrashInfo();
++  if (crash_info) {
++    process_state->mac_crash_info_ = crash_info->description();
++    process_state->mac_crash_info_records_ = crash_info->records();
++  }
++
+   // This will just return an empty string if it doesn't exist.
+   process_state->assertion_ = GetAssertion(dump);
+ 
+diff --git a/src/processor/stackwalk_common.cc b/src/processor/stackwalk_common.cc
+--- a/src/processor/stackwalk_common.cc
++++ b/src/processor/stackwalk_common.cc
+@@ -872,6 +872,12 @@ void PrintProcessState(const ProcessStat
+     printf("Process uptime: not available\n");
+   }
+ 
++  if (!process_state.mac_crash_info().empty()) {
++    printf("\n");
++    printf("Application-specific information:\n");
++    printf("%s", process_state.mac_crash_info().c_str());
++  }
++
+   // If the thread that requested the dump is known, print it first.
+   int requesting_thread = process_state.requesting_thread();
+   if (requesting_thread != -1) {
+@@ -955,6 +961,44 @@ void PrintProcessStateMachineReadable(co
+     printf("\n");
+   }
+ 
++  const crash_info_record_t* crash_info_records =
++    process_state.mac_crash_info_records();
++  size_t num_records =
++    process_state.mac_crash_info_records_count();
++  for (size_t i = 0; i < num_records; ++i) {
++    char thread_str[32];
++    if (crash_info_records[i].thread) {
++      snprintf(thread_str, sizeof(thread_str), "0x%llx",
++               crash_info_records[i].thread);
++    } else {
++      strncpy(thread_str, "0", sizeof(thread_str));
++    }
++    char dialog_mode_str[32];
++    if (crash_info_records[i].dialog_mode) {
++      snprintf(dialog_mode_str, sizeof(dialog_mode_str), "0x%x",
++               crash_info_records[i].dialog_mode);
++    } else {
++      strncpy(dialog_mode_str, "0", sizeof(dialog_mode_str));
++    }
++    char abort_cause_str[32];
++    if (crash_info_records[i].abort_cause) {
++      snprintf(abort_cause_str, sizeof(abort_cause_str), "%lld",
++               crash_info_records[i].abort_cause);
++    } else {
++      strncpy(abort_cause_str, "0", sizeof(abort_cause_str));
++    }
++    printf("MacCrashInfo%c%s%c%lu%c%s%c%s%c%s%c%s%c%s%c%s%c%s\n",
++           kOutputSeparator, crash_info_records[i].module_path.c_str(),
++           kOutputSeparator, crash_info_records[i].version,
++           kOutputSeparator, crash_info_records[i].message.c_str(),
++           kOutputSeparator, crash_info_records[i].signature_string.c_str(),
++           kOutputSeparator, crash_info_records[i].backtrace.c_str(),
++           kOutputSeparator, crash_info_records[i].message2.c_str(),
++           kOutputSeparator, thread_str,
++           kOutputSeparator, dialog_mode_str,
++           kOutputSeparator, abort_cause_str);
++  }
++
+   PrintModulesMachineReadable(process_state.modules());
+   PrintUnloadedModulesMachineReadable(process_state.unloaded_modules());
+ 
