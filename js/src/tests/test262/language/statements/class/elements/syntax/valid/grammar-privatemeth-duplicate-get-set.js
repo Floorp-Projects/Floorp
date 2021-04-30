@@ -1,4 +1,3 @@
-// |reftest| shell-option(--enable-private-methods) skip-if(!xulRuntime.shell) -- requires shell-options
 // This file was procedurally generated from the following sources:
 // - src/class-elements/grammar-privatemeth-duplicate-get-set.case
 // - src/class-elements/syntax/valid/cls-decl-elements-valid-syntax.template
