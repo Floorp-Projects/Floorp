@@ -552,3 +552,32 @@ add_task(async function test_extension_allow_http_for_localhost() {
 
   await ext1.unload();
 });
+
+add_task(async function test_search_favicon_mv3() {
+  Services.prefs.setBoolPref("extensions.manifestV3.enabled", true);
+  let normalized = await ExtensionTestUtils.normalizeManifest({
+    manifest_version: 3,
+    chrome_settings_overrides: {
+      search_provider: {
+        name: "HTTP Icon in MV3",
+        search_url: "https://example.org/",
+        favicon_url: "https://example.org/icon.png",
+      },
+    },
+  });
+  Assert.ok(
+    normalized.error.endsWith("must be a relative URL"),
+    "Should have an error"
+  );
+  normalized = await ExtensionTestUtils.normalizeManifest({
+    manifest_version: 3,
+    chrome_settings_overrides: {
+      search_provider: {
+        name: "HTTP Icon in MV3",
+        search_url: "https://example.org/",
+        favicon_url: "/icon.png",
+      },
+    },
+  });
+  Assert.ok(!normalized.error, "Should not have an error");
+});
