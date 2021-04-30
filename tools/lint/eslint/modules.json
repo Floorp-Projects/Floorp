@@ -135,7 +135,6 @@
   "NotificationDB.jsm": [],
   "nsFormAutoCompleteResult.jsm": ["FormAutoCompleteResult"],
   "observers.js": ["Observers"],
-  "offlineAppCache.jsm": ["OfflineAppCacheHelper"],
   "OrientationChangeHandler.jsm": [],
   "osfile.jsm": ["OS", "require"],
   "osfile_async_front.jsm": ["OS"],

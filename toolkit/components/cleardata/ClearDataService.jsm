@@ -15,7 +15,6 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 XPCOMUtils.defineLazyModuleGetters(this, {
   AppConstants: "resource://gre/modules/AppConstants.jsm",
   Downloads: "resource://gre/modules/Downloads.jsm",
-  OfflineAppCacheHelper: "resource://gre/modules/offlineAppCache.jsm",
   ServiceWorkerCleanUp: "resource://gre/modules/ServiceWorkerCleanUp.jsm",
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
 });
@@ -335,26 +334,6 @@ const MediaDevicesCleaner = {
       mediaMgr.sanitizeDeviceIds(null);
       aResolve();
     });
-  },
-};
-
-const AppCacheCleaner = {
-  deleteByOriginAttributes(aOriginAttributesString) {
-    return new Promise(aResolve => {
-      let appCacheService = Cc[
-        "@mozilla.org/network/application-cache-service;1"
-      ].getService(Ci.nsIApplicationCacheService);
-      try {
-        appCacheService.evictMatchingOriginAttributes(aOriginAttributesString);
-      } catch (ex) {}
-      aResolve();
-    });
-  },
-
-  deleteAll() {
-    // AppCache: this doesn't wait for the cleanup to be complete.
-    OfflineAppCacheHelper.clear();
-    return Promise.resolve();
   },
 };
 
@@ -1034,8 +1013,6 @@ const FLAGS_MAP = [
     flag: Ci.nsIClearDataService.CLEAR_MEDIA_DEVICES,
     cleaners: [MediaDevicesCleaner],
   },
-
-  { flag: Ci.nsIClearDataService.CLEAR_APPCACHE, cleaners: [AppCacheCleaner] },
 
   { flag: Ci.nsIClearDataService.CLEAR_DOM_QUOTA, cleaners: [QuotaCleaner] },
 
