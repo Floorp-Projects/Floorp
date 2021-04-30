@@ -88,8 +88,9 @@ bool SwipeTracker::ComputeSwipeSuccess() const {
 }
 
 nsEventStatus SwipeTracker::ProcessEvent(const PanGestureInput& aEvent) {
-  // If the fingers have already been lifted, don't process this event for swiping.
-  if (!mEventsAreControllingSwipe) {
+  // If the fingers have already been lifted or the swipe direction is where
+  // navigation is impossible, don't process this event for swiping.
+  if (!mEventsAreControllingSwipe || !SwipingInAllowedDirection()) {
     // Return nsEventStatus_eConsumeNoDefault for events from the swipe gesture
     // and nsEventStatus_eIgnore for events of subsequent scroll gestures.
     if (aEvent.mType == PanGestureInput::PANGESTURE_MAYSTART ||
@@ -100,9 +101,6 @@ nsEventStatus SwipeTracker::ProcessEvent(const PanGestureInput& aEvent) {
   }
 
   double delta = -aEvent.mPanDisplacement.x / mWidget.BackingScaleFactor() / kWholePagePixelSize;
-  if (!SwipingInAllowedDirection()) {
-    delta /= kRubberBandResistanceFactor;
-  }
   mGestureAmount = ClampToAllowedRange(mGestureAmount + delta);
   SendSwipeEvent(eSwipeGestureUpdate, 0, mGestureAmount, aEvent.mTimeStamp);
 
@@ -112,9 +110,8 @@ nsEventStatus SwipeTracker::ProcessEvent(const PanGestureInput& aEvent) {
     mLastEventTimeStamp = aEvent.mTimeStamp;
   } else {
     mEventsAreControllingSwipe = false;
-    bool didSwipeSucceed = SwipingInAllowedDirection() && ComputeSwipeSuccess();
     double targetValue = 0.0;
-    if (didSwipeSucceed) {
+    if (ComputeSwipeSuccess()) {
       // Let's use same timestamp as previous event because this is caused by
       // the preceding event.
       SendSwipeEvent(eSwipeGesture, mSwipeDirection, 0.0, aEvent.mTimeStamp);
