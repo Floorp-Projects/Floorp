@@ -6474,7 +6474,6 @@ void HTMLInputElement::UpdateValueMissingValidityStateForRadio(
   MOZ_ASSERT(mType == NS_FORM_INPUT_RADIO,
              "This should be called only for radio input types");
 
-  bool notify = mDoneCreating;
   HTMLInputElement* selection = GetSelectedRadioButton();
 
   aIgnoreSelf = aIgnoreSelf || !IsMutable();
@@ -6514,7 +6513,7 @@ void HTMLInputElement::UpdateValueMissingValidityStateForRadio(
     // nsRadioSetValueMissingState will call ContentStateChanged while visiting.
     nsAutoScriptBlocker scriptBlocker;
     nsCOMPtr<nsIRadioVisitor> visitor =
-        new nsRadioSetValueMissingState(this, valueMissing, notify);
+        new nsRadioSetValueMissingState(this, valueMissing);
     VisitGroup(visitor);
   }
 }
