@@ -46,12 +46,8 @@ UNIFIED_SOURCES += [
 ]
 
 
-if CONFIG["FUZZING_INTERFACES"]:
+if CONFIG["LIBFUZZER"]:
     UNIFIED_SOURCES += ["xpcrtfuzzing/xpcrtfuzzing.cpp"]
-    USE_LIBS += [
-        "static:fuzzer",
-    ]
-
 
 XPCOM_MANIFESTS += [
     "components.conf",
