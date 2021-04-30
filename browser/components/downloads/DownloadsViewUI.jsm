@@ -514,6 +514,10 @@ DownloadsViewUI.DownloadElementShell.prototype = {
       // the user interface here. The _updateStateInner function takes care of
       // displaying the right button type for all other state changes.
       this.showButton("cancel");
+
+      // If there was a verdict set but the download is running we can assume
+      // that the verdict has been overruled and can be removed.
+      this.element.removeAttribute("verdict");
     }
 
     // Since state changed, reset the time left estimation.

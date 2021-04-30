@@ -651,6 +651,9 @@ Download.prototype = {
       this.error = null;
       this.succeeded = false;
       this.hasBlockedData = false;
+      // This ensures the verdict will not get set again after the browser
+      // restarts and the download gets serialized and de-serialized again.
+      delete this._unknownProperties?.errorObj;
       this.start().catch(e => {
         this.error = e;
         this._notifyChange();
