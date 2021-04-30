@@ -344,8 +344,6 @@ class nsHttpChannel final : public HttpBaseChannel,
   [[nodiscard]] nsresult ContinueProcessRedirection(nsresult);
   [[nodiscard]] nsresult ContinueProcessRedirectionAfterFallback(nsresult);
   [[nodiscard]] nsresult ProcessFailedProxyConnect(uint32_t httpStatus);
-  [[nodiscard]] nsresult ProcessFallback(bool* waitingForRedirectCallback);
-  [[nodiscard]] nsresult ContinueProcessFallback(nsresult);
   void HandleAsyncAbort();
   [[nodiscard]] nsresult EnsureAssocReq();
   void ProcessSSLInformation();
@@ -627,14 +625,10 @@ class nsHttpChannel final : public HttpBaseChannel,
     (uint32_t, CustomAuthHeader, 1),
     (uint32_t, Resuming, 1),
     (uint32_t, InitedCacheEntry, 1),
-    // True if we are loading a fallback cache entry from the
-    // application cache.
-    (uint32_t, FallbackChannel, 1),
     // True if consumer added its own If-None-Match or If-Modified-Since
     // headers. In such a case we must not override them in the cache code
     // and also we want to pass possible 304 code response through.
     (uint32_t, CustomConditionalRequest, 1),
-    (uint32_t, FallingBack, 1),
     (uint32_t, WaitingForRedirectCallback, 1),
     // True if mRequestTime has been set. In such a case it is safe to update
     // the cache entry's expiration time. Otherwise, it is not(see bug 567360).
