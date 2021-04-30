@@ -1011,8 +1011,9 @@ void nsFocusManager::WindowHidden(mozIDOMWindowProxy* aWindow,
   nsCOMPtr<nsPIDOMWindowOuter> window = nsPIDOMWindowOuter::From(aWindow);
 
   if (MOZ_LOG_TEST(gFocusLog, LogLevel::Debug)) {
-    LOGFOCUS(("Window %p Hidden [Currently: %p %p] actionid: %" PRIu64, window.get(),
-              mActiveWindow.get(), mFocusedWindow.get(), aActionId));
+    LOGFOCUS(("Window %p Hidden [Currently: %p %p] actionid: %" PRIu64,
+              window.get(), mActiveWindow.get(), mFocusedWindow.get(),
+              aActionId));
     nsAutoCString spec;
     Document* doc = window->GetExtantDoc();
     if (doc && doc->GetDocumentURI()) {
@@ -2316,10 +2317,11 @@ bool nsFocusManager::BlurImpl(BrowsingContext* aBrowsingContextToClear,
           if (RefPtr<BrowserParent> browserParent =
                   windowGlobalParent->GetBrowserParent()) {
             browserParent->Deactivate(windowBeingLowered, aActionId);
-            LOGFOCUS(("%s remote browser deactivated %p, %d, actionid: %" PRIu64,
-                      aContext == topLevelBrowsingContext ? "Top-level"
-                                                          : "OOP iframe",
-                      browserParent.get(), windowBeingLowered, aActionId));
+            LOGFOCUS(
+                ("%s remote browser deactivated %p, %d, actionid: %" PRIu64,
+                 aContext == topLevelBrowsingContext ? "Top-level"
+                                                     : "OOP iframe",
+                 browserParent.get(), windowBeingLowered, aActionId));
           }
         }
       });
@@ -2328,8 +2330,8 @@ bool nsFocusManager::BlurImpl(BrowsingContext* aBrowsingContextToClear,
     // Same as above but for out-of-process iframes
     if (BrowserBridgeChild* bbc = BrowserBridgeChild::GetFrom(element)) {
       bbc->Deactivate(windowBeingLowered, aActionId);
-      LOGFOCUS(("Out-of-process iframe deactivated %p, %d, actionid: %" PRIu64, bbc,
-                windowBeingLowered, aActionId));
+      LOGFOCUS(("Out-of-process iframe deactivated %p, %d, actionid: %" PRIu64,
+                bbc, windowBeingLowered, aActionId));
     }
   }
 
@@ -2414,14 +2416,15 @@ void nsFocusManager::ActivateRemoteFrameIfNeeded(Element& aElement,
                                                  uint64_t aActionId) {
   if (BrowserParent* remote = BrowserParent::GetFrom(&aElement)) {
     remote->Activate(aActionId);
-    LOGFOCUS(("Remote browser activated %p, actionid: %" PRIu64, remote, aActionId));
+    LOGFOCUS(
+        ("Remote browser activated %p, actionid: %" PRIu64, remote, aActionId));
   }
 
   // Same as above but for out-of-process iframes
   if (BrowserBridgeChild* bbc = BrowserBridgeChild::GetFrom(&aElement)) {
     bbc->Activate(aActionId);
-    LOGFOCUS(
-        ("Out-of-process iframe activated %p, actionid: %" PRIu64, bbc, aActionId));
+    LOGFOCUS(("Out-of-process iframe activated %p, actionid: %" PRIu64, bbc,
+              aActionId));
   }
 }
 
@@ -2471,7 +2474,8 @@ void nsFocusManager::Focus(
             aActionId, mActionIdForFocusedBrowsingContextInContent)) {
       // Unclear if this ever happens.
       LOGFOCUS(
-          ("Ignored an attempt to focus an element due to stale action id %" PRIu64 ".",
+          ("Ignored an attempt to focus an element due to stale action id "
+           "%" PRIu64 ".",
            aActionId));
       return;
     }
@@ -2512,7 +2516,8 @@ void nsFocusManager::Focus(
       LOGCONTENT(" from %s", docm->GetRootElement());
     }
     LOGFOCUS(
-        (" [Newdoc: %d FocusChanged: %d Raised: %d Flags: %x actionid: %" PRIu64 "]",
+        (" [Newdoc: %d FocusChanged: %d Raised: %d Flags: %x actionid: %" PRIu64
+         "]",
          aIsNewDocument, aFocusChanged, aWindowRaised, aFlags, aActionId));
   }
 
@@ -4977,10 +4982,10 @@ void nsFocusManager::ReviseActiveBrowsingContext(
     uint64_t aNewActionId) {
   MOZ_ASSERT(XRE_IsContentProcess());
   if (mActionIdForActiveBrowsingContextInContent == aOldActionId) {
-    LOGFOCUS(
-        ("Revising the active BrowsingContext [%p]. old actionid: %" PRIu64 ", new "
-         "actionid: %" PRIu64,
-         aContext, aOldActionId, aNewActionId));
+    LOGFOCUS(("Revising the active BrowsingContext [%p]. old actionid: %" PRIu64
+              ", new "
+              "actionid: %" PRIu64,
+              aContext, aOldActionId, aNewActionId));
     mActiveBrowsingContextInContent = aContext;
     mActionIdForActiveBrowsingContextInContent = aNewActionId;
   } else {
@@ -4997,7 +5002,8 @@ void nsFocusManager::ReviseFocusedBrowsingContext(
   MOZ_ASSERT(XRE_IsContentProcess());
   if (mActionIdForFocusedBrowsingContextInContent == aOldActionId) {
     LOGFOCUS(
-        ("Revising the focused BrowsingContext [%p]. old actionid: %" PRIu64 ", new "
+        ("Revising the focused BrowsingContext [%p]. old actionid: %" PRIu64
+         ", new "
          "actionid: %" PRIu64,
          aContext, aOldActionId, aNewActionId));
     mFocusedBrowsingContextInContent = aContext;
