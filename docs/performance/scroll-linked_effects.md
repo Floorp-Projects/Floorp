@@ -12,15 +12,15 @@ techniques.
 Often scrolling effects are implemented by listening for the `scroll`
 event and then updating elements on the page in some way (usually the
 CSS
-[`position`](/en-US/docs/Web/CSS/position "The position CSS property sets how an element is positioned in a document. The top, right, bottom, and left properties determine the final location of positioned elements.")
+[`position`]((https://developer.mozilla.org/en-US/docs/Web/CSS/position "The position CSS property sets how an element is positioned in a document. The top, right, bottom, and left properties determine the final location of positioned elements.")
 or
-[`transform`](/en-US/docs/Web/CSS/transform "The transform CSS property lets you rotate, scale, skew, or translate an element. It modifies the coordinate space of the CSS visual formatting model.")
+[`transform`](https://developer.mozilla.org/en-US/docs/Web/CSS/transform "The transform CSS property lets you rotate, scale, skew, or translate an element. It modifies the coordinate space of the CSS visual formatting model.")
 property.) You can find a sampling of such effects at [CSS Scroll API:
 Use
 Cases](https://github.com/RByers/css-houdini-drafts/blob/master/css-scroll-api/UseCases.md).
 
 These effects work well in browsers where the scrolling is done
-synchronously on the browser\'s main thread. However, most browsers now
+synchronously on the browser's main thread. However, most browsers now
 support some sort of asynchronous scrolling in order to provide a
 consistent 60 frames per second experience to the user. In the
 asynchronous scrolling model, the visual scroll position is updated in
@@ -46,12 +46,12 @@ Here is an implementation of a sticky-positioning effect, where the
 ```
 
 This implementation of sticky positioning relies on the scroll event
-listener to reposition the \"toolbar\" div. As the scroll event listener
-runs in the JavaScript on the browser\'s main thread, it will be
+listener to reposition the "toolbar" div. As the scroll event listener
+runs in the JavaScript on the browser's main thread, it will be
 asynchronous relative to the user-visible scrolling. Therefore, with
 asynchronous scrolling, the event handler will be delayed relative to
 the user-visible scroll, and so the div will not stay visually fixed as
-intended. Instead, it will move with the user\'s scrolling, and then
+intended. Instead, it will move with the user's scrolling, and then
 \"snap\" back into position when the scroll event handler runs. This
 constant moving and snapping will result in a jittery visual effect. One
 way to implement this without the scroll event listener is to use the
@@ -69,7 +69,7 @@ the \"toolbar\" div is updated by the browser as the user scrolls.
 ### Example 2: Scroll snapping
 
 Below is an implementation of scroll snapping, where the scroll position
-snaps to a particular destination when the user\'s scrolling stops near
+snaps to a particular destination when the user's scrolling stops near
 that destination.
 
 ``` {.brush: .html}
@@ -97,7 +97,7 @@ In this example, there is a scroll event listener which detects if the
 scroll position is within 200 pixels of the top of the \"snaptarget\"
 div. If it is, then it triggers an animation to \"snap\" the scroll
 position to the top of the div. As this animation is driven by
-JavaScript on the browser\'s main thread, it can be interrupted by other
+JavaScript on the browser's main thread, it can be interrupted by other
 JavaScript running in other tabs or other windows. Therefore, the
 animation can end up looking janky and not as smooth as intended.
 Instead, using the CSS snap-points property will allow the browser to
@@ -124,7 +124,7 @@ the user.
 ```
 
 This version can work smoothly in the browser even if there is
-slow-running Javascript on the browser\'s main thread.
+slow-running Javascript on the browser's main thread.
 
 ### Other effects
 
@@ -157,7 +157,7 @@ consideration are:
     animation.
 -   [CompositorWorker](https://docs.google.com/document/d/18GGuTRGnafai17PDWjCHHAvFRsCfYUDYsi720sVPkws/edit?pli=1#heading=h.iy9r1phg1ux4):
     Allows JavaScript to be run on the compositor thread in small
-    chunks, provided it doesn\'t cause the framerate to drop.
+    chunks, provided it doesn't cause the framerate to drop.
 -   [Scroll
     Customization](https://docs.google.com/document/d/1VnvAqeWFG9JFZfgG5evBqrLGDZYRE5w6G5jEDORekPY/edit?pli=1):
     Introduces a new API for content to dictate how a scroll delta is

@@ -524,7 +524,7 @@ The Gecko profiler is your best friend when diagnosing performance
 problems and looking for bottlenecks. There’s plenty of excellent
 documentation on MDN about the Gecko profiler:
 
--  [Basic instructions for gathering and sharing a performance profile](https://developer.mozilla.org/en-US/docs/Mozilla/Performance/Reporting_a_Performance_Problem)
+-  [Basic instructions for gathering and sharing a performance profile](reporting_a_performance_problem.md)
 
 -  [Advanced profile analysis](https://developer.mozilla.org/en-US/docs/Mozilla/Performance/Profiling_with_the_Built-in_Profiler)
 

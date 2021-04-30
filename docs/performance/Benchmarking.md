@@ -19,7 +19,7 @@ Add the following to your
 [mozconfig](/setup/configuring_build_options.html#using-a-mozconfig-configuration-file)
 in order to build with level 2:
 
-``` {.notranslate}
+```
 ac_add_options RUSTC_OPT_LEVEL=2
 ```
 
@@ -32,7 +32,7 @@ all debug builds, and in optimized Nightly builds (but not opt Developer
 Edition or Beta builds). The poisoning can be disabled by setting the
 environment variable
 
-``` {.notranslate}
+```
     JSGC_DISABLE_POISONING=1
 ```
 
