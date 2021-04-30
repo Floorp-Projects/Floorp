@@ -98,20 +98,5 @@ cd /setup
 
 pip3 install --require-hashes -r /tmp/tox_requirements.txt
 
-###
-# rustfmt and clippy
-###
-
-cd /setup
-export RUSTUP_HOME=/build/rust
-export CARGO_HOME="$RUSTUP_HOME"
-mkdir -p "$CARGO_HOME"
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-"$RUSTUP_HOME"/bin/rustup component add rustfmt
-"$RUSTUP_HOME"/bin/rustup component add clippy
-"$RUSTUP_HOME"/bin/rustc --version
-"$RUSTUP_HOME"/bin/rustfmt --version
-"$CARGO_HOME"/bin/cargo clippy --version
-
 cd /
 rm -rf /setup
