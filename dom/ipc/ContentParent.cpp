@@ -6778,8 +6778,9 @@ mozilla::ipc::IPCResult ContentParent::RecvAdjustWindowFocus(
         ("ParentIPC: Trying to send a message to dead or detached context"));
     return IPC_OK();
   }
-  LOGFOCUS(("ContentParent::RecvAdjustWindowFocus isVisible %d actionid: %" PRIu64,
-            aIsVisible, aActionId));
+  LOGFOCUS(
+      ("ContentParent::RecvAdjustWindowFocus isVisible %d actionid: %" PRIu64,
+       aIsVisible, aActionId));
 
   nsTHashMap<nsPtrHashKey<ContentParent>, bool> processes(2);
   processes.InsertOrUpdate(this, true);
@@ -6866,8 +6867,8 @@ mozilla::ipc::IPCResult ContentParent::RecvSetActiveBrowsingContext(
         ("ParentIPC: Trying to send a message to dead or detached context"));
     return IPC_OK();
   }
-  LOGFOCUS(
-      ("ContentParent::RecvSetActiveBrowsingContext actionid: %" PRIu64, aActionId));
+  LOGFOCUS(("ContentParent::RecvSetActiveBrowsingContext actionid: %" PRIu64,
+            aActionId));
   CanonicalBrowsingContext* context = aContext.get_canonical();
 
   nsFocusManager* fm = nsFocusManager::GetFocusManager();
@@ -6971,8 +6972,8 @@ mozilla::ipc::IPCResult ContentParent::RecvFinalizeFocusOuter(
 
 mozilla::ipc::IPCResult ContentParent::RecvInsertNewFocusActionId(
     uint64_t aActionId) {
-  LOGFOCUS(
-      ("ContentParent::RecvInsertNewFocusActionId actionid: %" PRIu64, aActionId));
+  LOGFOCUS(("ContentParent::RecvInsertNewFocusActionId actionid: %" PRIu64,
+            aActionId));
   nsFocusManager* fm = nsFocusManager::GetFocusManager();
   if (fm) {
     fm->InsertNewFocusActionId(aActionId);
