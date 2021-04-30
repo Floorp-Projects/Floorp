@@ -2044,8 +2044,8 @@ HTMLFormElement::GetNextRadioButton(const nsAString& aName,
 
 NS_IMETHODIMP
 HTMLFormElement::WalkRadioGroup(const nsAString& aName,
-                                nsIRadioVisitor* aVisitor, bool aFlushContent) {
-  return RadioGroupManager::WalkRadioGroup(aName, aVisitor, aFlushContent);
+                                nsIRadioVisitor* aVisitor) {
+  return RadioGroupManager::WalkRadioGroup(aName, aVisitor);
 }
 
 void HTMLFormElement::AddToRadioGroup(const nsAString& aName,

@@ -6210,7 +6210,7 @@ nsresult HTMLInputElement::VisitGroup(nsIRadioVisitor* aVisitor,
   if (container) {
     nsAutoString name;
     GetAttr(kNameSpaceID_None, nsGkAtoms::name, name);
-    return container->WalkRadioGroup(name, aVisitor, aFlushContent);
+    return container->WalkRadioGroup(name, aVisitor);
   }
 
   aVisitor->Visit(this);

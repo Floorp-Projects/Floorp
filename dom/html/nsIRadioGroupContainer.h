@@ -35,11 +35,9 @@ class nsIRadioGroupContainer : public nsISupports {
    * Walk through the radio group, visiting each note with avisitor->Visit()
    * @param aName the group name
    * @param aVisitor the visitor to visit with
-   * @param aFlushContent whether to ensure the content model is up to date
-   *        before walking.
    */
-  NS_IMETHOD WalkRadioGroup(const nsAString& aName, nsIRadioVisitor* aVisitor,
-                            bool aFlushContent) = 0;
+  NS_IMETHOD WalkRadioGroup(const nsAString& aName,
+                            nsIRadioVisitor* aVisitor) = 0;
 
   /**
    * Set the current radio button in a group

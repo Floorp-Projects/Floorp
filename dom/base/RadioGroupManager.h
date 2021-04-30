@@ -31,8 +31,7 @@ class RadioGroupManager {
   static void Unlink(RadioGroupManager* tmp);
 
   // nsIRadioGroupContainer
-  NS_IMETHOD WalkRadioGroup(const nsAString& aName, nsIRadioVisitor* aVisitor,
-                            bool aFlushContent);
+  NS_IMETHOD WalkRadioGroup(const nsAString& aName, nsIRadioVisitor* aVisitor);
   void SetCurrentRadioButton(const nsAString& aName, HTMLInputElement* aRadio);
   HTMLInputElement* GetCurrentRadioButton(const nsAString& aName);
   nsresult GetNextRadioButton(const nsAString& aName, const bool aPrevious,

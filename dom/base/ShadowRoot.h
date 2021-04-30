@@ -209,9 +209,9 @@ class ShadowRoot final : public DocumentFragment,
   void GetEventTargetParent(EventChainPreVisitor& aVisitor) override;
 
   // nsIRadioGroupContainer
-  NS_IMETHOD WalkRadioGroup(const nsAString& aName, nsIRadioVisitor* aVisitor,
-                            bool aFlushContent) override {
-    return DocumentOrShadowRoot::WalkRadioGroup(aName, aVisitor, aFlushContent);
+  NS_IMETHOD WalkRadioGroup(const nsAString& aName,
+                            nsIRadioVisitor* aVisitor) override {
+    return DocumentOrShadowRoot::WalkRadioGroup(aName, aVisitor);
   }
   virtual void SetCurrentRadioButton(const nsAString& aName,
                                      HTMLInputElement* aRadio) override {
