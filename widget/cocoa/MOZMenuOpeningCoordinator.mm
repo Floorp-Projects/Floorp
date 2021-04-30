@@ -14,7 +14,9 @@
 
 #include "nsCocoaFeatures.h"
 #include "nsCocoaUtils.h"
+#include "nsDeque.h"
 #include "nsObjCExceptions.h"
+#include "nsThreadUtils.h"
 #include "SDKDeclarations.h"
 
 @interface MOZMenuOpeningInfo : NSObject
@@ -31,6 +33,10 @@
   // non-nil between asynchronouslyOpenMenu:atScreenPosition:forView: and the
   // time at at which it is unqueued in _runMenu.
   MOZMenuOpeningInfo* mPendingOpening;  // strong
+
+  // Any runnables we want to run after the current menu event loop has been exited.
+  // Only non-empty if mRunMenuIsOnTheStack is true.
+  nsRefPtrDeque<mozilla::Runnable> mPendingAfterMenuCloseRunnables;
 
   // An incrementing counter
   NSInteger mLastHandle;
@@ -99,6 +105,12 @@
     }
 
     [info release];
+
+    // We have exited _openMenu's nested event loop. Dispatch any pending "after menu close"
+    // runnables to the event loop.
+    while (mPendingAfterMenuCloseRunnables.GetSize() != 0) {
+      NS_DispatchToCurrentThread(mPendingAfterMenuCloseRunnables.PopFront());
+    }
   }
 
   mRunMenuIsOnTheStack = NO;
@@ -108,6 +120,16 @@
   if (mPendingOpening && mPendingOpening.handle == aHandle) {
     [mPendingOpening release];
     mPendingOpening = nil;
+  }
+}
+
+- (void)runAfterMenuClosed:(RefPtr<mozilla::Runnable>&&)aRunnable {
+  MOZ_RELEASE_ASSERT(aRunnable);
+
+  if (mRunMenuIsOnTheStack) {
+    mPendingAfterMenuCloseRunnables.Push(aRunnable.forget());
+  } else {
+    NS_DispatchToCurrentThread(aRunnable.forget());
   }
 }
 
