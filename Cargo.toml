@@ -103,3 +103,8 @@ path = "third_party/rust/autocfg"
 [patch.crates-io.autocfg01]
 path = "third_party/rust/autocfg-0.1.6"
 package = "autocfg"
+
+# Patch mio 0.6 to use winapi 0.3 and miow 0.3, getting rid of winapi 0.2.
+# There is not going to be new version of mio 0.6, mio now being >= 0.7.11.
+[patch.crates-io.mio]
+path = "third_party/rust/mio"

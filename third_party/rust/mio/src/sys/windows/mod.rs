@@ -139,8 +139,14 @@
 use std::io;
 use std::os::windows::prelude::*;
 
-use kernel32;
-use winapi;
+mod kernel32 {
+    pub use ::winapi::um::ioapiset::CancelIoEx;
+    pub use ::winapi::um::winbase::SetFileCompletionNotificationModes;
+}
+mod winapi {
+    pub use ::winapi::shared::minwindef::{TRUE, UCHAR};
+    pub use ::winapi::um::winnt::HANDLE;
+}
 
 mod awakener;
 #[macro_use]
