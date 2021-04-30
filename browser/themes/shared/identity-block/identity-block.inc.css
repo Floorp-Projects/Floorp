@@ -233,7 +233,7 @@
 } /*** END !proton ***/
 
 #identity-box[pageproxystate="valid"].localResource #identity-icon {
-  list-style-image: url(chrome://global/skin/icons/document.svg);
+  list-style-image: url(chrome://global/skin/icons/page-portrait.svg);
 }
 
 #urlbar:not(.searchButton) > #urlbar-input-container > #identity-box[pageproxystate="invalid"] #identity-icon {
