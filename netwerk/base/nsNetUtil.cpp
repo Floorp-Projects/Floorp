@@ -2126,8 +2126,6 @@ bool NS_IsSafeMethodNav(nsIChannel* aChannel) {
   return requestHead->IsSafeMethod();
 }
 
-bool NS_ShouldCheckAppCache(nsIPrincipal* aPrincipal) { return false; }
-
 void NS_WrapAuthPrompt(nsIAuthPrompt* aAuthPrompt,
                        nsIAuthPrompt2** aAuthPrompt2) {
   nsCOMPtr<nsIAuthPromptAdapterFactory> factory =
