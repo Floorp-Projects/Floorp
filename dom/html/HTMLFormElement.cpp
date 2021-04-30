@@ -1486,7 +1486,7 @@ already_AddRefed<nsISupports> HTMLFormElement::NamedGetter(
     const nsAString& aName, bool& aFound) {
   aFound = true;
 
-  nsCOMPtr<nsISupports> result = DoResolveName(aName, true);
+  nsCOMPtr<nsISupports> result = DoResolveName(aName);
   if (result) {
     AddToPastNamesMap(aName, result);
     return result.forget();
@@ -1526,9 +1526,8 @@ already_AddRefed<nsISupports> HTMLFormElement::FindNamedItem(
 }
 
 already_AddRefed<nsISupports> HTMLFormElement::DoResolveName(
-    const nsAString& aName, bool aFlushContent) {
-  nsCOMPtr<nsISupports> result =
-      mControls->NamedItemInternal(aName, aFlushContent);
+    const nsAString& aName) {
+  nsCOMPtr<nsISupports> result = mControls->NamedItemInternal(aName);
   return result.forget();
 }
 
