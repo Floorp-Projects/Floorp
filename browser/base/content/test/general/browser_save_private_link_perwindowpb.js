@@ -33,8 +33,7 @@ function promiseNoCacheEntry(filename) {
     function Visitor() {}
 
     let storage = Services.cache2.diskCacheStorage(
-      Services.loadContextInfo.default,
-      false
+      Services.loadContextInfo.default
     );
     storage.asyncVisitStorage(new Visitor(), true /* Do walk entries */);
   });

@@ -60,7 +60,7 @@ nsresult CachePushChecker::DoCheck() {
 
   RefPtr<LoadContextInfo> lci = GetLoadContextInfo(false, mOriginAttributes);
   nsCOMPtr<nsICacheStorage> ds;
-  rv = css->DiskCacheStorage(lci, false, getter_AddRefs(ds));
+  rv = css->DiskCacheStorage(lci, getter_AddRefs(ds));
   if (NS_FAILED(rv)) {
     return rv;
   }

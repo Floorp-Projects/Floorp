@@ -36,13 +36,8 @@ interface nsICacheStorageService : nsISupports
   /**
    * Get storage where entries will be written to disk when not forbidden by
    * response headers.
-   *
-   * @param aLookupAppCache
-   *    When set true (for top level document loading channels) app cache will
-   *    be first to check on to find entries in.
    */
-  nsICacheStorage diskCacheStorage(in nsILoadContextInfo aLoadContextInfo,
-                                   in bool aLookupAppCache);
+  nsICacheStorage diskCacheStorage(in nsILoadContextInfo aLoadContextInfo);
 
   /**
    * Get storage where entries will be written to disk and marked as pinned.

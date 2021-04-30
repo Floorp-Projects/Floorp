@@ -214,8 +214,7 @@ nsresult nsAboutCache::GetStorage(nsACString const& storageName,
 
   nsCOMPtr<nsICacheStorage> cacheStorage;
   if (storageName == "disk") {
-    rv = cacheService->DiskCacheStorage(loadInfo, false,
-                                        getter_AddRefs(cacheStorage));
+    rv = cacheService->DiskCacheStorage(loadInfo, getter_AddRefs(cacheStorage));
   } else if (storageName == "memory") {
     rv = cacheService->MemoryCacheStorage(loadInfo,
                                           getter_AddRefs(cacheStorage));

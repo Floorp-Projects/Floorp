@@ -34,14 +34,12 @@ function getStorageEntryCount(device, goon) {
   switch (device) {
     case "private":
       storage = Services.cache2.diskCacheStorage(
-        Services.loadContextInfo.private,
-        false
+        Services.loadContextInfo.private
       );
       break;
     case "regular":
       storage = Services.cache2.diskCacheStorage(
-        Services.loadContextInfo.default,
-        false
+        Services.loadContextInfo.default
       );
       break;
     default:
