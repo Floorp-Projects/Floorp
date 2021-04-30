@@ -25,7 +25,6 @@ class imgCacheValidator;
 class imgLoader;
 class imgRequestProxy;
 class imgCacheEntry;
-class nsIApplicationCache;
 class nsIProperties;
 class nsIRequest;
 class nsITimedChannel;
@@ -105,12 +104,6 @@ class imgRequest final : public nsIStreamListener,
   // If this function is called multiple times, the information set earliest
   // wins.
   static void SetCacheValidation(imgCacheEntry* aEntry, nsIRequest* aRequest);
-
-  // Check if application cache of the original load is different from
-  // application cache of the new load.  Also lack of application cache
-  // on one of the loads is considered a change of a loading cache since
-  // HTTP cache may contain a different data then app cache.
-  bool CacheChanged(nsIRequest* aNewRequest);
 
   bool GetMultipart() const;
 
@@ -248,7 +241,6 @@ class imgRequest final : public nsIStreamListener,
   nsCOMPtr<nsIProperties> mProperties;
   nsCOMPtr<nsIChannel> mChannel;
   nsCOMPtr<nsIInterfaceRequestor> mPrevChannelSink;
-  nsCOMPtr<nsIApplicationCache> mApplicationCache;
 
   nsCOMPtr<nsITimedChannel> mTimedChannel;
 

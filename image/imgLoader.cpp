@@ -38,8 +38,6 @@
 #include "nsContentPolicyUtils.h"
 #include "nsContentUtils.h"
 #include "nsHttpChannel.h"
-#include "nsIApplicationCache.h"
-#include "nsIApplicationCacheContainer.h"
 #include "nsIAsyncVerifyRedirectCallback.h"
 #include "nsICacheInfoChannel.h"
 #include "nsIChannelEventSink.h"
@@ -1867,26 +1865,6 @@ bool imgLoader::ValidateEntry(
              aURI->GetSpecOrDefault().get()));
   }
 
-  // We can't use a cached request if it comes from a different
-  // application cache than this load is expecting.
-  nsCOMPtr<nsIApplicationCacheContainer> appCacheContainer;
-  nsCOMPtr<nsIApplicationCache> requestAppCache;
-  nsCOMPtr<nsIApplicationCache> groupAppCache;
-  if ((appCacheContainer = do_GetInterface(request->GetRequest()))) {
-    appCacheContainer->GetApplicationCache(getter_AddRefs(requestAppCache));
-  }
-  if ((appCacheContainer = do_QueryInterface(aLoadGroup))) {
-    appCacheContainer->GetApplicationCache(getter_AddRefs(groupAppCache));
-  }
-
-  if (requestAppCache != groupAppCache) {
-    MOZ_LOG(gImgLog, LogLevel::Debug,
-            ("imgLoader::ValidateEntry - Unable to use cached imgRequest "
-             "[request=%p] because of mismatched application caches\n",
-             address_of(request)));
-    return false;
-  }
-
   // If the original request is still transferring don't kick off a validation
   // network request because it is a bit silly to issue a validation request if
   // the original request hasn't even finished yet. So just return true
@@ -3021,7 +2999,7 @@ imgCacheValidator::OnStartRequest(nsIRequest* aRequest) {
   // we have to do is tell them to notify their listeners.
   nsCOMPtr<nsICacheInfoChannel> cacheChan(do_QueryInterface(aRequest));
   nsCOMPtr<nsIChannel> channel(do_QueryInterface(aRequest));
-  if (cacheChan && channel && !mRequest->CacheChanged(aRequest)) {
+  if (cacheChan && channel) {
     bool isFromCache = false;
     cacheChan->IsFromCache(&isFromCache);
 
