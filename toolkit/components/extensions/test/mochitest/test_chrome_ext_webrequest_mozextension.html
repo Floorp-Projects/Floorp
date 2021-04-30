@@ -72,15 +72,15 @@ add_task(async function test_webRequest_no_mozextension_permission() {
 
 add_task(async function test_webRequest_mozextension_fetch() {
   function background() {
-    let page = browser.extension.getURL("fetched.html");
+    let page = browser.runtime.getURL("fetched.html");
     browser.webRequest.onBeforeRequest.addListener(details => {
       browser.test.assertEq(details.url, page, "got correct url in onBeforeRequest");
       browser.test.sendMessage("request-started");
-    }, {urls: [browser.extension.getURL("*")]}, ["blocking"]);
+    }, {urls: [browser.runtime.getURL("*")]}, ["blocking"]);
     browser.webRequest.onCompleted.addListener(details => {
       browser.test.assertEq(details.url, page, "got correct url in onCompleted");
       browser.test.sendMessage("request-complete");
-    }, {urls: [browser.extension.getURL("*")]});
+    }, {urls: [browser.runtime.getURL("*")]});
 
     browser.test.onMessage.addListener((msg, data) => {
       fetch(page).then(() => {
@@ -91,7 +91,7 @@ add_task(async function test_webRequest_mozextension_fetch() {
         browser.test.sendMessage("done");
       });
     });
-    browser.test.sendMessage("extensionUrl", browser.extension.getURL("*"));
+    browser.test.sendMessage("extensionUrl", browser.runtime.getURL("*"));
   }
 
   // Use webrequest to monitor moz-extension:// requests
@@ -134,15 +134,15 @@ add_task(async function test_webRequest_mozextension_fetch() {
 
 add_task(async function test_webRequest_mozextension_tab_query() {
   function background() {
-    browser.test.sendMessage("extensionUrl", browser.extension.getURL("*"));
-    let page = browser.extension.getURL("tab.html");
+    browser.test.sendMessage("extensionUrl", browser.runtime.getURL("*"));
+    let page = browser.runtime.getURL("tab.html");
 
     async function onUpdated(tabId, tabInfo, tab) {
       if (tabInfo.status !== "complete") {
         return;
       }
       browser.test.log(`tab created ${tabId} ${JSON.stringify(tabInfo)} ${tab.url}`);
-      let tabs = await browser.tabs.query({url: browser.extension.getURL("*")});
+      let tabs = await browser.tabs.query({url: browser.runtime.getURL("*")});
       browser.test.assertEq(1, tabs.length, "got one tab");
       browser.test.assertEq(tabs.length && tabs[0].id, tab.id, "got the correct tab");
       browser.test.assertEq(tabs.length && tabs[0].url, page, "got correct url in tab");

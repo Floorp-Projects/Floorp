@@ -31,7 +31,7 @@ this.ui = (function() {
   const substitutedCss = inlineSelectionCss.replace(
     /MOZ_EXTENSION([^"]+)/g,
     (match, filename) => {
-      return browser.extension.getURL(filename);
+      return browser.runtime.getURL(filename);
     }
   );
 
@@ -60,7 +60,7 @@ this.ui = (function() {
 
   function initializeIframe() {
     const el = document.createElement("iframe");
-    el.src = browser.extension.getURL("blank.html");
+    el.src = browser.runtime.getURL("blank.html");
     el.style.zIndex = "99999999999";
     el.style.border = "none";
     el.style.top = "0";
@@ -411,18 +411,18 @@ this.ui = (function() {
                     <div class="preview-image">
                       <div class="preview-buttons">
                         <button class="highlight-button-cancel" title="${cancelTitle}">
-                          <img src="${browser.extension.getURL(
+                          <img src="${browser.runtime.getURL(
                             "icons/cancel.svg"
                           )}" />
                         </button>
                         <button class="highlight-button-copy" title="${copyTitle}">
-                          <img src="${browser.extension.getURL(
+                          <img src="${browser.runtime.getURL(
                             "icons/copy.svg"
                           )}" />
                           <span data-l10n-id="screenshots-copy-button"/>
                         </button>
                         <button class="highlight-button-download" title="${downloadTitle}">
-                          <img src="${browser.extension.getURL(
+                          <img src="${browser.runtime.getURL(
                             "icons/download-white.svg"
                           )}" />
                           <span data-l10n-id="screenshots-download-button"/>
@@ -731,7 +731,7 @@ this.ui = (function() {
       const buttons = makeEl("div", "highlight-buttons");
       const cancel = makeEl("button", "highlight-button-cancel");
       const cancelImg = makeEl("img");
-      cancelImg.src = browser.extension.getURL("icons/cancel.svg");
+      cancelImg.src = browser.runtime.getURL("icons/cancel.svg");
       cancel.title = cancelTitle;
       cancel.appendChild(cancelImg);
       buttons.appendChild(cancel);
@@ -741,14 +741,14 @@ this.ui = (function() {
       const copyImg = makeEl("img");
       const copyString = makeEl("span");
       copyString.textContent = copyText;
-      copyImg.src = browser.extension.getURL("icons/copy.svg");
+      copyImg.src = browser.runtime.getURL("icons/copy.svg");
       copy.appendChild(copyImg);
       copy.appendChild(copyString);
       buttons.appendChild(copy);
 
       const download = makeEl("button", "highlight-button-download");
       const downloadImg = makeEl("img");
-      downloadImg.src = browser.extension.getURL("icons/download-white.svg");
+      downloadImg.src = browser.runtime.getURL("icons/download-white.svg");
       download.appendChild(downloadImg);
       download.append(downloadText);
       download.title = downloadTitle;

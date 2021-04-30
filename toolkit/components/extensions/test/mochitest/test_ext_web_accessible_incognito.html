@@ -68,7 +68,7 @@ add_task(async function test_web_accessible_resources_incognito() {
       ],
     },
     background() {
-      browser.test.sendMessage("url", browser.extension.getURL(""));
+      browser.test.sendMessage("url", browser.runtime.getURL(""));
     },
     files: {
       "image.png": IMAGE_ARRAYBUFFER,

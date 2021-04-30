@@ -84,7 +84,7 @@ add_task(async function testBadURL() {
         }, result => {
           browser.test.assertEq(undefined, result, "Result value");
 
-          browser.test.assertTrue(browser.extension.lastError instanceof Error,
+          browser.test.assertTrue(browser.runtime.lastError instanceof Error,
                                   "runtime.lastError is Error");
 
           browser.test.assertTrue(browser.runtime.lastError instanceof Error,
@@ -92,8 +92,8 @@ add_task(async function testBadURL() {
 
           browser.test.assertEq(
             "Files to be injected must be within the extension",
-            browser.extension.lastError && browser.extension.lastError.message,
-            "extension.lastError value");
+            browser.runtime.lastError && browser.runtime.lastError.message,
+            "runtime.lastError value");
 
           browser.test.assertEq(
             "Files to be injected must be within the extension",
@@ -109,8 +109,8 @@ add_task(async function testBadURL() {
       }).catch(error => {
         browser.test.assertTrue(error instanceof Error, "Error is Error");
 
-        browser.test.assertEq(null, browser.extension.lastError,
-                              "extension.lastError value");
+        browser.test.assertEq(null, browser.runtime.lastError,
+                              "runtime.lastError value");
 
         browser.test.assertEq(null, browser.runtime.lastError,
                               "runtime.lastError value");

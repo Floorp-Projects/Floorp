@@ -51,7 +51,7 @@ function confirmExtensionPage() {
 add_task(async function testIdentityIndication() {
   let extension = ExtensionTestUtils.loadExtension({
     background() {
-      browser.test.sendMessage("url", browser.extension.getURL("icon.png"));
+      browser.test.sendMessage("url", browser.runtime.getURL("icon.png"));
     },
     manifest: {
       name: "Test Extension",
@@ -78,7 +78,7 @@ add_task(async function testIdentityIndication() {
 add_task(async function testIdentityIndicationNewTab() {
   let extension = ExtensionTestUtils.loadExtension({
     background() {
-      browser.test.sendMessage("url", browser.extension.getURL("newtab.html"));
+      browser.test.sendMessage("url", browser.runtime.getURL("newtab.html"));
     },
     manifest: {
       name: "Test Extension",

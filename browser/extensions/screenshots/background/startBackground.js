@@ -120,7 +120,7 @@ this.startBackground = (function() {
       loadedPromise = loadedPromise.then(() => {
         return new Promise((resolve, reject) => {
           const tag = document.createElement("script");
-          tag.src = browser.extension.getURL(script);
+          tag.src = browser.runtime.getURL(script);
           tag.onload = () => {
             resolve();
           };

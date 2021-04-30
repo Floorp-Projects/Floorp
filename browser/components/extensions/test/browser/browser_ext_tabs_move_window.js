@@ -140,7 +140,7 @@ add_task(async function test_currentWindowAfterTabMoved() {
   async function background() {
     let tabId;
 
-    const url = browser.extension.getURL("current.html");
+    const url = browser.runtime.getURL("current.html");
 
     browser.test.onMessage.addListener(async msg => {
       if (msg === "move") {
