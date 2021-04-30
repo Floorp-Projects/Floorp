@@ -258,6 +258,7 @@ class mozInlineSpellChecker final : public nsIInlineSpellChecker,
   // (https://bugzilla.mozilla.org/show_bug.cgi?id=1620540).
   MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult
   RemoveRange(mozilla::dom::Selection* aSpellCheckSelection, nsRange* aRange);
+
   MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult
   AddRange(mozilla::dom::Selection* aSpellCheckSelection, nsRange* aRange);
   bool IsSpellCheckSelectionFull() const {
@@ -294,6 +295,13 @@ class mozInlineSpellChecker final : public nsIInlineSpellChecker,
 
  protected:
   virtual ~mozInlineSpellChecker();
+
+  // Adds the ranges corresponding to the misspelled words as long as
+  // aSpellCheckerSelection isn't full.
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY void AddRangesForMisspelledWords(
+      const nsTArray<NodeOffsetRange>& aRanges,
+      const nsTArray<bool>& aIsMisspelled,
+      mozilla::dom::Selection& aSpellCheckerSelection);
 
   // called when async nsIEditorSpellCheck methods complete
   nsresult EditorSpellCheckInited();
