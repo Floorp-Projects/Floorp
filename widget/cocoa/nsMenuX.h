@@ -98,9 +98,9 @@ class nsMenuX final : public nsMenuParentX,
 
   mozilla::Maybe<MenuChild> GetItemForElement(mozilla::dom::Element* aMenuChildElement);
 
-  // Asynchronously runs the command event on aItem, and closes the menu.
-  void ActivateItemAndClose(RefPtr<nsMenuItemX>&& aItem, NSEventModifierFlags aModifiers,
-                            int16_t aButton);
+  // Asynchronously runs the command event on aItem, after the root menu has closed.
+  void ActivateItemAfterClosing(RefPtr<nsMenuItemX>&& aItem, NSEventModifierFlags aModifiers,
+                                int16_t aButton);
 
   bool IsOpenForGecko() const { return mIsOpenForGecko; }
 
@@ -234,7 +234,7 @@ class nsMenuX final : public nsMenuParentX,
   RefPtr<mozilla::CancelableRunnable> mPendingAsyncMenuCloseRunnable;
 
   // Any runnables for running asynchronous command events.
-  // These are only used during automated tests, via ActivateItemAndClose.
+  // These are only used during automated tests, via ActivateItemAfterClosing.
   // We keep track of them here so that we can ensure they're run before popuphiding/popuphidden.
   nsTArray<RefPtr<mozilla::Runnable>> mPendingCommandRunnables;
 
