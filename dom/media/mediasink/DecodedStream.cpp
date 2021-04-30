@@ -671,7 +671,7 @@ void DecodedStream::SetVolume(double aVolume) {
     return;
   }
   mVolume = aVolume;
-  if (mData->mAudioTrack) {
+  if (mData && mData->mAudioTrack) {
     mData->mAudioTrack->SetVolume(static_cast<float>(aVolume));
   }
 }
@@ -686,7 +686,7 @@ void DecodedStream::SetPlaybackRate(double aPlaybackRate) {
     return;
   }
   mPlaybackRate = aPlaybackRate;
-  if (mData->mAudioTrack) {
+  if (mData && mData->mAudioTrack) {
     mData->mAudioTrack->SetPlaybackRate(static_cast<float>(aPlaybackRate));
   }
 }
