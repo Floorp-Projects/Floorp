@@ -72,18 +72,14 @@ class nsRadioGetCheckedChangedVisitor : public nsRadioVisitor {
  */
 class nsRadioSetValueMissingState : public nsRadioVisitor {
  public:
-  nsRadioSetValueMissingState(nsIFormControl* aExcludeElement, bool aValidity,
-                              bool aNotify)
-      : mExcludeElement(aExcludeElement),
-        mValidity(aValidity),
-        mNotify(aNotify) {}
+  nsRadioSetValueMissingState(nsIFormControl* aExcludeElement, bool aValidity)
+      : mExcludeElement(aExcludeElement), mValidity(aValidity) {}
 
   virtual bool Visit(nsIFormControl* aRadio) override;
 
  protected:
   nsIFormControl* mExcludeElement;
   bool mValidity;
-  bool mNotify;
 };
 
 class nsRadioUpdateStateVisitor : public nsRadioVisitor {
