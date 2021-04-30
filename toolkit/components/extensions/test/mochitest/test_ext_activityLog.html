@@ -110,7 +110,7 @@ add_task(async function test_api() {
           browser.tabs.hide(data);
         }
       });
-      browser.test.sendMessage("url", browser.extension.getURL(""));
+      browser.test.sendMessage("url", browser.runtime.getURL(""));
     },
   });
 

@@ -57,7 +57,7 @@ async function check(contentTask, options = {}) {
         let { browser } = this;
         browser.test.sendMessage(
           "extension-tab-url",
-          browser.extension.getURL("extension-tab-page.html")
+          browser.runtime.getURL("extension-tab-page.html")
         );
       },
       files: {

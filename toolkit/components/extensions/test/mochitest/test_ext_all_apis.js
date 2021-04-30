@@ -155,6 +155,8 @@ add_task(async function test_enumerate_content_script_apis() {
       "contentscript.js": sendAllApis,
     },
   };
+  // Turn off warning as errors to pass for deprecated APIs
+  ExtensionTestUtils.failOnSchemaWarnings(false);
   let extension = ExtensionTestUtils.loadExtension(extensionData);
   await extension.startup();
 
@@ -165,17 +167,22 @@ add_task(async function test_enumerate_content_script_apis() {
   isDeeply(actualApis, expectedApis, "content script APIs");
 
   await extension.unload();
+  ExtensionTestUtils.failOnSchemaWarnings(true);
 });
 
 add_task(async function test_enumerate_background_script_apis() {
   let extensionData = {
     background: sendAllApis,
   };
+  // Turn off warning as errors to pass for deprecated APIs
+  ExtensionTestUtils.failOnSchemaWarnings(false);
   let extension = ExtensionTestUtils.loadExtension(extensionData);
   await extension.startup();
+
   let actualApis = await extension.awaitMessage("allApis");
   let expectedApis = generateExpectations(expectedBackgroundApis);
   isDeeply(actualApis, expectedApis, "background script APIs");
 
   await extension.unload();
+  ExtensionTestUtils.failOnSchemaWarnings(true);
 });

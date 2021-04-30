@@ -42,7 +42,7 @@ add_task(
       });
 
       let anotherFrame = document.createElement("iframe");
-      anotherFrame.src = browser.extension.getURL("extensionpage.html");
+      anotherFrame.src = browser.runtime.getURL("extensionpage.html");
       document.body.appendChild(anotherFrame);
     }
 

@@ -83,54 +83,54 @@ add_task(async function test_web_accessible_resources() {
     let urls = [
       // { url, shouldLoad, sandbox, srcdoc }
       {
-        url: browser.extension.getURL("accessible.html"),
+        url: browser.runtime.getURL("accessible.html"),
         shouldLoad: true,
       },
       {
-        url: browser.extension.getURL("accessible.html") + "?foo=bar",
+        url: browser.runtime.getURL("accessible.html") + "?foo=bar",
         shouldLoad: true,
       },
       {
-        url: browser.extension.getURL("accessible.html") + "#!foo=bar",
+        url: browser.runtime.getURL("accessible.html") + "#!foo=bar",
         shouldLoad: true,
       },
       {
-        url: browser.extension.getURL("accessible.html"),
+        url: browser.runtime.getURL("accessible.html"),
         shouldLoad: true,
         sandbox: "allow-scripts",
       },
       {
-        url: browser.extension.getURL("accessible.html"),
+        url: browser.runtime.getURL("accessible.html"),
         shouldLoad: true,
         sandbox: "allow-same-origin allow-scripts",
       },
       {
-        url: browser.extension.getURL("accessible.html"),
+        url: browser.runtime.getURL("accessible.html"),
         shouldLoad: true,
         sandbox: "allow-scripts",
         srcdoc: true,
       },
       {
-        url: browser.extension.getURL("inaccessible.html"),
+        url: browser.runtime.getURL("inaccessible.html"),
         shouldLoad: false,
       },
       {
-        url: browser.extension.getURL("inaccessible.html"),
+        url: browser.runtime.getURL("inaccessible.html"),
         shouldLoad: false,
         sandbox: "allow-same-origin allow-scripts",
       },
       {
-        url: browser.extension.getURL("inaccessible.html"),
+        url: browser.runtime.getURL("inaccessible.html"),
         shouldLoad: false,
         sandbox: "allow-same-origin allow-scripts",
         srcdoc: true,
       },
       {
-        url: browser.extension.getURL("wild1.html"),
+        url: browser.runtime.getURL("wild1.html"),
         shouldLoad: true,
       },
       {
-        url: browser.extension.getURL("wild2.htm"),
+        url: browser.runtime.getURL("wild2.htm"),
         shouldLoad: false,
       },
     ];
@@ -305,14 +305,14 @@ add_task(async function test_web_accessible_resources_mixed_content() {
       "http://example.com/tests/toolkit/components/extensions/test/mochitest/file_image_bad.png",
       "blocked"
     );
-    await testImageLoading(browser.extension.getURL("image.png"), "loaded");
+    await testImageLoading(browser.runtime.getURL("image.png"), "loaded");
 
     let testScriptElement = document.createElement("script");
     // Set the src via wrappedJSObject so the load is triggered with the
     // content page's principal rather than ours.
     testScriptElement.wrappedJSObject.setAttribute(
       "src",
-      browser.extension.getURL("test_script.js")
+      browser.runtime.getURL("test_script.js")
     );
     document.head.appendChild(testScriptElement);
 

@@ -23,7 +23,7 @@ add_task(async function test_cross_docGroup_adoption() {
       "content-script.js": function() {
         let xhr = new XMLHttpRequest();
         xhr.responseType = "document";
-        xhr.open("GET", browser.extension.getURL("blank.html"));
+        xhr.open("GET", browser.runtime.getURL("blank.html"));
 
         xhr.onload = function() {
           let doc = xhr.response;

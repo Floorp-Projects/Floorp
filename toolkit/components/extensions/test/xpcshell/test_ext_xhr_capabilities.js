@@ -7,7 +7,7 @@ add_task(async function test_xhr_capabilities() {
   let extension = ExtensionTestUtils.loadExtension({
     background() {
       let xhr = new XMLHttpRequest();
-      xhr.open("GET", browser.extension.getURL("bad.xml"));
+      xhr.open("GET", browser.runtime.getURL("bad.xml"));
 
       browser.test.sendMessage("result", {
         name: "Background script XHRs should not be privileged",
@@ -37,7 +37,7 @@ add_task(async function test_xhr_capabilities() {
       "bad.xml": "<xml",
       "content_script.js"() {
         let xhr = new XMLHttpRequest();
-        xhr.open("GET", browser.extension.getURL("bad.xml"));
+        xhr.open("GET", browser.runtime.getURL("bad.xml"));
 
         browser.test.sendMessage("result", {
           name: "Content script XHRs should not be privileged",

@@ -22,7 +22,7 @@ add_task(async function test_cross_docGroup_adoption() {
       "current.html": "<html>data</html>",
       "content-script.js": function() {
         let iframe = document.createElement("iframe");
-        iframe.src = browser.extension.getURL("current.html");
+        iframe.src = browser.runtime.getURL("current.html");
         document.body.appendChild(iframe);
 
         iframe.addEventListener(

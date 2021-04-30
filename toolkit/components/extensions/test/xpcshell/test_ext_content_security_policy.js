@@ -101,7 +101,7 @@ async function testPolicy(manifest_version = 2, customCSP = null) {
   function background() {
     browser.test.sendMessage(
       "base-url",
-      browser.extension.getURL("").replace(/\/$/, "")
+      browser.runtime.getURL("").replace(/\/$/, "")
     );
 
     browser.test.sendMessage("background-csp", window.getCSP());

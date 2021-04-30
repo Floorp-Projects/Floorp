@@ -124,7 +124,7 @@ add_task(async function test_permissions() {
     browser.test.onMessage.addListener(async (method, arg) => {
       if (method == "getAll") {
         let perms = await browser.permissions.getAll();
-        let url = browser.extension.getURL("*");
+        let url = browser.runtime.getURL("*");
         perms.origins = perms.origins.filter(i => i != url);
         browser.test.sendMessage("getAll.result", perms);
       } else if (method == "contains") {
@@ -349,7 +349,7 @@ add_task(async function test_startup() {
     });
 
     let all = await browser.permissions.getAll();
-    let url = browser.extension.getURL("*");
+    let url = browser.runtime.getURL("*");
     all.origins = all.origins.filter(i => i != url);
     browser.test.sendMessage("perms", all);
   }
