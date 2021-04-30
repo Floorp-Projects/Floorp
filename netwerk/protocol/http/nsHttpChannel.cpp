@@ -22,7 +22,6 @@
 #include "nsHttpChannelAuthProvider.h"
 #include "nsHttpHandler.h"
 #include "nsString.h"
-#include "nsIApplicationCacheContainer.h"
 #include "nsICacheStorageService.h"
 #include "nsICacheStorage.h"
 #include "nsICacheEntry.h"
@@ -146,10 +145,10 @@ namespace {
 
 // True if the local cache should be bypassed when processing a request.
 #define BYPASS_LOCAL_CACHE(loadFlags, isPreferCacheLoadOverBypass) \
-  (loadFlags & (nsIRequest::LOAD_BYPASS_CACHE |                    \
-                nsICachingChannel::LOAD_BYPASS_LOCAL_CACHE) &&     \
-   !((loadFlags & nsIRequest::LOAD_FROM_CACHE) &&                  \
-     isPreferCacheLoadOverBypass))
+  ((loadFlags) & (nsIRequest::LOAD_BYPASS_CACHE |                  \
+                  nsICachingChannel::LOAD_BYPASS_LOCAL_CACHE) &&   \
+   !(((loadFlags)&nsIRequest::LOAD_FROM_CACHE) &&                  \
+     (isPreferCacheLoadOverBypass)))
 
 #define RECOVER_FROM_CACHE_FILE_ERROR(result) \
   ((result) == NS_ERROR_FILE_NOT_FOUND ||     \
@@ -889,8 +888,7 @@ void nsHttpChannel::SpeculativeConnect() {
   // Before we take the latency hit of dealing with the cache, try and
   // get the TCP (and SSL) handshakes going so they can overlap.
 
-  // don't speculate if we are on uses of the offline application cache,
-  // if we are offline, when doing http upgrade (i.e.
+  // don't speculate if we are offline, when doing http upgrade (i.e.
   // websockets bootstrap), or if we can't do keep-alive (because then we
   // couldn't reuse the speculative connection anyhow).
   if (gIOService->IsOffline() || mUpgradeProtocolCallback ||
@@ -899,11 +897,11 @@ void nsHttpChannel::SpeculativeConnect() {
   }
 
   // LOAD_ONLY_FROM_CACHE and LOAD_NO_NETWORK_IO must not hit network.
-  // LOAD_FROM_CACHE and LOAD_CHECK_OFFLINE_CACHE are unlikely to hit network,
-  // so skip preconnects for them.
-  if (mLoadFlags & (LOAD_ONLY_FROM_CACHE | LOAD_FROM_CACHE |
-                    LOAD_NO_NETWORK_IO | LOAD_CHECK_OFFLINE_CACHE))
+  // LOAD_FROM_CACHE is unlikely to hit network, so skip preconnects for it.
+  if (mLoadFlags &
+      (LOAD_ONLY_FROM_CACHE | LOAD_FROM_CACHE | LOAD_NO_NETWORK_IO)) {
     return;
+  }
 
   if (LoadAllowStaleCacheContent()) {
     return;
@@ -8299,7 +8297,7 @@ void nsHttpChannel::InvalidateCacheEntryForLocation(const char* location) {
 void nsHttpChannel::DoInvalidateCacheEntry(nsIURI* aURI) {
   // NOTE:
   // Following comments 24,32 and 33 in bug #327765, we only care about
-  // the cache in the protocol-handler, not the application cache.
+  // the cache in the protocol-handler.
   // The logic below deviates from the original logic in OpenCacheEntry on
   // one point by using only READ_ONLY access-policy. I think this is safe.
 
