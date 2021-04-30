@@ -1516,19 +1516,8 @@ void mozInlineSpellChecker::CheckCurrentWordsNoSuggest(
           return;
         }
 
-        for (size_t i = 0; i < aIsMisspelled.Length(); i++) {
-          if (!aIsMisspelled[i]) {
-            continue;
-          }
-
-          RefPtr<nsRange> wordRange =
-              mozInlineSpellWordUtil::MakeRange(ranges[i]);
-          // If we somehow can't make a range for this word, just ignore
-          // it.
-          if (wordRange) {
-            self->AddRange(spellCheckerSelection, wordRange);
-          }
-        }
+        self->AddRangesForMisspelledWords(ranges, aIsMisspelled,
+                                          *spellCheckerSelection);
       },
       [self, token](nsresult aRv) {
         if (!self->mTextEditor || self->mTextEditor->Destroyed()) {
@@ -1690,6 +1679,23 @@ nsresult mozInlineSpellChecker::RemoveRange(Selection* aSpellCheckSelection,
   if (!rv.Failed() && mNumWordsInSpellSelection) mNumWordsInSpellSelection--;
 
   return rv.StealNSResult();
+}
+
+void mozInlineSpellChecker::AddRangesForMisspelledWords(
+    const nsTArray<NodeOffsetRange>& aRanges,
+    const nsTArray<bool>& aIsMisspelled, Selection& aSpellCheckerSelection) {
+  for (size_t i = 0; i < aIsMisspelled.Length(); i++) {
+    if (!aIsMisspelled[i]) {
+      continue;
+    }
+
+    RefPtr<nsRange> wordRange = mozInlineSpellWordUtil::MakeRange(aRanges[i]);
+    // If we somehow can't make a range for this word, just ignore
+    // it.
+    if (wordRange) {
+      AddRange(&aSpellCheckerSelection, wordRange);
+    }
+  }
 }
 
 // mozInlineSpellChecker::AddRange
