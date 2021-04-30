@@ -304,7 +304,6 @@ nsHttpChannel::nsHttpChannel()
       mLogicalOffset(0),
       mPostID(0),
       mRequestTime(0),
-      mOfflineCacheLastModifiedTime(0),
       mSuspendTotalTime(0),
       mRedirectType(0),
       mCacheOpenWithPriority(false),
@@ -3226,11 +3225,6 @@ nsresult nsHttpChannel::ProcessPartialContent(
 
     rv = InstallCacheListener(mLogicalOffset);
     if (NS_FAILED(rv)) return rv;
-
-    if (mOfflineCacheEntry) {
-      rv = InstallOfflineCacheListener(mLogicalOffset);
-      if (NS_FAILED(rv)) return rv;
-    }
   } else {
     // suspend the current transaction
     rv = mTransactionPump->Suspend();
@@ -4302,45 +4296,7 @@ nsresult nsHttpChannel::UpdateExpirationTime() {
                                        expirationTime);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (mOfflineCacheEntry) {
-    rv = mOfflineCacheEntry->SetExpirationTime(expirationTime);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
   return NS_OK;
-}
-
-bool nsHttpChannel::ShouldUpdateOfflineCacheEntry() {
-  if (!mApplicationCacheForWrite || !mOfflineCacheEntry) {
-    return false;
-  }
-
-  // if we're updating the cache entry, update the offline cache entry too
-  if (mCacheEntry && LoadCacheEntryIsWriteOnly()) {
-    return true;
-  }
-
-  // if there's nothing in the offline cache, add it
-  if (mOfflineCacheEntry) {
-    return true;
-  }
-
-  // if the document is newer than the offline entry, update it
-  uint32_t docLastModifiedTime;
-  nsresult rv = mResponseHead->GetLastModifiedValue(&docLastModifiedTime);
-  if (NS_FAILED(rv)) {
-    return true;
-  }
-
-  if (mOfflineCacheLastModifiedTime == 0) {
-    return false;
-  }
-
-  if (docLastModifiedTime > mOfflineCacheLastModifiedTime) {
-    return true;
-  }
-
-  return false;
 }
 
 nsresult nsHttpChannel::OpenCacheInputStream(nsICacheEntry* cacheEntry,
@@ -4627,25 +4583,13 @@ nsresult nsHttpChannel::ReadFromCache(bool alreadyMarkedValid) {
   }
 
   if ((mLoadFlags & LOAD_ONLY_IF_MODIFIED) && !LoadCachedContentIsPartial()) {
-    if (!mApplicationCacheForWrite) {
-      LOG(
-          ("Skipping read from cache based on LOAD_ONLY_IF_MODIFIED "
-           "load flag\n"));
-      MOZ_ASSERT(!mCacheInputStream);
-      // TODO: Bug 759040 - We should call HandleAsyncNotModified directly
-      // here, to avoid event dispatching latency.
-      return AsyncCall(&nsHttpChannel::HandleAsyncNotModified);
-    }
-
-    if (!ShouldUpdateOfflineCacheEntry()) {
-      LOG(
-          ("Skipping read from cache based on LOAD_ONLY_IF_MODIFIED "
-           "load flag (mApplicationCacheForWrite not null case)\n"));
-      mCacheInputStream.CloseAndRelease();
-      // TODO: Bug 759040 - We should call HandleAsyncNotModified directly
-      // here, to avoid event dispatching latency.
-      return AsyncCall(&nsHttpChannel::HandleAsyncNotModified);
-    }
+    LOG(
+        ("Skipping read from cache based on LOAD_ONLY_IF_MODIFIED "
+         "load flag\n"));
+    MOZ_ASSERT(!mCacheInputStream);
+    // TODO: Bug 759040 - We should call HandleAsyncNotModified directly
+    // here, to avoid event dispatching latency.
+    return AsyncCall(&nsHttpChannel::HandleAsyncNotModified);
   }
 
   MOZ_ASSERT(mCacheInputStream);
@@ -5094,31 +5038,6 @@ nsresult nsHttpChannel::InstallCacheListener(int64_t offset) {
   if (NS_FAILED(rv)) return rv;
 
   mListener = tee;
-  return NS_OK;
-}
-
-nsresult nsHttpChannel::InstallOfflineCacheListener(int64_t offset) {
-  nsresult rv;
-
-  LOG(("Preparing to write data into the offline cache [uri=%s]\n",
-       mSpec.get()));
-
-  MOZ_ASSERT(mOfflineCacheEntry);
-  MOZ_ASSERT(mListener);
-
-  nsCOMPtr<nsIOutputStream> out;
-  rv = mOfflineCacheEntry->OpenOutputStream(offset, -1, getter_AddRefs(out));
-  if (NS_FAILED(rv)) return rv;
-
-  nsCOMPtr<nsIStreamListenerTee> tee =
-      do_CreateInstance(kStreamListenerTeeCID, &rv);
-  if (NS_FAILED(rv)) return rv;
-
-  rv = tee->Init(mListener, out, nullptr);
-  if (NS_FAILED(rv)) return rv;
-
-  mListener = tee;
-
   return NS_OK;
 }
 
@@ -8158,18 +8077,6 @@ nsHttpChannel::GetCacheToken(nsISupports** token) {
 
 NS_IMETHODIMP
 nsHttpChannel::SetCacheToken(nsISupports* token) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsHttpChannel::GetOfflineCacheToken(nsISupports** token) {
-  NS_ENSURE_ARG_POINTER(token);
-  if (!mOfflineCacheEntry) return NS_ERROR_NOT_AVAILABLE;
-  return CallQueryInterface(mOfflineCacheEntry, token);
-}
-
-NS_IMETHODIMP
-nsHttpChannel::SetOfflineCacheToken(nsISupports* token) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
