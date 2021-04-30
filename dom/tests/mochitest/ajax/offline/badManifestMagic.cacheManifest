@@ -1,3 +1,0 @@
-# This doesn't start with the magic cache manifest line.
-https://example.com/tests/SimpleTest/SimpleTest.js
-https://example.com/tests/dom/tests/mochitest/ajax/offline/offlineTests.js

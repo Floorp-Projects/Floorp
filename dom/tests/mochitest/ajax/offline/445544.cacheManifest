@@ -1,8 +1,0 @@
-CACHE MANIFEST
-https://example.com/tests/SimpleTest/SimpleTest.js
-https://example.com/tests/dom/tests/mochitest/ajax/offline/offlineTests.js
-
-test_bug445544.html
-445544_part1.html
-
-# not including 445544_part2.html
