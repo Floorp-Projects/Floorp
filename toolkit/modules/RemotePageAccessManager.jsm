@@ -309,7 +309,7 @@ let RemotePageAccessManager = {
       if (!aPrincipal.schemeIs("about")) {
         return null;
       }
-      spec = aPrincipal.prepath + aPrincipal.filePath;
+      spec = aPrincipal.prePath + aPrincipal.filePath;
     }
 
     // Check if there is an entry for that requestying URI in the accessMap;

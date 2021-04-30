@@ -258,11 +258,11 @@ interface nsIPrincipal : nsISerializable
     readonly attribute ACString host;
 
     /**
-     * Returns the prepath of the principals uri
+     * Returns the prePath of the principals uri
      * follows the format scheme:
      * "scheme://username:password@hostname:portnumber/"
      */
-    readonly attribute ACString prepath;
+    readonly attribute ACString prePath;
 
     /**
      * Returns the filePath of the principals uri. See nsIURI.
