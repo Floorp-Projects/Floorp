@@ -447,16 +447,6 @@ class TabBase {
   }
 
   /**
-   * @property {boolean} selected
-   *        An alias for `active`.
-   *        @readonly
-   *        @abstract
-   */
-  get selected() {
-    throw new Error("Not implemented");
-  }
-
-  /**
    * @property {string} status
    *        Returns the current loading status of the tab. May be either
    *        "loading" or "complete".

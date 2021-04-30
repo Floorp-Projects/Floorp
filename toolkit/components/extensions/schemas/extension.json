@@ -11,6 +11,8 @@
       "lastError": {
         "type": "object",
         "optional": true,
+        "max_manifest_version": 2,
+        "deprecated": "Please use $(ref:runtime.lastError).",
         "allowedContexts": ["content", "devtools"],
         "description": "Set for the lifetime of a callback if an ansychronous extension api has resulted in an error. If no error has occured lastError will be <var>undefined</var>.",
         "properties": {
@@ -39,6 +41,8 @@
       {
         "name": "getURL",
         "type": "function",
+        "deprecated": "Please use $(ref:runtime.getURL).",
+        "max_manifest_version": 2,
         "allowedContexts": ["content", "devtools"],
         "description": "Converts a relative path within an extension install directory to a fully-qualified URL.",
         "parameters": [
@@ -94,6 +98,7 @@
       {
         "name": "getBackgroundPage",
         "type": "function",
+        "max_manifest_version": 2,
         "description": "Returns the JavaScript 'window' object for the background page running inside the current extension. Returns null if the extension has no background page.",
         "parameters": [],
         "returns": {
