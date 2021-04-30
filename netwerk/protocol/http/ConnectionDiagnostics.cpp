@@ -194,7 +194,7 @@ void Http2Session::PrintDiagnostics(nsCString& log) {
   log.AppendPrintf("     transactionHashCount = %d streamIDHashCount = %d\n",
                    mStreamTransactionHash.Count(), mStreamIDHash.Count());
 
-  log.AppendPrintf("     Queued Stream Size = %zu\n", mQueuedStreams.GetSize());
+  log.AppendPrintf("     Queued Stream Size = %zu\n", mQueuedStreams.Length());
 
   PRIntervalTime now = PR_IntervalNow();
   log.AppendPrintf("     Ping Threshold = %ums\n",
