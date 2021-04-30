@@ -63,7 +63,6 @@ user_pref("widget.disable-dark-scrollbar", true);
 user_pref("nglayout.initialpaint.unsuppress_with_no_background", true);
 user_pref("media.block-autoplay-until-in-foreground", false);
 // Enable AppCache globally for now whilst it's being removed in Bug 1584984
-user_pref("browser.cache.offline.storage.enable", true);
 user_pref("browser.cache.offline.enable", true);
 // Enable blocking access to storage from tracking resources by default.
 // We don't want to run WPT using BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN (5 - aka Dynamic First Party Isolation) yet.
