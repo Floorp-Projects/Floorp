@@ -1092,7 +1092,6 @@ add_task(async function test_processIncoming_decrypt_failed() {
     let ping = await sync_engine_and_validate_telem(engine, true);
     Assert.equal(ping.engines[0].incoming.applied, 2);
     Assert.equal(ping.engines[0].incoming.failed, 4);
-    Assert.equal(ping.engines[0].incoming.newFailed, 4);
 
     Assert.equal(engine.previousFailed.size, 4);
     Assert.ok(engine.previousFailed.has("nojson"));
