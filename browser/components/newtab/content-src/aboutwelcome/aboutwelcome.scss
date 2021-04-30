@@ -695,13 +695,6 @@ body {
       background-image: url('chrome://activity-stream/content/data/content/assets/noodle-C.svg');
     }
 
-    .yellow-circle {
-      width: 10px;
-      height: 10px;
-      background: #FFD567;
-      border-radius: 50%;
-    }
-
     .orange-L {
       background-image: url('chrome://activity-stream/content/data/content/assets/noodle-solid-L.svg');
       -moz-context-properties: fill;
@@ -802,21 +795,6 @@ body {
       }
 
       // Position of noodles on first screen
-      .outline-L {
-        width: 87px;
-        height: 80px;
-        bottom: 94px;
-        inset-inline-end: 430px;
-
-        &:dir(rtl) {
-          transform: rotate(240deg);
-        }
-
-        @media (max-width: $proton-break-point-smallest) {
-          visibility: hidden;
-        }
-      }
-
       .solid-L {
         width: 1300px;
         height: 1050px;
@@ -852,11 +830,6 @@ body {
         &:dir(rtl) {
           transform: rotate(-207deg);
         }
-      }
-
-      .yellow-circle {
-        bottom: 75px;
-        inset-inline-end: 540px;
       }
     }
 
@@ -913,6 +886,7 @@ body {
       .yellow-circle {
         width: 165px;
         height: 165px;
+        border-radius: 50%;
         transform: translate(230%, -5%);
         background: #FF7139;
 
@@ -1000,6 +974,7 @@ body {
       .yellow-circle {
         width: 165px;
         height: 165px;
+        border-radius: 50%;
         transform: translate(160%, 130%);
         background: #FF7139;
 

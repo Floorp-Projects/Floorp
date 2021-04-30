@@ -469,11 +469,6 @@ body {
       fill: var(--in-content-page-background); }
     .onboardingContainer.proton .purple-C {
       background-image: url("chrome://activity-stream/content/data/content/assets/noodle-C.svg"); }
-    .onboardingContainer.proton .yellow-circle {
-      width: 10px;
-      height: 10px;
-      background: #FFD567;
-      border-radius: 50%; }
     .onboardingContainer.proton .orange-L {
       background-image: url("chrome://activity-stream/content/data/content/assets/noodle-solid-L.svg");
       -moz-context-properties: fill;
@@ -546,16 +541,6 @@ body {
           margin-bottom: 5px; }
           .onboardingContainer.proton .screen-0 .section-main .welcome-text h1 {
             width: 283px; }
-      .onboardingContainer.proton .screen-0 .outline-L {
-        width: 87px;
-        height: 80px;
-        bottom: 94px;
-        inset-inline-end: 430px; }
-        .onboardingContainer.proton .screen-0 .outline-L:dir(rtl) {
-          transform: rotate(240deg); }
-        @media (max-width: 690px) {
-          .onboardingContainer.proton .screen-0 .outline-L {
-            visibility: hidden; } }
       .onboardingContainer.proton .screen-0 .solid-L {
         width: 1300px;
         height: 1050px;
@@ -581,9 +566,6 @@ body {
         transform: rotate(-75deg); }
         .onboardingContainer.proton .screen-0 .purple-C:dir(rtl) {
           transform: rotate(-207deg); }
-      .onboardingContainer.proton .screen-0 .yellow-circle {
-        bottom: 75px;
-        inset-inline-end: 540px; }
     .onboardingContainer.proton .screen-1 .section-main {
       z-index: 1;
       width: 504px;
@@ -619,6 +601,7 @@ body {
     .onboardingContainer.proton .screen-1 .yellow-circle {
       width: 165px;
       height: 165px;
+      border-radius: 50%;
       transform: translate(230%, -5%);
       background: #FF7139; }
       .onboardingContainer.proton .screen-1 .yellow-circle:dir(rtl) {
@@ -675,6 +658,7 @@ body {
     .onboardingContainer.proton .screen-2 .yellow-circle {
       width: 165px;
       height: 165px;
+      border-radius: 50%;
       transform: translate(160%, 130%);
       background: #FF7139; }
       .onboardingContainer.proton .screen-2 .yellow-circle:dir(rtl) {
