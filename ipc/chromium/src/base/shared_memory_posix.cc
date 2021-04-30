@@ -523,7 +523,11 @@ bool SharedMemory::ShareToProcessCommon(ProcessId processId,
                                         bool close_self) {
   freezeable_ = false;
   const int new_fd = dup(mapped_file_.get());
-  DCHECK(new_fd >= -1);
+  if (new_fd < 0) {
+    CHROMIUM_LOG(WARNING) << "failed to duplicate file descriptor: "
+                          << strerror(errno);
+    return false;
+  }
   new_handle->fd = new_fd;
   new_handle->auto_close = true;
 
