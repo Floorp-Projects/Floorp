@@ -274,10 +274,10 @@ var pktUI = (function() {
     // We don't have to hide and show the panel again if it's already shown
     // as if the user tries to click again on the toolbar button the overlay
     // will close instead of the button will be clicked
-    var frame = getPanelFrame();
+    var iframe = getPanelFrame();
 
-    // Load the frame
-    frame.setAttribute("src", url);
+    // Load the iframe
+    iframe.setAttribute("src", url);
   }
 
   function onShowSignup() {
@@ -440,17 +440,17 @@ var pktUI = (function() {
    * }
    */
   function resizePanel(options = {}) {
-    var frame = getPanelFrame();
+    var iframe = getPanelFrame();
 
     // Set an explicit size, panel will adapt.
-    frame.style.width = options.width + "px";
-    frame.style.height = options.height + "px";
+    iframe.style.width = options.width + "px";
+    iframe.style.height = options.height + "px";
   }
 
   // -- Browser Navigation -- //
 
   /**
-   * Open a new tab with a given url and notify the frame panel that it was opened
+   * Open a new tab with a given url and notify the iframe panel that it was opened
    */
 
   function openTabWithUrl(url, aTriggeringPrincipal, aCsp) {
@@ -638,7 +638,7 @@ var pktUI = (function() {
 // -- Communication to Background -- //
 var pktUIMessaging = (function() {
   /**
-   * Send a message to the panel's frame
+   * Send a message to the panel's iframe
    */
   function sendMessageToPanel(messageId, panelId, payload) {
     if (!isPanelIdValid(panelId)) {
@@ -660,7 +660,7 @@ var pktUIMessaging = (function() {
 
   /**
    * Helper function to package an error object and send it to the panel
-   * frame as a message response
+   * iframe as a message response
    */
   function sendErrorMessageToPanel(messageId, panelId, error) {
     var errorResponse = { status: "error", error };
