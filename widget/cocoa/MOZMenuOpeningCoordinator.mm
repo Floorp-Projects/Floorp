@@ -1,0 +1,161 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/*
+ * Makes sure that the nested event loop for NSMenu tracking is situated as low
+ * on the stack as possible, and that two NSMenu event loops are never nested.
+ */
+
+#include "MOZMenuOpeningCoordinator.h"
+
+#include "nsCocoaFeatures.h"
+#include "nsCocoaUtils.h"
+#include "nsObjCExceptions.h"
+#include "SDKDeclarations.h"
+
+@interface MOZMenuOpeningInfo : NSObject
+@property NSInteger handle;
+@property(retain) NSMenu* menu;
+@property NSPoint position;
+@property(retain) NSView* view;
+@end
+
+@implementation MOZMenuOpeningInfo
+@end
+
+@implementation MOZMenuOpeningCoordinator {
+  // non-nil between asynchronouslyOpenMenu:atScreenPosition:forView: and the
+  // time at at which it is unqueued in _runMenu.
+  MOZMenuOpeningInfo* mPendingOpening;  // strong
+
+  // An incrementing counter
+  NSInteger mLastHandle;
+
+  // YES while _runMenu is on the stack
+  BOOL mRunMenuIsOnTheStack;
+}
+
++ (instancetype)sharedInstance {
+  static MOZMenuOpeningCoordinator* sInstance = nil;
+  if (!sInstance) {
+    sInstance = [[MOZMenuOpeningCoordinator alloc] init];
+  }
+  return sInstance;
+}
+
+- (NSInteger)asynchronouslyOpenMenu:(NSMenu*)aMenu
+                   atScreenPosition:(NSPoint)aPosition
+                            forView:(NSView*)aView {
+  MOZ_RELEASE_ASSERT(!mPendingOpening,
+                     "A menu is already waiting to open. Before opening the next one, either wait "
+                     "for this one to open or cancel the request.");
+
+  NSInteger handle = ++mLastHandle;
+
+  MOZMenuOpeningInfo* info = [[MOZMenuOpeningInfo alloc] init];
+  info.handle = handle;
+  info.menu = aMenu;
+  info.position = aPosition;
+  info.view = aView;
+  mPendingOpening = [info retain];
+  [info release];
+
+  if (!mRunMenuIsOnTheStack) {
+    // Call _runMenu from the event loop, so that it doesn't block this call.
+    [self performSelector:@selector(_runMenu) withObject:nil afterDelay:0.0];
+  }
+
+  return handle;
+}
+
+- (void)_runMenu {
+  MOZ_RELEASE_ASSERT(!mRunMenuIsOnTheStack);
+
+  mRunMenuIsOnTheStack = YES;
+
+  while (mPendingOpening) {
+    MOZMenuOpeningInfo* info = [mPendingOpening retain];
+    [mPendingOpening release];
+    mPendingOpening = nil;
+
+    @try {
+      [self _openMenu:info.menu atScreenPosition:info.position forView:info.view];
+    } @catch (NSException* exception) {
+      nsObjCExceptionLog(exception);
+    }
+
+    [info release];
+  }
+
+  mRunMenuIsOnTheStack = NO;
+}
+
+- (void)cancelAsynchronousOpening:(NSInteger)aHandle {
+  if (mPendingOpening && mPendingOpening.handle == aHandle) {
+    [mPendingOpening release];
+    mPendingOpening = nil;
+  }
+}
+
+- (void)_openMenu:(NSMenu*)aMenu atScreenPosition:(NSPoint)aPosition forView:(NSView*)aView {
+  // There are multiple ways to display an NSMenu as a context menu.
+  //
+  //  1. We can return the NSMenu from -[ChildView menuForEvent:] and the NSView will open it for
+  //     us.
+  //  2. We can call +[NSMenu popUpContextMenu:withEvent:forView:] inside a mouseDown handler with a
+  //     real mouse down event.
+  //  3. We can call +[NSMenu popUpContextMenu:withEvent:forView:] at a later time, with a real
+  //     mouse event that we stored earlier.
+  //  4. We can call +[NSMenu popUpContextMenu:withEvent:forView:] at any time, with a synthetic
+  //     mouse event that we create just for that purpose.
+  //  5. We can call -[NSMenu popUpMenuPositioningItem:atLocation:inView:] and it just takes a
+  //     position, not an event.
+  //
+  // 1-4 look the same, 5 looks different: 5 is made for use with NSPopUpButton, where the selected
+  // item needs to be shown at a specific position. If a tall menu is opened with a position close
+  // to the bottom edge of the screen, 5 results in a cropped menu with scroll arrows, even if the
+  // entire menu would fit on the screen, due to the positioning constraint.
+  // 1-2 only work if the menu contents are known synchronously during the call to menuForEvent or
+  // during the mouseDown event handler.
+  // NativeMenuMac::ShowAsContextMenu can be called at any time. It could be called during a
+  // menuForEvent call (during a "contextmenu" event handler), or during a mouseDown handler, or at
+  // a later time.
+  // The code below uses option 4 as the preferred option because it's the simplest: It works in all
+  // scenarios and it doesn't have the positioning drawbacks of option 5.
+
+  if (@available(macOS 10.14, *)) {
+#if !defined(MAC_OS_VERSION_11_0) || MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_VERSION_11_0
+    if (nsCocoaFeatures::OnBigSurOrLater()) {
+#else
+    if (@available(macOS 11.0, *)) {
+#endif
+      // Make native context menus respect the NSApp appearance rather than the NSWindow appearance.
+      [aMenu setAppearance:NSApp.effectiveAppearance];
+    }
+  }
+
+  if (aView) {
+    // Create a synthetic event at the right location and open the menu [option 4].
+    NSPoint locationInWindow = nsCocoaUtils::ConvertPointFromScreen(aView.window, aPosition);
+    NSEvent* event = [NSEvent mouseEventWithType:NSEventTypeRightMouseDown
+                                        location:locationInWindow
+                                   modifierFlags:0
+                                       timestamp:NSProcessInfo.processInfo.systemUptime
+                                    windowNumber:aView.window.windowNumber
+                                         context:nil
+                                     eventNumber:0
+                                      clickCount:1
+                                        pressure:0.0f];
+    [NSMenu popUpContextMenu:aMenu withEvent:event forView:aView];
+  } else {
+    // Open the menu using popUpMenuPositioningItem:atLocation:inView: [option 5].
+    // This is not preferred, because it positions the menu differently from how a native context
+    // menu would be positioned; it enforces aPosition for the top left corner even if this
+    // means that the menu will be displayed in a clipped fashion with scroll arrows.
+    [aMenu popUpMenuPositioningItem:nil atLocation:aPosition inView:nil];
+  }
+}
+
+@end
