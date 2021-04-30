@@ -16,7 +16,6 @@
 #include "nsIObserverService.h"
 #include "nsIAppStartup.h"
 #include "nsIGeolocationProvider.h"
-#include "nsCacheService.h"
 #include "nsIDOMWakeLockListener.h"
 #include "nsIPowerManagerService.h"
 #include "nsISpeculativeConnect.h"
@@ -160,13 +159,6 @@ class GeckoThreadSupport final
 
     obsServ->NotifyObservers(nullptr, "memory-pressure", u"heap-minimize");
 
-    // If we are OOM killed with the disk cache enabled, the entire
-    // cache will be cleared (bug 105843), so shut down the cache here
-    // and re-init on foregrounding
-    if (nsCacheService::GlobalInstance()) {
-      nsCacheService::GlobalInstance()->Shutdown();
-    }
-
     // We really want to send a notification like profile-before-change,
     // but profile-before-change ends up shutting some things down instead
     // of flushing data
@@ -185,13 +177,6 @@ class GeckoThreadSupport final
     // to "resumed", so we should notify observers and so on.
     if (sPauseCount != 0) {
       return;
-    }
-
-    // If we are OOM killed with the disk cache enabled, the entire
-    // cache will be cleared (bug 105843), so shut down cache on backgrounding
-    // and re-init here
-    if (nsCacheService::GlobalInstance()) {
-      nsCacheService::GlobalInstance()->Init();
     }
 
     // We didn't return from one of our own activities, so restore
