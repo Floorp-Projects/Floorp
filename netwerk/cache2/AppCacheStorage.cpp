@@ -122,36 +122,7 @@ NS_IMETHODIMP AppCacheStorage::AsyncDoomURI(
 
 NS_IMETHODIMP AppCacheStorage::AsyncEvictStorage(
     nsICacheEntryDoomCallback* aCallback) {
-  if (!CacheStorageService::Self()) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
-  if (!LoadInfo()) {
-    return NS_ERROR_CACHE_KEY_NOT_FOUND;
-  }
-
-  nsresult rv;
-
-  if (!mAppCache) {
-    // Discard everything under this storage context
-    nsCOMPtr<nsIApplicationCacheService> appCacheService =
-        do_GetService(NS_APPLICATIONCACHESERVICE_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = appCacheService->Evict(LoadInfo());
-    NS_ENSURE_SUCCESS(rv, rv);
-  } else {
-    // Discard the group
-    RefPtr<_OldStorage> old = new _OldStorage(
-        LoadInfo(), WriteToDisk(), LookupAppCache(), true, mAppCache);
-    rv = old->AsyncEvictStorage(aCallback);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    return NS_OK;
-  }
-
-  if (aCallback) aCallback->OnCacheEntryDoomed(NS_OK);
-
-  return NS_OK;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP AppCacheStorage::AsyncVisitStorage(
