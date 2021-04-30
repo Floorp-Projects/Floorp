@@ -573,16 +573,10 @@ menuitem.bookmark-item {
 @media (-moz-windows-default-theme: 0) {
   :root:not(:-moz-lwtheme) {
     --urlbar-popup-action-color: -moz-nativehyperlinktext;
+  }
 
-    --urlbarView-button-text: buttontext;
-    --urlbarView-button-background: buttonface;
-    --urlbarView-button-background-hover: buttonface;
-    --urlbarView-button-background-active: buttonface;
-    --urlbarView-button-border: threedshadow;
-    --urlbarView-primary-button-text: highlighttext;
-    --urlbarView-primary-button-background: highlight;
-    --urlbarView-primary-button-background-hover: highlight;
-    --urlbarView-primary-button-background-active: highlight;
+  :root:not(:-moz-lwtheme) .urlbarView-tip-button[selected] {
+    color: var(--buttons-primary-button-color, highlighttext);
   }
 }
 
