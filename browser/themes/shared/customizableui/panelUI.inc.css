@@ -2852,16 +2852,14 @@ panelview:not([mainview]) #PanelUI-whatsNew-title {
 
 .PanelUI-profiler-button-primary {
   background-color: #0060DF;
-  /* The !important designation here is to overcome the specificity of the button.css
-     styles that are being applied on linux for hovers. */
-  color: #fff !important;
+  color: #fff;
 }
 
 .PanelUI-profiler-button-primary:hover {
   background-color: #003eaa;
 }
 
-.PanelUI-profiler-button-primary:active {
+.PanelUI-profiler-button-primary:active:hover {
   background-color: #002275;
 }
 

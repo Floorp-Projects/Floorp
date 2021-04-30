@@ -328,7 +328,7 @@ button.downloadButton {
   border: none;
   background: transparent;
   padding: 0;
-  color: inherit !important /* !important overrides button.css on Mac and Linux */;
+  color: inherit;
 }
 
 .downloadButton > .button-box > .button-icon {
