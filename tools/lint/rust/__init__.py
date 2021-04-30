@@ -10,6 +10,7 @@ import subprocess
 from collections import namedtuple
 from distutils.version import StrictVersion
 
+from mozboot.util import get_tools_dir
 from mozfile import which
 from mozlint import result
 from mozlint.pathutils import expand_exclusions
@@ -108,7 +109,8 @@ def get_rustfmt_binary():
     if binary:
         return binary
 
-    return which("rustfmt")
+    rust_path = os.path.join(get_tools_dir(), "rustc", "bin")
+    return which("rustfmt", path=os.pathsep.join([rust_path, os.environ["PATH"]]))
 
 
 def get_rustfmt_version(binary):
