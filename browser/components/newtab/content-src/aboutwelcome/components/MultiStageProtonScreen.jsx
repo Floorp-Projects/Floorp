@@ -17,9 +17,11 @@ export class MultiStageProtonScreen extends React.PureComponent {
         {isWelcomeScreen ? (
           <div className="section-left">
             <div className="message-text">
+              <div className="spacer-top" />
               <Localized text={content.subtitle}>
                 <h1 />
               </Localized>
+              <div className="spacer-bottom" />
             </div>
             {content.help_text && content.help_text.text ? (
               <Localized text={content.help_text.text}>
