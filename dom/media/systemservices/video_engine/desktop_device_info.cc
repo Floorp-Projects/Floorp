@@ -256,9 +256,9 @@ void DesktopDeviceInfoImpl::InitializeWindowList() {
       char idStr[BUFSIZ];
 #if WEBRTC_WIN
       _snprintf_s(idStr, sizeof(idStr), sizeof(idStr) - 1, "%ld",
-                  pWinDevice->getScreenId());
+                  static_cast<long>(pWinDevice->getScreenId()));
 #else
-      SprintfLiteral(idStr, "%ld", pWinDevice->getScreenId());
+      SprintfLiteral(idStr, "%ld", static_cast<long>(pWinDevice->getScreenId()));
 #endif
       pWinDevice->setUniqueIdName(idStr);
       desktop_window_list_[pWinDevice->getScreenId()] = pWinDevice;
