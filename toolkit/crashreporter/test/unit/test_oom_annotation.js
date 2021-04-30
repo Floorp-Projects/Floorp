@@ -34,6 +34,7 @@ add_task(async function run_test() {
           break;
         case "linux":
           annotations = [
+            ["OOMAllocationSize", true],
             ["AvailablePageFile", false],
             ["AvailablePhysicalMemory", false],
             ["AvailableSwapMemory", false],
@@ -44,6 +45,7 @@ add_task(async function run_test() {
           break;
         case "macosx":
           annotations = [
+            ["OOMAllocationSize", true],
             ["AvailablePhysicalMemory", false],
             ["AvailableSwapMemory", false],
             ["PurgeablePhysicalMemory", false],

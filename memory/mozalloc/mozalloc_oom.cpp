@@ -9,7 +9,7 @@
 #include "mozilla/mozalloc_oom.h"
 #include "mozilla/Assertions.h"
 
-static mozalloc_oom_abort_handler gAbortHandler;
+static size_t gMozallocOOMAllocationSize = 0;
 
 #define OOM_MSG_LEADER "out of memory: 0x"
 #define OOM_MSG_DIGITS "0000000000000000"  // large enough for 2^64
@@ -36,7 +36,7 @@ void mozalloc_handle_oom(size_t size) {
   // which might be in use at the time under querySelector or
   // querySelectorAll.
 
-  if (gAbortHandler) gAbortHandler(size);
+  gMozallocOOMAllocationSize = size;
 
   static_assert(OOM_MSG_FIRST_DIGIT_OFFSET > 0,
                 "Loop below will never terminate (i can't go below 0)");
@@ -51,6 +51,4 @@ void mozalloc_handle_oom(size_t size) {
   mozalloc_abort(oomMsg);
 }
 
-void mozalloc_set_oom_abort_handler(mozalloc_oom_abort_handler handler) {
-  gAbortHandler = handler;
-}
+size_t mozalloc_get_oom_abort_size(void) { return gMozallocOOMAllocationSize; }
