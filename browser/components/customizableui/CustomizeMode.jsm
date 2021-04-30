@@ -52,11 +52,6 @@ ChromeUtils.defineModuleGetter(
 );
 ChromeUtils.defineModuleGetter(
   this,
-  "BrowserUIUtils",
-  "resource:///modules/BrowserUIUtils.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
   "BrowserUsageTelemetry",
   "resource:///modules/BrowserUsageTelemetry.jsm"
 );
@@ -799,19 +794,14 @@ CustomizeMode.prototype = {
     }
     if (!this.window.gReduceMotion) {
       let overflowButton = this.$("nav-bar-overflow-button");
-      BrowserUIUtils.setToolbarButtonHeightProperty(overflowButton).then(() => {
-        overflowButton.setAttribute("animate", "true");
-        overflowButton.addEventListener("animationend", function onAnimationEnd(
-          event
-        ) {
-          if (event.animationName.startsWith("overflow-animation")) {
-            this.setAttribute("fade", "true");
-          } else if (event.animationName == "overflow-fade") {
-            this.removeEventListener("animationend", onAnimationEnd);
-            this.removeAttribute("animate");
-            this.removeAttribute("fade");
-          }
-        });
+      overflowButton.setAttribute("animate", "true");
+      overflowButton.addEventListener("animationend", function onAnimationEnd(
+        event
+      ) {
+        if (event.animationName.startsWith("overflow-animation")) {
+          this.removeEventListener("animationend", onAnimationEnd);
+          this.removeAttribute("animate");
+        }
       });
     }
   },
