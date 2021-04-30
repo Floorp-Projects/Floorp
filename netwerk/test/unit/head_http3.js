@@ -5,7 +5,7 @@
 /* import-globals-from head_channels.js */
 /* import-globals-from head_cookies.js */
 
-async function http3_setup_tests() {
+async function http3_setup_tests(http3version) {
   let env = Cc["@mozilla.org/process/environment;1"].getService(
     Ci.nsIEnvironment
   );
@@ -21,7 +21,7 @@ async function http3_setup_tests() {
   Services.prefs.setBoolPref("network.dns.disableIPv6", true);
   Services.prefs.setCharPref(
     "network.http.http3.alt-svc-mapping-for-testing",
-    "foo.example.com;h3-27=:" + h3Port
+    `foo.example.com;${http3version}=:${h3Port}`
   );
 
   let certdb = Cc["@mozilla.org/security/x509certdb;1"].getService(
@@ -29,7 +29,7 @@ async function http3_setup_tests() {
   );
   addCertFromFile(certdb, "http2-ca.pem", "CTu,u,u");
 
-  await setup_altsvc("https://foo.example.com/", h3Route);
+  await setup_altsvc("https://foo.example.com/", h3Route, http3version);
 }
 
 function makeChan(uri) {
@@ -45,6 +45,7 @@ let CheckHttp3Listener = function() {};
 
 CheckHttp3Listener.prototype = {
   expectedRoute: "",
+  http3version: "",
 
   onStartRequest: function testOnStartRequest(request) {},
 
@@ -64,7 +65,7 @@ CheckHttp3Listener.prototype = {
       try {
         httpVersion = request.protocolVersion;
       } catch (e) {}
-      Assert.equal(httpVersion, "h3-27");
+      Assert.equal(httpVersion, this.http3version);
       this.finish(true);
     } else {
       dump("try again to get alt svc mapping\n");
@@ -73,12 +74,13 @@ CheckHttp3Listener.prototype = {
   },
 };
 
-async function setup_altsvc(uri, expectedRoute) {
+async function setup_altsvc(uri, expectedRoute, http3version) {
   let result = false;
   do {
     let chan = makeChan(uri);
     let listener = new CheckHttp3Listener();
     listener.expectedRoute = expectedRoute;
+    listener.http3version = http3version;
     result = await altsvcSetupPromise(chan, listener);
     dump("results=" + result);
   } while (result === false);
@@ -101,5 +103,6 @@ function http3_clear_prefs() {
   Services.prefs.clearUserPref(
     "network.http.http3.alt-svc-mapping-for-testing"
   );
+  Services.prefs.clearUserPref("network.http.http3.support_version1");
   dump("cleanup done\n");
 }
