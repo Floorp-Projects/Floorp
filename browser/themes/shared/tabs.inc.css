@@ -33,13 +33,15 @@
   --tab-shadow-max-size: 6px;
   --proton-tab-block-margin: 4px;
   --inline-tab-padding: 8px;
-  /* Value for --in-content-page-background in in-content/common.inc.css */
-  --tabpanel-background-color: #fff;
+  /* --tabpanel-background-color matches $in-content-page-background in newtab
+     (browser/components/newtab/content-src/styles/_variables.scss) */
+  --tabpanel-background-color: #F9F9FB;
 }
 @media (-moz-toolbar-prefers-color-scheme: dark) {
   :root {
-    /* Value for --in-content-page-background for dark mode in in-content/common.inc.css */
-    --tabpanel-background-color: rgb(28,27,34);
+    /* --tabpanel-background-color matches $in-content-page-background in newtab
+       (browser/components/newtab/content-src/styles/_variables.scss) */
+    --tabpanel-background-color: #2A2A2E;
   }
 } /*** END prefers-color-scheme: dark ***/
 } /*** END proton ***/

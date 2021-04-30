@@ -37,7 +37,7 @@
       "toolbar_field_text": "rgb(251,251,254)",
       "toolbar_field_focus": "rgb(66,65,77)",
       "toolbar_text": "rgb(251, 251, 254)",
-      "ntp_background": "rgb(28, 27, 34)",
+      "ntp_background": "#2A2A2E",
       "ntp_text": "rgb(251, 251, 254)",
       "sidebar": "#38383D",
       "sidebar_text": "rgb(249, 249, 250)",

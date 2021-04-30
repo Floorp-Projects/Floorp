@@ -35,7 +35,7 @@
       "toolbar_field_border": "transparent",
       "toolbar_field_focus": "white",
       "toolbar_text": "rgb(21,20,26)",
-      "ntp_background": "#fff",
+      "ntp_background": "#F9F9FB",
       "ntp_text": "rgb(21, 20, 26)",
       "popup_action_color": "rgb(91,91,102)",
       "button": "rgb(240,240,244)",
