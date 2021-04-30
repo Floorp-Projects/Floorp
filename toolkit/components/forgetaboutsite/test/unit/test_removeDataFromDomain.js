@@ -526,10 +526,7 @@ var tests = [
 //
 // Due to these prefs being static, setting them doesn't make a difference in time for the test
 // As we are removing AppCache in Bug 1584984 this will just be removed soon.
-if (
-  Services.prefs.getBoolPref("browser.cache.offline.enable") &&
-  Services.prefs.getBoolPref("browser.cache.offline.storage.enable")
-) {
+if (Services.prefs.getBoolPref("browser.cache.offline.enable")) {
   tests.push(test_cache_cleared);
 }
 

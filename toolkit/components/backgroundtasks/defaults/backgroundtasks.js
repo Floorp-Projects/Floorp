@@ -8,7 +8,6 @@ pref("devtools.console.stdout.chrome", true);
 pref("network.process.enabled", false);
 
 pref("browser.cache.offline.enable", false);
-pref("browser.cache.offline.storage.enable", false);
 pref("browser.cache.disk.enable", false);
 pref("permissions.memory_only", true);
 
