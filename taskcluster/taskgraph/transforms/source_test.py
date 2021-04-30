@@ -54,6 +54,10 @@ source_test_description_schema = Schema(
             "platform", job_description_schema["worker"]
         ),
         Optional("python-version"): [int],
+        Optional("dependencies"): {
+            k: optionally_keyed_by("platform", v)
+            for k, v in job_description_schema["dependencies"].items()
+        },
         # A list of artifacts to install from 'fetch' tasks.
         Optional("fetches"): {
             text_type: optionally_keyed_by(
@@ -187,6 +191,13 @@ def handle_platform(config, jobs):
         for field in fields:
             resolve_keyed_by(
                 job, field, item_name=job["name"], project=config.params["project"]
+            )
+        for field in job.get("dependencies", {}):
+            resolve_keyed_by(
+                job,
+                "dependencies.{}".format(field),
+                item_name=job["name"],
+                project=config.params["project"],
             )
 
         if "treeherder" in job:
