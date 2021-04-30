@@ -142,6 +142,7 @@ browser/chrome/browser/content/activity-stream/data/content/assets/glyph-arrowhe
 browser/chrome/browser/content/activity-stream/data/content/assets/glyph-arrowhead-down-16.svg
 browser/chrome/browser/content/activity-stream/data/content/assets/glyph-caret-right.svg
 browser/chrome/browser/content/activity-stream/data/content/assets/glyph-dismiss-16.svg
+browser/chrome/browser/content/activity-stream/data/content/assets/glyph-delete-16.svg
 browser/chrome/browser/content/activity-stream/data/content/assets/glyph-help-24.svg
 browser/chrome/browser/content/activity-stream/data/content/assets/glyph-highlights-16.svg
 browser/chrome/browser/content/activity-stream/data/content/assets/glyph-info-16.svg
@@ -155,6 +156,7 @@ browser/chrome/browser/skin/classic/browser/bookmark.svg
 browser/chrome/browser/skin/classic/browser/pin-12.svg
 browser/chrome/browser/skin/classic/browser/pocket-outline.svg
 chrome/toolkit/skin/classic/global/icons/close.svg
+chrome/toolkit/skin/classic/global/icons/delete.svg
 chrome/toolkit/skin/classic/global/icons/help.svg
 chrome/toolkit/skin/classic/global/icons/info.svg
 chrome/toolkit/skin/classic/global/icons/pocket.svg
