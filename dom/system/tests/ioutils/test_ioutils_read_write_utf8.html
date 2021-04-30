@@ -15,10 +15,12 @@
     const { Assert } = ChromeUtils.import("resource://testing-common/Assert.jsm");
     const { ObjectUtils } = ChromeUtils.import("resource://gre/modules/ObjectUtils.jsm");
 
-    // This is presently only used to test compatability between OS.File and
-    // IOUtils when it comes to writing compressed files. The import and the
-    // test `test_lz4_osfile_compat` can be removed with OS.File is removed.
+    // TODO: Remove this import for OS.File. It is currently being used as a
+    //       stop gap for missing IOUtils functionality.
     const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+
+
+    const tmpDir = OS.Constants.Path.tmpDir;
 
     // This is an impossible sequence of bytes in an UTF-8 encoded file.
     // See section 3.5.3 of this text:
@@ -27,8 +29,7 @@
 
     add_task(async function test_read_utf8_failure() {
       info("Test attempt to read non-existent file (UTF8)");
-      const tmpDir = await PathUtils.getTempDir();
-      const doesNotExist = PathUtils.join(tmpDir, "does_not_exist.tmp");
+      const doesNotExist = OS.Path.join(tmpDir, "does_not_exist.tmp");
       await Assert.rejects(
         IOUtils.readUTF8(doesNotExist),
         /Could not open the file at .*/,
@@ -36,7 +37,7 @@
       );
 
       info("Test attempt to read invalid UTF-8");
-      const invalidUTF8File = PathUtils.join(tmpDir, "invalid_utf8.tmp");
+      const invalidUTF8File = OS.Path.join(tmpDir, "invalid_utf8.tmp");
 
       // Deliberately write the invalid byte sequence to file.
       await IOUtils.write(invalidUTF8File, invalidUTF8);
@@ -51,9 +52,8 @@
     });
 
     add_task(async function test_write_utf8_no_overwrite() {
-      const tmpDir = await PathUtils.getTempDir();
       // Make a new file, and try to write to it with overwrites disabled.
-      const tmpFileName = PathUtils.join(tmpDir, "test_ioutils_write_utf8_overwrite.tmp");
+      const tmpFileName = OS.Path.join(tmpDir, "test_ioutils_write_utf8_overwrite.tmp");
       const untouchableContents = "Can't touch this!\n";
       await IOUtils.writeUTF8(tmpFileName, untouchableContents);
 
@@ -90,9 +90,8 @@
 
     add_task(async function test_write_with_backup() {
       info("Test backup file option with non-existing file");
-      const tmpDir = await PathUtils.getTempDir();
       let fileContents = "Original file contents";
-      let destFileName = PathUtils.join(tmpDir, "test_write_utf8_with_backup_option.tmp");
+      let destFileName = OS.Path.join(tmpDir, "test_write_utf8_with_backup_option.tmp");
       let backupFileName = destFileName + ".backup";
       let bytesWritten =
         await IOUtils.writeUTF8(destFileName, fileContents, {
@@ -138,11 +137,10 @@
 
     add_task(async function test_write_with_backup_and_tmp() {
       info("Test backup with tmp and backup file options, non-existing destination");
-      const tmpDir = await PathUtils.getTempDir();
       let fileContents = "Original file contents";
-      let destFileName = PathUtils.join(tmpDir, "test_write_utf8_with_backup_and_tmp_options.tmp");
+      let destFileName = OS.Path.join(tmpDir, "test_write_utf8_with_backup_and_tmp_options.tmp");
       let backupFileName = destFileName + ".backup";
-      let tmpFileName = PathUtils.join(tmpDir, "temp_file.tmp");
+      let tmpFileName = OS.Path.join(tmpDir, "temp_file.tmp");
       let bytesWritten =
         await IOUtils.writeUTF8(destFileName, fileContents, {
           backupFile: backupFileName,
@@ -190,8 +188,7 @@
     });
 
     add_task(async function test_empty_read_and_write_utf8() {
-      const tmpDir = await PathUtils.getTempDir();
-      const tmpFileName = PathUtils.join(tmpDir, "test_ioutils_empty_utf8.tmp");
+      const tmpFileName = OS.Path.join(tmpDir, "test_ioutils_empty_utf8.tmp");
       const emptyString = ""
       const bytesWritten = await IOUtils.writeUTF8(
         tmpFileName,
@@ -208,8 +205,7 @@
     add_task(async function test_full_read_and_write_utf8() {
       // Write a file.
       info("Test writing emoji file");
-      const tmpDir = await PathUtils.getTempDir();
-      const tmpFileName = PathUtils.join(tmpDir, "test_ioutils_emoji.tmp");
+      const tmpFileName = OS.Path.join(tmpDir, "test_ioutils_emoji.tmp");
 
       // Make sure non-ASCII text is supported for writing and reading back.
       // For fun, a sampling of space-separated emoji characters from different
@@ -261,8 +257,7 @@
 
 
     add_task(async function test_utf8_lz4() {
-      const tmpDir = await PathUtils.getTempDir();
-      const tmpFileName = PathUtils.join(tmpDir, "test_ioutils_utf8_lz4.tmp");
+      const tmpFileName = OS.Path.join(tmpDir, "test_ioutils_utf8_lz4.tmp");
 
       info("Test writing lz4 encoded UTF-8 string");
       const emoji = "☕️ ⚧️ 😀 🖖🏿 🤠 🏳️‍🌈 🥠 🏴‍☠️ 🪐";
@@ -298,9 +293,8 @@
     });
 
     add_task(async function test_utf8_lz4_osfile_compat() {
-      const tmpDir = await PathUtils.getTempDir();
-      const osfileTmpFile = PathUtils.join(tmpDir, "test_ioutils_utf8_lz4_compat_osfile.tmp");
-      const ioutilsTmpFile = PathUtils.join(tmpDir, "test_ioutils_utf8_lz4_compat_ioutils.tmp");
+      const osfileTmpFile = OS.Path.join(tmpDir, "test_ioutils_utf8_lz4_compat_osfile.tmp");
+      const ioutilsTmpFile = OS.Path.join(tmpDir, "test_ioutils_utf8_lz4_compat_ioutils.tmp");
 
       info("Test OS.File and IOUtils write the same UTF-8 file with LZ4 compression enabled")
       const emoji = "☕️ ⚧️ 😀 🖖🏿 🤠 🏳️‍🌈 🥠 🏴‍☠️ 🪐";
@@ -322,8 +316,7 @@
     });
 
     add_task(async function test_utf8_lz4_bad_call() {
-      const tmpDir = await PathUtils.getTempDir();
-      const tmpFileName = PathUtils.join(tmpDir, "test_ioutils_utf8_lz4_bad_call.tmp");
+      const tmpFileName = OS.Path.join(tmpDir, "test_ioutils_utf8_lz4_bad_call.tmp");
 
       info("readUTF8 ignores the maxBytes option if provided");
       const emoji = "☕️ ⚧️ 😀 🖖🏿 🤠 🏳️‍🌈 🥠 🏴‍☠️ 🪐";
@@ -337,8 +330,7 @@
     });
 
     add_task(async function test_utf8_lz4_failure() {
-      const tmpDir = await PathUtils.getTempDir();
-      const tmpFileName = PathUtils.join(tmpDir, "test_ioutils_utf8_lz4_fail.tmp");
+      const tmpFileName = OS.Path.join(tmpDir, "test_ioutils_utf8_lz4_fail.tmp");
 
       info("Test decompression of non-lz4 UTF-8 string");
       const repeatedBytes = Uint8Array.of(...new Array(50).fill(1));
