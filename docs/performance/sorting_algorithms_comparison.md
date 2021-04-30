@@ -1,4 +1,4 @@
-# Sorting algorithms comparision
+# Sorting algorithms comparison
 
 This article describes a simple example program that we use in two of
 the Performance guides: the guide to the [Call
