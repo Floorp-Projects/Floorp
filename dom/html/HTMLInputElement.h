@@ -978,7 +978,7 @@ class HTMLInputElement final : public TextControlElement,
    * Visit the group of radio buttons this radio belongs to
    * @param aVisitor the visitor to visit with
    */
-  nsresult VisitGroup(nsIRadioVisitor* aVisitor, bool aFlushContent);
+  nsresult VisitGroup(nsIRadioVisitor* aVisitor);
 
   /**
    * Do all the work that |SetChecked| does (radio button handling, etc.), but
