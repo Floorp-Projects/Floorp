@@ -12,6 +12,7 @@
 
 namespace mozilla {
 namespace a11y {
+class AccessibleWrap;
 
 class ia2AccessibleValue : public IAccessibleValue {
  public:
@@ -30,6 +31,9 @@ class ia2AccessibleValue : public IAccessibleValue {
 
   virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_minimumValue(
       /* [retval][out] */ VARIANT* minimumValue);
+
+ private:
+  AccessibleWrap* LocalAcc();
 };
 
 }  // namespace a11y
