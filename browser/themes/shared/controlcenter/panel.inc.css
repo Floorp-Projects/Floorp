@@ -501,15 +501,18 @@
 }
 
 .identity-popup-security-connection > hbox > description {
-  padding: 2px;
   margin-inline-start: 8px;
   margin-block: 0;
 }
 
 #identity-popup-security-button {
-  padding: 3px;
-  margin-bottom: 8px;
+  margin-bottom: 4px;
+  padding-inline: 3px;
   -moz-box-pack: start;
+}
+
+#identity-popup-security-button[footerHidden=true] {
+  margin-bottom: 6px;
 }
 
 .identity-popup-security-connection {
@@ -542,7 +545,7 @@
 }
 
 #identity-popup-clear-sitedata-footer {
-  margin-block: -4px 8px;
+  margin-top: 0;
 }
 
 #identity-popup-security-httpsonlymode,
