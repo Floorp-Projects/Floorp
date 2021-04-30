@@ -319,7 +319,12 @@ bool nsHTTPSOnlyUtils::ShouldUpgradeHttpsFirstRequest(nsIURI* aURI,
     return false;
   }
 
-  // 3. Don't upgrade if upgraded previously or exempt from upgrades
+  // 3. Check for general exceptions
+  if (OnionException(aURI) || LoopbackOrLocalException(aURI)) {
+    return false;
+  }
+
+  // 4. Don't upgrade if upgraded previously or exempt from upgrades
   uint32_t httpsOnlyStatus = aLoadInfo->GetHttpsOnlyStatus();
   if (httpsOnlyStatus & nsILoadInfo::HTTPS_ONLY_UPGRADED_HTTPS_FIRST ||
       httpsOnlyStatus & nsILoadInfo::HTTPS_ONLY_EXEMPT) {
