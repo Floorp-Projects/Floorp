@@ -75,7 +75,7 @@ function createURI(uri) {
   return Services.io.newURI(uri);
 }
 
-function getCacheStorage(where, lci, appcache) {
+function getCacheStorage(where, lci) {
   if (!lci) {
     lci = Services.loadContextInfo.default;
   }
@@ -84,8 +84,6 @@ function getCacheStorage(where, lci, appcache) {
       return Services.cache2.diskCacheStorage(lci, false);
     case "memory":
       return Services.cache2.memoryCacheStorage(lci);
-    case "appcache":
-      return Services.cache2.appCacheStorage(lci, appcache);
     case "pin":
       return Services.cache2.pinningCacheStorage(lci);
   }
@@ -97,8 +95,6 @@ function OpenCacheEntry(key, where, flags, lci) {
     key = createURI(key);
     function CacheListener() {}
     CacheListener.prototype = {
-      _appCache: null,
-
       QueryInterface: ChromeUtils.generateQI(["nsICacheEntryOpenCallback"]),
 
       onCacheEntryCheck(entry) {
@@ -110,7 +106,7 @@ function OpenCacheEntry(key, where, flags, lci) {
       },
 
       run() {
-        let storage = getCacheStorage(where, lci, this._appCache);
+        let storage = getCacheStorage(where, lci);
         storage.asyncOpenURI(key, "", flags, this);
       },
     };

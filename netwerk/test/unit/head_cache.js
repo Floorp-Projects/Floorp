@@ -19,7 +19,6 @@ function get_cache_service() {
 function evict_cache_entries(where) {
   var clearDisk = !where || where == "disk" || where == "all";
   var clearMem = !where || where == "memory" || where == "all";
-  var clearAppCache = where == "appcache";
 
   var svc = get_cache_service();
   var storage;
@@ -33,11 +32,6 @@ function evict_cache_entries(where) {
     storage = svc.diskCacheStorage(Services.loadContextInfo.default, false);
     storage.asyncEvictStorage(null);
   }
-
-  if (clearAppCache) {
-    storage = svc.appCacheStorage(Services.loadContextInfo.default, null);
-    storage.asyncEvictStorage(null);
-  }
 }
 
 function createURI(urispec) {
@@ -47,7 +41,7 @@ function createURI(urispec) {
   return ioServ.newURI(urispec);
 }
 
-function getCacheStorage(where, lci, appcache) {
+function getCacheStorage(where, lci) {
   if (!lci) {
     lci = Services.loadContextInfo.default;
   }
@@ -57,21 +51,17 @@ function getCacheStorage(where, lci, appcache) {
       return svc.diskCacheStorage(lci, false);
     case "memory":
       return svc.memoryCacheStorage(lci);
-    case "appcache":
-      return svc.appCacheStorage(lci, appcache);
     case "pin":
       return svc.pinningCacheStorage(lci);
   }
   return null;
 }
 
-function asyncOpenCacheEntry(key, where, flags, lci, callback, appcache) {
+function asyncOpenCacheEntry(key, where, flags, lci, callback) {
   key = createURI(key);
 
   function CacheListener() {}
   CacheListener.prototype = {
-    _appCache: appcache,
-
     QueryInterface: ChromeUtils.generateQI(["nsICacheEntryOpenCallback"]),
 
     onCacheEntryCheck(entry) {
@@ -92,7 +82,7 @@ function asyncOpenCacheEntry(key, where, flags, lci, callback, appcache) {
     },
 
     run() {
-      var storage = getCacheStorage(where, lci, this._appCache);
+      var storage = getCacheStorage(where, lci);
       storage.asyncOpenURI(key, "", flags, this);
     },
   };
@@ -136,13 +126,7 @@ function get_device_entry_count(where, lci, continuation) {
   storage.asyncVisitStorage(visitor, false);
 }
 
-function asyncCheckCacheEntryPresence(
-  key,
-  where,
-  shouldExist,
-  continuation,
-  appCache
-) {
+function asyncCheckCacheEntryPresence(key, where, shouldExist, continuation) {
   asyncOpenCacheEntry(
     key,
     where,
@@ -161,7 +145,6 @@ function asyncCheckCacheEntryPresence(
         Assert.equal(null, entry);
       }
       continuation();
-    },
-    appCache
+    }
   );
 }

@@ -1202,7 +1202,7 @@ Http2DiskCachePushListener.onStopRequest = function(request, status) {
   chan.asyncOpen(listener);
 };
 
-function continue_test_http2_disk_cache_push(status, entry, appCache) {
+function continue_test_http2_disk_cache_push(status, entry) {
   // TODO - store stuff in cache entry, then open an h2 channel that will push
   // this, once that completes, open a channel for the cache entry we made and
   // ensure it came from disk cache, not the push cache.
