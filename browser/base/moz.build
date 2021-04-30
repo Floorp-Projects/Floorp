@@ -28,6 +28,7 @@ BROWSER_CHROME_MANIFESTS += [
     "content/test/forms/browser.ini",
     "content/test/fullscreen/browser.ini",
     "content/test/general/browser.ini",
+    "content/test/gesture/browser.ini",
     "content/test/historySwipeAnimation/browser.ini",
     "content/test/keyboard/browser.ini",
     "content/test/menubar/browser.ini",

@@ -250,7 +250,7 @@ var gGestureSupport = {
         : aEvent.DIRECTION_LEFT;
     }
 
-    return true;
+    return canGoBack || canGoForward;
   },
 
   /**
