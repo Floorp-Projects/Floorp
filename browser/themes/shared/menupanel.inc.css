@@ -6,7 +6,7 @@
 
 @media not (-moz-proton) {
 #appMenu-new-window-button {
-  list-style-image: url(chrome://browser/skin/new-window.svg);
+  list-style-image: url(chrome://browser/skin/window.svg);
 }
 
 #appMenu-private-window-button {
