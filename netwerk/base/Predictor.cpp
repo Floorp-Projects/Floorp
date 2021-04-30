@@ -171,16 +171,13 @@ Predictor::Action::Action(bool fullUri, bool predict, Predictor::Reason reason,
 }
 
 NS_IMETHODIMP
-Predictor::Action::OnCacheEntryCheck(nsICacheEntry* entry,
-                                     nsIApplicationCache* appCache,
-                                     uint32_t* result) {
+Predictor::Action::OnCacheEntryCheck(nsICacheEntry* entry, uint32_t* result) {
   *result = nsICacheEntryOpenCallback::ENTRY_WANTED;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 Predictor::Action::OnCacheEntryAvailable(nsICacheEntry* entry, bool isNew,
-                                         nsIApplicationCache* appCache,
                                          nsresult result) {
   MOZ_ASSERT(NS_IsMainThread(), "Got cache entry off main thread!");
 
@@ -1762,16 +1759,13 @@ Predictor::Resetter::Resetter(Predictor* predictor)
     : mEntriesToVisit(0), mPredictor(predictor) {}
 
 NS_IMETHODIMP
-Predictor::Resetter::OnCacheEntryCheck(nsICacheEntry* entry,
-                                       nsIApplicationCache* appCache,
-                                       uint32_t* result) {
+Predictor::Resetter::OnCacheEntryCheck(nsICacheEntry* entry, uint32_t* result) {
   *result = nsICacheEntryOpenCallback::ENTRY_WANTED;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 Predictor::Resetter::OnCacheEntryAvailable(nsICacheEntry* entry, bool isNew,
-                                           nsIApplicationCache* appCache,
                                            nsresult result) {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -2307,7 +2301,6 @@ NS_IMPL_ISUPPORTS(Predictor::CacheabilityAction, nsICacheEntryOpenCallback,
 
 NS_IMETHODIMP
 Predictor::CacheabilityAction::OnCacheEntryCheck(nsICacheEntry* entry,
-                                                 nsIApplicationCache* appCache,
                                                  uint32_t* result) {
   *result = nsICacheEntryOpenCallback::ENTRY_WANTED;
   return NS_OK;
@@ -2326,9 +2319,9 @@ enum PrefetchDecisionReason {
 }
 
 NS_IMETHODIMP
-Predictor::CacheabilityAction::OnCacheEntryAvailable(
-    nsICacheEntry* entry, bool isNew, nsIApplicationCache* appCache,
-    nsresult result) {
+Predictor::CacheabilityAction::OnCacheEntryAvailable(nsICacheEntry* entry,
+                                                     bool isNew,
+                                                     nsresult result) {
   MOZ_ASSERT(NS_IsMainThread());
   // This is being opened read-only, so isNew should always be false
   MOZ_ASSERT(!isNew);

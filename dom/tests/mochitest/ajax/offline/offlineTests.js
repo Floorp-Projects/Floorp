@@ -24,7 +24,7 @@ QueryInterface: function(iid) {
     return this;
   },
 onCacheEntryCheck: function() { return Ci.nsICacheEntryOpenCallback.ENTRY_WANTED; },
-onCacheEntryAvailable: function(desc, isnew, applicationCache, status) {
+onCacheEntryAvailable: function(desc, isnew, status) {
     if (!desc) {
       this.fetch(this.callback);
       return;
@@ -206,7 +206,7 @@ waitForAdd: function(url, onFinished) {
 
   var waitForAddListener = SpecialPowers.wrapCallbackObject({
     onCacheEntryCheck: function() { return Ci.nsICacheEntryOpenCallback.ENTRY_WANTED; },
-    onCacheEntryAvailable: function(entry, isnew, applicationCache, status) {
+    onCacheEntryAvailable: function(entry, isnew, status) {
       if (entry) {
         entry.close();
         onFinished();

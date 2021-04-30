@@ -25,7 +25,7 @@ function run_test() {
             function(entry) {
               entry.setValid();
             }
-          ).onCacheEntryAvailable(entry, true, null, Cr.NS_OK);
+          ).onCacheEntryAvailable(entry, true, Cr.NS_OK);
         })
       );
 

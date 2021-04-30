@@ -261,17 +261,15 @@ nsresult nsAboutCacheEntry::Channel::ParseURI(nsIURI* uri,
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-nsAboutCacheEntry::Channel::OnCacheEntryCheck(
-    nsICacheEntry* aEntry, nsIApplicationCache* aApplicationCache,
-    uint32_t* result) {
+nsAboutCacheEntry::Channel::OnCacheEntryCheck(nsICacheEntry* aEntry,
+                                              uint32_t* result) {
   *result = nsICacheEntryOpenCallback::ENTRY_WANTED;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsAboutCacheEntry::Channel::OnCacheEntryAvailable(
-    nsICacheEntry* entry, bool isNew, nsIApplicationCache* aApplicationCache,
-    nsresult status) {
+nsAboutCacheEntry::Channel::OnCacheEntryAvailable(nsICacheEntry* entry,
+                                                  bool isNew, nsresult status) {
   nsresult rv;
 
   mWaitingForData = false;

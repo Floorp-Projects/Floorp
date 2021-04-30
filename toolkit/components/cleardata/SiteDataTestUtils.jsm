@@ -265,11 +265,11 @@ var SiteDataTestUtils = {
       CacheListener.prototype = {
         QueryInterface: ChromeUtils.generateQI(["nsICacheEntryOpenCallback"]),
 
-        onCacheEntryCheck(entry, appCache) {
+        onCacheEntryCheck(entry) {
           return Ci.nsICacheEntryOpenCallback.ENTRY_WANTED;
         },
 
-        onCacheEntryAvailable(entry, isnew, appCache, status) {
+        onCacheEntryAvailable(entry, isnew, status) {
           resolve();
         },
       };

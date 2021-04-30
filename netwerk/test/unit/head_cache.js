@@ -74,20 +74,20 @@ function asyncOpenCacheEntry(key, where, flags, lci, callback, appcache) {
 
     QueryInterface: ChromeUtils.generateQI(["nsICacheEntryOpenCallback"]),
 
-    onCacheEntryCheck(entry, appCache) {
+    onCacheEntryCheck(entry) {
       if (typeof callback === "object") {
-        return callback.onCacheEntryCheck(entry, appCache);
+        return callback.onCacheEntryCheck(entry);
       }
       return Ci.nsICacheEntryOpenCallback.ENTRY_WANTED;
     },
 
-    onCacheEntryAvailable(entry, isnew, appCache, status) {
+    onCacheEntryAvailable(entry, isnew, status) {
       if (typeof callback === "object") {
         // Root us at the callback
         callback.__cache_listener_root = this;
-        callback.onCacheEntryAvailable(entry, isnew, appCache, status);
+        callback.onCacheEntryAvailable(entry, isnew, status);
       } else {
-        callback(status, entry, appCache);
+        callback(status, entry);
       }
     },
 
