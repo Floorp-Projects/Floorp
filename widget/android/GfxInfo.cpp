@@ -660,12 +660,14 @@ nsresult GfxInfo::GetFeatureStatusImpl(
     }
 
     if (aFeature == FEATURE_WEBRENDER_OPTIMIZED_SHADERS) {
-      // Optimized shaders result in completely broken rendering on Mali-T
-      // devices running android versions up to 5.1.
-      // See bug 1689064 and bug 1707283 for details.
+      // Optimized shaders result in completely broken rendering on some Mali-T
+      // devices. We have seen this on T6xx, T7xx, and T8xx on android versions
+      // up to 5.1, and on T6xx on versions up to android 7.1. As a precaution
+      // disable for all Mali-T regardless of version. See bug 1689064 and bug
+      // 1707283 for details.
       const bool isMaliT =
           mGLStrings->Renderer().Find("Mali-T", /*ignoreCase*/ true) >= 0;
-      if (isMaliT && mSDKVersion <= 22) {
+      if (isMaliT) {
         *aStatus = nsIGfxInfo::FEATURE_BLOCKED_DEVICE;
         aFailureId = "FEATURE_FAILURE_BUG_1689064";
       } else {
