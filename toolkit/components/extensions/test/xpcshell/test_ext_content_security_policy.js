@@ -130,6 +130,13 @@ async function testPolicy(manifest_version = 2, customCSP = null) {
     };
   }
 
+  if (manifest_version == 3) {
+    let extension_pages = content_security_policy;
+    content_security_policy = {
+      extension_pages,
+    };
+  }
+
   let extension = ExtensionTestUtils.loadExtension({
     background,
 
