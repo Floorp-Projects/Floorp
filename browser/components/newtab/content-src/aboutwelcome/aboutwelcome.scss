@@ -590,7 +590,7 @@ body {
     .secondary-cta.top {
       position: absolute;
       top: 10px;
-      inset-inline-end: 47px;
+      inset-inline-end: 20px;
       z-index: 2;
 
       button {
@@ -720,14 +720,23 @@ body {
           flex-direction: column;
           justify-content: center;
 
+          .spacer-top {
+            flex: 2;
+          }
+
+          .spacer-bottom {
+            flex: 1;
+          }
+
           h1 {
             color: #FFF;
             font-weight: bold;
             font-size: 104px;
-            line-height: 92px;
+            line-height: 104px;
             margin: 0 6px;
             width: 517px;
             text-align: initial;
+            white-space: pre-wrap;
 
             @media (max-width: $break-point-widest) {
               width: 300px;
@@ -834,6 +843,8 @@ body {
     }
 
     .screen-1 {
+      background-color: rgba(21, 20, 26, 0.5);
+
       .section-main {
         z-index: 1;
         width: 504px;
@@ -909,6 +920,8 @@ body {
     }
 
     .screen-2 {
+      background-color: rgba(21, 20, 26, 0.5);
+
       .section-main {
         z-index: 1;
         width: 504px;

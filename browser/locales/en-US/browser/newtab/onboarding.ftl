@@ -143,7 +143,10 @@ onboarding-multistage-theme-description-alpenglow =
 # Firefox to pursue those passions, as well as the boldness in their
 # choice to use Firefox over a larger competitor browser.
 # An alternative title for localization is: "It starts here".
-mr1-welcome-screen-hero-text = Fire starts here
+# This text can be formatted to span multiple lines as needed.
+mr1-welcome-screen-hero-text =
+  Fire starts
+  here
 
 # This button will open system settings to turn on prefers-reduced-motion
 mr1-onboarding-reduce-motion-button-label = Turn off animations

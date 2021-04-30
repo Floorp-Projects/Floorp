@@ -1018,7 +1018,7 @@ add_task(async function test_multistage_aboutwelcome_proton() {
     // Expected selectors:
     [
       "div.onboardingContainer",
-      "div.proton[style*='.webp']",
+      "div.proton[style*='.jpg']",
       "div.section-left",
       "span.attrib-text",
       "div.secondary-cta.top",
@@ -1051,7 +1051,7 @@ add_task(async function test_multistage_aboutwelcome_proton() {
     // Expected selectors:
     [
       "div.onboardingContainer",
-      "div.proton[style*='.webp']",
+      "div.proton[style*='.jpg']",
       "div.section-main",
       ...condSelect(!win7Content, "nav.steps"),
     ],
@@ -1075,7 +1075,7 @@ add_task(async function test_multistage_aboutwelcome_proton() {
     // Expected selectors:
     [
       "div.onboardingContainer",
-      "div.proton[style*='.webp']",
+      "div.proton[style*='.jpg']",
       "div.section-main",
       "div.tiles-theme-container",
       "nav.steps",
