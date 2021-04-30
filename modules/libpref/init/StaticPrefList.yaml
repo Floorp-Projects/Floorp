@@ -830,11 +830,6 @@
   value: @IS_NOT_EARLY_BETA_OR_EARLIER@
   mirror: always
 
-- name: browser.cache.offline.storage.enable
-  type: bool
-  value: false
-  mirror: always
-
 - name: browser.cache.disk.enable
   type: RelaxedAtomicBool
   value: true
