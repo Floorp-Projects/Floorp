@@ -6350,18 +6350,6 @@ nsHttpChannel::GetEncodedBodySize(uint64_t* aEncodedBodySize) {
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-nsHttpChannel::SetupFallbackChannel(const char* aFallbackKey) {
-  ENSURE_CALLED_BEFORE_CONNECT();
-
-  LOG(("nsHttpChannel::SetupFallbackChannel [this=%p, key=%s]\n", this,
-       aFallbackKey));
-  StoreFallbackChannel(true);
-  mFallbackKey = aFallbackKey;
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsHttpChannel::GetIsAuthChannel(bool* aIsAuthChannel) {
   *aIsAuthChannel = mIsAuthChannel;
   return NS_OK;

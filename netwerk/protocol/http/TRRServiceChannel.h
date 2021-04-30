@@ -72,7 +72,6 @@ class TRRServiceChannel : public HttpBaseChannel,
   NS_IMETHOD LogMimeTypeMismatch(const nsACString& aMessageName, bool aWarning,
                                  const nsAString& aURL,
                                  const nsAString& aContentType) override;
-  NS_IMETHOD SetupFallbackChannel(const char* aFallbackKey) override;
   NS_IMETHOD GetIsAuthChannel(bool* aIsAuthChannel) override;
 
   NS_IMETHOD SetNotificationCallbacks(
