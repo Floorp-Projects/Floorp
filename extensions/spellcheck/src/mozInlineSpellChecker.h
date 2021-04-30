@@ -85,11 +85,13 @@ class mozInlineSpellStatus {
  private:
   // @param aSpellChecker must be non-nullptr.
   // @param aOp see mOp.
+  // @param aRange see mRange.
   // @param aAnchorRange see mAnchorRange.
   // @param aForceNavigationWordCheck see mForceNavigationWordCheck.
   // @param aNewNavigationPositionOffset see mNewNavigationPositionOffset.
   explicit mozInlineSpellStatus(mozInlineSpellChecker* aSpellChecker,
-                                Operation aOp, RefPtr<nsRange>&& aAnchorRange,
+                                Operation aOp, RefPtr<nsRange>&& aRange,
+                                RefPtr<nsRange>&& aAnchorRange,
                                 bool aForceNavigationWordCheck,
                                 int32_t aNewNavigationPositionOffset);
 
