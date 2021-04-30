@@ -150,7 +150,7 @@ var UrlbarUtils = {
     EXTENSION: "chrome://mozapps/skin/extensions/extension.svg",
     HISTORY: "chrome://browser/skin/history.svg",
     SEARCH_GLASS: "chrome://global/skin/icons/search-glass.svg",
-    TIP: "chrome://browser/skin/tip.svg",
+    TIP: "chrome://global/skin/icons/lightbulb.svg",
   },
 
   // The number of results by which Page Up/Down move the selection.
