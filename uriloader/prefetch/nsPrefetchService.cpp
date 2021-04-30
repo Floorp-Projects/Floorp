@@ -33,8 +33,11 @@
 #include "mozilla/dom/Document.h"
 #include "nsContentUtils.h"
 #include "mozilla/AsyncEventDispatcher.h"
+#include "nsICachingChannel.h"
+#include "nsHttp.h"
 
 using namespace mozilla;
+using namespace mozilla::dom;
 
 //
 // To enable logging (see mozilla/Logging.h for full details):
@@ -207,7 +210,7 @@ nsPrefetchNode::OnStartRequest(nsIRequest* aRequest) {
   //
   uint32_t expTime;
   if (NS_SUCCEEDED(cacheInfoChannel->GetCacheTokenExpirationTime(&expTime))) {
-    if (NowInSeconds() >= expTime) {
+    if (mozilla::net::NowInSeconds() >= expTime) {
       LOG(
           ("document cannot be reused from cache; "
            "canceling prefetch\n"));

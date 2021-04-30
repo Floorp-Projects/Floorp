@@ -49,7 +49,6 @@
 #include "nsIMIMEHeaderParam.h"
 #include "nsINode.h"
 #include "nsIObjectLoadingContent.h"
-#include "nsIOfflineCacheUpdate.h"
 #include "nsPersistentProperties.h"
 #include "nsIPrivateBrowsingChannel.h"
 #include "nsIPropertyBag2.h"
@@ -2127,23 +2126,7 @@ bool NS_IsSafeMethodNav(nsIChannel* aChannel) {
   return requestHead->IsSafeMethod();
 }
 
-bool NS_ShouldCheckAppCache(nsIPrincipal* aPrincipal) {
-  uint32_t privateBrowsingId = 0;
-  nsresult rv = aPrincipal->GetPrivateBrowsingId(&privateBrowsingId);
-  if (NS_SUCCEEDED(rv) && (privateBrowsingId > 0)) {
-    return false;
-  }
-
-  nsCOMPtr<nsIOfflineCacheUpdateService> offlineService =
-      do_GetService("@mozilla.org/offlinecacheupdate-service;1");
-  if (!offlineService) {
-    return false;
-  }
-
-  bool allowed;
-  rv = offlineService->OfflineAppAllowed(aPrincipal, &allowed);
-  return NS_SUCCEEDED(rv) && allowed;
-}
+bool NS_ShouldCheckAppCache(nsIPrincipal* aPrincipal) { return false; }
 
 void NS_WrapAuthPrompt(nsIAuthPrompt* aAuthPrompt,
                        nsIAuthPrompt2** aAuthPrompt2) {
