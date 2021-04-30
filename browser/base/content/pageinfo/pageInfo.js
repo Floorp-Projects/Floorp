@@ -458,10 +458,10 @@ async function loadTab(args) {
 
 function openCacheEntry(key, cb) {
   var checkCacheListener = {
-    onCacheEntryCheck(entry, appCache) {
+    onCacheEntryCheck(entry) {
       return Ci.nsICacheEntryOpenCallback.ENTRY_WANTED;
     },
-    onCacheEntryAvailable(entry, isNew, appCache, status) {
+    onCacheEntryAvailable(entry, isNew, status) {
       cb(entry);
     },
   };

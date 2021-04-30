@@ -96,7 +96,7 @@ function pumpReadStream(inputStream, goon) {
 
 OpenCallback.prototype = {
   QueryInterface: ChromeUtils.generateQI(["nsICacheEntryOpenCallback"]),
-  onCacheEntryCheck(entry, appCache) {
+  onCacheEntryCheck(entry) {
     LOG_C2(this, "onCacheEntryCheck");
     Assert.ok(!this.onCheckPassed);
     this.onCheckPassed = true;
@@ -141,7 +141,7 @@ OpenCallback.prototype = {
     LOG_C2(this, "onCacheEntryCheck DONE, return ENTRY_WANTED");
     return Ci.nsICacheEntryOpenCallback.ENTRY_WANTED;
   },
-  onCacheEntryAvailable(entry, isnew, appCache, status) {
+  onCacheEntryAvailable(entry, isnew, status) {
     if (this.behavior & MAYBE_NEW && isnew) {
       this.behavior |= NEW;
     }

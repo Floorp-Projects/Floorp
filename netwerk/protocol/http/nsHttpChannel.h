@@ -377,9 +377,9 @@ class nsHttpChannel final : public HttpBaseChannel,
   [[nodiscard]] nsresult OnNormalCacheEntryAvailable(nsICacheEntry* aEntry,
                                                      bool aNew,
                                                      nsresult aResult);
-  [[nodiscard]] nsresult OnCacheEntryAvailableInternal(
-      nsICacheEntry* entry, bool aNew, nsIApplicationCache* aAppCache,
-      nsresult status);
+  [[nodiscard]] nsresult OnCacheEntryAvailableInternal(nsICacheEntry* entry,
+                                                       bool aNew,
+                                                       nsresult status);
   [[nodiscard]] nsresult GenerateCacheKey(uint32_t postID, nsACString& key);
   [[nodiscard]] nsresult UpdateExpirationTime();
   [[nodiscard]] nsresult CheckPartial(nsICacheEntry* aEntry, int64_t* aSize,
@@ -501,8 +501,7 @@ class nsHttpChannel final : public HttpBaseChannel,
   void UntieByteRangeRequest();
   void UntieValidationRequest();
   [[nodiscard]] nsresult OpenCacheInputStream(nsICacheEntry* cacheEntry,
-                                              bool startBuffering,
-                                              bool checkingAppCacheEntry);
+                                              bool startBuffering);
 
   void SetPushedStreamTransactionAndId(
       HttpTransactionShell* aTransWithPushedStream, uint32_t aPushedStreamId);

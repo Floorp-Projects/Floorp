@@ -554,7 +554,7 @@ add_task(async function test_offline_cache() {
     onCacheEntryCheck() {
       return Ci.nsICacheEntryOpenCallback.ENTRY_WANTED;
     },
-    onCacheEntryAvailable(entry, isnew, unused, status) {
+    onCacheEntryAvailable(entry, isnew, status) {
       is(status, Cr.NS_OK);
       var stream = entry.openOutputStream(0, -1);
       var content = "content";
