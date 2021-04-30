@@ -39,6 +39,8 @@ And make sure that it is in the PATH
 
 def parse_issues(log, config, issues, path, onlyIn):
     results = []
+    if onlyIn:
+        onlyIn = os.path.normcase(os.path.normpath(onlyIn))
     for issue in issues:
 
         try:
@@ -70,7 +72,7 @@ def parse_issues(log, config, issues, path, onlyIn):
                         continue
 
                     l = detail["spans"][0]
-                    if onlyIn and onlyIn not in p:
+                    if onlyIn and onlyIn not in os.path.normcase(os.path.normpath(p)):
                         # Case when we have a .rs in the include list in the yaml file
                         log.debug(
                             "{} is not part of the list of files '{}'".format(p, onlyIn)

@@ -60,13 +60,14 @@ def parse_issues(config, output, paths):
             diff += line + "\n"
     # the algorithm above will always skip adding the last issue
     issues.append(RustfmtDiff(file, line_no, diff))
+    file = os.path.normcase(os.path.normpath(file))
     results = []
     for issue in issues:
         # rustfmt can not be supplied the paths to the files we want to analyze
         # therefore, for each issue detected, we check if any of the the paths
         # supplied are part of the file name.
         # This just filters out the issues that are not part of paths.
-        if any([path in file for path in paths]):
+        if any([os.path.normcase(os.path.normpath(path)) in file for path in paths]):
             res = {
                 "path": issue.file,
                 "diff": issue.diff,
