@@ -508,8 +508,6 @@ class nsHttpChannel final : public HttpBaseChannel,
   void SetPushedStreamTransactionAndId(
       HttpTransactionShell* aTransWithPushedStream, uint32_t aPushedStreamId);
 
-  void MaybeWarnAboutAppCache();
-
   void SetOriginHeader();
   void SetDoNotTrack();
 
@@ -526,7 +524,6 @@ class nsHttpChannel final : public HttpBaseChannel,
  private:
   // this section is for main-thread-only object
   // all the references need to be proxy released on main thread.
-  nsCOMPtr<nsIApplicationCache> mApplicationCacheForWrite;
   // auth specific data
   nsCOMPtr<nsIHttpChannelAuthProvider> mAuthProvider;
   nsCOMPtr<nsIURI> mRedirectURI;
