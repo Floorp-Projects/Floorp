@@ -181,6 +181,10 @@ static int do_main(int argc, char* argv[], char* envp[]) {
         sandboxing::GetInitializedBrokerServices();
 #endif
 
+#ifdef LIBFUZZER
+    shellData.fuzzerDriver = fuzzer::FuzzerDriver;
+#endif
+
     return gBootstrap->XRE_XPCShellMain(--argc, argv, envp, &shellData);
   }
 

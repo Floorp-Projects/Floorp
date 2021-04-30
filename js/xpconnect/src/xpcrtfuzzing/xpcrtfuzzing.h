@@ -10,10 +10,11 @@
 #define shell_xpcrtfuzzing_h
 
 #include "mozilla/dom/ScriptSettings.h"  // mozilla::dom::AutoJSAPI
+#include "FuzzerRegistry.h"              // LibFuzzerDriver
 
 // This is the entry point of the XPC runtime fuzzing code from the XPC shell
-int FuzzXPCRuntimeStart(mozilla::dom::AutoJSAPI* jsapi, int* argc,
-                        char*** argv);
+int FuzzXPCRuntimeStart(mozilla::dom::AutoJSAPI* jsapi, int* argc, char*** argv,
+                        LibFuzzerDriver);
 
 // These are the traditional libFuzzer-style functions for initialization
 // and fuzzing iteration.
