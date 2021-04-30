@@ -92,8 +92,6 @@
 #include "mozilla/net/UrlClassifierFeatureFactory.h"
 #include "ReferrerInfo.h"
 
-#include "nsIApplicationCacheChannel.h"
-#include "nsIApplicationCacheContainer.h"
 #include "nsIAppShell.h"
 #include "nsIAuthPrompt.h"
 #include "nsIAuthPrompt2.h"
@@ -656,29 +654,6 @@ nsDocShell::GetInterface(const nsIID& aIID, void** aSink) {
     RefPtr<Document> doc = mContentViewer->GetDocument();
     doc.forget(aSink);
     return *aSink ? NS_OK : NS_NOINTERFACE;
-  } else if (aIID.Equals(NS_GET_IID(nsIApplicationCacheContainer))) {
-    *aSink = nullptr;
-
-    // Return application cache associated with this docshell, if any
-
-    nsCOMPtr<nsIContentViewer> contentViewer;
-    GetContentViewer(getter_AddRefs(contentViewer));
-    if (!contentViewer) {
-      return NS_ERROR_NO_INTERFACE;
-    }
-
-    RefPtr<Document> doc = contentViewer->GetDocument();
-    NS_ASSERTION(doc, "Should have a document.");
-    if (!doc) {
-      return NS_ERROR_NO_INTERFACE;
-    }
-
-#if defined(DEBUG)
-    MOZ_LOG(
-        gDocShellLog, LogLevel::Debug,
-        ("nsDocShell[%p]: returning app cache container %p", this, doc.get()));
-#endif
-    return doc->QueryInterface(aIID, aSink);
   } else if (aIID.Equals(NS_GET_IID(nsIPrompt)) &&
              NS_SUCCEEDED(EnsureScriptEnvironment())) {
     nsresult rv;
@@ -5999,27 +5974,6 @@ void nsDocShell::OnRedirectStateChange(nsIChannel* aOldChannel,
     }
   }
 
-  // check if the new load should go through the application cache.
-  nsCOMPtr<nsIApplicationCacheChannel> appCacheChannel =
-      do_QueryInterface(aNewChannel);
-  if (appCacheChannel && !docChannel) {
-    if (GeckoProcessType_Default != XRE_GetProcessType()) {
-      // Permission will be checked in the parent process.
-      appCacheChannel->SetChooseApplicationCache(true);
-    } else {
-      nsCOMPtr<nsIScriptSecurityManager> secMan =
-          do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID);
-
-      if (secMan) {
-        nsCOMPtr<nsIPrincipal> principal;
-        secMan->GetDocShellContentPrincipal(newURI, this,
-                                            getter_AddRefs(principal));
-        appCacheChannel->SetChooseApplicationCache(
-            NS_ShouldCheckAppCache(principal));
-      }
-    }
-  }
-
   if (!(aRedirectFlags & nsIChannelEventSink::REDIRECT_INTERNAL) &&
       mLoadType & (LOAD_CMD_RELOAD | LOAD_CMD_HISTORY)) {
     mLoadType = LOAD_NORMAL_REPLACE;
@@ -9912,32 +9866,6 @@ nsIPrincipal* nsDocShell::GetInheritedPrincipal(
   // HTTPS by default. This behavior can be disabled through the loadinfo flag
   // HTTPS_ONLY_EXEMPT.
   nsHTTPSOnlyUtils::TestSitePermissionAndPotentiallyAddExemption(channel);
-
-  if (nsCOMPtr<nsIApplicationCacheChannel> appCacheChannel =
-          do_QueryInterface(channel)) {
-    // Any document load should not inherit application cache.
-    appCacheChannel->SetInheritApplicationCache(false);
-
-    // Loads with the correct permissions should check for a matching
-    // application cache.
-    if (GeckoProcessType_Default != XRE_GetProcessType()) {
-      // Permission will be checked in the parent process
-      appCacheChannel->SetChooseApplicationCache(true);
-    } else if (aDocShell) {
-      // TODO: Figure out how to handle this in the parent,
-      // on behalf of a content process.
-      nsCOMPtr<nsIScriptSecurityManager> secMan =
-          do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID);
-
-      if (secMan) {
-        nsCOMPtr<nsIPrincipal> principal;
-        secMan->GetDocShellContentPrincipal(aLoadState->URI(), aDocShell,
-                                            getter_AddRefs(principal));
-        appCacheChannel->SetChooseApplicationCache(
-            NS_ShouldCheckAppCache(principal));
-      }
-    }
-  }
 
   // hack
   nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(channel));
