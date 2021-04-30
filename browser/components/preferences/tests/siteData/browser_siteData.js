@@ -55,7 +55,6 @@ add_task(async function() {
   ok(qoutaUsageSite, "Should list site using quota usage");
 
   // Always remember to clean up
-  OfflineAppCacheHelper.clear();
   await new Promise(resolve => {
     let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
       TEST_QUOTA_USAGE_ORIGIN

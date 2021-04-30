@@ -32,9 +32,6 @@ const { DownloadUtils } = ChromeUtils.import(
 const { SiteDataManager } = ChromeUtils.import(
   "resource:///modules/SiteDataManager.jsm"
 );
-const { OfflineAppCacheHelper } = ChromeUtils.import(
-  "resource://gre/modules/offlineAppCache.jsm"
-);
 
 ChromeUtils.defineModuleGetter(
   this,
