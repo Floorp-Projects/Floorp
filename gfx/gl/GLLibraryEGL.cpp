@@ -44,6 +44,8 @@
 #  include <gdk/gdk.h>
 #endif  // MOZ_WAYLAND
 
+#include <mutex>  // for call_once
+
 namespace mozilla {
 namespace gl {
 
@@ -664,6 +666,10 @@ std::shared_ptr<EglDisplay> EglDisplay::Create(GLLibraryEGL& lib,
   if (!lib.fInitialize(display, nullptr, nullptr)) {
     return nullptr;
   }
+
+  static std::once_flag sMesaLeakFlag;
+  std::call_once(sMesaLeakFlag, MesaMemoryLeakWorkaround);
+
   const auto ret =
       std::make_shared<EglDisplay>(PrivateUseOnly{}, lib, display, isWarp);
   lib.mActiveDisplays.insert({display, ret});

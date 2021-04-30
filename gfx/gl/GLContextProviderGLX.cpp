@@ -232,6 +232,10 @@ bool GLXLibrary::EnsureInitialized() {
 
   mInitialized = true;
 
+  // This needs to be after `fQueryServerString` is called so that the
+  // driver is loaded.
+  MesaMemoryLeakWorkaround();
+
   return true;
 }
 
