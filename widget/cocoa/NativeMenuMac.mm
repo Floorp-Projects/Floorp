@@ -315,8 +315,15 @@ void NativeMenuMac::ActivateItem(dom::Element* aItemElement, Modifiers aModifier
     return;
   }
 
-  mMenu->ActivateItemAndClose(std::move(item->as<RefPtr<nsMenuItemX>>()),
-                              ConvertModifierFlags(aModifiers), aButton);
+  menu->ActivateItemAfterClosing(std::move(item->as<RefPtr<nsMenuItemX>>()),
+                                 ConvertModifierFlags(aModifiers), aButton);
+
+  // Close the menu.
+  // cancelTracking(WithoutAnimation) is asynchronous; the menu only hides once the stack unwinds
+  // from NSMenu's nested "tracking" event loop.
+  // However, cancelTrackingWithoutAnimation synchronously calls the menu delegate's menuDidClose
+  // handler, at least on macOS 11.
+  [mMenu->NativeNSMenu() cancelTrackingWithoutAnimation];
 }
 
 void NativeMenuMac::OpenSubmenu(dom::Element* aMenuElement) {
