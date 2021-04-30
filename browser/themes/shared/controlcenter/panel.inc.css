@@ -439,7 +439,7 @@
 }
 
 #identity-popup[connection=file] .identity-popup-security-connection {
-  background-image: url(chrome://global/skin/icons/document.svg);
+  background-image: url(chrome://global/skin/icons/page-portrait.svg);
 }
 
 #identity-popup[connection^=secure] .identity-popup-security-connection {
