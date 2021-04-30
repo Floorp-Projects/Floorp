@@ -726,11 +726,6 @@ nsresult nsHttpChannel::ConnectOnTailUnblock() {
     // if this channel is only allowed to pull from the cache, then
     // we must fail if we were unable to open a cache entry.
     if (mLoadFlags & LOAD_ONLY_FROM_CACHE) {
-      // If we have a fallback URI (and we're not already
-      // falling back), process the fallback asynchronously.
-      if (!LoadFallbackChannel() && !mFallbackKey.IsEmpty()) {
-        return AsyncCall(&nsHttpChannel::HandleAsyncFallback);
-      }
       return NS_ERROR_DOCUMENT_NOT_CACHED;
     }
     // otherwise, let's just proceed without using the cache.
@@ -801,11 +796,6 @@ nsresult nsHttpChannel::ContinueConnect() {
       return NS_ERROR_DOCUMENT_NOT_CACHED;
     }
   } else if (mLoadFlags & LOAD_ONLY_FROM_CACHE) {
-    // If we have a fallback URI (and we're not already
-    // falling back), process the fallback asynchronously.
-    if (!LoadFallbackChannel() && !mFallbackKey.IsEmpty()) {
-      return AsyncCall(&nsHttpChannel::HandleAsyncFallback);
-    }
     LOG(("  !mCacheEntry && mLoadFlags & LOAD_ONLY_FROM_CACHE"));
     return NS_ERROR_DOCUMENT_NOT_CACHED;
   }
@@ -3512,13 +3502,7 @@ nsresult nsHttpChannel::OpenCacheEntryInternal(
   }
 
   nsCOMPtr<nsICacheStorage> cacheStorage;
-  if (!mFallbackKey.IsEmpty() && LoadFallbackChannel()) {
-    // This is a fallback channel, open fallback URI instead
-    rv = NS_NewURI(getter_AddRefs(mCacheEntryURI), mFallbackKey);
-    NS_ENSURE_SUCCESS(rv, rv);
-  } else {
-    mCacheEntryURI = mURI;
-  }
+  mCacheEntryURI = mURI;
 
   RefPtr<LoadContextInfo> info = GetLoadContextInfo(this);
   if (!info) {
@@ -4100,12 +4084,6 @@ nsresult nsHttpChannel::OnCacheEntryAvailableInternal(
   rv = OnNormalCacheEntryAvailable(entry, aNew, status);
 
   if (NS_FAILED(rv) && (mLoadFlags & LOAD_ONLY_FROM_CACHE)) {
-    // If we have a fallback URI (and we're not already
-    // falling back), process the fallback asynchronously.
-    if (!LoadFallbackChannel() && !mFallbackKey.IsEmpty()) {
-      return AsyncCall(&nsHttpChannel::HandleAsyncFallback);
-    }
-
     return NS_ERROR_DOCUMENT_NOT_CACHED;
   }
 
@@ -4198,8 +4176,7 @@ nsresult nsHttpChannel::OnNormalCacheEntryAvailable(nsICacheEntry* aEntry,
 // Generates the proper cache-key for this instance of nsHttpChannel
 nsresult nsHttpChannel::GenerateCacheKey(uint32_t postID,
                                          nsACString& cacheKey) {
-  AssembleCacheKey(LoadFallbackChannel() ? mFallbackKey.get() : mSpec.get(),
-                   postID, cacheKey);
+  AssembleCacheKey(mSpec.get(), postID, cacheKey);
   return NS_OK;
 }
 
