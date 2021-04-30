@@ -1,3 +1,5 @@
+// |jit-test| --enable-private-fields;
+
 var shouldBeThis;
 
 class A {

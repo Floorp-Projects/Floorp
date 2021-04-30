@@ -1,4 +1,4 @@
-// |jit-test| --more-compartments
+// |jit-test| --enable-private-fields; --more-compartments
 
 a = newGlobal()
 b = a.Debugger(this)
