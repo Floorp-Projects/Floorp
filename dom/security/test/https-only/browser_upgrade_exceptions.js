@@ -12,7 +12,7 @@ add_task(async function() {
 
   // Loopback test
   await runTest(
-    "Loopback IP addresses should always be exempt from upgrades (127.0.0.1)",
+    "Loopback IP addresses should always be exempt from upgrades (localhost)",
     "http://localhost",
     "http://"
   );
