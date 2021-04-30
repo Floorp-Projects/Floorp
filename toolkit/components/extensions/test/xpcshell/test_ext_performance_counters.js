@@ -44,9 +44,9 @@ async function test_counter() {
     });
 
     // getURL() is done in the child, let do three
-    browser.extension.getURL("beasts/frog.html");
-    browser.extension.getURL("beasts/frog2.html");
-    browser.extension.getURL("beasts/frog3.html");
+    browser.runtime.getURL("beasts/frog.html");
+    browser.runtime.getURL("beasts/frog2.html");
+    browser.runtime.getURL("beasts/frog3.html");
     browser.test.sendMessage("done");
   }
 

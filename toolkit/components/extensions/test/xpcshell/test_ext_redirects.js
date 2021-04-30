@@ -78,7 +78,7 @@ function getExtension(
   if (!background) {
     background = () => {
       // send the extensions public uri to the test.
-      let exturi = browser.extension.getURL("finished.html");
+      let exturi = browser.runtime.getURL("finished.html");
       browser.test.sendMessage("redirectURI", exturi);
     };
   }
@@ -475,8 +475,8 @@ add_task(async function test_extension_302_redirect_tracing() {
 // disabled due to NS_BINDING_ABORTED happening.
 add_task(async function test_extension_302_redirect() {
   let extension = getExtension(true, () => {
-    let myuri = browser.extension.getURL("*");
-    let exturi = browser.extension.getURL("finished.html");
+    let myuri = browser.runtime.getURL("*");
+    let exturi = browser.runtime.getURL("finished.html");
     browser.webRequest.onBeforeRedirect.addListener(
       details => {
         browser.test.assertEq(details.redirectUrl, exturi, "redirect matches");
@@ -521,8 +521,8 @@ add_task(async function test_extension_302_redirect() {
 // Currently disabled due to NS_BINDING_ABORTED happening.
 add_task(async function test_extension_redirect() {
   let extension = getExtension(true, () => {
-    let myuri = browser.extension.getURL("*");
-    let exturi = browser.extension.getURL("finished.html");
+    let myuri = browser.runtime.getURL("*");
+    let exturi = browser.runtime.getURL("finished.html");
     browser.webRequest.onBeforeRequest.addListener(
       details => {
         return { redirectUrl: exturi };

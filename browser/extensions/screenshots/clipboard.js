@@ -12,7 +12,7 @@ this.clipboard = (function() {
   exports.copy = function(text) {
     return new Promise((resolve, reject) => {
       const element = document.createElement("iframe");
-      element.src = browser.extension.getURL("blank.html");
+      element.src = browser.runtime.getURL("blank.html");
       // We can't actually hide the iframe while copying, but we can make
       // it close to invisible:
       element.style.opacity = "0";

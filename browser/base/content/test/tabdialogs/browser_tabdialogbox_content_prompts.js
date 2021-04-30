@@ -11,7 +11,7 @@ const TEST_DATA_URI = "data:text/html,<body onload='alert(1)'>";
 const TEST_EXTENSION_DATA = {
   background() {
     // eslint-disable-next-line no-undef
-    browser.test.sendMessage("url", browser.extension.getURL("alert.html"));
+    browser.test.sendMessage("url", browser.runtime.getURL("alert.html"));
   },
   manifest: {
     name: "Test Extension",

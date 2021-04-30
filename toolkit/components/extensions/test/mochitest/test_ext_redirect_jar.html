@@ -45,7 +45,7 @@ function getExtension() {
       `,
     },
     background: async () => {
-      let redirectUrl = browser.extension.getURL("finished.html");
+      let redirectUrl = browser.runtime.getURL("finished.html");
       browser.webRequest.onBeforeRequest.addListener(details => {
         return {redirectUrl};
       }, {urls: ["*://*/intercept*"]}, ["blocking"]);

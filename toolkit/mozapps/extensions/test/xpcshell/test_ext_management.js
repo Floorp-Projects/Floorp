@@ -10,9 +10,9 @@ add_task(async function setup() {
 function backgroundGetSelf() {
   browser.management.getSelf().then(
     extInfo => {
-      let url = browser.extension.getURL("*");
+      let url = browser.runtime.getURL("*");
       extInfo.hostPermissions = extInfo.hostPermissions.filter(i => i != url);
-      extInfo.url = browser.extension.getURL("");
+      extInfo.url = browser.runtime.getURL("");
       browser.test.sendMessage("management-getSelf", extInfo);
     },
     error => {

@@ -67,7 +67,7 @@ async function testPermissionPopup({ expectPermissionHidden }) {
 add_task(async function testPersistentStoragePermissionHidden() {
   let extension = ExtensionTestUtils.loadExtension({
     background() {
-      browser.test.sendMessage("url", browser.extension.getURL("icon.png"));
+      browser.test.sendMessage("url", browser.runtime.getURL("icon.png"));
     },
     manifest: {
       name: "Test Extension",
@@ -91,7 +91,7 @@ add_task(async function testPersistentStoragePermissionHidden() {
 add_task(async function testPersistentStoragePermissionVisible() {
   let extension = ExtensionTestUtils.loadExtension({
     background() {
-      browser.test.sendMessage("url", browser.extension.getURL("icon.png"));
+      browser.test.sendMessage("url", browser.runtime.getURL("icon.png"));
     },
     manifest: {
       name: "Test Extension",

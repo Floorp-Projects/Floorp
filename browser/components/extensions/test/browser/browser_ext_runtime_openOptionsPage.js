@@ -299,7 +299,7 @@ add_task(async function test_tab_options() {
         }
       });
 
-      let optionsURL = browser.extension.getURL("options.html");
+      let optionsURL = browser.runtime.getURL("options.html");
 
       try {
         let [firstTab] = await browser.tabs.query({

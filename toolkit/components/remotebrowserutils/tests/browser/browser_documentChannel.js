@@ -59,7 +59,7 @@ const EXTENSION_DATA = {
       async details => {
         browser.test.log("webRequest onBeforeRequest");
         let isRedirect =
-          details.originUrl == browser.extension.getURL("redirect.html") &&
+          details.originUrl == browser.runtime.getURL("redirect.html") &&
           details.url.endsWith("print_postdata.sjs");
         let url = this.extUrl ? this.extUrl : details.url + "?redirected";
         return isRedirect ? { redirectUrl: url } : {};
