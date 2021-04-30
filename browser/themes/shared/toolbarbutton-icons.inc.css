@@ -319,59 +319,37 @@ toolbar[brighttext] {
   from {
     transform: translateX(0);
   }
-  50% {
-    fill: var(--toolbarbutton-icon-fill-attention);
-    fill-opacity: 1;
-  }
-  to {
-    transform: translateX(-1260px);
-    fill: var(--toolbarbutton-icon-fill-attention);
-    fill-opacity: 1;
-  }
-}
-
-/* The animation is supposed to show the blue fill color for 520ms, then the
-   fade to the toolbarbutton-fill color for the remaining 210ms. Thus with an
-   animation-duration of 730ms, 71% is the point where we start the fade out. */
-@keyframes overflow-fade {
   from {
-    fill: var(--toolbarbutton-icon-fill-attention);
-    fill-opacity: 1;
-  }
-  71% {
-    fill: var(--toolbarbutton-icon-fill-attention);
-    fill-opacity: 1;
-  }
-  to {
-    fill: inherit;
+    transform: translateX(-832px);
   }
 }
 
 #nav-bar-overflow-button > .toolbarbutton-animatable-box {
-  top: calc(50% - 18px); /* Vertically center the 36px tall animatable image */
+  visibility: hidden;
+  top: calc(50% - 8px); /* Vertically center the 16px tall animatable image */
   /* Since .toolbarbutton-icon uses a different width than the animatable box,
      we need to set a padding relative to the difference in widths. */
-  margin-inline-start: calc((16px + 2 * var(--toolbarbutton-inner-padding) - 18px) / 2);
-  width: 18px; /* Width of each frame within the SVG sprite */
-  height: 36px; /* Height of each frame within the SVG sprite */
+  margin-inline-start: calc((16px + 2 * var(--toolbarbutton-inner-padding) - 16px) / 2);
+  width: 16px; /* Width of each frame within the SVG sprite */
+  height: 16px; /* Height of each frame within the SVG sprite */
+  -moz-context-properties: fill, stroke;
+  fill: var(--toolbarbutton-icon-fill);
+  stroke: var(--toolbarbutton-icon-fill-attention);
 }
-
 #nav-bar-overflow-button > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image {
-  min-height: 36px; /* Minimum height must be equal to the height of the SVG sprite */
+  background-image: url("chrome://browser/skin/chevron-animation.svg");
+  width: 848px;
+  height: 16px;
+  transform: translateX(0);
 }
 
+#nav-bar-overflow-button[animate] > .toolbarbutton-animatable-box {
+  visibility: visible;
+}
 #nav-bar-overflow-button[animate] > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image {
   animation-name: overflow-animation;
-  animation-timing-function: steps(70);
-  animation-duration: 1167ms;
-  background-image: url("chrome://browser/skin/chevron-animation.svg");
-  width: 1278px;
-}
-
-#nav-bar-overflow-button[animate][fade] > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image {
-  animation-name: overflow-fade;
-  animation-timing-function: ease-out;
-  animation-duration: 730ms;
+  animation-timing-function: steps(52);
+  animation-duration: calc(52 * 16.667ms);
 }
 
 #email-link-button {

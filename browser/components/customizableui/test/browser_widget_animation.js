@@ -42,7 +42,7 @@ function promiseOverflowAnimationEnd() {
     overflowButton.addEventListener(
       "animationend",
       function cleanupOverflowAnimationOut(event) {
-        if (event.animationName == "overflow-fade") {
+        if (event.animationName == "overflow-animation") {
           overflowButton.removeEventListener(
             "animationend",
             cleanupOverflowAnimationOut
