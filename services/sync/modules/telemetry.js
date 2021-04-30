@@ -261,7 +261,8 @@ class EngineRecord {
     }
 
     let incomingData = {};
-    let properties = ["applied", "failed", "newFailed", "reconciled"];
+    // Counts has extra stuff used for logging, but we only care about a few
+    let properties = ["applied", "failed"];
     // Only record non-zero properties and only record incoming at all if
     // there's at least one property we care about.
     for (let property of properties) {
