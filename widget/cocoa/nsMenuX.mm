@@ -567,8 +567,8 @@ void nsMenuX::MenuClosedAsync() {
   }
 }
 
-void nsMenuX::ActivateItemAndClose(RefPtr<nsMenuItemX>&& aItem, NSEventModifierFlags aModifiers,
-                                   int16_t aButton) {
+void nsMenuX::ActivateItemAfterClosing(RefPtr<nsMenuItemX>&& aItem, NSEventModifierFlags aModifiers,
+                                       int16_t aButton) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   // Run the command asynchronously so that the menu can hide before the command runs.
@@ -597,15 +597,6 @@ void nsMenuX::ActivateItemAndClose(RefPtr<nsMenuItemX>&& aItem, NSEventModifierF
   RefPtr<Runnable> doCommandAsync = new DoCommandRunnable(std::move(aItem), aModifiers, aButton);
   mPendingCommandRunnables.AppendElement(doCommandAsync);
   NS_DispatchToCurrentThread(doCommandAsync);
-
-  if (mIsOpen) {
-    // cancelTracking(WithoutAnimation) is asynchronous; the menu only hides once the stack unwinds
-    // from NSMenu's nested "tracking" event loop.
-    [mNativeMenu cancelTrackingWithoutAnimation];
-  }
-
-  // We don't call FlushMenuClosedRunnable() here, so that the command event runs before
-  // MenuClosedAsync().
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
