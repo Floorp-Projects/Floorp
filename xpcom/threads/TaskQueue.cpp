@@ -108,10 +108,8 @@ void TaskQueue::AwaitShutdownAndIdle() {
 }
 
 void TaskQueue::OnDelayedRunnableCreated(DelayedRunnable* aRunnable) {
-#ifdef DEBUG
   MonitorAutoLock mon(mQueueMonitor);
-  MOZ_ASSERT(!mDelayedRunnablesCancelPromise);
-#endif
+  MOZ_RELEASE_ASSERT(!mDelayedRunnablesCancelPromise);
 }
 
 void TaskQueue::OnDelayedRunnableScheduled(DelayedRunnable* aRunnable) {
