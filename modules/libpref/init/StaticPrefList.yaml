@@ -5660,16 +5660,16 @@
     type: bool
     value: false
     mirror: always
-
-  # Experimental support for Private Methods in JavaScript.
--   name: javascript.options.experimental.private_methods
-    type: bool
-    value: false
-    mirror: always
 #endif  // NIGHTLY_BUILD
 
   # Support for Private Fields in JavaScript.
 - name: javascript.options.experimental.private_fields
+  type: bool
+  value: true
+  mirror: always
+
+  # Experimental support for Private Methods in JavaScript.
+- name: javascript.options.experimental.private_methods
   type: bool
   value: true
   mirror: always
