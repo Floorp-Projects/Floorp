@@ -304,7 +304,7 @@ class BlobURLsReporter final : public nsIMemoryReporter {
 
     nsAutoCString origin;
 
-    aInfo->mPrincipal->GetPrepath(origin);
+    aInfo->mPrincipal->GetPrePath(origin);
 
     // If we got a frame, we better have a current JSContext.  This is cheating
     // a bit; ideally we'd have our caller pass in a JSContext, or have
