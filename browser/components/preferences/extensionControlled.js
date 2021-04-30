@@ -251,7 +251,7 @@ function showEnableExtensionMessage(settingName) {
   };
   let label = document.createXULElement("label");
   let addonIcon = icon(
-    "chrome://mozapps/skin/extensions/extension.svg",
+    "chrome://mozapps/skin/extensions/extensionGeneric.svg",
     "addons-icon"
   );
   let toolbarIcon = icon("chrome://browser/skin/menu.svg", "menu-icon");
