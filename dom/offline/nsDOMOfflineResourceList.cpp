@@ -14,7 +14,6 @@
 #include "nsServiceManagerUtils.h"
 #include "nsICookieJarSettings.h"
 #include "nsIInterfaceRequestorUtils.h"
-#include "nsIOfflineCacheUpdate.h"
 #include "nsContentUtils.h"
 #include "nsILoadContext.h"
 #include "nsIObserverService.h"
@@ -62,7 +61,6 @@ NS_IMPL_CYCLE_COLLECTION_WEAK_INHERITED(nsDOMOfflineResourceList,
                                         DOMEventTargetHelper)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsDOMOfflineResourceList)
-  NS_INTERFACE_MAP_ENTRY(nsIOfflineCacheUpdateObserver)
   NS_INTERFACE_MAP_ENTRY(nsIObserver)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
 NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
@@ -152,21 +150,6 @@ nsDOMOfflineResourceList::Observe(nsISupports* aSubject, const char* aTopic,
   return NS_OK;
 }
 
-//
-// nsDOMOfflineResourceList::nsIOfflineCacheUpdateObserver
-//
-NS_IMETHODIMP
-nsDOMOfflineResourceList::UpdateStateChanged(nsIOfflineCacheUpdate* aUpdate,
-                                             uint32_t event) {
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMOfflineResourceList::ApplicationCacheAvailable(
-    nsIApplicationCache* aApplicationCache) {
-  return NS_OK;
-}
-
 nsresult nsDOMOfflineResourceList::GetCacheKey(const nsAString& aURI,
                                                nsCString& aKey) {
   nsCOMPtr<nsIURI> requestedURI;
@@ -176,8 +159,6 @@ nsresult nsDOMOfflineResourceList::GetCacheKey(const nsAString& aURI,
   return GetCacheKey(requestedURI, aKey);
 }
 
-void nsDOMOfflineResourceList::UpdateAdded(nsIOfflineCacheUpdate* aUpdate) {}
-
 already_AddRefed<nsIApplicationCacheContainer>
 nsDOMOfflineResourceList::GetDocumentAppCacheContainer() {
   return nullptr;
@@ -186,9 +167,6 @@ nsDOMOfflineResourceList::GetDocumentAppCacheContainer() {
 already_AddRefed<nsIApplicationCache>
 nsDOMOfflineResourceList::GetDocumentAppCache() {
   return nullptr;
-}
-
-void nsDOMOfflineResourceList::UpdateCompleted(nsIOfflineCacheUpdate* aUpdate) {
 }
 
 nsresult nsDOMOfflineResourceList::GetCacheKey(nsIURI* aURI, nsCString& aKey) {
