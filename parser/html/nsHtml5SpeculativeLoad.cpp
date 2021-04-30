@@ -97,7 +97,7 @@ void nsHtml5SpeculativeLoad::Perform(nsHtml5TreeOpExecutor* aExecutor) {
           mIsLinkPreload);
       break;
     case eSpeculativeLoadManifest:
-      aExecutor->ProcessOfflineManifest(mUrlOrSizes);
+      // TODO: remove this
       break;
     case eSpeculativeLoadSetDocumentCharset: {
       NS_ASSERTION(mTypeOrCharsetSourceOrDocumentModeOrMetaCSPOrSizesOrIntegrity

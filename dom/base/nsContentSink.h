@@ -35,7 +35,6 @@ class nsAtom;
 class nsIChannel;
 class nsIContent;
 class nsNodeInfoManager;
-class nsIApplicationCache;
 
 namespace mozilla {
 namespace css {
@@ -119,28 +118,6 @@ class nsContentSink : public nsICSSLoaderObserver,
   nsContentSink();
   virtual ~nsContentSink();
 
-  enum CacheSelectionAction {
-    // There is no offline cache manifest specified by the document,
-    // or the document was loaded from a cache other than the one it
-    // specifies via its manifest attribute and IS NOT a top-level
-    // document, or an error occurred during the cache selection
-    // algorithm.
-    CACHE_SELECTION_NONE = 0,
-
-    // The offline cache manifest must be updated.
-    CACHE_SELECTION_UPDATE = 1,
-
-    // The document was loaded from a cache other than the one it
-    // specifies via its manifest attribute and IS a top-level
-    // document.  In this case, the document is marked as foreign in
-    // the cache it was loaded from and must be reloaded from the
-    // correct cache (the one it specifies).
-    CACHE_SELECTION_RELOAD = 2,
-
-    // Some conditions require we must reselect the cache without the manifest
-    CACHE_SELECTION_RESELECT_WITHOUT_MANIFEST = 3
-  };
-
   nsresult Init(Document* aDoc, nsIURI* aURI, nsISupports* aContainer,
                 nsIChannel* aChannel);
 
@@ -173,59 +150,7 @@ class nsContentSink : public nsICSSLoaderObserver,
   // Gets the cache key (used to identify items in a cache) of the channel.
   nsresult GetChannelCacheKey(nsIChannel* aChannel, nsACString& aCacheKey);
 
-  // There is an offline cache manifest attribute specified and the
-  // document is allowed to use the offline cache.  Process the cache
-  // selection algorithm for this document and the manifest. Result is
-  // an action that must be taken on the manifest, see
-  // CacheSelectionAction enum above.
-  //
-  // @param aLoadApplicationCache
-  //        The application cache from which the load originated, if
-  //        any.
-  // @param aManifestURI
-  //        The manifest URI listed in the document.
-  // @param aFetchedWithHTTPGetOrEquiv
-  //        TRUE if this was fetched using the HTTP GET method.
-  // @param aAction
-  //        Out parameter, returns the action that should be performed
-  //        by the calling function.
-  nsresult SelectDocAppCache(nsIApplicationCache* aLoadApplicationCache,
-                             nsIURI* aManifestURI,
-                             bool aFetchedWithHTTPGetOrEquiv,
-                             CacheSelectionAction* aAction);
-
-  // There is no offline cache manifest attribute specified.  Process
-  // the cache selection algorithm w/o the manifest. Result is an
-  // action that must be taken, see CacheSelectionAction enum
-  // above. In case the offline cache manifest has to be updated the
-  // manifest URI is returned in aManifestURI.
-  //
-  // @param aLoadApplicationCache
-  //        The application cache from which the load originated, if
-  //        any.
-  // @param aManifestURI
-  //        Out parameter, returns the manifest URI of the cache that
-  //        was selected.
-  // @param aAction
-  //        Out parameter, returns the action that should be performed
-  //        by the calling function.
-  nsresult SelectDocAppCacheNoManifest(
-      nsIApplicationCache* aLoadApplicationCache, nsIURI** aManifestURI,
-      CacheSelectionAction* aAction);
-
  public:
-  // Searches for the offline cache manifest attribute and calls one
-  // of the above defined methods to select the document's application
-  // cache, let it be associated with the document and eventually
-  // schedule the cache update process.
-  // This method MUST be called with the empty string as the argument
-  // when there is no manifest attribute!
-  void ProcessOfflineManifest(const nsAString& aManifestSpec);
-
-  // Extracts the manifest attribute from the element if it is the root
-  // element and calls the above method.
-  void ProcessOfflineManifest(nsIContent* aElement);
-
   // For Preconnect() aHref can either be the usual
   // URI format or of the form "//www.hostname.com" without a scheme.
   void Preconnect(const nsAString& aHref, const nsAString& aCrossOrigin);
