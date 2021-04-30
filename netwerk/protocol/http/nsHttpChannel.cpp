@@ -350,7 +350,6 @@ void nsHttpChannel::ReleaseMainThreadOnlyReferences() {
   }
 
   nsTArray<nsCOMPtr<nsISupports>> arrayToRelease;
-  arrayToRelease.AppendElement(mApplicationCacheForWrite.forget());
   arrayToRelease.AppendElement(mAuthProvider.forget());
   arrayToRelease.AppendElement(mRedirectChannel.forget());
   arrayToRelease.AppendElement(mPreflightChannel.forget());
@@ -3476,8 +3475,7 @@ nsresult nsHttpChannel::OpenCacheEntryInternal(
   mCacheQueueSizeWhenOpen =
       CacheStorageService::CacheQueueSize(mCacheOpenWithPriority);
 
-  if (StaticPrefs::network_http_rcwn_enabled() && maybeRCWN &&
-      !mApplicationCacheForWrite) {
+  if (StaticPrefs::network_http_rcwn_enabled() && maybeRCWN) {
     bool hasAltData = false;
     uint32_t sizeInKb = 0;
     rv = cacheStorage->GetCacheIndexEntryAttrs(
@@ -4204,22 +4202,10 @@ nsresult nsHttpChannel::OpenCacheInputStream(nsICacheEntry* cacheEntry,
       !LoadCachedContentIsPartial()) {
     // For LOAD_ONLY_IF_MODIFIED, we usually don't have to deal with the
     // cached entity.
-    if (!mApplicationCacheForWrite) {
-      LOG(
-          ("Will skip read from cache based on LOAD_ONLY_IF_MODIFIED "
-           "load flag\n"));
-      return NS_OK;
-    }
-
-    // If offline caching has been requested and the offline cache needs
-    // updating, we must complete the call even if the main cache entry
-    // is up to date. We don't know yet for sure whether the offline
-    // cache needs updating because at this point we haven't opened it
-    // for writing yet, so we have to start reading the cached entity now
-    // just in case.
     LOG(
-        ("May skip read from cache based on LOAD_ONLY_IF_MODIFIED "
+        ("Will skip read from cache based on LOAD_ONLY_IF_MODIFIED "
          "load flag\n"));
+    return NS_OK;
   }
 
   // Open an input stream for the entity, so that the call to OpenInputStream
