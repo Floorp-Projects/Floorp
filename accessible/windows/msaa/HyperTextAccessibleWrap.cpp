@@ -40,7 +40,7 @@ HyperTextAccessibleWrap::QueryInterface(REFIID aIID, void** aInstancePtr) {
     }
   }
 
-  return AccessibleWrap::QueryInterface(aIID, aInstancePtr);
+  return MsaaAccessible::QueryInterface(aIID, aInstancePtr);
 }
 
 nsresult HyperTextAccessibleWrap::HandleAccEvent(AccEvent* aEvent) {

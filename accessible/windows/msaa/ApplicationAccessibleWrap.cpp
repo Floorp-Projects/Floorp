@@ -21,7 +21,7 @@ using namespace mozilla::a11y;
 // nsISupports
 NS_IMPL_ISUPPORTS_INHERITED0(ApplicationAccessibleWrap, ApplicationAccessible)
 
-IMPL_IUNKNOWN_INHERITED1(ApplicationAccessibleWrap, AccessibleWrap,
+IMPL_IUNKNOWN_INHERITED1(ApplicationAccessibleWrap, MsaaAccessible,
                          ia2AccessibleApplication)
 
 already_AddRefed<nsIPersistentProperties>

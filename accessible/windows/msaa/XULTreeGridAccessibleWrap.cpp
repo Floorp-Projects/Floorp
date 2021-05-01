@@ -13,7 +13,7 @@ using namespace mozilla::a11y;
 
 NS_IMPL_ISUPPORTS_INHERITED0(XULTreeGridAccessibleWrap, XULTreeGridAccessible)
 
-IMPL_IUNKNOWN_INHERITED1(XULTreeGridAccessibleWrap, AccessibleWrap,
+IMPL_IUNKNOWN_INHERITED1(XULTreeGridAccessibleWrap, MsaaAccessible,
                          ia2AccessibleTable)
 
 void XULTreeGridAccessibleWrap::Shutdown() {
@@ -28,7 +28,7 @@ void XULTreeGridAccessibleWrap::Shutdown() {
 NS_IMPL_ISUPPORTS_INHERITED0(XULTreeGridCellAccessibleWrap,
                              XULTreeGridCellAccessible)
 
-IMPL_IUNKNOWN_INHERITED1(XULTreeGridCellAccessibleWrap, AccessibleWrap,
+IMPL_IUNKNOWN_INHERITED1(XULTreeGridCellAccessibleWrap, MsaaAccessible,
                          ia2AccessibleTableCell)
 
 void XULTreeGridCellAccessibleWrap::Shutdown() {
