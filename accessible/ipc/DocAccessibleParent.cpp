@@ -140,7 +140,7 @@ uint32_t DocAccessibleParent::AddSubtree(
   ProxyCreated(newProxy);
 
 #if defined(XP_WIN)
-  WrapperFor(newProxy)->SetID(newChild.MsaaID());
+  WrapperFor(newProxy)->GetMsaa()->SetID(newChild.MsaaID());
 #endif
 
   for (uint32_t index = 0, len = mPendingChildDocs.Length(); index < len;

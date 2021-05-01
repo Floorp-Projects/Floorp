@@ -17,6 +17,7 @@
 
 namespace mozilla {
 namespace a11y {
+class Accessible;
 class AccessibleWrap;
 class LocalAccessible;
 class sdnAccessible;
@@ -65,6 +66,8 @@ class MsaaAccessible : public ia2Accessible,
   void MsaaShutdown();
 
   static IDispatch* NativeAccessible(LocalAccessible* aAccessible);
+
+  static MsaaAccessible* GetFrom(Accessible* aAcc);
 
   // IUnknown
   STDMETHODIMP QueryInterface(REFIID, void**) override;

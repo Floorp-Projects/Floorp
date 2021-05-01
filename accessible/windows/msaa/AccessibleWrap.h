@@ -65,6 +65,7 @@ class AccessibleWrap : public LocalAccessible, public MsaaAccessible {
    */
   bool IsRootForHWND();
 
+  MsaaAccessible* GetMsaa() { return this; }
   virtual void GetNativeInterface(void** aOutAccessible) override;
 
   static void SetHandlerControl(DWORD aPid, RefPtr<IHandlerControl> aCtrl);

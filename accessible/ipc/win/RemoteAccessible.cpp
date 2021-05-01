@@ -34,15 +34,16 @@ bool RemoteAccessible::GetCOMInterface(void** aOutAccessible) const {
   if (!mCOMProxy && mSafeToRecurse) {
     // See if we can lazily obtain a COM proxy
     AccessibleWrap* wrap = WrapperFor(this);
+    MsaaAccessible* msaa = wrap->GetMsaa();
     bool isDefunct = false;
     RemoteAccessible* thisPtr = const_cast<RemoteAccessible*>(this);
     // NB: Don't pass CHILDID_SELF here, use the absolute MSAA ID. Otherwise
     // GetIAccessibleFor will recurse into this function and we will just
     // overflow the stack.
     VARIANT realId = {{{VT_I4}}};
-    realId.ulVal = wrap->GetExistingID();
+    realId.ulVal = msaa->GetExistingID();
     MOZ_DIAGNOSTIC_ASSERT(realId.ulVal != CHILDID_SELF);
-    thisPtr->mCOMProxy = wrap->GetIAccessibleFor(realId, &isDefunct);
+    thisPtr->mCOMProxy = msaa->GetIAccessibleFor(realId, &isDefunct);
   }
 
   RefPtr<IAccessible> addRefed = mCOMProxy;
