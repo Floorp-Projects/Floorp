@@ -129,6 +129,11 @@ browser/chrome/browser/skin/classic/browser/controlcenter/tracker-image-disabled
 browser/chrome/browser/skin/classic/browser/notification-icons/canvas-blocked.svg
 browser/chrome/browser/skin/classic/browser/controlcenter/fingerprinters.svg
 browser/chrome/browser/skin/classic/browser/notification-icons/webauthn.svg
+
+# Bug 1708008 - De-duplicate extension icons
+browser/chrome/browser/content/browser/extension.svg
+chrome/toolkit/skin/classic/mozapps/extensions/extension.svg
+chrome/toolkit/skin/classic/mozapps/extensions/extensionGeneric.svg
 chrome/toolkit/skin/classic/mozapps/extensions/themeGeneric.svg
 browser/chrome/browser/skin/classic/browser/customize.svg
 
