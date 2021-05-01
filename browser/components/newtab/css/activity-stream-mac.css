@@ -281,7 +281,7 @@ body {
   .icon.icon-check {
     background-image: url("chrome://global/skin/icons/check.svg"); }
   .icon.icon-download {
-    background-image: url("chrome://browser/skin/downloads/download-icons.svg#arrow-with-bar"); }
+    background-image: url("chrome://browser/skin/downloads/downloads.svg"); }
   .icon.icon-copy {
     background-image: url("chrome://browser/skin/edit-copy.svg"); }
   .icon.icon-open-file {
