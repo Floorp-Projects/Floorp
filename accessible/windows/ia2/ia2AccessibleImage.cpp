@@ -18,6 +18,14 @@
 using namespace mozilla;
 using namespace mozilla::a11y;
 
+ImageAccessible* ia2AccessibleImage::ImageAcc() {
+  // XXX This first static_cast is a necessary hack until we get rid of the
+  // inheritance of ImageAccessibleWrap.
+  auto wrap = static_cast<ImageAccessibleWrap*>(this);
+  AccessibleWrap* acc = static_cast<MsaaAccessible*>(wrap)->LocalAcc();
+  return static_cast<ImageAccessible*>(acc);
+}
+
 // IUnknown
 
 STDMETHODIMP
@@ -43,8 +51,8 @@ ia2AccessibleImage::get_description(BSTR* aDescription) {
 
   *aDescription = nullptr;
 
-  ImageAccessibleWrap* acc = static_cast<ImageAccessibleWrap*>(this);
-  if (acc->IsDefunct()) return CO_E_OBJNOTCONNECTED;
+  ImageAccessible* acc = ImageAcc();
+  if (!acc) return CO_E_OBJNOTCONNECTED;
 
   nsAutoString description;
   acc->Name(description);
@@ -62,8 +70,8 @@ ia2AccessibleImage::get_imagePosition(enum IA2CoordinateType aCoordType,
   *aX = 0;
   *aY = 0;
 
-  ImageAccessibleWrap* imageAcc = static_cast<ImageAccessibleWrap*>(this);
-  if (imageAcc->IsDefunct()) return CO_E_OBJNOTCONNECTED;
+  ImageAccessible* imageAcc = ImageAcc();
+  if (!imageAcc) return CO_E_OBJNOTCONNECTED;
 
   uint32_t geckoCoordType =
       (aCoordType == IA2_COORDTYPE_SCREEN_RELATIVE)
@@ -83,8 +91,8 @@ ia2AccessibleImage::get_imageSize(long* aHeight, long* aWidth) {
   *aHeight = 0;
   *aWidth = 0;
 
-  ImageAccessibleWrap* imageAcc = static_cast<ImageAccessibleWrap*>(this);
-  if (imageAcc->IsDefunct()) return CO_E_OBJNOTCONNECTED;
+  ImageAccessible* imageAcc = ImageAcc();
+  if (!imageAcc) return CO_E_OBJNOTCONNECTED;
 
   nsIntSize size = imageAcc->Size();
   *aHeight = size.width;

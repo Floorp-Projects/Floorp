@@ -14,6 +14,14 @@
 
 using namespace mozilla::a11y;
 
+HyperTextAccessibleWrap* ia2AccessibleHypertext::TextAcc() {
+  // XXX This first static_cast is a necessary hack until we get rid of the
+  // inheritance of HyperTextAccessibleWrap.
+  auto wrap = static_cast<HyperTextAccessibleWrap*>(this);
+  AccessibleWrap* acc = static_cast<MsaaAccessible*>(wrap)->LocalAcc();
+  return static_cast<HyperTextAccessibleWrap*>(acc);
+}
+
 // IAccessibleHypertext
 
 STDMETHODIMP
@@ -22,11 +30,9 @@ ia2AccessibleHypertext::get_nHyperlinks(long* aHyperlinkCount) {
 
   *aHyperlinkCount = 0;
 
-  MOZ_ASSERT(!HyperTextProxyFor(this));
-
-  HyperTextAccessibleWrap* hyperText =
-      static_cast<HyperTextAccessibleWrap*>(this);
-  if (hyperText->IsDefunct()) return CO_E_OBJNOTCONNECTED;
+  HyperTextAccessibleWrap* hyperText = TextAcc();
+  if (!hyperText) return CO_E_OBJNOTCONNECTED;
+  MOZ_ASSERT(!hyperText->IsProxy());
 
   *aHyperlinkCount = hyperText->LinkCount();
   return S_OK;
@@ -39,20 +45,22 @@ ia2AccessibleHypertext::get_hyperlink(long aLinkIndex,
 
   *aHyperlink = nullptr;
 
-  AccessibleWrap* hyperLink;
-  MOZ_ASSERT(!HyperTextProxyFor(this));
-  HyperTextAccessibleWrap* hyperText =
-      static_cast<HyperTextAccessibleWrap*>(this);
-  if (hyperText->IsDefunct()) {
+  LocalAccessible* hyperLink;
+  HyperTextAccessibleWrap* hyperText = TextAcc();
+  if (!hyperText) {
     return CO_E_OBJNOTCONNECTED;
   }
+  MOZ_ASSERT(!hyperText->IsProxy());
 
-  hyperLink = static_cast<AccessibleWrap*>(hyperText->LinkAt(aLinkIndex));
+  hyperLink = hyperText->LinkAt(aLinkIndex);
 
   if (!hyperLink) return E_FAIL;
 
-  *aHyperlink = static_cast<IAccessibleHyperlink*>(hyperLink);
-  (*aHyperlink)->AddRef();
+  // GetNativeInterface returns an IAccessible, but we need an
+  // IAccessibleHyperlink, so use MsaaAccessible::GetFrom instead and let
+  // RefPtr cast it.
+  RefPtr<IAccessibleHyperlink> result = MsaaAccessible::GetFrom(hyperLink);
+  result.forget(aHyperlink);
   return S_OK;
 }
 
@@ -63,11 +71,9 @@ ia2AccessibleHypertext::get_hyperlinkIndex(long aCharIndex,
 
   *aHyperlinkIndex = 0;
 
-  MOZ_ASSERT(!HyperTextProxyFor(this));
-
-  HyperTextAccessibleWrap* hyperAcc =
-      static_cast<HyperTextAccessibleWrap*>(this);
-  if (hyperAcc->IsDefunct()) return CO_E_OBJNOTCONNECTED;
+  HyperTextAccessibleWrap* hyperAcc = TextAcc();
+  if (!hyperAcc) return CO_E_OBJNOTCONNECTED;
+  MOZ_ASSERT(!hyperAcc->IsProxy());
 
   *aHyperlinkIndex = hyperAcc->LinkIndexAtOffset(aCharIndex);
   return S_OK;
@@ -83,13 +89,11 @@ ia2AccessibleHypertext::get_hyperlinks(IAccessibleHyperlink*** aHyperlinks,
   *aHyperlinks = nullptr;
   *aNHyperlinks = 0;
 
-  MOZ_ASSERT(!HyperTextProxyFor(this));
-
-  HyperTextAccessibleWrap* hyperText =
-      static_cast<HyperTextAccessibleWrap*>(this);
-  if (hyperText->IsDefunct()) {
+  HyperTextAccessibleWrap* hyperText = TextAcc();
+  if (!hyperText) {
     return CO_E_OBJNOTCONNECTED;
   }
+  MOZ_ASSERT(!hyperText->IsProxy());
 
   uint32_t count = hyperText->LinkCount();
   *aNHyperlinks = count;
@@ -106,11 +110,13 @@ ia2AccessibleHypertext::get_hyperlinks(IAccessibleHyperlink*** aHyperlinks,
   }
 
   for (uint32_t i = 0; i < count; ++i) {
-    AccessibleWrap* hyperLink =
-        static_cast<AccessibleWrap*>(hyperText->LinkAt(i));
+    LocalAccessible* hyperLink = hyperText->LinkAt(i);
     MOZ_ASSERT(hyperLink);
-    (*aHyperlinks)[i] = static_cast<IAccessibleHyperlink*>(hyperLink);
-    (*aHyperlinks)[i]->AddRef();
+    // GetNativeInterface returns an IAccessible, but we need an
+    // IAccessibleHyperlink, so use MsaaAccessible::GetFrom instead and let
+    // RefPtr cast it.
+    RefPtr<IAccessibleHyperlink> iaHyper = MsaaAccessible::GetFrom(hyperLink);
+    iaHyper.forget(&(*aHyperlinks)[i]);
   }
 
   return S_OK;
