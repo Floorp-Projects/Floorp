@@ -618,6 +618,20 @@ ITypeInfo* MsaaAccessible::GetTI(LCID lcid) {
   return gTypeInfo;
 }
 
+// IUnknown methods
+// XXX This delegation to AccessibleWrap is a necessary hack until we can move
+// the IUnknown implementation out of AccessibleWrap.
+
+STDMETHODIMP MsaaAccessible::QueryInterface(REFIID iid, void** ppv) {
+  return static_cast<AccessibleWrap*>(this)->QueryInterface(iid, ppv);
+}
+ULONG STDMETHODCALLTYPE MsaaAccessible::AddRef() {
+  return static_cast<AccessibleWrap*>(this)->AddRef();
+}
+ULONG STDMETHODCALLTYPE MsaaAccessible::Release() {
+  return static_cast<AccessibleWrap*>(this)->Release();
+}
+
 // IAccessible methods
 
 STDMETHODIMP
