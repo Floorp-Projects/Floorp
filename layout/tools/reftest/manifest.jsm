@@ -582,8 +582,6 @@ function BuildConditionSandbox(aURL) {
 
     // config specific prefs
     sandbox.appleSilicon = prefs.getBoolPref("sandbox.apple_silicon", false);
-    // Plugins are no longer supported.  Don't try to use TestPlugin.
-    sandbox.haveTestPlugin = false;
 
     // Set a flag on sandbox if the windows default theme is active
     sandbox.windowsDefaultTheme = g.containingWindow.matchMedia("(-moz-windows-default-theme)").matches;

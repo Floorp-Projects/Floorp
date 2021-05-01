@@ -250,34 +250,14 @@ class SpecialPowersParent extends JSWindowActorParent {
         }
         break;
 
-      case "plugin-crashed":
       case "ipc:content-shutdown":
-        var message = { type: "crash-observed", dumpIDs: [] };
         aSubject = aSubject.QueryInterface(Ci.nsIPropertyBag2);
-        if (aTopic == "plugin-crashed") {
-          addDumpIDToMessage("pluginDumpID");
-
-          let pluginID = aSubject.getPropertyAsAString("pluginDumpID");
-          let additionalMinidumps = aSubject.getPropertyAsACString(
-            "additionalMinidumps"
-          );
-          if (additionalMinidumps.length != 0) {
-            let dumpNames = additionalMinidumps.split(",");
-            for (let name of dumpNames) {
-              message.dumpIDs.push({
-                id: pluginID + "-" + name,
-                extension: "dmp",
-              });
-            }
-          }
-        } else {
-          // ipc:content-shutdown
-          if (!aSubject.hasKey("abnormal")) {
-            return; // This is a normal shutdown, ignore it
-          }
-
-          addDumpIDToMessage("dumpID");
+        if (!aSubject.hasKey("abnormal")) {
+          return; // This is a normal shutdown, ignore it
         }
+
+        var message = { type: "crash-observed", dumpIDs: [] };
+        addDumpIDToMessage("dumpID");
         this.sendAsyncMessage("SPProcessCrashService", message);
         break;
     }
@@ -358,7 +338,6 @@ class SpecialPowersParent extends JSWindowActorParent {
       return;
     }
 
-    Services.obs.addObserver(this._observer, "plugin-crashed");
     Services.obs.addObserver(this._observer, "ipc:content-shutdown");
     this._processCrashObserversRegistered = true;
   }
@@ -368,7 +347,6 @@ class SpecialPowersParent extends JSWindowActorParent {
       return;
     }
 
-    Services.obs.removeObserver(this._observer, "plugin-crashed");
     Services.obs.removeObserver(this._observer, "ipc:content-shutdown");
     this._processCrashObserversRegistered = false;
   }

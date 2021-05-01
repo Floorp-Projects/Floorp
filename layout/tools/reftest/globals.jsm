@@ -143,8 +143,6 @@ for (let [key, val] of Object.entries({
     suiteStarted: false,
     manageSuite: false,
 
-    // The enabled-state of the test-plugins, stored so they can be reset later
-    testPluginEnabledStates: null,
     prefsToRestore: [],
     httpServerPort: -1,
 
