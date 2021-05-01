@@ -12,6 +12,7 @@
 
 namespace mozilla {
 namespace a11y {
+class ImageAccessible;
 
 class ia2AccessibleImage : public IAccessibleImage {
  public:
@@ -30,6 +31,9 @@ class ia2AccessibleImage : public IAccessibleImage {
   virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_imageSize(
       /* [out] */ long* height,
       /* [retval][out] */ long* width);
+
+ private:
+  ImageAccessible* ImageAcc();
 };
 
 }  // namespace a11y
