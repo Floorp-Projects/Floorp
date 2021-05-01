@@ -72,7 +72,6 @@ using namespace mozilla;
 using namespace mozilla::gfx;
 using namespace mozilla::unicode;
 using namespace mozilla::widget;
-using mozilla::dom::SystemFontListEntry;
 
 static FT_Library gPlatformFTLibrary = nullptr;
 static int32_t sDPI;
@@ -339,7 +338,7 @@ void gfxPlatformGtk::GetCommonFallbackFonts(uint32_t aCh, Script aRunScript,
 }
 
 void gfxPlatformGtk::ReadSystemFontList(
-    nsTArray<SystemFontListEntry>* retValue) {
+    mozilla::dom::SystemFontList* retValue) {
   gfxFcPlatformFontList::PlatformFontList()->ReadSystemFontList(retValue);
 }
 

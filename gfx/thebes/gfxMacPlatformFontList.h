@@ -160,7 +160,7 @@ class gfxMacPlatformFontList final : public gfxPlatformFontList {
     kTextSizeSystemFontFamily = 1,    // name of 'system' font at text sizes
     kDisplaySizeSystemFontFamily = 2  // 'system' font at display sizes
   };
-  void ReadSystemFontList(nsTArray<FontFamilyListEntry>* aList);
+  void ReadSystemFontList(mozilla::dom::SystemFontList*);
 
  protected:
   FontFamily GetDefaultFontForPlatform(const gfxFontStyle* aStyle,
