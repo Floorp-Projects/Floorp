@@ -898,16 +898,16 @@ void gfxMacPlatformFontList::AddFamily(CFStringRef aFamily) {
   AddFamily(nameUtf8, GetVisibilityForFamily(nameUtf8));
 }
 
-void gfxMacPlatformFontList::ReadSystemFontList(nsTArray<FontFamilyListEntry>* aList) {
+void gfxMacPlatformFontList::ReadSystemFontList(dom::SystemFontList* aList) {
   // Note: We rely on the records for mSystemTextFontFamilyName and
   // mSystemDisplayFontFamilyName (if present) being *before* the main
   // font list, so that those names are known in the content process
   // by the time we add the actual family records to the font list.
-  aList->AppendElement(FontFamilyListEntry(mSystemTextFontFamilyName, FontVisibility::Unknown,
-                                           kTextSizeSystemFontFamily));
+  aList->entries().AppendElement(FontFamilyListEntry(
+      mSystemTextFontFamilyName, FontVisibility::Unknown, kTextSizeSystemFontFamily));
   if (mUseSizeSensitiveSystemFont) {
-    aList->AppendElement(FontFamilyListEntry(mSystemDisplayFontFamilyName, FontVisibility::Unknown,
-                                             kDisplaySizeSystemFontFamily));
+    aList->entries().AppendElement(FontFamilyListEntry(
+        mSystemDisplayFontFamilyName, FontVisibility::Unknown, kDisplaySizeSystemFontFamily));
   }
   // Now collect the list of available families, with visibility attributes.
   for (auto f = mFontFamilies.Iter(); !f.Done(); f.Next()) {
@@ -915,7 +915,7 @@ void gfxMacPlatformFontList::ReadSystemFontList(nsTArray<FontFamilyListEntry>* a
     if (macFamily->IsSingleFaceFamily()) {
       continue;  // skip, this will be recreated separately in the child
     }
-    aList->AppendElement(
+    aList->entries().AppendElement(
         FontFamilyListEntry(macFamily->Name(), macFamily->Visibility(), kStandardFontFamily));
   }
 }
@@ -932,7 +932,7 @@ nsresult gfxMacPlatformFontList::InitFontListForPlatform() {
     // the GetXPCOMProcessAttributes message, because it's much faster than
     // querying Core Text again in the child.
     auto& fontList = dom::ContentChild::GetSingleton()->SystemFontList();
-    for (FontFamilyListEntry& ffe : fontList) {
+    for (FontFamilyListEntry& ffe : fontList.entries()) {
       switch (ffe.entryType()) {
         case kStandardFontFamily:
           // On Catalina or later, we pre-initialize system font-family entries
@@ -953,7 +953,7 @@ nsresult gfxMacPlatformFontList::InitFontListForPlatform() {
           break;
       }
     }
-    fontList.Clear();
+    fontList.entries().Clear();
   } else {
     // We're not a content process, so get the available fonts directly
     // from Core Text.

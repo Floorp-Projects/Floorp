@@ -28,6 +28,8 @@
 namespace mozilla {
 namespace dom {
 class SystemFontListEntry;
+class SystemFontList;
+class SystemFontOptions;
 };
 
 template <>
@@ -247,7 +249,7 @@ class gfxFcPlatformFontList final : public gfxPlatformFontList {
   void GetFontList(nsAtom* aLangGroup, const nsACString& aGenericFamily,
                    nsTArray<nsString>& aListOfFonts) override;
 
-  void ReadSystemFontList(nsTArray<FontPatternListEntry>* retValue);
+  void ReadSystemFontList(mozilla::dom::SystemFontList*);
 
   gfxFontEntry* CreateFontEntry(
       mozilla::fontlist::Face* aFace,
@@ -369,6 +371,30 @@ class gfxFcPlatformFontList final : public gfxPlatformFontList {
 
   nsCOMPtr<nsITimer> mCheckFontUpdatesTimer;
   RefPtr<FcConfig> mLastConfig;
+
+  // The current system font options in effect.
+#ifdef MOZ_WIDGET_GTK
+  // NOTE(emilio): This is a *system cairo* cairo_font_options_t object. As
+  // such, it can't be used outside of the few functions defined here.
+  cairo_font_options_t* mSystemFontOptions = nullptr;
+  int32_t mFreetypeLcdSetting = -1;  // -1 for not set
+
+  void ClearSystemFontOptions();
+
+  // Returns whether options actually changed.
+  // TODO(emilio): We could call this when gsettings change or such, but
+  // historically we haven't reacted to these settings changes, so keeping it
+  // simple for now.
+  bool UpdateSystemFontOptions();
+
+  void UpdateSystemFontOptionsFromIpc(const mozilla::dom::SystemFontOptions&);
+  void SystemFontOptionsToIpc(mozilla::dom::SystemFontOptions&);
+
+ public:
+  void SubstituteSystemFontOptions(FcPattern*);
+
+ private:
+#endif
 
   // By default, font prefs under Linux are set to simply lookup
   // via fontconfig the appropriate font for serif/sans-serif/monospace.

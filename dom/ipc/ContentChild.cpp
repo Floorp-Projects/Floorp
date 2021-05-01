@@ -606,8 +606,7 @@ NS_INTERFACE_MAP_END
 
 mozilla::ipc::IPCResult ContentChild::RecvSetXPCOMProcessAttributes(
     XPCOMInitData&& aXPCOMInit, const StructuredCloneData& aInitialData,
-    FullLookAndFeel&& aLookAndFeelData,
-    nsTArray<SystemFontListEntry>&& aFontList,
+    FullLookAndFeel&& aLookAndFeelData, dom::SystemFontList&& aFontList,
     const Maybe<SharedMemoryHandle>& aSharedUASheetHandle,
     const uintptr_t& aSharedUASheetAddress,
     nsTArray<SharedMemoryHandle>&& aSharedFontListBlocks) {
@@ -2344,7 +2343,7 @@ mozilla::ipc::IPCResult ContentChild::RecvUpdateDictionaryList(
 }
 
 mozilla::ipc::IPCResult ContentChild::RecvUpdateFontList(
-    nsTArray<SystemFontListEntry>&& aFontList) {
+    dom::SystemFontList&& aFontList) {
   mFontList = std::move(aFontList);
   gfxPlatform::GetPlatform()->UpdateFontList(true);
   return IPC_OK();

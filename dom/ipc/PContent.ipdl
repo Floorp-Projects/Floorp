@@ -194,6 +194,22 @@ struct SystemFontListEntry {
 };
 #endif
 
+#ifdef MOZ_WIDGET_GTK
+struct SystemFontOptions {
+    int32_t antialias; // cairo_antialias_t
+    int32_t subpixelOrder; // cairo_subpixel_order_t
+    int32_t hintStyle; // cairo_hint_style_t
+    int32_t lcdFilter; // cairo_lcd_filter_t
+};
+#endif
+
+struct SystemFontList {
+    SystemFontListEntry[] entries;
+#ifdef MOZ_WIDGET_GTK
+    SystemFontOptions options;
+#endif
+};
+
 union SystemParameterValue {
   bool;
   float;
@@ -601,7 +617,7 @@ child:
 
     async UpdateDictionaryList(nsCString[] dictionaries);
 
-    async UpdateFontList(SystemFontListEntry[] fontList);
+    async UpdateFontList(SystemFontList fontList);
 
     /**
      * The shared font list has been updated by the parent, so child processes
@@ -691,7 +707,7 @@ child:
                                     StructuredCloneData initialData,
                                     FullLookAndFeel lookAndFeeldata,
                                     /* used on MacOSX/Linux/Android only: */
-                                    SystemFontListEntry[] systemFontList,
+                                    SystemFontList systemFontList,
                                     SharedMemoryHandle? sharedUASheetHandle,
                                     uintptr_t sharedUASheetAddress,
                                     SharedMemoryHandle[] sharedFontListBlocks);
