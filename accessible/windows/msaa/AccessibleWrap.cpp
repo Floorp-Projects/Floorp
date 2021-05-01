@@ -8,7 +8,6 @@
 
 #include "mozilla/a11y/DocAccessibleParent.h"
 #include "AccEvent.h"
-#include "EnumVariant.h"
 #include "GeckoCustom.h"
 #include "nsAccUtils.h"
 #include "nsIAccessibleEvent.h"
@@ -47,70 +46,6 @@ void AccessibleWrap::Shutdown() {
 //-----------------------------------------------------
 // IUnknown interface methods - see iunknown.h for documentation
 //-----------------------------------------------------
-
-// Microsoft COM QueryInterface
-STDMETHODIMP
-AccessibleWrap::QueryInterface(REFIID iid, void** ppv) {
-  if (!ppv) return E_INVALIDARG;
-
-  *ppv = nullptr;
-
-  if (IID_IClientSecurity == iid) {
-    // Some code might QI(IID_IClientSecurity) to detect whether or not we are
-    // a proxy. Right now that can potentially happen off the main thread, so we
-    // look for this condition immediately so that we don't trigger other code
-    // that might not be thread-safe.
-    return E_NOINTERFACE;
-  }
-
-  if (IID_IUnknown == iid)
-    *ppv = static_cast<IAccessible*>(this);
-  else if (IID_IDispatch == iid || IID_IAccessible == iid)
-    *ppv = static_cast<IAccessible*>(this);
-  else if (IID_IEnumVARIANT == iid && !IsProxy()) {
-    // Don't support this interface for leaf elements.
-    if (!HasChildren() || nsAccUtils::MustPrune(this)) return E_NOINTERFACE;
-
-    *ppv = static_cast<IEnumVARIANT*>(new ChildrenEnumVariant(this));
-  } else if (IID_IServiceProvider == iid)
-    *ppv = new ServiceProvider(this);
-  else if (IID_ISimpleDOMNode == iid && !IsProxy()) {
-    if (IsDefunct() || (!HasOwnContent() && !IsDoc())) return E_NOINTERFACE;
-
-    *ppv = static_cast<ISimpleDOMNode*>(new sdnAccessible(WrapNotNull(this)));
-  }
-
-  if (nullptr == *ppv) {
-    HRESULT hr = ia2Accessible::QueryInterface(iid, ppv);
-    if (SUCCEEDED(hr)) return hr;
-  }
-
-  if (nullptr == *ppv && !IsProxy()) {
-    HRESULT hr = ia2AccessibleComponent::QueryInterface(iid, ppv);
-    if (SUCCEEDED(hr)) return hr;
-  }
-
-  if (nullptr == *ppv) {
-    HRESULT hr = ia2AccessibleHyperlink::QueryInterface(iid, ppv);
-    if (SUCCEEDED(hr)) return hr;
-  }
-
-  if (nullptr == *ppv && !IsProxy()) {
-    HRESULT hr = ia2AccessibleValue::QueryInterface(iid, ppv);
-    if (SUCCEEDED(hr)) return hr;
-  }
-
-  if (!*ppv && iid == IID_IGeckoCustom) {
-    RefPtr<GeckoCustom> gkCrap = new GeckoCustom(this);
-    gkCrap.forget(ppv);
-    return S_OK;
-  }
-
-  if (nullptr == *ppv) return E_NOINTERFACE;
-
-  (reinterpret_cast<IUnknown*>(*ppv))->AddRef();
-  return S_OK;
-}
 
 void AccessibleWrap::GetNativeInterface(void** aOutAccessible) {
   *aOutAccessible = static_cast<IAccessible*>(this);

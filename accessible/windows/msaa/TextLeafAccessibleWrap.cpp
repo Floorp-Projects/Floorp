@@ -18,4 +18,4 @@ if (aIID == IID_ISimpleDOMText) {
   static_cast<IUnknown*>(*aInstancePtr)->AddRef();
   return S_OK;
 }
-IMPL_IUNKNOWN_QUERY_TAIL_INHERITED(AccessibleWrap)
+IMPL_IUNKNOWN_QUERY_TAIL_INHERITED(MsaaAccessible)
