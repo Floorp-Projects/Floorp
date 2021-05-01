@@ -1732,10 +1732,7 @@ function OnProcessCrashed(subject, topic, data)
     let additionalDumps;
     let propbag = subject.QueryInterface(Ci.nsIPropertyBag2);
 
-    if (topic == "plugin-crashed") {
-        id = propbag.get("pluginDumpID");
-        additionalDumps = propbag.getPropertyAsACString("additionalMinidumps");
-    } else if (topic == "ipc:content-shutdown") {
+    if (topic == "ipc:content-shutdown") {
         id = propbag.get("dumpID");
     }
 
@@ -1755,7 +1752,6 @@ function RegisterProcessCrashObservers()
 {
     var os = Cc[NS_OBSERVER_SERVICE_CONTRACTID]
              .getService(Ci.nsIObserverService);
-    os.addObserver(OnProcessCrashed, "plugin-crashed");
     os.addObserver(OnProcessCrashed, "ipc:content-shutdown");
 }
 

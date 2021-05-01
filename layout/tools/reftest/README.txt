@@ -688,10 +688,10 @@ particular, scripting and frames are likely to cause problems; it is untested,
 though.  That said, it should be sufficient for testing layout issues related
 to pagination.
 
-Plugin and IPC Process Crash Tests: class="reftest-expect-process-crash"
+Process Crash Tests: class="reftest-expect-process-crash"
 ========================================================================
 
-If you are running a test that causes an out-of-process plugin or IPC process
+If you are running a test that causes a process
 under Electrolysis to crash as part of a reftest, this will cause process
 crash minidump files to be left in the profile directory.  The test
 infrastructure that runs the reftests will notice these minidump files and
@@ -701,8 +701,8 @@ They are also confusing, since the appearance of "PROCESS-CRASH" messages in
 the test run output can seem like a real problem, when in fact it is the
 expected behavior.
 
-To indicate to the reftest framework that a test is expecting a plugin or
-IPC process crash, have the test include "reftest-expect-process-crash" as
+To indicate to the reftest framework that a test is expecting a
+process to crash, have the test include "reftest-expect-process-crash" as
 one of the root element's classes by the time the test has finished.  This will
 cause any minidump files that are generated while running the test to be removed
 and they won't cause any error messages in the test run output.
