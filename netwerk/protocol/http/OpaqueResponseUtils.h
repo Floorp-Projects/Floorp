@@ -31,7 +31,7 @@ class OpaqueResponseBlockingInfo final {
   Telemetry::LABELS_OPAQUE_RESPONSE_BLOCKING mDestination;
 
  public:
-  NS_INLINE_DECL_REFCOUNTING(OpaqueResponseBlockingInfo);
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(OpaqueResponseBlockingInfo);
 
   explicit OpaqueResponseBlockingInfo(ExtContentPolicyType aContentPolicyType);
 
