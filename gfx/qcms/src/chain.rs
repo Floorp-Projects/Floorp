@@ -860,6 +860,9 @@ fn modular_transform_create_input(input: &Profile) -> Option<Vec<Box<dyn Modular
 fn modular_transform_create_output(out: &Profile) -> Option<Vec<Box<dyn ModularTransform>>> {
     let mut transforms = Vec::new();
     if let Some(B2A0) = &out.B2A0 {
+        if B2A0.num_input_channels != 3 || B2A0.num_output_channels != 3 {
+            return None;
+        }
         let lut_transform = modular_transform_create_lut(B2A0);
         if let Some(lut_transform) = lut_transform {
             transforms.extend(lut_transform);
