@@ -1,0 +1,661 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="20">
+  <defs>
+    <path fill="context-stroke" d="M10.109 2.55a.618.618 0 0 0-.207-.39.641.641 0 0 0-.418-.16.636.636 0 0 0-.625.55c0 0 0 8.45 0 8.45 0 0-3.31-3.36-3.31-3.36a.633.633 0 0 0-.88 0 .606.606 0 0 0-.187.44.62.62 0 0 0 .187.44c0 0 4.47 4.48 4.47 4.48 0 0 .72 0 .72 0 0 0 4.47-4.48 4.47-4.48a.604.604 0 0 0 0-.88.633.633 0 0 0-.88 0c0 0-3.34 3.36-3.34 3.36 0 0 0-8.45 0-8.45z" id="ab"/>
+    <path fill="context-stroke" d="M14.125 17a2 2 0 0 0 2-2c0 0 0-1.45 0-1.45a.625.625 0 0 0-.209-.39.632.632 0 0 0-.416-.16.636.636 0 0 0-.625.55c0 0 0 1.6 0 1.6 0 0-.601.6-.601.6 0 0-9.549 0-9.549 0 0 0-.6-.6-.6-.6 0 0 0-1.6 0-1.6A.638.638 0 0 0 3.5 13a.636.636 0 0 0-.625.55c0 0 0 1.45 0 1.45a2 2 0 0 0 2 2c0 0 9.25 0 9.25 0z" id="aa"/>
+    <path stroke="context-fill" stroke-width="1.8" d="M5.838 8.706c0 0 3.487 3.488 3.487 3.488 0 0 4.387-5.175 4.387-5.175" fill="none" id="i"/>
+    <path fill="#15141A" d="M-1.17 3c0 0-2.65-2.64-2.65-2.64a.625.625 0 0 1-.161-.7.638.638 0 0 1 .351-.35.625.625 0 0 1 .496.011.625.625 0 0 1 .204.149c0 0 2.07 2.08 2.07 2.08 0 0 3.79-3.8 3.79-3.8a.63.63 0 0 1 .89.89C3.82-1.36-.55 3-.55 3c0 0-.62 0-.62 0z" id="d"/>
+    <path stroke="context-fill" stroke-linecap="round" d="M9.991 1.6a8.4 8.4 0 1 1 0 16.8 8.4 8.4 0 0 1 0-16.8z" fill="none" stroke-width="1.05" id="c"/>
+    <path fill="context-fill" d="M0-4.752a4.753 4.753 0 1 0 .001 9.505A4.753 4.753 0 0 0 0-4.752z" id="b"/>
+    <path fill="none" stroke="context-fill" stroke-linecap="round" d="M0-8A8 8 0 1 1 0 8 8 8 0 0 1 0-8z" id="a"/>
+  </defs>
+  <svg viewBox="0 0 20 20" width="20" height="20">
+    <use transform="matrix(1.05 0 0 1.05 9.991 10)" href="#a"/>
+    <use transform="matrix(1.35 0 0 1.35 10 10)" href="#b"/>
+  </svg>
+  <svg viewBox="0 0 20 20" width="20" height="20" x="20">
+    <use transform="matrix(1.05 0 0 1.05 9.991 10)" href="#a"/>
+    <use transform="matrix(1.35 0 0 1.35 10 10)" href="#b"/>
+  </svg>
+  <svg viewBox="0 0 20 20" width="20" height="20" x="40">
+    <use transform="matrix(1.05 0 0 1.05 9.991 10)" href="#a"/>
+    <use transform="matrix(1.35 0 0 1.35 10 10)" href="#b"/>
+  </svg>
+  <svg viewBox="0 0 20 20" width="20" height="20" x="60">
+    <use transform="matrix(1.05 0 0 1.05 9.991 10)" href="#a"/>
+    <use transform="matrix(1.35 0 0 1.35 10 10)" href="#b"/>
+  </svg>
+  <svg viewBox="0 0 20 20" width="20" height="20" x="80">
+    <use transform="matrix(1.05 0 0 1.05 9.991 10)" href="#a"/>
+    <use transform="matrix(1.35 0 0 1.35 10 10)" href="#b"/>
+  </svg>
+  <svg viewBox="0 0 20 20" width="20" height="20" x="100">
+    <use transform="matrix(1.05 0 0 1.05 9.991 10)" href="#a"/>
+    <use transform="matrix(1.35 0 0 1.35 10 10)" href="#b"/>
+  </svg>
+  <svg viewBox="0 0 20 20" width="20" height="20" x="120">
+    <use transform="matrix(1.05 0 0 1.05 9.991 10)" href="#a"/>
+    <use transform="matrix(1.35 0 0 1.35 10 10)" href="#b"/>
+  </svg>
+  <svg viewBox="0 0 20 20" width="20" height="20" x="140">
+    <use transform="matrix(1.05 0 0 1.05 9.991 10)" href="#a"/>
+    <use transform="matrix(1.35 0 0 1.35 10 10)" href="#b"/>
+  </svg>
+  <svg viewBox="0 0 20 20" width="20" height="20" x="160">
+    <use transform="matrix(1.05 0 0 1.05 9.991 10)" href="#a"/>
+    <use transform="translate(10 10) scale(1.20948)" href="#b"/>
+  </svg>
+  <svg viewBox="0 0 20 20" width="20" height="20" x="180">
+    <use transform="matrix(1.05 0 0 1.05 9.991 10)" href="#a"/>
+    <use transform="translate(10 10) scale(.8747)" href="#b"/>
+  </svg>
+  <svg viewBox="0 0 20 20" width="20" height="20" x="200">
+    <use transform="matrix(1.05 0 0 1.05 9.991 10)" href="#a"/>
+    <use transform="translate(10 10) scale(.4753)" href="#b"/>
+  </svg>
+  <svg viewBox="0 0 20 20" width="20" height="20" x="220">
+    <use transform="matrix(1.05 0 0 1.05 9.991 10)" href="#a"/>
+    <use transform="translate(10 10) scale(.14052)" href="#b"/>
+  </svg>
+  <svg viewBox="0 0 20 20" width="20" height="20" x="240">
+    <use fill="none" stroke-width="1.05" href="#c"/>
+    <use transform="matrix(0 0 0 0 10 10)" href="#b"/>
+  </svg>
+  <svg viewBox="0 0 20 20" width="20" height="20" x="260">
+    <use fill="none" stroke-width="1.05" href="#c"/>
+    <use transform="matrix(0 0 0 0 10 10)" href="#b"/>
+  </svg>
+  <svg viewBox="0 0 20 20" width="20" height="20" x="280">
+    <defs>
+      <mask id="e" mask-type="alpha">
+        <use fill="#15141A" transform="translate(10 10)" href="#d"/>
+      </mask>
+    </defs>
+    <use fill="none" stroke-width="1.05" href="#c"/>
+    <use transform="matrix(0 0 0 0 10 10)" href="#b"/>
+    <g style="display:block" mask="url(#e)">
+      <path stroke="context-fill" stroke-width="1.8" d="M5.838 8.706c0 0 1.927 1.928 2.916 2.918" fill="none"/>
+    </g>
+  </svg>
+  <svg viewBox="0 0 20 20" width="20" height="20" x="300">
+    <defs>
+      <mask id="f" mask-type="alpha">
+        <use fill="#15141A" transform="translate(10 10)" href="#d"/>
+      </mask>
+    </defs>
+    <use fill="none" stroke-width="1.05" href="#c"/>
+    <use transform="matrix(0 0 0 0 10 10)" href="#b"/>
+    <g style="display:block" mask="url(#f)">
+      <path stroke="context-fill" stroke-width="1.8" d="M5.838 8.706c0 0 3.487 3.488 3.487 3.488 0 0 .802-.945 1.72-2.028" fill="none"/>
+    </g>
+  </svg>
+  <svg viewBox="0 0 20 20" width="20" height="20" x="320">
+    <defs>
+      <mask id="g" mask-type="alpha">
+        <use fill="#15141A" transform="translate(10 10)" href="#d"/>
+      </mask>
+    </defs>
+    <use fill="none" stroke-width="1.05" href="#c"/>
+    <use transform="matrix(0 0 0 0 10 10)" href="#b"/>
+    <g style="display:block" mask="url(#g)">
+      <path stroke="context-fill" stroke-width="1.8" d="M5.838 8.706c0 0 3.487 3.488 3.487 3.488 0 0 2.335-2.755 3.6-4.244" fill="none"/>
+    </g>
+  </svg>
+  <svg viewBox="0 0 20 20" width="20" height="20" x="340">
+    <defs>
+      <mask id="h" mask-type="alpha">
+        <use fill="#15141A" transform="translate(10 10)" href="#d"/>
+      </mask>
+    </defs>
+    <use fill="none" stroke-width="1.05" href="#c"/>
+    <use transform="matrix(0 0 0 0 10 10)" href="#b"/>
+    <g style="display:block" mask="url(#h)">
+      <use stroke="context-fill" stroke-width="1.8" fill="none" href="#i"/>
+    </g>
+  </svg>
+  <svg viewBox="0 0 20 20" width="20" height="20" x="360">
+    <defs>
+      <mask id="j" mask-type="alpha">
+        <use fill="#15141A" transform="translate(10 10)" href="#d"/>
+      </mask>
+    </defs>
+    <use fill="none" stroke-width="1.05" href="#c"/>
+    <use transform="matrix(0 0 0 0 10 10)" href="#b"/>
+    <g style="display:block" mask="url(#j)">
+      <use stroke="context-fill" stroke-width="1.8" fill="none" href="#i"/>
+    </g>
+  </svg>
+  <svg viewBox="0 0 20 20" width="20" height="20" x="380">
+    <defs>
+      <mask id="k" mask-type="alpha">
+        <use fill="#15141A" transform="translate(10 10)" href="#d"/>
+      </mask>
+    </defs>
+    <use fill="none" stroke-width="1.05" href="#c"/>
+    <use transform="matrix(0 0 0 0 10 10)" href="#b"/>
+    <g style="display:block" mask="url(#k)">
+      <use stroke="context-fill" stroke-width="1.8" fill="none" href="#i"/>
+    </g>
+  </svg>
+  <svg viewBox="0 0 20 20" width="20" height="20" x="400">
+    <defs>
+      <mask id="l" mask-type="alpha">
+        <use fill="#15141A" transform="translate(10 10)" href="#d"/>
+      </mask>
+    </defs>
+    <use fill="none" stroke-width="1.05" href="#c"/>
+    <use transform="matrix(0 0 0 0 10 10)" href="#b"/>
+    <g style="display:block" mask="url(#l)">
+      <use stroke="context-fill" stroke-width="1.8" fill="none" href="#i"/>
+    </g>
+  </svg>
+  <svg viewBox="0 0 20 20" width="20" height="20" x="420">
+    <defs>
+      <mask id="m" mask-type="alpha">
+        <use fill="#15141A" transform="translate(10 10)" href="#d"/>
+      </mask>
+    </defs>
+    <use fill="none" stroke-width="1.05" href="#c"/>
+    <use transform="matrix(0 0 0 0 10 10)" href="#b"/>
+    <g style="display:block" mask="url(#m)">
+      <use stroke="context-fill" stroke-width="1.8" fill="none" href="#i"/>
+    </g>
+  </svg>
+  <svg viewBox="0 0 20 20" width="20" height="20" x="440">
+    <defs>
+      <mask id="n" mask-type="alpha">
+        <use fill="#15141A" transform="translate(10 10)" href="#d"/>
+      </mask>
+    </defs>
+    <use fill="none" stroke-width="1.05" href="#c"/>
+    <use transform="matrix(0 0 0 0 10 10)" href="#b"/>
+    <g style="display:block" mask="url(#n)">
+      <use stroke="context-fill" stroke-width="1.8" fill="none" href="#i"/>
+    </g>
+  </svg>
+  <svg viewBox="0 0 20 20" width="20" height="20" x="460">
+    <defs>
+      <mask id="o" mask-type="alpha">
+        <use fill="#15141A" transform="translate(10 10)" href="#d"/>
+      </mask>
+    </defs>
+    <use fill="none" stroke-width="1.05" href="#c"/>
+    <use transform="matrix(0 0 0 0 10 10)" href="#b"/>
+    <g style="display:block" mask="url(#o)">
+      <use stroke="context-fill" stroke-width="1.8" fill="none" href="#i"/>
+    </g>
+  </svg>
+  <svg viewBox="0 0 20 20" width="20" height="20" x="480">
+    <defs>
+      <mask id="p" mask-type="alpha">
+        <use fill="#15141A" transform="translate(10 10)" href="#d"/>
+      </mask>
+    </defs>
+    <use fill="none" stroke-width="1.05" href="#c"/>
+    <use transform="matrix(0 0 0 0 10 10)" href="#b"/>
+    <g style="display:block" mask="url(#p)">
+      <use stroke="context-fill" stroke-width="1.8" fill="none" href="#i"/>
+    </g>
+  </svg>
+  <svg viewBox="0 0 20 20" width="20" height="20" x="500">
+    <defs>
+      <mask id="q" mask-type="alpha">
+        <use fill="#15141A" transform="translate(10 10)" href="#d"/>
+      </mask>
+    </defs>
+    <use fill="none" stroke-width="1.05" href="#c"/>
+    <use transform="matrix(0 0 0 0 10 10)" href="#b"/>
+    <g style="display:block" mask="url(#q)">
+      <use stroke="context-fill" stroke-width="1.8" fill="none" href="#i"/>
+    </g>
+  </svg>
+  <svg viewBox="0 0 20 20" width="20" height="20" x="520">
+    <defs>
+      <mask id="r" mask-type="alpha">
+        <use fill="#15141A" transform="translate(10 10)" href="#d"/>
+      </mask>
+    </defs>
+    <use fill="none" stroke-width="1.05" href="#c"/>
+    <use transform="matrix(0 0 0 0 10 10)" href="#b"/>
+    <g style="display:block" mask="url(#r)">
+      <use stroke="context-fill" stroke-width="1.8" fill="none" href="#i"/>
+    </g>
+  </svg>
+  <svg viewBox="0 0 20 20" width="20" height="20" x="540">
+    <defs>
+      <mask id="s" mask-type="alpha">
+        <use fill="#15141A" transform="translate(10 10)" href="#d"/>
+      </mask>
+    </defs>
+    <use fill="none" stroke-width="1.05" href="#c"/>
+    <use transform="matrix(0 0 0 0 10 10)" href="#b"/>
+    <g style="display:block" mask="url(#s)">
+      <use stroke="context-fill" stroke-width="1.8" fill="none" href="#i"/>
+    </g>
+  </svg>
+  <svg viewBox="0 0 20 20" width="20" height="20" x="560">
+    <defs>
+      <mask id="t" mask-type="alpha">
+        <use fill="#15141A" transform="translate(10 10)" href="#d"/>
+      </mask>
+    </defs>
+    <use fill="none" stroke-width="1.05" href="#c"/>
+    <use transform="matrix(0 0 0 0 10 10)" href="#b"/>
+    <g style="display:block" mask="url(#t)">
+      <use stroke="context-fill" stroke-width="1.8" fill="none" href="#i"/>
+    </g>
+  </svg>
+  <svg viewBox="0 0 20 20" width="20" height="20" x="580">
+    <defs>
+      <mask id="u" mask-type="alpha">
+        <use fill="#15141A" transform="translate(10 10)" href="#d"/>
+      </mask>
+    </defs>
+    <use fill="none" stroke-width="1.05" href="#c"/>
+    <use transform="matrix(0 0 0 0 10 10)" href="#b"/>
+    <g style="display:block" mask="url(#u)">
+      <use stroke="context-fill" stroke-width="1.8" fill="none" href="#i"/>
+    </g>
+  </svg>
+  <svg viewBox="0 0 20 20" width="20" height="20" x="600">
+    <defs>
+      <mask id="v" mask-type="alpha">
+        <use fill="#15141A" transform="translate(10 10)" href="#d"/>
+      </mask>
+    </defs>
+    <use fill="none" stroke-width="1.05" href="#c"/>
+    <use transform="matrix(0 0 0 0 10 10)" href="#b"/>
+    <g style="display:block" mask="url(#v)">
+      <use stroke="context-fill" stroke-width="1.8" fill="none" href="#i"/>
+    </g>
+  </svg>
+  <svg viewBox="0 0 20 20" width="20" height="20" x="620">
+    <defs>
+      <mask id="w" mask-type="alpha">
+        <use fill="#15141A" transform="translate(10 10)" href="#d"/>
+      </mask>
+    </defs>
+    <use fill="none" stroke-width="1.05" href="#c"/>
+    <use transform="matrix(0 0 0 0 10 10)" href="#b"/>
+    <g style="display:block" mask="url(#w)">
+      <use stroke="context-fill" stroke-width="1.8" fill="none" href="#i"/>
+    </g>
+  </svg>
+  <svg viewBox="0 0 20 20" width="20" height="20" x="640">
+    <defs>
+      <mask id="x" mask-type="alpha">
+        <use fill="#15141A" transform="translate(10 10)" href="#d"/>
+      </mask>
+    </defs>
+    <use fill="none" stroke-width="1.05" href="#c"/>
+    <use transform="matrix(0 0 0 0 10 10)" href="#b"/>
+    <g style="display:block" mask="url(#x)">
+      <use stroke="context-fill" stroke-width="1.8" fill="none" href="#i"/>
+    </g>
+  </svg>
+  <svg viewBox="0 0 20 20" width="20" height="20" x="660">
+    <defs>
+      <mask id="y" mask-type="alpha">
+        <use fill="#15141A" transform="translate(10 10)" href="#d"/>
+      </mask>
+    </defs>
+    <use fill="none" stroke-width="1.05" href="#c"/>
+    <use transform="matrix(0 0 0 0 10 10)" href="#b"/>
+    <g style="display:block" mask="url(#y)">
+      <use stroke="context-fill" stroke-width="1.8" fill="none" href="#i"/>
+    </g>
+  </svg>
+  <svg viewBox="0 0 20 20" width="20" height="20" x="680">
+    <defs>
+      <mask id="z" mask-type="alpha">
+        <use fill="#15141A" transform="translate(10 10)" href="#d"/>
+      </mask>
+    </defs>
+    <use fill="none" stroke-width="1.05" href="#c"/>
+    <use transform="matrix(0 0 0 0 10 10)" href="#b"/>
+    <g style="display:block" mask="url(#z)">
+      <use stroke="context-fill" stroke-width="1.8" fill="none" href="#i"/>
+    </g>
+  </svg>
+  <svg viewBox="0 0 20 20" width="20" height="20" x="700">
+    <defs>
+      <mask id="A" mask-type="alpha">
+        <use fill="#15141A" transform="translate(10 10)" href="#d"/>
+      </mask>
+    </defs>
+    <use fill="none" stroke-width="1.05" href="#c"/>
+    <use transform="matrix(0 0 0 0 10 10)" href="#b"/>
+    <g style="display:block" mask="url(#A)">
+      <use stroke="context-fill" stroke-width="1.8" fill="none" href="#i"/>
+    </g>
+  </svg>
+  <svg viewBox="0 0 20 20" width="20" height="20" x="720">
+    <defs>
+      <mask id="B" mask-type="alpha">
+        <use fill="#15141A" transform="translate(10 10)" href="#d"/>
+      </mask>
+    </defs>
+    <use stroke-width="1.05" href="#c"/>
+    <use transform="matrix(0 0 0 0 10 10)" href="#b"/>
+    <g style="display:block" mask="url(#B)">
+      <use stroke="context-fill" stroke-width="1.8" fill="none" href="#i"/>
+    </g>
+  </svg>
+  <svg viewBox="0 0 20 20" width="20" height="20" x="740">
+    <defs>
+      <mask id="C" mask-type="alpha">
+        <use fill="#15141A" transform="translate(10 10)" href="#d"/>
+      </mask>
+    </defs>
+    <use fill="none" stroke-width="1.05" href="#c"/>
+    <use transform="matrix(0 0 0 0 10 10)" href="#b"/>
+    <g style="display:block" mask="url(#C)">
+      <use stroke="context-fill" stroke-width="1.8" fill="none" href="#i"/>
+    </g>
+  </svg>
+  <svg viewBox="0 0 20 20" width="20" height="20" x="760">
+    <defs>
+      <mask id="D" mask-type="alpha">
+        <use fill="#15141A" transform="translate(10 10)" href="#d"/>
+      </mask>
+    </defs>
+    <use fill="none" stroke-width="1.05" href="#c"/>
+    <use transform="matrix(0 0 0 0 10 10)" href="#b"/>
+    <g style="display:block" mask="url(#D)">
+      <use stroke="context-fill" stroke-width="1.8" fill="none" href="#i"/>
+    </g>
+  </svg>
+  <svg viewBox="0 0 20 20" width="20" height="20" x="780">
+    <defs>
+      <mask id="E" mask-type="alpha">
+        <use fill="#15141A" transform="translate(10 10)" href="#d"/>
+      </mask>
+    </defs>
+    <use fill="none" stroke-width="1.05" href="#c"/>
+    <use transform="matrix(0 0 0 0 10 10)" href="#b"/>
+    <g style="display:block" mask="url(#E)">
+      <use stroke="context-fill" stroke-width="1.8" fill="none" href="#i"/>
+    </g>
+  </svg>
+  <svg viewBox="0 0 20 20" width="20" height="20" x="800">
+    <defs>
+      <mask id="F" mask-type="alpha">
+        <use fill="#15141A" transform="translate(10 10)" href="#d"/>
+      </mask>
+    </defs>
+    <use fill="none" stroke-width="1.05" href="#c"/>
+    <use transform="matrix(0 0 0 0 10 10)" href="#b"/>
+    <g style="display:block" mask="url(#F)">
+      <use stroke="context-fill" stroke-width="1.8" fill="none" href="#i"/>
+    </g>
+  </svg>
+  <svg viewBox="0 0 20 20" width="20" height="20" x="820">
+    <defs>
+      <mask id="G" mask-type="alpha">
+        <use fill="#15141A" transform="translate(10 10)" href="#d"/>
+      </mask>
+    </defs>
+    <use fill="none" stroke-width="1.05" href="#c"/>
+    <use transform="matrix(0 0 0 0 10 10)" href="#b"/>
+    <g style="display:block" mask="url(#G)">
+      <use stroke="context-fill" stroke-width="1.8" fill="none" href="#i"/>
+    </g>
+  </svg>
+  <svg viewBox="0 0 20 20" width="20" height="20" x="840">
+    <defs>
+      <mask id="H" mask-type="alpha">
+        <use fill="#15141A" transform="translate(10 10)" href="#d"/>
+      </mask>
+    </defs>
+    <use fill="none" stroke-width="1.05" href="#c"/>
+    <use transform="matrix(0 0 0 0 10 10)" href="#b"/>
+    <g style="display:block" mask="url(#H)">
+      <use stroke="context-fill" stroke-width="1.8" fill="none" href="#i"/>
+    </g>
+  </svg>
+  <svg viewBox="0 0 20 20" width="20" height="20" x="860">
+    <defs>
+      <mask id="I" mask-type="alpha">
+        <use fill="#15141A" transform="translate(10 10)" href="#d"/>
+      </mask>
+    </defs>
+    <use fill="none" stroke-width="1.05" href="#c"/>
+    <use transform="matrix(0 0 0 0 10 10)" href="#b"/>
+    <g style="display:block" mask="url(#I)">
+      <use stroke="context-fill" stroke-width="1.8" fill="none" href="#i"/>
+    </g>
+  </svg>
+  <svg viewBox="0 0 20 20" width="20" height="20" x="880">
+    <defs>
+      <mask id="J" mask-type="alpha">
+        <use fill="#15141A" transform="translate(10 10)" href="#d"/>
+      </mask>
+    </defs>
+    <use fill="none" stroke-width="1.05" href="#c"/>
+    <use transform="matrix(0 0 0 0 10 10)" href="#b"/>
+    <g style="display:block" mask="url(#J)">
+      <use stroke="context-fill" stroke-width="1.8" fill="none" href="#i"/>
+    </g>
+  </svg>
+  <svg viewBox="0 0 20 20" width="20" height="20" x="900">
+    <defs>
+      <mask id="K" mask-type="alpha">
+        <use fill="#15141A" transform="translate(10 10)" href="#d"/>
+      </mask>
+    </defs>
+    <use fill="none" stroke-width="1.05" href="#c"/>
+    <use transform="matrix(0 0 0 0 10 10)" href="#b"/>
+    <g style="display:block" mask="url(#K)">
+      <use stroke="context-fill" stroke-width="1.8" fill="none" href="#i"/>
+    </g>
+  </svg>
+  <svg viewBox="0 0 20 20" width="20" height="20" x="920">
+    <defs>
+      <mask id="L" mask-type="alpha">
+        <use fill="#15141A" transform="translate(10 10)" href="#d"/>
+      </mask>
+    </defs>
+    <use fill="none" stroke-width="1.05" href="#c"/>
+    <use transform="matrix(0 0 0 0 10 10)" href="#b"/>
+    <g style="display:block" mask="url(#L)">
+      <use stroke="context-fill" stroke-width="1.8" fill="none" href="#i"/>
+    </g>
+  </svg>
+  <svg viewBox="0 0 20 20" width="20" height="20" x="940">
+    <defs>
+      <mask id="M" mask-type="alpha">
+        <use fill="#15141A" transform="translate(10 10)" href="#d"/>
+      </mask>
+    </defs>
+    <use fill="none" stroke-width="1.05" href="#c"/>
+    <use transform="matrix(0 0 0 0 10 10)" href="#b"/>
+    <g style="display:block" mask="url(#M)">
+      <use stroke="context-fill" stroke-width="1.8" fill="none" href="#i"/>
+    </g>
+  </svg>
+  <svg viewBox="0 0 20 20" width="20" height="20" x="960">
+    <defs>
+      <mask id="N" mask-type="alpha">
+        <use fill="#15141A" transform="translate(10 10)" href="#d"/>
+      </mask>
+    </defs>
+    <use fill="none" stroke-width="1.05" href="#c"/>
+    <use transform="matrix(0 0 0 0 10 10)" href="#b"/>
+    <g style="display:block" mask="url(#N)">
+      <use stroke="context-fill" stroke-width="1.8" fill="none" href="#i"/>
+    </g>
+  </svg>
+  <svg viewBox="0 0 20 20" width="20" height="20" x="980">
+    <defs>
+      <mask id="O" mask-type="alpha">
+        <use fill="#15141A" transform="translate(10 10)" href="#d"/>
+      </mask>
+    </defs>
+    <use fill="none" stroke-width="1.05" href="#c"/>
+    <use transform="matrix(0 0 0 0 10 10)" href="#b"/>
+    <g style="display:block" mask="url(#O)">
+      <use stroke="context-fill" stroke-width="1.8" fill="none" href="#i"/>
+    </g>
+  </svg>
+  <svg viewBox="0 0 20 20" width="20" height="20" x="1000">
+    <defs>
+      <mask id="P" mask-type="alpha">
+        <use fill="#15141A" transform="translate(10 10)" href="#d"/>
+      </mask>
+    </defs>
+    <use fill="none" stroke-width="1.05" href="#c"/>
+    <use transform="matrix(0 0 0 0 10 10)" href="#b"/>
+    <g style="display:block" mask="url(#P)">
+      <use stroke="context-fill" stroke-width="1.8" fill="none" href="#i"/>
+    </g>
+  </svg>
+  <svg viewBox="0 0 20 20" width="20" height="20" x="1020">
+    <defs>
+      <mask id="Q" mask-type="alpha">
+        <use fill="#15141A" transform="translate(10 10)" href="#d"/>
+      </mask>
+    </defs>
+    <use fill="none" stroke-width="1.05" href="#c"/>
+    <use transform="matrix(0 0 0 0 10 10)" href="#b"/>
+    <g style="display:block" mask="url(#Q)">
+      <use stroke="context-fill" stroke-width="1.8" fill="none" href="#i"/>
+    </g>
+  </svg>
+  <svg viewBox="0 0 20 20" width="20" height="20" x="1040">
+    <defs>
+      <mask id="R" mask-type="alpha">
+        <use fill="#15141A" transform="translate(10 10)" href="#d"/>
+      </mask>
+    </defs>
+    <use fill="none" stroke-width="1.05" href="#c"/>
+    <use transform="matrix(0 0 0 0 10 10)" href="#b"/>
+    <g style="display:block" mask="url(#R)">
+      <use stroke="context-fill" stroke-width="1.8" fill="none" href="#i"/>
+    </g>
+  </svg>
+  <svg viewBox="0 0 20 20" width="20" height="20" x="1060">
+    <defs>
+      <mask id="S" mask-type="alpha">
+        <use fill="#15141A" transform="translate(10 10)" href="#d"/>
+      </mask>
+    </defs>
+    <use fill="none" stroke-width="1.05" href="#c"/>
+    <use transform="matrix(0 0 0 0 10 10)" href="#b"/>
+    <g style="display:block" mask="url(#S)">
+      <use stroke="context-fill" stroke-width="1.8" fill="none" href="#i"/>
+    </g>
+  </svg>
+  <svg viewBox="0 0 20 20" width="20" height="20" x="1080">
+    <defs>
+      <mask id="T" mask-type="alpha">
+        <use fill="#15141A" transform="translate(10 10)" href="#d"/>
+      </mask>
+    </defs>
+    <use fill="none" stroke-width="1.05" href="#c"/>
+    <use transform="matrix(0 0 0 0 10 10)" href="#b"/>
+    <g style="display:block" mask="url(#T)">
+      <use stroke="context-fill" stroke-width="1.8" fill="none" href="#i"/>
+    </g>
+  </svg>
+  <svg viewBox="0 0 20 20" width="20" height="20" x="1100">
+    <defs>
+      <mask id="U" mask-type="alpha">
+        <use fill="#15141A" transform="translate(10 10)" href="#d"/>
+      </mask>
+    </defs>
+    <use fill="none" stroke-width="1.05" href="#c"/>
+    <use transform="matrix(0 0 0 0 10 10)" href="#b"/>
+    <g style="display:block" mask="url(#U)">
+      <use stroke="context-fill" stroke-width="1.8" fill="none" href="#i"/>
+    </g>
+  </svg>
+  <svg viewBox="0 0 20 20" width="20" height="20" x="1120">
+    <defs>
+      <mask id="V" mask-type="alpha">
+        <use fill="#15141A" transform="translate(10 10)" href="#d"/>
+      </mask>
+    </defs>
+    <use fill="none" stroke-width="1.05" href="#c"/>
+    <use transform="matrix(0 0 0 0 10 10)" href="#b"/>
+    <g style="display:block" mask="url(#V)">
+      <use stroke="context-fill" stroke-width="1.8" fill="none" href="#i"/>
+    </g>
+  </svg>
+  <svg viewBox="0 0 20 20" width="20" height="20" x="1140">
+    <defs>
+      <mask id="W" mask-type="alpha">
+        <use fill="#15141A" transform="translate(10 10)" href="#d"/>
+      </mask>
+    </defs>
+    <use fill="none" stroke-width="1.05" href="#c"/>
+    <use transform="matrix(0 0 0 0 10 10)" href="#b"/>
+    <g style="display:block" mask="url(#W)">
+      <use stroke="context-fill" stroke-width="1.8" fill="none" href="#i"/>
+    </g>
+  </svg>
+  <svg viewBox="0 0 20 20" width="20" height="20" x="1160">
+    <defs>
+      <mask id="X" mask-type="alpha">
+        <use fill="#15141A" transform="translate(10 10)" href="#d"/>
+      </mask>
+    </defs>
+    <use fill="none" stroke-width="1.05" href="#c"/>
+    <use transform="matrix(0 0 0 0 10 10)" href="#b"/>
+    <g style="display:block" mask="url(#X)">
+      <use stroke="context-fill" stroke-width="1.8" fill="none" href="#i"/>
+    </g>
+  </svg>
+  <svg viewBox="0 0 20 20" width="20" height="20" x="1180">
+    <defs>
+      <mask id="Y" mask-type="alpha">
+        <use fill="#15141A" transform="translate(10 10)" href="#d"/>
+      </mask>
+    </defs>
+    <use fill="none" opacity=".74" stroke-width="1.05" href="#c"/>
+    <path fill="context-fill" d="M9.752 9.485a.046.046 0 0 0-.016-.03.048.048 0 0 0-.03-.011.047.047 0 0 0-.047.04c0 0 0 .627 0 .627 0 0-.245-.249-.245-.249a.047.047 0 0 0-.076.015.046.046 0 0 0 .01.05c0 0 .332.333.332.333 0 0 .053 0 .053 0 0 0 .332-.333.332-.333a.045.045 0 0 0 0-.065.047.047 0 0 0-.066 0c0 0-.247.25-.247.25 0 0 0-.627 0-.627z" opacity=".3"/>
+    <g mask="url(#Y)">
+      <path stroke="context-fill" stroke-width="1.67" d="M6.146 8.802c0 0 3.23 3.23 3.23 3.23 0 0 4.061-4.792 4.061-4.792" fill="none"/>
+    </g>
+  </svg>
+  <svg viewBox="0 0 20 20" width="20" height="20" x="1200">
+    <defs>
+      <mask id="Z" mask-type="alpha">
+        <use fill="#15141A" transform="translate(10 10)" href="#d"/>
+      </mask>
+    </defs>
+    <use fill="none" opacity=".26" stroke-width="1.05" href="#c"/>
+    <path fill="context-stroke" d="M10.465 18.111a.519.519 0 0 0 .52-.519c0 0 0-.376 0-.376a.164.164 0 0 0-.162-.143.165.165 0 0 0-.163.143c0 0 0 .415 0 .415 0 0-.156.156-.156.156 0 0-2.476 0-2.476 0 0 0-.156-.156-.156-.156 0 0 0-.415 0-.415a.163.163 0 0 0-.27-.101.16.16 0 0 0-.054.101c0 0 0 .376 0 .376a.519.519 0 0 0 .518.519c0 0 2.4 0 2.4 0z"/>
+    <path fill="context-stroke" d="M9.423 7.697a.16.16 0 0 0-.054-.1.166.166 0 0 0-.108-.042.165.165 0 0 0-.162.142c0 0 0 2.192 0 2.192 0 0-.859-.871-.859-.871a.164.164 0 0 0-.264.052.16.16 0 0 0 .036.176c0 0 1.16 1.162 1.16 1.162 0 0 .186 0 .186 0 0 0 1.16-1.162 1.16-1.162a.157.157 0 0 0 0-.228.164.164 0 0 0-.229 0c0 0-.866.871-.866.871 0 0 0-2.192 0-2.192z" opacity=".7"/>
+    <g style="display:block" mask="url(#Z)">
+      <path stroke="context-fill" stroke-width="1.33" d="M6.917 9.041c0 0 2.583 2.584 2.583 2.584 0 0 3.25-3.833 3.25-3.833" fill="none"/>
+    </g>
+  </svg>
+  <svg viewBox="0 0 20 20" width="20" height="20" x="1220">
+    <use fill="none" opacity=".26" stroke-width="1.05" href="#c"/>
+    <use transform="matrix(0 0 0 0 10 10)" href="#b"/>
+    <path fill="context-stroke" d="M11.655 17.75a1 1 0 0 0 1-1c0 0 0-.725 0-.725a.316.316 0 0 0-.313-.275.318.318 0 0 0-.312.275c0 0 0 .8 0 .8 0 0-.301.3-.301.3 0 0-4.775 0-4.775 0 0 0-.3-.3-.3-.3 0 0 0-.8 0-.8a.314.314 0 0 0-.52-.195.31.31 0 0 0-.104.195c0 0 0 .725 0 .725a1 1 0 0 0 1 1c0 0 4.625 0 4.625 0z"/>
+    <path fill="context-stroke" d="M9.646 6.025a.31.31 0 0 0-.104-.195.32.32 0 0 0-.209-.08.318.318 0 0 0-.312.275c0 0 0 4.225 0 4.225 0 0-1.655-1.68-1.655-1.68a.317.317 0 0 0-.509.1.308.308 0 0 0 .069.34c0 0 2.235 2.24 2.235 2.24 0 0 .36 0 .36 0 0 0 2.235-2.24 2.235-2.24a.302.302 0 0 0 0-.44.317.317 0 0 0-.44 0c0 0-1.67 1.68-1.67 1.68 0 0 0-4.225 0-4.225z"/>
+  </svg>
+  <svg viewBox="0 0 20 20" width="20" height="20" x="1240">
+    <use fill="none" opacity=".26" stroke-width="1.05" href="#c"/>
+    <path fill="context-stroke" d="M12.844 17.389a1.482 1.482 0 0 0 1.48-1.481c0 0 0-1.074 0-1.074a.468.468 0 0 0-.463-.407.471.471 0 0 0-.462.407c0 0 0 1.185 0 1.185 0 0-.445.444-.445.444 0 0-7.073 0-7.073 0 0 0-.444-.444-.444-.444 0 0 0-1.185 0-1.185a.466.466 0 0 0-.772-.289.459.459 0 0 0-.154.289c0 0 0 1.074 0 1.074a1.481 1.481 0 0 0 1.482 1.481c0 0 6.85 0 6.85 0z"/>
+    <path fill="context-stroke" d="M9.869 4.353a.458.458 0 0 0-.153-.29.475.475 0 0 0-.31-.118.47.47 0 0 0-.463.408c0 0 0 6.258 0 6.258 0 0-2.451-2.489-2.451-2.489a.469.469 0 0 0-.754.15.456.456 0 0 0 .102.502c0 0 3.31 3.318 3.31 3.318 0 0 .534 0 .534 0 0 0 3.31-3.318 3.31-3.318a.447.447 0 0 0 0-.652.469.469 0 0 0-.651 0c0 0-2.474 2.489-2.474 2.489 0 0 0-6.258 0-6.258z"/>
+  </svg>
+  <svg viewBox="0 0 20 20" width="20" height="20" x="1260">
+    <use fill="none" opacity=".26" stroke-width="1.05" href="#c"/>
+    <path fill="context-stroke" d="M13.759 17.111a1.852 1.852 0 0 0 1.851-1.851c0 0 0-1.343 0-1.343a.585.585 0 0 0-.579-.51.59.59 0 0 0-.578.51c0 0 0 1.481 0 1.481 0 0-.556.556-.556.556 0 0-8.841 0-8.841 0 0 0-.556-.556-.556-.556 0 0 0-1.481 0-1.481a.591.591 0 0 0-.579-.51.59.59 0 0 0-.578.51c0 0 0 1.343 0 1.343a1.851 1.851 0 0 0 1.852 1.851c0 0 8.564 0 8.564 0z"/>
+    <path fill="context-stroke" d="M10.04 3.065a.572.572 0 0 0-.191-.36.593.593 0 0 0-.387-.149.589.589 0 0 0-.579.51c0 0 0 7.823 0 7.823 0 0-3.065-3.111-3.065-3.111a.586.586 0 0 0-.814 0 .561.561 0 0 0-.173.407.574.574 0 0 0 .173.408c0 0 4.138 4.147 4.138 4.147 0 0 .667 0 .667 0 0 0 4.138-4.147 4.138-4.147a.559.559 0 0 0 0-.815.586.586 0 0 0-.814 0c0 0-3.093 3.11-3.093 3.11 0 0 0-7.823 0-7.823z"/>
+  </svg>
+  <svg viewBox="0 0 20 20" width="20" height="20" x="1280">
+    <use fill="none" opacity=".26" stroke-width="1.05" href="#c"/>
+    <use fill="context-stroke" href="#aa"/>
+    <use fill="context-stroke" href="#ab"/>
+  </svg>
+  <svg viewBox="0 0 20 20" width="20" height="20" x="1300">
+    <use fill="context-fill" opacity=".26" stroke-width="1.05" href="#c"/>
+    <use fill="context-stroke" href="#aa"/>
+    <use fill="context-stroke" href="#ab"/>
+  </svg>
+</svg>

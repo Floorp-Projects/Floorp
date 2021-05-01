@@ -388,83 +388,37 @@ const DownloadsIndicatorView = {
    *        Set to "start" for new downloads, "finish" for completed downloads.
    */
   _showNotification(aType) {
-    // No need to show visual notification if the panel is visible.
-    if (DownloadsPanel.isPanelShowing) {
-      return;
-    }
-
     let anchor = DownloadsButton._placeholder;
-    let widgetGroup = CustomizableUI.getWidget("downloads-button");
-    let widget = widgetGroup.forWindow(window);
-    if (widgetGroup.areaType == CustomizableUI.TYPE_MENU_PANEL) {
-      if (anchor && this._isAncestorPanelOpen(anchor)) {
-        // If the containing panel is open, don't do anything, because the
-        // notification would appear under the open panel. See
-        // https://bugzilla.mozilla.org/show_bug.cgi?id=984023
-        return;
-      }
-
-      // Otherwise, try to use the anchor of the panel:
-      anchor = widget.anchor;
-    }
     if (!anchor || !isElementVisible(anchor.parentNode)) {
       // Our container isn't visible, so can't show the animation:
       return;
     }
-
-    // The notification element is positioned to show in the same location as
-    // the downloads button. It's not in the downloads button itself in order to
-    // be able to anchor the notification elsewhere if required, and to ensure
-    // the notification isn't clipped by overflow properties of the anchor's
-    // container.
-    // Note: no notifier animation for download finished in Photon
-    let notifier = this.notifier;
-
-    if (aType == "start") {
-      // Show the notifier before measuring for size/placement. Being hidden by default
-      // avoids the interference with scrolling/APZ when the notifier element is
-      // tall enough to overlap the tabbrowser element
-      notifier.removeAttribute("hidden");
-
-      // the anchor height may vary if font-size is changed or
-      // compact/tablet mode is selected so recalculate this each time
-      let anchorRect = anchor.getBoundingClientRect();
-      let notifierRect = notifier.getBoundingClientRect();
-      let topDiff = anchorRect.top - notifierRect.top;
-      let leftDiff = anchorRect.left - notifierRect.left;
-      let heightDiff = anchorRect.height - notifierRect.height;
-      let widthDiff = anchorRect.width - notifierRect.width;
-      let translateX = leftDiff + 0.5 * widthDiff + "px";
-      let translateY = topDiff + 0.5 * heightDiff + "px";
-      notifier.style.transform =
-        "translate(" + translateX + ", " + translateY + ")";
-      notifier.setAttribute("notification", aType);
-    }
     anchor.setAttribute("notification", aType);
-
-    let animationDuration;
-    // This value is determined by the overall duration of animation in CSS.
-    animationDuration = aType == "start" ? 760 : 850;
+    anchor.setAttribute("animate", "");
 
     this._currentNotificationType = aType;
 
-    setTimeout(() => {
+    const onNotificationAnimEnd = event => {
+      if (event.animationName !== "downloadsButtonNotification") {
+        return;
+      }
+      anchor.removeEventListener("animationend", onNotificationAnimEnd);
+
       requestAnimationFrame(() => {
-        notifier.hidden = true;
-        notifier.removeAttribute("notification");
-        notifier.style.transform = "";
         anchor.removeAttribute("notification");
+        anchor.removeAttribute("animate");
 
         requestAnimationFrame(() => {
           let nextType = this._nextNotificationType;
           this._currentNotificationType = null;
           this._nextNotificationType = null;
-          if (nextType) {
+          if (nextType && isElementVisible(anchor.parentNode)) {
             this._showNotification(nextType);
           }
         });
       });
-    }, animationDuration);
+    };
+    anchor.addEventListener("animationend", onNotificationAnimEnd);
   },
 
   // Callback functions from DownloadsIndicatorData
@@ -500,24 +454,37 @@ const DownloadsIndicatorView = {
     if (!this._operational) {
       return;
     }
-
+    aValue = Math.min(100, aValue);
     if (this._percentComplete !== aValue) {
+      // Initial progress may fire before the start event gets to us.
+      // To avoid flashing, trip the start event first.
+      if (this._percentComplete < 0 && aValue >= 0) {
+        this.showEventNotification("start");
+      }
       this._percentComplete = aValue;
       this._refreshAttention();
-
-      if (this._percentComplete >= 0) {
-        this.indicator.setAttribute("progress", "true");
-        // For arrow type only:
-        // We set animationDelay to a minus value (0s ~ -100s) to show the
-        // corresponding frame needed for progress.
-        this._progressIcon.style.animationDelay = -this._percentComplete + "s";
-      } else {
-        this.indicator.removeAttribute("progress");
-        this._progressIcon.style.animationDelay = "1s";
+      if (this._progressRaf) {
+        cancelAnimationFrame(this._progressRaf);
+        delete this._progressRaf;
       }
+      this._progressRaf = requestAnimationFrame(() => {
+        // indeterminate downloads (unknown content-length) will show up as aValue = 0
+        if (this._percentComplete >= 0) {
+          this.indicator.setAttribute("progress", "true");
+          // For arrow type only: Set the % complete on the pie-chart.
+          // We use a minimum of 5% to ensure something is always visible
+          this.indicator.style.setProperty(
+            "--download-progress-pcent",
+            `${Math.max(5, this._percentComplete)}%`
+          );
+        } else {
+          this.indicator.removeAttribute("progress");
+          this.indicator.style.setProperty("--download-progress-pcent", "0%");
+        }
+      });
     }
   },
-  _percentComplete: null,
+  _percentComplete: -1,
 
   /**
    * Set when the indicator should draw user attention to itself.
@@ -646,15 +613,6 @@ const DownloadsIndicatorView = {
       this.__progressIcon ||
       (this.__progressIcon = document.getElementById(
         "downloads-indicator-progress-inner"
-      ))
-    );
-  },
-
-  get notifier() {
-    return (
-      this._notifier ||
-      (this._notifier = document.getElementById(
-        "downloads-notification-anchor"
       ))
     );
   },

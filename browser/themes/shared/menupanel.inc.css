@@ -167,7 +167,7 @@ toolbarpaletteitem[place="palette"] > #bookmarks-menu-button,
 }
 
 #appMenu-library-downloads-button {
-  list-style-image: url("chrome://browser/skin/downloads/download-icons.svg#arrow-with-bar");
+  list-style-image: url("chrome://browser/skin/downloads/downloads.svg");
 }
 } /** END not Proton **/
 
