@@ -710,10 +710,6 @@ var ProcessHangMonitor = {
     if (report.hangType == report.SLOW_SCRIPT) {
       // On non-e10s, SLOW_SCRIPT_NOTICE_COUNT is probed at nsGlobalWindow.cpp
       Services.telemetry.getHistogramById("SLOW_SCRIPT_NOTICE_COUNT").add();
-    } else if (report.hangType == report.PLUGIN_HANG) {
-      // On non-e10s we have sufficient plugin telemetry probes,
-      // so PLUGIN_HANG_NOTICE_COUNT is only probed on e10s.
-      Services.telemetry.getHistogramById("PLUGIN_HANG_NOTICE_COUNT").add();
     }
 
     this._activeReports.set(report, {
