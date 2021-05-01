@@ -24,6 +24,15 @@ class MsaaDocAccessible : public DocAccessible {
   MsaaDocAccessible(dom::Document* aDocument, PresShell* aPresShell)
       : DocAccessible(aDocument, aPresShell) {}
 
+  DocAccessible* DocAcc();
+
+  // IUnknown
+  // XXX This override of QueryInterface is a necessary hack until we get rid
+  // of the inheritance of DocAccessible.
+  STDMETHODIMP QueryInterface(REFIID iid, void** ppv) override {
+    return MsaaAccessible::QueryInterface(iid, ppv);
+  }
+
   // IAccessible
 
   // Override get_accParent for e10s
@@ -52,9 +61,6 @@ class MsaaDocAccessible : public DocAccessible {
    * This provides a mapping from 32 bit id to accessible objects.
    */
   nsTHashMap<nsUint32HashKey, AccessibleWrap*> mIDToAccessibleMap;
-
- private:
-  DocAccessible* DocAcc();
 };
 
 }  // namespace a11y
