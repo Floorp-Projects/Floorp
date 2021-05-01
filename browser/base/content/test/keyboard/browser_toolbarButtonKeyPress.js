@@ -336,8 +336,9 @@ add_task(async function testDownloadsButtonPress() {
 });
 
 // Test activation of the Save to Pocket button from the keyboard.
-// This is a customizable widget button which shows an iframe.
-// The Pocket iframe should appear and focus should move inside it.
+// This is a customizable widget button which shows an popup panel
+// with a browser element to embed the pocket UI into it.
+// The Pocket panel should appear and focus should move inside it.
 add_task(async function testPocketButtonPress() {
   await BrowserTestUtils.withNewTab("https://example.com", async function(
     aBrowser
@@ -355,8 +356,8 @@ add_task(async function testPocketButtonPress() {
     await focused;
     is(
       document.activeElement.tagName,
-      "iframe",
-      "Focus inside Pocket iframe after Bookmark button pressed"
+      "browser",
+      "Focus inside Pocket panel after Bookmark button pressed"
     );
     let hidden = BrowserTestUtils.waitForEvent(panel, "popuphidden");
     EventUtils.synthesizeKey("KEY_Escape");
