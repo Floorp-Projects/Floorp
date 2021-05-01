@@ -1481,13 +1481,6 @@ nsresult nsHttpChannel::CallOnStartRequest() {
     }
   }
 
-  auto isAllowedOrErr = EnsureOpaqueResponseIsAllowedAfterSniff();
-  if (isAllowedOrErr.isErr() || !isAllowedOrErr.inspect()) {
-    // XXXtt: Return an error code or make the response body null.
-    // We silence the error result now because we only want to get how many
-    // response will get allowed or blocked by ORB.
-  }
-
   // Note that the code below should be synced with the code in
   // HttpTransactionChild::CanSendODAToContentProcessDirectly(). We MUST make
   // sure HttpTransactionChild::CanSendODAToContentProcessDirectly() returns
@@ -1514,6 +1507,17 @@ nsresult nsHttpChannel::CallOnStartRequest() {
           unknownDecoderStarted = true;
         }
       }
+    }
+  }
+
+  // If unknownDecoder is not going to be launched, call
+  // EnsureOpaqueResponseIsAllowedAfterSniff immediately.
+  if (!unknownDecoderStarted) {
+    auto isAllowedOrErr = EnsureOpaqueResponseIsAllowedAfterSniff();
+    if (isAllowedOrErr.isErr() || !isAllowedOrErr.inspect()) {
+      // XXXtt: Return an error code or make the response body null.
+      // We silence the error result now because we only want to get how many
+      // response will get allowed or blocked by ORB.
     }
   }
 
@@ -7524,6 +7528,15 @@ nsHttpChannel::OnDataAvailable(nsIRequest* request, nsIInputStream* input,
     nsresult rv =
         mListener->OnDataAvailable(this, input, mLogicalOffset, count);
     if (NS_SUCCEEDED(rv)) {
+      auto isAllowedOrErr = EnsureOpaqueResponseIsAllowedAfterSniff();
+      if (isAllowedOrErr.isErr() || !isAllowedOrErr.inspect()) {
+        // XXXechuang:
+        // Return an error code or make the response body null here is too late
+        // some content data had already transferred to children processes.
+        // Currently, it is okay for collecting the correct telemetry data for
+        // further steps. But we should make sure all blocking should be done
+        // when implementing the real blocking.
+      }
       // by contract mListener must read all of "count" bytes, but
       // nsInputStreamPump is tolerant to seekable streams that violate that
       // and it will redeliver incompletely read data. So we need to do
