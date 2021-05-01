@@ -450,9 +450,6 @@
     <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
     <string name="exceptions_empty_message_learn_more_link">Meer info</string>
 
-    <!-- Description in Quick Settings that tells user tracking protection is off globally for all sites, and links to Settings to turn it on -->
-    <string name="preferences_tracking_protection_turned_off_globally">Globaal uitgeschakeld, ga naar Instellingen om in te schakelen.</string>
-
     <!-- Preference switch for Telemetry -->
     <string name="preferences_telemetry">Telemetry</string>
     <!-- Preference switch for usage and technical data collection -->
@@ -463,6 +460,8 @@
     <string name="preferences_marketing_data">Marketinggegevens</string>
     <!-- Preference description for marketing data collection, parameter is the app name (e.g. Firefox) -->
     <string name="preferences_marketing_data_description">Deelt gegevens over welke functies u in %1$s gebruikt met Leanplum, onze leverancier van mobiele marketing.</string>
+    <!-- Preference description for marketing data collection -->
+    <string name="preferences_marketing_data_description2">Deelt basale gebruiksgegevens met Adjust, onze leverancier van mobiele marketing</string>
     <!-- Title for studies preferences -->
     <string name="preference_experiments_2">Onderzoeken</string>
     <!-- Summary for studies preferences -->
@@ -803,8 +802,6 @@
     <string name="bookmark_delete_folder_snackbar">%1$s verwijderd</string>
     <!-- Screen title for adding a bookmarks folder -->
     <string name="bookmark_add_folder">Map toevoegen</string>
-    <!-- deprecated: Snackbar title shown after a bookmark has been created. -->
-    <string name="bookmark_created_snackbar">Bladwijzer gemaakt.</string>
     <!-- Snackbar title shown after a bookmark has been created. -->
     <string name="bookmark_saved_snackbar">Bladwijzer opgeslagen!</string>
     <!-- Snackbar edit button shown after a bookmark has been created. -->
@@ -1760,20 +1757,7 @@
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Verwijderen</string>
 
-    <!-- Deprecated: text for the firefox account onboarding card header
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_firefox_account_header">Haal het meeste uit %s.</string>
-
     <!-- Content description radio buttons with a link to more information -->
     <string name="radio_preference_info_content_description">Klik voor meer details</string>
-
-    <!-- Deprecated: No Open Tabs Message Header -->
-    <string name="no_collections_header1">Verzamel de dingen die belangrijk voor u zijn</string>
-    <!-- Deprecated: Label to describe what collections are to a new user without any collections -->
-    <string name="no_collections_description1">Groepeer vergelijkbare zoekopdrachten, websites en tabbladen voor snelle toegang later.</string>
-    <!-- Deprecated: text for the firefox account onboarding card header when we detect you're already signed in to -->
-    <string name="onboarding_firefox_account_auto_signin_header_2">U bent op een andere Firefox-browser op deze telefoon aangemeld als %s. Wilt u zich aanmelden met deze account?</string>
-    <!-- Deprecated: Describes the add to homescreen functionality -->
-    <string name="add_to_homescreen_description">U kunt deze website eenvoudig aan het startscherm van uw telefoon toevoegen voor directe toegang en sneller surfen met een app-achtige ervaring.</string>
 
     </resources>

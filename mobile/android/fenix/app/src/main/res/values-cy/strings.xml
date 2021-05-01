@@ -444,9 +444,6 @@
     <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
     <string name="exceptions_empty_message_learn_more_link">Dysgu rhagor</string>
 
-    <!-- Description in Quick Settings that tells user tracking protection is off globally for all sites, and links to Settings to turn it on -->
-    <string name="preferences_tracking_protection_turned_off_globally">Wedi’i ddiffodd yn eang, ewch i Gosodiadau i’w droi ymlaen.</string>
-
     <!-- Preference switch for Telemetry -->
     <string name="preferences_telemetry">Telemetreg</string>
     <!-- Preference switch for usage and technical data collection -->
@@ -457,6 +454,8 @@
     <string name="preferences_marketing_data">Data marchnata</string>
     <!-- Preference description for marketing data collection, parameter is the app name (e.g. Firefox) -->
     <string name="preferences_marketing_data_description">Yn rhannu data am ba nodweddion rydych chi’n eu defnyddio yn %1$s gyda Leanplum, ein gwerthwr marchnata symudol.</string>
+    <!-- Preference description for marketing data collection -->
+    <string name="preferences_marketing_data_description2">Yn rhannu data defnydd sylfaenol gydag Adjust, ein gwerthwr marchnata symudol</string>
     <!-- Title for studies preferences -->
     <string name="preference_experiments_2">Astudiaethau</string>
     <!-- Summary for studies preferences -->
@@ -795,8 +794,6 @@
     <string name="bookmark_delete_folder_snackbar">Wedi dileu %1$s</string>
     <!-- Screen title for adding a bookmarks folder -->
     <string name="bookmark_add_folder">Ychwanegu ffolder</string>
-    <!-- deprecated: Snackbar title shown after a bookmark has been created. -->
-    <string name="bookmark_created_snackbar">Nod tudalen wedi’i greu.</string>
     <!-- Snackbar title shown after a bookmark has been created. -->
     <string name="bookmark_saved_snackbar">Nod tudalen wedi’i gadw!</string>
     <!-- Snackbar edit button shown after a bookmark has been created. -->
@@ -1750,20 +1747,7 @@ Fodd bynnag, gall fod yn llai sefydlog. Llwythwch ein porwr Beta i gael profiad 
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Tynnu</string>
 
-    <!-- Deprecated: text for the firefox account onboarding card header
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_firefox_account_header">Cael y gorau o %s.</string>
-
     <!-- Content description radio buttons with a link to more information -->
     <string name="radio_preference_info_content_description">Cliciwch am ragor o fanylion</string>
-
-    <!-- Deprecated: No Open Tabs Message Header -->
-    <string name="no_collections_header1">Casglwch y pethau sy’n bwysig i chi</string>
-    <!-- Deprecated: Label to describe what collections are to a new user without any collections -->
-    <string name="no_collections_description1">Grwpiwch chwiliadau, gwefannau a thabiau tebyg ar gyfer mynediad cyflym yn y dyfodol.</string>
-    <!-- Deprecated: text for the firefox account onboarding card header when we detect you're already signed in to -->
-    <string name="onboarding_firefox_account_auto_signin_header_2">Rydych wedi eich mewngofnodi fel %s ar borwr Firefox arall ar y ffôn hwn. Hoffech chi fewngofnodi gyda’r cyfrif hwn?</string>
-    <!-- Deprecated: Describes the add to homescreen functionality -->
-    <string name="add_to_homescreen_description">Gallwch ychwanegu’r wefan hon yn hawdd i sgrin Cartref eich ffôn. Byddwch yn cael mynediad ar unwaith a phori’n gyflymach gyda phrofiad tebyg i ap.</string>
 
     </resources>

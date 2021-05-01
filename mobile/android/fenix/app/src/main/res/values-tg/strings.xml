@@ -441,9 +441,6 @@
     <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
     <string name="exceptions_empty_message_learn_more_link">Маълумоти бештар</string>
 
-    <!-- Description in Quick Settings that tells user tracking protection is off globally for all sites, and links to Settings to turn it on -->
-    <string name="preferences_tracking_protection_turned_off_globally">Комилан ғайрифаъол карда шуд, Барои фаъол кардани он ба Танзимот гузаред.</string>
-
     <!-- Preference switch for Telemetry -->
     <string name="preferences_telemetry">Телеметрия</string>
     <!-- Preference switch for usage and technical data collection -->
@@ -454,6 +451,8 @@
     <string name="preferences_marketing_data">Маълумоти маркетингӣ</string>
     <!-- Preference description for marketing data collection, parameter is the app name (e.g. Firefox) -->
     <string name="preferences_marketing_data_description">Маълумот дар бораи хусусиятҳое, ки шумо дар %1$s истифода мебаред бо Leanplum, яъне фурӯшандаи маркетинги мобилии мо, мубодила карда шавад</string>
+    <!-- Preference description for marketing data collection -->
+    <string name="preferences_marketing_data_description2">Маълумоти асосии истифодабариро бо «Adjust», фурӯшандаи маркетингии мобилии мо, мубодила мекунад</string>
     <!-- Title for studies preferences -->
     <string name="preference_experiments_2">Таҳқиқҳо</string>
     <!-- Summary for studies preferences -->
@@ -792,8 +791,6 @@
     <string name="bookmark_delete_folder_snackbar">%1$s нест карда шуд</string>
     <!-- Screen title for adding a bookmarks folder -->
     <string name="bookmark_add_folder">Илова кардани ҷузвадон</string>
-    <!-- deprecated: Snackbar title shown after a bookmark has been created. -->
-    <string name="bookmark_created_snackbar">Хатбарак эҷод карда шуд.</string>
     <!-- Snackbar title shown after a bookmark has been created. -->
     <string name="bookmark_saved_snackbar">Хатбарак нигоҳ дошта шуд!</string>
     <!-- Snackbar edit button shown after a bookmark has been created. -->
@@ -1753,19 +1750,7 @@
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Тоза кардан</string>
 
-    <!-- Deprecated: text for the firefox account onboarding card header
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_firefox_account_header">Аз %s баштар истифода баред.</string>
-
     <!-- Content description radio buttons with a link to more information -->
     <string name="radio_preference_info_content_description">Барои тафсилоти бештар зер кунед</string>
 
-    <!-- Deprecated: No Open Tabs Message Header -->
-    <string name="no_collections_header1">Чизҳоеро, ки ба шумо муҳиманд, ҷамъ кунед</string>
-    <!-- Deprecated: Label to describe what collections are to a new user without any collections -->
-    <string name="no_collections_description1">Ҷустуҷӯҳо, сомонаҳо ва варақаҳои монандро барои дастрасии фаврӣ дар оянда якҷоя кунед.</string>
-    <!-- Deprecated: text for the firefox account onboarding card header when we detect you're already signed in to -->
-    <string name="onboarding_firefox_account_auto_signin_header_2">Шумо ҳамчун %s тавассути браузери дигари Firefox дар ин телефон ворид шудаед. Шумо мехоҳед, ки бо ин ҳисоб ворид шавед?</string>
-    <!-- Deprecated: Describes the add to homescreen functionality -->
-    <string name="add_to_homescreen_description">Шумо метавонед ин сомонаро ба экрани асосии телефони худ ба осонӣ илова кунед, то ки ба он дастрасии фаврӣ дошта бошед ва бо таҷрибаи ба барнома монанд зудтар паймоиш кунед.</string>
-</resources>
+    </resources>
