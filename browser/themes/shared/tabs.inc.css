@@ -392,14 +392,6 @@
   padding: 2px;
 }
 
-#TabsToolbar:not([brighttext]) .tab-icon-overlay:not([crashed]):is([pinned], [sharing]) {
-  stroke: white;
-}
-
-#TabsToolbar[brighttext] .tab-icon-overlay:not([crashed]):is([pinned], [sharing]):not(:hover) {
-  stroke: black;
-}
-
 @media not (-moz-proton) {
 .tab-icon-overlay[pictureinpicture] {
   top: -5.5px;
@@ -427,17 +419,32 @@
   stroke: transparent;
 }
 
+.tab-icon-overlay:is([pinned], [sharing]):not([crashed]) {
+  stroke: white;
+  color: black;
+}
+
 .tab-icon-overlay:is([pinned], [sharing]):not([crashed])[soundplaying]:hover,
 .tab-icon-overlay:is([pinned], [sharing]):not([crashed])[muted]:hover,
 .tab-icon-overlay:is([pinned], [sharing]):not([crashed])[activemedia-blocked]:hover {
   background-color: white;
-  stroke: white;
-  color: black;
+}
+
+#TabsToolbar[brighttext] .tab-icon-overlay:is([pinned], [sharing]):not([crashed]) {
+  stroke: black;
+  color: white;
+}
+
+#TabsToolbar[brighttext] .tab-icon-overlay:is([pinned], [sharing]):not([crashed])[soundplaying]:hover,
+#TabsToolbar[brighttext] .tab-icon-overlay:is([pinned], [sharing]):not([crashed])[muted]:hover,
+#TabsToolbar[brighttext] .tab-icon-overlay:is([pinned], [sharing]):not([crashed])[activemedia-blocked]:hover {
+  background-color: black;
 }
 
 @media not (-moz-proton) {
 .tab-icon-overlay[pictureinpicture]:hover {
   background-color: white;
+  stroke: white;
   color: black;
 }
 } /*** END !proton ***/
