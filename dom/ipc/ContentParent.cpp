@@ -2879,7 +2879,7 @@ bool ContentParent::InitInternal(ProcessPriority aInitialPriority) {
   }
   // This is only implemented (returns a non-empty list) by MacOSX and Linux
   // at present.
-  nsTArray<SystemFontListEntry> fontList;
+  SystemFontList fontList;
   gfxPlatform::GetPlatform()->ReadSystemFontList(&fontList);
 
   const FullLookAndFeel& lnf = *RemoteLookAndFeel::ExtractData();
@@ -5010,7 +5010,7 @@ void ContentParent::NotifyUpdatedFonts(bool aFullRebuild) {
     return;
   }
 
-  nsTArray<SystemFontListEntry> fontList;
+  SystemFontList fontList;
   gfxPlatform::GetPlatform()->ReadSystemFontList(&fontList);
 
   for (auto* cp : AllProcesses(eLive)) {
