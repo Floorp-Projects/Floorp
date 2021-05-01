@@ -132,15 +132,6 @@ var ProcessHangMonitor = {
   },
 
   /**
-   * Terminate the plugin process associated with a hang being reported
-   * for the selected browser in |win|. Will attempt to generate a combined
-   * crash report for all processes.
-   */
-  terminatePlugin(win) {
-    this.handleUserInput(win, report => report.terminatePlugin());
-  },
-
-  /**
    * Dismiss the browser notification and invoke an appropriate action based on
    * the hang type.
    */
@@ -155,9 +146,6 @@ var ProcessHangMonitor = {
         this._recordTelemetryForReport(report, "user-aborted");
         this.terminateScript(win);
         break;
-      case report.PLUGIN_HANG:
-        this.terminatePlugin(win);
-        break;
     }
   },
 
@@ -170,10 +158,6 @@ var ProcessHangMonitor = {
       case report.SLOW_SCRIPT: {
         this._recordTelemetryForReport(report, endReason, backupInfo);
         report.terminateScript();
-        break;
-      }
-      case report.PLUGIN_HANG: {
-        report.terminatePlugin();
         break;
       }
     }
