@@ -130,16 +130,11 @@ class GeckoViewProcessHangMonitor extends GeckoViewModule {
   }
 
   /**
-   * Terminate whatever is causing this report, be it an add-on, page script,
-   * or plug-in. This is done without updating any report notifications.
+   * Terminate whatever is causing this report, be it an add-on or page script.
+   * This is done without updating any report notifications.
    */
   stopHang(report) {
-    switch (report.hangType) {
-      case report.SLOW_SCRIPT: {
-        report.terminateScript();
-        break;
-      }
-    }
+    report.terminateScript();
   }
 
   /**
@@ -169,16 +164,11 @@ class GeckoViewProcessHangMonitor extends GeckoViewModule {
    * construct an information bundle
    */
   notifyReport(report) {
-    const message = {
+    this.eventDispatcher.sendRequest({
       type: "GeckoView:HangReport",
       hangId: this._reportLookupIndex.get(report),
-    };
-
-    if (report.hangType == report.SLOW_SCRIPT) {
-      message.hangType = "SLOW_SCRIPT";
-      message.scriptFileName = report.scriptFileName;
-      this.eventDispatcher.sendRequest(message);
-    }
+      scriptFileName: report.scriptFileName,
+    });
   }
 
   /**

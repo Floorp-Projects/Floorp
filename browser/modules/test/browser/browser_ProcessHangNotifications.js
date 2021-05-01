@@ -63,26 +63,16 @@ let TestHangReport = function(
   });
 
   if (hangType == ADDON_HANG) {
-    // Add-on hangs are actually script hangs, but have an associated
-    // add-on ID for us to blame.
-    this._hangType = SLOW_SCRIPT;
+    // Add-on hangs need an associated add-on ID for us to blame.
     this._addonId = ADDON_ID;
-  } else {
-    this._hangType = hangType;
   }
 
   this._browser = browser;
 };
 
 TestHangReport.prototype = {
-  SLOW_SCRIPT,
-
   get addonId() {
     return this._addonId;
-  },
-
-  get hangType() {
-    return this._hangType;
   },
 
   QueryInterface: ChromeUtils.generateQI(["nsIHangReport"]),
