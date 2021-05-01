@@ -34,8 +34,7 @@ class gfxPlatformMac : public gfxPlatform {
 
   gfxPlatformFontList* CreatePlatformFontList() override;
 
-  void ReadSystemFontList(
-      nsTArray<mozilla::dom::SystemFontListEntry>* aFontList) override;
+  void ReadSystemFontList(mozilla::dom::SystemFontList* aFontList) override;
 
   bool IsFontFormatSupported(uint32_t aFormatFlags) override;
 

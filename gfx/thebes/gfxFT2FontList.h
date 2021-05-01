@@ -155,7 +155,7 @@ class gfxFT2FontList final : public gfxPlatformFontList {
 
   void WriteCache();
 
-  void ReadSystemFontList(nsTArray<FontListEntry>* aList);
+  void ReadSystemFontList(mozilla::dom::SystemFontList*);
 
   static gfxFT2FontList* PlatformFontList() {
     return static_cast<gfxFT2FontList*>(
