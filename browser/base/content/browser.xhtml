@@ -644,12 +644,6 @@
 #include ../../../devtools/startup/enableDevToolsPopup.inc.xhtml
 #include browser-allTabsMenu.inc.xhtml
 
-    <hbox id="downloads-animation-container">
-      <vbox id="downloads-notification-anchor" hidden="true">
-        <vbox id="downloads-indicator-notification"/>
-      </vbox>
-    </hbox>
-
     <tooltip id="dynamic-shortcut-tooltip"
              onpopupshowing="UpdateDynamicShortcutTooltipText(this);"/>
 
@@ -2032,9 +2026,6 @@
 
         <toolbarspring cui-areatype="toolbar" class="chromeclass-toolbar-additional"/>
 
-        <!-- This is a placeholder for the Downloads Indicator.  It is visible
-             during the customization of the toolbar, in the palette, and before
-             the Downloads Indicator overlay is loaded. -->
         <toolbarbutton id="downloads-button"
                        class="toolbarbutton-1 chromeclass-toolbar-additional"
                        badged="true"
@@ -2051,18 +2042,20 @@
                        hidden="true"
                        tooltip="dynamic-shortcut-tooltip"
                        indicator="true">
-            <!-- The panel's anchor area is smaller than the outer button, but must
-                 always be visible and must not move or resize when the indicator
-                 state changes, otherwise the panel could change its position or lose
-                 its arrow unexpectedly. -->
-            <stack id="downloads-indicator-anchor"
-                   consumeanchor="downloads-button">
-              <box id="downloads-indicator-icon"/>
-              <stack id="downloads-indicator-progress-outer">
-                <box id="downloads-indicator-progress-inner"/>
-              </stack>
-            </stack>
-          </toolbarbutton>
+          <box id="downloads-indicator-anchor"
+                 consumeanchor="downloads-button">
+            <image id="downloads-indicator-icon"/>
+          </box>
+          <box class="toolbarbutton-animatable-box" id="downloads-indicator-progress-outer">
+            <box id="downloads-indicator-progress-inner"/>
+          </box>
+          <box class="toolbarbutton-animatable-box" id="downloads-indicator-start-box">
+            <image class="toolbarbutton-animatable-image" id="downloads-indicator-start-image"/>
+          </box>
+          <box class="toolbarbutton-animatable-box" id="downloads-indicator-finish-box">
+            <image class="toolbarbutton-animatable-image" id="downloads-indicator-finish-image"/>
+          </box>
+        </toolbarbutton>
 
         <toolbarbutton id="fxa-toolbar-menu-button" class="toolbarbutton-1 chromeclass-toolbar-additional subviewbutton-nav"
                        badged="true"

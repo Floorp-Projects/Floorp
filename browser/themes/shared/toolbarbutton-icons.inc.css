@@ -184,7 +184,7 @@ toolbar[brighttext] {
 }
 
 #downloads-button {
-  list-style-image: url("chrome://browser/skin/downloads/download-icons.svg#arrow-with-bar");
+  list-style-image: url("chrome://browser/skin/downloads/downloads.svg");
 }
 
 #add-ons-button {
