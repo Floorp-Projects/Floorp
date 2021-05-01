@@ -16,12 +16,12 @@
 #include "mozilla/mscom/Registration.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/WinHeaderOnlyUtils.h"
+#include "MsaaRootAccessible.h"
 #include "nsAccessibilityService.h"
 #include "nsWindowsHelpers.h"
 #include "nsCOMPtr.h"
 #include "nsIFile.h"
 #include "nsXPCOM.h"
-#include "RootAccessibleWrap.h"
 #include "WinUtils.h"
 #include "prenv.h"
 
@@ -83,14 +83,14 @@ already_AddRefed<IAccessible> LazyInstantiator::GetRootAccessible(HWND aHwnd) {
     return result.forget();
   }
 
-  // Subtle: rootAcc might still be wrapped by a LazyInstantiator, but we
+  auto msaaRoot =
+      static_cast<MsaaRootAccessible*>(MsaaAccessible::GetFrom(rootAcc));
+  // Subtle: msaaRoot might still be wrapped by a LazyInstantiator, but we
   // don't need LazyInstantiator's capabilities anymore (since a11y is already
   // running). We can bypass LazyInstantiator by retrieving the internal
   // unknown (which is not wrapped by the LazyInstantiator) and then querying
   // that for IID_IAccessible.
-  a11y::RootAccessibleWrap* rootWrap =
-      static_cast<a11y::RootAccessibleWrap*>(rootAcc);
-  RefPtr<IUnknown> punk(rootWrap->GetInternalUnknown());
+  RefPtr<IUnknown> punk(msaaRoot->GetInternalUnknown());
 
   MOZ_ASSERT(punk);
   if (!punk) {
@@ -124,7 +124,7 @@ void LazyInstantiator::EnableBlindAggregation(HWND aHwnd) {
 LazyInstantiator::LazyInstantiator(HWND aHwnd)
     : mHwnd(aHwnd),
       mAllowBlindAggregation(false),
-      mWeakRootAccWrap(nullptr),
+      mWeakMsaaRoot(nullptr),
       mWeakAccessible(nullptr),
       mWeakDispatch(nullptr) {
   MOZ_ASSERT(aHwnd);
@@ -137,7 +137,7 @@ LazyInstantiator::LazyInstantiator(HWND aHwnd)
 LazyInstantiator::~LazyInstantiator() {
   if (mRealRootUnk) {
     // Disconnect ourselves from the root accessible.
-    RefPtr<IUnknown> dummy(mWeakRootAccWrap->Aggregate(nullptr));
+    RefPtr<IUnknown> dummy(mWeakMsaaRoot->Aggregate(nullptr));
   }
 
   ClearProp();
@@ -247,13 +247,15 @@ bool LazyInstantiator::ShouldInstantiate(const DWORD aClientTid) {
   return true;
 }
 
-RootAccessibleWrap* LazyInstantiator::ResolveRootAccWrap() {
+MsaaRootAccessible* LazyInstantiator::ResolveMsaaRoot() {
   LocalAccessible* acc = widget::WinUtils::GetRootAccessibleForHWND(mHwnd);
   if (!acc || !acc->IsRoot()) {
     return nullptr;
   }
 
-  return static_cast<RootAccessibleWrap*>(acc);
+  RefPtr<IAccessible> ia;
+  acc->GetNativeInterface(getter_AddRefs(ia));
+  return static_cast<MsaaRootAccessible*>(ia.get());
 }
 
 /**
@@ -296,13 +298,13 @@ LazyInstantiator::MaybeResolveRoot() {
 
   if (GetAccService() ||
       ShouldInstantiate(mscom::ProcessRuntime::GetClientThreadId())) {
-    mWeakRootAccWrap = ResolveRootAccWrap();
-    if (!mWeakRootAccWrap) {
+    mWeakMsaaRoot = ResolveMsaaRoot();
+    if (!mWeakMsaaRoot) {
       return E_POINTER;
     }
 
     // Wrap ourselves around the root accessible wrap
-    mRealRootUnk = mWeakRootAccWrap->Aggregate(static_cast<IAccessible*>(this));
+    mRealRootUnk = mWeakMsaaRoot->Aggregate(static_cast<IAccessible*>(this));
     if (!mRealRootUnk) {
       return E_FAIL;
     }
