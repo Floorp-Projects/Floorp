@@ -45,7 +45,7 @@ treechildren::-moz-tree-image(query, OrganizerQuery_allbms_____v) {
 }
 
 treechildren::-moz-tree-image(query, OrganizerQuery_downloads__v) {
-  list-style-image: url("chrome://browser/skin/downloads/download-icons.svg#arrow-with-bar");
+  list-style-image: url("chrome://browser/skin/downloads/downloads.svg");
 }
 
 treechildren::-moz-tree-image(title, query, tagContainer),
