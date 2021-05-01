@@ -66,19 +66,26 @@ add_task(async function() {
 
   let index = 0;
   for (const [key, id, isValid] of KEY_STATES) {
+    const promises = [];
     info(index + ": Pressing key " + key + " to get id " + id + ".");
-    const done = inspector.searchSuggestions.once("processing-done");
-    EventUtils.synthesizeKey(key, {}, inspector.panelWin);
-    await done;
-    info("Got processing-done event");
+
+    info("Waiting for current key press processing to complete");
+    promises.push(inspector.searchSuggestions.once("processing-done"));
 
     if (key === "VK_RETURN") {
       info("Waiting for " + (isValid ? "NO " : "") + "results");
-      await inspector.search.once("search-result");
+      promises.push(inspector.search.once("search-result"));
     }
 
     info("Waiting for search query to complete");
-    await inspector.searchSuggestions._lastQuery;
+    promises.push(inspector.searchSuggestions._lastQuery);
+
+    EventUtils.synthesizeKey(key, {}, inspector.panelWin);
+
+    await Promise.all(promises);
+    info(
+      "The keypress press process, any possible search results and the search query are complete."
+    );
 
     info(
       inspector.selection.nodeFront.id +

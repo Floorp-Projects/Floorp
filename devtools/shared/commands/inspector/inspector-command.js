@@ -22,6 +22,76 @@ class InspectorCommand {
   }
 
   /**
+   * Search the document for the given string and return all the results.
+   *
+   * @param {Object} walkerFront
+   * @param {String} query
+   *        The string to search for.
+   * @param {Object} options
+   *        {Boolean} options.reverse - search backwards
+   * @returns {Array} The list of search results
+   */
+  async walkerSearch(walkerFront, query, options = {}) {
+    const result = await walkerFront.search(query, options);
+    return result.list.items();
+  }
+
+  /**
+   * Incrementally search the top-level document and sub frames for a given string.
+   * Only one result is sent back at a time. Calling the
+   * method again with the same query will send the next result.
+   * If a new query which does not match the current one all is reset and new search
+   * is kicked off.
+   *
+   * @param {String} query
+   *         The string / selector searched for
+   * @param {Object} options
+   *        {Boolean} reverse - determines if the search is done backwards
+   * @returns {Object} res
+   *          {String} res.type
+   *          {String} res.query - The string / selector searched for
+   *          {Object} res.node - the current node
+   *          {Number} res.resultsIndex - The index of the current node
+   *          {Number} res.resultsLength - The total number of results found.
+   */
+  async findNextNode(query, { reverse } = {}) {
+    const inspectors = await this.getAllInspectorFronts();
+    const nodes = await Promise.all(
+      inspectors.map(({ walker }) =>
+        this.walkerSearch(walker, query, { reverse })
+      )
+    );
+    const results = nodes.flat();
+
+    // If the search query changes
+    if (this._searchQuery !== query) {
+      this._searchQuery = query;
+      this._currentIndex = -1;
+    }
+
+    if (!results.length) {
+      return null;
+    }
+
+    this._currentIndex = reverse
+      ? this._currentIndex - 1
+      : this._currentIndex + 1;
+
+    if (this._currentIndex >= results.length) {
+      this._currentIndex = 0;
+    }
+    if (this._currentIndex < 0) {
+      this._currentIndex = results.length - 1;
+    }
+
+    return {
+      node: results[this._currentIndex],
+      resultsIndex: this._currentIndex,
+      resultsLength: results.length,
+    };
+  }
+
+  /**
    * Returns a list of matching results for CSS selector autocompletion.
    *
    * @param {String} query

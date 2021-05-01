@@ -16,143 +16,134 @@ window.onload = function() {
   SimpleTest.waitForExplicitFinish();
 
   let walkerFront = null;
-  let inspector = null;
+  let inspectorCommand = null;
 
-  // WalkerFront specific tests.  These aren't to excercise search
+  // WalkerFront and Inspector Command specific tests.  These aren't to exercise search
   // edge cases so much as to test the state the Front maintains between
   // searches.
-  // See also test_inspector-search.html
 
   addAsyncTest(async function setup() {
     info("Setting up inspector and walker actors.");
 
     const url = document.getElementById("inspectorContent").href;
 
-    const { target } = await attachURL(url);
-    inspector = await target.getFront("inspector");
+    const { commands } = await attachURL(url);
+    const target = commands.targetCommand.targetFront;
+    const inspector = await target.getFront("inspector");
+
     walkerFront = inspector.walker;
+    inspectorCommand = commands.inspectorCommand;
 
     runNextTest();
   });
 
   addAsyncTest(async function testWalkerFrontDefaults() {
-    info("Testing search API using WalkerFront.");
+    info("Testing search API using WalkerFront and Inspector Command.");
     const nodes = await walkerFront.querySelectorAll(walkerFront.rootNode, "h2");
     const fronts = await nodes.items();
 
-    const frontResult = await walkerFront.search("");
-    ok(!frontResult, "Null result on front when searching for ''");
+    const commandResult = await inspectorCommand.findNextNode("");
+    ok(!commandResult, "Null result on front when searching for ''");
 
-    let results = await walkerFront.search("h2");
+    let results = await inspectorCommand.findNextNode("h2");
     isDeeply(results, {
       node: fronts[0],
-      type: "search",
       resultsIndex: 0,
       resultsLength: 3,
     }, "Default options work");
 
-    results = await walkerFront.search("h2", { });
+    results = await inspectorCommand.findNextNode("h2", { });
     isDeeply(results, {
       node: fronts[1],
-      type: "search",
       resultsIndex: 1,
       resultsLength: 3,
     }, "Search works with empty options");
 
     // Clear search data to remove result state on the front
-    await walkerFront.search("");
+    await inspectorCommand.findNextNode("");
     runNextTest();
   });
 
   addAsyncTest(async function testMultipleSearches() {
-    info("Testing search API using WalkerFront (reverse=false)");
+    info("Testing search API using WalkerFront and Inspector Command (reverse=false)");
     const nodes = await walkerFront.querySelectorAll(walkerFront.rootNode, "h2");
     const fronts = await nodes.items();
 
-    let results = await walkerFront.search("h2");
+    let results = await inspectorCommand.findNextNode("h2");
     isDeeply(results, {
       node: fronts[0],
-      type: "search",
       resultsIndex: 0,
       resultsLength: 3,
     }, "Search works with multiple results (reverse=false)");
 
-    results = await walkerFront.search("h2");
+    results = await inspectorCommand.findNextNode("h2");
     isDeeply(results, {
       node: fronts[1],
-      type: "search",
       resultsIndex: 1,
       resultsLength: 3,
     }, "Search works with multiple results (reverse=false)");
 
-    results = await walkerFront.search("h2");
+    results = await inspectorCommand.findNextNode("h2");
     isDeeply(results, {
       node: fronts[2],
-      type: "search",
       resultsIndex: 2,
       resultsLength: 3,
     }, "Search works with multiple results (reverse=false)");
 
-    results = await walkerFront.search("h2");
+    results = await inspectorCommand.findNextNode("h2");
     isDeeply(results, {
       node: fronts[0],
-      type: "search",
       resultsIndex: 0,
       resultsLength: 3,
     }, "Search works with multiple results (reverse=false)");
 
     // Clear search data to remove result state on the front
-    await walkerFront.search("");
+    await inspectorCommand.findNextNode("");
     runNextTest();
   });
 
   addAsyncTest(async function testMultipleSearchesReverse() {
-    info("Testing search API using WalkerFront (reverse=true)");
+    info("Testing search API using WalkerFront and Inspector Command (reverse=true)");
     const nodes = await walkerFront.querySelectorAll(walkerFront.rootNode, "h2");
     const fronts = await nodes.items();
 
-    let results = await walkerFront.search("h2", {reverse: true});
+    let results = await inspectorCommand.findNextNode("h2", {reverse: true});
     isDeeply(results, {
       node: fronts[2],
-      type: "search",
       resultsIndex: 2,
       resultsLength: 3,
     }, "Search works with multiple results (reverse=true)");
 
-    results = await walkerFront.search("h2", {reverse: true});
+    results = await inspectorCommand.findNextNode("h2", {reverse: true});
     isDeeply(results, {
       node: fronts[1],
-      type: "search",
       resultsIndex: 1,
       resultsLength: 3,
     }, "Search works with multiple results (reverse=true)");
 
-    results = await walkerFront.search("h2", {reverse: true});
+    results = await inspectorCommand.findNextNode("h2", {reverse: true});
     isDeeply(results, {
       node: fronts[0],
-      type: "search",
       resultsIndex: 0,
       resultsLength: 3,
     }, "Search works with multiple results (reverse=true)");
 
-    results = await walkerFront.search("h2", {reverse: true});
+    results = await inspectorCommand.findNextNode("h2", {reverse: true});
     isDeeply(results, {
       node: fronts[2],
-      type: "search",
       resultsIndex: 2,
       resultsLength: 3,
     }, "Search works with multiple results (reverse=true)");
 
-    results = await walkerFront.search("h2", {reverse: false});
+    results = await inspectorCommand.findNextNode("h2", {reverse: false});
     isDeeply(results, {
       node: fronts[0],
-      type: "search",
       resultsIndex: 0,
       resultsLength: 3,
     }, "Search works with multiple results (reverse=false)");
 
-    // Clear search data to remove result state on the front
-    await walkerFront.search("");
+    // Clear search data to remove result state on the command
+    await inspectorCommand.findNextNode("");
     runNextTest();
   });
 

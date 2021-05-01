@@ -7,22 +7,9 @@
 
 requestLongerTimeout(2);
 
-const IFRAME_SRC = "doc_inspector_search.html";
-const NESTED_IFRAME_SRC = `
-  <button id="b1">Nested button</button>
-  <iframe id="iframe-4" src="${URL_ROOT + IFRAME_SRC}"></iframe>
-`;
-const TEST_URL = `
-  <iframe id="iframe-1" src="${URL_ROOT + IFRAME_SRC}"></iframe>
-  <iframe id="iframe-2" src="${URL_ROOT + IFRAME_SRC}"></iframe>
-  <iframe id="iframe-3"
-          src="data:text/html;charset=utf-8,${encodeURI(NESTED_IFRAME_SRC)}">
-  </iframe>
-`;
-
 add_task(async function() {
   const { inspector } = await openInspectorForURL(
-    "data:text/html;charset=utf-8," + encodeURI(TEST_URL)
+    `${URL_ROOT_ORG}doc_inspector_search-iframes.html`
   );
 
   info("Focus the search box");
@@ -79,14 +66,47 @@ add_task(async function() {
 
 const checkCorrectButton = async function(inspector, frameSelector) {
   const { walker } = inspector;
-  const node = inspector.selection.nodeFront;
 
-  is(node.id, "b1", "The selected node is #b1");
-  is(node.tagName.toLowerCase(), "button", "The selected node is <button>");
+  const nodeFrontInfo = await getSelectedNodeFrontInfo(inspector);
 
-  const selectedNodeDoc = await walker.document(node);
-  let iframe = await walker.multiFrameQuerySelectorAll(frameSelector);
-  iframe = await iframe.item(0);
-  const iframeDoc = (await walker.children(iframe)).nodes[0];
-  is(selectedNodeDoc, iframeDoc, "The selected node is in " + frameSelector);
+  is(nodeFrontInfo.nodeFront.id, "b1", "The selected node is #b1");
+  is(
+    nodeFrontInfo.nodeFront.tagName.toLowerCase(),
+    "button",
+    "The selected node is <button>"
+  );
+
+  const iframes = await walker.multiFrameQuerySelectorAll(frameSelector);
+  const iframe = await iframes.item(0);
+  const expectedDocument = (await walker.children(iframe)).nodes[0];
+
+  is(
+    nodeFrontInfo.document,
+    expectedDocument,
+    "The selected node is in " + frameSelector
+  );
 };
+/**
+ * Gets the currently selected nodefront. It also finds the
+ * document node which contains the node.
+ * @param   {Object} inspector
+ * @returns {Object}
+ *          nodeFront - The currently selected nodeFront
+ *          document - The document which contains the node.
+ *
+ */
+async function getSelectedNodeFrontInfo(inspector) {
+  const { selection, commands } = inspector;
+
+  const nodeFront = selection.nodeFront;
+  const inspectors = await commands.inspectorCommand.getAllInspectorFronts();
+
+  for (let i = 0; i < inspectors.length; i++) {
+    const inspectorFront = inspectors[i];
+    if (inspectorFront.walker == nodeFront.walkerFront) {
+      const document = await inspectorFront.walker.document(nodeFront);
+      return { nodeFront, document };
+    }
+  }
+  return null;
+}
