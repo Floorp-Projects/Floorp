@@ -13,14 +13,8 @@ import sys
 
 if sys.version_info[0] < 3:
     import __builtin__ as builtins
-
-    class MetaPathFinder(object):
-        pass
-
-
 else:
-    from importlib.abc import MetaPathFinder
-
+    import builtins
 
 from types import ModuleType
 
@@ -514,53 +508,6 @@ class ImportHook(object):
         return module
 
 
-# Hook import such that .pyc/.pyo files without a corresponding .py file in
-# the source directory are essentially ignored. See further below for details
-# and caveats.
-# Objdirs outside the source directory are ignored because in most cases, if
-# a .pyc/.pyo file exists there, a .py file will be next to it anyways.
-class PathFinderHook(MetaPathFinder):
-    def __init__(self, klass):
-        # Assume the source directory is the parent directory of the one
-        # containing this file.
-        self._source_dir = (
-            os.path.normcase(
-                os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
-            )
-            + os.sep
-        )
-        self._finder_class = klass
-
-    def find_spec(self, full_name, paths=None, target=None):
-        spec = self._finder_class.find_spec(full_name, paths, target)
-
-        # Some modules don't have an origin.
-        if spec is None or spec.origin is None:
-            return spec
-
-        # Normalize the origin path.
-        path = os.path.normcase(os.path.abspath(spec.origin))
-        # Note: we could avoid normcase and abspath above for non pyc/pyo
-        # files, but those are actually rare, so it doesn't really matter.
-        if not path.endswith((".pyc", ".pyo")):
-            return spec
-
-        # Ignore modules outside our source directory
-        if not path.startswith(self._source_dir):
-            return spec
-
-        # If there is no .py corresponding to the .pyc/.pyo module we're
-        # resolving, remove the .pyc/.pyo file, and try again.
-        if not os.path.exists(spec.origin[:-1]):
-            if os.path.exists(spec.origin):
-                os.remove(spec.origin)
-            spec = self._finder_class.find_spec(full_name, paths, target)
-
-        return spec
-
-
 # Install our hook. This can be deleted when the Python 3 migration is complete.
 if sys.version_info[0] < 3:
     builtins.__import__ = ImportHook(builtins.__import__)
-else:
-    sys.meta_path = [PathFinderHook(c) for c in sys.meta_path]
