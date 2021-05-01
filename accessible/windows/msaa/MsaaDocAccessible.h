@@ -56,6 +56,8 @@ class MsaaDocAccessible : public DocAccessible {
     return mIDToAccessibleMap.Get(aID);
   }
 
+  static MsaaDocAccessible* GetFrom(DocAccessible* aDoc);
+
  protected:
   /*
    * This provides a mapping from 32 bit id to accessible objects.
