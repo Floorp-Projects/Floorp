@@ -35,6 +35,7 @@
 #include "js/GCVector.h"
 #include "js/HashTable.h"
 #include "js/Id.h"
+#include "js/MapAndSet.h"
 #include "js/MemoryFunctions.h"
 #include "js/OffThreadScriptCompilation.h"
 #include "js/Principals.h"
@@ -2052,73 +2053,6 @@ extern JS_PUBLIC_API bool CreateError(
     JSContext* cx, JSExnType type, HandleObject stack, HandleString fileName,
     uint32_t lineNumber, uint32_t columnNumber, JSErrorReport* report,
     HandleString message, MutableHandleValue rval);
-
-/************************************************************************/
-
-/*
- * Map
- */
-extern JS_PUBLIC_API JSObject* NewMapObject(JSContext* cx);
-
-extern JS_PUBLIC_API uint32_t MapSize(JSContext* cx, HandleObject obj);
-
-extern JS_PUBLIC_API bool MapGet(JSContext* cx, HandleObject obj,
-                                 HandleValue key, MutableHandleValue rval);
-
-extern JS_PUBLIC_API bool MapHas(JSContext* cx, HandleObject obj,
-                                 HandleValue key, bool* rval);
-
-extern JS_PUBLIC_API bool MapSet(JSContext* cx, HandleObject obj,
-                                 HandleValue key, HandleValue val);
-
-extern JS_PUBLIC_API bool MapDelete(JSContext* cx, HandleObject obj,
-                                    HandleValue key, bool* rval);
-
-extern JS_PUBLIC_API bool MapClear(JSContext* cx, HandleObject obj);
-
-extern JS_PUBLIC_API bool MapKeys(JSContext* cx, HandleObject obj,
-                                  MutableHandleValue rval);
-
-extern JS_PUBLIC_API bool MapValues(JSContext* cx, HandleObject obj,
-                                    MutableHandleValue rval);
-
-extern JS_PUBLIC_API bool MapEntries(JSContext* cx, HandleObject obj,
-                                     MutableHandleValue rval);
-
-extern JS_PUBLIC_API bool MapForEach(JSContext* cx, HandleObject obj,
-                                     HandleValue callbackFn,
-                                     HandleValue thisVal);
-
-/*
- * Set
- */
-extern JS_PUBLIC_API JSObject* NewSetObject(JSContext* cx);
-
-extern JS_PUBLIC_API uint32_t SetSize(JSContext* cx, HandleObject obj);
-
-extern JS_PUBLIC_API bool SetHas(JSContext* cx, HandleObject obj,
-                                 HandleValue key, bool* rval);
-
-extern JS_PUBLIC_API bool SetDelete(JSContext* cx, HandleObject obj,
-                                    HandleValue key, bool* rval);
-
-extern JS_PUBLIC_API bool SetAdd(JSContext* cx, HandleObject obj,
-                                 HandleValue key);
-
-extern JS_PUBLIC_API bool SetClear(JSContext* cx, HandleObject obj);
-
-extern JS_PUBLIC_API bool SetKeys(JSContext* cx, HandleObject obj,
-                                  MutableHandleValue rval);
-
-extern JS_PUBLIC_API bool SetValues(JSContext* cx, HandleObject obj,
-                                    MutableHandleValue rval);
-
-extern JS_PUBLIC_API bool SetEntries(JSContext* cx, HandleObject obj,
-                                     MutableHandleValue rval);
-
-extern JS_PUBLIC_API bool SetForEach(JSContext* cx, HandleObject obj,
-                                     HandleValue callbackFn,
-                                     HandleValue thisVal);
 
 } /* namespace JS */
 
