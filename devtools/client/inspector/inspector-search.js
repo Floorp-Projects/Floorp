@@ -18,8 +18,8 @@ const MAX_SUGGESTIONS = 15;
  * Converts any input field into a document search box.
  *
  * @param {InspectorPanel} inspector
- *        The InspectorPanel whose `walker` attribute should be used for
- *        document traversal.
+ *        The InspectorPanel to access the inspector commands for
+ *        search and document traversal.
  * @param {DOMNode} input
  *        The input element to which the panel will be attached and from where
  *        search input will be taken.
@@ -55,10 +55,6 @@ function InspectorSearch(inspector, input, clearBtn) {
 exports.InspectorSearch = InspectorSearch;
 
 InspectorSearch.prototype = {
-  get walker() {
-    return this.inspector.walker;
-  },
-
   destroy: function() {
     this.searchBox.removeEventListener("keydown", this._onKeyDown, true);
     this.searchBox.removeEventListener("input", this._onInput, true);
@@ -86,7 +82,12 @@ InspectorSearch.prototype = {
       return;
     }
 
-    const res = await this.walker.search(query, { reverse });
+    const res = await this.inspector.commands.inspectorCommand.findNextNode(
+      query,
+      {
+        reverse,
+      }
+    );
 
     // Value has changed since we started this request, we're done.
     if (query !== this.searchBox.value) {
@@ -98,7 +99,6 @@ InspectorSearch.prototype = {
         reason: "inspectorsearch",
       });
       searchContainer.classList.remove("devtools-searchbox-no-match");
-
       res.query = query;
       this.emit("search-result", res);
     } else {
@@ -146,8 +146,8 @@ InspectorSearch.prototype = {
  *
  * @constructor
  * @param InspectorPanel inspector
- *        The InspectorPanel whose `walker` attribute should be used for
- *        document traversal.
+ *        The InspectorPanel to access the inspector commands for
+ *        search and document traversal.
  * @param nsiInputElement inputNode
  *        The input element to which the panel will be attached and from where
  *        search input will be taken.
