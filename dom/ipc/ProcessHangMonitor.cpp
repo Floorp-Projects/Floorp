@@ -203,20 +203,19 @@ class HangMonitoredProcess final : public nsIHangReport {
   }
 
   /**
-   * Sets the information associated with this hang: this includes the ID of
-   * the plugin which caused the hang as well as the content PID. The ID of
-   * a minidump taken during the hang can also be provided.
+   * Sets the information associated with this hang: this includes the tab ID,
+   * filename, duration, and an add-on ID if it was caused by an add-on.
    *
-   * @param aHangData The hang information
    * @param aDumpId The ID of a minidump taken when the hang occurred
    */
-  void SetHangData(const HangData& aHangData, const nsAString& aDumpId) {
-    mHangData = aHangData;
+  void SetSlowScriptData(const SlowScriptData& aSlowScriptData,
+                         const nsAString& aDumpId) {
+    mSlowScriptData = aSlowScriptData;
     mDumpId = aDumpId;
   }
 
   void ClearHang() {
-    mHangData = HangData();
+    mSlowScriptData = SlowScriptData();
     mDumpId.Truncate();
   }
 
@@ -226,7 +225,7 @@ class HangMonitoredProcess final : public nsIHangReport {
   // Everything here is main thread-only.
   HangMonitorParent* mActor;
   ContentParent* mContentParent;
-  HangData mHangData;
+  SlowScriptData mSlowScriptData;
   nsAutoString mDumpId;
 };
 
@@ -238,7 +237,8 @@ class HangMonitorParent : public PProcessHangMonitorParent,
 
   void Bind(Endpoint<PProcessHangMonitorParent>&& aEndpoint);
 
-  mozilla::ipc::IPCResult RecvHangEvidence(const HangData& aHangData) override;
+  mozilla::ipc::IPCResult RecvHangEvidence(
+      const SlowScriptData& aSlowScriptData) override;
   mozilla::ipc::IPCResult RecvClearHang() override;
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
@@ -264,7 +264,7 @@ class HangMonitorParent : public PProcessHangMonitorParent,
   bool IsOnThread() { return mHangMonitor->IsOnThread(); }
 
  private:
-  void SendHangNotification(const HangData& aHangData,
+  void SendHangNotification(const SlowScriptData& aSlowScriptData,
                             const nsString& aBrowserDumpId);
 
   void ClearHangNotification();
@@ -781,8 +781,8 @@ void HangMonitorParent::Bind(Endpoint<PProcessHangMonitorParent>&& aEndpoint) {
   MOZ_ASSERT(ok);
 }
 
-void HangMonitorParent::SendHangNotification(const HangData& aHangData,
-                                             const nsString& aBrowserDumpId) {
+void HangMonitorParent::SendHangNotification(
+    const SlowScriptData& aSlowScriptData, const nsString& aBrowserDumpId) {
   // chrome process, main thread
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
@@ -791,7 +791,7 @@ void HangMonitorParent::SendHangNotification(const HangData& aHangData,
   // We already have a full minidump; go ahead and use it.
   dumpId = aBrowserDumpId;
 
-  mProcess->SetHangData(aHangData, dumpId);
+  mProcess->SetSlowScriptData(aSlowScriptData, dumpId);
 
   nsCOMPtr<nsIObserverService> observerService =
       mozilla::services::GetObserverService();
@@ -810,7 +810,7 @@ void HangMonitorParent::ClearHangNotification() {
 }
 
 mozilla::ipc::IPCResult HangMonitorParent::RecvHangEvidence(
-    const HangData& aHangData) {
+    const SlowScriptData& aSlowScriptData) {
   // chrome process, background thread
   MOZ_RELEASE_ASSERT(IsOnThread());
 
@@ -835,7 +835,7 @@ mozilla::ipc::IPCResult HangMonitorParent::RecvHangEvidence(
   MonitorAutoLock lock(mMonitor);
 
   NS_DispatchToMainThread(mMainThreadTaskFactory.NewRunnableMethod(
-      &HangMonitorParent::SendHangNotification, aHangData, crashId));
+      &HangMonitorParent::SendHangNotification, aSlowScriptData, crashId));
 
   return IPC_OK();
 }
@@ -887,39 +887,16 @@ void HangMonitorParent::EndStartingDebugger() {
 NS_IMPL_ISUPPORTS(HangMonitoredProcess, nsIHangReport)
 
 NS_IMETHODIMP
-HangMonitoredProcess::GetHangType(uint32_t* aHangType) {
-  MOZ_RELEASE_ASSERT(NS_IsMainThread());
-  switch (mHangData.type()) {
-    case HangData::TSlowScriptData:
-      *aHangType = SLOW_SCRIPT;
-      break;
-    default:
-      MOZ_ASSERT_UNREACHABLE("Unexpected HangData type");
-      return NS_ERROR_UNEXPECTED;
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 HangMonitoredProcess::GetHangDuration(double* aHangDuration) {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
-  if (mHangData.type() != HangData::TSlowScriptData) {
-    *aHangDuration = -1;
-  } else {
-    *aHangDuration = mHangData.get_SlowScriptData().duration();
-  }
+  *aHangDuration = mSlowScriptData.duration();
   return NS_OK;
 }
 
 NS_IMETHODIMP
 HangMonitoredProcess::GetScriptBrowser(Element** aBrowser) {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
-  if (mHangData.type() != HangData::TSlowScriptData) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
-  TabId tabId = mHangData.get_SlowScriptData().tabId();
+  TabId tabId = mSlowScriptData.tabId();
   if (!mContentParent) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -942,32 +919,20 @@ HangMonitoredProcess::GetScriptBrowser(Element** aBrowser) {
 NS_IMETHODIMP
 HangMonitoredProcess::GetScriptFileName(nsACString& aFileName) {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
-  if (mHangData.type() != HangData::TSlowScriptData) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
-  aFileName = mHangData.get_SlowScriptData().filename();
+  aFileName = mSlowScriptData.filename();
   return NS_OK;
 }
 
 NS_IMETHODIMP
 HangMonitoredProcess::GetAddonId(nsAString& aAddonId) {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
-  if (mHangData.type() != HangData::TSlowScriptData) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
-  aAddonId = mHangData.get_SlowScriptData().addonId();
+  aAddonId = mSlowScriptData.addonId();
   return NS_OK;
 }
 
 NS_IMETHODIMP
 HangMonitoredProcess::TerminateScript() {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
-  if (mHangData.type() != HangData::TSlowScriptData) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
   if (!mActor) {
     return NS_ERROR_UNEXPECTED;
   }
@@ -981,10 +946,6 @@ HangMonitoredProcess::TerminateScript() {
 NS_IMETHODIMP
 HangMonitoredProcess::BeginStartingDebugger() {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
-  if (mHangData.type() != HangData::TSlowScriptData) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
   if (!mActor) {
     return NS_ERROR_UNEXPECTED;
   }
@@ -998,10 +959,6 @@ HangMonitoredProcess::BeginStartingDebugger() {
 NS_IMETHODIMP
 HangMonitoredProcess::EndStartingDebugger() {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
-  if (mHangData.type() != HangData::TSlowScriptData) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
   if (!mActor) {
     return NS_ERROR_UNEXPECTED;
   }

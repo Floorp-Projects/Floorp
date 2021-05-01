@@ -482,8 +482,8 @@ async function testAboutProcessesWithConfig({ showAllFrames, showThreads }) {
       Services.obs.notifyObservers(
         {
           childID: hungChildID,
-          hangType: Ci.nsIHangReport.PLUGIN_HANG,
-          pluginName: "Fake plug-in",
+          scriptBrowser: tabHung.linkedBrowser,
+          scriptFileName: "chrome://browser/content/browser.js",
           QueryInterface: ChromeUtils.generateQI(["nsIHangReport"]),
         },
         "process-hang-report"

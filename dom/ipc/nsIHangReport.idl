@@ -21,14 +21,6 @@ webidl Element;
 [scriptable, uuid(5fcffbb9-be62-49b1-b8a1-36e820787a74)]
 interface nsIHangReport : nsISupports
 {
-  const unsigned long SLOW_SCRIPT = 1;
-
-  // The type of hang being reported: must be SLOW_SCRIPT.
-  readonly attribute unsigned long hangType;
-
-  // For SLOW_SCRIPT reports, these fields contain information about the
-  // slow script.
-  // Only valid for SLOW_SCRIPT reports.
   readonly attribute Element scriptBrowser;
   readonly attribute ACString scriptFileName;
   // Duration of the hang so far.
@@ -43,18 +35,14 @@ interface nsIHangReport : nsISupports
   void userCanceled();
 
   // Terminate the slow script if it is still running.
-  // Only valid for SLOW_SCRIPT reports.
   void terminateScript();
 
-
   // Ask the content process to start up the slow script debugger.
-  // Only valid for SLOW_SCRIPT reports.
   void beginStartingDebugger();
 
   // Inform the content process that the slow script debugger has finished
   // spinning up. The content process will run a nested event loop until this
   // method is called.
-  // Only valid for SLOW_SCRIPT reports.
   void endStartingDebugger();
 
   // Inquire whether the report is for a content process loaded by the given
