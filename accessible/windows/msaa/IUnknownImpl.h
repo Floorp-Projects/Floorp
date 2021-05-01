@@ -50,12 +50,12 @@ class AutoRefCnt {
 #define DECL_IUNKNOWN                                               \
  public:                                                            \
   virtual HRESULT STDMETHODCALLTYPE QueryInterface(REFIID, void**); \
-  ULONG STDMETHODCALLTYPE AddRef() final {                          \
+  ULONG STDMETHODCALLTYPE AddRef() override {                       \
     MOZ_ASSERT(int32_t(mRefCnt) >= 0, "illegal refcnt");            \
     ++mRefCnt;                                                      \
     return mRefCnt;                                                 \
   }                                                                 \
-  ULONG STDMETHODCALLTYPE Release() final {                         \
+  ULONG STDMETHODCALLTYPE Release() override {                      \
     MOZ_ASSERT(int32_t(mRefCnt) > 0, "dup release");                \
     --mRefCnt;                                                      \
     if (mRefCnt) return mRefCnt;                                    \
@@ -146,6 +146,18 @@ class AutoRefCnt {
   IMPL_IUNKNOWN_QUERY_CLASS(Super1);                            \
   IMPL_IUNKNOWN_QUERY_CLASS(Super2);                            \
   IMPL_IUNKNOWN_QUERY_TAIL_INHERITED(Super0)
+
+/**
+ * Overrides AddRef and Release to call a specific base class.
+ * If you are inheriting a single class (e.g. to override some methods), you
+ * shouldn't need to use this. However, if you are inheriting from a COM
+ * implementation and also inheriting additional COM interfaces, you will need
+ * to use this to specify which base implements reference counting.
+ */
+#define IMPL_IUNKNOWN_REFCOUNTING_INHERITED(BaseClass)                      \
+ public:                                                                    \
+  ULONG STDMETHODCALLTYPE AddRef() override { return BaseClass::AddRef(); } \
+  ULONG STDMETHODCALLTYPE Release() override { return BaseClass::Release(); }
 
 namespace mozilla {
 namespace a11y {
