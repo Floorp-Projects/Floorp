@@ -24,7 +24,7 @@ namespace a11y {
 
 IMPL_IUNKNOWN_QUERY_HEAD(ServiceProvider)
 IMPL_IUNKNOWN_QUERY_IFACE(IServiceProvider)
-IMPL_IUNKNOWN_QUERY_TAIL_AGGREGATED(mAccessible)
+IMPL_IUNKNOWN_QUERY_TAIL_AGGREGATED(mMsaa)
 
 ////////////////////////////////////////////////////////////////////////////////
 // IServiceProvider
@@ -35,11 +35,15 @@ ServiceProvider::QueryService(REFGUID aGuidService, REFIID aIID,
   if (!aInstancePtr) return E_INVALIDARG;
 
   *aInstancePtr = nullptr;
+  AccessibleWrap* acc = mMsaa->LocalAcc();
+  if (!acc) {
+    return CO_E_OBJNOTCONNECTED;
+  }
 
   // UIA IAccessibleEx
   if (aGuidService == IID_IAccessibleEx &&
       Preferences::GetBool("accessibility.uia.enable")) {
-    uiaRawElmProvider* accEx = new uiaRawElmProvider(mAccessible);
+    uiaRawElmProvider* accEx = new uiaRawElmProvider(acc);
     HRESULT hr = accEx->QueryInterface(aIID, aInstancePtr);
     if (FAILED(hr)) delete accEx;
 
@@ -59,11 +63,11 @@ ServiceProvider::QueryService(REFGUID aGuidService, REFIID aIID,
   if (aGuidService == SID_IAccessibleContentDocument) {
     if (aIID != IID_IAccessible) return E_NOINTERFACE;
 
-    // If mAccessible is within an OOP iframe document, the top level document
+    // If acc is within an OOP iframe document, the top level document
     // lives in a different process.
     if (XRE_IsContentProcess()) {
-      RootAccessible* root = mAccessible->RootAccessible();
-      // root will be null if mAccessible is the ApplicationAccessible.
+      RootAccessible* root = acc->RootAccessible();
+      // root will be null if acc is the ApplicationAccessible.
       if (root) {
         DocAccessibleChild* ipcDoc = root->IPCDoc();
         if (ipcDoc) {
@@ -77,13 +81,13 @@ ServiceProvider::QueryService(REFGUID aGuidService, REFIID aIID,
       }
     }
 
-    Relation rel =
-        mAccessible->RelationByType(RelationType::CONTAINING_TAB_PANE);
+    Relation rel = acc->RelationByType(RelationType::CONTAINING_TAB_PANE);
     AccessibleWrap* tabDoc = static_cast<AccessibleWrap*>(rel.Next());
     if (!tabDoc) return E_NOINTERFACE;
 
-    *aInstancePtr = static_cast<IAccessible*>(tabDoc);
-    (reinterpret_cast<IUnknown*>(*aInstancePtr))->AddRef();
+    RefPtr<IAccessible> result;
+    tabDoc->GetNativeInterface(getter_AddRefs(result));
+    result.forget(aInstancePtr);
     return S_OK;
   }
 
@@ -96,7 +100,9 @@ ServiceProvider::QueryService(REFGUID aGuidService, REFIID aIID,
         static_cast<ApplicationAccessibleWrap*>(ApplicationAcc());
     if (!applicationAcc) return E_NOINTERFACE;
 
-    return applicationAcc->QueryInterface(aIID, aInstancePtr);
+    RefPtr<IAccessible> appIa;
+    applicationAcc->GetNativeInterface(getter_AddRefs(appIa));
+    return appIa->QueryInterface(aIID, aInstancePtr);
   }
 
   static const GUID IID_SimpleDOMDeprecated = {
@@ -107,7 +113,7 @@ ServiceProvider::QueryService(REFGUID aGuidService, REFIID aIID,
   if (aGuidService == IID_ISimpleDOMNode ||
       aGuidService == IID_SimpleDOMDeprecated ||
       aGuidService == IID_IAccessible || aGuidService == IID_IAccessible2)
-    return mAccessible->QueryInterface(aIID, aInstancePtr);
+    return mMsaa->QueryInterface(aIID, aInstancePtr);
 
   return E_INVALIDARG;
 }

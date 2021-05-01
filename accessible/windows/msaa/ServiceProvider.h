@@ -9,15 +9,15 @@
 
 #include <servprov.h>
 
-#include "AccessibleWrap.h"
 #include "IUnknownImpl.h"
+#include "MsaaAccessible.h"
 
 namespace mozilla {
 namespace a11y {
 
 class ServiceProvider final : public IServiceProvider {
  public:
-  explicit ServiceProvider(AccessibleWrap* aAcc) : mAccessible(aAcc) {}
+  explicit ServiceProvider(MsaaAccessible* aMsaa) : mMsaa(aMsaa) {}
   ~ServiceProvider() {}
 
   DECL_IUNKNOWN
@@ -28,7 +28,7 @@ class ServiceProvider final : public IServiceProvider {
                                                  void** aInstancePtr);
 
  private:
-  RefPtr<AccessibleWrap> mAccessible;
+  RefPtr<MsaaAccessible> mMsaa;
 };
 
 }  // namespace a11y
