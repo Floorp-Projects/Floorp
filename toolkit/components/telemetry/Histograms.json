@@ -5256,39 +5256,6 @@
     "n_buckets": 10,
     "description": "Time spent scanning filesystem for plugins (ms)"
   },
-  "PLUGIN_HANG_UI_USER_RESPONSE": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
-    "expires_in_version": "never",
-    "kind": "enumerated",
-    "n_values": 3,
-    "description": "User response to Plugin Hang UI"
-  },
-  "PLUGIN_HANG_UI_DONT_ASK": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
-    "expires_in_version": "never",
-    "kind": "boolean",
-    "description": "Whether the user has requested not to see the Plugin Hang UI again"
-  },
-  "PLUGIN_HANG_UI_RESPONSE_TIME": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "high": 60000,
-    "n_buckets": 20,
-    "description": "Time spent in Plugin Hang UI (ms)"
-  },
-  "PLUGIN_HANG_TIME": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "high": 60000,
-    "n_buckets": 20,
-    "description": "Value of dom.ipc.plugins.hangUITimeoutSecs plus time spent in Plugin Hang UI (ms)"
-  },
   "PLUGIN_LOAD_METADATA": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],
@@ -13547,14 +13514,6 @@
     "n_buckets": 50,
     "bug_numbers": [1271978],
     "description": "The difference between the js slow script timeout for content set in prefs and the actual time we waited before displaying the notification (msec)."
-  },
-  "PLUGIN_HANG_NOTICE_COUNT": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
-    "alert_emails": ["perf-telemetry-alerts@mozilla.com"],
-    "expires_in_version": "never",
-    "kind": "count",
-    "description": "Count plugin hang notices in e10s"
   },
   "SERVICE_WORKER_SPAWN_ATTEMPTS": {
     "record_in_processes": ["main", "content"],
