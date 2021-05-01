@@ -139,10 +139,6 @@ class GeckoViewProcessHangMonitor extends GeckoViewModule {
         report.terminateScript();
         break;
       }
-      case report.PLUGIN_HANG: {
-        report.terminatePlugin();
-        break;
-      }
     }
   }
 
