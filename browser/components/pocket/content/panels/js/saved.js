@@ -727,15 +727,6 @@ PKT_PANEL_OVERLAY.prototype = {
       ).documentElement;
 
       elSubshell.insertBefore(elPremiumShell, elSubshell.firstChild);
-
-      document
-        .querySelector(`.pkt_ext_initload`)
-        .append(
-          parser.parseFromString(
-            Handlebars.templates.saved_premiumextras(this.dictJSON),
-            `text/html`
-          ).documentElement
-        );
     }
 
     // Initialize functionality for overlay
