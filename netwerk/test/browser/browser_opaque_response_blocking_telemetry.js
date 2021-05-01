@@ -28,6 +28,7 @@ const MEDIA_URL = `${ORIGIN2}/${DIRPATH}res.mp3`;
 const MEDIA_206_URL = `${ORIGIN2}/${DIRPATH}res_206.mp3`;
 const MEDIA_INVALID_PARTIAL_URL = `${ORIGIN2}/${DIRPATH}res_invalid_partial.mp3`;
 const MEDIA_NOT_200OR206_URL = `${ORIGIN2}/${DIRPATH}res_not_200or206.mp3`;
+const IMAGE_UNKNOWN_DECOEDER_URL = `${ORIGIN2}/${DIRPATH}res_img_for_unknown_decoder`;
 
 add_task(async function() {
   await SpecialPowers.pushPrefEnv({
@@ -92,6 +93,10 @@ add_task(async function() {
       url: MEDIA_NOT_200OR206_URL,
       key: "Blocked_Not200Or206",
       media: true,
+    },
+    {
+      url: IMAGE_UNKNOWN_DECOEDER_URL,
+      key: "Allowed_SniffAsImageOrAudioOrVideo",
     },
   ];
 
