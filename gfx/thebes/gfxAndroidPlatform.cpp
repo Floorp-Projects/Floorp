@@ -268,7 +268,7 @@ gfxPlatformFontList* gfxAndroidPlatform::CreatePlatformFontList() {
 }
 
 void gfxAndroidPlatform::ReadSystemFontList(
-    nsTArray<SystemFontListEntry>* aFontList) {
+    mozilla::dom::SystemFontList* aFontList) {
   gfxFT2FontList::PlatformFontList()->ReadSystemFontList(aFontList);
 }
 

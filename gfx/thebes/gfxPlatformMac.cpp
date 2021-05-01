@@ -40,7 +40,7 @@ using namespace mozilla;
 using namespace mozilla::gfx;
 using namespace mozilla::unicode;
 
-using mozilla::dom::SystemFontListEntry;
+using mozilla::dom::SystemFontList;
 
 // cribbed from CTFontManager.h
 enum { kAutoActivationDisabled = 1 };
@@ -238,8 +238,7 @@ gfxPlatformFontList* gfxPlatformMac::CreatePlatformFontList() {
   return nullptr;
 }
 
-void gfxPlatformMac::ReadSystemFontList(
-    nsTArray<SystemFontListEntry>* aFontList) {
+void gfxPlatformMac::ReadSystemFontList(SystemFontList* aFontList) {
   gfxMacPlatformFontList::PlatformFontList()->ReadSystemFontList(aFontList);
 }
 

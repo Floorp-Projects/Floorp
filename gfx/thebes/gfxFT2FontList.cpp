@@ -1616,10 +1616,10 @@ void gfxFT2FontList::AppendFaceFromFontListEntry(const FontListEntry& aFLE,
   }
 }
 
-void gfxFT2FontList::ReadSystemFontList(nsTArray<FontListEntry>* aList) {
+void gfxFT2FontList::ReadSystemFontList(dom::SystemFontList* aList) {
   for (const auto& entry : mFontFamilies) {
     auto family = static_cast<FT2FontFamily*>(entry.GetData().get());
-    family->AddFacesToFontList(aList);
+    family->AddFacesToFontList(&aList->entries());
   }
 }
 
@@ -1657,7 +1657,7 @@ nsresult gfxFT2FontList::InitFontListForPlatform() {
   // Content process: use font list passed from the chrome process via
   // the GetXPCOMProcessAttributes message.
   auto& fontList = dom::ContentChild::GetSingleton()->SystemFontList();
-  for (FontListEntry& fle : fontList) {
+  for (FontListEntry& fle : fontList.entries()) {
     // We don't need to identify "standard" font files here,
     // as the faces are already sorted.
     AppendFaceFromFontListEntry(fle, kUnknown);
@@ -1673,8 +1673,8 @@ nsresult gfxFT2FontList::InitFontListForPlatform() {
 
   LOG(("got font list from chrome process: %" PRIdPTR " faces in %" PRIu32
        " families",
-       fontList.Length(), mFontFamilies.Count()));
-  fontList.Clear();
+       fontList.entries().Length(), mFontFamilies.Count()));
+  fontList.entries().Clear();
 
   return NS_OK;
 }
