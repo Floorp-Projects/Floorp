@@ -125,10 +125,10 @@ fuzzy-if(d2d,0-16,0-10) == img-content-outside-viewBox-1.html img-content-outsid
 # img-foreignObject-iframe-1a.html, though, because its SVG image tries to
 # alert(), and that'd trigger a reftest timeout if we loaded that file directly.
 == img-foreignObject-embed-1.html         lime100x100-ref.html
-!= img-foreignObject-embed-1-helper.svg   lime100x100-ref.html
+skip != img-foreignObject-embed-1-helper.svg   lime100x100.svg    # Bug 1708599    
 == img-foreignObject-iframe-1a.html       lime100x100-ref.html
 == img-foreignObject-iframe-1b.html       lime100x100-ref.html
-!= img-foreignObject-iframe-1b-helper.svg lime100x100-ref.html
+!= img-foreignObject-iframe-1b-helper.svg lime100x100.svg
 
 == img-widthAndHeight-meet-1.html  img-widthAndHeight-meet-1-ref.html
 == img-widthAndHeight-meet-2.html  img-widthAndHeight-meet-2-ref.html
