@@ -13,6 +13,7 @@ for header in (
     "SweepingAPI.h",
     "TraceKind.h",
     "TracingAPI.h",
+    "WeakMap.h",
     "WeakMapPtr.h",
     "GCHashTable.h",
     "GCPolicyAPI.h",
