@@ -1054,11 +1054,8 @@ browser[tabmodalPromptShowing], browser[tabDialogShowing] {
 
 /*** Visibility of downloads indicator controls ***/
 
-/* Bug 924050: If we've loaded the indicator, for now we hide it in the menu panel,
-   and just show the icon. This is a hack to side-step very weird layout bugs that
-   seem to be caused by the indicator stack interacting with the menu panel. */
-#downloads-button[indicator]:not([cui-areatype="menu-panel"]) > .toolbarbutton-badge-stack > image.toolbarbutton-icon,
-#downloads-button[indicator][cui-areatype="menu-panel"] > .toolbarbutton-badge-stack > #downloads-indicator-anchor {
+/* Hide the default icon, show the anchor instead. */
+#downloads-button[indicator] > .toolbarbutton-badge-stack > image.toolbarbutton-icon {
   display: none;
 }
 
