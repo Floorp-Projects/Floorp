@@ -7,9 +7,9 @@
 #ifndef mozilla_a11y_GeckoCustom_h_
 #define mozilla_a11y_GeckoCustom_h_
 
-#include "AccessibleWrap.h"
 #include "IUnknownImpl.h"
 #include "IGeckoCustom.h"
+#include "MsaaAccessible.h"
 
 namespace mozilla {
 namespace a11y {
@@ -20,7 +20,7 @@ namespace a11y {
  */
 class GeckoCustom final : public IGeckoCustom {
  public:
-  explicit GeckoCustom(AccessibleWrap* aAcc) : mAcc(aAcc) {}
+  explicit GeckoCustom(MsaaAccessible* aMsaa) : mMsaa(aMsaa) {}
 
   // IUnknown
   DECL_IUNKNOWN
@@ -43,7 +43,7 @@ class GeckoCustom final : public IGeckoCustom {
   ~GeckoCustom() {}
 
  protected:
-  RefPtr<AccessibleWrap> mAcc;
+  RefPtr<MsaaAccessible> mMsaa;
 };
 
 }  // namespace a11y
