@@ -215,6 +215,7 @@ EXPORTS.js += [
     "../public/Warnings.h",
     "../public/WasmFeatures.h",
     "../public/WasmModule.h",
+    "../public/WeakMap.h",
     "../public/WeakMapPtr.h",
     "../public/Wrapper.h",
 ]
