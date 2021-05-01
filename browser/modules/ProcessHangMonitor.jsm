@@ -141,26 +141,17 @@ var ProcessHangMonitor = {
       return;
     }
 
-    switch (report.hangType) {
-      case report.SLOW_SCRIPT:
-        this._recordTelemetryForReport(report, "user-aborted");
-        this.terminateScript(win);
-        break;
-    }
+    this._recordTelemetryForReport(report, "user-aborted");
+    this.terminateScript(win);
   },
 
   /**
-   * Terminate whatever is causing this report, be it an add-on, page script,
-   * or plug-in. This is done without updating any report notifications.
+   * Terminate the script causing this report. This is done without
+   * updating any report notifications.
    */
   stopHang(report, endReason, backupInfo) {
-    switch (report.hangType) {
-      case report.SLOW_SCRIPT: {
-        this._recordTelemetryForReport(report, endReason, backupInfo);
-        report.terminateScript();
-        break;
-      }
-    }
+    this._recordTelemetryForReport(report, endReason, backupInfo);
+    report.terminateScript();
   },
 
   /**
@@ -286,24 +277,17 @@ var ProcessHangMonitor = {
 
   onWindowClosed(win) {
     let maybeStopHang = report => {
-      if (report.hangType == report.SLOW_SCRIPT) {
-        let hungBrowserWindow = null;
-        try {
-          hungBrowserWindow = report.scriptBrowser.ownerGlobal;
-        } catch (e) {
-          // Ignore failures to get the script browser - we'll be
-          // conservative, and assume that if we cannot access the
-          // window that belongs to this report that we should stop
-          // the hang.
-        }
-        if (!hungBrowserWindow || hungBrowserWindow == win) {
-          this.stopHang(report, "window-closed");
-          return true;
-        }
-      } else if (report.hangType == report.PLUGIN_HANG) {
-        // If any window has closed during a plug-in hang, we'll
-        // do the conservative thing and terminate the plug-in.
-        this.stopHang(report);
+      let hungBrowserWindow = null;
+      try {
+        hungBrowserWindow = report.scriptBrowser.ownerGlobal;
+      } catch (e) {
+        // Ignore failures to get the script browser - we'll be
+        // conservative, and assume that if we cannot access the
+        // window that belongs to this report that we should stop
+        // the hang.
+      }
+      if (!hungBrowserWindow || hungBrowserWindow == win) {
+        this.stopHang(report, "window-closed");
         return true;
       }
       return false;
@@ -377,10 +361,6 @@ var ProcessHangMonitor = {
       return;
     }
     try {
-      // Only report slow script hangs.
-      if (report.hangType != report.SLOW_SCRIPT) {
-        return;
-      }
       let uri_type;
       if (report.addonId) {
         uri_type = "extension";
@@ -578,7 +558,7 @@ var ProcessHangMonitor = {
       return;
     }
 
-    if (AppConstants.MOZ_DEV_EDITION && report.hangType == report.SLOW_SCRIPT) {
+    if (AppConstants.MOZ_DEV_EDITION) {
       buttons.push({
         label: bundle.getString("processHang.button_debug.label"),
         accessKey: bundle.getString("processHang.button_debug.accessKey"),
@@ -689,12 +669,9 @@ var ProcessHangMonitor = {
       return;
     }
 
-    // On e10s this counts slow-script/hanged-plugin notice only once.
+    // On e10s this counts slow-script notice only once.
     // This code is not reached on non-e10s.
-    if (report.hangType == report.SLOW_SCRIPT) {
-      // On non-e10s, SLOW_SCRIPT_NOTICE_COUNT is probed at nsGlobalWindow.cpp
-      Services.telemetry.getHistogramById("SLOW_SCRIPT_NOTICE_COUNT").add();
-    }
+    Services.telemetry.getHistogramById("SLOW_SCRIPT_NOTICE_COUNT").add();
 
     this._activeReports.set(report, {
       deselectCount: 0,

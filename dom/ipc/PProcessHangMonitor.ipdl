@@ -23,15 +23,10 @@ struct SlowScriptData
   double duration;
 };
 
-union HangData
-{
-  SlowScriptData;
-};
-
 protocol PProcessHangMonitor
 {
 parent:
-  async HangEvidence(HangData data);
+  async HangEvidence(SlowScriptData data);
   async ClearHang();
 
 child:
