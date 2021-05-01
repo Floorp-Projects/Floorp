@@ -15,6 +15,42 @@
 #include "js/TypeDecls.h"
 #include "js/Value.h"  // JS::Value, JS::Handle<JS::Value>
 
+class JSErrorReport;
+
+namespace JS {
+enum class ExceptionStackBehavior : bool {
+  // Do not capture any stack.
+  DoNotCapture,
+
+  // Capture the current JS stack when setting the exception. It may be
+  // retrieved by JS::GetPendingExceptionStack.
+  Capture
+};
+}  // namespace JS
+
+extern JS_PUBLIC_API bool JS_IsExceptionPending(JSContext* cx);
+
+extern JS_PUBLIC_API bool JS_IsThrowingOutOfMemory(JSContext* cx);
+
+extern JS_PUBLIC_API bool JS_GetPendingException(JSContext* cx,
+                                                 JS::MutableHandleValue vp);
+
+extern JS_PUBLIC_API void JS_SetPendingException(
+    JSContext* cx, JS::HandleValue v,
+    JS::ExceptionStackBehavior behavior = JS::ExceptionStackBehavior::Capture);
+
+extern JS_PUBLIC_API void JS_ClearPendingException(JSContext* cx);
+
+/**
+ * If the given object is an exception object, the exception will have (or be
+ * able to lazily create) an error report struct, and this function will return
+ * the address of that struct.  Otherwise, it returns nullptr. The lifetime
+ * of the error report struct that might be returned is the same as the
+ * lifetime of the exception object.
+ */
+extern JS_PUBLIC_API JSErrorReport* JS_ErrorFromException(JSContext* cx,
+                                                          JS::HandleObject obj);
+
 namespace JS {
 
 // This class encapsulates a (pending) exception and the corresponding optional
@@ -49,6 +85,54 @@ class MOZ_STACK_CLASS ExceptionStack {
   HandleObject stack() const { return stack_; }
 };
 
+/**
+ * Save and later restore the current exception state of a given JSContext.
+ * This is useful for implementing behavior in C++ that's like try/catch
+ * or try/finally in JS.
+ *
+ * Typical usage:
+ *
+ *     bool ok = JS::Evaluate(cx, ...);
+ *     AutoSaveExceptionState savedExc(cx);
+ *     ... cleanup that might re-enter JS ...
+ *     return ok;
+ */
+class JS_PUBLIC_API AutoSaveExceptionState {
+ private:
+  JSContext* context;
+  bool wasPropagatingForcedReturn;
+  bool wasOverRecursed;
+  bool wasThrowing;
+  RootedValue exceptionValue;
+  RootedObject exceptionStack;
+
+ public:
+  /*
+   * Take a snapshot of cx's current exception state. Then clear any current
+   * pending exception in cx.
+   */
+  explicit AutoSaveExceptionState(JSContext* cx);
+
+  /*
+   * If neither drop() nor restore() was called, restore the exception
+   * state only if no exception is currently pending on cx.
+   */
+  ~AutoSaveExceptionState();
+
+  /*
+   * Discard any stored exception state.
+   * If this is called, the destructor is a no-op.
+   */
+  void drop();
+
+  /*
+   * Replace cx's exception state with the stored exception state. Then
+   * discard the stored exception state. If this is called, the
+   * destructor is a no-op.
+   */
+  void restore();
+};
+
 // Get the current pending exception value and stack.
 // This function asserts that there is a pending exception.
 // If this function returns false, then retrieving the current pending exception
@@ -65,6 +149,15 @@ extern JS_PUBLIC_API bool StealPendingExceptionStack(
 // the current pending exception.
 extern JS_PUBLIC_API void SetPendingExceptionStack(
     JSContext* cx, const JS::ExceptionStack& exceptionStack);
+
+/**
+ * If the given object is an exception object (or an unwrappable
+ * cross-compartment wrapper for one), return the stack for that exception, if
+ * any.  Will return null if the given object is not an exception object
+ * (including if it's null or a security wrapper that can't be unwrapped) or if
+ * the exception has no stack.
+ */
+extern JS_PUBLIC_API JSObject* ExceptionStackOrNull(JS::HandleObject obj);
 
 }  // namespace JS
 
