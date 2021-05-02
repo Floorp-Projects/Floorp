@@ -30,11 +30,6 @@ class NS_NO_VTABLE DirectoryLock {
 
   virtual void AcquireImmediately() = 0;
 
-  // XXX Move to the UniversalDirectoryLock class.
-  virtual RefPtr<ClientDirectoryLock> Specialize(
-      PersistenceType aPersistenceType, const OriginMetadata& aOriginMetadata,
-      Client::Type aClientType) const = 0;
-
   virtual void Log() const = 0;
 };
 
@@ -76,6 +71,10 @@ class UniversalDirectoryLock : public DirectoryLock {
 
   // XXX Rename to NullableClientTypeRef.
   virtual const Nullable<Client::Type>& NullableClientType() const = 0;
+
+  virtual RefPtr<ClientDirectoryLock> SpecializeForClient(
+      PersistenceType aPersistenceType, const OriginMetadata& aOriginMetadata,
+      Client::Type aClientType) const = 0;
 };
 
 class NS_NO_VTABLE OpenDirectoryListener {
