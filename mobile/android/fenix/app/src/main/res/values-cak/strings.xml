@@ -461,9 +461,6 @@
     <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
     <string name="exceptions_empty_message_learn_more_link">Tetamäx ch\'aqa\' chik</string>
 
-    <!-- Description in Quick Settings that tells user tracking protection is off globally for all sites, and links to Settings to turn it on -->
-    <string name="preferences_tracking_protection_turned_off_globally">Tachupu\' chijun, jät pa Nuk\'ulem richin natzïj.</string>
-
     <!-- Preference switch for Telemetry -->
     <string name="preferences_telemetry">Etataqonel</string>
     <!-- Preference switch for usage and technical data collection -->
@@ -820,8 +817,6 @@
     <string name="bookmark_delete_folder_snackbar">Xyuj %1$s</string>
     <!-- Screen title for adding a bookmarks folder -->
     <string name="bookmark_add_folder">Titz\'aqatisäx Yakwuj</string>
-    <!-- deprecated: Snackbar title shown after a bookmark has been created. -->
-    <string name="bookmark_created_snackbar">Xtz\'ukutäj ri yaketal.</string>
     <!-- Snackbar title shown after a bookmark has been created. -->
     <string name="bookmark_saved_snackbar">¡Xyak yaketal!</string>
     <!-- Snackbar edit button shown after a bookmark has been created. -->
@@ -1216,6 +1211,8 @@
     <string name="onboarding_whats_new_description">¿La k\'o ak\'utunik chi rij ri xwachib\'ëx chik chi rij ri %s? ¿La nawajo\' nawetamaj achike ri xjalatäj?</string>
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
     <string name="onboarding_whats_new_description_linktext">Wawe\' e k\'o ri tzolin taq tzij</string>
+    <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
+    <string name="onboarding_account_sign_in_header_1">Taxima\' Firefox pa taq awokisab\'al</string>
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
         another Firefox browser. (The word `Firefox` should not be translated)
         The first parameter is the email of the detected user's account -->
@@ -1224,6 +1221,8 @@
     <string name="onboarding_firefox_account_auto_signin_confirm">Ja\', titikirisäx molojri\'ïl</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
     <string name="onboarding_firefox_account_signing_in">Nitikirisäx molojri\'ïl…</string>
+    <!-- text for the button to manually sign into Firefox account. -->
+    <string name="onboarding_firefox_account_sign_in_1">Tatz\'ib\'aj ab\'i\'</string>
     <!-- text for the button to stay signed out when presented with an option to automatically sign-in. -->
     <string name="onboarding_firefox_account_stay_signed_out">Jantape\' chupül</string>
     <!-- text to display in the snackbar once account is signed-in -->
@@ -1231,6 +1230,8 @@
     <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
     <string name="onboarding_firefox_account_automatic_signin_failed">Xsach toq xtikirisäx molojri\'ïl</string>
 
+    <!-- text for the tracking protection onboarding card header -->
+    <string name="onboarding_tracking_protection_header_3">Junelïk tzijïl ichinanem</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">Junaman (k\'o wi)</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
@@ -1579,6 +1580,9 @@
     <!-- Preference option for adding a credit card -->
     <string name="preferences_credit_cards_add_credit_card">Titz\'aqatisäx rutarjeta\' kre\'ito\'</string>
 
+    <!-- The header for the card number of a credit card -->
+    <string name="credit_cards_card_number">Rajilab\'al Tarjeta\'</string>
+
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Titz\'aqatisäx kanob\'äl</string>
     <!-- Title of the Edit search engine screen -->
@@ -1743,20 +1747,7 @@ Achi\'el: \nhttps://www.google.com/search?q=%s</string>
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Tiyuj</string>
 
-    <!-- Deprecated: text for the firefox account onboarding card header
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_firefox_account_header">Ütz tawokisaj ri %s.</string>
-
     <!-- Content description radio buttons with a link to more information -->
     <string name="radio_preference_info_content_description">Tipitz\' richin ch\'aqa\' rub\'anikil</string>
-
-    <!-- Deprecated: No Open Tabs Message Header -->
-    <string name="no_collections_header1">Ke\'amolo\' ri taq wachinäq niqa chawa</string>
-    <!-- Deprecated: Label to describe what collections are to a new user without any collections -->
-    <string name="no_collections_description1">Ketzob\'ajïx taq kanoxïk, taq ruxaq chuqa\' taq ruwi\' ejunam richin ye\'okisäx na.</string>
-    <!-- Deprecated: text for the firefox account onboarding card header when we detect you're already signed in to -->
-    <string name="onboarding_firefox_account_auto_signin_header_2">Xatikirisaj molojri\'ïl pa jun chik rokik\'amaya\'l Firefox achi\'el %s pa re oyonib\'äl re\'. ¿La nawajo\' natikirisaj molojri\'ïl rik\'in re rub\'i\' taqoya\'l re\'?</string>
-    <!-- Deprecated: Describes the add to homescreen functionality -->
-    <string name="add_to_homescreen_description">Anin yatikïr naya\' re ajk\'amaya\'l pa ri Rutikirib\'al ruxaq awoyonib\'al richin aninäq nawokisaj chuqa\' aninäq yatok pa k\'amaya\'l, achi\'el ta xa jun chokoy.</string>
 
     </resources>

@@ -445,9 +445,6 @@
     <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
     <string name="exceptions_empty_message_learn_more_link">מידע נוסף</string>
 
-    <!-- Description in Quick Settings that tells user tracking protection is off globally for all sites, and links to Settings to turn it on -->
-    <string name="preferences_tracking_protection_turned_off_globally">כבויה באופן גלובלי, יש לעבור להגדרות כדי להפעיל אותה.</string>
-
     <!-- Preference switch for Telemetry -->
     <string name="preferences_telemetry">Telemetry</string>
     <!-- Preference switch for usage and technical data collection -->
@@ -459,6 +456,8 @@
     <string name="preferences_marketing_data">נתוני שיווק</string>
     <!-- Preference description for marketing data collection, parameter is the app name (e.g. Firefox) -->
     <string name="preferences_marketing_data_description">שיתוף מידע על התכונות שהכי משמשות אותך ב־%1$s עם Leanplum, ספק השיווק שלנו למכשירים ניידים.</string>
+    <!-- Preference description for marketing data collection -->
+    <string name="preferences_marketing_data_description2">משתף נתוני שימוש בסיסיים עם Adjust, ספק השיווק שלנו בסלולר</string>
     <!-- Title for studies preferences -->
     <string name="preference_experiments_2">מחקרים</string>
     <!-- Summary for studies preferences -->
@@ -796,8 +795,6 @@
     <string name="bookmark_delete_folder_snackbar">נמחק %1$s</string>
     <!-- Screen title for adding a bookmarks folder -->
     <string name="bookmark_add_folder">הוספת תיקייה</string>
-    <!-- deprecated: Snackbar title shown after a bookmark has been created. -->
-    <string name="bookmark_created_snackbar">סימנייה נוצרה.</string>
     <!-- Snackbar title shown after a bookmark has been created. -->
     <string name="bookmark_saved_snackbar">הסימנייה נשמרה!</string>
     <!-- Snackbar edit button shown after a bookmark has been created. -->
@@ -1755,20 +1752,7 @@
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">הסרה</string>
 
-    <!-- Deprecated: text for the firefox account onboarding card header
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_firefox_account_header">להוציא את המיטב מ־%s.</string>
-
     <!-- Content description radio buttons with a link to more information -->
     <string name="radio_preference_info_content_description">יש ללחוץ לפרטים נוספים</string>
-
-    <!-- Deprecated: No Open Tabs Message Header -->
-    <string name="no_collections_header1">לאסוף את הדברים החשובים לך</string>
-    <!-- Deprecated: Label to describe what collections are to a new user without any collections -->
-    <string name="no_collections_description1">ניתן לקבץ חיפושים, אתרים ולשוניות דומים יחד כדי לגשת אליהם מהר יותר בהמשך.</string>
-    <!-- Deprecated: text for the firefox account onboarding card header when we detect you're already signed in to -->
-    <string name="onboarding_firefox_account_auto_signin_header_2">דפדפן Firefox נוסף בטלפון זה מחובר כ־%s. האם ברצונך להתחבר עם חשבון זה?</string>
-    <!-- Deprecated: Describes the add to homescreen functionality -->
-    <string name="add_to_homescreen_description">באפשרותך להוסיף בקלות אתר זה למסך הבית של הטלפון שלך כדי לקבל גישה מיידית ולגלוש מהר יותר עם חוויה שמדמה שימוש ביישומון.</string>
 
     </resources>
