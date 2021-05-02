@@ -173,11 +173,6 @@ class DirectoryLockImpl final : public ClientDirectoryLock,
 
   void AcquireImmediately() override;
 
-  RefPtr<ClientDirectoryLock> Specialize(
-      PersistenceType aPersistenceType,
-      const quota::OriginMetadata& aOriginMetadata,
-      Client::Type aClientType) const override;
-
   void Log() const override;
 
   // OriginDirectoryLock interface
@@ -222,6 +217,11 @@ class DirectoryLockImpl final : public ClientDirectoryLock,
   const Nullable<Client::Type>& NullableClientType() const override {
     return mClientType;
   }
+
+  RefPtr<ClientDirectoryLock> SpecializeForClient(
+      PersistenceType aPersistenceType,
+      const quota::OriginMetadata& aOriginMetadata,
+      Client::Type aClientType) const override;
 
  private:
   ~DirectoryLockImpl();
