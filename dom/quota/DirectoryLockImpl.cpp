@@ -201,7 +201,7 @@ void DirectoryLockImpl::AcquireImmediately() {
   mQuotaManager->RegisterDirectoryLock(*this);
 }
 
-RefPtr<ClientDirectoryLock> DirectoryLockImpl::Specialize(
+RefPtr<ClientDirectoryLock> DirectoryLockImpl::SpecializeForClient(
     PersistenceType aPersistenceType,
     const quota::OriginMetadata& aOriginMetadata,
     Client::Type aClientType) const {

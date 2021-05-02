@@ -5169,7 +5169,8 @@ class Maintenance final : public Runnable, public OpenDirectoryListener {
 
   RefPtr<QuotaClient> mQuotaClient;
   PRTime mStartTime;
-  RefPtr<DirectoryLock> mDirectoryLock;
+  RefPtr<UniversalDirectoryLock> mPendingDirectoryLock;
+  RefPtr<UniversalDirectoryLock> mDirectoryLock;
   nsTArray<DirectoryInfo> mDirectoryInfos;
   nsTHashMap<nsStringHashKey, DatabaseMaintenance*> mDatabaseMaintenances;
   nsresult mResultCode;
@@ -13432,14 +13433,19 @@ nsresult Maintenance::OpenDirectory() {
 
   // Get a shared lock for <profile>/storage/*/*/idb
 
-  RefPtr<DirectoryLock> directoryLock =
-      QuotaManager::Get()->CreateDirectoryLockInternal(
-          Nullable<PersistenceType>(), OriginScope::FromNull(),
-          Nullable<Client::Type>(Client::IDB),
-          /* aExclusive */ false);
+  mPendingDirectoryLock = QuotaManager::Get()->CreateDirectoryLockInternal(
+      Nullable<PersistenceType>(), OriginScope::FromNull(),
+      Nullable<Client::Type>(Client::IDB),
+      /* aExclusive */ false);
 
   mState = State::DirectoryOpenPending;
-  directoryLock->Acquire(this);
+
+  {
+    // Pin the directory lock, because Acquire might clear mPendingDirectoryLock
+    // during the Acquire call.
+    RefPtr pinnedDirectoryLock = mPendingDirectoryLock;
+    pinnedDirectoryLock->Acquire(this);
+  }
 
   return NS_OK;
 }
@@ -13765,7 +13771,7 @@ nsresult Maintenance::BeginDatabaseMaintenance() {
     for (const nsString& databasePath : *directoryInfo.mDatabasePaths) {
       if (Helper::IsSafeToRunMaintenance(databasePath)) {
         if (!directoryLock) {
-          directoryLock = mDirectoryLock->Specialize(
+          directoryLock = mDirectoryLock->SpecializeForClient(
               directoryInfo.mPersistenceType,
               *directoryInfo.mFullOriginMetadata, Client::IDB);
           MOZ_ASSERT(directoryLock);
@@ -13888,7 +13894,7 @@ void Maintenance::DirectoryLockAcquired(DirectoryLock* aLock) {
   MOZ_ASSERT(mState == State::DirectoryOpenPending);
   MOZ_ASSERT(!mDirectoryLock);
 
-  mDirectoryLock = aLock;
+  mDirectoryLock = std::exchange(mPendingDirectoryLock, nullptr);
 
   nsresult rv = DirectoryOpen();
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -13907,6 +13913,8 @@ void Maintenance::DirectoryLockFailed() {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(mState == State::DirectoryOpenPending);
   MOZ_ASSERT(!mDirectoryLock);
+
+  mPendingDirectoryLock = nullptr;
 
   if (NS_SUCCEEDED(mResultCode)) {
     mResultCode = NS_ERROR_FAILURE;
