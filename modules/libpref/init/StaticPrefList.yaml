@@ -6906,13 +6906,6 @@
   value: false
   mirror: always
 
-# Is ruby-position: alternate enabled?
-- name: layout.css.ruby.position-alternate.enabled
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-  rust: true
-
 - name: layout.css.scroll-behavior.damping-ratio
   type: AtomicFloat
   value: 1.0f
