@@ -41,7 +41,8 @@ class HistoryControllerTest {
     private val resources: Resources = mockk(relaxed = true)
     private val snackbar: FenixSnackbar = mockk(relaxed = true)
     private val clipboardManager: ClipboardManager = mockk(relaxed = true)
-    private val openInBrowser: (HistoryItem, BrowsingMode?) -> Unit = mockk(relaxed = true)
+    private val openInBrowser: (HistoryItem) -> Unit = mockk(relaxed = true)
+    private val openAndShowTray: (HistoryItem, BrowsingMode) -> Unit = mockk(relaxed = true)
     private val displayDeleteAll: () -> Unit = mockk(relaxed = true)
     private val invalidateOptionsMenu: () -> Unit = mockk(relaxed = true)
     private val deleteHistoryItems: (Set<HistoryItem>) -> Unit = mockk(relaxed = true)
@@ -55,6 +56,7 @@ class HistoryControllerTest {
         clipboardManager,
         scope,
         openInBrowser,
+        openAndShowTray,
         displayDeleteAll,
         invalidateOptionsMenu,
         deleteHistoryItems,
@@ -77,25 +79,25 @@ class HistoryControllerTest {
         controller.handleOpen(historyItem)
 
         verify {
-            openInBrowser(historyItem, null)
+            openInBrowser(historyItem)
         }
     }
 
     @Test
     fun onOpenItemInNormalMode() {
-        controller.handleOpen(historyItem, BrowsingMode.Normal)
+        controller.handleOpenInNewTab(historyItem, BrowsingMode.Normal)
 
         verify {
-            openInBrowser(historyItem, BrowsingMode.Normal)
+            openAndShowTray(historyItem, BrowsingMode.Normal)
         }
     }
 
     @Test
     fun onOpenItemInPrivateMode() {
-        controller.handleOpen(historyItem, BrowsingMode.Private)
+        controller.handleOpenInNewTab(historyItem, BrowsingMode.Private)
 
         verify {
-            openInBrowser(historyItem, BrowsingMode.Private)
+            openAndShowTray(historyItem, BrowsingMode.Private)
         }
     }
 

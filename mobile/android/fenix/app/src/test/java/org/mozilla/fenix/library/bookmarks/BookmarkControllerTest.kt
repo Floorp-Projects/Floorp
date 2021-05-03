@@ -27,6 +27,7 @@ import kotlinx.coroutines.test.TestCoroutineScope
 import mozilla.appservices.places.BookmarkRoot
 import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.concept.storage.BookmarkNodeType
+import mozilla.components.feature.tabs.TabsUseCases
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Before
@@ -54,14 +55,18 @@ class BookmarkControllerTest {
     private val clipboardManager: ClipboardManager = mockk(relaxUnitFun = true)
     private val navController: NavController = mockk(relaxed = true)
     private val sharedViewModel: BookmarksSharedViewModel = mockk()
+    private val tabsUseCases: TabsUseCases = mockk()
     private val loadBookmarkNode: suspend (String) -> BookmarkNode? = mockk(relaxed = true)
     private val showSnackbar: (String) -> Unit = mockk(relaxed = true)
     private val deleteBookmarkNodes: (Set<BookmarkNode>, Event) -> Unit = mockk(relaxed = true)
     private val deleteBookmarkFolder: (Set<BookmarkNode>) -> Unit = mockk(relaxed = true)
     private val invokePendingDeletion: () -> Unit = mockk(relaxed = true)
+    private val showTabTray: () -> Unit = mockk(relaxed = true)
 
     private val homeActivity: HomeActivity = mockk(relaxed = true)
     private val services: Services = mockk(relaxed = true)
+    private val addNewTabUseCase: TabsUseCases.AddNewTabUseCase = mockk(relaxed = true)
+    private val addNewPrivateTabUseCase: TabsUseCases.AddNewPrivateTabUseCase = mockk(relaxed = true)
 
     private val item =
         BookmarkNode(BookmarkNodeType.ITEM, "456", "123", 0, "Mozilla", "http://mozilla.org", null)
@@ -100,6 +105,8 @@ class BookmarkControllerTest {
         }
         every { bookmarkStore.dispatch(any()) } returns mockk()
         every { sharedViewModel.selectedFolder = any() } just runs
+        every { tabsUseCases.addTab } returns addNewTabUseCase
+        every { tabsUseCases.addPrivateTab } returns addNewPrivateTabUseCase
 
         controller = DefaultBookmarkController(
             activity = homeActivity,
@@ -108,11 +115,13 @@ class BookmarkControllerTest {
             scope = scope,
             store = bookmarkStore,
             sharedViewModel = sharedViewModel,
+            tabsUseCases = tabsUseCases,
             loadBookmarkNode = loadBookmarkNode,
             showSnackbar = showSnackbar,
             deleteBookmarkNodes = deleteBookmarkNodes,
             deleteBookmarkFolder = deleteBookmarkFolder,
-            invokePendingDeletion = invokePendingDeletion
+            invokePendingDeletion = invokePendingDeletion,
+            showTabTray = showTabTray
         )
     }
 
@@ -268,13 +277,25 @@ class BookmarkControllerTest {
     }
 
     @Test
+    fun `handleBookmarkTapped should open the bookmark`() {
+        controller.handleBookmarkTapped(item)
+
+        verifyOrder {
+            invokePendingDeletion.invoke()
+            homeActivity.openToBrowserAndLoad(item.url!!, true, BrowserDirection.FromBookmarks)
+        }
+    }
+
+    @Test
     fun `handleOpeningBookmark should open the bookmark a new 'Normal' tab`() {
         controller.handleOpeningBookmark(item, BrowsingMode.Normal)
 
         verifyOrder {
             invokePendingDeletion.invoke()
             homeActivity.browsingModeManager.mode = BrowsingMode.Normal
-            homeActivity.openToBrowserAndLoad(item.url!!, true, BrowserDirection.FromBookmarks)
+            tabsUseCases.addTab
+            addNewTabUseCase.invoke(item.url!!)
+            showTabTray
         }
     }
 
@@ -285,7 +306,9 @@ class BookmarkControllerTest {
         verifyOrder {
             invokePendingDeletion.invoke()
             homeActivity.browsingModeManager.mode = BrowsingMode.Private
-            homeActivity.openToBrowserAndLoad(item.url!!, true, BrowserDirection.FromBookmarks)
+            tabsUseCases.addPrivateTab
+            addNewPrivateTabUseCase.invoke(item.url!!)
+            showTabTray
         }
     }
 

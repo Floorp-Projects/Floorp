@@ -41,16 +41,16 @@ class ThreeDotMenuHistoryItemRobot {
             return LibrarySubMenusMultipleSelectionToolbarRobot.Transition()
         }
 
-        fun clickOpenInNormalTab(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
+        fun clickOpenInNormalTab(interact: TabDrawerRobot.() -> Unit): TabDrawerRobot.Transition {
             openInNewNormalTabButton().click()
-            BrowserRobot().interact()
-            return BrowserRobot.Transition()
+            TabDrawerRobot().interact()
+            return TabDrawerRobot.Transition()
         }
 
-        fun clickOpenInPrivateTab(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
+        fun clickOpenInPrivateTab(interact: TabDrawerRobot.() -> Unit): TabDrawerRobot.Transition {
             openInNewPrivateTabButton().click()
-            BrowserRobot().interact()
-            return BrowserRobot.Transition()
+            TabDrawerRobot().interact()
+            return TabDrawerRobot.Transition()
         }
 
         fun clickDelete(interact: HistoryRobot.() -> Unit): HistoryRobot.Transition {

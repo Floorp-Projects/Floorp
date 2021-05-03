@@ -14,6 +14,7 @@ import kotlinx.coroutines.launch
 import mozilla.appservices.places.BookmarkRoot
 import mozilla.components.concept.engine.prompt.ShareData
 import mozilla.components.concept.storage.BookmarkNode
+import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.service.fxa.sync.SyncReason
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
@@ -55,11 +56,13 @@ class DefaultBookmarkController(
     private val scope: CoroutineScope,
     private val store: BookmarkFragmentStore,
     private val sharedViewModel: BookmarksSharedViewModel,
+    private val tabsUseCases: TabsUseCases?,
     private val loadBookmarkNode: suspend (String) -> BookmarkNode?,
     private val showSnackbar: (String) -> Unit,
     private val deleteBookmarkNodes: (Set<BookmarkNode>, Event) -> Unit,
     private val deleteBookmarkFolder: (Set<BookmarkNode>) -> Unit,
-    private val invokePendingDeletion: () -> Unit
+    private val invokePendingDeletion: () -> Unit,
+    private val showTabTray: () -> Unit
 ) : BookmarkController {
 
     private val resources: Resources = activity.resources
@@ -70,7 +73,7 @@ class DefaultBookmarkController(
     }
 
     override fun handleBookmarkTapped(item: BookmarkNode) {
-        openInNewTab(item.url!!, true, BrowserDirection.FromBookmarks, activity.browsingModeManager.mode)
+        openInNewTabAndShow(item.url!!, true, BrowserDirection.FromBookmarks, activity.browsingModeManager.mode)
     }
 
     override fun handleBookmarkExpand(folder: BookmarkNode) {
@@ -126,7 +129,8 @@ class DefaultBookmarkController(
     }
 
     override fun handleOpeningBookmark(item: BookmarkNode, mode: BrowsingMode) {
-        openInNewTab(item.url!!, true, BrowserDirection.FromBookmarks, mode)
+        openInNewTab(item.url!!, mode)
+        showTabTray()
     }
 
     override fun handleBookmarkDeletion(nodes: Set<BookmarkNode>, eventType: Event) {
@@ -169,7 +173,7 @@ class DefaultBookmarkController(
         }
     }
 
-    private fun openInNewTab(
+    private fun openInNewTabAndShow(
         searchTermOrURL: String,
         newTab: Boolean,
         from: BrowserDirection,
@@ -179,6 +183,18 @@ class DefaultBookmarkController(
         with(activity) {
             browsingModeManager.mode = mode
             openToBrowserAndLoad(searchTermOrURL, newTab, from)
+        }
+    }
+
+    private fun openInNewTab(
+        url: String,
+        mode: BrowsingMode
+    ) {
+        invokePendingDeletion.invoke()
+        activity.browsingModeManager.mode = BrowsingMode.fromBoolean(mode == BrowsingMode.Private)
+        tabsUseCases?.let { tabsUseCases ->
+            val addTab = if (mode == BrowsingMode.Private) tabsUseCases.addPrivateTab else tabsUseCases.addTab
+            addTab.invoke(url)
         }
     }
 

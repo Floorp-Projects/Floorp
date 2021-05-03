@@ -89,7 +89,7 @@ class HistoryInteractorTest {
         interactor.onOpenInNormalTab(historyItem)
 
         verifyAll {
-            controller.handleOpen(historyItem, BrowsingMode.Normal)
+            controller.handleOpenInNewTab(historyItem, BrowsingMode.Normal)
         }
     }
 
@@ -98,7 +98,7 @@ class HistoryInteractorTest {
         interactor.onOpenInPrivateTab(historyItem)
 
         verifyAll {
-            controller.handleOpen(historyItem, BrowsingMode.Private)
+            controller.handleOpenInNewTab(historyItem, BrowsingMode.Private)
         }
     }
 

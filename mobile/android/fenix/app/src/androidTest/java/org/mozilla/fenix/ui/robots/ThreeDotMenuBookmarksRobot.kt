@@ -38,18 +38,18 @@ class ThreeDotMenuBookmarksRobot {
             return BookmarksRobot.Transition()
         }
 
-        fun clickOpenInNewTab(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
+        fun clickOpenInNewTab(interact: TabDrawerRobot.() -> Unit): TabDrawerRobot.Transition {
             openInNewTabButton().click()
 
-            BrowserRobot().interact()
-            return BrowserRobot.Transition()
+            TabDrawerRobot().interact()
+            return TabDrawerRobot.Transition()
         }
 
-        fun clickOpenInPrivateTab(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
+        fun clickOpenInPrivateTab(interact: TabDrawerRobot.() -> Unit): TabDrawerRobot.Transition {
             openInPrivateTabButton().click()
 
-            BrowserRobot().interact()
-            return BrowserRobot.Transition()
+            TabDrawerRobot().interact()
+            return TabDrawerRobot.Transition()
         }
 
         fun clickDelete(interact: BookmarksRobot.() -> Unit): BookmarksRobot.Transition {

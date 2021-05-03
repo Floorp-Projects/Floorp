@@ -92,11 +92,13 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), UserInteractionHan
                 scope = viewLifecycleOwner.lifecycleScope,
                 store = bookmarkStore,
                 sharedViewModel = sharedViewModel,
+                tabsUseCases = activity?.components?.useCases?.tabsUseCases,
                 loadBookmarkNode = ::loadBookmarkNode,
                 showSnackbar = ::showSnackBarWithText,
                 deleteBookmarkNodes = ::deleteMulti,
                 deleteBookmarkFolder = ::showRemoveFolderDialog,
-                invokePendingDeletion = ::invokePendingDeletion
+                invokePendingDeletion = ::invokePendingDeletion,
+                showTabTray = ::showTabTray
             ),
             metrics = metrics!!
         )
@@ -243,7 +245,7 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), UserInteractionHan
 
     private fun showTabTray() {
         invokePendingDeletion()
-        navigateToBookmarkFragment(BookmarkFragmentDirections.actionGlobalTabTrayDialogFragment())
+        navigateToBookmarkFragment(BookmarkFragmentDirections.actionGlobalTabsTrayFragment())
     }
 
     private fun navigateToBookmarkFragment(directions: NavDirections) {

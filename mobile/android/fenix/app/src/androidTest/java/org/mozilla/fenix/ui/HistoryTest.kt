@@ -149,8 +149,7 @@ class HistoryTest {
             IdlingRegistry.getInstance().register(historyListIdlingResource!!)
         }.openThreeDotMenu {
         }.clickOpenInNormalTab {
-            verifyUrl(firstWebPage.url.toString())
-        }.openTabDrawer {
+            verifyTabTrayIsOpened()
             verifyNormalModeSelected()
         }
     }
@@ -170,8 +169,7 @@ class HistoryTest {
             IdlingRegistry.getInstance().register(historyListIdlingResource!!)
         }.openThreeDotMenu {
         }.clickOpenInPrivateTab {
-            verifyUrl(firstWebPage.url.toString())
-        }.openTabDrawer {
+            verifyTabTrayIsOpened()
             verifyPrivateModeSelected()
         }
     }

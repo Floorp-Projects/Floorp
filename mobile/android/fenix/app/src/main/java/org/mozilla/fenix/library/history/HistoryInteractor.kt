@@ -43,11 +43,11 @@ class HistoryInteractor(
     }
 
     override fun onOpenInNormalTab(item: HistoryItem) {
-        historyController.handleOpen(item, BrowsingMode.Normal)
+        historyController.handleOpenInNewTab(item, BrowsingMode.Normal)
     }
 
     override fun onOpenInPrivateTab(item: HistoryItem) {
-        historyController.handleOpen(item, BrowsingMode.Private)
+        historyController.handleOpenInNewTab(item, BrowsingMode.Private)
     }
 
     override fun onDeleteAll() {
