@@ -1708,15 +1708,17 @@ already_AddRefed<Promise> SessionStoreUtils::RestoreDocShellState(
 
     DocShellRestoreState state = {uri, aDocShellCaps, storage};
 
-    if (wgp->IsInProcess()) {
-      RestoreDocShellState(aContext.GetDocShell(), state);
-      promise->MaybeResolveWithUndefined();
-    } else {
-      wgp->SendRestoreDocShellState(state)->Then(
-          GetMainThreadSerialEventTarget(), __func__,
-          [promise](void) { promise->MaybeResolveWithUndefined(); },
-          [promise](void) { promise->MaybeReject(NS_ERROR_FAILURE); });
-    }
+    // We can't know at this point if the associated browser element will
+    // go through a remoteness change to load |aURL|, so forcing a round trip
+    // here even for non-remote documents gives SessionStore a chance to first
+    // flip the browser's remoteness, and then call this again. Note that this
+    // is only actually required as long as we're still doing an explicit
+    // remoteness flip during the session restore process, which will be removed
+    // in bug 1709136.
+    wgp->SendRestoreDocShellState(state)->Then(
+        GetMainThreadSerialEventTarget(), __func__,
+        [promise](void) { promise->MaybeResolveWithUndefined(); },
+        [promise](void) { promise->MaybeRejectWithUndefined(); });
 
     return promise.forget();
   }
