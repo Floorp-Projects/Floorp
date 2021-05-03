@@ -75,8 +75,8 @@ class ChangesView {
     return this._contextMenu;
   }
 
-  get resourceCommand() {
-    return this.inspector.toolbox.resourceCommand;
+  get resourceWatcher() {
+    return this.inspector.toolbox.resourceWatcher;
   }
 
   init() {
@@ -101,27 +101,27 @@ class ChangesView {
   }
 
   async watchResources() {
-    await this.resourceCommand.watchResources(
-      [this.resourceCommand.TYPES.DOCUMENT_EVENT],
+    await this.resourceWatcher.watchResources(
+      [this.resourceWatcher.TYPES.DOCUMENT_EVENT],
       {
         onAvailable: this.onResourceAvailable,
         // Ignore any DOCUMENT_EVENT resources that have occured in the past
-        // and are cached by the resource command, otherwise the Changes panel will
+        // and are cached by the resource watcher, otherwise the Changes panel will
         // react to them erroneously and interpret that the document is reloading *now*
         // which leads to clearing all stored changes.
         ignoreExistingResources: true,
       }
     );
 
-    await this.resourceCommand.watchResources(
-      [this.resourceCommand.TYPES.CSS_CHANGE],
+    await this.resourceWatcher.watchResources(
+      [this.resourceWatcher.TYPES.CSS_CHANGE],
       { onAvailable: this.onResourceAvailable }
     );
   }
 
   onResourceAvailable(resources) {
     for (const resource of resources) {
-      if (resource.resourceType === this.resourceCommand.TYPES.CSS_CHANGE) {
+      if (resource.resourceType === this.resourceWatcher.TYPES.CSS_CHANGE) {
         this.onAddChange(resource);
         continue;
       }
@@ -256,10 +256,10 @@ class ChangesView {
    * Destruction function called when the inspector is destroyed.
    */
   destroy() {
-    this.resourceCommand.unwatchResources(
+    this.resourceWatcher.unwatchResources(
       [
-        this.resourceCommand.TYPES.CSS_CHANGE,
-        this.resourceCommand.TYPES.DOCUMENT_EVENT,
+        this.resourceWatcher.TYPES.CSS_CHANGE,
+        this.resourceWatcher.TYPES.DOCUMENT_EVENT,
       ],
       { onAvailable: this.onResourceAvailable }
     );

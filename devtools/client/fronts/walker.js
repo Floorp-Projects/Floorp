@@ -41,7 +41,7 @@ class WalkerFront extends FrontClassWithSpec(walkerSpec) {
     this.before("new-mutations", this.onMutations.bind(this));
 
     // Those events will be emitted if watchRootNode was called on the
-    // corresponding WalkerActor, which should be handled by the ResourceCommand
+    // corresponding WalkerActor, which should be handled by the ResourceWatcher
     // as long as a consumer is watching for root-node resources.
     // This should be fixed by using watchResources directly from the walker
     // front, either with the ROOT_NODE resource, or with the DOCUMENT_EVENT

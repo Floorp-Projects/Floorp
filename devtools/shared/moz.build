@@ -23,6 +23,7 @@ DIRS += [
     "platform",
     "protocol",
     "qrcode",
+    "resources",
     "security",
     "sprintfjs",
     "specs",

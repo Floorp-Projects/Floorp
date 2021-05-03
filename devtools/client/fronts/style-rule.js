@@ -110,14 +110,14 @@ class StyleRuleFront extends FrontClassWithSpec(styleRuleSpec) {
   }
 
   get parentStyleSheet() {
-    const resourceCommand = this.targetFront.resourceCommand;
+    const resourceWatcher = this.targetFront.resourceWatcher;
     if (
-      resourceCommand?.hasResourceCommandSupport(
-        resourceCommand.TYPES.STYLESHEET
+      resourceWatcher?.hasResourceWatcherSupport(
+        resourceWatcher.TYPES.STYLESHEET
       )
     ) {
-      return resourceCommand.getResourceById(
-        resourceCommand.TYPES.STYLESHEET,
+      return resourceWatcher.getResourceById(
+        resourceWatcher.TYPES.STYLESHEET,
         this._form.parentStyleSheet
       );
     }

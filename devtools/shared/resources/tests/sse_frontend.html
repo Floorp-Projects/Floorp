@@ -1,0 +1,31 @@
+<!-- Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/ -->
+<!doctype HTML>
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    <title>SSE Inspection Test Page</title>
+  </head>
+  <body>
+    <h1>SSE Inspection Test Page</h1>
+    <script type="text/javascript">
+      "use strict";
+
+      /* exported openConnection */
+      function openConnection() {
+        return new Promise(resolve => {
+          const es = new EventSource("sse_backend.sjs");
+          es.onmessage = function (e) {
+            es.close();
+            resolve();
+          };
+        });
+      }
+    </script>
+    <iframe id="in-process-frame"  src="http://example.com/browser/devtools/shared/resources/tests/sse_frontend_iframe.html"> </iframe>
+    <iframe id="out-process-frame" src="http://example.org/browser/devtools/shared/resources/tests/sse_frontend_iframe.html"></iframe>
+  </body>
+</html>

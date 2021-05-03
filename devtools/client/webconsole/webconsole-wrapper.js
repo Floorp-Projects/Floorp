@@ -90,7 +90,7 @@ class WebConsoleWrapper {
         updateRequest: (id, data) => this.batchedRequestUpdates({ id, data }),
       },
       webConsoleFront,
-      resourceCommand: this.hud.resourceCommand,
+      resourceWatcher: this.hud.resourceWatcher,
     });
 
     return new Promise(resolve => {

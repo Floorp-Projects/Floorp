@@ -202,10 +202,10 @@ class SourceMapURLService {
     this._pendingURLSubscriptions.clear();
     this._urlToIDMap.clear();
 
-    const { resourceCommand } = this._toolbox;
+    const { resourceWatcher } = this._toolbox;
     try {
-      resourceCommand.unwatchResources(
-        [resourceCommand.TYPES.STYLESHEET, resourceCommand.TYPES.SOURCE],
+      resourceWatcher.unwatchResources(
+        [resourceWatcher.TYPES.STYLESHEET, resourceWatcher.TYPES.SOURCE],
         { onAvailable: this._onResourceAvailable }
       );
     } catch (e) {
@@ -421,10 +421,10 @@ class SourceMapURLService {
     }
 
     if (!this._sourcesLoading) {
-      const { resourceCommand } = this._toolbox;
-      const { STYLESHEET, SOURCE } = resourceCommand.TYPES;
+      const { resourceWatcher } = this._toolbox;
+      const { STYLESHEET, SOURCE } = resourceWatcher.TYPES;
 
-      this._sourcesLoading = resourceCommand.watchResources(
+      this._sourcesLoading = resourceWatcher.watchResources(
         [STYLESHEET, SOURCE],
         {
           onAvailable: this._onResourceAvailable,
@@ -443,8 +443,8 @@ class SourceMapURLService {
   }
 
   _onResourceAvailable(resources) {
-    const { resourceCommand } = this._toolbox;
-    const { STYLESHEET, SOURCE } = resourceCommand.TYPES;
+    const { resourceWatcher } = this._toolbox;
+    const { STYLESHEET, SOURCE } = resourceWatcher.TYPES;
     for (const resource of resources) {
       if (resource.resourceType == STYLESHEET) {
         this._onNewStyleSheet(resource);
