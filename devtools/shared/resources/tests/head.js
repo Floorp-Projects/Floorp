@@ -19,20 +19,20 @@ async function _initResourceWatcherFromCommands(
   commands,
   { listenForWorkers = false } = {}
 ) {
-  const {
-    ResourceWatcher,
-  } = require("devtools/shared/resources/resource-watcher");
-
   const targetCommand = commands.targetCommand;
   if (listenForWorkers) {
     targetCommand.listenForWorkers = true;
   }
   await targetCommand.startListening();
 
-  // Now create a ResourceWatcher
-  const resourceWatcher = new ResourceWatcher(targetCommand);
-
-  return { client: commands.client, commands, resourceWatcher, targetCommand };
+  //TODO: Stop exporting resourceWatcher and use commands.resourceCommand
+  //And rename all these methods
+  return {
+    client: commands.client,
+    commands,
+    resourceWatcher: commands.resourceCommand,
+    targetCommand,
+  };
 }
 
 /**

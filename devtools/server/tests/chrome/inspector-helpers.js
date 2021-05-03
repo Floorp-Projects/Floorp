@@ -17,10 +17,6 @@ const {
   DocumentWalker: _documentWalker,
 } = require("devtools/server/actors/inspector/document-walker");
 
-const {
-  ResourceWatcher,
-} = require("devtools/shared/resources/resource-watcher");
-
 const Services = require("Services");
 
 // Always log packets when running tests.
@@ -135,6 +131,7 @@ function runNextTest() {
   }
 }
 
+//TODO: renamed to createResourceCommand
 async function createResourceWatcher(commands) {
-  return new ResourceWatcher(commands.targetCommand);
+  return commands.resourceCommand;
 }

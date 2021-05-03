@@ -12,9 +12,6 @@ const {
 } = require("devtools/client/responsive/utils/orientation");
 const Constants = require("devtools/client/responsive/constants");
 const {
-  ResourceWatcher,
-} = require("devtools/shared/resources/resource-watcher");
-const {
   CommandsFactory,
 } = require("devtools/shared/commands/commands-factory");
 
@@ -370,7 +367,8 @@ class ResponsiveUI {
 
   async connectToServer() {
     this.commands = await CommandsFactory.forTab(this.tab);
-    this.resourceWatcher = new ResourceWatcher(this.commands.targetCommand);
+    //TODO: use commands.resourceCommands instead of resourceWatcher
+    this.resourceWatcher = this.commands.resourceCommand;
 
     await this.commands.targetCommand.startListening();
 
