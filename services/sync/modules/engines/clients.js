@@ -742,11 +742,6 @@ ClientEngine.prototype = {
       importance: 0,
       desc: "Clear temporary local data for engine",
     },
-    wipeAll: {
-      args: 0,
-      importance: 0,
-      desc: "Delete all client data for all engines",
-    },
     wipeEngine: {
       args: 1,
       importance: 0,
@@ -852,9 +847,6 @@ ClientEngine.prototype = {
           case "resetEngine":
             await this.service.resetClient(engines);
             break;
-          case "wipeAll":
-            engines = null;
-          // Fallthrough
           case "wipeEngine":
             await this.service.wipeClient(engines);
             break;

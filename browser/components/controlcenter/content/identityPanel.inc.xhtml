@@ -35,6 +35,8 @@
                           when-connection="not-secure secure-cert-user-overridden secure-custom-root cert-error-page https-only-error-page" data-l10n-id="identity-connection-not-secure"></description>
               <description class="identity-popup-connection-secure"
                           when-connection="secure secure-ev" data-l10n-id="identity-connection-secure"></description>
+              <description class="identity-popup-connection-failure"
+                          when-connection="net-error-page" data-l10n-id="identity-connection-failure"></description>
               <description when-connection="chrome" data-l10n-id="identity-connection-internal"></description>
               <description when-connection="file" data-l10n-id="identity-connection-file"></description>
               <description when-connection="extension" data-l10n-id="identity-extension-page"></description>
@@ -85,7 +87,7 @@
         </vbox>
         <button id="identity-popup-security-expander"
                 class="identity-popup-expander"
-                when-connection="not-secure secure secure-ev secure-cert-user-overridden cert-error-page https-only-error-page"
+                when-connection="not-secure secure secure-ev secure-cert-user-overridden cert-error-page net-error-page https-only-error-page"
                 oncommand="gIdentityHandler.showSecuritySubView();"/>
       </hbox>
 
@@ -105,9 +107,9 @@
                descriptionheightworkaround="true">
       <vbox class="identity-popup-security-content">
         <vbox class="identity-popup-security-connection">
-          <description class="identity-popup-connection-not-secure security-view"
-                       when-connection="not-secure secure-cert-user-overridden cert-error-page https-only-error-page" data-l10n-id="identity-connection-not-secure-security-view"></description>
-          <description class="identity-popup-connection-secure security-view"
+          <description class="identity-popup-connection-not-secure"
+                       when-connection="not-secure secure-cert-user-overridden cert-error-page net-error-page https-only-error-page" data-l10n-id="identity-connection-not-secure-security-view"></description>
+          <description class="identity-popup-connection-secure"
                        when-connection="secure secure-ev" data-l10n-id="identity-connection-verified"></description>
         </vbox>
       </vbox>
@@ -135,7 +137,7 @@
                 oncommand="gIdentityHandler.removeCertException()"/>
 
         <!-- Connection is Not Secure -->
-        <description when-connection="not-secure cert-error-page https-only-error-page"
+        <description when-connection="not-secure cert-error-page net-error-page https-only-error-page"
                      data-l10n-id="identity-description-insecure"></description>
 
         <!-- Weak Cipher -->
