@@ -85,14 +85,6 @@ class DocRemoteAccessibleWrap : public HyperTextRemoteAccessibleWrap {
   nsTHashMap<nsUint32HashKey, AccessibleWrap*> mIDToAccessibleMap;
 };
 
-template <typename T>
-inline RemoteAccessible* HyperTextProxyFor(T* aWrapper) {
-  static_assert(std::is_base_of<IUnknown, T>::value,
-                "only IAccessible* should be passed in");
-  auto wrapper = static_cast<HyperTextRemoteAccessibleWrap*>(aWrapper);
-  return wrapper->IsProxy() ? wrapper->Proxy() : nullptr;
-}
-
 /**
  * Stub AccessibleWrap used in a content process for an embedded document
  * residing in another content process.
