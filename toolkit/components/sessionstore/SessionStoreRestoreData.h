@@ -26,7 +26,7 @@ class SessionStoreRestoreData final : public nsISessionStoreRestoreData {
  public:
   SessionStoreRestoreData() = default;
   bool IsEmpty();
-  SessionStoreRestoreData* FindChild(BrowsingContext* aContext);
+  SessionStoreRestoreData* FindDataForChild(BrowsingContext* aContext);
   bool CanRestoreInto(nsIURI* aDocumentURI);
   bool RestoreInto(RefPtr<BrowsingContext> aContext);
 
