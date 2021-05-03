@@ -766,9 +766,9 @@ void TRRService::ConfirmationContext::HandleEvent(ConfirmationEvent aEvent,
       mState = CONFIRM_TRYING_OK;
     }
 
-    if (mTimer) {
-      mTimer->Cancel();
-      mTimer = nullptr;
+    nsCOMPtr<nsITimer> timer = std::move(mTimer);
+    if (timer) {
+      timer->Cancel();
     }
 
     MOZ_ASSERT(mode == nsIDNSService::MODE_TRRFIRST,
@@ -1033,12 +1033,13 @@ void TRRService::AddToBlocklist(const nsACString& aHost,
 
 NS_IMETHODIMP
 TRRService::ConfirmationContext::Notify(nsITimer* aTimer) {
+  MutexAutoLock lock(OwningObject()->mLock);
   if (aTimer == mTimer) {
-    HandleEvent(ConfirmationEvent::Retry);
-  } else {
-    MOZ_CRASH("Unknown timer");
+    HandleEvent(ConfirmationEvent::Retry, lock);
+    return NS_OK;
   }
 
+  MOZ_CRASH("Unknown timer");
   return NS_OK;
 }
 
