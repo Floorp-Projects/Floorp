@@ -96,6 +96,7 @@ pub struct RadialGradientTemplate {
     pub params: RadialGradientParams,
     pub center: DevicePoint,
     pub task_size: DeviceIntSize,
+    pub scale: DeviceVector2D,
     pub stretch_size: LayoutSize,
     pub tile_spacing: LayoutSize,
     pub brush_segments: Vec<BrushSegment>,
@@ -143,30 +144,24 @@ impl From<RadialGradientKey> for RadialGradientTemplate {
         // differences, especially with 8 bits per channel.
         const MAX_SIZE: f32 = 1024.0;
         let mut task_size: DeviceSize = stretch_size.cast_unit();
-        let mut center = DevicePoint::new(item.center.x, item.center.y);
-        let mut params = item.params;
+        let mut scale = vec2(1.0, 1.0);
         if task_size.width > MAX_SIZE {
-            let sx = MAX_SIZE / task_size.width;
+            scale.x = task_size.width/ MAX_SIZE;
             task_size.width = MAX_SIZE;
-            params.ratio_xy *= sx;
-            center.x *= sx;
-            params.start_radius *= sx;
-            params.end_radius *= sx;
         }
         if task_size.height > MAX_SIZE {
-            let sy = MAX_SIZE / task_size.height;
+            scale.y = task_size.height /MAX_SIZE;
             task_size.height = MAX_SIZE;
-            params.ratio_xy /= sy;
-            center.y *= sy;
         }
 
         RadialGradientTemplate {
             common,
-            center,
+            center: DevicePoint::new(item.center.x, item.center.y),
             extend_mode: item.extend_mode,
-            params,
+            params: item.params,
             stretch_size,
             task_size: task_size.ceil().to_i32(),
+            scale,
             tile_spacing: item.tile_spacing.into(),
             brush_segments,
             stops_opacity,
@@ -221,6 +216,7 @@ impl RadialGradientTemplate {
         let cache_key = RadialGradientCacheKey {
             size: task_size,
             center: PointKey { x: self.center.x, y: self.center.y },
+            scale: PointKey { x: self.scale.x, y: self.scale.y },
             start_radius: FloatKey(self.params.start_radius),
             end_radius: FloatKey(self.params.end_radius),
             ratio_xy: FloatKey(self.params.ratio_xy),
@@ -245,6 +241,7 @@ impl RadialGradientTemplate {
                     RenderTaskKind::RadialGradient(RadialGradientTask {
                         extend_mode: self.extend_mode,
                         center: self.center,
+                        scale: self.scale,
                         params: self.params.clone(),
                         stops: self.stops_handle,
                     }),
@@ -317,6 +314,7 @@ impl IsVisible for RadialGradient {
 pub struct RadialGradientTask {
     pub extend_mode: ExtendMode,
     pub center: DevicePoint,
+    pub scale: DeviceVector2D,
     pub params: RadialGradientParams,
     pub stops: GpuCacheHandle,
 }
@@ -326,6 +324,7 @@ impl RadialGradientTask {
         RadialGradientInstance {
             task_rect: target_rect.to_f32(),
             center: self.center,
+            scale: self.scale,
             start_radius: self.params.start_radius,
             end_radius: self.params.end_radius,
             ratio_xy: self.params.ratio_xy,
@@ -345,6 +344,7 @@ impl RadialGradientTask {
 pub struct RadialGradientInstance {
     pub task_rect: DeviceRect,
     pub center: DevicePoint,
+    pub scale: DeviceVector2D,
     pub start_radius: f32,
     pub end_radius: f32,
     pub ratio_xy: f32,
@@ -358,6 +358,7 @@ pub struct RadialGradientInstance {
 pub struct RadialGradientCacheKey {
     pub size: DeviceIntSize,
     pub center: PointKey,
+    pub scale: PointKey,
     pub start_radius: FloatKey,
     pub end_radius: FloatKey,
     pub ratio_xy: FloatKey,
