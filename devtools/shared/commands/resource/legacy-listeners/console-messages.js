@@ -4,9 +4,7 @@
 
 "use strict";
 
-const {
-  ResourceWatcher,
-} = require("devtools/shared/resources/resource-watcher");
+const ResourceCommand = require("devtools/shared/commands/resource/resource-command");
 
 module.exports = async function({ targetCommand, targetFront, onAvailable }) {
   // Allow the top level target unconditionnally.
@@ -42,7 +40,7 @@ module.exports = async function({ targetCommand, targetFront, onAvailable }) {
   const { messages } = await webConsoleFront.getCachedMessages(["ConsoleAPI"]);
 
   for (const message of messages) {
-    message.resourceType = ResourceWatcher.TYPES.CONSOLE_MESSAGE;
+    message.resourceType = ResourceCommand.TYPES.CONSOLE_MESSAGE;
   }
   onAvailable(messages);
 
@@ -54,7 +52,7 @@ module.exports = async function({ targetCommand, targetFront, onAvailable }) {
       return;
     }
 
-    message.resourceType = ResourceWatcher.TYPES.CONSOLE_MESSAGE;
+    message.resourceType = ResourceCommand.TYPES.CONSOLE_MESSAGE;
     onAvailable([message]);
   });
 };

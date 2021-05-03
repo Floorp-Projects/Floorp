@@ -4,9 +4,7 @@
 
 "use strict";
 
-const {
-  ResourceWatcher,
-} = require("devtools/shared/resources/resource-watcher");
+const ResourceCommand = require("devtools/shared/commands/resource/resource-command");
 
 module.exports = async function({ targetCommand, targetFront, onAvailable }) {
   const isBrowserToolbox = targetCommand.targetFront.isParentProcess;
@@ -48,7 +46,7 @@ module.exports = async function({ targetCommand, targetFront, onAvailable }) {
 
     onAvailable([
       {
-        resourceType: ResourceWatcher.TYPES.THREAD_STATE,
+        resourceType: ResourceCommand.TYPES.THREAD_STATE,
         state: "paused",
         why,
         frame: packet.frame,
@@ -68,7 +66,7 @@ module.exports = async function({ targetCommand, targetFront, onAvailable }) {
 
     onAvailable([
       {
-        resourceType: ResourceWatcher.TYPES.THREAD_STATE,
+        resourceType: ResourceCommand.TYPES.THREAD_STATE,
         state: "resumed",
       },
     ]);

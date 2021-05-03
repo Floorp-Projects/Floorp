@@ -5,10 +5,6 @@
 
 // Test the ResourceWatcher API around ROOT_NODE
 
-const {
-  ResourceWatcher,
-} = require("devtools/shared/resources/resource-watcher");
-
 /**
  * The original test still asserts some scenarios using several watchRootNode
  * call sites, which is not something we intend to support at the moment in the
@@ -30,7 +26,7 @@ add_task(async function() {
   info("Call watchResources([ROOT_NODE], ...)");
   let onAvailableCounter = 0;
   const onAvailable = resources => (onAvailableCounter += resources.length);
-  await resourceWatcher.watchResources([ResourceWatcher.TYPES.ROOT_NODE], {
+  await resourceWatcher.watchResources([resourceWatcher.TYPES.ROOT_NODE], {
     onAvailable,
   });
 
@@ -49,7 +45,7 @@ add_task(async function() {
   is(onAvailableCounter, 2, "onAvailable has been called 2 times");
 
   info("Call unwatchResources([ROOT_NODE], ...) for the onAvailable callback");
-  resourceWatcher.unwatchResources([ResourceWatcher.TYPES.ROOT_NODE], {
+  resourceWatcher.unwatchResources([resourceWatcher.TYPES.ROOT_NODE], {
     onAvailable,
   });
 
@@ -85,7 +81,7 @@ add_task(async function testRootNodeFrontIsCorrect() {
   let rootNodeResolve;
   let rootNodePromise = new Promise(r => (rootNodeResolve = r));
   const onAvailable = ([rootNodeFront]) => rootNodeResolve(rootNodeFront);
-  await resourceWatcher.watchResources([ResourceWatcher.TYPES.ROOT_NODE], {
+  await resourceWatcher.watchResources([resourceWatcher.TYPES.ROOT_NODE], {
     onAvailable,
   });
 
@@ -94,7 +90,7 @@ add_task(async function testRootNodeFrontIsCorrect() {
   ok(!!root1, "onAvailable has been called with a valid argument");
   is(
     root1.resourceType,
-    ResourceWatcher.TYPES.ROOT_NODE,
+    resourceWatcher.TYPES.ROOT_NODE,
     "The resource has the expected type"
   );
 
@@ -121,7 +117,7 @@ add_task(async function testRootNodeFrontIsCorrect() {
   is(div3.getAttribute("id"), "div3", "Correct root node retrieved");
 
   // Cleanup
-  resourceWatcher.unwatchResources([ResourceWatcher.TYPES.ROOT_NODE], {
+  resourceWatcher.unwatchResources([resourceWatcher.TYPES.ROOT_NODE], {
     onAvailable,
   });
   targetCommand.destroy();

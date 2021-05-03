@@ -4,9 +4,7 @@
 
 "use strict";
 
-const {
-  ResourceWatcher,
-} = require("devtools/shared/resources/resource-watcher");
+const ResourceCommand = require("devtools/shared/commands/resource/resource-command");
 const { MESSAGE_CATEGORY } = require("devtools/shared/constants");
 
 module.exports = async function({ targetCommand, targetFront, onAvailable }) {
@@ -39,7 +37,7 @@ module.exports = async function({ targetCommand, targetFront, onAvailable }) {
       continue;
     }
 
-    message.resourceType = ResourceWatcher.TYPES.CSS_MESSAGE;
+    message.resourceType = ResourceCommand.TYPES.CSS_MESSAGE;
     message.cssSelectors = message.pageError.cssSelectors;
     delete message.pageError.cssSelectors;
     cachedMessages.push(message);
@@ -54,7 +52,7 @@ module.exports = async function({ targetCommand, targetFront, onAvailable }) {
       return;
     }
 
-    message.resourceType = ResourceWatcher.TYPES.CSS_MESSAGE;
+    message.resourceType = ResourceCommand.TYPES.CSS_MESSAGE;
     message.cssSelectors = message.pageError.cssSelectors;
     delete message.pageError.cssSelectors;
     onAvailable([message]);

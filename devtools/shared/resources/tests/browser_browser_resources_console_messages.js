@@ -5,10 +5,6 @@
 
 // Test the ResourceWatcher API around CONSOLE_MESSAGE for the whole browser
 
-const {
-  ResourceWatcher,
-} = require("devtools/shared/resources/resource-watcher");
-
 const TEST_URL = URL_ROOT_SSL + "early_console_document.html";
 
 add_task(async function() {
@@ -30,7 +26,7 @@ add_task(async function() {
   info("Wait for existing browser mochitest log");
   const existingMsg = await waitForNextResource(
     resourceWatcher,
-    ResourceWatcher.TYPES.CONSOLE_MESSAGE,
+    resourceWatcher.TYPES.CONSOLE_MESSAGE,
     {
       ignoreExistingResources: false,
       predicate({ message }) {
@@ -57,14 +53,14 @@ add_task(async function() {
     );
     if (runtimeLogResource) {
       resourceWatcher.unwatchResources(
-        [ResourceWatcher.TYPES.CONSOLE_MESSAGE],
+        [resourceWatcher.TYPES.CONSOLE_MESSAGE],
         { onAvailable }
       );
       resolveMochitestRuntimeLog(runtimeLogResource);
     }
   };
   await resourceWatcher.watchResources(
-    [ResourceWatcher.TYPES.CONSOLE_MESSAGE],
+    [resourceWatcher.TYPES.CONSOLE_MESSAGE],
     {
       ignoreExistingResources: true,
       onAvailable,
@@ -83,7 +79,7 @@ add_task(async function() {
 
   const onEarlyLog = waitForNextResource(
     resourceWatcher,
-    ResourceWatcher.TYPES.CONSOLE_MESSAGE,
+    resourceWatcher.TYPES.CONSOLE_MESSAGE,
     {
       ignoreExistingResources: true,
       predicate({ message }) {

@@ -6,9 +6,7 @@
 // Test that calling unwatchResources before watchResources could resolve still
 // removes watcher entries correctly.
 
-const {
-  ResourceWatcher,
-} = require("devtools/shared/resources/resource-watcher");
+const ResourceCommand = require("devtools/shared/commands/resource/resource-command");
 
 const TEST_URI = "data:text/html;charset=utf-8,";
 
@@ -18,7 +16,7 @@ add_task(async function() {
   const { client, resourceWatcher, targetCommand } = await initResourceWatcher(
     tab
   );
-  const { CONSOLE_MESSAGE, ROOT_NODE } = ResourceWatcher.TYPES;
+  const { CONSOLE_MESSAGE, ROOT_NODE } = resourceWatcher.TYPES;
 
   info("Use console.log in the content page");
   await logInTab(tab, "msg-1");
@@ -96,7 +94,7 @@ function hasMessage(messageResources, text) {
 // All resource watcher callbacks share the same pattern here: they add all
 // console message resources to a provided `messages` array.
 function createMessageCallback(messages) {
-  const { CONSOLE_MESSAGE } = ResourceWatcher.TYPES;
+  const { CONSOLE_MESSAGE } = ResourceCommand.TYPES;
   return async resources => {
     for (const resource of resources) {
       if (resource.resourceType === CONSOLE_MESSAGE) {

@@ -4,9 +4,7 @@
 
 "use strict";
 
-const {
-  ResourceWatcher,
-} = require("devtools/shared/resources/resource-watcher");
+const ResourceCommand = require("devtools/shared/commands/resource/resource-command");
 
 module.exports = async function({ targetFront, onAvailable }) {
   const eventSourceFront = await targetFront.getFront("eventSource");
@@ -27,7 +25,7 @@ module.exports = async function({ targetFront, onAvailable }) {
 
 function createResource(messageType, eventParams) {
   return {
-    resourceType: ResourceWatcher.TYPES.SERVER_SENT_EVENT,
+    resourceType: ResourceCommand.TYPES.SERVER_SENT_EVENT,
     messageType,
     ...eventParams,
   };

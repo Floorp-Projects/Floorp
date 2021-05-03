@@ -2,11 +2,10 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 "use strict";
+
 // Test the ResourceWatcher API around NETWORK_EVENT
 
-const {
-  ResourceWatcher,
-} = require("devtools/shared/resources/resource-watcher");
+const ResourceCommand = require("devtools/shared/commands/resource/resource-command");
 
 const EXAMPLE_DOMAIN = "https://example.com/";
 const TEST_URI = `${URL_ROOT_SSL}network_document.html`;
@@ -29,17 +28,17 @@ async function testNetworkEventResourcesWithExistingResources() {
     totalExpectedOnUpdatedCounts: 1,
     expectedResourcesOnAvailable: {
       [`${EXAMPLE_DOMAIN}cached_post.html`]: {
-        resourceType: ResourceWatcher.TYPES.NETWORK_EVENT,
+        resourceType: ResourceCommand.TYPES.NETWORK_EVENT,
         method: "POST",
       },
       [`${EXAMPLE_DOMAIN}live_get.html`]: {
-        resourceType: ResourceWatcher.TYPES.NETWORK_EVENT,
+        resourceType: ResourceCommand.TYPES.NETWORK_EVENT,
         method: "GET",
       },
     },
     expectedResourcesOnUpdated: {
       [`${EXAMPLE_DOMAIN}live_get.html`]: {
-        resourceType: ResourceWatcher.TYPES.NETWORK_EVENT,
+        resourceType: ResourceCommand.TYPES.NETWORK_EVENT,
         method: "GET",
       },
     },
@@ -56,13 +55,13 @@ async function testNetworkEventResourcesWithoutExistingResources() {
     totalExpectedOnUpdatedCounts: 1,
     expectedResourcesOnAvailable: {
       [`${EXAMPLE_DOMAIN}live_get.html`]: {
-        resourceType: ResourceWatcher.TYPES.NETWORK_EVENT,
+        resourceType: ResourceCommand.TYPES.NETWORK_EVENT,
         method: "GET",
       },
     },
     expectedResourcesOnUpdated: {
       [`${EXAMPLE_DOMAIN}live_get.html`]: {
-        resourceType: ResourceWatcher.TYPES.NETWORK_EVENT,
+        resourceType: ResourceCommand.TYPES.NETWORK_EVENT,
         method: "GET",
       },
     },
@@ -89,7 +88,7 @@ async function testNetworkEventResources(options) {
       for (const resource of resources) {
         is(
           resource.resourceType,
-          ResourceWatcher.TYPES.NETWORK_EVENT,
+          resourceWatcher.TYPES.NETWORK_EVENT,
           "Received a network event resource"
         );
       }
@@ -99,7 +98,7 @@ async function testNetworkEventResources(options) {
       for (const { resource } of updates) {
         is(
           resource.resourceType,
-          ResourceWatcher.TYPES.NETWORK_EVENT,
+          resourceWatcher.TYPES.NETWORK_EVENT,
           "Received a network update event resource"
         );
         resolve();
@@ -107,7 +106,7 @@ async function testNetworkEventResources(options) {
     };
 
     resourceWatcher
-      .watchResources([ResourceWatcher.TYPES.NETWORK_EVENT], {
+      .watchResources([resourceWatcher.TYPES.NETWORK_EVENT], {
         onAvailable: onResourceAvailable,
         onUpdated: onResourceUpdated,
       })
@@ -143,7 +142,7 @@ async function testNetworkEventResources(options) {
     for (const resource of resources) {
       is(
         resource.resourceType,
-        ResourceWatcher.TYPES.NETWORK_EVENT,
+        resourceWatcher.TYPES.NETWORK_EVENT,
         "Received a network event resource"
       );
       actualResourcesOnAvailable[resource.url] = {
@@ -159,7 +158,7 @@ async function testNetworkEventResources(options) {
     for (const { resource } of updates) {
       is(
         resource.resourceType,
-        ResourceWatcher.TYPES.NETWORK_EVENT,
+        resourceWatcher.TYPES.NETWORK_EVENT,
         "Received a network update event resource"
       );
       actualResourcesOnUpdated[resource.url] = {
@@ -171,7 +170,7 @@ async function testNetworkEventResources(options) {
     }
   };
 
-  await resourceWatcher.watchResources([ResourceWatcher.TYPES.NETWORK_EVENT], {
+  await resourceWatcher.watchResources([resourceWatcher.TYPES.NETWORK_EVENT], {
     onAvailable,
     onUpdated,
     ignoreExistingResources,
@@ -225,7 +224,7 @@ async function testNetworkEventResources(options) {
   }
 
   await resourceWatcher.unwatchResources(
-    [ResourceWatcher.TYPES.NETWORK_EVENT],
+    [resourceWatcher.TYPES.NETWORK_EVENT],
     {
       onAvailable,
       onUpdated,
@@ -234,7 +233,7 @@ async function testNetworkEventResources(options) {
   );
 
   await resourceWatcher.unwatchResources(
-    [ResourceWatcher.TYPES.NETWORK_EVENT],
+    [resourceWatcher.TYPES.NETWORK_EVENT],
     {
       onAvailable: onResourceAvailable,
       onUpdated: onResourceUpdated,
@@ -288,7 +287,7 @@ async function testNetworkEventResourcesFromTheContentProcess() {
     };
 
     resourceWatcher
-      .watchResources([ResourceWatcher.TYPES.NETWORK_EVENT], {
+      .watchResources([resourceWatcher.TYPES.NETWORK_EVENT], {
         onAvailable,
         onUpdated,
       })
@@ -317,7 +316,7 @@ async function testNetworkEventResourcesFromTheContentProcess() {
   // Assert the data for the CSP blocked JS script file
   is(
     availableJSResource.resourceType,
-    ResourceWatcher.TYPES.NETWORK_EVENT,
+    resourceWatcher.TYPES.NETWORK_EVENT,
     "This is a network event resource"
   );
   is(
@@ -328,7 +327,7 @@ async function testNetworkEventResourcesFromTheContentProcess() {
 
   is(
     updateJSResource.resourceType,
-    ResourceWatcher.TYPES.NETWORK_EVENT,
+    resourceWatcher.TYPES.NETWORK_EVENT,
     "This is a network event resource"
   );
   is(
@@ -349,7 +348,7 @@ async function testNetworkEventResourcesFromTheContentProcess() {
   // Assert the data for the CSP blocked CSS file
   is(
     availableCSSResource.resourceType,
-    ResourceWatcher.TYPES.NETWORK_EVENT,
+    resourceWatcher.TYPES.NETWORK_EVENT,
     "This is a network event resource"
   );
   is(
@@ -360,7 +359,7 @@ async function testNetworkEventResourcesFromTheContentProcess() {
 
   is(
     updateCSSResource.resourceType,
-    ResourceWatcher.TYPES.NETWORK_EVENT,
+    resourceWatcher.TYPES.NETWORK_EVENT,
     "This is a network event resource"
   );
   is(
@@ -370,7 +369,7 @@ async function testNetworkEventResourcesFromTheContentProcess() {
   );
 
   await resourceWatcher.unwatchResources(
-    [ResourceWatcher.TYPES.NETWORK_EVENT],
+    [resourceWatcher.TYPES.NETWORK_EVENT],
     {
       onAvailable,
       onUpdated,

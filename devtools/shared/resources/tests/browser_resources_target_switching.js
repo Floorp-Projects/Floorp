@@ -5,11 +5,6 @@
 
 // Test the behavior of ResourceWatcher when the top level target changes
 
-const {
-  ResourceWatcher,
-} = require("devtools/shared/resources/resource-watcher");
-const { CONSOLE_MESSAGE, SOURCE } = ResourceWatcher.TYPES;
-
 const TEST_URI =
   "data:text/html;charset=utf-8,<script>console.log('foo');</script>";
 
@@ -19,6 +14,7 @@ add_task(async function() {
   const { client, resourceWatcher, targetCommand } = await initResourceWatcher(
     tab
   );
+  const { CONSOLE_MESSAGE, SOURCE } = resourceWatcher.TYPES;
 
   info("Check the resources gotten from getAllResources at initial");
   is(

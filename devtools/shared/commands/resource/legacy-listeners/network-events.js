@@ -4,9 +4,7 @@
 
 "use strict";
 
-const {
-  ResourceWatcher,
-} = require("devtools/shared/resources/resource-watcher");
+const ResourceCommand = require("devtools/shared/commands/resource/resource-command");
 
 module.exports = async function({
   targetCommand,
@@ -37,7 +35,7 @@ module.exports = async function({
 
     resources.set(actor.actor, {
       resourceId: actor.channelId,
-      resourceType: ResourceWatcher.TYPES.NETWORK_EVENT,
+      resourceType: ResourceCommand.TYPES.NETWORK_EVENT,
       isBlocked: !!actor.blockedReason,
       types: [],
       resourceUpdates: {},
@@ -46,7 +44,7 @@ module.exports = async function({
     onAvailable([
       {
         resourceId: actor.channelId,
-        resourceType: ResourceWatcher.TYPES.NETWORK_EVENT,
+        resourceType: ResourceCommand.TYPES.NETWORK_EVENT,
         timeStamp: actor.timeStamp,
         actor: actor.actor,
         startedDateTime: actor.startedDateTime,

@@ -6,9 +6,6 @@
 // Test the ResourceWatcher API around CSS_MESSAGE
 // Reproduces the CSS message assertions from devtools/shared/webconsole/test/chrome/test_page_errors.html
 
-const {
-  ResourceWatcher,
-} = require("devtools/shared/resources/resource-watcher");
 const { MESSAGE_CATEGORY } = require("devtools/shared/constants");
 
 // Create a simple server so we have a nice sourceName in the resources packets.
@@ -48,7 +45,7 @@ async function testWatchingCssMessages() {
     receivedMessages,
     false
   );
-  await resourceWatcher.watchResources([ResourceWatcher.TYPES.CSS_MESSAGE], {
+  await resourceWatcher.watchResources([resourceWatcher.TYPES.CSS_MESSAGE], {
     onAvailable,
   });
 
@@ -111,7 +108,7 @@ async function testWatchingCachedCssMessages() {
     receivedMessages,
     true
   );
-  await resourceWatcher.watchResources([ResourceWatcher.TYPES.CSS_MESSAGE], {
+  await resourceWatcher.watchResources([resourceWatcher.TYPES.CSS_MESSAGE], {
     onAvailable,
   });
   is(receivedMessages.length, 3, "Cached messages were retrieved as expected");
