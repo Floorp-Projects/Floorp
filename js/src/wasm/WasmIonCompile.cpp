@@ -723,41 +723,8 @@ class FunctionCompiler {
     MOZ_ASSERT(lhs->type() == MIRType::Simd128 &&
                rhs->type() == MIRType::Int32);
 
-    // Do something vector-based when the platform allows it.
-    if ((rhs->isConstant() && !MacroAssembler::MustScalarizeShiftSimd128(
-                                  op, Imm32(rhs->toConstant()->toInt32()))) ||
-        (!rhs->isConstant() &&
-         !MacroAssembler::MustScalarizeShiftSimd128(op))) {
-      int32_t maskBits;
-      if (!rhs->isConstant() &&
-          MacroAssembler::MustMaskShiftCountSimd128(op, &maskBits)) {
-        MConstant* mask = MConstant::New(alloc(), Int32Value(maskBits));
-        curBlock_->add(mask);
-        MBitAnd* maskedShift = MBitAnd::New(alloc(), rhs, mask, MIRType::Int32);
-        curBlock_->add(maskedShift);
-        rhs = maskedShift;
-      }
-
-      auto* ins = MWasmShiftSimd128::New(alloc(), lhs, rhs, op);
-      curBlock_->add(ins);
-      return ins;
-    }
-
-#  ifdef DEBUG
-    js::wasm::ReportSimdAnalysis("shift -> variable scalarized shift");
-#  endif
-
-    // Otherwise just scalarize using existing primitive operations.
-    auto* lane0 = reduceSimd128(lhs, SimdOp::I64x2ExtractLane, ValType::I64, 0);
-    auto* lane1 = reduceSimd128(lhs, SimdOp::I64x2ExtractLane, ValType::I64, 1);
-    auto* shiftCount = extendI32(rhs, /*isUnsigned=*/false);
-    auto* shifted0 = binary<MRsh>(lane0, shiftCount, MIRType::Int64);
-    auto* shifted1 = binary<MRsh>(lane1, shiftCount, MIRType::Int64);
-    V128 zero;
-    auto* res0 = constant(zero);
-    auto* res1 =
-        replaceLaneSimd128(res0, shifted0, 0, SimdOp::I64x2ReplaceLane);
-    auto* ins = replaceLaneSimd128(res1, shifted1, 1, SimdOp::I64x2ReplaceLane);
+    auto* ins = MWasmShiftSimd128::New(alloc(), lhs, rhs, op);
+    curBlock_->add(ins);
     return ins;
   }
 

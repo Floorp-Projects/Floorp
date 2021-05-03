@@ -2892,6 +2892,9 @@ void CodeGenerator::visitWasmVariableShiftSimd128(
     case wasm::SimdOp::I64x2Shl:
       masm.leftShiftInt64x2(rhs, lhsDest, temp1);
       break;
+    case wasm::SimdOp::I64x2ShrS:
+      masm.rightShiftInt64x2(rhs, lhsDest, temp1, temp2);
+      break;
     case wasm::SimdOp::I64x2ShrU:
       masm.unsignedRightShiftInt64x2(rhs, lhsDest, temp1);
       break;
