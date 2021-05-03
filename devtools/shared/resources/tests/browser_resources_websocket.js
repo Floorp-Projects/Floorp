@@ -3,7 +3,7 @@
 
 "use strict";
 
-// Test the ResourceWatcher API around WEBSOCKET.
+// Test the ResourceCommand API around WEBSOCKET.
 
 const ResourceCommand = require("devtools/shared/commands/resource/resource-command");
 
@@ -27,7 +27,7 @@ add_task(async function() {
 
 async function testWebsocketResources(target) {
   const tab = await addTab(URL_ROOT + "websocket_frontend.html");
-  const { client, resourceWatcher, targetCommand } = await initResourceWatcher(
+  const { client, resourceWatcher, targetCommand } = await initResourceCommand(
     tab
   );
 

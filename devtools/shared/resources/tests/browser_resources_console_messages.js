@@ -3,7 +3,7 @@
 
 "use strict";
 
-// Test the ResourceWatcher API around CONSOLE_MESSAGE
+// Test the ResourceCommand API around CONSOLE_MESSAGE
 //
 // Reproduces assertions from: devtools/shared/webconsole/test/chrome/test_cached_messages.html
 // And now more. Once we remove the console actor's startListeners in favor of watcher class
@@ -25,12 +25,12 @@ add_task(async function() {
 async function testTabConsoleMessagesResources(executeInIframe) {
   const tab = await addTab(FISSION_TEST_URL);
 
-  const { client, resourceWatcher, targetCommand } = await initResourceWatcher(
+  const { client, resourceWatcher, targetCommand } = await initResourceCommand(
     tab
   );
 
   info(
-    "Log some messages *before* calling ResourceWatcher.watchResources in order to " +
+    "Log some messages *before* calling ResourceCommand.watchResources in order to " +
       "assert the behavior of already existing messages."
   );
   await logExistingMessages(tab.linkedBrowser, executeInIframe);
@@ -90,7 +90,7 @@ async function testTabConsoleMessagesResources(executeInIframe) {
   );
 
   info(
-    "Now log messages *after* the call to ResourceWatcher.watchResources and after having received all existing messages"
+    "Now log messages *after* the call to ResourceCommand.watchResources and after having received all existing messages"
   );
   await logRuntimeMessages(tab.linkedBrowser, executeInIframe);
 
@@ -119,7 +119,7 @@ async function testTabConsoleMessagesResourcesWithIgnoreExistingResources(
   info("Test ignoreExistingResources option for console messages");
   const tab = await addTab(FISSION_TEST_URL);
 
-  const { client, resourceWatcher, targetCommand } = await initResourceWatcher(
+  const { client, resourceWatcher, targetCommand } = await initResourceCommand(
     tab
   );
 

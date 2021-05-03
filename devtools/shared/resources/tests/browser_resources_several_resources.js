@@ -21,12 +21,12 @@ add_task(async function() {
     client,
     resourceWatcher,
     targetCommand,
-  } = await initMultiProcessResourceWatcher();
+  } = await initMultiProcessResourceCommand();
 
   const { CONSOLE_MESSAGE, ROOT_NODE } = resourceWatcher.TYPES;
 
   // We are only interested in console messages as a resource, the ROOT_NODE one
-  // is here to test the ResourceWatcher::unwatchResources API with several resources.
+  // is here to test the ResourceCommand::unwatchResources API with several resources.
   const receivedMessages = [];
   const onAvailable = resources => {
     for (const resource of resources) {

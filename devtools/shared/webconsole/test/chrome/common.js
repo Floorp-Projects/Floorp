@@ -6,7 +6,7 @@
 
 /* exported attachConsole, attachConsoleToTab, attachConsoleToWorker,
    closeDebugger, checkConsoleAPICalls, checkRawHeaders, runTests, nextTest, Ci, Cc,
-   withActiveServiceWorker, Services, consoleAPICall, createResourceWatcherForTab */
+   withActiveServiceWorker, Services, consoleAPICall, createCommandsForTab */
 
 const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
 const { DevToolsServer } = require("devtools/server/devtools-server");
@@ -115,13 +115,10 @@ var _attachConsole = async function(listeners, attachToTab, attachToWorker) {
   return null;
 };
 
-async function createResourceWatcherForTab() {
+async function createCommandsForTab() {
   const commands = await CommandsFactory.forMainProcess();
   await commands.targetCommand.startListening();
-  const target = commands.targetCommand.targetFront;
-
-  // TODO: return commands and use commands.resourceCommand directly
-  return { resourceWatcher: commands.resourceCommand, target };
+  return commands;
 }
 
 function closeDebugger(state, callback) {

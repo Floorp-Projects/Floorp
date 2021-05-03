@@ -3,7 +3,7 @@
 
 "use strict";
 
-// Test the ResourceWatcher API around DOCUMENT_EVENT
+// Test the ResourceCommand API around DOCUMENT_EVENT
 
 add_task(async function() {
   await testDocumentEventResources();
@@ -16,13 +16,13 @@ add_task(async function() {
 });
 
 async function testDocumentEventResources() {
-  info("Test ResourceWatcher for DOCUMENT_EVENT");
+  info("Test ResourceCommand for DOCUMENT_EVENT");
 
   // Open a test tab
   const tab = await addTab("data:text/html,Document Events");
 
   const listener = new ResourceListener();
-  const { client, resourceWatcher, targetCommand } = await initResourceWatcher(
+  const { client, resourceWatcher, targetCommand } = await initResourceCommand(
     tab
   );
 
@@ -75,7 +75,7 @@ async function testDocumentEventResourcesWithIgnoreExistingResources() {
 
   const tab = await addTab("data:text/html,Document Events");
 
-  const { client, resourceWatcher, targetCommand } = await initResourceWatcher(
+  const { client, resourceWatcher, targetCommand } = await initResourceCommand(
     tab
   );
 
@@ -102,7 +102,7 @@ async function testCrossOriginNavigation() {
 
   const tab = await addTab("http://example.com/document-builder.sjs?html=com");
 
-  const { client, resourceWatcher, targetCommand } = await initResourceWatcher(
+  const { client, resourceWatcher, targetCommand } = await initResourceCommand(
     tab
   );
 

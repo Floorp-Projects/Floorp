@@ -13,7 +13,7 @@ const TEST_URI = "data:text/html;charset=utf-8,";
 add_task(async function() {
   const tab = await addTab(TEST_URI);
 
-  const { client, resourceWatcher, targetCommand } = await initResourceWatcher(
+  const { client, resourceWatcher, targetCommand } = await initResourceCommand(
     tab
   );
   const { CONSOLE_MESSAGE, ROOT_NODE } = resourceWatcher.TYPES;

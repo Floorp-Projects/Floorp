@@ -54,8 +54,8 @@ class Connector {
     return this.commands.targetCommand.targetFront;
   }
 
-  get hasResourceWatcherSupport() {
-    return this.toolbox.resourceWatcher.hasResourceWatcherSupport(
+  get hasResourceCommandSupport() {
+    return this.toolbox.resourceWatcher.hasResourceCommandSupport(
       this.toolbox.resourceWatcher.TYPES.NETWORK_EVENT
     );
   }
@@ -161,7 +161,7 @@ class Connector {
 
     // Initialize Responsive Emulation front for network throttling.
     this.responsiveFront = await this.currentTarget.getFront("responsive");
-    if (this.hasResourceWatcherSupport) {
+    if (this.hasResourceCommandSupport) {
       this.networkFront = await this.watcherFront.getNetworkParentActor();
     }
   }
@@ -390,7 +390,7 @@ class Connector {
    * @param {object} data data payload would like to sent to backend
    */
   async sendHTTPRequest(data) {
-    if (this.hasResourceWatcherSupport && this.currentTarget) {
+    if (this.hasResourceCommandSupport && this.currentTarget) {
       const networkContentFront = await this.currentTarget.getFront(
         "networkContent"
       );
@@ -425,7 +425,7 @@ class Connector {
    * Get the list of blocked URLs
    */
   async getBlockedUrls() {
-    if (this.hasResourceWatcherSupport && this.networkFront) {
+    if (this.hasResourceCommandSupport && this.networkFront) {
       return this.networkFront.getBlockedUrls();
     }
     if (!this.webConsoleFront.traits.blockedUrls) {
@@ -440,7 +440,7 @@ class Connector {
    * @param {object} urls An array of URL strings
    */
   async setBlockedUrls(urls) {
-    if (this.hasResourceWatcherSupport && this.networkFront) {
+    if (this.hasResourceCommandSupport && this.networkFront) {
       return this.networkFront.setBlockedUrls(urls);
     }
     return this.webConsoleFront.setBlockedUrls(urls);
@@ -578,7 +578,7 @@ class Connector {
 
   async updateNetworkThrottling(enabled, profile) {
     const throttlingFront =
-      this.hasResourceWatcherSupport && this.networkFront
+      this.hasResourceCommandSupport && this.networkFront
         ? this.networkFront
         : this.responsiveFront;
 
