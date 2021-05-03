@@ -98,11 +98,16 @@ let DefaultTabUnloaderMethods = {
   },
 
   *iterateProcesses(tab) {
-    let bc = tab.linkedBrowser.browsingContext;
+    let bc = tab?.linkedBrowser?.browsingContext;
+    if (!bc) {
+      return;
+    }
 
     const iter = this.iterateBrowsingContexts(bc);
     for (let childBC of iter) {
-      yield childBC.currentWindowGlobal.osPid;
+      if (childBC?.currentWindowGlobal) {
+        yield childBC.currentWindowGlobal.osPid;
+      }
     }
   },
 
