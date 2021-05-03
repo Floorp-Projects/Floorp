@@ -10,9 +10,9 @@ const {
 
 const {
   makeStorageLegacyListener,
-} = require("devtools/shared/resources/legacy-listeners/storage-utils");
+} = require("devtools/shared/commands/resource/legacy-listeners/storage-utils");
 
 module.exports = makeStorageLegacyListener(
-  "Cache",
-  ResourceWatcher.TYPES.CACHE_STORAGE
+  "sessionStorage",
+  ResourceWatcher.TYPES.SESSION_STORAGE
 );

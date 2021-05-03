@@ -116,17 +116,12 @@ var _attachConsole = async function(listeners, attachToTab, attachToWorker) {
 };
 
 async function createResourceWatcherForTab() {
-  // Avoid mocha to try to load these module and fail while doing it when running node tests
-  const {
-    ResourceWatcher,
-  } = require("devtools/shared/resources/resource-watcher");
-
   const commands = await CommandsFactory.forMainProcess();
   await commands.targetCommand.startListening();
   const target = commands.targetCommand.targetFront;
-  const resourceWatcher = new ResourceWatcher(commands.targetCommand);
 
-  return { resourceWatcher, target };
+  // TODO: return commands and use commands.resourceCommand directly
+  return { resourceWatcher: commands.resourceCommand, target };
 }
 
 function closeDebugger(state, callback) {
