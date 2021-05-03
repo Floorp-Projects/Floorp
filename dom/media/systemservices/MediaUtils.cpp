@@ -36,7 +36,7 @@ nsCOMPtr<nsIAsyncShutdownClient> MustGetShutdownBarrier() {
 
 NS_IMPL_ISUPPORTS(ShutdownBlocker, nsIAsyncShutdownBlocker)
 
-namespace {
+namespace anon_media_utils {
 class MediaEventBlocker : public ShutdownBlocker {
  public:
   explicit MediaEventBlocker(nsString aName)
@@ -88,7 +88,7 @@ class RefCountedTicket {
 ShutdownBlockingTicket::ShutdownBlockingTicket(nsString aName,
                                                nsString aFileName,
                                                int32_t aLineNr)
-    : mTicket(MakeAndAddRef<RefCountedTicket>()) {
+    : mTicket(MakeAndAddRef<anon_media_utils::RefCountedTicket>()) {
   aName.AppendPrintf(" - %p", this);
   NS_DispatchToMainThread(NS_NewRunnableFunction(
       __func__, [ticket = mTicket, name = std::move(aName),
