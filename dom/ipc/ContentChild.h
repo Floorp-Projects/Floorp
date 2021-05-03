@@ -381,6 +381,8 @@ class ContentChild final : public PContentChild,
 
   mozilla::ipc::IPCResult RecvRemoteType(const nsCString& aRemoteType);
 
+  void PreallocInit();
+
   // Call RemoteTypePrefix() on the result to remove URIs if you want to use
   // this for telemetry.
   const nsACString& GetRemoteType() const override;
