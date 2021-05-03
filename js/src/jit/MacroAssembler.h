@@ -2752,8 +2752,7 @@ class MacroAssembler : public MacroAssemblerSpecific {
                                 FloatRegister temp) DEFINED_ON(arm64);
 
   inline void rightShiftInt8x16(Imm32 count, FloatRegister src,
-                                FloatRegister dest, FloatRegister temp)
-      DEFINED_ON(x86_shared);
+                                FloatRegister dest) DEFINED_ON(x86_shared);
 
   inline void unsignedRightShiftInt8x16(Register rhs, FloatRegister lhsDest,
                                         Register temp1, FloatRegister temp2)
