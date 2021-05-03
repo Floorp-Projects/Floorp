@@ -68,7 +68,7 @@ nsresult CreateFileTables(mozIStorageConnection& aConnection) {
       "DELETE FROM file WHERE id = OLD.id; "
       "END;"_ns};
 
-  IDB_TRY(ExecuteSimpleSQLSequence(aConnection, commands));
+  QM_TRY(ExecuteSimpleSQLSequence(aConnection, commands));
 
   return NS_OK;
 }
@@ -160,11 +160,11 @@ nsresult CreateTables(mozIStorageConnection& aConnection) {
       "ON unique_index_data (index_id, value_locale, object_data_key, value) "
       "WHERE value_locale IS NOT NULL;"_ns};
 
-  IDB_TRY(ExecuteSimpleSQLSequence(aConnection, commands));
+  QM_TRY(ExecuteSimpleSQLSequence(aConnection, commands));
 
-  IDB_TRY(CreateFileTables(aConnection));
+  QM_TRY(CreateFileTables(aConnection));
 
-  IDB_TRY(aConnection.SetSchemaVersion(kSQLiteSchemaVersion));
+  QM_TRY(aConnection.SetSchemaVersion(kSQLiteSchemaVersion));
 
   return NS_OK;
 }

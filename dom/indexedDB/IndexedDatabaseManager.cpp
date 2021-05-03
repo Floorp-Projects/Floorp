@@ -253,7 +253,7 @@ IndexedDatabaseManager* IndexedDatabaseManager::GetOrCreate() {
 
     RefPtr<IndexedDatabaseManager> instance(new IndexedDatabaseManager());
 
-    IDB_TRY(instance->Init(), nullptr);
+    QM_TRY(instance->Init(), nullptr);
 
     if (gInitialized.exchange(true)) {
       NS_ERROR("Initialized more than once?!");
@@ -524,8 +524,7 @@ bool IndexedDatabaseManager::DefineIndexedDB(JSContext* aCx,
     return false;
   }
 
-  IDB_TRY_UNWRAP(auto factory, IDBFactory::CreateForMainThreadJS(global),
-                 false);
+  QM_TRY_UNWRAP(auto factory, IDBFactory::CreateForMainThreadJS(global), false);
 
   MOZ_ASSERT(factory, "This should never fail for chrome!");
 

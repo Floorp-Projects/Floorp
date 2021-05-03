@@ -107,8 +107,8 @@ nsresult UpgradeSchemaFrom4To5(mozIStorageConnection& aConnection) {
   {
     mozStorageStatementScoper scoper(stmt);
 
-    IDB_TRY_INSPECT(const bool& hasResults,
-                    MOZ_TO_RESULT_INVOKE(stmt, ExecuteStep));
+    QM_TRY_INSPECT(const bool& hasResults,
+                   MOZ_TO_RESULT_INVOKE(stmt, ExecuteStep));
 
     if (NS_WARN_IF(!hasResults)) {
       return NS_ERROR_FAILURE;
@@ -1035,7 +1035,7 @@ class EncodeKeysFunction final : public mozIStorageFunction {
       return rv;
     }
 
-    IDB_TRY_INSPECT(
+    QM_TRY_INSPECT(
         const auto& key, ([type, aArguments]() -> Result<Key, nsresult> {
           switch (type) {
             case mozIStorageStatement::VALUE_TYPE_INTEGER: {
@@ -1052,7 +1052,7 @@ class EncodeKeysFunction final : public mozIStorageFunction {
               aArguments->GetString(0, stringKey);
 
               Key key;
-              IDB_TRY(key.SetFromString(stringKey));
+              QM_TRY(key.SetFromString(stringKey));
 
               return key;
             }
@@ -1456,7 +1456,7 @@ UpgradeSchemaFrom17_0To18_0Helper::InsertIndexDataValuesFunction::
 
   // Read out the previous value. It may be NULL, in which case we'll just end
   // up with an empty array.
-  IDB_TRY_UNWRAP(auto indexValues, ReadCompressedIndexDataValues(*aValues, 0));
+  QM_TRY_UNWRAP(auto indexValues, ReadCompressedIndexDataValues(*aValues, 0));
 
   IndexOrObjectStoreId indexId;
   nsresult rv = aValues->GetInt64(1, &indexId);
@@ -1484,8 +1484,8 @@ UpgradeSchemaFrom17_0To18_0Helper::InsertIndexDataValuesFunction::
   }
 
   // Compress the array.
-  IDB_TRY_UNWRAP((auto [indexValuesBlob, indexValuesBlobLength]),
-                 MakeCompressedIndexDataValues(indexValues));
+  QM_TRY_UNWRAP((auto [indexValuesBlob, indexValuesBlobLength]),
+                MakeCompressedIndexDataValues(indexValues));
 
   // The compressed blob is the result of this function.
   nsCOMPtr<nsIVariant> result = new storage::AdoptedBlobVariant(
@@ -2127,10 +2127,10 @@ nsresult UpgradeSchemaFrom17_0To18_0Helper::DoUpgradeInternal(
 #ifdef DEBUG
   {
     // Make sure there's only one entry in the |database| table.
-    IDB_TRY_INSPECT(const auto& stmt,
-                    quota::CreateAndExecuteSingleStepStatement(
-                        aConnection, "SELECT COUNT(*) FROM database;"_ns),
-                    QM_ASSERT_UNREACHABLE);
+    QM_TRY_INSPECT(const auto& stmt,
+                   quota::CreateAndExecuteSingleStepStatement(
+                       aConnection, "SELECT COUNT(*) FROM database;"_ns),
+                   QM_ASSERT_UNREACHABLE);
 
     int64_t count;
     MOZ_ASSERT(NS_SUCCEEDED(stmt->GetInt64(0, &count)));
@@ -2307,8 +2307,8 @@ nsresult UpgradeSchemaFrom19_0To20_0(nsIFile* aFMDirectory,
   {
     mozStorageStatementScoper scoper(stmt);
 
-    IDB_TRY_INSPECT(const bool& hasResult,
-                    MOZ_TO_RESULT_INVOKE(stmt, ExecuteStep));
+    QM_TRY_INSPECT(const bool& hasResult,
+                   MOZ_TO_RESULT_INVOKE(stmt, ExecuteStep));
 
     if (NS_WARN_IF(!hasResult)) {
       MOZ_ASSERT(false, "This should never be possible!");
@@ -2420,8 +2420,8 @@ UpgradeIndexDataValuesFunction::ReadOldCompressedIDVFromBlob(
   IndexDataValuesArray result;
   for (auto remainder = aBlobData; !remainder.IsEmpty();) {
     if (!nextIndexIdAlreadyRead) {
-      IDB_TRY_UNWRAP((std::tie(indexId, unique, remainder)),
-                     ReadCompressedIndexId(remainder));
+      QM_TRY_UNWRAP((std::tie(indexId, unique, remainder)),
+                    ReadCompressedIndexId(remainder));
     }
     nextIndexIdAlreadyRead = false;
 
@@ -2431,7 +2431,7 @@ UpgradeIndexDataValuesFunction::ReadOldCompressedIDVFromBlob(
     }
 
     // Read key buffer length.
-    IDB_TRY_INSPECT(
+    QM_TRY_INSPECT(
         (const auto& [keyBufferLength, remainderAfterKeyBufferLength]),
         ReadCompressedNumber(remainder));
 
@@ -2453,8 +2453,8 @@ UpgradeIndexDataValuesFunction::ReadOldCompressedIDVFromBlob(
     remainder = remainderAfterKeyBuffer;
     if (!remainder.IsEmpty()) {
       // Read either a sort key buffer length or an index id.
-      IDB_TRY_INSPECT((const auto& [maybeIndexId, remainderAfterIndexId]),
-                      ReadCompressedNumber(remainder));
+      QM_TRY_INSPECT((const auto& [maybeIndexId, remainderAfterIndexId]),
+                     ReadCompressedNumber(remainder));
 
       // Locale-aware indexes haven't been around long enough to have any users,
       // we can safely assume all sort key buffer lengths will be zero.
@@ -2510,11 +2510,11 @@ UpgradeIndexDataValuesFunction::OnFunctionCall(
     return rv;
   }
 
-  IDB_TRY_INSPECT(const auto& oldIdv,
-                  ReadOldCompressedIDVFromBlob(Span(oldBlob, oldBlobLength)));
+  QM_TRY_INSPECT(const auto& oldIdv,
+                 ReadOldCompressedIDVFromBlob(Span(oldBlob, oldBlobLength)));
 
-  IDB_TRY_UNWRAP((auto [newIdv, newIdvLength]),
-                 MakeCompressedIndexDataValues(oldIdv));
+  QM_TRY_UNWRAP((auto [newIdv, newIdvLength]),
+                MakeCompressedIndexDataValues(oldIdv));
 
   nsCOMPtr<nsIVariant> result = new storage::AdoptedBlobVariant(
       std::pair(newIdv.release(), newIdvLength));
@@ -2892,9 +2892,9 @@ UpgradeFileIdsFunction::OnFunctionCall(mozIStorageValueArray* aArguments,
     return NS_ERROR_UNEXPECTED;
   }
 
-  IDB_TRY_UNWRAP(auto cloneInfo,
-                 GetStructuredCloneReadInfoFromValueArray(
-                     aArguments, 1, 0, *mFileManager, Nothing{}));
+  QM_TRY_UNWRAP(auto cloneInfo,
+                GetStructuredCloneReadInfoFromValueArray(
+                    aArguments, 1, 0, *mFileManager, Nothing{}));
 
   nsAutoString fileIds;
   // XXX does this really need non-const cloneInfo?
@@ -2925,83 +2925,83 @@ Result<bool, nsresult> MaybeUpgradeSchema(mozIStorageConnection& aConnection,
   while (schemaVersion != kSQLiteSchemaVersion) {
     switch (schemaVersion) {
       case 4:
-        IDB_TRY(UpgradeSchemaFrom4To5(aConnection));
+        QM_TRY(UpgradeSchemaFrom4To5(aConnection));
         break;
       case 5:
-        IDB_TRY(UpgradeSchemaFrom5To6(aConnection));
+        QM_TRY(UpgradeSchemaFrom5To6(aConnection));
         break;
       case 6:
-        IDB_TRY(UpgradeSchemaFrom6To7(aConnection));
+        QM_TRY(UpgradeSchemaFrom6To7(aConnection));
         break;
       case 7:
-        IDB_TRY(UpgradeSchemaFrom7To8(aConnection));
+        QM_TRY(UpgradeSchemaFrom7To8(aConnection));
         break;
       case 8:
-        IDB_TRY(UpgradeSchemaFrom8To9_0(aConnection));
+        QM_TRY(UpgradeSchemaFrom8To9_0(aConnection));
         vacuumNeeded = true;
         break;
       case MakeSchemaVersion(9, 0):
-        IDB_TRY(UpgradeSchemaFrom9_0To10_0(aConnection));
+        QM_TRY(UpgradeSchemaFrom9_0To10_0(aConnection));
         break;
       case MakeSchemaVersion(10, 0):
-        IDB_TRY(UpgradeSchemaFrom10_0To11_0(aConnection));
+        QM_TRY(UpgradeSchemaFrom10_0To11_0(aConnection));
         break;
       case MakeSchemaVersion(11, 0):
-        IDB_TRY(UpgradeSchemaFrom11_0To12_0(aConnection));
+        QM_TRY(UpgradeSchemaFrom11_0To12_0(aConnection));
         break;
       case MakeSchemaVersion(12, 0):
-        IDB_TRY(UpgradeSchemaFrom12_0To13_0(aConnection, &vacuumNeeded));
+        QM_TRY(UpgradeSchemaFrom12_0To13_0(aConnection, &vacuumNeeded));
         break;
       case MakeSchemaVersion(13, 0):
-        IDB_TRY(UpgradeSchemaFrom13_0To14_0(aConnection));
+        QM_TRY(UpgradeSchemaFrom13_0To14_0(aConnection));
         break;
       case MakeSchemaVersion(14, 0):
-        IDB_TRY(UpgradeSchemaFrom14_0To15_0(aConnection));
+        QM_TRY(UpgradeSchemaFrom14_0To15_0(aConnection));
         break;
       case MakeSchemaVersion(15, 0):
-        IDB_TRY(UpgradeSchemaFrom15_0To16_0(aConnection));
+        QM_TRY(UpgradeSchemaFrom15_0To16_0(aConnection));
         break;
       case MakeSchemaVersion(16, 0):
-        IDB_TRY(UpgradeSchemaFrom16_0To17_0(aConnection));
+        QM_TRY(UpgradeSchemaFrom16_0To17_0(aConnection));
         break;
       case MakeSchemaVersion(17, 0):
-        IDB_TRY(UpgradeSchemaFrom17_0To18_0(aConnection, aOrigin));
+        QM_TRY(UpgradeSchemaFrom17_0To18_0(aConnection, aOrigin));
         vacuumNeeded = true;
         break;
       case MakeSchemaVersion(18, 0):
-        IDB_TRY(UpgradeSchemaFrom18_0To19_0(aConnection));
+        QM_TRY(UpgradeSchemaFrom18_0To19_0(aConnection));
         break;
       case MakeSchemaVersion(19, 0):
-        IDB_TRY(UpgradeSchemaFrom19_0To20_0(&aFMDirectory, aConnection));
+        QM_TRY(UpgradeSchemaFrom19_0To20_0(&aFMDirectory, aConnection));
         break;
       case MakeSchemaVersion(20, 0):
-        IDB_TRY(UpgradeSchemaFrom20_0To21_0(aConnection));
+        QM_TRY(UpgradeSchemaFrom20_0To21_0(aConnection));
         break;
       case MakeSchemaVersion(21, 0):
-        IDB_TRY(UpgradeSchemaFrom21_0To22_0(aConnection));
+        QM_TRY(UpgradeSchemaFrom21_0To22_0(aConnection));
         break;
       case MakeSchemaVersion(22, 0):
-        IDB_TRY(UpgradeSchemaFrom22_0To23_0(aConnection, aOrigin));
+        QM_TRY(UpgradeSchemaFrom22_0To23_0(aConnection, aOrigin));
         break;
       case MakeSchemaVersion(23, 0):
-        IDB_TRY(UpgradeSchemaFrom23_0To24_0(aConnection));
+        QM_TRY(UpgradeSchemaFrom23_0To24_0(aConnection));
         break;
       case MakeSchemaVersion(24, 0):
-        IDB_TRY(UpgradeSchemaFrom24_0To25_0(aConnection));
+        QM_TRY(UpgradeSchemaFrom24_0To25_0(aConnection));
         break;
       case MakeSchemaVersion(25, 0):
-        IDB_TRY(UpgradeSchemaFrom25_0To26_0(aConnection));
+        QM_TRY(UpgradeSchemaFrom25_0To26_0(aConnection));
         break;
       default:
-        IDB_FAIL(Err(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR), []() {
+        QM_FAIL(Err(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR), []() {
           IDB_WARNING(
               "Unable to open IndexedDB database, no upgrade path is "
               "available!");
         });
     }
 
-    IDB_TRY_UNWRAP(schemaVersion,
-                   MOZ_TO_RESULT_INVOKE(aConnection, GetSchemaVersion));
+    QM_TRY_UNWRAP(schemaVersion,
+                  MOZ_TO_RESULT_INVOKE(aConnection, GetSchemaVersion));
   }
 
   MOZ_ASSERT(schemaVersion == kSQLiteSchemaVersion);
