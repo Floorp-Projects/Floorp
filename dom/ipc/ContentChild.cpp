@@ -2528,6 +2528,10 @@ mozilla::ipc::IPCResult ContentChild::RecvRemoteType(
     MOZ_LOG(ContentParent::GetLog(), LogLevel::Debug,
             ("Setting remoteType of process %d to %s", getpid(),
              aRemoteType.get()));
+
+    if (aRemoteType == PREALLOC_REMOTE_TYPE) {
+      PreallocInit();
+    }
   }
 
   auto remoteTypePrefix = RemoteTypePrefix(aRemoteType);
@@ -2582,6 +2586,9 @@ mozilla::ipc::IPCResult ContentChild::RecvRemoteType(
 
   return IPC_OK();
 }
+
+// A method to initialize anything we need during the preallocation phase
+void ContentChild::PreallocInit() {}
 
 // Call RemoteTypePrefix() on the result to remove URIs if you want to use this
 // for telemetry.
