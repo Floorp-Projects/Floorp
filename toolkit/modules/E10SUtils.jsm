@@ -82,6 +82,16 @@ function getAboutModule(aURL) {
   }
 }
 
+function getOriginalReaderModeURI(aURI) {
+  try {
+    let searchParams = new URLSearchParams(aURI.query);
+    if (searchParams.has("url")) {
+      return Services.io.newURI(searchParams.get("url"));
+    }
+  } catch (e) {}
+  return null;
+}
+
 const NOT_REMOTE = null;
 
 // These must match any similar ones in ContentParent.h and ProcInfo.h
@@ -474,6 +484,32 @@ var E10SUtils = {
           ) {
             return PRIVILEGEDABOUT_REMOTE_TYPE;
           }
+
+          // When loading about:reader, try to display the document in the same
+          // web remote type as the document it's loading.
+          if (aURI.filePath == "reader") {
+            let readerModeURI = getOriginalReaderModeURI(aURI);
+            if (readerModeURI) {
+              let innerRemoteType = this.getRemoteTypeForURIObject(
+                readerModeURI,
+                aMultiProcess,
+                aRemoteSubframes,
+                aPreferredRemoteType,
+                aCurrentUri,
+                null, // aResultPrincipal
+                aIsSubframe,
+                aIsWorker,
+                aOriginAttributes
+              );
+              if (
+                innerRemoteType &&
+                innerRemoteType.startsWith(WEB_REMOTE_TYPE)
+              ) {
+                return innerRemoteType;
+              }
+            }
+          }
+
           return DEFAULT_REMOTE_TYPE;
         }
 
