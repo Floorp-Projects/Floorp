@@ -6,6 +6,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ia2Accessible.h"
+#include "ia2AccessibleHypertext.h"
 #include "ia2AccessibleText.h"
 
 #include "AccessibleText_i.c"
@@ -24,10 +25,8 @@ uint32_t ia2AccessibleText::sLastTextChangeEnd = 0;
 bool ia2AccessibleText::sLastTextChangeWasInsert = false;
 
 HyperTextAccessibleWrap* ia2AccessibleText::TextAcc() {
-  // XXX This first static_cast is a necessary hack until we get rid of the
-  // inheritance of HyperTextAccessibleWrap.
-  auto wrap = static_cast<HyperTextAccessibleWrap*>(this);
-  AccessibleWrap* acc = static_cast<MsaaAccessible*>(wrap)->LocalAcc();
+  auto hyp = static_cast<ia2AccessibleHypertext*>(this);
+  AccessibleWrap* acc = static_cast<MsaaAccessible*>(hyp)->LocalAcc();
   return static_cast<HyperTextAccessibleWrap*>(acc);
 }
 

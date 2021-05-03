@@ -6,6 +6,7 @@
 
 #include "ServiceProvider.h"
 
+#include "AccessibleApplication_i.c"
 #include "ApplicationAccessibleWrap.h"
 #include "DocAccessible.h"
 #include "nsAccUtils.h"

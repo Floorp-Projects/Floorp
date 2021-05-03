@@ -20,22 +20,15 @@
 
 using namespace mozilla::a11y;
 
-// IUnknown
-
-STDMETHODIMP
-ia2AccessibleTableCell::QueryInterface(REFIID iid, void** ppv) {
-  if (!ppv) return E_INVALIDARG;
-
-  *ppv = nullptr;
-
-  if (IID_IAccessibleTableCell == iid) {
-    *ppv = static_cast<IAccessibleTableCell*>(this);
-    (reinterpret_cast<IUnknown*>(*ppv))->AddRef();
-    return S_OK;
-  }
-
-  return E_NOINTERFACE;
+TableCellAccessible* ia2AccessibleTableCell::CellAcc() {
+  AccessibleWrap* acc = LocalAcc();
+  return acc ? acc->AsTableCell() : nullptr;
 }
+
+// IUnknown
+IMPL_IUNKNOWN_QUERY_HEAD(ia2AccessibleTableCell)
+IMPL_IUNKNOWN_QUERY_IFACE(IAccessibleTableCell)
+IMPL_IUNKNOWN_QUERY_TAIL_INHERITED(MsaaAccessible)
 
 ////////////////////////////////////////////////////////////////////////////////
 // IAccessibleTableCell

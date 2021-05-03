@@ -12,11 +12,7 @@ using namespace mozilla;
 using namespace mozilla::a11y;
 
 RootAccessible* MsaaRootAccessible::RootAcc() {
-  // XXX This first static_cast is a necessary hack until we get rid of the
-  // inheritance of RootAccessibleWrap.
-  auto wrap = static_cast<RootAccessible*>(this);
-  AccessibleWrap* acc = static_cast<MsaaAccessible*>(wrap)->LocalAcc();
-  return static_cast<RootAccessible*>(acc);
+  return static_cast<RootAccessible*>(LocalAcc());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -36,15 +32,15 @@ MsaaRootAccessible::InternalQueryInterface(REFIID aIid, void** aOutInterface) {
   }
 
   // ...Otherwise we pass through to the base COM implementation of
-  // QueryInterface which is provided by DocAccessibleWrap.
-  return DocAccessibleWrap::QueryInterface(aIid, aOutInterface);
+  // QueryInterface which is provided by MsaaDocAccessible.
+  return MsaaDocAccessible::QueryInterface(aIid, aOutInterface);
 }
 
 ULONG
-MsaaRootAccessible::InternalAddRef() { return DocAccessible::AddRef(); }
+MsaaRootAccessible::InternalAddRef() { return MsaaDocAccessible::AddRef(); }
 
 ULONG
-MsaaRootAccessible::InternalRelease() { return DocAccessible::Release(); }
+MsaaRootAccessible::InternalRelease() { return MsaaDocAccessible::Release(); }
 
 already_AddRefed<IUnknown> MsaaRootAccessible::Aggregate(IUnknown* aOuter) {
   MOZ_ASSERT(mOuter &&

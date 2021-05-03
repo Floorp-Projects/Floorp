@@ -21,15 +21,12 @@ EXPORTS.mozilla.a11y += [
 UNIFIED_SOURCES += [
     "AccessibleWrap.cpp",
     "ApplicationAccessibleWrap.cpp",
-    "ARIAGridAccessibleWrap.cpp",
     "Compatibility.cpp",
     "CompatibilityUIA.cpp",
     "DocAccessibleWrap.cpp",
     "EnumVariant.cpp",
     "GeckoCustom.cpp",
-    "HTMLTableAccessibleWrap.cpp",
     "HyperTextAccessibleWrap.cpp",
-    "ImageAccessibleWrap.cpp",
     "IUnknownImpl.cpp",
     "MsaaAccessible.cpp",
     "MsaaDocAccessible.cpp",
@@ -39,7 +36,6 @@ UNIFIED_SOURCES += [
     "nsWinUtils.cpp",
     "Platform.cpp",
     "RootAccessibleWrap.cpp",
-    "TextLeafAccessibleWrap.cpp",
 ]
 
 SOURCES += [
@@ -55,9 +51,7 @@ OS_LIBS += [
 
 if CONFIG["MOZ_XUL"]:
     UNIFIED_SOURCES += [
-        "XULListboxAccessibleWrap.cpp",
         "XULMenuAccessibleWrap.cpp",
-        "XULTreeGridAccessibleWrap.cpp",
     ]
 
 LOCAL_INCLUDES += [

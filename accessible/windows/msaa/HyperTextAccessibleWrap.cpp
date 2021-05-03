@@ -17,32 +17,6 @@ using namespace mozilla::a11y;
 
 NS_IMPL_ISUPPORTS_INHERITED0(HyperTextAccessibleWrap, HyperTextAccessible)
 
-STDMETHODIMP
-HyperTextAccessibleWrap::QueryInterface(REFIID aIID, void** aInstancePtr) {
-  if (!aInstancePtr) return E_FAIL;
-
-  *aInstancePtr = nullptr;
-
-  if (IsTextRole()) {
-    if (aIID == IID_IAccessibleText)
-      *aInstancePtr =
-          static_cast<IAccessibleText*>(static_cast<ia2AccessibleText*>(this));
-    else if (aIID == IID_IAccessibleHypertext)
-      *aInstancePtr = static_cast<IAccessibleHypertext*>(this);
-    else if (aIID == IID_IAccessibleHypertext2)
-      *aInstancePtr = static_cast<IAccessibleHypertext2*>(this);
-    else if (aIID == IID_IAccessibleEditableText)
-      *aInstancePtr = static_cast<IAccessibleEditableText*>(this);
-
-    if (*aInstancePtr) {
-      AddRef();
-      return S_OK;
-    }
-  }
-
-  return MsaaAccessible::QueryInterface(aIID, aInstancePtr);
-}
-
 nsresult HyperTextAccessibleWrap::HandleAccEvent(AccEvent* aEvent) {
   uint32_t eventType = aEvent->GetEventType();
 

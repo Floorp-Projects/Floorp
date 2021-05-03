@@ -15,11 +15,36 @@
 using namespace mozilla::a11y;
 
 HyperTextAccessibleWrap* ia2AccessibleHypertext::TextAcc() {
-  // XXX This first static_cast is a necessary hack until we get rid of the
-  // inheritance of HyperTextAccessibleWrap.
-  auto wrap = static_cast<HyperTextAccessibleWrap*>(this);
-  AccessibleWrap* acc = static_cast<MsaaAccessible*>(wrap)->LocalAcc();
+  AccessibleWrap* acc = LocalAcc();
   return static_cast<HyperTextAccessibleWrap*>(acc);
+}
+
+// IUnknown
+STDMETHODIMP
+ia2AccessibleHypertext::QueryInterface(REFIID aIID, void** aInstancePtr) {
+  if (!aInstancePtr) return E_FAIL;
+
+  *aInstancePtr = nullptr;
+
+  HyperTextAccessibleWrap* hyp = TextAcc();
+  if (hyp && hyp->IsTextRole()) {
+    if (aIID == IID_IAccessibleText)
+      *aInstancePtr =
+          static_cast<IAccessibleText*>(static_cast<ia2AccessibleText*>(this));
+    else if (aIID == IID_IAccessibleHypertext)
+      *aInstancePtr = static_cast<IAccessibleHypertext*>(this);
+    else if (aIID == IID_IAccessibleHypertext2)
+      *aInstancePtr = static_cast<IAccessibleHypertext2*>(this);
+    else if (aIID == IID_IAccessibleEditableText)
+      *aInstancePtr = static_cast<IAccessibleEditableText*>(this);
+
+    if (*aInstancePtr) {
+      AddRef();
+      return S_OK;
+    }
+  }
+
+  return MsaaAccessible::QueryInterface(aIID, aInstancePtr);
 }
 
 // IAccessibleHypertext

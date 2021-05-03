@@ -7,7 +7,7 @@
 #ifndef mozilla_a11y_DocAccessibleWrap_h__
 #define mozilla_a11y_DocAccessibleWrap_h__
 
-#include "MsaaDocAccessible.h"
+#include "DocAccessible.h"
 
 namespace mozilla {
 
@@ -15,12 +15,10 @@ class PresShell;
 
 namespace a11y {
 
-class DocAccessibleWrap : public MsaaDocAccessible {
+class DocAccessibleWrap : public DocAccessible {
  public:
   DocAccessibleWrap(dom::Document* aDocument, PresShell* aPresShell);
   virtual ~DocAccessibleWrap();
-
-  DECL_IUNKNOWN_INHERITED
 
   // LocalAccessible
   virtual void Shutdown();

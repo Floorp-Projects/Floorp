@@ -11,6 +11,7 @@
 #include "ia2AccessibleComponent.h"
 #include "ia2AccessibleHyperlink.h"
 #include "ia2AccessibleValue.h"
+#include "IUnknownImpl.h"
 #include "mozilla/a11y/MsaaIdGenerator.h"
 #include "mozilla/dom/ipc/IdType.h"
 #include "nsXULAppAPI.h"
@@ -27,7 +28,7 @@ class MsaaAccessible : public ia2Accessible,
                        public ia2AccessibleHyperlink,
                        public ia2AccessibleValue {
  public:
-  MsaaAccessible();
+  static MsaaAccessible* Create(Accessible* aAcc);
 
   AccessibleWrap* LocalAcc();
 
@@ -69,10 +70,7 @@ class MsaaAccessible : public ia2Accessible,
 
   static MsaaAccessible* GetFrom(Accessible* aAcc);
 
-  // IUnknown
-  STDMETHODIMP QueryInterface(REFIID, void**) override;
-  ULONG STDMETHODCALLTYPE AddRef() override;
-  ULONG STDMETHODCALLTYPE Release() override;
+  DECL_IUNKNOWN
 
   // IAccessible
   virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_accParent(
@@ -157,7 +155,10 @@ class MsaaAccessible : public ia2Accessible,
                                            UINT* puArgErr) override;
 
  protected:
+  explicit MsaaAccessible(Accessible* aAcc);
   virtual ~MsaaAccessible();
+
+  Accessible* mAcc;
 
   uint32_t mID;
   static MsaaIdGenerator sIDGen;

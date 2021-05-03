@@ -9,15 +9,19 @@
 #define IA2_ACCESSIBLE_APPLICATION_H_
 
 #include "AccessibleApplication.h"
+#include "IUnknownImpl.h"
+#include "MsaaAccessible.h"
 
 namespace mozilla {
 namespace a11y {
 class ApplicationAccessible;
 
-class ia2AccessibleApplication : public IAccessibleApplication {
+class ia2AccessibleApplication : public IAccessibleApplication,
+                                 public MsaaAccessible {
  public:
   // IUnknown
-  STDMETHODIMP QueryInterface(REFIID, void**);
+  DECL_IUNKNOWN_INHERITED
+  IMPL_IUNKNOWN_REFCOUNTING_INHERITED(MsaaAccessible)
 
   // IAccessibleApplication
   virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_appName(
@@ -31,6 +35,9 @@ class ia2AccessibleApplication : public IAccessibleApplication {
 
   virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_toolkitVersion(
       /* [retval][out] */ BSTR* version);
+
+ protected:
+  using MsaaAccessible::MsaaAccessible;
 
  private:
   ApplicationAccessible* AppAcc();

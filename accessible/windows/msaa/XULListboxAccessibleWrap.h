@@ -12,28 +12,7 @@
 
 namespace mozilla {
 namespace a11y {
-
-/**
- * IA2 wrapper class for XULListboxAccessible class implementing
- * IAccessibleTable and IAccessibleTable2 interfaces.
- */
-class XULListboxAccessibleWrap : public XULListboxAccessible,
-                                 public ia2AccessibleTable {
-  ~XULListboxAccessibleWrap() {}
-
- public:
-  XULListboxAccessibleWrap(nsIContent* aContent, DocAccessible* aDoc)
-      : XULListboxAccessible(aContent, aDoc), ia2AccessibleTable(this) {}
-
-  // IUnknown
-  DECL_IUNKNOWN_INHERITED
-
-  // nsISupports
-  NS_DECL_ISUPPORTS_INHERITED
-
-  virtual void Shutdown() override;
-};
-
+using XULListboxAccessibleWrap = XULListboxAccessible;
 }  // namespace a11y
 }  // namespace mozilla
 
