@@ -883,7 +883,7 @@ void TRR::ReportStatus(nsresult aStatusCode) {
   // it as failed; otherwise it can cause the confirmation to fail.
   if (UseDefaultServer() && aStatusCode != NS_ERROR_ABORT) {
     // Bad content is still considered "okay" if the HTTP response is okay
-    gTRRService->TRRIsOkay(aStatusCode);
+    gTRRService->RecordTRRStatus(aStatusCode);
   }
 }
 
