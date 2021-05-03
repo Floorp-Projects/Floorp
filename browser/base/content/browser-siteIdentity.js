@@ -1014,8 +1014,10 @@ var gIdentityHandler = {
       connection = "cert-error-page";
     } else if (this._isAboutHttpsOnlyErrorPage) {
       connection = "https-only-error-page";
-    } else if (this._isAboutNetErrorPage || this._isAboutBlockedPage) {
+    } else if (this._isAboutBlockedPage) {
       connection = "not-secure";
+    } else if (this._isAboutNetErrorPage) {
+      connection = "net-error-page";
     } else if (this._isPotentiallyTrustworthy) {
       connection = "file";
     }
