@@ -694,17 +694,12 @@ nsresult nsPageSequenceFrame::DoPageEnd() {
   return rv;
 }
 
-static gfx::Matrix4x4 ComputePageSequenceTransform(const nsIFrame* aFrame,
-                                                   float aAppUnitsPerPixel) {
+gfx::Matrix4x4 ComputePageSequenceTransform(nsIFrame* aFrame,
+                                            float aAppUnitsPerPixel) {
   MOZ_ASSERT(aFrame->IsPageSequenceFrame());
   float scale =
-      static_cast<const nsPageSequenceFrame*>(aFrame)->GetPrintPreviewScale();
+      static_cast<nsPageSequenceFrame*>(aFrame)->GetPrintPreviewScale();
   return gfx::Matrix4x4::Scaling(scale, scale, 1);
-}
-
-nsIFrame::ComputeTransformFunction nsPageSequenceFrame::GetTransformGetter()
-    const {
-  return ComputePageSequenceTransform;
 }
 
 void nsPageSequenceFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
@@ -736,9 +731,9 @@ void nsPageSequenceFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     }
   }
 
-  content.AppendNewToTop<nsDisplayTransform>(
-      aBuilder, this, &content, content.GetBuildingRect(),
-      nsDisplayTransform::WithTransformGetter);
+  content.AppendNewToTop<nsDisplayTransform>(aBuilder, this, &content,
+                                             content.GetBuildingRect(),
+                                             ::ComputePageSequenceTransform);
 
   aLists.Content()->AppendToTop(&content);
 }

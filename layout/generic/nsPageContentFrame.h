@@ -37,9 +37,7 @@ class nsPageContentFrame final : public mozilla::ViewportFrame {
 
   void SetSharedPageData(nsSharedPageData* aPD) { mPD = aPD; }
 
-  ComputeTransformFunction GetTransformGetter() const override;
-  void BuildDisplayList(nsDisplayListBuilder*,
-                        const nsDisplayListSet&) override;
+  bool HasTransformGetter() const override { return true; }
 
   /**
    * Return our canvas frame.
