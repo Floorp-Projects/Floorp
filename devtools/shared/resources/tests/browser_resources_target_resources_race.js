@@ -21,11 +21,11 @@ add_task(async function() {
     client,
     resourceWatcher,
     targetCommand,
-  } = await initMultiProcessResourceWatcher();
+  } = await initMultiProcessResourceCommand();
 
   const expectedPlatformMessage = "expectedMessage";
 
-  info("Log a message *before* calling ResourceWatcher.watchResources");
+  info("Log a message *before* calling ResourceCommand.watchResources");
   Services.console.logStringMessage(expectedPlatformMessage);
 
   info("Call watchResources from 2 separate call sites consecutively");

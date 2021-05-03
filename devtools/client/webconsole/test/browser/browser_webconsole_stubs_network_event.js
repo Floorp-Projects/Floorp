@@ -5,7 +5,6 @@
 
 const {
   createCommandsForTab,
-  createResourceWatcherForCommands,
   STUBS_UPDATE_ENV,
   getStubFile,
   getCleanedPacket,
@@ -59,7 +58,9 @@ async function generateNetworkEventStubs() {
   const stubs = new Map();
   const tab = await addTab(TEST_URI);
   const commands = await createCommandsForTab(tab);
-  const resourceWatcher = await createResourceWatcherForCommands(commands);
+  await commands.targetCommand.startListening();
+  const resourceWatcher = commands.resourceCommand;
+
   const stacktraces = new Map();
   let addNetworkStub = function() {};
   let addNetworkUpdateStub = function() {};

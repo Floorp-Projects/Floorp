@@ -6,7 +6,6 @@
 const {
   STUBS_UPDATE_ENV,
   createCommandsForTab,
-  createResourceWatcherForCommands,
   getCleanedPacket,
   getStubFile,
   writeStubsToFile,
@@ -63,7 +62,8 @@ async function generateCssMessageStubs() {
 
   const tab = await addTab(TEST_URI);
   const commands = await createCommandsForTab(tab);
-  const resourceWatcher = await createResourceWatcherForCommands(commands);
+  await commands.targetCommand.startListening();
+  const resourceWatcher = commands.resourceCommand;
 
   // The resource-watcher only supports a single call to watch/unwatch per
   // instance, so we attach a unique watch callback, which will forward the

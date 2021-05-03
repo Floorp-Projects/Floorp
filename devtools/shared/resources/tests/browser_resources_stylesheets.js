@@ -3,7 +3,7 @@
 
 "use strict";
 
-// Test the ResourceWatcher API around STYLESHEET.
+// Test the ResourceCommand API around STYLESHEET.
 
 const ResourceCommand = require("devtools/shared/commands/resource/resource-command");
 
@@ -99,15 +99,15 @@ add_task(async function() {
 });
 
 async function testResourceAvailableFeature() {
-  info("Check resource available feature of the ResourceWatcher");
+  info("Check resource available feature of the ResourceCommand");
 
   const tab = await addTab(STYLE_TEST_URL);
 
-  const { client, resourceWatcher, targetCommand } = await initResourceWatcher(
+  const { client, resourceWatcher, targetCommand } = await initResourceCommand(
     tab
   );
 
-  info("Check whether ResourceWatcher gets existing stylesheet");
+  info("Check whether ResourceCommand gets existing stylesheet");
   const availableResources = [];
   await resourceWatcher.watchResources([resourceWatcher.TYPES.STYLESHEET], {
     onAvailable: resources => availableResources.push(...resources),
@@ -127,7 +127,7 @@ async function testResourceAvailableFeature() {
     await assertResource(availableResource, expectedResource);
   }
 
-  info("Check whether ResourceWatcher gets additonal stylesheet");
+  info("Check whether ResourceCommand gets additonal stylesheet");
   await ContentTask.spawn(
     tab.linkedBrowser,
     ADDITIONAL_RESOURCE.styleText,
@@ -147,7 +147,7 @@ async function testResourceAvailableFeature() {
   );
 
   info(
-    "Check whether ResourceWatcher gets additonal stylesheet which is added by DevTool"
+    "Check whether ResourceCommand gets additonal stylesheet which is added by DevTool"
   );
   const styleSheetsFront = await targetCommand.targetFront.getFront(
     "stylesheets"
@@ -168,11 +168,11 @@ async function testResourceAvailableFeature() {
 }
 
 async function testResourceUpdateFeature() {
-  info("Check resource update feature of the ResourceWatcher");
+  info("Check resource update feature of the ResourceCommand");
 
   const tab = await addTab(STYLE_TEST_URL);
 
-  const { client, resourceWatcher, targetCommand } = await initResourceWatcher(
+  const { client, resourceWatcher, targetCommand } = await initResourceCommand(
     tab
   );
 
@@ -300,7 +300,7 @@ async function testResourceUpdateFeature() {
 }
 
 async function testNestedResourceUpdateFeature() {
-  info("Check nested resource update feature of the ResourceWatcher");
+  info("Check nested resource update feature of the ResourceCommand");
 
   const tab = await addTab(STYLE_TEST_URL);
 
@@ -313,7 +313,7 @@ async function testNestedResourceUpdateFeature() {
     tab.ownerGlobal.resizeTo(originalWindowWidth, originalWindowHeight);
   });
 
-  const { client, resourceWatcher, targetCommand } = await initResourceWatcher(
+  const { client, resourceWatcher, targetCommand } = await initResourceCommand(
     tab
   );
 

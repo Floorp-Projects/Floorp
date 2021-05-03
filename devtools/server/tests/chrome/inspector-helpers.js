@@ -1,8 +1,7 @@
 /* exported attachURL, promiseDone,
    promiseOnce,
    addTest, addAsyncTest,
-   runNextTest, _documentWalker,
-   createResourceWatcher */
+   runNextTest, _documentWalker */
 "use strict";
 
 const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
@@ -129,9 +128,4 @@ function runNextTest() {
         ex
     );
   }
-}
-
-//TODO: renamed to createResourceCommand
-async function createResourceWatcher(commands) {
-  return commands.resourceCommand;
 }

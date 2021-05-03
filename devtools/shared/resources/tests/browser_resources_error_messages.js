@@ -3,7 +3,7 @@
 
 "use strict";
 
-// Test the ResourceWatcher API around ERROR_MESSAGE
+// Test the ResourceCommand API around ERROR_MESSAGE
 // Reproduces assertions from devtools/shared/webconsole/test/chrome/test_page_errors.html
 
 // Create a simple server so we have a nice sourceName in the resources packets.
@@ -28,7 +28,7 @@ async function testErrorMessagesResources() {
   // Open a test tab
   const tab = await addTab(TEST_URI);
 
-  const { client, resourceWatcher, targetCommand } = await initResourceWatcher(
+  const { client, resourceWatcher, targetCommand } = await initResourceCommand(
     tab
   );
 
@@ -39,7 +39,7 @@ async function testErrorMessagesResources() {
   );
 
   info(
-    "Log some errors *before* calling ResourceWatcher.watchResources in order to assert" +
+    "Log some errors *before* calling ResourceCommand.watchResources in order to assert" +
       " the behavior of already existing messages."
   );
   await triggerErrors(tab);
@@ -91,7 +91,7 @@ async function testErrorMessagesResources() {
   );
 
   info(
-    "Now log errors *after* the call to ResourceWatcher.watchResources and after having" +
+    "Now log errors *after* the call to ResourceCommand.watchResources and after having" +
       " received all existing messages"
   );
   await triggerErrors(tab);
@@ -109,7 +109,7 @@ async function testErrorMessagesResourcesWithIgnoreExistingResources() {
   info("Test ignoreExistingResources option for ERROR_MESSAGE");
   const tab = await addTab(TEST_URI);
 
-  const { client, resourceWatcher, targetCommand } = await initResourceWatcher(
+  const { client, resourceWatcher, targetCommand } = await initResourceCommand(
     tab
   );
 

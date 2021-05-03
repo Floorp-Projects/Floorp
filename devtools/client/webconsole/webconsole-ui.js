@@ -339,7 +339,7 @@ class WebConsoleUI {
       // We can call it from here, as `_attchTargets` is called after the UI is initialized.
       // Bug 1642599:
       // TargetCommand.startListening ought to be called before watching for resources,
-      // in order to set TargetCommand.watcherFront which is used by ResourceWatcher.watchResources.
+      // in order to set TargetCommand.watcherFront which is used by ResourceCommand.watchResources.
       await this.hud.commands.targetCommand.startListening();
     }
 
