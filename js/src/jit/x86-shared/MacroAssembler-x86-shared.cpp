@@ -285,24 +285,6 @@ void MacroAssemblerX86Shared::minMaxFloat32(FloatRegister first,
   bind(&done);
 }
 
-#ifdef ENABLE_WASM_SIMD
-bool MacroAssembler::MustScalarizeShiftSimd128(wasm::SimdOp op) {
-  return op == wasm::SimdOp::I64x2ShrS;
-}
-
-bool MacroAssembler::MustMaskShiftCountSimd128(wasm::SimdOp op, int32_t* mask) {
-  if (op == wasm::SimdOp::I64x2ShrS) {
-    *mask = 63;
-    return true;
-  }
-  return false;
-}
-
-bool MacroAssembler::MustScalarizeShiftSimd128(wasm::SimdOp op, Imm32 imm) {
-  return op == wasm::SimdOp::I64x2ShrS && (imm.value & 63) > 31;
-}
-#endif
-
 //{{{ check_macroassembler_style
 // ===============================================================
 // MacroAssembler high-level usage.

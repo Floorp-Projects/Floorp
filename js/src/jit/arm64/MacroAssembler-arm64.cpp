@@ -52,20 +52,6 @@ void MacroAssemblerCompat::boxValue(JSValueType type, Register src,
       Operand(ImmShiftedTag(type).value));
 }
 
-#ifdef ENABLE_WASM_SIMD
-bool MacroAssembler::MustScalarizeShiftSimd128(wasm::SimdOp op) {
-  return false;
-}
-
-bool MacroAssembler::MustMaskShiftCountSimd128(wasm::SimdOp op, int32_t* mask) {
-  return false;
-}
-
-bool MacroAssembler::MustScalarizeShiftSimd128(wasm::SimdOp op, Imm32 imm) {
-  return false;
-}
-#endif
-
 void MacroAssembler::clampDoubleToUint8(FloatRegister input, Register output) {
   ARMRegister dest(output, 32);
   Fcvtns(dest, ARMFPRegister(input, 64));
