@@ -1,5 +1,3 @@
-// |reftest| skip-if(!Int32Array.prototype.at)
-
 for (var constructor of anyTypedArrayConstructors) {
     assertEq(constructor.prototype.at.length, 1);
 
