@@ -237,6 +237,9 @@ const FullLookAndFeel* RemoteLookAndFeel::ExtractData() {
   impl->GetGtkContentTheme(lf->theme());
 #endif
 
+  lf->tables().passwordChar() = impl->GetPasswordCharacterImpl();
+  lf->tables().passwordEcho() = impl->GetEchoPasswordImpl();
+
   AddIDsToMap(impl, lf);
 
   // This assignment to sCachedLookAndFeelData must be done after the
