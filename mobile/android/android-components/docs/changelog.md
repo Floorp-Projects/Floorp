@@ -49,6 +49,16 @@ permalink: /changelog/
   * 🌟️ New APIs for managing keys - `ManagedKey`, `KeyProvider` and `KeyRecoveryHandler`.
   * 🌟️ `AutofillCreditCardsAddressesStorage` implements these APIs for managing keys for credit card storage.
 
+* **lib-state**
+  * 🌟️ Added `AbstractBinding` for simple features that want to observe changes to the `State` in a `Store` without needing to manually manage the CoroutineScope. This can now be handled like other `LifecycleAwareFeature` implementations:
+    ```kotlin
+    class SimpleFeature(store: BrowserStore) : AbstractBinding<BrowserState>(store) {
+      override suspend fun onState(flow: Flow<BrowserState>) {
+        // Interact with flowable state.
+      }
+    }
+    ```
+
 # 75.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v74.0.0...v75.0.0)
