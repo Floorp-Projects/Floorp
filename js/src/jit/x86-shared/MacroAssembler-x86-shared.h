@@ -504,7 +504,7 @@ class MacroAssemblerX86Shared : public Assembler {
                                        Register temp, FloatRegister xtmp,
                                        FloatRegister dest);
   void packedRightShiftByScalarInt8x16(Imm32 count, FloatRegister src,
-                                       FloatRegister temp, FloatRegister dest);
+                                       FloatRegister dest);
   void packedUnsignedRightShiftByScalarInt8x16(FloatRegister in, Register count,
                                                Register temp,
                                                FloatRegister xtmp,

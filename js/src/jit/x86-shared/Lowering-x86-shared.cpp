@@ -1049,16 +1049,12 @@ void LIRGenerator::visitWasmShiftSimd128(MWasmShiftSimd128* ins) {
   MOZ_ASSERT(ins->type() == MIRType::Simd128);
 
   if (rhs->isConstant()) {
-    LDefinition temp = LDefinition::BogusTemp();
     int32_t shiftCount = rhs->toConstant()->toInt32();
     switch (ins->simdOp()) {
       case wasm::SimdOp::I8x16Shl:
       case wasm::SimdOp::I8x16ShrU:
-        shiftCount &= 7;
-        break;
       case wasm::SimdOp::I8x16ShrS:
         shiftCount &= 7;
-        temp = tempSimd128();
         break;
       case wasm::SimdOp::I16x8Shl:
       case wasm::SimdOp::I16x8ShrU:
@@ -1084,7 +1080,7 @@ void LIRGenerator::visitWasmShiftSimd128(MWasmShiftSimd128* ins) {
     // Almost always beneficial, and never detrimental, to reuse the input if
     // possible.
     auto* lir = new (alloc())
-        LWasmConstantShiftSimd128(useRegisterAtStart(lhs), temp, shiftCount);
+        LWasmConstantShiftSimd128(useRegisterAtStart(lhs), shiftCount);
     defineReuseInput(lir, ins, LWasmConstantShiftSimd128::Src);
     return;
   }
