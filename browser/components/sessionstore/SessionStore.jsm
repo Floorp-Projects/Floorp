@@ -559,6 +559,10 @@ var SessionStoreInternal = {
   // For each <browser> element, records the current epoch.
   _browserEpochs: new WeakMap(),
 
+  // For each <browser> element that's being restored, this records the latest
+  // restoreHistory() promise.
+  _historyRestorePromises: new WeakMap(),
+
   // Any browsers that fires the oop-browser-crashed event gets stored in
   // here - that way we know which browsers to ignore messages from (until
   // they get restored).
@@ -1190,6 +1194,7 @@ var SessionStoreInternal = {
     if (!Services.appinfo.sessionHistoryInParent) {
       throw new Error("This function should only be used with SHIP");
     }
+
     class ProgressListener {
       constructor() {
         browser.addProgressListener(
@@ -5614,15 +5619,6 @@ var SessionStoreInternal = {
   _resetLocalTabRestoringState(aTab) {
     let browser = aTab.linkedBrowser;
 
-    if (Services.appinfo.sessionHistoryInParent) {
-      if (this._browserProgressListenerForRestore.has(browser.permanentKey)) {
-        this._browserProgressListenerForRestore
-          .get(browser.permanentKey)
-          .uninstall();
-      }
-      browser.browsingContext.clearRestoreState();
-    }
-
     // Keep the tab's previous state for later in this method
     let previousState = TAB_STATE_FOR_BROWSER.get(browser);
 
@@ -5633,6 +5629,16 @@ var SessionStoreInternal = {
 
     // The browser is no longer in any sort of restoring state.
     TAB_STATE_FOR_BROWSER.delete(browser);
+
+    if (Services.appinfo.sessionHistoryInParent) {
+      if (this._browserProgressListenerForRestore.has(browser.permanentKey)) {
+        this._browserProgressListenerForRestore
+          .get(browser.permanentKey)
+          .uninstall();
+      }
+      browser.browsingContext.clearRestoreState();
+      this._historyRestorePromises.delete(browser.permanentKey);
+    }
 
     aTab.removeAttribute("pending");
 
@@ -5845,16 +5851,38 @@ var SessionStoreInternal = {
     let storage = data.tabData?.storage || {};
     delete data.tabData?.storage;
 
+    // If this restore requires a remoteness change, we'll make two calls to
+    // this function with the same browser element (this will be cleared up in
+    // bug 1709136). Tracking the latest promise ensures that we're only
+    // proceeding after the second call.
     let promise = SessionStoreUtils.restoreDocShellState(
       browser.browsingContext,
       uri,
       disallow,
       storage
     );
+    this._historyRestorePromises.set(browser.permanentKey, promise);
 
-    promise.finally(() => {
-      this._restoreHistoryComplete(browser, data);
-    });
+    promise
+      .then(() => {
+        if (
+          this._historyRestorePromises.get(browser.permanentKey) === promise
+        ) {
+          this._historyRestorePromises.delete(browser.permanentKey);
+          this._restoreHistoryComplete(browser, data);
+        }
+      })
+      .catch(() => {
+        // We'll generally only arrive here for the pre-remoteness-flip promise.
+        // This is expected, since after going through a remoteness change, the
+        // browser's associated WindowGlobal actor is destroyed, and the promise
+        // is rejected.
+        if (
+          this._historyRestorePromises.get(browser.permanentKey) === promise
+        ) {
+          console.error("Rejected active restore promise");
+        }
+      });
 
     this._shistoryToRestore.set(browser.permanentKey, data);
 
@@ -5901,7 +5929,7 @@ var SessionStoreInternal = {
     let tabData = data.tabData || {};
     let uri = null;
     let loadFlags = null;
-    let promises = [];
+    let promises = [this._historyRestorePromises.get(browser.permanentKey)];
 
     if (tabData.userTypedValue && tabData.userTypedClear) {
       uri = tabData.userTypedValue;
