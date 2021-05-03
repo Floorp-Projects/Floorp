@@ -659,4 +659,14 @@ if use_minidump:
 for name, st in results:
     print("exit status %d for '%s'" % (st, name))
 
-sys.exit(max((st for _, st in results), key=abs))
+# Pick the "worst" exit status. SIGSEGV might give a status of -11, so use the
+# maximum absolute value instead of just the maximum.
+exit_status = max((st for _, st in results), key=abs)
+
+# The exit status on Windows can be something like 2147483651 (0x80000003),
+# which will be converted to status zero in the caller. Mask off the high bits,
+# but if the result is zero then fall back to returning 1.
+if exit_status & 0xFF:
+    sys.exit(exit_status & 0xFF)
+else:
+    sys.exit(1 if exit_status else 0)
