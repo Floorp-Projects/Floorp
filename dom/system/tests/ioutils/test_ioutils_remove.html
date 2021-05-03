@@ -15,10 +15,16 @@
     const { Assert } = ChromeUtils.import("resource://testing-common/Assert.jsm");
     const { ObjectUtils } = ChromeUtils.import("resource://gre/modules/ObjectUtils.jsm");
 
+    // TODO: Remove this import for OS.File. It is currently being used as a
+    //       stop gap for missing IOUtils functionality.
+    const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+
+
+    const tmpDir = OS.Constants.Path.tmpDir;
+
     add_task(async function test_create_and_remove_file() {
       info("Test creating and removing a single file");
-      const tmpDir = await PathUtils.getTempDir();
-      const tmpFileName = PathUtils.join(tmpDir, "test_ioutils_create_and_remove.tmp");
+      const tmpFileName = OS.Path.join(tmpDir, "test_ioutils_create_and_remove.tmp");
       await IOUtils.write(tmpFileName, new Uint8Array(0));
       ok(await fileExists(tmpFileName), `Expected file ${tmpFileName} to exist`);
 
@@ -26,7 +32,7 @@
       ok(!await fileExists(tmpFileName), "IOUtils::remove can remove files");
 
       info("Test creating and removing an empty directory");
-      const tmpDirName = PathUtils.join(tmpDir, "test_ioutils_create_and_remove.tmp.d");
+      const tmpDirName = OS.Path.join(tmpDir, "test_ioutils_create_and_remove.tmp.d");
       await IOUtils.makeDirectory(tmpDirName);
       ok(await dirExists(tmpDirName), `Expected directory ${tmpDirName} to exist`);
 
@@ -35,8 +41,7 @@
     });
 
     add_task(async function test_remove_non_existing() {
-      const tmpDir = await PathUtils.getTempDir();
-      const tmpFileName = PathUtils.join(tmpDir, "test_ioutil_remove_non_existing.tmp");
+      const tmpFileName = OS.Path.join(tmpDir, "test_ioutil_remove_non_existing.tmp");
       ok(!await fileExists(tmpFileName), `Expected file ${tmpFileName} not to exist`);
 
       await IOUtils.remove(tmpFileName, { ignoreAbsent: true });
@@ -51,11 +56,10 @@
     });
 
     add_task(async function test_remove_recursive() {
-      const tmpDir = await PathUtils.getTempDir();
-      const tmpParentDir = PathUtils.join(tmpDir, "test_ioutils_remove.tmp.d");
-      const tmpChildDir = PathUtils.join(tmpParentDir, "child.tmp.d");
-      const tmpTopLevelFileName = PathUtils.join(tmpParentDir, "top.tmp");
-      const tmpNestedFileName = PathUtils.join(tmpChildDir, "nested.tmp");
+      const tmpParentDir = OS.Path.join(tmpDir, "test_ioutils_remove.tmp.d");
+      const tmpChildDir = OS.Path.join(tmpParentDir, "child.tmp.d");
+      const tmpTopLevelFileName = OS.Path.join(tmpParentDir, "top.tmp");
+      const tmpNestedFileName = OS.Path.join(tmpChildDir, "nested.tmp");
       await createDir(tmpChildDir);
       await createFile(tmpTopLevelFileName, "");
       await createFile(tmpNestedFileName, "");
