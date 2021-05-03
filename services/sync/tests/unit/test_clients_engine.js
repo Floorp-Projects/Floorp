@@ -547,8 +547,6 @@ add_task(async function test_command_validation() {
     ["resetAll", ["foo"], false],
     ["resetEngine", ["tabs"], true],
     ["resetEngine", [], false],
-    ["wipeAll", [], true],
-    ["wipeAll", ["foo"], false],
     ["wipeEngine", ["tabs"], true],
     ["wipeEngine", [], false],
     ["logout", [], true],
@@ -634,7 +632,7 @@ add_task(async function test_command_invalid_client() {
   let error;
 
   try {
-    await engine.sendCommand("wipeAll", [], id);
+    await engine.sendCommand("wipeEngine", ["tabs"], id);
   } catch (ex) {
     error = ex;
   }
@@ -909,7 +907,7 @@ add_task(async function test_command_sync() {
     equal(clientRecord.commands.length, 0);
 
     _("Send a command to the remote client.");
-    await engine.sendCommand("wipeAll", []);
+    await engine.sendCommand("wipeEngine", ["tabs"]);
     let clientCommands = (await engine._readCommands())[remoteId];
     equal(clientCommands.length, 1);
     await syncClientsEngine(server);
@@ -930,8 +928,9 @@ add_task(async function test_command_sync() {
     equal(engine.localCommands.length, 1);
 
     let command = engine.localCommands[0];
-    equal(command.command, "wipeAll");
-    equal(command.args.length, 0);
+    equal(command.command, "wipeEngine");
+    equal(command.args.length, 1);
+    equal(command.args[0], "tabs");
   } finally {
     await cleanup();
 
@@ -1937,7 +1936,7 @@ add_task(async function test_command_sync() {
       "3 remote records written (+1 for the synced local record)"
     );
 
-    await engine.sendCommand("wipeAll", []);
+    await engine.sendCommand("wipeEngine", ["tabs"]);
     await engine._tracker.addChangedID(engine.localID);
     const getClientFxaDeviceId = sinon
       .stub(engine, "getClientFxaDeviceId")
@@ -2002,7 +2001,7 @@ add_task(async function ensureSameFlowIDs() {
     });
 
     await syncClientsEngine(server);
-    await engine.sendCommand("wipeAll", []);
+    await engine.sendCommand("wipeEngine", ["tabs"]);
     await syncClientsEngine(server);
     equal(events.length, 2);
     // we don't know what the flowID is, but do know it should be the same.
@@ -2014,7 +2013,7 @@ add_task(async function ensureSameFlowIDs() {
     // check it's correctly used when we specify a flow ID
     events.length = 0;
     let flowID = Utils.makeGUID();
-    await engine.sendCommand("wipeAll", [], null, { flowID });
+    await engine.sendCommand("wipeEngine", ["tabs"], null, { flowID });
     await syncClientsEngine(server);
     equal(events.length, 2);
     equal(events[0].extra.flowID, flowID);
@@ -2027,7 +2026,9 @@ add_task(async function ensureSameFlowIDs() {
 
     // and that it works when something else is in "extra"
     events.length = 0;
-    await engine.sendCommand("wipeAll", [], null, { reason: "testing" });
+    await engine.sendCommand("wipeEngine", ["tabs"], null, {
+      reason: "testing",
+    });
     await syncClientsEngine(server);
     equal(events.length, 2);
     equal(events[0].extra.flowID, events[1].extra.flowID);
@@ -2040,7 +2041,7 @@ add_task(async function ensureSameFlowIDs() {
 
     // and when both are specified.
     events.length = 0;
-    await engine.sendCommand("wipeAll", [], null, {
+    await engine.sendCommand("wipeEngine", ["tabs"], null, {
       reason: "testing",
       flowID,
     });
