@@ -50,9 +50,7 @@ class AutoNoAnalysisForTest {
 BEGIN_TEST(testGCGrayMarking) {
   AutoNoAnalysisForTest disableAnalysis;
   AutoDisableCompactingGC disableCompactingGC(cx);
-#ifdef JS_GC_ZEAL
   AutoLeaveZeal nozeal(cx);
-#endif /* JS_GC_ZEAL */
 
   CHECK(InitGlobals());
   JSAutoRealm ar(cx, global1);
@@ -60,14 +58,11 @@ BEGIN_TEST(testGCGrayMarking) {
   InitGrayRootTracer();
 
   // Enable incremental GC.
-  JS_SetGCParameter(cx, JSGC_INCREMENTAL_GC_ENABLED, true);
-  JS_SetGCParameter(cx, JSGC_PER_ZONE_GC_ENABLED, true);
+  AutoGCParameter param1(cx, JSGC_INCREMENTAL_GC_ENABLED, true);
+  AutoGCParameter param2(cx, JSGC_PER_ZONE_GC_ENABLED, true);
 
   bool ok = TestMarking() && TestJSWeakMaps() && TestInternalWeakMaps() &&
             TestCCWs() && TestGrayUnmarking();
-
-  JS_SetGCParameter(cx, JSGC_INCREMENTAL_GC_ENABLED, false);
-  JS_SetGCParameter(cx, JSGC_PER_ZONE_GC_ENABLED, false);
 
   global1 = nullptr;
   global2 = nullptr;
