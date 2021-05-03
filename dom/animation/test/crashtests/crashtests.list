@@ -54,3 +54,4 @@ pref(dom.animations-api.core.enabled,true) load 1612891-3.html
 pref(dom.animations-api.core.enabled,true) pref(dom.animations-api.getAnimations.enabled,true) load 1633442.html
 pref(dom.animations-api.core.enabled,true) pref(dom.animations-api.implicit-keyframes.enabled,true) load 1633486.html
 pref(layout.animation.prerender.partial,true) load 1656419.html
+pref(layout.css.step-position-jump.enabled,true) load 1706157.html
