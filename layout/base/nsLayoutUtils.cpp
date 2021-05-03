@@ -2412,7 +2412,7 @@ bool nsLayoutUtils::GetLayerTransformForFrame(nsIFrame* aFrame,
                                               Matrix4x4Flagged* aTransform) {
   // FIXME/bug 796690: we can sometimes compute a transform in these
   // cases, it just increases complexity considerably.  Punt for now.
-  if (aFrame->Extend3DContext() || aFrame->HasTransformGetter()) {
+  if (aFrame->Extend3DContext() || aFrame->GetTransformGetter()) {
     return false;
   }
 
