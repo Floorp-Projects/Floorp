@@ -3,13 +3,14 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
-    android:width="23dp"
-    android:height="21dp"
-    android:viewportWidth="23"
-    android:viewportHeight="21">
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
   <path
-      android:pathData="M16 9c0.6 0 1.16 0.32 1.47 0.83l0.07 0.13 4.32 8.55A1.72 1.72 0 0 1 20.38 21H11.68a1.73 1.73 0 0 1-1.57-2.33l0.07-0.16 4.27-8.55c0.3-0.59 0.9-0.96 1.55-0.96zm-6-9a10 10 0 0 1 9.77 12.14l-1.33-2.63a2.72 2.72 0 0 0-4.6-0.46 4.25 4.25 0 1 0-0.4 0.68l-1.23 2.49a5.9 5.9 0 0 1-2.21 0.58c-2.13 0-4.18-2.3-5.67-0.6a1.41 1.41 0 0 0-0.1 1.73c1.22 1.8 3.25 3 5.58 3.07l-0.54 1.06c-0.3 0.6-0.35 1.27-0.2 1.9A10 10 0 0 1 10 0zm5.32 17.3a1.02 1.02 0 1 0 1.45 1.43 1.02 1.02 0 0 0-1.45-1.44zm0.26-5.31a0.87 0.87 0 0 0-0.4 0.85v2.6a0.87 0.87 0 0 0 1.73 0v-2.6a0.87 0.87 0 0 0-1.33-0.85z"
-      android:strokeWidth="1"
-      android:fillColor="#20123A"
-      android:fillType="nonZero"/>
+      android:fillColor="?primaryText"
+      android:pathData="M10.07 20.336l1.198-2.089A6.364 6.364 0 0 1 9.5 18.5c-2.353 0-4.395-1.277-5.525-3.162a2.451 2.451 0 0 1 1.84-0.838h7.372c0.075 0 0.144 0.017 0.217 0.024l1.28-2.231c0.916-1.596 3.218-1.596 4.134 0l0.12 0.208a9.71 9.71 0 0 0-0.07-2.613c-0.65-3.933-3.823-7.105-7.756-7.755C4.62 1.06-0.94 6.62 0.133 13.111c0.65 3.933 3.822 7.105 7.755 7.755a9.794 9.794 0 0 0 1.93 0.111c0.052-0.217 0.132-0.432 0.251-0.641zM9.5 6.5a3 3 0 1 1 0 6 3 3 0 0 1 0-6z" />
+  <path
+      android:fillColor="?primaryText"
+      android:pathData="M21.58 20.073l-3.68-6.414c-0.504-0.879-1.795-0.879-2.299 0l-3.679 6.414C11.427 20.935 12.062 22 13.072 22h7.358c1.008 0 1.643-1.065 1.15-1.927zM16.75 21a0.75 0.75 0 1 1 0-1.5 0.75 0.75 0 0 1 0 1.5zM16 15.725a0.75 0.75 0 0 1 1.5 0V17.9a0.75 0.75 0 0 1-1.5 0v-2.175z" />
 </vector>

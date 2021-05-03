@@ -547,7 +547,7 @@ open class DefaultToolbarMenu(
 
     val syncMenuItem = BrowserMenuImageText(
         getSyncItemTitle(),
-        R.drawable.ic_synced_tabs,
+        R.drawable.ic_signed_out,
         primaryTextColor()
     ) {
         onItemTapped.invoke(ToolbarMenu.Item.SyncAccount(accountManager.signedInToFxa()))
