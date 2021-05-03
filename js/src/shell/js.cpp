@@ -141,6 +141,7 @@
 #include "js/Warnings.h"     // JS::SetWarningReporter
 #include "js/WasmModule.h"   // JS::WasmModule
 #include "js/Wrapper.h"
+#include "proxy/DeadObjectProxy.h"  // js::IsDeadProxyObject
 #include "shell/jsoptparse.h"
 #include "shell/jsshell.h"
 #include "shell/OSObject.h"
@@ -4722,6 +4723,13 @@ JSObject* GetElementCallback(JSContext* cx, JS::HandleValue value) {
     return nullptr;
   }
 
+  // Due to nukeCCW shenanigans in the shell, we need to check for dead-proxy
+  // objects that may have replaced an CCW.  Otherwise the GetProperty below
+  // would throw an exception which we do not want to support in this callback.
+  if (js::IsDeadProxyObject(&privateValue.toObject())) {
+    return nullptr;
+  }
+
   RootedObject infoObject(cx,
                           CheckedUnwrapStatic(privateValue.toObjectOrNull()));
   AutoRealm ar(cx, infoObject);
@@ -4737,6 +4745,7 @@ JSObject* GetElementCallback(JSContext* cx, JS::HandleValue value) {
   if (elementValue.isObject()) {
     return &elementValue.toObject();
   }
+
   return nullptr;
 }
 
