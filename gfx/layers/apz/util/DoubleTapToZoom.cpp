@@ -29,6 +29,13 @@ namespace {
 
 using FrameForPointOption = nsLayoutUtils::FrameForPointOption;
 
+static bool IsGeneratedContent(nsIContent* aContent) {
+  // We exclude marks because making them double tap targets does not seem
+  // desirable.
+  return aContent->IsGeneratedContentContainerForBefore() ||
+         aContent->IsGeneratedContentContainerForAfter();
+}
+
 // Returns the DOM element found at |aPoint|, interpreted as being relative to
 // the root frame of |aPresShell| in visual coordinates. If the point is inside
 // a subdocument, returns an element inside the subdocument, rather than the
@@ -46,7 +53,8 @@ static already_AddRefed<dom::Element> ElementFromPoint(
       RelativeTo{rootFrame, ViewportType::Visual}, CSSPoint::ToAppUnits(aPoint),
       {{FrameForPointOption::IgnorePaintSuppression}});
   while (frame && (!frame->GetContent() ||
-                   frame->GetContent()->IsInNativeAnonymousSubtree())) {
+                   (frame->GetContent()->IsInNativeAnonymousSubtree() &&
+                    !IsGeneratedContent(frame->GetContent())))) {
     frame = nsLayoutUtils::GetParentOrPlaceholderFor(frame);
   }
   if (!frame) {
