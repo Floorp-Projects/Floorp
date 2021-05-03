@@ -121,7 +121,10 @@ var TabStateFlusherInternal = {
     SessionStore.ensureInitialized(browser.ownerGlobal);
 
     let mm = browser.messageManager;
-    mm.sendAsyncMessage("SessionStore:flush", { id });
+    mm.sendAsyncMessage("SessionStore:flush", {
+      id,
+      epoch: SessionStore.getCurrentEpoch(browser),
+    });
 
     // Retrieve active requests for given browser.
     let permanentKey = browser.permanentKey;
