@@ -14,7 +14,7 @@ const EXISTING_RESOURCES = [
     styleText: "body { color: lime; }",
     href: null,
     nodeHref:
-      "https://example.com/browser/devtools/shared/resources/tests/style_document.html",
+      "https://example.com/browser/devtools/shared/commands/resource/tests/style_document.html",
     isNew: false,
     disabled: false,
     ruleCount: 1,
@@ -23,9 +23,9 @@ const EXISTING_RESOURCES = [
   {
     styleText: "body { margin: 1px; }",
     href:
-      "https://example.com/browser/devtools/shared/resources/tests/style_document.css",
+      "https://example.com/browser/devtools/shared/commands/resource/tests/style_document.css",
     nodeHref:
-      "https://example.com/browser/devtools/shared/resources/tests/style_document.html",
+      "https://example.com/browser/devtools/shared/commands/resource/tests/style_document.html",
     isNew: false,
     disabled: false,
     ruleCount: 1,
@@ -35,7 +35,7 @@ const EXISTING_RESOURCES = [
     styleText: "body { background-color: pink; }",
     href: null,
     nodeHref:
-      "https://example.org/browser/devtools/shared/resources/tests/style_iframe.html",
+      "https://example.org/browser/devtools/shared/commands/resource/tests/style_iframe.html",
     isNew: false,
     disabled: false,
     ruleCount: 1,
@@ -44,9 +44,9 @@ const EXISTING_RESOURCES = [
   {
     styleText: "body { padding: 1px; }",
     href:
-      "https://example.org/browser/devtools/shared/resources/tests/style_iframe.css",
+      "https://example.org/browser/devtools/shared/commands/resource/tests/style_iframe.css",
     nodeHref:
-      "https://example.org/browser/devtools/shared/resources/tests/style_iframe.html",
+      "https://example.org/browser/devtools/shared/commands/resource/tests/style_iframe.html",
     isNew: false,
     disabled: false,
     ruleCount: 1,
@@ -59,7 +59,7 @@ const ADDITIONAL_RESOURCE = {
     "@media all { body { color: red; } } @media print { body { color: cyan; } } body { font-size: 10px; }",
   href: null,
   nodeHref:
-    "https://example.com/browser/devtools/shared/resources/tests/style_document.html",
+    "https://example.com/browser/devtools/shared/commands/resource/tests/style_document.html",
   isNew: false,
   disabled: false,
   ruleCount: 3,
@@ -85,7 +85,7 @@ const ADDITIONAL_FROM_ACTOR_RESOURCE = {
   styleText: "body { font-size: 10px; }",
   href: null,
   nodeHref:
-    "https://example.com/browser/devtools/shared/resources/tests/style_document.html",
+    "https://example.com/browser/devtools/shared/commands/resource/tests/style_document.html",
   isNew: true,
   disabled: false,
   ruleCount: 1,
