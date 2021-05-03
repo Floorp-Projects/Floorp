@@ -15,7 +15,6 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.verify
-import org.mozilla.geckoview.MockWebNotification
 import org.mozilla.geckoview.WebNotification as GeckoViewWebNotification
 
 @RunWith(AndroidJUnit4::class)
@@ -24,10 +23,9 @@ class GeckoWebNotificationDelegateTest {
     @Test
     fun `onShowNotification is forwarded to delegate`() {
         val webNotificationDelegate: WebNotificationDelegate = mock()
-        val geckoViewWebNotification: GeckoViewWebNotification = MockWebNotification(
+        val geckoViewWebNotification: GeckoViewWebNotification = mockWebNotification(
             title = "title",
             tag = "tag",
-            cookie = "cookie",
             text = "text",
             imageUrl = "imageUrl",
             textDirection = "textDirection",
@@ -56,10 +54,9 @@ class GeckoWebNotificationDelegateTest {
     @Test
     fun `onCloseNotification is forwarded to delegate`() {
         val webNotificationDelegate: WebNotificationDelegate = mock()
-        val geckoViewWebNotification: GeckoViewWebNotification = MockWebNotification(
+        val geckoViewWebNotification: GeckoViewWebNotification = mockWebNotification(
             title = "title",
             tag = "tag",
-            cookie = "cookie",
             text = "text",
             imageUrl = "imageUrl",
             textDirection = "textDirection",
@@ -87,16 +84,15 @@ class GeckoWebNotificationDelegateTest {
     @Test
     fun `notification without a source are from web extensions`() {
         val webNotificationDelegate: WebNotificationDelegate = mock()
-        val geckoViewWebNotification: GeckoViewWebNotification = MockWebNotification(
+        val geckoViewWebNotification: GeckoViewWebNotification = mockWebNotification(
             title = "title",
             tag = "tag",
-            cookie = "cookie",
             text = "text",
             imageUrl = "imageUrl",
             textDirection = "textDirection",
             lang = "lang",
             requireInteraction = true,
-            source = ""
+            source = null
         )
         val geckoWebNotificationDelegate = GeckoWebNotificationDelegate(webNotificationDelegate)
 
