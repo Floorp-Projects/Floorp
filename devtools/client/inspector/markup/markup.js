@@ -372,8 +372,8 @@ function MarkupView(inspector, frame, controllerWindow) {
     mutations: this._onWalkerMutations,
   });
 
-  this.resourceWatcher = this.inspector.toolbox.resourceWatcher;
-  this.resourceWatcher.watchResources([this.resourceWatcher.TYPES.ROOT_NODE], {
+  this.resourceCommand = this.inspector.toolbox.resourceCommand;
+  this.resourceCommand.watchResources([this.resourceCommand.TYPES.ROOT_NODE], {
     onAvailable: this._onResourceAvailable,
   });
 }
@@ -1442,7 +1442,7 @@ MarkupView.prototype = {
   _onResourceAvailable: async function(resources) {
     for (const resource of resources) {
       if (
-        resource.resourceType !== this.resourceWatcher.TYPES.ROOT_NODE ||
+        resource.resourceType !== this.resourceCommand.TYPES.ROOT_NODE ||
         resource.isDestroyed()
       ) {
         // Only handle alive root-node resources
@@ -2379,8 +2379,8 @@ MarkupView.prototype = {
     this._elt.removeEventListener("mouseout", this._onMouseOut);
     this._frame.removeEventListener("focus", this._onFocus);
     this.inspector.selection.off("new-node-front", this._onNewSelection);
-    this.resourceWatcher.unwatchResources(
-      [this.resourceWatcher.TYPES.ROOT_NODE],
+    this.resourceCommand.unwatchResources(
+      [this.resourceCommand.TYPES.ROOT_NODE],
       { onAvailable: this._onResourceAvailable }
     );
     this.inspector.toolbox.nodePicker.off(

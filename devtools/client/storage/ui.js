@@ -285,17 +285,17 @@ class StorageUI {
 
     this._onResourceListAvailable = this._onResourceListAvailable.bind(this);
 
-    const { resourceWatcher } = this._toolbox;
-    await this._toolbox.resourceWatcher.watchResources(
+    const { resourceCommand } = this._toolbox;
+    await this._toolbox.resourceCommand.watchResources(
       [
         // The first item in this list will be the first selected storage item
         // Tests assume Cookie -- moving cookie will break tests
-        resourceWatcher.TYPES.COOKIE,
-        resourceWatcher.TYPES.CACHE_STORAGE,
-        resourceWatcher.TYPES.EXTENSION_STORAGE,
-        resourceWatcher.TYPES.INDEXED_DB,
-        resourceWatcher.TYPES.LOCAL_STORAGE,
-        resourceWatcher.TYPES.SESSION_STORAGE,
+        resourceCommand.TYPES.COOKIE,
+        resourceCommand.TYPES.CACHE_STORAGE,
+        resourceCommand.TYPES.EXTENSION_STORAGE,
+        resourceCommand.TYPES.INDEXED_DB,
+        resourceCommand.TYPES.LOCAL_STORAGE,
+        resourceCommand.TYPES.SESSION_STORAGE,
       ],
       {
         onAvailable: this._onResourceListAvailable,
@@ -376,15 +376,15 @@ class StorageUI {
   }
 
   destroy() {
-    const { resourceWatcher } = this._toolbox;
-    resourceWatcher.unwatchResources(
+    const { resourceCommand } = this._toolbox;
+    resourceCommand.unwatchResources(
       [
-        resourceWatcher.TYPES.COOKIE,
-        resourceWatcher.TYPES.CACHE_STORAGE,
-        resourceWatcher.TYPES.EXTENSION_STORAGE,
-        resourceWatcher.TYPES.INDEXED_DB,
-        resourceWatcher.TYPES.LOCAL_STORAGE,
-        resourceWatcher.TYPES.SESSION_STORAGE,
+        resourceCommand.TYPES.COOKIE,
+        resourceCommand.TYPES.CACHE_STORAGE,
+        resourceCommand.TYPES.EXTENSION_STORAGE,
+        resourceCommand.TYPES.INDEXED_DB,
+        resourceCommand.TYPES.LOCAL_STORAGE,
+        resourceCommand.TYPES.SESSION_STORAGE,
       ],
       {
         onAvailable: this._onResourceListAvailable,

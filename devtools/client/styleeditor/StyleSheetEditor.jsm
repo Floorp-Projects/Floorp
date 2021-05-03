@@ -63,7 +63,7 @@ const STYLE_SHEET_UPDATE_CAUSED_BY_STYLE_EDITOR = "styleeditor";
  *   'error': An error has occured
  *
  * @param  {Resource} resource
- *         The STYLESHEET resource which is received from resource watcher.
+ *         The STYLESHEET resource which is received from resource command.
  * @param {DOMWindow}  win
  *        panel window for style editor
  * @param {Walker} walker

@@ -27,7 +27,7 @@ add_task(async function() {
 
 async function testWebsocketResources(target) {
   const tab = await addTab(URL_ROOT + "websocket_frontend.html");
-  const { client, resourceWatcher, targetCommand } = await initResourceCommand(
+  const { client, resourceCommand, targetCommand } = await initResourceCommand(
     tab
   );
 
@@ -36,7 +36,7 @@ async function testWebsocketResources(target) {
     availableResources.push(...resources);
   }
 
-  await resourceWatcher.watchResources([resourceWatcher.TYPES.WEBSOCKET], {
+  await resourceCommand.watchResources([resourceCommand.TYPES.WEBSOCKET], {
     onAvailable: onResourceAvailable,
   });
 
@@ -153,7 +153,7 @@ async function testWebsocketResources(target) {
     existingResources.push(...resources);
   }
 
-  await resourceWatcher.watchResources([resourceWatcher.TYPES.WEBSOCKET], {
+  await resourceCommand.watchResources([resourceCommand.TYPES.WEBSOCKET], {
     onAvailable: onExsistingResourceAvailable,
   });
 
@@ -170,11 +170,11 @@ async function testWebsocketResources(target) {
     );
   }
 
-  await resourceWatcher.unwatchResources([resourceWatcher.TYPES.WEBSOCKET], {
+  await resourceCommand.unwatchResources([resourceCommand.TYPES.WEBSOCKET], {
     onAvailable: onResourceAvailable,
   });
 
-  await resourceWatcher.unwatchResources([resourceWatcher.TYPES.WEBSOCKET], {
+  await resourceCommand.unwatchResources([resourceCommand.TYPES.WEBSOCKET], {
     onAvailable: onExsistingResourceAvailable,
   });
 

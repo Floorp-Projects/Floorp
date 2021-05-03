@@ -55,13 +55,13 @@ class Connector {
   }
 
   get hasResourceCommandSupport() {
-    return this.toolbox.resourceWatcher.hasResourceCommandSupport(
-      this.toolbox.resourceWatcher.TYPES.NETWORK_EVENT
+    return this.toolbox.resourceCommand.hasResourceCommandSupport(
+      this.toolbox.resourceCommand.TYPES.NETWORK_EVENT
     );
   }
 
   get watcherFront() {
-    return this.toolbox.resourceWatcher.watcherFront;
+    return this.toolbox.resourceCommand.watcherFront;
   }
 
   /**
@@ -85,8 +85,8 @@ class Connector {
       this.onTargetAvailable
     );
 
-    await this.toolbox.resourceWatcher.watchResources(
-      [this.toolbox.resourceWatcher.TYPES.DOCUMENT_EVENT],
+    await this.toolbox.resourceCommand.watchResources(
+      [this.toolbox.resourceCommand.TYPES.DOCUMENT_EVENT],
       { onAvailable: this.onResourceAvailable }
     );
   }
@@ -104,8 +104,8 @@ class Connector {
       this.onTargetAvailable
     );
 
-    this.toolbox.resourceWatcher.unwatchResources(
-      [this.toolbox.resourceWatcher.TYPES.DOCUMENT_EVENT],
+    this.toolbox.resourceCommand.unwatchResources(
+      [this.toolbox.resourceCommand.TYPES.DOCUMENT_EVENT],
       { onAvailable: this.onResourceAvailable }
     );
 
@@ -151,7 +151,7 @@ class Connector {
       webConsoleFront: this.webConsoleFront,
       actions: this.actions,
       owner: this.owner,
-      resourceWatcher: this.toolbox.resourceWatcher,
+      resourceCommand: this.toolbox.resourceCommand,
     });
 
     // If this is the first top level target, lets register all the listeners
@@ -168,7 +168,7 @@ class Connector {
 
   async onResourceAvailable(resources) {
     for (const resource of resources) {
-      const { TYPES } = this.toolbox.resourceWatcher;
+      const { TYPES } = this.toolbox.resourceCommand;
 
       if (resource.resourceType === TYPES.DOCUMENT_EVENT) {
         this.onDocEvent(resource);
@@ -249,7 +249,7 @@ class Connector {
     for (const { resource, update } of updates) {
       if (
         resource.resourceType ===
-          this.toolbox.resourceWatcher.TYPES.NETWORK_EVENT &&
+          this.toolbox.resourceCommand.TYPES.NETWORK_EVENT &&
         this.listenForNetworkEvents
       ) {
         this.dataProvider.onNetworkResourceUpdated(resource, update);
@@ -259,11 +259,11 @@ class Connector {
 
   async addListeners(ignoreExistingResources = false) {
     const targetResources = [
-      this.toolbox.resourceWatcher.TYPES.NETWORK_EVENT,
-      this.toolbox.resourceWatcher.TYPES.NETWORK_EVENT_STACKTRACE,
+      this.toolbox.resourceCommand.TYPES.NETWORK_EVENT,
+      this.toolbox.resourceCommand.TYPES.NETWORK_EVENT_STACKTRACE,
     ];
     if (Services.prefs.getBoolPref("devtools.netmonitor.features.webSockets")) {
-      targetResources.push(this.toolbox.resourceWatcher.TYPES.WEBSOCKET);
+      targetResources.push(this.toolbox.resourceCommand.TYPES.WEBSOCKET);
     }
 
     if (
@@ -272,11 +272,11 @@ class Connector {
       )
     ) {
       targetResources.push(
-        this.toolbox.resourceWatcher.TYPES.SERVER_SENT_EVENT
+        this.toolbox.resourceCommand.TYPES.SERVER_SENT_EVENT
       );
     }
 
-    await this.toolbox.resourceWatcher.watchResources(targetResources, {
+    await this.toolbox.resourceCommand.watchResources(targetResources, {
       onAvailable: this.onResourceAvailable,
       onUpdated: this.onResourceUpdated,
       ignoreExistingResources,
@@ -284,12 +284,12 @@ class Connector {
   }
 
   removeListeners() {
-    this.toolbox.resourceWatcher.unwatchResources(
+    this.toolbox.resourceCommand.unwatchResources(
       [
-        this.toolbox.resourceWatcher.TYPES.NETWORK_EVENT,
-        this.toolbox.resourceWatcher.TYPES.NETWORK_EVENT_STACKTRACE,
-        this.toolbox.resourceWatcher.TYPES.WEBSOCKET,
-        this.toolbox.resourceWatcher.TYPES.SERVER_SENT_EVENT,
+        this.toolbox.resourceCommand.TYPES.NETWORK_EVENT,
+        this.toolbox.resourceCommand.TYPES.NETWORK_EVENT_STACKTRACE,
+        this.toolbox.resourceCommand.TYPES.WEBSOCKET,
+        this.toolbox.resourceCommand.TYPES.SERVER_SENT_EVENT,
       ],
       {
         onAvailable: this.onResourceAvailable,

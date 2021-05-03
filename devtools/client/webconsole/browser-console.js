@@ -41,16 +41,9 @@ class BrowserConsole extends WebConsole {
   constructor(commands, iframeWindow, chromeWindow) {
     super(null, commands, iframeWindow, chromeWindow, true);
 
-    // Note that this.commands is being assigned from WebConsole's constructor
-    //TODO: use commands.resourceCommand instead of _resourceWatcher
-    this._resourceWatcher = commands.resourceCommand;
     this._telemetry = new Telemetry();
     this._bcInitializer = null;
     this._bcDestroyer = null;
-  }
-
-  get resourceWatcher() {
-    return this._resourceWatcher;
   }
 
   /**

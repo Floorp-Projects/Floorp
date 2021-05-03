@@ -25,12 +25,12 @@ async function _initResourceCommandFromCommands(
   }
   await targetCommand.startListening();
 
-  //TODO: Stop exporting resourceWatcher and use commands.resourceCommand
+  //Bug 1709065: Stop exporting resourceCommand and use commands.resourceCommand
   //And rename all these methods
   return {
     client: commands.client,
     commands,
-    resourceWatcher: commands.resourceCommand,
+    resourceCommand: commands.resourceCommand,
     targetCommand,
   };
 }
@@ -43,7 +43,7 @@ async function _initResourceCommandFromCommands(
  * @param {Object} options
  * @param {Boolean} options.listenForWorkers
  * @return {Object} object
- * @return {ResourceCommand} object.resourceWatcher
+ * @return {ResourceCommand} object.resourceCommand
  *         The underlying resource command interface.
  * @return {Object} object.commands
  *         The commands object defined by modules from devtools/shared/commands.
@@ -61,7 +61,7 @@ async function initResourceCommand(tab, options) {
  * Instantiate a multi-process ResourceCommand, watching all type of targets.
  *
  * @return {Object} object
- * @return {ResourceCommand} object.resourceWatcher
+ * @return {ResourceCommand} object.resourceCommand
  *         The underlying resource command interface.
  * @return {Object} object.commands
  *         The commands object defined by modules from devtools/shared/commands.

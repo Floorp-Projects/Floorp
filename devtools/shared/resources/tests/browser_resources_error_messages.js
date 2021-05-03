@@ -28,7 +28,7 @@ async function testErrorMessagesResources() {
   // Open a test tab
   const tab = await addTab(TEST_URI);
 
-  const { client, resourceWatcher, targetCommand } = await initResourceCommand(
+  const { client, resourceCommand, targetCommand } = await initResourceCommand(
     tab
   );
 
@@ -82,7 +82,7 @@ async function testErrorMessagesResources() {
     }
   };
 
-  await resourceWatcher.watchResources([resourceWatcher.TYPES.ERROR_MESSAGE], {
+  await resourceCommand.watchResources([resourceCommand.TYPES.ERROR_MESSAGE], {
     onAvailable,
   });
 
@@ -109,7 +109,7 @@ async function testErrorMessagesResourcesWithIgnoreExistingResources() {
   info("Test ignoreExistingResources option for ERROR_MESSAGE");
   const tab = await addTab(TEST_URI);
 
-  const { client, resourceWatcher, targetCommand } = await initResourceCommand(
+  const { client, resourceCommand, targetCommand } = await initResourceCommand(
     tab
   );
 
@@ -119,7 +119,7 @@ async function testErrorMessagesResourcesWithIgnoreExistingResources() {
   await triggerErrors(tab);
 
   const availableResources = [];
-  await resourceWatcher.watchResources([resourceWatcher.TYPES.ERROR_MESSAGE], {
+  await resourceCommand.watchResources([resourceCommand.TYPES.ERROR_MESSAGE], {
     onAvailable: resources => availableResources.push(...resources),
     ignoreExistingResources: true,
   });

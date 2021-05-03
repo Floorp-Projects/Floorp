@@ -63,9 +63,9 @@ async function generateCssMessageStubs() {
   const tab = await addTab(TEST_URI);
   const commands = await createCommandsForTab(tab);
   await commands.targetCommand.startListening();
-  const resourceWatcher = commands.resourceCommand;
+  const resourceCommand = commands.resourceCommand;
 
-  // The resource-watcher only supports a single call to watch/unwatch per
+  // The resource command only supports a single call to watch/unwatch per
   // instance, so we attach a unique watch callback, which will forward the
   // resource to `handleErrorMessage`, dynamically updated for each command.
   let handleCSSMessage = function() {};
@@ -76,7 +76,7 @@ async function generateCssMessageStubs() {
     }
   };
 
-  await resourceWatcher.watchResources([resourceWatcher.TYPES.CSS_MESSAGE], {
+  await resourceCommand.watchResources([resourceCommand.TYPES.CSS_MESSAGE], {
     onAvailable: onCSSMessageAvailable,
   });
 
@@ -101,7 +101,7 @@ async function generateCssMessageStubs() {
     await received;
   }
 
-  resourceWatcher.unwatchResources([resourceWatcher.TYPES.CSS_MESSAGE], {
+  resourceCommand.unwatchResources([resourceCommand.TYPES.CSS_MESSAGE], {
     onAvailable: onCSSMessageAvailable,
   });
 

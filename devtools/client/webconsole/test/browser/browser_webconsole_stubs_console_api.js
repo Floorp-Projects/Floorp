@@ -63,7 +63,7 @@ async function generateConsoleApiStubs() {
   const tab = await addTab(TEST_URI);
   const commands = await createCommandsForTab(tab);
   await commands.targetCommand.startListening();
-  const resourceWatcher = commands.resourceCommand;
+  const resourceCommand = commands.resourceCommand;
 
   // The resource-watcher only supports a single call to watch/unwatch per
   // instance, so we attach a unique watch callback, which will forward the
@@ -75,8 +75,8 @@ async function generateConsoleApiStubs() {
       handleConsoleMessage(resource);
     }
   };
-  await resourceWatcher.watchResources(
-    [resourceWatcher.TYPES.CONSOLE_MESSAGE],
+  await resourceCommand.watchResources(
+    [resourceCommand.TYPES.CONSOLE_MESSAGE],
     {
       onAvailable: onConsoleMessage,
     }
@@ -111,7 +111,7 @@ async function generateConsoleApiStubs() {
     await received;
   }
 
-  resourceWatcher.unwatchResources([resourceWatcher.TYPES.CONSOLE_MESSAGE], {
+  resourceCommand.unwatchResources([resourceCommand.TYPES.CONSOLE_MESSAGE], {
     onAvailable: onConsoleMessage,
   });
 

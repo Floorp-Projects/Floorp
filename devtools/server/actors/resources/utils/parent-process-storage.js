@@ -67,7 +67,7 @@ class ParentProcessStorage {
     storage.resourceType = this.storageType;
     storage.resourceId = `${this.storageType}-${browsingContext.id}`;
     storage.resourceKey = this.storageKey;
-    // NOTE: the resource watcher needs this attribute
+    // NOTE: the resource command needs this attribute
     storage.browsingContextID = browsingContext.id;
 
     onAvailable([storage]);
