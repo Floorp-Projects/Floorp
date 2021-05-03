@@ -69,9 +69,6 @@
   --panel-banner-item-background-color: var(--button-bgcolor);
   --panel-banner-item-hover-bgcolor: var(--button-hover-bgcolor);
   --panel-banner-item-active-bgcolor: var(--button-active-bgcolor);
-  /* These colors are normally defined by the theme, but we need fallbacks in
-     case the theme doesn't supply them, because otherwise icons that use these
-     would not appear at all. The values are from the default light theme. */
   --panel-banner-item-update-supported-bgcolor: #2AC3A2;
   --panel-banner-item-warning-icon-bgcolor: #FFA436;
   --panel-banner-item-info-icon-bgcolor: #0090ED;
