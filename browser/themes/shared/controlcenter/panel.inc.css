@@ -966,6 +966,7 @@ description#identity-popup-content-verifier,
   border-width: 0;
   min-width: 0;
   padding: 2px;
+  padding-inline-end: 6px;
   background-color: var(--button-bgcolor);
   color: var(--button-color);
   opacity: 0.6;
@@ -1302,6 +1303,15 @@ description#identity-popup-content-verifier,
 
 .permission-popup-section {
   padding-bottom: 12px;
+}
+
+#permission-popup-menulist::part(dropmarker-icon) {
+  height: 12px;
+  width: 12px;
+}
+
+#permission-popup-menulist {
+  padding-inline: 12px 6px;
 }
 
 .protections-popup-footer-button,
