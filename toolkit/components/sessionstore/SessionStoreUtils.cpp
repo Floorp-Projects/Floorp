@@ -1563,34 +1563,26 @@ SessionStoreUtils::ConstructSessionStoreRestoreData(
 
 /* static */
 MOZ_CAN_RUN_SCRIPT
-bool SessionStoreUtils::SetRestoreData(const GlobalObject& aGlobal,
-                                       CanonicalBrowsingContext& aContext,
-                                       nsISessionStoreRestoreData* aData) {
+already_AddRefed<Promise> SessionStoreUtils::InitializeRestore(
+    const GlobalObject& aGlobal, CanonicalBrowsingContext& aContext,
+    nsISessionStoreRestoreData* aData, ErrorResult& aError) {
   if (!mozilla::SessionHistoryInParent()) {
     MOZ_CRASH("why were we called?");
   }
 
   MOZ_DIAGNOSTIC_ASSERT(aContext.IsTop());
 
+  MOZ_DIAGNOSTIC_ASSERT(aData);
   nsCOMPtr<SessionStoreRestoreData> data = do_QueryInterface(aData);
-  aContext.SetRestoreData(data);
-
-  if (data && !data->IsEmpty()) {
-    if (nsISHistory* shistory = aContext.GetSessionHistory()) {
-      shistory->ReloadCurrentEntry();
-      return true;
-    }
+  aContext.SetRestoreData(data, aError);
+  if (aError.Failed()) {
+    return nullptr;
   }
 
-  return false;
-}
+  MOZ_DIAGNOSTIC_ASSERT(aContext.GetSessionHistory());
+  aContext.GetSessionHistory()->ReloadCurrentEntry();
 
-/* static */
-nsresult SessionStoreUtils::CallRestoreTabContentComplete(Element* aBrowser) {
-  nsCOMPtr<nsISessionStoreFunctions> funcs =
-      do_ImportModule("resource://gre/modules/SessionStoreFunctions.jsm");
-  NS_ENSURE_TRUE(funcs, NS_ERROR_FAILURE);
-  return funcs->RestoreTabContentComplete(aBrowser);
+  return aContext.GetRestorePromise();
 }
 
 /* static */
