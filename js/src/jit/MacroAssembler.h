@@ -351,22 +351,6 @@ class MacroAssembler : public MacroAssemblerSpecific {
   void Push(RegisterOrSP reg);
 #endif
 
-#ifdef ENABLE_WASM_SIMD
-  // `op` should be a shift operation.  Return true if a variable-width shift
-  // operation must be scalarized on the current architecture.
-  static bool MustScalarizeShiftSimd128(wasm::SimdOp op);
-
-  // `op` should be a shift operation.  Return true if a variable-width shift
-  // operation on this architecture that is not scalarized should pre-mask the
-  // shift count, and if so, return the mask in `*mask`.
-  static bool MustMaskShiftCountSimd128(wasm::SimdOp op, int32_t* mask);
-
-  // `op` should be a shift operation and `imm` a possibly-unmasked immediate
-  // shift count.  Return true if a constant-width shift operation with the
-  // given width must be scalarized on the current architecture.
-  static bool MustScalarizeShiftSimd128(wasm::SimdOp op, Imm32 imm);
-#endif
-
  private:
   // The value returned by GetMaxOffsetGuardLimit() in WasmTypes.h
   uint32_t wasmMaxOffsetGuardLimit_;
@@ -2803,7 +2787,10 @@ class MacroAssembler : public MacroAssemblerSpecific {
                                         FloatRegister dest)
       DEFINED_ON(x86_shared);
 
-  // Only if !MustScalarizeShiftSimd128(SimdOp::I64x2ShrS, count).
+  inline void rightShiftInt64x2(Register rhs, FloatRegister lhsDest,
+                                Register temp1, FloatRegister temp2)
+      DEFINED_ON(x86_shared);
+
   inline void rightShiftInt64x2(Imm32 count, FloatRegister src,
                                 FloatRegister dest) DEFINED_ON(x86_shared);
 
@@ -2812,6 +2799,11 @@ class MacroAssembler : public MacroAssemblerSpecific {
 
   inline void unsignedRightShiftInt64x2(Imm32 count, FloatRegister src,
                                         FloatRegister dest)
+      DEFINED_ON(x86_shared);
+
+  // Sign replication operation
+
+  inline void signReplicationInt64x2(FloatRegister src, FloatRegister dest)
       DEFINED_ON(x86_shared);
 
   // Bitwise and, or, xor, not

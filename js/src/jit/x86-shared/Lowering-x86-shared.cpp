@@ -1095,6 +1095,7 @@ void LIRGenerator::visitWasmShiftSimd128(MWasmShiftSimd128* ins) {
     case wasm::SimdOp::I8x16Shl:
     case wasm::SimdOp::I8x16ShrS:
     case wasm::SimdOp::I8x16ShrU:
+    case wasm::SimdOp::I64x2ShrS:
       tempReg0 = temp();
       tempReg1 = tempSimd128();
       break;
