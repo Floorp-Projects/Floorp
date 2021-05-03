@@ -6,7 +6,7 @@
 
 const {
   TYPES: { COOKIE },
-} = require("devtools/shared/resources/resource-watcher");
+} = require("devtools/shared/commands/resource/resource-command");
 
 const { Front, types } = require("devtools/shared/protocol.js");
 

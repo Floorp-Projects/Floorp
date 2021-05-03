@@ -5,10 +5,6 @@
 
 // Test the ResourceWatcher API around CSS_CHANGE.
 
-const {
-  ResourceWatcher,
-} = require("devtools/shared/resources/resource-watcher");
-
 add_task(async function() {
   // Open a test tab
   const tab = await addTab(
@@ -21,7 +17,7 @@ add_task(async function() {
 
   // CSS_CHANGE watcher doesn't record modification made before watching,
   // so we have to start watching before doing any DOM mutation.
-  await resourceWatcher.watchResources([ResourceWatcher.TYPES.CSS_CHANGE], {
+  await resourceWatcher.watchResources([resourceWatcher.TYPES.CSS_CHANGE], {
     onAvailable: () => {},
   });
 
@@ -40,7 +36,7 @@ add_task(async function() {
   await setProperty(style.rule, 0, "color", "black");
 
   const availableResources = [];
-  await resourceWatcher.watchResources([ResourceWatcher.TYPES.CSS_CHANGE], {
+  await resourceWatcher.watchResources([resourceWatcher.TYPES.CSS_CHANGE], {
     onAvailable: resources => availableResources.push(...resources),
   });
   assertResource(
@@ -80,7 +76,7 @@ add_task(async function() {
 
   info("Check whether ResourceWatcher sends all resources added in this test");
   const existingResources = [];
-  await resourceWatcher.watchResources([ResourceWatcher.TYPES.CSS_CHANGE], {
+  await resourceWatcher.watchResources([resourceWatcher.TYPES.CSS_CHANGE], {
     onAvailable: resources => existingResources.push(...resources),
   });
   await waitUntil(() => existingResources.length === 4);

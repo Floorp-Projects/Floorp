@@ -12,9 +12,7 @@ const {
   EDITOR_PRETTY_PRINT,
 } = require("devtools/client/webconsole/constants");
 const { getAllPrefs } = require("devtools/client/webconsole/selectors/prefs");
-const {
-  ResourceWatcher,
-} = require("devtools/shared/resources/resource-watcher");
+const ResourceCommand = require("devtools/shared/commands/resource/resource-command");
 const l10n = require("devtools/client/webconsole/utils/l10n");
 
 loader.lazyServiceGetter(
@@ -239,7 +237,7 @@ function handleHelperResult(response) {
                     level: message.level || "log",
                     arguments: [message.text],
                   },
-                  resourceType: ResourceWatcher.TYPES.CONSOLE_MESSAGE,
+                  resourceType: ResourceCommand.TYPES.CONSOLE_MESSAGE,
                 }))
               )
             );
@@ -264,7 +262,7 @@ function handleHelperResult(response) {
           dispatch(
             messagesActions.messagesAdd([
               {
-                resourceType: ResourceWatcher.TYPES.PLATFORM_MESSAGE,
+                resourceType: ResourceCommand.TYPES.PLATFORM_MESSAGE,
                 message: l10n.getFormatStr(
                   "webconsole.message.commands.blockedURL",
                   [blockURL]
@@ -288,7 +286,7 @@ function handleHelperResult(response) {
           dispatch(
             messagesActions.messagesAdd([
               {
-                resourceType: ResourceWatcher.TYPES.PLATFORM_MESSAGE,
+                resourceType: ResourceCommand.TYPES.PLATFORM_MESSAGE,
                 message: l10n.getFormatStr(
                   "webconsole.message.commands.unblockedURL",
                   [unblockURL]

@@ -3,10 +3,6 @@
 
 "use strict";
 
-const {
-  ResourceWatcher,
-} = require("devtools/shared/resources/resource-watcher");
-
 /**
  * Check that the resource watcher is still properly watching for new targets
  * after unwatching one resource, if there is still another watched resource.
@@ -27,7 +23,7 @@ add_task(async function() {
     targetCommand,
   } = await initMultiProcessResourceWatcher();
 
-  const { CONSOLE_MESSAGE, ROOT_NODE } = ResourceWatcher.TYPES;
+  const { CONSOLE_MESSAGE, ROOT_NODE } = resourceWatcher.TYPES;
 
   // We are only interested in console messages as a resource, the ROOT_NODE one
   // is here to test the ResourceWatcher::unwatchResources API with several resources.

@@ -5,9 +5,7 @@
 
 // Test the ResourceWatcher API around THREAD_STATE
 
-const {
-  ResourceWatcher,
-} = require("devtools/shared/resources/resource-watcher");
+const ResourceCommand = require("devtools/shared/commands/resource/resource-command");
 
 const BREAKPOINT_TEST_URL = URL_ROOT_SSL + "breakpoint_document.html";
 const REMOTE_IFRAME_URL =
@@ -62,7 +60,7 @@ async function checkBreakpointBeforeWatchResources() {
 
   info("Call watchResources");
   const availableResources = [];
-  await resourceWatcher.watchResources([ResourceWatcher.TYPES.THREAD_STATE], {
+  await resourceWatcher.watchResources([resourceWatcher.TYPES.THREAD_STATE], {
     onAvailable: resources => availableResources.push(...resources),
   });
 
@@ -121,7 +119,7 @@ async function checkBreakpointAfterWatchResources() {
 
   info("Call watchResources");
   const availableResources = [];
-  await resourceWatcher.watchResources([ResourceWatcher.TYPES.THREAD_STATE], {
+  await resourceWatcher.watchResources([resourceWatcher.TYPES.THREAD_STATE], {
     onAvailable: resources => availableResources.push(...resources),
   });
 
@@ -193,7 +191,7 @@ async function checkRealBreakpoint() {
 
   info("Call watchResources");
   const availableResources = [];
-  await resourceWatcher.watchResources([ResourceWatcher.TYPES.THREAD_STATE], {
+  await resourceWatcher.watchResources([resourceWatcher.TYPES.THREAD_STATE], {
     onAvailable: resources => availableResources.push(...resources),
   });
 
@@ -277,7 +275,7 @@ async function checkPauseOnException() {
 
   info("Call watchResources");
   const availableResources = [];
-  await resourceWatcher.watchResources([ResourceWatcher.TYPES.THREAD_STATE], {
+  await resourceWatcher.watchResources([resourceWatcher.TYPES.THREAD_STATE], {
     onAvailable: resources => availableResources.push(...resources),
   });
 
@@ -382,7 +380,7 @@ async function checkSetBeforeWatch() {
 
   info("Call watchResources");
   const availableResources = [];
-  await resourceWatcher.watchResources([ResourceWatcher.TYPES.THREAD_STATE], {
+  await resourceWatcher.watchResources([resourceWatcher.TYPES.THREAD_STATE], {
     onAvailable: resources => availableResources.push(...resources),
   });
 
@@ -437,7 +435,7 @@ async function checkDebuggerStatementInIframes() {
 
   info("Call watchResources");
   const availableResources = [];
-  await resourceWatcher.watchResources([ResourceWatcher.TYPES.THREAD_STATE], {
+  await resourceWatcher.watchResources([resourceWatcher.TYPES.THREAD_STATE], {
     onAvailable: resources => availableResources.push(...resources),
   });
 
@@ -518,7 +516,7 @@ async function checkDebuggerStatementInIframes() {
 async function assertPausedResource(resource, expected) {
   is(
     resource.resourceType,
-    ResourceWatcher.TYPES.THREAD_STATE,
+    ResourceCommand.TYPES.THREAD_STATE,
     "Resource type is correct"
   );
   is(resource.state, "paused", "state attribute is correct");
@@ -558,7 +556,7 @@ async function assertPausedResource(resource, expected) {
 async function assertResumedResource(resource) {
   is(
     resource.resourceType,
-    ResourceWatcher.TYPES.THREAD_STATE,
+    ResourceCommand.TYPES.THREAD_STATE,
     "Resource type is correct"
   );
   is(resource.state, "resumed", "state attribute is correct");

@@ -6,10 +6,6 @@
 // Test the ResourceWatcher API around PLATFORM_MESSAGE
 // Reproduces assertions from: devtools/shared/webconsole/test/chrome/test_nsiconsolemessage.html
 
-const {
-  ResourceWatcher,
-} = require("devtools/shared/resources/resource-watcher");
-
 add_task(async function() {
   // Disable the preloaded process as it creates processes intermittently
   // which forces the emission of RDP requests we aren't correctly waiting for.
@@ -83,7 +79,7 @@ async function testPlatformMessagesResources() {
   };
 
   await resourceWatcher.watchResources(
-    [ResourceWatcher.TYPES.PLATFORM_MESSAGE],
+    [resourceWatcher.TYPES.PLATFORM_MESSAGE],
     {
       onAvailable,
     }
@@ -120,7 +116,7 @@ async function testPlatformMessagesResourcesWithIgnoreExistingResources() {
 
   const availableResources = [];
   await resourceWatcher.watchResources(
-    [ResourceWatcher.TYPES.PLATFORM_MESSAGE],
+    [resourceWatcher.TYPES.PLATFORM_MESSAGE],
     {
       onAvailable: resources => {
         for (const resource of resources) {

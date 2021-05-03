@@ -5,9 +5,7 @@
 
 // Test the ResourceWatcher API around STYLESHEET.
 
-const {
-  ResourceWatcher,
-} = require("devtools/shared/resources/resource-watcher");
+const ResourceCommand = require("devtools/shared/commands/resource/resource-command");
 
 const STYLE_TEST_URL = URL_ROOT_SSL + "style_document.html";
 
@@ -111,7 +109,7 @@ async function testResourceAvailableFeature() {
 
   info("Check whether ResourceWatcher gets existing stylesheet");
   const availableResources = [];
-  await resourceWatcher.watchResources([ResourceWatcher.TYPES.STYLESHEET], {
+  await resourceWatcher.watchResources([resourceWatcher.TYPES.STYLESHEET], {
     onAvailable: resources => availableResources.push(...resources),
   });
 
@@ -181,7 +179,7 @@ async function testResourceUpdateFeature() {
   info("Setup the watcher");
   const availableResources = [];
   const updates = [];
-  await resourceWatcher.watchResources([ResourceWatcher.TYPES.STYLESHEET], {
+  await resourceWatcher.watchResources([resourceWatcher.TYPES.STYLESHEET], {
     onAvailable: resources => availableResources.push(...resources),
     onUpdated: newUpdates => updates.push(...newUpdates),
   });
@@ -322,7 +320,7 @@ async function testNestedResourceUpdateFeature() {
   info("Setup the watcher");
   const availableResources = [];
   const updates = [];
-  await resourceWatcher.watchResources([ResourceWatcher.TYPES.STYLESHEET], {
+  await resourceWatcher.watchResources([resourceWatcher.TYPES.STYLESHEET], {
     onAvailable: resources => availableResources.push(...resources),
     onUpdated: newUpdates => updates.push(...newUpdates),
   });
@@ -463,7 +461,7 @@ function assertMediaRules(mediaRules, expected) {
 async function assertResource(resource, expected) {
   is(
     resource.resourceType,
-    ResourceWatcher.TYPES.STYLESHEET,
+    ResourceCommand.TYPES.STYLESHEET,
     "Resource type is correct"
   );
   const styleSheetsFront = await resource.targetFront.getFront("stylesheets");
@@ -482,7 +480,7 @@ async function assertResource(resource, expected) {
 function assertUpdate(update, expected) {
   is(
     update.resourceType,
-    ResourceWatcher.TYPES.STYLESHEET,
+    ResourceCommand.TYPES.STYLESHEET,
     "Resource type is correct"
   );
   is(update.resourceId, expected.resourceId, "resourceId is correct");
