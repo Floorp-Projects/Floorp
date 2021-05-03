@@ -9,11 +9,10 @@ const {
 } = require("devtools/shared/resources/resource-watcher");
 
 const {
-  // getFilteredStorageEvents,
   makeStorageLegacyListener,
-} = require("devtools/shared/resources/legacy-listeners/storage-utils");
+} = require("devtools/shared/commands/resource/legacy-listeners/storage-utils");
 
 module.exports = makeStorageLegacyListener(
-  "indexedDB",
-  ResourceWatcher.TYPES.INDEXED_DB
+  "localStorage",
+  ResourceWatcher.TYPES.LOCAL_STORAGE
 );

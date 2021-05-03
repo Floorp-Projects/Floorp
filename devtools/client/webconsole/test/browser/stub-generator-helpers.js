@@ -30,14 +30,10 @@ async function createCommandsForMainProcess() {
   return commands;
 }
 
+// TODO: rename this method to createResourceCommandForCommands?
 async function createResourceWatcherForCommands(commands) {
-  // Avoid mocha to try to load these module and fail while doing it when running node tests
-  const {
-    ResourceWatcher,
-  } = require("devtools/shared/resources/resource-watcher");
-
   await commands.targetCommand.startListening();
-  return new ResourceWatcher(commands.targetCommand);
+  return commands.resourceCommand;
 }
 
 // eslint-disable-next-line complexity
