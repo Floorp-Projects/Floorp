@@ -45,9 +45,6 @@ inline CancelAnimationFlags operator|(CancelAnimationFlags a,
 
 // clang-format off
 enum class ScrollSource {
-  // scrollTo() or something similar.
-  DOM,
-
   // Touch-screen.
   Touchscreen,
 
