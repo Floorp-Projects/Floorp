@@ -25,7 +25,7 @@ add_task(async function() {
 async function testTabConsoleMessagesResources(executeInIframe) {
   const tab = await addTab(FISSION_TEST_URL);
 
-  const { client, resourceWatcher, targetCommand } = await initResourceCommand(
+  const { client, resourceCommand, targetCommand } = await initResourceCommand(
     tab
   );
 
@@ -55,7 +55,7 @@ async function testTabConsoleMessagesResources(executeInIframe) {
 
       is(
         resource.resourceType,
-        resourceWatcher.TYPES.CONSOLE_MESSAGE,
+        resourceCommand.TYPES.CONSOLE_MESSAGE,
         "Received a message"
       );
       ok(resource.message, "message is wrapped into a message attribute");
@@ -77,8 +77,8 @@ async function testTabConsoleMessagesResources(executeInIframe) {
     }
   };
 
-  await resourceWatcher.watchResources(
-    [resourceWatcher.TYPES.CONSOLE_MESSAGE],
+  await resourceCommand.watchResources(
+    [resourceCommand.TYPES.CONSOLE_MESSAGE],
     {
       onAvailable,
     }
@@ -119,7 +119,7 @@ async function testTabConsoleMessagesResourcesWithIgnoreExistingResources(
   info("Test ignoreExistingResources option for console messages");
   const tab = await addTab(FISSION_TEST_URL);
 
-  const { client, resourceWatcher, targetCommand } = await initResourceCommand(
+  const { client, resourceCommand, targetCommand } = await initResourceCommand(
     tab
   );
 
@@ -129,8 +129,8 @@ async function testTabConsoleMessagesResourcesWithIgnoreExistingResources(
   await logExistingMessages(tab.linkedBrowser, executeInIframe);
 
   const availableResources = [];
-  await resourceWatcher.watchResources(
-    [resourceWatcher.TYPES.CONSOLE_MESSAGE],
+  await resourceCommand.watchResources(
+    [resourceCommand.TYPES.CONSOLE_MESSAGE],
     {
       onAvailable: resources => availableResources.push(...resources),
       ignoreExistingResources: true,

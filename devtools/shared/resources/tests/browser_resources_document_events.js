@@ -22,7 +22,7 @@ async function testDocumentEventResources() {
   const tab = await addTab("data:text/html,Document Events");
 
   const listener = new ResourceListener();
-  const { client, resourceWatcher, targetCommand } = await initResourceCommand(
+  const { client, resourceCommand, targetCommand } = await initResourceCommand(
     tab
   );
 
@@ -32,7 +32,7 @@ async function testDocumentEventResources() {
   const onLoadingAtInit = listener.once("dom-loading");
   const onInteractiveAtInit = listener.once("dom-interactive");
   const onCompleteAtInit = listener.once("dom-complete");
-  await resourceWatcher.watchResources([resourceWatcher.TYPES.DOCUMENT_EVENT], {
+  await resourceCommand.watchResources([resourceCommand.TYPES.DOCUMENT_EVENT], {
     onAvailable: parameters => listener.dispatch(parameters),
   });
   await assertPromises(onLoadingAtInit, onInteractiveAtInit, onCompleteAtInit);
@@ -75,13 +75,13 @@ async function testDocumentEventResourcesWithIgnoreExistingResources() {
 
   const tab = await addTab("data:text/html,Document Events");
 
-  const { client, resourceWatcher, targetCommand } = await initResourceCommand(
+  const { client, resourceCommand, targetCommand } = await initResourceCommand(
     tab
   );
 
   info("Check whether the existing document events will not be fired");
   const documentEvents = [];
-  await resourceWatcher.watchResources([resourceWatcher.TYPES.DOCUMENT_EVENT], {
+  await resourceCommand.watchResources([resourceCommand.TYPES.DOCUMENT_EVENT], {
     onAvailable: resources => documentEvents.push(...resources),
     ignoreExistingResources: true,
   });
@@ -102,12 +102,12 @@ async function testCrossOriginNavigation() {
 
   const tab = await addTab("http://example.com/document-builder.sjs?html=com");
 
-  const { client, resourceWatcher, targetCommand } = await initResourceCommand(
+  const { client, resourceCommand, targetCommand } = await initResourceCommand(
     tab
   );
 
   const documentEvents = [];
-  await resourceWatcher.watchResources([resourceWatcher.TYPES.DOCUMENT_EVENT], {
+  await resourceCommand.watchResources([resourceCommand.TYPES.DOCUMENT_EVENT], {
     onAvailable: resources => documentEvents.push(...resources),
     ignoreExistingResources: true,
   });

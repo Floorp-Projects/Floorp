@@ -299,11 +299,11 @@ class ResourceCommand {
    *        composed of a BrowsingContextTargetFront or ContentProcessTargetFront.
    */
   async _onTargetAvailable({ targetFront, isTargetSwitching }) {
-    // We put the resourceWatcher on the targetFront so it can be retrieved in the
+    // We put the resourceCommand on the targetFront so it can be retrieved in the
     // inspector and style-rule fronts. This might be removed in the future if/when we
-    // turn the resourceWatcher into a Command.
+    // turn the resourceCommand into a Command.
     // ⚠️ This shouldn't be used anywhere else ⚠️
-    targetFront.resourceWatcher = this;
+    targetFront.resourceCommand = this;
 
     const resources = [];
     if (isTargetSwitching) {
@@ -430,7 +430,7 @@ class ResourceCommand {
       }
 
       // isAlreadyExistingResource indicates that the resources already existed before
-      // the resource watcher started watching for this type of resource.
+      // the resource command started watching for this type of resource.
       resource.isAlreadyExistingResource = this._processingExistingResources.has(
         resourceType
       );

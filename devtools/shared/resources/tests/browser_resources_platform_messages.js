@@ -18,7 +18,7 @@ add_task(async function() {
 async function testPlatformMessagesResources() {
   const {
     client,
-    resourceWatcher,
+    resourceCommand,
     targetCommand,
   } = await initMultiProcessResourceCommand();
 
@@ -78,8 +78,8 @@ async function testPlatformMessagesResources() {
     }
   };
 
-  await resourceWatcher.watchResources(
-    [resourceWatcher.TYPES.PLATFORM_MESSAGE],
+  await resourceCommand.watchResources(
+    [resourceCommand.TYPES.PLATFORM_MESSAGE],
     {
       onAvailable,
     }
@@ -103,7 +103,7 @@ async function testPlatformMessagesResources() {
 async function testPlatformMessagesResourcesWithIgnoreExistingResources() {
   const {
     client,
-    resourceWatcher,
+    resourceCommand,
     targetCommand,
   } = await initMultiProcessResourceCommand();
 
@@ -115,8 +115,8 @@ async function testPlatformMessagesResourcesWithIgnoreExistingResources() {
   Services.console.logStringMessage(expectedMessages[1]);
 
   const availableResources = [];
-  await resourceWatcher.watchResources(
-    [resourceWatcher.TYPES.PLATFORM_MESSAGE],
+  await resourceCommand.watchResources(
+    [resourceCommand.TYPES.PLATFORM_MESSAGE],
     {
       onAvailable: resources => {
         for (const resource of resources) {

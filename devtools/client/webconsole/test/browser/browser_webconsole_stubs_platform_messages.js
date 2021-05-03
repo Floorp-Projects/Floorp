@@ -61,7 +61,7 @@ async function generatePlatformMessagesStubs() {
 
   const commands = await createCommandsForMainProcess();
   await commands.targetCommand.startListening();
-  const resourceWatcher = commands.resourceCommand;
+  const resourceCommand = commands.resourceCommand;
 
   // The resource-watcher only supports a single call to watch/unwatch per
   // instance, so we attach a unique watch callback, which will forward the
@@ -73,8 +73,8 @@ async function generatePlatformMessagesStubs() {
       handlePlatformMessage(resource);
     }
   };
-  await resourceWatcher.watchResources(
-    [resourceWatcher.TYPES.PLATFORM_MESSAGE],
+  await resourceCommand.watchResources(
+    [resourceCommand.TYPES.PLATFORM_MESSAGE],
     {
       onAvailable: onPlatformMessageAvailable,
     }

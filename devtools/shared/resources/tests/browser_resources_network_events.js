@@ -70,7 +70,7 @@ async function testNetworkEventResourcesWithoutExistingResources() {
 
 async function testNetworkEventResources(options) {
   const tab = await addTab(TEST_URI);
-  const { client, resourceWatcher, targetCommand } = await initResourceCommand(
+  const { client, resourceCommand, targetCommand } = await initResourceCommand(
     tab
   );
 
@@ -88,7 +88,7 @@ async function testNetworkEventResources(options) {
       for (const resource of resources) {
         is(
           resource.resourceType,
-          resourceWatcher.TYPES.NETWORK_EVENT,
+          resourceCommand.TYPES.NETWORK_EVENT,
           "Received a network event resource"
         );
       }
@@ -98,15 +98,15 @@ async function testNetworkEventResources(options) {
       for (const { resource } of updates) {
         is(
           resource.resourceType,
-          resourceWatcher.TYPES.NETWORK_EVENT,
+          resourceCommand.TYPES.NETWORK_EVENT,
           "Received a network update event resource"
         );
         resolve();
       }
     };
 
-    resourceWatcher
-      .watchResources([resourceWatcher.TYPES.NETWORK_EVENT], {
+    resourceCommand
+      .watchResources([resourceCommand.TYPES.NETWORK_EVENT], {
         onAvailable: onResourceAvailable,
         onUpdated: onResourceUpdated,
       })
@@ -142,7 +142,7 @@ async function testNetworkEventResources(options) {
     for (const resource of resources) {
       is(
         resource.resourceType,
-        resourceWatcher.TYPES.NETWORK_EVENT,
+        resourceCommand.TYPES.NETWORK_EVENT,
         "Received a network event resource"
       );
       actualResourcesOnAvailable[resource.url] = {
@@ -158,7 +158,7 @@ async function testNetworkEventResources(options) {
     for (const { resource } of updates) {
       is(
         resource.resourceType,
-        resourceWatcher.TYPES.NETWORK_EVENT,
+        resourceCommand.TYPES.NETWORK_EVENT,
         "Received a network update event resource"
       );
       actualResourcesOnUpdated[resource.url] = {
@@ -170,7 +170,7 @@ async function testNetworkEventResources(options) {
     }
   };
 
-  await resourceWatcher.watchResources([resourceWatcher.TYPES.NETWORK_EVENT], {
+  await resourceCommand.watchResources([resourceCommand.TYPES.NETWORK_EVENT], {
     onAvailable,
     onUpdated,
     ignoreExistingResources,
@@ -223,8 +223,8 @@ async function testNetworkEventResources(options) {
     assertResources(actual, expected);
   }
 
-  await resourceWatcher.unwatchResources(
-    [resourceWatcher.TYPES.NETWORK_EVENT],
+  await resourceCommand.unwatchResources(
+    [resourceCommand.TYPES.NETWORK_EVENT],
     {
       onAvailable,
       onUpdated,
@@ -232,8 +232,8 @@ async function testNetworkEventResources(options) {
     }
   );
 
-  await resourceWatcher.unwatchResources(
-    [resourceWatcher.TYPES.NETWORK_EVENT],
+  await resourceCommand.unwatchResources(
+    [resourceCommand.TYPES.NETWORK_EVENT],
     {
       onAvailable: onResourceAvailable,
       onUpdated: onResourceUpdated,
@@ -263,7 +263,7 @@ async function testNetworkEventResourcesFromTheContentProcess() {
   const allResourcesOnUpdate = [];
 
   const tab = await addTab(CSP_URL);
-  const { client, resourceWatcher, targetCommand } = await initResourceCommand(
+  const { client, resourceCommand, targetCommand } = await initResourceCommand(
     tab
   );
 
@@ -286,8 +286,8 @@ async function testNetworkEventResourcesFromTheContentProcess() {
       }
     };
 
-    resourceWatcher
-      .watchResources([resourceWatcher.TYPES.NETWORK_EVENT], {
+    resourceCommand
+      .watchResources([resourceCommand.TYPES.NETWORK_EVENT], {
         onAvailable,
         onUpdated,
       })
@@ -316,7 +316,7 @@ async function testNetworkEventResourcesFromTheContentProcess() {
   // Assert the data for the CSP blocked JS script file
   is(
     availableJSResource.resourceType,
-    resourceWatcher.TYPES.NETWORK_EVENT,
+    resourceCommand.TYPES.NETWORK_EVENT,
     "This is a network event resource"
   );
   is(
@@ -327,7 +327,7 @@ async function testNetworkEventResourcesFromTheContentProcess() {
 
   is(
     updateJSResource.resourceType,
-    resourceWatcher.TYPES.NETWORK_EVENT,
+    resourceCommand.TYPES.NETWORK_EVENT,
     "This is a network event resource"
   );
   is(
@@ -348,7 +348,7 @@ async function testNetworkEventResourcesFromTheContentProcess() {
   // Assert the data for the CSP blocked CSS file
   is(
     availableCSSResource.resourceType,
-    resourceWatcher.TYPES.NETWORK_EVENT,
+    resourceCommand.TYPES.NETWORK_EVENT,
     "This is a network event resource"
   );
   is(
@@ -359,7 +359,7 @@ async function testNetworkEventResourcesFromTheContentProcess() {
 
   is(
     updateCSSResource.resourceType,
-    resourceWatcher.TYPES.NETWORK_EVENT,
+    resourceCommand.TYPES.NETWORK_EVENT,
     "This is a network event resource"
   );
   is(
@@ -368,8 +368,8 @@ async function testNetworkEventResourcesFromTheContentProcess() {
     "The css resource is blocked by CSP"
   );
 
-  await resourceWatcher.unwatchResources(
-    [resourceWatcher.TYPES.NETWORK_EVENT],
+  await resourceCommand.unwatchResources(
+    [resourceCommand.TYPES.NETWORK_EVENT],
     {
       onAvailable,
       onUpdated,

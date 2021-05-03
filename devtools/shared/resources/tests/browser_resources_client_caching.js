@@ -12,7 +12,7 @@ add_task(async function() {
 
   const tab = await addTab(TEST_URI);
 
-  const { client, resourceWatcher, targetCommand } = await initResourceCommand(
+  const { client, resourceCommand, targetCommand } = await initResourceCommand(
     tab
   );
 
@@ -22,8 +22,8 @@ add_task(async function() {
 
   info("Register first listener");
   const cachedResources1 = [];
-  await resourceWatcher.watchResources(
-    [resourceWatcher.TYPES.CONSOLE_MESSAGE],
+  await resourceCommand.watchResources(
+    [resourceCommand.TYPES.CONSOLE_MESSAGE],
     {
       onAvailable: resources => cachedResources1.push(...resources),
     }
@@ -31,8 +31,8 @@ add_task(async function() {
 
   info("Register second listener");
   const cachedResources2 = [];
-  await resourceWatcher.watchResources(
-    [resourceWatcher.TYPES.CONSOLE_MESSAGE],
+  await resourceCommand.watchResources(
+    [resourceCommand.TYPES.CONSOLE_MESSAGE],
     {
       onAvailable: resources => cachedResources2.push(...resources),
     }
@@ -52,7 +52,7 @@ add_task(async function() {
 
   const tab = await addTab(TEST_URI);
 
-  const { client, resourceWatcher, targetCommand } = await initResourceCommand(
+  const { client, resourceCommand, targetCommand } = await initResourceCommand(
     tab
   );
 
@@ -62,8 +62,8 @@ add_task(async function() {
 
   info("Register first listener to get all available resources");
   const availableResources = [];
-  await resourceWatcher.watchResources(
-    [resourceWatcher.TYPES.CONSOLE_MESSAGE],
+  await resourceCommand.watchResources(
+    [resourceCommand.TYPES.CONSOLE_MESSAGE],
     {
       onAvailable: resources => availableResources.push(...resources),
     }
@@ -79,8 +79,8 @@ add_task(async function() {
 
   info("Register second listener to get the cached resources");
   const cachedResources = [];
-  await resourceWatcher.watchResources(
-    [resourceWatcher.TYPES.CONSOLE_MESSAGE],
+  await resourceCommand.watchResources(
+    [resourceCommand.TYPES.CONSOLE_MESSAGE],
     {
       onAvailable: resources => cachedResources.push(...resources),
     }
@@ -98,7 +98,7 @@ add_task(async function() {
 
   const tab = await addTab(TEST_URI);
 
-  const { client, resourceWatcher, targetCommand } = await initResourceCommand(
+  const { client, resourceCommand, targetCommand } = await initResourceCommand(
     tab
   );
 
@@ -107,8 +107,8 @@ add_task(async function() {
   await logMessages(tab.linkedBrowser, existingMessages);
 
   info("Register first listener");
-  await resourceWatcher.watchResources(
-    [resourceWatcher.TYPES.CONSOLE_MESSAGE],
+  await resourceCommand.watchResources(
+    [resourceCommand.TYPES.CONSOLE_MESSAGE],
     {
       onAvailable: () => {},
     }
@@ -121,8 +121,8 @@ add_task(async function() {
 
   info("Register second listener");
   const cachedResources = [];
-  await resourceWatcher.watchResources(
-    [resourceWatcher.TYPES.CONSOLE_MESSAGE],
+  await resourceCommand.watchResources(
+    [resourceCommand.TYPES.CONSOLE_MESSAGE],
     {
       onAvailable: resources => cachedResources.push(...resources),
     }
@@ -139,16 +139,16 @@ add_task(async function() {
 
   const tab = await addTab(TEST_URI);
 
-  const { client, resourceWatcher, targetCommand } = await initResourceCommand(
+  const { client, resourceCommand, targetCommand } = await initResourceCommand(
     tab
   );
 
   info("Register first listener to get all available resources");
   const availableResources = [];
-  await resourceWatcher.watchResources(
+  await resourceCommand.watchResources(
     [
-      resourceWatcher.TYPES.CONSOLE_MESSAGE,
-      resourceWatcher.TYPES.ERROR_MESSAGE,
+      resourceCommand.TYPES.CONSOLE_MESSAGE,
+      resourceCommand.TYPES.ERROR_MESSAGE,
     ],
     {
       onAvailable: resources => availableResources.push(...resources),
@@ -176,10 +176,10 @@ add_task(async function() {
 
   info("Register listener to get the cached resources");
   const cachedResources = [];
-  await resourceWatcher.watchResources(
+  await resourceCommand.watchResources(
     [
-      resourceWatcher.TYPES.CONSOLE_MESSAGE,
-      resourceWatcher.TYPES.ERROR_MESSAGE,
+      resourceCommand.TYPES.CONSOLE_MESSAGE,
+      resourceCommand.TYPES.ERROR_MESSAGE,
     ],
     {
       onAvailable: resources => cachedResources.push(...resources),
@@ -201,7 +201,7 @@ add_task(async function() {
 async function testIgnoreExistingResources(isFirstListenerIgnoreExisting) {
   const tab = await addTab(TEST_URI);
 
-  const { client, resourceWatcher, targetCommand } = await initResourceCommand(
+  const { client, resourceCommand, targetCommand } = await initResourceCommand(
     tab
   );
 
@@ -211,8 +211,8 @@ async function testIgnoreExistingResources(isFirstListenerIgnoreExisting) {
 
   info("Register first listener");
   const cachedResources1 = [];
-  await resourceWatcher.watchResources(
-    [resourceWatcher.TYPES.CONSOLE_MESSAGE],
+  await resourceCommand.watchResources(
+    [resourceCommand.TYPES.CONSOLE_MESSAGE],
     {
       onAvailable: resources => cachedResources1.push(...resources),
       ignoreExistingResources: isFirstListenerIgnoreExisting,
@@ -221,8 +221,8 @@ async function testIgnoreExistingResources(isFirstListenerIgnoreExisting) {
 
   info("Register second listener");
   const cachedResources2 = [];
-  await resourceWatcher.watchResources(
-    [resourceWatcher.TYPES.CONSOLE_MESSAGE],
+  await resourceCommand.watchResources(
+    [resourceCommand.TYPES.CONSOLE_MESSAGE],
     {
       onAvailable: resources => cachedResources2.push(...resources),
       ignoreExistingResources: !isFirstListenerIgnoreExisting,
@@ -266,7 +266,7 @@ add_task(async function() {
 
   const tab = await addTab(TEST_URI);
 
-  const { client, resourceWatcher, targetCommand } = await initResourceCommand(
+  const { client, resourceCommand, targetCommand } = await initResourceCommand(
     tab
   );
 
@@ -282,8 +282,8 @@ add_task(async function() {
     onAvailableCallCount++;
   };
 
-  await resourceWatcher.watchResources(
-    [resourceWatcher.TYPES.CONSOLE_MESSAGE],
+  await resourceCommand.watchResources(
+    [resourceCommand.TYPES.CONSOLE_MESSAGE],
     { onAvailable }
   );
   is(availableResources.length, 0, "availableResources array is empty");
@@ -301,7 +301,7 @@ add_task(async function() {
     "onAvailable was called with the expected resource"
   );
 
-  resourceWatcher.unwatchResources([resourceWatcher.TYPES.CONSOLE_MESSAGE], {
+  resourceCommand.unwatchResources([resourceCommand.TYPES.CONSOLE_MESSAGE], {
     onAvailable,
   });
   targetCommand.destroy();

@@ -25,7 +25,7 @@ add_task(async function() {
 async function testServerSentEventResources(target) {
   const tab = await addTab(URL_ROOT + "sse_frontend.html");
 
-  const { client, resourceWatcher, targetCommand } = await initResourceCommand(
+  const { client, resourceCommand, targetCommand } = await initResourceCommand(
     tab
   );
 
@@ -35,8 +35,8 @@ async function testServerSentEventResources(target) {
     availableResources.push(...resources);
   }
 
-  await resourceWatcher.watchResources(
-    [resourceWatcher.TYPES.SERVER_SENT_EVENT],
+  await resourceCommand.watchResources(
+    [resourceCommand.TYPES.SERVER_SENT_EVENT],
     { onAvailable: onResourceAvailable }
   );
 
@@ -69,8 +69,8 @@ async function testServerSentEventResources(target) {
     httpChannelId,
   });
 
-  await resourceWatcher.unwatchResources(
-    [resourceWatcher.TYPES.SERVER_SENT_EVENT],
+  await resourceCommand.unwatchResources(
+    [resourceCommand.TYPES.SERVER_SENT_EVENT],
     { onAvailable: onResourceAvailable }
   );
 

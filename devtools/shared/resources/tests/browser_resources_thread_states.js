@@ -39,7 +39,7 @@ async function checkBreakpointBeforeWatchResources() {
 
   const tab = await addTab(BREAKPOINT_TEST_URL);
 
-  const { client, resourceWatcher, targetCommand } = await initResourceCommand(
+  const { client, resourceCommand, targetCommand } = await initResourceCommand(
     tab
   );
 
@@ -60,7 +60,7 @@ async function checkBreakpointBeforeWatchResources() {
 
   info("Call watchResources");
   const availableResources = [];
-  await resourceWatcher.watchResources([resourceWatcher.TYPES.THREAD_STATE], {
+  await resourceCommand.watchResources([resourceCommand.TYPES.THREAD_STATE], {
     onAvailable: resources => availableResources.push(...resources),
   });
 
@@ -113,13 +113,13 @@ async function checkBreakpointAfterWatchResources() {
 
   const tab = await addTab(BREAKPOINT_TEST_URL);
 
-  const { client, resourceWatcher, targetCommand } = await initResourceCommand(
+  const { client, resourceCommand, targetCommand } = await initResourceCommand(
     tab
   );
 
   info("Call watchResources");
   const availableResources = [];
-  await resourceWatcher.watchResources([resourceWatcher.TYPES.THREAD_STATE], {
+  await resourceCommand.watchResources([resourceCommand.TYPES.THREAD_STATE], {
     onAvailable: resources => availableResources.push(...resources),
   });
 
@@ -185,13 +185,13 @@ async function checkRealBreakpoint() {
 
   const tab = await addTab(BREAKPOINT_TEST_URL);
 
-  const { client, resourceWatcher, targetCommand } = await initResourceCommand(
+  const { client, resourceCommand, targetCommand } = await initResourceCommand(
     tab
   );
 
   info("Call watchResources");
   const availableResources = [];
-  await resourceWatcher.watchResources([resourceWatcher.TYPES.THREAD_STATE], {
+  await resourceCommand.watchResources([resourceCommand.TYPES.THREAD_STATE], {
     onAvailable: resources => availableResources.push(...resources),
   });
 
@@ -269,13 +269,13 @@ async function checkPauseOnException() {
     "data:text/html,<meta charset=utf8><script>a.b.c.d</script>"
   );
 
-  const { client, resourceWatcher, targetCommand } = await initResourceCommand(
+  const { client, resourceCommand, targetCommand } = await initResourceCommand(
     tab
   );
 
   info("Call watchResources");
   const availableResources = [];
-  await resourceWatcher.watchResources([resourceWatcher.TYPES.THREAD_STATE], {
+  await resourceCommand.watchResources([resourceCommand.TYPES.THREAD_STATE], {
     onAvailable: resources => availableResources.push(...resources),
   });
 
@@ -342,7 +342,7 @@ async function checkSetBeforeWatch() {
 
   const tab = await addTab(BREAKPOINT_TEST_URL);
 
-  const { client, resourceWatcher, targetCommand } = await initResourceCommand(
+  const { client, resourceCommand, targetCommand } = await initResourceCommand(
     tab
   );
 
@@ -380,7 +380,7 @@ async function checkSetBeforeWatch() {
 
   info("Call watchResources");
   const availableResources = [];
-  await resourceWatcher.watchResources([resourceWatcher.TYPES.THREAD_STATE], {
+  await resourceCommand.watchResources([resourceCommand.TYPES.THREAD_STATE], {
     onAvailable: resources => availableResources.push(...resources),
   });
 
@@ -429,13 +429,13 @@ async function checkDebuggerStatementInIframes() {
 
   const tab = await addTab(BREAKPOINT_TEST_URL);
 
-  const { client, resourceWatcher, targetCommand } = await initResourceCommand(
+  const { client, resourceCommand, targetCommand } = await initResourceCommand(
     tab
   );
 
   info("Call watchResources");
   const availableResources = [];
-  await resourceWatcher.watchResources([resourceWatcher.TYPES.THREAD_STATE], {
+  await resourceCommand.watchResources([resourceCommand.TYPES.THREAD_STATE], {
     onAvailable: resources => availableResources.push(...resources),
   });
 
