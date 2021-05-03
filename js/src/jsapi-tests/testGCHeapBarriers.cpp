@@ -92,7 +92,9 @@ static void MakeGray(JSObject* obj) {
 //  - HeapPtr
 //  - WeakHeapPtr
 BEGIN_TEST(testGCHeapPostBarriers) {
+#ifdef JS_GC_ZEAL
   AutoLeaveZeal nozeal(cx);
+#endif /* JS_GC_ZEAL */
 
   /* Sanity check - objects start in the nursery and then become tenured. */
   JS_GC(cx);
@@ -340,7 +342,9 @@ END_TEST(testGCHeapPostBarriers)
 // Also check that equality comparisons on wrappers do not trigger the read
 // barrier.
 BEGIN_TEST(testGCHeapReadBarriers) {
+#ifdef JS_GC_ZEAL
   AutoLeaveZeal nozeal(cx);
+#endif /* JS_GC_ZEAL */
 
   CHECK((TestWrapperType<JS::Heap<JSObject*>, JSObject*>()));
   CHECK((TestWrapperType<JS::TenuredHeap<JSObject*>, JSObject*>()));
@@ -434,9 +438,13 @@ using ObjectVector = Vector<JSObject*, 0, SystemAllocPolicy>;
 //  - HeapPtr
 //  - PreBarriered
 BEGIN_TEST(testGCHeapPreBarriers) {
+#ifdef JS_GC_ZEAL
   AutoLeaveZeal nozeal(cx);
+#endif /* JS_GC_ZEAL */
 
-  AutoGCParameter param1(cx, JSGC_INCREMENTAL_GC_ENABLED, true);
+  bool wasIncrementalGCEnabled =
+      JS_GetGCParameter(cx, JSGC_INCREMENTAL_GC_ENABLED);
+  JS_SetGCParameter(cx, JSGC_INCREMENTAL_GC_ENABLED, true);
 
   // Create a bunch of objects. These are unrooted and will be used to test
   // whether barriers have fired by checking whether they have been marked
@@ -470,6 +478,8 @@ BEGIN_TEST(testGCHeapPreBarriers) {
   TestGCPtr(testObjects);
 
   gc::FinishGC(cx, JS::GCReason::API);
+
+  JS_SetGCParameter(cx, JSGC_INCREMENTAL_GC_ENABLED, wasIncrementalGCEnabled);
 
   return true;
 }
