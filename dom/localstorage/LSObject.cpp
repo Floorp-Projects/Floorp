@@ -337,7 +337,7 @@ nsresult LSObject::CreateForWindow(nsPIDOMWindowInner* aWindow,
   }
 
 #ifdef DEBUG
-  LS_TRY_INSPECT(
+  QM_TRY_INSPECT(
       const auto& principalMetadata,
       quota::QuotaManager::GetInfoFromPrincipal(storagePrincipal.get()));
 
@@ -345,7 +345,7 @@ nsresult LSObject::CreateForWindow(nsPIDOMWindowInner* aWindow,
 
   const auto& origin = principalMetadata.mOrigin;
 #else
-  LS_TRY_INSPECT(
+  QM_TRY_INSPECT(
       const auto& origin,
       quota::QuotaManager::GetOriginFromPrincipal(storagePrincipal.get()));
 #endif
@@ -428,7 +428,7 @@ nsresult LSObject::CreateForPrincipal(nsPIDOMWindowInner* aWindow,
   }
 
 #ifdef DEBUG
-  LS_TRY_INSPECT(
+  QM_TRY_INSPECT(
       const auto& principalMetadata,
       ([&storagePrincipalInfo,
         &aPrincipal]() -> Result<quota::PrincipalMetadata, nsresult> {
@@ -437,14 +437,14 @@ nsresult LSObject::CreateForPrincipal(nsPIDOMWindowInner* aWindow,
           return quota::QuotaManager::GetInfoForChrome();
         }
 
-        LS_TRY_RETURN(quota::QuotaManager::GetInfoFromPrincipal(aPrincipal));
+        QM_TRY_RETURN(quota::QuotaManager::GetInfoFromPrincipal(aPrincipal));
       }()));
 
   MOZ_ASSERT(originAttrSuffix == principalMetadata.mSuffix);
 
   const auto& origin = principalMetadata.mOrigin;
 #else
-  LS_TRY_INSPECT(
+  QM_TRY_INSPECT(
       const auto& origin, ([&storagePrincipalInfo,
                             &aPrincipal]() -> Result<nsAutoCString, nsresult> {
         if (storagePrincipalInfo->type() ==
@@ -452,7 +452,7 @@ nsresult LSObject::CreateForPrincipal(nsPIDOMWindowInner* aWindow,
           return nsAutoCString{quota::QuotaManager::GetOriginForChrome()};
         }
 
-        LS_TRY_RETURN(quota::QuotaManager::GetOriginFromPrincipal(aPrincipal));
+        QM_TRY_RETURN(quota::QuotaManager::GetOriginFromPrincipal(aPrincipal));
       }()));
 #endif
 

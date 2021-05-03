@@ -127,7 +127,7 @@ Result<std::pair<nsCString, nsCString>, nsresult> GenerateOriginKey2(
   attrs.CreateSuffix(originAttrSuffix);
 
   RefPtr<MozURL> specURL;
-  LS_TRY(MozURL::Init(getter_AddRefs(specURL), spec));
+  QM_TRY(MozURL::Init(getter_AddRefs(specURL), spec));
 
   nsCString host(specURL->Host());
   uint32_t length = host.Length();

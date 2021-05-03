@@ -139,7 +139,7 @@ mozilla::ipc::IPCResult LSObserverChild::RecvObserve(
     return IPC_OK();
   }
 
-  LS_TRY_INSPECT(const auto& principal,
+  QM_TRY_INSPECT(const auto& principal,
                  PrincipalInfoToPrincipal(aPrincipalInfo),
                  IPC_FAIL_NO_REASON(this));
 
