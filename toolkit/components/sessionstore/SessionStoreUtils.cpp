@@ -217,8 +217,7 @@ void SessionStoreUtils::CollectDocShellCapabilities(const GlobalObject& aGlobal,
 
 /* static */
 void SessionStoreUtils::RestoreDocShellCapabilities(
-    const GlobalObject& aGlobal, nsIDocShell* aDocShell,
-    const nsCString& aDisallowCapabilities) {
+    nsIDocShell* aDocShell, const nsCString& aDisallowCapabilities) {
   aDocShell->SetAllowPlugins(true);
   aDocShell->SetAllowJavascript(true);
   aDocShell->SetAllowMetaRedirects(true);
@@ -1366,6 +1365,18 @@ void SessionStoreUtils::CollectedSessionStorage(
 void SessionStoreUtils::RestoreSessionStorage(
     const GlobalObject& aGlobal, nsIDocShell* aDocShell,
     const Record<nsString, Record<nsString, nsString>>& aData) {
+  BrowsingContext* const browsingContext =
+      nsDocShell::Cast(aDocShell)->GetBrowsingContext();
+  if (!browsingContext) {
+    return;
+  }
+
+  const RefPtr<SessionStorageManager> storageManager =
+      browsingContext->GetSessionStorageManager();
+  if (!storageManager) {
+    return;
+  }
+
   for (auto& entry : aData.Entries()) {
     // NOTE: In capture() we record the full origin for the URI which the
     // sessionStorage is being captured for. As of bug 1235657 this code
@@ -1387,21 +1398,11 @@ void SessionStoreUtils::RestoreSessionStorage(
     int32_t pos = entry.mKey.RFindChar('^');
     nsCOMPtr<nsIPrincipal> principal = BasePrincipal::CreateContentPrincipal(
         NS_ConvertUTF16toUTF8(Substring(entry.mKey, 0, pos)));
-    BrowsingContext* const browsingContext =
-        nsDocShell::Cast(aDocShell)->GetBrowsingContext();
-    if (!browsingContext) {
-      return;
-    }
 
     nsCOMPtr<nsIPrincipal> storagePrincipal =
         BasePrincipal::CreateContentPrincipal(
             NS_ConvertUTF16toUTF8(entry.mKey));
 
-    const RefPtr<SessionStorageManager> storageManager =
-        browsingContext->GetSessionStorageManager();
-    if (!storageManager) {
-      return;
-    }
     RefPtr<Storage> storage;
     // There is no need to pass documentURI, it's only used to fill documentURI
     // property of domstorage event, which in this case has no consumer.
@@ -1417,6 +1418,71 @@ void SessionStoreUtils::RestoreSessionStorage(
     for (auto& InnerEntry : entry.mValue.Entries()) {
       IgnoredErrorResult result;
       storage->SetItem(InnerEntry.mKey, InnerEntry.mValue, *principal, result);
+      if (result.Failed()) {
+        NS_WARNING("storage set item failed!");
+      }
+    }
+  }
+}
+
+// This is a mirror of SessionStoreUtils::RestoreSessionStorage for the SHIP
+// codepath. We'll be able to remove this when it becomes possible to restore
+// storage directly from the parent (bug 1700623).
+void RestoreSessionStorage(nsIDocShell* aDocShell,
+                           const nsTArray<StorageEntry>& aData) {
+  BrowsingContext* const browsingContext =
+      nsDocShell::Cast(aDocShell)->GetBrowsingContext();
+  if (!browsingContext) {
+    return;
+  }
+
+  const RefPtr<SessionStorageManager> storageManager =
+      browsingContext->GetSessionStorageManager();
+  if (!storageManager) {
+    return;
+  }
+
+  for (const auto& entry : aData) {
+    // NOTE: In capture() we record the full origin for the URI which the
+    // sessionStorage is being captured for. As of bug 1235657 this code
+    // stopped parsing any origins which have originattributes correctly, as
+    // it decided to use the origin attributes from the docshell, and try to
+    // interpret the origin as a URI. Since bug 1353844 this code now correctly
+    // parses the full origin, and then discards the origin attributes, to
+    // make the behavior line up with the original intentions in bug 1235657
+    // while preserving the ability to read all session storage from
+    // previous versions. In the future, if this behavior is desired, we may
+    // want to use the spec instead of the origin as the key, and avoid
+    // transmitting origin attribute information which we then discard when
+    // restoring.
+    //
+    // If changing this logic, make sure to also change the principal
+    // computation logic in SessionStore::_sendRestoreHistory.
+
+    // OriginAttributes are always after a '^' character
+    int32_t pos = entry.origin().RFindChar('^');
+    nsCOMPtr<nsIPrincipal> principal = BasePrincipal::CreateContentPrincipal(
+        Substring(entry.origin(), 0, pos));
+
+    nsCOMPtr<nsIPrincipal> storagePrincipal =
+        BasePrincipal::CreateContentPrincipal(entry.origin());
+
+    RefPtr<Storage> storage;
+    // There is no need to pass documentURI, it's only used to fill documentURI
+    // property of domstorage event, which in this case has no consumer.
+    // Prevention of events in case of missing documentURI will be solved in a
+    // followup bug to bug 600307.
+    // Null window because the current window doesn't match the principal yet
+    // and loads about:blank.
+    storageManager->CreateStorage(nullptr, principal, storagePrincipal, u""_ns,
+                                  false, getter_AddRefs(storage));
+    if (!storage) {
+      continue;
+    }
+    MOZ_DIAGNOSTIC_ASSERT(entry.keys().Length() == entry.values().Length());
+    for (size_t i = 0; i < entry.keys().Length(); ++i) {
+      IgnoredErrorResult result;
+      storage->SetItem(entry.keys()[i], entry.values()[i], *principal, result);
       if (result.Failed()) {
         NS_WARNING("storage set item failed!");
       }
@@ -1583,6 +1649,79 @@ already_AddRefed<Promise> SessionStoreUtils::InitializeRestore(
   aContext.GetSessionHistory()->ReloadCurrentEntry();
 
   return aContext.GetRestorePromise();
+}
+
+/* static */
+void SessionStoreUtils::RestoreDocShellState(
+    nsIDocShell* aDocShell, const DocShellRestoreState& aState) {
+  if (aDocShell) {
+    if (aState.URI()) {
+      aDocShell->SetCurrentURI(aState.URI());
+    }
+    RestoreDocShellCapabilities(aDocShell, aState.docShellCaps());
+    // We'll be able to remove this when it becomes possible to restore
+    // storage directly from the parent.
+    if (!aState.sessionStorage().IsEmpty()) {
+      ::RestoreSessionStorage(aDocShell, aState.sessionStorage());
+    }
+  }
+}
+
+/* static */
+already_AddRefed<Promise> SessionStoreUtils::RestoreDocShellState(
+    const GlobalObject& aGlobal, CanonicalBrowsingContext& aContext,
+    const nsACString& aURL, const nsCString& aDocShellCaps,
+    const Record<nsCString, Record<nsString, nsString>>& aSessionStorage,
+    ErrorResult& aError) {
+  MOZ_RELEASE_ASSERT(mozilla::SessionHistoryInParent());
+  MOZ_RELEASE_ASSERT(aContext.IsTop());
+
+  if (WindowGlobalParent* wgp = aContext.GetCurrentWindowGlobal()) {
+    nsCOMPtr<nsIGlobalObject> global =
+        do_QueryInterface(aGlobal.GetAsSupports());
+    MOZ_DIAGNOSTIC_ASSERT(global);
+
+    RefPtr<Promise> promise = Promise::Create(global, aError);
+    if (aError.Failed()) {
+      return nullptr;
+    }
+
+    nsCOMPtr<nsIURI> uri;
+    if (!aURL.IsEmpty()) {
+      if (NS_FAILED(NS_NewURI(getter_AddRefs(uri), aURL))) {
+        aError.Throw(NS_ERROR_FAILURE);
+        return nullptr;
+      }
+    }
+
+    // We'll be able to remove this when it becomes possible to restore storage
+    // directly from the parent.
+    nsTArray<StorageEntry> storage;
+    for (const auto& originEntry : aSessionStorage.Entries()) {
+      StorageEntry* entry = storage.AppendElement();
+      entry->origin() = originEntry.mKey;
+      for (const auto& kvEntry : originEntry.mValue.Entries()) {
+        entry->keys().AppendElement(kvEntry.mKey);
+        entry->values().AppendElement(kvEntry.mValue);
+      }
+    }
+
+    DocShellRestoreState state = {uri, aDocShellCaps, storage};
+
+    if (wgp->IsInProcess()) {
+      RestoreDocShellState(aContext.GetDocShell(), state);
+      promise->MaybeResolveWithUndefined();
+    } else {
+      wgp->SendRestoreDocShellState(state)->Then(
+          GetMainThreadSerialEventTarget(), __func__,
+          [promise](void) { promise->MaybeResolveWithUndefined(); },
+          [promise](void) { promise->MaybeReject(NS_ERROR_FAILURE); });
+    }
+
+    return promise.forget();
+  }
+
+  return nullptr;
 }
 
 /* static */
