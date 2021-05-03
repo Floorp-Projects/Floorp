@@ -50,33 +50,33 @@
 namespace mozilla {
 namespace dom {
 
-JSObject* GetElementCallback(JSContext* aCx, JS::HandleValue aValue) {
-  JS::RootedValue privateValue(aCx, aValue);
-  MOZ_ASSERT(!privateValue.isObjectOrNull() && !privateValue.isUndefined());
-  LoadedScript* script = static_cast<LoadedScript*>(privateValue.toPrivate());
+JSObject* SourceElementCallback(JSContext* aCx, JS::HandleValue aPrivateValue) {
+  // NOTE: The result of this is only used by DevTools for matching sources, so
+  // it is safe to silently ignore any errors and return nullptr for them.
+
+  LoadedScript* script = static_cast<LoadedScript*>(aPrivateValue.toPrivate());
 
   if (!script->GetFetchOptions()) {
     return nullptr;
   }
 
-  JS::Rooted<JS::Value> elementValue(aCx);
-  {
-    nsCOMPtr<Element> domElement = script->GetFetchOptions()->mElement;
-    if (!domElement) {
-      return nullptr;
-    }
-
-    JSObject* globalObject =
-        domElement->OwnerDoc()->GetScopeObject()->GetGlobalJSObject();
-    JSAutoRealm ar(aCx, globalObject);
-
-    nsresult rv = nsContentUtils::WrapNative(aCx, domElement, &elementValue,
-                                             /* aAllowWrapping = */ true);
-    if (NS_FAILED(rv)) {
-      return nullptr;
-    }
+  nsCOMPtr<Element> domElement = script->GetFetchOptions()->mElement;
+  if (!domElement) {
+    return nullptr;
   }
-  return elementValue.toObjectOrNull();
+
+  JSObject* globalObject =
+      domElement->OwnerDoc()->GetScopeObject()->GetGlobalJSObject();
+  JSAutoRealm ar(aCx, globalObject);
+
+  JS::Rooted<JS::Value> elementValue(aCx);
+  nsresult rv = nsContentUtils::WrapNative(aCx, domElement, &elementValue,
+                                           /* aAllowWrapping = */ true);
+  if (NS_FAILED(rv)) {
+    return nullptr;
+  }
+
+  return &elementValue.toObject();
 }
 
 static MOZ_THREAD_LOCAL(ScriptSettingsStackEntry*) sScriptSettingsTLS;
@@ -340,7 +340,7 @@ void AutoJSAPI::InitInternal(nsIGlobalObject* aGlobalObject, JSObject* aGlobal,
   mOldWarningReporter.emplace(JS::GetWarningReporter(aCx));
 
   JS::SetWarningReporter(aCx, WarningOnlyErrorReporter);
-  JS::SetGetElementCallback(aCx, &GetElementCallback);
+  JS::SetSourceElementCallback(aCx, SourceElementCallback);
 
 #ifdef DEBUG
   if (haveException) {
