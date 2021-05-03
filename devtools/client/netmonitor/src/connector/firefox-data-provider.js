@@ -29,15 +29,15 @@ class FirefoxDataProvider {
    * @param {Object} webConsoleFront represents the client object for Console actor.
    * @param {Object} actions set of actions fired during data fetching process.
    * @param {Object} owner all events are fired on this object.
-   * @param {Object} resourceWatcher enables checking for watcher support
+   * @param {Object} resourceCommand enables checking for watcher support
    */
-  constructor({ webConsoleFront, actions, owner, resourceWatcher }) {
+  constructor({ webConsoleFront, actions, owner, resourceCommand }) {
     // Options
     this.webConsoleFront = webConsoleFront;
     this.actions = actions || {};
     this.actionsEnabled = true;
     this.owner = owner;
-    this.resourceWatcher = resourceWatcher;
+    this.resourceCommand = resourceCommand;
     // Map of all stacktrace resources keyed by network event's resourceId
     this.stackTraces = new Map();
     // Map of the stacktrace information keyed by the actor id's
@@ -521,8 +521,8 @@ class FirefoxDataProvider {
     let response;
     if (
       clientMethodName == "getStackTrace" &&
-      this.resourceWatcher.hasResourceCommandSupport(
-        this.resourceWatcher.TYPES.NETWORK_EVENT_STACKTRACE
+      this.resourceCommand.hasResourceCommandSupport(
+        this.resourceCommand.TYPES.NETWORK_EVENT_STACKTRACE
       )
     ) {
       const requestInfo = this.stackTraceRequestInfoByActorID.get(

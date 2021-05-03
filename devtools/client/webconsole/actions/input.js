@@ -171,13 +171,13 @@ function handleHelperResult(response) {
   return async ({ dispatch, hud, toolbox, webConsoleUI }) => {
     const { result, helperResult } = response;
     const helperHasRawOutput = !!helperResult?.rawOutput;
-    const hasNetworkResourceCommandSupport = hud.resourceWatcher.hasResourceCommandSupport(
-      hud.resourceWatcher.TYPES.NETWORK_EVENT
+    const hasNetworkResourceCommandSupport = hud.resourceCommand.hasResourceCommandSupport(
+      hud.resourceCommand.TYPES.NETWORK_EVENT
     );
     let networkFront = null;
     // @backward-compat { version 86 } default network events watcher support
     if (hasNetworkResourceCommandSupport) {
-      networkFront = await hud.resourceWatcher.watcherFront.getNetworkParentActor();
+      networkFront = await hud.resourceCommand.watcherFront.getNetworkParentActor();
     }
 
     if (helperResult?.type) {

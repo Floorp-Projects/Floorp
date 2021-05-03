@@ -15,7 +15,7 @@ add_task(async function() {
   const htmlRequest = await fetch(TEST_URL);
   const htmlContent = await htmlRequest.text();
 
-  const { client, resourceWatcher, targetCommand } = await initResourceCommand(
+  const { client, resourceCommand, targetCommand } = await initResourceCommand(
     tab
   );
 
@@ -34,7 +34,7 @@ add_task(async function() {
 
   info("Check already available resources");
   const availableResources = [];
-  await resourceWatcher.watchResources([resourceWatcher.TYPES.SOURCE], {
+  await resourceCommand.watchResources([resourceCommand.TYPES.SOURCE], {
     onAvailable: resources => availableResources.push(...resources),
   });
 

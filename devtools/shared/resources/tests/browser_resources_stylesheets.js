@@ -103,13 +103,13 @@ async function testResourceAvailableFeature() {
 
   const tab = await addTab(STYLE_TEST_URL);
 
-  const { client, resourceWatcher, targetCommand } = await initResourceCommand(
+  const { client, resourceCommand, targetCommand } = await initResourceCommand(
     tab
   );
 
   info("Check whether ResourceCommand gets existing stylesheet");
   const availableResources = [];
-  await resourceWatcher.watchResources([resourceWatcher.TYPES.STYLESHEET], {
+  await resourceCommand.watchResources([resourceCommand.TYPES.STYLESHEET], {
     onAvailable: resources => availableResources.push(...resources),
   });
 
@@ -172,14 +172,14 @@ async function testResourceUpdateFeature() {
 
   const tab = await addTab(STYLE_TEST_URL);
 
-  const { client, resourceWatcher, targetCommand } = await initResourceCommand(
+  const { client, resourceCommand, targetCommand } = await initResourceCommand(
     tab
   );
 
   info("Setup the watcher");
   const availableResources = [];
   const updates = [];
-  await resourceWatcher.watchResources([resourceWatcher.TYPES.STYLESHEET], {
+  await resourceCommand.watchResources([resourceCommand.TYPES.STYLESHEET], {
     onAvailable: resources => availableResources.push(...resources),
     onUpdated: newUpdates => updates.push(...newUpdates),
   });
@@ -313,14 +313,14 @@ async function testNestedResourceUpdateFeature() {
     tab.ownerGlobal.resizeTo(originalWindowWidth, originalWindowHeight);
   });
 
-  const { client, resourceWatcher, targetCommand } = await initResourceCommand(
+  const { client, resourceCommand, targetCommand } = await initResourceCommand(
     tab
   );
 
   info("Setup the watcher");
   const availableResources = [];
   const updates = [];
-  await resourceWatcher.watchResources([resourceWatcher.TYPES.STYLESHEET], {
+  await resourceCommand.watchResources([resourceCommand.TYPES.STYLESHEET], {
     onAvailable: resources => availableResources.push(...resources),
     onUpdated: newUpdates => updates.push(...newUpdates),
   });

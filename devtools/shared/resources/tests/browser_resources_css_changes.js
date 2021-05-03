@@ -11,13 +11,13 @@ add_task(async function() {
     "data:text/html,<body style='color: lime;'>CSS Changes</body>"
   );
 
-  const { client, resourceWatcher, targetCommand } = await initResourceCommand(
+  const { client, resourceCommand, targetCommand } = await initResourceCommand(
     tab
   );
 
   // CSS_CHANGE watcher doesn't record modification made before watching,
   // so we have to start watching before doing any DOM mutation.
-  await resourceWatcher.watchResources([resourceWatcher.TYPES.CSS_CHANGE], {
+  await resourceCommand.watchResources([resourceCommand.TYPES.CSS_CHANGE], {
     onAvailable: () => {},
   });
 
@@ -36,7 +36,7 @@ add_task(async function() {
   await setProperty(style.rule, 0, "color", "black");
 
   const availableResources = [];
-  await resourceWatcher.watchResources([resourceWatcher.TYPES.CSS_CHANGE], {
+  await resourceCommand.watchResources([resourceCommand.TYPES.CSS_CHANGE], {
     onAvailable: resources => availableResources.push(...resources),
   });
   assertResource(
@@ -76,7 +76,7 @@ add_task(async function() {
 
   info("Check whether ResourceCommand sends all resources added in this test");
   const existingResources = [];
-  await resourceWatcher.watchResources([resourceWatcher.TYPES.CSS_CHANGE], {
+  await resourceCommand.watchResources([resourceCommand.TYPES.CSS_CHANGE], {
     onAvailable: resources => existingResources.push(...resources),
   });
   await waitUntil(() => existingResources.length === 4);

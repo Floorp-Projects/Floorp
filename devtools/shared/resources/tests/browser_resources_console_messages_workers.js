@@ -18,7 +18,7 @@ add_task(async function() {
 
   const {
     client,
-    resourceWatcher,
+    resourceCommand,
     targetCommand,
   } = await initResourceCommand(tab, { listenForWorkers: true });
 
@@ -51,8 +51,8 @@ add_task(async function() {
     }
   };
 
-  await resourceWatcher.watchResources(
-    [resourceWatcher.TYPES.CONSOLE_MESSAGE],
+  await resourceCommand.watchResources(
+    [resourceCommand.TYPES.CONSOLE_MESSAGE],
     {
       onAvailable,
     }

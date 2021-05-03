@@ -114,7 +114,7 @@ class ResponsiveUI {
   }
 
   get watcherFront() {
-    return this.resourceWatcher.watcherFront;
+    return this.resourceCommand.watcherFront;
   }
 
   /**
@@ -329,8 +329,8 @@ class ResponsiveUI {
         this.onTargetAvailable
       );
 
-      this.resourceWatcher.unwatchResources(
-        [this.resourceWatcher.TYPES.NETWORK_EVENT],
+      this.resourceCommand.unwatchResources(
+        [this.resourceCommand.TYPES.NETWORK_EVENT],
         { onAvailable: this.onNetworkResourceAvailable }
       );
 
@@ -367,8 +367,7 @@ class ResponsiveUI {
 
   async connectToServer() {
     this.commands = await CommandsFactory.forTab(this.tab);
-    //TODO: use commands.resourceCommands instead of resourceWatcher
-    this.resourceWatcher = this.commands.resourceCommand;
+    this.resourceCommand = this.commands.resourceCommand;
 
     await this.commands.targetCommand.startListening();
 
@@ -377,10 +376,10 @@ class ResponsiveUI {
       this.onTargetAvailable
     );
 
-    // To support network throttling the resource watcher
+    // To support network throttling the resource command
     // needs to be watching for network resources.
-    await this.resourceWatcher.watchResources(
-      [this.resourceWatcher.TYPES.NETWORK_EVENT],
+    await this.resourceCommand.watchResources(
+      [this.resourceCommand.TYPES.NETWORK_EVENT],
       { onAvailable: this.onNetworkResourceAvailable }
     );
 

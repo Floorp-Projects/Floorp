@@ -13,7 +13,7 @@ add_task(async function() {
 
   const {
     client,
-    resourceWatcher,
+    resourceCommand,
     targetCommand,
   } = await initMultiProcessResourceCommand();
 
@@ -25,8 +25,8 @@ add_task(async function() {
 
   info("Wait for existing browser mochitest log");
   const existingMsg = await waitForNextResource(
-    resourceWatcher,
-    resourceWatcher.TYPES.CONSOLE_MESSAGE,
+    resourceCommand,
+    resourceCommand.TYPES.CONSOLE_MESSAGE,
     {
       ignoreExistingResources: false,
       predicate({ message }) {
@@ -52,15 +52,15 @@ add_task(async function() {
       resource => resource.message.arguments[0] == "foobar2"
     );
     if (runtimeLogResource) {
-      resourceWatcher.unwatchResources(
-        [resourceWatcher.TYPES.CONSOLE_MESSAGE],
+      resourceCommand.unwatchResources(
+        [resourceCommand.TYPES.CONSOLE_MESSAGE],
         { onAvailable }
       );
       resolveMochitestRuntimeLog(runtimeLogResource);
     }
   };
-  await resourceWatcher.watchResources(
-    [resourceWatcher.TYPES.CONSOLE_MESSAGE],
+  await resourceCommand.watchResources(
+    [resourceCommand.TYPES.CONSOLE_MESSAGE],
     {
       ignoreExistingResources: true,
       onAvailable,
@@ -78,8 +78,8 @@ add_task(async function() {
   );
 
   const onEarlyLog = waitForNextResource(
-    resourceWatcher,
-    resourceWatcher.TYPES.CONSOLE_MESSAGE,
+    resourceCommand,
+    resourceCommand.TYPES.CONSOLE_MESSAGE,
     {
       ignoreExistingResources: true,
       predicate({ message }) {

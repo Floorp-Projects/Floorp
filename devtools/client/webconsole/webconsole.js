@@ -101,8 +101,8 @@ class WebConsole {
     return this.commands.targetCommand.targetFront;
   }
 
-  get resourceWatcher() {
-    return this.toolbox.resourceWatcher;
+  get resourceCommand() {
+    return this.commands.resourceCommand;
   }
 
   /**
