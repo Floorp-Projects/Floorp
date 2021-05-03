@@ -512,6 +512,7 @@ impl LinearGradientTemplate {
                 scale: PointKey { x: self.scale.x, y: self.scale.y },
                 extend_mode: self.extend_mode,
                 stops: self.stops.iter().map(|stop| (*stop).into()).collect(),
+                reversed_stops: self.reverse_stops,
             };
 
             frame_state.resource_cache.request_render_task(
@@ -706,4 +707,5 @@ pub struct LinearGradientCacheKey {
     pub scale: PointKey,
     pub extend_mode: ExtendMode,
     pub stops: Vec<GradientStopKey>,
+    pub reversed_stops: bool,
 }
