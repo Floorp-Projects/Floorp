@@ -55,43 +55,58 @@ static inline double StepTiming(
   // https://drafts.csswg.org/css-easing-1/#step-timing-function-algo
 
   // Calculate current step.
-  int32_t currentStep = floor(aPortion * aStepFunc.mSteps);
+  const int32_t currentStep = static_cast<int32_t>(
+      clamped(floor(aPortion * aStepFunc.mSteps),
+              (double)std::numeric_limits<int32_t>::min(),
+              (double)std::numeric_limits<int32_t>::max()));
+  CheckedInt32 checkedCurrentStep = currentStep;
 
   // Increment current step if it is jump-start or start.
   if (aStepFunc.mPos == StyleStepPosition::Start ||
       aStepFunc.mPos == StyleStepPosition::JumpStart ||
       aStepFunc.mPos == StyleStepPosition::JumpBoth) {
-    ++currentStep;
+    ++checkedCurrentStep;
   }
 
   // If the "before flag" is set and we are at a transition point,
   // drop back a step
   if (aBeforeFlag == ComputedTimingFunction::BeforeFlag::Set &&
       fmod(aPortion * aStepFunc.mSteps, 1) == 0) {
-    --currentStep;
+    --checkedCurrentStep;
+  }
+
+  if (!checkedCurrentStep.isValid()) {
+    // Unexpected behavior (e.g. overflow). Roll back to |currentStep|.
+    checkedCurrentStep = currentStep;
   }
 
   // We should not produce a result outside [0, 1] unless we have an
   // input outside that range. This takes care of steps that would otherwise
   // occur at boundaries.
-  if (aPortion >= 0.0 && currentStep < 0) {
-    currentStep = 0;
+  if (aPortion >= 0.0 && checkedCurrentStep.value() < 0) {
+    checkedCurrentStep = 0;
   }
 
-  int32_t jumps = aStepFunc.mSteps;
+  // |jumps| should always be in [1, INT_MAX].
+  CheckedInt32 jumps = aStepFunc.mSteps;
   if (aStepFunc.mPos == StyleStepPosition::JumpBoth) {
     ++jumps;
   } else if (aStepFunc.mPos == StyleStepPosition::JumpNone) {
     --jumps;
   }
 
-  if (aPortion <= 1.0 && currentStep > jumps) {
-    currentStep = jumps;
+  if (!jumps.isValid()) {
+    // Unexpected behavior (e.g. overflow). Roll back to |aStepFunc.mSteps|.
+    jumps = aStepFunc.mSteps;
+  }
+
+  if (aPortion <= 1.0 && checkedCurrentStep.value() > jumps.value()) {
+    checkedCurrentStep = jumps;
   }
 
   // Convert to the output progress value.
-  MOZ_ASSERT(jumps > 0, "`jumps` should be a positive integer");
-  return double(currentStep) / double(jumps);
+  MOZ_ASSERT(jumps.value() > 0, "`jumps` should be a positive integer");
+  return double(checkedCurrentStep.value()) / double(jumps.value());
 }
 
 double ComputedTimingFunction::GetValue(
