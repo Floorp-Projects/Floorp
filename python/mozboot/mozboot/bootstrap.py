@@ -429,7 +429,7 @@ class Bootstrapper(object):
                     mozconfig_path,
                     raw_mozconfig,
                 )
-                print(suggestion)
+                print(suggestion, end="")
 
     def _validate_python_environment(self):
         valid = True
