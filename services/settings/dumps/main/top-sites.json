@@ -1,6 +1,19 @@
 {
   "data": [
     {
+      "url": "https://www.amazon.ca/",
+      "order": 50,
+      "title": "Amazon",
+      "schema": 1619728729570,
+      "include_regions": [
+        "CA"
+      ],
+      "search_shortcut": false,
+      "exclude_experiments": [],
+      "id": "82386dfa-cc7a-4fcb-9b1e-c9343d3da79d",
+      "last_modified": 1619789145867
+    },
+    {
       "url": "https://yandex.ru/?clid=2453500",
       "order": 0,
       "title": "Яндекс",
@@ -273,21 +286,6 @@
       ],
       "id": "2bf453fd-b588-4d99-b7e7-0d48387a62f8",
       "last_modified": 1616085500488
-    },
-    {
-      "url": "https://www.amazon.ca/",
-      "order": 50,
-      "title": "Amazon",
-      "schema": 1614962211068,
-      "include_regions": [
-        "CA"
-      ],
-      "search_shortcut": false,
-      "exclude_experiments": [
-        "ebay-2020-1"
-      ],
-      "id": "82386dfa-cc7a-4fcb-9b1e-c9343d3da79d",
-      "last_modified": 1615385045116
     },
     {
       "url": "https://www.amazon.com/",
