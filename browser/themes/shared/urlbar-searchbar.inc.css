@@ -419,7 +419,7 @@
 }
 
 #urlbar-search-mode-indicator-title {
-  padding-inline: 0 1px;
+  padding-inline: 0 3px;
   opacity: var(--identity-box-label-opacity);
 }
 @media not (-moz-proton) {
