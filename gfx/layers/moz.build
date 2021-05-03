@@ -372,6 +372,7 @@ UNIFIED_SOURCES += [
     "apz/src/PotentialCheckerboardDurationTracker.cpp",
     "apz/src/QueuedInput.cpp",
     "apz/src/SampledAPZCState.cpp",
+    "apz/src/ScrollThumbUtils.cpp",
     "apz/src/SimpleVelocityTracker.cpp",
     "apz/src/SmoothMsdScrollAnimation.cpp",
     "apz/src/SmoothScrollAnimation.cpp",
