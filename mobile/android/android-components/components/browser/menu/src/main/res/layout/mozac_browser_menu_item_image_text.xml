@@ -38,8 +38,8 @@
 
     <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/overflowImage"
-        android:layout_width="16dp"
-        android:layout_height="16dp"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
         android:clickable="false"
         android:visibility="gone"
         android:background="@android:color/transparent"
