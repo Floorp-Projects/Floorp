@@ -77,6 +77,7 @@
 #identity-popup[connection=file] [when-connection~=file],
 #identity-popup[connection=extension] [when-connection~=extension],
 #identity-popup[connection=cert-error-page] [when-connection~=cert-error-page],
+#identity-popup[connection=net-error-page] [when-connection~=net-error-page],
 #identity-popup[connection=https-only-error-page] [when-connection~=https-only-error-page],
 /* Show weak cipher messages when needed. */
 #identity-popup[ciphers=weak] [when-ciphers~=weak],
@@ -462,6 +463,12 @@
 #identity-popup[connection=secure-cert-user-overridden] .identity-popup-security-connection,
 #identity-popup[connection=cert-error-page] .identity-popup-security-connection {
   background-image: url(chrome://global/skin/icons/security-warning.svg);
+  fill: unset;
+  -moz-context-properties: fill;
+}
+
+#identity-popup[connection=net-error-page] .identity-popup-security-connection {
+  background-image: url(chrome://global/skin/icons/info.svg);
   fill: unset;
   -moz-context-properties: fill;
 }
