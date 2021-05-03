@@ -1517,23 +1517,20 @@ static already_AddRefed<DataSourceSurface> CanvasToDataSourceSurface(
 NS_IMETHODIMP
 nsDOMWindowUtils::CompareCanvases(nsISupports* aCanvas1, nsISupports* aCanvas2,
                                   uint32_t* aMaxDifference, uint32_t* retVal) {
-  if (aCanvas1 == nullptr || aCanvas2 == nullptr || retVal == nullptr)
-    return NS_ERROR_FAILURE;
-
   nsCOMPtr<nsIContent> contentCanvas1 = do_QueryInterface(aCanvas1);
   nsCOMPtr<nsIContent> contentCanvas2 = do_QueryInterface(aCanvas2);
-  auto canvas1 = HTMLCanvasElement::FromNodeOrNull(contentCanvas1);
-  auto canvas2 = HTMLCanvasElement::FromNodeOrNull(contentCanvas2);
+  auto* canvas1 = HTMLCanvasElement::FromNodeOrNull(contentCanvas1);
+  auto* canvas2 = HTMLCanvasElement::FromNodeOrNull(contentCanvas2);
 
-  if (!canvas1 || !canvas2) {
+  if (NS_WARN_IF(!canvas1) || NS_WARN_IF(!canvas2)) {
     return NS_ERROR_FAILURE;
   }
 
   RefPtr<DataSourceSurface> img1 = CanvasToDataSourceSurface(canvas1);
   RefPtr<DataSourceSurface> img2 = CanvasToDataSourceSurface(canvas2);
 
-  if (img1 == nullptr || img2 == nullptr ||
-      img1->GetSize() != img2->GetSize()) {
+  if (NS_WARN_IF(!img1) || NS_WARN_IF(!img2) ||
+      NS_WARN_IF(img1->GetSize() != img2->GetSize())) {
     return NS_ERROR_FAILURE;
   }
 
@@ -1545,8 +1542,8 @@ nsDOMWindowUtils::CompareCanvases(nsISupports* aCanvas1, nsISupports* aCanvas2,
   DataSourceSurface::ScopedMap map1(img1, DataSourceSurface::READ);
   DataSourceSurface::ScopedMap map2(img2, DataSourceSurface::READ);
 
-  if (!map1.IsMapped() || !map2.IsMapped() ||
-      map1.GetStride() != map2.GetStride()) {
+  if (NS_WARN_IF(!map1.IsMapped()) || NS_WARN_IF(!map2.IsMapped()) ||
+      NS_WARN_IF(map1.GetStride() != map2.GetStride())) {
     return NS_ERROR_FAILURE;
   }
 
