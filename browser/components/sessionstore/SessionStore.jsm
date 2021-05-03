@@ -5832,7 +5832,7 @@ var SessionStoreInternal = {
    * This mirrors ContentRestore.restoreHistory() for parent process session
    * history restores, but we're not actually restoring history here.
    */
-  async _restoreTabState(browser, data) {
+  _restoreHistory(browser, data) {
     if (!Services.appinfo.sessionHistoryInParent) {
       throw new Error("This function should only be used with SHIP");
     }
@@ -5840,33 +5840,21 @@ var SessionStoreInternal = {
     // In case about:blank isn't done yet.
     browser.stop();
 
-    let win = browser.ownerGlobal;
-    let tab = win?.gBrowser.getTabForBrowser(browser);
+    let uri = data.tabData?.entries[data.tabData.index - 1]?.url;
+    let disallow = data.tabData?.disallow;
+    let storage = data.tabData?.storage || {};
+    delete data.tabData?.storage;
 
-    browser.messageManager.sendAsyncMessage(
-      "SessionStore:restoreDocShellState",
-      {
-        epoch: data.epoch,
-        tabData: {
-          uri: data.tabData?.entries[data.tabData.index - 1]?.url ?? null,
-          disallow: data.tabData?.disallow,
-          storage: data.tabData?.storage,
-        },
-      }
+    let promise = SessionStoreUtils.restoreDocShellState(
+      browser.browsingContext,
+      uri,
+      disallow,
+      storage
     );
-    // For the non-remote case, the above will restore, but asynchronously.
-    // However, we need to restore DocShellState synchronously in the
-    // parent to avoid a test failure.
-    if (tab.linkedBrowser.docShell) {
-      SessionStoreUtils.restoreDocShellCapabilities(
-        tab.linkedBrowser.docShell,
-        data.tabData.disallow
-      );
-    }
 
-    if (data.tabData?.storage) {
-      delete data.tabData.storage;
-    }
+    promise.finally(() => {
+      this._restoreHistoryComplete(browser, data);
+    });
 
     this._shistoryToRestore.set(browser.permanentKey, data);
 
@@ -5911,41 +5899,55 @@ var SessionStoreInternal = {
     this._restoreTabContentStarted(browser, data);
 
     let tabData = data.tabData || {};
-    let uri = "about:blank";
-    let loadFlags = Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_HISTORY;
+    let uri = null;
+    let loadFlags = null;
+    let promises = [];
 
-    if (tabData?.userTypedValue && tabData?.userTypedClear) {
+    if (tabData.userTypedValue && tabData.userTypedClear) {
       uri = tabData.userTypedValue;
       loadFlags = Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP;
-    } else if (tabData?.entries.length) {
-      let promise = SessionStoreUtils.initializeRestore(
-        browser.browsingContext,
-        this.buildRestoreData(tabData.formdata, tabData.scroll)
+    } else if (tabData.entries.length) {
+      promises.push(
+        SessionStoreUtils.initializeRestore(
+          browser.browsingContext,
+          this.buildRestoreData(tabData.formdata, tabData.scroll)
+        )
       );
-      promise.then(() => {
-        if (TAB_STATE_FOR_BROWSER.get(browser) === TAB_STATE_RESTORING) {
-          this._restoreTabContentComplete(browser, data);
-        }
-      });
-      return;
+    } else {
+      uri = "about:blank";
+      loadFlags = Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_HISTORY;
     }
 
-    this.addProgressListenerForRestore(browser, {
-      onStopRequest: (request, listener) => {
-        let requestURI = request.QueryInterface(Ci.nsIChannel)?.originalURI;
-        // FIXME: We sometimes see spurious STATE_STOP events for about:blank
-        // URIs, so we have to manually drop those here (unless we're actually
-        // expecting an about:blank load).
-        if (requestURI?.spec !== "about:blank" || uri === "about:blank") {
-          listener.uninstall();
-          this._restoreTabContentComplete(browser, data);
-        }
-      },
-    });
+    if (uri && loadFlags) {
+      let deferred = PromiseUtils.defer();
+      promises.push(deferred.promise);
 
-    browser.browsingContext.loadURI(uri, {
-      loadFlags,
-      triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+      this.addProgressListenerForRestore(browser, {
+        onStopRequest: (request, listener) => {
+          let requestURI = request.QueryInterface(Ci.nsIChannel)?.originalURI;
+          // FIXME: We sometimes see spurious STATE_STOP events for about:blank
+          // URIs, so we have to manually drop those here (unless we're actually
+          // expecting an about:blank load).
+          if (requestURI?.spec !== "about:blank" || uri === "about:blank") {
+            listener.uninstall();
+            deferred.resolve();
+          }
+        },
+      });
+
+      browser.browsingContext.loadURI(uri, {
+        loadFlags,
+        triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+      });
+    }
+
+    Promise.allSettled(promises).then(() => {
+      // We may have stopped or restarted the restore for this browser prior to
+      // the resolution of the promises, so this ensures that we're only
+      // "completing the restore" for browsers that are actively being restored.
+      if (TAB_STATE_FOR_BROWSER.get(browser) === TAB_STATE_RESTORING) {
+        this._restoreTabContentComplete(browser, data);
+      }
     });
   },
 
@@ -6139,7 +6141,7 @@ var SessionStoreInternal = {
     }
 
     if (Services.appinfo.sessionHistoryInParent) {
-      this._restoreTabState(browser, options);
+      this._restoreHistory(browser, options);
     } else {
       browser.messageManager.sendAsyncMessage(
         "SessionStore:restoreHistory",

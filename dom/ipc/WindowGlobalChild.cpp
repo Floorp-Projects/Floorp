@@ -557,6 +557,17 @@ mozilla::ipc::IPCResult WindowGlobalChild::RecvSetContainerFeaturePolicy(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult WindowGlobalChild::RecvRestoreDocShellState(
+    const dom::sessionstore::DocShellRestoreState& aState,
+    RestoreDocShellStateResolver&& aResolve) {
+  if (mWindowGlobal) {
+    SessionStoreUtils::RestoreDocShellState(mWindowGlobal->GetDocShell(),
+                                            aState);
+  }
+  aResolve(true);
+  return IPC_OK();
+}
+
 mozilla::ipc::IPCResult WindowGlobalChild::RecvRestoreTabContent(
     dom::SessionStoreRestoreData* aData, RestoreTabContentResolver&& aResolve) {
   aData->RestoreInto(BrowsingContext());
