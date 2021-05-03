@@ -1741,8 +1741,11 @@ JSObject* ScriptSourceObject::unwrappedElement(JSContext* cx) const {
     return nullptr;
   }
 
-  MOZ_ASSERT(cx->runtime()->getElementCallback);
-  return (*cx->runtime()->getElementCallback)(cx, privateValue);
+  if (cx->runtime()->sourceElementCallback) {
+    return (*cx->runtime()->sourceElementCallback)(cx, privateValue);
+  }
+
+  return nullptr;
 }
 
 class ScriptSource::LoadSourceMatcher {

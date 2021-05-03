@@ -470,10 +470,10 @@ JS_PUBLIC_API bool JS::UpdateDebugMetadata(
   return true;
 }
 
-JS_PUBLIC_API void JS::SetGetElementCallback(JSContext* cx,
-                                             JSGetElementCallback callback) {
+JS_PUBLIC_API void JS::SetSourceElementCallback(
+    JSContext* cx, JSSourceElementCallback callback) {
   MOZ_ASSERT(cx->runtime());
-  cx->runtime()->setElementCallback(cx->runtime(), callback);
+  cx->runtime()->setSourceElementCallback(cx->runtime(), callback);
 }
 
 MOZ_NEVER_INLINE static bool ExecuteScript(JSContext* cx, HandleObject envChain,

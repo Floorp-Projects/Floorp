@@ -99,8 +99,11 @@ class MOZ_RAII JS_PUBLIC_API CustomAutoRooter : private AutoGCRooter {
 /* Callbacks and their arguments. */
 
 /************************************************************************/
-using JSGetElementCallback = JSObject* (*)(JSContext* aCx,
-                                           JS::HandleValue privateValue);
+
+// Callback for the embedding to map from a ScriptSourceObject private-value to
+// an object that is exposed as the source "element" in debugger API.  This hook
+// must be infallible, but can return nullptr if no such element exists.
+using JSSourceElementCallback = JSObject* (*)(JSContext*, JS::HandleValue);
 
 using JSInterruptCallback = bool (*)(JSContext*);
 

@@ -397,14 +397,14 @@ struct DebuggerSourceGetElementMatcher {
 
 bool DebuggerSource::CallData::getElement() {
   DebuggerSourceGetElementMatcher matcher(cx);
+  RootedValue elementValue(cx);
   if (JSObject* element = referent.match(matcher)) {
-    args.rval().setObjectOrNull(element);
-    if (!obj->owner()->wrapDebuggeeValue(cx, args.rval())) {
+    elementValue.setObject(*element);
+    if (!obj->owner()->wrapDebuggeeValue(cx, &elementValue)) {
       return false;
     }
-  } else {
-    args.rval().setUndefined();
   }
+  args.rval().set(elementValue);
   return true;
 }
 
