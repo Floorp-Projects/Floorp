@@ -111,8 +111,6 @@ class TRRService : public TRRServiceBase,
   virtual void ReadEtcHostsFile() override;
   void AddEtcHosts(const nsTArray<nsCString>&);
 
-  void CompleteConfirmation(nsresult aStatus, TRR* aTrrRequest);
-
   bool mInitialized{false};
   Atomic<uint32_t, Relaxed> mBlocklistDurationSeconds{60};
 
@@ -243,6 +241,8 @@ class TRRService : public TRRServiceBase,
     void RequestCompleted(nsresult aLookupStatus, nsresult aChannelStatus);
 
     enum ConfirmationState State() { return mState; }
+
+    void CompleteConfirmation(nsresult aStatus, TRR* aTrrRequest);
 
    private:
     // Since the ConfirmationContext is embedded in the TRRService object
