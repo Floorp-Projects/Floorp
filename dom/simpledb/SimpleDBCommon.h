@@ -9,13 +9,6 @@
 
 #include "mozilla/dom/quota/QuotaCommon.h"
 
-// XXX Replace all uses by the QM_* variants and remove these aliases
-#define SDB_TRY QM_TRY
-#define SDB_TRY_UNWRAP QM_TRY_UNWRAP
-#define SDB_TRY_INSPECT QM_TRY_INSPECT
-#define SDB_TRY_RETURN QM_TRY_RETURN
-#define SDB_FAIL QM_FAIL
-
 namespace mozilla {
 namespace dom {
 

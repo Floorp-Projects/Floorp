@@ -1118,11 +1118,11 @@ nsresult OpenOp::Open() {
   } else {
     MOZ_ASSERT(principalInfo.type() == PrincipalInfo::TContentPrincipalInfo);
 
-    SDB_TRY_INSPECT(const auto& principal,
-                    PrincipalInfoToPrincipal(principalInfo));
+    QM_TRY_INSPECT(const auto& principal,
+                   PrincipalInfoToPrincipal(principalInfo));
 
-    SDB_TRY_UNWRAP(auto principalMetadata,
-                   QuotaManager::GetInfoFromPrincipal(principal));
+    QM_TRY_UNWRAP(auto principalMetadata,
+                  QuotaManager::GetInfoFromPrincipal(principal));
 
     mOriginMetadata = {std::move(principalMetadata), persistenceType};
   }
@@ -1239,20 +1239,20 @@ nsresult OpenOp::DatabaseWork() {
   QuotaManager* quotaManager = QuotaManager::Get();
   MOZ_ASSERT(quotaManager);
 
-  SDB_TRY(quotaManager->EnsureStorageIsInitialized());
+  QM_TRY(quotaManager->EnsureStorageIsInitialized());
 
-  SDB_TRY_INSPECT(
+  QM_TRY_INSPECT(
       const auto& dbDirectory,
       ([persistenceType = GetConnection()->GetPersistenceType(), &quotaManager,
         this]()
            -> mozilla::Result<std::pair<nsCOMPtr<nsIFile>, bool>, nsresult> {
         if (persistenceType == PERSISTENCE_TYPE_PERSISTENT) {
-          SDB_TRY_RETURN(quotaManager->EnsurePersistentOriginIsInitialized(
+          QM_TRY_RETURN(quotaManager->EnsurePersistentOriginIsInitialized(
               mOriginMetadata));
         }
 
-        SDB_TRY(quotaManager->EnsureTemporaryStorageIsInitialized());
-        SDB_TRY_RETURN(quotaManager->EnsureTemporaryOriginIsInitialized(
+        QM_TRY(quotaManager->EnsureTemporaryStorageIsInitialized());
+        QM_TRY_RETURN(quotaManager->EnsureTemporaryOriginIsInitialized(
             persistenceType, mOriginMetadata));
       }()
                   .map([](const auto& res) { return res.first; })));
@@ -1731,9 +1731,8 @@ Result<UsageInfo, nsresult> QuotaClient::GetUsageForOrigin(
   QuotaManager* quotaManager = QuotaManager::Get();
   MOZ_ASSERT(quotaManager);
 
-  SDB_TRY_UNWRAP(auto directory,
-                 quotaManager->GetDirectoryForOrigin(aPersistenceType,
-                                                     aOriginMetadata.mOrigin));
+  QM_TRY_UNWRAP(auto directory, quotaManager->GetDirectoryForOrigin(
+                                    aPersistenceType, aOriginMetadata.mOrigin));
 
   MOZ_ASSERT(directory);
 
@@ -1746,12 +1745,12 @@ Result<UsageInfo, nsresult> QuotaClient::GetUsageForOrigin(
   DebugOnly<bool> exists;
   MOZ_ASSERT(NS_SUCCEEDED(directory->Exists(&exists)) && exists);
 
-  SDB_TRY_RETURN(ReduceEachFileAtomicCancelable(
+  QM_TRY_RETURN(ReduceEachFileAtomicCancelable(
       *directory, aCanceled, UsageInfo{},
       [](UsageInfo usageInfo,
          const nsCOMPtr<nsIFile>& file) -> Result<UsageInfo, nsresult> {
-        SDB_TRY_INSPECT(const bool& isDirectory,
-                        MOZ_TO_RESULT_INVOKE(file, IsDirectory));
+        QM_TRY_INSPECT(const bool& isDirectory,
+                       MOZ_TO_RESULT_INVOKE(file, IsDirectory));
 
         if (isDirectory) {
           Unused << WARN_IF_FILE_IS_UNKNOWN(*file);
@@ -1759,11 +1758,11 @@ Result<UsageInfo, nsresult> QuotaClient::GetUsageForOrigin(
         }
 
         nsString leafName;
-        SDB_TRY(file->GetLeafName(leafName));
+        QM_TRY(file->GetLeafName(leafName));
 
         if (StringEndsWith(leafName, kSDBSuffix)) {
-          SDB_TRY_INSPECT(const int64_t& fileSize,
-                          MOZ_TO_RESULT_INVOKE(file, GetFileSize));
+          QM_TRY_INSPECT(const int64_t& fileSize,
+                         MOZ_TO_RESULT_INVOKE(file, GetFileSize));
 
           MOZ_ASSERT(fileSize >= 0);
 
