@@ -29,13 +29,11 @@ class TRRServiceParent;
 
 class TRRService : public TRRServiceBase,
                    public nsIObserver,
-                   public nsITimerCallback,
                    public nsSupportsWeakReference,
                    public AHostResolver {
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIOBSERVER
-  NS_DECL_NSITIMERCALLBACK
 
   TRRService();
   nsresult Init();
@@ -191,7 +189,10 @@ class TRRService : public TRRServiceBase,
     CONFIRM_DISABLED = 5,
   };
 
-  class ConfirmationContext {
+  class ConfirmationContext final : public nsITimerCallback {
+    NS_DECL_ISUPPORTS_INHERITED
+    NS_DECL_NSITIMERCALLBACK
+
     friend void TRRService::HandleConfirmationEvent(ConfirmationEvent,
                                                     const MutexAutoLock&);
 
@@ -244,7 +245,19 @@ class TRRService : public TRRServiceBase,
     enum ConfirmationState State() { return mState; }
 
    private:
+    // Since the ConfirmationContext is embedded in the TRRService object
+    // we can easily get a pointer to the TRRService. ConfirmationContext
+    // delegates AddRef/Release calls to the owning object since they are
+    // guaranteed to have the same lifetime.
+    TRRService* OwningObject() {
+      return reinterpret_cast<TRRService*>(reinterpret_cast<uint8_t*>(this) -
+                                           offsetof(TRRService, mConfirmation));
+    }
+
     Atomic<enum ConfirmationState, Relaxed> mState{CONFIRM_OFF};
+
+    friend class TRRService;
+    ~ConfirmationContext() = default;
   };
 
   ConfirmationContext mConfirmation;

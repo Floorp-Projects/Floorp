@@ -64,6 +64,11 @@ const nsCString& TRRService::ProviderKey() { return kTRRDomains[sDomainIndex]; }
 
 NS_IMPL_ISUPPORTS(TRRService, nsIObserver, nsISupportsWeakReference)
 
+NS_IMPL_ADDREF_USING_AGGREGATOR(TRRService::ConfirmationContext, OwningObject())
+NS_IMPL_RELEASE_USING_AGGREGATOR(TRRService::ConfirmationContext,
+                                 OwningObject())
+NS_IMPL_QUERY_INTERFACE(TRRService::ConfirmationContext, nsITimerCallback)
+
 TRRService::TRRService() { MOZ_ASSERT(NS_IsMainThread(), "wrong thread"); }
 
 // static
@@ -840,8 +845,8 @@ void TRRService::HandleConfirmationEvent(ConfirmationEvent aEvent,
       mConfirmation.mTask = nullptr;
       // retry failed NS confirmation
 
-      NS_NewTimerWithCallback(getter_AddRefs(mConfirmation.mTimer), this,
-                              mConfirmation.mRetryInterval,
+      NS_NewTimerWithCallback(getter_AddRefs(mConfirmation.mTimer),
+                              &mConfirmation, mConfirmation.mRetryInterval,
                               nsITimer::TYPE_ONE_SHOT);
       if (mConfirmation.mRetryInterval < 64000) {
         // double the interval up to this point
@@ -1030,9 +1035,9 @@ void TRRService::AddToBlocklist(const nsACString& aHost,
 }
 
 NS_IMETHODIMP
-TRRService::Notify(nsITimer* aTimer) {
-  if (aTimer == mConfirmation.mTimer) {
-    HandleConfirmationEvent(ConfirmationEvent::Retry);
+TRRService::ConfirmationContext::Notify(nsITimer* aTimer) {
+  if (aTimer == mTimer) {
+    OwningObject()->HandleConfirmationEvent(ConfirmationEvent::Retry);
   } else {
     MOZ_CRASH("Unknown timer");
   }
