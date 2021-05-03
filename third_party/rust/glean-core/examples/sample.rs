@@ -1,4 +1,5 @@
 use std::env;
+use std::path::PathBuf;
 
 use glean_core::metrics::*;
 use glean_core::ping::PingMaker;
@@ -11,10 +12,10 @@ fn main() {
     let mut args = env::args().skip(1);
 
     let data_path = if let Some(path) = args.next() {
-        path
+        PathBuf::from(path)
     } else {
         let root = Builder::new().prefix("simple-db").tempdir().unwrap();
-        root.path().display().to_string()
+        root.path().into()
     };
 
     let cfg = glean_core::Configuration {

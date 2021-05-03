@@ -34,8 +34,10 @@ fn set_up_basic_ping() -> (Glean, PingMaker, PingType, tempfile::TempDir) {
 fn ping_info_must_contain_a_nonempty_start_and_end_time() {
     let (glean, ping_maker, ping_type, _t) = set_up_basic_ping();
 
-    let content = ping_maker.collect(&glean, &ping_type, None).unwrap();
-    let ping_info = content["ping_info"].as_object().unwrap();
+    let ping = ping_maker
+        .collect(&glean, &ping_type, None, "", "")
+        .unwrap();
+    let ping_info = ping.content["ping_info"].as_object().unwrap();
 
     let start_time_str = ping_info["start_time"].as_str().unwrap();
     let start_time_date = iso8601_to_chrono(&iso8601::datetime(start_time_str).unwrap());
@@ -50,8 +52,10 @@ fn ping_info_must_contain_a_nonempty_start_and_end_time() {
 fn get_ping_info_must_report_all_the_required_fields() {
     let (glean, ping_maker, ping_type, _t) = set_up_basic_ping();
 
-    let content = ping_maker.collect(&glean, &ping_type, None).unwrap();
-    let ping_info = content["ping_info"].as_object().unwrap();
+    let ping = ping_maker
+        .collect(&glean, &ping_type, None, "", "")
+        .unwrap();
+    let ping_info = ping.content["ping_info"].as_object().unwrap();
 
     assert!(ping_info.get("start_time").is_some());
     assert!(ping_info.get("end_time").is_some());
@@ -62,14 +66,13 @@ fn get_ping_info_must_report_all_the_required_fields() {
 fn get_client_info_must_report_all_the_available_data() {
     let (glean, ping_maker, ping_type, _t) = set_up_basic_ping();
 
-    let content = ping_maker.collect(&glean, &ping_type, None).unwrap();
-    let client_info = content["client_info"].as_object().unwrap();
+    let ping = ping_maker
+        .collect(&glean, &ping_type, None, "", "")
+        .unwrap();
+    let client_info = ping.content["client_info"].as_object().unwrap();
 
     client_info["telemetry_sdk_build"].as_str().unwrap();
 }
-
-// SKIPPED from glean-ac: collect() must report a valid ping with the data from the engines
-// This test doesn't really make sense with rkv
 
 #[test]
 fn collect_must_report_none_when_no_data_is_stored() {
@@ -83,7 +86,7 @@ fn collect_must_report_none_when_no_data_is_stored() {
     glean.register_ping_type(&ping_type);
 
     assert!(ping_maker
-        .collect(&glean, &unknown_ping_type, None)
+        .collect(&glean, &unknown_ping_type, None, "", "")
         .is_none());
 }
 
@@ -104,8 +107,10 @@ fn seq_number_must_be_sequential() {
     for i in 0..=1 {
         for ping_name in ["store1", "store2"].iter() {
             let ping_type = PingType::new(*ping_name, true, false, vec![]);
-            let content = ping_maker.collect(&glean, &ping_type, None).unwrap();
-            let seq_num = content["ping_info"]["seq"].as_i64().unwrap();
+            let ping = ping_maker
+                .collect(&glean, &ping_type, None, "", "")
+                .unwrap();
+            let seq_num = ping.content["ping_info"]["seq"].as_i64().unwrap();
             // Ensure sequence numbers in different stores are independent of
             // each other
             assert_eq!(i, seq_num);
@@ -117,13 +122,17 @@ fn seq_number_must_be_sequential() {
         let ping_type = PingType::new("store1", true, false, vec![]);
 
         // 3rd ping of store1
-        let content = ping_maker.collect(&glean, &ping_type, None).unwrap();
-        let seq_num = content["ping_info"]["seq"].as_i64().unwrap();
+        let ping = ping_maker
+            .collect(&glean, &ping_type, None, "", "")
+            .unwrap();
+        let seq_num = ping.content["ping_info"]["seq"].as_i64().unwrap();
         assert_eq!(2, seq_num);
 
         // 4th ping of store1
-        let content = ping_maker.collect(&glean, &ping_type, None).unwrap();
-        let seq_num = content["ping_info"]["seq"].as_i64().unwrap();
+        let ping = ping_maker
+            .collect(&glean, &ping_type, None, "", "")
+            .unwrap();
+        let seq_num = ping.content["ping_info"]["seq"].as_i64().unwrap();
         assert_eq!(3, seq_num);
     }
 
@@ -131,8 +140,10 @@ fn seq_number_must_be_sequential() {
         let ping_type = PingType::new("store2", true, false, vec![]);
 
         // 3rd ping of store2
-        let content = ping_maker.collect(&glean, &ping_type, None).unwrap();
-        let seq_num = content["ping_info"]["seq"].as_i64().unwrap();
+        let ping = ping_maker
+            .collect(&glean, &ping_type, None, "", "")
+            .unwrap();
+        let seq_num = ping.content["ping_info"]["seq"].as_i64().unwrap();
         assert_eq!(2, seq_num);
     }
 
@@ -140,8 +151,10 @@ fn seq_number_must_be_sequential() {
         let ping_type = PingType::new("store1", true, false, vec![]);
 
         // 5th ping of store1
-        let content = ping_maker.collect(&glean, &ping_type, None).unwrap();
-        let seq_num = content["ping_info"]["seq"].as_i64().unwrap();
+        let ping = ping_maker
+            .collect(&glean, &ping_type, None, "", "")
+            .unwrap();
+        let seq_num = ping.content["ping_info"]["seq"].as_i64().unwrap();
         assert_eq!(4, seq_num);
     }
 }

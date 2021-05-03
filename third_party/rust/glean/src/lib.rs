@@ -182,7 +182,7 @@ pub fn initialize(cfg: Configuration, client_info: ClientInfoMetrics) {
         .spawn(move || {
             let core_cfg = glean_core::Configuration {
                 upload_enabled: cfg.upload_enabled,
-                data_path: cfg.data_path.into_os_string().into_string().unwrap(),
+                data_path: cfg.data_path,
                 application_id: cfg.application_id.clone(),
                 language_binding_name: LANGUAGE_BINDING_NAME.into(),
                 max_events: cfg.max_events,

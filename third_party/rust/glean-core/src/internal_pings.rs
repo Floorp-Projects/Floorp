@@ -53,7 +53,12 @@ impl InternalPings {
                     "max_capacity".to_string(),
                 ],
             ),
-            deletion_request: PingType::new("deletion-request", true, true, vec![]),
+            deletion_request: PingType::new(
+                "deletion-request",
+                true,
+                true,
+                vec!["at_init".to_string(), "set_upload_enabled".to_string()],
+            ),
         }
     }
 }
