@@ -1270,10 +1270,8 @@ addon-recommendations-link = Learn more
 # or builds with no Telemetry support available.
 collection-health-report-disabled = Data reporting is disabled for this build configuration
 
-collection-backlogged-crash-reports =
-    .label = Allow { -brand-short-name } to send backlogged crash reports on your behalf
+collection-backlogged-crash-reports-with-link = Allow { -brand-short-name } to send backlogged crash reports on your behalf <a data-l10n-name="crash-reports-link">Learn more</a>
     .accesskey = c
-collection-backlogged-crash-reports-link = Learn more
 
 ## Privacy Section - Security
 ##
