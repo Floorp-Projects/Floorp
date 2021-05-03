@@ -83,7 +83,9 @@ class SettingsTest {
             { settings.loginAutofillEnabled },
             { settings.loginAutofillEnabled = false },
             { settings.clearColor },
-            { settings.clearColor = Color.BLUE }
+            { settings.clearColor = Color.BLUE },
+            { settings.enterpriseRootsEnabled },
+            { settings.enterpriseRootsEnabled = false }
         )
     }
 
@@ -125,6 +127,7 @@ class SettingsTest {
         assertFalse(settings.forceUserScalableContent)
         assertFalse(settings.loginAutofillEnabled)
         assertNull(settings.clearColor)
+        assertFalse(settings.enterpriseRootsEnabled)
 
         val interceptor: RequestInterceptor = mock()
         val historyTrackingDelegate: HistoryTrackingDelegate = mock()
@@ -159,7 +162,8 @@ class SettingsTest {
             fontSizeFactor = 2.0F,
             forceUserScalableContent = true,
             loginAutofillEnabled = true,
-            clearColor = Color.BLUE
+            clearColor = Color.BLUE,
+            enterpriseRootsEnabled = true
         )
 
         assertFalse(defaultSettings.domStorageEnabled)
@@ -192,5 +196,6 @@ class SettingsTest {
         assertTrue(defaultSettings.forceUserScalableContent)
         assertTrue(defaultSettings.loginAutofillEnabled)
         assertEquals(Color.BLUE, defaultSettings.clearColor)
+        assertTrue(defaultSettings.enterpriseRootsEnabled)
     }
 }

@@ -179,6 +179,11 @@ abstract class Settings {
      * Setting to control the clear color while drawing.
      */
     open var clearColor: Int? by UnsupportedSetting()
+
+    /**
+     * Setting to control whether enterprise root certs are enabled.
+     */
+    open var enterpriseRootsEnabled: Boolean by UnsupportedSetting()
 }
 
 /**
@@ -214,7 +219,8 @@ data class DefaultSettings(
     override var fontSizeFactor: Float? = null,
     override var forceUserScalableContent: Boolean = false,
     override var loginAutofillEnabled: Boolean = false,
-    override var clearColor: Int? = null
+    override var clearColor: Int? = null,
+    override var enterpriseRootsEnabled: Boolean = false
 ) : Settings()
 
 class UnsupportedSetting<T> {

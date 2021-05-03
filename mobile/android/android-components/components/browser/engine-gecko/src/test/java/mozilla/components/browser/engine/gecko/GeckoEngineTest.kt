@@ -206,6 +206,7 @@ class GeckoEngineTest {
         whenever(runtimeSettings.fontSizeFactor).thenReturn(1.0F)
         whenever(runtimeSettings.forceUserScalableEnabled).thenReturn(false)
         whenever(runtimeSettings.loginAutofillEnabled).thenReturn(false)
+        whenever(runtimeSettings.enterpriseRootsEnabled).thenReturn(false)
         whenever(runtimeSettings.contentBlocking).thenReturn(contentBlockingSettings)
         whenever(runtimeSettings.preferredColorScheme).thenReturn(GeckoRuntimeSettings.COLOR_SCHEME_SYSTEM)
         whenever(runtime.settings).thenReturn(runtimeSettings)
@@ -218,6 +219,10 @@ class GeckoEngineTest {
         assertFalse(engine.settings.loginAutofillEnabled)
         engine.settings.loginAutofillEnabled = true
         verify(runtimeSettings).loginAutofillEnabled = true
+
+        assertFalse(engine.settings.enterpriseRootsEnabled)
+        engine.settings.enterpriseRootsEnabled = true
+        verify(runtimeSettings).enterpriseRootsEnabled = true
 
         assertTrue(engine.settings.webFontsEnabled)
         engine.settings.webFontsEnabled = false
