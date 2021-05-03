@@ -34,12 +34,11 @@ nsresult BodyTraverseFiles(const QuotaInfo& aQuotaInfo, nsIFile& aBodyDir,
 #endif
 
   FlippedOnce<true> isEmpty;
-  CACHE_TRY(quota::CollectEachFile(
+  QM_TRY(quota::CollectEachFile(
       aBodyDir,
       [&isEmpty, &aQuotaInfo, aTrackQuota, &aHandleFileFunc,
        aCanRemoveFiles](const nsCOMPtr<nsIFile>& file) -> Result<Ok, nsresult> {
-        CACHE_TRY_INSPECT(const auto& dirEntryKind,
-                          quota::GetDirEntryKind(*file));
+        QM_TRY_INSPECT(const auto& dirEntryKind, quota::GetDirEntryKind(*file));
 
         switch (dirEntryKind) {
           case quota::nsIFileKind::ExistsAsDirectory: {
@@ -52,7 +51,7 @@ nsresult BodyTraverseFiles(const QuotaInfo& aQuotaInfo, nsIFile& aBodyDir,
 
           case quota::nsIFileKind::ExistsAsFile: {
             nsAutoCString leafName;
-            CACHE_TRY(file->GetNativeLeafName(leafName));
+            QM_TRY(file->GetNativeLeafName(leafName));
 
             // Delete all tmp files regardless of known bodies. These are all
             // considered orphans.
@@ -64,18 +63,18 @@ nsresult BodyTraverseFiles(const QuotaInfo& aQuotaInfo, nsIFile& aBodyDir,
                 return Ok{};
               }
             } else {
-              CACHE_TRY(OkIf(StringEndsWith(leafName, ".final"_ns)), Ok{},
-                        ([&aQuotaInfo, &file](const auto&) {
-                          // Otherwise, it must be a .final file.  If its not,
-                          // then try to remove it and move on
-                          DebugOnly<nsresult> result = RemoveNsIFile(
-                              aQuotaInfo, *file, /* aTrackQuota */ false);
-                          MOZ_ASSERT(NS_SUCCEEDED(result));
-                        }));
+              QM_TRY(OkIf(StringEndsWith(leafName, ".final"_ns)), Ok{},
+                     ([&aQuotaInfo, &file](const auto&) {
+                       // Otherwise, it must be a .final file.  If its not,
+                       // then try to remove it and move on
+                       DebugOnly<nsresult> result = RemoveNsIFile(
+                           aQuotaInfo, *file, /* aTrackQuota */ false);
+                       MOZ_ASSERT(NS_SUCCEEDED(result));
+                     }));
             }
 
-            CACHE_TRY_INSPECT(const bool& fileDeleted,
-                              aHandleFileFunc(*file, leafName));
+            QM_TRY_INSPECT(const bool& fileDeleted,
+                           aHandleFileFunc(*file, leafName));
             if (fileDeleted) {
               return Ok{};
             }
