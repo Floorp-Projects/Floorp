@@ -102,9 +102,11 @@ function waitForBrowserState(aState, aSetStateCallback) {
   let restoreHiddenTabs = Services.prefs.getBoolPref(
     "browser.sessionstore.restore_hidden_tabs"
   );
-  let restoreTabsLazily = Services.prefs.getBoolPref(
-    "browser.sessionstore.restore_tabs_lazily"
-  );
+  // This should match the |restoreTabsLazily| value that
+  // SessionStore.restoreWindow() uses.
+  let restoreTabsLazily =
+    Services.prefs.getBoolPref("browser.sessionstore.restore_on_demand") &&
+    Services.prefs.getBoolPref("browser.sessionstore.restore_tabs_lazily");
 
   aState.windows.forEach(function(winState) {
     winState.tabs.forEach(function(tabState) {
