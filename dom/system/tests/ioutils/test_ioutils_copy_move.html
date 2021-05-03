@@ -15,9 +15,15 @@
     const { Assert } = ChromeUtils.import("resource://testing-common/Assert.jsm");
     const { ObjectUtils } = ChromeUtils.import("resource://gre/modules/ObjectUtils.jsm");
 
+    // TODO: Remove this import for OS.File. It is currently being used as a
+    //       stop gap for missing IOUtils functionality.
+    const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+
+
+    const tmpDir = OS.Constants.Path.tmpDir;
+
     add_task(async function test_move_relative_path() {
-      const tmpDir = await PathUtils.getTempDir();
-      const tmpFileName = PathUtils.join(tmpDir, "test_ioutils_move_relative_path.tmp");
+      const tmpFileName = OS.Path.join(tmpDir, "test_ioutils_move_relative_path.tmp");
       const dest = "relative_to_cwd.tmp";
       await createFile(tmpFileName, "source");
 
@@ -37,9 +43,8 @@
 
     add_task(async function test_move_rename() {
       // Set up.
-      const tmpDir = await PathUtils.getTempDir();
-      const tmpFileName = PathUtils.join(tmpDir, "test_ioutils_move_src.tmp");
-      const destFileName = PathUtils.join(tmpDir, "test_ioutils_move_dest.tmp");
+      const tmpFileName = OS.Path.join(tmpDir, "test_ioutils_move_src.tmp");
+      const destFileName = OS.Path.join(tmpDir, "test_ioutils_move_dest.tmp");
       await createFile(tmpFileName, "dest");
       // Test.
       info("Test move to new file in same directory");
@@ -82,10 +87,9 @@
     add_task(async function test_move_to_dir() {
       // Set up.
       info("Test move and rename to non-existing directory");
-      const tmpDir = await PathUtils.getTempDir();
-      const tmpFileName = PathUtils.join(tmpDir, "test_move_to_dir.tmp");
-      const destDir = PathUtils.join(tmpDir, "test_move_to_dir.tmp.d");
-      const dest = PathUtils.join(destDir, "dest.tmp");
+      const tmpFileName = OS.Path.join(tmpDir, "test_move_to_dir.tmp");
+      const destDir = OS.Path.join(tmpDir, "test_move_to_dir.tmp.d");
+      const dest = OS.Path.join(destDir, "dest.tmp");
       await createFile(tmpFileName);
       // Test.
       ok(!await IOUtils.exists(destDir), "Expected path not to exist");
@@ -115,7 +119,7 @@
       ok(await dirExists(destDir), `Expected ${destDir} to be a directory`);
       ok(
         !await fileExists(tmpFileName)
-        && await fileExists(PathUtils.join(destDir, PathUtils.filename(tmpFileName))),
+        && await fileExists(OS.Path.join(destDir, OS.Path.basename(tmpFileName))),
         "IOUtils::move can move a file into an existing dir"
       );
 
@@ -126,9 +130,8 @@
     add_task(async function test_move_dir() {
       // Set up.
       info("Test rename an empty directory");
-      const tmpDir = await PathUtils.getTempDir();
-      const srcDir = PathUtils.join(tmpDir, "test_move_dir.tmp.d");
-      const destDir = PathUtils.join(tmpDir, "test_move_dir_dest.tmp.d");
+      const srcDir = OS.Path.join(tmpDir, "test_move_dir.tmp.d");
+      const destDir = OS.Path.join(tmpDir, "test_move_dir_dest.tmp.d");
       await createDir(srcDir);
       // Test.
       await IOUtils.move(srcDir, destDir);
@@ -140,14 +143,14 @@
       // Set up.
       info("Test move directory and its content into another directory");
       await createDir(srcDir);
-      await createFile(PathUtils.join(srcDir, "file.tmp"), "foo");
+      await createFile(OS.Path.join(srcDir, "file.tmp"), "foo");
       // Test.
       await IOUtils.move(srcDir, destDir);
-      const destFile = PathUtils.join(destDir, PathUtils.filename(srcDir), "file.tmp");
+      const destFile = OS.Path.join(destDir, OS.Path.basename(srcDir), "file.tmp");
       ok(
         !await IOUtils.exists(srcDir)
         && await dirExists(destDir)
-        && await dirExists(PathUtils.join(destDir, PathUtils.filename(srcDir)))
+        && await dirExists(OS.Path.join(destDir, OS.Path.basename(srcDir)))
         && await fileHasTextContents(destFile, "foo"),
         "IOUtils::move can move a directory and its contents into another one"
       )
@@ -159,9 +162,8 @@
     add_task(async function test_move_failures() {
       // Set up.
       info("Test attempt to rename a non-existent source file");
-      const tmpDir = await PathUtils.getTempDir();
-      const notExistsSrc = PathUtils.join(tmpDir, "not_exists_src.tmp");
-      const notExistsDest = PathUtils.join(tmpDir, "not_exists_dest.tmp");
+      const notExistsSrc = OS.Path.join(tmpDir, "not_exists_src.tmp");
+      const notExistsDest = OS.Path.join(tmpDir, "not_exists_dest.tmp");
       // Test.
       await Assert.rejects(
         IOUtils.move(notExistsSrc, notExistsDest),
@@ -175,8 +177,8 @@
 
       // Set up.
       info("Test attempt to move a directory to a file");
-      const destFile = PathUtils.join(tmpDir, "test_move_failures_file_dest.tmp");
-      const srcDir = PathUtils.join(tmpDir, "test_move_failure_src.tmp.d");
+      const destFile = OS.Path.join(tmpDir, "test_move_failures_file_dest.tmp");
+      const srcDir = OS.Path.join(tmpDir, "test_move_failure_src.tmp.d");
       await createFile(destFile);
       await createDir(srcDir);
       // Test.
@@ -192,9 +194,8 @@
 
     add_task(async function test_copy() {
       // Set up.
-      const tmpDir = await PathUtils.getTempDir();
-      const tmpFileName = PathUtils.join(tmpDir, "test_ioutils_orig.tmp");
-      const destFileName = PathUtils.join(tmpDir, "test_ioutils_copy.tmp");
+      const tmpFileName = OS.Path.join(tmpDir, "test_ioutils_orig.tmp");
+      const destFileName = OS.Path.join(tmpDir, "test_ioutils_copy.tmp");
       await createFile(tmpFileName, "original");
       // Test.
       info("Test copy to new file in same directory");
@@ -236,10 +237,9 @@
     add_task(async function test_copy_file_to_dir() {
       // Set up.
       info("Test copy file to non-existing directory");
-      const tmpDir = await PathUtils.getTempDir();
-      const tmpFileName = PathUtils.join(tmpDir, "test_copy_file_to_dir.tmp");
-      const destDir = PathUtils.join(tmpDir, "test_copy_file_to_dir.tmp.d");
-      const dest = PathUtils.join(destDir, "dest.tmp");
+      const tmpFileName = OS.Path.join(tmpDir, "test_copy_file_to_dir.tmp");
+      const destDir = OS.Path.join(tmpDir, "test_copy_file_to_dir.tmp.d");
+      const dest = OS.Path.join(destDir, "dest.tmp");
       await createFile(tmpFileName);
       // Test.
       ok(!await IOUtils.exists(destDir), "Expected path not to exist");
@@ -269,7 +269,7 @@
       ok(await dirExists(destDir), `Expected ${destDir} to be a directory`);
       ok(
         await fileExists(tmpFileName)
-        && await fileExists(PathUtils.join(destDir, PathUtils.filename(tmpFileName))),
+        && await fileExists(OS.Path.join(destDir, OS.Path.basename(tmpFileName))),
         "IOUtils::copy can copy a file into an existing dir"
       );
 
@@ -280,9 +280,8 @@
     add_task(async function test_copy_dir_recursive() {
       // Set up.
       info("Test rename an empty directory");
-      const tmpDir = await PathUtils.getTempDir();
-      const srcDir = PathUtils.join(tmpDir, "test_copy_dir.tmp.d");
-      const destDir = PathUtils.join(tmpDir, "test_copy_dir_dest.tmp.d");
+      const srcDir = OS.Path.join(tmpDir, "test_copy_dir.tmp.d");
+      const destDir = OS.Path.join(tmpDir, "test_copy_dir_dest.tmp.d");
       await createDir(srcDir);
       // Test.
       await IOUtils.copy(srcDir, destDir, { recursive: true });
@@ -294,14 +293,14 @@
       // Set up.
       info("Test copy directory and its content into another directory");
       await createDir(srcDir);
-      await createFile(PathUtils.join(srcDir, "file.tmp"), "foo");
+      await createFile(OS.Path.join(srcDir, "file.tmp"), "foo");
       // Test.
       await IOUtils.copy(srcDir, destDir, { recursive: true });
-      const destFile = PathUtils.join(destDir, PathUtils.filename(srcDir), "file.tmp");
+      const destFile = OS.Path.join(destDir, OS.Path.basename(srcDir), "file.tmp");
       ok(
         await dirExists(srcDir)
         && await dirExists(destDir)
-        && await dirExists(PathUtils.join(destDir, PathUtils.basename(srcDir)))
+        && await dirExists(OS.Path.join(destDir, OS.Path.basename(srcDir)))
         && await fileHasTextContents(destFile, "foo"),
         "IOUtils::copy can move a directory and its contents into another one"
       )
@@ -313,9 +312,8 @@
     add_task(async function test_copy_failures() {
       // Set up.
       info("Test attempt to copy a non-existent source file");
-      const tmpDir = await PathUtils.getTempDir();
-      const notExistsSrc = PathUtils.join(tmpDir, "test_copy_not_exists_src.tmp");
-      const notExistsDest = PathUtils.join(tmpDir, "test_copy_not_exists_dest.tmp");
+      const notExistsSrc = OS.Path.join(tmpDir, "test_copy_not_exists_src.tmp");
+      const notExistsDest = OS.Path.join(tmpDir, "test_copy_not_exists_dest.tmp");
       // Test.
       await Assert.rejects(
         IOUtils.copy(notExistsSrc, notExistsDest),
@@ -329,8 +327,8 @@
 
       // Set up.
       info("Test attempt to copy a directory to a file");
-      const destFile = PathUtils.join(tmpDir, "test_copy_failures_file_dest.tmp");
-      const srcDir = PathUtils.join(tmpDir, "test_copy_failure_src.tmp.d");
+      const destFile = OS.Path.join(tmpDir, "test_copy_failures_file_dest.tmp");
+      const srcDir = OS.Path.join(tmpDir, "test_copy_failure_src.tmp.d");
       await createFile(destFile);
       await createDir(srcDir);
       // Test.
