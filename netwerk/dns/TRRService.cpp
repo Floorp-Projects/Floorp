@@ -1207,48 +1207,49 @@ void TRRService::ConfirmationContext::RequestCompleted(
   mAttemptCount++;
 }
 
-void TRRService::CompleteConfirmation(nsresult aStatus, TRR* aTRRRequest) {
+void TRRService::ConfirmationContext::CompleteConfirmation(nsresult aStatus,
+                                                           TRR* aTRRRequest) {
   {
-    MutexAutoLock lock(mLock);
+    MutexAutoLock lock(OwningObject()->mLock);
     // Ignore confirmations that dont match the pending task.
-    if (mConfirmation.mTask != aTRRRequest) {
+    if (mTask != aTRRRequest) {
       return;
     }
-    MOZ_ASSERT(mConfirmation.State() == CONFIRM_TRYING_OK ||
-               mConfirmation.State() == CONFIRM_TRYING_FAILED);
-    if (mConfirmation.State() != CONFIRM_TRYING_OK &&
-        mConfirmation.State() != CONFIRM_TRYING_FAILED) {
+    MOZ_ASSERT(State() == CONFIRM_TRYING_OK ||
+               State() == CONFIRM_TRYING_FAILED);
+    if (State() != CONFIRM_TRYING_OK && State() != CONFIRM_TRYING_FAILED) {
       return;
     }
 
-    mConfirmation.RequestCompleted(aStatus, aTRRRequest->ChannelStatus());
+    RequestCompleted(aStatus, aTRRRequest->ChannelStatus());
 
-    MOZ_ASSERT(mConfirmation.mTask);
+    MOZ_ASSERT(mTask);
     if (NS_SUCCEEDED(aStatus)) {
-      HandleConfirmationEvent(ConfirmationEvent::ConfirmOK, lock);
+      OwningObject()->HandleConfirmationEvent(ConfirmationEvent::ConfirmOK,
+                                              lock);
     } else {
-      HandleConfirmationEvent(ConfirmationEvent::ConfirmFail, lock);
+      OwningObject()->HandleConfirmationEvent(ConfirmationEvent::ConfirmFail,
+                                              lock);
     }
 
-    LOG(("TRRService finishing confirmation test %s %d %X\n", mPrivateURI.get(),
-         mConfirmation.State(), (unsigned int)aStatus));
+    LOG(("TRRService finishing confirmation test %s %d %X\n",
+         OwningObject()->mPrivateURI.get(), State(), (unsigned int)aStatus));
   }
 
-  if (mConfirmation.State() == CONFIRM_OK) {
+  if (State() == CONFIRM_OK) {
     // Record event and start new confirmation context
-    mConfirmation.RecordEvent("success");
+    RecordEvent("success");
 
     // A fresh confirmation means previous blocked entries might not
     // be valid anymore.
-    auto bl = mTRRBLStorage.Lock();
+    auto bl = OwningObject()->mTRRBLStorage.Lock();
     bl->Clear();
   } else {
-    MOZ_ASSERT(mConfirmation.State() == CONFIRM_FAILED);
+    MOZ_ASSERT(State() == CONFIRM_FAILED);
   }
 
   Telemetry::Accumulate(Telemetry::DNS_TRR_NS_VERFIFIED3,
-                        TRRService::ProviderKey(),
-                        (mConfirmation.State() == CONFIRM_OK));
+                        TRRService::ProviderKey(), (State() == CONFIRM_OK));
 }
 
 AHostResolver::LookupStatus TRRService::CompleteLookup(
@@ -1265,7 +1266,7 @@ AHostResolver::LookupStatus TRRService::CompleteLookup(
   MOZ_ASSERT(newRRSet && newRRSet->TRRType() == TRRTYPE_NS);
 
   if (aTRRRequest->Purpose() == TRR::Confirmation) {
-    CompleteConfirmation(status, aTRRRequest);
+    mConfirmation.CompleteConfirmation(status, aTRRRequest);
     return LOOKUP_OK;
   }
 
