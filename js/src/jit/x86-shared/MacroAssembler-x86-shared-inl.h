@@ -2069,9 +2069,8 @@ void MacroAssembler::rightShiftInt8x16(Register rhs, FloatRegister lhsDest,
 }
 
 void MacroAssembler::rightShiftInt8x16(Imm32 count, FloatRegister src,
-                                       FloatRegister dest, FloatRegister temp) {
-  MacroAssemblerX86Shared::packedRightShiftByScalarInt8x16(count, src, temp,
-                                                           dest);
+                                       FloatRegister dest) {
+  MacroAssemblerX86Shared::packedRightShiftByScalarInt8x16(count, src, dest);
 }
 
 void MacroAssembler::unsignedRightShiftInt8x16(Register rhs,
