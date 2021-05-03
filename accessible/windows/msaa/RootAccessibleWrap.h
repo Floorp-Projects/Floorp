@@ -6,7 +6,7 @@
 #ifndef mozilla_a11y_RootAccessibleWrap_h__
 #define mozilla_a11y_RootAccessibleWrap_h__
 
-#include "MsaaRootAccessible.h"
+#include "RootAccessible.h"
 
 namespace mozilla {
 
@@ -14,7 +14,7 @@ class PresShell;
 
 namespace a11y {
 
-class RootAccessibleWrap : public MsaaRootAccessible {
+class RootAccessibleWrap : public RootAccessible {
  public:
   RootAccessibleWrap(dom::Document* aDocument, PresShell* aPresShell);
   virtual ~RootAccessibleWrap();

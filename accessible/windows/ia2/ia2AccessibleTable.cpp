@@ -21,6 +21,11 @@
 
 using namespace mozilla::a11y;
 
+TableAccessible* ia2AccessibleTable::TableAcc() {
+  AccessibleWrap* acc = LocalAcc();
+  return acc ? acc->AsTable() : nullptr;
+}
+
 // IUnknown
 
 STDMETHODIMP
@@ -42,7 +47,7 @@ ia2AccessibleTable::QueryInterface(REFIID iid, void** ppv) {
     return S_OK;
   }
 
-  return E_NOINTERFACE;
+  return ia2AccessibleHypertext::QueryInterface(iid, ppv);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

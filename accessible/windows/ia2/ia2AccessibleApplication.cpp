@@ -14,30 +14,15 @@ using namespace mozilla;
 using namespace mozilla::a11y;
 
 ApplicationAccessible* ia2AccessibleApplication::AppAcc() {
-  // XXX This first static_cast is a necessary hack until we get rid of the
-  // inheritance of ApplicationAccessibleWrap.
-  auto wrap = static_cast<ApplicationAccessibleWrap*>(this);
-  AccessibleWrap* acc = static_cast<MsaaAccessible*>(wrap)->LocalAcc();
-  return static_cast<ApplicationAccessible*>(acc);
+  return static_cast<ApplicationAccessible*>(LocalAcc());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 // IUnknown
 
-STDMETHODIMP
-ia2AccessibleApplication::QueryInterface(REFIID iid, void** ppv) {
-  if (!ppv) return E_INVALIDARG;
-
-  *ppv = nullptr;
-
-  if (IID_IAccessibleApplication == iid) {
-    *ppv = static_cast<IAccessibleApplication*>(this);
-    (reinterpret_cast<IUnknown*>(*ppv))->AddRef();
-    return S_OK;
-  }
-
-  return E_NOINTERFACE;
-}
+IMPL_IUNKNOWN_QUERY_HEAD(ia2AccessibleApplication)
+IMPL_IUNKNOWN_QUERY_IFACE(IAccessibleApplication)
+IMPL_IUNKNOWN_QUERY_TAIL_INHERITED(MsaaAccessible)
 
 ////////////////////////////////////////////////////////////////////////////////
 // IAccessibleApplication

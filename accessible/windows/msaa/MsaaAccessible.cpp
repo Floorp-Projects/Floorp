@@ -5,17 +5,26 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "EnumVariant.h"
-#include "MsaaAccessible.h"
+#include "ia2AccessibleApplication.h"
+#include "ia2AccessibleHypertext.h"
+#include "ia2AccessibleImage.h"
+#include "ia2AccessibleTable.h"
+#include "ia2AccessibleTableCell.h"
 #include "mozilla/a11y/AccessibleWrap.h"
 #include "mozilla/a11y/DocAccessibleParent.h"
 #include "mozilla/dom/BrowserBridgeParent.h"
 #include "mozilla/dom/BrowserParent.h"
 #include "mozilla/mscom/Interceptor.h"
+#include "MsaaAccessible.h"
+#include "MsaaDocAccessible.h"
+#include "MsaaRootAccessible.h"
+#include "MsaaXULMenuAccessible.h"
 #include "nsEventMap.h"
 #include "nsViewManager.h"
 #include "nsWinUtils.h"
 #include "Relation.h"
 #include "sdnAccessible.h"
+#include "sdnTextAccessible.h"
 
 using namespace mozilla;
 using namespace mozilla::a11y;
@@ -26,28 +35,75 @@ static const VARIANT kVarChildIdSelf = {{{VT_I4}}};
 MsaaIdGenerator MsaaAccessible::sIDGen;
 ITypeInfo* MsaaAccessible::gTypeInfo = nullptr;
 
-MsaaAccessible::MsaaAccessible() : mID(kNoID) {}
+/* static */
+MsaaAccessible* MsaaAccessible::Create(Accessible* aAcc) {
+  // We don't support RemoteAccessible yet.
+  MOZ_ASSERT(aAcc->IsLocal());
+  // The order of some of these is important! For example, when isRoot is true,
+  // IsDoc will also be true, so we must check IsRoot first. IsTable/Cell and
+  // IsHyperText are a similar case.
+  if (aAcc->IsRoot()) {
+    return new MsaaRootAccessible(aAcc);
+  }
+  if (aAcc->IsDoc()) {
+    return new MsaaDocAccessible(aAcc);
+  }
+  if (aAcc->IsTable()) {
+    return new ia2AccessibleTable(aAcc);
+  }
+  if (aAcc->IsTableCell()) {
+    return new ia2AccessibleTableCell(aAcc);
+  }
+  if (aAcc->IsApplication()) {
+    return new ia2AccessibleApplication(aAcc);
+  }
+  if (aAcc->IsHyperText()) {
+    return new ia2AccessibleHypertext(aAcc);
+  }
+  if (aAcc->IsImage()) {
+    return new ia2AccessibleImage(aAcc);
+  }
+  if (aAcc->AsLocal()->GetContent() &&
+      aAcc->AsLocal()->GetContent()->IsXULElement(nsGkAtoms::menuitem)) {
+    return new MsaaXULMenuitemAccessible(aAcc);
+  }
+  return new MsaaAccessible(aAcc);
+}
+
+MsaaAccessible::MsaaAccessible(Accessible* aAcc) : mAcc(aAcc), mID(kNoID) {}
 
 MsaaAccessible::~MsaaAccessible() {
+  MOZ_ASSERT(!mAcc, "MsaaShutdown wasn't called!");
   if (mID != kNoID) {
     sIDGen.ReleaseID(WrapNotNull(this));
   }
 }
 
 void MsaaAccessible::MsaaShutdown() {
+  // Accessibles can be shut down twice in some cases. If that happens,
+  // MsaaShutdown will also be called twice because AccessibleWrap holds
+  // the reference until its destructor is called; see the comments in
+  // AccessibleWrap::Shutdown.
+  if (!mAcc) {
+    return;
+  }
+
+  // We don't support RemoteAccessible yet.
+  MOZ_ASSERT(mAcc->IsLocal());
+  if (mAcc->AsLocal()->IsProxy()) {
+    // For RemoteAccessibleWrap, we just need to clear mAcc.
+    mAcc = nullptr;
+    return;
+  }
+
   if (mID != kNoID) {
     // Don't use LocalAcc() here because it requires that the Accessible is
     // not defunct. When shutting down, the Accessible might already be
     // marked defunct. It's safe for us to call LocalAccessible::Document() here
     // regardless.
-    auto localAcc = static_cast<AccessibleWrap*>(this);
-    DocAccessible* docAcc = localAcc->Document();
-    auto doc = docAcc ? MsaaDocAccessible::GetFrom(docAcc) : nullptr;
-    // Accessibles can be shut down twice in some cases. When this happens,
-    // doc will be null.
-    if (doc) {
-      doc->RemoveID(mID);
-    }
+    auto doc = MsaaDocAccessible::GetFrom(mAcc->AsLocal()->Document());
+    MOZ_ASSERT(doc);
+    doc->RemoveID(mID);
   }
 
   if (XRE_IsContentProcess()) {
@@ -71,11 +127,13 @@ void MsaaAccessible::MsaaShutdown() {
     }
     mAssociatedCOMObjectsForDisconnection.Clear();
   }
+
+  mAcc = nullptr;
 }
 
 void MsaaAccessible::SetID(uint32_t aID) {
-  MOZ_ASSERT(XRE_IsParentProcess() &&
-             static_cast<AccessibleWrap*>(this)->IsProxy());
+  MOZ_ASSERT(XRE_IsParentProcess() && mAcc && mAcc->IsLocal() &&
+             mAcc->AsLocal()->IsProxy());
   mID = aID;
 }
 
@@ -252,8 +310,10 @@ void MsaaAccessible::FireWinEvent(LocalAccessible* aTarget,
 }
 
 AccessibleWrap* MsaaAccessible::LocalAcc() {
-  auto acc = static_cast<AccessibleWrap*>(this);
-  return acc->IsDefunct() ? nullptr : acc;
+  auto acc = static_cast<AccessibleWrap*>(mAcc);
+  MOZ_ASSERT(!acc || !acc->IsDefunct(),
+             "mAcc defunct but MsaaShutdown wasn't called");
+  return acc;
 }
 
 /**
@@ -666,6 +726,12 @@ MsaaAccessible::QueryInterface(REFIID iid, void** ppv) {
     }
 
     *ppv = static_cast<ISimpleDOMNode*>(new sdnAccessible(WrapNotNull(this)));
+  } else if (iid == IID_ISimpleDOMText && acc->IsTextLeaf() &&
+             !acc->IsProxy()) {
+    statistics::ISimpleDOMUsed();
+    *ppv = static_cast<ISimpleDOMText*>(new sdnTextAccessible(this));
+    static_cast<IUnknown*>(*ppv)->AddRef();
+    return S_OK;
   }
 
   if (nullptr == *ppv) {
@@ -698,15 +764,6 @@ MsaaAccessible::QueryInterface(REFIID iid, void** ppv) {
 
   (reinterpret_cast<IUnknown*>(*ppv))->AddRef();
   return S_OK;
-}
-
-// XXX This delegation to AccessibleWrap is a necessary hack until we can move
-// the IUnknown implementation out of AccessibleWrap.
-ULONG STDMETHODCALLTYPE MsaaAccessible::AddRef() {
-  return static_cast<AccessibleWrap*>(this)->AddRef();
-}
-ULONG STDMETHODCALLTYPE MsaaAccessible::Release() {
-  return static_cast<AccessibleWrap*>(this)->Release();
 }
 
 // IAccessible methods

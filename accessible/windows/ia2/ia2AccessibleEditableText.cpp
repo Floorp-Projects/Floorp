@@ -6,6 +6,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ia2AccessibleEditableText.h"
+#include "ia2AccessibleHypertext.h"
 
 #include "AccessibleEditableText_i.c"
 #include "HyperTextAccessible-inl.h"
@@ -18,10 +19,8 @@
 using namespace mozilla::a11y;
 
 HyperTextAccessibleWrap* ia2AccessibleEditableText::TextAcc() {
-  // XXX This first static_cast is a necessary hack until we get rid of the
-  // inheritance of HyperTextAccessibleWrap.
-  auto wrap = static_cast<HyperTextAccessibleWrap*>(this);
-  AccessibleWrap* acc = static_cast<MsaaAccessible*>(wrap)->LocalAcc();
+  auto hyp = static_cast<ia2AccessibleHypertext*>(this);
+  AccessibleWrap* acc = static_cast<MsaaAccessible*>(hyp)->LocalAcc();
   return static_cast<HyperTextAccessibleWrap*>(acc);
 }
 

@@ -24,18 +24,9 @@ using namespace mozilla::a11y;
 
 DocAccessibleWrap::DocAccessibleWrap(dom::Document* aDocument,
                                      PresShell* aPresShell)
-    : MsaaDocAccessible(aDocument, aPresShell), mHWND(nullptr) {}
+    : DocAccessible(aDocument, aPresShell), mHWND(nullptr) {}
 
 DocAccessibleWrap::~DocAccessibleWrap() {}
-
-IMPL_IUNKNOWN_QUERY_HEAD(DocAccessibleWrap)
-if (aIID == IID_ISimpleDOMDocument) {
-  statistics::ISimpleDOMUsed();
-  *aInstancePtr = static_cast<ISimpleDOMDocument*>(new sdnDocAccessible(this));
-  static_cast<IUnknown*>(*aInstancePtr)->AddRef();
-  return S_OK;
-}
-IMPL_IUNKNOWN_QUERY_TAIL_INHERITED(HyperTextAccessibleWrap)
 
 ////////////////////////////////////////////////////////////////////////////////
 // LocalAccessible

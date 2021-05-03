@@ -9,8 +9,14 @@
 #define _ACCESSIBLE_TEXT_H
 
 #include "AccessibleText.h"
+#include "nsIAccessibleText.h"
 
 namespace mozilla {
+template <class T>
+class StaticAutoPtr;
+template <class T>
+class StaticRefPtr;
+
 namespace a11y {
 class HyperTextAccessibleWrap;
 

@@ -29,7 +29,7 @@ namespace mozilla {
 namespace a11y {
 class DocRemoteAccessibleWrap;
 
-class AccessibleWrap : public LocalAccessible, public MsaaAccessible {
+class AccessibleWrap : public LocalAccessible {
  public:  // construction, destruction
   AccessibleWrap(nsIContent* aContent, DocAccessible* aDoc);
 
@@ -63,7 +63,7 @@ class AccessibleWrap : public LocalAccessible, public MsaaAccessible {
    */
   bool IsRootForHWND();
 
-  MsaaAccessible* GetMsaa() { return this; }
+  MsaaAccessible* GetMsaa();
   virtual void GetNativeInterface(void** aOutAccessible) override;
 
   static void SetHandlerControl(DWORD aPid, RefPtr<IHandlerControl> aCtrl);
@@ -75,6 +75,8 @@ class AccessibleWrap : public LocalAccessible, public MsaaAccessible {
 
  protected:
   virtual ~AccessibleWrap() = default;
+
+  RefPtr<MsaaAccessible> mMsaa;
 
   struct HandlerControllerData final {
     HandlerControllerData(DWORD aPid, RefPtr<IHandlerControl>&& aCtrl)

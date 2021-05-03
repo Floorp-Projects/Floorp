@@ -6,21 +6,19 @@
 #ifndef mozilla_a11y_MsaaXULMenuAccessible_h__
 #define mozilla_a11y_MsaaXULMenuAccessible_h__
 
-#include "XULMenuAccessible.h"
+#include "MsaaAccessible.h"
 
 namespace mozilla {
 namespace a11y {
 
-// XXX This should inherit from MsaaAccessible. Inheriting from
-// XULMenuitemAccessible is a necessary hack until we remove the inheritance of
-// XULMenuitemAccessibleWrap.
-class MsaaXULMenuitemAccessible : public XULMenuitemAccessible {
+class MsaaXULMenuitemAccessible : public MsaaAccessible {
  public:
-  using XULMenuitemAccessible::XULMenuitemAccessible;
-
   virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_accKeyboardShortcut(
       /* [optional][in] */ VARIANT varChild,
       /* [retval][out] */ BSTR __RPC_FAR* pszKeyboardShortcut) override;
+
+ protected:
+  using MsaaAccessible::MsaaAccessible;
 };
 
 }  // namespace a11y

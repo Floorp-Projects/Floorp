@@ -7,31 +7,21 @@
 #ifndef mozilla_a11y_MsaaDocAccessible_h__
 #define mozilla_a11y_MsaaDocAccessible_h__
 
-#include "DocAccessible.h"
-#include "MsaaAccessible.h"
+#include "ia2AccessibleHypertext.h"
 
 namespace mozilla {
 
-class PresShell;
-
 namespace a11y {
+class Accessible;
 class DocAccessible;
 
-// XXX This should inherit from MsaaAccessible. Inheriting from DocAccessible
-// is a necessary hack until we remove the inheritance of DocAccessibleWrap.
-class MsaaDocAccessible : public DocAccessible {
+class MsaaDocAccessible : public ia2AccessibleHypertext {
  public:
-  MsaaDocAccessible(dom::Document* aDocument, PresShell* aPresShell)
-      : DocAccessible(aDocument, aPresShell) {}
-
   DocAccessible* DocAcc();
 
   // IUnknown
-  // XXX This override of QueryInterface is a necessary hack until we get rid
-  // of the inheritance of DocAccessible.
-  STDMETHODIMP QueryInterface(REFIID iid, void** ppv) override {
-    return MsaaAccessible::QueryInterface(iid, ppv);
-  }
+  DECL_IUNKNOWN_INHERITED
+  IMPL_IUNKNOWN_REFCOUNTING_INHERITED(ia2AccessibleHypertext)
 
   // IAccessible
 
@@ -59,6 +49,8 @@ class MsaaDocAccessible : public DocAccessible {
   static MsaaDocAccessible* GetFrom(DocAccessible* aDoc);
 
  protected:
+  using ia2AccessibleHypertext::ia2AccessibleHypertext;
+
   /*
    * This provides a mapping from 32 bit id to accessible objects.
    */

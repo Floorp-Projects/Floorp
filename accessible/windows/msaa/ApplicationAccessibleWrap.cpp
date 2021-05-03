@@ -7,8 +7,6 @@
 
 #include "ApplicationAccessibleWrap.h"
 
-#include "IUnknownImpl.h"
-
 #include "nsIGfxInfo.h"
 #include "nsPersistentProperties.h"
 #include "nsServiceManagerUtils.h"
@@ -20,9 +18,6 @@ using namespace mozilla::a11y;
 ////////////////////////////////////////////////////////////////////////////////
 // nsISupports
 NS_IMPL_ISUPPORTS_INHERITED0(ApplicationAccessibleWrap, ApplicationAccessible)
-
-IMPL_IUNKNOWN_INHERITED1(ApplicationAccessibleWrap, MsaaAccessible,
-                         ia2AccessibleApplication)
 
 already_AddRefed<nsIPersistentProperties>
 ApplicationAccessibleWrap::NativeAttributes() {
