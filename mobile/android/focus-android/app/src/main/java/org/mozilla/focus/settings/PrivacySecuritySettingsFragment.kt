@@ -37,9 +37,6 @@ class PrivacySecuritySettingsFragment : BaseSettingsFragment(),
         val cookiesPreference =
             findPreference(getString(R.string.pref_key_performance_enable_cookies)) as CookiesPreference
 
-        cookiesPreference.setDefaultValue(
-            getString(R.string.preference_privacy_should_block_cookies_third_party_tracker_cookies_option)
-        )
         cookiesPreference.updateSummary()
     }
 
