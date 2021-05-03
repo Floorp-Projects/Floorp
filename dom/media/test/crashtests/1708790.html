@@ -12,6 +12,7 @@
     audio.pause();
     audio.volume = 0.5;
     audio.playbackRate = 0.5;
+    audio.mozPreservesPitch = false;
   } finally {
     document.documentElement.removeAttribute("class")
   }
