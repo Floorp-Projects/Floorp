@@ -1,0 +1,74 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>Check element's ready state while suspending video decoding</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="manifest.js"></script>
+<script src="background_video.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+<script type="application/javascript">
+
+/**
+ * This test is used to ensure that the media element's ready state won't be
+ * incorrectly changed to `HAVE_METADATA` or lower when seeking happens on a
+ * null decoder that is caused by suspending video decoding.
+ */
+add_task(async function setupTestingPref() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["media.test.video-suspend", true],
+      ["media.suspend-bkgnd-video.enabled", true],
+      ["media.suspend-bkgnd-video.delay-ms", 0],
+    ],
+  });
+});
+
+add_task(async function testReadyStateWhenSuspendingVideoDecoding() {
+  const video = await createPlayingVideo();
+  assertVideoReadyStateIsSufficientForPlaying(video);
+  await suspendVideoDecoding(video);
+  await seekVideo(video);
+  assertVideoReadyStateIsSufficientForPlaying(video);
+});
+
+async function createPlayingVideo() {
+  let video = document.createElement("video");
+  video.src = "gizmo.mp4";
+  video.controls = true;
+  video.loop = true;
+  document.body.appendChild(video);
+  ok(await video.play().then(_=>true, _=>false), "video started playing");
+  return video;
+}
+
+function assertVideoReadyStateIsSufficientForPlaying(video) {
+  ok(video.readyState > HTMLMediaElement.HAVE_METADATA,
+    `Ready state ${video.readyState} is suffient for playing`);
+}
+
+async function suspendVideoDecoding(video) {
+  video.setVisible(false);
+  nextVideoSuspends(video);
+  info(`suspended video decoding`);
+  // Because the suspend event we received can only indicate MDSM finishes the
+  // setup of suspending decoding, but the actual setting the null decoder
+  // happens on MediaFormatReader where we are not able to observe the behavior
+  // via event. Instread of implementing something in MFR to propagate the event
+  // or changing the timing of current suspend event, which might increase the
+  // maintenance effect, Here choose to use a simple workaround to wait for a
+  // short while to ensure the decoding has been switched to the null decoder.
+  // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
+  await new Promise(resolve => setTimeout(resolve, 2000));
+}
+
+async function seekVideo(video) {
+  video.currentTime = 0;
+  ok(await new Promise(r => video.onseeked = r).then(_=>true, _=>false),
+     `seeking completed`);
+}
+
+</script>
+</head>
+<body>
+</body>
+</html>
