@@ -256,7 +256,7 @@ StyleEditorUI.prototype = {
   async _onOrigSourcesPrefChanged() {
     this._clear();
     // When we toggle the source-map preference, we clear the panel and re-fetch the exact
-    // same stylesheet resources from ResourceWatcher, but `_addStyleSheet` will trigger
+    // same stylesheet resources from ResourceCommand, but `_addStyleSheet` will trigger
     // or ignore the additional source-map mapping.
     this._root.classList.add("loading");
     for (const resource of this._toolbox.resourceWatcher.getAllResources(

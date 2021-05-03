@@ -3,7 +3,7 @@
 
 "use strict";
 
-// Test the ResourceWatcher API around ROOT_NODE
+// Test the ResourceCommand API around ROOT_NODE
 
 /**
  * The original test still asserts some scenarios using several watchRootNode
@@ -17,7 +17,7 @@ add_task(async function() {
   // Open a test tab
   const tab = await addTab("data:text/html,Root Node tests");
 
-  const { client, resourceWatcher, targetCommand } = await initResourceWatcher(
+  const { client, resourceWatcher, targetCommand } = await initResourceCommand(
     tab
   );
 
@@ -71,7 +71,7 @@ add_task(async function() {
 add_task(async function testRootNodeFrontIsCorrect() {
   const tab = await addTab("data:text/html,<div id=div1>");
 
-  const { client, resourceWatcher, targetCommand } = await initResourceWatcher(
+  const { client, resourceWatcher, targetCommand } = await initResourceCommand(
     tab
   );
   const browser = gBrowser.selectedBrowser;

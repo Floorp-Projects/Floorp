@@ -3,7 +3,7 @@
 
 "use strict";
 
-// Test the cache mechanism of the ResourceWatcher.
+// Test the cache mechanism of the ResourceCommand.
 
 const TEST_URI = "data:text/html;charset=utf-8,Cache Test";
 
@@ -12,7 +12,7 @@ add_task(async function() {
 
   const tab = await addTab(TEST_URI);
 
-  const { client, resourceWatcher, targetCommand } = await initResourceWatcher(
+  const { client, resourceWatcher, targetCommand } = await initResourceCommand(
     tab
   );
 
@@ -52,7 +52,7 @@ add_task(async function() {
 
   const tab = await addTab(TEST_URI);
 
-  const { client, resourceWatcher, targetCommand } = await initResourceWatcher(
+  const { client, resourceWatcher, targetCommand } = await initResourceCommand(
     tab
   );
 
@@ -98,7 +98,7 @@ add_task(async function() {
 
   const tab = await addTab(TEST_URI);
 
-  const { client, resourceWatcher, targetCommand } = await initResourceWatcher(
+  const { client, resourceWatcher, targetCommand } = await initResourceCommand(
     tab
   );
 
@@ -128,7 +128,7 @@ add_task(async function() {
     }
   );
 
-  is(cachedResources.length, 0, "The cache in ResourceWatcher is cleared");
+  is(cachedResources.length, 0, "The cache in ResourceCommand is cleared");
 
   targetCommand.destroy();
   await client.close();
@@ -139,7 +139,7 @@ add_task(async function() {
 
   const tab = await addTab(TEST_URI);
 
-  const { client, resourceWatcher, targetCommand } = await initResourceWatcher(
+  const { client, resourceWatcher, targetCommand } = await initResourceCommand(
     tab
   );
 
@@ -201,7 +201,7 @@ add_task(async function() {
 async function testIgnoreExistingResources(isFirstListenerIgnoreExisting) {
   const tab = await addTab(TEST_URI);
 
-  const { client, resourceWatcher, targetCommand } = await initResourceWatcher(
+  const { client, resourceWatcher, targetCommand } = await initResourceCommand(
     tab
   );
 
@@ -266,7 +266,7 @@ add_task(async function() {
 
   const tab = await addTab(TEST_URI);
 
-  const { client, resourceWatcher, targetCommand } = await initResourceWatcher(
+  const { client, resourceWatcher, targetCommand } = await initResourceCommand(
     tab
   );
 

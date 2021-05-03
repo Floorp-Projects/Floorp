@@ -3,7 +3,7 @@
 
 "use strict";
 
-// Test the ResourceWatcher API around NETWORK_EVENT
+// Test the ResourceCommand API around NETWORK_EVENT
 
 const ResourceCommand = require("devtools/shared/commands/resource/resource-command");
 
@@ -70,12 +70,12 @@ async function testNetworkEventResourcesWithoutExistingResources() {
 
 async function testNetworkEventResources(options) {
   const tab = await addTab(TEST_URI);
-  const { client, resourceWatcher, targetCommand } = await initResourceWatcher(
+  const { client, resourceWatcher, targetCommand } = await initResourceCommand(
     tab
   );
 
   info(
-    `Trigger some network requests *before* calling ResourceWatcher.watchResources
+    `Trigger some network requests *before* calling ResourceCommand.watchResources
      in order to assert the behavior of already existing network events.`
   );
 
@@ -83,7 +83,7 @@ async function testNetworkEventResources(options) {
   let onResourceUpdated = () => {};
 
   // Lets make sure there is already a network event resource in the cache.
-  const waitOnRequestForResourceWatcherCache = new Promise(resolve => {
+  const waitOnRequestForResourceCommandCache = new Promise(resolve => {
     onResourceAvailable = resources => {
       for (const resource of resources) {
         is(
@@ -117,7 +117,7 @@ async function testNetworkEventResources(options) {
       });
   });
 
-  await waitOnRequestForResourceWatcherCache;
+  await waitOnRequestForResourceCommandCache;
 
   const actualResourcesOnAvailable = {};
   const actualResourcesOnUpdated = {};
@@ -177,7 +177,7 @@ async function testNetworkEventResources(options) {
   });
 
   info(
-    `Trigger the rest of the requests *after* calling ResourceWatcher.watchResources
+    `Trigger the rest of the requests *after* calling ResourceCommand.watchResources
      in order to assert the behavior of live network events.`
   );
   await triggerNetworkRequests(tab.linkedBrowser, [liveRequest]);
@@ -263,7 +263,7 @@ async function testNetworkEventResourcesFromTheContentProcess() {
   const allResourcesOnUpdate = [];
 
   const tab = await addTab(CSP_URL);
-  const { client, resourceWatcher, targetCommand } = await initResourceWatcher(
+  const { client, resourceWatcher, targetCommand } = await initResourceCommand(
     tab
   );
 

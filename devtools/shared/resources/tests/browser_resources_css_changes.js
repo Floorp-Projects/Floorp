@@ -3,7 +3,7 @@
 
 "use strict";
 
-// Test the ResourceWatcher API around CSS_CHANGE.
+// Test the ResourceCommand API around CSS_CHANGE.
 
 add_task(async function() {
   // Open a test tab
@@ -11,7 +11,7 @@ add_task(async function() {
     "data:text/html,<body style='color: lime;'>CSS Changes</body>"
   );
 
-  const { client, resourceWatcher, targetCommand } = await initResourceWatcher(
+  const { client, resourceWatcher, targetCommand } = await initResourceCommand(
     tab
   );
 
@@ -31,7 +31,7 @@ add_task(async function() {
   )[0];
 
   info(
-    "Check whether ResourceWatcher catches CSS change that fired before starting to watch"
+    "Check whether ResourceCommand catches CSS change that fired before starting to watch"
   );
   await setProperty(style.rule, 0, "color", "black");
 
@@ -46,7 +46,7 @@ add_task(async function() {
   );
 
   info(
-    "Check whether ResourceWatcher catches CSS change after the property changed"
+    "Check whether ResourceCommand catches CSS change after the property changed"
   );
   await setProperty(style.rule, 0, "background-color", "pink");
   await waitUntil(() => availableResources.length === 2);
@@ -56,7 +56,7 @@ add_task(async function() {
     { index: 0, property: "color", value: "black" }
   );
 
-  info("Check whether ResourceWatcher catches CSS change of disabling");
+  info("Check whether ResourceCommand catches CSS change of disabling");
   await setPropertyEnabled(style.rule, 0, "background-color", false);
   await waitUntil(() => availableResources.length === 3);
   assertResource(availableResources[2], null, {
@@ -65,7 +65,7 @@ add_task(async function() {
     value: "pink",
   });
 
-  info("Check whether ResourceWatcher catches CSS change of new property");
+  info("Check whether ResourceCommand catches CSS change of new property");
   await createProperty(style.rule, 1, "font-size", "100px");
   await waitUntil(() => availableResources.length === 4);
   assertResource(
@@ -74,7 +74,7 @@ add_task(async function() {
     null
   );
 
-  info("Check whether ResourceWatcher sends all resources added in this test");
+  info("Check whether ResourceCommand sends all resources added in this test");
   const existingResources = [];
   await resourceWatcher.watchResources([resourceWatcher.TYPES.CSS_CHANGE], {
     onAvailable: resources => existingResources.push(...resources),

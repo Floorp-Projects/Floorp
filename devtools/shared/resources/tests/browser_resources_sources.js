@@ -3,7 +3,7 @@
 
 "use strict";
 
-// Test the ResourceWatcher API around SOURCE.
+// Test the ResourceCommand API around SOURCE.
 
 const ResourceCommand = require("devtools/shared/commands/resource/resource-command");
 
@@ -15,7 +15,7 @@ add_task(async function() {
   const htmlRequest = await fetch(TEST_URL);
   const htmlContent = await htmlRequest.text();
 
-  const { client, resourceWatcher, targetCommand } = await initResourceWatcher(
+  const { client, resourceWatcher, targetCommand } = await initResourceCommand(
     tab
   );
 

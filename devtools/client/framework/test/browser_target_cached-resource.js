@@ -3,7 +3,7 @@
 
 "use strict";
 
-// The target front holds resources that happend before ResourceWatcher addeed listeners.
+// The target front holds resources that happend before ResourceCommand addeed listeners.
 // Test whether that feature works correctly or not.
 const TEST_URI =
   "http://example.com/browser/devtools/client/framework/test/doc_cached-resource.html";

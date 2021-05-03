@@ -3,7 +3,7 @@
 
 "use strict";
 
-// Test the ResourceWatcher API around CSS_MESSAGE
+// Test the ResourceCommand API around CSS_MESSAGE
 // Reproduces the CSS message assertions from devtools/shared/webconsole/test/chrome/test_page_errors.html
 
 const { MESSAGE_CATEGORY } = require("devtools/shared/constants");
@@ -35,7 +35,7 @@ async function testWatchingCssMessages() {
   // Open a test tab
   const tab = await addTab(TEST_URI);
 
-  const { client, resourceWatcher, targetCommand } = await initResourceWatcher(
+  const { client, resourceWatcher, targetCommand } = await initResourceCommand(
     tab
   );
 
@@ -50,7 +50,7 @@ async function testWatchingCssMessages() {
   });
 
   info(
-    "Now log CSS warning *after* the call to ResourceWatcher.watchResources and after " +
+    "Now log CSS warning *after* the call to ResourceCommand.watchResources and after " +
       "having received the existing message"
   );
   // We need to wait for the first CSS Warning as it is not a cached message; when we
@@ -98,7 +98,7 @@ async function testWatchingCachedCssMessages() {
 
   // At this point, all messages should be in the ConsoleService cache, and we can begin
   // to watch and check that we do retrieve those messages.
-  const { client, resourceWatcher, targetCommand } = await initResourceWatcher(
+  const { client, resourceWatcher, targetCommand } = await initResourceCommand(
     tab
   );
 

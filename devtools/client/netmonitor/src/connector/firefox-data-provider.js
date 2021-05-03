@@ -521,7 +521,7 @@ class FirefoxDataProvider {
     let response;
     if (
       clientMethodName == "getStackTrace" &&
-      this.resourceWatcher.hasResourceWatcherSupport(
+      this.resourceWatcher.hasResourceCommandSupport(
         this.resourceWatcher.TYPES.NETWORK_EVENT_STACKTRACE
       )
     ) {

@@ -3,7 +3,7 @@
 
 "use strict";
 
-// Test the ResourceWatcher API around SERVER SENT EVENTS.
+// Test the ResourceCommand API around SERVER SENT EVENTS.
 
 const ResourceCommand = require("devtools/shared/commands/resource/resource-command");
 
@@ -25,7 +25,7 @@ add_task(async function() {
 async function testServerSentEventResources(target) {
   const tab = await addTab(URL_ROOT + "sse_frontend.html");
 
-  const { client, resourceWatcher, targetCommand } = await initResourceWatcher(
+  const { client, resourceWatcher, targetCommand } = await initResourceCommand(
     tab
   );
 

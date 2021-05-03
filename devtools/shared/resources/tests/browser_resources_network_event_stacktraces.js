@@ -3,7 +3,7 @@
 
 "use strict";
 
-// Test the ResourceWatcher API around NETWORK_EVENT_STACKTRACE
+// Test the ResourceCommand API around NETWORK_EVENT_STACKTRACE
 
 const TEST_URI = `${URL_ROOT_SSL}network_document.html`;
 
@@ -25,7 +25,7 @@ const REQUEST_STUB = {
 add_task(async function() {
   info("Test network stacktraces events");
   const tab = await addTab(TEST_URI);
-  const { client, resourceWatcher, targetCommand } = await initResourceWatcher(
+  const { client, resourceWatcher, targetCommand } = await initResourceCommand(
     tab
   );
 

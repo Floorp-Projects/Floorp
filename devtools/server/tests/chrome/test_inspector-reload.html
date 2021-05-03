@@ -20,7 +20,7 @@ window.onload = function() {
 
 let gInspectee = null;
 let gWalker = null;
-let gResourceWatcher = null;
+let gResourceCommand = null;
 
 addTest(async function setup() {
   const url = document.getElementById("inspectorContent").href;
@@ -30,7 +30,7 @@ addTest(async function setup() {
   gInspectee = doc;
   const walker = inspector.walker;
   gWalker = await inspector.getWalker();
-  gResourceWatcher = await createResourceWatcher(commands);
+  gResourceCommand = commands.resourceCommand;
 
   ok(walker === gWalker, "getWalker() twice should return the same walker.");
   runNextTest();
@@ -43,7 +43,7 @@ addTest(async function testReload() {
   let rootNodeResolve;
   let rootNodePromise = new Promise(r => (rootNodeResolve = r));
   const onAvailable = rootNodeFront => rootNodeResolve(rootNodeFront);
-  await gResourceWatcher.watchResources([gResourceWatcher.TYPES.ROOT_NODE], {
+  await gResourceCommand.watchResources([gResourceCommand.TYPES.ROOT_NODE], {
     onAvailable,
   });
   await rootNodePromise;
@@ -69,7 +69,7 @@ addTest(async function testReload() {
 addTest(function cleanup() {
   gWalker = null;
   gInspectee = null;
-  gResourceWatcher = null;
+  gResourceCommand = null;
   runNextTest();
 });
   </script>

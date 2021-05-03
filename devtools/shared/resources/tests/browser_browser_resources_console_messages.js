@@ -3,7 +3,7 @@
 
 "use strict";
 
-// Test the ResourceWatcher API around CONSOLE_MESSAGE for the whole browser
+// Test the ResourceCommand API around CONSOLE_MESSAGE for the whole browser
 
 const TEST_URL = URL_ROOT_SSL + "early_console_document.html";
 
@@ -15,10 +15,10 @@ add_task(async function() {
     client,
     resourceWatcher,
     targetCommand,
-  } = await initMultiProcessResourceWatcher();
+  } = await initMultiProcessResourceCommand();
 
   info(
-    "Log some messages *before* calling ResourceWatcher.watchResources in order to " +
+    "Log some messages *before* calling ResourceCommand.watchResources in order to " +
       "assert the behavior of already existing messages."
   );
   console.log("foobar");
