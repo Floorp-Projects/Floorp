@@ -9,58 +9,11 @@
 #define MOZILLA_A11Y_ARIAGRIDACCESSIBLEWRAP_H
 
 #include "ARIAGridAccessible.h"
-#include "ia2AccessibleTable.h"
-#include "ia2AccessibleTableCell.h"
 
 namespace mozilla {
 namespace a11y {
-
-/**
- * IA2 wrapper class for ARIAGridAccessible implementing IAccessibleTable and
- * IAccessibleTable2 interfaces.
- */
-class ARIAGridAccessibleWrap : public ARIAGridAccessible,
-                               public ia2AccessibleTable {
-  ~ARIAGridAccessibleWrap() {}
-
- public:
-  ARIAGridAccessibleWrap(nsIContent* aContent, DocAccessible* aDoc)
-      : ARIAGridAccessible(aContent, aDoc), ia2AccessibleTable(this) {}
-
-  // IUnknown
-  DECL_IUNKNOWN_INHERITED
-
-  // nsISupports
-  // Need to declare addref/release here unconditionally, because
-  // ia2AccessibleTable has pure-virtual refcounting.
-  NS_DECL_ISUPPORTS_INHERITED
-
-  virtual void Shutdown() override;
-};
-
-/**
- * IA2 wrapper class for ARIAGridCellAccessible implementing
- * IAccessibleTableCell interface.
- */
-class ARIAGridCellAccessibleWrap : public ARIAGridCellAccessible,
-                                   public ia2AccessibleTableCell {
-  ~ARIAGridCellAccessibleWrap() {}
-
- public:
-  ARIAGridCellAccessibleWrap(nsIContent* aContent, DocAccessible* aDoc)
-      : ARIAGridCellAccessible(aContent, aDoc), ia2AccessibleTableCell(this) {}
-
-  // IUnknown
-  DECL_IUNKNOWN_INHERITED
-
-  // nsISupports
-  // Need to declare addref/release here unconditionally, because
-  // ia2AccessibleTable has pure-virtual refcounting.
-  NS_DECL_ISUPPORTS_INHERITED
-
-  virtual void Shutdown() override;
-};
-
+using ARIAGridAccessibleWrap = ARIAGridAccessible;
+using ARIAGridCellAccessibleWrap = ARIAGridCellAccessible;
 }  // namespace a11y
 }  // namespace mozilla
 

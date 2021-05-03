@@ -18,7 +18,7 @@ using namespace mozilla::a11y;
 
 RootAccessibleWrap::RootAccessibleWrap(dom::Document* aDocument,
                                        PresShell* aPresShell)
-    : MsaaRootAccessible(aDocument, aPresShell) {}
+    : RootAccessible(aDocument, aPresShell) {}
 
 RootAccessibleWrap::~RootAccessibleWrap() {}
 

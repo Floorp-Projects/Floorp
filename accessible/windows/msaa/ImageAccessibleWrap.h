@@ -9,26 +9,10 @@
 #define mozilla_a11y_ImageAccessibleWrap_h__
 
 #include "ImageAccessible.h"
-#include "ia2AccessibleImage.h"
 
 namespace mozilla {
 namespace a11y {
-
-class ImageAccessibleWrap : public ImageAccessible, public ia2AccessibleImage {
- public:
-  ImageAccessibleWrap(nsIContent* aContent, DocAccessible* aDoc)
-      : ImageAccessible(aContent, aDoc) {}
-
-  // IUnknown
-  DECL_IUNKNOWN_INHERITED
-
-  // nsISupports
-  NS_DECL_ISUPPORTS_INHERITED
-
- protected:
-  ~ImageAccessibleWrap() {}
-};
-
+using ImageAccessibleWrap = ImageAccessible;
 }  // namespace a11y
 }  // namespace mozilla
 

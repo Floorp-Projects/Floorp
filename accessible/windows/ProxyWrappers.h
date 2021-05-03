@@ -22,6 +22,9 @@ class RemoteAccessibleWrap : public AccessibleWrap {
   }
 
   virtual void Shutdown() override {
+    if (mMsaa) {
+      mMsaa->MsaaShutdown();
+    }
     mBits.proxy = nullptr;
     mStateFlags |= eIsDefunct;
   }
@@ -40,6 +43,9 @@ class HyperTextRemoteAccessibleWrap : public HyperTextAccessibleWrap {
   }
 
   virtual void Shutdown() override {
+    if (mMsaa) {
+      mMsaa->MsaaShutdown();
+    }
     mBits.proxy = nullptr;
     mStateFlags |= eIsDefunct;
   }
@@ -104,6 +110,7 @@ class RemoteIframeDocRemoteAccessibleWrap : public HyperTextAccessibleWrap {
   }
 
   virtual void Shutdown() override {
+    MOZ_ASSERT(!mMsaa);
     mStateFlags |= eIsDefunct;
     mCOMProxy = nullptr;
   }

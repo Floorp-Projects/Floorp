@@ -7,21 +7,16 @@
 #define mozilla_a11y_MsaaRootAccessible_h__
 
 #include "mozilla/mscom/Aggregation.h"
-#include "RootAccessible.h"
+#include "MsaaDocAccessible.h"
 
 namespace mozilla {
 
-class PresShell;
-
 namespace a11y {
 
-// XXX This should inherit from MsaaDocAccessible. Inheriting from
-// RootAccessible is a necessary hack until we remove the inheritance of
-// RootAccessibleWrap.
-class MsaaRootAccessible : public RootAccessible {
+class MsaaRootAccessible : public MsaaDocAccessible {
  public:
-  MsaaRootAccessible(dom::Document* aDocument, PresShell* aPresShell)
-      : RootAccessible(aDocument, aPresShell), mOuter(&mInternalUnknown) {}
+  explicit MsaaRootAccessible(Accessible* aAcc)
+      : MsaaDocAccessible(aAcc), mOuter(&mInternalUnknown) {}
 
   /**
    * This method enables a RootAccessibleWrap to be wrapped by a
