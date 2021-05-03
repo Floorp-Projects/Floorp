@@ -409,8 +409,9 @@ std::vector<UniquePtr<JsepCodecDescription>> JsepTrack::NegotiateCodecs(
       // First codec of ours that matches. See if we can negotiate it.
       UniquePtr<JsepCodecDescription> clone(codec->Clone());
       if (clone->Negotiate(fmt, remote, isOffer)) {
-        // If negotiation changed the payload type, remember that for later
-        codec->mDefaultPt = clone->mDefaultPt;
+        // If negotiation succeeded, remember the payload type the other side
+        // used for reoffers.
+        codec->mDefaultPt = fmt;
 
         // Remember whether we negotiated rtx and the associated pt for later.
         if (codec->mType == SdpMediaSection::kVideo) {
