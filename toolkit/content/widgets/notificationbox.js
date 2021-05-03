@@ -587,7 +587,8 @@
         // Remove the <slot>, API surface is `set label()` and `setButtons()`.
         messageContent.textContent = "";
 
-        this.messageText = document.createElement("span");
+        // A 'label' allows screen readers to detect the text of the alert.
+        this.messageText = document.createElement("label");
         this.messageText.classList.add("notification-message");
         this.buttonContainer = document.createElement("span");
         this.buttonContainer.classList.add("notification-button-container");
