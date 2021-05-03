@@ -148,9 +148,6 @@ class TRRService : public TRRServiceBase,
     ConfirmFail,
   };
 
-  void HandleConfirmationEvent(ConfirmationEvent aEvent);
-  void HandleConfirmationEvent(ConfirmationEvent aEvent, const MutexAutoLock&);
-
   //                                 (FailedLookups/URIChange/NetworkUp)
   //                                    +-------------------------+
   // +-----------+                      |                         |
@@ -190,9 +187,6 @@ class TRRService : public TRRServiceBase,
   class ConfirmationContext final : public nsITimerCallback {
     NS_DECL_ISUPPORTS_INHERITED
     NS_DECL_NSITIMERCALLBACK
-
-    friend void TRRService::HandleConfirmationEvent(ConfirmationEvent,
-                                                    const MutexAutoLock&);
 
    public:
     static const size_t RESULTS_SIZE = 32;
@@ -245,6 +239,9 @@ class TRRService : public TRRServiceBase,
     void CompleteConfirmation(nsresult aStatus, TRR* aTrrRequest);
 
     void RecordTRRStatus(nsresult aChannelStatus);
+
+    void HandleEvent(ConfirmationEvent aEvent);
+    void HandleEvent(ConfirmationEvent aEvent, const MutexAutoLock&);
 
    private:
     // Since the ConfirmationContext is embedded in the TRRService object
