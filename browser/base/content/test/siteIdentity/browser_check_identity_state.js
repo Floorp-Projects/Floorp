@@ -499,6 +499,45 @@ add_task(async function test_about_net_error_uri_from_navigation_tab() {
   await noCertErrorFromNavigationTest(false);
 });
 
+add_task(async function netErrorPageTest() {
+  const TLS10_PAGE = "https://tls1.example.com/";
+  Services.prefs.setIntPref("security.tls.version.min", 3);
+  Services.prefs.setIntPref("security.tls.version.max", 4);
+
+  let browser;
+  let pageLoaded;
+  await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    () => {
+      gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, TLS10_PAGE);
+      browser = gBrowser.selectedBrowser;
+      pageLoaded = BrowserTestUtils.waitForErrorPage(browser);
+    },
+    false
+  );
+
+  info("Loading and waiting for the net error");
+  await pageLoaded;
+
+  await SpecialPowers.spawn(browser, [], function() {
+    const doc = content.document;
+    ok(
+      doc.documentURI.startsWith("about:neterror"),
+      "Should be showing error page"
+    );
+  });
+
+  is(
+    getConnectionState(),
+    "net-error-page",
+    "Connection should be the net error page."
+  );
+
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
+
+  await SpecialPowers.popPrefEnv();
+});
+
 async function aboutBlockedTest(secureCheck) {
   let url = "http://www.itisatrap.org/firefox/its-an-attack.html";
   let oldTab = await loadNewTab("about:robots");
