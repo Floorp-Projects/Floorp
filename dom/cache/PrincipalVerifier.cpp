@@ -101,7 +101,7 @@ void PrincipalVerifier::VerifyOnMainThread() {
   // this method.
   RefPtr<ContentParent> actor = std::move(mActor);
 
-  CACHE_TRY_INSPECT(
+  QM_TRY_INSPECT(
       const auto& principal, PrincipalInfoToPrincipal(mPrincipalInfo), QM_VOID,
       [this](const nsresult result) { DispatchToInitiatingThread(result); });
 

@@ -76,20 +76,20 @@ class CacheQuotaClient final : public quota::Client {
 
     if (aIncreaseSize == aDecreaseSize && !temporaryPaddingFileExist) {
       // Early return here, since most cache actions won't modify padding size.
-      CACHE_TRY(aCommitHook());
+      QM_TRY(aCommitHook());
 
       return NS_OK;
     }
 
     // Don't delete the temporary padding file in case of an error to force the
     // next action recalculate the padding size.
-    CACHE_TRY(UpdateDirectoryPaddingFile(aBaseDir, aConn, aIncreaseSize,
-                                         aDecreaseSize,
-                                         temporaryPaddingFileExist));
+    QM_TRY(UpdateDirectoryPaddingFile(aBaseDir, aConn, aIncreaseSize,
+                                      aDecreaseSize,
+                                      temporaryPaddingFileExist));
 
     // Don't delete the temporary padding file in case of an error to force the
     // next action recalculate the padding size.
-    CACHE_TRY(aCommitHook());
+    QM_TRY(aCommitHook());
 
     QM_TRY(QM_OR_ELSE_WARN(
         ToResult(DirectoryPaddingFinalizeWrite(aBaseDir)),

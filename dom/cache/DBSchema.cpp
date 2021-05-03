@@ -412,13 +412,13 @@ class MOZ_RAII AutoDisableForeignKeyChecking {
  public:
   explicit AutoDisableForeignKeyChecking(mozIStorageConnection* aConn)
       : mConn(aConn), mForeignKeyCheckingDisabled(false) {
-    CACHE_TRY_INSPECT(const auto& state,
-                      quota::CreateAndExecuteSingleStepStatement(
-                          *mConn, "PRAGMA foreign_keys;"_ns),
-                      QM_VOID);
+    QM_TRY_INSPECT(const auto& state,
+                   quota::CreateAndExecuteSingleStepStatement(
+                       *mConn, "PRAGMA foreign_keys;"_ns),
+                   QM_VOID);
 
-    CACHE_TRY_INSPECT(const int32_t& mode,
-                      MOZ_TO_RESULT_INVOKE(*state, GetInt32, 0), QM_VOID);
+    QM_TRY_INSPECT(const int32_t& mode,
+                   MOZ_TO_RESULT_INVOKE(*state, GetInt32, 0), QM_VOID);
 
     if (mode) {
       QM_WARNONLY_TRY(
@@ -448,18 +448,18 @@ nsresult IntegrityCheck(mozIStorageConnection& aConn) {
     return NS_OK;
   }
 
-  CACHE_TRY_INSPECT(const auto& stmt,
-                    quota::CreateAndExecuteSingleStepStatement(
-                        aConn,
-                        "SELECT COUNT(*) FROM pragma_integrity_check() "
-                        "WHERE integrity_check != 'ok';"_ns));
+  QM_TRY_INSPECT(const auto& stmt,
+                 quota::CreateAndExecuteSingleStepStatement(
+                     aConn,
+                     "SELECT COUNT(*) FROM pragma_integrity_check() "
+                     "WHERE integrity_check != 'ok';"_ns));
 
-  CACHE_TRY_INSPECT(const auto& result,
-                    MOZ_TO_RESULT_INVOKE_TYPED(nsString, *stmt, GetString, 0));
+  QM_TRY_INSPECT(const auto& result,
+                 MOZ_TO_RESULT_INVOKE_TYPED(nsString, *stmt, GetString, 0));
 
   nsresult rv;
   const uint32_t count = result.ToInteger(&rv);
-  CACHE_TRY(OkIf(NS_SUCCEEDED(rv)), rv);
+  QM_TRY(OkIf(NS_SUCCEEDED(rv)), rv);
 
   Telemetry::ScalarSet(Telemetry::ScalarID::CACHE_INTEGRITY_CHECK_COUNT, count);
 
@@ -471,12 +471,12 @@ nsresult IntegrityCheck(mozIStorageConnection& aConn) {
 nsresult CreateOrMigrateSchema(mozIStorageConnection& aConn) {
   MOZ_ASSERT(!NS_IsMainThread());
 
-  CACHE_TRY_UNWRAP(int32_t schemaVersion, GetEffectiveSchemaVersion(aConn));
+  QM_TRY_UNWRAP(int32_t schemaVersion, GetEffectiveSchemaVersion(aConn));
 
   if (schemaVersion == kLatestSchemaVersion) {
     // We already have the correct schema version.  Validate it matches
     // our expected schema and then proceed.
-    CACHE_TRY(Validate(aConn));
+    QM_TRY(Validate(aConn));
 
     return NS_OK;
   }
@@ -487,33 +487,32 @@ nsresult CreateOrMigrateSchema(mozIStorageConnection& aConn) {
   mozStorageTransaction trans(&aConn, false,
                               mozIStorageConnection::TRANSACTION_IMMEDIATE);
 
-  CACHE_TRY(trans.Start());
+  QM_TRY(trans.Start());
 
   const bool migrating = schemaVersion != 0;
 
   if (migrating) {
     // A schema exists, but its not the current version.  Attempt to
     // migrate it to our new schema.
-    CACHE_TRY(Migrate(aConn));
+    QM_TRY(Migrate(aConn));
   } else {
     // There is no schema installed.  Create the database from scratch.
-    CACHE_TRY(aConn.ExecuteSimpleSQL(nsLiteralCString(kTableCaches)));
-    CACHE_TRY(aConn.ExecuteSimpleSQL(nsLiteralCString(kTableSecurityInfo)));
-    CACHE_TRY(aConn.ExecuteSimpleSQL(nsLiteralCString(kIndexSecurityInfoHash)));
-    CACHE_TRY(aConn.ExecuteSimpleSQL(nsLiteralCString(kTableEntries)));
-    CACHE_TRY(aConn.ExecuteSimpleSQL(nsLiteralCString(kIndexEntriesRequest)));
-    CACHE_TRY(aConn.ExecuteSimpleSQL(nsLiteralCString(kTableRequestHeaders)));
-    CACHE_TRY(aConn.ExecuteSimpleSQL(nsLiteralCString(kTableResponseHeaders)));
-    CACHE_TRY(
-        aConn.ExecuteSimpleSQL(nsLiteralCString(kIndexResponseHeadersName)));
-    CACHE_TRY(aConn.ExecuteSimpleSQL(nsLiteralCString(kTableResponseUrlList)));
-    CACHE_TRY(aConn.ExecuteSimpleSQL(nsLiteralCString(kTableStorage)));
-    CACHE_TRY(aConn.SetSchemaVersion(kLatestSchemaVersion));
-    CACHE_TRY_UNWRAP(schemaVersion, GetEffectiveSchemaVersion(aConn));
+    QM_TRY(aConn.ExecuteSimpleSQL(nsLiteralCString(kTableCaches)));
+    QM_TRY(aConn.ExecuteSimpleSQL(nsLiteralCString(kTableSecurityInfo)));
+    QM_TRY(aConn.ExecuteSimpleSQL(nsLiteralCString(kIndexSecurityInfoHash)));
+    QM_TRY(aConn.ExecuteSimpleSQL(nsLiteralCString(kTableEntries)));
+    QM_TRY(aConn.ExecuteSimpleSQL(nsLiteralCString(kIndexEntriesRequest)));
+    QM_TRY(aConn.ExecuteSimpleSQL(nsLiteralCString(kTableRequestHeaders)));
+    QM_TRY(aConn.ExecuteSimpleSQL(nsLiteralCString(kTableResponseHeaders)));
+    QM_TRY(aConn.ExecuteSimpleSQL(nsLiteralCString(kIndexResponseHeadersName)));
+    QM_TRY(aConn.ExecuteSimpleSQL(nsLiteralCString(kTableResponseUrlList)));
+    QM_TRY(aConn.ExecuteSimpleSQL(nsLiteralCString(kTableStorage)));
+    QM_TRY(aConn.SetSchemaVersion(kLatestSchemaVersion));
+    QM_TRY_UNWRAP(schemaVersion, GetEffectiveSchemaVersion(aConn));
   }
 
-  CACHE_TRY(Validate(aConn));
-  CACHE_TRY(trans.Commit());
+  QM_TRY(Validate(aConn));
+  QM_TRY(trans.Commit());
 
   if (migrating) {
     // Migrations happen infrequently and reflect a chance in DB structure.
@@ -521,14 +520,14 @@ nsresult CreateOrMigrateSchema(mozIStorageConnection& aConn) {
     // if a new migration is incorrect by fast failing on the corruption.
     // Unfortunately, this must be performed outside of the transaction.
 
-    CACHE_TRY(ToResult(aConn.ExecuteSimpleSQL("VACUUM"_ns))
-                  .orElse([&aConn](const nsresult rv) -> Result<Ok, nsresult> {
-                    if (rv == NS_ERROR_STORAGE_CONSTRAINT) {
-                      CACHE_TRY(IntegrityCheck(aConn));
-                    }
+    QM_TRY(ToResult(aConn.ExecuteSimpleSQL("VACUUM"_ns))
+               .orElse([&aConn](const nsresult rv) -> Result<Ok, nsresult> {
+                 if (rv == NS_ERROR_STORAGE_CONSTRAINT) {
+                   QM_TRY(IntegrityCheck(aConn));
+                 }
 
-                    return Err(rv);
-                  }));
+                 return Err(rv);
+               }));
   }
 
   return NS_OK;
@@ -545,7 +544,7 @@ nsresult InitializeConnection(mozIStorageConnection& aConn) {
   // need ordering and the binary equality operations are correct.  So, do
   // NOT set PRAGMA encoding to UTF-16.
 
-  CACHE_TRY(aConn.ExecuteSimpleSQL(nsPrintfCString(
+  QM_TRY(aConn.ExecuteSimpleSQL(nsPrintfCString(
       // Use a smaller page size to improve perf/footprint; default is too large
       "PRAGMA page_size = %u; "
       // Enable auto_vacuum; this must happen after page_size and before WAL
@@ -559,7 +558,7 @@ nsresult InitializeConnection(mozIStorageConnection& aConn) {
 
   // Enable WAL journaling.  This must be performed in a separate transaction
   // after changing the page_size and enabling auto_vacuum.
-  CACHE_TRY(aConn.ExecuteSimpleSQL(nsPrintfCString(
+  QM_TRY(aConn.ExecuteSimpleSQL(nsPrintfCString(
       // WAL journal can grow to given number of *pages*
       "PRAGMA wal_autocheckpoint = %u; "
       // Always truncate the journal back to given number of *bytes*
@@ -573,15 +572,15 @@ nsresult InitializeConnection(mozIStorageConnection& aConn) {
   // pragma above fails silently.
 #ifdef DEBUG
   {
-    CACHE_TRY_INSPECT(const auto& state,
-                      quota::CreateAndExecuteSingleStepStatement(
-                          aConn, "PRAGMA auto_vacuum;"_ns));
+    QM_TRY_INSPECT(const auto& state,
+                   quota::CreateAndExecuteSingleStepStatement(
+                       aConn, "PRAGMA auto_vacuum;"_ns));
 
-    CACHE_TRY_INSPECT(const int32_t& mode,
-                      MOZ_TO_RESULT_INVOKE(*state, GetInt32, 0));
+    QM_TRY_INSPECT(const int32_t& mode,
+                   MOZ_TO_RESULT_INVOKE(*state, GetInt32, 0));
 
     // integer value 2 is incremental mode
-    CACHE_TRY(OkIf(mode == 2), NS_ERROR_UNEXPECTED);
+    QM_TRY(OkIf(mode == 2), NS_ERROR_UNEXPECTED);
   }
 #endif
 
@@ -591,17 +590,16 @@ nsresult InitializeConnection(mozIStorageConnection& aConn) {
 Result<CacheId, nsresult> CreateCacheId(mozIStorageConnection& aConn) {
   MOZ_ASSERT(!NS_IsMainThread());
 
-  CACHE_TRY(aConn.ExecuteSimpleSQL("INSERT INTO caches DEFAULT VALUES;"_ns));
+  QM_TRY(aConn.ExecuteSimpleSQL("INSERT INTO caches DEFAULT VALUES;"_ns));
 
-  CACHE_TRY_INSPECT(const auto& state,
-                    quota::CreateAndExecuteSingleStepStatement<
-                        quota::SingleStepResult::ReturnNullIfNoResult>(
-                        aConn, "SELECT last_insert_rowid()"_ns));
+  QM_TRY_INSPECT(const auto& state,
+                 quota::CreateAndExecuteSingleStepStatement<
+                     quota::SingleStepResult::ReturnNullIfNoResult>(
+                     aConn, "SELECT last_insert_rowid()"_ns));
 
-  CACHE_TRY(OkIf(state), Err(NS_ERROR_UNEXPECTED));
+  QM_TRY(OkIf(state), Err(NS_ERROR_UNEXPECTED));
 
-  CACHE_TRY_INSPECT(const CacheId& id,
-                    MOZ_TO_RESULT_INVOKE(state, GetInt64, 0));
+  QM_TRY_INSPECT(const CacheId& id, MOZ_TO_RESULT_INVOKE(state, GetInt64, 0));
 
   return id;
 }
@@ -613,56 +611,56 @@ Result<DeletionInfo, nsresult> DeleteCacheId(mozIStorageConnection& aConn,
   // Delete the bodies explicitly as we need to read out the body IDs
   // anyway.  These body IDs must be deleted one-by-one as content may
   // still be referencing them invidivually.
-  CACHE_TRY_INSPECT(const auto& matches, QueryAll(aConn, aCacheId));
+  QM_TRY_INSPECT(const auto& matches, QueryAll(aConn, aCacheId));
 
   // XXX only deletedBodyIdList needs to be non-const
-  CACHE_TRY_UNWRAP(
+  QM_TRY_UNWRAP(
       (auto [deletedBodyIdList, deletedSecurityIdList, deletedPaddingSize]),
       DeleteEntries(aConn, matches));
 
-  CACHE_TRY(DeleteSecurityInfoList(aConn, deletedSecurityIdList));
+  QM_TRY(DeleteSecurityInfoList(aConn, deletedSecurityIdList));
 
   // Delete the remainder of the cache using cascade semantics.
-  CACHE_TRY_INSPECT(const auto& state,
-                    MOZ_TO_RESULT_INVOKE_TYPED(
-                        nsCOMPtr<mozIStorageStatement>, aConn, CreateStatement,
-                        "DELETE FROM caches WHERE id=:id;"_ns));
+  QM_TRY_INSPECT(const auto& state,
+                 MOZ_TO_RESULT_INVOKE_TYPED(
+                     nsCOMPtr<mozIStorageStatement>, aConn, CreateStatement,
+                     "DELETE FROM caches WHERE id=:id;"_ns));
 
-  CACHE_TRY(state->BindInt64ByName("id"_ns, aCacheId));
+  QM_TRY(state->BindInt64ByName("id"_ns, aCacheId));
 
-  CACHE_TRY(state->Execute());
+  QM_TRY(state->Execute());
 
   return DeletionInfo{std::move(deletedBodyIdList), deletedPaddingSize};
 }
 
 Result<AutoTArray<CacheId, 8>, nsresult> FindOrphanedCacheIds(
     mozIStorageConnection& aConn) {
-  CACHE_TRY_INSPECT(const auto& state,
-                    MOZ_TO_RESULT_INVOKE_TYPED(
-                        nsCOMPtr<mozIStorageStatement>, aConn, CreateStatement,
-                        "SELECT id FROM caches "
-                        "WHERE id NOT IN (SELECT cache_id from storage);"_ns));
+  QM_TRY_INSPECT(const auto& state,
+                 MOZ_TO_RESULT_INVOKE_TYPED(
+                     nsCOMPtr<mozIStorageStatement>, aConn, CreateStatement,
+                     "SELECT id FROM caches "
+                     "WHERE id NOT IN (SELECT cache_id from storage);"_ns));
 
-  CACHE_TRY_RETURN(
+  QM_TRY_RETURN(
       (quota::CollectElementsWhileHasResultTyped<AutoTArray<CacheId, 8>>(
           *state, [](auto& stmt) {
-            CACHE_TRY_RETURN(MOZ_TO_RESULT_INVOKE(stmt, GetInt64, 0));
+            QM_TRY_RETURN(MOZ_TO_RESULT_INVOKE(stmt, GetInt64, 0));
           })));
 }
 
 Result<int64_t, nsresult> FindOverallPaddingSize(mozIStorageConnection& aConn) {
-  CACHE_TRY_INSPECT(const auto& state,
-                    MOZ_TO_RESULT_INVOKE_TYPED(
-                        nsCOMPtr<mozIStorageStatement>, aConn, CreateStatement,
-                        "SELECT response_padding_size FROM entries "
-                        "WHERE response_padding_size IS NOT NULL;"_ns));
+  QM_TRY_INSPECT(const auto& state,
+                 MOZ_TO_RESULT_INVOKE_TYPED(
+                     nsCOMPtr<mozIStorageStatement>, aConn, CreateStatement,
+                     "SELECT response_padding_size FROM entries "
+                     "WHERE response_padding_size IS NOT NULL;"_ns));
 
   int64_t overallPaddingSize = 0;
 
-  CACHE_TRY(quota::CollectWhileHasResult(
+  QM_TRY(quota::CollectWhileHasResult(
       *state, [&overallPaddingSize](auto& stmt) -> Result<Ok, nsresult> {
-        CACHE_TRY_INSPECT(const int64_t& padding_size,
-                          MOZ_TO_RESULT_INVOKE(stmt, GetInt64, 0));
+        QM_TRY_INSPECT(const int64_t& padding_size,
+                       MOZ_TO_RESULT_INVOKE(stmt, GetInt64, 0));
 
         MOZ_DIAGNOSTIC_ASSERT(padding_size >= 0);
         MOZ_DIAGNOSTIC_ASSERT(INT64_MAX - padding_size >= overallPaddingSize);
@@ -677,7 +675,7 @@ Result<int64_t, nsresult> FindOverallPaddingSize(mozIStorageConnection& aConn) {
 Result<nsTArray<nsID>, nsresult> GetKnownBodyIds(mozIStorageConnection& aConn) {
   MOZ_ASSERT(!NS_IsMainThread());
 
-  CACHE_TRY_INSPECT(
+  QM_TRY_INSPECT(
       const auto& state,
       MOZ_TO_RESULT_INVOKE_TYPED(
           nsCOMPtr<mozIStorageStatement>, aConn, CreateStatement,
@@ -685,15 +683,15 @@ Result<nsTArray<nsID>, nsresult> GetKnownBodyIds(mozIStorageConnection& aConn) {
 
   AutoTArray<nsID, 64> idList;
 
-  CACHE_TRY(quota::CollectWhileHasResult(
+  QM_TRY(quota::CollectWhileHasResult(
       *state, [&idList](auto& stmt) -> Result<Ok, nsresult> {
         // extract 0 to 2 nsID structs per row
         for (uint32_t i = 0; i < 2; ++i) {
-          CACHE_TRY_INSPECT(const bool& isNull,
-                            MOZ_TO_RESULT_INVOKE(stmt, GetIsNull, i));
+          QM_TRY_INSPECT(const bool& isNull,
+                         MOZ_TO_RESULT_INVOKE(stmt, GetIsNull, i));
 
           if (!isNull) {
-            CACHE_TRY_INSPECT(const auto& id, ExtractId(stmt, i));
+            QM_TRY_INSPECT(const auto& id, ExtractId(stmt, i));
 
             idList.AppendElement(id);
           }
@@ -710,14 +708,14 @@ Result<Maybe<SavedResponse>, nsresult> CacheMatch(
     const CacheRequest& aRequest, const CacheQueryParams& aParams) {
   MOZ_ASSERT(!NS_IsMainThread());
 
-  CACHE_TRY_INSPECT(const auto& matches,
-                    QueryCache(aConn, aCacheId, aRequest, aParams, 1));
+  QM_TRY_INSPECT(const auto& matches,
+                 QueryCache(aConn, aCacheId, aRequest, aParams, 1));
 
   if (matches.IsEmpty()) {
     return Maybe<SavedResponse>();
   }
 
-  CACHE_TRY_UNWRAP(auto response, ReadResponse(aConn, matches[0]));
+  QM_TRY_UNWRAP(auto response, ReadResponse(aConn, matches[0]));
 
   response.mCacheId = aCacheId;
 
@@ -729,21 +727,21 @@ Result<nsTArray<SavedResponse>, nsresult> CacheMatchAll(
     const Maybe<CacheRequest>& aMaybeRequest, const CacheQueryParams& aParams) {
   MOZ_ASSERT(!NS_IsMainThread());
 
-  CACHE_TRY_INSPECT(
+  QM_TRY_INSPECT(
       const auto& matches, ([&aConn, aCacheId, &aMaybeRequest, &aParams] {
         if (aMaybeRequest.isNothing()) {
-          CACHE_TRY_RETURN(QueryAll(aConn, aCacheId));
+          QM_TRY_RETURN(QueryAll(aConn, aCacheId));
         }
 
-        CACHE_TRY_RETURN(
+        QM_TRY_RETURN(
             QueryCache(aConn, aCacheId, aMaybeRequest.ref(), aParams));
       }()));
 
   // TODO: replace this with a bulk load using SQL IN clause (bug 1110458)
-  CACHE_TRY_RETURN(TransformIntoNewArrayAbortOnErr(
+  QM_TRY_RETURN(TransformIntoNewArrayAbortOnErr(
       matches,
       [&aConn, aCacheId](const auto match) -> Result<SavedResponse, nsresult> {
-        CACHE_TRY_UNWRAP(auto savedResponse, ReadResponse(aConn, match));
+        QM_TRY_UNWRAP(auto savedResponse, ReadResponse(aConn, match));
 
         savedResponse.mCacheId = aCacheId;
         return savedResponse;
@@ -759,22 +757,22 @@ Result<DeletionInfo, nsresult> CachePut(mozIStorageConnection& aConn,
                                         const nsID* aResponseBodyId) {
   MOZ_ASSERT(!NS_IsMainThread());
 
-  CACHE_TRY_INSPECT(
+  QM_TRY_INSPECT(
       const auto& matches,
       QueryCache(aConn, aCacheId, aRequest,
                  CacheQueryParams(false, false, false, false, u""_ns)));
 
   // XXX only deletedBodyIdList needs to be non-const
-  CACHE_TRY_UNWRAP(
+  QM_TRY_UNWRAP(
       (auto [deletedBodyIdList, deletedSecurityIdList, deletedPaddingSize]),
       DeleteEntries(aConn, matches));
 
-  CACHE_TRY(InsertEntry(aConn, aCacheId, aRequest, aRequestBodyId, aResponse,
-                        aResponseBodyId));
+  QM_TRY(InsertEntry(aConn, aCacheId, aRequest, aRequestBodyId, aResponse,
+                     aResponseBodyId));
 
   // Delete the security values after doing the insert to avoid churning
   // the security table when its not necessary.
-  CACHE_TRY(DeleteSecurityInfoList(aConn, deletedSecurityIdList));
+  QM_TRY(DeleteSecurityInfoList(aConn, deletedSecurityIdList));
 
   return DeletionInfo{std::move(deletedBodyIdList), deletedPaddingSize};
 }
@@ -784,19 +782,19 @@ Result<Maybe<DeletionInfo>, nsresult> CacheDelete(
     const CacheRequest& aRequest, const CacheQueryParams& aParams) {
   MOZ_ASSERT(!NS_IsMainThread());
 
-  CACHE_TRY_INSPECT(const auto& matches,
-                    QueryCache(aConn, aCacheId, aRequest, aParams));
+  QM_TRY_INSPECT(const auto& matches,
+                 QueryCache(aConn, aCacheId, aRequest, aParams));
 
   if (matches.IsEmpty()) {
     return Maybe<DeletionInfo>();
   }
 
   // XXX only deletedBodyIdList needs to be non-const
-  CACHE_TRY_UNWRAP(
+  QM_TRY_UNWRAP(
       (auto [deletedBodyIdList, deletedSecurityIdList, deletedPaddingSize]),
       DeleteEntries(aConn, matches));
 
-  CACHE_TRY(DeleteSecurityInfoList(aConn, deletedSecurityIdList));
+  QM_TRY(DeleteSecurityInfoList(aConn, deletedSecurityIdList));
 
   return Some(DeletionInfo{std::move(deletedBodyIdList), deletedPaddingSize});
 }
@@ -806,21 +804,21 @@ Result<nsTArray<SavedRequest>, nsresult> CacheKeys(
     const Maybe<CacheRequest>& aMaybeRequest, const CacheQueryParams& aParams) {
   MOZ_ASSERT(!NS_IsMainThread());
 
-  CACHE_TRY_INSPECT(
+  QM_TRY_INSPECT(
       const auto& matches, ([&aConn, aCacheId, &aMaybeRequest, &aParams] {
         if (aMaybeRequest.isNothing()) {
-          CACHE_TRY_RETURN(QueryAll(aConn, aCacheId));
+          QM_TRY_RETURN(QueryAll(aConn, aCacheId));
         }
 
-        CACHE_TRY_RETURN(
+        QM_TRY_RETURN(
             QueryCache(aConn, aCacheId, aMaybeRequest.ref(), aParams));
       }()));
 
   // TODO: replace this with a bulk load using SQL IN clause (bug 1110458)
-  CACHE_TRY_RETURN(TransformIntoNewArrayAbortOnErr(
+  QM_TRY_RETURN(TransformIntoNewArrayAbortOnErr(
       matches,
       [&aConn, aCacheId](const auto match) -> Result<SavedRequest, nsresult> {
-        CACHE_TRY_UNWRAP(auto savedRequest, ReadRequest(aConn, match));
+        QM_TRY_UNWRAP(auto savedRequest, ReadRequest(aConn, match));
 
         savedRequest.mCacheId = aCacheId;
         return savedRequest;
@@ -836,9 +834,8 @@ Result<Maybe<SavedResponse>, nsresult> StorageMatch(
   // If we are given a cache to check, then simply find its cache ID
   // and perform the match.
   if (aParams.cacheNameSet()) {
-    CACHE_TRY_INSPECT(
-        const auto& maybeCacheId,
-        StorageGetCacheId(aConn, aNamespace, aParams.cacheName()));
+    QM_TRY_INSPECT(const auto& maybeCacheId,
+                   StorageGetCacheId(aConn, aNamespace, aParams.cacheName()));
     if (maybeCacheId.isNothing()) {
       return Maybe<SavedResponse>();
     }
@@ -848,25 +845,25 @@ Result<Maybe<SavedResponse>, nsresult> StorageMatch(
 
   // Otherwise we need to get a list of all the cache IDs in this namespace.
 
-  CACHE_TRY_INSPECT(const auto& state,
-                    MOZ_TO_RESULT_INVOKE_TYPED(
-                        nsCOMPtr<mozIStorageStatement>, aConn, CreateStatement,
-                        "SELECT cache_id FROM storage WHERE "
-                        "namespace=:namespace ORDER BY rowid;"_ns));
+  QM_TRY_INSPECT(const auto& state,
+                 MOZ_TO_RESULT_INVOKE_TYPED(
+                     nsCOMPtr<mozIStorageStatement>, aConn, CreateStatement,
+                     "SELECT cache_id FROM storage WHERE "
+                     "namespace=:namespace ORDER BY rowid;"_ns));
 
-  CACHE_TRY(state->BindInt32ByName("namespace"_ns, aNamespace));
+  QM_TRY(state->BindInt32ByName("namespace"_ns, aNamespace));
 
-  CACHE_TRY_INSPECT(
+  QM_TRY_INSPECT(
       const auto& cacheIdList,
       (quota::CollectElementsWhileHasResultTyped<AutoTArray<CacheId, 32>>(
           *state, [](auto& stmt) {
-            CACHE_TRY_RETURN(MOZ_TO_RESULT_INVOKE(stmt, GetInt64, 0));
+            QM_TRY_RETURN(MOZ_TO_RESULT_INVOKE(stmt, GetInt64, 0));
           })));
 
   // Now try to find a match in each cache in order
   for (const auto cacheId : cacheIdList) {
-    CACHE_TRY_UNWRAP(auto matchedResponse,
-                     CacheMatch(aConn, cacheId, aRequest, aParams));
+    QM_TRY_UNWRAP(auto matchedResponse,
+                  CacheMatch(aConn, cacheId, aRequest, aParams));
 
     if (matchedResponse.isSome()) {
       return matchedResponse;
@@ -889,36 +886,35 @@ Result<Maybe<CacheId>, nsresult> StorageGetCacheId(mozIStorageConnection& aConn,
       "WHERE namespace=:namespace AND %s "
       "ORDER BY rowid;";
 
-  CACHE_TRY_INSPECT(const auto& state,
-                    CreateAndBindKeyStatement(aConn, query, aKey));
+  QM_TRY_INSPECT(const auto& state,
+                 CreateAndBindKeyStatement(aConn, query, aKey));
 
-  CACHE_TRY(state->BindInt32ByName("namespace"_ns, aNamespace));
+  QM_TRY(state->BindInt32ByName("namespace"_ns, aNamespace));
 
-  CACHE_TRY_INSPECT(const bool& hasMoreData,
-                    MOZ_TO_RESULT_INVOKE(*state, ExecuteStep));
+  QM_TRY_INSPECT(const bool& hasMoreData,
+                 MOZ_TO_RESULT_INVOKE(*state, ExecuteStep));
 
   if (!hasMoreData) {
     return Maybe<CacheId>();
   }
 
-  CACHE_TRY_RETURN(
-      MOZ_TO_RESULT_INVOKE(*state, GetInt64, 0).map(Some<CacheId>));
+  QM_TRY_RETURN(MOZ_TO_RESULT_INVOKE(*state, GetInt64, 0).map(Some<CacheId>));
 }
 
 nsresult StoragePutCache(mozIStorageConnection& aConn, Namespace aNamespace,
                          const nsAString& aKey, CacheId aCacheId) {
   MOZ_ASSERT(!NS_IsMainThread());
 
-  CACHE_TRY_INSPECT(const auto& state,
-                    MOZ_TO_RESULT_INVOKE_TYPED(
-                        nsCOMPtr<mozIStorageStatement>, aConn, CreateStatement,
-                        "INSERT INTO storage (namespace, key, cache_id) "
-                        "VALUES (:namespace, :key, :cache_id);"_ns));
+  QM_TRY_INSPECT(const auto& state,
+                 MOZ_TO_RESULT_INVOKE_TYPED(
+                     nsCOMPtr<mozIStorageStatement>, aConn, CreateStatement,
+                     "INSERT INTO storage (namespace, key, cache_id) "
+                     "VALUES (:namespace, :key, :cache_id);"_ns));
 
-  CACHE_TRY(state->BindInt32ByName("namespace"_ns, aNamespace));
-  CACHE_TRY(state->BindStringAsBlobByName("key"_ns, aKey));
-  CACHE_TRY(state->BindInt64ByName("cache_id"_ns, aCacheId));
-  CACHE_TRY(state->Execute());
+  QM_TRY(state->BindInt32ByName("namespace"_ns, aNamespace));
+  QM_TRY(state->BindStringAsBlobByName("key"_ns, aKey));
+  QM_TRY(state->BindInt64ByName("cache_id"_ns, aCacheId));
+  QM_TRY(state->Execute());
 
   return NS_OK;
 }
@@ -933,12 +929,12 @@ nsresult StorageForgetCache(mozIStorageConnection& aConn, Namespace aNamespace,
   const char* const query =
       "DELETE FROM storage WHERE namespace=:namespace AND %s;";
 
-  CACHE_TRY_INSPECT(const auto& state,
-                    CreateAndBindKeyStatement(aConn, query, aKey));
+  QM_TRY_INSPECT(const auto& state,
+                 CreateAndBindKeyStatement(aConn, query, aKey));
 
-  CACHE_TRY(state->BindInt32ByName("namespace"_ns, aNamespace));
+  QM_TRY(state->BindInt32ByName("namespace"_ns, aNamespace));
 
-  CACHE_TRY(state->Execute());
+  QM_TRY(state->Execute());
 
   return NS_OK;
 }
@@ -947,16 +943,16 @@ Result<nsTArray<nsString>, nsresult> StorageGetKeys(
     mozIStorageConnection& aConn, Namespace aNamespace) {
   MOZ_ASSERT(!NS_IsMainThread());
 
-  CACHE_TRY_INSPECT(
+  QM_TRY_INSPECT(
       const auto& state,
       MOZ_TO_RESULT_INVOKE_TYPED(
           nsCOMPtr<mozIStorageStatement>, aConn, CreateStatement,
           "SELECT key FROM storage WHERE namespace=:namespace ORDER BY rowid;"_ns));
 
-  CACHE_TRY(state->BindInt32ByName("namespace"_ns, aNamespace));
+  QM_TRY(state->BindInt32ByName("namespace"_ns, aNamespace));
 
-  CACHE_TRY_RETURN(quota::CollectElementsWhileHasResult(*state, [](auto& stmt) {
-    CACHE_TRY_RETURN(
+  QM_TRY_RETURN(quota::CollectElementsWhileHasResult(*state, [](auto& stmt) {
+    QM_TRY_RETURN(
         MOZ_TO_RESULT_INVOKE_TYPED(nsString, stmt, GetBlobAsString, 0));
   }));
 }
@@ -967,17 +963,17 @@ Result<EntryIds, nsresult> QueryAll(mozIStorageConnection& aConn,
                                     CacheId aCacheId) {
   MOZ_ASSERT(!NS_IsMainThread());
 
-  CACHE_TRY_INSPECT(
+  QM_TRY_INSPECT(
       const auto& state,
       MOZ_TO_RESULT_INVOKE_TYPED(
           nsCOMPtr<mozIStorageStatement>, aConn, CreateStatement,
           "SELECT id FROM entries WHERE cache_id=:cache_id ORDER BY id;"_ns));
 
-  CACHE_TRY(state->BindInt64ByName("cache_id"_ns, aCacheId));
+  QM_TRY(state->BindInt64ByName("cache_id"_ns, aCacheId));
 
-  CACHE_TRY_RETURN((quota::CollectElementsWhileHasResultTyped<EntryIds>(
+  QM_TRY_RETURN((quota::CollectElementsWhileHasResultTyped<EntryIds>(
       *state, [](auto& stmt) {
-        CACHE_TRY_RETURN(MOZ_TO_RESULT_INVOKE(stmt, GetInt32, 0));
+        QM_TRY_RETURN(MOZ_TO_RESULT_INVOKE(stmt, GetInt32, 0));
       })));
 }
 
@@ -1015,58 +1011,57 @@ Result<EntryIds, nsresult> QueryCache(mozIStorageConnection& aConn,
 
   query.AppendLiteral("GROUP BY entries.id ORDER BY entries.id;");
 
-  CACHE_TRY_INSPECT(const auto& state,
-                    MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<mozIStorageStatement>,
-                                               aConn, CreateStatement, query));
+  QM_TRY_INSPECT(const auto& state,
+                 MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<mozIStorageStatement>,
+                                            aConn, CreateStatement, query));
 
-  CACHE_TRY(state->BindInt64ByName("cache_id"_ns, aCacheId));
+  QM_TRY(state->BindInt64ByName("cache_id"_ns, aCacheId));
 
-  CACHE_TRY_INSPECT(
-      const auto& crypto,
-      ToResultGet<nsCOMPtr<nsICryptoHash>>(
-          MOZ_SELECT_OVERLOAD(do_CreateInstance), NS_CRYPTO_HASH_CONTRACTID));
+  QM_TRY_INSPECT(const auto& crypto, ToResultGet<nsCOMPtr<nsICryptoHash>>(
+                                         MOZ_SELECT_OVERLOAD(do_CreateInstance),
+                                         NS_CRYPTO_HASH_CONTRACTID));
 
-  CACHE_TRY_INSPECT(const auto& urlWithoutQueryHash,
-                    HashCString(*crypto, aRequest.urlWithoutQuery()));
+  QM_TRY_INSPECT(const auto& urlWithoutQueryHash,
+                 HashCString(*crypto, aRequest.urlWithoutQuery()));
 
-  CACHE_TRY(state->BindUTF8StringAsBlobByName("url_no_query_hash"_ns,
-                                              urlWithoutQueryHash));
+  QM_TRY(state->BindUTF8StringAsBlobByName("url_no_query_hash"_ns,
+                                           urlWithoutQueryHash));
 
   if (!aParams.ignoreSearch()) {
-    CACHE_TRY_INSPECT(const auto& urlQueryHash,
-                      HashCString(*crypto, aRequest.urlQuery()));
+    QM_TRY_INSPECT(const auto& urlQueryHash,
+                   HashCString(*crypto, aRequest.urlQuery()));
 
-    CACHE_TRY(
+    QM_TRY(
         state->BindUTF8StringAsBlobByName("url_query_hash"_ns, urlQueryHash));
   }
 
-  CACHE_TRY(state->BindUTF8StringByName("url_no_query"_ns,
-                                        aRequest.urlWithoutQuery()));
+  QM_TRY(state->BindUTF8StringByName("url_no_query"_ns,
+                                     aRequest.urlWithoutQuery()));
 
   if (!aParams.ignoreSearch()) {
-    CACHE_TRY(state->BindUTF8StringByName("url_query"_ns, aRequest.urlQuery()));
+    QM_TRY(state->BindUTF8StringByName("url_query"_ns, aRequest.urlQuery()));
   }
 
   EntryIds entryIdList;
 
-  CACHE_TRY(CollectWhile(
+  QM_TRY(CollectWhile(
       [&state, &entryIdList, aMaxResults]() -> Result<bool, nsresult> {
         if (entryIdList.Length() == aMaxResults) {
           return false;
         }
-        CACHE_TRY_RETURN(MOZ_TO_RESULT_INVOKE(state, ExecuteStep));
+        QM_TRY_RETURN(MOZ_TO_RESULT_INVOKE(state, ExecuteStep));
       },
       [&state, &entryIdList, ignoreVary = aParams.ignoreVary(), &aConn,
        &aRequest]() -> Result<Ok, nsresult> {
-        CACHE_TRY_INSPECT(const EntryId& entryId,
-                          MOZ_TO_RESULT_INVOKE(state, GetInt32, 0));
+        QM_TRY_INSPECT(const EntryId& entryId,
+                       MOZ_TO_RESULT_INVOKE(state, GetInt32, 0));
 
-        CACHE_TRY_INSPECT(const int32_t& varyCount,
-                          MOZ_TO_RESULT_INVOKE(state, GetInt32, 1));
+        QM_TRY_INSPECT(const int32_t& varyCount,
+                       MOZ_TO_RESULT_INVOKE(state, GetInt32, 1));
 
         if (!ignoreVary && varyCount > 0) {
-          CACHE_TRY_INSPECT(const bool& matchedByVary,
-                            MatchByVaryHeader(aConn, aRequest, entryId));
+          QM_TRY_INSPECT(const bool& matchedByVary,
+                         MatchByVaryHeader(aConn, aRequest, entryId));
           if (!matchedByVary) {
             return Ok{};
           }
@@ -1085,10 +1080,10 @@ Result<bool, nsresult> MatchByVaryHeader(mozIStorageConnection& aConn,
                                          EntryId entryId) {
   MOZ_ASSERT(!NS_IsMainThread());
 
-  CACHE_TRY_INSPECT(
+  QM_TRY_INSPECT(
       const auto& varyValues,
       ([&aConn, entryId]() -> Result<AutoTArray<nsCString, 8>, nsresult> {
-        CACHE_TRY_INSPECT(
+        QM_TRY_INSPECT(
             const auto& state,
             MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<mozIStorageStatement>, aConn,
                                        CreateStatement,
@@ -1096,36 +1091,36 @@ Result<bool, nsresult> MatchByVaryHeader(mozIStorageConnection& aConn,
                                        "WHERE name='vary' COLLATE NOCASE "
                                        "AND entry_id=:entry_id;"_ns));
 
-        CACHE_TRY(state->BindInt32ByName("entry_id"_ns, entryId));
+        QM_TRY(state->BindInt32ByName("entry_id"_ns, entryId));
 
-        CACHE_TRY_RETURN((
+        QM_TRY_RETURN((
             quota::CollectElementsWhileHasResultTyped<AutoTArray<nsCString, 8>>(
                 *state, [](auto& stmt) {
-                  CACHE_TRY_RETURN(MOZ_TO_RESULT_INVOKE_TYPED(
-                      nsCString, stmt, GetUTF8String, 0));
+                  QM_TRY_RETURN(MOZ_TO_RESULT_INVOKE_TYPED(nsCString, stmt,
+                                                           GetUTF8String, 0));
                 })));
       }()));
 
   // Should not have called this function if this was not the case
   MOZ_DIAGNOSTIC_ASSERT(!varyValues.IsEmpty());
 
-  CACHE_TRY_INSPECT(const auto& state,
-                    MOZ_TO_RESULT_INVOKE_TYPED(
-                        nsCOMPtr<mozIStorageStatement>, aConn, CreateStatement,
-                        "SELECT name, value FROM request_headers "
-                        "WHERE entry_id=:entry_id;"_ns));
+  QM_TRY_INSPECT(const auto& state,
+                 MOZ_TO_RESULT_INVOKE_TYPED(
+                     nsCOMPtr<mozIStorageStatement>, aConn, CreateStatement,
+                     "SELECT name, value FROM request_headers "
+                     "WHERE entry_id=:entry_id;"_ns));
 
-  CACHE_TRY(state->BindInt32ByName("entry_id"_ns, entryId));
+  QM_TRY(state->BindInt32ByName("entry_id"_ns, entryId));
 
   RefPtr<InternalHeaders> cachedHeaders =
       new InternalHeaders(HeadersGuardEnum::None);
 
-  CACHE_TRY(quota::CollectWhileHasResult(
+  QM_TRY(quota::CollectWhileHasResult(
       *state, [&cachedHeaders](auto& stmt) -> Result<Ok, nsresult> {
-        CACHE_TRY_INSPECT(
+        QM_TRY_INSPECT(
             const auto& name,
             MOZ_TO_RESULT_INVOKE_TYPED(nsCString, stmt, GetUTF8String, 0));
-        CACHE_TRY_INSPECT(
+        QM_TRY_INSPECT(
             const auto& value,
             MOZ_TO_RESULT_INVOKE_TYPED(nsCString, stmt, GetUTF8String, 1));
 
@@ -1236,37 +1231,37 @@ static nsresult DeleteEntriesInternal(
   AppendListParamsToQuery(query, aEntryIdList, aPos, aLen);
   query.AppendLiteral(")");
 
-  CACHE_TRY_INSPECT(const auto& state,
-                    MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<mozIStorageStatement>,
-                                               aConn, CreateStatement, query));
+  QM_TRY_INSPECT(const auto& state,
+                 MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<mozIStorageStatement>,
+                                            aConn, CreateStatement, query));
 
-  CACHE_TRY(BindListParamsToQuery(*state, aEntryIdList, aPos, aLen));
+  QM_TRY(BindListParamsToQuery(*state, aEntryIdList, aPos, aLen));
 
   int64_t overallPaddingSize = 0;
 
-  CACHE_TRY(quota::CollectWhileHasResult(
+  QM_TRY(quota::CollectWhileHasResult(
       *state,
       [&overallPaddingSize, &aDeletedBodyIdListOut,
        &aDeletedSecurityIdListOut](auto& stmt) -> Result<Ok, nsresult> {
         // extract 0 to 2 nsID structs per row
         for (uint32_t i = 0; i < 2; ++i) {
-          CACHE_TRY_INSPECT(const bool& isNull,
-                            MOZ_TO_RESULT_INVOKE(stmt, GetIsNull, i));
+          QM_TRY_INSPECT(const bool& isNull,
+                         MOZ_TO_RESULT_INVOKE(stmt, GetIsNull, i));
 
           if (!isNull) {
-            CACHE_TRY_INSPECT(const auto& id, ExtractId(stmt, i));
+            QM_TRY_INSPECT(const auto& id, ExtractId(stmt, i));
 
             aDeletedBodyIdListOut.AppendElement(id);
           }
         }
 
         {  // and then a possible third entry for the security id
-          CACHE_TRY_INSPECT(const bool& isNull,
-                            MOZ_TO_RESULT_INVOKE(stmt, GetIsNull, 2));
+          QM_TRY_INSPECT(const bool& isNull,
+                         MOZ_TO_RESULT_INVOKE(stmt, GetIsNull, 2));
 
           if (!isNull) {
-            CACHE_TRY_INSPECT(const int32_t& securityId,
-                              MOZ_TO_RESULT_INVOKE(stmt, GetInt32, 2));
+            QM_TRY_INSPECT(const int32_t& securityId,
+                           MOZ_TO_RESULT_INVOKE(stmt, GetInt32, 2));
 
             // XXXtt: Consider using map for aDeletedSecuityIdListOut.
             auto foundIt =
@@ -1289,12 +1284,12 @@ static nsresult DeleteEntriesInternal(
 
         {
           // It's possible to have null padding size for non-opaque response
-          CACHE_TRY_INSPECT(const bool& isNull,
-                            MOZ_TO_RESULT_INVOKE(stmt, GetIsNull, 3));
+          QM_TRY_INSPECT(const bool& isNull,
+                         MOZ_TO_RESULT_INVOKE(stmt, GetIsNull, 3));
 
           if (!isNull) {
-            CACHE_TRY_INSPECT(const int64_t& paddingSize,
-                              MOZ_TO_RESULT_INVOKE(stmt, GetInt64, 3));
+            QM_TRY_INSPECT(const int64_t& paddingSize,
+                           MOZ_TO_RESULT_INVOKE(stmt, GetInt64, 3));
 
             MOZ_DIAGNOSTIC_ASSERT(paddingSize >= 0);
             MOZ_DIAGNOSTIC_ASSERT(INT64_MAX - overallPaddingSize >=
@@ -1315,13 +1310,13 @@ static nsresult DeleteEntriesInternal(
   query.AppendLiteral(")");
 
   {
-    CACHE_TRY_INSPECT(const auto& state, MOZ_TO_RESULT_INVOKE_TYPED(
-                                             nsCOMPtr<mozIStorageStatement>,
-                                             aConn, CreateStatement, query));
+    QM_TRY_INSPECT(const auto& state,
+                   MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<mozIStorageStatement>,
+                                              aConn, CreateStatement, query));
 
-    CACHE_TRY(BindListParamsToQuery(*state, aEntryIdList, aPos, aLen));
+    QM_TRY(BindListParamsToQuery(*state, aEntryIdList, aPos, aLen));
 
-    CACHE_TRY(state->Execute());
+    QM_TRY(state->Execute());
   }
 
   return NS_OK;
@@ -1332,9 +1327,9 @@ DeleteEntries(mozIStorageConnection& aConn,
               const nsTArray<EntryId>& aEntryIdList) {
   auto result =
       std::make_tuple(nsTArray<nsID>{}, AutoTArray<IdCount, 16>{}, int64_t{0});
-  CACHE_TRY(DeleteEntriesInternal(aConn, aEntryIdList, std::get<0>(result),
-                                  std::get<1>(result), &std::get<2>(result), 0,
-                                  aEntryIdList.Length()));
+  QM_TRY(DeleteEntriesInternal(aConn, aEntryIdList, std::get<0>(result),
+                               std::get<1>(result), &std::get<2>(result), 0,
+                               aEntryIdList.Length()));
 
   return result;
 }
@@ -1348,13 +1343,13 @@ Result<int32_t, nsresult> InsertSecurityInfo(mozIStorageConnection& aConn,
   // the full blob would be quite expensive.  Instead, we index a small
   // hash value.  Calculate this hash as the first 8 bytes of the SHA1 of
   // the full data.
-  CACHE_TRY_INSPECT(const auto& hash, HashCString(aCrypto, aData));
+  QM_TRY_INSPECT(const auto& hash, HashCString(aCrypto, aData));
 
   // Next, search for an existing entry for this blob by comparing the hash
   // value first and then the full data.  SQLite is smart enough to use
   // the index on the hash to search the table before doing the expensive
   // comparison of the large data column.  (This was verified with EXPLAIN.)
-  CACHE_TRY_INSPECT(
+  QM_TRY_INSPECT(
       const auto& selectStmt,
       quota::CreateAndExecuteSingleStepStatement<
           quota::SingleStepResult::ReturnNullIfNoResult>(
@@ -1364,8 +1359,8 @@ Result<int32_t, nsresult> InsertSecurityInfo(mozIStorageConnection& aConn,
           "SELECT id, refcount FROM security_info WHERE hash=:hash AND "
           "data=:data;"_ns,
           [&hash, &aData](auto& state) -> Result<Ok, nsresult> {
-            CACHE_TRY(state.BindUTF8StringAsBlobByName("hash"_ns, hash));
-            CACHE_TRY(state.BindUTF8StringAsBlobByName("data"_ns, aData));
+            QM_TRY(state.BindUTF8StringAsBlobByName("hash"_ns, hash));
+            QM_TRY(state.BindUTF8StringAsBlobByName("data"_ns, aData));
 
             return Ok{};
           }));
@@ -1373,61 +1368,61 @@ Result<int32_t, nsresult> InsertSecurityInfo(mozIStorageConnection& aConn,
   // This security info blob is already in the database
   if (selectStmt) {
     // get the existing security blob id to return
-    CACHE_TRY_INSPECT(const int32_t& id,
-                      MOZ_TO_RESULT_INVOKE(selectStmt, GetInt32, 0));
-    CACHE_TRY_INSPECT(const int32_t& refcount,
-                      MOZ_TO_RESULT_INVOKE(selectStmt, GetInt32, 1));
+    QM_TRY_INSPECT(const int32_t& id,
+                   MOZ_TO_RESULT_INVOKE(selectStmt, GetInt32, 0));
+    QM_TRY_INSPECT(const int32_t& refcount,
+                   MOZ_TO_RESULT_INVOKE(selectStmt, GetInt32, 1));
 
     // But first, update the refcount in the database.
-    CACHE_TRY_INSPECT(
+    QM_TRY_INSPECT(
         const auto& state,
         MOZ_TO_RESULT_INVOKE_TYPED(
             nsCOMPtr<mozIStorageStatement>, aConn, CreateStatement,
             "UPDATE security_info SET refcount=:refcount WHERE id=:id;"_ns));
 
-    CACHE_TRY(state->BindInt32ByName("refcount"_ns, refcount + 1));
-    CACHE_TRY(state->BindInt32ByName("id"_ns, id));
-    CACHE_TRY(state->Execute());
+    QM_TRY(state->BindInt32ByName("refcount"_ns, refcount + 1));
+    QM_TRY(state->BindInt32ByName("id"_ns, id));
+    QM_TRY(state->Execute());
 
     return id;
   }
 
   // This is a new security info blob.  Create a new row in the security table
   // with an initial refcount of 1.
-  CACHE_TRY_INSPECT(const auto& state,
-                    MOZ_TO_RESULT_INVOKE_TYPED(
-                        nsCOMPtr<mozIStorageStatement>, aConn, CreateStatement,
-                        "INSERT INTO security_info (hash, data, refcount) "
-                        "VALUES (:hash, :data, 1);"_ns));
+  QM_TRY_INSPECT(const auto& state,
+                 MOZ_TO_RESULT_INVOKE_TYPED(
+                     nsCOMPtr<mozIStorageStatement>, aConn, CreateStatement,
+                     "INSERT INTO security_info (hash, data, refcount) "
+                     "VALUES (:hash, :data, 1);"_ns));
 
-  CACHE_TRY(state->BindUTF8StringAsBlobByName("hash"_ns, hash));
-  CACHE_TRY(state->BindUTF8StringAsBlobByName("data"_ns, aData));
-  CACHE_TRY(state->Execute());
+  QM_TRY(state->BindUTF8StringAsBlobByName("hash"_ns, hash));
+  QM_TRY(state->BindUTF8StringAsBlobByName("data"_ns, aData));
+  QM_TRY(state->Execute());
 
   {
-    CACHE_TRY_INSPECT(const auto& state,
-                      quota::CreateAndExecuteSingleStepStatement(
-                          aConn, "SELECT last_insert_rowid()"_ns));
+    QM_TRY_INSPECT(const auto& state,
+                   quota::CreateAndExecuteSingleStepStatement(
+                       aConn, "SELECT last_insert_rowid()"_ns));
 
-    CACHE_TRY_RETURN(MOZ_TO_RESULT_INVOKE(*state, GetInt32, 0));
+    QM_TRY_RETURN(MOZ_TO_RESULT_INVOKE(*state, GetInt32, 0));
   }
 }
 
 nsresult DeleteSecurityInfo(mozIStorageConnection& aConn, int32_t aId,
                             int32_t aCount) {
   // First, we need to determine the current refcount for this security blob.
-  CACHE_TRY_INSPECT(
+  QM_TRY_INSPECT(
       const int32_t& refcount, ([&aConn, aId]() -> Result<int32_t, nsresult> {
-        CACHE_TRY_INSPECT(
+        QM_TRY_INSPECT(
             const auto& state,
             quota::CreateAndExecuteSingleStepStatement(
                 aConn, "SELECT refcount FROM security_info WHERE id=:id;"_ns,
                 [aId](auto& state) -> Result<Ok, nsresult> {
-                  CACHE_TRY(state.BindInt32ByName("id"_ns, aId));
+                  QM_TRY(state.BindInt32ByName("id"_ns, aId));
                   return Ok{};
                 }));
 
-        CACHE_TRY_RETURN(MOZ_TO_RESULT_INVOKE(*state, GetInt32, 0));
+        QM_TRY_RETURN(MOZ_TO_RESULT_INVOKE(*state, GetInt32, 0));
       }()));
 
   MOZ_DIAGNOSTIC_ASSERT(refcount >= aCount);
@@ -1438,29 +1433,28 @@ nsresult DeleteSecurityInfo(mozIStorageConnection& aConn, int32_t aId,
   // If the last reference to this security blob was removed we can
   // just remove the entire row.
   if (newCount == 0) {
-    CACHE_TRY_INSPECT(
-        const auto& state,
-        MOZ_TO_RESULT_INVOKE_TYPED(
-            nsCOMPtr<mozIStorageStatement>, aConn, CreateStatement,
-            "DELETE FROM security_info WHERE id=:id;"_ns));
+    QM_TRY_INSPECT(const auto& state,
+                   MOZ_TO_RESULT_INVOKE_TYPED(
+                       nsCOMPtr<mozIStorageStatement>, aConn, CreateStatement,
+                       "DELETE FROM security_info WHERE id=:id;"_ns));
 
-    CACHE_TRY(state->BindInt32ByName("id"_ns, aId));
-    CACHE_TRY(state->Execute());
+    QM_TRY(state->BindInt32ByName("id"_ns, aId));
+    QM_TRY(state->Execute());
 
     return NS_OK;
   }
 
   // Otherwise update the refcount in the table to reflect the reduced
   // number of references to the security blob.
-  CACHE_TRY_INSPECT(
+  QM_TRY_INSPECT(
       const auto& state,
       MOZ_TO_RESULT_INVOKE_TYPED(
           nsCOMPtr<mozIStorageStatement>, aConn, CreateStatement,
           "UPDATE security_info SET refcount=:refcount WHERE id=:id;"_ns));
 
-  CACHE_TRY(state->BindInt32ByName("refcount"_ns, newCount));
-  CACHE_TRY(state->BindInt32ByName("id"_ns, aId));
-  CACHE_TRY(state->Execute());
+  QM_TRY(state->BindInt32ByName("refcount"_ns, newCount));
+  QM_TRY(state->BindInt32ByName("id"_ns, aId));
+  QM_TRY(state->Execute());
 
   return NS_OK;
 }
@@ -1469,8 +1463,8 @@ nsresult DeleteSecurityInfoList(
     mozIStorageConnection& aConn,
     const nsTArray<IdCount>& aDeletedStorageIdList) {
   for (const auto& deletedStorageId : aDeletedStorageIdList) {
-    CACHE_TRY(DeleteSecurityInfo(aConn, deletedStorageId.mId,
-                                 deletedStorageId.mCount));
+    QM_TRY(DeleteSecurityInfo(aConn, deletedStorageId.mId,
+                              deletedStorageId.mCount));
   }
 
   return NS_OK;
@@ -1482,152 +1476,149 @@ nsresult InsertEntry(mozIStorageConnection& aConn, CacheId aCacheId,
                      const nsID* aResponseBodyId) {
   MOZ_ASSERT(!NS_IsMainThread());
 
-  CACHE_TRY_INSPECT(
-      const auto& crypto,
-      ToResultGet<nsCOMPtr<nsICryptoHash>>(
-          MOZ_SELECT_OVERLOAD(do_CreateInstance), NS_CRYPTO_HASH_CONTRACTID));
+  QM_TRY_INSPECT(const auto& crypto, ToResultGet<nsCOMPtr<nsICryptoHash>>(
+                                         MOZ_SELECT_OVERLOAD(do_CreateInstance),
+                                         NS_CRYPTO_HASH_CONTRACTID));
 
   int32_t securityId = -1;
   if (!aResponse.channelInfo().securityInfo().IsEmpty()) {
-    CACHE_TRY_UNWRAP(
-        securityId, InsertSecurityInfo(aConn, *crypto,
-                                       aResponse.channelInfo().securityInfo()));
+    QM_TRY_UNWRAP(securityId,
+                  InsertSecurityInfo(aConn, *crypto,
+                                     aResponse.channelInfo().securityInfo()));
   }
 
   {
-    CACHE_TRY_INSPECT(const auto& state,
-                      MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<mozIStorageStatement>,
-                                                 aConn, CreateStatement,
-                                                 "INSERT INTO entries ("
-                                                 "request_method, "
-                                                 "request_url_no_query, "
-                                                 "request_url_no_query_hash, "
-                                                 "request_url_query, "
-                                                 "request_url_query_hash, "
-                                                 "request_url_fragment, "
-                                                 "request_referrer, "
-                                                 "request_referrer_policy, "
-                                                 "request_headers_guard, "
-                                                 "request_mode, "
-                                                 "request_credentials, "
-                                                 "request_contentpolicytype, "
-                                                 "request_cache, "
-                                                 "request_redirect, "
-                                                 "request_integrity, "
-                                                 "request_body_id, "
-                                                 "response_type, "
-                                                 "response_status, "
-                                                 "response_status_text, "
-                                                 "response_headers_guard, "
-                                                 "response_body_id, "
-                                                 "response_security_info_id, "
-                                                 "response_principal_info, "
-                                                 "response_padding_size, "
-                                                 "cache_id "
-                                                 ") VALUES ("
-                                                 ":request_method, "
-                                                 ":request_url_no_query, "
-                                                 ":request_url_no_query_hash, "
-                                                 ":request_url_query, "
-                                                 ":request_url_query_hash, "
-                                                 ":request_url_fragment, "
-                                                 ":request_referrer, "
-                                                 ":request_referrer_policy, "
-                                                 ":request_headers_guard, "
-                                                 ":request_mode, "
-                                                 ":request_credentials, "
-                                                 ":request_contentpolicytype, "
-                                                 ":request_cache, "
-                                                 ":request_redirect, "
-                                                 ":request_integrity, "
-                                                 ":request_body_id, "
-                                                 ":response_type, "
-                                                 ":response_status, "
-                                                 ":response_status_text, "
-                                                 ":response_headers_guard, "
-                                                 ":response_body_id, "
-                                                 ":response_security_info_id, "
-                                                 ":response_principal_info, "
-                                                 ":response_padding_size, "
-                                                 ":cache_id "
-                                                 ");"_ns));
+    QM_TRY_INSPECT(const auto& state,
+                   MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<mozIStorageStatement>,
+                                              aConn, CreateStatement,
+                                              "INSERT INTO entries ("
+                                              "request_method, "
+                                              "request_url_no_query, "
+                                              "request_url_no_query_hash, "
+                                              "request_url_query, "
+                                              "request_url_query_hash, "
+                                              "request_url_fragment, "
+                                              "request_referrer, "
+                                              "request_referrer_policy, "
+                                              "request_headers_guard, "
+                                              "request_mode, "
+                                              "request_credentials, "
+                                              "request_contentpolicytype, "
+                                              "request_cache, "
+                                              "request_redirect, "
+                                              "request_integrity, "
+                                              "request_body_id, "
+                                              "response_type, "
+                                              "response_status, "
+                                              "response_status_text, "
+                                              "response_headers_guard, "
+                                              "response_body_id, "
+                                              "response_security_info_id, "
+                                              "response_principal_info, "
+                                              "response_padding_size, "
+                                              "cache_id "
+                                              ") VALUES ("
+                                              ":request_method, "
+                                              ":request_url_no_query, "
+                                              ":request_url_no_query_hash, "
+                                              ":request_url_query, "
+                                              ":request_url_query_hash, "
+                                              ":request_url_fragment, "
+                                              ":request_referrer, "
+                                              ":request_referrer_policy, "
+                                              ":request_headers_guard, "
+                                              ":request_mode, "
+                                              ":request_credentials, "
+                                              ":request_contentpolicytype, "
+                                              ":request_cache, "
+                                              ":request_redirect, "
+                                              ":request_integrity, "
+                                              ":request_body_id, "
+                                              ":response_type, "
+                                              ":response_status, "
+                                              ":response_status_text, "
+                                              ":response_headers_guard, "
+                                              ":response_body_id, "
+                                              ":response_security_info_id, "
+                                              ":response_principal_info, "
+                                              ":response_padding_size, "
+                                              ":cache_id "
+                                              ");"_ns));
 
-    CACHE_TRY(
-        state->BindUTF8StringByName("request_method"_ns, aRequest.method()));
+    QM_TRY(state->BindUTF8StringByName("request_method"_ns, aRequest.method()));
 
-    CACHE_TRY(state->BindUTF8StringByName("request_url_no_query"_ns,
-                                          aRequest.urlWithoutQuery()));
+    QM_TRY(state->BindUTF8StringByName("request_url_no_query"_ns,
+                                       aRequest.urlWithoutQuery()));
 
-    CACHE_TRY_INSPECT(const auto& urlWithoutQueryHash,
-                      HashCString(*crypto, aRequest.urlWithoutQuery()));
+    QM_TRY_INSPECT(const auto& urlWithoutQueryHash,
+                   HashCString(*crypto, aRequest.urlWithoutQuery()));
 
-    CACHE_TRY(state->BindUTF8StringAsBlobByName("request_url_no_query_hash"_ns,
-                                                urlWithoutQueryHash));
+    QM_TRY(state->BindUTF8StringAsBlobByName("request_url_no_query_hash"_ns,
+                                             urlWithoutQueryHash));
 
-    CACHE_TRY(state->BindUTF8StringByName("request_url_query"_ns,
-                                          aRequest.urlQuery()));
+    QM_TRY(state->BindUTF8StringByName("request_url_query"_ns,
+                                       aRequest.urlQuery()));
 
-    CACHE_TRY_INSPECT(const auto& urlQueryHash,
-                      HashCString(*crypto, aRequest.urlQuery()));
+    QM_TRY_INSPECT(const auto& urlQueryHash,
+                   HashCString(*crypto, aRequest.urlQuery()));
 
-    CACHE_TRY(state->BindUTF8StringAsBlobByName("request_url_query_hash"_ns,
-                                                urlQueryHash));
+    QM_TRY(state->BindUTF8StringAsBlobByName("request_url_query_hash"_ns,
+                                             urlQueryHash));
 
-    CACHE_TRY(state->BindUTF8StringByName("request_url_fragment"_ns,
-                                          aRequest.urlFragment()));
+    QM_TRY(state->BindUTF8StringByName("request_url_fragment"_ns,
+                                       aRequest.urlFragment()));
 
-    CACHE_TRY(
-        state->BindStringByName("request_referrer"_ns, aRequest.referrer()));
+    QM_TRY(state->BindStringByName("request_referrer"_ns, aRequest.referrer()));
 
-    CACHE_TRY(state->BindInt32ByName(
+    QM_TRY(state->BindInt32ByName(
         "request_referrer_policy"_ns,
         static_cast<int32_t>(aRequest.referrerPolicy())));
 
-    CACHE_TRY(
+    QM_TRY(
         state->BindInt32ByName("request_headers_guard"_ns,
                                static_cast<int32_t>(aRequest.headersGuard())));
 
-    CACHE_TRY(state->BindInt32ByName("request_mode"_ns,
-                                     static_cast<int32_t>(aRequest.mode())));
+    QM_TRY(state->BindInt32ByName("request_mode"_ns,
+                                  static_cast<int32_t>(aRequest.mode())));
 
-    CACHE_TRY(
+    QM_TRY(
         state->BindInt32ByName("request_credentials"_ns,
                                static_cast<int32_t>(aRequest.credentials())));
 
-    CACHE_TRY(state->BindInt32ByName(
+    QM_TRY(state->BindInt32ByName(
         "request_contentpolicytype"_ns,
         static_cast<int32_t>(aRequest.contentPolicyType())));
 
-    CACHE_TRY(state->BindInt32ByName(
+    QM_TRY(state->BindInt32ByName(
         "request_cache"_ns, static_cast<int32_t>(aRequest.requestCache())));
 
-    CACHE_TRY(state->BindInt32ByName(
+    QM_TRY(state->BindInt32ByName(
         "request_redirect"_ns,
         static_cast<int32_t>(aRequest.requestRedirect())));
 
-    CACHE_TRY(
+    QM_TRY(
         state->BindStringByName("request_integrity"_ns, aRequest.integrity()));
 
-    CACHE_TRY(BindId(*state, "request_body_id"_ns, aRequestBodyId));
+    QM_TRY(BindId(*state, "request_body_id"_ns, aRequestBodyId));
 
-    CACHE_TRY(state->BindInt32ByName("response_type"_ns,
-                                     static_cast<int32_t>(aResponse.type())));
+    QM_TRY(state->BindInt32ByName("response_type"_ns,
+                                  static_cast<int32_t>(aResponse.type())));
 
-    CACHE_TRY(state->BindInt32ByName("response_status"_ns, aResponse.status()));
+    QM_TRY(state->BindInt32ByName("response_status"_ns, aResponse.status()));
 
-    CACHE_TRY(state->BindUTF8StringByName("response_status_text"_ns,
-                                          aResponse.statusText()));
+    QM_TRY(state->BindUTF8StringByName("response_status_text"_ns,
+                                       aResponse.statusText()));
 
-    CACHE_TRY(
+    QM_TRY(
         state->BindInt32ByName("response_headers_guard"_ns,
                                static_cast<int32_t>(aResponse.headersGuard())));
 
-    CACHE_TRY(BindId(*state, "response_body_id"_ns, aResponseBodyId));
+    QM_TRY(BindId(*state, "response_body_id"_ns, aResponseBodyId));
 
     if (aResponse.channelInfo().securityInfo().IsEmpty()) {
-      CACHE_TRY(state->BindNullByName("response_security_info_id"_ns));
+      QM_TRY(state->BindNullByName("response_security_info_id"_ns));
     } else {
-      CACHE_TRY(
+      QM_TRY(
           state->BindInt32ByName("response_security_info_id"_ns, securityId));
     }
 
@@ -1648,89 +1639,86 @@ nsresult InsertEntry(mozIStorageConnection& aConn, CacheId aCacheId,
       serializedInfo.Append(suffix);
     }
 
-    CACHE_TRY(state->BindUTF8StringByName("response_principal_info"_ns,
-                                          serializedInfo));
+    QM_TRY(state->BindUTF8StringByName("response_principal_info"_ns,
+                                       serializedInfo));
 
     if (aResponse.paddingSize() == InternalResponse::UNKNOWN_PADDING_SIZE) {
       MOZ_DIAGNOSTIC_ASSERT(aResponse.type() != ResponseType::Opaque);
-      CACHE_TRY(state->BindNullByName("response_padding_size"_ns));
+      QM_TRY(state->BindNullByName("response_padding_size"_ns));
     } else {
       MOZ_DIAGNOSTIC_ASSERT(aResponse.paddingSize() >= 0);
       MOZ_DIAGNOSTIC_ASSERT(aResponse.type() == ResponseType::Opaque);
 
-      CACHE_TRY(state->BindInt64ByName("response_padding_size"_ns,
-                                       aResponse.paddingSize()));
+      QM_TRY(state->BindInt64ByName("response_padding_size"_ns,
+                                    aResponse.paddingSize()));
     }
 
-    CACHE_TRY(state->BindInt64ByName("cache_id"_ns, aCacheId));
+    QM_TRY(state->BindInt64ByName("cache_id"_ns, aCacheId));
 
-    CACHE_TRY(state->Execute());
+    QM_TRY(state->Execute());
   }
 
-  CACHE_TRY_INSPECT(
-      const int32_t& entryId, ([&aConn]() -> Result<int32_t, nsresult> {
-        CACHE_TRY_INSPECT(const auto& state,
-                          quota::CreateAndExecuteSingleStepStatement(
-                              aConn, "SELECT last_insert_rowid()"_ns));
+  QM_TRY_INSPECT(const int32_t& entryId,
+                 ([&aConn]() -> Result<int32_t, nsresult> {
+                   QM_TRY_INSPECT(const auto& state,
+                                  quota::CreateAndExecuteSingleStepStatement(
+                                      aConn, "SELECT last_insert_rowid()"_ns));
 
-        CACHE_TRY_RETURN(MOZ_TO_RESULT_INVOKE(*state, GetInt32, 0));
-      }()));
+                   QM_TRY_RETURN(MOZ_TO_RESULT_INVOKE(*state, GetInt32, 0));
+                 }()));
 
   {
-    CACHE_TRY_INSPECT(
-        const auto& state,
-        MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<mozIStorageStatement>, aConn,
-                                   CreateStatement,
-                                   "INSERT INTO request_headers ("
-                                   "name, "
-                                   "value, "
-                                   "entry_id "
-                                   ") VALUES (:name, :value, :entry_id)"_ns));
+    QM_TRY_INSPECT(const auto& state,
+                   MOZ_TO_RESULT_INVOKE_TYPED(
+                       nsCOMPtr<mozIStorageStatement>, aConn, CreateStatement,
+                       "INSERT INTO request_headers ("
+                       "name, "
+                       "value, "
+                       "entry_id "
+                       ") VALUES (:name, :value, :entry_id)"_ns));
 
     for (const auto& requestHeader : aRequest.headers()) {
-      CACHE_TRY(state->BindUTF8StringByName("name"_ns, requestHeader.name()));
+      QM_TRY(state->BindUTF8StringByName("name"_ns, requestHeader.name()));
 
-      CACHE_TRY(state->BindUTF8StringByName("value"_ns, requestHeader.value()));
+      QM_TRY(state->BindUTF8StringByName("value"_ns, requestHeader.value()));
 
-      CACHE_TRY(state->BindInt32ByName("entry_id"_ns, entryId));
+      QM_TRY(state->BindInt32ByName("entry_id"_ns, entryId));
 
-      CACHE_TRY(state->Execute());
+      QM_TRY(state->Execute());
     }
   }
 
   {
-    CACHE_TRY_INSPECT(
-        const auto& state,
-        MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<mozIStorageStatement>, aConn,
-                                   CreateStatement,
-                                   "INSERT INTO response_headers ("
-                                   "name, "
-                                   "value, "
-                                   "entry_id "
-                                   ") VALUES (:name, :value, :entry_id)"_ns));
+    QM_TRY_INSPECT(const auto& state,
+                   MOZ_TO_RESULT_INVOKE_TYPED(
+                       nsCOMPtr<mozIStorageStatement>, aConn, CreateStatement,
+                       "INSERT INTO response_headers ("
+                       "name, "
+                       "value, "
+                       "entry_id "
+                       ") VALUES (:name, :value, :entry_id)"_ns));
 
     for (const auto& responseHeader : aResponse.headers()) {
-      CACHE_TRY(state->BindUTF8StringByName("name"_ns, responseHeader.name()));
-      CACHE_TRY(
-          state->BindUTF8StringByName("value"_ns, responseHeader.value()));
-      CACHE_TRY(state->BindInt32ByName("entry_id"_ns, entryId));
-      CACHE_TRY(state->Execute());
+      QM_TRY(state->BindUTF8StringByName("name"_ns, responseHeader.name()));
+      QM_TRY(state->BindUTF8StringByName("value"_ns, responseHeader.value()));
+      QM_TRY(state->BindInt32ByName("entry_id"_ns, entryId));
+      QM_TRY(state->Execute());
     }
   }
 
   {
-    CACHE_TRY_INSPECT(const auto& state, MOZ_TO_RESULT_INVOKE_TYPED(
-                                             nsCOMPtr<mozIStorageStatement>,
-                                             aConn, CreateStatement,
-                                             "INSERT INTO response_url_list ("
-                                             "url, "
-                                             "entry_id "
-                                             ") VALUES (:url, :entry_id)"_ns));
+    QM_TRY_INSPECT(const auto& state,
+                   MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<mozIStorageStatement>,
+                                              aConn, CreateStatement,
+                                              "INSERT INTO response_url_list ("
+                                              "url, "
+                                              "entry_id "
+                                              ") VALUES (:url, :entry_id)"_ns));
 
     for (const auto& responseUrl : aResponse.urlList()) {
-      CACHE_TRY(state->BindUTF8StringByName("url"_ns, responseUrl));
-      CACHE_TRY(state->BindInt32ByName("entry_id"_ns, entryId));
-      CACHE_TRY(state->Execute());
+      QM_TRY(state->BindUTF8StringByName("url"_ns, responseUrl));
+      QM_TRY(state->BindInt32ByName("entry_id"_ns, entryId));
+      QM_TRY(state->Execute());
     }
   }
 
@@ -1745,10 +1733,10 @@ Result<HeadersEntry, nsresult> GetHeadersEntryFromStatement(
     mozIStorageStatement& aStmt) {
   HeadersEntry header;
 
-  CACHE_TRY_UNWRAP(header.name(), MOZ_TO_RESULT_INVOKE_TYPED(nsCString, aStmt,
-                                                             GetUTF8String, 0));
-  CACHE_TRY_UNWRAP(header.value(), MOZ_TO_RESULT_INVOKE_TYPED(
-                                       nsCString, aStmt, GetUTF8String, 1));
+  QM_TRY_UNWRAP(header.name(),
+                MOZ_TO_RESULT_INVOKE_TYPED(nsCString, aStmt, GetUTF8String, 0));
+  QM_TRY_UNWRAP(header.value(),
+                MOZ_TO_RESULT_INVOKE_TYPED(nsCString, aStmt, GetUTF8String, 1));
 
   return header;
 }
@@ -1759,51 +1747,51 @@ Result<SavedResponse, nsresult> ReadResponse(mozIStorageConnection& aConn,
 
   SavedResponse savedResponse;
 
-  CACHE_TRY_INSPECT(const auto& state,
-                    quota::CreateAndExecuteSingleStepStatement(
-                        aConn,
-                        "SELECT "
-                        "entries.response_type, "
-                        "entries.response_status, "
-                        "entries.response_status_text, "
-                        "entries.response_headers_guard, "
-                        "entries.response_body_id, "
-                        "entries.response_principal_info, "
-                        "entries.response_padding_size, "
-                        "security_info.data "
-                        "FROM entries "
-                        "LEFT OUTER JOIN security_info "
-                        "ON entries.response_security_info_id=security_info.id "
-                        "WHERE entries.id=:id;"_ns,
-                        [aEntryId](auto& state) -> Result<Ok, nsresult> {
-                          CACHE_TRY(state.BindInt32ByName("id"_ns, aEntryId));
+  QM_TRY_INSPECT(const auto& state,
+                 quota::CreateAndExecuteSingleStepStatement(
+                     aConn,
+                     "SELECT "
+                     "entries.response_type, "
+                     "entries.response_status, "
+                     "entries.response_status_text, "
+                     "entries.response_headers_guard, "
+                     "entries.response_body_id, "
+                     "entries.response_principal_info, "
+                     "entries.response_padding_size, "
+                     "security_info.data "
+                     "FROM entries "
+                     "LEFT OUTER JOIN security_info "
+                     "ON entries.response_security_info_id=security_info.id "
+                     "WHERE entries.id=:id;"_ns,
+                     [aEntryId](auto& state) -> Result<Ok, nsresult> {
+                       QM_TRY(state.BindInt32ByName("id"_ns, aEntryId));
 
-                          return Ok{};
-                        }));
+                       return Ok{};
+                     }));
 
-  CACHE_TRY_INSPECT(const int32_t& type,
-                    MOZ_TO_RESULT_INVOKE(*state, GetInt32, 0));
+  QM_TRY_INSPECT(const int32_t& type,
+                 MOZ_TO_RESULT_INVOKE(*state, GetInt32, 0));
   savedResponse.mValue.type() = static_cast<ResponseType>(type);
 
-  CACHE_TRY_INSPECT(const int32_t& status,
-                    MOZ_TO_RESULT_INVOKE(*state, GetInt32, 1));
+  QM_TRY_INSPECT(const int32_t& status,
+                 MOZ_TO_RESULT_INVOKE(*state, GetInt32, 1));
   savedResponse.mValue.status() = static_cast<uint32_t>(status);
 
-  CACHE_TRY(state->GetUTF8String(2, savedResponse.mValue.statusText()));
+  QM_TRY(state->GetUTF8String(2, savedResponse.mValue.statusText()));
 
-  CACHE_TRY_INSPECT(const int32_t& guard,
-                    MOZ_TO_RESULT_INVOKE(*state, GetInt32, 3));
+  QM_TRY_INSPECT(const int32_t& guard,
+                 MOZ_TO_RESULT_INVOKE(*state, GetInt32, 3));
   savedResponse.mValue.headersGuard() = static_cast<HeadersGuardEnum>(guard);
 
-  CACHE_TRY_INSPECT(const bool& nullBody,
-                    MOZ_TO_RESULT_INVOKE(*state, GetIsNull, 4));
+  QM_TRY_INSPECT(const bool& nullBody,
+                 MOZ_TO_RESULT_INVOKE(*state, GetIsNull, 4));
   savedResponse.mHasBodyId = !nullBody;
 
   if (savedResponse.mHasBodyId) {
-    CACHE_TRY_UNWRAP(savedResponse.mBodyId, ExtractId(*state, 4));
+    QM_TRY_UNWRAP(savedResponse.mBodyId, ExtractId(*state, 4));
   }
 
-  CACHE_TRY_INSPECT(
+  QM_TRY_INSPECT(
       const auto& serializedInfo,
       MOZ_TO_RESULT_INVOKE_TYPED(nsAutoCString, *state, GetUTF8String, 5));
 
@@ -1817,7 +1805,7 @@ Result<SavedResponse, nsresult> ReadResponse(mozIStorageConnection& aConn,
     }
 
     RefPtr<net::MozURL> url;
-    CACHE_TRY(net::MozURL::Init(getter_AddRefs(url), specNoSuffix));
+    QM_TRY(net::MozURL::Init(getter_AddRefs(url), specNoSuffix));
 
 #ifdef DEBUG
     nsDependentCSubstring scheme = url->Scheme();
@@ -1846,65 +1834,65 @@ Result<SavedResponse, nsresult> ReadResponse(mozIStorageConnection& aConn,
     url->Origin(origin);
 
     nsCString baseDomain;
-    CACHE_TRY(url->BaseDomain(baseDomain));
+    QM_TRY(url->BaseDomain(baseDomain));
 
     savedResponse.mValue.principalInfo() =
         Some(mozilla::ipc::ContentPrincipalInfo(attrs, origin, specNoSuffix,
                                                 Nothing(), baseDomain));
   }
 
-  CACHE_TRY_INSPECT(const bool& nullPadding,
-                    MOZ_TO_RESULT_INVOKE(*state, GetIsNull, 6));
+  QM_TRY_INSPECT(const bool& nullPadding,
+                 MOZ_TO_RESULT_INVOKE(*state, GetIsNull, 6));
 
   if (nullPadding) {
     MOZ_DIAGNOSTIC_ASSERT(savedResponse.mValue.type() != ResponseType::Opaque);
     savedResponse.mValue.paddingSize() = InternalResponse::UNKNOWN_PADDING_SIZE;
   } else {
     MOZ_DIAGNOSTIC_ASSERT(savedResponse.mValue.type() == ResponseType::Opaque);
-    CACHE_TRY_INSPECT(const int64_t& paddingSize,
-                      MOZ_TO_RESULT_INVOKE(*state, GetInt64, 6));
+    QM_TRY_INSPECT(const int64_t& paddingSize,
+                   MOZ_TO_RESULT_INVOKE(*state, GetInt64, 6));
 
     MOZ_DIAGNOSTIC_ASSERT(paddingSize >= 0);
     savedResponse.mValue.paddingSize() = paddingSize;
   }
 
-  CACHE_TRY(state->GetBlobAsUTF8String(
+  QM_TRY(state->GetBlobAsUTF8String(
       7, savedResponse.mValue.channelInfo().securityInfo()));
 
   {
-    CACHE_TRY_INSPECT(const auto& state, MOZ_TO_RESULT_INVOKE_TYPED(
-                                             nsCOMPtr<mozIStorageStatement>,
-                                             aConn, CreateStatement,
-                                             "SELECT "
-                                             "name, "
-                                             "value "
-                                             "FROM response_headers "
-                                             "WHERE entry_id=:entry_id;"_ns));
+    QM_TRY_INSPECT(const auto& state,
+                   MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<mozIStorageStatement>,
+                                              aConn, CreateStatement,
+                                              "SELECT "
+                                              "name, "
+                                              "value "
+                                              "FROM response_headers "
+                                              "WHERE entry_id=:entry_id;"_ns));
 
-    CACHE_TRY(state->BindInt32ByName("entry_id"_ns, aEntryId));
+    QM_TRY(state->BindInt32ByName("entry_id"_ns, aEntryId));
 
-    CACHE_TRY_UNWRAP(savedResponse.mValue.headers(),
-                     quota::CollectElementsWhileHasResult(
-                         *state, GetHeadersEntryFromStatement));
+    QM_TRY_UNWRAP(savedResponse.mValue.headers(),
+                  quota::CollectElementsWhileHasResult(
+                      *state, GetHeadersEntryFromStatement));
   }
 
   {
-    CACHE_TRY_INSPECT(const auto& state, MOZ_TO_RESULT_INVOKE_TYPED(
-                                             nsCOMPtr<mozIStorageStatement>,
-                                             aConn, CreateStatement,
-                                             "SELECT "
-                                             "url "
-                                             "FROM response_url_list "
-                                             "WHERE entry_id=:entry_id;"_ns));
+    QM_TRY_INSPECT(const auto& state,
+                   MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<mozIStorageStatement>,
+                                              aConn, CreateStatement,
+                                              "SELECT "
+                                              "url "
+                                              "FROM response_url_list "
+                                              "WHERE entry_id=:entry_id;"_ns));
 
-    CACHE_TRY(state->BindInt32ByName("entry_id"_ns, aEntryId));
+    QM_TRY(state->BindInt32ByName("entry_id"_ns, aEntryId));
 
-    CACHE_TRY_UNWRAP(savedResponse.mValue.urlList(),
-                     quota::CollectElementsWhileHasResult(
-                         *state, [](auto& stmt) -> Result<nsCString, nsresult> {
-                           CACHE_TRY_RETURN(MOZ_TO_RESULT_INVOKE_TYPED(
-                               nsCString, stmt, GetUTF8String, 0));
-                         }));
+    QM_TRY_UNWRAP(savedResponse.mValue.urlList(),
+                  quota::CollectElementsWhileHasResult(
+                      *state, [](auto& stmt) -> Result<nsCString, nsresult> {
+                        QM_TRY_RETURN(MOZ_TO_RESULT_INVOKE_TYPED(
+                            nsCString, stmt, GetUTF8String, 0));
+                      }));
   }
 
   return savedResponse;
@@ -1916,97 +1904,96 @@ Result<SavedRequest, nsresult> ReadRequest(mozIStorageConnection& aConn,
 
   SavedRequest savedRequest;
 
-  CACHE_TRY_INSPECT(const auto& state,
-                    quota::CreateAndExecuteSingleStepStatement<
-                        quota::SingleStepResult::ReturnNullIfNoResult>(
-                        aConn,
-                        "SELECT "
-                        "request_method, "
-                        "request_url_no_query, "
-                        "request_url_query, "
-                        "request_url_fragment, "
-                        "request_referrer, "
-                        "request_referrer_policy, "
-                        "request_headers_guard, "
-                        "request_mode, "
-                        "request_credentials, "
-                        "request_contentpolicytype, "
-                        "request_cache, "
-                        "request_redirect, "
-                        "request_integrity, "
-                        "request_body_id "
-                        "FROM entries "
-                        "WHERE id=:id;"_ns,
-                        [aEntryId](auto& state) -> Result<Ok, nsresult> {
-                          CACHE_TRY(state.BindInt32ByName("id"_ns, aEntryId));
+  QM_TRY_INSPECT(const auto& state,
+                 quota::CreateAndExecuteSingleStepStatement<
+                     quota::SingleStepResult::ReturnNullIfNoResult>(
+                     aConn,
+                     "SELECT "
+                     "request_method, "
+                     "request_url_no_query, "
+                     "request_url_query, "
+                     "request_url_fragment, "
+                     "request_referrer, "
+                     "request_referrer_policy, "
+                     "request_headers_guard, "
+                     "request_mode, "
+                     "request_credentials, "
+                     "request_contentpolicytype, "
+                     "request_cache, "
+                     "request_redirect, "
+                     "request_integrity, "
+                     "request_body_id "
+                     "FROM entries "
+                     "WHERE id=:id;"_ns,
+                     [aEntryId](auto& state) -> Result<Ok, nsresult> {
+                       QM_TRY(state.BindInt32ByName("id"_ns, aEntryId));
 
-                          return Ok{};
-                        }));
+                       return Ok{};
+                     }));
 
-  CACHE_TRY(OkIf(state), Err(NS_ERROR_UNEXPECTED));
+  QM_TRY(OkIf(state), Err(NS_ERROR_UNEXPECTED));
 
-  CACHE_TRY(state->GetUTF8String(0, savedRequest.mValue.method()));
-  CACHE_TRY(state->GetUTF8String(1, savedRequest.mValue.urlWithoutQuery()));
-  CACHE_TRY(state->GetUTF8String(2, savedRequest.mValue.urlQuery()));
-  CACHE_TRY(state->GetUTF8String(3, savedRequest.mValue.urlFragment()));
-  CACHE_TRY(state->GetString(4, savedRequest.mValue.referrer()));
+  QM_TRY(state->GetUTF8String(0, savedRequest.mValue.method()));
+  QM_TRY(state->GetUTF8String(1, savedRequest.mValue.urlWithoutQuery()));
+  QM_TRY(state->GetUTF8String(2, savedRequest.mValue.urlQuery()));
+  QM_TRY(state->GetUTF8String(3, savedRequest.mValue.urlFragment()));
+  QM_TRY(state->GetString(4, savedRequest.mValue.referrer()));
 
-  CACHE_TRY_INSPECT(const int32_t& referrerPolicy,
-                    MOZ_TO_RESULT_INVOKE(state, GetInt32, 5));
+  QM_TRY_INSPECT(const int32_t& referrerPolicy,
+                 MOZ_TO_RESULT_INVOKE(state, GetInt32, 5));
   savedRequest.mValue.referrerPolicy() =
       static_cast<ReferrerPolicy>(referrerPolicy);
 
-  CACHE_TRY_INSPECT(const int32_t& guard,
-                    MOZ_TO_RESULT_INVOKE(state, GetInt32, 6));
+  QM_TRY_INSPECT(const int32_t& guard,
+                 MOZ_TO_RESULT_INVOKE(state, GetInt32, 6));
   savedRequest.mValue.headersGuard() = static_cast<HeadersGuardEnum>(guard);
 
-  CACHE_TRY_INSPECT(const int32_t& mode,
-                    MOZ_TO_RESULT_INVOKE(state, GetInt32, 7));
+  QM_TRY_INSPECT(const int32_t& mode, MOZ_TO_RESULT_INVOKE(state, GetInt32, 7));
   savedRequest.mValue.mode() = static_cast<RequestMode>(mode);
 
-  CACHE_TRY_INSPECT(const int32_t& credentials,
-                    MOZ_TO_RESULT_INVOKE(state, GetInt32, 8));
+  QM_TRY_INSPECT(const int32_t& credentials,
+                 MOZ_TO_RESULT_INVOKE(state, GetInt32, 8));
   savedRequest.mValue.credentials() =
       static_cast<RequestCredentials>(credentials);
 
-  CACHE_TRY_INSPECT(const int32_t& requestContentPolicyType,
-                    MOZ_TO_RESULT_INVOKE(state, GetInt32, 9));
+  QM_TRY_INSPECT(const int32_t& requestContentPolicyType,
+                 MOZ_TO_RESULT_INVOKE(state, GetInt32, 9));
   savedRequest.mValue.contentPolicyType() =
       static_cast<nsContentPolicyType>(requestContentPolicyType);
 
-  CACHE_TRY_INSPECT(const int32_t& requestCache,
-                    MOZ_TO_RESULT_INVOKE(state, GetInt32, 10));
+  QM_TRY_INSPECT(const int32_t& requestCache,
+                 MOZ_TO_RESULT_INVOKE(state, GetInt32, 10));
   savedRequest.mValue.requestCache() = static_cast<RequestCache>(requestCache);
 
-  CACHE_TRY_INSPECT(const int32_t& requestRedirect,
-                    MOZ_TO_RESULT_INVOKE(state, GetInt32, 11));
+  QM_TRY_INSPECT(const int32_t& requestRedirect,
+                 MOZ_TO_RESULT_INVOKE(state, GetInt32, 11));
   savedRequest.mValue.requestRedirect() =
       static_cast<RequestRedirect>(requestRedirect);
 
-  CACHE_TRY(state->GetString(12, savedRequest.mValue.integrity()));
+  QM_TRY(state->GetString(12, savedRequest.mValue.integrity()));
 
-  CACHE_TRY_INSPECT(const bool& nullBody,
-                    MOZ_TO_RESULT_INVOKE(state, GetIsNull, 13));
+  QM_TRY_INSPECT(const bool& nullBody,
+                 MOZ_TO_RESULT_INVOKE(state, GetIsNull, 13));
   savedRequest.mHasBodyId = !nullBody;
   if (savedRequest.mHasBodyId) {
-    CACHE_TRY_UNWRAP(savedRequest.mBodyId, ExtractId(*state, 13));
+    QM_TRY_UNWRAP(savedRequest.mBodyId, ExtractId(*state, 13));
   }
 
   {
-    CACHE_TRY_INSPECT(const auto& state, MOZ_TO_RESULT_INVOKE_TYPED(
-                                             nsCOMPtr<mozIStorageStatement>,
-                                             aConn, CreateStatement,
-                                             "SELECT "
-                                             "name, "
-                                             "value "
-                                             "FROM request_headers "
-                                             "WHERE entry_id=:entry_id;"_ns));
+    QM_TRY_INSPECT(const auto& state,
+                   MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<mozIStorageStatement>,
+                                              aConn, CreateStatement,
+                                              "SELECT "
+                                              "name, "
+                                              "value "
+                                              "FROM request_headers "
+                                              "WHERE entry_id=:entry_id;"_ns));
 
-    CACHE_TRY(state->BindInt32ByName("entry_id"_ns, aEntryId));
+    QM_TRY(state->BindInt32ByName("entry_id"_ns, aEntryId));
 
-    CACHE_TRY_UNWRAP(savedRequest.mValue.headers(),
-                     quota::CollectElementsWhileHasResult(
-                         *state, GetHeadersEntryFromStatement));
+    QM_TRY_UNWRAP(savedRequest.mValue.headers(),
+                  quota::CollectElementsWhileHasResult(
+                      *state, GetHeadersEntryFromStatement));
   }
 
   return savedRequest;
@@ -2034,7 +2021,7 @@ nsresult BindListParamsToQuery(mozIStorageStatement& aState,
   MOZ_ASSERT(!NS_IsMainThread());
   MOZ_DIAGNOSTIC_ASSERT((aPos + aLen) <= aEntryIdList.Length());
   for (int32_t i = aPos; i < aLen; ++i) {
-    CACHE_TRY(aState.BindInt32ByIndex(i, aEntryIdList[i]));
+    QM_TRY(aState.BindInt32ByIndex(i, aEntryIdList[i]));
   }
   return NS_OK;
 }
@@ -2044,13 +2031,13 @@ nsresult BindId(mozIStorageStatement& aState, const nsACString& aName,
   MOZ_ASSERT(!NS_IsMainThread());
 
   if (!aId) {
-    CACHE_TRY(aState.BindNullByName(aName));
+    QM_TRY(aState.BindNullByName(aName));
     return NS_OK;
   }
 
   char idBuf[NSID_LENGTH];
   aId->ToProvidedString(idBuf);
-  CACHE_TRY(aState.BindUTF8StringByName(aName, nsDependentCString(idBuf)));
+  QM_TRY(aState.BindUTF8StringByName(aName, nsDependentCString(idBuf)));
 
   return NS_OK;
 }
@@ -2058,12 +2045,12 @@ nsresult BindId(mozIStorageStatement& aState, const nsACString& aName,
 Result<nsID, nsresult> ExtractId(mozIStorageStatement& aState, uint32_t aPos) {
   MOZ_ASSERT(!NS_IsMainThread());
 
-  CACHE_TRY_INSPECT(
+  QM_TRY_INSPECT(
       const auto& idString,
       MOZ_TO_RESULT_INVOKE_TYPED(nsAutoCString, aState, GetUTF8String, aPos));
 
   nsID id;
-  CACHE_TRY(OkIf(id.Parse(idString.get())), Err(NS_ERROR_UNEXPECTED));
+  QM_TRY(OkIf(id.Parse(idString.get())), Err(NS_ERROR_UNEXPECTED));
 
   return id;
 }
@@ -2081,7 +2068,7 @@ CreateAndBindKeyStatement(mozIStorageConnection& aConn,
   // if the key is empty, otherwise use "=:key" so that sqlite uses the
   // index.
 
-  CACHE_TRY_UNWRAP(
+  QM_TRY_UNWRAP(
       auto state,
       MOZ_TO_RESULT_INVOKE_TYPED(
           nsCOMPtr<mozIStorageStatement>, aConn, CreateStatement,
@@ -2089,7 +2076,7 @@ CreateAndBindKeyStatement(mozIStorageConnection& aConn,
                           aKey.IsEmpty() ? "key IS NULL" : "key=:key")));
 
   if (!aKey.IsEmpty()) {
-    CACHE_TRY(state->BindStringAsBlobByName("key"_ns, aKey));
+    QM_TRY(state->BindStringAsBlobByName("key"_ns, aKey));
   }
 
   return WrapNotNull(std::move(state));
@@ -2097,13 +2084,13 @@ CreateAndBindKeyStatement(mozIStorageConnection& aConn,
 
 Result<nsAutoCString, nsresult> HashCString(nsICryptoHash& aCrypto,
                                             const nsACString& aIn) {
-  CACHE_TRY(aCrypto.Init(nsICryptoHash::SHA1));
+  QM_TRY(aCrypto.Init(nsICryptoHash::SHA1));
 
-  CACHE_TRY(aCrypto.Update(reinterpret_cast<const uint8_t*>(aIn.BeginReading()),
-                           aIn.Length()));
+  QM_TRY(aCrypto.Update(reinterpret_cast<const uint8_t*>(aIn.BeginReading()),
+                        aIn.Length()));
 
   nsAutoCString fullHash;
-  CACHE_TRY(aCrypto.Finish(false /* based64 result */, fullHash));
+  QM_TRY(aCrypto.Finish(false /* based64 result */, fullHash));
 
   return Result<nsAutoCString, nsresult>{std::in_place,
                                          Substring(fullHash, 0, 8)};
@@ -2113,12 +2100,11 @@ Result<nsAutoCString, nsresult> HashCString(nsICryptoHash& aCrypto,
 
 nsresult IncrementalVacuum(mozIStorageConnection& aConn) {
   // Determine how much free space is in the database.
-  CACHE_TRY_INSPECT(const auto& state,
-                    quota::CreateAndExecuteSingleStepStatement(
-                        aConn, "PRAGMA freelist_count;"_ns));
+  QM_TRY_INSPECT(const auto& state, quota::CreateAndExecuteSingleStepStatement(
+                                        aConn, "PRAGMA freelist_count;"_ns));
 
-  CACHE_TRY_INSPECT(const int32_t& freePages,
-                    MOZ_TO_RESULT_INVOKE(*state, GetInt32, 0));
+  QM_TRY_INSPECT(const int32_t& freePages,
+                 MOZ_TO_RESULT_INVOKE(*state, GetInt32, 0));
 
   // We have a relatively small page size, so we want to be careful to avoid
   // fragmentation.  We already use a growth incremental which will cause
@@ -2140,18 +2126,18 @@ nsresult IncrementalVacuum(mozIStorageConnection& aConn) {
   // chunks of multiple pages back to the OS.
   const int32_t pagesToRelease = freePages - kMaxFreePages;
 
-  CACHE_TRY(aConn.ExecuteSimpleSQL(
+  QM_TRY(aConn.ExecuteSimpleSQL(
       nsPrintfCString("PRAGMA incremental_vacuum(%d);", pagesToRelease)));
 
   // Verify that our incremental vacuum actually did something
 #ifdef DEBUG
   {
-    CACHE_TRY_INSPECT(const auto& state,
-                      quota::CreateAndExecuteSingleStepStatement(
-                          aConn, "PRAGMA freelist_count;"_ns));
+    QM_TRY_INSPECT(const auto& state,
+                   quota::CreateAndExecuteSingleStepStatement(
+                       aConn, "PRAGMA freelist_count;"_ns));
 
-    CACHE_TRY_INSPECT(const int32_t& freePages,
-                      MOZ_TO_RESULT_INVOKE(*state, GetInt32, 0));
+    QM_TRY_INSPECT(const int32_t& freePages,
+                   MOZ_TO_RESULT_INVOKE(*state, GetInt32, 0));
 
     MOZ_ASSERT(freePages <= kMaxFreePages);
   }
@@ -2167,8 +2153,8 @@ namespace {
 // kHackyDowngradeSchemaVersion and kHackyPaddingSizePresentVersion.
 Result<int32_t, nsresult> GetEffectiveSchemaVersion(
     mozIStorageConnection& aConn) {
-  CACHE_TRY_INSPECT(const int32_t& schemaVersion,
-                    MOZ_TO_RESULT_INVOKE(aConn, GetSchemaVersion));
+  QM_TRY_INSPECT(const int32_t& schemaVersion,
+                 MOZ_TO_RESULT_INVOKE(aConn, GetSchemaVersion));
 
   if (schemaVersion == kHackyDowngradeSchemaVersion) {
     // This is the special case.  Check for the existence of the
@@ -2179,12 +2165,12 @@ Result<int32_t, nsresult> GetEffectiveSchemaVersion(
     // was the first release with this functionality, shipping 3.16.2.)
     //
     // If there are any result rows, then the column is present.
-    CACHE_TRY_INSPECT(const bool& hasColumn,
-                      quota::CreateAndExecuteSingleStepStatement<
-                          quota::SingleStepResult::ReturnNullIfNoResult>(
-                          aConn,
-                          "SELECT name FROM pragma_table_info('entries') WHERE "
-                          "name = 'response_padding_size'"_ns));
+    QM_TRY_INSPECT(const bool& hasColumn,
+                   quota::CreateAndExecuteSingleStepStatement<
+                       quota::SingleStepResult::ReturnNullIfNoResult>(
+                       aConn,
+                       "SELECT name FROM pragma_table_info('entries') WHERE "
+                       "name = 'response_padding_size'"_ns));
 
     if (hasColumn) {
       return kHackyPaddingSizePresentVersion;
@@ -2212,9 +2198,9 @@ struct Expect {
 #endif
 
 nsresult Validate(mozIStorageConnection& aConn) {
-  CACHE_TRY_INSPECT(const int32_t& schemaVersion,
-                    GetEffectiveSchemaVersion(aConn));
-  CACHE_TRY(OkIf(schemaVersion == kLatestSchemaVersion), NS_ERROR_FAILURE);
+  QM_TRY_INSPECT(const int32_t& schemaVersion,
+                 GetEffectiveSchemaVersion(aConn));
+  QM_TRY(OkIf(schemaVersion == kLatestSchemaVersion), NS_ERROR_FAILURE);
 
 #ifdef DEBUG
   // This is the schema we expect the database at the latest version to
@@ -2235,20 +2221,20 @@ nsresult Validate(mozIStorageConnection& aConn) {
   };
 
   // Read the schema from the sqlite_master table and compare.
-  CACHE_TRY_INSPECT(const auto& state,
-                    MOZ_TO_RESULT_INVOKE_TYPED(
-                        nsCOMPtr<mozIStorageStatement>, aConn, CreateStatement,
-                        "SELECT name, type, sql FROM sqlite_master;"_ns));
+  QM_TRY_INSPECT(const auto& state,
+                 MOZ_TO_RESULT_INVOKE_TYPED(
+                     nsCOMPtr<mozIStorageStatement>, aConn, CreateStatement,
+                     "SELECT name, type, sql FROM sqlite_master;"_ns));
 
-  CACHE_TRY(quota::CollectWhileHasResult(
+  QM_TRY(quota::CollectWhileHasResult(
       *state, [&expects](auto& stmt) -> Result<Ok, nsresult> {
-        CACHE_TRY_INSPECT(
+        QM_TRY_INSPECT(
             const auto& name,
             MOZ_TO_RESULT_INVOKE_TYPED(nsAutoCString, stmt, GetUTF8String, 0));
-        CACHE_TRY_INSPECT(
+        QM_TRY_INSPECT(
             const auto& type,
             MOZ_TO_RESULT_INVOKE_TYPED(nsAutoCString, stmt, GetUTF8String, 1));
-        CACHE_TRY_INSPECT(
+        QM_TRY_INSPECT(
             const auto& sql,
             MOZ_TO_RESULT_INVOKE_TYPED(nsAutoCString, stmt, GetUTF8String, 2));
 
@@ -2328,19 +2314,19 @@ constexpr Migration sMigrationList[] = {
 };
 
 nsresult RewriteEntriesSchema(mozIStorageConnection& aConn) {
-  CACHE_TRY(aConn.ExecuteSimpleSQL("PRAGMA writable_schema = ON"_ns));
+  QM_TRY(aConn.ExecuteSimpleSQL("PRAGMA writable_schema = ON"_ns));
 
-  CACHE_TRY_INSPECT(
+  QM_TRY_INSPECT(
       const auto& state,
       MOZ_TO_RESULT_INVOKE_TYPED(
           nsCOMPtr<mozIStorageStatement>, aConn, CreateStatement,
           "UPDATE sqlite_master SET sql=:sql WHERE name='entries'"_ns));
 
-  CACHE_TRY(
+  QM_TRY(
       state->BindUTF8StringByName("sql"_ns, nsDependentCString(kTableEntries)));
-  CACHE_TRY(state->Execute());
+  QM_TRY(state->Execute());
 
-  CACHE_TRY(aConn.ExecuteSimpleSQL("PRAGMA writable_schema = OFF"_ns));
+  QM_TRY(aConn.ExecuteSimpleSQL("PRAGMA writable_schema = OFF"_ns));
 
   return NS_OK;
 }
@@ -2348,7 +2334,7 @@ nsresult RewriteEntriesSchema(mozIStorageConnection& aConn) {
 nsresult Migrate(mozIStorageConnection& aConn) {
   MOZ_ASSERT(!NS_IsMainThread());
 
-  CACHE_TRY_UNWRAP(int32_t currentVersion, GetEffectiveSchemaVersion(aConn));
+  QM_TRY_UNWRAP(int32_t currentVersion, GetEffectiveSchemaVersion(aConn));
 
   bool rewriteSchema = false;
 
@@ -2361,7 +2347,7 @@ nsresult Migrate(mozIStorageConnection& aConn) {
     for (const auto& migration : sMigrationList) {
       if (migration.mFromVersion == currentVersion) {
         bool shouldRewrite = false;
-        CACHE_TRY(migration.mFunc(aConn, shouldRewrite));
+        QM_TRY(migration.mFunc(aConn, shouldRewrite));
         if (shouldRewrite) {
           rewriteSchema = true;
         }
@@ -2372,7 +2358,7 @@ nsresult Migrate(mozIStorageConnection& aConn) {
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
     int32_t lastVersion = currentVersion;
 #endif
-    CACHE_TRY_UNWRAP(currentVersion, GetEffectiveSchemaVersion(aConn));
+    QM_TRY_UNWRAP(currentVersion, GetEffectiveSchemaVersion(aConn));
 
     MOZ_DIAGNOSTIC_ASSERT(currentVersion > lastVersion);
   }
@@ -2400,11 +2386,11 @@ nsresult MigrateFrom15To16(mozIStorageConnection& aConn, bool& aRewriteSchema) {
   // we need to apply the default "follow" to existing records in the table.
   // We don't actually want to keep the default in the schema for future
   // INSERTs.
-  CACHE_TRY(aConn.ExecuteSimpleSQL(
+  QM_TRY(aConn.ExecuteSimpleSQL(
       "ALTER TABLE entries "
       "ADD COLUMN request_redirect INTEGER NOT NULL DEFAULT 0"_ns));
 
-  CACHE_TRY(aConn.SetSchemaVersion(16));
+  QM_TRY(aConn.SetSchemaVersion(16));
 
   aRewriteSchema = true;
 
@@ -2422,7 +2408,7 @@ nsresult MigrateFrom16To17(mozIStorageConnection& aConn, bool& aRewriteSchema) {
   // one.
 
   // Create a new_entries table with the new fields as of version 17.
-  CACHE_TRY(aConn.ExecuteSimpleSQL(
+  QM_TRY(aConn.ExecuteSimpleSQL(
       "CREATE TABLE new_entries ("
       "id INTEGER NOT NULL PRIMARY KEY, "
       "request_method TEXT NOT NULL, "
@@ -2450,7 +2436,7 @@ nsresult MigrateFrom16To17(mozIStorageConnection& aConn, bool& aRewriteSchema) {
       ")"_ns));
 
   // Copy all of the data to the newly created table.
-  CACHE_TRY(
+  QM_TRY(
       aConn.ExecuteSimpleSQL("INSERT INTO new_entries ("
                              "id, "
                              "request_method, "
@@ -2502,25 +2488,25 @@ nsresult MigrateFrom16To17(mozIStorageConnection& aConn, bool& aRewriteSchema) {
                              "FROM entries;"_ns));
 
   // Remove the old table.
-  CACHE_TRY(aConn.ExecuteSimpleSQL("DROP TABLE entries;"_ns));
+  QM_TRY(aConn.ExecuteSimpleSQL("DROP TABLE entries;"_ns));
 
   // Rename new_entries to entries.
-  CACHE_TRY(
+  QM_TRY(
       aConn.ExecuteSimpleSQL("ALTER TABLE new_entries RENAME to entries;"_ns));
 
   // Now, recreate our indices.
-  CACHE_TRY(aConn.ExecuteSimpleSQL(nsDependentCString(kIndexEntriesRequest)));
+  QM_TRY(aConn.ExecuteSimpleSQL(nsDependentCString(kIndexEntriesRequest)));
 
   // Revalidate the foreign key constraints, and ensure that there are no
   // violations.
-  CACHE_TRY_INSPECT(const bool& hasResult,
-                    quota::CreateAndExecuteSingleStepStatement<
-                        quota::SingleStepResult::ReturnNullIfNoResult>(
-                        aConn, "PRAGMA foreign_key_check;"_ns));
+  QM_TRY_INSPECT(const bool& hasResult,
+                 quota::CreateAndExecuteSingleStepStatement<
+                     quota::SingleStepResult::ReturnNullIfNoResult>(
+                     aConn, "PRAGMA foreign_key_check;"_ns));
 
-  CACHE_TRY(OkIf(!hasResult), NS_ERROR_FAILURE);
+  QM_TRY(OkIf(!hasResult), NS_ERROR_FAILURE);
 
-  CACHE_TRY(aConn.SetSchemaVersion(17));
+  QM_TRY(aConn.SetSchemaVersion(17));
 
   return NS_OK;
 }
@@ -2537,11 +2523,11 @@ nsresult MigrateFrom17To18(mozIStorageConnection& aConn, bool& aRewriteSchema) {
 
   static_assert(int(RequestCache::Default) == 0,
                 "This is where the 0 below comes from!");
-  CACHE_TRY(
+  QM_TRY(
       aConn.ExecuteSimpleSQL("UPDATE entries SET request_cache = 0 "
                              "WHERE request_cache = 5;"_ns));
 
-  CACHE_TRY(aConn.SetSchemaVersion(18));
+  QM_TRY(aConn.SetSchemaVersion(18));
 
   return NS_OK;
 }
@@ -2561,11 +2547,11 @@ nsresult MigrateFrom18To19(mozIStorageConnection& aConn, bool& aRewriteSchema) {
                 "This is where the numbers below come from!");
   // 8 is former TYPE_REFRESH.
 
-  CACHE_TRY(aConn.ExecuteSimpleSQL(
+  QM_TRY(aConn.ExecuteSimpleSQL(
       "UPDATE entries SET request_mode = 3 "
       "WHERE request_contentpolicytype IN (6, 7, 28, 29, 8);"_ns));
 
-  CACHE_TRY(aConn.SetSchemaVersion(19));
+  QM_TRY(aConn.SetSchemaVersion(19));
 
   return NS_OK;
 }
@@ -2578,11 +2564,11 @@ nsresult MigrateFrom19To20(mozIStorageConnection& aConn, bool& aRewriteSchema) {
   // because its required by ALTER TABLE and we need to apply the default
   // "no-referrer-when-downgrade" to existing records in the table. We don't
   // actually want to keep the default in the schema for future INSERTs.
-  CACHE_TRY(aConn.ExecuteSimpleSQL(
+  QM_TRY(aConn.ExecuteSimpleSQL(
       "ALTER TABLE entries "
       "ADD COLUMN request_referrer_policy INTEGER NOT NULL DEFAULT 2"_ns));
 
-  CACHE_TRY(aConn.SetSchemaVersion(20));
+  QM_TRY(aConn.SetSchemaVersion(20));
 
   aRewriteSchema = true;
 
@@ -2600,7 +2586,7 @@ nsresult MigrateFrom20To21(mozIStorageConnection& aConn, bool& aRewriteSchema) {
   // the old one.
 
   // Create a new_entries table with the new fields as of version 21.
-  CACHE_TRY(aConn.ExecuteSimpleSQL(
+  QM_TRY(aConn.ExecuteSimpleSQL(
       "CREATE TABLE new_entries ("
       "id INTEGER NOT NULL PRIMARY KEY, "
       "request_method TEXT NOT NULL, "
@@ -2628,14 +2614,14 @@ nsresult MigrateFrom20To21(mozIStorageConnection& aConn, bool& aRewriteSchema) {
       ")"_ns));
 
   // Create a response_url_list table with the new fields as of version 21.
-  CACHE_TRY(aConn.ExecuteSimpleSQL(
+  QM_TRY(aConn.ExecuteSimpleSQL(
       "CREATE TABLE response_url_list ("
       "url TEXT NOT NULL, "
       "entry_id INTEGER NOT NULL REFERENCES entries(id) ON DELETE CASCADE"
       ")"_ns));
 
   // Copy all of the data to the newly created entries table.
-  CACHE_TRY(
+  QM_TRY(
       aConn.ExecuteSimpleSQL("INSERT INTO new_entries ("
                              "id, "
                              "request_method, "
@@ -2687,7 +2673,7 @@ nsresult MigrateFrom20To21(mozIStorageConnection& aConn, bool& aRewriteSchema) {
                              "FROM entries;"_ns));
 
   // Copy reponse_url to the newly created response_url_list table.
-  CACHE_TRY(
+  QM_TRY(
       aConn.ExecuteSimpleSQL("INSERT INTO response_url_list ("
                              "url, "
                              "entry_id "
@@ -2697,25 +2683,25 @@ nsresult MigrateFrom20To21(mozIStorageConnection& aConn, bool& aRewriteSchema) {
                              "FROM entries;"_ns));
 
   // Remove the old table.
-  CACHE_TRY(aConn.ExecuteSimpleSQL("DROP TABLE entries;"_ns));
+  QM_TRY(aConn.ExecuteSimpleSQL("DROP TABLE entries;"_ns));
 
   // Rename new_entries to entries.
-  CACHE_TRY(
+  QM_TRY(
       aConn.ExecuteSimpleSQL("ALTER TABLE new_entries RENAME to entries;"_ns));
 
   // Now, recreate our indices.
-  CACHE_TRY(aConn.ExecuteSimpleSQL(nsLiteralCString(kIndexEntriesRequest)));
+  QM_TRY(aConn.ExecuteSimpleSQL(nsLiteralCString(kIndexEntriesRequest)));
 
   // Revalidate the foreign key constraints, and ensure that there are no
   // violations.
-  CACHE_TRY_INSPECT(const bool& hasResult,
-                    quota::CreateAndExecuteSingleStepStatement<
-                        quota::SingleStepResult::ReturnNullIfNoResult>(
-                        aConn, "PRAGMA foreign_key_check;"_ns));
+  QM_TRY_INSPECT(const bool& hasResult,
+                 quota::CreateAndExecuteSingleStepStatement<
+                     quota::SingleStepResult::ReturnNullIfNoResult>(
+                     aConn, "PRAGMA foreign_key_check;"_ns));
 
-  CACHE_TRY(OkIf(!hasResult), NS_ERROR_FAILURE);
+  QM_TRY(OkIf(!hasResult), NS_ERROR_FAILURE);
 
-  CACHE_TRY(aConn.SetSchemaVersion(21));
+  QM_TRY(aConn.SetSchemaVersion(21));
 
   aRewriteSchema = true;
 
@@ -2726,14 +2712,14 @@ nsresult MigrateFrom21To22(mozIStorageConnection& aConn, bool& aRewriteSchema) {
   MOZ_ASSERT(!NS_IsMainThread());
 
   // Add the request_integrity column.
-  CACHE_TRY(aConn.ExecuteSimpleSQL(
+  QM_TRY(aConn.ExecuteSimpleSQL(
       "ALTER TABLE entries "
       "ADD COLUMN request_integrity TEXT NOT NULL DEFAULT '';"_ns));
 
-  CACHE_TRY(
+  QM_TRY(
       aConn.ExecuteSimpleSQL("UPDATE entries SET request_integrity = '';"_ns));
 
-  CACHE_TRY(aConn.SetSchemaVersion(22));
+  QM_TRY(aConn.SetSchemaVersion(22));
 
   aRewriteSchema = true;
 
@@ -2745,7 +2731,7 @@ nsresult MigrateFrom22To23(mozIStorageConnection& aConn, bool& aRewriteSchema) {
 
   // The only change between 22 and 23 was a different snappy compression
   // format, but it's backwards-compatible.
-  CACHE_TRY(aConn.SetSchemaVersion(23));
+  QM_TRY(aConn.SetSchemaVersion(23));
 
   return NS_OK;
 }
@@ -2754,11 +2740,11 @@ nsresult MigrateFrom23To24(mozIStorageConnection& aConn, bool& aRewriteSchema) {
   MOZ_ASSERT(!NS_IsMainThread());
 
   // Add the request_url_fragment column.
-  CACHE_TRY(aConn.ExecuteSimpleSQL(
+  QM_TRY(aConn.ExecuteSimpleSQL(
       "ALTER TABLE entries "
       "ADD COLUMN request_url_fragment TEXT NOT NULL DEFAULT ''"_ns));
 
-  CACHE_TRY(aConn.SetSchemaVersion(24));
+  QM_TRY(aConn.SetSchemaVersion(24));
 
   aRewriteSchema = true;
 
@@ -2769,7 +2755,7 @@ nsresult MigrateFrom24To25(mozIStorageConnection& aConn, bool& aRewriteSchema) {
   MOZ_ASSERT(!NS_IsMainThread());
 
   // The only change between 24 and 25 was a new nsIContentPolicy type.
-  CACHE_TRY(aConn.SetSchemaVersion(25));
+  QM_TRY(aConn.SetSchemaVersion(25));
 
   return NS_OK;
 }
@@ -2779,16 +2765,16 @@ nsresult MigrateFrom25To26(mozIStorageConnection& aConn, bool& aRewriteSchema) {
 
   // Add the response_padding_size column.
   // Note: only opaque repsonse should be non-null interger.
-  CACHE_TRY(aConn.ExecuteSimpleSQL(
+  QM_TRY(aConn.ExecuteSimpleSQL(
       "ALTER TABLE entries "
       "ADD COLUMN response_padding_size INTEGER NULL "_ns));
 
-  CACHE_TRY(
+  QM_TRY(
       aConn.ExecuteSimpleSQL("UPDATE entries SET response_padding_size = 0 "
                              "WHERE response_type = 4"_ns  // opaque response
                              ));
 
-  CACHE_TRY(aConn.SetSchemaVersion(26));
+  QM_TRY(aConn.SetSchemaVersion(26));
 
   aRewriteSchema = true;
 
@@ -2798,7 +2784,7 @@ nsresult MigrateFrom25To26(mozIStorageConnection& aConn, bool& aRewriteSchema) {
 nsresult MigrateFrom26To27(mozIStorageConnection& aConn, bool& aRewriteSchema) {
   MOZ_ASSERT(!NS_IsMainThread());
 
-  CACHE_TRY(aConn.SetSchemaVersion(kHackyDowngradeSchemaVersion));
+  QM_TRY(aConn.SetSchemaVersion(kHackyDowngradeSchemaVersion));
 
   return NS_OK;
 }
@@ -2810,11 +2796,11 @@ nsresult MigrateFrom27To28(mozIStorageConnection& aConn, bool& aRewriteSchema) {
   // However, at that time, the default value for the existing rows is NULL
   // which against the statement in kTableEntries. Thus, we need to have another
   // upgrade to update these values to an empty string.
-  CACHE_TRY(
+  QM_TRY(
       aConn.ExecuteSimpleSQL("UPDATE entries SET request_integrity = '' "
                              "WHERE request_integrity is NULL;"_ns));
 
-  CACHE_TRY(aConn.SetSchemaVersion(28));
+  QM_TRY(aConn.SetSchemaVersion(28));
 
   return NS_OK;
 }

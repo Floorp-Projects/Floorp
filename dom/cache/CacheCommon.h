@@ -9,11 +9,4 @@
 
 #include "mozilla/dom/quota/QuotaCommon.h"
 
-// XXX Replace all uses by the QM_* variants and remove these aliases
-#define CACHE_TRY QM_TRY
-#define CACHE_TRY_UNWRAP QM_TRY_UNWRAP
-#define CACHE_TRY_INSPECT QM_TRY_INSPECT
-#define CACHE_TRY_RETURN QM_TRY_RETURN
-#define CACHE_FAIL QM_FAIL
-
 #endif  // mozilla_dom_cache_CacheCommon_h

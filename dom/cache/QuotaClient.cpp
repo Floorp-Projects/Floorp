@@ -41,13 +41,13 @@ template <typename StepFunc>
 Result<UsageInfo, nsresult> ReduceUsageInfo(nsIFile& aDir,
                                             const Atomic<bool>& aCanceled,
                                             const StepFunc& aStepFunc) {
-  CACHE_TRY_RETURN(quota::ReduceEachFileAtomicCancelable(
+  QM_TRY_RETURN(quota::ReduceEachFileAtomicCancelable(
       aDir, aCanceled, UsageInfo{},
       [&aStepFunc](UsageInfo usageInfo, const nsCOMPtr<nsIFile>& bodyDir)
           -> Result<UsageInfo, nsresult> {
-        CACHE_TRY(OkIf(!QuotaManager::IsShuttingDown()), Err(NS_ERROR_ABORT));
+        QM_TRY(OkIf(!QuotaManager::IsShuttingDown()), Err(NS_ERROR_ABORT));
 
-        CACHE_TRY_INSPECT(const auto& stepUsageInfo, aStepFunc(bodyDir));
+        QM_TRY_INSPECT(const auto& stepUsageInfo, aStepFunc(bodyDir));
 
         return usageInfo + stepUsageInfo;
       }));
@@ -57,10 +57,10 @@ Result<UsageInfo, nsresult> GetBodyUsage(nsIFile& aMorgueDir,
                                          const Atomic<bool>& aCanceled) {
   AssertIsOnIOThread();
 
-  CACHE_TRY_RETURN(ReduceUsageInfo(
+  QM_TRY_RETURN(ReduceUsageInfo(
       aMorgueDir, aCanceled,
       [](const nsCOMPtr<nsIFile>& bodyDir) -> Result<UsageInfo, nsresult> {
-        CACHE_TRY_INSPECT(const auto& dirEntryKind, GetDirEntryKind(*bodyDir));
+        QM_TRY_INSPECT(const auto& dirEntryKind, GetDirEntryKind(*bodyDir));
 
         if (dirEntryKind != nsIFileKind::ExistsAsDirectory) {
           if (dirEntryKind == nsIFileKind::ExistsAsFile) {
@@ -81,8 +81,8 @@ Result<UsageInfo, nsresult> GetBodyUsage(nsIFile& aMorgueDir,
                          const nsACString& leafName) -> Result<bool, nsresult> {
           Unused << leafName;
 
-          CACHE_TRY_INSPECT(const int64_t& fileSize,
-                            MOZ_TO_RESULT_INVOKE(bodyFile, GetFileSize));
+          QM_TRY_INSPECT(const int64_t& fileSize,
+                         MOZ_TO_RESULT_INVOKE(bodyFile, GetFileSize));
           MOZ_DIAGNOSTIC_ASSERT(fileSize >= 0);
           // FIXME: Separate file usage and database usage in OriginInfo so that
           // the workaround for treating body file size as database usage can be
@@ -106,18 +106,18 @@ Result<UsageInfo, nsresult> GetBodyUsage(nsIFile& aMorgueDir,
         // QM_OR_ELSE_WARN is not used here since we want ignore
         // NS_ERROR_FILE_FS_CORRUPTED completely (even a warning is not
         // desired).
-        CACHE_TRY(ToResult(BodyTraverseFiles(QuotaInfo{}, *bodyDir, getUsage,
-                                             /* aCanRemoveFiles */ true,
-                                             /* aTrackQuota */ false))
-                      .orElse([](const nsresult rv) -> Result<Ok, nsresult> {
-                        // We treat NS_ERROR_FILE_FS_CORRUPTED as if the
-                        // directory did not exist at all.
-                        if (rv == NS_ERROR_FILE_FS_CORRUPTED) {
-                          return Ok{};
-                        }
+        QM_TRY(ToResult(BodyTraverseFiles(QuotaInfo{}, *bodyDir, getUsage,
+                                          /* aCanRemoveFiles */ true,
+                                          /* aTrackQuota */ false))
+                   .orElse([](const nsresult rv) -> Result<Ok, nsresult> {
+                     // We treat NS_ERROR_FILE_FS_CORRUPTED as if the
+                     // directory did not exist at all.
+                     if (rv == NS_ERROR_FILE_FS_CORRUPTED) {
+                       return Ok{};
+                     }
 
-                        return Err(rv);
-                      }));
+                     return Err(rv);
+                   }));
         return usageInfo;
       }));
 }
@@ -136,22 +136,21 @@ Result<int64_t, nsresult> GetPaddingSizeFromDB(
 
 #ifdef DEBUG
   {
-    CACHE_TRY_INSPECT(const bool& exists,
-                      MOZ_TO_RESULT_INVOKE(aDBFile, Exists));
+    QM_TRY_INSPECT(const bool& exists, MOZ_TO_RESULT_INVOKE(aDBFile, Exists));
     MOZ_ASSERT(exists);
   }
 #endif
 
-  CACHE_TRY_INSPECT(const auto& conn, OpenDBConnection(quotaInfo, aDBFile));
+  QM_TRY_INSPECT(const auto& conn, OpenDBConnection(quotaInfo, aDBFile));
 
   // Make sure that the database has the latest schema before we try to read
   // from it. We have to do this because GetPaddingSizeFromDB is called
   // by InitOrigin. And it means that SetupAction::RunSyncWithDBOnTarget hasn't
   // checked the schema for the given origin yet).
-  CACHE_TRY(db::CreateOrMigrateSchema(*conn));
+  QM_TRY(db::CreateOrMigrateSchema(*conn));
 
-  CACHE_TRY_RETURN(DirectoryPaddingRestore(aDir, *conn,
-                                           /* aMustRestore */ false));
+  QM_TRY_RETURN(DirectoryPaddingRestore(aDir, *conn,
+                                        /* aMustRestore */ false));
 }
 
 }  // namespace
@@ -181,24 +180,23 @@ Result<UsageInfo, nsresult> CacheQuotaClient::InitOrigin(
   QuotaManager* const qm = QuotaManager::Get();
   MOZ_DIAGNOSTIC_ASSERT(qm);
 
-  CACHE_TRY_INSPECT(
+  QM_TRY_INSPECT(
       const auto& dir,
       qm->GetDirectoryForOrigin(aPersistenceType, aOriginMetadata.mOrigin));
 
-  CACHE_TRY(
-      dir->Append(NS_LITERAL_STRING_FROM_CSTRING(DOMCACHE_DIRECTORY_NAME)));
+  QM_TRY(dir->Append(NS_LITERAL_STRING_FROM_CSTRING(DOMCACHE_DIRECTORY_NAME)));
 
-  CACHE_TRY_INSPECT(
+  QM_TRY_INSPECT(
       const auto& cachesSQLiteFile,
       ([dir]() -> Result<nsCOMPtr<nsIFile>, nsresult> {
-        CACHE_TRY_INSPECT(const auto& cachesSQLite,
-                          CloneFileAndAppend(*dir, kCachesSQLiteFilename));
+        QM_TRY_INSPECT(const auto& cachesSQLite,
+                       CloneFileAndAppend(*dir, kCachesSQLiteFilename));
 
         // IsDirectory is used to check if caches.sqlite exists or not. Another
         // benefit of this is that we can test the failed cases by creating a
         // directory named "caches.sqlite".
-        CACHE_TRY_INSPECT(const auto& dirEntryKind,
-                          GetDirEntryKind(*cachesSQLite));
+        QM_TRY_INSPECT(const auto& dirEntryKind,
+                       GetDirEntryKind(*cachesSQLite));
         if (dirEntryKind == nsIFileKind::DoesNotExist) {
           // We only ensure padding files and morgue directory get removed like
           // WipeDatabase in DBAction.cpp. The -wal journal file will be
@@ -209,25 +207,25 @@ Result<UsageInfo, nsresult> CacheQuotaClient::InitOrigin(
           // XXX Long term, we might even think about removing entire origin
           // directory because missing caches.sqlite while other files exist can
           // be interpreted as database corruption.
-          CACHE_TRY(mozilla::dom::cache::DirectoryPaddingDeleteFile(
+          QM_TRY(mozilla::dom::cache::DirectoryPaddingDeleteFile(
               *dir, DirPaddingFile::TMP_FILE));
 
-          CACHE_TRY(mozilla::dom::cache::DirectoryPaddingDeleteFile(
+          QM_TRY(mozilla::dom::cache::DirectoryPaddingDeleteFile(
               *dir, DirPaddingFile::FILE));
 
-          CACHE_TRY_INSPECT(const auto& morgueDir,
-                            CloneFileAndAppend(*dir, kMorgueDirectoryFilename));
+          QM_TRY_INSPECT(const auto& morgueDir,
+                         CloneFileAndAppend(*dir, kMorgueDirectoryFilename));
 
           QuotaInfo dummy;
-          CACHE_TRY(mozilla::dom::cache::RemoveNsIFileRecursively(
+          QM_TRY(mozilla::dom::cache::RemoveNsIFileRecursively(
               dummy, *morgueDir,
               /* aTrackQuota */ false));
 
           return nsCOMPtr<nsIFile>{nullptr};
         }
 
-        CACHE_TRY(OkIf(dirEntryKind == nsIFileKind::ExistsAsFile),
-                  Err(NS_ERROR_FAILURE));
+        QM_TRY(OkIf(dirEntryKind == nsIFileKind::ExistsAsFile),
+               Err(NS_ERROR_FAILURE));
 
         return cachesSQLite;
       }()));
@@ -236,9 +234,9 @@ Result<UsageInfo, nsresult> CacheQuotaClient::InitOrigin(
   // should have been removed if they existed. We ignore the rest of known files
   // because we assume that they will be removed when a new database is created.
   // XXX Ensure the -wel file is removed if the caches.sqlite doesn't exist.
-  CACHE_TRY(OkIf(!!cachesSQLiteFile), UsageInfo{});
+  QM_TRY(OkIf(!!cachesSQLiteFile), UsageInfo{});
 
-  CACHE_TRY_INSPECT(
+  QM_TRY_INSPECT(
       const auto& paddingSize,
       ([dir, cachesSQLiteFile,
         &aOriginMetadata]() -> Result<int64_t, nsresult> {
@@ -253,26 +251,26 @@ Result<UsageInfo, nsresult> CacheQuotaClient::InitOrigin(
         // If the temporary file still exists or failing to get the padding size
         // from the padding file, then we need to get the padding size from the
         // database and restore the padding file.
-        CACHE_TRY_RETURN(
+        QM_TRY_RETURN(
             GetPaddingSizeFromDB(*dir, *cachesSQLiteFile, aOriginMetadata));
       }()));
 
-  CACHE_TRY_INSPECT(
+  QM_TRY_INSPECT(
       const auto& innerUsageInfo,
       ReduceUsageInfo(
           *dir, aCanceled,
           [&aCanceled](
               const nsCOMPtr<nsIFile>& file) -> Result<UsageInfo, nsresult> {
-            CACHE_TRY_INSPECT(
+            QM_TRY_INSPECT(
                 const auto& leafName,
                 MOZ_TO_RESULT_INVOKE_TYPED(nsAutoString, file, GetLeafName));
 
-            CACHE_TRY_INSPECT(const auto& dirEntryKind, GetDirEntryKind(*file));
+            QM_TRY_INSPECT(const auto& dirEntryKind, GetDirEntryKind(*file));
 
             switch (dirEntryKind) {
               case nsIFileKind::ExistsAsDirectory:
                 if (leafName.EqualsLiteral("morgue")) {
-                  CACHE_TRY_RETURN(GetBodyUsage(*file, aCanceled));
+                  QM_TRY_RETURN(GetBodyUsage(*file, aCanceled));
                 } else {
                   NS_WARNING("Unknown Cache directory found!");
                 }
@@ -290,8 +288,8 @@ Result<UsageInfo, nsresult> CacheQuotaClient::InitOrigin(
 
                 if (leafName.Equals(kCachesSQLiteFilename) ||
                     leafName.EqualsLiteral("caches.sqlite-wal")) {
-                  CACHE_TRY_INSPECT(const int64_t& fileSize,
-                                    MOZ_TO_RESULT_INVOKE(file, GetFileSize));
+                  QM_TRY_INSPECT(const int64_t& fileSize,
+                                 MOZ_TO_RESULT_INVOKE(file, GetFileSize));
                   MOZ_DIAGNOSTIC_ASSERT(fileSize >= 0);
 
                   return UsageInfo{DatabaseUsageType(Some(fileSize))};
@@ -418,7 +416,7 @@ nsresult CacheQuotaClient::UpgradeStorageFrom2_0To2_1(nsIFile* aDirectory) {
   AssertIsOnIOThread();
   MOZ_DIAGNOSTIC_ASSERT(aDirectory);
 
-  CACHE_TRY(DirectoryPaddingInit(*aDirectory));
+  QM_TRY(DirectoryPaddingInit(*aDirectory));
 
   return NS_OK;
 }
@@ -429,9 +427,9 @@ nsresult CacheQuotaClient::RestorePaddingFileInternal(
   MOZ_DIAGNOSTIC_ASSERT(aBaseDir);
   MOZ_DIAGNOSTIC_ASSERT(aConn);
 
-  CACHE_TRY_INSPECT(const int64_t& dummyPaddingSize,
-                    DirectoryPaddingRestore(*aBaseDir, *aConn,
-                                            /* aMustRestore */ true));
+  QM_TRY_INSPECT(const int64_t& dummyPaddingSize,
+                 DirectoryPaddingRestore(*aBaseDir, *aConn,
+                                         /* aMustRestore */ true));
   Unused << dummyPaddingSize;
 
   return NS_OK;
@@ -444,20 +442,19 @@ nsresult CacheQuotaClient::WipePaddingFileInternal(const QuotaInfo& aQuotaInfo,
 
   MOZ_ASSERT(DirectoryPaddingFileExists(*aBaseDir, DirPaddingFile::FILE));
 
-  CACHE_TRY_INSPECT(
+  QM_TRY_INSPECT(
       const int64_t& paddingSize, ([&aBaseDir]() -> Result<int64_t, nsresult> {
         const bool temporaryPaddingFileExist =
             DirectoryPaddingFileExists(*aBaseDir, DirPaddingFile::TMP_FILE);
 
         Maybe<int64_t> directoryPaddingGetResult;
         if (!temporaryPaddingFileExist) {
-          CACHE_TRY_UNWRAP(
-              directoryPaddingGetResult,
-              ([&aBaseDir]() -> Result<Maybe<int64_t>, nsresult> {
-                CACHE_TRY_RETURN(
-                    DirectoryPaddingGet(*aBaseDir).map(Some<int64_t>),
-                    Maybe<int64_t>{});
-              }()));
+          QM_TRY_UNWRAP(directoryPaddingGetResult,
+                        ([&aBaseDir]() -> Result<Maybe<int64_t>, nsresult> {
+                          QM_TRY_RETURN(
+                              DirectoryPaddingGet(*aBaseDir).map(Some<int64_t>),
+                              Maybe<int64_t>{});
+                        }()));
         }
 
         if (temporaryPaddingFileExist || !directoryPaddingGetResult) {
@@ -475,12 +472,12 @@ nsresult CacheQuotaClient::WipePaddingFileInternal(const QuotaInfo& aQuotaInfo,
     DecreaseUsageForQuotaInfo(aQuotaInfo, paddingSize);
   }
 
-  CACHE_TRY(DirectoryPaddingDeleteFile(*aBaseDir, DirPaddingFile::FILE));
+  QM_TRY(DirectoryPaddingDeleteFile(*aBaseDir, DirPaddingFile::FILE));
 
   // Remove temporary file if we have one.
-  CACHE_TRY(DirectoryPaddingDeleteFile(*aBaseDir, DirPaddingFile::TMP_FILE));
+  QM_TRY(DirectoryPaddingDeleteFile(*aBaseDir, DirPaddingFile::TMP_FILE));
 
-  CACHE_TRY(DirectoryPaddingInit(*aBaseDir));
+  QM_TRY(DirectoryPaddingInit(*aBaseDir));
 
   return NS_OK;
 }
@@ -512,7 +509,7 @@ nsresult RestorePaddingFile(nsIFile* aBaseDir, mozIStorageConnection* aConn) {
   RefPtr<CacheQuotaClient> cacheQuotaClient = CacheQuotaClient::Get();
   MOZ_DIAGNOSTIC_ASSERT(cacheQuotaClient);
 
-  CACHE_TRY(cacheQuotaClient->RestorePaddingFileInternal(aBaseDir, aConn));
+  QM_TRY(cacheQuotaClient->RestorePaddingFileInternal(aBaseDir, aConn));
 
   return NS_OK;
 }
@@ -525,7 +522,7 @@ nsresult WipePaddingFile(const QuotaInfo& aQuotaInfo, nsIFile* aBaseDir) {
   RefPtr<CacheQuotaClient> cacheQuotaClient = CacheQuotaClient::Get();
   MOZ_DIAGNOSTIC_ASSERT(cacheQuotaClient);
 
-  CACHE_TRY(cacheQuotaClient->WipePaddingFileInternal(aQuotaInfo, aBaseDir));
+  QM_TRY(cacheQuotaClient->WipePaddingFileInternal(aQuotaInfo, aBaseDir));
 
   return NS_OK;
 }

@@ -26,8 +26,8 @@ Result<SafeRefPtr<ManagerId>, nsresult> ManagerId::Create(
   // QuotaManager::GetOriginFromPrincipal() has special logic for system
   // and about: principals.  We need to use the same modified origin in
   // order to interpret calls from QM correctly.
-  CACHE_TRY_INSPECT(const auto& quotaOrigin,
-                    QuotaManager::GetOriginFromPrincipal(aPrincipal));
+  QM_TRY_INSPECT(const auto& quotaOrigin,
+                 QuotaManager::GetOriginFromPrincipal(aPrincipal));
 
   return MakeSafeRefPtr<ManagerId>(aPrincipal, quotaOrigin, ConstructorGuard{});
 }
