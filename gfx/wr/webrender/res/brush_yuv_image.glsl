@@ -65,8 +65,8 @@ void brush_vs(
     vYuvColorSpace = prim.color_space;
     vRescaleFactor = int(log2(prim.coefficient));
 #endif
-
-    if (vFormat == YUV_FORMAT_PLANAR) {
+    // The additional test for 99 works around a gen6 shader compiler bug: 1708937
+    if (vFormat == YUV_FORMAT_PLANAR || vFormat == 99) {
         ImageSource res_y = fetch_image_source(prim_user_data.x);
         ImageSource res_u = fetch_image_source(prim_user_data.y);
         ImageSource res_v = fetch_image_source(prim_user_data.z);
