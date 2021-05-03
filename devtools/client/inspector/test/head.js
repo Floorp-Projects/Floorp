@@ -500,7 +500,7 @@ function undoChange(inspector) {
   const canUndo = inspector.markup.undo.canUndo();
   ok(canUndo, "The last change in the markup-view can be undone");
   if (!canUndo) {
-    return promise.reject();
+    return Promise.reject();
   }
 
   const mutated = inspector.once("markupmutation");
@@ -520,7 +520,7 @@ function redoChange(inspector) {
   const canRedo = inspector.markup.undo.canRedo();
   ok(canRedo, "The last change in the markup-view can be redone");
   if (!canRedo) {
-    return promise.reject();
+    return Promise.reject();
   }
 
   const mutated = inspector.once("markupmutation");

@@ -37,12 +37,12 @@ add_task(async function() {
       this.nodeFront = nodeFront;
       this.isShown = true;
       this.nbOfTimesShown++;
-      return promise.resolve(true);
+      return Promise.resolve(true);
     },
     hide: function() {
       this.nodeFront = null;
       this.isShown = false;
-      return promise.resolve();
+      return Promise.resolve();
     },
     finalize: function() {},
   };

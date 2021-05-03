@@ -340,8 +340,7 @@ function findVariableViewProperties(ruleArray, parsed) {
     // Return the results - a promise resolved to hold the updated ruleArray.
     const returnResults = onAllRulesMatched.bind(null, ruleArray);
 
-    return promise
-      .all(outstanding)
+    return Promise.all(outstanding)
       .then(lastStep)
       .then(returnResults);
   }
@@ -436,7 +435,7 @@ function findVariableViewProperties(ruleArray, parsed) {
  */
 function matchVariablesViewProperty(prop, rule) {
   function resolve(result) {
-    return promise.resolve(result);
+    return Promise.resolve(result);
   }
 
   if (!prop) {

@@ -24,8 +24,7 @@ function test() {
   gClient.connect().then(([aType, aTraits]) => {
     is(aType, "browser", "Root actor should identify itself as a browser.");
 
-    promise
-      .resolve(null)
+    Promise.resolve(null)
       .then(testFirstTab)
       .then(testSecondTab)
       .then(testRemoveTab)

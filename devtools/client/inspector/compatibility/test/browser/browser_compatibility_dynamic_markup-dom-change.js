@@ -83,7 +83,7 @@ var clickContainer = async function(selector, inspector) {
   const container = getContainerForNodeFront(nodeFront, inspector);
 
   const updated = container.selected
-    ? promise.resolve()
+    ? Promise.resolve()
     : inspector.once("inspector-updated");
   EventUtils.synthesizeMouseAtCenter(
     container.tagLine,
