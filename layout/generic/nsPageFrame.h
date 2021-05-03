@@ -65,8 +65,6 @@ class nsPageFrame final : public nsContainerFrame {
     mIndexOnSheet = aIndexOnSheet;
   }
 
-  ComputeTransformFunction GetTransformGetter() const override;
-
  protected:
   explicit nsPageFrame(ComputedStyle* aStyle, nsPresContext* aPresContext);
   virtual ~nsPageFrame();
