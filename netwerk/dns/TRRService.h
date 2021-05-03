@@ -15,6 +15,7 @@
 #include "TRRServiceBase.h"
 #include "nsICaptivePortalService.h"
 #include "nsTHashSet.h"
+#include "TRR.h"
 
 class nsDNSService;
 class nsIPrefBranch;
@@ -188,7 +189,7 @@ class TRRService : public TRRServiceBase,
     NS_DECL_ISUPPORTS_INHERITED
     NS_DECL_NSITIMERCALLBACK
 
-   public:
+   private:
     static const size_t RESULTS_SIZE = 32;
 
     RefPtr<TRR> mTask;
@@ -226,6 +227,7 @@ class TRRService : public TRRServiceBase,
     // confirmation.
     nsCString mFailedLookups;
 
+   public:
     // Called when a confirmation completes successfully or when the
     // confirmation context changes.
     void RecordEvent(const char* aReason);
@@ -243,23 +245,80 @@ class TRRService : public TRRServiceBase,
     void HandleEvent(ConfirmationEvent aEvent);
     void HandleEvent(ConfirmationEvent aEvent, const MutexAutoLock&);
 
+    void SetCaptivePortalStatus(int32_t aStatus) {
+      mCaptivePortalStatus = aStatus;
+    }
+
+    uintptr_t TaskAddr() { return uintptr_t(mTask.get()); }
+
    private:
     // Since the ConfirmationContext is embedded in the TRRService object
     // we can easily get a pointer to the TRRService. ConfirmationContext
     // delegates AddRef/Release calls to the owning object since they are
     // guaranteed to have the same lifetime.
     TRRService* OwningObject() {
-      return reinterpret_cast<TRRService*>(reinterpret_cast<uint8_t*>(this) -
-                                           offsetof(TRRService, mConfirmation));
+      return reinterpret_cast<TRRService*>(
+          reinterpret_cast<uint8_t*>(this) -
+          offsetof(TRRService, mConfirmation) -
+          offsetof(ConfirmationWrapper, mConfirmation));
     }
 
     Atomic<enum ConfirmationState, Relaxed> mState{CONFIRM_OFF};
 
+    // TRRService needs to be a friend class because it needs to access the
+    // destructor.
     friend class TRRService;
     ~ConfirmationContext() = default;
   };
 
-  ConfirmationContext mConfirmation;
+  // Because TRRService needs to be a friend class to ConfirmationContext that
+  // means it can access member variables. In order to properly separate logic
+  // and prevent direct access to its member variables we embed it in a wrapper
+  // class.
+  class ConfirmationWrapper {
+   public:
+    // Called when a confirmation completes successfully or when the
+    // confirmation context changes.
+    void RecordEvent(const char* aReason) {
+      mConfirmation.RecordEvent(aReason);
+    }
+
+    // Called when a confirmation request is completed. The status is recorded
+    // in the results.
+    void RequestCompleted(nsresult aLookupStatus, nsresult aChannelStatus) {
+      mConfirmation.RequestCompleted(aLookupStatus, aChannelStatus);
+    }
+
+    enum ConfirmationState State() { return mConfirmation.State(); }
+
+    void CompleteConfirmation(nsresult aStatus, TRR* aTrrRequest) {
+      mConfirmation.CompleteConfirmation(aStatus, aTrrRequest);
+    }
+
+    void RecordTRRStatus(nsresult aChannelStatus) {
+      mConfirmation.RecordTRRStatus(aChannelStatus);
+    }
+
+    void HandleEvent(ConfirmationEvent aEvent) {
+      mConfirmation.HandleEvent(aEvent);
+    }
+
+    void HandleEvent(ConfirmationEvent aEvent, const MutexAutoLock& lock) {
+      mConfirmation.HandleEvent(aEvent, lock);
+    }
+
+    void SetCaptivePortalStatus(int32_t aStatus) {
+      mConfirmation.SetCaptivePortalStatus(aStatus);
+    }
+
+    uintptr_t TaskAddr() { return mConfirmation.TaskAddr(); }
+
+   private:
+    friend TRRService* ConfirmationContext::OwningObject();
+    ConfirmationContext mConfirmation;
+  };
+
+  ConfirmationWrapper mConfirmation;
 
   bool mParentalControlEnabled{false};
   RefPtr<ODoHService> mODoHService;

@@ -596,27 +596,28 @@ TRRService::Observe(nsISupports* aSubject, const char* aTopic,
   MOZ_ASSERT(NS_IsMainThread(), "wrong thread");
   LOG(("TRR::Observe() topic=%s\n", aTopic));
   if (!strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID)) {
-    TRR* prevConf = mConfirmation.mTask;
+    auto prevConf = mConfirmation.TaskAddr();
 
     ReadPrefs(NS_ConvertUTF16toUTF8(aData).get());
     mConfirmation.RecordEvent("pref-change");
 
     // We should only trigger a new confirmation if reading the prefs didn't
     // already trigger one.
-    if (prevConf == mConfirmation.mTask) {
+    if (prevConf == mConfirmation.TaskAddr()) {
       mConfirmation.HandleEvent(ConfirmationEvent::PrefChange);
     }
   } else if (!strcmp(aTopic, kOpenCaptivePortalLoginEvent)) {
     // We are in a captive portal
     LOG(("TRRservice in captive portal\n"));
     mCaptiveIsPassed = false;
-    mConfirmation.mCaptivePortalStatus = nsICaptivePortalService::LOCKED_PORTAL;
+    mConfirmation.SetCaptivePortalStatus(
+        nsICaptivePortalService::LOCKED_PORTAL);
   } else if (!strcmp(aTopic, NS_CAPTIVE_PORTAL_CONNECTIVITY)) {
     nsAutoCString data = NS_ConvertUTF16toUTF8(aData);
     LOG(("TRRservice captive portal was %s\n", data.get()));
     nsCOMPtr<nsICaptivePortalService> cps = do_QueryInterface(aSubject);
     if (cps) {
-      mConfirmation.mCaptivePortalStatus = cps->State();
+      mConfirmation.SetCaptivePortalStatus(cps->State());
     }
 
     // If we were previously in a captive portal, this event means we will
