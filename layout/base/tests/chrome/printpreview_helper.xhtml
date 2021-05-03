@@ -20,6 +20,7 @@ var info = window.arguments[0].info;
 var SimpleTest = window.arguments[0].SimpleTest;
 var gWbp;
 var gPrintPreviewWindow;
+var gPrintPreviewBrowser;
 var ctx1;
 var ctx2;
 var counter = 0;
@@ -82,7 +83,24 @@ function printpreview(options = {}) {
   function afterprint() { ++after; }
   frameElts[0].contentWindow.addEventListener("beforeprint", beforeprint, true);
   frameElts[0].contentWindow.addEventListener("afterprint", afterprint, true);
-  gPrintPreviewWindow = frameElts[0].contentWindow.printPreview(settings, listener);
+  {
+    let bc = frameElts[0].contentWindow.browsingContext;
+    let browser = document.createXULElement("browser");
+    browser.setAttribute("type", "content");
+    browser.setAttribute("width", "800");
+    browser.setAttribute("height", "800");
+    browser.style.maxWidth = "800px"; // Deal with XUL silliness.
+    browser.setAttribute("initialBrowsingContextGroupId", bc.group.id);
+    browser.setAttribute("nodefaultsrc", "true");
+    document.documentElement.appendChild(browser);
+    gPrintPreviewBrowser = browser;
+
+    // Force contentViewer creation and layout.
+    browser.browsingContext.docShell.document;
+    browser.getBoundingClientRect();
+
+    gPrintPreviewWindow = frameElts[0].contentWindow.printPreview(settings, listener, browser.browsingContext.docShell);
+  }
   gWbp = gPrintPreviewWindow.docShell.contentViewer;
   gWbp.QueryInterface(Ci.nsIWebBrowserPrint);
   is(before, 1, "Should have called beforeprint listener!");
@@ -98,7 +116,7 @@ function printpreview(options = {}) {
 
 function exitprintpreview() {
   gPrintPreviewWindow.docShell.exitPrintPreview();
-  gPrintPreviewWindow.close();
+  gPrintPreviewBrowser.remove();
 }
 
 function finish() {
@@ -148,7 +166,7 @@ function addHTMLContent(parent) {
   n.innerHTML = s;
 }
 
-function startTest1() {
+async function startTest1() {
   ctx1 = document.getElementsByTagName("canvas")[0].getContext("2d");
   ctx2 = document.getElementsByTagName("canvas")[1].getContext("2d");
   frameElts[0].contentDocument.body.innerHTML = "<div> </div><div>" + counter + " timers</div><div> </div>";
@@ -161,7 +179,7 @@ function startTest1() {
   frameElts[0].contentWindow.setTimeout(frameElts[0].contentWindow.counterTimeout, 0);
   frameElts[0].contentDocument.body.firstChild.innerHTML = "Print preview";
 
-  let ppfinished = printpreview();
+  await printpreview();
   drawPrintPreviewWindow(ctx1);
   frameElts[0].contentDocument.body.firstChild.innerHTML = "Galley presentation";
 
@@ -172,13 +190,10 @@ function startTest1() {
   // And readd.
   addHTMLContent(frameElts[0].contentDocument.body.lastChild);
 
-  setTimeout(function() {
-    finalizeTest1(ppfinished)
-  }, 1000);
+  setTimeout(finalizeTest1, 1000);
 }
 
-async function finalizeTest1(ppfinished) {
-  await ppfinished;
+function finalizeTest1() {
   drawPrintPreviewWindow(ctx2);
   exitprintpreview();
   ok(compareCanvases(), "Canvas should be the same!");
@@ -390,9 +405,11 @@ async function runTest9() {
 }
 
 function drawPrintPreviewWindow(ctx) {
-  ctx.canvas.width = gPrintPreviewWindow.innerWidth;
-  ctx.canvas.height = gPrintPreviewWindow.innerHeight;
-  ctx.drawWindow(gPrintPreviewWindow, 0, 0, gPrintPreviewWindow.innerWidth, gPrintPreviewWindow.innerHeight, "rgb(255, 255, 255)");
+  let width = gPrintPreviewWindow.innerWidth;
+  let height = gPrintPreviewWindow.innerHeight;
+  ctx.canvas.width = width;
+  ctx.canvas.height = height;
+  ctx.drawWindow(gPrintPreviewWindow, 0, 0, width, height, "rgb(255, 255, 255)");
 }
 
 // Test for bug 1524640
@@ -1141,7 +1158,7 @@ async function runTest40() {
 <table style="border: 1px solid black;" xmlns="http://www.w3.org/1999/xhtml">
 <tr><th>Print preview canvas 1</th><th>Print preview canvas 2</th></tr>
 <tr>
-<td><canvas height="400" width="400"></canvas></td>
-<td><canvas height="400" width="400"></canvas></td>
+<td><canvas height="800" width="800"></canvas></td>
+<td><canvas height="800" width="800"></canvas></td>
 </tr></table>
 </window>
