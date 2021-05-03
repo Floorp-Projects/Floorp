@@ -44,9 +44,9 @@ add_task(async function() {
       sourceForm: {
         introductionType: "scriptElement",
         sourceMapBaseURL:
-          "https://example.com/browser/devtools/shared/resources/tests/sources.js",
+          "https://example.com/browser/devtools/shared/commands/resource/tests/sources.js",
         url:
-          "https://example.com/browser/devtools/shared/resources/tests/sources.js",
+          "https://example.com/browser/devtools/shared/commands/resource/tests/sources.js",
         isBlackBoxed: false,
         sourceMapURL: null,
         extensionName: null,
@@ -61,7 +61,7 @@ add_task(async function() {
       sourceForm: {
         introductionType: "eval",
         sourceMapBaseURL:
-          "https://example.com/browser/devtools/shared/resources/tests/sources.html",
+          "https://example.com/browser/devtools/shared/commands/resource/tests/sources.html",
         url: null,
         isBlackBoxed: false,
         sourceMapURL: null,
@@ -77,9 +77,9 @@ add_task(async function() {
       sourceForm: {
         introductionType: "scriptElement",
         sourceMapBaseURL:
-          "https://example.com/browser/devtools/shared/resources/tests/sources.html",
+          "https://example.com/browser/devtools/shared/commands/resource/tests/sources.html",
         url:
-          "https://example.com/browser/devtools/shared/resources/tests/sources.html",
+          "https://example.com/browser/devtools/shared/commands/resource/tests/sources.html",
         isBlackBoxed: false,
         sourceMapURL: null,
         extensionName: null,
@@ -94,9 +94,9 @@ add_task(async function() {
       sourceForm: {
         introductionType: undefined,
         sourceMapBaseURL:
-          "https://example.com/browser/devtools/shared/resources/tests/worker-sources.js",
+          "https://example.com/browser/devtools/shared/commands/resource/tests/worker-sources.js",
         url:
-          "https://example.com/browser/devtools/shared/resources/tests/worker-sources.js",
+          "https://example.com/browser/devtools/shared/commands/resource/tests/worker-sources.js",
         isBlackBoxed: false,
         sourceMapURL: null,
         extensionName: null,
@@ -111,9 +111,9 @@ add_task(async function() {
       sourceForm: {
         introductionType: undefined,
         sourceMapBaseURL:
-          "https://example.com/browser/devtools/shared/resources/tests/service-worker-sources.js",
+          "https://example.com/browser/devtools/shared/commands/resource/tests/service-worker-sources.js",
         url:
-          "https://example.com/browser/devtools/shared/resources/tests/service-worker-sources.js",
+          "https://example.com/browser/devtools/shared/commands/resource/tests/service-worker-sources.js",
         isBlackBoxed: false,
         sourceMapURL: null,
         extensionName: null,
