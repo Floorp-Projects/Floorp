@@ -368,7 +368,7 @@
     <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
     <string name="preferences_customize_amo_collection">Власна збірка додатків</string>
     <!-- Button caption to confirm the add-on collection configuration -->
-    <string name="customize_addon_collection_ok">OK</string>
+    <string name="customize_addon_collection_ok">Гаразд</string>
     <!-- Button caption to abort the add-on collection configuration -->
     <string name="customize_addon_collection_cancel">Скасувати</string>
     <!-- Hint displayed on input field for custom collection name -->
@@ -462,7 +462,7 @@
     <!-- Preference description for marketing data collection, parameter is the app name (e.g. Firefox) -->
     <string name="preferences_marketing_data_description">Надсилання даних про функції, які ви використовуєте в %1$s, нашій компанії з мобільного маркетингу Leanplum.</string>
     <!-- Preference description for marketing data collection -->
-    <string name="preferences_marketing_data_description2">Надсилати основні дані про користування до Adjust, нашого постачальника мобільного маркетингу</string>
+    <string name="preferences_marketing_data_description2">Надсилати основні дані про використання до нашого постачальника мобільного маркетингу Adjust</string>
     <!-- Title for studies preferences -->
     <string name="preference_experiments_2">Дослідження</string>
     <!-- Summary for studies preferences -->
@@ -1753,7 +1753,7 @@
 	<!-- Hint for renaming title of a top site -->
 	<string name="top_site_name_hint">Назва популярного сайту</string>
 	<!-- Button caption to confirm the renaming of the top site. -->
-	<string name="top_sites_rename_dialog_ok">OK</string>
+	<string name="top_sites_rename_dialog_ok">Гаразд</string>
 	<!-- Dialog button text for canceling the rename top site prompt. -->
 	<string name="top_sites_rename_dialog_cancel">Скасувати</string>
 

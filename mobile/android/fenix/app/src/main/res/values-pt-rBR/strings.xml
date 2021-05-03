@@ -455,7 +455,7 @@
     <!-- Preference description for marketing data collection, parameter is the app name (e.g. Firefox) -->
     <string name="preferences_marketing_data_description">Compartilhar dados sobre que recursos você usa no %1$s com o Leanplum, nosso fornecedor de marketing para celular.</string>
     <!-- Preference description for marketing data collection -->
-    <string name="preferences_marketing_data_description2">Compartilha dados básicos de uso com a Adjust, nossa fornecedora de marketing em dispositivos móveis</string>
+    <string name="preferences_marketing_data_description2">Compartilhar dados básicos de uso com a Adjust, nossa fornecedora de marketing em dispositivos móveis</string>
     <!-- Title for studies preferences -->
     <string name="preference_experiments_2">Estudos</string>
     <!-- Summary for studies preferences -->
@@ -528,7 +528,7 @@
     <!-- Option in library to open Bookmarks page -->
     <string name="library_bookmarks">Favoritos</string>
     <!-- Option in library to open Desktop Bookmarks root page -->
-    <string name="library_desktop_bookmarks_root">Favoritos do computador</string>
+    <string name="library_desktop_bookmarks_root">Favoritos no computador</string>
     <!-- Option in library to open Desktop Bookmarks "menu" page -->
     <string name="library_desktop_bookmarks_menu">Menu de favoritos</string>
     <!-- Option in library to open Desktop Bookmarks "toolbar" page -->
@@ -581,20 +581,20 @@
     <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->
     <string name="close_tabs_manually">Manualmente</string>
     <!-- Option for auto closing tabs that will auto close tabs after one day -->
-    <string name="close_tabs_after_one_day">Após um dia</string>
+    <string name="close_tabs_after_one_day">Após um dia sem uso</string>
     <!-- Option for auto closing tabs that will auto close tabs after one week -->
-    <string name="close_tabs_after_one_week">Após uma semana</string>
+    <string name="close_tabs_after_one_week">Após uma semana sem uso</string>
     <!-- Option for auto closing tabs that will auto close tabs after one month -->
-    <string name="close_tabs_after_one_month">Após um mês</string>
+    <string name="close_tabs_after_one_month">Após um mês sem uso</string>
 
     <!-- Summary for tabs preference when auto closing tabs setting is set to manual close-->
     <string name="close_tabs_manually_summary">Fechar manualmente</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one day-->
-    <string name="close_tabs_after_one_day_summary">Fechar após um dia</string>
+    <string name="close_tabs_after_one_day_summary">Fechar após um dia sem uso</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one week-->
-    <string name="close_tabs_after_one_week_summary">Fechar após uma semana</string>
+    <string name="close_tabs_after_one_week_summary">Fechar após uma semana sem uso</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one month-->
-    <string name="close_tabs_after_one_month_summary">Fechar após um mês</string>
+    <string name="close_tabs_after_one_month_summary">Fechar após um mês sem uso</string>
 
     <!-- Sessions -->
     <!-- Title for the list of tabs -->
