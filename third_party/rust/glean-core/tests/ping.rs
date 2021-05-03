@@ -55,7 +55,15 @@ fn disabling_upload_clears_pending_pings() {
     glean.set_upload_enabled(false);
     assert_eq!(0, get_queued_pings(glean.get_data_path()).unwrap().len());
     // Disabling upload generates a deletion ping
-    assert_eq!(1, get_deletion_pings(glean.get_data_path()).unwrap().len());
+    let dpings = get_deletion_pings(glean.get_data_path()).unwrap();
+    assert_eq!(1, dpings.len());
+    let payload = &dpings[0].1;
+    assert_eq!(
+        "set_upload_enabled",
+        payload["ping_info"].as_object().unwrap()["reason"]
+            .as_str()
+            .unwrap()
+    );
 
     glean.set_upload_enabled(true);
     assert_eq!(0, get_queued_pings(glean.get_data_path()).unwrap().len());
@@ -71,7 +79,15 @@ fn deletion_request_only_when_toggled_from_on_to_off() {
 
     // Disabling upload generates a deletion ping
     glean.set_upload_enabled(false);
-    assert_eq!(1, get_deletion_pings(glean.get_data_path()).unwrap().len());
+    let dpings = get_deletion_pings(glean.get_data_path()).unwrap();
+    assert_eq!(1, dpings.len());
+    let payload = &dpings[0].1;
+    assert_eq!(
+        "set_upload_enabled",
+        payload["ping_info"].as_object().unwrap()["reason"]
+            .as_str()
+            .unwrap()
+    );
 
     // Re-setting it to `false` should not generate an additional ping.
     // As we didn't clear the pending ping, that's the only one that sticks around.

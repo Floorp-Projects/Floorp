@@ -321,7 +321,8 @@ impl PingUploadManager {
         }
     }
 
-    fn enqueue_ping(
+    /// Enqueue a ping for upload.
+    pub fn enqueue_ping(
         &self,
         glean: &Glean,
         document_id: &str,
