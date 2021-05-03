@@ -8,6 +8,7 @@ It does not contain any logic for saving or communication with the extension or 
 
 var PKT_PANEL_OVERLAY = function(options) {
   var myself = this;
+
   this.inited = false;
   this.active = false;
   this.pockethost = "getpocket.com";
@@ -32,12 +33,20 @@ var PKT_PANEL_OVERLAY = function(options) {
   this.justaddedsuggested = false;
   this.fxasignedin = false;
   this.premiumDetailsAdded = false;
+
+  this.parseHTML = function(htmlString) {
+    const parser = new DOMParser();
+    return parser.parseFromString(htmlString, `text/html`).documentElement;
+  };
   this.fillTagContainer = function(tags, container, tagclass) {
-    container.children().remove();
-    for (var i = 0; i < tags.length; i++) {
-      var newtag = $('<li><a href="#" class="token_tag"></a></li>');
-      newtag.find("a").text(tags[i]);
-      newtag.addClass(tagclass);
+    while (container.firstChild) {
+      container.firstChild.remove();
+    }
+
+    for (let i = 0; i < tags.length; i++) {
+      let newtag = this.parseHTML(
+        `<li class="${tagclass}"><a href="#" class="token_tag">${tags[i]}</a></li>`
+      );
       container.append(newtag);
       this.cxt_suggested_available++;
     }
@@ -51,13 +60,13 @@ var PKT_PANEL_OVERLAY = function(options) {
     });
   };
   this.fillSuggestedTags = function() {
-    if (!$(".pkt_ext_suggestedtag_detail").length) {
+    if (!document.querySelector(`.pkt_ext_suggestedtag_detail`)) {
       myself.suggestedTagsLoaded = true;
       myself.startCloseTimer();
       return;
     }
 
-    $(".pkt_ext_subshell").show();
+    document.querySelector(`.pkt_ext_subshell`).style.display = `block`;
 
     thePKT_PANEL.sendMessage(
       "PKT_getSuggestedTags",
@@ -66,9 +75,9 @@ var PKT_PANEL_OVERLAY = function(options) {
       },
       function(resp) {
         const { data } = resp;
-        $(".pkt_ext_suggestedtag_detail").removeClass(
-          "pkt_ext_suggestedtag_detail_loading"
-        );
+        document
+          .querySelector(`.pkt_ext_suggestedtag_detail`)
+          .classList.remove(`pkt_ext_suggestedtag_detail_loading`);
         if (data.status == "success") {
           var newtags = [];
           for (let i = 0; i < data.value.suggestedTags.length; i++) {
@@ -80,13 +89,14 @@ var PKT_PANEL_OVERLAY = function(options) {
           }
           myself.fillTagContainer(
             newtags,
-            $(".pkt_ext_suggestedtag_detail ul"),
+            document.querySelector(`.pkt_ext_suggestedtag_detail ul`),
             "token_suggestedtag"
           );
         } else if (data.status == "error") {
-          var msg = $('<p class="suggestedtag_msg">');
-          msg.text(data.error.message);
-          $(".pkt_ext_suggestedtag_detail").append(msg);
+          let elMsg = myself.parseHTML(
+            `<p class="suggestedtag_msg">${data.error.message}</p>`
+          );
+          document.querySelector(`.pkt_ext_suggestedtag_detail`).append(elMsg);
           this.suggestedTagsLoaded = true;
           if (!myself.mouseInside) {
             myself.startCloseTimer();
@@ -116,9 +126,8 @@ var PKT_PANEL_OVERLAY = function(options) {
         myself.closeValid = false;
       });
 
-    $("body").on("keydown", function(e) {
-      var key = e.keyCode || e.which;
-      if (key === 9) {
+    document.querySelector(`body`).addEventListener(`keydown`, e => {
+      if (e.key === `Tab`) {
         myself.mouseInside = true;
         myself.stopCloseTimer();
       }
@@ -151,12 +160,11 @@ var PKT_PANEL_OVERLAY = function(options) {
     thePKT_PANEL.sendMessage("PKT_close");
   };
   this.checkValidTagSubmit = function() {
-    var inputlength = $.trim(
-      $(".pkt_ext_tag_input_wrapper")
-        .find(".token-input-input-token")
-        .children("input")
-        .val()
-    ).length;
+    let inputlength = document
+      .querySelector(
+        `.pkt_ext_tag_input_wrapper .token-input-input-token input`
+      )
+      .value.trim().length;
 
     if (
       document.querySelector(`.pkt_ext_containersaved .token-input-token`) ||
