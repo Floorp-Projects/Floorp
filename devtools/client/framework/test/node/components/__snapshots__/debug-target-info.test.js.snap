@@ -374,7 +374,7 @@ exports[`DebugTargetInfo component Target title renders the expected snapshot fo
     <b
       className="devtools-ellipsis-text"
     >
-      toolbox.debugTargetInfo.runtimeLabel.thisFirefox-1.0.0
+      toolbox.debugTargetInfo.runtimeLabel.thisRuntime-NodeTest-1.0.0
     </b>
     <span
       className="devtools-ellipsis-text"
@@ -459,7 +459,7 @@ exports[`DebugTargetInfo component Target title renders the expected snapshot fo
     <b
       className="devtools-ellipsis-text"
     >
-      toolbox.debugTargetInfo.runtimeLabel.thisFirefox-1.0.0
+      toolbox.debugTargetInfo.runtimeLabel.thisRuntime-NodeTest-1.0.0
     </b>
     <span
       className="devtools-ellipsis-text"

@@ -538,6 +538,15 @@ const Services = {
 
   appinfo: "",
   obs: { addObserver: () => {} },
+  strings: {
+    createBundle: function(bundle) {
+      return {
+        GetStringFromName: function(str) {
+          return "NodeTest";
+        },
+      };
+    },
+  },
 };
 
 function pref(name, value) {
