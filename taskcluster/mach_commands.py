@@ -579,16 +579,24 @@ class MachCommands(MachCommandBase):
 
                 with tempfile.NamedTemporaryFile(mode="w") as cur:
                     cur.write(out)
-                    out = subprocess.run(
-                        shlex.split(diffcmd)
-                        + [
-                            base.name,
-                            cur.name,
-                        ],
-                        stdout=subprocess.PIPE,
-                        stderr=subprocess.PIPE,
-                        universal_newlines=True,
-                    ).stdout
+                    try:
+                        out = subprocess.run(
+                            shlex.split(diffcmd)
+                            + [
+                                base.name,
+                                cur.name,
+                            ],
+                            stdout=subprocess.PIPE,
+                            stderr=subprocess.PIPE,
+                            universal_newlines=True,
+                            check=True,
+                        ).stdout
+                    except subprocess.CalledProcessError as e:
+                        # returncode 1 simply means diffs were found
+                        if e.returncode != 1:
+                            print(e.stderr, file=sys.stderr)
+                            raise
+                        out = e.output
 
         fh = options["output_file"]
         if fh:
