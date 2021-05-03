@@ -149,7 +149,7 @@ class nsPageSequenceFrame final : public nsContainerFrame {
   // user's settings
   bool HonorPrintBackgroundSettings() const override { return false; }
 
-  ComputeTransformFunction GetTransformGetter() const override;
+  bool HasTransformGetter() const override { return true; }
 
 #ifdef DEBUG_FRAME_DUMP
   nsresult GetFrameName(nsAString& aResult) const override;
