@@ -5,10 +5,6 @@
 
 // Test the ResourceWatcher API around DOCUMENT_EVENT
 
-const {
-  ResourceWatcher,
-} = require("devtools/shared/resources/resource-watcher");
-
 add_task(async function() {
   await testDocumentEventResources();
   await testDocumentEventResourcesWithIgnoreExistingResources();
@@ -36,7 +32,7 @@ async function testDocumentEventResources() {
   const onLoadingAtInit = listener.once("dom-loading");
   const onInteractiveAtInit = listener.once("dom-interactive");
   const onCompleteAtInit = listener.once("dom-complete");
-  await resourceWatcher.watchResources([ResourceWatcher.TYPES.DOCUMENT_EVENT], {
+  await resourceWatcher.watchResources([resourceWatcher.TYPES.DOCUMENT_EVENT], {
     onAvailable: parameters => listener.dispatch(parameters),
   });
   await assertPromises(onLoadingAtInit, onInteractiveAtInit, onCompleteAtInit);
@@ -85,7 +81,7 @@ async function testDocumentEventResourcesWithIgnoreExistingResources() {
 
   info("Check whether the existing document events will not be fired");
   const documentEvents = [];
-  await resourceWatcher.watchResources([ResourceWatcher.TYPES.DOCUMENT_EVENT], {
+  await resourceWatcher.watchResources([resourceWatcher.TYPES.DOCUMENT_EVENT], {
     onAvailable: resources => documentEvents.push(...resources),
     ignoreExistingResources: true,
   });
@@ -111,7 +107,7 @@ async function testCrossOriginNavigation() {
   );
 
   const documentEvents = [];
-  await resourceWatcher.watchResources([ResourceWatcher.TYPES.DOCUMENT_EVENT], {
+  await resourceWatcher.watchResources([resourceWatcher.TYPES.DOCUMENT_EVENT], {
     onAvailable: resources => documentEvents.push(...resources),
     ignoreExistingResources: true,
   });

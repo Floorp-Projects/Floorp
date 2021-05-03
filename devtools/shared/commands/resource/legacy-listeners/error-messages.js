@@ -4,9 +4,7 @@
 
 "use strict";
 
-const {
-  ResourceWatcher,
-} = require("devtools/shared/resources/resource-watcher");
+const ResourceCommand = require("devtools/shared/commands/resource/resource-command");
 const { MESSAGE_CATEGORY } = require("devtools/shared/constants");
 
 module.exports = async function({ targetCommand, targetFront, onAvailable }) {
@@ -46,7 +44,7 @@ module.exports = async function({ targetCommand, targetFront, onAvailable }) {
   );
 
   messages.forEach(message => {
-    message.resourceType = ResourceWatcher.TYPES.ERROR_MESSAGE;
+    message.resourceType = ResourceCommand.TYPES.ERROR_MESSAGE;
   });
   // Cached messages don't have the same shape as live messages,
   // so we need to transform them.
@@ -58,7 +56,7 @@ module.exports = async function({ targetCommand, targetFront, onAvailable }) {
       return;
     }
 
-    message.resourceType = ResourceWatcher.TYPES.ERROR_MESSAGE;
+    message.resourceType = ResourceCommand.TYPES.ERROR_MESSAGE;
     onAvailable([message]);
   });
 };

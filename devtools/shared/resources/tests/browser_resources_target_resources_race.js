@@ -3,10 +3,6 @@
 
 "use strict";
 
-const {
-  ResourceWatcher,
-} = require("devtools/shared/resources/resource-watcher");
-
 /**
  * Test initial target resources are correctly retrieved even when several calls
  * to watchResources are made simultaneously.
@@ -43,7 +39,7 @@ add_task(async function() {
   // calls to watchResources (which could come from 2 separate modules in a real
   // scenario).
   const initialWatchPromise = resourceWatcher.watchResources(
-    [ResourceWatcher.TYPES.CSS_MESSAGE],
+    [resourceWatcher.TYPES.CSS_MESSAGE],
     {
       onAvailable: onCssMessageAvailable,
     }
@@ -52,7 +48,7 @@ add_task(async function() {
   // `waitForNextResource` will trigger another call to `watchResources`.
   const onMessageReceived = waitForNextResource(
     resourceWatcher,
-    ResourceWatcher.TYPES.PLATFORM_MESSAGE,
+    resourceWatcher.TYPES.PLATFORM_MESSAGE,
     {
       ignoreExistingResources: false,
       predicate: r => r.message === expectedPlatformMessage,
@@ -67,7 +63,7 @@ add_task(async function() {
   await initialWatchPromise;
 
   // Unwatch all resources.
-  resourceWatcher.unwatchResources([ResourceWatcher.TYPES.CSS_MESSAGE], {
+  resourceWatcher.unwatchResources([resourceWatcher.TYPES.CSS_MESSAGE], {
     onAvailable: onCssMessageAvailable,
   });
 

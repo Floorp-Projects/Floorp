@@ -2,11 +2,10 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 "use strict";
+
 // Test the ResourceWatcher API around SERVER SENT EVENTS.
 
-const {
-  ResourceWatcher,
-} = require("devtools/shared/resources/resource-watcher");
+const ResourceCommand = require("devtools/shared/commands/resource/resource-command");
 
 const targets = {
   TOP_LEVEL_DOCUMENT: "top-level-document",
@@ -37,7 +36,7 @@ async function testServerSentEventResources(target) {
   }
 
   await resourceWatcher.watchResources(
-    [ResourceWatcher.TYPES.SERVER_SENT_EVENT],
+    [resourceWatcher.TYPES.SERVER_SENT_EVENT],
     { onAvailable: onResourceAvailable }
   );
 
@@ -71,7 +70,7 @@ async function testServerSentEventResources(target) {
   });
 
   await resourceWatcher.unwatchResources(
-    [ResourceWatcher.TYPES.SERVER_SENT_EVENT],
+    [resourceWatcher.TYPES.SERVER_SENT_EVENT],
     { onAvailable: onResourceAvailable }
   );
 
@@ -83,7 +82,7 @@ async function testServerSentEventResources(target) {
 function assertResource(resource, expected) {
   is(
     resource.resourceType,
-    ResourceWatcher.TYPES.SERVER_SENT_EVENT,
+    ResourceCommand.TYPES.SERVER_SENT_EVENT,
     "Resource type is correct"
   );
 

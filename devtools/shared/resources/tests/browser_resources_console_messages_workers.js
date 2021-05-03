@@ -5,10 +5,6 @@
 
 // Test the ResourceWatcher API around CONSOLE_MESSAGE in workers
 
-const {
-  ResourceWatcher,
-} = require("devtools/shared/resources/resource-watcher");
-
 const FISSION_TEST_URL = URL_ROOT_SSL + "fission_document.html";
 const WORKER_FILE = "test_worker.js";
 const IFRAME_FILE = `${URL_ROOT_ORG_SSL}fission_iframe.html`;
@@ -56,7 +52,7 @@ add_task(async function() {
   };
 
   await resourceWatcher.watchResources(
-    [ResourceWatcher.TYPES.CONSOLE_MESSAGE],
+    [resourceWatcher.TYPES.CONSOLE_MESSAGE],
     {
       onAvailable,
     }

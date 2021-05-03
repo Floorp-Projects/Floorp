@@ -5,10 +5,6 @@
 
 // Test the ResourceWatcher API around NETWORK_EVENT_STACKTRACE
 
-const {
-  ResourceWatcher,
-} = require("devtools/shared/resources/resource-watcher");
-
 const TEST_URI = `${URL_ROOT_SSL}network_document.html`;
 
 const REQUEST_STUB = {
@@ -39,7 +35,7 @@ add_task(async function() {
   function onResourceAvailable(resources) {
     for (const resource of resources) {
       if (
-        resource.resourceType === ResourceWatcher.TYPES.NETWORK_EVENT_STACKTRACE
+        resource.resourceType === resourceWatcher.TYPES.NETWORK_EVENT_STACKTRACE
       ) {
         ok(
           !networkEvents.has(resource.resourceId),
@@ -61,7 +57,7 @@ add_task(async function() {
         return;
       }
 
-      if (resource.resourceType === ResourceWatcher.TYPES.NETWORK_EVENT) {
+      if (resource.resourceType === resourceWatcher.TYPES.NETWORK_EVENT) {
         ok(
           stackTraces.has(resource.stacktraceResourceId),
           "The stack trace does exists"
@@ -76,8 +72,8 @@ add_task(async function() {
 
   await resourceWatcher.watchResources(
     [
-      ResourceWatcher.TYPES.NETWORK_EVENT_STACKTRACE,
-      ResourceWatcher.TYPES.NETWORK_EVENT,
+      resourceWatcher.TYPES.NETWORK_EVENT_STACKTRACE,
+      resourceWatcher.TYPES.NETWORK_EVENT,
     ],
     {
       onAvailable: onResourceAvailable,
@@ -89,8 +85,8 @@ add_task(async function() {
 
   resourceWatcher.unwatchResources(
     [
-      ResourceWatcher.TYPES.NETWORK_EVENT_STACKTRACE,
-      ResourceWatcher.TYPES.NETWORK_EVENT,
+      resourceWatcher.TYPES.NETWORK_EVENT_STACKTRACE,
+      resourceWatcher.TYPES.NETWORK_EVENT,
     ],
     {
       onAvailable: onResourceAvailable,
