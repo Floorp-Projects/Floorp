@@ -96,10 +96,10 @@ nsresult GetJSValFromKeyPathString(
       // We call JS_GetOwnUCPropertyDescriptor on purpose (as opposed to
       // JS_GetUCPropertyDescriptor) to avoid searching the prototype chain.
       JS::Rooted<JS::PropertyDescriptor> desc(aCx);
-      IDB_TRY(OkIf(JS_GetOwnUCPropertyDescriptor(aCx, obj, keyPathChars,
-                                                 keyPathLen, &desc)),
-              NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR,
-              IDB_REPORT_INTERNAL_ERR_LAMBDA);
+      QM_TRY(OkIf(JS_GetOwnUCPropertyDescriptor(aCx, obj, keyPathChars,
+                                                keyPathLen, &desc)),
+             NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR,
+             IDB_REPORT_INTERNAL_ERR_LAMBDA);
 
       JS::Rooted<JS::Value> intermediate(aCx);
       bool hasProp = false;
@@ -243,13 +243,13 @@ nsresult GetJSValFromKeyPathString(
       IDB_REPORT_INTERNAL_ERR();
       return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
     }
-    IDB_TRY(OkIf(succeeded.ok()), NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR,
-            IDB_REPORT_INTERNAL_ERR_LAMBDA);
+    QM_TRY(OkIf(succeeded.ok()), NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR,
+           IDB_REPORT_INTERNAL_ERR_LAMBDA);
   }
 
   // TODO: It would be nicer to do the cleanup using a RAII class or something.
-  //       This last IDB_TRY could be removed then.
-  IDB_TRY(rv);
+  //       This last QM_TRY could be removed then.
+  QM_TRY(rv);
   return NS_OK;
 }
 

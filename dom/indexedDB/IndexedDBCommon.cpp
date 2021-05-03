@@ -21,15 +21,15 @@ nsresult SnappyUncompressStructuredCloneData(
 
   char buffer[kFileCopyBufferSize];
 
-  IDB_TRY(CollectEach(
+  QM_TRY(CollectEach(
       [&snappyInputStream = *snappyInputStream, &buffer] {
-        IDB_TRY_RETURN(MOZ_TO_RESULT_INVOKE(snappyInputStream, Read, buffer,
-                                            sizeof(buffer)));
+        QM_TRY_RETURN(MOZ_TO_RESULT_INVOKE(snappyInputStream, Read, buffer,
+                                           sizeof(buffer)));
       },
       [&aStructuredCloneData,
        &buffer](const uint32_t& numRead) -> Result<Ok, nsresult> {
-        IDB_TRY(OkIf(aStructuredCloneData.AppendBytes(buffer, numRead)),
-                Err(NS_ERROR_OUT_OF_MEMORY));
+        QM_TRY(OkIf(aStructuredCloneData.AppendBytes(buffer, numRead)),
+               Err(NS_ERROR_OUT_OF_MEMORY));
 
         return Ok{};
       }));

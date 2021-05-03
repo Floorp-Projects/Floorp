@@ -12,13 +12,6 @@
 class JSStructuredCloneData;
 class nsIInputStream;
 
-// XXX Replace all uses by the QM_* variants and remove these aliases
-#define IDB_TRY QM_TRY
-#define IDB_TRY_UNWRAP QM_TRY_UNWRAP
-#define IDB_TRY_INSPECT QM_TRY_INSPECT
-#define IDB_TRY_RETURN QM_TRY_RETURN
-#define IDB_FAIL QM_FAIL
-
 namespace mozilla::dom::indexedDB {
 
 static constexpr uint32_t kFileCopyBufferSize = 32768;

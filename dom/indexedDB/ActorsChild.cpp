@@ -783,9 +783,8 @@ class WorkerPermissionChallenge final : public Runnable {
       return true;
     }
 
-    IDB_TRY_UNWRAP(auto principal,
-                   mozilla::ipc::PrincipalInfoToPrincipal(mPrincipalInfo),
-                   true);
+    QM_TRY_UNWRAP(auto principal,
+                  mozilla::ipc::PrincipalInfoToPrincipal(mPrincipalInfo), true);
 
     if (XRE_IsParentProcess()) {
       const nsCOMPtr<Element> ownerElement =
@@ -797,8 +796,8 @@ class WorkerPermissionChallenge final : public Runnable {
       RefPtr<WorkerPermissionRequest> helper =
           new WorkerPermissionRequest(ownerElement, principal, this);
 
-      IDB_TRY_INSPECT(const PermissionRequestBase::PermissionValue& permission,
-                      helper->PromptIfNeeded(), true);
+      QM_TRY_INSPECT(const PermissionRequestBase::PermissionValue& permission,
+                     helper->PromptIfNeeded(), true);
 
       MOZ_ASSERT(permission == PermissionRequestBase::kPermissionAllowed ||
                  permission == PermissionRequestBase::kPermissionDenied ||
@@ -1470,9 +1469,9 @@ mozilla::ipc::IPCResult BackgroundFactoryRequestChild::RecvPermissionChallenge(
     return IPC_OK();
   }
 
-  IDB_TRY_UNWRAP(auto principal,
-                 mozilla::ipc::PrincipalInfoToPrincipal(aPrincipalInfo),
-                 IPC_FAIL_NO_REASON(this));
+  QM_TRY_UNWRAP(auto principal,
+                mozilla::ipc::PrincipalInfoToPrincipal(aPrincipalInfo),
+                IPC_FAIL_NO_REASON(this));
 
   if (XRE_IsParentProcess()) {
     nsCOMPtr<nsIGlobalObject> global = mFactory->GetParentObject();
@@ -1494,8 +1493,8 @@ mozilla::ipc::IPCResult BackgroundFactoryRequestChild::RecvPermissionChallenge(
         new PermissionRequestMainProcessHelper(this, mFactory.clonePtr(),
                                                ownerElement, principal);
 
-    IDB_TRY_INSPECT(const PermissionRequestBase::PermissionValue& permission,
-                    helper->PromptIfNeeded(), IPC_FAIL_NO_REASON(this));
+    QM_TRY_INSPECT(const PermissionRequestBase::PermissionValue& permission,
+                   helper->PromptIfNeeded(), IPC_FAIL_NO_REASON(this));
 
     MOZ_ASSERT(permission == PermissionRequestBase::kPermissionAllowed ||
                permission == PermissionRequestBase::kPermissionDenied ||
@@ -2440,16 +2439,16 @@ void BackgroundRequestChild::HandleResponse(
 
   nsTArray<StructuredCloneReadInfoChild> cloneReadInfos;
 
-  IDB_TRY(OkIf(cloneReadInfos.SetCapacity(aResponse.Length(), fallible)),
-          QM_VOID, ([&aResponse, this](const auto) {
-            // Since we are under memory pressure, release aResponse early.
-            aResponse.Clear();
+  QM_TRY(OkIf(cloneReadInfos.SetCapacity(aResponse.Length(), fallible)),
+         QM_VOID, ([&aResponse, this](const auto) {
+           // Since we are under memory pressure, release aResponse early.
+           aResponse.Clear();
 
-            DispatchErrorEvent(mRequest, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR,
-                               AcquireTransaction());
+           DispatchErrorEvent(mRequest, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR,
+                              AcquireTransaction());
 
-            MOZ_ASSERT(mTransaction->IsAborted());
-          }));
+           MOZ_ASSERT(mTransaction->IsAborted());
+         }));
 
   std::transform(std::make_move_iterator(aResponse.begin()),
                  std::make_move_iterator(aResponse.end()),
@@ -2794,12 +2793,12 @@ nsresult BackgroundRequestChild::PreprocessHelper::ProcessStream() {
       blobInputStream->GetInternalStream();
   MOZ_ASSERT(internalInputStream);
 
-  IDB_TRY(
+  QM_TRY(
       SnappyUncompressStructuredCloneData(*internalInputStream, *mCloneData));
 
   mState = State::Finishing;
 
-  IDB_TRY(mOwningEventTarget->Dispatch(this, NS_DISPATCH_NORMAL));
+  QM_TRY(mOwningEventTarget->Dispatch(this, NS_DISPATCH_NORMAL));
 
   return NS_OK;
 }
