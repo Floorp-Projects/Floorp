@@ -369,7 +369,7 @@ int32_t WebrtcMediaDataEncoder::Encode(
     }
   }
 
-  LOG_V("Encode frame, type %d size %u", (*aFrameTypes)[0], aInputFrame.size());
+  LOG_V("Encode frame, type %d size %u", static_cast<int>((*aFrameTypes)[0]), aInputFrame.size());
   MOZ_ASSERT(aInputFrame.video_frame_buffer()->type() ==
              webrtc::VideoFrameBuffer::Type::kI420);
   RefPtr<VideoData> data = CreateVideoDataFromWebrtcVideoFrame(
