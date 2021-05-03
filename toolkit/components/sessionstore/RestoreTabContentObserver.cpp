@@ -80,9 +80,7 @@ RestoreTabContentObserver::Observe(nsISupports* aSubject, const char* aTopic,
   }
 
   nsCOMPtr<nsIURI> uri = inner->GetDocumentURI();
-  // We'll never need to restore data into an about:blank document, so we can
-  // ignore those here.
-  if (!uri || NS_IsAboutBlank(uri)) {
+  if (!uri) {
     return NS_OK;
   }
 

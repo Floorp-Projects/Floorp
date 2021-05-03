@@ -126,8 +126,9 @@ namespace SessionStoreUtils {
 
    nsISessionStoreRestoreData constructSessionStoreRestoreData();
 
-   boolean setRestoreData(CanonicalBrowsingContext browsingContext,
-                          nsISessionStoreRestoreData? data);
+   [Throws]
+   Promise<void> initializeRestore(CanonicalBrowsingContext browsingContext,
+                                   nsISessionStoreRestoreData? data);
 };
 
 [GenerateConversionToJS, GenerateInit]

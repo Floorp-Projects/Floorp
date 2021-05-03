@@ -17,8 +17,6 @@ interface nsISessionStoreFunctions : nsISupports {
     in uint32_t aEpoch,
     in jsval aData, in boolean aCollectSHistory);
 
-  void RestoreTabContentComplete(in Element aBrowser);
-  
   void UpdateSessionStoreForWindow(
     in Element aBrowser, in BrowsingContext aBrowsingContext,
     in uint32_t aEpoch, in jsval aData);
