@@ -28,7 +28,7 @@ add_task(async function() {
     updates.push(gUI.once("sidebar-updated"));
     gUI.updateObjectSidebar();
   }
-  await promise.all(updates);
+  await Promise.all(updates);
 
   info("Updates performed, going to verify result");
   const parsedScope = gUI.view.getScopeAtIndex(1);

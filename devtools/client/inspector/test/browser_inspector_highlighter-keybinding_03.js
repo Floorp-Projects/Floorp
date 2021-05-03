@@ -54,7 +54,7 @@ add_task(async function() {
   function doKeyPick(args) {
     info("Key pressed. Waiting for element to be picked");
     testActor.synthesizeKey(args);
-    return promise.all([
+    return Promise.all([
       inspector.selection.once("new-node-front"),
       inspector.once("inspector-updated"),
       toolbox.nodePicker.once("picker-stopped"),

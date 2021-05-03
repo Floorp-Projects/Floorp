@@ -20,7 +20,7 @@ add_task(async function() {
     show: function(node, options) {
       this.isShown = true;
       this.options = options;
-      return promise.resolve();
+      return Promise.resolve();
     },
 
     hide: function() {
