@@ -560,6 +560,11 @@
 .identity-popup-warning-box {
   padding-inline: 2.4em 3em;
 }
+
+#identity-popup-securityView-body > .identity-popup-warning-box {
+  padding-inline: 0;
+  font-weight: 600;
+}
 }/** END Proton **/
 
 #identity-popup-securityView-body > label:not(.plain),
