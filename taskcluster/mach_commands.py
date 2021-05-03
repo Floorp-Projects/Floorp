@@ -583,7 +583,8 @@ class MachCommands(MachCommandBase):
                             base.name,
                             cur.name,
                         ],
-                        capture_output=True,
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.PIPE,
                         universal_newlines=True,
                     ).stdout
 
