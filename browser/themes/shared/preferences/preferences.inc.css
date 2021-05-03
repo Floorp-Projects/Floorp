@@ -1187,3 +1187,16 @@ richlistitem .text-link:hover {
 .featureGateDescription {
   margin-inline-start: 28px;
 }
+
+.checkbox-row {
+  display: flex;
+  align-items: baseline;
+}
+
+.checkbox-row input[type=checkbox] {
+  translate: 0 2px
+}
+
+.checkbox-row a {
+  margin-inline-start: 6px;
+}

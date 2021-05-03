@@ -434,7 +434,10 @@ const Preferences = (window.Preferences = (function() {
           element.setAttribute(attribute, value);
         }
       }
-      if (aElement.localName == "checkbox") {
+      if (
+        aElement.localName == "checkbox" ||
+        (aElement.localName == "input" && aElement.type == "checkbox")
+      ) {
         setValue(aElement, "checked", val);
       } else {
         setValue(aElement, "value", val);
@@ -466,7 +469,10 @@ const Preferences = (window.Preferences = (function() {
         return element.getAttribute(attribute);
       }
       let value;
-      if (aElement.localName == "checkbox") {
+      if (
+        aElement.localName == "checkbox" ||
+        (aElement.localName == "input" && aElement.type == "checkbox")
+      ) {
         value = getValue(aElement, "checked");
       } else {
         value = getValue(aElement, "value");
