@@ -20,7 +20,6 @@ registerCleanupFunction(() => {
 
 var { OS } = require("resource://gre/modules/osfile.jsm");
 var { FileUtils } = require("resource://gre/modules/FileUtils.jsm");
-var promise = require("promise");
 var { expectState } = require("devtools/server/actors/common");
 var HeapSnapshotFileUtils = require("devtools/shared/heapsnapshot/HeapSnapshotFileUtils");
 var HeapAnalysesClient = require("devtools/shared/heapsnapshot/HeapAnalysesClient");

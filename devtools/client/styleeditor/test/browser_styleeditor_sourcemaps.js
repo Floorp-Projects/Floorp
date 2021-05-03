@@ -132,7 +132,7 @@ function togglePref(UI) {
 
   Services.prefs.setBoolPref(PREF, false);
 
-  return promise.all([editorsPromise, selectedPromise]);
+  return Promise.all([editorsPromise, selectedPromise]);
 }
 
 function openEditor(editor) {

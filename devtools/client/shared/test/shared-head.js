@@ -56,9 +56,6 @@ const {
 } = require("devtools/shared/commands/commands-factory");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 
-// This is overridden in files that load shared-head via loadSubScript.
-// eslint-disable-next-line prefer-const
-let promise = require("promise");
 const defer = require("devtools/shared/defer");
 const KeyShortcuts = require("devtools/client/shared/key-shortcuts");
 

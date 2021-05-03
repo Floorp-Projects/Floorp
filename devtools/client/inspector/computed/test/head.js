@@ -138,7 +138,7 @@ function expandComputedViewPropertyByIndex(view, index) {
   info("Expanding property " + index + " in the computed view");
   const expandos = view.styleDocument.querySelectorAll(".computed-expandable");
   if (!expandos.length || !expandos[index]) {
-    return promise.reject();
+    return Promise.reject();
   }
 
   const onExpand = view.inspector.once("computed-view-property-expanded");

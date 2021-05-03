@@ -77,7 +77,7 @@ function testFriendlyNamesAfterSave(ui) {
     "Friendly name for the second inline sheet isn't the same as the first."
   );
 
-  return promise.resolve(null);
+  return Promise.resolve(null);
 }
 
 function testFriendlyNamesAfterNavigation(ui) {
@@ -97,5 +97,5 @@ function testFriendlyNamesAfterNavigation(ui) {
     "The second editor doesn't have the save path as a friendly name."
   );
 
-  return promise.resolve(null);
+  return Promise.resolve(null);
 }
