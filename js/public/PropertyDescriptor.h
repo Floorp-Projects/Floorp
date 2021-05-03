@@ -9,6 +9,7 @@
 #define js_PropertyDescriptor_h
 
 #include "mozilla/Assertions.h"  // MOZ_ASSERT, MOZ_ASSERT_IF
+#include "mozilla/EnumSet.h"     // mozilla::EnumSet
 #include "mozilla/Maybe.h"       // mozilla::Maybe
 
 #include <stdint.h>  // uint8_t
@@ -115,6 +116,20 @@ static constexpr unsigned JSPROP_FLAGS_MASK =
 
 namespace JS {
 
+// 6.1.7.1 Property Attributes
+enum class PropertyAttribute : uint8_t {
+  // The descriptor is [[Configurable]] := true.
+  Configurable,
+
+  // The descriptor is [[Enumerable]] := true.
+  Enumerable,
+
+  // The descriptor is [[Writable]] := true. Only valid for data descriptors.
+  Writable
+};
+
+using PropertyAttributes = mozilla::EnumSet<PropertyAttribute>;
+
 /**
  * A structure that represents a property on an object, or the absence of a
  * property.  Use {,Mutable}Handle<PropertyDescriptor> to interact with
@@ -134,6 +149,43 @@ struct JS_PUBLIC_API PropertyDescriptor {
   PropertyDescriptor() = default;
 
   void trace(JSTracer* trc);
+
+  static PropertyDescriptor Data(const Value& value,
+                                 PropertyAttributes attributes = {}) {
+    PropertyDescriptor desc;
+    desc.setConfigurable(attributes.contains(PropertyAttribute::Configurable));
+    desc.setEnumerable(attributes.contains(PropertyAttribute::Enumerable));
+    desc.setWritable(attributes.contains(PropertyAttribute::Writable));
+    desc.value_ = value;
+    return desc;
+  }
+
+  // This constructor is only provided for legacy code!
+  static PropertyDescriptor Data(const Value& value, unsigned attrs) {
+    MOZ_ASSERT((attrs &
+                ~(JSPROP_PERMANENT | JSPROP_ENUMERATE | JSPROP_READONLY)) == 0);
+    PropertyDescriptor desc;
+    desc.attrs = attrs;
+    desc.value_ = value;
+    return desc;
+  }
+
+  static PropertyDescriptor Accessor(JSObject* getter, JSObject* setter,
+                                     unsigned attrs) {
+    MOZ_ASSERT((attrs & ~(JSPROP_PERMANENT | JSPROP_ENUMERATE)) == 0);
+    MOZ_ASSERT(getter || setter);
+    PropertyDescriptor desc;
+    desc.attrs = attrs;
+    if (getter) {
+      desc.getter = getter;
+      desc.attrs |= JSPROP_GETTER;
+    }
+    if (setter) {
+      desc.setter = setter;
+      desc.attrs |= JSPROP_SETTER;
+    }
+    return desc;
+  }
 
  private:
   bool has(unsigned bit) const {
