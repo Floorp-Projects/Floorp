@@ -189,13 +189,6 @@
  * interface.
  */
 
-// XXX Replace all uses by the QM_* variants and remove these aliases
-#define LS_TRY QM_TRY
-#define LS_TRY_UNWRAP QM_TRY_UNWRAP
-#define LS_TRY_INSPECT QM_TRY_INSPECT
-#define LS_TRY_RETURN QM_TRY_RETURN
-#define LS_FAIL QM_FAIL
-
 namespace mozilla {
 
 class LogModule;
