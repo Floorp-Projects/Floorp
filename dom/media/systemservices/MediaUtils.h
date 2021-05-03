@@ -183,7 +183,9 @@ class ShutdownBlocker : public nsIAsyncShutdownBlocker {
   const nsString mName;
 };
 
-namespace {
+// See Bug 1710676 to fix this hack to work around build-linux64-base-toolchains/opt
+// complaining about a field whose type uses the anonymous namespace.
+namespace anon_media_utils {
 class RefCountedTicket;
 }
 
@@ -193,7 +195,7 @@ class RefCountedTicket;
  * xpcom-will-shutdown. Constructed and destroyed on any thread.
  */
 class ShutdownBlockingTicket final {
-  RefPtr<RefCountedTicket> mTicket;
+  RefPtr<anon_media_utils::RefCountedTicket> mTicket;
 
  public:
   /**
