@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "DummyMediaDataDecoder.h"
+#include "ImageContainer.h"
 
 namespace mozilla {
 
@@ -13,12 +14,13 @@ class NullVideoDataCreator : public DummyDataCreator {
   NullVideoDataCreator() = default;
 
   already_AddRefed<MediaData> Create(MediaRawData* aSample) override {
-    // Create a dummy VideoData with no image. This gives us something to
+    // Create a dummy VideoData with an empty image. This gives us something to
     // send to media streams if necessary.
-    RefPtr<VideoData> v(new VideoData(aSample->mOffset, aSample->mTime,
-                                      aSample->mDuration, aSample->mKeyframe,
-                                      aSample->mTimecode, gfx::IntSize(), 0));
-    return v.forget();
+    RefPtr<layers::PlanarYCbCrImage> image =
+        new layers::RecyclingPlanarYCbCrImage(new layers::BufferRecycleBin());
+    return VideoData::CreateFromImage(gfx::IntSize(), aSample->mOffset,
+                                      aSample->mTime, aSample->mDuration, image,
+                                      aSample->mKeyframe, aSample->mTimecode);
   }
 };
 
