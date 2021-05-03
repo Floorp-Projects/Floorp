@@ -1866,9 +1866,10 @@ pictureinpicture:
   most_concurrent_players:
     bug_numbers:
       - 1677107
+      - 1706843
     description:
       The most concurrent Picture-in-Picture players the user had open at any one time.
-    expires: "91"
+    expires: "96"
     kind: uint
     notification_emails:
       - mconley@mozilla.com
