@@ -1,0 +1,21 @@
+<html class="reftest-wait">
+<head>
+<script>
+(async _ => {
+  try {
+    const audio = document.createElement('audio');
+    audio.src = 'sound.ogg';
+    const ac = new AudioContext();
+    const src = ac.createMediaElementSource(audio);
+    src.connect(ac.destination);
+    await audio.play();
+    audio.pause();
+    audio.volume = 0.5;
+    audio.playbackRate = 0.5;
+  } finally {
+    document.documentElement.removeAttribute("class")
+  }
+})()
+</script>
+</head>
+</html>
