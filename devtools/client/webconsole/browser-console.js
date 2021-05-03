@@ -6,6 +6,9 @@
 
 const Services = require("Services");
 const WebConsole = require("devtools/client/webconsole/webconsole");
+const {
+  ResourceWatcher,
+} = require("devtools/shared/resources/resource-watcher");
 const { Utils } = require("devtools/client/webconsole/utils");
 
 loader.lazyRequireGetter(this, "Telemetry", "devtools/client/shared/telemetry");
@@ -41,9 +44,15 @@ class BrowserConsole extends WebConsole {
   constructor(commands, iframeWindow, chromeWindow) {
     super(null, commands, iframeWindow, chromeWindow, true);
 
+    // Note that this.commands is being assigned from WebConsole's constructor
+    this._resourceWatcher = new ResourceWatcher(this.commands.targetCommand);
     this._telemetry = new Telemetry();
     this._bcInitializer = null;
     this._bcDestroyer = null;
+  }
+
+  get resourceWatcher() {
+    return this._resourceWatcher;
   }
 
   /**

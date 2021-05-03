@@ -202,21 +202,21 @@ class WebConsoleUI {
       this._onTargetDestroy
     );
 
-    const resourceCommand = this.hud.resourceCommand;
-    resourceCommand.unwatchResources(
+    const resourceWatcher = this.hud.resourceWatcher;
+    resourceWatcher.unwatchResources(
       [
-        resourceCommand.TYPES.CONSOLE_MESSAGE,
-        resourceCommand.TYPES.ERROR_MESSAGE,
-        resourceCommand.TYPES.PLATFORM_MESSAGE,
-        resourceCommand.TYPES.NETWORK_EVENT,
-        resourceCommand.TYPES.NETWORK_EVENT_STACKTRACE,
+        resourceWatcher.TYPES.CONSOLE_MESSAGE,
+        resourceWatcher.TYPES.ERROR_MESSAGE,
+        resourceWatcher.TYPES.PLATFORM_MESSAGE,
+        resourceWatcher.TYPES.NETWORK_EVENT,
+        resourceWatcher.TYPES.NETWORK_EVENT_STACKTRACE,
       ],
       {
         onAvailable: this._onResourceAvailable,
         onUpdated: this._onResourceUpdated,
       }
     );
-    resourceCommand.unwatchResources([resourceCommand.TYPES.CSS_MESSAGE], {
+    resourceWatcher.unwatchResources([resourceWatcher.TYPES.CSS_MESSAGE], {
       onAvailable: this._onResourceAvailable,
     });
 
@@ -339,7 +339,7 @@ class WebConsoleUI {
       // We can call it from here, as `_attchTargets` is called after the UI is initialized.
       // Bug 1642599:
       // TargetCommand.startListening ought to be called before watching for resources,
-      // in order to set TargetCommand.watcherFront which is used by ResourceCommand.watchResources.
+      // in order to set TargetCommand.watcherFront which is used by ResourceWatcher.watchResources.
       await this.hud.commands.targetCommand.startListening();
     }
 
@@ -355,15 +355,15 @@ class WebConsoleUI {
       this._onTargetDestroy
     );
 
-    const resourceCommand = this.hud.resourceCommand;
-    await resourceCommand.watchResources(
+    const resourceWatcher = this.hud.resourceWatcher;
+    await resourceWatcher.watchResources(
       [
-        resourceCommand.TYPES.CONSOLE_MESSAGE,
-        resourceCommand.TYPES.ERROR_MESSAGE,
-        resourceCommand.TYPES.PLATFORM_MESSAGE,
-        resourceCommand.TYPES.NETWORK_EVENT,
-        resourceCommand.TYPES.NETWORK_EVENT_STACKTRACE,
-        resourceCommand.TYPES.CLONED_CONTENT_PROCESS_MESSAGE,
+        resourceWatcher.TYPES.CONSOLE_MESSAGE,
+        resourceWatcher.TYPES.ERROR_MESSAGE,
+        resourceWatcher.TYPES.PLATFORM_MESSAGE,
+        resourceWatcher.TYPES.NETWORK_EVENT,
+        resourceWatcher.TYPES.NETWORK_EVENT_STACKTRACE,
+        resourceWatcher.TYPES.CLONED_CONTENT_PROCESS_MESSAGE,
       ],
       {
         onAvailable: this._onResourceAvailable,
@@ -373,8 +373,8 @@ class WebConsoleUI {
   }
 
   async watchCssMessages() {
-    const { resourceCommand } = this.hud;
-    await resourceCommand.watchResources([resourceCommand.TYPES.CSS_MESSAGE], {
+    const { resourceWatcher } = this.hud;
+    await resourceWatcher.watchResources([resourceWatcher.TYPES.CSS_MESSAGE], {
       onAvailable: this._onResourceAvailable,
     });
   }
@@ -385,7 +385,7 @@ class WebConsoleUI {
     }
     const messages = [];
     for (const resource of resources) {
-      const { TYPES } = this.hud.resourceCommand;
+      const { TYPES } = this.hud.resourceWatcher;
       // Ignore messages forwarded from content processes if we're in fission browser toolbox.
       if (
         !this.wrapper ||
@@ -426,7 +426,7 @@ class WebConsoleUI {
     const messageUpdates = updates
       .filter(
         ({ resource }) =>
-          resource.resourceType == this.hud.resourceCommand.TYPES.NETWORK_EVENT
+          resource.resourceType == this.hud.resourceWatcher.TYPES.NETWORK_EVENT
       )
       .map(({ resource }) => {
         this.wrapper.networkDataProvider?.onNetworkResourceUpdated(resource);

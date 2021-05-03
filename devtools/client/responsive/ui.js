@@ -12,6 +12,9 @@ const {
 } = require("devtools/client/responsive/utils/orientation");
 const Constants = require("devtools/client/responsive/constants");
 const {
+  ResourceWatcher,
+} = require("devtools/shared/resources/resource-watcher");
+const {
   CommandsFactory,
 } = require("devtools/shared/commands/commands-factory");
 
@@ -114,7 +117,7 @@ class ResponsiveUI {
   }
 
   get watcherFront() {
-    return this.resourceCommand.watcherFront;
+    return this.resourceWatcher.watcherFront;
   }
 
   /**
@@ -329,8 +332,8 @@ class ResponsiveUI {
         this.onTargetAvailable
       );
 
-      this.resourceCommand.unwatchResources(
-        [this.resourceCommand.TYPES.NETWORK_EVENT],
+      this.resourceWatcher.unwatchResources(
+        [this.resourceWatcher.TYPES.NETWORK_EVENT],
         { onAvailable: this.onNetworkResourceAvailable }
       );
 
@@ -367,7 +370,7 @@ class ResponsiveUI {
 
   async connectToServer() {
     this.commands = await CommandsFactory.forTab(this.tab);
-    this.resourceCommand = this.commands.resourceCommand;
+    this.resourceWatcher = new ResourceWatcher(this.commands.targetCommand);
 
     await this.commands.targetCommand.startListening();
 
@@ -376,10 +379,10 @@ class ResponsiveUI {
       this.onTargetAvailable
     );
 
-    // To support network throttling the resource command
+    // To support network throttling the resource watcher
     // needs to be watching for network resources.
-    await this.resourceCommand.watchResources(
-      [this.resourceCommand.TYPES.NETWORK_EVENT],
+    await this.resourceWatcher.watchResources(
+      [this.resourceWatcher.TYPES.NETWORK_EVENT],
       { onAvailable: this.onNetworkResourceAvailable }
     );
 

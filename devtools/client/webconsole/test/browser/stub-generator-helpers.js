@@ -30,6 +30,16 @@ async function createCommandsForMainProcess() {
   return commands;
 }
 
+async function createResourceWatcherForCommands(commands) {
+  // Avoid mocha to try to load these module and fail while doing it when running node tests
+  const {
+    ResourceWatcher,
+  } = require("devtools/shared/resources/resource-watcher");
+
+  await commands.targetCommand.startListening();
+  return new ResourceWatcher(commands.targetCommand);
+}
+
 // eslint-disable-next-line complexity
 function getCleanedPacket(key, packet) {
   const { stubPackets } = require(CHROME_PREFIX + STUBS_FOLDER + "index");
@@ -536,6 +546,7 @@ module.exports = {
   STUBS_UPDATE_ENV,
   createCommandsForTab,
   createCommandsForMainProcess,
+  createResourceWatcherForCommands,
   getStubFile,
   getCleanedPacket,
   getSerializedPacket,

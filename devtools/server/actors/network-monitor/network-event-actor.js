@@ -96,7 +96,7 @@ const NetworkEventActor = protocol.ActorClassWithSpec(networkEventSpec, {
    * Returns a grip for this actor.
    */
   asResource() {
-    // The browsingContextID is used by the ResourceCommand on the client
+    // The browsingContextID is used by the ResourceWatcher on the client
     // to find the related Target Front.
     const browsingContextID = this._browsingContextID
       ? this._browsingContextID

@@ -54,13 +54,10 @@ async function startTest()
 
 async function checkHSTS({desc, url, usesHSTS}) {
   info("Testing HSTS for " + url);
-  const commands = await createCommandsForTab();
-  const target = commands.targetCommand.targetFront;
-  const resourceCommand = commands.resourceCommand;
-
+  const { resourceWatcher, target } = await createResourceWatcherForTab();
   const resource = await new Promise(resolve => {
-    resourceCommand
-      .watchResources([resourceCommand.TYPES.NETWORK_EVENT], {
+    resourceWatcher
+      .watchResources([resourceWatcher.TYPES.NETWORK_EVENT], {
         onAvailable: () => {},
         onUpdated: resourceUpdate => {
           resolve(resourceUpdate[0].resource);
@@ -80,7 +77,7 @@ async function checkHSTS({desc, url, usesHSTS}) {
     usesHSTS,
     "Strict Transport Security detected correctly for " + url
   );
-  await commands.destroy();
+  await target.client.close();
 }
 
 addEventListener("load", startTest, { once: true });

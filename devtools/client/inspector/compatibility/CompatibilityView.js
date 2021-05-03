@@ -48,8 +48,8 @@ class CompatibilityView {
 
   destroy() {
     try {
-      this.resourceCommand.unwatchResources(
-        [this.resourceCommand.TYPES.CSS_CHANGE],
+      this.resourceWatcher.unwatchResources(
+        [this.resourceWatcher.TYPES.CSS_CHANGE],
         {
           onAvailable: this._onResourceAvailable,
         }
@@ -69,8 +69,8 @@ class CompatibilityView {
     this.inspector = null;
   }
 
-  get resourceCommand() {
-    return this.inspector.toolbox.resourceCommand;
+  get resourceWatcher() {
+    return this.inspector.toolbox.resourceWatcher;
   }
 
   async _init() {
@@ -104,8 +104,8 @@ class CompatibilityView {
       this._onPanelSelected
     );
 
-    await this.resourceCommand.watchResources(
-      [this.resourceCommand.TYPES.CSS_CHANGE],
+    await this.resourceWatcher.watchResources(
+      [this.resourceWatcher.TYPES.CSS_CHANGE],
       {
         onAvailable: this._onResourceAvailable,
         // CSS changes made before opening Compatibility View are already applied to

@@ -54,14 +54,14 @@ class Connector {
     return this.commands.targetCommand.targetFront;
   }
 
-  get hasResourceCommandSupport() {
-    return this.toolbox.resourceCommand.hasResourceCommandSupport(
-      this.toolbox.resourceCommand.TYPES.NETWORK_EVENT
+  get hasResourceWatcherSupport() {
+    return this.toolbox.resourceWatcher.hasResourceWatcherSupport(
+      this.toolbox.resourceWatcher.TYPES.NETWORK_EVENT
     );
   }
 
   get watcherFront() {
-    return this.toolbox.resourceCommand.watcherFront;
+    return this.toolbox.resourceWatcher.watcherFront;
   }
 
   /**
@@ -85,8 +85,8 @@ class Connector {
       this.onTargetAvailable
     );
 
-    await this.toolbox.resourceCommand.watchResources(
-      [this.toolbox.resourceCommand.TYPES.DOCUMENT_EVENT],
+    await this.toolbox.resourceWatcher.watchResources(
+      [this.toolbox.resourceWatcher.TYPES.DOCUMENT_EVENT],
       { onAvailable: this.onResourceAvailable }
     );
   }
@@ -104,8 +104,8 @@ class Connector {
       this.onTargetAvailable
     );
 
-    this.toolbox.resourceCommand.unwatchResources(
-      [this.toolbox.resourceCommand.TYPES.DOCUMENT_EVENT],
+    this.toolbox.resourceWatcher.unwatchResources(
+      [this.toolbox.resourceWatcher.TYPES.DOCUMENT_EVENT],
       { onAvailable: this.onResourceAvailable }
     );
 
@@ -151,7 +151,7 @@ class Connector {
       webConsoleFront: this.webConsoleFront,
       actions: this.actions,
       owner: this.owner,
-      resourceCommand: this.toolbox.resourceCommand,
+      resourceWatcher: this.toolbox.resourceWatcher,
     });
 
     // If this is the first top level target, lets register all the listeners
@@ -161,14 +161,14 @@ class Connector {
 
     // Initialize Responsive Emulation front for network throttling.
     this.responsiveFront = await this.currentTarget.getFront("responsive");
-    if (this.hasResourceCommandSupport) {
+    if (this.hasResourceWatcherSupport) {
       this.networkFront = await this.watcherFront.getNetworkParentActor();
     }
   }
 
   async onResourceAvailable(resources) {
     for (const resource of resources) {
-      const { TYPES } = this.toolbox.resourceCommand;
+      const { TYPES } = this.toolbox.resourceWatcher;
 
       if (resource.resourceType === TYPES.DOCUMENT_EVENT) {
         this.onDocEvent(resource);
@@ -249,7 +249,7 @@ class Connector {
     for (const { resource, update } of updates) {
       if (
         resource.resourceType ===
-          this.toolbox.resourceCommand.TYPES.NETWORK_EVENT &&
+          this.toolbox.resourceWatcher.TYPES.NETWORK_EVENT &&
         this.listenForNetworkEvents
       ) {
         this.dataProvider.onNetworkResourceUpdated(resource, update);
@@ -259,11 +259,11 @@ class Connector {
 
   async addListeners(ignoreExistingResources = false) {
     const targetResources = [
-      this.toolbox.resourceCommand.TYPES.NETWORK_EVENT,
-      this.toolbox.resourceCommand.TYPES.NETWORK_EVENT_STACKTRACE,
+      this.toolbox.resourceWatcher.TYPES.NETWORK_EVENT,
+      this.toolbox.resourceWatcher.TYPES.NETWORK_EVENT_STACKTRACE,
     ];
     if (Services.prefs.getBoolPref("devtools.netmonitor.features.webSockets")) {
-      targetResources.push(this.toolbox.resourceCommand.TYPES.WEBSOCKET);
+      targetResources.push(this.toolbox.resourceWatcher.TYPES.WEBSOCKET);
     }
 
     if (
@@ -272,11 +272,11 @@ class Connector {
       )
     ) {
       targetResources.push(
-        this.toolbox.resourceCommand.TYPES.SERVER_SENT_EVENT
+        this.toolbox.resourceWatcher.TYPES.SERVER_SENT_EVENT
       );
     }
 
-    await this.toolbox.resourceCommand.watchResources(targetResources, {
+    await this.toolbox.resourceWatcher.watchResources(targetResources, {
       onAvailable: this.onResourceAvailable,
       onUpdated: this.onResourceUpdated,
       ignoreExistingResources,
@@ -284,12 +284,12 @@ class Connector {
   }
 
   removeListeners() {
-    this.toolbox.resourceCommand.unwatchResources(
+    this.toolbox.resourceWatcher.unwatchResources(
       [
-        this.toolbox.resourceCommand.TYPES.NETWORK_EVENT,
-        this.toolbox.resourceCommand.TYPES.NETWORK_EVENT_STACKTRACE,
-        this.toolbox.resourceCommand.TYPES.WEBSOCKET,
-        this.toolbox.resourceCommand.TYPES.SERVER_SENT_EVENT,
+        this.toolbox.resourceWatcher.TYPES.NETWORK_EVENT,
+        this.toolbox.resourceWatcher.TYPES.NETWORK_EVENT_STACKTRACE,
+        this.toolbox.resourceWatcher.TYPES.WEBSOCKET,
+        this.toolbox.resourceWatcher.TYPES.SERVER_SENT_EVENT,
       ],
       {
         onAvailable: this.onResourceAvailable,
@@ -390,7 +390,7 @@ class Connector {
    * @param {object} data data payload would like to sent to backend
    */
   async sendHTTPRequest(data) {
-    if (this.hasResourceCommandSupport && this.currentTarget) {
+    if (this.hasResourceWatcherSupport && this.currentTarget) {
       const networkContentFront = await this.currentTarget.getFront(
         "networkContent"
       );
@@ -425,7 +425,7 @@ class Connector {
    * Get the list of blocked URLs
    */
   async getBlockedUrls() {
-    if (this.hasResourceCommandSupport && this.networkFront) {
+    if (this.hasResourceWatcherSupport && this.networkFront) {
       return this.networkFront.getBlockedUrls();
     }
     if (!this.webConsoleFront.traits.blockedUrls) {
@@ -440,7 +440,7 @@ class Connector {
    * @param {object} urls An array of URL strings
    */
   async setBlockedUrls(urls) {
-    if (this.hasResourceCommandSupport && this.networkFront) {
+    if (this.hasResourceWatcherSupport && this.networkFront) {
       return this.networkFront.setBlockedUrls(urls);
     }
     return this.webConsoleFront.setBlockedUrls(urls);
@@ -578,7 +578,7 @@ class Connector {
 
   async updateNetworkThrottling(enabled, profile) {
     const throttlingFront =
-      this.hasResourceCommandSupport && this.networkFront
+      this.hasResourceWatcherSupport && this.networkFront
         ? this.networkFront
         : this.responsiveFront;
 

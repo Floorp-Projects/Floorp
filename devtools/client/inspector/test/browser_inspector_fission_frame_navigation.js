@@ -67,7 +67,7 @@ add_task(async function navigateFrameNotExpandedInMarkupView() {
   }
 
   const { inspector } = await openInspectorForURL(TEST_ORG_URI);
-  const resourceCommand = inspector.toolbox.resourceCommand;
+  const resourceWatcher = inspector.toolbox.resourceWatcher;
 
   // At this stage the expected layout of the markup view is
   // v html     (expanded)
@@ -81,7 +81,7 @@ add_task(async function navigateFrameNotExpandedInMarkupView() {
 
   is(
     resource.resourceType,
-    resourceCommand.TYPES.ROOT_NODE,
+    resourceWatcher.TYPES.ROOT_NODE,
     "A resource with resourceType ROOT_NODE was received when navigating"
   );
 
@@ -110,12 +110,12 @@ async function navigateIframeTo(inspector, url) {
   info("Navigate the test iframe to " + url);
 
   const { commands } = inspector;
-  const { resourceCommand } = inspector.toolbox;
+  const { resourceWatcher } = inspector.toolbox;
   const onTargetProcessed = waitForTargetProcessed(commands, url);
 
   const onNewRoot = waitForNextResource(
-    resourceCommand,
-    resourceCommand.TYPES.ROOT_NODE,
+    resourceWatcher,
+    resourceWatcher.TYPES.ROOT_NODE,
     {
       ignoreExistingResources: true,
     }
@@ -144,7 +144,7 @@ async function navigateIframeTo(inspector, url) {
 /**
  * Returns a promise that waits until the provided commands's TargetCommand has fully
  * processed a target with the provided URL.
- * This will avoid navigating again before the new resource command  have fully
+ * This will avoid navigating again before the new resource watchers have fully
  * attached to the new target.
  */
 function waitForTargetProcessed(commands, url) {

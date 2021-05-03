@@ -6,6 +6,7 @@
 const {
   STUBS_UPDATE_ENV,
   createCommandsForTab,
+  createResourceWatcherForCommands,
   getStubFile,
   getCleanedPacket,
   getSerializedPacket,
@@ -62,8 +63,7 @@ async function generateConsoleApiStubs() {
 
   const tab = await addTab(TEST_URI);
   const commands = await createCommandsForTab(tab);
-  await commands.targetCommand.startListening();
-  const resourceCommand = commands.resourceCommand;
+  const resourceWatcher = await createResourceWatcherForCommands(commands);
 
   // The resource-watcher only supports a single call to watch/unwatch per
   // instance, so we attach a unique watch callback, which will forward the
@@ -75,8 +75,8 @@ async function generateConsoleApiStubs() {
       handleConsoleMessage(resource);
     }
   };
-  await resourceCommand.watchResources(
-    [resourceCommand.TYPES.CONSOLE_MESSAGE],
+  await resourceWatcher.watchResources(
+    [resourceWatcher.TYPES.CONSOLE_MESSAGE],
     {
       onAvailable: onConsoleMessage,
     }
@@ -111,7 +111,7 @@ async function generateConsoleApiStubs() {
     await received;
   }
 
-  resourceCommand.unwatchResources([resourceCommand.TYPES.CONSOLE_MESSAGE], {
+  resourceWatcher.unwatchResources([resourceWatcher.TYPES.CONSOLE_MESSAGE], {
     onAvailable: onConsoleMessage,
   });
 

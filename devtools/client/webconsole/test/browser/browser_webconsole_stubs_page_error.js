@@ -6,6 +6,7 @@
 const {
   STUBS_UPDATE_ENV,
   createCommandsForTab,
+  createResourceWatcherForCommands,
   getCleanedPacket,
   getSerializedPacket,
   getStubFile,
@@ -64,8 +65,7 @@ async function generatePageErrorStubs() {
 
   const tab = await addTab(TEST_URI);
   const commands = await createCommandsForTab(tab);
-  await commands.targetCommand.startListening();
-  const resourceCommand = commands.resourceCommand;
+  const resourceWatcher = await createResourceWatcherForCommands(commands);
 
   // The resource-watcher only supports a single call to watch/unwatch per
   // instance, so we attach a unique watch callback, which will forward the
@@ -77,7 +77,7 @@ async function generatePageErrorStubs() {
       handleErrorMessage(resource);
     }
   };
-  await resourceCommand.watchResources([resourceCommand.TYPES.ERROR_MESSAGE], {
+  await resourceWatcher.watchResources([resourceWatcher.TYPES.ERROR_MESSAGE], {
     onAvailable: onErrorMessageAvailable,
   });
 
