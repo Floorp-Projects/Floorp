@@ -118,8 +118,8 @@ pub fn optimize_linear_gradient(
     end: &mut LayoutPoint,
     extend_mode: ExtendMode,
     stops: &mut [GradientStopKey],
-    // Callback called for each fast-path segment (rect, clip, start end, stops).
-    callback: &mut dyn FnMut(&LayoutRect, &LayoutRect, LayoutPoint, LayoutPoint, &[GradientStopKey])
+    // Callback called for each fast-path segment (rect, start end, stops).
+    callback: &mut dyn FnMut(&LayoutRect, LayoutPoint, LayoutPoint, &[GradientStopKey])
 ) -> bool {
     let offset = apply_gradient_local_clip(
         prim_rect,
@@ -264,13 +264,25 @@ pub fn optimize_linear_gradient(
         let mut start = point2(0.0, 0.0);
         let mut end = point2(segment_length, 0.0);
 
-        adjust_rect(&mut segment_rect);
         adjust_point(&mut start);
         adjust_point(&mut end);
+        adjust_rect(&mut segment_rect);
+
+        let origin_before_clip = segment_rect.origin;
+        segment_rect = match segment_rect.intersection(&clip_rect) {
+            Some(rect) => rect,
+            None => {
+                continue;
+            }
+        };
+        let offset = segment_rect.origin - origin_before_clip;
+
+        // Account for the clipping since start and end are relative to the origin.
+        start -= offset;
+        end -= offset;
 
         callback(
             &segment_rect,
-            &clip_rect,
             start,
             end,
             &[
