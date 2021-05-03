@@ -86,8 +86,8 @@ impl EventDatabase {
     ///
     /// * `data_path` - The directory to store events in. A new directory
     /// * `events` - will be created inside of this directory.
-    pub fn new(data_path: &str) -> Result<Self> {
-        let path = Path::new(data_path).join("events");
+    pub fn new(data_path: &Path) -> Result<Self> {
+        let path = data_path.join("events");
         create_dir_all(&path)?;
 
         Ok(Self {
@@ -227,7 +227,7 @@ impl EventDatabase {
         for store_name in stores_to_submit {
             if let Err(err) = glean.submit_ping_by_name(store_name, Some("max_capacity")) {
                 log::warn!(
-                    "Got more than {} events, but could not send {} ping: {}",
+                    "Got more than {} events, but could not persist {} ping: {}",
                     glean.get_max_events(),
                     store_name,
                     err
@@ -380,7 +380,7 @@ mod test {
         let t = tempfile::tempdir().unwrap();
 
         {
-            let db = EventDatabase::new(&t.path().display().to_string()).unwrap();
+            let db = EventDatabase::new(&t.path()).unwrap();
             db.write_event_to_disk("events", "{\"timestamp\": 500");
             db.write_event_to_disk("events", "{\"timestamp\"");
             db.write_event_to_disk(
@@ -390,7 +390,7 @@ mod test {
         }
 
         {
-            let db = EventDatabase::new(&t.path().display().to_string()).unwrap();
+            let db = EventDatabase::new(&t.path()).unwrap();
             db.load_events_from_disk().unwrap();
             let events = &db.event_stores.read().unwrap()["events"];
             assert_eq!(1, events.len());
@@ -472,7 +472,7 @@ mod test {
     #[test]
     fn doesnt_record_when_upload_is_disabled() {
         let (mut glean, dir) = new_glean(None);
-        let db = EventDatabase::new(dir.path().to_str().unwrap()).unwrap();
+        let db = EventDatabase::new(dir.path()).unwrap();
 
         let test_storage = "test-storage";
         let test_category = "category";
