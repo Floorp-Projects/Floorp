@@ -28,7 +28,78 @@ struct AsyncScrollThumbTransformer {
   AsyncTransformComponentMatrix mScrollbarTransform;
 
   LayerToParentLayerMatrix4x4 ComputeTransform();
+
+ private:
+  // Helper functions for ComputeTransform().
+
+  // If the thumb's orientation is along |aAxis|, add transformations
+  // of the thumb into |mScrollbarTransform|.
+  void ApplyTransformForAxis(const Axis& aAxis);
 };
+
+void AsyncScrollThumbTransformer::ApplyTransformForAxis(const Axis& aAxis) {
+  ParentLayerCoord asyncScroll = aAxis.GetTransformTranslation(mAsyncTransform);
+  const float asyncZoom = aAxis.GetTransformScale(mAsyncTransform);
+
+  // The scroll thumb needs to be scaled in the direction of scrolling by the
+  // inverse of the async zoom. This is because zooming in decreases the
+  // fraction of the whole srollable rect that is in view.
+  const float scale = 1.f / asyncZoom;
+
+  // Note: |metrics.GetZoom()| doesn't yet include the async zoom.
+  const CSSToParentLayerScale effectiveZoom(
+      aAxis.GetAxisScale(mMetrics.GetZoom()).scale * asyncZoom);
+
+  if (gfxPlatform::UseDesktopZoomingScrollbars()) {
+    // As computed by GetCurrentAsyncTransform, asyncScrollY is
+    //   asyncScrollY = -(GetEffectiveScrollOffset -
+    //   mLastContentPaintMetrics.GetLayoutScrollOffset()) *
+    //   effectiveZoom
+    // where GetEffectiveScrollOffset includes the visual viewport offset that
+    // the main thread knows about plus any async scrolling to the visual
+    // viewport offset that the main thread does not (yet) know about. We want
+    // asyncScrollY to be
+    //   asyncScrollY = -(GetEffectiveScrollOffset -
+    //   mLastContentPaintMetrics.GetVisualScrollOffset()) * effectiveZoom
+    // because the main thread positions the scrollbars at the visual viewport
+    // offset that it knows about. (aMetrics is mLastContentPaintMetrics)
+
+    asyncScroll -= aAxis.GetPointOffset(
+        (mMetrics.GetLayoutScrollOffset() - mMetrics.GetVisualScrollOffset()) *
+        effectiveZoom);
+  }
+
+  // Here we convert the scrollbar thumb ratio into a true unitless ratio by
+  // dividing out the conversion factor from the scrollframe's parent's space
+  // to the scrollframe's space.
+  const float ratio = mScrollbarData.mThumbRatio /
+                      (mMetrics.GetPresShellResolution() * asyncZoom);
+  // The scroll thumb needs to be translated in opposite direction of the
+  // async scroll. This is because scrolling down, which translates the layer
+  // content up, should result in moving the scroll thumb down.
+  ParentLayerCoord translation = -asyncScroll * ratio;
+
+  // The scroll thumb additionally needs to be translated to compensate for
+  // the scale applied above. The origin with respect to which the scale is
+  // applied is the origin of the entire scrollbar, rather than the origin of
+  // the scroll thumb (meaning, for a vertical scrollbar it's at the top of
+  // the composition bounds). This means that empty space above the thumb
+  // is scaled too, effectively translating the thumb. We undo that
+  // translation here.
+  // (One can think of the adjustment being done to the translation here as
+  // a change of basis. We have a method to help with that,
+  // Matrix4x4::ChangeBasis(), but it wouldn't necessarily make the code
+  // cleaner in this case).
+  const CSSCoord thumbOrigin =
+      (aAxis.GetPointOffset(mMetrics.GetVisualScrollOffset()) * ratio);
+  const CSSCoord thumbOriginScaled = thumbOrigin * scale;
+  const CSSCoord thumbOriginDelta = thumbOriginScaled - thumbOrigin;
+  const ParentLayerCoord thumbOriginDeltaPL = thumbOriginDelta * effectiveZoom;
+  translation -= thumbOriginDeltaPL;
+
+  aAxis.PostScale(mScrollbarTransform, scale);
+  aAxis.PostTranslate(mScrollbarTransform, translation);
+}
 
 LayerToParentLayerMatrix4x4 AsyncScrollThumbTransformer::ComputeTransform() {
   // We only apply the transform if the scroll-target layer has non-container
@@ -50,100 +121,10 @@ LayerToParentLayerMatrix4x4 AsyncScrollThumbTransformer::ComputeTransform() {
   // based on the painted content, we need to adjust it based on asyncTransform
   // so that it reflects what the user is actually seeing now.
   if (*mScrollbarData.mDirection == ScrollDirection::eVertical) {
-    ParentLayerCoord asyncScrollY = mAsyncTransform._42;
-    const float asyncZoomY = mAsyncTransform._22;
-
-    // The scroll thumb needs to be scaled in the direction of scrolling by the
-    // inverse of the async zoom. This is because zooming in decreases the
-    // fraction of the whole srollable rect that is in view.
-    const float yScale = 1.f / asyncZoomY;
-
-    // Note: |metrics.GetZoom()| doesn't yet include the async zoom.
-    const CSSToParentLayerScale effectiveZoom(mMetrics.GetZoom().yScale *
-                                              asyncZoomY);
-
-    if (gfxPlatform::UseDesktopZoomingScrollbars()) {
-      // As computed by GetCurrentAsyncTransform, asyncScrollY is
-      //   asyncScrollY = -(GetEffectiveScrollOffset -
-      //   mLastContentPaintMetrics.GetLayoutScrollOffset()) *
-      //   effectiveZoom
-      // where GetEffectiveScrollOffset includes the visual viewport offset that
-      // the main thread knows about plus any async scrolling to the visual
-      // viewport offset that the main thread does not (yet) know about. We want
-      // asyncScrollY to be
-      //   asyncScrollY = -(GetEffectiveScrollOffset -
-      //   mLastContentPaintMetrics.GetVisualScrollOffset()) * effectiveZoom
-      // because the main thread positions the scrollbars at the visual viewport
-      // offset that it knows about. (aMetrics is mLastContentPaintMetrics)
-
-      asyncScrollY -= ((mMetrics.GetLayoutScrollOffset() -
-                        mMetrics.GetVisualScrollOffset()) *
-                       effectiveZoom)
-                          .y;
-    }
-
-    // Here we convert the scrollbar thumb ratio into a true unitless ratio by
-    // dividing out the conversion factor from the scrollframe's parent's space
-    // to the scrollframe's space.
-    const float ratio = mScrollbarData.mThumbRatio /
-                        (mMetrics.GetPresShellResolution() * asyncZoomY);
-    // The scroll thumb needs to be translated in opposite direction of the
-    // async scroll. This is because scrolling down, which translates the layer
-    // content up, should result in moving the scroll thumb down.
-    ParentLayerCoord yTranslation = -asyncScrollY * ratio;
-
-    // The scroll thumb additionally needs to be translated to compensate for
-    // the scale applied above. The origin with respect to which the scale is
-    // applied is the origin of the entire scrollbar, rather than the origin of
-    // the scroll thumb (meaning, for a vertical scrollbar it's at the top of
-    // the composition bounds). This means that empty space above the thumb
-    // is scaled too, effectively translating the thumb. We undo that
-    // translation here.
-    // (One can think of the adjustment being done to the translation here as
-    // a change of basis. We have a method to help with that,
-    // Matrix4x4::ChangeBasis(), but it wouldn't necessarily make the code
-    // cleaner in this case).
-    const CSSCoord thumbOrigin = (mMetrics.GetVisualScrollOffset().y * ratio);
-    const CSSCoord thumbOriginScaled = thumbOrigin * yScale;
-    const CSSCoord thumbOriginDelta = thumbOriginScaled - thumbOrigin;
-    const ParentLayerCoord thumbOriginDeltaPL =
-        thumbOriginDelta * effectiveZoom;
-    yTranslation -= thumbOriginDeltaPL;
-
-    mScrollbarTransform.PostScale(1.f, yScale, 1.f);
-    mScrollbarTransform.PostTranslate(0, yTranslation, 0);
+    ApplyTransformForAxis(mApzc->mY);
   }
   if (*mScrollbarData.mDirection == ScrollDirection::eHorizontal) {
-    // See detailed comments under the eVertical case.
-
-    ParentLayerCoord asyncScrollX = mAsyncTransform._41;
-    const float asyncZoomX = mAsyncTransform._11;
-
-    const float xScale = 1.f / asyncZoomX;
-
-    const CSSToParentLayerScale effectiveZoom(mMetrics.GetZoom().xScale *
-                                              asyncZoomX);
-
-    if (gfxPlatform::UseDesktopZoomingScrollbars()) {
-      asyncScrollX -= ((mMetrics.GetLayoutScrollOffset() -
-                        mMetrics.GetVisualScrollOffset()) *
-                       effectiveZoom)
-                          .x;
-    }
-
-    const float ratio = mScrollbarData.mThumbRatio /
-                        (mMetrics.GetPresShellResolution() * asyncZoomX);
-    ParentLayerCoord xTranslation = -asyncScrollX * ratio;
-
-    const CSSCoord thumbOrigin = (mMetrics.GetVisualScrollOffset().x * ratio);
-    const CSSCoord thumbOriginScaled = thumbOrigin * xScale;
-    const CSSCoord thumbOriginDelta = thumbOriginScaled - thumbOrigin;
-    const ParentLayerCoord thumbOriginDeltaPL =
-        thumbOriginDelta * effectiveZoom;
-    xTranslation -= thumbOriginDeltaPL;
-
-    mScrollbarTransform.PostScale(xScale, 1.f, 1.f);
-    mScrollbarTransform.PostTranslate(xTranslation, 0, 0);
+    ApplyTransformForAxis(mApzc->mX);
   }
 
   LayerToParentLayerMatrix4x4 transform =
