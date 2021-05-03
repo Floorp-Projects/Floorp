@@ -266,8 +266,13 @@ extern JS_PUBLIC_API bool UpdateDebugMetadata(
     HandleString elementAttributeName, HandleScript introScript,
     HandleScript scriptOrModule);
 
-extern JS_PUBLIC_API void SetGetElementCallback(JSContext* cx,
-                                                JSGetElementCallback callback);
+// The debugger API exposes an optional "element" property on DebuggerSource
+// objects.  The callback defined here provides that value.  SpiderMonkey
+// doesn't particularly care about this, but within Firefox the "element" is the
+// HTML script tag for the script which DevTools can use for a better debugging
+// experience.
+extern JS_PUBLIC_API void SetSourceElementCallback(
+    JSContext* cx, JSSourceElementCallback callback);
 
 } /* namespace JS */
 

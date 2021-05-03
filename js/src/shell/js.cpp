@@ -4717,8 +4717,8 @@ static void DestroyShellCompartmentPrivate(JSFreeOp* fop,
 static void SetWorkerContextOptions(JSContext* cx);
 static bool ShellBuildId(JS::BuildIdCharVector* buildId);
 
-JSObject* GetElementCallback(JSContext* cx, JS::HandleValue value) {
-  RootedValue privateValue(cx, value);
+static JSObject* ShellSourceElementCallback(JSContext* cx,
+                                            JS::HandleValue privateValue) {
   if (!privateValue.isObject()) {
     return nullptr;
   }
@@ -4783,7 +4783,7 @@ static void WorkerMain(WorkerInput* input) {
                                   DummyHasReleasedWrapperCallback);
   JS_InitDestroyPrincipalsCallback(cx, ShellPrincipals::destroy);
   JS_SetDestroyCompartmentCallback(cx, DestroyShellCompartmentPrivate);
-  JS::SetGetElementCallback(cx, &GetElementCallback);
+  JS::SetSourceElementCallback(cx, ShellSourceElementCallback);
 
   js::SetWindowProxyClass(cx, &ShellWindowProxyClass);
 
@@ -12421,7 +12421,7 @@ int main(int argc, char** argv) {
   JS_SetSecurityCallbacks(cx, &ShellPrincipals::securityCallbacks);
   JS_InitDestroyPrincipalsCallback(cx, ShellPrincipals::destroy);
   JS_SetDestroyCompartmentCallback(cx, DestroyShellCompartmentPrivate);
-  JS::SetGetElementCallback(cx, &GetElementCallback);
+  JS::SetSourceElementCallback(cx, ShellSourceElementCallback);
 
   js::SetWindowProxyClass(cx, &ShellWindowProxyClass);
 
