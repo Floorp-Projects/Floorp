@@ -411,15 +411,15 @@ Context::QuotaInitRunnable::Run() {
         QuotaManager* quotaManager = QuotaManager::Get();
         MOZ_DIAGNOSTIC_ASSERT(quotaManager);
 
-        CACHE_TRY(quotaManager->EnsureStorageIsInitialized());
+        QM_TRY(quotaManager->EnsureStorageIsInitialized());
 
-        CACHE_TRY(quotaManager->EnsureTemporaryStorageIsInitialized());
+        QM_TRY(quotaManager->EnsureTemporaryStorageIsInitialized());
 
-        CACHE_TRY_UNWRAP(mQuotaInfo.mDir,
-                         quotaManager
-                             ->EnsureTemporaryOriginIsInitialized(
-                                 PERSISTENCE_TYPE_DEFAULT, mQuotaInfo)
-                             .map([](const auto& res) { return res.first; }));
+        QM_TRY_UNWRAP(mQuotaInfo.mDir,
+                      quotaManager
+                          ->EnsureTemporaryOriginIsInitialized(
+                              PERSISTENCE_TYPE_DEFAULT, mQuotaInfo)
+                          .map([](const auto& res) { return res.first; }));
 
         mState = STATE_RUN_ON_TARGET;
 
