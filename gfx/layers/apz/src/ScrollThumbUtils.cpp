@@ -14,6 +14,7 @@ namespace layers {
 namespace apz {
 
 struct AsyncScrollThumbTransformer {
+  // Inputs
   const LayerToParentLayerMatrix4x4& mCurrentTransform;
   const gfx::Matrix4x4& mScrollableContentTransform;
   AsyncPanZoomController* mApzc;
@@ -21,6 +22,10 @@ struct AsyncScrollThumbTransformer {
   const ScrollbarData& mScrollbarData;
   bool mScrollbarIsDescendant;
   AsyncTransformComponentMatrix* mOutClipTransform;
+
+  // Intermediate results
+  AsyncTransformComponentMatrix mAsyncTransform;
+  AsyncTransformComponentMatrix mScrollbarTransform;
 
   LayerToParentLayerMatrix4x4 ComputeTransform();
 };
@@ -37,17 +42,16 @@ LayerToParentLayerMatrix4x4 AsyncScrollThumbTransformer::ComputeTransform() {
 
   MOZ_RELEASE_ASSERT(mApzc);
 
-  AsyncTransformComponentMatrix asyncTransform =
+  mAsyncTransform =
       mApzc->GetCurrentAsyncTransform(AsyncPanZoomController::eForCompositing);
 
-  // |asyncTransform| represents the amount by which we have scrolled and
+  // |mAsyncTransform| represents the amount by which we have scrolled and
   // zoomed since the last paint. Because the scrollbar was sized and positioned
   // based on the painted content, we need to adjust it based on asyncTransform
   // so that it reflects what the user is actually seeing now.
-  AsyncTransformComponentMatrix scrollbarTransform;
   if (*mScrollbarData.mDirection == ScrollDirection::eVertical) {
-    ParentLayerCoord asyncScrollY = asyncTransform._42;
-    const float asyncZoomY = asyncTransform._22;
+    ParentLayerCoord asyncScrollY = mAsyncTransform._42;
+    const float asyncZoomY = mAsyncTransform._22;
 
     // The scroll thumb needs to be scaled in the direction of scrolling by the
     // inverse of the async zoom. This is because zooming in decreases the
@@ -106,14 +110,14 @@ LayerToParentLayerMatrix4x4 AsyncScrollThumbTransformer::ComputeTransform() {
         thumbOriginDelta * effectiveZoom;
     yTranslation -= thumbOriginDeltaPL;
 
-    scrollbarTransform.PostScale(1.f, yScale, 1.f);
-    scrollbarTransform.PostTranslate(0, yTranslation, 0);
+    mScrollbarTransform.PostScale(1.f, yScale, 1.f);
+    mScrollbarTransform.PostTranslate(0, yTranslation, 0);
   }
   if (*mScrollbarData.mDirection == ScrollDirection::eHorizontal) {
     // See detailed comments under the eVertical case.
 
-    ParentLayerCoord asyncScrollX = asyncTransform._41;
-    const float asyncZoomX = asyncTransform._11;
+    ParentLayerCoord asyncScrollX = mAsyncTransform._41;
+    const float asyncZoomX = mAsyncTransform._11;
 
     const float xScale = 1.f / asyncZoomX;
 
@@ -138,12 +142,12 @@ LayerToParentLayerMatrix4x4 AsyncScrollThumbTransformer::ComputeTransform() {
         thumbOriginDelta * effectiveZoom;
     xTranslation -= thumbOriginDeltaPL;
 
-    scrollbarTransform.PostScale(xScale, 1.f, 1.f);
-    scrollbarTransform.PostTranslate(xTranslation, 0, 0);
+    mScrollbarTransform.PostScale(xScale, 1.f, 1.f);
+    mScrollbarTransform.PostTranslate(xTranslation, 0, 0);
   }
 
   LayerToParentLayerMatrix4x4 transform =
-      mCurrentTransform * scrollbarTransform;
+      mCurrentTransform * mScrollbarTransform;
 
   AsyncTransformComponentMatrix compensation;
   // If the scrollbar layer is a child of the content it is a scrollbar for,
@@ -161,7 +165,7 @@ LayerToParentLayerMatrix4x4 AsyncScrollThumbTransformer::ComputeTransform() {
     AsyncTransformComponentMatrix overscroll =
         mApzc->GetOverscrollTransform(AsyncPanZoomController::eForCompositing);
     gfx::Matrix4x4 asyncUntransform =
-        (asyncTransform * overscroll).Inverse().ToUnknownMatrix();
+        (mAsyncTransform * overscroll).Inverse().ToUnknownMatrix();
     const gfx::Matrix4x4& contentTransform = mScrollableContentTransform;
     gfx::Matrix4x4 contentUntransform = contentTransform.Inverse();
 
