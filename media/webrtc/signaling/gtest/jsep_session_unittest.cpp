@@ -5026,6 +5026,13 @@ TEST_F(JsepSessionTest, TestAnswerPTAsymmetry) {
   ASSERT_TRUE(codec);
   ASSERT_EQ("opus", codec->mName);
   ASSERT_EQ("105", codec->mDefaultPt);
+
+  // Offerer should use 105 for reoffers
+  offer = CreateOffer();
+  ASSERT_NE(std::string::npos, offer.find("a=rtpmap:105 opus")) << offer;
+  ASSERT_EQ(std::string::npos, offer.find("a=rtpmap:109 opus")) << offer;
+  ASSERT_NE(std::string::npos, offer.find("a=fmtp:105")) << offer;
+  ASSERT_EQ(std::string::npos, offer.find("a=fmtp:109")) << offer;
 }
 
 TEST_F(JsepSessionTest, PayloadTypeClash) {
