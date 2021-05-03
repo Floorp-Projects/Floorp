@@ -1305,7 +1305,7 @@ toolbarpaletteitem > toolbaritem {
   -moz-box-pack: center;
 }
 
-toolbarpaletteitem > #stop-reload-button {
+toolbarpaletteitem:not([place="palette"]) > #stop-reload-button {
   -moz-box-pack: inherit;
 }
 
