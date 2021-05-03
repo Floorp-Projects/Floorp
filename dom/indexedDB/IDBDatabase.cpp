@@ -890,9 +890,9 @@ nsresult IDBDatabase::GetQuotaInfo(nsACString& aOrigin,
       return NS_OK;
 
     case PrincipalInfo::TContentPrincipalInfo: {
-      IDB_TRY_UNWRAP(auto principal, PrincipalInfoToPrincipal(*principalInfo));
+      QM_TRY_UNWRAP(auto principal, PrincipalInfoToPrincipal(*principalInfo));
 
-      IDB_TRY_UNWRAP(aOrigin, QuotaManager::GetOriginFromPrincipal(principal));
+      QM_TRY_UNWRAP(aOrigin, QuotaManager::GetOriginFromPrincipal(principal));
 
       return NS_OK;
     }

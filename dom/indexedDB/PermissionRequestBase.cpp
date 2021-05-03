@@ -61,12 +61,11 @@ PermissionRequestBase::GetCurrentPermission(nsIPrincipal& aPrincipal) {
   AssertSanity();
 
   const nsCOMPtr<nsIPermissionManager> permMan = GetPermissionManager();
-  IDB_TRY(OkIf(permMan), Err(NS_ERROR_FAILURE));
+  QM_TRY(OkIf(permMan), Err(NS_ERROR_FAILURE));
 
-  IDB_TRY_INSPECT(
-      const uint32_t& intPermission,
-      MOZ_TO_RESULT_INVOKE(permMan, TestExactPermissionFromPrincipal,
-                           &aPrincipal, kPermissionString));
+  QM_TRY_INSPECT(const uint32_t& intPermission,
+                 MOZ_TO_RESULT_INVOKE(permMan, TestExactPermissionFromPrincipal,
+                                      &aPrincipal, kPermissionString));
 
   const PermissionValue permission =
       PermissionValueForIntPermission(intPermission);
@@ -107,25 +106,25 @@ PermissionRequestBase::PromptIfNeeded() {
   nsCOMPtr<Element> element = std::move(mOwnerElement);
   nsCOMPtr<nsIPrincipal> principal = std::move(mPrincipal);
 
-  IDB_TRY_INSPECT(const PermissionValue& currentValue,
-                  GetCurrentPermission(*principal));
+  QM_TRY_INSPECT(const PermissionValue& currentValue,
+                 GetCurrentPermission(*principal));
   MOZ_ASSERT(currentValue != kPermissionDefault);
 
   if (currentValue == kPermissionPrompt) {
     nsCOMPtr<nsIObserverService> obsSvc = GetObserverService();
-    IDB_TRY(OkIf(obsSvc), Err(NS_ERROR_FAILURE));
+    QM_TRY(OkIf(obsSvc), Err(NS_ERROR_FAILURE));
 
     // We're about to prompt so move the members back.
     mOwnerElement = std::move(element);
     mPrincipal = std::move(principal);
 
-    IDB_TRY(obsSvc->NotifyObservers(static_cast<nsIObserver*>(this),
-                                    kPermissionPromptTopic, nullptr),
-            QM_PROPAGATE, [this](const auto&) {
-              // Finally release if we failed the prompt.
-              mOwnerElement = nullptr;
-              mPrincipal = nullptr;
-            });
+    QM_TRY(obsSvc->NotifyObservers(static_cast<nsIObserver*>(this),
+                                   kPermissionPromptTopic, nullptr),
+           QM_PROPAGATE, [this](const auto&) {
+             // Finally release if we failed the prompt.
+             mOwnerElement = nullptr;
+             mPrincipal = nullptr;
+           });
   }
 
   return currentValue;
