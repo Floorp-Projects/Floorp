@@ -488,8 +488,8 @@ function waitForNetworkEvents(monitor, getRequests, options = {}) {
 async function waitForNetworkResource(toolbox, noOfExpectedResources = 1) {
   let countOfAvailableResources = 0;
   return waitForNextResource(
-    toolbox.resourceCommand,
-    toolbox.resourceCommand.TYPES.NETWORK_EVENT,
+    toolbox.resourceWatcher,
+    toolbox.resourceWatcher.TYPES.NETWORK_EVENT,
     {
       ignoreExistingResources: true,
       predicate: resource =>

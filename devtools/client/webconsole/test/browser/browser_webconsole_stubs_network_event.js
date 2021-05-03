@@ -5,6 +5,7 @@
 
 const {
   createCommandsForTab,
+  createResourceWatcherForCommands,
   STUBS_UPDATE_ENV,
   getStubFile,
   getCleanedPacket,
@@ -58,16 +59,14 @@ async function generateNetworkEventStubs() {
   const stubs = new Map();
   const tab = await addTab(TEST_URI);
   const commands = await createCommandsForTab(tab);
-  await commands.targetCommand.startListening();
-  const resourceCommand = commands.resourceCommand;
-
+  const resourceWatcher = await createResourceWatcherForCommands(commands);
   const stacktraces = new Map();
   let addNetworkStub = function() {};
   let addNetworkUpdateStub = function() {};
 
   const onAvailable = resources => {
     for (const resource of resources) {
-      if (resource.resourceType == resourceCommand.TYPES.NETWORK_EVENT) {
+      if (resource.resourceType == resourceWatcher.TYPES.NETWORK_EVENT) {
         if (stacktraces.has(resource.channelId)) {
           const { stacktraceAvailable, lastFrame } = stacktraces.get(
             resource.channelId
@@ -80,7 +79,7 @@ async function generateNetworkEventStubs() {
         continue;
       }
       if (
-        resource.resourceType == resourceCommand.TYPES.NETWORK_EVENT_STACKTRACE
+        resource.resourceType == resourceWatcher.TYPES.NETWORK_EVENT_STACKTRACE
       ) {
         stacktraces.set(resource.channelId, resource);
       }
@@ -92,10 +91,10 @@ async function generateNetworkEventStubs() {
     }
   };
 
-  await resourceCommand.watchResources(
+  await resourceWatcher.watchResources(
     [
-      resourceCommand.TYPES.NETWORK_EVENT_STACKTRACE,
-      resourceCommand.TYPES.NETWORK_EVENT,
+      resourceWatcher.TYPES.NETWORK_EVENT_STACKTRACE,
+      resourceWatcher.TYPES.NETWORK_EVENT,
     ],
     {
       onAvailable,
@@ -138,10 +137,10 @@ async function generateNetworkEventStubs() {
     });
     await Promise.all([networkEventDone, networkEventUpdateDone]);
   }
-  resourceCommand.unwatchResources(
+  resourceWatcher.unwatchResources(
     [
-      resourceCommand.TYPES.NETWORK_EVENT_STACKTRACE,
-      resourceCommand.TYPES.NETWORK_EVENT,
+      resourceWatcher.TYPES.NETWORK_EVENT_STACKTRACE,
+      resourceWatcher.TYPES.NETWORK_EVENT,
     ],
     {
       onAvailable,

@@ -52,8 +52,8 @@ function TargetMixin(parentClass) {
       this.fronts = new Map();
 
       // `resource-available-form` and `resource-updated-form` events can be emitted
-      // by target actors before the ResourceCommand could add event listeners.
-      // The target front will cache those events until the ResourceCommand has
+      // by target actors before the ResourceWatcher could add event listeners.
+      // The target front will cache those events until the ResourceWatcher has
       // added the listeners.
       this._resourceCache = {};
 

@@ -326,7 +326,7 @@ class TargetCommand extends EventEmitter {
     }
 
     // Cache the Watcher once for all, the first time we call `startListening()`.
-    // This `watcherFront` attribute may be then used in any function in TargetCommand or ResourceCommand after this.
+    // This `watcherFront` attribute may be then used in any function in TargetCommand or ResourceWatcher after this.
     if (!this.watcherFront) {
       // Bug 1675763: Watcher actor is not available in all situations yet.
       const supportsWatcher = this.descriptorFront.traits?.watcher;

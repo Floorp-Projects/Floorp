@@ -330,7 +330,7 @@ function getAdHocFrontOrPrimitiveGrip(packet, parentFront) {
   // actorID, unless:
   // - it's a Symbol (See Bug 1600299)
   // - it's a mapEntry (the preview.key and preview.value properties can hold actors)
-  // - or it is already a front (happens when we are using the legacy listeners in the ResourceCommand)
+  // - or it is already a front (happens when we are using the legacy listeners in the ResourceWatcher)
   const isPacketAnObject = packet && typeof packet === "object";
   const isFront = !!packet.typeName;
   if (

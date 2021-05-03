@@ -52,7 +52,7 @@ class ContentProcessStorage {
       await this.actor.preListStores();
     }
 
-    // We have to manage the actor manually, because ResourceCommand doesn't
+    // We have to manage the actor manually, because ResourceWatcher doesn't
     // use the protocol.js specification.
     // resource-available-form is typed as "json"
     // So that we have to manually handle stuff that would normally be
