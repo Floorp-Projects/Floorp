@@ -134,6 +134,11 @@ BROWSER_ARTIFACT_MODE_MOZCONFIG = """
 ac_add_options --enable-artifact-builds
 """.strip()
 
+JS_MOZCONFIG_TEMPLATE = """\
+# Build only the SpiderMonkey JS test shell
+ac_add_options --enable-application=js
+"""
+
 # Upgrade Mercurial older than this.
 # This should match the OLDEST_NON_LEGACY_VERSION in
 # version-control-tools/hgext/configwizard/__init__.py.
@@ -214,6 +219,19 @@ class BaseBootstrapper(object):
         entirely from configure.
         """
         pass
+
+    def install_js_packages(self, mozconfig_builder):
+        """
+        Install packages required to build SpiderMonkey JavaScript Engine
+        (application 'js').
+        """
+        return self.install_browser_packages(mozconfig_builder)
+
+    def generate_js_mozconfig(self):
+        """
+        Create a reasonable starting point for a JS shell build.
+        """
+        return JS_MOZCONFIG_TEMPLATE
 
     def install_browser_artifact_mode_packages(self, mozconfig_builder):
         """
