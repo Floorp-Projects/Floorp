@@ -7,7 +7,7 @@
 /* import-globals-from ../../debugger/test/mochitest/helpers/context.js */
 
 // The test can take a while to run
-requestLongerTimeout(2);
+requestLongerTimeout(3);
 
 const FILENAME = "doc_backward_forward_navigation.html";
 const TEST_URI_ORG = `${URL_ROOT_ORG}${FILENAME}`;
@@ -18,7 +18,10 @@ Services.scriptloader.loadSubScript(
   this
 );
 
-add_task(async function() {
+add_task(async function testMultipleNavigations() {
+  info(
+    "Test that DevTools works fine after multiple backward/forward navigations"
+  );
   // Don't show the third panel to limit the logs and activity.
   await pushPref("devtools.inspector.three-pane-enabled", false);
   await pushPref("devtools.inspector.activeSidebar", "ruleview");
@@ -64,7 +67,11 @@ add_task(async function() {
   await checkToolboxState(toolbox);
 });
 
-add_task(async function() {
+add_task(async function testSingleBackAndForthInstantNavigation() {
+  info(
+    "Test that DevTools works fine after navigating backward and forward right after"
+  );
+
   // Don't show the third panel to limit the logs and activity.
   await pushPref("devtools.inspector.three-pane-enabled", false);
   await pushPref("devtools.inspector.activeSidebar", "ruleview");
@@ -104,9 +111,19 @@ async function checkToolboxState(toolbox) {
     "Check that the markup view is rendered correctly and elements can be selected"
   );
   const inspector = await toolbox.selectTool("inspector");
-  const h1NodeFront = await getNodeFront("ul.logs", inspector);
-  ok(h1NodeFront, "the markup view is still rendered fine");
+  await waitFor(
+    () =>
+      inspector.markup &&
+      inspector.markup.win.document.body.innerText.includes(
+        `<body class="no-mutation">`
+      ),
+    `wait for <body class="no-mutation"> to be displayed in the markup view, got: ${inspector.markup?.win.document.body.innerText}`,
+    100,
+    100
+  );
+  ok(true, "the markup view is still rendered fine");
   await selectNode("ul.logs", inspector);
+  ok(true, "Nodes can be selected");
 
   info("Check that the debugger has some sources");
   const dbgPanel = await toolbox.selectTool("jsdebugger");
