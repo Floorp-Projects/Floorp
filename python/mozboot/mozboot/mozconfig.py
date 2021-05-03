@@ -37,7 +37,7 @@ class MozconfigBuilder(object):
         self._lines.extend([line.strip() for line in block.split("\n") if line.strip()])
 
     def generate(self):
-        return "\n".join(self._lines)
+        return "".join(line + "\n" for line in self._lines)
 
 
 def find_mozconfig(topsrcdir, env=os.environ):
