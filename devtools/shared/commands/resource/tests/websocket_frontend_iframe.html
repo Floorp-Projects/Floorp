@@ -16,7 +16,7 @@
     function openConnection() {
       return new Promise(resolve => {
         webSocket = new WebSocket(
-          "ws://mochi.test:8888/browser/devtools/shared/resources/tests/websocket_backend"
+          "ws://mochi.test:8888/browser/devtools/shared/commands/resource/tests/websocket_backend"
         );
         webSocket.onopen = () => {
           resolve();

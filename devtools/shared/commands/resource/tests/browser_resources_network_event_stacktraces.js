@@ -13,7 +13,7 @@ const REQUEST_STUB = {
     stacktraceAvailable: true,
     lastFrame: {
       filename:
-        "https://example.com/browser/devtools/shared/resources/tests/network_document.html",
+        "https://example.com/browser/devtools/shared/commands/resource/tests/network_document.html",
       lineNumber: 1,
       columnNumber: 40,
       functionName: "triggerRequest",
