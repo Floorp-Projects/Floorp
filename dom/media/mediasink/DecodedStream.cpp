@@ -702,7 +702,7 @@ void DecodedStream::SetPreservesPitch(bool aPreservesPitch) {
     return;
   }
   mPreservesPitch = aPreservesPitch;
-  if (mData->mAudioTrack) {
+  if (mData && mData->mAudioTrack) {
     mData->mAudioTrack->SetPreservesPitch(aPreservesPitch);
   }
 }
