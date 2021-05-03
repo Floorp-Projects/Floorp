@@ -1255,21 +1255,41 @@ class CGTemplatedType(CGWrapper):
         CGWrapper.__init__(self, child, pre=pre, post=post)
 
 
-class CGNamespace(CGWrapper):
-    def __init__(self, namespace, child, declareOnly=False):
-        pre = "namespace %s {\n" % namespace
-        post = "} // namespace %s\n" % namespace
-        CGWrapper.__init__(self, child, pre=pre, post=post, declareOnly=declareOnly)
+class CGNamespace(CGThing):
+    """
+    Generates namespace block that wraps other CGThings.
+    """
+
+    def __init__(self, namespace, child):
+        CGThing.__init__(self)
+        self.child = child
+        self.pre = "namespace %s {\n" % namespace
+        self.post = "} // namespace %s\n" % namespace
+
+    def declare(self):
+        decl = self.child.declare()
+        if len(decl.strip()) == 0:
+            return ""
+        return self.pre + decl + self.post
+
+    def define(self):
+        defn = self.child.define()
+        if len(defn.strip()) == 0:
+            return ""
+        return self.pre + defn + self.post
+
+    def deps(self):
+        return self.child.deps()
 
     @staticmethod
-    def build(namespaces, child, declareOnly=False):
+    def build(namespaces, child):
         """
         Static helper method to build multiple wrapped namespaces.
         """
         if not namespaces:
-            return CGWrapper(child, declareOnly=declareOnly)
-        inner = CGNamespace.build(namespaces[1:], child, declareOnly=declareOnly)
-        return CGNamespace(namespaces[0], inner, declareOnly=declareOnly)
+            return CGWrapper(child)
+        inner = CGNamespace.build(namespaces[1:], child)
+        return CGNamespace(namespaces[0], inner)
 
 
 class CGIncludeGuard(CGWrapper):
@@ -17881,9 +17901,7 @@ class ForwardDeclarationBuilder:
                 )
             )
         for namespace, child in sorted(six.iteritems(self.children)):
-            decls.append(
-                CGNamespace(namespace, child._build(atTopLevel=False), declareOnly=True)
-            )
+            decls.append(CGNamespace(namespace, child._build(atTopLevel=False)))
 
         cg = CGList(decls, "\n")
         if not atTopLevel and len(decls) + len(self.decls) > 1:
