@@ -62,7 +62,7 @@ class TRRService : public TRRServiceBase,
   bool IsExcludedFromTRR(const nsACString& aHost);
 
   bool MaybeBootstrap(const nsACString& possible, nsACString& result);
-  void TRRIsOkay(nsresult aChannelStatus);
+  void RecordTRRStatus(nsresult aChannelStatus);
   bool ParentalControlEnabled() const { return mParentalControlEnabled; }
 
   nsresult DispatchTRRRequest(TRR* aTrrRequest);
@@ -204,7 +204,7 @@ class TRRService : public TRRServiceBase,
     Atomic<uint32_t, Relaxed> mTRRFailures{0};
 
     // This buffer holds consecutive TRR failures reported by calling
-    // TRRIsOkay(). It is only meant for reporting event telemetry.
+    // RecordTRRStatus(). It is only meant for reporting event telemetry.
     char mFailureReasons[RESULTS_SIZE] = {0};
 
     // The number of confirmation retries.
@@ -243,6 +243,8 @@ class TRRService : public TRRServiceBase,
     enum ConfirmationState State() { return mState; }
 
     void CompleteConfirmation(nsresult aStatus, TRR* aTrrRequest);
+
+    void RecordTRRStatus(nsresult aChannelStatus);
 
    private:
     // Since the ConfirmationContext is embedded in the TRRService object
