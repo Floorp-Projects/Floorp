@@ -1,0 +1,101 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=2100"/>
+  <title>Check that on generated content works</title>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <script type="application/javascript">
+
+async function test() {
+  let useTouchpad = (location.search == "?touchpad");
+
+  let resolution = getResolution();
+  let initial_resolution = resolution;
+  ok(resolution > 0,
+     "The initial_resolution is " + resolution + ", which is some sane value");
+
+  let target = document.getElementById("target");
+
+  info("tar " + target.getBoundingClientRect().width);
+
+  // Check that first double tap zooms in
+  info("sending first double tap");
+  await doubleTapOn(target, 10, 10, useTouchpad);
+  let prev_resolution = resolution;
+  resolution = getResolution();
+  ok(resolution > prev_resolution, "After double-tap the resolution has increased to " + resolution);
+
+  // Check that second double tap zooms out
+  info("sending second double tap");
+  await doubleTapOn(target, 10, 10, useTouchpad);
+  prev_resolution = resolution;
+  resolution = getResolution();
+  ok(resolution < prev_resolution, "After double-tap the resolution has decreased to " + resolution);
+  ok(resolution == initial_resolution, "After double-tap the resolution has decreased to initial_resolution");
+
+  info(" window.innerWidth " + window.innerWidth);
+
+  // Check that third double tap zooms in
+  info("sending third double tap");
+  await doubleTapOn(document.getElementById("placeholder"), 10, 10, useTouchpad);
+  prev_resolution = resolution;
+  resolution = getResolution();
+  ok(resolution > prev_resolution, "After double-tap the resolution has increased to " + resolution);
+
+  info(" window.innerWidth " + window.innerWidth);
+
+  // Check that fourth double tap zooms out
+  info("sending forth double tap");
+  await doubleTapOn(document.getElementById("placeholder"), 10, 10, useTouchpad);
+  prev_resolution = resolution;
+  resolution = getResolution();
+  ok(resolution < prev_resolution, "After double-tap the resolution has decreased to " + resolution);
+  ok(resolution == initial_resolution, "After double-tap the resolution has decreased to initial_resolution");
+
+}
+
+waitUntilApzStable()
+.then(test)
+.then(subtestDone, subtestFailed);
+
+  </script>
+  <style>
+body, html {
+  margin: 0;
+}
+.withafter {
+  width: 200px;
+  height: 200px;
+  left: 0;
+  background: green;
+  position: relative;
+}
+.withafter::after {
+  width: 20vw;
+  height: 100px;
+  background: blue;
+  position: absolute;
+  left: 80vw;
+  content: 'after';
+}
+.placeholder {
+  width: 20vw;
+  height: 100px;
+  background: blue;
+  position: absolute;
+  left: 80vw;
+  top:0;
+  z-index: -10;
+}
+</style>
+</head>
+<body>
+
+<div id="target" class="withafter">some text</div>
+<div id="placeholder" class="placeholder"></div>
+
+</body>
+</html>
