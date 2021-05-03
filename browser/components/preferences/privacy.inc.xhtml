@@ -885,14 +885,15 @@
 #endif
 
 #ifdef MOZ_CRASHREPORTER
-    <hbox align="center">
-      <checkbox id="automaticallySubmitCrashesBox"
-                class="tail-with-learn-more"
-                preference="browser.crashReports.unsubmittedCheck.autoSubmit2"
-                data-l10n-id="collection-backlogged-crash-reports"
-                flex="1"/>
-      <label id="crashReporterLearnMore"
-              class="learnMore" is="text-link" data-l10n-id="collection-backlogged-crash-reports-link"/>
+    <hbox align="center" class="checkbox-row">
+      <html:input type="checkbox"
+                id="automaticallySubmitCrashesBox"
+                preference="browser.crashReports.unsubmittedCheck.autoSubmit2"/>
+      <label for="automaticallySubmitCrashesBox"
+                id="crashReporterLabel"
+                data-l10n-id="collection-backlogged-crash-reports-with-link">
+        <html:a data-l10n-name="crash-reports-link" id="crashReporterLearnMore" target="_blank"/>
+      </label>
     </hbox>
 #endif
   </vbox>
