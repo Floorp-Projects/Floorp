@@ -13,6 +13,7 @@
 #include "WindowSurfaceX11Image.h"
 #include "WindowSurfaceX11SHM.h"
 #include "WindowSurfaceXRender.h"
+#include "mozilla/X11Util.h"
 #ifdef MOZ_WAYLAND
 #  include "WindowSurfaceWayland.h"
 #endif
@@ -24,7 +25,6 @@ using namespace mozilla::layers;
 
 WindowSurfaceProvider::WindowSurfaceProvider()
     : mIsX11Display(false),
-      mXDisplay(nullptr),
       mXWindow(0),
       mXVisual(nullptr),
       mXDepth(0),
@@ -37,16 +37,8 @@ WindowSurfaceProvider::WindowSurfaceProvider()
       mIsShaped(false) {
 }
 
-void WindowSurfaceProvider::Initialize(Display* aDisplay, Window aWindow,
-                                       Visual* aVisual, int aDepth,
-                                       bool aIsShaped) {
-  // We should not be initialized
-  MOZ_ASSERT(!mXDisplay);
-
-  // This should also be a valid initialization
-  MOZ_ASSERT(aDisplay && aWindow != X11None && aVisual);
-
-  mXDisplay = aDisplay;
+void WindowSurfaceProvider::Initialize(Window aWindow, Visual* aVisual,
+                                       int aDepth, bool aIsShaped) {
   mXWindow = aWindow;
   mXVisual = aVisual;
   mXDepth = aDepth;
@@ -71,30 +63,27 @@ UniquePtr<WindowSurface> WindowSurfaceProvider::CreateWindowSurface() {
   }
 #endif
 
-  // We should be initialized
-  MOZ_ASSERT(mXDisplay);
-
   // Blit to the window with the following priority:
   // 1. XRender (iff XRender is enabled && we are in-process)
   // 2. MIT-SHM
   // 3. XPutImage
   if (!mIsShaped && gfx::gfxVars::UseXRender()) {
     LOG(("Drawing to Window 0x%lx will use XRender\n", mXWindow));
-    return MakeUnique<WindowSurfaceXRender>(mXDisplay, mXWindow, mXVisual,
-                                            mXDepth);
+    return MakeUnique<WindowSurfaceXRender>(DefaultXDisplay(), mXWindow,
+                                            mXVisual, mXDepth);
   }
 
 #ifdef MOZ_HAVE_SHMIMAGE
   if (!mIsShaped && nsShmImage::UseShm()) {
     LOG(("Drawing to Window 0x%lx will use MIT-SHM\n", mXWindow));
-    return MakeUnique<WindowSurfaceX11SHM>(mXDisplay, mXWindow, mXVisual,
-                                           mXDepth);
+    return MakeUnique<WindowSurfaceX11SHM>(DefaultXDisplay(), mXWindow,
+                                           mXVisual, mXDepth);
   }
 #endif  // MOZ_HAVE_SHMIMAGE
 
   LOG(("Drawing to Window 0x%lx will use XPutImage\n", mXWindow));
-  return MakeUnique<WindowSurfaceX11Image>(mXDisplay, mXWindow, mXVisual,
-                                           mXDepth, mIsShaped);
+  return MakeUnique<WindowSurfaceX11Image>(DefaultXDisplay(), mXWindow,
+                                           mXVisual, mXDepth, mIsShaped);
 }
 
 already_AddRefed<gfx::DrawTarget>
@@ -117,7 +106,7 @@ WindowSurfaceProvider::StartRemoteDrawingInRegion(
     gfxWarningOnce()
         << "Failed to lock WindowSurface, falling back to XPutImage backend.";
     mWindowSurface = MakeUnique<WindowSurfaceX11Image>(
-        mXDisplay, mXWindow, mXVisual, mXDepth, mIsShaped);
+        DefaultXDisplay(), mXWindow, mXVisual, mXDepth, mIsShaped);
     dt = mWindowSurface->Lock(aInvalidRegion);
   }
   return dt.forget();

@@ -40,8 +40,7 @@ class WindowSurfaceProvider final {
    * own the Display, Window, etc, and they must continue to exist
    * while WindowSurfaceProvider is used.
    */
-  void Initialize(Display* aDisplay, Window aWindow, Visual* aVisual,
-                  int aDepth, bool aIsShaped);
+  void Initialize(Window aWindow, Visual* aVisual, int aDepth, bool aIsShaped);
 
 #ifdef MOZ_WAYLAND
   void Initialize(nsWindow* aWidget);
@@ -50,7 +49,7 @@ class WindowSurfaceProvider final {
   /**
    * Releases any surfaces created by this provider.
    * This is used by GtkCompositorWidget to get rid
-   * of resources before we close the display connection.
+   * of resources.
    */
   void CleanupResources();
 
@@ -65,7 +64,6 @@ class WindowSurfaceProvider final {
 
   // Can we access X?
   bool mIsX11Display;
-  Display* mXDisplay;
   Window mXWindow;
   Visual* mXVisual;
   int mXDepth;
