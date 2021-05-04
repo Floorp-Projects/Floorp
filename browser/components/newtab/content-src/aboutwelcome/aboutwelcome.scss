@@ -648,7 +648,6 @@ body {
         border-radius: 40px;
         margin-inline-start: 12px;
         outline: 1px solid var(--in-content-border-color);
-        outline-offset: -0.5px;
 
         &:focus,
         &:active,
@@ -657,19 +656,19 @@ body {
         }
 
         &.light {
-          background-image: url('resource://builtin-themes/light/icon.svg');
+          background: linear-gradient(45deg, #F0F0F4, #F9F9FB);
         }
 
         &.dark {
-          background-image: url('resource://builtin-themes/dark/icon.svg');
+          background: linear-gradient(45deg, #1C1B22 50%, #42414D);
         }
 
         &.alpenglow {
-          background-image: url('resource://builtin-themes/alpenglow/icon.svg');
+          background: linear-gradient(45deg, #9059FF, #FF4AA2, #FFBD4F);
         }
 
         &.automatic {
-          background-image: url('resource://default-theme/icon.svg');
+          background: linear-gradient(45deg, #F0F0F4 50%, #23222B 50%);
         }
       }
     }
