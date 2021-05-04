@@ -937,15 +937,14 @@ already_AddRefed<nsHostRecord> nsHostResolver::InitLoopbackRecord(
   RefPtr<nsHostRecord> rec = InitRecord(key);
 
   nsTArray<NetAddr> addresses;
-  PRNetAddr prAddr;
-  memset(&prAddr, 0, sizeof(prAddr));
+  NetAddr addr;
   if (key.af == PR_AF_INET || key.af == PR_AF_UNSPEC) {
-    MOZ_RELEASE_ASSERT(PR_StringToNetAddr("127.0.0.1", &prAddr) == PR_SUCCESS);
-    addresses.AppendElement(NetAddr(&prAddr));
+    MOZ_RELEASE_ASSERT(NS_SUCCEEDED(addr.InitFromString("127.0.0.1"_ns)));
+    addresses.AppendElement(addr);
   }
   if (key.af == PR_AF_INET6 || key.af == PR_AF_UNSPEC) {
-    MOZ_RELEASE_ASSERT(PR_StringToNetAddr("::1", &prAddr) == PR_SUCCESS);
-    addresses.AppendElement(NetAddr(&prAddr));
+    MOZ_RELEASE_ASSERT(NS_SUCCEEDED(addr.InitFromString("::1"_ns)));
+    addresses.AppendElement(addr);
   }
 
   RefPtr<AddrInfo> ai =
@@ -990,17 +989,11 @@ nsresult nsHostResolver::ResolveHost(const nsACString& aHost,
   }
 
   // Used to try to parse to an IP address literal.
-  PRNetAddr tempAddr;
-  // Unfortunately, PR_StringToNetAddr does not properly initialize
-  // the output buffer in the case of IPv6 input. See bug 223145.
-  memset(&tempAddr, 0, sizeof(PRNetAddr));
-
-  if (IS_OTHER_TYPE(type) &&
-      (PR_StringToNetAddr(host.get(), &tempAddr) == PR_SUCCESS)) {
+  NetAddr tempAddr;
+  if (IS_OTHER_TYPE(type) && (NS_SUCCEEDED(tempAddr.InitFromString(host)))) {
     // For by-type queries the host cannot be IP literal.
     return NS_ERROR_UNKNOWN_HOST;
   }
-  memset(&tempAddr, 0, sizeof(PRNetAddr));
 
   RefPtr<nsResolveHostCallback> callback(aCallback);
   // if result is set inside the lock, then we need to issue the
@@ -1091,8 +1084,7 @@ nsresult nsHostResolver::ResolveHost(const nsACString& aHost,
       LOG(("  Using cached address for IP Literal [%s].\n", host.get()));
       Telemetry::Accumulate(Telemetry::DNS_LOOKUP_METHOD2, METHOD_LITERAL);
       result = rec;
-    } else if (addrRec &&
-               PR_StringToNetAddr(host.get(), &tempAddr) == PR_SUCCESS) {
+    } else if (addrRec && NS_SUCCEEDED(tempAddr.InitFromString(host))) {
       // try parsing the host name as an IP address literal to short
       // circuit full host resolution.  (this is necessary on some
       // platforms like Win9x.  see bug 219376 for more details.)
@@ -1100,8 +1092,7 @@ nsresult nsHostResolver::ResolveHost(const nsACString& aHost,
 
       // ok, just copy the result into the host record, and be
       // done with it! ;-)
-      addrRec->addr = MakeUnique<NetAddr>();
-      PRNetAddrToNetAddr(&tempAddr, addrRec->addr.get());
+      addrRec->addr = MakeUnique<NetAddr>(tempAddr);
       // put reference to host record on stack...
       Telemetry::Accumulate(Telemetry::DNS_LOOKUP_METHOD2, METHOD_LITERAL);
       result = rec;

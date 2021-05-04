@@ -118,21 +118,8 @@ static void AddrToString(NetAddr& netAddr, nsACString& addrStr) {
 
 static nsresult StringAndPortToNetAddr(nsACString& remoteAddrStr,
                                        uint16_t remotePort, NetAddr* netAddr) {
-  memset(netAddr, 0, sizeof(*netAddr));
-  PRNetAddr remotePRAddr;
-  memset(&remotePRAddr, 0, sizeof(remotePRAddr));
-  PRStatus prRv =
-      PR_StringToNetAddr(remoteAddrStr.BeginReading(), &remotePRAddr);
-  MOZ_ASSERT(prRv == PR_SUCCESS);
-  if (prRv != PR_SUCCESS) {
+  if (NS_FAILED(netAddr->InitFromString(remoteAddrStr, remotePort))) {
     return NS_ERROR_FAILURE;
-  }
-
-  PRNetAddrToNetAddr(&remotePRAddr, netAddr);
-  if (netAddr->raw.family == AF_INET6) {
-    netAddr->inet6.port = htons(remotePort);
-  } else {
-    netAddr->inet.port = htons(remotePort);
   }
 
   return NS_OK;
