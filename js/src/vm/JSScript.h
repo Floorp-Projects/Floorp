@@ -1515,10 +1515,6 @@ class BaseScript : public gc::TenuredCellWithNonGCPointer<uint8_t> {
     MOZ_ASSERT(extent_.toStringStart <= extent_.sourceStart);
     MOZ_ASSERT(extent_.sourceStart <= extent_.sourceEnd);
     MOZ_ASSERT(extent_.sourceEnd <= extent_.toStringEnd);
-
-    if (argumentsHasVarBinding()) {
-      setFlag(MutableFlags::NeedsArgsObj, true);
-    }
   }
 
   void setJitCodeRaw(uint8_t* code) { setHeaderPtr(code); }
@@ -1642,15 +1638,13 @@ class BaseScript : public gc::TenuredCellWithNonGCPointer<uint8_t> {
                         NeedsFunctionEnvironmentObjects)
   // FunctionHasExtraBodyVarScope: custom logic below.
   IMMUTABLE_FLAG_GETTER(shouldDeclareArguments, ShouldDeclareArguments)
-  IMMUTABLE_FLAG_GETTER(argumentsHasVarBinding, ArgumentsHasVarBinding)
-  IMMUTABLE_FLAG_GETTER(alwaysNeedsArgsObj, AlwaysNeedsArgsObj)
+  IMMUTABLE_FLAG_GETTER(needsArgsObj, NeedsArgsObj)
   IMMUTABLE_FLAG_GETTER(hasMappedArgsObj, HasMappedArgsObj)
   IMMUTABLE_FLAG_GETTER(isInlinableLargeFunction, IsInlinableLargeFunction)
 
   MUTABLE_FLAG_GETTER_SETTER(hasRunOnce, HasRunOnce)
   MUTABLE_FLAG_GETTER_SETTER(hasScriptCounts, HasScriptCounts)
   MUTABLE_FLAG_GETTER_SETTER(hasDebugScript, HasDebugScript)
-  // NeedsArgsObj: custom logic below.
   MUTABLE_FLAG_GETTER_SETTER(allowRelazify, AllowRelazify)
   MUTABLE_FLAG_GETTER_SETTER(spewEnabled, SpewEnabled)
   MUTABLE_FLAG_GETTER_SETTER(needsFinalWarmUpCount, NeedsFinalWarmUpCount)
@@ -2014,12 +2008,6 @@ class JSScript : public js::BaseScript {
     // true.  So just pretend like we never ran this script.
     clearFlag(MutableFlags::HasRunOnce);
   }
-
-  bool argumentsAliasesFormals() const {
-    return argumentsHasVarBinding() && hasMappedArgsObj();
-  }
-
-  bool needsArgsObj() const { return hasFlag(MutableFlags::NeedsArgsObj); }
 
   /*
    * Arguments access (via JSOp::*Arg* opcodes) must access the canonical

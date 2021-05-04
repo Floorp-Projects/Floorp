@@ -461,7 +461,7 @@ bool TrialInliner::canInline(JSFunction* target, HandleScript caller,
   }
 
   uint32_t calleeNumActuals = GetCalleeNumActuals(loc);
-  if (script->argumentsHasVarBinding() &&
+  if (script->needsArgsObj() &&
       calleeNumActuals > ArgumentsObject::MaxInlinedArgs) {
     JitSpew(JitSpew_WarpTrialInlining,
             "SKIP: needs arguments object with %u actual args (maximum %u)",
