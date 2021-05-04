@@ -40,6 +40,7 @@ add_task(async function context_one() {
 
       elt = popup.parentNode.getMenuItem("add-engine-0");
       Assert.ok(BrowserTestUtils.is_visible(elt));
+      await document.l10n.translateElements([elt]);
       Assert.ok(elt.label.includes("add_search_engine_0"));
       Assert.ok(elt.hasAttribute("image"));
       Assert.equal(
@@ -66,7 +67,7 @@ add_task(async function context_one() {
     let engine = await Services.search.getEngineByName("add_search_engine_0");
     await Services.search.removeEngine(engine);
 
-    await UrlbarTestUtils.withContextMenu(window, popup => {
+    await UrlbarTestUtils.withContextMenu(window, async popup => {
       info("The separator and the add engine item should be present again.");
       let elt = popup.parentNode.getMenuItem("add-engine-separator");
       Assert.ok(BrowserTestUtils.is_visible(elt));
@@ -76,6 +77,7 @@ add_task(async function context_one() {
 
       elt = popup.parentNode.getMenuItem("add-engine-0");
       Assert.ok(BrowserTestUtils.is_visible(elt));
+      await document.l10n.translateElements([elt]);
       Assert.ok(elt.label.includes("add_search_engine_0"));
     });
   });
@@ -97,6 +99,7 @@ add_task(async function context_invalid() {
 
       let elt = popup.parentNode.getMenuItem("add-engine-0");
       Assert.ok(BrowserTestUtils.is_visible(elt));
+      await document.l10n.translateElements([elt]);
       Assert.ok(elt.label.includes("add_search_engine_404"));
       Assert.equal(
         elt.getAttribute("uri"),
@@ -138,6 +141,7 @@ add_task(async function context_same_name() {
 
       elt = popup.parentNode.getMenuItem("add-engine-0");
       Assert.ok(BrowserTestUtils.is_visible(elt));
+      await document.l10n.translateElements([elt]);
       Assert.ok(elt.label.includes("add_search_engine_0"));
     });
   });
@@ -156,9 +160,11 @@ add_task(async function context_two() {
 
       elt = popup.parentNode.getMenuItem("add-engine-0");
       Assert.ok(BrowserTestUtils.is_visible(elt));
+      await document.l10n.translateElements([elt]);
       Assert.ok(elt.label.includes("add_search_engine_0"));
       elt = popup.parentNode.getMenuItem("add-engine-1");
       Assert.ok(BrowserTestUtils.is_visible(elt));
+      await document.l10n.translateElements([elt]);
       Assert.ok(elt.label.includes("add_search_engine_1"));
     });
   });
@@ -216,6 +222,7 @@ add_task(async function context_many() {
         let elt = popup.parentNode.getMenuItem(`add-engine-${i}`);
         Assert.equal(elt.parentNode, popup);
         Assert.ok(BrowserTestUtils.is_visible(elt));
+        await document.l10n.translateElements([elt]);
         Assert.ok(elt.label.includes(`add_search_engine_${i + 1}`));
       }
     });
@@ -273,6 +280,7 @@ add_task(async function context_after_customize() {
 
       elt = popup.parentNode.getMenuItem("add-engine-0");
       Assert.ok(BrowserTestUtils.is_visible(elt));
+      await document.l10n.translateElements([elt]);
       Assert.ok(elt.label.includes("add_search_engine_0"));
     });
 
@@ -296,6 +304,7 @@ add_task(async function context_after_customize() {
 
       elt = popup.parentNode.getMenuItem("add-engine-0");
       Assert.ok(BrowserTestUtils.is_visible(elt));
+      await document.l10n.translateElements([elt]);
       Assert.ok(elt.label.includes("add_search_engine_0"));
     });
   });

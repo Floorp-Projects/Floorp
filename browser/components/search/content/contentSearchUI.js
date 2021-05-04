@@ -993,7 +993,7 @@ this.ContentSearchUIController = (function() {
         );
         button.appendChild(img);
         button.style.width = buttonWidth + "px";
-        button.setAttribute("title", engine.name);
+        button.setAttribute("engine-name", engine.name);
 
         button.engineName = engine.name;
         button.addEventListener("click", this);
