@@ -93,10 +93,13 @@ async function do_test_shortcuts(activateTask) {
     for (let button of addEngineButtons) {
       Assert.ok(BrowserTestUtils.is_visible(button));
       Assert.ok(button.hasAttribute("image"));
+      await document.l10n.translateElements([button]);
       Assert.ok(
         button.getAttribute("tooltiptext").includes("add_search_engine_")
       );
-      Assert.ok(button.getAttribute("title").startsWith("add_search_engine_"));
+      Assert.ok(
+        button.getAttribute("engine-name").startsWith("add_search_engine_")
+      );
       Assert.ok(
         button.classList.contains("searchbar-engine-one-off-add-engine")
       );
@@ -125,7 +128,7 @@ async function do_test_shortcuts(activateTask) {
       "Check there's one button to add engines"
     );
     Assert.equal(
-      addEngineButtons[0].getAttribute("title"),
+      addEngineButtons[0].getAttribute("engine-name"),
       "add_search_engine_1"
     );
     let installedEngineButton = addEngineButtons[0].previousElementSibling;

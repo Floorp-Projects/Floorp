@@ -85,8 +85,6 @@ class SearchOneOffs {
 
     this.contextMenuPopup = this.querySelector(".search-one-offs-context-menu");
 
-    this._bundle = null;
-
     /**
      * When a context menu is opened on a one-off button, this is set to the
      * engine of that button for use with the context menu actions.
@@ -377,14 +375,6 @@ class SearchOneOffs {
     return this.getAttribute("compact") == "true";
   }
 
-  get bundle() {
-    if (!this._bundle) {
-      const kBundleURI = "chrome://browser/locale/search.properties";
-      this._bundle = Services.strings.createBundle(kBundleURI);
-    }
-    return this._bundle;
-  }
-
   async getEngineInfo() {
     if (this._engineInfo) {
       return this._engineInfo;
@@ -601,10 +591,7 @@ class SearchOneOffs {
       button.setAttribute("badged", "true");
       button.setAttribute("type", "menu");
       button.setAttribute("wantdropmarker", "true");
-      button.setAttribute(
-        "label",
-        this.bundle.GetStringFromName("cmd_addFoundEngineMenu")
-      );
+      button.setAttribute("data-l10n-id", "search-one-offs-add-engine-menu");
       button.setAttribute("crop", "end");
       button.setAttribute("pack", "start");
 
@@ -654,14 +641,15 @@ class SearchOneOffs {
         this.telemetryOrigin +
         "-add-engine-" +
         this._fixUpEngineNameForID(engine.title);
-      let label = this.bundle.formatStringFromName("cmd_addFoundEngine", [
-        engine.title,
-      ]);
-      button.setAttribute("label", label);
+      button.setAttribute("data-l10n-id", "search-one-offs-add-engine");
+      button.setAttribute(
+        "data-l10n-args",
+        JSON.stringify({ engineName: engine.title })
+      );
       button.setAttribute("crop", "end");
       button.setAttribute("tooltiptext", engine.title + "\n" + engine.uri);
       button.setAttribute("uri", engine.uri);
-      button.setAttribute("title", engine.title);
+      button.setAttribute("engine-name", engine.title);
       if (engine.icon) {
         button.setAttribute("image", engine.icon);
       }

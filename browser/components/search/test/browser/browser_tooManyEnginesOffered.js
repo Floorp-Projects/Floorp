@@ -5,7 +5,6 @@
 // itself.
 
 const searchPopup = document.getElementById("PopupSearchAutoComplete");
-const oneOffsContainer = searchPopup.searchOneOffsContainer;
 
 add_task(async function test_setup() {
   await gCUITestUtils.addSearchBar();
@@ -27,6 +26,11 @@ add_task(async function test() {
   let promise = promiseEvent(searchPopup, "popupshown");
   info("Opening search panel");
   searchbar.focus();
+  // In TV we may try opening too early, when the searchbar is not ready yet.
+  await TestUtils.waitForCondition(
+    () => BrowserSearch.searchBar.textbox.controller.input,
+    "Wait for the searchbar controller to connect"
+  );
   EventUtils.synthesizeKey("KEY_ArrowDown");
   await promise;
 
@@ -35,6 +39,8 @@ add_task(async function test() {
   Assert.equal(items.length, 1, "A single button");
   let menuButton = items[0];
   Assert.equal(menuButton.type, "menu", "A menu button");
+  await document.l10n.translateElements([menuButton]);
+  Assert.equal(menuButton.label, "Add search engine");
 
   // Mouse over the menu button to open it.
   let buttonPopup = menuButton.menupopup;
@@ -49,7 +55,7 @@ add_task(async function test() {
   for (let i = 0; i < buttonPopup.children.length; i++) {
     let item = buttonPopup.children[i];
     Assert.equal(
-      item.getAttribute("title"),
+      item.getAttribute("engine-name"),
       "engine" + (i + 1),
       "Expected engine title"
     );
@@ -91,7 +97,7 @@ add_task(async function test() {
 function getOpenSearchItems() {
   let os = [];
 
-  let addEngineList = oneOffsContainer.querySelector(".search-add-engines");
+  let addEngineList = searchPopup.oneOffButtons.addEngines;
   for (
     let item = addEngineList.firstElementChild;
     item;
