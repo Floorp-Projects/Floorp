@@ -23,15 +23,6 @@ function sendPageEvent(action, data) {
   document.dispatchEvent(event);
 }
 
-function readOptinParams() {
-  let searchParams = new URLSearchParams(new URL(location).search);
-  return {
-    slug: searchParams.get("optin_slug"),
-    branch: searchParams.get("optin_branch"),
-    collection: searchParams.get("optin_collection"),
-  };
-}
-
 /**
  * Handle basic layout and routing within about:studies.
  */
@@ -58,10 +49,6 @@ class AboutStudies extends React.Component {
     for (const remoteName of Object.keys(this.remoteValueNameMap)) {
       document.addEventListener(`ReceiveRemoteValue:${remoteName}`, this);
       sendPageEvent(`GetRemoteValue:${remoteName}`);
-    }
-    let optinParams = readOptinParams();
-    if (optinParams.branch && optinParams.slug) {
-      sendPageEvent(`ExperimentOptIn`, optinParams);
     }
   }
 
