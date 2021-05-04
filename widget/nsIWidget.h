@@ -23,7 +23,6 @@
 #include "mozilla/layers/LayersTypes.h"
 #include "mozilla/layers/ScrollableLayerGuid.h"
 #include "mozilla/layers/ZoomConstraints.h"
-#include "mozilla/image/Resolution.h"
 #include "mozilla/widget/IMEData.h"
 #include "nsCOMPtr.h"
 #include "nsColor.h"
@@ -993,7 +992,7 @@ class nsIWidget : public nsISupports {
     nsCOMPtr<imgIContainer> mContainer;
     uint32_t mHotspotX = 0;
     uint32_t mHotspotY = 0;
-    mozilla::ImageResolution mResolution;
+    float mResolution = 1.0f;
 
     bool IsCustom() const { return !!mContainer; }
 
@@ -1004,7 +1003,7 @@ class nsIWidget : public nsISupports {
              mResolution == aOther.mResolution;
     }
 
-    bool operator!=(const Cursor& aOther) const { return !(*this == aOther); }
+    bool operator!=(const Cursor& aOther) { return !(*this == aOther); }
   };
 
   /**

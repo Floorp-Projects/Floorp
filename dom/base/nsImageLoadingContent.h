@@ -232,6 +232,9 @@ class nsImageLoadingContent : public nsIImageLoadingContent {
   // want a non-const nsIContent.
   virtual nsIContent* AsContent() = 0;
 
+  // Hooks for subclasses to call to get the intrinsic width and height.
+  uint32_t NaturalWidth();
+  uint32_t NaturalHeight();
   /**
    * Get width and height of the current request, using given image request if
    * attributes are unset.

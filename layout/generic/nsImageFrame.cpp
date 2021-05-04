@@ -356,38 +356,6 @@ static bool SizeIsAvailable(imgIRequest* aRequest) {
   return NS_SUCCEEDED(rv) && (imageStatus & imgIRequest::STATUS_SIZE_AVAILABLE);
 }
 
-const StyleImage* nsImageFrame::GetImageFromStyle() const {
-  if (mKind == Kind::ImageElement) {
-    return nullptr;
-  }
-  uint32_t contentIndex = 0;
-  const nsStyleContent* styleContent = StyleContent();
-  if (mKind == Kind::ContentPropertyAtIndex) {
-    MOZ_RELEASE_ASSERT(
-        mContent->IsHTMLElement(nsGkAtoms::mozgeneratedcontentimage));
-    contentIndex = static_cast<GeneratedImageContent*>(mContent.get())->Index();
-
-    // TODO(emilio): Consider inheriting the `content` property instead of doing
-    // this parent traversal?
-    nsIFrame* parent = GetParent();
-    MOZ_DIAGNOSTIC_ASSERT(
-        parent->GetContent()->IsGeneratedContentContainerForMarker() ||
-        parent->GetContent()->IsGeneratedContentContainerForAfter() ||
-        parent->GetContent()->IsGeneratedContentContainerForBefore());
-    nsIFrame* nonAnonymousParent = parent;
-    while (nonAnonymousParent->Style()->IsAnonBox()) {
-      nonAnonymousParent = nonAnonymousParent->GetParent();
-    }
-    MOZ_DIAGNOSTIC_ASSERT(parent->GetContent() ==
-                          nonAnonymousParent->GetContent());
-    styleContent = nonAnonymousParent->StyleContent();
-  }
-  MOZ_RELEASE_ASSERT(contentIndex < styleContent->ContentCount());
-  auto& contentItem = styleContent->ContentAt(contentIndex);
-  MOZ_RELEASE_ASSERT(contentItem.IsImage());
-  return &contentItem.AsImage();
-}
-
 void nsImageFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
                         nsIFrame* aPrevInFlow) {
   MOZ_ASSERT_IF(aPrevInFlow,
@@ -410,11 +378,33 @@ void nsImageFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
     // that it can register images.
     imageLoader->FrameCreated(this);
   } else {
-    const StyleImage* image = GetImageFromStyle();
-    MOZ_ASSERT(image->IsImageRequestType(),
+    uint32_t contentIndex = 0;
+    const nsStyleContent* styleContent = StyleContent();
+    if (mKind == Kind::ContentPropertyAtIndex) {
+      MOZ_RELEASE_ASSERT(
+          aParent->GetContent()->IsGeneratedContentContainerForMarker() ||
+          aParent->GetContent()->IsGeneratedContentContainerForAfter() ||
+          aParent->GetContent()->IsGeneratedContentContainerForBefore());
+      MOZ_RELEASE_ASSERT(
+          aContent->IsHTMLElement(nsGkAtoms::mozgeneratedcontentimage));
+      nsIFrame* nonAnonymousParent = aParent;
+      while (nonAnonymousParent->Style()->IsAnonBox()) {
+        nonAnonymousParent = nonAnonymousParent->GetParent();
+      }
+      MOZ_RELEASE_ASSERT(aParent->GetContent() ==
+                         nonAnonymousParent->GetContent());
+      styleContent = nonAnonymousParent->StyleContent();
+      contentIndex = static_cast<GeneratedImageContent*>(aContent)->Index();
+    }
+    MOZ_RELEASE_ASSERT(contentIndex < styleContent->ContentCount());
+    MOZ_RELEASE_ASSERT(styleContent->ContentAt(contentIndex).IsImage());
+    const StyleImage& image = styleContent->ContentAt(contentIndex).AsImage();
+    MOZ_ASSERT(image.IsImageRequestType(),
                "Content image should only parse url() type");
+    auto [finalImage, resolution] = image.FinalImageAndResolution();
     Document* doc = PresContext()->Document();
-    if (imgRequestProxy* proxy = image->GetImageRequest()) {
+    if (imgRequestProxy* proxy = finalImage->GetImageRequest()) {
+      mContentURLRequestResolution = resolution;
       proxy->Clone(mListener, doc, getter_AddRefs(mContentURLRequest));
       SetupForContentURLRequest();
     }
@@ -467,25 +457,34 @@ void nsImageFrame::SetupForContentURLRequest() {
 }
 
 static void ScaleIntrinsicSizeForDensity(IntrinsicSize& aSize,
-                                         const ImageResolution& aResolution) {
+                                         double aDensity) {
+  if (aDensity == 1.0) {
+    return;
+  }
+
   if (aSize.width) {
-    aResolution.ApplyXTo(aSize.width.ref());
+    aSize.width = Some(NSToCoordRound(double(*aSize.width) / aDensity));
   }
   if (aSize.height) {
-    aResolution.ApplyYTo(aSize.height.ref());
+    aSize.height = Some(NSToCoordRound(double(*aSize.height) / aDensity));
   }
 }
 
-static void ScaleIntrinsicSizeForDensity(imgIContainer* aImage,
-                                         nsIContent& aContent,
+static void ScaleIntrinsicSizeForDensity(nsIContent& aContent,
                                          IntrinsicSize& aSize) {
-  ImageResolution resolution = aImage->GetResolution();
-  if (auto* image = HTMLImageElement::FromNode(aContent)) {
-    if (auto* selector = image->GetResponsiveImageSelector()) {
-      resolution.ScaleBy(selector->GetSelectedImageDensity());
-    }
+  auto* image = HTMLImageElement::FromNode(aContent);
+  if (!image) {
+    return;
   }
-  ScaleIntrinsicSizeForDensity(aSize, resolution);
+
+  ResponsiveImageSelector* selector = image->GetResponsiveImageSelector();
+  if (!selector) {
+    return;
+  }
+
+  double density = selector->GetSelectedImageDensity();
+  MOZ_ASSERT(density >= 0.0);
+  ScaleIntrinsicSizeForDensity(aSize, density);
 }
 
 static IntrinsicSize ComputeIntrinsicSize(imgIContainer* aImage,
@@ -503,10 +502,10 @@ static IntrinsicSize ComputeIntrinsicSize(imgIContainer* aImage,
     intrinsicSize.width = size.width == -1 ? Nothing() : Some(size.width);
     intrinsicSize.height = size.height == -1 ? Nothing() : Some(size.height);
     if (aKind == nsImageFrame::Kind::ImageElement) {
-      ScaleIntrinsicSizeForDensity(aImage, *aFrame.GetContent(), intrinsicSize);
+      ScaleIntrinsicSizeForDensity(*aFrame.GetContent(), intrinsicSize);
     } else {
       ScaleIntrinsicSizeForDensity(intrinsicSize,
-                                   aFrame.GetImageFromStyle()->GetResolution());
+                                   aFrame.GetContentURLRequestResolution());
     }
     return intrinsicSize;
   }
@@ -1487,7 +1486,7 @@ ImgDrawResult nsImageFrame::DisplayAltFeedback(gfxContext& aRenderingContext,
       nsRect dest(flushRight ? inner.XMost() - size : inner.x, inner.y, size,
                   size);
       result = nsLayoutUtils::DrawSingleImage(
-          aRenderingContext, PresContext(), imgCon,
+          aRenderingContext, PresContext(), imgCon, /* aResolution = */ 1.0f,
           nsLayoutUtils::GetSamplingFilterForFrame(this), dest, aDirtyRect,
           /* no SVGImageContext */ Nothing(), aFlags);
     }
@@ -2091,8 +2090,10 @@ ImgDrawResult nsImageFrame::PaintImage(gfxContext& aRenderingContext,
   Maybe<SVGImageContext> svgContext;
   SVGImageContext::MaybeStoreContextPaint(svgContext, this, aImage);
 
+  // We've already accounted for resolution via mIntrinsicSize, which influences
+  // the dest rect, so we don't need to worry about it here..
   ImgDrawResult result = nsLayoutUtils::DrawSingleImage(
-      aRenderingContext, PresContext(), aImage,
+      aRenderingContext, PresContext(), aImage, /* aResolution = */ 1.0f,
       nsLayoutUtils::GetSamplingFilterForFrame(this), dest, aDirtyRect,
       svgContext, flags, &anchorPoint);
 

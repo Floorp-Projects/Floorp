@@ -15,7 +15,6 @@
 #include "DecoderFlags.h"
 #include "ImageMetadata.h"
 #include "Orientation.h"
-#include "Resolution.h"
 #include "SourceBuffer.h"
 #include "StreamingLexer.h"
 #include "SurfaceFlags.h"
@@ -474,8 +473,8 @@ class Decoder {
 
   // Called by decoders when they determine the size of the image. Informs
   // the image of its size and sends notifications.
-  void PostSize(int32_t aWidth, int32_t aHeight, Orientation = Orientation(),
-                Resolution = Resolution());
+  void PostSize(int32_t aWidth, int32_t aHeight,
+                Orientation aOrientation = Orientation());
 
   // Called by decoders if they determine that the image has transparency.
   //

@@ -13,7 +13,6 @@
 #include "mozilla/SVGImageContext.h"
 #include "ImageRegion.h"
 #include "Orientation.h"
-#include "mozilla/image/Resolution.h"
 
 #include "mozilla/MemoryReporting.h"
 
@@ -113,9 +112,6 @@ Maybe<AspectRatio> DynamicImage::GetIntrinsicRatio() {
 
 NS_IMETHODIMP_(Orientation)
 DynamicImage::GetOrientation() { return Orientation(); }
-
-NS_IMETHODIMP_(Resolution)
-DynamicImage::GetResolution() { return {}; }
 
 NS_IMETHODIMP
 DynamicImage::GetType(uint16_t* aType) {

@@ -389,10 +389,8 @@ parent:
      *   Width of the image.
      * @param height
      *   Height of the image.
-     * @param resolutionX
-     *   Resolution of the image X axis in dppx units.
-     * @param resolutionY
-     *   Resolution of the image Y axis in dppx units.
+     * @param resolution
+     *   Resolution of the image in dppx units.
      * @param stride
      *   Stride used in the image data.
      * @param format
@@ -409,8 +407,7 @@ parent:
                     bool hasCustomCursor,
                     nsCString customCursorData,
                     uint32_t width, uint32_t height,
-                    float resolutionX, float resolutionY,
-                    uint32_t stride, SurfaceFormat format,
+                    float resolution, uint32_t stride, SurfaceFormat format,
                     uint32_t hotspotX, uint32_t hotspotY, bool force);
 
     /**

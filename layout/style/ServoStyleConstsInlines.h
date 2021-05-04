@@ -942,16 +942,20 @@ inline bool RestyleHint::DefinitelyRecascadesAllSubtree() const {
 }
 
 template <>
-ImageResolution StyleImage::GetResolution() const;
-
-template <>
-inline const StyleImage& StyleImage::FinalImage() const {
+inline std::pair<const StyleImage*, float> StyleImage::FinalImageAndResolution()
+    const {
   if (!IsImageSet()) {
-    return *this;
+    return {this, 1.0f};
   }
   auto& set = AsImageSet();
   auto& selectedItem = set->items.AsSpan()[set->selected_index];
-  return selectedItem.image.FinalImage();
+  return {selectedItem.image.FinalImageAndResolution().first,
+          selectedItem.resolution._0};
+}
+
+template <>
+inline const StyleImage& StyleImage::FinalImage() const {
+  return *FinalImageAndResolution().first;
 }
 
 template <>
