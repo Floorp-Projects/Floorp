@@ -18,7 +18,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 });
 
 const PREF_TIMEOUT = "first-startup.timeout";
-const PROBE_NAME = "firstStartup";
 
 /**
  * Service for blocking application startup, to be used on the first install. The intended
@@ -79,9 +78,6 @@ var FirstStartup = {
     } else {
       this._state = this.UNSUPPORTED;
     }
-
-    Services.telemetry.scalarSet(`${PROBE_NAME}.statusCode`, this._state);
-    Services.telemetry.scalarSet(`${PROBE_NAME}.elapsed`, this.elapsed);
   },
 
   get state() {
