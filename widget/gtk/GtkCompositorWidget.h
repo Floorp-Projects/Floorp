@@ -64,7 +64,6 @@ class GtkCompositorWidget : public CompositorWidget,
   LayoutDeviceIntRegion GetTransparentRegion() override;
 
 #if defined(MOZ_X11)
-  Display* XDisplay() const { return mXDisplay; }
   Window XWindow() const { return mXWindow; }
 #endif
 #if defined(MOZ_WAYLAND)
@@ -90,7 +89,6 @@ class GtkCompositorWidget : public CompositorWidget,
   WindowSurfaceProvider mProvider;
 
 #if defined(MOZ_X11)
-  Display* mXDisplay = {};
   Window mXWindow = {};
 #endif
   int32_t mDepth = {};

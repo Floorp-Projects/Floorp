@@ -376,9 +376,6 @@ class nsWindow final : public nsBaseWidget {
                                       bool aFlippedX, bool aFlippedY);
   static bool IsToplevelWindowTransparent();
 
-#ifdef MOZ_X11
-  Display* XDisplay() { return mXDisplay; }
-#endif
 #ifdef MOZ_WAYLAND
   bool GetCSDDecorationOffset(int* aDx, int* aDy);
   void SetEGLNativeWindowSize(const LayoutDeviceIntSize& aEGLWindowSize);
@@ -698,7 +695,6 @@ class nsWindow final : public nsBaseWidget {
                 GTK_WIDGET_COMPOSIDED_ENABLED = 2} WindowComposeRequest;
   void SetCompositorHint(WindowComposeRequest aState);
 
-  Display* mXDisplay;
   Window mXWindow;
   Visual* mXVisual;
   int mXDepth;
