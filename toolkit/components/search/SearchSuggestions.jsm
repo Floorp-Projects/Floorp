@@ -55,32 +55,29 @@ SuggestAutoComplete.prototype = {
    */
   onResultsReturned(results) {
     let finalResults = [];
-    let finalComments = [];
 
     // If form history has results, add them to the list.
     for (let i = 0; i < results.local.length; ++i) {
       finalResults.push(results.local[i].value);
-      finalComments.push("");
     }
 
     // If there are remote matches, add them.
     if (results.remote.length) {
-      // "comments" column values for suggestions are empty strings
-      let comments = new Array(results.remote.length).fill("");
       // now put the history results above the suggestions
       // We shouldn't show tail suggestions in their full-text form.
       let nonTailEntries = results.remote.filter(
         e => !e.matchPrefix && !e.tail
       );
       finalResults = finalResults.concat(nonTailEntries.map(e => e.value));
-      finalComments = finalComments.concat(comments);
     }
 
     // Notify the FE of our new results
     this.onResultsReady(
       results.term,
       finalResults,
-      finalComments,
+      // We supply the comments field so that autocomplete does not kick in the
+      // unescaping of the results for display which it uses for urls.
+      [...finalResults],
       results.formHistoryResult
     );
   },

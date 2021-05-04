@@ -1,6 +1,9 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+/* eslint-disable-next-line mozilla/reject-importGlobalProperties */
+Cu.importGlobalProperties(["TextEncoder"]);
+
 let gTimer;
 
 function handleRequest(req, resp) {
@@ -42,7 +45,10 @@ function writeResponse(params, resp) {
   let suffixes = ["foo", "bar"];
   let data = [params.query, suffixes.map(s => params.query + s)];
   resp.setHeader("Content-Type", "application/json", false);
-  resp.write(JSON.stringify(data));
+
+  let json = JSON.stringify(data);
+  let utf8 = String.fromCharCode(...new TextEncoder().encode(json));
+  resp.write(utf8);
 }
 
 function decode(str) {
