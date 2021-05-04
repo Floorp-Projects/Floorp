@@ -13,7 +13,7 @@
 [package]
 edition = "2018"
 name = "itertools"
-version = "0.9.0"
+version = "0.10.0"
 authors = ["bluss"]
 exclude = ["/bors.toml"]
 description = "Extra iterator adaptors, iterator methods, free functions, and macros."
@@ -54,11 +54,22 @@ harness = false
 [[bench]]
 name = "bench1"
 harness = false
+
+[[bench]]
+name = "combinations"
+harness = false
+
+[[bench]]
+name = "powerset"
+harness = false
 [dependencies.either]
 version = "1.0"
 default-features = false
 [dev-dependencies.criterion]
-version = "=0.3.0"
+version = "=0"
+
+[dev-dependencies.paste]
+version = "1.0.0"
 
 [dev-dependencies.permutohedron]
 version = "0.2"
@@ -72,4 +83,5 @@ version = "0.7"
 
 [features]
 default = ["use_std"]
-use_std = []
+use_alloc = []
+use_std = ["use_alloc"]

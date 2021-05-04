@@ -110,8 +110,9 @@ impl<'a> Expander<'a> {
             }
 
             ModuleField::Data(e) => {
-                if let DataKind::Active { memory, .. } = &mut e.kind {
+                if let DataKind::Active { memory, offset, .. } = &mut e.kind {
                     self.expand(memory);
+                    self.expand_expr(offset);
                 }
             }
 

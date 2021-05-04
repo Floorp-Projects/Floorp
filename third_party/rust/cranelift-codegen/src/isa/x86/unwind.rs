@@ -250,16 +250,15 @@ mod tests {
     use crate::ir::{
         types, AbiParam, ExternalName, InstBuilder, Signature, StackSlotData, StackSlotKind,
     };
-    use crate::isa::{lookup, CallConv};
+    use crate::isa::{lookup_variant, BackendVariant, CallConv};
     use crate::settings::{builder, Flags};
     use crate::Context;
     use std::str::FromStr;
     use target_lexicon::triple;
 
     #[test]
-    #[cfg_attr(feature = "x64", should_panic)] // TODO #2079
     fn test_small_alloc() {
-        let isa = lookup(triple!("x86_64"))
+        let isa = lookup_variant(triple!("x86_64"), BackendVariant::Legacy)
             .expect("expect x86 ISA")
             .finish(Flags::new(builder()));
 
@@ -314,9 +313,8 @@ mod tests {
     }
 
     #[test]
-    #[cfg_attr(feature = "x64", should_panic)] // TODO #2079
     fn test_medium_alloc() {
-        let isa = lookup(triple!("x86_64"))
+        let isa = lookup_variant(triple!("x86_64"), BackendVariant::Legacy)
             .expect("expect x86 ISA")
             .finish(Flags::new(builder()));
 
@@ -371,9 +369,8 @@ mod tests {
     }
 
     #[test]
-    #[cfg_attr(feature = "x64", should_panic)] // TODO #2079
     fn test_large_alloc() {
-        let isa = lookup(triple!("x86_64"))
+        let isa = lookup_variant(triple!("x86_64"), BackendVariant::Legacy)
             .expect("expect x86 ISA")
             .finish(Flags::new(builder()));
 
@@ -444,9 +441,8 @@ mod tests {
     }
 
     #[test]
-    #[cfg_attr(feature = "x64", should_panic)] // TODO #2079
     fn test_multi_return_func() {
-        let isa = lookup(triple!("x86_64"))
+        let isa = lookup_variant(triple!("x86_64"), BackendVariant::Legacy)
             .expect("expect x86 ISA")
             .finish(Flags::new(builder()));
 

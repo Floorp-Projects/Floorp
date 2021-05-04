@@ -1847,6 +1847,22 @@ fn test_aarch64_binemit() {
         "cset x15, ge",
     ));
     insns.push((
+        Inst::CSetm {
+            rd: writable_xreg(0),
+            cond: Cond::Eq,
+        },
+        "E0139FDA",
+        "csetm x0, eq",
+    ));
+    insns.push((
+        Inst::CSetm {
+            rd: writable_xreg(16),
+            cond: Cond::Vs,
+        },
+        "F0739FDA",
+        "csetm x16, vs",
+    ));
+    insns.push((
         Inst::CCmpImm {
             size: OperandSize::Size64,
             rn: xreg(22),
@@ -2057,6 +2073,24 @@ fn test_aarch64_binemit() {
         "dup v18.2d, v10.d[0]",
     ));
     insns.push((
+        Inst::VecDupFPImm {
+            rd: writable_vreg(31),
+            imm: ASIMDFPModImm::maybe_from_u64(1_f32.to_bits() as u64, ScalarSize::Size32).unwrap(),
+            size: VectorSize::Size32x2,
+        },
+        "1FF6030F",
+        "fmov v31.2s, #1",
+    ));
+    insns.push((
+        Inst::VecDupFPImm {
+            rd: writable_vreg(0),
+            imm: ASIMDFPModImm::maybe_from_u64(2_f64.to_bits(), ScalarSize::Size64).unwrap(),
+            size: VectorSize::Size64x2,
+        },
+        "00F4006F",
+        "fmov v0.2d, #2",
+    ));
+    insns.push((
         Inst::VecDupImm {
             rd: writable_vreg(31),
             imm: ASIMDMovModImm::maybe_from_u64(255, ScalarSize::Size8).unwrap(),
@@ -2068,13 +2102,93 @@ fn test_aarch64_binemit() {
     ));
     insns.push((
         Inst::VecDupImm {
+            rd: writable_vreg(30),
+            imm: ASIMDMovModImm::maybe_from_u64(0, ScalarSize::Size16).unwrap(),
+            invert: false,
+            size: VectorSize::Size16x8,
+        },
+        "1E84004F",
+        "movi v30.8h, #0",
+    ));
+    insns.push((
+        Inst::VecDupImm {
             rd: writable_vreg(0),
-            imm: ASIMDMovModImm::zero(),
+            imm: ASIMDMovModImm::zero(ScalarSize::Size16),
             invert: true,
             size: VectorSize::Size16x4,
         },
         "0084002F",
         "mvni v0.4h, #0",
+    ));
+    insns.push((
+        Inst::VecDupImm {
+            rd: writable_vreg(0),
+            imm: ASIMDMovModImm::maybe_from_u64(256, ScalarSize::Size16).unwrap(),
+            invert: false,
+            size: VectorSize::Size16x8,
+        },
+        "20A4004F",
+        "movi v0.8h, #1, LSL #8",
+    ));
+    insns.push((
+        Inst::VecDupImm {
+            rd: writable_vreg(8),
+            imm: ASIMDMovModImm::maybe_from_u64(2228223, ScalarSize::Size32).unwrap(),
+            invert: false,
+            size: VectorSize::Size32x4,
+        },
+        "28D4014F",
+        "movi v8.4s, #33, MSL #16",
+    ));
+    insns.push((
+        Inst::VecDupImm {
+            rd: writable_vreg(16),
+            imm: ASIMDMovModImm::maybe_from_u64(35071, ScalarSize::Size32).unwrap(),
+            invert: true,
+            size: VectorSize::Size32x2,
+        },
+        "10C5042F",
+        "mvni v16.2s, #136, MSL #8",
+    ));
+    insns.push((
+        Inst::VecDupImm {
+            rd: writable_vreg(1),
+            imm: ASIMDMovModImm::maybe_from_u64(0, ScalarSize::Size32).unwrap(),
+            invert: false,
+            size: VectorSize::Size32x2,
+        },
+        "0104000F",
+        "movi v1.2s, #0",
+    ));
+    insns.push((
+        Inst::VecDupImm {
+            rd: writable_vreg(24),
+            imm: ASIMDMovModImm::maybe_from_u64(1107296256, ScalarSize::Size32).unwrap(),
+            invert: false,
+            size: VectorSize::Size32x4,
+        },
+        "5864024F",
+        "movi v24.4s, #66, LSL #24",
+    ));
+    insns.push((
+        Inst::VecDupImm {
+            rd: writable_vreg(8),
+            imm: ASIMDMovModImm::zero(ScalarSize::Size64),
+            invert: false,
+            size: VectorSize::Size64x2,
+        },
+        "08E4006F",
+        "movi v8.2d, #0",
+    ));
+    insns.push((
+        Inst::VecDupImm {
+            rd: writable_vreg(7),
+            imm: ASIMDMovModImm::maybe_from_u64(18374687574904995840, ScalarSize::Size64).unwrap(),
+            invert: false,
+            size: VectorSize::Size64x2,
+        },
+        "87E6046F",
+        "movi v7.2d, #18374687574904995840",
     ));
     insns.push((
         Inst::VecExtend {
@@ -3679,6 +3793,28 @@ fn test_aarch64_binemit() {
     ));
 
     insns.push((
+        Inst::VecMisc {
+            op: VecMisc2::Cnt,
+            rd: writable_vreg(23),
+            rn: vreg(5),
+            size: VectorSize::Size8x8,
+        },
+        "B758200E",
+        "cnt v23.8b, v5.8b",
+    ));
+
+    insns.push((
+        Inst::VecLanes {
+            op: VecLanesOp::Uminv,
+            rd: writable_vreg(0),
+            rn: vreg(31),
+            size: VectorSize::Size8x8,
+        },
+        "E0AB312E",
+        "uminv b0, v31.8b",
+    ));
+
+    insns.push((
         Inst::VecLanes {
             op: VecLanesOp::Uminv,
             rd: writable_vreg(2),
@@ -3720,6 +3856,17 @@ fn test_aarch64_binemit() {
         },
         "A2BB314E",
         "addv b2, v29.16b",
+    ));
+
+    insns.push((
+        Inst::VecLanes {
+            op: VecLanesOp::Addv,
+            rd: writable_vreg(15),
+            rn: vreg(7),
+            size: VectorSize::Size16x4,
+        },
+        "EFB8710E",
+        "addv h15, v7.4h",
     ));
 
     insns.push((
@@ -3954,6 +4101,50 @@ fn test_aarch64_binemit() {
 
     insns.push((
         Inst::Extend {
+            rd: writable_xreg(3),
+            rn: xreg(5),
+            signed: false,
+            from_bits: 1,
+            to_bits: 32,
+        },
+        "A3000012",
+        "and w3, w5, #1",
+    ));
+    insns.push((
+        Inst::Extend {
+            rd: writable_xreg(3),
+            rn: xreg(5),
+            signed: false,
+            from_bits: 1,
+            to_bits: 64,
+        },
+        "A3000012",
+        "and w3, w5, #1",
+    ));
+    insns.push((
+        Inst::Extend {
+            rd: writable_xreg(10),
+            rn: xreg(21),
+            signed: true,
+            from_bits: 1,
+            to_bits: 32,
+        },
+        "AA020013",
+        "sbfx w10, w21, #0, #1",
+    ));
+    insns.push((
+        Inst::Extend {
+            rd: writable_xreg(1),
+            rn: xreg(2),
+            signed: true,
+            from_bits: 1,
+            to_bits: 64,
+        },
+        "41004093",
+        "sbfx x1, x2, #0, #1",
+    ));
+    insns.push((
+        Inst::Extend {
             rd: writable_xreg(1),
             rn: xreg(2),
             signed: false,
@@ -4005,7 +4196,7 @@ fn test_aarch64_binemit() {
             to_bits: 64,
         },
         "411C0053",
-        "uxtb x1, w2",
+        "uxtb w1, w2",
     ));
     insns.push((
         Inst::Extend {
@@ -4027,7 +4218,7 @@ fn test_aarch64_binemit() {
             to_bits: 64,
         },
         "413C0053",
-        "uxth x1, w2",
+        "uxth w1, w2",
     ));
     insns.push((
         Inst::Extend {
@@ -4281,8 +4472,8 @@ fn test_aarch64_binemit() {
             rd: writable_vreg(8),
             rn: vreg(4),
         },
-        "881CA40E",
-        "mov v8.8b, v4.8b",
+        "8840601E",
+        "fmov d8, d4",
     ));
 
     insns.push((
@@ -4314,6 +4505,16 @@ fn test_aarch64_binemit() {
         },
         "7705085E",
         "mov d23, v11.d[0]",
+    ));
+
+    insns.push((
+        Inst::FpuExtend {
+            rd: writable_vreg(31),
+            rn: vreg(0),
+            size: ScalarSize::Size32,
+        },
+        "1F40201E",
+        "fmov s31, s0",
     ));
 
     insns.push((
@@ -5034,9 +5235,48 @@ fn test_aarch64_binemit() {
         "BF3B03D53B7F5F88FC031AAA3C7F1888B8FFFFB5BF3B03D5",
         "atomically { 32_bits_at_[x25]) Xchg= x26 ; x27 = old_value_at_[x25]; x24,x28 = trash }",
     ));
-
     insns.push((
         Inst::AtomicCAS {
+            rs: writable_xreg(28),
+            rt: xreg(20),
+            rn: xreg(10),
+            ty: I8,
+        },
+        "54FDFC08",
+        "casalb w28, w20, [x10]",
+    ));
+    insns.push((
+        Inst::AtomicCAS {
+            rs: writable_xreg(2),
+            rt: xreg(19),
+            rn: xreg(23),
+            ty: I16,
+        },
+        "F3FEE248",
+        "casalh w2, w19, [x23]",
+    ));
+    insns.push((
+        Inst::AtomicCAS {
+            rs: writable_xreg(0),
+            rt: zero_reg(),
+            rn: stack_reg(),
+            ty: I32,
+        },
+        "FFFFE088",
+        "casal w0, wzr, [sp]",
+    ));
+    insns.push((
+        Inst::AtomicCAS {
+            rs: writable_xreg(7),
+            rt: xreg(15),
+            rn: xreg(27),
+            ty: I64,
+        },
+        "6FFFE7C8",
+        "casal x7, x15, [x27]",
+    ));
+    insns.push((
+        Inst::AtomicCASLoop {
             ty: I8,
         },
         "BF3B03D53B7F5F08581F40927F0318EB610000543C7F180878FFFFB5BF3B03D5",
@@ -5044,7 +5284,7 @@ fn test_aarch64_binemit() {
     ));
 
     insns.push((
-        Inst::AtomicCAS {
+        Inst::AtomicCASLoop {
             ty: I64,
         },
         "BF3B03D53B7F5FC8F8031AAA7F0318EB610000543C7F18C878FFFFB5BF3B03D5",

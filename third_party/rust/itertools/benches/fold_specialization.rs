@@ -9,7 +9,7 @@ where I: Iterator
     type Item = I::Item;
 
     #[inline(always)]
-    fn next(&mut self) -> Option<I::Item> {
+    fn next(&mut self) -> Option<Self::Item> {
         self.0.next()
     }
 

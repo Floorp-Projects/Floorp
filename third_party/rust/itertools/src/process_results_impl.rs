@@ -28,8 +28,7 @@ impl<'a, I, T, E> Iterator for ProcessResults<'a, I, E>
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
-        let (_, hi) = self.iter.size_hint();
-        (0, hi)
+        (0, self.iter.size_hint().1)
     }
 }
 

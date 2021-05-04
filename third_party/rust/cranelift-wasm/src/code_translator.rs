@@ -64,11 +64,11 @@
 //! 32X4 and 64X2 types from CLIF and instead have a single V128 type.
 //!
 //! For further background see also:
-//!   https://github.com/bytecodealliance/wasmtime/issues/1147
+//!   <https://github.com/bytecodealliance/wasmtime/issues/1147>
 //!     ("Too many raw_bitcasts in SIMD code")
-//!   https://github.com/bytecodealliance/cranelift/pull/1251
+//!   <https://github.com/bytecodealliance/cranelift/pull/1251>
 //!     ("Add X128 type to represent WebAssembly's V128 type")
-//!   https://github.com/bytecodealliance/cranelift/pull/1236
+//!   <https://github.com/bytecodealliance/cranelift/pull/1236>
 //!     ("Relax verification to allow I8X16 to act as a default vector type")
 
 use super::{hash_map, HashMap};
@@ -261,7 +261,7 @@ pub fn translate_operator<FE: FuncEnvironment + ?Sized>(
                 .extend_from_slice(builder.block_params(loop_body));
 
             builder.switch_to_block(loop_body);
-            environ.translate_loop_header(builder.cursor())?;
+            environ.translate_loop_header(builder)?;
         }
         Operator::If { ty } => {
             let val = state.pop1();
@@ -547,6 +547,19 @@ pub fn translate_operator<FE: FuncEnvironment + ?Sized>(
             }
             state.popn(return_count);
             state.reachable = false;
+        }
+        /********************************** Exception handing **********************************/
+        Operator::Try { .. }
+        | Operator::Catch { .. }
+        | Operator::Throw { .. }
+        | Operator::Unwind
+        | Operator::Rethrow { .. }
+        | Operator::Delegate { .. }
+        | Operator::CatchAll => {
+            return Err(wasm_unsupported!(
+                "proposed exception handling operator {:?}",
+                op
+            ));
         }
         /************************************ Calls ****************************************
          * The call instructions pop off their arguments from the stack and append their
@@ -1430,17 +1443,16 @@ pub fn translate_operator<FE: FuncEnvironment + ?Sized>(
         | Operator::V128Load16Splat { memarg }
         | Operator::V128Load32Splat { memarg }
         | Operator::V128Load64Splat { memarg } => {
-            let opcode = ir::Opcode::LoadSplat;
-            let result_ty = type_of(op);
-            let (flags, base, offset) = prepare_load(
+            translate_load(
                 memarg,
-                mem_op_size(opcode, result_ty.lane_type()),
+                ir::Opcode::Load,
+                type_of(op).lane_type(),
                 builder,
                 state,
                 environ,
             )?;
-            let (load, dfg) = builder.ins().Load(opcode, result_ty, flags, offset, base);
-            state.push1(dfg.first_result(load))
+            let splatted = builder.ins().splat(type_of(op), state.pop1());
+            state.push1(splatted)
         }
         Operator::V128Load32Zero { memarg } | Operator::V128Load64Zero { memarg } => {
             translate_load(
@@ -1453,6 +1465,30 @@ pub fn translate_operator<FE: FuncEnvironment + ?Sized>(
             )?;
             let as_vector = builder.ins().scalar_to_vector(type_of(op), state.pop1());
             state.push1(as_vector)
+        }
+        Operator::V128Load8Lane { memarg, lane }
+        | Operator::V128Load16Lane { memarg, lane }
+        | Operator::V128Load32Lane { memarg, lane }
+        | Operator::V128Load64Lane { memarg, lane } => {
+            let vector = pop1_with_bitcast(state, type_of(op), builder);
+            translate_load(
+                memarg,
+                ir::Opcode::Load,
+                type_of(op).lane_type(),
+                builder,
+                state,
+                environ,
+            )?;
+            let replacement = state.pop1();
+            state.push1(builder.ins().insertlane(vector, replacement, *lane))
+        }
+        Operator::V128Store8Lane { memarg, lane }
+        | Operator::V128Store16Lane { memarg, lane }
+        | Operator::V128Store32Lane { memarg, lane }
+        | Operator::V128Store64Lane { memarg, lane } => {
+            let vector = pop1_with_bitcast(state, type_of(op), builder);
+            state.push1(builder.ins().extractlane(vector, lane.clone()));
+            translate_store(memarg, ir::Opcode::Store, builder, state, environ)?;
         }
         Operator::I8x16ExtractLaneS { lane } | Operator::I16x8ExtractLaneS { lane } => {
             let vector = pop1_with_bitcast(state, type_of(op), builder);
@@ -1552,7 +1588,7 @@ pub fn translate_operator<FE: FuncEnvironment + ?Sized>(
             let a = pop1_with_bitcast(state, type_of(op), builder);
             state.push1(builder.ins().ineg(a))
         }
-        Operator::I8x16Abs | Operator::I16x8Abs | Operator::I32x4Abs => {
+        Operator::I8x16Abs | Operator::I16x8Abs | Operator::I32x4Abs | Operator::I64x2Abs => {
             let a = pop1_with_bitcast(state, type_of(op), builder);
             state.push1(builder.ins().iabs(a))
         }
@@ -1616,30 +1652,36 @@ pub fn translate_operator<FE: FuncEnvironment + ?Sized>(
             // operands must match (hence the bitcast).
             state.push1(builder.ins().bitselect(bitcast_c, bitcast_a, bitcast_b))
         }
-        Operator::I8x16AnyTrue | Operator::I16x8AnyTrue | Operator::I32x4AnyTrue => {
+        Operator::V128AnyTrue => {
             let a = pop1_with_bitcast(state, type_of(op), builder);
             let bool_result = builder.ins().vany_true(a);
             state.push1(builder.ins().bint(I32, bool_result))
         }
-        Operator::I8x16AllTrue | Operator::I16x8AllTrue | Operator::I32x4AllTrue => {
+        Operator::I8x16AllTrue
+        | Operator::I16x8AllTrue
+        | Operator::I32x4AllTrue
+        | Operator::I64x2AllTrue => {
             let a = pop1_with_bitcast(state, type_of(op), builder);
             let bool_result = builder.ins().vall_true(a);
             state.push1(builder.ins().bint(I32, bool_result))
         }
-        Operator::I8x16Bitmask | Operator::I16x8Bitmask | Operator::I32x4Bitmask => {
+        Operator::I8x16Bitmask
+        | Operator::I16x8Bitmask
+        | Operator::I32x4Bitmask
+        | Operator::I64x2Bitmask => {
             let a = pop1_with_bitcast(state, type_of(op), builder);
             state.push1(builder.ins().vhigh_bits(I32, a));
         }
-        Operator::I8x16Eq | Operator::I16x8Eq | Operator::I32x4Eq => {
+        Operator::I8x16Eq | Operator::I16x8Eq | Operator::I32x4Eq | Operator::I64x2Eq => {
             translate_vector_icmp(IntCC::Equal, type_of(op), builder, state)
         }
-        Operator::I8x16Ne | Operator::I16x8Ne | Operator::I32x4Ne => {
+        Operator::I8x16Ne | Operator::I16x8Ne | Operator::I32x4Ne | Operator::I64x2Ne => {
             translate_vector_icmp(IntCC::NotEqual, type_of(op), builder, state)
         }
-        Operator::I8x16GtS | Operator::I16x8GtS | Operator::I32x4GtS => {
+        Operator::I8x16GtS | Operator::I16x8GtS | Operator::I32x4GtS | Operator::I64x2GtS => {
             translate_vector_icmp(IntCC::SignedGreaterThan, type_of(op), builder, state)
         }
-        Operator::I8x16LtS | Operator::I16x8LtS | Operator::I32x4LtS => {
+        Operator::I8x16LtS | Operator::I16x8LtS | Operator::I32x4LtS | Operator::I64x2LtS => {
             translate_vector_icmp(IntCC::SignedLessThan, type_of(op), builder, state)
         }
         Operator::I8x16GtU | Operator::I16x8GtU | Operator::I32x4GtU => {
@@ -1648,10 +1690,10 @@ pub fn translate_operator<FE: FuncEnvironment + ?Sized>(
         Operator::I8x16LtU | Operator::I16x8LtU | Operator::I32x4LtU => {
             translate_vector_icmp(IntCC::UnsignedLessThan, type_of(op), builder, state)
         }
-        Operator::I8x16GeS | Operator::I16x8GeS | Operator::I32x4GeS => {
+        Operator::I8x16GeS | Operator::I16x8GeS | Operator::I32x4GeS | Operator::I64x2GeS => {
             translate_vector_icmp(IntCC::SignedGreaterThanOrEqual, type_of(op), builder, state)
         }
-        Operator::I8x16LeS | Operator::I16x8LeS | Operator::I32x4LeS => {
+        Operator::I8x16LeS | Operator::I16x8LeS | Operator::I32x4LeS | Operator::I64x2LeS => {
             translate_vector_icmp(IntCC::SignedLessThanOrEqual, type_of(op), builder, state)
         }
         Operator::I8x16GeU | Operator::I16x8GeU | Operator::I32x4GeU => translate_vector_icmp(
@@ -1733,6 +1775,10 @@ pub fn translate_operator<FE: FuncEnvironment + ?Sized>(
             let a = pop1_with_bitcast(state, I32X4, builder);
             state.push1(builder.ins().fcvt_from_uint(F32X4, a))
         }
+        Operator::F64x2ConvertLowI32x4S => {
+            let a = pop1_with_bitcast(state, I32X4, builder);
+            state.push1(builder.ins().fcvt_low_from_sint(F64X2, a));
+        }
         Operator::I32x4TruncSatF32x4S => {
             let a = pop1_with_bitcast(state, F32X4, builder);
             state.push1(builder.ins().fcvt_to_sint_sat(I32X4, a))
@@ -1757,35 +1803,35 @@ pub fn translate_operator<FE: FuncEnvironment + ?Sized>(
             let (a, b) = pop2_with_bitcast(state, I32X4, builder);
             state.push1(builder.ins().unarrow(a, b))
         }
-        Operator::I16x8WidenLowI8x16S => {
+        Operator::I16x8ExtendLowI8x16S => {
             let a = pop1_with_bitcast(state, I8X16, builder);
             state.push1(builder.ins().swiden_low(a))
         }
-        Operator::I16x8WidenHighI8x16S => {
+        Operator::I16x8ExtendHighI8x16S => {
             let a = pop1_with_bitcast(state, I8X16, builder);
             state.push1(builder.ins().swiden_high(a))
         }
-        Operator::I16x8WidenLowI8x16U => {
+        Operator::I16x8ExtendLowI8x16U => {
             let a = pop1_with_bitcast(state, I8X16, builder);
             state.push1(builder.ins().uwiden_low(a))
         }
-        Operator::I16x8WidenHighI8x16U => {
+        Operator::I16x8ExtendHighI8x16U => {
             let a = pop1_with_bitcast(state, I8X16, builder);
             state.push1(builder.ins().uwiden_high(a))
         }
-        Operator::I32x4WidenLowI16x8S => {
+        Operator::I32x4ExtendLowI16x8S => {
             let a = pop1_with_bitcast(state, I16X8, builder);
             state.push1(builder.ins().swiden_low(a))
         }
-        Operator::I32x4WidenHighI16x8S => {
+        Operator::I32x4ExtendHighI16x8S => {
             let a = pop1_with_bitcast(state, I16X8, builder);
             state.push1(builder.ins().swiden_high(a))
         }
-        Operator::I32x4WidenLowI16x8U => {
+        Operator::I32x4ExtendLowI16x8U => {
             let a = pop1_with_bitcast(state, I16X8, builder);
             state.push1(builder.ins().uwiden_low(a))
         }
-        Operator::I32x4WidenHighI16x8U => {
+        Operator::I32x4ExtendHighI16x8U => {
             let a = pop1_with_bitcast(state, I16X8, builder);
             state.push1(builder.ins().uwiden_high(a))
         }
@@ -1809,12 +1855,39 @@ pub fn translate_operator<FE: FuncEnvironment + ?Sized>(
             let arg = pop1_with_bitcast(state, type_of(op), builder);
             state.push1(builder.ins().nearest(arg));
         }
-
         Operator::I32x4DotI16x8S => {
             let (a, b) = pop2_with_bitcast(state, I16X8, builder);
             state.push1(builder.ins().widening_pairwise_dot_product_s(a, b));
         }
-
+        Operator::I64x2ExtendLowI32x4S
+        | Operator::I64x2ExtendHighI32x4S
+        | Operator::I64x2ExtendLowI32x4U
+        | Operator::I64x2ExtendHighI32x4U
+        | Operator::I16x8Q15MulrSatS
+        | Operator::I16x8ExtMulLowI8x16S
+        | Operator::I16x8ExtMulHighI8x16S
+        | Operator::I16x8ExtMulLowI8x16U
+        | Operator::I16x8ExtMulHighI8x16U
+        | Operator::I32x4ExtMulLowI16x8S
+        | Operator::I32x4ExtMulHighI16x8S
+        | Operator::I32x4ExtMulLowI16x8U
+        | Operator::I32x4ExtMulHighI16x8U
+        | Operator::I64x2ExtMulLowI32x4S
+        | Operator::I64x2ExtMulHighI32x4S
+        | Operator::I64x2ExtMulLowI32x4U
+        | Operator::I64x2ExtMulHighI32x4U
+        | Operator::I16x8ExtAddPairwiseI8x16S
+        | Operator::I16x8ExtAddPairwiseI8x16U
+        | Operator::I32x4ExtAddPairwiseI16x8S
+        | Operator::I32x4ExtAddPairwiseI16x8U
+        | Operator::F32x4DemoteF64x2Zero
+        | Operator::F64x2PromoteLowF32x4
+        | Operator::F64x2ConvertLowI32x4U
+        | Operator::I32x4TruncSatF64x2SZero
+        | Operator::I32x4TruncSatF64x2UZero
+        | Operator::I8x16Popcnt => {
+            return Err(wasm_unsupported!("proposed simd operator {:?}", op));
+        }
         Operator::ReturnCall { .. } | Operator::ReturnCallIndirect { .. } => {
             return Err(wasm_unsupported!("proposed tail-call operator {:?}", op));
         }
@@ -2060,7 +2133,9 @@ fn prepare_load<FE: FuncEnvironment + ?Sized>(
     // Note that we don't set `is_aligned` here, even if the load instruction's
     // alignment immediate says it's aligned, because WebAssembly's immediate
     // field is just a hint, while Cranelift's aligned flag needs a guarantee.
-    let flags = MemFlags::new();
+    // WebAssembly memory accesses are always little-endian.
+    let mut flags = MemFlags::new();
+    flags.set_endianness(ir::Endianness::Little);
 
     Ok((flags, base, offset.into()))
 }
@@ -2107,7 +2182,8 @@ fn translate_store<FE: FuncEnvironment + ?Sized>(
         builder,
     );
     // See the comments in `prepare_load` about the flags.
-    let flags = MemFlags::new();
+    let mut flags = MemFlags::new();
+    flags.set_endianness(ir::Endianness::Little);
     builder
         .ins()
         .Store(opcode, val_ty, flags, offset.into(), val, base);
@@ -2119,7 +2195,7 @@ fn mem_op_size(opcode: ir::Opcode, ty: Type) -> u32 {
         ir::Opcode::Istore8 | ir::Opcode::Sload8 | ir::Opcode::Uload8 => 1,
         ir::Opcode::Istore16 | ir::Opcode::Sload16 | ir::Opcode::Uload16 => 2,
         ir::Opcode::Istore32 | ir::Opcode::Sload32 | ir::Opcode::Uload32 => 4,
-        ir::Opcode::Store | ir::Opcode::Load | ir::Opcode::LoadSplat => ty.bytes(),
+        ir::Opcode::Store | ir::Opcode::Load => ty.bytes(),
         _ => panic!("unknown size of mem op for {:?}", opcode),
     }
 }
@@ -2247,7 +2323,8 @@ fn translate_atomic_rmw<FE: FuncEnvironment + ?Sized>(
         finalise_atomic_mem_addr(linear_mem_addr, memarg, access_ty, builder, state, environ)?;
 
     // See the comments in `prepare_load` about the flags.
-    let flags = MemFlags::new();
+    let mut flags = MemFlags::new();
+    flags.set_endianness(ir::Endianness::Little);
     let mut res = builder
         .ins()
         .atomic_rmw(access_ty, flags, op, final_effective_address, arg2);
@@ -2300,7 +2377,8 @@ fn translate_atomic_cas<FE: FuncEnvironment + ?Sized>(
         finalise_atomic_mem_addr(linear_mem_addr, memarg, access_ty, builder, state, environ)?;
 
     // See the comments in `prepare_load` about the flags.
-    let flags = MemFlags::new();
+    let mut flags = MemFlags::new();
+    flags.set_endianness(ir::Endianness::Little);
     let mut res = builder
         .ins()
         .atomic_cas(flags, final_effective_address, expected, replacement);
@@ -2342,7 +2420,8 @@ fn translate_atomic_load<FE: FuncEnvironment + ?Sized>(
         finalise_atomic_mem_addr(linear_mem_addr, memarg, access_ty, builder, state, environ)?;
 
     // See the comments in `prepare_load` about the flags.
-    let flags = MemFlags::new();
+    let mut flags = MemFlags::new();
+    flags.set_endianness(ir::Endianness::Little);
     let mut res = builder
         .ins()
         .atomic_load(access_ty, flags, final_effective_address);
@@ -2388,7 +2467,8 @@ fn translate_atomic_store<FE: FuncEnvironment + ?Sized>(
         finalise_atomic_mem_addr(linear_mem_addr, memarg, access_ty, builder, state, environ)?;
 
     // See the comments in `prepare_load` about the flags.
-    let flags = MemFlags::new();
+    let mut flags = MemFlags::new();
+    flags.set_endianness(ir::Endianness::Little);
     builder
         .ins()
         .atomic_store(flags, data, final_effective_address);
@@ -2472,11 +2552,14 @@ fn type_of(operator: &Operator) -> Type {
         | Operator::V128AndNot
         | Operator::V128Or
         | Operator::V128Xor
+        | Operator::V128AnyTrue
         | Operator::V128Bitselect => I8X16, // default type representing V128
 
         Operator::I8x16Shuffle { .. }
         | Operator::I8x16Splat
         | Operator::V128Load8Splat { .. }
+        | Operator::V128Load8Lane { .. }
+        | Operator::V128Store8Lane { .. }
         | Operator::I8x16ExtractLaneS { .. }
         | Operator::I8x16ExtractLaneU { .. }
         | Operator::I8x16ReplaceLane { .. }
@@ -2492,7 +2575,6 @@ fn type_of(operator: &Operator) -> Type {
         | Operator::I8x16GeU
         | Operator::I8x16Neg
         | Operator::I8x16Abs
-        | Operator::I8x16AnyTrue
         | Operator::I8x16AllTrue
         | Operator::I8x16Shl
         | Operator::I8x16ShrS
@@ -2512,6 +2594,8 @@ fn type_of(operator: &Operator) -> Type {
 
         Operator::I16x8Splat
         | Operator::V128Load16Splat { .. }
+        | Operator::V128Load16Lane { .. }
+        | Operator::V128Store16Lane { .. }
         | Operator::I16x8ExtractLaneS { .. }
         | Operator::I16x8ExtractLaneU { .. }
         | Operator::I16x8ReplaceLane { .. }
@@ -2527,7 +2611,6 @@ fn type_of(operator: &Operator) -> Type {
         | Operator::I16x8GeU
         | Operator::I16x8Neg
         | Operator::I16x8Abs
-        | Operator::I16x8AnyTrue
         | Operator::I16x8AllTrue
         | Operator::I16x8Shl
         | Operator::I16x8ShrS
@@ -2548,6 +2631,8 @@ fn type_of(operator: &Operator) -> Type {
 
         Operator::I32x4Splat
         | Operator::V128Load32Splat { .. }
+        | Operator::V128Load32Lane { .. }
+        | Operator::V128Store32Lane { .. }
         | Operator::I32x4ExtractLane { .. }
         | Operator::I32x4ReplaceLane { .. }
         | Operator::I32x4Eq
@@ -2562,7 +2647,6 @@ fn type_of(operator: &Operator) -> Type {
         | Operator::I32x4GeU
         | Operator::I32x4Neg
         | Operator::I32x4Abs
-        | Operator::I32x4AnyTrue
         | Operator::I32x4AllTrue
         | Operator::I32x4Shl
         | Operator::I32x4ShrS
@@ -2581,15 +2665,26 @@ fn type_of(operator: &Operator) -> Type {
 
         Operator::I64x2Splat
         | Operator::V128Load64Splat { .. }
+        | Operator::V128Load64Lane { .. }
+        | Operator::V128Store64Lane { .. }
         | Operator::I64x2ExtractLane { .. }
         | Operator::I64x2ReplaceLane { .. }
+        | Operator::I64x2Eq
+        | Operator::I64x2Ne
+        | Operator::I64x2LtS
+        | Operator::I64x2GtS
+        | Operator::I64x2LeS
+        | Operator::I64x2GeS
         | Operator::I64x2Neg
+        | Operator::I64x2Abs
+        | Operator::I64x2AllTrue
         | Operator::I64x2Shl
         | Operator::I64x2ShrS
         | Operator::I64x2ShrU
         | Operator::I64x2Add
         | Operator::I64x2Sub
         | Operator::I64x2Mul
+        | Operator::I64x2Bitmask
         | Operator::V128Load64Zero { .. } => I64X2,
 
         Operator::F32x4Splat

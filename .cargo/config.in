@@ -47,21 +47,6 @@ git = "https://github.com/mozilla/application-services"
 replace-with = "vendored-sources"
 rev = "8a576fbe79199fa8664f64285524017f74ebcc5f"
 
-[source."https://github.com/mozilla-spidermonkey/wasmtime"]
-git = "https://github.com/mozilla-spidermonkey/wasmtime"
-replace-with = "vendored-sources"
-rev = "a25399760e9f12b679aa267dd2af7cfedc72bb71"
-
-[source."https://github.com/mozilla-spidermonkey/wasm-tools"]
-git = "https://github.com/mozilla-spidermonkey/wasm-tools"
-replace-with = "vendored-sources"
-rev = "1b7763faa484e62752538b78e7a69883f4faceee"
-
-[source."https://github.com/mozilla-spidermonkey/regalloc.rs"]
-git = "https://github.com/mozilla-spidermonkey/regalloc.rs"
-replace-with = "vendored-sources"
-rev = "fc5d1d33317b0fbd36725757f80a95127eff5109"
-
 [source."https://github.com/mozilla-spidermonkey/jsparagus"]
 git = "https://github.com/mozilla-spidermonkey/jsparagus"
 replace-with = "vendored-sources"
@@ -121,6 +106,11 @@ rev = "84e02f96149207b1bafecb1924b14315930c98ee"
 git = "https://github.com/gfx-rs/d3d12-rs"
 replace-with = "vendored-sources"
 rev = "be19a243b86e0bafb9937d661fc8eabb3e42b44e"
+
+[source."https://github.com/bytecodealliance/wasmtime"]
+git = "https://github.com/bytecodealliance/wasmtime"
+replace-with = "vendored-sources"
+rev = "6b77786a6e758e91da9484a1c80b6fa5f88e1b3d"
 
 [source."https://github.com/PLSysSec/rlbox_lucet_sandbox/"]
 git = "https://github.com/PLSysSec/rlbox_lucet_sandbox/"

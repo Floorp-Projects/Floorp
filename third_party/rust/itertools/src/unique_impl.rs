@@ -54,7 +54,7 @@ impl<I, V, F> Iterator for UniqueBy<I, V, F>
 {
     type Item = I::Item;
 
-    fn next(&mut self) -> Option<I::Item> {
+    fn next(&mut self) -> Option<Self::Item> {
         while let Some(v) = self.iter.next() {
             let key = (self.f)(&v);
             if self.used.insert(key, ()).is_none() {
@@ -76,13 +76,29 @@ impl<I, V, F> Iterator for UniqueBy<I, V, F>
     }
 }
 
+impl<I, V, F> DoubleEndedIterator for UniqueBy<I, V, F>
+    where I: DoubleEndedIterator,
+          V: Eq + Hash,
+          F: FnMut(&I::Item) -> V
+{
+    fn next_back(&mut self) -> Option<Self::Item> {
+        while let Some(v) = self.iter.next_back() {
+            let key = (self.f)(&v);
+            if self.used.insert(key, ()).is_none() {
+                return Some(v);
+            }
+        }
+        None
+    }
+}
+
 impl<I> Iterator for Unique<I>
     where I: Iterator,
           I::Item: Eq + Hash + Clone
 {
     type Item = I::Item;
 
-    fn next(&mut self) -> Option<I::Item> {
+    fn next(&mut self) -> Option<Self::Item> {
         while let Some(v) = self.iter.iter.next() {
             if let Entry::Vacant(entry) = self.iter.used.entry(v) {
                 let elt = entry.key().clone();
@@ -101,6 +117,22 @@ impl<I> Iterator for Unique<I>
 
     fn count(self) -> usize {
         count_new_keys(self.iter.used, self.iter.iter)
+    }
+}
+
+impl<I> DoubleEndedIterator for Unique<I>
+    where I: DoubleEndedIterator,
+          I::Item: Eq + Hash + Clone
+{
+    fn next_back(&mut self) -> Option<Self::Item> {
+        while let Some(v) = self.iter.iter.next_back() {
+            if let Entry::Vacant(entry) = self.iter.used.entry(v) {
+                let elt = entry.key().clone();
+                entry.insert(());
+                return Some(elt);
+            }
+        }
+        None
     }
 }
 

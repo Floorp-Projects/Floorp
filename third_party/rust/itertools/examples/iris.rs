@@ -55,7 +55,7 @@ fn main() {
     // using Itertools::fold_results to create the result of parsing
     let irises = DATA.lines()
                      .map(str::parse)
-                     .fold_results(Vec::new(), |mut v, iris: Iris| {
+                     .fold_ok(Vec::new(), |mut v, iris: Iris| {
                          v.push(iris);
                          v
                      });

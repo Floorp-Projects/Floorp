@@ -56,20 +56,31 @@ pub unsafe extern "C" fn wasm_code_offsets(
         }
 
         let mut offsets = Vec::new();
-        let mut parser = Parser::new(bytes);
-        let mut next_input = ParserInput::Default;
 
-        while !parser.eof() {
-            let offset = parser.current_position();
-            match parser.read_with_input(next_input) {
-                ParserState::BeginSection { code, .. } if *code != SectionCode::Code => {
-                    next_input = ParserInput::SkipSection;
+        // Read operators offsets and skip invalid data.
+        for payload in Parser::new(0).parse_all(bytes) {
+            if payload.is_err() {
+                break;
+            }
+            match payload.unwrap() {
+                Payload::CodeSectionEntry(body) => {
+                    let reader = match body.get_operators_reader() {
+                        Ok(r) => r,
+                        Err(_) => {
+                            break;
+                        }
+                    };
+                    for pair in reader.into_iter_with_offsets() {
+                        let offset = match pair {
+                            Ok((_op, offset)) => offset,
+                            Err(_) => {
+                                break;
+                            }
+                        };
+                        offsets.push(offset as u32);
+                    }
                 }
-                ParserState::CodeOperator(..) => {
-                    offsets.push(offset as u32);
-                    next_input = ParserInput::Default
-                }
-                _ => next_input = ParserInput::Default,
+                _ => (),
             }
         }
 

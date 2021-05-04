@@ -1,6 +1,7 @@
 use itertools::Itertools;
 use itertools::EitherOrBoth::{Both, Left, Right};
 use itertools::free::zip_eq;
+use itertools::multizip;
 
 #[test]
 fn zip_longest_fused() {
@@ -40,6 +41,20 @@ fn test_double_ended_zip_longest() {
     assert_eq!(it.next(), None);
 }
 
+#[test]
+fn test_double_ended_zip() {
+    let xs = [1, 2, 3, 4, 5, 6];
+    let ys = [1, 2, 3, 7];
+    let a = xs.iter().map(|&x| x);
+    let b = ys.iter().map(|&x| x);
+    let mut it = multizip((a, b));
+    assert_eq!(it.next_back(), Some((4, 7)));
+    assert_eq!(it.next_back(), Some((3, 3)));
+    assert_eq!(it.next_back(), Some((2, 2)));
+    assert_eq!(it.next_back(), Some((1, 1)));
+    assert_eq!(it.next_back(), None);
+}
+
 
 #[should_panic]
 #[test]
@@ -60,4 +75,3 @@ fn zip_eq_panic2()
 
     zip_eq(&a, &b).count();
 }
-

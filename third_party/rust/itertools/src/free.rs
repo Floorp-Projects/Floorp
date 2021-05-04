@@ -3,13 +3,18 @@
 //! The benefit of free functions is that they accept any `IntoIterator` as
 //! argument, so the resulting code may be easier to read.
 
-#[cfg(feature = "use_std")]
+#[cfg(feature = "use_alloc")]
 use std::fmt::Display;
 use std::iter::{self, Zip};
-#[cfg(feature = "use_std")]
-type VecIntoIter<T> = ::std::vec::IntoIter<T>;
+#[cfg(feature = "use_alloc")]
+type VecIntoIter<T> = alloc::vec::IntoIter<T>;
 
-#[cfg(feature = "use_std")]
+#[cfg(feature = "use_alloc")]
+use alloc::{
+    string::String,
+};
+
+#[cfg(feature = "use_alloc")]
 use crate::Itertools;
 
 pub use crate::adaptors::{
@@ -17,15 +22,17 @@ pub use crate::adaptors::{
     merge,
     put_back,
 };
-#[cfg(feature = "use_std")]
+#[cfg(feature = "use_alloc")]
 pub use crate::put_back_n_impl::put_back_n;
-#[cfg(feature = "use_std")]
+#[cfg(feature = "use_alloc")]
 pub use crate::multipeek_impl::multipeek;
-#[cfg(feature = "use_std")]
+#[cfg(feature = "use_alloc")]
+pub use crate::peek_nth::peek_nth;
+#[cfg(feature = "use_alloc")]
 pub use crate::kmerge_impl::kmerge;
 pub use crate::zip_eq_impl::zip_eq;
 pub use crate::merge_join::merge_join_by;
-#[cfg(feature = "use_std")]
+#[cfg(feature = "use_alloc")]
 pub use crate::rciter_impl::rciter;
 
 /// Iterate `iterable` with a running index.
@@ -206,7 +213,7 @@ pub fn min<I>(iterable: I) -> Option<I::Item>
 ///
 /// assert_eq!(join(&[1, 2, 3], ", "), "1, 2, 3");
 /// ```
-#[cfg(feature = "use_std")]
+#[cfg(feature = "use_alloc")]
 pub fn join<I>(iterable: I, sep: &str) -> String
     where I: IntoIterator,
           I::Item: Display
@@ -226,7 +233,7 @@ pub fn join<I>(iterable: I, sep: &str) -> String
 ///
 /// assert_equal(sorted("rust".chars()), "rstu".chars());
 /// ```
-#[cfg(feature = "use_std")]
+#[cfg(feature = "use_alloc")]
 pub fn sorted<I>(iterable: I) -> VecIntoIter<I::Item>
     where I: IntoIterator,
           I::Item: Ord

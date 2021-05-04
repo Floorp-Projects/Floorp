@@ -6,5 +6,5 @@ git checkout main && \
 cargo bench --bench benchmark -- --noplot --save-baseline before
 
 # record current bench results
-git checkout - && \
+git checkout -f - && \
 cargo bench --bench benchmark -- --noplot --baseline before

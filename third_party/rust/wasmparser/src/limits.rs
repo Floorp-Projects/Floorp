@@ -35,3 +35,5 @@ pub const MAX_WASM_TABLES: usize = 100;
 pub const MAX_WASM_MEMORIES: usize = 100;
 pub const MAX_WASM_MODULES: usize = 1_000;
 pub const MAX_WASM_INSTANCES: usize = 1_000;
+pub const MAX_WASM_EVENTS: usize = 1_000_000;
+pub const MAX_TYPE_SIZE: u32 = 100_000;

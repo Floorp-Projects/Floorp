@@ -21,10 +21,10 @@ use crate::isa::{EncInfo, RegClass, RegInfo, TargetIsa};
 use crate::regalloc;
 use crate::result::CodegenResult;
 use crate::timing;
-use alloc::borrow::Cow;
-use alloc::boxed::Box;
+use alloc::{borrow::Cow, boxed::Box, vec::Vec};
 use core::any::Any;
 use core::fmt;
+use core::hash::{Hash, Hasher};
 use target_lexicon::{PointerWidth, Triple};
 
 #[allow(dead_code)]
@@ -76,6 +76,15 @@ impl TargetIsa for Isa {
 
     fn flags(&self) -> &shared_settings::Flags {
         &self.shared_flags
+    }
+
+    fn isa_flags(&self) -> Vec<shared_settings::Value> {
+        self.isa_flags.iter().collect()
+    }
+
+    fn hash_all_flags(&self, mut hasher: &mut dyn Hasher) {
+        self.shared_flags.hash(&mut hasher);
+        self.isa_flags.hash(&mut hasher);
     }
 
     fn uses_cpu_flags(&self) -> bool {

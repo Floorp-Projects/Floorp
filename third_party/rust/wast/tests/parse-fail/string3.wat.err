@@ -1,4 +1,4 @@
-invalid hex digit '\"'
+invalid hex digit '"'
      --> tests/parse-fail/string3.wat:2:14
       |
     2 |   (import "\0"))

@@ -499,9 +499,11 @@ macro_rules! instructions {
     (@encode $dst:ident $($bytes:tt)*) => ($dst.extend_from_slice(&[$($bytes)*]););
 
     (@get_memarg $name:ident MemArg<$amt:tt>) => (Some($name));
+    (@get_memarg $name:ident LoadOrStoreLane<$amt:tt>) => (Some(&mut $name.memarg));
     (@get_memarg $($other:tt)*) => (None);
 
     (@memarg_binding $name:ident MemArg<$amt:tt>) => ($name);
+    (@memarg_binding $name:ident LoadOrStoreLane<$amt:tt>) => ($name);
     (@memarg_binding $name:ident $other:ty) => (_);
 }
 

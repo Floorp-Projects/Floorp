@@ -1004,11 +1004,8 @@ fn get_range_frags_for_block<F: Function>(
                 // not listed in `livein`, since otherwise `state` would have an entry for it.
                 None => panic!("get_range_frags_for_block: fail #2"),
                 Some(ref mut pf) => {
-                    // This the first or subsequent modify after a write.  Add two to the
-                    // mentions count, as that reflects the implied spill cost increment more
-                    // accurately than just adding one: if we spill the live range in which this
-                    // ends up, we'll generate both a reload and a spill instruction.
-                    pf.num_mentions = plus1(plus1(pf.num_mentions));
+                    // This the first or subsequent modify after a write.
+                    pf.num_mentions = plus1(pf.num_mentions);
                     let new_last = InstPoint::new_def(iix);
                     debug_assert!(pf.last <= new_last);
                     pf.last = new_last;

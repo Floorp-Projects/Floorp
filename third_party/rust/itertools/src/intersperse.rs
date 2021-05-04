@@ -1,7 +1,19 @@
 use std::iter::Fuse;
 use super::size_hint;
 
-#[derive(Clone)]
+pub trait IntersperseElement<Item> {
+    fn generate(&mut self) -> Item;
+}
+
+#[derive(Debug, Clone)]
+pub struct IntersperseElementSimple<Item>(Item);
+
+impl<Item: Clone> IntersperseElement<Item> for IntersperseElementSimple<Item> {
+    fn generate(&mut self) -> Item {
+        self.0.clone()
+    }
+}
+
 /// An iterator adaptor to insert a particular value
 /// between each element of the adapted iterator.
 ///
@@ -10,41 +22,64 @@ use super::size_hint;
 /// This iterator is *fused*.
 ///
 /// See [`.intersperse()`](../trait.Itertools.html#method.intersperse) for more information.
-#[must_use = "iterator adaptors are lazy and do nothing unless consumed"]
-#[derive(Debug)]
-pub struct Intersperse<I>
-    where I: Iterator
+pub type Intersperse<I> = IntersperseWith<I, IntersperseElementSimple<<I as Iterator>::Item>>;
+
+/// Create a new Intersperse iterator
+pub fn intersperse<I>(iter: I, elt: I::Item) -> Intersperse<I>
+    where I: Iterator,
 {
-    element: I::Item,
+    intersperse_with(iter, IntersperseElementSimple(elt))
+}
+
+impl<Item, F: FnMut()->Item> IntersperseElement<Item> for F {
+    fn generate(&mut self) -> Item {
+        self()
+    }
+}
+
+/// An iterator adaptor to insert a particular value created by a function
+/// between each element of the adapted iterator.
+///
+/// Iterator element type is `I::Item`
+///
+/// This iterator is *fused*.
+///
+/// See [`.intersperse_with()`](../trait.Itertools.html#method.intersperse_with) for more information.
+#[must_use = "iterator adaptors are lazy and do nothing unless consumed"]
+#[derive(Clone, Debug)]
+pub struct IntersperseWith<I, ElemF>
+    where I: Iterator,
+{
+    element: ElemF,
     iter: Fuse<I>,
     peek: Option<I::Item>,
 }
 
-/// Create a new Intersperse iterator
-pub fn intersperse<I>(iter: I, elt: I::Item) -> Intersperse<I>
-    where I: Iterator
+/// Create a new IntersperseWith iterator
+pub fn intersperse_with<I, ElemF>(iter: I, elt: ElemF) -> IntersperseWith<I, ElemF>
+    where I: Iterator,
 {
     let mut iter = iter.fuse();
-    Intersperse {
+    IntersperseWith {
         peek: iter.next(),
         iter,
         element: elt,
     }
 }
 
-impl<I> Iterator for Intersperse<I>
+impl<I, ElemF> Iterator for IntersperseWith<I, ElemF>
     where I: Iterator,
-          I::Item: Clone
+          ElemF: IntersperseElement<I::Item>
 {
     type Item = I::Item;
     #[inline]
-    fn next(&mut self) -> Option<I::Item> {
+    fn next(&mut self) -> Option<Self::Item> {
         if self.peek.is_some() {
             self.peek.take()
         } else {
             self.peek = self.iter.next();
             if self.peek.is_some() {
-                Some(self.element.clone())
+                Some(self.element.generate())
             } else {
                 None
             }
@@ -62,16 +97,16 @@ impl<I> Iterator for Intersperse<I>
         Self: Sized, F: FnMut(B, Self::Item) -> B,
     {
         let mut accum = init;
-        
+
         if let Some(x) = self.peek.take() {
             accum = f(accum, x);
         }
 
-        let element = &self.element;
+        let element = &mut self.element;
 
         self.iter.fold(accum,
             |accum, x| {
-                let accum = f(accum, element.clone());
+                let accum = f(accum, element.generate());
                 let accum = f(accum, x);
                 accum
         })

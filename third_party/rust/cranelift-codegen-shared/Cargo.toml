@@ -1,11 +1,17 @@
 [package]
 authors = ["The Cranelift Project Developers"]
 name = "cranelift-codegen-shared"
-version = "0.68.0"
+version = "0.73.0"
 description = "For code shared between cranelift-codegen-meta and cranelift-codegen"
 license = "Apache-2.0 WITH LLVM-exception"
 repository = "https://github.com/bytecodealliance/wasmtime"
 readme = "README.md"
 edition = "2018"
 
-# Since this is a shared dependency of several packages, please strive to keep this dependency-free.
+[dependencies]
+# Since this is a shared dependency of several packages, please strive to keep this dependency-free
+# when no features are enabled.
+serde = { version = "1.0.94", features = ["derive"], optional = true }
+
+[features]
+enable-serde = ["serde"]

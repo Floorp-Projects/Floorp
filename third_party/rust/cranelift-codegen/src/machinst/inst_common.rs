@@ -1,6 +1,8 @@
 //! A place to park MachInst::Inst fragments which are common across multiple architectures.
 
+use super::{LowerCtx, VCodeInst};
 use crate::ir::{self, Inst as IRInst};
+use smallvec::SmallVec;
 
 //============================================================================
 // Instruction input "slots".
@@ -22,6 +24,24 @@ pub(crate) struct InsnOutput {
     pub(crate) output: usize,
 }
 
+pub(crate) fn insn_inputs<I: VCodeInst, C: LowerCtx<I = I>>(
+    ctx: &C,
+    insn: IRInst,
+) -> SmallVec<[InsnInput; 4]> {
+    (0..ctx.num_inputs(insn))
+        .map(|i| InsnInput { insn, input: i })
+        .collect()
+}
+
+pub(crate) fn insn_outputs<I: VCodeInst, C: LowerCtx<I = I>>(
+    ctx: &C,
+    insn: IRInst,
+) -> SmallVec<[InsnOutput; 4]> {
+    (0..ctx.num_outputs(insn))
+        .map(|i| InsnOutput { insn, output: i })
+        .collect()
+}
+
 //============================================================================
 // Atomic instructions.
 
@@ -36,12 +56,22 @@ pub enum AtomicRmwOp {
     Sub,
     /// And
     And,
+    /// Nand
+    Nand,
     /// Or
     Or,
     /// Exclusive Or
     Xor,
     /// Exchange (swap operands)
     Xchg,
+    /// Unsigned min
+    Umin,
+    /// Unsigned max
+    Umax,
+    /// Signed min
+    Smin,
+    /// Signed max
+    Smax,
 }
 
 impl AtomicRmwOp {
@@ -51,9 +81,14 @@ impl AtomicRmwOp {
             ir::AtomicRmwOp::Add => AtomicRmwOp::Add,
             ir::AtomicRmwOp::Sub => AtomicRmwOp::Sub,
             ir::AtomicRmwOp::And => AtomicRmwOp::And,
+            ir::AtomicRmwOp::Nand => AtomicRmwOp::Nand,
             ir::AtomicRmwOp::Or => AtomicRmwOp::Or,
             ir::AtomicRmwOp::Xor => AtomicRmwOp::Xor,
             ir::AtomicRmwOp::Xchg => AtomicRmwOp::Xchg,
+            ir::AtomicRmwOp::Umin => AtomicRmwOp::Umin,
+            ir::AtomicRmwOp::Umax => AtomicRmwOp::Umax,
+            ir::AtomicRmwOp::Smin => AtomicRmwOp::Smin,
+            ir::AtomicRmwOp::Smax => AtomicRmwOp::Smax,
         }
     }
 }

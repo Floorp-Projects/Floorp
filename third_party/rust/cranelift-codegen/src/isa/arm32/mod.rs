@@ -7,7 +7,8 @@ use crate::machinst::{compile, MachBackend, MachCompileResult, TargetIsaAdapter,
 use crate::result::CodegenResult;
 use crate::settings;
 
-use alloc::boxed::Box;
+use alloc::{boxed::Box, vec::Vec};
+use core::hash::{Hash, Hasher};
 use regalloc::{PrettyPrint, RealRegUniverse};
 use target_lexicon::{Architecture, ArmArchitecture, Triple};
 
@@ -60,6 +61,7 @@ impl MachBackend for Arm32Backend {
         let vcode = self.compile_vcode(func, flags.clone())?;
         let buffer = vcode.emit();
         let frame_size = vcode.frame_size();
+        let stackslot_offsets = vcode.stackslot_offsets().clone();
 
         let disasm = if want_disasm {
             Some(vcode.show_rru(Some(&create_reg_universe())))
@@ -73,7 +75,8 @@ impl MachBackend for Arm32Backend {
             buffer,
             frame_size,
             disasm,
-            unwind_info: None,
+            value_labels_ranges: Default::default(),
+            stackslot_offsets,
         })
     }
 
@@ -87,6 +90,14 @@ impl MachBackend for Arm32Backend {
 
     fn flags(&self) -> &settings::Flags {
         &self.flags
+    }
+
+    fn isa_flags(&self) -> Vec<settings::Value> {
+        Vec::new()
+    }
+
+    fn hash_all_flags(&self, mut hasher: &mut dyn Hasher) {
+        self.flags.hash(&mut hasher);
     }
 
     fn reg_universe(&self) -> &RealRegUniverse {

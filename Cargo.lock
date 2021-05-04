@@ -779,42 +779,42 @@ dependencies = [
 
 [[package]]
 name = "cranelift-bforest"
-version = "0.68.0"
-source = "git+https://github.com/mozilla-spidermonkey/wasmtime?rev=a25399760e9f12b679aa267dd2af7cfedc72bb71#a25399760e9f12b679aa267dd2af7cfedc72bb71"
+version = "0.73.0"
+source = "git+https://github.com/bytecodealliance/wasmtime?rev=6b77786a6e758e91da9484a1c80b6fa5f88e1b3d#6b77786a6e758e91da9484a1c80b6fa5f88e1b3d"
 dependencies = [
- "cranelift-entity 0.68.0",
+ "cranelift-entity 0.73.0",
 ]
 
 [[package]]
 name = "cranelift-codegen"
-version = "0.68.0"
-source = "git+https://github.com/mozilla-spidermonkey/wasmtime?rev=a25399760e9f12b679aa267dd2af7cfedc72bb71#a25399760e9f12b679aa267dd2af7cfedc72bb71"
+version = "0.73.0"
+source = "git+https://github.com/bytecodealliance/wasmtime?rev=6b77786a6e758e91da9484a1c80b6fa5f88e1b3d#6b77786a6e758e91da9484a1c80b6fa5f88e1b3d"
 dependencies = [
  "byteorder",
  "cranelift-bforest",
  "cranelift-codegen-meta",
  "cranelift-codegen-shared",
- "cranelift-entity 0.68.0",
+ "cranelift-entity 0.73.0",
  "log",
  "regalloc",
  "smallvec",
- "target-lexicon 0.11.0",
+ "target-lexicon 0.12.0",
  "thiserror",
 ]
 
 [[package]]
 name = "cranelift-codegen-meta"
-version = "0.68.0"
-source = "git+https://github.com/mozilla-spidermonkey/wasmtime?rev=a25399760e9f12b679aa267dd2af7cfedc72bb71#a25399760e9f12b679aa267dd2af7cfedc72bb71"
+version = "0.73.0"
+source = "git+https://github.com/bytecodealliance/wasmtime?rev=6b77786a6e758e91da9484a1c80b6fa5f88e1b3d#6b77786a6e758e91da9484a1c80b6fa5f88e1b3d"
 dependencies = [
  "cranelift-codegen-shared",
- "cranelift-entity 0.68.0",
+ "cranelift-entity 0.73.0",
 ]
 
 [[package]]
 name = "cranelift-codegen-shared"
-version = "0.68.0"
-source = "git+https://github.com/mozilla-spidermonkey/wasmtime?rev=a25399760e9f12b679aa267dd2af7cfedc72bb71#a25399760e9f12b679aa267dd2af7cfedc72bb71"
+version = "0.73.0"
+source = "git+https://github.com/bytecodealliance/wasmtime?rev=6b77786a6e758e91da9484a1c80b6fa5f88e1b3d#6b77786a6e758e91da9484a1c80b6fa5f88e1b3d"
 
 [[package]]
 name = "cranelift-entity"
@@ -823,33 +823,33 @@ source = "git+https://github.com/PLSysSec/lucet_sandbox_compiler?rev=cd07861d1c9
 
 [[package]]
 name = "cranelift-entity"
-version = "0.68.0"
-source = "git+https://github.com/mozilla-spidermonkey/wasmtime?rev=a25399760e9f12b679aa267dd2af7cfedc72bb71#a25399760e9f12b679aa267dd2af7cfedc72bb71"
+version = "0.73.0"
+source = "git+https://github.com/bytecodealliance/wasmtime?rev=6b77786a6e758e91da9484a1c80b6fa5f88e1b3d#6b77786a6e758e91da9484a1c80b6fa5f88e1b3d"
 
 [[package]]
 name = "cranelift-frontend"
-version = "0.68.0"
-source = "git+https://github.com/mozilla-spidermonkey/wasmtime?rev=a25399760e9f12b679aa267dd2af7cfedc72bb71#a25399760e9f12b679aa267dd2af7cfedc72bb71"
+version = "0.73.0"
+source = "git+https://github.com/bytecodealliance/wasmtime?rev=6b77786a6e758e91da9484a1c80b6fa5f88e1b3d#6b77786a6e758e91da9484a1c80b6fa5f88e1b3d"
 dependencies = [
  "cranelift-codegen",
  "log",
  "smallvec",
- "target-lexicon 0.11.0",
+ "target-lexicon 0.12.0",
 ]
 
 [[package]]
 name = "cranelift-wasm"
-version = "0.68.0"
-source = "git+https://github.com/mozilla-spidermonkey/wasmtime?rev=a25399760e9f12b679aa267dd2af7cfedc72bb71#a25399760e9f12b679aa267dd2af7cfedc72bb71"
+version = "0.73.0"
+source = "git+https://github.com/bytecodealliance/wasmtime?rev=6b77786a6e758e91da9484a1c80b6fa5f88e1b3d#6b77786a6e758e91da9484a1c80b6fa5f88e1b3d"
 dependencies = [
  "cranelift-codegen",
- "cranelift-entity 0.68.0",
+ "cranelift-entity 0.73.0",
  "cranelift-frontend",
- "itertools 0.9.0",
+ "itertools 0.10.0",
  "log",
  "smallvec",
  "thiserror",
- "wasmparser 0.67.0",
+ "wasmparser",
 ]
 
 [[package]]
@@ -2539,9 +2539,9 @@ dependencies = [
 
 [[package]]
 name = "itertools"
-version = "0.9.0"
+version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "284f18f85651fe11e8a991b2adb42cb078325c996ed026d994719efcfca1d54b"
+checksum = "37d572918e350e82412fe766d24b15e6682fb2ed2bbe018280caa810397cb319"
 dependencies = [
  "either",
 ]
@@ -2648,7 +2648,7 @@ version = "0.1.0"
 dependencies = [
  "jsrust_shared",
  "mozglue-static",
- "wasmparser 0.48.2",
+ "wasmparser",
  "wat",
 ]
 
@@ -4253,7 +4253,8 @@ dependencies = [
 [[package]]
 name = "regalloc"
 version = "0.0.31"
-source = "git+https://github.com/mozilla-spidermonkey/regalloc.rs?rev=fc5d1d33317b0fbd36725757f80a95127eff5109#fc5d1d33317b0fbd36725757f80a95127eff5109"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "571f7f397d61c4755285cd37853fe8e03271c243424a907415909379659381c5"
 dependencies = [
  "log",
  "rustc-hash",
@@ -5078,9 +5079,9 @@ checksum = "6f4c118a7a38378f305a9e111fcb2f7f838c0be324bfb31a77ea04f7f6e684b4"
 
 [[package]]
 name = "target-lexicon"
-version = "0.11.0"
+version = "0.12.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fe2635952a442a01fd4cb53d98858b5e4bb461b02c0d111f22f31772e3e7a8b2"
+checksum = "64ae3b39281e4b14b8123bdbaddd472b7dfe215e444181f2f9d2443c2444f834"
 
 [[package]]
 name = "tempfile"
@@ -5680,20 +5681,15 @@ checksum = "cccddf32554fecc6acb585f82a32a72e28b48f8c4c1883ddfeeeaa96f7d8e519"
 
 [[package]]
 name = "wasmparser"
-version = "0.48.2"
+version = "0.77.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "073da89bf1c84db000dd68ce660c1b4a08e3a2d28fd1e3394ab9e7abdde4a0f8"
-
-[[package]]
-name = "wasmparser"
-version = "0.67.0"
-source = "git+https://github.com/mozilla-spidermonkey/wasm-tools?rev=1b7763faa484e62752538b78e7a69883f4faceee#1b7763faa484e62752538b78e7a69883f4faceee"
+checksum = "b35c86d22e720a07d954ebbed772d01180501afe7d03d464f413bb5f8914a8d6"
 
 [[package]]
 name = "wast"
-version = "35.0.1"
+version = "35.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1a5800e9f86a1eae935e38bea11e60fd253f6d514d153fb39b3e5535a7b37b56"
+checksum = "2ef140f1b49946586078353a453a1d28ba90adfc54dde75710bc1931de204d68"
 dependencies = [
  "leb128",
 ]

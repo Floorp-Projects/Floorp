@@ -1,7 +1,9 @@
-#![cfg(feature = "use_std")]
+#![cfg(feature = "use_alloc")]
 
 use crate::size_hint;
 use crate::Itertools;
+
+use alloc::vec::Vec;
 
 #[derive(Clone)]
 /// An iterator adaptor that iterates over the cartesian product of
@@ -161,7 +163,7 @@ impl<I> Iterator for MultiProduct<I>
     }
 
     fn count(self) -> usize {
-        if self.0.len() == 0 {
+        if self.0.is_empty() {
             return 0;
         }
 
@@ -183,7 +185,7 @@ impl<I> Iterator for MultiProduct<I>
 
     fn size_hint(&self) -> (usize, Option<usize>) {
         // Not ExactSizeIterator because size may be larger than usize
-        if self.0.len() == 0 {
+        if self.0.is_empty() {
             return (0, Some(0));
         }
 
