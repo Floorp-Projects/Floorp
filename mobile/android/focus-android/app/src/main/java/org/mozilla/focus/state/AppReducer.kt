@@ -26,6 +26,7 @@ object AppReducer : Reducer<AppState, AppAction> {
             is AppAction.Unlock -> unlock(state, action)
             is AppAction.OpenSettings -> openSettings(state, action)
             is AppAction.NavigateUp -> navigateUp(state, action)
+            is AppAction.OpenTab -> openTab(state, action)
         }
     }
 }
@@ -143,6 +144,12 @@ private fun unlock(state: AppState, action: AppAction.Unlock): AppState {
 private fun openSettings(state: AppState, action: AppAction.OpenSettings): AppState {
     return state.copy(
         screen = Screen.Settings(page = action.page)
+    )
+}
+
+private fun openTab(state: AppState, action: AppAction.OpenTab): AppState {
+    return state.copy(
+        screen = Screen.Browser(tabId = action.tabId, showTabs = false)
     )
 }
 

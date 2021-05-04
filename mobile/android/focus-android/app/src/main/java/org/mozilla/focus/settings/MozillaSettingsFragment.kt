@@ -11,6 +11,8 @@ import mozilla.components.browser.state.state.SessionState
 import org.mozilla.focus.R
 import org.mozilla.focus.browser.LocalizedContent
 import org.mozilla.focus.ext.components
+import org.mozilla.focus.ext.requireComponents
+import org.mozilla.focus.state.AppAction
 import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.utils.AppConstants
 import org.mozilla.focus.utils.SupportUtils
@@ -42,28 +44,28 @@ class MozillaSettingsFragment : BaseSettingsFragment(),
 
         when (preference.key) {
             resources.getString(R.string.pref_key_about) -> run {
-                activity.components.tabsUseCases.addPrivateTab(
+                val tabId = activity.components.tabsUseCases.addPrivateTab(
                     LocalizedContent.URL_ABOUT,
                     source = SessionState.Source.MENU,
                     selectTab = true
                 )
-                activity.finish()
+                requireComponents.appStore.dispatch(AppAction.OpenTab(tabId))
             }
             resources.getString(R.string.pref_key_help) -> run {
-                activity.components.tabsUseCases.addPrivateTab(
+                val tabId = activity.components.tabsUseCases.addPrivateTab(
                     SupportUtils.HELP_URL,
                     source = SessionState.Source.MENU,
                     selectTab = true
                 )
-                activity.finish()
+                requireComponents.appStore.dispatch(AppAction.OpenTab(tabId))
             }
             resources.getString(R.string.pref_key_rights) -> run {
-                activity.components.tabsUseCases.addPrivateTab(
+                val tabId = activity.components.tabsUseCases.addPrivateTab(
                     LocalizedContent.URL_RIGHTS,
                     source = SessionState.Source.MENU,
                     selectTab = true
                 )
-                activity.finish()
+                requireComponents.appStore.dispatch(AppAction.OpenTab(tabId))
             }
             resources.getString(R.string.pref_key_privacy_notice) -> {
                 val url = if (AppConstants.isKlarBuild)
@@ -71,12 +73,12 @@ class MozillaSettingsFragment : BaseSettingsFragment(),
                 else
                     SupportUtils.PRIVACY_NOTICE_URL
 
-                activity.components.tabsUseCases.addPrivateTab(
+                val tabId = activity.components.tabsUseCases.addPrivateTab(
                     url,
                     source = SessionState.Source.MENU,
                     selectTab = true
                 )
-                activity.finish()
+                requireComponents.appStore.dispatch(AppAction.OpenTab(tabId))
             }
         }
         return super.onPreferenceTreeClick(preference)

@@ -73,4 +73,9 @@ sealed class AppAction : Action {
      * Forces showing the first run screen (for tests).
      */
     internal object ShowFirstRun : AppAction()
+
+    /**
+     * Opens the tab with the given [tabId] and actively switches to the browser screen if needed.
+     */
+    data class OpenTab(val tabId: String) : AppAction()
 }
