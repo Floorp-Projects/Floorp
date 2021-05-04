@@ -6572,7 +6572,9 @@ nsresult nsDocShell::EndPageLoad(nsIWebProgress* aProgress,
                                        isInitialDocument,
                                        &skippedUnknownProtocolNavigation);
     if (NS_FAILED(aStatus)) {
-      DisplayLoadError(aStatus, url, nullptr, aChannel);
+      if (!mIsBeingDestroyed) {
+        DisplayLoadError(aStatus, url, nullptr, aChannel);
+      }
     } else if (skippedUnknownProtocolNavigation) {
       nsTArray<nsString> params;
       if (NS_FAILED(
