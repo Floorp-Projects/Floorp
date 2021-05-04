@@ -64,9 +64,11 @@ bool checkSize(JS::HandleObject map, uint32_t expected) {
 END_TEST(testWeakMap_basicOperations)
 
 BEGIN_TEST(testWeakMap_keyDelegates) {
+#ifdef JS_GC_ZEAL
   AutoLeaveZeal nozeal(cx);
+#endif /* JS_GC_ZEAL */
 
-  AutoGCParameter param(cx, JSGC_INCREMENTAL_GC_ENABLED, true);
+  JS_SetGCParameter(cx, JSGC_INCREMENTAL_GC_ENABLED, true);
   JS_GC(cx);
   JS::RootedObject map(cx, JS::NewWeakMapObject(cx));
   CHECK(map);
