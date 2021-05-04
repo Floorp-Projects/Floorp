@@ -457,7 +457,7 @@ class MOZ_NON_MEMMOVABLE JS_PUBLIC_API JSStructuredCloneData {
                               JS::StructuredCloneScope::Unassigned) {}
   JSStructuredCloneData(JSStructuredCloneData&& other) = default;
   JSStructuredCloneData& operator=(JSStructuredCloneData&& other) = default;
-  ~JSStructuredCloneData() { discardTransferables(); }
+  ~JSStructuredCloneData();
 
   void setCallbacks(const JSStructuredCloneCallbacks* callbacks, void* closure,
                     OwnTransferablePolicy policy) {
