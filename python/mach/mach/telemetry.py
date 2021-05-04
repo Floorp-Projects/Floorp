@@ -6,6 +6,7 @@ from __future__ import print_function, absolute_import
 
 import json
 import os
+import subprocess
 import sys
 
 from six.moves import input, configparser
@@ -114,9 +115,17 @@ def arcrc_path():
 
 
 def resolve_setting_from_arcconfig(topsrcdir, setting):
+    git_path = os.path.join(topsrcdir, ".git")
+    if os.path.isfile(git_path):
+        git_path = subprocess.check_output(
+            ["git", "rev-parse", "--git-common-dir"],
+            cwd=topsrcdir,
+            universal_newlines=True,
+        )
+
     for arcconfig_path in [
         os.path.join(topsrcdir, ".hg", ".arcconfig"),
-        os.path.join(topsrcdir, ".git", ".arcconfig"),
+        os.path.join(git_path, ".arcconfig"),
         os.path.join(topsrcdir, ".arcconfig"),
     ]:
         try:
