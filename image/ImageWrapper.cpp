@@ -7,13 +7,13 @@
 #include "mozilla/gfx/2D.h"
 #include "mozilla/RefPtr.h"
 #include "Orientation.h"
+#include "mozilla/image/Resolution.h"
 
 #include "mozilla/MemoryReporting.h"
 
 namespace mozilla {
 
 using dom::Document;
-using gfx::DataSourceSurface;
 using gfx::IntSize;
 using gfx::SamplingFilter;
 using gfx::SourceSurface;
@@ -134,6 +134,9 @@ nsresult ImageWrapper::GetHotspotY(int32_t* aY) {
 
 NS_IMETHODIMP_(Orientation)
 ImageWrapper::GetOrientation() { return mInnerImage->GetOrientation(); }
+
+NS_IMETHODIMP_(Resolution)
+ImageWrapper::GetResolution() { return mInnerImage->GetResolution(); }
 
 NS_IMETHODIMP
 ImageWrapper::GetType(uint16_t* aType) { return mInnerImage->GetType(aType); }

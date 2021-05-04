@@ -48,6 +48,7 @@ namespace image {
 
 class ImageRegion;
 struct Orientation;
+struct Resolution;
 
 }
 }
@@ -71,6 +72,7 @@ native TempRefImageContainer(already_AddRefed<mozilla::layers::ImageContainer>);
 [ref] native ImageRegion(mozilla::image::ImageRegion);
 [ptr] native LayerManager(mozilla::layers::LayerManager);
 native Orientation(mozilla::image::Orientation);
+native ImageResolution(mozilla::image::Resolution);
 [ref] native TimeStamp(mozilla::TimeStamp);
 [ref] native MaybeSVGImageContext(mozilla::Maybe<mozilla::SVGImageContext>);
 native TempRefSourceSurface(already_AddRefed<mozilla::gfx::SourceSurface>);
@@ -638,6 +640,12 @@ interface imgIContainer : nsISupports
    * metadata (e.g. EXIF).
    */
   [notxpcom] Orientation getOrientation();
+
+  /*
+   * Returns the intrinsic resolution of the image, or 1.0 if the image doesn't
+   * declare any.
+   */
+  [notxpcom] ImageResolution getResolution();
 
   /*
    * Returns the delay, in ms, between the first and second frame. If this
