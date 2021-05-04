@@ -8,10 +8,14 @@ use alloc::vec::Vec;
 use core::fmt::{self, Display, Formatter};
 use core::slice::{Iter, IterMut};
 
+#[cfg(feature = "enable-serde")]
+use serde::{Deserialize, Serialize};
+
 /// Contents of a jump table.
 ///
 /// All jump tables use 0-based indexing and are densely populated.
 #[derive(Clone)]
+#[cfg_attr(feature = "enable-serde", derive(Serialize, Deserialize))]
 pub struct JumpTableData {
     // Table entries.
     table: Vec<Block>,
@@ -63,6 +67,11 @@ impl JumpTableData {
     /// Returns an iterator that allows modifying each value.
     pub fn iter_mut(&mut self) -> IterMut<Block> {
         self.table.iter_mut()
+    }
+
+    /// Clears all entries in this jump table.
+    pub fn clear(&mut self) {
+        self.table.clear();
     }
 }
 

@@ -5,6 +5,9 @@ use alloc::vec::Vec;
 use core::marker::PhantomData;
 use core::mem;
 
+#[cfg(feature = "enable-serde")]
+use serde::{Deserialize, Serialize};
+
 /// A small list of entity references allocated from a pool.
 ///
 /// An `EntityList<T>` type provides similar functionality to `Vec<T>`, but with some important
@@ -59,7 +62,8 @@ use core::mem;
 ///
 /// The index stored in an `EntityList` points to part 2, the list elements. The value 0 is
 /// reserved for the empty list which isn't allocated in the vector.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
+#[cfg_attr(feature = "enable-serde", derive(Serialize, Deserialize))]
 pub struct EntityList<T: EntityRef + ReservedValue> {
     index: u32,
     unused: PhantomData<T>,
@@ -77,6 +81,7 @@ impl<T: EntityRef + ReservedValue> Default for EntityList<T> {
 
 /// A memory pool for storing lists of `T`.
 #[derive(Clone, Debug)]
+#[cfg_attr(feature = "enable-serde", derive(Serialize, Deserialize))]
 pub struct ListPool<T: EntityRef + ReservedValue> {
     // The main array containing the lists.
     data: Vec<T>,
@@ -91,17 +96,20 @@ type SizeClass = u8;
 
 /// Get the size of a given size class. The size includes the length field, so the maximum list
 /// length is one less than the class size.
+#[inline]
 fn sclass_size(sclass: SizeClass) -> usize {
     4 << sclass
 }
 
 /// Get the size class to use for a given list length.
 /// This always leaves room for the length element in addition to the list elements.
+#[inline]
 fn sclass_for_length(len: usize) -> SizeClass {
     30 - (len as u32 | 3).leading_zeros() as SizeClass
 }
 
 /// Is `len` the minimum length in its size class?
+#[inline]
 fn is_sclass_min_length(len: usize) -> bool {
     len > 3 && len.is_power_of_two()
 }
@@ -299,6 +307,24 @@ impl<T: EntityRef + ReservedValue> EntityList<T> {
         self.as_mut_slice(pool).get_mut(index)
     }
 
+    /// Create a deep clone of the list, which does not alias the original list.
+    pub fn deep_clone(&self, pool: &mut ListPool<T>) -> Self {
+        match pool.len_of(self) {
+            None => return Self::new(),
+            Some(len) => {
+                let src = self.index as usize;
+                let block = pool.alloc(sclass_for_length(len));
+                pool.data[block] = T::new(len);
+                pool.data.copy_within(src..src + len, block + 1);
+
+                Self {
+                    index: (block + 1) as u32,
+                    unused: PhantomData,
+                }
+            }
+        }
+    }
+
     /// Removes all elements from the list.
     ///
     /// The memory used by the list is put back in the pool.
@@ -387,14 +413,34 @@ impl<T: EntityRef + ReservedValue> EntityList<T> {
         &mut pool.data[block + 1..block + 1 + new_len]
     }
 
+    /// Constructs a list from an iterator.
+    pub fn from_iter<I>(elements: I, pool: &mut ListPool<T>) -> Self
+    where
+        I: IntoIterator<Item = T>,
+    {
+        let mut list = Self::new();
+        list.extend(elements, pool);
+        list
+    }
+
     /// Appends multiple elements to the back of the list.
     pub fn extend<I>(&mut self, elements: I, pool: &mut ListPool<T>)
     where
         I: IntoIterator<Item = T>,
     {
-        // TODO: use `size_hint()` to reduce reallocations.
-        for x in elements {
-            self.push(x, pool);
+        let iterator = elements.into_iter();
+        let (len, upper) = iterator.size_hint();
+        // On most iterators this check is optimized down to `true`.
+        if upper == Some(len) {
+            let data = self.grow(len, pool);
+            let offset = data.len() - len;
+            for (src, dst) in iterator.zip(data[offset..].iter_mut()) {
+                *dst = src;
+            }
+        } else {
+            for x in iterator {
+                self.push(x, pool);
+            }
         }
     }
 
@@ -417,20 +463,8 @@ impl<T: EntityRef + ReservedValue> EntityList<T> {
         }
     }
 
-    /// Removes the element at position `index` from the list. Potentially linear complexity.
-    pub fn remove(&mut self, index: usize, pool: &mut ListPool<T>) {
-        let len;
-        {
-            let seq = self.as_mut_slice(pool);
-            len = seq.len();
-            debug_assert!(index < len);
-
-            // Copy elements down.
-            for i in index..len - 1 {
-                seq[i] = seq[i + 1];
-            }
-        }
-
+    /// Removes the last element from the list.
+    fn remove_last(&mut self, len: usize, pool: &mut ListPool<T>) {
         // Check if we deleted the last element.
         if len == 1 {
             self.clear(pool);
@@ -449,19 +483,64 @@ impl<T: EntityRef + ReservedValue> EntityList<T> {
         pool.data[block] = T::new(len - 1);
     }
 
+    /// Removes the element at position `index` from the list. Potentially linear complexity.
+    pub fn remove(&mut self, index: usize, pool: &mut ListPool<T>) {
+        let len;
+        {
+            let seq = self.as_mut_slice(pool);
+            len = seq.len();
+            debug_assert!(index < len);
+
+            // Copy elements down.
+            for i in index..len - 1 {
+                seq[i] = seq[i + 1];
+            }
+        }
+
+        self.remove_last(len, pool);
+    }
+
     /// Removes the element at `index` in constant time by switching it with the last element of
     /// the list.
     pub fn swap_remove(&mut self, index: usize, pool: &mut ListPool<T>) {
-        let len = self.len(pool);
+        let seq = self.as_mut_slice(pool);
+        let len = seq.len();
         debug_assert!(index < len);
-        if index == len - 1 {
-            self.remove(index, pool);
-        } else {
-            {
-                let seq = self.as_mut_slice(pool);
-                seq.swap(index, len - 1);
+        if index != len - 1 {
+            seq.swap(index, len - 1);
+        }
+
+        self.remove_last(len, pool);
+    }
+
+    /// Shortens the list down to `len` elements.
+    ///
+    /// Does nothing if the list is already shorter than `len`.
+    pub fn truncate(&mut self, new_len: usize, pool: &mut ListPool<T>) {
+        if new_len == 0 {
+            self.clear(pool);
+            return;
+        }
+
+        match pool.len_of(self) {
+            None => return,
+            Some(len) => {
+                if len <= new_len {
+                    return;
+                }
+
+                let block;
+                let idx = self.index as usize;
+                let sclass = sclass_for_length(len);
+                let new_sclass = sclass_for_length(new_len);
+                if sclass != new_sclass {
+                    block = pool.realloc(idx - 1, sclass, new_sclass, new_len + 1);
+                    self.index = (block + 1) as u32;
+                } else {
+                    block = idx - 1;
+                }
+                pool.data[block] = T::new(new_len);
             }
-            self.remove(len - 1, pool);
         }
     }
 
@@ -630,6 +709,10 @@ mod tests {
             list.as_slice(pool),
             &[i1, i2, i3, i4, i1, i1, i2, i2, i3, i3, i4, i4]
         );
+
+        let list2 = EntityList::from_iter([i1, i1, i2, i2, i3, i3, i4, i4].iter().cloned(), pool);
+        assert_eq!(list2.len(pool), 8);
+        assert_eq!(list2.as_slice(pool), &[i1, i1, i2, i2, i3, i3, i4, i4]);
     }
 
     #[test]
@@ -703,5 +786,45 @@ mod tests {
         list.grow_at(3, 1, pool);
         list.as_mut_slice(pool)[3] = i4;
         assert_eq!(list.as_slice(pool), &[i2, i1, i3, i4]);
+    }
+
+    #[test]
+    fn deep_clone() {
+        let pool = &mut ListPool::<Inst>::new();
+
+        let i1 = Inst::new(1);
+        let i2 = Inst::new(2);
+        let i3 = Inst::new(3);
+        let i4 = Inst::new(4);
+
+        let mut list1 = EntityList::from_slice(&[i1, i2, i3], pool);
+        let list2 = list1.deep_clone(pool);
+        assert_eq!(list1.as_slice(pool), &[i1, i2, i3]);
+        assert_eq!(list2.as_slice(pool), &[i1, i2, i3]);
+
+        list1.as_mut_slice(pool)[0] = i4;
+        assert_eq!(list1.as_slice(pool), &[i4, i2, i3]);
+        assert_eq!(list2.as_slice(pool), &[i1, i2, i3]);
+    }
+
+    #[test]
+    fn truncate() {
+        let pool = &mut ListPool::<Inst>::new();
+
+        let i1 = Inst::new(1);
+        let i2 = Inst::new(2);
+        let i3 = Inst::new(3);
+        let i4 = Inst::new(4);
+
+        let mut list = EntityList::from_slice(&[i1, i2, i3, i4, i1, i2, i3, i4], pool);
+        assert_eq!(list.as_slice(pool), &[i1, i2, i3, i4, i1, i2, i3, i4]);
+        list.truncate(6, pool);
+        assert_eq!(list.as_slice(pool), &[i1, i2, i3, i4, i1, i2]);
+        list.truncate(9, pool);
+        assert_eq!(list.as_slice(pool), &[i1, i2, i3, i4, i1, i2]);
+        list.truncate(2, pool);
+        assert_eq!(list.as_slice(pool), &[i1, i2]);
+        list.truncate(0, pool);
+        assert!(list.is_empty());
     }
 }

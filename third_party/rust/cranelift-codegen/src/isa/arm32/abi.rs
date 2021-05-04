@@ -10,7 +10,7 @@ use crate::{CodegenError, CodegenResult};
 use alloc::boxed::Box;
 use alloc::vec::Vec;
 use regalloc::{RealReg, Reg, RegClass, Set, Writable};
-use smallvec::SmallVec;
+use smallvec::{smallvec, SmallVec};
 
 /// Support for the ARM ABI from the callee side (within a function body).
 pub(crate) type Arm32ABICallee = ABICalleeImpl<Arm32MachineDeps>;
@@ -51,6 +51,7 @@ impl ABIMachineSpec for Arm32MachineDeps {
 
     fn compute_arg_locs(
         _call_conv: isa::CallConv,
+        _flags: &settings::Flags,
         params: &[ir::AbiParam],
         args_or_rets: ArgsOrRets,
         add_ret_area_ptr: bool,
@@ -81,7 +82,7 @@ impl ABIMachineSpec for Arm32MachineDeps {
             if next_rreg < max_reg_val {
                 let reg = rreg(next_rreg);
 
-                ret.push(ABIArg::Reg(
+                ret.push(ABIArg::reg(
                     reg.to_real_reg(),
                     param.value_type,
                     param.extension,
@@ -101,7 +102,7 @@ impl ABIMachineSpec for Arm32MachineDeps {
         let extra_arg = if add_ret_area_ptr {
             debug_assert!(args_or_rets == ArgsOrRets::Args);
             if next_rreg < max_reg_val {
-                ret.push(ABIArg::Reg(
+                ret.push(ABIArg::reg(
                     rreg(next_rreg).to_real_reg(),
                     I32,
                     ir::ArgumentExtension::None,
@@ -124,7 +125,7 @@ impl ABIMachineSpec for Arm32MachineDeps {
         let max_stack = next_stack;
         for (ty, ext, purpose) in stack_args.into_iter().rev() {
             next_stack -= 4;
-            ret.push(ABIArg::Stack(
+            ret.push(ABIArg::stack(
                 (max_stack - next_stack) as i64,
                 ty,
                 ext,
@@ -185,7 +186,7 @@ impl ABIMachineSpec for Arm32MachineDeps {
         Inst::EpiloguePlaceholder
     }
 
-    fn gen_add_imm(into_reg: Writable<Reg>, from_reg: Reg, imm: u32) -> SmallVec<[Inst; 4]> {
+    fn gen_add_imm(into_reg: Writable<Reg>, from_reg: Reg, imm: u32) -> SmallInstVec<Inst> {
         let mut insts = SmallVec::new();
 
         if let Some(imm12) = UImm12::maybe_from_i64(imm as i64) {
@@ -209,7 +210,7 @@ impl ABIMachineSpec for Arm32MachineDeps {
         insts
     }
 
-    fn gen_stack_lower_bound_trap(limit_reg: Reg) -> SmallVec<[Inst; 2]> {
+    fn gen_stack_lower_bound_trap(limit_reg: Reg) -> SmallInstVec<Inst> {
         let mut insts = SmallVec::new();
         insts.push(Inst::Cmp {
             rn: sp_reg(),
@@ -243,7 +244,7 @@ impl ABIMachineSpec for Arm32MachineDeps {
         Inst::gen_store(from_reg, mem, ty)
     }
 
-    fn gen_sp_reg_adjust(amount: i32) -> SmallVec<[Inst; 2]> {
+    fn gen_sp_reg_adjust(amount: i32) -> SmallInstVec<Inst> {
         let mut ret = SmallVec::new();
 
         if amount == 0 {
@@ -283,7 +284,7 @@ impl ABIMachineSpec for Arm32MachineDeps {
         Inst::VirtualSPOffsetAdj { offset }
     }
 
-    fn gen_prologue_frame_setup() -> SmallVec<[Inst; 2]> {
+    fn gen_prologue_frame_setup(_: &settings::Flags) -> SmallInstVec<Inst> {
         let mut ret = SmallVec::new();
         let reg_list = vec![fp_reg(), lr_reg()];
         ret.push(Inst::Push { reg_list });
@@ -294,7 +295,7 @@ impl ABIMachineSpec for Arm32MachineDeps {
         ret
     }
 
-    fn gen_epilogue_frame_restore() -> SmallVec<[Inst; 2]> {
+    fn gen_epilogue_frame_restore(_: &settings::Flags) -> SmallInstVec<Inst> {
         let mut ret = SmallVec::new();
         ret.push(Inst::Mov {
             rd: writable_sp_reg(),
@@ -305,6 +306,12 @@ impl ABIMachineSpec for Arm32MachineDeps {
         ret
     }
 
+    fn gen_probestack(_: u32) -> SmallInstVec<Self::I> {
+        // TODO: implement if we ever require stack probes on ARM32 (unlikely
+        // unless Lucet is ported)
+        smallvec![]
+    }
+
     /// Returns stack bytes used as well as instructions. Does not adjust
     /// nominal SP offset; caller will do that.
     fn gen_clobber_save(
@@ -312,7 +319,6 @@ impl ABIMachineSpec for Arm32MachineDeps {
         _flags: &settings::Flags,
         clobbers: &Set<Writable<RealReg>>,
         fixed_frame_storage_size: u32,
-        _outgoing_args_size: u32,
     ) -> (u64, SmallVec<[Inst; 16]>) {
         let mut insts = SmallVec::new();
         if fixed_frame_storage_size > 0 {
@@ -342,7 +348,6 @@ impl ABIMachineSpec for Arm32MachineDeps {
         _flags: &settings::Flags,
         clobbers: &Set<Writable<RealReg>>,
         _fixed_frame_storage_size: u32,
-        _outgoing_args_size: u32,
     ) -> SmallVec<[Inst; 16]> {
         let mut insts = SmallVec::new();
         let clobbered_vec = get_callee_saves(clobbers);
@@ -420,6 +425,15 @@ impl ABIMachineSpec for Arm32MachineDeps {
         insts
     }
 
+    fn gen_memcpy(
+        _call_conv: isa::CallConv,
+        _dst: Reg,
+        _src: Reg,
+        _size: usize,
+    ) -> SmallVec<[Self::I; 8]> {
+        unimplemented!("StructArgs not implemented for ARM32 yet");
+    }
+
     fn get_number_of_spillslots_for_value(rc: RegClass, _ty: Type) -> u32 {
         match rc {
             RegClass::I32 => 1,
@@ -444,6 +458,13 @@ impl ABIMachineSpec for Arm32MachineDeps {
             }
         }
         caller_saved
+    }
+
+    fn get_ext_mode(
+        _call_conv: isa::CallConv,
+        specified: ir::ArgumentExtension,
+    ) -> ir::ArgumentExtension {
+        specified
     }
 }
 

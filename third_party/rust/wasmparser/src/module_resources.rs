@@ -202,6 +202,8 @@ pub trait WasmModuleResources {
     fn table_at(&self, at: u32) -> Option<TableType>;
     /// Returns the linear memory at given index.
     fn memory_at(&self, at: u32) -> Option<MemoryType>;
+    /// Returns the event at given index.
+    fn event_at(&self, at: u32) -> Option<&Self::FuncType>;
     /// Returns the global variable at given index.
     fn global_at(&self, at: u32) -> Option<GlobalType>;
     /// Returns the `FuncType` associated with the given type index.
@@ -231,6 +233,9 @@ where
     }
     fn memory_at(&self, at: u32) -> Option<MemoryType> {
         T::memory_at(self, at)
+    }
+    fn event_at(&self, at: u32) -> Option<&Self::FuncType> {
+        T::event_at(self, at)
     }
     fn global_at(&self, at: u32) -> Option<GlobalType> {
         T::global_at(self, at)

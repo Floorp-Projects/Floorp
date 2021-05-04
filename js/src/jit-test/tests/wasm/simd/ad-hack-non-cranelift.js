@@ -9,18 +9,18 @@
 //
 // is equivalent to
 //
-//   (iMxN.mul (iMxN.widen_{high,low}_iKxL_{s,u} A)
-//             (iMxN.widen_{high,low}_iKxL_{s,u} B))
+//   (iMxN.mul (iMxN.extend_{high,low}_iKxL_{s,u} A)
+//             (iMxN.extend_{high,low}_iKxL_{s,u} B))
 //
 // It doesn't really matter what the inputs are, we can test this almost
 // blindly.
 //
-// Unfortunately, we do not yet have i64x2.widen_* so we introduce a helper
+// Unfortunately, we do not yet have i64x2.extend_* so we introduce a helper
 // function to compute that.
 
 function makeExtMulTest(wide, narrow, part, signed) {
     let widener = (wide == 'i64x2') ?
-        `call $${wide}_widen_${part}_${narrow}_${signed}` :
+        `call $${wide}_extend_${part}_${narrow}_${signed}` :
         `${wide}.extend_${part}_${narrow}_${signed}`;
     return `
     (func (export "${wide}_extmul_${part}_${narrow}_${signed}")
@@ -36,21 +36,21 @@ function makeExtMulTest(wide, narrow, part, signed) {
 var ins = wasmEvalText(`
   (module
     (memory (export "mem") 1 1)
-    (func $i64x2_widen_low_i32x4_s (param v128) (result v128)
+    (func $i64x2_extend_low_i32x4_s (param v128) (result v128)
       (i64x2.shr_s (i8x16.shuffle 16 16 16 16 0 1 2 3 16 16 16 16 4 5 6 7
                                   (local.get 0)
                                   (v128.const i32x4 0 0 0 0))
                    (i32.const 32)))
-    (func $i64x2_widen_high_i32x4_s (param v128) (result v128)
+    (func $i64x2_extend_high_i32x4_s (param v128) (result v128)
       (i64x2.shr_s (i8x16.shuffle 16 16 16 16 8 9 10 11 16 16 16 16 12 13 14 15
                                   (local.get 0)
                                   (v128.const i32x4 0 0 0 0))
                    (i32.const 32)))
-    (func $i64x2_widen_low_i32x4_u (param v128) (result v128)
+    (func $i64x2_extend_low_i32x4_u (param v128) (result v128)
       (i8x16.shuffle 0 1 2 3 16 16 16 16 4 5 6 7 16 16 16 16
                      (local.get 0)
                      (v128.const i32x4 0 0 0 0)))
-    (func $i64x2_widen_high_i32x4_u (param v128) (result v128)
+    (func $i64x2_extend_high_i32x4_u (param v128) (result v128)
       (i8x16.shuffle 8 9 10 11 16 16 16 16 12 13 14 15 16 16 16 16
                      (local.get 0)
                      (v128.const i32x4 0 0 0 0)))
@@ -132,13 +132,13 @@ assertEq(ins.exports.const_bitmask_i64x2(), 1);
 var ins = wasmEvalText(`
   (module
     (memory (export "mem") 1 1)
-    (func (export "widen_low_i32x4_s")
+    (func (export "extend_low_i32x4_s")
       (v128.store (i32.const 0) (i64x2.extend_low_i32x4_s (v128.load (i32.const 16)))))
-    (func (export "widen_high_i32x4_s")
+    (func (export "extend_high_i32x4_s")
       (v128.store (i32.const 0) (i64x2.extend_high_i32x4_s (v128.load (i32.const 16)))))
-    (func (export "widen_low_i32x4_u")
+    (func (export "extend_low_i32x4_u")
       (v128.store (i32.const 0) (i64x2.extend_low_i32x4_u (v128.load (i32.const 16)))))
-    (func (export "widen_high_i32x4_u")
+    (func (export "extend_high_i32x4_u")
       (v128.store (i32.const 0) (i64x2.extend_high_i32x4_u (v128.load (i32.const 16))))))`);
 
 var mem32 = new Int32Array(ins.exports.mem.buffer);
@@ -148,16 +148,16 @@ var mem64u = new BigUint64Array(ins.exports.mem.buffer);
 var as = [205, 1, 192, 3].map((x) => x << 24);
 set(mem32, 4, as);
 
-ins.exports.widen_low_i32x4_s();
+ins.exports.extend_low_i32x4_s();
 assertSame(get(mem64, 0, 2), iota(2).map((n) => BigInt(as[n])))
 
-ins.exports.widen_high_i32x4_s();
+ins.exports.extend_high_i32x4_s();
 assertSame(get(mem64, 0, 2), iota(2).map((n) => BigInt(as[n+2])));
 
-ins.exports.widen_low_i32x4_u();
+ins.exports.extend_low_i32x4_u();
 assertSame(get(mem64u, 0, 2), iota(2).map((n) => BigInt(as[n] >>> 0)));
 
-ins.exports.widen_high_i32x4_u();
+ins.exports.extend_high_i32x4_u();
 assertSame(get(mem64u, 0, 2), iota(2).map((n) => BigInt(as[n+2] >>> 0)));
 
 // Saturating rounding q-format multiplication.

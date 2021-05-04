@@ -29,13 +29,15 @@ impl<'a> InstanceSectionReader<'a> {
             &self.reader.buffer[self.reader.position..],
             self.original_position(),
         )?;
-        self.reader.skip_bytes(1)?;
-        self.reader.skip_var_32()?;
-        let count = self.reader.read_var_u32()?;
-        for _ in 0..count {
-            self.reader.skip_bytes(1)?;
-            self.reader.skip_var_32()?;
+
+        // FIXME(#188): should probably figure out a different API for
+        // wasmparser such that we don't have to read instances to skip them
+        // here.
+        let mut args = instance.args()?;
+        for _ in 0..args.get_count() {
+            args.read()?;
         }
+        self.reader = args.reader;
         Ok(instance)
     }
 }
@@ -72,6 +74,7 @@ impl<'a> IntoIterator for InstanceSectionReader<'a> {
     }
 }
 
+#[derive(Clone)]
 pub struct Instance<'a> {
     reader: BinaryReader<'a>,
     module: u32,
@@ -116,21 +119,30 @@ pub struct InstanceArgsReader<'a> {
     remaining: u32,
 }
 
+#[derive(Debug)]
+pub struct InstanceArg<'a> {
+    pub name: &'a str,
+    pub kind: ExternalKind,
+    pub index: u32,
+}
+
 impl<'a> InstanceArgsReader<'a> {
     pub fn original_position(&self) -> usize {
         self.reader.original_position()
     }
 
-    pub fn read(&mut self) -> Result<(ExternalKind, u32)> {
-        let kind = self.reader.read_external_kind()?;
-        let index = self.reader.read_var_u32()?;
+    pub fn read(&mut self) -> Result<InstanceArg<'a>> {
         self.remaining -= 1;
-        Ok((kind, index))
+        Ok(InstanceArg {
+            name: self.reader.read_string()?,
+            kind: self.reader.read_external_kind()?,
+            index: self.reader.read_var_u32()?,
+        })
     }
 }
 
 impl<'a> SectionReader for InstanceArgsReader<'a> {
-    type Item = (ExternalKind, u32);
+    type Item = InstanceArg<'a>;
 
     fn read(&mut self) -> Result<Self::Item> {
         InstanceArgsReader::read(self)
@@ -153,7 +165,7 @@ impl<'a> SectionWithLimitedItems for InstanceArgsReader<'a> {
 }
 
 impl<'a> IntoIterator for InstanceArgsReader<'a> {
-    type Item = Result<(ExternalKind, u32)>;
+    type Item = Result<InstanceArg<'a>>;
     type IntoIter = SectionIteratorLimited<InstanceArgsReader<'a>>;
 
     fn into_iter(self) -> Self::IntoIter {

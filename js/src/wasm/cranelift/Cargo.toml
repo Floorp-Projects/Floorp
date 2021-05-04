@@ -13,8 +13,8 @@ name = "baldrdash"
 # cranelift-wasm to pinned commits. If you want to update Cranelift in Gecko,
 # you should update the following $TOP_LEVEL/Cargo.toml file: look for the
 # revision (rev) hashes of both cranelift dependencies (codegen and wasm).
-cranelift-codegen = { version = "0.68.0", default-features = false }
-cranelift-wasm = { version = "0.68.0" }
+cranelift-codegen = { version = "0.73.0", default-features = false }
+cranelift-wasm = { version = "0.73.0" }
 log = { version = "0.4.6", default-features = false, features = ["release_max_level_info"] }
 env_logger = "0.8"
 smallvec = "1.0"
@@ -24,7 +24,7 @@ bindgen = {version = "0.56", default-features = false} # disable `logging` to re
 
 [features]
 default = ['cranelift-codegen/std']
-cranelift_x86 = ['cranelift-codegen/x64']
+cranelift_x86 = ['cranelift-codegen/x86']
 cranelift_arm32 = ['cranelift-codegen/arm32']
 cranelift_arm64 = ['cranelift-codegen/arm64']
 

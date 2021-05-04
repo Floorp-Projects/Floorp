@@ -50,7 +50,7 @@ pub use crate::ir::instructions::{
 pub use crate::ir::jumptable::JumpTableData;
 pub use crate::ir::layout::Layout;
 pub use crate::ir::libcall::{get_probestack_funcref, LibCall};
-pub use crate::ir::memflags::MemFlags;
+pub use crate::ir::memflags::{Endianness, MemFlags};
 pub use crate::ir::progpoint::{ExpandedProgramPoint, ProgramOrder, ProgramPoint};
 pub use crate::ir::sourceloc::SourceLoc;
 pub use crate::ir::stackslot::{StackLayoutInfo, StackSlotData, StackSlotKind, StackSlots};
@@ -58,6 +58,7 @@ pub use crate::ir::table::TableData;
 pub use crate::ir::trapcode::TrapCode;
 pub use crate::ir::types::Type;
 pub use crate::ir::valueloc::{ArgumentLoc, ValueLoc};
+pub use crate::value_label::LabelValueLoc;
 pub use cranelift_codegen_shared::condcodes;
 
 use crate::binemit;
@@ -90,6 +91,7 @@ entity_impl!(ValueLabel, "val");
 
 /// A label of a Value.
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "enable-serde", derive(Serialize, Deserialize))]
 pub struct ValueLabelStart {
     /// Source location when it is in effect
     pub from: SourceLoc,
@@ -100,6 +102,7 @@ pub struct ValueLabelStart {
 
 /// Value label assignements: label starts or value aliases.
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "enable-serde", derive(Serialize, Deserialize))]
 pub enum ValueLabelAssignments {
     /// Original value labels assigned at transform.
     Starts(alloc::vec::Vec<ValueLabelStart>),

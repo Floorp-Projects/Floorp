@@ -86,12 +86,12 @@ minidump_writer_linux = { git = "https://github.com/msirringhaus/minidump_writer
 xmldecl = { git = "https://github.com/hsivonen/xmldecl", rev="a74f7df5bf6cb11194fb74daa0c3cf42f326fd90" }
 
 [patch.crates-io.cranelift-codegen]
-git = "https://github.com/mozilla-spidermonkey/wasmtime"
-rev = "a25399760e9f12b679aa267dd2af7cfedc72bb71"
+git = "https://github.com/bytecodealliance/wasmtime"
+rev = "6b77786a6e758e91da9484a1c80b6fa5f88e1b3d"
 
 [patch.crates-io.cranelift-wasm]
-git = "https://github.com/mozilla-spidermonkey/wasmtime"
-rev = "a25399760e9f12b679aa267dd2af7cfedc72bb71"
+git = "https://github.com/bytecodealliance/wasmtime"
+rev = "6b77786a6e758e91da9484a1c80b6fa5f88e1b3d"
 
 # Patch autocfg to hide rustc output. Workaround for https://github.com/cuviper/autocfg/issues/30
 [patch.crates-io.autocfg]

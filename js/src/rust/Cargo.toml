@@ -21,4 +21,4 @@ jsrust_shared = { path = "./shared" }
 # Workaround for https://github.com/rust-lang/rust/issues/58393
 mozglue-static = { path = "../../../mozglue/static/rust" }
 wat = { version = "1.0.37" }
-wasmparser = { version = "0.48.2" }
+wasmparser = { version = "0.77.0" }

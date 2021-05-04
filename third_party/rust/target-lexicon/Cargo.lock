@@ -2,5 +2,4 @@
 # It is not intended for manual editing.
 [[package]]
 name = "target-lexicon"
-version = "0.11.0"
-
+version = "0.12.0"

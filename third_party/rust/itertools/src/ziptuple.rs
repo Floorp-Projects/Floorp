@@ -98,6 +98,30 @@ macro_rules! impl_zip_iter {
                 $B: ExactSizeIterator,
             )*
         { }
+
+        #[allow(non_snake_case)]
+        impl<$($B),*> DoubleEndedIterator for Zip<($($B,)*)> where
+            $(
+                $B: DoubleEndedIterator + ExactSizeIterator,
+            )*
+        {
+            #[inline]
+            fn next_back(&mut self) -> Option<Self::Item> {
+                let ($(ref mut $B,)*) = self.t;
+                let size = *[$( $B.len(), )*].iter().min().unwrap();
+
+                $(
+                    if $B.len() != size {
+                        for _ in 0..$B.len() - size { $B.next_back(); }
+                    }
+                )*
+
+                match ($($B.next_back(),)*) {
+                    ($(Some($B),)*) => Some(($($B,)*)),
+                    _ => None,
+                }
+            }
+        }
     );
 }
 
@@ -109,3 +133,7 @@ impl_zip_iter!(A, B, C, D, E);
 impl_zip_iter!(A, B, C, D, E, F);
 impl_zip_iter!(A, B, C, D, E, F, G);
 impl_zip_iter!(A, B, C, D, E, F, G, H);
+impl_zip_iter!(A, B, C, D, E, F, G, H, I);
+impl_zip_iter!(A, B, C, D, E, F, G, H, I, J);
+impl_zip_iter!(A, B, C, D, E, F, G, H, I, J, K);
+impl_zip_iter!(A, B, C, D, E, F, G, H, I, J, K, L);

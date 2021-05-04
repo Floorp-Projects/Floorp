@@ -1,8 +1,8 @@
 use super::size_hint;
 
 use std::cell::RefCell;
-use std::collections::VecDeque;
-use std::rc::Rc;
+use alloc::collections::VecDeque;
+use alloc::rc::Rc;
 
 /// Common buffer object for the two tee halves
 #[derive(Debug)]
@@ -39,7 +39,7 @@ impl<I> Iterator for Tee<I>
           I::Item: Clone
 {
     type Item = I::Item;
-    fn next(&mut self) -> Option<I::Item> {
+    fn next(&mut self) -> Option<Self::Item> {
         // .borrow_mut may fail here -- but only if the user has tied some kind of weird
         // knot where the iterator refers back to itself.
         let mut buffer = self.rcbuffer.borrow_mut();

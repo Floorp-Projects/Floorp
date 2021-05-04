@@ -37,13 +37,18 @@ pub enum DataKind<'a> {
 pub struct DataSectionReader<'a> {
     reader: BinaryReader<'a>,
     count: u32,
+    forbid_bulk_memory: bool,
 }
 
 impl<'a> DataSectionReader<'a> {
     pub fn new(data: &'a [u8], offset: usize) -> Result<DataSectionReader<'a>> {
         let mut reader = BinaryReader::new_with_offset(data, offset);
         let count = reader.read_var_u32()?;
-        Ok(DataSectionReader { reader, count })
+        Ok(DataSectionReader {
+            reader,
+            count,
+            forbid_bulk_memory: false,
+        })
     }
 
     pub fn original_position(&self) -> usize {
@@ -52,6 +57,10 @@ impl<'a> DataSectionReader<'a> {
 
     pub fn get_count(&self) -> u32 {
         self.count
+    }
+
+    pub fn forbid_bulk_memory(&mut self, forbid: bool) {
+        self.forbid_bulk_memory = forbid;
     }
 
     fn verify_data_end(&self, end: usize) -> Result<()> {
@@ -87,11 +96,12 @@ impl<'a> DataSectionReader<'a> {
         'a: 'b,
     {
         let flags = self.reader.read_var_u32()?;
-        let kind = if flags == 1 {
+        let kind = if !self.forbid_bulk_memory && flags == 1 {
             DataKind::Passive
         } else {
             let memory_index = match flags {
                 0 => 0,
+                _ if self.forbid_bulk_memory => flags,
                 2 => self.reader.read_var_u32()?,
                 _ => {
                     return Err(BinaryReaderError::new(

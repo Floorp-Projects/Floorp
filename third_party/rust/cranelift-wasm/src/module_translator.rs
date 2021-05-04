@@ -2,9 +2,10 @@
 //! to deal with each part of it.
 use crate::environ::{ModuleEnvironment, WasmResult};
 use crate::sections_translator::{
-    parse_data_section, parse_element_section, parse_export_section, parse_function_section,
-    parse_global_section, parse_import_section, parse_memory_section, parse_name_section,
-    parse_start_section, parse_table_section, parse_type_section,
+    parse_alias_section, parse_data_section, parse_element_section, parse_event_section,
+    parse_export_section, parse_function_section, parse_global_section, parse_import_section,
+    parse_instance_section, parse_memory_section, parse_name_section, parse_start_section,
+    parse_table_section, parse_type_section,
 };
 use crate::state::ModuleTranslationState;
 use cranelift_codegen::timing;
@@ -21,23 +22,16 @@ pub fn translate_module<'data>(
     let mut module_translation_state = ModuleTranslationState::new();
     let mut validator = Validator::new();
     validator.wasm_features(environ.wasm_features());
-    let mut stack = Vec::new();
-    let mut modules = 1;
-    let mut cur_module = 0;
 
     for payload in Parser::new(0).parse_all(data) {
         match payload? {
             Payload::Version { num, range } => {
                 validator.version(num, &range)?;
-                environ.module_start(cur_module);
+                environ.module_start();
             }
             Payload::End => {
                 validator.end()?;
-                environ.module_end(cur_module);
-                if let Some((other, other_index)) = stack.pop() {
-                    validator = other;
-                    cur_module = other_index;
-                }
+                environ.module_end();
             }
 
             Payload::TypeSection(types) => {
@@ -63,6 +57,11 @@ pub fn translate_module<'data>(
             Payload::MemorySection(memories) => {
                 validator.memory_section(&memories)?;
                 parse_memory_section(memories, environ)?;
+            }
+
+            Payload::EventSection(events) => {
+                validator.event_section(&events)?;
+                parse_event_section(events, environ)?;
             }
 
             Payload::GlobalSection(globals) => {
@@ -102,41 +101,37 @@ pub fn translate_module<'data>(
 
             Payload::DataCountSection { count, range } => {
                 validator.data_count_section(count, &range)?;
+
+                // NOTE: the count here is the total segment count, not the passive segment count
                 environ.reserve_passive_data(count)?;
             }
 
-            Payload::ModuleSection(s) => {
-                validator.module_section(&s)?;
-                environ.reserve_modules(s.get_count());
-            }
             Payload::InstanceSection(s) => {
                 validator.instance_section(&s)?;
-                unimplemented!("module linking not implemented yet")
+                parse_instance_section(s, environ)?;
             }
             Payload::AliasSection(s) => {
                 validator.alias_section(&s)?;
-                unimplemented!("module linking not implemented yet")
+                parse_alias_section(s, environ)?;
             }
-            Payload::ModuleCodeSectionStart {
+            Payload::ModuleSectionStart {
                 count,
                 range,
                 size: _,
             } => {
-                validator.module_code_section_start(count, &range)?;
+                validator.module_section_start(count, &range)?;
+                environ.reserve_modules(count);
             }
 
-            Payload::ModuleCodeSectionEntry { .. } => {
-                let subvalidator = validator.module_code_section_entry();
-                stack.push((validator, cur_module));
-                validator = subvalidator;
-                cur_module = modules;
-                modules += 1;
+            Payload::ModuleSectionEntry { .. } => {
+                validator.module_section_entry();
             }
 
             Payload::CustomSection {
                 name: "name",
                 data,
                 data_offset,
+                range: _,
             } => {
                 let result = NameSectionReader::new(data, data_offset)
                     .map_err(|e| e.into())

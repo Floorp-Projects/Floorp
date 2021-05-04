@@ -16,11 +16,11 @@
 use crate::limits::*;
 use crate::ResizableLimits64;
 use crate::WasmModuleResources;
-use crate::{Alias, AliasedInstance, ExternalKind, Import, ImportSectionEntryType};
-use crate::{BinaryReaderError, GlobalType, MemoryType, Range, Result, TableType, Type};
+use crate::{Alias, ExternalKind, Import, ImportSectionEntryType};
+use crate::{BinaryReaderError, EventType, GlobalType, MemoryType, Range, Result, TableType, Type};
 use crate::{DataKind, ElementItem, ElementKind, InitExpr, Instance, Operator};
-use crate::{Export, ExportType, FunctionBody, Parser, Payload};
 use crate::{FuncType, ResizableLimits, SectionReader, SectionWithLimitedItems};
+use crate::{FunctionBody, Parser, Payload};
 use std::collections::{HashMap, HashSet};
 use std::mem;
 use std::sync::Arc;
@@ -76,6 +76,28 @@ pub use func::FuncValidator;
 /// [core]: https://webassembly.github.io/spec/core/valid/index.html
 #[derive(Default)]
 pub struct Validator {
+    /// The current module that we're validating.
+    cur: Module,
+
+    /// With module linking this is the list of parent modules to this module,
+    /// sorted from oldest to most recent.
+    parents: Vec<Module>,
+
+    /// This is the global list of all types shared by this validator which all
+    /// modules will reference.
+    types: SnapshotList<TypeDef>,
+
+    /// Enabled WebAssembly feature flags, dictating what's valid and what
+    /// isn't.
+    features: WasmFeatures,
+
+    /// The current byte-level offset in the wasm binary. This is updated to
+    /// produce error messages in `create_error`.
+    offset: usize,
+}
+
+#[derive(Default)]
+struct Module {
     /// Internal state that is incrementally built-up for the module being
     /// validate. This houses type information for all wasm items, like
     /// functions. Note that this starts out as a solely owned `Arc<T>` so we can
@@ -83,16 +105,8 @@ pub struct Validator {
     /// mutated to we can clone it cheaply and hand it to sub-validators.
     state: arc::MaybeOwned<ModuleState>,
 
-    /// Enabled WebAssembly feature flags, dictating what's valid and what
-    /// isn't.
-    features: WasmFeatures,
-
     /// Where we are, order-wise, in the wasm binary.
     order: Order,
-
-    /// The current byte-level offset in the wasm binary. This is updated to
-    /// produce error messages in `create_error`.
-    offset: usize,
 
     /// The number of data segments we ended up finding in this module, or 0 if
     /// they either weren't present or none were found.
@@ -100,67 +114,68 @@ pub struct Validator {
 
     /// The number of functions we expect to be defined in the code section, or
     /// basically the length of the function section if it was found. The next
-    /// index is where we are, in the function index space, for the next entry
-    /// in the code section (used to figure out what type is next for the
-    /// function being validated.
+    /// index is where we are, in the code section index space, for the next
+    /// entry in the code section (used to figure out what type is next for the
+    /// function being validated).
     expected_code_bodies: Option<u32>,
     code_section_index: usize,
-
-    /// Similar to code bodies above, but for module bodies instead.
-    expected_modules: Option<u32>,
-    module_code_section_index: usize,
-
-    /// If this validator is for a nested module then this keeps track of the
-    /// type of the module that we're matching against. The `expected_type` is
-    /// an entry in our parent's type index space, and the two positional
-    /// indices keep track of where we are in matching against imports/exports.
-    ///
-    /// Note that the exact algorithm for how it's determine that a submodule
-    /// matches its declare type is a bit up for debate. For now we go for 1:1
-    /// "everything must be equal" matching. This is the subject of
-    /// WebAssembly/module-linking#7, though.
-    expected_type: Option<Def<u32>>,
-    expected_import_pos: usize,
-    expected_export_pos: usize,
 }
 
 #[derive(Default)]
 struct ModuleState {
-    depth: usize,
-    types: Vec<ValidatedType>,
-    tables: Vec<Def<TableType>>,
+    /// This is a snapshot of `validator.types` when it is created. This is not
+    /// initially filled in but once everything in a module except the code
+    /// section has been parsed then this will be filled in.
+    ///
+    /// Note that this `ModuleState` will be a separately-owned structure living
+    /// in each function's validator. This is done to allow parallel validation
+    /// of functions while the main module is possibly still being parsed.
+    all_types: Option<Arc<SnapshotList<TypeDef>>>,
+
+    types: Vec<usize>, // pointer into `validator.types`
+    tables: Vec<TableType>,
     memories: Vec<MemoryType>,
-    globals: Vec<Def<GlobalType>>,
+    globals: Vec<GlobalType>,
     element_types: Vec<Type>,
     data_count: Option<u32>,
-    func_type_indices: Vec<Def<u32>>,
-    module_type_indices: Vec<Def<u32>>,
-    instance_type_indices: Vec<Def<InstanceDef>>,
+    code_type_indexes: Vec<u32>, // pointer into `types` above
+    func_types: Vec<usize>,      // pointer into `validator.types`
+    events: Vec<usize>,          // pointer into `validator.types`
+    submodules: Vec<usize>,      // pointer into `validator.types`
+    instances: Vec<usize>,       // pointer into `validator.types`
     function_references: HashSet<u32>,
-    parent: Option<Arc<ModuleState>>,
+
+    // This is populated when we hit the export section
+    exports: NameSet,
+
+    // This is populated as we visit import sections, which might be
+    // incrementally in the face of a module-linking-using module.
+    imports: NameSet,
 }
 
 /// Flags for features that are enabled for validation.
 #[derive(Hash, Debug, Copy, Clone)]
 pub struct WasmFeatures {
-    /// The WebAssembly reference types proposal
+    /// The WebAssembly reference types proposal (enabled by default)
     pub reference_types: bool,
+    /// The WebAssembly multi-value proposal (enabled by default)
+    pub multi_value: bool,
+    /// The WebAssembly bulk memory operations proposal (enabled by default)
+    pub bulk_memory: bool,
     /// The WebAssembly module linking proposal
     pub module_linking: bool,
     /// The WebAssembly SIMD proposal
     pub simd: bool,
-    /// The WebAssembly multi-value proposal (enabled by default)
-    pub multi_value: bool,
     /// The WebAssembly threads proposal
     pub threads: bool,
     /// The WebAssembly tail-call proposal
     pub tail_call: bool,
-    /// The WebAssembly bulk memory operations proposal
-    pub bulk_memory: bool,
     /// Whether or not only deterministic instructions are allowed
     pub deterministic_only: bool,
     /// The WebAssembly multi memory proposal
     pub multi_memory: bool,
+    /// The WebAssembly exception handling proposal
+    pub exceptions: bool,
     /// The WebAssembly memory64 proposal
     pub memory64: bool,
 }
@@ -169,18 +184,19 @@ impl Default for WasmFeatures {
     fn default() -> WasmFeatures {
         WasmFeatures {
             // off-by-default features
-            reference_types: false,
             module_linking: false,
             simd: false,
             threads: false,
             tail_call: false,
-            bulk_memory: false,
             multi_memory: false,
+            exceptions: false,
             memory64: false,
             deterministic_only: cfg!(feature = "deterministic"),
 
             // on-by-default features
+            bulk_memory: true,
             multi_value: true,
+            reference_types: true,
         }
     }
 }
@@ -195,12 +211,12 @@ enum Order {
     Function,
     Table,
     Memory,
+    Event,
     Global,
     Export,
     Start,
     Element,
     DataCount,
-    ModuleCode,
     Code,
     Data,
 }
@@ -211,44 +227,56 @@ impl Default for Order {
     }
 }
 
-enum InstanceDef {
-    Imported { type_idx: u32 },
-    Instantiated { module_idx: u32 },
-}
-
-enum ValidatedType {
-    Def(TypeDef),
-    Alias(Def<u32>),
-}
-
 enum TypeDef {
     Func(FuncType),
     Module(ModuleType),
     Instance(InstanceType),
 }
 
+impl TypeDef {
+    fn unwrap_func(&self) -> &FuncType {
+        match self {
+            TypeDef::Func(f) => f,
+            _ => panic!("not a function type"),
+        }
+    }
+
+    fn unwrap_module(&self) -> &ModuleType {
+        match self {
+            TypeDef::Module(f) => f,
+            _ => panic!("not a module type"),
+        }
+    }
+
+    fn unwrap_instance(&self) -> &InstanceType {
+        match self {
+            TypeDef::Instance(f) => f,
+            _ => panic!("not an instance type"),
+        }
+    }
+}
+
 struct ModuleType {
-    imports: Vec<(String, Option<String>, ImportSectionEntryType)>,
-    exports: Vec<(String, ImportSectionEntryType)>,
+    type_size: u32,
+    imports: HashMap<String, EntityType>,
+    exports: HashMap<String, EntityType>,
 }
 
+#[derive(Default)]
 struct InstanceType {
-    exports: Vec<(String, ImportSectionEntryType)>,
+    type_size: u32,
+    exports: HashMap<String, EntityType>,
 }
 
-fn to_import(item: &(String, Option<String>, ImportSectionEntryType)) -> Import<'_> {
-    Import {
-        module: &item.0,
-        field: item.1.as_deref(),
-        ty: item.2,
-    }
-}
-
-fn to_export(item: &(String, ImportSectionEntryType)) -> ExportType<'_> {
-    ExportType {
-        name: &item.0,
-        ty: item.1,
-    }
+#[derive(Clone)]
+enum EntityType {
+    Global(GlobalType),
+    Memory(MemoryType),
+    Table(TableType),
+    Func(usize),     // pointer into `validator.types`
+    Module(usize),   // pointer into `validator.types`
+    Instance(usize), // pointer into `validator.types`
+    Event(usize),    // pointer into `validator.types`
 }
 
 /// Possible return values from [`Validator::payload`].
@@ -257,12 +285,9 @@ pub enum ValidPayload<'a> {
     Ok,
     /// The payload validated, but it started a nested module.
     ///
-    /// This result indicates that the current validator needs to be saved until
-    /// later. The returned parser and validator should be used instead.
-    Push(Parser, Validator),
-    /// The payload validated, and the current validator is finished. The last
-    /// validator that was in use should be popped off the stack to resume.
-    Pop,
+    /// This result indicates that the specified parser should be used instead
+    /// of the currently-used parser until this returned one ends.
+    Submodule(Parser),
     /// A function was found to be validate.
     Func(FuncValidator<ValidatorResources>, FunctionBody<'a>),
 }
@@ -290,19 +315,11 @@ impl Validator {
     /// validated. Parse and validation errors will be returned through
     /// `Err(_)`, and otherwise a successful validation means `Ok(())` is
     /// returned.
-    pub fn validate_all(self, bytes: &[u8]) -> Result<()> {
+    pub fn validate_all(&mut self, bytes: &[u8]) -> Result<()> {
         let mut functions_to_validate = Vec::new();
-        let mut stack = Vec::new();
-        let mut cur = self;
         for payload in Parser::new(0).parse_all(bytes) {
-            match cur.payload(&payload?)? {
-                ValidPayload::Ok => {}
-                ValidPayload::Pop => cur = stack.pop().unwrap(),
-                ValidPayload::Push(_parser, validator) => {
-                    stack.push(cur);
-                    cur = validator
-                }
-                ValidPayload::Func(validator, ops) => functions_to_validate.push((validator, ops)),
+            if let ValidPayload::Func(a, b) = self.payload(&payload?)? {
+                functions_to_validate.push((a, b));
             }
         }
 
@@ -333,10 +350,10 @@ impl Validator {
             ImportSection(s) => self.import_section(s)?,
             AliasSection(s) => self.alias_section(s)?,
             InstanceSection(s) => self.instance_section(s)?,
-            ModuleSection(s) => self.module_section(s)?,
             FunctionSection(s) => self.function_section(s)?,
             TableSection(s) => self.table_section(s)?,
             MemorySection(s) => self.memory_section(s)?,
+            EventSection(s) => self.event_section(s)?,
             GlobalSection(s) => self.global_section(s)?,
             ExportSection(s) => self.export_section(s)?,
             StartSection { func, range } => self.start_section(*func, range)?,
@@ -351,26 +368,19 @@ impl Validator {
                 let func_validator = self.code_section_entry()?;
                 return Ok(ValidPayload::Func(func_validator, body.clone()));
             }
-            ModuleCodeSectionStart {
+            ModuleSectionStart {
                 count,
                 range,
                 size: _,
-            } => self.module_code_section_start(*count, range)?,
+            } => self.module_section_start(*count, range)?,
             DataSection(s) => self.data_section(s)?,
-            End => {
-                self.end()?;
-                return Ok(if self.state.depth > 0 {
-                    ValidPayload::Pop
-                } else {
-                    ValidPayload::Ok
-                });
-            }
+            End => self.end()?,
 
             CustomSection { .. } => {} // no validation for custom sections
             UnknownSection { id, range, .. } => self.unknown_section(*id, range)?,
-            ModuleCodeSectionEntry { parser, range: _ } => {
-                let subvalidator = self.module_code_section_entry();
-                return Ok(ValidPayload::Push(parser.clone(), subvalidator));
+            ModuleSectionEntry { parser, .. } => {
+                self.module_section_entry();
+                return Ok(ValidPayload::Submodule(parser.clone()));
             }
         }
         Ok(ValidPayload::Ok)
@@ -383,10 +393,10 @@ impl Validator {
     /// Validates [`Payload::Version`](crate::Payload)
     pub fn version(&mut self, num: u32, range: &Range) -> Result<()> {
         self.offset = range.start;
-        if self.order != Order::Initial {
+        if self.cur.order != Order::Initial {
             return self.create_error("wasm version header out of order");
         }
-        self.order = Order::AfterHeader;
+        self.cur.order = Order::AfterHeader;
         if num != 1 {
             return self.create_error("bad wasm file version");
         }
@@ -394,7 +404,7 @@ impl Validator {
     }
 
     fn update_order(&mut self, order: Order) -> Result<()> {
-        let prev = mem::replace(&mut self.order, order);
+        let prev = mem::replace(&mut self.cur.order, order);
         // If the previous section came before this section, then that's always
         // valid.
         if prev < order {
@@ -402,7 +412,7 @@ impl Validator {
         }
         // ... otherwise if this is a repeated section then only the "module
         // linking header" is allows to have repeats
-        if prev == self.order && self.order == Order::ModuleLinkingHeader {
+        if prev == self.cur.order && self.cur.order == Order::ModuleLinkingHeader {
             return Ok(());
         }
         self.create_error("section out of order")
@@ -416,84 +426,90 @@ impl Validator {
         }
     }
 
-    fn get_type<'me>(&'me self, idx: Def<u32>) -> Result<Def<&'me TypeDef>> {
-        match self.state.get_type(idx) {
-            Some(t) => Ok(t),
-            None => self.create_error("unknown type: type index out of bounds"),
+    fn get_type(&self, idx: u32) -> Result<&TypeDef> {
+        match self.cur.state.types.get(idx as usize) {
+            Some(t) => Ok(&self.types[*t]),
+            None => self.create_error(format!("unknown type {}: type index out of bounds", idx)),
         }
     }
 
-    fn get_table<'me>(&'me self, idx: Def<u32>) -> Result<&'me Def<TableType>> {
-        match self.state.get_table(idx) {
+    fn get_table(&self, idx: u32) -> Result<&TableType> {
+        match self.cur.state.tables.get(idx as usize) {
             Some(t) => Ok(t),
-            None => self.create_error("unknown table: table index out of bounds"),
+            None => self.create_error(format!("unknown table {}: table index out of bounds", idx)),
         }
     }
 
-    fn get_memory<'me>(&'me self, idx: Def<u32>) -> Result<&'me MemoryType> {
-        match self.state.get_memory(idx) {
-            Some(t) => Ok(t),
-            None => self.create_error("unknown memory: memory index out of bounds"),
-        }
-    }
-
-    fn get_global<'me>(&'me self, idx: Def<u32>) -> Result<&'me Def<GlobalType>> {
-        match self.state.get_global(idx) {
-            Some(t) => Ok(t),
-            None => self.create_error("unknown global: global index out of bounds"),
-        }
-    }
-
-    fn get_func_type_index<'me>(&'me self, idx: Def<u32>) -> Result<Def<u32>> {
-        match self.state.get_func_type_index(idx) {
+    fn get_memory(&self, idx: u32) -> Result<&MemoryType> {
+        match self.cur.state.memories.get(idx as usize) {
             Some(t) => Ok(t),
             None => self.create_error(format!(
-                "unknown function {}: func index out of bounds",
-                idx.item
+                "unknown memory {}: memory index out of bounds",
+                idx,
             )),
         }
     }
 
-    fn get_module_type_index<'me>(&'me self, idx: Def<u32>) -> Result<Def<u32>> {
-        match self.state.get_module_type_index(idx) {
+    fn get_global(&self, idx: u32) -> Result<&GlobalType> {
+        match self.cur.state.globals.get(idx as usize) {
             Some(t) => Ok(t),
+            None => self.create_error(format!(
+                "unknown global {}: global index out of bounds",
+                idx,
+            )),
+        }
+    }
+
+    fn get_func_type(&self, func_idx: u32) -> Result<&FuncType> {
+        match self.cur.state.func_types.get(func_idx as usize) {
+            Some(t) => Ok(self.types[*t].unwrap_func()),
+            None => self.create_error(format!(
+                "unknown function {}: func index out of bounds",
+                func_idx,
+            )),
+        }
+    }
+
+    fn get_module_type(&self, module_idx: u32) -> Result<&ModuleType> {
+        match self.cur.state.submodules.get(module_idx as usize) {
+            Some(t) => Ok(self.types[*t].unwrap_module()),
             None => self.create_error("unknown module: module index out of bounds"),
         }
     }
 
-    fn get_instance_def<'me>(&'me self, idx: Def<u32>) -> Result<&'me Def<InstanceDef>> {
-        match self.state.get_instance_def(idx) {
-            Some(t) => Ok(t),
+    fn get_instance_type(&self, instance_idx: u32) -> Result<&InstanceType> {
+        match self.cur.state.instances.get(instance_idx as usize) {
+            Some(t) => Ok(self.types[*t].unwrap_instance()),
             None => self.create_error("unknown instance: instance index out of bounds"),
         }
     }
 
-    fn func_type_at<'me>(&'me self, type_index: Def<u32>) -> Result<Def<&'me FuncType>> {
+    fn func_type_at(&self, type_index: u32) -> Result<&FuncType> {
         let def = self.get_type(type_index)?;
-        match &def.item {
-            TypeDef::Func(item) => Ok(def.with(item)),
+        match def {
+            TypeDef::Func(item) => Ok(item),
             _ => self.create_error("type index is not a function"),
         }
     }
 
-    fn module_type_at<'me>(&'me self, type_index: Def<u32>) -> Result<Def<&'me ModuleType>> {
+    fn module_type_at(&self, type_index: u32) -> Result<&ModuleType> {
         if !self.features.module_linking {
             return self.create_error("module linking proposal not enabled");
         }
         let ty = self.get_type(type_index)?;
-        match &ty.item {
-            TypeDef::Module(item) => Ok(ty.with(item)),
+        match ty {
+            TypeDef::Module(item) => Ok(item),
             _ => self.create_error("type index is not a module"),
         }
     }
 
-    fn instance_type_at<'me>(&'me self, type_index: Def<u32>) -> Result<Def<&'me InstanceType>> {
+    fn instance_type_at(&self, type_index: u32) -> Result<&InstanceType> {
         if !self.features.module_linking {
             return self.create_error("module linking proposal not enabled");
         }
-        let def = self.get_type(type_index)?;
-        match &def.item {
-            TypeDef::Instance(item) => Ok(def.with(item)),
+        let ty = self.get_type(type_index)?;
+        match ty {
+            TypeDef::Instance(item) => Ok(item),
             _ => self.create_error("type index is not an instance"),
         }
     }
@@ -540,7 +556,7 @@ impl Validator {
     pub fn type_section(&mut self, section: &crate::TypeSectionReader<'_>) -> Result<()> {
         let order = self.header_order(Order::Type);
         self.check_max(
-            self.state.types.len(),
+            self.cur.state.types.len(),
             section.get_count(),
             MAX_WASM_TYPES,
             "types",
@@ -564,49 +580,51 @@ impl Validator {
                 if !self.features.module_linking {
                     return self.create_error("module linking proposal not enabled");
                 }
-                let imports = t
-                    .imports
-                    .iter()
-                    .map(|i| {
-                        self.import_entry_type(&i.ty)?;
-                        Ok((i.module.to_string(), i.field.map(|i| i.to_string()), i.ty))
-                    })
-                    .collect::<Result<_>>()?;
-                let mut names = HashSet::new();
-                let exports = t
-                    .exports
-                    .iter()
-                    .map(|e| {
-                        if !names.insert(e.name) {
-                            return self.create_error("duplicate export name");
-                        }
-                        self.import_entry_type(&e.ty)?;
-                        Ok((e.name.to_string(), e.ty))
-                    })
-                    .collect::<Result<_>>()?;
-                TypeDef::Module(ModuleType { imports, exports })
+                let mut imports = NameSet::default();
+                for i in t.imports.iter() {
+                    let ty = self.import_entry_type(&i.ty)?;
+                    imports.push(
+                        self.offset,
+                        i.module,
+                        i.field,
+                        ty,
+                        &mut self.types,
+                        "import",
+                    )?;
+                }
+
+                let mut exports = NameSet::default();
+                for e in t.exports.iter() {
+                    let ty = self.import_entry_type(&e.ty)?;
+                    exports.push(self.offset, e.name, None, ty, &mut self.types, "export")?;
+                }
+                TypeDef::Module(ModuleType {
+                    type_size: combine_type_sizes(
+                        self.offset,
+                        imports.type_size,
+                        exports.type_size,
+                    )?,
+                    imports: imports.set,
+                    exports: exports.set,
+                })
             }
             crate::TypeDef::Instance(t) => {
                 if !self.features.module_linking {
                     return self.create_error("module linking proposal not enabled");
                 }
-                let mut names = HashSet::new();
-                let exports = t
-                    .exports
-                    .iter()
-                    .map(|e| {
-                        if !names.insert(e.name) {
-                            return self.create_error("duplicate export name");
-                        }
-                        self.import_entry_type(&e.ty)?;
-                        Ok((e.name.to_string(), e.ty))
-                    })
-                    .collect::<Result<_>>()?;
-                TypeDef::Instance(InstanceType { exports })
+                let mut exports = NameSet::default();
+                for e in t.exports.iter() {
+                    let ty = self.import_entry_type(&e.ty)?;
+                    exports.push(self.offset, e.name, None, ty, &mut self.types, "export")?;
+                }
+                TypeDef::Instance(InstanceType {
+                    type_size: exports.type_size,
+                    exports: exports.set,
+                })
             }
         };
-        let def = ValidatedType::Def(def);
-        self.state.assert_mut().types.push(def);
+        self.cur.state.assert_mut().types.push(self.types.len());
+        self.types.push(def);
         Ok(())
     }
 
@@ -617,22 +635,41 @@ impl Validator {
         }
     }
 
-    fn import_entry_type(&self, import_type: &ImportSectionEntryType) -> Result<()> {
+    fn import_entry_type(&self, import_type: &ImportSectionEntryType) -> Result<EntityType> {
         match import_type {
             ImportSectionEntryType::Function(type_index) => {
-                self.func_type_at(self.state.def(*type_index))?;
-                Ok(())
+                self.func_type_at(*type_index)?;
+                Ok(EntityType::Func(self.cur.state.types[*type_index as usize]))
             }
-            ImportSectionEntryType::Table(t) => self.table_type(t),
-            ImportSectionEntryType::Memory(t) => self.memory_type(t),
-            ImportSectionEntryType::Global(t) => self.global_type(t),
+            ImportSectionEntryType::Table(t) => {
+                self.table_type(t)?;
+                Ok(EntityType::Table(t.clone()))
+            }
+            ImportSectionEntryType::Memory(t) => {
+                self.memory_type(t)?;
+                Ok(EntityType::Memory(t.clone()))
+            }
+            ImportSectionEntryType::Event(t) => {
+                self.event_type(t)?;
+                Ok(EntityType::Event(
+                    self.cur.state.types[t.type_index as usize],
+                ))
+            }
+            ImportSectionEntryType::Global(t) => {
+                self.global_type(t)?;
+                Ok(EntityType::Global(t.clone()))
+            }
             ImportSectionEntryType::Module(type_index) => {
-                self.module_type_at(self.state.def(*type_index))?;
-                Ok(())
+                self.module_type_at(*type_index)?;
+                Ok(EntityType::Module(
+                    self.cur.state.types[*type_index as usize],
+                ))
             }
             ImportSectionEntryType::Instance(type_index) => {
-                self.instance_type_at(self.state.def(*type_index))?;
-                Ok(())
+                self.instance_type_at(*type_index)?;
+                Ok(EntityType::Instance(
+                    self.cur.state.types[*type_index as usize],
+                ))
             }
         }
     }
@@ -703,6 +740,14 @@ impl Validator {
         Ok(())
     }
 
+    fn event_type(&self, ty: &EventType) -> Result<()> {
+        let ty = self.func_type_at(ty.type_index)?;
+        if ty.returns.len() > 0 {
+            return self.create_error("invalid result arity for exception type");
+        }
+        Ok(())
+    }
+
     fn global_type(&self, ty: &GlobalType) -> Result<()> {
         self.value_type(ty.content_type)
     }
@@ -728,72 +773,111 @@ impl Validator {
     /// Validates [`Payload::ImportSection`](crate::Payload)
     pub fn import_section(&mut self, section: &crate::ImportSectionReader<'_>) -> Result<()> {
         let order = self.header_order(Order::Import);
-        self.section(order, section, |me, item| me.import(item))
+        self.section(order, section, |me, item| me.import(item))?;
+
+        // Clear the list of implicit imports after the import section is
+        // finished since later import sections cannot append further to the
+        // pseudo-instances defined in this import section.
+        self.cur.state.assert_mut().imports.implicit.drain();
+        Ok(())
     }
 
     fn import(&mut self, entry: Import<'_>) -> Result<()> {
         if !self.features.module_linking && entry.field.is_none() {
             return self.create_error("module linking proposal is not enabled");
         }
-        self.import_entry_type(&entry.ty)?;
+        let ty = self.import_entry_type(&entry.ty)?;
+        let state = self.cur.state.assert_mut();
+
+        // Build up a map of what this module imports, for when this module is a
+        // nested module it'll be needed to infer the type signature of the
+        // nested module. Note that this does not happen unless the module
+        // linking proposal is enabled.
+        //
+        // This is a breaking change! This will disallow multiple imports that
+        // import from the same item twice. We can't turn module linking
+        // on-by-default as-is without some sort of recourse for consumers that
+        // want to backwards-compatibly parse older modules still. Unclear how
+        // to do this.
+        if self.features.module_linking {
+            let implicit_instance_type = state.imports.push(
+                self.offset,
+                entry.module,
+                entry.field,
+                ty,
+                &mut self.types,
+                "import",
+            )?;
+            if let Some(idx) = implicit_instance_type {
+                state.instances.push(idx);
+            }
+        }
         let (len, max, desc) = match entry.ty {
             ImportSectionEntryType::Function(type_index) => {
-                let def = self.state.def(type_index);
-                let state = self.state.assert_mut();
-                state.func_type_indices.push(def);
-                (state.func_type_indices.len(), MAX_WASM_FUNCTIONS, "funcs")
+                let ty = state.types[type_index as usize];
+                state.func_types.push(ty);
+                (state.func_types.len(), MAX_WASM_FUNCTIONS, "funcs")
             }
             ImportSectionEntryType::Table(ty) => {
-                let def = self.state.def(ty);
-                let state = self.state.assert_mut();
-                state.tables.push(def);
+                state.tables.push(ty);
                 (state.tables.len(), self.max_tables(), "tables")
             }
             ImportSectionEntryType::Memory(ty) => {
-                let state = self.state.assert_mut();
                 state.memories.push(ty);
                 (state.memories.len(), self.max_memories(), "memories")
             }
+            ImportSectionEntryType::Event(ty) => {
+                let ty = state.types[ty.type_index as usize];
+                state.events.push(ty);
+                (state.events.len(), MAX_WASM_EVENTS, "events")
+            }
             ImportSectionEntryType::Global(ty) => {
-                let def = self.state.def(ty);
-                let state = self.state.assert_mut();
-                state.globals.push(def);
+                state.globals.push(ty);
                 (state.globals.len(), MAX_WASM_GLOBALS, "globals")
             }
             ImportSectionEntryType::Instance(type_idx) => {
-                let def = self.state.def(InstanceDef::Imported { type_idx });
-                let state = self.state.assert_mut();
-                state.instance_type_indices.push(def);
-                (
-                    state.instance_type_indices.len(),
-                    MAX_WASM_INSTANCES,
-                    "instances",
-                )
+                let index = state.types[type_idx as usize];
+                state.instances.push(index);
+                (state.instances.len(), MAX_WASM_INSTANCES, "instances")
             }
             ImportSectionEntryType::Module(type_index) => {
-                let def = self.state.def(type_index);
-                let state = self.state.assert_mut();
-                state.module_type_indices.push(def);
-                (state.module_type_indices.len(), MAX_WASM_MODULES, "modules")
+                let index = state.types[type_index as usize];
+                state.submodules.push(index);
+                (state.submodules.len(), MAX_WASM_MODULES, "modules")
             }
         };
         self.check_max(len, 0, max, desc)?;
-
-        if let Some(ty) = self.expected_type {
-            let idx = self.expected_import_pos;
-            self.expected_import_pos += 1;
-            let module_ty = self.module_type_at(ty)?;
-            let equal = match module_ty.item.imports.get(idx) {
-                Some(import) => {
-                    self.imports_equal(self.state.def(entry), module_ty.with(to_import(import)))
-                }
-                None => false,
-            };
-            if !equal {
-                return self.create_error("inline module type does not match declared type");
-            }
-        }
         Ok(())
+    }
+
+    /// Validates [`Payload::ModuleSectionStart`](crate::Payload)
+    pub fn module_section_start(&mut self, count: u32, range: &Range) -> Result<()> {
+        drop(count);
+        if !self.features.module_linking {
+            return self.create_error("module linking proposal not enabled");
+        }
+        self.offset = range.start;
+        self.update_order(Order::ModuleLinkingHeader)?;
+        self.check_max(
+            self.cur.state.submodules.len(),
+            count,
+            MAX_WASM_MODULES,
+            "modules",
+        )?;
+        Ok(())
+    }
+
+    /// Validates [`Payload::ModuleSectionEntry`](crate::Payload).
+    ///
+    /// Note that this does not actually perform any validation itself. The
+    /// `ModuleSectionEntry` payload is associated with a sub-parser for the
+    /// sub-module, and it's expected that the events from the [`Parser`]
+    /// are fed into this validator.
+    pub fn module_section_entry(&mut self) {
+        // Start a new module...
+        let prev = mem::replace(&mut self.cur, Module::default());
+        // ... and record the current module as its parent.
+        self.parents.push(prev);
     }
 
     /// Validates [`Payload::AliasSection`](crate::Payload)
@@ -805,101 +889,93 @@ impl Validator {
     }
 
     fn alias(&mut self, alias: Alias) -> Result<()> {
-        match alias.instance {
-            AliasedInstance::Child(instance_idx) => {
-                let ty = self.get_instance_def(self.state.def(instance_idx))?;
-                let exports = match ty.item {
-                    InstanceDef::Imported { type_idx } => {
-                        let ty = self.instance_type_at(ty.with(type_idx))?;
-                        ty.map(|t| &t.exports)
-                    }
-                    InstanceDef::Instantiated { module_idx } => {
-                        let ty = self.get_module_type_index(ty.with(module_idx))?;
-                        let ty = self.module_type_at(ty)?;
-                        ty.map(|t| &t.exports)
-                    }
-                };
-                let export = match exports.item.get(alias.index as usize) {
+        match alias {
+            Alias::InstanceExport {
+                instance,
+                kind,
+                export,
+            } => {
+                let ty = self.get_instance_type(instance)?;
+                let export = match ty.exports.get(export) {
                     Some(e) => e,
                     None => {
-                        return self.create_error("aliased export index out of bounds");
+                        return self.create_error(format!(
+                            "aliased name `{}` does not exist in instance",
+                            export
+                        ));
                     }
                 };
-                match (export.1, alias.kind) {
-                    (ImportSectionEntryType::Function(ty), ExternalKind::Function) => {
-                        let def = exports.with(ty);
-                        self.state.assert_mut().func_type_indices.push(def);
+                match (export, kind) {
+                    (EntityType::Func(ty), ExternalKind::Function) => {
+                        let ty = *ty;
+                        self.cur.state.assert_mut().func_types.push(ty);
                     }
-                    (ImportSectionEntryType::Table(ty), ExternalKind::Table) => {
-                        let def = exports.with(ty);
-                        self.state.assert_mut().tables.push(def);
+                    (EntityType::Table(ty), ExternalKind::Table) => {
+                        let ty = ty.clone();
+                        self.cur.state.assert_mut().tables.push(ty);
                     }
-                    (ImportSectionEntryType::Memory(ty), ExternalKind::Memory) => {
-                        self.state.assert_mut().memories.push(ty);
+                    (EntityType::Memory(ty), ExternalKind::Memory) => {
+                        let ty = ty.clone();
+                        self.cur.state.assert_mut().memories.push(ty);
                     }
-                    (ImportSectionEntryType::Global(ty), ExternalKind::Global) => {
-                        let def = exports.with(ty);
-                        self.state.assert_mut().globals.push(def);
+                    (EntityType::Event(ty), ExternalKind::Event) => {
+                        let ty = *ty;
+                        self.cur.state.assert_mut().events.push(ty);
                     }
-                    (ImportSectionEntryType::Instance(ty), ExternalKind::Instance) => {
-                        let def = exports.with(InstanceDef::Imported { type_idx: ty });
-                        self.state.assert_mut().instance_type_indices.push(def);
+                    (EntityType::Global(ty), ExternalKind::Global) => {
+                        let ty = ty.clone();
+                        self.cur.state.assert_mut().globals.push(ty);
                     }
-                    (ImportSectionEntryType::Module(ty), ExternalKind::Module) => {
-                        let def = exports.with(ty);
-                        self.state.assert_mut().module_type_indices.push(def);
+                    (EntityType::Instance(ty), ExternalKind::Instance) => {
+                        let ty = *ty;
+                        self.cur.state.assert_mut().instances.push(ty);
+                    }
+                    (EntityType::Module(ty), ExternalKind::Module) => {
+                        let ty = *ty;
+                        self.cur.state.assert_mut().submodules.push(ty);
                     }
                     _ => return self.create_error("alias kind mismatch with export kind"),
                 }
             }
-            AliasedInstance::Parent => {
-                let idx = match self.state.depth.checked_sub(1) {
-                    None => return self.create_error("no parent module to alias from"),
-                    Some(depth) => Def {
-                        depth,
-                        item: alias.index,
-                    },
+            Alias::OuterType {
+                relative_depth,
+                index,
+            } => {
+                let i = self
+                    .parents
+                    .len()
+                    .checked_sub(relative_depth as usize)
+                    .and_then(|i| i.checked_sub(1))
+                    .ok_or_else(|| {
+                        BinaryReaderError::new("relative depth too large", self.offset)
+                    })?;
+                let ty = match self.parents[i].state.types.get(index as usize) {
+                    Some(m) => *m,
+                    None => return self.create_error("alias to type not defined in parent yet"),
                 };
-                match alias.kind {
-                    ExternalKind::Module => {
-                        let ty = self.get_module_type_index(idx)?;
-                        self.state.assert_mut().module_type_indices.push(ty);
-                    }
-                    ExternalKind::Type => {
-                        // make sure this type actually exists, then push it as
-                        // ourselve aliasing that type.
-                        self.get_type(idx)?;
-                        self.state
-                            .assert_mut()
-                            .types
-                            .push(ValidatedType::Alias(idx));
-                    }
-                    _ => return self.create_error("only parent types/modules can be aliased"),
-                }
+                self.cur.state.assert_mut().types.push(ty);
+            }
+            Alias::OuterModule {
+                relative_depth,
+                index,
+            } => {
+                let i = self
+                    .parents
+                    .len()
+                    .checked_sub(relative_depth as usize)
+                    .and_then(|i| i.checked_sub(1))
+                    .ok_or_else(|| {
+                        BinaryReaderError::new("relative depth too large", self.offset)
+                    })?;
+                let module = match self.parents[i].state.submodules.get(index as usize) {
+                    Some(m) => *m,
+                    None => return self.create_error("alias to module not defined in parent yet"),
+                };
+                self.cur.state.assert_mut().submodules.push(module);
             }
         }
 
         Ok(())
-    }
-
-    /// Validates [`Payload::ModuleSection`](crate::Payload)
-    pub fn module_section(&mut self, section: &crate::ModuleSectionReader<'_>) -> Result<()> {
-        if !self.features.module_linking {
-            return self.create_error("module linking proposal not enabled");
-        }
-        self.check_max(
-            self.state.module_type_indices.len(),
-            section.get_count(),
-            MAX_WASM_MODULES,
-            "modules",
-        )?;
-        self.expected_modules = Some(section.get_count() + self.expected_modules.unwrap_or(0));
-        self.section(Order::ModuleLinkingHeader, section, |me, type_index| {
-            let type_index = me.state.def(type_index);
-            me.module_type_at(type_index)?;
-            me.state.assert_mut().module_type_indices.push(type_index);
-            Ok(())
-        })
     }
 
     /// Validates [`Payload::InstanceSection`](crate::Payload)
@@ -908,7 +984,7 @@ impl Validator {
             return self.create_error("module linking proposal not enabled");
         }
         self.check_max(
-            self.state.instance_type_indices.len(),
+            self.cur.state.instances.len(),
             section.get_count(),
             MAX_WASM_INSTANCES,
             "instances",
@@ -920,216 +996,166 @@ impl Validator {
         // Fetch the type of the instantiated module so we can typecheck all of
         // the import items.
         let module_idx = instance.module();
-        let module_ty = self.get_module_type_index(self.state.def(module_idx))?;
-        let ty = self.module_type_at(module_ty)?;
 
-        // Make sure the right number of imports are provided
-        let mut args = instance.args()?;
-        if args.get_count() as usize != ty.item.imports.len() {
-            return self.create_error("wrong number of imports provided");
+        // Build up the set of what we're providing as imports.
+        let mut set = NameSet::default();
+        for arg in instance.args()? {
+            let arg = arg?;
+            let ty = self.check_external_kind("instance argument", arg.kind, arg.index)?;
+            set.push(self.offset, arg.name, None, ty, &mut self.types, "arg")?;
         }
 
-        // Now pairwise match each import against the expected type, making sure
-        // that the provided type is a subtype of the expected type.
-        for import_ty in ty.item.imports.iter() {
-            let (kind, index) = args.read()?;
-            let index = self.state.def(index);
-            let actual = match kind {
-                ExternalKind::Function => self
-                    .get_func_type_index(index)?
-                    .map(ImportSectionEntryType::Function),
-                ExternalKind::Table => self.get_table(index)?.map(ImportSectionEntryType::Table),
-                ExternalKind::Memory => self
-                    .state
-                    .def(ImportSectionEntryType::Memory(*self.get_memory(index)?)),
-                ExternalKind::Global => self.get_global(index)?.map(ImportSectionEntryType::Global),
-                ExternalKind::Module => self
-                    .get_module_type_index(index)?
-                    .map(ImportSectionEntryType::Module),
-                ExternalKind::Instance => {
-                    let def = self.get_instance_def(index)?;
-                    match def.item {
-                        InstanceDef::Imported { type_idx } => {
-                            def.with(ImportSectionEntryType::Instance(type_idx))
-                        }
-                        InstanceDef::Instantiated { module_idx } => {
-                            let expected = match import_ty.2 {
-                                ImportSectionEntryType::Instance(idx) => ty.with(idx),
-                                _ => {
-                                    return self
-                                        .create_error("wrong kind of item used for instantiate")
-                                }
-                            };
-                            let expected = self.instance_type_at(expected)?;
-                            let module_idx = def.with(module_idx);
-                            let actual = self.get_module_type_index(module_idx)?;
-                            let actual = self.module_type_at(actual)?;
-                            self.check_export_sets_match(
-                                expected.map(|m| &*m.exports),
-                                actual.map(|m| &*m.exports),
-                            )?;
-                            continue;
-                        }
-                    }
-                }
-                ExternalKind::Type => return self.create_error("cannot export types"),
-            };
-            let item = actual.item;
-            self.check_imports_match(ty.with(&import_ty.2), actual.map(|_| &item))?;
-        }
-        args.ensure_end()?;
+        // Check our provided `set` to ensure it's a subtype of the expected set
+        // of imports from the module's import types.
+        let ty = self.get_module_type(module_idx)?;
+        self.check_type_sets_match(&set.set, &ty.imports, "import")?;
 
-        let def = self.state.def(InstanceDef::Instantiated { module_idx });
-        self.state.assert_mut().instance_type_indices.push(def);
+        // Create a synthetic type declaration for this instance's type and
+        // record its type in the global type list. We might not have another
+        // `TypeDef::Instance` to point to if the module was locally declared.
+        //
+        // Note that the predicted size of this type is inflated due to
+        // accounting for the imports on the original module, but that should be
+        // ok for now since it's only used to limit the size of larger types.
+        let instance_ty = InstanceType {
+            type_size: ty.type_size,
+            exports: ty.exports.clone(),
+        };
+        self.cur.state.assert_mut().instances.push(self.types.len());
+        self.types.push(TypeDef::Instance(instance_ty));
         Ok(())
     }
 
     // Note that this function is basically implementing
     // https://webassembly.github.io/spec/core/exec/modules.html#import-matching
-    fn check_imports_match(
-        &self,
-        expected: Def<&ImportSectionEntryType>,
-        actual: Def<&ImportSectionEntryType>,
-    ) -> Result<()> {
+    fn check_subtypes(&self, a: &EntityType, b: &EntityType) -> Result<()> {
         macro_rules! limits_match {
-            ($expected:expr, $actual:expr) => {{
-                let expected = $expected;
-                let actual = $actual;
-                actual.initial >= expected.initial
-                    && match expected.maximum {
-                        Some(expected_max) => match actual.maximum {
-                            Some(actual_max) => actual_max <= expected_max,
+            ($a:expr, $b:expr) => {{
+                let a = $a;
+                let b = $b;
+                a.initial >= b.initial
+                    && match b.maximum {
+                        Some(b_max) => match a.maximum {
+                            Some(a_max) => a_max <= b_max,
                             None => false,
                         },
                         None => true,
                     }
             }};
         }
-        match (expected.item, actual.item) {
-            (
-                ImportSectionEntryType::Function(expected_idx),
-                ImportSectionEntryType::Function(actual_idx),
-            ) => {
-                let expected = self.func_type_at(expected.map(|_| *expected_idx))?;
-                let actual = self.func_type_at(actual.map(|_| *actual_idx))?;
-                if actual.item == expected.item {
-                    return Ok(());
+        match a {
+            EntityType::Global(a) => {
+                let b = match b {
+                    EntityType::Global(b) => b,
+                    _ => return self.create_error("item type mismatch"),
+                };
+                if a == b {
+                    Ok(())
+                } else {
+                    self.create_error("global type mismatch")
                 }
-                self.create_error("function provided for instantiation has wrong type")
             }
-            (ImportSectionEntryType::Table(expected), ImportSectionEntryType::Table(actual)) => {
-                if expected.element_type == actual.element_type
-                    && limits_match!(&expected.limits, &actual.limits)
-                {
-                    return Ok(());
+            EntityType::Table(a) => {
+                let b = match b {
+                    EntityType::Table(b) => b,
+                    _ => return self.create_error("item type mismatch"),
+                };
+                if a.element_type == b.element_type && limits_match!(&a.limits, &b.limits) {
+                    Ok(())
+                } else {
+                    self.create_error("table type mismatch")
                 }
-                self.create_error("table provided for instantiation has wrong type")
             }
-            (ImportSectionEntryType::Memory(expected), ImportSectionEntryType::Memory(actual)) => {
-                match (expected, actual) {
-                    (
-                        MemoryType::M32 {
-                            limits: a,
-                            shared: ash,
-                        },
-                        MemoryType::M32 {
-                            limits: b,
-                            shared: bsh,
-                        },
-                    ) => {
-                        if limits_match!(a, b) && ash == bsh {
-                            return Ok(());
-                        }
-                    }
-                    (
-                        MemoryType::M64 {
-                            limits: a,
-                            shared: ash,
-                        },
-                        MemoryType::M64 {
-                            limits: b,
-                            shared: bsh,
-                        },
-                    ) => {
-                        if limits_match!(a, b) && ash == bsh {
-                            return Ok(());
-                        }
-                    }
-                    _ => {}
+            EntityType::Func(a) => {
+                let b = match b {
+                    EntityType::Func(b) => b,
+                    _ => return self.create_error("item type mismatch"),
+                };
+                if self.types[*a].unwrap_func() == self.types[*b].unwrap_func() {
+                    Ok(())
+                } else {
+                    self.create_error("func type mismatch")
                 }
-                self.create_error("memory provided for instantiation has wrong type")
             }
-            (ImportSectionEntryType::Global(expected), ImportSectionEntryType::Global(actual)) => {
-                if expected == actual {
-                    return Ok(());
+            EntityType::Event(a) => {
+                let b = match b {
+                    EntityType::Event(b) => b,
+                    _ => return self.create_error("item type mismatch"),
+                };
+                if self.types[*a].unwrap_func() == self.types[*b].unwrap_func() {
+                    Ok(())
+                } else {
+                    self.create_error("event type mismatch")
                 }
-                self.create_error("global provided for instantiation has wrong type")
             }
-            (
-                ImportSectionEntryType::Instance(expected_idx),
-                ImportSectionEntryType::Instance(actual_idx),
-            ) => {
-                let expected = self.instance_type_at(expected.map(|_| *expected_idx))?;
-                let actual = self.instance_type_at(actual.map(|_| *actual_idx))?;
-                self.check_export_sets_match(
-                    expected.map(|i| &*i.exports),
-                    actual.map(|i| &*i.exports),
-                )?;
+            EntityType::Memory(MemoryType::M32 { limits, shared }) => {
+                let (b_limits, b_shared) = match b {
+                    EntityType::Memory(MemoryType::M32 { limits, shared }) => (limits, shared),
+                    _ => return self.create_error("item type mismatch"),
+                };
+                if limits_match!(limits, b_limits) && shared == b_shared {
+                    Ok(())
+                } else {
+                    self.create_error("memory type mismatch")
+                }
+            }
+            EntityType::Memory(MemoryType::M64 { limits, shared }) => {
+                let (b_limits, b_shared) = match b {
+                    EntityType::Memory(MemoryType::M64 { limits, shared }) => (limits, shared),
+                    _ => return self.create_error("item type mismatch"),
+                };
+                if limits_match!(limits, b_limits) && shared == b_shared {
+                    Ok(())
+                } else {
+                    self.create_error("memory type mismatch")
+                }
+            }
+            EntityType::Instance(a) => {
+                let b = match b {
+                    EntityType::Instance(b) => b,
+                    _ => return self.create_error("item type mismatch"),
+                };
+                let a = self.types[*a].unwrap_instance();
+                let b = self.types[*b].unwrap_instance();
+                self.check_type_sets_match(&a.exports, &b.exports, "export")?;
                 Ok(())
             }
-            (
-                ImportSectionEntryType::Module(expected_idx),
-                ImportSectionEntryType::Module(actual_idx),
-            ) => {
-                let expected = self.module_type_at(expected.map(|_| *expected_idx))?;
-                let actual = self.module_type_at(actual.map(|_| *actual_idx))?;
-                if expected.item.imports.len() != actual.item.imports.len() {
-                    return self.create_error("mismatched number of module imports");
-                }
-                for (a, b) in expected.item.imports.iter().zip(actual.item.imports.iter()) {
-                    self.check_imports_match(expected.map(|_| &a.2), actual.map(|_| &b.2))?;
-                }
-                self.check_export_sets_match(
-                    expected.map(|i| &*i.exports),
-                    actual.map(|i| &*i.exports),
-                )?;
+            EntityType::Module(a) => {
+                let b = match b {
+                    EntityType::Module(b) => b,
+                    _ => return self.create_error("item type mismatch"),
+                };
+                let a = self.types[*a].unwrap_module();
+                let b = self.types[*b].unwrap_module();
+                // Note the order changing between imports and exports! This is
+                // a live demonstration of variance in action.
+                self.check_type_sets_match(&b.imports, &a.imports, "import")?;
+                self.check_type_sets_match(&a.exports, &b.exports, "export")?;
                 Ok(())
             }
-            _ => self.create_error("wrong kind of item used for instantiate"),
         }
     }
 
-    fn check_export_sets_match(
+    fn check_type_sets_match(
         &self,
-        expected: Def<&[(String, ImportSectionEntryType)]>,
-        actual: Def<&[(String, ImportSectionEntryType)]>,
+        a: &HashMap<String, EntityType>,
+        b: &HashMap<String, EntityType>,
+        desc: &str,
     ) -> Result<()> {
-        let name_to_idx = actual
-            .item
-            .iter()
-            .enumerate()
-            .map(|(i, e)| (&e.0, i))
-            .collect::<HashMap<_, _>>();
-        for expected_export in expected.item {
-            let idx = match name_to_idx.get(&expected_export.0) {
-                Some(i) => *i,
-                None => {
-                    return self.create_error(&format!("no export named `{}`", expected_export.0))
-                }
-            };
-            self.check_imports_match(
-                expected.map(|_| &expected_export.1),
-                actual.map(|_| &actual.item[idx].1),
-            )?;
+        for (name, b) in b {
+            match a.get(name) {
+                Some(a) => self.check_subtypes(a, b)?,
+                None => return self.create_error(&format!("no {} named `{}`", desc, name)),
+            }
         }
         Ok(())
     }
 
     /// Validates [`Payload::FunctionSection`](crate::Payload)
     pub fn function_section(&mut self, section: &crate::FunctionSectionReader<'_>) -> Result<()> {
-        self.expected_code_bodies = Some(section.get_count());
+        self.cur.expected_code_bodies = Some(section.get_count());
         self.check_max(
-            self.state.func_type_indices.len(),
+            self.cur.state.func_types.len(),
             section.get_count(),
             MAX_WASM_FUNCTIONS,
             "funcs",
@@ -1137,9 +1163,10 @@ impl Validator {
         // Assert that each type index is indeed a function type, and otherwise
         // just push it for handling later.
         self.section(Order::Function, section, |me, i| {
-            let type_index = me.state.def(i);
-            me.func_type_at(type_index)?;
-            me.state.assert_mut().func_type_indices.push(type_index);
+            me.func_type_at(i)?;
+            let state = me.cur.state.assert_mut();
+            state.func_types.push(state.types[i as usize]);
+            state.code_type_indexes.push(i);
             Ok(())
         })
     }
@@ -1155,15 +1182,14 @@ impl Validator {
     /// Validates [`Payload::TableSection`](crate::Payload)
     pub fn table_section(&mut self, section: &crate::TableSectionReader<'_>) -> Result<()> {
         self.check_max(
-            self.state.tables.len(),
+            self.cur.state.tables.len(),
             section.get_count(),
             self.max_tables(),
             "tables",
         )?;
         self.section(Order::Table, section, |me, ty| {
             me.table_type(&ty)?;
-            let def = me.state.def(ty);
-            me.state.assert_mut().tables.push(def);
+            me.cur.state.assert_mut().tables.push(ty);
             Ok(())
         })
     }
@@ -1178,14 +1204,29 @@ impl Validator {
 
     pub fn memory_section(&mut self, section: &crate::MemorySectionReader<'_>) -> Result<()> {
         self.check_max(
-            self.state.memories.len(),
+            self.cur.state.memories.len(),
             section.get_count(),
             self.max_memories(),
             "memories",
         )?;
         self.section(Order::Memory, section, |me, ty| {
             me.memory_type(&ty)?;
-            me.state.assert_mut().memories.push(ty);
+            me.cur.state.assert_mut().memories.push(ty);
+            Ok(())
+        })
+    }
+
+    pub fn event_section(&mut self, section: &crate::EventSectionReader<'_>) -> Result<()> {
+        self.check_max(
+            self.cur.state.events.len(),
+            section.get_count(),
+            MAX_WASM_EVENTS,
+            "events",
+        )?;
+        self.section(Order::Event, section, |me, ty| {
+            me.event_type(&ty)?;
+            let state = me.cur.state.assert_mut();
+            state.events.push(state.types[ty.type_index as usize]);
             Ok(())
         })
     }
@@ -1193,7 +1234,7 @@ impl Validator {
     /// Validates [`Payload::GlobalSection`](crate::Payload)
     pub fn global_section(&mut self, section: &crate::GlobalSectionReader<'_>) -> Result<()> {
         self.check_max(
-            self.state.globals.len(),
+            self.cur.state.globals.len(),
             section.get_count(),
             MAX_WASM_GLOBALS,
             "globals",
@@ -1201,8 +1242,7 @@ impl Validator {
         self.section(Order::Global, section, |me, g| {
             me.global_type(&g.ty)?;
             me.init_expr(&g.init_expr, g.ty.content_type, false)?;
-            let def = me.state.def(g.ty);
-            me.state.assert_mut().globals.push(def);
+            me.cur.state.assert_mut().globals.push(g.ty);
             Ok(())
         })
     }
@@ -1215,6 +1255,7 @@ impl Validator {
             None => return self.create_error("type mismatch: init_expr is empty"),
         };
         self.offset = offset;
+        let mut function_reference = None;
         let ty = match op {
             Operator::I32Const { .. } => Type::I32,
             Operator::I64Const { .. } => Type::I64,
@@ -1223,16 +1264,17 @@ impl Validator {
             Operator::RefNull { ty } => ty,
             Operator::V128Const { .. } => Type::V128,
             Operator::GlobalGet { global_index } => {
-                self.get_global(self.state.def(global_index))?
-                    .item
-                    .content_type
+                let global = self.get_global(global_index)?;
+                if global.mutable {
+                    return self.create_error(
+                        "constant expression required: global.get of mutable global",
+                    );
+                }
+                global.content_type
             }
             Operator::RefFunc { function_index } => {
-                self.get_func_type_index(self.state.def(function_index))?;
-                self.state
-                    .assert_mut()
-                    .function_references
-                    .insert(function_index);
+                function_reference = Some(function_index);
+                self.get_func_type(function_index)?;
                 Type::FuncRef
             }
             Operator::End => return self.create_error("type mismatch: init_expr is empty"),
@@ -1245,6 +1287,14 @@ impl Validator {
             if !allow32 || ty != Type::I32 {
                 return self.create_error("type mismatch: invalid init_expr type");
             }
+        }
+
+        if let Some(index) = function_reference {
+            self.cur
+                .state
+                .assert_mut()
+                .function_references
+                .insert(index);
         }
 
         // Make sure the next instruction is an `end`
@@ -1270,171 +1320,81 @@ impl Validator {
 
     /// Validates [`Payload::ExportSection`](crate::Payload)
     pub fn export_section(&mut self, section: &crate::ExportSectionReader<'_>) -> Result<()> {
-        let mut exported_names = HashSet::new();
         self.section(Order::Export, section, |me, e| {
-            if !exported_names.insert(e.field.to_string()) {
-                return me.create_error("duplicate export name");
-            }
             if let ExternalKind::Type = e.kind {
                 return me.create_error("cannot export types");
             }
-            me.check_external_kind("exported", e.kind, e.index)?;
-            if !me.export_is_expected(e)? {
-                return me.create_error("inline module type does not match declared type");
-            }
+            let ty = me.check_external_kind("exported", e.kind, e.index)?;
+            let state = me.cur.state.assert_mut();
+            state
+                .exports
+                .push(me.offset, e.field, None, ty, &mut me.types, "export")?;
             Ok(())
         })
     }
 
-    fn check_external_kind(&mut self, desc: &str, kind: ExternalKind, index: u32) -> Result<()> {
-        let (ty, total) = match kind {
-            ExternalKind::Function => ("function", self.state.func_type_indices.len()),
-            ExternalKind::Table => ("table", self.state.tables.len()),
-            ExternalKind::Memory => ("memory", self.state.memories.len()),
-            ExternalKind::Global => ("global", self.state.globals.len()),
-            ExternalKind::Module => ("module", self.state.module_type_indices.len()),
-            ExternalKind::Instance => ("instance", self.state.instance_type_indices.len()),
-            ExternalKind::Type => return self.create_error("cannot export types"),
+    fn check_external_kind(
+        &mut self,
+        desc: &str,
+        kind: ExternalKind,
+        index: u32,
+    ) -> Result<EntityType> {
+        let check = |ty: &str, total: usize| {
+            if index as usize >= total {
+                self.create_error(&format!(
+                    "unknown {ty} {index}: {desc} {ty} index out of bounds",
+                    desc = desc,
+                    index = index,
+                    ty = ty,
+                ))
+            } else {
+                Ok(())
+            }
         };
-        if index as usize >= total {
-            return self.create_error(&format!(
-                "unknown {ty} {index}: {desc} {ty} index out of bounds",
-                desc = desc,
-                index = index,
-                ty = ty,
-            ));
-        }
-        if let ExternalKind::Function = kind {
-            self.state.assert_mut().function_references.insert(index);
-        }
-        Ok(())
-    }
-
-    fn export_is_expected(&mut self, actual: Export<'_>) -> Result<bool> {
-        let expected_ty = match self.expected_type {
-            Some(ty) => ty,
-            None => return Ok(true),
-        };
-        let idx = self.expected_export_pos;
-        self.expected_export_pos += 1;
-        let module_ty = self.module_type_at(expected_ty)?;
-        let expected = match module_ty.item.exports.get(idx) {
-            Some(expected) => module_ty.with(to_export(expected)),
-            None => return Ok(false),
-        };
-        let index = self.state.def(actual.index);
-        let ty = match actual.kind {
-            ExternalKind::Function => self
-                .get_func_type_index(index)?
-                .map(ImportSectionEntryType::Function),
-            ExternalKind::Table => self.get_table(index)?.map(ImportSectionEntryType::Table),
+        Ok(match kind {
+            ExternalKind::Function => {
+                check("function", self.cur.state.func_types.len())?;
+                self.cur
+                    .state
+                    .assert_mut()
+                    .function_references
+                    .insert(index);
+                EntityType::Func(self.cur.state.func_types[index as usize])
+            }
+            ExternalKind::Table => {
+                check("table", self.cur.state.tables.len())?;
+                EntityType::Table(self.cur.state.tables[index as usize].clone())
+            }
             ExternalKind::Memory => {
-                let mem = *self.get_memory(index)?;
-                let ty = ImportSectionEntryType::Memory(mem);
-                self.state.def(ty)
+                check("memory", self.cur.state.memories.len())?;
+                EntityType::Memory(self.cur.state.memories[index as usize].clone())
             }
-            ExternalKind::Global => self.get_global(index)?.map(ImportSectionEntryType::Global),
-            ExternalKind::Module => self
-                .get_module_type_index(index)?
-                .map(ImportSectionEntryType::Module),
+            ExternalKind::Global => {
+                check("global", self.cur.state.globals.len())?;
+                EntityType::Global(self.cur.state.globals[index as usize].clone())
+            }
+            ExternalKind::Event => {
+                check("event", self.cur.state.events.len())?;
+                EntityType::Event(self.cur.state.events[index as usize])
+            }
+            ExternalKind::Module => {
+                check("module", self.cur.state.submodules.len())?;
+                EntityType::Module(self.cur.state.submodules[index as usize])
+            }
             ExternalKind::Instance => {
-                let def = self.get_instance_def(index)?;
-                match def.item {
-                    InstanceDef::Imported { type_idx } => {
-                        def.with(ImportSectionEntryType::Instance(type_idx))
-                    }
-                    InstanceDef::Instantiated { module_idx } => {
-                        let a = self.get_module_type_index(def.with(module_idx))?;
-                        let a = self.module_type_at(a)?;
-                        let b = match expected.item.ty {
-                            ImportSectionEntryType::Instance(idx) => {
-                                self.instance_type_at(expected.with(idx))?
-                            }
-                            _ => return Ok(false),
-                        };
-                        return Ok(actual.field == expected.item.name
-                            && a.item.exports.len() == b.item.exports.len()
-                            && a.item
-                                .exports
-                                .iter()
-                                .map(to_export)
-                                .zip(b.item.exports.iter().map(to_export))
-                                .all(|(ae, be)| self.exports_equal(a.with(ae), b.with(be))));
-                    }
-                }
+                check("instance", self.cur.state.instances.len())?;
+                EntityType::Instance(self.cur.state.instances[index as usize])
             }
-            ExternalKind::Type => unreachable!(), // already validated to not exist
-        };
-        let actual = ty.map(|ty| ExportType {
-            name: actual.field,
-            ty,
-        });
-        Ok(self.exports_equal(actual, expected))
-    }
-
-    fn imports_equal(&self, a: Def<Import<'_>>, b: Def<Import<'_>>) -> bool {
-        a.item.module == b.item.module
-            && a.item.field == b.item.field
-            && self.import_ty_equal(a.with(&a.item.ty), b.with(&b.item.ty))
-    }
-
-    fn exports_equal(&self, a: Def<ExportType<'_>>, b: Def<ExportType<'_>>) -> bool {
-        a.item.name == b.item.name && self.import_ty_equal(a.with(&a.item.ty), b.with(&b.item.ty))
-    }
-
-    fn import_ty_equal(
-        &self,
-        a: Def<&ImportSectionEntryType>,
-        b: Def<&ImportSectionEntryType>,
-    ) -> bool {
-        match (a.item, b.item) {
-            (ImportSectionEntryType::Function(ai), ImportSectionEntryType::Function(bi)) => {
-                self.func_type_at(a.with(*ai)).unwrap().item
-                    == self.func_type_at(b.with(*bi)).unwrap().item
-            }
-            (ImportSectionEntryType::Table(a), ImportSectionEntryType::Table(b)) => a == b,
-            (ImportSectionEntryType::Memory(a), ImportSectionEntryType::Memory(b)) => a == b,
-            (ImportSectionEntryType::Global(a), ImportSectionEntryType::Global(b)) => a == b,
-            (ImportSectionEntryType::Instance(ai), ImportSectionEntryType::Instance(bi)) => {
-                let a = self.instance_type_at(a.with(*ai)).unwrap();
-                let b = self.instance_type_at(b.with(*bi)).unwrap();
-                a.item.exports.len() == b.item.exports.len()
-                    && a.item
-                        .exports
-                        .iter()
-                        .map(to_export)
-                        .zip(b.item.exports.iter().map(to_export))
-                        .all(|(ae, be)| self.exports_equal(a.with(ae), b.with(be)))
-            }
-            (ImportSectionEntryType::Module(ai), ImportSectionEntryType::Module(bi)) => {
-                let a = self.module_type_at(a.with(*ai)).unwrap();
-                let b = self.module_type_at(b.with(*bi)).unwrap();
-                a.item.imports.len() == b.item.imports.len()
-                    && a.item
-                        .imports
-                        .iter()
-                        .map(to_import)
-                        .zip(b.item.imports.iter().map(to_import))
-                        .all(|(ai, bi)| self.imports_equal(a.with(ai), b.with(bi)))
-                    && a.item.exports.len() == b.item.exports.len()
-                    && a.item
-                        .exports
-                        .iter()
-                        .map(to_export)
-                        .zip(b.item.exports.iter().map(to_export))
-                        .all(|(ae, be)| self.exports_equal(a.with(ae), b.with(be)))
-            }
-            _ => false,
-        }
+            ExternalKind::Type => return self.create_error("cannot export types"),
+        })
     }
 
     /// Validates [`Payload::StartSection`](crate::Payload)
     pub fn start_section(&mut self, func: u32, range: &Range) -> Result<()> {
         self.offset = range.start;
         self.update_order(Order::Start)?;
-        let ty = self.get_func_type_index(self.state.def(func))?;
-        let ty = self.func_type_at(ty)?;
-        if !ty.item.params.is_empty() || !ty.item.returns.is_empty() {
+        let ty = self.get_func_type(func)?;
+        if !ty.params.is_empty() || !ty.returns.is_empty() {
             return self.create_error("invalid start function type");
         }
         Ok(())
@@ -1457,8 +1417,8 @@ impl Validator {
                     table_index,
                     init_expr,
                 } => {
-                    let table = me.get_table(me.state.def(table_index))?;
-                    if e.ty != table.item.element_type {
+                    let table = me.get_table(table_index)?;
+                    if e.ty != table.element_type {
                         return me.create_error("element_type != table type");
                     }
                     me.init_expr(&init_expr, Type::I32, false)?;
@@ -1488,13 +1448,13 @@ impl Validator {
                             return me
                                 .create_error("type mismatch: segment does not have funcref type");
                         }
-                        me.get_func_type_index(me.state.def(f))?;
-                        me.state.assert_mut().function_references.insert(f);
+                        me.get_func_type(f)?;
+                        me.cur.state.assert_mut().function_references.insert(f);
                     }
                 }
             }
 
-            me.state.assert_mut().element_types.push(e.ty);
+            me.cur.state.assert_mut().element_types.push(e.ty);
             Ok(())
         })
     }
@@ -1503,60 +1463,18 @@ impl Validator {
     pub fn data_count_section(&mut self, count: u32, range: &Range) -> Result<()> {
         self.offset = range.start;
         self.update_order(Order::DataCount)?;
-        self.state.assert_mut().data_count = Some(count);
+        self.cur.state.assert_mut().data_count = Some(count);
         if count > MAX_WASM_DATA_SEGMENTS as u32 {
             return self.create_error("data count section specifies too many data segments");
         }
         Ok(())
     }
 
-    /// Validates [`Payload::ModuleCodeSectionStart`](crate::Payload)
-    pub fn module_code_section_start(&mut self, count: u32, range: &Range) -> Result<()> {
-        if !self.features.module_linking {
-            return self.create_error("module linking proposal not enabled");
-        }
-        self.offset = range.start;
-        self.update_order(Order::ModuleCode)?;
-        match self.expected_modules.take() {
-            Some(n) if n == count => {}
-            Some(_) => {
-                return self
-                    .create_error("module and module code section have inconsistent lengths");
-            }
-            None if count == 0 => {}
-            None => return self.create_error("module code section without module section"),
-        }
-        self.module_code_section_index = self.state.module_type_indices.len() - (count as usize);
-        Ok(())
-    }
-
-    /// Validates [`Payload::ModuleCodeSectionEntry`](crate::Payload).
-    ///
-    /// Note that this does not actually perform any validation itself. The
-    /// `ModuleCodeSectionEntry` payload is associated with a sub-parser for the
-    /// sub-module, and it's expected that the returned [`Validator`] will be
-    /// paired with the [`Parser`] otherwise used with the module.
-    ///
-    /// Note that the returned [`Validator`] should be used for the nested
-    /// module. It will correctly work with parent aliases as well as ensure the
-    /// type of the inline module matches the declared type. Using
-    /// [`Validator::new`] will result in incorrect validation.
-    pub fn module_code_section_entry<'a>(&mut self) -> Validator {
-        let mut ret = Validator::default();
-        ret.features = self.features.clone();
-        ret.expected_type = Some(self.state.module_type_indices[self.module_code_section_index]);
-        self.module_code_section_index += 1;
-        let state = ret.state.assert_mut();
-        state.parent = Some(self.state.arc().clone());
-        state.depth = self.state.depth + 1;
-        return ret;
-    }
-
     /// Validates [`Payload::CodeSectionStart`](crate::Payload).
     pub fn code_section_start(&mut self, count: u32, range: &Range) -> Result<()> {
         self.offset = range.start;
         self.update_order(Order::Code)?;
-        match self.expected_code_bodies.take() {
+        match self.cur.expected_code_bodies.take() {
             Some(n) if n == count => {}
             Some(_) => {
                 return self.create_error("function and code section have inconsistent lengths");
@@ -1566,7 +1484,15 @@ impl Validator {
             None if count == 0 => {}
             None => return self.create_error("code section without function section"),
         }
-        self.code_section_index = self.state.func_type_indices.len() - (count as usize);
+
+        // Prepare our module's view into the global `types` array. This enables
+        // parallel function validation to accesss our built-so-far list off
+        // types. Note that all the `WasmModuleResources` methods rely on
+        // `all_types` being filled in, and this is the point at which they're
+        // filled in.
+        let types = self.types.commit();
+        self.cur.state.assert_mut().all_types = Some(Arc::new(types));
+
         Ok(())
     }
 
@@ -1584,24 +1510,26 @@ impl Validator {
     /// another thread, for example, to offload actual processing of functions
     /// elsewhere.
     pub fn code_section_entry(&mut self) -> Result<FuncValidator<ValidatorResources>> {
-        let ty_index = self.state.func_type_indices[self.code_section_index];
-        self.code_section_index += 1;
-        let resources = ValidatorResources(self.state.arc().clone());
-        Ok(FuncValidator::new(ty_index.item, 0, resources, &self.features).unwrap())
+        let ty = self.cur.state.code_type_indexes[self.cur.code_section_index];
+        self.cur.code_section_index += 1;
+        let resources = ValidatorResources(self.cur.state.arc().clone());
+        Ok(FuncValidator::new(ty, 0, resources, &self.features).unwrap())
     }
 
     /// Validates [`Payload::DataSection`](crate::Payload).
     pub fn data_section(&mut self, section: &crate::DataSectionReader<'_>) -> Result<()> {
-        self.data_found = section.get_count();
+        self.cur.data_found = section.get_count();
         self.check_max(0, section.get_count(), MAX_WASM_DATA_SEGMENTS, "segments")?;
-        self.section(Order::Data, section, |me, d| {
+        let mut section = section.clone();
+        section.forbid_bulk_memory(!self.features.bulk_memory);
+        self.section(Order::Data, &section, |me, d| {
             match d.kind {
                 DataKind::Passive => {}
                 DataKind::Active {
                     memory_index,
                     init_expr,
                 } => {
-                    let ty = me.get_memory(me.state.def(memory_index))?.index_type();
+                    let ty = me.get_memory(memory_index)?.index_type();
                     let allow32 = ty == Type::I64;
                     me.init_expr(&init_expr, ty, allow32)?;
                 }
@@ -1620,31 +1548,55 @@ impl Validator {
 
     /// Validates [`Payload::End`](crate::Payload).
     pub fn end(&mut self) -> Result<()> {
-        if let Some(data_count) = self.state.data_count {
-            if data_count != self.data_found {
+        // Ensure that the data count section, if any, was correct.
+        if let Some(data_count) = self.cur.state.data_count {
+            if data_count != self.cur.data_found {
                 return self.create_error("data count section and passive data mismatch");
             }
         }
-        if let Some(n) = self.expected_code_bodies.take() {
+        // Ensure that the function section, if nonzero, was paired with a code
+        // section with the appropriate length.
+        if let Some(n) = self.cur.expected_code_bodies.take() {
             if n > 0 {
                 return self.create_error("function and code sections have inconsistent lengths");
             }
         }
-        if let Some(n) = self.expected_modules.take() {
-            if n > 0 {
-                return self
-                    .create_error("module and module code sections have inconsistent lengths");
-            }
-        }
-        if let Some(t) = self.expected_type {
-            let ty = self.module_type_at(t)?;
-            if self.expected_import_pos != ty.item.imports.len()
-                || self.expected_export_pos != ty.item.exports.len()
-            {
-                return self.create_error("inline module type does not match declared type");
-            }
+
+        // Ensure that the effective type size of this module is of a bounded
+        // size. This is primarily here for the module linking proposal, and
+        // we'll record this in the module type below if we're part of a nested
+        // module.
+        let type_size = combine_type_sizes(
+            self.offset,
+            self.cur.state.imports.type_size,
+            self.cur.state.exports.type_size,
+        )?;
+
+        // If we have a parent then we're going to exit this module's context
+        // and resume where we left off in the parent. We inject a new type for
+        // our module we just validated in the parent's module index space, and
+        // then we reset our current state to the parent.
+        if let Some(mut parent) = self.parents.pop() {
+            let module_type = self.types.len();
+            self.types.push(TypeDef::Module(ModuleType {
+                type_size,
+                imports: self.cur.state.imports.set.clone(),
+                exports: self.cur.state.exports.set.clone(),
+            }));
+            parent.state.assert_mut().submodules.push(module_type);
+            self.cur = parent;
         }
         Ok(())
+    }
+}
+
+fn combine_type_sizes(offset: usize, a: u32, b: u32) -> Result<u32> {
+    match a.checked_add(b) {
+        Some(sum) if sum < MAX_TYPE_SIZE => Ok(sum),
+        _ => Err(BinaryReaderError::new(
+            "effective type size too large".to_string(),
+            offset,
+        )),
     }
 }
 
@@ -1659,6 +1611,13 @@ impl WasmFeatures {
                     Err("reference types support is not enabled")
                 }
             }
+            Type::ExnRef => {
+                if self.exceptions {
+                    Ok(())
+                } else {
+                    Err("exceptions support is not enabled")
+                }
+            }
             Type::V128 => {
                 if self.simd {
                     Ok(())
@@ -1671,83 +1630,6 @@ impl WasmFeatures {
     }
 }
 
-impl ModuleState {
-    fn def<T>(&self, item: T) -> Def<T> {
-        Def {
-            depth: self.depth,
-            item,
-        }
-    }
-
-    fn get<'me, T>(
-        &'me self,
-        idx: Def<u32>,
-        get_list: impl FnOnce(&'me ModuleState) -> &'me [T],
-    ) -> Option<&'me T> {
-        let mut cur = self;
-        for _ in 0..(self.depth - idx.depth) {
-            cur = cur.parent.as_ref().unwrap();
-        }
-        get_list(cur).get(idx.item as usize)
-    }
-
-    fn get_type<'me>(&'me self, mut idx: Def<u32>) -> Option<Def<&'me TypeDef>> {
-        loop {
-            let def = self.get(idx, |v| &v.types)?;
-            match def {
-                ValidatedType::Def(item) => break Some(idx.with(item)),
-                ValidatedType::Alias(other) => idx = *other,
-            }
-        }
-    }
-
-    fn get_table<'me>(&'me self, idx: Def<u32>) -> Option<&'me Def<TableType>> {
-        self.get(idx, |v| &v.tables)
-    }
-
-    fn get_memory<'me>(&'me self, idx: Def<u32>) -> Option<&'me MemoryType> {
-        self.get(idx, |v| &v.memories)
-    }
-
-    fn get_global<'me>(&'me self, idx: Def<u32>) -> Option<&'me Def<GlobalType>> {
-        self.get(idx, |v| &v.globals)
-    }
-
-    fn get_func_type_index<'me>(&'me self, idx: Def<u32>) -> Option<Def<u32>> {
-        Some(*self.get(idx, |v| &v.func_type_indices)?)
-    }
-
-    fn get_module_type_index<'me>(&'me self, idx: Def<u32>) -> Option<Def<u32>> {
-        Some(*self.get(idx, |v| &v.module_type_indices)?)
-    }
-
-    fn get_instance_def<'me>(&'me self, idx: Def<u32>) -> Option<&'me Def<InstanceDef>> {
-        self.get(idx, |v| &v.instance_type_indices)
-    }
-}
-
-#[derive(Copy, Clone)]
-struct Def<T> {
-    depth: usize,
-    item: T,
-}
-
-impl<T> Def<T> {
-    fn map<U>(self, map: impl FnOnce(T) -> U) -> Def<U> {
-        Def {
-            depth: self.depth,
-            item: map(self.item),
-        }
-    }
-
-    fn with<U>(&self, item: U) -> Def<U> {
-        Def {
-            depth: self.depth,
-            item: item,
-        }
-    }
-}
-
 /// The implementation of [`WasmModuleResources`] used by [`Validator`].
 pub struct ValidatorResources(Arc<ModuleState>);
 
@@ -1755,27 +1637,39 @@ impl WasmModuleResources for ValidatorResources {
     type FuncType = crate::FuncType;
 
     fn table_at(&self, at: u32) -> Option<TableType> {
-        self.0.get_table(self.0.def(at)).map(|t| t.item)
+        self.0.tables.get(at as usize).cloned()
     }
 
     fn memory_at(&self, at: u32) -> Option<MemoryType> {
-        self.0.get_memory(self.0.def(at)).copied()
+        self.0.memories.get(at as usize).cloned()
+    }
+
+    fn event_at(&self, at: u32) -> Option<&Self::FuncType> {
+        let types = self.0.all_types.as_ref().unwrap();
+        let i = *self.0.events.get(at as usize)?;
+        match &types[i] {
+            TypeDef::Func(f) => Some(f),
+            _ => None,
+        }
     }
 
     fn global_at(&self, at: u32) -> Option<GlobalType> {
-        self.0.get_global(self.0.def(at)).map(|t| t.item)
+        self.0.globals.get(at as usize).cloned()
     }
 
     fn func_type_at(&self, at: u32) -> Option<&Self::FuncType> {
-        match self.0.get_type(self.0.def(at))?.item {
+        let types = self.0.all_types.as_ref().unwrap();
+        let i = *self.0.types.get(at as usize)?;
+        match &types[i] {
             TypeDef::Func(f) => Some(f),
             _ => None,
         }
     }
 
     fn type_of_function(&self, at: u32) -> Option<&Self::FuncType> {
-        let ty = self.0.get_func_type_index(self.0.def(at))?;
-        match self.0.get_type(ty)?.item {
+        let types = self.0.all_types.as_ref().unwrap();
+        let i = *self.0.func_types.get(at as usize)?;
+        match &types[i] {
             TypeDef::Func(f) => Some(f),
             _ => None,
         }
@@ -1840,6 +1734,264 @@ mod arc {
 
         fn deref(&self) -> &T {
             &self.arc
+        }
+    }
+}
+
+/// This is a helper structure to create a map from names to types.
+///
+/// The main purpose of this structure is to handle the two-level imports found
+/// in wasm modules pre-module-linking. A two-level import is equivalent to a
+/// single-level import of an instance, and that mapping happens here.
+#[derive(Default)]
+struct NameSet {
+    set: HashMap<String, EntityType>,
+    implicit: HashSet<String>,
+    type_size: u32,
+}
+
+impl NameSet {
+    /// Pushes a new name into this typed set off names, internally handling the
+    /// mapping of two-level namespaces into a single-level namespace.
+    ///
+    /// * `offset` - the binary offset in the original wasm file of where to
+    ///   report errors about.
+    /// * `module` - the first-level name in the namespace
+    /// * `name` - the optional second-level namespace
+    /// * `ty` - the type of the item being pushed
+    /// * `types` - our global list of types
+    /// * `desc` - a human-readable description of the item being pushed, used
+    ///   for generating errors.
+    ///
+    /// Returns an error if the name was a duplicate. Returns `Ok(Some(idx))` if
+    /// this push was the first push to define an implicit instance with the
+    /// type `idx` into the global list of types. Returns `Ok(None)` otherwise.
+    fn push(
+        &mut self,
+        offset: usize,
+        module: &str,
+        name: Option<&str>,
+        ty: EntityType,
+        types: &mut SnapshotList<TypeDef>,
+        desc: &str,
+    ) -> Result<Option<usize>> {
+        self.type_size = combine_type_sizes(offset, self.type_size, ty.size(types))?;
+        let name = match name {
+            Some(name) => name,
+            // If the `name` is not provided then this is a module-linking style
+            // definition with only one level of a name rather than two. This
+            // means we can insert the `ty` into the set of imports directly,
+            // error-ing out on duplicates.
+            None => {
+                let prev = self.set.insert(module.to_string(), ty);
+                return if prev.is_some() {
+                    Err(BinaryReaderError::new(
+                        format!("duplicate {} name `{}` already defined", desc, module),
+                        offset,
+                    ))
+                } else {
+                    Ok(None)
+                };
+            }
+        };
+        match self.set.get(module) {
+            // If `module` was previously defined and we implicitly defined it,
+            // then we know that it points to an instance type. We update the
+            // set of exports of the instance type here since we're adding a new
+            // entry. Note that nothing, at the point that we're building this
+            // set, should point to this instance type so it should be safe to
+            // mutate.
+            Some(instance) if self.implicit.contains(module) => {
+                let instance = match instance {
+                    EntityType::Instance(i) => match &mut types[*i] {
+                        TypeDef::Instance(i) => i,
+                        _ => unreachable!(),
+                    },
+                    _ => unreachable!(),
+                };
+                let prev = instance.exports.insert(name.to_string(), ty);
+                if prev.is_some() {
+                    return Err(BinaryReaderError::new(
+                        format!(
+                            "duplicate {} name `{}::{}` already defined",
+                            desc, module, name
+                        ),
+                        offset,
+                    ));
+                }
+                Ok(None)
+            }
+
+            // Otherwise `module` was previously defined, but it *wasn't*
+            // implicitly defined through a two level import (rather was
+            // explicitly defined with a single-level import), then that's an
+            // error.
+            Some(_) => {
+                return Err(BinaryReaderError::new(
+                    format!("cannot define the {} `{}` twice", desc, module),
+                    offset,
+                ))
+            }
+
+            // And finally if `module` wasn't already defined then we go ahead
+            // and define it here as a instance type with a single export, our
+            // `name`.
+            None => {
+                let idx = types.len();
+                let mut instance = InstanceType::default();
+                instance.exports.insert(name.to_string(), ty);
+                types.push(TypeDef::Instance(instance));
+                assert!(self.implicit.insert(module.to_string()));
+                self.set
+                    .insert(module.to_string(), EntityType::Instance(idx));
+                Ok(Some(idx))
+            }
+        }
+    }
+}
+
+impl EntityType {
+    fn size(&self, list: &SnapshotList<TypeDef>) -> u32 {
+        let recursive_size = match self {
+            // Note that this function computes the size of the *type*, not the
+            // size of the value, so these "leaves" all count as 1
+            EntityType::Global(_) | EntityType::Memory(_) | EntityType::Table(_) => 1,
+
+            // These types have recursive sizes so we look up the size in the
+            // type tables.
+            EntityType::Func(i)
+            | EntityType::Module(i)
+            | EntityType::Instance(i)
+            | EntityType::Event(i) => match &list[*i] {
+                TypeDef::Func(f) => (f.params.len() + f.returns.len()) as u32,
+                TypeDef::Module(m) => m.type_size,
+                TypeDef::Instance(i) => i.type_size,
+            },
+        };
+        recursive_size.saturating_add(1)
+    }
+}
+
+/// This is a type which mirrors a subset of the `Vec<T>` API, but is intended
+/// to be able to be cheaply snapshotted and cloned.
+///
+/// When each module's code sections start we "commit" the current list of types
+/// in the global list of types. This means that the temporary `cur` vec here is
+/// pushed onto `snapshots` and wrapped up in an `Arc`. At that point we clone
+/// this entire list (which is then O(modules), not O(types in all modules)) and
+/// pass out as a context to each function validator.
+///
+/// Otherwise, though, this type behaves as if it were a large `Vec<T>`, but
+/// it's represented by lists of contiguous chunks.
+struct SnapshotList<T> {
+    // All previous snapshots, the "head" of the list that this type represents.
+    // The first entry in this pair is the starting index for all elements
+    // contained in the list, and the second element is the list itself. Note
+    // the `Arc` wrapper around sub-lists, which makes cloning time for this
+    // `SnapshotList` O(snapshots) rather than O(snapshots_total), which for
+    // us in this context means the number of modules, not types.
+    //
+    // Note that this list is sorted least-to-greatest in order of the index for
+    // binary searching.
+    snapshots: Vec<(usize, Arc<Vec<T>>)>,
+
+    // This is the total length of all lists in the `snapshots` array.
+    snapshots_total: usize,
+
+    // The current list of types for the current snapshot that are being built.
+    cur: Vec<T>,
+}
+
+impl<T> SnapshotList<T> {
+    /// Same as `<&[T]>::get`
+    fn get(&self, index: usize) -> Option<&T> {
+        // Check to see if this index falls on our local list
+        if index >= self.snapshots_total {
+            return self.cur.get(index - self.snapshots_total);
+        }
+        // ... and failing that we do a binary search to figure out which bucket
+        // it's in. Note the `i-1` in the `Err` case because if we don't find an
+        // exact match the type is located in the previous bucket.
+        let i = match self.snapshots.binary_search_by_key(&index, |(i, _)| *i) {
+            Ok(i) => i,
+            Err(i) => i - 1,
+        };
+        let (len, list) = &self.snapshots[i];
+        Some(&list[index - len])
+    }
+
+    /// Same as `<&mut [T]>::get_mut`, except only works for indexes into the
+    /// current snapshot being built.
+    ///
+    /// # Panics
+    ///
+    /// Panics if an index is passed in which falls within the
+    /// previously-snapshotted list of types. This should never happen in our
+    /// contesxt and the panic is intended to weed out possible bugs in
+    /// wasmparser.
+    fn get_mut(&mut self, index: usize) -> Option<&mut T> {
+        if index >= self.snapshots_total {
+            return self.cur.get_mut(index - self.snapshots_total);
+        }
+        panic!("cannot get a mutable reference in snapshotted part of list")
+    }
+
+    /// Same as `Vec::push`
+    fn push(&mut self, val: T) {
+        self.cur.push(val);
+    }
+
+    /// Same as `<[T]>::len`
+    fn len(&self) -> usize {
+        self.cur.len() + self.snapshots_total
+    }
+
+    /// Commits previously pushed types into this snapshot vector, and returns a
+    /// clone of this list.
+    ///
+    /// The returned `SnapshotList` can be used to access all the same types as
+    /// this list itself. This list also is not changed (from an external
+    /// perspective) and can continue to access all the same types.
+    fn commit(&mut self) -> SnapshotList<T> {
+        // If the current chunk has new elements, commit them in to an
+        // `Arc`-wrapped vector in the snapshots list. Note the `shrink_to_fit`
+        // ahead of time to hopefully keep memory usage lower than it would
+        // otherwise be.
+        let len = self.cur.len();
+        if len > 0 {
+            self.cur.shrink_to_fit();
+            self.snapshots
+                .push((self.snapshots_total, Arc::new(mem::take(&mut self.cur))));
+            self.snapshots_total += len;
+        }
+        SnapshotList {
+            snapshots: self.snapshots.clone(),
+            snapshots_total: self.snapshots_total,
+            cur: Vec::new(),
+        }
+    }
+}
+
+impl<T> std::ops::Index<usize> for SnapshotList<T> {
+    type Output = T;
+
+    fn index(&self, index: usize) -> &T {
+        self.get(index).unwrap()
+    }
+}
+
+impl<T> std::ops::IndexMut<usize> for SnapshotList<T> {
+    fn index_mut(&mut self, index: usize) -> &mut T {
+        self.get_mut(index).unwrap()
+    }
+}
+
+impl<T> Default for SnapshotList<T> {
+    fn default() -> SnapshotList<T> {
+        SnapshotList {
+            snapshots: Vec::new(),
+            snapshots_total: 0,
+            cur: Vec::new(),
         }
     }
 }

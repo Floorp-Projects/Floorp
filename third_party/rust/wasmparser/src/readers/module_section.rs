@@ -1,11 +1,16 @@
-use super::{
-    BinaryReader, Range, Result, SectionIteratorLimited, SectionReader, SectionWithLimitedItems,
+use crate::{
+    BinaryReader, BinaryReaderError, Range, Result, SectionIteratorLimited, SectionReader,
+    SectionWithLimitedItems,
 };
 
-#[derive(Clone)]
 pub struct ModuleSectionReader<'a> {
     reader: BinaryReader<'a>,
     count: u32,
+}
+
+#[derive(Debug)]
+pub struct NestedModule<'a> {
+    reader: BinaryReader<'a>,
 }
 
 impl<'a> ModuleSectionReader<'a> {
@@ -23,13 +28,33 @@ impl<'a> ModuleSectionReader<'a> {
         self.count
     }
 
-    pub fn read(&mut self) -> Result<u32> {
-        self.reader.read_var_u32()
+    fn verify_module_end(&self, end: usize) -> Result<()> {
+        if self.reader.buffer.len() < end {
+            return Err(BinaryReaderError::new(
+                "module body extends past end of the module code section",
+                self.reader.original_offset + self.reader.buffer.len(),
+            ));
+        }
+        Ok(())
+    }
+
+    pub fn read(&mut self) -> Result<NestedModule<'a>> {
+        let size = self.reader.read_var_u32()? as usize;
+        let module_start = self.reader.position;
+        let module_end = module_start + size;
+        self.verify_module_end(module_end)?;
+        self.reader.skip_to(module_end);
+        Ok(NestedModule {
+            reader: BinaryReader::new_with_offset(
+                &self.reader.buffer[module_start..module_end],
+                self.reader.original_offset + module_start,
+            ),
+        })
     }
 }
 
 impl<'a> SectionReader for ModuleSectionReader<'a> {
-    type Item = u32;
+    type Item = NestedModule<'a>;
 
     fn read(&mut self) -> Result<Self::Item> {
         ModuleSectionReader::read(self)
@@ -52,10 +77,20 @@ impl<'a> SectionWithLimitedItems for ModuleSectionReader<'a> {
 }
 
 impl<'a> IntoIterator for ModuleSectionReader<'a> {
-    type Item = Result<u32>;
+    type Item = Result<NestedModule<'a>>;
     type IntoIter = SectionIteratorLimited<ModuleSectionReader<'a>>;
 
     fn into_iter(self) -> Self::IntoIter {
         SectionIteratorLimited::new(self)
+    }
+}
+
+impl<'a> NestedModule<'a> {
+    pub fn raw_bytes(&self) -> (usize, &'a [u8]) {
+        (self.reader.original_position(), self.reader.buffer)
+    }
+
+    pub fn original_position(&self) -> usize {
+        self.reader.original_position()
     }
 }

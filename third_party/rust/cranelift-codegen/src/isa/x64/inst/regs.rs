@@ -1,14 +1,20 @@
 //! Registers, the Universe thereof, and printing.
 //!
-//! These are ordered by sequence number, as required in the Universe.  The strange ordering is
-//! intended to make callee-save registers available before caller-saved ones.  This is a net win
-//! provided that each function makes at least one onward call.  It'll be a net loss for leaf
-//! functions, and we should change the ordering in that case, so as to make caller-save regs
-//! available first.
+//! These are ordered by sequence number, as required in the Universe.
 //!
-//! TODO Maybe have two different universes, one for leaf functions and one for non-leaf functions?
-//! Also, they will have to be ABI dependent.  Need to find a way to avoid constructing a universe
-//! for each function we compile.
+//! The caller-saved registers are placed first in order to prefer not to clobber (requiring
+//! saves/restores in prologue/epilogue code) when possible. Note that there is no other heuristic
+//! in the backend that will apply such pressure; the register allocator's cost heuristics are not
+//! aware of the cost of clobber-save/restore code.
+//!
+//! One might worry that this pessimizes code with many callsites, where using caller-saves causes
+//! us to have to save them (as we are the caller) frequently. However, the register allocator
+//! *should be* aware of *this* cost, because it sees that the call instruction modifies all of the
+//! caller-saved (i.e., callee-clobbered) registers.
+//!
+//! Hence, this ordering encodes pressure in one direction (prefer not to clobber registers that we
+//! ourselves have to save) and this is balanaced against the RA's pressure in the other direction
+//! at callsites.
 
 use crate::settings;
 use alloc::vec::Vec;
@@ -17,11 +23,20 @@ use regalloc::{
 };
 use std::string::String;
 
-// Hardware encodings for a few registers.
+// Hardware encodings (note the special rax, rcx, rdx, rbx order).
 
+pub const ENC_RAX: u8 = 0;
+pub const ENC_RCX: u8 = 1;
+pub const ENC_RDX: u8 = 2;
 pub const ENC_RBX: u8 = 3;
 pub const ENC_RSP: u8 = 4;
 pub const ENC_RBP: u8 = 5;
+pub const ENC_RSI: u8 = 6;
+pub const ENC_RDI: u8 = 7;
+pub const ENC_R8: u8 = 8;
+pub const ENC_R9: u8 = 9;
+pub const ENC_R10: u8 = 10;
+pub const ENC_R11: u8 = 11;
 pub const ENC_R12: u8 = 12;
 pub const ENC_R13: u8 = 13;
 pub const ENC_R14: u8 = 14;
@@ -31,44 +46,44 @@ fn gpr(enc: u8, index: u8) -> Reg {
     Reg::new_real(RegClass::I64, enc, index)
 }
 
-pub(crate) fn r12() -> Reg {
-    gpr(ENC_R12, 16)
-}
-pub(crate) fn r13() -> Reg {
-    gpr(ENC_R13, 17)
-}
-pub(crate) fn r14() -> Reg {
-    gpr(ENC_R14, 18)
-}
-pub(crate) fn rbx() -> Reg {
-    gpr(ENC_RBX, 19)
-}
 pub(crate) fn rsi() -> Reg {
-    gpr(6, 20)
+    gpr(ENC_RSI, 16)
 }
 pub(crate) fn rdi() -> Reg {
-    gpr(7, 21)
+    gpr(ENC_RDI, 17)
 }
 pub(crate) fn rax() -> Reg {
-    gpr(0, 22)
+    gpr(ENC_RAX, 18)
 }
 pub(crate) fn rcx() -> Reg {
-    gpr(1, 23)
+    gpr(ENC_RCX, 19)
 }
 pub(crate) fn rdx() -> Reg {
-    gpr(2, 24)
+    gpr(ENC_RDX, 20)
 }
 pub(crate) fn r8() -> Reg {
-    gpr(8, 25)
+    gpr(ENC_R8, 21)
 }
 pub(crate) fn r9() -> Reg {
-    gpr(9, 26)
+    gpr(ENC_R9, 22)
 }
 pub(crate) fn r10() -> Reg {
-    gpr(10, 27)
+    gpr(ENC_R10, 23)
 }
 pub(crate) fn r11() -> Reg {
-    gpr(11, 28)
+    gpr(ENC_R11, 24)
+}
+pub(crate) fn r12() -> Reg {
+    gpr(ENC_R12, 25)
+}
+pub(crate) fn r13() -> Reg {
+    gpr(ENC_R13, 26)
+}
+pub(crate) fn r14() -> Reg {
+    gpr(ENC_R14, 27)
+}
+pub(crate) fn rbx() -> Reg {
+    gpr(ENC_RBX, 28)
 }
 
 pub(crate) fn r15() -> Reg {
@@ -176,13 +191,6 @@ pub(crate) fn create_reg_universe_systemv(flags: &settings::Flags) -> RealRegUni
     // Integer regs.
     let first_gpr = regs.len();
 
-    // Callee-saved, in the SystemV x86_64 ABI.
-    regs.push((r12().to_real_reg(), "%r12".into()));
-    regs.push((r13().to_real_reg(), "%r13".into()));
-    regs.push((r14().to_real_reg(), "%r14".into()));
-
-    regs.push((rbx().to_real_reg(), "%rbx".into()));
-
     // Caller-saved, in the SystemV x86_64 ABI.
     regs.push((rsi().to_real_reg(), "%rsi".into()));
     regs.push((rdi().to_real_reg(), "%rdi".into()));
@@ -193,6 +201,13 @@ pub(crate) fn create_reg_universe_systemv(flags: &settings::Flags) -> RealRegUni
     regs.push((r9().to_real_reg(), "%r9".into()));
     regs.push((r10().to_real_reg(), "%r10".into()));
     regs.push((r11().to_real_reg(), "%r11".into()));
+
+    // Callee-saved, in the SystemV x86_64 ABI.
+    regs.push((r12().to_real_reg(), "%r12".into()));
+    regs.push((r13().to_real_reg(), "%r13".into()));
+    regs.push((r14().to_real_reg(), "%r14".into()));
+
+    regs.push((rbx().to_real_reg(), "%rbx".into()));
 
     // Other regs, not available to the allocator.
     debug_assert_eq!(r15(), pinned_reg());

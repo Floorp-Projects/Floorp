@@ -174,6 +174,7 @@ impl<'static_env, 'module_env> BatchCompiler<'static_env, 'module_env> {
             deterministic_only: true,
             memory64: false,
             multi_memory: false,
+            exceptions: false,
         };
         let sig_index = self.module_env.func_sig_index(index);
         let mut validator =

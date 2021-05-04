@@ -3,7 +3,7 @@
 // Some variants are never constructed, but we still want them as options in the future.
 #![allow(dead_code)]
 
-use crate::ir::types::{F32X2, F32X4, F64X2, I16X4, I16X8, I32X2, I32X4, I64X2, I8X16, I8X8};
+use crate::ir::types::*;
 use crate::ir::Type;
 use crate::isa::aarch64::inst::*;
 use crate::machinst::{ty_bits, MachLabel};
@@ -208,6 +208,19 @@ impl AMode {
     /// Memory reference to a label: a global function or value, or data in the constant pool.
     pub fn label(label: MemLabel) -> AMode {
         AMode::Label(label)
+    }
+
+    /// Does the address resolve to just a register value, with no offset or
+    /// other computation?
+    pub fn is_reg(&self) -> Option<Reg> {
+        match self {
+            &AMode::UnsignedOffset(r, uimm12) if uimm12.value() == 0 => Some(r),
+            &AMode::Unscaled(r, imm9) if imm9.value() == 0 => Some(r),
+            &AMode::RegOffset(r, off, _) if off == 0 => Some(r),
+            &AMode::FPOffset(off, _) if off == 0 => Some(fp_reg()),
+            &AMode::SPOffset(off, _) if off == 0 => Some(stack_reg()),
+            _ => None,
+        }
     }
 }
 
@@ -585,6 +598,14 @@ impl ScalarSize {
             ScalarSize::Size32 => OperandSize::Size32,
             ScalarSize::Size64 => OperandSize::Size64,
             _ => panic!("Unexpected operand_size request for: {:?}", self),
+        }
+    }
+
+    /// Convert from an integer operand size.
+    pub fn from_operand_size(size: OperandSize) -> ScalarSize {
+        match size {
+            OperandSize::Size32 => ScalarSize::Size32,
+            OperandSize::Size64 => ScalarSize::Size64,
         }
     }
 

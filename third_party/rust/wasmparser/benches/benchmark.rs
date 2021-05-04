@@ -104,11 +104,6 @@ fn read_all_wasm(wasm: &[u8]) -> Result<()> {
                     }
                 }
             }
-            ModuleSection(s) => {
-                for item in s {
-                    item?;
-                }
-            }
             FunctionSection(s) => {
                 for item in s {
                     item?;
@@ -120,6 +115,11 @@ fn read_all_wasm(wasm: &[u8]) -> Result<()> {
                 }
             }
             MemorySection(s) => {
+                for item in s {
+                    item?;
+                }
+            }
+            EventSection(s) => {
                 for item in s {
                     item?;
                 }
@@ -174,8 +174,8 @@ fn read_all_wasm(wasm: &[u8]) -> Result<()> {
             | UnknownSection { .. }
             | CustomSection { .. }
             | CodeSectionStart { .. }
-            | ModuleCodeSectionStart { .. }
-            | ModuleCodeSectionEntry { .. }
+            | ModuleSectionStart { .. }
+            | ModuleSectionEntry { .. }
             | End => {}
         }
     }
@@ -210,6 +210,7 @@ fn validate_benchmark(c: &mut Criterion) {
             reference_types: true,
             multi_value: true,
             simd: true,
+            exceptions: true,
             module_linking: true,
             bulk_memory: true,
             threads: true,
