@@ -72,14 +72,10 @@ class AudioParam final : public nsWrapperCache, public AudioParamTimeline {
     SendEventToEngine(event);
   }
 
-  void SetValue(float aValue) {
+  void SetValue(float aValue, ErrorResult& aRv) {
     AudioTimelineEvent event(AudioTimelineEvent::SetValue, 0.0f, aValue);
 
-    ErrorResult rv;
-    if (!ValidateEvent(event, rv)) {
-      MOZ_ASSERT(false,
-                 "This should not happen, "
-                 "setting the value should always work");
+    if (!ValidateEvent(event, aRv)) {
       return;
     }
 
