@@ -97,6 +97,14 @@ bitflags! {
     }
 }
 
+#[derive(Copy, Clone, Debug, PartialEq)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+pub enum TileKind {
+    Opaque,
+    Alpha,
+    Clear,
+}
 
 /// Describes the geometry and surface of a tile to be composited
 #[cfg_attr(feature = "capture", derive(Serialize))]
@@ -109,6 +117,27 @@ pub struct CompositeTile {
     pub valid_rect: DeviceRect,
     pub transform: Option<CompositorSurfaceTransform>,
     pub z_id: ZBufferId,
+    pub kind: TileKind,
+}
+
+fn tile_kind(surface: &CompositeTileSurface, is_opaque: bool) -> TileKind {
+    match surface {
+        // Color tiles are, by definition, opaque. We might support non-opaque color
+        // tiles if we ever find pages that have a lot of these.
+        CompositeTileSurface::Color { .. } => TileKind::Opaque,
+        // Clear tiles have a special bucket
+        CompositeTileSurface::Clear => TileKind::Clear,
+        CompositeTileSurface::Texture { .. }
+        | CompositeTileSurface::ExternalSurface { .. } => {
+            // Texture surfaces get bucketed by opaque/alpha, for z-rejection
+            // on the Draw compositor mode.
+            if is_opaque {
+                TileKind::Opaque
+            } else {
+                TileKind::Alpha
+            }
+        }
+    }
 }
 
 pub enum ExternalSurfaceDependency {
@@ -405,9 +434,7 @@ impl CompositeDescriptor {
 }
 
 pub struct CompositeStatePreallocator {
-    opaque_tiles: Preallocator,
-    alpha_tiles: Preallocator,
-    clear_tiles: Preallocator,
+    tiles: Preallocator,
     external_surfaces: Preallocator,
     occluders: Preallocator,
     occluders_events: Preallocator,
@@ -417,9 +444,7 @@ pub struct CompositeStatePreallocator {
 
 impl CompositeStatePreallocator {
     pub fn record(&mut self, state: &CompositeState) {
-        self.opaque_tiles.record_vec(&state.opaque_tiles);
-        self.alpha_tiles.record_vec(&state.alpha_tiles);
-        self.clear_tiles.record_vec(&state.clear_tiles);
+        self.tiles.record_vec(&state.tiles);
         self.external_surfaces.record_vec(&state.external_surfaces);
         self.occluders.record_vec(&state.occluders.occluders);
         self.occluders_events.record_vec(&state.occluders.events);
@@ -428,9 +453,7 @@ impl CompositeStatePreallocator {
     }
 
     pub fn preallocate(&self, state: &mut CompositeState) {
-        self.opaque_tiles.preallocate_vec(&mut state.opaque_tiles);
-        self.alpha_tiles.preallocate_vec(&mut state.alpha_tiles);
-        self.clear_tiles.preallocate_vec(&mut state.clear_tiles);
+        self.tiles.preallocate_vec(&mut state.tiles);
         self.external_surfaces.preallocate_vec(&mut state.external_surfaces);
         self.occluders.preallocate_vec(&mut state.occluders.occluders);
         self.occluders_events.preallocate_vec(&mut state.occluders.events);
@@ -442,9 +465,7 @@ impl CompositeStatePreallocator {
 impl Default for CompositeStatePreallocator {
     fn default() -> Self {
         CompositeStatePreallocator {
-            opaque_tiles: Preallocator::new(40),
-            alpha_tiles: Preallocator::new(16),
-            clear_tiles: Preallocator::new(0),
+            tiles: Preallocator::new(56),
             external_surfaces: Preallocator::new(0),
             occluders: Preallocator::new(16),
             occluders_events: Preallocator::new(32),
@@ -461,12 +482,10 @@ pub struct CompositeState {
     // TODO(gw): Consider splitting up CompositeState into separate struct types depending
     //           on the selected compositing mode. Many of the fields in this state struct
     //           are only applicable to either Native or Draw compositing mode.
-    /// List of opaque tiles to be drawn by the Draw compositor.
-    pub opaque_tiles: Vec<CompositeTile>,
-    /// List of alpha tiles to be drawn by the Draw compositor.
-    pub alpha_tiles: Vec<CompositeTile>,
-    /// List of clear tiles to be drawn by the Draw compositor.
-    pub clear_tiles: Vec<CompositeTile>,
+    /// List of tiles to be drawn by the Draw compositor.
+    /// Tiles are accumulated in this vector and sorted from front to back at the end of the
+    /// frame.
+    pub tiles: Vec<CompositeTile>,
     /// List of primitives that were promoted to be compositor surfaces.
     pub external_surfaces: Vec<ResolvedExternalSurface>,
     /// Used to generate z-id values for tiles in the Draw compositor mode.
@@ -500,9 +519,7 @@ impl CompositeState {
         dirty_rects_are_valid: bool,
     ) -> Self {
         CompositeState {
-            opaque_tiles: Vec::new(),
-            alpha_tiles: Vec::new(),
-            clear_tiles: Vec::new(),
+            tiles: Vec::new(),
             z_generator: ZBufferIdGenerator::new(max_depth_ids),
             dirty_rects_are_valid,
             compositor_kind,
@@ -573,13 +590,13 @@ impl CompositeState {
                         (CompositeTileSurface::Color { color: *color }, true)
                     }
                     TileSurface::Clear => {
-                        (CompositeTileSurface::Clear, false)
+                        (CompositeTileSurface::Clear, true)
                     }
                     TileSurface::Texture { descriptor, .. } => {
                         let surface = descriptor.resolve(resource_cache, tile_cache.current_tile_size);
                         (
                             CompositeTileSurface::Texture { surface },
-                            tile.is_opaque
+                            tile.is_opaque 
                         )
                     }
                 };
@@ -593,6 +610,7 @@ impl CompositeState {
                 }
 
                 let tile = CompositeTile {
+                    kind: tile_kind(&surface, is_opaque),
                     surface,
                     rect: device_rect,
                     valid_rect: tile.device_valid_rect.translate(-device_rect.origin.to_vector()),
@@ -602,7 +620,7 @@ impl CompositeState {
                     z_id: tile.z_id,
                 };
 
-                self.push_tile(tile, is_opaque);
+                self.tiles.push(tile);
             }
 
             // Sort the tile descriptor lists, since iterating values in the tile_cache.tiles
@@ -714,8 +732,10 @@ impl CompositeState {
                     ResolvedExternalSurfaceIndex::INVALID
                 };
 
+                let surface = CompositeTileSurface::ExternalSurface { external_surface_index };
                 let tile = CompositeTile {
-                    surface: CompositeTileSurface::ExternalSurface { external_surface_index },
+                    kind: tile_kind(&surface, compositor_surface.is_opaque),
+                    surface,
                     rect: external_surface.surface_rect,
                     valid_rect: external_surface.surface_rect.translate(-external_surface.surface_rect.origin.to_vector()),
                     dirty_rect: external_surface.surface_rect.translate(-external_surface.surface_rect.origin.to_vector()),
@@ -738,7 +758,7 @@ impl CompositeState {
                     }
                 );
 
-                self.push_tile(tile, compositor_surface.is_opaque);
+                self.tiles.push(tile);
             }
         }
     }
@@ -841,39 +861,9 @@ impl CompositeState {
         external_surface_index
     }
 
-    /// Add a tile to the appropriate array, depending on tile properties and compositor mode.
-    fn push_tile(
-        &mut self,
-        tile: CompositeTile,
-        is_opaque: bool,
-    ) {
-        match tile.surface {
-            CompositeTileSurface::Color { .. } => {
-                // Color tiles are, by definition, opaque. We might support non-opaque color
-                // tiles if we ever find pages that have a lot of these.
-                self.opaque_tiles.push(tile);
-            }
-            CompositeTileSurface::Clear => {
-                // Clear tiles have a special bucket
-                self.clear_tiles.push(tile);
-            }
-            CompositeTileSurface::Texture { .. } => {
-                // Texture surfaces get bucketed by opaque/alpha, for z-rejection
-                // on the Draw compositor mode.
-                if is_opaque {
-                    self.opaque_tiles.push(tile);
-                } else {
-                    self.alpha_tiles.push(tile);
-                }
-            }
-            CompositeTileSurface::ExternalSurface { .. } => {
-                if is_opaque {
-                    self.opaque_tiles.push(tile);
-                } else {
-                    self.alpha_tiles.push(tile);
-                }
-            }
-        }
+    pub fn end_frame(&mut self) {
+        // Sort tiles from front to back.
+        self.tiles.sort_by_key(|tile| -tile.z_id.0);        
     }
 }
 
