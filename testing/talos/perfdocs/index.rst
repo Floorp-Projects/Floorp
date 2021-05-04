@@ -546,6 +546,26 @@ cpstartup
 
     0;content-process-startup;877;737;687;688;802;697;794;685;694;688;794;669;699;684;690;849;687;873;694;689
 
+cross_origin_pageload
+=====================
+
+-  contact: :sefeng, :jesup
+-  measuring: The time it takes to load a page which has 20 cross origin iframes
+-  source:
+   `cross_origin_pageload <https://dxr.mozilla.org/mozilla-central/source/testing/talos/talos/tests/cross_origin_pageload>`__
+-  type: `Page load`_
+-  bug: `bug
+   1701989 <https://bugzilla.mozilla.org/show_bug.cgi?id=1701989>`__
+-  data: 10 cycles of the entire benchmark
+-  **Lower is better**
+-  unit: ms
+
+**Example Data**
+
+.. code-block:: none
+
+    0;/index.html;194.42;154.12;141.38;145.88;136.92;147.64;152.54;138.02;145.5;143.62
+
 .. _damp:
 
 damp
