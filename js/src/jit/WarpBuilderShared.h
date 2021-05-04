@@ -43,13 +43,12 @@ class MOZ_STACK_CLASS CallInfo {
   bool setter_ = false;
 
  public:
-  // For some argument formats (normal calls, FunCall, FunApplyArgs in an
-  // inlined function) we can shuffle around definitions in the CallInfo
-  // and use a normal MCall. For others, we need to use a specialized call.
+  // For normal calls and FunCall we can shuffle around definitions in
+  // the CallInfo and use a normal MCall. For others, we need to use a
+  // specialized call.
   enum class ArgFormat {
     Standard,
     Array,
-    FunApplyMagicArgs,
     FunApplyArgsObj,
   };
 
@@ -160,10 +159,6 @@ class MOZ_STACK_CLASS CallInfo {
   [[nodiscard]] bool setArgs(const MDefinitionVector& args) {
     MOZ_ASSERT(args_.empty());
     return args_.appendAll(args);
-  }
-  [[nodiscard]] bool replaceArgs(const MDefinitionVector& args) {
-    args_.clear();
-    return setArgs(args);
   }
 
   MDefinitionVector& argv() { return args_; }

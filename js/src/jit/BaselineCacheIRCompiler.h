@@ -54,9 +54,6 @@ class MOZ_RAII BaselineCacheIRCompiler : public CacheIRCompiler {
   void pushFunCallArguments(Register argcReg, Register calleeReg,
                             Register scratch, Register scratch2,
                             bool isJitCall);
-  void pushFunApplyMagicArgs(Register argcReg, Register calleeReg,
-                             Register scratch, Register scratch2,
-                             bool isJitCall);
   void pushFunApplyArgsObj(Register argcReg, Register calleeReg,
                            Register scratch, Register scratch2, bool isJitCall);
   void createThis(Register argcReg, Register calleeReg, Register scratch,
