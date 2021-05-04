@@ -23,10 +23,8 @@ job-defaults:
         by-variant:
             fission:
                 by-test-platform:
-                    linux.*64(-qr)?/.*: ['autoland']
-                    linux.*64-shippable(-qr)?/.*: ['mozilla-central']
-                    windows10-64(-qr)?/.*: ['autoland']
-                    windows10-64-shippable(-qr)?/.*: ['mozilla-central']
+                    (linux.*64|windows10-64)(-shippable)?(-qr)?/.*: ['trunk']
+                    linux.*64-asan/opt: ['trunk']
                     default: []
             default: built-projects
     test-manifest-loader: null  # don't load tests in the taskgraph
