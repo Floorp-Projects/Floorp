@@ -574,10 +574,6 @@ menuitem.bookmark-item {
   :root:not(:-moz-lwtheme) {
     --urlbar-popup-action-color: -moz-nativehyperlinktext;
   }
-
-  :root:not(:-moz-lwtheme) .urlbarView-tip-button[selected] {
-    color: var(--buttons-primary-button-color, highlighttext);
-  }
 }
 
 @media not (-moz-proton) {
