@@ -211,10 +211,6 @@ projects:
     path: components/browser/menu2
     description: 'An immutable customizable menu for browsers.'
     publish: true
-  browser-session:
-    path: components/browser/session
-    description: 'An abstract layer hiding the actual browser engine implementation.'
-    publish: true
   browser-session-storage:
     path: components/browser/session-storage
     description: 'Component for saving and restoring the browser state.'

@@ -9,14 +9,14 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.test.TestCoroutineDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
-import mozilla.components.browser.session.Session
-import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.action.UndoAction
 import mozilla.components.browser.state.selector.selectedTab
+import mozilla.components.browser.state.state.BrowserState
+import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.libstate.ext.waitUntilIdle
-import mozilla.components.support.test.mock
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -41,30 +41,28 @@ class UndoMiddlewareTest {
 
     @Test
     fun `Undo scenario - Removing single tab`() {
-        val lookup = SessionManagerLookup()
-        val store = BrowserStore(middleware = listOf(
-            UndoMiddleware(lookup, clearAfterMillis = 60000)
-        ))
-        val manager = SessionManager(engine = mock(), store = store).apply {
-            lookup.sessionManager = this
-        }
+        val store = BrowserStore(
+            middleware = listOf(
+                UndoMiddleware(clearAfterMillis = 60000)
+            ),
+            initialState = BrowserState(
+                tabs = listOf(
+                    createTab("https://www.mozilla.org", id = "mozilla"),
+                    createTab("https://getpocket.com", id = "pocket")
+                ),
+                selectedTabId = "mozilla"
+            )
+        )
 
-        val mozilla = Session("https://www.mozilla.org")
-        val pocket = Session("https://getpocket.com")
-
-        manager.add(mozilla)
-        manager.add(pocket)
-
-        assertEquals(2, manager.size)
         assertEquals(2, store.state.tabs.size)
-        assertEquals("https://www.mozilla.org", manager.selectedSessionOrThrow.url)
+        assertEquals(2, store.state.tabs.size)
         assertEquals("https://www.mozilla.org", store.state.selectedTab!!.content.url)
 
-        manager.remove(mozilla)
+        store.dispatch(
+            TabListAction.RemoveTabAction(tabId = "mozilla")
+        ).joinBlocking()
 
-        assertEquals(1, manager.size)
         assertEquals(1, store.state.tabs.size)
-        assertEquals("https://getpocket.com", manager.selectedSessionOrThrow.url)
         assertEquals("https://getpocket.com", store.state.selectedTab!!.content.url)
 
         testDispatcher.withDispatchingPaused {
@@ -77,40 +75,34 @@ class UndoMiddlewareTest {
 
         store.waitUntilIdle()
 
-        assertEquals(2, manager.size)
         assertEquals(2, store.state.tabs.size)
-        assertEquals("https://www.mozilla.org", manager.selectedSessionOrThrow.url)
         assertEquals("https://www.mozilla.org", store.state.selectedTab!!.content.url)
     }
 
     @Test
     fun `Undo scenario - Removing list of tabs`() {
-        val lookup = SessionManagerLookup()
-        val store = BrowserStore(middleware = listOf(
-            UndoMiddleware(lookup, clearAfterMillis = 60000)
-        ))
-        val manager = SessionManager(engine = mock(), store = store).apply {
-            lookup.sessionManager = this
-        }
+        val store = BrowserStore(
+            middleware = listOf(
+                UndoMiddleware(clearAfterMillis = 60000)
+            ),
+            initialState = BrowserState(
+                tabs = listOf(
+                    createTab("https://www.mozilla.org", id = "mozilla"),
+                    createTab("https://getpocket.com", id = "pocket"),
+                    createTab("https://firefox.com", id = "firefox")
+                ),
+                selectedTabId = "mozilla"
+            )
+        )
 
-        val mozilla = Session("https://www.mozilla.org")
-        val pocket = Session("https://getpocket.com")
-        val firefox = Session("https://firefox.com")
-
-        manager.add(mozilla)
-        manager.add(pocket)
-        manager.add(firefox)
-
-        assertEquals(3, manager.size)
         assertEquals(3, store.state.tabs.size)
-        assertEquals("https://www.mozilla.org", manager.selectedSessionOrThrow.url)
         assertEquals("https://www.mozilla.org", store.state.selectedTab!!.content.url)
 
-        manager.removeListOfSessions(listOf(mozilla.id, pocket.id))
+        store.dispatch(
+            TabListAction.RemoveTabsAction(listOf("mozilla", "pocket"))
+        ).joinBlocking()
 
-        assertEquals(1, manager.size)
         assertEquals(1, store.state.tabs.size)
-        assertEquals("https://firefox.com", manager.selectedSessionOrThrow.url)
         assertEquals("https://firefox.com", store.state.selectedTab!!.content.url)
 
         testDispatcher.withDispatchingPaused {
@@ -123,41 +115,34 @@ class UndoMiddlewareTest {
 
         store.waitUntilIdle()
 
-        assertEquals(3, manager.size)
         assertEquals(3, store.state.tabs.size)
-        assertEquals("https://www.mozilla.org", manager.selectedSessionOrThrow.url)
         assertEquals("https://www.mozilla.org", store.state.selectedTab!!.content.url)
     }
 
     @Test
     fun `Undo scenario - Removing all normal tabs`() {
-        val lookup = SessionManagerLookup()
-        val store = BrowserStore(middleware = listOf(
-            UndoMiddleware(lookup, clearAfterMillis = 60000)
-        ))
-        val manager = SessionManager(engine = mock(), store = store).apply {
-            lookup.sessionManager = this
-        }
+        val store = BrowserStore(
+            middleware = listOf(
+                UndoMiddleware(clearAfterMillis = 60000)
+            ),
+            initialState = BrowserState(
+                tabs = listOf(
+                    createTab("https://www.mozilla.org", id = "mozilla"),
+                    createTab("https://getpocket.com", id = "pocket"),
+                    createTab("https://reddit.com/r/firefox", id = "reddit", private = true)
+                ),
+                selectedTabId = "pocket"
+            )
+        )
 
-        val mozilla = Session("https://www.mozilla.org")
-        val pocket = Session("https://getpocket.com")
-        val reddit = Session("https://reddit.com/r/firefox", private = true)
-
-        manager.add(mozilla)
-        manager.add(pocket)
-        manager.add(reddit)
-        manager.select(pocket)
-
-        assertEquals(3, manager.size)
         assertEquals(3, store.state.tabs.size)
-        assertEquals("https://getpocket.com", manager.selectedSessionOrThrow.url)
         assertEquals("https://getpocket.com", store.state.selectedTab!!.content.url)
 
-        manager.removeNormalSessions()
+        store.dispatch(
+            TabListAction.RemoveAllNormalTabsAction
+        ).joinBlocking()
 
-        assertEquals(1, manager.size)
         assertEquals(1, store.state.tabs.size)
-        assertNull(manager.selectedSession)
         assertNull(store.state.selectedTab)
 
         testDispatcher.withDispatchingPaused {
@@ -170,43 +155,42 @@ class UndoMiddlewareTest {
 
         store.waitUntilIdle()
 
-        assertEquals(3, manager.size)
         assertEquals(3, store.state.tabs.size)
-        assertEquals("https://getpocket.com", manager.selectedSessionOrThrow.url)
         assertEquals("https://getpocket.com", store.state.selectedTab!!.content.url)
     }
 
     @Test
     fun `Undo History in State is written`() {
-        val lookup = SessionManagerLookup()
-        val store = BrowserStore(middleware = listOf(
-            UndoMiddleware(lookup, clearAfterMillis = 60000)
-        ))
-        val manager = SessionManager(engine = mock(), store = store).apply {
-            lookup.sessionManager = this
-        }
-
-        val mozilla = Session("https://www.mozilla.org", id = "mozilla")
-        val pocket = Session("https://getpocket.com", id = "pocket")
-        val reddit = Session("https://reddit.com/r/firefox", private = true, id = "reddit")
-
-        manager.add(mozilla)
-        manager.add(pocket)
-        manager.add(reddit)
-        manager.select(pocket)
+        val store = BrowserStore(
+            middleware = listOf(
+                UndoMiddleware(clearAfterMillis = 60000)
+            ),
+            initialState = BrowserState(
+                tabs = listOf(
+                    createTab("https://www.mozilla.org", id = "mozilla"),
+                    createTab("https://getpocket.com", id = "pocket"),
+                    createTab("https://reddit.com/r/firefox", id = "reddit", private = true)
+                ),
+                selectedTabId = "pocket"
+            )
+        )
 
         assertNull(store.state.undoHistory.selectedTabId)
         assertTrue(store.state.undoHistory.tabs.isEmpty())
         assertEquals(3, store.state.tabs.size)
 
-        manager.removePrivateSessions()
+        store.dispatch(
+            TabListAction.RemoveAllPrivateTabsAction
+        ).joinBlocking()
 
         assertNull(store.state.undoHistory.selectedTabId)
         assertEquals(1, store.state.undoHistory.tabs.size)
         assertEquals("https://reddit.com/r/firefox", store.state.undoHistory.tabs[0].url)
         assertEquals(2, store.state.tabs.size)
 
-        manager.removeNormalSessions()
+        store.dispatch(
+            TabListAction.RemoveAllNormalTabsAction
+        ).joinBlocking()
 
         assertEquals("pocket", store.state.undoHistory.selectedTabId)
         assertEquals(2, store.state.undoHistory.tabs.size)
@@ -222,6 +206,8 @@ class UndoMiddlewareTest {
             store.dispatch(UndoAction.RestoreRecoverableTabs).joinBlocking()
         }
 
+        store.waitUntilIdle()
+
         assertNull(store.state.undoHistory.selectedTabId)
         assertTrue(store.state.undoHistory.tabs.isEmpty())
         assertEquals(0, store.state.undoHistory.tabs.size)
@@ -235,32 +221,28 @@ class UndoMiddlewareTest {
         val waitDispatcher = TestCoroutineDispatcher()
         val waitScope = CoroutineScope(waitDispatcher)
 
-        val lookup = SessionManagerLookup()
-        val store = BrowserStore(middleware = listOf(
-            UndoMiddleware(lookup, clearAfterMillis = 60000, waitScope = waitScope)
-        ))
-        val manager = SessionManager(engine = mock(), store = store).apply {
-            lookup.sessionManager = this
-        }
-
-        val mozilla = Session("https://www.mozilla.org", id = "mozilla")
-        val pocket = Session("https://getpocket.com", id = "pocket")
-        val reddit = Session("https://reddit.com/r/firefox", private = true, id = "reddit")
-
-        manager.add(mozilla)
-        manager.add(pocket)
-        manager.add(reddit)
-        manager.select(pocket)
-
-        assertEquals(3, manager.size)
+        val store = BrowserStore(
+            middleware = listOf(
+                UndoMiddleware(clearAfterMillis = 60000, waitScope = waitScope)
+            ),
+            initialState = BrowserState(
+                tabs = listOf(
+                    createTab("https://www.mozilla.org", id = "mozilla"),
+                    createTab("https://getpocket.com", id = "pocket"),
+                    createTab("https://reddit.com/r/firefox", id = "reddit", private = true)
+                ),
+                selectedTabId = "pocket"
+            )
+        )
         assertEquals(3, store.state.tabs.size)
-        assertEquals("https://getpocket.com", manager.selectedSessionOrThrow.url)
         assertEquals("https://getpocket.com", store.state.selectedTab!!.content.url)
 
-        manager.removeNormalSessions()
+        store.dispatch(
+            TabListAction.RemoveAllNormalTabsAction
+        ).joinBlocking()
 
-        assertEquals(1, manager.size)
-        assertEquals("https://reddit.com/r/firefox", manager.sessions[0].url)
+        assertEquals(1, store.state.tabs.size)
+        assertEquals("https://reddit.com/r/firefox", store.state.tabs[0].content.url)
         assertEquals("pocket", store.state.undoHistory.selectedTabId)
         assertEquals(2, store.state.undoHistory.tabs.size)
         assertEquals("https://www.mozilla.org", store.state.undoHistory.tabs[0].url)
@@ -272,8 +254,8 @@ class UndoMiddlewareTest {
 
         assertNull(store.state.undoHistory.selectedTabId)
         assertTrue(store.state.undoHistory.tabs.isEmpty())
-        assertEquals(1, manager.size)
-        assertEquals("https://reddit.com/r/firefox", manager.sessions[0].url)
+        assertEquals(1, store.state.tabs.size)
+        assertEquals("https://reddit.com/r/firefox", store.state.tabs[0].content.url)
 
         testDispatcher.withDispatchingPaused {
             // We need to pause the test dispatcher here to avoid it dispatching immediately.
@@ -283,16 +265,8 @@ class UndoMiddlewareTest {
             store.dispatch(UndoAction.RestoreRecoverableTabs).joinBlocking()
         }
 
-        assertEquals(1, manager.size)
-        assertEquals("https://reddit.com/r/firefox", manager.sessions[0].url)
-    }
-}
-
-private class SessionManagerLookup : () -> SessionManager {
-    lateinit var sessionManager: SessionManager
-
-    override operator fun invoke(): SessionManager {
-        return sessionManager
+        assertEquals(1, store.state.tabs.size)
+        assertEquals("https://reddit.com/r/firefox", store.state.tabs[0].content.url)
     }
 }
 

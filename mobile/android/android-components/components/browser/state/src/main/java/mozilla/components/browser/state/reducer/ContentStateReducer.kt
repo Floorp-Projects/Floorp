@@ -11,8 +11,12 @@ import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.ContentState
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.state.content.HistoryState
+import mozilla.components.concept.engine.manifest.WebAppManifest
+import mozilla.components.support.ktx.android.net.isInScope
 import mozilla.components.support.ktx.android.net.sameSchemeAndHostAs
+import mozilla.components.support.ktx.kotlin.isSameOriginAs
 
+@Suppress("LargeClass")
 internal object ContentStateReducer {
     /**
      * [ContentAction] Reducer function for modifying a specific [ContentState] of a [SessionState].
@@ -27,13 +31,29 @@ internal object ContentStateReducer {
                 it.copy(thumbnail = null)
             }
             is ContentAction.UpdateUrlAction -> updateContentState(state, action.sessionId) {
-                val icon = if (!isHostEquals(it.url, action.url)) {
-                    null
-                } else {
-                    it.icon
-                }
-
-                it.copy(url = action.url, icon = icon)
+                it.copy(
+                    url = action.url,
+                    icon = if (!isHostEquals(it.url, action.url)) {
+                        null
+                    } else {
+                        it.icon
+                    },
+                    title = if (!isUrlSame(it.url, action.url)) {
+                        ""
+                    } else {
+                        it.title
+                    },
+                    webAppManifest = if (!isInScope(it.webAppManifest, action.url)) {
+                        null
+                    } else {
+                        it.webAppManifest
+                    },
+                    permissionRequestsList = if (!it.url.isSameOriginAs(action.url)) {
+                        emptyList()
+                    } else {
+                        it.permissionRequestsList
+                    }
+                )
             }
             is ContentAction.UpdateProgressAction -> updateContentState(state, action.sessionId) {
                 it.copy(progress = action.progress)
@@ -234,4 +254,27 @@ private fun isHostEquals(sessionUrl: String, newUrl: String): Boolean {
     val newUri = Uri.parse(newUrl)
 
     return sessionUri.sameSchemeAndHostAs(newUri)
+}
+
+private fun isUrlSame(originalUrl: String, newUrl: String): Boolean {
+    val originalUri = Uri.parse(originalUrl)
+    val uri = Uri.parse(newUrl)
+
+    return uri.port == originalUri.port &&
+        uri.host == originalUri.host &&
+        uri.path?.trimStart('/') == originalUri.path?.trimStart('/') &&
+        uri.query == originalUri.query
+}
+
+/**
+ * Checks that the [newUrl] is in scope of the web app manifest.
+ *
+ * https://www.w3.org/TR/appmanifest/#dfn-within-scope
+ */
+private fun isInScope(manifest: WebAppManifest?, newUrl: String): Boolean {
+    val scope = manifest?.scope ?: manifest?.startUrl ?: return false
+    val scopeUri = Uri.parse(scope)
+    val newUri = Uri.parse(newUrl)
+
+    return newUri.isInScope(listOf(scopeUri))
 }

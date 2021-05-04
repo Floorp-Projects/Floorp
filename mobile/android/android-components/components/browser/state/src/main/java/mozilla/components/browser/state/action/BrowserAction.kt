@@ -700,133 +700,144 @@ sealed class EngineAction : BrowserAction() {
      * Creates an [EngineSession] for the given [tabId] if none exists yet.
      */
     data class CreateEngineSessionAction(
-        val tabId: String,
-        val skipLoading: Boolean = false
-    ) : EngineAction()
+        override val tabId: String,
+        val skipLoading: Boolean = false,
+        val followupAction: BrowserAction? = null
+    ) : EngineAction(), ActionWithTab
 
     /**
-     * Loads the given [url] in the tab with the given [sessionId].
+     * Loads the given [url] in the tab with the given [tabId].
      */
     data class LoadUrlAction(
-        val sessionId: String,
+        override val tabId: String,
         val url: String,
         val flags: EngineSession.LoadUrlFlags = EngineSession.LoadUrlFlags.none(),
         val additionalHeaders: Map<String, String>? = null
-    ) : EngineAction()
+    ) : EngineAction(), ActionWithTab
 
     /**
-     * Loads [data] in the tab with the given [sessionId].
+     * Loads [data] in the tab with the given [tabId].
      */
     data class LoadDataAction(
-        val sessionId: String,
+        override val tabId: String,
         val data: String,
         val mimeType: String = "text/html",
         val encoding: String = "UTF-8"
-    ) : EngineAction()
+    ) : EngineAction(), ActionWithTab
 
     /**
-     * Reloads the tab with the given [sessionId].
+     * Reloads the tab with the given [tabId].
      */
     data class ReloadAction(
-        val sessionId: String,
+        override val tabId: String,
         val flags: EngineSession.LoadUrlFlags = EngineSession.LoadUrlFlags.none()
-    ) : EngineAction()
+    ) : EngineAction(), ActionWithTab
 
     /**
-     * Navigates back in the tab with the given [sessionId].
+     * Navigates back in the tab with the given [tabId].
      */
     data class GoBackAction(
-        val sessionId: String
-    ) : EngineAction()
+        override val tabId: String
+    ) : EngineAction(), ActionWithTab
 
     /**
-     * Navigates forward in the tab with the given [sessionId].
+     * Navigates forward in the tab with the given [tabId].
      */
     data class GoForwardAction(
-        val sessionId: String
-    ) : EngineAction()
+        override val tabId: String
+    ) : EngineAction(), ActionWithTab
 
     /**
-     * Navigates to the specified index in the history of the tab with the given [sessionId].
+     * Navigates to the specified index in the history of the tab with the given [tabId].
      */
     data class GoToHistoryIndexAction(
-        val sessionId: String,
+        override val tabId: String,
         val index: Int
-    ) : EngineAction()
+    ) : EngineAction(), ActionWithTab
 
     /**
-     * Enables/disables desktop mode in the tabs with the given [sessionId].
+     * Enables/disables desktop mode in the tabs with the given [tabId].
      */
     data class ToggleDesktopModeAction(
-        val sessionId: String,
+        override val tabId: String,
         val enable: Boolean
-    ) : EngineAction()
+    ) : EngineAction(), ActionWithTab
 
     /**
-     * Exits fullscreen mode in the tabs with the given [sessionId].
+     * Exits fullscreen mode in the tabs with the given [tabId].
      */
     data class ExitFullScreenModeAction(
-        val sessionId: String
-    ) : EngineAction()
+        override val tabId: String
+    ) : EngineAction(), ActionWithTab
 
     /**
-     * Clears browsing data for the tab with the given [sessionId].
+     * Clears browsing data for the tab with the given [tabId].
      */
     data class ClearDataAction(
-        val sessionId: String,
+        override val tabId: String,
         val data: Engine.BrowsingData
-    ) : EngineAction()
+    ) : EngineAction(), ActionWithTab
 
     /**
-     * Attaches the provided [EngineSession] to the session with the provided [sessionId].
+     * Attaches the provided [EngineSession] to the session with the provided [tabId].
      *
-     * @property sessionId The ID of the tab the [EngineSession] should be linked to.
+     * @property tabId The ID of the tab the [EngineSession] should be linked to.
      * @property engineSession The [EngineSession] that should be linked to the tab.
      * @property timestamp Timestamp (milliseconds) of when the linking has happened (By default
      * set to [SystemClock.elapsedRealtime].
      */
     data class LinkEngineSessionAction(
-        val sessionId: String,
+        override val tabId: String,
         val engineSession: EngineSession,
         val timestamp: Long = Clock.elapsedRealtime(),
         val skipLoading: Boolean = false
-    ) : EngineAction()
+    ) : EngineAction(), ActionWithTab
 
     /**
-     * Suspends the [EngineSession] of the session with the provided [sessionId].
+     * Suspends the [EngineSession] of the session with the provided [tabId].
      */
     data class SuspendEngineSessionAction(
-        val sessionId: String
-    ) : EngineAction()
+        override val tabId: String
+    ) : EngineAction(), ActionWithTab
 
     /**
-     * Marks the [EngineSession] of the session with the provided [sessionId] as killed (The matching
+     * Marks the [EngineSession] of the session with the provided [tabId] as killed (The matching
      * content process was killed).
      */
     data class KillEngineSessionAction(
-        val sessionId: String
-    ) : EngineAction()
+        override val tabId: String
+    ) : EngineAction(), ActionWithTab
 
     /**
-     * Detaches the current [EngineSession] from the session with the provided [sessionId].
+     * Detaches the current [EngineSession] from the session with the provided [tabId].
      */
-    data class UnlinkEngineSessionAction(val sessionId: String) : EngineAction()
+    data class UnlinkEngineSessionAction(
+        override val tabId: String
+    ) : EngineAction(), ActionWithTab
 
     /**
-     * Updates the [EngineSessionState] of the session with the provided [sessionId].
+     * Updates the [EngineState.initializing] flag of the session with the provided [tabId].
+     */
+    data class UpdateEngineSessionInitializingAction(
+        override val tabId: String,
+        val initializing: Boolean
+    ) : EngineAction(), ActionWithTab
+
+    /**
+     * Updates the [EngineSessionState] of the session with the provided [tabId].
      */
     data class UpdateEngineSessionStateAction(
-        val sessionId: String,
+        override val tabId: String,
         val engineSessionState: EngineSessionState
-    ) : EngineAction()
+    ) : EngineAction(), ActionWithTab
 
     /**
-     * Updates the [EngineSession.Observer] of the session with the provided [sessionId].
+     * Updates the [EngineSession.Observer] of the session with the provided [tabId].
      */
     data class UpdateEngineSessionObserverAction(
-        val sessionId: String,
+        override val tabId: String,
         val engineSessionObserver: EngineSession.Observer
-    ) : EngineAction()
+    ) : EngineAction(), ActionWithTab
 
     /**
      * Purges the back/forward history of all tabs and custom tabs.

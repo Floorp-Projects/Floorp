@@ -9,7 +9,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.state.action.BrowserAction
 import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.action.UndoAction
@@ -20,8 +19,10 @@ import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.recover.toRecoverableTab
+import mozilla.components.browser.state.state.recover.toTabSessionStates
 import mozilla.components.lib.state.Middleware
 import mozilla.components.lib.state.MiddlewareContext
+import mozilla.components.lib.state.Store
 import mozilla.components.support.base.log.logger.Logger
 import java.util.UUID
 import mozilla.components.support.base.coroutines.Dispatchers as MozillaDispatchers
@@ -32,7 +33,6 @@ import mozilla.components.support.base.coroutines.Dispatchers as MozillaDispatch
  * the tabs from [BrowserState.undoHistory].
  */
 class UndoMiddleware(
-    private val sessionManagerLookup: () -> SessionManager,
     private val clearAfterMillis: Long = 5000, // For comparison: a LENGTH_LONG Snackbar takes 2750.
     private val mainScope: CoroutineScope = CoroutineScope(Dispatchers.Main),
     private val waitScope: CoroutineScope = CoroutineScope(MozillaDispatchers.Cached)
@@ -68,7 +68,7 @@ class UndoMiddleware(
             }
 
             // Restore
-            is UndoAction.RestoreRecoverableTabs -> restore(context.state)
+            is UndoAction.RestoreRecoverableTabs -> restore(context.store, context.state)
         }
 
         next(action)
@@ -108,14 +108,15 @@ class UndoMiddleware(
         }
     }
 
-    private fun restore(state: BrowserState) = mainScope.launch {
+    private fun restore(
+        store: Store<BrowserState, BrowserAction>,
+        state: BrowserState
+    ) = mainScope.launch {
         clearJob?.cancel()
 
         // Since we have to restore into SessionManager (until we can nuke it from orbit and only use BrowserStore),
         // this is a bit crude. For example we do not restore into the previous position. The goal is to make this
         // nice once we can restore directly into BrowserState.
-
-        val sessionManager = sessionManagerLookup.invoke()
 
         val undoHistory = state.undoHistory
         val tabs = undoHistory.tabs
@@ -124,14 +125,11 @@ class UndoMiddleware(
             return@launch
         }
 
-        sessionManager.restore(tabs)
+        store.dispatch(TabListAction.RestoreAction(tabs.toTabSessionStates()))
 
         // Restore the previous selection if needed.
         undoHistory.selectedTabId?.let { tabId ->
-            val tab = sessionManager.findSessionById(tabId)
-            if (tab != null) {
-                sessionManager.select(tab)
-            }
+            store.dispatch(TabListAction.SelectTabAction(tabId))
         }
     }
 }

@@ -8,6 +8,7 @@ import android.graphics.Bitmap
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSessionState
 import mozilla.components.concept.storage.HistoryMetadataKey
+import mozilla.components.concept.engine.manifest.WebAppManifest
 import java.util.UUID
 
 /**
@@ -69,6 +70,7 @@ fun createTab(
     private: Boolean = false,
     id: String = UUID.randomUUID().toString(),
     parent: TabSessionState? = null,
+    parentId: String? = null,
     extensions: Map<String, WebExtensionState> = emptyMap(),
     readerState: ReaderState = ReaderState(),
     title: String = "",
@@ -80,7 +82,10 @@ fun createTab(
     engineSessionState: EngineSessionState? = null,
     crashed: Boolean = false,
     mediaSessionState: MediaSessionState? = null,
-    historyMetadata: HistoryMetadataKey? = null
+    historyMetadata: HistoryMetadataKey? = null,
+    webAppManifest: WebAppManifest? = null,
+    searchTerms: String = "",
+    initialLoadFlags: EngineSession.LoadUrlFlags = EngineSession.LoadUrlFlags.none()
 ): TabSessionState {
     return TabSessionState(
         id = id,
@@ -88,9 +93,11 @@ fun createTab(
             url,
             private,
             title = title,
-            thumbnail = thumbnail
+            thumbnail = thumbnail,
+            webAppManifest = webAppManifest,
+            searchTerms = searchTerms
         ),
-        parentId = parent?.id,
+        parentId = parentId ?: parent?.id,
         extensionState = extensions,
         readerState = readerState,
         contextId = contextId,
@@ -99,7 +106,8 @@ fun createTab(
         engineState = EngineState(
             engineSession = engineSession,
             engineSessionState = engineSessionState,
-            crashed = crashed
+            crashed = crashed,
+            initialLoadFlags = initialLoadFlags
         ),
         mediaSessionState = mediaSessionState,
         historyMetadata = historyMetadata

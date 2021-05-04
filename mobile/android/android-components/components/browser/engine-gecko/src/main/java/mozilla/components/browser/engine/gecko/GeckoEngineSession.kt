@@ -538,9 +538,7 @@ class GeckoEngineSession(
         ): GeckoResult<GeckoSession> {
             val newEngineSession = GeckoEngineSession(runtime, privateMode, defaultSettings, openGeckoSession = false)
             notifyObservers {
-                MainScope().launch {
-                    onWindowRequest(GeckoWindowRequest(uri, newEngineSession))
-                }
+                onWindowRequest(GeckoWindowRequest(uri, newEngineSession))
             }
             return GeckoResult.fromValue(newEngineSession.geckoSession)
         }

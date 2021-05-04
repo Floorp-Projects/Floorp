@@ -44,19 +44,12 @@ class WindowFeature(
                             }
                         }
                         WindowRequest.Type.OPEN -> consumeWindowRequest(state.id) {
-                            if (state.content.private) {
-                                tabsUseCases.addPrivateTab(
-                                    selectTab = true,
-                                    parentId = state.id,
-                                    engineSession = windowRequest.prepare()
-                                )
-                            } else {
-                                tabsUseCases.addTab(
-                                    selectTab = true,
-                                    parentId = state.id,
-                                    engineSession = windowRequest.prepare()
-                                )
-                            }
+                            tabsUseCases.addTab(
+                                selectTab = true,
+                                parentId = state.id,
+                                engineSession = windowRequest.prepare(),
+                                private = state.content.private
+                            )
                             windowRequest.start()
                         }
                     }

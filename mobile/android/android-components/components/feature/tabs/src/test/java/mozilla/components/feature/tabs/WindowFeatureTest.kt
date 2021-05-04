@@ -37,7 +37,6 @@ class WindowFeatureTest {
     private lateinit var engineSession: EngineSession
     private lateinit var tabsUseCases: TabsUseCases
     private lateinit var addTabUseCase: TabsUseCases.AddNewTabUseCase
-    private lateinit var addPrivateTabUseCase: TabsUseCases.AddNewPrivateTabUseCase
     private lateinit var removeTabUseCase: TabsUseCases.RemoveTabUseCase
     private val tabId = "test-tab"
     private val privateTabId = "test-tab-private"
@@ -52,12 +51,10 @@ class WindowFeatureTest {
             ),
             selectedTabId = tabId
         )))
-        addPrivateTabUseCase = mock()
         addTabUseCase = mock()
         removeTabUseCase = mock()
         tabsUseCases = mock()
         whenever(tabsUseCases.addTab).thenReturn(addTabUseCase)
-        whenever(tabsUseCases.addPrivateTab).thenReturn(addPrivateTabUseCase)
         whenever(tabsUseCases.removeTab).thenReturn(removeTabUseCase)
     }
 
@@ -88,7 +85,7 @@ class WindowFeatureTest {
         store.dispatch(TabListAction.SelectTabAction(privateTabId)).joinBlocking()
         store.dispatch(ContentAction.UpdateWindowRequestAction(privateTabId, windowRequest)).joinBlocking()
         testDispatcher.advanceUntilIdle()
-        verify(addPrivateTabUseCase).invoke(url = "about:blank", selectTab = true, parentId = privateTabId)
+        verify(addTabUseCase).invoke(url = "about:blank", selectTab = true, parentId = privateTabId, private = true)
         verify(store).dispatch(ContentAction.ConsumeWindowRequestAction(privateTabId))
     }
 

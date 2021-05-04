@@ -138,11 +138,12 @@ data class ContextMenuCandidate(
                     hitResult.isHttpLink()
             },
             action = { parent, hitResult ->
-                val tab = tabsUseCases.addPrivateTab(
+                val tab = tabsUseCases.addTab(
                     hitResult.getLink(),
                     selectTab = false,
                     startLoading = true,
-                    parentId = parent.id
+                    parentId = parent.id,
+                    private = true
                 )
 
                 snackbarDelegate.show(
@@ -250,19 +251,14 @@ data class ContextMenuCandidate(
                     hitResult.isImage()
             },
             action = { parent, hitResult ->
-                val tab = if (parent.content.private) {
-                    tabsUseCases.addPrivateTab(
-                        hitResult.src, selectTab = false, startLoading = true, parentId = parent.id
-                    )
-                } else {
-                    tabsUseCases.addTab(
-                        hitResult.src,
-                        selectTab = false,
-                        startLoading = true,
-                        parentId = parent.id,
-                        contextId = parent.contextId
-                    )
-                }
+                val tab = tabsUseCases.addTab(
+                    hitResult.src,
+                    selectTab = false,
+                    startLoading = true,
+                    parentId = parent.id,
+                    contextId = parent.contextId,
+                    private = parent.content.private
+                )
 
                 snackbarDelegate.show(
                     snackBarParentView = snackBarParentView,

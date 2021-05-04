@@ -29,7 +29,6 @@ tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach() 
 
 dependencies {
     implementation project(':browser-state')
-    implementation project(':browser-session')
     implementation project(':concept-storage')
     implementation project(':concept-engine')
     implementation project(':support-utils')

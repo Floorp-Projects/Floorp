@@ -24,10 +24,12 @@ import mozilla.components.concept.engine.EngineSessionState
  * before the session has crashed (if desired).
  * @property timestamp Timestamp of when the [EngineSession] was linked.
  * @property initialLoadFlags [EngineSession.LoadUrlFlags] to use for the first load of this session.
+ * @property initializing whether or not the [EngineSession] is currently being initialized.
  */
 data class EngineState(
     val engineSession: EngineSession? = null,
     val engineSessionState: EngineSessionState? = null,
+    val initializing: Boolean = false,
     val engineObserver: EngineSession.Observer? = null,
     val crashed: Boolean = false,
     val timestamp: Long? = null,
