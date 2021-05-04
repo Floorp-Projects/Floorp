@@ -2188,7 +2188,7 @@ inline bool OpIter<Policy>::readRefFunc(uint32_t* funcIndex) {
   if (*funcIndex >= env_.funcs.length()) {
     return fail("function index out of range");
   }
-  if (!env_.validForRefFunc.getBit(*funcIndex)) {
+  if (kind_ == OpIter::Func && !env_.funcs[*funcIndex].canRefFunc()) {
     return fail(
         "function index is not declared in a section before the code section");
   }

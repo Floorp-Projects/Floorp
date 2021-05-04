@@ -2329,7 +2329,8 @@ static bool DecodeExport(Decoder& d, ModuleEnvironment* env,
       }
 #endif
 
-      env->validForRefFunc.setBit(funcIndex);
+      env->declareFuncExported(funcIndex, /* eager */ true,
+                               /* canRefFunc */ true);
       return env->exports.emplaceBack(std::move(fieldName), funcIndex,
                                       DefinitionKind::Function);
     }
@@ -2462,6 +2463,7 @@ static bool DecodeStartSection(Decoder& d, ModuleEnvironment* env) {
     return d.fail("start function must be nullary");
   }
 
+  env->declareFuncExported(funcIndex, /* eager */ true, /* canFuncRef */ false);
   env->startFuncIndex = Some(funcIndex);
 
   return d.finishSection(*range, "start");
@@ -2630,9 +2632,10 @@ static bool DecodeElemSection(Decoder& d, ModuleEnvironment* env) {
                          kind == ElemSegmentKind::Declared ||
                          env->tables[seg->tableIndex].importedOrExported;
 #endif
+    bool isAsmJS = seg->active() && env->tables[seg->tableIndex].isAsmJS;
 
-    // For passive segments we should use DecodeInitializerExpression() but we
-    // don't really want to generalize that function yet, so instead read the
+    // For passive segments we should use InitExpr but we don't really want to
+    // generalize the ElemSection data structure yet, so instead read the
     // required Ref.Func and End here.
 
     TypeCache cache;
@@ -2689,8 +2692,9 @@ static bool DecodeElemSection(Decoder& d, ModuleEnvironment* env) {
       }
 
       seg->elemFuncIndices.infallibleAppend(funcIndex);
-      if (funcIndex != NullFuncIndex) {
-        env->validForRefFunc.setBit(funcIndex);
+      if (funcIndex != NullFuncIndex && !isAsmJS) {
+        env->declareFuncExported(funcIndex, /* eager */ false,
+                                 /* canRefFunc */ true);
       }
     }
 
