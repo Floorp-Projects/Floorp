@@ -18,7 +18,7 @@ class CodeCoverageHandler {
   static CodeCoverageHandler* Get();
   CrossProcessMutex* GetMutex();
   CrossProcessMutexHandle GetMutexHandle(int aProcId);
-  static void FlushCounters();
+  static void FlushCounters(const bool initialized = false);
   static void FlushCountersSignalHandler(int);
 
  private:
