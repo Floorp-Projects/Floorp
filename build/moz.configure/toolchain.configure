@@ -93,7 +93,6 @@ with only_when(host_is_osx | target_is_osx):
         # installation docs:
         # https://firefox-source-docs.mozilla.org/setup/macos_build.html#macos-sdk-is-unsupported
         sdk_min_version = Version("10.12")
-        sdk_max_version = Version("11.1")
 
         if sdk:
             sdk = sdk[0]
@@ -136,12 +135,6 @@ with only_when(host_is_osx | target_is_osx):
                 "updating your system Xcode. If that's not sufficient, see the manual "
                 "SDK installation docs: %s"
                 % (version, sdk_min_version, sdk_installation_docs_url)
-            )
-        if version > sdk_max_version:
-            die(
-                'SDK version "%s" is unsupported. Please downgrade to version '
-                "%s. See the manual SDK installation docs: %s"
-                % (version, sdk_max_version, sdk_installation_docs_url)
             )
         return sdk
 
