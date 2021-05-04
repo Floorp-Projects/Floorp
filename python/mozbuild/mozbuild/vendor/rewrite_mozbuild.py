@@ -206,7 +206,7 @@ def log(*args, **kwargs):
 
 # < python 3.8 shims #########################
 # Taskcluster currently runs python 3.5 and it's difficult to move to a more recent one
-# Once Taskcluster moves to 3.8 we could try to remove this. (Or keep it for developers who are < 3.8)
+# Once Tskcl moves to 3.8 we could try to remove this. (Or keep it for developers who are < 3.8)
 # From https://github.com/python/cpython/blob/44f6b9aa49d562ab7c67952442b8348346b24141/Lib/ast.py
 
 
