@@ -2075,13 +2075,6 @@ bool BaselineCacheIRCompiler::updateArgc(CallFlags flags, Register argcReg,
       masm.load32(Address(scratch, ObjectElements::offsetOfLength()), scratch);
       break;
     }
-    case CallFlags::FunApplyMagicArgs: {
-      // The length of |arguments| is stored in the baseline frame.
-      Address numActualArgsAddr(BaselineFrameReg,
-                                BaselineFrame::offsetOfNumActualArgs());
-      masm.load32(numActualArgsAddr, scratch);
-      break;
-    }
     case CallFlags::FunApplyArgsObj: {
       // Load the arguments object length.
       BaselineFrameSlot slot(0);
@@ -2118,9 +2111,6 @@ void BaselineCacheIRCompiler::pushArguments(Register argcReg,
       break;
     case CallFlags::FunCall:
       pushFunCallArguments(argcReg, calleeReg, scratch, scratch2, isJitCall);
-      break;
-    case CallFlags::FunApplyMagicArgs:
-      pushFunApplyMagicArgs(argcReg, calleeReg, scratch, scratch2, isJitCall);
       break;
     case CallFlags::FunApplyArgsObj:
       pushFunApplyArgsObj(argcReg, calleeReg, scratch, scratch2, isJitCall);
@@ -2288,45 +2278,6 @@ void BaselineCacheIRCompiler::pushFunCallArguments(Register argcReg,
   }
 
   masm.bind(&done);
-}
-
-void BaselineCacheIRCompiler::pushFunApplyMagicArgs(Register argcReg,
-                                                    Register calleeReg,
-                                                    Register scratch,
-                                                    Register scratch2,
-                                                    bool isJitCall) {
-  // Push the caller's arguments onto the stack.
-
-  // Find the start of the caller's arguments.
-  Register startReg = scratch;
-  masm.loadPtr(Address(BaselineFrameReg, 0), startReg);
-  masm.addPtr(Imm32(BaselineFrame::offsetOfArg(0)), startReg);
-
-  if (isJitCall) {
-    masm.alignJitStackBasedOnNArgs(argcReg, /*countIncludesThis =*/false);
-  }
-
-  Register endReg = scratch2;
-  BaseValueIndex endAddr(startReg, argcReg);
-  masm.computeEffectiveAddress(endAddr, endReg);
-
-  // Copying pre-decrements endReg by 8 until startReg is reached
-  Label copyDone;
-  Label copyStart;
-  masm.bind(&copyStart);
-  masm.branchPtr(Assembler::Equal, endReg, startReg, &copyDone);
-  masm.subPtr(Imm32(sizeof(Value)), endReg);
-  masm.pushValue(Address(endReg, 0));
-  masm.jump(&copyStart);
-  masm.bind(&copyDone);
-
-  // Push arg0 as |this| for call
-  masm.pushValue(Address(BaselineFrameReg, STUB_FRAME_SIZE + sizeof(Value)));
-
-  // Push |callee| if needed.
-  if (!isJitCall) {
-    masm.Push(TypedOrValueRegister(MIRType::Object, AnyRegister(calleeReg)));
-  }
 }
 
 void BaselineCacheIRCompiler::pushFunApplyArgsObj(Register argcReg,
