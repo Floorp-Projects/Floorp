@@ -7,7 +7,7 @@
 
 /* global waitUntilState, gBrowser */
 /* exported addTestTab, checkTreeState, checkSidebarState, checkAuditState, selectRow,
-            toggleRow, toggleMenuItem, addA11yPanelTestsTask, navigate,
+            toggleRow, toggleMenuItem, addA11yPanelTestsTask, reload, navigate,
             openSimulationMenu, toggleSimulationOption, TREE_FILTERS_MENU_ID,
             PREFS_MENU_ID */
 
@@ -827,4 +827,14 @@ function addA11YPanelTask(msg, uri, task, options = {}) {
     await task(env);
     await closeTabToolboxAccessibility(env.tab);
   });
+}
+
+/**
+ * Reload panel target.
+ * @param  {Object} target             Panel target.
+ * @param  {String} waitForTargetEvent Event to wait for after reload.
+ */
+function reload(target, waitForTargetEvent = "navigate") {
+  executeSoon(() => target.reload());
+  return once(target, waitForTargetEvent);
 }

@@ -199,8 +199,19 @@ registerCleanupFunction(() => {
   Services.cookies.removeAll();
 });
 
+function waitForNavigation(target) {
+  return new Promise(resolve => {
+    target.once("will-navigate", () => {
+      target.once("navigate", () => {
+        resolve();
+      });
+    });
+  });
+}
+
 async function toggleCache(toolbox, disabled) {
   const options = { cacheDisabled: disabled };
+  const navigationFinished = waitForNavigation(toolbox.target);
 
   // Disable the cache for any toolbox that it is opened from this point on.
   Services.prefs.setBoolPref("devtools.cache.disabled", disabled);
@@ -208,7 +219,9 @@ async function toggleCache(toolbox, disabled) {
   await toolbox.commands.targetConfigurationCommand.updateConfiguration(
     options
   );
-  await toolbox.commands.targetCommand.reloadTopLevelTarget();
+  await toolbox.target.reload();
+
+  await navigationFinished;
 }
 
 /**

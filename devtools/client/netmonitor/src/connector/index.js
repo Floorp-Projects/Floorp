@@ -460,17 +460,25 @@ class Connector {
       this.currentActivity = ACTIVITY_TYPE.NONE;
     };
 
+    // Waits for a series of "navigation start" and "navigation stop" events.
+    const waitForNavigation = async () => {
+      await this.currentTarget.once("will-navigate");
+      await this.currentTarget.once("navigate");
+    };
+
     // Reconfigures the tab, optionally triggering a reload.
-    const reconfigureTab = async options => {
-      await this.commands.targetConfigurationCommand.updateConfiguration(
+    const reconfigureTab = options => {
+      return this.commands.targetConfigurationCommand.updateConfiguration(
         options
       );
     };
 
     // Reconfigures the tab and waits for the target to finish navigating.
     const reconfigureTabAndReload = async options => {
+      const navigationFinished = waitForNavigation();
       await reconfigureTab(options);
-      await this.commands.targetCommand.reloadTopLevelTarget();
+      await this.toolbox.target.reload();
+      await navigationFinished;
     };
 
     switch (type) {
