@@ -1854,7 +1854,7 @@ class DebugEnvironmentProxyHandler : public BaseProxyHandler {
     return isFunctionEnvironment(env) && !env.as<CallObject>()
                                               .callee()
                                               .baseScript()
-                                              ->argumentsHasVarBinding();
+                                              ->needsArgsObj();
   }
 
   /*
@@ -1925,7 +1925,7 @@ class DebugEnvironmentProxyHandler : public BaseProxyHandler {
           }
         }
       }
-      MOZ_ASSERT(callee && callee->baseScript()->argumentsHasVarBinding());
+      MOZ_ASSERT(callee && callee->baseScript()->needsArgsObj());
     }
 #endif
 

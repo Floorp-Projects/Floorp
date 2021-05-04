@@ -41,7 +41,7 @@ inline unsigned StartArgSlot(JSScript* script) {
 
   // Note: when updating this, please also update the assert in
   // SnapshotWriter::startFrame
-  return 2 + (script->argumentsHasVarBinding() ? 1 : 0);
+  return 2 + (script->needsArgsObj() ? 1 : 0);
 }
 
 inline unsigned CountArgSlots(JSScript* script, JSFunction* fun) {
@@ -226,10 +226,7 @@ class CompileInfo {
     return nimplicit() + nargs() + nlocals();
   }
 
-  bool hasArguments() const { return script()->argumentsHasVarBinding(); }
-  bool argumentsAliasesFormals() const {
-    return script()->argumentsAliasesFormals();
-  }
+  bool hasArguments() const { return script()->needsArgsObj(); }
   bool hasMappedArgsObj() const { return script()->hasMappedArgsObj(); }
   bool needsArgsObj() const { return scriptNeedsArgsObj_; }
   bool argsObjAliasesFormals() const {

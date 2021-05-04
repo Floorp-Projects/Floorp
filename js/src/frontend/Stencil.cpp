@@ -2566,11 +2566,8 @@ static void DumpImmutableScriptFlags(js::JSONPrinter& json,
         case ImmutableScriptFlagsEnum::ShouldDeclareArguments:
           json.value("ShouldDeclareArguments");
           break;
-        case ImmutableScriptFlagsEnum::ArgumentsHasVarBinding:
-          json.value("ArgumentsHasVarBinding");
-          break;
-        case ImmutableScriptFlagsEnum::AlwaysNeedsArgsObj:
-          json.value("AlwaysNeedsArgsObj");
+        case ImmutableScriptFlagsEnum::NeedsArgsObj:
+          json.value("NeedsArgsObj");
           break;
         case ImmutableScriptFlagsEnum::HasMappedArgsObj:
           json.value("HasMappedArgsObj");
