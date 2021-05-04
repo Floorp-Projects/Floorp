@@ -28,25 +28,6 @@ function checkHistogramResults(resultIndexes, expected, histogram) {
   }
 }
 
-let searchInSearchbar = async function(inputText) {
-  let win = window;
-  await new Promise(r => waitForFocus(r, win));
-  let sb = BrowserSearch.searchBar;
-  // Write the search query in the searchbar.
-  sb.focus();
-  sb.value = inputText;
-  sb.textbox.controller.startSearch(inputText);
-  // Wait for the popup to show.
-  await BrowserTestUtils.waitForEvent(sb.textbox.popup, "popupshown");
-  // And then for the search to complete.
-  await BrowserTestUtils.waitForCondition(
-    () =>
-      sb.textbox.controller.searchStatus >=
-      Ci.nsIAutoCompleteController.STATUS_COMPLETE_NO_MATCH,
-    "The search in the searchbar must complete."
-  );
-};
-
 /**
  * Click one of the entries in the search suggestion popup.
  *
@@ -307,11 +288,9 @@ add_task(async function test_oneOff_click() {
 
   info("Type a query.");
   let p = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
-  await searchInSearchbar("query");
+  let popup = await searchInSearchbar("query");
   info("Click the first one-off button.");
-  BrowserSearch.searchBar.textbox.popup.oneOffButtons
-    .getSelectableButtons(false)[0]
-    .click();
+  popup.oneOffButtons.getSelectableButtons(false)[0].click();
   await p;
 
   let resultMethods = resultMethodHist.snapshot();

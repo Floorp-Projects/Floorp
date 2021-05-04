@@ -35,9 +35,6 @@ let goButton;
 
 add_task(async function setup() {
   searchbar = await gCUITestUtils.addSearchBar();
-  registerCleanupFunction(() => {
-    gCUITestUtils.removeSearchBar();
-  });
   textbox = searchbar.textbox;
   searchIcon = searchbar.querySelector(".searchbar-search-button");
   goButton = searchbar.querySelector(".search-go-button");
@@ -48,14 +45,7 @@ add_task(async function setup() {
   );
   await Services.search.setDefault(engine);
 
-  // First cleanup the form history in case other tests left things there.
-  await new Promise((resolve, reject) => {
-    info("cleanup the search history");
-    searchbar.FormHistory.update(
-      { op: "remove", fieldname: "searchbar-history" },
-      { handleCompletion: resolve, handleError: reject }
-    );
-  });
+  await clearSearchbarHistory();
 
   await new Promise((resolve, reject) => {
     info("adding search history values: " + kValues);
@@ -69,6 +59,7 @@ add_task(async function setup() {
   });
 
   registerCleanupFunction(async () => {
+    await clearSearchbarHistory();
     await Services.search.setDefault(defaultEngine);
     gCUITestUtils.removeSearchBar();
   });
