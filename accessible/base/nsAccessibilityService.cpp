@@ -548,19 +548,6 @@ void nsAccessibilityService::RangeValueChanged(PresShell* aPresShell,
   }
 }
 
-void nsAccessibilityService::UpdateListBullet(PresShell* aPresShell,
-                                              nsIContent* aHTMLListItemContent,
-                                              bool aHasBullet) {
-  DocAccessible* document = GetDocAccessible(aPresShell);
-  if (document) {
-    LocalAccessible* accessible = document->GetAccessible(aHTMLListItemContent);
-    if (accessible) {
-      HTMLLIAccessible* listItem = accessible->AsHTMLListItem();
-      if (listItem) listItem->UpdateBullet(aHasBullet);
-    }
-  }
-}
-
 void nsAccessibilityService::UpdateImageMap(nsImageFrame* aImageFrame) {
   PresShell* presShell = aImageFrame->PresShell();
   DocAccessible* document = GetDocAccessible(presShell);
@@ -1137,6 +1124,14 @@ LocalAccessible* nsAccessibilityService::CreateAccessible(
                          nsGkAtoms::maligngroup_, nsGkAtoms::malignmark_,
                          nsGkAtoms::mspace_, nsGkAtoms::semantics_)) {
         newAcc = new HyperTextAccessible(content, document);
+      }
+    } else if (content->IsGeneratedContentContainerForMarker()) {
+      if (aContext->IsHTMLListItem()) {
+        const nsStyleList* styleList = frame->StyleList();
+        if (!styleList->mListStyleImage.IsNone() ||
+            !styleList->mCounterStyle.IsNone()) {
+          newAcc = new HTMLListBulletAccessible(content, document);
+        }
       }
     }
   }

@@ -188,13 +188,9 @@
           { // li
             role: ROLE_LISTITEM,
             children: [
-              { // ::marker content text
-                role: ROLE_STATICTEXT,
-                name: "foo",
-              },
-              { // ::marker content counter
-                role: ROLE_STATICTEXT,
-                name: "1",
+              { // ::marker content text and counter
+                role: ROLE_LISTITEM_MARKER,
+                name: "foo 1",
               },
               {
                 role: ROLE_TEXT_LEAF,
@@ -205,13 +201,9 @@
           { // li
             role: ROLE_LISTITEM,
             children: [
-              { // ::marker content text
-                role: ROLE_STATICTEXT,
-                name: "foo",
-              },
-              { // ::marker content counter
-                role: ROLE_STATICTEXT,
-                name: "2",
+              { // ::marker content text and counter
+                role: ROLE_LISTITEM_MARKER,
+                name: "foo 2",
               },
               {
                 role: ROLE_TEXT_LEAF,
