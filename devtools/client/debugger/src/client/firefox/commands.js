@@ -326,7 +326,7 @@ async function pauseOnExceptions(
   shouldPauseOnExceptions,
   shouldPauseOnCaughtExceptions
 ) {
-  if (commands.targetCommand.hasTargetWatcherSupport("thread-configuration")) {
+  if (commands.targetCommand.hasTargetWatcherSupport()) {
     const threadConfigurationActor = await commands.targetCommand.watcherFront.getThreadConfigurationActor();
     await threadConfigurationActor.updateConfiguration({
       pauseOnExceptions: shouldPauseOnExceptions,
