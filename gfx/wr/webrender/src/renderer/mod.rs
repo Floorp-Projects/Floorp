@@ -57,6 +57,7 @@ use crate::capture::{CaptureConfig, ExternalCaptureImage, PlainExternalImage};
 use crate::composite::{CompositeState, CompositeTileSurface, ResolvedExternalSurface, CompositorSurfaceTransform};
 use crate::composite::{CompositorKind, Compositor, NativeTileId, CompositeFeatures, CompositeSurfaceFormat, ResolvedExternalSurfaceColorData};
 use crate::composite::{CompositorConfig, NativeSurfaceOperationDetails, NativeSurfaceId, NativeSurfaceOperation};
+use crate::composite::TileKind;
 use crate::c_str;
 use crate::debug_colors;
 use crate::device::{DepthFunction, Device, DrawTarget, ExternalTexture, GpuFrameId};
@@ -3287,13 +3288,7 @@ impl Renderer {
             );
 
         for item in tiles_iter {
-            let tile = match item.src {
-                occ::ItemSource::Opaque(idx) => &composite_state.opaque_tiles[idx],
-                occ::ItemSource::Alpha(idx) => &composite_state.alpha_tiles[idx],
-                occ::ItemSource::Clear(..) => {
-                    continue;
-                }
-            };
+            let tile = &composite_state.tiles[item.key];
 
             let clip_rect = item.rectangle.to_rect();
 
@@ -3502,35 +3497,13 @@ impl Renderer {
             }
         }
 
-        let cap = composite_state.opaque_tiles.len() +
-            composite_state.alpha_tiles.len() +
-            composite_state.clear_tiles.len();
+        let cap = composite_state.tiles.len();
 
         let mut occlusion = occlusion::FrontToBackBuilder::with_capacity(cap, cap);
 
-        let mut items = Vec::with_capacity(cap);
-
-        // TODO: This will get simpler if we stop storing tiles in separate arrays.
-
-        for (idx, tile) in composite_state.opaque_tiles.iter().enumerate() {
-            items.push((tile.z_id.0, occ::ItemSource::Opaque(idx)));
-        }
-        for (idx, tile) in composite_state.alpha_tiles.iter().enumerate() {
-            items.push((tile.z_id.0, occ::ItemSource::Alpha(idx)));
-        }
-        for (idx, tile) in composite_state.clear_tiles.iter().enumerate() {
-            items.push((tile.z_id.0, occ::ItemSource::Clear(idx)));
-        }
-
-        items.sort_by_key(|item| -item.0);
-        for &(_, src) in &items {
-            let tile = match src {
-                occ::ItemSource::Opaque(idx) => &composite_state.opaque_tiles[idx],
-                occ::ItemSource::Alpha(idx) => &composite_state.alpha_tiles[idx],
-                occ::ItemSource::Clear(idx) => &composite_state.clear_tiles[idx],
-            };
-
-            let is_opaque = !matches!(src, occ::ItemSource::Alpha(..));
+        for (idx, tile) in composite_state.tiles.iter().enumerate() {
+            // Clear tiles overwrite whatever is under them, so they are treated as opaque.
+            let is_opaque = tile.kind != TileKind::Alpha;
 
             // Determine a clip rect to apply to this tile, depending on what
             // the partial present mode is.
@@ -3553,7 +3526,7 @@ impl Renderer {
                 continue;
             }
 
-            occlusion.add(&rect, is_opaque, src);
+            occlusion.add(&rect, is_opaque, idx);
         }
 
         // Clear the framebuffer
@@ -3578,8 +3551,9 @@ impl Renderer {
 
         // We are only interested in tiles backed with actual cached pixels so we don't
         // count clear tiles here.
-        let num_tiles = composite_state.opaque_tiles.len()
-            + composite_state.alpha_tiles.len();
+        let num_tiles = composite_state.tiles
+            .iter()
+            .filter(|tile| tile.kind != TileKind::Clear).count();
         self.profile.set(profiler::PICTURE_TILES, num_tiles);
 
         if !occlusion.opaque_items().is_empty() {
@@ -4442,7 +4416,10 @@ impl Renderer {
 
                 // Work out how many dirty rects WR produced, and if that's more than
                 // what the device supports.
-                for tile in composite_state.opaque_tiles.iter().chain(composite_state.alpha_tiles.iter()) {
+                for tile in &composite_state.tiles {
+                    if tile.kind == TileKind::Clear {
+                        continue;
+                    }
                     let tile_dirty_rect = tile.dirty_rect.translate(tile.rect.origin.to_vector());
                     let transformed_dirty_rect = if let Some(transform) = tile.transform {
                         transform.outer_transformed_rect(&tile_dirty_rect)
@@ -4616,7 +4593,10 @@ impl Renderer {
             let compositor = self.compositor_config.compositor().unwrap();
             // Invalidate any native surface tiles that might be updated by passes.
             if !frame.has_been_rendered {
-                for tile in frame.composite_state.opaque_tiles.iter().chain(frame.composite_state.alpha_tiles.iter()) {
+                for tile in &frame.composite_state.tiles {
+                    if tile.kind == TileKind::Clear {
+                        continue;
+                    }
                     if !tile.dirty_rect.is_empty() {
                         if let CompositeTileSurface::Texture { surface: ResolvedSurfaceTexture::Native { id, .. } } =
                             tile.surface {

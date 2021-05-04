@@ -689,6 +689,8 @@ impl FrameBuilder {
         self.prim_headers_prealloc.record_vec(&mut prim_headers.headers_int);
         self.composite_state_prealloc.record(&composite_state);
 
+        composite_state.end_frame();
+
         Frame {
             device_rect: DeviceIntRect::new(
                 device_origin,
