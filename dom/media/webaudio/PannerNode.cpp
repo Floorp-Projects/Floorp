@@ -348,6 +348,39 @@ void PannerNode::SetPanningModel(PanningModelType aPanningModel) {
   SendInt32ParameterToTrack(PANNING_MODEL, int32_t(mPanningModel));
 }
 
+static bool SetParamFromDouble(AudioParam* aParam, double aValue,
+                               const char (&aParamName)[2], ErrorResult& aRv) {
+  float value = static_cast<float>(aValue);
+  if (!mozilla::IsFinite(value)) {
+    aRv.ThrowTypeError<MSG_NOT_FINITE>(aParamName);
+    return false;
+  }
+  aParam->SetValue(value, aRv);
+  return !aRv.Failed();
+}
+
+void PannerNode::SetPosition(double aX, double aY, double aZ,
+                             ErrorResult& aRv) {
+  if (!SetParamFromDouble(mPositionX, aX, "x", aRv)) {
+    return;
+  }
+  if (!SetParamFromDouble(mPositionY, aY, "y", aRv)) {
+    return;
+  }
+  SetParamFromDouble(mPositionZ, aZ, "z", aRv);
+}
+
+void PannerNode::SetOrientation(double aX, double aY, double aZ,
+                                ErrorResult& aRv) {
+  if (!SetParamFromDouble(mOrientationX, aX, "x", aRv)) {
+    return;
+  }
+  if (!SetParamFromDouble(mOrientationY, aY, "y", aRv)) {
+    return;
+  }
+  SetParamFromDouble(mOrientationZ, aZ, "z", aRv);
+}
+
 size_t PannerNode::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const {
   return AudioNode::SizeOfExcludingThis(aMallocSizeOf);
 }
