@@ -188,6 +188,9 @@ sm-arm64-sim-linux64/debug:
         symbol: SM(arm64)
     run:
         spidermonkey-variant: arm64-sim
+    worker:
+        env:
+            MOZ_JS_UPLOAD_BINARIES_DEFAULT: "1"
     fetches:
         toolchain:
             - linux64-clang
