@@ -44,6 +44,7 @@
 #include "SurfaceCache.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/DocumentInlines.h"
+#include "mozilla/image/Resolution.h"
 
 namespace mozilla {
 
@@ -602,6 +603,9 @@ Maybe<AspectRatio> VectorImage::GetIntrinsicRatio() {
 
 NS_IMETHODIMP_(Orientation)
 VectorImage::GetOrientation() { return Orientation(); }
+
+NS_IMETHODIMP_(Resolution)
+VectorImage::GetResolution() { return {}; }
 
 //******************************************************************************
 NS_IMETHODIMP

@@ -552,6 +552,11 @@ ImageTestCase DownscaledAVIFTestCase();
 ImageTestCase LargeAVIFTestCase();
 ImageTestCase MultiLayerAVIFTestCase();
 ImageTestCase TransparentAVIFTestCase();
+
+ImageTestCase ExifResolutionTestCase();
+
+RefPtr<Image> TestCaseToDecodedImage(const ImageTestCase&);
+
 }  // namespace image
 }  // namespace mozilla
 
