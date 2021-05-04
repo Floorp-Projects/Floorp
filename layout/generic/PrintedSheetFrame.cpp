@@ -31,59 +31,6 @@ NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 
 NS_IMPL_FRAMEARENA_HELPERS(PrintedSheetFrame)
 
-std::tuple<uint32_t, uint32_t> GetRowAndColFromIdx(uint32_t aIdxOnSheet,
-                                                   uint32_t aNumCols) {
-  // Compute the row index by *dividing* the item's ordinal position by how
-  // many items fit in each row (i.e. the number of columns), and flooring.
-  // Compute the column index by getting the remainder of that division:
-  // Notably, mNumRows is irrelevant to this computation; that's because
-  // we're adding new items column-by-column rather than row-by-row.
-  return {aIdxOnSheet / aNumCols, aIdxOnSheet % aNumCols};
-}
-
-// Helper for BuildDisplayList:
-gfx::Matrix4x4 ComputePagesPerSheetTransform(nsIFrame* aFrame,
-                                             float aAppUnitsPerPixel) {
-  MOZ_ASSERT(aFrame->IsPageFrame());
-  auto* pageFrame = static_cast<nsPageFrame*>(aFrame);
-
-  // Variables that we use in our transform (initialized with reasonable
-  // defaults that work for the regular one-page-per-sheet scenario):
-  float scale = 1.0f;
-  nsPoint gridOrigin;
-  uint32_t rowIdx = 0;
-  uint32_t colIdx = 0;
-
-  nsSharedPageData* pd = pageFrame->GetSharedPageData();
-  if (pd) {
-    const auto* ppsInfo = pd->PagesPerSheetInfo();
-    if (ppsInfo->mNumPages > 1) {
-      scale = pd->mPagesPerSheetScale;
-      gridOrigin = pd->mPagesPerSheetGridOrigin;
-      std::tie(rowIdx, colIdx) = GetRowAndColFromIdx(pageFrame->IndexOnSheet(),
-                                                     pd->mPagesPerSheetNumCols);
-    }
-  }
-
-  // Scale down the page based on the above-computed scale:
-  auto transform = gfx::Matrix4x4::Scaling(scale, scale, 1);
-
-  // Draw the page at an offset, to get it in its pages-per-sheet "cell":
-  nsSize pageSize = pageFrame->PresContext()->GetPageSize();
-  transform.PreTranslate(
-      NSAppUnitsToFloatPixels(colIdx * pageSize.width, aAppUnitsPerPixel),
-      NSAppUnitsToFloatPixels(rowIdx * pageSize.height, aAppUnitsPerPixel), 0);
-
-  // Also add the grid origin as an offset (so that we're not drawing into the
-  // sheet's unwritable area). Note that this is a PostTranslate operation
-  // (vs. PreTranslate above), since gridOrigin is an offset on the sheet
-  // itself, whereas the offset above was in the scaled coordinate space of the
-  // pages.
-  return transform.PostTranslate(
-      NSAppUnitsToFloatPixels(gridOrigin.x, aAppUnitsPerPixel),
-      NSAppUnitsToFloatPixels(gridOrigin.y, aAppUnitsPerPixel), 0);
-}
-
 void PrintedSheetFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
                                          const nsDisplayListSet& aLists) {
   if (PresContext()->IsScreen()) {
@@ -92,30 +39,9 @@ void PrintedSheetFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     DisplayBorderBackgroundOutline(aBuilder, aLists);
   }
 
-  // Let each of our children (pages) draw itself, with a supplemental
-  // transform to shrink it & place it in its pages-per-sheet cell:
   for (auto* frame : mFrames) {
     if (!frame->HasAnyStateBits(NS_PAGE_SKIPPED_BY_CUSTOM_RANGE)) {
-      // We'll be drawing our nsPageFrame children with a (usually-trivial)
-      // N-pages-per-sheet transform applied, so our passed-in visible rect
-      // isn't meaningful while we're drawing our children, because the
-      // transform could scale down content whose coordinates are off-screen
-      // such that it ends up on-screen. So: we temporarily update the visible
-      // rect to be the child nsPageFrame's whole frame-rect (represented in
-      // this PrintedSheetFrame's coordinate space.
-      nsDisplayList content;
-      {
-        nsRect visibleRect = frame->GetRect();
-        nsDisplayListBuilder::AutoBuildingDisplayList buildingForChild(
-            aBuilder, this, visibleRect, visibleRect);
-
-        frame->BuildDisplayListForStackingContext(aBuilder, &content);
-      }
-      content.AppendNewToTop<nsDisplayTransform>(aBuilder, frame, &content,
-                                                 content.GetBuildingRect(),
-                                                 ComputePagesPerSheetTransform);
-
-      aLists.Content()->AppendToTop(&content);
+      BuildDisplayListForChild(aBuilder, frame, aLists);
     }
   }
 }
