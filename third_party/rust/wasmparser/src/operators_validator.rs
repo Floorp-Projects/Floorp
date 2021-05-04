@@ -110,6 +110,10 @@ enum FrameKind {
     If,
     Else,
     Loop,
+    Try,
+    Catch,
+    CatchAll,
+    Unwind,
 }
 
 impl OperatorValidator {
@@ -284,7 +288,12 @@ impl OperatorValidator {
         // Read the expected type and expected height of the operand stack the
         // end of the frame.
         let frame = self.control.last().unwrap();
-        let ty = frame.block_type;
+        // The end of an `unwind` should check against the empty block type.
+        let ty = if frame.kind == FrameKind::Unwind {
+            TypeOrFuncType::Type(Type::EmptyBlockType)
+        } else {
+            frame.block_type
+        };
         let height = frame.height;
 
         // Pop all the result types, in reverse order, from the operand stack.
@@ -390,6 +399,15 @@ impl OperatorValidator {
     fn check_simd_enabled(&self) -> OperatorValidatorResult<()> {
         if !self.features.simd {
             return Err(OperatorValidatorError::new("SIMD support is not enabled"));
+        }
+        Ok(())
+    }
+
+    fn check_exceptions_enabled(&self) -> OperatorValidatorResult<()> {
+        if !self.features.exceptions {
+            return Err(OperatorValidatorError::new(
+                "Exceptions support is not enabled",
+            ));
         }
         Ok(())
     }
@@ -568,7 +586,104 @@ impl OperatorValidator {
                 if frame.kind != FrameKind::If {
                     bail_op_err!("else found outside of an `if` block");
                 }
-                self.push_ctrl(FrameKind::Else, frame.block_type, resources)?;
+                self.push_ctrl(FrameKind::Else, frame.block_type, resources)?
+            }
+            Operator::Try { ty } => {
+                self.check_exceptions_enabled()?;
+                self.check_block_type(ty, resources)?;
+                for ty in params(ty, resources)?.rev() {
+                    self.pop_operand(Some(ty))?;
+                }
+                self.push_ctrl(FrameKind::Try, ty, resources)?;
+            }
+            Operator::Catch { index } => {
+                self.check_exceptions_enabled()?;
+                let frame = self.pop_ctrl(resources)?;
+                if frame.kind != FrameKind::Try && frame.kind != FrameKind::Catch {
+                    bail_op_err!("catch found outside of an `try` block");
+                }
+                // Start a new frame and push `exnref` value.
+                self.control.push(Frame {
+                    kind: FrameKind::Catch,
+                    block_type: frame.block_type,
+                    height: self.operands.len(),
+                    unreachable: false,
+                });
+                // Push exception argument types.
+                let ty = event_at(&resources, index)?;
+                for ty in ty.inputs() {
+                    self.push_operand(ty)?;
+                }
+            }
+            Operator::Throw { index } => {
+                self.check_exceptions_enabled()?;
+                // Check values associated with the exception.
+                let ty = event_at(&resources, index)?;
+                for ty in ty.inputs().rev() {
+                    self.pop_operand(Some(ty))?;
+                }
+                if ty.outputs().len() > 0 {
+                    bail_op_err!("result type expected to be empty for exception");
+                }
+                self.unreachable();
+            }
+            Operator::Rethrow { relative_depth } => {
+                self.check_exceptions_enabled()?;
+                // This is not a jump, but we need to check that the `rethrow`
+                // targets an actual `catch` to get the exception.
+                let (_, kind) = self.jump(relative_depth)?;
+                if kind != FrameKind::Catch && kind != FrameKind::CatchAll {
+                    bail_op_err!("rethrow target was not a `catch` block");
+                }
+                self.unreachable();
+            }
+            Operator::Unwind => {
+                self.check_exceptions_enabled()?;
+                // Switch from `try` to an `unwind` frame.
+                let frame = self.pop_ctrl(resources)?;
+                if frame.kind != FrameKind::Try {
+                    bail_op_err!("unwind found outside of an `try` block");
+                }
+                self.control.push(Frame {
+                    kind: FrameKind::Unwind,
+                    block_type: frame.block_type,
+                    height: self.operands.len(),
+                    unreachable: false,
+                });
+            }
+            Operator::Delegate { relative_depth } => {
+                self.check_exceptions_enabled()?;
+                let frame = self.pop_ctrl(resources)?;
+                if frame.kind != FrameKind::Try {
+                    bail_op_err!("delegate found outside of an `try` block");
+                }
+                // This operation is not a jump, but we need to check the
+                // depth for validity and that it targets a `try`.
+                let (_, kind) = self.jump(relative_depth)?;
+                if kind != FrameKind::Try
+                    && (kind != FrameKind::Block
+                        || self.control.len() != relative_depth as usize + 1)
+                {
+                    bail_op_err!("must delegate to a try block or caller");
+                }
+                for ty in results(frame.block_type, resources)? {
+                    self.push_operand(ty)?;
+                }
+            }
+            Operator::CatchAll => {
+                self.check_exceptions_enabled()?;
+                let frame = self.pop_ctrl(resources)?;
+                if frame.kind == FrameKind::CatchAll {
+                    bail_op_err!("only one catch_all allowed per `try` block");
+                } else if frame.kind != FrameKind::Try && frame.kind != FrameKind::Catch {
+                    bail_op_err!("catch_all found outside of a `try` block");
+                }
+                self.control.push(Frame {
+                    kind: FrameKind::CatchAll,
+                    block_type: frame.block_type,
+                    height: self.operands.len(),
+                    unreachable: false,
+                });
             }
             Operator::End => {
                 let mut frame = self.pop_ctrl(resources)?;
@@ -577,10 +692,17 @@ impl OperatorValidator {
                 // now, but it's used to allow for `if` statements that are
                 // missing an `else` block which have the same parameter/return
                 // types on the block (since that's valid).
-                if frame.kind == FrameKind::If {
-                    self.push_ctrl(FrameKind::Else, frame.block_type, resources)?;
-                    frame = self.pop_ctrl(resources)?;
+                match frame.kind {
+                    FrameKind::If => {
+                        self.push_ctrl(FrameKind::Else, frame.block_type, resources)?;
+                        frame = self.pop_ctrl(resources)?;
+                    }
+                    FrameKind::Try => {
+                        bail_op_err!("expected catch block");
+                    }
+                    _ => (),
                 }
+
                 for ty in results(frame.block_type, resources)? {
                     self.push_operand(ty)?;
                 }
@@ -1453,6 +1575,12 @@ impl OperatorValidator {
             | Operator::I32x4LeU
             | Operator::I32x4GeS
             | Operator::I32x4GeU
+            | Operator::I64x2Eq
+            | Operator::I64x2Ne
+            | Operator::I64x2LtS
+            | Operator::I64x2GtS
+            | Operator::I64x2LeS
+            | Operator::I64x2GeS
             | Operator::V128And
             | Operator::V128AndNot
             | Operator::V128Or
@@ -1494,7 +1622,20 @@ impl OperatorValidator {
             | Operator::I8x16NarrowI16x8S
             | Operator::I8x16NarrowI16x8U
             | Operator::I16x8NarrowI32x4S
-            | Operator::I16x8NarrowI32x4U => {
+            | Operator::I16x8NarrowI32x4U
+            | Operator::I16x8ExtMulLowI8x16S
+            | Operator::I16x8ExtMulHighI8x16S
+            | Operator::I16x8ExtMulLowI8x16U
+            | Operator::I16x8ExtMulHighI8x16U
+            | Operator::I32x4ExtMulLowI16x8S
+            | Operator::I32x4ExtMulHighI16x8S
+            | Operator::I32x4ExtMulLowI16x8U
+            | Operator::I32x4ExtMulHighI16x8U
+            | Operator::I64x2ExtMulLowI32x4S
+            | Operator::I64x2ExtMulHighI32x4S
+            | Operator::I64x2ExtMulLowI32x4U
+            | Operator::I64x2ExtMulHighI32x4U
+            | Operator::I16x8Q15MulrSatS => {
                 self.check_simd_enabled()?;
                 self.pop_operand(Some(Type::V128))?;
                 self.pop_operand(Some(Type::V128))?;
@@ -1514,6 +1655,12 @@ impl OperatorValidator {
             | Operator::F64x2Abs
             | Operator::F64x2Neg
             | Operator::F64x2Sqrt
+            | Operator::F32x4DemoteF64x2Zero
+            | Operator::F64x2PromoteLowF32x4
+            | Operator::F64x2ConvertLowI32x4S
+            | Operator::F64x2ConvertLowI32x4U
+            | Operator::I32x4TruncSatF64x2SZero
+            | Operator::I32x4TruncSatF64x2UZero
             | Operator::F32x4ConvertI32x4S
             | Operator::F32x4ConvertI32x4U => {
                 self.check_non_deterministic_enabled()?;
@@ -1524,21 +1671,31 @@ impl OperatorValidator {
             Operator::V128Not
             | Operator::I8x16Abs
             | Operator::I8x16Neg
+            | Operator::I8x16Popcnt
             | Operator::I16x8Abs
             | Operator::I16x8Neg
             | Operator::I32x4Abs
             | Operator::I32x4Neg
+            | Operator::I64x2Abs
             | Operator::I64x2Neg
             | Operator::I32x4TruncSatF32x4S
             | Operator::I32x4TruncSatF32x4U
-            | Operator::I16x8WidenLowI8x16S
-            | Operator::I16x8WidenHighI8x16S
-            | Operator::I16x8WidenLowI8x16U
-            | Operator::I16x8WidenHighI8x16U
-            | Operator::I32x4WidenLowI16x8S
-            | Operator::I32x4WidenHighI16x8S
-            | Operator::I32x4WidenLowI16x8U
-            | Operator::I32x4WidenHighI16x8U => {
+            | Operator::I16x8ExtendLowI8x16S
+            | Operator::I16x8ExtendHighI8x16S
+            | Operator::I16x8ExtendLowI8x16U
+            | Operator::I16x8ExtendHighI8x16U
+            | Operator::I32x4ExtendLowI16x8S
+            | Operator::I32x4ExtendHighI16x8S
+            | Operator::I32x4ExtendLowI16x8U
+            | Operator::I32x4ExtendHighI16x8U
+            | Operator::I64x2ExtendLowI32x4S
+            | Operator::I64x2ExtendHighI32x4S
+            | Operator::I64x2ExtendLowI32x4U
+            | Operator::I64x2ExtendHighI32x4U
+            | Operator::I16x8ExtAddPairwiseI8x16S
+            | Operator::I16x8ExtAddPairwiseI8x16U
+            | Operator::I32x4ExtAddPairwiseI16x8S
+            | Operator::I32x4ExtAddPairwiseI16x8U => {
                 self.check_simd_enabled()?;
                 self.pop_operand(Some(Type::V128))?;
                 self.push_operand(Type::V128)?;
@@ -1550,15 +1707,15 @@ impl OperatorValidator {
                 self.pop_operand(Some(Type::V128))?;
                 self.push_operand(Type::V128)?;
             }
-            Operator::I8x16AnyTrue
+            Operator::V128AnyTrue
             | Operator::I8x16AllTrue
             | Operator::I8x16Bitmask
-            | Operator::I16x8AnyTrue
             | Operator::I16x8AllTrue
             | Operator::I16x8Bitmask
-            | Operator::I32x4AnyTrue
             | Operator::I32x4AllTrue
-            | Operator::I32x4Bitmask => {
+            | Operator::I32x4Bitmask
+            | Operator::I64x2AllTrue
+            | Operator::I64x2Bitmask => {
                 self.check_simd_enabled()?;
                 self.pop_operand(Some(Type::V128))?;
                 self.push_operand(Type::I32)?;
@@ -1626,7 +1783,66 @@ impl OperatorValidator {
                 self.pop_operand(Some(idx))?;
                 self.push_operand(Type::V128)?;
             }
-
+            Operator::V128Load8Lane { memarg, lane } => {
+                self.check_simd_enabled()?;
+                let idx = self.check_memarg(memarg, 0, resources)?;
+                self.check_simd_lane_index(lane, 16)?;
+                self.pop_operand(Some(Type::V128))?;
+                self.pop_operand(Some(idx))?;
+                self.push_operand(Type::V128)?;
+            }
+            Operator::V128Load16Lane { memarg, lane } => {
+                self.check_simd_enabled()?;
+                let idx = self.check_memarg(memarg, 1, resources)?;
+                self.check_simd_lane_index(lane, 8)?;
+                self.pop_operand(Some(Type::V128))?;
+                self.pop_operand(Some(idx))?;
+                self.push_operand(Type::V128)?;
+            }
+            Operator::V128Load32Lane { memarg, lane } => {
+                self.check_simd_enabled()?;
+                let idx = self.check_memarg(memarg, 2, resources)?;
+                self.check_simd_lane_index(lane, 4)?;
+                self.pop_operand(Some(Type::V128))?;
+                self.pop_operand(Some(idx))?;
+                self.push_operand(Type::V128)?;
+            }
+            Operator::V128Load64Lane { memarg, lane } => {
+                self.check_simd_enabled()?;
+                let idx = self.check_memarg(memarg, 3, resources)?;
+                self.check_simd_lane_index(lane, 2)?;
+                self.pop_operand(Some(Type::V128))?;
+                self.pop_operand(Some(idx))?;
+                self.push_operand(Type::V128)?;
+            }
+            Operator::V128Store8Lane { memarg, lane } => {
+                self.check_simd_enabled()?;
+                let idx = self.check_memarg(memarg, 0, resources)?;
+                self.check_simd_lane_index(lane, 16)?;
+                self.pop_operand(Some(Type::V128))?;
+                self.pop_operand(Some(idx))?;
+            }
+            Operator::V128Store16Lane { memarg, lane } => {
+                self.check_simd_enabled()?;
+                let idx = self.check_memarg(memarg, 1, resources)?;
+                self.check_simd_lane_index(lane, 8)?;
+                self.pop_operand(Some(Type::V128))?;
+                self.pop_operand(Some(idx))?;
+            }
+            Operator::V128Store32Lane { memarg, lane } => {
+                self.check_simd_enabled()?;
+                let idx = self.check_memarg(memarg, 2, resources)?;
+                self.check_simd_lane_index(lane, 4)?;
+                self.pop_operand(Some(Type::V128))?;
+                self.pop_operand(Some(idx))?;
+            }
+            Operator::V128Store64Lane { memarg, lane } => {
+                self.check_simd_enabled()?;
+                let idx = self.check_memarg(memarg, 3, resources)?;
+                self.check_simd_lane_index(lane, 2)?;
+                self.pop_operand(Some(Type::V128))?;
+                self.pop_operand(Some(idx))?;
+            }
             Operator::MemoryInit { mem, segment } => {
                 self.check_bulk_memory_enabled()?;
                 let ty = self.check_memory_index(mem, resources)?;
@@ -1779,6 +1995,15 @@ fn func_type_at<T: WasmModuleResources>(
         .ok_or_else(|| OperatorValidatorError::new("unknown type: type index out of bounds"))
 }
 
+fn event_at<T: WasmModuleResources>(
+    resources: &T,
+    at: u32,
+) -> OperatorValidatorResult<&T::FuncType> {
+    resources
+        .event_at(at)
+        .ok_or_else(|| OperatorValidatorError::new("unknown event: event index out of bounds"))
+}
+
 enum Either<A, B> {
     A(A),
     B(B),
@@ -1851,6 +2076,7 @@ fn ty_to_str(ty: Type) -> &'static str {
         Type::V128 => "v128",
         Type::FuncRef => "funcref",
         Type::ExternRef => "externref",
+        Type::ExnRef => "exnref",
         Type::Func => "func",
         Type::EmptyBlockType => "nil",
     }

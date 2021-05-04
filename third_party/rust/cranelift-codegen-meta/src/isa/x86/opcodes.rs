@@ -508,6 +508,9 @@ pub static VPMULLQ: [u8; 4] = [0x66, 0x0f, 0x38, 0x40];
 /// in xmm2/m128, and store the quadword results in xmm1 (SSE2).
 pub static PMULUDQ: [u8; 3] = [0x66, 0x0f, 0xf4];
 
+/// Multiply the packed word integers, add adjacent doubleword results.
+pub static PMADDWD: [u8; 3] = [0x66, 0x0f, 0xf5];
+
 /// Pop top of stack into r{16,32,64}; increment stack pointer.
 pub static POP_REG: [u8; 1] = [0x58];
 
@@ -710,9 +713,6 @@ pub static XOR_IMM8_SIGN_EXTEND: [u8; 1] = [0x83];
 
 /// r/m{16,32,64} XOR register of the same size.
 pub static XOR: [u8; 1] = [0x31];
-
-/// r/m8 XOR r8.
-pub static XORB: [u8; 1] = [0x30];
 
 /// Bitwise logical XOR of packed double-precision floating-point values.
 pub static XORPD: [u8; 3] = [0x66, 0x0f, 0x57];

@@ -1,4 +1,10 @@
+#[cfg(feature = "use_std")]
+use std::error::Error;
+use std::fmt::{Debug, Display, Formatter, Result as FmtResult};
+
 use std::iter::ExactSizeIterator;
+
+use either::Either;
 
 use crate::size_hint;
 
@@ -10,12 +16,12 @@ use crate::size_hint;
 ///
 /// This is very similar to PutBackN except this iterator only supports 0-2 elements and does not
 /// use a `Vec`.
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct ExactlyOneError<I>
 where
     I: Iterator,
 {
-    first_two: (Option<I::Item>, Option<I::Item>),
+    first_two: Option<Either<[I::Item; 2], I::Item>>,
     inner: I,
 }
 
@@ -24,8 +30,16 @@ where
     I: Iterator,
 {
     /// Creates a new `ExactlyOneErr` iterator.
-    pub(crate) fn new(first_two: (Option<I::Item>, Option<I::Item>), inner: I) -> Self {
+    pub(crate) fn new(first_two: Option<Either<[I::Item; 2], I::Item>>, inner: I) -> Self {
         Self { first_two, inner }
+    }
+
+    fn additional_len(&self) -> usize {
+        match self.first_two {
+            Some(Either::Left(_)) => 2,
+            Some(Either::Right(_)) => 1,
+            None => 0,
+        }
     }
 }
 
@@ -36,23 +50,61 @@ where
     type Item = I::Item;
 
     fn next(&mut self) -> Option<Self::Item> {
-        self.first_two
-            .0
-            .take()
-            .or_else(|| self.first_two.1.take())
-            .or_else(|| self.inner.next())
+        match self.first_two.take() {
+            Some(Either::Left([first, second])) => {
+                self.first_two = Some(Either::Right(second));
+                Some(first)
+            },
+            Some(Either::Right(second)) => {
+                Some(second)
+            }
+            None => {
+                self.inner.next()
+            }
+        }
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
-        let mut additional_len = 0;
-        if self.first_two.0.is_some() {
-            additional_len += 1;
-        }
-        if self.first_two.1.is_some() {
-            additional_len += 1;
-        }
-        size_hint::add_scalar(self.inner.size_hint(), additional_len)
+        size_hint::add_scalar(self.inner.size_hint(), self.additional_len())
     }
 }
 
+
 impl<I> ExactSizeIterator for ExactlyOneError<I> where I: ExactSizeIterator {}
+
+impl<I> Display for ExactlyOneError<I> 
+    where I: Iterator,
+{
+    fn fmt(&self, f: &mut Formatter) -> FmtResult {
+        let additional = self.additional_len();
+        if additional > 0 {
+            write!(f, "got at least 2 elements when exactly one was expected")
+        } else {
+            write!(f, "got zero elements when exactly one was expected")
+        }
+    }
+}
+
+impl<I> Debug for ExactlyOneError<I> 
+    where I: Iterator + Debug,
+          I::Item: Debug,
+{
+    fn fmt(&self, f: &mut Formatter) -> FmtResult {
+        match &self.first_two {
+            Some(Either::Left([first, second])) => {
+                write!(f, "ExactlyOneError[First: {:?}, Second: {:?}, RemainingIter: {:?}]", first, second, self.inner)
+            },
+            Some(Either::Right(second)) => {
+                write!(f, "ExactlyOneError[Second: {:?}, RemainingIter: {:?}]", second, self.inner)
+            }
+            None => {
+                write!(f, "ExactlyOneError[RemainingIter: {:?}]", self.inner)
+            }
+        }
+    }
+}
+
+#[cfg(feature = "use_std")]
+impl<I> Error for ExactlyOneError<I>  where I: Iterator + Debug, I::Item: Debug, {}
+
+

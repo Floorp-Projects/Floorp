@@ -380,6 +380,9 @@ impl<'module> wasmparser::WasmModuleResources for ModuleEnvironment<'module> {
             None
         }
     }
+    fn event_at(&self, _at: u32) -> Option<&Self::FuncType> {
+        panic!("unexpected exception operation");
+    }
     fn global_at(&self, at: u32) -> Option<wasmparser::GlobalType> {
         let num_globals = unsafe { low_level::env_num_globals(self.env) };
         if (at as usize) < num_globals {

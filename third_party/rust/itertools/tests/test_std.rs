@@ -1,8 +1,15 @@
+use paste;
 use permutohedron;
+use quickcheck as qc;
+use rand::{distributions::{Distribution, Standard}, Rng, SeedableRng, rngs::StdRng};
+use rand::{seq::SliceRandom, thread_rng};
+use std::{cmp::min, fmt::Debug, marker::PhantomData};
 use itertools as it;
 use crate::it::Itertools;
+use crate::it::ExactlyOneError;
 use crate::it::multizip;
 use crate::it::multipeek;
+use crate::it::peek_nth;
 use crate::it::free::rciter;
 use crate::it::free::put_back_n;
 use crate::it::FoldWhile;
@@ -58,6 +65,9 @@ fn unique_by() {
     let xs = ["aaa", "bbbbb", "aa", "ccc", "bbbb", "aaaaa", "cccc"];
     let ys = ["aaa", "bbbbb", "ccc"];
     it::assert_equal(ys.iter(), xs.iter().unique_by(|x| x[..2].to_string()));
+    it::assert_equal(ys.iter(), xs.iter().rev().unique_by(|x| x[..2].to_string()).rev());
+    let ys_rev = ["cccc", "aaaaa", "bbbb"];
+    it::assert_equal(ys_rev.iter(), xs.iter().unique_by(|x| x[..2].to_string()).rev());
 }
 
 #[test]
@@ -65,9 +75,16 @@ fn unique() {
     let xs = [0, 1, 2, 3, 2, 1, 3];
     let ys = [0, 1, 2, 3];
     it::assert_equal(ys.iter(), xs.iter().unique());
+    it::assert_equal(ys.iter(), xs.iter().rev().unique().rev());
+    let ys_rev = [3, 1, 2, 0];
+    it::assert_equal(ys_rev.iter(), xs.iter().unique().rev());
+
     let xs = [0, 1];
     let ys = [0, 1];
     it::assert_equal(ys.iter(), xs.iter().unique());
+    it::assert_equal(ys.iter(), xs.iter().rev().unique().rev());
+    let ys_rev = [1, 0];
+    it::assert_equal(ys_rev.iter(), xs.iter().unique().rev());
 }
 
 #[test]
@@ -99,6 +116,26 @@ fn dedup() {
 }
 
 #[test]
+fn coalesce() {
+    let data = vec![-1., -2., -3., 3., 1., 0., -1.];
+    let it = data.iter().cloned().coalesce(|x, y|
+        if (x >= 0.) == (y >= 0.) {
+            Ok(x + y)
+        } else {
+            Err((x, y))
+        }
+    );
+    itertools::assert_equal(it.clone(), vec![-6., 4., -1.]);
+    assert_eq!(
+        it.fold(vec![], |mut v, n| {
+            v.push(n);
+            v
+        }),
+        vec![-6., 4., -1.]
+    );
+}
+
+#[test]
 fn dedup_by() {
     let xs = [(0, 0), (0, 1), (1, 1), (2, 1), (0, 2), (3, 1), (0, 3), (1, 3)];
     let ys = [(0, 0), (0, 1), (0, 2), (3, 1), (0, 3)];
@@ -112,6 +149,33 @@ fn dedup_by() {
     let mut xs_d = Vec::new();
     xs.iter().dedup_by(|x, y| x.1==y.1).fold((), |(), &elt| xs_d.push(elt));
     assert_eq!(&xs_d, &ys);
+}
+
+#[test]
+fn dedup_with_count() {
+    let xs: [i32; 8] = [0, 1, 1, 1, 2, 1, 3, 3];
+    let ys: [(usize, &i32); 5] = [(1, &0), (3, &1), (1, &2), (1, &1), (2, &3)];
+
+    it::assert_equal(ys.iter().cloned(), xs.iter().dedup_with_count());
+
+    let xs: [i32; 5] = [0, 0, 0, 0, 0];
+    let ys: [(usize, &i32); 1] = [(5, &0)];
+
+    it::assert_equal(ys.iter().cloned(), xs.iter().dedup_with_count());
+}
+
+
+#[test]
+fn dedup_by_with_count() {
+    let xs = [(0, 0), (0, 1), (1, 1), (2, 1), (0, 2), (3, 1), (0, 3), (1, 3)];
+    let ys = [(1, &(0, 0)), (3, &(0, 1)), (1, &(0, 2)), (1, &(3, 1)), (2, &(0, 3))];
+
+    it::assert_equal(ys.iter().cloned(), xs.iter().dedup_by_with_count(|x, y| x.1==y.1));
+
+    let xs = [(0, 1), (0, 2), (0, 3), (0, 4), (0, 5)];
+    let ys = [( 5, &(0, 1))];
+
+    it::assert_equal(ys.iter().cloned(), xs.iter().dedup_by_with_count(|x, y| x.0==y.0));
 }
 
 #[test]
@@ -192,7 +256,7 @@ fn trait_pointers() {
         I: 'r + Iterator<Item=X>
     {
         type Item = X;
-        fn next(&mut self) -> Option<X>
+        fn next(&mut self) -> Option<Self::Item>
         {
             self.0.next()
         }
@@ -285,6 +349,26 @@ fn join() {
 }
 
 #[test]
+fn sorted_unstable_by() {
+    let sc = [3, 4, 1, 2].iter().cloned().sorted_by(|&a, &b| {
+        a.cmp(&b)
+    });
+    it::assert_equal(sc, vec![1, 2, 3, 4]);
+
+    let v = (0..5).sorted_unstable_by(|&a, &b| a.cmp(&b).reverse());
+    it::assert_equal(v, vec![4, 3, 2, 1, 0]);
+}
+
+#[test]
+fn sorted_unstable_by_key() {
+    let sc = [3, 4, 1, 2].iter().cloned().sorted_unstable_by_key(|&x| x);
+    it::assert_equal(sc, vec![1, 2, 3, 4]);
+
+    let v = (0..5).sorted_unstable_by_key(|&x| -x);
+    it::assert_equal(v, vec![4, 3, 2, 1, 0]);
+}
+
+#[test]
 fn sorted_by() {
     let sc = [3, 4, 1, 2].iter().cloned().sorted_by(|&a, &b| {
         a.cmp(&b)
@@ -294,6 +378,88 @@ fn sorted_by() {
     let v = (0..5).sorted_by(|&a, &b| a.cmp(&b).reverse());
     it::assert_equal(v, vec![4, 3, 2, 1, 0]);
 }
+
+qc::quickcheck! {
+    fn k_smallest_range(n: u64, m: u16, k: u16) -> () {
+        // u16 is used to constrain k and m to 0..2¹⁶,
+        //  otherwise the test could use too much memory.
+        let (k, m) = (k as u64, m as u64);
+
+        // Generate a random permutation of n..n+m
+        let i = {
+            let mut v: Vec<u64> = (n..n.saturating_add(m)).collect();
+            v.shuffle(&mut thread_rng());
+            v.into_iter()
+        };
+
+        // Check that taking the k smallest elements yields n..n+min(k, m)
+        it::assert_equal(
+            i.k_smallest(k as usize),
+            n..n.saturating_add(min(k, m))
+        );
+    }
+}
+
+#[derive(Clone, Debug)]
+struct RandIter<T: 'static + Clone + Send, R: 'static + Clone + Rng + SeedableRng + Send = StdRng> {
+    idx: usize,
+    len: usize,
+    rng: R,
+    _t: PhantomData<T>
+}
+
+impl<T: Clone + Send, R: Clone + Rng + SeedableRng + Send> Iterator for RandIter<T, R>
+where Standard: Distribution<T> {
+    type Item = T;
+    fn next(&mut self) -> Option<T> {
+        if self.idx == self.len {
+            None
+        } else {
+            self.idx += 1;
+            Some(self.rng.gen())
+        }
+    }
+}
+
+impl<T: Clone + Send, R: Clone + Rng + SeedableRng + Send> qc::Arbitrary for RandIter<T, R> {
+    fn arbitrary<G: qc::Gen>(g: &mut G) -> Self {
+        RandIter {
+            idx: 0,
+            len: g.size(),
+            rng: R::seed_from_u64(g.next_u64()),
+            _t : PhantomData{},
+        }
+    }
+}
+
+// Check that taking the k smallest is the same as
+//  sorting then taking the k first elements
+fn k_smallest_sort<I>(i: I, k: u16) -> ()
+where
+    I: Iterator + Clone,
+    I::Item: Ord + Debug,
+{
+    let j = i.clone();
+    let k = k as usize;
+    it::assert_equal(
+        i.k_smallest(k),
+        j.sorted().take(k)
+    )
+}
+
+macro_rules! generic_test {
+    ($f:ident, $($t:ty),+) => {
+        $(paste::item! {
+            qc::quickcheck! {
+                fn [< $f _ $t >](i: RandIter<$t>, k: u16) -> () {
+                    $f(i, k)
+                }
+            }
+        })+
+    };
+}
+
+generic_test!(k_smallest_sort, u8, u16, u32, u64, i8, i16, i32, i64);
 
 #[test]
 fn sorted_by_key() {
@@ -328,7 +494,6 @@ fn test_multipeek() {
     assert_eq!(mp.next(), Some(5));
     assert_eq!(mp.next(), None);
     assert_eq!(mp.peek(), None);
-
 }
 
 #[test]
@@ -369,6 +534,70 @@ fn test_multipeek_peeking_next() {
     assert_eq!(mp.peek(), None);
     assert_eq!(mp.next(), Some(7));
     assert_eq!(mp.peek(), None);
+}
+
+#[test]
+fn test_peek_nth() {
+    let nums = vec![1u8,2,3,4,5];
+
+    let iter = peek_nth(nums.iter().map(|&x| x));
+    assert_eq!(nums, iter.collect::<Vec<_>>());
+
+    let mut iter = peek_nth(nums.iter().map(|&x| x));
+
+    assert_eq!(iter.peek_nth(0), Some(&1));
+    assert_eq!(iter.peek_nth(0), Some(&1));
+    assert_eq!(iter.next(), Some(1));
+
+    assert_eq!(iter.peek_nth(0), Some(&2));
+    assert_eq!(iter.peek_nth(1), Some(&3));
+    assert_eq!(iter.next(), Some(2));
+
+    assert_eq!(iter.peek_nth(0), Some(&3));
+    assert_eq!(iter.peek_nth(1), Some(&4));
+    assert_eq!(iter.peek_nth(2), Some(&5));
+    assert_eq!(iter.peek_nth(3), None);
+
+    assert_eq!(iter.next(), Some(3));
+    assert_eq!(iter.next(), Some(4));
+
+    assert_eq!(iter.peek_nth(0), Some(&5));
+    assert_eq!(iter.peek_nth(1), None);
+    assert_eq!(iter.next(), Some(5));
+    assert_eq!(iter.next(), None);
+
+    assert_eq!(iter.peek_nth(0), None);
+    assert_eq!(iter.peek_nth(1), None);
+}
+
+#[test]
+fn test_peek_nth_peeking_next() {
+    use it::PeekingNext;
+    let nums = vec![1u8,2,3,4,5,6,7];
+    let mut iter = peek_nth(nums.iter().map(|&x| x));
+
+    assert_eq!(iter.peeking_next(|&x| x != 0), Some(1));
+    assert_eq!(iter.next(), Some(2));
+
+    assert_eq!(iter.peek_nth(0), Some(&3));
+    assert_eq!(iter.peek_nth(1), Some(&4));
+    assert_eq!(iter.peeking_next(|&x| x == 3), Some(3));
+    assert_eq!(iter.peek(), Some(&4));
+
+    assert_eq!(iter.peeking_next(|&x| x != 4), None);
+    assert_eq!(iter.peeking_next(|&x| x == 4), Some(4));
+    assert_eq!(iter.peek_nth(0), Some(&5));
+    assert_eq!(iter.peek_nth(1), Some(&6));
+
+    assert_eq!(iter.peeking_next(|&x| x != 5), None);
+    assert_eq!(iter.peek(), Some(&5));
+
+    assert_eq!(iter.peeking_next(|&x| x == 5), Some(5));
+    assert_eq!(iter.peeking_next(|&x| x == 6), Some(6));
+    assert_eq!(iter.peek_nth(0), Some(&7));
+    assert_eq!(iter.peek_nth(1), None);
+    assert_eq!(iter.next(), Some(7));
+    assert_eq!(iter.peek(), None);
 }
 
 #[test]
@@ -642,6 +871,23 @@ fn combinations_with_replacement() {
 }
 
 #[test]
+fn powerset() {
+    it::assert_equal((0..0).powerset(), vec![vec![]]);
+    it::assert_equal((0..1).powerset(), vec![vec![], vec![0]]);
+    it::assert_equal((0..2).powerset(), vec![vec![], vec![0], vec![1], vec![0, 1]]);
+    it::assert_equal((0..3).powerset(), vec![
+        vec![],
+        vec![0], vec![1], vec![2],
+        vec![0, 1], vec![0, 2], vec![1, 2],
+        vec![0, 1, 2]
+    ]);
+
+    assert_eq!((0..4).powerset().count(), 1 << 4);
+    assert_eq!((0..8).powerset().count(), 1 << 8);
+    assert_eq!((0..16).powerset().count(), 1 << 16);
+}
+
+#[test]
 fn diff_mismatch() {
     let a = vec![1, 2, 3, 4];
     let b = vec![1.0, 5.0, 3.0, 4.0];
@@ -790,4 +1036,14 @@ fn tree_fold1() {
         let actual = num_strings.tree_fold1(|a, b| format!("{} {} x", a, b));
         assert_eq!(actual, expected);
     }
+}
+
+#[test]
+fn exactly_one_question_mark_syntax_works() {
+    exactly_one_question_mark_return().unwrap_err();
+}
+
+fn exactly_one_question_mark_return() -> Result<(), ExactlyOneError<std::slice::Iter<'static, ()>>> {
+    [].iter().exactly_one()?;
+    Ok(())
 }

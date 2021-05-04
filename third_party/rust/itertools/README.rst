@@ -21,7 +21,7 @@ How to use with cargo:
 .. code:: toml
 
     [dependencies]
-    itertools = "0.8"
+    itertools = "0.9"
 
 How to use in your crate:
 

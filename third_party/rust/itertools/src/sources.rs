@@ -7,7 +7,7 @@ use std::mem;
 
 /// See [`repeat_call`](../fn.repeat_call.html) for more information.
 #[derive(Clone)]
-#[deprecated(note="Use std repeat_with() instead", since="0.8")]
+#[deprecated(note="Use std repeat_with() instead", since="0.8.0")]
 pub struct RepeatCall<F> {
     f: F,
 }
@@ -39,7 +39,7 @@ impl<F> fmt::Debug for RepeatCall<F>
 ///     vec![1, 1, 1, 1, 1]
 /// );
 /// ```
-#[deprecated(note="Use std repeat_with() instead", since="0.8")]
+#[deprecated(note="Use std repeat_with() instead", since="0.8.0")]
 pub fn repeat_call<F, A>(function: F) -> RepeatCall<F>
     where F: FnMut() -> A
 {
@@ -52,7 +52,7 @@ impl<A, F> Iterator for RepeatCall<F>
     type Item = A;
 
     #[inline]
-    fn next(&mut self) -> Option<A> {
+    fn next(&mut self) -> Option<Self::Item> {
         Some((self.f)())
     }
 
@@ -76,22 +76,21 @@ impl<A, F> Iterator for RepeatCall<F>
 ///
 /// use itertools::unfold;
 ///
-/// let (mut x1, mut x2) = (1u32, 1u32);
-/// let mut fibonacci = unfold((), move |_| {
+/// let mut fibonacci = unfold((1u32, 1u32), |(x1, x2)| {
 ///     // Attempt to get the next Fibonacci number
-///     let next = x1.saturating_add(x2);
+///     let next = x1.saturating_add(*x2);
 ///
 ///     // Shift left: ret <- x1 <- x2 <- next
-///     let ret = x1;
-///     x1 = x2;
-///     x2 = next;
+///     let ret = *x1;
+///     *x1 = *x2;
+///     *x2 = next;
 ///
 ///     // If addition has saturated at the maximum, we are finished
-///     if ret == x1 && ret > 1 {
-///         return None;
+///     if ret == *x1 && ret > 1 {
+///         None
+///     } else {
+///         Some(ret)
 ///     }
-///
-///     Some(ret)
 /// });
 ///
 /// itertools::assert_equal(fibonacci.by_ref().take(8),
@@ -128,14 +127,8 @@ impl<A, St, F> Iterator for Unfold<St, F>
     type Item = A;
 
     #[inline]
-    fn next(&mut self) -> Option<A> {
+    fn next(&mut self) -> Option<Self::Item> {
         (self.f)(&mut self.state)
-    }
-
-    #[inline]
-    fn size_hint(&self) -> (usize, Option<usize>) {
-        // no possible known bounds at this point
-        (0, None)
     }
 }
 

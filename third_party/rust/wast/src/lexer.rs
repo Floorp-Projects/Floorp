@@ -817,12 +817,19 @@ impl fmt::Display for LexError {
         use LexError::*;
         match self {
             DanglingBlockComment => f.write_str("unterminated block comment")?,
-            Unexpected(c) => write!(f, "unexpected character {:?}", c)?,
-            InvalidStringElement(c) => write!(f, "invalid character in string {:?}", c)?,
-            InvalidStringEscape(c) => write!(f, "invalid string escape {:?}", c)?,
-            InvalidHexDigit(c) => write!(f, "invalid hex digit {:?}", c)?,
-            InvalidDigit(c) => write!(f, "invalid decimal digit {:?}", c)?,
-            Expected { wanted, found } => write!(f, "expected {:?} but found {:?}", wanted, found)?,
+            Unexpected(c) => write!(f, "unexpected character '{}'", escape_char(*c))?,
+            InvalidStringElement(c) => {
+                write!(f, "invalid character in string '{}'", escape_char(*c))?
+            }
+            InvalidStringEscape(c) => write!(f, "invalid string escape '{}'", escape_char(*c))?,
+            InvalidHexDigit(c) => write!(f, "invalid hex digit '{}'", escape_char(*c))?,
+            InvalidDigit(c) => write!(f, "invalid decimal digit '{}'", escape_char(*c))?,
+            Expected { wanted, found } => write!(
+                f,
+                "expected '{}' but found '{}'",
+                escape_char(*wanted),
+                escape_char(*found)
+            )?,
             UnexpectedEof => write!(f, "unexpected end-of-file")?,
             NumberTooBig => f.write_str("number is too big to parse")?,
             InvalidUnicodeValue(c) => write!(f, "invalid unicode scalar value 0x{:x}", c)?,
@@ -830,6 +837,19 @@ impl fmt::Display for LexError {
             __Nonexhaustive => unreachable!(),
         }
         Ok(())
+    }
+}
+
+fn escape_char(c: char) -> String {
+    match c {
+        '\t' => String::from("\\\t"),
+        '\r' => String::from("\\\r"),
+        '\n' => String::from("\\\n"),
+        '\\' => String::from("\\\\"),
+        '\'' => String::from("\\\'"),
+        '\"' => String::from("\""),
+        '\x20'..='\x7e' => String::from(c),
+        _ => c.escape_unicode().to_string(),
     }
 }
 
