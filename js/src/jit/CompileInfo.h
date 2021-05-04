@@ -194,7 +194,7 @@ class CompileInfo {
     return 1;
   }
   uint32_t argsObjSlot() const {
-    MOZ_ASSERT(hasArguments());
+    MOZ_ASSERT(needsArgsObj());
     return 2;
   }
   uint32_t thisSlot() const {
@@ -226,7 +226,6 @@ class CompileInfo {
     return nimplicit() + nargs() + nlocals();
   }
 
-  bool hasArguments() const { return script()->needsArgsObj(); }
   bool hasMappedArgsObj() const { return script()->hasMappedArgsObj(); }
   bool needsArgsObj() const { return scriptNeedsArgsObj_; }
   bool argsObjAliasesFormals() const {
@@ -298,7 +297,7 @@ class CompileInfo {
       // If the function may need an arguments object, also preserve the
       // environment chain because it may be needed to reconstruct the arguments
       // object during bailout.
-      if (funNeedsSomeEnvironmentObject_ || hasArguments()) {
+      if (funNeedsSomeEnvironmentObject_ || needsArgsObj()) {
         return SlotObservableKind::ObservableRecoverable;
       }
       return SlotObservableKind::NotObservable;
@@ -306,7 +305,7 @@ class CompileInfo {
 
     // The arguments object is observable. If it does not escape, it can
     // be recovered.
-    if (hasArguments() && slot == argsObjSlot()) {
+    if (needsArgsObj() && slot == argsObjSlot()) {
       MOZ_ASSERT(funMaybeLazy());
       return SlotObservableKind::ObservableRecoverable;
     }
@@ -360,9 +359,6 @@ class CompileInfo {
   jsbytecode* osrPc_;
   AnalysisMode analysisMode_;
 
-  // Whether a script needs an arguments object is unstable over compilation
-  // since the arguments optimization could be marked as failed on the active
-  // thread, so cache a value here and use it throughout for consistency.
   bool scriptNeedsArgsObj_;
 
   // Record the state of previous bailouts in order to prevent compiling the
