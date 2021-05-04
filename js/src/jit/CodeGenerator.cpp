@@ -7089,6 +7089,36 @@ void CodeGenerator::visitNewPlainObject(LNewPlainObject* lir) {
   masm.bind(ool->rejoin());
 }
 
+void CodeGenerator::visitNewArrayObject(LNewArrayObject* lir) {
+  Register objReg = ToRegister(lir->output());
+  Register temp0Reg = ToRegister(lir->temp0());
+  Register shapeReg = ToRegister(lir->temp1());
+
+  auto* mir = lir->mir();
+  uint32_t arrayLength = mir->length();
+
+  gc::AllocKind allocKind = GuessArrayGCKind(arrayLength);
+  MOZ_ASSERT(CanChangeToBackgroundAllocKind(allocKind, &ArrayObject::class_));
+  allocKind = ForegroundToBackgroundAllocKind(allocKind);
+
+  uint32_t slotCount = GetGCKindSlots(allocKind);
+  MOZ_ASSERT(slotCount >= ObjectElements::VALUES_PER_HEADER);
+  uint32_t arrayCapacity = slotCount - ObjectElements::VALUES_PER_HEADER;
+
+  const Shape* shape = mir->shape();
+
+  using Fn = ArrayObject* (*)(JSContext*, uint32_t, NewObjectKind);
+  OutOfLineCode* ool = oolCallVM<Fn, NewArrayOperation>(
+      lir, ArgList(Imm32(arrayLength), Imm32(GenericObject)),
+      StoreRegisterTo(objReg));
+
+  masm.movePtr(ImmPtr(shape), shapeReg);
+  masm.createArrayWithFixedElements(objReg, shapeReg, temp0Reg, arrayLength,
+                                    arrayCapacity, allocKind,
+                                    mir->initialHeap(), ool->entry());
+  masm.bind(ool->rejoin());
+}
+
 void CodeGenerator::visitNewNamedLambdaObject(LNewNamedLambdaObject* lir) {
   Register objReg = ToRegister(lir->output());
   Register tempReg = ToRegister(lir->temp());

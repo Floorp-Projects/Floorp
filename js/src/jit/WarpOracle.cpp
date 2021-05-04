@@ -504,23 +504,6 @@ AbortReasonOr<WarpScriptSnapshot*> WarpScriptOracle::createScriptSnapshot() {
         break;
       }
 
-      case JSOp::NewArray: {
-        const ICEntry& entry = getICEntry(loc);
-        auto* stub = entry.fallbackStub()->toNewArray_Fallback();
-        if (ArrayObject* templateObj = stub->templateObject()) {
-          // Only inline elements are supported without a VM call.
-          size_t numInlineElements =
-              gc::GetGCKindSlots(templateObj->asTenured().getAllocKind()) -
-              ObjectElements::VALUES_PER_HEADER;
-          bool useVMCall = loc.getNewArrayLength() > numInlineElements;
-          if (!AddOpSnapshot<WarpNewArray>(alloc_, opSnapshots, offset,
-                                           templateObj, useVMCall)) {
-            return abort(AbortReason::Alloc);
-          }
-        }
-        break;
-      }
-
       case JSOp::BindGName: {
         RootedGlobalObject global(cx_, &script_->global());
         RootedPropertyName name(cx_, loc.getPropertyName(script_));
@@ -601,6 +584,7 @@ AbortReasonOr<WarpScriptSnapshot*> WarpScriptOracle::createScriptSnapshot() {
       case JSOp::TypeofExpr:
       case JSOp::NewObject:
       case JSOp::NewInit:
+      case JSOp::NewArray:
         MOZ_TRY(maybeInlineIC(opSnapshots, loc));
         break;
 
