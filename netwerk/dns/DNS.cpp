@@ -198,6 +198,25 @@ bool NetAddr::IsIPAddrAny() const {
 
 NetAddr::NetAddr(const PRNetAddr* prAddr) { PRNetAddrToNetAddr(prAddr, this); }
 
+nsresult NetAddr::InitFromString(const nsACString& aString, uint16_t aPort) {
+  const nsPromiseFlatCString& flat = PromiseFlatCString(aString);
+  PRNetAddr prAddr{};
+  if (PR_StringToNetAddr(flat.get(), &prAddr) != PR_SUCCESS) {
+    return NS_ERROR_FAILURE;
+  }
+
+  PRNetAddrToNetAddr(&prAddr, this);
+
+  if (aPort) {
+    if (this->raw.family == PR_AF_INET) {
+      this->inet.port = PR_htons(aPort);
+    } else if (this->raw.family == PR_AF_INET6) {
+      this->inet6.port = PR_htons(aPort);
+    }
+  }
+  return NS_OK;
+}
+
 bool NetAddr::IsIPAddrV4() const { return this->raw.family == AF_INET; }
 
 bool NetAddr::IsIPAddrV4Mapped() const {
