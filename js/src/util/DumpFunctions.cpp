@@ -291,8 +291,7 @@ static bool FormatFrame(JSContext* cx, const FrameIter& iter, Sprinter& sp,
           arg = MagicValue(JS_OPTIMIZED_OUT);
         }
       } else if (iter.hasUsableAbstractFramePtr()) {
-        if (!script->needsArgsAnalysis() && script->argsObjAliasesFormals() &&
-            iter.hasArgsObj()) {
+        if (script->argsObjAliasesFormals() && iter.hasArgsObj()) {
           arg = iter.argsObj().arg(i);
         } else {
           arg = iter.unaliasedActual(i, DONT_CHECK_ALIASING);

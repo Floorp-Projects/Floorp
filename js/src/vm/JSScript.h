@@ -1516,15 +1516,8 @@ class BaseScript : public gc::TenuredCellWithNonGCPointer<uint8_t> {
     MOZ_ASSERT(extent_.sourceStart <= extent_.sourceEnd);
     MOZ_ASSERT(extent_.sourceEnd <= extent_.toStringEnd);
 
-    // The immutableFlags determine if the arguments-analysis will need to be
-    // run. We track if we need to run the analysis and the result of the
-    // analysis on the mutableFlags. The analysis is deterministic so we only
-    // need it once, even if we relazify, etc.
     if (argumentsHasVarBinding()) {
-      setFlag(MutableFlags::NeedsArgsObj, alwaysNeedsArgsObj());
-      setFlag(MutableFlags::NeedsArgsAnalysis, !alwaysNeedsArgsObj());
-    } else {
-      MOZ_ASSERT(!alwaysNeedsArgsObj());
+      setFlag(MutableFlags::NeedsArgsObj, true);
     }
   }
 
@@ -1657,7 +1650,6 @@ class BaseScript : public gc::TenuredCellWithNonGCPointer<uint8_t> {
   MUTABLE_FLAG_GETTER_SETTER(hasRunOnce, HasRunOnce)
   MUTABLE_FLAG_GETTER_SETTER(hasScriptCounts, HasScriptCounts)
   MUTABLE_FLAG_GETTER_SETTER(hasDebugScript, HasDebugScript)
-  MUTABLE_FLAG_GETTER_SETTER(needsArgsAnalysis, NeedsArgsAnalysis)
   // NeedsArgsObj: custom logic below.
   MUTABLE_FLAG_GETTER_SETTER(allowRelazify, AllowRelazify)
   MUTABLE_FLAG_GETTER_SETTER(spewEnabled, SpewEnabled)
@@ -2027,22 +2019,7 @@ class JSScript : public js::BaseScript {
     return argumentsHasVarBinding() && hasMappedArgsObj();
   }
 
-  /*
-   * As an optimization, even when argumentsHasVarBinding, the function
-   * prologue may not need to create an arguments object. This is determined by
-   * needsArgsObj which is set by AnalyzeArgumentsUsage. When !needsArgsObj,
-   * the prologue may simply write MagicValue(JS_OPTIMIZED_ARGUMENTS) to
-   * 'arguments's slot and any uses of 'arguments' will be guaranteed to handle
-   * this magic value. To avoid spurious arguments object creation, we maintain
-   * the invariant that needsArgsObj is only called after the script has been
-   * analyzed.
-   */
-  inline bool ensureHasAnalyzedArgsUsage(JSContext* cx);
-  bool needsArgsObj() const {
-    MOZ_ASSERT(!needsArgsAnalysis());
-    return hasFlag(MutableFlags::NeedsArgsObj);
-  }
-  void setNeedsArgsObj(bool needsArgsObj);
+  bool needsArgsObj() const { return hasFlag(MutableFlags::NeedsArgsObj); }
   static void argumentsOptimizationFailed(JSContext* cx,
                                           js::HandleScript script);
 

@@ -3521,9 +3521,6 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     }
 
     CASE(Arguments) {
-      if (!script->ensureHasAnalyzedArgsUsage(cx)) {
-        goto error;
-      }
       if (script->needsArgsObj()) {
         ArgumentsObject* obj = ArgumentsObject::createExpected(cx, REGS.fp());
         if (!obj) {
