@@ -289,12 +289,6 @@ moz-input-box > menupopup .context-menu-add-engine > .menu-iconic-left {
 
 %include ../shared/urlbarView.inc.css
 
-.urlbarView:not(:-moz-lwtheme),
-#PopupSearchAutoComplete:not(:-moz-lwtheme) {
-  /* Set custom disabled text color since native graytext is too faint on macOS 10.14+. */
-  --panel-disabled-color: #737373;
-}
-
 /* ----- AUTOCOMPLETE ----- */
 
 %include ../shared/autocomplete.inc.css
