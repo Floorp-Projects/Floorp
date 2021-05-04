@@ -40,7 +40,6 @@ class WarpScriptSnapshot;
   _(WarpGetImport)               \
   _(WarpLambda)                  \
   _(WarpRest)                    \
-  _(WarpNewArray)                \
   _(WarpBindGName)               \
   _(WarpBailout)                 \
   _(WarpCacheIR)                 \
@@ -392,29 +391,6 @@ class WarpRest : public WarpOpSnapshot {
 
   ArrayObject* templateObject() const { return templateObject_; }
   size_t maxInlineElements() const { return maxInlineElements_; }
-
-  void traceData(JSTracer* trc);
-
-#ifdef JS_JITSPEW
-  void dumpData(GenericPrinter& out) const;
-#endif
-};
-
-// Template object for JSOp::NewArray.
-class WarpNewArray : public WarpOpSnapshot {
-  WarpGCPtr<ArrayObject*> templateObject_;
-  bool useVMCall_;
-
- public:
-  static constexpr Kind ThisKind = Kind::WarpNewArray;
-
-  WarpNewArray(uint32_t offset, ArrayObject* templateObject, bool useVMCall)
-      : WarpOpSnapshot(ThisKind, offset),
-        templateObject_(templateObject),
-        useVMCall_(useVMCall) {}
-
-  ArrayObject* templateObject() const { return templateObject_; }
-  bool useVMCall() const { return useVMCall_; }
 
   void traceData(JSTracer* trc);
 
