@@ -452,7 +452,7 @@ pref("browser.download.alwaysOpenInSystemViewerContextMenuItem", true);
 // Open downloaded file types internally for the given types.
 // This is a comma-separated list, the empty string ("") means no types are
 // viewable internally.
-pref("browser.download.viewableInternally.enabledTypes", "xml,svg,webp,avif,jxl");
+pref("browser.download.viewableInternally.enabledTypes", "xml,svg,webp,avif");
 
 
 // This controls whether the button is automatically shown/hidden depending
