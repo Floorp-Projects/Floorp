@@ -31,6 +31,7 @@
 #include "js/CharacterEncoding.h"
 #include "js/Class.h"
 #include "js/CompileOptions.h"
+#include "js/Context.h"
 #include "js/ErrorReport.h"
 #include "js/Exception.h"
 #include "js/GCVector.h"
@@ -56,6 +57,7 @@
 #include "js/ValueArray.h"
 #include "js/Vector.h"
 #include "js/WeakMap.h"
+#include "js/Zone.h"
 
 /************************************************************************/
 
@@ -135,13 +137,6 @@ struct JSWrapObjectCallbacks {
   JSPreWrapCallback preWrap;
 };
 
-using JSDestroyZoneCallback = void (*)(JSFreeOp*, JS::Zone*);
-
-using JSDestroyCompartmentCallback = void (*)(JSFreeOp*, JS::Compartment*);
-
-using JSSizeOfIncludingThisCompartmentCallback =
-    size_t (*)(mozilla::MallocSizeOf, JS::Compartment*);
-
 /**
  * Callback used to intercept JavaScript errors.
  */
@@ -214,116 +209,6 @@ extern JS_PUBLIC_API bool JS_IsBuiltinEvalFunction(JSFunction* fun);
 /** True iff fun is the Function constructor. */
 extern JS_PUBLIC_API bool JS_IsBuiltinFunctionConstructor(JSFunction* fun);
 
-/************************************************************************/
-
-// [SMDOC] Data Structures (JSContext, JSRuntime, Realm, Compartment, Zone)
-//
-// SpiderMonkey uses some data structures that behave a lot like Russian dolls:
-// runtimes contain zones, zones contain compartments, compartments contain
-// realms. Each layer has its own purpose.
-//
-// Realm
-// -----
-// Data associated with a global object. In the browser each frame has its
-// own global/realm.
-//
-// Compartment
-// -----------
-// Security membrane; when an object from compartment A is used in compartment
-// B, a cross-compartment wrapper (a kind of proxy) is used. In the browser,
-// same-origin realms can share a compartment.
-//
-// Zone
-// ----
-// A Zone is a group of compartments that share GC resources (arenas, strings,
-// etc) for memory usage and performance reasons. Zone is the GC unit: the GC
-// can operate on one or more zones at a time. The browser uses roughly one zone
-// per tab.
-//
-// Context
-// -------
-// JSContext represents a thread: there must be exactly one JSContext for each
-// thread running JS/Wasm.
-//
-// Internally, helper threads can also have a JSContext. They do not always have
-// an active context, but one may be requested by AutoSetHelperThreadContext,
-// which activates a pre-allocated JSContext for the duration of its lifetime.
-//
-// Runtime
-// -------
-// JSRuntime is very similar to JSContext: each runtime belongs to one context
-// (thread), but helper threads don't have their own runtimes (they're shared by
-// all runtimes in the process and use the runtime of the task they're
-// executing).
-
-/*
- * Locking, contexts, and memory allocation.
- *
- * It is important that SpiderMonkey be initialized, and the first context
- * be created, in a single-threaded fashion.  Otherwise the behavior of the
- * library is undefined.
- * See:
- * https://developer.mozilla.org/en-US/docs/Mozilla/Projects/SpiderMonkey/JSAPI_reference
- */
-
-// Create a new context (and runtime) for this thread.
-extern JS_PUBLIC_API JSContext* JS_NewContext(
-    uint32_t maxbytes, JSRuntime* parentRuntime = nullptr);
-
-// Destroy a context allocated with JS_NewContext. Must be called on the thread
-// that called JS_NewContext.
-extern JS_PUBLIC_API void JS_DestroyContext(JSContext* cx);
-
-JS_PUBLIC_API void* JS_GetContextPrivate(JSContext* cx);
-
-JS_PUBLIC_API void JS_SetContextPrivate(JSContext* cx, void* data);
-
-extern JS_PUBLIC_API JSRuntime* JS_GetParentRuntime(JSContext* cx);
-
-extern JS_PUBLIC_API JSRuntime* JS_GetRuntime(JSContext* cx);
-
-extern JS_PUBLIC_API void JS_SetFutexCanWait(JSContext* cx);
-
-namespace js {
-
-void AssertHeapIsIdle();
-
-} /* namespace js */
-
-namespace JS {
-
-/**
- * Initialize the runtime's self-hosted code. Embeddings should call this
- * exactly once per runtime/context, before the first JS_NewGlobalObject
- * call.
- *
- * NOTE: This may not set a pending exception in the case of OOM since this
- *       runs very early in startup.
- */
-JS_PUBLIC_API bool InitSelfHostedCode(JSContext* cx);
-
-/**
- * Asserts (in debug and release builds) that `obj` belongs to the current
- * thread's context.
- */
-JS_PUBLIC_API void AssertObjectBelongsToCurrentThread(JSObject* obj);
-
-/**
- * Install a process-wide callback to validate script filenames. The JS engine
- * will invoke this callback for each JS script it parses or XDR decodes.
- *
- * If the callback returns |false|, an exception is thrown and parsing/decoding
- * will be aborted.
- *
- * See also CompileOptions::setSkipFilenameValidation to opt-out of the callback
- * for specific parse jobs.
- */
-using FilenameValidationCallback = bool (*)(const char* filename,
-                                            bool isSystemRealm);
-JS_PUBLIC_API void SetFilenameValidationCallback(FilenameValidationCallback cb);
-
-} /* namespace JS */
-
 /**
  * Set callback to send tasks to XPCOM thread pools
  */
@@ -331,15 +216,6 @@ JS_PUBLIC_API void SetHelperThreadTaskCallback(
     bool (*callback)(js::UniquePtr<js::RunnableTask>));
 
 extern JS_PUBLIC_API const char* JS_GetImplementationVersion(void);
-
-extern JS_PUBLIC_API void JS_SetDestroyZoneCallback(
-    JSContext* cx, JSDestroyZoneCallback callback);
-
-extern JS_PUBLIC_API void JS_SetDestroyCompartmentCallback(
-    JSContext* cx, JSDestroyCompartmentCallback callback);
-
-extern JS_PUBLIC_API void JS_SetSizeOfIncludingThisCompartmentCallback(
-    JSContext* cx, JSSizeOfIncludingThisCompartmentCallback callback);
 
 extern JS_PUBLIC_API void JS_SetWrapObjectCallbacks(
     JSContext* cx, const JSWrapObjectCallbacks* callbacks);
@@ -369,16 +245,6 @@ extern JS_PUBLIC_API JSErrorInterceptor* JS_GetErrorInterceptorCallback(
 extern JS_PUBLIC_API mozilla::Maybe<JSExnType> JS_GetErrorType(
     const JS::Value& val);
 
-extern JS_PUBLIC_API void JS_SetCompartmentPrivate(JS::Compartment* compartment,
-                                                   void* data);
-
-extern JS_PUBLIC_API void* JS_GetCompartmentPrivate(
-    JS::Compartment* compartment);
-
-extern JS_PUBLIC_API void JS_SetZoneUserData(JS::Zone* zone, void* data);
-
-extern JS_PUBLIC_API void* JS_GetZoneUserData(JS::Zone* zone);
-
 extern JS_PUBLIC_API bool JS_WrapObject(JSContext* cx,
                                         JS::MutableHandleObject objp);
 
@@ -388,100 +254,6 @@ extern JS_PUBLIC_API bool JS_WrapValue(JSContext* cx,
 extern JS_PUBLIC_API JSObject* JS_TransplantObject(JSContext* cx,
                                                    JS::HandleObject origobj,
                                                    JS::HandleObject target);
-
-extern JS_PUBLIC_API bool JS_RefreshCrossCompartmentWrappers(
-    JSContext* cx, JS::Handle<JSObject*> obj);
-
-/*
- * At any time, a JSContext has a current (possibly-nullptr) realm.
- * Realms are described in:
- *
- *   developer.mozilla.org/en-US/docs/SpiderMonkey/SpiderMonkey_compartments
- *
- * The current realm of a context may be changed. The preferred way to do
- * this is with JSAutoRealm:
- *
- *   void foo(JSContext* cx, JSObject* obj) {
- *     // in some realm 'r'
- *     {
- *       JSAutoRealm ar(cx, obj);  // constructor enters
- *       // in the realm of 'obj'
- *     }                           // destructor leaves
- *     // back in realm 'r'
- *   }
- *
- * The object passed to JSAutoRealm must *not* be a cross-compartment wrapper,
- * because CCWs are not associated with a single realm.
- *
- * For more complicated uses that don't neatly fit in a C++ stack frame, the
- * realm can be entered and left using separate function calls:
- *
- *   void foo(JSContext* cx, JSObject* obj) {
- *     // in 'oldRealm'
- *     JS::Realm* oldRealm = JS::EnterRealm(cx, obj);
- *     // in the realm of 'obj'
- *     JS::LeaveRealm(cx, oldRealm);
- *     // back in 'oldRealm'
- *   }
- *
- * Note: these calls must still execute in a LIFO manner w.r.t all other
- * enter/leave calls on the context. Furthermore, only the return value of a
- * JS::EnterRealm call may be passed as the 'oldRealm' argument of
- * the corresponding JS::LeaveRealm call.
- *
- * Entering a realm roots the realm and its global object for the lifetime of
- * the JSAutoRealm.
- */
-
-class MOZ_RAII JS_PUBLIC_API JSAutoRealm {
-  JSContext* cx_;
-  JS::Realm* oldRealm_;
-
- public:
-  JSAutoRealm(JSContext* cx, JSObject* target);
-  JSAutoRealm(JSContext* cx, JSScript* target);
-  ~JSAutoRealm();
-};
-
-class MOZ_RAII JS_PUBLIC_API JSAutoNullableRealm {
-  JSContext* cx_;
-  JS::Realm* oldRealm_;
-
- public:
-  explicit JSAutoNullableRealm(JSContext* cx, JSObject* targetOrNull);
-  ~JSAutoNullableRealm();
-};
-
-namespace JS {
-
-/** NB: This API is infallible; a nullptr return value does not indicate error.
- *
- * |target| must not be a cross-compartment wrapper because CCWs are not
- * associated with a single realm.
- *
- * Entering a realm roots the realm and its global object until the matching
- * JS::LeaveRealm() call.
- */
-extern JS_PUBLIC_API JS::Realm* EnterRealm(JSContext* cx, JSObject* target);
-
-extern JS_PUBLIC_API void LeaveRealm(JSContext* cx, JS::Realm* oldRealm);
-
-}  // namespace JS
-
-/**
- * Mark a jsid after entering a new compartment. Different zones separately
- * mark the ids in a runtime, and this must be used any time an id is obtained
- * from one compartment and then used in another compartment, unless the two
- * compartments are guaranteed to be in the same zone.
- */
-extern JS_PUBLIC_API void JS_MarkCrossZoneId(JSContext* cx, jsid id);
-
-/**
- * If value stores a jsid (an atomized string or symbol), mark that id as for
- * JS_MarkCrossZoneId.
- */
-extern JS_PUBLIC_API void JS_MarkCrossZoneIdValue(JSContext* cx,
-                                                  const JS::Value& value);
 
 /**
  * Resolve id, which must contain either a string or an int, to a standard

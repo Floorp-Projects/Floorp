@@ -12,6 +12,13 @@
 #include "js/GCPolicyAPI.h"
 #include "js/TypeDecls.h"  // forward-declaration of JS::Realm
 
+/************************************************************************/
+
+// [SMDOC] Realms
+//
+// Data associated with a global object. In the browser each frame has its
+// own global/realm.
+
 namespace js {
 namespace gc {
 JS_PUBLIC_API void TraceRealm(JSTracer* trc, JS::Realm* realm,
@@ -116,6 +123,78 @@ extern JS_PUBLIC_API JSObject* GetRealmWeakMapKey(JSContext* cx);
 extern JS_PUBLIC_API Realm* GetFunctionRealm(JSContext* cx,
                                              HandleObject objArg);
 
+/** NB: This API is infallible; a nullptr return value does not indicate error.
+ *
+ * |target| must not be a cross-compartment wrapper because CCWs are not
+ * associated with a single realm.
+ *
+ * Entering a realm roots the realm and its global object until the matching
+ * JS::LeaveRealm() call.
+ */
+extern JS_PUBLIC_API JS::Realm* EnterRealm(JSContext* cx, JSObject* target);
+
+extern JS_PUBLIC_API void LeaveRealm(JSContext* cx, JS::Realm* oldRealm);
+
 }  // namespace JS
+
+/*
+ * At any time, a JSContext has a current (possibly-nullptr) realm.
+ * Realms are described in:
+ *
+ *   developer.mozilla.org/en-US/docs/SpiderMonkey/SpiderMonkey_compartments
+ *
+ * The current realm of a context may be changed. The preferred way to do
+ * this is with JSAutoRealm:
+ *
+ *   void foo(JSContext* cx, JSObject* obj) {
+ *     // in some realm 'r'
+ *     {
+ *       JSAutoRealm ar(cx, obj);  // constructor enters
+ *       // in the realm of 'obj'
+ *     }                           // destructor leaves
+ *     // back in realm 'r'
+ *   }
+ *
+ * The object passed to JSAutoRealm must *not* be a cross-compartment wrapper,
+ * because CCWs are not associated with a single realm.
+ *
+ * For more complicated uses that don't neatly fit in a C++ stack frame, the
+ * realm can be entered and left using separate function calls:
+ *
+ *   void foo(JSContext* cx, JSObject* obj) {
+ *     // in 'oldRealm'
+ *     JS::Realm* oldRealm = JS::EnterRealm(cx, obj);
+ *     // in the realm of 'obj'
+ *     JS::LeaveRealm(cx, oldRealm);
+ *     // back in 'oldRealm'
+ *   }
+ *
+ * Note: these calls must still execute in a LIFO manner w.r.t all other
+ * enter/leave calls on the context. Furthermore, only the return value of a
+ * JS::EnterRealm call may be passed as the 'oldRealm' argument of
+ * the corresponding JS::LeaveRealm call.
+ *
+ * Entering a realm roots the realm and its global object for the lifetime of
+ * the JSAutoRealm.
+ */
+
+class MOZ_RAII JS_PUBLIC_API JSAutoRealm {
+  JSContext* cx_;
+  JS::Realm* oldRealm_;
+
+ public:
+  JSAutoRealm(JSContext* cx, JSObject* target);
+  JSAutoRealm(JSContext* cx, JSScript* target);
+  ~JSAutoRealm();
+};
+
+class MOZ_RAII JS_PUBLIC_API JSAutoNullableRealm {
+  JSContext* cx_;
+  JS::Realm* oldRealm_;
+
+ public:
+  explicit JSAutoNullableRealm(JSContext* cx, JSObject* targetOrNull);
+  ~JSAutoNullableRealm();
+};
 
 #endif  // js_Realm_h

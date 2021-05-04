@@ -140,6 +140,7 @@ EXPORTS.js += [
     "../public/ComparisonOperators.h",
     "../public/CompilationAndEvaluation.h",
     "../public/CompileOptions.h",
+    "../public/Context.h",
     "../public/ContextOptions.h",
     "../public/Conversions.h",
     "../public/Date.h",
@@ -219,6 +220,7 @@ EXPORTS.js += [
     "../public/WeakMap.h",
     "../public/WeakMapPtr.h",
     "../public/Wrapper.h",
+    "../public/Zone.h",
 ]
 
 # This lives in mozglue/baseprofiler but we re-publish ourselves to support
