@@ -1448,8 +1448,7 @@ MIRType TypeAnalyzer::guessPhiType(MPhi* phi) const {
   MIRType magicType = MIRType::None;
   for (size_t i = 0; i < phi->numOperands(); i++) {
     MDefinition* in = phi->getOperand(i);
-    if (in->type() == MIRType::MagicOptimizedArguments ||
-        in->type() == MIRType::MagicHole ||
+    if (in->type() == MIRType::MagicHole ||
         in->type() == MIRType::MagicIsConstructing) {
       if (magicType == MIRType::None) {
         magicType = in->type();
@@ -1828,9 +1827,6 @@ void TypeAnalyzer::replaceRedundantPhi(MPhi* phi) {
       break;
     case MIRType::Null:
       v = NullValue();
-      break;
-    case MIRType::MagicOptimizedArguments:
-      v = MagicValue(JS_OPTIMIZED_ARGUMENTS);
       break;
     case MIRType::MagicOptimizedOut:
       v = MagicValue(JS_OPTIMIZED_OUT);
@@ -2853,7 +2849,6 @@ static bool IsResumableMIRType(MIRType type) {
     case MIRType::BigInt:
     case MIRType::Object:
     case MIRType::Shape:
-    case MIRType::MagicOptimizedArguments:
     case MIRType::MagicOptimizedOut:
     case MIRType::MagicUninitializedLexical:
     case MIRType::MagicIsConstructing:
@@ -2896,9 +2891,6 @@ static void AssertIfResumableInstruction(MDefinition* def) {
 static void AssertResumePointDominatedByOperands(MResumePoint* resume) {
   for (size_t i = 0, e = resume->numOperands(); i < e; ++i) {
     MDefinition* op = resume->getOperand(i);
-    if (op->type() == MIRType::MagicOptimizedArguments) {
-      continue;
-    }
     MOZ_ASSERT(op->block()->dominates(resume->block()),
                "Resume point is not dominated by its operands");
   }

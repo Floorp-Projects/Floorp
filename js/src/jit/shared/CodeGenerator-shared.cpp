@@ -440,16 +440,12 @@ void CodeGeneratorShared::encodeAllocation(LSnapshot* snapshot,
       }
       break;
     }
-    case MIRType::MagicOptimizedArguments:
     case MIRType::MagicOptimizedOut:
     case MIRType::MagicUninitializedLexical:
     case MIRType::MagicIsConstructing: {
       uint32_t index;
       JSWhyMagic why = JS_GENERIC_MAGIC;
       switch (type) {
-        case MIRType::MagicOptimizedArguments:
-          why = JS_OPTIMIZED_ARGUMENTS;
-          break;
         case MIRType::MagicOptimizedOut:
           why = JS_OPTIMIZED_OUT;
           break;
