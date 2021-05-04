@@ -8,12 +8,6 @@
 // Note: Running this file outputs a new nsSTSPreloadlist.inc in the current
 //       working directory.
 
-/*
-var Cc = Components.classes;
-var Ci = Components.interfaces;
-var Cu = Components.utils;
-var Cr = Components.results;
-*/
 var gSSService = Cc["@mozilla.org/ssservice;1"].getService(
   Ci.nsISiteSecurityService
 );
@@ -28,7 +22,6 @@ const SOURCE =
 const TOOL_SOURCE =
   "https://hg.mozilla.org/mozilla-central/file/default/taskcluster/docker/periodic-updates/scripts/getHSTSPreloadList.js";
 const OUTPUT = "nsSTSPreloadList.inc";
-const ERROR_OUTPUT = "nsSTSPreloadList.errors";
 const MINIMUM_REQUIRED_MAX_AGE = 60 * 60 * 24 * 7 * 18;
 const MAX_CONCURRENT_REQUESTS = 500;
 const MAX_RETRIES = 1;
@@ -312,15 +305,13 @@ async function probeHSTSStatuses(inHosts) {
   let totalLength = inHosts.length;
   dump("Examining " + totalLength + " hosts.\n");
 
-  // Debug/testing on a small number of hosts
-  // while (inHosts.length > 40000) {
-
-  // Make requests in batches of 250. Otherwise, we have too many in-flight
-  // requests and the time it takes to process them causes them all to time out.
+  // Make requests in batches of MAX_CONCURRENT_REQUESTS. Otherwise, we have
+  // too many in-flight requests and the time it takes to process them causes
+  // them all to time out.
   let allResults = [];
   while (inHosts.length > 0) {
     let promises = [];
-    for (let i = 0; i < 250 && inHosts.length > 0; i++) {
+    for (let i = 0; i < MAX_CONCURRENT_REQUESTS && inHosts.length > 0; i++) {
       let host = inHosts.shift();
       promises.push(getHSTSStatus(host));
     }
