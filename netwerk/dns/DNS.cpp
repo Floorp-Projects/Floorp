@@ -179,6 +179,11 @@ bool IsLoopbackHostname(const nsACString& aAsciiHost) {
          StringEndsWith(host, ".localhost"_ns);
 }
 
+bool HostIsIPLiteral(const nsACString& aAsciiHost) {
+  NetAddr addr;
+  return NS_SUCCEEDED(addr.InitFromString(aAsciiHost));
+}
+
 bool NetAddr::IsIPAddrAny() const {
   if (this->raw.family == AF_INET) {
     if (this->inet.ip == htonl(INADDR_ANY)) {
