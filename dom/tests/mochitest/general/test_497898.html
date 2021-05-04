@@ -20,12 +20,15 @@ function switchFocus()
 </head>
 <body>
   <iframe srcdoc="<html><meta charset='utf-8'>
-      <head></head>
-      <body>
-        <button id='a' onfocus='parent.switchFocus()' onblur='window.frameElement.parentNode.removeChild(window.frameElement)'>Switching focus to a different program should not crash Mozilla</button>
+      <head>
         <script>
-document.getElementById('a').focus();
+          function run() {
+            setTimeout(() => document.getElementById('a').focus(), 0);
+          }
         </script>
+      </head>
+      <body onload='run()'>
+        <button id='a' onfocus='parent.switchFocus()' onblur='window.frameElement.parentNode.removeChild(window.frameElement)'>Switching focus to a different program should not crash Mozilla</button>
       </body>
     </html>">
   </iframe>
