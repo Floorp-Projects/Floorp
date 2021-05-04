@@ -663,7 +663,7 @@ bool BaselineStackBuilder::buildBaselineFrame() {
 
   // Get |argsObj| if present.
   ArgumentsObject* argsObj = nullptr;
-  if (script_->argumentsHasVarBinding()) {
+  if (script_->needsArgsObj()) {
     Value maybeArgsObj = iter_.read();
     MOZ_ASSERT(maybeArgsObj.isObject() || maybeArgsObj.isUndefined() ||
                maybeArgsObj.isMagic(JS_OPTIMIZED_OUT));

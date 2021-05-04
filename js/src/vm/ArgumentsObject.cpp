@@ -95,7 +95,7 @@ void ArgumentsObject::MaybeForwardToCallObject(AbstractFramePtr frame,
                                                ArgumentsObject* obj,
                                                ArgumentsData* data) {
   JSScript* script = frame.script();
-  if (frame.callee()->needsCallObject() && script->argumentsAliasesFormals()) {
+  if (frame.callee()->needsCallObject() && script->argsObjAliasesFormals()) {
     obj->initFixedSlot(MAYBE_CALL_SLOT, ObjectValue(frame.callObj()));
     for (PositionalFormalParameterIter fi(script); fi; fi++) {
       if (fi.closedOver()) {
@@ -112,7 +112,7 @@ void ArgumentsObject::MaybeForwardToCallObject(JSFunction* callee,
                                                ArgumentsObject* obj,
                                                ArgumentsData* data) {
   JSScript* script = callee->nonLazyScript();
-  if (callee->needsCallObject() && script->argumentsAliasesFormals()) {
+  if (callee->needsCallObject() && script->argsObjAliasesFormals()) {
     MOZ_ASSERT(callObj && callObj->is<CallObject>());
     obj->initFixedSlot(MAYBE_CALL_SLOT, ObjectValue(*callObj));
     for (PositionalFormalParameterIter fi(script); fi; fi++) {

@@ -652,16 +652,7 @@ bool ParseContext::declareFunctionArgumentsObject(
   }
 
   if (usesArguments) {
-    // There is an 'arguments' binding. Is the arguments object definitely
-    // needed?
-    //
-    // Also see the flags' comments in ContextFlags.
-    funbox->setArgumentsHasVarBinding();
-
-    // Dynamic scope access destroys all hope of optimization.
-    if (sc()->bindingsAccessedDynamically()) {
-      funbox->setAlwaysNeedsArgsObj();
-    }
+    funbox->setNeedsArgsObj();
   }
 
   return true;

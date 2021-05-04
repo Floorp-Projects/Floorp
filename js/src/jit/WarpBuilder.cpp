@@ -957,9 +957,7 @@ bool WarpBuilder::build_SetArg(BytecodeLocation loc) {
   uint32_t arg = loc.arg();
   MDefinition* val = current->peek(-1);
 
-  if (!info().argumentsAliasesFormals()) {
-    MOZ_ASSERT(!info().argsObjAliasesFormals());
-
+  if (!info().argsObjAliasesFormals()) {
     // |arguments| is never referenced within this function. No arguments object
     // is created in this case, so we don't need to worry about synchronizing
     // the argument values when writing to them.
@@ -980,9 +978,6 @@ bool WarpBuilder::build_SetArg(BytecodeLocation loc) {
   MOZ_ASSERT(info().hasArguments() && info().hasMappedArgsObj(),
              "arguments aliases formals when an arguments binding is present "
              "and the arguments object is mapped");
-
-  MOZ_ASSERT(info().needsArgsObj(),
-             "unexpected JSOp::SetArg with lazy arguments");
 
   MOZ_ASSERT(
       info().argsObjAliasesFormals(),
