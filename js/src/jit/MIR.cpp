@@ -872,7 +872,6 @@ MConstant::MConstant(TempAllocator& alloc, const js::Value& vp)
       MOZ_ASSERT(!IsInsideNursery(&vp.toObject()));
       payload_.obj = &vp.toObject();
       break;
-    case MIRType::MagicOptimizedArguments:
     case MIRType::MagicOptimizedOut:
     case MIRType::MagicHole:
     case MIRType::MagicIsConstructing:
@@ -1049,9 +1048,6 @@ void MConstant::printOpcode(GenericPrinter& out) const {
     case MIRType::Shape:
       out.printf("shape at %p", (void*)toShape());
       break;
-    case MIRType::MagicOptimizedArguments:
-      out.printf("magic lazyargs");
-      break;
     case MIRType::MagicHole:
       out.printf("magic hole");
       break;
@@ -1113,8 +1109,6 @@ Value MConstant::toJSValue() const {
       return ObjectValue(toObject());
     case MIRType::Shape:
       return PrivateGCThingValue(toShape());
-    case MIRType::MagicOptimizedArguments:
-      return MagicValue(JS_OPTIMIZED_ARGUMENTS);
     case MIRType::MagicOptimizedOut:
       return MagicValue(JS_OPTIMIZED_OUT);
     case MIRType::MagicHole:
