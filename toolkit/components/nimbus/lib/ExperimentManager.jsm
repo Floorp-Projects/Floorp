@@ -176,22 +176,13 @@ class _ExperimentManager {
    * @rejects {Error}
    * @memberof _ExperimentManager
    */
-  async enroll(
-    {
-      slug,
-      branches,
-      experimentType = TELEMETRY_DEFAULT_EXPERIMENT_TYPE,
-      userFacingName,
-      userFacingDescription,
-    },
-    source
-  ) {
+  async enroll(recipe, source) {
+    let { slug, branches } = recipe;
     if (this.store.has(slug)) {
       this.sendFailureTelemetry("enrollFailed", slug, "name-conflict");
       throw new Error(`An experiment with the slug "${slug}" already exists.`);
     }
 
-    const enrollmentId = NormandyUtils.generateUuid();
     const branch = await this.chooseBranch(slug, branches);
 
     if (
@@ -208,18 +199,38 @@ class _ExperimentManager {
       return null;
     }
 
+    return this._enroll(recipe, branch, source);
+  }
+
+  _enroll(
+    {
+      slug,
+      experimentType = TELEMETRY_DEFAULT_EXPERIMENT_TYPE,
+      userFacingName,
+      userFacingDescription,
+    },
+    branch,
+    source,
+    options = {}
+  ) {
     /** @type {Enrollment} */
     const experiment = {
       slug,
       branch,
       active: true,
-      enrollmentId,
+      enrollmentId: NormandyUtils.generateUuid(),
       experimentType,
       source,
       userFacingName,
       userFacingDescription,
       lastSeen: new Date().toJSON(),
     };
+
+    // Tag this as a forced enrollment. This prevents all unenrolling unless
+    // manually triggered from about:studies
+    if (options.force) {
+      experiment.force = true;
+    }
 
     this.store.addExperiment(experiment);
     this.setExperimentActive(experiment);
@@ -228,6 +239,29 @@ class _ExperimentManager {
     log.debug(`New experiment started: ${slug}, ${branch.slug}`);
 
     return experiment;
+  }
+
+  forceEnroll(recipe, branch, source = "force-enrollment") {
+    /**
+     * If we happen to be enrolled in an experiment for the same feature
+     * we need to unenroll from that experiment.
+     * If the experiment has the same slug after unenrollment adding it to the
+     * store will overwrite the initial experiment.
+     */
+    let experiment = this.store.getExperimentForFeature(
+      branch.feature?.featureId
+    );
+    if (experiment) {
+      log.debug(
+        `Existing experiment found for the same feature ${branch?.feature.featureId}, unenrolling.`
+      );
+
+      this.unenroll(experiment.slug, source);
+    }
+
+    recipe.userFacingName = `${recipe.userFacingName} - Forced enrollment`;
+
+    return this._enroll(recipe, branch, source, { force: true });
   }
 
   /**
@@ -242,6 +276,11 @@ class _ExperimentManager {
     // Don't update experiments that were already unenrolled.
     if (experiment.active === false) {
       log.debug(`Enrollment ${recipe.slug} has expired, aborting.`);
+      return;
+    }
+
+    // Don't check forced enrollments
+    if (experiment.force) {
       return;
     }
 
