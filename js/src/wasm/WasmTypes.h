@@ -2292,18 +2292,51 @@ class Export {
 
 using ExportVector = Vector<Export, 0, SystemAllocPolicy>;
 
-// A FuncDesc describes a single function.
+// FuncFlags provides metadata for a function definition.
+
+enum class FuncFlags : uint8_t {
+  None = 0x0,
+  // The function maybe be accessible by JS and needs thunks generated for it.
+  // See `[SMDOC] Exported wasm functions and the jit-entry stubs` in
+  // WasmJS.cpp for more information.
+  Exported = 0x1,
+  // The function should have thunks generated upon instantiation, not upon
+  // first call. May only be set if `Exported` is set.
+  Eager = 0x2,
+  // The function can be the target of a ref.func instruction in the code
+  // section. May only be set if `Exported` is set.
+  CanRefFunc = 0x4,
+};
+
+// A FuncDesc describes a single function definition.
 
 class TypeIdDesc;
 
 struct FuncDesc {
   FuncType* type;
   TypeIdDesc* typeId;
-  uint32_t typeIndex;
+  // Bit pack to keep this struct small on 32-bit systems
+  uint32_t typeIndex : 24;
+  FuncFlags flags : 8;
+
+  // Assert that the bit packing scheme is viable
+  static_assert(MaxTypes <= (1 << 24) - 1);
+  static_assert(sizeof(FuncFlags) == sizeof(uint8_t));
 
   FuncDesc() = default;
   FuncDesc(FuncType* type, TypeIdDesc* typeId, uint32_t typeIndex)
-      : type(type), typeId(typeId), typeIndex(typeIndex) {}
+      : type(type),
+        typeId(typeId),
+        typeIndex(typeIndex),
+        flags(FuncFlags::None) {}
+
+  bool isExported() const {
+    return uint8_t(flags) & uint8_t(FuncFlags::Exported);
+  }
+  bool isEager() const { return uint8_t(flags) & uint8_t(FuncFlags::Eager); }
+  bool canRefFunc() const {
+    return uint8_t(flags) & uint8_t(FuncFlags::CanRefFunc);
+  }
 };
 
 using FuncDescVector = Vector<FuncDesc, 0, SystemAllocPolicy>;
