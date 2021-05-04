@@ -1,3 +1,45 @@
+v3.4.1
+======
+
+Refresh packaging.
+
+v3.4.0
+======
+
+#68 and bpo-42090: ``Path.joinpath`` now takes arbitrary
+positional arguments and no longer accepts ``add`` as a
+keyword argument.
+
+v3.3.2
+======
+
+Updated project metadata including badges.
+
+v3.3.1
+======
+
+bpo-42043: Add tests capturing subclassing requirements.
+
+v3.3.0
+======
+
+#9: ``Path`` objects now expose a ``.filename`` attribute
+and rely on that to resolve ``.name`` and ``.parent`` when
+the ``Path`` object is at the root of the zipfile.
+
+v3.2.0
+======
+
+#57 and bpo-40564: Mutate the passed ZipFile object
+type instead of making a copy. Prevents issues when
+both the local copy and the caller's copy attempt to
+close the same file handle.
+
+#56 and bpo-41035: ``Path._next`` now honors
+subclasses.
+
+#55: ``Path.is_file()`` now returns False for non-existent names.
+
 v3.1.0
 ======
 

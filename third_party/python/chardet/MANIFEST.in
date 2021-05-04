@@ -1,0 +1,8 @@
+include LICENSE
+include *.rst
+include requirements.txt
+include test.py
+recursive-include docs *
+recursive-include tests *
+global-exclude *.pyc
+global-exclude __pycache__
