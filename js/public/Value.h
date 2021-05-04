@@ -241,6 +241,9 @@ enum JSWhyMagic {
   /** uninitialized lexical bindings that produce ReferenceError on touch. */
   JS_UNINITIALIZED_LEXICAL,
 
+  /** arguments object can't be created because environment is dead. */
+  JS_MISSING_ARGUMENTS,
+
   /** standard constructors are not created for off-thread parsing. */
   JS_OFF_THREAD_CONSTRUCTOR,
 

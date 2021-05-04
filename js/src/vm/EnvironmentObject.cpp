@@ -1851,10 +1851,8 @@ class DebugEnvironmentProxyHandler : public BaseProxyHandler {
    * 'arguments' may be missing from the list of bindings.
    */
   static bool isMissingArgumentsBinding(EnvironmentObject& env) {
-    return isFunctionEnvironment(env) && !env.as<CallObject>()
-                                              .callee()
-                                              .baseScript()
-                                              ->needsArgsObj();
+    return isFunctionEnvironment(env) &&
+           !env.as<CallObject>().callee().baseScript()->needsArgsObj();
   }
 
   /*
@@ -1872,64 +1870,14 @@ class DebugEnvironmentProxyHandler : public BaseProxyHandler {
   /*
    * This function checks if an arguments object needs to be created when
    * the debugger requests 'arguments' for a function scope where the
-   * arguments object has been optimized away (either because the binding is
-   * missing altogether or because !ScriptAnalysis::needsArgsObj).
+   * arguments object was not otherwise needed.
    */
   static bool isMissingArguments(JSContext* cx, jsid id,
                                  EnvironmentObject& env) {
-    return isArguments(cx, id) && isFunctionEnvironment(env) &&
-           !env.as<CallObject>().callee().nonLazyScript()->needsArgsObj();
+    return isArguments(cx, id) && isMissingArgumentsBinding(env);
   }
   static bool isMissingThis(JSContext* cx, jsid id, EnvironmentObject& env) {
     return isThis(cx, id) && isMissingThisBinding(env);
-  }
-
-  /*
-   * Check if the value is the magic value JS_OPTIMIZED_ARGUMENTS. The
-   * arguments analysis may have optimized out the 'arguments', and this
-   * magic value could have propagated to other local slots. e.g.,
-   *
-   *   function f() { var a = arguments; h(); }
-   *   function h() { evalInFrame(1, "a.push(0)"); }
-   *
-   * where evalInFrame(N, str) means to evaluate str N frames up.
-   *
-   * In this case we don't know we need to recover a missing arguments
-   * object until after we've performed the property get.
-   */
-  static bool isMagicMissingArgumentsValue(EnvironmentObject& env,
-                                           HandleValue v) {
-    bool isMagic = v.isMagic() && v.whyMagic() == JS_OPTIMIZED_ARGUMENTS;
-
-#ifdef DEBUG
-    // The |env| object here is not limited to CallObjects but may also
-    // be lexical envs in case of the following:
-    //
-    //   function f() { { let a = arguments; } }
-    //
-    // We need to check that |env|'s scope's nearest function scope has an
-    // 'arguments' var binding. The environment chain is not sufficient:
-    // |f| above will not have a CallObject because there are no aliased
-    // body-level bindings.
-    if (isMagic) {
-      JSFunction* callee = nullptr;
-      if (isFunctionEnvironment(env)) {
-        callee = &env.as<CallObject>().callee();
-      } else {
-        // We will never have a WithEnvironmentObject here because no
-        // binding accesses on with scopes are unaliased.
-        for (ScopeIter si(getEnvironmentScope(env)); si; si++) {
-          if (si.kind() == ScopeKind::Function) {
-            callee = si.scope()->as<FunctionScope>().canonicalFunction();
-            break;
-          }
-        }
-      }
-      MOZ_ASSERT(callee && callee->baseScript()->needsArgsObj());
-    }
-#endif
-
-    return isMagic;
   }
 
   /*
@@ -2109,10 +2057,6 @@ class DebugEnvironmentProxyHandler : public BaseProxyHandler {
 
     switch (access) {
       case ACCESS_UNALIASED: {
-        if (isMagicMissingArgumentsValue(*env, v)) {
-          return getMissingArgumentsPropertyDescriptor(cx, debugEnv, *env,
-                                                       desc);
-        }
         Rooted<PropertyDescriptor> desc_(cx);
         desc_.object().set(debugEnv);
         desc_.setAttributes(JSPROP_READONLY | JSPROP_ENUMERATE |
@@ -2190,9 +2134,6 @@ class DebugEnvironmentProxyHandler : public BaseProxyHandler {
 
     switch (access) {
       case ACCESS_UNALIASED:
-        if (isMagicMissingArgumentsValue(*env, vp)) {
-          return getMissingArguments(cx, *env, vp);
-        }
         if (isMaybeUninitializedThisValue(cx, id, vp)) {
           return getMissingThis(cx, *env, vp);
         }
@@ -2220,8 +2161,7 @@ class DebugEnvironmentProxyHandler : public BaseProxyHandler {
     if (!createMissingArguments(cx, env, &argsObj)) {
       return false;
     }
-    vp.set(argsObj ? ObjectValue(*argsObj)
-                   : MagicValue(JS_OPTIMIZED_ARGUMENTS));
+    vp.set(argsObj ? ObjectValue(*argsObj) : MagicValue(JS_MISSING_ARGUMENTS));
     return true;
   }
 
@@ -2259,9 +2199,6 @@ class DebugEnvironmentProxyHandler : public BaseProxyHandler {
 
     switch (access) {
       case ACCESS_UNALIASED:
-        if (isMagicMissingArgumentsValue(*env, vp)) {
-          return getMissingArgumentsMaybeSentinelValue(cx, *env, vp);
-        }
         if (isMaybeUninitializedThisValue(cx, id, vp)) {
           return getMissingThisMaybeSentinelValue(cx, *env, vp);
         }
