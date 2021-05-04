@@ -274,9 +274,6 @@ class DWriteFontFallbackRenderer final : public IDWriteTextRenderer {
 
   ~DWriteFontFallbackRenderer() {}
 
-  // If we don't have an mSystemFonts pointer, this renderer is unusable.
-  bool IsValid() const { return mSystemFonts; }
-
   // IDWriteTextRenderer methods
   IFACEMETHOD(DrawGlyphRun)
   (void* clientDrawingContext, FLOAT baselineOriginX, FLOAT baselineOriginY,
