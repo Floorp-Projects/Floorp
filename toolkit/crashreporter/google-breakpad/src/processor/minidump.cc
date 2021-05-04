@@ -5187,10 +5187,10 @@ bool MinidumpMacCrashInfo::ReadCrashInfoRecord(MDLocationDescriptor location,
   // stores more strings than we expect in (MDRawMacCrashInfoRecord).data,
   // or one created by older code that contains fewer strings than we
   // expect. In the first case we ignore the "extra" strings. To deal with
-  // the second case we bail when 'offset > string_data_size'.
+  // the second case we bail when 'offset >= string_data_size'.
   const char* string_data = (const char*) &(*data)[0];
   size_t offset = 0;
-  for (int i = 1; (i <= 5) && (string_data != nullptr); ++i) {
+  for (int i = 1; i <= 5; ++i) {
     switch (i) {
       case 1:
         record.module_path.append(string_data);
@@ -5210,7 +5210,7 @@ bool MinidumpMacCrashInfo::ReadCrashInfoRecord(MDLocationDescriptor location,
     }
     size_t char_array_size = strlen(string_data) + 1;
     offset += char_array_size;
-    if (offset > string_data_size) {
+    if (offset >= string_data_size) {
       break;
     }
     string_data += char_array_size;
