@@ -2949,6 +2949,10 @@ impl TileCacheInstance {
             return SurfacePromotionResult::Failed;
         }
 
+        if self.slice_flags.contains(SliceFlags::IS_BLEND_CONTAINER) {
+            return SurfacePromotionResult::Failed;
+        }
+
         SurfacePromotionResult::Success {
             flip_y: transform.m22 < 0.0,
         }
