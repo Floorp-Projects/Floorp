@@ -55,27 +55,15 @@ inline unsigned CountArgSlots(JSScript* script, JSFunction* fun) {
   return StartArgSlot(script) + (fun ? fun->nargs() + 1 : 0);
 }
 
-enum AnalysisMode {
-  /* JavaScript execution, not analysis. */
-  Analysis_None,
-
-  /*
-   * MIR analysis performed when executing a script which uses its arguments,
-   * when it is not known whether a lazy arguments value can be used.
-   */
-  Analysis_ArgumentsUsage
-};
-
 // Contains information about the compilation source for IR being generated.
 class CompileInfo {
  public:
   CompileInfo(CompileRuntime* runtime, JSScript* script, JSFunction* fun,
-              jsbytecode* osrPc, AnalysisMode analysisMode,
-              bool scriptNeedsArgsObj, InlineScriptTree* inlineScriptTree)
+              jsbytecode* osrPc, bool scriptNeedsArgsObj,
+              InlineScriptTree* inlineScriptTree)
       : script_(script),
         fun_(fun),
         osrPc_(osrPc),
-        analysisMode_(analysisMode),
         scriptNeedsArgsObj_(scriptNeedsArgsObj),
         hadEagerTruncationBailout_(script->hadEagerTruncationBailout()),
         hadSpeculativePhiBailout_(script->hadSpeculativePhiBailout()),
@@ -141,7 +129,6 @@ class CompileInfo {
       : script_(nullptr),
         fun_(nullptr),
         osrPc_(nullptr),
-        analysisMode_(Analysis_None),
         scriptNeedsArgsObj_(false),
         hadEagerTruncationBailout_(false),
         hadSpeculativePhiBailout_(false),
@@ -231,10 +218,6 @@ class CompileInfo {
   bool argsObjAliasesFormals() const {
     return scriptNeedsArgsObj_ && script()->hasMappedArgsObj();
   }
-
-  AnalysisMode analysisMode() const { return analysisMode_; }
-
-  bool isAnalysis() const { return analysisMode_ != Analysis_None; }
 
   bool needsBodyEnvironmentObject() const {
     return needsBodyEnvironmentObject_;
@@ -357,7 +340,6 @@ class CompileInfo {
   JSScript* script_;
   JSFunction* fun_;
   jsbytecode* osrPc_;
-  AnalysisMode analysisMode_;
 
   bool scriptNeedsArgsObj_;
 
