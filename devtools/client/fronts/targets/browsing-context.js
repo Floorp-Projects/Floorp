@@ -53,25 +53,6 @@ class BrowsingContextTargetFront extends TargetMixin(
     this.emit("frame-update", packet);
   }
 
-  async reload({ options } = {}) {
-    try {
-      await super.reload({ options });
-    } catch (e) {
-      dump(" reload exception: " + e + " >>> " + e.message + " <<<\n");
-      // If the target follows the window global lifecycle, the reload request
-      // will fail, and we should swallow the error. Re-throw it otherwise.
-      // @backward-compat { version 88 } The trait check can be removed after
-      // version 88 hits the release channel.
-      const shouldSwallowReloadError =
-        this.getTrait("supportsFollowWindowGlobalLifeCycleFlag") &&
-        this.targetForm.followWindowGlobalLifeCycle;
-
-      if (!shouldSwallowReloadError) {
-        throw e;
-      }
-    }
-  }
-
   /**
    * Event listener for `tabNavigated` event.
    */
