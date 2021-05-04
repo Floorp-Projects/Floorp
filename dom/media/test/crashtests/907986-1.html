@@ -8,7 +8,7 @@ context.oncomplete = function(e) {
 // zero front vector
 context.listener.setOrientation(0, 0, 0, 6.311749985202524e+307, 0, 0);
 var panner = context.createPanner();
-panner.setPosition(6.311749985202524e+307, 4, 6.311749985202524e+307);
+panner.setPosition(3.40282e+38, 4, 3.40282e+38);
 panner.connect(context.destination);
 var source = context.createOscillator();
 source.connect(panner);
