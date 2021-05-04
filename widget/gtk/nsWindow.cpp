@@ -89,6 +89,7 @@
 #include "ScreenHelperGTK.h"
 #include "SystemTimeConverter.h"
 #include "WidgetUtilsGtk.h"
+#include "mozilla/X11Util.h"
 
 #ifdef ACCESSIBILITY
 #  include "mozilla/a11y/LocalAccessible.h"
@@ -478,7 +479,6 @@ nsWindow::nsWindow()
 #endif
 #ifdef MOZ_X11
       ,
-      mXDisplay(nullptr),
       mXWindow(X11None),
       mXVisual(nullptr),
       mXDepth(0)
@@ -5125,7 +5125,6 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
 
 #ifdef MOZ_X11
   if (GdkIsX11Display() && mGdkWindow) {
-    mXDisplay = GDK_WINDOW_XDISPLAY(mGdkWindow);
     mXWindow = gdk_x11_window_get_xid(mGdkWindow);
 
     GdkVisual* gdkVisual = gdk_window_get_visual(mGdkWindow);
@@ -5133,7 +5132,7 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
     mXDepth = gdk_visual_get_depth(gdkVisual);
     bool shaped = popupNeedsAlphaVisual && !mHasAlphaVisual;
 
-    mSurfaceProvider.Initialize(mXDisplay, mXWindow, mXVisual, mXDepth, shaped);
+    mSurfaceProvider.Initialize(mXWindow, mXVisual, mXDepth, shaped);
 
     if (mIsTopLevel) {
       // Set window manager hint to keep fullscreen windows composited.
@@ -5145,7 +5144,9 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
     }
     // Dummy call to a function in mozgtk to prevent the linker from removing
     // the dependency with --as-needed.
-    XShmQueryExtension(mXDisplay);
+    if (GdkIsX11Display()) {
+      XShmQueryExtension(DefaultXDisplay());
+    }
   }
 #  ifdef MOZ_WAYLAND
   else if (GdkIsWaylandDisplay()) {
@@ -8354,18 +8355,21 @@ int32_t nsWindow::RoundsWidgetCoordinatesTo() { return GdkCeiledScaleFactor(); }
 
 void nsWindow::GetCompositorWidgetInitData(
     mozilla::widget::CompositorWidgetInitData* aInitData) {
-  // Make sure the window XID is propagated to X server, we can fail otherwise
-  // in GPU process (Bug 1401634).
-  if (mXDisplay && mXWindow != X11None) {
-    XFlush(mXDisplay);
+  nsCString displayName;
+
+  if (GdkIsX11Display() && mXWindow != X11None) {
+    // Make sure the window XID is propagated to X server, we can fail otherwise
+    // in GPU process (Bug 1401634).
+    Display* display = DefaultXDisplay();
+    XFlush(display);
+    displayName = nsCString(XDisplayString(display));
   }
 
   bool isShaped =
       mIsTransparent && !mHasAlphaVisual && !mTransparencyBitmapForTitlebar;
   *aInitData = mozilla::widget::GtkCompositorWidgetInitData(
-      (mXWindow != X11None) ? mXWindow : (uintptr_t) nullptr,
-      mXDisplay ? nsCString(XDisplayString(mXDisplay)) : nsCString(), isShaped,
-      GdkIsX11Display(), GetClientSize());
+      (mXWindow != X11None) ? mXWindow : (uintptr_t) nullptr, displayName,
+      isShaped, GdkIsX11Display(), GetClientSize());
 }
 
 #ifdef MOZ_WAYLAND

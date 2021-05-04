@@ -788,7 +788,7 @@ already_AddRefed<GLContext> GLContextProviderGLX::CreateForCompositorWidget(
   GtkCompositorWidget* compWidget = aCompositorWidget->AsX11();
   MOZ_ASSERT(compWidget);
 
-  return CreateForWidget(compWidget->XDisplay(), compWidget->XWindow(),
+  return CreateForWidget(DefaultXDisplay(), compWidget->XWindow(),
                          aHardwareWebRender, aForceAccelerated);
 }
 
