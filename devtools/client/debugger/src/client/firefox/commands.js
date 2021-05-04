@@ -136,9 +136,7 @@ async function sourceContents({ actor, thread }) {
 }
 
 async function setXHRBreakpoint(path, method) {
-  const hasWatcherSupport = commands.targetCommand.hasTargetWatcherSupport(
-    "set-xhr-breakpoints"
-  );
+  const hasWatcherSupport = commands.targetCommand.hasTargetWatcherSupport();
   if (!hasWatcherSupport) {
     // Without watcher support, forward setXHRBreakpoint to all threads.
     return forEachThread(thread => thread.setXHRBreakpoint(path, method));
@@ -148,11 +146,9 @@ async function setXHRBreakpoint(path, method) {
 }
 
 async function removeXHRBreakpoint(path, method) {
-  const hasWatcherSupport = commands.targetCommand.hasTargetWatcherSupport(
-    "set-xhr-breakpoints"
-  );
+  const hasWatcherSupport = commands.targetCommand.hasTargetWatcherSupport();
   if (!hasWatcherSupport) {
-    // Without watcher support, forward setXHRBreakpoint to all threads.
+    // Without watcher support, forward removeXHRBreakpoint to all threads.
     return forEachThread(thread => thread.removeXHRBreakpoint(path, method));
   }
   const breakpointsFront = await commands.targetCommand.watcherFront.getBreakpointListActor();
