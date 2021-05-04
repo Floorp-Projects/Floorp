@@ -261,9 +261,10 @@ OCSPRequest::Run() {
     priorityChannel->AdjustPriority(nsISupportsPriority::PRIORITY_HIGHEST);
   }
 
-  channel->SetLoadFlags(nsIRequest::LOAD_ANONYMOUS |
-                        nsIChannel::LOAD_BYPASS_SERVICE_WORKER |
-                        nsIChannel::LOAD_BYPASS_URL_CLASSIFIER);
+  channel->SetLoadFlags(
+      nsIRequest::LOAD_ANONYMOUS | nsIRequest::LOAD_BYPASS_CACHE |
+      nsIRequest::INHIBIT_CACHING | nsIChannel::LOAD_BYPASS_SERVICE_WORKER |
+      nsIChannel::LOAD_BYPASS_URL_CLASSIFIER);
 
   nsCOMPtr<nsILoadInfo> loadInfo = channel->LoadInfo();
 
