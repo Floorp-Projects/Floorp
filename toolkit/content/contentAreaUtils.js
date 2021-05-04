@@ -1136,6 +1136,7 @@ const kImageExtensions = new Set([
   "svg",
   "webp",
   "avif",
+  "jxl",
 ]);
 
 function getNormalizedLeafName(aFile, aDefaultExtension) {
