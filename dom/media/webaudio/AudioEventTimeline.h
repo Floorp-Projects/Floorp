@@ -118,7 +118,7 @@ class AudioEventTimeline {
         mComputedValue(aDefaultValue),
         mLastComputedValue(aDefaultValue) {}
 
-  bool ValidateEvent(AudioTimelineEvent& aEvent, ErrorResult& aRv) {
+  bool ValidateEvent(const AudioTimelineEvent& aEvent, ErrorResult& aRv) const {
     MOZ_ASSERT(NS_IsMainThread());
 
     auto TimeOf = [](const AudioTimelineEvent& aEvent) -> double {
