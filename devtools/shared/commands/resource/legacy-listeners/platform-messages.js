@@ -4,9 +4,7 @@
 
 "use strict";
 
-const {
-  ResourceWatcher,
-} = require("devtools/shared/resources/resource-watcher");
+const ResourceCommand = require("devtools/shared/commands/resource/resource-command");
 
 module.exports = async function({ targetCommand, targetFront, onAvailable }) {
   // Only allow the top level target and processes.
@@ -35,12 +33,12 @@ module.exports = async function({ targetCommand, targetFront, onAvailable }) {
   const { messages } = await webConsoleFront.getCachedMessages(["LogMessage"]);
 
   for (const message of messages) {
-    message.resourceType = ResourceWatcher.TYPES.PLATFORM_MESSAGE;
+    message.resourceType = ResourceCommand.TYPES.PLATFORM_MESSAGE;
   }
   onAvailable(messages);
 
   webConsoleFront.on("logMessage", message => {
-    message.resourceType = ResourceWatcher.TYPES.PLATFORM_MESSAGE;
+    message.resourceType = ResourceCommand.TYPES.PLATFORM_MESSAGE;
     onAvailable([message]);
   });
 };

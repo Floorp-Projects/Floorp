@@ -6,19 +6,17 @@
 // Test that calling unwatchResources before watchResources could resolve still
 // removes watcher entries correctly.
 
-const {
-  ResourceWatcher,
-} = require("devtools/shared/resources/resource-watcher");
+const ResourceCommand = require("devtools/shared/commands/resource/resource-command");
 
 const TEST_URI = "data:text/html;charset=utf-8,";
 
 add_task(async function() {
   const tab = await addTab(TEST_URI);
 
-  const { client, resourceWatcher, targetCommand } = await initResourceWatcher(
+  const { client, resourceCommand, targetCommand } = await initResourceCommand(
     tab
   );
-  const { CONSOLE_MESSAGE, ROOT_NODE } = ResourceWatcher.TYPES;
+  const { CONSOLE_MESSAGE, ROOT_NODE } = resourceCommand.TYPES;
 
   info("Use console.log in the content page");
   await logInTab(tab, "msg-1");
@@ -30,10 +28,10 @@ add_task(async function() {
   // resolved.
   const messages1 = [];
   const onAvailable1 = createMessageCallback(messages1);
-  const onWatcher1Ready = resourceWatcher.watchResources([CONSOLE_MESSAGE], {
+  const onWatcher1Ready = resourceCommand.watchResources([CONSOLE_MESSAGE], {
     onAvailable: onAvailable1,
   });
-  resourceWatcher.unwatchResources([CONSOLE_MESSAGE], {
+  resourceCommand.unwatchResources([CONSOLE_MESSAGE], {
     onAvailable: onAvailable1,
   });
 
@@ -42,13 +40,13 @@ add_task(async function() {
   // But unwatchResource is only called for CONSOLE_MESSAGE, not for ROOT_NODE.
   const messages2 = [];
   const onAvailable2 = createMessageCallback(messages2);
-  const onWatcher2Ready = resourceWatcher.watchResources(
+  const onWatcher2Ready = resourceCommand.watchResources(
     [CONSOLE_MESSAGE, ROOT_NODE],
     {
       onAvailable: onAvailable2,
     }
   );
-  resourceWatcher.unwatchResources([CONSOLE_MESSAGE], {
+  resourceCommand.unwatchResources([CONSOLE_MESSAGE], {
     onAvailable: onAvailable2,
   });
 
@@ -56,7 +54,7 @@ add_task(async function() {
   // explicitly for it before the end of test. Used as a reference.
   const messages3 = [];
   const onAvailable3 = createMessageCallback(messages3);
-  const onWatcher3Ready = resourceWatcher.watchResources([CONSOLE_MESSAGE], {
+  const onWatcher3Ready = resourceCommand.watchResources([CONSOLE_MESSAGE], {
     onAvailable: onAvailable3,
   });
 
@@ -93,10 +91,10 @@ function hasMessage(messageResources, text) {
   );
 }
 
-// All resource watcher callbacks share the same pattern here: they add all
+// All resource command callbacks share the same pattern here: they add all
 // console message resources to a provided `messages` array.
 function createMessageCallback(messages) {
-  const { CONSOLE_MESSAGE } = ResourceWatcher.TYPES;
+  const { CONSOLE_MESSAGE } = ResourceCommand.TYPES;
   return async resources => {
     for (const resource of resources) {
       if (resource.resourceType === CONSOLE_MESSAGE) {

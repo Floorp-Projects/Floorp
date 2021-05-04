@@ -3,23 +3,19 @@
 
 "use strict";
 
-// Test that the server ResourceWatcher are destroyed when the associated target actors
+// Test that the server ResourceCommand are destroyed when the associated target actors
 // are destroyed.
-
-const {
-  ResourceWatcher,
-} = require("devtools/shared/resources/resource-watcher");
 
 add_task(async function() {
   const tab = await addTab("data:text/html,Test");
-  const { client, resourceWatcher, targetCommand } = await initResourceWatcher(
+  const { client, resourceCommand, targetCommand } = await initResourceCommand(
     tab
   );
 
   // Start watching for console messages. We don't care about messages here, only the
   // registration/destroy mechanism, so we make onAvailable a no-op function.
-  await resourceWatcher.watchResources(
-    [ResourceWatcher.TYPES.CONSOLE_MESSAGE],
+  await resourceCommand.watchResources(
+    [resourceCommand.TYPES.CONSOLE_MESSAGE],
     {
       onAvailable: () => {},
     }

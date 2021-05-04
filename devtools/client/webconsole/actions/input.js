@@ -12,9 +12,7 @@ const {
   EDITOR_PRETTY_PRINT,
 } = require("devtools/client/webconsole/constants");
 const { getAllPrefs } = require("devtools/client/webconsole/selectors/prefs");
-const {
-  ResourceWatcher,
-} = require("devtools/shared/resources/resource-watcher");
+const ResourceCommand = require("devtools/shared/commands/resource/resource-command");
 const l10n = require("devtools/client/webconsole/utils/l10n");
 
 loader.lazyServiceGetter(
@@ -173,13 +171,13 @@ function handleHelperResult(response) {
   return async ({ dispatch, hud, toolbox, webConsoleUI }) => {
     const { result, helperResult } = response;
     const helperHasRawOutput = !!helperResult?.rawOutput;
-    const hasNetworkResourceWatcherSupport = hud.resourceWatcher.hasResourceWatcherSupport(
-      hud.resourceWatcher.TYPES.NETWORK_EVENT
+    const hasNetworkResourceCommandSupport = hud.resourceCommand.hasResourceCommandSupport(
+      hud.resourceCommand.TYPES.NETWORK_EVENT
     );
     let networkFront = null;
     // @backward-compat { version 86 } default network events watcher support
-    if (hasNetworkResourceWatcherSupport) {
-      networkFront = await hud.resourceWatcher.watcherFront.getNetworkParentActor();
+    if (hasNetworkResourceCommandSupport) {
+      networkFront = await hud.resourceCommand.watcherFront.getNetworkParentActor();
     }
 
     if (helperResult?.type) {
@@ -239,7 +237,7 @@ function handleHelperResult(response) {
                     level: message.level || "log",
                     arguments: [message.text],
                   },
-                  resourceType: ResourceWatcher.TYPES.CONSOLE_MESSAGE,
+                  resourceType: ResourceCommand.TYPES.CONSOLE_MESSAGE,
                 }))
               )
             );
@@ -252,7 +250,7 @@ function handleHelperResult(response) {
           // Then, calling the Netmonitor action will only update the visual state of the Netmonitor,
           // but we also have to block the request via the NetworkParentActor.
           // @backward-compat { version 86 } default network events watcher support
-          if (hasNetworkResourceWatcherSupport && networkFront) {
+          if (hasNetworkResourceCommandSupport && networkFront) {
             await networkFront.blockRequest({ url: blockURL });
           }
           toolbox
@@ -264,7 +262,7 @@ function handleHelperResult(response) {
           dispatch(
             messagesActions.messagesAdd([
               {
-                resourceType: ResourceWatcher.TYPES.PLATFORM_MESSAGE,
+                resourceType: ResourceCommand.TYPES.PLATFORM_MESSAGE,
                 message: l10n.getFormatStr(
                   "webconsole.message.commands.blockedURL",
                   [blockURL]
@@ -276,7 +274,7 @@ function handleHelperResult(response) {
         case "unblockURL":
           const unblockURL = helperResult.args.url;
           // @backward-compat { version 86 } see related comments in block url above
-          if (hasNetworkResourceWatcherSupport && networkFront) {
+          if (hasNetworkResourceCommandSupport && networkFront) {
             await networkFront.unblockRequest({ url: unblockURL });
           }
           toolbox
@@ -288,7 +286,7 @@ function handleHelperResult(response) {
           dispatch(
             messagesActions.messagesAdd([
               {
-                resourceType: ResourceWatcher.TYPES.PLATFORM_MESSAGE,
+                resourceType: ResourceCommand.TYPES.PLATFORM_MESSAGE,
                 message: l10n.getFormatStr(
                   "webconsole.message.commands.unblockedURL",
                   [unblockURL]

@@ -4,9 +4,7 @@
 
 "use strict";
 
-const {
-  ResourceWatcher,
-} = require("devtools/shared/resources/resource-watcher");
+const ResourceCommand = require("devtools/shared/commands/resource/resource-command");
 
 /**
  * Emit SOURCE resources, which represents a Javascript source and has the following attributes set on "available":
@@ -52,7 +50,7 @@ module.exports = async function({ targetCommand, targetFront, onAvailable }) {
     }
     sourcesActorIDCache.add(source.actor);
     // source is a SourceActor's form, add the resourceType attribute on it
-    source.resourceType = ResourceWatcher.TYPES.SOURCE;
+    source.resourceType = ResourceCommand.TYPES.SOURCE;
     onAvailable([source]);
   });
 
@@ -83,7 +81,7 @@ module.exports = async function({ targetCommand, targetFront, onAvailable }) {
   for (const source of sources) {
     sourcesActorIDCache.add(source.actor);
     // source is a SourceActor's form, add the resourceType attribute on it
-    source.resourceType = ResourceWatcher.TYPES.SOURCE;
+    source.resourceType = ResourceCommand.TYPES.SOURCE;
   }
   onAvailable(sources);
 };

@@ -3,12 +3,7 @@
 
 "use strict";
 
-// Test the behavior of ResourceWatcher when the top level target changes
-
-const {
-  ResourceWatcher,
-} = require("devtools/shared/resources/resource-watcher");
-const { CONSOLE_MESSAGE, SOURCE } = ResourceWatcher.TYPES;
+// Test the behavior of ResourceCommand when the top level target changes
 
 const TEST_URI =
   "data:text/html;charset=utf-8,<script>console.log('foo');</script>";
@@ -16,13 +11,14 @@ const TEST_URI =
 add_task(async function() {
   const tab = await addTab(TEST_URI);
 
-  const { client, resourceWatcher, targetCommand } = await initResourceWatcher(
+  const { client, resourceCommand, targetCommand } = await initResourceCommand(
     tab
   );
+  const { CONSOLE_MESSAGE, SOURCE } = resourceCommand.TYPES;
 
   info("Check the resources gotten from getAllResources at initial");
   is(
-    resourceWatcher.getAllResources(CONSOLE_MESSAGE).length,
+    resourceCommand.getAllResources(CONSOLE_MESSAGE).length,
     0,
     "There is no resources before calling watchResources"
   );
@@ -40,7 +36,7 @@ add_task(async function() {
       })
       .map(r => availableResources.push(r));
   };
-  await resourceWatcher.watchResources([CONSOLE_MESSAGE], { onAvailable });
+  await resourceCommand.watchResources([CONSOLE_MESSAGE], { onAvailable });
 
   is(availableResources.length, 1, "Got the page message");
   is(
@@ -50,16 +46,16 @@ add_task(async function() {
   );
 
   // Register another listener before unregistering the console listener
-  // otherwise the resource watcher stop watching for targets
+  // otherwise the resource command stop watching for targets
   const onSourceAvailable = () => {};
-  await resourceWatcher.watchResources([SOURCE], {
+  await resourceCommand.watchResources([SOURCE], {
     onAvailable: onSourceAvailable,
   });
 
   info(
     "Unregister the console listener and check that we no longer listen for console messages"
   );
-  resourceWatcher.unwatchResources([CONSOLE_MESSAGE], {
+  resourceCommand.unwatchResources([CONSOLE_MESSAGE], {
     onAvailable,
   });
 
@@ -87,12 +83,12 @@ add_task(async function() {
     "the data:URI fired a message, but we are no longer listening to it, so no new one should be notified"
   );
   is(
-    resourceWatcher.getAllResources(CONSOLE_MESSAGE).length,
+    resourceCommand.getAllResources(CONSOLE_MESSAGE).length,
     0,
     "As we are no longer listening to CONSOLE message, we should not collect any"
   );
 
-  resourceWatcher.unwatchResources([SOURCE], {
+  resourceCommand.unwatchResources([SOURCE], {
     onAvailable: onSourceAvailable,
   });
 

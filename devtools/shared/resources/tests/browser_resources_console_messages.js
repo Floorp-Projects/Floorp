@@ -3,15 +3,11 @@
 
 "use strict";
 
-// Test the ResourceWatcher API around CONSOLE_MESSAGE
+// Test the ResourceCommand API around CONSOLE_MESSAGE
 //
 // Reproduces assertions from: devtools/shared/webconsole/test/chrome/test_cached_messages.html
 // And now more. Once we remove the console actor's startListeners in favor of watcher class
 // We could remove that other old test.
-
-const {
-  ResourceWatcher,
-} = require("devtools/shared/resources/resource-watcher");
 
 const FISSION_TEST_URL = URL_ROOT_SSL + "fission_document.html";
 const IFRAME_URL = URL_ROOT_ORG_SSL + "fission_iframe.html";
@@ -29,12 +25,12 @@ add_task(async function() {
 async function testTabConsoleMessagesResources(executeInIframe) {
   const tab = await addTab(FISSION_TEST_URL);
 
-  const { client, resourceWatcher, targetCommand } = await initResourceWatcher(
+  const { client, resourceCommand, targetCommand } = await initResourceCommand(
     tab
   );
 
   info(
-    "Log some messages *before* calling ResourceWatcher.watchResources in order to " +
+    "Log some messages *before* calling ResourceCommand.watchResources in order to " +
       "assert the behavior of already existing messages."
   );
   await logExistingMessages(tab.linkedBrowser, executeInIframe);
@@ -59,7 +55,7 @@ async function testTabConsoleMessagesResources(executeInIframe) {
 
       is(
         resource.resourceType,
-        ResourceWatcher.TYPES.CONSOLE_MESSAGE,
+        resourceCommand.TYPES.CONSOLE_MESSAGE,
         "Received a message"
       );
       ok(resource.message, "message is wrapped into a message attribute");
@@ -81,8 +77,8 @@ async function testTabConsoleMessagesResources(executeInIframe) {
     }
   };
 
-  await resourceWatcher.watchResources(
-    [ResourceWatcher.TYPES.CONSOLE_MESSAGE],
+  await resourceCommand.watchResources(
+    [resourceCommand.TYPES.CONSOLE_MESSAGE],
     {
       onAvailable,
     }
@@ -94,7 +90,7 @@ async function testTabConsoleMessagesResources(executeInIframe) {
   );
 
   info(
-    "Now log messages *after* the call to ResourceWatcher.watchResources and after having received all existing messages"
+    "Now log messages *after* the call to ResourceCommand.watchResources and after having received all existing messages"
   );
   await logRuntimeMessages(tab.linkedBrowser, executeInIframe);
 
@@ -123,7 +119,7 @@ async function testTabConsoleMessagesResourcesWithIgnoreExistingResources(
   info("Test ignoreExistingResources option for console messages");
   const tab = await addTab(FISSION_TEST_URL);
 
-  const { client, resourceWatcher, targetCommand } = await initResourceWatcher(
+  const { client, resourceCommand, targetCommand } = await initResourceCommand(
     tab
   );
 
@@ -133,8 +129,8 @@ async function testTabConsoleMessagesResourcesWithIgnoreExistingResources(
   await logExistingMessages(tab.linkedBrowser, executeInIframe);
 
   const availableResources = [];
-  await resourceWatcher.watchResources(
-    [ResourceWatcher.TYPES.CONSOLE_MESSAGE],
+  await resourceCommand.watchResources(
+    [resourceCommand.TYPES.CONSOLE_MESSAGE],
     {
       onAvailable: resources => availableResources.push(...resources),
       ignoreExistingResources: true,

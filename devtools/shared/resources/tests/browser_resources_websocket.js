@@ -3,11 +3,9 @@
 
 "use strict";
 
-// Test the ResourceWatcher API around WEBSOCKET.
+// Test the ResourceCommand API around WEBSOCKET.
 
-const {
-  ResourceWatcher,
-} = require("devtools/shared/resources/resource-watcher");
+const ResourceCommand = require("devtools/shared/commands/resource/resource-command");
 
 const IS_NUMBER = "IS_NUMBER";
 const SHOULD_EXIST = "SHOULD_EXIST";
@@ -29,7 +27,7 @@ add_task(async function() {
 
 async function testWebsocketResources(target) {
   const tab = await addTab(URL_ROOT + "websocket_frontend.html");
-  const { client, resourceWatcher, targetCommand } = await initResourceWatcher(
+  const { client, resourceCommand, targetCommand } = await initResourceCommand(
     tab
   );
 
@@ -38,7 +36,7 @@ async function testWebsocketResources(target) {
     availableResources.push(...resources);
   }
 
-  await resourceWatcher.watchResources([ResourceWatcher.TYPES.WEBSOCKET], {
+  await resourceCommand.watchResources([resourceCommand.TYPES.WEBSOCKET], {
     onAvailable: onResourceAvailable,
   });
 
@@ -155,7 +153,7 @@ async function testWebsocketResources(target) {
     existingResources.push(...resources);
   }
 
-  await resourceWatcher.watchResources([ResourceWatcher.TYPES.WEBSOCKET], {
+  await resourceCommand.watchResources([resourceCommand.TYPES.WEBSOCKET], {
     onAvailable: onExsistingResourceAvailable,
   });
 
@@ -172,11 +170,11 @@ async function testWebsocketResources(target) {
     );
   }
 
-  await resourceWatcher.unwatchResources([ResourceWatcher.TYPES.WEBSOCKET], {
+  await resourceCommand.unwatchResources([resourceCommand.TYPES.WEBSOCKET], {
     onAvailable: onResourceAvailable,
   });
 
-  await resourceWatcher.unwatchResources([ResourceWatcher.TYPES.WEBSOCKET], {
+  await resourceCommand.unwatchResources([resourceCommand.TYPES.WEBSOCKET], {
     onAvailable: onExsistingResourceAvailable,
   });
 
@@ -220,7 +218,7 @@ async function executeFunctionInContext(tab, target, funcName, ...funcArgs) {
 function assertResource(resource, expected) {
   is(
     resource.resourceType,
-    ResourceWatcher.TYPES.WEBSOCKET,
+    ResourceCommand.TYPES.WEBSOCKET,
     "Resource type is correct"
   );
 
