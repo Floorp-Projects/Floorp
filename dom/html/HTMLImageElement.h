@@ -97,11 +97,8 @@ class HTMLImageElement final : public nsGenericHTMLElement,
   void SetHeight(uint32_t aHeight, ErrorResult& aError) {
     SetUnsignedIntAttr(nsGkAtoms::height, aHeight, 0, aError);
   }
-
-  nsIntSize NaturalSize();
-  uint32_t NaturalHeight() { return NaturalSize().height; }
-  uint32_t NaturalWidth() { return NaturalSize().width; }
-
+  uint32_t NaturalWidth();
+  uint32_t NaturalHeight();
   bool Complete();
   uint32_t Hspace() {
     return GetDimensionAttrAsUnsignedInt(nsGkAtoms::hspace, 0);

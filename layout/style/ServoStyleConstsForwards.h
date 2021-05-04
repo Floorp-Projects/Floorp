@@ -30,7 +30,6 @@
 #  include "nsCSSPropertyID.h"
 #  include "nsCompatibility.h"
 #  include "nsIURI.h"
-#  include "mozilla/image/Resolution.h"
 #  include <atomic>
 
 struct RawServoAnimationValueTable;

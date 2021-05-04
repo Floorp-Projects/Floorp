@@ -10,22 +10,17 @@
 #include "nsDebug.h"
 
 #include "Orientation.h"
-#include "mozilla/image/Resolution.h"
 
-namespace mozilla::image {
+namespace mozilla {
+namespace image {
 
 enum class ByteOrder : uint8_t { Unknown, LittleEndian, BigEndian };
 
 struct EXIFData {
-  const Orientation orientation = Orientation();
-  const Resolution resolution = Resolution();
-};
+  EXIFData() {}
+  explicit EXIFData(Orientation aOrientation) : orientation(aOrientation) {}
 
-struct ParsedEXIFData;
-
-enum class ResolutionUnit : uint8_t {
-  Dpi,
-  Dpcm,
+  const Orientation orientation;
 };
 
 class EXIFParser {
@@ -46,36 +41,17 @@ class EXIFParser {
   EXIFData ParseEXIF(const uint8_t* aData, const uint32_t aLength);
   bool ParseEXIFHeader();
   bool ParseTIFFHeader(uint32_t& aIFD0OffsetOut);
-
-  void ParseIFD0(ParsedEXIFData&);
-  bool ParseOrientation(uint16_t aType, uint32_t aCount, Orientation&);
-  bool ParseResolution(uint16_t aType, uint32_t aCount, float&);
-  bool ParseResolutionUnit(uint16_t aType, uint32_t aCount, ResolutionUnit&);
+  bool ParseIFD0(Orientation& aOrientationOut);
+  bool ParseOrientation(uint16_t aType, uint32_t aCount, Orientation& aOut);
 
   bool Initialize(const uint8_t* aData, const uint32_t aLength);
   void Advance(const uint32_t aDistance);
   void JumpTo(const uint32_t aOffset);
 
-  uint32_t CurrentOffset() const { return mCurrent - mStart; }
-
-  class ScopedJump {
-    EXIFParser& mParser;
-    uint32_t mOldOffset;
-
-   public:
-    ScopedJump(EXIFParser& aParser, uint32_t aOffset)
-        : mParser(aParser), mOldOffset(aParser.CurrentOffset()) {
-      mParser.JumpTo(aOffset);
-    }
-
-    ~ScopedJump() { mParser.JumpTo(mOldOffset); }
-  };
-
   bool MatchString(const char* aString, const uint32_t aLength);
   bool MatchUInt16(const uint16_t aValue);
   bool ReadUInt16(uint16_t& aOut);
   bool ReadUInt32(uint32_t& aOut);
-  bool ReadRational(float& aOut);
 
   const uint8_t* mStart;
   const uint8_t* mCurrent;
@@ -84,6 +60,7 @@ class EXIFParser {
   ByteOrder mByteOrder;
 };
 
-}  // namespace mozilla::image
+}  // namespace image
+}  // namespace mozilla
 
 #endif  // mozilla_image_decoders_EXIF_h

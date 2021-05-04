@@ -2351,9 +2351,8 @@ static GdkCursor* GetCursorForImage(const nsIWidget::Cursor& aCursor,
   // factor and then tell gtk to scale it down. We ensure to scale at least to
   // the GDK scale factor, so that cursors aren't downsized in HiDPI on wayland,
   // see bug 1707533.
-  int32_t gtkScale = std::max(
-      aWidgetScaleFactor, int32_t(std::ceil(std::max(aCursor.mResolution.mX,
-                                                     aCursor.mResolution.mY))));
+  int32_t gtkScale =
+      std::max(aWidgetScaleFactor, int32_t(std::ceil(aCursor.mResolution)));
 
   // Reject cursors greater than 128 pixels in some direction, to prevent
   // spoofing.
