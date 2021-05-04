@@ -129,6 +129,8 @@ static bool ValidateInitExpr(Decoder& d, ModuleEnvironment* env,
         if (!iter.readRefFunc(&funcIndex)) {
           return false;
         }
+        env->declareFuncExported(funcIndex, /* eager */ false,
+                                 /* canRefFunc */ true);
         *literal = Nothing();
         break;
       }

@@ -2069,6 +2069,14 @@ class MOZ_STACK_CLASS ModuleValidator : public ModuleValidatorShared {
           FuncDesc(&moduleEnv_.types.funcType(funcTypeIndex),
                    &moduleEnv_.typeIds[funcTypeIndex], funcTypeIndex);
     }
+    for (const Export& exp : moduleEnv_.exports) {
+      if (exp.kind() != DefinitionKind::Function) {
+        continue;
+      }
+      uint32_t funcIndex = exp.funcIndex();
+      moduleEnv_.declareFuncExported(funcIndex, /* eager */ true,
+                                     /* canRefFunc */ false);
+    }
 
     if (!moduleEnv_.funcImportGlobalDataOffsets.resize(
             funcImportMap_.count())) {
