@@ -420,12 +420,7 @@ bool ModuleGenerator::init(Metadata* maybeAsmJSMetadata) {
     }
   }
 
-  for (const GlobalDesc& global : moduleEnv_->globals) {
-    if (global.isVariable() &&
-        global.initExpr().kind() == InitExpr::Kind::RefFunc) {
-      addOrMerge(ExportedFunc(global.initExpr().refFuncIndex(), false));
-    }
-  }
+  // TODO: add back in next commit
 
   auto* newEnd =
       std::remove_if(exportedFuncs.begin(), exportedFuncs.end(),
@@ -1243,12 +1238,11 @@ SharedModule ModuleGenerator::finishModule(
     return nullptr;
   }
   for (const DataSegmentEnv& srcSeg : moduleEnv_->dataSegments) {
-    MutableDataSegment dstSeg = js_new<DataSegment>(srcSeg);
+    MutableDataSegment dstSeg = js_new<DataSegment>();
     if (!dstSeg) {
       return nullptr;
     }
-    if (!dstSeg->bytes.append(bytecode.begin() + srcSeg.bytecodeOffset,
-                              srcSeg.length)) {
+    if (!dstSeg->init(bytecode, srcSeg)) {
       return nullptr;
     }
     dataSegments.infallibleAppend(std::move(dstSeg));

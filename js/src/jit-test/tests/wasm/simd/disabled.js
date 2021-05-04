@@ -24,5 +24,5 @@ wasmFailValidateText(`(module (global (import "m" "g") (mut v128)))`,
                      /expected global type/);
 
 wasmFailValidateText(`(module (global i32 (v128.const i32x4 0 0 0 0)))`,
-                     /(v128 not enabled)|(unexpected initializer expression)/);
+                     /(v128 not enabled)|(unexpected initializer opcode)/);
 

@@ -449,9 +449,24 @@ class Decoder {
                                        const FeatureArgs& features,
                                        RefType type);
 
-  // Instruction opcode and immediates
+  // Instruction opcode
 
   [[nodiscard]] bool readOp(OpBytes* op);
+
+  // Instruction immediates for constant instructions
+
+  [[nodiscard]] bool readGetGlobal(uint32_t* id);
+  [[nodiscard]] bool readI32Const(int32_t* i32);
+  [[nodiscard]] bool readI64Const(int64_t* i64);
+  [[nodiscard]] bool readF32Const(float* f32);
+  [[nodiscard]] bool readF64Const(double* f64);
+#ifdef ENABLE_WASM_SIMD
+  [[nodiscard]] bool readV128Const(V128* value);
+#endif
+  [[nodiscard]] bool readRefFunc(uint32_t* funcIndex);
+  [[nodiscard]] bool readRefNull(const TypeContext& types,
+                                 const FeatureArgs& features, RefType* type);
+  [[nodiscard]] bool readRefNull(const FeatureArgs& features, RefType* type);
 
   // See writeBytes comment.
 
@@ -799,7 +814,7 @@ inline bool Decoder::validateTypeIndex(const TypeContext& types,
   return fail("type index references an invalid type");
 }
 
-// Instruction opcode and immediates
+// Instruction opcode
 
 inline bool Decoder::readOp(OpBytes* op) {
   static_assert(size_t(Op::Limit) == 256, "fits");
@@ -812,6 +827,68 @@ inline bool Decoder::readOp(OpBytes* op) {
     return true;
   }
   return readVarU32(&op->b1);
+}
+
+// Instruction immediates for constant instructions
+
+inline bool Decoder::readGetGlobal(uint32_t* id) {
+  if (!readVarU32(id)) {
+    return fail("unable to read global index");
+  }
+  return true;
+}
+
+inline bool Decoder::readI32Const(int32_t* i32) {
+  if (!readVarS32(i32)) {
+    return fail("failed to read I32 constant");
+  }
+  return true;
+}
+
+inline bool Decoder::readI64Const(int64_t* i64) {
+  if (!readVarS64(i64)) {
+    return fail("failed to read I64 constant");
+  }
+  return true;
+}
+
+inline bool Decoder::readF32Const(float* f32) {
+  if (!readFixedF32(f32)) {
+    return fail("failed to read F32 constant");
+  }
+  return true;
+}
+
+inline bool Decoder::readF64Const(double* f64) {
+  if (!readFixedF64(f64)) {
+    return fail("failed to read F64 constant");
+  }
+  return true;
+}
+
+#ifdef ENABLE_WASM_SIMD
+inline bool Decoder::readV128Const(V128* value) {
+  if (!readFixedV128(value)) {
+    return fail("unable to read V128 constant");
+  }
+  return true;
+}
+#endif
+
+inline bool Decoder::readRefFunc(uint32_t* funcIndex) {
+  if (!readVarU32(funcIndex)) {
+    return fail("unable to read function index");
+  }
+  return true;
+}
+
+inline bool Decoder::readRefNull(const TypeContext& types,
+                                 const FeatureArgs& features, RefType* type) {
+  return readHeapType(types, features, true, type);
+}
+
+inline bool Decoder::readRefNull(const FeatureArgs& features, RefType* type) {
+  return readHeapType(MaxTypes, features, true, type);
 }
 
 }  // namespace wasm

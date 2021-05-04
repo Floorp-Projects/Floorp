@@ -1725,7 +1725,7 @@ class MOZ_STACK_CLASS ModuleValidatorShared {
     }
     seg->elemType = RefType::func();
     seg->tableIndex = tableIndex;
-    seg->offsetIfActive = Some(InitExpr::fromConstant(LitVal(uint32_t(0))));
+    seg->offsetIfActive = Some(InitExpr(LitVal(uint32_t(0))));
     seg->elemFuncIndices = std::move(elems);
     return moduleEnv_.elemSegments.append(std::move(seg));
   }

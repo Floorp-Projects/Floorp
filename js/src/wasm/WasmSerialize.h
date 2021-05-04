@@ -19,6 +19,8 @@
 #ifndef wasm_serialize_h
 #define wasm_serialize_h
 
+#include "mozilla/Maybe.h"
+
 #include <type_traits>
 
 #include "js/Vector.h"
@@ -124,6 +126,48 @@ static inline size_t SizeOfVectorExcludingThis(
     size += t.sizeOfExcludingThis(mallocSizeOf);
   }
   return size;
+}
+
+template <class T>
+static inline size_t SerializedMaybeSize(const mozilla::Maybe<T>& maybe) {
+  if (!maybe) {
+    return sizeof(uint8_t);
+  }
+  return sizeof(uint8_t) + maybe->serializedSize();
+}
+
+template <class T>
+static inline uint8_t* SerializeMaybe(uint8_t* cursor,
+                                      const mozilla::Maybe<T>& maybe) {
+  cursor = WriteScalar<uint8_t>(cursor, maybe ? 1 : 0);
+  if (maybe) {
+    cursor = maybe->serialize(cursor);
+  }
+  return cursor;
+}
+
+template <class T>
+static inline const uint8_t* DeserializeMaybe(const uint8_t* cursor,
+                                              mozilla::Maybe<T>* maybe) {
+  uint8_t isSome;
+  cursor = ReadScalar<uint8_t>(cursor, &isSome);
+  if (!cursor) {
+    return nullptr;
+  }
+
+  if (isSome == 1) {
+    maybe->emplace();
+    cursor = (*maybe)->deserialize(cursor);
+  } else {
+    *maybe = Nothing();
+  }
+  return cursor;
+}
+
+template <class T>
+static inline size_t SizeOfMaybeExcludingThis(const mozilla::Maybe<T>& maybe,
+                                              MallocSizeOf mallocSizeOf) {
+  return maybe ? maybe->sizeOfExcludingThis(mallocSizeOf) : 0;
 }
 
 template <class T, size_t N>

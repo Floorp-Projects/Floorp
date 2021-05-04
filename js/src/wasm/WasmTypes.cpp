@@ -1410,16 +1410,97 @@ size_t Export::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const {
   return fieldName_.sizeOfExcludingThis(mallocSizeOf);
 }
 
+size_t GlobalDesc::serializedSize() const {
+  size_t size = sizeof(kind_);
+  switch (kind_) {
+    case GlobalKind::Import:
+      size += initial_.serializedSize() + sizeof(offset_) + sizeof(isMutable_) +
+              sizeof(isWasm_) + sizeof(isExport_) + sizeof(importIndex_);
+      break;
+    case GlobalKind::Variable:
+      size += initial_.serializedSize() + sizeof(offset_) + sizeof(isMutable_) +
+              sizeof(isWasm_) + sizeof(isExport_);
+      break;
+    case GlobalKind::Constant:
+      size += initial_.serializedSize();
+      break;
+    default:
+      MOZ_CRASH();
+  }
+  return size;
+}
+
+uint8_t* GlobalDesc::serialize(uint8_t* cursor) const {
+  cursor = WriteBytes(cursor, &kind_, sizeof(kind_));
+  switch (kind_) {
+    case GlobalKind::Import:
+      cursor = initial_.serialize(cursor);
+      cursor = WriteBytes(cursor, &offset_, sizeof(offset_));
+      cursor = WriteBytes(cursor, &isMutable_, sizeof(isMutable_));
+      cursor = WriteBytes(cursor, &isWasm_, sizeof(isWasm_));
+      cursor = WriteBytes(cursor, &isExport_, sizeof(isExport_));
+      cursor = WriteBytes(cursor, &importIndex_, sizeof(importIndex_));
+      break;
+    case GlobalKind::Variable:
+      cursor = initial_.serialize(cursor);
+      cursor = WriteBytes(cursor, &offset_, sizeof(offset_));
+      cursor = WriteBytes(cursor, &isMutable_, sizeof(isMutable_));
+      cursor = WriteBytes(cursor, &isWasm_, sizeof(isWasm_));
+      cursor = WriteBytes(cursor, &isExport_, sizeof(isExport_));
+      break;
+    case GlobalKind::Constant:
+      cursor = initial_.serialize(cursor);
+      break;
+    default:
+      MOZ_CRASH();
+  }
+  return cursor;
+}
+
+const uint8_t* GlobalDesc::deserialize(const uint8_t* cursor) {
+  if (!(cursor = ReadBytes(cursor, &kind_, sizeof(kind_)))) {
+    return nullptr;
+  }
+  switch (kind_) {
+    case GlobalKind::Import:
+      (cursor = initial_.deserialize(cursor)) &&
+          (cursor = ReadBytes(cursor, &offset_, sizeof(offset_))) &&
+          (cursor = ReadBytes(cursor, &isMutable_, sizeof(isMutable_))) &&
+          (cursor = ReadBytes(cursor, &isWasm_, sizeof(isWasm_))) &&
+          (cursor = ReadBytes(cursor, &isExport_, sizeof(isExport_))) &&
+          (cursor = ReadBytes(cursor, &importIndex_, sizeof(importIndex_)));
+      break;
+    case GlobalKind::Variable:
+      (cursor = initial_.deserialize(cursor)) &&
+          (cursor = ReadBytes(cursor, &offset_, sizeof(offset_))) &&
+          (cursor = ReadBytes(cursor, &isMutable_, sizeof(isMutable_))) &&
+          (cursor = ReadBytes(cursor, &isWasm_, sizeof(isWasm_))) &&
+          (cursor = ReadBytes(cursor, &isExport_, sizeof(isExport_)));
+      break;
+    case GlobalKind::Constant:
+      cursor = initial_.deserialize(cursor);
+      break;
+    default:
+      MOZ_CRASH();
+  }
+  return cursor;
+}
+
+size_t GlobalDesc::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const {
+  return initial_.sizeOfExcludingThis(mallocSizeOf);
+}
+
 size_t ElemSegment::serializedSize() const {
   return sizeof(kind) + sizeof(tableIndex) + sizeof(elemType) +
-         sizeof(offsetIfActive) + SerializedPodVectorSize(elemFuncIndices);
+         SerializedMaybeSize(offsetIfActive) +
+         SerializedPodVectorSize(elemFuncIndices);
 }
 
 uint8_t* ElemSegment::serialize(uint8_t* cursor) const {
   cursor = WriteBytes(cursor, &kind, sizeof(kind));
   cursor = WriteBytes(cursor, &tableIndex, sizeof(tableIndex));
   cursor = WriteBytes(cursor, &elemType, sizeof(elemType));
-  cursor = WriteBytes(cursor, &offsetIfActive, sizeof(offsetIfActive));
+  cursor = SerializeMaybe(cursor, offsetIfActive);
   cursor = SerializePodVector(cursor, elemFuncIndices);
   return cursor;
 }
@@ -1428,33 +1509,35 @@ const uint8_t* ElemSegment::deserialize(const uint8_t* cursor) {
   (cursor = ReadBytes(cursor, &kind, sizeof(kind))) &&
       (cursor = ReadBytes(cursor, &tableIndex, sizeof(tableIndex))) &&
       (cursor = ReadBytes(cursor, &elemType, sizeof(elemType))) &&
-      (cursor = ReadBytes(cursor, &offsetIfActive, sizeof(offsetIfActive))) &&
+      (cursor = DeserializeMaybe(cursor, &offsetIfActive)) &&
       (cursor = DeserializePodVector(cursor, &elemFuncIndices));
   return cursor;
 }
 
 size_t ElemSegment::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const {
-  return elemFuncIndices.sizeOfExcludingThis(mallocSizeOf);
+  return SizeOfMaybeExcludingThis(offsetIfActive, mallocSizeOf) +
+         elemFuncIndices.sizeOfExcludingThis(mallocSizeOf);
 }
 
 size_t DataSegment::serializedSize() const {
-  return sizeof(offsetIfActive) + SerializedPodVectorSize(bytes);
+  return SerializedMaybeSize(offsetIfActive) + SerializedPodVectorSize(bytes);
 }
 
 uint8_t* DataSegment::serialize(uint8_t* cursor) const {
-  cursor = WriteBytes(cursor, &offsetIfActive, sizeof(offsetIfActive));
+  cursor = SerializeMaybe(cursor, offsetIfActive);
   cursor = SerializePodVector(cursor, bytes);
   return cursor;
 }
 
 const uint8_t* DataSegment::deserialize(const uint8_t* cursor) {
-  (cursor = ReadBytes(cursor, &offsetIfActive, sizeof(offsetIfActive))) &&
+  (cursor = DeserializeMaybe(cursor, &offsetIfActive)) &&
       (cursor = DeserializePodVector(cursor, &bytes));
   return cursor;
 }
 
 size_t DataSegment::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const {
-  return bytes.sizeOfExcludingThis(mallocSizeOf);
+  return SizeOfMaybeExcludingThis(offsetIfActive, mallocSizeOf) +
+         bytes.sizeOfExcludingThis(mallocSizeOf);
 }
 
 size_t CustomSection::serializedSize() const {
