@@ -420,25 +420,25 @@
 }
 
 .tab-icon-overlay:is([pinned], [sharing]):not([crashed]) {
-  stroke: white;
-  color: black;
+  stroke: var(--tab-icon-overlay-stroke, white);
+  color: var(--tab-icon-overlay-fill, black);
 }
 
 .tab-icon-overlay:is([pinned], [sharing]):not([crashed])[soundplaying]:hover,
 .tab-icon-overlay:is([pinned], [sharing]):not([crashed])[muted]:hover,
 .tab-icon-overlay:is([pinned], [sharing]):not([crashed])[activemedia-blocked]:hover {
-  background-color: white;
+  background-color: var(--tab-icon-overlay-stroke, white);
 }
 
 #TabsToolbar[brighttext] .tab-icon-overlay:is([pinned], [sharing]):not([crashed]) {
-  stroke: black;
-  color: white;
+  stroke: var(--tab-icon-overlay-stroke, black);
+  color: var(--tab-icon-overlay-fill, white);
 }
 
 #TabsToolbar[brighttext] .tab-icon-overlay:is([pinned], [sharing]):not([crashed])[soundplaying]:hover,
 #TabsToolbar[brighttext] .tab-icon-overlay:is([pinned], [sharing]):not([crashed])[muted]:hover,
 #TabsToolbar[brighttext] .tab-icon-overlay:is([pinned], [sharing]):not([crashed])[activemedia-blocked]:hover {
-  background-color: black;
+  background-color: var(--tab-icon-overlay-stroke, black);
 }
 
 @media not (-moz-proton) {
