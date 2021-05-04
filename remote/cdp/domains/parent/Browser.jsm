@@ -34,6 +34,17 @@ class Browser extends Domain {
   }
 
   close() {
-    Services.startup.quit(Ci.nsIAppStartup.eAttemptQuit);
+    // Notify all windows that an application quit has been requested.
+    const cancelQuit = Cc["@mozilla.org/supports-PRBool;1"].createInstance(
+      Ci.nsISupportsPRBool
+    );
+    Services.obs.notifyObservers(cancelQuit, "quit-application-requested");
+
+    // If the shutdown of the application is prevented force quit it instead.
+    const mode = cancelQuit.data
+      ? Ci.nsIAppStartup.eForceQuit
+      : Ci.nsIAppStartup.eAttemptQuit;
+
+    Services.startup.quit(mode);
   }
 }
