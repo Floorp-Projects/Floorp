@@ -804,6 +804,38 @@ set_config("ENABLE_WASM_SIMD_WORMHOLE", wasm_simd_wormhole)
 set_define("ENABLE_WASM_SIMD_WORMHOLE", wasm_simd_wormhole)
 
 
+# Support for WebAssembly relaxed SIMD
+# =====================================================
+
+
+@depends(milestone.is_nightly, "--enable-wasm-simd")
+def default_wasm_relaxed_simd(is_nightly, wasm_simd):
+    if is_nightly and wasm_simd:
+        return True
+
+
+option(
+    "--enable-wasm-relaxed-simd",
+    default=default_wasm_relaxed_simd,
+    help="{Enable|Disable} WebAssembly relaxed SIMD",
+)
+
+
+@depends("--enable-wasm-relaxed-simd", "--enable-wasm-simd")
+def wasm_relaxed_simd(value, wasm_simd):
+    if not value:
+        return
+
+    if not wasm_simd:
+        die("relaxed SIMD requires SIMD")
+
+    return True
+
+
+set_config("ENABLE_WASM_RELAXED_SIMD", wasm_relaxed_simd)
+set_define("ENABLE_WASM_RELAXED_SIMD", wasm_relaxed_simd)
+
+
 # Options for generating the shell as a script
 # ============================================
 option("--with-qemu-exe", nargs=1, help="Use path as an arm emulator on host platforms")
