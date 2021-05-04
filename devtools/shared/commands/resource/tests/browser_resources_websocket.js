@@ -59,7 +59,7 @@ async function testWebsocketResources(target) {
   assertResource(availableResources[0], {
     wsMessageType: "webSocketOpened",
     effectiveURI:
-      "ws://mochi.test:8888/browser/devtools/shared/resources/tests/websocket_backend",
+      "ws://mochi.test:8888/browser/devtools/shared/commands/resource/tests/websocket_backend",
     extensions: "permessage-deflate",
     protocols: "",
   });
