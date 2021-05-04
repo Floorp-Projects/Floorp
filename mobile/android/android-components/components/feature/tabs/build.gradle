@@ -31,7 +31,6 @@ tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
 
 dependencies {
     implementation project(':browser-state')
-    implementation project(':browser-session')
     implementation project(':browser-session-storage')
     implementation project(':browser-thumbnails')
     api project(':feature-session')

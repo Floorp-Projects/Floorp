@@ -71,7 +71,6 @@ dependencies {
     implementation Dependencies.kotlin_stdlib
     implementation Dependencies.kotlin_coroutines
 
-    testImplementation project(":browser-session")
     testImplementation project(':support-test')
     testImplementation project(':support-test-libstate')
 

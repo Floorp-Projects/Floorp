@@ -8,25 +8,30 @@ import android.app.SearchManager
 import android.content.Intent
 import android.nfc.NfcAdapter.ACTION_NDEF_DISCOVERED
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import mozilla.components.browser.session.Session
-import mozilla.components.browser.session.SessionManager
-import mozilla.components.browser.state.action.EngineAction
-import mozilla.components.browser.state.state.SessionState.Source
+import kotlinx.coroutines.test.TestCoroutineDispatcher
+import kotlinx.coroutines.test.TestCoroutineScope
+import kotlinx.coroutines.test.setMain
+import mozilla.components.browser.state.action.BrowserAction
+import mozilla.components.browser.state.action.TabListAction
+import mozilla.components.browser.state.engine.EngineMiddleware
+import mozilla.components.browser.state.search.SearchEngine
+import mozilla.components.browser.state.selector.findTabByUrl
+import mozilla.components.browser.state.selector.selectedTab
+import mozilla.components.browser.state.state.BrowserState
+import mozilla.components.browser.state.state.SearchState
+import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession
-import mozilla.components.concept.engine.EngineSession.LoadUrlFlags
 import mozilla.components.feature.search.SearchUseCases
-import mozilla.components.browser.state.action.ContentAction
-import mozilla.components.browser.state.state.BrowserState
-import mozilla.components.browser.state.state.SearchState
 import mozilla.components.feature.search.ext.createSearchEngine
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.feature.tabs.TabsUseCases
-import mozilla.components.support.test.any
-import mozilla.components.support.test.argumentCaptor
-import mozilla.components.support.test.eq
+import mozilla.components.support.test.ext.joinBlocking
+import mozilla.components.support.test.libstate.ext.waitUntilIdle
+import mozilla.components.support.test.middleware.CaptureActionsMiddleware
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.whenever
 import org.junit.Assert.assertEquals
@@ -35,296 +40,203 @@ import org.junit.Assert.assertNotNull
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.ArgumentMatchers.anyList
-import org.mockito.Mockito.never
-import org.mockito.Mockito.spy
-import org.mockito.Mockito.times
-import org.mockito.Mockito.verify
+import org.mockito.Mockito.anyBoolean
+import org.mockito.Mockito.anyString
+import org.mockito.Mockito.doReturn
 
 @RunWith(AndroidJUnit4::class)
 @ExperimentalCoroutinesApi
 class TabIntentProcessorTest {
+    private val testDispatcher = TestCoroutineDispatcher()
+    private val scope = TestCoroutineScope(testDispatcher)
 
-    private val store = mock<BrowserStore>()
-    private val sessionManager = mock<SessionManager>()
-    private val session = mock<Session>()
-    private val sessionUseCases = SessionUseCases(store, sessionManager)
+    private lateinit var middleware: CaptureActionsMiddleware<BrowserState, BrowserAction>
 
-    private val searchEngine = createSearchEngine(
-        name = "Test",
-        url = "https://localhost/?q={searchTerms}",
-        icon = mock()
-    )
+    private lateinit var searchEngine: SearchEngine
+    private lateinit var store: BrowserStore
+    private lateinit var engine: Engine
+    private lateinit var engineSession: EngineSession
 
-    private val state = BrowserState(
-        search = SearchState(
-            regionSearchEngines = listOf(searchEngine)
-        )
-    )
-
-    private val tabsUseCases = TabsUseCases(store, sessionManager)
-    private val searchUseCases = SearchUseCases(
-        store,
-        tabsUseCases
-    )
+    private lateinit var sessionUseCases: SessionUseCases
+    private lateinit var tabsUseCases: TabsUseCases
+    private lateinit var searchUseCases: SearchUseCases
 
     @Before
     fun setup() {
-        whenever(sessionManager.selectedSession).thenReturn(session)
-        whenever(store.state).thenReturn(state)
+        Dispatchers.setMain(testDispatcher)
+
+        searchEngine = createSearchEngine(
+            name = "Test",
+            url = "https://localhost/?q={searchTerms}",
+            icon = mock()
+        )
+
+        engine = mock()
+        engineSession = mock()
+        doReturn(engineSession).`when`(engine).createSession(anyBoolean(), anyString())
+
+        middleware = CaptureActionsMiddleware()
+
+        store = BrowserStore(
+            BrowserState(
+                search = SearchState(regionSearchEngines = listOf(searchEngine))
+            ),
+            middleware = EngineMiddleware.create(
+                engine = mock(),
+                scope = scope
+            ) + listOf(middleware)
+        )
+
+        sessionUseCases = SessionUseCases(store)
+        tabsUseCases = TabsUseCases(store)
+        searchUseCases = SearchUseCases(store, tabsUseCases)
     }
 
     @Test
-    fun processViewIntent() {
-        val engine = mock<Engine>()
-        val sessionManager = spy(SessionManager(engine))
-        val useCases = SessionUseCases(store, sessionManager)
-        val handler =
-            TabIntentProcessor(TabsUseCases(store, sessionManager), useCases.loadUrl, searchUseCases.newTabSearch)
-        val intent = mock<Intent>()
+    fun `open or select tab on ACTION_VIEW intent`() {
+        val useCases = SessionUseCases(store)
+        val handler = TabIntentProcessor(TabsUseCases(store), useCases.loadUrl, searchUseCases.newTabSearch)
+        val intent: Intent = mock()
         whenever(intent.action).thenReturn(Intent.ACTION_VIEW)
+        whenever(intent.dataString).thenReturn("https://mozilla.org")
 
-        val engineSession = mock<EngineSession>()
-        whenever(intent.dataString).thenReturn("")
+        assertEquals(0, store.state.tabs.size)
         handler.process(intent)
-        verify(engineSession, never()).loadUrl("")
+        store.waitUntilIdle()
+        assertEquals(1, store.state.tabs.size)
 
-        whenever(intent.dataString).thenReturn("http://mozilla.org")
+        val tab = store.state.findTabByUrl("https://mozilla.org")
+        assertNotNull(tab)
+
+        val otherTab = createTab("https://firefox.com")
+        store.dispatch(TabListAction.AddTabAction(otherTab, select = true)).joinBlocking()
+        assertEquals(2, store.state.tabs.size)
+        assertEquals(otherTab, store.state.selectedTab)
+
         handler.process(intent)
-
-        val sessionCaptor = argumentCaptor<Session>()
-        verify(sessionManager).add(
-            sessionCaptor.capture(),
-            eq(true),
-            eq(null),
-            eq(null),
-            eq(null),
-            eq(LoadUrlFlags.external())
-        )
-        verify(store).dispatch(EngineAction.LoadUrlAction(
-            sessionCaptor.value.id, "http://mozilla.org", LoadUrlFlags.external())
-        )
-
-        // try to send a request to open a tab with the same url as before
-        whenever(intent.dataString).thenReturn("http://mozilla.org")
-        handler.process(intent)
-        verify(sessionManager).select(any())
-        verify(sessionManager, never()).add(anyList())
-
-        assertEquals(sessionManager.sessions.size, 1)
-
-        val session = sessionManager.all[0]
-        assertNotNull(session)
-        assertEquals("http://mozilla.org", session.url)
-        assertEquals(Source.ACTION_VIEW, session.source)
+        store.waitUntilIdle()
+        assertEquals(2, store.state.tabs.size)
+        assertEquals(tab, store.state.selectedTab)
     }
 
     @Test
-    fun `process ACTION MAIN Intent`() {
-        val engine = mock<Engine>()
-        val sessionManager = spy(SessionManager(engine))
-        val useCases = SessionUseCases(store, sessionManager)
-        val handler =
-            TabIntentProcessor(TabsUseCases(store, sessionManager), useCases.loadUrl, searchUseCases.newTabSearch)
-        val intent = mock<Intent>()
+    fun `open or select tab on ACTION_MAIN intent`() {
+        val useCases = SessionUseCases(store)
+        val handler = TabIntentProcessor(TabsUseCases(store), useCases.loadUrl, searchUseCases.newTabSearch)
+        val intent: Intent = mock()
         whenever(intent.action).thenReturn(Intent.ACTION_MAIN)
+        whenever(intent.dataString).thenReturn("https://mozilla.org")
 
-        val engineSession = mock<EngineSession>()
-        whenever(intent.dataString).thenReturn("")
+        assertEquals(0, store.state.tabs.size)
         handler.process(intent)
-        verify(engineSession, never()).loadUrl("")
+        store.waitUntilIdle()
+        assertEquals(1, store.state.tabs.size)
 
-        whenever(intent.dataString).thenReturn("http://mozilla.org")
+        val tab = store.state.findTabByUrl("https://mozilla.org")
+        assertNotNull(tab)
+
+        val otherTab = createTab("https://firefox.com")
+        store.dispatch(TabListAction.AddTabAction(otherTab, select = true)).joinBlocking()
+        assertEquals(2, store.state.tabs.size)
+        assertEquals(otherTab, store.state.selectedTab)
+
         handler.process(intent)
-
-        val sessionCaptor = argumentCaptor<Session>()
-        verify(sessionManager).add(
-            sessionCaptor.capture(),
-            eq(true),
-            eq(null),
-            eq(null),
-            eq(null),
-            eq(LoadUrlFlags.external())
-        )
-        verify(store).dispatch(EngineAction.LoadUrlAction(
-            sessionCaptor.value.id, "http://mozilla.org", LoadUrlFlags.external())
-        )
-
-        // try to send a request to open a tab with the same url as before
-        whenever(intent.dataString).thenReturn("http://mozilla.org")
-        handler.process(intent)
-        verify(sessionManager).select(any())
-        verify(sessionManager, never()).add(anyList())
-
-        assertEquals(sessionManager.sessions.size, 1)
-
-        val session = sessionManager.all[0]
-        assertNotNull(session)
-        assertEquals("http://mozilla.org", session.url)
-        assertEquals(Source.ACTION_VIEW, session.source)
+        store.waitUntilIdle()
+        assertEquals(2, store.state.tabs.size)
+        assertEquals(tab, store.state.selectedTab)
     }
 
     @Test
-    fun processNfcIntent() {
-        val engine = mock<Engine>()
-        val sessionManager = spy(SessionManager(engine))
-        val useCases = SessionUseCases(store, sessionManager)
-        val handler =
-            TabIntentProcessor(TabsUseCases(store, sessionManager), useCases.loadUrl, searchUseCases.newTabSearch)
-        val intent = mock<Intent>()
+    fun `open or select tab on ACTION_NDEF_DISCOVERED intent`() {
+        val useCases = SessionUseCases(store)
+        val handler = TabIntentProcessor(TabsUseCases(store), useCases.loadUrl, searchUseCases.newTabSearch)
+        val intent: Intent = mock()
         whenever(intent.action).thenReturn(ACTION_NDEF_DISCOVERED)
+        whenever(intent.dataString).thenReturn("https://mozilla.org")
 
-        val engineSession = mock<EngineSession>()
-
-        whenever(intent.dataString).thenReturn("")
+        assertEquals(0, store.state.tabs.size)
         handler.process(intent)
-        verify(engineSession, never()).loadUrl("")
+        store.waitUntilIdle()
+        assertEquals(1, store.state.tabs.size)
 
-        whenever(intent.dataString).thenReturn("http://mozilla.org")
+        val tab = store.state.findTabByUrl("https://mozilla.org")
+        assertNotNull(tab)
+
+        val otherTab = createTab("https://firefox.com")
+        store.dispatch(TabListAction.AddTabAction(otherTab, select = true)).joinBlocking()
+        assertEquals(2, store.state.tabs.size)
+        assertEquals(otherTab, store.state.selectedTab)
+
         handler.process(intent)
-        val sessionCaptor = argumentCaptor<Session>()
-        verify(sessionManager).add(
-            sessionCaptor.capture(),
-            eq(true),
-            eq(null),
-            eq(null),
-            eq(null),
-            eq(LoadUrlFlags.external())
-        )
-        verify(store).dispatch(EngineAction.LoadUrlAction(
-            sessionCaptor.value.id, "http://mozilla.org", LoadUrlFlags.external())
-        )
-
-        val session = sessionManager.all[0]
-        assertNotNull(session)
-        assertEquals("http://mozilla.org", session.url)
-        assertEquals(Source.ACTION_VIEW, session.source)
+        store.waitUntilIdle()
+        assertEquals(2, store.state.tabs.size)
+        assertEquals(tab, store.state.selectedTab)
     }
 
     @Test
-    fun `load URL on ACTION_SEND if text contains URL`() {
-        val handler = TabIntentProcessor(TabsUseCases(store, sessionManager), sessionUseCases.loadUrl, searchUseCases.newTabSearch)
+    fun `open tab on ACTION_SEND intent`() {
+        val handler = TabIntentProcessor(TabsUseCases(store), sessionUseCases.loadUrl, searchUseCases.newTabSearch)
 
-        val intent = mock<Intent>()
+        val intent: Intent = mock()
         whenever(intent.action).thenReturn(Intent.ACTION_SEND)
+        whenever(intent.getStringExtra(Intent.EXTRA_TEXT)).thenReturn("https://mozilla.org")
 
-        whenever(intent.getStringExtra(Intent.EXTRA_TEXT)).thenReturn("http://mozilla.org")
+        assertEquals(0, store.state.tabs.size)
         handler.process(intent)
-        val sessionCaptor = argumentCaptor<Session>()
-        verify(sessionManager).add(
-            sessionCaptor.capture(),
-            eq(true),
-            eq(null),
-            eq(null),
-            eq(null),
-            eq(LoadUrlFlags.external())
-        )
-        verify(store).dispatch(EngineAction.LoadUrlAction(
-            sessionCaptor.value.id, "http://mozilla.org", LoadUrlFlags.external())
-        )
+        store.waitUntilIdle()
+        assertEquals(1, store.state.tabs.size)
+        assertEquals("https://mozilla.org", store.state.tabs[0].content.url)
 
-        whenever(intent.getStringExtra(Intent.EXTRA_TEXT)).thenReturn("see http://getpocket.com")
+        whenever(intent.getStringExtra(Intent.EXTRA_TEXT)).thenReturn("see https://getpocket.com")
         handler.process(intent)
-        verify(sessionManager, times(2)).add(
-            sessionCaptor.capture(),
-            eq(true),
-            eq(null),
-            eq(null),
-            eq(null),
-            eq(LoadUrlFlags.external())
-        )
-        verify(store).dispatch(EngineAction.LoadUrlAction(
-            sessionCaptor.allValues.last().id, "http://getpocket.com", LoadUrlFlags.external())
-        )
+        store.waitUntilIdle()
+        assertEquals(2, store.state.tabs.size)
+        assertEquals("https://getpocket.com", store.state.tabs[1].content.url)
 
-        whenever(intent.getStringExtra(Intent.EXTRA_TEXT)).thenReturn("see http://mozilla.com and http://getpocket.com")
+        whenever(intent.getStringExtra(Intent.EXTRA_TEXT)).thenReturn("see https://firefox.com and https://mozilla.org")
         handler.process(intent)
-        verify(sessionManager, times(3)).add(
-            sessionCaptor.capture(),
-            eq(true),
-            eq(null),
-            eq(null),
-            eq(null),
-            eq(LoadUrlFlags.external())
-        )
-        verify(store).dispatch(EngineAction.LoadUrlAction(
-            sessionCaptor.allValues.last().id, "http://mozilla.com", LoadUrlFlags.external())
-        )
+        store.waitUntilIdle()
+        assertEquals(3, store.state.tabs.size)
+        assertEquals("https://firefox.com", store.state.tabs[2].content.url)
 
-        whenever(intent.getStringExtra(Intent.EXTRA_TEXT)).thenReturn("checkout the Tweet: http://tweets.mozilla.com")
+        whenever(intent.getStringExtra(Intent.EXTRA_TEXT)).thenReturn("checkout the Tweet: https://tweets.mozilla.com")
         handler.process(intent)
-        verify(sessionManager, times(4)).add(
-            sessionCaptor.capture(),
-            eq(true),
-            eq(null),
-            eq(null),
-            eq(null),
-            eq(LoadUrlFlags.external())
-        )
-        verify(store).dispatch(EngineAction.LoadUrlAction(
-            sessionCaptor.allValues.last().id, "http://tweets.mozilla.com", LoadUrlFlags.external())
-        )
+        store.waitUntilIdle()
+        assertEquals(4, store.state.tabs.size)
+        assertEquals("https://tweets.mozilla.com", store.state.tabs[3].content.url)
 
-        whenever(intent.getStringExtra(Intent.EXTRA_TEXT)).thenReturn("checkout the Tweet: HTTP://tweets.mozilla.org")
+        whenever(intent.getStringExtra(Intent.EXTRA_TEXT)).thenReturn("checkout the Tweet: HTTPS://tweets.mozilla.org")
         handler.process(intent)
-        verify(sessionManager, times(5)).add(
-            sessionCaptor.capture(),
-            eq(true),
-            eq(null),
-            eq(null),
-            eq(null),
-            eq(LoadUrlFlags.external())
-        )
-        verify(store).dispatch(EngineAction.LoadUrlAction(
-            sessionCaptor.allValues.last().id, "HTTP://tweets.mozilla.org", LoadUrlFlags.external())
-        )
+        store.waitUntilIdle()
+        assertEquals(5, store.state.tabs.size)
+        assertEquals("HTTPS://tweets.mozilla.org", store.state.tabs[4].content.url)
     }
 
     @Test
-    fun `perform search on ACTION_SEND if text (no URL) provided`() {
-        val engine = mock<Engine>()
-        val sessionManager = spy(SessionManager(engine))
-
-        val searchUseCases = SearchUseCases(
-            store,
-            TabsUseCases(store, sessionManager)
-        )
-        val sessionUseCases = SessionUseCases(store, sessionManager)
+    fun `open tab and trigger search on ACTION_SEND if text is not a URL`() {
+        val handler = TabIntentProcessor(TabsUseCases(store), sessionUseCases.loadUrl, searchUseCases.newTabSearch)
 
         val searchTerms = "mozilla android"
         val searchUrl = "https://localhost/?q=mozilla%20android"
 
-        val handler = TabIntentProcessor(TabsUseCases(store, sessionManager), sessionUseCases.loadUrl, searchUseCases.newTabSearch)
-
-        val intent = mock<Intent>()
+        val intent: Intent = mock()
         whenever(intent.action).thenReturn(Intent.ACTION_SEND)
         whenever(intent.getStringExtra(Intent.EXTRA_TEXT)).thenReturn(searchTerms)
 
+        assertEquals(0, store.state.tabs.size)
         handler.process(intent)
-        val sessionCaptor = argumentCaptor<Session>()
-        verify(sessionManager).add(
-            sessionCaptor.capture(),
-            eq(true),
-            eq(null),
-            eq(null),
-            eq(null),
-            eq(LoadUrlFlags.none())
-        )
-        verify(store).dispatch(EngineAction.LoadUrlAction(
-            sessionCaptor.value.id, searchUrl, LoadUrlFlags.none())
-        )
-        assertEquals(searchUrl, sessionManager.selectedSession?.url)
 
-        verify(store).dispatch(ContentAction.UpdateSearchTermsAction(
-            sessionCaptor.value.id, searchTerms
-        ))
+        store.waitUntilIdle()
+        assertEquals(1, store.state.tabs.size)
+        assertEquals(searchUrl, store.state.tabs[0].content.url)
+        assertEquals(searchTerms, store.state.tabs[0].content.searchTerms)
     }
 
     @Test
-    fun `processor handles ACTION_SEND with empty text`() {
-        val handler = TabIntentProcessor(TabsUseCases(store, sessionManager), sessionUseCases.loadUrl, searchUseCases.newTabSearch)
+    fun `nothing happens on ACTION_SEND if no text is provided`() {
+        val handler = TabIntentProcessor(TabsUseCases(store), sessionUseCases.loadUrl, searchUseCases.newTabSearch)
 
-        val intent = mock<Intent>()
+        val intent: Intent = mock()
         whenever(intent.action).thenReturn(Intent.ACTION_SEND)
         whenever(intent.getStringExtra(Intent.EXTRA_TEXT)).thenReturn(" ")
 
@@ -333,10 +245,10 @@ class TabIntentProcessorTest {
     }
 
     @Test
-    fun `processor handles ACTION_SEARCH with empty text`() {
-        val handler = TabIntentProcessor(TabsUseCases(store, sessionManager), sessionUseCases.loadUrl, searchUseCases.newTabSearch)
+    fun `nothing happens on ACTION_SEARCH if text is empty`() {
+        val handler = TabIntentProcessor(TabsUseCases(store), sessionUseCases.loadUrl, searchUseCases.newTabSearch)
 
-        val intent = mock<Intent>()
+        val intent: Intent = mock()
         whenever(intent.action).thenReturn(Intent.ACTION_SEARCH)
         whenever(intent.getStringExtra(SearchManager.QUERY)).thenReturn(" ")
 
@@ -345,73 +257,47 @@ class TabIntentProcessorTest {
     }
 
     @Test
-    fun `load URL on ACTION_SEARCH if text is an URL`() {
-        val handler = TabIntentProcessor(TabsUseCases(store, sessionManager), sessionUseCases.loadUrl, searchUseCases.newTabSearch)
+    fun `open tab on ACTION_SEARCH intent`() {
+        val handler = TabIntentProcessor(TabsUseCases(store), sessionUseCases.loadUrl, searchUseCases.newTabSearch)
 
-        val intent = mock<Intent>()
+        val intent: Intent = mock()
         whenever(intent.action).thenReturn(Intent.ACTION_SEARCH)
-
         whenever(intent.getStringExtra(SearchManager.QUERY)).thenReturn("http://mozilla.org")
+
+        assertEquals(0, store.state.tabs.size)
         handler.process(intent)
-        val sessionCaptor = argumentCaptor<Session>()
-        verify(sessionManager).add(
-            sessionCaptor.capture(),
-            eq(true),
-            eq(null),
-            eq(null),
-            eq(null),
-            eq(LoadUrlFlags.external())
-        )
-        verify(store).dispatch(EngineAction.LoadUrlAction(
-            sessionCaptor.value.id, "http://mozilla.org", LoadUrlFlags.external())
-        )
+
+        store.waitUntilIdle()
+        assertEquals(1, store.state.tabs.size)
+        assertEquals("http://mozilla.org", store.state.tabs[0].content.url)
+        assertEquals("", store.state.tabs[0].content.searchTerms)
     }
 
     @Test
-    fun `perform search on ACTION_SEARCH if text (no URL) provided`() {
-        val engine = mock<Engine>()
-        val sessionManager = spy(SessionManager(engine))
-
-        val searchUseCases = SearchUseCases(
-            store,
-            TabsUseCases(store, sessionManager)
-        )
-        val sessionUseCases = SessionUseCases(store, sessionManager)
+    fun `open tab and trigger search on ACTION_SEARCH intent if text is not a URL`() {
+        val handler = TabIntentProcessor(TabsUseCases(store), sessionUseCases.loadUrl, searchUseCases.newTabSearch)
 
         val searchTerms = "mozilla android"
         val searchUrl = "https://localhost/?q=mozilla%20android"
 
-        val handler = TabIntentProcessor(TabsUseCases(store, sessionManager), sessionUseCases.loadUrl, searchUseCases.newTabSearch)
-
-        val intent = mock<Intent>()
+        val intent: Intent = mock()
         whenever(intent.action).thenReturn(Intent.ACTION_SEARCH)
         whenever(intent.getStringExtra(SearchManager.QUERY)).thenReturn(searchTerms)
 
+        assertEquals(0, store.state.tabs.size)
         handler.process(intent)
-        val sessionCaptor = argumentCaptor<Session>()
-        verify(sessionManager).add(
-            sessionCaptor.capture(),
-            eq(true),
-            eq(null),
-            eq(null),
-            eq(null),
-            eq(LoadUrlFlags.none())
-        )
-        verify(store).dispatch(EngineAction.LoadUrlAction(
-            sessionCaptor.value.id, searchUrl, LoadUrlFlags.none())
-        )
-        assertEquals(searchUrl, sessionManager.selectedSession?.url)
 
-        verify(store).dispatch(ContentAction.UpdateSearchTermsAction(
-            sessionCaptor.value.id, searchTerms
-        ))
+        store.waitUntilIdle()
+        assertEquals(1, store.state.tabs.size)
+        assertEquals(searchUrl, store.state.tabs[0].content.url)
+        assertEquals(searchTerms, store.state.tabs[0].content.searchTerms)
     }
 
     @Test
-    fun `processor handles ACTION_WEB_SEARCH with empty text`() {
-        val handler = TabIntentProcessor(TabsUseCases(store, sessionManager), sessionUseCases.loadUrl, searchUseCases.newTabSearch)
+    fun `nothing happens on ACTION_WEB_SEARCH if text is empty`() {
+        val handler = TabIntentProcessor(TabsUseCases(store), sessionUseCases.loadUrl, searchUseCases.newTabSearch)
 
-        val intent = mock<Intent>()
+        val intent: Intent = mock()
         whenever(intent.action).thenReturn(Intent.ACTION_WEB_SEARCH)
         whenever(intent.getStringExtra(SearchManager.QUERY)).thenReturn(" ")
 
@@ -420,65 +306,37 @@ class TabIntentProcessorTest {
     }
 
     @Test
-    fun `load URL on ACTION_WEB_SEARCH if text is an URL`() {
-        val handler = TabIntentProcessor(TabsUseCases(store, sessionManager), sessionUseCases.loadUrl, searchUseCases.newTabSearch)
+    fun `open tab on ACTION_WEB_SEARCH intent`() {
+        val handler = TabIntentProcessor(TabsUseCases(store), sessionUseCases.loadUrl, searchUseCases.newTabSearch)
 
-        val intent = mock<Intent>()
+        val intent: Intent = mock()
         whenever(intent.action).thenReturn(Intent.ACTION_WEB_SEARCH)
-
         whenever(intent.getStringExtra(SearchManager.QUERY)).thenReturn("http://mozilla.org")
+
+        assertEquals(0, store.state.tabs.size)
         handler.process(intent)
-        val sessionCaptor = argumentCaptor<Session>()
-        verify(sessionManager).add(
-            sessionCaptor.capture(),
-            eq(true),
-            eq(null),
-            eq(null),
-            eq(null),
-            eq(LoadUrlFlags.external())
-        )
-        verify(store).dispatch(EngineAction.LoadUrlAction(
-            sessionCaptor.value.id, "http://mozilla.org", LoadUrlFlags.external())
-        )
+        store.waitUntilIdle()
+        assertEquals(1, store.state.tabs.size)
+        assertEquals("http://mozilla.org", store.state.tabs[0].content.url)
+        assertEquals("", store.state.tabs[0].content.searchTerms)
     }
 
     @Test
-    fun `perform search on ACTION_WEB_SEARCH if text (no URL) provided`() {
-        val engine = mock<Engine>()
-        val sessionManager = spy(SessionManager(engine))
-
-        val searchUseCases = SearchUseCases(
-            store,
-            TabsUseCases(store, sessionManager)
-        )
-        val sessionUseCases = SessionUseCases(store, sessionManager)
+    fun `open tab and trigger search on ACTION_WEB_SEARCH intent if text is not a URL`() {
+        val handler = TabIntentProcessor(TabsUseCases(store), sessionUseCases.loadUrl, searchUseCases.newTabSearch)
 
         val searchTerms = "mozilla android"
         val searchUrl = "https://localhost/?q=mozilla%20android"
 
-        val handler = TabIntentProcessor(TabsUseCases(store, sessionManager), sessionUseCases.loadUrl, searchUseCases.newTabSearch)
-
-        val intent = mock<Intent>()
-        whenever(intent.action).thenReturn(Intent.ACTION_WEB_SEARCH)
+        val intent: Intent = mock()
+        whenever(intent.action).thenReturn(Intent.ACTION_SEARCH)
         whenever(intent.getStringExtra(SearchManager.QUERY)).thenReturn(searchTerms)
 
+        assertEquals(0, store.state.tabs.size)
         handler.process(intent)
-        val sessionCaptor = argumentCaptor<Session>()
-        verify(sessionManager).add(
-            sessionCaptor.capture(),
-            eq(true),
-            eq(null),
-            eq(null),
-            eq(null),
-            eq(LoadUrlFlags.none())
-        )
-        verify(store).dispatch(EngineAction.LoadUrlAction(
-            sessionCaptor.value.id, searchUrl, LoadUrlFlags.none())
-        )
-        assertEquals(searchUrl, sessionManager.selectedSession?.url)
-
-        verify(store).dispatch(ContentAction.UpdateSearchTermsAction(
-            sessionCaptor.value.id, searchTerms
-        ))
+        store.waitUntilIdle()
+        assertEquals(1, store.state.tabs.size)
+        assertEquals(searchUrl, store.state.tabs[0].content.url)
+        assertEquals(searchTerms, store.state.tabs[0].content.searchTerms)
     }
 }

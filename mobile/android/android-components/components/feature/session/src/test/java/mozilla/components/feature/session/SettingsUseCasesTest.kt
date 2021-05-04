@@ -34,12 +34,12 @@ class SettingsUseCasesTest {
         ))
 
         store.dispatch(EngineAction.LinkEngineSessionAction(
-            sessionId = "A",
+            tabId = "A",
             engineSession = engineSessionA
         )).joinBlocking()
 
         store.dispatch(EngineAction.LinkEngineSessionAction(
-            sessionId = "B",
+            tabId = "B",
             engineSession = engineSessionB
         )).joinBlocking()
 

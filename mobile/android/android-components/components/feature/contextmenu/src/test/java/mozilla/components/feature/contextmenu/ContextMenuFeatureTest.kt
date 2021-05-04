@@ -13,8 +13,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.test.TestCoroutineDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
-import mozilla.components.browser.session.Session
-import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.selector.findTab
@@ -247,12 +245,13 @@ class ContextMenuFeatureTest {
 
     @Test
     fun `Cancelling context menu item will consume HitResult`() {
-        store = BrowserStore()
-
-        val sessionManager = SessionManager(engine = mock(), store = store)
-        Session("https://www.mozilla.org", id = "test-tab").also {
-            sessionManager.add(it)
-        }
+        store = BrowserStore(
+            initialState = BrowserState(
+                tabs = listOf(
+                    createTab("https://www.mozilla.org", id = "test-tab")
+                )
+            )
+        )
 
         store.dispatch(ContentAction.UpdateHitResultAction(
             "test-tab",
@@ -281,12 +280,13 @@ class ContextMenuFeatureTest {
 
     @Test
     fun `Selecting context menu item will invoke action of candidate and consume HitResult`() {
-        store = BrowserStore()
-
-        val sessionManager = SessionManager(engine = mock(), store = store)
-        Session("https://www.mozilla.org", id = "test-tab").also {
-            sessionManager.add(it)
-        }
+        store = BrowserStore(
+            initialState = BrowserState(
+                tabs = listOf(
+                    createTab("https://www.mozilla.org", id = "test-tab")
+                )
+            )
+        )
 
         store.dispatch(ContentAction.UpdateHitResultAction(
             "test-tab",
@@ -328,12 +328,13 @@ class ContextMenuFeatureTest {
 
     @Test
     fun `Selecting context menu item will emit a click fact`() {
-        store = BrowserStore()
-
-        val sessionManager = SessionManager(engine = mock(), store = store)
-        Session("https://www.mozilla.org", id = "test-tab").also {
-            sessionManager.add(it)
-        }
+        store = BrowserStore(
+            initialState = BrowserState(
+                tabs = listOf(
+                    createTab("https://www.mozilla.org", id = "test-tab")
+                )
+            )
+        )
 
         store.dispatch(ContentAction.UpdateHitResultAction(
             "test-tab",

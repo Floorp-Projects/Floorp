@@ -136,9 +136,9 @@ class SearchUseCasesTest {
 
     @Test
     fun newPrivateTabSearch() {
-        val newTabUseCase: TabsUseCases.AddNewPrivateTabUseCase = mock()
-        whenever(tabsUseCases.addPrivateTab).thenReturn(newTabUseCase)
-        whenever(newTabUseCase(searchUrl, source = SessionState.Source.NONE)).thenReturn("1177")
+        val newTabUseCase: TabsUseCases.AddNewTabUseCase = mock()
+        whenever(tabsUseCases.addTab).thenReturn(newTabUseCase)
+        whenever(newTabUseCase(searchUrl, source = SessionState.Source.NONE, private = true)).thenReturn("1177")
 
         useCases.newPrivateTabSearch.invoke(searchTerms)
         store.waitUntilIdle()
@@ -147,6 +147,7 @@ class SearchUseCasesTest {
             searchUrl,
             parentId = null,
             selectTab = true,
+            private = true,
             source = SessionState.Source.NONE
         )
 
@@ -157,17 +158,19 @@ class SearchUseCasesTest {
 
     @Test
     fun newPrivateTabSearchWithParentSession() {
-        val newTabUseCase: TabsUseCases.AddNewPrivateTabUseCase = mock()
-        whenever(tabsUseCases.addPrivateTab).thenReturn(newTabUseCase)
-        whenever(newTabUseCase(searchUrl, source = SessionState.Source.NONE, parentId = "test-parent")).thenReturn("1177")
+        val newTabUseCase: TabsUseCases.AddNewTabUseCase = mock()
+        whenever(tabsUseCases.addTab).thenReturn(newTabUseCase)
+        whenever(newTabUseCase(searchUrl, source = SessionState.Source.NONE, parentId = "test-parent", private = true)).thenReturn("1177")
 
         useCases.newPrivateTabSearch.invoke(searchTerms, parentSessionId = "test-parent")
+
         store.waitUntilIdle()
 
         verify(newTabUseCase).invoke(
             searchUrl,
             parentId = "test-parent",
             selectTab = true,
+            private = true,
             source = SessionState.Source.NONE
         )
 

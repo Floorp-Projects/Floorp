@@ -11,6 +11,7 @@ import androidx.lifecycle.LifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.OnLifecycleEvent
 import androidx.lifecycle.ProcessLifecycleOwner
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.MainScope
@@ -119,7 +120,15 @@ fun <S : State, A : Action> Store<S, A>.channel(
     val channel = Channel<S>(Channel.CONFLATED)
 
     val subscription = observeManually { state ->
-        runBlocking { channel.send(state) }
+        runBlocking {
+            try {
+                channel.send(state)
+            } catch (e: CancellationException) {
+                // It's possible for this channel to have been closed concurrently before
+                // we had a chance to unsubscribe. In this case we can just ignore this
+                // one subscription and keep going.
+            }
+        }
     }
 
     subscription.binding = SubscriptionLifecycleBinding(owner, subscription).apply {
@@ -166,7 +175,15 @@ fun <S : State, A : Action> Store<S, A>.flow(
         owner?.lifecycle?.removeObserver(ownerDestroyedObserver)
 
         val subscription = observeManually { state ->
-            runBlocking { send(state) }
+            runBlocking {
+                try {
+                    send(state)
+                } catch (e: CancellationException) {
+                    // It's possible for this channel to have been closed concurrently before
+                    // we had a chance to unsubscribe. In this case we can just ignore this
+                    // one subscription and keep going.
+                }
+            }
         }
 
         if (owner == null) {

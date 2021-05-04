@@ -25,7 +25,7 @@ import mozilla.components.feature.customtabs.store.CustomTabsServiceStore
 import mozilla.components.feature.intent.ext.putSessionId
 import mozilla.components.feature.intent.processing.IntentProcessor
 import mozilla.components.feature.pwa.ext.toOrigin
-import mozilla.components.feature.tabs.TabsUseCases
+import mozilla.components.feature.tabs.CustomTabsUseCases
 import mozilla.components.service.digitalassetlinks.RelationChecker
 import mozilla.components.support.utils.SafeIntent
 import mozilla.components.support.utils.toSafeIntent
@@ -34,7 +34,7 @@ import mozilla.components.support.utils.toSafeIntent
  * Processor for intents which open Trusted Web Activities.
  */
 class TrustedWebActivityIntentProcessor(
-    private val addNewTabUseCase: TabsUseCases.AddNewTabUseCase,
+    private val addNewTabUseCase: CustomTabsUseCases.AddCustomTabUseCase,
     packageManager: PackageManager,
     relationChecker: RelationChecker,
     private val store: CustomTabsServiceStore

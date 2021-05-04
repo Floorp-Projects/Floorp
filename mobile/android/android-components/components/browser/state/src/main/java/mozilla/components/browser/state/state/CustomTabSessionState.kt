@@ -5,6 +5,7 @@
 package mozilla.components.browser.state.state
 
 import mozilla.components.concept.engine.EngineSession
+import mozilla.components.concept.engine.manifest.WebAppManifest
 import java.util.UUID
 
 /**
@@ -62,20 +63,28 @@ fun createCustomTab(
     contextId: String? = null,
     engineSession: EngineSession? = null,
     mediaSessionState: MediaSessionState? = null,
-    crashed: Boolean = false
+    crashed: Boolean = false,
+    source: SessionState.Source = SessionState.Source.CUSTOM_TAB,
+    private: Boolean = false,
+    webAppManifest: WebAppManifest? = null,
+    initialLoadFlags: EngineSession.LoadUrlFlags = EngineSession.LoadUrlFlags.none()
 ): CustomTabSessionState {
     return CustomTabSessionState(
         id = id,
+        source = source,
         content = ContentState(
             url = url,
-            title = title
+            title = title,
+            private = private,
+            webAppManifest = webAppManifest
         ),
         config = config,
         mediaSessionState = mediaSessionState,
         contextId = contextId,
         engineState = EngineState(
             engineSession = engineSession,
-            crashed = crashed
+            crashed = crashed,
+            initialLoadFlags = initialLoadFlags
         )
     )
 }
