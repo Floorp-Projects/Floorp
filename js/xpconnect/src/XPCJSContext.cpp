@@ -967,17 +967,16 @@ static void ReloadPrefsCallback(const char* pref, void* aXpccx) {
   bool topLevelAwaitEnabled =
       Preferences::GetBool(JS_OPTIONS_DOT_STR "experimental.top_level_await");
 
-  // Require private fields disabled outside of nightly.
-  bool privateFieldsEnabled = false;
-  bool privateMethodsEnabled = false;
+  bool privateFieldsEnabled =
+      Preferences::GetBool(JS_OPTIONS_DOT_STR "experimental.private_fields");
+  bool privateMethodsEnabled =
+      Preferences::GetBool(JS_OPTIONS_DOT_STR "experimental.private_methods");
+
+  // Require Ergonomic brand checks disabled outside of nightly.
   bool ergnomicBrandChecksEnabled = false;
 #ifdef NIGHTLY_BUILD
   sIteratorHelpersEnabled =
       Preferences::GetBool(JS_OPTIONS_DOT_STR "experimental.iterator_helpers");
-  privateFieldsEnabled =
-      Preferences::GetBool(JS_OPTIONS_DOT_STR "experimental.private_fields");
-  privateMethodsEnabled =
-      Preferences::GetBool(JS_OPTIONS_DOT_STR "experimental.private_methods");
   ergnomicBrandChecksEnabled = Preferences::GetBool(
       JS_OPTIONS_DOT_STR "experimental.ergonomic_brand_checks");
 #endif
