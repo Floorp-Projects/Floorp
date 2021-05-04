@@ -6655,15 +6655,9 @@ class nsDisplayTransform : public nsPaintedDisplayItem {
  public:
   enum class PrerenderDecision : uint8_t { No, Full, Partial };
 
-  /**
-   * Returns a matrix (in pixels) for the current frame. The matrix should be
-   * relative to the current frame's coordinate space.
-   *
-   * @param aFrame The frame to compute the transform for.
-   * @param aAppUnitsPerPixel The number of app units per graphics unit.
-   */
-  typedef Matrix4x4 (*ComputeTransformFunction)(nsIFrame* aFrame,
-                                                float aAppUnitsPerPixel);
+  enum {
+    WithTransformGetter,
+  };
 
   /* Constructor accepts a display list, empties it, and wraps it up.  It also
    * ferries the underlying frame to the nsDisplayItem constructor.
@@ -6677,7 +6671,7 @@ class nsDisplayTransform : public nsPaintedDisplayItem {
 
   nsDisplayTransform(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                      nsDisplayList* aList, const nsRect& aChildrenBuildingRect,
-                     ComputeTransformFunction aTransformGetter);
+                     decltype(WithTransformGetter));
 
   MOZ_COUNTED_DTOR_OVERRIDE(nsDisplayTransform)
 
@@ -6774,7 +6768,7 @@ class nsDisplayTransform : public nsPaintedDisplayItem {
     // If we were created using a transform-getter, then we don't
     // belong to a transformed frame, and aren't a reference frame
     // for our children.
-    if (!mTransformGetter) {
+    if (!mHasTransformGetter) {
       return mFrame;
     }
     return nsPaintedDisplayItem::ReferenceFrameForChildren();
@@ -7009,7 +7003,6 @@ class nsDisplayTransform : public nsPaintedDisplayItem {
   mutable mozilla::Maybe<Matrix4x4Flagged> mInverseTransform;
   // Accumulated transform of ancestors on the preserves-3d chain.
   mozilla::UniquePtr<Matrix4x4> mTransformPreserves3D;
-  ComputeTransformFunction mTransformGetter;
   RefPtr<AnimatedGeometryRoot> mAnimatedGeometryRootForChildren;
   RefPtr<AnimatedGeometryRoot> mAnimatedGeometryRootForScrollMetadata;
   nsRect mChildrenBuildingRect;
@@ -7030,6 +7023,8 @@ class nsDisplayTransform : public nsPaintedDisplayItem {
   bool mIsTransformSeparator : 1;
   // True if this nsDisplayTransform should get flattened
   bool mShouldFlatten : 1;
+  // True if we have a transform getter.
+  bool mHasTransformGetter : 1;
 };
 
 /* A display item that applies a perspective transformation to a single

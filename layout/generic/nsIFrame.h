@@ -1975,9 +1975,18 @@ class nsIFrame : public nsQueryFrame {
   }
 
   /**
-   * Return true if this frame might be using a transform getter.
+   * Returns a matrix (in pixels) for the current frame. The matrix should be
+   * relative to the current frame's coordinate space.
+   *
+   * @param aFrame The frame to compute the transform for.
+   * @param aAppUnitsPerPixel The number of app units per graphics unit.
    */
-  virtual bool HasTransformGetter() const { return false; }
+  using ComputeTransformFunction = Matrix4x4 (*)(const nsIFrame*,
+                                                 float aAppUnitsPerPixel);
+  /** Returns the transform getter of this frame, if any. */
+  virtual ComputeTransformFunction GetTransformGetter() const {
+    return nullptr;
+  }
 
   /**
    * Returns true if this frame is an SVG frame that has SVG transforms applied
