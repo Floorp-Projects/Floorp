@@ -1211,13 +1211,6 @@ static void FinishRestore(CanonicalBrowsingContext* aBrowsingContext,
     loadingBC->SetActiveSessionHistoryEntry(nullptr);
     RemotenessChangeOptions options;
     aBrowsingContext->ReplacedBy(loadingBC, options);
-    frameLoaderOwner->ReplaceFrameLoader(aFrameLoader);
-
-    // The old page can't be stored in the bfcache,
-    // destroy the nsFrameLoader.
-    if (!aCanSave && currentFrameLoader) {
-      currentFrameLoader->Destroy();
-    }
 
     // Assuming we still have the session history, update the index.
     if (loadingBC->GetSessionHistory()) {
@@ -1228,6 +1221,15 @@ static void FinishRestore(CanonicalBrowsingContext* aBrowsingContext,
     // ResetSHEntryHasUserInteractionCache(); ?
     // browser.navigation.requireUserInteraction is still
     // disabled everywhere.
+
+    frameLoaderOwner->ReplaceFrameLoader(aFrameLoader);
+
+    // The old page can't be stored in the bfcache,
+    // destroy the nsFrameLoader.
+    if (!aCanSave && currentFrameLoader) {
+      currentFrameLoader->Destroy();
+    }
+
     return;
   }
 
