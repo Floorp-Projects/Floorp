@@ -650,7 +650,7 @@ FC_GetMechanismList(CK_SLOT_ID slotID,
     CHECK_FORK();
 
     SFTK_FIPSFATALCHECK();
-    if ((slotID == FIPS_SLOT_ID) || (slotID >= SFTK_MIN_FIPS_USER_SLOT_ID)) {
+    if (sftk_isFIPS(slotID)) {
         slotID = NETSCAPE_SLOT_ID;
     }
     /* FIPS Slots support all functions */
@@ -666,7 +666,7 @@ FC_GetMechanismInfo(CK_SLOT_ID slotID, CK_MECHANISM_TYPE type,
     CHECK_FORK();
 
     SFTK_FIPSFATALCHECK();
-    if ((slotID == FIPS_SLOT_ID) || (slotID >= SFTK_MIN_FIPS_USER_SLOT_ID)) {
+    if (sftk_isFIPS(slotID)) {
         slotID = NETSCAPE_SLOT_ID;
     }
     /* FIPS Slots support all functions */
@@ -682,7 +682,7 @@ FC_GetMechanismInfoV2(CK_SLOT_ID slotID, CK_MECHANISM_TYPE type,
     CHECK_FORK();
 
     SFTK_FIPSFATALCHECK();
-    if ((slotID == FIPS_SLOT_ID) || (slotID >= SFTK_MIN_FIPS_USER_SLOT_ID)) {
+    if (sftk_isFIPS(slotID)) {
         slotID = NETSCAPE_SLOT_ID;
     }
     /* FIPS Slots support all functions */

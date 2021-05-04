@@ -192,7 +192,7 @@ ec_GFp_pt_mul_jm_wNAF(const mp_int *n, const mp_int *px, const mp_int *py,
     mp_int raz4;
     mp_int scratch[MAX_SCRATCH];
     signed char *naf = NULL;
-    int i, orderBitSize;
+    int i, orderBitSize = 0;
 
     MP_DIGITS(&rz) = 0;
     MP_DIGITS(&raz4) = 0;
@@ -289,6 +289,9 @@ CLEANUP:
     mp_clear(&tpy);
     mp_clear(&rz);
     mp_clear(&raz4);
+    if (naf) {
+        memset(naf, 0, orderBitSize + 1);
+    }
     free(naf);
     return res;
 }

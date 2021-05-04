@@ -18,6 +18,7 @@
 #include "hasht.h"
 #include "pqg.h"
 #include "blapii.h"
+#include "secitem.h"
 
 #ifndef NSS_FIPS_DISABLED
 
@@ -494,6 +495,8 @@ blapi_SHVerifyFile(const char *shName, PRBool self)
 #endif /* DEBUG_SHVERIFY */
 
 loser:
+    PORT_Memset(buf, 0, sizeof buf);
+    PORT_Memset(hashBuf, 0, sizeof hashBuf);
     if (checkName != NULL) {
         PORT_Free(checkName);
     }
@@ -509,19 +512,19 @@ loser:
         }
     }
     if (signature.data != NULL) {
-        PORT_Free(signature.data);
+        SECITEM_ZfreeItem(&signature, PR_FALSE);
     }
     if (key.params.prime.data != NULL) {
-        PORT_Free(key.params.prime.data);
+        SECITEM_ZfreeItem(&key.params.prime, PR_FALSE);
     }
     if (key.params.subPrime.data != NULL) {
-        PORT_Free(key.params.subPrime.data);
+        SECITEM_ZfreeItem(&key.params.subPrime, PR_FALSE);
     }
     if (key.params.base.data != NULL) {
-        PORT_Free(key.params.base.data);
+        SECITEM_ZfreeItem(&key.params.base, PR_FALSE);
     }
     if (key.publicValue.data != NULL) {
-        PORT_Free(key.publicValue.data);
+        SECITEM_ZfreeItem(&key.publicValue, PR_FALSE);
     }
 
     return result;

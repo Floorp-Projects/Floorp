@@ -465,7 +465,7 @@ sftk_ike_prf(CK_SESSION_HANDLE hSession, const SFTKAttribute *inKey,
     SFTKObject *newKeyObj = NULL;
     unsigned char outKeyData[HASH_LENGTH_MAX];
     unsigned char *newInKey = NULL;
-    unsigned int newInKeySize;
+    unsigned int newInKeySize = 0;
     unsigned int macSize;
     CK_RV crv = CKR_OK;
     prfContext context;
@@ -545,7 +545,7 @@ sftk_ike_prf(CK_SESSION_HANDLE hSession, const SFTKAttribute *inKey,
     crv = sftk_forceAttribute(outKey, CKA_VALUE, outKeyData, macSize);
 fail:
     if (newInKey) {
-        PORT_Free(newInKey);
+        PORT_ZFree(newInKey, newInKeySize);
     }
     if (newKeyValue) {
         sftk_FreeAttribute(newKeyValue);

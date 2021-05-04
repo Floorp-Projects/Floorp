@@ -1593,7 +1593,7 @@ RSA_Cleanup(void)
             mp_clear(&bp->f);
             mp_clear(&bp->g);
         }
-        SECITEM_FreeItem(&rsabp->modulus, PR_FALSE);
+        SECITEM_ZfreeItem(&rsabp->modulus, PR_FALSE);
         PORT_Free(rsabp);
     }
 

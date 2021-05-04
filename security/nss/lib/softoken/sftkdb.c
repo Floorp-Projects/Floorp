@@ -162,7 +162,7 @@ sftk_SDBULong2ULong(unsigned char *data)
  */
 static CK_ATTRIBUTE *
 sftkdb_fixupTemplateIn(const CK_ATTRIBUTE *template, int count,
-                       unsigned char **dataOut)
+                       unsigned char **dataOut, int *dataOutSize)
 {
     int i;
     int ulongCount = 0;
@@ -170,6 +170,7 @@ sftkdb_fixupTemplateIn(const CK_ATTRIBUTE *template, int count,
     CK_ATTRIBUTE *ntemplate;
 
     *dataOut = NULL;
+    *dataOutSize = 0;
 
     /* first count the number of CK_ULONG attributes */
     for (i = 0; i < count; i++) {
@@ -201,6 +202,7 @@ sftkdb_fixupTemplateIn(const CK_ATTRIBUTE *template, int count,
         return NULL;
     }
     *dataOut = data;
+    *dataOutSize = SDB_ULONG_SIZE * ulongCount;
     /* copy the old template, fixup the actual ulongs */
     for (i = 0; i < count; i++) {
         ntemplate[i] = template[i];
@@ -400,7 +402,7 @@ sftkdb_fixupTemplateOut(CK_ATTRIBUTE *template, CK_OBJECT_HANDLE objectID,
             }
             PORT_Assert(template[i].ulValueLen >= plainText->len);
             if (template[i].ulValueLen < plainText->len) {
-                SECITEM_FreeItem(plainText, PR_TRUE);
+                SECITEM_ZfreeItem(plainText, PR_TRUE);
                 PORT_Memset(template[i].pValue, 0, template[i].ulValueLen);
                 template[i].ulValueLen = -1;
                 crv = CKR_GENERAL_ERROR;
@@ -410,7 +412,7 @@ sftkdb_fixupTemplateOut(CK_ATTRIBUTE *template, CK_OBJECT_HANDLE objectID,
             /* copy the plain text back into the template */
             PORT_Memcpy(template[i].pValue, plainText->data, plainText->len);
             template[i].ulValueLen = plainText->len;
-            SECITEM_FreeItem(plainText, PR_TRUE);
+            SECITEM_ZfreeItem(plainText, PR_TRUE);
         }
         /* make sure signed attributes are valid */
         if (checkSig && sftkdb_isAuthenticatedAttribute(ntemplate[i].type)) {
@@ -1293,7 +1295,7 @@ loser:
     }
 
     if (arena) {
-        PORT_FreeArena(arena, PR_FALSE);
+        PORT_FreeArena(arena, PR_TRUE);
     }
     if (crv == CKR_OK) {
         *objectID |= (handle->type | SFTK_TOKEN_TYPE);
@@ -1308,6 +1310,7 @@ sftkdb_FindObjectsInit(SFTKDBHandle *handle, const CK_ATTRIBUTE *template,
     unsigned char *data = NULL;
     CK_ATTRIBUTE *ntemplate = NULL;
     CK_RV crv;
+    int dataSize;
     SDB *db;
 
     if (handle == NULL) {
@@ -1316,7 +1319,7 @@ sftkdb_FindObjectsInit(SFTKDBHandle *handle, const CK_ATTRIBUTE *template,
     db = SFTK_GET_SDB(handle);
 
     if (count != 0) {
-        ntemplate = sftkdb_fixupTemplateIn(template, count, &data);
+        ntemplate = sftkdb_fixupTemplateIn(template, count, &data, &dataSize);
         if (ntemplate == NULL) {
             return CKR_HOST_MEMORY;
         }
@@ -1326,7 +1329,7 @@ sftkdb_FindObjectsInit(SFTKDBHandle *handle, const CK_ATTRIBUTE *template,
                                      count, find);
     if (data) {
         PORT_Free(ntemplate);
-        PORT_Free(data);
+        PORT_ZFree(data, dataSize);
     }
     return crv;
 }
@@ -1373,6 +1376,7 @@ sftkdb_GetAttributeValue(SFTKDBHandle *handle, CK_OBJECT_HANDLE objectID,
     CK_RV crv, crv2;
     CK_ATTRIBUTE *ntemplate;
     unsigned char *data = NULL;
+    int dataSize = 0;
     SDB *db;
 
     if (handle == NULL) {
@@ -1413,7 +1417,7 @@ sftkdb_GetAttributeValue(SFTKDBHandle *handle, CK_OBJECT_HANDLE objectID,
     if (count == 0) {
         return CKR_OK;
     }
-    ntemplate = sftkdb_fixupTemplateIn(template, count, &data);
+    ntemplate = sftkdb_fixupTemplateIn(template, count, &data, &dataSize);
     if (ntemplate == NULL) {
         return CKR_HOST_MEMORY;
     }
@@ -1426,7 +1430,7 @@ sftkdb_GetAttributeValue(SFTKDBHandle *handle, CK_OBJECT_HANDLE objectID,
         crv = crv2;
     if (data) {
         PORT_Free(ntemplate);
-        PORT_Free(data);
+        PORT_ZFree(data, dataSize);
     }
     return crv;
 }
@@ -1442,6 +1446,7 @@ sftkdb_SetAttributeValue(SFTKDBHandle *handle, SFTKObject *object,
     CK_RV crv = CKR_OK;
     CK_OBJECT_HANDLE objectID = (object->handle & SFTK_OBJ_ID_MASK);
     PRBool inTransaction = PR_FALSE;
+    int dataSize;
 
     if (handle == NULL) {
         return CKR_TOKEN_WRITE_PROTECTED;
@@ -1463,7 +1468,7 @@ sftkdb_SetAttributeValue(SFTKDBHandle *handle, SFTKObject *object,
         return CKR_USER_NOT_LOGGED_IN;
     }
 
-    ntemplate = sftkdb_fixupTemplateIn(template, count, &data);
+    ntemplate = sftkdb_fixupTemplateIn(template, count, &data, &dataSize);
     if (ntemplate == NULL) {
         return CKR_HOST_MEMORY;
     }
@@ -1498,7 +1503,7 @@ loser:
     }
     if (data) {
         PORT_Free(ntemplate);
-        PORT_Free(data);
+        PORT_ZFree(data, dataSize);
     }
     if (arena) {
         PORT_FreeArena(arena, PR_FALSE);
@@ -1602,13 +1607,13 @@ sftkdb_CloseDB(SFTKDBHandle *handle)
         (*handle->db->sdb_Close)(handle->db);
     }
     if (handle->passwordKey.data) {
-        PORT_ZFree(handle->passwordKey.data, handle->passwordKey.len);
+        SECITEM_ZfreeItem(&handle->passwordKey, PR_FALSE);
     }
     if (handle->passwordLock) {
         SKIP_AFTER_FORK(PZ_DestroyLock(handle->passwordLock));
     }
     if (handle->updatePasswordKey) {
-        SECITEM_FreeItem(handle->updatePasswordKey, PR_TRUE);
+        SECITEM_ZfreeItem(handle->updatePasswordKey, PR_TRUE);
     }
     if (handle->updateID) {
         PORT_Free(handle->updateID);
@@ -2689,6 +2694,10 @@ sftkdb_ResetKeyDB(SFTKDBHandle *handle)
     if (crv != CKR_OK) {
         /* set error */
         return SECFailure;
+    }
+    if (handle->passwordKey.data) {
+        SECITEM_ZfreeItem(&handle->passwordKey, PR_FALSE);
+        handle->passwordKey.data = NULL;
     }
     return SECSuccess;
 }

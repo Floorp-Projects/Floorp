@@ -1006,7 +1006,11 @@ CLEANUP:
     mp_clear(&accum[2]);
     mp_clear(&accum[3]);
     mp_clear(&tmp);
-    /* PORT_Memset(powers,0,num_powers*nLen*sizeof(mp_digit)); */
+    /* zero required by FIPS here, can't use PORT_ZFree
+     * because mpi doesn't link with util */
+    if (powers) {
+        PORT_Memset(powers, 0, num_powers * sizeof(mp_digit));
+    }
     free(powersArray);
     return res;
 }

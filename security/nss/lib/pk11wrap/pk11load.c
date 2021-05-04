@@ -528,7 +528,10 @@ secmod_LoadPKCS11Module(SECMODModule *mod, SECMODModule **oldModule)
     }
 #endif
 
-    mod->isThreadSafe = PR_TRUE;
+    /* This test operation makes sure our locking system is
+     * consistent even if we are using non-thread safe tokens by
+     * simulating unsafe tokens with safe ones. */
+    mod->isThreadSafe = !PR_GetEnvSecure("NSS_FORCE_TOKEN_LOCK");
 
     /* Now we initialize the module */
     rv = secmod_ModuleInit(mod, oldModule, &alreadyLoaded);
