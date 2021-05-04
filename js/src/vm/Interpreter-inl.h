@@ -30,24 +30,6 @@
 namespace js {
 
 /*
- * Every possible consumer of MagicValue(JS_OPTIMIZED_ARGUMENTS) (as determined
- * by ScriptAnalysis::needsArgsObj) must check for these magic values and, when
- * one is received, act as if the value were the function's ArgumentsObject.
- * Additionally, it is possible that, after 'arguments' was copied into a
- * temporary, the arguments object has been created a some other failed guard
- * that called JSScript::argumentsOptimizationFailed. In this case, it is
- * always valid (and necessary) to replace JS_OPTIMIZED_ARGUMENTS with the real
- * arguments object.
- */
-static inline bool IsOptimizedArguments(AbstractFramePtr frame,
-                                        MutableHandleValue vp) {
-  if (vp.isMagic(JS_OPTIMIZED_ARGUMENTS) && frame.script()->needsArgsObj()) {
-    vp.setObject(frame.argsObj());
-  }
-  return vp.isMagic(JS_OPTIMIZED_ARGUMENTS);
-}
-
-/*
  * Per ES6, lexical declarations may not be accessed in any fashion until they
  * are initialized (i.e., until the actual declaring statement is
  * executed). The various LEXICAL opcodes need to check if the slot is an
@@ -55,7 +37,7 @@ static inline bool IsOptimizedArguments(AbstractFramePtr frame,
  * JS_UNINITIALIZED_LEXICAL.
  */
 static inline bool IsUninitializedLexical(const Value& val) {
-  // Use whyMagic here because JS_OPTIMIZED_ARGUMENTS could flow into here.
+  // Use whyMagic here because JS_OPTIMIZED_OUT could flow into here.
   return val.isMagic() && val.whyMagic() == JS_UNINITIALIZED_LEXICAL;
 }
 

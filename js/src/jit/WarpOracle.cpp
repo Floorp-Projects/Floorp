@@ -331,18 +331,17 @@ AbortReasonOr<WarpScriptSnapshot*> WarpScriptOracle::createScriptSnapshot() {
     JSOp op = loc.getOp();
     uint32_t offset = loc.bytecodeToOffset(script_);
     switch (op) {
-      case JSOp::Arguments:
-        if (script_->needsArgsObj()) {
-          bool mapped = script_->hasMappedArgsObj();
-          ArgumentsObject* templateObj =
-              script_->realm()->maybeArgumentsTemplateObject(mapped);
-          if (!AddOpSnapshot<WarpArguments>(alloc_, opSnapshots, offset,
-                                            templateObj)) {
-            return abort(AbortReason::Alloc);
-          }
+      case JSOp::Arguments: {
+        MOZ_ASSERT(script_->needsArgsObj());
+        bool mapped = script_->hasMappedArgsObj();
+        ArgumentsObject* templateObj =
+            script_->realm()->maybeArgumentsTemplateObject(mapped);
+        if (!AddOpSnapshot<WarpArguments>(alloc_, opSnapshots, offset,
+                                          templateObj)) {
+          return abort(AbortReason::Alloc);
         }
         break;
-
+      }
       case JSOp::RegExp: {
         bool hasShared = loc.getRegExp(script_)->hasShared();
         if (!AddOpSnapshot<WarpRegExp>(alloc_, opSnapshots, offset,

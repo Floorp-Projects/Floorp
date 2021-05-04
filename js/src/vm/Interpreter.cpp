@@ -200,17 +200,7 @@ static inline bool GetPropertyOperation(JSContext* cx, InterpreterFrame* fp,
                                         MutableHandleValue vp) {
   RootedPropertyName name(cx, script->getName(pc));
 
-  if (name == cx->names().length) {
-    if (IsOptimizedArguments(fp, lval)) {
-      vp.setInt32(fp->numActualArgs());
-      return true;
-    }
-
-    if (GetLengthProperty(lval, vp)) {
-      return true;
-    }
-  } else if (name == cx->names().callee && IsOptimizedArguments(fp, lval)) {
-    vp.setObject(fp->callee());
+  if (name == cx->names().length && GetLengthProperty(lval, vp)) {
     return true;
   }
 
@@ -3510,15 +3500,12 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     }
 
     CASE(Arguments) {
-      if (script->needsArgsObj()) {
-        ArgumentsObject* obj = ArgumentsObject::createExpected(cx, REGS.fp());
-        if (!obj) {
-          goto error;
-        }
-        PUSH_COPY(ObjectValue(*obj));
-      } else {
-        PUSH_COPY(MagicValue(JS_OPTIMIZED_ARGUMENTS));
+      MOZ_ASSERT(script->needsArgsObj());
+      ArgumentsObject* obj = ArgumentsObject::createExpected(cx, REGS.fp());
+      if (!obj) {
+        goto error;
       }
+      PUSH_COPY(ObjectValue(*obj));
     }
     END_CASE(Arguments)
 

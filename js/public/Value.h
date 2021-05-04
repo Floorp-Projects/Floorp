@@ -220,9 +220,6 @@ enum JSWhyMagic {
   /** an empty subnode in the AST serializer */
   JS_SERIALIZE_NO_NODE,
 
-  /** optimized-away 'arguments' value */
-  JS_OPTIMIZED_ARGUMENTS,
-
   /** magic value passed to natives to indicate construction */
   JS_IS_CONSTRUCTING,
 
