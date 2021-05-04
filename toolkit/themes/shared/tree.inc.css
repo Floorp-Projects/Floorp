@@ -199,7 +199,8 @@ treechildren::-moz-tree-row(selected, editing) {
   border: none;
 }
 
-treechildren::-moz-tree-cell-text(selected, editing) {
+treechildren::-moz-tree-cell-text(selected, editing),
+treechildren::-moz-tree-image(selected, editing) {
   color: inherit;
 }
 
