@@ -138,8 +138,9 @@ open class ExceptionsListFragment : BaseSettingsLikeFragment(), CoroutineScope {
 
         (exceptionList.adapter as DomainListAdapter).refresh(requireActivity()) {
             if ((exceptionList.adapter as DomainListAdapter).itemCount == 0) {
-                @Suppress("DEPRECATION")
-                requireFragmentManager().popBackStack()
+                requireComponents.appStore.dispatch(
+                    AppAction.NavigateUp(requireComponents.store.state.selectedTabId)
+                )
             }
             activity?.invalidateOptionsMenu()
         }

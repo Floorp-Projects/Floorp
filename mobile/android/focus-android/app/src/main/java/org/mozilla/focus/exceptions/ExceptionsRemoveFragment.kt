@@ -13,6 +13,8 @@ import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.launch
 import org.mozilla.focus.R
 import org.mozilla.focus.ext.components
+import org.mozilla.focus.ext.requireComponents
+import org.mozilla.focus.state.AppAction
 import org.mozilla.focus.telemetry.TelemetryWrapper
 
 class ExceptionsRemoveFragment : ExceptionsListFragment() {
@@ -38,8 +40,9 @@ class ExceptionsRemoveFragment : ExceptionsListFragment() {
                     context.components.trackingProtectionUseCases.removeException(exception)
                 }
 
-                @Suppress("DEPRECATION")
-                requireFragmentManager().popBackStack()
+                requireComponents.appStore.dispatch(
+                    AppAction.NavigateUp(requireComponents.store.state.selectedTabId)
+                )
             }
         }
     }

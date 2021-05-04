@@ -12,6 +12,7 @@ import mozilla.components.browser.state.state.searchEngines
 import org.mozilla.focus.R
 import org.mozilla.focus.ext.requireComponents
 import org.mozilla.focus.search.MultiselectSearchEngineListPreference
+import org.mozilla.focus.state.AppAction
 import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.utils.ViewUtils
 
@@ -66,8 +67,9 @@ class RemoveSearchEnginesSettingsFragment : BaseSettingsFragment() {
                     requireComponents.searchUseCases.removeSearchEngine(searchEngine)
                 }
 
-                @Suppress("DEPRECATION")
-                requireFragmentManager().popBackStack()
+                requireComponents.appStore.dispatch(
+                    AppAction.NavigateUp(requireComponents.store.state.selectedTabId)
+                )
                 true
             }
             else -> super.onOptionsItemSelected(item)

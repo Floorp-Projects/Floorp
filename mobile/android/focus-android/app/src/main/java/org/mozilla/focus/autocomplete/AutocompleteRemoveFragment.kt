@@ -17,6 +17,8 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import mozilla.components.browser.domains.CustomDomains
 import org.mozilla.focus.R
+import org.mozilla.focus.ext.requireComponents
+import org.mozilla.focus.state.AppAction
 import org.mozilla.focus.telemetry.TelemetryWrapper
 import kotlin.coroutines.CoroutineContext
 
@@ -47,8 +49,9 @@ class AutocompleteRemoveFragment : AutocompleteListFragment(), CoroutineScope {
                     TelemetryWrapper.removeAutocompleteDomainsEvent(domains.size)
                 }.await()
 
-                @Suppress("DEPRECATION")
-                requireFragmentManager().popBackStack()
+                requireComponents.appStore.dispatch(
+                    AppAction.NavigateUp(requireComponents.store.state.selectedTabId)
+                )
             }
         }
     }

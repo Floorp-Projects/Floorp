@@ -24,6 +24,7 @@ import org.mozilla.focus.R
 import org.mozilla.focus.ext.requireComponents
 import org.mozilla.focus.search.ManualAddSearchEnginePreference
 import org.mozilla.focus.shortcut.IconGenerator
+import org.mozilla.focus.state.AppAction
 import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.utils.Settings
 import org.mozilla.focus.utils.SupportUtils
@@ -247,8 +248,10 @@ class ManualAddSearchEngineSettingsFragment : BaseSettingsFragment() {
 
                 Snackbar.make(fragment.requireView(), R.string.search_add_confirmation, Snackbar.LENGTH_SHORT).show()
                 Settings.getInstance(fragment.requireActivity()).setDefaultSearchEngineByName(engineName)
-                @Suppress("DEPRECATION")
-                fragment.requireFragmentManager().popBackStack()
+
+                fragment.requireComponents.appStore.dispatch(
+                    AppAction.NavigateUp(fragment.requireComponents.store.state.selectedTabId)
+                )
             } else {
                 showServerError(fragment)
             }
