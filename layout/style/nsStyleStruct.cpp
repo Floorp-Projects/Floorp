@@ -1631,20 +1631,20 @@ void StyleImage::ResolveImage(Document& aDoc, const StyleImage* aOld) {
 
 template <>
 ImageResolution StyleImage::GetResolution() const {
-  if (IsImageSet()) {
-    auto& set = AsImageSet();
-    float r = set->items.AsSpan()[set->selected_index].resolution._0;
-    if (MOZ_LIKELY(r != 0.0f)) {
-      return ImageResolution(r, r);
-    }
-  } else if (imgRequestProxy* request = GetImageRequest()) {
+  ImageResolution resolution;
+  if (imgRequestProxy* request = GetImageRequest()) {
     RefPtr<imgIContainer> image;
     request->GetImage(getter_AddRefs(image));
     if (image) {
-      return image->GetResolution();
+      resolution = image->GetResolution();
     }
   }
-  return {};
+  if (IsImageSet()) {
+    auto& set = AsImageSet();
+    float r = set->items.AsSpan()[set->selected_index].resolution._0;
+    resolution.ScaleBy(r);
+  }
+  return resolution;
 }
 
 template <>
