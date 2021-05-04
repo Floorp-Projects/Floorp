@@ -1216,6 +1216,32 @@ void nsImageLoadingContent::ForceImageState(bool aForce,
   mForcedImageState = EventStates(aState);
 }
 
+uint32_t nsImageLoadingContent::NaturalWidth() {
+  nsCOMPtr<imgIContainer> image;
+  if (mCurrentRequest) {
+    mCurrentRequest->GetImage(getter_AddRefs(image));
+  }
+
+  int32_t size = 0;
+  if (image) {
+    Unused << image->GetWidth(&size);
+  }
+  return size;
+}
+
+uint32_t nsImageLoadingContent::NaturalHeight() {
+  nsCOMPtr<imgIContainer> image;
+  if (mCurrentRequest) {
+    mCurrentRequest->GetImage(getter_AddRefs(image));
+  }
+
+  int32_t size = 0;
+  if (image) {
+    Unused << image->GetHeight(&size);
+  }
+  return size;
+}
+
 CSSIntSize nsImageLoadingContent::GetWidthHeightForImage() {
   Element* element = AsContent()->AsElement();
   if (nsIFrame* frame = element->GetPrimaryFrame(FlushType::Layout)) {
