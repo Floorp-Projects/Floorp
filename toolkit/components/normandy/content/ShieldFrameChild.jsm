@@ -126,9 +126,6 @@ class ShieldFrameChild extends JSWindowActorChild {
           strings
         );
         break;
-      case "ExperimentOptIn":
-        this.sendQuery("Shield:ExperimentOptIn", event.detail.data);
-        break;
     }
   }
 
