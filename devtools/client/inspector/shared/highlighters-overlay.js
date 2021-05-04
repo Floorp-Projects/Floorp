@@ -213,9 +213,9 @@ class HighlightersOverlay {
     // Add inspector events, not specific to a given view.
     this.inspector.on("markupmutation", this.onMarkupMutation);
 
-    this.resourceWatcher = this.inspector.toolbox.resourceWatcher;
-    this.resourceWatcher.watchResources(
-      [this.resourceWatcher.TYPES.ROOT_NODE],
+    this.resourceCommand = this.inspector.toolbox.resourceCommand;
+    this.resourceCommand.watchResources(
+      [this.resourceCommand.TYPES.ROOT_NODE],
       { onAvailable: this._onResourceAvailable }
     );
 
@@ -1742,7 +1742,7 @@ class HighlightersOverlay {
   async _onResourceAvailable(resources) {
     for (const resource of resources) {
       if (
-        resource.resourceType !== this.resourceWatcher.TYPES.ROOT_NODE ||
+        resource.resourceType !== this.resourceCommand.TYPES.ROOT_NODE ||
         // It might happen that the ROOT_NODE resource (which is a Front) is already
         // destroyed, and in such case we want to ignore it.
         resource.isDestroyed()
@@ -1888,8 +1888,8 @@ class HighlightersOverlay {
    */
   destroy() {
     this.inspector.off("markupmutation", this.onMarkupMutation);
-    this.resourceWatcher.unwatchResources(
-      [this.resourceWatcher.TYPES.ROOT_NODE],
+    this.resourceCommand.unwatchResources(
+      [this.resourceCommand.TYPES.ROOT_NODE],
       { onAvailable: this._onResourceAvailable }
     );
 

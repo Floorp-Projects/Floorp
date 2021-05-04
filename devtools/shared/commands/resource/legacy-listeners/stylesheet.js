@@ -4,9 +4,7 @@
 
 "use strict";
 
-const {
-  ResourceWatcher,
-} = require("devtools/shared/resources/resource-watcher");
+const ResourceCommand = require("devtools/shared/commands/resource/resource-command");
 
 module.exports = async function({ targetFront, onAvailable, onUpdated }) {
   if (!targetFront.hasActor("styleSheets")) {
@@ -125,7 +123,7 @@ module.exports = async function({ targetFront, onAvailable, onUpdated }) {
 function toResource(styleSheet, isNew, fileName) {
   Object.assign(styleSheet, {
     resourceId: styleSheet.actorID,
-    resourceType: ResourceWatcher.TYPES.STYLESHEET,
+    resourceType: ResourceCommand.TYPES.STYLESHEET,
     isNew,
     fileName,
   });

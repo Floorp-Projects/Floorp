@@ -52,7 +52,7 @@ class ParentProcessStorage {
       await this.actor.preListStores();
     }
 
-    // We have to manage the actor manually, because ResourceWatcher doesn't
+    // We have to manage the actor manually, because ResourceCommand doesn't
     // use the protocol.js specification.
     // resource-available-form is typed as "json"
     // So that we have to manually handle stuff that would normally be
@@ -67,7 +67,7 @@ class ParentProcessStorage {
     storage.resourceType = this.storageType;
     storage.resourceId = `${this.storageType}-${browsingContext.id}`;
     storage.resourceKey = this.storageKey;
-    // NOTE: the resource watcher needs this attribute
+    // NOTE: the resource command needs this attribute
     storage.browsingContextID = browsingContext.id;
 
     onAvailable([storage]);

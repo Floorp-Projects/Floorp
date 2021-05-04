@@ -145,14 +145,14 @@ StyleEditorUI.prototype = {
       this._onTargetAvailable
     );
 
-    await this._toolbox.resourceWatcher.watchResources(
-      [this._toolbox.resourceWatcher.TYPES.DOCUMENT_EVENT],
+    await this._toolbox.resourceCommand.watchResources(
+      [this._toolbox.resourceCommand.TYPES.DOCUMENT_EVENT],
       { onAvailable: this._onResourceAvailable }
     );
 
     this._startLoadingStyleSheets();
-    await this._toolbox.resourceWatcher.watchResources(
-      [this._toolbox.resourceWatcher.TYPES.STYLESHEET],
+    await this._toolbox.resourceCommand.watchResources(
+      [this._toolbox.resourceCommand.TYPES.STYLESHEET],
       {
         onAvailable: this._onResourceAvailable,
         onUpdated: this._onResourceUpdated,
@@ -256,11 +256,11 @@ StyleEditorUI.prototype = {
   async _onOrigSourcesPrefChanged() {
     this._clear();
     // When we toggle the source-map preference, we clear the panel and re-fetch the exact
-    // same stylesheet resources from ResourceWatcher, but `_addStyleSheet` will trigger
+    // same stylesheet resources from ResourceCommand, but `_addStyleSheet` will trigger
     // or ignore the additional source-map mapping.
     this._root.classList.add("loading");
-    for (const resource of this._toolbox.resourceWatcher.getAllResources(
-      this._toolbox.resourceWatcher.TYPES.STYLESHEET
+    for (const resource of this._toolbox.resourceCommand.getAllResources(
+      this._toolbox.resourceCommand.TYPES.STYLESHEET
     )) {
       await this._handleStyleSheetResource(resource);
     }
@@ -309,7 +309,7 @@ StyleEditorUI.prototype = {
    * instead (e.g. Sass sources), if applicable.
    *
    * @param  {Resource} resource
-   *         The STYLESHEET resource which is received from resource watcher.
+   *         The STYLESHEET resource which is received from resource command.
    * @return {Promise}
    *         A promise that resolves to the style sheet's editor when the style sheet has
    *         been fully loaded.  If the style sheet has a source map, and source mapping
@@ -406,7 +406,7 @@ StyleEditorUI.prototype = {
    * Add a new editor to the UI for a source.
    *
    * @param  {Resource} resource
-   *         The resource which is received from resource watcher.
+   *         The resource which is received from resource command.
    * @return {Promise} that is resolved with the created StyleSheetEditor when
    *                   the editor is fully initialized or rejected on error.
    */
@@ -1190,7 +1190,7 @@ StyleEditorUI.prototype = {
     const promises = [];
     for (const resource of resources) {
       if (
-        resource.resourceType === this._toolbox.resourceWatcher.TYPES.STYLESHEET
+        resource.resourceType === this._toolbox.resourceCommand.TYPES.STYLESHEET
       ) {
         const onStyleSheetHandled = this._handleStyleSheetResource(resource);
 
@@ -1235,7 +1235,7 @@ StyleEditorUI.prototype = {
   async _onResourceUpdated(updates) {
     for (const { resource, update } of updates) {
       if (
-        update.resourceType === this._toolbox.resourceWatcher.TYPES.STYLESHEET
+        update.resourceType === this._toolbox.resourceCommand.TYPES.STYLESHEET
       ) {
         const editor = this.editors.find(
           e => e.resourceId === update.resourceId
@@ -1279,10 +1279,10 @@ StyleEditorUI.prototype = {
       this._onTargetAvailable
     );
 
-    this._toolbox.resourceWatcher.unwatchResources(
+    this._toolbox.resourceCommand.unwatchResources(
       [
-        this._toolbox.resourceWatcher.TYPES.DOCUMENT_EVENT,
-        this._toolbox.resourceWatcher.TYPES.STYLESHEET,
+        this._toolbox.resourceCommand.TYPES.DOCUMENT_EVENT,
+        this._toolbox.resourceCommand.TYPES.STYLESHEET,
       ],
       {
         onAvailable: this._onResourceAvailable,

@@ -20,12 +20,14 @@ SimpleTest.waitForExplicitFinish();
 
 async function startTest()
 {
-  const { resourceWatcher, target } = await createResourceWatcherForTab();
+  const commands = await createCommandsForTab();
+  const target = commands.targetCommand.targetFront;
+  const resourceCommand = commands.resourceCommand;
 
   info("test network POST request");
   const resource = await new Promise(resolve => {
-    resourceWatcher
-      .watchResources([resourceWatcher.TYPES.NETWORK_EVENT], {
+    resourceCommand
+      .watchResources([resourceCommand.TYPES.NETWORK_EVENT], {
         onAvailable: () => {},
         onUpdated: resourceUpdate => {
           resolve(resourceUpdate[0].resource);
@@ -123,7 +125,7 @@ async function startTest()
     totalTime: /^\d+$/,
   });
 
-  await target.client.close();
+  await commands.destroy();
   SimpleTest.finish();
 }
 

@@ -4,9 +4,7 @@
 
 "use strict";
 
-const {
-  ResourceWatcher,
-} = require("devtools/shared/resources/resource-watcher");
+const ResourceCommand = require("devtools/shared/commands/resource/resource-command");
 
 const Services = require("Services");
 
@@ -45,7 +43,7 @@ module.exports = async function({ targetCommand, targetFront, onAvailable }) {
     if (!packet.clonedFromContentProcess) {
       return;
     }
-    packet.resourceType = ResourceWatcher.TYPES.CONSOLE_MESSAGE;
+    packet.resourceType = ResourceCommand.TYPES.CONSOLE_MESSAGE;
     onAvailable([packet]);
   });
 };

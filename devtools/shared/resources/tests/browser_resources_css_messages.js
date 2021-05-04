@@ -3,12 +3,9 @@
 
 "use strict";
 
-// Test the ResourceWatcher API around CSS_MESSAGE
+// Test the ResourceCommand API around CSS_MESSAGE
 // Reproduces the CSS message assertions from devtools/shared/webconsole/test/chrome/test_page_errors.html
 
-const {
-  ResourceWatcher,
-} = require("devtools/shared/resources/resource-watcher");
 const { MESSAGE_CATEGORY } = require("devtools/shared/constants");
 
 // Create a simple server so we have a nice sourceName in the resources packets.
@@ -38,7 +35,7 @@ async function testWatchingCssMessages() {
   // Open a test tab
   const tab = await addTab(TEST_URI);
 
-  const { client, resourceWatcher, targetCommand } = await initResourceWatcher(
+  const { client, resourceCommand, targetCommand } = await initResourceCommand(
     tab
   );
 
@@ -48,12 +45,12 @@ async function testWatchingCssMessages() {
     receivedMessages,
     false
   );
-  await resourceWatcher.watchResources([ResourceWatcher.TYPES.CSS_MESSAGE], {
+  await resourceCommand.watchResources([resourceCommand.TYPES.CSS_MESSAGE], {
     onAvailable,
   });
 
   info(
-    "Now log CSS warning *after* the call to ResourceWatcher.watchResources and after " +
+    "Now log CSS warning *after* the call to ResourceCommand.watchResources and after " +
       "having received the existing message"
   );
   // We need to wait for the first CSS Warning as it is not a cached message; when we
@@ -101,7 +98,7 @@ async function testWatchingCachedCssMessages() {
 
   // At this point, all messages should be in the ConsoleService cache, and we can begin
   // to watch and check that we do retrieve those messages.
-  const { client, resourceWatcher, targetCommand } = await initResourceWatcher(
+  const { client, resourceCommand, targetCommand } = await initResourceCommand(
     tab
   );
 
@@ -111,7 +108,7 @@ async function testWatchingCachedCssMessages() {
     receivedMessages,
     true
   );
-  await resourceWatcher.watchResources([ResourceWatcher.TYPES.CSS_MESSAGE], {
+  await resourceCommand.watchResources([resourceCommand.TYPES.CSS_MESSAGE], {
     onAvailable,
   });
   is(receivedMessages.length, 3, "Cached messages were retrieved as expected");

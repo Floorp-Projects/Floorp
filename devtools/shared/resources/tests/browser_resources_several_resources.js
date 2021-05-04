@@ -3,12 +3,8 @@
 
 "use strict";
 
-const {
-  ResourceWatcher,
-} = require("devtools/shared/resources/resource-watcher");
-
 /**
- * Check that the resource watcher is still properly watching for new targets
+ * Check that the resource command is still properly watching for new targets
  * after unwatching one resource, if there is still another watched resource.
  */
 add_task(async function() {
@@ -23,14 +19,14 @@ add_task(async function() {
 
   const {
     client,
-    resourceWatcher,
+    resourceCommand,
     targetCommand,
-  } = await initMultiProcessResourceWatcher();
+  } = await initMultiProcessResourceCommand();
 
-  const { CONSOLE_MESSAGE, ROOT_NODE } = ResourceWatcher.TYPES;
+  const { CONSOLE_MESSAGE, ROOT_NODE } = resourceCommand.TYPES;
 
   // We are only interested in console messages as a resource, the ROOT_NODE one
-  // is here to test the ResourceWatcher::unwatchResources API with several resources.
+  // is here to test the ResourceCommand::unwatchResources API with several resources.
   const receivedMessages = [];
   const onAvailable = resources => {
     for (const resource of resources) {
@@ -41,7 +37,7 @@ add_task(async function() {
   };
 
   info("Call watchResources([CONSOLE_MESSAGE, ROOT_NODE], ...)");
-  await resourceWatcher.watchResources([CONSOLE_MESSAGE, ROOT_NODE], {
+  await resourceCommand.watchResources([CONSOLE_MESSAGE, ROOT_NODE], {
     onAvailable,
   });
 
@@ -56,7 +52,7 @@ add_task(async function() {
     )
   );
 
-  // Check that the resource watcher captures resources from new targets.
+  // Check that the resource command captures resources from new targets.
   info("Open a first tab on the example.com domain");
   const comTab = await addTab(
     "http://example.com/document-builder.sjs?html=com"
@@ -73,7 +69,7 @@ add_task(async function() {
   );
 
   info("Stop watching ROOT_NODE resources");
-  await resourceWatcher.unwatchResources([ROOT_NODE], { onAvailable });
+  await resourceCommand.unwatchResources([ROOT_NODE], { onAvailable });
 
   // Check that messages from new targets are still captured after calling
   // unwatch for another resource.
@@ -93,7 +89,7 @@ add_task(async function() {
   );
 
   info("Stop watching CONSOLE_MESSAGE resources");
-  await resourceWatcher.unwatchResources([CONSOLE_MESSAGE], { onAvailable });
+  await resourceCommand.unwatchResources([CONSOLE_MESSAGE], { onAvailable });
   await logInTab(tab, "test-again");
 
   // We don't have a specific event to wait for here, so allow some time for
@@ -105,7 +101,7 @@ add_task(async function() {
       resource => resource.message.arguments[0] === "test-again"
     ),
     undefined,
-    "The resource watcher should not watch CONSOLE_MESSAGE anymore"
+    "The resource command should not watch CONSOLE_MESSAGE anymore"
   );
 
   // Cleanup

@@ -3,24 +3,20 @@
 
 "use strict";
 
-// Test getAllResources function of the ResourceWatcher.
-
-const {
-  ResourceWatcher,
-} = require("devtools/shared/resources/resource-watcher");
+// Test getAllResources function of the ResourceCommand.
 
 const TEST_URI = "data:text/html;charset=utf-8,getAllResources test";
 
 add_task(async function() {
   const tab = await addTab(TEST_URI);
 
-  const { client, resourceWatcher, targetCommand } = await initResourceWatcher(
+  const { client, resourceCommand, targetCommand } = await initResourceCommand(
     tab
   );
 
   info("Check the resources gotten from getAllResources at initial");
   is(
-    resourceWatcher.getAllResources(ResourceWatcher.TYPES.CONSOLE_MESSAGE)
+    resourceCommand.getAllResources(resourceCommand.TYPES.CONSOLE_MESSAGE)
       .length,
     0,
     "There is no resources at initial"
@@ -31,8 +27,8 @@ add_task(async function() {
   );
   const availableResources = [];
   const onAvailable = resources => availableResources.push(...resources);
-  await resourceWatcher.watchResources(
-    [ResourceWatcher.TYPES.CONSOLE_MESSAGE],
+  await resourceCommand.watchResources(
+    [resourceCommand.TYPES.CONSOLE_MESSAGE],
     { onAvailable }
   );
 
@@ -41,11 +37,11 @@ add_task(async function() {
   await logMessages(tab.linkedBrowser, messages);
   await waitUntil(() => availableResources.length >= messages.length);
   assertResources(
-    resourceWatcher.getAllResources(ResourceWatcher.TYPES.CONSOLE_MESSAGE),
+    resourceCommand.getAllResources(resourceCommand.TYPES.CONSOLE_MESSAGE),
     availableResources
   );
   assertResources(
-    resourceWatcher.getAllResources(ResourceWatcher.TYPES.STYLESHEET),
+    resourceCommand.getAllResources(resourceCommand.TYPES.STYLESHEET),
     []
   );
 
@@ -54,7 +50,7 @@ add_task(async function() {
   gBrowser.reloadTab(tab);
   await onReloaded;
   assertResources(
-    resourceWatcher.getAllResources(ResourceWatcher.TYPES.CONSOLE_MESSAGE),
+    resourceCommand.getAllResources(resourceCommand.TYPES.CONSOLE_MESSAGE),
     []
   );
 
@@ -62,16 +58,16 @@ add_task(async function() {
   await logMessages(tab.linkedBrowser, messages);
   await waitUntil(
     () =>
-      resourceWatcher.getAllResources(ResourceWatcher.TYPES.CONSOLE_MESSAGE)
+      resourceCommand.getAllResources(resourceCommand.TYPES.CONSOLE_MESSAGE)
         .length === messages.length
   );
 
   info("Check the resources after unwatching");
-  resourceWatcher.unwatchResources([ResourceWatcher.TYPES.CONSOLE_MESSAGE], {
+  resourceCommand.unwatchResources([resourceCommand.TYPES.CONSOLE_MESSAGE], {
     onAvailable,
   });
   assertResources(
-    resourceWatcher.getAllResources(ResourceWatcher.TYPES.CONSOLE_MESSAGE),
+    resourceCommand.getAllResources(resourceCommand.TYPES.CONSOLE_MESSAGE),
     []
   );
 

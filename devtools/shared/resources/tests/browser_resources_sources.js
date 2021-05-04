@@ -3,11 +3,9 @@
 
 "use strict";
 
-// Test the ResourceWatcher API around SOURCE.
+// Test the ResourceCommand API around SOURCE.
 
-const {
-  ResourceWatcher,
-} = require("devtools/shared/resources/resource-watcher");
+const ResourceCommand = require("devtools/shared/commands/resource/resource-command");
 
 const TEST_URL = URL_ROOT_SSL + "sources.html";
 
@@ -17,7 +15,7 @@ add_task(async function() {
   const htmlRequest = await fetch(TEST_URL);
   const htmlContent = await htmlRequest.text();
 
-  const { client, resourceWatcher, targetCommand } = await initResourceWatcher(
+  const { client, resourceCommand, targetCommand } = await initResourceCommand(
     tab
   );
 
@@ -36,7 +34,7 @@ add_task(async function() {
 
   info("Check already available resources");
   const availableResources = [];
-  await resourceWatcher.watchResources([ResourceWatcher.TYPES.SOURCE], {
+  await resourceCommand.watchResources([resourceCommand.TYPES.SOURCE], {
     onAvailable: resources => availableResources.push(...resources),
   });
 
@@ -154,7 +152,7 @@ async function assertResource(source, expected) {
 
   is(
     source.resourceType,
-    ResourceWatcher.TYPES.SOURCE,
+    ResourceCommand.TYPES.SOURCE,
     "Resource type is correct"
   );
 

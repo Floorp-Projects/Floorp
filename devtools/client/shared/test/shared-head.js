@@ -1194,10 +1194,10 @@ function getCurrentTestFilePath() {
 /**
  * Wait for a single resource of the provided resourceType.
  *
- * @param {ResourceWatcher} resourceWatcher
- *        The ResourceWatcher instance that should emit the expected resource.
+ * @param {ResourceCommand} resourceCommand
+ *        The ResourceCommand instance that should emit the expected resource.
  * @param {String} resourceType
- *        One of ResourceWatcher.TYPES, type of the expected resource.
+ *        One of ResourceCommand.TYPES, type of the expected resource.
  * @param {Object} additional options
  *        - {Boolean} ignoreExistingResources: ignore existing resources or not.
  *        - {Function} predicate: if provided, will wait until a resource makes
@@ -1207,7 +1207,7 @@ function getCurrentTestFilePath() {
  *         - targetFront {TargetFront} the target which owns the resource
  */
 function waitForNextResource(
-  resourceWatcher,
+  resourceCommand,
   resourceType,
   { ignoreExistingResources = false, predicate } = {}
 ) {
@@ -1220,11 +1220,11 @@ function waitForNextResource(
       const matchingResource = resources.find(resource => predicate(resource));
       if (matchingResource) {
         resolve(matchingResource);
-        resourceWatcher.unwatchResources([resourceType], { onAvailable });
+        resourceCommand.unwatchResources([resourceType], { onAvailable });
       }
     };
 
-    resourceWatcher.watchResources([resourceType], {
+    resourceCommand.watchResources([resourceType], {
       ignoreExistingResources,
       onAvailable,
     });

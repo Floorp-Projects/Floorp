@@ -3,11 +3,9 @@
 
 "use strict";
 
-// Test the ResourceWatcher API around STYLESHEET.
+// Test the ResourceCommand API around STYLESHEET.
 
-const {
-  ResourceWatcher,
-} = require("devtools/shared/resources/resource-watcher");
+const ResourceCommand = require("devtools/shared/commands/resource/resource-command");
 
 const STYLE_TEST_URL = URL_ROOT_SSL + "style_document.html";
 
@@ -101,17 +99,17 @@ add_task(async function() {
 });
 
 async function testResourceAvailableFeature() {
-  info("Check resource available feature of the ResourceWatcher");
+  info("Check resource available feature of the ResourceCommand");
 
   const tab = await addTab(STYLE_TEST_URL);
 
-  const { client, resourceWatcher, targetCommand } = await initResourceWatcher(
+  const { client, resourceCommand, targetCommand } = await initResourceCommand(
     tab
   );
 
-  info("Check whether ResourceWatcher gets existing stylesheet");
+  info("Check whether ResourceCommand gets existing stylesheet");
   const availableResources = [];
-  await resourceWatcher.watchResources([ResourceWatcher.TYPES.STYLESHEET], {
+  await resourceCommand.watchResources([resourceCommand.TYPES.STYLESHEET], {
     onAvailable: resources => availableResources.push(...resources),
   });
 
@@ -129,7 +127,7 @@ async function testResourceAvailableFeature() {
     await assertResource(availableResource, expectedResource);
   }
 
-  info("Check whether ResourceWatcher gets additonal stylesheet");
+  info("Check whether ResourceCommand gets additonal stylesheet");
   await ContentTask.spawn(
     tab.linkedBrowser,
     ADDITIONAL_RESOURCE.styleText,
@@ -149,7 +147,7 @@ async function testResourceAvailableFeature() {
   );
 
   info(
-    "Check whether ResourceWatcher gets additonal stylesheet which is added by DevTool"
+    "Check whether ResourceCommand gets additonal stylesheet which is added by DevTool"
   );
   const styleSheetsFront = await targetCommand.targetFront.getFront(
     "stylesheets"
@@ -170,18 +168,18 @@ async function testResourceAvailableFeature() {
 }
 
 async function testResourceUpdateFeature() {
-  info("Check resource update feature of the ResourceWatcher");
+  info("Check resource update feature of the ResourceCommand");
 
   const tab = await addTab(STYLE_TEST_URL);
 
-  const { client, resourceWatcher, targetCommand } = await initResourceWatcher(
+  const { client, resourceCommand, targetCommand } = await initResourceCommand(
     tab
   );
 
   info("Setup the watcher");
   const availableResources = [];
   const updates = [];
-  await resourceWatcher.watchResources([ResourceWatcher.TYPES.STYLESHEET], {
+  await resourceCommand.watchResources([resourceCommand.TYPES.STYLESHEET], {
     onAvailable: resources => availableResources.push(...resources),
     onUpdated: newUpdates => updates.push(...newUpdates),
   });
@@ -302,7 +300,7 @@ async function testResourceUpdateFeature() {
 }
 
 async function testNestedResourceUpdateFeature() {
-  info("Check nested resource update feature of the ResourceWatcher");
+  info("Check nested resource update feature of the ResourceCommand");
 
   const tab = await addTab(STYLE_TEST_URL);
 
@@ -315,14 +313,14 @@ async function testNestedResourceUpdateFeature() {
     tab.ownerGlobal.resizeTo(originalWindowWidth, originalWindowHeight);
   });
 
-  const { client, resourceWatcher, targetCommand } = await initResourceWatcher(
+  const { client, resourceCommand, targetCommand } = await initResourceCommand(
     tab
   );
 
   info("Setup the watcher");
   const availableResources = [];
   const updates = [];
-  await resourceWatcher.watchResources([ResourceWatcher.TYPES.STYLESHEET], {
+  await resourceCommand.watchResources([resourceCommand.TYPES.STYLESHEET], {
     onAvailable: resources => availableResources.push(...resources),
     onUpdated: newUpdates => updates.push(...newUpdates),
   });
@@ -463,7 +461,7 @@ function assertMediaRules(mediaRules, expected) {
 async function assertResource(resource, expected) {
   is(
     resource.resourceType,
-    ResourceWatcher.TYPES.STYLESHEET,
+    ResourceCommand.TYPES.STYLESHEET,
     "Resource type is correct"
   );
   const styleSheetsFront = await resource.targetFront.getFront("stylesheets");
@@ -482,7 +480,7 @@ async function assertResource(resource, expected) {
 function assertUpdate(update, expected) {
   is(
     update.resourceType,
-    ResourceWatcher.TYPES.STYLESHEET,
+    ResourceCommand.TYPES.STYLESHEET,
     "Resource type is correct"
   );
   is(update.resourceId, expected.resourceId, "resourceId is correct");

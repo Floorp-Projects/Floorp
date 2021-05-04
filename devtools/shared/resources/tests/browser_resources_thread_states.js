@@ -3,11 +3,9 @@
 
 "use strict";
 
-// Test the ResourceWatcher API around THREAD_STATE
+// Test the ResourceCommand API around THREAD_STATE
 
-const {
-  ResourceWatcher,
-} = require("devtools/shared/resources/resource-watcher");
+const ResourceCommand = require("devtools/shared/commands/resource/resource-command");
 
 const BREAKPOINT_TEST_URL = URL_ROOT_SSL + "breakpoint_document.html";
 const REMOTE_IFRAME_URL =
@@ -36,12 +34,12 @@ add_task(async function() {
 
 async function checkBreakpointBeforeWatchResources() {
   info(
-    "Check whether ResourceWatcher gets existing breakpoint, being hit before calling watchResources"
+    "Check whether ResourceCommand gets existing breakpoint, being hit before calling watchResources"
   );
 
   const tab = await addTab(BREAKPOINT_TEST_URL);
 
-  const { client, resourceWatcher, targetCommand } = await initResourceWatcher(
+  const { client, resourceCommand, targetCommand } = await initResourceCommand(
     tab
   );
 
@@ -62,7 +60,7 @@ async function checkBreakpointBeforeWatchResources() {
 
   info("Call watchResources");
   const availableResources = [];
-  await resourceWatcher.watchResources([ResourceWatcher.TYPES.THREAD_STATE], {
+  await resourceCommand.watchResources([resourceCommand.TYPES.THREAD_STATE], {
     onAvailable: resources => availableResources.push(...resources),
   });
 
@@ -110,18 +108,18 @@ async function checkBreakpointBeforeWatchResources() {
 
 async function checkBreakpointAfterWatchResources() {
   info(
-    "Check whether ResourceWatcher gets breakpoint hit after calling watchResources"
+    "Check whether ResourceCommand gets breakpoint hit after calling watchResources"
   );
 
   const tab = await addTab(BREAKPOINT_TEST_URL);
 
-  const { client, resourceWatcher, targetCommand } = await initResourceWatcher(
+  const { client, resourceCommand, targetCommand } = await initResourceCommand(
     tab
   );
 
   info("Call watchResources");
   const availableResources = [];
-  await resourceWatcher.watchResources([ResourceWatcher.TYPES.THREAD_STATE], {
+  await resourceCommand.watchResources([resourceCommand.TYPES.THREAD_STATE], {
     onAvailable: resources => availableResources.push(...resources),
   });
 
@@ -182,18 +180,18 @@ async function checkBreakpointAfterWatchResources() {
 
 async function checkRealBreakpoint() {
   info(
-    "Check whether ResourceWatcher gets breakpoint set via the thread Front (instead of just debugger statements)"
+    "Check whether ResourceCommand gets breakpoint set via the thread Front (instead of just debugger statements)"
   );
 
   const tab = await addTab(BREAKPOINT_TEST_URL);
 
-  const { client, resourceWatcher, targetCommand } = await initResourceWatcher(
+  const { client, resourceCommand, targetCommand } = await initResourceCommand(
     tab
   );
 
   info("Call watchResources");
   const availableResources = [];
-  await resourceWatcher.watchResources([ResourceWatcher.TYPES.THREAD_STATE], {
+  await resourceCommand.watchResources([resourceCommand.TYPES.THREAD_STATE], {
     onAvailable: resources => availableResources.push(...resources),
   });
 
@@ -264,20 +262,20 @@ async function checkRealBreakpoint() {
 
 async function checkPauseOnException() {
   info(
-    "Check whether ResourceWatcher gets breakpoint for exception (when explicitly requested)"
+    "Check whether ResourceCommand gets breakpoint for exception (when explicitly requested)"
   );
 
   const tab = await addTab(
     "data:text/html,<meta charset=utf8><script>a.b.c.d</script>"
   );
 
-  const { client, resourceWatcher, targetCommand } = await initResourceWatcher(
+  const { client, resourceCommand, targetCommand } = await initResourceCommand(
     tab
   );
 
   info("Call watchResources");
   const availableResources = [];
-  await resourceWatcher.watchResources([ResourceWatcher.TYPES.THREAD_STATE], {
+  await resourceCommand.watchResources([resourceCommand.TYPES.THREAD_STATE], {
     onAvailable: resources => availableResources.push(...resources),
   });
 
@@ -344,7 +342,7 @@ async function checkSetBeforeWatch() {
 
   const tab = await addTab(BREAKPOINT_TEST_URL);
 
-  const { client, resourceWatcher, targetCommand } = await initResourceWatcher(
+  const { client, resourceCommand, targetCommand } = await initResourceCommand(
     tab
   );
 
@@ -382,7 +380,7 @@ async function checkSetBeforeWatch() {
 
   info("Call watchResources");
   const availableResources = [];
-  await resourceWatcher.watchResources([ResourceWatcher.TYPES.THREAD_STATE], {
+  await resourceCommand.watchResources([resourceCommand.TYPES.THREAD_STATE], {
     onAvailable: resources => availableResources.push(...resources),
   });
 
@@ -427,17 +425,17 @@ async function checkSetBeforeWatch() {
 }
 
 async function checkDebuggerStatementInIframes() {
-  info("Check whether ResourceWatcher gets breakpoint for (remote) iframes");
+  info("Check whether ResourceCommand gets breakpoint for (remote) iframes");
 
   const tab = await addTab(BREAKPOINT_TEST_URL);
 
-  const { client, resourceWatcher, targetCommand } = await initResourceWatcher(
+  const { client, resourceCommand, targetCommand } = await initResourceCommand(
     tab
   );
 
   info("Call watchResources");
   const availableResources = [];
-  await resourceWatcher.watchResources([ResourceWatcher.TYPES.THREAD_STATE], {
+  await resourceCommand.watchResources([resourceCommand.TYPES.THREAD_STATE], {
     onAvailable: resources => availableResources.push(...resources),
   });
 
@@ -518,7 +516,7 @@ async function checkDebuggerStatementInIframes() {
 async function assertPausedResource(resource, expected) {
   is(
     resource.resourceType,
-    ResourceWatcher.TYPES.THREAD_STATE,
+    ResourceCommand.TYPES.THREAD_STATE,
     "Resource type is correct"
   );
   is(resource.state, "paused", "state attribute is correct");
@@ -558,7 +556,7 @@ async function assertPausedResource(resource, expected) {
 async function assertResumedResource(resource) {
   is(
     resource.resourceType,
-    ResourceWatcher.TYPES.THREAD_STATE,
+    ResourceCommand.TYPES.THREAD_STATE,
     "Resource type is correct"
   );
   is(resource.state, "resumed", "state attribute is correct");

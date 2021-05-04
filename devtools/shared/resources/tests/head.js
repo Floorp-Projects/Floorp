@@ -15,36 +15,36 @@ Services.scriptloader.loadSubScript(
 const { DevToolsClient } = require("devtools/client/devtools-client");
 const { DevToolsServer } = require("devtools/server/devtools-server");
 
-async function _initResourceWatcherFromCommands(
+async function _initResourceCommandFromCommands(
   commands,
   { listenForWorkers = false } = {}
 ) {
-  const {
-    ResourceWatcher,
-  } = require("devtools/shared/resources/resource-watcher");
-
   const targetCommand = commands.targetCommand;
   if (listenForWorkers) {
     targetCommand.listenForWorkers = true;
   }
   await targetCommand.startListening();
 
-  // Now create a ResourceWatcher
-  const resourceWatcher = new ResourceWatcher(targetCommand);
-
-  return { client: commands.client, commands, resourceWatcher, targetCommand };
+  //Bug 1709065: Stop exporting resourceCommand and use commands.resourceCommand
+  //And rename all these methods
+  return {
+    client: commands.client,
+    commands,
+    resourceCommand: commands.resourceCommand,
+    targetCommand,
+  };
 }
 
 /**
- * Instantiate a ResourceWatcher for the given tab.
+ * Instantiate a ResourceCommand for the given tab.
  *
  * @param {Tab} tab
  *        The browser frontend's tab to connect to.
  * @param {Object} options
  * @param {Boolean} options.listenForWorkers
  * @return {Object} object
- * @return {ResourceWatcher} object.resourceWatcher
- *         The underlying resource watcher interface.
+ * @return {ResourceCommand} object.resourceCommand
+ *         The underlying resource command interface.
  * @return {Object} object.commands
  *         The commands object defined by modules from devtools/shared/commands.
  * @return {DevToolsClient} object.client
@@ -52,17 +52,17 @@ async function _initResourceWatcherFromCommands(
  * @return {TargetCommand} object.targetCommand
  *         The underlying target list instance.
  */
-async function initResourceWatcher(tab, options) {
+async function initResourceCommand(tab, options) {
   const commands = await CommandsFactory.forTab(tab);
-  return _initResourceWatcherFromCommands(commands, options);
+  return _initResourceCommandFromCommands(commands, options);
 }
 
 /**
- * Instantiate a multi-process ResourceWatcher, watching all type of targets.
+ * Instantiate a multi-process ResourceCommand, watching all type of targets.
  *
  * @return {Object} object
- * @return {ResourceWatcher} object.resourceWatcher
- *         The underlying resource watcher interface.
+ * @return {ResourceCommand} object.resourceCommand
+ *         The underlying resource command interface.
  * @return {Object} object.commands
  *         The commands object defined by modules from devtools/shared/commands.
  * @return {DevToolsClient} object.client
@@ -70,9 +70,9 @@ async function initResourceWatcher(tab, options) {
  * @return {DevToolsClient} object.targetCommand
  *         The underlying target list instance.
  */
-async function initMultiProcessResourceWatcher() {
+async function initMultiProcessResourceCommand() {
   const commands = await CommandsFactory.forMainProcess();
-  return _initResourceWatcherFromCommands(commands);
+  return _initResourceCommandFromCommands(commands);
 }
 
 // Copied from devtools/shared/webconsole/test/chrome/common.js

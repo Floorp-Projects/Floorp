@@ -20,7 +20,7 @@ window.onload = function() {
 
 let gWalker = null;
 let gDoc = null;
-let gResourceWatcher = null;
+let gResourceCommand = null;
 let gRootNodeResolve = null;
 
 async function reloadTarget() {
@@ -36,12 +36,12 @@ addAsyncTest(async function() {
   gDoc = doc;
   const inspector = await target.getFront("inspector");
   gWalker = inspector.walker;
-  gResourceWatcher = await createResourceWatcher(commands);
+  gResourceCommand = commands.resourceCommand;
 
   info("Start watching for root nodes and wait for the initial root node");
   const rootNodePromise = new Promise(r => (gRootNodeResolve = r));
   const onAvailable = rootNodeFront => gRootNodeResolve(rootNodeFront);
-  await gResourceWatcher.watchResources([gResourceWatcher.TYPES.ROOT_NODE], {
+  await gResourceCommand.watchResources([gResourceCommand.TYPES.ROOT_NODE], {
     onAvailable,
   });
   await rootNodePromise;
@@ -315,7 +315,7 @@ addAsyncTest(async function() {
 addTest(function cleanup() {
   gWalker = null;
   gDoc = null;
-  gResourceWatcher = null;
+  gResourceCommand = null;
   runNextTest();
 });
   </script>

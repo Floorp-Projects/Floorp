@@ -29,11 +29,11 @@ addTest(async function setup() {
   const { commands, target, doc } = await attachURL(url);
   gInspectee = doc;
 
-  // We need an active resource watcher before initializing the inspector front.
-  const resourceWatcher = await createResourceWatcher(commands);
-  // We don't listen for specific resources, we only need to trigger the resource watcher
-  // onTargetAvailable callback so the resourceWatcher is set on the target front.
-  await resourceWatcher.watchResources([], { onAvailable: () => {} });
+  // We need an active resource command before initializing the inspector front.
+  const resourceCommand = commands.resourceCommand;
+  // We don't listen for specific resources, we only need to trigger the resource command
+  // onTargetAvailable callback so the resourceCommand is set on the target front.
+  await resourceCommand.watchResources([], { onAvailable: () => {} });
 
   const inspector = await target.getFront("inspector");
   gWalker = inspector.walker;

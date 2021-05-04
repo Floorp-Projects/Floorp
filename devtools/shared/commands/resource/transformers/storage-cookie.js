@@ -5,18 +5,18 @@
 "use strict";
 
 const {
-  TYPES: { SESSION_STORAGE },
-} = require("devtools/shared/resources/resource-watcher");
+  TYPES: { COOKIE },
+} = require("devtools/shared/commands/resource/resource-command");
 
 const { Front, types } = require("devtools/shared/protocol.js");
 
 module.exports = function({ resource, watcherFront, targetFront }) {
   if (!(resource instanceof Front) && watcherFront) {
-    // instantiate front for session storage
-    resource = types.getType("sessionStorage").read(resource, targetFront);
-    resource.resourceType = SESSION_STORAGE;
-    resource.resourceId = SESSION_STORAGE;
-    resource.resourceKey = "sessionStorage";
+    // instantiate front for cookies
+    resource = types.getType("cookies").read(resource, targetFront);
+    resource.resourceType = COOKIE;
+    resource.resourceId = `${COOKIE}-${targetFront.browsingContextID}`;
+    resource.resourceKey = "cookies";
   }
 
   return resource;
