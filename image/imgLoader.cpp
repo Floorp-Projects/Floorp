@@ -2766,11 +2766,6 @@ nsresult imgLoader::GetMimeTypeFromContent(const char* aContents,
                         detected) &&
              detected.Equals(IMAGE_AVIF)) {
     aContentType.AssignLiteral(IMAGE_AVIF);
-  } else if ((aLength >= 2 && !memcmp(aContents, "\xFF\x0A", 2)) ||
-             (aLength >= 12 &&
-              !memcmp(aContents, "\x00\x00\x00\x0CJXL \x0D\x0A\x87\x0A", 12))) {
-    // Each version is for containerless and containerful files respectively.
-    aContentType.AssignLiteral(IMAGE_JXL);
   } else {
     /* none of the above?  I give up */
     return NS_ERROR_NOT_AVAILABLE;
