@@ -36,6 +36,12 @@
     <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website has an invalid SSL certificate. -->
     <string name="mozac_browser_errorpages_security_bad_cert_advanced">Киңәйтелгән...</string>
 
+    <!-- The advanced certificate information shown when a website sends has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[
+        <label>Кемдер үзенең сайтын бу сайт дип күрсәтергә тырыша кебек, шунлыктан дәвам итмәвегез хәерле.</label>
+        <br><br>
+        <label>Веб-сайтлар үзләренең чынлыгын сертификатлар ярдәмендә раслый. %1$s кушымтасы <b>%2$s</b> сайтына ышанмый, чөнки сертификатны чыгаручы я билгесез, я ул үзлегеннән имзаланган, я сервер дөрес арадашчы сертификатлар җибәрми.</label>
+    ]]></string>
     <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
     <string name="mozac_browser_errorpages_security_bad_cert_back">Кире кайту (киңәш ителә)</string>
 
@@ -44,6 +50,15 @@
 
     <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
     <string name="mozac_browser_errorpages_net_interrupt_title">Бәйләнеш өзелде</string>
+
+    <!-- The error message shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_message"><![CDATA[
+      <p>Браузер уңышлы тоташты, ләкин мәгълүмат тапшырылганда бәйләнеш өзелеп китте. Янәдән тырышып карагыз.</p>
+      <ul>
+        <li>Сайт вакытлыча я бөтенләй эшләми, я бик мәшгуль. Берәздән янәдән ачып карагыз.</li>
+        <li>Әгәр һичбер сайт та ачылмаса, җиһазыгызның мобиль интернет я Wi-Fi бәйләнешләрен тикшерегез.</li>
+      </ul>
+    ]]></string>
 
     <!-- The document title and heading of the error page shown when a website takes too long to load. -->
     <string name="mozac_browser_errorpages_net_timeout_title">Бәйләнешне көтү вакыты чыкты</string>
