@@ -51,12 +51,13 @@ StaticRefPtr<nsHttpNTLMAuth> nsHttpNTLMAuth::gSingleton;
 
 static bool IsNonFqdn(nsIURI* uri) {
   nsAutoCString host;
-  if (NS_FAILED(uri->GetAsciiHost(host))) {
-    return false;
-  }
+  PRNetAddr addr;
+
+  if (NS_FAILED(uri->GetAsciiHost(host))) return false;
 
   // return true if host does not contain a dot and is not an ip address
-  return !host.IsEmpty() && !host.Contains('.') && !HostIsIPLiteral(host);
+  return !host.IsEmpty() && !host.Contains('.') &&
+         PR_StringToNetAddr(host.BeginReading(), &addr) != PR_SUCCESS;
 }
 
 // Check to see if we should use our generic (internal) NTLM auth module.
