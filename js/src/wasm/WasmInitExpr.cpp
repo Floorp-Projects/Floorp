@@ -52,6 +52,9 @@ static bool ValidateInitExpr(Decoder& d, ModuleEnvironment* env,
       return false;
     }
 
+#ifdef ENABLE_WASM_EXTENDED_CONST
+    Nothing nothing;
+#endif
     NothingVector nothings{};
     ResultType unusedType;
 
@@ -142,6 +145,32 @@ static bool ValidateInitExpr(Decoder& d, ModuleEnvironment* env,
         *literal = Some(LitVal(ValType(type)));
         break;
       }
+#ifdef ENABLE_WASM_EXTENDED_CONST
+      case uint16_t(Op::I32Add):
+      case uint16_t(Op::I32Sub):
+      case uint16_t(Op::I32Mul): {
+        if (!env->extendedConstEnabled()) {
+          return d.fail("unexpected initializer opcode");
+        }
+        if (!iter.readBinary(ValType::I32, &nothing, &nothing)) {
+          return false;
+        }
+        *literal = Nothing();
+        break;
+      }
+      case uint16_t(Op::I64Add):
+      case uint16_t(Op::I64Sub):
+      case uint16_t(Op::I64Mul): {
+        if (!env->extendedConstEnabled()) {
+          return d.fail("unexpected initializer opcode");
+        }
+        if (!iter.readBinary(ValType::I64, &nothing, &nothing)) {
+          return false;
+        }
+        *literal = Nothing();
+        break;
+      }
+#endif
       default: {
         return d.fail("unexpected initializer opcode");
       }
@@ -184,6 +213,19 @@ class MOZ_STACK_CLASS InitExprInterpreter {
     return stack.append(Val(RefType::func(), ref));
   }
 
+#ifdef ENABLE_WASM_EXTENDED_CONST
+  int32_t popI32() {
+    uint32_t result = stack.back().i32();
+    stack.popBack();
+    return int32_t(result);
+  }
+  int64_t popI64() {
+    uint64_t result = stack.back().i64();
+    stack.popBack();
+    return int64_t(result);
+  }
+#endif
+
   bool evalGetGlobal(uint32_t index) {
     return stack.append(globalImportValues[index]);
   }
@@ -200,6 +242,44 @@ class MOZ_STACK_CLASS InitExprInterpreter {
     return pushFuncRef(FuncRef::fromCompiledCode(fnref));
   }
   bool evalRefNull(RefType type) { return pushRef(type, AnyRef::null()); }
+#ifdef ENABLE_WASM_EXTENDED_CONST
+  bool evalI32Add() {
+    uint32_t a = popI32();
+    uint32_t b = popI32();
+    pushI32(a + b);
+    return true;
+  }
+  bool evalI32Sub() {
+    uint32_t a = popI32();
+    uint32_t b = popI32();
+    pushI32(a - b);
+    return true;
+  }
+  bool evalI32Mul() {
+    uint32_t a = popI32();
+    uint32_t b = popI32();
+    pushI32(a * b);
+    return true;
+  }
+  bool evalI64Add() {
+    uint64_t a = popI64();
+    uint64_t b = popI64();
+    pushI64(a + b);
+    return true;
+  }
+  bool evalI64Sub() {
+    uint64_t a = popI64();
+    uint64_t b = popI64();
+    pushI64(a - b);
+    return true;
+  }
+  bool evalI64Mul() {
+    uint64_t a = popI64();
+    uint64_t b = popI64();
+    pushI64(a * b);
+    return true;
+  }
+#endif
 };
 
 bool InitExprInterpreter::evaluate(Decoder& d) {
@@ -276,6 +356,44 @@ bool InitExprInterpreter::evaluate(Decoder& d) {
         }
         CHECK(evalRefNull(type));
       }
+#ifdef ENABLE_WASM_EXTENDED_CONST
+      case uint16_t(Op::I32Add): {
+        if (!d.readBinary()) {
+          return false;
+        }
+        CHECK(evalI32Add());
+      }
+      case uint16_t(Op::I32Sub): {
+        if (!d.readBinary()) {
+          return false;
+        }
+        CHECK(evalI32Sub());
+      }
+      case uint16_t(Op::I32Mul): {
+        if (!d.readBinary()) {
+          return false;
+        }
+        CHECK(evalI32Mul());
+      }
+      case uint16_t(Op::I64Add): {
+        if (!d.readBinary()) {
+          return false;
+        }
+        CHECK(evalI64Add());
+      }
+      case uint16_t(Op::I64Sub): {
+        if (!d.readBinary()) {
+          return false;
+        }
+        CHECK(evalI64Sub());
+      }
+      case uint16_t(Op::I64Mul): {
+        if (!d.readBinary()) {
+          return false;
+        }
+        CHECK(evalI64Mul());
+      }
+#endif
       default: {
         MOZ_CRASH();
       }
