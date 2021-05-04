@@ -188,6 +188,10 @@ static nsCString ImageAcceptHeader() {
     mimeTypes.Append("image/avif,");
   }
 
+  if (mozilla::StaticPrefs::image_jxl_enabled()) {
+    mimeTypes.Append("image/jxl,");
+  }
+
   if (mozilla::StaticPrefs::image_webp_enabled()) {
     mimeTypes.Append("image/webp,");
   }
@@ -355,6 +359,7 @@ static const char* gCallbackPrefs[] = {
     DOM_SECURITY_PREFIX,
     "image.http.accept",
     "image.avif.enabled",
+    "image.jxl.enabled",
     "image.webp.enabled",
     nullptr,
 };
@@ -1830,6 +1835,7 @@ void nsHttpHandler::PrefsChanged(const char* pref) {
 
   const bool imageAcceptPrefChanged = PREF_CHANGED("image.http.accept") ||
                                       PREF_CHANGED("image.avif.enabled") ||
+                                      PREF_CHANGED("image.jxl.enabled") ||
                                       PREF_CHANGED("image.webp.enabled");
 
   if (imageAcceptPrefChanged) {
