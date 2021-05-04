@@ -5779,6 +5779,13 @@
     mirror: always
 #endif  // defined(ENABLE_WASM_SIMD)
 
+#if defined(ENABLE_WASM_RELAXED_SIMD)
+-   name: javascript.options.wasm_relaxed_simd
+    type: bool
+    value: false
+    mirror: always
+#endif  // defined(ENABLE_WASM_RELAXED_SIMD)
+
 #if defined(ENABLE_WASM_REFTYPES)
 -   name: javascript.options.wasm_reftypes
     type: bool

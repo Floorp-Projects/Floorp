@@ -52,6 +52,11 @@
 #else
 #  define WASM_SIMD_ENABLED 0
 #endif
+#ifdef ENABLE_WASM_RELAXED_SIMD
+#  define WASM_RELAXED_SIMD_ENABLED 1
+#else
+#  define WASM_RELAXED_SIMD_ENABLED 0
+#endif
 #ifdef ENABLE_WASM_EXCEPTIONS
 #  define WASM_EXCEPTIONS_ENABLED 1
 #else
@@ -100,7 +105,16 @@
                /* compiler predicate */ BaselineAvailable(cx),                \
                /* flag predicate     */ WasmFunctionReferencesFlag(cx),       \
                /* shell flag         */ "gc",                                 \
-               /* preference name    */ "gc")
+               /* preference name    */ "gc")                                 \
+  EXPERIMENTAL(/* capitalized name   */ RelaxedSimd,                          \
+               /* lower case name    */ v128Relaxed,                          \
+               /* compile predicate  */ WASM_RELAXED_SIMD_ENABLED,            \
+               /* compiler predicate */ AnyCompilerAvailable(cx),             \
+               /* flag predicate     */ !IsFuzzingCranelift(cx) &&            \
+               js::jit::JitSupportsWasmSimd(),                                \
+               /* shell flag         */ "relaxed-simd",                       \
+               /* preference name    */ "relaxed_simd")
+
 // clang-format on
 
 #endif  // js_WasmFeatures_h
