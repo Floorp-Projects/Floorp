@@ -319,8 +319,7 @@ class DebugTargetInfo extends PureComponent {
         className: "qa-reload-button",
         icon: "chrome://browser/skin/reload.svg",
         l10nId: "toolbox.debugTargetInfo.reload",
-        onClick: () =>
-          this.props.toolbox.commands.targetCommand.reloadTopLevelTarget(),
+        onClick: () => this.props.toolbox.target.reload(),
       })
     );
 

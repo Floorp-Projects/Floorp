@@ -21,7 +21,7 @@ const {
 } = require("devtools/client/performance/test/helpers/wait-utils");
 
 add_task(async function() {
-  const { panel } = await initPerformanceInNewTab({
+  const { panel, target } = await initPerformanceInNewTab({
     url: SIMPLE_URL,
     win: window,
   });
@@ -29,7 +29,7 @@ add_task(async function() {
   const { PerformanceController } = panel.panelWin;
 
   await startRecording(panel);
-  await reload(panel);
+  await reload(target);
 
   await waitUntil(() => {
     // Wait until we get the necessary markers.
