@@ -65,6 +65,17 @@ class WMFVideoMFTManager : public MFTManager {
 
   bool CanUseDXVA(IMFMediaType* aType, float aFramerate);
 
+  // Gets the duration from aSample, and if an unknown or invalid duration is
+  // returned from WMF, this instead returns the last known input duration.
+  // The sample duration is unknown per `IMFSample::GetSampleDuration` docs
+  // 'If the retrieved duration is zero, or if the method returns
+  // MF_E_NO_SAMPLE_DURATION, the duration is unknown'. The same API also
+  // suggests it may return other unspecified error codes, so we handle those
+  // too. It also returns a signed int, but since a negative duration doesn't
+  // make sense, we also handle that case.
+  media::TimeUnit GetSampleDurationOrLastKnownDuration(
+      IMFSample* aSample) const;
+
   // Video frame geometry.
   const VideoInfo mVideoInfo;
   const gfx::IntSize mImageSize;

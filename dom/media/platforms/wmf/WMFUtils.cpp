@@ -91,7 +91,8 @@ int32_t MFOffsetToInt32(const MFOffset& aOffset) {
 TimeUnit GetSampleDuration(IMFSample* aSample) {
   NS_ENSURE_TRUE(aSample, TimeUnit::Invalid());
   int64_t duration = 0;
-  aSample->GetSampleDuration(&duration);
+  HRESULT hr = aSample->GetSampleDuration(&duration);
+  NS_ENSURE_TRUE(SUCCEEDED(hr), TimeUnit::Invalid());
   return TimeUnit::FromMicroseconds(HNsToUsecs(duration));
 }
 
