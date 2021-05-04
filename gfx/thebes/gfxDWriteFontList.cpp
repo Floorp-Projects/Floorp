@@ -2109,6 +2109,9 @@ gfxFontEntry* gfxDWriteFontList::PlatformGlobalFontFallback(
   if (!mFallbackRenderer) {
     mFallbackRenderer = new DWriteFontFallbackRenderer(dwFactory);
   }
+  if (!mFallbackRenderer->IsValid()) {
+    return nullptr;
+  }
 
   // initialize text format
   if (!mFallbackFormat) {
@@ -2147,8 +2150,14 @@ gfxFontEntry* gfxDWriteFontList::PlatformGlobalFontFallback(
 
   // call the draw method to invoke the DirectWrite layout functions
   // which determine the fallback font
-  hr = fallbackLayout->Draw(nullptr, mFallbackRenderer, 50.0f, 50.0f);
-  if (FAILED(hr)) {
+  MOZ_SEH_TRY {
+    hr = fallbackLayout->Draw(nullptr, mFallbackRenderer, 50.0f, 50.0f);
+    if (FAILED(hr)) {
+      return nullptr;
+    }
+  }
+  MOZ_SEH_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
+    gfxCriticalNote << "Exception occurred during DWrite font fallback";
     return nullptr;
   }
 
