@@ -154,17 +154,13 @@ class TabDescriptorFront extends DescriptorMixin(
     // in getTarget, this acts as an additional security to avoid races.
     this._targetFront = null;
 
-    // @backward-compat { version 88 } Descriptor actors now emit descriptor-destroyed.
-    // But about:debugging / remote debugging tabs doesn't support top level target switching
-    // so that we also have to remove the descriptor when the target is destroyed.
-    // Should be kept until about:debugging supports target switching and we remove the
-    // !isLocalTab check.
-    // Also destroy descriptor of web extension as they expect the client to be closed immediately
-    if (
-      !this.traits.emitDescriptorDestroyed ||
-      !this.isLocalTab ||
-      this.isDevToolsExtensionContext
-    ) {
+    // about:debugging / remote debugging tabs don't support top level
+    // target-switching so we have to remove the descriptor when the target is
+    // destroyed. When about:debugging supports target switching, we can remove
+    // the !isLocalTab check. See Bug 1709267.
+    // Also destroy descriptor of web extension as they expect the client to be
+    // closed immediately
+    if (!this.isLocalTab || this.isDevToolsExtensionContext) {
       this.destroy();
     }
   }
