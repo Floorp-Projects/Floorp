@@ -5464,12 +5464,6 @@
   value: true
   mirror: always
 
-# Whether we attempt to decode JXL images or not.
-- name: image.jxl.enabled
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-
 #---------------------------------------------------------------------------
 # Prefs starting with "intl."
 #---------------------------------------------------------------------------
