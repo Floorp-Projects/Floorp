@@ -4288,7 +4288,8 @@ static bool EmitRefFunc(FunctionCompiler& f) {
 }
 
 static bool EmitRefNull(FunctionCompiler& f) {
-  if (!f.iter().readRefNull()) {
+  RefType type;
+  if (!f.iter().readRefNull(&type)) {
     return false;
   }
 

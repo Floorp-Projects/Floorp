@@ -934,7 +934,7 @@ bool MetadataTier::clone(const MetadataTier& src) {
 
 size_t Metadata::serializedSize() const {
   return sizeof(pod()) + SerializedVectorSize(types) +
-         SerializedPodVectorSize(globals) + SerializedPodVectorSize(tables) +
+         SerializedVectorSize(globals) + SerializedPodVectorSize(tables) +
 #ifdef ENABLE_WASM_EXCEPTIONS
          SerializedPodVectorSize(events) +
 #endif
@@ -947,7 +947,7 @@ uint8_t* Metadata::serialize(uint8_t* cursor) const {
              debugFuncReturnTypes.empty());
   cursor = WriteBytes(cursor, &pod(), sizeof(pod()));
   cursor = SerializeVector(cursor, types);
-  cursor = SerializePodVector(cursor, globals);
+  cursor = SerializeVector(cursor, globals);
   cursor = SerializePodVector(cursor, tables);
 #ifdef ENABLE_WASM_EXCEPTIONS
   cursor = SerializePodVector(cursor, events);
@@ -962,7 +962,7 @@ uint8_t* Metadata::serialize(uint8_t* cursor) const {
 /* static */ const uint8_t* Metadata::deserialize(const uint8_t* cursor) {
   (cursor = ReadBytes(cursor, &pod(), sizeof(pod()))) &&
       (cursor = DeserializeVector(cursor, &types)) &&
-      (cursor = DeserializePodVector(cursor, &globals)) &&
+      (cursor = DeserializeVector(cursor, &globals)) &&
       (cursor = DeserializePodVector(cursor, &tables)) &&
 #ifdef ENABLE_WASM_EXCEPTIONS
       (cursor = DeserializePodVector(cursor, &events)) &&

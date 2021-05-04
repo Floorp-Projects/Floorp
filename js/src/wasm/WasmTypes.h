@@ -113,6 +113,9 @@ class Module;
 class Instance;
 class Table;
 
+struct ModuleEnvironment;
+class Decoder;
+
 // Uint32Vector has initial size 8 on the basis that the dominant use cases
 // (line numbers and control stacks) tend to have a small but nonzero number
 // of elements.
@@ -2157,81 +2160,66 @@ class ArrayType {
 using ArrayTypeVector = Vector<ArrayType, 0, SystemAllocPolicy>;
 using ArrayTypePtrVector = Vector<const ArrayType*, 0, SystemAllocPolicy>;
 
-// An InitExpr describes a deferred initializer expression, used to initialize
+enum class InitExprKind {
+  None,
+  Literal,
+  Variable,
+};
+
+// A InitExpr describes a deferred initializer expression, used to initialize
 // a global or a table element offset. Such expressions are created during
 // decoding and actually executed on module instantiation.
 
 class InitExpr {
- public:
-  enum class Kind { Constant, GetGlobal, RefFunc };
-
- private:
-  // Note: all this private data is currently (de)serialized via memcpy().
-  Kind kind_;
-  union U {
-    LitVal val_;
-    struct {
-      uint32_t index_;
-      ValType type_;
-    } global;
-    uint32_t refFuncIndex_;
-    U() : global{} {}
-  } u;
+  InitExprKind kind_;
+  // The bytecode for this constant expression if this is not a literal.
+  Bytes bytecode_;
+  // The value if this is a literal.
+  LitVal literal_;
+  // The value type of this constant expression in either case.
+  ValType type_;
 
  public:
-  InitExpr() = default;
+  InitExpr() : kind_(InitExprKind::None) {}
 
-  static InitExpr fromConstant(LitVal val) {
-    InitExpr expr;
-    expr.kind_ = Kind::Constant;
-    expr.u.val_ = val;
-    return expr;
+  explicit InitExpr(LitVal literal)
+      : kind_(InitExprKind::Literal),
+        literal_(literal),
+        type_(literal.type()) {}
+
+  // Decode and validate a constant expression given at the current
+  // position of the decoder. Upon failure, the decoder contains the failure
+  // message or else the failure was an OOM.
+  static bool decodeAndValidate(Decoder& d, ModuleEnvironment* env,
+                                ValType expected, InitExpr* expr);
+
+  // Evaluate the constant expresssion with the given context. This may only
+  // fail due to an OOM, as all InitExpr's are required to have been validated.
+  bool evaluate(JSContext* cx, const ValVector& globalImportValues,
+                HandleWasmInstanceObject instanceObj,
+                MutableHandleVal result) const;
+
+  bool isLiteral() const { return kind_ == InitExprKind::Literal; }
+
+  // Gets the result of this expression if it was determined to be a literal.
+  LitVal literal() const {
+    MOZ_ASSERT(isLiteral());
+    return literal_;
   }
 
-  static InitExpr fromGetGlobal(uint32_t globalIndex, ValType type) {
-    InitExpr expr;
-    expr.kind_ = Kind::GetGlobal;
-    expr.u.global.index_ = globalIndex;
-    expr.u.global.type_ = type;
-    return expr;
-  }
+  // Get the type of the resulting value of this expression.
+  ValType type() const { return type_; }
 
-  static InitExpr fromRefFunc(uint32_t refFuncIndex) {
-    InitExpr expr;
-    expr.kind_ = Kind::RefFunc;
-    expr.u.refFuncIndex_ = refFuncIndex;
-    return expr;
-  }
+  // Allow moving, but not implicit copying
+  InitExpr(const InitExpr&) = delete;
+  InitExpr& operator=(const InitExpr&) = delete;
+  InitExpr(InitExpr&&) = default;
+  InitExpr& operator=(InitExpr&&) = default;
 
-  Kind kind() const { return kind_; }
+  // Allow explicit cloning
+  [[nodiscard]] bool clone(const InitExpr& src);
 
-  bool isVal() const { return kind() == Kind::Constant; }
-  LitVal val() const {
-    MOZ_ASSERT(isVal());
-    return u.val_;
-  }
-
-  uint32_t globalIndex() const {
-    MOZ_ASSERT(kind() == Kind::GetGlobal);
-    return u.global.index_;
-  }
-
-  uint32_t refFuncIndex() const {
-    MOZ_ASSERT(kind() == Kind::RefFunc);
-    return u.refFuncIndex_;
-  }
-
-  ValType type() const {
-    switch (kind()) {
-      case Kind::Constant:
-        return u.val_.type();
-      case Kind::GetGlobal:
-        return u.global.type_;
-      case Kind::RefFunc:
-        return ValType(RefType::func());
-    }
-    MOZ_CRASH("unexpected initExpr type");
-  }
+  WASM_DECLARE_SERIALIZABLE(InitExpr)
 };
 
 // CacheableChars is used to cacheably store UniqueChars.
@@ -2331,74 +2319,64 @@ using FuncDescVector = Vector<FuncDesc, 0, SystemAllocPolicy>;
 enum class GlobalKind { Import, Constant, Variable };
 
 class GlobalDesc {
-  union V {
-    struct {
-      union U {
-        InitExpr initial_;
-        struct {
-          ValType type_;
-          uint32_t index_;
-        } import;
-        U() : import{} {}
-      } val;
-      unsigned offset_;
-      bool isMutable_;
-      bool isWasm_;
-      bool isExport_;
-    } var;
-    LitVal cst_;
-    V() {}
-  } u;
   GlobalKind kind_;
+  // Stores the value type of this global for all kinds, and the initializer
+  // expression when `constant` or `variable`.
+  InitExpr initial_;
+  // Metadata for the global when `variable` or `import`.
+  unsigned offset_;
+  bool isMutable_;
+  bool isWasm_;
+  bool isExport_;
+  // Metadata for the global when `import`.
+  uint32_t importIndex_;
 
   // Private, as they have unusual semantics.
 
-  bool isExport() const { return !isConstant() && u.var.isExport_; }
-  bool isWasm() const { return !isConstant() && u.var.isWasm_; }
+  bool isExport() const { return !isConstant() && isExport_; }
+  bool isWasm() const { return !isConstant() && isWasm_; }
 
  public:
   GlobalDesc() = default;
 
-  explicit GlobalDesc(InitExpr initial, bool isMutable,
+  explicit GlobalDesc(InitExpr&& initial, bool isMutable,
                       ModuleKind kind = ModuleKind::Wasm)
-      : kind_((isMutable || !initial.isVal()) ? GlobalKind::Variable
-                                              : GlobalKind::Constant) {
+      : kind_((isMutable || !initial.isLiteral()) ? GlobalKind::Variable
+                                                  : GlobalKind::Constant) {
+    initial_ = std::move(initial);
     if (isVariable()) {
-      u.var.val.initial_ = initial;
-      u.var.isMutable_ = isMutable;
-      u.var.isWasm_ = kind == Wasm;
-      u.var.isExport_ = false;
-      u.var.offset_ = UINT32_MAX;
-    } else {
-      u.cst_ = initial.val();
+      isMutable_ = isMutable;
+      isWasm_ = kind == Wasm;
+      isExport_ = false;
+      offset_ = UINT32_MAX;
     }
   }
 
   explicit GlobalDesc(ValType type, bool isMutable, uint32_t importIndex,
                       ModuleKind kind = ModuleKind::Wasm)
       : kind_(GlobalKind::Import) {
-    u.var.val.import.type_ = type;
-    u.var.val.import.index_ = importIndex;
-    u.var.isMutable_ = isMutable;
-    u.var.isWasm_ = kind == Wasm;
-    u.var.isExport_ = false;
-    u.var.offset_ = UINT32_MAX;
+    initial_ = InitExpr(LitVal(type));
+    importIndex_ = importIndex;
+    isMutable_ = isMutable;
+    isWasm_ = kind == Wasm;
+    isExport_ = false;
+    offset_ = UINT32_MAX;
   }
 
   void setOffset(unsigned offset) {
     MOZ_ASSERT(!isConstant());
-    MOZ_ASSERT(u.var.offset_ == UINT32_MAX);
-    u.var.offset_ = offset;
+    MOZ_ASSERT(offset_ == UINT32_MAX);
+    offset_ = offset;
   }
   unsigned offset() const {
     MOZ_ASSERT(!isConstant());
-    MOZ_ASSERT(u.var.offset_ != UINT32_MAX);
-    return u.var.offset_;
+    MOZ_ASSERT(offset_ != UINT32_MAX);
+    return offset_;
   }
 
   void setIsExport() {
     if (!isConstant()) {
-      u.var.isExport_ = true;
+      isExport_ = true;
     }
   }
 
@@ -2407,19 +2385,17 @@ class GlobalDesc {
   bool isConstant() const { return kind_ == GlobalKind::Constant; }
   bool isImport() const { return kind_ == GlobalKind::Import; }
 
-  bool isMutable() const { return !isConstant() && u.var.isMutable_; }
-  LitVal constantValue() const {
-    MOZ_ASSERT(isConstant());
-    return u.cst_;
-  }
+  bool isMutable() const { return !isConstant() && isMutable_; }
   const InitExpr& initExpr() const {
-    MOZ_ASSERT(isVariable());
-    return u.var.val.initial_;
+    MOZ_ASSERT(!isImport());
+    return initial_;
   }
   uint32_t importIndex() const {
     MOZ_ASSERT(isImport());
-    return u.var.val.import.index_;
+    return importIndex_;
   }
+
+  LitVal constantValue() const { return initial_.literal(); }
 
   // If isIndirect() is true then storage for the value is not in the
   // instance's global area, but in a WasmGlobalObject::Cell hanging off a
@@ -2436,17 +2412,9 @@ class GlobalDesc {
     return isMutable() && isWasm() && (isImport() || isExport());
   }
 
-  ValType type() const {
-    switch (kind_) {
-      case GlobalKind::Import:
-        return u.var.val.import.type_;
-      case GlobalKind::Variable:
-        return u.var.val.initial_.type();
-      case GlobalKind::Constant:
-        return u.cst_.type();
-    }
-    MOZ_CRASH("unexpected global kind");
-  }
+  ValType type() const { return initial_.type(); }
+
+  WASM_DECLARE_SERIALIZABLE(GlobalDesc)
 };
 
 using GlobalDescVector = Vector<GlobalDesc, 0, SystemAllocPolicy>;
@@ -2489,7 +2457,7 @@ struct ElemSegment : AtomicRefCounted<ElemSegment> {
 
   bool active() const { return kind == Kind::Active; }
 
-  InitExpr offset() const { return *offsetIfActive; }
+  const InitExpr& offset() const { return *offsetIfActive; }
 
   size_t length() const { return elemFuncIndices.length(); }
 
@@ -2529,12 +2497,21 @@ struct DataSegment : AtomicRefCounted<DataSegment> {
   Bytes bytes;
 
   DataSegment() = default;
-  explicit DataSegment(const DataSegmentEnv& src)
-      : offsetIfActive(src.offsetIfActive) {}
 
   bool active() const { return !!offsetIfActive; }
 
-  InitExpr offset() const { return *offsetIfActive; }
+  const InitExpr& offset() const { return *offsetIfActive; }
+
+  [[nodiscard]] bool init(const ShareableBytes& bytecode,
+                          const DataSegmentEnv& src) {
+    if (src.offsetIfActive) {
+      offsetIfActive.emplace();
+      if (!offsetIfActive->clone(*src.offsetIfActive)) {
+        return false;
+      }
+    }
+    return bytes.append(bytecode.begin() + src.bytecodeOffset, src.length);
+  }
 
   WASM_DECLARE_SERIALIZABLE(DataSegment)
 };

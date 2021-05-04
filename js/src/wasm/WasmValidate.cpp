@@ -174,23 +174,6 @@ bool wasm::CheckIsSubtypeOf(Decoder& d, const ModuleEnvironment& env,
 
 // Function body validation.
 
-class NothingVector {
-  Nothing unused_;
-
- public:
-  bool resize(size_t length) { return true; }
-  Nothing& operator[](size_t) { return unused_; }
-  Nothing& back() { return unused_; }
-};
-
-struct ValidatingPolicy {
-  using Value = Nothing;
-  using ValueVector = NothingVector;
-  using ControlItem = Nothing;
-};
-
-using ValidatingOpIter = OpIter<ValidatingPolicy>;
-
 static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
                                     uint32_t funcIndex,
                                     const ValTypeVector& locals,
@@ -1130,7 +1113,8 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
         CHECK(iter.readRefFunc(&unusedIndex));
       }
       case uint16_t(Op::RefNull): {
-        CHECK(iter.readRefNull());
+        RefType type;
+        CHECK(iter.readRefNull(&type));
       }
       case uint16_t(Op::RefIsNull): {
         Nothing nothing;
@@ -2204,126 +2188,6 @@ static bool DecodeMemorySection(Decoder& d, ModuleEnvironment* env) {
   return d.finishSection(*range, "memory");
 }
 
-static bool DecodeInitializerExpression(Decoder& d, ModuleEnvironment* env,
-                                        ValType expected, InitExpr* init) {
-  OpBytes op;
-  if (!d.readOp(&op)) {
-    return d.fail("failed to read initializer type");
-  }
-
-  switch (op.b0) {
-    case uint16_t(Op::I32Const): {
-      int32_t i32;
-      if (!d.readVarS32(&i32)) {
-        return d.fail("failed to read initializer i32 expression");
-      }
-      *init = InitExpr::fromConstant(LitVal(uint32_t(i32)));
-      break;
-    }
-    case uint16_t(Op::I64Const): {
-      int64_t i64;
-      if (!d.readVarS64(&i64)) {
-        return d.fail("failed to read initializer i64 expression");
-      }
-      *init = InitExpr::fromConstant(LitVal(uint64_t(i64)));
-      break;
-    }
-    case uint16_t(Op::F32Const): {
-      float f32;
-      if (!d.readFixedF32(&f32)) {
-        return d.fail("failed to read initializer f32 expression");
-      }
-      *init = InitExpr::fromConstant(LitVal(f32));
-      break;
-    }
-    case uint16_t(Op::F64Const): {
-      double f64;
-      if (!d.readFixedF64(&f64)) {
-        return d.fail("failed to read initializer f64 expression");
-      }
-      *init = InitExpr::fromConstant(LitVal(f64));
-      break;
-    }
-#ifdef ENABLE_WASM_SIMD
-    case uint16_t(Op::SimdPrefix): {
-      if (!env->v128Enabled()) {
-        return d.fail("v128 not enabled");
-      }
-      if (op.b1 != uint32_t(SimdOp::V128Const)) {
-        return d.fail("unexpected initializer expression");
-      }
-      V128 v128;
-      if (!d.readFixedV128(&v128)) {
-        return d.fail("failed to read initializer v128 expression");
-      }
-      *init = InitExpr::fromConstant(LitVal(v128));
-      break;
-    }
-#endif
-    case uint16_t(Op::RefNull): {
-      MOZ_ASSERT_IF(
-          expected.isReference() && env->types.isStructType(expected.refType()),
-          env->gcEnabled());
-      RefType initType;
-      if (!d.readHeapType(env->types, env->features, true, &initType)) {
-        return false;
-      }
-      *init = InitExpr::fromConstant(LitVal(initType, AnyRef::null()));
-      break;
-    }
-    case uint16_t(Op::RefFunc): {
-      if (!expected.isReference() || expected.refType() != RefType::func()) {
-        return d.fail(
-            "type mismatch: initializer type and expected type don't match");
-      }
-      uint32_t i;
-      if (!d.readVarU32(&i)) {
-        return d.fail(
-            "failed to read ref.func index in initializer expression");
-      }
-      if (i >= env->numFuncs()) {
-        return d.fail("function index out of range in initializer expression");
-      }
-      env->validForRefFunc.setBit(i);
-      *init = InitExpr::fromRefFunc(i);
-      break;
-    }
-    case uint16_t(Op::GetGlobal): {
-      uint32_t i;
-      const GlobalDescVector& globals = env->globals;
-      if (!d.readVarU32(&i)) {
-        return d.fail(
-            "failed to read global.get index in initializer expression");
-      }
-      if (i >= globals.length()) {
-        return d.fail("global index out of range in initializer expression");
-      }
-      if (!globals[i].isImport() || globals[i].isMutable()) {
-        return d.fail(
-            "initializer expression must reference a global immutable import");
-      }
-      *init = InitExpr::fromGetGlobal(i, globals[i].type());
-      break;
-    }
-    default: {
-      return d.fail("unexpected initializer expression");
-    }
-  }
-
-  TypeCache cache;
-  if (!CheckIsSubtypeOf(d, *env, d.currentOffset(), init->type(), expected,
-                        &cache)) {
-    return false;
-  }
-
-  OpBytes end;
-  if (!d.readOp(&end) || end.b0 != uint16_t(Op::End)) {
-    return d.fail("failed to read end of initializer expression");
-  }
-
-  return true;
-}
-
 static bool DecodeGlobalSection(Decoder& d, ModuleEnvironment* env) {
   MaybeSectionRange range;
   if (!d.startSection(SectionId::Global, env, &range, "global")) {
@@ -2356,11 +2220,12 @@ static bool DecodeGlobalSection(Decoder& d, ModuleEnvironment* env) {
     }
 
     InitExpr initializer;
-    if (!DecodeInitializerExpression(d, env, type, &initializer)) {
+    if (!InitExpr::decodeAndValidate(d, env, type, &initializer)) {
       return false;
     }
 
-    env->globals.infallibleAppend(GlobalDesc(initializer, isMutable));
+    env->globals.infallibleAppend(
+        GlobalDesc(std::move(initializer), isMutable));
   }
 
   return d.finishSection(*range, "global");
@@ -2677,10 +2542,10 @@ static bool DecodeElemSection(Decoder& d, ModuleEnvironment* env) {
       seg->tableIndex = tableIndex;
 
       InitExpr offset;
-      if (!DecodeInitializerExpression(d, env, ValType::I32, &offset)) {
+      if (!InitExpr::decodeAndValidate(d, env, ValType::I32, &offset)) {
         return false;
       }
-      seg->offsetIfActive.emplace(offset);
+      seg->offsetIfActive.emplace(std::move(offset));
     } else {
       // Too many bugs result from keeping this value zero.  For passive
       // or declared segments, there really is no table index, and we should
@@ -3050,10 +2915,10 @@ static bool DecodeDataSection(Decoder& d, ModuleEnvironment* env) {
     if (initializerKind == DataSegmentKind::Active ||
         initializerKind == DataSegmentKind::ActiveWithMemoryIndex) {
       InitExpr segOffset;
-      if (!DecodeInitializerExpression(d, env, ValType::I32, &segOffset)) {
+      if (!InitExpr::decodeAndValidate(d, env, ValType::I32, &segOffset)) {
         return false;
       }
-      seg.offsetIfActive.emplace(segOffset);
+      seg.offsetIfActive.emplace(std::move(segOffset));
     }
 
     if (!d.readVarU32(&seg.length)) {
@@ -3070,7 +2935,7 @@ static bool DecodeDataSection(Decoder& d, ModuleEnvironment* env) {
       return d.fail("data segment shorter than declared");
     }
 
-    if (!env->dataSegments.append(seg)) {
+    if (!env->dataSegments.append(std::move(seg))) {
       return false;
     }
   }
