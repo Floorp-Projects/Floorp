@@ -172,7 +172,7 @@ already_AddRefed<StereoPannerNode> StereoPannerNode::Create(
     return nullptr;
   }
 
-  audioNode->Pan()->SetValue(aOptions.mPan);
+  audioNode->Pan()->SetInitialValue(aOptions.mPan);
   return audioNode.forget();
 }
 

@@ -59,6 +59,19 @@ class AudioParam final : public nsWrapperCache, public AudioParamTimeline {
     return this;
   }
 
+  // Intended for use in AudioNode creation, when the setter should not throw.
+  void SetInitialValue(float aValue) {
+    MOZ_ASSERT(HasSimpleValue(), "Existing events unexpected");
+    AudioTimelineEvent event(AudioTimelineEvent::SetValue, 0.0f, aValue);
+
+    DebugOnly<ErrorResult> rv;
+    MOZ_ASSERT(ValidateEvent(event, rv), "This event should be valid");
+
+    AudioParamTimeline::SetValue(aValue);
+
+    SendEventToEngine(event);
+  }
+
   void SetValue(float aValue) {
     AudioTimelineEvent event(AudioTimelineEvent::SetValue, 0.0f, aValue);
 

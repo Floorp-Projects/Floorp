@@ -642,7 +642,7 @@ void AudioWorkletNode::SendParameterData(
       for (auto& audioParam : mParams) {
         audioParam->GetName(name);
         if (paramDataEntry.mKey.Equals(name)) {
-          audioParam->SetValue(paramDataEntry.mValue);
+          audioParam->SetInitialValue(paramDataEntry.mValue);
         }
       }
     }
