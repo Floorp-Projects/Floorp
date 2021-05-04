@@ -67,26 +67,38 @@ class PannerNode final : public AudioNode {
     SendInt32ParameterToTrack(DISTANCE_MODEL, int32_t(mDistanceModel));
   }
 
-  void SetPosition(double aX, double aY, double aZ) {
+  void SetPosition(double aX, double aY, double aZ, ErrorResult& aRv) {
     if (fabs(aX) > std::numeric_limits<float>::max() ||
         fabs(aY) > std::numeric_limits<float>::max() ||
         fabs(aZ) > std::numeric_limits<float>::max()) {
       return;
     }
-    mPositionX->SetValue(aX);
-    mPositionY->SetValue(aY);
-    mPositionZ->SetValue(aZ);
+    mPositionX->SetValue(aX, aRv);
+    if (aRv.Failed()) {
+      return;
+    }
+    mPositionY->SetValue(aY, aRv);
+    if (aRv.Failed()) {
+      return;
+    }
+    mPositionZ->SetValue(aZ, aRv);
   }
 
-  void SetOrientation(double aX, double aY, double aZ) {
+  void SetOrientation(double aX, double aY, double aZ, ErrorResult& aRv) {
     if (fabs(aX) > std::numeric_limits<float>::max() ||
         fabs(aY) > std::numeric_limits<float>::max() ||
         fabs(aZ) > std::numeric_limits<float>::max()) {
       return;
     }
-    mOrientationX->SetValue(aX);
-    mOrientationY->SetValue(aY);
-    mOrientationZ->SetValue(aZ);
+    mOrientationX->SetValue(aX, aRv);
+    if (aRv.Failed()) {
+      return;
+    }
+    mOrientationY->SetValue(aY, aRv);
+    if (aRv.Failed()) {
+      return;
+    }
+    mOrientationZ->SetValue(aZ, aRv);
   }
 
   double RefDistance() const { return mRefDistance; }
