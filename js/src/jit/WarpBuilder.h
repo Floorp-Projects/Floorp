@@ -285,8 +285,6 @@ class MOZ_STACK_CLASS WarpBuilder : public WarpBuilderShared {
   MConstant* globalLexicalEnvConstant();
   MDefinition* getCallee();
 
-  MDefinition* maybeGuardNotOptimizedArguments(MDefinition* def);
-
   [[nodiscard]] bool buildUnaryOp(BytecodeLocation loc);
   [[nodiscard]] bool buildBinaryOp(BytecodeLocation loc);
   [[nodiscard]] bool buildCompareOp(BytecodeLocation loc);

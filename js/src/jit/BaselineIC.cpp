@@ -853,23 +853,11 @@ bool DoGetElemFallback(JSContext* cx, BaselineFrame* frame,
   MOZ_ASSERT(JSOp(*pc) == JSOp::GetElem);
 #endif
 
-  // Don't pass lhs directly, we need it when generating stubs.
-  RootedValue lhsCopy(cx, lhs);
-
-  bool isOptimizedArgs = false;
-  if (lhs.isMagic(JS_OPTIMIZED_ARGUMENTS)) {
-    // Handle optimized arguments[i] access.
-    isOptimizedArgs =
-        MaybeGetElemOptimizedArguments(cx, frame, &lhsCopy, rhs, res);
-  }
-
   TryAttachStub<GetPropIRGenerator>("GetElem", cx, frame, stub,
                                     CacheKind::GetElem, lhs, rhs);
 
-  if (!isOptimizedArgs) {
-    if (!GetElementOperation(cx, lhsCopy, rhs, res)) {
-      return false;
-    }
+  if (!GetElementOperation(cx, lhs, rhs, res)) {
+    return false;
   }
 
   return true;
@@ -1762,12 +1750,6 @@ bool DoCallFallback(JSContext* cx, BaselineFrame* frame, ICCall_Fallback* stub,
                                      constructing, ignoresReturnValue);
   RootedValue callee(cx, vp[0]);
   RootedValue newTarget(cx, constructing ? callArgs.newTarget() : NullValue());
-
-  // Handle funapply with JSOp::Arguments
-  if (op == JSOp::FunApply && argc == 2 &&
-      callArgs[1].isMagic(JS_OPTIMIZED_ARGUMENTS)) {
-    GuardFunApplyArgumentsOptimization(cx, frame, callArgs);
-  }
 
   // Transition stub state to megamorphic or generic if warranted.
   MaybeTransition(cx, frame, stub);

@@ -8109,19 +8109,6 @@ class LGuardValue : public LInstructionHelper<0, BOX_PIECES, 0> {
   MGuardValue* mir() { return mir_->toGuardValue(); }
 };
 
-class LGuardNotOptimizedArguments
-    : public LInstructionHelper<0, BOX_PIECES, 0> {
- public:
-  LIR_HEADER(GuardNotOptimizedArguments)
-
-  explicit LGuardNotOptimizedArguments(const LBoxAllocation& input)
-      : LInstructionHelper(classOpcode) {
-    setBoxOperand(Input, input);
-  }
-
-  static const size_t Input = 0;
-};
-
 class LGuardNullOrUndefined : public LInstructionHelper<0, BOX_PIECES, 0> {
  public:
   LIR_HEADER(GuardNullOrUndefined)
