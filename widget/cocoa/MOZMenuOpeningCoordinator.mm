@@ -11,10 +11,12 @@
 #include "MOZMenuOpeningCoordinator.h"
 
 #include "mozilla/ClearOnShutdown.h"
+#include "mozilla/StaticPrefs_widget.h"
 
 #include "nsCocoaFeatures.h"
 #include "nsCocoaUtils.h"
 #include "nsDeque.h"
+#include "nsMenuX.h"
 #include "nsObjCExceptions.h"
 #include "nsThreadUtils.h"
 #include "SDKDeclarations.h"
@@ -159,25 +161,50 @@
   // The code below uses option 4 as the preferred option because it's the simplest: It works in all
   // scenarios and it doesn't have the positioning drawbacks of option 5.
 
-  if (@available(macOS 10.14, *)) {
-#if !defined(MAC_OS_VERSION_11_0) || MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_VERSION_11_0
-    if (nsCocoaFeatures::OnBigSurOrLater()) {
-#else
-    if (@available(macOS 11.0, *)) {
-#endif
-      // Make native context menus respect the NSApp appearance rather than the NSWindow appearance.
-      [aMenu setAppearance:NSApp.effectiveAppearance];
-    }
-  }
-
   if (aView) {
+    NSWindow* window = aView.window;
+
+    if (@available(macOS 10.14, *)) {
+      if (window.effectiveAppearance != NSApp.effectiveAppearance) {
+        // By default, NSMenu inherits its appearance from the opening NSEvent's window. But we
+        // would like it to use the system appearance - if the system uses Dark Mode, we would like
+        // context menus to be dark even if the window's appearance is Light.
+#if !defined(MAC_OS_VERSION_11_0) || MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_VERSION_11_0
+        if (nsCocoaFeatures::OnBigSurOrLater()) {
+#else
+        if (@available(macOS 11.0, *)) {
+#endif
+          // On macOS Big Sur, we can achieve this by using -[NSMenu setAppearance:].
+          [aMenu setAppearance:NSApp.effectiveAppearance];
+        } else if (mozilla::StaticPrefs::
+                       widget_macos_enable_pre_bigsur_workaround_for_dark_mode_context_menus()) {
+          // On 10.14 and 10.15, there is no API to override the NSMenu appearance.
+          // We use the following hack: We change the NSWindow appearance just long enough that
+          // NSMenu opening picks it up, and then reset the NSWindow appearance to its old value.
+          // Resetting it in the menu delegate's menuWillOpen method seems to achieve this without
+          // any flashing effect.
+          if ([aMenu.delegate isKindOfClass:[MenuDelegate class]]) {
+            MenuDelegate* delegate = (MenuDelegate*)aMenu.delegate;
+
+            // Store the old NSWindow appearance, override it with the system appearance, and then
+            // reset it when the menu is open.
+            NSAppearance* oldAppearance = window.appearance;
+            window.appearance = NSApp.effectiveAppearance;
+            [(MenuDelegate*)delegate runBlockWhenOpen:^() {
+              window.appearance = oldAppearance;
+            }];
+          }
+        }
+      }
+    }
+
     // Create a synthetic event at the right location and open the menu [option 4].
-    NSPoint locationInWindow = nsCocoaUtils::ConvertPointFromScreen(aView.window, aPosition);
+    NSPoint locationInWindow = nsCocoaUtils::ConvertPointFromScreen(window, aPosition);
     NSEvent* event = [NSEvent mouseEventWithType:NSEventTypeRightMouseDown
                                         location:locationInWindow
                                    modifierFlags:0
                                        timestamp:NSProcessInfo.processInfo.systemUptime
-                                    windowNumber:aView.window.windowNumber
+                                    windowNumber:window.windowNumber
                                          context:nil
                                      eventNumber:0
                                       clickCount:1
