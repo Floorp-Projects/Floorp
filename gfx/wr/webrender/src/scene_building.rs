@@ -564,6 +564,7 @@ impl<'a> SceneBuilder<'a> {
             &builder.config,
             &mut builder.clip_store,
             &mut builder.prim_store,
+            builder.interners,
         );
 
         BuiltScene {
