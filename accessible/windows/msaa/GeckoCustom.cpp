@@ -16,14 +16,22 @@ IMPL_IUNKNOWN_QUERY_TAIL_AGGREGATED(mMsaa)
 
 HRESULT
 GeckoCustom::get_anchorCount(long* aCount) {
-  *aCount = mMsaa->LocalAcc()->AnchorCount();
+  AccessibleWrap* acc = mMsaa->LocalAcc();
+  if (!acc) {
+    return CO_E_OBJNOTCONNECTED;
+  }
+  *aCount = acc->AnchorCount();
   return S_OK;
 }
 
 HRESULT
 GeckoCustom::get_boundsInCSSPixels(int32_t* aX, int32_t* aY, int32_t* aWidth,
                                    int32_t* aHeight) {
-  nsIntRect bounds = mMsaa->LocalAcc()->BoundsInCSSPixels();
+  AccessibleWrap* acc = mMsaa->LocalAcc();
+  if (!acc) {
+    return CO_E_OBJNOTCONNECTED;
+  }
+  nsIntRect bounds = acc->BoundsInCSSPixels();
   if (!bounds.IsEmpty()) {
     *aWidth = bounds.Width();
     *aHeight = bounds.Height();
@@ -38,7 +46,11 @@ GeckoCustom::get_boundsInCSSPixels(int32_t* aX, int32_t* aY, int32_t* aWidth,
 
 HRESULT
 GeckoCustom::get_DOMNodeID(BSTR* aID) {
-  nsIContent* content = mMsaa->LocalAcc()->GetContent();
+  AccessibleWrap* acc = mMsaa->LocalAcc();
+  if (!acc) {
+    return CO_E_OBJNOTCONNECTED;
+  }
+  nsIContent* content = acc->GetContent();
   if (!content) {
     return S_OK;
   }
@@ -55,18 +67,29 @@ GeckoCustom::get_DOMNodeID(BSTR* aID) {
 STDMETHODIMP
 GeckoCustom::get_ID(uint64_t* aID) {
   AccessibleWrap* acc = mMsaa->LocalAcc();
+  if (!acc) {
+    return CO_E_OBJNOTCONNECTED;
+  }
   *aID = acc->IsDoc() ? 0 : reinterpret_cast<uintptr_t>(acc);
   return S_OK;
 }
 
 STDMETHODIMP
 GeckoCustom::get_minimumIncrement(double* aIncrement) {
-  *aIncrement = mMsaa->LocalAcc()->Step();
+  AccessibleWrap* acc = mMsaa->LocalAcc();
+  if (!acc) {
+    return CO_E_OBJNOTCONNECTED;
+  }
+  *aIncrement = acc->Step();
   return S_OK;
 }
 
 STDMETHODIMP
 GeckoCustom::get_mozState(uint64_t* aState) {
-  *aState = mMsaa->LocalAcc()->State();
+  AccessibleWrap* acc = mMsaa->LocalAcc();
+  if (!acc) {
+    return CO_E_OBJNOTCONNECTED;
+  }
+  *aState = acc->State();
   return S_OK;
 }
