@@ -869,6 +869,12 @@ PrototypeDocumentContentSink::OnStreamComplete(nsIStreamLoader* aLoader,
 NS_IMETHODIMP
 PrototypeDocumentContentSink::OnScriptCompileComplete(JSScript* aScript,
                                                       nsresult aStatus) {
+  // The mCurrentScriptProto may have been cleared out by another
+  // PrototypeDocumentContentSink.
+  if (!mCurrentScriptProto) {
+    return NS_OK;
+  }
+
   // When compiling off thread the script will not have been attached to the
   // script proto yet.
   if (aScript && !mCurrentScriptProto->HasScriptObject())
