@@ -1,0 +1,5 @@
+include LICENSE README.rst
+include src_py3/typing_extensions.py
+include src_py3/test_typing_extensions.py
+include src_py2/typing_extensions.py
+include src_py2/test_typing_extensions.py
