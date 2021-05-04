@@ -879,18 +879,6 @@ AbortReasonOr<Ok> WarpScriptOracle::maybeInlineIC(WarpOpSnapshotList& snapshots,
           return abort(AbortReason::Error);
         }
         break;
-      case CacheOp::GuardFrameHasNoArgumentsObject:
-        if (info_->needsArgsObj()) {
-          // The script used optimized-arguments at some point but not anymore.
-          // Don't transpile this stale Baseline IC stub.
-          [[maybe_unused]] unsigned line, column;
-          LineNumberAndColumn(script_, loc, &line, &column);
-          JitSpew(JitSpew_WarpTranspiler,
-                  "GuardFrameHasNoArgumentsObject with NeedsArgsObj @ %s:%u:%u",
-                  script_->filename(), line, column);
-          return Ok();
-        }
-        break;
       default:
         break;
     }
