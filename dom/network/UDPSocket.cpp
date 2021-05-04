@@ -82,9 +82,7 @@ already_AddRefed<UDPSocket> UDPSocket::Constructor(const GlobalObject& aGlobal,
 
     // check if localAddress is a valid IPv4/6 address
     NS_ConvertUTF16toUTF8 address(localAddress);
-    PRNetAddr prAddr;
-    PRStatus status = PR_StringToNetAddr(address.BeginReading(), &prAddr);
-    if (status != PR_SUCCESS) {
+    if (!net::HostIsIPLiteral(address)) {
       aRv.Throw(NS_ERROR_DOM_INVALID_ACCESS_ERR);
       return nullptr;
     }

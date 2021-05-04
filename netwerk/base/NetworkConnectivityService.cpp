@@ -128,17 +128,15 @@ already_AddRefed<AddrInfo> NetworkConnectivityService::MapNAT64IPs(
 // Returns true if a prefix was read and saved to the argument
 static inline bool NAT64PrefixFromPref(NetAddr* prefix) {
   nsAutoCString nat64PrefixPref;
-  PRNetAddr prAddr{};
 
   nsresult rv = Preferences::GetCString(
       "network.connectivity-service.nat64-prefix", nat64PrefixPref);
   if (NS_FAILED(rv) || nat64PrefixPref.IsEmpty() ||
-      PR_StringToNetAddr(nat64PrefixPref.get(), &prAddr) != PR_SUCCESS ||
-      prAddr.raw.family != PR_AF_INET6) {
+      NS_FAILED(prefix->InitFromString(nat64PrefixPref)) ||
+      prefix->raw.family != PR_AF_INET6) {
     return false;
   }
 
-  PRNetAddrToNetAddr(&prAddr, prefix);
   return true;
 }
 
