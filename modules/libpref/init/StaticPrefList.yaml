@@ -11184,6 +11184,8 @@
   # TODO(emilio): In order to enable this on GTK we need to teach
   # nsNativeThemeGTK to draw non-system-themed widgets, which seems a bit hard,
   # or alternatively do this only for documents which use the non-native theme.
+  #
+  # We also need to enable widget.gtk.alt-theme.dark.
   value: false
 #endif
   mirror: always
@@ -11207,6 +11209,17 @@
 
 # Whether to allow gtk dark themes in content.
 - name: widget.content.allow-gtk-dark-theme
+  type: bool
+  value: false
+  mirror: always
+
+# Whether we try to extract dark theme GTK colors.
+#
+# This has a startup performance cost (see bug 1709295), so until we need them
+# (that is, until we implement the color-scheme CSS property / meta tag / etc,
+# or we start following the firefox theme color scheme in our UI with
+# widget.system-colors-follow-theme) we keep this code pref'd off.
+- name: widget.gtk.alt-theme.dark
   type: bool
   value: false
   mirror: always
