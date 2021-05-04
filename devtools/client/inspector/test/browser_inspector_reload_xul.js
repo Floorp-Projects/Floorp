@@ -23,14 +23,7 @@ async function testToolboxInitialization(tab, inspector, toolbox) {
   await testMarkupView("#p", inspector);
 
   info("Reloading the page.");
-  const markuploaded = inspector.once("markuploaded");
-  const onNewRoot = inspector.once("new-root");
-  const onUpdated = inspector.once("inspector-updated");
-  await toolbox.target.reload();
-  info("Waiting for inspector to be ready.");
-  await markuploaded;
-  await onNewRoot;
-  await onUpdated;
+  await navigateTo(TEST_URI);
 
   await selectNode("#q", inspector);
   await testMarkupView("#q", inspector);

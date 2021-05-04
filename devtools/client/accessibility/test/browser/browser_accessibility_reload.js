@@ -59,7 +59,8 @@ const tests = [
   },
   {
     desc: "Reload the page.",
-    setup: async ({ panel }) => reload(panel.accessibilityProxy.currentTarget),
+    setup: async ({ panel }) =>
+      panel.accessibilityProxy.commands.targetCommand.reloadTopLevelTarget(),
     expected: {
       tree: [
         {
