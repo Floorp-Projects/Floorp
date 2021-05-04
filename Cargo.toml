@@ -82,9 +82,6 @@ packed_simd = { git = "https://github.com/hsivonen/packed_simd", rev="0917fe7800
 rlbox_lucet_sandbox = { git = "https://github.com/PLSysSec/rlbox_lucet_sandbox/", rev="f3cace4fb8b53db0849c62af4fa62bade5a620f7" }
 nix = { git = "https://github.com/shravanrn/nix/", rev="4af6c367603869a30fddb5ffb0aba2b9477ba92e" }
 spirv_cross = { git = "https://github.com/kvark/spirv_cross", branch = "wgpu5" }
-# failure's backtrace feature might break our builds, see bug 1608157.
-failure = { git = "https://github.com/badboy/failure", rev = "64af847bc5fdcb6d2438bec8a6030812a80519a5" }
-failure_derive = { git = "https://github.com/badboy/failure", rev = "64af847bc5fdcb6d2438bec8a6030812a80519a5" }
 minidump_writer_linux = { git = "https://github.com/msirringhaus/minidump_writer_linux.git", rev = "47cba046aabef76233942a09f31e6ef7a8a4eda9" }
 xmldecl = { git = "https://github.com/hsivonen/xmldecl", rev="a74f7df5bf6cb11194fb74daa0c3cf42f326fd90" }
 
@@ -108,3 +105,7 @@ package = "autocfg"
 # There is not going to be new version of mio 0.6, mio now being >= 0.7.11.
 [patch.crates-io.mio]
 path = "third_party/rust/mio"
+
+# Patch failure 0.1.8 to disable the backtrace feature by default. See bug 1608157.
+[patch.crates-io.failure]
+path = "third_party/rust/failure"
