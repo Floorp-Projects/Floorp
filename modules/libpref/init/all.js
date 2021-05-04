@@ -1053,6 +1053,10 @@ pref("dom.cycle_collector.incremental", true);
 //   3 = openAbused
 pref("privacy.popups.disable_from_plugins", 3);
 
+// If enabled by privacy.resistFingerprinting.testGranularityMask, list of
+// domains exempted from RFP.
+pref("privacy.resistFingerprinting.exemptedDomains", "*.example.invalid");
+
 // Fix cookie blocking breakage by providing ephemeral Paritioned LocalStorage
 // for a list of hosts when detected as trackers.
 // (See nsICookieService::BEHAVIOR_REJECT_TRACKER cookie behavior)
