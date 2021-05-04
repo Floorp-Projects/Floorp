@@ -6,11 +6,8 @@
 #include "CustomMatchers.h"
 
 void ExplicitOperatorBoolChecker::registerMatchers(MatchFinder *AstMatcher) {
-  // Older clang versions such as the ones used on the infra recognize these
-  // conversions as 'operator _Bool', but newer clang versions recognize these
-  // as 'operator bool'.
   AstMatcher->addMatcher(
-      cxxMethodDecl(anyOf(hasName("operator bool"), hasName("operator _Bool")))
+      cxxMethodDecl(allOf(isFirstParty(), hasName("operator bool")))
           .bind("node"),
       this);
 }
