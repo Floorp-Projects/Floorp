@@ -4036,23 +4036,6 @@ bool BaselineCompilerCodeGen::emitFormalArgAccess(JSOp op) {
   // Sync so that we can use R0.
   frame.syncStack(0);
 
-  // If the script is known to have an arguments object, we can just use it.
-  // Else, we *may* have an arguments object (because we can't invalidate
-  // when needsArgsObj becomes |true|), so we have to test HAS_ARGS_OBJ.
-  Label done;
-  if (!handler.script()->needsArgsObj()) {
-    Label hasArgsObj;
-    masm.branchTest32(Assembler::NonZero, frame.addressOfFlags(),
-                      Imm32(BaselineFrame::HAS_ARGS_OBJ), &hasArgsObj);
-    if (op == JSOp::GetArg) {
-      masm.loadValue(frame.addressOfArg(arg), R0);
-    } else {
-      frame.storeStackValue(-1, frame.addressOfArg(arg), R0);
-    }
-    masm.jump(&done);
-    masm.bind(&hasArgsObj);
-  }
-
   // Load the arguments object data vector.
   Register reg = R2.scratchReg();
   masm.loadPtr(frame.addressOfArgsObj(), reg);
@@ -4085,7 +4068,6 @@ bool BaselineCompilerCodeGen::emitFormalArgAccess(JSOp op) {
     masm.bind(&skipBarrier);
   }
 
-  masm.bind(&done);
   return true;
 }
 
@@ -5523,23 +5505,7 @@ template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_Arguments() {
   frame.syncStack(0);
 
-  MOZ_ASSERT_IF(handler.maybeScript(),
-                handler.maybeScript()->argumentsHasVarBinding());
-
-  Label done;
-  if (!handler.maybeScript() || !handler.maybeScript()->needsArgsObj()) {
-    // We assume the script does not need an arguments object. However, this
-    // assumption can be invalidated later, see argumentsOptimizationFailed
-    // in JSScript. Guard on the script's NeedsArgsObj flag.
-    masm.moveValue(MagicValue(JS_OPTIMIZED_ARGUMENTS), R0);
-
-    // If we don't need an arguments object, skip the VM call.
-    Register scratch = R1.scratchReg();
-    loadScript(scratch);
-    masm.branchTest32(
-        Assembler::Zero, Address(scratch, JSScript::offsetOfMutableFlags()),
-        Imm32(uint32_t(JSScript::MutableFlags::NeedsArgsObj)), &done);
-  }
+  MOZ_ASSERT_IF(handler.maybeScript(), handler.maybeScript()->needsArgsObj());
 
   prepareVMCall();
 
@@ -5551,7 +5517,6 @@ bool BaselineCodeGen<Handler>::emit_Arguments() {
     return false;
   }
 
-  masm.bind(&done);
   frame.push(R0);
   return true;
 }
