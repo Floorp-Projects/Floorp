@@ -409,8 +409,10 @@ class PromptParent extends JSWindowActorParent {
       try {
         domain ||= allowTabFocusByPromptPrincipal.URI.displayHostPort;
       } catch (ex) {
-        domain ||= allowTabFocusByPromptPrincipal.URI.prePath;
+        /* Ignore exceptions from fetching the display host/port. */
       }
+      // If it's still empty, use `prePath` so we have *something* to show:
+      domain ||= allowTabFocusByPromptPrincipal.URI.prePath;
       let [allowFocusMsg] = gTabBrowserLocalization.formatMessagesSync([
         {
           id: "tabbrowser-allow-dialogs-to-get-focus",
