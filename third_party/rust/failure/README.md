@@ -1,5 +1,11 @@
 # failure - a new error management story
 
+**Notice**: `failure` is deprecated. If you liked `failure`'s API, consider using:
+- [Anyhow](https://github.com/dtolnay/anyhow) is a good replacement for `failure::Error`.
+- [thiserror](https://github.com/dtolnay/thiserror) is a good, near drop-in replacement for `#[derive(Fail)]`.
+
+---
+
 [![Build Status](https://travis-ci.org/rust-lang-nursery/failure.svg?branch=master)](https://travis-ci.org/rust-lang-nursery/failure)
 [![Latest Version](https://img.shields.io/crates/v/failure.svg)](https://crates.io/crates/failure)
 [![docs](https://docs.rs/failure/badge.svg)](https://docs.rs/failure)
