@@ -7,10 +7,7 @@
 #include "core/TelemetryEvent.h"
 #include "gtest/gtest.h"
 #include "js/Array.h"  // JS::GetArrayLength
-#include "js/TypeDecls.h"
-#include "mozilla/BasePrincipal.h"
 #include "mozilla/Maybe.h"
-#include "mozilla/RefPtr.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/Unused.h"
 #include "TelemetryFixture.h"
@@ -20,12 +17,8 @@
 #include <stdlib.h>
 #include "nsContentSecurityManager.h"
 #include "nsContentSecurityUtils.h"
-#include "nsContentUtils.h"
-#include "nsIContentPolicy.h"
-#include "nsILoadInfo.h"
 #include "nsNetUtil.h"
 #include "nsStringFwd.h"
-#include "mozilla/nsRedirectHistoryEntry.h"
 
 using namespace mozilla;
 using namespace TelemetryTestHelpers;
@@ -36,12 +29,11 @@ TEST_F(TelemetryTestFixture, UnexpectedPrivilegedLoadsTelemetryTest) {
     nsCString extraValueContenttype;
     nsCString extraValueRemotetype;
     nsCString extraValueFiledetails;
-    nsCString extraValueRedirects;
   };
 
   struct testCasesAndResults {
     nsCString urlstring;
-    nsContentPolicyType contentType;
+    ExtContentPolicyType contentType;
     nsCString remoteType;
     testResults expected;
   };
@@ -57,126 +49,82 @@ TEST_F(TelemetryTestFixture, UnexpectedPrivilegedLoadsTelemetryTest) {
   constexpr auto extraKeyContenttype = "contenttype"_ns;
   constexpr auto extraKeyRemotetype = "remotetype"_ns;
   constexpr auto extraKeyFiledetails = "filedetails"_ns;
-  constexpr auto extraKeyRedirects = "redirects"_ns;
 
   // some cases from TestFilenameEvalParser
   // no need to replicate all scenarios?!
   testCasesAndResults myTestCases[] = {
       {"chrome://firegestures/content/browser.js"_ns,
-       nsContentPolicyType::TYPE_SCRIPT,
+       ExtContentPolicy::TYPE_SCRIPT,
        "web"_ns,
        {"chromeuri"_ns, "TYPE_SCRIPT"_ns, "web"_ns,
-        "chrome://firegestures/content/browser.js"_ns, ""_ns}},
+        "chrome://firegestures/content/browser.js"_ns}},
       {"resource://firegestures/content/browser.js"_ns,
-       nsContentPolicyType::TYPE_SCRIPT,
+       ExtContentPolicy::TYPE_SCRIPT,
        "web"_ns,
        {"resourceuri"_ns, "TYPE_SCRIPT"_ns, "web"_ns,
-        "resource://firegestures/content/browser.js"_ns, ""_ns}},
+        "resource://firegestures/content/browser.js"_ns}},
       {// test that we don't report blob details
        // ..and test that we strip of URLs from remoteTypes
        "blob://000-000"_ns,
-       nsContentPolicyType::TYPE_SCRIPT,
+       ExtContentPolicy::TYPE_SCRIPT,
        "webIsolated=https://blob.example/"_ns,
-       {"bloburi"_ns, "TYPE_SCRIPT"_ns, "webIsolated"_ns, "unknown"_ns, ""_ns}},
+       {"bloburi"_ns, "TYPE_SCRIPT"_ns, "webIsolated"_ns, "unknown"_ns}},
       {// test for cases where finalURI is null, due to a broken nested URI
        // .. like malformed moz-icon URLs
        "moz-icon:blahblah"_ns,
-       nsContentPolicyType::TYPE_STYLESHEET,
+       ExtContentPolicy::TYPE_STYLESHEET,
        "web"_ns,
-       {"other"_ns, "TYPE_STYLESHEET"_ns, "web"_ns, "unknown"_ns, ""_ns}},
+       {"other"_ns, "TYPE_STYLESHEET"_ns, "web"_ns, "unknown"_ns}},
       {// we dont report data urls
        // ..and test that we strip of URLs from remoteTypes
        "data://blahblahblah"_ns,
-       nsContentPolicyType::TYPE_SCRIPT,
+       ExtContentPolicy::TYPE_SCRIPT,
        "webCOOP+COEP=https://data.example"_ns,
-       {"dataurl"_ns, "TYPE_SCRIPT"_ns, "webCOOP+COEP"_ns, "unknown"_ns,
-        ""_ns}},
+       {"dataurl"_ns, "TYPE_SCRIPT"_ns, "webCOOP+COEP"_ns, "unknown"_ns}},
       {// handle data URLs for webextension content scripts differently
        // .. by noticing their annotation
        "data:text/css;extension=style;charset=utf-8,/* some css here */"_ns,
-       nsContentPolicyType::TYPE_STYLESHEET,
+       ExtContentPolicy::TYPE_STYLESHEET,
        "web"_ns,
        {"dataurl-extension-contentstyle"_ns, "TYPE_STYLESHEET"_ns, "web"_ns,
-        "unknown"_ns, ""_ns}},
+        "unknown"_ns}},
       {// we only report file URLs on windows, where we can easily sanitize
        "file://c/users/tom/file.txt"_ns,
-       nsContentPolicyType::TYPE_SCRIPT,
+       ExtContentPolicy::TYPE_SCRIPT,
        "web"_ns,
        {
 #if defined(XP_WIN)
            "sanitizedWindowsURL"_ns, "TYPE_SCRIPT"_ns, "web"_ns,
-           "file://.../file.txt"_ns, ""_ns
+           "file://.../file.txt"_ns
 
 #else
-           "other"_ns, "TYPE_SCRIPT"_ns, "web"_ns, "unknown"_ns, ""_ns
+           "other"_ns, "TYPE_SCRIPT"_ns, "web"_ns, "unknown"_ns
 #endif
        }},
-      {// test for one redirect
-       "moz-extension://abcdefab-1234-4321-0000-abcdefabcdef/js/assets.js"_ns,
-       nsContentPolicyType::TYPE_SCRIPT,
-       "web"_ns,
-       {"other"_ns, "TYPE_SCRIPT"_ns, "web"_ns, "unknown"_ns, "https"_ns}},
       {// test for cases where finalURI is empty
        ""_ns,
-       nsContentPolicyType::TYPE_STYLESHEET,
+       ExtContentPolicy::TYPE_STYLESHEET,
        "web"_ns,
-       {"other"_ns, "TYPE_STYLESHEET"_ns, "web"_ns, "unknown"_ns, ""_ns}},
+       {"other"_ns, "TYPE_STYLESHEET"_ns, "web"_ns, "unknown"_ns}},
       {// test for cases where finalURI is null, due to the struct layout, we'll
        // override the URL with nullptr in loop below.
        "URLWillResultInNullPtr"_ns,
-       nsContentPolicyType::TYPE_SCRIPT,
+       ExtContentPolicy::TYPE_SCRIPT,
        "web"_ns,
-       {"other"_ns, "TYPE_SCRIPT"_ns, "web"_ns, "unknown"_ns, ""_ns}},
+       {"other"_ns, "TYPE_SCRIPT"_ns, "web"_ns, "unknown"_ns}},
   };
 
   int i = 0;
   for (auto const& currentTest : myTestCases) {
-    nsresult rv;
     nsCOMPtr<nsIURI> uri;
 
     // special-casing for a case where the uri is null
     if (!currentTest.urlstring.Equals("URLWillResultInNullPtr")) {
       NS_NewURI(getter_AddRefs(uri), currentTest.urlstring);
     }
-
-    // We can't create channels for chrome: URLs unless they are in a chrome
-    // registry that maps them into the actual destination URL (usually
-    // file://). It seems that gtest don't have chrome manifest registered, so
-    // we'll use a mockChannel with a mockUri.
-    nsCOMPtr<nsIURI> mockUri;
-    rv = NS_NewURI(getter_AddRefs(mockUri), "http://example.com"_ns);
-    ASSERT_EQ(rv, NS_OK) << "Could not create mockUri";
-    nsCOMPtr<nsIChannel> mockChannel;
-    nsCOMPtr<nsIIOService> service = do_GetIOService();
-    if (!service) {
-      ASSERT_TRUE(false)
-      << "Couldn't initialize IOService";
-    }
-    rv = service->NewChannelFromURI(
-        mockUri, nullptr, nsContentUtils::GetSystemPrincipal(),
-        nsContentUtils::GetSystemPrincipal(), 0, currentTest.contentType,
-        getter_AddRefs(mockChannel));
-    ASSERT_EQ(rv, NS_OK) << "Could not create a mock channel";
-    nsCOMPtr<nsILoadInfo> mockLoadInfo = mockChannel->LoadInfo();
-
-    // We're adding a redirect entry for one specific test
-    if (currentTest.urlstring.EqualsASCII(
-            "moz-extension://abcdefab-1234-4321-0000-abcdefabcdef/js/"
-            "assets.js")) {
-      nsCOMPtr<nsIURI> redirUri;
-      NS_NewURI(getter_AddRefs(redirUri),
-                "https://www.analytics.example/analytics.js"_ns);
-      nsCOMPtr<nsIPrincipal> redirPrincipal =
-          BasePrincipal::CreateContentPrincipal(redirUri, OriginAttributes());
-      nsCOMPtr<nsIRedirectHistoryEntry> entry =
-          new net::nsRedirectHistoryEntry(redirPrincipal, nullptr, ""_ns);
-
-      mockLoadInfo->AppendRedirectHistoryEntry(entry, false);
-    }
-
     // this will record the event
     nsContentSecurityManager::MeasureUnexpectedPrivilegedLoads(
-        mockLoadInfo, uri, currentTest.remoteType);
+        uri, currentTest.contentType, currentTest.remoteType);
 
     // let's inspect the recorded events
 
@@ -252,15 +200,5 @@ TEST_F(TelemetryTestFixture, UnexpectedPrivilegedLoadsTelemetryTest) {
     ASSERT_STREQ(NS_ConvertUTF16toUTF8(jsStr).get(),
                  currentTest.expected.extraValueFiledetails.get())
         << "Reported value for extra filedetails should equals supplied value";
-    // checking the extraKeyRedirects match
-    JS::Rooted<JS::Value> extraValRedirects(aCx);
-    ASSERT_TRUE(JS_GetProperty(aCx, extraObj, extraKeyRedirects.get(),
-                               &extraValRedirects))
-    << "Must be able to get the extra value for redirects";
-    ASSERT_TRUE(jsStr.init(aCx, extraValRedirects))
-    << "Extra value redirects must be able to be init'd to a jsstring";
-    ASSERT_STREQ(NS_ConvertUTF16toUTF8(jsStr).get(),
-                 currentTest.expected.extraValueRedirects.get())
-        << "Reported value for extra redirect should equals supplied value";
   }
 }
