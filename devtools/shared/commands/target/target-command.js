@@ -276,7 +276,23 @@ class TargetCommand extends EventEmitter {
     return this._listenersStarted.has(type);
   }
 
-  hasTargetWatcherSupport(type) {
+  /**
+   * Check if the watcher is currently supported.
+   *
+   * When no typeOrTrait is provided, we will only check that the watcher is
+   * available.
+   *
+   * When a typeOrTrait is provided, we will check for an explicit trait on the
+   * watcherFront that indicates either that:
+   *   - a target type is supported
+   *   - or that a custom trait is true
+   *
+   * @param {String} [targetTypeOrTrait]
+   *        Optional target type or trait.
+   * @return {Boolean} true if the watcher is available and supports the
+   *          optional targetTypeOrTrait
+   */
+  hasTargetWatcherSupport(targetTypeOrTrait) {
     // If the top level target is a parent process, we're in the browser console or browser toolbox.
     // In such case, if the browser toolbox fission pref is disabled, we don't want to use watchers
     // (even if traits on the server are enabled).
@@ -287,7 +303,14 @@ class TargetCommand extends EventEmitter {
       return false;
     }
 
-    return !!this.watcherFront?.traits[type];
+    if (targetTypeOrTrait) {
+      // Target types are also exposed as traits, where resource types are
+      // exposed under traits.resources (cf hasResourceWatcherSupport
+      // implementation).
+      return !!this.watcherFront?.traits[targetTypeOrTrait];
+    }
+
+    return !!this.watcherFront;
   }
 
   isServerTargetSwitchingEnabled() {
