@@ -811,7 +811,17 @@ SECStatus PK11_VerifyWithMechanism(SECKEYPublicKey *key,
  **********************************************************************/
 void PK11_DestroyContext(PK11Context *context, PRBool freeit);
 PK11Context *PK11_CreateContextBySymKey(CK_MECHANISM_TYPE type,
-                                        CK_ATTRIBUTE_TYPE operation, PK11SymKey *symKey, SECItem *param);
+                                        CK_ATTRIBUTE_TYPE operation,
+                                        PK11SymKey *symKey,
+                                        const SECItem *param);
+PK11Context *PK11_CreateContextByPubKey(CK_MECHANISM_TYPE type,
+                                        CK_ATTRIBUTE_TYPE operation,
+                                        SECKEYPublicKey *pubKey,
+                                        const SECItem *param, void *pwArg);
+PK11Context *PK11_CreateContextByPrivKey(CK_MECHANISM_TYPE type,
+                                         CK_ATTRIBUTE_TYPE operation,
+                                         SECKEYPrivateKey *privKey,
+                                         const SECItem *param);
 PK11Context *PK11_CreateDigestContext(SECOidTag hashAlg);
 PK11Context *PK11_CloneContext(PK11Context *old);
 SECStatus PK11_DigestBegin(PK11Context *cx);
@@ -1007,7 +1017,7 @@ PRBool SECMOD_HasRootCerts(void);
 /**********************************************************************
  * Other Utilities
  **********************************************************************/
-/* 
+/*
  * Get the state of the system FIPS mode -
  *  NSS uses this to force FIPS mode if the system bit is on. This returns
  *  the system state independent of the database state and can be called

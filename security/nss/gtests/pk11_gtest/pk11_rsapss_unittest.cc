@@ -9,7 +9,6 @@
 #include "pk11pub.h"
 #include "sechash.h"
 
-#include "cpputil.h"
 #include "databuffer.h"
 
 #include "gtest/gtest.h"
@@ -28,81 +27,66 @@
 
 namespace nss_test {
 
-class Pkcs11RsaPssTestWycheproof
-    : public ::testing::TestWithParam<RsaPssTestVector> {
+CK_MECHANISM_TYPE RsaPssMapCombo(SECOidTag hashOid) {
+  switch (hashOid) {
+    case SEC_OID_SHA1:
+      return CKM_SHA1_RSA_PKCS_PSS;
+    case SEC_OID_SHA224:
+      return CKM_SHA224_RSA_PKCS_PSS;
+    case SEC_OID_SHA256:
+      return CKM_SHA256_RSA_PKCS_PSS;
+    case SEC_OID_SHA384:
+      return CKM_SHA384_RSA_PKCS_PSS;
+    case SEC_OID_SHA512:
+      return CKM_SHA512_RSA_PKCS_PSS;
+    default:
+      break;
+  }
+  return CKM_INVALID_MECHANISM;
+}
+
+class Pkcs11RsaPssTestBase : public Pk11SignatureTest {
  protected:
-  void TestPss(const RsaPssTestVector& vec) {
-    SECItem spki_item = {siBuffer, toUcharPtr(vec.public_key.data()),
-                         static_cast<unsigned int>(vec.public_key.size())};
-
-    ScopedCERTSubjectPublicKeyInfo cert_spki(
-        SECKEY_DecodeDERSubjectPublicKeyInfo(&spki_item));
-    ASSERT_TRUE(cert_spki);
-
-    ScopedSECKEYPublicKey pub_key(SECKEY_ExtractPublicKey(cert_spki.get()));
-    ASSERT_TRUE(pub_key);
-
-    DataBuffer hash;
-    hash.Allocate(static_cast<size_t>(HASH_ResultLenByOidTag(vec.hash_oid)));
-    SECStatus rv = PK11_HashBuf(vec.hash_oid, toUcharPtr(hash.data()),
-                                toUcharPtr(vec.msg.data()), vec.msg.size());
-    ASSERT_EQ(rv, SECSuccess);
-
-    // Verify.
-    SECItem hash_item = {siBuffer, toUcharPtr(hash.data()),
-                         static_cast<unsigned int>(hash.len())};
-    SECItem sig_item = {siBuffer, toUcharPtr(vec.sig.data()),
-                        static_cast<unsigned int>(vec.sig.size())};
-    CK_MECHANISM_TYPE hash_mech = 0;
-    switch (vec.hash_oid) {
-      case SEC_OID_SHA1:
-        hash_mech = CKM_SHA_1;
-        break;
-      case SEC_OID_SHA224:
-        hash_mech = CKM_SHA224;
-        break;
-      case SEC_OID_SHA256:
-        hash_mech = CKM_SHA256;
-        break;
-      case SEC_OID_SHA384:
-        hash_mech = CKM_SHA384;
-        break;
-      case SEC_OID_SHA512:
-        hash_mech = CKM_SHA512;
-        break;
-      default:
-        ASSERT_TRUE(hash_mech);
-        return;
-    }
-
-    CK_RSA_PKCS_PSS_PARAMS pss_params = {hash_mech, vec.mgf_hash, vec.sLen};
-    SECItem params = {siBuffer, reinterpret_cast<unsigned char*>(&pss_params),
-                      sizeof(pss_params)};
-
-    rv = PK11_VerifyWithMechanism(pub_key.get(), CKM_RSA_PKCS_PSS, &params,
-                                  &sig_item, &hash_item, nullptr);
-    EXPECT_EQ(vec.valid ? SECSuccess : SECFailure, rv);
-  };
-};
-
-class Pkcs11RsaPssTest : public Pk11SignatureTest {
- public:
-  Pkcs11RsaPssTest() : Pk11SignatureTest(CKM_RSA_PKCS_PSS, SEC_OID_SHA1) {
-    pss_params_.hashAlg = CKM_SHA_1;
-    pss_params_.mgf = CKG_MGF1_SHA1;
-    pss_params_.sLen = HASH_ResultLenByOidTag(SEC_OID_SHA1);
+  Pkcs11RsaPssTestBase(SECOidTag hashOid, CK_RSA_PKCS_MGF_TYPE mgf, int sLen)
+      : Pk11SignatureTest(CKM_RSA_PKCS_PSS, hashOid, RsaPssMapCombo(hashOid)) {
+    pss_params_.hashAlg = PK11_AlgtagToMechanism(hashOid);
+    pss_params_.mgf = mgf;
+    pss_params_.sLen = sLen;
 
     params_.type = siBuffer;
     params_.data = reinterpret_cast<unsigned char*>(&pss_params_);
     params_.len = sizeof(pss_params_);
   }
 
- protected:
   const SECItem* parameters() const { return &params_; }
+
+  void Verify(const RsaPssTestVector& vec) {
+    Pkcs11SignatureTestParams params = {
+        DataBuffer(), DataBuffer(vec.public_key.data(), vec.public_key.size()),
+        DataBuffer(vec.msg.data(), vec.msg.size()),
+        DataBuffer(vec.sig.data(), vec.sig.size())};
+
+    Pk11SignatureTest::Verify(params, vec.valid);
+  }
 
  private:
   CK_RSA_PKCS_PSS_PARAMS pss_params_;
   SECItem params_;
+};
+
+class Pkcs11RsaPssTest : public Pkcs11RsaPssTestBase {
+ public:
+  Pkcs11RsaPssTest()
+      : Pkcs11RsaPssTestBase(SEC_OID_SHA1, CKG_MGF1_SHA1, SHA1_LENGTH) {}
+};
+
+class Pkcs11RsaPssTestWycheproof
+    : public Pkcs11RsaPssTestBase,
+      public ::testing::WithParamInterface<RsaPssTestVector> {
+ public:
+  Pkcs11RsaPssTestWycheproof()
+      : Pkcs11RsaPssTestBase(GetParam().hash_oid, GetParam().mgf_hash,
+                             GetParam().sLen) {}
 };
 
 TEST_F(Pkcs11RsaPssTest, GenerateAndSignAndVerify) {
@@ -179,7 +163,9 @@ class Pkcs11RsaPssVectorTest
     : public Pkcs11RsaPssTest,
       public ::testing::WithParamInterface<Pkcs11SignatureTestParams> {};
 
-TEST_P(Pkcs11RsaPssVectorTest, Verify) { Verify(GetParam()); }
+TEST_P(Pkcs11RsaPssVectorTest, Verify) {
+  Pk11SignatureTest::Verify(GetParam());
+}
 
 TEST_P(Pkcs11RsaPssVectorTest, SignAndVerify) { SignAndVerify(GetParam()); }
 
@@ -227,7 +213,7 @@ static const Pkcs11SignatureTestParams kRsaPssVectors[] = {
 INSTANTIATE_TEST_SUITE_P(RsaPssSignVerify, Pkcs11RsaPssVectorTest,
                          ::testing::ValuesIn(kRsaPssVectors));
 
-TEST_P(Pkcs11RsaPssTestWycheproof, Verify) { TestPss(GetParam()); }
+TEST_P(Pkcs11RsaPssTestWycheproof, Verify) { Verify(GetParam()); }
 
 INSTANTIATE_TEST_SUITE_P(
     Wycheproof2048RsaPssSha120Test, Pkcs11RsaPssTestWycheproof,

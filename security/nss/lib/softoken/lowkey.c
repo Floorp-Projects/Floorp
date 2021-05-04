@@ -220,7 +220,7 @@ void
 nsslowkey_DestroyPublicKey(NSSLOWKEYPublicKey *pubk)
 {
     if (pubk && pubk->arena) {
-        PORT_FreeArena(pubk->arena, PR_FALSE);
+        PORT_FreeArena(pubk->arena, PR_TRUE);
     }
 }
 unsigned
@@ -310,7 +310,7 @@ nsslowkey_ConvertToPublicKey(NSSLOWKEYPrivateKey *privk)
                         break;
                     }
                     rv = SECITEM_CopyItem(privk->arena, &privk->u.dsa.publicValue, &publicValue);
-                    SECITEM_FreeItem(&publicValue, PR_FALSE);
+                    SECITEM_ZfreeItem(&publicValue, PR_FALSE);
                     if (rv != SECSuccess) {
                         break;
                     }
@@ -349,7 +349,7 @@ nsslowkey_ConvertToPublicKey(NSSLOWKEYPrivateKey *privk)
                         break;
                     }
                     rv = SECITEM_CopyItem(privk->arena, &privk->u.dh.publicValue, &publicValue);
-                    SECITEM_FreeItem(&publicValue, PR_FALSE);
+                    SECITEM_ZfreeItem(&publicValue, PR_FALSE);
                     if (rv != SECSuccess) {
                         break;
                     }
@@ -394,7 +394,7 @@ nsslowkey_ConvertToPublicKey(NSSLOWKEYPrivateKey *privk)
             break;
     }
 
-    PORT_FreeArena(arena, PR_FALSE);
+    PORT_FreeArena(arena, PR_TRUE);
     return NULL;
 }
 

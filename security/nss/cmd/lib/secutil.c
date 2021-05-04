@@ -1378,6 +1378,7 @@ secu_PrintECPublicKey(FILE *out, SECKEYPublicKey *pk, char *m, int level)
         (pk->u.ec.DEREncodedParams.data[0] == 0x06)) {
         curveOID.len = pk->u.ec.DEREncodedParams.data[1];
         curveOID.data = pk->u.ec.DEREncodedParams.data + 2;
+        curveOID.len = PR_MIN(curveOID.len, pk->u.ec.DEREncodedParams.len - 2);
         SECU_PrintObjectID(out, &curveOID, "Curve", level + 1);
     }
 }

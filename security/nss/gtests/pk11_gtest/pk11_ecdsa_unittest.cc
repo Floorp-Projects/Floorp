@@ -8,6 +8,7 @@
 #include "sechash.h"
 #include "cryptohi.h"
 
+#include "cpputil.h"
 #include "gtest/gtest.h"
 #include "nss_scoped_ptrs.h"
 
@@ -19,10 +20,29 @@
 
 namespace nss_test {
 
+CK_MECHANISM_TYPE
+EcHashToComboMech(SECOidTag hash) {
+  switch (hash) {
+    case SEC_OID_SHA1:
+      return CKM_ECDSA_SHA1;
+    case SEC_OID_SHA224:
+      return CKM_ECDSA_SHA224;
+    case SEC_OID_SHA256:
+      return CKM_ECDSA_SHA256;
+    case SEC_OID_SHA384:
+      return CKM_ECDSA_SHA384;
+    case SEC_OID_SHA512:
+      return CKM_ECDSA_SHA512;
+    default:
+      break;
+  }
+  return CKM_INVALID_MECHANISM;
+}
+
 class Pkcs11EcdsaTestBase : public Pk11SignatureTest {
  protected:
   Pkcs11EcdsaTestBase(SECOidTag hash_oid)
-      : Pk11SignatureTest(CKM_ECDSA, hash_oid) {}
+      : Pk11SignatureTest(CKM_ECDSA, hash_oid, EcHashToComboMech(hash_oid)) {}
 };
 
 struct Pkcs11EcdsaTestParams {
@@ -88,7 +108,8 @@ TEST_F(Pkcs11EcdsaSha256Test, ImportOnlyAlgorithmParams) {
                sizeof(kP256Pkcs8OnlyAlgorithmParams));
   DataBuffer data(kP256Data, sizeof(kP256Data));
   DataBuffer sig;
-  EXPECT_TRUE(ImportPrivateKeyAndSignHashedData(k, data, &sig));
+  DataBuffer sig2;
+  EXPECT_TRUE(ImportPrivateKeyAndSignHashedData(k, data, &sig, &sig2));
 };
 
 // Importing a private key in PKCS#8 format must succeed when the outer AlgID
@@ -99,7 +120,8 @@ TEST_F(Pkcs11EcdsaSha256Test, ImportMatchingCurveOIDAndAlgorithmParams) {
                sizeof(kP256Pkcs8MatchingCurveOIDAndAlgorithmParams));
   DataBuffer data(kP256Data, sizeof(kP256Data));
   DataBuffer sig;
-  EXPECT_TRUE(ImportPrivateKeyAndSignHashedData(k, data, &sig));
+  DataBuffer sig2;
+  EXPECT_TRUE(ImportPrivateKeyAndSignHashedData(k, data, &sig, &sig2));
 };
 
 // Importing a private key in PKCS#8 format must succeed when the outer AlgID
@@ -110,7 +132,8 @@ TEST_F(Pkcs11EcdsaSha256Test, ImportDissimilarCurveOIDAndAlgorithmParams) {
                sizeof(kP256Pkcs8DissimilarCurveOIDAndAlgorithmParams));
   DataBuffer data(kP256Data, sizeof(kP256Data));
   DataBuffer sig;
-  EXPECT_TRUE(ImportPrivateKeyAndSignHashedData(k, data, &sig));
+  DataBuffer sig2;
+  EXPECT_TRUE(ImportPrivateKeyAndSignHashedData(k, data, &sig, &sig2));
 };
 
 // Importing a private key in PKCS#8 format must fail when the outer ASN.1

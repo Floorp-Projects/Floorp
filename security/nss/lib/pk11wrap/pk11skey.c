@@ -368,6 +368,7 @@ PK11_GetWrapKey(PK11SlotInfo *slot, int wrap, CK_MECHANISM_TYPE type,
                 int series, void *wincx)
 {
     PK11SymKey *symKey = NULL;
+    CK_OBJECT_HANDLE keyHandle;
 
     PK11_EnterSlotMonitor(slot);
     if (slot->series != series ||
@@ -380,9 +381,10 @@ PK11_GetWrapKey(PK11SlotInfo *slot, int wrap, CK_MECHANISM_TYPE type,
         type = slot->wrapMechanism;
     }
 
-    symKey = PK11_SymKeyFromHandle(slot, NULL, PK11_OriginDerive,
-                                   slot->wrapMechanism, slot->refKeys[wrap], PR_FALSE, wincx);
+    keyHandle = slot->refKeys[wrap];
     PK11_ExitSlotMonitor(slot);
+    symKey = PK11_SymKeyFromHandle(slot, NULL, PK11_OriginDerive,
+                                   slot->wrapMechanism, keyHandle, PR_FALSE, wincx);
     return symKey;
 }
 

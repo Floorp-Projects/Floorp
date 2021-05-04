@@ -55,6 +55,9 @@
 #   sharedb      - run test suites with shareable database format
 #                  enabled (databases are created directly to this
 #                  format). This is the default and doesn't need to be run separately.
+#   threadunsafe - run test suites with thread unsafe environment variable
+#                  so simulate running NSS locking for PKCS #11 modules which
+#                  are not thread safe.
 #
 # Mandatory environment variables (to be set before testing):
 # -----------------------------------------------------------
@@ -75,6 +78,7 @@
 #   NSS_TESTS      - list of all test suites to run (separated by space
 #                    character, without trailing .sh)
 #                  - this list can be reduced for individual test cycles
+#   NSS_THREAD_TESTS - list of test suites run in the threadunsafe cycle
 #
 #   NSS_SSL_TESTS  - list of ssl tests to run (see ssl.sh)
 #   NSS_SSL_RUN    - list of ssl sub-tests to run (see ssl.sh)
@@ -83,7 +87,7 @@
 # ---------------
 #                           all.sh                       ~  (main)
 #                              |                               |
-#          +------------+------------+-----------+       ~  run_cycles
+#          +------------+------------+-----------+---    ~  run_cycles
 #          |            |            |           |             |
 #      standard       pkix       upgradedb     sharedb   ~  run_cycle_*
 #         ...           |           ...         ...            |
@@ -249,6 +253,37 @@ run_cycle_shared_db()
     run_tests
 }
 
+########################## run_thread_unsafe #########################
+# run test suites with an non-thread safe softoken
+# This simulates loading a non-threadsafe PKCS #11 module and makes
+# Sure we don't have any deadlocks in our locking code
+########################################################################
+run_cycle_thread_unsafe()
+{
+    TEST_MODE=THREAD_UNSAFE
+
+    TABLE_ARGS="bgcolor=lightgray"
+    html_head "Testing with non-threadsafe softoken"
+    html "</TABLE><BR>"
+
+    HOSTDIR="${HOSTDIR}/threadunsafe"
+    mkdir -p "${HOSTDIR}"
+    init_directories
+
+    NSS_FORCE_TOKEN_LOCK=1
+    export NSS_FORCE_TOKEN_LOCK
+
+    # run the tests for appropriate for thread unsafe
+    # basically it's the ssl tests right now. 
+    TESTS="${THREAD_TESTS}"
+    TESTS_SKIP="dbupgrade"
+
+    export -n NSS_SSL_TESTS
+    export -n NSS_SSL_RUN
+
+    run_tests
+}
+
 ############################# run_cycles ###############################
 # run test cycles defined in CYCLES variable
 ########################################################################
@@ -271,6 +306,9 @@ run_cycles()
         "sharedb")
             run_cycle_shared_db
             ;;
+        "threadunsafe")
+            run_cycle_thread_unsafe
+            ;;
         esac
         . ${ENV_BACKUP}
     done
@@ -288,7 +326,7 @@ if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
     . ./init.sh
 fi
 
-cycles="standard pkix"
+cycles="standard pkix threadunsafe"
 CYCLES=${NSS_CYCLES:-$cycles}
 
 NO_INIT_SUPPORT=`certutil --build-flags |grep -cw NSS_NO_INIT_SUPPORT`
@@ -297,6 +335,7 @@ if [ $NO_INIT_SUPPORT -eq 0 ]; then
 fi
 
 tests="cipher lowhash libpkix cert dbtests tools $RUN_FIPS sdr crmf smime ssl ocsp merge pkits ec gtests ssl_gtests policy"
+thread_tests="ssl ssl_gtests"
 # Don't run chains tests when we have a gyp build.
 if [ "$OBJDIR" != "Debug" -a "$OBJDIR" != "Release" ]; then
   tests="$tests chains"
@@ -304,6 +343,17 @@ fi
 TESTS=${NSS_TESTS:-$tests}
 
 ALL_TESTS=${TESTS}
+default_thread=""
+for i in ${ALL_TESTS}
+do
+    for j in ${thread_tests}
+    do
+        if [ $i = $j ]; then 
+            default_thread="$default_thread $i"
+        fi
+    done
+done
+THREAD_TESTS=${NSS_THREAD_TESTS-$default_thread}
 
 nss_ssl_tests="crl iopr policy normal_normal"
 if [ $NO_INIT_SUPPORT -eq 0 ]; then

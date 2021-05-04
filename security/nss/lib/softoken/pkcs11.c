@@ -318,6 +318,11 @@ static const struct mechanismList mechanisms[] = {
     { CKM_SHA256_RSA_PKCS, { RSA_MIN_MODULUS_BITS, CK_MAX, CKF_SN_VR }, PR_TRUE },
     { CKM_SHA384_RSA_PKCS, { RSA_MIN_MODULUS_BITS, CK_MAX, CKF_SN_VR }, PR_TRUE },
     { CKM_SHA512_RSA_PKCS, { RSA_MIN_MODULUS_BITS, CK_MAX, CKF_SN_VR }, PR_TRUE },
+    { CKM_SHA1_RSA_PKCS_PSS, { RSA_MIN_MODULUS_BITS, CK_MAX, CKF_SN_VR }, PR_TRUE },
+    { CKM_SHA224_RSA_PKCS_PSS, { RSA_MIN_MODULUS_BITS, CK_MAX, CKF_SN_VR }, PR_TRUE },
+    { CKM_SHA256_RSA_PKCS_PSS, { RSA_MIN_MODULUS_BITS, CK_MAX, CKF_SN_VR }, PR_TRUE },
+    { CKM_SHA384_RSA_PKCS_PSS, { RSA_MIN_MODULUS_BITS, CK_MAX, CKF_SN_VR }, PR_TRUE },
+    { CKM_SHA512_RSA_PKCS_PSS, { RSA_MIN_MODULUS_BITS, CK_MAX, CKF_SN_VR }, PR_TRUE },
     /* ------------------------- DSA Operations --------------------------- */
     { CKM_DSA_KEY_PAIR_GEN, { DSA_MIN_P_BITS, DSA_MAX_P_BITS, CKF_GENERATE_KEY_PAIR }, PR_TRUE },
     { CKM_DSA, { DSA_MIN_P_BITS, DSA_MAX_P_BITS, CKF_SN_VR }, PR_TRUE },
@@ -1172,7 +1177,7 @@ sftk_handlePrivateKeyObject(SFTKSession *session, SFTKObject *object, CK_KEY_TYP
             crv = sftk_forceAttribute(object, CKA_NSS_DB,
                                       sftk_item_expand(&mod));
             if (mod.data)
-                PORT_Free(mod.data);
+                SECITEM_ZfreeItem(&mod, PR_FALSE);
             if (crv != CKR_OK)
                 return crv;
 
@@ -1492,7 +1497,7 @@ sftk_handleKeyObject(SFTKSession *session, SFTKObject *object)
         case CKO_SECRET_KEY:
             /* make sure the required fields exist */
             return sftk_handleSecretKeyObject(session, object, key_type,
-                                              (PRBool)(session->slot->slotID == FIPS_SLOT_ID));
+                                              (PRBool)(sftk_isFIPS(session->slot->slotID)));
         default:
             break;
     }
@@ -1934,7 +1939,7 @@ sftk_GetPubKey(SFTKObject *object, CK_KEY_TYPE key_type,
     }
     *crvp = crv;
     if (crv != CKR_OK) {
-        PORT_FreeArena(arena, PR_FALSE);
+        PORT_FreeArena(arena, PR_TRUE);
         return NULL;
     }
 
@@ -2094,7 +2099,7 @@ sftk_mkPrivKey(SFTKObject *object, CK_KEY_TYPE key_type, CK_RV *crvp)
     }
     *crvp = crv;
     if (crv != CKR_OK) {
-        PORT_FreeArena(arena, PR_FALSE);
+        PORT_FreeArena(arena, PR_TRUE);
         return NULL;
     }
     return privKey;
@@ -2599,7 +2604,7 @@ static PLHashTable *nscSlotHashTable[2] = { NULL, NULL };
 static unsigned int
 sftk_GetModuleIndex(CK_SLOT_ID slotID)
 {
-    if ((slotID == FIPS_SLOT_ID) || (slotID >= SFTK_MIN_FIPS_USER_SLOT_ID)) {
+    if (sftk_isFIPS(slotID)) {
         return NSC_FIPS_MODULE;
     }
     return NSC_NON_FIPS_MODULE;
@@ -2671,6 +2676,9 @@ sftk_RegisterSlot(SFTKSlot *slot, unsigned int moduleIndex)
         nscSlotList[index] = (CK_SLOT_ID *)PORT_Realloc(oldNscSlotList,
                                                         nscSlotListSize[index] * sizeof(CK_SLOT_ID));
         if (nscSlotList[index] == NULL) {
+            /* evidently coverity doesn't know realloc does not
+             * free var if it fails ! */
+            /* coverity [use_after_free : FALSE] */
             nscSlotList[index] = oldNscSlotList;
             nscSlotListSize[index] = oldNscSlotListSize;
             return CKR_HOST_MEMORY;
@@ -4026,6 +4034,7 @@ NSC_InitPIN(CK_SESSION_HANDLE hSession,
     if (tokenRemoved) {
         sftk_CloseAllSessions(slot, PR_FALSE);
     }
+    PORT_Memset(newPinStr, 0, ulPinLen);
     sftk_freeDB(handle);
     handle = NULL;
 
@@ -4117,10 +4126,12 @@ NSC_SetPIN(CK_SESSION_HANDLE hSession, CK_CHAR_PTR pOldPin,
     /* change the data base password */
     PR_Lock(slot->pwCheckLock);
     rv = sftkdb_ChangePassword(handle, oldPinStr, newPinStr, &tokenRemoved);
+    PORT_Memset(newPinStr, 0, ulNewLen);
+    PORT_Memset(oldPinStr, 0, ulOldLen);
     if (tokenRemoved) {
         sftk_CloseAllSessions(slot, PR_FALSE);
     }
-    if ((rv != SECSuccess) && (slot->slotID == FIPS_SLOT_ID)) {
+    if ((rv != SECSuccess) && (sftk_isFIPS(slot->slotID))) {
         PR_Sleep(loginWaitTime);
     }
     PR_Unlock(slot->pwCheckLock);
@@ -4356,6 +4367,7 @@ NSC_Login(CK_SESSION_HANDLE hSession, CK_USER_TYPE userType,
 
     handle = sftk_getKeyDB(slot);
     if (handle == NULL) {
+        PORT_Memset(pinStr, 0, ulPinLen);
         return CKR_USER_TYPE_INVALID;
     }
 
@@ -4370,7 +4382,7 @@ NSC_Login(CK_SESSION_HANDLE hSession, CK_USER_TYPE userType,
          * key database */
         if (((userType == CKU_SO) && (sessionFlags & CKF_RW_SESSION))
             /* fips always needs to authenticate, even if there isn't a db */
-            || (slot->slotID == FIPS_SLOT_ID)) {
+            || (sftk_isFIPS(slot->slotID))) {
             /* should this be a fixed password? */
             if (ulPinLen == 0) {
                 sftkdb_ClearPassword(handle);
@@ -4401,7 +4413,7 @@ NSC_Login(CK_SESSION_HANDLE hSession, CK_USER_TYPE userType,
     if (tokenRemoved) {
         sftk_CloseAllSessions(slot, PR_FALSE);
     }
-    if ((rv != SECSuccess) && (slot->slotID == FIPS_SLOT_ID)) {
+    if ((rv != SECSuccess) && (sftk_isFIPS(slot->slotID))) {
         PR_Sleep(loginWaitTime);
     }
     PR_Unlock(slot->pwCheckLock);
@@ -4422,6 +4434,7 @@ NSC_Login(CK_SESSION_HANDLE hSession, CK_USER_TYPE userType,
 
     crv = CKR_PIN_INCORRECT;
 done:
+    PORT_Memset(pinStr, 0, ulPinLen);
     if (handle) {
         sftk_freeDB(handle);
     }

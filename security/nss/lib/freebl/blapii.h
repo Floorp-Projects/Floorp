@@ -98,4 +98,14 @@ PRBool arm_sha1_support();
 PRBool arm_sha2_support();
 PRBool ppc_crypto_support();
 
+#ifdef NSS_FIPS_DISABLED
+#define BLAPI_CLEAR_STACK(stack_size)
+#else
+#define BLAPI_CLEAR_STACK(stack_size)                    \
+    {                                                    \
+        volatile char _stkclr[stack_size];               \
+        PORT_Memset((void *)&_stkclr[0], 0, stack_size); \
+    }
+#endif
+
 #endif /* _BLAPII_H_ */

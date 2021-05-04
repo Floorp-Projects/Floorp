@@ -174,7 +174,7 @@ sftk_TLSPRFInit(SFTKSessionContext *context,
     prf_cx->cxDataLen = 0;
     prf_cx->cxBufSize = blockSize - offsetof(TLSPRFContext, cxBuf);
     prf_cx->cxRv = SECSuccess;
-    prf_cx->cxIsFIPS = (key->slot->slotID == FIPS_SLOT_ID);
+    prf_cx->cxIsFIPS = sftk_isFIPS(key->slot->slotID);
     prf_cx->cxBufPtr = prf_cx->cxBuf;
     prf_cx->cxHashAlg = hash_alg;
     prf_cx->cxOutLen = out_len;

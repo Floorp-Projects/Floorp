@@ -110,7 +110,7 @@ SECOID_CopyAlgorithmID(PLArenaPool *arena, SECAlgorithmID *to,
 void
 SECOID_DestroyAlgorithmID(SECAlgorithmID *algid, PRBool freeit)
 {
-    SECITEM_FreeItem(&algid->parameters, PR_FALSE);
+    SECITEM_ZfreeItem(&algid->parameters, PR_FALSE);
     SECITEM_FreeItem(&algid->algorithm, PR_FALSE);
     if (freeit == PR_TRUE)
         PORT_Free(algid);

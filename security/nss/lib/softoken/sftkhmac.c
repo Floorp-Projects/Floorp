@@ -69,6 +69,7 @@ SetupMAC(CK_MECHANISM_PTR mech, SFTKObject *key)
 
     ctx = PORT_Alloc(sizeof(sftk_MACConstantTimeCtx));
     if (!ctx) {
+        PORT_Memset(secret, 0, secretLength);
         return NULL;
     }
 
@@ -76,6 +77,7 @@ SetupMAC(CK_MECHANISM_PTR mech, SFTKObject *key)
     ctx->secretLength = secretLength;
     ctx->hash = HASH_GetRawHashObject(alg);
     ctx->totalLength = params->ulBodyTotalLen;
+    PORT_Memset(secret, 0, secretLength);
 
     return ctx;
 }
@@ -188,7 +190,7 @@ sftk_MACConstantTime_EndHash(void *pctx, void *out, unsigned int *outLength,
 void
 sftk_MACConstantTime_DestroyContext(void *pctx, PRBool free)
 {
-    PORT_Free(pctx);
+    PORT_ZFree(pctx, sizeof(sftk_MACConstantTimeCtx));
 }
 
 CK_RV
@@ -217,7 +219,7 @@ CK_RV
 sftk_MAC_Init(sftk_MACCtx *ctx, CK_MECHANISM_TYPE mech, SFTKObject *key)
 {
     SFTKAttribute *keyval = NULL;
-    PRBool isFIPS = (key->slot->slotID == FIPS_SLOT_ID);
+    PRBool isFIPS = sftk_isFIPS(key->slot->slotID);
     CK_RV ret = CKR_OK;
 
     /* Find the actual value of the key. */

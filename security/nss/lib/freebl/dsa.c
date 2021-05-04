@@ -260,7 +260,7 @@ DSA_NewRandom(PLArenaPool *arena, const SECItem *q, SECItem *seed)
         PORT_SetError(SEC_ERROR_NEED_RANDOM);
     loser:
         if (arena != NULL) {
-            SECITEM_FreeItem(seed, PR_FALSE);
+            SECITEM_ZfreeItem(seed, PR_FALSE);
         }
         return SECFailure;
     }
@@ -295,7 +295,7 @@ DSA_NewKey(const PQGParams *params, DSAPrivateKey **privKey)
             rv = dsa_NewKeyExtended(params, &seed, privKey);
         }
     }
-    SECITEM_FreeItem(&seed, PR_FALSE);
+    SECITEM_ZfreeItem(&seed, PR_FALSE);
     return rv;
 }
 
@@ -403,6 +403,8 @@ dsa_SignDigest(DSAPrivateKey *key, SECItem *signature, const SECItem *digest,
     CHECK_MPI_OK(mp_exptmod(&g, &t, &p, &r)); /* r = g**t mod p */
     /* r is now g**(k+q*fuzz) == g**k mod p */
     CHECK_MPI_OK(mp_mod(&r, &q, &r)); /* r = r mod q    */
+    /* make sure fuzz is cleared off the stack and not optimized away */
+    *(volatile mp_digit *)&fuzz = 0;
 
     /*
     ** FIPS 186-1, Section 5, Step 2
@@ -415,14 +417,14 @@ dsa_SignDigest(DSAPrivateKey *key, SECItem *signature, const SECItem *digest,
         goto cleanup;
     }
     SECITEM_TO_MPINT(t2, &t); /* t <-$ Zq */
-    SECITEM_FreeItem(&t2, PR_FALSE);
+    SECITEM_ZfreeItem(&t2, PR_FALSE);
     if (DSA_NewRandom(NULL, &key->params.subPrime, &t2) != SECSuccess) {
         PORT_SetError(SEC_ERROR_NEED_RANDOM);
         rv = SECFailure;
         goto cleanup;
     }
     SECITEM_TO_MPINT(t2, &ar); /* ar <-$ Zq */
-    SECITEM_FreeItem(&t2, PR_FALSE);
+    SECITEM_ZfreeItem(&t2, PR_FALSE);
 
     /* Using mp_invmod on k directly would leak bits from k. */
     CHECK_MPI_OK(mp_mul(&k, &ar, &k));       /* k = k * ar */
@@ -530,6 +532,7 @@ DSA_SignDigest(DSAPrivateKey *key, SECItem *signature, const SECItem *digest)
         rv = dsa_SignDigest(key, signature, digest, kSeed);
     } while (rv != SECSuccess && PORT_GetError() == SEC_ERROR_NEED_RANDOM &&
              --retries > 0);
+    PORT_Memset(kSeed, 0, sizeof kSeed);
     return rv;
 }
 
@@ -670,6 +673,7 @@ DSA_VerifyDigest(DSAPublicKey *key, const SECItem *signature,
         verified = SECSuccess; /* Signature verified. */
     }
 cleanup:
+    PORT_Memset(localDigestData, 0, sizeof localDigestData);
     mp_clear(&p);
     mp_clear(&q);
     mp_clear(&g);

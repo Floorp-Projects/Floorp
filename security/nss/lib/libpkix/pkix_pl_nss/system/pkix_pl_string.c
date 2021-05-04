@@ -439,7 +439,8 @@ PKIX_PL_Sprintf(
 
                                 tempString = va_arg(args, PKIX_PL_String *);
                                 if (tempString != NULL) {
-                                        PKIX_CHECK(PKIX_PL_String_GetEncoded
+                                        PKIX_CHECK_NO_GOTO(
+                                                PKIX_PL_String_GetEncoded
                                                 ((PKIX_PL_String*)
                                                 tempString,
                                                 PKIX_ESCASCII,
@@ -447,6 +448,12 @@ PKIX_PL_Sprintf(
                                                 &dummyLen,
                                                 plContext),
                                                 PKIX_STRINGGETENCODEDFAILED);
+                                        /* need to cleanup var args before
+                                         * we ditch out to cleanup. */
+                                        if (pkixErrorResult) {
+                                            va_end(args);
+                                            goto cleanup;
+                                        }
                                 } else {
                                         /* there may be a NULL in var_args */
                                         pArg = NULL;

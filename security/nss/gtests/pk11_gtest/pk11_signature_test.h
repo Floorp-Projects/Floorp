@@ -7,7 +7,6 @@
 #include "pk11pub.h"
 #include "sechash.h"
 
-#include "cpputil.h"
 #include "nss_scoped_ptrs.h"
 #include "databuffer.h"
 
@@ -25,46 +24,18 @@ struct Pkcs11SignatureTestParams {
 
 class Pk11SignatureTest : public ::testing::Test {
  protected:
-  Pk11SignatureTest(CK_MECHANISM_TYPE mech, SECOidTag hash_oid)
-      : mechanism_(mech), hash_oid_(hash_oid) {}
+  Pk11SignatureTest(CK_MECHANISM_TYPE mech, SECOidTag hash_oid,
+                    CK_MECHANISM_TYPE combo)
+      : mechanism_(mech), hash_oid_(hash_oid), combo_(combo) {
+    skip_raw_ = false;
+  }
 
   virtual const SECItem* parameters() const { return nullptr; }
   CK_MECHANISM_TYPE mechanism() const { return mechanism_; }
+  void setSkipRaw(bool skip_raw) { skip_raw_ = true; }
 
-  ScopedSECKEYPrivateKey ImportPrivateKey(const DataBuffer& pkcs8) {
-    ScopedPK11SlotInfo slot(PK11_GetInternalSlot());
-    if (!slot) {
-      ADD_FAILURE() << "No slot";
-      return nullptr;
-    }
-
-    SECItem pkcs8Item = {siBuffer, toUcharPtr(pkcs8.data()),
-                         static_cast<unsigned int>(pkcs8.len())};
-
-    SECKEYPrivateKey* key = nullptr;
-    SECStatus rv = PK11_ImportDERPrivateKeyInfoAndReturnKey(
-        slot.get(), &pkcs8Item, nullptr, nullptr, false, false, KU_ALL, &key,
-        nullptr);
-
-    if (rv != SECSuccess) {
-      return nullptr;
-    }
-
-    return ScopedSECKEYPrivateKey(key);
-  }
-
-  ScopedSECKEYPublicKey ImportPublicKey(const DataBuffer& spki) {
-    SECItem spkiItem = {siBuffer, toUcharPtr(spki.data()),
-                        static_cast<unsigned int>(spki.len())};
-
-    ScopedCERTSubjectPublicKeyInfo certSpki(
-        SECKEY_DecodeDERSubjectPublicKeyInfo(&spkiItem));
-    if (!certSpki) {
-      return nullptr;
-    }
-
-    return ScopedSECKEYPublicKey(SECKEY_ExtractPublicKey(certSpki.get()));
-  }
+  ScopedSECKEYPrivateKey ImportPrivateKey(const DataBuffer& pkcs8);
+  ScopedSECKEYPublicKey ImportPublicKey(const DataBuffer& spki);
 
   bool ComputeHash(const DataBuffer& data, DataBuffer* hash) {
     hash->Allocate(static_cast<size_t>(HASH_ResultLenByOidTag(hash_oid_)));
@@ -74,66 +45,37 @@ class Pk11SignatureTest : public ::testing::Test {
   }
 
   bool SignHashedData(ScopedSECKEYPrivateKey& privKey, const DataBuffer& hash,
-                      DataBuffer* sig) {
-    SECItem hashItem = {siBuffer, toUcharPtr(hash.data()),
-                        static_cast<unsigned int>(hash.len())};
-    int sigLen = PK11_SignatureLen(privKey.get());
-    EXPECT_LT(0, sigLen);
-    sig->Allocate(static_cast<size_t>(sigLen));
-    SECItem sigItem = {siBuffer, toUcharPtr(sig->data()),
-                       static_cast<unsigned int>(sig->len())};
-    SECStatus rv = PK11_SignWithMechanism(privKey.get(), mechanism_,
-                                          parameters(), &sigItem, &hashItem);
-    return rv == SECSuccess;
-  }
-
+                      DataBuffer* sig);
+  bool SignData(ScopedSECKEYPrivateKey& privKey, const DataBuffer& data,
+                DataBuffer* sig);
   bool ImportPrivateKeyAndSignHashedData(const DataBuffer& pkcs8,
                                          const DataBuffer& data,
-                                         DataBuffer* sig) {
-    ScopedSECKEYPrivateKey privKey(ImportPrivateKey(pkcs8));
-    if (!privKey) {
-      return false;
-    }
+                                         DataBuffer* sig, DataBuffer* sig2);
+  void Verify(const Pkcs11SignatureTestParams& params, const DataBuffer& sig,
+              bool valid);
 
-    DataBuffer hash;
-    if (!ComputeHash(data, &hash)) {
-      ADD_FAILURE() << "Failed to compute hash";
-      return false;
-    }
-    return SignHashedData(privKey, hash, sig);
-  }
-
-  void Verify(const Pkcs11SignatureTestParams& params, const DataBuffer& sig) {
-    ScopedSECKEYPublicKey pubKey(ImportPublicKey(params.spki_));
-    ASSERT_TRUE(pubKey);
-
-    DataBuffer hash;
-    ASSERT_TRUE(ComputeHash(params.data_, &hash));
-
-    // Verify.
-    SECItem hashItem = {siBuffer, toUcharPtr(hash.data()),
-                        static_cast<unsigned int>(hash.len())};
-    SECItem sigItem = {siBuffer, toUcharPtr(sig.data()),
-                       static_cast<unsigned int>(sig.len())};
-    SECStatus rv = PK11_VerifyWithMechanism(
-        pubKey.get(), mechanism_, parameters(), &sigItem, &hashItem, nullptr);
-    EXPECT_EQ(rv, SECSuccess);
+  void Verify(const Pkcs11SignatureTestParams& params, bool valid) {
+    Verify(params, params.signature_, valid);
   }
 
   void Verify(const Pkcs11SignatureTestParams& params) {
-    Verify(params, params.signature_);
+    Verify(params, params.signature_, true);
   }
 
   void SignAndVerify(const Pkcs11SignatureTestParams& params) {
     DataBuffer sig;
-    ASSERT_TRUE(
-        ImportPrivateKeyAndSignHashedData(params.pkcs8_, params.data_, &sig));
-    Verify(params, sig);
+    DataBuffer sig2;
+    ASSERT_TRUE(ImportPrivateKeyAndSignHashedData(params.pkcs8_, params.data_,
+                                                  &sig, &sig2));
+    Verify(params, sig, true);
+    Verify(params, sig2, true);
   }
 
  private:
   CK_MECHANISM_TYPE mechanism_;
   SECOidTag hash_oid_;
+  CK_MECHANISM_TYPE combo_;
+  bool skip_raw_;
 };
 
 }  // namespace nss_test
