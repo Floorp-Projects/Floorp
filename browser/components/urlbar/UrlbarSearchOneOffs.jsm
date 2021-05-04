@@ -348,9 +348,13 @@ class UrlbarSearchOneOffs extends SearchOneOffs {
         if (engine.icon) {
           button.setAttribute("image", engine.icon);
         }
-        button.setAttribute("title", engine.name);
+        button.setAttribute("data-l10n-id", "search-one-offs-add-engine");
+        button.setAttribute(
+          "data-l10n-args",
+          JSON.stringify({ engineName: engine.name })
+        );
+        button.setAttribute("engine-name", engine.name);
         button.setAttribute("uri", engine.uri);
-        button.setAttribute("tooltiptext", engine.tooltip);
         this.buttons.appendChild(button);
       }
     }

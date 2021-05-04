@@ -407,6 +407,8 @@ var UrlbarTestUtils = {
       win
     );
     await openPromise;
+    // On Mac sometimes the menuitems are not ready.
+    await new Promise(win.requestAnimationFrame);
     try {
       await task(cxmenu);
     } finally {

@@ -247,6 +247,19 @@ search-one-offs-context-set-as-default-private =
 search-one-offs-engine-with-alias =
     .tooltiptext = { $engineName } ({ $alias })
 
+# Shown when adding new engines from the address bar shortcut buttons or context
+# menu, or from the search bar shortcut buttons.
+# Variables:
+#  $engineName (String): The name of the engine.
+search-one-offs-add-engine =
+    .label = Add “{ $engineName }”
+    .tooltiptext = Add search engine “{ $engineName }”
+    .aria-label = Add search engine “{ $engineName }”
+# When more than 5 engines are offered by a web page, they are grouped in a
+# submenu using this as its label.
+search-one-offs-add-engine-menu =
+    .label = Add search engine
+
 ## Local search mode one-off buttons
 ## Variables:
 ##  $restrict (String): The restriction token corresponding to the search mode.
