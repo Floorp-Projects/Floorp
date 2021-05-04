@@ -6,7 +6,6 @@ rust:
         - '.'
     exclude:
         - dom/webauthn/libudev-sys/
-        - gfx/wr/direct-composition/
         - gfx/wr/peek-poke/
         - gfx/wr/webrender_build/
         - gfx/wgpu/
