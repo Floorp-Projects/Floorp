@@ -3,7 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 %include ../../shared/customizableui/panelUI.inc.css
-%include ../../shared/customizableui/panelUI-custom-colors.inc.css
 
 @media (-moz-proton) {
 panel[type="arrow"][side="top"],
