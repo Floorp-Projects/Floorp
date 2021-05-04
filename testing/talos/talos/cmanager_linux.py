@@ -38,7 +38,9 @@ def xrestop(binary="xrestop"):
 
     args = ["-m", "1", "-b"]
     command = [binary] + args
-    process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    process = subprocess.Popen(
+        command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True
+    )
     stdout, stderr = process.communicate()
     if process.returncode:
         raise Exception(
