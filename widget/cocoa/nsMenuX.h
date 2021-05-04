@@ -29,8 +29,10 @@ class nsIWidget;
 // up carbon events. Protocol is defined as of 10.6 SDK.
 @interface MenuDelegate : NSObject <NSMenuDelegate> {
   nsMenuX* mGeckoMenu;  // weak ref
+  NSMutableArray* mBlocksToRunWhenOpen;
 }
 - (id)initWithGeckoMenu:(nsMenuX*)geckoMenu;
+- (void)runBlockWhenOpen:(void (^)())block;
 @property BOOL menuIsInMenubar;
 @end
 

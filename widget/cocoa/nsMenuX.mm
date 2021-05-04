@@ -1080,8 +1080,18 @@ void nsMenuX::Dump(uint32_t aIndent) const {
     NS_ASSERTION(geckoMenu,
                  "Cannot initialize native menu delegate with NULL gecko menu! Will crash!");
     mGeckoMenu = geckoMenu;
+    mBlocksToRunWhenOpen = [[NSMutableArray alloc] init];
   }
   return self;
+}
+
+- (void)dealloc {
+  [mBlocksToRunWhenOpen release];
+  [super dealloc];
+}
+
+- (void)runBlockWhenOpen:(void (^)())block {
+  [mBlocksToRunWhenOpen addObject:[[block copy] autorelease]];
 }
 
 - (void)menu:(NSMenu*)aMenu willHighlightItem:(NSMenuItem*)aItem {
@@ -1095,6 +1105,11 @@ void nsMenuX::Dump(uint32_t aIndent) const {
 }
 
 - (void)menuWillOpen:(NSMenu*)menu {
+  for (void (^block)() in mBlocksToRunWhenOpen) {
+    block();
+  }
+  [mBlocksToRunWhenOpen removeAllObjects];
+
   if (!mGeckoMenu) {
     return;
   }
