@@ -12,7 +12,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   SearchUtils: "resource://gre/modules/SearchUtils.jsm",
   SearchTestUtils: "resource://testing-common/SearchTestUtils.jsm",
   Services: "resource://gre/modules/Services.jsm",
-  TestUtils: "resource://testing-common/TestUtils.jsm",
 });
 
 var dirSvc = Services.dirSvc;
