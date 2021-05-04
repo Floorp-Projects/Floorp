@@ -158,21 +158,20 @@ void nsHistory::Go(int32_t aDelta, CallerType aCallerType, ErrorResult& aRv) {
     return;
   }
 
+  bool userActivation =
+      win->GetWindowContext()
+          ? win->GetWindowContext()->HasValidTransientUserGestureActivation()
+          : false;
+
   // Ignore the return value from Go(), since returning errors from Go() can
   // lead to exceptions and a possible leak of history length
   // AsyncGo throws if we hit the location change rate limit.
   if (StaticPrefs::dom_window_history_async()) {
-    session_history->AsyncGo(
-        aDelta, /* aRequireUserInteraction = */ false,
-        /* aUserActivation */
-        win->GetWindowContext()->HasValidTransientUserGestureActivation(),
-        aCallerType, aRv);
+    session_history->AsyncGo(aDelta, /* aRequireUserInteraction = */ false,
+                             userActivation, aCallerType, aRv);
   } else {
-    session_history->Go(
-        aDelta, /* aRequireUserInteraction = */ false,
-        /* aUserActivation */
-        win->GetWindowContext()->HasValidTransientUserGestureActivation(),
-        IgnoreErrors());
+    session_history->Go(aDelta, /* aRequireUserInteraction = */ false,
+                        userActivation, IgnoreErrors());
   }
 }
 
@@ -191,18 +190,17 @@ void nsHistory::Back(CallerType aCallerType, ErrorResult& aRv) {
     return;
   }
 
+  bool userActivation =
+      win->GetWindowContext()
+          ? win->GetWindowContext()->HasValidTransientUserGestureActivation()
+          : false;
+
   if (StaticPrefs::dom_window_history_async()) {
-    sHistory->AsyncGo(
-        -1, /* aRequireUserInteraction = */ false,
-        /* aUserActivation */
-        win->GetWindowContext()->HasValidTransientUserGestureActivation(),
-        aCallerType, aRv);
+    sHistory->AsyncGo(-1, /* aRequireUserInteraction = */ false, userActivation,
+                      aCallerType, aRv);
   } else {
-    sHistory->Go(
-        -1, /* aRequireUserInteraction = */ false,
-        /* aUserActivation */
-        win->GetWindowContext()->HasValidTransientUserGestureActivation(),
-        IgnoreErrors());
+    sHistory->Go(-1, /* aRequireUserInteraction = */ false, userActivation,
+                 IgnoreErrors());
   }
 }
 
@@ -221,18 +219,17 @@ void nsHistory::Forward(CallerType aCallerType, ErrorResult& aRv) {
     return;
   }
 
+  bool userActivation =
+      win->GetWindowContext()
+          ? win->GetWindowContext()->HasValidTransientUserGestureActivation()
+          : false;
+
   if (StaticPrefs::dom_window_history_async()) {
-    sHistory->AsyncGo(
-        1, /* aRequireUserInteraction = */ false,
-        /* aUserActivation */
-        win->GetWindowContext()->HasValidTransientUserGestureActivation(),
-        aCallerType, aRv);
+    sHistory->AsyncGo(1, /* aRequireUserInteraction = */ false, userActivation,
+                      aCallerType, aRv);
   } else {
-    sHistory->Go(
-        1, /* aRequireUserInteraction = */ false,
-        /* aUserActivation */
-        win->GetWindowContext()->HasValidTransientUserGestureActivation(),
-        IgnoreErrors());
+    sHistory->Go(1, /* aRequireUserInteraction = */ false, userActivation,
+                 IgnoreErrors());
   }
 }
 
