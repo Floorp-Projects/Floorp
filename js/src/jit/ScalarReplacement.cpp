@@ -107,11 +107,11 @@ bool EmulateStateOf<MemoryView>::run(MemoryView& view) {
 }
 
 static bool IsObjectEscaped(MInstruction* ins,
-                            JS::GCCellPtr objOrShape = JS::GCCellPtr());
+                            const Shape* shapeDefault = nullptr);
 
 // Returns False if the lambda is not escaped and if it is optimizable by
 // ScalarReplacementOfObject.
-static bool IsLambdaEscaped(MInstruction* lambda, JS::GCCellPtr objOrShape) {
+static bool IsLambdaEscaped(MInstruction* lambda, const Shape* shape) {
   MOZ_ASSERT(lambda->isLambda() || lambda->isLambdaArrow() ||
              lambda->isFunctionWithProto());
   JitSpewDef(JitSpew_Escape, "Check lambda\n", lambda);
@@ -136,7 +136,7 @@ static bool IsLambdaEscaped(MInstruction* lambda, JS::GCCellPtr objOrShape) {
       return true;
     }
 
-    if (IsObjectEscaped(def->toInstruction(), objOrShape)) {
+    if (IsObjectEscaped(def->toInstruction(), shape)) {
       JitSpewDef(JitSpew_Escape, "is indirectly escaped by\n", def);
       return true;
     }
@@ -156,25 +156,23 @@ static inline bool IsOptimizableObjectInstruction(MInstruction* ins) {
 //
 // For the moment, this code is dumb as it only supports objects which are not
 // changing shape, and which are known by TI at the object creation.
-static bool IsObjectEscaped(MInstruction* ins,
-                            JS::GCCellPtr objOrShapeDefault) {
+static bool IsObjectEscaped(MInstruction* ins, const Shape* shapeDefault) {
   MOZ_ASSERT(ins->type() == MIRType::Object);
 
   JitSpewDef(JitSpew_Escape, "Check object\n", ins);
   JitSpewIndent spewIndent(JitSpew_Escape);
 
-  JS::GCCellPtr objOrShape = objOrShapeDefault;
-  if (!objOrShape) {
+  const Shape* shape = shapeDefault;
+  if (!shape) {
     if (ins->isNewPlainObject()) {
-      objOrShape =
-          JS::GCCellPtr(const_cast<Shape*>(ins->toNewPlainObject()->shape()));
-    } else if (JSObject* obj = MObjectState::templateObjectOf(ins)) {
-      objOrShape = JS::GCCellPtr(obj);
+      shape = ins->toNewPlainObject()->shape();
+    } else if (JSObject* templateObj = MObjectState::templateObjectOf(ins)) {
+      shape = templateObj->shape();
     }
   }
 
-  if (!objOrShape) {
-    JitSpew(JitSpew_Escape, "No template object or shape defined.");
+  if (!shape) {
+    JitSpew(JitSpew_Escape, "No shape defined.");
     return true;
   }
 
@@ -227,17 +225,11 @@ static bool IsObjectEscaped(MInstruction* ins,
       case MDefinition::Opcode::GuardShape: {
         MGuardShape* guard = def->toGuardShape();
         MOZ_ASSERT(!ins->isGuardShape());
-        Shape* shape;
-        if (objOrShape.is<JSObject>()) {
-          shape = objOrShape.as<JSObject>().shape();
-        } else {
-          shape = &objOrShape.as<Shape>();
-        }
         if (shape != guard->shape()) {
           JitSpewDef(JitSpew_Escape, "has a non-matching guard shape\n", guard);
           return true;
         }
-        if (IsObjectEscaped(def->toInstruction(), objOrShape)) {
+        if (IsObjectEscaped(def->toInstruction(), shape)) {
           JitSpewDef(JitSpew_Escape, "is indirectly escaped by\n", def);
           return true;
         }
@@ -245,7 +237,7 @@ static bool IsObjectEscaped(MInstruction* ins,
       }
 
       case MDefinition::Opcode::CheckIsObj: {
-        if (IsObjectEscaped(def->toInstruction(), objOrShape)) {
+        if (IsObjectEscaped(def->toInstruction(), shape)) {
           JitSpewDef(JitSpew_Escape, "is indirectly escaped by\n", def);
           return true;
         }
@@ -257,7 +249,7 @@ static bool IsObjectEscaped(MInstruction* ins,
           JitSpewDef(JitSpew_Escape, "has an invalid unbox\n", def);
           return true;
         }
-        if (IsObjectEscaped(def->toInstruction(), objOrShape)) {
+        if (IsObjectEscaped(def->toInstruction(), shape)) {
           JitSpewDef(JitSpew_Escape, "is indirectly escaped by\n", def);
           return true;
         }
@@ -267,7 +259,7 @@ static bool IsObjectEscaped(MInstruction* ins,
       case MDefinition::Opcode::Lambda:
       case MDefinition::Opcode::LambdaArrow:
       case MDefinition::Opcode::FunctionWithProto: {
-        if (IsLambdaEscaped(def->toInstruction(), objOrShape)) {
+        if (IsLambdaEscaped(def->toInstruction(), shape)) {
           JitSpewDef(JitSpew_Escape, "is indirectly escaped by\n", def);
           return true;
         }
