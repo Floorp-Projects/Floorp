@@ -433,6 +433,8 @@ bitflags! {
     pub struct SliceFlags : u8 {
         /// Slice created by a prim that has PrimitiveFlags::IS_SCROLLBAR_CONTAINER
         const IS_SCROLLBAR = 1;
+        /// Represents a mix-blend container (can't split out compositor surfaces in this slice)
+        const IS_BLEND_CONTAINER = 2;
     }
 }
 
@@ -2087,6 +2089,7 @@ impl<'a> SceneBuilder<'a> {
                 self.interners,
                 &self.config,
                 self.root_iframe_clip,
+                SliceFlags::IS_BLEND_CONTAINER,
             );
 
             return;
