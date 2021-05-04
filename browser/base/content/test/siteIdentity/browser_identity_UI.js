@@ -10,59 +10,70 @@ var tests = [
     name: "normal domain",
     location: "http://test1.example.org/",
     hostForDisplay: "test1.example.org",
+    hasSubview: true,
   },
   {
     name: "view-source",
     location: "view-source:http://example.com/",
     newURI: "http://example.com/",
     hostForDisplay: "example.com",
+    hasSubview: true,
   },
   {
     name: "normal HTTPS",
     location: "https://example.com/",
     hostForDisplay: "example.com",
+    hasSubview: true,
   },
   {
     name: "IDN subdomain",
     location: "http://sub1.xn--hxajbheg2az3al.xn--jxalpdlp/",
     hostForDisplay: "sub1." + idnDomain,
+    hasSubview: true,
   },
   {
     name: "subdomain with port",
     location: "http://sub1.test1.example.org:8000/",
     hostForDisplay: "sub1.test1.example.org",
+    hasSubview: true,
   },
   {
     name: "subdomain HTTPS",
     location: "https://test1.example.com/",
     hostForDisplay: "test1.example.com",
+    hasSubview: true,
   },
   {
     name: "view-source HTTPS",
     location: "view-source:https://example.com/",
     newURI: "https://example.com/",
     hostForDisplay: "example.com",
+    hasSubview: true,
   },
   {
     name: "IP address",
     location: "http://127.0.0.1:8888/",
     hostForDisplay: "127.0.0.1",
+    hasSubview: false,
   },
   {
     name: "about:certificate",
     location:
       "about:certificate?cert=MIIHQjCCBiqgAwIBAgIQCgYwQn9bvO&cert=1pVzllk7ZFHzANBgkqhkiG9w0BAQ",
     hostForDisplay: "about:certificate",
+    hasSubview: false,
   },
   {
     name: "about:reader",
     location: "about:reader?url=http://example.com",
     hostForDisplay: "example.com",
+    hasSubview: false,
   },
   {
     name: "chrome:",
     location: "chrome://global/skin/in-content/info-pages.css",
     hostForDisplay: "chrome://global/skin/in-content/info-pages.css",
+    hasSubview: false,
   },
 ];
 
@@ -153,14 +164,30 @@ async function runTest(i, forward) {
     "identity UI header shows the host for test " + testDesc
   );
 
-  // Show the subview, which is an easy way in automation to reproduce
-  // Bug 1207542, where the CC wouldn't close on navigation.
-  let promiseViewShown = BrowserTestUtils.waitForEvent(
-    gIdentityHandler._identityPopup,
-    "ViewShown"
-  );
-  gBrowser.ownerDocument
-    .querySelector("#identity-popup-security-expander")
-    .click();
-  await promiseViewShown;
+  let securityButton;
+  if (gProtonDoorhangers) {
+    securityButton = gBrowser.ownerDocument.querySelector(
+      "#identity-popup-security-button"
+    );
+    is(
+      securityButton.disabled,
+      !currentTest.hasSubview,
+      "Security button has correct disabled state"
+    );
+  }
+  if (currentTest.hasSubview) {
+    // Show the subview, which is an easy way in automation to reproduce
+    // Bug 1207542, where the CC wouldn't close on navigation.
+    let promiseViewShown = BrowserTestUtils.waitForEvent(
+      gIdentityHandler._identityPopup,
+      "ViewShown"
+    );
+    let subviewButton = gProtonDoorhangers
+      ? securityButton
+      : gBrowser.ownerDocument.querySelector(
+          "#identity-popup-security-expander"
+        );
+    subviewButton.click();
+    await promiseViewShown;
+  }
 }
