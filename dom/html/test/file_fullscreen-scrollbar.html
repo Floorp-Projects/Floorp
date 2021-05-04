@@ -51,6 +51,8 @@ function triggerFrameReconstruction() {
 
 function assertHasScrollbars(elem) {
   var rect = getMeasureRect();
+  info(`screen.width: ${screen.width}, screen.height: ${screen.height}`);
+  info(`rect.width: ${rect.width}, rect.height: ${rect.height}`);
   is(rect.width, screen.width - gVerticalScrollbarWidth,
      `Should have vertical scrollbar when ${elem} is in fullscreen`);
   is(rect.height, screen.height - gHorizontalScrollbarWidth,
@@ -86,10 +88,14 @@ function begin() {
 
   var rectOuter = document.getElementById("ref-outer").getBoundingClientRect();
   var rectInner = document.getElementById("ref-inner").getBoundingClientRect();
+  info(`rectOuter: ${rectOuter.width} x ${rectOuter.height}`);
+  info(`rectInner: ${rectInner.width} x ${rectInner.height}`);
   gVerticalScrollbarWidth = rectOuter.width - rectInner.width;
   gHorizontalScrollbarWidth = rectOuter.height - rectInner.height;
   ok(gVerticalScrollbarWidth != 0, "Should have vertical scrollbar");
   ok(gHorizontalScrollbarWidth != 0, "Should have horizontal scrollbar");
+  info(`gVerticalScrollbarWidth: ${gVerticalScrollbarWidth}`);
+  info(`gHorizontalScrollbarWidth: ${gHorizontalScrollbarWidth}`);
 
   info("Entering fullscreen on root");
   addFullscreenChangeContinuation("enter", enteredFullscreenOnRoot);
