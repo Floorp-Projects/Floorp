@@ -404,7 +404,7 @@ class Test(MachCommandBase):
                 sys.exit(1)
             extra_args_debugger_notation = "=".join(
                 ["--debugger", log_args.get("debugger")]
-            ).encode("ascii")
+            )
             if extra_args:
                 extra_args.append(extra_args_debugger_notation)
             else:
