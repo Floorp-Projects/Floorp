@@ -89,8 +89,6 @@ static inline MIRType MIRTypeFromValue(const js::Value& vp) {
   }
   if (vp.isMagic()) {
     switch (vp.whyMagic()) {
-      case JS_OPTIMIZED_ARGUMENTS:
-        return MIRType::MagicOptimizedArguments;
       case JS_OPTIMIZED_OUT:
         return MIRType::MagicOptimizedOut;
       case JS_ELEMENTS_HOLE:
