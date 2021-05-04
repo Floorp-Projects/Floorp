@@ -36,13 +36,12 @@
   --panel-separator-margin: 6px 0;
   --panel-subview-body-padding: 6px 0;
 
-  --panelview-toolbarbutton-hover-bgcolor: var(--arrowpanel-dimmed);
+  --panelview-toolbarbutton-hover-bgcolor: var(--button-hover-bgcolor);
   --panelview-toolbarbutton-hover-color: inherit;
-  --panelview-toolbarbutton-active-bgcolor: var(--arrowpanel-dimmed-further);
+  --panelview-toolbarbutton-active-bgcolor: var(--button-active-bgcolor);
   --panelview-toolbarbutton-active-color: inherit;
   --panel-separator-zap-gradient: linear-gradient(90deg, #9059FF 0%, #FF4AA2 52.08%, #FFBD4F 100%);
-  --panel-shortcut-color: inherit;
-  --panelview-toolbarbutton-focus-box-shadow: inset 0 0 0 2px -moz-accent-color;
+  --panelview-toolbarbutton-focus-box-shadow: inset 0 0 0 2px var(--focus-outline-color);
 }
 
 @media not (-moz-proton) {
