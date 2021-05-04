@@ -158,9 +158,7 @@ class TabDescriptorFront extends DescriptorMixin(
     // target-switching so we have to remove the descriptor when the target is
     // destroyed. When about:debugging supports target switching, we can remove
     // the !isLocalTab check. See Bug 1709267.
-    // Also destroy descriptor of web extension as they expect the client to be
-    // closed immediately
-    if (!this.isLocalTab || this.isDevToolsExtensionContext) {
+    if (!this.isLocalTab) {
       this.destroy();
     }
   }
