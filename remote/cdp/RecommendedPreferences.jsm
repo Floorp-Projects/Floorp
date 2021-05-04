@@ -14,6 +14,9 @@ const RecommendedPreferences = new Map([
   // of Firefox aren't downloaded and applied, enforce its presence.
   ["app.update.disabledForTesting", true],
 
+  // Do not warn on quitting Firefox
+  ["browser.warnOnQuit", false],
+
   // Allow the application to have focus even when it runs in the background.
   ["focusmanager.testmode", true],
 
