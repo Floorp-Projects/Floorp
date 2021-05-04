@@ -63,19 +63,10 @@ List of phases
 
   The time-out has been reached before startup tasks are complete.
 
-  This status code is reported to Telemetry via the ``firstStartup.statusCode``
-  scalar.
-
 ``FirstStartup.SUCCESS``
 
   All startup tasks have completed successfully, and application startup may resume.
 
-  This status code is reported to Telemetry via the ``firstStartup.statusCode``
-  scalar.
-
 ``FirstStartup.UNSUPPORTED``
 
   No startup tasks are supported, and `FirstStartup` exited.
-
-  This status code is reported to Telemetry via the ``firstStartup.statusCode``
-  scalar.

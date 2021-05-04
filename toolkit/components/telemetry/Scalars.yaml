@@ -6049,38 +6049,6 @@ blocklist:
     record_in_processes:
       - main
 
-firstStartup:
-  statusCode:
-    bug_numbers:
-      - 1582608
-    description: >-
-      Status of the FirstRun service, which runs post-install/early-startup in Firefox.
-    expires: "90"
-    kind: uint
-    notification_emails:
-      - rhelmer@mozilla.com
-    release_channel_collection: opt-out
-    products:
-      - 'firefox'
-      - 'thunderbird'
-    record_in_processes:
-      - main
-  elapsed:
-    bug_numbers:
-      - 1582608
-    description: >-
-      Number of milliseconds the FirstRun service took to run.
-    expires: "90"
-    kind: uint
-    notification_emails:
-      - rhelmer@mozilla.com
-    release_channel_collection: opt-out
-    products:
-      - 'firefox'
-      - 'thunderbird'
-    record_in_processes:
-      - main
-
 # The following section is for the "deletion-request" ping (bug 1585410). All the
 # extra identifiers other than `client_id` could be added here.
 deletion.request:
