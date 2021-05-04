@@ -33,6 +33,8 @@
     --arrowpanel-dimmed: color-mix(in srgb, currentColor 12%, transparent);
     --arrowpanel-dimmed-further: color-mix(in srgb, currentColor 20%, transparent);
     --arrowpanel-dimmed-even-further: color-mix(in srgb, currentColor 27%, transparent);
+    --panel-disabled-color: color-mix(in srgb, currentColor 40%, transparent);
+    --panel-shortcut-color: rgb(91,91,102);
 
     --error-text-color: rgb(197,0,66);
 
