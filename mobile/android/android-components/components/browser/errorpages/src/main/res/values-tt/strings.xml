@@ -6,8 +6,21 @@
     <!-- The document title and heading of an error page shown when a website cannot be loaded for an unknown reason. -->
     <string name="mozac_browser_errorpages_generic_title">Сорауны тәмамлап булмый</string>
 
+    <!-- The error message shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_message"><![CDATA[
+      <p>Бу проблема яки хата турында өстәмә мәгълүмат әлегә юк.</p>
+    ]]></string>
+
     <!-- The document title and heading of the error page shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
     <string name="mozac_browser_errorpages_security_ssl_title">Хәвефсез бәйләнеш кору хатасы</string>
+
+    <!-- The error message shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_message"><![CDATA[
+      <ul>
+        <li>Күрәсегез килгән сәхифә күрсәтелә алмый, чөнки алынган мәгълүматларның чынлыгын раслау мөмкин түгел</li>
+        <li>Зинһар сайт ияләре белән элемтәгә кереп, аларга бу проблема турында сөйләгез.</li>
+      </ul>
+    ]]></string>
 
     <!-- The document title and heading of the error page shown when a website sends has an invalid or expired SSL certificate. -->
     <string name="mozac_browser_errorpages_security_bad_cert_title">Хәвефсез бәйләнеш кору хатасы</string>
@@ -97,6 +110,9 @@
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_file_access_denied_title">Файлдан файдалануга рөхсәт бирелмәде</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_proxy_connection_refused_title">Прокси-сервер бәйләнештән бар тартты</string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_proxy_host_title">Прокси-сервер табылмады</string>
