@@ -133,6 +133,7 @@ mod visibility;
 mod api_resources;
 mod image_tiling;
 mod image_source;
+mod rectangle_occlusion;
 pub mod host_utils;
 
 ///

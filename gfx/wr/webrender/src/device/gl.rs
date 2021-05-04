@@ -2133,7 +2133,7 @@ impl Device {
     ) {
         let (fbo_id, rect, depth_available) = match target {
             DrawTarget::Default { rect, .. } => {
-                (self.default_draw_fbo, rect, true)
+                (self.default_draw_fbo, rect, false)
             }
             DrawTarget::Texture { dimensions, fbo_id, with_depth, .. } => {
                 let rect = FramebufferIntRect::new(
