@@ -1,6 +1,5 @@
 [workspace]
 members = [
-    "direct-composition",
     "examples",
     "webrender",
     "webrender_api",
