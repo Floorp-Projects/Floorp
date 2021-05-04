@@ -1398,38 +1398,6 @@ bool FallbackICCodeCompiler::emit_GetIntrinsic() {
 // GetProp_Fallback
 //
 
-static bool ComputeGetPropResult(JSContext* cx, BaselineFrame* frame, JSOp op,
-                                 HandlePropertyName name,
-                                 MutableHandleValue val,
-                                 MutableHandleValue res) {
-  // Handle arguments.length and arguments.callee on optimized arguments, as
-  // it is not an object.
-  if (val.isMagic(JS_OPTIMIZED_ARGUMENTS) && IsOptimizedArguments(frame, val)) {
-    if (name == cx->names().length) {
-      res.setInt32(frame->numActualArgs());
-    } else {
-      MOZ_ASSERT(name == cx->names().callee);
-      MOZ_ASSERT(frame->script()->hasMappedArgsObj());
-      res.setObject(*frame->callee());
-    }
-  } else {
-    if (op == JSOp::GetBoundName) {
-      RootedObject env(cx, &val.toObject());
-      RootedId id(cx, NameToId(name));
-      if (!GetNameBoundInEnvironment(cx, env, id, res)) {
-        return false;
-      }
-    } else {
-      MOZ_ASSERT(op == JSOp::GetProp);
-      if (!GetProperty(cx, val, name, res)) {
-        return false;
-      }
-    }
-  }
-
-  return true;
-}
-
 bool DoGetPropFallback(JSContext* cx, BaselineFrame* frame,
                        ICGetProp_Fallback* stub, MutableHandleValue val,
                        MutableHandleValue res) {
@@ -1449,7 +1417,18 @@ bool DoGetPropFallback(JSContext* cx, BaselineFrame* frame,
   TryAttachStub<GetPropIRGenerator>("GetProp", cx, frame, stub,
                                     CacheKind::GetProp, val, idVal);
 
-  return ComputeGetPropResult(cx, frame, op, name, val, res);
+  if (op == JSOp::GetBoundName) {
+    RootedObject env(cx, &val.toObject());
+    RootedId id(cx, NameToId(name));
+    return GetNameBoundInEnvironment(cx, env, id, res);
+  }
+
+  MOZ_ASSERT(op == JSOp::GetProp);
+  if (!GetProperty(cx, val, name, res)) {
+    return false;
+  }
+
+  return true;
 }
 
 bool DoGetPropSuperFallback(JSContext* cx, BaselineFrame* frame,
