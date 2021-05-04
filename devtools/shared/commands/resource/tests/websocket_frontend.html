@@ -16,7 +16,7 @@
       function openConnection() {
         return new Promise(resolve => {
           webSocket = new WebSocket(
-            "ws://mochi.test:8888/browser/devtools/shared/resources/tests/websocket_backend"
+            "ws://mochi.test:8888/browser/devtools/shared/commands/resource/tests/websocket_backend"
           );
           webSocket.onopen = () => {
             resolve();
@@ -38,8 +38,8 @@
       }
     </script>
     <iframe id="in-process-frame"
-      src="http://example.com/browser/devtools/shared/resources/tests/websocket_frontend_iframe.html"></iframe>
+      src="http://example.com/browser/devtools/shared/commands/resource/tests/websocket_frontend_iframe.html"></iframe>
     <iframe id="out-process-frame"
-      src="http://example.org/browser/devtools/shared/resources/tests/websocket_frontend_iframe.html"></iframe>
+      src="http://example.org/browser/devtools/shared/commands/resource/tests/websocket_frontend_iframe.html"></iframe>
   </body>
 </html>
