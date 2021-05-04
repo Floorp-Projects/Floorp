@@ -464,9 +464,19 @@ class MOZ_STACK_CLASS OpIter : private Policy {
   // ------------------------------------------------------------------------
   // Decoding and validation interface.
 
+  // Initialization and termination
+
+  [[nodiscard]] bool startFunction(uint32_t funcIndex);
+  [[nodiscard]] bool endFunction(const uint8_t* bodyEnd);
+
+  // Value and reference types
+
+  [[nodiscard]] bool readValType(ValType* type);
+  [[nodiscard]] bool readHeapType(bool nullable, RefType* type);
+
+  // Instructions
+
   [[nodiscard]] bool readOp(OpBytes* op);
-  [[nodiscard]] bool readFunctionStart(uint32_t funcIndex);
-  [[nodiscard]] bool readFunctionEnd(const uint8_t* bodyEnd);
   [[nodiscard]] bool readReturn(ValueVector* values);
   [[nodiscard]] bool readBlock(ResultType* paramType);
   [[nodiscard]] bool readLoop(ResultType* paramType);
@@ -610,10 +620,6 @@ class MOZ_STACK_CLASS OpIter : private Policy {
                                   uint32_t* rttTypeIndex, uint32_t* rttDepth,
                                   ResultType* branchTargetType,
                                   ValueVector* values);
-  [[nodiscard]] bool readValType(ValType* type);
-  [[nodiscard]] bool readHeapType(bool nullable, RefType* type);
-  [[nodiscard]] bool readReferenceType(ValType* type,
-                                       const char* const context);
 
 #ifdef ENABLE_WASM_SIMD
   [[nodiscard]] bool readLaneIndex(uint32_t inputLanes, uint32_t* laneIndex);
@@ -1110,7 +1116,7 @@ inline void OpIter<Policy>::peekOp(OpBytes* op) {
 }
 
 template <typename Policy>
-inline bool OpIter<Policy>::readFunctionStart(uint32_t funcIndex) {
+inline bool OpIter<Policy>::startFunction(uint32_t funcIndex) {
   MOZ_ASSERT(elseParamStack_.empty());
   MOZ_ASSERT(valueStack_.empty());
   MOZ_ASSERT(controlStack_.empty());
@@ -1120,7 +1126,7 @@ inline bool OpIter<Policy>::readFunctionStart(uint32_t funcIndex) {
 }
 
 template <typename Policy>
-inline bool OpIter<Policy>::readFunctionEnd(const uint8_t* bodyEnd) {
+inline bool OpIter<Policy>::endFunction(const uint8_t* bodyEnd) {
   if (d_.currentPosition() != bodyEnd) {
     return fail("function body length mismatch");
   }
@@ -1135,6 +1141,16 @@ inline bool OpIter<Policy>::readFunctionEnd(const uint8_t* bodyEnd) {
 #endif
   valueStack_.clear();
   return true;
+}
+
+template <typename Policy>
+inline bool OpIter<Policy>::readValType(ValType* type) {
+  return d_.readValType(env_.types, env_.features, type);
+}
+
+template <typename Policy>
+inline bool OpIter<Policy>::readHeapType(bool nullable, RefType* type) {
+  return d_.readHeapType(env_.types, env_.features, nullable, type);
 }
 
 template <typename Policy>
@@ -2199,26 +2215,6 @@ inline bool OpIter<Policy>::readBrOnNull(uint32_t* relativeDepth,
   } else {
     infalliblePush(refType.asNonNullable());
   }
-  return true;
-}
-
-template <typename Policy>
-inline bool OpIter<Policy>::readValType(ValType* type) {
-  return d_.readValType(env_.types, env_.features, type);
-}
-
-template <typename Policy>
-inline bool OpIter<Policy>::readHeapType(bool nullable, RefType* type) {
-  return d_.readHeapType(env_.types, env_.features, nullable, type);
-}
-
-template <typename Policy>
-inline bool OpIter<Policy>::readReferenceType(ValType* type,
-                                              const char* context) {
-  if (!readValType(type) || !type->isReference()) {
-    return fail_ctx("invalid reference type for %s", context);
-  }
-
   return true;
 }
 
