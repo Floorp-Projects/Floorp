@@ -7926,7 +7926,7 @@ double nsWindow::FractionalScaleFactor() {
 
 gint nsWindow::DevicePixelsToGdkCoordRoundUp(int pixels) {
   double scale = FractionalScaleFactor();
-  return ceil((pixels + scale - 1) / scale);
+  return ceil(pixels / scale);
 }
 
 gint nsWindow::DevicePixelsToGdkCoordRoundDown(int pixels) {
@@ -7943,16 +7943,16 @@ GdkRectangle nsWindow::DevicePixelsToGdkRectRoundOut(LayoutDeviceIntRect rect) {
   double scale = FractionalScaleFactor();
   int x = floor(rect.x / scale);
   int y = floor(rect.y / scale);
-  int right = ceil((rect.x + rect.width + scale - 1) / scale);
-  int bottom = ceil((rect.y + rect.height + scale - 1) / scale);
+  int right = ceil((rect.x + rect.width) / scale);
+  int bottom = ceil((rect.y + rect.height) / scale);
   return {x, y, right - x, bottom - y};
 }
 
 GdkRectangle nsWindow::DevicePixelsToGdkSizeRoundUp(
     LayoutDeviceIntSize pixelSize) {
   double scale = FractionalScaleFactor();
-  gint width = ceil((pixelSize.width + scale - 1) / scale);
-  gint height = ceil((pixelSize.height + scale - 1) / scale);
+  gint width = ceil(pixelSize.width / scale);
+  gint height = ceil(pixelSize.height / scale);
   return {0, 0, width, height};
 }
 
