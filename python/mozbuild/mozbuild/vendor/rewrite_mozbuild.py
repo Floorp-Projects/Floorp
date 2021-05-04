@@ -204,6 +204,83 @@ def log(*args, **kwargs):
     pass
 
 
+# < python 3.8 shims #########################
+# Taskcluster currently runs python 3.5 and it's difficult to move to a more recent one
+# Once Taskcluster moves to 3.8 we could try to remove this. (Or keep it for developers who are < 3.8)
+# From https://github.com/python/cpython/blob/44f6b9aa49d562ab7c67952442b8348346b24141/Lib/ast.py
+
+
+def _splitlines_no_ff(source):
+    """Split a string into lines ignoring form feed and other chars.
+    This mimics how the Python parser splits source code.
+    """
+    idx = 0
+    lines = []
+    next_line = ""
+    while idx < len(source):
+        c = source[idx]
+        next_line += c
+        idx += 1
+        # Keep \r\n together
+        if c == "\r" and idx < len(source) and source[idx] == "\n":
+            next_line += "\n"
+            idx += 1
+        if c in "\r\n":
+            lines.append(next_line)
+            next_line = ""
+
+    if next_line:
+        lines.append(next_line)
+    return lines
+
+
+def _pad_whitespace(source):
+    r"""Replace all chars except '\f\t' in a line with spaces."""
+    result = ""
+    for c in source:
+        if c in "\f\t":
+            result += c
+        else:
+            result += " "
+    return result
+
+
+def ast_get_source_segment(source, node):
+    """Get source code segment of the *source* that generated *node*.
+    If some location information (`lineno`, `end_lineno`, `col_offset`,
+    or `end_col_offset`) is missing, return None.
+    If *padded* is `True`, the first line of a multi-line statement will
+    be padded with spaces to match its original position.
+    """
+    try:
+        lineno = node.lineno - 1
+        end_lineno = node.end_lineno - 1
+        col_offset = node.col_offset
+        end_col_offset = node.end_col_offset
+    except AttributeError:
+        return None
+
+    lines = _splitlines_no_ff(source)
+    if end_lineno == lineno:
+        return lines[lineno].encode()[col_offset:end_col_offset].decode()
+
+    if padded:
+        padding = _pad_whitespace(lines[lineno].encode()[:col_offset].decode())
+    else:
+        padding = ""
+
+    first = padding + lines[lineno].encode()[col_offset:].decode()
+    last = lines[end_lineno].encode()[:end_col_offset].decode()
+    lines = lines[lineno + 1 : end_lineno]
+
+    lines.insert(0, first)
+    lines.append(last)
+    return "".join(lines)
+
+
+##############################################
+
+
 def node_to_readable_file_location(code, node, child_node=None):
     location = ""
 
@@ -219,28 +296,28 @@ def node_to_readable_file_location(code, node, child_node=None):
     elif isinstance(node, ast.If):
         assert child_node
         if child_node in node.body:
-            location += "if " + ast.get_source_segment(code, node.test)
+            location += "if " + ast_get_source_segment(code, node.test)
         else:
-            location += "else-of-if " + ast.get_source_segment(code, node.test)
+            location += "else-of-if " + ast_get_source_segment(code, node.test)
     elif isinstance(node, ast.For):
         location += (
             "for "
-            + ast.get_source_segment(code, node.target)
+            + ast_get_source_segment(code, node.target)
             + " in "
-            + ast.get_source_segment(code, node.iter)
+            + ast_get_source_segment(code, node.iter)
         )
     elif isinstance(node, ast.AugAssign):
         if isinstance(node.target, ast.Name):
             location += node.target.id
         else:
-            location += ast.get_source_segment(code, node.target)
+            location += ast_get_source_segment(code, node.target)
     elif isinstance(node, ast.Assign):
         # This assert would fire if we did e.g. some_sources = all_sources = [ ... ]
         assert len(node.targets) == 1, "Assignment node contains more than one target"
         if isinstance(node.targets[0], ast.Name):
             location += node.targets[0].id
         else:
-            location += ast.get_source_segment(code, node.targets[0])
+            location += ast_get_source_segment(code, node.targets[0])
     else:
         raise Exception("Got a node type I don't know how to handle: " + str(node))
 
@@ -264,20 +341,20 @@ def assignment_node_to_source_filename_list(code, node):
             if not isinstance(f, ast.Constant):
                 log(
                     "Found non-constant source file name in list: ",
-                    ast.get_source_segment(code, f),
+                    ast_get_source_segment(code, f),
                 )
                 return []
         return [f.value for f in node.value.elts]
     elif isinstance(node.value, ast.ListComp):
         # SOURCES += [f for f in foo if blah]
-        log("Could not find the files for " + ast.get_source_segment(code, node.value))
+        log("Could not find the files for " + ast_get_source_segment(code, node.value))
     elif isinstance(node.value, ast.Name) or isinstance(node.value, ast.Subscript):
         # SOURCES += other_var
         # SOURCES += files['X64_SOURCES']
-        log("Could not find the files for " + ast.get_source_segment(code, node))
+        log("Could not find the files for " + ast_get_source_segment(code, node))
     elif isinstance(node.value, ast.Call):
         # SOURCES += sorted(...)
-        log("Could not find the files for " + ast.get_source_segment(code, node))
+        log("Could not find the files for " + ast_get_source_segment(code, node))
     else:
         raise Exception(
             "Unexpected node received in assignment_node_to_source_filename_list: "
