@@ -193,12 +193,6 @@ class nsAccessibilityService final : public mozilla::a11y::DocManager,
   void RangeValueChanged(mozilla::PresShell* aPresShell, nsIContent* aContent);
 
   /**
-   * Update list bullet accessible.
-   */
-  void UpdateListBullet(mozilla::PresShell* aPresShell,
-                        nsIContent* aHTMLListItemContent, bool aHasBullet);
-
-  /**
    * Update the image map.
    */
   void UpdateImageMap(nsImageFrame* aImageFrame);
