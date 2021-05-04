@@ -23,6 +23,9 @@
 #ifdef MOZ_AV1
 #  include "nsAVIFDecoder.h"
 #endif
+#ifdef MOZ_JXL
+#  include "nsJXLDecoder.h"
+#endif
 
 namespace mozilla {
 
@@ -88,6 +91,11 @@ DecoderType DecoderFactory::GetDecoderType(const char* aMimeType) {
     type = DecoderType::AVIF;
   }
 #endif
+#ifdef MOZ_JXL
+  else if (!strcmp(aMimeType, IMAGE_JXL) && StaticPrefs::image_jxl_enabled()) {
+    type = DecoderType::JXL;
+  }
+#endif
 
   return type;
 }
@@ -129,6 +137,11 @@ already_AddRefed<Decoder> DecoderFactory::GetDecoder(DecoderType aType,
 #ifdef MOZ_AV1
     case DecoderType::AVIF:
       decoder = new nsAVIFDecoder(aImage);
+      break;
+#endif
+#ifdef MOZ_JXL
+    case DecoderType::JXL:
+      decoder = new nsJXLDecoder(aImage);
       break;
 #endif
     default:
