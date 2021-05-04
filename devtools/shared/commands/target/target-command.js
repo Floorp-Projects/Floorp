@@ -42,13 +42,10 @@ class TargetCommand extends EventEmitter {
    *
    * @param {DescriptorFront} descriptorFront
    *        The context to inspector identified by this descriptor.
-   * @param {Object} commands
-   *        The commands object with all interfaces defined from devtools/shared/commands/
    */
-  constructor({ descriptorFront, commands }) {
+  constructor({ descriptorFront }) {
     super();
 
-    this.commands = commands;
     this.descriptorFront = descriptorFront;
     this.rootFront = descriptorFront.client.mainRoot;
 
@@ -657,64 +654,6 @@ class TargetCommand extends EventEmitter {
     }
 
     this.switchToTarget(newTarget);
-  }
-
-  /**
-   * Reload the current top level target.
-   * This only works for targets inheriting from BrowsingContextTarget.
-   *
-   * @param {Boolean} bypassCache
-   *        If true, the reload will be forced to bypass any cache.
-   */
-  async reloadTopLevelTarget(bypassCache = false) {
-    if (!this.targetFront.isBrowsingContext) {
-      throw new Error(
-        "The top level target isn't a BrowsingContext and don't support being reloaded"
-      );
-    }
-
-    // Wait for the next DOCUMENT_EVENT's dom-complete event
-    let resolve = null;
-    const onReloaded = new Promise(r => (resolve = r));
-    const { resourceCommand } = this.commands;
-    const { DOCUMENT_EVENT } = resourceCommand.TYPES;
-    const onAvailable = resources => {
-      if (resources.find(resource => resource.name == "dom-complete")) {
-        resourceCommand.unwatchResources([DOCUMENT_EVENT], { onAvailable });
-        resolve();
-      }
-    };
-    // Wait for watchResources completion before reloading, otherwise we might miss the dom-complete event
-    // if watchResources is still pending while the reload already started and finished loading the document early.
-    await resourceCommand.watchResources([DOCUMENT_EVENT], {
-      onAvailable,
-      ignoreExistingResources: true,
-    });
-
-    const { targetFront } = this;
-    try {
-      // Arguments of reload are a bit convoluted.
-      // We expect an dictionary object, which only support one attribute
-      // called "force" which force bypassing the caches.
-      await targetFront.reload({ options: { force: bypassCache } });
-    } catch (e) {
-      dump(" target reload exception: " + e + " >>> " + e.message + " <<<\n");
-      // If the target follows the window global lifecycle, the reload request
-      // will fail, and we should swallow the error. Re-throw it otherwise.
-      // Reload request will fail because the target actor is going to be destroyed
-      // during the reload and so the ongoing reload request will most likely fail in some way.
-      // @backward-compat { version 88 } The trait check can be removed after
-      // version 88 hits the release channel.
-      const shouldSwallowReloadError =
-        targetFront.getTrait("supportsFollowWindowGlobalLifeCycleFlag") &&
-        targetFront.targetForm.followWindowGlobalLifeCycle;
-
-      if (!shouldSwallowReloadError) {
-        throw e;
-      }
-    }
-
-    await onReloaded;
   }
 
   /**

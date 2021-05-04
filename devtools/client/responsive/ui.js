@@ -259,6 +259,8 @@ class ResponsiveUI {
     const isTabContentDestroying =
       isWindowClosing || options?.reason === "TabClose";
 
+    let currentTarget;
+
     // Ensure init has finished before starting destroy
     if (!isTabContentDestroying) {
       await this.inited;
@@ -270,6 +272,10 @@ class ResponsiveUI {
 
       // Hide browser UI to avoid displaying weird intermediate states while closing.
       this.hideBrowserUI();
+
+      // Save reference to tab target before RDM stops listening to it. Will need it if
+      // the tab has to be reloaded to remove the emulated settings created by RDM.
+      currentTarget = this.currentTarget;
 
       // Resseting the throtting needs to be done before the
       // network events watching is stopped.
@@ -310,8 +316,8 @@ class ResponsiveUI {
       reloadNeeded |=
         (await this.updateTouchSimulation()) &&
         this.reloadOnChange("touchSimulation");
-      if (reloadNeeded) {
-        await this.reloadBrowser();
+      if (reloadNeeded && currentTarget) {
+        await currentTarget.reload();
       }
 
       // Unwatch targets & resources as the last step. If we are not waching for
@@ -1052,7 +1058,7 @@ class ResponsiveUI {
    * Reload the current tab.
    */
   async reloadBrowser() {
-    await this.commands.targetCommand.reloadTopLevelTarget();
+    await this.currentTarget.reload();
   }
 }
 
