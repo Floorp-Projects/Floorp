@@ -120,6 +120,7 @@ impl TileCacheBuilder {
         interners: &Interners,
         config: &FrameBuilderConfig,
         iframe_clip: Option<ClipChainId>,
+        slice_flags: SliceFlags,
     ) {
         assert!(self.can_add_container_tile_cache());
 
@@ -241,7 +242,7 @@ impl TileCacheBuilder {
 
         let params = TileCacheParams {
             slice,
-            slice_flags: SliceFlags::empty(),
+            slice_flags,
             spatial_node_index: scroll_root,
             background_color: None,
             shared_clips,
