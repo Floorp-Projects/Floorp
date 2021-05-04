@@ -125,7 +125,7 @@ already_AddRefed<GainNode> GainNode::Create(AudioContext& aAudioContext,
     return nullptr;
   }
 
-  audioNode->Gain()->SetValue(aOptions.mGain);
+  audioNode->Gain()->SetInitialValue(aOptions.mGain);
   return audioNode.forget();
 }
 

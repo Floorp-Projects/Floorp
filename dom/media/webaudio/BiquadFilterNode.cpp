@@ -253,10 +253,10 @@ already_AddRefed<BiquadFilterNode> BiquadFilterNode::Create(
   }
 
   audioNode->SetType(aOptions.mType);
-  audioNode->Q()->SetValue(aOptions.mQ);
-  audioNode->Detune()->SetValue(aOptions.mDetune);
-  audioNode->Frequency()->SetValue(aOptions.mFrequency);
-  audioNode->Gain()->SetValue(aOptions.mGain);
+  audioNode->Q()->SetInitialValue(aOptions.mQ);
+  audioNode->Detune()->SetInitialValue(aOptions.mDetune);
+  audioNode->Frequency()->SetInitialValue(aOptions.mFrequency);
+  audioNode->Gain()->SetInitialValue(aOptions.mGain);
 
   return audioNode.forget();
 }

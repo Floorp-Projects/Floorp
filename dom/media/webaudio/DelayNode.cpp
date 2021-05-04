@@ -199,7 +199,7 @@ already_AddRefed<DelayNode> DelayNode::Create(AudioContext& aAudioContext,
     return nullptr;
   }
 
-  audioNode->DelayTime()->SetValue(aOptions.mDelayTime);
+  audioNode->DelayTime()->SetInitialValue(aOptions.mDelayTime);
   return audioNode.forget();
 }
 

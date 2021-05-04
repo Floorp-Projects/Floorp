@@ -616,11 +616,11 @@ already_AddRefed<AudioBufferSourceNode> AudioBufferSourceNode::Create(
     audioNode->SetBuffer(aCx, aOptions.mBuffer.Value(), ignored);
   }
 
-  audioNode->Detune()->SetValue(aOptions.mDetune);
+  audioNode->Detune()->SetInitialValue(aOptions.mDetune);
   audioNode->SetLoop(aOptions.mLoop);
   audioNode->SetLoopEnd(aOptions.mLoopEnd);
   audioNode->SetLoopStart(aOptions.mLoopStart);
-  audioNode->PlaybackRate()->SetValue(aOptions.mPlaybackRate);
+  audioNode->PlaybackRate()->SetInitialValue(aOptions.mPlaybackRate);
 
   return audioNode.forget();
 }
