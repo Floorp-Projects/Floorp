@@ -87,6 +87,19 @@ TEST_F(ImageLoader, DetectAVIFCompatibleBrand) {
   CheckMimeType(buffer, sizeof(buffer), IMAGE_AVIF);
 }
 
+TEST_F(ImageLoader, DetectJXLCodestream) {
+  const char buffer[] = "\xff\x0a";
+  CheckMimeType(buffer, sizeof(buffer), IMAGE_JXL);
+}
+
+TEST_F(ImageLoader, DetectJXLContainer) {
+  const char buffer[] =
+      "\x00\x00\x00\x0c"
+      "JXL "
+      "\x0d\x0a\x87\x0a";
+  CheckMimeType(buffer, sizeof(buffer), IMAGE_JXL);
+}
+
 TEST_F(ImageLoader, DetectNonImageMP4) {
   const char buffer[] =
       "\x00\x00\x00\x1c"  // box length
