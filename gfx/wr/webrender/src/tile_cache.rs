@@ -454,6 +454,7 @@ impl TileCacheBuilder {
         config: &FrameBuilderConfig,
         clip_store: &mut ClipStore,
         prim_store: &mut PrimitiveStore,
+        interners: &Interners,
     ) -> (TileCacheConfig, Vec<PictureIndex>) {
         let mut result = TileCacheConfig::new(self.pending_tile_caches.len());
         let mut tile_cache_pictures = Vec::new();
@@ -462,10 +463,11 @@ impl TileCacheBuilder {
             // Accumulate any clip instances from the iframe_clip into the shared clips
             // that will be applied by this tile cache during compositing.
             if let Some(clip_chain_id) = pending_tile_cache.iframe_clip {
-                add_all_clips(
+                add_all_rect_clips(
                     clip_chain_id,
                     &mut pending_tile_cache.params.shared_clips,
                     clip_store,
+                    interners,
                 );
             }
 
@@ -536,10 +538,11 @@ fn add_clips(
 }
 
 // Walk a clip-chain, and accumulate all clip instances into supplied `prim_clips` array.
-fn add_all_clips(
+fn add_all_rect_clips(
     clip_chain_id: ClipChainId,
     prim_clips: &mut Vec<ClipInstance>,
     clip_store: &ClipStore,
+    interners: &Interners,
 ) {
     let mut current_clip_chain_id = clip_chain_id;
 
@@ -547,7 +550,11 @@ fn add_all_clips(
         let clip_chain_node = &clip_store
             .clip_chain_nodes[current_clip_chain_id.0 as usize];
 
-        prim_clips.push(ClipInstance::new(clip_chain_node.handle, clip_chain_node.spatial_node_index));
+        let clip_node_data = &interners.clip[clip_chain_node.handle];
+        if let ClipNodeKind::Rectangle = clip_node_data.clip_node_kind {
+            prim_clips.push(ClipInstance::new(clip_chain_node.handle, clip_chain_node.spatial_node_index));
+        }
+
         current_clip_chain_id = clip_chain_node.parent_clip_chain_id;
     }
 }
