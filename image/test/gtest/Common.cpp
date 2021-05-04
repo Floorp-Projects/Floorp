@@ -46,10 +46,6 @@ AutoInitializeImageLib::AutoInitializeImageLib() {
   rv = Preferences::SetBool("image.avif.enabled", true);
   EXPECT_TRUE(rv == NS_OK);
 
-  // Ensure JXL is enabled to run decoder tests.
-  rv = Preferences::SetBool("image.jxl.enabled", true);
-  EXPECT_TRUE(rv == NS_OK);
-
   // Ensure that ImageLib services are initialized.
   nsCOMPtr<imgITools> imgTools =
       do_CreateInstance("@mozilla.org/image/tools;1");
@@ -441,10 +437,6 @@ ImageTestCase GreenAVIFTestCase() {
       .WithSurfaceFlags(SurfaceFlags::TO_SRGB_COLORSPACE);
 }
 
-ImageTestCase GreenJXLTestCase() {
-  return ImageTestCase("green.jxl", "image/jxl", IntSize(100, 100));
-}
-
 // Forcing sRGB is required until nsAVIFDecoder supports ICC profiles
 // See bug 1634741
 ImageTestCase Transparent10bit420AVIFTestCase() {
@@ -572,11 +564,6 @@ ImageTestCase LargeAVIFTestCase() {
                        TEST_CASE_IGNORE_OUTPUT);
 }
 
-ImageTestCase LargeJXLTestCase() {
-  return ImageTestCase("large.jxl", "image/jxl", IntSize(1200, 660),
-                       TEST_CASE_IGNORE_OUTPUT);
-}
-
 ImageTestCase GreenWebPIccSrgbTestCase() {
   return ImageTestCase("green.icc_srgb.webp", "image/webp", IntSize(100, 100));
 }
@@ -673,11 +660,6 @@ ImageTestCase TransparentWebPTestCase() {
   return test;
 }
 
-ImageTestCase TransparentJXLTestCase() {
-  return ImageTestCase("transparent.jxl", "image/jxl", IntSize(1200, 1200),
-                       TEST_CASE_IS_TRANSPARENT);
-}
-
 ImageTestCase TransparentNoAlphaHeaderWebPTestCase() {
   ImageTestCase test("transparent-no-alpha-header.webp", "image/webp",
                      IntSize(100, 100), TEST_CASE_IS_FUZZY);
@@ -764,11 +746,6 @@ ImageTestCase DownscaledWebPTestCase() {
 
 ImageTestCase DownscaledAVIFTestCase() {
   return ImageTestCase("downscaled.avif", "image/avif", IntSize(100, 100),
-                       IntSize(20, 20));
-}
-
-ImageTestCase DownscaledJXLTestCase() {
-  return ImageTestCase("downscaled.jxl", "image/jxl", IntSize(100, 100),
                        IntSize(20, 20));
 }
 
