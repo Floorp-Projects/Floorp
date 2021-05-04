@@ -81,7 +81,8 @@ button.downloadButton:hover:active,
 .downloadBlockedBadgeNew {
   background-repeat: no-repeat;
   width: 16px;
-  margin: 10.5px 16px 0;
+  height: 16px;
+  margin: 0 16px;
 }
 
 #downloadsPanel-blockedSubview[verdict="Insecure"] .downloadsPanel-blockedSubview-image,
