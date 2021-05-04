@@ -970,7 +970,7 @@ bool WarpBuilder::build_SetArg(BytecodeLocation loc) {
     // Directly writing to a positional formal parameter is only possible when
     // the |arguments| contents are never observed, otherwise we can't
     // reconstruct the original parameter values when we access them through
-    // |arguments[i]|. AnalyzeArgumentsUsage ensures this is handled correctly.
+    // |arguments[i]|.
     MOZ_ASSERT_IF(info().hasArguments(), !info().hasMappedArgsObj());
 
     current->setArg(arg);

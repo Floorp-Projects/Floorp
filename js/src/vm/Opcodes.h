@@ -3313,30 +3313,6 @@
      * The current script must be a function script. This instruction must
      * execute at most once per function activation.
      *
-     * #### Optimized arguments
-     *
-     * If `script->needsArgsObj()` is false, no ArgumentsObject is created.
-     * Instead, `MagicValue(JS_OPTIMIZED_ARGUMENTS)` is pushed.
-     *
-     * This optimization imposes no restrictions on bytecode. Rather,
-     * `js::jit::AnalyzeArgumentsUsage` examines the bytecode and enables the
-     * optimization only if all uses of `arguments` are optimizable.  Each
-     * execution engine must know what the analysis considers optimizable and
-     * cope with the magic value when it is used in those ways.
-     *
-     * Example 1: `arguments[0]` is supported; therefore the interpreter's
-     * implementation of `JSOp::GetElem` checks for optimized arguments (see
-     * `MaybeGetElemOptimizedArguments`).
-     *
-     * Example 2: `f.apply(this, arguments)` is supported; therefore our
-     * implementation of `Function.prototype.apply` checks for optimized
-     * arguments (`see js::fun_apply`), and all `JSOp::FunApply` implementations
-     * must check for cases where `f.apply` turns out to be any other function
-     * (see `GuardFunApplyArgumentsOptimization`).
-     *
-     * It's not documented anywhere exactly which opcodes support
-     * `JS_OPTIMIZED_ARGUMENTS`; see the source of `AnalyzeArgumentsUsage`.
-     *
      *   Category: Variables and scopes
      *   Type: Function environment setup
      *   Operands:

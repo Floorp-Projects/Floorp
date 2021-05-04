@@ -65,17 +65,6 @@ bool JSScript::createJitScript(JSContext* cx) {
 
   gc::AutoSuppressGC suppressGC(cx);
 
-  // Run the arguments-analysis if needed. Both the Baseline Interpreter and
-  // Compiler rely on this.
-  if (!ensureHasAnalyzedArgsUsage(cx)) {
-    return false;
-  }
-
-  // If ensureHasAnalyzedArgsUsage allocated the JitScript we're done.
-  if (hasJitScript()) {
-    return true;
-  }
-
   // Store the profile string in the JitScript if the profiler is enabled.
   const char* profileString = nullptr;
   if (cx->runtime()->geckoProfiler().enabled()) {
