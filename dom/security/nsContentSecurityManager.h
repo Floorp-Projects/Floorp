@@ -11,6 +11,7 @@
 #include "nsIChannel.h"
 #include "nsIChannelEventSink.h"
 
+class nsILoadInfo;
 class nsIStreamListener;
 
 #define NS_CONTENTSECURITYMANAGER_CONTRACTID \
@@ -37,9 +38,9 @@ class nsContentSecurityManager : public nsIContentSecurityManager,
 
   static bool AllowTopLevelNavigationToDataURI(nsIChannel* aChannel);
   static bool AllowInsecureRedirectToDataURI(nsIChannel* aNewChannel);
-  static void MeasureUnexpectedPrivilegedLoads(
-      nsIURI* aFinalURI, ExtContentPolicyType aContentPolicyType,
-      const nsACString& aRemoteType);
+  static void MeasureUnexpectedPrivilegedLoads(nsILoadInfo* aLoadInfo,
+                                               nsIURI* aFinalURI,
+                                               const nsACString& aRemoteType);
 
  private:
   static nsresult CheckChannel(nsIChannel* aChannel);
