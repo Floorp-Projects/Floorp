@@ -122,11 +122,6 @@ git = "https://github.com/gfx-rs/d3d12-rs"
 replace-with = "vendored-sources"
 rev = "be19a243b86e0bafb9937d661fc8eabb3e42b44e"
 
-[source."https://github.com/badboy/failure"]
-git = "https://github.com/badboy/failure"
-replace-with = "vendored-sources"
-rev = "64af847bc5fdcb6d2438bec8a6030812a80519a5"
-
 [source."https://github.com/PLSysSec/rlbox_lucet_sandbox/"]
 git = "https://github.com/PLSysSec/rlbox_lucet_sandbox/"
 replace-with = "vendored-sources"

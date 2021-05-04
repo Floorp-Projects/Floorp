@@ -104,7 +104,7 @@ fn fail_derive_impl(s: synstructure::Structure) -> Result<TokenStream, Error> {
     })
 }
 
-fn display_body(s: &synstructure::Structure) -> Result<Option<quote::__rt::TokenStream>, Error> {
+fn display_body(s: &synstructure::Structure) -> Result<Option<TokenStream>, Error> {
     let mut msgs = s.variants().iter().map(|v| find_error_msg(&v.ast().attrs));
     if msgs.all(|msg| msg.map(|m| m.is_none()).unwrap_or(true)) {
         return Ok(None);
