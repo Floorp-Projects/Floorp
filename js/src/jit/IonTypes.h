@@ -81,8 +81,7 @@ static const SnapshotOffset INVALID_SNAPSHOT_OFFSET = uint32_t(-1);
  *
  * 2. If the bailout occurs because an assumption we made in WarpBuilder was
  *    invalidated, then FinishBailoutToBaseline will set a flag on the script
- *    to avoid that assumption in the future. Examples include
- *    NotOptimizedArgumentsGuard and UninitializedLexical.
+ *    to avoid that assumption in the future: for example, UninitializedLexical.
  *
  * 3. Similarly, if the bailing instruction is generated or modified by a MIR
  *    optimization, then FinishBailoutToBaseline will set a flag on the script
@@ -162,10 +161,6 @@ enum class BailoutKind : uint8_t {
   // We hit this code for the first time.
   FirstExecution,
 
-  // A bailout triggered by MGuardNotOptimizedArguments. We will call
-  // argumentsOptimizationFailed to invalidate the script.
-  NotOptimizedArgumentsGuard,
-
   // A lexical check failed. We will set lexical checks as unmovable.
   UninitializedLexical,
 
@@ -208,8 +203,6 @@ inline const char* BailoutKindString(BailoutKind kind) {
       return "Debugger";
     case BailoutKind::FirstExecution:
       return "FirstExecution";
-    case BailoutKind::NotOptimizedArgumentsGuard:
-      return "NotOptimizedArgumentsGuard";
     case BailoutKind::UninitializedLexical:
       return "UninitializedLexical";
     case BailoutKind::IonExceptionDebugMode:

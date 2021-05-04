@@ -2020,8 +2020,6 @@ class JSScript : public js::BaseScript {
   }
 
   bool needsArgsObj() const { return hasFlag(MutableFlags::NeedsArgsObj); }
-  static void argumentsOptimizationFailed(JSContext* cx,
-                                          js::HandleScript script);
 
   /*
    * Arguments access (via JSOp::*Arg* opcodes) must access the canonical

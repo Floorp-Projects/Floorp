@@ -4214,15 +4214,6 @@ void LIRGenerator::visitGuardValue(MGuardValue* ins) {
   redefine(ins, ins->value());
 }
 
-void LIRGenerator::visitGuardNotOptimizedArguments(
-    MGuardNotOptimizedArguments* ins) {
-  MOZ_ASSERT(ins->value()->type() == MIRType::Value);
-  auto* lir = new (alloc()) LGuardNotOptimizedArguments(useBox(ins->value()));
-  assignSnapshot(lir, ins->bailoutKind());
-  add(lir, ins);
-  redefine(ins, ins->value());
-}
-
 void LIRGenerator::visitGuardNullOrUndefined(MGuardNullOrUndefined* ins) {
   MOZ_ASSERT(ins->value()->type() == MIRType::Value);
   auto* lir = new (alloc()) LGuardNullOrUndefined(useBox(ins->value()));
