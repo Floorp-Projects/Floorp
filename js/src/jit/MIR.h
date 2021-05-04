@@ -2173,6 +2173,10 @@ class MNewArrayObject : public MUnaryInstruction, public NoTypePolicy::Data {
 
   uint32_t length() const { return length_; }
   gc::InitialHeap initialHeap() const { return initialHeap_; }
+
+  [[nodiscard]] bool writeRecoverData(
+      CompactBufferWriter& writer) const override;
+  bool canRecoverOnBailout() const override { return true; }
 };
 
 class MNewIterator : public MUnaryInstruction, public NoTypePolicy::Data {

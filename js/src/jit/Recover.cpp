@@ -1564,6 +1564,39 @@ bool RNewPlainObject::recover(JSContext* cx, SnapshotIterator& iter) const {
   return true;
 }
 
+bool MNewArrayObject::writeRecoverData(CompactBufferWriter& writer) const {
+  MOZ_ASSERT(canRecoverOnBailout());
+  writer.writeUnsigned(uint32_t(RInstruction::Recover_NewArrayObject));
+
+  writer.writeUnsigned(length_);
+  MOZ_ASSERT(gc::InitialHeap(uint8_t(initialHeap_)) == initialHeap_);
+  writer.writeByte(uint8_t(initialHeap_));
+  return true;
+}
+
+RNewArrayObject::RNewArrayObject(CompactBufferReader& reader) {
+  length_ = reader.readUnsigned();
+  initialHeap_ = gc::InitialHeap(reader.readByte());
+  MOZ_ASSERT(initialHeap_ == gc::DefaultHeap ||
+             initialHeap_ == gc::TenuredHeap);
+}
+
+bool RNewArrayObject::recover(JSContext* cx, SnapshotIterator& iter) const {
+  iter.read();  // Skip unused shape field.
+
+  NewObjectKind kind =
+      initialHeap_ == gc::TenuredHeap ? TenuredObject : GenericObject;
+  JSObject* array = NewArrayOperation(cx, length_, kind);
+  if (!array) {
+    return false;
+  }
+
+  RootedValue result(cx);
+  result.setObject(*array);
+  iter.storeInstructionResult(result);
+  return true;
+}
+
 bool MNewTypedArray::writeRecoverData(CompactBufferWriter& writer) const {
   MOZ_ASSERT(canRecoverOnBailout());
   writer.writeUnsigned(uint32_t(RInstruction::Recover_NewTypedArray));
