@@ -48,7 +48,9 @@ interface PannerNode : AudioNode {
     attribute PanningModelType panningModel;
 
     // Uses a 3D cartesian coordinate system
+    [Throws]
     void setPosition(double x, double y, double z);
+    [Throws]
     void setOrientation(double x, double y, double z);
 
     // Cartesian coordinate for position

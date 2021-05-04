@@ -4,7 +4,8 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  *
  * The origin of this IDL file is
- * https://webaudio.github.io/web-audio-api/
+ * https://webaudio.github.io/web-audio-api/#enumdef-automationrate
+ * https://webaudio.github.io/web-audio-api/#audioparam
  *
  * Copyright © 2012 W3C® (MIT, ERCIM, Keio), All Rights Reserved. W3C
  * liability, trademark and document use rules apply.
@@ -18,7 +19,7 @@ enum AutomationRate {
 [Pref="dom.webaudio.enabled",
  Exposed=Window]
 interface AudioParam {
-
+    [SetterThrows]
                     attribute float value;
     readonly        attribute float defaultValue;
     readonly        attribute float minValue;
