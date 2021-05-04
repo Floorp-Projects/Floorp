@@ -4,9 +4,7 @@
 
 "use strict";
 
-const {
-  ResourceWatcher,
-} = require("devtools/shared/resources/resource-watcher");
+const ResourceCommand = require("devtools/shared/commands/resource/resource-command");
 
 module.exports = async function({ targetFront, onAvailable }) {
   if (!targetFront.hasActor("webSocket")) {
@@ -55,7 +53,7 @@ module.exports = async function({ targetFront, onAvailable }) {
 
 function toResource(wsMessageType, eventParams) {
   return {
-    resourceType: ResourceWatcher.TYPES.WEBSOCKET,
+    resourceType: ResourceCommand.TYPES.WEBSOCKET,
     wsMessageType,
     ...eventParams,
   };

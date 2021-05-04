@@ -36,9 +36,6 @@ var Startup = Cc["@mozilla.org/devtools/startup-clh;1"].getService(
   Ci.nsISupports
 ).wrappedJSObject;
 
-const {
-  ResourceWatcher,
-} = require("devtools/shared/resources/resource-watcher");
 const { createCommandsDictionary } = require("devtools/shared/commands/index");
 
 const { BrowserLoader } = ChromeUtils.import(
@@ -787,7 +784,8 @@ Toolbox.prototype = {
         this._onTargetThreadFrontResumeWrongOrder.bind(this)
       );
 
-      this.resourceWatcher = new ResourceWatcher(this.commands.targetCommand);
+      // Bug 1709063: Use commands.resourceCommand instead of toolbox.resourceCommand
+      this.resourceCommand = this.commands.resourceCommand;
 
       // Optimization: fire up a few other things before waiting on
       // the iframe being ready (makes startup faster)
@@ -805,16 +803,16 @@ Toolbox.prototype = {
 
       // Watch for console API messages, errors and network events in order to populate
       // the error count icon in the toolbox.
-      const onResourcesWatched = this.resourceWatcher.watchResources(
+      const onResourcesWatched = this.resourceCommand.watchResources(
         [
-          this.resourceWatcher.TYPES.CONSOLE_MESSAGE,
-          this.resourceWatcher.TYPES.ERROR_MESSAGE,
+          this.resourceCommand.TYPES.CONSOLE_MESSAGE,
+          this.resourceCommand.TYPES.ERROR_MESSAGE,
           // Independently of watching network event resources for the error count icon,
           // we need to start tracking network activity on toolbox open for targets such
           // as tabs, in order to ensure there is always at least one listener existing
           // for network events across the lifetime of the various panels, so stopping
-          // the resource watcher from clearing out its cache of network event resources.
-          this.resourceWatcher.TYPES.NETWORK_EVENT,
+          // the resource command from clearing out its cache of network event resources.
+          this.resourceCommand.TYPES.NETWORK_EVENT,
         ],
         {
           onAvailable: this._onResourceAvailable,
@@ -3763,11 +3761,11 @@ Toolbox.prototype = {
       this._onTargetAvailable,
       this._onTargetDestroyed
     );
-    this.resourceWatcher.unwatchResources(
+    this.resourceCommand.unwatchResources(
       [
-        this.resourceWatcher.TYPES.CONSOLE_MESSAGE,
-        this.resourceWatcher.TYPES.ERROR_MESSAGE,
-        this.resourceWatcher.TYPES.NETWORK_EVENT,
+        this.resourceCommand.TYPES.CONSOLE_MESSAGE,
+        this.resourceCommand.TYPES.ERROR_MESSAGE,
+        this.resourceCommand.TYPES.NETWORK_EVENT,
       ],
       { onAvailable: this._onResourceAvailable }
     );
@@ -4310,7 +4308,7 @@ Toolbox.prototype = {
 
     for (const resource of resources) {
       if (
-        resource.resourceType === this.resourceWatcher.TYPES.ERROR_MESSAGE &&
+        resource.resourceType === this.resourceCommand.TYPES.ERROR_MESSAGE &&
         // ERROR_MESSAGE resources can be warnings/info, but here we only want to count errors
         resource.pageError.error
       ) {
@@ -4319,7 +4317,7 @@ Toolbox.prototype = {
       }
 
       if (
-        resource.resourceType === this.resourceWatcher.TYPES.CONSOLE_MESSAGE
+        resource.resourceType === this.resourceCommand.TYPES.CONSOLE_MESSAGE
       ) {
         const { level } = resource.message;
         if (level === "error" || level === "exception" || level === "assert") {
@@ -4342,7 +4340,7 @@ Toolbox.prototype = {
     for (const { update } of resources) {
       // In order to match webconsole behaviour, we treat 4xx and 5xx network calls as errors.
       if (
-        update.resourceType === this.resourceWatcher.TYPES.NETWORK_EVENT &&
+        update.resourceType === this.resourceCommand.TYPES.NETWORK_EVENT &&
         update.resourceUpdates.status &&
         update.resourceUpdates.status.toString().match(REGEX_4XX_5XX)
       ) {

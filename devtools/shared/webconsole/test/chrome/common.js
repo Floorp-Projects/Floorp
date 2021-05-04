@@ -6,7 +6,7 @@
 
 /* exported attachConsole, attachConsoleToTab, attachConsoleToWorker,
    closeDebugger, checkConsoleAPICalls, checkRawHeaders, runTests, nextTest, Ci, Cc,
-   withActiveServiceWorker, Services, consoleAPICall, createResourceWatcherForTab */
+   withActiveServiceWorker, Services, consoleAPICall, createCommandsForTab */
 
 const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
 const { DevToolsServer } = require("devtools/server/devtools-server");
@@ -115,18 +115,10 @@ var _attachConsole = async function(listeners, attachToTab, attachToWorker) {
   return null;
 };
 
-async function createResourceWatcherForTab() {
-  // Avoid mocha to try to load these module and fail while doing it when running node tests
-  const {
-    ResourceWatcher,
-  } = require("devtools/shared/resources/resource-watcher");
-
+async function createCommandsForTab() {
   const commands = await CommandsFactory.forMainProcess();
   await commands.targetCommand.startListening();
-  const target = commands.targetCommand.targetFront;
-  const resourceWatcher = new ResourceWatcher(commands.targetCommand);
-
-  return { resourceWatcher, target };
+  return commands;
 }
 
 function closeDebugger(state, callback) {

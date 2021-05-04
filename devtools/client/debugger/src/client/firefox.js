@@ -15,12 +15,12 @@ import sourceQueue from "../utils/source-queue";
 
 let actions;
 let targetCommand;
-let resourceWatcher;
+let resourceCommand;
 
-export async function onConnect(commands, _resourceWatcher, _actions, store) {
+export async function onConnect(commands, _resourceCommand, _actions, store) {
   actions = _actions;
   targetCommand = commands.targetCommand;
-  resourceWatcher = _resourceWatcher;
+  resourceCommand = _resourceCommand;
 
   setupCommands(commands);
   setupCreate({ store });
@@ -43,13 +43,13 @@ export async function onConnect(commands, _resourceWatcher, _actions, store) {
 
   // Use independant listeners for SOURCE and THREAD_STATE in order to ease
   // doing batching and notify about a set of SOURCE's in one redux action.
-  await resourceWatcher.watchResources([resourceWatcher.TYPES.SOURCE], {
+  await resourceCommand.watchResources([resourceCommand.TYPES.SOURCE], {
     onAvailable: onSourceAvailable,
   });
-  await resourceWatcher.watchResources([resourceWatcher.TYPES.THREAD_STATE], {
+  await resourceCommand.watchResources([resourceCommand.TYPES.THREAD_STATE], {
     onAvailable: onBreakpointAvailable,
   });
-  await resourceWatcher.watchResources([resourceWatcher.TYPES.ERROR_MESSAGE], {
+  await resourceCommand.watchResources([resourceCommand.TYPES.ERROR_MESSAGE], {
     onAvailable: actions.addExceptionFromResources,
   });
 }
@@ -60,13 +60,13 @@ export function onDisconnect() {
     onTargetAvailable,
     onTargetDestroyed
   );
-  resourceWatcher.unwatchResources([resourceWatcher.TYPES.SOURCE], {
+  resourceCommand.unwatchResources([resourceCommand.TYPES.SOURCE], {
     onAvailable: onSourceAvailable,
   });
-  resourceWatcher.unwatchResources([resourceWatcher.TYPES.THREAD_STATE], {
+  resourceCommand.unwatchResources([resourceCommand.TYPES.THREAD_STATE], {
     onAvailable: onBreakpointAvailable,
   });
-  resourceWatcher.unwatchResources([resourceWatcher.TYPES.ERROR_MESSAGE], {
+  resourceCommand.unwatchResources([resourceCommand.TYPES.ERROR_MESSAGE], {
     onAvailable: actions.addExceptionFromResources,
   });
   sourceQueue.clear();

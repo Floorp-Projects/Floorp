@@ -3437,7 +3437,7 @@ function trimHttpHttpsPort(url) {
  *
  * This class is meant to be dropped once we implement all storage
  * types via a Watcher class. (bug 1644192)
- * listStores will have been replaced by the ResourceWatcher API
+ * listStores will have been replaced by the ResourceCommand API
  * which will distribute all storage type specific actors.
  */
 const StorageActor = protocol.ActorClassWithSpec(specs.storageSpec, {

@@ -3,12 +3,8 @@
 
 "use strict";
 
-// Test the ResourceWatcher API around PLATFORM_MESSAGE
+// Test the ResourceCommand API around PLATFORM_MESSAGE
 // Reproduces assertions from: devtools/shared/webconsole/test/chrome/test_nsiconsolemessage.html
-
-const {
-  ResourceWatcher,
-} = require("devtools/shared/resources/resource-watcher");
 
 add_task(async function() {
   // Disable the preloaded process as it creates processes intermittently
@@ -22,9 +18,9 @@ add_task(async function() {
 async function testPlatformMessagesResources() {
   const {
     client,
-    resourceWatcher,
+    resourceCommand,
     targetCommand,
-  } = await initMultiProcessResourceWatcher();
+  } = await initMultiProcessResourceCommand();
 
   const cachedMessages = [
     "This is a cached message",
@@ -38,7 +34,7 @@ async function testPlatformMessagesResources() {
   const receivedMessages = [];
 
   info(
-    "Log some messages *before* calling ResourceWatcher.watchResources in order to assert the behavior of already existing messages."
+    "Log some messages *before* calling ResourceCommand.watchResources in order to assert the behavior of already existing messages."
   );
   Services.console.logStringMessage(expectedMessages[0]);
   Services.console.logStringMessage(expectedMessages[1]);
@@ -82,15 +78,15 @@ async function testPlatformMessagesResources() {
     }
   };
 
-  await resourceWatcher.watchResources(
-    [ResourceWatcher.TYPES.PLATFORM_MESSAGE],
+  await resourceCommand.watchResources(
+    [resourceCommand.TYPES.PLATFORM_MESSAGE],
     {
       onAvailable,
     }
   );
 
   info(
-    "Now log messages *after* the call to ResourceWatcher.watchResources and after having received all existing messages"
+    "Now log messages *after* the call to ResourceCommand.watchResources and after having received all existing messages"
   );
   Services.console.logStringMessage(expectedMessages[2]);
   Services.console.logStringMessage(expectedMessages[3]);
@@ -107,9 +103,9 @@ async function testPlatformMessagesResources() {
 async function testPlatformMessagesResourcesWithIgnoreExistingResources() {
   const {
     client,
-    resourceWatcher,
+    resourceCommand,
     targetCommand,
-  } = await initMultiProcessResourceWatcher();
+  } = await initMultiProcessResourceCommand();
 
   info(
     "Check whether onAvailable will not be called with existing platform messages"
@@ -119,8 +115,8 @@ async function testPlatformMessagesResourcesWithIgnoreExistingResources() {
   Services.console.logStringMessage(expectedMessages[1]);
 
   const availableResources = [];
-  await resourceWatcher.watchResources(
-    [ResourceWatcher.TYPES.PLATFORM_MESSAGE],
+  await resourceCommand.watchResources(
+    [resourceCommand.TYPES.PLATFORM_MESSAGE],
     {
       onAvailable: resources => {
         for (const resource of resources) {

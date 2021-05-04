@@ -6,9 +6,7 @@
 
 const Services = require("Services");
 const l10n = require("devtools/client/webconsole/utils/l10n");
-const {
-  ResourceWatcher,
-} = require("devtools/shared/resources/resource-watcher");
+const ResourceCommand = require("devtools/shared/commands/resource/resource-command");
 
 // URL Regex, common idioms:
 //
@@ -96,23 +94,23 @@ function prepareMessage(resource, idGenerator) {
  */
 function transformResource(resource) {
   switch (resource.resourceType || resource.type) {
-    case ResourceWatcher.TYPES.CONSOLE_MESSAGE: {
+    case ResourceCommand.TYPES.CONSOLE_MESSAGE: {
       return transformConsoleAPICallResource(resource);
     }
 
-    case ResourceWatcher.TYPES.PLATFORM_MESSAGE: {
+    case ResourceCommand.TYPES.PLATFORM_MESSAGE: {
       return transformPlatformMessageResource(resource);
     }
 
-    case ResourceWatcher.TYPES.ERROR_MESSAGE: {
+    case ResourceCommand.TYPES.ERROR_MESSAGE: {
       return transformPageErrorResource(resource);
     }
 
-    case ResourceWatcher.TYPES.CSS_MESSAGE: {
+    case ResourceCommand.TYPES.CSS_MESSAGE: {
       return transformCSSMessageResource(resource);
     }
 
-    case ResourceWatcher.TYPES.NETWORK_EVENT: {
+    case ResourceCommand.TYPES.NETWORK_EVENT: {
       return transformNetworkEventResource(resource);
     }
 

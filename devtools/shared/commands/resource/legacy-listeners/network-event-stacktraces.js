@@ -4,16 +4,14 @@
 
 "use strict";
 
-const {
-  ResourceWatcher,
-} = require("devtools/shared/resources/resource-watcher");
+const ResourceCommand = require("devtools/shared/commands/resource/resource-command");
 
 module.exports = async function({ targetCommand, targetFront, onAvailable }) {
   function onNetworkEventStackTrace(packet) {
     const actor = packet.eventActor;
     onAvailable([
       {
-        resourceType: ResourceWatcher.TYPES.NETWORK_EVENT_STACKTRACE,
+        resourceType: ResourceCommand.TYPES.NETWORK_EVENT_STACKTRACE,
         resourceId: actor.channelId,
         stacktraceAvailable: actor.cause.stacktraceAvailable,
         lastFrame: actor.cause.lastFrame,

@@ -3,11 +3,7 @@
 
 "use strict";
 
-// Test the ResourceWatcher API around NETWORK_EVENT_STACKTRACE
-
-const {
-  ResourceWatcher,
-} = require("devtools/shared/resources/resource-watcher");
+// Test the ResourceCommand API around NETWORK_EVENT_STACKTRACE
 
 const TEST_URI = `${URL_ROOT_SSL}network_document.html`;
 
@@ -29,7 +25,7 @@ const REQUEST_STUB = {
 add_task(async function() {
   info("Test network stacktraces events");
   const tab = await addTab(TEST_URI);
-  const { client, resourceWatcher, targetCommand } = await initResourceWatcher(
+  const { client, resourceCommand, targetCommand } = await initResourceCommand(
     tab
   );
 
@@ -39,7 +35,7 @@ add_task(async function() {
   function onResourceAvailable(resources) {
     for (const resource of resources) {
       if (
-        resource.resourceType === ResourceWatcher.TYPES.NETWORK_EVENT_STACKTRACE
+        resource.resourceType === resourceCommand.TYPES.NETWORK_EVENT_STACKTRACE
       ) {
         ok(
           !networkEvents.has(resource.resourceId),
@@ -61,7 +57,7 @@ add_task(async function() {
         return;
       }
 
-      if (resource.resourceType === ResourceWatcher.TYPES.NETWORK_EVENT) {
+      if (resource.resourceType === resourceCommand.TYPES.NETWORK_EVENT) {
         ok(
           stackTraces.has(resource.stacktraceResourceId),
           "The stack trace does exists"
@@ -74,10 +70,10 @@ add_task(async function() {
 
   function onResourceUpdated() {}
 
-  await resourceWatcher.watchResources(
+  await resourceCommand.watchResources(
     [
-      ResourceWatcher.TYPES.NETWORK_EVENT_STACKTRACE,
-      ResourceWatcher.TYPES.NETWORK_EVENT,
+      resourceCommand.TYPES.NETWORK_EVENT_STACKTRACE,
+      resourceCommand.TYPES.NETWORK_EVENT,
     ],
     {
       onAvailable: onResourceAvailable,
@@ -87,10 +83,10 @@ add_task(async function() {
 
   await triggerNetworkRequests(tab.linkedBrowser, [REQUEST_STUB.code]);
 
-  resourceWatcher.unwatchResources(
+  resourceCommand.unwatchResources(
     [
-      ResourceWatcher.TYPES.NETWORK_EVENT_STACKTRACE,
-      ResourceWatcher.TYPES.NETWORK_EVENT,
+      resourceCommand.TYPES.NETWORK_EVENT_STACKTRACE,
+      resourceCommand.TYPES.NETWORK_EVENT,
     ],
     {
       onAvailable: onResourceAvailable,

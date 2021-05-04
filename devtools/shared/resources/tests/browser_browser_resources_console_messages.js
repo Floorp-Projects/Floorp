@@ -3,11 +3,7 @@
 
 "use strict";
 
-// Test the ResourceWatcher API around CONSOLE_MESSAGE for the whole browser
-
-const {
-  ResourceWatcher,
-} = require("devtools/shared/resources/resource-watcher");
+// Test the ResourceCommand API around CONSOLE_MESSAGE for the whole browser
 
 const TEST_URL = URL_ROOT_SSL + "early_console_document.html";
 
@@ -17,20 +13,20 @@ add_task(async function() {
 
   const {
     client,
-    resourceWatcher,
+    resourceCommand,
     targetCommand,
-  } = await initMultiProcessResourceWatcher();
+  } = await initMultiProcessResourceCommand();
 
   info(
-    "Log some messages *before* calling ResourceWatcher.watchResources in order to " +
+    "Log some messages *before* calling ResourceCommand.watchResources in order to " +
       "assert the behavior of already existing messages."
   );
   console.log("foobar");
 
   info("Wait for existing browser mochitest log");
   const existingMsg = await waitForNextResource(
-    resourceWatcher,
-    ResourceWatcher.TYPES.CONSOLE_MESSAGE,
+    resourceCommand,
+    resourceCommand.TYPES.CONSOLE_MESSAGE,
     {
       ignoreExistingResources: false,
       predicate({ message }) {
@@ -56,15 +52,15 @@ add_task(async function() {
       resource => resource.message.arguments[0] == "foobar2"
     );
     if (runtimeLogResource) {
-      resourceWatcher.unwatchResources(
-        [ResourceWatcher.TYPES.CONSOLE_MESSAGE],
+      resourceCommand.unwatchResources(
+        [resourceCommand.TYPES.CONSOLE_MESSAGE],
         { onAvailable }
       );
       resolveMochitestRuntimeLog(runtimeLogResource);
     }
   };
-  await resourceWatcher.watchResources(
-    [ResourceWatcher.TYPES.CONSOLE_MESSAGE],
+  await resourceCommand.watchResources(
+    [resourceCommand.TYPES.CONSOLE_MESSAGE],
     {
       ignoreExistingResources: true,
       onAvailable,
@@ -82,8 +78,8 @@ add_task(async function() {
   );
 
   const onEarlyLog = waitForNextResource(
-    resourceWatcher,
-    ResourceWatcher.TYPES.CONSOLE_MESSAGE,
+    resourceCommand,
+    resourceCommand.TYPES.CONSOLE_MESSAGE,
     {
       ignoreExistingResources: true,
       predicate({ message }) {

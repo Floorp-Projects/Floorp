@@ -17,7 +17,7 @@ const trace = {
  */
 function HarCollector(options) {
   this.webConsoleFront = options.webConsoleFront;
-  this.resourceWatcher = options.resourceWatcher;
+  this.resourceCommand = options.resourceCommand;
 
   this.onResourceAvailable = this.onResourceAvailable.bind(this);
   this.onResourceUpdated = this.onResourceUpdated.bind(this);
@@ -36,8 +36,8 @@ HarCollector.prototype = {
   // Connection
 
   start: async function() {
-    await this.resourceWatcher.watchResources(
-      [this.resourceWatcher.TYPES.NETWORK_EVENT],
+    await this.resourceCommand.watchResources(
+      [this.resourceCommand.TYPES.NETWORK_EVENT],
       {
         onAvailable: this.onResourceAvailable,
         onUpdated: this.onResourceUpdated,
@@ -46,8 +46,8 @@ HarCollector.prototype = {
   },
 
   stop: async function() {
-    await this.resourceWatcher.unwatchResources(
-      [this.resourceWatcher.TYPES.NETWORK_EVENT],
+    await this.resourceCommand.unwatchResources(
+      [this.resourceCommand.TYPES.NETWORK_EVENT],
       {
         onAvailable: this.onResourceAvailable,
         onUpdated: this.onResourceUpdated,

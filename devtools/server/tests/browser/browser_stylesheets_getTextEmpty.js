@@ -14,22 +14,20 @@ add_task(async function() {
   const browser = await addTab(TEST_URI);
   const tab = gBrowser.getTabForBrowser(browser);
 
-  const {
-    ResourceWatcher,
-  } = require("devtools/shared/resources/resource-watcher");
-
   const commands = await CommandsFactory.forTab(tab);
   await commands.targetCommand.startListening();
   const target = commands.targetCommand.targetFront;
-  const resourceWatcher = new ResourceWatcher(commands.targetCommand);
 
   const styleSheetsFront = await target.getFront("stylesheets");
   ok(styleSheetsFront, "The StyleSheetsFront was created.");
 
   const sheets = [];
-  await resourceWatcher.watchResources([ResourceWatcher.TYPES.STYLESHEET], {
-    onAvailable: resources => sheets.push(...resources),
-  });
+  await commands.resourceCommand.watchResources(
+    [commands.resourceCommand.TYPES.STYLESHEET],
+    {
+      onAvailable: resources => sheets.push(...resources),
+    }
+  );
   is(sheets.length, 1, "watchResources returned the correct number of sheets");
 
   const { resourceId } = sheets[0];

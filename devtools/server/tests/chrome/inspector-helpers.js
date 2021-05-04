@@ -1,8 +1,7 @@
 /* exported attachURL, promiseDone,
    promiseOnce,
    addTest, addAsyncTest,
-   runNextTest, _documentWalker,
-   createResourceWatcher */
+   runNextTest, _documentWalker */
 "use strict";
 
 const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
@@ -16,10 +15,6 @@ const {
 const {
   DocumentWalker: _documentWalker,
 } = require("devtools/server/actors/inspector/document-walker");
-
-const {
-  ResourceWatcher,
-} = require("devtools/shared/resources/resource-watcher");
 
 const Services = require("Services");
 
@@ -133,8 +128,4 @@ function runNextTest() {
         ex
     );
   }
-}
-
-async function createResourceWatcher(commands) {
-  return new ResourceWatcher(commands.targetCommand);
 }

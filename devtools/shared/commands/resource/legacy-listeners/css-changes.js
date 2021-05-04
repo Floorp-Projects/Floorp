@@ -4,9 +4,7 @@
 
 "use strict";
 
-const {
-  ResourceWatcher,
-} = require("devtools/shared/resources/resource-watcher");
+const ResourceCommand = require("devtools/shared/commands/resource/resource-command");
 
 module.exports = async function({ targetFront, onAvailable }) {
   if (!targetFront.hasActor("changes")) {
@@ -25,6 +23,6 @@ module.exports = async function({ targetFront, onAvailable }) {
 
 function toResource(change) {
   return Object.assign(change, {
-    resourceType: ResourceWatcher.TYPES.CSS_CHANGE,
+    resourceType: ResourceCommand.TYPES.CSS_CHANGE,
   });
 }

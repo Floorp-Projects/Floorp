@@ -66,7 +66,7 @@ async function loadInitialState() {
 
 export async function bootstrap({
   commands,
-  resourceWatcher,
+  resourceCommand,
   workers: panelWorkers,
   panel,
 }) {
@@ -84,7 +84,7 @@ export async function bootstrap({
 
   const connected = firefox.onConnect(
     commands,
-    resourceWatcher,
+    resourceCommand,
     actions,
     store
   );

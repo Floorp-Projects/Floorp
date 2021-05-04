@@ -4,16 +4,13 @@
 
 "use strict";
 
-const {
-  ResourceWatcher,
-} = require("devtools/shared/resources/resource-watcher");
+const ResourceCommand = require("devtools/shared/commands/resource/resource-command");
 
 const {
-  // getFilteredStorageEvents,
   makeStorageLegacyListener,
-} = require("devtools/shared/resources/legacy-listeners/storage-utils");
+} = require("devtools/shared/commands/resource/legacy-listeners/storage-utils");
 
 module.exports = makeStorageLegacyListener(
-  "indexedDB",
-  ResourceWatcher.TYPES.INDEXED_DB
+  "extensionStorage",
+  ResourceCommand.TYPES.EXTENSION_STORAGE
 );

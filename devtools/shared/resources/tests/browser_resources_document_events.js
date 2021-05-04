@@ -3,11 +3,7 @@
 
 "use strict";
 
-// Test the ResourceWatcher API around DOCUMENT_EVENT
-
-const {
-  ResourceWatcher,
-} = require("devtools/shared/resources/resource-watcher");
+// Test the ResourceCommand API around DOCUMENT_EVENT
 
 add_task(async function() {
   await testDocumentEventResources();
@@ -20,13 +16,13 @@ add_task(async function() {
 });
 
 async function testDocumentEventResources() {
-  info("Test ResourceWatcher for DOCUMENT_EVENT");
+  info("Test ResourceCommand for DOCUMENT_EVENT");
 
   // Open a test tab
   const tab = await addTab("data:text/html,Document Events");
 
   const listener = new ResourceListener();
-  const { client, resourceWatcher, targetCommand } = await initResourceWatcher(
+  const { client, resourceCommand, targetCommand } = await initResourceCommand(
     tab
   );
 
@@ -36,7 +32,7 @@ async function testDocumentEventResources() {
   const onLoadingAtInit = listener.once("dom-loading");
   const onInteractiveAtInit = listener.once("dom-interactive");
   const onCompleteAtInit = listener.once("dom-complete");
-  await resourceWatcher.watchResources([ResourceWatcher.TYPES.DOCUMENT_EVENT], {
+  await resourceCommand.watchResources([resourceCommand.TYPES.DOCUMENT_EVENT], {
     onAvailable: parameters => listener.dispatch(parameters),
   });
   await assertPromises(onLoadingAtInit, onInteractiveAtInit, onCompleteAtInit);
@@ -79,13 +75,13 @@ async function testDocumentEventResourcesWithIgnoreExistingResources() {
 
   const tab = await addTab("data:text/html,Document Events");
 
-  const { client, resourceWatcher, targetCommand } = await initResourceWatcher(
+  const { client, resourceCommand, targetCommand } = await initResourceCommand(
     tab
   );
 
   info("Check whether the existing document events will not be fired");
   const documentEvents = [];
-  await resourceWatcher.watchResources([ResourceWatcher.TYPES.DOCUMENT_EVENT], {
+  await resourceCommand.watchResources([resourceCommand.TYPES.DOCUMENT_EVENT], {
     onAvailable: resources => documentEvents.push(...resources),
     ignoreExistingResources: true,
   });
@@ -106,12 +102,12 @@ async function testCrossOriginNavigation() {
 
   const tab = await addTab("http://example.com/document-builder.sjs?html=com");
 
-  const { client, resourceWatcher, targetCommand } = await initResourceWatcher(
+  const { client, resourceCommand, targetCommand } = await initResourceCommand(
     tab
   );
 
   const documentEvents = [];
-  await resourceWatcher.watchResources([ResourceWatcher.TYPES.DOCUMENT_EVENT], {
+  await resourceCommand.watchResources([resourceCommand.TYPES.DOCUMENT_EVENT], {
     onAvailable: resources => documentEvents.push(...resources),
     ignoreExistingResources: true,
   });

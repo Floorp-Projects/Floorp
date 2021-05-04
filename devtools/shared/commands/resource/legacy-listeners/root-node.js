@@ -4,9 +4,7 @@
 
 "use strict";
 
-const {
-  ResourceWatcher,
-} = require("devtools/shared/resources/resource-watcher");
+const ResourceCommand = require("devtools/shared/commands/resource/resource-command");
 
 module.exports = async function({ targetFront, onAvailable, onDestroyed }) {
   // XXX: When watching root node for a non top-level target, this will also
@@ -50,12 +48,12 @@ module.exports = async function({ targetFront, onAvailable, onDestroyed }) {
 
   const inspectorFront = await targetFront.getFront("inspector");
   inspectorFront.walker.on("root-available", node => {
-    node.resourceType = ResourceWatcher.TYPES.ROOT_NODE;
+    node.resourceType = ResourceCommand.TYPES.ROOT_NODE;
     return onAvailable([node]);
   });
 
   inspectorFront.walker.on("root-destroyed", node => {
-    node.resourceType = ResourceWatcher.TYPES.ROOT_NODE;
+    node.resourceType = ResourceCommand.TYPES.ROOT_NODE;
     return onDestroyed([node]);
   });
 

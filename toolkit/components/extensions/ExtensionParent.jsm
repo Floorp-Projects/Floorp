@@ -652,8 +652,8 @@ class DevToolsExtensionPageContextParent extends ExtensionPageContextParent {
     if (!this._onNavigatedListeners) {
       this._onNavigatedListeners = new Set();
 
-      await this.devToolsToolbox.resourceWatcher.watchResources(
-        [this.devToolsToolbox.resourceWatcher.TYPES.DOCUMENT_EVENT],
+      await this.devToolsToolbox.resourceCommand.watchResources(
+        [this.devToolsToolbox.resourceCommand.TYPES.DOCUMENT_EVENT],
         {
           onAvailable: this._onResourceAvailable,
           ignoreExistingResources: true,
@@ -705,8 +705,8 @@ class DevToolsExtensionPageContextParent extends ExtensionPageContextParent {
     }
 
     if (this._onNavigatedListeners) {
-      this.devToolsToolbox.resourceWatcher.unwatchResources(
-        [this.devToolsToolbox.resourceWatcher.TYPES.DOCUMENT_EVENT],
+      this.devToolsToolbox.resourceCommand.unwatchResources(
+        [this.devToolsToolbox.resourceCommand.TYPES.DOCUMENT_EVENT],
         { onAvailable: this._onResourceAvailable }
       );
     }
