@@ -228,10 +228,10 @@ static bool IsObjectEscaped(MInstruction* ins,
         MGuardShape* guard = def->toGuardShape();
         MOZ_ASSERT(!ins->isGuardShape());
         Shape* shape;
-        if (objOrShape.is<Shape>()) {
-          shape = &objOrShape.as<Shape>();
-        } else {
+        if (objOrShape.is<JSObject>()) {
           shape = objOrShape.as<JSObject>().shape();
+        } else {
+          shape = &objOrShape.as<Shape>();
         }
         if (shape != guard->shape()) {
           JitSpewDef(JitSpew_Escape, "has a non-matching guard shape\n", guard);
@@ -844,7 +844,7 @@ static bool IsElementEscaped(MDefinition* def, uint32_t arraySize) {
 }
 
 static inline bool IsOptimizableArrayInstruction(MInstruction* ins) {
-  return ins->isNewArray();
+  return ins->isNewArray() || ins->isNewArrayObject();
 }
 
 // Returns False if the array is not escaped and if it is optimizable by
@@ -859,13 +859,20 @@ static bool IsArrayEscaped(MInstruction* ins, MInstruction* newArray) {
   JitSpewDef(JitSpew_Escape, "Check array\n", ins);
   JitSpewIndent spewIndent(JitSpew_Escape);
 
-  JSObject* templateObject = newArray->toNewArray()->templateObject();
-  if (!templateObject) {
-    JitSpew(JitSpew_Escape, "No template object defined.");
-    return true;
+  const Shape* shape;
+  uint32_t length;
+  if (newArray->isNewArrayObject()) {
+    length = newArray->toNewArrayObject()->length();
+    shape = newArray->toNewArrayObject()->shape();
+  } else {
+    length = newArray->toNewArray()->length();
+    JSObject* templateObject = newArray->toNewArray()->templateObject();
+    if (!templateObject) {
+      JitSpew(JitSpew_Escape, "No template object defined.");
+      return true;
+    }
+    shape = templateObject->shape();
   }
-
-  uint32_t length = newArray->toNewArray()->length();
 
   if (length >= 16) {
     JitSpew(JitSpew_Escape, "Array has too many elements");
@@ -901,7 +908,7 @@ static bool IsArrayEscaped(MInstruction* ins, MInstruction* newArray) {
 
       case MDefinition::Opcode::GuardShape: {
         MGuardShape* guard = def->toGuardShape();
-        if (templateObject->shape() != guard->shape()) {
+        if (shape != guard->shape()) {
           JitSpewDef(JitSpew_Escape, "has a non-matching guard shape\n", guard);
           return true;
         }
@@ -915,7 +922,7 @@ static bool IsArrayEscaped(MInstruction* ins, MInstruction* newArray) {
 
       case MDefinition::Opcode::GuardToClass: {
         MGuardToClass* guard = def->toGuardToClass();
-        if (templateObject->getClass() != guard->getClass()) {
+        if (shape->getObjectClass() != guard->getClass()) {
           JitSpewDef(JitSpew_Escape, "has a non-matching class guard\n", guard);
           return true;
         }
