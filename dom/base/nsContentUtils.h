@@ -353,6 +353,7 @@ class nsContentUtils {
   static bool ShouldResistFingerprinting(
       mozilla::dom::WorkerPrivate* aWorkerPrivate);
   static bool ShouldResistFingerprinting(const Document* aDoc);
+  static bool ShouldResistFingerprinting(nsIChannel* aChannel);
 
   // Prevent system colors from being exposed to CSS or canvas.
   static bool UseStandinsForNativeColors();
@@ -2727,6 +2728,11 @@ class nsContentUtils {
   static bool IsNodeInEditableRegion(nsINode* aNode);
 
   /**
+   * Returns a LogModule that logs debugging info from RFP functions.
+   */
+  static mozilla::LogModule* ResistFingerprintingLog();
+
+  /**
    * Returns a LogModule that dump calls from content script are logged to.
    * This can be enabled with the 'Dump' module, and is useful for synchronizing
    * content JS to other logging modules.
@@ -3412,6 +3418,7 @@ class nsContentUtils {
   // bytecode out of the nsCacheInfoChannel.
   static nsCString* sJSBytecodeMimeType;
 
+  static mozilla::LazyLogModule gResistFingerprintingLog;
   static mozilla::LazyLogModule sDOMDumpLog;
 
   static int32_t sInnerOrOuterWindowCount;
