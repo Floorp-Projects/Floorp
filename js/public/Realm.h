@@ -109,9 +109,10 @@ extern JS_PUBLIC_API JSObject* GetRealmErrorPrototype(JSContext* cx);
 
 extern JS_PUBLIC_API JSObject* GetRealmIteratorPrototype(JSContext* cx);
 
-// Returns a key for cross-origin realm weak map.
+// Returns an object that represents the realm, that can be referred from
+// other realm/compartment.
 // See the consumer in `MaybeCrossOriginObjectMixins::EnsureHolder` for details.
-extern JS_PUBLIC_API JSObject* GetRealmWeakMapKey(JSContext* cx);
+extern JS_PUBLIC_API JSObject* GetRealmKeyObject(JSContext* cx);
 
 // Implements https://tc39.github.io/ecma262/#sec-getfunctionrealm
 // 7.3.22 GetFunctionRealm ( obj )
