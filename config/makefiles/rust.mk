@@ -330,6 +330,34 @@ ifndef NATIVE_TSAN
 $(TARGET_RECIPES): MOZ_CARGO_WRAP_LDFLAGS:=$(filter-out -fsanitize=cfi% -framework Cocoa -lobjc AudioToolbox ExceptionHandling -fprofile-%,$(LDFLAGS))
 endif # NATIVE_TSAN
 
+# When building programs with sanitizer, rustc links its own runtime, which
+# conflicts with the one that passing -fsanitize=* to the linker would add.
+ifneq (,$(filter -Zsanitizer=%,$(RUSTFLAGS)))
+force-cargo-program-build: MOZ_CARGO_WRAP_LDFLAGS:=$(filter-out -fsanitize=%,$(MOZ_CARGO_WRAP_LDFLAGS))
+endif
+
+# Rustc assumes that *-windows-gnu targets build with mingw-gcc and manually
+# add runtime libraries that don't exist with mingw-clang. We created dummy
+# libraries in $(topobjdir)/build/win32, but that's not enough, because some
+# of the wanted symbols that come from these libraries are available in a
+# different library, that we add manually. We also need to avoid rustc
+# passing -nodefaultlibs to clang so that it adds clang_rt.
+ifeq (WINNT_clang,$(OS_ARCH)_$(CC_TYPE))
+force-cargo-program-build: MOZ_CARGO_WRAP_LDFLAGS+=-L$(topobjdir)/build/win32 -lunwind
+force-cargo-program-build: CARGO_RUSTCFLAGS += -C default-linker-libraries=yes
+endif
+
+# Rustc passes -nodefaultlibs to the linker (clang) on mac, which prevents
+# clang from adding the necessary sanitizer runtimes when building with
+# C/C++ sanitizer but without rust sanitizer.
+ifeq (Darwin,$(OS_ARCH))
+ifeq (,$(filter -Zsanitizer=%,$(RUSTFLAGS)))
+ifneq (,$(filter -fsanitize=%,$(LDFLAGS)))
+force-cargo-program-build: CARGO_RUSTCFLAGS += -C default-linker-libraries=yes
+endif
+endif
+endif
+
 $(HOST_RECIPES): MOZ_CARGO_WRAP_LDFLAGS:=$(HOST_LDFLAGS) $(WRAP_HOST_LINKER_LIBPATHS)
 $(TARGET_RECIPES) $(HOST_RECIPES): MOZ_CARGO_WRAP_HOST_LDFLAGS:=$(HOST_LDFLAGS) $(WRAP_HOST_LINKER_LIBPATHS)
 
@@ -426,7 +454,7 @@ ifdef RUST_PROGRAMS
 
 force-cargo-program-build: $(call resfile,module)
 	$(REPORT_BUILD)
-	$(call CARGO_BUILD) $(addprefix --bin ,$(RUST_CARGO_PROGRAMS)) $(cargo_target_flag) -- $(addprefix -C link-arg=$(CURDIR)/,$(call resfile,module))
+	$(call CARGO_BUILD) $(addprefix --bin ,$(RUST_CARGO_PROGRAMS)) $(cargo_target_flag) -- $(addprefix -C link-arg=$(CURDIR)/,$(call resfile,module)) $(CARGO_RUSTCFLAGS)
 
 $(RUST_PROGRAMS): force-cargo-program-build ;
 

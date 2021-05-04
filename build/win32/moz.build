@@ -15,6 +15,17 @@ if CONFIG["ENABLE_TESTS"]:
 
 NO_PGO = True
 
+# See comment about *-windows-gnu targets in config/makefiles/rust.mk
+if CONFIG["CC_TYPE"] == "clang":
+    GeneratedFile(
+        "libgcc.a",
+        "libgcc_eh.a",
+        "libpthread.a",
+        script="dummy_libs.py",
+        flags=["libgcc_eh.a", "libpthread.a"],
+    )
+
+
 if CONFIG["WIN32_REDIST_DIR"] and CONFIG["COMPILE_ENVIRONMENT"]:
     for f in ["MSVC_C_RUNTIME_DLL", "MSVC_CXX_RUNTIME_DLL"]:
         FINAL_TARGET_FILES += ["%%%s/%s" % (CONFIG["WIN32_REDIST_DIR"], CONFIG[f])]
