@@ -986,17 +986,8 @@ nsresult nsWindowWatcher::OpenWindowInternal(
     // when its BrowsingContext was created, in order to ensure that the context
     // is loaded within the correct BrowsingContextGroup.
     if (windowIsNew && newBC->IsContent()) {
-      if (parentBC->IsDiscarded()) {
-        // If the parent BC was discarded in a nested event loop before we got
-        // to this point, we can't set it as the opener. Ideally we would still
-        // set `HadOriginalOpener()` in that case, but that's somewhat
-        // nontrivial, and not worth the effort given the nature of the corner
-        // case (see comment in `nsFrameLoader::CreateBrowsingContext`.
-        MOZ_RELEASE_ASSERT(newBC->GetOpenerId() == 0);
-      } else {
-        MOZ_RELEASE_ASSERT(newBC->GetOpenerId() == parentBC->Id());
-        MOZ_RELEASE_ASSERT(newBC->HadOriginalOpener());
-      }
+      MOZ_RELEASE_ASSERT(newBC->GetOpenerId() == parentBC->Id());
+      MOZ_RELEASE_ASSERT(!!parentBC == newBC->HadOriginalOpener());
     } else {
       // Update the opener for an existing or chrome BC.
       newBC->SetOpener(parentBC);
