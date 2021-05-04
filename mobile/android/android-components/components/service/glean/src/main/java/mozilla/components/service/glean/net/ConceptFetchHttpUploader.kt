@@ -25,9 +25,12 @@ typealias PingUploader = CorePingUploader
  * A simple ping Uploader, which implements a "send once" policy, never
  * storing or attempting to send the ping again. This uses Android Component's
  * `concept-fetch`.
+ *
+ * @param usePrivateRequest Sets the [Request.private] flag in all requests using this uploader.
  */
 class ConceptFetchHttpUploader(
-    internal val client: Lazy<Client>
+    internal val client: Lazy<Client>,
+    private val usePrivateRequest: Boolean = false
 ) : PingUploader {
     private val logger = Logger("glean/ConceptFetchHttpUploader")
 
@@ -89,7 +92,8 @@ class ConceptFetchHttpUploader(
             // offer a better API to do that, so we nuke all cookies going to our telemetry
             // endpoint.
             cookiePolicy = Request.CookiePolicy.OMIT,
-            body = Request.Body(data.inputStream())
+            body = Request.Body(data.inputStream()),
+            private = usePrivateRequest
         )
     }
 

@@ -42,6 +42,9 @@ permalink: /changelog/
   * 🌟️ When configuring syncable storage layers, `SyncManager` now takes an optional `KeyProvider` to handle encryption/decryption of protected values.
   * 🌟️ Support for syncing Address and Credit Cards
 
+* **service-glean**
+  * `ConceptFetchHttpUploader` adds support for private requests. By default, all requests are non-private.
+
 * **lib-dataprotect**
   * 🌟️ New APIs for managing keys - `ManagedKey`, `KeyProvider` and `KeyRecoveryHandler`.
   * 🌟️ `AutofillCreditCardsAddressesStorage` implements these APIs for managing keys for credit card storage.

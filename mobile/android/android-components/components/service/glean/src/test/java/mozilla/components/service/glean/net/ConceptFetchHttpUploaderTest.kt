@@ -288,4 +288,26 @@ class ConceptFetchHttpUploaderTest {
         uploader.upload("path", "ping".toByteArray(), emptyList())
         assertTrue(uploader.client.isInitialized())
     }
+
+    @Test
+    fun `usePrivateRequest sends all requests with private flag`() {
+        val mockClient: Client = mock()
+        `when`(mockClient.fetch(any())).thenReturn(
+            Response("URL", 200, mock(), mock()))
+
+        val expectedHeaders = mapOf(
+            "Content-Type" to "application/json; charset=utf-8",
+            "Test-header" to "SomeValue",
+            "OtherHeader" to "Glean/Test 25.0.2"
+        )
+
+        val uploader = ConceptFetchHttpUploader(lazy { mockClient }, true)
+        uploader.upload(testPath, testPing.toByteArray(), expectedHeaders.toList())
+
+        val captor = argumentCaptor<Request>()
+
+        verify(mockClient).fetch(captor.capture())
+
+        assertTrue(captor.value.private)
+    }
 }
