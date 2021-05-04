@@ -57,6 +57,11 @@
 #else
 #  define WASM_RELAXED_SIMD_ENABLED 0
 #endif
+#ifdef ENABLE_WASM_EXTENDED_CONST
+#  define WASM_EXTENDED_CONST_ENABLED 1
+#else
+#  define WASM_EXTENDED_CONST_ENABLED 0
+#endif
 #ifdef ENABLE_WASM_EXCEPTIONS
 #  define WASM_EXCEPTIONS_ENABLED 1
 #else
@@ -83,6 +88,13 @@
               js::jit::JitSupportsWasmSimd(),                                 \
           /* shell flag         */ "simd",                                    \
           /* preference name    */ "simd")                                    \
+  EXPERIMENTAL(/* capitalized name   */ ExtendedConst,                        \
+               /* lower case name    */ extendedConst,                        \
+               /* compile predicate  */ WASM_EXTENDED_CONST_ENABLED,          \
+               /* compiler predicate */ true,                                 \
+               /* flag predicate     */ true,                                 \
+               /* shell flag         */ "extended-const",                     \
+               /* preference name    */ "extended_const")                     \
   EXPERIMENTAL(                                                               \
       /* capitalized name   */ Exceptions,                                    \
       /* lower case name    */ exceptions,                                    \

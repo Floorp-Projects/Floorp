@@ -726,6 +726,31 @@ def enable_shared_memory(value):
 set_config("ENABLE_SHARED_MEMORY", enable_shared_memory)
 set_define("ENABLE_SHARED_MEMORY", enable_shared_memory)
 
+# Support for WebAssembly extended constant expressions
+# =====================================================
+
+
+@depends(milestone.is_nightly)
+def default_wasm_extended_const(is_nightly):
+    if is_nightly:
+        return True
+
+
+option(
+    "--enable-wasm-extended-const",
+    default=default_wasm_extended_const,
+    help="{Enable|Disable} WebAssembly extended constant expressions",
+)
+
+
+@depends("--enable-wasm-extended-const")
+def wasm_extended_const(value):
+    if value:
+        return True
+
+
+set_config("ENABLE_WASM_EXTENDED_CONST", wasm_extended_const)
+set_define("ENABLE_WASM_EXTENDED_CONST", wasm_extended_const)
 
 # Support for WebAssembly SIMD
 # =====================================================
