@@ -738,16 +738,8 @@ class ICBinaryArith_Fallback : public ICFallbackStub {
 class ICNewArray_Fallback : public ICFallbackStub {
   friend class ICStubSpace;
 
-  GCPtrArrayObject templateObject_;
-
   explicit ICNewArray_Fallback(TrampolinePtr stubCode)
-      : ICFallbackStub(ICStub::NewArray_Fallback, stubCode),
-        templateObject_(nullptr) {}
-
- public:
-  GCPtrArrayObject& templateObject() { return templateObject_; }
-
-  void setTemplateObject(ArrayObject* obj) { templateObject_ = obj; }
+      : ICFallbackStub(ICStub::NewArray_Fallback, stubCode) {}
 };
 
 // JSOp::NewObject
