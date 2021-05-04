@@ -30,6 +30,13 @@ struct Resolution {
   float mX = 1.0f;
   float mY = 1.0f;
 
+  void ScaleBy(float aScale) {
+    if (MOZ_LIKELY(aScale != 0.0f)) {
+      mX *= aScale;
+      mY *= aScale;
+    }
+  }
+
   void ApplyXTo(int32_t& aWidth) const {
     if (mX != 1.0f) {
       aWidth = std::round(float(aWidth) / mX);
