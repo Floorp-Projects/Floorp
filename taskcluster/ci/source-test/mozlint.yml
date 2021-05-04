@@ -370,7 +370,7 @@ clippy:
     treeherder:
         symbol: rust(clippy)
     run:
-        mach: lint -v -l clippy -f treeherder -f json:/builds/worker/mozlint.json *
+        mach: lint -v -l clippy -f treeherder -f json:/builds/worker/mozlint.json -j 1 *
     when:
         files-changed:
             - '**/*.rs'
