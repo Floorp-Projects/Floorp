@@ -65,12 +65,6 @@ XPCOMUtils.defineLazyGetter(this, "gWidgetsBundle", function() {
     "chrome://browser/locale/customizableui/customizableWidgets.properties";
   return Services.strings.createBundle(kUrl);
 });
-XPCOMUtils.defineLazyPreferenceGetter(
-  this,
-  "gProton",
-  "browser.proton.enabled",
-  false
-);
 XPCOMUtils.defineLazyServiceGetter(
   this,
   "gTouchBarUpdater",
@@ -256,11 +250,6 @@ CustomizeMode.prototype = {
   },
 
   async _updateThemeButtonIcon() {
-    // Keep the default button icon.
-    if (gProton) {
-      return;
-    }
-
     let lwthemeButton = this.$("customization-lwtheme-button");
     let lwthemeIcon = lwthemeButton.icon;
     let theme = (await AddonManager.getAddonsByTypes(["theme"])).find(

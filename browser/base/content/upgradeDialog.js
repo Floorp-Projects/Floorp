@@ -190,14 +190,6 @@ function onLoad(ready) {
           );
         }
 
-        // Load resource: theme swatches with permission.
-        [...themes.children].forEach(input => {
-          new Image().src = getComputedStyle(
-            input,
-            "::before"
-          ).backgroundImage.match(/resource:[^"]+/)?.[0];
-        });
-
         // Update content and backdrop for theme screen.
         subtitle.remove();
         items.remove();
