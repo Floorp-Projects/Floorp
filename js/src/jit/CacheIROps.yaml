@@ -460,20 +460,6 @@
     sym: SymbolId
     expected: SymbolField
 
-- name: GuardMagicValue
-  shared: true
-  transpile: true
-  cost_estimate: 1
-  args:
-    val: ValId
-    magic: JSWhyMagicImm
-
-- name: GuardFrameHasNoArgumentsObject
-  shared: false
-  transpile: true
-  cost_estimate: 1
-  args:
-
 - name: GuardNoDenseElements
   shared: true
   transpile: true
@@ -1859,25 +1845,6 @@
   cost_estimate: 1
   args:
     str: StringId
-
-- name: LoadFrameCalleeResult
-  shared: false
-  transpile: true
-  cost_estimate: 1
-  args:
-
-- name: LoadFrameNumActualArgsResult
-  shared: false
-  transpile: true
-  cost_estimate: 1
-  args:
-
-- name: LoadFrameArgumentResult
-  shared: false
-  transpile: true
-  cost_estimate: 1
-  args:
-    index: Int32Id
 
 - name: FrameIsConstructingResult
   shared: false

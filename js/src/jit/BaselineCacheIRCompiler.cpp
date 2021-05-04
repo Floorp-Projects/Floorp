@@ -624,68 +624,6 @@ bool BaselineCacheIRCompiler::emitProxyGetResult(ObjOperandId objId,
   return true;
 }
 
-bool BaselineCacheIRCompiler::emitGuardFrameHasNoArgumentsObject() {
-  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  FailurePath* failure;
-  if (!addFailurePath(&failure)) {
-    return false;
-  }
-
-  masm.branchTest32(
-      Assembler::NonZero,
-      Address(BaselineFrameReg, BaselineFrame::reverseOffsetOfFlags()),
-      Imm32(BaselineFrame::HAS_ARGS_OBJ), failure->label());
-  return true;
-}
-
-bool BaselineCacheIRCompiler::emitLoadFrameCalleeResult() {
-  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  AutoOutputRegister output(*this);
-  AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
-
-  Address callee(BaselineFrameReg, BaselineFrame::offsetOfCalleeToken());
-  masm.loadFunctionFromCalleeToken(callee, scratch);
-  masm.tagValue(JSVAL_TYPE_OBJECT, scratch, output.valueReg());
-  return true;
-}
-
-bool BaselineCacheIRCompiler::emitLoadFrameNumActualArgsResult() {
-  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  AutoOutputRegister output(*this);
-  AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
-
-  Address actualArgs(BaselineFrameReg, BaselineFrame::offsetOfNumActualArgs());
-  masm.loadPtr(actualArgs, scratch);
-  masm.tagValue(JSVAL_TYPE_INT32, scratch, output.valueReg());
-  return true;
-}
-
-bool BaselineCacheIRCompiler::emitLoadFrameArgumentResult(
-    Int32OperandId indexId) {
-  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  AutoOutputRegister output(*this);
-  Register index = allocator.useRegister(masm, indexId);
-  AutoScratchRegister scratch1(allocator, masm);
-  AutoScratchRegisterMaybeOutput scratch2(allocator, masm, output);
-
-  FailurePath* failure;
-  if (!addFailurePath(&failure)) {
-    return false;
-  }
-
-  // Bounds check.
-  masm.loadPtr(
-      Address(BaselineFrameReg, BaselineFrame::offsetOfNumActualArgs()),
-      scratch1);
-  masm.spectreBoundsCheck32(index, scratch1, scratch2, failure->label());
-
-  // Load the argument.
-  masm.loadValue(
-      BaseValueIndex(BaselineFrameReg, index, BaselineFrame::offsetOfArg(0)),
-      output.valueReg());
-  return true;
-}
-
 bool BaselineCacheIRCompiler::emitFrameIsConstructingResult() {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
 

@@ -2146,20 +2146,6 @@ bool CacheIRCompiler::emitGuardIsNotDOMProxy(ObjOperandId objId) {
   return true;
 }
 
-bool CacheIRCompiler::emitGuardMagicValue(ValOperandId valId,
-                                          JSWhyMagic magic) {
-  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  ValueOperand val = allocator.useValueRegister(masm, valId);
-
-  FailurePath* failure;
-  if (!addFailurePath(&failure)) {
-    return false;
-  }
-
-  masm.branchTestMagicValue(Assembler::NotEqual, val, magic, failure->label());
-  return true;
-}
-
 bool CacheIRCompiler::emitGuardNoDenseElements(ObjOperandId objId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   Register obj = allocator.useRegister(masm, objId);

@@ -897,24 +897,6 @@ bool WarpCacheIRTranspiler::emitGuardNoDenseElements(ObjOperandId objId) {
   return true;
 }
 
-bool WarpCacheIRTranspiler::emitGuardMagicValue(ValOperandId valId,
-                                                JSWhyMagic magic) {
-  MDefinition* val = getOperand(valId);
-
-  auto* ins = MGuardValue::New(alloc(), val, MagicValue(magic));
-  add(ins);
-
-  setOperand(valId, ins);
-  return true;
-}
-
-bool WarpCacheIRTranspiler::emitGuardFrameHasNoArgumentsObject() {
-  // WarpOracle ensures this op isn't transpiled in functions that need an
-  // arguments object.
-  MOZ_ASSERT(!currentBlock()->info().needsArgsObj());
-  return true;
-}
-
 bool WarpCacheIRTranspiler::emitGuardFunctionHasJitEntry(ObjOperandId funId,
                                                          bool constructing) {
   MDefinition* fun = getOperand(funId);
@@ -997,51 +979,6 @@ bool WarpCacheIRTranspiler::emitGuardArgumentsObjectFlags(ObjOperandId objId,
   add(ins);
 
   setOperand(objId, ins);
-  return true;
-}
-
-bool WarpCacheIRTranspiler::emitLoadFrameCalleeResult() {
-  if (const CallInfo* callInfo = builder_->inlineCallInfo()) {
-    pushResult(callInfo->callee());
-    return true;
-  }
-
-  auto* ins = MCallee::New(alloc());
-  add(ins);
-  pushResult(ins);
-  return true;
-}
-
-bool WarpCacheIRTranspiler::emitLoadFrameNumActualArgsResult() {
-  if (const CallInfo* callInfo = builder_->inlineCallInfo()) {
-    auto* ins = constant(Int32Value(callInfo->argc()));
-    pushResult(ins);
-    return true;
-  }
-
-  auto* ins = MArgumentsLength::New(alloc());
-  add(ins);
-  pushResult(ins);
-  return true;
-}
-
-bool WarpCacheIRTranspiler::emitLoadFrameArgumentResult(
-    Int32OperandId indexId) {
-  // We don't support arguments[i] in inlined functions. Scripts using
-  // arguments[i] are marked as uninlineable in arguments analysis.
-  MOZ_ASSERT(!builder_->inlineCallInfo());
-
-  MDefinition* index = getOperand(indexId);
-
-  auto* length = MArgumentsLength::New(alloc());
-  add(length);
-
-  index = addBoundsCheck(index, length);
-
-  auto* load = MGetFrameArgument::New(alloc(), index);
-  add(load);
-
-  pushResult(load);
   return true;
 }
 
