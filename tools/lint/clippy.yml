@@ -6,7 +6,6 @@ clippy:
         - dom/media/gtest/
         - dom/webauthn/libudev-sys/
         - gfx/webrender_bindings/
-        - gfx/wr/example-compositor/compositor-windows/
         - gfx/wr/peek-poke/
         - gfx/wr/peek-poke/peek-poke-derive/
         - gfx/wr/webrender_build/
@@ -17,7 +16,6 @@ clippy:
         - modules/libpref/init/static_prefs/
         - mozglue/static/rust/
         - netwerk/base/mozurl/
-        - security/manager/ssl/osclientcerts/
         - servo/components/derive_common/
         - servo/components/selectors/
         - servo/components/servo_arc/
@@ -53,6 +51,8 @@ clippy:
         - gfx/wr/
         - gfx/wr/webrender/
         - gfx/wr/examples/
+        # windows-only
+        - gfx/wr/example-compositor/compositor-windows/
         - gfx/wr/webrender_api/
         - gfx/wr/wrench/
         - gfx/wgpu/wgpu-core/
@@ -97,6 +97,8 @@ clippy:
         - toolkit/components/bitsdownload/bits_client/
         - gfx/wr/example-compositor/compositor/
         - toolkit/components/bitsdownload/bits_client/bits/
+        # mac and windows only
+        - security/manager/ssl/osclientcerts/
     extensions:
         - rs
     support-files:
