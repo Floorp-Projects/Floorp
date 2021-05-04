@@ -16,8 +16,8 @@
  * limitations under the License.
  */
 
-#ifndef wasm_binary_h
-#define wasm_binary_h
+#ifndef wasm_constants_h
+#define wasm_constants_h
 
 namespace js {
 namespace wasm {
@@ -1073,4 +1073,4 @@ enum class MemoryUsage { None = false, Unshared = 1, Shared = 2 };
 }  // namespace wasm
 }  // namespace js
 
-#endif  // wasm_binary_h
+#endif  // wasm_constants_h
