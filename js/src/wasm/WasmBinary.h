@@ -413,263 +413,45 @@ class Decoder {
   }
   [[nodiscard]] bool readVarS64(int64_t* out) { return readVarS<int64_t>(out); }
 
-  [[nodiscard]] ValType uncheckedReadValType() {
-    uint8_t code = uncheckedReadFixedU8();
-    switch (code) {
-      case uint8_t(TypeCode::FuncRef):
-      case uint8_t(TypeCode::ExternRef):
-        return RefType::fromTypeCode(TypeCode(code), true);
-      case uint8_t(TypeCode::Rtt): {
-        uint32_t rttDepth = uncheckedReadVarU32();
-        int32_t typeIndex = uncheckedReadVarS32();
-        return ValType::fromRtt(typeIndex, rttDepth);
-      }
-      case uint8_t(TypeCode::Ref):
-      case uint8_t(TypeCode::NullableRef): {
-        bool nullable = code == uint8_t(TypeCode::NullableRef);
+  // Value and reference types
 
-        uint8_t nextByte;
-        peekByte(&nextByte);
-
-        if ((nextByte & SLEB128SignMask) == SLEB128SignBit) {
-          uint8_t code = uncheckedReadFixedU8();
-          return RefType::fromTypeCode(TypeCode(code), nullable);
-        }
-
-        int32_t x = uncheckedReadVarS32();
-        return RefType::fromTypeIndex(x, nullable);
-      }
-      default:
-        return ValType::fromNonRefTypeCode(TypeCode(code));
-    }
-  }
-
+  [[nodiscard]] ValType uncheckedReadValType();
   template <class T>
   [[nodiscard]] bool readPackedType(uint32_t numTypes,
-                                    const FeatureArgs& features, T* type) {
-    static_assert(uint8_t(TypeCode::Limit) <= UINT8_MAX, "fits");
-    uint8_t code;
-    if (!readFixedU8(&code)) {
-      return fail("expected type code");
-    }
-    switch (code) {
-      case uint8_t(TypeCode::V128): {
-#ifdef ENABLE_WASM_SIMD
-        if (!features.v128) {
-          return fail("v128 not enabled");
-        }
-        *type = T::fromNonRefTypeCode(TypeCode(code));
-        return true;
-#else
-        break;
-#endif
-      }
-      case uint8_t(TypeCode::FuncRef):
-      case uint8_t(TypeCode::ExternRef): {
-        *type = RefType::fromTypeCode(TypeCode(code), true);
-        return true;
-      }
-      case uint8_t(TypeCode::Ref):
-      case uint8_t(TypeCode::NullableRef): {
-#ifdef ENABLE_WASM_FUNCTION_REFERENCES
-        if (!features.functionReferences) {
-          return fail("(ref T) types not enabled");
-        }
-        bool nullable = code == uint8_t(TypeCode::NullableRef);
-        RefType refType;
-        if (!readHeapType(numTypes, features, nullable, &refType)) {
-          return false;
-        }
-        *type = refType;
-        return true;
-#else
-        break;
-#endif
-      }
-      case uint8_t(TypeCode::Rtt): {
-#ifdef ENABLE_WASM_GC
-        if (!features.gc) {
-          return fail("gc types not enabled");
-        }
-
-        uint32_t rttDepth;
-        if (!readVarU32(&rttDepth) || uint32_t(rttDepth) >= MaxRttDepth) {
-          return fail("invalid rtt depth");
-        }
-
-        RefType heapType;
-        if (!readHeapType(numTypes, features, true, &heapType)) {
-          return false;
-        }
-
-        if (!heapType.isTypeIndex()) {
-          return fail("invalid heap type for rtt");
-        }
-
-        *type = T::fromRtt(heapType.typeIndex(), rttDepth);
-        return true;
-#else
-        break;
-#endif
-      }
-      case uint8_t(TypeCode::EqRef): {
-#ifdef ENABLE_WASM_GC
-        if (!features.gc) {
-          return fail("gc types not enabled");
-        }
-        *type = RefType::fromTypeCode(TypeCode(code), true);
-        return true;
-#else
-        break;
-#endif
-      }
-      default: {
-        if (!T::isValidTypeCode(TypeCode(code))) {
-          break;
-        }
-        *type = T::fromNonRefTypeCode(TypeCode(code));
-        return true;
-      }
-    }
-    return fail("bad type");
-  }
+                                    const FeatureArgs& features, T* type);
   template <class T>
   [[nodiscard]] bool readPackedType(const TypeContext& types,
-                                    const FeatureArgs& features, T* type) {
-    if (!readPackedType(types.length(), features, type)) {
-      return false;
-    }
-    if (type->isTypeIndex() &&
-        !validateTypeIndex(types, features, type->refType())) {
-      return false;
-    }
-    return true;
-  }
+                                    const FeatureArgs& features, T* type);
 
   [[nodiscard]] bool readValType(uint32_t numTypes, const FeatureArgs& features,
-                                 ValType* type) {
-    return readPackedType<ValType>(numTypes, features, type);
-  }
+                                 ValType* type);
   [[nodiscard]] bool readValType(const TypeContext& types,
-                                 const FeatureArgs& features, ValType* type) {
-    return readPackedType<ValType>(types, features, type);
-  }
+                                 const FeatureArgs& features, ValType* type);
 
   [[nodiscard]] bool readFieldType(uint32_t numTypes,
                                    const FeatureArgs& features,
-                                   FieldType* type) {
-    return readPackedType<FieldType>(numTypes, features, type);
-  }
+                                   FieldType* type);
   [[nodiscard]] bool readFieldType(const TypeContext& types,
                                    const FeatureArgs& features,
-                                   FieldType* type) {
-    return readPackedType<FieldType>(types, features, type);
-  }
+                                   FieldType* type);
 
   [[nodiscard]] bool readHeapType(uint32_t numTypes,
                                   const FeatureArgs& features, bool nullable,
-                                  RefType* type) {
-    uint8_t nextByte;
-    if (!peekByte(&nextByte)) {
-      return fail("expected heap type code");
-    }
-
-    if ((nextByte & SLEB128SignMask) == SLEB128SignBit) {
-      uint8_t code;
-      if (!readFixedU8(&code)) {
-        return false;
-      }
-
-      switch (code) {
-        case uint8_t(TypeCode::FuncRef):
-        case uint8_t(TypeCode::ExternRef):
-          *type = RefType::fromTypeCode(TypeCode(code), nullable);
-          return true;
-#ifdef ENABLE_WASM_GC
-        case uint8_t(TypeCode::EqRef):
-          if (!features.gc) {
-            return fail("gc types not enabled");
-          }
-          *type = RefType::fromTypeCode(TypeCode(code), nullable);
-          return true;
-#endif
-        default:
-          return fail("invalid heap type");
-      }
-    }
-
-#ifdef ENABLE_WASM_FUNCTION_REFERENCES
-    if (features.functionReferences) {
-      int32_t x;
-      if (!readVarS32(&x) || x < 0 || uint32_t(x) >= numTypes ||
-          uint32_t(x) >= MaxTypeIndex) {
-        return fail("invalid heap type index");
-      }
-      *type = RefType::fromTypeIndex(x, nullable);
-      return true;
-    }
-#endif
-    return fail("invalid heap type");
-  }
+                                  RefType* type);
   [[nodiscard]] bool readHeapType(const TypeContext& types,
                                   const FeatureArgs& features, bool nullable,
-                                  RefType* type) {
-    if (!readHeapType(types.length(), features, nullable, type)) {
-      return false;
-    }
-
-    if (type->isTypeIndex() && !validateTypeIndex(types, features, *type)) {
-      return false;
-    }
-    return true;
-  }
+                                  RefType* type);
   [[nodiscard]] bool readRefType(uint32_t numTypes, const FeatureArgs& features,
-                                 RefType* type) {
-    ValType valType;
-    if (!readValType(numTypes, features, &valType)) {
-      return false;
-    }
-    if (!valType.isReference()) {
-      return fail("bad type");
-    }
-    *type = valType.refType();
-    return true;
-  }
+                                 RefType* type);
   [[nodiscard]] bool readRefType(const TypeContext& types,
-                                 const FeatureArgs& features, RefType* type) {
-    ValType valType;
-    if (!readValType(types, features, &valType)) {
-      return false;
-    }
-    if (!valType.isReference()) {
-      return fail("bad type");
-    }
-    *type = valType.refType();
-    return true;
-  }
+                                 const FeatureArgs& features, RefType* type);
   [[nodiscard]] bool validateTypeIndex(const TypeContext& types,
                                        const FeatureArgs& features,
-                                       RefType type) {
-    MOZ_ASSERT(type.isTypeIndex());
+                                       RefType type);
 
-    if (features.gc && (types[type.typeIndex()].isStructType() ||
-                        types[type.typeIndex()].isArrayType())) {
-      return true;
-    }
-    return fail("type index references an invalid type");
-  }
-  [[nodiscard]] bool readOp(OpBytes* op) {
-    static_assert(size_t(Op::Limit) == 256, "fits");
-    uint8_t u8;
-    if (!readFixedU8(&u8)) {
-      return false;
-    }
-    op->b0 = u8;
-    if (MOZ_LIKELY(!IsPrefixByte(u8))) {
-      return true;
-    }
-    return readVarU32(&op->b1);
-  }
+  // Instruction opcode and immediates
+
+  [[nodiscard]] bool readOp(OpBytes* op);
 
   // See writeBytes comment.
 
@@ -768,6 +550,269 @@ class Decoder {
     return u8 != UINT8_MAX ? Op(u8) : Op(uncheckedReadFixedU8() + UINT8_MAX);
   }
 };
+
+// Value and reference types
+
+inline ValType Decoder::uncheckedReadValType() {
+  uint8_t code = uncheckedReadFixedU8();
+  switch (code) {
+    case uint8_t(TypeCode::FuncRef):
+    case uint8_t(TypeCode::ExternRef):
+      return RefType::fromTypeCode(TypeCode(code), true);
+    case uint8_t(TypeCode::Rtt): {
+      uint32_t rttDepth = uncheckedReadVarU32();
+      int32_t typeIndex = uncheckedReadVarS32();
+      return ValType::fromRtt(typeIndex, rttDepth);
+    }
+    case uint8_t(TypeCode::Ref):
+    case uint8_t(TypeCode::NullableRef): {
+      bool nullable = code == uint8_t(TypeCode::NullableRef);
+
+      uint8_t nextByte;
+      peekByte(&nextByte);
+
+      if ((nextByte & SLEB128SignMask) == SLEB128SignBit) {
+        uint8_t code = uncheckedReadFixedU8();
+        return RefType::fromTypeCode(TypeCode(code), nullable);
+      }
+
+      int32_t x = uncheckedReadVarS32();
+      return RefType::fromTypeIndex(x, nullable);
+    }
+    default:
+      return ValType::fromNonRefTypeCode(TypeCode(code));
+  }
+}
+
+template <class T>
+inline bool Decoder::readPackedType(uint32_t numTypes,
+                                    const FeatureArgs& features, T* type) {
+  static_assert(uint8_t(TypeCode::Limit) <= UINT8_MAX, "fits");
+  uint8_t code;
+  if (!readFixedU8(&code)) {
+    return fail("expected type code");
+  }
+  switch (code) {
+    case uint8_t(TypeCode::V128): {
+#ifdef ENABLE_WASM_SIMD
+      if (!features.v128) {
+        return fail("v128 not enabled");
+      }
+      *type = T::fromNonRefTypeCode(TypeCode(code));
+      return true;
+#else
+      break;
+#endif
+    }
+    case uint8_t(TypeCode::FuncRef):
+    case uint8_t(TypeCode::ExternRef): {
+      *type = RefType::fromTypeCode(TypeCode(code), true);
+      return true;
+    }
+    case uint8_t(TypeCode::Ref):
+    case uint8_t(TypeCode::NullableRef): {
+#ifdef ENABLE_WASM_FUNCTION_REFERENCES
+      if (!features.functionReferences) {
+        return fail("(ref T) types not enabled");
+      }
+      bool nullable = code == uint8_t(TypeCode::NullableRef);
+      RefType refType;
+      if (!readHeapType(numTypes, features, nullable, &refType)) {
+        return false;
+      }
+      *type = refType;
+      return true;
+#else
+      break;
+#endif
+    }
+    case uint8_t(TypeCode::Rtt): {
+#ifdef ENABLE_WASM_GC
+      if (!features.gc) {
+        return fail("gc types not enabled");
+      }
+
+      uint32_t rttDepth;
+      if (!readVarU32(&rttDepth) || uint32_t(rttDepth) >= MaxRttDepth) {
+        return fail("invalid rtt depth");
+      }
+
+      RefType heapType;
+      if (!readHeapType(numTypes, features, true, &heapType)) {
+        return false;
+      }
+
+      if (!heapType.isTypeIndex()) {
+        return fail("invalid heap type for rtt");
+      }
+
+      *type = T::fromRtt(heapType.typeIndex(), rttDepth);
+      return true;
+#else
+      break;
+#endif
+    }
+    case uint8_t(TypeCode::EqRef): {
+#ifdef ENABLE_WASM_GC
+      if (!features.gc) {
+        return fail("gc types not enabled");
+      }
+      *type = RefType::fromTypeCode(TypeCode(code), true);
+      return true;
+#else
+      break;
+#endif
+    }
+    default: {
+      if (!T::isValidTypeCode(TypeCode(code))) {
+        break;
+      }
+      *type = T::fromNonRefTypeCode(TypeCode(code));
+      return true;
+    }
+  }
+  return fail("bad type");
+}
+template <class T>
+inline bool Decoder::readPackedType(const TypeContext& types,
+                                    const FeatureArgs& features, T* type) {
+  if (!readPackedType(types.length(), features, type)) {
+    return false;
+  }
+  if (type->isTypeIndex() &&
+      !validateTypeIndex(types, features, type->refType())) {
+    return false;
+  }
+  return true;
+}
+
+inline bool Decoder::readValType(uint32_t numTypes, const FeatureArgs& features,
+                                 ValType* type) {
+  return readPackedType<ValType>(numTypes, features, type);
+}
+inline bool Decoder::readValType(const TypeContext& types,
+                                 const FeatureArgs& features, ValType* type) {
+  return readPackedType<ValType>(types, features, type);
+}
+
+inline bool Decoder::readFieldType(uint32_t numTypes,
+                                   const FeatureArgs& features,
+                                   FieldType* type) {
+  return readPackedType<FieldType>(numTypes, features, type);
+}
+inline bool Decoder::readFieldType(const TypeContext& types,
+                                   const FeatureArgs& features,
+                                   FieldType* type) {
+  return readPackedType<FieldType>(types, features, type);
+}
+
+inline bool Decoder::readHeapType(uint32_t numTypes,
+                                  const FeatureArgs& features, bool nullable,
+                                  RefType* type) {
+  uint8_t nextByte;
+  if (!peekByte(&nextByte)) {
+    return fail("expected heap type code");
+  }
+
+  if ((nextByte & SLEB128SignMask) == SLEB128SignBit) {
+    uint8_t code;
+    if (!readFixedU8(&code)) {
+      return false;
+    }
+
+    switch (code) {
+      case uint8_t(TypeCode::FuncRef):
+      case uint8_t(TypeCode::ExternRef):
+        *type = RefType::fromTypeCode(TypeCode(code), nullable);
+        return true;
+#ifdef ENABLE_WASM_GC
+      case uint8_t(TypeCode::EqRef):
+        if (!features.gc) {
+          return fail("gc types not enabled");
+        }
+        *type = RefType::fromTypeCode(TypeCode(code), nullable);
+        return true;
+#endif
+      default:
+        return fail("invalid heap type");
+    }
+  }
+
+#ifdef ENABLE_WASM_FUNCTION_REFERENCES
+  if (features.functionReferences) {
+    int32_t x;
+    if (!readVarS32(&x) || x < 0 || uint32_t(x) >= numTypes ||
+        uint32_t(x) >= MaxTypeIndex) {
+      return fail("invalid heap type index");
+    }
+    *type = RefType::fromTypeIndex(x, nullable);
+    return true;
+  }
+#endif
+  return fail("invalid heap type");
+}
+inline bool Decoder::readHeapType(const TypeContext& types,
+                                  const FeatureArgs& features, bool nullable,
+                                  RefType* type) {
+  if (!readHeapType(types.length(), features, nullable, type)) {
+    return false;
+  }
+
+  if (type->isTypeIndex() && !validateTypeIndex(types, features, *type)) {
+    return false;
+  }
+  return true;
+}
+inline bool Decoder::readRefType(uint32_t numTypes, const FeatureArgs& features,
+                                 RefType* type) {
+  ValType valType;
+  if (!readValType(numTypes, features, &valType)) {
+    return false;
+  }
+  if (!valType.isReference()) {
+    return fail("bad type");
+  }
+  *type = valType.refType();
+  return true;
+}
+inline bool Decoder::readRefType(const TypeContext& types,
+                                 const FeatureArgs& features, RefType* type) {
+  ValType valType;
+  if (!readValType(types, features, &valType)) {
+    return false;
+  }
+  if (!valType.isReference()) {
+    return fail("bad type");
+  }
+  *type = valType.refType();
+  return true;
+}
+inline bool Decoder::validateTypeIndex(const TypeContext& types,
+                                       const FeatureArgs& features,
+                                       RefType type) {
+  MOZ_ASSERT(type.isTypeIndex());
+
+  if (features.gc && (types[type.typeIndex()].isStructType() ||
+                      types[type.typeIndex()].isArrayType())) {
+    return true;
+  }
+  return fail("type index references an invalid type");
+}
+
+// Instruction opcode and immediates
+
+inline bool Decoder::readOp(OpBytes* op) {
+  static_assert(size_t(Op::Limit) == 256, "fits");
+  uint8_t u8;
+  if (!readFixedU8(&u8)) {
+    return false;
+  }
+  op->b0 = u8;
+  if (MOZ_LIKELY(!IsPrefixByte(u8))) {
+    return true;
+  }
+  return readVarU32(&op->b1);
+}
 
 }  // namespace wasm
 }  // namespace js
