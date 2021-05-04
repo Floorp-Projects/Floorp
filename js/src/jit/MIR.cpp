@@ -4099,7 +4099,11 @@ MArrayState::MArrayState(MDefinition* arr) : MVariadicInstruction(classOpcode) {
   // This instruction is only used as a summary for bailout paths.
   setResultType(MIRType::Object);
   setRecoveredOnBailout();
-  numElements_ = arr->toNewArray()->length();
+  if (arr->isNewArrayObject()) {
+    numElements_ = arr->toNewArrayObject()->length();
+  } else {
+    numElements_ = arr->toNewArray()->length();
+  }
 }
 
 bool MArrayState::init(TempAllocator& alloc, MDefinition* obj,
