@@ -16,3 +16,6 @@
 == wrapper.html?invalid-compression-BITFIELDS.bmp about:blank
 
 == wrapper.html?invalid-truncated-metadata.bmp about:blank
+
+# Test for an invalid data offset
+== wrapper.html?invalid-data-offset.bmp about:blank
