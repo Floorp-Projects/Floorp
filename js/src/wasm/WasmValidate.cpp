@@ -197,7 +197,7 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
                                     const uint8_t* bodyEnd, Decoder* d) {
   ValidatingOpIter iter(env, *d);
 
-  if (!iter.readFunctionStart(funcIndex)) {
+  if (!iter.startFunction(funcIndex)) {
     return false;
   }
 
@@ -223,7 +223,7 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
         }
         iter.popEnd();
         if (iter.controlStackEmpty()) {
-          return iter.readFunctionEnd(bodyEnd);
+          return iter.endFunction(bodyEnd);
         }
         break;
       }

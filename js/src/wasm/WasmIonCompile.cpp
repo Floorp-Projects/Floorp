@@ -2451,7 +2451,7 @@ static bool EmitEnd(FunctionCompiler& f) {
       if (!f.returnValues(postJoinDefs)) {
         return false;
       }
-      return f.iter().readFunctionEnd(f.iter().end());
+      return f.iter().endFunction(f.iter().end());
     case LabelKind::Block:
       if (!f.finishBlock(&postJoinDefs)) {
         return false;
@@ -4517,7 +4517,7 @@ static bool EmitStoreLaneSimd128(FunctionCompiler& f, uint32_t laneSize) {
 #endif
 
 static bool EmitBodyExprs(FunctionCompiler& f) {
-  if (!f.iter().readFunctionStart(f.funcIndex())) {
+  if (!f.iter().startFunction(f.funcIndex())) {
     return false;
   }
 
