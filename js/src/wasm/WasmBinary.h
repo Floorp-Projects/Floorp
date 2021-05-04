@@ -455,6 +455,7 @@ class Decoder {
 
   // Instruction immediates for constant instructions
 
+  [[nodiscard]] bool readBinary() { return true; }
   [[nodiscard]] bool readGetGlobal(uint32_t* id);
   [[nodiscard]] bool readI32Const(int32_t* i32);
   [[nodiscard]] bool readI64Const(int64_t* i64);
