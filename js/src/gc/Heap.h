@@ -169,6 +169,13 @@ class alignas(ArenaSize) Arena {
 
  public:
   /*
+   * One of the AllocKind constants or AllocKind::LIMIT when the arena does
+   * not contain any GC things and is on the list of empty arenas in the GC
+   * chunk.
+   */
+  AllocKind allocKind;
+
+  /*
    * The zone that this Arena is contained within, when allocated. The offset
    * of this field must match the ArenaZoneOffset stored in js/HeapAPI.h,
    * as is statically asserted below.
@@ -184,24 +191,13 @@ class alignas(ArenaSize) Arena {
 
  private:
   /*
-   * One of the AllocKind constants or AllocKind::LIMIT when the arena does
-   * not contain any GC things and is on the list of empty arenas in the GC
-   * chunk.
-   *
-   * We use 8 bits for the alloc kind so the compiler can use byte-level
-   * memory instructions to access it.
-   */
-  size_t allocKind : 8;
-
- private:
-  /*
    * When recursive marking uses too much stack we delay marking of
    * arenas and link them into a list for later processing. This
    * uses the following fields.
    */
   static const size_t DELAYED_MARKING_FLAG_BITS = 3;
   static const size_t DELAYED_MARKING_ARENA_BITS =
-      JS_BITS_PER_WORD - 8 - DELAYED_MARKING_FLAG_BITS;
+      JS_BITS_PER_WORD - DELAYED_MARKING_FLAG_BITS;
   size_t onDelayedMarkingList_ : 1;
   size_t hasDelayedBlackMarking_ : 1;
   size_t hasDelayedGrayMarking_ : 1;
@@ -258,7 +254,7 @@ class alignas(ArenaSize) Arena {
     AlwaysPoison(&zone, JS_FREED_ARENA_PATTERN, sizeof(zone),
                  MemCheckKind::MakeNoAccess);
 
-    allocKind = size_t(AllocKind::LIMIT);
+    allocKind = AllocKind::LIMIT;
     onDelayedMarkingList_ = 0;
     hasDelayedBlackMarking_ = 0;
     hasDelayedGrayMarking_ = 0;
@@ -287,7 +283,7 @@ class alignas(ArenaSize) Arena {
 
   AllocKind getAllocKind() const {
     MOZ_ASSERT(allocated());
-    return AllocKind(allocKind);
+    return allocKind;
   }
 
   FreeSpan* getFirstFreeSpan() { return &firstFreeSpan; }

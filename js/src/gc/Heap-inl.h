@@ -31,7 +31,7 @@ inline void js::gc::Arena::init(JS::Zone* zoneArg, AllocKind kind,
   MOZ_MAKE_MEM_UNDEFINED(this, ArenaSize);
 
   zone = zoneArg;
-  allocKind = size_t(kind);
+  allocKind = kind;
   onDelayedMarkingList_ = 0;
   hasDelayedBlackMarking_ = 0;
   hasDelayedGrayMarking_ = 0;
