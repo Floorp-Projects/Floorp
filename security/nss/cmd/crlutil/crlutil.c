@@ -386,7 +386,6 @@ CreateModifiedCRLCopy(PLArenaPool *arena, CERTCertDBHandle *certHandle,
         rv = SECU_ReadDERFromFile(&crlDER, inFile, PR_FALSE, PR_FALSE);
         if (rv != SECSuccess) {
             SECU_PrintError(progName, "unable to read input file");
-            PORT_FreeArena(modArena, PR_FALSE);
             goto loser;
         }
 

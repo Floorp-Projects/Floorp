@@ -6,12 +6,14 @@
 
 #include <memory>
 #include "nss.h"
+#include "prerror.h"
 #include "pk11pub.h"
 #include "sechash.h"
 #include "cryptohi.h"
 
 #include "cpputil.h"
 #include "databuffer.h"
+#include "pk11_signature_test.h"
 
 #include "gtest/gtest.h"
 #include "nss_scoped_ptrs.h"
@@ -19,59 +21,59 @@
 #include "testvectors/dsa-vectors.h"
 
 namespace nss_test {
+CK_MECHANISM_TYPE
+DsaHashToComboMech(SECOidTag hash) {
+  switch (hash) {
+    case SEC_OID_SHA1:
+      return CKM_DSA_SHA1;
+    case SEC_OID_SHA224:
+      return CKM_DSA_SHA224;
+    case SEC_OID_SHA256:
+      return CKM_DSA_SHA256;
+    case SEC_OID_SHA384:
+      return CKM_DSA_SHA384;
+    case SEC_OID_SHA512:
+      return CKM_DSA_SHA512;
+    default:
+      break;
+  }
+  return CKM_INVALID_MECHANISM;
+}
 
-class Pkcs11DsaTest : public ::testing::TestWithParam<DsaTestVector> {
+class Pkcs11DsaTestBase : public Pk11SignatureTest {
  protected:
-  void Derive(const uint8_t* sig, size_t sig_len, const uint8_t* spki,
-              size_t spki_len, const uint8_t* data, size_t data_len,
-              bool expect_success, const uint32_t test_id,
-              const SECOidTag hash_oid) {
-    std::stringstream s;
-    s << "Test with original ID #" << test_id << " failed.\n";
-    s << "Expected Success: " << expect_success << "\n";
-    std::string msg = s.str();
+  Pkcs11DsaTestBase(SECOidTag hashOid)
+      : Pk11SignatureTest(CKM_DSA, hashOid, DsaHashToComboMech(hashOid)) {}
 
-    SECItem spki_item = {siBuffer, toUcharPtr(spki),
-                         static_cast<unsigned int>(spki_len)};
-
-    ScopedCERTSubjectPublicKeyInfo cert_spki(
-        SECKEY_DecodeDERSubjectPublicKeyInfo(&spki_item));
-    ASSERT_TRUE(cert_spki) << msg;
-
-    ScopedSECKEYPublicKey pub_key(SECKEY_ExtractPublicKey(cert_spki.get()));
-    ASSERT_TRUE(pub_key) << msg;
-
-    SECItem sig_item = {siBuffer, toUcharPtr(sig),
-                        static_cast<unsigned int>(sig_len)};
-    ScopedSECItem decoded_sig_item(
-        DSAU_DecodeDerSigToLen(&sig_item, SECKEY_SignatureLen(pub_key.get())));
-    if (!decoded_sig_item) {
-      ASSERT_FALSE(expect_success) << msg;
+  void Verify(const DsaTestVector vec) {
+    /* DSA vectors encode the signature in DER, we need to unwrap it before
+     * we can send the raw signatures to PKCS #11. */
+    DataBuffer pubKeyBuffer(vec.public_key.data(), vec.public_key.size());
+    ScopedSECKEYPublicKey nssPubKey(ImportPublicKey(pubKeyBuffer));
+    SECItem sigItem = {siBuffer, toUcharPtr(vec.sig.data()),
+                       static_cast<unsigned int>(vec.sig.size())};
+    ScopedSECItem decodedSigItem(
+        DSAU_DecodeDerSigToLen(&sigItem, SECKEY_SignatureLen(nssPubKey.get())));
+    if (!decodedSigItem) {
+      ASSERT_FALSE(vec.valid) << "Failed to decode DSA signature Error: "
+                              << PORT_ErrorToString(PORT_GetError()) << "\n";
       return;
     }
 
-    DataBuffer hash;
-    hash.Allocate(static_cast<size_t>(HASH_ResultLenByOidTag(hash_oid)));
-    SECStatus rv = PK11_HashBuf(hash_oid, toUcharPtr(hash.data()),
-                                toUcharPtr(data), data_len);
-    ASSERT_EQ(SECSuccess, rv) << msg;
-
-    // Verify.
-    SECItem hash_item = {siBuffer, toUcharPtr(hash.data()),
-                         static_cast<unsigned int>(hash.len())};
-    rv = PK11_VerifyWithMechanism(pub_key.get(), CKM_DSA, nullptr,
-                                  decoded_sig_item.get(), &hash_item, nullptr);
-    EXPECT_EQ(expect_success ? SECSuccess : SECFailure, rv);
-  };
-
-  void Derive(const DsaTestVector vector) {
-    Derive(vector.sig.data(), vector.sig.size(), vector.public_key.data(),
-           vector.public_key.size(), vector.msg.data(), vector.msg.size(),
-           vector.valid, vector.id, vector.hash_oid);
-  };
+    Pkcs11SignatureTestParams params = {
+        DataBuffer(), pubKeyBuffer, DataBuffer(vec.msg.data(), vec.msg.size()),
+        DataBuffer(decodedSigItem.get()->data, decodedSigItem.get()->len)};
+    Pk11SignatureTest::Verify(params, (bool)vec.valid);
+  }
 };
 
-TEST_P(Pkcs11DsaTest, WycheproofVectors) { Derive(GetParam()); }
+class Pkcs11DsaTest : public Pkcs11DsaTestBase,
+                      public ::testing::WithParamInterface<DsaTestVector> {
+ public:
+  Pkcs11DsaTest() : Pkcs11DsaTestBase(GetParam().hash_oid) {}
+};
+
+TEST_P(Pkcs11DsaTest, WycheproofVectors) { Verify(GetParam()); }
 
 INSTANTIATE_TEST_SUITE_P(DsaTest, Pkcs11DsaTest,
                          ::testing::ValuesIn(kDsaWycheproofVectors));

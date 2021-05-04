@@ -311,40 +311,75 @@ sv_PrintDSAPublicKey(FILE *out, SECKEYPublicKey *pk, char *m)
     sv_PrintInteger(out, &pk->u.dsa.publicValue, "publicValue=");
 }
 
+void
+sv_PrintECDSAPublicKey(FILE *out, SECKEYPublicKey *pk, char *m)
+{
+    SECItem curve = { siBuffer, NULL, 0 };
+    if ((pk->u.ec.DEREncodedParams.len > 2) &&
+        (pk->u.ec.DEREncodedParams.data[0] == 0x06)) {
+        /* strip to just the oid for the curve */
+        curve.len = pk->u.ec.DEREncodedParams.data[1];
+        curve.data = pk->u.ec.DEREncodedParams.data + 2;
+        /* don't overflow the buffer */
+        curve.len = PR_MIN(curve.len, pk->u.ec.DEREncodedParams.len - 2);
+        fprintf(out, "%s", m);
+        sv_PrintObjectID(out, &curve, "curve=");
+    }
+    fprintf(out, "%s", m);
+    sv_PrintInteger(out, &pk->u.ec.publicValue, "publicValue=");
+}
+
 int
 sv_PrintSubjectPublicKeyInfo(FILE *out, PLArenaPool *arena,
                              CERTSubjectPublicKeyInfo *i, char *msg)
 {
-    SECKEYPublicKey *pk;
+    SECKEYPublicKey pk;
     int rv;
     char mm[200];
 
     sprintf(mm, "%s.publicKeyAlgorithm=", msg);
     sv_PrintAlgorithmID(out, &i->algorithm, mm);
 
-    pk = (SECKEYPublicKey *)PORT_ZAlloc(sizeof(SECKEYPublicKey));
-    if (!pk)
-        return PORT_GetError();
-
     DER_ConvertBitString(&i->subjectPublicKey);
     switch (SECOID_FindOIDTag(&i->algorithm.algorithm)) {
         case SEC_OID_PKCS1_RSA_ENCRYPTION:
-            rv = SEC_ASN1DecodeItem(arena, pk,
+        case SEC_OID_PKCS1_RSA_PSS_SIGNATURE:
+            rv = SEC_ASN1DecodeItem(arena, &pk,
                                     SEC_ASN1_GET(SECKEY_RSAPublicKeyTemplate),
                                     &i->subjectPublicKey);
             if (rv)
                 return rv;
             sprintf(mm, "%s.rsaPublicKey.", msg);
-            sv_PrintRSAPublicKey(out, pk, mm);
+            sv_PrintRSAPublicKey(out, &pk, mm);
             break;
         case SEC_OID_ANSIX9_DSA_SIGNATURE:
-            rv = SEC_ASN1DecodeItem(arena, pk,
+            rv = SEC_ASN1DecodeItem(arena, &pk,
                                     SEC_ASN1_GET(SECKEY_DSAPublicKeyTemplate),
                                     &i->subjectPublicKey);
             if (rv)
                 return rv;
+#ifdef notdef
+            /* SECKEY_PQGParamsTemplate is not yet exported form NSS */
+            rv = SEC_ASN1DecodeItem(arena, &pk.u.dsa.params,
+                                    SEC_ASN1_GET(SECKEY_PQGParamsTemplate),
+                                    &i->algorithm.parameters);
+            if (rv)
+                return rv;
+#endif
             sprintf(mm, "%s.dsaPublicKey.", msg);
-            sv_PrintDSAPublicKey(out, pk, mm);
+            sv_PrintDSAPublicKey(out, &pk, mm);
+            break;
+        case SEC_OID_ANSIX962_EC_PUBLIC_KEY:
+            rv = SECITEM_CopyItem(arena, &pk.u.ec.DEREncodedParams,
+                                  &i->algorithm.parameters);
+            if (rv)
+                return rv;
+            rv = SECITEM_CopyItem(arena, &pk.u.ec.publicValue,
+                                  &i->subjectPublicKey);
+            if (rv)
+                return rv;
+            sprintf(mm, "%s.ecdsaPublicKey.", msg);
+            sv_PrintECDSAPublicKey(out, &pk, mm);
             break;
         default:
             fprintf(out, "%s=bad SPKI algorithm type\n", msg);

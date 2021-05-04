@@ -19,7 +19,6 @@ ListCerts(char *key, int list_certs)
 {
     int failed = 0;
     SECStatus rv;
-    char *ugly_list;
     CERTCertDBHandle *db;
 
     CERTCertificate *cert;
@@ -32,14 +31,6 @@ ListCerts(char *key, int list_certs)
     errlog.head = NULL;
     errlog.tail = NULL;
     errlog.count = 0;
-
-    ugly_list = PORT_ZAlloc(16);
-
-    if (ugly_list == NULL) {
-        out_of_memory();
-    }
-
-    *ugly_list = 0;
 
     db = CERT_GetDefaultCertDB();
 

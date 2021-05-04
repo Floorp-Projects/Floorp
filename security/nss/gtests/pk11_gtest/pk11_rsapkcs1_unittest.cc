@@ -15,6 +15,7 @@
 #include "pk11pub.h"
 #include "secerr.h"
 #include "sechash.h"
+#include "pk11_signature_test.h"
 
 #include "testvectors/rsa_signature_2048_sha224-vectors.h"
 #include "testvectors/rsa_signature_2048_sha256-vectors.h"
@@ -28,10 +29,46 @@
 
 namespace nss_test {
 
-class Pkcs11RsaPkcs1WycheproofTest
-    : public ::testing::TestWithParam<RsaSignatureTestVector> {
+CK_MECHANISM_TYPE RsaHashToComboMech(SECOidTag hash) {
+  switch (hash) {
+    case SEC_OID_SHA1:
+      return CKM_SHA1_RSA_PKCS;
+    case SEC_OID_SHA224:
+      return CKM_SHA224_RSA_PKCS;
+    case SEC_OID_SHA256:
+      return CKM_SHA256_RSA_PKCS;
+    case SEC_OID_SHA384:
+      return CKM_SHA384_RSA_PKCS;
+    case SEC_OID_SHA512:
+      return CKM_SHA512_RSA_PKCS;
+    default:
+      break;
+  }
+  return CKM_INVALID_MECHANISM;
+}
+
+class Pkcs11RsaBaseTest : public Pk11SignatureTest {
  protected:
-  void Derive(const RsaSignatureTestVector vec) {
+  Pkcs11RsaBaseTest(SECOidTag hashOid)
+      : Pk11SignatureTest(CKM_RSA_PKCS, hashOid, RsaHashToComboMech(hashOid)) {}
+
+  void Verify(const RsaSignatureTestVector vec) {
+    Pkcs11SignatureTestParams params = {
+        DataBuffer(), DataBuffer(vec.public_key.data(), vec.public_key.size()),
+        DataBuffer(vec.msg.data(), vec.msg.size()),
+        DataBuffer(vec.sig.data(), vec.sig.size())};
+    Pk11SignatureTest::Verify(params, (bool)vec.valid);
+  }
+};
+
+class Pkcs11RsaPkcs1WycheproofTest
+    : public Pkcs11RsaBaseTest,
+      public ::testing::WithParamInterface<RsaSignatureTestVector> {
+ public:
+  Pkcs11RsaPkcs1WycheproofTest() : Pkcs11RsaBaseTest(GetParam().hash_oid) {}
+
+ protected:
+  void Verify1(const RsaSignatureTestVector vec) {
     SECItem spki_item = {siBuffer, toUcharPtr(vec.public_key.data()),
                          static_cast<unsigned int>(vec.public_key.size())};
 
@@ -210,7 +247,13 @@ TEST(RsaPkcs1Test, RequireNullParameter) {
 #endif
 }
 
-TEST_P(Pkcs11RsaPkcs1WycheproofTest, Verify) { Derive(GetParam()); }
+TEST_P(Pkcs11RsaPkcs1WycheproofTest, Verify) {
+  /* Using VFY_ interface */
+  Verify1(GetParam());
+  /* Using PKCS #11 interface */
+  setSkipRaw(true);
+  Verify(GetParam());
+}
 
 INSTANTIATE_TEST_SUITE_P(
     Wycheproof2048RsaSignatureSha224Test, Pkcs11RsaPkcs1WycheproofTest,

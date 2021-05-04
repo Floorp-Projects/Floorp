@@ -829,10 +829,15 @@ pkix_pl_CertNameConstraints_Create(
 
         if (nssNameConstraints == NULL) {
                 *pNameConstraints = NULL;
+                 /* we free the arnea here because PKIX_ERROR_RECEIVED
+                  * may not be set. Setting arena to NULL makes sure
+                  * we don't try to free it again (and makes scanners
+                  * happy). */
                 if (arena){
                         PKIX_CERTNAMECONSTRAINTS_DEBUG
                                 ("\t\tCalling PORT_FreeArena).\n");
                         PORT_FreeArena(arena, PR_FALSE);
+                        arena = NULL;
                 }
                 goto cleanup;
         }

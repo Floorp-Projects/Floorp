@@ -303,6 +303,7 @@ PrintKey(PK11SymKey *symKey)
         printf("<restricted>");
     }
     printf("\n");
+    PORT_Free(name);
 }
 
 SECStatus

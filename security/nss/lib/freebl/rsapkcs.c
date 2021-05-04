@@ -147,7 +147,7 @@ rsa_FormatOneBlock(unsigned modulusLen,
             padLen = modulusLen - data->len - 3;
             PORT_Assert(padLen >= RSA_BLOCK_MIN_PAD_LEN);
             if (padLen < RSA_BLOCK_MIN_PAD_LEN) {
-                PORT_Free(block);
+                PORT_ZFree(block, modulusLen);
                 return NULL;
             }
             PORT_Memset(bp, RSA_BLOCK_PRIVATE_PAD_OCTET, padLen);
@@ -176,7 +176,7 @@ rsa_FormatOneBlock(unsigned modulusLen,
             padLen = modulusLen - (data->len + 3);
             PORT_Assert(padLen >= RSA_BLOCK_MIN_PAD_LEN);
             if (padLen < RSA_BLOCK_MIN_PAD_LEN) {
-                PORT_Free(block);
+                PORT_ZFree(block, modulusLen);
                 return NULL;
             }
             j = modulusLen - 2;
@@ -205,7 +205,7 @@ rsa_FormatOneBlock(unsigned modulusLen,
                 }
             }
             if (rv != SECSuccess) {
-                PORT_Free(block);
+                PORT_ZFree(block, modulusLen);
                 PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
                 return NULL;
             }
@@ -216,7 +216,7 @@ rsa_FormatOneBlock(unsigned modulusLen,
 
         default:
             PORT_Assert(0);
-            PORT_Free(block);
+            PORT_ZFree(block, modulusLen);
             return NULL;
     }
 

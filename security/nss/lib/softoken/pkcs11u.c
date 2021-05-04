@@ -155,16 +155,19 @@ sftk_NewAttribute(SFTKObject *object,
 static void
 sftk_DestroyAttribute(SFTKAttribute *attribute)
 {
-    if (attribute->freeData) {
-        if (attribute->attrib.pValue) {
-            /* clear out the data in the attribute value... it may have been
-             * sensitive data */
-            PORT_Memset(attribute->attrib.pValue, 0,
-                        attribute->attrib.ulValueLen);
+    if (attribute->attrib.pValue) {
+        /* clear out the data in the attribute value... it may have been
+         * sensitive data */
+        PORT_Memset(attribute->attrib.pValue, 0, attribute->attrib.ulValueLen);
+        if (attribute->freeData) {
+            PORT_Free(attribute->attrib.pValue);
+            attribute->attrib.pValue = NULL;
+            attribute->freeData = PR_FALSE;
         }
-        PORT_Free(attribute->attrib.pValue);
     }
-    PORT_Free(attribute);
+    if (attribute->freeAttr) {
+        PORT_Free(attribute);
+    }
 }
 
 /*
@@ -864,7 +867,7 @@ sftk_DeleteAttributeType(SFTKObject *object, CK_ATTRIBUTE_TYPE type)
     if (attribute == NULL)
         return;
     sftk_DeleteAttribute(object, attribute);
-    sftk_FreeAttribute(attribute);
+    sftk_DestroyAttribute(attribute);
 }
 
 CK_RV

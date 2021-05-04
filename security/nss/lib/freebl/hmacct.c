@@ -274,6 +274,11 @@ MAC(unsigned char *mdOut,
     hashObj->end(mdState, mdOut, mdOutLen, mdOutMax);
     hashObj->destroy(mdState, PR_TRUE);
 
+    PORT_Memset(lengthBytes, 0, sizeof lengthBytes);
+    PORT_Memset(hmacPad, 0, sizeof hmacPad);
+    PORT_Memset(firstBlock, 0, sizeof firstBlock);
+    PORT_Memset(macOut, 0, sizeof macOut);
+
     return SECSuccess;
 }
 

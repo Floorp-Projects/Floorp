@@ -957,6 +957,7 @@ aes_InitContext(AESContext *cx, const unsigned char *key, unsigned int keysize,
         } else {
             rijndael_invkey_expansion(cx, key, Nk);
         }
+        BLAPI_CLEAR_STACK(256)
     }
     cx->worker_cx = cx;
     cx->destroy = NULL;
@@ -1118,6 +1119,7 @@ AES_Encrypt(AESContext *cx, unsigned char *output,
             const unsigned char *input, unsigned int inputLen)
 {
     /* Check args */
+    SECStatus rv;
     if (cx == NULL || output == NULL || (input == NULL && inputLen != 0)) {
         PORT_SetError(SEC_ERROR_INVALID_ARGS);
         return SECFailure;
@@ -1152,8 +1154,10 @@ AES_Encrypt(AESContext *cx, unsigned char *output,
     }
 #endif
 
-    return (*cx->worker)(cx->worker_cx, output, outputLen, maxOutputLen,
-                         input, inputLen, AES_BLOCK_SIZE);
+    rv = (*cx->worker)(cx->worker_cx, output, outputLen, maxOutputLen,
+                       input, inputLen, AES_BLOCK_SIZE);
+    BLAPI_CLEAR_STACK(256)
+    return rv;
 }
 
 /*
@@ -1167,6 +1171,7 @@ AES_Decrypt(AESContext *cx, unsigned char *output,
             unsigned int *outputLen, unsigned int maxOutputLen,
             const unsigned char *input, unsigned int inputLen)
 {
+    SECStatus rv;
     /* Check args */
     if (cx == NULL || output == NULL || (input == NULL && inputLen != 0)) {
         PORT_SetError(SEC_ERROR_INVALID_ARGS);
@@ -1181,8 +1186,10 @@ AES_Decrypt(AESContext *cx, unsigned char *output,
         return SECFailure;
     }
     *outputLen = inputLen;
-    return (*cx->worker)(cx->worker_cx, output, outputLen, maxOutputLen,
-                         input, inputLen, AES_BLOCK_SIZE);
+    rv = (*cx->worker)(cx->worker_cx, output, outputLen, maxOutputLen,
+                       input, inputLen, AES_BLOCK_SIZE);
+    BLAPI_CLEAR_STACK(256)
+    return rv;
 }
 
 /*
@@ -1197,6 +1204,7 @@ AES_AEAD(AESContext *cx, unsigned char *output,
          void *params, unsigned int paramsLen,
          const unsigned char *aad, unsigned int aadLen)
 {
+    SECStatus rv;
     /* Check args */
     if (cx == NULL || output == NULL || (input == NULL && inputLen != 0) || (aad == NULL && aadLen != 0) || params == NULL) {
         PORT_SetError(SEC_ERROR_INVALID_ARGS);
@@ -1232,7 +1240,9 @@ AES_AEAD(AESContext *cx, unsigned char *output,
     }
 #endif
 
-    return (*cx->worker_aead)(cx->worker_cx, output, outputLen, maxOutputLen,
-                              input, inputLen, params, paramsLen, aad, aadLen,
-                              AES_BLOCK_SIZE);
+    rv = (*cx->worker_aead)(cx->worker_cx, output, outputLen, maxOutputLen,
+                            input, inputLen, params, paramsLen, aad, aadLen,
+                            AES_BLOCK_SIZE);
+    BLAPI_CLEAR_STACK(256)
+    return rv;
 }

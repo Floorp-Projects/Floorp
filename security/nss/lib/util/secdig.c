@@ -135,7 +135,7 @@ void
 SGN_DestroyDigestInfo(SGNDigestInfo *di)
 {
     if (di && di->arena) {
-        PORT_FreeArena(di->arena, PR_FALSE);
+        PORT_FreeArena(di->arena, PR_TRUE);
     }
 
     return;
