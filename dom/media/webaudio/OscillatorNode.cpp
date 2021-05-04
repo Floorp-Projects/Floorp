@@ -395,8 +395,8 @@ already_AddRefed<OscillatorNode> OscillatorNode::Create(
     return nullptr;
   }
 
-  audioNode->Frequency()->SetValue(aOptions.mFrequency);
-  audioNode->Detune()->SetValue(aOptions.mDetune);
+  audioNode->Frequency()->SetInitialValue(aOptions.mFrequency);
+  audioNode->Detune()->SetInitialValue(aOptions.mDetune);
 
   if (aOptions.mPeriodicWave.WasPassed()) {
     audioNode->SetPeriodicWave(aOptions.mPeriodicWave.Value());

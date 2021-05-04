@@ -309,10 +309,12 @@ already_AddRefed<PannerNode> PannerNode::Create(AudioContext& aAudioContext,
 
   audioNode->SetPanningModel(aOptions.mPanningModel);
   audioNode->SetDistanceModel(aOptions.mDistanceModel);
-  audioNode->SetPosition(aOptions.mPositionX, aOptions.mPositionY,
-                         aOptions.mPositionZ);
-  audioNode->SetOrientation(aOptions.mOrientationX, aOptions.mOrientationY,
-                            aOptions.mOrientationZ);
+  audioNode->mPositionX->SetInitialValue(aOptions.mPositionX);
+  audioNode->mPositionY->SetInitialValue(aOptions.mPositionY);
+  audioNode->mPositionZ->SetInitialValue(aOptions.mPositionZ);
+  audioNode->mOrientationX->SetInitialValue(aOptions.mOrientationX);
+  audioNode->mOrientationY->SetInitialValue(aOptions.mOrientationY);
+  audioNode->mOrientationZ->SetInitialValue(aOptions.mOrientationZ);
   audioNode->SetRefDistance(aOptions.mRefDistance, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;

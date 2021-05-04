@@ -190,7 +190,7 @@ already_AddRefed<ConstantSourceNode> ConstantSourceNode::Constructor(
     const GlobalObject& aGlobal, AudioContext& aContext,
     const ConstantSourceOptions& aOptions) {
   RefPtr<ConstantSourceNode> object = new ConstantSourceNode(&aContext);
-  object->mOffset->SetValue(aOptions.mOffset);
+  object->mOffset->SetInitialValue(aOptions.mOffset);
   return object.forget();
 }
 
