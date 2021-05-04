@@ -4670,8 +4670,10 @@ Scope* JSScript::innermostScope(jsbytecode* pc) const {
 void js::SetFrameArgumentsObject(JSContext* cx, AbstractFramePtr frame,
                                  HandleScript script, JSObject* argsobj) {
   /*
-   * Replace any optimized arguments in the frame with an explicit arguments
-   * object. Note that 'arguments' may have already been overwritten.
+   * If the arguments object was optimized out by scalar replacement,
+   * we must recreate it when we bail out. Because 'arguments' may have
+   * already been overwritten, we must check to see if the slot already
+   * contains a value.
    */
 
   Rooted<BindingIter> bi(cx, BindingIter(script));
@@ -4683,9 +4685,12 @@ void js::SetFrameArgumentsObject(JSContext* cx, AbstractFramePtr frame,
   }
 
   if (bi.location().kind() == BindingLocation::Kind::Environment) {
+#ifdef DEBUG
     /*
-     * Scan the script to find the slot in the call object that 'arguments'
-     * is assigned to.
+     * If |arguments| lives in the call object, we should not have
+     * optimized it. Scan the script to find the slot in the call
+     * object that |arguments| is assigned to and verify that it
+     * already exists.
      */
     jsbytecode* pc = script->code();
     while (JSOp(*pc) != JSOp::Arguments) {
@@ -4694,28 +4699,16 @@ void js::SetFrameArgumentsObject(JSContext* cx, AbstractFramePtr frame,
     pc += JSOpLength_Arguments;
     MOZ_ASSERT(JSOp(*pc) == JSOp::SetAliasedVar);
 
-    // Note that here and below, it is insufficient to only check for
-    // JS_OPTIMIZED_ARGUMENTS, as Ion could have optimized out the
-    // arguments slot.
     EnvironmentObject& env = frame.callObj().as<EnvironmentObject>();
-    if (IsOptimizedPlaceholderMagicValue(env.aliasedBinding(bi))) {
-      env.setAliasedBinding(cx, bi, ObjectValue(*argsobj));
-    }
-  } else {
-    MOZ_ASSERT(bi.location().kind() == BindingLocation::Kind::Frame);
-    uint32_t frameSlot = bi.location().slot();
-    if (IsOptimizedPlaceholderMagicValue(frame.unaliasedLocal(frameSlot))) {
-      frame.unaliasedLocal(frameSlot) = ObjectValue(*argsobj);
-    }
+    MOZ_ASSERT(!env.aliasedBinding(bi).isMagic(JS_OPTIMIZED_OUT));
+#endif
+    return;
   }
 
-  // JS_OPTIMIZED_ARGUMENTS may also have been stored to a local slot
-  // during bailout. Update those local slots.
-  for (uint32_t i = 0; i < script->nfixed(); i++) {
-    Value& value = frame.unaliasedLocal(i);
-    if (value.isMagic() && value.whyMagic() == JS_OPTIMIZED_ARGUMENTS) {
-      frame.unaliasedLocal(i) = ObjectValue(*argsobj);
-    }
+  MOZ_ASSERT(bi.location().kind() == BindingLocation::Kind::Frame);
+  uint32_t frameSlot = bi.location().slot();
+  if (frame.unaliasedLocal(frameSlot).isMagic(JS_OPTIMIZED_OUT)) {
+    frame.unaliasedLocal(frameSlot) = ObjectValue(*argsobj);
   }
 }
 

@@ -918,15 +918,6 @@ static_assert(sizeof(Value) == 8,
               "Value size must leave three tag bits, be a binary power, and "
               "is ubiquitously depended upon everywhere");
 
-inline bool IsOptimizedPlaceholderMagicValue(const Value& v) {
-  if (v.isMagic()) {
-    MOZ_ASSERT(v.whyMagic() == JS_OPTIMIZED_ARGUMENTS ||
-               v.whyMagic() == JS_OPTIMIZED_OUT);
-    return true;
-  }
-  return false;
-}
-
 static MOZ_ALWAYS_INLINE void ExposeValueToActiveJS(const Value& v) {
 #ifdef DEBUG
   Value tmp = v;
