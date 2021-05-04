@@ -294,7 +294,7 @@ bool MaybeCrossOriginObjectMixins::EnsureHolder(
   // existing wrapper in the cache, that contains the security wrapper created
   // here.  We should use unique/private object here, so that this doesn't
   // affect later wrap operation.
-  JS::Rooted<JSObject*> key(cx, JS::GetRealmWeakMapKey(cx));
+  JS::Rooted<JSObject*> key(cx, JS::GetRealmKeyObject(cx));
   if (!key) {
     return false;
   }

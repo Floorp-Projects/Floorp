@@ -964,10 +964,10 @@ NativeObject* GlobalObject::getOrCreateForOfPICObject(
 }
 
 /* static */
-JSObject* GlobalObject::getOrCreateRealmWeakMapKey(
+JSObject* GlobalObject::getOrCreateRealmKeyObject(
     JSContext* cx, Handle<GlobalObject*> global) {
   cx->check(global);
-  Value v = global->getReservedSlot(REALM_WEAK_MAP_KEY);
+  Value v = global->getReservedSlot(REALM_KEY_OBJECT);
   if (v.isObject()) {
     return &v.toObject();
   }
@@ -977,7 +977,7 @@ JSObject* GlobalObject::getOrCreateRealmWeakMapKey(
     return nullptr;
   }
 
-  global->setReservedSlot(REALM_WEAK_MAP_KEY, ObjectValue(*key));
+  global->setReservedSlot(REALM_KEY_OBJECT, ObjectValue(*key));
   return key;
 }
 

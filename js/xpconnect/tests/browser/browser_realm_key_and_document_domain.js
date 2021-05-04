@@ -19,9 +19,9 @@ async function test_document(url) {
 }
 
 add_task(async function test_explicit_object_prototype() {
-  await test_document("http://mochi.test:8888/browser/js/xpconnect/tests/browser/browser_realm_weak_map_object_prototype_top.html");
+  await test_document("http://mochi.test:8888/browser/js/xpconnect/tests/browser/browser_realm_key_object_prototype_top.html");
 });
 
 add_task(async function test_implicit_object_prototype() {
-  await test_document("http://mochi.test:8888/browser/js/xpconnect/tests/browser/browser_realm_weak_map_promise_top.html");
+  await test_document("http://mochi.test:8888/browser/js/xpconnect/tests/browser/browser_realm_key_promise_top.html");
 });
