@@ -35,9 +35,7 @@ class TargetConfigurationCommand {
   }
 
   _hasTargetWatcherSupport() {
-    return this._commands.targetCommand.hasTargetWatcherSupport(
-      "target-configuration"
-    );
+    return this._commands.targetCommand.hasTargetWatcherSupport();
   }
 
   /**

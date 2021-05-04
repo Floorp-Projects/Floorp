@@ -162,12 +162,6 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
           [Resources.TYPES.SERVER_SENT_EVENT]: hasBrowserElement,
           [Resources.TYPES.WEBSOCKET]: hasBrowserElement,
         },
-        // @backward-compat { version 87 } Starting with FF87, if the watcher is
-        // supported, the TargetConfiguration actor can be used to set configuration
-        // flags which impact BrowsingContext targets.
-        // When removing this trait, consumers should still check that the Watcher is
-        // available.
-        "target-configuration": true,
         // @backward-compat { version 88 } Starting with FF88, if the watcher is
         // supported, the ThreadConfiguration actor can be used to maintain thread configuration
         // options.
