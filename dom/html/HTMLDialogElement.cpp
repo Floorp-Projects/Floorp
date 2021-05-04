@@ -109,10 +109,11 @@ void HTMLDialogElement::RemoveFromTopLayerIfNeeded() {
 }
 
 void HTMLDialogElement::StorePreviouslyFocusedElement() {
-  if (nsIContent* unretargetedFocus =
-          GetComposedDoc()->GetUnretargetedFocusedContent()) {
-    mPreviouslyFocusedElement =
-        do_GetWeakReference(unretargetedFocus->AsElement());
+  if (Document* doc = GetComposedDoc()) {
+    if (nsIContent* unretargetedFocus = doc->GetUnretargetedFocusedContent()) {
+      mPreviouslyFocusedElement =
+          do_GetWeakReference(unretargetedFocus->AsElement());
+    }
   }
 }
 
