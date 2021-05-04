@@ -12681,7 +12681,8 @@ bool BaseCompiler::emitRefFunc() {
 }
 
 bool BaseCompiler::emitRefNull() {
-  if (!iter_.readRefNull()) {
+  RefType type;
+  if (!iter_.readRefNull(&type)) {
     return false;
   }
 

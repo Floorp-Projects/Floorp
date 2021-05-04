@@ -512,20 +512,6 @@ bool Module::extractCode(JSContext* cx, Tier tier,
   return true;
 }
 
-static uint32_t EvaluateOffsetInitExpr(const ValVector& globalImportValues,
-                                       InitExpr initExpr) {
-  switch (initExpr.kind()) {
-    case InitExpr::Kind::Constant:
-      return initExpr.val().i32();
-    case InitExpr::Kind::GetGlobal:
-      return globalImportValues[initExpr.globalIndex()].i32();
-    case InitExpr::Kind::RefFunc:
-      break;
-  }
-
-  MOZ_CRASH("bad initializer expression");
-}
-
 #ifdef DEBUG
 static bool AllSegmentsArePassive(const DataSegmentVector& vec) {
   for (const DataSegment* seg : vec) {
@@ -549,8 +535,12 @@ bool Module::initSegments(JSContext* cx, HandleWasmInstanceObject instanceObj,
 
   for (const ElemSegment* seg : elemSegments_) {
     if (seg->active()) {
-      uint32_t offset =
-          EvaluateOffsetInitExpr(globalImportValues, seg->offset());
+      RootedVal offsetVal(cx);
+      if (!seg->offset().evaluate(cx, globalImportValues, instanceObj,
+                                  &offsetVal)) {
+        return false;  // OOM
+      }
+      uint32_t offset = offsetVal.get().i32();
       uint32_t count = seg->length();
 
       uint32_t tableLength = tables[seg->tableIndex]->length();
@@ -576,8 +566,12 @@ bool Module::initSegments(JSContext* cx, HandleWasmInstanceObject instanceObj,
         continue;
       }
 
-      uint32_t offset =
-          EvaluateOffsetInitExpr(globalImportValues, seg->offset());
+      RootedVal offsetVal(cx);
+      if (!seg->offset().evaluate(cx, globalImportValues, instanceObj,
+                                  &offsetVal)) {
+        return false;  // OOM
+      }
+      uint32_t offset = offsetVal.get().i32();
       uint32_t count = seg->bytes.length();
 
       if (offset > memoryLength || memoryLength - offset < count) {
@@ -1104,36 +1098,11 @@ static bool GetGlobalExport(JSContext* cx, HandleWasmInstanceObject instanceObj,
   MOZ_ASSERT(!global.isMutable());
   MOZ_ASSERT(!global.isImport());
   RootedVal globalVal(cx);
-  switch (global.kind()) {
-    case GlobalKind::Variable: {
-      const InitExpr& init = global.initExpr();
-      switch (init.kind()) {
-        case InitExpr::Kind::Constant:
-          globalVal.set(Val(init.val()));
-          break;
-        case InitExpr::Kind::GetGlobal:
-          globalVal.set(Val(globalImportValues[init.globalIndex()]));
-          break;
-        case InitExpr::Kind::RefFunc:
-          RootedFunction func(cx);
-          if (!GetFunctionExport(cx, instanceObj, funcImports,
-                                 init.refFuncIndex(), &func)) {
-            return false;
-          }
-          globalVal.set(
-              Val(ValType(RefType::func()), FuncRef::fromJSFunction(func)));
-      }
-      break;
-    }
-    case GlobalKind::Constant: {
-      globalVal.set(Val(global.constantValue()));
-      break;
-    }
-    case GlobalKind::Import: {
-      MOZ_CRASH();
-    }
+  MOZ_RELEASE_ASSERT(!global.isImport());
+  const InitExpr& init = global.initExpr();
+  if (!init.evaluate(cx, globalImportValues, instanceObj, &globalVal)) {
+    return false;
   }
-
   globalObj->val() = globalVal;
   return true;
 }

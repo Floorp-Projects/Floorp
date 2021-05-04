@@ -93,7 +93,7 @@ assertErrorMessage(() => wasmEvalText(`
 // Globals.
 assertErrorMessage(() => wasmEvalText('(module (global $t (export)))'), SyntaxError, parsingError);
 assertErrorMessage(() => wasmEvalText('(module (global $t (export "g")))'), SyntaxError, parsingError);
-assertErrorMessage(() => wasmEvalText('(module (global $t (export "g") i32))'), WebAssembly.CompileError, /unexpected initializer expression/);
+assertErrorMessage(() => wasmEvalText('(module (global $t (export "g") i32))'), WebAssembly.CompileError, /popping value/);
 wasmEvalText('(module (global $t (export "g") i32 (i32.const 42)))');
 
 assertErrorMessage(() => wasmEvalText('(module (global $t (import) i32))'), SyntaxError, parsingError);
