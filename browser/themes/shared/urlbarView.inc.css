@@ -493,18 +493,18 @@
 }
 
 .urlbarView-tip-button[selected] {
-  color: var(--buttons-primary-button-color, white);
-  background-color: var(--buttons-primary-button-bgcolor, -moz-accent-color);
+  color: var(--button-primary-color);
+  background-color: var(--button-primary-bgcolor);
   outline: var(--focus-outline);
   outline-offset: 2px;
 }
 
 .urlbarView-tip-button[selected]:hover {
-  background-color: var(--buttons-primary-button-hover-bgcolor, color-mix(in srgb, black 10%, -moz-accent-color));
+  background-color: var(--button-primary-hover-bgcolor);
 }
 
 .urlbarView-tip-button[selected]:hover:active {
-  background-color: var(--buttons-primary-button-active-bgcolor, color-mix(in srgb, black 20%, -moz-accent-color));
+  background-color: var(--button-primary-active-bgcolor);
 }
 
 .urlbarView-tip-button-spacer {

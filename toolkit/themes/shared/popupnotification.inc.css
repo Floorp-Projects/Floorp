@@ -199,16 +199,16 @@ popupnotification {
 }
 
 .panel-footer > button:not([disabled])[default] {
-  color: var(--buttons-primary-button-color, -moz-accent-color-foreground);
-  background-color: var(--buttons-primary-button-bgcolor, -moz-accent-color);
+  color: var(--button-primary-color);
+  background-color: var(--button-primary-bgcolor);
 }
 
 .panel-footer > button:not([disabled])[default]:hover {
-  background-color: var(--buttons-primary-button-hover-bgcolor, color-mix(in srgb, black 10%, -moz-accent-color));
+  background-color: var(--button-primary-hover-bgcolor);
 }
 
 .panel-footer > button:not([disabled])[default]:hover:active {
-  background-color: var(--buttons-primary-button-active-bgcolor, color-mix(in srgb, black 20%, -moz-accent-color));
+  background-color: var(--button-primary-active-bgcolor);
 }
 
 .panel-footer:not(.panel-footer-menulike) > button > .button-box {
