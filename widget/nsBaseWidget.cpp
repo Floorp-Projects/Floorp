@@ -529,10 +529,7 @@ nsIntSize nsIWidget::CustomCursorSize(const Cursor& aCursor) {
   int32_t height = 0;
   aCursor.mContainer->GetWidth(&width);
   aCursor.mContainer->GetHeight(&height);
-  if (aCursor.mResolution != 0.0f && aCursor.mResolution != 1.0f) {
-    width = std::round(float(width) / aCursor.mResolution);
-    height = std::round(float(height) / aCursor.mResolution);
-  }
+  aCursor.mResolution.ApplyTo(width, height);
   return {width, height};
 }
 
