@@ -203,8 +203,10 @@ bool AudioNodePrincipalSubsumes(MediaRecorder* aRecorder,
   return PrincipalSubsumes(aRecorder, principal);
 }
 
+// This list is sorted so that lesser failures are later, so that
+// IsTypeSupportedImpl() can report the error from audio or video types that
+// is closer to being supported.
 enum class TypeSupport {
-  Supported,
   MediaTypeInvalid,
   NoVideoWithAudioType,
   ContainersDisabled,
@@ -212,6 +214,7 @@ enum class TypeSupport {
   ContainerUnsupported,
   CodecUnsupported,
   CodecDuplicated,
+  Supported,
 };
 
 nsCString TypeSupportToCString(TypeSupport aSupport,
@@ -429,11 +432,9 @@ TypeSupport IsTypeSupportedImpl(const nsAString& aMIMEType) {
     return TypeSupport::Supported;
   }
   Maybe<MediaContainerType> mime = MakeMediaContainerType(aMIMEType);
-  TypeSupport rv = CanRecordAudioTrackWith(mime, aMIMEType);
-  if (rv == TypeSupport::Supported) {
-    return rv;
-  }
-  return CanRecordVideoTrackWith(mime, aMIMEType);
+  TypeSupport audioSupport = CanRecordAudioTrackWith(mime, aMIMEType);
+  TypeSupport videoSupport = CanRecordVideoTrackWith(mime, aMIMEType);
+  return std::max(audioSupport, videoSupport);
 }
 
 nsString SelectMimeType(bool aHasVideo, bool aHasAudio,
