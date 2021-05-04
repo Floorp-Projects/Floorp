@@ -36,8 +36,3 @@ pushd examples
 cargo check --verbose
 if %ERRORLEVEL% NEQ 0 EXIT /b %ERRORLEVEL%
 popd
-
-pushd direct-composition
-cargo check --verbose
-if %ERRORLEVEL% NEQ 0 EXIT /b %ERRORLEVEL%
-popd
