@@ -32,6 +32,7 @@ pub type DeviceIntLength = Length<i32, DevicePixel>;
 pub type DeviceIntSideOffsets = SideOffsets2D<i32, DevicePixel>;
 
 pub type DeviceRect = Rect<f32, DevicePixel>;
+pub type DeviceBox2D = Box2D<f32, DevicePixel>;
 pub type DevicePoint = Point2D<f32, DevicePixel>;
 pub type DeviceVector2D = Vector2D<f32, DevicePixel>;
 pub type DeviceSize = Size2D<f32, DevicePixel>;
