@@ -126,9 +126,12 @@ void nsBulletFrame::DidSetComputedStyle(ComputedStyle* aOldStyle) {
                        !newStyleList->mCounterStyle.IsNone();
 
       if (hadBullet != hasBullet) {
-        nsIContent* listItem = mContent->GetParent();
-        accService->UpdateListBullet(PresContext()->GetPresShell(), listItem,
-                                     hasBullet);
+        if (hadBullet) {
+          accService->ContentRemoved(PresContext()->GetPresShell(), mContent);
+        } else {
+          accService->ContentRangeInserted(PresContext()->GetPresShell(),
+                                           mContent, nullptr);
+        }
       }
     }
   }
