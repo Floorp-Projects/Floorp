@@ -1090,7 +1090,7 @@ Toolbox.prototype = {
     ].forEach(([id, force]) => {
       const key = L10N.getStr("toolbox." + id + ".key");
       this.shortcuts.on(key, event => {
-        this.reloadTarget(force);
+        this.commands.targetCommand.reloadTopLevelTarget(force);
 
         // Prevent Firefox shortcuts from reloading the page
         event.preventDefault();
@@ -2928,13 +2928,6 @@ Toolbox.prototype = {
     // preventDefault will avoid a Linux only bug when the focus is on a text input
     // See Bug 1519087.
     event.preventDefault();
-  },
-
-  /**
-   * Tells the target tab to reload.
-   */
-  reloadTarget: function(force) {
-    this.target.reload({ options: { force } });
   },
 
   /**

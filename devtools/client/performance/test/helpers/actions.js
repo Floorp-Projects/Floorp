@@ -160,9 +160,8 @@ exports.waitForOverviewRenderedWithMarkers = (
 };
 
 /**
- * Reloads the given tab target.
+ * Reloads the current tab
  */
-exports.reload = target => {
-  target.reload();
-  return once(target, "navigate");
+exports.reload = async panel => {
+  await panel.commands.targetCommand.reloadTopLevelTarget();
 };

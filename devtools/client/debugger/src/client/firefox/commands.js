@@ -299,10 +299,6 @@ function navigate(url) {
   return currentTarget().navigateTo({ url });
 }
 
-function reload() {
-  return currentTarget().reload();
-}
-
 function getProperties(thread, grip) {
   const objClient = lookupThreadFront(thread).pauseGrip(grip);
 
@@ -486,7 +482,6 @@ const clientCommands = {
   evaluateInFrame,
   evaluateExpressions,
   navigate,
-  reload,
   getProperties,
   getFrameScopes,
   getFrames,
