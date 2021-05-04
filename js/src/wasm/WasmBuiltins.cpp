@@ -586,6 +586,10 @@ static void* WasmHandleThrow(jit::ResumeFromException* rfe) {
 static void* ReportError(JSContext* cx, unsigned errorNumber) {
   JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, errorNumber);
 
+  if (cx->isThrowingOutOfMemory()) {
+    return nullptr;
+  }
+
   // Distinguish exceptions thrown from traps from other RuntimeErrors.
   RootedValue exn(cx);
   if (!cx->getPendingException(&exn)) {
