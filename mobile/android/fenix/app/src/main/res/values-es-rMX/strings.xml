@@ -175,6 +175,13 @@
     <!-- Browser menu button to configure reader mode appearance e.g. the used font type and size -->
     <string name="browser_menu_read_appearance">Apariencia</string>
 
+    <!-- Browser menu button to show reader view appearance controls e.g. the used font type and size -->
+    <string name="browser_menu_customize_reader_view">Personalizar vista de lectura</string>
+    <!-- Browser menu label for adding a bookmark -->
+    <string name="browser_menu_add">Agregar</string>
+    <!-- Browser menu label for editing a bookmark -->
+    <string name="browser_menu_edit">Editar</string>
+
     <!-- Error message to show when the user tries to access a scheme not
         handled by the app (Ex: blob, tel etc) -->
     <string name="unknown_scheme_error_message">No se puede conectar. Esquema de URL irreconocible.</string>
@@ -211,6 +218,11 @@
 
     <!-- Search suggestion onboarding hint Learn more link text -->
     <string name="search_suggestions_onboarding_learn_more_link">Saber más</string>
+
+    <!-- Search engine suggestion title text. The first parameter is the name of teh suggested engine-->
+    <string name="search_engine_suggestions_title">Buscar %s</string>
+    <!-- Search engine suggestion description text -->
+    <string name="search_engine_suggestions_description">Buscar directamente desde la barra de direcciones</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
@@ -429,9 +441,6 @@
     <string name="exceptions_empty_message_description">Las excepciones te permiten deshabilitar la protección contra rastreo en sitios seleccionados.</string>
     <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
     <string name="exceptions_empty_message_learn_more_link">Más información</string>
-
-    <!-- Description in Quick Settings that tells user tracking protection is off globally for all sites, and links to Settings to turn it on -->
-    <string name="preferences_tracking_protection_turned_off_globally">Se desactivó en general, ve a Ajustes para activarlo.</string>
 
     <!-- Preference switch for Telemetry -->
     <string name="preferences_telemetry">Telemetría</string>
@@ -768,8 +777,6 @@
     <string name="bookmark_delete_folder_snackbar">Se eliminó %1$s</string>
     <!-- Screen title for adding a bookmarks folder -->
     <string name="bookmark_add_folder">Agregar carpeta</string>
-    <!-- deprecated: Snackbar title shown after a bookmark has been created. -->
-    <string name="bookmark_created_snackbar">Marcador creado.</string>
     <!-- Snackbar title shown after a bookmark has been created. -->
     <string name="bookmark_saved_snackbar">¡Marcador guardado!</string>
     <!-- Snackbar edit button shown after a bookmark has been created. -->
@@ -1648,20 +1655,7 @@
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Eliminar</string>
 
-    <!-- Deprecated: text for the firefox account onboarding card header
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_firefox_account_header">Saca el máximo provecho de %s.</string>
-
     <!-- Content description radio buttons with a link to more information -->
     <string name="radio_preference_info_content_description">Clic para más detalles</string>
-
-    <!-- Deprecated: No Open Tabs Message Header -->
-    <string name="no_collections_header1">Colecciona las cosas que te importan</string>
-    <!-- Deprecated: Label to describe what collections are to a new user without any collections -->
-    <string name="no_collections_description1">Agrupa búsquedas, sitios y pestañas similares para acceder a ellos rápidamente.</string>
-    <!-- Deprecated: text for the firefox account onboarding card header when we detect you're already signed in to -->
-    <string name="onboarding_firefox_account_auto_signin_header_2">Ya has iniciado sesión como %s en otro navegador Firefox de este teléfono. ¿Quieres iniciar sesión con esta cuenta?</string>
-    <!-- Deprecated: Describes the add to homescreen functionality -->
-    <string name="add_to_homescreen_description">Puedes agregar fácilmente este sitio web a la página de inicio de tu teléfono para navegar más rápido con una experiencia similar a una app.</string>
 
     </resources>

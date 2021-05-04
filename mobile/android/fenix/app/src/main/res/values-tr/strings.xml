@@ -445,9 +445,6 @@
     <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
     <string name="exceptions_empty_message_learn_more_link">Daha fazla bilgi al</string>
 
-    <!-- Description in Quick Settings that tells user tracking protection is off globally for all sites, and links to Settings to turn it on -->
-    <string name="preferences_tracking_protection_turned_off_globally">Tamamen kapalı. Açmak için Ayarlar’a gidin.</string>
-
     <!-- Preference switch for Telemetry -->
     <string name="preferences_telemetry">Telemetri</string>
     <!-- Preference switch for usage and technical data collection -->
@@ -458,6 +455,8 @@
     <string name="preferences_marketing_data">Pazarlama verileri</string>
     <!-- Preference description for marketing data collection, parameter is the app name (e.g. Firefox) -->
     <string name="preferences_marketing_data_description">Kullandığınız %1$s özellikleri ile ilgili verileri mobil pazarlama hizmeti aldığımız Leanplum ile paylaşır.</string>
+    <!-- Preference description for marketing data collection -->
+    <string name="preferences_marketing_data_description2">Temel kullanım verilerini mobil pazarlama iş ortağımız Adjust ile paylaşır</string>
     <!-- Title for studies preferences -->
     <string name="preference_experiments_2">Araştırmalar</string>
     <!-- Summary for studies preferences -->
@@ -796,8 +795,6 @@
     <string name="bookmark_delete_folder_snackbar">%1$s silindi</string>
     <!-- Screen title for adding a bookmarks folder -->
     <string name="bookmark_add_folder">Klasör ekle</string>
-    <!-- deprecated: Snackbar title shown after a bookmark has been created. -->
-    <string name="bookmark_created_snackbar">Yer imi oluşturuldu.</string>
     <!-- Snackbar title shown after a bookmark has been created. -->
     <string name="bookmark_saved_snackbar">Yer imi kaydedildi!</string>
     <!-- Snackbar edit button shown after a bookmark has been created. -->
@@ -1750,20 +1747,7 @@
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Kaldır</string>
 
-    <!-- Deprecated: text for the firefox account onboarding card header
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_firefox_account_header">%s tarayıcınızdan en iyi şekilde yararlanın.</string>
-
     <!-- Content description radio buttons with a link to more information -->
     <string name="radio_preference_info_content_description">Ayrıntılar için tıklayın</string>
-
-    <!-- Deprecated: No Open Tabs Message Header -->
-    <string name="no_collections_header1">Sizin için önemli olan şeyleri toplayın</string>
-    <!-- Deprecated: Label to describe what collections are to a new user without any collections -->
-    <string name="no_collections_description1">Benzer aramaları, siteleri ve sekmeleri gruplandırarak daha sonra onlara hızlıca erişebilirsiniz.</string>
-    <!-- Deprecated: text for the firefox account onboarding card header when we detect you're already signed in to -->
-    <string name="onboarding_firefox_account_auto_signin_header_2">Bu telefondaki başka bir Firefox tarayıcısına %s olarak giriş yapmışsınız. Bu hesapla giriş yapmak ister misiniz?</string>
-    <!-- Deprecated: Describes the add to homescreen functionality -->
-    <string name="add_to_homescreen_description">Bu siteyi telefonunuzun ana ekranına ekleyerek ona hızlıca erişebilir, site bir uygulamaymış gibi daha hızlı gezinti yapabilirsiniz.</string>
 
     </resources>
