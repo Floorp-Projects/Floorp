@@ -1108,22 +1108,6 @@ bool IonCacheIRCompiler::emitProxyGetResult(ObjOperandId objId,
   return true;
 }
 
-bool IonCacheIRCompiler::emitGuardFrameHasNoArgumentsObject() {
-  MOZ_CRASH("Baseline-specific op");
-}
-
-bool IonCacheIRCompiler::emitLoadFrameCalleeResult() {
-  MOZ_CRASH("Baseline-specific op");
-}
-
-bool IonCacheIRCompiler::emitLoadFrameNumActualArgsResult() {
-  MOZ_CRASH("Baseline-specific op");
-}
-
-bool IonCacheIRCompiler::emitLoadFrameArgumentResult(Int32OperandId indexId) {
-  MOZ_CRASH("Baseline-specific op");
-}
-
 bool IonCacheIRCompiler::emitFrameIsConstructingResult() {
   MOZ_CRASH("Baseline-specific op");
 }

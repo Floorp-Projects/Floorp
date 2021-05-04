@@ -1320,10 +1320,7 @@ class MOZ_RAII GetPropIRGenerator : public IRGenerator {
   AttachDecision tryAttachPrimitive(ValOperandId valId, HandleId id);
   AttachDecision tryAttachStringChar(ValOperandId valId, ValOperandId indexId);
   AttachDecision tryAttachStringLength(ValOperandId valId, HandleId id);
-  AttachDecision tryAttachMagicArgumentsName(ValOperandId valId, HandleId id);
 
-  AttachDecision tryAttachMagicArgument(ValOperandId valId,
-                                        ValOperandId indexId);
   AttachDecision tryAttachArgumentsObjectArg(HandleObject obj,
                                              ObjOperandId objId, uint32_t index,
                                              Int32OperandId indexId);
