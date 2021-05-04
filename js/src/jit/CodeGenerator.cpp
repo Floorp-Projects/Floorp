@@ -4620,15 +4620,6 @@ void CodeGenerator::visitGuardValue(LGuardValue* lir) {
   bailoutFrom(&bail, lir->snapshot());
 }
 
-void CodeGenerator::visitGuardNotOptimizedArguments(
-    LGuardNotOptimizedArguments* lir) {
-  ValueOperand input = ToValue(lir, LGuardNotOptimizedArguments::Input);
-  Label bail;
-  masm.branchTestValue(Assembler::Equal, input,
-                       MagicValue(JS_OPTIMIZED_ARGUMENTS), &bail);
-  bailoutFrom(&bail, lir->snapshot());
-}
-
 void CodeGenerator::visitGuardNullOrUndefined(LGuardNullOrUndefined* lir) {
   ValueOperand input = ToValue(lir, LGuardNullOrUndefined::Input);
 

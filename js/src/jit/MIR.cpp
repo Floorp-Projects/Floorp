@@ -5124,31 +5124,6 @@ MDefinition* MGuardValue::foldsTo(TempAllocator& alloc) {
   return this;
 }
 
-/* static */
-bool MGuardNotOptimizedArguments::maybeIsOptimizedArguments(MDefinition* def) {
-  if (def->isBox()) {
-    def = def->toBox()->input();
-  }
-
-  if (def->type() != MIRType::Value &&
-      def->type() != MIRType::MagicOptimizedArguments) {
-    return false;
-  }
-
-  // Only phis and constants can produce optimized-arguments.
-  MOZ_ASSERT_IF(def->type() == MIRType::MagicOptimizedArguments,
-                def->isConstant());
-  return def->isConstant() || def->isPhi();
-}
-
-MDefinition* MGuardNotOptimizedArguments::foldsTo(TempAllocator& alloc) {
-  if (!maybeIsOptimizedArguments(value())) {
-    return value();
-  }
-
-  return this;
-}
-
 MDefinition* MGuardNullOrUndefined::foldsTo(TempAllocator& alloc) {
   MDefinition* input = value();
   if (input->isBox()) {

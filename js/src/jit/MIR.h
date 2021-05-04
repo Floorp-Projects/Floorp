@@ -9282,36 +9282,6 @@ class MGuardValue : public MUnaryInstruction, public BoxInputsPolicy::Data {
   AliasSet getAliasSet() const override { return AliasSet::None(); }
 };
 
-// Guards the value is not MagicValue(JS_OPTIMIZED_ARGUMENTS). If this fails,
-// disable lazy arguments for the script.
-class MGuardNotOptimizedArguments : public MUnaryInstruction,
-                                    public BoxInputsPolicy::Data {
-  explicit MGuardNotOptimizedArguments(MDefinition* val)
-      : MUnaryInstruction(classOpcode, val) {
-    setGuard();
-    setResultType(MIRType::Value);
-    // Note: don't setMovable() to not deoptimize lazy arguments unnecessarily.
-
-    // If this instruction bails out, we will disable the optimization to
-    // prevent bailout loops.
-    setBailoutKind(BailoutKind::NotOptimizedArgumentsGuard);
-  }
-
- public:
-  INSTRUCTION_HEADER(GuardNotOptimizedArguments)
-  TRIVIAL_NEW_WRAPPERS
-  NAMED_OPERANDS((0, value))
-
-  bool congruentTo(const MDefinition* ins) const override {
-    return congruentIfOperandsEqual(ins);
-  }
-
-  static bool maybeIsOptimizedArguments(MDefinition* def);
-
-  MDefinition* foldsTo(TempAllocator& alloc) override;
-  AliasSet getAliasSet() const override { return AliasSet::None(); }
-};
-
 // Guard on null or undefined values.
 class MGuardNullOrUndefined : public MUnaryInstruction,
                               public BoxInputsPolicy::Data {
