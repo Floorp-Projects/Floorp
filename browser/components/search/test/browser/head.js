@@ -186,3 +186,32 @@ async function assertSearchSourcesTelemetry(
     );
   }
 }
+
+async function searchInSearchbar(inputText, win = window) {
+  await new Promise(r => waitForFocus(r, win));
+  let sb = win.BrowserSearch.searchBar;
+  // Write the search query in the searchbar.
+  sb.focus();
+  sb.value = inputText;
+  sb.textbox.controller.startSearch(inputText);
+  // Wait for the popup to show.
+  await BrowserTestUtils.waitForEvent(sb.textbox.popup, "popupshown");
+  // And then for the search to complete.
+  await TestUtils.waitForCondition(
+    () =>
+      sb.textbox.controller.searchStatus >=
+      Ci.nsIAutoCompleteController.STATUS_COMPLETE_NO_MATCH,
+    "The search in the searchbar must complete."
+  );
+  return sb.textbox.popup;
+}
+
+function clearSearchbarHistory(win = window) {
+  return new Promise((resolve, reject) => {
+    info("cleanup the search history");
+    win.BrowserSearch.searchBar.FormHistory.update(
+      { op: "remove", fieldname: "searchbar-history" },
+      { handleCompletion: resolve, handleError: reject }
+    );
+  });
+}

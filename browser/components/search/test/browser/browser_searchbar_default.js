@@ -14,24 +14,6 @@ const { SearchSuggestionController } = ChromeUtils.import(
 const templateNormal = "https://example.com/?q=";
 const templatePrivate = "https://example.com/?query=";
 
-async function searchInSearchbar(win, inputText) {
-  await new Promise(r => waitForFocus(r, win));
-  let searchbar = win.BrowserSearch.searchBar;
-  // Write the search query in the searchbar.
-  searchbar.focus();
-  searchbar.value = inputText;
-  searchbar.textbox.controller.startSearch(inputText);
-  // Wait for the popup to show.
-  await BrowserTestUtils.waitForEvent(searchbar.textbox.popup, "popupshown");
-  // And then for the search to complete.
-  await BrowserTestUtils.waitForCondition(
-    () =>
-      searchbar.textbox.controller.searchStatus >=
-      Ci.nsIAutoCompleteController.STATUS_COMPLETE_NO_MATCH,
-    "The search in the searchbar must complete."
-  );
-}
-
 add_task(async function setup() {
   await gCUITestUtils.addSearchBar();
 
@@ -79,7 +61,7 @@ async function doSearch(
   templateUrl,
   inputText = "query"
 ) {
-  await searchInSearchbar(win, inputText);
+  await searchInSearchbar(inputText, win);
 
   Assert.ok(
     win.BrowserSearch.searchBar.textbox.popup.searchbarEngineName
