@@ -641,7 +641,9 @@ class TypedArrayObjectTemplate : public TypedArrayObject {
       // Step 7.
       if (*byteOffset % BYTES_PER_ELEMENT != 0) {
         JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                  JSMSG_TYPED_ARRAY_CONSTRUCT_BOUNDS);
+                                  JSMSG_TYPED_ARRAY_CONSTRUCT_OFFSET_BOUNDS,
+                                  Scalar::name(ArrayTypeID()),
+                                  Scalar::byteSizeString(ArrayTypeID()));
         return false;
       }
     }
@@ -681,12 +683,22 @@ class TypedArrayObjectTemplate : public TypedArrayObject {
     size_t len;
     if (lengthIndex == UINT64_MAX) {
       // Steps 11.a, 11.c.
-      if (bufferByteLength % BYTES_PER_ELEMENT != 0 ||
-          byteOffset > bufferByteLength) {
+      if (bufferByteLength % BYTES_PER_ELEMENT != 0) {
         // The given byte array doesn't map exactly to
-        // |BYTES_PER_ELEMENT * N| or |byteOffset| is invalid.
+        // |BYTES_PER_ELEMENT * N|
         JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                  JSMSG_TYPED_ARRAY_CONSTRUCT_BOUNDS);
+                                  JSMSG_TYPED_ARRAY_CONSTRUCT_OFFSET_MISALIGNED,
+                                  Scalar::name(ArrayTypeID()),
+                                  Scalar::byteSizeString(ArrayTypeID()));
+        return false;
+      }
+
+      if (byteOffset > bufferByteLength) {
+        // |byteOffset| is invalid.
+        JS_ReportErrorNumberASCII(
+            cx, GetErrorMessage, nullptr,
+            JSMSG_TYPED_ARRAY_CONSTRUCT_OFFSET_LENGTH_BOUNDS,
+            Scalar::name(ArrayTypeID()));
         return false;
       }
 
@@ -700,8 +712,10 @@ class TypedArrayObjectTemplate : public TypedArrayObject {
       // Step 12.b.
       if (byteOffset + newByteLength > bufferByteLength) {
         // |byteOffset + newByteLength| is too big for the arraybuffer
-        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                  JSMSG_TYPED_ARRAY_CONSTRUCT_BOUNDS);
+        JS_ReportErrorNumberASCII(
+            cx, GetErrorMessage, nullptr,
+            JSMSG_TYPED_ARRAY_CONSTRUCT_ARRAY_LENGTH_BOUNDS,
+            Scalar::name(ArrayTypeID()));
         return false;
       }
 
@@ -710,7 +724,8 @@ class TypedArrayObjectTemplate : public TypedArrayObject {
 
     if (len > maxByteLength() / BYTES_PER_ELEMENT) {
       JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                JSMSG_TYPED_ARRAY_CONSTRUCT_BOUNDS);
+                                JSMSG_TYPED_ARRAY_CONSTRUCT_TOO_LARGE,
+                                Scalar::name(ArrayTypeID()));
       return false;
     }
 
@@ -811,7 +826,9 @@ class TypedArrayObjectTemplate : public TypedArrayObject {
                               size_t byteOffset, int64_t lengthInt) {
     if (byteOffset % BYTES_PER_ELEMENT != 0) {
       JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                JSMSG_TYPED_ARRAY_CONSTRUCT_BOUNDS);
+                                JSMSG_TYPED_ARRAY_CONSTRUCT_OFFSET_BOUNDS,
+                                Scalar::name(ArrayTypeID()),
+                                Scalar::byteSizeString(ArrayTypeID()));
       return nullptr;  // invalid byteOffset
     }
 
