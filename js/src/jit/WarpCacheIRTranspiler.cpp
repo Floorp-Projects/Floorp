@@ -4795,14 +4795,27 @@ bool WarpCacheIRTranspiler::emitNewPlainObjectResult(uint32_t numFixedSlots,
   gc::InitialHeap heap = gc::DefaultHeap;
 
   auto* shapeConstant = MConstant::NewShape(alloc(), shape);
-  if (!shapeConstant) {
-    return false;
-  }
-
   add(shapeConstant);
 
   auto* obj = MNewPlainObject::New(alloc(), shapeConstant, numFixedSlots,
                                    numDynamicSlots, allocKind, heap);
+  addEffectful(obj);
+
+  pushResult(obj);
+  return resumeAfter(obj);
+}
+
+bool WarpCacheIRTranspiler::emitNewArrayObjectResult(uint32_t length,
+                                                     uint32_t shapeOffset) {
+  Shape* shape = shapeStubField(shapeOffset);
+
+  // TODO: support pre-tenuring.
+  gc::InitialHeap heap = gc::DefaultHeap;
+
+  auto* shapeConstant = MConstant::NewShape(alloc(), shape);
+  add(shapeConstant);
+
+  auto* obj = MNewArrayObject::New(alloc(), shapeConstant, length, heap);
   addEffectful(obj);
 
   pushResult(obj);

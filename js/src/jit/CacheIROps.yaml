@@ -2472,7 +2472,7 @@
 
 - name: NewArrayObjectResult
   shared: false
-  transpile: false
+  transpile: true
   cost_estimate: 4
   args:
     arrayLength: UInt32Imm
