@@ -337,6 +337,14 @@ add_task(async function() {
         continue;
       }
 
+      // "Files" from memfd_create() are similar to tmpfs but never
+      // exist in the filesystem; however, they have names which are
+      // exposed in procfs, and the I/O interposer observes when
+      // they're close()d.
+      if (LINUX && filename.startsWith("/memfd:")) {
+        continue;
+      }
+
       // Shared memory uses temporary files on MacOS <= 10.11 to avoid
       // a kernel security bug that will never be patched (see
       // https://crbug.com/project-zero/1671 for details).  This can
