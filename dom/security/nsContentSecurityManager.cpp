@@ -11,7 +11,6 @@
 #include "nsEscape.h"
 #include "nsDataHandler.h"
 #include "nsIChannel.h"
-#include "nsIContentPolicy.h"
 #include "nsIHttpChannelInternal.h"
 #include "nsINode.h"
 #include "nsIStreamListener.h"
@@ -830,40 +829,17 @@ static void DebugDoContentSecurityCheck(nsIChannel* aChannel,
 
 /* static */
 void nsContentSecurityManager::MeasureUnexpectedPrivilegedLoads(
-    nsILoadInfo* aLoadInfo, nsIURI* aFinalURI, const nsACString& aRemoteType) {
+    nsIURI* aFinalURI, ExtContentPolicyType aContentPolicyType,
+    const nsACString& aRemoteType) {
   if (!StaticPrefs::dom_security_unexpected_system_load_telemetry_enabled()) {
     return;
   }
-  ExtContentPolicyType contentPolicyType =
-      aLoadInfo->GetExternalContentPolicyType();
   // restricting reported types to script and styles
   // to be continued in follow-ups of bug 1697163.
-  if (contentPolicyType != ExtContentPolicyType::TYPE_SCRIPT &&
-      contentPolicyType != ExtContentPolicyType::TYPE_STYLESHEET) {
+  if (aContentPolicyType != ExtContentPolicyType::TYPE_SCRIPT &&
+      aContentPolicyType != ExtContentPolicyType::TYPE_STYLESHEET) {
     return;
   }
-
-  // Gather redirected schemes in string
-  nsAutoCString loggedRedirects;
-  loggedRedirects.AssignLiteral("");
-  const nsTArray<nsCOMPtr<nsIRedirectHistoryEntry>>& redirects =
-      aLoadInfo->RedirectChain();
-  if (!redirects.IsEmpty()) {
-    nsCOMPtr<nsIRedirectHistoryEntry> end = redirects.LastElement();
-    for (nsIRedirectHistoryEntry* entry : redirects) {
-      nsCOMPtr<nsIPrincipal> principal;
-      entry->GetPrincipal(getter_AddRefs(principal));
-      if (principal) {
-        nsAutoCString scheme;
-        principal->GetScheme(scheme);
-        loggedRedirects.Append(scheme);
-        if (entry != end) {
-          loggedRedirects.AppendLiteral(", ");
-        }
-      }
-    }
-  }
-
   nsAutoCString uriString;
   if (aFinalURI) {
     aFinalURI->GetAsciiSpec(uriString);
@@ -882,7 +858,7 @@ void nsContentSecurityManager::MeasureUnexpectedPrivilegedLoads(
   // sanitize remoteType because it may contain sensitive
   // info, like URLs. e.g. `webIsolated=https://example.com`
   nsAutoCString loggedRemoteType(dom::RemoteTypePrefix(aRemoteType));
-  nsAutoCString loggedContentType(NS_CP_ContentTypeName(contentPolicyType));
+  nsAutoCString loggedContentType(NS_CP_ContentTypeName(aContentPolicyType));
 
   MOZ_LOG(sCSMLog, LogLevel::Debug, ("UnexpectedPrivilegedLoadTelemetry:\n"));
   MOZ_LOG(sCSMLog, LogLevel::Debug,
@@ -894,16 +870,13 @@ void nsContentSecurityManager::MeasureUnexpectedPrivilegedLoads(
   MOZ_LOG(sCSMLog, LogLevel::Debug,
           ("- fileInfo: %s\n", fileNameTypeAndDetails.first.get()));
   MOZ_LOG(sCSMLog, LogLevel::Debug,
-          ("- fileDetails: %s\n", loggedFileDetails.get()));
-  MOZ_LOG(sCSMLog, LogLevel::Debug,
-          ("- redirects: %s\n\n", loggedRedirects.get()));
+          ("- fileDetails: %s\n\n", loggedFileDetails.get()));
 
   // Send Telemetry
   auto extra = Some<nsTArray<EventExtraEntry>>(
       {EventExtraEntry{"contenttype"_ns, loggedContentType},
        EventExtraEntry{"remotetype"_ns, loggedRemoteType},
-       EventExtraEntry{"filedetails"_ns, loggedFileDetails},
-       EventExtraEntry{"redirects"_ns, loggedRedirects}});
+       EventExtraEntry{"filedetails"_ns, loggedFileDetails}});
 
   if (!sTelemetryEventEnabled.exchange(true)) {
     Telemetry::SetEventRecordingEnabled("security"_ns, true);
@@ -985,7 +958,7 @@ nsresult nsContentSecurityManager::CheckAllowLoadInSystemPrivilegedContext(
 
   // GetInnerURI can return null for malformed nested URIs like moz-icon:trash
   if (!finalURI) {
-    MeasureUnexpectedPrivilegedLoads(loadInfo, finalURI, remoteType);
+    MeasureUnexpectedPrivilegedLoads(finalURI, contentPolicyType, remoteType);
     if (cancelNonLocalSystemPrincipal) {
       aChannel->Cancel(NS_ERROR_CONTENT_BLOCKED);
       return NS_ERROR_CONTENT_BLOCKED;
@@ -1009,7 +982,7 @@ nsresult nsContentSecurityManager::CheckAllowLoadInSystemPrivilegedContext(
   // Telemetry for unexpected privileged loads.
   // pref check & data sanitization happens in the called function
   if (finalURI) {
-    MeasureUnexpectedPrivilegedLoads(loadInfo, finalURI, remoteType);
+    MeasureUnexpectedPrivilegedLoads(finalURI, contentPolicyType, remoteType);
   }
 
   // Relaxing restrictions for our test suites:
