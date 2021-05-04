@@ -1,3 +1,4 @@
+from collections import namedtuple
 
 import py
 import os, sys
@@ -10,16 +11,22 @@ def test_get_terminal_width():
     assert x == terminalwriter.get_terminal_width
 
 def test_getdimensions(monkeypatch):
-    fcntl = py.test.importorskip("fcntl")
-    import struct
-    l = []
-    monkeypatch.setattr(fcntl, 'ioctl', lambda *args: l.append(args))
-    try:
-        terminalwriter._getdimensions()
-    except (TypeError, struct.error):
-        pass
-    assert len(l) == 1
-    assert l[0][0] == 1
+    if sys.version_info >= (3, 3):
+        import shutil
+        Size = namedtuple('Size', 'lines columns')
+        monkeypatch.setattr(shutil, 'get_terminal_size', lambda: Size(60, 100))
+        assert terminalwriter._getdimensions() == (60, 100)
+    else:
+        fcntl = py.test.importorskip("fcntl")
+        import struct
+        l = []
+        monkeypatch.setattr(fcntl, 'ioctl', lambda *args: l.append(args))
+        try:
+            terminalwriter._getdimensions()
+        except (TypeError, struct.error):
+            pass
+        assert len(l) == 1
+        assert l[0][0] == 1
 
 def test_terminal_width_COLUMNS(monkeypatch):
     """ Dummy test for get_terminal_width
@@ -157,6 +164,12 @@ class TestTerminalWriter:
         l = tw.getlines()
         assert len(l) == 1
         assert l[0] == "-" * 26 + " hello " + "-" * (27-win32) + "\n"
+
+    def test_sep_longer_than_width(self, tw):
+        tw.sep('-', 'a' * 10, fullwidth=5)
+        line, = tw.getlines()
+        # even though the string is wider than the line, still have a separator
+        assert line == '- aaaaaaaaaa -\n'
 
     @py.test.mark.skipif("sys.platform == 'win32'")
     def test__escaped(self, tw):
