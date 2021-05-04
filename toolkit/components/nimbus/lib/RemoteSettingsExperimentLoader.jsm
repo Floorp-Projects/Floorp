@@ -47,12 +47,19 @@ const TIMER_NAME = "rs-experiment-loader-timer";
 const TIMER_LAST_UPDATE_PREF = `app.update.lastUpdateTime.${TIMER_NAME}`;
 // Use the same update interval as normandy
 const RUN_INTERVAL_PREF = "app.normandy.run_interval_seconds";
+const NIMBUS_DEBUG_PREF = "nimbus.debug";
 
 XPCOMUtils.defineLazyPreferenceGetter(
   this,
   "COLLECTION_ID",
   COLLECTION_ID_PREF,
   COLLECTION_ID_FALLBACK
+);
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "NIMBUS_DEBUG",
+  NIMBUS_DEBUG_PREF,
+  false
 );
 
 /**
@@ -312,6 +319,41 @@ class _RemoteSettingsExperimentLoader {
     }
 
     this._updating = false;
+  }
+
+  async optInToExperiment({ slug, branch: branchSlug, collection }) {
+    if (!NIMBUS_DEBUG) {
+      log.debug(
+        `Force enrollment only works when '${NIMBUS_DEBUG_PREF}' is enabled.`
+      );
+      return null;
+    }
+
+    let recipes;
+    try {
+      recipes = await RemoteSettings(collection || COLLECTION_ID).get();
+    } catch (e) {
+      log.debug("Error getting recipes from remote settings.");
+      Cu.reportError(e);
+    }
+
+    let recipe = recipes.find(r => r.slug === slug);
+
+    if (!recipe) {
+      log.debug(
+        `Could not find experiment slug ${slug} in collection ${collection ||
+          COLLECTION_ID}.`
+      );
+      return null;
+    }
+
+    let branch = recipe.branches.find(b => b.slug === branchSlug);
+    if (!branch) {
+      log.debug(`Could not find branch slug ${branch} in ${slug}.`);
+      return null;
+    }
+
+    return ExperimentManager.forceEnroll(recipe, branch);
   }
 
   /**

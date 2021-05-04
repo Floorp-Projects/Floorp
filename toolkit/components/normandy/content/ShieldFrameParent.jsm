@@ -47,6 +47,8 @@ class ShieldFrameParent extends JSWindowActorParent {
         break;
       case "Shield:GetStudiesEnabled":
         return aboutStudies.getStudiesEnabled();
+      case "Shield:ExperimentOptIn":
+        return aboutStudies.optInToExperiment(msg.data);
     }
 
     return null;
