@@ -1642,6 +1642,9 @@ MDefinition* MUnbox::foldsTo(TempAllocator& alloc) {
 
     // Fold MUnbox(MBox(x)) => x if types match.
     if (unboxed->type() == type()) {
+      if (fallible()) {
+        unboxed->setImplicitlyUsedUnchecked();
+      }
       return unboxed;
     }
 
