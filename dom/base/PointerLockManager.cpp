@@ -288,7 +288,7 @@ bool PointerLockManager::SetPointerLock(Element* aElement, Document* aDocument,
 
   // Hide the cursor and set pointer lock for future mouse events
   RefPtr<EventStateManager> esm = presContext->EventStateManager();
-  esm->SetCursor(aCursorStyle, nullptr, 1.0f, Nothing(), widget, true);
+  esm->SetCursor(aCursorStyle, nullptr, {}, Nothing(), widget, true);
   EventStateManager::SetPointerLock(widget, aElement);
 
   return true;

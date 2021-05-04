@@ -299,7 +299,7 @@ class nsImageRenderer {
 
   nsIFrame* mForFrame;
   const mozilla::StyleImage* mImage;
-  float mImageResolution;
+  ImageResolution mImageResolution;
   mozilla::StyleImage::Tag mType;
   nsCOMPtr<imgIContainer> mImageContainer;
   const mozilla::StyleGradient* mGradientData;

@@ -925,7 +925,7 @@ void PuppetWidget::SetCursor(const Cursor& aCursor) {
   IntSize customCursorSize;
   int32_t stride = 0;
   auto format = SurfaceFormat::B8G8R8A8;
-  float resolution = aCursor.mResolution;
+  ImageResolution resolution = aCursor.mResolution;
   if (aCursor.IsCustom()) {
     int32_t width = 0, height = 0;
     aCursor.mContainer->GetWidth(&width);
@@ -936,9 +936,8 @@ void PuppetWidget::SetCursor(const Cursor& aCursor) {
     if (width && height &&
         aCursor.mContainer->GetType() == imgIContainer::TYPE_VECTOR) {
       // For vector images, scale to device pixels.
-      resolution *= GetDefaultScale().scale;
-      width = std::ceil(width * resolution);
-      height = std::ceil(height * resolution);
+      resolution.ScaleBy(GetDefaultScale().scale);
+      resolution.ApplyInverseTo(width, height);
       surface = aCursor.mContainer->GetFrameAtSize(
           {width, height},
           imgIContainer::FRAME_CURRENT, flags);
@@ -964,8 +963,9 @@ void PuppetWidget::SetCursor(const Cursor& aCursor) {
                                 length);
   if (!mBrowserChild->SendSetCursor(
           aCursor.mDefaultCursor, hasCustomCursor, cursorData,
-          customCursorSize.width, customCursorSize.height, resolution,
-          stride, format, aCursor.mHotspotX, aCursor.mHotspotY, force)) {
+          customCursorSize.width, customCursorSize.height,
+          resolution.mX, resolution.mY, stride, format,
+          aCursor.mHotspotX, aCursor.mHotspotY, force)) {
     return;
   }
   mCursor = aCursor;
