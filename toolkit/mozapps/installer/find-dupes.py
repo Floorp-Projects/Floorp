@@ -51,29 +51,29 @@ def normalize_path(p):
 
 
 def find_dupes(source, allowed_dupes, bail=True):
-    md5_chunk_size = 1024 * 10
+    chunk_size = 1024 * 10
     allowed_dupes = set(allowed_dupes)
-    md5s = OrderedDict()
+    checksums = OrderedDict()
     for p, f in UnpackFinder(source):
-        md5 = hashlib.md5()
+        checksum = hashlib.sha1()
         content_size = 0
-        for buf in iter(functools.partial(f.open().read, md5_chunk_size), b""):
-            md5.update(six.ensure_binary(buf))
+        for buf in iter(functools.partial(f.open().read, chunk_size), b""):
+            checksum.update(six.ensure_binary(buf))
             content_size += len(six.ensure_binary(buf))
-        m = md5.digest()
-        if m not in md5s:
+        m = checksum.digest()
+        if m not in checksums:
             if isinstance(f, DeflatedFile):
                 compressed = f.file.compressed_size
             else:
                 compressed = content_size
-            md5s[m] = (content_size, compressed, [])
-        md5s[m][2].append(p)
+            checksums[m] = (content_size, compressed, [])
+        checksums[m][2].append(p)
     total = 0
     total_compressed = 0
     num_dupes = 0
     unexpected_dupes = []
     for m, (size, compressed, paths) in sorted(
-        six.iteritems(md5s), key=lambda x: x[1][1]
+        six.iteritems(checksums), key=lambda x: x[1][1]
     ):
         if len(paths) > 1:
             _compressed = " (%d compressed)" % compressed if compressed != size else ""
