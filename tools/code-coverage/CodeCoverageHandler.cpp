@@ -12,6 +12,7 @@
 #  include <unistd.h>
 #endif
 #include "js/experimental/CodeCoverage.h"
+#include "mozilla/Atomics.h"
 #include "mozilla/dom/ScriptSettings.h"  // for AutoJSAPI
 #include "mozilla/CodeCoverageHandler.h"
 #include "mozilla/ClearOnShutdown.h"
@@ -37,7 +38,13 @@ extern "C" void __gcov_reset();
 
 StaticAutoPtr<CodeCoverageHandler> CodeCoverageHandler::instance;
 
-void CodeCoverageHandler::FlushCounters() {
+void CodeCoverageHandler::FlushCounters(const bool initialized) {
+  static Atomic<bool> hasBeenInitialized(false);
+  if (!hasBeenInitialized) {
+    hasBeenInitialized = initialized;
+    return;
+  }
+
   printf_stderr("[CodeCoverage] Requested flush for %d.\n", getpid());
 
   CrossProcessMutexAutoLock lock(*CodeCoverageHandler::Get()->GetMutex());
@@ -124,6 +131,9 @@ void CodeCoverageHandler::Init() {
   MOZ_ASSERT(XRE_IsParentProcess());
   instance = new CodeCoverageHandler();
   ClearOnShutdown(&instance);
+
+  // Don't really flush but just make FlushCounters usable.
+  FlushCounters(true);
 }
 
 void CodeCoverageHandler::Init(const CrossProcessMutexHandle& aHandle) {
@@ -131,6 +141,9 @@ void CodeCoverageHandler::Init(const CrossProcessMutexHandle& aHandle) {
   MOZ_ASSERT(!XRE_IsParentProcess());
   instance = new CodeCoverageHandler(aHandle);
   ClearOnShutdown(&instance);
+
+  // Don't really flush but just make FlushCounters usable.
+  FlushCounters(true);
 }
 
 CodeCoverageHandler* CodeCoverageHandler::Get() {
