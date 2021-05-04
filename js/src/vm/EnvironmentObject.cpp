@@ -1522,9 +1522,6 @@ class DebugEnvironmentProxyHandler : public BaseProxyHandler {
         CallObject& callobj = env->as<CallObject>();
         RootedFunction fun(cx, &callobj.callee());
         script = JSFunction::getOrCreateScript(cx, fun);
-        if (!script->ensureHasAnalyzedArgsUsage(cx)) {
-          return false;
-        }
       } else {
         script = env->as<ModuleEnvironmentObject>().module().maybeScript();
         if (!script) {
@@ -2774,8 +2771,7 @@ void DebugEnvironments::takeFrameSnapshot(
      * Copy in formals that are not aliased via the scope chain
      * but are aliased via the arguments object.
      */
-    if (!script->needsArgsAnalysis() && script->needsArgsObj() &&
-        frame.hasArgsObj()) {
+    if (script->needsArgsObj() && frame.hasArgsObj()) {
       for (unsigned i = 0; i < frame.numFormalArgs(); ++i) {
         if (script->formalLivesInArgumentsObject(i)) {
           vec[i].set(frame.argsObj().arg(i));

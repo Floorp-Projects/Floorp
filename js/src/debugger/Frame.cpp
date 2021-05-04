@@ -73,13 +73,12 @@
 #include "wasm/WasmJS.h"                   // for WasmInstanceObject
 #include "wasm/WasmTypes.h"                // for DebugFrame
 
-#include "debugger/Debugger-inl.h"  // for Debugger::fromJSObject
-#include "gc/WeakMap-inl.h"         // for WeakMap::remove
-#include "vm/Compartment-inl.h"     // for Compartment::wrap
-#include "vm/JSContext-inl.h"       // for JSContext::check
-#include "vm/JSObject-inl.h"        // for NewObjectWithGivenProto
-#include "vm/JSScript-inl.h"        // for JSScript::ensureHasAnalyzedArgsUsage
-#include "vm/NativeObject-inl.h"    // for NativeObject::global
+#include "debugger/Debugger-inl.h"    // for Debugger::fromJSObject
+#include "gc/WeakMap-inl.h"           // for WeakMap::remove
+#include "vm/Compartment-inl.h"       // for Compartment::wrap
+#include "vm/JSContext-inl.h"         // for JSContext::check
+#include "vm/JSObject-inl.h"          // for NewObjectWithGivenProto
+#include "vm/NativeObject-inl.h"      // for NativeObject::global
 #include "vm/ObjectOperations-inl.h"  // for GetProperty
 #include "vm/Realm-inl.h"             // for AutoRealm::AutoRealm
 #include "vm/Stack-inl.h"             // for AbstractFramePtr::script
@@ -1613,12 +1612,6 @@ static bool DebuggerArguments_getArg(JSContext* cx, unsigned argc, Value* vp) {
   RootedScript script(cx);
   if (unsigned(i) < frame.numActualArgs()) {
     script = frame.script();
-    {
-      AutoRealm ar(cx, script);
-      if (!script->ensureHasAnalyzedArgsUsage(cx)) {
-        return false;
-      }
-    }
     if (unsigned(i) < frame.numFormalArgs()) {
       for (PositionalFormalParameterIter fi(script); fi; fi++) {
         if (fi.argumentSlot() == unsigned(i)) {

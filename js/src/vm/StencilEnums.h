@@ -273,8 +273,8 @@ enum class MutableScriptFlagsEnum : uint32_t {
   // Script has an entry in Realm::debugScriptMap.
   HasDebugScript = 1 << 11,
 
-  // See: JSScript::ensureHasAnalyzedArgsUsage.
-  NeedsArgsAnalysis = 1 << 12,
+  // Currently unused: (TODO: remove NeedsArgsObj too)
+  // 1 << 12
   NeedsArgsObj = 1 << 13,
 
   // Script supports relazification where it releases bytecode and gcthings to

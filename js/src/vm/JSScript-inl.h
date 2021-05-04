@@ -160,13 +160,6 @@ inline js::Shape* JSScript::initialEnvironmentShape() const {
   return nullptr;
 }
 
-inline bool JSScript::ensureHasAnalyzedArgsUsage(JSContext* cx) {
-  if (needsArgsAnalysis()) {
-    return js::jit::AnalyzeArgumentsUsage(cx, this);
-  }
-  return true;
-}
-
 inline bool JSScript::isDebuggee() const {
   return realm()->debuggerObservesAllExecution() || hasDebugScript();
 }

@@ -167,8 +167,6 @@ class LinearSum {
 MDefinition* ConvertLinearSum(TempAllocator& alloc, MBasicBlock* block,
                               const LinearSum& sum, BailoutKind bailoutKind);
 
-[[nodiscard]] bool AnalyzeArgumentsUsage(JSContext* cx, JSScript* script);
-
 bool DeadIfUnused(const MDefinition* def);
 
 bool IsDiscardable(const MDefinition* def);

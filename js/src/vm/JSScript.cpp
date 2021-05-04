@@ -4667,12 +4667,6 @@ Scope* JSScript::innermostScope(jsbytecode* pc) const {
   return bodyScope();
 }
 
-void JSScript::setNeedsArgsObj(bool needsArgsObj) {
-  MOZ_ASSERT_IF(needsArgsObj, argumentsHasVarBinding());
-  clearFlag(MutableFlags::NeedsArgsAnalysis);
-  setFlag(MutableFlags::NeedsArgsObj, needsArgsObj);
-}
-
 void js::SetFrameArgumentsObject(JSContext* cx, AbstractFramePtr frame,
                                  HandleScript script, JSObject* argsobj) {
   /*
@@ -4728,7 +4722,6 @@ void js::SetFrameArgumentsObject(JSContext* cx, AbstractFramePtr frame,
 /* static */
 void JSScript::argumentsOptimizationFailed(JSContext* cx, HandleScript script) {
   MOZ_ASSERT(script->isFunction());
-  MOZ_ASSERT(!script->needsArgsAnalysis());
   MOZ_ASSERT(script->argumentsHasVarBinding());
 
   /*
