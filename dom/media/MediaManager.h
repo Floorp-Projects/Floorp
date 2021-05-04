@@ -10,6 +10,7 @@
 #include "MediaEventSource.h"
 #include "mozilla/dom/GetUserMediaRequest.h"
 #include "mozilla/Unused.h"
+#include "nsIMediaDevice.h"
 #include "nsIMediaManager.h"
 
 #include "nsHashKeys.h"
@@ -18,7 +19,6 @@
 #include "nsIMemoryReporter.h"
 #include "nsIObserver.h"
 
-#include "nsIDOMNavigatorUserMedia.h"
 #include "nsXULAppAPI.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Preferences.h"
