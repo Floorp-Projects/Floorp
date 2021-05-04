@@ -121,9 +121,7 @@ void WarpOracle::addScriptSnapshot(WarpScriptSnapshot* scriptSnapshot) {
 AbortReasonOr<WarpSnapshot*> WarpOracle::createSnapshot() {
 #ifdef JS_JITSPEW
   const char* mode;
-  if (mirGen().outerInfo().isAnalysis()) {
-    mode = "Analyzing";
-  } else if (outerScript_->hasIonScript()) {
+  if (outerScript_->hasIonScript()) {
     mode = "Recompiling";
   } else {
     mode = "Compiling";
@@ -711,16 +709,8 @@ AbortReasonOr<WarpScriptSnapshot*> WarpScriptOracle::createScriptSnapshot() {
       case JSOp::Yield:
       case JSOp::ResumeKind:
       case JSOp::ThrowMsg:
-        // Supported by WarpBuilder. Nothing to do.
-        break;
-
       case JSOp::Try:
-        if (info_->isAnalysis()) {
-          // Try-catch is not supported for the arguments analysis because
-          // |arguments| uses in the catch-block are not accounted for.
-          return abort(AbortReason::Disable,
-                       "try-catch not supported during analysis");
-        }
+        // Supported by WarpBuilder. Nothing to do.
         break;
 
         // Unsupported ops. Don't use a 'default' here, we want to trigger a
@@ -776,8 +766,8 @@ AbortReasonOr<Ok> WarpScriptOracle::maybeInlineIC(WarpOpSnapshotList& snapshots,
 
   MOZ_ASSERT(loc.opHasIC());
 
-  // Don't create snapshots for the arguments analysis or when testing ICs.
-  if (info_->isAnalysis() || JitOptions.forceInlineCaches) {
+  // Don't create snapshots when testing ICs.
+  if (JitOptions.forceInlineCaches) {
     return Ok();
   }
 
@@ -954,8 +944,8 @@ AbortReasonOr<bool> WarpScriptOracle::maybeInlineCall(
   jsbytecode* osrPc = nullptr;
   bool needsArgsObj = targetScript->needsArgsObj();
   CompileInfo* info = lifoAlloc->new_<CompileInfo>(
-      mirGen_.runtime, targetScript, targetFunction, osrPc,
-      info_->analysisMode(), needsArgsObj, inlineScriptTree);
+      mirGen_.runtime, targetScript, targetFunction, osrPc, needsArgsObj,
+      inlineScriptTree);
   if (!info) {
     return abort(AbortReason::Alloc);
   }
