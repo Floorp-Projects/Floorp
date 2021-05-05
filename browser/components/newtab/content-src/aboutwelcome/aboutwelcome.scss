@@ -517,6 +517,32 @@ body {
     background: radial-gradient(79.33% 221.6% at 7.58% 89.55%, #15141A 0%, rgba(21, 20, 26, 0) 54.36%, rgba(21, 20, 26, 0.63) 100%) center / cover no-repeat fixed;
     background-color: #212121;
 
+    // Transition all of these and reduced motion effectively only does opacity.
+    --transition: 0.6s opacity, 0.6s scale, 0.6s rotate, 0.6s translate;
+
+    // Define some variables that are used for in/out states.
+    @media (prefers-reduced-motion: no-preference) {
+      --translate: 30px;
+      --rotate: 20deg;
+      --scale: 0.4;
+
+      // Scale is used for noodles that can be flipped.
+      &:dir(rtl) {
+        --scale: -0.4 0.4;
+      }
+    }
+
+    // Use default values that match "unmoved" state to avoid motion.
+    @media (prefers-reduced-motion: reduce) {
+      --translate: 0;
+      --rotate: 0deg;
+      --scale: 1;
+
+      &:dir(rtl) {
+        --scale: -1 1;
+      }
+    }
+
     &:dir(rtl) {
       transform: rotateY(180deg);
     }
@@ -542,12 +568,18 @@ body {
     .main-content {
       background-color: var(--in-content-page-background);
       border-radius: 20px;
+      display: flex;
+      flex-direction: column;
       height: 100%;
       padding: 0;
+      transition: var(--transition);
       z-index: 1;
     }
 
     .welcome-text {
+      margin-bottom: auto;
+      transition: var(--transition);
+
       h1,
       h2 {
         color: var(--in-content-page-color);
@@ -571,12 +603,18 @@ body {
       background: url('chrome://branding/content/about-logo.svg') top
       center / 80px no-repeat;
       padding: 80px 0 10px;
+      transition: var(--transition);
     }
 
     .primary {
       font-size: 13px;
       line-height: 16px;
       padding: 11px 15px;
+      transition: var(--transition);
+    }
+
+    .secondary-cta {
+      transition: var(--transition);
     }
 
     .secondary {
@@ -599,7 +637,9 @@ body {
     }
 
     .steps {
+      margin-top: 0;
       padding-bottom: 0;
+      transition: var(--transition);
 
       .indicator {
         width: 6px;
@@ -612,10 +652,13 @@ body {
       }
     }
 
+    .tiles-theme-container {
+      margin: auto 0;
+    }
+
     .tiles-theme-section {
-      border: var(--tiles-theme-section-border-width)
-      solid
-      var(--in-content-page-background);
+      border: var(--tiles-theme-section-border-width) solid var(--in-content-page-background);
+      transition: var(--transition);
 
       &:focus-within {
         border: var(--tiles-theme-section-border-width) dotted;
@@ -674,11 +717,22 @@ body {
       }
     }
 
+    .message-text,
+    .attrib-text {
+      transition: var(--transition);
+    }
+
     .noodle {
       display: block;
       background-repeat: no-repeat;
       background-size: 100% 100%;
       position: absolute;
+      transition: var(--transition);
+
+      // Flip noodles in a way that combines individual transforms.
+      &:dir(rtl) {
+        scale: -1 1;
+      }
     }
 
     .outline-L {
@@ -766,6 +820,7 @@ body {
           line-height: 18px;
           color: #F9F9FB;
           text-shadow: 0 0 7px rgba(0, 0, 0, 0.6);
+          transition-delay: 0.5s;
 
           @media (max-width: 900px) {
             width: 200px;
@@ -784,22 +839,35 @@ body {
 
         .main-content {
           background: transparent;
+          display: block;
           position: absolute;
           height: 350px;
           bottom: -60px;
           inset-inline-end: 80px;
+          transition: var(--transition);
         }
 
         .brand-logo {
           margin-top: 0;
+          transition-delay: 1.2s;
         }
 
         .welcome-text {
           margin-bottom: 5px;
+          transition-delay: 1.2s;
 
           h1 {
             width: 283px;
           }
+        }
+
+        .primary,
+        .secondary-cta:not(.top) {
+          transition-delay: 1.7s;
+        }
+
+        .secondary-cta.top {
+          transition-delay: 0.5s;
         }
       }
 
@@ -810,10 +878,7 @@ body {
         bottom: -390px;
         inset-inline-end: -640px;
         transform: rotate(-80deg);
-
-        &:dir(rtl) {
-          transform: rotate(-260deg);
-        }
+        transition-delay: 0.5s;
       }
 
       .orange-L {
@@ -821,12 +886,7 @@ body {
         height: 356px;
         bottom: 270px;
         inset-inline-end: -245px;
-
-        &:dir(rtl) {
-          bottom: 208px;
-          inset-inline-end: -100px;
-          transform: rotate(-245deg);
-        }
+        transition-delay: 0.8s;
       }
 
       .purple-C {
@@ -835,10 +895,7 @@ body {
         bottom: -100px;
         inset-inline-end: 125px;
         transform: rotate(-75deg);
-
-        &:dir(rtl) {
-          transform: rotate(-207deg);
-        }
+        transition-delay: 0.8s;
       }
     }
 
@@ -860,6 +917,20 @@ body {
           width: 420px;
           height: auto;
         }
+
+        .brand-logo {
+          transition-delay: 0.6s;
+        }
+
+        .welcome-text {
+          transition-delay: 0.8s;
+        }
+
+        .primary,
+        .secondary-cta,
+        .steps {
+          transition-delay: 1s;
+        }
       }
 
       //Position of noodles on second screen
@@ -867,31 +938,21 @@ body {
         width: 87px;
         height: 80px;
         transform: rotate(10deg) translate(-30%, 200%);
+        transition-delay: 0.4s;
         z-index: 2;
-
-        &:dir(rtl) {
-          transform: rotate(232deg) translate(-160%, -145%);
-        }
       }
 
       .orange-L {
         width: 448px;
         height: 568px;
         transform: rotate(-155deg) translate(12%, -21%);
-
-        &:dir(rtl) {
-          transform: rotate(-180deg) translate(-10%, -12%);
-        }
+        transition-delay: 0.2s;
       }
 
       .purple-C {
         width: 294px;
         height: 254px;
         transform: translate(-20%, -62%);
-
-        &:dir(rtl) {
-          transform: rotate(50deg) translate(-25%, -50%);
-        }
       }
 
       .yellow-circle {
@@ -900,17 +961,10 @@ body {
         border-radius: 50%;
         transform: translate(230%, -5%);
         background: #FF7139;
-
-        &:dir(rtl) {
-          transform: translate(-225%, -5%);
-        }
+        transition-delay: -0.2s;
 
         @media (max-width: $break-point-large) {
           transform: translate(205%, -5%);
-
-          &:dir(rtl) {
-            transform: translate(-200%, -5%);
-          }
         }
 
         @media (max-width: $break-point-medium) {
@@ -937,6 +991,15 @@ body {
           width: 420px;
           height: auto;
         }
+
+        .tiles-theme-section {
+          transition-delay: 0.2s;
+        }
+
+        .primary,
+        .secondary-cta {
+          transition-delay: 0.4s;
+        }
       }
 
       // Position of noodles on third screen
@@ -944,18 +1007,11 @@ body {
         width: 87px;
         height: 80px;
         transform: rotate(250deg) translate(-420%, 425%);
+        transition-delay: 0.2s;
         z-index: 2;
-
-        &:dir(rtl) {
-          transform: rotate(10deg) translate(-475%, 300%);
-        }
 
         @media (max-width: $break-point-large) {
           transform: rotate(250deg) translate(-400%, 280%);
-
-          &:dir(rtl) {
-            transform: rotate(10deg) translate(-390%, 340%);
-          }
         }
       }
 
@@ -963,10 +1019,7 @@ body {
         height: 800px;
         width: 660px;
         transform: rotate(35deg) translate(-10%, -7%);
-
-        &:dir(rtl) {
-          transform: rotate(215deg) translate(-10%, -7%);
-        }
+        transition-delay: -0.4s;
 
         @media (max-width: $break-point-large) {
           height: 740px;
@@ -978,10 +1031,7 @@ body {
         width: 392px;
         height: 394px;
         transform: rotate(260deg) translate(-34%, -35%);
-
-        &:dir(rtl) {
-          transform: rotate(50deg) translate(-20%, -40%);
-        }
+        transition-delay: -0.2s;
       }
 
       .yellow-circle {
@@ -990,9 +1040,126 @@ body {
         border-radius: 50%;
         transform: translate(160%, 130%);
         background: #FF7139;
+      }
+    }
 
-        &:dir(rtl) {
-          transform: translate(-190%, -130%);
+    &.transition-in {
+      .noodle {
+        opacity: 0;
+        rotate: var(--rotate);
+        scale: var(--scale);
+      }
+
+      .screen-0 {
+        .brand-logo,
+        .welcome-text,
+        .primary,
+        .secondary-cta:not(.top),
+        .message-text {
+          opacity: 0;
+          translate: 0 var(--translate);
+        }
+
+        .attrib-text,
+        .secondary-cta.top {
+          opacity: 0;
+        }
+      }
+
+      .screen-1 {
+        .main-content {
+          translate: 0 calc(-2 * var(--translate));
+        }
+
+        .brand-logo,
+        .steps {
+          opacity: 0;
+          translate: 0 calc(-1 * var(--translate));
+        }
+      }
+
+      .screen-2 {
+        .steps {
+          opacity: 0.2;
+        }
+      }
+
+      .screen-1,
+      .screen-2 {
+        .welcome-text,
+        .tiles-theme-section,
+        .primary,
+        .secondary-cta:not(.top) {
+          opacity: 0;
+          translate: 0 calc(-1 * var(--translate));
+        }
+      }
+    }
+
+    &.transition-out {
+      .noodle {
+        opacity: 0;
+        rotate: var(--rotate);
+        scale: var(--scale);
+        transition-delay: 0.2s;
+      }
+
+      .screen-0 {
+        .message-text {
+          opacity: 0;
+          translate: 0 var(--translate);
+        }
+
+        .main-content {
+          opacity: 0;
+          translate: 0 var(--translate);
+          transition-delay: 0.2s;
+        }
+
+        .solid-L {
+          transition-delay: 0.4s;
+        }
+
+        .attrib-text,
+        .secondary-cta.top {
+          opacity: 0;
+          transition-delay: 0.2s;
+        }
+      }
+
+      .screen-1 {
+        .main-content {
+          overflow: hidden;
+        }
+
+        .welcome-text {
+          opacity: 0;
+          translate: 0 var(--translate);
+          transition-delay: 0.1s;
+        }
+
+        .primary,
+        .secondary-cta:not(.top) {
+          opacity: 0;
+          translate: 0 var(--translate);
+          transition-delay: 0.3s;
+        }
+
+        .steps {
+          opacity: 0.2;
+          transition-delay: 0.5s;
+        }
+      }
+
+      .screen-2 {
+        .noodle {
+          transition-delay: 0s;
+        }
+
+        .main-content {
+          opacity: 0;
+          translate: 0 calc(2 * var(--translate));
+          transition-delay: 0.4s;
         }
       }
     }
