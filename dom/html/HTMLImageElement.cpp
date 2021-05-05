@@ -732,7 +732,7 @@ nsIntSize HTMLImageElement::NaturalSize() {
   if (mResponsiveSelector) {
     float density = mResponsiveSelector->GetSelectedImageDensity();
     MOZ_ASSERT(density >= 0.0);
-    resolution = {density, density};
+    resolution.ScaleBy(density);
   }
 
   resolution.ApplyTo(size.width, size.height);
