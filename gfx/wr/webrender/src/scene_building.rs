@@ -1322,6 +1322,7 @@ impl<'a> SceneBuilder<'a> {
                     &mut tile_spacing,
                     &layout.clip_rect,
                     info.gradient.radius,
+                    info.gradient.end_offset,
                     info.gradient.extend_mode,
                     &stops,
                     &mut |solid_rect, color| {
