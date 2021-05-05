@@ -5,6 +5,16 @@ Some parts of this process, including cloning and compiling, can take a long tim
 If at any point you get stuck, please don't hesitate to ask at `https://chat.mozilla.org <https://chat.mozilla.org>`__
 in the `#introduction <https://chat.mozilla.org/#/room/#introduction:mozilla.org>`__ channel.
 
+Before you start
+----------------
+Please register and create your account for
+
+`Bugzilla <https://bugzilla.mozilla.org/>`__ : web-based general-purpose bug tracking system.
+To register with Phabricator, make sure you enable Two-Factor Authentication (My Profile >> Edit Profile & Preferences >> Two-Factor Authentication) in Bugzilla.
+
+`Phabricator <https://phabricator.services.mozilla.com/>`__: web-based software development collaboration tools, mainly for code review.
+Please obtain an API Token (Settings >> Conduit API Tokens)
+
 Clone the sources
 -----------------
 
@@ -105,7 +115,7 @@ Then:
 
 The commit message should look like:
 
-.. code-block::
+.. code-block:: text
 
     Bug xxxx - Short description of your change. r?reviewer
 
