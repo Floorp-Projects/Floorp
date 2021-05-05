@@ -57,7 +57,6 @@
 #include "nsNetUtil.h"
 #include "nsPIDOMWindow.h"
 #include "nsProxyRelease.h"
-#include "nsVariant.h"
 #include "nspr.h"
 #include "nss.h"
 #include "pk11pub.h"
@@ -186,7 +185,6 @@ using dom::MediaStreamTrackSource;
 using dom::MediaTrackConstraints;
 using dom::MediaTrackConstraintSet;
 using dom::MediaTrackSettings;
-using dom::MozGetUserMediaDevicesSuccessCallback;
 using dom::OwningBooleanOrMediaTrackConstraints;
 using dom::OwningStringOrStringSequence;
 using dom::OwningStringOrStringSequenceOrConstrainDOMStringParameters;
@@ -1264,12 +1262,10 @@ class GetUserMediaTask {
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(GetUserMediaTask)
   GetUserMediaTask(uint64_t aWindowID, const ipc::PrincipalInfo& aPrincipalInfo,
-                   CallerType aCallerType,
-                   RefPtr<MediaManager::MediaDeviceSetRefCnt> aMediaDeviceSet)
+                   CallerType aCallerType)
       : mPrincipalInfo(aPrincipalInfo),
         mWindowID(aWindowID),
-        mCallerType(aCallerType),
-        mMediaDeviceSet(std::move(aMediaDeviceSet)) {}
+        mCallerType(aCallerType) {}
 
   virtual void Denied(MediaMgrError::Name aName,
                       const nsCString& aMessage = ""_ns) = 0;
@@ -1324,9 +1320,6 @@ class GetUserMediaTask {
   const uint64_t mWindowID;
   // Whether the JS caller of getUserMedia() has system (subject) principal
   const enum CallerType mCallerType;
-
- public:
-  const RefPtr<MediaManager::MediaDeviceSetRefCnt> mMediaDeviceSet;
 };
 
 /**
@@ -1345,11 +1338,8 @@ class GetUserMediaStreamTask final : public GetUserMediaTask {
       RefPtr<DeviceListener> aAudioDeviceListener,
       RefPtr<DeviceListener> aVideoDeviceListener,
       const MediaEnginePrefs& aPrefs, const ipc::PrincipalInfo& aPrincipalInfo,
-      enum CallerType aCallerType,
-      RefPtr<MediaManager::MediaDeviceSetRefCnt>&& aMediaDeviceSet,
-      bool aShouldFocusSource)
-      : GetUserMediaTask(aWindowID, aPrincipalInfo, aCallerType,
-                         std::move(aMediaDeviceSet)),
+      enum CallerType aCallerType, bool aShouldFocusSource)
+      : GetUserMediaTask(aWindowID, aPrincipalInfo, aCallerType),
         mConstraints(aConstraints),
         mHolder(std::move(aHolder)),
         mWindowListener(std::move(aWindowListener)),
@@ -1710,13 +1700,10 @@ void GetUserMediaStreamTask::PrepareDOMStream() {
  */
 class SelectAudioOutputTask final : public GetUserMediaTask {
  public:
-  SelectAudioOutputTask(
-      MozPromiseHolder<MediaManager::DevicePromise>&& aHolder,
-      uint64_t aWindowID, enum CallerType aCallerType,
-      const ipc::PrincipalInfo& aPrincipalInfo,
-      RefPtr<MediaManager::MediaDeviceSetRefCnt>&& aMediaDeviceSet)
-      : GetUserMediaTask(aWindowID, aPrincipalInfo, aCallerType,
-                         std::move(aMediaDeviceSet)),
+  SelectAudioOutputTask(MozPromiseHolder<MediaManager::DevicePromise>&& aHolder,
+                        uint64_t aWindowID, enum CallerType aCallerType,
+                        const ipc::PrincipalInfo& aPrincipalInfo)
+      : GetUserMediaTask(aWindowID, aPrincipalInfo, aCallerType),
         mHolder(std::move(aHolder)) {}
 
   void Allowed(RefPtr<MediaDevice> aAudioOutput) {
@@ -2858,7 +2845,7 @@ RefPtr<MediaManager::StreamPromise> MediaManager::GetUserMedia(
             auto task = MakeRefPtr<GetUserMediaStreamTask>(
                 c, std::move(holder), windowID, std::move(windowListener),
                 std::move(audioListener), std::move(videoListener), prefs,
-                principalInfo, aCallerType, std::move(devices), focusSource);
+                principalInfo, aCallerType, focusSource);
 
             size_t taskCount =
                 self->AddTaskAndGetCount(windowID, callID, std::move(task));
@@ -2869,7 +2856,8 @@ RefPtr<MediaManager::StreamPromise> MediaManager::GetUserMedia(
                                    callID.get());
             } else {
               auto req = MakeRefPtr<GetUserMediaRequest>(
-                  window, callID, c, isSecure, isHandlingUserInput);
+                  window, callID, std::move(devices), c, isSecure,
+                  isHandlingUserInput);
               if (!Preferences::GetBool("media.navigator.permission.force") &&
                   taskCount > 1) {
                 // there is at least 1 pending gUM request
@@ -2969,31 +2957,6 @@ nsresult MediaManager::AnonymizeId(nsAString& aId,
 
   CopyUTF8toUTF16(mac, aId);
   return NS_OK;
-}
-
-/* static */
-already_AddRefed<nsIWritableVariant> MediaManager::ToJSArray(
-    MediaDeviceSet& aDevices) {
-  MOZ_ASSERT(NS_IsMainThread());
-  auto var = MakeRefPtr<nsVariantCC>();
-  size_t len = aDevices.Length();
-  if (len) {
-    nsTArray<nsIMediaDevice*> tmp(len);
-    for (auto& device : aDevices) {
-      tmp.AppendElement(device);
-    }
-    auto* elements = static_cast<const void*>(tmp.Elements());
-    nsresult rv = var->SetAsArray(nsIDataType::VTYPE_INTERFACE,
-                                  &NS_GET_IID(nsIMediaDevice), len,
-                                  const_cast<void*>(elements));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return nullptr;
-    }
-  } else {
-    var->SetAsEmptyArray();  // because SetAsArray() fails on zero length
-                             // arrays.
-  }
-  return var.forget();
 }
 
 RefPtr<MediaManager::MgrPromise> MediaManager::EnumerateDevicesImpl(
@@ -3271,40 +3234,6 @@ RefPtr<SinkInfoPromise> MediaManager::GetSinkDevice(nsPIDOMWindowInner* aWindow,
             return SinkInfoPromise::CreateAndReject(NS_ERROR_NOT_AVAILABLE,
                                                     __func__);
           });
-}
-
-/*
- * GetUserMediaDevices - called by the UI-part of getUserMedia from chrome JS.
- */
-
-nsresult MediaManager::GetUserMediaDevices(
-    nsPIDOMWindowInner* aWindow,
-    MozGetUserMediaDevicesSuccessCallback& aOnSuccess, uint64_t aWindowId,
-    const nsAString& aCallID) {
-  MOZ_ASSERT(NS_IsMainThread());
-  if (!aWindowId) {
-    aWindowId = aWindow->WindowID();
-  }
-
-  // Locate + return already-constrained list.
-
-  nsTArray<nsString>* callIDs;
-  if (!mCallIds.Get(aWindowId, &callIDs)) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  for (auto& callID : *callIDs) {
-    RefPtr<GetUserMediaTask> task;
-    if (!aCallID.Length() || aCallID == callID) {
-      if (mActiveCallbacks.Get(callID, getter_AddRefs(task))) {
-        nsCOMPtr<nsIWritableVariant> array =
-            MediaManager::ToJSArray(*task->mMediaDeviceSet);
-        aOnSuccess.Call(array);
-        return NS_OK;
-      }
-    }
-  }
-  return NS_ERROR_UNEXPECTED;
 }
 
 MediaEngine* MediaManager::GetBackend() {

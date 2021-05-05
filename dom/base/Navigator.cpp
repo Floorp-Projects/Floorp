@@ -1325,22 +1325,6 @@ void Navigator::MozGetUserMedia(const MediaStreamConstraints& aConstraints,
       });
 }
 
-void Navigator::MozGetUserMediaDevices(
-    MozGetUserMediaDevicesSuccessCallback& aOnSuccess,
-    NavigatorUserMediaErrorCallback& aOnError, uint64_t aInnerWindowID,
-    const nsAString& aCallID, ErrorResult& aRv) {
-  if (!mWindow || !mWindow->GetOuterWindow() ||
-      mWindow->GetOuterWindow()->GetCurrentInnerWindow() != mWindow) {
-    aRv.Throw(NS_ERROR_NOT_AVAILABLE);
-    return;
-  }
-  RefPtr<MediaManager> manager = MediaManager::Get();
-  // XXXbz aOnError seems to be unused?
-  nsCOMPtr<nsPIDOMWindowInner> window(mWindow);
-  aRv =
-      manager->GetUserMediaDevices(window, aOnSuccess, aInnerWindowID, aCallID);
-}
-
 //*****************************************************************************
 //    Navigator::nsINavigatorBattery
 //*****************************************************************************
