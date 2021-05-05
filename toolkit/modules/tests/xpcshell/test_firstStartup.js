@@ -15,7 +15,7 @@ const PREF_TIMEOUT = "first-startup.timeout";
 add_task(async function test_success() {
   updateAppInfo();
   FirstStartup.init();
-  if (AppConstants.MOZ_NORMANDY) {
+  if (AppConstants.MOZ_NORMANDY || AppConstants.MOZ_UPDATE_AGENT) {
     equal(FirstStartup.state, FirstStartup.SUCCESS);
   } else {
     equal(FirstStartup.state, FirstStartup.UNSUPPORTED);
@@ -27,7 +27,7 @@ add_task(async function test_timeout() {
   Services.prefs.setIntPref(PREF_TIMEOUT, 0);
   FirstStartup.init();
 
-  if (AppConstants.MOZ_NORMANDY) {
+  if (AppConstants.MOZ_NORMANDY || AppConstants.MOZ_UPDATE_AGENT) {
     equal(FirstStartup.state, FirstStartup.TIMED_OUT);
   } else {
     equal(FirstStartup.state, FirstStartup.UNSUPPORTED);
