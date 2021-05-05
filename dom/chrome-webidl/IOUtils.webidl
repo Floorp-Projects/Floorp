@@ -256,7 +256,7 @@ enum WriteMode {
   /**
    * Append to the end of the file.
    *
-   * The file will be created if it does not exist.
+   * This mode will refuse to create the file if it does not exist.
    */
   "append",
   /**

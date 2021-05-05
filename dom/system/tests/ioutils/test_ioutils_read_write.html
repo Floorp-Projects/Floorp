@@ -502,6 +502,16 @@
       const afterAppend = await IOUtils.read(fileName);
       Assert.deepEqual(Array.from(afterAppend), [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], "read bytes should be equal after appending");
     });
+
+    add_task(async function test_write_append_no_create() {
+      const tmpDir = await PathUtils.getTempDir();
+      const fileName = PathUtils.join(tmpDir, "test_ioutils_write_append_create.tmp");
+
+      await Assert.rejects(
+        IOUtils.write(fileName, Uint8Array.of(5, 6, 7, 8, 9), { mode: "append" }),
+        /NotFoundError: Could not open the file at .*/
+      );
+    });
   </script>
 </head>
 
