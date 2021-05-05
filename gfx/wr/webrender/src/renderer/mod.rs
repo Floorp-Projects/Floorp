@@ -3517,10 +3517,15 @@ impl Renderer {
 
         match partial_present_mode {
             Some(PartialPresentMode::Single { dirty_rect }) => {
-                // We have a single dirty rect, so clear only that
-                self.device.clear_target(clear_color,
-                                         Some(1.0),
-                                         Some(draw_target.to_framebuffer_rect(dirty_rect.to_i32())));
+                // On Mali-G77 we have observed artefacts when calling glClear (even with
+                // the empty scissor rect set) after calling eglSetDamageRegion with an
+                // empty damage region. So avoid clearing in that case. See bug 1709548.
+                if !dirty_rect.is_empty() {
+                    // We have a single dirty rect, so clear only that
+                    self.device.clear_target(clear_color,
+                                             Some(1.0),
+                                             Some(draw_target.to_framebuffer_rect(dirty_rect.to_i32())));
+                }
             }
             None => {
                 // Partial present is disabled, so clear the entire framebuffer
