@@ -1,4 +1,2 @@
 component {2ac4e026-cf25-47d5-b067-78d553c3cad8} TestInterfaceJS.js
 contract @mozilla.org/dom/test-interface-js;1 {2ac4e026-cf25-47d5-b067-78d553c3cad8}
-component {4bc6f6f3-e005-4f0a-b42d-4d1663a9013a} TestInterfaceJSMaplike.js
-contract @mozilla.org/dom/test-interface-js-maplike;1 {4bc6f6f3-e005-4f0a-b42d-4d1663a9013a}
