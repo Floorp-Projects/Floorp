@@ -72,7 +72,7 @@ static already_AddRefed<dom::Element> ElementFromPoint(
   return nullptr;
 }
 
-// Get table cell from element or parent.
+// Get table cell from element, parent or grand parent.
 static dom::Element* GetNearbyTableCell(
     const nsCOMPtr<dom::Element>& aElement) {
   nsTableCellFrame* tableCell = do_QueryFrame(aElement->GetPrimaryFrame());
@@ -83,6 +83,12 @@ static dom::Element* GetNearbyTableCell(
     nsTableCellFrame* tableCell = do_QueryFrame(parent->GetPrimaryFrame());
     if (tableCell) {
       return parent;
+    }
+    if (dom::Element* grandParent = parent->GetFlattenedTreeParentElement()) {
+      tableCell = do_QueryFrame(grandParent->GetPrimaryFrame());
+      if (tableCell) {
+        return grandParent;
+      }
     }
   }
   return nullptr;
