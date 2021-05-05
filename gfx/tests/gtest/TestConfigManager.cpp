@@ -983,47 +983,6 @@ TEST_F(GfxConfigManager, WebRenderForceSoftwareForceEnabledEnvvar) {
   EXPECT_TRUE(mFeatures.mWrSoftware.IsEnabled());
 }
 
-TEST_F(GfxConfigManager, WebRenderSoftwareReleaseD3D11Enabled) {
-  mIsNightly = mIsEarlyBetaOrEarlier = false;
-  mMockGfxInfo->mStatusWr = nsIGfxInfo::FEATURE_DENIED;
-  mMockGfxInfo->mStatusWrSoftware = nsIGfxInfo::FEATURE_ALLOW_ALWAYS;
-  ConfigureWebRender();
-
-  EXPECT_FALSE(mFeatures.mWrQualified.IsEnabled());
-  EXPECT_FALSE(mFeatures.mWr.IsEnabled());
-  EXPECT_FALSE(mFeatures.mWrCompositor.IsEnabled());
-  EXPECT_FALSE(mFeatures.mWrAngle.IsEnabled());
-  EXPECT_FALSE(mFeatures.mWrDComp.IsEnabled());
-  EXPECT_FALSE(mFeatures.mWrPartial.IsEnabled());
-  EXPECT_FALSE(mFeatures.mWrShaderCache.IsEnabled());
-  EXPECT_FALSE(mFeatures.mWrOptimizedShaders.IsEnabled());
-  EXPECT_TRUE(mFeatures.mHwCompositing.IsEnabled());
-  EXPECT_TRUE(mFeatures.mGPUProcess.IsEnabled());
-  EXPECT_TRUE(mFeatures.mD3D11HwAngle.IsEnabled());
-  EXPECT_FALSE(mFeatures.mWrSoftware.IsEnabled());
-}
-
-TEST_F(GfxConfigManager, WebRenderSoftwareReleaseD3D11Disabled) {
-  mIsNightly = mIsEarlyBetaOrEarlier = false;
-  mMockGfxInfo->mStatusWr = nsIGfxInfo::FEATURE_DENIED;
-  mMockGfxInfo->mStatusWrSoftware = nsIGfxInfo::FEATURE_ALLOW_ALWAYS;
-  mFeatures.mD3D11Compositing.UserDisable("", ""_ns);
-  ConfigureWebRender();
-
-  EXPECT_FALSE(mFeatures.mWrQualified.IsEnabled());
-  EXPECT_FALSE(mFeatures.mWr.IsEnabled());
-  EXPECT_FALSE(mFeatures.mWrCompositor.IsEnabled());
-  EXPECT_TRUE(mFeatures.mWrAngle.IsEnabled());
-  EXPECT_FALSE(mFeatures.mWrDComp.IsEnabled());
-  EXPECT_TRUE(mFeatures.mWrPartial.IsEnabled());
-  EXPECT_FALSE(mFeatures.mWrShaderCache.IsEnabled());
-  EXPECT_FALSE(mFeatures.mWrOptimizedShaders.IsEnabled());
-  EXPECT_TRUE(mFeatures.mHwCompositing.IsEnabled());
-  EXPECT_TRUE(mFeatures.mGPUProcess.IsEnabled());
-  EXPECT_TRUE(mFeatures.mD3D11HwAngle.IsEnabled());
-  EXPECT_TRUE(mFeatures.mWrSoftware.IsEnabled());
-}
-
 TEST_F(GfxConfigManager, WebRenderSoftwareReleaseWindowsGPUProcessDisabled) {
   mIsNightly = mIsEarlyBetaOrEarlier = false;
   mMockGfxInfo->mStatusWr = nsIGfxInfo::FEATURE_DENIED;

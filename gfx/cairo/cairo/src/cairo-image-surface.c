@@ -1243,6 +1243,9 @@ _cairo_image_compute_color (cairo_image_surface_t      *image)
     int x, y;
     cairo_image_color_t color;
 
+    if (image->width == 0 || image->height == 0)
+	return CAIRO_IMAGE_IS_MONOCHROME;
+
     if (image->format == CAIRO_FORMAT_A1)
 	return CAIRO_IMAGE_IS_MONOCHROME;
 

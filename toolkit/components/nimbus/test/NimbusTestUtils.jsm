@@ -73,6 +73,9 @@ const ExperimentFakes = {
     store = ExperimentManager.store,
     configuration,
   }) {
+    if (!store._isReady) {
+      throw new Error("Store not ready, need to `await ExperimentAPI.ready()`");
+    }
     store.updateRemoteConfigs(feature.featureId, configuration);
 
     return feature.ready();

@@ -22,7 +22,7 @@ add_task(async function testChangingTabVisibilityAffectsInvisiblePlayTime() {
   });
   await pauseMedia(mediaTab);
 
-  info(`measuring play time when tab is in foreground`);
+  info(`measuring play time when tab is in background`);
   await BrowserTestUtils.switchTab(window.gBrowser, originalTab);
   await startMedia({
     mediaTab,
@@ -42,6 +42,22 @@ async function openMediaTab(url) {
   const tab = await BrowserTestUtils.openNewForegroundTab(window.gBrowser, url);
   info(`add content helper functions and variables`);
   await SpecialPowers.spawn(tab.linkedBrowser, [], _ => {
+    content.waitForOnTimeUpdate = element => {
+      return new Promise(resolve => {
+        element.addEventListener(
+          "timeupdate",
+          e => {
+            resolve();
+          },
+          { once: true }
+        );
+      });
+    };
+
+    content.sleep = ms => {
+      return new Promise(resolve => content.setTimeout(resolve, ms));
+    };
+
     content.assertAttributeDefined = (videoChrome, checkType) => {
       ok(videoChrome[checkType] != undefined, `${checkType} exists`);
     };
@@ -53,17 +69,19 @@ async function openMediaTab(url) {
         `${checkType} equals to ${expectedValue}`
       );
     };
-    content.assertValueConstantlyIncreases = (videoChrome, checkType) => {
+    content.assertValueConstantlyIncreases = async (videoChrome, checkType) => {
       content.assertAttributeDefined(videoChrome, checkType);
       const valueSnapshot = videoChrome[checkType];
+      await content.waitForOnTimeUpdate(videoChrome);
       ok(
         videoChrome[checkType] > valueSnapshot,
         `${checkType} keeps increasing`
       );
     };
-    content.assertValueKeptUnchanged = (videoChrome, checkType) => {
+    content.assertValueKeptUnchanged = async (videoChrome, checkType) => {
       content.assertAttributeDefined(videoChrome, checkType);
       const valueSnapshot = videoChrome[checkType];
+      await content.sleep(1000);
       ok(
         videoChrome[checkType] == valueSnapshot,
         `${checkType} keeps unchanged`
@@ -92,17 +110,23 @@ function startMedia({
       );
       const videoChrome = SpecialPowers.wrap(video);
       if (accumulateTime) {
-        content.assertValueConstantlyIncreases(videoChrome, "totalPlayTime");
+        await content.assertValueConstantlyIncreases(
+          videoChrome,
+          "totalPlayTime"
+        );
       } else {
-        content.assertValueKeptUnchanged(videoChrome, "totalPlayTime");
+        await content.assertValueKeptUnchanged(videoChrome, "totalPlayTime");
       }
       if (accumulateInvisibleTime) {
-        content.assertValueConstantlyIncreases(
+        await content.assertValueConstantlyIncreases(
           videoChrome,
           "invisiblePlayTime"
         );
       } else {
-        content.assertValueKeptUnchanged(videoChrome, "invisiblePlayTime");
+        await content.assertValueKeptUnchanged(
+          videoChrome,
+          "invisiblePlayTime"
+        );
       }
     }
   );
@@ -114,7 +138,7 @@ function pauseMedia(tab) {
     video.pause();
     ok(true, "video paused");
     const videoChrome = SpecialPowers.wrap(video);
-    content.assertValueKeptUnchanged(videoChrome, "totalPlayTime");
-    content.assertValueKeptUnchanged(videoChrome, "invisiblePlayTime");
+    await content.assertValueKeptUnchanged(videoChrome, "totalPlayTime");
+    await content.assertValueKeptUnchanged(videoChrome, "invisiblePlayTime");
   });
 }

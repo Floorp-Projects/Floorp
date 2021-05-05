@@ -418,6 +418,7 @@ def _finalize_telemetry_glean(telemetry, is_bootstrap, success):
         get_cpu_brand,
         get_distro_and_version,
         get_psutil_stats,
+        get_shell_info,
     )
 
     mach_metrics = telemetry.metrics(MACH_METRICS_PATH)
@@ -430,6 +431,10 @@ def _finalize_telemetry_glean(telemetry, is_bootstrap, success):
     distro, version = get_distro_and_version()
     system_metrics.distro.set(distro)
     system_metrics.distro_version.set(version)
+
+    vscode_terminal, ssh_connection = get_shell_info()
+    system_metrics.vscode_terminal.set(vscode_terminal)
+    system_metrics.ssh_connection.set(ssh_connection)
 
     has_psutil, logical_cores, physical_cores, memory_total = get_psutil_stats()
     if has_psutil:

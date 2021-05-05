@@ -110,6 +110,11 @@ toolbar[brighttext] {
   position: relative;
 }
 
+:where(#reload-button, #stop-button) > .toolbarbutton-icon,
+:where(#reload-button, #stop-button) > .toolbarbutton-animatable-box {
+  translate: 0 1px; /* The animation is 18px but the other icons are 16px, lower it by 1px so it is vertically centered */
+}
+
 #reload-button > .toolbarbutton-animatable-box,
 #stop-button > .toolbarbutton-animatable-box {
   top: calc(50% - 10px); /* Vertically center the 20px tall animatable image */
