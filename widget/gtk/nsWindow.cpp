@@ -4777,8 +4777,11 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
                                                                : "Utility")));
         if (parentnsWindow) {
           LOG(("    parent window for popup: %p\n", parentnsWindow));
-          gtk_window_set_transient_for(
-              GTK_WINDOW(mShell), GTK_WINDOW(parentnsWindow->GetGtkWidget()));
+          GtkWindow* parentWidget = GTK_WINDOW(parentnsWindow->GetGtkWidget());
+          gtk_window_set_transient_for(GTK_WINDOW(mShell), parentWidget);
+          if (GdkIsWaylandDisplay() && gtk_window_get_modal(parentWidget)) {
+            gtk_window_set_modal(GTK_WINDOW(mShell), true);
+          }
         }
 
         // We need realized mShell at NativeMove().
