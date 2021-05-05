@@ -4985,6 +4985,8 @@
   type: bool
 #if defined(MOZ_WIDGET_ANDROID)
   value: false
+#elif defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
+  value: true
 #else
   value: @IS_EARLY_BETA_OR_EARLIER@
 #endif
@@ -4997,6 +4999,16 @@
     value: @IS_NIGHTLY_BUILD@
     mirror: once
 #endif
+
+# Whether or not fallback to Software WebRender requires the GPU process.
+- name: gfx.webrender.fallback.software.requires-gpu-process
+  type: bool
+#if defined(XP_WIN)
+  value: @IS_NOT_EARLY_BETA_OR_EARLIER@
+#else
+  value: false
+#endif
+  mirror: once
 
 - name: gfx.webrender.program-binary-disk
   type: bool
