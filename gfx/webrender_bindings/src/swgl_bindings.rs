@@ -84,6 +84,7 @@ pub extern "C" fn wr_swgl_set_texture_buffer(
 }
 
 #[no_mangle]
+#[allow(clippy::many_single_char_names)]
 pub extern "C" fn wr_swgl_clear_color_rect(
     ctx: *mut c_void,
     fbo: u32,
