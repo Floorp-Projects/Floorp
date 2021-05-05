@@ -13,12 +13,10 @@
     "use strict";
 
     const { Assert } = ChromeUtils.import("resource://testing-common/Assert.jsm");
-    const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
-
-    const tmpDir = OS.Constants.Path.tmpDir;
 
     add_task(async function iterate_dir_failure() {
-      let notExists = OS.Path.join(tmpDir, 'does_not_exist_dir.tmp.d');
+      const tmpDir = await PathUtils.getTempDir();
+      let notExists = PathUtils.join(tmpDir, 'does_not_exist_dir.tmp.d');
 
       await Assert.rejects(
         IOUtils.getChildren(notExists),
@@ -29,7 +27,7 @@
 
       info('Try to get the children of a regular file');
 
-      let tmpFileName = OS.Path.join(tmpDir, 'iterator_file.tmp');
+      let tmpFileName = PathUtils.join(tmpDir, 'iterator_file.tmp');
       await createFile(tmpFileName)
       await Assert.rejects(IOUtils.getChildren(tmpFileName),
         /Could not get children of file\(.*\) because it is not a directory/,
@@ -42,10 +40,11 @@
     add_task(async function iterate_dir() {
       info('Try to get the children of a multi-level directory hierarchy');
 
-      let root = OS.Path.join(tmpDir, 'iterator.tmp.d');
-      let child1 = OS.Path.join(root, 'child1.tmp');
-      let child2 = OS.Path.join(root, 'child2.tmp');
-      let grandchild = OS.Path.join(child1, 'grandchild.tmp');
+      const tmpDir = await PathUtils.getTempDir();
+      let root = PathUtils.join(tmpDir, 'iterator.tmp.d');
+      let child1 = PathUtils.join(root, 'child1.tmp');
+      let child2 = PathUtils.join(root, 'child2.tmp');
+      let grandchild = PathUtils.join(child1, 'grandchild.tmp');
 
       await createDir(grandchild); // Ancestors will be created.
       await createDir(child2);
@@ -61,7 +60,8 @@
     add_task(async function iterate_empty_dir() {
       info('Try to get the children of an empty directory');
 
-      let emptyDir = OS.Path.join(tmpDir, 'iterator_empty_dir.tmp.d');
+      const tmpDir = await PathUtils.getTempDir();
+      let emptyDir = PathUtils.join(tmpDir, 'iterator_empty_dir.tmp.d');
       await createDir(emptyDir);
 
       is(
