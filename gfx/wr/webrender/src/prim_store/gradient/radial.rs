@@ -385,6 +385,7 @@ pub fn optimize_radial_gradient(
     tile_spacing: &mut LayoutSize,
     clip_rect: &LayoutRect,
     radius: LayoutSize,
+    end_offset: f32,
     extend_mode: ExtendMode,
     stops: &[GradientStopKey],
     solid_parts: &mut dyn FnMut(&LayoutRect, ColorU),
@@ -403,8 +404,8 @@ pub fn optimize_radial_gradient(
     }
 
     // Bounding box of the "interesting" part of the gradient.
-    let min = prim_rect.origin + center.to_vector() - radius.to_vector();
-    let max = prim_rect.origin + center.to_vector() + radius.to_vector();
+    let min = prim_rect.origin + center.to_vector() - radius.to_vector() * end_offset;
+    let max = prim_rect.origin + center.to_vector() + radius.to_vector() * end_offset;
 
     // The (non-repeated) gradient primitive rect.
     let gradient_rect = LayoutRect {
@@ -443,7 +444,6 @@ pub fn optimize_radial_gradient(
         if r < threshold { r = 0.0 }
         if b < threshold { b = 0.0 }
     }
-
 
     if l + t + r + b == 0.0 {
         // No adjustment to make;
