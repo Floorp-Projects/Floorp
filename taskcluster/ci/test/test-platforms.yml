@@ -367,27 +367,27 @@ windows7-32-mingwclang/opt:
 ##
 # MacOS X platforms (matching /macosx.*/)
 
-macosx1100-64-qr/debug:
-    build-platform: macosx64/debug
-    test-sets:
-        - macosx1100-64-jittests
+# macosx1100-64-qr/debug:
+#    build-platform: macosx64/debug
+#    test-sets:
+#        - macosx1100-64-jittests
 
-macosx1100-64-shippable-qr/opt:
-    build-platform: macosx64-shippable/opt
-    test-sets:
-        - macosx1100-64-qr-tests
-        - macosx1100-64-jittests
-        - macosx1100-64-qr-failures-tests
-        - macosx64-talos
-        - browsertime-high-priority
-        - raptor-firefox
+# macosx1100-64-shippable-qr/opt:
+#    build-platform: macosx64-shippable/opt
+#    test-sets:
+#        - macosx1100-64-qr-tests
+#        - macosx1100-64-jittests
+#        - macosx1100-64-qr-failures-tests
+#        - macosx64-talos
+#        - browsertime-high-priority
+#        - raptor-firefox
 
-macosx1100-64-qr/opt:
-    build-platform: macosx64/opt
-    test-sets:
-        - macosx1100-64-qr-tests
-        - macosx1100-64-jittests
-        - macosx1100-64-qr-failures-tests
+# macosx1100-64-qr/opt:
+#    build-platform: macosx64/opt
+#    test-sets:
+#        - macosx1100-64-qr-tests
+#        - macosx1100-64-jittests
+#        - macosx1100-64-qr-failures-tests
 
 macosx1015-64-shippable/opt:
     build-platform: macosx64-shippable/opt
