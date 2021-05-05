@@ -408,9 +408,6 @@
     <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
     <string name="exceptions_empty_message_learn_more_link">Күбрәк белү</string>
 
-    <!-- Description in Quick Settings that tells user tracking protection is off globally for all sites, and links to Settings to turn it on -->
-    <string name="preferences_tracking_protection_turned_off_globally">Тулысынча сүндерелгән, аны кабызу өчен көйләүләргә керегез.</string>
-
     <!-- Preference switch for Telemetry -->
     <string name="preferences_telemetry">Телеметрия</string>
     <!-- Preference switch for usage and technical data collection -->
@@ -736,8 +733,6 @@
     <string name="bookmark_delete_folder_snackbar">%1$s бетерелде</string>
     <!-- Screen title for adding a bookmarks folder -->
     <string name="bookmark_add_folder">Папка өстәү</string>
-    <!-- deprecated: Snackbar title shown after a bookmark has been created. -->
-    <string name="bookmark_created_snackbar">Кыстыргыч ясалды.</string>
     <!-- Snackbar title shown after a bookmark has been created. -->
     <string name="bookmark_saved_snackbar">Кыстыргыч cакланды!</string>
     <!-- Snackbar edit button shown after a bookmark has been created. -->
@@ -986,6 +981,9 @@
     <string name="a11y_dialog_deleted_undo">Кире алу</string>
     <!-- Text for action to confirm deleting a tab or collection shown in a11y dialog -->
     <string name="a11y_dialog_deleted_confirm">Раслау</string>
+    <!-- QR code scanner prompt which appears after scanning a code, but before navigating to it
+        First parameter is the name of the app, second parameter is the URL or text scanned-->
+    <string name="qr_scanner_confirmation_dialog_message">%1$s кушымтасына %2$s сылтамасын ачарга рөхсәт бирү</string>
     <!-- QR code scanner prompt dialog positive option to allow navigation to scanned link -->
     <string name="qr_scanner_dialog_positive">РӨXCӘT ИТҮ</string>
     <!-- QR code scanner prompt dialog positive option to deny navigation to scanned link -->
@@ -1087,6 +1085,8 @@
     <string name="onboarding_firefox_account_signing_in">Керү...</string>
     <!-- text for the button to manually sign into Firefox account. -->
     <string name="onboarding_firefox_account_sign_in_1">Теркәлү</string>
+    <!-- text for the button to stay signed out when presented with an option to automatically sign-in. -->
+    <string name="onboarding_firefox_account_stay_signed_out">Кермичә генә тору</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">Синхронлау кабызылган</string>
     <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
@@ -1097,6 +1097,11 @@
     <string name="onboarding_tracking_protection_strict_button">Катгый (киңәш ителә)</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_option">Катгый</string>
+    <!-- text for the private browsing onboarding card header -->
+    <string name="onboarding_private_browsing_header">Хосусый режимда гизү</string>
+    <!-- text for the private browsing onboarding card description
+    The first parameter is an icon that represents private browsing -->
+    <string name="onboarding_private_browsing_description1">Бер тапкыр гына хосусый таб ачу өчен %s тамгачыгына басыгыз.</string>
     <!-- text for the private browsing onbording card button, that launches settings -->
     <string name="onboarding_private_browsing_button">Көйләүләрне ачу</string>
     <!-- text for the privacy notice onboarding card header -->
