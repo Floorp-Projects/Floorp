@@ -1,4 +1,4 @@
-// |jit-test| skip-if: !wasmSimdEnabled() || !hasDisassembler() || wasmCompileMode() != "ion" || !getBuildConfiguration().x64; include:codegen-x64-test.js
+// |jit-test| skip-if: !wasmSimdEnabled() || !hasDisassembler() || wasmCompileMode() != "ion" || !getBuildConfiguration().x64 || getBuildConfiguration().simulator; include:codegen-x64-test.js
 
 // Test that constants that can be synthesized are synthesized.  See README-codegen.md
 // for general information about this type of test case.

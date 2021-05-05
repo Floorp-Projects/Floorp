@@ -1,4 +1,4 @@
-// |jit-test| skip-if: !wasmSimdEnabled() || !hasDisassembler() || wasmCompileMode() != "ion" || !getBuildConfiguration().x64; include:codegen-x64-test.js
+// |jit-test| skip-if: !wasmSimdEnabled() || !hasDisassembler() || wasmCompileMode() || getBuildConfiguration().simulator; include:codegen-x64-test.js
 
 // Test that there are no extraneous moves for variable SIMD negate, abs, and
 // not instructions. See README-codegen.md for general information about this
