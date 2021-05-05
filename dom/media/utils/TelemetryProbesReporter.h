@@ -7,7 +7,7 @@
 
 #include "MediaInfo.h"
 #include "mozilla/Maybe.h"
-#include "mozilla/TimeStamp.h"
+#include "mozilla/AwakeTimeStamp.h"
 #include "nsISupportsImpl.h"
 
 namespace mozilla {
@@ -67,22 +67,22 @@ class TelemetryProbesReporter final {
       if (IsStarted()) {
         return;
       }
-      mStartTime = TimeStamp::Now();
+      mStartTime = Some(AwakeTimeStamp::NowLoRes());
     }
     void Pause() {
       if (!IsStarted()) {
         return;
       }
-      mSum = (TimeStamp::Now() - mStartTime);
-      mStartTime = TimeStamp();
+      mSum = (AwakeTimeStamp::NowLoRes() - mStartTime.value());
+      mStartTime = Nothing();
     }
-    bool IsStarted() const { return !mStartTime.IsNull(); }
+    bool IsStarted() const { return mStartTime.isSome(); }
 
     double GetAndClearTotal() {
       MOZ_ASSERT(!IsStarted(), "only call this when accumulator is paused");
       double total = mSum.ToSeconds();
-      mStartTime = TimeStamp();
-      mSum = TimeDuration();
+      mStartTime = Nothing();
+      mSum = AwakeTimeDuration();
       return total;
     }
 
@@ -90,12 +90,12 @@ class TelemetryProbesReporter final {
       if (!IsStarted()) {
         return mSum.ToSeconds();
       }
-      return (TimeStamp::Now() - mStartTime).ToSeconds();
+      return (AwakeTimeStamp::NowLoRes() - mStartTime.value()).ToSeconds();
     }
 
    private:
-    TimeStamp mStartTime;
-    TimeDuration mSum;
+    Maybe<AwakeTimeStamp> mStartTime;
+    AwakeTimeDuration mSum;
   };
 
   // The owner is HTMLMediaElement that is guaranteed being always alive during
