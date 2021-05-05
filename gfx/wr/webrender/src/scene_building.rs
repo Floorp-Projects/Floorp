@@ -549,7 +549,7 @@ impl<'a> SceneBuilder<'a> {
             containing_block_stack: Vec::new(),
             raster_space_stack: vec![RasterSpace::Screen],
             prim_store: PrimitiveStore::new(&stats.prim_store_stats),
-            clip_store: ClipStore::new(),
+            clip_store: ClipStore::new(&stats.clip_store_stats),
             interners,
             rf_mapper: ReferenceFrameMapper::new(),
             external_scroll_mapper: ScrollOffsetMapper::new(),
