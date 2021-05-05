@@ -7,7 +7,7 @@ use std::ffi::OsString;
 use std::fs::{create_dir_all, read_dir, read_to_string, File};
 use std::io::{Error, ErrorKind};
 use std::io::{Read, Write};
-use std::path::PathBuf;
+use std::path::{PathBuf, Path};
 use std::rc::Rc;
 use std::sync::Arc;
 
@@ -19,7 +19,7 @@ use webrender::{ProgramBinary, ProgramCache, ProgramCacheObserver, ProgramSource
 
 const MAX_LOAD_TIME_MS: u64 = 400;
 
-fn deserialize_program_binary(path: &PathBuf) -> Result<Arc<ProgramBinary>, Error> {
+fn deserialize_program_binary(path: &Path) -> Result<Arc<ProgramBinary>, Error> {
     let mut buf = vec![];
     let mut file = File::open(path)?;
     file.read_to_end(&mut buf)?;

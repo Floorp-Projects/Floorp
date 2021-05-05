@@ -2,6 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#![allow(clippy::missing_safety_doc)]
+#![allow(clippy::not_unsafe_ptr_arg_deref)]
+
 use gleam::gl;
 use std::cell::RefCell;
 #[cfg(not(target_os = "macos"))]
@@ -240,11 +243,11 @@ pub struct WrVecU8 {
 }
 
 impl WrVecU8 {
-    fn to_vec(self) -> Vec<u8> {
+    fn into_vec(self) -> Vec<u8> {
         unsafe { Vec::from_raw_parts(self.data, self.length, self.capacity) }
     }
 
-    // Equivalent to `to_vec` but clears self instead of consuming the value.
+    // Equivalent to `into_vec` but clears self instead of consuming the value.
     fn flush_into_vec(&mut self) -> Vec<u8> {
         self.convert_into_vec::<u8>()
     }
@@ -299,7 +302,7 @@ pub extern "C" fn wr_vec_u8_reserve(v: &mut WrVecU8, len: usize) {
 
 #[no_mangle]
 pub extern "C" fn wr_vec_u8_free(v: WrVecU8) {
-    v.to_vec();
+    v.into_vec();
 }
 
 #[repr(C)]
@@ -357,18 +360,18 @@ pub struct WrImageDescriptor {
     pub prefer_compositor_surface: bool,
 }
 
-impl<'a> Into<ImageDescriptor> for &'a WrImageDescriptor {
-    fn into(self) -> ImageDescriptor {
+impl<'a> From<&'a WrImageDescriptor> for ImageDescriptor {
+    fn from(desc: &'a WrImageDescriptor) -> ImageDescriptor {
         let mut flags = ImageDescriptorFlags::empty();
 
-        if self.opacity == OpacityType::Opaque {
+        if desc.opacity == OpacityType::Opaque {
             flags |= ImageDescriptorFlags::IS_OPAQUE;
         }
 
         ImageDescriptor {
-            size: DeviceIntSize::new(self.width, self.height),
-            stride: if self.stride != 0 { Some(self.stride) } else { None },
-            format: self.format,
+            size: DeviceIntSize::new(desc.width, desc.height),
+            stride: if desc.stride != 0 { Some(desc.stride) } else { None },
+            format: desc.format,
             offset: 0,
             flags,
         }
@@ -1173,10 +1176,7 @@ fn wr_device_new(gl_context: *mut c_void, pc: Option<&mut WrProgramCache>) -> De
 
     let use_optimized_shaders = unsafe { gfx_wr_use_optimized_shaders() };
 
-    let cached_programs = match pc {
-        Some(cached_programs) => Some(Rc::clone(cached_programs.rc_get())),
-        None => None,
-    };
+    let cached_programs = pc.map(|cached_programs| Rc::clone(cached_programs.rc_get()));
 
     Device::new(
         gl,
@@ -1419,7 +1419,7 @@ impl MappableCompositor for WrCompositor {
             );
         }
 
-        if tile_info.data != ptr::null_mut() && tile_info.stride != 0 {
+        if !tile_info.data.is_null() && tile_info.stride != 0 {
             Some(tile_info)
         } else {
             None
@@ -1499,14 +1499,14 @@ pub extern "C" fn wr_window_new(
 ) -> bool {
     assert!(unsafe { is_in_render_thread() });
 
-    let software = swgl_context != ptr::null_mut();
+    let software = !swgl_context.is_null();
     let (gl, sw_gl) = if software {
         let ctx = swgl::Context::from(swgl_context);
         ctx.make_current();
         (Rc::new(ctx) as Rc<dyn gl::Gl>, Some(ctx))
     } else {
         let gl = unsafe {
-            if gl_context == ptr::null_mut() {
+            if gl_context.is_null() {
                 panic!("Native GL context required when not using SWGL!");
             } else if is_glcontext_gles(gl_context) {
                 gl::GlesFns::load_with(|symbol| get_proc_address(gl_context, symbol))
@@ -1530,7 +1530,7 @@ pub extern "C" fn wr_window_new(
         }
     };
 
-    let upload_method = if gl_context != ptr::null_mut() && unsafe { is_glcontext_angle(gl_context) } {
+    let upload_method = if !gl_context.is_null() && unsafe { is_glcontext_angle(gl_context) } {
         UploadMethod::Immediate
     } else {
         UploadMethod::PixelBuffer(ONE_TIME_USAGE_HINT)
@@ -1542,10 +1542,7 @@ pub extern "C" fn wr_window_new(
         ShaderPrecacheFlags::empty()
     };
 
-    let cached_programs = match program_cache {
-        Some(program_cache) => Some(Rc::clone(&program_cache.rc_get())),
-        None => None,
-    };
+    let cached_programs = program_cache.map(|program_cache| Rc::clone(&program_cache.rc_get()));
 
     let color = if cfg!(target_os = "android") {
         // The color is for avoiding black flash before receiving display list.
@@ -1684,7 +1681,7 @@ pub extern "C" fn wr_window_new(
 
 #[no_mangle]
 pub unsafe extern "C" fn wr_api_free_error_msg(msg: *mut c_char) {
-    if msg != ptr::null_mut() {
+    if !msg.is_null() {
         CString::from_raw(msg);
     }
 }
@@ -2489,10 +2486,7 @@ pub extern "C" fn wr_dp_push_stacking_context(
         .collect();
 
     let transform_ref = unsafe { transform.as_ref() };
-    let mut transform_binding = match transform_ref {
-        Some(t) => Some(PropertyBinding::Value(*t)),
-        None => None,
-    };
+    let mut transform_binding = transform_ref.map(|t| PropertyBinding::Value(*t));
 
     let computed_ref = unsafe { params.computed_transform.as_ref() };
     let opacity_ref = unsafe { params.opacity.as_ref() };
@@ -2519,7 +2513,7 @@ pub extern "C" fn wr_dp_push_stacking_context(
                 transform_binding = Some(PropertyBinding::Binding(
                     PropertyBindingKey::new(anim.id),
                     // Same as above opacity case.
-                    transform_ref.cloned().unwrap_or(LayoutTransform::identity()),
+                    transform_ref.cloned().unwrap_or_else(LayoutTransform::identity),
                 ));
             }
             _ => unreachable!("{:?} should not create a stacking context", anim.effect_type),
