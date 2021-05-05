@@ -5,6 +5,12 @@
 var ta, f, tb, s, tc;
 var i = 0;
 
+// This test loops repeatedly through its "boom" functions. We place an upper
+// bound on how many loops we'll allow, in case the repeated mutations/paints
+// block the test harness from considering the test to be done.
+var loopCount = 0;
+const maxLoopCount = 20;
+
 function boom1()
 {
   var r = document.body; 
@@ -43,7 +49,9 @@ function boom3()
   ta.data = " E " + ta.data;
   document.body.removeChild(s);
 
-  setTimeout(boom1, 10);
+  if (++loopCount < maxLoopCount) {
+    setTimeout(boom1, 10);
+  }
 }
 
 </script>
