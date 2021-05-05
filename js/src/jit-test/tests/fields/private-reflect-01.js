@@ -1,3 +1,5 @@
+// |jit-test| --enable-ergonomic-brand-checks
+
 function rp(x) {
   return Reflect.parse(x);
 };
@@ -7,6 +9,15 @@ rp(`(
       static #m = 'test262';
     }
   )`);
+
+rp(`(
+  class {
+    static #m = 'test262';
+    constructor() {
+      #m in {};
+    }
+  }
+)`);
 
 rp(`(
     class {
