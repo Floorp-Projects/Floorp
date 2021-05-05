@@ -853,10 +853,10 @@ impl Moz2dBlobImageHandler {
                         if !unsafe { HasFontData(instance.font_key) } {
                             let template = resources.get_font_data(instance.font_key);
                             match template {
-                                &FontTemplate::Raw(ref data, ref index) => unsafe {
+                                FontTemplate::Raw(ref data, ref index) => unsafe {
                                     AddFontData(instance.font_key, data.as_ptr(), data.len(), *index, data);
                                 },
-                                &FontTemplate::Native(ref handle) => {
+                                FontTemplate::Native(ref handle) => {
                                     process_native_font_handle(instance.font_key, handle);
                                 }
                             }
