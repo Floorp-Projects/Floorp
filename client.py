@@ -62,7 +62,7 @@ def do_hg_replace(dir, repository, tag, exclusions, hg):
 def toggle_trailing_blank_line(depname):
     """If the trailing line is empty, then we'll delete it.
     Otherwise we'll add a blank line."""
-    lines = open(depname, "r").readlines()
+    lines = open(depname, "rb").readlines()
     if not lines:
         print("unexpected short file", file=sys.stderr)
         return
