@@ -1015,7 +1015,3 @@ shell-option(--enable-iterator-helpers) script non262/Iterator/prototype/take/le
 shell-option(--enable-iterator-helpers) script non262/Iterator/prototype/take/name.js
 shell-option(--enable-iterator-helpers) script non262/Iterator/prototype/take/take.js
 shell-option(--enable-iterator-helpers) script non262/Iterator/prototype/take/take-more-than-available.js
-
-# New Ergonomic Brand Check Tests: Failure to find private method https://bugzilla.mozilla.org/show_bug.cgi?id=1706763
-skip script test262/language/expressions/in/private-field-presence-method.js
-skip script test262/language/expressions/in/private-field-presence-method-shadowed.js

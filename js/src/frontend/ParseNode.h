@@ -209,6 +209,7 @@ class FunctionBox;
   F(GeExpr, ListNode)                                            \
   F(InstanceOfExpr, ListNode)                                    \
   F(InExpr, ListNode)                                            \
+  F(PrivateInExpr, ListNode)                                     \
   F(LshExpr, ListNode)                                           \
   F(RshExpr, ListNode)                                           \
   F(UrshExpr, ListNode)                                          \
