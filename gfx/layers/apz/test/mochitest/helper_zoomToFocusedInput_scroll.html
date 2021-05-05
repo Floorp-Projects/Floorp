@@ -3,6 +3,7 @@
   <head>
   <title>Checking zoomToFocusedInput scrolls that focused input element is visible position</title>
   <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
   <script src="/tests/SimpleTest/paint_listener.js"></script>
   </head>
 <body>
@@ -14,11 +15,14 @@
 async function test() {
   is(0, window.scrollY, "scroll position starts at zero");
   input1.focus();
+  await waitToClearOutAnyPotentialScrolls(window);
   isnot(0, window.scrollY, "scroll position isn't top");
   window.scrollTo(0, 0);
+  await waitToClearOutAnyPotentialScrolls(window);
   is(0, window.scrollY, "scroll position is top");
 
   let utils = SpecialPowers.getDOMWindowUtils(window);
+  let transformEndPromise = promiseTransformEnd();
   utils.zoomToFocusedInput();
   isnot(0, window.scrollY, "scroll position isn't top");
 
@@ -26,13 +30,7 @@ async function test() {
   // cancelled by a main thread scroll position update triggered by
   // the ScrollContentIntoView() operation performed by zoomToFocusedInput().
 
-  // Tick the refresh driver enough to let the zoom animation run
-  // to completion.
-  utils.advanceTimeAndRefresh(0);
-  for (let i = 0; i < 100; i++) {
-    utils.advanceTimeAndRefresh(16);
-  }
-  utils.restoreNormalRefresh();
+  await transformEndPromise;
   await promiseApzFlushedRepaints();
 
   // Check that the zoom animation performed additional scrolling

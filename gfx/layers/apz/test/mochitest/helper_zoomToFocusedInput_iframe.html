@@ -4,6 +4,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Checking zoomToFocusedInput scrolls that focused element is into iframe</title>
   <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
   <script src="/tests/SimpleTest/paint_listener.js"></script>
   </head>
 <body>
@@ -22,13 +23,19 @@ async function test() {
     textarea.value += "foo\n";
   }
 
+  let win = iframe.contentWindow;
+
   iframe.focus();
   textarea.focus();
 
+  await waitToClearOutAnyPotentialScrolls(win);
+
   textarea.setSelectionRange(0, 0);
   window.scrollTo(0, 0);
+  await waitToClearOutAnyPotentialScrolls(win);
   is(0, window.scrollY, "scroll position is reset");
 
+  let transformEndPromise = promiseTransformEnd();
   utils.zoomToFocusedInput();
   await promiseApzFlushedRepaints();
 
@@ -36,11 +43,16 @@ async function test() {
   ok(iframe.contentWindow.scrollY > 0, "scroll position into iframe isn't top");
   let prevPosY = window.scrollY;
 
+  await transformEndPromise;
+
   window.scrollTo(0, 0);
+  await waitToClearOutAnyPotentialScrolls(win);
   is(0, window.scrollY, "scroll position is reset");
 
   textarea.setSelectionRange(textarea.value.length, textarea.value.length);
+  transformEndPromise = promiseTransformEnd();
   utils.zoomToFocusedInput();
+  await transformEndPromise;
   await promiseApzFlushedRepaints();
 
   ok(window.scrollY > 0, "scroll position isn't top");
