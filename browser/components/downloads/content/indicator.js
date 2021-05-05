@@ -475,7 +475,7 @@ const DownloadsIndicatorView = {
           // We use a minimum of 5% to ensure something is always visible
           this.indicator.style.setProperty(
             "--download-progress-pcent",
-            `${Math.max(5, this._percentComplete)}%`
+            `${Math.max(10, this._percentComplete)}%`
           );
         } else {
           this.indicator.removeAttribute("progress");
