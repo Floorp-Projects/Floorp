@@ -4418,9 +4418,9 @@ SurfaceFromElementResult CanvasRenderingContext2D::CachedSurfaceFromElement(
     return res;
   }
 
-  int32_t corsmode = imgIRequest::CORS_NONE;
+  int32_t corsmode = CORS_NONE;
   if (NS_SUCCEEDED(imgRequest->GetCORSMode(&corsmode))) {
-    res.mCORSUsed = corsmode != imgIRequest::CORS_NONE;
+    res.mCORSUsed = corsmode != CORS_NONE;
   }
 
   res.mSize = res.mIntrinsicSize = res.mSourceSurface->GetSize();

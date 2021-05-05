@@ -124,23 +124,7 @@ interface imgIRequest : nsIRequest
   readonly attribute bool multipart;
 
   /**
-   * CORS modes images can be loaded with.
-   *
-   * By default, all images are loaded with CORS_NONE and cannot be used
-   * cross-origin in context like WebGL.
-   *
-   * If an HTML img element has the crossorigin attribute set, the imgIRequest
-   * will be validated for cross-origin usage with CORS, and, if successful,
-   * will have its CORS mode set to the relevant type.
-   */
-  //@{
-  const long CORS_NONE = 1;
-  const long CORS_ANONYMOUS = 2;
-  const long CORS_USE_CREDENTIALS = 3;
-  //@}
-
-  /**
-   * The CORS mode that this image was loaded with.
+   * The CORS mode that this image was loaded with (a mozilla::CORSMode).
    */
   readonly attribute long CORSMode;
 

@@ -7107,7 +7107,7 @@ SurfaceFromElementResult nsLayoutUtils::SurfaceFromElement(
 
   int32_t corsmode;
   if (NS_SUCCEEDED(imgRequest->GetCORSMode(&corsmode))) {
-    result.mCORSUsed = (corsmode != imgIRequest::CORS_NONE);
+    result.mCORSUsed = corsmode != CORS_NONE;
   }
 
   bool hadCrossOriginRedirects = true;
