@@ -12,6 +12,9 @@ const { ExperimentFakes } = ChromeUtils.import(
 const { ExperimentManager } = ChromeUtils.import(
   "resource://nimbus/lib/ExperimentManager.jsm"
 );
+const { RemoteSettingsExperimentLoader } = ChromeUtils.import(
+  "resource://nimbus/lib/RemoteSettingsExperimentLoader.jsm"
+);
 const { PromiseUtils } = ChromeUtils.import(
   "resource://gre/modules/PromiseUtils.jsm"
 );
@@ -746,4 +749,35 @@ add_task(async function test_getStudiesEnabled() {
     Services.prefs.getBoolPref("app.shield.optoutstudies.enabled"),
     "about:studies is enabled if the pref is enabled"
   );
+});
+
+add_task(async function test_forceEnroll() {
+  let sandbox = sinon.createSandbox();
+  let stub = sandbox.stub(RemoteSettingsExperimentLoader, "optInToExperiment");
+
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url:
+        "about:studies?optin_collection=collection123&optin_branch=branch123&optin_slug=slug123",
+    },
+    async browser => {
+      await SpecialPowers.spawn(browser, [], async () => {
+        await ContentTaskUtils.waitForCondition(
+          () => content.document.querySelector(".info-box-content"),
+          "Wait for content to load"
+        );
+
+        return true;
+      });
+    }
+  );
+
+  Assert.ok(stub.called, "Called optInToExperiment");
+  Assert.deepEqual(
+    stub.firstCall.args[0],
+    { slug: "slug123", branch: "branch123", collection: "collection123" },
+    "Called with correct arguments"
+  );
+  sandbox.restore();
 });
