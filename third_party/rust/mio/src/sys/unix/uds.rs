@@ -187,6 +187,7 @@ impl UnixSocket {
                 iov_len: buf.len(),
             };
             struct Cmsg {
+                #[allow(dead_code)]
                 hdr: libc::cmsghdr,
                 data: [libc::c_int; 1],
             }
