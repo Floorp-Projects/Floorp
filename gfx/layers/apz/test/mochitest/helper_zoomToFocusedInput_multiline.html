@@ -3,6 +3,7 @@
   <head>
   <title>Checking zoomToFocusedInput scrolls that focused non-input element is visible position</title>
   <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
   <script src="/tests/SimpleTest/paint_listener.js"></script>
   </head>
 <body>
@@ -27,18 +28,26 @@ async function test() {
   let selection = window.getSelection();
   selection.collapse(div.firstChild, 0);
   window.scrollTo(0, 0);
+  await waitToClearOutAnyPotentialScrolls(window);
   is(0, window.scrollY, "scroll position is reset");
+  let transformEndPromise = promiseTransformEnd();
   utils.zoomToFocusedInput();
+  await transformEndPromise;
   await promiseApzFlushedRepaints();
   ok(window.scrollY > 0, "scroll position isn't top");
+
   let prevY = window.scrollY;
 
   selection.collapse(document.getElementById("last").firstChild, 0);
   window.scrollTo(0, 0);
+  await waitToClearOutAnyPotentialScrolls(window);
   is(0, window.scrollY, "scroll position is reset");
+  transformEndPromise = promiseTransformEnd();
   utils.zoomToFocusedInput();
   await promiseApzFlushedRepaints();
   ok(prevY < window.scrollY, "scroll position is visibile position of caret");
+
+  await transformEndPromise;
 
   document.getElementById("content").removeChild(div);
 
@@ -51,20 +60,30 @@ async function test() {
   document.getElementById("content").appendChild(textarea);
   textarea.focus();
 
+  await waitToClearOutAnyPotentialScrolls(window);
+
   textarea.setSelectionRange(0, 0);
   window.scrollTo(0, 0);
+  await waitToClearOutAnyPotentialScrolls(window);
   is(0, window.scrollY, "scroll position is reset");
+  transformEndPromise = promiseTransformEnd();
   utils.zoomToFocusedInput();
   await promiseApzFlushedRepaints();
   ok(window.scrollY > 0, "scroll position isn't top");
   prevY = window.scrollY;
 
+  await transformEndPromise;
+
   textarea.setSelectionRange(textarea.value.length, textarea.value.length);
   window.scrollTo(0, 0);
+  await waitToClearOutAnyPotentialScrolls(window);
   is(0, window.scrollY, "scroll position is reset");
+  transformEndPromise = promiseTransformEnd();
   utils.zoomToFocusedInput();
   await promiseApzFlushedRepaints();
   ok(prevY < window.scrollY, "scroll position is visibile position of caret");
+
+  await transformEndPromise;
 
   document.getElementById("content").removeChild(textarea);
 }
