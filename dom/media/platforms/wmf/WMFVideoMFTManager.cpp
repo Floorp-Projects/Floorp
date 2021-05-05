@@ -523,7 +523,7 @@ TimeUnit WMFVideoMFTManager::GetSampleDurationOrLastKnownDuration(
     // A negative duration will cause issues up the stack. It's also unclear
     // why this would happen, but the API allows for it by returning a signed
     // int, so we handle it here.
-    LOG("Got negative sample duration: %d seconds. Using mLastDuration "
+    LOG("Got negative sample duration: %f seconds. Using mLastDuration "
         "instead.",
         duration.ToSeconds());
   } else {
