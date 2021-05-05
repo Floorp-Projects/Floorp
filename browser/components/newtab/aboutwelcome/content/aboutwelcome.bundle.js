@@ -192,6 +192,7 @@ class AboutWelcome extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureComp
       message_id: props.messageId,
       utm_term: props.UTMTerm,
       design: props.design,
+      transitions: props.transitions,
       background_url: props.background_url
     });
   }
@@ -287,7 +288,9 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
+ // Amount of milliseconds for all transitions to complete (including delays).
 
+const TRANSITION_OUT_TIME = 1000;
 const MultiStageAboutWelcome = props => {
   const [index, setScreenIndex] = Object(react__WEBPACK_IMPORTED_MODULE_0__["useState"])(0);
   Object(react__WEBPACK_IMPORTED_MODULE_0__["useEffect"])(() => {
@@ -324,15 +327,36 @@ const MultiStageAboutWelcome = props => {
         setFlowParams(await _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_2__["AboutWelcomeUtils"].fetchFlowParams(metricsFlowUri));
       }
     })();
-  }, [metricsFlowUri]); // Transition to next screen, opening about:home on last screen button CTA
+  }, [metricsFlowUri]); // Allow "in" style to render to actually transition towards regular state,
+  // which also makes using browser back/forward navigation skip transitions.
 
-  const handleTransition = index < props.screens.length - 1 ? () => setScreenIndex(prevState => prevState + 1) : () => _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_2__["AboutWelcomeUtils"].handleUserAction({
-    type: "OPEN_ABOUT_PAGE",
-    data: {
-      args: "home",
-      where: "current"
+  const [transition, setTransition] = Object(react__WEBPACK_IMPORTED_MODULE_0__["useState"])(props.transitions ? "in" : "");
+  Object(react__WEBPACK_IMPORTED_MODULE_0__["useEffect"])(() => {
+    if (transition === "in") {
+      requestAnimationFrame(() => requestAnimationFrame(() => setTransition("")));
     }
-  }); // Update top sites with default sites by region when region is available
+  }, [transition]); // Transition to next screen, opening about:home on last screen button CTA
+
+  const handleTransition = () => {
+    // Start transitioning things "out" immediately when moving forwards.
+    setTransition(props.transitions ? "out" : ""); // Actually move forwards after all transitions finish.
+
+    setTimeout(() => {
+      if (index < props.screens.length - 1) {
+        setTransition(props.transitions ? "in" : "");
+        setScreenIndex(prevState => prevState + 1);
+      } else {
+        _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_2__["AboutWelcomeUtils"].handleUserAction({
+          type: "OPEN_ABOUT_PAGE",
+          data: {
+            args: "home",
+            where: "current"
+          }
+        });
+      }
+    }, props.transitions ? TRANSITION_OUT_TIME : 0);
+  }; // Update top sites with default sites by region when region is available
+
 
   const [region, setRegion] = Object(react__WEBPACK_IMPORTED_MODULE_0__["useState"])(null);
   Object(react__WEBPACK_IMPORTED_MODULE_0__["useEffect"])(() => {
@@ -379,7 +403,7 @@ const MultiStageAboutWelcome = props => {
     })();
   }, [useImportable, region]);
   return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(react__WEBPACK_IMPORTED_MODULE_0___default.a.Fragment, null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
-    className: `outer-wrapper onboardingContainer ${props.design}`,
+    className: `outer-wrapper onboardingContainer ${props.design} transition-${transition}`,
     style: {
       backgroundImage: `url(${props.background_url})`
     }

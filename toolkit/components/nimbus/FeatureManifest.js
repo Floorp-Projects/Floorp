@@ -54,6 +54,9 @@ const FeatureManifest = {
         type: "boolean",
         fallbackPref: "browser.aboutwelcome.skipFocus",
       },
+      transitions: {
+        type: "boolean",
+      },
     },
   },
   newtab: {
