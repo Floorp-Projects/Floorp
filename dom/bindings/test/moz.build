@@ -15,7 +15,6 @@ Library("dombindings_test_s")
 EXTRA_COMPONENTS += [
     "TestInterfaceJS.js",
     "TestInterfaceJS.manifest",
-    "TestInterfaceJSMaplike.js",
 ]
 
 MOCHITEST_MANIFESTS += ["mochitest.ini"]

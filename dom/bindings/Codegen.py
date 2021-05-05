@@ -19884,24 +19884,6 @@ class CGJSImplClass(CGBindingImplClass):
             )
         )
 
-        if (
-            descriptor.interface.isJSImplemented()
-            and descriptor.interface.maplikeOrSetlikeOrIterable
-            and descriptor.interface.maplikeOrSetlikeOrIterable.isMaplike()
-        ):
-            self.methodDecls.append(
-                ClassMethod(
-                    "__OnGet",
-                    "void",
-                    [
-                        Argument("JS::Handle<JS::Value>", "aKey"),
-                        Argument("JS::Handle<JS::Value>", "aValue"),
-                        Argument("ErrorResult&", "aRv"),
-                    ],
-                    body="mImpl->__OnGet(aKey, aValue, aRv);\n",
-                )
-            )
-
         CGClass.__init__(
             self,
             descriptor.name,
@@ -20406,15 +20388,6 @@ class CGCallbackInterface(CGCallback):
             methods.append(CGJSImplInitOperation(sigs[0], descriptor))
             needInitId = True
 
-        needOnGetId = False
-        if (
-            iface.isJSImplemented()
-            and iface.maplikeOrSetlikeOrIterable
-            and iface.maplikeOrSetlikeOrIterable.isMaplike()
-        ):
-            methods.append(CGJSImplOnGetOperation(descriptor))
-            needOnGetId = True
-
         idlist = [
             descriptor.binaryNameFor(m.identifier.name)
             for m in iface.members
@@ -20422,8 +20395,6 @@ class CGCallbackInterface(CGCallback):
         ]
         if needInitId:
             idlist.append("__init")
-        if needOnGetId:
-            idlist.append("__onget")
 
         if iface.isJSImplemented() and iface.getExtendedAttribute(
             "WantsEventListenerHooks"
@@ -21137,35 +21108,6 @@ class CGJSImplInitOperation(CallbackOperationBase):
         return "__init"
 
 
-class CGJSImplOnGetOperation(CallbackOperationBase):
-    """
-    Codegen the __OnGet() method used to notify the JS impl that a get() is
-    happening on a JS-implemented maplike.  This method takes two arguments
-    (key and value) and returns nothing.
-    """
-
-    def __init__(self, descriptor):
-        CallbackOperationBase.__init__(
-            self,
-            (
-                BuiltinTypes[IDLBuiltinType.Types.void],
-                [
-                    FakeArgument(BuiltinTypes[IDLBuiltinType.Types.any], None, "key"),
-                    FakeArgument(BuiltinTypes[IDLBuiltinType.Types.any], None, "value"),
-                ],
-            ),
-            "__onget",
-            "__OnGet",
-            descriptor,
-            singleOperation=False,
-            rethrowContentException=True,
-            spiderMonkeyInterfacesAreStructs=True,
-        )
-
-    def getPrettyName(self):
-        return "__onget"
-
-
 class CGJSImplEventHookOperation(CallbackOperationBase):
     """
     Codegen the hooks on a JS impl for adding/removing event listeners.
@@ -21546,28 +21488,7 @@ class CGMaplikeOrSetlikeMethodGenerator(CGThing):
             ]
 
         arguments = ["&result"]
-        callOnGet = []
-        if (
-            self.descriptor.interface.isJSImplemented()
-            and not self.helperImpl  # For C++ MaplikeHelper Get method, we don't notify underlying js implementation
-        ):
-            callOnGet = [
-                CGGeneric(
-                    dedent(
-                        """
-                {
-                  JS::ExposeValueToActiveJS(result);
-                  ErrorResult onGetResult;
-                  self->__OnGet(arg0Val, result, onGetResult);
-                  if (onGetResult.MaybeSetPendingException(cx)) {
-                    return false;
-                  }
-                }
-                """
-                    )
-                )
-            ]
-        return self.mergeTuples(r, (code, arguments, callOnGet))
+        return self.mergeTuples(r, (code, arguments, []))
 
     def has(self):
         """
@@ -22012,13 +21933,6 @@ class GlobalGenRoots:
             if d.interface.isJSImplemented() and d.interface.ctor():
                 # We'll have an __init() method.
                 members.append(FakeMember("__init"))
-            if (
-                d.interface.isJSImplemented()
-                and d.interface.maplikeOrSetlikeOrIterable
-                and d.interface.maplikeOrSetlikeOrIterable.isMaplike()
-            ):
-                # We'll have an __onget() method.
-                members.append(FakeMember("__onget"))
             if d.interface.isJSImplemented() and d.interface.getExtendedAttribute(
                 "WantsEventListenerHooks"
             ):
