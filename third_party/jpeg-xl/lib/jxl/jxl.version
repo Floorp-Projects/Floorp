@@ -1,7 +1,0 @@
-JXL_0 {
-  global:
-    Jxl*;
-
-  local:
-    *;
-};
