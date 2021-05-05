@@ -1,5 +1,0 @@
-{
-  extern "C" {
-    jpegxl_*;
-  };
-};
