@@ -172,3 +172,7 @@ chrome/toolkit/skin/classic/mozapps/extensions/category-discover.svg
 # Bug 1700124 - De-duplicate browser/themes/shared icons
 browser/chrome/browser/content/activity-stream/data/content/assets/glyph-add-16.svg
 browser/chrome/browser/skin/classic/browser/zoom-in.svg
+
+# Bug 1709445 - De-duplicate history icons
+browser/chrome/browser/skin/classic/browser/history.svg
+browser/chrome/browser/skin/classic/browser/places/history.svg
