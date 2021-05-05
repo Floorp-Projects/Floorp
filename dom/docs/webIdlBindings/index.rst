@@ -1,9 +1,6 @@
-WebIDL bindings
-===============
-
 .. note::
 
-   Need to document the setup for indexed and named
+   Notes: Need to document the setup for indexed and named
    setters/creators/deleters.
 
 The `WebIDL <https://heycam.github.io/webidl/>`__ bindings are generated
@@ -18,15 +15,15 @@ and added to the list in the
 file in that directory.
 
 Note that if you're adding new interfaces, then the test at
-``dom/tests/mochitest/general/test_interfaces.html`` will most likely
+``dom/tests/mochitest/general/test_interfaces.html``\ will most likely
 fail. This is a signal that you need to get a review from a `DOM
 peer <https://wiki.mozilla.org/Modules/All#Document_Object_Model>`__.
 Resist the urge to just add your interfaces to the
-`moz.build <https://searchfox.org/mozilla-central/source/dom/webidl/moz.build>`__ list
+`moz.build <https://searchfox.org/mozilla-central/source//dom/webidl/moz.build>`__ list
 without the review; it will just annoy the DOM peers and they'll make
 you get the review anyway.
 
-The configuration file, ``dom/bindings/Bindings.conf``, is basically a
+The configuration file, ``dom/bindings/Bindings.conf,`` is basically a
 Python dict that maps interface names to information about the
 interface, called a *descriptor*. There are all sorts of possible
 options here that handle various edge cases, but most descriptors can be
@@ -132,7 +129,7 @@ interface, you need to do the following:
    ``mozilla::dom::MyInterface_Binding::Wrap``. Note that if your C++
    type is implementing multiple distinct Web IDL interfaces, you need
    to choose which ``mozilla::dom::MyInterface_Binding::Wrap`` to call
-   here. See ``AudioContext::WrapObject``, for example.
+   here. See ``AudioContext::WrapObject``,  for example.
 
 #. Expose whatever methods the interface needs on
    ``mozilla::dom::MyInterface``. These can be inline, virtual, have any
@@ -150,10 +147,10 @@ bindings <https://hg.mozilla.org/mozilla-central/rev/dd08c10193c6>`__.
 
 .. note::
 
-   If your object can only be reflected into JS by creating it, not by
-   retrieving it from somewhere, you can skip steps 1 and 2 above and
-   instead add ``'wrapperCache': False`` to your descriptor. You will
-   need to flag the functions that return your object as
+   **Note:** If your object can only be reflected into JS by creating
+   it, not by retrieving it from somewhere, you can skip steps 1 and 2
+   above and instead add ``'wrapperCache': False`` to your descriptor.
+   You will need to flag the functions that return your object as
    ```[NewObject]`` <https://heycam.github.io/webidl/#NewObject>`__ in
    the WebIDL. If your object is not refcounted then the return value of
    functions that return it should return an nsAutoPtr.
@@ -168,15 +165,17 @@ C++ reflections of WebIDL constructs
 C++ reflections of WebIDL operations (methods)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-A WebIDL operation is turned into a method call on the underlying C++
-object. The return type and argument types are determined `as described
-below <#typemapping>`__. In addition to those, all `methods that are
-allowed to throw <#Throws>`__ will get an ``ErrorResult&`` argument
-appended to their argument list. Non-static methods that use certain
-WebIDL types like ``any`` or ``object`` will get a ``JSContext*``
-argument prepended to the argument list. Static methods will be passed a
-```const GlobalObject&`` <#GlobalObject>`__ for the relevant global and
-can get a ``JSContext*`` by calling ``Context()`` on it.
+|
+| A WebIDL operation is turned into a method call on the underlying C++
+  object. The return type and argument types are determined `as
+  described below <#typemapping>`__. In addition to those, all `methods
+  that are allowed to throw <#Throws>`__ will get an ``ErrorResult&``
+  argument appended to their argument list. Non-static methods that use
+  certain WebIDL types like ``any`` or ``object`` will get a
+  ``JSContext*`` argument prepended to the argument list. Static methods
+  will be passed a ```const GlobalObject&`` <#GlobalObject>`__ for the
+  relevant global and can get a ``JSContext*`` by calling ``Context()``
+  on it.
 
 The name of the C++ method is simply the name of the WebIDL operation
 with the first letter converted to uppercase.
@@ -309,7 +308,7 @@ unless stated otherwise, nullable types are represented by wrapping
 In all cases, optional arguments which do not have a default value are
 represented by wrapping ```const Optional<>&`` <#Optional>`__ around the
 representation of the argument type. If the argument type is a C++
-reference, it will also become a ```NonNull<>`` <#NonNull>`__ around the
+reference, it will also become a `NonNull<> <#NonNull>`__ around the
 actual type of the object in the process. Optional arguments which do
 have a default value are just represented by the argument type itself,
 set to the default value if the argument was not in fact passed in.
@@ -320,112 +319,110 @@ Variadic WebIDL arguments are treated as a
 Here's a table, see the specific sections below for more details and
 explanations.
 
-.. list-table:: Type reflection
-   :header-rows: 1
-   :stub-columns: 1
-
-   * - WebIDL Type
-     - Argument Type
-     - Return Type
-     - Dictionary/Member Type
-   * - any
-     - ``JS::Handle<JS::Value>``
-     - ``JS::MutableHandle<JS::Value>``
-     - ``JS::Value``
-   * - boolean
-     - ``bool``
-     - ``bool``
-     - ``bool``
-   * - byte
-     - ``int8_t``
-     - ``int8_t``
-     - ``int8_t``
-   * - ByteString
-     - ``const nsACString&``
-     - | ``nsCString&`` *(outparam)*
-       | ``nsACString&`` *(outparam)*
-     - ``nsCString``
-   * - Date
-     -
-     - 
-     - ``mozilla::dom::Date``
-   * - DOMString
-     - ``const nsAString&``
-     - | ```mozilla::dom::DOMString&`` <#DOMString-helper>`__ *(outparam)*
-       | ``nsAString&`` *(outparam)*
-       | ``nsString&`` *(outparam)*
-     - ``nsString``
-   * - UTF8String
-     - ``const nsACString&``
-     - ``nsACString&`` *(outparam)*
-     - ``nsCString``
-   * - double
-     - ``double``
-     - ``double``
-     - ``double``
-   * - float
-     - ``float``
-     - ``float``
-     - ``float``
-   * - interface: non-nullable
-     - ``Foo&``
-     - ``already_addRefed<Foo>``
-     - ```OwningNonNull<Foo>`` <#OwningNonNull>`__
-   * - interface: nullable
-     - ``Foo*``
-     - | ``already_addRefed<Foo>``
-       | ``Foo*``
-     - ``RefPtr<Foo>``
-   * - long
-     - ``int32_t``
-     - ``int32_t``
-     - ``int32_t``
-   * - long long
-     - ``int64_t``
-     - ``int64_t``
-     - ``int64_t``
-   * - object
-     - ``JS::Handle<JSObject*>``
-     - ``JS::MutableHandle<JSObject*>``
-     - ``JSObject*``
-   * - octet
-     - ``uint8_t``
-     - ``uint8_t``
-     - ``uint8_t``
-   * - sequence
-     - ```const Sequence<T>&`` <#Sequence>`__
-     - ``nsTArray<T>&`` *(outparam)*
-     - 
-   * - short
-     - ``int16_t``
-     - ``int16_t``
-     - ``int16_t``
-   * - unrestricted double
-     - ``double``
-     - ``double``
-     - ``double``
-   * - unrestricted float
-     - ``float``
-     - ``float``
-     - ``float``
-   * - unsigned long
-     - ``uint32_t``
-     - ``uint32_t``
-     - ``uint32_t``
-   * - unsigned long long
-     - ``uint64_t``
-     - ``uint64_t``
-     - ``uint64_t``
-   * - unsigned short
-     - ``uint16_t``
-     - ``uint16_t``
-     - ``uint16_t``
-   * - USVString
-     - ``const nsAString&``
-     - | ```mozilla::dom::DOMString`` <#DOMString-helper>`__ *(outparam)*
-       | ``nsAString&`` *(outparam)*
-       | ``nsString&`` *(outparam)*
-     - ``nsString``
++-----------------+-----------------+-----------------+-----------------+
+| **WebIDL Type** | **Argument      | **Return Type** | **Di            |
+|                 | Type**          |                 | ctionary/Member |
+|                 |                 |                 | Type**          |
++-----------------+-----------------+-----------------+-----------------+
+| **any**         | ``JS::Hand      | ``JS::          | ``JS::Value``   |
+|                 | le<JS::Value>`` | MutableHand     |                 |
+|                 |                 | le<JS::Value>`` |                 |
++-----------------+-----------------+-----------------+-----------------+
+| **boolean**     | ``bool``        | ``bool``        | ``bool``        |
++-----------------+-----------------+-----------------+-----------------+
+| **byte**        | ``int8_t``      | ``int8_t``      | ``int8_t``      |
++-----------------+-----------------+-----------------+-----------------+
+| **ByteString**  | ``cons          | ``nsCString&``  | ``nsCString``   |
+|                 | t nsACString&`` | (outparam)      |                 |
+|                 |                 | ``nsACString&`` |                 |
+|                 |                 | (outparam)      |                 |
++-----------------+-----------------+-----------------+-----------------+
+| **Date**        |                 |                 | ``mozil         |
+|                 |                 |                 | la::dom::Date`` |
++-----------------+-----------------+-----------------+-----------------+
+| **DOMString**   | ``con           | ```mozilla:     | ``nsString``    |
+|                 | st nsAString&`` | :dom::DOMString |                 |
+|                 |                 | &`` <https://de |                 |
+|                 |                 | veloper.mozilla |                 |
+|                 |                 | .org/en-US/docs |                 |
+|                 |                 | /Mozilla/WebIDL |                 |
+|                 |                 | _bindings#DOMSt |                 |
+|                 |                 | ring-helper>`__ |                 |
+|                 |                 | (outparam)      |                 |
+|                 |                 | ``nsAString&``  |                 |
+|                 |                 | (outparam)      |                 |
+|                 |                 | ``nsString&``   |                 |
+|                 |                 | (outparam)      |                 |
++-----------------+-----------------+-----------------+-----------------+
+| **UTF8String**  | ``cons          | ``nsACString&`` | ``nsCString``   |
+|                 | t nsACString&`` | (outparam)      |                 |
++-----------------+-----------------+-----------------+-----------------+
+| **double**      | ``double``      | ``double``      | ``double``      |
++-----------------+-----------------+-----------------+-----------------+
+| **float**       | ``float``       | ``float``       | ``float``       |
++-----------------+-----------------+-----------------+-----------------+
+| **interface:    | ``Foo&``        | ``already_ad    | ``              |
+| non-nullable**  |                 | dRefed<Foo>     | `OwningNonNull< |
+|                 |                 | Foo*``          | Foo>`` <https:/ |
+|                 |                 |                 | /developer.mozi |
+|                 |                 |                 | lla.org/en-US/d |
+|                 |                 |                 | ocs/Mozilla/Web |
+|                 |                 |                 | IDL_bindings#Ow |
+|                 |                 |                 | ningNonNull>`__ |
++-----------------+-----------------+-----------------+-----------------+
+| **interface:    | ``Foo*``        | ``already_ad    | ``RefPtr<Foo>`` |
+| nullable**      |                 | dRefed<Foo>     |                 |
+|                 |                 |          Foo*`` |                 |
++-----------------+-----------------+-----------------+-----------------+
+| **long**        | ``int32_t``     | ``int32_t``     | ``int32_t``     |
++-----------------+-----------------+-----------------+-----------------+
+| **long long**   | ``int64_t``     | ``int64_t``     | ``int64_t``     |
++-----------------+-----------------+-----------------+-----------------+
+| **object**      | ``JS::Hand      | ``              | ``JSObject*``   |
+|                 | le<JSObject*>`` | JS::MutableHand |                 |
+|                 |                 | le<JSObject*>`` |                 |
++-----------------+-----------------+-----------------+-----------------+
+| **octet**       | ``uint8_t``     | ``uint8_t``     | ``uint8_t``     |
++-----------------+-----------------+-----------------+-----------------+
+| **sequence**    | ```const Seq    | `               |                 |
+|                 | uence<T>&`` <ht | `nsTArray<T>&`` |                 |
+|                 | tps://developer | (outparam)      |                 |
+|                 | .mozilla.org/en |                 |                 |
+|                 | -US/docs/Mozill |                 |                 |
+|                 | a/WebIDL_bindin |                 |                 |
+|                 | gs#Sequence>`__ |                 |                 |
++-----------------+-----------------+-----------------+-----------------+
+| **short**       | ``int16_t``     | ``int16_t``     | ``int16_t``     |
++-----------------+-----------------+-----------------+-----------------+
+| **unrestricted  | ``double``      | ``double``      | ``double``      |
+| double**        |                 |                 |                 |
++-----------------+-----------------+-----------------+-----------------+
+| **unrestricted  | ``float``       | ``float``       | ``float``       |
+| float**         |                 |                 |                 |
++-----------------+-----------------+-----------------+-----------------+
+| **unsigned      | ``uint32_t``    | ``uint32_t``    | ``uint32_t``    |
+| long**          |                 |                 |                 |
++-----------------+-----------------+-----------------+-----------------+
+| **unsigned long | ``uint64_t``    | ``uint64_t``    | ``uint64_t``    |
+| long**          |                 |                 |                 |
++-----------------+-----------------+-----------------+-----------------+
+| **unsigned      | ``uint16_t``    | ``uint16_t``    | ``uint16_t``    |
+| short**         |                 |                 |                 |
++-----------------+-----------------+-----------------+-----------------+
+| **USVString**   | ``con           | ```mozilla:     | ``nsString``    |
+|                 | st nsAString&`` | :dom::DOMString |                 |
+|                 |                 | &`` <https://de |                 |
+|                 |                 | veloper.mozilla |                 |
+|                 |                 | .org/en-US/docs |                 |
+|                 |                 | /Mozilla/WebIDL |                 |
+|                 |                 | _bindings#DOMSt |                 |
+|                 |                 | ring-helper>`__ |                 |
+|                 |                 | (outparam)      |                 |
+|                 |                 | ``nsAString&``  |                 |
+|                 |                 | (outparam)      |                 |
+|                 |                 | ``nsString&``   |                 |
+|                 |                 | (outparam)      |                 |
++-----------------+-----------------+-----------------+-----------------+
 
 ``any``
 ^^^^^^^
@@ -593,7 +590,7 @@ will correspond to these C++ function declarations:
 ^^^^^^^^^^^^^^
 
 ``UTF8String`` is a string with guaranteed-valid UTF-8 contents. It is
-not a standard in the WebIDL spec, but its observables are the same as
+not an standard in the WebIDL spec, but its observables are the same as
 those of ``USVString``.
 
 It is a good fit for when the specification allows a ``USVString``, but
@@ -608,7 +605,7 @@ It is reflected in three different ways, depending on use:
 -  In sequences, dictionaries owning unions, and variadic arguments it
    becomes ``nsCString``.
 
-Nullable ``UTF8String``\s are represented by the same types as
+Nullable ``UTF8String``\ s are represented by the same types as
 non-nullable ones, but the string will return true for ``IsVoid()``.
 Returning null as a string value can be done using ``SetIsVoid()`` on
 the out param.
@@ -1004,9 +1001,9 @@ members that you can use to quickly determine useful things.
 -  **dictionary.IsAnyMemberPresent()** - great for checking if you need
    to do anything.
    (e.g., ``if (!arg.IsAnyMemberPresent()) return; // nothing to do``)
--  **member.Value()** - getting the actual data/value of a member that
+-  **member.Value()  **- getting the actual data/value of a member that
    was passed.
-   (e.g., ``mBar.Assign(args.mBar.value())``)
+   (e.g.,  ``mBar.Assign(args.mBar.value())``)
 
 Example implementation using all of the above:
 
@@ -1437,7 +1434,7 @@ methods on the C++ implementation:
    whatever type the named getter is declared to return. It also has a
    boolean out param for whether a property with that name should exist
    at all.
--  A ``NameIsEnumerable`` method. This takes a property name and
+-   A ``NameIsEnumerable`` method. This takes a property name and
    returns a boolean that indicates whether the property is enumerable.
 -  A ``GetSupportedNames`` method. This takes an unsigned integer which
    corresponds to the flags passed to the ``iterate`` proxy trap and
@@ -1610,7 +1607,7 @@ show ``[ChromeOnly]`` interface objects on it.
 If specified on a dictionary member, then the dictionary member will
 only appear to exist in system-privileged code.
 
-This extended attribute can be specified together with ``[Func]``, and
+This extended attribute can be specified together with ``[Func]``,  and
 ``[Pref]``. If more than one of these is specified, all conditions will
 need to test true for the interface or interface member to be exposed.
 
@@ -1661,7 +1658,7 @@ with the relevant name: the dictionary member would either be
    };
 
 This extended attribute can be specified together with ``[ChromeOnly]``,
-and ``[Func]``. If more than one of these is specified, all conditions
+and\ ``[Func]``. If more than one of these is specified, all conditions
 will need to test true for the interface or interface member to be
 exposed.
 
@@ -1901,6 +1898,16 @@ Bindings.conf, should be avoided.
 Used on an interface to provide the contractid of the `JavaScript
 component implementing the
 interface <#Implementing_WebIDL_using_Javascript>`__.
+
+.. _NavigatorProperty:
+
+``[NavigatorProperty="propName"]``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Setting this extended attribute to ``propName`` on an interface causes
+``window.navigator.propName`` to be an instance of the interface.  Note
+that adding or removing this extended attribute requires a clobber.  See
+https://bugzilla.mozilla.org/show_bug.cgi?id=1333117 for details.
 
 .. _StoreInSlot:
 
@@ -2149,7 +2156,7 @@ null and two setters that can be used to set it to a value:
 ~~~~~~~~~~~~~~~
 
 ``Optional<>`` is a struct declared in
-```BindingDeclarations.h`` <https://searchfox.org/mozilla-central/source/dom/bindings/BindingDeclarations.h>`__
+```BindingDeclarations.h`` <https://searchfox.org/mozilla-central/source//dom/bindings/BindingDeclarations.h>`__
 and exported to ``mozilla/dom/BindingDeclarations.h`` that is used to
 represent optional arguments and dictionary members, but only those that
 have no default value.
@@ -2164,7 +2171,7 @@ get a ``const T&`` for the value.
 ~~~~~~~~~~~~~~
 
 ``NonNull<T>`` is a struct declared in
-```BindingUtils.h`` <https://searchfox.org/mozilla-central/source/dom/bindings/BindingUtils.h>`__
+```BindingUtils.h`` <https://searchfox.org/mozilla-central/source//dom/bindings/BindingUtils.h>`__
 and exported to ``mozilla/dom/BindingUtils.h`` that is used to represent
 non-null C++ objects. It has a conversion operator that produces ``T&``.
 
@@ -2174,7 +2181,7 @@ non-null C++ objects. It has a conversion operator that produces ``T&``.
 ~~~~~~~~~~~~~~~~~~~~
 
 ``OwningNonNull<T>`` is a struct declared in
-```OwningNonNull.h`` <https://searchfox.org/mozilla-central/source/xpcom/base/OwningNonNull.h>`__
+```OwningNonNull.h`` <https://searchfox.org/mozilla-central/source//xpcom/base/OwningNonNull.h>`__
 and exported to ``mozilla/OwningNonNull.h`` that is used to represent
 non-null C++ objects and holds a strong reference to them. It has a
 conversion operator that produces ``T&``.
@@ -2191,8 +2198,8 @@ namespace. Each struct has a ``Data()`` method that returns a pointer to
 the relevant type (``uint8_t`` for ``ArrayBuffer`` and
 ``ArrayBufferView``) and a ``Length()`` method that returns the length
 in units of ``*Data()``. So for example, ``Int32Array`` has a ``Data()``
-returning ``int32_t*`` and a ``Length()`` that returns the number of
-32-bit ints in the array..
+returning i\ ``nt32_t``\ ``*`` and a ``Length()`` that returns the
+number of 32-bit ints in the array..
 
 .. _Sequence:
 
@@ -2200,7 +2207,7 @@ returning ``int32_t*`` and a ``Length()`` that returns the number of
 ~~~~~~~~~~~~~~~
 
 ``Sequence<>`` is a type declared in
-```BindingDeclarations.h`` <https://searchfox.org/mozilla-central/source/dom/bindings/BindingDeclarations.h>`__
+```BindingDeclarations.h`` <https://searchfox.org/mozilla-central/source//dom/bindings/BindingDeclarations.h>`__
 and exported to ``mozilla/dom/BindingDeclarations.h`` that is used to
 represent sequence arguments. It's some kind of typed array, but which
 exact kind is opaque to consumers. This allows the binding code to
@@ -2213,7 +2220,7 @@ and so forth) without having to update all the callees.
 ~~~~~~~~~~~~~~~~~~~~
 
 ``CallbackFunction`` is a type declared in
-`CallbackFunction.h <https://searchfox.org/mozilla-central/source/dom/bindings/CallbackFunction.h>`__
+`CallbackFunction.h <https://searchfox.org/mozilla-central/source//dom/bindings/CallbackFunction.h>`__
 and exported to ``mozilla/dom/CallbackFunction.h`` that is used as a
 common base class for all the generated callback function
 representations. This class inherits from ``nsISupports``, and consumers
@@ -2225,7 +2232,7 @@ must make sure to cycle-collect it, since it keeps JS objects alive.
 ~~~~~~~~~~~~~~~~~~~~~
 
 ``CallbackInterface`` is a type declared in
-`CallbackInterface.h <https://searchfox.org/mozilla-central/source/dom/bindings/CallbackInterface.h>`__
+`CallbackInterface.h <https://searchfox.org/mozilla-central/source//dom/bindings/CallbackInterface.h>`__
 and exported to ``mozilla/dom/CallbackInterface.h`` that is used as a
 common base class for all the generated callback interface
 representations. This class inherits from ``nsISupports``, and consumers
@@ -2237,7 +2244,7 @@ must make sure to cycle-collect it, since it keeps JS objects alive.
 ~~~~~~~~~~~~~
 
 ``DOMString`` is a class declared in
-`BindingDeclarations.h <https://searchfox.org/mozilla-central/source/dom/bindings/BindingDeclarations.h>`__
+`BindingDeclarations.h <https://searchfox.org/mozilla-central/source//dom/bindings/BindingDeclarations.h>`__
 and exported to ``mozilla/dom/BindingDeclarations.h`` that is used for
 WebIDL ``DOMString`` return values. It has a conversion operator to
 ``nsString&`` so that it can be passed to methods that take that type or
@@ -2256,7 +2263,7 @@ codepath even if it does end up having to addref the ``nsStringBuffer``.
 ~~~~~~~~~~~~~~~~
 
 ``GlobalObject`` is a class declared in
-`BindingDeclarations.h <https://searchfox.org/mozilla-central/source/dom/bindings/BindingDeclarations.h>`__
+`BindingDeclarations.h <https://searchfox.org/mozilla-central/source//dom/bindings/BindingDeclarations.h>`__
 and exported to ``mozilla/dom/BindingDeclarations.h`` that is used to
 represent the global object for static attributes and operations
 (including constructors). It has a ``Get()`` method that returns the
@@ -2272,7 +2279,7 @@ the ``JSContext`` may not match the compartment of the global!
 ~~~~~~~~
 
 ``Date`` is a class declared in
-`BindingDeclarations.h <https://searchfox.org/mozilla-central/source/dom/bindings/BindingDeclarations.h>`__
+`BindingDeclarations.h <https://searchfox.org/mozilla-central/source//dom/bindings/BindingDeclarations.h>`__
 and exported to ``mozilla/dom/BindingDeclarations.h`` that is used to
 represent WebIDL Dates. It has a ``TimeStamp()`` method returning a
 double which represents a number of milliseconds since the epoch, as
@@ -2286,16 +2293,16 @@ with a double timestamp or a JS ``Date`` object. It also has a
 ~~~~~~~~~~~~~~~
 
 ``ErrorResult`` is a class declared in
-`ErrorResult.h <https://searchfox.org/mozilla-central/source/dom/bindings/ErrorResult.h>`__
+`ErrorResult.h <https://searchfox.org/mozilla-central/source//dom/bindings/ErrorResult.h>`__
 and exported to ``mozilla/ErrorResult.h`` that is used to represent
 exceptions in WebIDL bindings. This has the following methods:
 
 -  ``Throw``: allows throwing an ``nsresult``. The ``nsresult`` must be
    a failure code.
 -  ``ThrowTypeError``: allows throwing a ``TypeError`` with the given
-   error message. The list of allowed ``TypeError``\s and corresponding
+   error message. The list of allowed ``TypeError``\ s and corresponding
    messages is in
-   ```dom/bindings/Errors.msg`` <https://searchfox.org/mozilla-central/source/dom/bindings/Errors.msg>`__.
+   ```dom/bindings/Errors.msg`` <https://searchfox.org/mozilla-central/source//dom/bindings/Errors.msg>`__.
 -  ``ThrowJSException``: allows throwing a preexisting JS exception
    value. However, the ``MightThrowJSException()`` method must be called
    before any such exceptions are thrown (even if no exception is
@@ -2381,17 +2388,12 @@ How to get a JSContext passed to a given method
 In some rare cases you may need a ``JSContext*`` argument to be passed
 to a C++ method that wouldn't otherwise get such an argument. To see how
 to achieve this, search for ``implicitJSContext`` in
-`dom/bindings/Bindings.conf <#Bindings.conf>`__.
+`dom/bindings/Bindings.conf <https://developer.mozilla.org/en-US/docs/Mozilla/WebIDL_bindings#Bindings.conf>`__.
 
 .. _Implementing_WebIDL_using_Javascript:
 
 Implementing WebIDL using Javascript
 ------------------------------------
-
-.. warning::
-
-   Implementing WebIDL using Javascript is deprecated. New interfaces
-   should always be implemented in C++!
 
 It is possible to implement WebIDL interfaces in JavaScript within Gecko
 -- however, **this is limited to interfaces that are not exposed in Web
@@ -2450,8 +2452,7 @@ and the chrome-side object to use. For example:
 
 .. code:: brush:
 
-   var contentObject = RTCPeerConnection._create(contentWin, new
-   MyPeerConnectionImpl());
+
 
 However, if you are in a JS component, you may only be able to get to
 the correct interface object via some window object. In this case, the
@@ -2459,8 +2460,7 @@ code would look more like:
 
 .. code:: brush:
 
-   var contentObject = contentWin.RTCPeerConnection._create(contentWin,
-   new MyPeerConnectionImpl());
+
 
 Creating the object this way will not invoke its ``__init`` method or
 ``init`` method.
@@ -2518,14 +2518,21 @@ the object, and not the JS implementation, so you currently cannot
 access any private data.
 
 The WebIDL constructor invocation will first create your object. If the
-XPCOM component implements ``nsIDOMGlobalPropertyInitializer``, then
-the object's ``init`` method will be invoked with a single argument:
+XPCOM component implements ``nsIDOMGlobalPropertyInitializer``\ , then
+the object's\ ``init``\ method will be invoked with a single argument:
 the content window the constructor came from. This allows the JS
 implementation to know which content window it's associated with.
-The ``init`` method should not return anything. After this, the
+The\ ``init``\ method should not return anything. After this, the
 content-side object will be created. Then,if there are any constructor
 arguments, the object's ``__init`` method will be invoked, with the
 constructor arguments as its arguments.
+
+If you want an instance of the class to be added to
+``window.navigator``, add an extended
+attribute\ ``NavigatorProperty="PropertyName"`` which will make the
+instance available as ``window.navigator.PropertyName``.  Note that
+adding or removing ``NavigatorProperty`` requires a clobber.  See
+https://bugzilla.mozilla.org/show_bug.cgi?id=1333117 for details.
 
 .. _Static_Members:
 
@@ -2645,6 +2652,71 @@ content object, it is available as a property called ``__DOM_IMPL__`` on
 the chrome implementation object. This property only appears after the
 content-side object has been created. So it is available in ``__init``
 but not in ``init``.
+
+.. _MaplikeSetlike_declaration_helpers_in_Javascript_implementations:
+
+Maplike/Setlike declaration helpers in Javascript implementations
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+In order to manipulate the storage for maplike and setlike declarations
+on WebIDL interfaces from javascript implementations, certain functions
+are generated that can be used by the implementation. Retrieval from
+storage can happen via the publicly exposed maplike functions for the
+interface, but these helpers guarantee that access is available to
+manipulate storage from chrome JS, even in the case of the interface
+declaration being readonly.
+
+.. _Maplike_2:
+
+Maplike
+^^^^^^^
+
+The following interface:
+
+.. code:: notranslate
+
+   [JSImplementation="@mozilla.org/dom/string-to-long-js-maplike;1",
+    Constructor()]
+   interface StringToLongMaplike {
+     readonly maplike<DOMString, long>;
+   };
+
+Has these JS functions available to it:
+
+.. code:: brush:
+
+   // Sets a certain key with a certain value. Exception thrown on wrong types.
+   this.__DOM_IMPL__.__set(aKey, aValue);
+   // Deletes a key. Returns a boolean, true if key exists and was deleted, false otherwise.
+   this.__DOM_IMPL__.__delete(aKey);
+   // Completely clear all values from maplike storage
+   this.__DOM_IMPL__.__clear();
+
+.. _Setlike_2:
+
+Setlike
+^^^^^^^
+
+The following interface:
+
+.. code:: notranslate
+
+   [JSImplementation="@mozilla.org/dom/string-js-setlike;1",
+    Constructor()]
+   interface StringSetlike {
+     readonly setlike<DOMString>;
+   };
+
+Has these JS functions available to it:
+
+.. code:: brush:
+
+   // Adds a key to a set. Exception thrown on wrong types.
+   this.__DOM_IMPL__.__add(aKey);
+   // Deletes a key. Returns a boolean, true if key exists and was deleted, false otherwise.
+   this.__DOM_IMPL__.__delete(aKey)
+   // Completely clear all values from maplike storage
+   this.__DOM_IMPL__.__clear();
 
 .. _Determining_the_principal_of_the_caller_that_invoked_the_WebIDL_API:
 
