@@ -2002,6 +2002,34 @@ bool XrayDeleteNamedProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
                                                    opresult);
 }
 
+namespace binding_detail {
+
+bool ResolveOwnProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
+                        JS::Handle<JSObject*> obj, JS::Handle<jsid> id,
+                        JS::MutableHandle<JS::PropertyDescriptor> desc) {
+  JS::Rooted<mozilla::Maybe<JS::PropertyDescriptor>> ownDesc(cx);
+  if (!js::GetProxyHandler(obj)->getOwnPropertyDescriptor(cx, wrapper, id,
+                                                          &ownDesc)) {
+    return false;
+  }
+
+  if (ownDesc.isNothing()) {
+    desc.object().set(nullptr);
+  } else {
+    desc.set(*ownDesc);
+  }
+
+  return true;
+}
+
+bool EnumerateOwnProperties(JSContext* cx, JS::Handle<JSObject*> wrapper,
+                            JS::Handle<JSObject*> obj,
+                            JS::MutableHandleVector<jsid> props) {
+  return js::GetProxyHandler(obj)->ownPropertyKeys(cx, wrapper, props);
+}
+
+}  // namespace binding_detail
+
 JSObject* GetCachedSlotStorageObjectSlow(JSContext* cx,
                                          JS::Handle<JSObject*> obj,
                                          bool* isXray) {
