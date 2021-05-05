@@ -241,17 +241,21 @@ bool SVGImageFrame::GetIntrinsicImageDimensions(
     return false;
   }
 
+  ImageResolution resolution = mImageContainer->GetResolution();
+
   int32_t width, height;
   if (NS_FAILED(mImageContainer->GetWidth(&width))) {
     aSize.width = -1;
   } else {
     aSize.width = width;
+    resolution.ApplyXTo(aSize.width);
   }
 
   if (NS_FAILED(mImageContainer->GetHeight(&height))) {
     aSize.height = -1;
   } else {
     aSize.height = height;
+    resolution.ApplyYTo(aSize.height);
   }
 
   Maybe<AspectRatio> asp = mImageContainer->GetIntrinsicRatio();
@@ -272,6 +276,7 @@ bool SVGImageFrame::TransformContextForPainting(gfxContext* aGfxContext,
         nativeWidth == 0 || nativeHeight == 0) {
       return false;
     }
+    mImageContainer->GetResolution().ApplyTo(nativeWidth, nativeHeight);
     imageTransform = GetRasterImageTransform(nativeWidth, nativeHeight) *
                      ToMatrix(aTransform);
 
@@ -405,7 +410,7 @@ void SVGImageFrame::PaintSVG(gfxContext& aContext, const gfxMatrix& aTransform,
       // That method needs our image to have a fixed native width & height,
       // and that's not always true for TYPE_VECTOR images.
       aImgParams.result &= nsLayoutUtils::DrawSingleImage(
-          aContext, PresContext(), mImageContainer, /* aResolution = */ 1.0f,
+          aContext, PresContext(), mImageContainer,
           nsLayoutUtils::GetSamplingFilterForFrame(this), destRect,
           aDirtyRect ? dirtyRect : destRect, context, flags);
     } else {  // mImageContainer->GetType() == TYPE_RASTER
@@ -674,6 +679,7 @@ nsIFrame* SVGImageFrame::GetFrameForPoint(const gfxPoint& aPoint) {
           nativeWidth == 0 || nativeHeight == 0) {
         return nullptr;
       }
+      mImageContainer->GetResolution().ApplyTo(nativeWidth, nativeHeight);
       Matrix viewBoxTM = SVGContentUtils::GetViewBoxTransform(
           rect.width, rect.height, 0, 0, nativeWidth, nativeHeight,
           element->mPreserveAspectRatio);
