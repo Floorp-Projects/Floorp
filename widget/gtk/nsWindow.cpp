@@ -1700,7 +1700,11 @@ void nsWindow::NativeMoveResizeWaylandPopup(GdkPoint* aPosition,
   }
   LOG((" parentRect gravity: %d anchor gravity: %d\n", rectAnchor, menuAnchor));
 
-  GdkAnchorHints hints = GdkAnchorHints(GDK_ANCHOR_RESIZE);
+  // Gtk default is: GDK_ANCHOR_FLIP | GDK_ANCHOR_SLIDE | GDK_ANCHOR_RESIZE.
+  // We want to SLIDE_X menu on the dual monitor setup rather than resize it
+  // on the other monitor.
+  GdkAnchorHints hints =
+      GdkAnchorHints(GDK_ANCHOR_FLIP | GDK_ANCHOR_SLIDE_X | GDK_ANCHOR_RESIZE);
 
   // slideHorizontal from nsMenuPopupFrame::SetPopupPosition
   if (position >= POPUPPOSITION_BEFORESTART &&
