@@ -8,6 +8,7 @@
 
 #include "nsHttpBasicAuth.h"
 #include "plstr.h"
+#include "nsCRT.h"
 #include "nsString.h"
 #include "mozilla/Base64.h"
 #include "mozilla/ClearOnShutdown.h"
@@ -76,7 +77,7 @@ nsHttpBasicAuth::GenerateCredentials(
   *aFlags = 0;
 
   // we only know how to deal with Basic auth for http.
-  bool isBasicAuth = !PL_strncasecmp(challenge, "basic", 5);
+  bool isBasicAuth = !nsCRT::strncasecmp(challenge, "basic", 5);
   NS_ENSURE_TRUE(isBasicAuth, NS_ERROR_UNEXPECTED);
 
   // we work with UTF-8 around here

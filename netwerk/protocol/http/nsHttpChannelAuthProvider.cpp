@@ -11,6 +11,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/StoragePrincipalHelper.h"
 #include "nsHttpChannelAuthProvider.h"
+#include "nsCRT.h"
 #include "nsNetUtil.h"
 #include "nsHttpHandler.h"
 #include "nsIHttpAuthenticator.h"
@@ -1089,7 +1090,7 @@ void nsHttpChannelAuthProvider::ParseRealm(const char* challenge,
   // end-of-line, if the string is not quoted.
   //
 
-  const char* p = PL_strcasestr(challenge, "realm=");
+  const char* p = nsCRT::strcasestr(challenge, "realm=");
   if (p) {
     bool has_quote = false;
     p += 6;

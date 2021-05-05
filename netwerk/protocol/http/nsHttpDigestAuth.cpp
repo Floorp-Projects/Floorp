@@ -185,7 +185,7 @@ nsHttpDigestAuth::GenerateCredentials(
 
   *aFlags = 0;
 
-  bool isDigestAuth = !PL_strncasecmp(challenge, "digest ", 7);
+  bool isDigestAuth = !nsCRT::strncasecmp(challenge, "digest ", 7);
   NS_ENSURE_TRUE(isDigestAuth, NS_ERROR_UNEXPECTED);
 
   // IIS implementation requires extra quotes
@@ -195,7 +195,7 @@ nsHttpDigestAuth::GenerateCredentials(
     Unused << authChannel->GetServerResponseHeader(serverVal);
     if (!serverVal.IsEmpty()) {
       requireExtraQuotes =
-          !PL_strncasecmp(serverVal.get(), "Microsoft-IIS", 13);
+          !nsCRT::strncasecmp(serverVal.get(), "Microsoft-IIS", 13);
     }
   }
 

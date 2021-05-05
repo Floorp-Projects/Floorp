@@ -675,7 +675,8 @@ static void net_ParseMediaType(const nsACString& aMediaTypeStr,
       const char* paramName = net_FindCharNotInSet(
           start + curParamStart, start + curParamEnd, HTTP_LWS);
       static const char charsetStr[] = "charset=";
-      if (PL_strncasecmp(paramName, charsetStr, sizeof(charsetStr) - 1) == 0) {
+      if (nsCRT::strncasecmp(paramName, charsetStr, sizeof(charsetStr) - 1) ==
+          0) {
         charset = paramName + sizeof(charsetStr) - 1;
         charsetEnd = start + curParamEnd;
         typeHasCharset = true;

@@ -1868,13 +1868,14 @@ char* nsHttpTransaction::LocateHttpStart(char* buf, uint32_t len,
   static const uint32_t ICYHeaderLen = sizeof(ICYHeader) - 1;
 
   if (aAllowPartialMatch && (len < HTTPHeaderLen))
-    return (PL_strncasecmp(buf, HTTPHeader, len) == 0) ? buf : nullptr;
+    return (nsCRT::strncasecmp(buf, HTTPHeader, len) == 0) ? buf : nullptr;
 
   // mLineBuf can contain partial match from previous search
   if (!mLineBuf.IsEmpty()) {
     MOZ_ASSERT(mLineBuf.Length() < HTTPHeaderLen);
     int32_t checkChars = std::min(len, HTTPHeaderLen - mLineBuf.Length());
-    if (PL_strncasecmp(buf, HTTPHeader + mLineBuf.Length(), checkChars) == 0) {
+    if (nsCRT::strncasecmp(buf, HTTPHeader + mLineBuf.Length(), checkChars) ==
+        0) {
       mLineBuf.Append(buf, checkChars);
       if (mLineBuf.Length() == HTTPHeaderLen) {
         // We've found whole HTTPHeader sequence. Return pointer at the
@@ -1891,8 +1892,8 @@ char* nsHttpTransaction::LocateHttpStart(char* buf, uint32_t len,
 
   bool firstByte = true;
   while (len > 0) {
-    if (PL_strncasecmp(buf, HTTPHeader,
-                       std::min<uint32_t>(len, HTTPHeaderLen)) == 0) {
+    if (nsCRT::strncasecmp(buf, HTTPHeader,
+                           std::min<uint32_t>(len, HTTPHeaderLen)) == 0) {
       if (len < HTTPHeaderLen) {
         // partial HTTPHeader sequence found
         // save partial match to mLineBuf
@@ -1910,7 +1911,7 @@ char* nsHttpTransaction::LocateHttpStart(char* buf, uint32_t len,
     // other browsers
 
     if (firstByte && !mInvalidResponseBytesRead && len >= HTTP2HeaderLen &&
-        (PL_strncasecmp(buf, HTTP2Header, HTTP2HeaderLen) == 0)) {
+        (nsCRT::strncasecmp(buf, HTTP2Header, HTTP2HeaderLen) == 0)) {
       LOG(("nsHttpTransaction:: Identified HTTP/2.0 treating as 1.x\n"));
       return buf;
     }
@@ -1920,7 +1921,7 @@ char* nsHttpTransaction::LocateHttpStart(char* buf, uint32_t len,
     // other browsers
 
     if (firstByte && !mInvalidResponseBytesRead && len >= HTTP3HeaderLen &&
-        (PL_strncasecmp(buf, HTTP3Header, HTTP3HeaderLen) == 0)) {
+        (nsCRT::strncasecmp(buf, HTTP3Header, HTTP3HeaderLen) == 0)) {
       LOG(("nsHttpTransaction:: Identified HTTP/3.0 treating as 1.x\n"));
       return buf;
     }
@@ -1930,7 +1931,7 @@ char* nsHttpTransaction::LocateHttpStart(char* buf, uint32_t len,
     // as HTTP/1.0 in nsHttpResponseHead::ParseVersion
 
     if (firstByte && !mInvalidResponseBytesRead && len >= ICYHeaderLen &&
-        (PL_strncasecmp(buf, ICYHeader, ICYHeaderLen) == 0)) {
+        (nsCRT::strncasecmp(buf, ICYHeader, ICYHeaderLen) == 0)) {
       LOG(("nsHttpTransaction:: Identified ICY treating as HTTP/1.0\n"));
       return buf;
     }

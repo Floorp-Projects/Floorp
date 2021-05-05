@@ -15,6 +15,7 @@
 #include "nsProxyRelease.h"
 #include "nsReadableUtils.h"
 #include "nsString.h"
+#include "nsCRT.h"
 #include "nsNetCID.h"
 #include "nsError.h"
 #include "nsDNSPrefetch.h"
@@ -1350,7 +1351,7 @@ uint16_t nsDNSService::GetAFForLookup(const nsACString& host, uint32_t flags) {
       domainLen = end - domain;
       if (domainLen && hostLen >= domainLen) {
         const char* hostTail = hostStart.get() + hostLen - domainLen;
-        if (PL_strncasecmp(domain, hostTail, domainLen) == 0) {
+        if (nsCRT::strncasecmp(domain, hostTail, domainLen) == 0) {
           // now, make sure either that the hostname is a direct match or
           // that the hostname begins with a dot.
           if (hostLen == domainLen || *hostTail == '.' ||

@@ -34,6 +34,7 @@
 #include "nsIStreamListenerTee.h"
 #include "nsISeekableStream.h"
 #include "nsIProtocolProxyService2.h"
+#include "nsCRT.h"
 #include "nsMimeTypes.h"
 #include "nsNetCID.h"
 #include "nsNetUtil.h"
@@ -3107,7 +3108,8 @@ nsresult nsHttpChannel::ProcessPartialContent(
   Unused << mResponseHead->GetHeader(nsHttp::Content_Encoding, contentEncoding);
   Unused << mCachedResponseHead->GetHeader(nsHttp::Content_Encoding,
                                            cachedContentEncoding);
-  if (PL_strcasecmp(contentEncoding.get(), cachedContentEncoding.get()) != 0) {
+  if (nsCRT::strcasecmp(contentEncoding.get(), cachedContentEncoding.get()) !=
+      0) {
     Cancel(NS_ERROR_INVALID_CONTENT_ENCODING);
     return CallOnStartRequest();
   }
