@@ -342,6 +342,8 @@ static void PushRegisterDump(MacroAssembler& masm) {
   // be pushed. So pushing happens in two phases.
   //
   // Registers are pushed in reverse order of code.
+  //
+  // See block comment in MacroAssembler.h for further required invariants.
 
   // First, push the last four registers, passing zero for sp.
   // Zero is pushed for x28 and x31: the pseudo-SP and SP, respectively.

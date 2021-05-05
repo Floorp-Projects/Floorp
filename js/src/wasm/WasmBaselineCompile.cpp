@@ -642,6 +642,9 @@ class BaseRegAlloc {
   // masm.  (This is the case on ARM64 for now, and is a consequence of needing
   // more than 64 bits for FloatRegisters::SetType to represent SIMD registers.
   // See lengty comment in Architecture-arm64.h.)
+  //
+  // FIXME: RABALDR_SIDEALLOC_V128 is no longer necessary on ARM64, we should
+  // be able to use SIMD normally there.
 
   BaseCompilerInterface* bc;
   AllocatableGeneralRegisterSet availGPR;

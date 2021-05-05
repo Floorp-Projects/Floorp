@@ -250,11 +250,6 @@ class MacroAssemblerCompat : public vixl::MacroAssembler {
     vixl::MacroAssembler::Drop(Operand(ARMRegister(amount, 64)));
   }
 
-#ifdef ENABLE_WASM_SIMD
-  void PushRegsInMaskForWasmStubs(LiveRegisterSet set);
-  void PopRegsInMaskForWasmStubs(LiveRegisterSet set, LiveRegisterSet ignore);
-#endif
-
   // Update sp with the value of the current active stack pointer, if necessary.
   void syncStackPtr() {
     if (!GetStackPointer64().Is(vixl::sp)) {
