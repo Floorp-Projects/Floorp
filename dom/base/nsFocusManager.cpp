@@ -1641,7 +1641,8 @@ void nsFocusManager::SetFocusInner(Element* aNewContent, int32_t aFlags,
   // to guard against phishing.
 #ifndef XP_MACOSX
   if (elementToFocus &&
-      nsContentUtils::GetRootDocument(elementToFocus->OwnerDoc())
+      nsContentUtils::GetInProcessSubtreeRootDocument(
+          elementToFocus->OwnerDoc())
           ->GetFullscreenElement() &&
       nsContentUtils::HasPluginWithUncontrolledEventDispatch(elementToFocus)) {
     nsContentUtils::ReportToConsole(nsIScriptError::warningFlag, "DOM"_ns,
