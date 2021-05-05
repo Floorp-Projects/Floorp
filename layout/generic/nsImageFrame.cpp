@@ -479,15 +479,13 @@ static void ScaleIntrinsicSizeForDensity(IntrinsicSize& aSize,
 static void ScaleIntrinsicSizeForDensity(imgIContainer* aImage,
                                          nsIContent& aContent,
                                          IntrinsicSize& aSize) {
+  ImageResolution resolution = aImage->GetResolution();
   if (auto* image = HTMLImageElement::FromNode(aContent)) {
     if (auto* selector = image->GetResponsiveImageSelector()) {
-      float density = selector->GetSelectedImageDensity();
-      MOZ_ASSERT(density >= 0.0);
-      ScaleIntrinsicSizeForDensity(aSize, ImageResolution{density, density});
-      return;
+      resolution.ScaleBy(selector->GetSelectedImageDensity());
     }
   }
-  ScaleIntrinsicSizeForDensity(aSize, aImage->GetResolution());
+  ScaleIntrinsicSizeForDensity(aSize, resolution);
 }
 
 static IntrinsicSize ComputeIntrinsicSize(imgIContainer* aImage,
