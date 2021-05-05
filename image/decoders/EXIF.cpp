@@ -20,7 +20,10 @@ enum class EXIFTag : uint16_t {
   Orientation = 0x112,
   XResolution = 0x11a,
   YResolution = 0x11b,
+  PixelXDimension = 0xa002,
+  PixelYDimension = 0xa003,
   ResolutionUnit = 0x128,
+  IFDPointer = 0x8769,
 };
 
 // See Section 4.6.2.
@@ -41,9 +44,11 @@ static const uint32_t TIFFHeaderStart = EXIFHeaderLength;
 
 struct ParsedEXIFData {
   Orientation orientation;
-  float resolutionX = 72.0f;
-  float resolutionY = 72.0f;
-  ResolutionUnit resolutionUnit = ResolutionUnit::Dpi;
+  Maybe<float> resolutionX;
+  Maybe<float> resolutionY;
+  Maybe<uint32_t> pixelXDimension;
+  Maybe<uint32_t> pixelYDimension;
+  Maybe<ResolutionUnit> resolutionUnit;
 };
 
 static float ToDppx(float aResolution, ResolutionUnit aUnit) {
@@ -58,10 +63,38 @@ static float ToDppx(float aResolution, ResolutionUnit aUnit) {
   MOZ_CRASH("Unknown resolution unit?");
 }
 
+static Resolution ResolutionFromParsedData(const ParsedEXIFData& aData,
+                                           const gfx::IntSize& aRealImageSize) {
+  if (!aData.resolutionUnit || !aData.resolutionX || !aData.resolutionY) {
+    return {};
+  }
+
+  Resolution resolution{ToDppx(*aData.resolutionX, *aData.resolutionUnit),
+                        ToDppx(*aData.resolutionY, *aData.resolutionUnit)};
+
+  if (StaticPrefs::image_exif_density_correction_sanity_check_enabled()) {
+    if (!aData.pixelXDimension || !aData.pixelYDimension) {
+      return {};
+    }
+
+    const gfx::IntSize exifSize(*aData.pixelXDimension, *aData.pixelYDimension);
+
+    gfx::IntSize scaledSize = aRealImageSize;
+    resolution.ApplyTo(scaledSize.width, scaledSize.height);
+
+    if (exifSize != scaledSize) {
+      return {};
+    }
+  }
+
+  return resolution;
+}
+
 /////////////////////////////////////////////////////////////
 // Parse EXIF data, typically found in a JPEG's APP1 segment.
 /////////////////////////////////////////////////////////////
-EXIFData EXIFParser::ParseEXIF(const uint8_t* aData, const uint32_t aLength) {
+EXIFData EXIFParser::ParseEXIF(const uint8_t* aData, const uint32_t aLength,
+                               const gfx::IntSize& aRealImageSize) {
   if (!Initialize(aData, aLength)) {
     return EXIFData();
   }
@@ -77,13 +110,11 @@ EXIFData EXIFParser::ParseEXIF(const uint8_t* aData, const uint32_t aLength) {
 
   JumpTo(offsetIFD);
 
-  // We only care about IFD0 at this point, so we don't bother with the other
-  // IFDs. If we got this far we're done.
   ParsedEXIFData data;
-  ParseIFD0(data);
+  ParseIFD(data);
+
   return EXIFData{data.orientation,
-                  Resolution(ToDppx(data.resolutionX, data.resolutionUnit),
-                             ToDppx(data.resolutionY, data.resolutionUnit))};
+                  ResolutionFromParsedData(data, aRealImageSize)};
 }
 
 /////////////////////////////////////////////////////////
@@ -120,10 +151,18 @@ bool EXIFParser::ParseTIFFHeader(uint32_t& aIFD0OffsetOut) {
   return true;
 }
 
+// An arbitrary limit on the amount of pointers that we'll chase, to prevent bad
+// inputs getting us stuck.
+constexpr uint32_t kMaxEXIFDepth = 16;
+
 /////////////////////////////////////////////////////////
 // Parse the entries in IFD0. (Section 4.6.2)
 /////////////////////////////////////////////////////////
-void EXIFParser::ParseIFD0(ParsedEXIFData& aData) {
+void EXIFParser::ParseIFD(ParsedEXIFData& aData, uint32_t aDepth) {
+  if (NS_WARN_IF(aDepth > kMaxEXIFDepth)) {
+    return;
+  }
+
   uint16_t entryCount;
   if (!ReadUInt16(entryCount)) {
     return;
@@ -168,6 +207,27 @@ void EXIFParser::ParseIFD0(ParsedEXIFData& aData) {
           return;
         }
         break;
+      case EXIFTag::PixelXDimension:
+        if (!ParseDimension(type, count, aData.pixelXDimension)) {
+          return;
+        }
+        break;
+      case EXIFTag::PixelYDimension:
+        if (!ParseDimension(type, count, aData.pixelYDimension)) {
+          return;
+        }
+        break;
+      case EXIFTag::IFDPointer: {
+        uint32_t offset;
+        if (!ReadUInt32(offset)) {
+          return;
+        }
+
+        ScopedJump jump(*this, offset + TIFFHeaderStart);
+        ParseIFD(aData, aDepth + 1);
+        break;
+      }
+
       default:
         Advance(4);
         break;
@@ -198,7 +258,8 @@ bool EXIFParser::ReadRational(float& aOut) {
   return true;
 }
 
-bool EXIFParser::ParseResolution(uint16_t aType, uint32_t aCount, float& aOut) {
+bool EXIFParser::ParseResolution(uint16_t aType, uint32_t aCount,
+                                 Maybe<float>& aOut) {
   if (!StaticPrefs::image_exif_density_correction_enabled()) {
     Advance(4);
     return true;
@@ -213,12 +274,47 @@ bool EXIFParser::ParseResolution(uint16_t aType, uint32_t aCount, float& aOut) {
   if (value == 0.0f) {
     return false;
   }
-  aOut = value;
+  aOut = Some(value);
+  return true;
+}
+
+bool EXIFParser::ParseDimension(uint16_t aType, uint32_t aCount,
+                                Maybe<uint32_t>& aOut) {
+  if (!StaticPrefs::image_exif_density_correction_enabled()) {
+    Advance(4);
+    return true;
+  }
+
+  if (aCount != 1) {
+    return false;
+  }
+
+  switch (aType) {
+    case ShortType: {
+      uint16_t value;
+      if (!ReadUInt16(value)) {
+        return false;
+      }
+      aOut = Some(value);
+      Advance(2);
+      break;
+    }
+    case LongType: {
+      uint32_t value;
+      if (!ReadUInt32(value)) {
+        return false;
+      }
+      aOut = Some(value);
+      break;
+    }
+    default:
+      return false;
+  }
   return true;
 }
 
 bool EXIFParser::ParseResolutionUnit(uint16_t aType, uint32_t aCount,
-                                     ResolutionUnit& aOut) {
+                                     Maybe<ResolutionUnit>& aOut) {
   if (!StaticPrefs::image_exif_density_correction_enabled()) {
     Advance(4);
     return true;
@@ -232,10 +328,10 @@ bool EXIFParser::ParseResolutionUnit(uint16_t aType, uint32_t aCount,
   }
   switch (value) {
     case 2:
-      aOut = ResolutionUnit::Dpi;
+      aOut = Some(ResolutionUnit::Dpi);
       break;
     case 3:
-      aOut = ResolutionUnit::Dpcm;
+      aOut = Some(ResolutionUnit::Dpcm);
       break;
     default:
       return false;
