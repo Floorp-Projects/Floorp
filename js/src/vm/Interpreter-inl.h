@@ -550,6 +550,18 @@ static MOZ_ALWAYS_INLINE bool CheckPrivateFieldOperation(JSContext* cx,
   ThrowMsgKind msgKind;
   GetCheckPrivateFieldOperands(pc, &condition, &msgKind);
 
+  // When we are using OnlyCheckRhs, we are implementing PrivateInExpr
+  // This requires we throw if the rhs is not an object;
+  //
+  // The InlineCache for CheckPrivateField already checks for a
+  // non-object rhs and refuses to attach in that circumstance.
+  if (condition == ThrowCondition::OnlyCheckRhs) {
+    if (!val.isObject()) {
+      ReportInNotObjectError(cx, idval, -2, val, -1);
+      return false;
+    }
+  }
+
   MOZ_ASSERT(idval.isSymbol());
   MOZ_ASSERT(idval.toSymbol()->isPrivateName());
 
