@@ -3544,7 +3544,11 @@ impl Renderer {
 
         match partial_present_mode {
             Some(PartialPresentMode::Single { dirty_rect }) => {
-                if occlusion.test(&dirty_rect.to_box2d()) {
+                // There is no need to clear if the dirty rect is occluded. Additionally,
+                // on Mali-G77 we have observed artefacts when calling glClear (even with
+                // the empty scissor rect set) after calling eglSetDamageRegion with an
+                // empty damage region. So avoid clearing in that case. See bug 1709548.
+                if !dirty_rect.is_empty() && occlusion.test(&dirty_rect.to_box2d()) {
                     // We have a single dirty rect, so clear only that
                     self.device.clear_target(clear_color,
                                              None,
