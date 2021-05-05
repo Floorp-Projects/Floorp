@@ -620,6 +620,7 @@ linux-tsan-tests:
     - mochitest-browser-chrome
     - mochitest-media
     - mochitest-plain
+    - reftest
     - web-platform-tests
     - web-platform-tests-reftest
     - xpcshell
