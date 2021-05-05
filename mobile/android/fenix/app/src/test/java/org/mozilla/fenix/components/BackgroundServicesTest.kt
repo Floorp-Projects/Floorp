@@ -38,6 +38,7 @@ class BackgroundServicesTest {
     fun setup() {
         MockKAnnotations.init(this)
         every { metrics.track(any()) } just Runs
+        every { settings.signedInFxaAccount = any() } just Runs
 
         observer = TelemetryAccountObserver(settings, metrics)
         registry = ObserverRegistry<AccountObserver>().apply { register(observer) }
@@ -49,6 +50,7 @@ class BackgroundServicesTest {
 
         registry.notifyObservers { onAuthenticated(account, AuthType.Signin) }
         verify { metrics.track(Event.SyncAuthSignIn) }
+        verify { settings.signedInFxaAccount = true }
         confirmVerified(metrics, settings)
     }
 
@@ -58,6 +60,7 @@ class BackgroundServicesTest {
 
         registry.notifyObservers { onAuthenticated(account, AuthType.Signup) }
         verify { metrics.track(Event.SyncAuthSignUp) }
+        verify { settings.signedInFxaAccount = true }
         confirmVerified(metrics, settings)
     }
 
@@ -67,6 +70,7 @@ class BackgroundServicesTest {
 
         registry.notifyObservers { onAuthenticated(account, AuthType.Pairing) }
         verify { metrics.track(Event.SyncAuthPaired) }
+        verify { settings.signedInFxaAccount = true }
         confirmVerified(metrics, settings)
     }
 
@@ -76,6 +80,7 @@ class BackgroundServicesTest {
 
         registry.notifyObservers { onAuthenticated(account, AuthType.MigratedReuse) }
         verify { metrics.track(Event.SyncAuthFromSharedReuse) }
+        verify { settings.signedInFxaAccount = true }
         confirmVerified(metrics, settings)
 
         registry.notifyObservers { onAuthenticated(account, AuthType.MigratedCopy) }
@@ -88,6 +93,7 @@ class BackgroundServicesTest {
 
         registry.notifyObservers { onAuthenticated(account, AuthType.Recovered) }
         verify { metrics.track(Event.SyncAuthRecovered) }
+        verify { settings.signedInFxaAccount = true }
         confirmVerified(metrics, settings)
     }
 
@@ -97,6 +103,7 @@ class BackgroundServicesTest {
 
         registry.notifyObservers { onAuthenticated(account, AuthType.OtherExternal(null)) }
         verify { metrics.track(Event.SyncAuthOtherExternal) }
+        verify { settings.signedInFxaAccount = true }
         confirmVerified(metrics, settings)
     }
 
@@ -106,6 +113,7 @@ class BackgroundServicesTest {
 
         registry.notifyObservers { onAuthenticated(account, AuthType.OtherExternal("someAction")) }
         verify { metrics.track(Event.SyncAuthOtherExternal) }
+        verify { settings.signedInFxaAccount = true }
         confirmVerified(metrics, settings)
     }
 
@@ -115,6 +123,7 @@ class BackgroundServicesTest {
 
         registry.notifyObservers { onAuthenticated(account, AuthType.Existing) }
         verify { metrics wasNot Called }
+        verify { settings.signedInFxaAccount = true }
         confirmVerified(metrics, settings)
     }
 
@@ -122,6 +131,7 @@ class BackgroundServicesTest {
     fun `telemetry account observer tracks sign out event`() {
         registry.notifyObservers { onLoggedOut() }
         verify { metrics.track(Event.SyncAuthSignOut) }
+        verify { settings.signedInFxaAccount = false }
         confirmVerified(metrics, settings)
     }
 }

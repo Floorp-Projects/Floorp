@@ -141,7 +141,11 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
             buildInfo = GleanBuildInfo.buildInfo
         )
 
-        setStartupMetrics(components.core.store, settings())
+        // We avoid blocking the main thread on startup by setting startup metrics on the background thread.
+        val store = components.core.store
+        GlobalScope.launch(Dispatchers.IO) {
+            setStartupMetrics(store, settings())
+        }
     }
 
     @CallSuper
@@ -622,10 +626,7 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
             privateSearchSuggestions.set(settings.shouldShowSearchSuggestionsInPrivate)
             voiceSearchEnabled.set(settings.shouldShowVoiceSearch)
             openLinksInAppEnabled.set(settings.openLinksInExternalApp)
-
-            val isLoggedIn =
-                components.backgroundServices.accountManager.accountProfile() != null
-            signedInSync.set(isLoggedIn)
+            signedInSync.set(settings.signedInFxaAccount)
 
             val syncedItems = SyncEnginesStorage(applicationContext).getStatus().entries.filter {
                 it.value

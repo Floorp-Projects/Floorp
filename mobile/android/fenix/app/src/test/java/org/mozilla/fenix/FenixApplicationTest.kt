@@ -127,6 +127,7 @@ class FenixApplicationTest {
         every { settings.switchServiceIsEnabled } returns true
         every { settings.touchExplorationIsEnabled } returns true
         every { settings.shouldUseLightTheme } returns true
+        every { settings.signedInFxaAccount } returns true
 
         application.setStartupMetrics(browserStore, settings, browsersCache, mozillaProductDetector)
 

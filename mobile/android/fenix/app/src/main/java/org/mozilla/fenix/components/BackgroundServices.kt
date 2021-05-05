@@ -188,6 +188,7 @@ internal class TelemetryAccountObserver(
     private val metricController: MetricController
 ) : AccountObserver {
     override fun onAuthenticated(account: OAuthAccount, authType: AuthType) {
+        settings.signedInFxaAccount = true
         when (authType) {
             // User signed-in into an existing FxA account.
             AuthType.Signin -> Event.SyncAuthSignIn
@@ -220,5 +221,6 @@ internal class TelemetryAccountObserver(
 
     override fun onLoggedOut() {
         metricController.track(Event.SyncAuthSignOut)
+        settings.signedInFxaAccount = false
     }
 }
