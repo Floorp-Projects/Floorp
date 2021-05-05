@@ -434,3 +434,31 @@ add_task(async function test_prevent_double_exposure_isEnabled() {
 
   sandbox.restore();
 });
+
+add_task(async function test_set_remote_before_ready() {
+  let sandbox = sinon.createSandbox();
+  const manager = ExperimentFakes.manager();
+  sandbox.stub(ExperimentAPI, "_store").get(() => manager.store);
+  const feature = new ExperimentFeature("foo", FAKE_FEATURE_MANIFEST);
+
+  Assert.throws(
+    () =>
+      ExperimentFakes.remoteDefaultsHelper({
+        feature,
+        store: manager.store,
+        configuration: { variables: { test: true } },
+      }),
+    /Store not ready/,
+    "Throws if used before init finishes"
+  );
+
+  await manager.onStartup();
+
+  await ExperimentFakes.remoteDefaultsHelper({
+    feature,
+    store: manager.store,
+    configuration: { variables: { test: true } },
+  });
+
+  Assert.ok(feature.getValue().test, "Successfully set");
+});
