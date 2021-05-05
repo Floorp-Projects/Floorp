@@ -1021,13 +1021,6 @@ class IDLInterfaceOrNamespace(IDLInterfaceOrInterfaceMixinOrNamespace):
         # things like exposure setting.
         for member in self.members:
             if member.isMaplikeOrSetlikeOrIterable():
-                if self.isJSImplemented():
-                    raise WebIDLError(
-                        "%s declaration used on "
-                        "interface that is implemented in JS"
-                        % (member.maplikeOrSetlikeOrIterableType),
-                        [member.location],
-                    )
                 # Check that we only have one interface declaration (currently
                 # there can only be one maplike/setlike declaration per
                 # interface)
@@ -1045,7 +1038,9 @@ class IDLInterfaceOrNamespace(IDLInterfaceOrInterfaceMixinOrNamespace):
                 self.maplikeOrSetlikeOrIterable = member
                 # If we've got a maplike or setlike declaration, we'll be building all of
                 # our required methods in Codegen. Generate members now.
-                self.maplikeOrSetlikeOrIterable.expand(self.members)
+                self.maplikeOrSetlikeOrIterable.expand(
+                    self.members, self.isJSImplemented()
+                )
 
         assert not self.parent or isinstance(self.parent, IDLIdentifierPlaceholder)
         parent = self.parent.finish(scope) if self.parent else None
@@ -4610,7 +4605,7 @@ class IDLIterable(IDLMaplikeOrSetlikeOrIterableBase):
             self.valueType,
         )
 
-    def expand(self, members):
+    def expand(self, members, isJSImplemented):
         """
         In order to take advantage of all of the method machinery in Codegen,
         we generate our functions as if they were part of the interface
@@ -4696,7 +4691,7 @@ class IDLMaplikeOrSetlike(IDLMaplikeOrSetlikeOrIterableBase):
             self.keyType,
         )
 
-    def expand(self, members):
+    def expand(self, members, isJSImplemented):
         """
         In order to take advantage of all of the method machinery in Codegen,
         we generate our functions as if they were part of the interface
@@ -4787,6 +4782,28 @@ class IDLMaplikeOrSetlike(IDLMaplikeOrSetlikeOrIterableBase):
                 [getKeyArg()],
             )
 
+        # Always generate underscored functions (e.g. __add, __clear) for js
+        # implemented interfaces as convenience functions.
+        if isJSImplemented:
+            # void clear()
+            self.addMethod(
+                "clear",
+                members,
+                True,
+                BuiltinTypes[IDLBuiltinType.Types.void],
+                [],
+                chromeOnly=True,
+            )
+            # boolean delete(keyType key)
+            self.addMethod(
+                "delete",
+                members,
+                True,
+                BuiltinTypes[IDLBuiltinType.Types.boolean],
+                [getKeyArg()],
+                chromeOnly=True,
+            )
+
         if self.isSetlike():
             if not self.readonly:
                 # Add returns the set object it just added to.
@@ -4798,6 +4815,15 @@ class IDLMaplikeOrSetlike(IDLMaplikeOrSetlikeOrIterableBase):
                     True,
                     BuiltinTypes[IDLBuiltinType.Types.object],
                     [getKeyArg()],
+                )
+            if isJSImplemented:
+                self.addMethod(
+                    "add",
+                    members,
+                    True,
+                    BuiltinTypes[IDLBuiltinType.Types.object],
+                    [getKeyArg()],
+                    chromeOnly=True,
                 )
             return
 
@@ -4834,6 +4860,15 @@ class IDLMaplikeOrSetlike(IDLMaplikeOrSetlikeOrIterableBase):
                 True,
                 BuiltinTypes[IDLBuiltinType.Types.object],
                 [getKeyArg(), getValueArg()],
+            )
+        if isJSImplemented:
+            self.addMethod(
+                "set",
+                members,
+                True,
+                BuiltinTypes[IDLBuiltinType.Types.object],
+                [getKeyArg(), getValueArg()],
+                chromeOnly=True,
             )
 
 
