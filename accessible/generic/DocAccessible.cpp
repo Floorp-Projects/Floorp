@@ -1795,6 +1795,9 @@ void DocAccessible::DoInitialUpdate() {
   if (logging::IsEnabled(logging::eVerbose)) {
     logging::Tree("TREE", "Initial subtree", this);
   }
+  if (logging::IsEnabled(logging::eTreeSize)) {
+    logging::TreeSize("TREE SIZE", "Initial subtree", this);
+  }
 #endif
 
   // Fire reorder event after the document tree is constructed. Note, since
