@@ -201,6 +201,10 @@ bool GPUProcessManager::MaybeDisableGPUProcess(const char* aMessage,
     return true;
   }
 
+  if (!aAllowRestart) {
+    gfxConfig::SetFailed(Feature::GPU_PROCESS, FeatureStatus::Failed, aMessage);
+  }
+
   bool wantRestart = gfxPlatform::FallbackFromAcceleration(
       FeatureStatus::Unavailable, "GPU Process is disabled",
       "FEATURE_FAILURE_GPU_PROCESS_DISABLED"_ns);
@@ -209,7 +213,10 @@ bool GPUProcessManager::MaybeDisableGPUProcess(const char* aMessage,
     return false;
   }
 
-  gfxConfig::SetFailed(Feature::GPU_PROCESS, FeatureStatus::Failed, aMessage);
+  if (aAllowRestart) {
+    gfxConfig::SetFailed(Feature::GPU_PROCESS, FeatureStatus::Failed, aMessage);
+  }
+
   gfxCriticalNote << aMessage;
 
   gfxPlatform::DisableGPUProcess();

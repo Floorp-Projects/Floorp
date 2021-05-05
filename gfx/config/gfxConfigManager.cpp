@@ -171,17 +171,11 @@ void gfxConfigManager::ConfigureWebRenderSoftware() {
       break;
   }
 
-  if (!mIsEarlyBetaOrEarlier && mFeatureD3D11Compositing) {
-    if (!mFeatureGPUProcess->IsEnabled()) {
-      mFeatureWrSoftware->Disable(FeatureStatus::Unavailable,
-                                  "Requires GPU process on release",
-                                  "FEATURE_FAILURE_RELEASE_NO_GPU_PROCESS"_ns);
-    }
-    if (mFeatureD3D11Compositing->IsEnabled()) {
-      mFeatureWrSoftware->Disable(FeatureStatus::Unavailable,
-                                  "User has D3D11 support on release",
-                                  "FEATURE_FAILURE_RELEASE_D3D11_SUPPORTED"_ns);
-    }
+  if (!mIsEarlyBetaOrEarlier && mFeatureD3D11Compositing &&
+      !mFeatureGPUProcess->IsEnabled()) {
+    mFeatureWrSoftware->Disable(FeatureStatus::Unavailable,
+                                "Requires GPU process on release",
+                                "FEATURE_FAILURE_RELEASE_NO_GPU_PROCESS"_ns);
   }
 }
 
