@@ -192,8 +192,7 @@
   MACRO(InstanceOf, "keyword 'instanceof'")                            \
   RANGE(KeywordBinOpFirst, InstanceOf)                                 \
   MACRO(In, "keyword 'in'")                                            \
-  MACRO(PrivateIn, "keyword 'in' (private)")                           \
-  RANGE(KeywordBinOpLast, PrivateIn)                                   \
+  RANGE(KeywordBinOpLast, In)                                          \
                                                                        \
   /* Shift ops, per TokenKindIsShift. */                               \
   MACRO(Lsh, "'<<'")                                                   \

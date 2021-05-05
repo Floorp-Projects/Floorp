@@ -9,15 +9,6 @@ rp(`(
   )`);
 
 rp(`(
-  class {
-    static #m = 'test262';
-    constructor() {
-      #m in {};
-    }
-  }
-)`);
-
-rp(`(
     class {
       #m = 'test262';
     }

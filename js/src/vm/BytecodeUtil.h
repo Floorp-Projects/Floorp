@@ -575,7 +575,7 @@ inline void GetCheckPrivateFieldOperands(jsbytecode* pc,
 
   MOZ_ASSERT(*throwCondition == ThrowCondition::ThrowHas ||
              *throwCondition == ThrowCondition::ThrowHasNot ||
-             *throwCondition == ThrowCondition::OnlyCheckRhs);
+             *throwCondition == ThrowCondition::NoThrow);
 
   MOZ_ASSERT(*throwKind == ThrowMsgKind::PrivateDoubleInit ||
              *throwKind == ThrowMsgKind::MissingPrivateOnGet ||

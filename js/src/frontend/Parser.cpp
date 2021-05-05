@@ -9199,7 +9199,6 @@ static const int PrecedenceTable[] = {
     9,  /* ParseNodeKind::Ge */
     9,  /* ParseNodeKind::InstanceOf */
     9,  /* ParseNodeKind::In */
-    9,  /* ParseNodeKind::PrivateIn */
     10, /* ParseNodeKind::Lsh */
     10, /* ParseNodeKind::Rsh */
     10, /* ParseNodeKind::Ursh */
@@ -9281,7 +9280,6 @@ GeneralParser<ParseHandler, Unit>::orExpr(InHandling inHandling,
         return null();
       }
 
-      bool isErgonomicBrandCheck = false;
       switch (tok) {
         // Report an error for unary expressions on the LHS of **.
         case TokenKind::Pow:
@@ -9327,8 +9325,6 @@ GeneralParser<ParseHandler, Unit>::orExpr(InHandling inHandling,
               error(JSMSG_ILLEGAL_PRIVATE_NAME);
               return null();
             }
-
-            isErgonomicBrandCheck = true;
           }
           break;
 
@@ -9337,12 +9333,7 @@ GeneralParser<ParseHandler, Unit>::orExpr(InHandling inHandling,
           break;
       }
 
-      if (isErgonomicBrandCheck) {
-        pnk = ParseNodeKind::PrivateInExpr;
-      } else {
-        pnk = BinaryOpTokenKindToParseNodeKind(tok);
-      }
-
+      pnk = BinaryOpTokenKindToParseNodeKind(tok);
     } else {
       tok = TokenKind::Eof;
       pnk = ParseNodeKind::Limit;

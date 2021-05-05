@@ -83,19 +83,7 @@ struct BytecodeEmitter;
 //
 class MOZ_STACK_CLASS PrivateOpEmitter {
  public:
-  enum class Kind {
-    Get,
-    Call,
-    Delete,
-    PostIncrement,
-    PreIncrement,
-    PostDecrement,
-    PreDecrement,
-    SimpleAssignment,
-    PropInit,
-    CompoundAssignment,
-    ErgonomicBrandCheck,
-  };
+  using Kind = ElemOpEmitter::Kind;
 
  private:
   BytecodeEmitter* bce_;
@@ -173,10 +161,6 @@ class MOZ_STACK_CLASS PrivateOpEmitter {
 
   [[nodiscard]] bool isFieldInit() const { return kind_ == Kind::PropInit; }
 
-  [[nodiscard]] bool isBrandCheck() const {
-    return kind_ == Kind::ErgonomicBrandCheck;
-  }
-
   [[nodiscard]] bool isCompoundAssignment() const {
     return kind_ == Kind::CompoundAssignment;
   }
@@ -205,7 +189,6 @@ class MOZ_STACK_CLASS PrivateOpEmitter {
 
   [[nodiscard]] bool emitLoadPrivateBrand();
 
- public:
   // Emit bytecode to check for the presence/absence of a private field/brand.
   //
   // Given OBJ KEY on the stack, where KEY is a private name symbol, the
@@ -214,12 +197,11 @@ class MOZ_STACK_CLASS PrivateOpEmitter {
   // If `isFieldInit()`, the check is reversed: the code will throw if OBJ
   // already has the KEY.
   //
-  // If `isBrandCheck()`, the check verifies RHS is an object (throwing if not).
-  //
-  // The bytecode leaves OBJ KEY BOOL on the stack. Caller is responsible for
-  // consuming or popping it.
+  // The bytecode leaves OBJ KEY BOOL on the stack. The boolean value is
+  // useless. Caller is responsible for popping it.
   [[nodiscard]] bool emitBrandCheck();
 
+ public:
   [[nodiscard]] bool emitReference();
   [[nodiscard]] bool skipReference();
   [[nodiscard]] bool emitGet();
