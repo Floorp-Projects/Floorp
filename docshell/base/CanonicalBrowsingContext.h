@@ -302,6 +302,17 @@ class CanonicalBrowsingContext final : public BrowsingContext {
 
   bool AllowedInBFCache(const Maybe<uint64_t>& aChannelId);
 
+  // Methods for getting and setting the active state for top level
+  // browsing contexts, for the process priority manager.
+  bool IsPriorityActive() const {
+    MOZ_RELEASE_ASSERT(IsTop());
+    return mPriorityActive;
+  }
+  void SetPriorityActive(bool aIsActive) {
+    MOZ_RELEASE_ASSERT(IsTop());
+    mPriorityActive = aIsActive;
+  }
+
  protected:
   // Called when the browsing context is being discarded.
   void CanonicalDiscard();
@@ -443,6 +454,10 @@ class CanonicalBrowsingContext final : public BrowsingContext {
   RefPtr<FeaturePolicy> mContainerFeaturePolicy;
 
   RefPtr<RestoreState> mRestoreState;
+
+  // If this is a top level context, this is true if our browser ID is marked as
+  // active in the process priority manager.
+  bool mPriorityActive = false;
 };
 
 }  // namespace dom
