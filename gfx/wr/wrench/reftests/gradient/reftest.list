@@ -121,3 +121,6 @@ fuzzy(1,7000) == radial-large.yaml radial-large-ref.png
 
 # crash tests
 == linear-far-endpoints.yaml linear-far-endpoints.yaml
+== linear-nan.yaml linear-nan.yaml
+== radial-nan.yaml radial-nan.yaml
+== conic-nan.yaml conic-nan.yaml
