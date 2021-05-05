@@ -9,6 +9,7 @@
 
 #include "RasterImage.h"
 #include "SurfacePipe.h"
+#include "EXIF.h"
 
 // On Windows systems, RasterImage.h brings in 'windows.h', which defines INT32.
 // But the jpeg decoder has its own definition of INT32. To avoid build issues,
@@ -23,8 +24,7 @@ extern "C" {
 
 #include <setjmp.h>
 
-namespace mozilla {
-namespace image {
+namespace mozilla::image {
 
 typedef struct {
   struct jpeg_error_mgr pub;  // "public" fields for IJG library
@@ -62,7 +62,7 @@ class nsJPEGDecoder : public Decoder {
   Maybe<Telemetry::HistogramID> SpeedHistogram() const override;
 
  protected:
-  Orientation ReadOrientationFromEXIF();
+  EXIFData ReadExifData() const;
   WriteState OutputScanlines();
 
  private:
@@ -107,7 +107,6 @@ class nsJPEGDecoder : public Decoder {
   SurfacePipe mPipe;
 };
 
-}  // namespace image
-}  // namespace mozilla
+}  // namespace mozilla::image
 
 #endif  // mozilla_image_decoders_nsJPEGDecoder_h
