@@ -513,10 +513,10 @@ void IOInterposer::UnregisterCurrentThread() {
   if (!sThreadLocalDataInitialized) {
     return;
   }
-  PerThreadData* curThreadData = sThreadLocalData.get();
-  MOZ_ASSERT(curThreadData);
-  sThreadLocalData.set(nullptr);
-  delete curThreadData;
+  if (PerThreadData* curThreadData = sThreadLocalData.get()) {
+    sThreadLocalData.set(nullptr);
+    delete curThreadData;
+  }
 }
 
 void IOInterposer::EnteringNextStage() {
