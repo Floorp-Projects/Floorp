@@ -3500,6 +3500,7 @@ impl Renderer {
         let cap = composite_state.tiles.len();
 
         let mut occlusion = occlusion::FrontToBackBuilder::with_capacity(cap, cap);
+        let mut clear_tiles = Vec::new();
 
         for (idx, tile) in composite_state.tiles.iter().enumerate() {
             // Clear tiles overwrite whatever is under them, so they are treated as opaque.
@@ -3523,6 +3524,15 @@ impl Renderer {
                 .intersection_unchecked(&valid_device_rect);
 
             if rect.is_empty() {
+                continue;
+            }
+
+            if tile.kind == TileKind::Clear {
+                // Clear tiles are specific to how we render the window buttons on
+                // Windows 8. We can get away with drawing them at the end on top
+                // of everything else, which we do to avoid having to juggle with
+                // the blend state.
+                clear_tiles.push(occlusion::Item { rectangle: rect, key: idx });
                 continue;
             }
 
@@ -3576,6 +3586,20 @@ impl Renderer {
             self.set_blend_mode_premultiplied_alpha(FramebufferKind::Main);
             self.draw_tile_list(
                 occlusion.alpha_items().iter().rev(),
+                &composite_state,
+                &composite_state.external_surfaces,
+                projection,
+                &mut results.stats,
+            );
+            self.gpu_profiler.finish_sampler(transparent_sampler);
+        }
+
+        if !clear_tiles.is_empty() {
+            let transparent_sampler = self.gpu_profiler.start_sampler(GPU_SAMPLER_TAG_TRANSPARENT);
+            self.set_blend(true, FramebufferKind::Main);
+            self.device.set_blend_mode_premultiplied_dest_out();
+            self.draw_tile_list(
+                clear_tiles.iter(),
                 &composite_state,
                 &composite_state.external_surfaces,
                 projection,
