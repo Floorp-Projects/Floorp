@@ -1269,8 +1269,8 @@ metrics:
     expires: "2021-08-11"
 
 preferences:
-  show_search_suggestions:
-    type: string_list
+  search_suggestions_enabled:
+    type: boolean
     description: >
       Whether or not the user has search suggestions enabled
       default: true
@@ -1286,8 +1286,8 @@ preferences:
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2021-08-01"
-  remote_debugging:
-    type: string_list
+  remote_debugging_enabled:
+    type: boolean
     description: >
       Whether or not the user has remote debugging enabled
       default: false
@@ -1303,8 +1303,8 @@ preferences:
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2021-08-01"
-  telemetry:
-    type: string_list
+  telemetry_enabled:
+    type: boolean
     description: >
       Whether or not the user has telemetry enabled. Note we should
       never receive a "false" value for this since telemetry would
@@ -1322,8 +1322,8 @@ preferences:
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2021-08-01"
-  tracking_protection:
-    type: string_list
+  enhanced_tracking_protection:
+    type: string
     description: >
       What type of enhanced tracking protection the user has enabled.
       "standard," "strict," "custom," or "" (if disabled)
@@ -1340,8 +1340,8 @@ preferences:
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2021-08-01"
-  search_bookmarks:
-    type: string_list
+  bookmarks_suggestion:
+    type: boolean
     description: >
       Whether or not the user has enabled bookmark search suggestions
       default: true
@@ -1357,8 +1357,8 @@ preferences:
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2021-08-01"
-  search_browsing_history:
-    type: string_list
+  browsing_history_suggestion:
+    type: boolean
     description: >
       Whether or not the user has enabled browsing history suggestions.
       default: true
@@ -1374,8 +1374,8 @@ preferences:
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2021-08-01"
-  show_clipboard_suggestions:
-    type: string_list
+  clipboard_suggestions_enabled:
+    type: boolean
     description: >
       Whether or not the user has enabled clipboard search suggestions.
       default: true
@@ -1391,8 +1391,8 @@ preferences:
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2021-08-01"
-  show_search_shortcuts:
-    type: string_list
+  search_shortcuts_enabled:
+    type: boolean
     description: >
       Whether or not the user has enabled search shortcuts.
       default: true
@@ -1408,8 +1408,8 @@ preferences:
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2021-08-01"
-  open_links_in_a_private_tab:
-    type: string_list
+  open_links_in_private:
+    type: boolean
     description: >
       Whether or not the user has enabled open links in a private tab.
       default: false
@@ -1425,8 +1425,8 @@ preferences:
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2021-08-01"
-  sync:
-    type: string_list
+  signed_in_sync:
+    type: boolean
     description: >
       Whether or not the user is signed into FxA
       default: false
@@ -1461,8 +1461,8 @@ preferences:
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2021-08-01"
-  show_voice_search:
-    type: string_list
+  voice_search_enabled:
+    type: boolean
     description: >
       Whether or not the user has enabled the voice search button.
       default: true
@@ -1478,8 +1478,8 @@ preferences:
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2021-08-01"
-  search_suggestions_private:
-    type: string_list
+  private_search_suggestions:
+    type: boolean
     description: >
       Whether or not the user has enabled showing search suggestions
       in private mode.
@@ -1496,8 +1496,8 @@ preferences:
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2021-08-01"
-  toolbar_position:
-    type: string_list
+  toolbar_position_setting:
+    type: string
     description: >
       The position of the toolbar
       default: bottom (defaults to top if the user has accessibility services)
@@ -1531,8 +1531,8 @@ preferences:
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2021-08-01"
-  open_links_in_app:
-    type: string_list
+  open_links_in_app_enabled:
+    type: boolean
     description: >
       Whether or not the user has the open links in apps feature enabled.
       default: false
@@ -1548,8 +1548,8 @@ preferences:
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2021-08-01"
-  theme:
-    type: string_list
+  user_theme:
+    type: string
     description: >
       The theme the user has enabled. "light," "dark," "system," or "battery"
       default: "system" for API 28+, else "light"

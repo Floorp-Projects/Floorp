@@ -5,10 +5,6 @@
 package org.mozilla.fenix.components.metrics
 
 import android.content.Context
-import mozilla.components.browser.state.store.BrowserStore
-import mozilla.components.feature.search.ext.buildSearchUrl
-import mozilla.components.feature.search.ext.waitForSelectedOrDefaultSearchEngine
-import mozilla.components.service.fxa.manager.SyncEnginesStorage
 import mozilla.components.service.glean.Glean
 import mozilla.components.service.glean.private.NoExtraKeys
 import mozilla.components.support.base.log.logger.Logger
@@ -46,12 +42,10 @@ import org.mozilla.fenix.GleanMetrics.Metrics
 import org.mozilla.fenix.GleanMetrics.Onboarding
 import org.mozilla.fenix.GleanMetrics.Pings
 import org.mozilla.fenix.GleanMetrics.Pocket
-import org.mozilla.fenix.GleanMetrics.Preferences
 import org.mozilla.fenix.GleanMetrics.PrivateBrowsingMode
 import org.mozilla.fenix.GleanMetrics.PrivateBrowsingShortcut
 import org.mozilla.fenix.GleanMetrics.ProgressiveWebApp
 import org.mozilla.fenix.GleanMetrics.ReaderMode
-import org.mozilla.fenix.GleanMetrics.SearchDefaultEngine
 import org.mozilla.fenix.GleanMetrics.SearchShortcuts
 import org.mozilla.fenix.GleanMetrics.SearchSuggestions
 import org.mozilla.fenix.GleanMetrics.SearchWidget
@@ -70,11 +64,7 @@ import org.mozilla.fenix.GleanMetrics.TopSites
 import org.mozilla.fenix.GleanMetrics.TrackingProtection
 import org.mozilla.fenix.GleanMetrics.UserSpecifiedSearchEngines
 import org.mozilla.fenix.GleanMetrics.VoiceSearch
-import org.mozilla.fenix.components.toolbar.ToolbarPosition
 import org.mozilla.fenix.ext.components
-import org.mozilla.fenix.ext.settings
-import org.mozilla.fenix.utils.BrowsersCache
-import org.mozilla.fenix.utils.Settings
 
 private class EventWrapper<T : Enum<T>>(
     private val recorder: ((Map<T, String>?) -> Unit),
@@ -855,11 +845,11 @@ private val Event.wrapper: EventWrapper<*>?
         is Event.SyncAuthFromSharedReuse, Event.SyncAuthFromSharedCopy -> null
     }
 
+/**
+ * Service responsible for sending the activation and installation pings.
+ */
 class GleanMetricsService(
-    private val context: Context,
-    private val store: Lazy<BrowserStore>,
-    private val browsersCache: BrowsersCache = BrowsersCache,
-    private val mozillaProductDetector: MozillaProductDetector = MozillaProductDetector
+    private val context: Context
 ) : MetricsService {
     override val type = MetricServiceType.Data
 
@@ -887,178 +877,8 @@ class GleanMetricsService(
             // can handle events being recorded before it's initialized.
             Glean.registerPings(Pings)
 
-            // setStartupMetrics is not a fast function. It does not need to be done before we can consider
-            // ourselves initialized. So, let's do it, well, later.
-            setStartupMetrics(context.settings())
-        }
-    }
-
-    /**
-     * This function is called before the metrics ping is sent.  Part of this function depends on
-     * shared preferences to be updated so the correct value is sent with the metrics ping.
-     *
-     * The reason we're using shared preferences to track some of these values is due to the
-     * limitations of the metrics ping.  Events are only sent in a metrics ping if the user have made
-     * changes between each ping.  However, in some cases we want current values to be sent even if
-     * the user have not changed anything between pings.
-     */
-    internal fun setStartupMetrics(settings: Settings) {
-        setPreferenceMetrics()
-        with(Metrics) {
-            defaultBrowser.set(browsersCache.all(context).isDefaultBrowser)
-            mozillaProductDetector.getMozillaBrowserDefault(context)?.also {
-                defaultMozBrowser.set(it)
-            }
-
-            mozillaProducts.set(mozillaProductDetector.getInstalledMozillaProducts(context))
-
-            adjustCampaign.set(settings.adjustCampaignId)
-            adjustAdGroup.set(settings.adjustAdGroup)
-            adjustCreative.set(settings.adjustCreative)
-            adjustNetwork.set(settings.adjustNetwork)
-
-            searchWidgetInstalled.set(settings.searchWidgetInstalled)
-
-            val openTabsCount = settings.openTabsCount
-            hasOpenTabs.set(openTabsCount > 0)
-            if (openTabsCount > 0) {
-                tabsOpenCount.add(openTabsCount)
-            }
-
-            val topSitesSize = settings.topSitesSize
-            hasTopSites.set(topSitesSize > 0)
-            if (topSitesSize > 0) {
-                topSitesCount.add(topSitesSize)
-            }
-
-            val installedAddonSize = settings.installedAddonsCount
-            Addons.hasInstalledAddons.set(installedAddonSize > 0)
-            if (installedAddonSize > 0) {
-                Addons.installedAddons.set(settings.installedAddonsList.split(','))
-            }
-
-            val enabledAddonSize = settings.enabledAddonsCount
-            Addons.hasEnabledAddons.set(enabledAddonSize > 0)
-            if (enabledAddonSize > 0) {
-                Addons.enabledAddons.set(settings.enabledAddonsList.split(','))
-            }
-
-            val desktopBookmarksSize = settings.desktopBookmarksSize
-            hasDesktopBookmarks.set(desktopBookmarksSize > 0)
-            if (desktopBookmarksSize > 0) {
-                desktopBookmarksCount.add(desktopBookmarksSize)
-            }
-
-            val mobileBookmarksSize = settings.mobileBookmarksSize
-            hasMobileBookmarks.set(mobileBookmarksSize > 0)
-            if (mobileBookmarksSize > 0) {
-                mobileBookmarksCount.add(mobileBookmarksSize)
-            }
-
-            toolbarPosition.set(
-                when (settings.toolbarPosition) {
-                    ToolbarPosition.BOTTOM -> Event.ToolbarPositionChanged.Position.BOTTOM.name
-                    ToolbarPosition.TOP -> Event.ToolbarPositionChanged.Position.TOP.name
-                }
-            )
-
-            tabViewSetting.set(settings.getTabViewPingString())
-            closeTabSetting.set(settings.getTabTimeoutPingString())
-        }
-
-        store.value.waitForSelectedOrDefaultSearchEngine { searchEngine ->
-            if (searchEngine != null) {
-                SearchDefaultEngine.apply {
-                    code.set(searchEngine.id)
-                    name.set(searchEngine.name)
-                    submissionUrl.set(searchEngine.buildSearchUrl(""))
-                }
-            }
-
             activationPing.checkAndSend()
             installationPing.checkAndSend()
-        }
-    }
-
-    private fun setPreferenceMetrics() {
-        // We purposefully make all of our preferences the string_list format to make data analysis
-        // simpler. While it makes things like booleans a bit more complicated, it means all our
-        // preferences can be analyzed with the same dashboard and compared.
-        with(Preferences) {
-            showSearchSuggestions.set(context.settings().shouldShowSearchSuggestions.toStringList())
-            remoteDebugging.set(context.settings().isRemoteDebuggingEnabled.toStringList())
-            telemetry.set(context.settings().isTelemetryEnabled.toStringList())
-            searchBrowsingHistory.set(context.settings().shouldShowHistorySuggestions.toStringList())
-            searchBookmarks.set(context.settings().shouldShowBookmarkSuggestions.toStringList())
-            showClipboardSuggestions.set(context.settings().shouldShowClipboardSuggestions.toStringList())
-            showSearchShortcuts.set(context.settings().shouldShowSearchShortcuts.toStringList())
-            openLinksInAPrivateTab.set(context.settings().openLinksInAPrivateTab.toStringList())
-            searchSuggestionsPrivate.set(context.settings().shouldShowSearchSuggestionsInPrivate.toStringList())
-            showVoiceSearch.set(context.settings().shouldShowVoiceSearch.toStringList())
-            openLinksInApp.set(context.settings().openLinksInExternalApp.toStringList())
-
-            val isLoggedIn =
-                context.components.backgroundServices.accountManager.accountProfile() != null
-            sync.set(isLoggedIn.toStringList())
-
-            val syncedItems = SyncEnginesStorage(context).getStatus().entries.filter {
-                it.value
-            }.map { it.key.nativeName }
-
-            syncItems.set(syncedItems)
-
-            val toolbarPositionSelection =
-                if (context.settings().shouldUseFixedTopToolbar) {
-                    "fixed_top"
-                } else if (context.settings().shouldUseBottomToolbar) {
-                    "bottom"
-                } else {
-                    "top"
-                }
-
-            toolbarPosition.set(listOf(toolbarPositionSelection))
-
-            val etpSelection =
-                if (!context.settings().shouldUseTrackingProtection) {
-                    ""
-                } else if (context.settings().useStandardTrackingProtection) {
-                    "standard"
-                } else if (context.settings().useStrictTrackingProtection) {
-                    "strict"
-                } else if (context.settings().useCustomTrackingProtection) {
-                    "custom"
-                } else {
-                    ""
-                }
-
-            trackingProtection.set(listOf(etpSelection))
-
-            val accessibilitySelection = mutableListOf<String>()
-
-            if (context.settings().switchServiceIsEnabled) {
-                accessibilitySelection.add("switch")
-            }
-
-            if (context.settings().touchExplorationIsEnabled) {
-                accessibilitySelection.add("touch exploration")
-            }
-
-            accessibilityServices.set(accessibilitySelection.toList())
-
-            val themeSelection =
-                if (context.settings().shouldUseLightTheme) {
-                    "light"
-                } else if (context.settings().shouldUseDarkTheme) {
-                    "dark"
-                } else if (context.settings().shouldFollowDeviceTheme) {
-                    "system"
-                } else if (context.settings().shouldUseAutoBatteryTheme) {
-                    "battery"
-                } else {
-                    ""
-                }
-
-            theme.set(listOf(themeSelection))
         }
     }
 

@@ -92,7 +92,7 @@ class Analytics(
     val metrics: MetricController by lazyMonitored {
         MetricController.create(
             listOf(
-                GleanMetricsService(context, lazy { context.components.core.store }),
+                GleanMetricsService(context),
                 AdjustMetricsService(context as Application)
             ),
             isDataTelemetryEnabled = { context.settings().isTelemetryEnabled },

@@ -63,6 +63,17 @@ import org.mozilla.fenix.session.VisibilityLifecycleCallback
 import org.mozilla.fenix.telemetry.TelemetryLifecycleObserver
 import org.mozilla.fenix.utils.BrowsersCache
 import java.util.concurrent.TimeUnit
+import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.feature.search.ext.buildSearchUrl
+import mozilla.components.feature.search.ext.waitForSelectedOrDefaultSearchEngine
+import mozilla.components.service.fxa.manager.SyncEnginesStorage
+import org.mozilla.fenix.GleanMetrics.Addons
+import org.mozilla.fenix.GleanMetrics.Preferences
+import org.mozilla.fenix.GleanMetrics.SearchDefaultEngine
+import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.components.metrics.MozillaProductDetector
+import org.mozilla.fenix.components.toolbar.ToolbarPosition
+import org.mozilla.fenix.utils.Settings
 
 /**
  *The main application class for Fenix. Records data to measure initialization performance.
@@ -130,13 +141,7 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
             buildInfo = GleanBuildInfo.buildInfo
         )
 
-        // Set this early to guarantee it's in every ping from here on.
-        Metrics.distributionId.set(
-            when (Config.channel.isMozillaOnline) {
-                true -> "MozillaOnline"
-                false -> "Mozilla"
-            }
-        )
+        setStartupMetrics(components.core.store, settings())
     }
 
     @CallSuper
@@ -496,6 +501,172 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
             // As checks are a persistent subscriptions, we have to make sure
             // we remove any previous subscriptions.
             checker.unregisterForChecks()
+        }
+    }
+
+    /**
+     * This function is called right after Glean is initialized. Part of this function depends on
+     * shared preferences to be updated so the correct value is sent with the metrics ping.
+     *
+     * The reason we're using shared preferences to track these values is due to the limitations of
+     * the current metrics ping design. The values set here will be sent in every metrics ping even
+     * if these values have not changed since the last startup.
+     */
+    @Suppress("ComplexMethod", "LongMethod")
+    @VisibleForTesting
+    internal fun setStartupMetrics(
+        browserStore: BrowserStore,
+        settings: Settings,
+        browsersCache: BrowsersCache = BrowsersCache,
+        mozillaProductDetector: MozillaProductDetector = MozillaProductDetector
+    ) {
+        setPreferenceMetrics(settings)
+        with(Metrics) {
+            // Set this early to guarantee it's in every ping from here on.
+            distributionId.set(
+                when (Config.channel.isMozillaOnline) {
+                    true -> "MozillaOnline"
+                    false -> "Mozilla"
+                }
+            )
+
+            defaultBrowser.set(browsersCache.all(applicationContext).isDefaultBrowser)
+            mozillaProductDetector.getMozillaBrowserDefault(applicationContext)?.also {
+                defaultMozBrowser.set(it)
+            }
+
+            mozillaProducts.set(mozillaProductDetector.getInstalledMozillaProducts(applicationContext))
+
+            adjustCampaign.set(settings.adjustCampaignId)
+            adjustAdGroup.set(settings.adjustAdGroup)
+            adjustCreative.set(settings.adjustCreative)
+            adjustNetwork.set(settings.adjustNetwork)
+
+            searchWidgetInstalled.set(settings.searchWidgetInstalled)
+
+            val openTabsCount = settings.openTabsCount
+            hasOpenTabs.set(openTabsCount > 0)
+            if (openTabsCount > 0) {
+                tabsOpenCount.add(openTabsCount)
+            }
+
+            val topSitesSize = settings.topSitesSize
+            hasTopSites.set(topSitesSize > 0)
+            if (topSitesSize > 0) {
+                topSitesCount.add(topSitesSize)
+            }
+
+            val installedAddonSize = settings.installedAddonsCount
+            Addons.hasInstalledAddons.set(installedAddonSize > 0)
+            if (installedAddonSize > 0) {
+                Addons.installedAddons.set(settings.installedAddonsList.split(','))
+            }
+
+            val enabledAddonSize = settings.enabledAddonsCount
+            Addons.hasEnabledAddons.set(enabledAddonSize > 0)
+            if (enabledAddonSize > 0) {
+                Addons.enabledAddons.set(settings.enabledAddonsList.split(','))
+            }
+
+            val desktopBookmarksSize = settings.desktopBookmarksSize
+            hasDesktopBookmarks.set(desktopBookmarksSize > 0)
+            if (desktopBookmarksSize > 0) {
+                desktopBookmarksCount.add(desktopBookmarksSize)
+            }
+
+            val mobileBookmarksSize = settings.mobileBookmarksSize
+            hasMobileBookmarks.set(mobileBookmarksSize > 0)
+            if (mobileBookmarksSize > 0) {
+                mobileBookmarksCount.add(mobileBookmarksSize)
+            }
+
+            toolbarPosition.set(
+                when (settings.toolbarPosition) {
+                    ToolbarPosition.BOTTOM -> Event.ToolbarPositionChanged.Position.BOTTOM.name
+                    ToolbarPosition.TOP -> Event.ToolbarPositionChanged.Position.TOP.name
+                }
+            )
+
+            tabViewSetting.set(settings.getTabViewPingString())
+            closeTabSetting.set(settings.getTabTimeoutPingString())
+        }
+
+        browserStore.waitForSelectedOrDefaultSearchEngine { searchEngine ->
+            if (searchEngine != null) {
+                SearchDefaultEngine.apply {
+                    code.set(searchEngine.id)
+                    name.set(searchEngine.name)
+                    submissionUrl.set(searchEngine.buildSearchUrl(""))
+                }
+            }
+        }
+    }
+
+    @Suppress("ComplexMethod")
+    private fun setPreferenceMetrics(
+        settings: Settings
+    ) {
+        with(Preferences) {
+            searchSuggestionsEnabled.set(settings.shouldShowSearchSuggestions)
+            remoteDebuggingEnabled.set(settings.isRemoteDebuggingEnabled)
+            telemetryEnabled.set(settings.isTelemetryEnabled)
+            browsingHistorySuggestion.set(settings.shouldShowHistorySuggestions)
+            bookmarksSuggestion.set(settings.shouldShowBookmarkSuggestions)
+            clipboardSuggestionsEnabled.set(settings.shouldShowClipboardSuggestions)
+            searchShortcutsEnabled.set(settings.shouldShowSearchShortcuts)
+            openLinksInPrivate.set(settings.openLinksInAPrivateTab)
+            privateSearchSuggestions.set(settings.shouldShowSearchSuggestionsInPrivate)
+            voiceSearchEnabled.set(settings.shouldShowVoiceSearch)
+            openLinksInAppEnabled.set(settings.openLinksInExternalApp)
+
+            val isLoggedIn =
+                components.backgroundServices.accountManager.accountProfile() != null
+            signedInSync.set(isLoggedIn)
+
+            val syncedItems = SyncEnginesStorage(applicationContext).getStatus().entries.filter {
+                it.value
+            }.map { it.key.nativeName }
+            syncItems.set(syncedItems)
+
+            toolbarPositionSetting.set(
+                when {
+                    settings.shouldUseFixedTopToolbar -> "fixed_top"
+                    settings.shouldUseBottomToolbar -> "bottom"
+                    else -> "top"
+                }
+            )
+
+            enhancedTrackingProtection.set(
+                when {
+                    !settings.shouldUseTrackingProtection -> ""
+                    settings.useStandardTrackingProtection -> "standard"
+                    settings.useStrictTrackingProtection -> "strict"
+                    settings.useCustomTrackingProtection -> "custom"
+                    else -> ""
+                }
+            )
+
+            val accessibilitySelection = mutableListOf<String>()
+
+            if (settings.switchServiceIsEnabled) {
+                accessibilitySelection.add("switch")
+            }
+
+            if (settings.touchExplorationIsEnabled) {
+                accessibilitySelection.add("touch exploration")
+            }
+
+            accessibilityServices.set(accessibilitySelection.toList())
+
+            userTheme.set(
+                when {
+                    settings.shouldUseLightTheme -> "light"
+                    settings.shouldUseDarkTheme -> "dark"
+                    settings.shouldFollowDeviceTheme -> "system"
+                    settings.shouldUseAutoBatteryTheme -> "battery"
+                    else -> ""
+                }
+            )
         }
     }
 
