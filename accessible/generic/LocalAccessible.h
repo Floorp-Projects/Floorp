@@ -58,6 +58,7 @@ namespace logging {
 typedef const char* (*GetTreePrefix)(void* aData, LocalAccessible*);
 void Tree(const char* aTitle, const char* aMsgText, LocalAccessible* aRoot,
           GetTreePrefix aPrefixFunc, void* GetTreePrefixData);
+void TreeSize(const char* aTitle, const char* aMsgText, LocalAccessible* aRoot);
 };  // namespace logging
 #endif
 
@@ -1098,6 +1099,8 @@ class LocalAccessible : public nsISupports, public Accessible {
                             LocalAccessible* aRoot,
                             logging::GetTreePrefix aPrefixFunc,
                             void* aGetTreePrefixData);
+  friend void logging::TreeSize(const char* aTitle, const char* aMsgText,
+                                LocalAccessible* aRoot);
 #endif
   friend class DocAccessible;
   friend class xpcAccessible;

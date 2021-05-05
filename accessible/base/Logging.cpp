@@ -32,6 +32,8 @@ using namespace mozilla::a11y;
 
 using mozilla::dom::BorrowedAttrInfo;
 
+MOZ_DEFINE_MALLOC_SIZE_OF(AccessibleLoggingMallocSizeOf)
+
 ////////////////////////////////////////////////////////////////////////////////
 // Logging helpers
 
@@ -52,6 +54,7 @@ static ModuleRep sModuleMap[] = {{"docload", logging::eDocLoad},
                                  {"platforms", logging::ePlatforms},
                                  {"text", logging::eText},
                                  {"tree", logging::eTree},
+                                 {"treeSize", logging::eTreeSize},
 
                                  {"DOMEvents", logging::eDOMEvents},
                                  {"focus", logging::eFocus},
@@ -740,6 +743,49 @@ void logging::DOMTree(const char* aTitle, const char* aMsgText,
       }
     }
   } while (root);
+  logging::MsgEnd();
+}
+
+void logging::TreeSize(const char* aTitle, const char* aMsgText,
+                       LocalAccessible* aRoot) {
+  logging::MsgBegin(aTitle, "%s", aMsgText);
+  logging::AccessibleInfo("Logging tree size from: ", aRoot);
+  size_t b = 0;
+  size_t n = 0;
+  LocalAccessible* root = aRoot;
+  do {
+    // Process the current acc
+    b += AccessibleLoggingMallocSizeOf(root);
+    n++;
+
+    // Get next acc
+    if (root->LocalFirstChild() && !root->LocalFirstChild()->IsDoc()) {
+      root = root->LocalFirstChild();
+      continue;
+    }
+    int32_t idxInParent = root != aRoot && root->mParent
+                              ? root->mParent->mChildren.IndexOf(root)
+                              : -1;
+    if (idxInParent != -1 &&
+        idxInParent <
+            static_cast<int32_t>(root->mParent->mChildren.Length() - 1)) {
+      root = root->mParent->mChildren.ElementAt(idxInParent + 1);
+      continue;
+    }
+    while (root != aRoot && (root = root->LocalParent())) {
+      int32_t idxInParent = !root->IsDoc() && root->mParent
+                                ? root->mParent->mChildren.IndexOf(root)
+                                : -1;
+      if (idxInParent != -1 &&
+          idxInParent <
+              static_cast<int32_t>(root->mParent->mChildren.Length() - 1)) {
+        root = root->mParent->mChildren.ElementAt(idxInParent + 1);
+        break;
+      }
+    }
+  } while (root && root != aRoot);
+
+  printf("\nTree contains %zu accessibles and is %zu bytes\n", n, b);
   logging::MsgEnd();
 }
 
