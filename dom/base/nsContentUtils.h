@@ -2446,10 +2446,10 @@ class nsContentUtils {
   static bool HasPluginWithUncontrolledEventDispatch(nsIContent* aContent);
 
   /**
-   * Returns the root document in a document hierarchy. Normally this
-   * will be the chrome document.
+   * Returns the in-process subtree root document in a document hierarchy.
+   * This could be a chrome document.
    */
-  static Document* GetRootDocument(Document* aDoc);
+  static Document* GetInProcessSubtreeRootDocument(Document* aDoc);
 
   static void GetShiftText(nsAString& text);
   static void GetControlText(nsAString& text);

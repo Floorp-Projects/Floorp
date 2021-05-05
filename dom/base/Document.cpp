@@ -13696,7 +13696,8 @@ bool FullscreenRoots::Contains(Document* aRoot) {
 
 /* static */
 void FullscreenRoots::Add(Document* aDoc) {
-  nsCOMPtr<Document> root = nsContentUtils::GetRootDocument(aDoc);
+  nsCOMPtr<Document> root =
+      nsContentUtils::GetInProcessSubtreeRootDocument(aDoc);
   if (!FullscreenRoots::Contains(root)) {
     if (!sInstance) {
       sInstance = new FullscreenRoots();
@@ -13722,7 +13723,8 @@ uint32_t FullscreenRoots::Find(Document* aRoot) {
 
 /* static */
 void FullscreenRoots::Remove(Document* aDoc) {
-  nsCOMPtr<Document> root = nsContentUtils::GetRootDocument(aDoc);
+  nsCOMPtr<Document> root =
+      nsContentUtils::GetInProcessSubtreeRootDocument(aDoc);
   uint32_t index = Find(root);
   NS_ASSERTION(index != NotFound,
                "Should only try to remove roots which are still added!");
@@ -13972,7 +13974,7 @@ static Document* GetFullscreenLeaf(Document* aDoc) {
   }
   // Otherwise we could be either in a non-fullscreen doc tree, or we're
   // below the fullscreen doc. Start the search from the root.
-  Document* root = nsContentUtils::GetRootDocument(aDoc);
+  Document* root = nsContentUtils::GetInProcessSubtreeRootDocument(aDoc);
   return GetFullscreenLeaf(*root);
 }
 
@@ -14632,8 +14634,9 @@ void Document::RequestFullscreenInContentProcess(
   // If we are in the content process, we can apply the fullscreen
   // state directly only if we have been in DOM fullscreen, because
   // otherwise we always need to notify the chrome.
-  if (applyFullScreenDirectly || !!nsContentUtils::GetRootDocument(this)
-                                       ->GetUnretargetedFullScreenElement()) {
+  if (applyFullScreenDirectly ||
+      !!nsContentUtils::GetInProcessSubtreeRootDocument(this)
+            ->GetUnretargetedFullScreenElement()) {
     ApplyFullscreen(std::move(aRequest));
     return;
   }
@@ -14730,7 +14733,8 @@ bool Document::ApplyFullscreen(UniquePtr<FullscreenRequest> aRequest) {
   // Remember the root document, so that if a fullscreen document is hidden
   // we can reset fullscreen state in the remaining visible fullscreen
   // documents.
-  Document* fullScreenRootDoc = nsContentUtils::GetRootDocument(this);
+  Document* fullScreenRootDoc =
+      nsContentUtils::GetInProcessSubtreeRootDocument(this);
 
   // If a document is already in fullscreen, then unlock the mouse pointer
   // before setting a new document to fullscreen
