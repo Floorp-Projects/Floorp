@@ -10,7 +10,9 @@
 #include "nsDebug.h"
 
 #include "Orientation.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/image/Resolution.h"
+#include "mozilla/gfx/Point.h"
 
 namespace mozilla::image {
 
@@ -30,9 +32,10 @@ enum class ResolutionUnit : uint8_t {
 
 class EXIFParser {
  public:
-  static EXIFData Parse(const uint8_t* aData, const uint32_t aLength) {
+  static EXIFData Parse(const uint8_t* aData, const uint32_t aLength,
+                        const gfx::IntSize& aRealImageSize) {
     EXIFParser parser;
-    return parser.ParseEXIF(aData, aLength);
+    return parser.ParseEXIF(aData, aLength, aRealImageSize);
   }
 
  private:
@@ -43,14 +46,17 @@ class EXIFParser {
         mRemainingLength(0),
         mByteOrder(ByteOrder::Unknown) {}
 
-  EXIFData ParseEXIF(const uint8_t* aData, const uint32_t aLength);
+  EXIFData ParseEXIF(const uint8_t* aData, const uint32_t aLength,
+                     const gfx::IntSize& aRealImageSize);
   bool ParseEXIFHeader();
   bool ParseTIFFHeader(uint32_t& aIFD0OffsetOut);
 
-  void ParseIFD0(ParsedEXIFData&);
+  void ParseIFD(ParsedEXIFData&, uint32_t aDepth = 0);
   bool ParseOrientation(uint16_t aType, uint32_t aCount, Orientation&);
-  bool ParseResolution(uint16_t aType, uint32_t aCount, float&);
-  bool ParseResolutionUnit(uint16_t aType, uint32_t aCount, ResolutionUnit&);
+  bool ParseResolution(uint16_t aType, uint32_t aCount, Maybe<float>&);
+  bool ParseResolutionUnit(uint16_t aType, uint32_t aCount,
+                           Maybe<ResolutionUnit>&);
+  bool ParseDimension(uint16_t aType, uint32_t aCount, Maybe<uint32_t>&);
 
   bool Initialize(const uint8_t* aData, const uint32_t aLength);
   void Advance(const uint32_t aDistance);
