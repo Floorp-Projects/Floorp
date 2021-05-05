@@ -791,7 +791,7 @@ def target_tasks_general_perf_testing(full_task_graph, parameters, graph_config)
             if "chrome-m" not in try_name and "-qr" not in platform:
                 return False
             # Select live site tests
-            if "-live" in try_name and ("fenix" in try_name or "chrome-m" in try_name):
+            if "-live" in try_name:
                 return True
             # Select fenix resource usage tests
             if "fenix" in try_name:
