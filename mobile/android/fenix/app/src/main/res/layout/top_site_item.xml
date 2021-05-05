@@ -12,14 +12,18 @@
     android:layout_marginBottom="@dimen/top_sites_item_margin_bottom"
     android:orientation="vertical">
 
-    <ImageView
-        android:id="@+id/favicon_image"
-        style="@style/TopSite.Favicon"
-        android:layout_gravity="center"
-        android:importantForAccessibility="no"
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/favicon_card"
+        style="@style/TopSite.FaviconCard"
+        android:importantForAccessibility="noHideDescendants"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent">
+
+        <com.google.android.material.imageview.ShapeableImageView
+            android:id="@+id/favicon_image"
+            style="@style/topSiteFavicon" />
+    </com.google.android.material.card.MaterialCardView>
 
     <TextView
         android:id="@+id/top_site_title"
@@ -36,7 +40,7 @@
         android:textSize="12sp"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/favicon_image"
+        app:layout_constraintTop_toBottomOf="@id/favicon_card"
         tools:ignore="RtlCompat,SmallSp" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
