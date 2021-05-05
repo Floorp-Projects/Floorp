@@ -85,6 +85,18 @@ fpush-linux-android:
         - "'test-android-em 'debug"
         - "^build !-shippable !-signing !-asan !-fuzzing !-rusttests !-base-toolchain !-aar-"
 
+geckodriver:
+    selector: fuzzy
+    description: >-
+        Runs the tests relevant to geckodriver, which implements the WebDriver
+        specification. This preset can be filtered down further to limit it to
+        a specific platform or other tasks only. For example:
+        |mach try --preset geckodriver -xq "'linux"|
+    query:
+        - "'rusttests"
+        - "'platform 'wdspec 'debug !fis"
+        - "'browsertime 'amazon 'vismet 'shippable 'firefox !fis"
+
 marionette:
     selector: fuzzy
     description: >-

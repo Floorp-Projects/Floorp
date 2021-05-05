@@ -40,6 +40,7 @@ For developers
 
    Building.md
    Testing.md
+   Patches.md
    Releasing.md
    ARM.md
 
