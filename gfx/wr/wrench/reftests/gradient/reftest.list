@@ -111,6 +111,7 @@ fuzzy-range(<=1,1) == gradient_cache_hardstop_clip.yaml gradient_cache_hardstop_
 
 # Exercise the radial gradient optimization code path
 == radial-optimized.yaml radial-optimized-ref.yaml
+== radial-optimized-2.yaml radial-optimized-2-ref.yaml
 == radial-tiling-optimized.yaml radial-tiling-optimized-ref.yaml
 
 # Exercise the cached gradient scaling code path
