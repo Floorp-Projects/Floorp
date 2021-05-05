@@ -2,7 +2,7 @@
 # to see which animation takes precedence (out of multiple animations on the
 # same attribute)
 
-random == enveloped-tree-1.xhtml enveloped-tree-1-ref.xhtml  # bug 470868
+skip-if(ThreadSanitizer) random == enveloped-tree-1.xhtml enveloped-tree-1-ref.xhtml  # bug 470868
 fuzzy-if(cocoaWidget&&layersGPUAccelerated,0-1,0-3) fuzzy-if(skiaContent,0-1,0-810) == promoted-tree-1.xhtml promoted-tree-1-ref.xhtml
 random == moved-tree-1.xhtml moved-tree-1-ref.xhtml  # bug 470868
 random-if(cocoaWidget||d2d) == deferred-anim-1.xhtml deferred-anim-1-ref.xhtml # bug 470868, bug 585484

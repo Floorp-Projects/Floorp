@@ -1,4 +1,4 @@
-fuzzy-if(gtkWidget||webrender,0-1,0-34) == simple.html chrome://reftest/content/forms/input/file/simple-ref.xhtml
+skip-if(ThreadSanitizer) fuzzy-if(gtkWidget||webrender,0-1,0-34) == simple.html chrome://reftest/content/forms/input/file/simple-ref.xhtml
 fuzzy-if(gtkWidget||webrender,0-1,0-17) == rtl.html chrome://reftest/content/forms/input/file/rtl-ref.xhtml
 fuzzy-if(gtkWidget||webrender,0-1,0-34) == size.html chrome://reftest/content/forms/input/file/simple-ref.xhtml
 fuzzy-if(gtkWidget||webrender,0-1,0-10) == background.html chrome://reftest/content/forms/input/file/background-ref.xhtml

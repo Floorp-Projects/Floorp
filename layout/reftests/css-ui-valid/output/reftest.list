@@ -1,2 +1,2 @@
-== output-valid.html output-ref.html
+skip-if(ThreadSanitizer) == output-valid.html output-ref.html
 == output-invalid.html output-ref.html

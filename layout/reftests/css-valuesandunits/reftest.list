@@ -1,4 +1,4 @@
-== unit-rem-div-fontsize.html unit-rem-ref.html
+skip-if(ThreadSanitizer) == unit-rem-div-fontsize.html unit-rem-ref.html
 == unit-rem-div-width-inner.html unit-rem-ref.html
 == unit-rem-div-width-outer.html unit-rem-ref.html
 fuzzy-if(webrender&&winWidget,0-27,0-4) == unit-rem-iframe.html unit-rem-ref-iframe.html

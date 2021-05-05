@@ -1,4 +1,4 @@
-fuzzy-if(Android,0-8,0-1) needs-focus == select-valid.html select-ref.html
+skip-if(ThreadSanitizer) fuzzy-if(Android,0-8,0-1) needs-focus == select-valid.html select-ref.html
 fuzzy-if(skiaContent,0-2,0-5) needs-focus == select-valid-reset.html select-required-ref.html
 fuzzy-if(skiaContent,0-1,0-3) needs-focus == select-invalid.html select-ref.html
 fuzzy-if(skiaContent,0-2,0-4) needs-focus == select-disabled.html select-disabled-ref.html
