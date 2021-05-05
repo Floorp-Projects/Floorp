@@ -43,15 +43,16 @@ enum EModules {
   ePlatforms = 1 << 5,
   eText = 1 << 6,
   eTree = 1 << 7,
+  eTreeSize = 1 << 8,
 
-  eDOMEvents = 1 << 8,
-  eFocus = 1 << 9,
-  eSelection = 1 << 10,
+  eDOMEvents = 1 << 9,
+  eFocus = 1 << 10,
+  eSelection = 1 << 11,
   eNotifications = eDOMEvents | eSelection | eFocus,
 
   // extras
-  eStack = 1 << 11,
-  eVerbose = 1 << 12
+  eStack = 1 << 12,
+  eVerbose = 1 << 13
 };
 
 /**
@@ -151,6 +152,11 @@ void Tree(const char* aTitle, const char* aMsgText, LocalAccessible* aRoot,
           GetTreePrefix aPrefixFunc = nullptr,
           void* aGetTreePrefixData = nullptr);
 void DOMTree(const char* aTitle, const char* aMsgText, DocAccessible* aDoc);
+
+/**
+ * Log the tree size in bytes.
+ */
+void TreeSize(const char* aTitle, const char* aMsgText, LocalAccessible* aRoot);
 
 /**
  * Log the message ('title: text' format) on new line. Print the start and end
