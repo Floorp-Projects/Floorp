@@ -45,7 +45,12 @@
 #define RTC_BASE_LOGGING_H_
 
 #pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wclass-varargs"
+#pragma GCC diagnostic ignored "-Wvarargs"
+
+#if defined(__clang__)
+#  pragma clang diagnostic push
+#  pragma clang diagnostic ignored "-Wclass-varargs"
+#endif
 
 #include <errno.h>
 
@@ -713,5 +718,8 @@ inline const char* AdaptString(const std::string& str) {
 }  // namespace rtc
 
 #pragma GCC diagnostic pop
+#if defined(__clang__)
+#  pragma clang diagnostic pop
+#endif
 
 #endif  // RTC_BASE_LOGGING_H_
