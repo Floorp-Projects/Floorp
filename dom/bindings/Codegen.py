@@ -502,8 +502,8 @@ class CGNativePropertyHooks(CGThing):
             and self.descriptor.proxy
             and not self.descriptor.isMaybeCrossOriginObject()
         ):
-            resolveOwnProperty = "ResolveOwnProperty"
-            enumerateOwnProperties = "EnumerateOwnProperties"
+            resolveOwnProperty = "binding_detail::ResolveOwnProperty"
+            enumerateOwnProperties = "binding_detail::EnumerateOwnProperties"
             if self.descriptor.needsXrayNamedDeleterHook():
                 deleteNamedProperty = "DeleteNamedProperty"
         elif self.descriptor.needsXrayResolveHooks():
@@ -13662,38 +13662,6 @@ class CGClass(CGThing):
         return result
 
 
-class CGResolveOwnProperty(CGAbstractStaticMethod):
-    def __init__(self, descriptor):
-        args = [
-            Argument("JSContext*", "cx"),
-            Argument("JS::Handle<JSObject*>", "wrapper"),
-            Argument("JS::Handle<JSObject*>", "obj"),
-            Argument("JS::Handle<jsid>", "id"),
-            Argument("JS::MutableHandle<JS::PropertyDescriptor>", "desc"),
-        ]
-        CGAbstractStaticMethod.__init__(
-            self, descriptor, "ResolveOwnProperty", "bool", args
-        )
-
-    def definition_body(self):
-        return dedent(
-            """
-        JS::Rooted<mozilla::Maybe<JS::PropertyDescriptor>> ownDesc(cx);
-        if (!js::GetProxyHandler(obj)->getOwnPropertyDescriptor(cx, wrapper, id, &ownDesc)) {
-            return false;
-        }
-
-        if (ownDesc.isNothing()) {
-            desc.object().set(nullptr);
-        } else {
-            desc.set(*ownDesc);
-        }
-
-        return true;
-        """
-        )
-
-
 class CGResolveOwnPropertyViaResolve(CGAbstractBindingMethod):
     """
     An implementation of Xray ResolveOwnProperty stuff for things that have a
@@ -13747,22 +13715,6 @@ class CGResolveOwnPropertyViaResolve(CGAbstractBindingMethod):
             """
             )
         )
-
-
-class CGEnumerateOwnProperties(CGAbstractStaticMethod):
-    def __init__(self, descriptor):
-        args = [
-            Argument("JSContext*", "cx"),
-            Argument("JS::Handle<JSObject*>", "wrapper"),
-            Argument("JS::Handle<JSObject*>", "obj"),
-            Argument("JS::MutableHandleVector<jsid>", "props"),
-        ]
-        CGAbstractStaticMethod.__init__(
-            self, descriptor, "EnumerateOwnProperties", "bool", args
-        )
-
-    def definition_body(self):
-        return "return js::GetProxyHandler(obj)->ownPropertyKeys(cx, wrapper, props);\n"
 
 
 class CGEnumerateOwnPropertiesViaGetOwnPropertyNames(CGAbstractBindingMethod):
@@ -16351,9 +16303,6 @@ class CGDescriptor(CGThing):
         # after we have our DOMProxyHandler defined.
         if descriptor.wantsXrays:
             if descriptor.concrete and descriptor.proxy:
-                if not descriptor.isMaybeCrossOriginObject():
-                    cgThings.append(CGResolveOwnProperty(descriptor))
-                    cgThings.append(CGEnumerateOwnProperties(descriptor))
                 if descriptor.needsXrayNamedDeleterHook():
                     cgThings.append(CGDeleteNamedProperty(descriptor))
             elif descriptor.needsXrayResolveHooks():
