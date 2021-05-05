@@ -40,10 +40,16 @@ set_config(
 # check for, download, and install updates.
 # ==============================================================
 
+
+@depends("--enable-backgroundtasks", build_project)
+def update_agent_default(backgroundtasks, build_project):
+    return bool(backgroundtasks) and build_project == "browser"
+
+
 option(
     "--disable-update-agent",
     when=target_is_windows | target_is_osx,
-    default=depends("--enable-backgroundtasks")(lambda x: bool(x)),
+    default=update_agent_default,
     help="{Enable|Disable} building update agent",
 )
 
@@ -71,9 +77,9 @@ def check_update_agent(update_agent, backgroundtasks):
 # ==============================================================================
 
 
-@depends(target)
-def default_browser_agent_default(target):
-    return target.os == "WINNT"
+@depends(target, build_project)
+def default_browser_agent_default(target, build_project):
+    return target.os == "WINNT" and build_project == "browser"
 
 
 option(
