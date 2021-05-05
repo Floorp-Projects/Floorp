@@ -5501,13 +5501,13 @@
 # Whether the new encoding detector is enabled for the .in TLD.
 - name: intl.charset.detector.ng.in.enabled
   type: bool
-  value: false
+  value: true
   mirror: always
 
 # Whether the new encoding detector is enabled for the .lk TLD.
 - name: intl.charset.detector.ng.lk.enabled
   type: bool
-  value: false
+  value: true
   mirror: always
 
 # If true, dispatch the keydown and keyup events on any web apps even during
