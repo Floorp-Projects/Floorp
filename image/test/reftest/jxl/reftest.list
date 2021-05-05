@@ -1,0 +1,3 @@
+# JXL tests
+
+pref(image.jxl.enabled,true) == jxl-size-33x33.jxl jxl-size-33x33.png

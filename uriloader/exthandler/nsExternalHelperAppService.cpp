@@ -535,6 +535,7 @@ static const nsExtraMimeTypeEntry extraMimeEntries[] = {
     {IMAGE_SVG_XML, "svg", "Scalable Vector Graphics"},
     {IMAGE_WEBP, "webp", "WebP Image"},
     {IMAGE_AVIF, "avif", "AV1 Image File"},
+    {IMAGE_JXL, "jxl", "JPEG XL Image File"},
 
     {MESSAGE_RFC822, "eml", "RFC-822 data"},
     {TEXT_PLAIN, "txt,text", "Text File"},
@@ -605,7 +606,7 @@ static const char* forcedExtensionMimetypes[] = {
  * NOTE: These MUST be lower-case and ASCII.
  */
 static const char* descriptionOverwriteExtensions[] = {
-    "avif", "pdf", "svg", "webp", "xml",
+    "avif", "jxl", "pdf", "svg", "webp", "xml",
 };
 
 static StaticRefPtr<nsExternalHelperAppService> sExtHelperAppSvcSingleton;
