@@ -1917,6 +1917,7 @@ BinaryOperator ASTSerializer::binop(ParseNodeKind kind) {
     case ParseNodeKind::BitAndExpr:
       return BINOP_BITAND;
     case ParseNodeKind::InExpr:
+    case ParseNodeKind::PrivateInExpr:
       return BINOP_IN;
     case ParseNodeKind::InstanceOfExpr:
       return BINOP_INSTANCEOF;
@@ -2900,6 +2901,7 @@ bool ASTSerializer::expression(ParseNode* pn, MutableHandleValue dst) {
     case ParseNodeKind::BitXorExpr:
     case ParseNodeKind::BitAndExpr:
     case ParseNodeKind::InExpr:
+    case ParseNodeKind::PrivateInExpr:
     case ParseNodeKind::InstanceOfExpr:
       return leftAssociate(&pn->as<ListNode>(), dst);
 
