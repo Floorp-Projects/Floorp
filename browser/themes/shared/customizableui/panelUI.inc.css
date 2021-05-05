@@ -1392,6 +1392,10 @@ panelmultiview[mainViewId="PanelUI-fxa"] #PanelUI-remotetabs-syncnow {
   display: none;
 }
 
+.subview-subheader {
+  display: -moz-box;
+}
+
 .subview-subheader,
 panelview .toolbarbutton-1,
 .subviewbutton,
