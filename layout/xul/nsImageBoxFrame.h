@@ -78,10 +78,12 @@ class nsImageBoxFrame final : public nsLeafBoxFrame {
    *
    * TODO(emilio): Maybe support list-style-image: linear-gradient() etc?
    */
-  const mozilla::StyleImage* GetImageFromStyle(const ComputedStyle&);
-  const mozilla::StyleImage* GetImageFromStyle() {
+  const mozilla::StyleImage* GetImageFromStyle(const ComputedStyle&) const;
+  const mozilla::StyleImage* GetImageFromStyle() const {
     return GetImageFromStyle(*Style());
   }
+
+  mozilla::ImageResolution GetImageResolution() const;
 
   /**
    * Update mUseSrcAttr from appropriate content attributes or from
@@ -141,7 +143,6 @@ class nsImageBoxFrame final : public nsLeafBoxFrame {
   nsSize mImageSize;
 
   RefPtr<imgRequestProxy> mImageRequest;
-  float mImageResolution = 1.0f;
   nsCOMPtr<imgINotificationObserver> mListener;
 
   int32_t mLoadFlags;

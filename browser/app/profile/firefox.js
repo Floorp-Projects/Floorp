@@ -1489,6 +1489,7 @@ pref("browser.messaging-system.personalized-cfr.score-threshold", 5000);
 pref("messaging-system.log", "warn");
 pref("messaging-system.rsexperimentloader.enabled", true);
 pref("messaging-system.rsexperimentloader.collection_id", "nimbus-desktop-experiments");
+pref("nimbus.debug", false);
 
 // Enable the DOM fullscreen API.
 pref("full-screen-api.enabled", true);

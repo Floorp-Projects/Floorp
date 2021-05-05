@@ -50,6 +50,9 @@ nsSize CSSSizeOrRatio::ComputeConcreteSize() const {
 nsImageRenderer::nsImageRenderer(nsIFrame* aForFrame, const StyleImage* aImage,
                                  uint32_t aFlags)
     : mForFrame(aForFrame),
+      mImage(&aImage->FinalImage()),
+      mImageResolution(aImage->GetResolution()),
+      mType(mImage->tag),
       mImageContainer(nullptr),
       mGradientData(nullptr),
       mPaintServerFrame(nullptr),
@@ -57,12 +60,7 @@ nsImageRenderer::nsImageRenderer(nsIFrame* aForFrame, const StyleImage* aImage,
       mSize(0, 0),
       mFlags(aFlags),
       mExtendMode(ExtendMode::CLAMP),
-      mMaskOp(StyleMaskMode::MatchSource) {
-  auto pair = aImage->FinalImageAndResolution();
-  mImage = pair.first;
-  mType = mImage->tag;
-  mImageResolution = pair.second;
-}
+      mMaskOp(StyleMaskMode::MatchSource) {}
 
 bool nsImageRenderer::PrepareImage() {
   if (mImage->IsNone()) {
@@ -940,9 +938,8 @@ ImgDrawResult nsImageRenderer::DrawBorderImageComponent(
 
     if (!RequiresScaling(aFill, aHFill, aVFill, aUnitSize)) {
       ImgDrawResult result = nsLayoutUtils::DrawSingleImage(
-          aRenderingContext, aPresContext, subImage, mImageResolution,
-          samplingFilter, aFill, aDirtyRect,
-          /* no SVGImageContext */ Nothing(), drawFlags);
+          aRenderingContext, aPresContext, subImage, samplingFilter, aFill,
+          aDirtyRect, /* no SVGImageContext */ Nothing(), drawFlags);
 
       if (!mImage->IsComplete()) {
         result &= ImgDrawResult::SUCCESS_NOT_COMPLETE;
@@ -1010,9 +1007,8 @@ ImgDrawResult nsImageRenderer::DrawShapeImage(nsPresContext* aPresContext,
     // rendered pixel has an alpha that precisely matches the alpha of the
     // closest pixel in the image.
     return nsLayoutUtils::DrawSingleImage(
-        aRenderingContext, aPresContext, mImageContainer, mImageResolution,
-        SamplingFilter::POINT, dest, dest, Nothing(), drawFlags, nullptr,
-        nullptr);
+        aRenderingContext, aPresContext, mImageContainer, SamplingFilter::POINT,
+        dest, dest, Nothing(), drawFlags);
   }
 
   if (mImage->IsGradient()) {

@@ -96,17 +96,6 @@ jobs:
           by-project:
               mozilla-central: [{hour: 10, minute: 0}]
 
-    - name: live-site-perf-testing
-      job:
-          type: decision-task
-          treeherder-symbol: lst
-          target-tasks-method: live_site_perf_testing
-          include-push-tasks: true
-      run-on-projects:
-          - mozilla-central
-      when:
-          - {weekday: 'Sunday', hour: 5, minute: 0}
-
     - name: general-perf-testing
       job:
           type: decision-task

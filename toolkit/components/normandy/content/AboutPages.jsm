@@ -33,6 +33,11 @@ ChromeUtils.defineModuleGetter(
   "ExperimentManager",
   "resource://nimbus/lib/ExperimentManager.jsm"
 );
+ChromeUtils.defineModuleGetter(
+  this,
+  "RemoteSettingsExperimentLoader",
+  "resource://nimbus/lib/RemoteSettingsExperimentLoader.jsm"
+);
 
 var EXPORTED_SYMBOLS = ["AboutPages"];
 
@@ -118,6 +123,10 @@ XPCOMUtils.defineLazyGetter(AboutPages, "aboutStudies", () => {
 
     getMessagingSystemList() {
       return ExperimentManager.store.getAll();
+    },
+
+    optInToExperiment(data) {
+      RemoteSettingsExperimentLoader.optInToExperiment(data);
     },
 
     /** Add a browsing context to the weak set;

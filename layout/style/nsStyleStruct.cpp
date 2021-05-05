@@ -1630,9 +1630,26 @@ void StyleImage::ResolveImage(Document& aDoc, const StyleImage* aOld) {
 }
 
 template <>
+ImageResolution StyleImage::GetResolution() const {
+  ImageResolution resolution;
+  if (imgRequestProxy* request = GetImageRequest()) {
+    RefPtr<imgIContainer> image;
+    request->GetImage(getter_AddRefs(image));
+    if (image) {
+      resolution = image->GetResolution();
+    }
+  }
+  if (IsImageSet()) {
+    auto& set = AsImageSet();
+    float r = set->items.AsSpan()[set->selected_index].resolution._0;
+    resolution.ScaleBy(r);
+  }
+  return resolution;
+}
+
+template <>
 Maybe<CSSIntSize> StyleImage::GetIntrinsicSize() const {
-  auto [finalImage, resolution] = FinalImageAndResolution();
-  imgRequestProxy* request = finalImage->GetImageRequest();
+  imgRequestProxy* request = GetImageRequest();
   if (!request) {
     return Nothing();
   }
@@ -1647,10 +1664,7 @@ Maybe<CSSIntSize> StyleImage::GetIntrinsicSize() const {
   int32_t w = 0, h = 0;
   image->GetWidth(&w);
   image->GetHeight(&h);
-  if (resolution != 0.0f && resolution != 1.0f) {
-    w = std::round(float(w) / resolution);
-    h = std::round(float(h) / resolution);
-  }
+  GetResolution().ApplyTo(w, h);
   return Some(CSSIntSize{w, h});
 }
 
@@ -1909,9 +1923,9 @@ static bool SizeDependsOnPositioningAreaSize(const StyleBackgroundSize& aSize,
       bool hasWidth, hasHeight;
       // We could bother getting the right resolution here but it doesn't matter
       // since we ignore `imageSize`.
-      nsLayoutUtils::ComputeSizeForDrawing(imgContainer,
-                                           /* aResolution = */ 1.0f, imageSize,
-                                           imageRatio, hasWidth, hasHeight);
+      nsLayoutUtils::ComputeSizeForDrawing(imgContainer, ImageResolution(),
+                                           imageSize, imageRatio, hasWidth,
+                                           hasHeight);
 
       // If the image has a fixed width and height, rendering never depends on
       // the frame size.

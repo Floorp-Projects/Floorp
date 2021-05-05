@@ -1593,6 +1593,8 @@ class MediaDecoderStateMachine::NextFrameSeekingState
   }
 
   void DoSeek() override {
+    mMaster->StopMediaSink();
+
     auto currentTime = mCurrentTime;
     DiscardFrames(VideoQueue(), [currentTime](int64_t aSampleTime) {
       return aSampleTime <= currentTime.ToMicroseconds();

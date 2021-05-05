@@ -6,7 +6,7 @@ http://creativecommons.org/publicdomain/zero/1.0/ */
 const { ExperimentFakes } = ChromeUtils.import(
   "resource://testing-common/NimbusTestUtils.jsm"
 );
-const { NimbusFeatures, ExperimentFeature } = ChromeUtils.import(
+const { NimbusFeatures, ExperimentFeature, ExperimentAPI } = ChromeUtils.import(
   "resource://nimbus/ExperimentAPI.jsm"
 );
 
@@ -294,6 +294,7 @@ add_task(async function not_major_upgrade() {
 });
 
 add_task(async function remote_disabled() {
+  await ExperimentAPI.ready();
   await ExperimentFakes.remoteDefaultsHelper({
     feature: NimbusFeatures.upgradeDialog,
     configuration: { enabled: false, variables: {} },

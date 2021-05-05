@@ -15,8 +15,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1603712
   SimpleTest.waitForExplicitFinish();
 
   var tlds = [
-    {'tld': 'in', 'encoding': 'windows-1252'},
-    {'tld': 'lk', 'encoding': 'windows-1252'},
+    {'tld': 'in', 'expectedEncoding': 'Shift_JIS'},
+    {'tld': 'lk', 'expectedEncoding': 'Shift_JIS'},
   ];
 
   var iframe = null;
@@ -31,7 +31,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1603712
 
   function next(event) {
     if (event) {
-      is(event.data, current.encoding, "Got bad encoding for " + current.tld);
+      is(event.data, current.expectedEncoding, "Got bad encoding for " + current.tld);
     }
     current = tlds.shift();
     if (!current) {

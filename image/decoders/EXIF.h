@@ -10,24 +10,32 @@
 #include "nsDebug.h"
 
 #include "Orientation.h"
+#include "mozilla/Maybe.h"
+#include "mozilla/image/Resolution.h"
+#include "mozilla/gfx/Point.h"
 
-namespace mozilla {
-namespace image {
+namespace mozilla::image {
 
 enum class ByteOrder : uint8_t { Unknown, LittleEndian, BigEndian };
 
 struct EXIFData {
-  EXIFData() {}
-  explicit EXIFData(Orientation aOrientation) : orientation(aOrientation) {}
+  const Orientation orientation = Orientation();
+  const Resolution resolution = Resolution();
+};
 
-  const Orientation orientation;
+struct ParsedEXIFData;
+
+enum class ResolutionUnit : uint8_t {
+  Dpi,
+  Dpcm,
 };
 
 class EXIFParser {
  public:
-  static EXIFData Parse(const uint8_t* aData, const uint32_t aLength) {
+  static EXIFData Parse(const uint8_t* aData, const uint32_t aLength,
+                        const gfx::IntSize& aRealImageSize) {
     EXIFParser parser;
-    return parser.ParseEXIF(aData, aLength);
+    return parser.ParseEXIF(aData, aLength, aRealImageSize);
   }
 
  private:
@@ -38,20 +46,42 @@ class EXIFParser {
         mRemainingLength(0),
         mByteOrder(ByteOrder::Unknown) {}
 
-  EXIFData ParseEXIF(const uint8_t* aData, const uint32_t aLength);
+  EXIFData ParseEXIF(const uint8_t* aData, const uint32_t aLength,
+                     const gfx::IntSize& aRealImageSize);
   bool ParseEXIFHeader();
   bool ParseTIFFHeader(uint32_t& aIFD0OffsetOut);
-  bool ParseIFD0(Orientation& aOrientationOut);
-  bool ParseOrientation(uint16_t aType, uint32_t aCount, Orientation& aOut);
+
+  void ParseIFD(ParsedEXIFData&, uint32_t aDepth = 0);
+  bool ParseOrientation(uint16_t aType, uint32_t aCount, Orientation&);
+  bool ParseResolution(uint16_t aType, uint32_t aCount, Maybe<float>&);
+  bool ParseResolutionUnit(uint16_t aType, uint32_t aCount,
+                           Maybe<ResolutionUnit>&);
+  bool ParseDimension(uint16_t aType, uint32_t aCount, Maybe<uint32_t>&);
 
   bool Initialize(const uint8_t* aData, const uint32_t aLength);
   void Advance(const uint32_t aDistance);
   void JumpTo(const uint32_t aOffset);
 
+  uint32_t CurrentOffset() const { return mCurrent - mStart; }
+
+  class ScopedJump {
+    EXIFParser& mParser;
+    uint32_t mOldOffset;
+
+   public:
+    ScopedJump(EXIFParser& aParser, uint32_t aOffset)
+        : mParser(aParser), mOldOffset(aParser.CurrentOffset()) {
+      mParser.JumpTo(aOffset);
+    }
+
+    ~ScopedJump() { mParser.JumpTo(mOldOffset); }
+  };
+
   bool MatchString(const char* aString, const uint32_t aLength);
   bool MatchUInt16(const uint16_t aValue);
   bool ReadUInt16(uint16_t& aOut);
   bool ReadUInt32(uint32_t& aOut);
+  bool ReadRational(float& aOut);
 
   const uint8_t* mStart;
   const uint8_t* mCurrent;
@@ -60,7 +90,6 @@ class EXIFParser {
   ByteOrder mByteOrder;
 };
 
-}  // namespace image
-}  // namespace mozilla
+}  // namespace mozilla::image
 
 #endif  // mozilla_image_decoders_EXIF_h

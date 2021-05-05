@@ -6,9 +6,9 @@
 #include "EXIF.h"
 
 #include "mozilla/EndianUtils.h"
+#include "mozilla/StaticPrefs_image.h"
 
-namespace mozilla {
-namespace image {
+namespace mozilla::image {
 
 // Section references in this file refer to the EXIF v2.3 standard, also known
 // as CIPA DC-008-Translation-2010.
@@ -16,8 +16,14 @@ namespace image {
 // See Section 4.6.4, Table 4.
 // Typesafe enums are intentionally not used here since we're comparing to raw
 // integers produced by parsing.
-enum EXIFTag {
-  OrientationTag = 0x112,
+enum class EXIFTag : uint16_t {
+  Orientation = 0x112,
+  XResolution = 0x11a,
+  YResolution = 0x11b,
+  PixelXDimension = 0xa002,
+  PixelYDimension = 0xa003,
+  ResolutionUnit = 0x128,
+  IFDPointer = 0x8769,
 };
 
 // See Section 4.6.2.
@@ -34,11 +40,61 @@ enum EXIFType {
 
 static const char* EXIFHeader = "Exif\0\0";
 static const uint32_t EXIFHeaderLength = 6;
+static const uint32_t TIFFHeaderStart = EXIFHeaderLength;
+
+struct ParsedEXIFData {
+  Orientation orientation;
+  Maybe<float> resolutionX;
+  Maybe<float> resolutionY;
+  Maybe<uint32_t> pixelXDimension;
+  Maybe<uint32_t> pixelYDimension;
+  Maybe<ResolutionUnit> resolutionUnit;
+};
+
+static float ToDppx(float aResolution, ResolutionUnit aUnit) {
+  constexpr float kPointsPerInch = 72.0f;
+  constexpr float kPointsPerCm = 1.0f / 2.54f;
+  switch (aUnit) {
+    case ResolutionUnit::Dpi:
+      return aResolution / kPointsPerInch;
+    case ResolutionUnit::Dpcm:
+      return aResolution / kPointsPerCm;
+  }
+  MOZ_CRASH("Unknown resolution unit?");
+}
+
+static Resolution ResolutionFromParsedData(const ParsedEXIFData& aData,
+                                           const gfx::IntSize& aRealImageSize) {
+  if (!aData.resolutionUnit || !aData.resolutionX || !aData.resolutionY) {
+    return {};
+  }
+
+  Resolution resolution{ToDppx(*aData.resolutionX, *aData.resolutionUnit),
+                        ToDppx(*aData.resolutionY, *aData.resolutionUnit)};
+
+  if (StaticPrefs::image_exif_density_correction_sanity_check_enabled()) {
+    if (!aData.pixelXDimension || !aData.pixelYDimension) {
+      return {};
+    }
+
+    const gfx::IntSize exifSize(*aData.pixelXDimension, *aData.pixelYDimension);
+
+    gfx::IntSize scaledSize = aRealImageSize;
+    resolution.ApplyTo(scaledSize.width, scaledSize.height);
+
+    if (exifSize != scaledSize) {
+      return {};
+    }
+  }
+
+  return resolution;
+}
 
 /////////////////////////////////////////////////////////////
 // Parse EXIF data, typically found in a JPEG's APP1 segment.
 /////////////////////////////////////////////////////////////
-EXIFData EXIFParser::ParseEXIF(const uint8_t* aData, const uint32_t aLength) {
+EXIFData EXIFParser::ParseEXIF(const uint8_t* aData, const uint32_t aLength,
+                               const gfx::IntSize& aRealImageSize) {
   if (!Initialize(aData, aLength)) {
     return EXIFData();
   }
@@ -54,14 +110,11 @@ EXIFData EXIFParser::ParseEXIF(const uint8_t* aData, const uint32_t aLength) {
 
   JumpTo(offsetIFD);
 
-  Orientation orientation;
-  if (!ParseIFD0(orientation)) {
-    return EXIFData();
-  }
+  ParsedEXIFData data;
+  ParseIFD(data);
 
-  // We only care about orientation at this point, so we don't bother with the
-  // other IFDs. If we got this far we're done.
-  return EXIFData(orientation);
+  return EXIFData{data.orientation,
+                  ResolutionFromParsedData(data, aRealImageSize)};
 }
 
 /////////////////////////////////////////////////////////
@@ -94,55 +147,199 @@ bool EXIFParser::ParseTIFFHeader(uint32_t& aIFD0OffsetOut) {
   // The IFD offset is relative to the beginning of the TIFF header, which
   // begins after the EXIF header, so we need to increase the offset
   // appropriately.
-  aIFD0OffsetOut = ifd0Offset + EXIFHeaderLength;
+  aIFD0OffsetOut = ifd0Offset + TIFFHeaderStart;
   return true;
 }
+
+// An arbitrary limit on the amount of pointers that we'll chase, to prevent bad
+// inputs getting us stuck.
+constexpr uint32_t kMaxEXIFDepth = 16;
 
 /////////////////////////////////////////////////////////
 // Parse the entries in IFD0. (Section 4.6.2)
 /////////////////////////////////////////////////////////
-bool EXIFParser::ParseIFD0(Orientation& aOrientationOut) {
+void EXIFParser::ParseIFD(ParsedEXIFData& aData, uint32_t aDepth) {
+  if (NS_WARN_IF(aDepth > kMaxEXIFDepth)) {
+    return;
+  }
+
   uint16_t entryCount;
   if (!ReadUInt16(entryCount)) {
-    return false;
+    return;
   }
 
   for (uint16_t entry = 0; entry < entryCount; ++entry) {
-    // Read the fields of the entry.
+    // Read the fields of the 12-byte entry.
     uint16_t tag;
     if (!ReadUInt16(tag)) {
-      return false;
-    }
-
-    // Right now, we only care about orientation, so we immediately skip to the
-    // next entry if we find anything else.
-    if (tag != OrientationTag) {
-      Advance(10);
-      continue;
+      return;
     }
 
     uint16_t type;
     if (!ReadUInt16(type)) {
-      return false;
+      return;
     }
 
     uint32_t count;
     if (!ReadUInt32(count)) {
-      return false;
+      return;
     }
 
-    // We should have an orientation value here; go ahead and parse it.
-    if (!ParseOrientation(type, count, aOrientationOut)) {
-      return false;
-    }
+    switch (EXIFTag(tag)) {
+      case EXIFTag::Orientation:
+        // We should have an orientation value here; go ahead and parse it.
+        if (!ParseOrientation(type, count, aData.orientation)) {
+          return;
+        }
+        break;
+      case EXIFTag::ResolutionUnit:
+        if (!ParseResolutionUnit(type, count, aData.resolutionUnit)) {
+          return;
+        }
+        break;
+      case EXIFTag::XResolution:
+        if (!ParseResolution(type, count, aData.resolutionX)) {
+          return;
+        }
+        break;
+      case EXIFTag::YResolution:
+        if (!ParseResolution(type, count, aData.resolutionY)) {
+          return;
+        }
+        break;
+      case EXIFTag::PixelXDimension:
+        if (!ParseDimension(type, count, aData.pixelXDimension)) {
+          return;
+        }
+        break;
+      case EXIFTag::PixelYDimension:
+        if (!ParseDimension(type, count, aData.pixelYDimension)) {
+          return;
+        }
+        break;
+      case EXIFTag::IFDPointer: {
+        uint32_t offset;
+        if (!ReadUInt32(offset)) {
+          return;
+        }
 
-    // Since the orientation is all we care about, we're done.
+        ScopedJump jump(*this, offset + TIFFHeaderStart);
+        ParseIFD(aData, aDepth + 1);
+        break;
+      }
+
+      default:
+        Advance(4);
+        break;
+    }
+  }
+}
+
+bool EXIFParser::ReadRational(float& aOut) {
+  // Values larger than 4 bytes (like rationals) are specified as an offset into
+  // the TIFF header.
+  uint32_t valueOffset;
+  if (!ReadUInt32(valueOffset)) {
+    return false;
+  }
+  ScopedJump jumpToHeader(*this, valueOffset + TIFFHeaderStart);
+  uint32_t numerator;
+  if (!ReadUInt32(numerator)) {
+    return false;
+  }
+  uint32_t denominator;
+  if (!ReadUInt32(denominator)) {
+    return false;
+  }
+  if (denominator == 0) {
+    return false;
+  }
+  aOut = float(numerator) / float(denominator);
+  return true;
+}
+
+bool EXIFParser::ParseResolution(uint16_t aType, uint32_t aCount,
+                                 Maybe<float>& aOut) {
+  if (!StaticPrefs::image_exif_density_correction_enabled()) {
+    Advance(4);
+    return true;
+  }
+  if (aType != RationalType || aCount != 1) {
+    return false;
+  }
+  float value;
+  if (!ReadRational(value)) {
+    return false;
+  }
+  if (value == 0.0f) {
+    return false;
+  }
+  aOut = Some(value);
+  return true;
+}
+
+bool EXIFParser::ParseDimension(uint16_t aType, uint32_t aCount,
+                                Maybe<uint32_t>& aOut) {
+  if (!StaticPrefs::image_exif_density_correction_enabled()) {
+    Advance(4);
     return true;
   }
 
-  // We didn't find an orientation field in the IFD. That's OK; we assume the
-  // default orientation in that case.
-  aOrientationOut = Orientation();
+  if (aCount != 1) {
+    return false;
+  }
+
+  switch (aType) {
+    case ShortType: {
+      uint16_t value;
+      if (!ReadUInt16(value)) {
+        return false;
+      }
+      aOut = Some(value);
+      Advance(2);
+      break;
+    }
+    case LongType: {
+      uint32_t value;
+      if (!ReadUInt32(value)) {
+        return false;
+      }
+      aOut = Some(value);
+      break;
+    }
+    default:
+      return false;
+  }
+  return true;
+}
+
+bool EXIFParser::ParseResolutionUnit(uint16_t aType, uint32_t aCount,
+                                     Maybe<ResolutionUnit>& aOut) {
+  if (!StaticPrefs::image_exif_density_correction_enabled()) {
+    Advance(4);
+    return true;
+  }
+  if (aType != ShortType || aCount != 1) {
+    return false;
+  }
+  uint16_t value;
+  if (!ReadUInt16(value)) {
+    return false;
+  }
+  switch (value) {
+    case 2:
+      aOut = Some(ResolutionUnit::Dpi);
+      break;
+    case 3:
+      aOut = Some(ResolutionUnit::Dpcm);
+      break;
+    default:
+      return false;
+  }
+
+  // This is a 32-bit field, but the unit value only occupies the first 16 bits.
+  // We need to advance another 16 bits to consume the entire field.
+  Advance(2);
   return true;
 }
 
@@ -319,5 +516,4 @@ bool EXIFParser::ReadUInt32(uint32_t& aValue) {
   return matched;
 }
 
-}  // namespace image
-}  // namespace mozilla
+}  // namespace mozilla::image

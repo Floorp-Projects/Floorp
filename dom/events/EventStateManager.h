@@ -243,9 +243,9 @@ class EventStateManager : public nsSupportsWeakReference, public nsIObserver {
   bool CheckIfEventMatchesAccessKey(WidgetKeyboardEvent* aEvent,
                                     nsPresContext* aPresContext);
 
-  nsresult SetCursor(StyleCursorKind aCursor, imgIContainer* aContainer,
-                     float aResolution, const Maybe<gfx::IntPoint>& aHotspot,
-                     nsIWidget* aWidget, bool aLockCursor);
+  nsresult SetCursor(StyleCursorKind, imgIContainer*, const ImageResolution&,
+                     const Maybe<gfx::IntPoint>& aHotspot, nsIWidget* aWidget,
+                     bool aLockCursor);
 
   /**
    * Checks if the current mouse over element matches the given

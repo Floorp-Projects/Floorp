@@ -673,7 +673,7 @@ let JSWINDOWACTORS = {
         ShieldPageEvent: { wantUntrusted: true },
       },
     },
-    matches: ["about:studies"],
+    matches: ["about:studies*"],
   },
 
   ASRouter: {

@@ -888,7 +888,7 @@ popupnotificationcontent {
 }
 
 .popup-notification-body menulist {
-  margin-inline: 0;
+  margin: 0;
 }
 
 .popup-notification-checkbox {

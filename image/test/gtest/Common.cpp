@@ -9,6 +9,7 @@
 
 #include "gfxPlatform.h"
 
+#include "ImageFactory.h"
 #include "imgITools.h"
 #include "mozilla/Preferences.h"
 #include "nsComponentManagerUtils.h"
@@ -829,6 +830,42 @@ ImageTestCase PerfRgbAlphaLossyWebPTestCase() {
 
 ImageTestCase PerfRgbGIFTestCase() {
   return ImageTestCase("perf_srgb.gif", "image/gif", IntSize(1000, 1000));
+}
+
+ImageTestCase ExifResolutionTestCase() {
+  return ImageTestCase("exif_resolution.jpg", "image/jpeg", IntSize(100, 50));
+}
+
+RefPtr<Image> TestCaseToDecodedImage(const ImageTestCase& aTestCase) {
+  RefPtr<Image> image = ImageFactory::CreateAnonymousImage(
+      nsDependentCString(aTestCase.mMimeType));
+  MOZ_RELEASE_ASSERT(!image->HasError());
+
+  nsCOMPtr<nsIInputStream> inputStream = LoadFile(aTestCase.mPath);
+  MOZ_RELEASE_ASSERT(inputStream);
+
+  // Figure out how much data we have.
+  uint64_t length;
+  nsresult rv = inputStream->Available(&length);
+  MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
+
+  // Write the data into the image.
+  rv = image->OnImageDataAvailable(nullptr, nullptr, inputStream, 0,
+                                   static_cast<uint32_t>(length));
+  MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
+
+  // Let the image know we've sent all the data.
+  rv = image->OnImageDataComplete(nullptr, nullptr, NS_OK, true);
+  MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
+
+  RefPtr<ProgressTracker> tracker = image->GetProgressTracker();
+  tracker->SyncNotifyProgress(FLAG_LOAD_COMPLETE);
+
+  // Use GetFrame() to force a sync decode of the image.
+  RefPtr<SourceSurface> surface = image->GetFrame(
+      imgIContainer::FRAME_CURRENT, imgIContainer::FLAG_SYNC_DECODE);
+  Unused << surface;
+  return image;
 }
 
 }  // namespace image
