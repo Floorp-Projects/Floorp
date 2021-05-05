@@ -395,6 +395,15 @@ static bool GetBuildConfiguration(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
+#ifdef JS_SIMULATOR
+  value = BooleanValue(true);
+#else
+  value = BooleanValue(false);
+#endif
+  if (!JS_SetProperty(cx, info, "simulator", value)) {
+    return false;
+  }
+
 #ifdef __wasi__
   value = BooleanValue(true);
 #else
