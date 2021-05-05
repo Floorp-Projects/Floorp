@@ -41,7 +41,7 @@ async function resetConfiguration(config) {
   s.scrollTop = 0;
 
   await promiseAllPaintsDone();
-  await promiseOnlyApzControllerFlushed();
+  await promiseApzFlushedRepaints();
 }
 
 async function test() {
