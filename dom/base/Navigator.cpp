@@ -1283,6 +1283,11 @@ void Navigator::MozGetUserMedia(const MediaStreamConstraints& aConstraints,
     aRv.ThrowInvalidStateError("The document is not fully active.");
     return;
   }
+  if (Document* doc = mWindow->GetExtantDoc()) {
+    if (!mWindow->IsSecureContext()) {
+      doc->SetUseCounter(eUseCounter_custom_MozGetUserMediaInsec);
+    }
+  }
   RefPtr<MediaManager::StreamPromise> sp;
   if (!MediaManager::IsOn(aConstraints.mVideo) &&
       !MediaManager::IsOn(aConstraints.mAudio)) {
@@ -1328,11 +1333,6 @@ void Navigator::MozGetUserMediaDevices(
       mWindow->GetOuterWindow()->GetCurrentInnerWindow() != mWindow) {
     aRv.Throw(NS_ERROR_NOT_AVAILABLE);
     return;
-  }
-  if (Document* doc = mWindow->GetExtantDoc()) {
-    if (!mWindow->IsSecureContext()) {
-      doc->SetUseCounter(eUseCounter_custom_MozGetUserMediaInsec);
-    }
   }
   RefPtr<MediaManager> manager = MediaManager::Get();
   // XXXbz aOnError seems to be unused?
