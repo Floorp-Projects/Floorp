@@ -1,0 +1,91 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test media sink and media's audible state</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="manifest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<script class="testbody" type="text/javascript">
+/**
+ * This test is used to ensure that when shutdown and recreate the media sink,
+ * the media element's audible state should reflect the audio sink's status.
+ * Eg. when shutdown the sink, the audible state would become inaudible, because
+ * we have no sink at that moment. After recreating the sink, the audible state
+ * should become audible again when the sink starts playing audible.
+ */
+add_task(async function setTestPref() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["media.testing-only-events", true],
+          ["media.setsinkid.enabled", true],
+          // For using `navigator.mediaDevices.enumerateDevices()`
+          ["media.devices.insecure.enabled", true]]});
+});
+
+add_task(async function testRecreateMediaSinkWhenChangeSinkId() {
+  const kExpectedLoopingTimes = 10;
+  const audio = await createPlayingAndAudibleLoopingAudio();
+  await waitAtLeastFinishLoopingOnce(audio, { times : kExpectedLoopingTimes });
+
+  info(`set sink id in order to recreate the media sink`);
+  const allDevices = await navigator.mediaDevices.enumerateDevices();
+  const audioDevices = allDevices.filter(({kind}) => kind == 'audiooutput');
+  info(`found  ${audioDevices.length} output devices`);
+  ok(audioDevices.length > 0, "More than one output device found");
+
+  // This part is a little unintuitive, which simulates the situation where the
+  // issue happened that should not happen again after fixing bug 1693250.
+  // Let's say we have an audio which duration is 10s, and has looped 5 times
+  // so the current sink's clock time is larger than 50s. If we switch to a new
+  // sink, the sink's clock time would start from 0 and then will keep playing
+  // silence in next 5 times of looping, until the new sink's clock time catches
+  // up with the old sink. So if the issue is already fixed, audio should become
+  // audible immediately because we keep the clock time consistent between sinks
+  // instead of restarting time from 0.
+  info(`audio should become audible before reaching the expected looping times`);
+  let loopTimes = 0;
+  audio.onseeked = _ => loopTimes++;
+  await Promise.all([
+    expectToReceiveEvent(audio, "mozaudiblestatechanged", { times : 2 }),
+    audio.setSinkId(audioDevices[0].deviceId),
+  ]);
+  ok(loopTimes < kExpectedLoopingTimes, `Become audible in ${loopTimes} times of looping`);
+});
+
+/**
+ * Follwing are helper functions.
+ */
+async function createPlayingAndAudibleLoopingAudio() {
+  const audio = document.createElement('audio');
+  audio.src = "small-shot.ogg";
+  audio.loop = true;
+  document.body.appendChild(audio);
+
+  info(`wait for audio starting playing and becoming audible.`);
+  await Promise.all([
+    expectToReceiveEvent(audio, "mozaudiblestatechanged", { times : 1 }),
+    audio.play()]);
+  return audio;
+}
+
+function waitAtLeastFinishLoopingOnce(element, { times }) {
+  info(`wait until audio finishes looping at least once`);
+  return expectToReceiveEvent(element, "seeked", { times });
+}
+
+function expectToReceiveEvent(element, event, { times }) {
+  return new Promise(r => {
+    let receivedTimes = 0;
+    element.addEventListener(event, _ => {
+      if (++receivedTimes == times) {
+        ok(true, `received ${event} ${times} times.`);
+        r();
+      }
+    });
+  });
+}
+
+</script>
+</body>
+</html>
