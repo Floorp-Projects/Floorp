@@ -697,6 +697,7 @@ def clang_plugin_path(library_name_info, build_env):
     )
 
 
+set_config("CLANG_PLUGIN", clang_plugin_path)
 add_old_configure_assignment("CLANG_PLUGIN", clang_plugin_path)
 
 
