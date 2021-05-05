@@ -693,8 +693,9 @@ bool nsHttpHandler::IsAcceptableEncoding(const char* enc, bool isSecure) {
   // gzip and deflate are inherently acceptable in modern HTTP - always
   // process them if a stream converter can also be found.
   if (!rv &&
-      (!PL_strcasecmp(enc, "gzip") || !PL_strcasecmp(enc, "deflate") ||
-       !PL_strcasecmp(enc, "x-gzip") || !PL_strcasecmp(enc, "x-deflate"))) {
+      (!nsCRT::strcasecmp(enc, "gzip") || !nsCRT::strcasecmp(enc, "deflate") ||
+       !nsCRT::strcasecmp(enc, "x-gzip") ||
+       !nsCRT::strcasecmp(enc, "x-deflate"))) {
     rv = true;
   }
   LOG(("nsHttpHandler::IsAceptableEncoding %s https=%d %d\n", enc, isSecure,

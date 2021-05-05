@@ -8,6 +8,7 @@
 #include "nsMemory.h"
 #include "plstr.h"
 #include "nsCOMPtr.h"
+#include "nsCRT.h"
 #include "nsError.h"
 #include "nsStreamUtils.h"
 #include "nsStringStream.h"
@@ -89,21 +90,21 @@ NS_IMETHODIMP
 nsHTTPCompressConv::AsyncConvertData(const char* aFromType, const char* aToType,
                                      nsIStreamListener* aListener,
                                      nsISupports* aCtxt) {
-  if (!PL_strncasecmp(aFromType, HTTP_COMPRESS_TYPE,
-                      sizeof(HTTP_COMPRESS_TYPE) - 1) ||
-      !PL_strncasecmp(aFromType, HTTP_X_COMPRESS_TYPE,
-                      sizeof(HTTP_X_COMPRESS_TYPE) - 1)) {
+  if (!nsCRT::strncasecmp(aFromType, HTTP_COMPRESS_TYPE,
+                          sizeof(HTTP_COMPRESS_TYPE) - 1) ||
+      !nsCRT::strncasecmp(aFromType, HTTP_X_COMPRESS_TYPE,
+                          sizeof(HTTP_X_COMPRESS_TYPE) - 1)) {
     mMode = HTTP_COMPRESS_COMPRESS;
-  } else if (!PL_strncasecmp(aFromType, HTTP_GZIP_TYPE,
-                             sizeof(HTTP_GZIP_TYPE) - 1) ||
-             !PL_strncasecmp(aFromType, HTTP_X_GZIP_TYPE,
-                             sizeof(HTTP_X_GZIP_TYPE) - 1)) {
+  } else if (!nsCRT::strncasecmp(aFromType, HTTP_GZIP_TYPE,
+                                 sizeof(HTTP_GZIP_TYPE) - 1) ||
+             !nsCRT::strncasecmp(aFromType, HTTP_X_GZIP_TYPE,
+                                 sizeof(HTTP_X_GZIP_TYPE) - 1)) {
     mMode = HTTP_COMPRESS_GZIP;
-  } else if (!PL_strncasecmp(aFromType, HTTP_DEFLATE_TYPE,
-                             sizeof(HTTP_DEFLATE_TYPE) - 1)) {
+  } else if (!nsCRT::strncasecmp(aFromType, HTTP_DEFLATE_TYPE,
+                                 sizeof(HTTP_DEFLATE_TYPE) - 1)) {
     mMode = HTTP_COMPRESS_DEFLATE;
-  } else if (!PL_strncasecmp(aFromType, HTTP_BROTLI_TYPE,
-                             sizeof(HTTP_BROTLI_TYPE) - 1)) {
+  } else if (!nsCRT::strncasecmp(aFromType, HTTP_BROTLI_TYPE,
+                                 sizeof(HTTP_BROTLI_TYPE) - 1)) {
     mMode = HTTP_COMPRESS_BROTLI;
   }
   LOG(("nsHttpCompresssConv %p AsyncConvertData %s %s mode %d\n", this,

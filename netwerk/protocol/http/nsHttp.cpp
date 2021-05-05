@@ -86,8 +86,8 @@ static PLDHashNumber StringHash(const void* key) {
 static bool StringCompare(const PLDHashEntryHdr* entry, const void* testKey) {
   const void* entryKey = reinterpret_cast<const PLDHashEntryStub*>(entry)->key;
 
-  return PL_strcasecmp(reinterpret_cast<const char*>(entryKey),
-                       reinterpret_cast<const char*>(testKey)) == 0;
+  return nsCRT::strcasecmp(reinterpret_cast<const char*>(entryKey),
+                           reinterpret_cast<const char*>(testKey)) == 0;
 }
 
 static const PLDHashTableOps ops = {StringHash, StringCompare,
@@ -271,7 +271,7 @@ const char* FindToken(const char* input, const char* token, const char* seps) {
   const char* inputTop = input;
   const char* inputEnd = input + inputLen - tokenLen;
   for (; input <= inputEnd; ++input) {
-    if (PL_strncasecmp(input, token, tokenLen) == 0) {
+    if (nsCRT::strncasecmp(input, token, tokenLen) == 0) {
       if (input > inputTop && !strchr(seps, *(input - 1))) continue;
       if (input < inputEnd && !strchr(seps, *(input + tokenLen))) continue;
       return input;
@@ -853,8 +853,8 @@ void LogHeaders(const char* lineStart) {
   while ((endOfLine = PL_strstr(lineStart, "\r\n"))) {
     buf.Assign(lineStart, endOfLine - lineStart);
     if (StaticPrefs::network_http_sanitize_headers_in_logs() &&
-        (PL_strcasestr(buf.get(), "authorization: ") ||
-         PL_strcasestr(buf.get(), "proxy-authorization: "))) {
+        (nsCRT::strcasestr(buf.get(), "authorization: ") ||
+         nsCRT::strcasestr(buf.get(), "proxy-authorization: "))) {
       char* p = PL_strchr(buf.get(), ' ');
       while (p && *++p) {
         *p = '*';
