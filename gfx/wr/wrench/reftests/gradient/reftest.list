@@ -76,6 +76,7 @@ fuzzy(1,7) == tiling-conic-3.yaml tiling-conic-3-ref.yaml
 == radial-zero-size-3.yaml radial-zero-size-ref.yaml
 
 == linear-adjust-tile-size.yaml linear-adjust-tile-size-ref.yaml
+== linear-repeat-clip.yaml linear-repeat-clip-ref.yaml
 
 platform(linux,mac) == linear-aligned-border-radius.yaml linear-aligned-border-radius.png
 # interpolation fuzz from sampling texture-baked gradient ramps
