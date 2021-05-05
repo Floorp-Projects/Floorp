@@ -224,7 +224,6 @@ BrowserParent::BrowserParent(ContentParent* aManager, const TabId& aTabId,
       mRemoteTargetSetsCursor(false),
       mPreserveLayers(false),
       mRenderLayers(true),
-      mActiveInPriorityManager(false),
       mHasLayers(false),
       mHasPresented(false),
       mIsReadyToHandleInputEvents(false),
@@ -234,6 +233,14 @@ BrowserParent::BrowserParent(ContentParent* aManager, const TabId& aTabId,
   // When the input event queue is disabled, we don't need to handle the case
   // that some input events are dispatched before PBrowserConstructor.
   mIsReadyToHandleInputEvents = !ContentParent::IsInputEventQueueSupported();
+
+  // If we're in a BC tree that is active with respect to the priority manager,
+  // ensure that this new BrowserParent is marked as active. This ensures that
+  // the process will be prioritized in a cross-site iframe navigation in an
+  // active tab.
+  if (aBrowsingContext->Top()->IsPriorityActive()) {
+    ProcessPriorityManager::ActivityChanged(this, true);
+  }
 }
 
 BrowserParent::~BrowserParent() = default;
@@ -3377,13 +3384,6 @@ bool BrowserParent::GetHasLayers() { return mHasLayers; }
 bool BrowserParent::GetRenderLayers() { return mRenderLayers; }
 
 void BrowserParent::SetRenderLayers(bool aEnabled) {
-  if (mActiveInPriorityManager != aEnabled) {
-    mActiveInPriorityManager = aEnabled;
-    // Let's inform the priority manager. This operation can end up with the
-    // changing of the process priority.
-    ProcessPriorityManager::ActivityChanged(this, aEnabled);
-  }
-
   if (aEnabled == mRenderLayers) {
     if (aEnabled && mHasLayers && mPreserveLayers) {
       // RenderLayers might be called when we've been preserving layers,
@@ -3443,13 +3443,6 @@ void BrowserParent::NotifyResolutionChanged() {
     // that case.
     Unused << SendUIResolutionChanged(mDPI, mRounding,
                                       mDPI < 0 ? -1.0 : mDefaultScale.scale);
-  }
-}
-
-void BrowserParent::Deprioritize() {
-  if (mActiveInPriorityManager) {
-    ProcessPriorityManager::ActivityChanged(this, false);
-    mActiveInPriorityManager = false;
   }
 }
 
