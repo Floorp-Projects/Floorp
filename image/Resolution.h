@@ -63,6 +63,15 @@ struct Resolution {
     ApplyXTo(aWidth);
     ApplyYTo(aHeight);
   }
+
+  void ApplyInverseTo(int32_t& aWidth, int32_t& aHeight) {
+    if (mX != 1.0f) {
+      aWidth = std::round(float(aWidth) * mX);
+    }
+    if (mY != 1.0f) {
+      aHeight = std::round(float(aHeight) * mY);
+    }
+  }
 };
 
 }  // namespace image
