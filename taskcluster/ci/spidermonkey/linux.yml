@@ -383,6 +383,25 @@ sm-fuzzing-linux64/opt:
             - linux64-llvm-symbolizer
             - linux64-sysroot
 
+sm-fuzzilli-linux64/debug:
+    description: "Spidermonkey Fuzzilli debug"
+    index:
+        job-name: sm-fuzzilli-linux64-debug
+    treeherder:
+        platform: linux64/debug
+        symbol: SM(fuzzilli)
+    worker:
+        env:
+            MOZ_JS_UPLOAD_BINARIES_DEFAULT: "1"
+    run:
+        spidermonkey-variant: fuzzilli
+    fetches:
+        toolchain:
+            - linux64-clang
+            - linux64-rust
+            - linux64-cbindgen
+            - linux64-sysroot
+
 sm-gdb-linux64/debug:
     description: "Spidermonkey GDB Pretty-printers"
     index:
