@@ -1,4 +1,4 @@
-== select-fieldset-1.html select-fieldset-ref.html
+skip-if(ThreadSanitizer) == select-fieldset-1.html select-fieldset-ref.html
 fuzzy-if(skiaContent,0-1,0-9) == select-fieldset-2.html select-fieldset-ref-disabled.html
 == select-fieldset-3.html select-fieldset-ref-disabled.html
 fuzzy-if(skiaContent,0-1,0-9) == select-fieldset-4.html select-fieldset-ref.html

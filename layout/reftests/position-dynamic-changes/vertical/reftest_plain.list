@@ -1,6 +1,6 @@
 # Please see the comment at the beginning of reftest.list
 
-fuzzy-if(geckoview,0-2,0-1382) == topN-heightA-bottomA.html topN-heightA-bottomA-ref.html
+skip-if(ThreadSanitizer) fuzzy-if(geckoview,0-2,0-1382) == topN-heightA-bottomA.html topN-heightA-bottomA-ref.html
 fuzzy-if(geckoview,0-2,0-1382) == topN-heightA-bottomN.html topN-heightA-bottomN-ref.html
 fuzzy-if(geckoview,0-2,0-1382) == topA-heightN-bottomA.html topA-heightN-bottomA-ref.html
 fuzzy-if(geckoview,0-2,0-1382) == topN-heightN-bottomA.html topN-heightN-bottomA-ref.html

@@ -1,7 +1,7 @@
 # PngSuite - Image filtering
 
 # f00n0g08 - grayscale, no interlacing, filter-type 0
-== f00n0g08.png f00n0g08.html
+skip-if(ThreadSanitizer) == f00n0g08.png f00n0g08.html
 # f00n2c08 - color, no interlacing, filter-type 0
 == f00n2c08.png f00n2c08.html
 # f01n0g08 - grayscale, no interlacing, filter-type 1
@@ -18,5 +18,5 @@
 == f03n2c08.png f03n2c08.html
 # f04n0g08 - grayscale, no interlacing, filter-type 4
 == f04n0g08.png f04n0g08.html
-# f04n2c08 - color, no interlacing, filter-type 4 
+# f04n2c08 - color, no interlacing, filter-type 4
 == f04n2c08.png f04n2c08.html
