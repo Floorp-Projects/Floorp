@@ -184,10 +184,23 @@ class TelemetryTestCase(WindowManagerMixin, MarionetteTestCase):
         return self.marionette.quit(in_app=True)
 
     def install_addon(self):
-        """Install a minimal addon and add its ID to self.addon_ids."""
+        """Install a minimal addon."""
+        addon_name = "helloworld"
+        self._install_addon(addon_name)
 
+    def install_dynamic_addon(self):
+        """Install a dynamic probe addon.
+
+        Source Code:
+        https://github.com/mozilla-extensions/dynamic-probe-telemetry-extension
+        """
+        addon_name = "dynamic_addon/dynamic-probe-telemetry-extension-signed.xpi"
+        self._install_addon(addon_name, temp=False)
+
+    def _install_addon(self, addon_name, temp=True):
+        """Logic to install addon and add its ID to self.addons.ids"""
         resources_dir = os.path.join(os.path.dirname(__file__), "resources")
-        addon_path = os.path.abspath(os.path.join(resources_dir, "helloworld"))
+        addon_path = os.path.abspath(os.path.join(resources_dir, addon_name))
 
         try:
             # Ensure the Environment has init'd so the installed addon
@@ -202,7 +215,7 @@ class TelemetryTestCase(WindowManagerMixin, MarionetteTestCase):
                 self.marionette.execute_async_script(textwrap.dedent(script))
 
             addons = Addons(self.marionette)
-            addon_id = addons.install(addon_path, temp=True)
+            addon_id = addons.install(addon_path, temp=temp)
         except MarionetteException as e:
             self.fail("{} - Error installing addon: {} - ".format(e.cause, e.message))
         else:
