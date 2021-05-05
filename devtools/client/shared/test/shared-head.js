@@ -203,18 +203,12 @@ async function getTestActor(toolbox) {
 // Sometimes, we need the test actor before opening or without a toolbox then just
 // create a front for the given `tab`
 async function getTestActorWithoutToolbox(tab) {
-  const { DevToolsServer } = require("devtools/server/devtools-server");
-  const { DevToolsClient } = require("devtools/client/devtools-client");
+  const commands = await CommandsFactory.forTab(tab);
+  // Initialize the TargetCommands which require some async stuff to be done
+  // before being fully ready. This will define the `targetCommand.targetFront` attribute.
+  await commands.targetCommand.startListening();
 
-  // We need to spawn a client instance,
-  // but for that we have to first ensure a server is running
-  DevToolsServer.init();
-  DevToolsServer.registerAllActors();
-  const client = new DevToolsClient(DevToolsServer.connectPipe());
-  await client.connect();
-
-  const descriptor = await client.mainRoot.getTab({ tab });
-  const targetFront = await descriptor.getTarget();
+  const targetFront = commands.targetCommand.targetFront;
   return targetFront.getFront("test");
 }
 
