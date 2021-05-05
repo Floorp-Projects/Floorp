@@ -722,6 +722,18 @@ impl ClipNode {
     }
 }
 
+pub struct ClipStoreStats {
+    templates_capacity: usize,
+}
+
+impl ClipStoreStats {
+    pub fn empty() -> Self {
+        ClipStoreStats {
+            templates_capacity: 0,
+        }
+    }
+}
+
 /// The main clipping public interface that other modules access.
 #[derive(MallocSizeOf)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
@@ -971,15 +983,29 @@ impl ClipChainStack {
 }
 
 impl ClipStore {
-    pub fn new() -> Self {
+    pub fn new(stats: &ClipStoreStats) -> Self {
+        let mut templates = FastHashMap::default();
+        templates.reserve(stats.templates_capacity);
+
         ClipStore {
             clip_chain_nodes: Vec::new(),
             clip_node_instances: Vec::new(),
             active_clip_node_info: Vec::new(),
             active_local_clip_rect: None,
             active_pic_clip_rect: PictureRect::max_rect(),
-            templates: FastHashMap::default(),
+            templates,
             chain_builder_stack: Vec::new(),
+        }
+    }
+
+    pub fn get_stats(&self) -> ClipStoreStats {
+        // Selecting the smaller of the current capacity and 2*len ensures we don't
+        // retain a huge hashmap alloc after navigating away from a page with a large
+        // number of clip templates.
+        let templates_capacity = self.templates.capacity().min(self.templates.len() * 2);
+
+        ClipStoreStats {
+            templates_capacity,
         }
     }
 

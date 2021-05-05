@@ -8,7 +8,7 @@ use api::units::*;
 use malloc_size_of::{MallocSizeOf, MallocSizeOfOps};
 use crate::render_api::MemoryReport;
 use crate::composite::CompositorKind;
-use crate::clip::ClipStore;
+use crate::clip::{ClipStore, ClipStoreStats};
 use crate::spatial_tree::SpatialTree;
 use crate::frame_builder::{ChasePrimitive, FrameBuilderConfig};
 use crate::hit_test::{HitTester, HitTestingScene, HitTestingSceneStats};
@@ -286,7 +286,7 @@ impl BuiltScene {
             output_rect: DeviceIntRect::zero(),
             background_color: None,
             prim_store: PrimitiveStore::new(&PrimitiveStoreStats::empty()),
-            clip_store: ClipStore::new(),
+            clip_store: ClipStore::new(&ClipStoreStats::empty()),
             spatial_tree: SpatialTree::new(),
             hit_testing_scene: Arc::new(HitTestingScene::new(&HitTestingSceneStats::empty())),
             tile_cache_config: TileCacheConfig::new(0),
@@ -319,6 +319,7 @@ impl BuiltScene {
         SceneStats {
             prim_store_stats: self.prim_store.get_stats(),
             hit_test_stats: self.hit_testing_scene.get_stats(),
+            clip_store_stats: self.clip_store.get_stats(),
         }
     }
 
@@ -337,6 +338,7 @@ impl BuiltScene {
 pub struct SceneStats {
     pub prim_store_stats: PrimitiveStoreStats,
     pub hit_test_stats: HitTestingSceneStats,
+    pub clip_store_stats: ClipStoreStats,
 }
 
 impl SceneStats {
@@ -344,6 +346,7 @@ impl SceneStats {
         SceneStats {
             prim_store_stats: PrimitiveStoreStats::empty(),
             hit_test_stats: HitTestingSceneStats::empty(),
+            clip_store_stats: ClipStoreStats::empty(),
         }
     }
 }
