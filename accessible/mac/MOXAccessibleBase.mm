@@ -384,12 +384,6 @@ mozilla::LogModule* GetMacAccessibilityLog() {
   NS_OBJC_END_TRY_BLOCK_RETURN(nil);
 }
 
-- (NSValue*)accessibilityFrame {
-  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
-  return [self isSelectorSupported:@selector(moxFrame)] ? [self moxFrame] : nil;
-  NS_OBJC_END_TRY_BLOCK_RETURN(nil);
-}
-
 - (BOOL)isAccessibilityElement {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 

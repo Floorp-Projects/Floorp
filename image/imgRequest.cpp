@@ -58,7 +58,7 @@ imgRequest::imgRequest(imgLoader* aLoader, const ImageCacheKey& aCacheKey)
       mFirstProxy(nullptr),
       mValidator(nullptr),
       mInnerWindowId(0),
-      mCORSMode(imgIRequest::CORS_NONE),
+      mCORSMode(CORS_NONE),
       mImageErrorCode(NS_OK),
       mImageAvailable(false),
       mIsDeniedCrossSiteCORSRequest(false),
@@ -87,7 +87,8 @@ nsresult imgRequest::Init(nsIURI* aURI, nsIURI* aFinalURI,
                           bool aHadInsecureRedirect, nsIRequest* aRequest,
                           nsIChannel* aChannel, imgCacheEntry* aCacheEntry,
                           mozilla::dom::Document* aLoadingDocument,
-                          nsIPrincipal* aTriggeringPrincipal, int32_t aCORSMode,
+                          nsIPrincipal* aTriggeringPrincipal,
+                          mozilla::CORSMode aCORSMode,
                           nsIReferrerInfo* aReferrerInfo) {
   MOZ_ASSERT(NS_IsMainThread(), "Cannot use nsIURI off main thread!");
 

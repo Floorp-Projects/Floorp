@@ -4985,6 +4985,8 @@
   type: bool
 #if defined(MOZ_WIDGET_ANDROID)
   value: false
+#elif defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
+  value: true
 #else
   value: @IS_EARLY_BETA_OR_EARLIER@
 #endif
@@ -4997,6 +4999,16 @@
     value: @IS_NIGHTLY_BUILD@
     mirror: once
 #endif
+
+# Whether or not fallback to Software WebRender requires the GPU process.
+- name: gfx.webrender.fallback.software.requires-gpu-process
+  type: bool
+#if defined(XP_WIN)
+  value: @IS_NOT_EARLY_BETA_OR_EARLIER@
+#else
+  value: false
+#endif
+  mirror: once
 
 - name: gfx.webrender.program-binary-disk
   type: bool
@@ -5307,6 +5319,18 @@
   value: true
   mirror: always
 
+# Whether we use EXIF metadata for image density.
+- name: image.exif-density-correction.enabled
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
+# Whether EXIF density metadata is sanity checked against PixelXDimension and PixelYDimension
+- name: image.exif-density-correction.sanity-check.enabled
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
 # The threshold for inferring that changes to an <img> element's |src|
 # attribute by JavaScript represent an animation, in milliseconds. If the |src|
 # attribute is changing more frequently than this value, then we enter a
@@ -5477,13 +5501,13 @@
 # Whether the new encoding detector is enabled for the .in TLD.
 - name: intl.charset.detector.ng.in.enabled
   type: bool
-  value: false
+  value: true
   mirror: always
 
 # Whether the new encoding detector is enabled for the .lk TLD.
 - name: intl.charset.detector.ng.lk.enabled
   type: bool
-  value: false
+  value: true
   mirror: always
 
 # If true, dispatch the keydown and keyup events on any web apps even during

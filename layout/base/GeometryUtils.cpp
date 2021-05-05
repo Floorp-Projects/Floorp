@@ -327,7 +327,7 @@ void GetBoxQuadsFromWindowOrigin(nsINode* aNode,
   BoxQuadOptions bqo(aOptions);
 
   RefPtr<Document> topInProcessDoc =
-      nsContentUtils::GetRootDocument(aNode->OwnerDoc());
+      nsContentUtils::GetInProcessSubtreeRootDocument(aNode->OwnerDoc());
 
   OwningGeometryNode ogn;
   ogn.SetAsDocument() = topInProcessDoc;

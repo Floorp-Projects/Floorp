@@ -4,6 +4,7 @@
 
 "use strict";
 
+const Services = require("Services");
 const {
   WatcherRegistry,
 } = require("devtools/server/actors/watcher/WatcherRegistry.jsm");
@@ -15,6 +16,8 @@ const {
   getAllRemoteBrowsingContexts,
   shouldNotifyWindowGlobal,
 } = require("devtools/server/actors/watcher/target-helpers/utils.js");
+
+const browsingContextAttachedObserverByWatcher = new Map();
 
 /**
  * Force creating targets for all existing BrowsingContext, that, for a given Watcher Actor.
@@ -36,6 +39,13 @@ async function createTargets(watcher) {
       "Existing WindowGlobal"
     );
 
+    // We need to set the watchedByDevTools flag on all top-level browsing context. In the
+    // case of a content toolbox, this is done in the tab descriptor, but when we're in the
+    // browser toolbox, such descriptor is not created.
+    if (browsingContext.top === browsingContext) {
+      browsingContext.watchedByDevTools = true;
+    }
+
     // Await for the query in order to try to resolve only *after* we received these
     // already available targets.
     const promise = browsingContext.currentWindowGlobal
@@ -48,6 +58,46 @@ async function createTargets(watcher) {
       });
     promises.push(promise);
   }
+
+  // If we have a browserElement, set the watchedByDevTools flag on its related browsing context
+  // TODO: We should also set the flag for the "parent process" browsing context when we're
+  // in the browser toolbox. This is blocked by Bug 1675763, and should be handled as part
+  // of Bug 1709529.
+  if (watcher.browserElement) {
+    // The `watchedByDevTools` enables gecko behavior tied to this flag, such as:
+    //  - reporting the contents of HTML loaded in the docshells
+    //  - capturing stacks for the network monitor.
+    watcher.browserElement.browsingContext.watchedByDevTools = true;
+  }
+
+  if (!browsingContextAttachedObserverByWatcher.has(watcher)) {
+    // We store the browserId here as watcher.browserElement.browserId can momentary be
+    // set to 0 when there's a navigation to a new browsing context.
+    const browserId = watcher.browserElement?.browserId;
+    const onBrowsingContextAttached = browsingContext => {
+      // We want to set watchedByDevTools on new top-level browsing contexts:
+      // - in the case of the BrowserToolbox/BrowserConsole, that would be the browsing
+      //   contexts of all the tabs we want to handle.
+      // - for the regular toolbox, browsing context that are being created when navigating
+      //   to a page that forces a new browsing context.
+      if (
+        browsingContext.top === browsingContext &&
+        (!watcher.browserElement || browserId === browsingContext.browserId)
+      ) {
+        browsingContext.watchedByDevTools = true;
+      }
+    };
+    Services.obs.addObserver(
+      onBrowsingContextAttached,
+      "browsing-context-attached"
+    );
+    // We store the observer so we can retrieve it elsewhere (e.g. for removal in destroyTargets).
+    browsingContextAttachedObserverByWatcher.set(
+      watcher,
+      onBrowsingContextAttached
+    );
+  }
+
   return Promise.all(promises);
 }
 
@@ -68,12 +118,28 @@ function destroyTargets(watcher) {
       "Existing WindowGlobal"
     );
 
+    if (browsingContext.top === browsingContext) {
+      browsingContext.watchedByDevTools = false;
+    }
+
     browsingContext.currentWindowGlobal
       .getActor("DevToolsFrame")
       .destroyTarget({
         watcherActorID: watcher.actorID,
         browserId: watcher.browserId,
       });
+  }
+
+  if (watcher.browserElement) {
+    watcher.browserElement.browsingContext.watchedByDevTools = false;
+  }
+
+  if (browsingContextAttachedObserverByWatcher.has(watcher)) {
+    Services.obs.removeObserver(
+      browsingContextAttachedObserverByWatcher.get(watcher),
+      "browsing-context-attached"
+    );
+    browsingContextAttachedObserverByWatcher.delete(watcher);
   }
 }
 

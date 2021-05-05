@@ -1,4 +1,4 @@
-// |jit-test| skip-if: !wasmSimdEnabled() || !hasDisassembler() || wasmCompileMode() != "ion" || !getBuildConfiguration().x86; include:codegen-x86-test.js
+// |jit-test| skip-if: !wasmSimdEnabled() || !hasDisassembler() || wasmCompileMode() != "ion" || !getBuildConfiguration().x86 || getBuildConfiguration().simulator; include:codegen-x86-test.js
 
 codegenTestX86_v128xLITERAL_v128(
     [['f32x4.eq', '(v128.const f32x4 1 2 3 4)',

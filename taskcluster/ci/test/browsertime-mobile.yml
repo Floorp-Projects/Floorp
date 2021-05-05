@@ -181,68 +181,66 @@ browsertime-youtube-playback-mobile:
     max-run-time: 3600
 
 browsertime-tp6m-live:
-    description: "Raptor (browsertime) tp6 live site page-load tests on android"
-    raptor-test: tp6m
+    <<: *tp6m-defaults
+    apps: [chrome-m, fenix, geckoview]
     raptor-subtests:
-        by-app:
-            geckoview:
-                - [cnn-ampstories, cnn-amp]
-            default:
-                - allrecipes
-                - amazon
-                - [amazon-search, amazon-s]
-                - bbc
-                - bing
-                - [bing-search-restaurants, bing-s-r]
-                - booking
-                - booking-sf
-                - cnn
-                - [cnn-ampstories, cnn-amp]
-                - discord
-                - [ebay-kleinanzeigen, ebay-k]
-                - [ebay-kleinanzeigen-search, ebay-k-s]
-                - espn
-                - expedia
-                - facebook
-                - [facebook-cristiano, fb-cris]
-                - [fashionbeans, fashbea]
-                - google
-                - [google-accounts, gacc]
-                - [google-maps, gmaps]
-                - [google-search-restaurants, gsearch-r]
-                - instagram
-                - imdb
-                - [imdb-firefox, imdb-f]
-                - [medium-article, medium]
-                - [microsoft-support, micros-sup]
-                - nytimes
-                - [people-article, people]
-                - reddit
-                - [reddit-thread, reddit-thr]
-                - rumble-fox
-                - [stackoverflow, stacko]
-                - [stackoverflow-question, stack-q]
-                - [urbandictionary-define, urbict-def]
-                - web-de
-                - [wikia-marvel, wikia-m]
-                - wikipedia
-                - youtube
-                - [youtube-watch, youtube-w]
-    apps: ["fenix", "chrome-m", "geckoview"]
-    run-on-projects:
-        by-app:
-            geckoview:
-                by-test-platform:
-                    android-hw-g5.*shippable-qr.*: [autoland]
-                    android-hw-p2.*aarch64-shippable-qr.*: [autoland]
-                    default: []
-            default: []
-    run-visual-metrics: true
-    treeherder-symbol: Btime-live(tp6m)
+        - allrecipes
+        - amazon
+        - [amazon-search, amazon-s]
+        - bbc
+        - bing
+        - [bing-search-restaurants, bing-s-r]
+        - booking
+        - booking-sf
+        - cnn
+        - [cnn-ampstories, cnn-amp]
+        - discord
+        - [ebay-kleinanzeigen, ebay-k]
+        - [ebay-kleinanzeigen-search, ebay-k-s]
+        - espn
+        - expedia
+        - facebook
+        - [facebook-cristiano, fb-cris]
+        - [fashionbeans, fashbea]
+        - google
+        - [google-accounts, gacc]
+        - [google-maps, gmaps]
+        - [google-search-restaurants, gsearch-r]
+        - instagram
+        - imdb
+        - [imdb-firefox, imdb-f]
+        - [medium-article, medium]
+        - [microsoft-support, micros-sup]
+        - nytimes
+        - [people-article, people]
+        - reddit
+        - [reddit-thread, reddit-thr]
+        - rumble-fox
+        - [stackoverflow, stacko]
+        - [stackoverflow-question, stack-q]
+        - [urbandictionary-define, urbict-def]
+        - web-de
+        - [wikia-marvel, wikia-m]
+        - wikipedia
+        - youtube
+        - [youtube-watch, youtube-w]
     mozharness:
         extra-options:
             - --live-sites
             - --chimera
+    run-on-projects:
+        by-subtest:
+            cnn-ampstories:
+                by-app:
+                    geckoview:
+                        by-test-platform:
+                            android-hw-g5.*shippable-qr.*: [autoland]
+                            android-hw-p2.*aarch64-shippable-qr.*: [autoland]
+                            default: []
+                    default: []
+            default: []
+    tier: 3
+    treeherder-symbol: Btime-live(tp6m)
 
 browsertime-tp6m-profiling:
     description: "Raptor (browsertime) tp6 page-load tests on android with Gecko profiling"

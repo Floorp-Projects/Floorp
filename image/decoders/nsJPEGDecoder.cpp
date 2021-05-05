@@ -236,8 +236,9 @@ LexerTransition<nsJPEGDecoder::State> nsJPEGDecoder::ReadJPEGData(
       }
 
       // Post our size to the superclass
-      PostSize(mInfo.image_width, mInfo.image_height,
-               ReadOrientationFromEXIF());
+      EXIFData exif = ReadExifData();
+      PostSize(mInfo.image_width, mInfo.image_height, exif.orientation,
+               exif.resolution);
       if (HasError()) {
         // Setting the size led to an error.
         mState = JPEG_ERROR;
@@ -601,7 +602,7 @@ LexerTransition<nsJPEGDecoder::State> nsJPEGDecoder::FinishedJPEGData() {
   return Transition::TerminateFailure();
 }
 
-Orientation nsJPEGDecoder::ReadOrientationFromEXIF() {
+EXIFData nsJPEGDecoder::ReadExifData() const {
   jpeg_saved_marker_ptr marker;
 
   // Locate the APP1 marker, where EXIF data is stored, in the marker list.
@@ -613,13 +614,12 @@ Orientation nsJPEGDecoder::ReadOrientationFromEXIF() {
 
   // If we're at the end of the list, there's no EXIF data.
   if (!marker) {
-    return Orientation();
+    return EXIFData();
   }
 
-  // Extract the orientation information.
-  EXIFData exif = EXIFParser::Parse(marker->data,
-                                    static_cast<uint32_t>(marker->data_length));
-  return exif.orientation;
+  return EXIFParser::Parse(marker->data,
+                           static_cast<uint32_t>(marker->data_length),
+                           gfx::IntSize(mInfo.image_width, mInfo.image_height));
 }
 
 void nsJPEGDecoder::NotifyDone() {

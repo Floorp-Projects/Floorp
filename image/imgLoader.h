@@ -340,10 +340,6 @@ class imgLoader final : public imgILoader,
   bool SetHasNoProxies(imgRequest* aRequest, imgCacheEntry* aEntry);
   bool SetHasProxies(imgRequest* aRequest);
 
-  // This method converts imgIRequest::CORS_* values to mozilla::CORSMode
-  // values.
-  static mozilla::CORSMode ConvertToCORSMode(uint32_t aImgCORS);
-
  private:  // methods
   static already_AddRefed<imgLoader> CreateImageLoader();
 
@@ -356,7 +352,7 @@ class imgLoader final : public imgILoader,
       mozilla::dom::Document* aLoadingDocument, nsLoadFlags aLoadFlags,
       nsContentPolicyType aLoadPolicyType, bool aCanMakeNewChannel,
       bool* aNewChannelCreated, imgRequestProxy** aProxyRequest,
-      nsIPrincipal* aTriggeringPrincipal, int32_t aCORSMode, bool aLinkPreload);
+      nsIPrincipal* aTriggeringPrincipal, mozilla::CORSMode, bool aLinkPreload);
 
   bool ValidateRequestWithNewChannel(
       imgRequest* request, nsIURI* aURI, nsIURI* aInitialDocumentURI,
@@ -365,7 +361,7 @@ class imgLoader final : public imgILoader,
       mozilla::dom::Document* aLoadingDocument, uint64_t aInnerWindowId,
       nsLoadFlags aLoadFlags, nsContentPolicyType aContentPolicyType,
       imgRequestProxy** aProxyRequest, nsIPrincipal* aLoadingPrincipal,
-      int32_t aCORSMode, bool aLinkPreload, bool* aNewChannelCreated);
+      mozilla::CORSMode, bool aLinkPreload, bool* aNewChannelCreated);
 
   // aURI may be different from imgRequest's URI in the case of blob URIs, as we
   // can share requests with different URIs.

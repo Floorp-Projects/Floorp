@@ -885,7 +885,7 @@ Result<uint32_t, IOUtils::IOError> IOUtils::WriteSync(
   if (exists && aOptions.mMode == WriteMode::Create) {
     return Err(IOError(NS_ERROR_DOM_TYPE_MISMATCH_ERR)
                    .WithMessage("Refusing to overwrite the file at %s\n"
-                                "Specify `noOverwrite: false` to allow "
+                                "Specify `mode: \"overwrite\"` to allow "
                                 "overwriting the destination",
                                 aFile->HumanReadablePath().get()));
   }

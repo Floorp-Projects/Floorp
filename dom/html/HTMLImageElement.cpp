@@ -710,28 +710,33 @@ uint32_t HTMLImageElement::Height() { return GetWidthHeightForImage().height; }
 
 uint32_t HTMLImageElement::Width() { return GetWidthHeightForImage().width; }
 
-uint32_t HTMLImageElement::NaturalHeight() {
-  uint32_t height = nsImageLoadingContent::NaturalHeight();
-
-  if (mResponsiveSelector) {
-    double density = mResponsiveSelector->GetSelectedImageDensity();
-    MOZ_ASSERT(density >= 0.0);
-    height = NSToIntRound(double(height) / density);
+nsIntSize HTMLImageElement::NaturalSize() {
+  if (!mCurrentRequest) {
+    return {};
   }
 
-  return height;
-}
-
-uint32_t HTMLImageElement::NaturalWidth() {
-  uint32_t width = nsImageLoadingContent::NaturalWidth();
-
-  if (mResponsiveSelector) {
-    double density = mResponsiveSelector->GetSelectedImageDensity();
-    MOZ_ASSERT(density >= 0.0);
-    width = NSToIntRound(double(width) / density);
+  nsCOMPtr<imgIContainer> image;
+  mCurrentRequest->GetImage(getter_AddRefs(image));
+  if (!image) {
+    return {};
   }
 
-  return width;
+  nsIntSize size;
+  Unused << image->GetHeight(&size.height);
+  Unused << image->GetWidth(&size.width);
+
+  ImageResolution resolution = image->GetResolution();
+  // NOTE(emilio): What we implement here matches the image-set() spec, but it's
+  // unclear whether this is the right thing to do, see
+  // https://github.com/whatwg/html/pull/5574#issuecomment-826335244.
+  if (mResponsiveSelector) {
+    float density = mResponsiveSelector->GetSelectedImageDensity();
+    MOZ_ASSERT(density >= 0.0);
+    resolution.ScaleBy(density);
+  }
+
+  resolution.ApplyTo(size.width, size.height);
+  return size;
 }
 
 nsresult HTMLImageElement::CopyInnerTo(HTMLImageElement* aDest) {

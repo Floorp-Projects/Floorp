@@ -111,9 +111,6 @@
 // AXWindow
 - (id _Nullable)moxWindow;
 
-// AXFrame
-- (NSValue* _Nullable)moxFrame;
-
 // AXTitleUIElement
 - (id _Nullable)moxTitleUIElement;
 
