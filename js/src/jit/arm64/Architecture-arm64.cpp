@@ -46,33 +46,71 @@ FloatRegisters::Code FloatRegisters::FromName(const char* name) {
   return Invalid;
 }
 
-// These assume no SIMD registers as the register sets do not directly support
-// SIMD.  When SIMD is needed (wasm baseline + stubs), other routines are used.
-
+// This must sync with GetPushSizeInBytes just below and also with
+// MacroAssembler::PushRegsInMask.
 FloatRegisterSet FloatRegister::ReduceSetForPush(const FloatRegisterSet& s) {
-  LiveFloatRegisterSet ret;
-  for (FloatRegisterIterator iter(s); iter.more(); ++iter) {
-    ret.addUnchecked(FromCode((*iter).encoding()));
-  }
-  return ret.set();
+  SetType all = s.bits();
+  SetType set128b =
+      (all & FloatRegisters::AllSimd128Mask) >> FloatRegisters::ShiftSimd128;
+  SetType doubleSet =
+      (all & FloatRegisters::AllDoubleMask) >> FloatRegisters::ShiftDouble;
+  SetType singleSet =
+      (all & FloatRegisters::AllSingleMask) >> FloatRegisters::ShiftSingle;
+
+  // See GetPushSizeInBytes.
+  SetType set64b = (singleSet | doubleSet) & ~set128b;
+
+  SetType reduced = (set128b << FloatRegisters::ShiftSimd128) |
+                    (set64b << FloatRegisters::ShiftDouble);
+  return FloatRegisterSet(reduced);
 }
 
+// Compute the size of the dump area for |s.ReduceSetForPush()|, as defined by
+// MacroAssembler::PushRegsInMask for this target.
 uint32_t FloatRegister::GetPushSizeInBytes(const FloatRegisterSet& s) {
-  return s.size() * sizeof(double);
+  SetType all = s.bits();
+  SetType set128b =
+      (all & FloatRegisters::AllSimd128Mask) >> FloatRegisters::ShiftSimd128;
+  SetType doubleSet =
+      (all & FloatRegisters::AllDoubleMask) >> FloatRegisters::ShiftDouble;
+  SetType singleSet =
+      (all & FloatRegisters::AllSingleMask) >> FloatRegisters::ShiftSingle;
+
+  // PushRegsInMask pushes singles as if they were doubles.  Also we need to
+  // remove singles or doubles which are also pushed as part of a vector
+  // register.
+  SetType set64b = (singleSet | doubleSet) & ~set128b;
+
+  // The "+ 1) & ~1" is to take into account the alignment hole below the
+  // double-reg dump area.  See MacroAssembler::PushRegsInMaskSizeInBytes.
+  return ((set64b.size() + 1) & ~1) * sizeof(double) +
+         set128b.size() * SizeOfSimd128;
 }
 
 uint32_t FloatRegister::getRegisterDumpOffsetInBytes() {
-  // Although registers are 128-bits wide, only the first 64 need saving per
-  // ABI.
-  return encoding() * sizeof(double);
+  // See block comment in MacroAssembler.h for further required invariants.
+  static_assert(sizeof(jit::FloatRegisters::RegisterContent) == 16);
+  return encoding() * sizeof(jit::FloatRegisters::RegisterContent);
 }
 
-#if defined(ENABLE_WASM_SIMD)
-uint32_t FloatRegister::GetPushSizeInBytesForWasmStubs(
-    const FloatRegisterSet& s) {
-  return s.size() * SizeOfSimd128;
+// For N in 0..31, if any of sN, dN or qN is a member of `s`, the returned set
+// will contain all of sN, dN and qN.
+FloatRegisterSet FloatRegister::BroadcastToAllSizes(const FloatRegisterSet& s) {
+  SetType all = s.bits();
+  SetType set128b =
+      (all & FloatRegisters::AllSimd128Mask) >> FloatRegisters::ShiftSimd128;
+  SetType doubleSet =
+      (all & FloatRegisters::AllDoubleMask) >> FloatRegisters::ShiftDouble;
+  SetType singleSet =
+      (all & FloatRegisters::AllSingleMask) >> FloatRegisters::ShiftSingle;
+
+  SetType merged = set128b | doubleSet | singleSet;
+  SetType broadcasted = (merged << FloatRegisters::ShiftSimd128) |
+                        (merged << FloatRegisters::ShiftDouble) |
+                        (merged << FloatRegisters::ShiftSingle);
+
+  return FloatRegisterSet(broadcasted);
 }
-#endif
 
 uint32_t GetARM64Flags() { return 0; }
 

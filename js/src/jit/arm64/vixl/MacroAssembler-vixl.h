@@ -2429,6 +2429,7 @@ class UseScratchRegisterScope {
   Register AcquireX() { return AcquireNextAvailable(available_).X(); }
   VRegister AcquireS() { return AcquireNextAvailable(availablefp_).S(); }
   VRegister AcquireD() { return AcquireNextAvailable(availablefp_).D(); }
+  VRegister AcquireQ() { return AcquireNextAvailable(availablefp_).Q(); }
 
 
   Register AcquireSameSizeAs(const Register& reg);
