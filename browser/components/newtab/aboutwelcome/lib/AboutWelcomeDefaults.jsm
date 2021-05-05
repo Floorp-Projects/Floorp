@@ -198,6 +198,7 @@ const DEFAULT_WELCOME_CONTENT = {
 const DEFAULT_PROTON_WELCOME_CONTENT = {
   id: "DEFAULT_ABOUTWELCOME_PROTON",
   template: "multistage",
+  transitions: true,
   background_url:
     "chrome://activity-stream/content/data/content/assets/proton-bkg.jpg",
   screens: [
