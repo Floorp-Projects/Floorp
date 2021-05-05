@@ -121,37 +121,18 @@ pub fn optimize_linear_gradient(
     // Callback called for each fast-path segment (rect, start end, stops).
     callback: &mut dyn FnMut(&LayoutRect, LayoutPoint, LayoutPoint, &[GradientStopKey])
 ) -> bool {
-    let offset = apply_gradient_local_clip(
-        prim_rect,
-        &tile_size,
-        &tile_spacing,
-        &clip_rect
-    );
-
-    *start += offset;
-    *end += offset;
+    // First sanitize the gradient parameters. See if we can remove repetitions,
+    // tighten the primitive bounds, etc.
 
     // The size of gradient render tasks depends on the tile_size. No need to generate
     // large stretch sizes that will be clipped to the bounds of the primitive.
     tile_size.width = tile_size.width.min(prim_rect.size.width);
     tile_size.height = tile_size.height.min(prim_rect.size.height);
 
-    if extend_mode != ExtendMode::Clamp || stops.is_empty() {
-        return false;
-    }
+    simplify_repeated_primitive(&tile_size, &mut tile_spacing, prim_rect);
 
     let vertical = start.x.approx_eq(&end.x);
     let horizontal = start.y.approx_eq(&end.y);
-
-    if !vertical && !horizontal {
-        return false;
-    }
-
-    if vertical && horizontal {
-        return false;
-    }
-
-    simplify_repeated_primitive(&tile_size, &mut tile_spacing, prim_rect);
 
     let mut horizontally_tiled = prim_rect.size.width > tile_size.width;
     let mut vertically_tiled = prim_rect.size.height > tile_size.height;
@@ -166,6 +147,32 @@ pub fn optimize_linear_gradient(
     if horizontally_tiled && vertical && tile_spacing.width == 0.0 {
         tile_size.width = prim_rect.size.width;
         horizontally_tiled = false;
+    }
+
+    let offset = apply_gradient_local_clip(
+        prim_rect,
+        &tile_size,
+        &tile_spacing,
+        &clip_rect
+    );
+
+    *start += offset;
+    *end += offset;
+
+    // Next, in the case of axis-aligned gradients, see if it is worth
+    // decomposing the gradient into multiple gradients with only two
+    // gradient stops per segment to get a faster shader.
+
+    if extend_mode != ExtendMode::Clamp || stops.is_empty() {
+        return false;
+    }
+
+    if !vertical && !horizontal {
+        return false;
+    }
+
+    if vertical && horizontal {
+        return false;
     }
 
     if !tile_spacing.is_empty() || vertically_tiled || horizontally_tiled {
@@ -201,7 +208,12 @@ pub fn optimize_linear_gradient(
         if vertical { swap(&mut p.x, &mut p.y); }
     };
 
-    let clip_rect = *prim_rect;
+    let clip_rect = match clip_rect.intersection(prim_rect) {
+        Some(clip) => clip,
+        None => {
+            return false;
+        }
+    };
 
     adjust_rect(prim_rect);
     adjust_point(start);

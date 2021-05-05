@@ -316,7 +316,7 @@ impl GradientGpuBlockBuilder {
 }
 
 // If the gradient is not tiled we know that any content outside of the clip will not
-// be shown. Applying a conservative clip early reduces how much of the gradient we
+// be shown. Applying the clip early reduces how much of the gradient we
 // render and cache. We do this optimization separately on each axis.
 // Returns the offset between the new and old primitive rect origin, to apply to the
 // gradient parameters that are relative to the primitive origin.
@@ -326,8 +326,10 @@ pub fn apply_gradient_local_clip(
     tile_spacing: &LayoutSize,
     clip_rect: &LayoutRect,
 ) -> LayoutVector2D {
-    let is_tiled_x = prim_rect.size.width > stretch_size.width + tile_spacing.width;
-    let is_tiled_y = prim_rect.size.height > stretch_size.height + tile_spacing.height;
+    let w = prim_rect.max_x().min(clip_rect.max_x()) - prim_rect.min_x();
+    let h = prim_rect.max_y().min(clip_rect.max_y()) - prim_rect.min_y();
+    let is_tiled_x = w > stretch_size.width + tile_spacing.width;
+    let is_tiled_y = h > stretch_size.height + tile_spacing.height;
 
     let mut offset = LayoutVector2D::new(0.0, 0.0);
 
