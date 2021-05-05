@@ -19,6 +19,7 @@
 #include "mozilla/FileUtilsWin.h"
 #include "mozilla/IOInterposer.h"
 #include "mozilla/Mutex.h"
+#include "mozilla/NativeNt.h"
 #include "mozilla/SmallArrayLRUCache.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtr.h"
@@ -256,6 +257,16 @@ static NTSTATUS NTAPI InterposedNtCreateFile(
     PLARGE_INTEGER aAllocationSize, ULONG aFileAttributes, ULONG aShareAccess,
     ULONG aCreateDisposition, ULONG aCreateOptions, PVOID aEaBuffer,
     ULONG aEaLength) {
+  // Something is badly wrong if this function is undefined
+  MOZ_ASSERT(gOriginalNtCreateFile);
+
+  if (!mozilla::nt::RtlGetThreadLocalStoragePointer()) {
+    return gOriginalNtCreateFile(
+        aFileHandle, aDesiredAccess, aObjectAttributes, aIoStatusBlock,
+        aAllocationSize, aFileAttributes, aShareAccess, aCreateDisposition,
+        aCreateOptions, aEaBuffer, aEaLength);
+  }
+
   // Report IO
   const wchar_t* buf =
       aObjectAttributes ? aObjectAttributes->ObjectName->Buffer : L"";
@@ -265,9 +276,6 @@ static NTSTATUS NTAPI InterposedNtCreateFile(
   nsDependentSubstring filename(buf, len);
   WinIOAutoObservation timer(mozilla::IOInterposeObserver::OpCreateOrOpen,
                              filename);
-
-  // Something is badly wrong if this function is undefined
-  MOZ_ASSERT(gOriginalNtCreateFile);
 
   // Execute original function
   NTSTATUS status = gOriginalNtCreateFile(
@@ -286,12 +294,17 @@ static NTSTATUS NTAPI InterposedNtReadFile(HANDLE aFileHandle, HANDLE aEvent,
                                            PVOID aBuffer, ULONG aLength,
                                            PLARGE_INTEGER aOffset,
                                            PULONG aKey) {
+  // Something is badly wrong if this function is undefined
+  MOZ_ASSERT(gOriginalNtReadFile);
+
+  if (!mozilla::nt::RtlGetThreadLocalStoragePointer()) {
+    return gOriginalNtReadFile(aFileHandle, aEvent, aApc, aApcCtx, aIoStatus,
+                               aBuffer, aLength, aOffset, aKey);
+  }
+
   // Report IO
   WinIOAutoObservation timer(mozilla::IOInterposeObserver::OpRead, aFileHandle,
                              aOffset);
-
-  // Something is badly wrong if this function is undefined
-  MOZ_ASSERT(gOriginalNtReadFile);
 
   // Execute original function
   return gOriginalNtReadFile(aFileHandle, aEvent, aApc, aApcCtx, aIoStatus,
@@ -302,12 +315,18 @@ static NTSTATUS NTAPI InterposedNtReadFileScatter(
     HANDLE aFileHandle, HANDLE aEvent, PIO_APC_ROUTINE aApc, PVOID aApcCtx,
     PIO_STATUS_BLOCK aIoStatus, FILE_SEGMENT_ELEMENT* aSegments, ULONG aLength,
     PLARGE_INTEGER aOffset, PULONG aKey) {
+  // Something is badly wrong if this function is undefined
+  MOZ_ASSERT(gOriginalNtReadFileScatter);
+
+  if (!mozilla::nt::RtlGetThreadLocalStoragePointer()) {
+    return gOriginalNtReadFileScatter(aFileHandle, aEvent, aApc, aApcCtx,
+                                      aIoStatus, aSegments, aLength, aOffset,
+                                      aKey);
+  }
+
   // Report IO
   WinIOAutoObservation timer(mozilla::IOInterposeObserver::OpRead, aFileHandle,
                              aOffset);
-
-  // Something is badly wrong if this function is undefined
-  MOZ_ASSERT(gOriginalNtReadFileScatter);
 
   // Execute original function
   return gOriginalNtReadFileScatter(aFileHandle, aEvent, aApc, aApcCtx,
@@ -322,12 +341,17 @@ static NTSTATUS NTAPI InterposedNtWriteFile(HANDLE aFileHandle, HANDLE aEvent,
                                             PVOID aBuffer, ULONG aLength,
                                             PLARGE_INTEGER aOffset,
                                             PULONG aKey) {
+  // Something is badly wrong if this function is undefined
+  MOZ_ASSERT(gOriginalNtWriteFile);
+
+  if (!mozilla::nt::RtlGetThreadLocalStoragePointer()) {
+    return gOriginalNtWriteFile(aFileHandle, aEvent, aApc, aApcCtx, aIoStatus,
+                                aBuffer, aLength, aOffset, aKey);
+  }
+
   // Report IO
   WinIOAutoObservation timer(mozilla::IOInterposeObserver::OpWrite, aFileHandle,
                              aOffset);
-
-  // Something is badly wrong if this function is undefined
-  MOZ_ASSERT(gOriginalNtWriteFile);
 
   // Execute original function
   return gOriginalNtWriteFile(aFileHandle, aEvent, aApc, aApcCtx, aIoStatus,
@@ -339,12 +363,18 @@ static NTSTATUS NTAPI InterposedNtWriteFileGather(
     HANDLE aFileHandle, HANDLE aEvent, PIO_APC_ROUTINE aApc, PVOID aApcCtx,
     PIO_STATUS_BLOCK aIoStatus, FILE_SEGMENT_ELEMENT* aSegments, ULONG aLength,
     PLARGE_INTEGER aOffset, PULONG aKey) {
+  // Something is badly wrong if this function is undefined
+  MOZ_ASSERT(gOriginalNtWriteFileGather);
+
+  if (!mozilla::nt::RtlGetThreadLocalStoragePointer()) {
+    return gOriginalNtWriteFileGather(aFileHandle, aEvent, aApc, aApcCtx,
+                                      aIoStatus, aSegments, aLength, aOffset,
+                                      aKey);
+  }
+
   // Report IO
   WinIOAutoObservation timer(mozilla::IOInterposeObserver::OpWrite, aFileHandle,
                              aOffset);
-
-  // Something is badly wrong if this function is undefined
-  MOZ_ASSERT(gOriginalNtWriteFileGather);
 
   // Execute original function
   return gOriginalNtWriteFileGather(aFileHandle, aEvent, aApc, aApcCtx,
@@ -354,12 +384,16 @@ static NTSTATUS NTAPI InterposedNtWriteFileGather(
 
 static NTSTATUS NTAPI InterposedNtFlushBuffersFile(
     HANDLE aFileHandle, PIO_STATUS_BLOCK aIoStatusBlock) {
+  // Something is badly wrong if this function is undefined
+  MOZ_ASSERT(gOriginalNtFlushBuffersFile);
+
+  if (!mozilla::nt::RtlGetThreadLocalStoragePointer()) {
+    return gOriginalNtFlushBuffersFile(aFileHandle, aIoStatusBlock);
+  }
+
   // Report IO
   WinIOAutoObservation timer(mozilla::IOInterposeObserver::OpFSync, aFileHandle,
                              nullptr);
-
-  // Something is badly wrong if this function is undefined
-  MOZ_ASSERT(gOriginalNtFlushBuffersFile);
 
   // Execute original function
   return gOriginalNtFlushBuffersFile(aFileHandle, aIoStatusBlock);
@@ -368,6 +402,14 @@ static NTSTATUS NTAPI InterposedNtFlushBuffersFile(
 static NTSTATUS NTAPI InterposedNtQueryFullAttributesFile(
     POBJECT_ATTRIBUTES aObjectAttributes,
     PFILE_NETWORK_OPEN_INFORMATION aFileInformation) {
+  // Something is badly wrong if this function is undefined
+  MOZ_ASSERT(gOriginalNtQueryFullAttributesFile);
+
+  if (!mozilla::nt::RtlGetThreadLocalStoragePointer()) {
+    return gOriginalNtQueryFullAttributesFile(aObjectAttributes,
+                                              aFileInformation);
+  }
+
   // Report IO
   const wchar_t* buf =
       aObjectAttributes ? aObjectAttributes->ObjectName->Buffer : L"";
@@ -376,9 +418,6 @@ static NTSTATUS NTAPI InterposedNtQueryFullAttributesFile(
                      : 0;
   nsDependentSubstring filename(buf, len);
   WinIOAutoObservation timer(mozilla::IOInterposeObserver::OpStat, filename);
-
-  // Something is badly wrong if this function is undefined
-  MOZ_ASSERT(gOriginalNtQueryFullAttributesFile);
 
   // Execute original function
   return gOriginalNtQueryFullAttributesFile(aObjectAttributes,
