@@ -11,7 +11,6 @@
 #include "TaskController.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/StaticPrefs_dom.h"
-#include "nsXULAppAPI.h"
 
 namespace mozilla {
 

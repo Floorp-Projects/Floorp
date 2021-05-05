@@ -16,7 +16,6 @@
 #include "nsITransport.h"
 #include "nsIObserverService.h"
 #include "nsThreadPool.h"
-#include "mozilla/DelayedRunnable.h"
 #include "mozilla/Services.h"
 
 namespace mozilla {
@@ -244,12 +243,6 @@ nsInputStreamTransport::OnInputStreamReady(nsIAsyncInputStream* aStream) {
 // nsStreamTransportService
 //-----------------------------------------------------------------------------
 
-nsStreamTransportService::nsStreamTransportService()
-    : mScheduledDelayedRunnables(
-          "nsStreamTransportService.mScheduledDelayedRunnables"),
-      mShutdownLock("nsStreamTransportService.mShutdownLock"),
-      mIsShutdown(false) {}
-
 nsStreamTransportService::~nsStreamTransportService() {
   NS_ASSERTION(!mPool, "thread pool wasn't shutdown");
 }
@@ -269,25 +262,8 @@ nsresult nsStreamTransportService::Init() {
   return NS_OK;
 }
 
-void nsStreamTransportService::OnDelayedRunnableCreated(
-    DelayedRunnable* aRunnable) {}
-
-void nsStreamTransportService::OnDelayedRunnableScheduled(
-    DelayedRunnable* aRunnable) {
-  MOZ_ASSERT(IsOnCurrentThread());
-  auto delayedRunnables = mScheduledDelayedRunnables.Lock();
-  delayedRunnables->AppendElement(aRunnable);
-}
-
-void nsStreamTransportService::OnDelayedRunnableRan(
-    DelayedRunnable* aRunnable) {
-  MOZ_ASSERT(IsOnCurrentThread());
-  auto delayedRunnables = mScheduledDelayedRunnables.Lock();
-  MOZ_ALWAYS_TRUE(delayedRunnables->RemoveElement(aRunnable));
-}
-
 NS_IMPL_ISUPPORTS(nsStreamTransportService, nsIStreamTransportService,
-                  nsIEventTarget, nsIDelayedRunnableObserver, nsIObserver)
+                  nsIEventTarget, nsIObserver)
 
 NS_IMETHODIMP
 nsStreamTransportService::DispatchFromScript(nsIRunnable* task,
@@ -376,31 +352,6 @@ nsStreamTransportService::Observe(nsISupports* subject, const char* topic,
   if (mPool) {
     mPool->Shutdown();
     mPool = nullptr;
-  }
-
-  // Because the DelayedRunnables are run by a thread pool, no guarantee is
-  // given to which thread they run or get released on. Releasing them on the
-  // thread pool or on the background target thus doesn't really matter. We are
-  // forced to do it on the background target after the thread pool has finished
-  // processing all events, since doing it on the thread pool would allow the
-  // shutdown task to race with scheduling new DelayedRunnables, possibly
-  // missing the cleanup of some of them.
-  nsTArray<RefPtr<DelayedRunnable>> delayedRunnables;
-  {
-    auto sdrs = mScheduledDelayedRunnables.Lock();
-    std::swap(*sdrs, delayedRunnables);
-    MOZ_ASSERT(sdrs->IsEmpty());
-  }
-  if (!delayedRunnables.IsEmpty()) {
-    NS_DispatchBackgroundTask(
-        NS_NewRunnableFunction(
-            "nsStreamTransportService::mScheduledDelayedRunnables Cancel",
-            [delayedRunnables = std::move(delayedRunnables)] {
-              for (const auto& r : delayedRunnables) {
-                r->CancelTimer();
-              }
-            }),
-        NS_DISPATCH_SYNC);
   }
   return NS_OK;
 }
