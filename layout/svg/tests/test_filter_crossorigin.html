@@ -23,9 +23,22 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=695385
 
 <pre id="test">
 <script type="application/javascript">
+
+function promiseExecuteSoon() {
+  return new Promise(SimpleTest.executeSoon);
+}
+
 // Main Function
 async function run() {
   SimpleTest.waitForExplicitFinish();
+
+  // XXXdholbert Wait a few ticks, to give the iframes a little more
+  // opportunity to load their external resources before we call
+  // snapshotWindow. This is an attempt at a workaround/diagnostic for
+  // https://bugzilla.mozilla.org/show_bug.cgi?id=1706542
+  for (let i = 0; i < 60; i++) {
+    await promiseExecuteSoon();
+  }
 
   let snapshots = new Array(4);
   for (let i = 0; i < snapshots.length; i++) {
