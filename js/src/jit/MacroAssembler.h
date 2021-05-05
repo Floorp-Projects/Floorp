@@ -399,13 +399,20 @@ class MacroAssembler : public MacroAssemblerSpecific {
   // layout.  Any inconsistencies will certainly lead to crashing in generated
   // code:
   //
-  //   PushRegsInMaskSizeInBytes PushRegsInMask storeRegsInMask
-  //   PopRegsInMask PopRegsInMaskIgnore
+  //   MacroAssembler::PushRegsInMaskSizeInBytes
+  //   MacroAssembler::PushRegsInMask
+  //   MacroAssembler::storeRegsInMask
+  //   MacroAssembler::PopRegsInMask
+  //   MacroAssembler::PopRegsInMaskIgnore
+  //   FloatRegister::getRegisterDumpOffsetInBytes
+  //   (no class) PushRegisterDump
+  //   (union) RegisterContent
   //
   // To be more exact, the invariants are:
   //
   // * The save area is conceptually viewed as starting at a highest address
-  //   and working down to some lower address.
+  //   (really, at "highest address - 1") and working down to some lower
+  //   address.
   //
   // * PushRegsInMask, storeRegsInMask and PopRegsInMask{Ignore} must use
   //   exactly the same memory layout, when starting from the abovementioned
@@ -422,6 +429,44 @@ class MacroAssembler : public MacroAssemblerSpecific {
   // * Hence, regardless of whether the save area is created with
   //   storeRegsInMask or PushRegsInMask, it is guaranteed to fit inside an
   //   area of size calculated by PushRegsInMaskSizeInBytes.
+  //
+  // * For the `ignore` argument of PopRegsInMaskIgnore, equality checking
+  //   for the floating point/SIMD registers is done on the basis of the
+  //   underlying physical register, regardless of width.  For example, if the
+  //   to-restore set contains v17 (the SIMD register with encoding 17) and
+  //   the ignore set contains d17 (the double register with encoding 17) then
+  //   no part of the physical register with encoding 17 will be restored.
+  //   (This is probably not true on arm32, since that has aliased float32
+  //   registers; but none of our other targets do.)
+  //
+  // * {Push,store}RegsInMask/storeRegsInMask are further constrained as
+  //   follows: when given the argument AllFloatRegisters, the resulting
+  //   memory area must contain exactly all the SIMD/FP registers for the
+  //   target at their widest width (that we care about).  [We have no targets
+  //   where the SIMD registers and FP register sets are disjoint.]  They must
+  //   be packed end-to-end with no holes, with the register with the lowest
+  //   encoding number (0), as returned by FloatRegister::encoding(), at the
+  //   abovementioned highest address, register 1 just below that, etc.
+  //
+  //   Furthermore the sizeof(RegisterContent) must equal the size of a SIMD
+  //   register in the abovementioned array.
+  //
+  //   Furthermore the value returned by
+  //   FloatRegister::getRegisterDumpOffsetInBytes must be a correct index
+  //   into the abovementioned array.  Given the constraints, the only correct
+  //   value is `reg.encoding() * sizeof(RegisterContent)`.
+
+  // Regarding JitRuntime::generateInvalidator and the first two fields of of
+  // class InvalidationBailoutStack (`fpregs_` and `regs_`).  These form their
+  // own layout-equivalence class.  That is, they must be format-consistent.
+  // But they are not part of the equivalence class that PushRegsInMask et al
+  // belong to. JitRuntime::generateInvalidator may use PushRegsInMask to
+  // generate part of the layout, but that's only a happy coincidence; some
+  // targets roll their own save-code instead.
+  //
+  // Nevertheless, because some targets *do* call PushRegsInMask from
+  // JitRuntime::generateInvalidator, you should check carefully all of the
+  // ::generateInvalidator methods if you change the PushRegsInMask format.
 
   // The size of the area used by PushRegsInMask.
   size_t PushRegsInMaskSizeInBytes(LiveRegisterSet set)
@@ -433,7 +478,11 @@ class MacroAssembler : public MacroAssemblerSpecific {
 
   // Like PushRegsInMask, but instead of pushing the registers, store them to
   // |dest|. |dest| should point to the end of the reserved space, so the
-  // first register will be stored at |dest.offset - sizeof(register)|.
+  // first register will be stored at |dest.offset - sizeof(register)|.  It is
+  // required that |dest.offset| is at least as large as the value computed by
+  // PushRegsInMaskSizeInBytes for this |set|.  In other words, |dest.base|
+  // must point to either the lowest address in the save area, or some address
+  // below that.
   void storeRegsInMask(LiveRegisterSet set, Address dest, Register scratch)
       DEFINED_ON(arm, arm64, mips32, mips64, x86_shared);
 

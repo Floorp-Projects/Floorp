@@ -56,29 +56,52 @@ static PackedRegisterMask ReadRegisterMask(CompactBufferReader& stream) {
   return stream.readUnsigned();
 }
 
-static void WriteFloatRegisterMask(CompactBufferWriter& stream, uint64_t bits) {
-  if (sizeof(FloatRegisters::SetType) == 1) {
-    stream.writeByte(bits);
-  } else if (sizeof(FloatRegisters::SetType) == 4) {
-    stream.writeUnsigned(bits);
-  } else {
-    MOZ_ASSERT(sizeof(FloatRegisters::SetType) == 8);
-    stream.writeUnsigned(bits & 0xffffffff);
-    stream.writeUnsigned(bits >> 32);
+static void WriteFloatRegisterMask(CompactBufferWriter& stream,
+                                   FloatRegisters::SetType bits) {
+  switch (sizeof(FloatRegisters::SetType)) {
+#ifdef JS_CODEGEN_ARM64
+    case 16:
+      stream.writeUnsigned64(bits.low());
+      stream.writeUnsigned64(bits.high());
+      break;
+#else
+    case 1:
+      stream.writeByte(bits);
+      break;
+    case 4:
+      stream.writeUnsigned(bits);
+      break;
+    case 8:
+      stream.writeUnsigned64(bits);
+      break;
+#endif
+    default:
+      MOZ_CRASH("WriteFloatRegisterMask: unexpected size");
   }
 }
 
-static int64_t ReadFloatRegisterMask(CompactBufferReader& stream) {
-  if (sizeof(FloatRegisters::SetType) == 1) {
-    return stream.readByte();
+static FloatRegisters::SetType ReadFloatRegisterMask(
+    CompactBufferReader& stream) {
+  switch (sizeof(FloatRegisters::SetType)) {
+#ifdef JS_CODEGEN_ARM64
+    case 16: {
+      uint64_t low = stream.readUnsigned64();
+      uint64_t high = stream.readUnsigned64();
+      return Bitset128(high, low);
+    }
+#else
+    case 1:
+      return stream.readByte();
+    case 2:
+    case 3:
+    case 4:
+      return stream.readUnsigned();
+    case 8:
+      return stream.readUnsigned64();
+#endif
+    default:
+      MOZ_CRASH("ReadFloatRegisterMask: unexpected size");
   }
-  if (sizeof(FloatRegisters::SetType) <= 4) {
-    return stream.readUnsigned();
-  }
-  MOZ_ASSERT(sizeof(FloatRegisters::SetType) == 8);
-  uint64_t ret = stream.readUnsigned();
-  ret |= uint64_t(stream.readUnsigned()) << 32;
-  return ret;
 }
 
 void SafepointWriter::writeGcRegs(LSafepoint* safepoint) {
@@ -399,6 +422,7 @@ SafepointReader::SafepointReader(IonScript* script, const SafepointIndex* si)
     valueSpills_ = GeneralRegisterSet(ReadRegisterMask(stream_));
 #endif
   }
+
   allFloatSpills_ = FloatRegisterSet(ReadFloatRegisterMask(stream_));
 
   advanceFromGcRegs();

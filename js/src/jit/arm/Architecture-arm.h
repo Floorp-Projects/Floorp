@@ -26,12 +26,6 @@
 namespace js {
 namespace jit {
 
-// In bytes: slots needed for potential memory->memory move spills.
-//   +8 for cycles
-//   +4 for gpr spills
-//   +8 for double spills
-static const uint32_t ION_FRAME_SLACK_SIZE = 20;
-
 // These offsets are specific to nunboxing, and capture offsets into the
 // components of a js::Value.
 static const int32_t NUNBOX32_TYPE_OFFSET = 4;

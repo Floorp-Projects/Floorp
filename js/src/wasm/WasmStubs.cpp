@@ -155,42 +155,6 @@ void ABIResultIter::settlePrev() {
   cur_ = ABIResult(type, nextStackOffset_);
 }
 
-// Register save/restore.
-//
-// On ARM64, the register sets are not able to represent SIMD registers (see
-// lengthy comment in Architecture-arm64.h for information), and so we use a
-// hack to save and restore them: on this architecture, when we care about SIMD,
-// we call special routines that know about them.
-//
-// In a couple of cases it is not currently necessary to save and restore SIMD
-// registers, but the extra traffic is all along slow paths and not really worth
-// optimizing.
-static void PushRegsInMask(MacroAssembler& masm, const LiveRegisterSet& set) {
-#if defined(ENABLE_WASM_SIMD) && defined(JS_CODEGEN_ARM64)
-  masm.PushRegsInMaskForWasmStubs(set);
-#else
-  masm.PushRegsInMask(set);
-#endif
-}
-
-static void PopRegsInMask(MacroAssembler& masm, const LiveRegisterSet& set) {
-#if defined(ENABLE_WASM_SIMD) && defined(JS_CODEGEN_ARM64)
-  masm.PopRegsInMaskForWasmStubs(set, LiveRegisterSet());
-#else
-  masm.PopRegsInMask(set);
-#endif
-}
-
-static void PopRegsInMaskIgnore(MacroAssembler& masm,
-                                const LiveRegisterSet& set,
-                                const LiveRegisterSet& ignore) {
-#if defined(ENABLE_WASM_SIMD) && defined(JS_CODEGEN_ARM64)
-  masm.PopRegsInMaskForWasmStubs(set, ignore);
-#else
-  masm.PopRegsInMaskIgnore(set, ignore);
-#endif
-}
-
 #ifdef WASM_CODEGEN_DEBUG
 template <class Closure>
 static void GenPrint(DebugChannel channel, MacroAssembler& masm,
@@ -201,7 +165,7 @@ static void GenPrint(DebugChannel channel, MacroAssembler& masm,
 
   AllocatableRegisterSet regs(RegisterSet::All());
   LiveRegisterSet save(regs.asLiveSet());
-  PushRegsInMask(masm, save);
+  masm.PushRegsInMask(save);
 
   if (taken) {
     regs.take(taken.value());
@@ -215,7 +179,7 @@ static void GenPrint(DebugChannel channel, MacroAssembler& masm,
     passArgAndCall(IsCompilingWasm(), temp);
   }
 
-  PopRegsInMask(masm, save);
+  masm.PopRegsInMask(save);
 }
 
 static void GenPrintf(DebugChannel channel, MacroAssembler& masm,
@@ -774,15 +738,10 @@ static bool GenerateInterpEntry(MacroAssembler& masm, const FuncExport& fe,
   // Save all caller non-volatile registers before we clobber them here and in
   // the wasm callee (which does not preserve non-volatile registers).
   masm.setFramePushed(0);
-  PushRegsInMask(masm, NonVolatileRegs);
+  masm.PushRegsInMask(NonVolatileRegs);
 
   const unsigned nonVolatileRegsPushSize =
-#if defined(ENABLE_WASM_SIMD) && defined(JS_CODEGEN_ARM64)
-      NonVolatileRegs.gprs().size() * sizeof(intptr_t) +
-      FloatRegister::GetPushSizeInBytesForWasmStubs(NonVolatileRegs.fpus());
-#else
       masm.PushRegsInMaskSizeInBytes(NonVolatileRegs);
-#endif
 
   MOZ_ASSERT(masm.framePushed() == nonVolatileRegsPushSize);
 
@@ -904,7 +863,7 @@ static bool GenerateInterpEntry(MacroAssembler& masm, const FuncExport& fe,
   masm.bind(&join);
 
   // Restore clobbered non-volatile registers of the caller.
-  PopRegsInMask(masm, NonVolatileRegs);
+  masm.PopRegsInMask(NonVolatileRegs);
   MOZ_ASSERT(masm.framePushed() == 0);
 
 #if defined(JS_CODEGEN_ARM64)
@@ -992,7 +951,7 @@ static void GenerateBigIntInitialization(MacroAssembler& masm,
   // We need to avoid clobbering other argument registers and the input.
   AllocatableRegisterSet regs(RegisterSet::Volatile());
   LiveRegisterSet save(regs.asLiveSet());
-  PushRegsInMask(masm, save);
+  masm.PushRegsInMask(save);
 
   unsigned frameSize = StackDecrementForCall(
       ABIStackAlignment, masm.framePushed() + bytesPushedByPrologue, 0);
@@ -1013,7 +972,7 @@ static void GenerateBigIntInitialization(MacroAssembler& masm,
 
   LiveRegisterSet ignore;
   ignore.add(scratch);
-  PopRegsInMaskIgnore(masm, save, ignore);
+  masm.PopRegsInMaskIgnore(save, ignore);
 
   masm.branchTest32(Assembler::Zero, scratch, scratch, fail);
   masm.initializeBigInt64(Scalar::BigInt64, scratch, input);
@@ -2700,15 +2659,17 @@ static const LiveRegisterSet RegsToPreserve(
 // We assume that traps do not happen while lr is live. This both ensures that
 // the size of RegsToPreserve is a multiple of 2 (preserving WasmStackAlignment)
 // and gives us a register to clobber in the return path.
-//
-// Note there are no SIMD registers in the set; the doubles in the set stand in
-// for SIMD registers, which are pushed as appropriate.  See comments above at
-// PushRegsInMask and lengty comment in Architecture-arm64.h.
 static const LiveRegisterSet RegsToPreserve(
     GeneralRegisterSet(Registers::AllMask &
                        ~((Registers::SetType(1) << RealStackPointer.code()) |
                          (Registers::SetType(1) << Registers::lr))),
+#  ifdef ENABLE_WASM_SIMD
+    FloatRegisterSet(FloatRegisters::AllSimd128Mask));
+#  else
+    // If SIMD is not enabled, it's pointless to save/restore the upper 64
+    // bits of each vector register.
     FloatRegisterSet(FloatRegisters::AllDoubleMask));
+#  endif
 #elif defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
 // It's correct to use FloatRegisters::AllMask even when SIMD is not enabled;
 // PushRegsInMask strips out the high lanes of the XMM registers in this case,
@@ -2762,7 +2723,7 @@ static bool GenerateTrapExit(MacroAssembler& masm, Label* throwLabel,
   // Push a dummy word to use as return address below.
   WasmPush(masm, ImmWord(TrapExitDummyValue));
   unsigned framePushedBeforePreserve = masm.framePushed();
-  PushRegsInMask(masm, RegsToPreserve);
+  masm.PushRegsInMask(RegsToPreserve);
   unsigned offsetOfReturnWord = masm.framePushed() - framePushedBeforePreserve;
 
   // We know that StackPointer is word-aligned, but not necessarily
@@ -2786,7 +2747,7 @@ static bool GenerateTrapExit(MacroAssembler& masm, Label* throwLabel,
   // use to jump to via ret.
   masm.moveToStackPtr(preAlignStackPointer);
   masm.storePtr(ReturnReg, Address(masm.getStackPointer(), offsetOfReturnWord));
-  PopRegsInMask(masm, RegsToPreserve);
+  masm.PopRegsInMask(RegsToPreserve);
 #ifdef JS_CODEGEN_ARM64
   WasmPop(masm, lr);
   masm.abiret();
@@ -2926,7 +2887,7 @@ static bool GenerateDebugTrapStub(MacroAssembler& masm, Label* throwLabel,
   GenerateExitPrologue(masm, 0, ExitReason::Fixed::DebugTrap, offsets);
 
   // Save all registers used between baseline compiler operations.
-  PushRegsInMask(masm, AllAllocatableRegs);
+  masm.PushRegsInMask(AllAllocatableRegs);
 
   uint32_t framePushed = masm.framePushed();
 
@@ -2960,7 +2921,7 @@ static bool GenerateDebugTrapStub(MacroAssembler& masm, Label* throwLabel,
 #endif
 
   masm.setFramePushed(framePushed);
-  PopRegsInMask(masm, AllAllocatableRegs);
+  masm.PopRegsInMask(AllAllocatableRegs);
 
   GenerateExitEpilogue(masm, 0, ExitReason::Fixed::DebugTrap, offsets);
 

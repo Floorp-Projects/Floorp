@@ -48,6 +48,21 @@ class CompactBufferReader {
     }
   }
 
+  uint64_t readVariableLength64() {
+    uint64_t val = 0;
+    uint32_t shift = 0;
+    uint8_t byte;
+    while (true) {
+      MOZ_ASSERT(shift < 64);
+      byte = readByte();
+      val |= (uint64_t(byte) >> 1) << shift;
+      shift += 7;
+      if (!(byte & 1)) {
+        return val;
+      }
+    }
+  }
+
  public:
   CompactBufferReader(const uint8_t* start, const uint8_t* end)
       : buffer_(start), end_(end) {}
@@ -74,6 +89,7 @@ class CompactBufferReader {
     return *reinterpret_cast<const uint32_t*>(buffer_);
   }
   uint32_t readUnsigned() { return readVariableLength(); }
+  uint32_t readUnsigned64() { return readVariableLength64(); }
   int32_t readSigned() {
     uint8_t b = readByte();
     bool isNegative = !!(b & (1 << 0));
@@ -168,6 +184,13 @@ class CompactBufferWriter {
       value >>= 7;
       original >>= 7;
     } while (original);
+  }
+  void writeUnsigned64(uint64_t value) {
+    do {
+      uint8_t byte = ((value & 0x7F) << 1) | (value > 0x7F);
+      writeByte(byte);
+      value >>= 7;
+    } while (value);
   }
   void writeSigned(int32_t v) {
     bool isNegative = v < 0;
