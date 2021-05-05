@@ -162,6 +162,20 @@ let DownloadsViewableInternally = {
       // available getter is set by initAvailable()
     },
     {
+      extension: "jxl",
+      mimeTypes: ["image/jxl"],
+      initAvailable() {
+        XPCOMUtils.defineLazyPreferenceGetter(
+          this,
+          "available",
+          "image.jxl.enabled",
+          false,
+          () => DownloadsViewableInternally._updateHandler(this)
+        );
+      },
+      // available getter is set by initAvailable()
+    },
+    {
       extension: "pdf",
       mimeTypes: ["application/pdf"],
       // PDF uses pdfjs.disabled rather than PREF_ENABLED_TYPES.
