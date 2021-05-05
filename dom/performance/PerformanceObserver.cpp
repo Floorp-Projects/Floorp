@@ -126,13 +126,15 @@ void PerformanceObserver::QueueEntry(PerformanceEntry* aEntry) {
   mQueuedEntries.AppendElement(aEntry);
 }
 
+static constexpr nsLiteralString kValidEventTimingNames[2] = {
+    u"event"_ns, u"first-input"_ns};
+
 /*
  * Keep this list in alphabetical order.
  * https://w3c.github.io/performance-timeline/#supportedentrytypes-attribute
  */
-static const char16_t* const sValidTypeNames[7] = {
-    u"event",      u"first-input", u"mark",     u"measure",
-    u"navigation", u"paint",       u"resource",
+static constexpr nsLiteralString kValidTypeNames[5] = {
+    u"mark"_ns, u"measure"_ns, u"navigation"_ns, u"paint"_ns, u"resource"_ns,
 };
 
 void PerformanceObserver::ReportUnsupportedTypesErrorToConsole(
@@ -206,11 +208,17 @@ void PerformanceObserver::Observe(const PerformanceObserverInit& aOptions,
 
     /* 3.3.1.5.2 */
     nsTArray<nsString> validEntryTypes;
-    for (const char16_t* name : sValidTypeNames) {
-      nsDependentString validTypeName(name);
-      if (entryTypes.Contains<nsString>(validTypeName) &&
-          !validEntryTypes.Contains<nsString>(validTypeName)) {
-        validEntryTypes.AppendElement(validTypeName);
+
+    if (StaticPrefs::dom_enable_event_timing()) {
+      for (const nsLiteralString& name : kValidEventTimingNames) {
+        if (entryTypes.Contains(name) && !validEntryTypes.Contains(name)) {
+          validEntryTypes.AppendElement(name);
+        }
+      }
+    }
+    for (const nsLiteralString& name : kValidTypeNames) {
+      if (entryTypes.Contains(name) && !validEntryTypes.Contains(name)) {
+        validEntryTypes.AppendElement(name);
       }
     }
 
@@ -253,9 +261,16 @@ void PerformanceObserver::Observe(const PerformanceObserverInit& aOptions,
     nsString type = maybeType.Value();
 
     /* 3.3.1.6.2 */
-    for (const char16_t* name : sValidTypeNames) {
-      nsDependentString validTypeName(name);
-      if (type == validTypeName) {
+    if (StaticPrefs::dom_enable_event_timing()) {
+      for (const nsLiteralString& name : kValidEventTimingNames) {
+        if (type == name) {
+          typeValid = true;
+          break;
+        }
+      }
+    }
+    for (const nsLiteralString& name : kValidTypeNames) {
+      if (type == name) {
         typeValid = true;
         break;
       }
@@ -309,9 +324,13 @@ void PerformanceObserver::GetSupportedEntryTypes(
   nsTArray<nsString> validTypes;
   JS::Rooted<JS::Value> val(aGlobal.Context());
 
-  for (const char16_t* name : sValidTypeNames) {
-    nsString validTypeName(name);
-    validTypes.AppendElement(validTypeName);
+  if (StaticPrefs::dom_enable_event_timing()) {
+    for (const nsLiteralString& name : kValidEventTimingNames) {
+      validTypes.AppendElement(name);
+    }
+  }
+  for (const nsLiteralString& name : kValidTypeNames) {
+    validTypes.AppendElement(name);
   }
 
   if (!ToJSValue(aGlobal.Context(), validTypes, &val)) {
