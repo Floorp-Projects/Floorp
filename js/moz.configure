@@ -756,15 +756,18 @@ set_define("ENABLE_WASM_EXTENDED_CONST", wasm_extended_const)
 # =====================================================
 
 
-@depends("--enable-jit", "--enable-simulator", target)
-def default_wasm_simd(jit_enabled, simulator, target):
+@depends("--enable-jit", "--enable-simulator", "--enable-cranelift", target)
+def default_wasm_simd(jit_enabled, simulator, cranelift_enabled, target):
     if not jit_enabled:
         return
 
-    if simulator:
+    if cranelift_enabled:
         return
 
-    if target.cpu in ("x86_64", "x86"):
+    if simulator and (simulator[0] != "arm64"):
+        return
+
+    if target.cpu in ("x86_64", "x86", "aarch64"):
         return True
 
 
@@ -775,21 +778,30 @@ option(
 )
 
 
-@depends("--enable-wasm-simd", "--enable-jit", "--enable-simulator", target)
-def wasm_simd(value, jit_enabled, simulator, target):
+@depends(
+    "--enable-wasm-simd",
+    "--enable-jit",
+    "--enable-simulator",
+    "--enable-cranelift",
+    target,
+)
+def wasm_simd(value, jit_enabled, simulator, cranelift_enabled, target):
     if not value:
         return
 
     if not jit_enabled:
-        return
+        die("--enable-wasm-simd requires --enable-jit")
 
-    if simulator:
-        return
+    if cranelift_enabled:
+        die("--enable-wasm-simd is not supported for --enable-cranelift")
 
-    if target.cpu in ("x86_64", "x86"):
+    if simulator and (simulator[0] != "arm64"):
+        die("--enable-wasm-simd is not supported for simulators, except arm64")
+
+    if target.cpu in ("x86_64", "x86", "aarch64"):
         return True
 
-    die("--enable-wasm-simd only possible when targeting the x86_64/x86 jits")
+    die("--enable-wasm-simd only possible when targeting the x86_64/x86/arm64 jits")
 
 
 set_config("ENABLE_WASM_SIMD", wasm_simd)
