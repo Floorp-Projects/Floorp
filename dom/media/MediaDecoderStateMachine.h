@@ -767,6 +767,12 @@ class MediaDecoderStateMachine
   // after Initialization. TaskQueue thread only.
   bool mIsMediaSinkSuspended = false;
 
+  // This stores the last clock time before the media sink got shutdown, and
+  // we might use that as the next start time when we re-create the media sink
+  // later, which ensures the clock time is monotonically increased even if
+  // the media sinks have been changed multiple times.
+  Maybe<media::TimeUnit> mLastClockTimeBeforeStopSink;
+
  public:
   AbstractCanonical<media::TimeIntervals>* CanonicalBuffered() const;
 
