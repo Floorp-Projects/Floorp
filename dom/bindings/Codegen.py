@@ -15257,22 +15257,11 @@ class CGDOMJSProxyHandler_get(ClassMethod):
         self.descriptor = descriptor
 
     def getBody(self):
-        if self.descriptor.isMaybeCrossOriginObject():
-            maybeCrossOriginGet = dedent(
-                """
-                if (!IsPlatformObjectSameOrigin(cx, proxy)) {
-                  return CrossOriginGet(cx, proxy, receiver, id, vp);
-                }
-
-                """
-            )
-        else:
-            maybeCrossOriginGet = ""
-
         missingPropUseCounters = missingPropUseCountersForDescriptor(self.descriptor)
 
         getUnforgeableOrExpando = dedent(
             """
+            bool expandoHasProp = false;
             { // Scope for expando
               JS::Rooted<JSObject*> expando(cx, DOMProxyHandler::GetExpandoObject(proxy));
               if (expando) {
@@ -15283,7 +15272,7 @@ class CGDOMJSProxyHandler_get(ClassMethod):
                 if (expandoHasProp) {
                   // Forward the get to the expando object, but our receiver is whatever our
                   // receiver is.
-                  if (!JS_ForwardGetPropertyTo(cx, expando, id, rootedReceiver, vp)) {
+                  if (!JS_ForwardGetPropertyTo(cx, expando, id, ${receiver}, vp)) {
                     return false;
                   }
                 }
@@ -15292,50 +15281,72 @@ class CGDOMJSProxyHandler_get(ClassMethod):
             """
         )
 
+        getOnPrototype = dedent(
+            """
+            bool foundOnPrototype;
+            if (!GetPropertyOnPrototype(cx, proxy, ${receiver}, id, &foundOnPrototype, vp)) {
+              return false;
+            }
+            """
+        )
+
         if self.descriptor.isMaybeCrossOriginObject():
-            getUnforgeableOrExpando = fill(
+            # We can't handle these for cross-origin objects
+            assert not self.descriptor.supportsIndexedProperties()
+            assert not self.descriptor.supportsNamedProperties()
+
+            return fill(
                 """
-                { // Scope for the JSAutoRealm accessing expando
+                MOZ_ASSERT(!xpc::WrapperFactory::IsXrayWrapper(proxy),
+                            "Should not have a XrayWrapper here");
+
+                if (!IsPlatformObjectSameOrigin(cx, proxy)) {
+                  return CrossOriginGet(cx, proxy, receiver, id, vp);
+                }
+
+                $*{missingPropUseCounters}
+                { // Scope for the JSAutoRealm accessing expando and prototype.
                   JSAutoRealm ar(cx, proxy);
-                  if (!MaybeWrapValue(cx, &rootedReceiver)) {
+                  JS::Rooted<JS::Value> wrappedReceiver(cx, receiver);
+                  if (!MaybeWrapValue(cx, &wrappedReceiver)) {
                     return false;
                   }
                   JS_MarkCrossZoneId(cx, id);
 
                   $*{getUnforgeableOrExpando}
+                  if (!expandoHasProp) {
+                    $*{getOnPrototype}
+                    if (!foundOnPrototype) {
+                      MOZ_ASSERT(vp.isUndefined());
+                      return true;
+                    }
+                  }
                 }
-                if (expandoHasProp) {
-                  return MaybeWrapValue(cx, vp);
-                }
-                """,
-                getUnforgeableOrExpando=getUnforgeableOrExpando,
-            )
-        else:
-            getUnforgeableOrExpando = fill(
-                """
-                $*{getUnforgeableOrExpando}
 
-                if (expandoHasProp) {
-                  return true;
-                }
+                return MaybeWrapValue(cx, vp);
                 """,
-                getUnforgeableOrExpando=getUnforgeableOrExpando,
+                missingPropUseCounters=missingPropUseCountersForDescriptor(
+                    self.descriptor
+                ),
+                getUnforgeableOrExpando=fill(
+                    getUnforgeableOrExpando, receiver="wrappedReceiver"
+                ),
+                getOnPrototype=fill(getOnPrototype, receiver="wrappedReceiver"),
             )
-
-        getUnforgeableOrExpando = fill(
-            """
-            bool expandoHasProp = false;
-            $*{getUnforgeableOrExpando}
-            """,
-            getUnforgeableOrExpando=getUnforgeableOrExpando,
-        )
 
         templateValues = {"jsvalRef": "vp", "jsvalHandle": "vp", "obj": "proxy"}
 
-        if self.descriptor.supportsIndexedProperties():
-            # We can't handle this for cross-origin objects
-            assert not self.descriptor.isMaybeCrossOriginObject()
+        getUnforgeableOrExpando = fill(
+            getUnforgeableOrExpando, receiver="receiver"
+        ) + dedent(
+            """
 
+            if (expandoHasProp) {
+              return true;
+            }
+            """
+        )
+        if self.descriptor.supportsIndexedProperties():
             getIndexedOrExpando = fill(
                 """
                 uint32_t index = GetArrayIndexFromId(id);
@@ -15356,9 +15367,6 @@ class CGDOMJSProxyHandler_get(ClassMethod):
             getIndexedOrExpando = getUnforgeableOrExpando
 
         if self.descriptor.supportsNamedProperties():
-            # We can't handle this for cross-origin objects
-            assert not self.descriptor.isMaybeCrossOriginObject()
-
             getNamed = CGProxyNamedGetter(self.descriptor, templateValues)
             if self.descriptor.supportsIndexedProperties():
                 getNamed = CGIfWrapper(getNamed, "!IsArrayIndex(index)")
@@ -15366,72 +15374,36 @@ class CGDOMJSProxyHandler_get(ClassMethod):
         else:
             getNamed = ""
 
-        getOnPrototype = dedent(
+        getOnPrototype = fill(getOnPrototype, receiver="receiver") + dedent(
             """
-            if (!GetPropertyOnPrototype(cx, proxy, rootedReceiver, id, &foundOnPrototype, vp)) {
-              return false;
+
+            if (foundOnPrototype) {
+              return true;
             }
 
+            MOZ_ASSERT(vp.isUndefined());
             """
         )
 
-        if self.descriptor.isMaybeCrossOriginObject():
-            getOnPrototype = fill(
-                """
-                bool foundOnPrototype;
-                { // Scope for JSAutoRealm
-                  JSAutoRealm ar(cx, proxy);
-                  // We already wrapped rootedReceiver
-                  MOZ_ASSERT_IF(rootedReceiver.isObject(),
-                                js::IsObjectInContextCompartment(&rootedReceiver.toObject(), cx));
-                  JS_MarkCrossZoneId(cx, id);
-                  $*{getOnPrototype}
-                }
-
-                if (foundOnPrototype) {
-                  return MaybeWrapValue(cx, vp);
-                }
-
-                """,
-                getOnPrototype=getOnPrototype,
-            )
-        else:
-            getOnPrototype = fill(
-                """
-                bool foundOnPrototype;
-                $*{getOnPrototype}
-                if (foundOnPrototype) {
-                  return true;
-                }
-
-                """,
-                getOnPrototype=getOnPrototype,
-            )
-
         if self.descriptor.interface.getExtendedAttribute("LegacyOverrideBuiltIns"):
-            getNamed = getNamed + getOnPrototype
+            getNamedOrOnPrototype = getNamed + getOnPrototype
         else:
-            getNamed = getOnPrototype + getNamed
+            getNamedOrOnPrototype = getOnPrototype + getNamed
 
         return fill(
             """
             MOZ_ASSERT(!xpc::WrapperFactory::IsXrayWrapper(proxy),
                         "Should not have a XrayWrapper here");
 
-            $*{maybeCrossOriginGet}
-            JS::Rooted<JS::Value> rootedReceiver(cx, receiver);
-
             $*{missingPropUseCounters}
             $*{indexedOrExpando}
 
-            $*{named}
-            vp.setUndefined();
+            $*{namedOrOnPropotype}
             return true;
             """,
-            maybeCrossOriginGet=maybeCrossOriginGet,
             missingPropUseCounters=missingPropUseCounters,
             indexedOrExpando=getIndexedOrExpando,
-            named=getNamed,
+            namedOrOnPropotype=getNamedOrOnPrototype,
         )
 
 
