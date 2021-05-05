@@ -9378,15 +9378,17 @@ class LWasmUnarySimd128 : public LInstructionHelper<1, 1, 1> {
 };
 
 // (v128, imm) -> scalar effect-free operations.
-class LWasmReduceSimd128 : public LInstructionHelper<1, 1, 0> {
+// temp is FPR (if in use).
+class LWasmReduceSimd128 : public LInstructionHelper<1, 1, 1> {
  public:
   LIR_HEADER(WasmReduceSimd128)
 
   static constexpr uint32_t Src = 0;
 
-  explicit LWasmReduceSimd128(const LAllocation& src)
+  explicit LWasmReduceSimd128(const LAllocation& src, const LDefinition& temp)
       : LInstructionHelper(classOpcode) {
     setOperand(Src, src);
+    setTemp(0, temp);
   }
 
   const LAllocation* src() { return getOperand(Src); }
@@ -9437,23 +9439,26 @@ class LWasmReduceSimd128ToInt64
   wasm::SimdOp simdOp() const { return mir_->toWasmReduceSimd128()->simdOp(); }
 };
 
-class LWasmLoadLaneSimd128 : public LInstructionHelper<1, 3, 0> {
+class LWasmLoadLaneSimd128 : public LInstructionHelper<1, 3, 1> {
  public:
   LIR_HEADER(WasmLoadLaneSimd128);
 
   static constexpr uint32_t Src = 2;
 
   explicit LWasmLoadLaneSimd128(const LAllocation& ptr, const LAllocation& src,
+                                const LDefinition& temp,
                                 const LAllocation& memoryBase = LAllocation())
       : LInstructionHelper(classOpcode) {
     setOperand(0, ptr);
     setOperand(1, memoryBase);
     setOperand(Src, src);
+    setTemp(0, temp);
   }
 
   const LAllocation* ptr() { return getOperand(0); }
   const LAllocation* memoryBase() { return getOperand(1); }
   const LAllocation* src() { return getOperand(Src); }
+  const LDefinition* temp() { return getTemp(0); }
   MWasmLoadLaneSimd128* mir() const { return mir_->toWasmLoadLaneSimd128(); }
   uint32_t laneSize() const {
     return mir_->toWasmLoadLaneSimd128()->laneSize();
@@ -9463,23 +9468,26 @@ class LWasmLoadLaneSimd128 : public LInstructionHelper<1, 3, 0> {
   }
 };
 
-class LWasmStoreLaneSimd128 : public LInstructionHelper<1, 3, 0> {
+class LWasmStoreLaneSimd128 : public LInstructionHelper<1, 3, 1> {
  public:
   LIR_HEADER(WasmStoreLaneSimd128);
 
   static constexpr uint32_t Src = 2;
 
   explicit LWasmStoreLaneSimd128(const LAllocation& ptr, const LAllocation& src,
+                                 const LDefinition& temp,
                                  const LAllocation& memoryBase = LAllocation())
       : LInstructionHelper(classOpcode) {
     setOperand(0, ptr);
     setOperand(1, memoryBase);
     setOperand(Src, src);
+    setTemp(0, temp);
   }
 
   const LAllocation* ptr() { return getOperand(0); }
   const LAllocation* memoryBase() { return getOperand(1); }
   const LAllocation* src() { return getOperand(Src); }
+  const LDefinition* temp() { return getTemp(0); }
   MWasmStoreLaneSimd128* mir() const { return mir_->toWasmStoreLaneSimd128(); }
   uint32_t laneSize() const {
     return mir_->toWasmStoreLaneSimd128()->laneSize();

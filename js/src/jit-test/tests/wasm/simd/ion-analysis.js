@@ -11,6 +11,8 @@
 // We test that the expected transformation applies, and that the machine code
 // generates the expected result.
 
+var isArm64 = getBuildConfiguration().arm64;
+
 // 32-bit permutation that is not a rotation.
 let perm32x4_pattern = [4, 5, 6, 7, 12, 13, 14, 15, 8, 9, 10, 11, 0, 1, 2, 3];
 
@@ -770,7 +772,7 @@ for ( let [ty128,size] of [['i8x16',1], ['i16x8',2], ['i32x4',4]] ) {
     let ops = { all_true: allTrue, any_true: anyTrue, bitmask };
 
     for ( let op of ['any_true', 'all_true', 'bitmask'] ) {
-        let folded = op != 'bitmask' || size == 2;
+        let folded = op != 'bitmask' || (size == 2 && !isArm64);
         let operation = op == 'any_true' ? 'v128.any_true' : `${ty128}.${op}`;
         let positive =
             wasmCompile(
