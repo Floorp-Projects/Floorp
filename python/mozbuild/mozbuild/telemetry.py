@@ -231,3 +231,11 @@ def get_distro_and_version():
         return "windows", "%s.%s.%s" % (ver.major, ver.minor, ver.build)
     else:
         return sys.platform, ""
+
+
+def get_shell_info():
+    """Returns if the current shell was opened by vscode and if it's a SSH connection"""
+
+    return True if "vscode" in os.getenv("TERM_PROGRAM", "") else False, os.getenv(
+        "SSH_CLIENT", False
+    )

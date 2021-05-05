@@ -159,3 +159,31 @@ mach.system:
     expires: never
     send_in_pings:
       - usage
+  vscode_terminal:
+    type: boolean
+    description: True if the current terminal is opened via Visual Studio Code.
+    lifetime: application
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1702172
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1702172#c4
+    notification_emails:
+      - build-telemetry@mozilla.com
+      - andi@mozilla.com
+    expires: never
+    send_in_pings:
+      - usage
+  ssh_connection:
+    type: boolean
+    description: True if the current shell is a remote SSH connection.
+    lifetime: application
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1702172
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1702172#c4
+    notification_emails:
+      - build-telemetry@mozilla.com
+      - andi@mozilla.com
+    expires: never
+    send_in_pings:
+      - usage
