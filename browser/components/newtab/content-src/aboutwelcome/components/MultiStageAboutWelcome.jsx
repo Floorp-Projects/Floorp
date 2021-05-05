@@ -12,6 +12,9 @@ import {
   addUtmParams,
 } from "../../asrouter/templates/FirstRun/addUtmParams";
 
+// Amount of milliseconds for all transitions to complete (including delays).
+const TRANSITION_OUT_TIME = 1000;
+
 export const MultiStageAboutWelcome = props => {
   const [index, setScreenIndex] = useState(0);
   useEffect(() => {
@@ -52,15 +55,38 @@ export const MultiStageAboutWelcome = props => {
     })();
   }, [metricsFlowUri]);
 
+  // Allow "in" style to render to actually transition towards regular state,
+  // which also makes using browser back/forward navigation skip transitions.
+  const [transition, setTransition] = useState(props.transitions ? "in" : "");
+  useEffect(() => {
+    if (transition === "in") {
+      requestAnimationFrame(() =>
+        requestAnimationFrame(() => setTransition(""))
+      );
+    }
+  }, [transition]);
+
   // Transition to next screen, opening about:home on last screen button CTA
-  const handleTransition =
-    index < props.screens.length - 1
-      ? () => setScreenIndex(prevState => prevState + 1)
-      : () =>
+  const handleTransition = () => {
+    // Start transitioning things "out" immediately when moving forwards.
+    setTransition(props.transitions ? "out" : "");
+
+    // Actually move forwards after all transitions finish.
+    setTimeout(
+      () => {
+        if (index < props.screens.length - 1) {
+          setTransition(props.transitions ? "in" : "");
+          setScreenIndex(prevState => prevState + 1);
+        } else {
           AboutWelcomeUtils.handleUserAction({
             type: "OPEN_ABOUT_PAGE",
             data: { args: "home", where: "current" },
           });
+        }
+      },
+      props.transitions ? TRANSITION_OUT_TIME : 0
+    );
+  };
 
   // Update top sites with default sites by region when region is available
   const [region, setRegion] = useState(null);
@@ -109,7 +135,7 @@ export const MultiStageAboutWelcome = props => {
   return (
     <React.Fragment>
       <div
-        className={`outer-wrapper onboardingContainer ${props.design}`}
+        className={`outer-wrapper onboardingContainer ${props.design} transition-${transition}`}
         style={{
           backgroundImage: `url(${props.background_url})`,
         }}

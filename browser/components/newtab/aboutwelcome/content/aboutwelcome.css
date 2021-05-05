@@ -360,7 +360,22 @@ body {
         opacity: 1; }
   .onboardingContainer.proton {
     background: radial-gradient(79.33% 221.6% at 7.58% 89.55%, #15141A 0%, rgba(21, 20, 26, 0) 54.36%, rgba(21, 20, 26, 0.63) 100%) center/cover no-repeat fixed;
-    background-color: #212121; }
+    background-color: #212121;
+    --transition: 0.6s opacity, 0.6s scale, 0.6s rotate, 0.6s translate; }
+    @media (prefers-reduced-motion: no-preference) {
+      .onboardingContainer.proton {
+        --translate: 30px;
+        --rotate: 20deg;
+        --scale: 0.4; }
+        .onboardingContainer.proton:dir(rtl) {
+          --scale: -0.4 0.4; } }
+    @media (prefers-reduced-motion: reduce) {
+      .onboardingContainer.proton {
+        --translate: 0;
+        --rotate: 0deg;
+        --scale: 1; }
+        .onboardingContainer.proton:dir(rtl) {
+          --scale: -1 1; } }
     .onboardingContainer.proton:dir(rtl) {
       transform: rotateY(180deg); }
     .onboardingContainer.proton .screen {
@@ -378,28 +393,38 @@ body {
     .onboardingContainer.proton .main-content {
       background-color: var(--in-content-page-background);
       border-radius: 20px;
+      display: flex;
+      flex-direction: column;
       height: 100%;
       padding: 0;
+      transition: var(--transition);
       z-index: 1; }
-    .onboardingContainer.proton .welcome-text h1,
-    .onboardingContainer.proton .welcome-text h2 {
-      color: var(--in-content-page-color);
-      width: 376px; }
-    .onboardingContainer.proton .welcome-text h1 {
-      font-size: 24px;
-      line-height: 36px;
-      font-weight: 600;
-      letter-spacing: -0.02em; }
-    .onboardingContainer.proton .welcome-text h2 {
-      font-size: 16px;
-      line-height: 24px; }
+    .onboardingContainer.proton .welcome-text {
+      margin-bottom: auto;
+      transition: var(--transition); }
+      .onboardingContainer.proton .welcome-text h1,
+      .onboardingContainer.proton .welcome-text h2 {
+        color: var(--in-content-page-color);
+        width: 376px; }
+      .onboardingContainer.proton .welcome-text h1 {
+        font-size: 24px;
+        line-height: 36px;
+        font-weight: 600;
+        letter-spacing: -0.02em; }
+      .onboardingContainer.proton .welcome-text h2 {
+        font-size: 16px;
+        line-height: 24px; }
     .onboardingContainer.proton .brand-logo {
       background: url("chrome://branding/content/about-logo.svg") top center/80px no-repeat;
-      padding: 80px 0 10px; }
+      padding: 80px 0 10px;
+      transition: var(--transition); }
     .onboardingContainer.proton .primary {
       font-size: 13px;
       line-height: 16px;
-      padding: 11px 15px; }
+      padding: 11px 15px;
+      transition: var(--transition); }
+    .onboardingContainer.proton .secondary-cta {
+      transition: var(--transition); }
     .onboardingContainer.proton .secondary {
       background: none;
       color: var(--in-content-link-color) !important;
@@ -414,15 +439,20 @@ body {
       .onboardingContainer.proton .secondary-cta.top button {
         color: #FFF !important; }
     .onboardingContainer.proton .steps {
-      padding-bottom: 0; }
+      margin-top: 0;
+      padding-bottom: 0;
+      transition: var(--transition); }
       .onboardingContainer.proton .steps .indicator {
         width: 6px;
         height: 6px;
         background: var(--checkbox-border-color); }
         .onboardingContainer.proton .steps .indicator.current {
           background: var(--checkbox-checked-bgcolor); }
+    .onboardingContainer.proton .tiles-theme-container {
+      margin: auto 0; }
     .onboardingContainer.proton .tiles-theme-section {
-      border: var(--tiles-theme-section-border-width) solid var(--in-content-page-background); }
+      border: var(--tiles-theme-section-border-width) solid var(--in-content-page-background);
+      transition: var(--transition); }
       .onboardingContainer.proton .tiles-theme-section:focus-within {
         border: var(--tiles-theme-section-border-width) dotted; }
     .onboardingContainer.proton .theme {
@@ -456,11 +486,17 @@ body {
           background-image: url("resource://builtin-themes/alpenglow/icon.svg"); }
         .onboardingContainer.proton .theme .icon.automatic {
           background-image: url("resource://default-theme/icon.svg"); }
+    .onboardingContainer.proton .message-text,
+    .onboardingContainer.proton .attrib-text {
+      transition: var(--transition); }
     .onboardingContainer.proton .noodle {
       display: block;
       background-repeat: no-repeat;
       background-size: 100% 100%;
-      position: absolute; }
+      position: absolute;
+      transition: var(--transition); }
+      .onboardingContainer.proton .noodle:dir(rtl) {
+        scale: -1 1; }
     .onboardingContainer.proton .outline-L {
       background-image: url("chrome://activity-stream/content/data/content/assets/noodle-outline-L.svg"); }
     .onboardingContainer.proton .solid-L {
@@ -523,7 +559,8 @@ body {
           font-size: 12px;
           line-height: 18px;
           color: #F9F9FB;
-          text-shadow: 0 0 7px rgba(0, 0, 0, 0.6); }
+          text-shadow: 0 0 7px rgba(0, 0, 0, 0.6);
+          transition-delay: 0.5s; }
           @media (max-width: 900px) {
             .onboardingContainer.proton .screen-0 .section-left .attrib-text {
               width: 200px; } }
@@ -536,41 +573,45 @@ body {
         width: 50%; }
         .onboardingContainer.proton .screen-0 .section-main .main-content {
           background: transparent;
+          display: block;
           position: absolute;
           height: 350px;
           bottom: -60px;
-          inset-inline-end: 80px; }
+          inset-inline-end: 80px;
+          transition: var(--transition); }
         .onboardingContainer.proton .screen-0 .section-main .brand-logo {
-          margin-top: 0; }
+          margin-top: 0;
+          transition-delay: 1.2s; }
         .onboardingContainer.proton .screen-0 .section-main .welcome-text {
-          margin-bottom: 5px; }
+          margin-bottom: 5px;
+          transition-delay: 1.2s; }
           .onboardingContainer.proton .screen-0 .section-main .welcome-text h1 {
             width: 283px; }
+        .onboardingContainer.proton .screen-0 .section-main .primary,
+        .onboardingContainer.proton .screen-0 .section-main .secondary-cta:not(.top) {
+          transition-delay: 1.7s; }
+        .onboardingContainer.proton .screen-0 .section-main .secondary-cta.top {
+          transition-delay: 0.5s; }
       .onboardingContainer.proton .screen-0 .solid-L {
         width: 1300px;
         height: 1050px;
         bottom: -390px;
         inset-inline-end: -640px;
-        transform: rotate(-80deg); }
-        .onboardingContainer.proton .screen-0 .solid-L:dir(rtl) {
-          transform: rotate(-260deg); }
+        transform: rotate(-80deg);
+        transition-delay: 0.5s; }
       .onboardingContainer.proton .screen-0 .orange-L {
         width: 466px;
         height: 356px;
         bottom: 270px;
-        inset-inline-end: -245px; }
-        .onboardingContainer.proton .screen-0 .orange-L:dir(rtl) {
-          bottom: 208px;
-          inset-inline-end: -100px;
-          transform: rotate(-245deg); }
+        inset-inline-end: -245px;
+        transition-delay: 0.8s; }
       .onboardingContainer.proton .screen-0 .purple-C {
         width: 467px;
         height: 382px;
         bottom: -100px;
         inset-inline-end: 125px;
-        transform: rotate(-75deg); }
-        .onboardingContainer.proton .screen-0 .purple-C:dir(rtl) {
-          transform: rotate(-207deg); }
+        transform: rotate(-75deg);
+        transition-delay: 0.8s; }
     .onboardingContainer.proton .screen-1 {
       background-color: rgba(21, 20, 26, 0.5); }
       .onboardingContainer.proton .screen-1 .section-main {
@@ -586,38 +627,39 @@ body {
           .onboardingContainer.proton .screen-1 .section-main {
             width: 420px;
             height: auto; } }
+        .onboardingContainer.proton .screen-1 .section-main .brand-logo {
+          transition-delay: 0.6s; }
+        .onboardingContainer.proton .screen-1 .section-main .welcome-text {
+          transition-delay: 0.8s; }
+        .onboardingContainer.proton .screen-1 .section-main .primary,
+        .onboardingContainer.proton .screen-1 .section-main .secondary-cta,
+        .onboardingContainer.proton .screen-1 .section-main .steps {
+          transition-delay: 1s; }
       .onboardingContainer.proton .screen-1 .outline-L {
         width: 87px;
         height: 80px;
         transform: rotate(10deg) translate(-30%, 200%);
+        transition-delay: 0.4s;
         z-index: 2; }
-        .onboardingContainer.proton .screen-1 .outline-L:dir(rtl) {
-          transform: rotate(232deg) translate(-160%, -145%); }
       .onboardingContainer.proton .screen-1 .orange-L {
         width: 448px;
         height: 568px;
-        transform: rotate(-155deg) translate(12%, -21%); }
-        .onboardingContainer.proton .screen-1 .orange-L:dir(rtl) {
-          transform: rotate(-180deg) translate(-10%, -12%); }
+        transform: rotate(-155deg) translate(12%, -21%);
+        transition-delay: 0.2s; }
       .onboardingContainer.proton .screen-1 .purple-C {
         width: 294px;
         height: 254px;
         transform: translate(-20%, -62%); }
-        .onboardingContainer.proton .screen-1 .purple-C:dir(rtl) {
-          transform: rotate(50deg) translate(-25%, -50%); }
       .onboardingContainer.proton .screen-1 .yellow-circle {
         width: 165px;
         height: 165px;
         border-radius: 50%;
         transform: translate(230%, -5%);
-        background: #FF7139; }
-        .onboardingContainer.proton .screen-1 .yellow-circle:dir(rtl) {
-          transform: translate(-225%, -5%); }
+        background: #FF7139;
+        transition-delay: -0.2s; }
         @media (max-width: 866px) {
           .onboardingContainer.proton .screen-1 .yellow-circle {
-            transform: translate(205%, -5%); }
-            .onboardingContainer.proton .screen-1 .yellow-circle:dir(rtl) {
-              transform: translate(-200%, -5%); } }
+            transform: translate(205%, -5%); } }
         @media (max-width: 610px) {
           .onboardingContainer.proton .screen-1 .yellow-circle {
             transform: translate(185%, -5%); } }
@@ -636,24 +678,25 @@ body {
           .onboardingContainer.proton .screen-2 .section-main {
             width: 420px;
             height: auto; } }
+        .onboardingContainer.proton .screen-2 .section-main .tiles-theme-section {
+          transition-delay: 0.2s; }
+        .onboardingContainer.proton .screen-2 .section-main .primary,
+        .onboardingContainer.proton .screen-2 .section-main .secondary-cta {
+          transition-delay: 0.4s; }
       .onboardingContainer.proton .screen-2 .outline-L {
         width: 87px;
         height: 80px;
         transform: rotate(250deg) translate(-420%, 425%);
+        transition-delay: 0.2s;
         z-index: 2; }
-        .onboardingContainer.proton .screen-2 .outline-L:dir(rtl) {
-          transform: rotate(10deg) translate(-475%, 300%); }
         @media (max-width: 866px) {
           .onboardingContainer.proton .screen-2 .outline-L {
-            transform: rotate(250deg) translate(-400%, 280%); }
-            .onboardingContainer.proton .screen-2 .outline-L:dir(rtl) {
-              transform: rotate(10deg) translate(-390%, 340%); } }
+            transform: rotate(250deg) translate(-400%, 280%); } }
       .onboardingContainer.proton .screen-2 .orange-L {
         height: 800px;
         width: 660px;
-        transform: rotate(35deg) translate(-10%, -7%); }
-        .onboardingContainer.proton .screen-2 .orange-L:dir(rtl) {
-          transform: rotate(215deg) translate(-10%, -7%); }
+        transform: rotate(35deg) translate(-10%, -7%);
+        transition-delay: -0.4s; }
         @media (max-width: 866px) {
           .onboardingContainer.proton .screen-2 .orange-L {
             height: 740px;
@@ -661,14 +704,81 @@ body {
       .onboardingContainer.proton .screen-2 .purple-C {
         width: 392px;
         height: 394px;
-        transform: rotate(260deg) translate(-34%, -35%); }
-        .onboardingContainer.proton .screen-2 .purple-C:dir(rtl) {
-          transform: rotate(50deg) translate(-20%, -40%); }
+        transform: rotate(260deg) translate(-34%, -35%);
+        transition-delay: -0.2s; }
       .onboardingContainer.proton .screen-2 .yellow-circle {
         width: 165px;
         height: 165px;
         border-radius: 50%;
         transform: translate(160%, 130%);
         background: #FF7139; }
-        .onboardingContainer.proton .screen-2 .yellow-circle:dir(rtl) {
-          transform: translate(-190%, -130%); }
+    .onboardingContainer.proton.transition-in .noodle {
+      opacity: 0;
+      rotate: var(--rotate);
+      scale: var(--scale); }
+    .onboardingContainer.proton.transition-in .screen-0 .brand-logo,
+    .onboardingContainer.proton.transition-in .screen-0 .welcome-text,
+    .onboardingContainer.proton.transition-in .screen-0 .primary,
+    .onboardingContainer.proton.transition-in .screen-0 .secondary-cta:not(.top),
+    .onboardingContainer.proton.transition-in .screen-0 .message-text {
+      opacity: 0;
+      translate: 0 var(--translate); }
+    .onboardingContainer.proton.transition-in .screen-0 .attrib-text,
+    .onboardingContainer.proton.transition-in .screen-0 .secondary-cta.top {
+      opacity: 0; }
+    .onboardingContainer.proton.transition-in .screen-1 .main-content {
+      translate: 0 calc(-2 * var(--translate)); }
+    .onboardingContainer.proton.transition-in .screen-1 .brand-logo,
+    .onboardingContainer.proton.transition-in .screen-1 .steps {
+      opacity: 0;
+      translate: 0 calc(-1 * var(--translate)); }
+    .onboardingContainer.proton.transition-in .screen-2 .steps {
+      opacity: 0.2; }
+    .onboardingContainer.proton.transition-in .screen-1 .welcome-text,
+    .onboardingContainer.proton.transition-in .screen-1 .tiles-theme-section,
+    .onboardingContainer.proton.transition-in .screen-1 .primary,
+    .onboardingContainer.proton.transition-in .screen-1 .secondary-cta:not(.top),
+    .onboardingContainer.proton.transition-in .screen-2 .welcome-text,
+    .onboardingContainer.proton.transition-in .screen-2 .tiles-theme-section,
+    .onboardingContainer.proton.transition-in .screen-2 .primary,
+    .onboardingContainer.proton.transition-in .screen-2 .secondary-cta:not(.top) {
+      opacity: 0;
+      translate: 0 calc(-1 * var(--translate)); }
+    .onboardingContainer.proton.transition-out .noodle {
+      opacity: 0;
+      rotate: var(--rotate);
+      scale: var(--scale);
+      transition-delay: 0.2s; }
+    .onboardingContainer.proton.transition-out .screen-0 .message-text {
+      opacity: 0;
+      translate: 0 var(--translate); }
+    .onboardingContainer.proton.transition-out .screen-0 .main-content {
+      opacity: 0;
+      translate: 0 var(--translate);
+      transition-delay: 0.2s; }
+    .onboardingContainer.proton.transition-out .screen-0 .solid-L {
+      transition-delay: 0.4s; }
+    .onboardingContainer.proton.transition-out .screen-0 .attrib-text,
+    .onboardingContainer.proton.transition-out .screen-0 .secondary-cta.top {
+      opacity: 0;
+      transition-delay: 0.2s; }
+    .onboardingContainer.proton.transition-out .screen-1 .main-content {
+      overflow: hidden; }
+    .onboardingContainer.proton.transition-out .screen-1 .welcome-text {
+      opacity: 0;
+      translate: 0 var(--translate);
+      transition-delay: 0.1s; }
+    .onboardingContainer.proton.transition-out .screen-1 .primary,
+    .onboardingContainer.proton.transition-out .screen-1 .secondary-cta:not(.top) {
+      opacity: 0;
+      translate: 0 var(--translate);
+      transition-delay: 0.3s; }
+    .onboardingContainer.proton.transition-out .screen-1 .steps {
+      opacity: 0.2;
+      transition-delay: 0.5s; }
+    .onboardingContainer.proton.transition-out .screen-2 .noodle {
+      transition-delay: 0s; }
+    .onboardingContainer.proton.transition-out .screen-2 .main-content {
+      opacity: 0;
+      translate: 0 calc(2 * var(--translate));
+      transition-delay: 0.4s; }
