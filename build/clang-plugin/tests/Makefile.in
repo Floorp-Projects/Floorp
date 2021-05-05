@@ -4,10 +4,16 @@
 
 include $(topsrcdir)/config/rules.mk
 
-target:: $(OBJS)
+$(OBJS): $(CLANG_PLUGIN)
 
-# We don't actually build anything.
-.PHONY: $(OBJS)
+# Because building the objects doesn't actually build anything, create
+# a stamp file to avoid re-running the tests unless the test files or
+# the plugin changed. And since no objects are created, and not having
+# the files around makes the rule always, we create dummy files here too.
+tests-ok: $(OBJS) $(CSRCS) $(CPPSRCS) $(CLANG_PLUGIN)
+	touch $@ $(OBJS)
+
+target-objects: tests-ok
 
 # Don't actually build a library, since we don't actually build objects.
 $(LIBRARY): EXPAND_LIBS_GEN=true
