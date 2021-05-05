@@ -549,6 +549,12 @@ function BuildConditionSandbox(aURL) {
     sandbox.AddressSanitizer = false;
 #endif
 
+#if MOZ_TSAN
+    sandbox.ThreadSanitizer = true;
+#else
+    sandbox.ThreadSanitizer = false;
+#endif
+
 #if MOZ_WEBRTC
     sandbox.webrtc = true;
 #else
