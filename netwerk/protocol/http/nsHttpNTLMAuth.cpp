@@ -31,6 +31,7 @@
 #include "mozilla/Tokenizer.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
+#include "nsCRT.h"
 #include "nsNetUtil.h"
 #include "nsIChannel.h"
 #include "nsUnicharUtils.h"
@@ -171,7 +172,7 @@ nsHttpNTLMAuth::ChallengeReceived(nsIHttpAuthenticableChannel* channel,
   // Start a new auth sequence if the challenge is exactly "NTLM".
   // If native NTLM auth apis are available and enabled through prefs,
   // try to use them.
-  if (PL_strcasecmp(challenge, "NTLM") == 0) {
+  if (nsCRT::strcasecmp(challenge, "NTLM") == 0) {
     nsCOMPtr<nsIAuthModule> module;
 
     // Check to see if we should default to our generic NTLM auth module
@@ -285,7 +286,7 @@ nsHttpNTLMAuth::GenerateCredentials(nsIHttpAuthenticableChannel* authChannel,
   Maybe<nsTArray<uint8_t>> certArray;
 
   // initial challenge
-  if (PL_strcasecmp(challenge, "NTLM") == 0) {
+  if (nsCRT::strcasecmp(challenge, "NTLM") == 0) {
     // NTLM service name format is 'HTTP@host' for both http and https
     nsCOMPtr<nsIURI> uri;
     rv = authChannel->GetURI(getter_AddRefs(uri));

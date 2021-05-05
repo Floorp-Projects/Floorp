@@ -31,6 +31,7 @@
 #include "nsISSLSocketControl.h"
 #include "nsISupportsPriority.h"
 #include "nsITransportSecurityInfo.h"
+#include "nsCRT.h"
 #include "nsPreloadedStream.h"
 #include "nsProxyRelease.h"
 #include "nsSocketTransport2.h"
@@ -1282,13 +1283,13 @@ nsresult nsHttpConnection::OnHeadersAvailable(nsAHttpTransaction* trans,
     Unused << responseHead->GetHeader(nsHttp::Keep_Alive, keepAlive);
 
     if (mUsingSpdyVersion == SpdyVersion::NONE) {
-      const char* cp = PL_strcasestr(keepAlive.get(), "timeout=");
+      const char* cp = nsCRT::strcasestr(keepAlive.get(), "timeout=");
       if (cp)
         mIdleTimeout = PR_SecondsToInterval((uint32_t)atoi(cp + 8));
       else
         mIdleTimeout = gHttpHandler->IdleTimeout() * mDefaultTimeoutFactor;
 
-      cp = PL_strcasestr(keepAlive.get(), "max=");
+      cp = nsCRT::strcasestr(keepAlive.get(), "max=");
       if (cp) {
         int maxUses = atoi(cp + 4);
         if (maxUses > 0) {

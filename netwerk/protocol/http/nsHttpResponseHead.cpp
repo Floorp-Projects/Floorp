@@ -13,6 +13,7 @@
 #include "nsPrintfCString.h"
 #include "prtime.h"
 #include "plstr.h"
+#include "nsCRT.h"
 #include "nsURLHelper.h"
 #include "CacheControlParser.h"
 #include <algorithm>
@@ -1098,7 +1099,7 @@ void nsHttpResponseHead::ParseVersion(const char* str) {
   Tokenizer t(str, nullptr, "");
   // make sure we have HTTP at the beginning
   if (!t.CheckWord("HTTP")) {
-    if (PL_strncasecmp(str, "ICY ", 4) == 0) {
+    if (nsCRT::strncasecmp(str, "ICY ", 4) == 0) {
       // ShoutCast ICY is HTTP/1.0-like. Assume it is HTTP/1.0.
       LOG(("Treating ICY as HTTP 1.0\n"));
       mVersion = HttpVersion::v1_0;

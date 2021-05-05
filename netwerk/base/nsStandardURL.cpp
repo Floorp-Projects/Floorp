@@ -1010,7 +1010,7 @@ bool nsStandardURL::SegmentIs(const URLSegment& seg, const char* val,
   // if the first |seg.mLen| chars of |val| match, then |val| must
   // also be null terminated at |seg.mLen|.
   if (ignoreCase) {
-    return !PL_strncasecmp(mSpec.get() + seg.mPos, val, seg.mLen) &&
+    return !nsCRT::strncasecmp(mSpec.get() + seg.mPos, val, seg.mLen) &&
            (val[seg.mLen] == '\0');
   }
 
@@ -1030,7 +1030,7 @@ bool nsStandardURL::SegmentIs(const char* spec, const URLSegment& seg,
   // if the first |seg.mLen| chars of |val| match, then |val| must
   // also be null terminated at |seg.mLen|.
   if (ignoreCase) {
-    return !PL_strncasecmp(spec + seg.mPos, val, seg.mLen) &&
+    return !nsCRT::strncasecmp(spec + seg.mPos, val, seg.mLen) &&
            (val[seg.mLen] == '\0');
   }
 
@@ -1049,7 +1049,8 @@ bool nsStandardURL::SegmentIs(const URLSegment& seg1, const char* val,
     return false;
   }
   if (ignoreCase) {
-    return !PL_strncasecmp(mSpec.get() + seg1.mPos, val + seg2.mPos, seg1.mLen);
+    return !nsCRT::strncasecmp(mSpec.get() + seg1.mPos, val + seg2.mPos,
+                               seg1.mLen);
   }
 
   return !strncmp(mSpec.get() + seg1.mPos, val + seg2.mPos, seg1.mLen);

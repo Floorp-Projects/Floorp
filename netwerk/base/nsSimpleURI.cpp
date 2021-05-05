@@ -10,6 +10,7 @@
 
 #include "nsSimpleURI.h"
 #include "nscore.h"
+#include "nsCRT.h"
 #include "nsString.h"
 #include "plstr.h"
 #include "nsURLHelper.h"
@@ -523,7 +524,7 @@ nsSimpleURI::SchemeIs(const char* i_Scheme, bool* o_Equals) {
 
   // mScheme is guaranteed to be lower case.
   if (*i_Scheme == *this_scheme || *i_Scheme == (*this_scheme - ('a' - 'A'))) {
-    *o_Equals = PL_strcasecmp(this_scheme, i_Scheme) == 0;
+    *o_Equals = nsCRT::strcasecmp(this_scheme, i_Scheme) == 0;
   } else {
     *o_Equals = false;
   }

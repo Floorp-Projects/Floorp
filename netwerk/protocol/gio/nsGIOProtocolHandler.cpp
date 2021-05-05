@@ -17,6 +17,7 @@
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
 #include "nsIObserver.h"
+#include "nsCRT.h"
 #include "nsThreadUtils.h"
 #include "nsProxyRelease.h"
 #include "nsIStringBundle.h"
@@ -147,7 +148,7 @@ static gint FileInfoComparator(gconstpointer a, gconstpointer b) {
     return 1;
   }
 
-  return strcasecmp(g_file_info_get_name(ia), g_file_info_get_name(ib));
+  return nsCRT::strcasecmp(g_file_info_get_name(ia), g_file_info_get_name(ib));
 }
 
 /* Declaration of mount callback functions */

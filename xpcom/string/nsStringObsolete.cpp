@@ -225,7 +225,11 @@ static
                 bool aIgnoreCase) {
   int32_t result = 0;
   if (aIgnoreCase)
+#  if defined(LIBFUZZER) && defined(LINUX)
+    result = int32_t(strncasecmp(aStr1, aStr2, aCount));
+#  else
     result = int32_t(PL_strncasecmp(aStr1, aStr2, aCount));
+#  endif
   else
     result = nsCharTraits<char>::compare(aStr1, aStr2, aCount);
 

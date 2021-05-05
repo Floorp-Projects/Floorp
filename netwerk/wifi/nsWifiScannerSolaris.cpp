@@ -5,6 +5,7 @@
 #include "nsWifiMonitor.h"
 #include "nsWifiAccessPoint.h"
 
+#include "nsCRT.h"
 #include "nsServiceManagerUtils.h"
 #include "nsComponentManagerUtils.h"
 
@@ -35,7 +36,8 @@ static nsWifiAccessPoint* do_parse_str(char* bssid_str, char* essid_str,
   int signal = 0;
   uint32_t strength_vals_count = sizeof(strength_vals) / sizeof(val_strength_t);
   for (uint32_t i = 0; i < strength_vals_count; i++) {
-    if (!strncasecmp(strength, strength_vals[i].strength_name, DLADM_STRSIZE)) {
+    if (!nsCRT::strncasecmp(strength, strength_vals[i].strength_name,
+                            DLADM_STRSIZE)) {
       signal = strength_vals[i].signal_value;
       break;
     }
