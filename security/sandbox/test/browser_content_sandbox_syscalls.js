@@ -64,6 +64,28 @@ function callSysctl(args) {
   return rv;
 }
 
+function callPrctl(args) {
+  const { ctypes } = ChromeUtils.import("resource://gre/modules/ctypes.jsm");
+  let { lib, option } = args;
+  let libc = ctypes.open(lib);
+  let prctl = libc.declare(
+    "prctl",
+    ctypes.default_abi,
+    ctypes.int,
+    ctypes.int, // option
+    ctypes.unsigned_long, // arg2
+    ctypes.unsigned_long, // arg3
+    ctypes.unsigned_long, // arg4
+    ctypes.unsigned_long // arg5
+  );
+  let rv = prctl(option, 0, 0, 0, 0);
+  if (rv == -1) {
+    rv = ctypes.errno;
+  }
+  libc.close();
+  return rv;
+}
+
 // Calls the native open/close syscalls.
 function callOpen(args) {
   const { ctypes } = ChromeUtils.import("resource://gre/modules/ctypes.jsm");
@@ -266,5 +288,13 @@ add_task(async function() {
       callSysctl
     );
     ok(rv == 0, "calling sysctl('hw.ncpu') is permitted");
+  }
+
+  // verify we block PR_CAPBSET_READ with EINVAL
+  if (isLinux()) {
+    const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+    let option = OS.Constants.libc.PR_CAPBSET_READ;
+    let rv = await SpecialPowers.spawn(browser, [{ lib, option }], callPrctl);
+    ok(rv == OS.Constants.libc.EINVAL, "prctl(PR_CAPBSET_READ) is blocked");
   }
 });
