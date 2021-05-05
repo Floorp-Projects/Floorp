@@ -1416,12 +1416,14 @@ class MacroAssemblerCompat : public vixl::MacroAssembler {
                          ARMFPRegister lhs, ARMFPRegister rhs);
   void compareSimd128Float(Assembler::Condition cond, ARMFPRegister dest,
                            ARMFPRegister lhs, ARMFPRegister rhs);
-  void rightShiftInt8x16(Register rhs, FloatRegister lhsDest,
-                         FloatRegister temp, bool isUnsigned);
-  void rightShiftInt16x8(Register rhs, FloatRegister lhsDest,
-                         FloatRegister temp, bool isUnsigned);
-  void rightShiftInt32x4(Register rhs, FloatRegister lhsDest,
-                         FloatRegister temp, bool isUnsigned);
+  void rightShiftInt8x16(FloatRegister lhs, Register rhs, FloatRegister dest,
+                         bool isUnsigned);
+  void rightShiftInt16x8(FloatRegister lhs, Register rhs, FloatRegister dest,
+                         bool isUnsigned);
+  void rightShiftInt32x4(FloatRegister lhs, Register rhs, FloatRegister dest,
+                         bool isUnsigned);
+  void rightShiftInt64x2(FloatRegister lhs, Register rhs, FloatRegister dest,
+                         bool isUnsigned);
 
   void branchNegativeZero(FloatRegister reg, Register scratch, Label* label) {
     MOZ_CRASH("branchNegativeZero");

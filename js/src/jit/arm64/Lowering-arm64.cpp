@@ -423,6 +423,50 @@ void LIRGeneratorARM64::lowerBigIntMod(MBigIntMod* ins) {
   assignSafepoint(lir, ins);
 }
 
+#ifdef ENABLE_WASM_SIMD
+
+bool LIRGeneratorARM64::canFoldReduceSimd128AndBranch(wasm::SimdOp op) {
+  switch (op) {
+    case wasm::SimdOp::V128AnyTrue:
+    case wasm::SimdOp::I8x16AllTrue:
+    case wasm::SimdOp::I16x8AllTrue:
+    case wasm::SimdOp::I32x4AllTrue:
+    case wasm::SimdOp::I64x2AllTrue:
+      return true;
+    default:
+      return false;
+  }
+}
+
+bool LIRGeneratorARM64::canEmitWasmReduceSimd128AtUses(
+    MWasmReduceSimd128* ins) {
+  if (!ins->canEmitAtUses()) {
+    return false;
+  }
+  // Only specific ops generating int32.
+  if (ins->type() != MIRType::Int32) {
+    return false;
+  }
+  if (!canFoldReduceSimd128AndBranch(ins->simdOp())) {
+    return false;
+  }
+  // If never used then defer (it will be removed).
+  MUseIterator iter(ins->usesBegin());
+  if (iter == ins->usesEnd()) {
+    return true;
+  }
+  // We require an MTest consumer.
+  MNode* node = iter->consumer();
+  if (!node->isDefinition() || !node->toDefinition()->isTest()) {
+    return false;
+  }
+  // Defer only if there's only one use.
+  iter++;
+  return iter == ins->usesEnd();
+}
+
+#endif
+
 void LIRGenerator::visitWasmNeg(MWasmNeg* ins) {
   switch (ins->type()) {
     case MIRType::Int32:
@@ -863,11 +907,41 @@ void LIRGenerator::visitSignExtendInt64(MSignExtendInt64* ins) {
 }
 
 void LIRGenerator::visitWasmBitselectSimd128(MWasmBitselectSimd128* ins) {
-  MOZ_CRASH("bitselect NYI");
+  MOZ_ASSERT(ins->lhs()->type() == MIRType::Simd128);
+  MOZ_ASSERT(ins->rhs()->type() == MIRType::Simd128);
+  MOZ_ASSERT(ins->control()->type() == MIRType::Simd128);
+  MOZ_ASSERT(ins->type() == MIRType::Simd128);
+
+  auto* lir = new (alloc())
+      LWasmBitselectSimd128(useRegister(ins->lhs()), useRegister(ins->rhs()),
+                            useRegisterAtStart(ins->control()), tempSimd128());
+  // On ARM64, control register is used as output at machine instruction.
+  defineReuseInput(lir, ins, LWasmBitselectSimd128::Control);
 }
 
 void LIRGenerator::visitWasmBinarySimd128(MWasmBinarySimd128* ins) {
-  MOZ_CRASH("binary SIMD NYI");
+  MDefinition* lhs = ins->lhs();
+  MDefinition* rhs = ins->rhs();
+  wasm::SimdOp op = ins->simdOp();
+
+  MOZ_ASSERT(lhs->type() == MIRType::Simd128);
+  MOZ_ASSERT(rhs->type() == MIRType::Simd128);
+  MOZ_ASSERT(ins->type() == MIRType::Simd128);
+
+  // Without useRegisterAtStart, the regalloc gets confused and starts copying
+  // things redundantly.  Worth investigating further.  Also seen on x86.
+
+  LAllocation lhsAlloc = useRegisterAtStart(lhs);
+  LAllocation rhsAlloc = useRegisterAtStart(rhs);
+  LDefinition tempReg0 = LDefinition::BogusTemp();
+  LDefinition tempReg1 = LDefinition::BogusTemp();
+  if (op == wasm::SimdOp::I64x2Mul) {
+    tempReg0 = tempSimd128();
+    tempReg1 = tempSimd128();
+  }
+  auto* lir = new (alloc())
+      LWasmBinarySimd128(op, lhsAlloc, rhsAlloc, tempReg0, tempReg1);
+  define(lir, ins);
 }
 
 bool MWasmBinarySimd128::specializeForConstantRhs() {
@@ -881,33 +955,289 @@ void LIRGenerator::visitWasmBinarySimd128WithConstant(
 }
 
 void LIRGenerator::visitWasmShiftSimd128(MWasmShiftSimd128* ins) {
-  MOZ_CRASH("shift SIMD NYI");
+  MDefinition* lhs = ins->lhs();
+  MDefinition* rhs = ins->rhs();
+
+  MOZ_ASSERT(lhs->type() == MIRType::Simd128);
+  MOZ_ASSERT(rhs->type() == MIRType::Int32);
+  MOZ_ASSERT(ins->type() == MIRType::Simd128);
+
+  if (rhs->isConstant()) {
+    int32_t shiftCount = rhs->toConstant()->toInt32();
+    switch (ins->simdOp()) {
+      case wasm::SimdOp::I8x16Shl:
+      case wasm::SimdOp::I8x16ShrU:
+      case wasm::SimdOp::I8x16ShrS:
+        shiftCount &= 7;
+        break;
+      case wasm::SimdOp::I16x8Shl:
+      case wasm::SimdOp::I16x8ShrU:
+      case wasm::SimdOp::I16x8ShrS:
+        shiftCount &= 15;
+        break;
+      case wasm::SimdOp::I32x4Shl:
+      case wasm::SimdOp::I32x4ShrU:
+      case wasm::SimdOp::I32x4ShrS:
+        shiftCount &= 31;
+        break;
+      case wasm::SimdOp::I64x2Shl:
+      case wasm::SimdOp::I64x2ShrU:
+      case wasm::SimdOp::I64x2ShrS:
+        shiftCount &= 63;
+        break;
+      default:
+        MOZ_CRASH("Unexpected shift operation");
+    }
+#ifdef DEBUG
+    js::wasm::ReportSimdAnalysis("shift -> constant shift");
+#endif
+    auto* lir =
+        new (alloc()) LWasmConstantShiftSimd128(useRegister(lhs), shiftCount);
+    define(lir, ins);
+    return;
+  }
+
+#ifdef DEBUG
+  js::wasm::ReportSimdAnalysis("shift -> variable shift");
+#endif
+
+  LAllocation lhsDestAlloc = useRegisterAtStart(lhs);
+  LAllocation rhsAlloc = useRegisterAtStart(rhs);
+  auto* lir = new (alloc()) LWasmVariableShiftSimd128(lhsDestAlloc, rhsAlloc,
+                                                      LDefinition::BogusTemp(),
+                                                      LDefinition::BogusTemp());
+  define(lir, ins);
 }
 
 void LIRGenerator::visitWasmShuffleSimd128(MWasmShuffleSimd128* ins) {
-  MOZ_CRASH("shuffle SIMD NYI");
+  MOZ_ASSERT(ins->lhs()->type() == MIRType::Simd128);
+  MOZ_ASSERT(ins->rhs()->type() == MIRType::Simd128);
+  MOZ_ASSERT(ins->type() == MIRType::Simd128);
+
+  Shuffle s = AnalyzeShuffle(ins);
+#ifdef DEBUG
+  ReportShuffleSpecialization(s);
+#endif
+  switch (s.opd) {
+    case Shuffle::Operand::LEFT:
+    case Shuffle::Operand::RIGHT: {
+      LAllocation src;
+      switch (*s.permuteOp) {
+        case LWasmPermuteSimd128::MOVE:
+        case LWasmPermuteSimd128::BROADCAST_8x16:
+        case LWasmPermuteSimd128::BROADCAST_16x8:
+        case LWasmPermuteSimd128::PERMUTE_8x16:
+        case LWasmPermuteSimd128::PERMUTE_16x8:
+        case LWasmPermuteSimd128::PERMUTE_32x4:
+        case LWasmPermuteSimd128::ROTATE_RIGHT_8x16:
+        case LWasmPermuteSimd128::SHIFT_LEFT_8x16:
+        case LWasmPermuteSimd128::SHIFT_RIGHT_8x16:
+          break;
+        default:
+          MOZ_CRASH("Unexpected operator");
+      }
+      if (s.opd == Shuffle::Operand::LEFT) {
+        src = useRegisterAtStart(ins->lhs());
+      } else {
+        src = useRegisterAtStart(ins->rhs());
+      }
+      auto* lir =
+          new (alloc()) LWasmPermuteSimd128(src, *s.permuteOp, s.control);
+      define(lir, ins);
+      break;
+    }
+    case Shuffle::Operand::BOTH:
+    case Shuffle::Operand::BOTH_SWAPPED: {
+      LDefinition temp = LDefinition::BogusTemp();
+      LAllocation lhs;
+      LAllocation rhs;
+      if (s.opd == Shuffle::Operand::BOTH) {
+        lhs = useRegisterAtStart(ins->lhs());
+        rhs = useRegisterAtStart(ins->rhs());
+      } else {
+        lhs = useRegisterAtStart(ins->rhs());
+        rhs = useRegisterAtStart(ins->lhs());
+      }
+      auto* lir = new (alloc())
+          LWasmShuffleSimd128(lhs, rhs, temp, *s.shuffleOp, s.control);
+      define(lir, ins);
+      break;
+    }
+  }
 }
 
 void LIRGenerator::visitWasmReplaceLaneSimd128(MWasmReplaceLaneSimd128* ins) {
-  MOZ_CRASH("replace-lane SIMD NYI");
+  MOZ_ASSERT(ins->lhs()->type() == MIRType::Simd128);
+  MOZ_ASSERT(ins->type() == MIRType::Simd128);
+
+  if (ins->rhs()->type() == MIRType::Int64) {
+    auto* lir = new (alloc()) LWasmReplaceInt64LaneSimd128(
+        useRegister(ins->lhs()), useInt64Register(ins->rhs()));
+    define(lir, ins);
+  } else {
+    auto* lir = new (alloc()) LWasmReplaceLaneSimd128(useRegister(ins->lhs()),
+                                                      useRegister(ins->rhs()));
+    define(lir, ins);
+  }
 }
 
 void LIRGenerator::visitWasmScalarToSimd128(MWasmScalarToSimd128* ins) {
-  MOZ_CRASH("scalar-to-SIMD NYI");
+  MOZ_ASSERT(ins->type() == MIRType::Simd128);
+
+  switch (ins->input()->type()) {
+    case MIRType::Int64: {
+      // 64-bit integer splats.
+      // Load-and-(sign|zero)extend.
+      auto* lir = new (alloc())
+          LWasmInt64ToSimd128(useInt64RegisterAtStart(ins->input()));
+      define(lir, ins);
+      break;
+    }
+    case MIRType::Float32:
+    case MIRType::Double: {
+      // Floating-point splats.
+      auto* lir =
+          new (alloc()) LWasmScalarToSimd128(useRegisterAtStart(ins->input()));
+      define(lir, ins);
+      break;
+    }
+    default: {
+      // 32-bit integer splats.
+      auto* lir =
+          new (alloc()) LWasmScalarToSimd128(useRegisterAtStart(ins->input()));
+      define(lir, ins);
+      break;
+    }
+  }
 }
 
 void LIRGenerator::visitWasmUnarySimd128(MWasmUnarySimd128* ins) {
-  MOZ_CRASH("unary SIMD NYI");
+  MOZ_ASSERT(ins->input()->type() == MIRType::Simd128);
+  MOZ_ASSERT(ins->type() == MIRType::Simd128);
+
+  LDefinition tempReg = LDefinition::BogusTemp();
+  switch (ins->simdOp()) {
+    case wasm::SimdOp::I8x16Neg:
+    case wasm::SimdOp::I16x8Neg:
+    case wasm::SimdOp::I32x4Neg:
+    case wasm::SimdOp::I64x2Neg:
+    case wasm::SimdOp::F32x4Neg:
+    case wasm::SimdOp::F64x2Neg:
+    case wasm::SimdOp::F32x4Abs:
+    case wasm::SimdOp::F64x2Abs:
+    case wasm::SimdOp::V128Not:
+    case wasm::SimdOp::F32x4Sqrt:
+    case wasm::SimdOp::F64x2Sqrt:
+    case wasm::SimdOp::I8x16Abs:
+    case wasm::SimdOp::I16x8Abs:
+    case wasm::SimdOp::I32x4Abs:
+    case wasm::SimdOp::I64x2Abs:
+    case wasm::SimdOp::I32x4TruncSSatF32x4:
+    case wasm::SimdOp::F32x4ConvertUI32x4:
+    case wasm::SimdOp::I32x4TruncUSatF32x4:
+    case wasm::SimdOp::I16x8WidenLowSI8x16:
+    case wasm::SimdOp::I16x8WidenHighSI8x16:
+    case wasm::SimdOp::I16x8WidenLowUI8x16:
+    case wasm::SimdOp::I16x8WidenHighUI8x16:
+    case wasm::SimdOp::I32x4WidenLowSI16x8:
+    case wasm::SimdOp::I32x4WidenHighSI16x8:
+    case wasm::SimdOp::I32x4WidenLowUI16x8:
+    case wasm::SimdOp::I32x4WidenHighUI16x8:
+    case wasm::SimdOp::I64x2WidenLowSI32x4:
+    case wasm::SimdOp::I64x2WidenHighSI32x4:
+    case wasm::SimdOp::I64x2WidenLowUI32x4:
+    case wasm::SimdOp::I64x2WidenHighUI32x4:
+    case wasm::SimdOp::F32x4ConvertSI32x4:
+    case wasm::SimdOp::F32x4Ceil:
+    case wasm::SimdOp::F32x4Floor:
+    case wasm::SimdOp::F32x4Trunc:
+    case wasm::SimdOp::F32x4Nearest:
+    case wasm::SimdOp::F64x2Ceil:
+    case wasm::SimdOp::F64x2Floor:
+    case wasm::SimdOp::F64x2Trunc:
+    case wasm::SimdOp::F64x2Nearest:
+    case wasm::SimdOp::F32x4DemoteF64x2Zero:
+    case wasm::SimdOp::F64x2PromoteLowF32x4:
+    case wasm::SimdOp::F64x2ConvertLowI32x4S:
+    case wasm::SimdOp::F64x2ConvertLowI32x4U:
+    case wasm::SimdOp::I16x8ExtAddPairwiseI8x16S:
+    case wasm::SimdOp::I16x8ExtAddPairwiseI8x16U:
+    case wasm::SimdOp::I32x4ExtAddPairwiseI16x8S:
+    case wasm::SimdOp::I32x4ExtAddPairwiseI16x8U:
+    case wasm::SimdOp::I8x16Popcnt:
+      break;
+    case wasm::SimdOp::I32x4TruncSatF64x2SZero:
+    case wasm::SimdOp::I32x4TruncSatF64x2UZero:
+      tempReg = tempSimd128();
+      break;
+    default:
+      MOZ_CRASH("Unary SimdOp not implemented");
+  }
+
+  LUse input = useRegisterAtStart(ins->input());
+  LWasmUnarySimd128* lir = new (alloc()) LWasmUnarySimd128(input, tempReg);
+  define(lir, ins);
 }
 
 void LIRGenerator::visitWasmReduceSimd128(MWasmReduceSimd128* ins) {
-  MOZ_CRASH("reduce-SIMD NYI");
+  if (canEmitWasmReduceSimd128AtUses(ins)) {
+    emitAtUses(ins);
+    return;
+  }
+
+  // Reductions (any_true, all_true, bitmask, extract_lane) uniformly prefer
+  // useRegisterAtStart:
+  //
+  // - In most cases, the input type differs from the output type, so there's no
+  //   conflict and it doesn't really matter.
+  //
+  // - For extract_lane(0) on F32x4 and F64x2, input == output results in zero
+  //   code being generated.
+  //
+  // - For extract_lane(k > 0) on F32x4 and F64x2, allowing the input register
+  //   to be targeted lowers register pressure if it's the last use of the
+  //   input.
+
+  if (ins->type() == MIRType::Int64) {
+    auto* lir = new (alloc())
+        LWasmReduceSimd128ToInt64(useRegisterAtStart(ins->input()));
+    defineInt64(lir, ins);
+  } else {
+    LDefinition tempReg = LDefinition::BogusTemp();
+    switch (ins->simdOp()) {
+      case wasm::SimdOp::I8x16Bitmask:
+      case wasm::SimdOp::I16x8Bitmask:
+      case wasm::SimdOp::I32x4Bitmask:
+      case wasm::SimdOp::I64x2Bitmask:
+        tempReg = tempSimd128();
+        break;
+      default:
+        break;
+    }
+
+    // Ideally we would reuse the input register for floating extract_lane if
+    // the lane is zero, but constraints in the register allocator require the
+    // input and output register types to be the same.
+    auto* lir = new (alloc())
+        LWasmReduceSimd128(useRegisterAtStart(ins->input()), tempReg);
+    define(lir, ins);
+  }
 }
 
 void LIRGenerator::visitWasmLoadLaneSimd128(MWasmLoadLaneSimd128* ins) {
-  MOZ_CRASH("load-lane SIMD NYI");
+  LUse base = useRegisterAtStart(ins->base());
+  LUse inputUse = useRegisterAtStart(ins->value());
+  MOZ_ASSERT(!ins->hasMemoryBase());
+  LWasmLoadLaneSimd128* lir =
+      new (alloc()) LWasmLoadLaneSimd128(base, inputUse, temp(), LAllocation());
+  define(lir, ins);
 }
 
 void LIRGenerator::visitWasmStoreLaneSimd128(MWasmStoreLaneSimd128* ins) {
-  MOZ_CRASH("store-lane SIMD NYI");
+  LUse base = useRegisterAtStart(ins->base());
+  LUse input = useRegisterAtStart(ins->value());
+  MOZ_ASSERT(!ins->hasMemoryBase());
+  LWasmStoreLaneSimd128* lir =
+      new (alloc()) LWasmStoreLaneSimd128(base, input, temp(), LAllocation());
+  add(lir, ins);
 }

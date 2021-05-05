@@ -8744,7 +8744,6 @@ class BaseCompiler final : public BaseCompilerInterface {
   [[nodiscard]] bool emitBitselect();
   [[nodiscard]] bool emitVectorShuffle();
   [[nodiscard]] bool emitVectorShiftRightI64x2(bool isUnsigned);
-  [[nodiscard]] bool emitVectorMulI64x2();
 #endif
 };
 
@@ -14580,6 +14579,11 @@ static void MulI64x2(MacroAssembler& masm, RegV128 rs, RegV128 rsd,
                      RegV128 temp) {
   masm.mulInt64x2(rsd, rs, rsd, temp);
 }
+#  elif defined(JS_CODEGEN_ARM64)
+static void MulI64x2(MacroAssembler& masm, RegV128 rs, RegV128 rsd,
+                     RegV128 temp1, RegV128 temp2) {
+  masm.mulInt64x2(rsd, rs, rsd, temp1, temp2);
+}
 #  endif
 
 static void MulF64x2(MacroAssembler& masm, RegV128 rs, RegV128 rsd) {
@@ -14753,7 +14757,7 @@ static void CmpI64x2ForOrdering(MacroAssembler& masm, Assembler::Condition cond,
 #  else
 static void CmpI64x2(MacroAssembler& masm, Assembler::Condition cond,
                      RegV128 rs, RegV128 rsd, RegV128 temp1, RegV128 temp2) {
-  masm.compareInt64x2(cond, rs, rsd, temp1, temp2);
+  masm.compareInt64x2(cond, rs, rsd);
 }
 #  endif  // JS_CODEGEN_X86 || JS_CODEGEN_X64
 
@@ -14933,49 +14937,51 @@ static void ShiftRightUI64x2(MacroAssembler& masm, RegI32 rs, RegV128 rsd,
 }
 #  elif defined(JS_CODEGEN_ARM64)
 static void ShiftLeftI8x16(MacroAssembler& masm, RegI32 rs, RegV128 rsd) {
-  masm.leftShiftInt8x16(rs, rsd);
+  masm.leftShiftInt8x16(rsd, rs, rsd);
 }
 
 static void ShiftLeftI16x8(MacroAssembler& masm, RegI32 rs, RegV128 rsd) {
-  masm.leftShiftInt16x8(rs, rsd);
+  masm.leftShiftInt16x8(rsd, rs, rsd);
 }
 
 static void ShiftLeftI32x4(MacroAssembler& masm, RegI32 rs, RegV128 rsd) {
-  masm.leftShiftInt32x4(rs, rsd);
+  masm.leftShiftInt32x4(rsd, rs, rsd);
 }
 
 static void ShiftLeftI64x2(MacroAssembler& masm, RegI32 rs, RegV128 rsd) {
-  masm.leftShiftInt64x2(rs, rsd);
+  masm.leftShiftInt64x2(rsd, rs, rsd);
 }
 
-static void ShiftRightI8x16(MacroAssembler& masm, RegI32 rs, RegV128 rsd,
-                            RegV128 temp) {
-  masm.rightShiftInt8x16(rs, rsd, temp);
+static void ShiftRightI8x16(MacroAssembler& masm, RegI32 rs, RegV128 rsd) {
+  masm.rightShiftInt8x16(rsd, rs, rsd);
 }
 
-static void ShiftRightUI8x16(MacroAssembler& masm, RegI32 rs, RegV128 rsd,
-                             RegV128 temp) {
-  masm.unsignedRightShiftInt8x16(rs, rsd, temp);
+static void ShiftRightUI8x16(MacroAssembler& masm, RegI32 rs, RegV128 rsd) {
+  masm.unsignedRightShiftInt8x16(rsd, rs, rsd);
 }
 
-static void ShiftRightI16x8(MacroAssembler& masm, RegI32 rs, RegV128 rsd,
-                            RegV128 temp) {
-  masm.rightShiftInt16x8(rs, rsd, temp);
+static void ShiftRightI16x8(MacroAssembler& masm, RegI32 rs, RegV128 rsd) {
+  masm.rightShiftInt16x8(rsd, rs, rsd);
 }
 
-static void ShiftRightUI16x8(MacroAssembler& masm, RegI32 rs, RegV128 rsd,
-                             RegV128 temp) {
-  masm.unsignedRightShiftInt16x8(rs, rsd, temp);
+static void ShiftRightUI16x8(MacroAssembler& masm, RegI32 rs, RegV128 rsd) {
+  masm.unsignedRightShiftInt16x8(rsd, rs, rsd);
 }
 
-static void ShiftRightI32x4(MacroAssembler& masm, RegI32 rs, RegV128 rsd,
-                            RegV128 temp) {
-  masm.rightShiftInt32x4(rs, rsd, temp);
+static void ShiftRightI32x4(MacroAssembler& masm, RegI32 rs, RegV128 rsd) {
+  masm.rightShiftInt32x4(rsd, rs, rsd);
 }
 
-static void ShiftRightUI32x4(MacroAssembler& masm, RegI32 rs, RegV128 rsd,
-                             RegV128 temp) {
-  masm.unsignedRightShiftInt32x4(rs, rsd, temp);
+static void ShiftRightUI32x4(MacroAssembler& masm, RegI32 rs, RegV128 rsd) {
+  masm.unsignedRightShiftInt32x4(rsd, rs, rsd);
+}
+
+static void ShiftRightI64x2(MacroAssembler& masm, RegI32 rs, RegV128 rsd) {
+  masm.rightShiftInt64x2(rsd, rs, rsd);
+}
+
+static void ShiftRightUI64x2(MacroAssembler& masm, RegI32 rs, RegV128 rsd) {
+  masm.unsignedRightShiftInt64x2(rsd, rs, rsd);
 }
 #  endif
 
@@ -15675,12 +15681,11 @@ bool BaseCompiler::emitVectorShiftRightI64x2(bool isUnsigned) {
     emitBinop(ShiftRightUI64x2);
     return true;
   }
-#  endif
 
-#  if defined(JS_CODEGEN_X86)
+#    if defined(JS_CODEGEN_X86)
   needI32(specific_.ecx);
   RegI32 count = popI32ToSpecific(specific_.ecx);
-#  elif defined(JS_CODEGEN_X64)
+#    elif defined(JS_CODEGEN_X64)
   RegI32 count;
   if (Assembler::HasBMI2()) {
     count = popI32();
@@ -15688,9 +15693,7 @@ bool BaseCompiler::emitVectorShiftRightI64x2(bool isUnsigned) {
     needI32(specific_.ecx);
     count = popI32ToSpecific(specific_.ecx);
   }
-#  elif defined(JS_CODEGEN_ARM64)
-  RegI32 count = popI32();
-#  endif
+#    endif
   RegV128 lhsDest = popV128();
   RegI64 tmp = needI64();
   masm.and32(Imm32(63), count);
@@ -15711,43 +15714,12 @@ bool BaseCompiler::emitVectorShiftRightI64x2(bool isUnsigned) {
   freeI64(tmp);
   freeI32(count);
   pushV128(lhsDest);
-
-  return true;
-}
-
-// Must be scalarized on ARM64.
-bool BaseCompiler::emitVectorMulI64x2() {
-  Nothing unused_a, unused_b;
-
-  if (!iter_.readBinary(ValType::V128, &unused_a, &unused_b)) {
-    return false;
-  }
-
-  if (deadCode_) {
-    return true;
-  }
-
-#  if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
-  emitBinop(MulI64x2);
 #  elif defined(JS_CODEGEN_ARM64)
-  RegV128 r, rs;
-  pop2xV128(&r, &rs);
-  RegI64 temp1 = needI64();
-  RegI64 temp2 = needI64();
-  masm.extractLaneInt64x2(0, r, temp1);
-  masm.extractLaneInt64x2(0, rs, temp2);
-  masm.mul64(temp2, temp1, Register::Invalid());
-  masm.replaceLaneInt64x2(0, temp1, r);
-  masm.extractLaneInt64x2(1, r, temp1);
-  masm.extractLaneInt64x2(1, rs, temp2);
-  masm.mul64(temp2, temp1, Register::Invalid());
-  masm.replaceLaneInt64x2(1, temp1, r);
-  freeI64(temp1);
-  freeI64(temp2);
-  freeV128(rs);
-  pushV128(r);
-#  else
-  MOZ_CRASH("NYI");
+  if (isUnsigned) {
+    emitBinop(ShiftRightUI64x2);
+  } else {
+    emitBinop(ShiftRightI64x2);
+  }
 #  endif
 
   return true;
@@ -16886,7 +16858,7 @@ bool BaseCompiler::emitBody() {
           case uint32_t(SimdOp::I64x2Sub):
             CHECK_NEXT(dispatchVectorBinary(SubI64x2));
           case uint32_t(SimdOp::I64x2Mul):
-            CHECK_NEXT(emitVectorMulI64x2());
+            CHECK_NEXT(dispatchVectorBinary(MulI64x2));
           case uint32_t(SimdOp::F32x4Add):
             CHECK_NEXT(dispatchVectorBinary(AddF32x4));
           case uint32_t(SimdOp::F32x4Sub):

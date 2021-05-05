@@ -642,121 +642,92 @@ void MacroAssemblerCompat::compareSimd128Float(Assembler::Condition cond,
   }
 }
 
-void MacroAssemblerCompat::rightShiftInt8x16(Register rhs,
-                                             FloatRegister lhsDest,
-                                             FloatRegister temp,
+void MacroAssemblerCompat::rightShiftInt8x16(FloatRegister lhs, Register rhs,
+                                             FloatRegister dest,
                                              bool isUnsigned) {
   ScratchSimd128Scope scratch_(asMasm());
-  ARMFPRegister shift = Simd8H(scratch_);
+  ARMFPRegister shift = Simd16B(scratch_);
 
-  // Compute 8 - (shift & 7) in all 16-bit lanes
+  // Compute -(shift & 7) in all 8-bit lanes
   {
     vixl::UseScratchRegisterScope temps(this);
     ARMRegister scratch = temps.AcquireW();
     And(scratch, ARMRegister(rhs, 32), 7);
     Neg(scratch, scratch);
-    Add(scratch, scratch, 8);
     Dup(shift, scratch);
   }
 
-  // Widen high bytes, shift left variable, then recover top bytes.
   if (isUnsigned) {
-    Ushll2(Simd8H(temp), Simd16B(lhsDest), 0);
+    Ushl(Simd16B(dest), Simd16B(lhs), shift);
   } else {
-    Sshll2(Simd8H(temp), Simd16B(lhsDest), 0);
+    Sshl(Simd16B(dest), Simd16B(lhs), shift);
   }
-  Ushl(Simd8H(temp), Simd8H(temp), shift);
-  Shrn(Simd8B(temp), Simd8H(temp), 8);
-
-  // Ditto low bytes, leaving them in the correct place for the output.
-  if (isUnsigned) {
-    Ushll(Simd8H(lhsDest), Simd8B(lhsDest), 0);
-  } else {
-    Sshll(Simd8H(lhsDest), Simd8B(lhsDest), 0);
-  }
-  Ushl(Simd8H(lhsDest), Simd8H(lhsDest), shift);
-  Shrn(Simd8B(lhsDest), Simd8H(lhsDest), 8);
-
-  // Reassemble: insert the high bytes.
-  Ins(Simd2D(lhsDest), 1, Simd2D(temp), 0);
 }
 
-void MacroAssemblerCompat::rightShiftInt16x8(Register rhs,
-                                             FloatRegister lhsDest,
-                                             FloatRegister temp,
+void MacroAssemblerCompat::rightShiftInt16x8(FloatRegister lhs, Register rhs,
+                                             FloatRegister dest,
                                              bool isUnsigned) {
   ScratchSimd128Scope scratch_(asMasm());
-  ARMFPRegister shift = Simd4S(scratch_);
+  ARMFPRegister shift = Simd8H(scratch_);
 
-  // Compute 16 - (shift & 15) in all 32-bit lanes
+  // Compute -(shift & 15) in all 16-bit lanes
   {
     vixl::UseScratchRegisterScope temps(this);
     ARMRegister scratch = temps.AcquireW();
     And(scratch, ARMRegister(rhs, 32), 15);
     Neg(scratch, scratch);
-    Add(scratch, scratch, 16);
     Dup(shift, scratch);
   }
 
-  // Widen high halfwords, shift left variable, then recover top halfwords
   if (isUnsigned) {
-    Ushll2(Simd4S(temp), Simd8H(lhsDest), 0);
+    Ushl(Simd8H(dest), Simd8H(lhs), shift);
   } else {
-    Sshll2(Simd4S(temp), Simd8H(lhsDest), 0);
+    Sshl(Simd8H(dest), Simd8H(lhs), shift);
   }
-  Ushl(Simd4S(temp), Simd4S(temp), shift);
-  Shrn(Simd4H(temp), Simd4S(temp), 16);
-
-  // Ditto low halfwords
-  if (isUnsigned) {
-    Ushll(Simd4S(lhsDest), Simd4H(lhsDest), 0);
-  } else {
-    Sshll(Simd4S(lhsDest), Simd4H(lhsDest), 0);
-  }
-  Ushl(Simd4S(lhsDest), Simd4S(lhsDest), shift);
-  Shrn(Simd4H(lhsDest), Simd4S(lhsDest), 16);
-
-  // Reassemble: insert the high halfwords.
-  Ins(Simd2D(lhsDest), 1, Simd2D(temp), 0);
 }
 
-void MacroAssemblerCompat::rightShiftInt32x4(Register rhs,
-                                             FloatRegister lhsDest,
-                                             FloatRegister temp,
+void MacroAssemblerCompat::rightShiftInt32x4(FloatRegister lhs, Register rhs,
+                                             FloatRegister dest,
+                                             bool isUnsigned) {
+  ScratchSimd128Scope scratch_(asMasm());
+  ARMFPRegister shift = Simd4S(scratch_);
+
+  // Compute -(shift & 31) in all 32-bit lanes
+  {
+    vixl::UseScratchRegisterScope temps(this);
+    ARMRegister scratch = temps.AcquireW();
+    And(scratch, ARMRegister(rhs, 32), 31);
+    Neg(scratch, scratch);
+    Dup(shift, scratch);
+  }
+
+  if (isUnsigned) {
+    Ushl(Simd4S(dest), Simd4S(lhs), shift);
+  } else {
+    Sshl(Simd4S(dest), Simd4S(lhs), shift);
+  }
+}
+
+void MacroAssemblerCompat::rightShiftInt64x2(FloatRegister lhs, Register rhs,
+                                             FloatRegister dest,
                                              bool isUnsigned) {
   ScratchSimd128Scope scratch_(asMasm());
   ARMFPRegister shift = Simd2D(scratch_);
 
-  // Compute 32 - (shift & 31) in all 64-bit lanes
+  // Compute -(shift & 63)
   {
     vixl::UseScratchRegisterScope temps(this);
     ARMRegister scratch = temps.AcquireX();
-    And(scratch, ARMRegister(rhs, 64), 31);
+    And(scratch, ARMRegister(rhs, 64), 63);
     Neg(scratch, scratch);
-    Add(scratch, scratch, 32);
     Dup(shift, scratch);
   }
 
-  // Widen high words, shift left variable, then recover top words
   if (isUnsigned) {
-    Ushll2(Simd2D(temp), Simd4S(lhsDest), 0);
+    Ushl(Simd2D(dest), Simd2D(lhs), shift);
   } else {
-    Sshll2(Simd2D(temp), Simd4S(lhsDest), 0);
+    Sshl(Simd2D(dest), Simd2D(lhs), shift);
   }
-  Ushl(Simd2D(temp), Simd2D(temp), shift);
-  Shrn(Simd2S(temp), Simd2D(temp), 32);
-
-  // Ditto high words
-  if (isUnsigned) {
-    Ushll(Simd2D(lhsDest), Simd2S(lhsDest), 0);
-  } else {
-    Sshll(Simd2D(lhsDest), Simd2S(lhsDest), 0);
-  }
-  Ushl(Simd2D(lhsDest), Simd2D(lhsDest), shift);
-  Shrn(Simd2S(lhsDest), Simd2D(lhsDest), 32);
-
-  // Reassemble: insert the high words.
-  Ins(Simd2D(lhsDest), 1, Simd2D(temp), 0);
 }
 
 void MacroAssembler::reserveStack(uint32_t amount) {
