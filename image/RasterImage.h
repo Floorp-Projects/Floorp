@@ -37,6 +37,7 @@
 #include "mozilla/TimeStamp.h"
 #include "mozilla/WeakPtr.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/image/Resolution.h"
 #include "ImageContainer.h"
 #include "PlaybackType.h"
 #ifdef DEBUG
@@ -411,6 +412,9 @@ class RasterImage final : public ImageResource,
   // The orientation required to correctly orient the image, from the image's
   // metadata. RasterImage will handle and apply this orientation itself.
   Orientation mOrientation;
+
+  // The resolution as specified in the image metadata, in dppx.
+  Resolution mResolution;
 
   /// If this has a value, we're waiting for SetSize() to send the load event.
   Maybe<Progress> mLoadProgress;

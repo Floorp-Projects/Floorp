@@ -62,6 +62,7 @@ TEST_HARNESS_FILES.gtest += [
     "downscaled.jpg",
     "downscaled.png",
     "downscaled.webp",
+    "exif_resolution.jpg",
     "first-frame-green.gif",
     "first-frame-green.png",
     "first-frame-green.webp",

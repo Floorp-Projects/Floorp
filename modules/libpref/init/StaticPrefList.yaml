@@ -5307,6 +5307,17 @@
   value: true
   mirror: always
 
+# Whether we use EXIF metadata for image density.
+#
+# NOTE: Before shipping this, make sure that the issue described in the
+# following comment is addressed:
+#
+#   https://github.com/whatwg/html/pull/5574#issuecomment-826335244
+- name: image.exif-density-correction.enabled
+  type: RelaxedAtomicBool
+  value: @IS_NIGHTLY_BUILD@
+  mirror: always
+
 # The threshold for inferring that changes to an <img> element's |src|
 # attribute by JavaScript represent an animation, in milliseconds. If the |src|
 # attribute is changing more frequently than this value, then we enter a
