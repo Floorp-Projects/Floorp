@@ -2567,12 +2567,6 @@ void MediaDecoderStateMachine::SeekingState::SeekCompleted() {
     mMaster->mOnPlaybackEvent.Notify(MediaPlaybackEvent::Invalidate);
   }
 
-  // `mLastClockTimeBeforeStopSink` stores the position from which we want to
-  // restart the media sink, but once the seeking completes, that position
-  // should be reset because the playback should start from a new position,
-  // instead of previous clock time.
-  mMaster->mLastClockTimeBeforeStopSink.reset();
-
   GoToNextState();
 }
 
@@ -2814,12 +2808,10 @@ void MediaDecoderStateMachine::InitializationTask(MediaDecoder* aDecoder) {
 }
 
 void MediaDecoderStateMachine::AudioAudibleChanged(bool aAudible) {
-  LOG("AudioAudibleChanged=%d", aAudible);
   mIsAudioDataAudible = aAudible;
 }
 
 MediaSink* MediaDecoderStateMachine::CreateAudioSink() {
-  MOZ_ASSERT(OnTaskQueue());
   if (mOutputCaptureState != MediaDecoder::OutputCaptureState::None) {
     DecodedStream* stream = new DecodedStream(
         this,
@@ -2829,7 +2821,6 @@ MediaSink* MediaDecoderStateMachine::CreateAudioSink() {
         mOutputTracks, mVolume, mPlaybackRate, mPreservesPitch, mAudioQueue,
         mVideoQueue);
     mAudibleListener.DisconnectIfExists();
-    AudioAudibleChanged(false);
     mAudibleListener = stream->AudibleEvent().Connect(
         OwnerThread(), this, &MediaDecoderStateMachine::AudioAudibleChanged);
     return stream;
@@ -2842,7 +2833,6 @@ MediaSink* MediaDecoderStateMachine::CreateAudioSink() {
         new AudioSink(self->mTaskQueue, self->mAudioQueue, aStartTime,
                       self->Info().mAudio, self->mSinkDevice.Ref());
     self->mAudibleListener.DisconnectIfExists();
-    self->AudioAudibleChanged(false);
     self->mAudibleListener = audioSink->AudibleEvent().Connect(
         self->mTaskQueue, self.get(),
         &MediaDecoderStateMachine::AudioAudibleChanged);
@@ -3224,9 +3214,7 @@ RefPtr<MediaDecoder::SeekPromise> MediaDecoderStateMachine::InvokeSeek(
 void MediaDecoderStateMachine::StopMediaSink() {
   MOZ_ASSERT(OnTaskQueue());
   if (mMediaSink->IsStarted()) {
-    mLastClockTimeBeforeStopSink = Some(mMediaSink->GetPosition());
-    LOG("Stop MediaSink, last clock time (%" PRId64 ")",
-        (*mLastClockTimeBeforeStopSink).ToMicroseconds());
+    LOG("Stop MediaSink");
     mMediaSink->Stop();
     mMediaSinkAudioEndedPromise.DisconnectIfExists();
     mMediaSinkVideoEndedPromise.DisconnectIfExists();
@@ -3399,11 +3387,7 @@ nsresult MediaDecoderStateMachine::StartMediaSink() {
   }
 
   mAudioCompleted = false;
-  const TimeUnit startTime = mLastClockTimeBeforeStopSink
-                                 ? *mLastClockTimeBeforeStopSink
-                                 : GetMediaTime();
-  LOG("Start sink, start time=%" PRId64, startTime.ToMicroseconds());
-  nsresult rv = mMediaSink->Start(startTime, Info());
+  nsresult rv = mMediaSink->Start(GetMediaTime(), Info());
   StreamNameChanged();
 
   auto videoPromise = mMediaSink->OnEnded(TrackInfo::kVideoTrack);
