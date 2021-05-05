@@ -1,0 +1,12 @@
+prefix=@CMAKE_INSTALL_PREFIX@
+exec_prefix=${prefix}
+libdir=${exec_prefix}/@CMAKE_INSTALL_LIBDIR@
+includedir=${prefix}/@CMAKE_INSTALL_INCLUDEDIR@
+
+Name: libjxl
+Description: Loads and saves JPEG XL files
+Version: @JPEGXL_LIBRARY_VERSION@
+Requires.private: @JPEGXL_LIBRARY_REQUIRES@
+Libs: -L${libdir} -ljxl
+Libs.private: -lm
+Cflags: -I${includedir}
