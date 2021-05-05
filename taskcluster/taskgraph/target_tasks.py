@@ -44,33 +44,6 @@ UNCOMMON_TRY_TASK_LABELS = [
 ]
 
 
-# These are live site performance tests we run three times a week
-LIVE_SITES = [
-    "amazon-search",
-    "bbc",
-    "booking-sf",
-    "cnn-ampstories",
-    "discord",
-    "espn",
-    "expedia",
-    "facebook-cristiano",
-    "fashionbeans",
-    "google",
-    "google-accounts",
-    "imdb-firefox",
-    "medium-article",
-    "microsoft-support",
-    "nytimes",
-    "people-article",
-    "reddit-thread",
-    "rumble-fox",
-    "stackoverflow-question",
-    "urbandictionary-define",
-    "wikia-marvel",
-    "youtube-watch",
-]
-
-
 def _target_task(name):
     def wrap(func):
         _target_task_methods[name] = func
@@ -757,53 +730,6 @@ def target_tasks_ship_geckoview(full_task_graph, parameters, graph_config):
     return [l for l, t in six.iteritems(full_task_graph.tasks) if filter(t)]
 
 
-@_target_task("live_site_perf_testing")
-def target_tasks_live_site_perf_testing(full_task_graph, parameters, graph_config):
-    """
-    Select browsertime live site tasks that should only run once a week.
-    """
-
-    def filter(task):
-        attributes = task.attributes
-        platform = attributes.get("test_platform")
-        try_name = attributes.get("raptor_try_name")
-
-        vismet = attributes.get("kind") == "visual-metrics-dep"
-        if vismet:
-            platform = task.task.get("extra").get("treeherder-platform")
-            try_name = task.label
-
-        if attributes.get("unittest_suite") != "raptor" and not vismet:
-            return False
-        elif "live" not in try_name:
-            return False
-        elif "browsertime" not in try_name:
-            return False
-        elif "shippable" not in platform:
-            return False
-
-        # android
-        if "android" in platform:
-            if not accept_raptor_android_build(platform):
-                return False
-            elif "-qr" not in platform:
-                return False
-            elif "fenix" not in try_name:
-                return False
-
-        # desktop
-        if "windows7" in platform or "windows10-32" in platform:
-            return False
-
-        for test in LIVE_SITES:
-            if re.search(test + r"(-fis)?$", try_name):
-                # These tests run 3 times a week, ignore them
-                return False
-        return True
-
-    return [l for l, t in six.iteritems(full_task_graph.tasks) if filter(t)]
-
-
 @_target_task("general_perf_testing")
 def target_tasks_general_perf_testing(full_task_graph, parameters, graph_config):
     """
@@ -822,12 +748,6 @@ def target_tasks_general_perf_testing(full_task_graph, parameters, graph_config)
             # Visual metric tasks are configured a bit differently
             platform = task.task.get("extra").get("treeherder-platform")
             try_name = task.label
-
-        def _run_live_site():
-            for test in LIVE_SITES:
-                if try_name.endswith(test) or try_name.endswith(test + "-e10s"):
-                    return True
-            return False
 
         # Completely ignore all non-shippable platforms
         if "shippable" not in platform:
@@ -851,6 +771,8 @@ def target_tasks_general_perf_testing(full_task_graph, parameters, graph_config)
                     if "tp6" in try_name and "macosx" in platform:
                         return False
                     return True
+                if "-live" in try_name:
+                    return True
                 if "-fis" in try_name:
                     return False
                 if "linux" in platform:
@@ -870,7 +792,7 @@ def target_tasks_general_perf_testing(full_task_graph, parameters, graph_config)
                 return False
             # Select live site tests
             if "-live" in try_name and ("fenix" in try_name or "chrome-m" in try_name):
-                return _run_live_site()
+                return True
             # Select fenix resource usage tests
             if "fenix" in try_name:
                 if "-power" in try_name:
