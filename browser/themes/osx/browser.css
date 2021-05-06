@@ -8,6 +8,7 @@
 %include ../shared/browser-custom-colors.inc.css
 
 :root {
+  --toolbar-non-lwt-bgcolor: #f9f9fb;
   --toolbar-non-lwt-textcolor: #0c0c0d;
   --toolbar-non-lwt-bgimage: none;
 
