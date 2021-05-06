@@ -3407,18 +3407,19 @@ static nscoord ComputeWhereToScroll(WhereToScroll aWhereToScroll,
  * This needs to work even if aRect has a width or height of zero.
  */
 static void ScrollToShowRect(nsIScrollableFrame* aFrameAsScrollable,
-                             const nsRect& aRect, ScrollAxis aVertical,
-                             ScrollAxis aHorizontal, ScrollFlags aScrollFlags) {
+                             const nsRect& aRect, const nsMargin& aMargin,
+                             ScrollAxis aVertical, ScrollAxis aHorizontal,
+                             ScrollFlags aScrollFlags) {
   nsPoint scrollPt = aFrameAsScrollable->GetVisualViewportOffset();
   const nsPoint originalScrollPt = scrollPt;
   const nsRect visibleRect(scrollPt,
                            aFrameAsScrollable->GetVisualViewportSize());
 
-  const nsMargin scrollPadding = aFrameAsScrollable->GetScrollPadding();
+  const nsMargin padding = aFrameAsScrollable->GetScrollPadding() + aMargin;
 
   const nsRect rectToScrollIntoView = [&] {
     nsRect r(aRect);
-    r.Inflate(scrollPadding);
+    r.Inflate(padding);
     return r.Intersect(aFrameAsScrollable->GetScrolledRect());
   }();
 
@@ -3442,8 +3443,8 @@ static void ScrollToShowRect(nsIScrollableFrame* aFrameAsScrollable,
       (!aVertical.mOnlyIfPerceivedScrollableDirection ||
        (directions.contains(ScrollDirection::eVertical)))) {
     if (ComputeNeedToScroll(aVertical.mWhenToScroll, lineSize.height, aRect.y,
-                            aRect.YMost(), visibleRect.y + scrollPadding.top,
-                            visibleRect.YMost() - scrollPadding.bottom)) {
+                            aRect.YMost(), visibleRect.y + padding.top,
+                            visibleRect.YMost() - padding.bottom)) {
       nscoord maxHeight;
       scrollPt.y = ComputeWhereToScroll(
           aVertical.mWhereToScroll, scrollPt.y, rectToScrollIntoView.y,
@@ -3458,8 +3459,8 @@ static void ScrollToShowRect(nsIScrollableFrame* aFrameAsScrollable,
       (!aHorizontal.mOnlyIfPerceivedScrollableDirection ||
        (directions.contains(ScrollDirection::eHorizontal)))) {
     if (ComputeNeedToScroll(aHorizontal.mWhenToScroll, lineSize.width, aRect.x,
-                            aRect.XMost(), visibleRect.x + scrollPadding.left,
-                            visibleRect.XMost() - scrollPadding.right)) {
+                            aRect.XMost(), visibleRect.x + padding.left,
+                            visibleRect.XMost() - padding.right)) {
       nscoord maxWidth;
       scrollPt.x = ComputeWhereToScroll(
           aHorizontal.mWhereToScroll, scrollPt.x, rectToScrollIntoView.x,
@@ -3611,14 +3612,13 @@ void PresShell::DoScrollContentIntoView() {
                           frameBounds, haveRect, prevBlock, lines, curLine);
   } while ((frame = frame->GetNextContinuation()));
 
-  frameBounds.Inflate(scrollMargin);
-
-  ScrollFrameRectIntoView(container, frameBounds, data->mContentScrollVAxis,
-                          data->mContentScrollHAxis,
+  ScrollFrameRectIntoView(container, frameBounds, scrollMargin,
+                          data->mContentScrollVAxis, data->mContentScrollHAxis,
                           data->mContentToScrollToFlags);
 }
 
 bool PresShell::ScrollFrameRectIntoView(nsIFrame* aFrame, const nsRect& aRect,
+                                        const nsMargin& aMargin,
                                         ScrollAxis aVertical,
                                         ScrollAxis aHorizontal,
                                         ScrollFlags aScrollFlags) {
@@ -3659,7 +3659,8 @@ bool PresShell::ScrollFrameRectIntoView(nsIFrame* aFrame, const nsRect& aRect,
 
       {
         AutoWeakFrame wf(container);
-        ScrollToShowRect(sf, targetRect, aVertical, aHorizontal, aScrollFlags);
+        ScrollToShowRect(sf, targetRect, aMargin, aVertical, aHorizontal,
+                         aScrollFlags);
         if (!wf.IsAlive()) {
           return didScroll;
         }
