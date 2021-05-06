@@ -462,13 +462,14 @@ var SelectParentHelper = {
       item.hiddenByContent = item.hidden;
       item.setAttribute("tooltiptext", option.tooltip);
 
-      if (style["background-color"] == "rgba(0, 0, 0, 0)") {
-        delete style["background-color"];
-      }
-
+      let optionBackgroundIsTransparent =
+        style["background-color"] == "rgba(0, 0, 0, 0)";
       let optionBackgroundSet =
-        style["background-color"] &&
-        style["background-color"] != selectStyle["background-color"];
+        !optionBackgroundIsTransparent || style.color != selectStyle.color;
+
+      if (optionBackgroundIsTransparent && style.color != selectStyle.color) {
+        style["background-color"] = selectStyle["background-color"];
+      }
 
       if (style.color == style["background-color"]) {
         style.color = selectStyle.color;
@@ -477,10 +478,21 @@ var SelectParentHelper = {
       if (customStylingEnabled) {
         let addedRule = false;
         for (const property of SUPPORTED_OPTION_OPTGROUP_PROPERTIES) {
-          if (property == "direction" || property == "font-size") {
-            continue;
-          } // handled above
-          if (!style[property] || style[property] == selectStyle[property]) {
+          let shouldSkip = (function() {
+            if (property == "direction" || property == "font-size") {
+              // Handled elsewhere.
+              return true;
+            }
+            if (!style[property]) {
+              return true;
+            }
+            if (property == "background-color" || property == "color") {
+              // This also depends on whether "color" is set.
+              return !optionBackgroundSet;
+            }
+            return style[property] == selectStyle[property];
+          })();
+          if (shouldSkip) {
             continue;
           }
           if (PROPERTIES_RESET_WHEN_ACTIVE.includes(property)) {
