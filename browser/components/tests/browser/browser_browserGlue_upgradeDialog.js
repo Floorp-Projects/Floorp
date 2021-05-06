@@ -10,9 +10,6 @@ const { NimbusFeatures, ExperimentFeature } = ChromeUtils.import(
   "resource://nimbus/ExperimentAPI.jsm"
 );
 
-const BROWSER_GLUE = Cc["@mozilla.org/browser/browserglue;1"].getService()
-  .wrappedJSObject;
-
 function mockAppConstants({ isWin7 }) {
   if (mockAppConstants.value === undefined) {
     const stub = sinon.stub(window, "AppConstants").value({
@@ -23,20 +20,6 @@ function mockAppConstants({ isWin7 }) {
     registerCleanupFunction(() => stub.restore());
   }
   mockAppConstants.value = isWin7;
-}
-
-function waitForDialog(callback = win => win.close()) {
-  return BrowserTestUtils.promiseAlertDialog(
-    null,
-    "chrome://browser/content/upgradeDialog.html",
-    { callback, isSubDialog: true }
-  );
-}
-
-function showAndWaitForDialog(callback) {
-  const promise = waitForDialog(callback);
-  BROWSER_GLUE._showUpgradeDialog();
-  return promise;
 }
 
 function AssertEvents(message, ...events) {
