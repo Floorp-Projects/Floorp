@@ -23,6 +23,19 @@ const FeatureManifest = {
         fallbackPref:
           "browser.urlbar.experimental.firefoxSuggestLabels.enabled",
       },
+      quickSuggestShouldShowOnboardingDialog: {
+        type: "boolean",
+        fallbackPref: "browser.urlbar.quicksuggest.shouldShowOnboardingDialog",
+        description:
+          "Whether or not to show the QuickSuggest onboarding dialog",
+      },
+      quickSuggestShowOnboardingDialogAfterNRestarts: {
+        type: "int",
+        fallbackPref:
+          "browser.urlbar.quicksuggest.showOnboardingDialogAfterNRestarts",
+        description:
+          "Show QuickSuggest onboarding dialog after N browser restarts",
+      },
     },
   },
   aboutwelcome: {
