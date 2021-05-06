@@ -217,7 +217,7 @@ function test_name_too_long() {
 // Try creating a socket in a directory that doesn't exist.
 function test_no_directory() {
   let socketName = do_get_tempdir();
-  socketName.append("directory-that-does-not-exist");
+  socketName.append("missing");
   socketName.append("socket");
 
   do_check_throws_nsIException(
