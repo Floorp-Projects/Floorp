@@ -31,7 +31,6 @@
 #include "mozilla/ErrorResult.h"
 #include "mozilla/gfx/2D.h"
 #include "WindowsDefaultBrowser.h"
-#include "WindowsUserChoice.h"
 
 #include <windows.h>
 #include <shellapi.h>
@@ -230,39 +229,6 @@ nsresult nsWindowsShellService::LaunchControlPanelDefaultsSelectionUI() {
 
 nsresult nsWindowsShellService::LaunchControlPanelDefaultPrograms() {
   return ::LaunchControlPanelDefaultPrograms() ? NS_OK : NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
-nsWindowsShellService::CheckAllProgIDsExist(bool* aResult) {
-  *aResult = false;
-  nsAutoString aumid;
-  if (!mozilla::widget::WinTaskbar::GetAppUserModelID(aumid)) {
-    return NS_OK;
-  }
-  *aResult =
-      CheckProgIDExists(FormatProgID(L"FirefoxURL", aumid.get()).get()) &&
-      CheckProgIDExists(FormatProgID(L"FirefoxHTML", aumid.get()).get());
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWindowsShellService::CheckBrowserUserChoiceHashes(bool* aResult) {
-  *aResult = ::CheckBrowserUserChoiceHashes();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWindowsShellService::CanSetDefaultBrowserUserChoice(bool* aResult) {
-  *aResult = false;
-// If the WDBA is not available, this could never succeed.
-#ifdef MOZ_DEFAULT_BROWSER_AGENT
-  bool progIDsExist = false;
-  bool hashOk = false;
-  *aResult = NS_SUCCEEDED(CheckAllProgIDsExist(&progIDsExist)) &&
-             progIDsExist &&
-             NS_SUCCEEDED(CheckBrowserUserChoiceHashes(&hashOk)) && hashOk;
-#endif
-  return NS_OK;
 }
 
 nsresult nsWindowsShellService::LaunchModernSettingsDialogDefaultApps() {

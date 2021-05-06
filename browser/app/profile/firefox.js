@@ -260,12 +260,6 @@ pref("browser.shell.mostRecentDateSetAsDefault", "");
 pref("browser.shell.skipDefaultBrowserCheckOnFirstRun", true);
 pref("browser.shell.didSkipDefaultBrowserCheckOnFirstRun", false);
 pref("browser.shell.defaultBrowserCheckCount", 0);
-#if defined(XP_WIN)
-// Attempt to set the default browser on Windows 10 using the UserChoice registry keys,
-// before falling back to launching the modern Settings dialog.
-pref("browser.shell.setDefaultBrowserUserChoice", false);
-#endif
-
 
 // 0 = blank, 1 = home (browser.startup.homepage), 2 = last visited page, 3 = resume previous browser session
 // The behavior of option 3 is detailed at: http://wiki.mozilla.org/Session_Restore
