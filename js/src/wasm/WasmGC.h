@@ -400,6 +400,12 @@ void EmitWasmPostBarrierGuard(MacroAssembler& masm,
                               Register otherScratch, Register setValue,
                               Label* skipBarrier);
 
+#ifdef DEBUG
+// Check whether |nextPC| is a valid code address for a stackmap created by
+// this compiler.
+bool IsValidStackMapKey(bool debugEnabled, const uint8_t* nextPC);
+#endif
+
 }  // namespace wasm
 }  // namespace js
 
