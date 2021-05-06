@@ -307,7 +307,13 @@ var tests = [
   test_basicrealm,
   test_nonascii,
   test_digest_noauth,
-  test_digest,
+  test_digest_md5,
+  test_digest_md5sess,
+  test_digest_sha256,
+  test_digest_sha256sess,
+  test_digest_sha256_md5,
+  test_digest_md5_sha256,
+  test_digest_md5_sha256_oneline,
   test_digest_bogus_user,
   test_short_digest,
   test_large_realm,
@@ -343,7 +349,16 @@ function run_test() {
   httpserv.registerPathHandler("/auth/ntlm/simple", authNtlmSimple);
   httpserv.registerPathHandler("/auth/realm", authRealm);
   httpserv.registerPathHandler("/auth/non_ascii", authNonascii);
-  httpserv.registerPathHandler("/auth/digest", authDigest);
+  httpserv.registerPathHandler("/auth/digest_md5", authDigestMD5);
+  httpserv.registerPathHandler("/auth/digest_md5sess", authDigestMD5sess);
+  httpserv.registerPathHandler("/auth/digest_sha256", authDigestSHA256);
+  httpserv.registerPathHandler("/auth/digest_sha256sess", authDigestSHA256sess);
+  httpserv.registerPathHandler("/auth/digest_sha256_md5", authDigestSHA256_MD5);
+  httpserv.registerPathHandler("/auth/digest_md5_sha256", authDigestMD5_SHA256);
+  httpserv.registerPathHandler(
+    "/auth/digest_md5_sha256_oneline",
+    authDigestMD5_SHA256_oneline
+  );
   httpserv.registerPathHandler("/auth/short_digest", authShortDigest);
   httpserv.registerPathHandler("/largeRealm", largeRealm);
   httpserv.registerPathHandler("/largeDomain", largeDomain);
@@ -488,7 +503,7 @@ function test_nonascii_xhr() {
 }
 
 function test_digest_noauth() {
-  var chan = makeChan(URL + "/auth/digest", URL);
+  var chan = makeChan(URL + "/auth/digest_md5", URL);
 
   //chan.notificationCallbacks = new Requestor(FLAG_RETURN_FALSE, 2);
   listener.expectedCode = 401; // Unauthorized
@@ -497,8 +512,68 @@ function test_digest_noauth() {
   do_test_pending();
 }
 
-function test_digest() {
-  var chan = makeChan(URL + "/auth/digest", URL);
+function test_digest_md5() {
+  var chan = makeChan(URL + "/auth/digest_md5", URL);
+
+  chan.notificationCallbacks = new Requestor(0, 2);
+  listener.expectedCode = 200; // OK
+  chan.asyncOpen(listener);
+
+  do_test_pending();
+}
+
+function test_digest_md5sess() {
+  var chan = makeChan(URL + "/auth/digest_md5sess", URL);
+
+  chan.notificationCallbacks = new Requestor(0, 2);
+  listener.expectedCode = 200; // OK
+  chan.asyncOpen(listener);
+
+  do_test_pending();
+}
+
+function test_digest_sha256() {
+  var chan = makeChan(URL + "/auth/digest_sha256", URL);
+
+  chan.notificationCallbacks = new Requestor(0, 2);
+  listener.expectedCode = 200; // OK
+  chan.asyncOpen(listener);
+
+  do_test_pending();
+}
+
+function test_digest_sha256sess() {
+  var chan = makeChan(URL + "/auth/digest_sha256sess", URL);
+
+  chan.notificationCallbacks = new Requestor(0, 2);
+  listener.expectedCode = 200; // OK
+  chan.asyncOpen(listener);
+
+  do_test_pending();
+}
+
+function test_digest_sha256_md5() {
+  var chan = makeChan(URL + "/auth/digest_sha256_md5", URL);
+
+  chan.notificationCallbacks = new Requestor(0, 2);
+  listener.expectedCode = 200; // OK
+  chan.asyncOpen(listener);
+
+  do_test_pending();
+}
+
+function test_digest_md5_sha256() {
+  var chan = makeChan(URL + "/auth/digest_md5_sha256", URL);
+
+  chan.notificationCallbacks = new Requestor(0, 2);
+  listener.expectedCode = 200; // OK
+  chan.asyncOpen(listener);
+
+  do_test_pending();
+}
+
+function test_digest_md5_sha256_oneline() {
+  var chan = makeChan(URL + "/auth/digest_md5_sha256_oneline", URL);
 
   chan.notificationCallbacks = new Requestor(0, 2);
   listener.expectedCode = 200; // OK
@@ -508,7 +583,7 @@ function test_digest() {
 }
 
 function test_digest_bogus_user() {
-  var chan = makeChan(URL + "/auth/digest", URL);
+  var chan = makeChan(URL + "/auth/digest_md5", URL);
   chan.notificationCallbacks = new Requestor(FLAG_BOGUS_USER, 2);
   listener.expectedCode = 401; // unauthorized
   chan.asyncOpen(listener);
@@ -622,10 +697,19 @@ function toHexString(charCode) {
   return ("0" + charCode.toString(16)).slice(-2);
 }
 
-function H(str) {
+function HMD5(str) {
   var data = bytesFromString(str);
   var ch = Cc["@mozilla.org/security/hash;1"].createInstance(Ci.nsICryptoHash);
   ch.init(Ci.nsICryptoHash.MD5);
+  ch.update(data, data.length);
+  var hash = ch.finish(false);
+  return Array.from(hash, (c, i) => toHexString(hash.charCodeAt(i))).join("");
+}
+
+function HSHA256(str) {
+  var data = bytesFromString(str);
+  var ch = Cc["@mozilla.org/security/hash;1"].createInstance(Ci.nsICryptoHash);
+  ch.init(Ci.nsICryptoHash.SHA256);
   ch.update(data, data.length);
   var hash = ch.finish(false);
   return Array.from(hash, (c, i) => toHexString(hash.charCodeAt(i))).join("");
@@ -635,55 +719,203 @@ function H(str) {
 // Digest handler
 //
 // /auth/digest
-function authDigest(metadata, response) {
+function authDigestMD5_helper(metadata, response, test_name) {
   var nonce = "6f93719059cf8d568005727f3250e798";
   var opaque = "1234opaque1234";
-  var cnonceRE = /cnonce="(\w+)"/;
-  var responseRE = /response="(\w+)"/;
-  var usernameRE = /username="(\w+)"/;
-  var authenticate =
-    'Digest realm="secret", domain="/",  qop=auth,' +
-    'algorithm=MD5, nonce="' +
-    nonce +
-    '" opaque="' +
-    opaque +
-    '"';
   var body;
+  var send_401 = 0;
   // check creds if we have them
   if (metadata.hasHeader("Authorization")) {
+    var cnonceRE = /cnonce="(\w+)"/;
+    var responseRE = /response="(\w+)"/;
+    var usernameRE = /username="(\w+)"/;
+    var algorithmRE = /algorithm=([\w-]+)/;
     var auth = metadata.getHeader("Authorization");
     var cnonce = auth.match(cnonceRE)[1];
     var clientDigest = auth.match(responseRE)[1];
     var username = auth.match(usernameRE)[1];
+    var algorithm = auth.match(algorithmRE)[1];
     var nc = "00000001";
 
     if (username != "guest") {
       response.setStatusLine(metadata.httpVersion, 400, "bad request");
       body = "should never get here";
+    } else if (
+      algorithm != null &&
+      algorithm != "MD5" &&
+      algorithm != "MD5-sess"
+    ) {
+      response.setStatusLine(metadata.httpVersion, 400, "bad request");
+      body = "Algorithm must be same as provided in WWW-Authenticate header";
     } else {
       // see RFC2617 for the description of this calculation
       var A1 = "guest:secret:guest";
-      var A2 = "GET:/auth/digest";
-      var noncebits = [nonce, nc, cnonce, "auth", H(A2)].join(":");
-      var digest = H([H(A1), noncebits].join(":"));
+      if (algorithm == "MD5-sess") {
+        A1 = [HMD5(A1), nonce, cnonce].join(":");
+      }
+      var A2 = "GET:/auth/" + test_name;
+      var noncebits = [nonce, nc, cnonce, "auth", HMD5(A2)].join(":");
+      var digest = HMD5([HMD5(A1), noncebits].join(":"));
 
       if (clientDigest == digest) {
         response.setStatusLine(metadata.httpVersion, 200, "OK, authorized");
         body = "success";
       } else {
-        response.setStatusLine(metadata.httpVersion, 401, "Unauthorized");
-        response.setHeader("WWW-Authenticate", authenticate, false);
+        send_401 = 1;
         body = "auth failed";
       }
     }
   } else {
     // no header, send one
-    response.setStatusLine(metadata.httpVersion, 401, "Unauthorized");
-    response.setHeader("WWW-Authenticate", authenticate, false);
+    send_401 = 1;
     body = "failed, no header";
   }
 
+  if (send_401) {
+    var authenticate_md5 =
+      'Digest realm="secret", domain="/",  qop=auth,' +
+      'algorithm=MD5, nonce="' +
+      nonce +
+      '" opaque="' +
+      opaque +
+      '"';
+    var authenticate_md5sess =
+      'Digest realm="secret", domain="/",  qop=auth,' +
+      'algorithm=MD5, nonce="' +
+      nonce +
+      '" opaque="' +
+      opaque +
+      '"';
+    if (test_name == "digest_md5") {
+      response.setHeader("WWW-Authenticate", authenticate_md5, false);
+    } else if (test_name == "digest_md5sess") {
+      response.setHeader("WWW-Authenticate", authenticate_md5sess, false);
+    }
+    response.setStatusLine(metadata.httpVersion, 401, "Unauthorized");
+  }
+
   response.bodyOutputStream.write(body, body.length);
+}
+
+function authDigestMD5(metadata, response) {
+  authDigestMD5_helper(metadata, response, "digest_md5");
+}
+
+function authDigestMD5sess(metadata, response) {
+  authDigestMD5_helper(metadata, response, "digest_md5sess");
+}
+
+function authDigestSHA256_helper(metadata, response, test_name) {
+  var nonce = "6f93719059cf8d568005727f3250e798";
+  var opaque = "1234opaque1234";
+  var body;
+  var send_401 = 0;
+  // check creds if we have them
+  if (metadata.hasHeader("Authorization")) {
+    var cnonceRE = /cnonce="(\w+)"/;
+    var responseRE = /response="(\w+)"/;
+    var usernameRE = /username="(\w+)"/;
+    var algorithmRE = /algorithm=([\w-]+)/;
+    var auth = metadata.getHeader("Authorization");
+    var cnonce = auth.match(cnonceRE)[1];
+    var clientDigest = auth.match(responseRE)[1];
+    var username = auth.match(usernameRE)[1];
+    var algorithm = auth.match(algorithmRE)[1];
+    var nc = "00000001";
+
+    if (username != "guest") {
+      response.setStatusLine(metadata.httpVersion, 400, "bad request");
+      body = "should never get here";
+    } else if (algorithm != "SHA-256" && algorithm != "SHA-256-sess") {
+      response.setStatusLine(metadata.httpVersion, 400, "bad request");
+      body = "Algorithm must be same as provided in WWW-Authenticate header";
+    } else {
+      // see RFC7616 for the description of this calculation
+      var A1 = "guest:secret:guest";
+      if (algorithm == "SHA-256-sess") {
+        A1 = [HSHA256(A1), nonce, cnonce].join(":");
+      }
+      var A2 = "GET:/auth/" + test_name;
+      var noncebits = [nonce, nc, cnonce, "auth", HSHA256(A2)].join(":");
+      var digest = HSHA256([HSHA256(A1), noncebits].join(":"));
+
+      if (clientDigest == digest) {
+        response.setStatusLine(metadata.httpVersion, 200, "OK, authorized");
+        body = "success";
+      } else {
+        send_401 = 1;
+        body = "auth failed";
+      }
+    }
+  } else {
+    // no header, send one
+    send_401 = 1;
+    body = "failed, no header";
+  }
+
+  if (send_401) {
+    var authenticate_sha256 =
+      'Digest realm="secret", domain="/", qop=auth, ' +
+      'algorithm=SHA-256, nonce="' +
+      nonce +
+      '", opaque="' +
+      opaque +
+      '"';
+    var authenticate_sha256sess =
+      'Digest realm="secret", domain="/", qop=auth, ' +
+      'algorithm=SHA-256-sess, nonce="' +
+      nonce +
+      '", opaque="' +
+      opaque +
+      '"';
+    var authenticate_md5 =
+      'Digest realm="secret", domain="/", qop=auth, ' +
+      'algorithm=MD5, nonce="' +
+      nonce +
+      '", opaque="' +
+      opaque +
+      '"';
+    if (test_name == "digest_sha256") {
+      response.setHeader("WWW-Authenticate", authenticate_sha256, false);
+    } else if (test_name == "digest_sha256sess") {
+      response.setHeader("WWW-Authenticate", authenticate_sha256sess, false);
+    } else if (test_name == "digest_md5_sha256") {
+      response.setHeader("WWW-Authenticate", authenticate_md5, false);
+      response.setHeader("WWW-Authenticate", authenticate_sha256, true);
+    } else if (test_name == "digest_md5_sha256_oneline") {
+      response.setHeader(
+        "WWW-Authenticate",
+        authenticate_md5 + " " + authenticate_sha256,
+        false
+      );
+    } else if (test_name == "digest_sha256_md5") {
+      response.setHeader("WWW-Authenticate", authenticate_sha256, false);
+      response.setHeader("WWW-Authenticate", authenticate_md5, true);
+    }
+    response.setStatusLine(metadata.httpVersion, 401, "Unauthorized");
+  }
+
+  response.bodyOutputStream.write(body, body.length);
+}
+
+function authDigestSHA256(metadata, response) {
+  authDigestSHA256_helper(metadata, response, "digest_sha256");
+}
+
+function authDigestSHA256sess(metadata, response) {
+  authDigestSHA256_helper(metadata, response, "digest_sha256sess");
+}
+
+function authDigestSHA256_MD5(metadata, response) {
+  authDigestSHA256_helper(metadata, response, "digest_sha256_md5");
+}
+
+function authDigestMD5_SHA256(metadata, response) {
+  authDigestSHA256_helper(metadata, response, "digest_md5_sha256");
+}
+
+function authDigestMD5_SHA256_oneline(metadata, response) {
+  authDigestSHA256_helper(metadata, response, "digest_md5_sha256_oneline");
 }
 
 function authShortDigest(metadata, response) {
