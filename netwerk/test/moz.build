@@ -4,7 +4,11 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-TEST_DIRS += ["httpserver", "gtest", "http3server"]
+TEST_DIRS += ["httpserver", "gtest"]
+
+# http3server depends on winapi 0.2.8, which doesn't work with AArch64
+if not (CONFIG["OS_ARCH"] == "WINNT" and CONFIG["CPU_ARCH"] == "aarch64"):
+    TEST_DIRS += ["http3server"]
 
 BROWSER_CHROME_MANIFESTS += ["browser/browser.ini"]
 MOCHITEST_MANIFESTS += ["mochitests/mochitest.ini"]
