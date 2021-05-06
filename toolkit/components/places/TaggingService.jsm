@@ -22,7 +22,7 @@ function TaggingService() {
   // Observe bookmarks changes.
   PlacesUtils.bookmarks.addObserver(this);
   PlacesUtils.observers.addListener(
-    ["bookmark-added", "bookmark-removed"],
+    ["bookmark-added", "bookmark-removed", "bookmark-moved"],
     this.handlePlacesEvents
   );
 
@@ -327,7 +327,7 @@ TaggingService.prototype = {
     if (aTopic == TOPIC_SHUTDOWN) {
       PlacesUtils.bookmarks.removeObserver(this);
       PlacesUtils.observers.removeListener(
-        ["bookmark-added", "bookmark-removed"],
+        ["bookmark-added", "bookmark-removed", "bookmark-moved"],
         this.handlePlacesEvents
       );
       Services.obs.removeObserver(this, TOPIC_SHUTDOWN);
@@ -417,6 +417,15 @@ TaggingService.prototype = {
               this._removeTagIfEmpty(event.parentId, event.source);
             }
           });
+          break;
+        case "bookmark-moved":
+          if (
+            this._tagFolders[event.id] &&
+            PlacesUtils.bookmarks.tagsGuid === event.oldParentGuid &&
+            PlacesUtils.bookmarks.tagsGuid !== event.parentGuid
+          ) {
+            delete this._tagFolders[event.id];
+          }
           break;
       }
     }

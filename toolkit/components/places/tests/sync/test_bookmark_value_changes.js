@@ -218,7 +218,7 @@ add_task(async function test_value_combo() {
       },
     },
     {
-      name: "onItemMoved",
+      name: "bookmark-moved",
       params: {
         itemId: localItemIds.get("bzBmk_______"),
         oldIndex: 0,
@@ -229,6 +229,7 @@ add_task(async function test_value_combo() {
         newParentGuid: PlacesUtils.bookmarks.toolbarGuid,
         source: PlacesUtils.bookmarks.SOURCES.SYNC,
         urlHref: "https://bugzilla.mozilla.org/",
+        isTagging: false,
       },
     },
     {
@@ -1364,12 +1365,12 @@ add_task(async function test_keywords_complex() {
       },
     },
     {
-      // These `onItemMoved` notifications aren't necessary: we only moved
+      // These `bookmark-moved` notifications aren't necessary: we only moved
       // (B C D E) to accomodate (A A1 B1), and Places doesn't usually fire move
       // notifications for repositioned siblings. However, detecting and filtering
       // these out complicates `noteObserverChanges`, so, for simplicity, we
       // record and fire the extra notifications.
-      name: "onItemMoved",
+      name: "bookmark-moved",
       params: {
         itemId: localItemIds.get("bookmarkBBBB"),
         oldIndex: 0,
@@ -1380,10 +1381,11 @@ add_task(async function test_keywords_complex() {
         newParentGuid: PlacesUtils.bookmarks.menuGuid,
         source: PlacesUtils.bookmarks.SOURCES.SYNC,
         urlHref: "http://example.com/b",
+        isTagging: false,
       },
     },
     {
-      name: "onItemMoved",
+      name: "bookmark-moved",
       params: {
         itemId: localItemIds.get("bookmarkCCCC"),
         oldIndex: 1,
@@ -1394,10 +1396,11 @@ add_task(async function test_keywords_complex() {
         newParentGuid: PlacesUtils.bookmarks.menuGuid,
         source: PlacesUtils.bookmarks.SOURCES.SYNC,
         urlHref: "http://example.com/c-remote",
+        isTagging: false,
       },
     },
     {
-      name: "onItemMoved",
+      name: "bookmark-moved",
       params: {
         itemId: localItemIds.get("bookmarkDDDD"),
         oldIndex: 2,
@@ -1408,10 +1411,11 @@ add_task(async function test_keywords_complex() {
         newParentGuid: PlacesUtils.bookmarks.menuGuid,
         source: PlacesUtils.bookmarks.SOURCES.SYNC,
         urlHref: "http://example.com/d",
+        isTagging: false,
       },
     },
     {
-      name: "onItemMoved",
+      name: "bookmark-moved",
       params: {
         itemId: localItemIds.get("bookmarkEEEE"),
         oldIndex: 3,
@@ -1422,6 +1426,7 @@ add_task(async function test_keywords_complex() {
         newParentGuid: PlacesUtils.bookmarks.menuGuid,
         source: PlacesUtils.bookmarks.SOURCES.SYNC,
         urlHref: "http://example.com/e",
+        isTagging: false,
       },
     },
     {
