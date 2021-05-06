@@ -24,6 +24,9 @@ worker.log = function(...args) {
   dump("Worker: " + args.join(" ") + "\n");
 };
 self.addEventListener("message", msg => worker.handleMessage(msg));
+self.addEventListener("unhandledrejection", function(error) {
+  throw error.reason;
+});
 
 var Agent = {
   bounce(...args) {
