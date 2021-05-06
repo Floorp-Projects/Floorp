@@ -45,6 +45,8 @@ impl HpKey {
     ///
     /// # Errors
     /// Errors if HKDF fails or if the label is too long to fit in a `c_uint`.
+    /// # Panics
+    /// When `cipher` is not known to this code.
     pub fn extract(version: Version, cipher: Cipher, prk: &SymKey, label: &str) -> Res<Self> {
         let l = label.as_bytes();
         let mut secret: *mut PK11SymKey = null_mut();
@@ -65,7 +67,7 @@ impl HpKey {
                 **prk,
                 null(),
                 0,
-                l.as_ptr() as *const c_char,
+                l.as_ptr().cast(),
                 c_uint::try_from(l.len())?,
                 mech,
                 key_size,
@@ -93,6 +95,8 @@ impl HpKey {
     /// # Errors
     /// An error is returned if the NSS functions fail; a sample of the
     /// wrong size is the obvious cause.
+    /// # Panics
+    /// When the mechanism for our key is not supported.
     pub fn mask(&self, sample: &[u8]) -> Res<Vec<u8>> {
         let k: *mut PK11SymKey = *self.0;
         let mech = unsafe { PK11_GetMechanism(k) };
@@ -123,7 +127,7 @@ impl HpKey {
                 output_slice.as_mut_ptr(),
                 &mut output_len,
                 c_uint::try_from(output.len())?,
-                inbuf.as_ptr() as *const u8,
+                inbuf.as_ptr().cast(),
                 c_uint::try_from(inbuf.len())?,
             )
         })?;

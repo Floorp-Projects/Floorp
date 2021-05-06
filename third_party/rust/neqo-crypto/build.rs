@@ -322,12 +322,11 @@ fn setup_standalone() -> Vec<String> {
 fn setup_for_gecko() -> Vec<String> {
     let mut flags: Vec<String> = Vec::new();
 
-    let libs = match env::var("CARGO_CFG_TARGET_OS")
-        .as_ref()
-        .map(std::string::String::as_str)
-    {
-        Ok("android") | Ok("macos") => vec!["nss3"],
-        _ => vec!["nssutil3", "nss3", "ssl3", "plds4", "plc4", "nspr4"],
+    let fold_libs = env::var("MOZ_FOLD_LIBS").unwrap_or("".to_string()) == "1";
+    let libs = if fold_libs {
+        vec!["nss3"]
+    } else {
+        vec!["nssutil3", "nss3", "ssl3", "plds4", "plc4", "nspr4"]
     };
 
     for lib in &libs {
@@ -335,28 +334,35 @@ fn setup_for_gecko() -> Vec<String> {
     }
 
     if let Some(path) = env::var_os("MOZ_TOPOBJDIR").map(PathBuf::from) {
-        println!(
-            "cargo:rustc-link-search=native={}",
-            path.join("dist").join("bin").to_str().unwrap()
-        );
-        let nsslib_path = path.join("security").join("nss").join("lib");
-        println!(
-            "cargo:rustc-link-search=native={}",
-            nsslib_path.join("nss").join("nss_nss3").to_str().unwrap()
-        );
-        println!(
-            "cargo:rustc-link-search=native={}",
-            nsslib_path.join("ssl").join("ssl_ssl3").to_str().unwrap()
-        );
-        println!(
-            "cargo:rustc-link-search=native={}",
-            path.join("config")
-                .join("external")
-                .join("nspr")
-                .join("pr")
-                .to_str()
-                .unwrap()
-        );
+        if fold_libs {
+            println!(
+                "cargo:rustc-link-search=native={}",
+                path.join("security").to_str().unwrap()
+            );
+        } else {
+            println!(
+                "cargo:rustc-link-search=native={}",
+                path.join("dist").join("bin").to_str().unwrap()
+            );
+            let nsslib_path = path.join("security").join("nss").join("lib");
+            println!(
+                "cargo:rustc-link-search=native={}",
+                nsslib_path.join("nss").join("nss_nss3").to_str().unwrap()
+            );
+            println!(
+                "cargo:rustc-link-search=native={}",
+                nsslib_path.join("ssl").join("ssl_ssl3").to_str().unwrap()
+            );
+            println!(
+                "cargo:rustc-link-search=native={}",
+                path.join("config")
+                    .join("external")
+                    .join("nspr")
+                    .join("pr")
+                    .to_str()
+                    .unwrap()
+            );
+        }
 
         let flags_path = path.join("netwerk/socket/neqo/extra-bindgen-flags");
 

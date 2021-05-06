@@ -7,7 +7,7 @@
 use crate::prefix::{
     DECODER_HEADER_ACK, DECODER_INSERT_COUNT_INCREMENT, DECODER_STREAM_CANCELLATION,
 };
-use crate::qpack_send_buf::QPData;
+use crate::qpack_send_buf::QpackData;
 use crate::reader::{IntReader, ReadByte};
 use crate::Res;
 use neqo_common::{qdebug, qtrace};
@@ -34,7 +34,7 @@ impl DecoderInstruction {
         }
     }
 
-    pub(crate) fn marshal(&self, enc: &mut QPData) {
+    pub(crate) fn marshal(&self, enc: &mut QpackData) {
         match self {
             Self::InsertCountIncrement { increment } => {
                 enc.encode_prefixed_encoded_int(DECODER_INSERT_COUNT_INCREMENT, *increment);
@@ -123,12 +123,12 @@ impl DecoderInstructionReader {
 #[cfg(test)]
 mod test {
 
-    use super::{DecoderInstruction, DecoderInstructionReader, QPData};
+    use super::{DecoderInstruction, DecoderInstructionReader, QpackData};
     use crate::reader::test_receiver::TestReceiver;
     use crate::Error;
 
     fn test_encoding_decoding(instruction: DecoderInstruction) {
-        let mut buf = QPData::default();
+        let mut buf = QpackData::default();
         instruction.marshal(&mut buf);
         let mut test_receiver: TestReceiver = TestReceiver::default();
         test_receiver.write(&buf);
@@ -152,7 +152,7 @@ mod test {
     }
 
     fn test_encoding_decoding_slow_reader(instruction: DecoderInstruction) {
-        let mut buf = QPData::default();
+        let mut buf = QpackData::default();
         instruction.marshal(&mut buf);
         let mut test_receiver: TestReceiver = TestReceiver::default();
         let mut decoder = DecoderInstructionReader::new();

@@ -8,7 +8,7 @@ use crate::prefix::{
     ENCODER_CAPACITY, ENCODER_DUPLICATE, ENCODER_INSERT_WITH_NAME_LITERAL,
     ENCODER_INSERT_WITH_NAME_REF_DYNAMIC, ENCODER_INSERT_WITH_NAME_REF_STATIC, NO_PREFIX,
 };
-use crate::qpack_send_buf::QPData;
+use crate::qpack_send_buf::QpackData;
 use crate::reader::{IntReader, LiteralReader, ReadByte, Reader};
 use crate::Res;
 use neqo_common::{qdebug, qtrace};
@@ -29,7 +29,7 @@ pub enum EncoderInstruction<'a> {
 }
 
 impl<'a> EncoderInstruction<'a> {
-    pub(crate) fn marshal(&self, enc: &mut QPData, use_huffman: bool) {
+    pub(crate) fn marshal(&self, enc: &mut QpackData, use_huffman: bool) {
         match self {
             Self::Capacity { value } => {
                 enc.encode_prefixed_encoded_int(ENCODER_CAPACITY, *value);
@@ -264,12 +264,12 @@ impl EncoderInstructionReader {
 #[cfg(test)]
 mod test {
 
-    use super::{EncoderInstruction, EncoderInstructionReader, QPData};
+    use super::{EncoderInstruction, EncoderInstructionReader, QpackData};
     use crate::reader::test_receiver::TestReceiver;
     use crate::Error;
 
     fn test_encoding_decoding(instruction: &EncoderInstruction, use_huffman: bool) {
-        let mut buf = QPData::default();
+        let mut buf = QpackData::default();
         instruction.marshal(&mut buf, use_huffman);
         let mut test_receiver: TestReceiver = TestReceiver::default();
         test_receiver.write(&buf);
@@ -363,7 +363,7 @@ mod test {
     }
 
     fn test_encoding_decoding_slow_reader(instruction: &EncoderInstruction, use_huffman: bool) {
-        let mut buf = QPData::default();
+        let mut buf = QpackData::default();
         instruction.marshal(&mut buf, use_huffman);
         let mut test_receiver: TestReceiver = TestReceiver::default();
         let mut decoder = EncoderInstructionReader::new();

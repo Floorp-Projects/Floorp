@@ -14,7 +14,7 @@ use std::time::{Duration, Instant};
 use neqo_common::{qlog::NeqoQlog, qtrace};
 
 use crate::qlog::{self, QlogMetric};
-use crate::tracking::PNSpace;
+use crate::tracking::PacketNumberSpace;
 
 /// The smallest time that the system timer (via `sleep()`, `nanosleep()`,
 /// `select()`, or similar) can reliably deliver; see `neqo_common::hrtime`.
@@ -116,10 +116,10 @@ impl RttEstimate {
         self.smoothed_rtt
     }
 
-    pub fn pto(&self, pn_space: PNSpace) -> Duration {
+    pub fn pto(&self, pn_space: PacketNumberSpace) -> Duration {
         self.estimate()
             + max(4 * self.rttvar, GRANULARITY)
-            + if pn_space == PNSpace::ApplicationData {
+            + if pn_space == PacketNumberSpace::ApplicationData {
                 self.max_ack_delay
             } else {
                 Duration::from_millis(0)

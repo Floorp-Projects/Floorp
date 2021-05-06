@@ -15,7 +15,8 @@ use std::ptr::{null_mut, NonNull};
 use std::time::{Duration, Instant};
 
 // This is an opaque struct in NSS.
-#[allow(clippy::empty_enum)]
+#[allow(clippy::empty_enum, clippy::upper_case_acronyms)]
+#[allow(unknown_lints, renamed_and_removed_lints, clippy::unknown_clippy_lints)] // Until we require rust 1.51.
 pub enum SSLAntiReplayContext {}
 
 experimental_api!(SSL_CreateAntiReplayContext(

@@ -807,7 +807,7 @@ impl SendStream {
         if let SendStreamState::Ready { fc, .. } | SendStreamState::Send { fc, .. } =
             &mut self.state
         {
-            fc.lost(limit);
+            fc.frame_lost(limit);
         } else {
             qtrace!([self], "Ignoring lost STREAM_DATA_BLOCKED({})", limit);
         }

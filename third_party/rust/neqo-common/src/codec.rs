@@ -35,7 +35,9 @@ impl<'a> Decoder<'a> {
         self.offset
     }
 
-    /// Skip n bytes.  Panics if `n` is too large.
+    /// Skip n bytes.
+    /// # Panics
+    /// If the remaining quantity is less than `n`.
     pub fn skip(&mut self, n: usize) {
         assert!(self.remaining() >= n);
         self.offset += n;
@@ -89,7 +91,9 @@ impl<'a> Decoder<'a> {
         Some(res)
     }
 
-    /// Decodes an unsigned integer of length 1..8.
+    /// Decodes an unsigned integer of length 1..=8.
+    /// # Panics
+    /// This panics if `n` is not in the range `1..=8`.
     pub fn decode_uint(&mut self, n: usize) -> Option<u64> {
         assert!(n > 0 && n <= 8);
         if self.remaining() < n {
@@ -105,6 +109,8 @@ impl<'a> Decoder<'a> {
     }
 
     /// Decodes a QUIC varint.
+    #[allow(unknown_lints, renamed_and_removed_lints, clippy::unknown_clippy_lints)] // Until we require rust 1.51.
+    #[allow(clippy::missing_panics_doc)] // See https://github.com/rust-lang/rust-clippy/issues/6699
     pub fn decode_varint(&mut self) -> Option<u64> {
         let b1 = match self.decode_byte() {
             Some(b) => b,
@@ -201,6 +207,8 @@ pub struct Encoder {
 
 impl Encoder {
     /// Static helper function for previewing the results of encoding without doing it.
+    /// # Panics
+    /// When `v` is too large.
     #[must_use]
     pub fn varint_len(v: u64) -> usize {
         match () {
@@ -213,6 +221,8 @@ impl Encoder {
     }
 
     /// Static helper to determine how long a varint-prefixed array encodes to.
+    /// # Panics
+    /// When `len` doesn't fit in a `u64`.
     #[must_use]
     pub fn vvec_len(len: usize) -> usize {
         Self::varint_len(u64::try_from(len).unwrap()) + len
@@ -247,6 +257,8 @@ impl Encoder {
     }
 
     /// Don't use this except in testing.
+    /// # Panics
+    /// When `s` contains non-hex values or an odd number of values.
     #[must_use]
     pub fn from_hex(s: impl AsRef<str>) -> Self {
         let s = s.as_ref();
@@ -277,6 +289,8 @@ impl Encoder {
     }
 
     /// Encode an integer of any size up to u64.
+    /// # Panics
+    /// When `n` is outside the range `1..=8`.
     #[allow(clippy::cast_possible_truncation)]
     pub fn encode_uint<T: Into<u64>>(&mut self, n: usize, v: T) -> &mut Self {
         let v = v.into();
@@ -288,6 +302,8 @@ impl Encoder {
     }
 
     /// Encode a QUIC varint.
+    /// # Panics
+    /// When `v >= 1<<62`.
     pub fn encode_varint<T: Into<u64>>(&mut self, v: T) -> &mut Self {
         let v = v.into();
         match () {
@@ -301,12 +317,16 @@ impl Encoder {
     }
 
     /// Encode a vector in TLS style.
+    /// # Panics
+    /// When `v` is longer than 2^64.
     pub fn encode_vec(&mut self, n: usize, v: &[u8]) -> &mut Self {
         self.encode_uint(n, u64::try_from(v.len()).unwrap())
             .encode(v)
     }
 
     /// Encode a vector in TLS style using a closure for the contents.
+    /// # Panics
+    /// When `f()` returns a length larger than `2^8n`.
     #[allow(clippy::cast_possible_truncation)]
     pub fn encode_vec_with<F: FnOnce(&mut Self)>(&mut self, n: usize, f: F) -> &mut Self {
         let start = self.buf.len();
@@ -321,12 +341,16 @@ impl Encoder {
     }
 
     /// Encode a vector with a varint length.
+    /// # Panics
+    /// When `v` is longer than 2^64.
     pub fn encode_vvec(&mut self, v: &[u8]) -> &mut Self {
         self.encode_varint(u64::try_from(v.len()).unwrap())
             .encode(v)
     }
 
     /// Encode a vector with a varint length using a closure.
+    /// # Panics
+    /// When `f()` writes more than 2^62 bytes.
     #[allow(clippy::cast_possible_truncation)]
     pub fn encode_vvec_with<F: FnOnce(&mut Self)>(&mut self, f: F) -> &mut Self {
         let start = self.buf.len();
@@ -406,10 +430,10 @@ impl From<&[u8]> for Encoder {
     }
 }
 
-impl Into<Vec<u8>> for Encoder {
+impl From<Encoder> for Vec<u8> {
     #[must_use]
-    fn into(self) -> Vec<u8> {
-        self.buf
+    fn from(buf: Encoder) -> Self {
+        buf.buf
     }
 }
 

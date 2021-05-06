@@ -28,7 +28,7 @@ const PR_FAILURE: PrStatus = prio::PRStatus::PR_FAILURE;
 
 /// Convert a pinned, boxed object into a void pointer.
 pub fn as_c_void<T: Unpin>(pin: &mut Pin<Box<T>>) -> *mut c_void {
-    Pin::into_inner(pin.as_mut()) as *mut T as *mut c_void
+    (Pin::into_inner(pin.as_mut()) as *mut T).cast()
 }
 
 // This holds the length of the slice, not the slice itself.
@@ -103,8 +103,7 @@ impl RecordList {
         len: c_uint,
         arg: *mut c_void,
     ) -> ssl::SECStatus {
-        let a = arg as *mut Self;
-        let records = a.as_mut().unwrap();
+        let records = arg.cast::<Self>().as_mut().unwrap();
 
         let slice = std::slice::from_raw_parts(data, len as usize);
         records.append(epoch, ContentType::try_from(ct).unwrap(), slice);
@@ -226,8 +225,7 @@ impl AgentIo {
 
     unsafe fn borrow(fd: &mut PrFd) -> &mut Self {
         #[allow(clippy::cast_ptr_alignment)]
-        let io = (**fd).secret as *mut Self;
-        io.as_mut().unwrap()
+        (**fd).secret.cast::<Self>().as_mut().unwrap()
     }
 
     pub fn wrap<'a: 'c, 'b: 'c, 'c>(&'a mut self, input: &'b [u8]) -> AgentIoInputContext<'c> {
@@ -265,7 +263,7 @@ unsafe extern "C" fn agent_close(fd: PrFd) -> PrStatus {
 unsafe extern "C" fn agent_read(mut fd: PrFd, buf: *mut c_void, amount: prio::PRInt32) -> PrStatus {
     let io = AgentIo::borrow(&mut fd);
     if let Ok(a) = usize::try_from(amount) {
-        match io.input.read_input(buf as *mut u8, a) {
+        match io.input.read_input(buf.cast(), a) {
             Ok(_) => PR_SUCCESS,
             Err(_) => PR_FAILURE,
         }
@@ -286,7 +284,7 @@ unsafe extern "C" fn agent_recv(
         return PR_FAILURE;
     }
     if let Ok(a) = usize::try_from(amount) {
-        match io.input.read_input(buf as *mut u8, a) {
+        match io.input.read_input(buf.cast(), a) {
             Ok(v) => prio::PRInt32::try_from(v).unwrap_or(PR_FAILURE),
             Err(_) => PR_FAILURE,
         }
@@ -302,7 +300,7 @@ unsafe extern "C" fn agent_write(
 ) -> PrStatus {
     let io = AgentIo::borrow(&mut fd);
     if let Ok(a) = usize::try_from(amount) {
-        io.save_output(buf as *const u8, a);
+        io.save_output(buf.cast(), a);
         amount
     } else {
         PR_FAILURE
@@ -322,7 +320,7 @@ unsafe extern "C" fn agent_send(
         return PR_FAILURE;
     }
     if let Ok(a) = usize::try_from(amount) {
-        io.save_output(buf as *const u8, a);
+        io.save_output(buf.cast(), a);
         amount
     } else {
         PR_FAILURE

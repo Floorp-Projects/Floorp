@@ -4,12 +4,16 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-#![allow(dead_code, non_upper_case_globals, non_snake_case)]
 #![allow(
+    dead_code,
+    non_upper_case_globals,
+    non_snake_case,
     clippy::cognitive_complexity,
     clippy::empty_enum,
-    clippy::too_many_lines
+    clippy::too_many_lines,
+    clippy::upper_case_acronyms
 )]
+#![allow(unknown_lints, renamed_and_removed_lints, clippy::unknown_clippy_lints)] // Until we require rust 1.51.
 
 include!(concat!(env!("OUT_DIR"), "/nspr_io.rs"));
 

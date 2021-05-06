@@ -1,6 +1,6 @@
 [package]
 name = "neqo-transport"
-version = "0.4.23"
+version = "0.4.24"
 authors = ["EKR <ekr@rtfm.com>", "Andy Grover <agrover@mozilla.com>"]
 edition = "2018"
 license = "MIT/Apache-2.0"
@@ -20,3 +20,4 @@ test-fixture = { path = "../test-fixture" }
 [features]
 default = ["deny-warnings"]
 deny-warnings = []
+fuzzing = ["neqo-crypto/fuzzing"]

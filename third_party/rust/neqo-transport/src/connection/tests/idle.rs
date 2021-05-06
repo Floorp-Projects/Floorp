@@ -12,7 +12,7 @@ use super::{
 use crate::packet::PacketBuilder;
 use crate::stats::FrameStats;
 use crate::tparams::{self, TransportParameter};
-use crate::tracking::PNSpace;
+use crate::tracking::PacketNumberSpace;
 use crate::StreamType;
 
 use neqo_common::Encoder;
@@ -256,7 +256,7 @@ fn idle_caching() {
         .crypto
         .streams
         .write_frame(
-            PNSpace::Initial,
+            PacketNumberSpace::Initial,
             &mut builder,
             &mut tokens,
             &mut FrameStats::default(),
@@ -268,7 +268,7 @@ fn idle_caching() {
         .crypto
         .streams
         .write_frame(
-            PNSpace::Initial,
+            PacketNumberSpace::Initial,
             &mut builder,
             &mut tokens,
             &mut FrameStats::default(),
