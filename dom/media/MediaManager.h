@@ -339,6 +339,9 @@ class MediaManager final : public nsIMediaManagerService,
                             RefPtr<GetUserMediaTask> aTask);
   // Finds the task corresponding to aCallID and removes it from tracking.
   RefPtr<GetUserMediaTask> TakeGetUserMediaTask(const nsAString& aCallID);
+  // Intended for use with "media.navigator.permission.disabled" to bypass the
+  // permission prompt and use the first appropriate device.
+  void NotifyAllowed(const nsString& aCallID, const MediaDeviceSet& aDevices);
 
   MOZ_DEFINE_MALLOC_SIZE_OF(MallocSizeOf);
 
