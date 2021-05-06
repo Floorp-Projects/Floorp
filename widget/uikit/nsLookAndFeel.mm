@@ -404,7 +404,7 @@ void nsLookAndFeel::EnsureInit() {
   if (color == 0x000000) {
     mColorTextSelectForeground = NS_RGB(0xff, 0xff, 0xff);
   } else {
-    mColorTextSelectForeground = NS_DONT_CHANGE_COLOR;
+    mColorTextSelectForeground = NS_SAME_AS_FOREGROUND_COLOR;
   }
 
   mColorDarkText = GetColorFromUIColor([UIColor darkTextColor]);
