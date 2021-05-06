@@ -192,10 +192,10 @@ static nsresult gssInit() {
 
   LOG(("Attempting to load gss functions\n"));
 
-  for (auto& gssFunc : gssFuncs) {
-    gssFunc.func = PR_FindFunctionSymbol(lib, gssFunc.str);
-    if (!gssFunc.func) {
-      LOG(("Fail to load %s function from gssapi library\n", gssFunc.str));
+  for (size_t i = 0; i < ArrayLength(gssFuncs); ++i) {
+    gssFuncs[i].func = PR_FindFunctionSymbol(lib, gssFuncs[i].str);
+    if (!gssFuncs[i].func) {
+      LOG(("Fail to load %s function from gssapi library\n", gssFuncs[i].str));
       PR_UnloadLibrary(lib);
       return NS_ERROR_FAILURE;
     }
@@ -324,15 +324,14 @@ void nsAuthGSSAPI::Shutdown() {
 NS_IMPL_ISUPPORTS(nsAuthGSSAPI, nsIAuthModule)
 
 NS_IMETHODIMP
-nsAuthGSSAPI::Init(const nsACString& serviceName, uint32_t serviceFlags,
-                   const nsAString& domain, const nsAString& username,
-                   const nsAString& password) {
+nsAuthGSSAPI::Init(const char* serviceName, uint32_t serviceFlags,
+                   const char16_t* domain, const char16_t* username,
+                   const char16_t* password) {
   // we don't expect to be passed any user credentials
-  NS_ASSERTION(domain.IsEmpty() && username.IsEmpty() && password.IsEmpty(),
-               "unexpected credentials");
+  NS_ASSERTION(!domain && !username && !password, "unexpected credentials");
 
   // it's critial that the caller supply a service name to be used
-  NS_ENSURE_TRUE(!serviceName.IsEmpty(), NS_ERROR_INVALID_ARG);
+  NS_ENSURE_TRUE(serviceName && *serviceName, NS_ERROR_INVALID_ARG);
 
   LOG(("entering nsAuthGSSAPI::Init()\n"));
 
@@ -447,19 +446,17 @@ nsAuthGSSAPI::GetNextToken(const void* inToken, uint32_t inTokenLen,
   }
 
   *outTokenLen = output_token.length;
-  if (output_token.length != 0) {
+  if (output_token.length != 0)
     *outToken = moz_xmemdup(output_token.value, output_token.length);
-  } else {
+  else
     *outToken = nullptr;
-  }
 
   gss_release_buffer_ptr(&minor_status, &output_token);
 
-  if (major_status == GSS_S_COMPLETE) {
+  if (major_status == GSS_S_COMPLETE)
     rv = NS_SUCCESS_AUTH_FINISHED;
-  } else {
+  else
     rv = NS_OK;
-  }
 
 end:
   gss_release_name_ptr(&minor_status, &server);
@@ -491,11 +488,10 @@ nsAuthGSSAPI::Unwrap(const void* inToken, uint32_t inTokenLen, void** outToken,
 
   *outTokenLen = output_token.length;
 
-  if (output_token.length) {
+  if (output_token.length)
     *outToken = moz_xmemdup(output_token.value, output_token.length);
-  } else {
+  else
     *outToken = nullptr;
-  }
 
   gss_release_buffer_ptr(&minor_status, &output_token);
 

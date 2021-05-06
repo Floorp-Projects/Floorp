@@ -20,18 +20,12 @@ namespace net {
 #define ALGO_SPECIFIED 0x01
 #define ALGO_MD5 0x02
 #define ALGO_MD5_SESS 0x04
-#define ALGO_SHA256 0x08
-#define ALGO_SHA256_SESS 0x10
 #define QOP_AUTH 0x01
 #define QOP_AUTH_INT 0x02
 
+#define DIGEST_LENGTH 16
+#define EXPANDED_DIGEST_LENGTH 32
 #define NONCE_COUNT_LENGTH 8
-#ifndef MD5_DIGEST_LENGTH
-#  define MD5_DIGEST_LENGTH 16
-#endif
-#ifndef SHA256_DIGEST_LENGTH
-#  define SHA256_DIGEST_LENGTH 32
-#endif
 
 //-----------------------------------------------------------------------------
 // nsHttpDigestAuth
@@ -46,21 +40,17 @@ class nsHttpDigestAuth final : public nsIHttpAuthenticator {
 
   static already_AddRefed<nsIHttpAuthenticator> GetOrCreate();
 
-  [[nodiscard]] static nsresult ParseChallenge(
-      const nsACString& aChallenge, nsACString& realm, nsACString& domain,
-      nsACString& nonce, nsACString& opaque, bool* stale, uint16_t* algorithm,
-      uint16_t* qop);
-
  protected:
   ~nsHttpDigestAuth() = default;
 
-  [[nodiscard]] nsresult ExpandToHex(const char* digest, char* result,
-                                     uint16_t algorithm);
+  [[nodiscard]] nsresult ExpandToHex(const char* digest, char* result);
 
-  [[nodiscard]] nsresult CalculateResponse(
-      const char* ha1_digest, const char* ha2_digest, uint16_t algorithm,
-      const nsCString& nonce, uint16_t qop, const char* nonce_count,
-      const nsCString& cnonce, char* result);
+  [[nodiscard]] nsresult CalculateResponse(const char* ha1_digest,
+                                           const char* ha2_digest,
+                                           const nsCString& nonce, uint16_t qop,
+                                           const char* nonce_count,
+                                           const nsCString& cnonce,
+                                           char* result);
 
   [[nodiscard]] nsresult CalculateHA1(const nsCString& username,
                                       const nsCString& password,
@@ -71,12 +61,17 @@ class nsHttpDigestAuth final : public nsIHttpAuthenticator {
 
   [[nodiscard]] nsresult CalculateHA2(const nsCString& http_method,
                                       const nsCString& http_uri_path,
-                                      uint16_t algorithm, uint16_t qop,
-                                      const char* bodyDigest, char* result);
+                                      uint16_t qop, const char* body_digest,
+                                      char* result);
+
+  [[nodiscard]] nsresult ParseChallenge(const char* challenge,
+                                        nsACString& realm, nsACString& domain,
+                                        nsACString& nonce, nsACString& opaque,
+                                        bool* stale, uint16_t* algorithm,
+                                        uint16_t* qop);
 
   // result is in mHashBuf
-  [[nodiscard]] nsresult DigestHash(const char* buf, uint32_t len,
-                                    uint16_t algorithm);
+  [[nodiscard]] nsresult MD5Hash(const char* buf, uint32_t len);
 
   [[nodiscard]] nsresult GetMethodAndPath(nsIHttpAuthenticableChannel*, bool,
                                           nsCString&, nsCString&);
@@ -87,7 +82,7 @@ class nsHttpDigestAuth final : public nsIHttpAuthenticator {
 
  protected:
   nsCOMPtr<nsICryptoHash> mVerifier;
-  char mHashBuf[SHA256_DIGEST_LENGTH]{};
+  char mHashBuf[DIGEST_LENGTH];
 
   static StaticRefPtr<nsHttpDigestAuth> gSingleton;
 };
