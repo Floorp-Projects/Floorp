@@ -89,12 +89,12 @@ class nsNavHistoryResult final
 
   void AddHistoryObserver(nsNavHistoryQueryResultNode* aNode);
   void AddBookmarkFolderObserver(nsNavHistoryFolderResultNode* aNode,
-                                 int64_t aFolder);
+                                 const nsACString& aFolderGUID);
   void AddAllBookmarksObserver(nsNavHistoryQueryResultNode* aNode);
   void AddMobilePrefsObserver(nsNavHistoryQueryResultNode* aNode);
   void RemoveHistoryObserver(nsNavHistoryQueryResultNode* aNode);
   void RemoveBookmarkFolderObserver(nsNavHistoryFolderResultNode* aNode,
-                                    int64_t aFolder);
+                                    const nsACString& aFolderGUID);
   void RemoveAllBookmarksObserver(nsNavHistoryQueryResultNode* aNode);
   void RemoveMobilePrefsObserver(nsNavHistoryQueryResultNode* aNode);
   void StopObserving();
@@ -137,9 +137,9 @@ class nsNavHistoryResult final
   QueryObserverList mMobilePrefObservers;
 
   typedef nsTArray<RefPtr<nsNavHistoryFolderResultNode> > FolderObserverList;
-  nsTHashMap<nsTrimInt64HashKey, FolderObserverList*> mBookmarkFolderObservers;
-  FolderObserverList* BookmarkFolderObserversForId(int64_t aFolderId,
-                                                   bool aCreate);
+  nsTHashMap<nsCStringHashKey, FolderObserverList*> mBookmarkFolderObservers;
+  FolderObserverList* BookmarkFolderObserversForGUID(const nsACString& aGUID,
+                                                     bool aCreate);
 
   typedef nsTArray<RefPtr<nsNavHistoryContainerResultNode> >
       ContainerObserverList;

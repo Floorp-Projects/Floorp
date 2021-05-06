@@ -152,9 +152,7 @@ add_task(async function test_value_structure_conflict() {
       name: "onItemMoved",
       params: {
         itemId: localItemIds.get("bookmarkEEEE"),
-        oldParentId: localItemIds.get("folderDDDDDD"),
         oldIndex: 1,
-        newParentId: localItemIds.get("folderDDDDDD"),
         newIndex: 0,
         type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
         guid: "bookmarkEEEE",
@@ -168,9 +166,7 @@ add_task(async function test_value_structure_conflict() {
       name: "onItemMoved",
       params: {
         itemId: localItemIds.get("bookmarkBBBB"),
-        oldParentId: localItemIds.get("folderDDDDDD"),
         oldIndex: 0,
-        newParentId: localItemIds.get("folderDDDDDD"),
         newIndex: 1,
         type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
         guid: "bookmarkBBBB",
@@ -405,9 +401,7 @@ add_task(async function test_move() {
       name: "onItemMoved",
       params: {
         itemId: localItemIds.get("devFolder___"),
-        oldParentId: PlacesUtils.bookmarksMenuFolderId,
         oldIndex: 0,
-        newParentId: PlacesUtils.toolbarFolderId,
         newIndex: 0,
         type: PlacesUtils.bookmarks.TYPE_FOLDER,
         guid: "devFolder___",
@@ -421,11 +415,7 @@ add_task(async function test_move() {
       name: "onItemMoved",
       params: {
         itemId: localItemIds.get("mozFolder___"),
-        oldParentId: localItemIds.get("devFolder___"),
         oldIndex: 1,
-        newParentId: await PlacesUtils.promiseItemId(
-          PlacesUtils.bookmarks.unfiledGuid
-        ),
         newIndex: 0,
         type: PlacesUtils.bookmarks.TYPE_FOLDER,
         guid: "mozFolder___",
@@ -439,9 +429,7 @@ add_task(async function test_move() {
       name: "onItemMoved",
       params: {
         itemId: localItemIds.get("bzBmk_______"),
-        oldParentId: PlacesUtils.bookmarksMenuFolderId,
         oldIndex: 1,
-        newParentId: localItemIds.get("devFolder___"),
         newIndex: 0,
         type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
         guid: "bzBmk_______",
@@ -455,9 +443,7 @@ add_task(async function test_move() {
       name: "onItemMoved",
       params: {
         itemId: localItemIds.get("wmBmk_______"),
-        oldParentId: localItemIds.get("devFolder___"),
         oldIndex: 2,
-        newParentId: localItemIds.get("devFolder___"),
         newIndex: 1,
         type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
         guid: "wmBmk_______",
@@ -471,9 +457,7 @@ add_task(async function test_move() {
       name: "onItemMoved",
       params: {
         itemId: localItemIds.get("nightlyBmk__"),
-        oldParentId: localItemIds.get("mozFolder___"),
         oldIndex: 1,
-        newParentId: localItemIds.get("mozFolder___"),
         newIndex: 0,
         type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
         guid: "nightlyBmk__",
@@ -487,9 +471,7 @@ add_task(async function test_move() {
       name: "onItemMoved",
       params: {
         itemId: localItemIds.get("mdnBmk______"),
-        oldParentId: localItemIds.get("devFolder___"),
         oldIndex: 0,
-        newParentId: localItemIds.get("mozFolder___"),
         newIndex: 1,
         type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
         guid: "mdnBmk______",
@@ -503,9 +485,7 @@ add_task(async function test_move() {
       name: "onItemMoved",
       params: {
         itemId: localItemIds.get("fxBmk_______"),
-        oldParentId: localItemIds.get("mozFolder___"),
         oldIndex: 0,
-        newParentId: localItemIds.get("mozFolder___"),
         newIndex: 2,
         type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
         guid: "fxBmk_______",
@@ -737,9 +717,7 @@ add_task(async function test_move_into_parent_sibling() {
       name: "onItemMoved",
       params: {
         itemId: localItemIds.get("bookmarkBBBB"),
-        oldParentId: localItemIds.get("folderAAAAAA"),
         oldIndex: 0,
-        newParentId: localItemIds.get("folderCCCCCC"),
         newIndex: 0,
         type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
         guid: "bookmarkBBBB",
@@ -956,9 +934,7 @@ add_task(async function test_complex_move_with_additions() {
       name: "onItemMoved",
       params: {
         itemId: localItemIds.get("bookmarkCCCC"),
-        oldParentId: localItemIds.get("folderAAAAAA"),
         oldIndex: 1,
-        newParentId: PlacesUtils.bookmarksMenuFolderId,
         newIndex: 0,
         type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
         guid: "bookmarkCCCC",
@@ -972,9 +948,7 @@ add_task(async function test_complex_move_with_additions() {
       name: "onItemMoved",
       params: {
         itemId: localItemIds.get("folderAAAAAA"),
-        oldParentId: PlacesUtils.bookmarksMenuFolderId,
         oldIndex: 0,
-        newParentId: PlacesUtils.toolbarFolderId,
         newIndex: 0,
         type: PlacesUtils.bookmarks.TYPE_FOLDER,
         guid: "folderAAAAAA",

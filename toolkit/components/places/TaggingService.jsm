@@ -437,16 +437,17 @@ TaggingService.prototype = {
 
   onItemMoved: function TS_onItemMoved(
     aItemId,
-    aOldParent,
     aOldIndex,
-    aNewParent,
     aNewIndex,
-    aItemType
+    aItemType,
+    aGuid,
+    aOldParentGuid,
+    aNewParentGuid
   ) {
     if (
       this._tagFolders[aItemId] &&
-      PlacesUtils.tagsFolderId == aOldParent &&
-      PlacesUtils.tagsFolderId != aNewParent
+      PlacesUtils.bookmarks.tagsGuid == aOldParentGuid &&
+      PlacesUtils.bookmarks.tagsGuid != aNewParentGuid
     ) {
       delete this._tagFolders[aItemId];
     }
