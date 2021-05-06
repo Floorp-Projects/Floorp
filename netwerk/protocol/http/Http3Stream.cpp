@@ -202,6 +202,10 @@ nsresult Http3Stream::OnReadSegment(const char* buf, uint32_t count,
         break;
       }
 
+      mTotalSent += *countRead;
+      mTransaction->OnTransportStatus(nullptr, NS_NET_STATUS_SENDING_TO,
+                                      mTotalSent);
+
       mRequestBodyLenRemaining -= *countRead;
       if (!mRequestBodyLenRemaining) {
         mTransaction->OnTransportStatus(nullptr, NS_NET_STATUS_WAITING_FOR, 0);
