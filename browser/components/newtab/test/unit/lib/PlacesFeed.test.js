@@ -1092,6 +1092,7 @@ describe("PlacesFeed", () => {
     });
     describe("Other empty methods (to keep code coverage happy)", () => {
       it("should have a various empty functions for xpconnect happiness", () => {
+        observer.onItemMoved();
         observer.onItemChanged();
       });
     });

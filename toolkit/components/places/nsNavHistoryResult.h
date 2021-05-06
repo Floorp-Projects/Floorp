@@ -89,12 +89,12 @@ class nsNavHistoryResult final
 
   void AddHistoryObserver(nsNavHistoryQueryResultNode* aNode);
   void AddBookmarkFolderObserver(nsNavHistoryFolderResultNode* aNode,
-                                 const nsACString& aFolderGUID);
+                                 int64_t aFolder);
   void AddAllBookmarksObserver(nsNavHistoryQueryResultNode* aNode);
   void AddMobilePrefsObserver(nsNavHistoryQueryResultNode* aNode);
   void RemoveHistoryObserver(nsNavHistoryQueryResultNode* aNode);
   void RemoveBookmarkFolderObserver(nsNavHistoryFolderResultNode* aNode,
-                                    const nsACString& aFolderGUID);
+                                    int64_t aFolder);
   void RemoveAllBookmarksObserver(nsNavHistoryQueryResultNode* aNode);
   void RemoveMobilePrefsObserver(nsNavHistoryQueryResultNode* aNode);
   void StopObserving();
@@ -137,9 +137,9 @@ class nsNavHistoryResult final
   QueryObserverList mMobilePrefObservers;
 
   typedef nsTArray<RefPtr<nsNavHistoryFolderResultNode> > FolderObserverList;
-  nsTHashMap<nsCStringHashKey, FolderObserverList*> mBookmarkFolderObservers;
-  FolderObserverList* BookmarkFolderObserversForGUID(const nsACString& aGUID,
-                                                     bool aCreate);
+  nsTHashMap<nsTrimInt64HashKey, FolderObserverList*> mBookmarkFolderObservers;
+  FolderObserverList* BookmarkFolderObserversForId(int64_t aFolderId,
+                                                   bool aCreate);
 
   typedef nsTArray<RefPtr<nsNavHistoryContainerResultNode> >
       ContainerObserverList;
@@ -688,11 +688,6 @@ class nsNavHistoryQueryResultNode final
                          uint16_t aItemType, nsIURI* aURI,
                          const nsACString& aGUID, const nsACString& aParentGUID,
                          uint16_t aSource);
-  nsresult OnItemMoved(int64_t aFolder, int32_t aOldIndex, int32_t aNewIndex,
-                       uint16_t aItemType, const nsACString& aGUID,
-                       const nsACString& aOldParentGUID,
-                       const nsACString& aNewParentGUID, uint16_t aSource,
-                       const nsACString& aURI);
 
   // The internal version has an output aAdded parameter, it is incremented by
   // query nodes when the visited uri belongs to them. If no such query exists,
@@ -791,11 +786,6 @@ class nsNavHistoryFolderResultNode final
                          uint16_t aItemType, nsIURI* aURI,
                          const nsACString& aGUID, const nsACString& aParentGUID,
                          uint16_t aSource);
-  nsresult OnItemMoved(int64_t aFolder, int32_t aOldIndex, int32_t aNewIndex,
-                       uint16_t aItemType, const nsACString& aGUID,
-                       const nsACString& aOldParentGUID,
-                       const nsACString& aNewParentGUID, uint16_t aSource,
-                       const nsACString& aURI);
   nsresult OnItemVisited(nsIURI* aURI, int64_t aVisitId, PRTime aTime);
   virtual void OnRemoving() override;
 

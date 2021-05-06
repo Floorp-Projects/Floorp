@@ -18,9 +18,18 @@ async function openPopupAndSelectFolder(guid, newBookmark = false) {
   let notificationPromise;
   if (!newBookmark) {
     notificationPromise = PlacesTestUtils.waitForNotification(
-      "bookmark-moved",
-      events => events.some(e => guid === e.parentGuid),
-      "places"
+      "onItemMoved",
+      (
+        id,
+        oldParentId,
+        oldIndex,
+        newParentId,
+        newIndex,
+        type,
+        itemGuid,
+        oldParentGuid,
+        newParentGuid
+      ) => guid == newParentGuid
     );
   }
 
