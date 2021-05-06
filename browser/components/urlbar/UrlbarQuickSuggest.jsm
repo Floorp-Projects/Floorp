@@ -34,8 +34,6 @@ const RS_COLLECTION = "quicksuggest";
 const NONSPONSORED_IAB_CATEGORIES = new Set(["5 - Education"]);
 // Version in which the mr1 dialog is shown.
 const MR1_VERSION = 89;
-// Number of restarts after mr1 dialog before showing onboarding dialog.
-const ONBOARDING_RESTARTS_NEEDED = 2;
 
 const SEEN_DIALOG_PREF = "quicksuggest.showedOnboardingDialog";
 const VERSION_PREF = "browser.startup.upgradeDialog.version";
@@ -62,7 +60,7 @@ class Suggestions {
       return this._initPromise;
     }
     this._initPromise = Promise.resolve();
-    if (NimbusFeatures.urlbar.getValue().quickSuggestEnabled) {
+    if (UrlbarPrefs.get("quickSuggestEnabled")) {
       this._initPromise = new Promise(resolve => (this._initResolve = resolve));
       Services.tm.idleDispatchToMainThread(this.onEnabledUpdate.bind(this));
     } else {
@@ -178,36 +176,49 @@ class Suggestions {
    * Called when an update that may change whether this feature is enabled
    * or not has occured.
    *
-   * Quicksuggest is first enabled through Nimbus, once the experiment has
-   * been enabled we will show the onboarding dialog to the user
-   * (on the 2nd restart). Once the user has seen the onboarding dialog
-   * then we initialise the quicksuggest data. No results will be shown
-   * until the last step is complete.
+   * QuickSuggest is controlled by two perferences that can be remotely
+   * configured through Nimbus.
    *
+   *   * `quickSuggestEnabled`: this enables the QuickSuggest feature, but the
+   *     suggestion might not be immediately available if we want the user to
+   *     see the onboarding dialog, which is controlled by
+   *     `quickSuggestShouldShowOnboardingDialog`
+   *
+   *   * `quickSuggestShouldShowOnboardingDialog`: this determines whether the
+   *     QuickSuggest onboarding dialog should be shown before we show any
+   *     suggestions to the user once QuickSuggest is enabled
    */
   onEnabledUpdate() {
     if (
-      NimbusFeatures.urlbar.getValue().quickSuggestEnabled &&
-      UrlbarPrefs.get(SEEN_DIALOG_PREF)
+      UrlbarPrefs.get("quickSuggestEnabled") &&
+      (UrlbarPrefs.get(SEEN_DIALOG_PREF) ||
+        !UrlbarPrefs.get("quickSuggestShouldShowOnboardingDialog"))
     ) {
       this._setupRemoteSettings();
     }
   }
 
   /*
-   * The quicksuggest onboarding dialog needs to be shown before users are
-   * shown any quicksuggest results. Given the release may overlap with
-   * mr1 which has an onboarding dialog we will wait for 2 restarts after
-   * the mr1 dialog will have been shown before showing the
-   * quicksuggest dialog.
+   * An onboarding dialog can be shown to the users who are enrolled into
+   * the QuickSuggest experiments or rollouts. This behavior is controlled
+   * by the pref `browser.urlbar.quicksuggest.shouldShowOnboardingDialog`
+   * which can be remotely configured by Nimbus.
+   *
+   * Given that the release may overlap with MR1 which has an onboarding dialog
+   * We will wait for a few restarts after the MR1 dialog will have been shown
+   * before showing the QuickSuggest dialog. This could be remotely configured
+   * by Nimbus through `quickSuggestShowOnboardingDialogAfterNRestarts`, the
+   * default is 2.
    */
   async maybeShowOnboardingDialog() {
     // If quicksuggest is not enabled, the user has already seen the
-    // quicksuggest onboarding dialog, or the user is not yet on a version
-    // where they could have seen the mr1 onboarding dialog then we won't
-    // show the quicksuggest onboarding.
+    // quicksuggest onboarding dialog, the onboarding dialog is configured to
+    // be skipped, or the user is not yet on a version where they could have
+    // seen the mr1 onboarding dialog then we won't show the quicksuggest
+    // onboarding.
     if (
-      !NimbusFeatures.urlbar.getValue().quickSuggestEnabled ||
+      !UrlbarPrefs.get("quickSuggestEnabled") ||
+      !UrlbarPrefs.get("quickSuggestShouldShowOnboardingDialog") ||
       UrlbarPrefs.get(SEEN_DIALOG_PREF) ||
       Services.prefs.getIntPref(VERSION_PREF, 0) < MR1_VERSION
     ) {
@@ -217,7 +228,10 @@ class Suggestions {
     // Wait a number of restarts after the user will have seen the mr1 onboarding dialog
     // before showing the quicksuggest one.
     let restartsSeen = UrlbarPrefs.get(RESTARTS_PREF);
-    if (restartsSeen < ONBOARDING_RESTARTS_NEEDED) {
+    if (
+      restartsSeen <
+      UrlbarPrefs.get("quickSuggestShowOnboardingDialogAfterNRestarts")
+    ) {
       UrlbarPrefs.set(RESTARTS_PREF, restartsSeen + 1);
       return;
     }
