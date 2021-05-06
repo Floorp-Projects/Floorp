@@ -547,6 +547,10 @@ class nsWindow final : public nsBaseWidget {
   LayoutDeviceIntRegion mDraggableRegion;
   // It's PictureInPicture window.
   bool mIsPIPWindow;
+  // It's undecorated popup utility window, without resizers/titlebar,
+  // movable by mouse. Used on Wayland as a workaround for popups without
+  // parent (for instance WebRTC sharing indicator).
+  bool mIsWaylandPanelWindow;
   bool mAlwaysOnTop;
 
   // The cursor cache
