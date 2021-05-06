@@ -49,7 +49,6 @@
 #include "nsUnicharUtils.h"
 #include "mozilla/net/HttpAuthUtils.h"
 #include "mozilla/ClearOnShutdown.h"
-#include "mozilla/net/DNS.h"
 
 using mozilla::Base64Decode;
 
@@ -565,16 +564,13 @@ bool nsHttpNegotiateAuth::TestBoolPref(const char* pref) {
 
 bool nsHttpNegotiateAuth::TestNonFqdn(nsIURI* uri) {
   nsAutoCString host;
+  PRNetAddr addr;
 
-  if (!TestBoolPref(kNegotiateAuthAllowNonFqdn)) {
-    return false;
-  }
+  if (!TestBoolPref(kNegotiateAuthAllowNonFqdn)) return false;
 
-  if (NS_FAILED(uri->GetAsciiHost(host))) {
-    return false;
-  }
+  if (NS_FAILED(uri->GetAsciiHost(host))) return false;
 
   // return true if host does not contain a dot and is not an ip address
   return !host.IsEmpty() && !host.Contains('.') &&
-         !mozilla::net::HostIsIPLiteral(host);
+         PR_StringToNetAddr(host.BeginReading(), &addr) != PR_SUCCESS;
 }

@@ -1820,9 +1820,9 @@ nsresult nsHttpChannel::ProcessSecurityHeaders() {
 
   // If the channel is not a hostname, but rather an IP, do not process STS
   // or PKP headers
-  if (HostIsIPLiteral(asciiHost)) {
+  PRNetAddr hostAddr;
+  if (PR_SUCCESS == PR_StringToNetAddr(asciiHost.get(), &hostAddr))
     return NS_OK;
-  }
 
   // mSecurityInfo may not always be present, and if it's not then it is okay
   // to just disregard any security headers since we know nothing about the

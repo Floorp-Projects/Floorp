@@ -980,7 +980,9 @@ bool ProxyAutoConfig::MyIPAddress(const JS::CallArgs& aArgs) {
     }
   } else {
     // we can still do the fancy multi homing thing if the host is a literal
-    if (HostIsIPLiteral(mRunningHost) &&
+    PRNetAddr tempAddr;
+    memset(&tempAddr, 0, sizeof(PRNetAddr));
+    if ((PR_StringToNetAddr(mRunningHost.get(), &tempAddr) == PR_SUCCESS) &&
         (!MyIPAddressTryHost(mRunningHost, kTimeout, aArgs, &rvalAssigned) ||
          rvalAssigned)) {
       return rvalAssigned;
