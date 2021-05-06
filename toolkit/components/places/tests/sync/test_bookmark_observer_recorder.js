@@ -476,7 +476,7 @@ add_task(async function test_apply_then_revert() {
       },
     },
     {
-      name: "onItemMoved",
+      name: "bookmark-moved",
       params: {
         itemId: localItemIds.get("bookmarkEEEE"),
         oldIndex: 2,
@@ -487,10 +487,11 @@ add_task(async function test_apply_then_revert() {
         newParentGuid: PlacesUtils.bookmarks.menuGuid,
         source: PlacesUtils.bookmarks.SOURCES.SYNC,
         urlHref: "http://example.com/e",
+        isTagging: false,
       },
     },
     {
-      name: "onItemMoved",
+      name: "bookmark-moved",
       params: {
         itemId: localItemIds.get("folderAAAAAA"),
         oldIndex: 0,
@@ -500,11 +501,12 @@ add_task(async function test_apply_then_revert() {
         oldParentGuid: PlacesUtils.bookmarks.menuGuid,
         newParentGuid: PlacesUtils.bookmarks.toolbarGuid,
         source: PlacesUtils.bookmarks.SOURCES.SYNC,
-        urlHref: null,
+        urlHref: "",
+        isTagging: false,
       },
     },
     {
-      name: "onItemMoved",
+      name: "bookmark-moved",
       params: {
         itemId: localItemIds.get("bookmarkCCCC"),
         oldIndex: 1,
@@ -515,10 +517,11 @@ add_task(async function test_apply_then_revert() {
         newParentGuid: "folderAAAAAA",
         source: PlacesUtils.bookmarks.SOURCES.SYNC,
         urlHref: "http://example.com/c",
+        isTagging: false,
       },
     },
     {
-      name: "onItemMoved",
+      name: "bookmark-moved",
       params: {
         itemId: localItemIds.get("bookmarkBBBB"),
         oldIndex: 0,
@@ -529,6 +532,7 @@ add_task(async function test_apply_then_revert() {
         newParentGuid: "folderAAAAAA",
         source: PlacesUtils.bookmarks.SOURCES.SYNC,
         urlHref: "http://example.com/b-remote",
+        isTagging: false,
       },
     },
     {
