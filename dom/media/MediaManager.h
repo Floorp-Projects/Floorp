@@ -44,6 +44,7 @@ namespace mozilla {
 class TaskQueue;
 class MediaTimer;
 namespace dom {
+struct AudioOutputOptions;
 struct MediaStreamConstraints;
 struct MediaTrackConstraints;
 struct MediaTrackConstraintSet;
@@ -238,6 +239,9 @@ class MediaManager final : public nsIMediaManagerService,
   nsresult EnumerateDevices(nsPIDOMWindowInner* aWindow,
                             dom::Promise& aPromise);
 
+  RefPtr<DevicePromise> SelectAudioOutput(
+      nsPIDOMWindowInner* aWindow, const dom::AudioOutputOptions& aOptions,
+      dom::CallerType aCallerType);
   // Get the sink that corresponds to the given device id.
   // It is resposible to check if an application is
   // authorized to play audio through the requested device.
