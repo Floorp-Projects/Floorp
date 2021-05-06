@@ -1,0 +1,415 @@
+/* Any copyright is dedicated to the Public Domain.
+ * http://creativecommons.org/publicdomain/zero/1.0/ */
+
+// Tests Firefox Suggest group labels in the view.
+
+"use strict";
+
+const SUGGESTIONS_FIRST_PREF = "browser.urlbar.showSearchSuggestionsFirst";
+const SUGGESTIONS_PREF = "browser.urlbar.suggest.searches";
+
+const TEST_ENGINE_BASENAME = "searchSuggestionEngine.xml";
+const MAX_RESULTS = UrlbarPrefs.get("maxRichResults");
+
+const TOP_SITES = [
+  "http://example-1.com/",
+  "http://example-2.com/",
+  "http://example-3.com/",
+];
+
+const FIREFOX_SUGGEST_LABEL = "Firefox Suggest";
+
+add_task(async function init() {
+  Assert.ok(
+    UrlbarPrefs.get("showSearchSuggestionsFirst"),
+    "Precondition: Search suggestions shown first by default"
+  );
+
+  // Add some history.
+  await PlacesUtils.history.clear();
+  await PlacesUtils.bookmarks.eraseEverything();
+  await UrlbarTestUtils.formHistory.clear();
+  await addHistory();
+
+  // Make sure we have some top sites.
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.urlbar.suggest.topsites", true],
+      ["browser.newtabpage.activity-stream.default.sites", TOP_SITES.join(",")],
+    ],
+  });
+  // Waiting for all top sites to be added intermittently times out, so just
+  // wait for any to be added. We're not testing top sites here; we only need
+  // the view to open in top-sites mode.
+  await updateTopSites(sites => sites && sites.length);
+
+  // Add a mock engine so we don't hit the network.
+  await SearchTestUtils.installSearchExtension();
+  let oldDefaultEngine = await Services.search.getDefault();
+  await Services.search.setDefault(Services.search.getEngineByName("Example"));
+
+  registerCleanupFunction(async () => {
+    await PlacesUtils.history.clear();
+    Services.search.setDefault(oldDefaultEngine);
+  });
+});
+
+// The Firefox Suggest label should not appear when the view shows top sites.
+add_task(async function topSites() {
+  await withExperiment(async () => {
+    await UrlbarTestUtils.promiseAutocompleteResultPopup({
+      window,
+      value: "",
+    });
+    await checkLabels(-1, {});
+    await UrlbarTestUtils.promisePopupClose(window);
+  });
+});
+
+// The Firefox Suggest label should appear when the search string is non-empty
+// and there are only general results.
+add_task(async function general() {
+  await withExperiment(async () => {
+    await UrlbarTestUtils.promiseAutocompleteResultPopup({
+      window,
+      value: "test",
+    });
+    await checkLabels(MAX_RESULTS, {
+      1: FIREFOX_SUGGEST_LABEL,
+    });
+    await UrlbarTestUtils.promisePopupClose(window);
+  });
+});
+
+// The Firefox Suggest label should appear when the search string is non-empty
+// and there are suggestions followed by general results.
+add_task(async function suggestionsBeforeGeneral() {
+  await withExperiment(async () => {
+    await withSuggestions(async () => {
+      await UrlbarTestUtils.promiseAutocompleteResultPopup({
+        window,
+        value: "test",
+      });
+      await checkLabels(MAX_RESULTS, {
+        3: FIREFOX_SUGGEST_LABEL,
+      });
+      await UrlbarTestUtils.promisePopupClose(window);
+    });
+  });
+});
+
+// Both the Firefox Suggest and Suggestions labels should appear when the search
+// string is non-empty, general results are shown before suggestions, and there
+// are general and suggestion results.
+add_task(async function generalBeforeSuggestions() {
+  await withExperiment(async () => {
+    await withSuggestions(async engine => {
+      Assert.ok(engine.name, "Engine name is non-empty");
+      await SpecialPowers.pushPrefEnv({
+        set: [[SUGGESTIONS_FIRST_PREF, false]],
+      });
+      await UrlbarTestUtils.promiseAutocompleteResultPopup({
+        window,
+        value: "test",
+      });
+      await checkLabels(MAX_RESULTS, {
+        1: FIREFOX_SUGGEST_LABEL,
+        [MAX_RESULTS - 2]: `${engine.name} suggestions`,
+      });
+      await UrlbarTestUtils.promisePopupClose(window);
+    });
+  });
+});
+
+// Neither the Firefox Suggest nor Suggestions label should appear when the
+// search string is non-empty, general results are shown before suggestions, and
+// there are only suggestion results.
+add_task(async function generalBeforeSuggestions_suggestionsOnly() {
+  await PlacesUtils.history.clear();
+
+  await withExperiment(async () => {
+    await withSuggestions(async engine => {
+      await SpecialPowers.pushPrefEnv({
+        set: [[SUGGESTIONS_FIRST_PREF, false]],
+      });
+      await UrlbarTestUtils.promiseAutocompleteResultPopup({
+        window,
+        value: "test",
+      });
+      await checkLabels(3, {});
+      await UrlbarTestUtils.promisePopupClose(window);
+    });
+  });
+
+  // Add back history so subsequent tasks run with this test's initial state.
+  await addHistory();
+});
+
+// The Firefox Suggest label should appear above a suggested-index result when
+// the result is the only result with that label.
+add_task(async function suggestedIndex_only() {
+  // Clear history, add a provider that returns a result with suggestedIndex =
+  // -1, set up an engine with suggestions, and start a query. The suggested-
+  // index result will be the only result with a label.
+  await PlacesUtils.history.clear();
+
+  let index = -1;
+  let provider = new SuggestedIndexProvider(index);
+  UrlbarProvidersManager.registerProvider(provider);
+
+  await withExperiment(async () => {
+    await withSuggestions(async engine => {
+      await UrlbarTestUtils.promiseAutocompleteResultPopup({
+        window,
+        value: "test",
+      });
+      let result = await UrlbarTestUtils.getDetailsOfResultAt(window, 3);
+      Assert.equal(
+        result.element.row.result.suggestedIndex,
+        index,
+        "Sanity check: Our suggested-index result is present"
+      );
+      await checkLabels(4, {
+        3: FIREFOX_SUGGEST_LABEL,
+      });
+      await UrlbarTestUtils.promisePopupClose(window);
+    });
+  });
+
+  UrlbarProvidersManager.unregisterProvider(provider);
+
+  // Add back history so subsequent tasks run with this test's initial state.
+  await addHistory();
+});
+
+// The Firefox Suggest label should appear above a suggested-index result when
+// the result is the first but not the only result with that label.
+add_task(async function suggestedIndex_first() {
+  let index = 1;
+  let provider = new SuggestedIndexProvider(index);
+  UrlbarProvidersManager.registerProvider(provider);
+
+  await withExperiment(async () => {
+    await UrlbarTestUtils.promiseAutocompleteResultPopup({
+      window,
+      value: "test",
+    });
+    let result = await UrlbarTestUtils.getDetailsOfResultAt(window, index);
+    Assert.equal(
+      result.element.row.result.suggestedIndex,
+      index,
+      "Sanity check: Our suggested-index result is present"
+    );
+    await checkLabels(MAX_RESULTS, {
+      [index]: FIREFOX_SUGGEST_LABEL,
+    });
+    await UrlbarTestUtils.promisePopupClose(window);
+  });
+
+  UrlbarProvidersManager.unregisterProvider(provider);
+});
+
+// The Firefox Suggest label should not appear above a suggested-index result
+// when the result is not the first with that label.
+add_task(async function suggestedIndex_notFirst() {
+  let index = -1;
+  let provider = new SuggestedIndexProvider(index);
+  UrlbarProvidersManager.registerProvider(provider);
+
+  await withExperiment(async () => {
+    await UrlbarTestUtils.promiseAutocompleteResultPopup({
+      window,
+      value: "test",
+    });
+    let result = await UrlbarTestUtils.getDetailsOfResultAt(
+      window,
+      MAX_RESULTS + index
+    );
+    Assert.equal(
+      result.element.row.result.suggestedIndex,
+      index,
+      "Sanity check: Our suggested-index result is present"
+    );
+    await checkLabels(MAX_RESULTS, {
+      1: FIREFOX_SUGGEST_LABEL,
+    });
+    await UrlbarTestUtils.promisePopupClose(window);
+  });
+
+  UrlbarProvidersManager.unregisterProvider(provider);
+});
+
+// Labels that appear multiple times but not consecutively should be shown.
+add_task(async function repeatLabels() {
+  let engineName = Services.search.defaultEngine.name;
+  let results = [
+    new UrlbarResult(
+      UrlbarUtils.RESULT_TYPE.URL,
+      UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
+      { url: "http://example.com/1" }
+    ),
+    new UrlbarResult(
+      UrlbarUtils.RESULT_TYPE.SEARCH,
+      UrlbarUtils.RESULT_SOURCE.SEARCH,
+      { suggestion: "test1", engine: engineName }
+    ),
+    new UrlbarResult(
+      UrlbarUtils.RESULT_TYPE.URL,
+      UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
+      { url: "http://example.com/2" }
+    ),
+    new UrlbarResult(
+      UrlbarUtils.RESULT_TYPE.SEARCH,
+      UrlbarUtils.RESULT_SOURCE.SEARCH,
+      { suggestion: "test2", engine: engineName }
+    ),
+  ];
+
+  for (let i = 0; i < results.length; i++) {
+    results[i].suggestedIndex = i;
+  }
+
+  let provider = new UrlbarTestUtils.TestProvider({
+    results,
+    priority: Infinity,
+  });
+  UrlbarProvidersManager.registerProvider(provider);
+
+  await withExperiment(async () => {
+    await UrlbarTestUtils.promiseAutocompleteResultPopup({
+      window,
+      value: "test",
+    });
+    await checkLabels(results.length, {
+      0: FIREFOX_SUGGEST_LABEL,
+      1: `${engineName} suggestions`,
+      2: FIREFOX_SUGGEST_LABEL,
+      3: `${engineName} suggestions`,
+    });
+    await UrlbarTestUtils.promisePopupClose(window);
+  });
+
+  UrlbarProvidersManager.unregisterProvider(provider);
+});
+
+/**
+ * Provider that returns a suggested-index result.
+ */
+class SuggestedIndexProvider extends UrlbarTestUtils.TestProvider {
+  constructor(suggestedIndex) {
+    super({
+      results: [
+        Object.assign(
+          new UrlbarResult(
+            UrlbarUtils.RESULT_TYPE.URL,
+            UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
+            { url: "http://example.com/" }
+          ),
+          { suggestedIndex }
+        ),
+      ],
+    });
+  }
+}
+
+async function addHistory() {
+  for (let i = 0; i < MAX_RESULTS; i++) {
+    await PlacesTestUtils.addVisits("http://example.com/" + i);
+  }
+}
+
+/**
+ * Asserts that each result in the view does or doesn't have a label, depending
+ * on `labelsByIndex`.
+ *
+ * @param {number} resultCount
+ *   The expected number of results. Pass -1 to use the max index in
+ *   `labelsByIndex` or the actual result count if `labelsByIndex` is empty.
+ * @param {object} labelsByIndex
+ *   A mapping from indexes to expected labels.
+ */
+async function checkLabels(resultCount, labelsByIndex) {
+  if (resultCount >= 0) {
+    Assert.equal(
+      UrlbarTestUtils.getResultCount(window),
+      resultCount,
+      "Expected result count"
+    );
+  } else {
+    // This `else` branch is only necessary because waiting for all top sites to
+    // be added intermittently times out. Don't let the test fail for such a
+    // dumb reason.
+    let indexes = Object.keys(labelsByIndex);
+    if (indexes.length) {
+      resultCount = indexes.sort((a, b) => b - a)[0] + 1;
+    } else {
+      resultCount = UrlbarTestUtils.getResultCount(window);
+      Assert.greater(resultCount, 0, "Actual result count is > 0");
+    }
+  }
+  for (let i = 0; i < resultCount; i++) {
+    let result = await UrlbarTestUtils.getDetailsOfResultAt(window, i);
+    let { row } = result.element;
+    let before = getComputedStyle(row, "::before");
+    if (labelsByIndex.hasOwnProperty(i)) {
+      Assert.equal(
+        before.content,
+        "attr(label)",
+        `::before.content is correct at index ${i}`
+      );
+      Assert.equal(
+        row.getAttribute("label"),
+        labelsByIndex[i],
+        `Row has correct label at index ${i}`
+      );
+    } else {
+      Assert.equal(
+        before.content,
+        "none",
+        `::before.content is 'none' at index ${i}`
+      );
+      Assert.ok(
+        !row.hasAttribute("label"),
+        `Row does not have label attribute at index ${i}`
+      );
+    }
+  }
+}
+
+/**
+ * Calls a callback while enrolled in a mock experiment that enables bucket
+ * titles.
+ *
+ * @param {function} callback
+ */
+async function withExperiment(callback) {
+  await UrlbarTestUtils.withExperiment({
+    callback,
+    valueOverrides: { firefoxSuggestLabelsEnabled: true },
+  });
+}
+
+/**
+ * Adds a search engine that provides suggestions, calls your callback, and then
+ * remove the engine.
+ *
+ * @param {function} callback
+ *   Your callback function.
+ */
+async function withSuggestions(callback) {
+  await SpecialPowers.pushPrefEnv({
+    set: [[SUGGESTIONS_PREF, true]],
+  });
+  let engine = await SearchTestUtils.promiseNewSearchEngine(
+    getRootDirectory(gTestPath) + TEST_ENGINE_BASENAME
+  );
+  let oldDefaultEngine = await Services.search.getDefault();
+  await Services.search.setDefault(engine);
+  try {
+    await callback(engine);
+  } finally {
+    await Services.search.setDefault(oldDefaultEngine);
+    await Services.search.removeEngine(engine);
+    await SpecialPowers.popPrefEnv();
+  }
+}
