@@ -3046,15 +3046,14 @@ RefPtr<MediaManager::MgrPromise> MediaManager::EnumerateDevicesImpl(
            aAudioInputEnumType, aOutDevices](bool) {
             // Only run if window is still on our active list.
             MediaManager* mgr = MediaManager::GetIfExists();
-            if (!mgr || !mgr->IsWindowStillActive(windowId)) {
+            if (!mgr || placeholderListener->Stopped()) {
               // The listener has already been removed if the window is no
               // longer active.
-              MOZ_ASSERT(placeholderListener->Stopped());
               return MgrPromise::CreateAndReject(
                   MakeRefPtr<MediaMgrError>(MediaMgrError::Name::AbortError),
                   __func__);
             }
-            MOZ_ASSERT(!placeholderListener->Stopped());
+            MOZ_ASSERT(mgr->IsWindowStillActive(windowId));
             placeholderListener->Stop();
 
             for (auto& device : *aOutDevices) {
