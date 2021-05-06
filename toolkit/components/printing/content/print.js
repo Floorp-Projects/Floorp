@@ -1208,11 +1208,13 @@ var PrintSettingsViewProxy = {
     }
     printerInfo.settings = printerInfo.defaultSettings.clone();
     // Apply any previously persisted user values
-    let flags = printerInfo.settings.kInitSaveAll;
-    if (printerName == PrintUtils.SAVE_TO_PDF_PRINTER) {
-      // Don't apply potentially-bad printToFile setting that may be in some user's prefs.
-      flags ^= printerInfo.settings.kInitSavePrintToFile;
-    }
+    // Don't apply kInitSavePrintToFile though, that should only be true for
+    // the PDF printer.
+    printerInfo.settings.printToFile =
+      printerName == PrintUtils.SAVE_TO_PDF_PRINTER;
+    let flags =
+      printerInfo.settings.kInitSaveAll ^
+      printerInfo.settings.kInitSavePrintToFile;
     PSSVC.initPrintSettingsFromPrefs(printerInfo.settings, true, flags);
     // We set `isInitializedFromPrinter` to make sure that that's set on the
     // SAVE_TO_PDF_PRINTER settings.  The naming is poor, but that tells the
