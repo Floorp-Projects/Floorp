@@ -131,6 +131,7 @@ add_task(async function init() {
   let doExperimentCleanup = await UrlbarTestUtils.enrollExperiment({
     valueOverrides: {
       quickSuggestEnabled: true,
+      quickSuggestShouldShowOnboardingDialog: true,
     },
   });
 

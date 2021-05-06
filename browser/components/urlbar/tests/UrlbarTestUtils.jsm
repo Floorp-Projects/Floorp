@@ -42,6 +42,8 @@ XPCOMUtils.defineLazyServiceGetter(
 const DEFAULT_EXPERIMENT_FEATURE_VARIABLES = {
   quickSuggestEnabled: false,
   firefoxSuggestLabelsEnabled: false,
+  quickSuggestShouldShowOnboardingDialog: true,
+  quickSuggestShowOnboardingDialogAfterNRestarts: 2,
 };
 
 var UrlbarTestUtils = {
