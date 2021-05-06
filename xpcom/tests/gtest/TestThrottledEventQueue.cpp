@@ -20,6 +20,7 @@
 #include "nsError.h"
 #include "nsIRunnable.h"
 #include "nsISerialEventTarget.h"
+#include "nsIThread.h"
 #include "nsThreadUtils.h"
 #include "prinrval.h"
 
