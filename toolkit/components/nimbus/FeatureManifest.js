@@ -18,6 +18,11 @@ const FeatureManifest = {
         type: "boolean",
         fallbackPref: "browser.urlbar.quicksuggest.enabled",
       },
+      firefoxSuggestLabelsEnabled: {
+        type: "boolean",
+        fallbackPref:
+          "browser.urlbar.experimental.firefoxSuggestLabels.enabled",
+      },
     },
   },
   aboutwelcome: {

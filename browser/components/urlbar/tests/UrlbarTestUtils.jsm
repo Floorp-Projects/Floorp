@@ -15,6 +15,8 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   BrowserTestUtils: "resource://testing-common/BrowserTestUtils.jsm",
   BrowserUIUtils: "resource:///modules/BrowserUIUtils.jsm",
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
+  ExperimentAPI: "resource://nimbus/ExperimentAPI.jsm",
+  ExperimentFakes: "resource://testing-common/NimbusTestUtils.jsm",
   FormHistoryTestUtils: "resource://testing-common/FormHistoryTestUtils.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
   Services: "resource://gre/modules/Services.jsm",
@@ -33,6 +35,14 @@ XPCOMUtils.defineLazyServiceGetter(
   "@mozilla.org/uuid-generator;1",
   "nsIUUIDGenerator"
 );
+
+// This must be kept in sync with FeatureManifest.js. UrlbarPrefs.get() will
+// throw an "unknown pref" error if a test enrolls in a mock experiment and hits
+// a code path that accesses a Nimbus feature variable not defined here.
+const DEFAULT_EXPERIMENT_FEATURE_VARIABLES = {
+  quickSuggestEnabled: false,
+  firefoxSuggestLabelsEnabled: false,
+};
 
 var UrlbarTestUtils = {
   /**
@@ -793,6 +803,76 @@ var UrlbarTestUtils = {
         throw error;
       }
     }
+  },
+
+  /**
+   * Calls a callback while enrolled in a mock Nimbus experiment. The experiment
+   * is automatically unenrolled and cleaned up after the callback returns.
+   *
+   * @param {function} callback
+   * @param {object} options
+   *   See enrollExperiment().
+   */
+  async withExperiment({ callback, ...options }) {
+    let doExperimentCleanup = await this.enrollExperiment(options);
+    await callback();
+    await doExperimentCleanup();
+  },
+
+  /**
+   * Enrolls in a mock Nimbus experiment.
+   *
+   * @param {object} [valueOverrides]
+   *   Individual feature variables to override. By default, feature variables
+   *   take their values from DEFAULT_EXPERIMENT_FEATURE_VARIABLES. Overridden
+   *   by `recipe`.
+   * @param {object} [recipe]
+   *   If given, this recipe is used as is.
+   * @param {string} [name]
+   *   The name of the experiment.
+   * @returns {function}
+   *   The experiment cleanup function (async).
+   */
+  async enrollExperiment({
+    valueOverrides = {},
+    recipe = null,
+    name = "UrlbarTestUtils-experiment",
+  }) {
+    await ExperimentAPI.ready();
+    let {
+      enrollmentPromise,
+      doExperimentCleanup,
+    } = ExperimentFakes.enrollmentHelper(
+      ExperimentFakes.recipe(
+        name,
+        recipe || {
+          branches: [
+            {
+              slug: "treatment-branch",
+              ratio: 1,
+              feature: {
+                enabled: true,
+                featureId: "urlbar",
+                value: Object.assign(
+                  DEFAULT_EXPERIMENT_FEATURE_VARIABLES,
+                  valueOverrides
+                ),
+              },
+            },
+          ],
+          bucketConfig: {
+            start: 0,
+            // Ensure 100% enrollment
+            count: 10000,
+            total: 10000,
+            namespace: "UrlbarTestUtils",
+            randomizationUnit: "normandy_id",
+          },
+        }
+      )
+    );
+    await enrollmentPromise;
+    return doExperimentCleanup;
   },
 };
 
