@@ -486,7 +486,7 @@ class tabswitch(PageloaderTest):
     extensions = ["${talos}/tests/tabswitch", "${talos}/pageloader"]
     tpmanifest = "${talos}/tests/tabswitch/tabswitch.manifest"
     tppagecycles = 5
-    timeout = 600
+    timeout = 900
     gecko_profile_entries = 5000000
     tploadnocache = True
     preferences = {
