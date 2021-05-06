@@ -7,7 +7,7 @@
  */
 
 .urlbarView-row[dynamicType=onboardTabToSearch] > .urlbarView-row-inner {
-  min-height: 64px;
+  min-height: 64px !important; /* Overriding :root:not([uidensity=compact]) .urlbarView-row-inner { min-height } in urlbarView.inc.css */
   align-items: center;
   width: 100%;
 }

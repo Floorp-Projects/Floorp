@@ -13,6 +13,8 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
   Services: "resource://gre/modules/Services.jsm",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
+  UrlbarProviderQuickSuggest:
+    "resource:///modules/UrlbarProviderQuickSuggest.jsm",
   UrlbarProvidersManager: "resource:///modules/UrlbarProvidersManager.jsm",
   UrlbarSearchOneOffs: "resource:///modules/UrlbarSearchOneOffs.jsm",
   UrlbarTokenizer: "resource:///modules/UrlbarTokenizer.jsm",
@@ -1616,13 +1618,48 @@ class UrlbarView {
     }
   }
 
+  /**
+   * Performs a final pass over all rows in the view after a view update, stale
+   * rows are removed, and other changes to the number of rows. Sets `rowIndex`
+   * on each result, updates row labels, and performs other tasks that must be
+   * deferred until all rows have been updated.
+   */
   _updateIndices() {
+    // `currentLabel` is the last-seen row label as we iterate through the rows.
+    // When we encounter a label that's different from `currentLabel`, we add it
+    // to the row and set it to `currentLabel`; we remove the labels for all
+    // other rows, and therefore no label will appear adjacent to itself. (A
+    // label may appear more than once, but there will be at least one different
+    // label in between.) Each row's label is determined by `_rowLabel()`.
+    let currentLabel;
+
     let visibleRowsExist = false;
     for (let i = 0; i < this._rows.children.length; i++) {
       let item = this._rows.children[i];
       item.result.rowIndex = i;
-      visibleRowsExist = visibleRowsExist || this._isElementVisible(item);
+
+      let visible = this._isElementVisible(item);
+      visibleRowsExist = visibleRowsExist || visible;
+
+      // Show or hide the row's label as appropriate.
+      let label;
+      if (visible) {
+        label = this._rowLabel(item, currentLabel);
+        if (label) {
+          if (label == currentLabel) {
+            label = null;
+          } else {
+            currentLabel = label;
+          }
+        }
+      }
+      if (label) {
+        item.setAttribute("label", label);
+      } else {
+        item.removeAttribute("label");
+      }
     }
+
     let selectableElement = this._getFirstSelectableElement();
     let uiIndex = 0;
     while (selectableElement) {
@@ -1634,6 +1671,34 @@ class UrlbarView {
     } else {
       this.panel.setAttribute("noresults", "true");
     }
+  }
+
+  _rowLabel(row, currentLabel) {
+    // We only show Firefox Suggest-related labels if the feature is enabled and
+    // we're not showing top sites.
+    if (
+      UrlbarPrefs.get("firefoxSuggestLabelsEnabled") &&
+      this._queryContext?.searchString &&
+      !row.result.heuristic
+    ) {
+      switch (row.result.type) {
+        case UrlbarUtils.RESULT_TYPE.KEYWORD:
+        case UrlbarUtils.RESULT_TYPE.REMOTE_TAB:
+        case UrlbarUtils.RESULT_TYPE.TAB_SWITCH:
+        case UrlbarUtils.RESULT_TYPE.URL:
+          return UrlbarProviderQuickSuggest.featureName;
+        case UrlbarUtils.RESULT_TYPE.SEARCH:
+          // We only show the "<engine> suggestions" label if it's not the first
+          // label. This string is hardcoded en-US for now.
+          if (currentLabel && row.result.payload.suggestion) {
+            let engineName =
+              row.result.payload.engine || Services.search.defaultEngine.name;
+            return engineName + " suggestions";
+          }
+          break;
+      }
+    }
+    return null;
   }
 
   _setRowVisibility(row, visible) {

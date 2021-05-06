@@ -26,8 +26,9 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 // These prefs are relative to the `browser.urlbar` branch.
 const SUGGEST_PREF = "suggest.quicksuggest";
 
-const NONSPONSORED_ACTION_TEXT = "Firefox Suggest";
-const HELP_TITLE = "Learn more about Firefox Suggest";
+const FEATURE_NAME = "Firefox Suggest";
+const NONSPONSORED_ACTION_TEXT = FEATURE_NAME;
+const HELP_TITLE = `Learn more about ${FEATURE_NAME}`;
 
 const TELEMETRY_SCALAR_IMPRESSION =
   "contextual.services.quicksuggest.impression";
@@ -61,6 +62,14 @@ class ProviderQuickSuggest extends UrlbarProvider {
    */
   get type() {
     return UrlbarUtils.PROVIDER_TYPE.NETWORK;
+  }
+
+  /**
+   * @returns {string} The name of the Firefox Suggest feature, suitable for
+   *   display to the user. en-US only for now.
+   */
+  get featureName() {
+    return FEATURE_NAME;
   }
 
   /**

@@ -36,34 +36,10 @@ const TEST_DATA = [
   },
 ];
 
-const EXPERIMENT_RECIPE = ExperimentFakes.recipe(
-  "mochitest-quicksuggest-experiment",
-  {
-    branches: [
-      {
-        slug: "treatment-branch",
-        ratio: 1,
-        feature: {
-          featureId: "urlbar",
-          enabled: true,
-          value: { quickSuggestEnabled: true },
-        },
-      },
-    ],
-    bucketConfig: {
-      start: 0,
-      // Ensure 100% enrollment
-      count: 10000,
-      total: 10000,
-      namespace: "my-mochitest",
-      randomizationUnit: "normandy_id",
-    },
-  }
-);
-
 const ABOUT_BLANK = "about:blank";
 const SUGGESTIONS_PREF = "browser.search.suggest.enabled";
 const PRIVATE_SUGGESTIONS_PREF = "browser.search.suggest.enabled.private";
+const SEEN_DIALOG_PREF = "browser.urlbar.quicksuggest.showedOnboardingDialog";
 
 function sleep(ms) {
   // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
@@ -148,14 +124,15 @@ add_task(async function init() {
       ["browser.startup.upgradeDialog.version", 89],
     ],
   });
-  // Wait for Experiment Store to initialize before trying to enroll
-  await ExperimentAPI.ready();
-  let {
-    enrollmentPromise,
-    doExperimentCleanup,
-  } = ExperimentFakes.enrollmentHelper(EXPERIMENT_RECIPE);
 
-  await enrollmentPromise;
+  Services.prefs.clearUserPref(SEEN_DIALOG_PREF);
+  Services.prefs.clearUserPref("browser.urlbar.quicksuggest.seenRestarts");
+
+  let doExperimentCleanup = await UrlbarTestUtils.enrollExperiment({
+    valueOverrides: {
+      quickSuggestEnabled: true,
+    },
+  });
 
   // Add a mock engine so we don't hit the network loading the SERP.
   await SearchTestUtils.installSearchExtension();
@@ -182,24 +159,28 @@ add_task(async function test_onboarding() {
     value: "fra",
   });
   await assertNoQuickSuggestResults();
+  await UrlbarTestUtils.promisePopupClose(window);
+
+  let dialogPromise = BrowserTestUtils.promiseAlertDialog(
+    "accept",
+    "chrome://browser/content/urlbar/quicksuggestOnboarding.xhtml",
+    { isSubDialog: true }
+  ).then(() => info("Saw dialog"));
+  let prefPromise = TestUtils.waitForPrefChange(
+    SEEN_DIALOG_PREF,
+    value => value === true
+  ).then(() => info("Saw pref change"));
 
   // Simulate 3 restarts. this function is only called by BrowserGlue
   // on startup, the first restart would be where MR1 was shown then
   // we will show onboarding the 2nd restart after that.
-  UrlbarQuickSuggest.maybeShowOnboardingDialog();
-  UrlbarQuickSuggest.maybeShowOnboardingDialog();
-  UrlbarQuickSuggest.maybeShowOnboardingDialog();
+  for (let i = 0; i < 3; i++) {
+    info(`Simulating restart ${i + 1}`);
+    await UrlbarQuickSuggest.maybeShowOnboardingDialog();
+  }
 
-  await BrowserTestUtils.promiseAlertDialog(
-    "accept",
-    "chrome://browser/content/urlbar/quicksuggestOnboarding.xhtml",
-    { isSubDialog: true }
-  );
-
-  TestUtils.waitForPrefChange(
-    "browser.urlbar.quicksuggest.showedOnboardingDialog",
-    value => value === true
-  );
+  info("Waiting for dialog and pref change");
+  await Promise.all([dialogPromise, prefPromise]);
 });
 
 add_task(async function basic_test() {
