@@ -286,11 +286,6 @@ void BlockingResourceBase::Release() {
   if (chainFront == this) {
     ResourceChainRemove();
   } else {
-    // not an error, but makes code hard to reason about.
-    NS_WARNING("Resource acquired is being released in non-LIFO order; why?\n");
-    nsCString tmp;
-    Print(tmp);
-
     // remove this resource from wherever it lives in the chain
     // we walk backwards in order of acquisition:
     //  (1)  ...node<-prev<-curr...
