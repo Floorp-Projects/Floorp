@@ -464,7 +464,6 @@ static bool IsSpecialColor(LookAndFeel::ColorID aID, nscolor aColor) {
 
   switch (aID) {
     case ColorID::TextSelectForeground:
-      return aColor == NS_DONT_CHANGE_COLOR;
     case ColorID::IMESelectedRawTextBackground:
     case ColorID::IMESelectedConvertedTextBackground:
     case ColorID::IMERawInputBackground:
