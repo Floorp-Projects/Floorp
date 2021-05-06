@@ -706,6 +706,8 @@ class CompositorBridgeParent final : public CompositorBridgeParentBase,
    */
   Maybe<CollectedFramesParams> WrapCollectedFrames(CollectedFrames&& aFrames);
 
+  void MaybeDeclareStable();
+
  protected:
   // Protected destructor, to discourage deletion outside of Release():
   virtual ~CompositorBridgeParent();

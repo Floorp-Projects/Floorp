@@ -118,6 +118,11 @@ mozilla::ipc::IPCResult GPUChild::RecvInitComplete(const GPUDeviceData& aData) {
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult GPUChild::RecvDeclareStable() {
+  mHost->mListener->OnProcessDeclaredStable();
+  return IPC_OK();
+}
+
 mozilla::ipc::IPCResult GPUChild::RecvReportCheckerboard(
     const uint32_t& aSeverity, const nsCString& aLog) {
   layers::CheckerboardEventStorage::Report(aSeverity, std::string(aLog.get()));
