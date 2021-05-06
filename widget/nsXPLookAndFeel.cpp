@@ -206,7 +206,6 @@ static const char sColorPrefs[][41] = {
     "ui.textForeground",
     "ui.textSelectBackground",
     "ui.textSelectForeground",
-    "ui.textSelectForegroundCustom",
     "ui.textSelectBackgroundDisabled",
     "ui.textSelectBackgroundAttention",
     "ui.textHighlightBackground",
