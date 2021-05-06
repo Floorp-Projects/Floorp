@@ -2061,7 +2061,6 @@ class BookmarkObserverRecorder {
     this.signal = signal;
     this.placesEvents = [];
     this.guidChangedArgs = [];
-    this.itemMovedArgs = [];
     this.itemChangedArgs = [];
     this.shouldInvalidateKeywords = false;
   }
@@ -2324,18 +2323,6 @@ class BookmarkObserverRecorder {
   }
 
   noteItemMoved(info) {
-    this.itemMovedArgs.push([
-      info.id,
-      info.oldPosition,
-      info.newPosition,
-      info.type,
-      info.guid,
-      info.oldParentGuid,
-      info.newParentGuid,
-      PlacesUtils.bookmarks.SOURCES.SYNC,
-      info.urlHref,
-    ]);
-
     this.placesEvents.push(
       new PlacesBookmarkMoved({
         id: info.id,
@@ -2432,21 +2419,6 @@ class BookmarkObserverRecorder {
       PlacesObservers.notifyListeners(this.placesEvents);
     }
 
-    await Async.yieldingForEach(
-      this.itemMovedArgs,
-      args => {
-        if (this.signal.aborted) {
-          throw new SyncedBookmarksMirror.InterruptedError(
-            "Interrupted before notifying observers for moved items"
-          );
-        }
-        this.notifyObserversWithInfo(observers, "onItemMoved", {
-          isTagging: false,
-          args,
-        });
-      },
-      yieldState
-    );
     await Async.yieldingForEach(
       this.itemChangedArgs,
       args => {

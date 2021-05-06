@@ -198,7 +198,7 @@ async function testMoveToFolder(details) {
 
   let observer;
   if (details.notifications) {
-    observer = expectNotifications(true);
+    observer = expectPlacesObserverNotifications(["bookmark-moved"]);
   }
 
   let movedItems = await PlacesUtils.bookmarks.moveToFolder(
@@ -255,18 +255,17 @@ async function testMoveToFolder(details) {
       let newFolder = notification.newFolder == "folderA" ? folderA : folderB;
 
       expectedNotifications.push({
-        name: "onItemMoved",
-        arguments: [
-          await PlacesUtils.promiseItemId(origItem.guid),
-          notification.originalIndex,
-          notification.newIndex,
-          PlacesUtils.bookmarks.TYPE_BOOKMARK,
-          origItem.guid,
-          origItem.parentGuid,
-          newFolder.guid,
-          PlacesUtils.bookmarks.SOURCES.DEFAULT,
-          origItem.url,
-        ],
+        type: "bookmark-moved",
+        id: await PlacesUtils.promiseItemId(origItem.guid),
+        itemType: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+        url: origItem.url,
+        guid: origItem.guid,
+        parentGuid: newFolder.guid,
+        source: PlacesUtils.bookmarks.SOURCES.DEFAULT,
+        index: notification.newIndex,
+        oldParentGuid: origItem.parentGuid,
+        oldIndex: notification.originalIndex,
+        isTagging: false,
       });
     }
     observer.check(expectedNotifications);
