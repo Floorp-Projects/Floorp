@@ -649,10 +649,9 @@ class XPCShellTestThread(Thread):
             self.has_failure_output = True
 
     def fix_text_output(self, line):
-        line = cleanup_encoding(line)
         if self.stack_fixer_function is not None:
-            return self.stack_fixer_function(line)
-        return line
+            line = self.stack_fixer_function(line)
+        return cleanup_encoding(line)
 
     def log_line(self, line):
         """Log a line of output (either a parser json object or text output from
