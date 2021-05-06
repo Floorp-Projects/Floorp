@@ -127,11 +127,11 @@ add_task(async function setup() {
     gBookmarkSkipObserver
   );
   PlacesUtils.observers.addListener(
-    ["bookmark-added", "bookmark-removed"],
+    ["bookmark-added", "bookmark-removed", "bookmark-moved"],
     gBookmarksObserver.handlePlacesEvents
   );
   PlacesUtils.observers.addListener(
-    ["bookmark-added", "bookmark-removed"],
+    ["bookmark-added", "bookmark-removed", "bookmark-moved"],
     gBookmarkSkipObserver.handlePlacesEvents
   );
 });
@@ -492,20 +492,20 @@ add_task(async function onItemChanged_tags_bookmark() {
   await promise;
 });
 
-add_task(async function onItemMoved_bookmark() {
+add_task(async function bookmarkItemMoved_bookmark() {
   let bm = await PlacesUtils.bookmarks.fetch({
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
     index: 0,
   });
   let promise = Promise.all([
-    gBookmarkSkipObserver.setup(["onItemMoved", "onItemMoved"]),
+    gBookmarkSkipObserver.setup(["bookmark-moved", "bookmark-moved"]),
     gBookmarksObserver.setup([
       {
-        name: "onItemMoved",
+        eventType: "bookmark-moved",
         args: [
-          { name: "itemId", check: v => typeof v == "number" && v > 0 },
+          { name: "id", check: v => typeof v == "number" && v > 0 },
           { name: "oldIndex", check: v => v === 0 },
-          { name: "newIndex", check: v => v === 0 },
+          { name: "index", check: v => v === 0 },
           {
             name: "itemType",
             check: v => v === PlacesUtils.bookmarks.TYPE_BOOKMARK,
@@ -519,7 +519,7 @@ add_task(async function onItemMoved_bookmark() {
             check: v => typeof v == "string" && PlacesUtils.isValidGuid(v),
           },
           {
-            name: "newParentGuid",
+            name: "parentGuid",
             check: v => typeof v == "string" && PlacesUtils.isValidGuid(v),
           },
           {
@@ -531,11 +531,11 @@ add_task(async function onItemMoved_bookmark() {
         ],
       },
       {
-        name: "onItemMoved",
+        eventType: "bookmark-moved",
         args: [
-          { name: "itemId", check: v => typeof v == "number" && v > 0 },
+          { name: "id", check: v => typeof v == "number" && v > 0 },
           { name: "oldIndex", check: v => v === 0 },
-          { name: "newIndex", check: v => v === 0 },
+          { name: "index", check: v => v === 0 },
           {
             name: "itemType",
             check: v => v === PlacesUtils.bookmarks.TYPE_BOOKMARK,
@@ -549,7 +549,7 @@ add_task(async function onItemMoved_bookmark() {
             check: v => typeof v == "string" && PlacesUtils.isValidGuid(v),
           },
           {
-            name: "newParentGuid",
+            name: "parentGuid",
             check: v => typeof v == "string" && PlacesUtils.isValidGuid(v),
           },
           {
