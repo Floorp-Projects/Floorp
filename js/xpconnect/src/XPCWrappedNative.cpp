@@ -29,6 +29,7 @@
 #include "mozilla/Unused.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/dom/BindingUtils.h"
+#include "mozilla/ProfilerLabels.h"
 #include <algorithm>
 
 using namespace xpc;
@@ -1147,7 +1148,13 @@ bool CallMethodHelper::Call() {
 
   mCallContext.GetContext()->SetPendingException(nullptr);
 
+  using Flags = js::ProfilingStackFrame::Flags;
   if (mVTableIndex == 0) {
+    AUTO_PROFILER_LABEL_DYNAMIC_FAST(mIFaceInfo->Name(), "QueryInterface", DOM,
+                                     mCallContext.GetJSContext(),
+                                     uint32_t(Flags::STRING_TEMPLATE_METHOD) |
+                                         uint32_t(Flags::RELEVANT_FOR_JS));
+
     return QueryInterfaceFastPath();
   }
 
@@ -1155,6 +1162,20 @@ bool CallMethodHelper::Call() {
     Throw(NS_ERROR_XPC_CANT_GET_METHOD_INFO, mCallContext);
     return false;
   }
+
+  // Add profiler labels matching the WebIDL profiler labels,
+  // which also use the DOM category.
+  Flags templateFlag = Flags::STRING_TEMPLATE_METHOD;
+  if (mMethodInfo->IsGetter()) {
+    templateFlag = Flags::STRING_TEMPLATE_GETTER;
+  }
+  if (mMethodInfo->IsSetter()) {
+    templateFlag = Flags::STRING_TEMPLATE_SETTER;
+  }
+  AUTO_PROFILER_LABEL_DYNAMIC_FAST(
+      mIFaceInfo->Name(), mMethodInfo->NameOrDescription(), DOM,
+      mCallContext.GetJSContext(),
+      uint32_t(templateFlag) | uint32_t(Flags::RELEVANT_FOR_JS));
 
   if (!InitializeDispatchParams()) {
     return false;
