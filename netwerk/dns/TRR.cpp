@@ -503,8 +503,9 @@ nsresult TRR::ReceivePush(nsIHttpChannel* pushed, nsHostRecord* pushedRec) {
     uri->GetQuery(query);
   }
 
+  PRNetAddr tempAddr;
   if (NS_FAILED(DohDecodeQuery(query, mHost, mType)) ||
-      HostIsIPLiteral(mHost)) {  // literal
+      (PR_StringToNetAddr(mHost.get(), &tempAddr) == PR_SUCCESS)) {  // literal
     LOG(("TRR::ReceivePush failed to decode %s\n", mHost.get()));
     return NS_ERROR_UNEXPECTED;
   }

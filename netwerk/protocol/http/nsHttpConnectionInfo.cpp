@@ -524,12 +524,16 @@ bool nsHttpConnectionInfo::UsingProxy() {
 }
 
 bool nsHttpConnectionInfo::HostIsLocalIPLiteral() const {
-  NetAddr netAddr;
+  PRNetAddr prAddr;
   // If the host/proxy host is not an IP address literal, return false.
-  nsAutoCString host(ProxyHost() ? ProxyHost() : Origin());
-  if (NS_FAILED(netAddr.InitFromString(host))) {
+  if (ProxyHost()) {
+    if (PR_StringToNetAddr(ProxyHost(), &prAddr) != PR_SUCCESS) {
+      return false;
+    }
+  } else if (PR_StringToNetAddr(Origin(), &prAddr) != PR_SUCCESS) {
     return false;
   }
+  NetAddr netAddr(&prAddr);
   return netAddr.IsIPAddrLocal();
 }
 
