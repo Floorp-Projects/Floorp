@@ -31,6 +31,17 @@ bug-numbers = [1443863]
 is-public = {default = false, nightly = true}
 default-value = {default = false, nightly = false}
 
+[media-jxl]
+title = "experimental-features-media-jxl"
+description = "experimental-features-media-jxl-description"
+description-links = {bugzilla = "https://bugzilla.mozilla.org/show_bug.cgi?id=1539075"}
+restart-required = false
+preference = "image.jxl.enabled"
+type = "boolean"
+bug-numbers = [1539075]
+is-public = {default = false, nightly = true}
+default-value = false
+
 [web-api-inputmode]
 title = "experimental-features-web-api-inputmode"
 description = "experimental-features-web-api-inputmode-description"
