@@ -26,7 +26,7 @@ import tools.fastlane.screengrab.UiAutomatorScreenshotStrategy;
  * Base class for tests that take screenshots.
  */
 @Ignore("This test was written specifically for WebView and needs to be adapted for GeckoView, see: https://github.com/mozilla-mobile/mobile-test-eng/issues/305")
-abstract class ScreenshotTest {
+public abstract class ScreenshotTest {
     final long waitingTime = DateUtils.SECOND_IN_MILLIS * 10;
 
     private Context targetContext;

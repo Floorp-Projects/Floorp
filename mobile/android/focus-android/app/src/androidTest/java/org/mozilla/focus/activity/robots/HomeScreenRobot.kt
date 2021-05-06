@@ -26,6 +26,27 @@ class HomeScreenRobot {
 
     fun skipFirstRun() = onView(withId(R.id.skip)).perform(click())
 
+    fun verifyOnboardingFirstSlide() {
+        assertTrue(firstSlide.waitForExists(waitingTime))
+    }
+
+    fun verifyOnboardingSecondSlide() {
+        assertTrue(secondSlide.waitForExists(waitingTime))
+    }
+
+    fun verifyOnboardingThirdSlide() {
+        assertTrue(thirdSlide.waitForExists(waitingTime))
+    }
+
+    fun verifyOnboardingLastSlide() {
+        assertTrue(lastSlide.waitForExists(waitingTime))
+        assertTrue(finishBtn.text == "OK, GOT IT!")
+    }
+
+    fun clickOnboardingNextBtn() = nextBtn.click()
+
+    fun clickOnboardingFinishBtn() = finishBtn.click()
+
     class Transition {
         fun openMainMenu(interact: ThreeDotMainMenuRobot.() -> Unit): ThreeDotMainMenuRobot.Transition {
             searchBar.waitForExists(waitingTime)
@@ -47,3 +68,36 @@ fun homeScreen(interact: HomeScreenRobot.() -> Unit): HomeScreenRobot.Transition
 private val searchBar = mDevice.findObject(UiSelector().resourceId("$packageName:id/urlView"))
 
 private val mainMenu = onView(withId(R.id.menuView))
+
+/********* First Run Locators  */
+private val firstSlide = mDevice.findObject(
+    UiSelector()
+        .text("Power up your privacy")
+)
+
+private val secondSlide = mDevice.findObject(
+    UiSelector()
+        .text("Your search, your way")
+)
+
+private val thirdSlide = mDevice.findObject(
+    UiSelector()
+        .text("Add shortcuts to your home screen")
+)
+
+private val lastSlide = mDevice.findObject(
+    UiSelector()
+        .text("Make privacy a habit")
+)
+
+private val nextBtn = mDevice.findObject(
+    UiSelector()
+        .resourceId("$packageName:id/next")
+        .enabled(true)
+)
+
+private val finishBtn = mDevice.findObject(
+    UiSelector()
+        .resourceId("$packageName:id/finish")
+        .enabled(true)
+)

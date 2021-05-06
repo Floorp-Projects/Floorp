@@ -133,53 +133,10 @@ object TestHelper {
         Assert.assertTrue(geckoView.waitForExists(waitingTime))
     }
 
-    /********* First View Locators  */
-    @JvmField
-    var firstSlide = mDevice.findObject(
-        UiSelector()
-            .text("Power up your privacy")
-            .enabled(true)
-    )
-
-    @JvmField
-    var secondSlide = mDevice.findObject(
-        UiSelector()
-            .text("Your search, your way")
-            .enabled(true)
-    )
-
-    @JvmField
-    var thirdSlide = mDevice.findObject(
-        UiSelector()
-            .text("Add shortcuts to your home screen")
-            .enabled(true)
-    )
-
-    @JvmField
-    var lastSlide = mDevice.findObject(
-        UiSelector()
-            .text("Make privacy a habit")
-            .enabled(true)
-    )
-
     @JvmField
     var nextBtn = mDevice.findObject(
         UiSelector()
             .resourceId(packageName + ":id/next")
-            .enabled(true)
-    )
-
-    @JvmField
-    var finishBtn = mDevice.findObject(
-        UiSelector()
-            .resourceId(packageName + ":id/finish")
-            .enabled(true)
-    )
-
-    @JvmField
-    var initialView = mDevice.findObject(
-        UiSelector()
-            .resourceId(packageName + ":id/backgroundView")
             .enabled(true)
     )
 
