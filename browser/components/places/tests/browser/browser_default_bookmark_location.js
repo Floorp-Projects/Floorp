@@ -177,8 +177,8 @@ add_task(async function test_change_location_panel() {
   // Make sure we wait for the move to complete.
   let itemMovedPromise = PlacesTestUtils.waitForNotification(
     "onItemMoved",
-    (id, oldParentId, oldIndex, newParentId, newIndex, type, guid) =>
-      newParentId == PlacesUtils.bookmarksMenuFolderId && guid == itemGuid
+    (id, oldIndex, newIndex, type, guid, oldParentGuid, newParentGuid) =>
+      newParentGuid == PlacesUtils.bookmarks.menuGuid && guid == itemGuid
   );
 
   // Wait for the pref to change

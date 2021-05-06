@@ -379,9 +379,7 @@ BookmarkObserver.prototype = {
   },
   onItemMoved(
     itemId,
-    oldParentId,
     oldIndex,
-    newParentId,
     newIndex,
     type,
     guid,
@@ -394,9 +392,7 @@ BookmarkObserver.prototype = {
       name: "onItemMoved",
       params: {
         itemId,
-        oldParentId,
         oldIndex,
-        newParentId,
         newIndex,
         type,
         guid,
