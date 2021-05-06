@@ -21,6 +21,7 @@
 #include "mozilla/dom/PlacesVisit.h"
 #include "mozilla/dom/PlacesVisitRemoved.h"
 #include "mozilla/dom/PlacesVisitTitle.h"
+#include "mozilla/dom/PlacesBookmarkMoved.h"
 
 #include "nsCycleCollectionParticipant.h"
 
@@ -3488,7 +3489,7 @@ nsNavHistoryResult::~nsNavHistoryResult() {
 }
 
 void nsNavHistoryResult::StopObserving() {
-  AutoTArray<PlacesEventType, 6> events;
+  AutoTArray<PlacesEventType, 7> events;
   events.AppendElement(PlacesEventType::Favicon_changed);
   if (mIsBookmarksObserver) {
     nsNavBookmarks* bookmarks = nsNavBookmarks::GetBookmarksService();
@@ -3498,6 +3499,7 @@ void nsNavHistoryResult::StopObserving() {
     }
     events.AppendElement(PlacesEventType::Bookmark_added);
     events.AppendElement(PlacesEventType::Bookmark_removed);
+    events.AppendElement(PlacesEventType::Bookmark_moved);
   }
   if (mIsMobilePrefObserver) {
     Preferences::UnregisterCallback(OnMobilePrefChangedCallback,
@@ -3618,9 +3620,10 @@ void nsNavHistoryResult::EnsureIsObservingBookmarks() {
     return;
   }
   bookmarks->AddObserver(this, true);
-  AutoTArray<PlacesEventType, 3> events;
+  AutoTArray<PlacesEventType, 4> events;
   events.AppendElement(PlacesEventType::Bookmark_added);
   events.AppendElement(PlacesEventType::Bookmark_removed);
+  events.AppendElement(PlacesEventType::Bookmark_moved);
   // If we're not observing visits yet, also add a page-visited observer to
   // serve onItemVisited.
   if (!mIsHistoryObserver && !mIsHistoryDetailsObserver) {
@@ -4184,6 +4187,36 @@ void nsNavHistoryResult::HandlePlacesEvent(const PlacesEventSequence& aEvents) {
         ENUMERATE_HISTORY_OBSERVERS(OnItemRemoved(
             item->mId, item->mParentId, item->mIndex, item->mItemType, uri,
             item->mGuid, item->mParentGuid, item->mSource));
+        break;
+      }
+      case PlacesEventType::Bookmark_moved: {
+        const dom::PlacesBookmarkMoved* item = event->AsPlacesBookmarkMoved();
+        if (NS_WARN_IF(!item)) {
+          continue;
+        }
+
+        NS_ConvertUTF16toUTF8 url(item->mUrl);
+
+        ENUMERATE_BOOKMARK_FOLDER_OBSERVERS(
+            item->mOldParentGuid,
+            OnItemMoved(item->mId, item->mOldIndex, item->mIndex,
+                        item->mItemType, item->mGuid, item->mOldParentGuid,
+                        item->mParentGuid, item->mSource, url));
+        if (!item->mParentGuid.Equals(item->mOldParentGuid)) {
+          ENUMERATE_BOOKMARK_FOLDER_OBSERVERS(
+              item->mParentGuid,
+              OnItemMoved(item->mId, item->mOldIndex, item->mIndex,
+                          item->mItemType, item->mGuid, item->mOldParentGuid,
+                          item->mParentGuid, item->mSource, url));
+        }
+        ENUMERATE_ALL_BOOKMARKS_OBSERVERS(
+            OnItemMoved(item->mId, item->mOldIndex, item->mIndex,
+                        item->mItemType, item->mGuid, item->mOldParentGuid,
+                        item->mParentGuid, item->mSource, url));
+        ENUMERATE_HISTORY_OBSERVERS(
+            OnItemMoved(item->mId, item->mOldIndex, item->mIndex,
+                        item->mItemType, item->mGuid, item->mOldParentGuid,
+                        item->mParentGuid, item->mSource, url));
         break;
       }
       case PlacesEventType::Page_title_changed: {

@@ -805,7 +805,7 @@ BookmarksTracker.prototype = {
       this.handlePlacesEvents.bind(this)
     );
     PlacesUtils.observers.addListener(
-      ["bookmark-added", "bookmark-removed"],
+      ["bookmark-added", "bookmark-removed", "bookmark-moved"],
       this._placesListener
     );
     Svc.Obs.add("bookmarks-restore-begin", this);
@@ -816,7 +816,7 @@ BookmarksTracker.prototype = {
   onStop() {
     PlacesUtils.bookmarks.removeObserver(this);
     PlacesUtils.observers.removeListener(
-      ["bookmark-added", "bookmark-removed"],
+      ["bookmark-added", "bookmark-removed", "bookmark-moved"],
       this._placesListener
     );
     Svc.Obs.remove("bookmarks-restore-begin", this);
@@ -882,6 +882,14 @@ BookmarksTracker.prototype = {
           }
 
           this._log.trace("'bookmark-removed': " + event.id);
+          this._upScore();
+          break;
+        case "bookmark-moved":
+          if (IGNORED_SOURCES.includes(event.source)) {
+            return;
+          }
+
+          this._log.trace("'bookmark-moved': " + event.id);
           this._upScore();
           break;
         case "purge-caches":
