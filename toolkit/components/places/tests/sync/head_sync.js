@@ -393,32 +393,6 @@ BookmarkObserver.prototype = {
     }
     this.notifications.push({ name: "onItemChanged", params });
   },
-  onItemMoved(
-    itemId,
-    oldIndex,
-    newIndex,
-    type,
-    guid,
-    oldParentGuid,
-    newParentGuid,
-    source,
-    urlHref
-  ) {
-    this.notifications.push({
-      name: "onItemMoved",
-      params: {
-        itemId,
-        oldIndex,
-        newIndex,
-        type,
-        guid,
-        oldParentGuid,
-        newParentGuid,
-        source,
-        urlHref,
-      },
-    });
-  },
 
   QueryInterface: ChromeUtils.generateQI(["nsINavBookmarkObserver"]),
 

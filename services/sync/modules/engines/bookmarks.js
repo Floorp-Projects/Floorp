@@ -933,24 +933,6 @@ BookmarksTracker.prototype = {
     );
     this._upScore();
   },
-
-  onItemMoved: function BMT_onItemMoved(
-    itemId,
-    oldIndex,
-    newIndex,
-    itemType,
-    guid,
-    oldParentGuid,
-    newParentGuid,
-    source
-  ) {
-    if (IGNORED_SOURCES.includes(source)) {
-      return;
-    }
-
-    this._log.trace("onItemMoved: " + itemId);
-    this._upScore();
-  },
 };
 
 /**
