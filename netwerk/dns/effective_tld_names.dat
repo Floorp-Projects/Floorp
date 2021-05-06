@@ -11815,10 +11815,11 @@ app.os.stg.fedoraproject.org
 
 // FearWorks Media Ltd. : https://fearworksmedia.co.uk
 // submitted by Keith Fairley <domains@fearworksmedia.co.uk>
-conn.uk
-copro.uk
 couk.me
 ukco.me
+conn.uk
+copro.uk
+hosp.uk
 
 // Fermax : https://fermax.com/
 // submitted by Koen Van Isterdael <k.vanisterdael@fermax.be>
@@ -12077,6 +12078,10 @@ blogspot.td
 blogspot.tw
 blogspot.ug
 blogspot.vn
+
+// Goupile : https://goupile.fr
+// Submitted by Niels Martignene <hello@goupile.fr>
+goupile.fr
 
 // Group 53, LLC : https://www.group53.com
 // Submitted by Tyler Todd <noc@nova53.net>
@@ -12897,8 +12902,10 @@ orsites.com
 // Submitted by Yngve Pettersen <yngve@opera.com>
 operaunite.com
 
-// Oursky Limited : https://skygear.io/
-// Submited by Skygear Developer <hello@skygear.io>
+// Oursky Limited : https://authgear.com/, https://skygear.io/
+// Submited by Authgear Team <hello@authgear.com>, Skygear Developer <hello@skygear.io>
+authgear-staging.com
+authgearapps.com
 skygearapp.com
 
 // OutSystems
