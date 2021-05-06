@@ -18,7 +18,6 @@ const DID_SEE_ABOUT_WELCOME_PREF = "trailhead.firstrun.didSeeAboutWelcome";
 
 // Test differently for windows 7 as theme screens are removed.
 const win7Content = AppConstants.isPlatformAndVersionAtMost("win", "6.1");
-const condSelect = (cond, select) => (cond ? [select] : []);
 
 const TEST_MULTISTAGE_CONTENT = [
   {
@@ -1199,15 +1198,10 @@ add_task(async function test_multistage_aboutwelcome_proton() {
       "div.onboardingContainer",
       "div.proton[style*='.jpg']",
       "div.section-main",
-      ...condSelect(!win7Content, "nav.steps"),
+      "nav.steps",
     ],
     // Unexpected selectors:
-    [
-      "main.AW_STEP1",
-      "main.AW_STEP3",
-      "div.section-left",
-      ...condSelect(win7Content, "nav.steps"),
-    ]
+    ["main.AW_STEP1", "main.AW_STEP3", "div.section-left"]
   );
 
   await onButtonClick(browser, "button.primary");
