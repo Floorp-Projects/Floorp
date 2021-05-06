@@ -43,9 +43,14 @@ NativeDNSResolverOverrideParent::GetSingleton() {
 
 NS_IMETHODIMP NativeDNSResolverOverrideParent::AddIPOverride(
     const nsACString& aHost, const nsACString& aIPLiteral) {
-  NetAddr tempAddr;
+  PRNetAddr tempAddr;
+  // Unfortunately, PR_StringToNetAddr does not properly initialize
+  // the output buffer in the case of IPv6 input. See bug 223145.
+  memset(&tempAddr, 0, sizeof(PRNetAddr));
+
   if (!aIPLiteral.Equals("N/A"_ns) &&
-      NS_FAILED(tempAddr.InitFromString(aIPLiteral))) {
+      PR_StringToNetAddr(nsCString(aIPLiteral).get(), &tempAddr) !=
+          PR_SUCCESS) {
     return NS_ERROR_UNEXPECTED;
   }
 
