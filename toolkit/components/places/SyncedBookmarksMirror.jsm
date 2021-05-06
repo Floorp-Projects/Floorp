@@ -2206,10 +2206,12 @@ class BookmarkObserverRecorder {
     await this.db.execute(
       `SELECT b.id, b.guid, b.type, p.guid AS newParentGuid, c.oldParentGuid,
               b.position AS newPosition, c.oldPosition,
+              gp.guid AS grandParentGuid,
               (SELECT h.url FROM moz_places h WHERE h.id = b.fk) AS url
        FROM itemsMoved c
        JOIN moz_bookmarks b ON b.id = c.itemId
        JOIN moz_bookmarks p ON p.id = b.parent
+       LEFT JOIN moz_bookmarks gp ON gp.id = p.parent
        ${this.orderBy("c.level", "b.parent", "b.position")}`,
       null,
       (row, cancel) => {
@@ -2226,6 +2228,7 @@ class BookmarkObserverRecorder {
           newPosition: row.getResultByName("newPosition"),
           oldPosition: row.getResultByName("oldPosition"),
           urlHref: row.getResultByName("url"),
+          grandParentGuid: row.getResultByName("grandParentGuid"),
         };
         this.noteItemMoved(info);
       }
@@ -2332,6 +2335,23 @@ class BookmarkObserverRecorder {
       PlacesUtils.bookmarks.SOURCES.SYNC,
       info.urlHref,
     ]);
+
+    this.placesEvents.push(
+      new PlacesBookmarkMoved({
+        id: info.id,
+        itemType: info.type,
+        url: info.urlHref,
+        guid: info.guid,
+        parentGuid: info.newParentGuid,
+        source: PlacesUtils.bookmarks.SOURCES.SYNC,
+        index: info.newPosition,
+        oldParentGuid: info.oldParentGuid,
+        oldIndex: info.oldPosition,
+        isTagging:
+          info.newParentGuid === PlacesUtils.bookmarks.tagsGuid ||
+          info.grandParentGuid === PlacesUtils.bookmarks.tagsGuid,
+      })
+    );
   }
 
   noteItemChanged(info) {
