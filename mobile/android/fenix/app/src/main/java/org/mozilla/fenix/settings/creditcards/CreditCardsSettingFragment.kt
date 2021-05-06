@@ -80,15 +80,14 @@ class CreditCardsSettingFragment : PreferenceFragmentCompat() {
             syncPreference = requirePreference(R.string.pref_key_credit_cards_sync_cards_across_devices),
             lifecycleOwner = viewLifecycleOwner,
             accountManager = requireComponents.backgroundServices.accountManager,
-            syncEngine = SyncEngine.Passwords,
+            syncEngine = SyncEngine.CreditCards,
+            loggedOffTitle = requireContext()
+                .getString(R.string.preferences_credit_cards_sync_cards_across_devices),
+            loggedInTitle = requireContext()
+                .getString(R.string.preferences_credit_cards_sync_cards),
             onSignInToSyncClicked = {
                 val directions =
                     CreditCardsSettingFragmentDirections.actionCreditCardsSettingFragmentToTurnOnSyncFragment()
-                findNavController().navigateBlockingForAsyncNavGraph(directions)
-            },
-            onSyncStatusClicked = {
-                val directions =
-                    CreditCardsSettingFragmentDirections.actionGlobalAccountSettingsFragment()
                 findNavController().navigateBlockingForAsyncNavGraph(directions)
             },
             onReconnectClicked = {

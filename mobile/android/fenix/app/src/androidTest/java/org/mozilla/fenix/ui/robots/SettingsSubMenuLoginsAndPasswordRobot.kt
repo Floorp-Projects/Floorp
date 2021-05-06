@@ -26,7 +26,7 @@ import org.mozilla.fenix.helpers.ext.waitNotNull
 class SettingsSubMenuLoginsAndPasswordRobot {
 
     fun verifyDefaultView() {
-        mDevice.waitNotNull(Until.findObjects(By.text("Sync logins")), TestAssetHelper.waitingTime)
+        mDevice.waitNotNull(Until.findObjects(By.text("Sync logins across devices")), TestAssetHelper.waitingTime)
         assertDefaultView()
     }
 
@@ -41,8 +41,6 @@ class SettingsSubMenuLoginsAndPasswordRobot {
     fun verifyDefaultValueExceptions() = assertDefaultValueExceptions()
 
     fun verifyDefaultValueAutofillLogins() = assertDefaultValueAutofillLogins()
-
-    fun verifyDefaultValueSyncLogins() = assertDefaultValueSyncLogins()
 
     class Transition {
         val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
@@ -71,7 +69,7 @@ class SettingsSubMenuLoginsAndPasswordRobot {
         }
 
         fun openSyncLogins(interact: SettingsTurnOnSyncRobot.() -> Unit): SettingsTurnOnSyncRobot.Transition {
-            fun syncLoginsButton() = onView(ViewMatchers.withText("Sync logins"))
+            fun syncLoginsButton() = onView(ViewMatchers.withText("Sync logins across devices"))
             syncLoginsButton().click()
 
             SettingsTurnOnSyncRobot().interact()
@@ -96,7 +94,7 @@ fun settingsSubMenuLoginsAndPassword(interact: SettingsSubMenuLoginsAndPasswordR
 private fun goBackButton() =
         onView(CoreMatchers.allOf(ViewMatchers.withContentDescription("Navigate up")))
 
-private fun assertDefaultView() = onView(ViewMatchers.withText("Sync logins"))
+private fun assertDefaultView() = onView(ViewMatchers.withText("Sync logins across devices"))
         .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
 
 private fun assertDefaultValueAutofillLogins() = onView(ViewMatchers.withText("Autofill"))

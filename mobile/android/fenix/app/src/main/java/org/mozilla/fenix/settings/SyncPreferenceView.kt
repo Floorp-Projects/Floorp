@@ -5,7 +5,6 @@
 package org.mozilla.fenix.settings
 
 import androidx.lifecycle.LifecycleOwner
-import androidx.preference.Preference
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import mozilla.components.concept.sync.AccountObserver
@@ -14,33 +13,33 @@ import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.service.fxa.SyncEngine
 import mozilla.components.service.fxa.manager.FxaAccountManager
 import mozilla.components.service.fxa.manager.SyncEnginesStorage
-import org.mozilla.fenix.R
 
 /**
  * A view to help manage the sync preference in the "Logins and passwords" and "Credit cards"
  * settings. The provided [syncPreference] is used to navigate to the different fragments
- * that manages the sync account authentication. A summary status will be also added
+ * that manages the sync account authentication. A toggle will be also added
  * depending on the sync account status.
  *
- * @param syncPreference The sync [Preference] to update and handle navigation.
+ * @param syncPreference The sync [SyncPreference] to update and handle navigation.
  * @param lifecycleOwner View lifecycle owner used to determine when to cancel UI jobs.
  * @param accountManager An instance of [FxaAccountManager].
  * @param syncEngine The sync engine that will be used for the sync status lookup.
+ * @param loggedOffTitle Text label for the setting when user is not logged in.
+ * @param loggedInTitle Text label for the setting when user is logged in.
  * @param onSignInToSyncClicked A callback executed when the [syncPreference] is clicked with a
  * preference status of "Sign in to Sync".
- * @param onSyncStatusClicked A callback executed when the [syncPreference] is clicked with a
- * preference status of "On" or "Off".
  * @param onReconnectClicked A callback executed when the [syncPreference] is clicked with a
  * preference status of "Reconnect".
  */
 @Suppress("LongParameterList")
 class SyncPreferenceView(
-    private val syncPreference: Preference,
+    private val syncPreference: SyncPreference,
     lifecycleOwner: LifecycleOwner,
     accountManager: FxaAccountManager,
     private val syncEngine: SyncEngine,
+    private val loggedOffTitle: String,
+    private val loggedInTitle: String,
     private val onSignInToSyncClicked: () -> Unit = {},
-    private val onSyncStatusClicked: () -> Unit = {},
     private val onReconnectClicked: () -> Unit = {}
 ) {
 
@@ -70,49 +69,53 @@ class SyncPreferenceView(
     }
 
     /**
-     * Shows the current status of the sync preference ("On"/"Off") for the logged in user.
+     * Shows a switch toggle for the sync preference when the user is logged in.
      */
     private fun updateSyncPreferenceStatus() {
         syncPreference.apply {
+            isSwitchWidgetVisible = true
+
             val syncEnginesStatus = SyncEnginesStorage(context).getStatus()
-            val loginsSyncStatus = syncEnginesStatus.getOrElse(syncEngine) { false }
+            val syncStatus = syncEnginesStatus.getOrElse(syncEngine) { false }
 
-            summary = context.getString(
-                if (loginsSyncStatus) R.string.preferences_passwords_sync_logins_on
-                else R.string.preferences_passwords_sync_logins_off
-            )
+            title = loggedInTitle
+            isChecked = syncStatus
 
-            setOnPreferenceClickListener {
-                onSyncStatusClicked()
+            setOnPreferenceChangeListener { _, newValue ->
+                SyncEnginesStorage(context).setStatus(syncEngine, newValue as Boolean)
                 true
             }
         }
     }
 
     /**
-     * Display that the user can "Sign in to Sync" when the user is logged off.
+     * Display that the user can sync across devices when the user is logged off.
      */
     private fun updateSyncPreferenceNeedsLogin() {
         syncPreference.apply {
-            summary = context.getString(R.string.preferences_passwords_sync_logins_sign_in)
+            isSwitchWidgetVisible = false
 
-            setOnPreferenceClickListener {
+            title = loggedOffTitle
+
+            setOnPreferenceChangeListener { _, _ ->
                 onSignInToSyncClicked()
-                true
+                false
             }
         }
     }
 
     /**
-     * Displays that the user needs to "Reconnect" to fix their account problems with sync.
+     * Displays the logged off title to prompt the user to to re-authenticate their sync account.
      */
     private fun updateSyncPreferenceNeedsReauth() {
         syncPreference.apply {
-            summary = context.getString(R.string.preferences_passwords_sync_logins_reconnect)
+            isSwitchWidgetVisible = false
 
-            setOnPreferenceClickListener {
+            title = loggedOffTitle
+
+            setOnPreferenceChangeListener { _, _ ->
                 onReconnectClicked()
-                true
+                false
             }
         }
     }
