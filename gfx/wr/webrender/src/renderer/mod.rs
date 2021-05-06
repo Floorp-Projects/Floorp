@@ -2127,15 +2127,15 @@ impl Renderer {
             frame_id
         };
 
-        // Inform the client that we are starting a composition transaction if native
-        // compositing is enabled. This needs to be done early in the frame, so that
-        // we can create debug overlays after drawing the main surfaces.
-        if let CompositorKind::Native { .. } = self.current_compositor_kind {
-            let compositor = self.compositor_config.compositor().unwrap();
-            compositor.begin_frame();
-        }
-
         if let Some(device_size) = device_size {
+            // Inform the client that we are starting a composition transaction if native
+            // compositing is enabled. This needs to be done early in the frame, so that
+            // we can create debug overlays after drawing the main surfaces.
+            if let CompositorKind::Native { .. } = self.current_compositor_kind {
+                let compositor = self.compositor_config.compositor().unwrap();
+                compositor.begin_frame();
+            }
+
             // Update the state of the debug overlay surface, ensuring that
             // the compositor mode has a suitable surface to draw to, if required.
             self.update_debug_overlay(device_size);
@@ -2302,13 +2302,15 @@ impl Renderer {
             self.unbind_debug_overlay();
         }
 
-        // Inform the client that we are finished this composition transaction if native
-        // compositing is enabled. This must be called after any debug / profiling compositor
-        // surfaces have been drawn and added to the visual tree.
-        if let CompositorKind::Native { .. } = self.current_compositor_kind {
-            profile_scope!("compositor.end_frame");
-            let compositor = self.compositor_config.compositor().unwrap();
-            compositor.end_frame();
+        if device_size.is_some() { 
+            // Inform the client that we are finished this composition transaction if native
+            // compositing is enabled. This must be called after any debug / profiling compositor
+            // surfaces have been drawn and added to the visual tree.
+            if let CompositorKind::Native { .. } = self.current_compositor_kind {
+                profile_scope!("compositor.end_frame");
+                let compositor = self.compositor_config.compositor().unwrap();
+                compositor.end_frame();
+            }
         }
 
         self.documents_seen.clear();
