@@ -50,19 +50,6 @@ interface TestInterfaceMaplikeJSObject {
 };
 
 [Pref="dom.expose_test_interfaces",
- JSImplementation="@mozilla.org/dom/test-interface-js-maplike;1",
- Exposed=Window]
-interface TestInterfaceJSMaplike {
-  [Throws]
-  constructor();
-
-  readonly maplike<DOMString, long>;
-  void setInternal(DOMString aKey, long aValue);
-  void clearInternal();
-  boolean deleteInternal(DOMString aKey);
-};
-
-[Pref="dom.expose_test_interfaces",
  Exposed=Window]
 interface TestInterfaceSetlike {
   [Throws]
