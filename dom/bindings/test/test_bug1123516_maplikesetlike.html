@@ -9,7 +9,7 @@
     </head>
     <body>
         <script class="testbody" type="application/javascript">
-        /* global TestInterfaceMaplike, TestInterfaceSetlike, TestInterfaceMaplikeObject, TestInterfaceJSMaplike, TestInterfaceMaplikeJSObject*/
+        /* global TestInterfaceMaplike, TestInterfaceSetlike, TestInterfaceMaplikeObject, TestInterfaceMaplikeJSObject*/
          SimpleTest.waitForExplicitFinish();
          SpecialPowers.pushPrefEnv({set: [["dom.expose_test_interfaces", true]]}, function() {
              var base_properties = [["has", "function", 1],
@@ -232,34 +232,6 @@
              m.clearInternal();
              is(m.size, 0, "JSObjectMapConvenience: size should be 0 after clearInternal");
              // JS implemented map creation convenience function test
-
-             info("JSMapConvenience: Testing JS implemented map creation convenience functions");
-             m = new TestInterfaceJSMaplike();
-             ok(m, "JSMapConvenience: got a TestInterfaceJSMaplike object");
-             is(m.size, 0, "JSMapConvenience: size should be zero");
-             ok(!m.has("test"), "JSMapConvenience: maplike has should return false");
-             m.setInternal("test", 1);
-             is(m.size, 1, "JSMapConvenience: size should be 1");
-             ok(m.has("test"), "JSMapConvenience: maplike has should return true");
-             is(m.get("test"), 1, "JSMapConvenience: maplike get should return value entered");
-             m.setInternal("test2", 2);
-             is(m.size, 2, "JSMapConvenience: size should be 2");
-             ok(m.has("test2"), "JSMapConvenience: maplike has should return true");
-             is(m.get("test2"), 2, "JSMapConvenience: maplike get should return value entered");
-             is(m.deleteInternal("test2"), true, "JSMapConvenience: maplike deleteInternal should return true");
-             is(m.size, 1, "JSMapConvenience: size should be 1");
-             for (let k of m.keys()) {
-                 is(k, "test", "JSMapConvenience: first keys element should be 'test'");
-             }
-             for (let v of m.values()) {
-                 is(v, 1, "JSMapConvenience: first values elements should be 1");
-             }
-             for (let e of m.entries()) {
-                 is(e[0], "test", "JSMapConvenience: entries first array element should be 'test'");
-                 is(e[1], 1, "JSMapConvenience: entries second array element should be 1");
-             }
-             m.clearInternal();
-             is(m.size, 0, "JSMapConvenience: size should be 0 after clearInternal");
 
              // Test this override for forEach
              info("ForEachThisOverride: Testing this override for forEach");
