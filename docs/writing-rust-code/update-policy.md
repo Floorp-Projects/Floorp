@@ -36,10 +36,27 @@ Release Firefox requirements:
 | Firefox 76 | Rust 1.41.0 | 1.41.0 | 2020 January 30 | 2020 April 2 | 2020 May 5
 | Firefox 77 | Rust 1.41.1 | 1.41.0 | 2020 January 30 | 2020 April 30 | 2020 June 2
 | Firefox 78 | Rust 1.43.0 | 1.41.0 | 2020 April 23 | 2020 May 28 | 2020 June 30
+| Firefox 79 | Rust 1.43.0 | 1.43.0 | 2020 April 23 | 2020 June 26 | 2020 July 28
+| Firefox 80 | Rust 1.43.0 | 1.43.0 | 2020 April 23 | 2020 July 23 | 2020 August 25
+| Firefox 81 | Rust 1.43.0 | 1.43.0 | 2020 April 23 | 2020 August 20 | 2020 September 22
+| Firefox 82 | Rust 1.43.0 | 1.43.0 | 2020 April 23 | 2020 September 17 | 2020 October 20
+| Firefox 83 | Rust 1.43.0 | 1.43.0 | 2020 April 23 | 2020 October 15 | 2020 November 17
+| Firefox 84 | Rust 1.47.0 | 1.43.0 | 2020 October 8 | 2020 November 12 | 2020 December 15
+| Firefox 85 | Rust 1.48.0 | 1.47.0 | 2020 November 19 | 2020 December 10 | 2021 January 26
+| Firefox 86 | Rust 1.49.0 | 1.47.0 | 2020 December 31 | 2021 January 21 | 2021 February 23
+| Firefox 87 | Rust 1.50.0 | 1.47.0 | 2021 February 11 | 2021 February 18 | 2021 March 23
+| Firefox 88 | Rust 1.50.0 | 1.47.0 | 2021 February 11 | 2021 March 18 | 2021 April 19
 | **Estimated** |
-| Firefox 79 | Rust 1.44.0 | 1.43.0 | 2020 June 4 | 2020 June 26 | 2020 July 28
-| Firefox 80 | Rust 1.44.0 | 1.44.0 | 2020 June 4 | 2020 July 23 | 2020 August 25
-| Firefox 81 | Rust 1.45.0 | 1.45.0 | 2020 July 16 | 2020 August 20 | 2020 September 22
+| Firefox 89 | Rust 1.51.0 | 1.47.0 | 2021 March 25 | 2021 April 15 | 2021 June 1
+| Firefox 90 | Rust 1.52.0 | 1.47.0 | 2021 May 6 | 2021 May 27 | 2021 June 29
+| Firefox 91 | Rust 1.52.0 | ? | 2021 May 6 | 2021 June 24 | 2021 July 27
+| Firefox 92 | Rust 1.53.0 | ? | 2021 June 17 | 2021 July 22 | 2021 August 24
+| Firefox 93 | Rust 1.54.0 | ? | 2021 July 29 | 2021 August 19 | 2021 September 21
+| Firefox 94 | Rust 1.54.0 | ? | 2021 July 29 | 2021 September 16 | 2021 October 19
+| Firefox 95 | Rust 1.55.0 | ? | 2021 September 9 | 2021 October 14 | 2021 November 16
+| Firefox 96 | Rust 1.56.0 | ? | 2021 October 21 | 2021 November 11 | 2021 December 14
+| Firefox 97 | Rust 1.56.0 | ? | 2021 October 21 | 2021 December 9 | 2021 January 25
+| Firefox 98 | Rust 1.57.0 | ? | 2021 December 2 | 2022 January 20 |
 
 New feature adoption schedule:
 
