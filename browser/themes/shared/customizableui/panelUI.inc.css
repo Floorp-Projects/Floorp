@@ -743,18 +743,13 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
 @media (-moz-proton) {
 .addon-banner-item,
 .panel-banner-item {
-  margin-inline: 8px;
+  margin: 0 8px 4px;
   padding: 8px;
   padding-inline-start: 0;
   min-height: unset;
   border-radius: 4px;
   -moz-box-align: start;
   font-weight: 600;
-}
-
-.addon-banner-item + .addon-banner-item,
-#appMenu-proton-addon-banners:not(:empty) + .panel-banner-item {
-  margin-block-start: 4px;
 }
 
 } /** END Proton **/
