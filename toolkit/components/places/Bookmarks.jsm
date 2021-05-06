@@ -664,7 +664,9 @@ var Bookmarks = Object.freeze({
         insertInfos[i] = Object.assign({}, item);
       }
 
-      PlacesObservers.notifyListeners(notifications);
+      if (notifications.length) {
+        PlacesObservers.notifyListeners(notifications);
+      }
 
       return insertInfos;
     })();
@@ -848,6 +850,8 @@ var Bookmarks = Object.freeze({
             );
           }
 
+          const notifications = [];
+
           // Notify onItemChanged to listeners.
           let observers = PlacesUtils.bookmarks.getObservers();
           // For lastModified, we only care about the original input, since we
@@ -969,6 +973,27 @@ var Bookmarks = Object.freeze({
               updatedItem.source,
               updatedItem.url && updatedItem.url.href,
             ]);
+
+            notifications.push(
+              new PlacesBookmarkMoved({
+                id: updatedItem._id,
+                itemType: updatedItem.type,
+                url: updatedItem.url && updatedItem.url.href,
+                guid: updatedItem.guid,
+                parentGuid: updatedItem.parentGuid,
+                source: updatedItem.source,
+                index: updatedItem.index,
+                oldParentGuid: item.parentGuid,
+                oldIndex: item.index,
+                isTagging:
+                  updatedItem.parentGuid === Bookmarks.tagsGuid ||
+                  parent.parentGuid === Bookmarks.tagsGuid,
+              })
+            );
+          }
+
+          if (notifications.length) {
+            PlacesObservers.notifyListeners(notifications);
           }
 
           // Remove non-enumerable properties.
@@ -1133,6 +1158,7 @@ var Bookmarks = Object.freeze({
                 newParent,
                 syncChangeDelta
               );
+              info.newParent = newParent;
 
               // For items moving within the same folder, we have to keep track
               // of their indexes. Otherwise we run the risk of not correctly
@@ -1173,8 +1199,10 @@ var Bookmarks = Object.freeze({
         }
       );
 
+      const notifications = [];
+
       // Updates complete, time to notify everyone.
-      for (let { updatedItem, existingItem } of updateInfos) {
+      for (let { updatedItem, existingItem, newParent } of updateInfos) {
         // Notify onItemChanged to listeners.
         let observers = PlacesUtils.bookmarks.getObservers();
         // If the item was moved, notify onItemMoved.
@@ -1196,9 +1224,30 @@ var Bookmarks = Object.freeze({
             source,
             existingItem.url,
           ]);
+
+          notifications.push(
+            new PlacesBookmarkMoved({
+              id: updatedItem._id,
+              itemType: updatedItem.type,
+              url: existingItem.url,
+              guid: updatedItem.guid,
+              parentGuid: updatedItem.parentGuid,
+              source,
+              index: updatedItem.index,
+              oldParentGuid: existingItem.parentGuid,
+              oldIndex: existingItem.index,
+              isTagging:
+                updatedItem.parentGuid === Bookmarks.tagsGuid ||
+                newParent.parentGuid === Bookmarks.tagsGuid,
+            })
+          );
         }
         // Remove non-enumerable properties.
         delete updatedItem.source;
+      }
+
+      if (notifications.length) {
+        PlacesObservers.notifyListeners(notifications);
       }
 
       return updateInfos.map(updateInfo =>
@@ -1740,6 +1789,8 @@ var Bookmarks = Object.freeze({
         options
       );
 
+      const notifications = [];
+
       let observers = PlacesUtils.bookmarks.getObservers();
       // Note that child.index is the old index.
       for (let i = 0; i < sortedChildren.length; ++i) {
@@ -1755,6 +1806,27 @@ var Bookmarks = Object.freeze({
           options.source,
           child.url && child.url.href,
         ]);
+
+        notifications.push(
+          new PlacesBookmarkMoved({
+            id: child._id,
+            itemType: child.type,
+            url: child.url && child.url.href,
+            guid: child.guid,
+            parentGuid: child.parentGuid,
+            source: options.source,
+            index: i,
+            oldParentGuid: child.parentGuid,
+            oldIndex: child.index,
+            isTagging:
+              child.parentGuid === Bookmarks.tagsGuid ||
+              parent.parentGuid === Bookmarks.tagsGuid,
+          })
+        );
+      }
+
+      if (notifications.length) {
+        PlacesObservers.notifyListeners(notifications);
       }
     })();
   },

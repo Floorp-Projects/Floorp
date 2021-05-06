@@ -220,6 +220,7 @@ EXPORTS.mozilla.dom += [
     "ParentProcessMessageManager.h",
     "PlacesBookmark.h",
     "PlacesBookmarkAddition.h",
+    "PlacesBookmarkMoved.h",
     "PlacesBookmarkRemoved.h",
     "PlacesEvent.h",
     "PlacesFavicon.h",
