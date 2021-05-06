@@ -161,10 +161,11 @@ class SearchSuggestionsFragment : Fragment(), CoroutineScope {
                 val context = textView.context
                 val url = SupportUtils.getSumoURLForTopic(context, SupportUtils.SumoTopic.SEARCH_SUGGESTIONS)
 
-                requireComponents.tabsUseCases.addPrivateTab(
+                requireComponents.tabsUseCases.addTab(
                     url,
                     source = SessionState.Source.MENU,
-                    selectTab = true
+                    selectTab = true,
+                    private = true
                 )
             }
 

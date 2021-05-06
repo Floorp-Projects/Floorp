@@ -7,9 +7,7 @@ package org.mozilla.focus
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-import mozilla.components.browser.session.Session
-import mozilla.components.browser.session.SessionManager
-import mozilla.components.browser.session.engine.EngineMiddleware
+import mozilla.components.browser.state.engine.EngineMiddleware
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.DefaultSettings
 import mozilla.components.concept.engine.Engine
@@ -114,13 +112,8 @@ class Components(
                 SearchMiddleware(context, migration = SearchMigration(context)),
                 SearchFilterMiddleware(),
                 PromptMiddleware()
-            ) + EngineMiddleware.create(engine, ::findSessionById)
+            ) + EngineMiddleware.create(engine)
         )
-    }
-
-    @Suppress("DEPRECATION")
-    private fun findSessionById(tabId: String): Session? {
-        return sessionManager.findSessionById(tabId)
     }
 
     /**
@@ -129,10 +122,10 @@ class Components(
     val customTabsStore by lazy { CustomTabsServiceStore() }
 
     @Suppress("DEPRECATION")
-    val sessionUseCases: SessionUseCases by lazy { SessionUseCases(store, sessionManager) }
+    val sessionUseCases: SessionUseCases by lazy { SessionUseCases(store) }
 
     @Suppress("DEPRECATION")
-    val tabsUseCases: TabsUseCases by lazy { TabsUseCases(store, sessionManager) }
+    val tabsUseCases: TabsUseCases by lazy { TabsUseCases(store) }
 
     val searchUseCases: SearchUseCases by lazy {
         SearchUseCases(store, tabsUseCases)
@@ -145,14 +138,9 @@ class Components(
     val appLinksUseCases: AppLinksUseCases by lazy { AppLinksUseCases(context.applicationContext) }
 
     @Suppress("DEPRECATION")
-    val customTabsUseCases: CustomTabsUseCases by lazy { CustomTabsUseCases(sessionManager, sessionUseCases.loadUrl) }
+    val customTabsUseCases: CustomTabsUseCases by lazy { CustomTabsUseCases(store, sessionUseCases.loadUrl) }
 
     val crashReporter: CrashReporter by lazy { createCrashReporter(context) }
-
-    @Deprecated("Use BrowserStore instead")
-    private val sessionManager by lazy {
-        SessionManager(engine, store)
-    }
 }
 
 private fun determineInitialScreen(context: Context): Screen {

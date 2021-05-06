@@ -33,10 +33,11 @@ abstract class LearnMoreSwitchPreference(context: Context?, attrs: AttributeSet?
         learnMoreLink.paintFlags = learnMoreLink.paintFlags or Paint.UNDERLINE_TEXT_FLAG
         learnMoreLink.setTextColor(ContextCompat.getColor(context, R.color.colorAction))
         learnMoreLink.setOnClickListener {
-            val tabId = context.components.tabsUseCases.addPrivateTab(
+            val tabId = context.components.tabsUseCases.addTab(
                 getLearnMoreUrl(),
                 source = SessionState.Source.MENU,
-                selectTab = true
+                selectTab = true,
+                private = true
             )
 
             context.components.appStore.dispatch(

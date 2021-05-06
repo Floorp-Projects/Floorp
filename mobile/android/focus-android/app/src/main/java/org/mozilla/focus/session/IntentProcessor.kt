@@ -129,18 +129,20 @@ class IntentProcessor(
     }
 
     private fun createSession(source: SessionState.Source, url: String): Result {
-        return Result.Tab(tabsUseCases.addPrivateTab(
+        return Result.Tab(tabsUseCases.addTab(
             url,
             source = source,
-            selectTab = true
+            selectTab = true,
+            private = true
         ))
     }
 
     private fun createSearchSession(source: SessionState.Source, url: String, searchTerms: String): Result {
-        return Result.Tab(tabsUseCases.addPrivateTab(
+        return Result.Tab(tabsUseCases.addTab(
             url,
             source = source,
-            searchTerms = searchTerms
+            searchTerms = searchTerms,
+            private = true
         ))
     }
 
@@ -152,10 +154,11 @@ class IntentProcessor(
                 private = true
             ))
         } else {
-            Result.Tab(tabsUseCases.addPrivateTab(
+            Result.Tab(tabsUseCases.addTab(
                 url,
                 source = source,
-                selectTab = true
+                selectTab = true,
+                private = true
             ))
         }
     }
@@ -174,9 +177,10 @@ class IntentProcessor(
             )
             Pair(Result.CustomTab(tabId), tabId)
         } else {
-            val tabId = tabsUseCases.addPrivateTab(
+            val tabId = tabsUseCases.addTab(
                 url,
-                source = source
+                source = source,
+                private = true
             )
             Pair(Result.Tab(tabId), tabId)
         }

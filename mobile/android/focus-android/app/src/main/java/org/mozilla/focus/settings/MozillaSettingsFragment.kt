@@ -44,26 +44,29 @@ class MozillaSettingsFragment : BaseSettingsFragment(),
 
         when (preference.key) {
             resources.getString(R.string.pref_key_about) -> run {
-                val tabId = activity.components.tabsUseCases.addPrivateTab(
+                val tabId = activity.components.tabsUseCases.addTab(
                     LocalizedContent.URL_ABOUT,
                     source = SessionState.Source.MENU,
-                    selectTab = true
+                    selectTab = true,
+                    private = true
                 )
                 requireComponents.appStore.dispatch(AppAction.OpenTab(tabId))
             }
             resources.getString(R.string.pref_key_help) -> run {
-                val tabId = activity.components.tabsUseCases.addPrivateTab(
+                val tabId = activity.components.tabsUseCases.addTab(
                     SupportUtils.HELP_URL,
                     source = SessionState.Source.MENU,
-                    selectTab = true
+                    selectTab = true,
+                    private = true
                 )
                 requireComponents.appStore.dispatch(AppAction.OpenTab(tabId))
             }
             resources.getString(R.string.pref_key_rights) -> run {
-                val tabId = activity.components.tabsUseCases.addPrivateTab(
+                val tabId = activity.components.tabsUseCases.addTab(
                     LocalizedContent.URL_RIGHTS,
                     source = SessionState.Source.MENU,
-                    selectTab = true
+                    selectTab = true,
+                    private = true
                 )
                 requireComponents.appStore.dispatch(AppAction.OpenTab(tabId))
             }
@@ -73,10 +76,11 @@ class MozillaSettingsFragment : BaseSettingsFragment(),
                 else
                     SupportUtils.PRIVACY_NOTICE_URL
 
-                val tabId = activity.components.tabsUseCases.addPrivateTab(
+                val tabId = activity.components.tabsUseCases.addTab(
                     url,
                     source = SessionState.Source.MENU,
-                    selectTab = true
+                    selectTab = true,
+                    private = true
                 )
                 requireComponents.appStore.dispatch(AppAction.OpenTab(tabId))
             }

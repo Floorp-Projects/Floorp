@@ -808,19 +808,21 @@ class BrowserFragment :
             }
 
             R.id.help -> {
-                requireComponents.tabsUseCases.addPrivateTab(
+                requireComponents.tabsUseCases.addTab(
                     SupportUtils.HELP_URL,
                     source = SessionState.Source.MENU,
-                    selectTab = true
+                    selectTab = true,
+                    private = true
                 )
             }
 
             R.id.help_trackers -> {
                 val url = SupportUtils.getSumoURLForTopic(requireContext(), SupportUtils.SumoTopic.TRACKERS)
-                requireComponents.tabsUseCases.addPrivateTab(
+                requireComponents.tabsUseCases.addTab(
                     url,
                     source = SessionState.Source.MENU,
-                    selectTab = true
+                    selectTab = true,
+                    private = true
                 )
             }
 
@@ -832,10 +834,11 @@ class BrowserFragment :
 
             R.id.report_site_issue -> {
                 val reportUrl = String.format(SupportUtils.REPORT_SITE_ISSUE_URL, tab.content.url)
-                requireComponents.tabsUseCases.addPrivateTab(
+                requireComponents.tabsUseCases.addTab(
                     reportUrl,
                     source = SessionState.Source.MENU,
-                    selectTab = true
+                    selectTab = true,
+                    private = true
                 )
 
                 TelemetryWrapper.reportSiteIssueEvent()

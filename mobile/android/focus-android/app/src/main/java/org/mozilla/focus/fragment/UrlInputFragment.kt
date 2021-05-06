@@ -441,7 +441,7 @@ class UrlInputFragment :
                 WhatsNew.userViewedWhatsNew(it)
 
                 val url = SupportUtils.getSumoURLForTopic(it, SupportUtils.SumoTopic.WHATS_NEW)
-                requireComponents.tabsUseCases.addPrivateTab(url, source = SessionState.Source.MENU)
+                requireComponents.tabsUseCases.addTab(url, source = SessionState.Source.MENU, private = true)
             }
 
             R.id.settings -> {
@@ -451,9 +451,10 @@ class UrlInputFragment :
             }
 
             R.id.help -> {
-                requireComponents.tabsUseCases.addPrivateTab(
+                requireComponents.tabsUseCases.addTab(
                     SupportUtils.HELP_URL,
-                    source = SessionState.Source.MENU
+                    source = SessionState.Source.MENU,
+                    private = true
                 )
             }
 
@@ -768,10 +769,11 @@ class UrlInputFragment :
 
             requireComponents.appStore.dispatch(AppAction.FinishEdit(tab.id))
         } else {
-            val tabId = requireComponents.tabsUseCases.addPrivateTab(
+            val tabId = requireComponents.tabsUseCases.addTab(
                 url,
                 source = SessionState.Source.USER_ENTERED,
-                selectTab = true
+                selectTab = true,
+                private = true
             )
 
             if (!searchTerms.isNullOrEmpty()) {
