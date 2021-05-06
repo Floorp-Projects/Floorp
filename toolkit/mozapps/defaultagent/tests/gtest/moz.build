@@ -15,14 +15,18 @@ UNIFIED_SOURCES += [
     "../../EventLog.cpp",
     "../../Registry.cpp",
     "CacheTest.cpp",
+    "SetDefaultBrowserTest.cpp",
 ]
 
 LOCAL_INCLUDES += [
+    "/browser/components/shell/",
     "/toolkit/mozapps/defaultagent",
 ]
 
 OS_LIBS += [
     "advapi32",
+    "bcrypt",
+    "crypt32",
     "kernel32",
     "rpcrt4",
 ]
