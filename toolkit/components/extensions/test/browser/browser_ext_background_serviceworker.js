@@ -105,8 +105,8 @@ add_task(async function test_serviceWorker_register_guarded_by_pref() {
 });
 
 add_task(async function test_cache_api_allowed() {
-  // Verify that Cache API support for moz-extension url availability is also
-  // conditioned by the extensions.backgroundServiceWorker.enabled pref.
+  // Verify that Cache API support for moz-extension url availability is
+  // conditioned only by the extensions.backgroundServiceWorker.enabled pref.
   // NOTE: the scenario with backgroundServiceWorkeEnable set to false
   // is part of "browser_ext_background_serviceworker_pref_disabled.js".
   const extension = ExtensionTestUtils.loadExtension({
