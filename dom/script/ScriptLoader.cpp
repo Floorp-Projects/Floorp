@@ -3141,8 +3141,15 @@ nsresult ScriptLoader::EvaluateScript(ScriptLoadRequest* aRequest) {
   nsAutoCString profilerLabelString;
   GetProfilerLabelForRequest(aRequest, profilerLabelString);
 
+  // Update our current script
+  // This must be destroyed after destroying nsAutoMicroTask, see:
+  // https://bugzilla.mozilla.org/show_bug.cgi?id=1620505#c4
+  nsIScriptElement* currentScript =
+      aRequest->IsModuleRequest() ? nullptr : aRequest->GetScriptElement();
+  AutoCurrentScriptUpdater scriptUpdater(this, currentScript);
+
   // New script entry point required, due to the "Create a script" sub-step of
-  // http://www.whatwg.org/specs/web-apps/current-work/#execute-the-script-block
+  // http://html.spec.whatwg.org/multipage/#execute-the-script-block
   nsAutoMicroTask mt;
   AutoEntryScript aes(globalObject, profilerLabelString.get(), true);
   JSContext* cx = aes.cx();
@@ -3251,10 +3258,6 @@ nsresult ScriptLoader::EvaluateScript(ScriptLoadRequest* aRequest) {
                           "scriptloader_no_encode");
       aRequest->mCacheInfo = nullptr;
     } else {
-      // Update our current script.
-      AutoCurrentScriptUpdater scriptUpdater(this,
-                                             aRequest->GetScriptElement());
-
       // Create a ClassicScript object and associate it with the JSScript.
       RefPtr<ClassicScript> classicScript =
           new ClassicScript(aRequest->mFetchOptions, aRequest->mBaseURL);
