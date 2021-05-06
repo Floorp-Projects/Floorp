@@ -29,17 +29,19 @@
 
 @media (-moz-proton-contextmenus) {
 @media (-moz-windows-default-theme) and (-moz-os-version: windows-win10) {
-  /* Prevent the global arrowscrollbox rules from replacing our background,
-     or adding more padding that would misalign our submenus. */
+  /* Prevent the global arrowscrollbox rules from replacing our background. */
   #BMB_bookmarksPopup::part(arrowscrollbox),
   #BMB_bookmarksPopup menupopup[placespopup=true]::part(arrowscrollbox) {
     background-color: var(--arrowpanel-background);
-    padding-block-start: 0;
   }
 
   /* Override the menupopup shadow rule from windows/global/popup.css */
   #BMB_bookmarksPopup {
     -moz-window-shadow: none;
+  }
+
+  #BMB_bookmarksPopup menupopup[placespopup=true] {
+    margin-top: -8px;
   }
 }
 }
