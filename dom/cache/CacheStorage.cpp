@@ -112,11 +112,7 @@ bool IsTrusted(const PrincipalInfo& aPrincipalInfo, bool aTestingPrefEnabled) {
 
   const nsAutoCString scheme(Substring(flatURL, schemePos, schemeLen));
   if (scheme.LowerCaseEqualsLiteral("https") ||
-      scheme.LowerCaseEqualsLiteral("file")) {
-    return true;
-  }
-
-  if (StaticPrefs::extensions_backgroundServiceWorker_enabled_AtStartup() &&
+      scheme.LowerCaseEqualsLiteral("file") ||
       scheme.LowerCaseEqualsLiteral("moz-extension")) {
     return true;
   }
