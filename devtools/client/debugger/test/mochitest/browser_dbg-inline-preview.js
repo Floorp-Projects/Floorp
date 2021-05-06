@@ -40,6 +40,10 @@ add_task(async function() {
     { identifier: "obj.a.b:", value: '"c"' },
   ]);
 
+  await checkInlinePreview(dbg, "classProperties", [
+    { identifier: "i:", value: "2" },
+  ]);
+
   // Checks that open in inspector button works in inline preview
   invokeInTab("btnClick");
   await checkInspectorIcon(dbg);

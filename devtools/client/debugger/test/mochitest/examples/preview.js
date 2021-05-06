@@ -41,8 +41,12 @@ function largeArray() {
 function classPreview() {
   class Foo {
     x = 1;
+    #privateVar = 2;
+    #privateMethod() {
+      return this.#privateVar;
+    }
     breakFn() {
-      let i = this.x;
+      let i = this.x * this.#privateVar;
       debugger;
     }
   }
