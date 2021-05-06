@@ -247,6 +247,10 @@ def filter_unsupported_artifact_builds(task, parameters):
     return not val
 
 
+def filter_out_shippable(task):
+    return not task.attributes.get("shippable", False)
+
+
 def _try_task_config(full_task_graph, parameters, graph_config):
     requested_tasks = parameters["try_task_config"]["tasks"]
     return list(set(requested_tasks) & full_task_graph.graph.nodes)
@@ -396,6 +400,7 @@ def target_tasks_try_auto(full_task_graph, parameters, graph_config):
         and filter_by_regex(t.label, include_regexes, mode="include")
         and filter_by_regex(t.label, exclude_regexes, mode="exclude")
         and filter_unsupported_artifact_builds(t, parameters)
+        and filter_out_shippable(t)
     ]
 
 
@@ -429,9 +434,8 @@ def target_tasks_autoland(full_task_graph, parameters, graph_config):
             return True
 
         build_type = task.attributes.get("build_type")
-        shippable = task.attributes.get("shippable", False)
 
-        if not build_type or build_type != "opt" or not shippable:
+        if not build_type or build_type != "opt" or filter_out_shippable(task):
             return True
 
         return False
