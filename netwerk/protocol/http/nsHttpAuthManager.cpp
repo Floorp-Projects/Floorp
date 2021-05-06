@@ -59,13 +59,11 @@ nsHttpAuthManager::GetAuthIdentity(
   }
 
   if (!aPath.IsEmpty())
-    rv = auth_cache->GetAuthEntryForPath(
-        PromiseFlatCString(aScheme).get(), PromiseFlatCString(aHost).get(),
-        aPort, PromiseFlatCString(aPath).get(), originSuffix, &entry);
+    rv = auth_cache->GetAuthEntryForPath(aScheme, aHost, aPort, aPath,
+                                         originSuffix, &entry);
   else
-    rv = auth_cache->GetAuthEntryForDomain(
-        PromiseFlatCString(aScheme).get(), PromiseFlatCString(aHost).get(),
-        aPort, PromiseFlatCString(aRealm).get(), originSuffix, &entry);
+    rv = auth_cache->GetAuthEntryForDomain(aScheme, aHost, aPort, aRealm,
+                                           originSuffix, &entry);
 
   if (NS_FAILED(rv)) return rv;
   if (!entry) return NS_ERROR_UNEXPECTED;
@@ -83,9 +81,7 @@ nsHttpAuthManager::SetAuthIdentity(
     const nsACString& aPath, const nsAString& aUserDomain,
     const nsAString& aUserName, const nsAString& aUserPassword, bool aIsPrivate,
     nsIPrincipal* aPrincipal) {
-  nsHttpAuthIdentity ident(PromiseFlatString(aUserDomain).get(),
-                           PromiseFlatString(aUserName).get(),
-                           PromiseFlatString(aUserPassword).get());
+  nsHttpAuthIdentity ident(aUserDomain, aUserName, aUserPassword);
 
   nsAutoCString originSuffix;
   if (aPrincipal) {
@@ -93,13 +89,11 @@ nsHttpAuthManager::SetAuthIdentity(
   }
 
   nsHttpAuthCache* auth_cache = aIsPrivate ? mPrivateAuthCache : mAuthCache;
-  return auth_cache->SetAuthEntry(
-      PromiseFlatCString(aScheme).get(), PromiseFlatCString(aHost).get(), aPort,
-      PromiseFlatCString(aPath).get(), PromiseFlatCString(aRealm).get(),
-      nullptr,  // credentials
-      nullptr,  // challenge
-      originSuffix, &ident,
-      nullptr);  // metadata
+  return auth_cache->SetAuthEntry(aScheme, aHost, aPort, aPath, aRealm,
+                                  ""_ns,  // credentials
+                                  ""_ns,  // challenge
+                                  originSuffix, &ident,
+                                  nullptr);  // metadata
 }
 
 NS_IMETHODIMP
