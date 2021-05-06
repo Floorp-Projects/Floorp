@@ -50,6 +50,7 @@
         "name": {
           "type": "string",
           "title": "Name",
+          "pattern": "^[a-z]{0,100}$",
           "description": "The application this applies to (default/not specified is everywhere)",
           "enum": [
             "",
@@ -62,6 +63,7 @@
           "description": "Which channel this belongs to (not set = everywhere). For ESR this is also keyed from the display version.",
           "items": {
             "type": "string",
+            "pattern": "^[a-z]{0,100}$",
             "enum": [
               "default",
               "nightly",
@@ -78,7 +80,8 @@
           "title": "Distributions",
           "description": "Which distributions this applies to.",
           "items": {
-            "type": "string"
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9.-]{0,100}$"
           },
           "uniqueItems": true
         },
@@ -87,18 +90,21 @@
           "title": "Excluded Distributions",
           "description": "Which distributions this does not apply to.",
           "items": {
-            "type": "string"
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9.-]{0,100}$"
           },
           "uniqueItems": true
         },
         "minVersion": {
           "type": "string",
           "title": "Minimum Version",
+          "pattern": "^[0-9a-z.]{0,20}$",
           "description": "The minimum version this applies to"
         },
         "maxVersion": {
           "type": "string",
           "title": "Maxium Version",
+          "pattern": "^[0-9a-z.]{0,20}$",
           "description": "The maximum version this applies to (less-than comparison)"
         }
       }
@@ -106,6 +112,7 @@
     "default": {
       "type": "string",
       "title": "Default Status",
+      "pattern": "^[a-z-]{0,20}$",
       "description": "Whether or not this engine should be default.",
       "enum": [
         "yes",
@@ -116,6 +123,7 @@
     "defaultPrivate": {
       "type": "string",
       "title": "Default Status (PBM)",
+      "pattern": "^[a-z-]{0,20}$",
       "description": "Whether or not this engine should be default in private browsing mode.",
       "enum": [
         "yes",
@@ -133,11 +141,13 @@
           "name": {
             "type": "string",
             "title": "Name",
+            "pattern": "^[a-z]{0,20}$",
             "description": "Name of the parameter that will be used in the search query"
           },
           "condition": {
             "type": "string",
             "title": "Condition",
+            "pattern": "^[a-z]{0,10}$",
             "description": "The type of parameter (pref or purpose)",
             "enum": [
               "pref",
@@ -147,6 +157,7 @@
           "purpose": {
             "type": "string",
             "title": "Purpose",
+            "pattern": "^[a-z{}]{0,100}$",
             "description": "The search purpose that triggers this parameter being appended.",
             "enum": [
               "searchbar",
@@ -159,11 +170,13 @@
           "value": {
             "type": "string",
             "title": "Value",
+            "pattern": "^[a-zA-Z0-9_]{0,100}$",
             "description": "If this is a purpose type, the value is used as the value of the parameter in the query"
           },
           "pref": {
             "type": "string",
             "title": "Preference name",
+            "pattern": "^[a-z0-9_]{0,100}$",
             "description": "The preference name to get the value from (i.e. browser.search.param.<preference name>)."
           }
         }
@@ -182,31 +195,37 @@
         "any": {
           "type": "string",
           "title": "Any",
+          "pattern": "^[a-z0-9]{0,100}$",
           "description": "SAP code that is used for all access points (overrides the others)."
         },
         "contextMenu": {
           "type": "string",
           "title": "Context Menu",
+          "pattern": "^[a-z0-9]{0,100}$",
           "description": "SAP code for searches from the context menu."
         },
         "homePage": {
           "type": "string",
           "title": "Home page",
+          "pattern": "^[a-z0-9]{0,100}$",
           "description": "SAP code for searches from the home page."
         },
         "keyword": {
           "type": "string",
           "title": "Keyword",
+          "pattern": "^[a-z0-9]{0,100}$",
           "description": "SAP code for searches via keywords."
         },
         "newTab": {
           "type": "string",
           "title": "New Tab",
+          "pattern": "^[a-z0-9]{0,100}$",
           "description": "SAP code for searches from the new tab page."
         },
         "searchBar": {
           "type": "string",
           "title": "Search Bar",
+          "pattern": "^[a-z0-9]{0,100}$",
           "description": "SAP code for searches from the search bar."
         }
       }
@@ -221,11 +240,13 @@
           "name": {
             "type": "string",
             "title": "Name",
+            "pattern": "^[a-zA-Z0-9.-]{0,100}$",
             "description": "Name of the parameter that will be used in the query"
           },
           "value": {
             "type": "string",
             "title": "Value",
+            "pattern": "^[a-zA-Z0-9_{}:/.-]{0,100}$",
             "description": "The value of parameter (pref or purpose)"
           }
         }
@@ -276,11 +297,13 @@
               "name": {
                 "type": "string",
                 "title": "Name",
+                "pattern": "^[a-zA-Z0-9.-]{0,100}$",
                 "description": "Name of the parameter to override"
               },
               "value": {
                 "type": "string",
                 "title": "Value",
+                "pattern": "^[a-zA-Z0-9_{}:/.-]{0,100}$",
                 "description": "The value to override with"
               }
             }
@@ -296,6 +319,7 @@
     "telemetryId": {
       "type": "string",
       "title": "Telemetry Id",
+      "pattern": "^[a-zA-Z0-9-]{0,100}$",
       "description": "The telemetry Id as used for some of SEARCH_COUNTS telemetry."
     },
     "webExtension": {
@@ -311,6 +335,7 @@
         "locale": {
           "type": "string",
           "title": "WebExtension Locale",
+          "pattern": "^[a-zA-Z0-9-]{0,100}$",
           "description": "Overrides the WebExtension locales and specifies to use a particular one. Ideally this should only be used when really necessary, otherwise considered deprecated."
         }
       }
@@ -336,7 +361,7 @@
           "title": "Matches exactly the codes",
           "items": {
             "type": "string",
-            "pattern": "^([a-z]{2,3}(\\-[a-zA-Z]{2,})?(-macos)?|default)$",
+            "pattern": "^([a-z]{2,3}(-[a-zA-Z]{2,})?(-macos)?|default)$",
             "minLength": 2
           }
         },
@@ -425,6 +450,7 @@
         "experiment": {
           "type": "string",
           "title": "Experiment",
+          "pattern": "^[a-zA-Z0-9-]{0,100}$",
           "description": "The experiment this section is associated with, if blank it is associated with any configuration."
         }
       }
