@@ -1,4 +1,5 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python2
+from __future__ import print_function
 
 import os
 import signal
@@ -6,18 +7,15 @@ import struct
 import sys
 
 
-def output(line, stream=sys.stdout, print_only=False):
-    if isinstance(line, str):
-        line = line.encode("utf-8", "surrogateescape")
-    if not print_only:
-        stream.buffer.write(struct.pack("@I", len(line)))
-    stream.buffer.write(line)
-    stream.flush()
+def output(line):
+    sys.stdout.write(struct.pack("@I", len(line)))
+    sys.stdout.write(line)
+    sys.stdout.flush()
 
 
 def echo_loop():
     while True:
-        line = sys.stdin.buffer.readline()
+        line = sys.stdin.readline()
         if not line:
             break
 
@@ -55,5 +53,5 @@ elif cmd == "ignore_sigterm":
 
             time.sleep(3600)
 elif cmd == "print":
-    output(sys.argv[2], stream=sys.stdout, print_only=True)
-    output(sys.argv[3], stream=sys.stderr, print_only=True)
+    sys.stdout.write(sys.argv[2])
+    sys.stderr.write(sys.argv[3])
