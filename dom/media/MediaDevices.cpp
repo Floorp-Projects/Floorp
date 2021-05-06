@@ -305,8 +305,29 @@ already_AddRefed<Promise> MediaDevices::SelectAudioOutput(
         "selectAudioOutput requires transient user activation.");
     return p.forget();
   }
-  aRv.ThrowNotSupportedError("Under implementation");
-  return nullptr;
+  RefPtr<MediaDevices> self(this);
+  MediaManager::Get()
+      ->SelectAudioOutput(owner, aOptions, aCallerType)
+      ->Then(
+          GetCurrentSerialEventTarget(), __func__,
+          [this, self, p](RefPtr<MediaDevice> aDevice) {
+            nsPIDOMWindowInner* window = GetWindowIfCurrent();
+            if (!window) {
+              return;  // Leave Promise pending after navigation by design.
+            }
+            MOZ_ASSERT(aDevice->mKind == dom::MediaDeviceKind::Audiooutput);
+            p->MaybeResolve(
+                MakeRefPtr<MediaDeviceInfo>(aDevice->mID, aDevice->mKind,
+                                            aDevice->mName, aDevice->mGroupID));
+          },
+          [this, self, p](const RefPtr<MediaMgrError>& error) {
+            nsPIDOMWindowInner* window = GetWindowIfCurrent();
+            if (!window) {
+              return;  // Leave Promise pending after navigation by design.
+            }
+            error->Reject(p);
+          });
+  return p.forget();
 }
 
 NS_IMPL_ADDREF_INHERITED(MediaDevices, DOMEventTargetHelper)

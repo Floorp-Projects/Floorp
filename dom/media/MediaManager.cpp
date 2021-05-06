@@ -33,6 +33,7 @@
 #include "mozilla/dom/GetUserMediaRequestBinding.h"
 #include "mozilla/dom/MediaDeviceInfo.h"
 #include "mozilla/dom/MediaDevices.h"
+#include "mozilla/dom/MediaDevicesBinding.h"
 #include "mozilla/dom/MediaStreamBinding.h"
 #include "mozilla/dom/MediaStreamTrackBinding.h"
 #include "mozilla/dom/Promise.h"
@@ -3161,6 +3162,88 @@ RefPtr<MediaManager::DeviceSetPromise> MediaManager::EnumerateDevices(
           [](RefPtr<MediaMgrError>&& aError) {
             return DeviceSetPromise::CreateAndReject(std::move(aError),
                                                      __func__);
+          });
+}
+
+RefPtr<MediaManager::DevicePromise> MediaManager::SelectAudioOutput(
+    nsPIDOMWindowInner* aWindow, const dom::AudioOutputOptions& aOptions,
+    CallerType aCallerType) {
+  bool isHandlingUserInput = UserActivation::IsHandlingUserInput();
+  nsCOMPtr<nsIPrincipal> principal =
+      nsGlobalWindowInner::Cast(aWindow)->GetPrincipal();
+  if (NS_WARN_IF(!principal)) {
+    return DevicePromise::CreateAndReject(
+        MakeRefPtr<MediaMgrError>(MediaMgrError::Name::SecurityError),
+        __func__);
+  }
+  // Disallow access to null principal.
+  if (principal->GetIsNullPrincipal()) {
+    return DevicePromise::CreateAndReject(
+        MakeRefPtr<MediaMgrError>(MediaMgrError::Name::NotAllowedError),
+        __func__);
+  }
+  ipc::PrincipalInfo principalInfo;
+  nsresult rv = PrincipalToPrincipalInfo(principal, &principalInfo);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return DevicePromise::CreateAndReject(
+        MakeRefPtr<MediaMgrError>(MediaMgrError::Name::SecurityError),
+        __func__);
+  }
+  uint64_t windowID = aWindow->WindowID();
+  auto devices = MakeRefPtr<MediaDeviceSetRefCnt>();
+  return EnumerateDevicesImpl(aWindow, MediaSourceEnum::Other,
+                              MediaSourceEnum::Other, MediaSinkEnum::Speaker,
+                              DeviceEnumerationType::Normal,
+                              DeviceEnumerationType::Normal, true, devices)
+      ->Then(
+          GetCurrentSerialEventTarget(), __func__,
+          [self = RefPtr<MediaManager>(this), windowID, devices, aOptions,
+           aCallerType, isHandlingUserInput, principalInfo](bool) mutable {
+            // Ensure that the window is still good.
+            RefPtr<nsPIDOMWindowInner> window =
+                nsGlobalWindowInner::GetInnerWindowWithId(windowID);
+            if (!window) {
+              LOG("SelectAudioOutput: bad window (%" PRIu64
+                  ") in post enumeration success callback!",
+                  windowID);
+              return DevicePromise::CreateAndReject(
+                  MakeRefPtr<MediaMgrError>(MediaMgrError::Name::AbortError),
+                  __func__);
+            }
+            MozPromiseHolder<DevicePromise> holder;
+            RefPtr<DevicePromise> p = holder.Ensure(__func__);
+            auto task = MakeRefPtr<SelectAudioOutputTask>(
+                std::move(holder), windowID, aCallerType, principalInfo);
+            nsString callID;
+            nsresult rv = GenerateUUID(callID);
+            MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
+            size_t taskCount =
+                self->AddTaskAndGetCount(windowID, callID, std::move(task));
+            bool askPermission =
+                !Preferences::GetBool("media.navigator.permission.disabled") ||
+                Preferences::GetBool("media.navigator.permission.force");
+            if (!askPermission) {
+              self->NotifyAllowed(callID, *devices);
+            } else {
+              MOZ_ASSERT(window->IsSecureContext());
+              auto req = MakeRefPtr<GetUserMediaRequest>(
+                  window, callID, std::move(devices), aOptions, true,
+                  isHandlingUserInput);
+              if (taskCount > 1) {
+                // there is at least 1 pending gUM request
+                self->mPendingGUMRequest.AppendElement(req.forget());
+              } else {
+                nsCOMPtr<nsIObserverService> obs =
+                    services::GetObserverService();
+                obs->NotifyObservers(req, "getUserMedia:request", nullptr);
+              }
+            }
+            return p;
+          },
+          [](RefPtr<MediaMgrError> aError) {
+            LOG("SelectAudioOutput: EnumerateDevicesImpl "
+                "failure callback called!");
+            return DevicePromise::CreateAndReject(std::move(aError), __func__);
           });
 }
 
