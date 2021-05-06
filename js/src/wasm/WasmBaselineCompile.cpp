@@ -213,7 +213,6 @@ static constexpr FloatRegister RabaldrScratchF64 = InvalidFloatReg;
 
 #ifdef JS_CODEGEN_ARM64
 #  define RABALDR_CHUNKY_STACK
-#  define RABALDR_SIDEALLOC_V128
 #  define RABALDR_SCRATCH_I32
 #  define RABALDR_SCRATCH_F32
 #  define RABALDR_SCRATCH_F64
@@ -386,40 +385,6 @@ struct RegF64 : public FloatRegister {
 };
 
 #ifdef ENABLE_WASM_SIMD
-#  ifdef RABALDR_SIDEALLOC_V128
-class RegV128 {
-  // fpr_ is either invalid or a double that aliases the simd register, see
-  // comments below at BaseRegAlloc.
-  FloatRegister fpr_;
-
- public:
-  RegV128() : fpr_(FloatRegister()) {}
-  explicit RegV128(FloatRegister reg)
-      : fpr_(FloatRegister(reg.encoding(), FloatRegisters::Double)) {
-    MOZ_ASSERT(reg.isSimd128());
-  }
-  static RegV128 fromDouble(FloatRegister reg) {
-    MOZ_ASSERT(reg.isDouble());
-    return RegV128(FloatRegister(reg.encoding(), FloatRegisters::Simd128));
-  }
-  FloatRegister asDouble() const { return fpr_; }
-  bool isInvalid() const { return fpr_.isInvalid(); }
-  bool isValid() const { return !isInvalid(); }
-  static RegV128 Invalid() { return RegV128(); }
-
-  operator FloatRegister() const {
-    return FloatRegister(fpr_.encoding(), FloatRegisters::Simd128);
-  }
-
-  bool operator==(const RegV128& that) const {
-    return asDouble() == that.asDouble();
-  }
-
-  bool operator!=(const RegV128& that) const {
-    return asDouble() != that.asDouble();
-  }
-};
-#  else
 struct RegV128 : public FloatRegister {
   RegV128() : FloatRegister() {}
   explicit RegV128(FloatRegister reg) : FloatRegister(reg) {
@@ -428,7 +393,6 @@ struct RegV128 : public FloatRegister {
   bool isValid() const { return !isInvalid(); }
   static RegV128 Invalid() { return RegV128(); }
 };
-#  endif
 #endif
 
 struct AnyReg {
@@ -635,16 +599,6 @@ class BaseRegAlloc {
   // properly with aliasing of registers: if s0 or s1 are allocated then d0 is
   // not allocatable; if s0 and s1 are freed individually then d0 becomes
   // allocatable.
-  //
-  // On platforms with RABALDR_SIDEALLOC_V128, the register set does not
-  // represent SIMD registers.  Instead, we allocate and free these registers as
-  // doubles and change the kind to Simd128 while the register is exposed to
-  // masm.  (This is the case on ARM64 for now, and is a consequence of needing
-  // more than 64 bits for FloatRegisters::SetType to represent SIMD registers.
-  // See lengty comment in Architecture-arm64.h.)
-  //
-  // FIXME: RABALDR_SIDEALLOC_V128 is no longer necessary on ARM64, we should
-  // be able to use SIMD normally there.
 
   BaseCompilerInterface* bc;
   AllocatableGeneralRegisterSet availGPR;
@@ -677,25 +631,12 @@ class BaseRegAlloc {
 
   template <MIRType t>
   bool hasFPU() {
-#ifdef RABALDR_SIDEALLOC_V128
-    // Workaround for GCC problem, bug 1677690
-    if constexpr (t == MIRType::Simd128) {
-      MOZ_CRASH("Should not happen");
-    } else
-#endif
-    {
-      return availFPU.hasAny<RegTypeOf<t>::value>();
-    }
+    return availFPU.hasAny<RegTypeOf<t>::value>();
   }
 
   bool isAvailableGPR(Register r) { return availGPR.has(r); }
 
-  bool isAvailableFPU(FloatRegister r) {
-#ifdef RABALDR_SIDEALLOC_V128
-    MOZ_ASSERT(!r.isSimd128());
-#endif
-    return availFPU.has(r);
-  }
+  bool isAvailableFPU(FloatRegister r) { return availFPU.has(r); }
 
   void allocGPR(Register r) {
     MOZ_ASSERT(isAvailableGPR(r));
@@ -760,24 +701,13 @@ class BaseRegAlloc {
 #endif
 
   void allocFPU(FloatRegister r) {
-#ifdef RABALDR_SIDEALLOC_V128
-    MOZ_ASSERT(!r.isSimd128());
-#endif
     MOZ_ASSERT(isAvailableFPU(r));
     availFPU.take(r);
   }
 
   template <MIRType t>
   FloatRegister allocFPU() {
-#ifdef RABALDR_SIDEALLOC_V128
-    // Workaround for GCC problem, bug 1677690
-    if constexpr (t == MIRType::Simd128) {
-      MOZ_CRASH("Should not happen");
-    } else
-#endif
-    {
-      return availFPU.takeAny<RegTypeOf<t>::value>();
-    }
+    return availFPU.takeAny<RegTypeOf<t>::value>();
   }
 
   void freeGPR(Register r) { availGPR.add(r); }
@@ -791,12 +721,7 @@ class BaseRegAlloc {
 #endif
   }
 
-  void freeFPU(FloatRegister r) {
-#ifdef RABALDR_SIDEALLOC_V128
-    MOZ_ASSERT(!r.isSimd128());
-#endif
-    availFPU.add(r);
-  }
+  void freeFPU(FloatRegister r) { availFPU.add(r); }
 
  public:
   explicit BaseRegAlloc()
@@ -891,11 +816,7 @@ class BaseRegAlloc {
   bool isAvailableF64(RegF64 r) { return isAvailableFPU(r); }
 
 #ifdef ENABLE_WASM_SIMD
-#  ifdef RABALDR_SIDEALLOC_V128
-  bool isAvailableV128(RegV128 r) { return isAvailableFPU(r.asDouble()); }
-#  else
   bool isAvailableV128(RegV128 r) { return isAvailableFPU(r); }
-#  endif
 #endif
 
   // TODO / OPTIMIZE (Bug 1316802): Do not sync everything on allocation
@@ -1001,31 +922,17 @@ class BaseRegAlloc {
 
 #ifdef ENABLE_WASM_SIMD
   [[nodiscard]] RegV128 needV128() {
-#  ifdef RABALDR_SIDEALLOC_V128
-    if (!hasFPU<MIRType::Double>()) {
-      bc->sync();
-    }
-    return RegV128::fromDouble(allocFPU<MIRType::Double>());
-#  else
     if (!hasFPU<MIRType::Simd128>()) {
       bc->sync();
     }
     return RegV128(allocFPU<MIRType::Simd128>());
-#  endif
   }
 
   void needV128(RegV128 specific) {
-#  ifdef RABALDR_SIDEALLOC_V128
-    if (!isAvailableV128(specific)) {
-      bc->sync();
-    }
-    allocFPU(specific.asDouble());
-#  else
     if (!isAvailableV128(specific)) {
       bc->sync();
     }
     allocFPU(specific);
-#  endif
   }
 #endif
 
@@ -1042,13 +949,7 @@ class BaseRegAlloc {
   void freeF32(RegF32 r) { freeFPU(r); }
 
 #ifdef ENABLE_WASM_SIMD
-  void freeV128(RegV128 r) {
-#  ifdef RABALDR_SIDEALLOC_V128
-    freeFPU(r.asDouble());
-#  else
-    freeFPU(r);
-#  endif
-  }
+  void freeV128(RegV128 r) { freeFPU(r); }
 #endif
 
   void freeTempPtr(RegPtr r, bool saved) {
@@ -1106,13 +1007,7 @@ class BaseRegAlloc {
     void addKnownF64(RegF64 r) { knownFPU_.add(r); }
 
 #  ifdef ENABLE_WASM_SIMD
-    void addKnownV128(RegV128 r) {
-#    ifdef RABALDR_SIDEALLOC_V128
-      knownFPU_.add(r.asDouble());
-#    else
-      knownFPU_.add(r);
-#    endif
-    }
+    void addKnownV128(RegV128 r) { knownFPU_.add(r); }
 #  endif
 
     void addKnownRef(RegRef r) { knownGPR_.add(r); }
