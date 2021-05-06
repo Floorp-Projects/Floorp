@@ -67,6 +67,7 @@ class Gamepad;
 class GamepadServiceTest;
 class NavigatorUserMediaSuccessCallback;
 class NavigatorUserMediaErrorCallback;
+class MozGetUserMediaDevicesSuccessCallback;
 
 struct MIDIOptions;
 
@@ -200,6 +201,11 @@ class Navigator final : public nsISupports, public nsWrapperCache {
                        NavigatorUserMediaSuccessCallback& aOnSuccess,
                        NavigatorUserMediaErrorCallback& aOnError,
                        CallerType aCallerType, ErrorResult& aRv);
+  MOZ_CAN_RUN_SCRIPT
+  void MozGetUserMediaDevices(MozGetUserMediaDevicesSuccessCallback& aOnSuccess,
+                              NavigatorUserMediaErrorCallback& aOnError,
+                              uint64_t aInnerWindowID, const nsAString& aCallID,
+                              ErrorResult& aRv);
 
   already_AddRefed<ServiceWorkerContainer> ServiceWorker();
 

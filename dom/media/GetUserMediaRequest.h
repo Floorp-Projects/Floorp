@@ -14,18 +14,9 @@
 #include "nsString.h"
 #include "nsWrapperCache.h"
 
-class nsIMediaDevice;
 class nsPIDOMWindowInner;
 
 namespace mozilla {
-
-class MediaDevice;
-
-namespace media {
-template <typename T>
-class Refcountable;
-}
-
 namespace dom {
 
 struct AudioOutputOptions;
@@ -34,19 +25,14 @@ enum class GetUserMediaRequestType : uint8_t;
 
 class GetUserMediaRequest : public nsISupports, public nsWrapperCache {
  public:
-  using MediaDeviceSetRefCnt =
-      media::Refcountable<nsTArray<RefPtr<MediaDevice>>>;
-
   // For getUserMedia "getUserMedia:request"
   GetUserMediaRequest(nsPIDOMWindowInner* aInnerWindow,
                       const nsAString& aCallID,
-                      RefPtr<MediaDeviceSetRefCnt> aMediaDeviceSet,
                       const MediaStreamConstraints& aConstraints,
                       bool aIsSecure, bool aIsHandlingUserInput);
   // For selectAudioOutput "getUserMedia:request"
   GetUserMediaRequest(nsPIDOMWindowInner* aInnerWindow,
                       const nsAString& aCallID,
-                      RefPtr<MediaDeviceSetRefCnt> aMediaDeviceSet,
                       const AudioOutputOptions& aAudioOutputOptions,
                       bool aIsSecure, bool aIsHandlingUserInput);
   // For "recording-device-stopped"
@@ -68,18 +54,16 @@ class GetUserMediaRequest : public nsISupports, public nsWrapperCache {
   void GetCallID(nsString& retval);
   void GetRawID(nsString& retval);
   void GetMediaSource(nsString& retval);
-  void GetDevices(nsTArray<RefPtr<nsIMediaDevice>>& retval) const;
   void GetConstraints(MediaStreamConstraints& result);
   void GetAudioOutputOptions(AudioOutputOptions& result);
 
  private:
-  virtual ~GetUserMediaRequest();
+  virtual ~GetUserMediaRequest() = default;
 
   uint64_t mInnerWindowID, mOuterWindowID;
   const nsString mCallID;
   const nsString mRawID;
   const nsString mMediaSource;
-  const RefPtr<MediaDeviceSetRefCnt> mMediaDeviceSet;
   UniquePtr<MediaStreamConstraints> mConstraints;
   UniquePtr<AudioOutputOptions> mAudioOutputOptions;
   GetUserMediaRequestType mType;

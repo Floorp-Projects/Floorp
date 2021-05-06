@@ -1283,11 +1283,6 @@ void Navigator::MozGetUserMedia(const MediaStreamConstraints& aConstraints,
     aRv.ThrowInvalidStateError("The document is not fully active.");
     return;
   }
-  if (Document* doc = mWindow->GetExtantDoc()) {
-    if (!mWindow->IsSecureContext()) {
-      doc->SetUseCounter(eUseCounter_custom_MozGetUserMediaInsec);
-    }
-  }
   RefPtr<MediaManager::StreamPromise> sp;
   if (!MediaManager::IsOn(aConstraints.mVideo) &&
       !MediaManager::IsOn(aConstraints.mAudio)) {
@@ -1323,6 +1318,27 @@ void Navigator::MozGetUserMedia(const MediaStreamConstraints& aConstraints,
         auto error = MakeRefPtr<MediaStreamError>(window, *aError);
         MediaManager::CallOnError(*onerror, *error);
       });
+}
+
+void Navigator::MozGetUserMediaDevices(
+    MozGetUserMediaDevicesSuccessCallback& aOnSuccess,
+    NavigatorUserMediaErrorCallback& aOnError, uint64_t aInnerWindowID,
+    const nsAString& aCallID, ErrorResult& aRv) {
+  if (!mWindow || !mWindow->GetOuterWindow() ||
+      mWindow->GetOuterWindow()->GetCurrentInnerWindow() != mWindow) {
+    aRv.Throw(NS_ERROR_NOT_AVAILABLE);
+    return;
+  }
+  if (Document* doc = mWindow->GetExtantDoc()) {
+    if (!mWindow->IsSecureContext()) {
+      doc->SetUseCounter(eUseCounter_custom_MozGetUserMediaInsec);
+    }
+  }
+  RefPtr<MediaManager> manager = MediaManager::Get();
+  // XXXbz aOnError seems to be unused?
+  nsCOMPtr<nsPIDOMWindowInner> window(mWindow);
+  aRv =
+      manager->GetUserMediaDevices(window, aOnSuccess, aInnerWindowID, aCallID);
 }
 
 //*****************************************************************************
