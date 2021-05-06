@@ -825,7 +825,7 @@ nsresult nsHttpTransaction::ReadSegments(nsAHttpSegmentReader* reader,
     mEarlyDataDisposition = EARLY_SENT;
   }
 
-  if (mDeferredSendProgress && mConnection && mConnection->Transport()) {
+  if (mDeferredSendProgress && mConnection) {
     // to avoid using mRequestStream concurrently, OnTransportStatus()
     // did not report upload status off the ReadSegments() stack from
     // nsSocketTransport do it now.
