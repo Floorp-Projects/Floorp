@@ -88,22 +88,29 @@ IPCResult WebGLParent::RecvGetFrontBufferSnapshot(
     webgl::FrontBufferSnapshotIpc* const ret) {
   *ret = {};
 
-  const auto surfSize = mHost->GetFrontBufferSize();
-  const auto byteSize = 4 * surfSize.x * surfSize.y;
+  const auto maybeSize = mHost->FrontBufferSnapshotInto({});
+  if (maybeSize) {
+    const auto& surfSize = *maybeSize;
+    const auto byteSize = 4 * surfSize.x * surfSize.y;
 
-  auto shmem = webgl::RaiiShmem::Alloc(
-      this, byteSize, mozilla::ipc::SharedMemory::SharedMemoryType::TYPE_BASIC);
-  if (!shmem) {
-    NS_WARNING("Failed to alloc shmem for RecvGetFrontBufferSnapshot.");
-    return IPC_FAIL(this, "Failed to allocate shmem for result");
-  }
+    auto shmem = webgl::RaiiShmem::Alloc(
+        this, byteSize,
+        mozilla::ipc::SharedMemory::SharedMemoryType::TYPE_BASIC);
+    if (!shmem) {
+      NS_WARNING("Failed to alloc shmem for RecvGetFrontBufferSnapshot.");
+      return IPC_FAIL(this, "Failed to allocate shmem for result");
+    }
 
-  const auto range = shmem.ByteRange();
-  auto retSize = surfSize;
-  if (!mHost->FrontBufferSnapshotInto(range)) {
-    retSize = {0, 0};  // Zero means failure.
+    const auto range = shmem.ByteRange();
+    auto retSize = surfSize;
+    if (!mHost->FrontBufferSnapshotInto(Some(range))) {
+      gfxCriticalNote << "WebGLParent::RecvGetFrontBufferSnapshot: "
+                         "FrontBufferSnapshotInto(some) failed after "
+                         "FrontBufferSnapshotInto(none)";
+      retSize = {0, 0};  // Zero means failure.
+    }
+    *ret = {retSize, shmem.Extract()};
   }
-  *ret = {retSize, shmem.Extract()};
   return IPC_OK();
 }
 
