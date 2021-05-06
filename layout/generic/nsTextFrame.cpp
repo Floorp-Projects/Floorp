@@ -4148,16 +4148,6 @@ bool nsTextPaintStyle::InitSelectionColorsAndShadow() {
                     &nsStyleText::mWebkitTextFillColor);
       mSelectionTextColor =
           EnsureDifferentColors(frameColor, mSelectionBGColor);
-    } else if (mSelectionTextColor == NS_CHANGE_COLOR_IF_SAME_AS_BG) {
-      nscolor frameColor =
-          SVGUtils::IsInSVGTextSubtree(mFrame)
-              ? mFrame->GetVisitedDependentColor(&nsStyleSVG::mFill)
-              : mFrame->GetVisitedDependentColor(
-                    &nsStyleText::mWebkitTextFillColor);
-      if (frameColor == mSelectionBGColor) {
-        mSelectionTextColor = LookAndFeel::Color(
-            LookAndFeel::ColorID::TextSelectForegroundCustom, mFrame);
-      }
     } else {
       EnsureSufficientContrast(&mSelectionTextColor, &mSelectionBGColor);
     }
