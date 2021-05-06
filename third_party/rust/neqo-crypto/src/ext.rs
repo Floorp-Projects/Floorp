@@ -69,8 +69,7 @@ impl ExtensionTracker {
     where
         F: FnOnce(&mut dyn ExtensionHandler) -> T,
     {
-        let handler_ptr = arg as *mut BoxedExtensionHandler;
-        let rc = handler_ptr.as_mut().unwrap();
+        let rc = arg.cast::<BoxedExtensionHandler>().as_mut().unwrap();
         f(&mut *rc.borrow_mut())
     }
 

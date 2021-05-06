@@ -179,6 +179,8 @@ impl Http3Client {
     /// This may be call if an application has a resumption token. This must be called before connection starts.
     /// # Errors
     /// An error is return if token cannot be decoded or a connection is is a wrong state.
+    /// # Panics
+    /// On closing if the base handler can't handle it (debug only).
     pub fn enable_resumption(&mut self, now: Instant, token: impl AsRef<[u8]>) -> Res<()> {
         if self.base_handler.state != Http3State::Initializing {
             return Err(Error::InvalidState);
@@ -200,12 +202,10 @@ impl Http3Client {
         self.conn.enable_resumption(now, tok)?;
         if self.conn.state().closed() {
             let state = self.conn.state().clone();
-            debug_assert!(
-                Ok(true)
-                    == self
-                        .base_handler
-                        .handle_state_change(&mut self.conn, &state)
-            );
+            let res = self
+                .base_handler
+                .handle_state_change(&mut self.conn, &state);
+            debug_assert_eq!(Ok(true), res);
             return Err(Error::FatalError);
         }
         if *self.conn.zero_rtt_state() == ZeroRttState::Sending {
@@ -285,11 +285,12 @@ impl Http3Client {
             .map_err(|e| Error::map_stream_create_errors(&e))?;
 
         // Transform pseudo-header fields
-        let mut final_headers = Vec::new();
-        final_headers.push((":method".into(), method.to_owned()));
-        final_headers.push((":scheme".into(), scheme.to_owned()));
-        final_headers.push((":authority".into(), host.to_owned()));
-        final_headers.push((":path".into(), path.to_owned()));
+        let mut final_headers = vec![
+            (":method".into(), method.to_owned()),
+            (":scheme".into(), scheme.to_owned()),
+            (":authority".into(), host.to_owned()),
+            (":path".into(), path.to_owned()),
+        ];
         final_headers.extend_from_slice(headers);
 
         self.base_handler.add_streams(
@@ -6131,6 +6132,7 @@ mod tests {
                 max_table_size_decoder: MAX_TABLE_SIZE,
                 max_blocked_streams: MAX_BLOCKED_STREAMS,
             },
+            None,
         )
         .unwrap();
 

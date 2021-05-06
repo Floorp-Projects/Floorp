@@ -10,7 +10,7 @@ use neqo_common::{qtrace, Decoder, Encoder};
 
 use crate::cid::MAX_CONNECTION_ID_LEN;
 use crate::packet::{PacketBuilder, PacketType};
-use crate::stream_id::{StreamId, StreamIndex, StreamType};
+use crate::stream_id::{StreamId, StreamType};
 use crate::{AppError, ConnectionError, Error, Res, TransportError};
 
 use std::convert::TryFrom;
@@ -155,7 +155,7 @@ pub enum Frame<'a> {
     },
     MaxStreams {
         stream_type: StreamType,
-        maximum_streams: StreamIndex,
+        maximum_streams: u64,
     },
     DataBlocked {
         data_limit: u64,
@@ -166,7 +166,7 @@ pub enum Frame<'a> {
     },
     StreamsBlocked {
         stream_type: StreamType,
-        stream_limit: StreamIndex,
+        stream_limit: u64,
     },
     NewConnectionId {
         sequence_number: u64,
@@ -240,6 +240,21 @@ impl<'a> Frame<'a> {
             }
             Self::HandshakeDone => FRAME_TYPE_HANDSHAKE_DONE,
         }
+    }
+
+    pub fn is_stream(&self) -> bool {
+        matches!(
+            self,
+            Self::ResetStream { .. }
+                | Self::StopSending { .. }
+                | Self::Stream { .. }
+                | Self::MaxData { .. }
+                | Self::MaxStreamData { .. }
+                | Self::MaxStreams { .. }
+                | Self::DataBlocked { .. }
+                | Self::StreamDataBlocked { .. }
+                | Self::StreamsBlocked { .. }
+        )
     }
 
     pub fn stream_type(fin: bool, nonzero_offset: bool, fill: bool) -> u64 {
@@ -468,7 +483,7 @@ impl<'a> Frame<'a> {
                 }
                 Ok(Self::MaxStreams {
                     stream_type: Self::stream_type_from_bit(t),
-                    maximum_streams: StreamIndex::new(m),
+                    maximum_streams: m,
                 })
             }
             FRAME_TYPE_DATA_BLOCKED => Ok(Self::DataBlocked {
@@ -481,7 +496,7 @@ impl<'a> Frame<'a> {
             FRAME_TYPE_STREAMS_BLOCKED_BIDI | FRAME_TYPE_STREAMS_BLOCKED_UNIDI => {
                 Ok(Self::StreamsBlocked {
                     stream_type: Self::stream_type_from_bit(t),
-                    stream_limit: StreamIndex::new(dv(dec)?),
+                    stream_limit: dv(dec)?,
                 })
             }
             FRAME_TYPE_NEW_CONNECTION_ID => {
@@ -690,14 +705,14 @@ mod tests {
     fn max_streams() {
         let mut f = Frame::MaxStreams {
             stream_type: StreamType::BiDi,
-            maximum_streams: StreamIndex::new(0x1234),
+            maximum_streams: 0x1234,
         };
 
         just_dec(&f, "125234");
 
         f = Frame::MaxStreams {
             stream_type: StreamType::UniDi,
-            maximum_streams: StreamIndex::new(0x1234),
+            maximum_streams: 0x1234,
         };
 
         just_dec(&f, "135234");
@@ -724,14 +739,14 @@ mod tests {
     fn streams_blocked() {
         let mut f = Frame::StreamsBlocked {
             stream_type: StreamType::BiDi,
-            stream_limit: StreamIndex::new(0x1234),
+            stream_limit: 0x1234,
         };
 
         just_dec(&f, "165234");
 
         f = Frame::StreamsBlocked {
             stream_type: StreamType::UniDi,
-            stream_limit: StreamIndex::new(0x1234),
+            stream_limit: 0x1234,
         };
 
         just_dec(&f, "175234");

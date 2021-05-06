@@ -13,7 +13,7 @@ use crate::server_events::{ClientRequestStream, Http3ServerEvent, Http3ServerEve
 use crate::settings::HttpZeroRttChecker;
 use crate::Res;
 use neqo_common::{qtrace, Datagram};
-use neqo_crypto::{AntiReplay, Cipher};
+use neqo_crypto::{AntiReplay, Cipher, ZeroRttChecker};
 use neqo_qpack::QpackSettings;
 use neqo_transport::server::{ActiveConnectionRef, Server, ValidateAddress};
 use neqo_transport::{
@@ -54,6 +54,7 @@ impl Http3Server {
         anti_replay: AntiReplay,
         cid_manager: Rc<RefCell<dyn ConnectionIdGenerator>>,
         qpack_settings: QpackSettings,
+        zero_rtt_checker: Option<Box<dyn ZeroRttChecker>>,
     ) -> Res<Self> {
         Ok(Self {
             server: Server::new(
@@ -61,7 +62,8 @@ impl Http3Server {
                 certs,
                 protocols,
                 anti_replay,
-                Box::new(HttpZeroRttChecker::new(qpack_settings)),
+                zero_rtt_checker
+                    .unwrap_or_else(|| Box::new(HttpZeroRttChecker::new(qpack_settings))),
                 cid_manager,
                 ConnectionParameters::default(),
             )?,
@@ -234,7 +236,7 @@ mod tests {
     use super::{Http3Server, Http3ServerEvent, Http3State, Rc, RefCell};
     use crate::{Error, Header};
     use neqo_common::event::Provider;
-    use neqo_crypto::AuthenticationStatus;
+    use neqo_crypto::{AuthenticationStatus, ZeroRttCheckResult, ZeroRttChecker};
     use neqo_qpack::encoder::QPackEncoder;
     use neqo_qpack::QpackSettings;
     use neqo_transport::{
@@ -262,6 +264,7 @@ mod tests {
             anti_replay(),
             Rc::new(RefCell::new(CountingConnectionIdGenerator::default())),
             settings,
+            None,
         )
         .expect("create a server")
     }
@@ -342,18 +345,11 @@ mod tests {
     }
 
     // Start a client/server and check setting frame.
-    fn connect_and_receive_settings() -> (Http3Server, Connection) {
-        // Create a server and connect it to a client.
-        // We will have a http3 server on one side and a neqo_transport
-        // connection on the other side so that we can check what the http3
-        // side sends and also to simulate an incorrectly behaving http3
-        // client.
-
+    fn connect_and_receive_settings_with_server(server: &mut Http3Server) -> Connection {
         const CONTROL_STREAM_DATA: &[u8] = &[0x0, 0x4, 0x6, 0x1, 0x40, 0x64, 0x7, 0x40, 0x64];
 
-        let mut server = default_server();
         let mut client = default_client();
-        connect_transport(&mut server, &mut client, false);
+        connect_transport(server, &mut client, false);
 
         let mut connected = false;
         while let Some(e) = client.next_event() {
@@ -409,6 +405,18 @@ mod tests {
             }
         }
         assert!(connected);
+        client
+    }
+
+    fn connect_and_receive_settings() -> (Http3Server, Connection) {
+        // Create a server and connect it to a client.
+        // We will have a http3 server on one side and a neqo_transport
+        // connection on the other side so that we can check what the http3
+        // side sends and also to simulate an incorrectly behaving http3
+        // client.
+
+        let mut server = default_server();
+        let client = connect_and_receive_settings_with_server(&mut server);
         (server, client)
     }
 
@@ -446,8 +454,8 @@ mod tests {
     }
 
     // Connect transport, send and receive settings.
-    fn connect() -> (Http3Server, PeerConnection) {
-        let (mut hconn, mut neqo_trans_conn) = connect_and_receive_settings();
+    fn connect_to(server: &mut Http3Server) -> PeerConnection {
+        let mut neqo_trans_conn = connect_and_receive_settings_with_server(server);
         let control_stream = neqo_trans_conn.stream_create(StreamType::UniDi).unwrap();
         let mut sent = neqo_trans_conn.stream_send(
             control_stream,
@@ -468,18 +476,22 @@ mod tests {
         sent = neqo_trans_conn.stream_send(decoder_stream, &[0x3]);
         assert_eq!(sent, Ok(1));
         let out1 = neqo_trans_conn.process(None, now());
-        let out2 = hconn.process(out1.dgram(), now());
+        let out2 = server.process(out1.dgram(), now());
         let _ = neqo_trans_conn.process(out2.dgram(), now());
 
         // assert no error occured.
-        assert_not_closed(&mut hconn);
-        (
-            hconn,
-            PeerConnection {
-                conn: neqo_trans_conn,
-                control_stream_id: control_stream,
-            },
-        )
+        assert_not_closed(server);
+
+        PeerConnection {
+            conn: neqo_trans_conn,
+            control_stream_id: control_stream,
+        }
+    }
+
+    fn connect() -> (Http3Server, PeerConnection) {
+        let mut server = default_server();
+        let client = connect_to(&mut server);
+        (server, client)
     }
 
     // Server: Test receiving a new control stream and a SETTINGS frame.
@@ -1118,5 +1130,44 @@ mod tests {
             }
         }
         assert_eq!(requests.len(), 2);
+    }
+
+    #[derive(Debug, Default)]
+    pub struct RejectZeroRtt {}
+    impl ZeroRttChecker for RejectZeroRtt {
+        fn check(&self, _token: &[u8]) -> ZeroRttCheckResult {
+            ZeroRttCheckResult::Reject
+        }
+    }
+
+    #[test]
+    fn reject_zero_server() {
+        fixture_init();
+        let mut server = Http3Server::new(
+            now(),
+            DEFAULT_KEYS,
+            DEFAULT_ALPN,
+            anti_replay(),
+            Rc::new(RefCell::new(CountingConnectionIdGenerator::default())),
+            DEFAULT_SETTINGS,
+            Some(Box::new(RejectZeroRtt::default())),
+        )
+        .expect("create a server");
+        let mut client = connect_to(&mut server);
+        let token = client.events().find_map(|e| {
+            if let ConnectionEvent::ResumptionToken(token) = e {
+                Some(token)
+            } else {
+                None
+            }
+        });
+        assert!(token.is_some());
+
+        let mut client = default_client();
+        client.enable_resumption(now(), token.unwrap()).unwrap();
+
+        connect_transport(&mut server, &mut client, true);
+        assert!(client.tls_info().unwrap().resumed());
+        assert_eq!(client.zero_rtt_state(), &ZeroRttState::Rejected);
     }
 }

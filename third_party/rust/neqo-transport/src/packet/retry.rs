@@ -10,7 +10,7 @@ use crate::packet::QuicVersion;
 use crate::{Error, Res};
 
 use neqo_common::qerror;
-use neqo_crypto::{aead::Aead, hkdf, TLS_AES_128_GCM_SHA256, TLS_VERSION_1_3};
+use neqo_crypto::{hkdf, Aead, TLS_AES_128_GCM_SHA256, TLS_VERSION_1_3};
 
 use std::cell::RefCell;
 

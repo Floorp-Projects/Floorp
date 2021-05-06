@@ -17,7 +17,8 @@ use std::convert::TryInto;
 use std::ops::{Deref, DerefMut};
 use std::ptr::NonNull;
 
-#[allow(clippy::unreadable_literal)]
+#[allow(unknown_lints, renamed_and_removed_lints, clippy::unknown_clippy_lints)] // Until we require rust 1.51.
+#[allow(clippy::unreadable_literal, clippy::upper_case_acronyms)]
 mod nss_p11 {
     include!(concat!(env!("OUT_DIR"), "/nss_p11.rs"));
 }
@@ -102,6 +103,8 @@ impl std::fmt::Debug for SymKey {
 }
 
 /// Generate a randomized buffer.
+/// # Panics
+/// When `size` is too large or NSS fails.
 #[must_use]
 pub fn random(size: usize) -> Vec<u8> {
     let mut buf = vec![0; size];

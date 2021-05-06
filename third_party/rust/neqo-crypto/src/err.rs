@@ -4,7 +4,8 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-#![allow(dead_code)]
+#![allow(dead_code, clippy::upper_case_acronyms)]
+#![allow(unknown_lints, renamed_and_removed_lints, clippy::unknown_clippy_lints)] // Until we require rust 1.51.
 
 use std::os::raw::c_char;
 
@@ -81,6 +82,18 @@ impl From<std::ffi::NulError> for Error {
     }
 }
 
+impl From<i32> for Error {
+    #[must_use]
+    fn from(code: PRErrorCode) -> Self {
+        let name = wrap_str_fn(|| unsafe { PR_ErrorToName(code) }, "UNKNOWN_ERROR");
+        let desc = wrap_str_fn(
+            || unsafe { PR_ErrorToString(code, PR_LANGUAGE_I_DEFAULT) },
+            "...",
+        );
+        Self::NssError { name, code, desc }
+    }
+}
+
 use std::ffi::CStr;
 
 fn wrap_str_fn<F>(f: F, dflt: &str) -> String
@@ -102,12 +115,7 @@ pub fn secstatus_to_res(rv: SECStatus) -> Res<()> {
     }
 
     let code = unsafe { PR_GetError() };
-    let name = wrap_str_fn(|| unsafe { PR_ErrorToName(code) }, "UNKNOWN_ERROR");
-    let desc = wrap_str_fn(
-        || unsafe { PR_ErrorToString(code, PR_LANGUAGE_I_DEFAULT) },
-        "...",
-    );
-    Err(Error::NssError { name, code, desc })
+    Err(Error::from(code))
 }
 
 pub fn is_blocked(result: &Res<()>) -> bool {

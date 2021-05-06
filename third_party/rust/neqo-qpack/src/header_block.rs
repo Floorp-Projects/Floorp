@@ -10,7 +10,7 @@ use crate::prefix::{
     HEADER_FIELD_LITERAL_NAME_REF_DYNAMIC, HEADER_FIELD_LITERAL_NAME_REF_DYNAMIC_POST,
     HEADER_FIELD_LITERAL_NAME_REF_STATIC, NO_PREFIX,
 };
-use crate::qpack_send_buf::QPData;
+use crate::qpack_send_buf::QpackData;
 use crate::reader::{to_string, ReceiverBufferWrapper};
 use crate::table::HeaderTable;
 use crate::Header;
@@ -21,7 +21,7 @@ use std::ops::{Deref, Div};
 
 #[derive(Default, Debug, PartialEq)]
 pub struct HeaderEncoder {
-    buf: QPData,
+    buf: QpackData,
     base: u64,
     use_huffman: bool,
     max_entries: u64,
@@ -37,7 +37,7 @@ impl ::std::fmt::Display for HeaderEncoder {
 impl HeaderEncoder {
     pub fn new(base: u64, use_huffman: bool, max_entries: u64) -> Self {
         Self {
-            buf: QPData::default(),
+            buf: QpackData::default(),
             base,
             use_huffman,
             max_entries,

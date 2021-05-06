@@ -1,6 +1,6 @@
 [package]
 name = "neqo-crypto"
-version = "0.4.23"
+version = "0.4.24"
 authors = ["Martin Thomson <mt@lowentropy.net>"]
 edition = "2018"
 build = "build.rs"
@@ -23,3 +23,4 @@ test-fixture = { path = "../test-fixture" }
 default = ["deny-warnings"]
 deny-warnings = []
 gecko = []
+fuzzing = []

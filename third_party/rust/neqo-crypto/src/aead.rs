@@ -81,7 +81,7 @@ impl Aead {
             version,
             cipher,
             secret,
-            p.as_ptr() as *const c_char,
+            p.as_ptr().cast(),
             c_uint::try_from(p.len())?,
             &mut ctx,
         )?;

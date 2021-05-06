@@ -4,11 +4,10 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use crate::aead::Aead;
 use crate::constants::{Cipher, Version};
 use crate::err::{Error, Res};
-use crate::hkdf;
 use crate::p11::{random, SymKey};
+use crate::{hkdf, Aead};
 
 use neqo_common::{hex, qinfo, qtrace, Encoder};
 

@@ -247,6 +247,12 @@ impl Http3Connection {
         }
     }
 
+    #[allow(
+        clippy::vec_init_then_push,
+        unknown_lints,
+        renamed_and_removed_lints,
+        clippy::unknown_clippy_lints
+    )]
     fn recv_control(&mut self, conn: &mut Connection, stream_id: u64) -> Res<HandleReadableOutput> {
         assert!(self.control_stream_remote.is_recv_stream(stream_id));
         let mut control_frames = Vec::new();

@@ -11,11 +11,11 @@ use std::convert::TryFrom;
 use std::ops::Deref;
 
 #[derive(Default, Debug, PartialEq)]
-pub(crate) struct QPData {
+pub(crate) struct QpackData {
     buf: Vec<u8>,
 }
 
-impl QPData {
+impl QpackData {
     pub fn len(&self) -> usize {
         self.buf.len()
     }
@@ -96,7 +96,7 @@ impl QPData {
     }
 }
 
-impl Deref for QPData {
+impl Deref for QpackData {
     type Target = [u8];
     fn deref(&self) -> &Self::Target {
         &*self.buf
@@ -105,25 +105,25 @@ impl Deref for QPData {
 
 #[cfg(test)]
 mod tests {
-    use super::{Prefix, QPData};
+    use super::{Prefix, QpackData};
 
     #[test]
     fn test_encode_prefixed_encoded_int_1() {
-        let mut d = QPData::default();
+        let mut d = QpackData::default();
         d.encode_prefixed_encoded_int(Prefix::new(0xC0, 2), 5);
         assert_eq!(d[..], [0xc5]);
     }
 
     #[test]
     fn test_encode_prefixed_encoded_int_2() {
-        let mut d = QPData::default();
+        let mut d = QpackData::default();
         d.encode_prefixed_encoded_int(Prefix::new(0xC0, 2), 65);
         assert_eq!(d[..], [0xff, 0x02]);
     }
 
     #[test]
     fn test_encode_prefixed_encoded_int_3() {
-        let mut d = QPData::default();
+        let mut d = QpackData::default();
         d.encode_prefixed_encoded_int(Prefix::new(0xC0, 2), 100_000);
         assert_eq!(d[..], [0xff, 0xe1, 0x8c, 0x06]);
     }
@@ -137,14 +137,14 @@ mod tests {
 
     #[test]
     fn test_encode_literal() {
-        let mut d = QPData::default();
+        let mut d = QpackData::default();
         d.encode_literal(false, Prefix::new(0xC0, 2), VALUE);
         assert_eq!(&&d[..], &LITERAL);
     }
 
     #[test]
     fn test_encode_literal_huffman() {
-        let mut d = QPData::default();
+        let mut d = QpackData::default();
         d.encode_literal(true, Prefix::new(0xC0, 2), VALUE);
         assert_eq!(&&d[..], &LITERAL_HUFFMAN);
     }

@@ -77,8 +77,7 @@ impl Secrets {
         secret: *mut PK11SymKey,
         arg: *mut c_void,
     ) {
-        let secrets_ptr = arg as *mut Self;
-        let secrets = secrets_ptr.as_mut().unwrap();
+        let secrets = arg.cast::<Self>().as_mut().unwrap();
         secrets.put_raw(epoch, dir, secret);
     }
 

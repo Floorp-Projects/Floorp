@@ -128,6 +128,9 @@ impl SecretAgentPreInfo {
     pub fn early_data(&self) -> bool {
         self.info.canSendEarlyData != 0
     }
+
+    /// # Panics
+    /// If `usize` is less than 32 bits and the value is too large.
     #[must_use]
     pub fn max_early_data(&self) -> usize {
         usize::try_from(self.info.maxEarlyDataSize).unwrap()
@@ -264,8 +267,8 @@ impl SecretAgent {
             return Err(Error::CreateSslSocket);
         }
         let fd = unsafe {
-            (*base_fd).secret = as_c_void(io) as *mut _;
-            ssl::SSL_ImportFD(null_mut(), base_fd as *mut ssl::PRFileDesc)
+            (*base_fd).secret = as_c_void(io).cast();
+            ssl::SSL_ImportFD(null_mut(), base_fd.cast())
         };
         if fd.is_null() {
             unsafe { prio::PR_Close(base_fd) };
@@ -280,7 +283,7 @@ impl SecretAgent {
         _check_sig: ssl::PRBool,
         _is_server: ssl::PRBool,
     ) -> ssl::SECStatus {
-        let auth_required_ptr = arg as *mut bool;
+        let auth_required_ptr = arg.cast::<bool>();
         *auth_required_ptr = true;
         // NSS insists on getting SECWouldBlock here rather than accepting
         // the usual combination of PR_WOULD_BLOCK_ERROR and SECFailure.
@@ -295,8 +298,7 @@ impl SecretAgent {
         let alert = alert.as_ref().unwrap();
         if alert.level == 2 {
             // Fatal alerts demand attention.
-            let p = arg as *mut Option<Alert>;
-            let st = p.as_mut().unwrap();
+            let st = arg.cast::<Option<Alert>>().as_mut().unwrap();
             if st.is_none() {
                 *st = Some(alert.description);
             } else {
@@ -430,11 +432,14 @@ impl SecretAgent {
     ///
     /// # Errors
     /// This should always panic rather than return an error.
+    /// # Panics
+    /// If any of the provided `protocols` are more than 255 bytes long.
     pub fn set_alpn(&mut self, protocols: &[impl AsRef<str>]) -> Res<()> {
         // Validate and set length.
         let mut encoded_len = protocols.len();
         for v in protocols {
             assert!(v.as_ref().len() < 256);
+            assert!(!v.as_ref().is_empty());
             encoded_len += v.as_ref().len();
         }
 
@@ -538,6 +543,8 @@ impl SecretAgent {
     /// Call this function to mark the peer as authenticated.
     /// Only call this function if `handshake/handshake_raw` returns
     /// `HandshakeState::AuthenticationPending`, or it will panic.
+    /// # Panics
+    /// If the handshake doesn't need to be authenticated.
     pub fn authenticated(&mut self, status: AuthenticationStatus) {
         assert_eq!(self.state, HandshakeState::AuthenticationPending);
         *self.auth_required = false;
@@ -647,11 +654,11 @@ impl SecretAgent {
         if let Some(true) = self.raw {
             // Need to hold the record list in scope until the close is done.
             let _records = self.setup_raw().expect("Can only close");
-            unsafe { prio::PR_Close(self.fd as *mut prio::PRFileDesc) };
+            unsafe { prio::PR_Close(self.fd.cast()) };
         } else {
             // Need to hold the IO wrapper in scope until the close is done.
             let _io = self.io.wrap(&[]);
-            unsafe { prio::PR_Close(self.fd as *mut prio::PRFileDesc) };
+            unsafe { prio::PR_Close(self.fd.cast()) };
         };
         let _output = self.io.take_output();
         self.fd = null_mut();
@@ -764,8 +771,7 @@ impl Client {
             // Ignore the token.
             return ssl::SECSuccess;
         }
-        let resumption_ptr = arg as *mut Vec<ResumptionToken>;
-        let resumption = resumption_ptr.as_mut().unwrap();
+        let resumption = arg.cast::<Vec<ResumptionToken>>().as_mut().unwrap();
         let len = usize::try_from(len).unwrap();
         let mut v = Vec::with_capacity(len);
         v.extend_from_slice(std::slice::from_raw_parts(token, len));
@@ -937,8 +943,7 @@ impl Server {
             return ssl::SSLHelloRetryRequestAction::ssl_hello_retry_accept;
         }
 
-        let p = arg as *mut ZeroRttCheckState;
-        let check_state = p.as_mut().unwrap();
+        let check_state = arg.cast::<ZeroRttCheckState>().as_mut().unwrap();
         let token = if client_token.is_null() {
             &[]
         } else {

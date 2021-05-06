@@ -25,7 +25,7 @@ use crate::recovery::RecoveryToken;
 use crate::rtt::RttEstimate;
 use crate::sender::PacketSender;
 use crate::stats::FrameStats;
-use crate::tracking::{PNSpace, SentPacket};
+use crate::tracking::{PacketNumberSpace, SentPacket};
 use crate::{Error, Res};
 
 use neqo_common::{hex, qdebug, qinfo, qlog::NeqoQlog, qtrace, Datagram, Encoder};
@@ -840,7 +840,7 @@ impl Path {
     pub fn on_packets_lost(
         &mut self,
         prev_largest_acked_sent: Option<Instant>,
-        space: PNSpace,
+        space: PacketNumberSpace,
         lost_packets: &[SentPacket],
     ) {
         debug_assert!(self.is_primary());

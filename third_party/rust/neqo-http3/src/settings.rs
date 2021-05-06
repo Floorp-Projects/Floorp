@@ -136,11 +136,13 @@ pub struct HttpZeroRttChecker {
 
 impl HttpZeroRttChecker {
     /// Right now we only have QPACK settings, so that is all this takes.
+    #[must_use]
     pub fn new(settings: QpackSettings) -> Self {
         Self { settings }
     }
 
     /// Save the settings that matter for 0-RTT.
+    #[must_use]
     pub fn save(settings: QpackSettings) -> Vec<u8> {
         let mut enc = Encoder::new();
         enc.encode_varint(SETTINGS_ZERO_RTT_VERSION)

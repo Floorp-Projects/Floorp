@@ -13,12 +13,12 @@ use std::rc::Rc;
 use std::time::Instant;
 
 use neqo_common::{hex, hex_snip_middle, qdebug, qinfo, qtrace, Encoder, Role};
+
 use neqo_crypto::{
-    aead::Aead, hkdf, hp::HpKey, Agent, AntiReplay, Cipher, Epoch, HandshakeState, Record,
-    RecordList, ResumptionToken, SymKey, ZeroRttChecker, TLS_AES_128_GCM_SHA256,
-    TLS_AES_256_GCM_SHA384, TLS_CHACHA20_POLY1305_SHA256, TLS_CT_HANDSHAKE,
-    TLS_EPOCH_APPLICATION_DATA, TLS_EPOCH_HANDSHAKE, TLS_EPOCH_INITIAL, TLS_EPOCH_ZERO_RTT,
-    TLS_VERSION_1_3,
+    hkdf, hp::HpKey, Aead, Agent, AntiReplay, Cipher, Epoch, HandshakeState, Record, RecordList,
+    ResumptionToken, SymKey, ZeroRttChecker, TLS_AES_128_GCM_SHA256, TLS_AES_256_GCM_SHA384,
+    TLS_CHACHA20_POLY1305_SHA256, TLS_CT_HANDSHAKE, TLS_EPOCH_APPLICATION_DATA,
+    TLS_EPOCH_HANDSHAKE, TLS_EPOCH_INITIAL, TLS_EPOCH_ZERO_RTT, TLS_VERSION_1_3,
 };
 
 use crate::packet::{PacketBuilder, PacketNumber, QuicVersion};
@@ -27,7 +27,7 @@ use crate::recv_stream::RxStreamOrderer;
 use crate::send_stream::TxBuffer;
 use crate::stats::FrameStats;
 use crate::tparams::{TpZeroRttChecker, TransportParameters, TransportParametersHandler};
-use crate::tracking::PNSpace;
+use crate::tracking::PacketNumberSpace;
 use crate::{Error, Res};
 
 const MAX_AUTH_TAG: usize = 32;
@@ -111,16 +111,16 @@ impl Crypto {
     pub fn handshake(
         &mut self,
         now: Instant,
-        space: PNSpace,
+        space: PacketNumberSpace,
         data: Option<&[u8]>,
     ) -> Res<&HandshakeState> {
         let input = data.map(|d| {
             qtrace!("Handshake record received {:0x?} ", d);
             let epoch = match space {
-                PNSpace::Initial => TLS_EPOCH_INITIAL,
-                PNSpace::Handshake => TLS_EPOCH_HANDSHAKE,
+                PacketNumberSpace::Initial => TLS_EPOCH_INITIAL,
+                PacketNumberSpace::Handshake => TLS_EPOCH_HANDSHAKE,
                 // Our epoch progresses forward, but the TLS epoch is fixed to 3.
-                PNSpace::ApplicationData => TLS_EPOCH_APPLICATION_DATA,
+                PacketNumberSpace::ApplicationData => TLS_EPOCH_APPLICATION_DATA,
             };
             Record {
                 ct: TLS_CT_HANDSHAKE,
@@ -235,14 +235,14 @@ impl Crypto {
                 return Err(Error::ProtocolViolation);
             }
             qtrace!([self], "Adding CRYPTO data {:?}", r);
-            self.streams.send(PNSpace::from(r.epoch), &r.data);
+            self.streams.send(PacketNumberSpace::from(r.epoch), &r.data);
         }
         Ok(())
     }
 
     pub fn write_frame(
         &mut self,
-        space: PNSpace,
+        space: PacketNumberSpace,
         builder: &mut PacketBuilder,
         tokens: &mut Vec<RecoveryToken>,
         stats: &mut FrameStats,
@@ -272,13 +272,13 @@ impl Crypto {
 
     /// Mark any outstanding frames in the indicated space as "lost" so
     /// that they can be sent again.
-    pub fn resend_unacked(&mut self, space: PNSpace) {
+    pub fn resend_unacked(&mut self, space: PacketNumberSpace) {
         self.streams.resend_unacked(space);
     }
 
     /// Discard state for a packet number space and return true
     /// if something was discarded.
-    pub fn discard(&mut self, space: PNSpace) -> bool {
+    pub fn discard(&mut self, space: PacketNumberSpace) -> bool {
         self.streams.discard(space);
         self.states.discard(space)
     }
@@ -352,7 +352,7 @@ pub struct CryptoDxState {
 }
 
 impl CryptoDxState {
-    #[allow(clippy::unknown_clippy_lints)] // Until we require rust 1.45.
+    #[allow(unknown_lints, renamed_and_removed_lints, clippy::unknown_clippy_lints)] // Until we require rust 1.45.
     #[allow(clippy::reversed_empty_ranges)] // To initialize an empty range.
     pub fn new(
         direction: CryptoDxDirection,
@@ -616,7 +616,7 @@ impl CryptoDxState {
         Ok(res.to_vec())
     }
 
-    #[cfg(test)]
+    #[cfg(all(test, not(feature = "fuzzing")))]
     pub(crate) fn test_default() -> Self {
         // This matches the value in packet.rs
         const CLIENT_CID: &[u8] = &[0x83, 0x94, 0xc8, 0xf0, 0x3e, 0x51, 0x57, 0x08];
@@ -735,18 +735,21 @@ pub struct CryptoStates {
 }
 
 impl CryptoStates {
-    /// Select a `CryptoDxState` and `CryptoSpace` for the given `PNSpace`.
-    /// This selects 0-RTT keys for `PNSpace::ApplicationData` if 1-RTT keys are
+    /// Select a `CryptoDxState` and `CryptoSpace` for the given `PacketNumberSpace`.
+    /// This selects 0-RTT keys for `PacketNumberSpace::ApplicationData` if 1-RTT keys are
     /// not yet available.
-    pub fn select_tx(&mut self, space: PNSpace) -> Option<(CryptoSpace, &mut CryptoDxState)> {
+    pub fn select_tx(
+        &mut self,
+        space: PacketNumberSpace,
+    ) -> Option<(CryptoSpace, &mut CryptoDxState)> {
         match space {
-            PNSpace::Initial => self
+            PacketNumberSpace::Initial => self
                 .tx(CryptoSpace::Initial)
                 .map(|dx| (CryptoSpace::Initial, dx)),
-            PNSpace::Handshake => self
+            PacketNumberSpace::Handshake => self
                 .tx(CryptoSpace::Handshake)
                 .map(|dx| (CryptoSpace::Handshake, dx)),
-            PNSpace::ApplicationData => {
+            PacketNumberSpace::ApplicationData => {
                 if let Some(app) = self.app_write.as_mut() {
                     Some((CryptoSpace::ApplicationData, &mut app.dx))
                 } else {
@@ -856,11 +859,11 @@ impl CryptoStates {
     }
 
     /// Discard keys and return true if that happened.
-    pub fn discard(&mut self, space: PNSpace) -> bool {
+    pub fn discard(&mut self, space: PacketNumberSpace) -> bool {
         match space {
-            PNSpace::Initial => self.initial.take().is_some(),
-            PNSpace::Handshake => self.handshake.take().is_some(),
-            PNSpace::ApplicationData => panic!("Can't drop application data keys"),
+            PacketNumberSpace::Initial => self.initial.take().is_some(),
+            PacketNumberSpace::Handshake => self.handshake.take().is_some(),
+            PacketNumberSpace::ApplicationData => panic!("Can't drop application data keys"),
         }
     }
 
@@ -1055,6 +1058,7 @@ impl CryptoStates {
     }
 
     /// Make some state for removing protection in tests.
+    #[cfg(not(feature = "fuzzing"))]
     #[cfg(test)]
     pub(crate) fn test_default() -> Self {
         let read = |epoch| {
@@ -1085,7 +1089,7 @@ impl CryptoStates {
         }
     }
 
-    #[cfg(test)]
+    #[cfg(all(not(feature = "fuzzing"), test))]
     pub(crate) fn test_chacha() -> Self {
         const SECRET: &[u8] = &[
             0x9a, 0xc3, 0x12, 0xa7, 0xf8, 0x77, 0x46, 0x8e, 0xbe, 0x69, 0x42, 0x27, 0x48, 0xad,
@@ -1162,9 +1166,9 @@ pub enum CryptoStreams {
 }
 
 impl CryptoStreams {
-    pub fn discard(&mut self, space: PNSpace) {
+    pub fn discard(&mut self, space: PacketNumberSpace) {
         match space {
-            PNSpace::Initial => {
+            PacketNumberSpace::Initial => {
                 if let Self::Initial {
                     handshake,
                     application,
@@ -1177,7 +1181,7 @@ impl CryptoStreams {
                     };
                 }
             }
-            PNSpace::Handshake => {
+            PacketNumberSpace::Handshake => {
                 if let Self::Handshake { application, .. } = self {
                     *self = Self::ApplicationData {
                         application: mem::take(application),
@@ -1186,23 +1190,25 @@ impl CryptoStreams {
                     panic!("Discarding handshake before initial discarded");
                 }
             }
-            PNSpace::ApplicationData => panic!("Discarding application data crypto streams"),
+            PacketNumberSpace::ApplicationData => {
+                panic!("Discarding application data crypto streams")
+            }
         }
     }
 
-    pub fn send(&mut self, space: PNSpace, data: &[u8]) {
+    pub fn send(&mut self, space: PacketNumberSpace, data: &[u8]) {
         self.get_mut(space).unwrap().tx.send(data);
     }
 
-    pub fn inbound_frame(&mut self, space: PNSpace, offset: u64, data: &[u8]) {
+    pub fn inbound_frame(&mut self, space: PacketNumberSpace, offset: u64, data: &[u8]) {
         self.get_mut(space).unwrap().rx.inbound_frame(offset, data);
     }
 
-    pub fn data_ready(&self, space: PNSpace) -> bool {
+    pub fn data_ready(&self, space: PacketNumberSpace) -> bool {
         self.get(space).map_or(false, |cs| cs.rx.data_ready())
     }
 
-    pub fn read_to_end(&mut self, space: PNSpace, buf: &mut Vec<u8>) -> usize {
+    pub fn read_to_end(&mut self, space: PacketNumberSpace, buf: &mut Vec<u8>) -> usize {
         self.get_mut(space).unwrap().rx.read_to_end(buf)
     }
 
@@ -1222,15 +1228,15 @@ impl CryptoStreams {
 
     /// Resend any Initial or Handshake CRYPTO frames that might be outstanding.
     /// This can help speed up handshake times.
-    pub fn resend_unacked(&mut self, space: PNSpace) {
-        if space != PNSpace::ApplicationData {
+    pub fn resend_unacked(&mut self, space: PacketNumberSpace) {
+        if space != PacketNumberSpace::ApplicationData {
             if let Some(cs) = self.get_mut(space) {
                 cs.tx.unmark_sent();
             }
         }
     }
 
-    fn get(&self, space: PNSpace) -> Option<&CryptoStream> {
+    fn get(&self, space: PacketNumberSpace) -> Option<&CryptoStream> {
         let (initial, hs, app) = match self {
             Self::Initial {
                 initial,
@@ -1244,13 +1250,13 @@ impl CryptoStreams {
             Self::ApplicationData { application } => (None, None, Some(application)),
         };
         match space {
-            PNSpace::Initial => initial,
-            PNSpace::Handshake => hs,
-            PNSpace::ApplicationData => app,
+            PacketNumberSpace::Initial => initial,
+            PacketNumberSpace::Handshake => hs,
+            PacketNumberSpace::ApplicationData => app,
         }
     }
 
-    fn get_mut(&mut self, space: PNSpace) -> Option<&mut CryptoStream> {
+    fn get_mut(&mut self, space: PacketNumberSpace) -> Option<&mut CryptoStream> {
         let (initial, hs, app) = match self {
             Self::Initial {
                 initial,
@@ -1264,15 +1270,15 @@ impl CryptoStreams {
             Self::ApplicationData { application } => (None, None, Some(application)),
         };
         match space {
-            PNSpace::Initial => initial,
-            PNSpace::Handshake => hs,
-            PNSpace::ApplicationData => app,
+            PacketNumberSpace::Initial => initial,
+            PacketNumberSpace::Handshake => hs,
+            PacketNumberSpace::ApplicationData => app,
         }
     }
 
     pub fn write_frame(
         &mut self,
-        space: PNSpace,
+        space: PacketNumberSpace,
         builder: &mut PacketBuilder,
         tokens: &mut Vec<RecoveryToken>,
         stats: &mut FrameStats,
@@ -1326,7 +1332,7 @@ impl Default for CryptoStreams {
 
 #[derive(Debug, Clone)]
 pub struct CryptoRecoveryToken {
-    space: PNSpace,
+    space: PacketNumberSpace,
     offset: u64,
     length: usize,
 }
