@@ -110,8 +110,6 @@
 }
 
 .urlbarView-row {
-  display: flex;
-  flex-wrap: nowrap;
   fill: currentColor;
   fill-opacity: var(--urlbar-icon-fill-opacity);
   padding-block: 3px;
@@ -140,12 +138,22 @@
 .urlbarView-row-inner {
   display: flex;
   flex-wrap: nowrap;
-  flex-grow: 1;
-  flex-shrink: 1;
   overflow: hidden;
   border-radius: 2px;
   padding-inline: var(--urlbarView-item-inline-padding);
   padding-block: 6px;
+}
+
+:root:not([uidensity=compact]) .urlbarView-row-inner {
+  min-height: 20px; /* row min-height 32px - (2 * padding-block 6px) */
+}
+
+.urlbarView-row[has-help] > .urlbarView-row-inner {
+  display: inline-flex;
+  vertical-align: middle;
+  /* For rows with a help button, row-inner is the main selectable part of the
+     row, and it takes up the entire row width except for the help button. */
+  width: calc(100% - 56px);
 }
 
 @media (-moz-proton) {
@@ -265,8 +273,9 @@
   text-align: right;
 }
 
-.urlbarView-row:not([type=tip], [type=dynamic], [has-help]):hover > .urlbarView-row-inner,
-.urlbarView-row[has-help] > .urlbarView-row-inner:not([selected]):hover {
+.urlbarView-row:not([type=tip], [type=dynamic], [has-help], [label]):hover > .urlbarView-row-inner,
+.urlbarView-row[has-help] > .urlbarView-row-inner:not([selected]):hover,
+.urlbarView-row[label] > .urlbarView-row-inner:not([selected]):hover {
   background-color: var(--autocomplete-popup-hover-background);
 }
 
@@ -389,15 +398,15 @@
 
 /* Help buttons are ghost buttons. */
 .urlbarView-help {
-  flex-grow: 0;
-  flex-shrink: 0;
-  flex-basis: 16px;
+  display: inline-block;
   min-width: 16px;
+  min-height: 16px;
+  vertical-align: middle;
   background-image: url("chrome://global/skin/icons/help.svg");
   background-size: 16px;
   background-position: center;
   background-repeat: no-repeat;
-  padding-inline: 8px;
+  padding: 8px;
   margin-inline-start: 8px;
   margin-inline-end: 4px;
   fill-opacity: 1;
@@ -453,15 +462,15 @@
   margin-block-end: 16px;
 }
 
+.urlbarView-tip-button,
 .urlbarView-row[type=tip] > .urlbarView-row-inner > .urlbarView-help {
-  height: 32px;
+  min-height: 16px;
+  padding: 7px;
 }
 
 /* The tip button is a Photon default button when unfocused and a
    primary button in all other states. */
 .urlbarView-tip-button {
-  min-height: 16px;
-  padding: 7px;
   border-radius: var(--toolbarbutton-border-radius);
   font-size: 0.93em;
   background-color: var(--button-bgcolor);
@@ -507,6 +516,22 @@
   flex-basis: 48px;
   flex-grow: 1;
   flex-shrink: 1;
+}
+
+.urlbarView-row[label]::before {
+  content: attr(label);
+  display: block;
+  margin-block: 4px;
+  margin-inline-start: var(--urlbarView-item-inline-padding);
+  font-size: 0.8em;
+  /* The color and opacity of labels is the same as the "This time, search with"
+     text in the search shortcuts. See `.search-panel-header > label` in
+     searchbar.inc.css. */
+  opacity: 0.6;
+}
+:root[lwt-toolbar-field-focus-brighttext] .urlbarView-row[label]::before {
+  /* Same as `.search-panel-header > label` in searchbar.inc.css */
+  opacity: 1;
 }
 
 /* Title */
