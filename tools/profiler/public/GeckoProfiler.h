@@ -394,6 +394,7 @@ class ProfilerStackCollector {
 // profiling stack, JS stack, and (optionally) native stack, passing the
 // collected frames into aCollector. aFeatures dictates which compiler features
 // are used. |Leaf| is the only relevant one.
+// Use `aThreadId`=0 to sample the current thread.
 void profiler_suspend_and_sample_thread(int aThreadId, uint32_t aFeatures,
                                         ProfilerStackCollector& aCollector,
                                         bool aSampleNative = true);
