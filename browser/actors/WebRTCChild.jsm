@@ -270,14 +270,31 @@ function handleGUMRequest(aSubject, aTopic, aData) {
   let isHandlingUserInput = aSubject.isHandlingUserInput;
   let contentWindow = Services.wm.getOuterWindowWithId(aSubject.windowID);
 
-  prompt(
-    contentWindow,
-    aSubject.windowID,
-    aSubject.callID,
-    constraints,
-    aSubject.devices,
-    secure,
-    isHandlingUserInput
+  contentWindow.navigator.mozGetUserMediaDevices(
+    function(devices) {
+      // If the window has been closed while we were waiting for the list of
+      // devices, there's nothing to do in the callback anymore.
+      if (contentWindow.closed) {
+        return;
+      }
+
+      prompt(
+        contentWindow,
+        aSubject.windowID,
+        aSubject.callID,
+        constraints,
+        devices,
+        secure,
+        isHandlingUserInput
+      );
+    },
+    function(error) {
+      // Device enumeration is done ahead of handleGUMRequest, so we're not
+      // responsible for handling the NotFoundError spec case.
+      denyGUMRequest({ callID: aSubject.callID });
+    },
+    aSubject.innerWindowID,
+    aSubject.callID
   );
 }
 
