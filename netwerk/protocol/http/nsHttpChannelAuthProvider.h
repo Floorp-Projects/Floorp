@@ -133,19 +133,19 @@ class nsHttpChannelAuthProvider final : public nsIHttpChannelAuthProvider,
       uint32_t aGenerateFlags, nsISupports* aSessionState, bool aProxyAuth);
 
  private:
-  nsIHttpAuthenticableChannel* mAuthChannel;  // weak ref
+  nsIHttpAuthenticableChannel* mAuthChannel{nullptr};  // weak ref
 
   nsCOMPtr<nsIURI> mURI;
   nsCOMPtr<nsProxyInfo> mProxyInfo;
   nsCString mHost;
-  int32_t mPort;
-  bool mUsingSSL;
-  bool mProxyUsingSSL;
-  bool mIsPrivate;
+  int32_t mPort{-1};
+  bool mUsingSSL{false};
+  bool mProxyUsingSSL{false};
+  bool mIsPrivate{false};
 
-  nsISupports* mProxyAuthContinuationState;
+  nsISupports* mProxyAuthContinuationState{nullptr};
   nsCString mProxyAuthType;
-  nsISupports* mAuthContinuationState;
+  nsISupports* mAuthContinuationState{nullptr};
   nsCString mAuthType;
   nsHttpAuthIdentity mIdent;
   nsHttpAuthIdentity mProxyIdent;
