@@ -51,11 +51,14 @@ elif CONFIG["OS_ARCH"] == "WINNT":
     SOURCES += [
         "nsWindowsShellService.cpp",
         "WindowsDefaultBrowser.cpp",
+        "WindowsUserChoice.cpp",
     ]
     LOCAL_INCLUDES += [
         "../../../other-licenses/nsis/Contrib/CityHash/cityhash",
     ]
     OS_LIBS += [
+        "bcrypt",
+        "crypt32",
         "propsys",
     ]
 
@@ -70,7 +73,12 @@ EXTRA_JS_MODULES += [
     "ShellService.jsm",
 ]
 
-for var in ("MOZ_APP_DISPLAYNAME", "MOZ_APP_NAME", "MOZ_APP_VERSION"):
+for var in (
+    "MOZ_APP_DISPLAYNAME",
+    "MOZ_APP_NAME",
+    "MOZ_APP_VERSION",
+    "MOZ_DEFAULT_BROWSER_AGENT",
+):
     DEFINES[var] = '"%s"' % CONFIG[var]
 
 CXXFLAGS += CONFIG["TK_CFLAGS"]
