@@ -701,15 +701,6 @@ class experimental(object):
     }
     """Disperse tests across platforms, medium confidence threshold with reduced tasks."""
 
-    bugbug_reduced_manifests_config_selection_low = {
-        "test": Any(
-            "skip-unless-schedules",
-            "bugbug-reduced-manifests-config-selection-low",
-            split_args=split_bugbug_arg,
-        ),
-    }
-    """Choose configs selected by bugbug, low confidence threshold with reduced tasks."""
-
     bugbug_reduced_manifests_config_selection_medium = {
         "test": Any(
             "skip-unless-schedules",
