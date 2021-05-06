@@ -22,6 +22,8 @@ const sourceOptions = {
     sourceType: "unambiguous",
     tokens: true,
     plugins: [
+      "classPrivateProperties",
+      "classPrivateMethods",
       "classProperties",
       "objectRestSpread",
       "optionalChaining",
@@ -39,6 +41,8 @@ const sourceOptions = {
       "nullishCoalescingOperator",
       "decorators-legacy",
       "objectRestSpread",
+      "classPrivateProperties",
+      "classPrivateMethods",
       "classProperties",
       "exportDefaultFrom",
       "exportNamespaceFrom",
@@ -107,6 +111,8 @@ export function parseConsoleScript(text, opts) {
   try {
     return _parse(text, {
       plugins: [
+        "classPrivateProperties",
+        "classPrivateMethods",
         "objectRestSpread",
         "dynamicImport",
         "nullishCoalescingOperator",
