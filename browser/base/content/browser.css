@@ -1090,11 +1090,15 @@ toolbarpaletteitem[place="palette"] > #downloads-button[indicator] > .toolbarbut
 
 /* Give this menupopup an arrow panel styling */
 #BMB_bookmarksPopup {
-  appearance: none;
   background: transparent;
   border: none;
   /* The popup inherits -moz-image-region from the button, must reset it */
   -moz-image-region: auto;
+}
+
+#BMB_bookmarksPopup,
+#BMB_bookmarksPopup menupopup {
+  appearance: none;
 }
 
 @supports -moz-bool-pref("xul.panel-animations.enabled") {

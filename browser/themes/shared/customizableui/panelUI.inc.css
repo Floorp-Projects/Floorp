@@ -403,6 +403,10 @@ panelmultiview[transitioning] > .panel-viewcontainer > .panel-viewstack > panelv
   border: 0;
 }
 
+#BMB_bookmarksPopup menupopup {
+  border-radius: var(--arrowpanel-border-radius);
+}
+
 #BMB_bookmarksPopup menupopup::part(arrowscrollbox) {
   padding: var(--panel-subview-body-padding);
   border: 0;
