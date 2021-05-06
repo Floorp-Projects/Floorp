@@ -1,0 +1,12 @@
+#!/usr/bin/make -f
+%:
+	dh $@ --buildsystem=cmake
+
+override_dh_auto_configure:
+	# TODO(deymo): Remove the DCMAKE_BUILD_TYPE once builds without NDEBUG
+	# are as useful as Release builds.
+	dh_auto_configure -- \
+	  -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+	  -DJPEGXL_FORCE_SYSTEM_GTEST=ON \
+	  -DJPEGXL_FORCE_SYSTEM_BROTLI=ON \
+	  -DJPEGXL_FORCE_SYSTEM_HWY=ON
