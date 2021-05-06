@@ -221,9 +221,7 @@ add_task(async function test_value_combo() {
       name: "onItemMoved",
       params: {
         itemId: localItemIds.get("bzBmk_______"),
-        oldParentId: PlacesUtils.toolbarFolderId,
         oldIndex: 0,
-        newParentId: PlacesUtils.toolbarFolderId,
         newIndex: 2,
         type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
         guid: "bzBmk_______",
@@ -1374,9 +1372,7 @@ add_task(async function test_keywords_complex() {
       name: "onItemMoved",
       params: {
         itemId: localItemIds.get("bookmarkBBBB"),
-        oldParentId: PlacesUtils.bookmarksMenuFolderId,
         oldIndex: 0,
-        newParentId: PlacesUtils.bookmarksMenuFolderId,
         newIndex: 3,
         type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
         guid: "bookmarkBBBB",
@@ -1390,9 +1386,7 @@ add_task(async function test_keywords_complex() {
       name: "onItemMoved",
       params: {
         itemId: localItemIds.get("bookmarkCCCC"),
-        oldParentId: PlacesUtils.bookmarksMenuFolderId,
         oldIndex: 1,
-        newParentId: PlacesUtils.bookmarksMenuFolderId,
         newIndex: 4,
         type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
         guid: "bookmarkCCCC",
@@ -1406,9 +1400,7 @@ add_task(async function test_keywords_complex() {
       name: "onItemMoved",
       params: {
         itemId: localItemIds.get("bookmarkDDDD"),
-        oldParentId: PlacesUtils.bookmarksMenuFolderId,
         oldIndex: 2,
-        newParentId: PlacesUtils.bookmarksMenuFolderId,
         newIndex: 5,
         type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
         guid: "bookmarkDDDD",
@@ -1422,9 +1414,7 @@ add_task(async function test_keywords_complex() {
       name: "onItemMoved",
       params: {
         itemId: localItemIds.get("bookmarkEEEE"),
-        oldParentId: PlacesUtils.bookmarksMenuFolderId,
         oldIndex: 3,
-        newParentId: PlacesUtils.bookmarksMenuFolderId,
         newIndex: 6,
         type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
         guid: "bookmarkEEEE",

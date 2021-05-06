@@ -960,9 +960,7 @@ var Bookmarks = Object.freeze({
           ) {
             notify(observers, "onItemMoved", [
               updatedItem._id,
-              item._parentId,
               item.index,
-              updatedItem._parentId,
               updatedItem.index,
               updatedItem.type,
               updatedItem.guid,
@@ -1189,9 +1187,7 @@ var Bookmarks = Object.freeze({
         ) {
           notify(observers, "onItemMoved", [
             updatedItem._id,
-            existingItem._parentId,
             existingItem.index,
-            updatedItem._parentId,
             updatedItem.index,
             updatedItem.type,
             updatedItem.guid,
@@ -1750,9 +1746,7 @@ var Bookmarks = Object.freeze({
         let child = sortedChildren[i];
         notify(observers, "onItemMoved", [
           child._id,
-          child._parentId,
           child.index,
-          child._parentId,
           i,
           child.type,
           child.guid,
