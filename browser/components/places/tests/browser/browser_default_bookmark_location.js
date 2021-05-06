@@ -176,13 +176,9 @@ add_task(async function test_change_location_panel() {
   let itemGuid = win.gEditItemOverlay._paneInfo.itemGuid;
   // Make sure we wait for the move to complete.
   let itemMovedPromise = PlacesTestUtils.waitForNotification(
-    "bookmark-moved",
-    events =>
-      events.some(
-        e =>
-          e.guid === itemGuid && e.parentGuid === PlacesUtils.bookmarks.menuGuid
-      ),
-    "places"
+    "onItemMoved",
+    (id, oldParentId, oldIndex, newParentId, newIndex, type, guid) =>
+      newParentId == PlacesUtils.bookmarksMenuFolderId && guid == itemGuid
   );
 
   // Wait for the pref to change

@@ -165,20 +165,29 @@ let observer = new (class extends EventEmitter {
             guid: event.guid,
             info: { parentId: event.parentGuid, index: event.index, node },
           });
-          break;
-        case "bookmark-moved":
-          this.emit("moved", {
-            guid: event.guid,
-            info: {
-              parentId: event.parentGuid,
-              index: event.index,
-              oldParentId: event.oldParentGuid,
-              oldIndex: event.oldIndex,
-            },
-          });
-          break;
       }
     }
+  }
+
+  onItemMoved(
+    id,
+    oldParentId,
+    oldIndex,
+    newParentId,
+    newIndex,
+    itemType,
+    guid,
+    oldParentGuid,
+    newParentGuid,
+    source
+  ) {
+    let info = {
+      parentId: newParentGuid,
+      index: newIndex,
+      oldParentId: oldParentGuid,
+      oldIndex,
+    };
+    this.emit("moved", { guid, info });
   }
 
   onItemChanged(
@@ -213,7 +222,7 @@ const decrementListeners = () => {
   if (!listenerCount) {
     PlacesUtils.bookmarks.removeObserver(observer);
     PlacesUtils.observers.removeListener(
-      ["bookmark-added", "bookmark-removed", "bookmark-moved"],
+      ["bookmark-added", "bookmark-removed"],
       observer.handlePlacesEvents
     );
   }
@@ -224,7 +233,7 @@ const incrementListeners = () => {
   if (listenerCount == 1) {
     PlacesUtils.bookmarks.addObserver(observer);
     PlacesUtils.observers.addListener(
-      ["bookmark-added", "bookmark-removed", "bookmark-moved"],
+      ["bookmark-added", "bookmark-removed"],
       observer.handlePlacesEvents
     );
   }

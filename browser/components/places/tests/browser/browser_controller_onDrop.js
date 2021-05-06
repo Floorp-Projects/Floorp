@@ -108,12 +108,18 @@ async function run_drag_test(startBookmarkIndex, insertionIndex) {
 
 add_task(async function test_simple_move_down() {
   let moveNotification = PlacesTestUtils.waitForNotification(
-    "bookmark-moved",
-    events =>
-      events.some(
-        e => e.guid === bookmarks[0].guid && e.oldIndex == 0 && e.index == 1
-      ),
-    "places"
+    "onItemMoved",
+    (
+      id,
+      oldParentId,
+      oldIndex,
+      newParentId,
+      newIndex,
+      itemType,
+      guid,
+      oldParentGuid,
+      newParentGuid
+    ) => guid == bookmarks[0].guid && oldIndex == 0 && newIndex == 1
   );
 
   await run_drag_test(0, 2);

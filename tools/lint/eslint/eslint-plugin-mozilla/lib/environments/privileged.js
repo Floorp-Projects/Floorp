@@ -427,7 +427,6 @@ module.exports = {
     Permissions: false,
     PlacesBookmark: false,
     PlacesBookmarkAddition: false,
-    PlacesBookmarkMoved: false,
     PlacesBookmarkRemoved: false,
     PlacesEvent: false,
     PlacesHistoryCleared: false,

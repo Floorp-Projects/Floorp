@@ -326,10 +326,10 @@ add_task(async function update_move_same_folder() {
     url: new URL("http://move.example.com/"),
   });
   let bmItemId = await PlacesUtils.promiseItemId(bm.guid);
+  let bmParentId = await PlacesUtils.promiseItemId(bm.parentGuid);
   let bmOldIndex = bm.index;
 
-  let observer = expectPlacesObserverNotifications(["bookmark-moved"]);
-
+  let observer = expectNotifications();
   bm = await PlacesUtils.bookmarks.update({
     guid: bm.guid,
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
@@ -338,23 +338,26 @@ add_task(async function update_move_same_folder() {
   Assert.equal(bm.index, 0);
   observer.check([
     {
-      type: "bookmark-moved",
-      id: bmItemId,
-      itemType: bm.type,
-      url: "http://move.example.com/",
-      guid: bm.guid,
-      parentGuid: bm.parentGuid,
-      source: Ci.nsINavBookmarksService.SOURCE_DEFAULT,
-      index: bm.index,
-      oldParentGuid: bm.parentGuid,
-      oldIndex: bmOldIndex,
-      isTagging: false,
+      name: "onItemMoved",
+      arguments: [
+        bmItemId,
+        bmParentId,
+        bmOldIndex,
+        bmParentId,
+        bm.index,
+        bm.type,
+        bm.guid,
+        bm.parentGuid,
+        bm.parentGuid,
+        Ci.nsINavBookmarksService.SOURCE_DEFAULT,
+        "http://move.example.com/",
+      ],
     },
   ]);
 
   // Test that we get the right index for DEFAULT_INDEX input.
   bmOldIndex = 0;
-  observer = expectPlacesObserverNotifications(["bookmark-moved"]);
+  observer = expectNotifications();
   bm = await PlacesUtils.bookmarks.update({
     guid: bm.guid,
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
@@ -363,17 +366,20 @@ add_task(async function update_move_same_folder() {
   Assert.ok(bm.index > 0);
   observer.check([
     {
-      type: "bookmark-moved",
-      id: bmItemId,
-      itemType: bm.type,
-      url: bm.url,
-      guid: bm.guid,
-      parentGuid: bm.parentGuid,
-      source: Ci.nsINavBookmarksService.SOURCE_DEFAULT,
-      index: bm.index,
-      oldParentGuid: bm.parentGuid,
-      oldIndex: bmOldIndex,
-      isTagging: false,
+      name: "onItemMoved",
+      arguments: [
+        bmItemId,
+        bmParentId,
+        bmOldIndex,
+        bmParentId,
+        bm.index,
+        bm.type,
+        bm.guid,
+        bm.parentGuid,
+        bm.parentGuid,
+        Ci.nsINavBookmarksService.SOURCE_DEFAULT,
+        bm.url,
+      ],
     },
   ]);
 });
@@ -389,66 +395,35 @@ add_task(async function update_move_different_folder() {
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
   });
   let bmItemId = await PlacesUtils.promiseItemId(bm.guid);
+  let bmOldParentId = await PlacesUtils.promiseItemId(
+    PlacesUtils.bookmarks.unfiledGuid
+  );
   let bmOldIndex = bm.index;
 
-  const observer = expectPlacesObserverNotifications(["bookmark-moved"]);
+  let observer = expectNotifications();
   bm = await PlacesUtils.bookmarks.update({
     guid: bm.guid,
     parentGuid: folder.guid,
     index: PlacesUtils.bookmarks.DEFAULT_INDEX,
   });
   Assert.equal(bm.index, 0);
+  let bmNewParentId = await PlacesUtils.promiseItemId(folder.guid);
   observer.check([
     {
-      type: "bookmark-moved",
-      id: bmItemId,
-      itemType: bm.type,
-      url: "http://move.example.com/",
-      guid: bm.guid,
-      parentGuid: bm.parentGuid,
-      source: Ci.nsINavBookmarksService.SOURCE_DEFAULT,
-      index: bm.index,
-      oldParentGuid: PlacesUtils.bookmarks.unfiledGuid,
-      oldIndex: bmOldIndex,
-      isTagging: false,
-    },
-  ]);
-});
-
-add_task(async function update_move_tag_folder() {
-  let bm = await PlacesUtils.bookmarks.insert({
-    type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
-    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
-    url: new URL("http://move.example.com/"),
-  });
-  let folder = await PlacesUtils.bookmarks.insert({
-    type: PlacesUtils.bookmarks.TYPE_FOLDER,
-    parentGuid: PlacesUtils.bookmarks.tagsGuid,
-    title: "tag",
-  });
-  let bmItemId = await PlacesUtils.promiseItemId(bm.guid);
-  let bmOldIndex = bm.index;
-
-  const observer = expectPlacesObserverNotifications(["bookmark-moved"]);
-  bm = await PlacesUtils.bookmarks.update({
-    guid: bm.guid,
-    parentGuid: folder.guid,
-    index: PlacesUtils.bookmarks.DEFAULT_INDEX,
-  });
-  Assert.equal(bm.index, 0);
-  observer.check([
-    {
-      type: "bookmark-moved",
-      id: bmItemId,
-      itemType: bm.type,
-      url: "http://move.example.com/",
-      guid: bm.guid,
-      parentGuid: bm.parentGuid,
-      source: Ci.nsINavBookmarksService.SOURCE_DEFAULT,
-      index: bm.index,
-      oldParentGuid: PlacesUtils.bookmarks.unfiledGuid,
-      oldIndex: bmOldIndex,
-      isTagging: true,
+      name: "onItemMoved",
+      arguments: [
+        bmItemId,
+        bmOldParentId,
+        bmOldIndex,
+        bmNewParentId,
+        bm.index,
+        bm.type,
+        bm.guid,
+        PlacesUtils.bookmarks.unfiledGuid,
+        bm.parentGuid,
+        Ci.nsINavBookmarksService.SOURCE_DEFAULT,
+        "http://move.example.com/",
+      ],
     },
   ]);
 });
@@ -912,31 +887,36 @@ add_task(async function reorder_notification() {
   // Randomly reorder the array.
   sorted.sort(() => 0.5 - Math.random());
 
-  const observer = expectPlacesObserverNotifications(["bookmark-moved"]);
+  let observer = expectNotifications();
   await PlacesUtils.bookmarks.reorder(
     PlacesUtils.bookmarks.unfiledGuid,
     sorted.map(bm => bm.guid)
   );
 
   let expectedNotifications = [];
+  let unfiledBookmarksFolderId = await PlacesUtils.promiseItemId(
+    PlacesUtils.bookmarks.unfiledGuid
+  );
   for (let i = 0; i < sorted.length; ++i) {
     let child = sorted[i];
     let childId = await PlacesUtils.promiseItemId(child.guid);
     expectedNotifications.push({
-      type: "bookmark-moved",
-      id: childId,
-      itemType: child.type,
-      url: child.url || "",
-      guid: child.guid,
-      parentGuid: child.parentGuid,
-      source: Ci.nsINavBookmarksService.SOURCE_DEFAULT,
-      index: i,
-      oldParentGuid: child.parentGuid,
-      oldIndex: child.index,
-      isTagging: false,
+      name: "onItemMoved",
+      arguments: [
+        childId,
+        unfiledBookmarksFolderId,
+        child.index,
+        unfiledBookmarksFolderId,
+        i,
+        child.type,
+        child.guid,
+        child.parentGuid,
+        child.parentGuid,
+        Ci.nsINavBookmarksService.SOURCE_DEFAULT,
+        child.url,
+      ],
     });
   }
-
   observer.check(expectedNotifications);
 });
 

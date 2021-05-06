@@ -49,7 +49,7 @@
  * Each successful operation notifies through the nsINavBookmarksObserver
  * interface.  To listen to such notifications you must register using
  * nsINavBookmarksService addObserver and removeObserver methods.
- * Note that bookmark addition or order changes won't notify bookmark-moved for
+ * Note that bookmark addition or order changes won't notify onItemMoved for
  * items that have their indexes changed.
  * Similarly, lastModified changes not done explicitly (like changing another
  * property) won't fire an onItemChanged notification for the lastModified
@@ -664,9 +664,7 @@ var Bookmarks = Object.freeze({
         insertInfos[i] = Object.assign({}, item);
       }
 
-      if (notifications.length) {
-        PlacesObservers.notifyListeners(notifications);
-      }
+      PlacesObservers.notifyListeners(notifications);
 
       return insertInfos;
     })();
@@ -850,8 +848,6 @@ var Bookmarks = Object.freeze({
             );
           }
 
-          const notifications = [];
-
           // Notify onItemChanged to listeners.
           let observers = PlacesUtils.bookmarks.getObservers();
           // For lastModified, we only care about the original input, since we
@@ -957,31 +953,24 @@ var Bookmarks = Object.freeze({
               updatedItem.source,
             ]);
           }
-          // If the item was moved, notify bookmark-moved.
+          // If the item was moved, notify onItemMoved.
           if (
             item.parentGuid != updatedItem.parentGuid ||
             item.index != updatedItem.index
           ) {
-            notifications.push(
-              new PlacesBookmarkMoved({
-                id: updatedItem._id,
-                itemType: updatedItem.type,
-                url: updatedItem.url && updatedItem.url.href,
-                guid: updatedItem.guid,
-                parentGuid: updatedItem.parentGuid,
-                source: updatedItem.source,
-                index: updatedItem.index,
-                oldParentGuid: item.parentGuid,
-                oldIndex: item.index,
-                isTagging:
-                  updatedItem.parentGuid === Bookmarks.tagsGuid ||
-                  parent.parentGuid === Bookmarks.tagsGuid,
-              })
-            );
-          }
-
-          if (notifications.length) {
-            PlacesObservers.notifyListeners(notifications);
+            notify(observers, "onItemMoved", [
+              updatedItem._id,
+              item._parentId,
+              item.index,
+              updatedItem._parentId,
+              updatedItem.index,
+              updatedItem.type,
+              updatedItem.guid,
+              item.parentGuid,
+              updatedItem.parentGuid,
+              updatedItem.source,
+              updatedItem.url && updatedItem.url.href,
+            ]);
           }
 
           // Remove non-enumerable properties.
@@ -1146,7 +1135,6 @@ var Bookmarks = Object.freeze({
                 newParent,
                 syncChangeDelta
               );
-              info.newParent = newParent;
 
               // For items moving within the same folder, we have to keep track
               // of their indexes. Otherwise we run the risk of not correctly
@@ -1187,11 +1175,11 @@ var Bookmarks = Object.freeze({
         }
       );
 
-      const notifications = [];
-
       // Updates complete, time to notify everyone.
-      for (let { updatedItem, existingItem, newParent } of updateInfos) {
-        // If the item was moved, notify bookmark-moved.
+      for (let { updatedItem, existingItem } of updateInfos) {
+        // Notify onItemChanged to listeners.
+        let observers = PlacesUtils.bookmarks.getObservers();
+        // If the item was moved, notify onItemMoved.
         // We use the updatedItem.index here, rather than currIndex, as the views
         // need to know where we inserted the item as opposed to where it ended
         // up.
@@ -1199,29 +1187,22 @@ var Bookmarks = Object.freeze({
           existingItem.parentGuid != updatedItem.parentGuid ||
           existingItem.index != updatedItem.index
         ) {
-          notifications.push(
-            new PlacesBookmarkMoved({
-              id: updatedItem._id,
-              itemType: updatedItem.type,
-              url: existingItem.url,
-              guid: updatedItem.guid,
-              parentGuid: updatedItem.parentGuid,
-              source,
-              index: updatedItem.index,
-              oldParentGuid: existingItem.parentGuid,
-              oldIndex: existingItem.index,
-              isTagging:
-                updatedItem.parentGuid === Bookmarks.tagsGuid ||
-                newParent.parentGuid === Bookmarks.tagsGuid,
-            })
-          );
+          notify(observers, "onItemMoved", [
+            updatedItem._id,
+            existingItem._parentId,
+            existingItem.index,
+            updatedItem._parentId,
+            updatedItem.index,
+            updatedItem.type,
+            updatedItem.guid,
+            existingItem.parentGuid,
+            updatedItem.parentGuid,
+            source,
+            existingItem.url,
+          ]);
         }
         // Remove non-enumerable properties.
         delete updatedItem.source;
-      }
-
-      if (notifications.length) {
-        PlacesObservers.notifyListeners(notifications);
       }
 
       return updateInfos.map(updateInfo =>
@@ -1763,31 +1744,23 @@ var Bookmarks = Object.freeze({
         options
       );
 
-      const notifications = [];
-
+      let observers = PlacesUtils.bookmarks.getObservers();
       // Note that child.index is the old index.
       for (let i = 0; i < sortedChildren.length; ++i) {
         let child = sortedChildren[i];
-        notifications.push(
-          new PlacesBookmarkMoved({
-            id: child._id,
-            itemType: child.type,
-            url: child.url && child.url.href,
-            guid: child.guid,
-            parentGuid: child.parentGuid,
-            source: options.source,
-            index: i,
-            oldParentGuid: child.parentGuid,
-            oldIndex: child.index,
-            isTagging:
-              child.parentGuid === Bookmarks.tagsGuid ||
-              parent.parentGuid === Bookmarks.tagsGuid,
-          })
-        );
-      }
-
-      if (notifications.length) {
-        PlacesObservers.notifyListeners(notifications);
+        notify(observers, "onItemMoved", [
+          child._id,
+          child._parentId,
+          child.index,
+          child._parentId,
+          i,
+          child.type,
+          child.guid,
+          child.parentGuid,
+          child.parentGuid,
+          options.source,
+          child.url && child.url.href,
+        ]);
       }
     })();
   },
