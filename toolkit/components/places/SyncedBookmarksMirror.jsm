@@ -2204,8 +2204,7 @@ class BookmarkObserverRecorder {
 
     MirrorLog.trace("Recording observer notifications for moved items");
     await this.db.execute(
-      `SELECT b.id, b.guid, b.type, p.id AS newParentId, c.oldParentId,
-              p.guid AS newParentGuid, c.oldParentGuid,
+      `SELECT b.id, b.guid, b.type, p.guid AS newParentGuid, c.oldParentGuid,
               b.position AS newPosition, c.oldPosition,
               (SELECT h.url FROM moz_places h WHERE h.id = b.fk) AS url
        FROM itemsMoved c
@@ -2222,8 +2221,6 @@ class BookmarkObserverRecorder {
           id: row.getResultByName("id"),
           guid: row.getResultByName("guid"),
           type: row.getResultByName("type"),
-          newParentId: row.getResultByName("newParentId"),
-          oldParentId: row.getResultByName("oldParentId"),
           newParentGuid: row.getResultByName("newParentGuid"),
           oldParentGuid: row.getResultByName("oldParentGuid"),
           newPosition: row.getResultByName("newPosition"),
@@ -2326,9 +2323,7 @@ class BookmarkObserverRecorder {
   noteItemMoved(info) {
     this.itemMovedArgs.push([
       info.id,
-      info.oldParentId,
       info.oldPosition,
-      info.newParentId,
       info.newPosition,
       info.type,
       info.guid,
