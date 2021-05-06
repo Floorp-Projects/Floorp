@@ -181,25 +181,6 @@ let observer = new (class extends EventEmitter {
     }
   }
 
-  onItemMoved(
-    id,
-    oldIndex,
-    newIndex,
-    itemType,
-    guid,
-    oldParentGuid,
-    newParentGuid,
-    source
-  ) {
-    let info = {
-      parentId: newParentGuid,
-      index: newIndex,
-      oldParentId: oldParentGuid,
-      oldIndex,
-    };
-    this.emit("moved", { guid, info });
-  }
-
   onItemChanged(
     id,
     prop,

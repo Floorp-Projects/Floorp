@@ -59,7 +59,6 @@ var bookmarksObserver = {
     this._itemChangedValue = value;
     this._itemChangedOldValue = oldValue;
   },
-  onItemMoved() {},
   QueryInterface: ChromeUtils.generateQI(["nsINavBookmarkObserver"]),
 };
 
