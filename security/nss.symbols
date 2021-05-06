@@ -179,6 +179,7 @@ HASH_Destroy
 HASH_End
 HASH_GetHashObject
 HASH_GetHashOidTagByHashType
+HASH_GetHashTypeByOidTag
 HASH_GetType
 HASH_HashBuf
 HASH_ResultLenByOidTag
