@@ -148,7 +148,6 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme, nscolor
                                          aScheme);
       break;
     case ColorID::Highlight:  // CSS2 color
-    case ColorID::MozAccentColor:
     case ColorID::MozMenuhover:
       color = GetColorFromNSColor(NSColor.alternateSelectedControlColor);
       break;
@@ -368,6 +367,7 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme, nscolor
       break;
     case ColorID::MozMacActiveMenuitem:
     case ColorID::MozMacActiveSourceListSelection:
+    case ColorID::MozAccentColor:
       color = GetColorFromNSColor(ControlAccentColor());
       break;
     default:
