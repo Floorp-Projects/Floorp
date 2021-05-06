@@ -77,14 +77,7 @@ static void GetOriginAttributesSuffix(nsIChannel* aChan, nsACString& aSuffix) {
 }
 
 nsHttpChannelAuthProvider::nsHttpChannelAuthProvider()
-    : mAuthChannel(nullptr),
-      mPort(-1),
-      mUsingSSL(false),
-      mProxyUsingSSL(false),
-      mIsPrivate(false),
-      mProxyAuthContinuationState(nullptr),
-      mAuthContinuationState(nullptr),
-      mProxyAuth(false),
+    : mProxyAuth(false),
       mTriedProxyAuth(false),
       mTriedHostAuth(false),
       mSuppressDefensiveAuth(false),
@@ -181,21 +174,23 @@ nsHttpChannelAuthProvider::ProcessAuthentication(uint32_t httpStatus,
       return NS_ERROR_UNEXPECTED;
     }
     rv = mAuthChannel->GetProxyChallenges(challenges);
-  } else
+  } else {
     rv = mAuthChannel->GetWWWChallenges(challenges);
+  }
   if (NS_FAILED(rv)) return rv;
 
   nsAutoCString creds;
   rv = GetCredentials(challenges, mProxyAuth, creds);
   if (rv == NS_ERROR_IN_PROGRESS) return rv;
-  if (NS_FAILED(rv))
+  if (NS_FAILED(rv)) {
     LOG(("unable to authenticate\n"));
-  else {
+  } else {
     // set the authentication credentials
-    if (mProxyAuth)
+    if (mProxyAuth) {
       rv = mAuthChannel->SetProxyCredentials(creds);
-    else
+    } else {
       rv = mAuthChannel->SetWWWCredentials(creds);
+    }
   }
   return rv;
 }
@@ -321,17 +316,19 @@ static void GetAuthPrompt(nsIInterfaceRequestor* ifreq, bool proxyAuth,
   if (!ifreq) return;
 
   uint32_t promptReason;
-  if (proxyAuth)
+  if (proxyAuth) {
     promptReason = nsIAuthPromptProvider::PROMPT_PROXY;
-  else
+  } else {
     promptReason = nsIAuthPromptProvider::PROMPT_NORMAL;
+  }
 
   nsCOMPtr<nsIAuthPromptProvider> promptProvider = do_GetInterface(ifreq);
-  if (promptProvider)
+  if (promptProvider) {
     promptProvider->GetAuthPrompt(promptReason, NS_GET_IID(nsIAuthPrompt2),
                                   reinterpret_cast<void**>(result));
-  else
+  } else {
     NS_QueryAuthPrompt2(ifreq, result);
+  }
 }
 
 // generate credentials for the given challenge, and update the auth cache.
@@ -824,10 +821,11 @@ nsresult nsHttpChannelAuthProvider::GetCredentialsForChallenge(
 
     if (!entry && ident->IsEmpty()) {
       uint32_t level = nsIAuthPrompt2::LEVEL_NONE;
-      if ((!proxyAuth && mUsingSSL) || (proxyAuth && mProxyUsingSSL))
+      if ((!proxyAuth && mUsingSSL) || (proxyAuth && mProxyUsingSSL)) {
         level = nsIAuthPrompt2::LEVEL_SECURE;
-      else if (authFlags & nsIHttpAuthenticator::IDENTITY_ENCRYPTED)
+      } else if (authFlags & nsIHttpAuthenticator::IDENTITY_ENCRYPTED) {
         level = nsIAuthPrompt2::LEVEL_PW_ENCRYPTED;
+      }
 
       // Collect statistics on how frequently the various types of HTTP
       // authentication are used over SSL and non-SSL connections.
@@ -1214,8 +1212,9 @@ nsresult nsHttpChannelAuthProvider::PromptForIdentity(
     mTriedHostAuth = true;
   }
 
-  if (authFlags & nsIHttpAuthenticator::IDENTITY_INCLUDES_DOMAIN)
+  if (authFlags & nsIHttpAuthenticator::IDENTITY_INCLUDES_DOMAIN) {
     promptFlags |= nsIAuthInformation::NEED_DOMAIN;
+  }
 
   if (mCrossOrigin) {
     promptFlags |= nsIAuthInformation::CROSS_ORIGIN_SUB_RESOURCE;
@@ -1241,10 +1240,11 @@ nsresult nsHttpChannelAuthProvider::PromptForIdentity(
     rv = authPrompt->PromptAuth(channel, level, holder, &retval);
     if (NS_FAILED(rv)) return rv;
 
-    if (!retval)
+    if (!retval) {
       rv = NS_ERROR_ABORT;
-    else
+    } else {
       holder->SetToHttpAuthIdentity(authFlags, ident);
+    }
   }
 
   // remember that we successfully showed the user an auth dialog
@@ -1459,10 +1459,11 @@ NS_IMETHODIMP nsHttpChannelAuthProvider::OnCredsGenerated(
 nsresult nsHttpChannelAuthProvider::ContinueOnAuthAvailable(
     const nsACString& creds) {
   nsresult rv;
-  if (mProxyAuth)
+  if (mProxyAuth) {
     rv = mAuthChannel->SetProxyCredentials(creds);
-  else
+  } else {
     rv = mAuthChannel->SetWWWCredentials(creds);
+  }
   if (NS_FAILED(rv)) return rv;
 
   // drop our remaining list of challenges.  We don't need them, because we
@@ -1493,14 +1494,16 @@ bool nsHttpChannelAuthProvider::ConfirmAuth(const char* bundleKey,
   if (NS_FAILED(rv)) return true;
 
   if (mSuppressDefensiveAuth ||
-      !(loadFlags & nsIChannel::LOAD_INITIAL_DOCUMENT_URI))
+      !(loadFlags & nsIChannel::LOAD_INITIAL_DOCUMENT_URI)) {
     return true;
+  }
 
   nsAutoCString userPass;
   rv = mURI->GetUserPass(userPass);
   if (NS_FAILED(rv) ||
-      (userPass.Length() < gHttpHandler->PhishyUserPassLength()))
+      (userPass.Length() < gHttpHandler->PhishyUserPassLength())) {
     return true;
+  }
 
   // we try to confirm by prompting the user.  if we cannot do so, then
   // assume the user said ok.  this is done to keep things working in
@@ -1668,8 +1671,9 @@ void nsHttpChannelAuthProvider::SetAuthorizationHeader(
     if (ident.IsEmpty()) {
       ident = entry->Identity();
       identFromURI = false;
-    } else
+    } else {
       identFromURI = true;
+    }
 
     nsCString temp;  // this must have the same lifetime as creds
     nsAutoCString creds(entry->Creds());
@@ -1708,18 +1712,20 @@ void nsHttpChannelAuthProvider::SetAuthorizationHeader(
       // this for non-proxy auth since the URL's userpass is not used for
       // proxy auth.
       if (header == nsHttp::Authorization) mSuppressDefensiveAuth = true;
-    } else
+    } else {
       ident.Clear();  // don't remember the identity
+    }
   }
 }
 
 nsresult nsHttpChannelAuthProvider::GetCurrentPath(nsACString& path) {
   nsresult rv;
   nsCOMPtr<nsIURL> url = do_QueryInterface(mURI);
-  if (url)
+  if (url) {
     rv = url->GetDirectory(path);
-  else
+  } else {
     rv = mURI->GetPathQueryRef(path);
+  }
   return rv;
 }
 
