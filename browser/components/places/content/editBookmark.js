@@ -1312,38 +1312,6 @@ var gEditItemOverlay = {
         break;
     }
   },
-
-  onItemMoved(
-    id,
-    oldIndex,
-    newIndex,
-    type,
-    guid,
-    oldParentGuid,
-    newParentGuid
-  ) {
-    if (!this._paneInfo.isItem || this._paneInfo.itemId != id) {
-      return;
-    }
-
-    this._paneInfo.parentGuid = newParentGuid;
-
-    if (
-      !this._paneInfo.visibleRows.has("folderRow") ||
-      newParentGuid == this._folderMenuList.selectedItem.folderGuid
-    ) {
-      return;
-    }
-
-    // Just setting selectItem _does not_ trigger oncommand, so we don't
-    // recurse.
-    PlacesUtils.bookmarks.fetch(newParentGuid).then(bm => {
-      this._folderMenuList.selectedItem = this._getFolderMenuItem(
-        newParentGuid,
-        bm.title
-      );
-    });
-  },
 };
 
 XPCOMUtils.defineLazyGetter(gEditItemOverlay, "_folderTree", () => {

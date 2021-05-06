@@ -2503,14 +2503,11 @@ nsNavHistoryQueryResultNode::OnItemChanged(
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsNavHistoryQueryResultNode::OnItemMoved(int64_t aFolder, int32_t aOldIndex,
-                                         int32_t aNewIndex, uint16_t aItemType,
-                                         const nsACString& aGUID,
-                                         const nsACString& aOldParentGUID,
-                                         const nsACString& aNewParentGUID,
-                                         uint16_t aSource,
-                                         const nsACString& aURI) {
+nsresult nsNavHistoryQueryResultNode::OnItemMoved(
+    int64_t aFolder, int32_t aOldIndex, int32_t aNewIndex, uint16_t aItemType,
+    const nsACString& aGUID, const nsACString& aOldParentGUID,
+    const nsACString& aNewParentGUID, uint16_t aSource,
+    const nsACString& aURI) {
   // 1. The query cannot be affected by the item's position
   // 2. For the time being, we cannot optimize this not to update
   //    queries which are not restricted to some folders, due to way
@@ -3322,14 +3319,11 @@ nsresult nsNavHistoryFolderResultNode::OnItemVisited(nsIURI* aURI,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsNavHistoryFolderResultNode::OnItemMoved(int64_t aItemId, int32_t aOldIndex,
-                                          int32_t aNewIndex, uint16_t aItemType,
-                                          const nsACString& aGUID,
-                                          const nsACString& aOldParentGUID,
-                                          const nsACString& aNewParentGUID,
-                                          uint16_t aSource,
-                                          const nsACString& aURI) {
+nsresult nsNavHistoryFolderResultNode::OnItemMoved(
+    int64_t aItemId, int32_t aOldIndex, int32_t aNewIndex, uint16_t aItemType,
+    const nsACString& aGUID, const nsACString& aOldParentGUID,
+    const nsACString& aNewParentGUID, uint16_t aSource,
+    const nsACString& aURI) {
   MOZ_ASSERT(aOldParentGUID.Equals(mTargetFolderGuid) ||
                  aNewParentGUID.Equals(mTargetFolderGuid),
              "Got a bookmark message that doesn't belong to us");
@@ -3947,36 +3941,6 @@ nsNavHistoryResult::OnItemChanged(
   // the same as other history notification, except that here we know the item
   // is a bookmark.  History observers will handle the history notification
   // instead.
-  return NS_OK;
-}
-
-/**
- * Need to notify both the source and the destination folders (if they are
- * different).
- */
-NS_IMETHODIMP
-nsNavHistoryResult::OnItemMoved(int64_t aItemId, int32_t aOldIndex,
-                                int32_t aNewIndex, uint16_t aItemType,
-                                const nsACString& aGUID,
-                                const nsACString& aOldParentGUID,
-                                const nsACString& aNewParentGUID,
-                                uint16_t aSource, const nsACString& aURI) {
-  ENUMERATE_BOOKMARK_FOLDER_OBSERVERS(
-      aOldParentGUID,
-      OnItemMoved(aItemId, aOldIndex, aNewIndex, aItemType, aGUID,
-                  aOldParentGUID, aNewParentGUID, aSource, aURI));
-  if (!aNewParentGUID.Equals(aOldParentGUID)) {
-    ENUMERATE_BOOKMARK_FOLDER_OBSERVERS(
-        aNewParentGUID,
-        OnItemMoved(aItemId, aOldIndex, aNewIndex, aItemType, aGUID,
-                    aOldParentGUID, aNewParentGUID, aSource, aURI));
-  }
-  ENUMERATE_ALL_BOOKMARKS_OBSERVERS(
-      OnItemMoved(aItemId, aOldIndex, aNewIndex, aItemType, aGUID,
-                  aOldParentGUID, aNewParentGUID, aSource, aURI));
-  ENUMERATE_HISTORY_OBSERVERS(OnItemMoved(aItemId, aOldIndex, aNewIndex,
-                                          aItemType, aGUID, aOldParentGUID,
-                                          aNewParentGUID, aSource, aURI));
   return NS_OK;
 }
 
