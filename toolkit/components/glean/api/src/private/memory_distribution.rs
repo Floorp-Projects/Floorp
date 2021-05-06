@@ -184,10 +184,15 @@ mod test {
         assert_eq!(0, metric_data.values[&44376]);
         assert_eq!(43008, metric_data.sum);
 
-        // TODO: implement replay. See bug 1646165.
-        // For now, let's ensure there's something in the buffer and replay doesn't error.
+        // Single-process IPC machine goes brrrrr...
         let buf = ipc::take_buf().unwrap();
         assert!(buf.len() > 0);
         assert!(ipc::replay_from_buf(&buf).is_ok());
+
+        let data = parent_metric.test_get_value(None).expect("must have data");
+        assert_eq!(2, data.values.values().fold(0, |acc, count| acc + count));
+        assert_eq!(1, data.values[&42494]);
+        assert_eq!(1, data.values[&115097]);
+        assert_eq!(162816, data.sum);
     }
 }
