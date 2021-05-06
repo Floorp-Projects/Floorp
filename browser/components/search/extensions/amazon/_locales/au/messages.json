@@ -12,7 +12,7 @@
     "message": "https://www.amazon.com.au/exec/obidos/external-search/?field-keywords={searchTerms}&ie={inputEncoding}&mode=blended"
   },
   "searchUrlGetParams": {
-    "message": "field-keywords={searchTerms}&ie={inputEncoding}&mode=blended&tag=mozillaaustra-22&sourceid=Mozilla-search"
+    "message": "field-keywords={searchTerms}&ie={inputEncoding}&mode=blended&tag=mozillaaust0c-22&sourceid=Mozilla-search"
   },
   "suggestUrl": {
     "message": "https://completion.amazon.com.au/search/complete"
