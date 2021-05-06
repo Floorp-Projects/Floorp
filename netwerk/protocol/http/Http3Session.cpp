@@ -1640,8 +1640,7 @@ void Http3Session::SetSecInfo() {
                             secInfo.signature_scheme);
   }
 
-  if (!mSocketControl->HasServerCert() &&
-      StaticPrefs::network_ssl_tokens_cache_enabled()) {
+  if (!mSocketControl->HasServerCert()) {
     mSocketControl->RebuildCertificateInfoFromSSLTokenCache();
   }
 }
