@@ -563,7 +563,7 @@ talos-tabswitch:
         by-test-platform:
             (linux1804-64|windows|macosx1015-64).*-qr.*: ['fission', 'webrender-sw']
             default: ['fission']
-    max-run-time: 1200
+    max-run-time: 1800
     mozharness:
         extra-options:
             - --suite=tabswitch
