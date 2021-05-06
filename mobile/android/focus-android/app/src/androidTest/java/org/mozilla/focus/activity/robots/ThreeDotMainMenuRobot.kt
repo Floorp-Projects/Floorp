@@ -10,12 +10,30 @@ import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.uiautomator.UiSelector
+import junit.framework.TestCase.assertTrue
 import org.mozilla.focus.R
 import org.mozilla.focus.helpers.TestHelper.mDevice
 import org.mozilla.focus.helpers.TestHelper.packageName
 import org.mozilla.focus.helpers.TestHelper.waitingTime
 
 class ThreeDotMainMenuRobot {
+
+    fun clickOpenInOption() {
+        openInBtn.waitForExists(waitingTime)
+        openInBtn.click()
+    }
+
+    fun verifyOpenInDialog() {
+        assertTrue(openInDialogTitle.exists())
+        assertTrue(openWithList.exists())
+    }
+
+    fun clickOpenInChrome() {
+        val chromeBrowser = mDevice.findObject(UiSelector().text("Chrome"))
+        if (chromeBrowser.exists()) {
+            chromeBrowser.click()
+        }
+    }
 
     class Transition {
         fun openSettings(interact: SettingsRobot.() -> Unit): SettingsRobot.Transition {
@@ -86,3 +104,18 @@ private val addToHSmenuItem = mDevice.findObject(
 private val whatsNewMenuLink = onView(withId(R.id.whats_new))
 
 private val helpPageMenuLink = onView(withId(R.id.help))
+
+private val openInBtn = mDevice.findObject(
+    UiSelector()
+        .resourceId("$packageName:id/open_select_browser")
+)
+
+private val openInDialogTitle = mDevice.findObject(
+    UiSelector()
+        .text("Open in…")
+)
+
+private val openWithList = mDevice.findObject(
+    UiSelector()
+        .resourceId("$packageName:id/apps")
+)
