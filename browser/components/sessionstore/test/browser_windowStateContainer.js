@@ -8,6 +8,23 @@ add_task(async function setup() {
   });
 });
 
+function promiseTabsRestored(win, nExpected) {
+  return new Promise(resolve => {
+    let nReceived = 0;
+    function handler(event) {
+      if (++nReceived === nExpected) {
+        win.gBrowser.tabContainer.removeEventListener(
+          "SSTabRestored",
+          handler,
+          true
+        );
+        resolve();
+      }
+    }
+    win.gBrowser.tabContainer.addEventListener("SSTabRestored", handler, true);
+  });
+}
+
 add_task(async function() {
   let win = await BrowserTestUtils.openNewBrowserWindow();
 
@@ -48,7 +65,9 @@ add_task(async function() {
     await TabStateFlusher.flush(tab.linkedBrowser);
   }
 
+  let tabsRestored = promiseTabsRestored(win2, 5);
   await setWindowState(win2, winState, true);
+  await tabsRestored;
 
   for (let i = 0; i < 4; i++) {
     let browser = win2.gBrowser.tabs[i].linkedBrowser;
@@ -125,7 +144,9 @@ add_task(async function() {
   win2.gBrowser.moveTabTo(win2.gBrowser.tabs[0], win2.gBrowser.tabs.length - 1);
   await TabStateFlusher.flush(win2.gBrowser.tabs[0].linkedBrowser);
 
+  let tabsRestored = promiseTabsRestored(win2, 2);
   await setWindowState(win2, winState, true);
+  await tabsRestored;
 
   for (let i = 0; i < 2; i++) {
     let browser = win2.gBrowser.tabs[i].linkedBrowser;
