@@ -754,7 +754,7 @@ def target_tasks_general_perf_testing(full_task_graph, parameters, graph_config)
             return False
 
         # ignore all windows 7 perf jobs scheduled automatically
-        if "windows7" in platform or "windows10-32":
+        if "windows7" in platform or "windows10-32" in platform:
             return False
 
         # Desktop selection
