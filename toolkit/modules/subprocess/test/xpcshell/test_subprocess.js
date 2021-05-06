@@ -693,7 +693,6 @@ add_task(async function test_subprocess_environment() {
     Object.assign(environment, {
       PATH: env.get("PATH"),
       PATHEXT: env.get("PATHEXT"),
-      SYSTEMROOT: env.get("SYSTEMROOT"),
     });
   }
 
