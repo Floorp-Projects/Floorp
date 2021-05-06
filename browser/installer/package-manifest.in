@@ -218,7 +218,6 @@
 #if defined(ENABLE_TESTS) && defined(MOZ_DEBUG)
 @RESPATH@/components/TestInterfaceJS.js
 @RESPATH@/components/TestInterfaceJS.manifest
-@RESPATH@/components/TestInterfaceJSMaplike.js
 #endif
 
 #if defined(MOZ_DEBUG) || defined(MOZ_DEV_EDITION) || defined(NIGHTLY_BUILD)
