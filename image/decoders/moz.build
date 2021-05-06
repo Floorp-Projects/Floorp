@@ -36,6 +36,11 @@ if CONFIG["MOZ_AV1"]:
         "nsAVIFDecoder.cpp",
     ]
 
+if CONFIG["MOZ_JXL"]:
+    UNIFIED_SOURCES += [
+        "nsJXLDecoder.cpp",
+    ]
+
 include("/ipc/chromium/chromium-config.mozbuild")
 
 LOCAL_INCLUDES += [
