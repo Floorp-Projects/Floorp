@@ -508,6 +508,11 @@ body {
 
       &.current {
         opacity: 1;
+
+        // This is the only step shown, so visually hide it to maintain spacing.
+        &:last-of-type:first-of-type {
+          opacity: 0;
+        }
       }
     }
   }

@@ -84,7 +84,7 @@ export class MultiStageProtonScreen extends React.PureComponent {
                 handleAction={this.props.handleAction}
               />
             ) : null}
-            {!isWelcomeScreen && total > 1 ? (
+            {!isWelcomeScreen ? (
               <nav
                 className="steps"
                 data-l10n-id={"onboarding-welcome-steps-indicator"}
