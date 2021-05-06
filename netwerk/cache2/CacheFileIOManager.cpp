@@ -1989,7 +1989,7 @@ nsresult CacheFileIOManager::WriteInternal(CacheFileHandle* aHandle,
       LOG(
           ("CacheFileIOManager::WriteInternal() - failing because cache size "
            "reached hard limit!"));
-      return NS_ERROR_FILE_DISK_FULL;
+      return NS_ERROR_FILE_NO_DEVICE_SPACE;
     }
 
     int64_t freeSpace;
@@ -2008,7 +2008,7 @@ nsresult CacheFileIOManager::WriteInternal(CacheFileHandle* aHandle,
             ("CacheFileIOManager::WriteInternal() - Low free space, refusing "
              "to write! [freeSpace=%" PRId64 "kB, limit=%ukB]",
              freeSpace, limit));
-        return NS_ERROR_FILE_DISK_FULL;
+        return NS_ERROR_FILE_NO_DEVICE_SPACE;
       }
     }
   }
@@ -2518,7 +2518,7 @@ nsresult CacheFileIOManager::TruncateSeekSetEOFInternal(
       LOG(
           ("CacheFileIOManager::TruncateSeekSetEOFInternal() - failing because "
            "cache size reached hard limit!"));
-      return NS_ERROR_FILE_DISK_FULL;
+      return NS_ERROR_FILE_NO_DEVICE_SPACE;
     }
 
     int64_t freeSpace;
@@ -2537,7 +2537,7 @@ nsresult CacheFileIOManager::TruncateSeekSetEOFInternal(
             ("CacheFileIOManager::TruncateSeekSetEOFInternal() - Low free space"
              ", refusing to write! [freeSpace=%" PRId64 "kB, limit=%ukB]",
              freeSpace, limit));
-        return NS_ERROR_FILE_DISK_FULL;
+        return NS_ERROR_FILE_NO_DEVICE_SPACE;
       }
     }
   }

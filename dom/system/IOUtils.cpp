@@ -156,10 +156,17 @@ static void RejectJSPromise(Promise* aPromise, const IOUtils::IOError& aError) {
   const auto& errMsg = aError.Message();
 
   switch (aError.Code()) {
+    case NS_ERROR_FILE_UNRESOLVABLE_SYMLINK:
+      [[fallthrough]];  // to NS_ERROR_FILE_INVALID_PATH
     case NS_ERROR_FILE_TARGET_DOES_NOT_EXIST:
+      [[fallthrough]];  // to NS_ERROR_FILE_INVALID_PATH
     case NS_ERROR_FILE_NOT_FOUND:
+      [[fallthrough]];  // to NS_ERROR_FILE_INVALID_PATH
+    case NS_ERROR_FILE_INVALID_PATH:
       aPromise->MaybeRejectWithNotFoundError(errMsg.refOr("File not found"_ns));
       break;
+    case NS_ERROR_FILE_IS_LOCKED:
+      [[fallthrough]];  // to NS_ERROR_FILE_ACCESS_DENIED
     case NS_ERROR_FILE_ACCESS_DENIED:
       aPromise->MaybeRejectWithNotAllowedError(
           errMsg.refOr("Access was denied to the target file"_ns));
@@ -167,6 +174,10 @@ static void RejectJSPromise(Promise* aPromise, const IOUtils::IOError& aError) {
     case NS_ERROR_FILE_TOO_BIG:
       aPromise->MaybeRejectWithNotReadableError(
           errMsg.refOr("Target file is too big"_ns));
+      break;
+    case NS_ERROR_FILE_NO_DEVICE_SPACE:
+      aPromise->MaybeRejectWithNotReadableError(
+          errMsg.refOr("Target device is full"_ns));
       break;
     case NS_ERROR_FILE_ALREADY_EXISTS:
       aPromise->MaybeRejectWithNoModificationAllowedError(
@@ -181,9 +192,22 @@ static void RejectJSPromise(Promise* aPromise, const IOUtils::IOError& aError) {
           errMsg.refOr("Target file is read only"_ns));
       break;
     case NS_ERROR_FILE_NOT_DIRECTORY:
+      [[fallthrough]];  // to NS_ERROR_FILE_DESTINATION_NOT_DIR
     case NS_ERROR_FILE_DESTINATION_NOT_DIR:
       aPromise->MaybeRejectWithInvalidAccessError(
           errMsg.refOr("Target file is not a directory"_ns));
+      break;
+    case NS_ERROR_FILE_IS_DIRECTORY:
+      aPromise->MaybeRejectWithInvalidAccessError(
+          errMsg.refOr("Target file is a directory"_ns));
+      break;
+    case NS_ERROR_FILE_UNKNOWN_TYPE:
+      aPromise->MaybeRejectWithInvalidAccessError(
+          errMsg.refOr("Target file is of unknown type"_ns));
+      break;
+    case NS_ERROR_FILE_NAME_TOO_LONG:
+      aPromise->MaybeRejectWithOperationError(
+          errMsg.refOr("Target file path is too long"_ns));
       break;
     case NS_ERROR_FILE_UNRECOGNIZED_PATH:
       aPromise->MaybeRejectWithOperationError(
@@ -193,11 +217,18 @@ static void RejectJSPromise(Promise* aPromise, const IOUtils::IOError& aError) {
       aPromise->MaybeRejectWithOperationError(
           errMsg.refOr("Target directory is not empty"_ns));
       break;
+    case NS_ERROR_FILE_DEVICE_FAILURE:
+      [[fallthrough]];  // to NS_ERROR_FILE_FS_CORRUPTED
+    case NS_ERROR_FILE_FS_CORRUPTED:
+      aPromise->MaybeRejectWithNotReadableError(
+          errMsg.refOr("Target file system may be corrupt or unavailable"_ns));
+      break;
     case NS_ERROR_FILE_CORRUPTED:
       aPromise->MaybeRejectWithNotReadableError(
           errMsg.refOr("Target file could not be read and may be corrupt"_ns));
       break;
     case NS_ERROR_ILLEGAL_INPUT:
+      [[fallthrough]];  // NS_ERROR_ILLEGAL_VALUE
     case NS_ERROR_ILLEGAL_VALUE:
       aPromise->MaybeRejectWithDataError(
           errMsg.refOr("Argument is not allowed"_ns));

@@ -1217,7 +1217,6 @@ nsresult nsWebBrowserPersist::SendErrorStatusChange(bool aIsReadError,
       // File exists with same name as directory.
       msgId = "fileAlreadyExistsError";
       break;
-    case NS_ERROR_FILE_DISK_FULL:
     case NS_ERROR_FILE_NO_DEVICE_SPACE:
       // Out of space on target volume.
       msgId = "diskFull";

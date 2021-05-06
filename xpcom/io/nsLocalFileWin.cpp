@@ -248,26 +248,35 @@ static nsresult ConvertWinError(DWORD aWinErr) {
 
   switch (aWinErr) {
     case ERROR_FILE_NOT_FOUND:
+      [[fallthrough]];  // to NS_ERROR_FILE_NOT_FOUND
     case ERROR_PATH_NOT_FOUND:
+      [[fallthrough]];  // to NS_ERROR_FILE_NOT_FOUND
     case ERROR_INVALID_DRIVE:
+      [[fallthrough]];  // to NS_ERROR_FILE_NOT_FOUND
     case ERROR_NOT_READY:
       rv = NS_ERROR_FILE_NOT_FOUND;
       break;
     case ERROR_ACCESS_DENIED:
+      [[fallthrough]];  // to NS_ERROR_FILE_ACCESS_DENIED
     case ERROR_NOT_SAME_DEVICE:
       rv = NS_ERROR_FILE_ACCESS_DENIED;
       break;
     case ERROR_SHARING_VIOLATION:  // CreateFile without sharing flags
+      [[fallthrough]];             // to NS_ERROR_FILE_IS_LOCKED
     case ERROR_LOCK_VIOLATION:     // LockFile, LockFileEx
       rv = NS_ERROR_FILE_IS_LOCKED;
       break;
     case ERROR_NOT_ENOUGH_MEMORY:
+      [[fallthrough]];  // to NS_ERROR_OUT_OF_MEMORY
     case ERROR_INVALID_BLOCK:
+      [[fallthrough]];  // to NS_ERROR_OUT_OF_MEMORY
     case ERROR_INVALID_HANDLE:
+      [[fallthrough]];  // to NS_ERROR_OUT_OF_MEMORY
     case ERROR_ARENA_TRASHED:
       rv = NS_ERROR_OUT_OF_MEMORY;
       break;
     case ERROR_DIR_NOT_EMPTY:
+      [[fallthrough]];  // to NS_ERROR_FILE_DIR_NOT_EMPTY
     case ERROR_CURRENT_DIRECTORY:
       rv = NS_ERROR_FILE_DIR_NOT_EMPTY;
       break;
@@ -275,10 +284,14 @@ static nsresult ConvertWinError(DWORD aWinErr) {
       rv = NS_ERROR_FILE_READ_ONLY;
       break;
     case ERROR_HANDLE_DISK_FULL:
-      rv = NS_ERROR_FILE_TOO_BIG;
+      [[fallthrough]];  // to NS_ERROR_FILE_NO_DEVICE_SPACE
+    case ERROR_DISK_FULL:
+      rv = NS_ERROR_FILE_NO_DEVICE_SPACE;
       break;
     case ERROR_FILE_EXISTS:
+      [[fallthrough]];  // to NS_ERROR_FILE_ALREADY_EXISTS
     case ERROR_ALREADY_EXISTS:
+      [[fallthrough]];  // to NS_ERROR_FILE_ALREADY_EXISTS
     case ERROR_CANNOT_MAKE:
       rv = NS_ERROR_FILE_ALREADY_EXISTS;
       break;
@@ -291,6 +304,10 @@ static nsresult ConvertWinError(DWORD aWinErr) {
     case ERROR_FILE_CORRUPT:
       rv = NS_ERROR_FILE_FS_CORRUPTED;
       break;
+    case ERROR_DEVICE_HARDWARE_ERROR:
+      [[fallthrough]];  // to NS_ERROR_FILE_DEVICE_FAILURE
+    case ERROR_DEVICE_NOT_CONNECTED:
+      [[fallthrough]];  // to NS_ERROR_FILE_DEVICE_FAILURE
     case ERROR_IO_DEVICE:
       rv = NS_ERROR_FILE_DEVICE_FAILURE;
       break;

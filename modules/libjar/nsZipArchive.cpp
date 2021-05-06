@@ -533,7 +533,7 @@ nsresult nsZipArchive::ExtractFile(nsZipItem* item, nsIFile* outFile,
     }
 
     if (aFd && PR_Write(aFd, buf, count) < (READTYPE)count) {
-      rv = NS_ERROR_FILE_DISK_FULL;
+      rv = NS_ERROR_FILE_NO_DEVICE_SPACE;
       break;
     }
   }

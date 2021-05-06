@@ -2248,7 +2248,7 @@ static nsresult MacErrorMapper(OSErr inErr) {
 
     case dskFulErr:
     case afpDiskFull:
-      outErr = NS_ERROR_FILE_DISK_FULL;
+      outErr = NS_ERROR_FILE_NO_DEVICE_SPACE;
       break;
 
     case fLckdErr:
