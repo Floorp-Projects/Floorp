@@ -50,6 +50,15 @@ If the crate uses only a few Gecko symbols, they may use the
 This allows the crate to test its non-Gecko-adjacent code using Rust tests.
 (You will need to cover the Gecko-adjacent code via another means.)
 
+**Note:** Some FOG rusttests panic on purpose. They print stack traces to stdout.
+If the rusttests fail and you see a stack trace,
+double-check it isn't from a purposefully-panicking test.
+
+**Note:** If a test fails, it is very likely they'll poison the test lock.
+This will cause all subsequent tests that attempt to take the test lock
+(which is all of them)
+to also fail due to `PoisonError`s. They can be safely ignored.
+
 ### Using `gtest` (Treeherder symbol `GTest` (a build task))
 
 Because Gecko symbols aren't built for the
