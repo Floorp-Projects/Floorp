@@ -479,9 +479,7 @@ add_task(async function test_apply_then_revert() {
       name: "onItemMoved",
       params: {
         itemId: localItemIds.get("bookmarkEEEE"),
-        oldParentId: PlacesUtils.bookmarksMenuFolderId,
         oldIndex: 2,
-        newParentId: PlacesUtils.bookmarksMenuFolderId,
         newIndex: 0,
         type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
         guid: "bookmarkEEEE",
@@ -495,9 +493,7 @@ add_task(async function test_apply_then_revert() {
       name: "onItemMoved",
       params: {
         itemId: localItemIds.get("folderAAAAAA"),
-        oldParentId: PlacesUtils.bookmarksMenuFolderId,
         oldIndex: 0,
-        newParentId: PlacesUtils.toolbarFolderId,
         newIndex: 0,
         type: PlacesUtils.bookmarks.TYPE_FOLDER,
         guid: "folderAAAAAA",
@@ -511,9 +507,7 @@ add_task(async function test_apply_then_revert() {
       name: "onItemMoved",
       params: {
         itemId: localItemIds.get("bookmarkCCCC"),
-        oldParentId: localItemIds.get("folderAAAAAA"),
         oldIndex: 1,
-        newParentId: localItemIds.get("folderAAAAAA"),
         newIndex: 0,
         type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
         guid: "bookmarkCCCC",
@@ -527,9 +521,7 @@ add_task(async function test_apply_then_revert() {
       name: "onItemMoved",
       params: {
         itemId: localItemIds.get("bookmarkBBBB"),
-        oldParentId: localItemIds.get("folderAAAAAA"),
         oldIndex: 0,
-        newParentId: localItemIds.get("folderAAAAAA"),
         newIndex: 1,
         type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
         guid: "bookmarkBBBB",

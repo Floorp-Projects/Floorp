@@ -504,12 +504,7 @@ add_task(async function onItemMoved_bookmark() {
         name: "onItemMoved",
         args: [
           { name: "itemId", check: v => typeof v == "number" && v > 0 },
-          { name: "oldParentId", check: v => v === gUnfiledFolderId },
           { name: "oldIndex", check: v => v === 0 },
-          {
-            name: "newParentId",
-            check: v => v === PlacesUtils.toolbarFolderId,
-          },
           { name: "newIndex", check: v => v === 0 },
           {
             name: "itemType",
@@ -539,12 +534,7 @@ add_task(async function onItemMoved_bookmark() {
         name: "onItemMoved",
         args: [
           { name: "itemId", check: v => typeof v == "number" && v > 0 },
-          {
-            name: "oldParentId",
-            check: v => v === PlacesUtils.toolbarFolderId,
-          },
           { name: "oldIndex", check: v => v === 0 },
-          { name: "newParentId", check: v => v === gUnfiledFolderId },
           { name: "newIndex", check: v => v === 0 },
           {
             name: "itemType",

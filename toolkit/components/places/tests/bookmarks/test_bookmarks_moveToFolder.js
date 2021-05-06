@@ -258,9 +258,7 @@ async function testMoveToFolder(details) {
         name: "onItemMoved",
         arguments: [
           await PlacesUtils.promiseItemId(origItem.guid),
-          await PlacesUtils.promiseItemId(origItem.parentGuid),
           notification.originalIndex,
-          await PlacesUtils.promiseItemId(newFolder.guid),
           notification.newIndex,
           PlacesUtils.bookmarks.TYPE_BOOKMARK,
           origItem.guid,
