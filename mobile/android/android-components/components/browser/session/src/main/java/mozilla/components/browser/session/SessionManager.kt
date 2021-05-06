@@ -96,12 +96,14 @@ class SessionManager(
     /**
      * Adds the provided session.
      */
+    @Suppress("LongParameterList")
     fun add(
         session: Session,
         selected: Boolean = false,
         engineSession: EngineSession? = null,
         engineSessionState: EngineSessionState? = null,
-        parent: Session? = null
+        parent: Session? = null,
+        initialLoadFlags: EngineSession.LoadUrlFlags = EngineSession.LoadUrlFlags.none()
     ) {
         // Add store to Session so that it can dispatch actions whenever it changes.
         session.store = store
@@ -114,13 +116,13 @@ class SessionManager(
         if (session.isCustomTabSession()) {
             store?.syncDispatch(
                 CustomTabListAction.AddCustomTabAction(
-                    session.toCustomTabSessionState()
+                    session.toCustomTabSessionState(initialLoadFlags)
                 )
             )
         } else {
             store?.syncDispatch(
                 TabListAction.AddTabAction(
-                    session.toTabSessionState(),
+                    session.toTabSessionState(initialLoadFlags),
                     select = selected
                 )
             )

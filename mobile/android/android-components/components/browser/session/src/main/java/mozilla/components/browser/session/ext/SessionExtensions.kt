@@ -7,28 +7,35 @@ package mozilla.components.browser.session.ext
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.state.state.ContentState
 import mozilla.components.browser.state.state.CustomTabSessionState
+import mozilla.components.browser.state.state.EngineState
 import mozilla.components.browser.state.state.SecurityInfoState
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.TrackingProtectionState
+import mozilla.components.concept.engine.EngineSession
 
 /**
  * Create a matching [TabSessionState] from a [Session].
  */
-fun Session.toTabSessionState(): TabSessionState {
+fun Session.toTabSessionState(
+    initialLoadFlags: EngineSession.LoadUrlFlags = EngineSession.LoadUrlFlags.none()
+): TabSessionState {
     return TabSessionState(
         id,
         toContentState(),
         toTrackingProtectionState(),
         parentId = parentId,
         contextId = contextId,
-        source = source
+        source = source,
+        engineState = EngineState(initialLoadFlags = initialLoadFlags)
     )
 }
 
 /**
  * Creates a matching [CustomTabSessionState] from a custom tab [Session].
  */
-fun Session.toCustomTabSessionState(): CustomTabSessionState {
+fun Session.toCustomTabSessionState(
+    initialLoadFlags: EngineSession.LoadUrlFlags = EngineSession.LoadUrlFlags.none()
+): CustomTabSessionState {
     val config =
         customTabConfig ?: throw IllegalStateException("Session is not a custom tab session")
     return CustomTabSessionState(
@@ -36,7 +43,8 @@ fun Session.toCustomTabSessionState(): CustomTabSessionState {
         toContentState(),
         toTrackingProtectionState(),
         config,
-        contextId = contextId
+        contextId = contextId,
+        engineState = EngineState(initialLoadFlags = initialLoadFlags)
     )
 }
 

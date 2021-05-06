@@ -93,7 +93,14 @@ class TabIntentProcessorTest {
         handler.process(intent)
 
         val sessionCaptor = argumentCaptor<Session>()
-        verify(sessionManager).add(sessionCaptor.capture(), eq(true), eq(null), eq(null), eq(null))
+        verify(sessionManager).add(
+            sessionCaptor.capture(),
+            eq(true),
+            eq(null),
+            eq(null),
+            eq(null),
+            eq(LoadUrlFlags.external())
+        )
         verify(store).dispatch(EngineAction.LoadUrlAction(
             sessionCaptor.value.id, "http://mozilla.org", LoadUrlFlags.external())
         )
@@ -131,7 +138,14 @@ class TabIntentProcessorTest {
         handler.process(intent)
 
         val sessionCaptor = argumentCaptor<Session>()
-        verify(sessionManager).add(sessionCaptor.capture(), eq(true), eq(null), eq(null), eq(null))
+        verify(sessionManager).add(
+            sessionCaptor.capture(),
+            eq(true),
+            eq(null),
+            eq(null),
+            eq(null),
+            eq(LoadUrlFlags.external())
+        )
         verify(store).dispatch(EngineAction.LoadUrlAction(
             sessionCaptor.value.id, "http://mozilla.org", LoadUrlFlags.external())
         )
@@ -169,7 +183,14 @@ class TabIntentProcessorTest {
         whenever(intent.dataString).thenReturn("http://mozilla.org")
         handler.process(intent)
         val sessionCaptor = argumentCaptor<Session>()
-        verify(sessionManager).add(sessionCaptor.capture(), eq(true), eq(null), eq(null), eq(null))
+        verify(sessionManager).add(
+            sessionCaptor.capture(),
+            eq(true),
+            eq(null),
+            eq(null),
+            eq(null),
+            eq(LoadUrlFlags.external())
+        )
         verify(store).dispatch(EngineAction.LoadUrlAction(
             sessionCaptor.value.id, "http://mozilla.org", LoadUrlFlags.external())
         )
@@ -190,35 +211,70 @@ class TabIntentProcessorTest {
         whenever(intent.getStringExtra(Intent.EXTRA_TEXT)).thenReturn("http://mozilla.org")
         handler.process(intent)
         val sessionCaptor = argumentCaptor<Session>()
-        verify(sessionManager).add(sessionCaptor.capture(), eq(true), eq(null), eq(null), eq(null))
+        verify(sessionManager).add(
+            sessionCaptor.capture(),
+            eq(true),
+            eq(null),
+            eq(null),
+            eq(null),
+            eq(LoadUrlFlags.external())
+        )
         verify(store).dispatch(EngineAction.LoadUrlAction(
             sessionCaptor.value.id, "http://mozilla.org", LoadUrlFlags.external())
         )
 
         whenever(intent.getStringExtra(Intent.EXTRA_TEXT)).thenReturn("see http://getpocket.com")
         handler.process(intent)
-        verify(sessionManager, times(2)).add(sessionCaptor.capture(), eq(true), eq(null), eq(null), eq(null))
+        verify(sessionManager, times(2)).add(
+            sessionCaptor.capture(),
+            eq(true),
+            eq(null),
+            eq(null),
+            eq(null),
+            eq(LoadUrlFlags.external())
+        )
         verify(store).dispatch(EngineAction.LoadUrlAction(
             sessionCaptor.allValues.last().id, "http://getpocket.com", LoadUrlFlags.external())
         )
 
         whenever(intent.getStringExtra(Intent.EXTRA_TEXT)).thenReturn("see http://mozilla.com and http://getpocket.com")
         handler.process(intent)
-        verify(sessionManager, times(3)).add(sessionCaptor.capture(), eq(true), eq(null), eq(null), eq(null))
+        verify(sessionManager, times(3)).add(
+            sessionCaptor.capture(),
+            eq(true),
+            eq(null),
+            eq(null),
+            eq(null),
+            eq(LoadUrlFlags.external())
+        )
         verify(store).dispatch(EngineAction.LoadUrlAction(
             sessionCaptor.allValues.last().id, "http://mozilla.com", LoadUrlFlags.external())
         )
 
         whenever(intent.getStringExtra(Intent.EXTRA_TEXT)).thenReturn("checkout the Tweet: http://tweets.mozilla.com")
         handler.process(intent)
-        verify(sessionManager, times(4)).add(sessionCaptor.capture(), eq(true), eq(null), eq(null), eq(null))
+        verify(sessionManager, times(4)).add(
+            sessionCaptor.capture(),
+            eq(true),
+            eq(null),
+            eq(null),
+            eq(null),
+            eq(LoadUrlFlags.external())
+        )
         verify(store).dispatch(EngineAction.LoadUrlAction(
             sessionCaptor.allValues.last().id, "http://tweets.mozilla.com", LoadUrlFlags.external())
         )
 
         whenever(intent.getStringExtra(Intent.EXTRA_TEXT)).thenReturn("checkout the Tweet: HTTP://tweets.mozilla.org")
         handler.process(intent)
-        verify(sessionManager, times(5)).add(sessionCaptor.capture(), eq(true), eq(null), eq(null), eq(null))
+        verify(sessionManager, times(5)).add(
+            sessionCaptor.capture(),
+            eq(true),
+            eq(null),
+            eq(null),
+            eq(null),
+            eq(LoadUrlFlags.external())
+        )
         verify(store).dispatch(EngineAction.LoadUrlAction(
             sessionCaptor.allValues.last().id, "HTTP://tweets.mozilla.org", LoadUrlFlags.external())
         )
@@ -246,7 +302,14 @@ class TabIntentProcessorTest {
 
         handler.process(intent)
         val sessionCaptor = argumentCaptor<Session>()
-        verify(sessionManager).add(sessionCaptor.capture(), eq(true), eq(null), eq(null), eq(null))
+        verify(sessionManager).add(
+            sessionCaptor.capture(),
+            eq(true),
+            eq(null),
+            eq(null),
+            eq(null),
+            eq(LoadUrlFlags.none())
+        )
         verify(store).dispatch(EngineAction.LoadUrlAction(
             sessionCaptor.value.id, searchUrl, LoadUrlFlags.none())
         )
@@ -291,7 +354,14 @@ class TabIntentProcessorTest {
         whenever(intent.getStringExtra(SearchManager.QUERY)).thenReturn("http://mozilla.org")
         handler.process(intent)
         val sessionCaptor = argumentCaptor<Session>()
-        verify(sessionManager).add(sessionCaptor.capture(), eq(true), eq(null), eq(null), eq(null))
+        verify(sessionManager).add(
+            sessionCaptor.capture(),
+            eq(true),
+            eq(null),
+            eq(null),
+            eq(null),
+            eq(LoadUrlFlags.external())
+        )
         verify(store).dispatch(EngineAction.LoadUrlAction(
             sessionCaptor.value.id, "http://mozilla.org", LoadUrlFlags.external())
         )
@@ -319,7 +389,14 @@ class TabIntentProcessorTest {
 
         handler.process(intent)
         val sessionCaptor = argumentCaptor<Session>()
-        verify(sessionManager).add(sessionCaptor.capture(), eq(true), eq(null), eq(null), eq(null))
+        verify(sessionManager).add(
+            sessionCaptor.capture(),
+            eq(true),
+            eq(null),
+            eq(null),
+            eq(null),
+            eq(LoadUrlFlags.none())
+        )
         verify(store).dispatch(EngineAction.LoadUrlAction(
             sessionCaptor.value.id, searchUrl, LoadUrlFlags.none())
         )
@@ -352,7 +429,14 @@ class TabIntentProcessorTest {
         whenever(intent.getStringExtra(SearchManager.QUERY)).thenReturn("http://mozilla.org")
         handler.process(intent)
         val sessionCaptor = argumentCaptor<Session>()
-        verify(sessionManager).add(sessionCaptor.capture(), eq(true), eq(null), eq(null), eq(null))
+        verify(sessionManager).add(
+            sessionCaptor.capture(),
+            eq(true),
+            eq(null),
+            eq(null),
+            eq(null),
+            eq(LoadUrlFlags.external())
+        )
         verify(store).dispatch(EngineAction.LoadUrlAction(
             sessionCaptor.value.id, "http://mozilla.org", LoadUrlFlags.external())
         )
@@ -380,7 +464,14 @@ class TabIntentProcessorTest {
 
         handler.process(intent)
         val sessionCaptor = argumentCaptor<Session>()
-        verify(sessionManager).add(sessionCaptor.capture(), eq(true), eq(null), eq(null), eq(null))
+        verify(sessionManager).add(
+            sessionCaptor.capture(),
+            eq(true),
+            eq(null),
+            eq(null),
+            eq(null),
+            eq(LoadUrlFlags.none())
+        )
         verify(store).dispatch(EngineAction.LoadUrlAction(
             sessionCaptor.value.id, searchUrl, LoadUrlFlags.none())
         )

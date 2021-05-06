@@ -37,10 +37,9 @@ class CustomTabsUseCases(
             val session = Session(url, private = private, source = SessionState.Source.CUSTOM_TAB)
             session.customTabConfig = customTabConfig
 
-            sessionManager.add(session)
-
-            loadUrlUseCase(url, session.id, EngineSession.LoadUrlFlags.external(), additionalHeaders)
-
+            val loadUrlFlags = EngineSession.LoadUrlFlags.external()
+            sessionManager.add(session, initialLoadFlags = loadUrlFlags)
+            loadUrlUseCase(url, session.id, loadUrlFlags, additionalHeaders)
             return session.id
         }
     }

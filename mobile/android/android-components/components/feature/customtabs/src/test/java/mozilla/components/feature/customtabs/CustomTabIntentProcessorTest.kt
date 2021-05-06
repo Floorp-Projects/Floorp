@@ -24,6 +24,7 @@ import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.feature.tabs.CustomTabsUseCases
 import mozilla.components.support.test.any
 import mozilla.components.support.test.argumentCaptor
+import mozilla.components.support.test.eq
 import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.middleware.CaptureActionsMiddleware
 import mozilla.components.support.test.mock
@@ -36,7 +37,6 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.ArgumentMatchers.eq
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 
@@ -64,7 +64,14 @@ class CustomTabIntentProcessorTest {
         handler.process(intent)
 
         val sessionCaptor = argumentCaptor<Session>()
-        verify(sessionManager).add(sessionCaptor.capture(), eq(false), eq(null), eq(null), eq(null))
+        verify(sessionManager).add(
+            sessionCaptor.capture(),
+            eq(false),
+            eq(null),
+            eq(null),
+            eq(null),
+            eq(LoadUrlFlags.external())
+        )
 
         store.waitUntilIdle()
         middleware.assertFirstAction(EngineAction.LoadUrlAction::class) { action ->
@@ -110,7 +117,14 @@ class CustomTabIntentProcessorTest {
         handler.process(intent)
 
         val sessionCaptor = argumentCaptor<Session>()
-        verify(sessionManager).add(sessionCaptor.capture(), eq(false), eq(null), eq(null), eq(null))
+        verify(sessionManager).add(
+            sessionCaptor.capture(),
+            eq(false),
+            eq(null),
+            eq(null),
+            eq(null),
+            eq(LoadUrlFlags.external())
+        )
 
         store.waitUntilIdle()
         middleware.assertFirstAction(EngineAction.LoadUrlAction::class) { action ->
@@ -151,7 +165,14 @@ class CustomTabIntentProcessorTest {
         handler.process(intent)
 
         val sessionCaptor = argumentCaptor<Session>()
-        verify(sessionManager).add(sessionCaptor.capture(), eq(false), eq(null), eq(null), eq(null))
+        verify(sessionManager).add(
+            sessionCaptor.capture(),
+            eq(false),
+            eq(null),
+            eq(null),
+            eq(null),
+            eq(LoadUrlFlags.external())
+        )
 
         store.waitUntilIdle()
         middleware.assertFirstAction(EngineAction.LoadUrlAction::class) { action ->

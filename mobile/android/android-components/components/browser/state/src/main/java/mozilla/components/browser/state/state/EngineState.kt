@@ -23,11 +23,13 @@ import mozilla.components.concept.engine.EngineSessionState
  * has recovered its content process), but further action may be needed to restore the last state
  * before the session has crashed (if desired).
  * @property timestamp Timestamp of when the [EngineSession] was linked.
+ * @property initialLoadFlags [EngineSession.LoadUrlFlags] to use for the first load of this session.
  */
 data class EngineState(
     val engineSession: EngineSession? = null,
     val engineSessionState: EngineSessionState? = null,
     val engineObserver: EngineSession.Observer? = null,
     val crashed: Boolean = false,
-    val timestamp: Long? = null
+    val timestamp: Long? = null,
+    val initialLoadFlags: EngineSession.LoadUrlFlags = EngineSession.LoadUrlFlags.none()
 )

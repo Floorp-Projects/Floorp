@@ -8,6 +8,7 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.TestCoroutineDispatcher
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.session.engine.EngineMiddleware
 import mozilla.components.browser.session.storage.SessionStorage
 import mozilla.components.browser.state.action.EngineAction
 import mozilla.components.browser.state.selector.findTab
@@ -17,11 +18,14 @@ import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.state.recover.RecoverableTab
 import mozilla.components.browser.state.state.recover.toRecoverableTab
 import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSession.LoadUrlFlags
 import mozilla.components.concept.engine.EngineSessionState
+import mozilla.components.support.test.any
 import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.ext.joinBlocking
+import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.rule.MainCoroutineRule
 import mozilla.components.support.test.whenever
@@ -32,9 +36,11 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
+import org.mockito.ArgumentMatchers.anyBoolean
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
+import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 
 const val DAY_IN_MS = 24 * 60 * 60 * 1000L
@@ -178,15 +184,35 @@ class TabsUseCasesTest {
 
     @Test
     fun `AddNewTabUseCase forwards load flags to engine`() {
-        val sessionManager: SessionManager = mock()
-        val store: BrowserStore = mock()
-        val useCases = TabsUseCases(store, sessionManager)
+        val engineSession: EngineSession = mock()
+        val engine: Engine = mock()
 
-        useCases.addTab.invoke("https://www.mozilla.org", LoadUrlFlags.select(LoadUrlFlags.EXTERNAL))
-        val actionCaptor = argumentCaptor<EngineAction.LoadUrlAction>()
-        verify(store).dispatch(actionCaptor.capture())
-        assertEquals("https://www.mozilla.org", actionCaptor.value.url)
-        assertEquals(LoadUrlFlags.select(LoadUrlFlags.EXTERNAL), actionCaptor.value.flags)
+        var sessionLookup: ((String) -> Session?)? = null
+
+        whenever(engine.createSession(anyBoolean(), any())).thenReturn(engineSession)
+        val store = BrowserStore(
+            middleware = EngineMiddleware.create(
+                engine = engine,
+                sessionLookup = { sessionLookup?.invoke(it) }
+            )
+        )
+        val sessionManager = SessionManager(engine, store)
+        sessionLookup = { sessionManager.findSessionById(it) }
+        val tabsUseCases = TabsUseCases(store, sessionManager)
+
+        tabsUseCases.addTab.invoke("https://www.mozilla.org", flags = LoadUrlFlags.external(), startLoading = true)
+
+        // Wait for CreateEngineSessionAction and middleware
+        store.waitUntilIdle()
+        dispatcher.advanceUntilIdle()
+
+        // Wait for LinkEngineSessionAction and middleware
+        store.waitUntilIdle()
+        dispatcher.advanceUntilIdle()
+
+        assertEquals(1, store.state.tabs.size)
+        assertEquals("https://www.mozilla.org", store.state.tabs[0].content.url)
+        verify(engineSession, times(1)).loadUrl("https://www.mozilla.org", null, LoadUrlFlags.external(), null)
     }
 
     @Test

@@ -165,7 +165,12 @@ class TabsUseCases(
             }
 
             val parent = parentId?.let { sessionManager.findSessionById(parentId) }
-            sessionManager.add(session, selected = selectTab, engineSession = engineSession, parent = parent)
+            sessionManager.add(session,
+                selected = selectTab,
+                engineSession = engineSession,
+                parent = parent,
+                initialLoadFlags = flags
+            )
 
             // If an engine session is specified then loading will have already started
             // during sessionManager.add when linking the session to its engine session.
@@ -222,7 +227,13 @@ class TabsUseCases(
             val session = Session(url, true, source)
 
             val parent = parentId?.let { sessionManager.findSessionById(parentId) }
-            sessionManager.add(session, selected = selectTab, engineSession = engineSession, parent = parent)
+            sessionManager.add(
+                session,
+                selected = selectTab,
+                engineSession = engineSession,
+                parent = parent,
+                initialLoadFlags = flags
+            )
 
             // If an engine session is specified then loading will have already started
             // during sessionManager.add when linking the session to its engine session.
@@ -390,7 +401,7 @@ class TabsUseCases(
                 sessionManager.select(existingSession)
             } else {
                 val session = Session(url, private, source)
-                sessionManager.add(session, selected = true)
+                sessionManager.add(session, selected = true, initialLoadFlags = flags)
                 store.dispatch(EngineAction.LoadUrlAction(
                     session.id,
                     url,
