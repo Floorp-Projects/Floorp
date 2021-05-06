@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 # vim:sw=4:ts=4:et:
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -74,11 +74,7 @@ def fixSymbols(
     line, jsonMode=False, slowWarning=False, breakpadSymsDir=None, hide_errors=False
 ):
 
-    if isinstance(line, bytes):
-        line_str = line.decode("utf-8")
-    else:
-        line_str = line
-
+    line_str = line.decode("utf-8") if isinstance(line, bytes) else line
     if line_re.search(line_str) is None:
         return line
 
@@ -97,7 +93,10 @@ def fixSymbols(
     out = fix_stacks.stdout.readline()
     if is_missing_newline:
         out = out[:-1]
-    return bytes(out, "utf-8")
+
+    if not isinstance(out, bytes):
+        out = out.encode("utf-8")
+    return out
 
 
 if __name__ == "__main__":
