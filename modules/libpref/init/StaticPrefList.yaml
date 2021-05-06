@@ -2305,12 +2305,20 @@
 
 - name: dom.ipc.processPriorityManager.backgroundPerceivableGracePeriodMS
   type: uint32_t
+#if defined(MOZ_WIDGET_ANDROID) && defined(NIGHTLY_BUILD)
+  value: 3000
+#else
   value: 0
+#endif
   mirror: always
 
 - name: dom.ipc.processPriorityManager.backgroundGracePeriodMS
   type: uint32_t
+#if defined(MOZ_WIDGET_ANDROID) && defined(NIGHTLY_BUILD)
+  value: 3000
+#else
   value: 0
+#endif
   mirror: always
 
 # Is support for HTMLElement.autocapitalize enabled?
