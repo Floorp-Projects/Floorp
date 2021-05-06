@@ -15,6 +15,7 @@
 #include "mozilla/RWLock.h"
 #include "nsTArray.h"
 #include "prio.h"
+#include "mozilla/net/DNS.h"
 
 #if defined(XP_WIN)
 #  define DNSQUERY_AVAILABLE 1
@@ -74,7 +75,7 @@ class NativeDNSResolverOverride : public nsINativeDNSResolverOverride {
   virtual ~NativeDNSResolverOverride() = default;
   mozilla::RWLock mLock{"NativeDNSResolverOverride"};
 
-  nsTHashMap<nsCStringHashKey, nsTArray<PRNetAddr>> mOverrides;
+  nsTHashMap<nsCStringHashKey, nsTArray<NetAddr>> mOverrides;
   nsTHashMap<nsCStringHashKey, nsCString> mCnames;
 
   friend bool FindAddrOverride(const nsACString& aHost, uint16_t aAddressFamily,
