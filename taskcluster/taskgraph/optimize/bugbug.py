@@ -62,6 +62,10 @@ def merge_bugbug_replies(data, new_data):
 @register_strategy("bugbug-reduced-high", args=(CT_HIGH, True, True))
 @register_strategy("bugbug-reduced-manifests", args=(CT_MEDIUM, False, True))
 @register_strategy(
+    "bugbug-reduced-manifests-config-selection-low",
+    args=(CT_LOW, False, True, None, 1, True),
+)
+@register_strategy(
     "bugbug-reduced-manifests-config-selection",
     args=(CT_MEDIUM, False, True, None, 1, True),
 )
