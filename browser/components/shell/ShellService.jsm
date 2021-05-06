@@ -19,6 +19,18 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/WindowsRegistry.jsm"
 );
 
+XPCOMUtils.defineLazyModuleGetters(this, {
+  Subprocess: "resource://gre/modules/Subprocess.jsm",
+  setTimeout: "resource://gre/modules/Timer.jsm",
+});
+
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "XreDirProvider",
+  "@mozilla.org/xre/directory-provider;1",
+  "nsIXREDirProvider"
+);
+
 /**
  * Internal functionality to save and restore the docShell.allow* properties.
  */
@@ -110,6 +122,85 @@ let ShellServiceInternal = {
       return this.shellService.isDefaultBrowser(forAllTypes);
     }
     return false;
+  },
+
+  /*
+   * Set the default browser through the UserChoice registry keys on Windows.
+   *
+   * NOTE: This does NOT open the System Settings app for manual selection
+   * in case of failure. If that is desired, catch the exception and call
+   * setDefaultBrowser().
+   *
+   * @return Promise, resolves when successful, rejects with Error on failure.
+   */
+  async setAsDefaultUserChoice() {
+    if (AppConstants.platform != "win") {
+      throw new Error("Windows-only");
+    }
+
+    // We launch the WDBA to handle the registry writes, see
+    // SetDefaultBrowserUserChoice() in
+    // toolkit/mozapps/defaultagent/SetDefaultBrowser.cpp.
+    // This is external in case an overzealous antimalware product decides to
+    // quarrantine any program that writes UserChoice, though this has not
+    // occurred during extensive testing.
+
+    if (!ShellService.checkAllProgIDsExist()) {
+      throw new Error("checkAllProgIDsExist() failed");
+    }
+
+    if (!ShellService.checkBrowserUserChoiceHashes()) {
+      throw new Error("checkBrowserUserChoiceHashes() failed");
+    }
+
+    const wdba = Services.dirsvc.get("XREExeF", Ci.nsIFile);
+    wdba.leafName = "default-browser-agent.exe";
+    const aumi = XreDirProvider.getInstallHash();
+
+    const exeProcess = await Subprocess.call({
+      command: wdba.path,
+      arguments: ["set-default-browser-user-choice", aumi],
+    });
+
+    // exit codes
+    const S_OK = 0;
+    const STILL_ACTIVE = 0x103;
+
+    const exeWaitTimeoutMs = 2000; // 2 seconds
+    const exeWaitPromise = exeProcess.wait();
+    const timeoutPromise = new Promise(function(resolve, reject) {
+      setTimeout(() => resolve({ exitCode: STILL_ACTIVE }), exeWaitTimeoutMs);
+    });
+    const { exitCode } = await Promise.race([exeWaitPromise, timeoutPromise]);
+
+    if (exitCode != S_OK) {
+      throw new Error(`WDBA nonzero exit code ${exitCode}`);
+    }
+  },
+
+  // override nsIShellService.setDefaultBrowser() on the ShellService proxy.
+  setDefaultBrowser(claimAllTypes, forAllUsers) {
+    // On Windows 10, our best chance is to set UserChoice, so try that first.
+    if (
+      AppConstants.platform == "win" &&
+      Services.prefs.getBoolPref(
+        "browser.shell.setDefaultBrowserUserChoice",
+        false
+      ) &&
+      Services.sysinfo.getProperty("version") == "10.0"
+    ) {
+      // nsWindowsShellService::SetDefaultBrowser() kicks off several
+      // operations, but doesn't wait for their result. So we don't need to
+      // await the result of setAsDefaultUserChoice() here, either, we just need
+      // to fall back in case it fails.
+      this.setAsDefaultUserChoice().catch(err => {
+        Cu.reportError(err);
+        this.shellService.setDefaultBrowser(claimAllTypes, forAllUsers);
+      });
+      return;
+    }
+
+    this.shellService.setDefaultBrowser(claimAllTypes, forAllUsers);
   },
 
   setAsDefault() {
