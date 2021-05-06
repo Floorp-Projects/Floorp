@@ -83,13 +83,13 @@ impl Error {
     /// # Errors
     ///   Any error is mapped to the indicated type.
     fn map_error<R>(r: Result<R, Self>, err: Self) -> Result<R, Self> {
-        Ok(r.map_err(|e| {
+        r.map_err(|e| {
             if matches!(e, Self::ClosedCriticalStream) {
                 e
             } else {
                 err
             }
-        })?)
+        })
     }
 }
 

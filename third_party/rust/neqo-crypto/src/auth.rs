@@ -33,34 +33,42 @@ pub enum AuthenticationStatus {
     Unknown,
 }
 
-impl Into<PRErrorCode> for AuthenticationStatus {
+impl From<AuthenticationStatus> for PRErrorCode {
     #[must_use]
-    fn into(self) -> PRErrorCode {
-        match self {
-            Self::Ok => 0,
-            Self::CaInvalid => sec::SEC_ERROR_CA_CERT_INVALID,
-            Self::CaNotV3 => mozpkix::MOZILLA_PKIX_ERROR_V1_CERT_USED_AS_CA,
-            Self::CertAlgorithmDisabled => sec::SEC_ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED,
-            Self::CertExpired => sec::SEC_ERROR_EXPIRED_CERTIFICATE,
-            Self::CertInvalidTime => sec::SEC_ERROR_INVALID_TIME,
-            Self::CertIsCa => mozpkix::MOZILLA_PKIX_ERROR_CA_CERT_USED_AS_END_ENTITY,
-            Self::CertKeyUsage => sec::SEC_ERROR_INADEQUATE_KEY_USAGE,
-            Self::CertMitm => mozpkix::MOZILLA_PKIX_ERROR_MITM_DETECTED,
-            Self::CertNotYetValid => mozpkix::MOZILLA_PKIX_ERROR_NOT_YET_VALID_CERTIFICATE,
-            Self::CertRevoked => sec::SEC_ERROR_REVOKED_CERTIFICATE,
-            Self::CertSelfSigned => mozpkix::MOZILLA_PKIX_ERROR_SELF_SIGNED_CERT,
-            Self::CertSubjectInvalid => ssl::SSL_ERROR_BAD_CERT_DOMAIN,
-            Self::CertUntrusted => sec::SEC_ERROR_UNTRUSTED_CERT,
-            Self::CertWeakKey => mozpkix::MOZILLA_PKIX_ERROR_INADEQUATE_KEY_SIZE,
-            Self::IssuerEmptyName => mozpkix::MOZILLA_PKIX_ERROR_EMPTY_ISSUER_NAME,
-            Self::IssuerExpired => sec::SEC_ERROR_EXPIRED_ISSUER_CERTIFICATE,
-            Self::IssuerNotYetValid => mozpkix::MOZILLA_PKIX_ERROR_NOT_YET_VALID_ISSUER_CERTIFICATE,
-            Self::IssuerUnknown => sec::SEC_ERROR_UNKNOWN_ISSUER,
-            Self::IssuerUntrusted => sec::SEC_ERROR_UNTRUSTED_ISSUER,
-            Self::PolicyRejection => {
+    fn from(v: AuthenticationStatus) -> Self {
+        match v {
+            AuthenticationStatus::Ok => 0,
+            AuthenticationStatus::CaInvalid => sec::SEC_ERROR_CA_CERT_INVALID,
+            AuthenticationStatus::CaNotV3 => mozpkix::MOZILLA_PKIX_ERROR_V1_CERT_USED_AS_CA,
+            AuthenticationStatus::CertAlgorithmDisabled => {
+                sec::SEC_ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED
+            }
+            AuthenticationStatus::CertExpired => sec::SEC_ERROR_EXPIRED_CERTIFICATE,
+            AuthenticationStatus::CertInvalidTime => sec::SEC_ERROR_INVALID_TIME,
+            AuthenticationStatus::CertIsCa => {
+                mozpkix::MOZILLA_PKIX_ERROR_CA_CERT_USED_AS_END_ENTITY
+            }
+            AuthenticationStatus::CertKeyUsage => sec::SEC_ERROR_INADEQUATE_KEY_USAGE,
+            AuthenticationStatus::CertMitm => mozpkix::MOZILLA_PKIX_ERROR_MITM_DETECTED,
+            AuthenticationStatus::CertNotYetValid => {
+                mozpkix::MOZILLA_PKIX_ERROR_NOT_YET_VALID_CERTIFICATE
+            }
+            AuthenticationStatus::CertRevoked => sec::SEC_ERROR_REVOKED_CERTIFICATE,
+            AuthenticationStatus::CertSelfSigned => mozpkix::MOZILLA_PKIX_ERROR_SELF_SIGNED_CERT,
+            AuthenticationStatus::CertSubjectInvalid => ssl::SSL_ERROR_BAD_CERT_DOMAIN,
+            AuthenticationStatus::CertUntrusted => sec::SEC_ERROR_UNTRUSTED_CERT,
+            AuthenticationStatus::CertWeakKey => mozpkix::MOZILLA_PKIX_ERROR_INADEQUATE_KEY_SIZE,
+            AuthenticationStatus::IssuerEmptyName => mozpkix::MOZILLA_PKIX_ERROR_EMPTY_ISSUER_NAME,
+            AuthenticationStatus::IssuerExpired => sec::SEC_ERROR_EXPIRED_ISSUER_CERTIFICATE,
+            AuthenticationStatus::IssuerNotYetValid => {
+                mozpkix::MOZILLA_PKIX_ERROR_NOT_YET_VALID_ISSUER_CERTIFICATE
+            }
+            AuthenticationStatus::IssuerUnknown => sec::SEC_ERROR_UNKNOWN_ISSUER,
+            AuthenticationStatus::IssuerUntrusted => sec::SEC_ERROR_UNTRUSTED_ISSUER,
+            AuthenticationStatus::PolicyRejection => {
                 mozpkix::MOZILLA_PKIX_ERROR_ADDITIONAL_POLICY_CONSTRAINT_FAILED
             }
-            Self::Unknown => sec::SEC_ERROR_LIBRARY_FAILURE,
+            AuthenticationStatus::Unknown => sec::SEC_ERROR_LIBRARY_FAILURE,
         }
     }
 }

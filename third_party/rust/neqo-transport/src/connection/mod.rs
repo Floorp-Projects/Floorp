@@ -35,8 +35,6 @@ use crate::cid::{
 use crate::crypto::{Crypto, CryptoDxState, CryptoSpace};
 use crate::dump::*;
 use crate::events::{ConnectionEvent, ConnectionEvents};
-use crate::fc::{ReceiverFlowControl, SenderFlowControl};
-use crate::flow_mgr::FlowMgr;
 use crate::frame::{
     CloseError, Frame, FrameType, FRAME_TYPE_CONNECTION_CLOSE_APPLICATION,
     FRAME_TYPE_CONNECTION_CLOSE_TRANSPORT,
@@ -47,13 +45,12 @@ use crate::packet::{
 use crate::path::{Path, PathRef, Paths};
 use crate::qlog;
 use crate::recovery::{LossRecovery, RecoveryToken, SendProfile};
-use crate::recv_stream::{RecvStream, RecvStreams};
 pub use crate::send_stream::{RetransmissionPriority, TransmissionPriority};
-use crate::send_stream::{SendStream, SendStreams};
 use crate::stats::{Stats, StatsCell};
-use crate::stream_id::{StreamId, StreamIndex, StreamIndexes, StreamType};
+use crate::stream_id::StreamType;
+use crate::streams::Streams;
 use crate::tparams::{self, TransportParameter, TransportParameters, TransportParametersHandler};
-use crate::tracking::{AckTracker, PNSpace, SentPacket};
+use crate::tracking::{AckTracker, PacketNumberSpace, SentPacket};
 use crate::{AppError, ConnectionError, Error, Res};
 
 mod idle;
@@ -248,12 +245,7 @@ pub struct Connection {
     pub(crate) crypto: Crypto,
     pub(crate) acks: AckTracker,
     idle_timeout: IdleTimeout,
-    pub(crate) indexes: StreamIndexes,
-    pub(crate) send_streams: SendStreams,
-    pub(crate) recv_streams: RecvStreams,
-    pub(crate) flow_control_sender: Rc<RefCell<SenderFlowControl<()>>>,
-    pub(crate) flow_control_receiver: Rc<RefCell<ReceiverFlowControl<()>>>,
-    pub(crate) flow_mgr: Rc<RefCell<FlowMgr>>,
+    streams: Streams,
     state_signaling: StateSignaling,
     loss_recovery: LossRecovery,
     events: ConnectionEvents,
@@ -369,17 +361,14 @@ impl Connection {
         )?;
 
         let stats = StatsCell::default();
-        let indexes = StreamIndexes::new(
-            conn_params.get_max_streams(StreamType::BiDi),
-            conn_params.get_max_streams(StreamType::UniDi),
-        );
+        let events = ConnectionEvents::default();
 
         let c = Self {
             role,
             state: State::Init,
             paths: Paths::default(),
             cid_manager,
-            tps: tphandler,
+            tps: tphandler.clone(),
             zero_rtt_state: ZeroRttState::Init,
             address_validation: AddressValidationInfo::None,
             local_initial_source_cid,
@@ -389,19 +378,11 @@ impl Connection {
             crypto,
             acks: AckTracker::default(),
             idle_timeout: IdleTimeout::default(),
-            indexes,
+            streams: Streams::new(tphandler, role, events.clone()),
             connection_ids: ConnectionIdStore::default(),
-            send_streams: SendStreams::default(),
-            recv_streams: RecvStreams::default(),
-            flow_control_sender: Rc::new(RefCell::new(SenderFlowControl::new((), 0))),
-            flow_control_receiver: Rc::new(RefCell::new(ReceiverFlowControl::new(
-                (),
-                conn_params.get_max_data(),
-            ))),
-            flow_mgr: Rc::new(RefCell::new(FlowMgr::default())),
             state_signaling: StateSignaling::Idle,
             loss_recovery: LossRecovery::new(stats.clone()),
-            events: ConnectionEvents::default(),
+            events,
             new_token: NewTokenState::new(role),
             stats,
             qlog: NeqoQlog::disabled(),
@@ -527,7 +508,7 @@ impl Connection {
             .primary()
             .borrow()
             .rtt()
-            .pto(PNSpace::ApplicationData)
+            .pto(PacketNumberSpace::ApplicationData)
     }
 
     fn create_resumption_token(&mut self, now: Instant) {
@@ -712,7 +693,7 @@ impl Connection {
     pub fn authenticated(&mut self, status: AuthenticationStatus, now: Instant) {
         qinfo!([self], "Authenticated {:?}", status);
         self.crypto.tls.authenticated(status);
-        let res = self.handshake(now, PNSpace::Handshake, None);
+        let res = self.handshake(now, PacketNumberSpace::Handshake, None);
         self.absorb_error(now, res);
         self.process_saved(now);
     }
@@ -833,7 +814,7 @@ impl Connection {
             return;
         }
 
-        self.cleanup_streams();
+        self.streams.cleanup_closed_streams();
 
         let res = self.crypto.states.check_key_update(now);
         self.absorb_error(now, res);
@@ -856,7 +837,7 @@ impl Connection {
     pub fn process_input(&mut self, d: Datagram, now: Instant) {
         self.input(d, now, now);
         self.process_saved(now);
-        self.cleanup_streams();
+        self.streams.cleanup_closed_streams();
     }
 
     /// Get the time that we next need to be called back, relative to `now`.
@@ -878,7 +859,7 @@ impl Connection {
         if let Some(p) = self.paths.primary_fallible() {
             let path = p.borrow();
             let rtt = path.rtt();
-            let pto = rtt.pto(PNSpace::ApplicationData);
+            let pto = rtt.pto(PacketNumberSpace::ApplicationData);
 
             let idle_time = self.idle_timeout.expiry(now, pto);
             qtrace!([self], "Idle timer {:?}", idle_time);
@@ -1010,7 +991,7 @@ impl Connection {
         };
     }
 
-    fn discard_keys(&mut self, space: PNSpace, now: Instant) {
+    fn discard_keys(&mut self, space: PacketNumberSpace, now: Instant) {
         if self.crypto.discard(space) {
             qinfo!([self], "Drop packet number space {}", space);
             let primary = self.paths.primary();
@@ -1173,7 +1154,7 @@ impl Connection {
                     && self.cid_manager.is_valid(packet.dcid())
                     && self.stats.borrow().saved_datagrams <= EXTRA_INITIALS
                 {
-                    self.crypto.resend_unacked(PNSpace::Initial);
+                    self.crypto.resend_unacked(PacketNumberSpace::Initial);
                 }
             }
             (PacketType::VersionNegotiation, ..)
@@ -1204,7 +1185,7 @@ impl Connection {
                 } else {
                     if self.role == Role::Server && packet.packet_type() == PacketType::Handshake {
                         // Server has received a Handshake packet -> discard Initial keys and states
-                        self.discard_keys(PNSpace::Initial, now);
+                        self.discard_keys(PacketNumberSpace::Initial, now);
                     }
                     PreprocessResult::Continue
                 }
@@ -1270,7 +1251,7 @@ impl Connection {
         let mut dcid = None;
 
         qtrace!([self], "{} input {}", path.borrow(), hex(&**d));
-        let pto = path.borrow().rtt().pto(PNSpace::ApplicationData);
+        let pto = path.borrow().rtt().pto(PacketNumberSpace::ApplicationData);
 
         // Handle each packet in the datagram.
         while !slc.is_empty() {
@@ -1307,7 +1288,7 @@ impl Connection {
                     );
 
                     qlog::packet_received(&mut self.qlog, &packet, &payload);
-                    let space = PNSpace::from(payload.packet_type());
+                    let space = PacketNumberSpace::from(payload.packet_type());
                     if self.acks.get_mut(space).unwrap().is_duplicate(payload.pn()) {
                         qdebug!([self], "Duplicate packet {}-{}", space, payload.pn());
                         self.stats.borrow_mut().dups_rx += 1;
@@ -1395,7 +1376,7 @@ impl Connection {
         }
         let largest_received = self
             .acks
-            .get_mut(PNSpace::from(packet.packet_type()))
+            .get_mut(PacketNumberSpace::from(packet.packet_type()))
             .unwrap()
             .set_received(now, packet.pn(), ack_eliciting);
 
@@ -1718,7 +1699,7 @@ impl Connection {
         let mut encoder = Encoder::with_capacity(256);
         let grease_quic_bit = self.can_grease_quic_bit();
         let version = self.version();
-        for space in PNSpace::iter() {
+        for space in PacketNumberSpace::iter() {
             let (cspace, tx) = if let Some(crypto) = self.crypto.states.select_tx(*space) {
                 crypto
             } else {
@@ -1749,7 +1730,7 @@ impl Connection {
             debug_assert!(builder.limit() <= 2048);
 
             // ConnectionError::Application is only allowed at 1RTT.
-            let sanitized = if *space == PNSpace::ApplicationData {
+            let sanitized = if *space == PacketNumberSpace::ApplicationData {
                 None
             } else {
                 close.sanitize()
@@ -1783,38 +1764,13 @@ impl Connection {
             }
         }
 
-        self.send_streams
+        self.streams
             .write_frames(TransmissionPriority::Critical, builder, tokens, stats)?;
         if builder.remaining() < 2 {
             return Ok(());
         }
 
-        // Send `DATA_BLOCKED` as necessary.
-        self.flow_control_sender
-            .borrow_mut()
-            .write_frames(builder, tokens, stats)?;
-        if builder.remaining() < 2 {
-            return Ok(());
-        }
-
-        // Send `MAX_DATA` as necessary.
-        self.flow_control_receiver
-            .borrow_mut()
-            .write_frames(builder, tokens, stats)?;
-        if builder.remaining() < 2 {
-            return Ok(());
-        }
-
-        self.recv_streams.write_frames(builder, tokens, stats)?;
-
-        self.flow_mgr
-            .borrow_mut()
-            .write_frames(builder, tokens, stats)?;
-        if builder.remaining() < 2 {
-            return Ok(());
-        }
-
-        self.send_streams
+        self.streams
             .write_frames(TransmissionPriority::Important, builder, tokens, stats)?;
         if builder.remaining() < 2 {
             return Ok(());
@@ -1830,13 +1786,13 @@ impl Connection {
             return Ok(());
         }
 
-        self.send_streams
+        self.streams
             .write_frames(TransmissionPriority::High, builder, tokens, stats)?;
         if builder.remaining() < 2 {
             return Ok(());
         }
 
-        self.send_streams
+        self.streams
             .write_frames(TransmissionPriority::Normal, builder, tokens, stats)?;
         if builder.remaining() < 2 {
             return Ok(());
@@ -1845,7 +1801,7 @@ impl Connection {
         // CRYPTO here only includes NewSessionTicket, plus NEW_TOKEN.
         // Both of these are only used for resumption and so can be relatively low priority.
         self.crypto
-            .write_frame(PNSpace::ApplicationData, builder, tokens, stats)?;
+            .write_frame(PacketNumberSpace::ApplicationData, builder, tokens, stats)?;
         if builder.remaining() < 2 {
             return Ok(());
         }
@@ -1854,7 +1810,7 @@ impl Connection {
             return Ok(());
         }
 
-        self.send_streams
+        self.streams
             .write_frames(TransmissionPriority::Low, builder, tokens, stats)?;
         Ok(())
     }
@@ -1865,7 +1821,7 @@ impl Connection {
     fn write_frames(
         &mut self,
         path: &PathRef,
-        space: PNSpace,
+        space: PacketNumberSpace,
         profile: &SendProfile,
         builder: &mut PacketBuilder,
         now: Instant,
@@ -1883,7 +1839,7 @@ impl Connection {
         // Avoid sending probes until the handshake completes,
         // but send them even when we don't have space.
         let full_mtu = profile.limit() == path.borrow().mtu();
-        if space == PNSpace::ApplicationData && self.state.connected() {
+        if space == PacketNumberSpace::ApplicationData && self.state.connected() {
             // Probes should only be padded if the full MTU is available.
             // The probing code needs to know so it can track that.
             if path.borrow_mut().write_frames(
@@ -1902,7 +1858,7 @@ impl Connection {
         }
 
         if primary {
-            if space == PNSpace::ApplicationData {
+            if space == PacketNumberSpace::ApplicationData {
                 self.write_appdata_frames(builder, &mut tokens)?;
             } else {
                 let stats = &mut self.stats.borrow_mut().frame_tx;
@@ -1921,7 +1877,7 @@ impl Connection {
             } else if !builder.packet_empty() {
                 // The packet only contains an ACK.  Check whether we want to
                 // force an ACK with a PING so we can stop tracking packets.
-                let pto = path.borrow().rtt().pto(PNSpace::ApplicationData);
+                let pto = path.borrow().rtt().pto(PacketNumberSpace::ApplicationData);
                 self.loss_recovery.should_probe(pto, now)
             } else {
                 false
@@ -1973,7 +1929,7 @@ impl Connection {
         // Frames for different epochs must go in different packets, but then these
         // packets can go in a single datagram
         let mut encoder = Encoder::with_capacity(profile.limit());
-        for space in PNSpace::iter() {
+        for space in PacketNumberSpace::iter() {
             // Ensure we have tx crypto state for this epoch, or skip it.
             let (cspace, tx) = if let Some(crypto) = self.crypto.states.select_tx(*space) {
                 crypto
@@ -2062,13 +2018,13 @@ impl Connection {
                 self.loss_recovery.on_packet_sent(path, sent);
             }
 
-            if *space == PNSpace::Handshake {
+            if *space == PacketNumberSpace::Handshake {
                 if self.role == Role::Client {
                     // Client can send Handshake packets -> discard Initial keys and states
-                    self.discard_keys(PNSpace::Initial, now);
+                    self.discard_keys(PacketNumberSpace::Initial, now);
                 } else if self.state == State::Confirmed {
                     // We could discard handshake keys in set_state, but wait until after sending an ACK.
-                    self.discard_keys(PNSpace::Handshake, now);
+                    self.discard_keys(PacketNumberSpace::Handshake, now);
                 }
             }
         }
@@ -2095,7 +2051,7 @@ impl Connection {
         if self.state == State::Confirmed {
             let la = self
                 .loss_recovery
-                .largest_acknowledged_pn(PNSpace::ApplicationData);
+                .largest_acknowledged_pn(PacketNumberSpace::ApplicationData);
             qinfo!([self], "Initiating key update");
             self.crypto.states.initiate_key_update(la)
         } else {
@@ -2113,7 +2069,7 @@ impl Connection {
         debug_assert_eq!(self.role, Role::Client);
         qlog::client_connection_started(&mut self.qlog, &self.paths.primary());
 
-        self.handshake(now, PNSpace::Initial, None)?;
+        self.handshake(now, PacketNumberSpace::Initial, None)?;
         self.set_state(State::WaitInitial);
         self.zero_rtt_state = if self.crypto.enable_0rtt(self.role)? {
             qdebug!([self], "Enabled 0-RTT");
@@ -2142,26 +2098,15 @@ impl Connection {
     }
 
     fn set_initial_limits(&mut self) {
-        let tps = self.tps.borrow();
-        let remote = tps.remote();
-        self.indexes.remote_max_stream_bidi =
-            StreamIndex::new(remote.get_integer(tparams::INITIAL_MAX_STREAMS_BIDI));
-        self.indexes.remote_max_stream_uni =
-            StreamIndex::new(remote.get_integer(tparams::INITIAL_MAX_STREAMS_UNI));
-        self.flow_control_sender
-            .borrow_mut()
-            .update(remote.get_integer(tparams::INITIAL_MAX_DATA));
-
-        let peer_timeout = remote.get_integer(tparams::IDLE_TIMEOUT);
+        self.streams.set_initial_limits();
+        let peer_timeout = self
+            .tps
+            .borrow()
+            .remote()
+            .get_integer(tparams::IDLE_TIMEOUT);
         if peer_timeout > 0 {
             self.idle_timeout
                 .set_peer_timeout(Duration::from_millis(peer_timeout));
-        }
-        // As a client, there are two sets of initial limits for sending stream data.
-        // If the second limit is higher and streams have been created, then
-        // ensure that streams are not blocked on the lower limit.
-        if self.role == Role::Client {
-            self.send_streams.update_initial_limit(&remote);
         }
     }
 
@@ -2293,7 +2238,12 @@ impl Connection {
         Ok(())
     }
 
-    fn handshake(&mut self, now: Instant, space: PNSpace, data: Option<&[u8]>) -> Res<()> {
+    fn handshake(
+        &mut self,
+        now: Instant,
+        space: PacketNumberSpace,
+        data: Option<&[u8]>,
+    ) -> Res<()> {
         qtrace!([self], "Handshake space={} data={:0x?}", space, data);
 
         let try_update = data.is_some();
@@ -2325,21 +2275,6 @@ impl Connection {
         Ok(())
     }
 
-    fn handle_max_data(&mut self, maximum_data: u64) {
-        let conn_was_blocked = self.flow_control_sender.borrow().available() == 0;
-        let conn_credit_increased = self.flow_control_sender.borrow_mut().update(maximum_data);
-
-        if conn_was_blocked && conn_credit_increased {
-            for (id, ss) in &mut self.send_streams {
-                if ss.avail() > 0 {
-                    // These may not actually all be writable if one
-                    // uses up all the conn credit. Not our fault.
-                    self.events.send_stream_writable(*id)
-                }
-            }
-        }
-    }
-
     fn input_frame(
         &mut self,
         path: &PathRef,
@@ -2352,7 +2287,12 @@ impl Connection {
             return Err(Error::ProtocolViolation);
         }
         self.stats.borrow_mut().frame_rx.all += 1;
-        let space = PNSpace::from(ptype);
+        let space = PacketNumberSpace::from(ptype);
+        if frame.is_stream() {
+            return self
+                .streams
+                .input_frame(frame, &mut self.stats.borrow_mut().frame_rx);
+        }
         match frame {
             Frame::Padding => {
                 // Note: This counts contiguous padding as a single frame.
@@ -2373,28 +2313,6 @@ impl Connection {
                 let ranges =
                     Frame::decode_ack_frame(largest_acknowledged, first_ack_range, &ack_ranges)?;
                 self.handle_ack(space, largest_acknowledged, ranges, ack_delay, now);
-            }
-            Frame::ResetStream {
-                stream_id,
-                application_error_code,
-                ..
-            } => {
-                // TODO(agrover@mozilla.com): use final_size for connection MaxData calc
-                self.stats.borrow_mut().frame_rx.reset_stream += 1;
-                if let (_, Some(rs)) = self.obtain_stream(stream_id)? {
-                    rs.reset(application_error_code);
-                }
-            }
-            Frame::StopSending {
-                stream_id,
-                application_error_code,
-            } => {
-                self.stats.borrow_mut().frame_rx.stop_sending += 1;
-                self.events
-                    .send_stream_stop_sending(stream_id, application_error_code);
-                if let (Some(ss), _) = self.obtain_stream(stream_id)? {
-                    ss.reset(application_error_code);
-                }
             }
             Frame::Crypto { offset, data } => {
                 qtrace!(
@@ -2421,86 +2339,6 @@ impl Connection {
                 self.stats.borrow_mut().frame_rx.new_token += 1;
                 self.new_token.save_token(token.to_vec());
                 self.create_resumption_token(now);
-            }
-            Frame::Stream {
-                fin,
-                stream_id,
-                offset,
-                data,
-                ..
-            } => {
-                self.stats.borrow_mut().frame_rx.stream += 1;
-                if let (_, Some(rs)) = self.obtain_stream(stream_id)? {
-                    rs.inbound_stream_frame(fin, offset, data)?;
-                }
-            }
-            Frame::MaxData { maximum_data } => {
-                self.stats.borrow_mut().frame_rx.max_data += 1;
-                self.handle_max_data(maximum_data);
-            }
-            Frame::MaxStreamData {
-                stream_id,
-                maximum_stream_data,
-            } => {
-                qtrace!(
-                    [self],
-                    "Stream {} Received MaxStreamData {}",
-                    stream_id,
-                    maximum_stream_data
-                );
-                self.stats.borrow_mut().frame_rx.max_stream_data += 1;
-                if let (Some(ss), _) = self.obtain_stream(stream_id)? {
-                    ss.set_max_stream_data(maximum_stream_data);
-                }
-            }
-            Frame::MaxStreams {
-                stream_type,
-                maximum_streams,
-            } => {
-                self.stats.borrow_mut().frame_rx.max_streams += 1;
-                let remote_max = match stream_type {
-                    StreamType::BiDi => &mut self.indexes.remote_max_stream_bidi,
-                    StreamType::UniDi => &mut self.indexes.remote_max_stream_uni,
-                };
-
-                if maximum_streams > *remote_max {
-                    *remote_max = maximum_streams;
-                    self.events.send_stream_creatable(stream_type);
-                }
-            }
-            Frame::DataBlocked { data_limit } => {
-                // Should never happen since we set data limit to max
-                qwarn!(
-                    [self],
-                    "Received DataBlocked with data limit {}",
-                    data_limit
-                );
-                self.stats.borrow_mut().frame_rx.data_blocked += 1;
-                self.flow_control_receiver.borrow_mut().send_flowc_update();
-            }
-            Frame::StreamDataBlocked { stream_id, .. } => {
-                qtrace!([self], "Received StreamDataBlocked");
-                self.stats.borrow_mut().frame_rx.stream_data_blocked += 1;
-                // Terminate connection with STREAM_STATE_ERROR if send-only
-                // stream (-transport 19.13)
-                if stream_id.is_send_only(self.role()) {
-                    return Err(Error::StreamStateError);
-                }
-
-                if let (_, Some(rs)) = self.obtain_stream(stream_id)? {
-                    rs.send_flowc_update();
-                }
-            }
-            Frame::StreamsBlocked { stream_type, .. } => {
-                self.stats.borrow_mut().frame_rx.streams_blocked += 1;
-                let local_max = match stream_type {
-                    StreamType::BiDi => &mut self.indexes.local_max_stream_bidi,
-                    StreamType::UniDi => &mut self.indexes.local_max_stream_uni,
-                };
-
-                self.flow_mgr
-                    .borrow_mut()
-                    .max_streams(*local_max, stream_type)
             }
             Frame::NewConnectionId {
                 sequence_number,
@@ -2574,9 +2412,10 @@ impl Connection {
                     return Err(Error::ProtocolViolation);
                 }
                 self.set_state(State::Confirmed);
-                self.discard_keys(PNSpace::Handshake, now);
+                self.discard_keys(PacketNumberSpace::Handshake, now);
                 self.migrate_to_preferred_address(now)?;
             }
+            _ => unreachable!("All other frames are for streams"),
         };
 
         Ok(())
@@ -2589,41 +2428,19 @@ impl Connection {
         for lost in lost_packets {
             for token in &lost.tokens {
                 qdebug!([self], "Lost: {:?}", token);
-                match token {
-                    RecoveryToken::Ack(_) => {}
-                    RecoveryToken::Stream(st) => self.send_streams.lost(&st),
-                    RecoveryToken::Crypto(ct) => self.crypto.lost(&ct),
-                    RecoveryToken::Flow(ft) => {
-                        self.flow_mgr.borrow_mut().lost(&ft, &mut self.indexes)
-                    }
-                    RecoveryToken::HandshakeDone => self.state_signaling.handshake_done(),
-                    RecoveryToken::NewToken(seqno) => self.new_token.lost(*seqno),
-                    RecoveryToken::NewConnectionId(ncid) => self.cid_manager.lost(ncid),
-                    RecoveryToken::RetireConnectionId(seqno) => self.paths.lost_retire_cid(*seqno),
-                    RecoveryToken::ResetStream { stream_id } => {
-                        self.send_streams.reset_lost(*stream_id)
-                    }
-                    RecoveryToken::DataBlocked(limit) => {
-                        self.flow_control_sender.borrow_mut().lost(*limit)
-                    }
-                    RecoveryToken::StreamDataBlocked { stream_id, limit } => {
-                        self.send_streams.blocked_lost(*stream_id, *limit)
-                    }
-                    RecoveryToken::MaxData(maximum_data) => {
-                        self.flow_control_receiver.borrow_mut().lost(*maximum_data)
-                    }
-                    RecoveryToken::MaxStreamData {
-                        stream_id,
-                        max_data,
-                    } => {
-                        if let Ok((_, Some(rs))) = self.obtain_stream(*stream_id) {
-                            rs.max_stream_data_lost(*max_data);
+                if token.is_stream() {
+                    self.streams.lost(token);
+                } else {
+                    match token {
+                        RecoveryToken::Ack(_) => {}
+                        RecoveryToken::Crypto(ct) => self.crypto.lost(&ct),
+                        RecoveryToken::HandshakeDone => self.state_signaling.handshake_done(),
+                        RecoveryToken::NewToken(seqno) => self.new_token.lost(*seqno),
+                        RecoveryToken::NewConnectionId(ncid) => self.cid_manager.lost(ncid),
+                        RecoveryToken::RetireConnectionId(seqno) => {
+                            self.paths.lost_retire_cid(*seqno)
                         }
-                    }
-                    RecoveryToken::StopSending { stream_id } => {
-                        if let Ok((_, Some(rs))) = self.obtain_stream(*stream_id) {
-                            rs.stop_sending_lost();
-                        }
+                        _ => unreachable!("The rest of tokens are for streams"),
                     }
                 }
             }
@@ -2643,7 +2460,7 @@ impl Connection {
 
     fn handle_ack<R>(
         &mut self,
-        space: PNSpace,
+        space: PacketNumberSpace,
         largest_acknowledged: u64,
         ack_ranges: R,
         ack_delay: u64,
@@ -2664,28 +2481,21 @@ impl Connection {
         );
         for acked in acked_packets {
             for token in &acked.tokens {
-                match token {
-                    RecoveryToken::Ack(at) => self.acks.acked(at),
-                    RecoveryToken::Stream(st) => self.send_streams.acked(st),
-                    RecoveryToken::Crypto(ct) => self.crypto.acked(ct),
-                    RecoveryToken::NewToken(seqno) => self.new_token.acked(*seqno),
-                    RecoveryToken::NewConnectionId(entry) => self.cid_manager.acked(entry),
-                    RecoveryToken::RetireConnectionId(seqno) => self.paths.acked_retire_cid(*seqno),
-                    RecoveryToken::ResetStream { stream_id } => {
-                        self.send_streams.reset_acked(*stream_id)
-                    }
-                    RecoveryToken::StopSending { stream_id } => {
-                        if let Ok((_, Some(rs))) = self.obtain_stream(*stream_id) {
-                            rs.stop_sending_acked();
+                if token.is_stream() {
+                    self.streams.acked(token);
+                } else {
+                    match token {
+                        RecoveryToken::Ack(at) => self.acks.acked(at),
+                        RecoveryToken::Crypto(ct) => self.crypto.acked(ct),
+                        RecoveryToken::NewToken(seqno) => self.new_token.acked(*seqno),
+                        RecoveryToken::NewConnectionId(entry) => self.cid_manager.acked(entry),
+                        RecoveryToken::RetireConnectionId(seqno) => {
+                            self.paths.acked_retire_cid(*seqno)
                         }
+                        // We only worry when these are lost
+                        RecoveryToken::HandshakeDone => (),
+                        _ => unreachable!("These are stream RecoveryTokens"),
                     }
-                    // We only worry when these are lost:
-                    RecoveryToken::Flow(_)
-                    | RecoveryToken::DataBlocked(_)
-                    | RecoveryToken::StreamDataBlocked { .. }
-                    | RecoveryToken::HandshakeDone
-                    | RecoveryToken::MaxData(_)
-                    | RecoveryToken::MaxStreamData { .. } => (),
                 }
             }
         }
@@ -2707,12 +2517,8 @@ impl Connection {
         let dropped = self.loss_recovery.drop_0rtt(&self.paths.primary());
         self.handle_lost_packets(&dropped);
 
-        self.send_streams.clear();
-        self.recv_streams.clear();
-        self.indexes = StreamIndexes::new(
-            self.conn_params.get_max_streams(StreamType::BiDi),
-            self.conn_params.get_max_streams(StreamType::UniDi),
-        );
+        self.streams.zero_rtt_rejected();
+
         self.crypto.states.discard_0rtt_keys();
         self.events.client_0rtt_rejected();
     }
@@ -2763,8 +2569,7 @@ impl Connection {
             qinfo!([self], "State change from {:?} -> {:?}", self.state, state);
             self.state = state.clone();
             if self.state.closed() {
-                self.send_streams.clear();
-                self.recv_streams.clear();
+                self.streams.clear_streams();
             }
             self.events.connection_state_change(state);
             qlog::connection_state_updated(&mut self.qlog, &self.state)
@@ -2777,138 +2582,6 @@ impl Connection {
             ));
             debug_assert!(self.state.closed());
         }
-    }
-
-    fn cleanup_streams(&mut self) {
-        self.send_streams.clear_terminal();
-        let send_streams = &self.send_streams;
-        let (removed_bidi, removed_uni) =
-            self.recv_streams.clear_terminal(send_streams, self.role());
-
-        // Send max_streams updates if we removed remote-initiated recv streams.
-        if removed_bidi > 0 {
-            self.indexes.local_max_stream_bidi += removed_bidi;
-            self.flow_mgr
-                .borrow_mut()
-                .max_streams(self.indexes.local_max_stream_bidi, StreamType::BiDi)
-        }
-        if removed_uni > 0 {
-            self.indexes.local_max_stream_uni += removed_uni;
-            self.flow_mgr
-                .borrow_mut()
-                .max_streams(self.indexes.local_max_stream_uni, StreamType::UniDi)
-        }
-    }
-
-    /// Get or make a stream, and implicitly open additional streams as
-    /// indicated by its stream id.
-    fn obtain_stream(
-        &mut self,
-        stream_id: StreamId,
-    ) -> Res<(Option<&mut SendStream>, Option<&mut RecvStream>)> {
-        if !self.state.connected()
-            && !matches!(
-                (&self.state, &self.zero_rtt_state),
-                (State::Handshaking, ZeroRttState::AcceptedServer)
-            )
-        {
-            return Err(Error::ConnectionState);
-        }
-
-        // May require creating new stream(s)
-        if stream_id.is_remote_initiated(self.role()) {
-            let next_stream_idx = if stream_id.is_bidi() {
-                &mut self.indexes.local_next_stream_bidi
-            } else {
-                &mut self.indexes.local_next_stream_uni
-            };
-            let stream_idx: StreamIndex = stream_id.into();
-
-            if stream_idx >= *next_stream_idx {
-                let recv_initial_max_stream_data = if stream_id.is_bidi() {
-                    if stream_idx > self.indexes.local_max_stream_bidi {
-                        qwarn!(
-                            [self],
-                            "remote bidi stream create blocked, next={:?} max={:?}",
-                            stream_idx,
-                            self.indexes.local_max_stream_bidi
-                        );
-                        return Err(Error::StreamLimitError);
-                    }
-                    // From the local perspective, this is a remote- originated BiDi stream. From
-                    // the remote perspective, this is a local-originated BiDi stream. Therefore,
-                    // look at the local transport parameters for the
-                    // INITIAL_MAX_STREAM_DATA_BIDI_REMOTE value to decide how much this endpoint
-                    // will allow its peer to send.
-                    self.tps
-                        .borrow()
-                        .local
-                        .get_integer(tparams::INITIAL_MAX_STREAM_DATA_BIDI_REMOTE)
-                } else {
-                    if stream_idx > self.indexes.local_max_stream_uni {
-                        qwarn!(
-                            [self],
-                            "remote uni stream create blocked, next={:?} max={:?}",
-                            stream_idx,
-                            self.indexes.local_max_stream_uni
-                        );
-                        return Err(Error::StreamLimitError);
-                    }
-                    self.tps
-                        .borrow()
-                        .local
-                        .get_integer(tparams::INITIAL_MAX_STREAM_DATA_UNI)
-                };
-
-                loop {
-                    let next_stream_id =
-                        next_stream_idx.to_stream_id(stream_id.stream_type(), stream_id.role());
-                    self.events.new_stream(next_stream_id);
-
-                    self.recv_streams.insert(
-                        next_stream_id,
-                        RecvStream::new(
-                            next_stream_id,
-                            recv_initial_max_stream_data,
-                            self.flow_mgr.clone(),
-                            self.events.clone(),
-                        ),
-                    );
-
-                    if next_stream_id.is_bidi() {
-                        // From the local perspective, this is a remote- originated BiDi stream.
-                        // From the remote perspective, this is a local-originated BiDi stream.
-                        // Therefore, look at the remote's transport parameters for the
-                        // INITIAL_MAX_STREAM_DATA_BIDI_LOCAL value to decide how much this endpoint
-                        // is allowed to send its peer.
-                        let send_initial_max_stream_data = self
-                            .tps
-                            .borrow()
-                            .remote()
-                            .get_integer(tparams::INITIAL_MAX_STREAM_DATA_BIDI_LOCAL);
-                        self.send_streams.insert(
-                            next_stream_id,
-                            SendStream::new(
-                                next_stream_id,
-                                send_initial_max_stream_data,
-                                Rc::clone(&self.flow_control_sender),
-                                self.events.clone(),
-                            ),
-                        );
-                    }
-
-                    *next_stream_idx += 1;
-                    if *next_stream_idx > stream_idx {
-                        break;
-                    }
-                }
-            }
-        }
-
-        Ok((
-            self.send_streams.get_mut(stream_id).ok(),
-            self.recv_streams.get_mut(stream_id).ok(),
-        ))
     }
 
     /// Create a stream.
@@ -2931,101 +2604,7 @@ impl Connection {
             _ => (),
         }
 
-        Ok(match st {
-            StreamType::UniDi => {
-                if self.indexes.remote_next_stream_uni >= self.indexes.remote_max_stream_uni {
-                    self.flow_mgr
-                        .borrow_mut()
-                        .streams_blocked(self.indexes.remote_max_stream_uni, StreamType::UniDi);
-                    qwarn!(
-                        [self],
-                        "local uni stream create blocked, next={:?} max={:?}",
-                        self.indexes.remote_next_stream_uni,
-                        self.indexes.remote_max_stream_uni
-                    );
-                    return Err(Error::StreamLimitError);
-                }
-                let new_id = self
-                    .indexes
-                    .remote_next_stream_uni
-                    .to_stream_id(StreamType::UniDi, self.role);
-                self.indexes.remote_next_stream_uni += 1;
-                let initial_max_stream_data = self
-                    .tps
-                    .borrow()
-                    .remote()
-                    .get_integer(tparams::INITIAL_MAX_STREAM_DATA_UNI);
-
-                self.send_streams.insert(
-                    new_id,
-                    SendStream::new(
-                        new_id,
-                        initial_max_stream_data,
-                        Rc::clone(&self.flow_control_sender),
-                        self.events.clone(),
-                    ),
-                );
-                new_id.as_u64()
-            }
-            StreamType::BiDi => {
-                if self.indexes.remote_next_stream_bidi >= self.indexes.remote_max_stream_bidi {
-                    self.flow_mgr
-                        .borrow_mut()
-                        .streams_blocked(self.indexes.remote_max_stream_bidi, StreamType::BiDi);
-                    qwarn!(
-                        [self],
-                        "local bidi stream create blocked, next={:?} max={:?}",
-                        self.indexes.remote_next_stream_bidi,
-                        self.indexes.remote_max_stream_bidi
-                    );
-                    return Err(Error::StreamLimitError);
-                }
-                let new_id = self
-                    .indexes
-                    .remote_next_stream_bidi
-                    .to_stream_id(StreamType::BiDi, self.role);
-                self.indexes.remote_next_stream_bidi += 1;
-                // From the local perspective, this is a local- originated BiDi stream. From the
-                // remote perspective, this is a remote-originated BiDi stream. Therefore, look at
-                // the remote transport parameters for the INITIAL_MAX_STREAM_DATA_BIDI_REMOTE value
-                // to decide how much this endpoint is allowed to send its peer.
-                let send_initial_max_stream_data = self
-                    .tps
-                    .borrow()
-                    .remote()
-                    .get_integer(tparams::INITIAL_MAX_STREAM_DATA_BIDI_REMOTE);
-
-                self.send_streams.insert(
-                    new_id,
-                    SendStream::new(
-                        new_id,
-                        send_initial_max_stream_data,
-                        Rc::clone(&self.flow_control_sender),
-                        self.events.clone(),
-                    ),
-                );
-                // From the local perspective, this is a local- originated BiDi stream. From the
-                // remote perspective, this is a remote-originated BiDi stream. Therefore, look at
-                // the local transport parameters for the INITIAL_MAX_STREAM_DATA_BIDI_LOCAL value
-                // to decide how much this endpoint will allow its peer to send.
-                let recv_initial_max_stream_data = self
-                    .tps
-                    .borrow()
-                    .local
-                    .get_integer(tparams::INITIAL_MAX_STREAM_DATA_BIDI_LOCAL);
-
-                self.recv_streams.insert(
-                    new_id,
-                    RecvStream::new(
-                        new_id,
-                        recv_initial_max_stream_data,
-                        self.flow_mgr.clone(),
-                        self.events.clone(),
-                    ),
-                );
-                new_id.as_u64()
-            }
-        })
+        self.streams.stream_create(st)
     }
 
     /// Set the priority of a stream.
@@ -3037,8 +2616,8 @@ impl Connection {
         transmission: TransmissionPriority,
         retransmission: RetransmissionPriority,
     ) -> Res<()> {
-        self.send_streams
-            .get_mut(stream_id.into())?
+        self.streams
+            .get_send_stream_mut(stream_id.into())?
             .set_priority(transmission, retransmission);
         Ok(())
     }
@@ -3051,7 +2630,9 @@ impl Connection {
     /// `InvalidInput` if length of `data` is zero,
     /// `FinalSizeError` if the stream has already been closed.
     pub fn stream_send(&mut self, stream_id: u64, data: &[u8]) -> Res<usize> {
-        self.send_streams.get_mut(stream_id.into())?.send(data)
+        self.streams
+            .get_send_stream_mut(stream_id.into())?
+            .send(data)
     }
 
     /// Send all data or nothing on a stream. May cause DATA_BLOCKED or
@@ -3063,8 +2644,8 @@ impl Connection {
     /// `FinalSizeError` if the stream has already been closed.
     pub fn stream_send_atomic(&mut self, stream_id: u64, data: &[u8]) -> Res<bool> {
         let val = self
-            .send_streams
-            .get_mut(stream_id.into())?
+            .streams
+            .get_send_stream_mut(stream_id.into())?
             .send_atomic(data);
         if let Ok(val) = val {
             debug_assert!(
@@ -3081,18 +2662,20 @@ impl Connection {
     /// i.e. that will not be blocked by flow credits or send buffer max
     /// capacity.
     pub fn stream_avail_send_space(&self, stream_id: u64) -> Res<usize> {
-        Ok(self.send_streams.get(stream_id.into())?.avail())
+        Ok(self.streams.get_send_stream(stream_id.into())?.avail())
     }
 
     /// Close the stream. Enqueued data will be sent.
     pub fn stream_close_send(&mut self, stream_id: u64) -> Res<()> {
-        self.send_streams.get_mut(stream_id.into())?.close();
+        self.streams.get_send_stream_mut(stream_id.into())?.close();
         Ok(())
     }
 
     /// Abandon transmission of in-flight and future stream data.
     pub fn stream_reset_send(&mut self, stream_id: u64, err: AppError) -> Res<()> {
-        self.send_streams.get_mut(stream_id.into())?.reset(err);
+        self.streams
+            .get_send_stream_mut(stream_id.into())?
+            .reset(err);
         Ok(())
     }
 
@@ -3102,7 +2685,7 @@ impl Connection {
     /// `InvalidStreamId` if the stream does not exist.
     /// `NoMoreData` if data and fin bit were previously read by the application.
     pub fn stream_recv(&mut self, stream_id: u64, data: &mut [u8]) -> Res<(usize, bool)> {
-        let stream = self.recv_streams.get_mut(stream_id.into())?;
+        let stream = self.streams.get_recv_stream_mut(stream_id.into())?;
 
         let rb = stream.read(data)?;
         Ok((rb.0 as usize, rb.1))
@@ -3110,7 +2693,7 @@ impl Connection {
 
     /// Application is no longer interested in this stream.
     pub fn stream_stop_sending(&mut self, stream_id: u64, err: AppError) -> Res<()> {
-        let stream = self.recv_streams.get_mut(stream_id.into())?;
+        let stream = self.streams.get_recv_stream_mut(stream_id.into())?;
 
         stream.stop_sending(err);
         Ok(())
@@ -3121,7 +2704,7 @@ impl Connection {
     /// Returns `InvalidStreamId` if a stream does not exist or the receiving
     /// side is closed.
     pub fn set_stream_max_data(&mut self, stream_id: u64, max_data: u64) -> Res<()> {
-        let stream = self.recv_streams.get_mut(stream_id.into())?;
+        let stream = self.streams.get_recv_stream_mut(stream_id.into())?;
 
         stream.set_stream_max_data(max_data);
         Ok(())

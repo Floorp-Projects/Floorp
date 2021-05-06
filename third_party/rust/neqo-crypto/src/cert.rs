@@ -32,7 +32,7 @@ pub struct CertificateInfo {
 
 fn peer_certificate_chain(fd: *mut PRFileDesc) -> Option<(CertList, *const CERTCertListNode)> {
     let chain = unsafe { SSL_PeerCertificateChain(fd) };
-    let certs = match NonNull::new(chain as *mut CERTCertList) {
+    let certs = match NonNull::new(chain.cast::<CERTCertList>()) {
         Some(certs_ptr) => CertList::new(certs_ptr),
         None => return None,
     };
@@ -54,7 +54,7 @@ fn stapled_ocsp_responses(fd: *mut PRFileDesc) -> Option<Vec<Vec<u8>>> {
                 return None;
             };
             for idx in 0..len {
-                let itemp = unsafe { ocsp_ptr.as_ref().items.offset(idx) as *const SECItem };
+                let itemp: *const SECItem = unsafe { ocsp_ptr.as_ref().items.offset(idx).cast() };
                 let item = unsafe { slice::from_raw_parts((*itemp).data, (*itemp).len as usize) };
                 ocsp_helper.push(item.to_owned());
             }
@@ -92,14 +92,14 @@ impl CertificateInfo {
 
     fn head(certs: &CertList) -> *const CERTCertListNode {
         // Three stars: one for the reference, one for the wrapper, one to deference the pointer.
-        unsafe { &(***certs).list as *const PRCList as *const CERTCertListNode }
+        unsafe { (&(***certs).list as *const PRCList).cast() }
     }
 }
 
 impl<'a> Iterator for &'a mut CertificateInfo {
     type Item = &'a [u8];
     fn next(&mut self) -> Option<&'a [u8]> {
-        self.cursor = unsafe { *self.cursor }.links.next as *const CERTCertListNode;
+        self.cursor = unsafe { *self.cursor }.links.next.cast();
         if self.cursor == CertificateInfo::head(&self.certs) {
             return None;
         }

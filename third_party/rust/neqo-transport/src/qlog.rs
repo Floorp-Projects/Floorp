@@ -376,7 +376,7 @@ fn frame_to_qlogframe(frame: &Frame) -> QuicFrame {
                 NeqoStreamType::BiDi => qlog::StreamType::Bidirectional,
                 NeqoStreamType::UniDi => qlog::StreamType::Unidirectional,
             },
-            maximum_streams.as_u64().to_string(),
+            maximum_streams.to_string(),
         ),
         Frame::DataBlocked { data_limit } => QuicFrame::data_blocked(data_limit.to_string()),
         Frame::StreamDataBlocked {
@@ -394,7 +394,7 @@ fn frame_to_qlogframe(frame: &Frame) -> QuicFrame {
                 NeqoStreamType::BiDi => qlog::StreamType::Bidirectional,
                 NeqoStreamType::UniDi => qlog::StreamType::Unidirectional,
             },
-            stream_limit.as_u64().to_string(),
+            stream_limit.to_string(),
         ),
         Frame::NewConnectionId {
             sequence_number,

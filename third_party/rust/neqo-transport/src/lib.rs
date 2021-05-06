@@ -17,7 +17,6 @@ mod crypto;
 mod dump;
 mod events;
 mod fc;
-mod flow_mgr;
 mod frame;
 mod pace;
 mod packet;
@@ -31,6 +30,7 @@ mod sender;
 pub mod server;
 mod stats;
 pub mod stream_id;
+pub mod streams;
 pub mod tparams;
 mod tracking;
 

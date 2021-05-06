@@ -21,15 +21,14 @@ use neqo_common::{qdebug, qlog::NeqoQlog, qtrace, qwarn};
 use crate::cid::ConnectionIdEntry;
 use crate::connection::LOCAL_IDLE_TIMEOUT;
 use crate::crypto::CryptoRecoveryToken;
-use crate::flow_mgr::FlowControlRecoveryToken;
 use crate::packet::PacketNumber;
 use crate::path::{Path, PathRef};
 use crate::qlog::{self, QlogMetric};
 use crate::rtt::RttEstimate;
 use crate::send_stream::StreamRecoveryToken;
 use crate::stats::{Stats, StatsCell};
-use crate::stream_id::StreamId;
-use crate::tracking::{AckToken, PNSpace, PNSpaceSet, SentPacket};
+use crate::stream_id::{StreamId, StreamType};
+use crate::tracking::{AckToken, PacketNumberSpace, PacketNumberSpaceSet, SentPacket};
 
 pub(crate) const PACKET_THRESHOLD: u64 = 3;
 /// `ACK_ONLY_SIZE_LIMIT` is the minimum size of the congestion window.
@@ -51,17 +50,51 @@ pub enum RecoveryToken {
     Ack(AckToken),
     Stream(StreamRecoveryToken),
     Crypto(CryptoRecoveryToken),
-    Flow(FlowControlRecoveryToken),
     HandshakeDone,
     NewToken(usize),
     NewConnectionId(ConnectionIdEntry<[u8; 16]>),
     RetireConnectionId(u64),
     DataBlocked(u64),
-    StreamDataBlocked { stream_id: StreamId, limit: u64 },
-    ResetStream { stream_id: StreamId },
+    StreamDataBlocked {
+        stream_id: StreamId,
+        limit: u64,
+    },
+    ResetStream {
+        stream_id: StreamId,
+    },
     MaxData(u64),
-    MaxStreamData { stream_id: StreamId, max_data: u64 },
-    StopSending { stream_id: StreamId },
+    MaxStreamData {
+        stream_id: StreamId,
+        max_data: u64,
+    },
+    StopSending {
+        stream_id: StreamId,
+    },
+    StreamsBlocked {
+        stream_type: StreamType,
+        limit: u64,
+    },
+    MaxStreams {
+        stream_type: StreamType,
+        max_streams: u64,
+    },
+}
+
+impl RecoveryToken {
+    pub fn is_stream(&self) -> bool {
+        matches!(
+            self,
+            Self::Stream(_)
+                | Self::ResetStream { .. }
+                | Self::StreamDataBlocked { .. }
+                | Self::MaxStreamData { .. }
+                | Self::StopSending { .. }
+                | Self::StreamsBlocked { .. }
+                | Self::MaxStreams { .. }
+                | Self::DataBlocked(_)
+                | Self::MaxData(_)
+        )
+    }
 }
 
 /// `SendProfile` tells a sender how to send packets.
@@ -70,9 +103,9 @@ pub struct SendProfile {
     /// The limit on the size of the packet.
     limit: usize,
     /// Whether this is a PTO, and what space the PTO is for.
-    pto: Option<PNSpace>,
+    pto: Option<PacketNumberSpace>,
     /// What spaces should be probed.
-    probe: PNSpaceSet,
+    probe: PacketNumberSpaceSet,
     /// Whether pacing is active.
     paced: bool,
 }
@@ -85,7 +118,7 @@ impl SendProfile {
         Self {
             limit: max(ACK_ONLY_SIZE_LIMIT - 1, limit),
             pto: None,
-            probe: PNSpaceSet::default(),
+            probe: PacketNumberSpaceSet::default(),
             paced: false,
         }
     }
@@ -95,12 +128,12 @@ impl SendProfile {
         Self {
             limit: ACK_ONLY_SIZE_LIMIT - 1,
             pto: None,
-            probe: PNSpaceSet::default(),
+            probe: PacketNumberSpaceSet::default(),
             paced: true,
         }
     }
 
-    pub fn new_pto(pn_space: PNSpace, mtu: usize, probe: PNSpaceSet) -> Self {
+    pub fn new_pto(pn_space: PacketNumberSpace, mtu: usize, probe: PacketNumberSpaceSet) -> Self {
         debug_assert!(mtu > ACK_ONLY_SIZE_LIMIT);
         debug_assert!(probe[pn_space]);
         Self {
@@ -114,7 +147,7 @@ impl SendProfile {
     /// Whether probing this space is helpful.  This isn't necessarily the space
     /// that caused the timer to pop, but it is helpful to send a PING in a space
     /// that has the PTO timer armed.
-    pub fn should_probe(&self, space: PNSpace) -> bool {
+    pub fn should_probe(&self, space: PacketNumberSpace) -> bool {
         self.probe[space]
     }
 
@@ -122,7 +155,7 @@ impl SendProfile {
     /// number space.
     /// Send only ACKs either: when the space available is too small, or when a PTO
     /// exists for a later packet number space (which should get the most space).
-    pub fn ack_only(&self, space: PNSpace) -> bool {
+    pub fn ack_only(&self, space: PacketNumberSpace) -> bool {
         self.limit < ACK_ONLY_SIZE_LIMIT || self.pto.map_or(false, |sp| space < sp)
     }
 
@@ -137,7 +170,7 @@ impl SendProfile {
 
 #[derive(Debug)]
 pub(crate) struct LossRecoverySpace {
-    space: PNSpace,
+    space: PacketNumberSpace,
     largest_acked: Option<PacketNumber>,
     largest_acked_sent_time: Option<Instant>,
     /// The time used to calculate the PTO timer for this space.
@@ -156,7 +189,7 @@ pub(crate) struct LossRecoverySpace {
 }
 
 impl LossRecoverySpace {
-    pub fn new(space: PNSpace) -> Self {
+    pub fn new(space: PacketNumberSpace) -> Self {
         Self {
             space,
             largest_acked: None,
@@ -169,7 +202,7 @@ impl LossRecoverySpace {
     }
 
     #[must_use]
-    pub fn space(&self) -> PNSpace {
+    pub fn space(&self) -> PacketNumberSpace {
         self.space
     }
 
@@ -203,7 +236,7 @@ impl LossRecoverySpace {
         if self.in_flight_outstanding() {
             debug_assert!(self.last_ack_eliciting.is_some());
             self.last_ack_eliciting
-        } else if self.space == PNSpace::ApplicationData {
+        } else if self.space == PacketNumberSpace::ApplicationData {
             None
         } else {
             // Nasty special case to prevent handshake deadlocks.
@@ -225,7 +258,9 @@ impl LossRecoverySpace {
         if sent_packet.ack_eliciting() {
             self.last_ack_eliciting = Some(sent_packet.time_sent);
             self.in_flight_outstanding += 1;
-        } else if self.space != PNSpace::ApplicationData && self.last_ack_eliciting.is_none() {
+        } else if self.space != PacketNumberSpace::ApplicationData
+            && self.last_ack_eliciting.is_none()
+        {
             // For Initial and Handshake spaces, make sure that we have a PTO baseline
             // always. See `LossRecoverySpace::pto_base_time()` for details.
             self.last_ack_eliciting = Some(sent_packet.time_sent);
@@ -324,7 +359,12 @@ impl LossRecoverySpace {
     /// We try to keep these around until a probe is sent for them, so it is
     /// important that `cd` is set to at least the current PTO time; otherwise we
     /// might remove all in-flight packets and stop sending probes.
-    #[allow(clippy::option_if_let_else, clippy::unknown_clippy_lints)] // Hard enough to read as-is.
+    #[allow(
+        clippy::option_if_let_else,
+        unknown_lints,
+        renamed_and_removed_lints,
+        clippy::unknown_clippy_lints
+    )] // Hard enough to read as-is.
     fn remove_old_lost(&mut self, now: Instant, cd: Duration) {
         let mut it = self.sent_packets.iter();
         // If the first item is not expired, do nothing.
@@ -418,11 +458,11 @@ pub(crate) struct LossRecoverySpaces {
 }
 
 impl LossRecoverySpaces {
-    fn idx(space: PNSpace) -> usize {
+    fn idx(space: PacketNumberSpace) -> usize {
         match space {
-            PNSpace::ApplicationData => 0,
-            PNSpace::Handshake => 1,
-            PNSpace::Initial => 2,
+            PacketNumberSpace::ApplicationData => 0,
+            PacketNumberSpace::Handshake => 1,
+            PacketNumberSpace::Initial => 2,
         }
     }
 
@@ -430,26 +470,26 @@ impl LossRecoverySpaces {
     /// outstanding, so that those can be marked as lost.
     /// # Panics
     /// If the space has already been removed.
-    pub fn drop_space(&mut self, space: PNSpace) -> impl IntoIterator<Item = SentPacket> {
+    pub fn drop_space(&mut self, space: PacketNumberSpace) -> impl IntoIterator<Item = SentPacket> {
         let sp = match space {
-            PNSpace::Initial => self.spaces.pop(),
-            PNSpace::Handshake => {
+            PacketNumberSpace::Initial => self.spaces.pop(),
+            PacketNumberSpace::Handshake => {
                 let sp = self.spaces.pop();
                 self.spaces.shrink_to_fit();
                 sp
             }
-            PNSpace::ApplicationData => panic!("discarding application space"),
+            PacketNumberSpace::ApplicationData => panic!("discarding application space"),
         };
         let mut sp = sp.unwrap();
         assert_eq!(sp.space(), space, "dropping spaces out of order");
         sp.remove_ignored()
     }
 
-    pub fn get(&self, space: PNSpace) -> Option<&LossRecoverySpace> {
+    pub fn get(&self, space: PacketNumberSpace) -> Option<&LossRecoverySpace> {
         self.spaces.get(Self::idx(space))
     }
 
-    pub fn get_mut(&mut self, space: PNSpace) -> Option<&mut LossRecoverySpace> {
+    pub fn get_mut(&mut self, space: PacketNumberSpace) -> Option<&mut LossRecoverySpace> {
         self.spaces.get_mut(Self::idx(space))
     }
 
@@ -466,9 +506,9 @@ impl Default for LossRecoverySpaces {
     fn default() -> Self {
         Self {
             spaces: smallvec![
-                LossRecoverySpace::new(PNSpace::ApplicationData),
-                LossRecoverySpace::new(PNSpace::Handshake),
-                LossRecoverySpace::new(PNSpace::Initial),
+                LossRecoverySpace::new(PacketNumberSpace::ApplicationData),
+                LossRecoverySpace::new(PacketNumberSpace::Handshake),
+                LossRecoverySpace::new(PacketNumberSpace::Initial),
             ],
         }
     }
@@ -477,16 +517,16 @@ impl Default for LossRecoverySpaces {
 #[derive(Debug)]
 struct PtoState {
     /// The packet number space that caused the PTO to fire.
-    space: PNSpace,
+    space: PacketNumberSpace,
     /// The number of probes that we have sent.
     count: usize,
     packets: usize,
     /// The complete set of packet number spaces that can have probes sent.
-    probe: PNSpaceSet,
+    probe: PacketNumberSpaceSet,
 }
 
 impl PtoState {
-    pub fn new(space: PNSpace, probe: PNSpaceSet) -> Self {
+    pub fn new(space: PacketNumberSpace, probe: PacketNumberSpaceSet) -> Self {
         debug_assert!(probe[space]);
         Self {
             space,
@@ -496,7 +536,7 @@ impl PtoState {
         }
     }
 
-    pub fn pto(&mut self, space: PNSpace, probe: PNSpaceSet) {
+    pub fn pto(&mut self, space: PacketNumberSpace, probe: PacketNumberSpaceSet) {
         debug_assert!(probe[space]);
         self.space = space;
         self.count += 1;
@@ -546,7 +586,7 @@ impl LossRecovery {
         }
     }
 
-    pub fn largest_acknowledged_pn(&self, pn_space: PNSpace) -> Option<PacketNumber> {
+    pub fn largest_acknowledged_pn(&self, pn_space: PacketNumberSpace) -> Option<PacketNumber> {
         self.spaces.get(pn_space).and_then(|sp| sp.largest_acked)
     }
 
@@ -559,13 +599,13 @@ impl LossRecovery {
         // The client should not have received any ACK frames when it drops 0-RTT.
         assert!(self
             .spaces
-            .get(PNSpace::ApplicationData)
+            .get(PacketNumberSpace::ApplicationData)
             .unwrap()
             .largest_acked
             .is_none());
         let mut dropped = self
             .spaces
-            .get_mut(PNSpace::ApplicationData)
+            .get_mut(PacketNumberSpace::ApplicationData)
             .unwrap()
             .remove_ignored()
             .collect::<Vec<_>>();
@@ -577,7 +617,7 @@ impl LossRecovery {
     }
 
     pub fn on_packet_sent(&mut self, path: &PathRef, mut sent_packet: SentPacket) {
-        let pn_space = PNSpace::from(sent_packet.pt);
+        let pn_space = PacketNumberSpace::from(sent_packet.pt);
         qdebug!([self], "packet {}-{} sent", pn_space, sent_packet.pn);
         if let Some(space) = self.spaces.get_mut(pn_space) {
             path.borrow_mut().packet_sent(&mut sent_packet);
@@ -594,7 +634,7 @@ impl LossRecovery {
 
     pub fn should_probe(&self, pto: Duration, now: Instant) -> bool {
         self.spaces
-            .get(PNSpace::ApplicationData)
+            .get(PacketNumberSpace::ApplicationData)
             .unwrap()
             .should_probe(pto, now)
     }
@@ -616,7 +656,7 @@ impl LossRecovery {
     pub fn on_ack_received<R>(
         &mut self,
         primary_path: &PathRef,
-        pn_space: PNSpace,
+        pn_space: PacketNumberSpace,
         largest_acked: u64,
         acked_ranges: R,
         ack_delay: Duration,
@@ -719,10 +759,10 @@ impl LossRecovery {
         self.confirmed_time = Some(now);
         // Up until now, the ApplicationData space has been ignored for PTO.
         // So maybe fire a PTO.
-        if let Some(pto) = self.pto_time(rtt, PNSpace::ApplicationData) {
+        if let Some(pto) = self.pto_time(rtt, PacketNumberSpace::ApplicationData) {
             if pto < now {
-                let probes = PNSpaceSet::from(&[PNSpace::ApplicationData]);
-                self.fire_pto(PNSpace::ApplicationData, probes);
+                let probes = PacketNumberSpaceSet::from(&[PacketNumberSpace::ApplicationData]);
+                self.fire_pto(PacketNumberSpace::ApplicationData, probes);
             }
         }
     }
@@ -738,7 +778,7 @@ impl LossRecovery {
     }
 
     /// Discard state for a given packet number space.
-    pub fn discard(&mut self, primary_path: &PathRef, space: PNSpace, now: Instant) {
+    pub fn discard(&mut self, primary_path: &PathRef, space: PacketNumberSpace, now: Instant) {
         qdebug!([self], "Reset loss recovery state for {}", space);
         let mut path = primary_path.borrow_mut();
         for p in self.spaces.drop_space(space) {
@@ -750,7 +790,7 @@ impl LossRecovery {
         // the server has completed address validation, but ignore that.
         self.pto_state = None;
 
-        if space == PNSpace::Handshake {
+        if space == PacketNumberSpace::Handshake {
             self.confirmed(path.rtt(), now);
         }
     }
@@ -787,7 +827,7 @@ impl LossRecovery {
     fn pto_period_inner(
         rtt: &RttEstimate,
         pto_state: Option<&PtoState>,
-        pn_space: PNSpace,
+        pn_space: PacketNumberSpace,
     ) -> Duration {
         rtt.pto(pn_space)
             .checked_mul(1 << pto_state.map_or(0, |p| p.count))
@@ -796,13 +836,13 @@ impl LossRecovery {
 
     /// Get the current PTO period for the given packet number space.
     /// Unlike calling `RttEstimate::pto` directly, this includes exponential backoff.
-    fn pto_period(&self, rtt: &RttEstimate, pn_space: PNSpace) -> Duration {
+    fn pto_period(&self, rtt: &RttEstimate, pn_space: PacketNumberSpace) -> Duration {
         Self::pto_period_inner(rtt, self.pto_state.as_ref(), pn_space)
     }
 
     // Calculate PTO time for the given space.
-    fn pto_time(&self, rtt: &RttEstimate, pn_space: PNSpace) -> Option<Instant> {
-        if self.confirmed_time.is_none() && pn_space == PNSpace::ApplicationData {
+    fn pto_time(&self, rtt: &RttEstimate, pn_space: PacketNumberSpace) -> Option<Instant> {
+        if self.confirmed_time.is_none() && pn_space == PacketNumberSpace::ApplicationData {
             None
         } else {
             self.spaces.get(pn_space).and_then(|space| {
@@ -817,17 +857,17 @@ impl LossRecovery {
     /// Ignore Application if either Initial or Handshake have an active PTO.
     fn earliest_pto(&self, rtt: &RttEstimate) -> Option<Instant> {
         if self.confirmed_time.is_some() {
-            self.pto_time(rtt, PNSpace::ApplicationData)
+            self.pto_time(rtt, PacketNumberSpace::ApplicationData)
         } else {
-            self.pto_time(rtt, PNSpace::Initial)
+            self.pto_time(rtt, PacketNumberSpace::Initial)
                 .iter()
-                .chain(self.pto_time(rtt, PNSpace::Handshake).iter())
+                .chain(self.pto_time(rtt, PacketNumberSpace::Handshake).iter())
                 .min()
                 .cloned()
         }
     }
 
-    fn fire_pto(&mut self, pn_space: PNSpace, allow_probes: PNSpaceSet) {
+    fn fire_pto(&mut self, pn_space: PacketNumberSpace, allow_probes: PacketNumberSpaceSet) {
         if let Some(st) = &mut self.pto_state {
             st.pto(pn_space, allow_probes);
         } else {
@@ -854,8 +894,8 @@ impl LossRecovery {
     fn maybe_fire_pto(&mut self, rtt: &RttEstimate, now: Instant, lost: &mut Vec<SentPacket>) {
         let mut pto_space = None;
         // The spaces in which we will allow probing.
-        let mut allow_probes = PNSpaceSet::default();
-        for pn_space in PNSpace::iter() {
+        let mut allow_probes = PacketNumberSpaceSet::default();
+        for pn_space in PacketNumberSpace::iter() {
             if let Some(t) = self.pto_time(rtt, *pn_space) {
                 allow_probes[*pn_space] = true;
                 if t <= now {
@@ -905,7 +945,12 @@ impl LossRecovery {
 
     /// Check how packets should be sent, based on whether there is a PTO,
     /// what the current congestion window is, and what the pacer says.
-    #[allow(clippy::option_if_let_else, clippy::unknown_clippy_lints)]
+    #[allow(
+        clippy::option_if_let_else,
+        unknown_lints,
+        renamed_and_removed_lints,
+        clippy::unknown_clippy_lints
+    )]
     pub fn send_profile(&mut self, path: &Path, now: Instant) -> SendProfile {
         qdebug!([self], "get send profile {:?}", now);
         let sender = path.sender();
@@ -932,7 +977,7 @@ impl LossRecovery {
                 // After entering recovery, allow a packet to be sent immediately.
                 // This uses the PTO machinery, probing in all spaces. This will
                 // result in a PING being sent in every active space.
-                SendProfile::new_pto(PNSpace::Initial, mtu, PNSpaceSet::all())
+                SendProfile::new_pto(PacketNumberSpace::Initial, mtu, PacketNumberSpaceSet::all())
             } else {
                 SendProfile::new_limited(limit)
             }
@@ -948,7 +993,7 @@ impl ::std::fmt::Display for LossRecovery {
 
 #[cfg(test)]
 mod tests {
-    use super::{LossRecovery, LossRecoverySpace, PNSpace, SendProfile, SentPacket};
+    use super::{LossRecovery, LossRecoverySpace, PacketNumberSpace, SendProfile, SentPacket};
     use crate::cc::CongestionControlAlgorithm;
     use crate::cid::{ConnectionId, ConnectionIdEntry};
     use crate::packet::PacketType;
@@ -983,7 +1028,7 @@ mod tests {
     impl Fixture {
         pub fn on_ack_received(
             &mut self,
-            pn_space: PNSpace,
+            pn_space: PacketNumberSpace,
             largest_acked: u64,
             acked_ranges: Vec<RangeInclusive<u64>>,
             ack_delay: Duration,
@@ -1011,11 +1056,11 @@ mod tests {
             self.lr.next_timeout(self.path.borrow().rtt())
         }
 
-        pub fn discard(&mut self, space: PNSpace, now: Instant) {
+        pub fn discard(&mut self, space: PacketNumberSpace, now: Instant) {
             self.lr.discard(&self.path, space, now)
         }
 
-        pub fn pto_time(&self, space: PNSpace) -> Option<Instant> {
+        pub fn pto_time(&self, space: PacketNumberSpace) -> Option<Instant> {
             self.lr.pto_time(self.path.borrow().rtt(), space)
         }
 
@@ -1091,18 +1136,22 @@ mod tests {
         };
         println!(
             "loss times: {:?} {:?} {:?}",
-            est(PNSpace::Initial),
-            est(PNSpace::Handshake),
-            est(PNSpace::ApplicationData),
+            est(PacketNumberSpace::Initial),
+            est(PacketNumberSpace::Handshake),
+            est(PacketNumberSpace::ApplicationData),
         );
-        assert_eq!(est(PNSpace::Initial), initial, "Initial earliest sent time");
         assert_eq!(
-            est(PNSpace::Handshake),
+            est(PacketNumberSpace::Initial),
+            initial,
+            "Initial earliest sent time"
+        );
+        assert_eq!(
+            est(PacketNumberSpace::Handshake),
             handshake,
             "Handshake earliest sent time"
         );
         assert_eq!(
-            est(PNSpace::ApplicationData),
+            est(PacketNumberSpace::ApplicationData),
             app_data,
             "AppData earliest sent time"
         );
@@ -1135,7 +1184,7 @@ mod tests {
     /// Acknowledge PN with the identified delay.
     fn ack(lr: &mut Fixture, pn: u64, delay: Duration) {
         lr.on_ack_received(
-            PNSpace::ApplicationData,
+            PacketNumberSpace::ApplicationData,
             pn,
             vec![pn..=pn],
             ACK_DELAY,
@@ -1162,7 +1211,7 @@ mod tests {
 
     #[test]
     fn remove_acked() {
-        let mut lrs = LossRecoverySpace::new(PNSpace::ApplicationData);
+        let mut lrs = LossRecoverySpace::new(PacketNumberSpace::ApplicationData);
         let mut stats = Stats::default();
         add_sent(&mut lrs, &[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
         let (acked, _) = lrs.remove_acked(vec![], &mut stats);
@@ -1282,7 +1331,7 @@ mod tests {
             ON_SENT_SIZE,
         ));
         let (_, lost) = lr.on_ack_received(
-            PNSpace::ApplicationData,
+            PacketNumberSpace::ApplicationData,
             1,
             vec![1..=1],
             ACK_DELAY,
@@ -1305,7 +1354,7 @@ mod tests {
         assert!(pn1_loss_time > pn2_ack_time);
 
         let (_, lost) = lr.on_ack_received(
-            PNSpace::ApplicationData,
+            PacketNumberSpace::ApplicationData,
             2,
             vec![2..=2],
             ACK_DELAY,
@@ -1334,7 +1383,7 @@ mod tests {
         // Acknowledge just 2-4, which will cause pn 1 to be marked as lost.
         assert_eq!(super::PACKET_THRESHOLD, 3);
         let (_, lost) = lr.on_ack_received(
-            PNSpace::ApplicationData,
+            PacketNumberSpace::ApplicationData,
             4,
             vec![2..=4],
             ACK_DELAY,
@@ -1347,23 +1396,23 @@ mod tests {
     #[should_panic(expected = "discarding application space")]
     fn drop_app() {
         let mut lr = Fixture::default();
-        lr.discard(PNSpace::ApplicationData, now());
+        lr.discard(PacketNumberSpace::ApplicationData, now());
     }
 
     #[test]
     #[should_panic(expected = "dropping spaces out of order")]
     fn drop_out_of_order() {
         let mut lr = Fixture::default();
-        lr.discard(PNSpace::Handshake, now());
+        lr.discard(PacketNumberSpace::Handshake, now());
     }
 
     #[test]
     #[should_panic(expected = "ACK on discarded space")]
     fn ack_after_drop() {
         let mut lr = Fixture::default();
-        lr.discard(PNSpace::Initial, now());
+        lr.discard(PacketNumberSpace::Initial, now());
         lr.on_ack_received(
-            PNSpace::Initial,
+            PacketNumberSpace::Initial,
             0,
             vec![],
             Duration::from_millis(0),
@@ -1406,7 +1455,7 @@ mod tests {
             PacketType::Short,
         ] {
             let sent_pkt = SentPacket::new(*sp, 1, pn_time(3), true, Vec::new(), ON_SENT_SIZE);
-            let pn_space = PNSpace::from(sent_pkt.pt);
+            let pn_space = PacketNumberSpace::from(sent_pkt.pt);
             lr.on_packet_sent(sent_pkt);
             lr.on_ack_received(pn_space, 1, vec![1..=1], Duration::from_secs(0), pn_time(3));
             let mut lost = Vec::new();
@@ -1419,10 +1468,10 @@ mod tests {
             assert!(lost.is_empty());
         }
 
-        lr.discard(PNSpace::Initial, pn_time(3));
+        lr.discard(PacketNumberSpace::Initial, pn_time(3));
         assert_sent_times(&lr, None, Some(pn_time(1)), Some(pn_time(2)));
 
-        lr.discard(PNSpace::Handshake, pn_time(3));
+        lr.discard(PacketNumberSpace::Handshake, pn_time(3));
         assert_sent_times(&lr, None, None, Some(pn_time(2)));
 
         // There are cases where we send a packet that is not subsequently tracked.
@@ -1458,20 +1507,20 @@ mod tests {
             ON_SENT_SIZE,
         ));
 
-        assert_eq!(lr.pto_time(PNSpace::ApplicationData), None);
-        lr.discard(PNSpace::Initial, pn_time(1));
-        assert_eq!(lr.pto_time(PNSpace::ApplicationData), None);
+        assert_eq!(lr.pto_time(PacketNumberSpace::ApplicationData), None);
+        lr.discard(PacketNumberSpace::Initial, pn_time(1));
+        assert_eq!(lr.pto_time(PacketNumberSpace::ApplicationData), None);
 
         // Expiring state after the PTO on the ApplicationData space has
         // expired should result in setting a PTO state.
-        let default_pto = RttEstimate::default().pto(PNSpace::ApplicationData);
+        let default_pto = RttEstimate::default().pto(PacketNumberSpace::ApplicationData);
         let expected_pto = pn_time(2) + default_pto;
-        lr.discard(PNSpace::Handshake, expected_pto);
+        lr.discard(PacketNumberSpace::Handshake, expected_pto);
         let profile = lr.send_profile(now());
         assert!(profile.pto.is_some());
-        assert!(!profile.should_probe(PNSpace::Initial));
-        assert!(!profile.should_probe(PNSpace::Handshake));
-        assert!(profile.should_probe(PNSpace::ApplicationData));
+        assert!(!profile.should_probe(PacketNumberSpace::Initial));
+        assert!(!profile.should_probe(PacketNumberSpace::Handshake));
+        assert!(profile.should_probe(PacketNumberSpace::ApplicationData));
     }
 
     #[test]
@@ -1495,14 +1544,14 @@ mod tests {
             ON_SENT_SIZE,
         ));
 
-        let handshake_pto = RttEstimate::default().pto(PNSpace::Handshake);
+        let handshake_pto = RttEstimate::default().pto(PacketNumberSpace::Handshake);
         let expected_pto = now() + handshake_pto;
-        assert_eq!(lr.pto_time(PNSpace::Initial), Some(expected_pto));
+        assert_eq!(lr.pto_time(PacketNumberSpace::Initial), Some(expected_pto));
         let profile = lr.send_profile(now());
-        assert!(profile.ack_only(PNSpace::Initial));
+        assert!(profile.ack_only(PacketNumberSpace::Initial));
         assert!(profile.pto.is_none());
-        assert!(!profile.should_probe(PNSpace::Initial));
-        assert!(!profile.should_probe(PNSpace::Handshake));
-        assert!(!profile.should_probe(PNSpace::ApplicationData));
+        assert!(!profile.should_probe(PacketNumberSpace::Initial));
+        assert!(!profile.should_probe(PacketNumberSpace::Handshake));
+        assert!(!profile.should_probe(PacketNumberSpace::ApplicationData));
     }
 }

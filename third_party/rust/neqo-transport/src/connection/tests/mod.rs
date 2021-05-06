@@ -29,6 +29,7 @@ use test_fixture::{self, addr, fixture_init, now};
 // All the tests.
 mod cc;
 mod close;
+mod fuzzing;
 mod handshake;
 mod idle;
 mod keys;

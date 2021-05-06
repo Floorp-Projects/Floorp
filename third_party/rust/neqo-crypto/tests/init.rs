@@ -12,8 +12,14 @@ use neqo_crypto::{assert_initialized, init_db};
 
 // Pull in the NSS internals so that we can ask NSS if it thinks that
 // it is properly initialized.
-#[allow(dead_code, non_upper_case_globals)]
-#[allow(clippy::redundant_static_lifetimes, clippy::unseparated_literal_suffix)]
+#[allow(
+    dead_code,
+    non_upper_case_globals,
+    clippy::redundant_static_lifetimes,
+    clippy::unseparated_literal_suffix,
+    clippy::upper_case_acronyms
+)]
+#[allow(unknown_lints, renamed_and_removed_lints, clippy::unknown_clippy_lints)] // Until we require rust 1.51.
 mod nss {
     include!(concat!(env!("OUT_DIR"), "/nss_init.rs"));
 }

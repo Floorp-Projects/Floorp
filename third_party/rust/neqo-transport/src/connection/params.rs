@@ -6,14 +6,14 @@
 
 use crate::connection::{ConnectionIdManager, Role, LOCAL_ACTIVE_CID_LIMIT, LOCAL_IDLE_TIMEOUT};
 use crate::recv_stream::RECV_BUFFER_SIZE;
-use crate::stream_id::{StreamIndex, StreamType};
+use crate::stream_id::StreamType;
 use crate::tparams::{self, PreferredAddress, TransportParameter, TransportParametersHandler};
 use crate::{CongestionControlAlgorithm, QuicVersion, Res};
 use std::convert::TryFrom;
 
 const LOCAL_MAX_DATA: u64 = 0x3FFF_FFFF_FFFF_FFFF; // 2^62-1
-const LOCAL_STREAM_LIMIT_BIDI: StreamIndex = StreamIndex::new(16);
-const LOCAL_STREAM_LIMIT_UNI: StreamIndex = StreamIndex::new(16);
+const LOCAL_STREAM_LIMIT_BIDI: u64 = 16;
+const LOCAL_STREAM_LIMIT_UNI: u64 = 16;
 
 /// What to do with preferred addresses.
 #[derive(Debug, Clone)]
@@ -42,9 +42,9 @@ pub struct ConnectionParameters {
     /// Initial flow control limit for receiving data on unidirectional streams that the peer creates.
     max_stream_data_uni: u64,
     /// Initial limit on bidirectional streams that the peer creates.
-    max_streams_bidi: StreamIndex,
+    max_streams_bidi: u64,
     /// Initial limit on unidirectional streams that this endpoint creates.
-    max_streams_uni: StreamIndex,
+    max_streams_uni: u64,
     preferred_address: PreferredAddressConfig,
 }
 
@@ -92,15 +92,15 @@ impl ConnectionParameters {
         self
     }
 
-    pub fn get_max_streams(&self, stream_type: StreamType) -> StreamIndex {
+    pub fn get_max_streams(&self, stream_type: StreamType) -> u64 {
         match stream_type {
             StreamType::BiDi => self.max_streams_bidi,
             StreamType::UniDi => self.max_streams_uni,
         }
     }
 
-    pub fn max_streams(mut self, stream_type: StreamType, v: StreamIndex) -> Self {
-        assert!(v.as_u64() <= (1 << 60), "max_streams is too large");
+    pub fn max_streams(mut self, stream_type: StreamType, v: u64) -> Self {
+        assert!(v <= (1 << 60), "max_streams is too large");
         match stream_type {
             StreamType::BiDi => {
                 self.max_streams_bidi = v;
@@ -194,14 +194,10 @@ impl ConnectionParameters {
             tparams::INITIAL_MAX_STREAM_DATA_UNI,
             self.max_stream_data_uni,
         );
-        tps.local.set_integer(
-            tparams::INITIAL_MAX_STREAMS_BIDI,
-            self.max_streams_bidi.as_u64(),
-        );
-        tps.local.set_integer(
-            tparams::INITIAL_MAX_STREAMS_UNI,
-            self.max_streams_uni.as_u64(),
-        );
+        tps.local
+            .set_integer(tparams::INITIAL_MAX_STREAMS_BIDI, self.max_streams_bidi);
+        tps.local
+            .set_integer(tparams::INITIAL_MAX_STREAMS_UNI, self.max_streams_uni);
         if let PreferredAddressConfig::Address(preferred) = &self.preferred_address {
             if role == Role::Server {
                 let (cid, srt) = cid_manager.preferred_address_cid()?;

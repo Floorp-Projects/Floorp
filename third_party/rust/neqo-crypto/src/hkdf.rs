@@ -140,7 +140,7 @@ pub fn expand_label(
             **prk,
             handshake_hash.as_ptr(),
             c_uint::try_from(handshake_hash.len())?,
-            l.as_ptr() as *const c_char,
+            l.as_ptr().cast(),
             c_uint::try_from(l.len())?,
             &mut secret,
         )
