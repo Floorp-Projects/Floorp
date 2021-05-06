@@ -61,7 +61,7 @@ def test_file_and_path_provided(lint, config, paths):
     # we should not have anything from bad_2.rs
     # as mozlint is filtering out the file
     print(results)
-    assert len(results) > 16
+    assert len(results) > 12
     assert "value assigned to `a` is never read" in results[0].message
     assert results[0].level == "warning"
     assert results[0].lineno == 7
@@ -78,9 +78,9 @@ def test_file_and_path_provided(lint, config, paths):
     assert "tools/lint/test/files/clippy/test1/bad2.rs" in results[8].path
 
     assert results[10].level == "warning"
-    assert results[10].lineno == 1
-    assert results[10].column == 4
-    assert results[10].rule == "dead_code"
+    assert results[10].lineno == 9
+    assert results[10].column == 9
+    assert results[10].rule == "unused_assignments"
     assert results[10].relpath == "test2/src/bad_1.rs"
     assert "tools/lint/test/files/clippy/test2/src/bad_1.rs" in results[10].path
     for r in results:
@@ -93,11 +93,11 @@ def test_file_provided(lint, config, paths):
     # we should not have anything from bad_2.rs
     # as mozlint is filtering out the file
     print(results)
-    assert len(results) > 8
+    assert len(results) > 2
     assert results[0].level == "warning"
-    assert results[0].lineno == 1
-    assert results[0].column == 4
-    assert results[0].rule == "dead_code"
+    assert results[0].lineno == 9
+    assert results[0].column == 9
+    assert results[0].rule == "unused_assignments"
     assert results[0].relpath == "test2/src/bad_1.rs"
     assert "tools/lint/test/files/clippy/test2/src/bad_1.rs" in results[0].path
     for r in results:
