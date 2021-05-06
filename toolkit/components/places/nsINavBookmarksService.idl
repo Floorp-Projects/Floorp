@@ -83,6 +83,45 @@ interface nsINavBookmarkObserver : nsISupports
                      in ACString aParentGuid,
                      in AUTF8String aOldValue,
                      in unsigned short aSource);
+
+  /**
+   * Notifies that an item has been moved.
+   *
+   * @param aItemId
+   *        The id of the item that was moved.
+   * @param aOldParentId
+   *        The id of the old parent.
+   * @param aOldIndex
+   *        The old index inside the old parent.
+   * @param aNewParentId
+   *        The id of the new parent.
+   * @param aNewIndex
+   *        The index inside the new parent.
+   * @param aItemType
+   *        The type of the item to be removed (see TYPE_* constants below).
+   * @param aGuid
+   *        The unique ID associated with the item.
+   * @param aOldParentGuid
+   *        The unique ID associated with the old item's parent.
+   * @param aNewParentGuid
+   *        The unique ID associated with the new item's parent.
+   * @param aSource
+   *        A change source constant from nsINavBookmarksService::SOURCE_*,
+   *        passed to the method that notifies the observer.
+   * @param aURI
+   *        The URI for this bookmark.
+   */
+  void onItemMoved(in long long aItemId,
+                   in long long aOldParentId,
+                   in long aOldIndex,
+                   in long long aNewParentId,
+                   in long aNewIndex,
+                   in unsigned short aItemType,
+                   in ACString aGuid,
+                   in ACString aOldParentGuid,
+                   in ACString aNewParentGuid,
+                   in unsigned short aSource,
+                   in AUTF8String aURI);
 };
 
 /**

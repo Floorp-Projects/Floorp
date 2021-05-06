@@ -722,6 +722,7 @@ function NavBookmarkObserver() {}
 NavBookmarkObserver.prototype = {
   onItemRemoved() {},
   onItemChanged() {},
+  onItemMoved() {},
   QueryInterface: ChromeUtils.generateQI(["nsINavBookmarkObserver"]),
 };
 

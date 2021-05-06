@@ -1818,7 +1818,7 @@ var BookmarkingUI = {
     if (this._hasBookmarksObserver) {
       PlacesUtils.bookmarks.removeObserver(this);
       PlacesUtils.observers.removeListener(
-        ["bookmark-added", "bookmark-removed", "bookmark-moved"],
+        ["bookmark-added", "bookmark-removed"],
         this.handlePlacesEvents
       );
     }
@@ -1869,7 +1869,7 @@ var BookmarkingUI = {
             PlacesUtils.bookmarks.addObserver(this);
             this.handlePlacesEvents = this.handlePlacesEvents.bind(this);
             PlacesUtils.observers.addListener(
-              ["bookmark-added", "bookmark-removed", "bookmark-moved"],
+              ["bookmark-added", "bookmark-removed"],
               this.handlePlacesEvents
             );
             this._hasBookmarksObserver = true;
@@ -2222,22 +2222,6 @@ var BookmarkingUI = {
             }
           }
           break;
-        case "bookmark-moved":
-          const hasMovedInOutOtherBookmarks =
-            ev.parentGuid === PlacesUtils.bookmarks.unfiledGuid ||
-            ev.oldParentGuid === PlacesUtils.bookmarks.unfiledGuid;
-          if (hasMovedInOutOtherBookmarks) {
-            this.maybeShowOtherBookmarksFolder();
-          }
-
-          const hasMovedInOutToolbar =
-            ev.parentGuid === PlacesUtils.bookmarks.toolbarGuid ||
-            ev.oldParentGuid === PlacesUtils.bookmarks.toolbarGuid;
-          if (hasMovedInOutToolbar) {
-            this.updateEmptyToolbarMessage();
-          }
-
-          break;
       }
 
       if (ev.parentGuid === PlacesUtils.bookmarks.unfiledGuid) {
@@ -2288,8 +2272,10 @@ var BookmarkingUI = {
 
   onItemMoved(
     aItemId,
-    aOldIndex,
-    aNewIndex,
+    aProperty,
+    aIsAnnotationProperty,
+    aNewValue,
+    aLastModified,
     aItemType,
     aGuid,
     oldParentGuid,

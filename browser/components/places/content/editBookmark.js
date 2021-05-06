@@ -348,11 +348,6 @@ var gEditItemOverlay = {
     // Observe changes.
     if (!this._observersAdded) {
       PlacesUtils.bookmarks.addObserver(this);
-      this.handlePlacesEvents = this.handlePlacesEvents.bind(this);
-      PlacesUtils.observers.addListener(
-        ["bookmark-moved"],
-        this.handlePlacesEvents
-      );
       window.addEventListener("unload", this);
       this._observersAdded = true;
     }
@@ -571,10 +566,6 @@ var gEditItemOverlay = {
 
     if (this._observersAdded) {
       PlacesUtils.bookmarks.removeObserver(this);
-      PlacesUtils.observers.removeListener(
-        ["bookmark-moved"],
-        this.handlePlacesEvents
-      );
       window.removeEventListener("unload", this);
       this._observersAdded = false;
     }
@@ -1135,35 +1126,6 @@ var gEditItemOverlay = {
     }
   },
 
-  async handlePlacesEvents(events) {
-    for (const event of events) {
-      switch (event.type) {
-        case "bookmark-moved":
-          if (!this._paneInfo.isItem || this._paneInfo.itemId != event.id) {
-            return;
-          }
-
-          this._paneInfo.parentGuid = event.parentGuid;
-
-          if (
-            !this._paneInfo.visibleRows.has("folderRow") ||
-            event.parentGuid === this._folderMenuList.selectedItem.folderGuid
-          ) {
-            return;
-          }
-
-          // Just setting selectItem _does not_ trigger oncommand, so we don't
-          // recurse.
-          const bm = await PlacesUtils.bookmarks.fetch(event.parentGuid);
-          this._folderMenuList.selectedItem = this._getFolderMenuItem(
-            event.parentGuid,
-            bm.title
-          );
-          break;
-      }
-    }
-  },
-
   toggleItemCheckbox(item) {
     // Update the tags field when items are checked/unchecked in the listbox
     let tags = this._getTagsArrayFromTagsInputField();
@@ -1311,6 +1273,40 @@ var gEditItemOverlay = {
         }
         break;
     }
+  },
+
+  onItemMoved(
+    id,
+    oldParentId,
+    oldIndex,
+    newParentId,
+    newIndex,
+    type,
+    guid,
+    oldParentGuid,
+    newParentGuid
+  ) {
+    if (!this._paneInfo.isItem || this._paneInfo.itemId != id) {
+      return;
+    }
+
+    this._paneInfo.parentGuid = newParentGuid;
+
+    if (
+      !this._paneInfo.visibleRows.has("folderRow") ||
+      newParentGuid == this._folderMenuList.selectedItem.folderGuid
+    ) {
+      return;
+    }
+
+    // Just setting selectItem _does not_ trigger oncommand, so we don't
+    // recurse.
+    PlacesUtils.bookmarks.fetch(newParentGuid).then(bm => {
+      this._folderMenuList.selectedItem = this._getFolderMenuItem(
+        newParentGuid,
+        bm.title
+      );
+    });
   },
 };
 

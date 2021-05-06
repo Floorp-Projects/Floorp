@@ -50,7 +50,9 @@ class BookmarksObserver extends Observer {
     this.skipTags = true;
   }
 
-  // Empty functions to make xpconnect happy.
+  // Empty functions to make xpconnect happy
+  onItemMoved() {}
+
   // Disabled due to performance cost, see Issue 3203 /
   // https://bugzilla.mozilla.org/show_bug.cgi?id=1392267.
   onItemChanged() {}

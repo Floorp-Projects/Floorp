@@ -165,14 +165,9 @@ add_task(async function test_move_existing_to_toolbar() {
 
       let menuList = win.document.getElementById("editBMPanel_folderMenuList");
       let itemMovedPromise = PlacesTestUtils.waitForNotification(
-        "bookmark-moved",
-        events =>
-          events.some(
-            e =>
-              e.parentGuid === PlacesUtils.bookmarks.toolbarGuid &&
-              e.guid === bm.guid
-          ),
-        "places"
+        "onItemMoved",
+        (id, oldParentId, oldIndex, newParentId, newIndex, type, guid) =>
+          newParentId == PlacesUtils.toolbarFolderId && guid == bm.guid
       );
       let promisePopup = BrowserTestUtils.waitForEvent(
         menuList.menupopup,
