@@ -1582,8 +1582,14 @@ impl Device {
             supports_extension(&extensions, "GL_ARB_copy_image")
         };
 
+        // We have seen crashes on x86 PowerVR Rogue G6430 devices during GPU cache
+        // updates using the scatter shader. It seems likely that GL_EXT_color_buffer_float
+        // is broken. See bug 1709408.
+        let is_x86_powervr_rogue_g6430 = renderer_name.starts_with("PowerVR Rogue G6430")
+            && cfg!(target_arch = "x86");
         let supports_color_buffer_float = match gl.get_type() {
             gl::GlType::Gl => true,
+            gl::GlType::Gles if is_x86_powervr_rogue_g6430 => false,
             gl::GlType::Gles => supports_extension(&extensions, "GL_EXT_color_buffer_float"),
         };
 
