@@ -2335,6 +2335,22 @@ RefPtr<GetUserMediaTask> MediaManager::TakeGetUserMediaTask(
   return task;
 }
 
+void MediaManager::NotifyAllowed(const nsString& aCallID,
+                                 const MediaDeviceSet& aDevices) {
+  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+  nsCOMPtr<nsIMutableArray> devicesCopy = nsArray::Create();
+  for (const auto& device : aDevices) {
+    nsresult rv = devicesCopy->AppendElement(device);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      obs->NotifyObservers(nullptr, "getUserMedia:response:deny",
+                           aCallID.get());
+      return;
+    }
+  }
+  obs->NotifyObservers(devicesCopy, "getUserMedia:privileged:allow",
+                       aCallID.get());
+}
+
 nsresult MediaManager::GenerateUUID(nsAString& aResult) {
   nsresult rv;
   nsCOMPtr<nsIUUIDGenerator> uuidgen =
@@ -2802,21 +2818,6 @@ RefPtr<MediaManager::StreamPromise> MediaManager::GetUserMedia(
                   MakeRefPtr<MediaMgrError>(error), __func__);
             }
 
-            // before we give up devices below
-            nsCOMPtr<nsIMutableArray> devicesCopy = nsArray::Create();
-            if (!askPermission) {
-              for (auto& device : *devices) {
-                nsresult rv = devicesCopy->AppendElement(device);
-                if (NS_WARN_IF(NS_FAILED(rv))) {
-                  placeholderListener->Stop();
-                  return StreamPromise::CreateAndReject(
-                      MakeRefPtr<MediaMgrError>(
-                          MediaMgrError::Name::AbortError),
-                      __func__);
-                }
-              }
-            }
-
             // Time to start devices. Create the necessary device listeners and
             // remove the placeholder.
             RefPtr<DeviceListener> audioListener;
@@ -2850,10 +2851,8 @@ RefPtr<MediaManager::StreamPromise> MediaManager::GetUserMedia(
             size_t taskCount =
                 self->AddTaskAndGetCount(windowID, callID, std::move(task));
 
-            nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
             if (!askPermission) {
-              obs->NotifyObservers(devicesCopy, "getUserMedia:privileged:allow",
-                                   callID.get());
+              self->NotifyAllowed(callID, *devices);
             } else {
               auto req = MakeRefPtr<GetUserMediaRequest>(
                   window, callID, std::move(devices), c, isSecure,
@@ -2865,6 +2864,8 @@ RefPtr<MediaManager::StreamPromise> MediaManager::GetUserMedia(
                 // request
                 self->mPendingGUMRequest.AppendElement(req.forget());
               } else {
+                nsCOMPtr<nsIObserverService> obs =
+                    services::GetObserverService();
                 obs->NotifyObservers(req, "getUserMedia:request", nullptr);
               }
             }
