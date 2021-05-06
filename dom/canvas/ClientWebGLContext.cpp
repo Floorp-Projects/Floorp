@@ -866,7 +866,9 @@ RefPtr<gfx::SourceSurface> ClientWebGLContext::GetFrontBufferSnapshot(
   auto snapshot = [&]() -> RefPtr<gfx::DataSourceSurface> {
     const auto& inProcess = mNotLost->inProcess;
     if (inProcess) {
-      const auto surfSize = inProcess->GetFrontBufferSize();
+      const auto maybeSize = inProcess->FrontBufferSnapshotInto({});
+      if (!maybeSize) return nullptr;
+      const auto& surfSize = *maybeSize;
       const auto stride = surfSize.x * 4;
       const auto byteSize = stride * surfSize.y;
       const auto surf = fnNewSurf(surfSize);
@@ -880,7 +882,12 @@ RefPtr<gfx::SourceSurface> ClientWebGLContext::GetFrontBufferSnapshot(
         }
         MOZ_RELEASE_ASSERT(map.GetStride() == static_cast<int64_t>(stride));
         auto range = Range<uint8_t>{map.GetData(), byteSize};
-        if (!inProcess->FrontBufferSnapshotInto(range)) return nullptr;
+        if (!inProcess->FrontBufferSnapshotInto(Some(range))) {
+          gfxCriticalNote << "ClientWebGLContext::GetFrontBufferSnapshot: "
+                             "FrontBufferSnapshotInto(some) failed after "
+                             "FrontBufferSnapshotInto(none)";
+          return nullptr;
+        }
       }
       return surf;
     }
