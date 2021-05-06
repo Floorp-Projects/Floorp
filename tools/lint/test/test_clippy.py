@@ -79,7 +79,7 @@ def test_file_and_path_provided(lint, config, paths):
 
     assert results[10].level == "warning"
     assert results[10].lineno == 9
-    assert results[10].column == 9
+    assert results[10].column >= 9
     assert results[10].rule == "unused_assignments"
     assert results[10].relpath == "test2/src/bad_1.rs"
     assert "tools/lint/test/files/clippy/test2/src/bad_1.rs" in results[10].path
@@ -96,7 +96,7 @@ def test_file_provided(lint, config, paths):
     assert len(results) > 2
     assert results[0].level == "warning"
     assert results[0].lineno == 9
-    assert results[0].column == 9
+    assert results[0].column >= 9
     assert results[0].rule == "unused_assignments"
     assert results[0].relpath == "test2/src/bad_1.rs"
     assert "tools/lint/test/files/clippy/test2/src/bad_1.rs" in results[0].path
