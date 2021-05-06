@@ -70,7 +70,6 @@ class Components(private val context: Context) {
         UseCases(
             context,
             core.engine,
-            core.sessionManager,
             core.store,
             core.webAppShortcutManager,
             core.topSitesStorage,

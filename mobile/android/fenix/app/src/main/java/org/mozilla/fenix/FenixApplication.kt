@@ -467,19 +467,12 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
                             components.core.store.state.selectedTab?.content?.private
                                 ?: components.settings.openLinksInAPrivateTab
 
-                        if (shouldCreatePrivateSession) {
-                            components.useCases.tabsUseCases.addPrivateTab(
-                                url = url,
-                                selectTab = true,
-                                engineSession = engineSession
-                            )
-                        } else {
-                            components.useCases.tabsUseCases.addTab(
-                                url = url,
-                                selectTab = true,
-                                engineSession = engineSession
-                            )
-                        }
+                        components.useCases.tabsUseCases.addTab(
+                            url = url,
+                            selectTab = true,
+                            engineSession = engineSession,
+                            private = shouldCreatePrivateSession
+                        )
                 },
                 onCloseTabOverride = {
                     _, sessionId -> components.useCases.tabsUseCases.removeTab(sessionId)

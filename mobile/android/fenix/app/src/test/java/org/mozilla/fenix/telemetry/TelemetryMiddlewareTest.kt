@@ -9,7 +9,7 @@ import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestCoroutineDispatcher
-import mozilla.components.browser.session.engine.EngineMiddleware
+import mozilla.components.browser.state.engine.EngineMiddleware
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.action.DownloadAction
 import mozilla.components.browser.state.action.EngineAction
@@ -73,7 +73,7 @@ class TelemetryMiddlewareTest {
             metrics
         )
         store = BrowserStore(
-            middleware = listOf(telemetryMiddleware) + EngineMiddleware.create(engine = mockk(), sessionLookup = { null }),
+            middleware = listOf(telemetryMiddleware) + EngineMiddleware.create(engine = mockk()),
             initialState = BrowserState()
         )
     }
@@ -340,7 +340,7 @@ class TelemetryMiddlewareTest {
         clock.elapsedTime = 100
 
         store.dispatch(EngineAction.LinkEngineSessionAction(
-            sessionId = "foreground",
+            tabId = "foreground",
             engineSession = mock()
         )).joinBlocking()
 
@@ -372,7 +372,7 @@ class TelemetryMiddlewareTest {
         clock.elapsedTime = 100
 
         store.dispatch(EngineAction.LinkEngineSessionAction(
-            sessionId = "background_pocket",
+            tabId = "background_pocket",
             engineSession = mock()
         )).joinBlocking()
 

@@ -205,11 +205,7 @@ class InstalledAddonDetailsFragment : Fragment() {
                     val shouldCreatePrivateSession =
                         (activity as HomeActivity).browsingModeManager.mode.isPrivate
 
-                    if (shouldCreatePrivateSession) {
-                        components.useCases.tabsUseCases.addPrivateTab(settingUrl)
-                    } else {
-                        components.useCases.tabsUseCases.addTab(settingUrl)
-                    }
+                    components.useCases.tabsUseCases.addTab(settingUrl, private = shouldCreatePrivateSession)
 
                     InstalledAddonDetailsFragmentDirections.actionGlobalBrowser(null)
                 } else {

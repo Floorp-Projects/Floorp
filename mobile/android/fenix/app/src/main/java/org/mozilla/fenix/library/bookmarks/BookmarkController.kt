@@ -192,10 +192,7 @@ class DefaultBookmarkController(
     ) {
         invokePendingDeletion.invoke()
         activity.browsingModeManager.mode = BrowsingMode.fromBoolean(mode == BrowsingMode.Private)
-        tabsUseCases?.let { tabsUseCases ->
-            val addTab = if (mode == BrowsingMode.Private) tabsUseCases.addPrivateTab else tabsUseCases.addTab
-            addTab.invoke(url)
-        }
+        tabsUseCases?.addTab?.invoke(url, private = (mode == BrowsingMode.Private))
     }
 
     private fun navigateToGivenDirection(directions: NavDirections) {

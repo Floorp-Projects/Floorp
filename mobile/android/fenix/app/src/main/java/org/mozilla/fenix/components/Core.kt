@@ -14,9 +14,7 @@ import io.sentry.Sentry
 import mozilla.components.browser.engine.gecko.GeckoEngine
 import mozilla.components.browser.engine.gecko.fetch.GeckoViewFetchClient
 import mozilla.components.browser.icons.BrowserIcons
-import mozilla.components.browser.session.Session
-import mozilla.components.browser.session.SessionManager
-import mozilla.components.browser.session.engine.EngineMiddleware
+import mozilla.components.browser.state.engine.EngineMiddleware
 import mozilla.components.browser.session.storage.SessionStorage
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.store.BrowserStore
@@ -191,7 +189,7 @@ class Core(
                     metrics
                 ),
                 ThumbnailsMiddleware(thumbnailStorage),
-                UndoMiddleware(::lookupSessionManager, context.getUndoDelay()),
+                UndoMiddleware(context.getUndoDelay()),
                 RegionMiddleware(context, locationService),
                 SearchMiddleware(
                     context,
@@ -203,18 +201,24 @@ class Core(
             )
 
         BrowserStore(
-            middleware = middlewareList + EngineMiddleware.create(engine, ::findSessionById)
-        )
-    }
+            middleware = middlewareList + EngineMiddleware.create(engine)
+        ).apply {
+            // Install the "icons" WebExtension to automatically load icons for every visited website.
+            icons.install(engine, this)
 
-    @Suppress("Deprecation")
-    private fun lookupSessionManager(): SessionManager {
-        return sessionManager
-    }
+            // Install the "ads" WebExtension to get the links in an partner page.
+            adsTelemetry.install(engine, this)
 
-    @Suppress("Deprecation")
-    private fun findSessionById(tabId: String): Session? {
-        return sessionManager.findSessionById(tabId)
+            // Install the "cookies" WebExtension and tracks user interaction with SERPs.
+            searchTelemetry.install(engine, this)
+
+            WebNotificationFeature(
+                context, engine, icons, R.drawable.ic_status_logo,
+                permissionStorage.permissionsStorage, HomeActivity::class.java
+            )
+
+            MediaSessionFeature(context, MediaSessionService::class.java, this).start()
+        }
     }
 
     /**
@@ -227,33 +231,6 @@ class Core(
      */
     val relationChecker: RelationChecker by lazyMonitored {
         StatementRelationChecker(StatementApi(client))
-    }
-
-    /**
-     * The session manager component provides access to a centralized registry of
-     * all browser sessions (i.e. tabs). It is initialized here to persist and restore
-     * sessions from the [SessionStorage], and with a default session (about:blank) in
-     * case all sessions/tabs are closed.
-     */
-    @Deprecated("Use browser store (for reading) and use cases (for writing) instead")
-    val sessionManager by lazyMonitored {
-        SessionManager(engine, store).also {
-            // Install the "icons" WebExtension to automatically load icons for every visited website.
-            icons.install(engine, store)
-
-            // Install the "ads" WebExtension to get the links in an partner page.
-            adsTelemetry.install(engine, store)
-
-            // Install the "cookies" WebExtension and tracks user interaction with SERPs.
-            searchTelemetry.install(engine, store)
-
-            WebNotificationFeature(
-                context, engine, icons, R.drawable.ic_status_logo,
-                permissionStorage.permissionsStorage, HomeActivity::class.java
-            )
-
-            MediaSessionFeature(context, MediaSessionService::class.java, store).start()
-        }
     }
 
     /**

@@ -66,13 +66,13 @@ class IntentProcessors(
     val externalAppIntentProcessors by lazyMonitored {
         listOf(
             TrustedWebActivityIntentProcessor(
-                addNewTabUseCase = tabsUseCases.addTab,
+                addNewTabUseCase = customTabsUseCases.add,
                 packageManager = context.packageManager,
                 relationChecker = relationChecker,
                 store = customTabsStore
             ),
-            WebAppIntentProcessor(store, tabsUseCases.addTab, sessionUseCases.loadUrl, manifestStorage),
-            FennecWebAppIntentProcessor(context, tabsUseCases.addTab, manifestStorage)
+            WebAppIntentProcessor(store, customTabsUseCases.addWebApp, sessionUseCases.loadUrl, manifestStorage),
+            FennecWebAppIntentProcessor(context, customTabsUseCases, manifestStorage)
         )
     }
 

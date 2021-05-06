@@ -101,7 +101,7 @@ class TelemetryMiddleware(
                 metrics.track(Event.DownloadAdded)
             }
             is EngineAction.KillEngineSessionAction -> {
-                val tab = context.state.findTabOrCustomTab(action.sessionId)
+                val tab = context.state.findTabOrCustomTab(action.tabId)
                 onEngineSessionKilled(context.state, tab)
             }
         }

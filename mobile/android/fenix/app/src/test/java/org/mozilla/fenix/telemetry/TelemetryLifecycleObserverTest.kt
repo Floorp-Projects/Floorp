@@ -6,8 +6,8 @@ package org.mozilla.fenix.telemetry
 
 import androidx.test.core.app.ApplicationProvider
 import io.mockk.mockk
-import mozilla.components.browser.session.engine.EngineMiddleware
 import mozilla.components.browser.state.action.EngineAction
+import mozilla.components.browser.state.engine.EngineMiddleware
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
@@ -85,7 +85,7 @@ class TelemetryLifecycleObserverTest {
                     createTab("https://getpocket.com", id = "pocket", crashed = true)
                 )
             ),
-            middleware = EngineMiddleware.create(engine = mockk(), sessionLookup = { null })
+            middleware = EngineMiddleware.create(engine = mockk())
         )
 
         val observer = TelemetryLifecycleObserver(store)

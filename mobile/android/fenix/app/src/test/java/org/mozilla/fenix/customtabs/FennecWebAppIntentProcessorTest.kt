@@ -6,7 +6,7 @@ package org.mozilla.fenix.customtabs
 
 import io.mockk.mockk
 import mozilla.components.feature.pwa.ManifestStorage
-import mozilla.components.feature.tabs.TabsUseCases
+import mozilla.components.feature.tabs.CustomTabsUseCases
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -59,7 +59,7 @@ class FennecWebAppIntentProcessorTest {
 }
 
 private fun createFennecWebAppIntentProcessor(): FennecWebAppIntentProcessor {
-    val useCase: TabsUseCases.AddNewTabUseCase = mockk(relaxed = true)
+    val useCase: CustomTabsUseCases = mockk(relaxed = true)
     val storage: ManifestStorage = mockk(relaxed = true)
 
     return FennecWebAppIntentProcessor(

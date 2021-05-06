@@ -266,10 +266,9 @@ class HistoryFragment : LibraryPageFragment<HistoryItem>(), UserInteractionHandl
 
         val homeActivity = activity as HomeActivity
         homeActivity.browsingModeManager.mode = mode
-        homeActivity.components.useCases.tabsUseCases.let { tabsUseCases ->
-            val addTab = if (mode == BrowsingMode.Private) tabsUseCases.addPrivateTab else tabsUseCases.addTab
-            addTab.invoke(item.url)
-        }
+        homeActivity.components.useCases.tabsUseCases.addTab.invoke(
+            item.url, private = (mode == BrowsingMode.Private)
+        )
 
         showTabTray()
     }

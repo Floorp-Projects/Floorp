@@ -11,7 +11,6 @@ import androidx.annotation.VisibleForTesting
 import androidx.core.content.ContextCompat
 import mozilla.components.browser.state.state.CustomTabConfig
 import mozilla.components.browser.state.state.SessionState
-import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.manifest.WebAppManifest
 import mozilla.components.concept.engine.manifest.WebAppManifestParser
 import mozilla.components.concept.engine.manifest.getOrNull
@@ -20,7 +19,7 @@ import mozilla.components.feature.intent.processing.IntentProcessor
 import mozilla.components.feature.pwa.ManifestStorage
 import mozilla.components.feature.pwa.ext.putWebAppManifest
 import mozilla.components.feature.pwa.ext.toCustomTabConfig
-import mozilla.components.feature.tabs.TabsUseCases
+import mozilla.components.feature.tabs.CustomTabsUseCases
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.utils.SafeIntent
 import mozilla.components.support.utils.toSafeIntent
@@ -36,7 +35,7 @@ import java.io.IOException
  */
 class FennecWebAppIntentProcessor(
     private val context: Context,
-    private val addNewTabUseCase: TabsUseCases.AddNewTabUseCase,
+    private val useCases: CustomTabsUseCases,
     private val storage: ManifestStorage
 ) : IntentProcessor {
     val logger = Logger("FennecWebAppIntentProcessor")
@@ -59,13 +58,20 @@ class FennecWebAppIntentProcessor(
 
         return if (!url.isNullOrEmpty() && matches(intent)) {
             val webAppManifest = runBlockingIncrement { loadManifest(safeIntent, url) }
-            val sessionId = addNewTabUseCase(
-                url = url,
-                source = SessionState.Source.HOME_SCREEN,
-                flags = EngineSession.LoadUrlFlags.external(),
-                webAppManifest = webAppManifest,
-                customTabConfig = webAppManifest?.toCustomTabConfig() ?: createFallbackCustomTabConfig()
-            )
+            val sessionId = if (webAppManifest != null) {
+                useCases.addWebApp(
+                    url = url,
+                    source = SessionState.Source.HOME_SCREEN,
+                    webAppManifest = webAppManifest,
+                    customTabConfig = webAppManifest.toCustomTabConfig()
+                )
+            } else {
+                useCases.add(
+                    url = url,
+                    source = SessionState.Source.HOME_SCREEN,
+                    customTabConfig = createFallbackCustomTabConfig()
+                )
+            }
             intent.putSessionId(sessionId)
 
             if (webAppManifest != null) {

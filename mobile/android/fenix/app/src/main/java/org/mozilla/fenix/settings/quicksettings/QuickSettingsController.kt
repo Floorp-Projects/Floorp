@@ -10,7 +10,6 @@ import androidx.core.net.toUri
 import androidx.navigation.NavController
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import mozilla.components.browser.session.Session
 import mozilla.components.browser.state.selector.findTabOrCustomTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.feature.session.SessionUseCases.ReloadUrlUseCase
@@ -66,7 +65,6 @@ interface QuickSettingsController {
  * in this Controller's Fragment.
  * @param ioScope [CoroutineScope] with an IO dispatcher used for structured concurrency.
  * @param navController NavController] used for navigation.
- * @param session [Session]? current browser state.
  * @param sitePermissions [SitePermissions]? list of website permissions and their status.
  * @param settings [Settings] application settings.
  * @param permissionStorage [PermissionStorage] app state for website permissions exception.

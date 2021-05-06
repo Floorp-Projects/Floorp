@@ -834,18 +834,27 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
         val startTime = components.core.engine.profiler?.getProfilerTime()
         val mode = browsingModeManager.mode
 
-        val loadUrlUseCase = if (newTab) {
-            when (mode) {
-                BrowsingMode.Private -> components.useCases.tabsUseCases.addPrivateTab
-                BrowsingMode.Normal -> components.useCases.tabsUseCases.addTab
-            }
-        } else components.useCases.sessionUseCases.loadUrl
+        val private = when (mode) {
+            BrowsingMode.Private -> true
+            BrowsingMode.Normal -> false
+        }
 
         // In situations where we want to perform a search but have no search engine (e.g. the user
         // has removed all of them, or we couldn't load any) we will pass searchTermOrURL to Gecko
         // and let it try to load whatever was entered.
         if ((!forceSearch && searchTermOrURL.isUrl()) || engine == null) {
-            loadUrlUseCase.invoke(searchTermOrURL.toNormalizedUrl(), flags)
+            if (newTab) {
+                components.useCases.tabsUseCases.addTab(
+                    url = searchTermOrURL.toNormalizedUrl(),
+                    flags = flags,
+                    private = private
+                )
+            } else {
+                components.useCases.sessionUseCases.loadUrl(
+                    url = searchTermOrURL.toNormalizedUrl(),
+                    flags = flags
+                )
+            }
 
             if (requestDesktopMode) {
                 handleRequestDesktopMode()

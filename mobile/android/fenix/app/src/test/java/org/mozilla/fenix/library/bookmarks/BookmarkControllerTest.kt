@@ -66,7 +66,6 @@ class BookmarkControllerTest {
     private val homeActivity: HomeActivity = mockk(relaxed = true)
     private val services: Services = mockk(relaxed = true)
     private val addNewTabUseCase: TabsUseCases.AddNewTabUseCase = mockk(relaxed = true)
-    private val addNewPrivateTabUseCase: TabsUseCases.AddNewPrivateTabUseCase = mockk(relaxed = true)
 
     private val item =
         BookmarkNode(BookmarkNodeType.ITEM, "456", "123", 0, "Mozilla", "http://mozilla.org", null)
@@ -106,7 +105,6 @@ class BookmarkControllerTest {
         every { bookmarkStore.dispatch(any()) } returns mockk()
         every { sharedViewModel.selectedFolder = any() } just runs
         every { tabsUseCases.addTab } returns addNewTabUseCase
-        every { tabsUseCases.addPrivateTab } returns addNewPrivateTabUseCase
 
         controller = DefaultBookmarkController(
             activity = homeActivity,
@@ -293,8 +291,7 @@ class BookmarkControllerTest {
         verifyOrder {
             invokePendingDeletion.invoke()
             homeActivity.browsingModeManager.mode = BrowsingMode.Normal
-            tabsUseCases.addTab
-            addNewTabUseCase.invoke(item.url!!)
+            addNewTabUseCase.invoke(item.url!!, private = false)
             showTabTray
         }
     }
@@ -306,8 +303,7 @@ class BookmarkControllerTest {
         verifyOrder {
             invokePendingDeletion.invoke()
             homeActivity.browsingModeManager.mode = BrowsingMode.Private
-            tabsUseCases.addPrivateTab
-            addNewPrivateTabUseCase.invoke(item.url!!)
+            addNewTabUseCase.invoke(item.url!!, private = true)
             showTabTray
         }
     }

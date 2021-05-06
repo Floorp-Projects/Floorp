@@ -24,8 +24,8 @@ class RemoveTabUseCaseWrapper(
     private val metrics: MetricController,
     private val onRemove: (String) -> Unit
 ) : TabsUseCases.RemoveTabUseCase {
-    override fun invoke(sessionId: String) {
+    override fun invoke(tabId: String) {
         metrics.track(Event.ClosedExistingTab)
-        onRemove(sessionId)
+        onRemove(tabId)
     }
 }

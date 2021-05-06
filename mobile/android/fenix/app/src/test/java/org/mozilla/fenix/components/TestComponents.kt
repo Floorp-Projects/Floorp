@@ -21,7 +21,6 @@ class TestComponents(private val context: Context) : Components(context) {
         UseCases(
             context,
             core.engine,
-            core.sessionManager,
             core.store,
             core.webAppShortcutManager,
             core.topSitesStorage,

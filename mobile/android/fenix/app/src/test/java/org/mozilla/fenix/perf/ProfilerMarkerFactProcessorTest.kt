@@ -83,7 +83,7 @@ private fun newFact(
     action: Action,
     item: String = "itemName"
 ) = Fact(
-    Component.BROWSER_SESSION,
+    Component.BROWSER_STATE,
     action,
     item
 )

@@ -26,11 +26,10 @@ abstract class LibraryPageFragment<T> : Fragment() {
 
     protected fun openItemsInNewTab(private: Boolean = false, toUrl: (T) -> String?) {
         context?.components?.useCases?.tabsUseCases?.let { tabsUseCases ->
-            val addTab = if (private) tabsUseCases.addPrivateTab else tabsUseCases.addTab
             selectedItems.asSequence()
                 .mapNotNull(toUrl)
                 .forEach { url ->
-                    addTab.invoke(url)
+                    tabsUseCases.addTab.invoke(url, private = private)
                 }
         }
 
