@@ -17626,44 +17626,6 @@ bool js::wasm::BaselineCompileFunctions(const ModuleEnvironment& moduleEnv,
   return code->swap(masm);
 }
 
-#ifdef DEBUG
-bool js::wasm::IsValidStackMapKey(bool debugEnabled, const uint8_t* nextPC) {
-#  if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_X86)
-  const uint8_t* insn = nextPC;
-  return (insn[-2] == 0x0F && insn[-1] == 0x0B) ||           // ud2
-         (insn[-2] == 0xFF && (insn[-1] & 0xF8) == 0xD0) ||  // call *%r_
-         insn[-5] == 0xE8 ||                                 // call simm32
-         (debugEnabled && insn[-5] == 0x0F && insn[-4] == 0x1F &&
-          insn[-3] == 0x44 && insn[-2] == 0x00 &&
-          insn[-1] == 0x00);  // nop_five
-
-#  elif defined(JS_CODEGEN_ARM)
-  const uint32_t* insn = (const uint32_t*)nextPC;
-  return ((uintptr_t(insn) & 3) == 0) &&              // must be ARM, not Thumb
-         (insn[-1] == 0xe7f000f0 ||                   // udf
-          (insn[-1] & 0xfffffff0) == 0xe12fff30 ||    // blx reg (ARM, enc A1)
-          (insn[-1] & 0xff000000) == 0xeb000000 ||    // bl simm24 (ARM, enc A1)
-          (debugEnabled && insn[-1] == 0xe320f000));  // "as_nop"
-
-#  elif defined(JS_CODEGEN_ARM64)
-  const uint32_t hltInsn = 0xd4a00000;
-  const uint32_t* insn = (const uint32_t*)nextPC;
-  return ((uintptr_t(insn) & 3) == 0) &&
-         (insn[-1] == hltInsn ||                      // hlt
-          (insn[-1] & 0xfffffc1f) == 0xd63f0000 ||    // blr reg
-          (insn[-1] & 0xfc000000) == 0x94000000 ||    // bl simm26
-          (debugEnabled && insn[-1] == 0xd503201f));  // nop
-
-#  elif defined(JS_CODEGEN_MIPS64)
-  // TODO (bug 1699696): Implement this.  As for the platforms above, we need to
-  // enumerate all code sequences that can precede the stack map location.
-  return true;
-#  else
-  MOZ_CRASH("IsValidStackMapKey: requires implementation on this platform");
-#  endif
-}
-#endif
-
 #undef RABALDR_INT_DIV_I64_CALLOUT
 #undef RABALDR_I64_TO_FLOAT_CALLOUT
 #undef RABALDR_FLOAT_TO_I64_CALLOUT
