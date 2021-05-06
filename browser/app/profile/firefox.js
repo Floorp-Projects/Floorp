@@ -354,6 +354,12 @@ pref("browser.urlbar.suggest.calculator",           false);
 // Whether the QuickSuggest experiment is enabled.
 pref("browser.urlbar.quicksuggest.enabled", false);
 
+// Whether to show the QuickSuggest onboarding dialog.
+pref("browser.urlbar.quicksuggest.shouldShowOnboardingDialog", true);
+
+// Show QuickSuggest onboarding dialog on the nth browser restarts.
+pref("browser.urlbar.quicksuggest.showOnboardingDialogAfterNRestarts", 2);
+
 // Whether to show search suggestions before general results like history and
 // bookmarks.
 pref("browser.urlbar.showSearchSuggestionsFirst", true);
