@@ -12,9 +12,14 @@ enum PlacesEventType {
   "bookmark-added",
   /**
    * data: PlacesBookmarkRemoved. Fired whenever a bookmark
-   * (or a bookmark folder/separator) is created.
+   * (or a bookmark folder/separator) is removed.
    */
   "bookmark-removed",
+  /**
+   * data: PlacesBookmarkMoved. Fired whenever a bookmark
+   * (or a bookmark folder/separator) is moved.
+   */
+  "bookmark-moved",
   /**
    * data: PlacesFavicon. Fired whenever a favicon changes.
    */
@@ -215,6 +220,42 @@ interface PlacesBookmarkRemoved : PlacesBookmark {
    * The item is a descendant of an item whose notification has been sent out.
    */
   readonly attribute boolean isDescendantRemoval;
+};
+
+dictionary PlacesBookmarkMovedInit {
+  required long long id;
+  required unsigned short itemType;
+  DOMString? url = null;
+  required ByteString guid;
+  required ByteString parentGuid;
+  required long index;
+  required ByteString oldParentGuid;
+  required long oldIndex;
+  required unsigned short source;
+  required boolean isTagging;
+};
+
+[ChromeOnly, Exposed=Window]
+/**
+ * NOTE: Though PlacesBookmarkMoved extends PlacesBookmark,
+ *       parentId will not be set. Use parentGuid instead.
+ */
+interface PlacesBookmarkMoved : PlacesBookmark {
+  constructor(PlacesBookmarkMovedInit initDict);
+  /**
+   * The item's index in the folder.
+   */
+  readonly attribute long index;
+
+  /**
+   * The unique ID associated with the item's old parent.
+   */
+  readonly attribute ByteString oldParentGuid;
+
+  /**
+   * The item's old index in the folder.
+   */
+  readonly attribute long oldIndex;
 };
 
 dictionary PlacesFaviconInit {
