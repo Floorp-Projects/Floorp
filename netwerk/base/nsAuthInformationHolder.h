@@ -15,7 +15,7 @@ class nsAuthInformationHolder : public nsIAuthInformation {
  public:
   // aAuthType must be ASCII
   nsAuthInformationHolder(uint32_t aFlags, const nsString& aRealm,
-                          const nsCString& aAuthType)
+                          const nsACString& aAuthType)
       : mFlags(aFlags), mRealm(aRealm), mAuthType(aAuthType) {}
 
   NS_DECL_ISUPPORTS

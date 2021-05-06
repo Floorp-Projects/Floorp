@@ -49,7 +49,7 @@ interface nsIHttpAuthenticator : nsISupports
      */
     [must_use]
     void challengeReceived(in    nsIHttpAuthenticableChannel aChannel,
-                           in    string       aChallenge,
+                           in    ACString     aChallenge,
                            in    boolean      aProxyAuth,
                            inout nsISupports  aSessionState,
                            inout nsISupports  aContinuationState,
@@ -96,11 +96,11 @@ interface nsIHttpAuthenticator : nsISupports
     [must_use]
     void generateCredentialsAsync(in    nsIHttpAuthenticableChannel aChannel,
                                   in    nsIHttpAuthenticatorCallback aCallback,
-                                  in    string         aChallenge,
+                                  in    ACString       aChallenge,
                                   in    boolean        aProxyAuth,
-                                  in    wstring        aDomain,
-                                  in    wstring        aUser,
-                                  in    wstring        aPassword,
+                                  in    AString        aDomain,
+                                  in    AString        aUser,
+                                  in    AString        aPassword,
                                   in    nsISupports    aSessionState,
                                   in    nsISupports    aContinuationState,
                                   out   nsICancelable  aCancel);
@@ -141,12 +141,12 @@ interface nsIHttpAuthenticator : nsISupports
      *        authenticator may return one of the generate flags bellow.
      */
     [must_use]
-    string generateCredentials(in    nsIHttpAuthenticableChannel aChannel,
-                               in    string         aChallenge,
+    ACString generateCredentials(in    nsIHttpAuthenticableChannel aChannel,
+                               in    ACString       aChallenge,
                                in    boolean        aProxyAuth,
-                               in    wstring        aDomain,
-                               in    wstring        aUser,
-                               in    wstring        aPassword,
+                               in    AString        aDomain,
+                               in    AString        aUser,
+                               in    AString        aPassword,
                                inout nsISupports    aSessionState,
                                inout nsISupports    aContinuationState,
                                out   unsigned long  aFlags);

@@ -60,11 +60,11 @@ interface nsIAuthModule : nsISupports
      * @param aPassword
      *        the user's password
      */
-    void init(in string        aServiceName,
+    void init(in ACString        aServiceName,
               in unsigned long aServiceFlags,
-              in wstring       aDomain,
-              in wstring       aUsername,
-              in wstring       aPassword);
+              in AString       aDomain,
+              in AString       aUsername,
+              in AString       aPassword);
 
     /**
      * Called to get the next token in a sequence of authentication steps.
