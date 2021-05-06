@@ -37,10 +37,10 @@ class OverscrollAnimation : public AsyncPanZoomAnimation {
   virtual bool DoSample(FrameMetrics& aFrameMetrics,
                         const TimeDuration& aDelta) override {
     // Can't inline these variables due to short-circuit evaluation.
-    bool continueX = mApzc.mX.IsOverscrollAnimationRunning() &&
-                     mApzc.mX.SampleOverscrollAnimation(aDelta);
-    bool continueY = mApzc.mY.IsOverscrollAnimationRunning() &&
-                     mApzc.mY.SampleOverscrollAnimation(aDelta);
+    bool continueX =
+        mApzc.mX.IsOverscrolled() && mApzc.mX.SampleOverscrollAnimation(aDelta);
+    bool continueY =
+        mApzc.mY.IsOverscrolled() && mApzc.mY.SampleOverscrollAnimation(aDelta);
     if (!continueX && !continueY) {
       // If we got into overscroll from a fling, that fling did not request a
       // fling snap to avoid a resulting scrollTo from cancelling the overscroll
