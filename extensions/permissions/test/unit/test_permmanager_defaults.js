@@ -60,6 +60,9 @@ add_task(async function do_test() {
   let permIsolateUserContext = Services.prefs.getBoolPref(
     "permissions.isolateBy.userContext"
   );
+  let permIsolatePrivateBrowsing = Services.prefs.getBoolPref(
+    "permissions.isolateBy.privateBrowsing"
+  );
 
   let pm = Services.perms;
 
@@ -92,7 +95,12 @@ add_task(async function do_test() {
   );
 
   attrs = { userContextId: 1 };
-  let principal6 = Services.scriptSecurityManager.createContentPrincipal(
+  let principal1UserContext = Services.scriptSecurityManager.createContentPrincipal(
+    TEST_ORIGIN,
+    attrs
+  );
+  attrs = { privateBrowsingId: 1 };
+  let principal1PrivateBrowsing = Services.scriptSecurityManager.createContentPrincipal(
     TEST_ORIGIN,
     attrs
   );
@@ -122,6 +130,16 @@ add_task(async function do_test() {
   Assert.equal(
     Ci.nsIPermissionManager.ALLOW_ACTION,
     pm.testPermissionFromPrincipal(principal4, TEST_PERMISSION)
+  );
+  // Depending on the prefs there are two scenarios here:
+  // 1. We isolate by private browsing: The permission mgr should
+  //    add default permissions for these principals too.
+  // 2. We don't isolate by private browsing: The permission
+  //    check will strip the private browsing origin attribute.
+  //    In this case the used internally for the lookup is always principal1.
+  Assert.equal(
+    Ci.nsIPermissionManager.ALLOW_ACTION,
+    pm.testPermissionFromPrincipal(principal1PrivateBrowsing, TEST_PERMISSION)
   );
 
   // Didn't add
@@ -158,13 +176,18 @@ add_task(async function do_test() {
     Ci.nsIPermissionManager.ALLOW_ACTION,
     pm.testPermissionFromPrincipal(principal4, TEST_PERMISSION)
   );
+  // Default permission should have also been added for private browsing.
+  Assert.equal(
+    Ci.nsIPermissionManager.ALLOW_ACTION,
+    pm.testPermissionFromPrincipal(principal1PrivateBrowsing, TEST_PERMISSION)
+  );
   // make sure principals with userContextId use the same / different permissions
   // depending on pref state
   Assert.equal(
     permIsolateUserContext
       ? Ci.nsIPermissionManager.UNKNOWN_ACTION
       : Ci.nsIPermissionManager.ALLOW_ACTION,
-    pm.testPermissionFromPrincipal(principal6, TEST_PERMISSION)
+    pm.testPermissionFromPrincipal(principal1UserContext, TEST_PERMISSION)
   );
   // make sure principals with a firstPartyDomain use different permissions
   Assert.equal(
@@ -187,7 +210,15 @@ add_task(async function do_test() {
   // (Should be unknown with and without OA stripping )
   Assert.equal(
     Ci.nsIPermissionManager.UNKNOWN_ACTION,
-    pm.testPermissionFromPrincipal(principal6, TEST_PERMISSION)
+    pm.testPermissionFromPrincipal(principal1UserContext, TEST_PERMISSION)
+  );
+  // If we isolate by private browsing, the permission should still be present
+  // for the private browsing principal.
+  Assert.equal(
+    permIsolatePrivateBrowsing
+      ? Ci.nsIPermissionManager.ALLOW_ACTION
+      : Ci.nsIPermissionManager.UNKNOWN_ACTION,
+    pm.testPermissionFromPrincipal(principal1PrivateBrowsing, TEST_PERMISSION)
   );
   // and we should have this UNKNOWN_ACTION reflected in the DB
   await checkCapabilityViaDB(Ci.nsIPermissionManager.UNKNOWN_ACTION);
@@ -201,12 +232,17 @@ add_task(async function do_test() {
     Ci.nsIPermissionManager.ALLOW_ACTION,
     pm.testPermissionFromPrincipal(principal, TEST_PERMISSION)
   );
+  // Make sure default imports work for private browsing after removeAll.
+  Assert.equal(
+    Ci.nsIPermissionManager.ALLOW_ACTION,
+    pm.testPermissionFromPrincipal(principal1PrivateBrowsing, TEST_PERMISSION)
+  );
   // make sure principals with userContextId share permissions depending on pref state
   Assert.equal(
     permIsolateUserContext
       ? Ci.nsIPermissionManager.UNKNOWN_ACTION
       : Ci.nsIPermissionManager.ALLOW_ACTION,
-    pm.testPermissionFromPrincipal(principal6, TEST_PERMISSION)
+    pm.testPermissionFromPrincipal(principal1UserContext, TEST_PERMISSION)
   );
   // make sure principals with firstPartyDomain use different permissions
   Assert.equal(
@@ -232,12 +268,21 @@ add_task(async function do_test() {
     Ci.nsIPermissionManager.DENY_ACTION,
     pm.testPermissionFromPrincipal(principal, TEST_PERMISSION)
   );
-  // make sure principals with userContextId share permissions depending on pref state
+  // make sure principals with userContextId use the same / different permissions
+  // depending on pref state
   Assert.equal(
     permIsolateUserContext
       ? Ci.nsIPermissionManager.UNKNOWN_ACTION
       : Ci.nsIPermissionManager.DENY_ACTION,
-    pm.testPermissionFromPrincipal(principal6, TEST_PERMISSION)
+    pm.testPermissionFromPrincipal(principal1UserContext, TEST_PERMISSION)
+  );
+  // If we isolate by private browsing, we should still have the default perm
+  // for the private browsing principal.
+  Assert.equal(
+    permIsolatePrivateBrowsing
+      ? Ci.nsIPermissionManager.ALLOW_ACTION
+      : Ci.nsIPermissionManager.DENY_ACTION,
+    pm.testPermissionFromPrincipal(principal1PrivateBrowsing, TEST_PERMISSION)
   );
   // make sure principals with firstPartyDomain use different permissions
   Assert.equal(
@@ -264,12 +309,21 @@ add_task(async function do_test() {
     Ci.nsIPermissionManager.PROMPT_ACTION,
     pm.testPermissionFromPrincipal(principal, TEST_PERMISSION)
   );
-  // make sure principals with userContextId share permissions depending on pref state
+  // make sure principals with userContextId use the same / different permissions
+  // depending on pref state
   Assert.equal(
     permIsolateUserContext
       ? Ci.nsIPermissionManager.UNKNOWN_ACTION
       : Ci.nsIPermissionManager.PROMPT_ACTION,
-    pm.testPermissionFromPrincipal(principal6, TEST_PERMISSION)
+    pm.testPermissionFromPrincipal(principal1UserContext, TEST_PERMISSION)
+  );
+  // If we isolate by private browsing, we should still have the default perm
+  // for the private browsing principal.
+  Assert.equal(
+    permIsolatePrivateBrowsing
+      ? Ci.nsIPermissionManager.ALLOW_ACTION
+      : Ci.nsIPermissionManager.PROMPT_ACTION,
+    pm.testPermissionFromPrincipal(principal1PrivateBrowsing, TEST_PERMISSION)
   );
   // make sure principals with firstPartyDomain use different permissions
   Assert.equal(
