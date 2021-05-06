@@ -6,6 +6,8 @@
  * This is an internal IDL file
  */
 
+interface nsIMediaDevice;
+
 // For gUM request start (getUserMedia:request) notification,
 // rawID, mediaSource and audioOutputOptions won't be set.
 // For selectAudioOutput request start (getUserMedia:request) notification,
@@ -30,6 +32,9 @@ interface GetUserMediaRequest {
   readonly attribute DOMString callID;
   readonly attribute DOMString rawID;
   readonly attribute DOMString mediaSource;
+  // The set of devices to consider
+  [Constant, Cached, Frozen]
+  readonly attribute sequence<nsIMediaDevice> devices;
   MediaStreamConstraints getConstraints();
   AudioOutputOptions getAudioOutputOptions();
   readonly attribute boolean isSecure;

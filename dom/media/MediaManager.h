@@ -232,11 +232,6 @@ class MediaManager final : public nsIMediaManagerService,
       const dom::MediaStreamConstraints& aConstraints,
       dom::CallerType aCallerType);
 
-  MOZ_CAN_RUN_SCRIPT
-  nsresult GetUserMediaDevices(
-      nsPIDOMWindowInner* aWindow,
-      dom::MozGetUserMediaDevicesSuccessCallback& aOnSuccess,
-      uint64_t aInnerWindowID = 0, const nsAString& aCallID = nsString());
   RefPtr<DeviceSetPromise> EnumerateDevices(nsPIDOMWindowInner* aWindow,
                                             dom::CallerType aCallerType);
 
@@ -281,8 +276,6 @@ class MediaManager final : public nsIMediaManagerService,
   static void AnonymizeDevices(MediaDeviceSet& aDevices,
                                const nsACString& aOriginKey,
                                const uint64_t aWindowId);
-  static already_AddRefed<nsIWritableVariant> ToJSArray(
-      MediaDeviceSet& aDevices);
 
   /**
    * This function tries to guess the group id for a video device in aDevices

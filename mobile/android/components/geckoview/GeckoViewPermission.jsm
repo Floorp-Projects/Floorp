@@ -91,23 +91,16 @@ class GeckoViewPermission {
 
   handleMediaRequest(aRequest) {
     const constraints = aRequest.getConstraints();
-    const callId = aRequest.callID;
+    const { callID, devices } = aRequest;
     const denyRequest = _ => {
-      Services.obs.notifyObservers(null, "getUserMedia:response:deny", callId);
+      Services.obs.notifyObservers(null, "getUserMedia:response:deny", callID);
     };
 
     const win = Services.wm.getOuterWindowWithId(aRequest.windowID);
-    new Promise((resolve, reject) => {
-      win.navigator.mozGetUserMediaDevices(
-        resolve,
-        reject,
-        aRequest.innerWindowID,
-        callId
-      );
-      // Release the request first.
-      aRequest = undefined;
-    })
-      .then(devices => {
+    // Release the request first.
+    aRequest = undefined;
+    Promise.resolve()
+      .then(() => {
         if (win.closed) {
           return Promise.resolve();
         }
@@ -181,7 +174,7 @@ class GeckoViewPermission {
             Services.obs.notifyObservers(
               allowedDevices,
               "getUserMedia:response:allow",
-              callId
+              callID
             );
           });
       })
