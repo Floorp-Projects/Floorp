@@ -105,7 +105,6 @@ XPC_MSG_DEF(NS_ERROR_FILE_TARGET_DOES_NOT_EXIST     , "File error: Target does n
 XPC_MSG_DEF(NS_ERROR_FILE_COPY_OR_MOVE_FAILED       , "File error: Copy or move failed")
 XPC_MSG_DEF(NS_ERROR_FILE_ALREADY_EXISTS            , "File error: Already exists")
 XPC_MSG_DEF(NS_ERROR_FILE_INVALID_PATH              , "File error: Invalid path")
-XPC_MSG_DEF(NS_ERROR_FILE_DISK_FULL                 , "File error: Disk full")
 XPC_MSG_DEF(NS_ERROR_FILE_CORRUPTED                 , "File error: Corrupted")
 XPC_MSG_DEF(NS_ERROR_FILE_NOT_DIRECTORY             , "File error: Not directory")
 XPC_MSG_DEF(NS_ERROR_FILE_IS_DIRECTORY              , "File error: Is directory")

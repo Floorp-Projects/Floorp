@@ -2053,7 +2053,7 @@ static uint32_t StatusToTelemetryEnum(nsresult aStatus) {
       return 0;  // Log this as a success
     case NS_ERROR_OUT_OF_MEMORY:
       return 2;
-    case NS_ERROR_FILE_DISK_FULL:
+    case NS_ERROR_FILE_NO_DEVICE_SPACE:
       return 3;
     case NS_ERROR_FILE_CORRUPTED:
       return 4;
