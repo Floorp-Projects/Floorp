@@ -1304,7 +1304,6 @@ function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj;
  *
  * Both are fine, but cannot be mixed for the same module.
  */
-// $FlowIgnore
 // Modules imported without destructuring
 // We cannot directly export literals containing special characters
 // (eg. "my-module/Test") which is why they are nested in "vendored".

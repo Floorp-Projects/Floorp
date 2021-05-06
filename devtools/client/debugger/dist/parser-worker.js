@@ -8314,12 +8314,12 @@ const sourceOptions = {
   generated: {
     sourceType: "unambiguous",
     tokens: true,
-    plugins: ["classProperties", "objectRestSpread", "optionalChaining", "nullishCoalescingOperator"]
+    plugins: ["classPrivateProperties", "classPrivateMethods", "classProperties", "objectRestSpread", "optionalChaining", "nullishCoalescingOperator"]
   },
   original: {
     sourceType: "unambiguous",
     tokens: true,
-    plugins: ["jsx", "flow", "doExpressions", "optionalChaining", "nullishCoalescingOperator", "decorators-legacy", "objectRestSpread", "classProperties", "exportDefaultFrom", "exportNamespaceFrom", "asyncGenerators", "functionBind", "functionSent", "dynamicImport", "react-jsx"]
+    plugins: ["jsx", "flow", "doExpressions", "optionalChaining", "nullishCoalescingOperator", "decorators-legacy", "objectRestSpread", "classPrivateProperties", "classPrivateMethods", "classProperties", "exportDefaultFrom", "exportNamespaceFrom", "asyncGenerators", "functionBind", "functionSent", "dynamicImport", "react-jsx"]
   }
 };
 
@@ -8391,7 +8391,7 @@ function parseVueScript(code) {
 function parseConsoleScript(text, opts) {
   try {
     return _parse(text, {
-      plugins: ["objectRestSpread", "dynamicImport", "nullishCoalescingOperator", "optionalChaining"],
+      plugins: ["classPrivateProperties", "classPrivateMethods", "objectRestSpread", "dynamicImport", "nullishCoalescingOperator", "optionalChaining"],
       ...opts,
       allowAwaitOutsideFunction: true
     });
@@ -16197,6 +16197,8 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.default = createSimplePath;
 
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
@@ -16209,14 +16211,23 @@ function createSimplePath(ancestors) {
 
   return new SimplePath(ancestors.slice());
 }
-
 /**
  * Mimics @babel/traverse's NodePath API in a simpler fashion that isn't as
  * heavy, but still allows the ease of passing paths around to process nested
  * AST structures.
  */
+
+
 class SimplePath {
   constructor(ancestors, index = ancestors.length - 1) {
+    _defineProperty(this, "_index", void 0);
+
+    _defineProperty(this, "_ancestors", void 0);
+
+    _defineProperty(this, "_ancestor", void 0);
+
+    _defineProperty(this, "_parentPath", void 0);
+
     if (index < 0 || index >= ancestors.length) {
       console.error(ancestors);
       throw new Error("Created invalid path");
@@ -30219,7 +30230,6 @@ function findScopes(scopes, location) {
 function compareLocations(a, b) {
   // According to type of Location.column can be undefined, if will not be the
   // case here, ignoring flow error.
-  // $FlowIgnore
   return a.line == b.line ? a.column - b.column : a.line - b.line;
 }
 
@@ -44876,6 +44886,29 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+/**
+ * "implicit"
+ * Variables added automaticly like "this" and "arguments"
+ *
+ * "var"
+ * Variables declared with "var" or non-block function declarations
+ *
+ * "let"
+ * Variables declared with "let".
+ *
+ * "const"
+ * Variables declared with "const", or added as const
+ * bindings like inner function expressions and inner class names.
+ *
+ * "import"
+ * Imported binding names exposed from other modules.
+ *
+ * "global"
+ * Variables that reference undeclared global values.
+ */
+// Location information about the expression immediartely surrounding a
+// given binding reference.
 function isGeneratedId(id) {
   return !/\/originalSource/.test(id);
 }

@@ -39,7 +39,7 @@ add_task(async function() {
   ]);
 
   await previews(dbg, "classPreview", [
-    { line: 45, column: 20, expression: "this.x", result: 1 },
+    { line: 49, column: 20, expression: "this.x", result: 1 },
   ]);
 });
 
