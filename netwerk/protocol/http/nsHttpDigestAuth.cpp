@@ -23,9 +23,12 @@
 #include "nsICryptoHash.h"
 #include "nsComponentManagerUtils.h"
 
-#define DigestLength(algorithm)                                            \
-  (((algorithm) & (ALGO_SHA256 | ALGO_SHA256_SESS)) ? SHA256_DIGEST_LENGTH \
-                                                    : MD5_DIGEST_LENGTH)
+constexpr uint16_t DigestLength(uint16_t aAlgorithm) {
+  if (aAlgorithm & (ALGO_SHA256 | ALGO_SHA256_SESS)) {
+    return SHA256_DIGEST_LENGTH;
+  }
+  return MD5_DIGEST_LENGTH;
+}
 
 namespace mozilla {
 namespace net {
