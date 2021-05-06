@@ -880,35 +880,29 @@ static inline void draw_quad_spans(int nump, Point2D p[4], uint32_t z,
       // If we're outside the clip rect, we're done.
       if (y > clipRect.y1) break;
         // Helper to find the next non-duplicate vertex that doesn't loop back.
-#define STEP_EDGE(e0i, e0, e1i, e1, STEP_POINT, end)               \
-  for (;;) {                                                       \
-    /* Set new start of edge to be end of old edge */              \
-    e0i = e1i;                                                     \
-    e0 = e1;                                                       \
-    /* Set new end of edge to next point */                        \
-    e1i = STEP_POINT(e1i);                                         \
-    e1 = p[e1i];                                                   \
-    /* If the edge is descending, use it. */                       \
-    if (e1.y > e0.y) break;                                        \
-    /* If the edge is ascending or crossed the end, we're done. */ \
-    if (e1.y < e0.y || e0i == end) return;                         \
-    /* Otherwise, it's a duplicate, so keep searching. */          \
-  }
+#define STEP_EDGE(y, e0i, e0, e1i, e1, STEP_POINT, end)     \
+  do {                                                      \
+    /* Set new start of edge to be end of old edge */       \
+    e0i = e1i;                                              \
+    e0 = e1;                                                \
+    /* Set new end of edge to next point */                 \
+    e1i = STEP_POINT(e1i);                                  \
+    e1 = p[e1i];                                            \
+    /* If the edge crossed the end, we're done. */          \
+    if (e0i == end) return;                                 \
+    /* Otherwise, it doesn't advance, so keep searching. */ \
+  } while (y > e1.y)
       // Check if Y advanced past the end of the left edge
       if (y > l1.y) {
         // Step to next left edge past Y and reset edge interpolants.
-        do {
-          STEP_EDGE(l0i, l0, l1i, l1, NEXT_POINT, r1i);
-        } while (y > l1.y);
+        STEP_EDGE(y, l0i, l0, l1i, l1, NEXT_POINT, r1i);
         (flipped ? right : left) =
             Edge(y, l0, l1, interp_outs[l0i], interp_outs[l1i], l1i);
       }
       // Check if Y advanced past the end of the right edge
       if (y > r1.y) {
         // Step to next right edge past Y and reset edge interpolants.
-        do {
-          STEP_EDGE(r0i, r0, r1i, r1, PREV_POINT, l1i);
-        } while (y > r1.y);
+        STEP_EDGE(y, r0i, r0, r1i, r1, PREV_POINT, l1i);
         (flipped ? left : right) =
             Edge(y, r0, r1, interp_outs[r0i], interp_outs[r1i], r0i);
       }
@@ -1146,18 +1140,14 @@ static inline void draw_perspective_spans(int nump, Point3D* p,
       // Check if Y advanced past the end of the left edge
       if (y > l1.y) {
         // Step to next left edge past Y and reset edge interpolants.
-        do {
-          STEP_EDGE(l0i, l0, l1i, l1, NEXT_POINT, r1i);
-        } while (y > l1.y);
+        STEP_EDGE(y, l0i, l0, l1i, l1, NEXT_POINT, r1i);
         (flipped ? right : left) =
             Edge(y, l0, l1, interp_outs[l0i], interp_outs[l1i], l1i);
       }
       // Check if Y advanced past the end of the right edge
       if (y > r1.y) {
         // Step to next right edge past Y and reset edge interpolants.
-        do {
-          STEP_EDGE(r0i, r0, r1i, r1, PREV_POINT, l1i);
-        } while (y > r1.y);
+        STEP_EDGE(y, r0i, r0, r1i, r1, PREV_POINT, l1i);
         (flipped ? left : right) =
             Edge(y, r0, r1, interp_outs[r0i], interp_outs[r1i], r0i);
       }
