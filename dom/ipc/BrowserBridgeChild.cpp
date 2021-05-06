@@ -217,8 +217,8 @@ mozilla::ipc::IPCResult BrowserBridgeChild::RecvScrollRectIntoView(
       aRect.ScaleToOtherAppUnitsRoundOut(aAppUnitsPerDevPixel, parentAPD);
   rect += extraOffset;
   RefPtr<PresShell> presShell = frame->PresShell();
-  presShell->ScrollFrameRectIntoView(frame, rect, aVertical, aHorizontal,
-                                     aScrollFlags);
+  presShell->ScrollFrameRectIntoView(frame, rect, nsMargin(), aVertical,
+                                     aHorizontal, aScrollFlags);
 
   return IPC_OK();
 }
