@@ -1164,12 +1164,14 @@ description#identity-popup-content-verifier,
   /* Override .protections-popup-section */
   border-top: none;
   background-color: var(--arrowpanel-dimmed);
+  border-radius: var(--arrowpanel-menuitem-padding);
 }
 
 #protections-popup-milestones-content {
   appearance: none;
   padding: var(--vertical-section-padding) calc(var(--horizontal-padding) * 0.5);
   margin: 0;
+  border-radius: var(--arrowpanel-menuitem-padding);
 }
 
 #protections-popup-milestones-content:hover,
@@ -1182,7 +1184,7 @@ description#identity-popup-content-verifier,
 }
 
 #protections-popup-milestones-text {
-  font-size: 1.23em;
+  font-weight: 600;
   margin: 0;
 }
 
@@ -1271,6 +1273,16 @@ description#identity-popup-content-verifier,
 #protections-popup-tp-switch-breakage-link,
 #protections-popup-tp-switch-breakage-fixed-link {
   margin-top: calc(0.5 * var(--vertical-section-padding)) !important;
+}
+
+#protections-popup-milestones-content,
+#protections-popup-milestones {
+  border-radius: 0;
+}
+
+#protections-popup-milestones-text {
+  font-weight: normal;
+  font-size: 1.23em;
 }
 
 .protections-popup-footer-icon {
