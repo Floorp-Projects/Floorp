@@ -11,7 +11,12 @@ add_task(async function test_setup() {
 });
 
 add_task(async function() {
+  const promiseFocusInSearchBar = BrowserTestUtils.waitForEvent(
+    BrowserSearch.searchBar.textbox,
+    "focus"
+  );
   BrowserSearch.searchBar.focus();
+  await promiseFocusInSearchBar;
 
   let DOMWindowUtils = EventUtils._getDOMWindowUtils();
   is(
