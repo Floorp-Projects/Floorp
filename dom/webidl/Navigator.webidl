@@ -256,24 +256,6 @@ partial interface Navigator {
                        NavigatorUserMediaErrorCallback errorCallback);
 };
 
-// nsINavigatorUserMedia
-callback MozGetUserMediaDevicesSuccessCallback = void (nsIVariant? devices);
-partial interface Navigator {
-  [Throws, ChromeOnly]
-  void mozGetUserMediaDevices(MozGetUserMediaDevicesSuccessCallback onsuccess,
-                              NavigatorUserMediaErrorCallback onerror,
-                              // The originating innerWindowID is needed to
-                              // avoid calling the callbacks if the window has
-                              // navigated away. It is optional only as legacy.
-                              optional unsigned long long innerWindowID = 0,
-                              // The callID is needed in case of multiple
-                              // concurrent requests to find the right one.
-                              // It is optional only as legacy.
-                              // TODO: Rewrite to not need this method anymore,
-                              // now that devices are enumerated earlier.
-                              optional DOMString callID = "");
-};
-
 // Service Workers/Navigation Controllers
 partial interface Navigator {
   [Func="ServiceWorkerContainer::IsEnabled", SameObject]

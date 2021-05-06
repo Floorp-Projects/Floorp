@@ -17,17 +17,11 @@ let observe = topic => new Promise(r => Services.obs.addObserver(function o(...a
 }, topic));
 
 let getDevices = async constraints => {
-  let [{ windowID, innerWindowID, callID }] = await Promise.race([
+  let [{ windowID, innerWindowID, callID, devices }] = await Promise.race([
     getUserMedia(constraints),
     observe("getUserMedia:request")
   ]);
   let window = Services.wm.getOuterWindowWithId(windowID);
-  let devices = await new Promise((resolve, reject) => {
-      resolve = SpecialPowers.wrapCallback(resolve);
-      reject = SpecialPowers.wrapCallback(reject);
-      window.navigator.mozGetUserMediaDevices(resolve, reject,
-                                              innerWindowID, callID);
-  });
   return devices.map(SpecialPowers.wrapCallback(d => d.QueryInterface(Ci.nsIMediaDevice)));
 };
 
