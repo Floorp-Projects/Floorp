@@ -3950,36 +3950,6 @@ nsNavHistoryResult::OnItemChanged(
   return NS_OK;
 }
 
-/**
- * Need to notify both the source and the destination folders (if they are
- * different).
- */
-NS_IMETHODIMP
-nsNavHistoryResult::OnItemMoved(int64_t aItemId, int32_t aOldIndex,
-                                int32_t aNewIndex, uint16_t aItemType,
-                                const nsACString& aGUID,
-                                const nsACString& aOldParentGUID,
-                                const nsACString& aNewParentGUID,
-                                uint16_t aSource, const nsACString& aURI) {
-  ENUMERATE_BOOKMARK_FOLDER_OBSERVERS(
-      aOldParentGUID,
-      OnItemMoved(aItemId, aOldIndex, aNewIndex, aItemType, aGUID,
-                  aOldParentGUID, aNewParentGUID, aSource, aURI));
-  if (!aNewParentGUID.Equals(aOldParentGUID)) {
-    ENUMERATE_BOOKMARK_FOLDER_OBSERVERS(
-        aNewParentGUID,
-        OnItemMoved(aItemId, aOldIndex, aNewIndex, aItemType, aGUID,
-                    aOldParentGUID, aNewParentGUID, aSource, aURI));
-  }
-  ENUMERATE_ALL_BOOKMARKS_OBSERVERS(
-      OnItemMoved(aItemId, aOldIndex, aNewIndex, aItemType, aGUID,
-                  aOldParentGUID, aNewParentGUID, aSource, aURI));
-  ENUMERATE_HISTORY_OBSERVERS(OnItemMoved(aItemId, aOldIndex, aNewIndex,
-                                          aItemType, aGUID, aOldParentGUID,
-                                          aNewParentGUID, aSource, aURI));
-  return NS_OK;
-}
-
 nsresult nsNavHistoryResult::OnVisit(nsIURI* aURI, int64_t aVisitId,
                                      PRTime aTime, uint32_t aTransitionType,
                                      const nsACString& aGUID, bool aHidden,

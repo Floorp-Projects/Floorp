@@ -688,6 +688,11 @@ class nsNavHistoryQueryResultNode final
                          uint16_t aItemType, nsIURI* aURI,
                          const nsACString& aGUID, const nsACString& aParentGUID,
                          uint16_t aSource);
+  nsresult OnItemMoved(int64_t aFolder, int32_t aOldIndex, int32_t aNewIndex,
+                       uint16_t aItemType, const nsACString& aGUID,
+                       const nsACString& aOldParentGUID,
+                       const nsACString& aNewParentGUID, uint16_t aSource,
+                       const nsACString& aURI);
 
   // The internal version has an output aAdded parameter, it is incremented by
   // query nodes when the visited uri belongs to them. If no such query exists,
@@ -786,6 +791,11 @@ class nsNavHistoryFolderResultNode final
                          uint16_t aItemType, nsIURI* aURI,
                          const nsACString& aGUID, const nsACString& aParentGUID,
                          uint16_t aSource);
+  nsresult OnItemMoved(int64_t aFolder, int32_t aOldIndex, int32_t aNewIndex,
+                       uint16_t aItemType, const nsACString& aGUID,
+                       const nsACString& aOldParentGUID,
+                       const nsACString& aNewParentGUID, uint16_t aSource,
+                       const nsACString& aURI);
   nsresult OnItemVisited(nsIURI* aURI, int64_t aVisitId, PRTime aTime);
   virtual void OnRemoving() override;
 

@@ -190,23 +190,6 @@ var bookmarksObserver = {
     }
   },
 
-  onItemMoved(
-    itemId,
-    oldIndex,
-    newIndex,
-    itemType,
-    guid,
-    oldParentGuid,
-    newParentGuid
-  ) {
-    this._notifications.push([
-      "assertItemMoved",
-      newParentGuid,
-      guid,
-      newIndex,
-    ]);
-  },
-
   onItemChanged(
     itemId,
     property,
