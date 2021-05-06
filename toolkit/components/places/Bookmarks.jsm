@@ -49,7 +49,7 @@
  * Each successful operation notifies through the nsINavBookmarksObserver
  * interface.  To listen to such notifications you must register using
  * nsINavBookmarksService addObserver and removeObserver methods.
- * Note that bookmark addition or order changes won't notify onItemMoved for
+ * Note that bookmark addition or order changes won't notify bookmark-moved for
  * items that have their indexes changed.
  * Similarly, lastModified changes not done explicitly (like changing another
  * property) won't fire an onItemChanged notification for the lastModified
@@ -957,23 +957,11 @@ var Bookmarks = Object.freeze({
               updatedItem.source,
             ]);
           }
-          // If the item was moved, notify onItemMoved.
+          // If the item was moved, notify bookmark-moved.
           if (
             item.parentGuid != updatedItem.parentGuid ||
             item.index != updatedItem.index
           ) {
-            notify(observers, "onItemMoved", [
-              updatedItem._id,
-              item.index,
-              updatedItem.index,
-              updatedItem.type,
-              updatedItem.guid,
-              item.parentGuid,
-              updatedItem.parentGuid,
-              updatedItem.source,
-              updatedItem.url && updatedItem.url.href,
-            ]);
-
             notifications.push(
               new PlacesBookmarkMoved({
                 id: updatedItem._id,
@@ -1203,9 +1191,7 @@ var Bookmarks = Object.freeze({
 
       // Updates complete, time to notify everyone.
       for (let { updatedItem, existingItem, newParent } of updateInfos) {
-        // Notify onItemChanged to listeners.
-        let observers = PlacesUtils.bookmarks.getObservers();
-        // If the item was moved, notify onItemMoved.
+        // If the item was moved, notify bookmark-moved.
         // We use the updatedItem.index here, rather than currIndex, as the views
         // need to know where we inserted the item as opposed to where it ended
         // up.
@@ -1213,18 +1199,6 @@ var Bookmarks = Object.freeze({
           existingItem.parentGuid != updatedItem.parentGuid ||
           existingItem.index != updatedItem.index
         ) {
-          notify(observers, "onItemMoved", [
-            updatedItem._id,
-            existingItem.index,
-            updatedItem.index,
-            updatedItem.type,
-            updatedItem.guid,
-            existingItem.parentGuid,
-            updatedItem.parentGuid,
-            source,
-            existingItem.url,
-          ]);
-
           notifications.push(
             new PlacesBookmarkMoved({
               id: updatedItem._id,
@@ -1791,22 +1765,9 @@ var Bookmarks = Object.freeze({
 
       const notifications = [];
 
-      let observers = PlacesUtils.bookmarks.getObservers();
       // Note that child.index is the old index.
       for (let i = 0; i < sortedChildren.length; ++i) {
         let child = sortedChildren[i];
-        notify(observers, "onItemMoved", [
-          child._id,
-          child.index,
-          i,
-          child.type,
-          child.guid,
-          child.parentGuid,
-          child.parentGuid,
-          options.source,
-          child.url && child.url.href,
-        ]);
-
         notifications.push(
           new PlacesBookmarkMoved({
             id: child._id,

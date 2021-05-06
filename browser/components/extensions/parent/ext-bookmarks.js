@@ -165,6 +165,18 @@ let observer = new (class extends EventEmitter {
             guid: event.guid,
             info: { parentId: event.parentGuid, index: event.index, node },
           });
+          break;
+        case "bookmark-moved":
+          this.emit("moved", {
+            guid: event.guid,
+            info: {
+              parentId: event.parentGuid,
+              index: event.index,
+              oldParentId: event.oldParentGuid,
+              oldIndex: event.oldIndex,
+            },
+          });
+          break;
       }
     }
   }
@@ -220,7 +232,7 @@ const decrementListeners = () => {
   if (!listenerCount) {
     PlacesUtils.bookmarks.removeObserver(observer);
     PlacesUtils.observers.removeListener(
-      ["bookmark-added", "bookmark-removed"],
+      ["bookmark-added", "bookmark-removed", "bookmark-moved"],
       observer.handlePlacesEvents
     );
   }
@@ -231,7 +243,7 @@ const incrementListeners = () => {
   if (listenerCount == 1) {
     PlacesUtils.bookmarks.addObserver(observer);
     PlacesUtils.observers.addListener(
-      ["bookmark-added", "bookmark-removed"],
+      ["bookmark-added", "bookmark-removed", "bookmark-moved"],
       observer.handlePlacesEvents
     );
   }

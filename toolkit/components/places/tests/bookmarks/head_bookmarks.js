@@ -107,6 +107,22 @@ function expectPlacesObserverNotifications(
               });
             }
           }
+          break;
+        case "bookmark-moved":
+          notifications.push({
+            type: event.type,
+            id: event.id,
+            itemType: event.itemType,
+            url: event.url,
+            guid: event.guid,
+            parentGuid: event.parentGuid,
+            source: event.source,
+            index: event.index,
+            oldParentGuid: event.oldParentGuid,
+            oldIndex: event.oldIndex,
+            isTagging: event.isTagging,
+          });
+          break;
       }
     }
   };
