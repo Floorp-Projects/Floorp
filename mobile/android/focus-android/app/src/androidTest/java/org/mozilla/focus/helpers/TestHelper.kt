@@ -5,9 +5,7 @@ package org.mozilla.focus.helpers
 
 import android.content.Context
 import android.content.pm.PackageManager
-import android.content.res.Resources
 import android.text.format.DateUtils
-import android.util.DisplayMetrics
 import android.util.Log
 import android.view.KeyEvent
 import androidx.test.espresso.Espresso
@@ -19,8 +17,6 @@ import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.espresso.web.sugar.Web
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.UiDevice
-import androidx.test.uiautomator.UiObject
-import androidx.test.uiautomator.UiObjectNotFoundException
 import androidx.test.uiautomator.UiSelector
 import okhttp3.mockwebserver.MockResponse
 import okio.Buffer
@@ -173,41 +169,10 @@ object TestHelper {
     )
 
     @JvmField
-    var searchSuggestionsTitle = mDevice.findObject(
-        UiSelector()
-            .resourceId(packageName + ":id/enable_search_suggestions_title")
-            .enabled(true)
-    )
-
-    @JvmField
-    var searchSuggestionsButtonYes = mDevice.findObject(
-        UiSelector()
-            .resourceId(packageName + ":id/enable_search_suggestions_button")
-            .enabled(true)
-    )
-
-    @JvmField
-    var cleartextField = mDevice.findObject(
-        UiSelector()
-            .resourceId(packageName + ":id/clearView")
-            .enabled(true)
-    )
-
-    @JvmField
     var hint = mDevice.findObject(
         UiSelector()
             .resourceId(packageName + ":id/searchView")
             .clickable(true)
-    )
-
-    @JvmField
-    var suggestionList = mDevice.findObject(
-        UiSelector()
-            .resourceId(packageName + ":id/suggestionList")
-    )
-    var suggestion = mDevice.findObject(
-        UiSelector()
-            .resourceId(packageName + ":id/suggestion")
     )
 
     @JvmField
@@ -227,11 +192,6 @@ object TestHelper {
         UiSelector()
             .resourceId(packageName + ":id/progress")
             .enabled(true)
-    )
-    var tryAgainBtn = mDevice.findObject(
-        UiSelector()
-            .resourceId("errorTryAgain")
-            .clickable(true)
     )
 
     @JvmField
@@ -259,20 +219,6 @@ object TestHelper {
         UiSelector()
             .text("Erase browsing history")
             .resourceId("android:id/text")
-            .enabled(true)
-    )
-    var notificationExpandSwitch = mDevice.findObject(
-        UiSelector()
-            .resourceId("android:id/expand_button")
-            .packageName(packageName + "")
-            .enabled(true)
-    )
-
-    @JvmField
-    var notificationOpenItem = mDevice.findObject(
-        UiSelector()
-            .resourceId("android:id/action0")
-            .description("Open")
             .enabled(true)
     )
 
@@ -327,12 +273,6 @@ object TestHelper {
     )
 
     /********* Main View Menu Item Locators  */
-    var whatsNewItem = mDevice.findObject(
-        UiSelector()
-            .resourceId(packageName + ":id/whats_new")
-            .enabled(true)
-    )
-
     @JvmField
     var HelpItem = mDevice.findObject(
         UiSelector()
@@ -346,25 +286,6 @@ object TestHelper {
             .resourceId(packageName + ":id/settings")
             .enabled(true)
     )
-
-    @JvmField
-    var blockCounterItem = mDevice.findObject(
-        UiSelector()
-            .resourceId(packageName + ":id/trackers_count")
-    )
-
-    @JvmField
-    var menulist = mDevice.findObject(
-        UiSelector()
-            .resourceId(packageName + ":id/list")
-            .enabled(true)
-    )
-
-    @Throws(UiObjectNotFoundException::class)
-    fun getMenuItemText(item: UiObject): String {
-        return item.getChild(UiSelector().index(0))
-            .getChild(UiSelector().index(0)).text
-    }
 
     /********** Share Menu Dialog  */
     @JvmField
@@ -389,61 +310,6 @@ object TestHelper {
             .resourceId(packageName + ":id/recycler_view")
     )
 
-    @JvmField
-    var settingsHeading = mDevice.findObject(
-        UiSelector()
-            .resourceId(packageName + ":id/toolbar")
-            .enabled(true)
-    )
-    var navigateUp = mDevice.findObject(
-        UiSelector()
-            .description("Navigate up")
-    )
-    var toggleAnalyticBlock = mDevice.findObject(
-        UiSelector()
-            .className("android.widget.Switch")
-            .instance(1)
-    )
-    var refreshBtn = mDevice.findObject(
-        UiSelector()
-            .resourceId(packageName + ":id/refresh")
-            .enabled(true)
-    )
-
-    const val PINCH_PERCENT = 50
-    const val PINCH_STEPS = 5
-
-    @JvmStatic
-    @Throws(UiObjectNotFoundException::class)
-    fun expandNotification() {
-        if (!notificationOpenItem.waitForExists(waitingTime)) {
-            if (!notificationExpandSwitch.exists()) {
-                notificationBarDeleteItem.pinchOut(PINCH_PERCENT, PINCH_STEPS)
-            } else {
-                notificationExpandSwitch.click()
-            }
-            Assert.assertTrue(notificationOpenItem.exists())
-        }
-    }
-
-    const val X_OFFSET = 20
-    const val Y_OFFSET = 500
-    const val STEPS = 10
-    private fun devicePixels(): DisplayMetrics {
-        return Resources.getSystem().displayMetrics
-    }
-
-    @JvmStatic
-    fun swipeScreenLeft() {
-        val metrics = devicePixels()
-        mDevice.swipe(metrics.widthPixels - X_OFFSET, Y_OFFSET, 0, Y_OFFSET, STEPS)
-    }
-
-    fun swipeScreenRight() {
-        val metrics = devicePixels()
-        mDevice.swipe(X_OFFSET, Y_OFFSET, metrics.widthPixels, Y_OFFSET, STEPS)
-    }
-
     @JvmStatic
     fun waitForIdle() {
         mDevice.waitForIdle(waitingTime)
@@ -462,11 +328,6 @@ object TestHelper {
     @JvmStatic
     fun pressHomeKey() {
         mDevice.pressHome()
-    }
-
-    @JvmStatic
-    fun openNotification() {
-        mDevice.openNotification()
     }
 
     @JvmStatic
