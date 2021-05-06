@@ -101,7 +101,7 @@ const test = new SearchConfigTest({
           regions: ["au"],
         },
       ],
-      searchUrlCode: "tag=mozillaaustra-22",
+      searchUrlCode: "tag=mozillaaust0c-22",
       suggestionUrlBase: "https://completion.amazon.com.au/search/complete",
       suggestUrlCode: "mkt=111172",
     },
