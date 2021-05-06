@@ -100,6 +100,17 @@ bugbug_disperse_reduced_medium:
         env:
             TASKGRAPH_OPTIMIZE_STRATEGIES: taskgraph.optimize:experimental.bugbug_disperse_reduced_medium
 
+bugbug_reduced_manifests_config_selection_low:
+    description: Runs the bugbug_reduced_manifests_config_selection_low optimization strategy instead of the default.
+    treeherder:
+        symbol: SS(bugbug_r_c_s_low)
+    index:
+        product: source
+        job-name: shadow-scheduler-bugbug_reduced_manifests_config_selection_low
+    worker:
+        env:
+            TASKGRAPH_OPTIMIZE_STRATEGIES: taskgraph.optimize:experimental.bugbug_reduced_manifests_config_selection_low
+
 bugbug_reduced_manifests_config_selection_medium:
     description: Runs the bugbug_reduced_manifests_config_selection_medium optimization strategy instead of the default.
     treeherder:
