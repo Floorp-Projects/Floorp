@@ -125,6 +125,15 @@ toolbarpaletteitem > #downloads-button > .toolbarbutton-badge-stack > #downloads
   /* initial state for animation */
   transform: translateX(0);
 }
+#downloads-button[attention="success"] > .toolbarbutton-badge-stack > #downloads-indicator-start-box > #downloads-indicator-start-image {
+  /* Match the download icon color in the initial animation frames
+     to the current color of the indicator */
+  stroke: var(--toolbarbutton-icon-fill-attention);
+}
+#downloads-button[washidden] > .toolbarbutton-badge-stack > #downloads-indicator-start-box > #downloads-indicator-start-image {
+  /* Hide the download icon in the first few animation frames, when the button was just un-hidden */
+  stroke: transparent;
+}
 
 #downloads-button[animate][notification="start"] > .toolbarbutton-badge-stack > #downloads-indicator-start-box > #downloads-indicator-start-image {
   visibility: visible;
