@@ -326,7 +326,6 @@ add_task(async function update_move_same_folder() {
     url: new URL("http://move.example.com/"),
   });
   let bmItemId = await PlacesUtils.promiseItemId(bm.guid);
-  let bmParentId = await PlacesUtils.promiseItemId(bm.parentGuid);
   let bmOldIndex = bm.index;
 
   let observer = expectNotifications();
@@ -341,9 +340,7 @@ add_task(async function update_move_same_folder() {
       name: "onItemMoved",
       arguments: [
         bmItemId,
-        bmParentId,
         bmOldIndex,
-        bmParentId,
         bm.index,
         bm.type,
         bm.guid,
@@ -369,9 +366,7 @@ add_task(async function update_move_same_folder() {
       name: "onItemMoved",
       arguments: [
         bmItemId,
-        bmParentId,
         bmOldIndex,
-        bmParentId,
         bm.index,
         bm.type,
         bm.guid,
@@ -395,9 +390,6 @@ add_task(async function update_move_different_folder() {
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
   });
   let bmItemId = await PlacesUtils.promiseItemId(bm.guid);
-  let bmOldParentId = await PlacesUtils.promiseItemId(
-    PlacesUtils.bookmarks.unfiledGuid
-  );
   let bmOldIndex = bm.index;
 
   let observer = expectNotifications();
@@ -407,15 +399,12 @@ add_task(async function update_move_different_folder() {
     index: PlacesUtils.bookmarks.DEFAULT_INDEX,
   });
   Assert.equal(bm.index, 0);
-  let bmNewParentId = await PlacesUtils.promiseItemId(folder.guid);
   observer.check([
     {
       name: "onItemMoved",
       arguments: [
         bmItemId,
-        bmOldParentId,
         bmOldIndex,
-        bmNewParentId,
         bm.index,
         bm.type,
         bm.guid,
@@ -894,9 +883,6 @@ add_task(async function reorder_notification() {
   );
 
   let expectedNotifications = [];
-  let unfiledBookmarksFolderId = await PlacesUtils.promiseItemId(
-    PlacesUtils.bookmarks.unfiledGuid
-  );
   for (let i = 0; i < sorted.length; ++i) {
     let child = sorted[i];
     let childId = await PlacesUtils.promiseItemId(child.guid);
@@ -904,9 +890,7 @@ add_task(async function reorder_notification() {
       name: "onItemMoved",
       arguments: [
         childId,
-        unfiledBookmarksFolderId,
         child.index,
-        unfiledBookmarksFolderId,
         i,
         child.type,
         child.guid,

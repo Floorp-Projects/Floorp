@@ -928,9 +928,7 @@ BookmarksTracker.prototype = {
 
   onItemMoved: function BMT_onItemMoved(
     itemId,
-    oldParent,
     oldIndex,
-    newParent,
     newIndex,
     itemType,
     guid,

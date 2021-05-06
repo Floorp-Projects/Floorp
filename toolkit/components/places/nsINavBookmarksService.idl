@@ -89,12 +89,8 @@ interface nsINavBookmarkObserver : nsISupports
    *
    * @param aItemId
    *        The id of the item that was moved.
-   * @param aOldParentId
-   *        The id of the old parent.
    * @param aOldIndex
    *        The old index inside the old parent.
-   * @param aNewParentId
-   *        The id of the new parent.
    * @param aNewIndex
    *        The index inside the new parent.
    * @param aItemType
@@ -112,9 +108,7 @@ interface nsINavBookmarkObserver : nsISupports
    *        The URI for this bookmark.
    */
   void onItemMoved(in long long aItemId,
-                   in long long aOldParentId,
                    in long aOldIndex,
-                   in long long aNewParentId,
                    in long aNewIndex,
                    in unsigned short aItemType,
                    in ACString aGuid,
