@@ -21,6 +21,7 @@
 #include "mozilla/mscom/Utils.h"
 #include "mozilla/PaintTracker.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/WindowsProcessMitigations.h"
 
 using namespace mozilla;
 using namespace mozilla::ipc;
@@ -856,10 +857,32 @@ SuppressedNeuteringRegion::~SuppressedNeuteringRegion() {
 
 bool SuppressedNeuteringRegion::sSuppressNeutering = false;
 
+static DWORD WaitForSingleObjectExWrapper(HANDLE aEvent, DWORD aTimeout) {
+  return ::WaitForSingleObjectEx(aEvent, aTimeout, TRUE);
+}
+
+static DWORD CoWaitForMultipleHandlesWrapper(HANDLE aEvent, DWORD aTimeout) {
+  DWORD waitResult = 0;
+  ::SetLastError(ERROR_SUCCESS);
+  HRESULT hr = ::CoWaitForMultipleHandles(COWAIT_ALERTABLE, aTimeout, 1,
+                                          &aEvent, &waitResult);
+  if (hr == S_OK) {
+    return waitResult;
+  }
+  if (hr == RPC_S_CALLPENDING) {
+    return WAIT_TIMEOUT;
+  }
+  return WAIT_FAILED;
+}
+
 #if defined(ACCESSIBILITY)
 bool MessageChannel::WaitForSyncNotifyWithA11yReentry() {
   mMonitor->AssertCurrentThreadOwns();
   MonitorAutoUnlock unlock(*mMonitor);
+
+  static auto* sWaitForEvent = IsWin32kLockedDown()
+                                   ? WaitForSingleObjectExWrapper
+                                   : CoWaitForMultipleHandlesWrapper;
 
   const DWORD waitStart = ::GetTickCount();
   DWORD elapsed = 0;
@@ -874,39 +897,41 @@ bool MessageChannel::WaitForSyncNotifyWithA11yReentry() {
         break;
       }
     }
+
     if (timeout != static_cast<DWORD>(kNoTimeout)) {
       elapsed = ::GetTickCount() - waitStart;
     }
+
     if (elapsed >= timeout) {
       timedOut = true;
       break;
     }
-    DWORD waitResult = 0;
-    ::SetLastError(ERROR_SUCCESS);
-    HRESULT hr = ::CoWaitForMultipleHandles(COWAIT_ALERTABLE, timeout - elapsed,
-                                            1, &mEvent, &waitResult);
-    if (hr == RPC_S_CALLPENDING) {
-      timedOut = true;
+
+    DWORD waitResult = sWaitForEvent(mEvent, timeout - elapsed);
+
+    if (waitResult == WAIT_OBJECT_0) {
+      // mEvent is signaled
+      BOOL success = ::ResetEvent(mEvent);
+      if (!success) {
+        gfxDevCrash(mozilla::gfx::LogReason::MessageChannelInvalidHandle)
+            << "WindowsMessageChannel::WaitForSyncNotifyWithA11yReentry "
+               "failed to reset event. GetLastError: "
+            << GetLastError();
+      }
       break;
     }
-    if (hr == S_OK) {
-      if (waitResult == 0) {
-        // mEvent is signaled
-        BOOL success = ::ResetEvent(mEvent);
-        if (!success) {
-          gfxDevCrash(mozilla::gfx::LogReason::MessageChannelInvalidHandle)
-              << "WindowsMessageChannel::WaitForSyncNotifyWithA11yReentry "
-                 "failed to reset event. GetLastError: "
-              << GetLastError();
-        }
-        break;
-      }
-      if (waitResult == WAIT_IO_COMPLETION) {
-        // APC fired, keep waiting
-        continue;
-      }
+
+    if (waitResult == WAIT_IO_COMPLETION) {
+      // APC fired, keep waiting
+      continue;
     }
-    NS_ERROR("CoWaitForMultipleHandles failed");
+
+    if (waitResult == WAIT_TIMEOUT) {
+      timeout = true;
+      break;
+    }
+
+    NS_ERROR("WaitForSyncNotifyWithA11yReentry failed");
     break;
   }
 
