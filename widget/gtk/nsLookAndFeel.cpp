@@ -706,9 +706,12 @@ nsresult nsLookAndFeel::NativeGetInt(IntID aID, int32_t& aResult) {
       aResult = 0;
       break;
     case IntID::ContextMenuOffsetVertical:
-    case IntID::ContextMenuOffsetHorizontal:
-      aResult = 2;
-      break;
+    case IntID::ContextMenuOffsetHorizontal: {
+      // The context menu offset is used in
+      // nsWindow::NativeMoveResizeWaylandPopup for the anchor rect.
+      static auto size = mozilla::widget::GdkIsWaylandDisplay() ? 0 : 2;
+      aResult = size;
+    } break;
     case IntID::GTKCSDAvailable:
       EnsureInit();
       aResult = mCSDAvailable;

@@ -1552,7 +1552,12 @@ void nsWindow::NativeMoveResizeWaylandPopupCB(const GdkRectangle* aFinalSize,
   }
 
   if (needsPositionUpdate) {
-    LOG(("  needPositionUpdate\n"));
+    LOG(("  view needPositionUpdate\n"));
+    // Context menus are offset 2px by using anchor gravity - ie by GTK.
+    // Notifying views about the move without updating widget position leads
+    // to endless loop.
+    mBounds = newBounds;
+
     // The newBounds are in coordinates relative to the parent window/popup.
     // The NotifyWindowMoved requires the coordinates relative to the toplevel.
     // We use the gdk_window_get_origin to get correct coordinates.
@@ -1652,15 +1657,16 @@ void nsWindow::NativeMoveResizeWaylandPopup(GdkPoint* aPosition,
 #endif
   }
 
-#ifdef MOZ_WAYLAND
-  bool hasAnchorRect = true;
-#endif
+  bool isContextMenu = false;
   if (anchorRect.width == 0) {
     LOG(("  No anchor rect given, use aPosition for anchor"));
     anchorRect.SetRect(aPosition->x, aPosition->y, 1, 1);
-#ifdef MOZ_WAYLAND
-    hasAnchorRect = false;
-#endif
+    if (popupFrame && mPopupType != ePopupTypeTooltip) {
+      isContextMenu = true;
+    }
+    // Use 2 pixel offset for the context menu from the
+    // nsLookAndFeel:ContextMenuOffsetHorizontal
+    anchorRect.SetRect(aPosition->x, aPosition->y, 2, 2);
   }
   LOG(("  anchor x %d y %d width %d height %d (absolute coords)\n",
        anchorRect.x, anchorRect.y, anchorRect.width, anchorRect.height));
@@ -1684,7 +1690,16 @@ void nsWindow::NativeMoveResizeWaylandPopup(GdkPoint* aPosition,
   GdkGravity menuAnchor = GDK_GRAVITY_NORTH_WEST;
   FlipType flipType = FlipType_Default;
   int8_t position = -1;
-  if (popupFrame) {
+  if (isContextMenu) {
+    if (GetTextDirection() == GTK_TEXT_DIR_RTL) {
+      rectAnchor = GDK_GRAVITY_SOUTH_WEST;
+      menuAnchor = GDK_GRAVITY_NORTH_EAST;
+
+    } else {
+      rectAnchor = GDK_GRAVITY_SOUTH_EAST;
+      menuAnchor = GDK_GRAVITY_NORTH_WEST;
+    }
+  } else if (popupFrame) {
 #ifdef MOZ_WAYLAND
     rectAnchor = PopupAlignmentToGdkGravity(popupFrame->GetPopupAnchor());
     menuAnchor = PopupAlignmentToGdkGravity(popupFrame->GetPopupAlignment());
@@ -1698,7 +1713,8 @@ void nsWindow::NativeMoveResizeWaylandPopup(GdkPoint* aPosition,
       menuAnchor = GDK_GRAVITY_NORTH_EAST;
     }
   }
-  LOG((" parentRect gravity: %d anchor gravity: %d\n", rectAnchor, menuAnchor));
+  LOG((" rectAnchor gravity: %d menuAnchor gravity: %d\n", rectAnchor,
+       menuAnchor));
 
   // Gtk default is: GDK_ANCHOR_FLIP | GDK_ANCHOR_SLIDE | GDK_ANCHOR_RESIZE.
   // We want to SLIDE_X menu on the dual monitor setup rather than resize it
@@ -1765,7 +1781,7 @@ void nsWindow::NativeMoveResizeWaylandPopup(GdkPoint* aPosition,
   nsPoint cursorOffset(0, 0);
 #ifdef MOZ_WAYLAND
   // Offset is already computed to the tooltips
-  if (hasAnchorRect && popupFrame && mPopupType != ePopupTypeTooltip) {
+  if (popupFrame && mPopupType != ePopupTypeTooltip) {
     nsMargin margin(0, 0, 0, 0);
     popupFrame->StyleMargin()->GetMargin(margin);
     switch (popupFrame->GetPopupAlignment()) {
