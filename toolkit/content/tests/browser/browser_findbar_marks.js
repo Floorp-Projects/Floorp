@@ -84,12 +84,30 @@ add_task(async function test_findmarks() {
     // in the right place. Later tests should give the same values.
     await promiseFindFinished(gBrowser, "tex", true);
 
-    // The exact values vary on each platform, so use a fuzzy match.
-    let scrollVar = scrollMaxY - 1670;
     let values = await getMarks(browser, true);
-    SimpleTest.isfuzzy(values[0], 8, 3, "first value");
-    SimpleTest.isfuzzy(values[1], 1305 + scrollVar, 10, "second value");
-    SimpleTest.isfuzzy(values[2], 1650 + scrollVar, 10, "third value");
+
+    // The exact values vary on each platform, so use fuzzy matches.
+    // 2610 is the approximate expected document height, and
+    // 10, 2040, 2570 are the approximate positions of the marks.
+    const expectedDocHeight = 2610;
+    SimpleTest.isfuzzy(
+      values[0],
+      Math.round(10 * (scrollMaxY / expectedDocHeight)),
+      10,
+      "first value"
+    );
+    SimpleTest.isfuzzy(
+      values[1],
+      Math.round(2040 * (scrollMaxY / expectedDocHeight)),
+      10,
+      "second value"
+    );
+    SimpleTest.isfuzzy(
+      values[2],
+      Math.round(2570 * (scrollMaxY / expectedDocHeight)),
+      10,
+      "third value"
+    );
 
     await doAndVerifyFind(browser, "text", true, [values[0], values[2]]);
     await doAndVerifyFind(browser, "", true, []);
