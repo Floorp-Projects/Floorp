@@ -25,7 +25,6 @@ function promiseOnItemChanged() {
   return new Promise(resolve => {
     PlacesUtils.bookmarks.addObserver({
       onItemRemoved() {},
-      onItemMoved() {},
 
       onItemChanged() {
         PlacesUtils.bookmarks.removeObserver(this);

@@ -100,24 +100,6 @@ var observer = {
     };
     changesForGuid.set(aProperty, change);
   },
-
-  onItemMoved(
-    aItemId,
-    aOldIndex,
-    aNewIndex,
-    aItemType,
-    aGuid,
-    aOldParentGuid,
-    aNewParentGuid
-  ) {
-    this.itemsMoved.set(aGuid, {
-      oldParentGuid: aOldParentGuid,
-      oldIndex: aOldIndex,
-      newParentGuid: aNewParentGuid,
-      newIndex: aNewIndex,
-      itemType: aItemType,
-    });
-  },
 };
 observer.reset();
 
