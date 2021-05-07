@@ -789,24 +789,34 @@ static JSObject* CreateConstructor(JSContext* cx, JS::Handle<JSObject*> global,
 }
 
 static bool DefineConstructor(JSContext* cx, JS::Handle<JSObject*> global,
-                              const char* name,
+                              JS::Handle<jsid> name,
                               JS::Handle<JSObject*> constructor) {
   bool alreadyDefined;
-  if (!JS_AlreadyHasOwnProperty(cx, global, name, &alreadyDefined)) {
+  if (!JS_AlreadyHasOwnPropertyById(cx, global, name, &alreadyDefined)) {
     return false;
   }
 
   // This is Enumerable: False per spec.
   return alreadyDefined ||
-         JS_DefineProperty(cx, global, name, constructor, JSPROP_RESOLVING);
+         JS_DefinePropertyById(cx, global, name, constructor, JSPROP_RESOLVING);
 }
 
+static bool DefineConstructor(JSContext* cx, JS::Handle<JSObject*> global,
+                              const char* name,
+                              JS::Handle<JSObject*> constructor) {
+  PinnedStringId nameStr;
+  return nameStr.init(cx, name) &&
+         DefineConstructor(cx, global, nameStr, constructor);
+}
+
+// name must be a pinned string (or JS::PropertyKey::fromPinnedString will
+// assert).
 static JSObject* CreateInterfaceObject(
     JSContext* cx, JS::Handle<JSObject*> global,
     JS::Handle<JSObject*> constructorProto, const JSClass* constructorClass,
     unsigned ctorNargs, const LegacyFactoryFunction* namedConstructors,
     JS::Handle<JSObject*> proto, const NativeProperties* properties,
-    const NativeProperties* chromeOnlyProperties, const char* name,
+    const NativeProperties* chromeOnlyProperties, JS::Handle<JSString*> name,
     bool isChrome, bool defineOnGlobal, const char* const* legacyWindowAliases,
     bool isNamespace) {
   JS::Rooted<JSObject*> constructor(cx);
@@ -824,15 +834,7 @@ static JSObject* CreateInterfaceObject(
       return nullptr;
     }
 
-    // Might as well intern, since we're going to need an atomized
-    // version of name anyway when we stick our constructor on the
-    // global.
-    JS::Rooted<JSString*> nameStr(cx, JS_AtomizeAndPinString(cx, name));
-    if (!nameStr) {
-      return nullptr;
-    }
-
-    if (!JS_DefineProperty(cx, constructor, "name", nameStr, JSPROP_READONLY)) {
+    if (!JS_DefineProperty(cx, constructor, "name", name, JSPROP_READONLY)) {
       return nullptr;
     }
   }
@@ -899,7 +901,8 @@ static JSObject* CreateInterfaceObject(
     return nullptr;
   }
 
-  if (defineOnGlobal && !DefineConstructor(cx, global, name, constructor)) {
+  JS::Rooted<jsid> nameStr(cx, JS::PropertyKey::fromPinnedString(name));
+  if (defineOnGlobal && !DefineConstructor(cx, global, nameStr, constructor)) {
     return nullptr;
   }
 
@@ -940,7 +943,8 @@ static JSObject* CreateInterfacePrototypeObject(
     JS::Handle<JSObject*> parentProto, const JSClass* protoClass,
     const NativeProperties* properties,
     const NativeProperties* chromeOnlyProperties,
-    const char* const* unscopableNames, bool isGlobal) {
+    const char* const* unscopableNames, JS::Handle<JSString*> name,
+    bool isGlobal) {
   JS::Rooted<JSObject*> ourProto(
       cx, JS_NewObjectWithGivenProto(cx, protoClass, parentProto));
   if (!ourProto ||
@@ -972,6 +976,13 @@ static JSObject* CreateInterfacePrototypeObject(
                                JSPROP_READONLY)) {
       return nullptr;
     }
+  }
+
+  JS::Rooted<jsid> toStringTagId(cx, SYMBOL_TO_JSID(JS::GetWellKnownSymbol(
+                                         cx, JS::SymbolCode::toStringTag)));
+  if (!JS_DefinePropertyById(cx, ourProto, toStringTagId, name,
+                             JSPROP_READONLY)) {
+    return nullptr;
   }
 
   return ourProto;
@@ -1042,8 +1053,6 @@ void CreateInterfaceObjects(
                  chromeOnlyProperties->HasStaticAttributes()))) ||
                  constructorClass,
              "Static methods but no constructorClass!");
-  MOZ_ASSERT(bool(name) == bool(constructorClass),
-             "Must have name precisely when we have an interface object");
   MOZ_ASSERT(!protoClass == !protoCache,
              "If, and only if, there is an interface prototype object we need "
              "to cache it");
@@ -1056,11 +1065,20 @@ void CreateInterfaceObjects(
 
   bool isChrome = nsContentUtils::ThreadsafeIsSystemCaller(cx);
 
+  // Might as well intern, since we're going to need an atomized
+  // version of name anyway when we stick our constructor on the
+  // global.
+  JS::Rooted<JSString*> nameStr(cx, JS_AtomizeAndPinString(cx, name));
+  if (!nameStr) {
+    return;
+  }
+
   JS::Rooted<JSObject*> proto(cx);
   if (protoClass) {
     proto = CreateInterfacePrototypeObject(
         cx, global, protoProto, protoClass, properties,
-        isChrome ? chromeOnlyProperties : nullptr, unscopableNames, isGlobal);
+        isChrome ? chromeOnlyProperties : nullptr, unscopableNames, nameStr,
+        isGlobal);
     if (!proto) {
       return;
     }
@@ -1074,7 +1092,7 @@ void CreateInterfaceObjects(
   if (constructorClass) {
     interface = CreateInterfaceObject(
         cx, global, constructorProto, constructorClass, ctorNargs,
-        namedConstructors, proto, properties, chromeOnlyProperties, name,
+        namedConstructors, proto, properties, chromeOnlyProperties, nameStr,
         isChrome, defineOnGlobal, legacyWindowAliases, isNamespace);
     if (!interface) {
       if (protoCache) {
@@ -1464,13 +1482,7 @@ static bool XrayResolveAttribute(JSContext* cx, JS::Handle<JSObject*> wrapper,
     return true;
   }
 
-  if (!attrSpec.isAccessor()) {
-    MOZ_ASSERT(id.isWellKnownSymbol(JS::SymbolCode::toStringTag));
-
-    desc.setAttributes(attrSpec.attributes());
-    desc.object().set(wrapper);
-    return attrSpec.getValue(cx, desc.value());
-  }
+  MOZ_ASSERT(attrSpec.isAccessor());
 
   MOZ_ASSERT(
       !attrSpec.isSelfHosted(),
@@ -1776,6 +1788,24 @@ static bool ResolvePrototypeOrConstructor(
              ResolvePrototypeOrConstructor(cx, wrapper, obj,
                                            nativePropertyHooks->mConstructorID,
                                            0, desc, cacheOnHolder);
+    }
+
+    if (id.isWellKnownSymbol(JS::SymbolCode::toStringTag)) {
+      const JSClass* objClass = JS::GetClass(obj);
+      prototypes::ID prototypeID =
+          DOMIfaceAndProtoJSClass::FromJSClass(objClass)->mPrototypeID;
+      JS::Rooted<JSString*> nameStr(
+          cx, JS_AtomizeString(cx, NamesOfInterfacesWithProtos(prototypeID)));
+      if (!nameStr) {
+        return false;
+      }
+
+      desc.value().setString(nameStr);
+      desc.setAttributes(JSPROP_READONLY);
+      desc.object().set(wrapper);
+      desc.setSetter(nullptr);
+      desc.setGetter(nullptr);
+      return true;
     }
 
     // The properties for globals live on the instance, so return here as there
