@@ -66,7 +66,7 @@ job-defaults:
                     default: []
 
 raptor-speedometer-firefox:
-    description: "Raptor Speedometer on Firefox"
+    description: Raptor Speedometer on Firefox
     try-name: raptor-speedometer-firefox
     treeherder-symbol: Rap(sp)
     mozharness:
@@ -74,7 +74,7 @@ raptor-speedometer-firefox:
             - --test=raptor-speedometer
 
 raptor-speedometer-firefox-profiling:
-    description: "Raptor Speedometer on Firefox with Gecko Profiling"
+    description: Raptor Speedometer on Firefox with Gecko Profiling
     try-name: raptor-speedometer-firefox-profiling
     treeherder-symbol: Rap-Prof(sp)
     max-run-time: 900
@@ -84,7 +84,7 @@ raptor-speedometer-firefox-profiling:
             - --gecko-profile
 
 raptor-stylebench-firefox:
-    description: "Raptor StyleBench on Firefox"
+    description: Raptor StyleBench on Firefox
     try-name: raptor-stylebench-firefox
     treeherder-symbol: Rap(sb)
     mozharness:
@@ -92,7 +92,7 @@ raptor-stylebench-firefox:
             - --test=raptor-stylebench
 
 raptor-stylebench-firefox-profiling:
-    description: "Raptor StyleBench on Firefox with Gecko Profiling"
+    description: Raptor StyleBench on Firefox with Gecko Profiling
     try-name: raptor-stylebench-firefox-profiling
     treeherder-symbol: Rap-Prof(sb)
     max-run-time: 900
@@ -102,7 +102,7 @@ raptor-stylebench-firefox-profiling:
             - --gecko-profile
 
 raptor-motionmark-htmlsuite-firefox:
-    description: "Raptor MotionMark HtmlSuite on Firefox"
+    description: Raptor MotionMark HtmlSuite on Firefox
     try-name: raptor-motionmark-htmlsuite-firefox
     treeherder-symbol: Rap(mm-h)
     mozharness:
@@ -110,7 +110,7 @@ raptor-motionmark-htmlsuite-firefox:
             - --test=raptor-motionmark-htmlsuite
 
 raptor-motionmark-htmlsuite-firefox-profiling:
-    description: "Raptor MotionMark HtmlSuite on Firefox with Gecko Profiling"
+    description: Raptor MotionMark HtmlSuite on Firefox with Gecko Profiling
     try-name: raptor-motionmark-htmlsuite-firefox-profiling
     treeherder-symbol: Rap-Prof(mm-h)
     mozharness:
@@ -119,7 +119,7 @@ raptor-motionmark-htmlsuite-firefox-profiling:
             - --gecko-profile
 
 raptor-motionmark-animometer-firefox:
-    description: "Raptor MotionMark Animometer on Firefox"
+    description: Raptor MotionMark Animometer on Firefox
     try-name: raptor-motionmark-animometer-firefox
     treeherder-symbol: Rap(mm-a)
     tier:
@@ -131,7 +131,7 @@ raptor-motionmark-animometer-firefox:
             - --test=raptor-motionmark-animometer
 
 raptor-motionmark-animometer-firefox-profiling:
-    description: "Raptor MotionMark Animometer on Firefox with Gecko Profiling"
+    description: Raptor MotionMark Animometer on Firefox with Gecko Profiling
     try-name: raptor-motionmark-animometer-firefox-profiling
     treeherder-symbol: Rap-Prof(mm-a)
     max-run-time: 900
@@ -141,7 +141,7 @@ raptor-motionmark-animometer-firefox-profiling:
             - --gecko-profile
 
 raptor-webaudio-firefox:
-    description: "Raptor WebAudio on Firefox"
+    description: Raptor WebAudio on Firefox
     try-name: raptor-webaudio-firefox
     treeherder-symbol: Rap(wa)
     tier:
@@ -153,7 +153,7 @@ raptor-webaudio-firefox:
             - --test=raptor-webaudio
 
 raptor-webaudio-firefox-profiling:
-    description: "Raptor WebAudio on Firefox with Gecko Profiling"
+    description: Raptor WebAudio on Firefox with Gecko Profiling
     try-name: raptor-webaudio-firefox
     treeherder-symbol: Rap-Prof(wa)
     max-run-time: 900
@@ -163,7 +163,7 @@ raptor-webaudio-firefox-profiling:
             - --gecko-profile
 
 raptor-sunspider-firefox:
-    description: "Raptor SunSpider on Firefox"
+    description: Raptor SunSpider on Firefox
     try-name: raptor-sunspider-firefox
     treeherder-symbol: Rap(ss)
     mozharness:
@@ -171,7 +171,7 @@ raptor-sunspider-firefox:
             - --test=raptor-sunspider
 
 raptor-sunspider-firefox-profiling:
-    description: "Raptor SunSpider on Firefox with Gecko Profiling"
+    description: Raptor SunSpider on Firefox with Gecko Profiling
     try-name: raptor-sunspider-firefox-profiling
     treeherder-symbol: Rap-Prof(ss)
     max-run-time: 900
@@ -181,7 +181,7 @@ raptor-sunspider-firefox-profiling:
             - --gecko-profile
 
 raptor-unity-webgl-firefox:
-    description: "Raptor Unity WebGL on Firefox"
+    description: Raptor Unity WebGL on Firefox
     try-name: raptor-unity-webgl-firefox
     treeherder-symbol: Rap(ugl)
     tier:
@@ -196,7 +196,7 @@ raptor-unity-webgl-firefox:
             - unity-webgl
 
 raptor-unity-webgl-firefox-profiling:
-    description: "Raptor Unity WebGL on Firefox with Gecko Profiling"
+    description: Raptor Unity WebGL on Firefox with Gecko Profiling
     try-name: raptor-unity-webgl-firefox-profiling
     treeherder-symbol: Rap-Prof(ugl)
     mozharness:
@@ -208,7 +208,7 @@ raptor-unity-webgl-firefox-profiling:
             - unity-webgl
 
 raptor-wasm-misc-firefox:
-    description: "Raptor WASM Misc on Firefox"
+    description: Raptor WASM Misc on Firefox
     try-name: raptor-wasm-misc-firefox
     treeherder-symbol: Rap(wm)
     mozharness:
@@ -219,7 +219,7 @@ raptor-wasm-misc-firefox:
             - wasm-misc
 
 raptor-wasm-misc-firefox-profiling:
-    description: "Raptor WASM Misc on Firefox with Gecko Profiling"
+    description: Raptor WASM Misc on Firefox with Gecko Profiling
     try-name: raptor-wasm-misc-firefox-profiling
     treeherder-symbol: Rap-Prof(wm)
     max-run-time: 900
@@ -232,7 +232,7 @@ raptor-wasm-misc-firefox-profiling:
             - wasm-misc
 
 raptor-wasm-misc-baseline-firefox:
-    description: "Raptor WASM Misc on Firefox with baseline JIT"
+    description: Raptor WASM Misc on Firefox with baseline JIT
     try-name: raptor-wasm-misc-baseline-firefox
     treeherder-symbol: Rap(wm-b)
     mozharness:
@@ -243,7 +243,7 @@ raptor-wasm-misc-baseline-firefox:
             - wasm-misc
 
 raptor-wasm-misc-baseline-firefox-profiling:
-    description: "Raptor WASM Misc on Firefox with baseline JIT and Gecko Profiling"
+    description: Raptor WASM Misc on Firefox with baseline JIT and Gecko Profiling
     try-name: raptor-wasm-misc-baseline-firefox-profiling
     treeherder-symbol: Rap-Prof(wm-b)
     max-run-time: 900
@@ -256,7 +256,7 @@ raptor-wasm-misc-baseline-firefox-profiling:
             - wasm-misc
 
 raptor-wasm-misc-optimizing-firefox:
-    description: "Raptor WASM Misc on Firefox with optimizing JIT"
+    description: Raptor WASM Misc on Firefox with optimizing JIT
     try-name: raptor-wasm-misc-optimizing-firefox
     treeherder-symbol: Rap(wm-i)
     mozharness:
@@ -267,7 +267,7 @@ raptor-wasm-misc-optimizing-firefox:
             - wasm-misc
 
 raptor-wasm-misc-optimizing-firefox-profiling:
-    description: "Raptor WASM Misc on Firefox with optimizing JIT and Gecko Profiling"
+    description: Raptor WASM Misc on Firefox with optimizing JIT and Gecko Profiling
     try-name: raptor-wasm-misc-optimizing-firefox-profiling
     treeherder-symbol: Rap-Prof(wm-i)
     max-run-time: 900
@@ -280,7 +280,7 @@ raptor-wasm-misc-optimizing-firefox-profiling:
             - wasm-misc
 
 raptor-assorted-dom-firefox:
-    description: "Raptor Assorted-Dom on Firefox"
+    description: Raptor Assorted-Dom on Firefox
     try-name: raptor-assorted-dom-firefox
     treeherder-symbol: Rap(dom)
     max-run-time:
@@ -296,7 +296,7 @@ raptor-assorted-dom-firefox:
             - assorted-dom
 
 raptor-assorted-dom-firefox-profiling:
-    description: "Raptor Assorted-Dom on Firefox with Gecko Profiling"
+    description: Raptor Assorted-Dom on Firefox with Gecko Profiling
     try-name: raptor-assorted-dom-firefox-profiling
     treeherder-symbol: Rap-Prof(dom)
     max-run-time: 900
@@ -309,7 +309,7 @@ raptor-assorted-dom-firefox-profiling:
             - assorted-dom
 
 raptor-wasm-godot-firefox:
-    description: "Raptor Wasm Godot on Firefox"
+    description: Raptor Wasm Godot on Firefox
     try-name: raptor-wasm-godot-firefox
     treeherder-symbol: Rap(godot)
     max-run-time:
@@ -322,7 +322,7 @@ raptor-wasm-godot-firefox:
             - --test=raptor-wasm-godot
 
 raptor-wasm-godot-firefox-profiling:
-    description: "Raptor Wasm Godot on Firefox with Gecko Profiling"
+    description: Raptor Wasm Godot on Firefox with Gecko Profiling
     try-name: raptor-wasm-godot-firefox-profiling
     treeherder-symbol: Rap-Prof(godot)
     max-run-time: 900
@@ -332,7 +332,7 @@ raptor-wasm-godot-firefox-profiling:
             - --gecko-profile
 
 raptor-wasm-godot-baseline-firefox:
-    description: "Raptor Wasm Godot on Firefox with baseline JIT"
+    description: Raptor Wasm Godot on Firefox with baseline JIT
     try-name: raptor-wasm-godot-baseline-firefox
     treeherder-symbol: Rap(godot-b)
     max-run-time:
@@ -345,7 +345,7 @@ raptor-wasm-godot-baseline-firefox:
             - --test=raptor-wasm-godot-baseline
 
 raptor-wasm-godot-baseline-firefox-profiling:
-    description: "Raptor Wasm Godot on Firefox with baseline JIT and Gecko Profiling"
+    description: Raptor Wasm Godot on Firefox with baseline JIT and Gecko Profiling
     try-name: raptor-wasm-godot-baseline-firefox-profiling
     treeherder-symbol: Rap-Prof(godot-b)
     max-run-time: 900
@@ -355,7 +355,7 @@ raptor-wasm-godot-baseline-firefox-profiling:
             - --gecko-profile
 
 raptor-wasm-godot-optimizing-firefox:
-    description: "Raptor WASM godot on Firefox with optimizing JIT"
+    description: Raptor WASM godot on Firefox with optimizing JIT
     try-name: raptor-wasm-godot-optimizing-firefox
     treeherder-symbol: Rap(godot-i)
     max-run-time:
@@ -368,7 +368,7 @@ raptor-wasm-godot-optimizing-firefox:
             - --test=raptor-wasm-godot-optimizing
 
 raptor-wasm-godot-optimizing-firefox-profiling:
-    description: "Raptor WASM godot on Firefox with optimizing JIT and Gecko Profiling"
+    description: Raptor WASM godot on Firefox with optimizing JIT and Gecko Profiling
     try-name: raptor-wasm-godot-optimizing-firefox-profiling
     treeherder-symbol: Rap-Prof(godot-i)
     max-run-time: 900
@@ -378,13 +378,13 @@ raptor-wasm-godot-optimizing-firefox-profiling:
             - --gecko-profile
 
 raptor-youtube-playback-v9-power-firefox:
-    description: "Raptor V9 YouTube Playback on Firefox with Power Testing"
+    description: Raptor V9 YouTube Playback on Firefox with Power Testing
     try-name: raptor-youtube-playback-v9-power-firefox
     treeherder-symbol: Rap(ytp-v9-p)
     run-on-projects:
         by-test-platform:
             (linux|windows.*64|macos)(?!.*shippable).*: []
-            default: ["mozilla-central"]
+            default: [mozilla-central]
     max-run-time: 2700
     tier:
         by-variant:
@@ -396,13 +396,13 @@ raptor-youtube-playback-v9-power-firefox:
             - --power-test
 
 raptor-youtube-playback-h264-power-firefox:
-    description: "Raptor H264 YouTube Playback on Firefox with Power Testing"
+    description: Raptor H264 YouTube Playback on Firefox with Power Testing
     try-name: raptor-youtube-playback-h264-power-firefox
     treeherder-symbol: Rap(ytp-h264-p)
     run-on-projects:
         by-test-platform:
             (linux|windows.*64|macos)(?!.*shippable).*: []
-            default: ["mozilla-central"]
+            default: [mozilla-central]
     max-run-time: 2700
     tier:
         by-variant:
@@ -414,7 +414,7 @@ raptor-youtube-playback-h264-power-firefox:
             - --power-test
 
 raptor-youtube-playback-av1-sfr-firefox:
-    description: "Raptor YouTube Playback AV1 SFR on Firefox"
+    description: Raptor YouTube Playback AV1 SFR on Firefox
     try-name: raptor-youtube-playback-av1-sfr-firefox
     treeherder-symbol: Rap(ytp-av1-sfr)
     run-on-projects:
@@ -426,7 +426,7 @@ raptor-youtube-playback-av1-sfr-firefox:
             default:
                 by-test-platform:
                     (linux|windows.*64|macos)(?!.*shippable).*: []
-                    default: ['mozilla-central']
+                    default: [mozilla-central]
     limit-platforms:
         - windows10-64-ref-hw-2017/opt
         - macosx1015-64-shippable-qr/opt
@@ -439,7 +439,7 @@ raptor-youtube-playback-av1-sfr-firefox:
             - --test=raptor-youtube-playback-av1-sfr
 
 raptor-youtube-playback-h264-sfr-firefox:
-    description: "Raptor YouTube Playback H264 SFR on Firefox"
+    description: Raptor YouTube Playback H264 SFR on Firefox
     try-name: raptor-youtube-playback-h264-sfr-firefox
     treeherder-symbol: Rap(ytp-h264-sfr)
     run-on-projects:
@@ -452,7 +452,7 @@ raptor-youtube-playback-h264-sfr-firefox:
                 by-test-platform:
                     windows.*-32.*/opt: []
                     (linux|windows.*64|macos)(?!.*shippable).*: []
-                    default: ['mozilla-central']
+                    default: [mozilla-central]
     max-run-time:
         by-test-platform:
             windows10-aarch64/opt: 3600
@@ -462,7 +462,7 @@ raptor-youtube-playback-h264-sfr-firefox:
             - --test=raptor-youtube-playback-h264-sfr
 
 raptor-youtube-playback-hfr-firefox:
-    description: "Raptor YouTube Playback HFR on Firefox"
+    description: Raptor YouTube Playback HFR on Firefox
     try-name: raptor-youtube-playback-hfr-firefox
     treeherder-symbol: Rap(ytp-hfr)
     run-on-projects:
@@ -475,7 +475,7 @@ raptor-youtube-playback-hfr-firefox:
                 by-test-platform:
                     windows.*-32.*/opt: []
                     (linux|windows.*64|macos)(?!.*shippable).*: []
-                    default: ['mozilla-central']
+                    default: [mozilla-central]
     max-run-time: 3600
     tier: 2
     mozharness:
@@ -483,7 +483,7 @@ raptor-youtube-playback-hfr-firefox:
             - --test=raptor-youtube-playback-hfr
 
 raptor-youtube-playback-vp9-sfr-firefox:
-    description: "Raptor YouTube Playback VP9 SFR on Firefox"
+    description: Raptor YouTube Playback VP9 SFR on Firefox
     try-name: raptor-youtube-playback-vp9-sfr-firefox
     treeherder-symbol: Rap(ytp-vp9-sfr)
     run-on-projects:
@@ -496,7 +496,7 @@ raptor-youtube-playback-vp9-sfr-firefox:
                 by-test-platform:
                     windows.*-32.*/opt: []
                     (linux|windows.*64|macos)(?!.*shippable).*: []
-                    default: ['mozilla-central']
+                    default: [mozilla-central]
     max-run-time:
         by-test-platform:
             windows10-aarch64/opt: 3600
@@ -508,7 +508,7 @@ raptor-youtube-playback-vp9-sfr-firefox:
             - --test=raptor-youtube-playback-vp9-sfr
 
 raptor-youtube-playback-widevine-hfr-firefox:
-    description: "Raptor YouTube Playback Widevine HFR on Firefox"
+    description: Raptor YouTube Playback Widevine HFR on Firefox
     try-name: raptor-youtube-playback-widevine-hfr-firefox
     treeherder-symbol: Rap(ytp-widevine-hfr)
     run-on-projects:
@@ -521,7 +521,7 @@ raptor-youtube-playback-widevine-hfr-firefox:
                 by-test-platform:
                     windows.*-32.*/opt: []
                     (linux|windows.*64|macos)(?!.*shippable).*: []
-                    default: ['mozilla-central']
+                    default: [mozilla-central]
     max-run-time:
         by-test-platform:
             windows10-aarch64/opt: 3600
@@ -531,7 +531,7 @@ raptor-youtube-playback-widevine-hfr-firefox:
             - --test=raptor-youtube-playback-widevine-hfr
 
 raptor-youtube-playback-widevine-h264-sfr-firefox:
-    description: "Raptor YouTube Playback Widevine H264 SFR on Firefox"
+    description: Raptor YouTube Playback Widevine H264 SFR on Firefox
     try-name: raptor-youtube-playback-widevine-h264-sfr-firefox
     treeherder-symbol: Rap(ytp-widevine-h264-sfr)
     run-on-projects:
@@ -544,7 +544,7 @@ raptor-youtube-playback-widevine-h264-sfr-firefox:
                 by-test-platform:
                     windows.*-32.*/opt: []
                     (linux|windows.*64|macos)(?!.*shippable).*: []
-                    default: ['mozilla-central']
+                    default: [mozilla-central]
     max-run-time:
         by-test-platform:
             windows10-aarch64/opt: 3600
@@ -554,7 +554,7 @@ raptor-youtube-playback-widevine-h264-sfr-firefox:
             - --test=raptor-youtube-playback-widevine-h264-sfr
 
 raptor-youtube-playback-widevine-vp9-sfr-firefox:
-    description: "Raptor YouTube Playback Widevine VP9 SFR on Firefox"
+    description: Raptor YouTube Playback Widevine VP9 SFR on Firefox
     try-name: raptor-youtube-playback-widevine-vp9-sfr-firefox
     treeherder-symbol: Rap(ytp-widevine-vp9-sfr)
     run-on-projects:
@@ -566,7 +566,7 @@ raptor-youtube-playback-widevine-vp9-sfr-firefox:
             default:
                 by-test-platform:
                     (linux|windows.*64|macos)(?!.*shippable).*: []
-                    default: ['mozilla-central']
+                    default: [mozilla-central]
     max-run-time:
         by-test-platform:
             windows10-aarch64/opt: 3600
@@ -578,7 +578,7 @@ raptor-youtube-playback-widevine-vp9-sfr-firefox:
             - --test=raptor-youtube-playback-widevine-vp9-sfr
 
 raptor-ares6-firefox:
-    description: "Raptor Ares6 on Firefox"
+    description: Raptor Ares6 on Firefox
     try-name: raptor-ares6-firefox
     treeherder-symbol: Rap(ares6)
     max-run-time: 2500
@@ -587,7 +587,7 @@ raptor-ares6-firefox:
             - --test=raptor-ares6
 
 raptor-ares6-firefox-profiling:
-    description: "Raptor Ares6 on Firefox with Gecko Profiling"
+    description: Raptor Ares6 on Firefox with Gecko Profiling
     try-name: raptor-ares6-firefox-profiling
     treeherder-symbol: Rap-Prof(ares6)
     tier:
@@ -600,7 +600,7 @@ raptor-ares6-firefox-profiling:
             - --gecko-profile
 
 raptor-jetstream2-firefox:
-    description: "Raptor Jetstream2 on Firefox"
+    description: Raptor Jetstream2 on Firefox
     try-name: raptor-jetstream2-firefox
     treeherder-symbol: Rap(js2)
     tier:
@@ -616,7 +616,7 @@ raptor-jetstream2-firefox:
             - jetstream2
 
 raptor-jetstream2-firefox-profiling:
-    description: "Raptor Jetstream2 on Firefox with Gecko Profiling"
+    description: Raptor Jetstream2 on Firefox with Gecko Profiling
     try-name: raptor-jetstream2-firefox-profiling
     treeherder-symbol: Rap-Prof(js2)
     max-run-time: 8000
