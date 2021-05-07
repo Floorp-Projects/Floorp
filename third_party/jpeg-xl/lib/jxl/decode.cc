@@ -360,6 +360,8 @@ struct JxlDecoderStruct {
   void* preview_out_buffer;
   void* dc_out_buffer;
   void* image_out_buffer;
+  JxlImageOutCallback image_out_callback;
+  void* image_out_opaque;
 
   size_t preview_out_size;
   size_t dc_out_size;
@@ -467,6 +469,8 @@ void JxlDecoderReset(JxlDecoder* dec) {
   dec->preview_out_buffer = nullptr;
   dec->dc_out_buffer = nullptr;
   dec->image_out_buffer = nullptr;
+  dec->image_out_callback = nullptr;
+  dec->image_out_opaque = nullptr;
   dec->preview_out_size = 0;
   dec->dc_out_size = 0;
   dec->image_out_size = 0;
@@ -719,7 +723,9 @@ static size_t GetStride(const JxlDecoder* dec, const JxlPixelFormat& format,
 static JxlDecoderStatus ConvertImageInternal(const JxlDecoder* dec,
                                              const jxl::ImageBundle& frame,
                                              const JxlPixelFormat& format,
-                                             void* out_image, size_t out_size) {
+                                             void* out_image, size_t out_size,
+                                             JxlImageOutCallback out_callback,
+                                             void* out_opaque) {
   // TODO(lode): handle mismatch of RGB/grayscale color profiles and pixel data
   // color/grayscale format
   const auto& metadata = dec->metadata.m;
@@ -736,7 +742,8 @@ static JxlDecoderStatus ConvertImageInternal(const JxlDecoder* dec,
   jxl::Status status = jxl::ConvertToExternal(
       frame, BitsPerChannel(format.data_type), float_format,
       format.num_channels, format.endianness, stride, dec->thread_pool.get(),
-      out_image, out_size, undo_orientation);
+      out_image, out_size, /*out_callback=*/out_callback,
+      /*out_opaque=*/out_opaque, undo_orientation);
 
   return status ? JXL_DEC_SUCCESS : JXL_DEC_ERROR;
 }
@@ -928,7 +935,8 @@ JxlDecoderStatus JxlDecoderProcessInternal(JxlDecoder* dec, const uint8_t* in,
         if (dec->preview_out_buffer) {
           JxlDecoderStatus status = ConvertImageInternal(
               dec, ib, dec->preview_out_format, dec->preview_out_buffer,
-              dec->preview_out_size);
+              dec->preview_out_size, /*out_callback=*/nullptr,
+              /*out_opaque=*/nullptr);
           if (status != JXL_DEC_SUCCESS) return status;
         }
         return JXL_DEC_PREVIEW_IMAGE;
@@ -1005,13 +1013,6 @@ JxlDecoderStatus JxlDecoderProcessInternal(JxlDecoder* dec, const uint8_t* in,
           /*allow_partial_frames=*/false, /*allow_partial_dc_global=*/false);
       if (!status) JXL_API_RETURN_IF_ERROR(status);
 
-      if (dec->image_out_format.data_type == JXL_TYPE_UINT8 &&
-          dec->image_out_format.num_channels >= 3) {
-        bool is_rgba = dec->image_out_format.num_channels == 4;
-        dec->frame_dec->MaybeSetRGB8OutputBuffer(
-            reinterpret_cast<uint8_t*>(dec->image_out_buffer),
-            GetStride(dec, dec->image_out_format), is_rgba);
-      }
       size_t sections_begin =
           DivCeil(reader->TotalBitsConsumed(), kBitsPerByte);
 
@@ -1038,9 +1039,43 @@ JxlDecoderStatus JxlDecoderProcessInternal(JxlDecoder* dec, const uint8_t* in,
             (dec->next_jpeg_reconstruction_out == nullptr ||
              dec->ib->jpeg_data == nullptr) &&
             dec->is_last_of_still) {
+          // TODO(lode): remove the dec->is_last_of_still condition if the
+          // frame decoder needs the image buffer as working space for decoding
+          // non-visible or blending frames too
           return JXL_DEC_NEED_IMAGE_OUT_BUFFER;
         }
       }
+
+      if (dec->image_out_buffer_set && !!dec->image_out_buffer &&
+          dec->image_out_format.data_type == JXL_TYPE_UINT8 &&
+          dec->image_out_format.num_channels >= 3) {
+        bool is_rgba = dec->image_out_format.num_channels == 4;
+        dec->frame_dec->MaybeSetRGB8OutputBuffer(
+            reinterpret_cast<uint8_t*>(dec->image_out_buffer),
+            GetStride(dec, dec->image_out_format), is_rgba);
+      }
+
+      const bool little_endian =
+          dec->image_out_format.endianness == JXL_LITTLE_ENDIAN ||
+          (dec->image_out_format.endianness == JXL_NATIVE_ENDIAN &&
+           IsLittleEndian());
+      bool swap_endianness = little_endian != IsLittleEndian();
+
+      // TODO(lode): Support more formats than just native endian float32 for
+      // the low-memory callback path
+      if (dec->image_out_buffer_set && !!dec->image_out_callback &&
+          dec->image_out_format.data_type == JXL_TYPE_FLOAT &&
+          dec->image_out_format.num_channels >= 3 && !swap_endianness &&
+          dec->frame_dec_in_progress) {
+        bool is_rgba = dec->image_out_format.num_channels == 4;
+        dec->frame_dec->MaybeSetFloatCallback(
+            [dec](const float* pixels, size_t x, size_t y, size_t num_pixels) {
+              dec->image_out_callback(dec->image_out_opaque, x, y, num_pixels,
+                                      pixels);
+            },
+            is_rgba);
+      }
+
       size_t pos = dec->frame_start - dec->codestream_pos;
 
       bool get_dc = dec->is_last_of_still &&
@@ -1118,9 +1153,10 @@ JxlDecoderStatus JxlDecoderProcessInternal(JxlDecoder* dec, const uint8_t* in,
       dc_bundle.SetFromImage(
           std::move(dc),
           dec->passes_state->output_encoding_info.color_encoding);
-      JXL_API_RETURN_IF_ERROR(
-          ConvertImageInternal(dec, dc_bundle, dec->dc_out_format,
-                               dec->dc_out_buffer, dec->dc_out_size));
+      JXL_API_RETURN_IF_ERROR(ConvertImageInternal(
+          dec, dc_bundle, dec->dc_out_format, dec->dc_out_buffer,
+          dec->dc_out_size,
+          /*out_callback=*/nullptr, /*out_opaque=*/nullptr));
       dec->frame_stage = FrameStage::kFull;
       return JXL_DEC_DC_IMAGE;
     }
@@ -1168,7 +1204,8 @@ JxlDecoderStatus JxlDecoderProcessInternal(JxlDecoder* dec, const uint8_t* in,
             // Copy pixels if desired.
             JxlDecoderStatus status = ConvertImageInternal(
                 dec, *dec->ib, dec->image_out_format, dec->image_out_buffer,
-                dec->image_out_size);
+                dec->image_out_size, dec->image_out_callback,
+                dec->image_out_opaque);
             if (status != JXL_DEC_SUCCESS) return status;
           }
           dec->image_out_buffer_set = false;
@@ -1901,9 +1938,10 @@ JxlDecoderStatus JxlDecoderFlushImage(JxlDecoder* dec) {
     return JXL_DEC_SUCCESS;
   }
 
-  JxlDecoderStatus status =
-      jxl::ConvertImageInternal(dec, *dec->ib, dec->image_out_format,
-                                dec->image_out_buffer, dec->image_out_size);
+  JxlDecoderStatus status = jxl::ConvertImageInternal(
+      dec, *dec->ib, dec->image_out_format, dec->image_out_buffer,
+      dec->image_out_size,
+      /*out_callback=*/nullptr, /*out_opaque=*/nullptr);
   if (status != JXL_DEC_SUCCESS) return status;
   return JXL_DEC_SUCCESS;
 }
@@ -2013,6 +2051,10 @@ JxlDecoderStatus JxlDecoderSetImageOutBuffer(JxlDecoder* dec,
   if (!dec->got_basic_info || !(dec->orig_events_wanted & JXL_DEC_FULL_IMAGE)) {
     return JXL_API_ERROR("No image out buffer needed at this time");
   }
+  if (dec->image_out_buffer_set && !!dec->image_out_callback) {
+    return JXL_API_ERROR(
+        "Cannot change from image out callback to image out buffer");
+  }
   size_t min_size;
   // This also checks whether the format is valid and supported and basic info
   // is available.
@@ -2027,13 +2069,22 @@ JxlDecoderStatus JxlDecoderSetImageOutBuffer(JxlDecoder* dec,
   dec->image_out_size = size;
   dec->image_out_format = *format;
 
-  if (format->data_type == JXL_TYPE_UINT8 && format->num_channels >= 3 &&
-      dec->frame_dec_in_progress) {
-    bool is_rgba = format->num_channels == 4;
-    dec->frame_dec->MaybeSetRGB8OutputBuffer(reinterpret_cast<uint8_t*>(buffer),
-                                             jxl::GetStride(dec, *format),
-                                             is_rgba);
+  return JXL_DEC_SUCCESS;
+}
+
+JxlDecoderStatus JxlDecoderSetImageOutCallback(JxlDecoder* dec,
+                                               const JxlPixelFormat* format,
+                                               JxlImageOutCallback callback,
+                                               void* opaque) {
+  if (dec->image_out_buffer_set && !!dec->image_out_buffer) {
+    return JXL_API_ERROR(
+        "Cannot change from image out buffer to image out callback");
   }
+
+  dec->image_out_buffer_set = true;
+  dec->image_out_callback = callback;
+  dec->image_out_opaque = opaque;
+  dec->image_out_format = *format;
 
   return JXL_DEC_SUCCESS;
 }

@@ -121,12 +121,23 @@ Status DecodeJPEGData(Span<const uint8_t> encoded, JPEGData* jpeg_data) {
     JXL_RETURN_IF_ERROR(br_read(jpeg_data->inter_marker_data[i]));
   }
   JXL_RETURN_IF_ERROR(br_read(jpeg_data->tail_data));
-  if (result != BrotliDecoderResult::BROTLI_DECODER_RESULT_SUCCESS) {
-    return JXL_FAILURE("Invalid brotli-compressed data");
-  }
 
-  if (!BrotliDecoderIsFinished(brotli_dec)) {
+  // Check if there is more decompressed output.
+  size_t available_out = 1;
+  uint64_t dummy;
+  uint8_t* next_out = reinterpret_cast<uint8_t*>(&dummy);
+  result = BrotliDecoderDecompressStream(brotli_dec, &available_in, &in,
+                                         &available_out, &next_out, nullptr);
+  if (available_out == 0 ||
+      result == BrotliDecoderResult::BROTLI_DECODER_RESULT_NEEDS_MORE_OUTPUT) {
     return JXL_FAILURE("Excess data in compressed stream");
+  }
+  if (result == BrotliDecoderResult::BROTLI_DECODER_RESULT_NEEDS_MORE_INPUT) {
+    return JXL_FAILURE("Incomplete brotli-stream");
+  }
+  if (!BrotliDecoderIsFinished(brotli_dec) ||
+      result != BrotliDecoderResult::BROTLI_DECODER_RESULT_SUCCESS) {
+    return JXL_FAILURE("Corrupted brotli-stream");
   }
   if (available_in != 0) {
     return JXL_FAILURE("Unused data after brotli stream");

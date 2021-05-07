@@ -114,7 +114,40 @@ Status UndoXYBInPlace(Image3F* idct, const Rect& rect,
         Store(TF_PQ().EncodedFromDisplay(d, linear_g), d, row1 + x);
         Store(TF_PQ().EncodedFromDisplay(d, linear_b), d, row2 + x);
       }
-    } else if (output_encoding_info.color_encoding.tf.IsGamma()) {
+    } else if (output_encoding_info.color_encoding.tf.IsHLG()) {
+      for (size_t x = 0; x < rect.xsize(); x += Lanes(d)) {
+        const auto in_opsin_x = Load(d, row0 + x);
+        const auto in_opsin_y = Load(d, row1 + x);
+        const auto in_opsin_b = Load(d, row2 + x);
+        JXL_COMPILER_FENCE;
+        auto linear_r = Undefined(d);
+        auto linear_g = Undefined(d);
+        auto linear_b = Undefined(d);
+        XybToRgb(d, in_opsin_x, in_opsin_y, in_opsin_b,
+                 output_encoding_info.opsin_params, &linear_r, &linear_g,
+                 &linear_b);
+        Store(TF_HLG().EncodedFromDisplay(d, linear_r), d, row0 + x);
+        Store(TF_HLG().EncodedFromDisplay(d, linear_g), d, row1 + x);
+        Store(TF_HLG().EncodedFromDisplay(d, linear_b), d, row2 + x);
+      }
+    } else if (output_encoding_info.color_encoding.tf.Is709()) {
+      for (size_t x = 0; x < rect.xsize(); x += Lanes(d)) {
+        const auto in_opsin_x = Load(d, row0 + x);
+        const auto in_opsin_y = Load(d, row1 + x);
+        const auto in_opsin_b = Load(d, row2 + x);
+        JXL_COMPILER_FENCE;
+        auto linear_r = Undefined(d);
+        auto linear_g = Undefined(d);
+        auto linear_b = Undefined(d);
+        XybToRgb(d, in_opsin_x, in_opsin_y, in_opsin_b,
+                 output_encoding_info.opsin_params, &linear_r, &linear_g,
+                 &linear_b);
+        Store(TF_709().EncodedFromDisplay(d, linear_r), d, row0 + x);
+        Store(TF_709().EncodedFromDisplay(d, linear_g), d, row1 + x);
+        Store(TF_709().EncodedFromDisplay(d, linear_b), d, row2 + x);
+      }
+    } else if (output_encoding_info.color_encoding.tf.IsGamma() ||
+               output_encoding_info.color_encoding.tf.IsDCI()) {
       auto gamma_tf = [&](hwy::HWY_NAMESPACE::Vec<decltype(d)> v) {
         return IfThenZeroElse(
             v <= Set(d, 1e-5f),
@@ -402,7 +435,9 @@ Status FinalizeImageRect(
   //   enough border available. (rect_for_if_input)
 
   Image3F* output_color =
-      dec_state->rgb_output == nullptr ? output_image->color() : nullptr;
+      dec_state->rgb_output == nullptr && dec_state->pixel_callback == nullptr
+          ? output_image->color()
+          : nullptr;
 
   Image3F* storage_for_if = output_color;
   Rect rect_for_if = output_rect;
@@ -490,7 +525,7 @@ Status FinalizeImageRect(
   // +-------------------------------------------------------------------+
   Image3F* output_pixel_data_storage = output_color;
   Rect upsampled_output_rect_for_storage = upsampled_output_rect;
-  if (dec_state->rgb_output) {
+  if (dec_state->rgb_output || dec_state->pixel_callback) {
     size_t log2_upsampling = CeilLog2Nonzero(frame_header.upsampling);
     if (storage_for_if == output_color) {
       storage_for_if =
@@ -520,12 +555,7 @@ Status FinalizeImageRect(
   if (ec < metadata.extra_channel_info.size()) {
     JXL_ASSERT(ec < extra_channels.size());
     alpha = extra_channels[ec].first;
-    JXL_ASSERT(upsampled_output_rect.x0() >= extra_channels[ec].second.x0());
-    JXL_ASSERT(upsampled_output_rect.y0() >= extra_channels[ec].second.y0());
-    alpha_rect =
-        Rect(upsampled_output_rect.x0() - extra_channels[ec].second.x0(),
-             upsampled_output_rect.y0() - extra_channels[ec].second.y0(),
-             upsampled_output_rect.xsize(), upsampled_output_rect.ysize());
+    alpha_rect = extra_channels[ec].second;
   }
 
   // +----------------------------- STEP 3 ------------------------------+
@@ -711,6 +741,40 @@ Status FinalizeImageRect(
          upsampled_output_rect.Lines(available_y, num_ys)
              .Crop(Rect(0, 0, frame_dim.xsize, frame_dim.ysize)),
          dec_state->rgb_output, dec_state->rgb_stride);
+      }
+      if (dec_state->pixel_callback != nullptr) {
+        Rect alpha_line_rect = alpha_rect.Lines(available_y, num_ys);
+        Rect color_input_line_rect =
+            upsampled_output_rect_for_storage.Lines(available_y, num_ys);
+        Rect image_line_rect =
+            upsampled_output_rect.Lines(available_y, num_ys)
+                .Crop(Rect(0, 0, frame_dim.xsize, frame_dim.ysize));
+        const float* line_buffers[4];
+        for (size_t iy = 0; iy < image_line_rect.ysize(); iy++) {
+          for (size_t c = 0; c < 3; c++) {
+            line_buffers[c] = color_input_line_rect.ConstPlaneRow(
+                *output_pixel_data_storage, c, iy);
+          }
+          if (alpha) {
+            line_buffers[3] = alpha_line_rect.ConstRow(*alpha, iy);
+          } else {
+            line_buffers[3] = dec_state->opaque_alpha.data();
+          }
+          std::vector<float>& interleaved =
+              dec_state->pixel_callback_rows[thread];
+          size_t j = 0;
+          for (size_t i = 0; i < image_line_rect.xsize(); i++) {
+            interleaved[j++] = line_buffers[0][i];
+            interleaved[j++] = line_buffers[1][i];
+            interleaved[j++] = line_buffers[2][i];
+            if (dec_state->rgb_output_is_rgba) {
+              interleaved[j++] = line_buffers[3][i];
+            }
+          }
+          dec_state->pixel_callback(interleaved.data(), image_line_rect.x0(),
+                                    image_line_rect.y0() + iy,
+                                    image_line_rect.xsize());
+        }
       }
     }
   }
