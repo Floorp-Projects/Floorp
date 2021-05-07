@@ -16,7 +16,7 @@ namespace widget {
 // A class for drawing to double-buffered windows.
 class WindowSurface {
  public:
-  virtual ~WindowSurface() = default;
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WindowSurface);
 
   // Locks a region of the window for drawing, returning a draw target
   // capturing the bounds of the provided region.
@@ -30,6 +30,9 @@ class WindowSurface {
 
   // Whether the window surface represents a fallback method.
   virtual bool IsFallback() const { return false; }
+
+ protected:
+  virtual ~WindowSurface() = default;
 };
 
 }  // namespace widget
