@@ -51,10 +51,11 @@ A FrameLayout here is an efficient way of having a views stack while allowing:
             <TextView
                 android:id="@+id/mozac_browser_tabstray_title"
                 android:layout_width="0dp"
-                android:layout_height="30dp"
+                android:layout_height="wrap_content"
                 android:layout_alignParentTop="true"
                 android:ellipsize="none"
                 android:fadingEdgeLength="25dp"
+                android:minHeight="30dp"
                 android:paddingHorizontal="7dp"
                 android:paddingVertical="5dp"
                 android:requiresFadingEdge="horizontal"
