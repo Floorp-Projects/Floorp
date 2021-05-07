@@ -3,7 +3,7 @@ import os
 import subprocess
 import time
 import sys
-from six.moves import urllib
+import urllib
 
 
 class WPTServer(object):
