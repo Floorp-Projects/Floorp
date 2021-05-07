@@ -6926,7 +6926,7 @@ static bool HandleInstantiationFailure(JSContext* cx, CallArgs args,
   options.setMutedErrors(source->mutedErrors())
       .setFile(source->filename())
       .setNoScriptRval(false);
-  options.asmJSOption = AsmJSOption::Disabled;
+  options.asmJSOption = AsmJSOption::DisabledByAsmJSPref;
 
   // The exported function inherits an implicit strict context if the module
   // also inherited it somehow.
@@ -7029,13 +7029,13 @@ static bool TypeFailureWarning(frontend::ParserBase& parser, const char* str) {
 // enabled for wasm, since asm.js compilation goes via wasm.
 static bool IsAsmJSCompilerAvailable(JSContext* cx) {
 #ifdef JS_CODEGEN_ARM64
-  // Disable asm.js-via-Ion on arm64 until such time as that pathway, along
+  // Disable asm.js-via-wasm on arm64 until such time as that pathway, along
   // with the associated compiler-option logic, is better tested.  asm.js will
   // still be available on arm64, but will be forced along the JS pathway,
   // with the associated performance lossage.  See bugs 1699379 and 1697560.
   return false;
 #endif
-  return HasPlatformSupport(cx) && IonAvailable(cx);
+  return HasPlatformSupport(cx) && WasmCompilerForAsmJSAvailable(cx);
 }
 
 static bool EstablishPreconditions(JSContext* cx,
@@ -7045,8 +7045,11 @@ static bool EstablishPreconditions(JSContext* cx,
   }
 
   switch (parser.options().asmJSOption) {
-    case AsmJSOption::Disabled:
+    case AsmJSOption::DisabledByAsmJSPref:
       return TypeFailureWarning(parser, "Disabled by 'asmjs' runtime option");
+    case AsmJSOption::DisabledByNoWasmCompiler:
+      return TypeFailureWarning(
+          parser, "Disabled because no suitable wasm compiler is available");
     case AsmJSOption::DisabledByDebugger:
       return TypeFailureWarning(parser, "Disabled by debugger");
     case AsmJSOption::Enabled:
@@ -7147,11 +7150,13 @@ bool js::IsAsmJSStrictModeModuleOrFunction(JSFunction* fun) {
   return false;
 }
 
+bool js::IsAsmJSCompilationAvailable(JSContext* cx) {
+  return cx->options().asmJS() && IsAsmJSCompilerAvailable(cx);
+}
+
 bool js::IsAsmJSCompilationAvailable(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
-
-  bool available = cx->options().asmJS() && IsAsmJSCompilerAvailable(cx);
-
+  bool available = IsAsmJSCompilationAvailable(cx);
   args.rval().set(BooleanValue(available));
   return true;
 }
