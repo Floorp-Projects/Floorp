@@ -63,41 +63,9 @@ SOURCES += [
     "WaylandVsyncSource.cpp",  # conflicts with X11 headers
 ]
 
-if CONFIG["MOZ_X11"]:
+if CONFIG["ACCESSIBILITY"]:
     UNIFIED_SOURCES += [
-        "CompositorWidgetChild.cpp",
-        "CompositorWidgetParent.cpp",
-        "GtkCompositorWidget.cpp",
-        "InProcessGtkCompositorWidget.cpp",
-        "nsUserIdleServiceGTK.cpp",
-    ]
-    EXPORTS.mozilla.widget += [
-        "CompositorWidgetChild.h",
-        "CompositorWidgetParent.h",
-        "GtkCompositorWidget.h",
-        "InProcessGtkCompositorWidget.h",
-    ]
-
-if CONFIG["NS_PRINTING"]:
-    UNIFIED_SOURCES += [
-        "nsDeviceContextSpecG.cpp",
-        "nsPrintDialogGTK.cpp",
-        "nsPrintSettingsGTK.cpp",
-        "nsPrintSettingsServiceGTK.cpp",
-    ]
-
-if CONFIG["MOZ_X11"]:
-    UNIFIED_SOURCES += [
-        "nsClipboard.cpp",
-        "nsClipboardX11.cpp",
-        "nsDragService.cpp",
-        "WindowSurfaceProvider.cpp",
-        "WindowSurfaceX11.cpp",
-        "WindowSurfaceX11Image.cpp",
-        "WindowSurfaceXRender.cpp",
-    ]
-    EXPORTS.mozilla.widget += [
-        "WindowSurfaceProvider.h",
+        "maiRedundantObjectFactory.c",
     ]
 
 if CONFIG["MOZ_WAYLAND"]:
@@ -116,9 +84,38 @@ if CONFIG["MOZ_WAYLAND"]:
         "nsWaylandDisplay.h",
     ]
 
-if CONFIG["ACCESSIBILITY"]:
+if CONFIG["MOZ_X11"]:
     UNIFIED_SOURCES += [
-        "maiRedundantObjectFactory.c",
+        "CompositorWidgetChild.cpp",
+        "CompositorWidgetParent.cpp",
+        "GtkCompositorWidget.cpp",
+        "InProcessGtkCompositorWidget.cpp",
+        "nsClipboard.cpp",
+        "nsClipboardX11.cpp",
+        "nsDragService.cpp",
+        "nsShmImage.cpp",
+        "nsUserIdleServiceGTK.cpp",
+        "WindowSurfaceProvider.cpp",
+        "WindowSurfaceX11.cpp",
+        "WindowSurfaceX11Image.cpp",
+        "WindowSurfaceX11SHM.cpp",
+        "WindowSurfaceXRender.cpp",
+    ]
+    EXPORTS.mozilla.widget += [
+        "CompositorWidgetChild.h",
+        "CompositorWidgetParent.h",
+        "GtkCompositorWidget.h",
+        "InProcessGtkCompositorWidget.h",
+        "WindowSurface.h",
+        "WindowSurfaceProvider.h",
+    ]
+
+if CONFIG["NS_PRINTING"]:
+    UNIFIED_SOURCES += [
+        "nsDeviceContextSpecG.cpp",
+        "nsPrintDialogGTK.cpp",
+        "nsPrintSettingsGTK.cpp",
+        "nsPrintSettingsServiceGTK.cpp",
     ]
 
 UNIFIED_SOURCES += [
