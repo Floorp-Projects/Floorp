@@ -742,6 +742,11 @@ class nsXULPopupManager final : public nsIDOMEventListener,
   // cause style changes and frame destruction.
   void HidePopupsInList(const nsTArray<nsMenuPopupFrame*>& aFrames);
 
+  // Hide, but don't close, visible menus. Called before executing a menu item.
+  // The caller promises to close the menus properly (with a call to HidePopup)
+  // once the item has been executed.
+  void HideOpenMenusBeforeExecutingMenu(CloseMenuMode aMode);
+
   // set the event that was used to trigger the popup, or null to clear the
   // event details. aTriggerContent will be set to the target of the event.
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
