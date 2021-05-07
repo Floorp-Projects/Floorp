@@ -383,11 +383,6 @@ typedef NativePropertiesN<7> NativeProperties;
 struct NativePropertiesHolder {
   const NativeProperties* regular;
   const NativeProperties* chromeOnly;
-  // Points to a static bool that's set to true once the regular and chromeOnly
-  // NativeProperties have been inited. This is a pointer to a bool instead of
-  // a bool value because NativePropertiesHolder is stored by value in
-  // a static const NativePropertyHooks.
-  bool* inited;
 };
 
 // Helper structure for Xrays for DOM binding objects. The same instance is used

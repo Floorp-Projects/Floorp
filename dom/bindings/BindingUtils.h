@@ -1770,6 +1770,8 @@ static inline bool AtomizeAndPinJSString(JSContext* cx, jsid& id,
   return false;
 }
 
+bool InitIds(JSContext* cx, const NativeProperties* properties);
+
 void GetInterfaceImpl(JSContext* aCx, nsIInterfaceRequestor* aRequestor,
                       nsWrapperCache* aCache, JS::Handle<JS::Value> aIID,
                       JS::MutableHandle<JS::Value> aRetval,
