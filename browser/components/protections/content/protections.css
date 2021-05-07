@@ -1036,6 +1036,7 @@ label[for="tab-cryptominer"]:hover ~ #highlight-hover {
 #monitor-partial-breaches-link:hover,
 #monitor-breaches-link:hover {
   background-color: var(--in-content-primary-button-background-hover);
+  color: var(--in-content-primary-button-text-color-hover);
 }
 
 #manage-protections:focus,
