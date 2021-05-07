@@ -31,12 +31,19 @@ export class _CustomizeMenu extends React.PureComponent {
   render() {
     return (
       <span>
-        <button
-          className="personalize-button"
-          onClick={() => this.props.onOpen()}
-          data-l10n-id="newtab-personalize-button-label"
-          ref={c => (this.openButton = c)}
-        />
+        <CSSTransition
+          timeout={300}
+          classNames="personalize-animate"
+          in={!this.props.showing}
+          appear={true}
+        >
+          <button
+            className="personalize-button"
+            onClick={() => this.props.onOpen()}
+            data-l10n-id="newtab-personalize-button-label"
+            ref={c => (this.openButton = c)}
+          />
+        </CSSTransition>
         <CSSTransition
           timeout={250}
           classNames="customize-animate"
