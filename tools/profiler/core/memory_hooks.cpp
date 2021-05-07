@@ -540,7 +540,7 @@ namespace mozilla::profiler {
 // Initialization
 //---------------------------------------------------------------------------
 
-void install_memory_hooks() {
+BaseProfilerCount* install_memory_hooks() {
   if (!sCounter) {
     sCounter = new ProfilerCounterTotal("malloc", "Memory",
                                         "Amount of allocated memory");
@@ -551,6 +551,7 @@ void install_memory_hooks() {
     sCounter->Clear();
   }
   jemalloc_replace_dynamic(replace_init);
+  return sCounter;
 }
 
 // Remove the hooks, but leave the sCounter machinery. Deleting the counter
