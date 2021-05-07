@@ -379,7 +379,7 @@ var ExtensionAddonObserver = {
         ExtensionStorage.clear(addon.id, { shouldNotifyListeners: false })
       );
 
-      // Clear any IndexedDB storage created by the extension
+      // Clear any IndexedDB and Cache API storage created by the extension.
       // If LSNG is enabled, this also clears localStorage.
       Services.qms.clearStoragesForPrincipal(principal);
 

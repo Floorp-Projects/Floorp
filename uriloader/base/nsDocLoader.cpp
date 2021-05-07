@@ -641,6 +641,20 @@ nsDocLoader::OnStopRequest(nsIRequest* aRequest, nsresult aStatus) {
   // when address of the request is reused.
   RemoveRequestInfo(aRequest);
 
+  // For the special case where the current document is an initial about:blank
+  // document, we may still have subframes loading, and keeping the DocLoader
+  // busy. In that case, if we have an error, we won't show it until those
+  // frames finish loading, which is nonsensical. So stop any subframe loads
+  // now.
+  if (NS_FAILED(aStatus) && aStatus != NS_BINDING_ABORTED &&
+      aStatus != NS_BINDING_REDIRECTED && aStatus != NS_BINDING_RETARGETED) {
+    if (RefPtr<Document> doc = do_GetInterface(GetAsSupports(this))) {
+      if (doc->IsInitialDocument()) {
+        NS_OBSERVER_ARRAY_NOTIFY_XPCOM_OBSERVERS(mChildList, Stop, ());
+      }
+    }
+  }
+
   //
   // Only fire the DocLoaderIsEmpty(...) if we may need to fire onload.
   //

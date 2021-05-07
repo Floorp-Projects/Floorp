@@ -19,12 +19,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ee2a4ec343196209d6594e19543ae87a39f96d5534d7174822a3ad825dd6ed7e"
 
 [[package]]
-name = "adler32"
-version = "1.0.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5d2e7343e7fc9de883d1b0341e0b13970f764c14101234857d2ddafa1cb1cac2"
-
-[[package]]
 name = "ahash"
 version = "0.4.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -446,12 +440,6 @@ name = "byte-tools"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "980479e6fde23246dfb54d47580d66b4e99202e7579c5eaa9fe10ecb5ebd2182"
-
-[[package]]
-name = "bytemuck"
-version = "1.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "37fa13df2292ecb479ec23aa06f4507928bef07839be9ef15281411076629431"
 
 [[package]]
 name = "byteorder"
@@ -1125,16 +1113,6 @@ dependencies = [
  "winapi",
  "wineventlog",
  "wio",
-]
-
-[[package]]
-name = "deflate"
-version = "0.7.19"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8a6abb26e16e8d419b5c78662aa9f82857c2386a073da266840e474d5055ec86"
-dependencies = [
- "adler32",
- "byteorder",
 ]
 
 [[package]]
@@ -2436,20 +2414,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "image"
-version = "0.23.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ef4e336ec01a678e7ab692914c641181528e8656451e6252f8f9e33728882eaf"
-dependencies = [
- "bytemuck",
- "byteorder",
- "num-iter",
- "num-rational",
- "num-traits",
- "png",
-]
-
-[[package]]
 name = "indexmap"
 version = "1.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2457,15 +2421,6 @@ checksum = "55e2e4c765aa53a0424761bf9f41aa7a6ac1efa87238f59560640e27fca028f2"
 dependencies = [
  "autocfg 1.0.1",
  "hashbrown",
-]
-
-[[package]]
-name = "inflate"
-version = "0.4.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1cdb29978cc5797bd8dcc8e5bf7de604891df2a8dc576973d71a281e916db2ff"
-dependencies = [
- "adler32",
 ]
 
 [[package]]
@@ -3561,27 +3516,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "num-iter"
-version = "0.1.39"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "76bd5272412d173d6bf9afdf98db8612bbabc9a7a830b7bfc9c188911716132e"
-dependencies = [
- "autocfg 0.1.6",
- "num-integer",
- "num-traits",
-]
-
-[[package]]
-name = "num-rational"
-version = "0.2.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4e96f040177bb3da242b5b1ecf3f54b5d5af3efbbfb18608977a5d2767b22f10"
-dependencies = [
- "num-integer",
- "num-traits",
-]
-
-[[package]]
 name = "num-traits"
 version = "0.2.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3942,18 +3876,6 @@ dependencies = [
  "line-wrap",
  "serde",
  "xml-rs",
-]
-
-[[package]]
-name = "png"
-version = "0.15.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ef859a23054bbfee7811284275ae522f0434a3c8e7f4b74bd4a35ae7e1c4a283"
-dependencies = [
- "bitflags",
- "crc32fast",
- "deflate",
- "inflate",
 ]
 
 [[package]]
@@ -5768,12 +5690,10 @@ dependencies = [
 name = "webrender"
 version = "0.61.0"
 dependencies = [
- "base64 0.12.0",
  "bincode",
  "bitflags",
  "build-parallel",
  "byteorder",
- "cfg-if 0.1.10",
  "core-foundation",
  "core-graphics",
  "core-text",
@@ -5786,7 +5706,6 @@ dependencies = [
  "fxhash",
  "gleam",
  "glslopt",
- "image",
  "lazy_static",
  "libc",
  "log",
@@ -5797,7 +5716,6 @@ dependencies = [
  "rayon",
  "ron",
  "serde",
- "serde_json",
  "smallvec",
  "svg_fmt",
  "swgl",
@@ -5807,7 +5725,6 @@ dependencies = [
  "webrender_api",
  "webrender_build",
  "wr_malloc_size_of",
- "ws",
 ]
 
 [[package]]
@@ -6011,24 +5928,6 @@ version = "0.0.1"
 dependencies = [
  "app_units",
  "euclid",
-]
-
-[[package]]
-name = "ws"
-version = "0.9.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c51a2c47b5798ccc774ffb93ff536aec7c4275d722fd9c740c83cdd1af1f2d94"
-dependencies = [
- "byteorder",
- "bytes 0.4.9",
- "httparse",
- "log",
- "mio",
- "mio-extras",
- "rand",
- "sha-1",
- "slab",
- "url",
 ]
 
 [[package]]

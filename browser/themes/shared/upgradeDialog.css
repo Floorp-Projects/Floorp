@@ -3,11 +3,20 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 body {
-  background: url(chrome://branding/content/about-logo.svg) center 45px / 54px no-repeat;
+  --logo-pos: 45px;
+  --margin: 3px;
+
+  background: url(chrome://branding/content/about-logo.svg) center
+    var(--logo-pos) / calc(9px + var(--logo-pos)) no-repeat;
   display: flex;
   flex-direction: column;
-  padding: 110px 30px 10px;
+  padding: calc(20px + 2 * var(--logo-pos)) 30px 10px;
   width: 544px;
+}
+
+body.compact {
+  --logo-pos: 25px;
+  --margin: 0px;
 }
 
 body > .hidden {
@@ -36,14 +45,19 @@ spacer {
   text-align: center;
 }
 
+body.compact #subtitle {
+  font-size: 14px;
+  line-height: 20px;
+}
+
 .items {
   margin: auto;
-  max-width: 320px;
+  max-width: calc(392px - 24 * var(--margin));
 }
 
 .items > li {
   list-style: none;
-  margin: 25px 0;
+  margin: calc(18px + 2 * var(--margin)) 0;
   position: relative;
 }
 
@@ -78,11 +92,22 @@ spacer {
   margin: 4px 0;
 }
 
+body.compact .items h2 {
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 16px;
+}
+
 .items p {
   color: var(--in-content-deemphasized-text);
   font-size: 14px;
   line-height: 20px;
   margin: 0;
+}
+
+body.compact .items p {
+  font-size: 12px;
+  line-height: 16px;
 }
 
 .themes {
@@ -172,7 +197,7 @@ spacer {
 
 #primary,
 #secondary {
-  margin: 5px auto;
+  margin: calc(2px + var(--margin)) auto;
 }
 
 #secondary {
@@ -183,7 +208,8 @@ spacer {
 
 .steps {
   color: var(--checkbox-border-color);
-  margin: 9px auto;
+  line-height: 14px;
+  margin: calc(3 * var(--margin)) auto;
   user-select: none;
 }
 

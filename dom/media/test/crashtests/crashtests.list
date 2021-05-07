@@ -107,6 +107,7 @@ load buffer-source-slow-resampling-1.html
 load convolver-memory-report-1.html
 load copyFromChannel-2.html
 load empty-buffer-source.html
+test-pref(media.devices.insecure.enabled,true) load enumerateDevices-after-discard-1.html
 skip-if(verify&&isDebugBuild&&gtkWidget) HTTP load media-element-source-seek-1.html
 skip-if(verify&&isDebugBuild&&gtkWidget) load offline-buffer-source-ended-1.html
 load oscillator-ended-1.html

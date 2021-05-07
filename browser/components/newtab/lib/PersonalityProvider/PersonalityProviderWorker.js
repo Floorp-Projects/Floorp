@@ -35,3 +35,6 @@ worker.close = function() {
 };
 
 self.addEventListener("message", msg => worker.handleMessage(msg));
+self.addEventListener("unhandledrejection", function(error) {
+  throw error.reason;
+});

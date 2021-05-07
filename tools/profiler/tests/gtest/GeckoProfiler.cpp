@@ -1984,19 +1984,21 @@ class GTestStackCollector final : public ProfilerStackCollector {
   int mFrames;
 };
 
-void DoSuspendAndSample(int aTid, nsIThread* aThread) {
-  aThread->Dispatch(
-      NS_NewRunnableFunction("GeckoProfiler_SuspendAndSample_Test::TestBody",
-                             [&]() {
-                               uint32_t features = ProfilerFeature::Leaf;
-                               GTestStackCollector collector;
-                               profiler_suspend_and_sample_thread(
-                                   aTid, features, collector,
-                                   /* sampleNative = */ true);
+void DoSuspendAndSample(int aTidToSample, nsIThread* aSamplingThread) {
+  aSamplingThread->Dispatch(
+      NS_NewRunnableFunction(
+          "GeckoProfiler_SuspendAndSample_Test::TestBody",
+          [&]() {
+            uint32_t features = ProfilerFeature::Leaf;
+            GTestStackCollector collector;
+            profiler_suspend_and_sample_thread(aTidToSample, features,
+                                               collector,
+                                               /* sampleNative = */ true);
 
-                               ASSERT_TRUE(collector.mSetIsMainThread == 1);
-                               ASSERT_TRUE(collector.mFrames > 0);
-                             }),
+            ASSERT_TRUE(collector.mSetIsMainThread ==
+                        (aTidToSample == profiler_main_thread_id()));
+            ASSERT_TRUE(collector.mFrames > 0);
+          }),
       NS_DISPATCH_SYNC);
 }
 
@@ -2013,6 +2015,8 @@ TEST(GeckoProfiler, SuspendAndSample)
   // Suspend and sample while the profiler is inactive.
   DoSuspendAndSample(tid, thread);
 
+  DoSuspendAndSample(0, thread);
+
   uint32_t features = ProfilerFeature::JS | ProfilerFeature::Threads;
   const char* filters[] = {"GeckoMain", "Compositor"};
 
@@ -2023,6 +2027,8 @@ TEST(GeckoProfiler, SuspendAndSample)
 
   // Suspend and sample while the profiler is active.
   DoSuspendAndSample(tid, thread);
+
+  DoSuspendAndSample(0, thread);
 
   profiler_stop();
 

@@ -37,7 +37,7 @@ And make sure that it is in the PATH
 """.strip()
 
 
-def parse_issues(log, config, issues, path, onlyIn):
+def parse_issues(log, config, issues, base_path, onlyIn):
     results = []
     if onlyIn:
         onlyIn = os.path.normcase(os.path.normpath(onlyIn))
@@ -72,6 +72,7 @@ def parse_issues(log, config, issues, path, onlyIn):
                         continue
 
                     l = detail["spans"][0]
+                    p = os.path.join(base_path, l["file_name"])
                     if onlyIn and onlyIn not in os.path.normcase(os.path.normpath(p)):
                         # Case when we have a .rs in the include list in the yaml file
                         log.debug(
@@ -225,7 +226,7 @@ def lint(paths, config, fix=None, **lintargs):
             p = os.path.dirname(p)
             onlyIn = path_conf
 
-        if os.path.isdir(p):
+        elif os.path.isdir(p):
             # Sometimes, clippy reports issues from other crates
             # Make sure that we don't display that either
             onlyIn = p
@@ -244,7 +245,15 @@ def lint(paths, config, fix=None, **lintargs):
 
         # Remove build artifacts created by clippy
         run_cargo_command(log, clean_command)
-        results += parse_issues(log, config, output, p, onlyIn)
+
+        # Source paths in clippy spans, when they are relative, are relative to the
+        # workspace if there is one.
+        for cargo_toml in cargo_files:
+            with open(cargo_toml) as fh:
+                if "[workspace]" in fh.read():
+                    p = cargo_toml
+                    break
+        results += parse_issues(log, config, output, os.path.dirname(p), onlyIn)
 
     # Remove Cargo.lock files created by clippy
     for lock_file in lock_files_to_delete:
