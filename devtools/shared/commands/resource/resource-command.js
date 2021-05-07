@@ -159,13 +159,15 @@ class ResourceCommand {
     // "resource-available" listener before requesting for the resources in _startListening.
     await this._watchAllTargets();
 
+    const promises = [];
     for (const resource of resources) {
       // If we are registering the first listener, so start listening from the server about
       // this one resource.
       if (!this._hasListenerForResource(resource)) {
-        await this._startListening(resource);
+        promises.push(this._startListening(resource));
       }
     }
+    await Promise.all(promises);
 
     // The resource cache is immediately filled when receiving the sources, but they are
     // emitted with a delay due to throttling. Since the cache can contain resources that
