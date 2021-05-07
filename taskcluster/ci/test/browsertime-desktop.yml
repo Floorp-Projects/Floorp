@@ -11,7 +11,7 @@ job-defaults:
     suite: raptor
     run-on-projects:
         by-test-platform:
-            linux.*shippable[^-qr].*: ['mozilla-central']
+            linux.*shippable[^-qr].*: [mozilla-central]
             default: []
     limit-platforms:
         by-app:
@@ -139,11 +139,11 @@ browsertime-tp6-essential:
                 by-app:
                     firefox:
                         by-test-platform:
-                            linux.*shippable.*: ["trunk", "mozilla-beta"]
-                            macosx1014-64-shippable-qr.*: ["trunk"]
-                            macosx1015.*shippable.*: ["trunk", "mozilla-beta"]
-                            windows10-64.*shippable.*: ["trunk", "mozilla-beta"]
-                            macosx1100.*shippable.*: ["mozilla-central", "mozilla-beta"]
+                            linux.*shippable.*: [trunk, mozilla-beta]
+                            macosx1014-64-shippable-qr.*: [trunk]
+                            macosx1015.*shippable.*: [trunk, mozilla-beta]
+                            windows10-64.*shippable.*: [trunk, mozilla-beta]
+                            macosx1100.*shippable.*: [mozilla-central, mozilla-beta]
                             default: []
                     default: []
     tier:
@@ -152,7 +152,7 @@ browsertime-tp6-essential:
             default: 3
 
 browsertime-benchmark:
-    description: "Raptor (browsertime) Benchmark tests "
+    description: Raptor (browsertime) Benchmark tests
     raptor-subtests:
         - ares6
         - [assorted-dom, dom]
@@ -207,17 +207,17 @@ browsertime-benchmark:
                                 by-test-platform:
                                     windows.*-32.*: []
                                     (linux|windows10-64|macos)(?!.*shippable).*: []
-                                    default: ["autoland"]
+                                    default: [autoland]
                             default: []
                     default:
                         by-app:
                             firefox:
                                 by-test-platform:
                                     (linux|windows|macos)(?!.*shippable).*: []
-                                    linux.*shippable.*: ["trunk", "mozilla-beta"]
-                                    macosx1014-64-shippable-qr.*: ["trunk"]
-                                    macosx1015.*shippable.*: ["trunk", "mozilla-beta"]
-                                    windows10-64.*shippable.*: ["trunk", "mozilla-beta"]
+                                    linux.*shippable.*: [trunk, mozilla-beta]
+                                    macosx1014-64-shippable-qr.*: [trunk]
+                                    macosx1015.*shippable.*: [trunk, mozilla-beta]
+                                    windows10-64.*shippable.*: [trunk, mozilla-beta]
                                     default: []
                             default: []
     max-run-time:
@@ -238,7 +238,7 @@ browsertime-benchmark:
             - unity-webgl
 
 browsertime-benchmark-wasm:
-    description: "Raptor (browsertime) WASM benchmarks"
+    description: Raptor (browsertime) WASM benchmarks
     raptor-subtests:
         by-app:
             firefox:
@@ -267,9 +267,9 @@ browsertime-benchmark-wasm:
                         by-test-platform:
                             macosx1014.*: []
                             (linux|windows|macos)(?!.*shippable).*: []
-                            linux.*shippable.*: ["trunk", "mozilla-beta"]
-                            macosx1015.*shippable.*: ["trunk", "mozilla-beta"]
-                            windows10-64.*shippable.*: ["trunk", "mozilla-beta"]
+                            linux.*shippable.*: [trunk, mozilla-beta]
+                            macosx1015.*shippable.*: [trunk, mozilla-beta]
+                            windows10-64.*shippable.*: [trunk, mozilla-beta]
                             default: []
                     default: []
     max-run-time:
@@ -356,7 +356,7 @@ browsertime-tp6-profiling:
             fission: []
             default:
                 by-test-platform:
-                    linux.*shippable[^-qr].*: ['mozilla-central']
+                    linux.*shippable[^-qr].*: [mozilla-central]
                     default: []
     tier:
         by-variant:
