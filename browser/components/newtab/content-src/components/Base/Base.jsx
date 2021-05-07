@@ -13,7 +13,6 @@ import { CustomizeMenu } from "content-src/components/CustomizeMenu/CustomizeMen
 import React from "react";
 import { Search } from "content-src/components/Search/Search";
 import { Sections } from "content-src/components/Sections/Sections";
-import { CSSTransition } from "react-transition-group";
 
 export const PrefsButton = ({ onClick, icon }) => (
   <div className="prefs-button">
@@ -23,14 +22,6 @@ export const PrefsButton = ({ onClick, icon }) => (
       data-l10n-id="newtab-settings-button"
     />
   </div>
-);
-
-export const PersonalizeButton = ({ onClick }) => (
-  <button
-    className="personalize-button"
-    onClick={onClick}
-    data-l10n-id="newtab-personalize-button-label"
-  />
 );
 
 // Returns a function will not be continuously triggered when called. The
@@ -225,24 +216,16 @@ export class BaseContent extends React.PureComponent {
     return (
       <div>
         {canShowCustomizationMenu ? (
-          <span>
-            <PersonalizeButton onClick={this.openCustomizationMenu} />
-            <CSSTransition
-              timeout={0}
-              classNames="customize-animate"
-              in={showCustomizationMenu}
-              appear={true}
-            >
-              <CustomizeMenu
-                onClose={this.closeCustomizationMenu}
-                openPreferences={this.openPreferences}
-                setPref={this.setPref}
-                enabledSections={enabledSections}
-                pocketRegion={pocketRegion}
-                mayHaveSponsoredTopSites={mayHaveSponsoredTopSites}
-              />
-            </CSSTransition>
-          </span>
+          <CustomizeMenu
+            onClose={this.closeCustomizationMenu}
+            onOpen={this.openCustomizationMenu}
+            openPreferences={this.openPreferences}
+            setPref={this.setPref}
+            enabledSections={enabledSections}
+            pocketRegion={pocketRegion}
+            mayHaveSponsoredTopSites={mayHaveSponsoredTopSites}
+            showing={showCustomizationMenu}
+          />
         ) : (
           <PrefsButton onClick={this.openPreferences} icon={prefsButtonIcon} />
         )}

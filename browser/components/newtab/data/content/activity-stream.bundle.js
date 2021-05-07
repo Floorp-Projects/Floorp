@@ -509,7 +509,6 @@ var actionUtils = {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* WEBPACK VAR INJECTION */(function(global) {/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "PrefsButton", function() { return PrefsButton; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "PersonalizeButton", function() { return PersonalizeButton; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "_Base", function() { return _Base; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "BaseContent", function() { return BaseContent; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "Base", function() { return Base; });
@@ -526,14 +525,11 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_8___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_8__);
 /* harmony import */ var content_src_components_Search_Search__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(65);
 /* harmony import */ var content_src_components_Sections_Sections__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(47);
-/* harmony import */ var react_transition_group__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(29);
-/* harmony import */ var react_transition_group__WEBPACK_IMPORTED_MODULE_11___default = /*#__PURE__*/__webpack_require__.n(react_transition_group__WEBPACK_IMPORTED_MODULE_11__);
 function _extends() { _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return _extends.apply(this, arguments); }
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
-
 
 
 
@@ -554,14 +550,7 @@ const PrefsButton = ({
   className: `icon ${icon || "icon-settings"}`,
   onClick: onClick,
   "data-l10n-id": "newtab-settings-button"
-}));
-const PersonalizeButton = ({
-  onClick
-}) => /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement("button", {
-  className: "personalize-button",
-  onClick: onClick,
-  "data-l10n-id": "newtab-personalize-button-label"
-}); // Returns a function will not be continuously triggered when called. The
+})); // Returns a function will not be continuously triggered when called. The
 // function will be triggered if called again after `wait` milliseconds.
 
 function debounce(func, wait) {
@@ -750,21 +739,16 @@ class BaseContent extends react__WEBPACK_IMPORTED_MODULE_8___default.a.PureCompo
       mayHaveSponsoredTopSites
     } = prefs;
     const outerClassName = ["outer-wrapper", isDiscoveryStream && pocketEnabled && "ds-outer-wrapper-search-alignment", isDiscoveryStream && "ds-outer-wrapper-breakpoint-override", prefs.showSearch && this.state.fixedSearch && !noSectionsEnabled && "fixed-search", prefs.showSearch && noSectionsEnabled && "only-search", prefs["logowordmark.alwaysVisible"] && "visible-logo", newNewtabExperienceEnabled && "newtab-experience"].filter(v => v).join(" ");
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement("div", null, canShowCustomizationMenu ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement("span", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement(PersonalizeButton, {
-      onClick: this.openCustomizationMenu
-    }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement(react_transition_group__WEBPACK_IMPORTED_MODULE_11__["CSSTransition"], {
-      timeout: 0,
-      classNames: "customize-animate",
-      in: showCustomizationMenu,
-      appear: true
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement(content_src_components_CustomizeMenu_CustomizeMenu__WEBPACK_IMPORTED_MODULE_7__["CustomizeMenu"], {
+    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement("div", null, canShowCustomizationMenu ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement(content_src_components_CustomizeMenu_CustomizeMenu__WEBPACK_IMPORTED_MODULE_7__["CustomizeMenu"], {
       onClose: this.closeCustomizationMenu,
+      onOpen: this.openCustomizationMenu,
       openPreferences: this.openPreferences,
       setPref: this.setPref,
       enabledSections: enabledSections,
       pocketRegion: pocketRegion,
-      mayHaveSponsoredTopSites: mayHaveSponsoredTopSites
-    }))) : /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement(PrefsButton, {
+      mayHaveSponsoredTopSites: mayHaveSponsoredTopSites,
+      showing: showCustomizationMenu
+    }) : /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement(PrefsButton, {
       onClick: this.openPreferences,
       icon: prefsButtonIcon
     }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement("div", {
@@ -14747,6 +14731,9 @@ class ContentSection_ContentSection extends external_React_default.a.PureCompone
 // EXTERNAL MODULE: external "ReactRedux"
 var external_ReactRedux_ = __webpack_require__(7);
 
+// EXTERNAL MODULE: external "ReactTransitionGroup"
+var external_ReactTransitionGroup_ = __webpack_require__(29);
+
 // CONCATENATED MODULE: ./content-src/components/CustomizeMenu/CustomizeMenu.jsx
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "_CustomizeMenu", function() { return CustomizeMenu_CustomizeMenu; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "CustomizeMenu", function() { return CustomizeMenu; });
@@ -14758,12 +14745,22 @@ var external_ReactRedux_ = __webpack_require__(7);
 
 
 
+
 class CustomizeMenu_CustomizeMenu extends external_React_default.a.PureComponent {
   render() {
-    return /*#__PURE__*/external_React_default.a.createElement("div", {
+    return /*#__PURE__*/external_React_default.a.createElement("span", null, /*#__PURE__*/external_React_default.a.createElement("button", {
+      className: "personalize-button",
+      onClick: () => this.props.onOpen(),
+      "data-l10n-id": "newtab-personalize-button-label"
+    }), /*#__PURE__*/external_React_default.a.createElement(external_ReactTransitionGroup_["CSSTransition"], {
+      timeout: 0,
+      classNames: "customize-animate",
+      in: this.props.showing,
+      appear: true
+    }, /*#__PURE__*/external_React_default.a.createElement("div", {
       className: "customize-menu"
     }, /*#__PURE__*/external_React_default.a.createElement("button", {
-      onClick: this.props.onClose,
+      onClick: () => this.props.onClose(),
       className: "close-button",
       "data-l10n-id": "newtab-custom-close-button"
     }), /*#__PURE__*/external_React_default.a.createElement(ThemesSection_ThemesSection, null), /*#__PURE__*/external_React_default.a.createElement(BackgroundsSection_BackgroundsSection, null), /*#__PURE__*/external_React_default.a.createElement(ContentSection_ContentSection, {
@@ -14774,7 +14771,7 @@ class CustomizeMenu_CustomizeMenu extends external_React_default.a.PureComponent
       mayHaveSponsoredTopSites: this.props.mayHaveSponsoredTopSites,
       mayHaveSponsoredStories: this.props.DiscoveryStream.config.show_spocs,
       dispatch: this.props.dispatch
-    }));
+    }))));
   }
 
 }
