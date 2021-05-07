@@ -48,7 +48,7 @@ def test_no_abort_by_user_prompt_in_other_tab(session, inline, dialog_type):
         window.opener.postMessage("foo", "*");
 
         // Delay resolving the Promise to ensure a user prompt has been opened.
-        setTimeout(() => resolve(42), 250);
+        setTimeout(() => resolve(42), 500);
         """,
     )
 
