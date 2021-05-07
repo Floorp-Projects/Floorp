@@ -595,7 +595,7 @@ impl ServersRunner {
     }
 }
 
-pub fn start_server() -> Result<(), io::Error> {
+fn main() -> Result<(), io::Error> {
     let args: Vec<String> = env::args().collect();
     if args.len() < 2 {
         eprintln!("Wrong arguments.");
@@ -623,9 +623,4 @@ pub fn start_server() -> Result<(), io::Error> {
     let mut servers_runner = ServersRunner::new()?;
     servers_runner.init();
     servers_runner.run()
-}
-
-#[no_mangle]
-pub extern "C" fn C_StartServer() {
-    start_server().expect("Server should be started succeed");
 }
