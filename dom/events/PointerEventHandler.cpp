@@ -549,6 +549,7 @@ void PointerEventHandler::InitPointerEventFromTouch(
   aPointerEvent->mHeight = aTouch->RadiusY(CallerType::System);
   aPointerEvent->tiltX = aTouch->tiltX;
   aPointerEvent->tiltY = aTouch->tiltY;
+  aPointerEvent->twist = aTouch->twist;
   aPointerEvent->mTime = aTouchEvent->mTime;
   aPointerEvent->mTimeStamp = aTouchEvent->mTimeStamp;
   aPointerEvent->mFlags = aTouchEvent->mFlags;
