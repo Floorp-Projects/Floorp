@@ -47,6 +47,7 @@
 
 .options-vertical-pane fieldset {
   border: none;
+  min-inline-size: auto;
 }
 
 .options-vertical-pane fieldset legend {
@@ -69,6 +70,8 @@
   display: flex;
   padding: 4px 0;
   align-items: center;
+  width: max-content;
+  max-width: 100%;
 }
 
 /* Add padding for label of select inputs in order to
