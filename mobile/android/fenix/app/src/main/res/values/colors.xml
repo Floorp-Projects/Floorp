@@ -106,7 +106,7 @@
     <color name="toolbar_start_gradient_dark_theme">@color/foundation_dark_theme</color>
     <color name="toolbar_center_gradient_dark_theme">@color/foundation_dark_theme</color>
     <color name="toolbar_end_gradient_dark_theme">@color/foundation_dark_theme</color>
-    <color name="toolbar_divider_color_dark_theme">#52525E</color>
+    <color name="toolbar_divider_color_dark_theme">@color/photonDarkGrey10</color>
     <color name="fill_link_from_clipboard_dark_theme">@color/accent_on_dark_background_normal_theme</color>
     <color name="sync_disconnected_icon_fill_dark_theme">#FFF36E</color>
     <color name="sync_disconnected_background_dark_theme">#5B5846</color>
@@ -123,6 +123,7 @@
     <color name="search_suggestion_indicator_icon_color_dark_theme">#2ac3a2</color>
     <color name="search_suggestion_indicator_icon_bookmark_color_dark_theme">#0090ed</color>
     <color name="preference_section_header_dark_theme">@color/accent_high_contrast_dark_theme</color>
+    <color name="recently_used_share_menu_dark_theme">@color/photonDarkGrey10</color>
 
     <color name="mozac_widget_favicon_background_dark_theme">@color/photonDarkGrey50</color>
     <color name="mozac_widget_favicon_border_dark_theme">@color/photonDarkGrey10</color>
@@ -170,7 +171,7 @@
     <color name="toolbar_start_gradient_private_theme">#7529A7</color>
     <color name="toolbar_center_gradient_private_theme">#492E85</color>
     <color name="toolbar_end_gradient_private_theme">#383372</color>
-    <color name="toolbar_divider_color_private_theme">#52525E</color>
+    <color name="toolbar_divider_color_private_theme">@color/photonDarkGrey10</color>
     <color name="fill_link_from_clipboard_private_theme">@color/accent_on_dark_background_private_theme</color>
     <color name="menu_category_private_theme">@color/primary_text_private_theme</color>
     <color name="sync_disconnected_icon_fill_private_theme">#C45A27</color>
@@ -251,6 +252,7 @@
     <color name="mozac_widget_favicon_border_normal_theme">@color/mozac_widget_favicon_border_light_theme</color>
     <color name="notification_accent_color_normal_theme">@color/accent_bright_light_theme</color>
     <color name="menu_item_button_normal_theme">@color/menu_item_button_light_theme</color>
+    <color name="recently_used_share_theme">@color/inset_light_theme</color>
 
     <!-- Tab tray -->
     <color name="tab_tray_item_text_normal_theme">@color/tab_tray_item_text_light_theme</color>

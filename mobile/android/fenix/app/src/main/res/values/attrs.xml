@@ -27,6 +27,7 @@
     <attr name="toolbarDivider" format="reference"/>
     <attr name="menuCategoryText" format="reference"/>
     <attr name="preferenceSectionHeader" format="reference"/>
+    <attr name="recentlyUsedShareMenu" format="reference" />
 
     <!-- Color used in DefaultToolbarMenu for buttons placed at the end of menu items -->
     <attr name="menuItemButtonTintColor" format="reference"/>
