@@ -67,12 +67,10 @@
 
 .toggle-group-input:enabled + .toggle-group-label:hover {
   background-color: var(--in-content-button-background-hover);
-  color: var(--in-content-button-text-color-hover);
 }
 
-.toggle-group-input:enabled + .toggle-group-label:hover:active {
+.toggle-group-input:enabled + .toggle-group-label:active {
   background-color: var(--in-content-button-background-active);
-  color: var(--in-content-button-text-color-hover);
 }
 
 .toggle-group-input:-moz-focusring + .toggle-group-label {
@@ -88,10 +86,8 @@
 
 .toggle-group-input:enabled:checked + .toggle-group-label:hover {
   background-color: var(--in-content-primary-button-background-hover);
-  color: var(--in-content-primary-button-text-color-hover);
 }
 
-.toggle-group-input:enabled:checked + .toggle-group-label:hover:active {
+.toggle-group-input:enabled:checked + .toggle-group-label:active {
   background-color: var(--in-content-primary-button-background-active);
-  color: var(--in-content-primary-button-text-color-hover);
 }
