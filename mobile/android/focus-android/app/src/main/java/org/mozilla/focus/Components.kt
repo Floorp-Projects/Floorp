@@ -33,6 +33,7 @@ import mozilla.components.lib.crash.service.CrashReporterService
 import mozilla.components.lib.crash.service.MozillaSocorroService
 import mozilla.components.lib.crash.service.SentryService
 import mozilla.components.service.location.LocationService
+import mozilla.components.service.location.MozillaLocationService
 import org.mozilla.focus.activity.MainActivity
 import org.mozilla.focus.components.EngineProvider
 import org.mozilla.focus.downloads.DownloadService
@@ -90,6 +91,15 @@ class Components(
 
     val settingsUseCases by lazy { SettingsUseCases(engine, store) }
 
+    private val locationService: LocationService by lazy {
+        if (BuildConfig.MLS_TOKEN.isNullOrEmpty()) {
+            LocationService.default()
+        } else {
+            @Suppress("DEPRECATION")
+            MozillaLocationService(context, client.unwrap(), BuildConfig.MLS_TOKEN)
+        }
+    }
+
     val store by lazy {
         BrowserStore(
             middleware = listOf(
@@ -100,7 +110,7 @@ class Components(
                 // We are currently using the default location service. We should consider using
                 // an actual implementation:
                 // https://github.com/mozilla-mobile/focus-android/issues/4781
-                RegionMiddleware(context, LocationService.default()),
+                RegionMiddleware(context, locationService),
                 SearchMiddleware(context, migration = SearchMigration(context)),
                 SearchFilterMiddleware(),
                 PromptMiddleware()
