@@ -55,7 +55,7 @@ class GtkCompositorWidget : public CompositorWidget,
   LayoutDeviceIntSize GetClientSize() override;
 
   nsIWidget* RealWidget() override;
-  GtkCompositorWidget* AsX11() override { return this; }
+  GtkCompositorWidget* AsGTK() override { return this; }
   CompositorWidgetDelegate* AsDelegate() override { return this; }
 
   EGLNativeWindowType GetEGLNativeWindow();
