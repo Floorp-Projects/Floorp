@@ -10,6 +10,24 @@ import React from "react";
 import { CSSTransition } from "react-transition-group";
 
 export class _CustomizeMenu extends React.PureComponent {
+  constructor(props) {
+    super(props);
+    this.onEntered = this.onEntered.bind(this);
+    this.onExited = this.onExited.bind(this);
+  }
+
+  onEntered() {
+    if (this.closeButton) {
+      this.closeButton.focus();
+    }
+  }
+
+  onExited() {
+    if (this.openButton) {
+      this.openButton.focus();
+    }
+  }
+
   render() {
     return (
       <span>
@@ -17,11 +35,14 @@ export class _CustomizeMenu extends React.PureComponent {
           className="personalize-button"
           onClick={() => this.props.onOpen()}
           data-l10n-id="newtab-personalize-button-label"
+          ref={c => (this.openButton = c)}
         />
         <CSSTransition
-          timeout={0}
+          timeout={250}
           classNames="customize-animate"
           in={this.props.showing}
+          onEntered={this.onEntered}
+          onExited={this.onExited}
           appear={true}
         >
           <div
@@ -33,6 +54,7 @@ export class _CustomizeMenu extends React.PureComponent {
               onClick={() => this.props.onClose()}
               className="close-button"
               data-l10n-id="newtab-custom-close-button"
+              ref={c => (this.closeButton = c)}
             />
             <ThemesSection />
             <BackgroundsSection />
