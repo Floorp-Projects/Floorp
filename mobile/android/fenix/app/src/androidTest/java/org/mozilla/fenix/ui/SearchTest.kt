@@ -32,6 +32,7 @@ class SearchTest {
             verifySearchView()
             verifyBrowserToolbar()
             verifyScanButton()
+            verifySearchEngineButton()
         }
     }
 

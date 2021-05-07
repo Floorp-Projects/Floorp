@@ -315,6 +315,8 @@ class HomeScreenRobot {
 
         fun openSearch(interact: SearchRobot.() -> Unit): SearchRobot.Transition {
             navigationToolbar().perform(click())
+            mDevice.findObject(UiSelector().resourceId("$packageName:id/search_wrapper"))
+                .waitForExists(waitingTime)
 
             SearchRobot().interact()
             return SearchRobot.Transition()
@@ -374,8 +376,8 @@ class HomeScreenRobot {
         }
 
         fun openNavigationToolbar(interact: NavigationToolbarRobot.() -> Unit): NavigationToolbarRobot.Transition {
-
             assertNavigationToolbar().perform(click())
+
             NavigationToolbarRobot().interact()
             return NavigationToolbarRobot.Transition()
         }
@@ -471,13 +473,12 @@ private fun assertKeyboardVisibility(isExpectedToBeVisible: Boolean) =
     )
 
 private fun navigationToolbar() =
-    onView(allOf(withText("Search or enter address")))
+    onView(withId(R.id.toolbar_wrapper))
 
 private fun closeTabButton() = onView(withId(R.id.close_tab_button))
 
 private fun assertNavigationToolbar() =
-    onView(allOf(withText("Search or enter address")))
-        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+    navigationToolbar().check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
 private fun assertFocusedNavigationToolbar() =
     onView(allOf(withHint("Search or enter address")))

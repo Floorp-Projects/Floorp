@@ -49,6 +49,7 @@ class SearchRobot {
     fun verifySearchView() = assertSearchView()
     fun verifyBrowserToolbar() = assertBrowserToolbarEditView()
     fun verifyScanButton() = assertScanButton()
+    fun verifySearchEngineButton() = assertSearchEngineButton()
     fun verifySearchWithText() = assertSearchWithText()
     fun verifySearchEngineResults(searchEngineName: String) =
         assertSearchEngineResults(searchEngineName)
@@ -215,7 +216,7 @@ private fun assertSearchEngineResults(searchEngineName: String) {
 }
 
 private fun assertSearchView() {
-    onView(allOf(withId(R.id.search_layout)))
+    onView(withId(R.id.search_wrapper)).check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 }
 
 private fun assertBrowserToolbarEditView() =
@@ -225,6 +226,10 @@ private fun assertBrowserToolbarEditView() =
 private fun assertScanButton() =
     onView(allOf(withText("Scan")))
         .check(matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+
+private fun assertSearchEngineButton() =
+    onView(withId(R.id.search_engines_shortcut_button))
+        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
 private fun assertSearchWithText() =
     onView(allOf(withText("THIS TIME, SEARCH WITH:")))
