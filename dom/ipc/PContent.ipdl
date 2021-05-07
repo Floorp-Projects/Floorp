@@ -891,14 +891,6 @@ child:
     // value for every individual BrowsingContext.
     async RegisterBrowsingContextGroup(uint64_t aGroupId, SyncedContextInitializer[] aInits);
 
-    // The BrowsingContextGroup has been destroyed in the parent process. The
-    // content process won't destroy the group until it receives this message or
-    // during shutdown.
-    //
-    // When the content process receives this message, all contexts in the group
-    // should have already been destroyed.
-    async DestroyBrowsingContextGroup(uint64_t aGroupId);
-
 #if defined(MOZ_SANDBOX) && defined(MOZ_DEBUG) && defined(ENABLE_TESTS)
     // Initialize top-level actor for testing content process sandbox.
     async InitSandboxTesting(Endpoint<PSandboxTestingChild> aEndpoint);
