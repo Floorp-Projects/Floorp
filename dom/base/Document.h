@@ -2513,6 +2513,7 @@ class Document : public nsINode,
 
     return !NodePrincipal()->SchemeIs("http") &&
            !NodePrincipal()->SchemeIs("https") &&
+           !NodePrincipal()->SchemeIs("ftp") &&
            !NodePrincipal()->SchemeIs("file");
   }
 
