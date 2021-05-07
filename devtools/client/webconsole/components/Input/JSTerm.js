@@ -911,7 +911,9 @@ class JSTerm extends Component {
     if (state.context) {
       for (let c = state.context; c; c = c.prev) {
         for (let v = c.vars; v; v = v.next) {
-          variables.push(v.name);
+          if (v.name) {
+            variables.push(v.name);
+          }
         }
       }
     }
@@ -920,7 +922,9 @@ class JSTerm extends Component {
     for (const key of keys) {
       if (state[key]) {
         for (let v = state[key]; v; v = v.next) {
-          variables.push(v.name);
+          if (v.name) {
+            variables.push(v.name);
+          }
         }
       }
     }
