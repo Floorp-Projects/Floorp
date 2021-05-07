@@ -812,6 +812,12 @@ class AsyncPanZoomController {
    */
   ParentLayerPoint GetOverscrollAmount() const;
 
+ private:
+  // Internal version of GetOverscrollAmount() which does not set
+  // the test async properties.
+  ParentLayerPoint GetOverscrollAmountInternal() const;
+
+ protected:
   /**
    * Returns SideBits where this APZC is overscrolled.
    */

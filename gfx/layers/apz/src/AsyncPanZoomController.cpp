@@ -598,7 +598,7 @@ AutoApplyAsyncTestAttributes::AutoApplyAsyncTestAttributes(
     // query the async transforms non-const.
     : mApzc(const_cast<AsyncPanZoomController*>(aApzc)),
       mPrevFrameMetrics(aApzc->Metrics()),
-      mPrevOverscroll(aApzc->GetOverscrollAmount()),
+      mPrevOverscroll(aApzc->GetOverscrollAmountInternal()),
       mProofOfLock(aProofOfLock) {
   mApzc->ApplyAsyncTestAttributes(aProofOfLock);
 }
@@ -3905,6 +3905,15 @@ ExternalPoint AsyncPanZoomController::GetFirstExternalTouchPoint(
 }
 
 ParentLayerPoint AsyncPanZoomController::GetOverscrollAmount() const {
+  if (StaticPrefs::apz_overscroll_test_async_scroll_offset_enabled()) {
+    RecursiveMutexAutoLock lock(mRecursiveMutex);
+    AutoApplyAsyncTestAttributes testAttributeApplier(this, lock);
+    return GetOverscrollAmountInternal();
+  }
+  return GetOverscrollAmountInternal();
+}
+
+ParentLayerPoint AsyncPanZoomController::GetOverscrollAmountInternal() const {
   return {mX.GetOverscroll(), mY.GetOverscroll()};
 }
 
