@@ -101,6 +101,9 @@ fuzzy-if(!webrender,111-112,600-600) pref(apz.allow_zooming,true) == async-scrol
 skip-if(!asyncPan||Android) pref(apz.overscroll.enabled,true) pref(apz.overscroll.test_async_scroll_offset.enabled,true) == overscroll.html overscroll-ref.html
 skip-if(!asyncPan||Android) pref(apz.overscroll.enabled,true) pref(apz.overscroll.test_async_scroll_offset.enabled,true) == overscroll-subframe.html overscroll-ref.html
 skip-if(!asyncPan||Android) pref(apz.overscroll.enabled,true) pref(apz.overscroll.test_async_scroll_offset.enabled,true) == overscroll-fixed.html overscroll-ref.html
+# This one needs to be fuzzed due to the fact that squishing a scrollbar
+# thumb on the compositor doesn't preserve its shape exactly.
+skip-if(!asyncPan||Android) fuzzy(0-56,0-33) pref(apz.overscroll.enabled,true) pref(apz.overscroll.test_async_scroll_offset.enabled,true) == overscroll-scrollbar.html overscroll-scrollbar-ref.html
 skip-if(!asyncPan||Android) pref(ui.prefersReducedMotion,1) pref(apz.overscroll.enabled,true) pref(apz.overscroll.test_async_scroll_offset.enabled,true) == overscroll-reduced-motion.html no-overscroll-ref.html
 
 # for this test, apz.allow_zooming is needed to ensure we take the containerless scrolling codepath that creates
