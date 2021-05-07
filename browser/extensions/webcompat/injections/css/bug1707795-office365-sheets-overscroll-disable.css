@@ -1,0 +1,8 @@
+/**
+ * www.office.com - There is an overscroll effect on Excel sheets which is
+ * not a very pleasant user experience. This invention disables it.
+ */
+
+.ewr-sheetcontainer {
+  overscroll-behavior: none;
+}
