@@ -658,6 +658,24 @@ void nsXULPopupManager::SetActiveMenuBar(nsMenuBarFrame* aMenuBar,
   UpdateKeyboardListeners();
 }
 
+static CloseMenuMode GetCloseMenuMode(nsIContent* aMenu) {
+  if (!aMenu->IsElement()) {
+    return CloseMenuMode_Auto;
+  }
+
+  static Element::AttrValuesArray strings[] = {nsGkAtoms::none,
+                                               nsGkAtoms::single, nullptr};
+  switch (aMenu->AsElement()->FindAttrValueIn(
+      kNameSpaceID_None, nsGkAtoms::closemenu, strings, eCaseMatters)) {
+    case 0:
+      return CloseMenuMode_None;
+    case 1:
+      return CloseMenuMode_Single;
+    default:
+      return CloseMenuMode_Auto;
+  }
+}
+
 void nsXULPopupManager::ShowMenu(nsIContent* aMenu, bool aSelectFirstItem,
                                  bool aAsynchronous) {
   if (mNativeMenu && aMenu->IsElement() &&
@@ -1434,33 +1452,15 @@ void nsXULPopupManager::UpdateFollowAnchor(nsMenuPopupFrame* aPopup) {
 
 void nsXULPopupManager::ExecuteMenu(nsIContent* aMenu,
                                     nsXULMenuCommandEvent* aEvent) {
-  CloseMenuMode cmm = CloseMenuMode_Auto;
-
-  static Element::AttrValuesArray strings[] = {nsGkAtoms::none,
-                                               nsGkAtoms::single, nullptr};
-
-  if (aMenu->IsElement()) {
-    switch (aMenu->AsElement()->FindAttrValueIn(
-        kNameSpaceID_None, nsGkAtoms::closemenu, strings, eCaseMatters)) {
-      case 0:
-        cmm = CloseMenuMode_None;
-        break;
-      case 1:
-        cmm = CloseMenuMode_Single;
-        break;
-      default:
-        break;
-    }
-  }
-
   // When a menuitem is selected to be executed, first hide all the open
   // popups, but don't remove them yet. This is needed when a menu command
   // opens a modal dialog. The views associated with the popups needed to be
   // hidden and the accesibility events fired before the command executes, but
   // the popuphiding/popuphidden events are fired afterwards.
-  nsTArray<nsMenuPopupFrame*> popupsToHide;
-  nsMenuChainItem* item = GetTopVisibleMenu();
+  CloseMenuMode cmm = GetCloseMenuMode(aMenu);
   if (cmm != CloseMenuMode_None) {
+    nsTArray<nsMenuPopupFrame*> popupsToHide;
+    nsMenuChainItem* item = GetTopVisibleMenu();
     while (item) {
       // if it isn't a <menupopup>, don't close it automatically
       if (!item->IsMenu()) break;
