@@ -891,6 +891,9 @@ void nsXULPopupManager::OnNativeSubMenuClosed(
   mNativeMenuSubmenuStates.Remove(aPopupElement);
 }
 
+void nsXULPopupManager::OnNativeMenuWillActivateItem(
+    mozilla::dom::Element* aMenuItemElement) {}
+
 void nsXULPopupManager::ShowPopupAtScreenRect(
     nsIContent* aPopup, const nsAString& aPosition, const nsIntRect& aRect,
     bool aIsContextMenu, bool aAttributesOverride, Event* aTriggerEvent) {
