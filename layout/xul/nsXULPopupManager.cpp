@@ -1450,32 +1450,42 @@ void nsXULPopupManager::UpdateFollowAnchor(nsMenuPopupFrame* aPopup) {
   }
 }
 
-void nsXULPopupManager::ExecuteMenu(nsIContent* aMenu,
-                                    nsXULMenuCommandEvent* aEvent) {
+void nsXULPopupManager::HideOpenMenusBeforeExecutingMenu(CloseMenuMode aMode) {
+  if (aMode == CloseMenuMode_None) {
+    return;
+  }
+
   // When a menuitem is selected to be executed, first hide all the open
   // popups, but don't remove them yet. This is needed when a menu command
   // opens a modal dialog. The views associated with the popups needed to be
   // hidden and the accesibility events fired before the command executes, but
   // the popuphiding/popuphidden events are fired afterwards.
-  CloseMenuMode cmm = GetCloseMenuMode(aMenu);
-  if (cmm != CloseMenuMode_None) {
-    nsTArray<nsMenuPopupFrame*> popupsToHide;
-    nsMenuChainItem* item = GetTopVisibleMenu();
-    while (item) {
-      // if it isn't a <menupopup>, don't close it automatically
-      if (!item->IsMenu()) break;
-      nsMenuChainItem* next = item->GetParent();
-      popupsToHide.AppendElement(item->Frame());
-      if (cmm == CloseMenuMode_Single)  // only close one level of menu
-        break;
-      item = next;
+  nsTArray<nsMenuPopupFrame*> popupsToHide;
+  nsMenuChainItem* item = GetTopVisibleMenu();
+  while (item) {
+    // if it isn't a <menupopup>, don't close it automatically
+    if (!item->IsMenu()) {
+      break;
     }
 
-    // Now hide the popups. If the closemenu mode is auto, deselect the menu,
-    // otherwise only one popup is closing, so keep the parent menu selected.
-    HidePopupsInList(popupsToHide);
+    nsMenuChainItem* next = item->GetParent();
+    popupsToHide.AppendElement(item->Frame());
+    if (aMode == CloseMenuMode_Single) {
+      // only close one level of menu
+      break;
+    }
+    item = next;
   }
 
+  // Now hide the popups. If the closemenu mode is auto, deselect the menu,
+  // otherwise only one popup is closing, so keep the parent menu selected.
+  HidePopupsInList(popupsToHide);
+}
+
+void nsXULPopupManager::ExecuteMenu(nsIContent* aMenu,
+                                    nsXULMenuCommandEvent* aEvent) {
+  CloseMenuMode cmm = GetCloseMenuMode(aMenu);
+  HideOpenMenusBeforeExecutingMenu(cmm);
   aEvent->SetCloseMenuMode(cmm);
   nsCOMPtr<nsIRunnable> event = aEvent;
   aMenu->OwnerDoc()->Dispatch(TaskCategory::Other, event.forget());
