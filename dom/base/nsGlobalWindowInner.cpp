@@ -2990,7 +2990,7 @@ const InterfaceShimEntry kInterfaceShimMap[] = {
 
 bool nsGlobalWindowInner::ResolveComponentsShim(
     JSContext* aCx, JS::Handle<JSObject*> aGlobal,
-    JS::MutableHandle<JS::PropertyDescriptor> aDesc) {
+    JS::MutableHandle<mozilla::Maybe<JS::PropertyDescriptor>> aDesc) {
   // Keep track of how often this happens.
   Telemetry::Accumulate(Telemetry::COMPONENTS_SHIM_ACCESSED_BY_CONTENT, true);
 
@@ -3046,7 +3046,8 @@ bool nsGlobalWindowInner::ResolveComponentsShim(
     }
   }
 
-  FillPropertyDescriptor(aDesc, aGlobal, JS::ObjectValue(*components), false);
+  FillPropertyDescriptor(aCx, aDesc, aGlobal, JS::ObjectValue(*components),
+                         false);
 
   return true;
 }
@@ -3062,7 +3063,7 @@ static const JSClass XULControllersShimClass = {"XULControllers", 0};
 
 bool nsGlobalWindowInner::DoResolve(
     JSContext* aCx, JS::Handle<JSObject*> aObj, JS::Handle<jsid> aId,
-    JS::MutableHandle<JS::PropertyDescriptor> aDesc) {
+    JS::MutableHandle<mozilla::Maybe<JS::PropertyDescriptor>> aDesc) {
   // Note: Keep this in sync with MayResolve.
 
   // Note: The infallibleInit call in GlobalResolve depends on this check.

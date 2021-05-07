@@ -42,10 +42,10 @@ class WebIDLGlobalNameHash {
 
   // Returns false if something failed. aFound is set to true if the name is in
   // the hash, whether it's enabled or not.
-  static bool DefineIfEnabled(JSContext* aCx, JS::Handle<JSObject*> aObj,
-                              JS::Handle<jsid> aId,
-                              JS::MutableHandle<JS::PropertyDescriptor> aDesc,
-                              bool* aFound);
+  static bool DefineIfEnabled(
+      JSContext* aCx, JS::Handle<JSObject*> aObj, JS::Handle<jsid> aId,
+      JS::MutableHandle<mozilla::Maybe<JS::PropertyDescriptor>> aDesc,
+      bool* aFound);
 
   static bool MayResolve(jsid aId);
 
