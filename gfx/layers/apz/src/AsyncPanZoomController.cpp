@@ -2681,7 +2681,7 @@ nsEventStatus AsyncPanZoomController::OnPan(
     // If there is an on-going overscroll animation, we tell the animation
     // whether the displacements should be handled by the animation or not.
     MOZ_ASSERT(mAnimation->AsOverscrollAnimation());
-    if (OverscrollAnimation* overscrollAnimation =
+    if (RefPtr<OverscrollAnimation> overscrollAnimation =
             mAnimation->AsOverscrollAnimation()) {
       overscrollAnimation->HandlePanMomentum(logicalPanDisplacement);
       // And then as a result of the above call, if the animation is currently
