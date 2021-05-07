@@ -20,7 +20,10 @@ add_task(async function() {
     var testVar;
     let testLet;
     const testConst;
-    class testClass {}
+    class testClass {
+      #secret
+      #getSecret() {}
+    }
     function testFunc(testParam1, testParam2, ...testParamRest) {
       var [testParamRestFirst] = testParamRest;
       let {testDeconstruct1,testDeconstruct2, ...testDeconstructRest} = testParam1;
