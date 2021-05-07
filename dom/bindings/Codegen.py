@@ -3086,15 +3086,6 @@ class AttrDefiner(PropertyDefiner):
         self.regular = [m for m in attributes if not isChromeOnly(m["attr"])]
         self.static = static
 
-        if (
-            not static
-            and not unforgeable
-            and descriptor.interface.hasInterfacePrototypeObject()
-        ):
-            self.regular.append(
-                {"name": "@@toStringTag", "attr": None, "flags": "JSPROP_READONLY"}
-            )
-
         if static:
             if not descriptor.interface.hasInterfaceObject():
                 # static attributes go on the interface object
@@ -3118,15 +3109,10 @@ class AttrDefiner(PropertyDefiner):
 
     @staticmethod
     def condition(m, d):
-        if m["name"] == "@@toStringTag":
-            return MemberCondition()
         return PropertyDefiner.getControllingCondition(m["attr"], d)
 
     @staticmethod
     def specData(entry, descriptor, static=False, crossOriginOnly=False):
-        if entry["name"] == "@@toStringTag":
-            return (entry["name"], entry["flags"], descriptor.interface.getClassName())
-
         def getter(attr):
             if crossOriginOnly and not attr.getExtendedAttribute("CrossOriginReadable"):
                 return "nullptr, nullptr"
@@ -3222,13 +3208,6 @@ class AttrDefiner(PropertyDefiner):
 
     @staticmethod
     def formatSpec(fields):
-        if fields[0] == "@@toStringTag":
-            return '  JS_STRING_SYM_PS(%s, "%s", %s)' % (
-                fields[0][2:],
-                fields[2],
-                fields[1],
-            )
-
         return '  JSPropertySpec::nativeAccessors("%s", %s, %s, %s)' % fields
 
     def generateArray(self, array, name):
@@ -3714,6 +3693,15 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
         else:
             chromeProperties = "nullptr"
 
+        # We use getClassName here. This should be the right thing to pass as
+        # the name argument to CreateInterfaceObjects. This is generally the
+        # interface identifier, except for the synthetic interfaces created for
+        # the default iterator objects. If needInterfaceObject is true then
+        # we'll use the name to install a property on the global object, so
+        # there shouldn't be any spaces in the name.
+        name = self.descriptor.interface.getClassName()
+        assert not (needInterfaceObject and " " in name)
+
         call = fill(
             """
             JS::Heap<JSObject*>* protoCache = ${protoCache};
@@ -3724,7 +3712,7 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
                                         interfaceCache,
                                         ${properties},
                                         ${chromeProperties},
-                                        ${name}, aDefineOnGlobal,
+                                        "${name}", aDefineOnGlobal,
                                         ${unscopableNames},
                                         ${isGlobal},
                                         ${legacyWindowAliases},
@@ -3740,9 +3728,7 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
             interfaceCache=interfaceCache,
             properties=properties,
             chromeProperties=chromeProperties,
-            name='"' + self.descriptor.interface.identifier.name + '"'
-            if needInterfaceObject
-            else "nullptr",
+            name=name,
             unscopableNames="unscopableNames" if self.haveUnscopables else "nullptr",
             isGlobal=toStringBool(isGlobal),
             legacyWindowAliases="legacyWindowAliases"
