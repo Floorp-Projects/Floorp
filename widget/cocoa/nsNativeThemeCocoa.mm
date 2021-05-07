@@ -2818,8 +2818,8 @@ void nsNativeThemeCocoa::RenderWidget(const WidgetInfo& aWidgetInfo,
           break;
         }
         case Widget::eListBox: {
-          // Fill the content with the control color.
-          CGContextSetFillColorWithColor(cgContext, [NSColor.controlColor CGColor]);
+          // Fill the content with the control background color.
+          CGContextSetFillColorWithColor(cgContext, [NSColor.controlBackgroundColor CGColor]);
           CGContextFillRect(cgContext, macRect);
           // Draw the frame using kCUIWidgetScrollViewFrame. This is what NSScrollView uses in
           // -[NSScrollView drawRect:] if you give it a borderType of NSBezelBorder.
