@@ -183,6 +183,11 @@ test_newtab({
       "Customize Menu should be visible on screen"
     );
 
+    await ContentTaskUtils.waitForCondition(
+      () => content.document.activeElement.classList.contains("close-button"),
+      "Close button should be focused when menu becomes visible"
+    );
+
     // Test close button.
     let closeButton = content.document.querySelector(".close-button");
     closeButton.click();
@@ -192,6 +197,12 @@ test_newtab({
           content.document.querySelector(".customize-menu")
         ).transform !== defaultPos,
       "Customize Menu should not be visible anymore"
+    );
+
+    await ContentTaskUtils.waitForCondition(
+      () =>
+        content.document.activeElement.classList.contains("personalize-button"),
+      "Personalize button should be focused when menu closes"
     );
 
     // Reopen the customize menu
