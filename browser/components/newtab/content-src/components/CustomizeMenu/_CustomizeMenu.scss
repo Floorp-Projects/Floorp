@@ -37,6 +37,10 @@
   &:focus-visible {
     @include ds-focus-nte;
   }
+
+  &.personalize-animate-exit-done {
+    visibility: hidden;
+  }
 }
 
 .customize-menu {

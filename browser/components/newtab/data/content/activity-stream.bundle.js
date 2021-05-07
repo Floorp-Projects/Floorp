@@ -14766,12 +14766,17 @@ class CustomizeMenu_CustomizeMenu extends external_React_default.a.PureComponent
   }
 
   render() {
-    return /*#__PURE__*/external_React_default.a.createElement("span", null, /*#__PURE__*/external_React_default.a.createElement("button", {
+    return /*#__PURE__*/external_React_default.a.createElement("span", null, /*#__PURE__*/external_React_default.a.createElement(external_ReactTransitionGroup_["CSSTransition"], {
+      timeout: 300,
+      classNames: "personalize-animate",
+      in: !this.props.showing,
+      appear: true
+    }, /*#__PURE__*/external_React_default.a.createElement("button", {
       className: "personalize-button",
       onClick: () => this.props.onOpen(),
       "data-l10n-id": "newtab-personalize-button-label",
       ref: c => this.openButton = c
-    }), /*#__PURE__*/external_React_default.a.createElement(external_ReactTransitionGroup_["CSSTransition"], {
+    })), /*#__PURE__*/external_React_default.a.createElement(external_ReactTransitionGroup_["CSSTransition"], {
       timeout: 250,
       classNames: "customize-animate",
       in: this.props.showing,

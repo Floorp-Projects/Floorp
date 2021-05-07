@@ -1678,6 +1678,8 @@ main {
     border: 0;
     outline: 0;
     box-shadow: 0 0 0 3px var(--newtab-focus-outline), 0 0 0 1px var(--newtab-focus-border); }
+  .personalize-button.personalize-animate-exit-done {
+    visibility: hidden; }
 
 .customize-menu {
   color: var(--customize-menu-primary-text-color);
