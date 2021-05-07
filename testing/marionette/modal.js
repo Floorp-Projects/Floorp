@@ -68,7 +68,10 @@ modal.findModalDialogs = function(context) {
     }
 
     dialogs = tabDialogBox.getContentDialogManager().dialogs;
-    if (dialogs.length) {
+
+    // Even with the dialog manager handing back a dialog, the `Dialog` property
+    // gets lazily added. If it's not set yet, ignore the dialog for now.
+    if (dialogs.length && dialogs[0].frameContentWindow.Dialog) {
       logger.trace("Found open content prompt");
       return new modal.Dialog(() => context, dialogs[0].frameContentWindow);
     }
