@@ -1030,7 +1030,6 @@
 
 {
    Starting with rust 1.52
-   <insert_a_suppression_name_here>
    Memcheck:Cond
    fun:_ZN5style10properties10shorthands4font10parse_into17hdbde89d63594167dE
    fun:_ZN5style10properties19PropertyDeclaration10parse_into17h5b1aaabefd80275aE
