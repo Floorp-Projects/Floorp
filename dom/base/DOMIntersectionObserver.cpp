@@ -152,8 +152,7 @@ static void LazyLoadCallback(
     MOZ_ASSERT(entry->Target()->IsHTMLElement(nsGkAtoms::img));
     if (entry->IsIntersecting()) {
       static_cast<HTMLImageElement*>(entry->Target())
-          ->StopLazyLoading(HTMLImageElement::FromIntersectionObserver::Yes,
-                            HTMLImageElement::StartLoading::Yes);
+          ->StopLazyLoadingAndStartLoadIfNeeded(true);
     }
   }
 }

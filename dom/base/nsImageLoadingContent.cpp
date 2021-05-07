@@ -999,8 +999,9 @@ void nsImageLoadingContent::ForceReload(bool aNotify, ErrorResult& aError) {
   ImageLoadType loadType = (mCurrentRequestFlags & REQUEST_IS_IMAGESET)
                                ? eImageLoadType_Imageset
                                : eImageLoadType_Normal;
-  nsresult rv = LoadImage(currentURI, true, aNotify, loadType,
-                          nsIRequest::VALIDATE_ALWAYS | LoadFlags());
+  nsresult rv =
+      LoadImage(currentURI, true, aNotify, loadType,
+                nsIRequest::VALIDATE_ALWAYS | LoadFlags(), true, nullptr);
   if (NS_FAILED(rv)) {
     aError.Throw(rv);
   }
@@ -1021,21 +1022,38 @@ nsresult nsImageLoadingContent::LoadImage(const nsAString& aNewURI, bool aForce,
     return NS_OK;
   }
 
-  // Parse the URI string to get image URI
-  nsCOMPtr<nsIURI> imageURI;
-  if (!aNewURI.IsEmpty()) {
-    Unused << StringToURI(aNewURI, doc, getter_AddRefs(imageURI));
+  // Pending load/error events need to be canceled in some situations. This
+  // is not documented in the spec, but can cause site compat problems if not
+  // done. See bug 1309461 and https://github.com/whatwg/html/issues/1872.
+  CancelPendingEvent();
+
+  if (aNewURI.IsEmpty()) {
+    // Cancel image requests and then fire only error event per spec.
+    CancelImageRequests(aNotify);
+    // Mark error event as cancelable only for src="" case, since only this
+    // error causes site compat problem (bug 1308069) for now.
+    FireEvent(u"error"_ns, true);
+    return NS_OK;
   }
 
-  return LoadImage(imageURI, aForce, aNotify, aImageLoadType, LoadFlags(), doc,
-                   aTriggeringPrincipal);
+  // Fire loadstart event
+  FireEvent(u"loadstart"_ns);
+
+  // Parse the URI string to get image URI
+  nsCOMPtr<nsIURI> imageURI;
+  nsresult rv = StringToURI(aNewURI, doc, getter_AddRefs(imageURI));
+  NS_ENSURE_SUCCESS(rv, rv);
+  // XXXbiesi fire onerror if that failed?
+
+  return LoadImage(imageURI, aForce, aNotify, aImageLoadType, LoadFlags(),
+                   false, doc, aTriggeringPrincipal);
 }
 
 nsresult nsImageLoadingContent::LoadImage(nsIURI* aNewURI, bool aForce,
                                           bool aNotify,
                                           ImageLoadType aImageLoadType,
                                           nsLoadFlags aLoadFlags,
-                                          Document* aDocument,
+                                          bool aLoadStart, Document* aDocument,
                                           nsIPrincipal* aTriggeringPrincipal) {
   MOZ_ASSERT(!mIsStartingImageLoad, "some evil code is reentering LoadImage.");
   if (mIsStartingImageLoad) {
@@ -1047,19 +1065,10 @@ nsresult nsImageLoadingContent::LoadImage(nsIURI* aNewURI, bool aForce,
   // done. See bug 1309461 and https://github.com/whatwg/html/issues/1872.
   CancelPendingEvent();
 
-  if (!aNewURI) {
-    // Cancel image requests and then fire only error event per spec.
-    CancelImageRequests(aNotify);
-    if (aImageLoadType == eImageLoadType_Normal) {
-      // Mark error event as cancelable only for src="" case, since only this
-      // error causes site compat problem (bug 1308069) for now.
-      FireEvent(u"error"_ns, true);
-    }
-    return NS_OK;
-  }
-
   // Fire loadstart event if required
-  FireEvent(u"loadstart"_ns);
+  if (aLoadStart) {
+    FireEvent(u"loadstart"_ns);
+  }
 
   if (!mLoadingEnabled) {
     // XXX Why fire an error here? seems like the callers to SetLoadingEnabled
