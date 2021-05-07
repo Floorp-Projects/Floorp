@@ -25,7 +25,7 @@ class ModulesMapResult;
 
 using ModulesTrustPromise = MozPromise<ModulesMapResult, nsresult, true>;
 
-class DllServices : public glue::DllServices {
+class DllServices final : public glue::DllServices {
  public:
   static DllServices* Get();
 
@@ -43,7 +43,7 @@ class DllServices : public glue::DllServices {
 
  private:
   DllServices() = default;
-  ~DllServices() = default;
+  ~DllServices();
 
   void NotifyDllLoad(glue::EnhancedModuleLoadInfo&& aModLoadInfo) override;
   void NotifyModuleLoadBacklog(ModuleLoadInfoVec&& aEvents) override;

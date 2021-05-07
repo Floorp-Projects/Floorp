@@ -760,6 +760,11 @@ namespace mozilla {
 Authenticode* GetAuthenticode();
 }  // namespace mozilla
 
+/**
+ * Please note that DllBlocklist_SetFullDllServices is called with
+ * aSvc = nullptr to de-initialize the resources even though they
+ * have been initialized via DllBlocklist_SetBasicDllServices.
+ */
 MFBT_API void DllBlocklist_SetFullDllServices(
     mozilla::glue::detail::DllServicesBase* aSvc) {
   glue::AutoExclusiveLock lock(gDllServicesLock);
