@@ -1075,7 +1075,7 @@ class ActivePS {
 
   // Not using PS_GET, because only the "Controlled" interface of
   // `mProfileBufferChunkManager` should be exposed here.
-  static ProfileBufferControlledChunkManager& ControlledChunkManager(
+  static ProfileBufferChunkManagerWithLocalLimit& ControlledChunkManager(
       PSLockRef) {
     MOZ_ASSERT(sInstance);
     return sInstance->mProfileBufferChunkManager;
@@ -1342,6 +1342,20 @@ class ActivePS {
     return profiles;
   }
 
+#if defined(MOZ_REPLACE_MALLOC) && defined(MOZ_PROFILER_MEMORY)
+  static void SetMemoryCounter(const BaseProfilerCount* aMemoryCounter) {
+    MOZ_ASSERT(sInstance);
+
+    sInstance->mMemoryCounter = aMemoryCounter;
+  }
+
+  static bool IsMemoryCounter(const BaseProfilerCount* aMemoryCounter) {
+    MOZ_ASSERT(sInstance);
+
+    return sInstance->mMemoryCounter == aMemoryCounter;
+  }
+#endif
+
  private:
   // The singleton instance.
   static ActivePS* sInstance;
@@ -1435,6 +1449,10 @@ class ActivePS {
     uint64_t mBufferPositionAtGatherTime;
   };
   Vector<ExitProfile> mExitProfiles;
+
+#if defined(MOZ_REPLACE_MALLOC) && defined(MOZ_PROFILER_MEMORY)
+  Atomic<const BaseProfilerCount*> mMemoryCounter;
+#endif
 };
 
 ActivePS* ActivePS::sInstance = nullptr;
@@ -3469,6 +3487,16 @@ void SamplerThread::Run() {
           int64_t count;
           uint64_t number;
           counter->Sample(count, number);
+#if defined(MOZ_REPLACE_MALLOC) && defined(MOZ_PROFILER_MEMORY)
+          if (ActivePS::IsMemoryCounter(counter)) {
+            // For the memory counter, substract the size of our buffer to avoid
+            // giving the misleading impression that the memory use keeps on
+            // growing when it's just the profiler session that's using a larger
+            // buffer as it gets longer.
+            count -= static_cast<int64_t>(
+                ActivePS::ControlledChunkManager(lock).TotalSize());
+          }
+#endif
           buffer.AddEntry(ProfileBufferEntry::CounterKey(0));
           buffer.AddEntry(ProfileBufferEntry::Count(count));
           if (number) {
@@ -4298,7 +4326,7 @@ void profiler_init(void* aStackTop) {
 #if defined(MOZ_REPLACE_MALLOC) && defined(MOZ_PROFILER_MEMORY)
   // Start counting memory allocations (outside of lock because this may call
   // profiler_add_sampled_counter which would attempt to take the lock.)
-  mozilla::profiler::install_memory_hooks();
+  ActivePS::SetMemoryCounter(mozilla::profiler::install_memory_hooks());
 #endif
 
   // We do this with gPSMutex unlocked. The comment in profiler_stop() explains
@@ -4874,7 +4902,7 @@ void profiler_start(PowerOfTwo32 aCapacity, double aInterval,
 #if defined(MOZ_REPLACE_MALLOC) && defined(MOZ_PROFILER_MEMORY)
   // Start counting memory allocations (outside of lock because this may call
   // profiler_add_sampled_counter which would attempt to take the lock.)
-  mozilla::profiler::install_memory_hooks();
+  ActivePS::SetMemoryCounter(mozilla::profiler::install_memory_hooks());
 #endif
 
   // We do these operations with gPSMutex unlocked. The comments in
