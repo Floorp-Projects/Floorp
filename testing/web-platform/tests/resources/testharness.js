@@ -3464,13 +3464,13 @@ policies and contribution forms [3].
                                      e.preventDefault();
                                      return;
                                  }
-                                 var result_class = element.parentNode.getAttribute("class");
+                                 var result_class = element.querySelector("span[class]").getAttribute("class");
                                  var style_element = output_document.querySelector("style#hide-" + result_class);
                                  var input_element = element.querySelector("input");
                                  if (!style_element && !input_element.checked) {
                                      style_element = output_document.createElementNS(xhtml_ns, "style");
                                      style_element.id = "hide-" + result_class;
-                                     style_element.textContent = "table#results > tbody > tr."+result_class+"{display:none}";
+                                     style_element.textContent = "table#results > tbody > tr.overall-"+result_class+"{display:none}";
                                      output_document.body.appendChild(style_element);
                                  } else if (style_element && input_element.checked) {
                                      style_element.parentNode.removeChild(style_element);
@@ -3542,7 +3542,9 @@ policies and contribution forms [3].
                 if (assert.stack) {
                     output_location = assert.stack.split("\n", 1)[0].replace(/@?\w+:\/\/[^ "\/]+(?::\d+)?/g, " ");
                 }
-                return "<tr><td class='" +
+                return "<tr class='overall-" +
+                    status_class(Test.prototype.status_formats[assert.status]) + "'>" +
+                    "<td class='" +
                     status_class(Test.prototype.status_formats[assert.status]) + "'>" +
                     Test.prototype.status_formats[assert.status] + "</td>" +
                     "<td><pre>" +
@@ -3564,7 +3566,10 @@ policies and contribution forms [3].
             "<tbody>";
         for (var i = 0; i < tests.length; i++) {
             var test = tests[i];
-            html += '<tr><td class="' +
+            html += '<tr class="overall-' +
+                status_class(test.format_status()) +
+                '">' +
+                '<td class="' +
                 status_class(test.format_status()) +
                 '">' +
                 test.format_status() +
