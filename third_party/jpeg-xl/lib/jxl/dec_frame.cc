@@ -429,11 +429,12 @@ void FrameDecoder::FinalizeDC() {
 
 void FrameDecoder::AllocateOutput() {
   const CodecMetadata& metadata = *frame_header_.nonserialized_metadata;
-  if (dec_state_->rgb_output == nullptr) {
+  if (dec_state_->rgb_output == nullptr && !dec_state_->pixel_callback) {
     decoded_->SetFromImage(Image3F(frame_dim_.xsize_upsampled_padded,
                                    frame_dim_.ysize_upsampled_padded),
                            dec_state_->output_encoding_info.color_encoding);
   }
+  dec_state_->extra_channels.clear();
   if (metadata.m.num_extra_channels > 0) {
     for (size_t i = 0; i < metadata.m.num_extra_channels; i++) {
       const auto eci = metadata.m.extra_channel_info[i];
@@ -456,7 +457,8 @@ void FrameDecoder::AllocateOutput() {
 
 Status FrameDecoder::ProcessACGlobal(BitReader* br) {
   JXL_CHECK(finalized_dc_);
-  JXL_CHECK(decoded_->HasColor() || dec_state_->rgb_output != nullptr);
+  JXL_CHECK(decoded_->HasColor() || dec_state_->rgb_output != nullptr ||
+            !!dec_state_->pixel_callback);
 
   // Decode AC group.
   if (frame_header_.encoding == FrameEncoding::kVarDCT) {
@@ -764,6 +766,12 @@ Status FrameDecoder::Flush() {
   // No early Flush() if blending is enabled.
   if (has_blending && !is_finalized_) {
     return false;
+  }
+  // No early Flush() - nothing to do - if the frame is a kSkipProgressive
+  // frame.
+  if (frame_header_.frame_type == FrameType::kSkipProgressive &&
+      !is_finalized_) {
+    return true;
   }
   if (decoded_->IsJPEG()) {
     // Nothing to do.

@@ -729,14 +729,14 @@ JXL_EXPORT JxlDecoderStatus JxlDecoderSetImageOutBuffer(
  * @param opaque optional user data, as given to JxlDecoderSetImageOutCallback.
  * @param x horizontal position of leftmost pixel of the pixel data.
  * @param y vertical position of the pixel data.
- * @param xsize amount of pixels included in the pixel data, horizontally.
+ * @param num_pixels amount of pixels included in the pixel data, horizontally.
  * This is not the same as xsize of the full image, it may be smaller.
  * @param pixels pixel data as a horizontal stripe, in the format passed to
  * JxlDecoderSetImageOutCallback. The memory is not owned by the user, and is
  * only valid during the time the callback is running.
  */
 typedef void (*JxlImageOutCallback)(void* opaque, size_t x, size_t y,
-                                    size_t xsize, const void* pixels);
+                                    size_t num_pixels, const void* pixels);
 
 /**
  * Sets pixel output callback. This is an alternative to

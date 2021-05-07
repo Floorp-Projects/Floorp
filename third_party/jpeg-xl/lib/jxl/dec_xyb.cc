@@ -346,11 +346,16 @@ Status OutputEncodingInfo::Set(const ImageMetadata& metadata) {
       // TODO(veluca): keep in sync with dec_reconstruct.cc
       if (!orig_color_encoding.tf.IsPQ() && !orig_color_encoding.tf.IsSRGB() &&
           !orig_color_encoding.tf.IsGamma() &&
-          !orig_color_encoding.tf.IsLinear()) {
+          !orig_color_encoding.tf.IsLinear() &&
+          !orig_color_encoding.tf.IsHLG() && !orig_color_encoding.tf.IsDCI() &&
+          !orig_color_encoding.tf.Is709()) {
         break;
       }
       if (orig_color_encoding.tf.IsGamma()) {
-        inverse_gamma = 1.0f / orig_color_encoding.tf.GetGamma();
+        inverse_gamma = orig_color_encoding.tf.GetGamma();
+      }
+      if (orig_color_encoding.tf.IsDCI()) {
+        inverse_gamma = 1.0f / 2.6f;
       }
       if (orig_color_encoding.IsGray() &&
           orig_color_encoding.white_point != WhitePoint::kD65) {

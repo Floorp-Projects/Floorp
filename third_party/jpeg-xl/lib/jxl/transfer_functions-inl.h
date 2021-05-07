@@ -61,6 +61,24 @@ class TF_HLG {
     return e;
   }
 
+  // Maximum error 5e-7.
+  template <class D, class V>
+  JXL_INLINE V EncodedFromDisplay(D d, V x) const {
+    const hwy::HWY_NAMESPACE::Rebind<uint32_t, D> du;
+    const V kSign = BitCast(d, Set(du, 0x80000000u));
+    const V original_sign = And(x, kSign);
+    x = AndNot(kSign, x);  // abs
+    const V below_div12 = Sqrt(Set(d, 3.0f) * x);
+    const V e =
+        MulAdd(Set(d, kA * 0.693147181f),
+               FastLog2f(d, MulAdd(Set(d, 12), x, Set(d, -kB))), Set(d, kC));
+    const V magnitude = IfThenElse(x <= Set(d, kDiv12), below_div12, e);
+    const V lifted = Or(AndNot(kSign, magnitude), original_sign);
+    const V kMul = Set(d, 1.0f / (1.0f - kBeta));
+    const V kAdd = Set(d, -kBeta / (1.0f - kBeta));
+    return MulAdd(kMul, lifted, kAdd);
+  }
+
  private:
   // OETF (defines the HLG approach). s = scene, returns encoded.
   JXL_INLINE double OETF(double s) const {
@@ -111,6 +129,30 @@ class TF_HLG {
   static constexpr double kB = 1 - 4 * kA;
   static constexpr double kC = 0.5599107295;
   static constexpr double kDiv12 = 1.0 / 12;
+};
+
+class TF_709 {
+ public:
+  JXL_INLINE double EncodedFromDisplay(const double d) const {
+    if (d < kThresh) return kMulLow * d;
+    return kMulHi * std::pow(d, kPowHi) + kSub;
+  }
+
+  // Maximum error 1e-6.
+  template <class D, class V>
+  JXL_INLINE V EncodedFromDisplay(D d, V x) const {
+    auto low = Set(d, kMulLow) * x;
+    auto hi =
+        MulAdd(Set(d, kMulHi), FastPowf(d, x, Set(d, kPowHi)), Set(d, kSub));
+    return IfThenElse(x <= Set(d, kThresh), low, hi);
+  }
+
+ private:
+  static constexpr double kThresh = 0.018;
+  static constexpr double kMulLow = 4.5;
+  static constexpr double kMulHi = 1.099;
+  static constexpr double kPowHi = 0.45;
+  static constexpr double kSub = -0.099;
 };
 
 // Perceptual Quantization
