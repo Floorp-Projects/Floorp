@@ -31,7 +31,7 @@
 }
 
 #placesList > treechildren::-moz-tree-separator {
-  border-top: 1px solid #505d6d;
+  border-top: 1px solid color-mix(in srgb, FieldText 70%, transparent);
   margin: 0 10px;
 }
 
@@ -45,7 +45,7 @@
 
 #placesView > splitter {
   border-inline-start: none !important;
-  border-inline-end: 1px solid #b4b4b4;
+  border-inline-end: 1px solid color-mix(in srgb, FieldText 30%, transparent);
   min-width: 1px;
   width: 3px;
   margin-inline-start: -3px;
@@ -144,7 +144,7 @@
 
 /* Info box */
 #detailsPane {
-  border-top: 1px solid #919191;
+  border-top: 1px solid color-mix(in srgb, FieldText 50%, transparent);
   padding: 10px;
 }
 
@@ -155,7 +155,7 @@
 
 #placeContent > treechildren::-moz-tree-cell,
 #placeContent > treechildren::-moz-tree-column {
-  border-inline-end: 1px solid #d7dad7;
+  border-inline-end: 1px solid color-mix(in srgb, FieldText 30%, transparent);
 }
 
 #placeContent > treechildren::-moz-tree-cell(separator) {
