@@ -38,13 +38,15 @@ struct AsyncScrollThumbTransformer {
   // of the thumb into |mScrollbarTransform|.
   void ApplyTransformForAxis(const Axis& aAxis);
 
-  // Scale the thumb by |aScale| along |aAxis|, while keeping the position
-  // of the top of the thumb constant.
-  void ScaleThumbBy(const Axis& aAxis, float aScale);
+  enum class ScrollThumbExtent { Start, End };
+
+  // Scale the thumb by |aScale| along |aAxis|, while keeping constant the
+  // position of the top denoted by |aExtent|.
+  void ScaleThumbBy(const Axis& aAxis, float aScale, ScrollThumbExtent aExtent);
 };
 
-void AsyncScrollThumbTransformer::ScaleThumbBy(const Axis& aAxis,
-                                               float aScale) {
+void AsyncScrollThumbTransformer::ScaleThumbBy(const Axis& aAxis, float aScale,
+                                               ScrollThumbExtent aExtent) {
   // To keep the position of the top of the thumb constant, the thumb needs to
   // translated to compensate for the scale applied. The origin with respect to
   // which the scale is applied is the origin of the layer tree, rather than
@@ -56,19 +58,22 @@ void AsyncScrollThumbTransformer::ScaleThumbBy(const Axis& aAxis,
   // change of basis. We have a method to help with that,
   // Matrix4x4::ChangeBasis(), but it wouldn't necessarily make the code cleaner
   // in this case).
-  CSSCoord thumbOriginRelativeToCompBounds =
+  CSSCoord thumbExtentRelativeToCompBounds =
       (aAxis.GetPointOffset(mMetrics.GetVisualScrollOffset()) *
        mUnitlessThumbRatio);
   CSSCoord compBoundsOrigin = aAxis.GetPointOffset(
       mMetrics.CalculateCompositionBoundsInCssPixelsOfSurroundingContent()
           .TopLeft());
-  CSSCoord thumbOrigin = compBoundsOrigin + thumbOriginRelativeToCompBounds;
-  const CSSCoord thumbOriginScaled = thumbOrigin * aScale;
-  const CSSCoord thumbOriginDelta = thumbOriginScaled - thumbOrigin;
-  const ParentLayerCoord thumbOriginDeltaPL = thumbOriginDelta * mEffectiveZoom;
+  CSSCoord thumbExtent = compBoundsOrigin + thumbExtentRelativeToCompBounds;
+  if (aExtent == ScrollThumbExtent::End) {
+    thumbExtent += mScrollbarData.mThumbLength;
+  }
+  const CSSCoord thumbExtentScaled = thumbExtent * aScale;
+  const CSSCoord thumbExtentDelta = thumbExtentScaled - thumbExtent;
+  const ParentLayerCoord thumbExtentDeltaPL = thumbExtentDelta * mEffectiveZoom;
 
   aAxis.PostScale(mScrollbarTransform, aScale);
-  aAxis.PostTranslate(mScrollbarTransform, -thumbOriginDeltaPL);
+  aAxis.PostTranslate(mScrollbarTransform, -thumbExtentDeltaPL);
 }
 
 void AsyncScrollThumbTransformer::ApplyTransformForAxis(const Axis& aAxis) {
@@ -114,7 +119,11 @@ void AsyncScrollThumbTransformer::ApplyTransformForAxis(const Axis& aAxis) {
   // content up, should result in moving the scroll thumb down.
   ParentLayerCoord translation = -asyncScroll * mUnitlessThumbRatio;
 
-  ScaleThumbBy(aAxis, scale);
+  // When scaling the thumb to account for the async zoom, keep the position
+  // of the start of the thumb (which corresponds to the scroll offset)
+  // constant.
+  ScaleThumbBy(aAxis, scale, ScrollThumbExtent::Start);
+
   aAxis.PostTranslate(mScrollbarTransform, translation);
 }
 
