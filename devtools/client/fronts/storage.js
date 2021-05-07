@@ -61,6 +61,19 @@ class StorageFront extends FrontClassWithSpec(storageSpec) {
     // Attribute name from which to retrieve the actorID out of the target actor's form
     this.formAttributeName = "storageActor";
   }
+
+  // listStores actor method doesn't support being called many times in a row,
+  // so memoize its value to call it only once.
+  // This function fetches all the storage actor's for each store type.
+  // This is called many times by each legacy listener, but its returned content
+  // is always the same as the actors are instantiated once for the whole target's lifecycle.
+  listStores() {
+    if (this.stores) {
+      return this.stores;
+    }
+    this.stores = super.listStores();
+    return this.stores;
+  }
 }
 
 exports.StorageFront = StorageFront;
