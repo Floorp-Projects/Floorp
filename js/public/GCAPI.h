@@ -50,13 +50,6 @@ enum class GCOptions : uint32_t {
 
 }  // namespace JS
 
-/**
- * Kinds of js_GC invocation.
- */
-using JSGCInvocationKind = JS::GCOptions;
-static constexpr JSGCInvocationKind GC_NORMAL = JS::GCOptions::Normal;
-static constexpr JSGCInvocationKind GC_SHRINK = JS::GCOptions::Shrink;
-
 typedef enum JSGCParamKey {
   /**
    * Maximum nominal heap before last ditch GC.
