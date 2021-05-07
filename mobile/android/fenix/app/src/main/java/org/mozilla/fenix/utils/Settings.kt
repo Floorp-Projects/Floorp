@@ -357,6 +357,11 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         featureFlag = FeatureFlags.tabsTrayRewrite
     )
 
+    var allowThirdPartyRootCerts by booleanPreference(
+        appContext.getPreferenceKey(R.string.pref_key_allow_third_party_root_certs),
+        default = false
+    )
+
     fun getTabTimeout(): Long = when {
         closeTabsAfterOneDay -> ONE_DAY_MS
         closeTabsAfterOneWeek -> ONE_WEEK_MS
