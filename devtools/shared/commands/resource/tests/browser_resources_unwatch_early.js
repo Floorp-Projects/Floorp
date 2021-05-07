@@ -35,6 +35,14 @@ add_task(async function() {
     onAvailable: onAvailable1,
   });
 
+  info(
+    "Calling unwatchResources for an already unregistered callback should be a no-op"
+  );
+  // and more importantly, it should not throw
+  resourceCommand.unwatchResources([CONSOLE_MESSAGE], {
+    onAvailable: onAvailable1,
+  });
+
   // Watcher 2 watches for CONSOLE_MESSAGE & another resource (ROOT_NODE).
   // Again unwatchResource will be called before onAvailable has resolved.
   // But unwatchResource is only called for CONSOLE_MESSAGE, not for ROOT_NODE.
