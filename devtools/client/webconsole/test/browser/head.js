@@ -1736,13 +1736,13 @@ function toggleLayout(hud) {
  * Otherwise test will be shutdown too early and cause failure.
  */
 async function waitForLazyRequests(toolbox) {
-  const { wrapper } = toolbox.getCurrentPanel().hud.ui;
+  const ui = toolbox.getCurrentPanel().hud.ui;
   return waitUntil(() => {
     return (
-      !wrapper.networkDataProvider.lazyRequestData.size &&
+      !ui.networkDataProvider.lazyRequestData.size &&
       // Make sure that batched request updates are all complete
       // as they trigger late lazy data requests.
-      !wrapper.queuedRequestUpdates.length
+      !ui.wrapper.queuedRequestUpdates.length
     );
   });
 }
