@@ -24,7 +24,11 @@ export class _CustomizeMenu extends React.PureComponent {
           in={this.props.showing}
           appear={true}
         >
-          <div className="customize-menu">
+          <div
+            className="customize-menu"
+            role="dialog"
+            data-l10n-id="newtab-personalize-dialog-label"
+          >
             <button
               onClick={() => this.props.onClose()}
               className="close-button"
