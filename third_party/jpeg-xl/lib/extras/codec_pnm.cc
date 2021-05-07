@@ -407,6 +407,7 @@ Status EncodeImagePNM(const CodecInOut* io, const ColorEncoding& c_desired,
   JXL_RETURN_IF_ERROR(ConvertToExternal(
       *transformed, bits_per_sample, floating_point, c_desired.Channels(),
       endianness, stride, pool, pixels.data(), pixels.size(),
+      /*out_callback=*/nullptr, /*out_opaque=*/nullptr,
       metadata.GetOrientation()));
 
   char header[kMaxHeaderSize];

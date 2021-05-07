@@ -39,6 +39,7 @@ struct OpsinParams {
 
 struct OutputEncodingInfo {
   ColorEncoding color_encoding;
+  // Used for Gamma and DCI transfer functions.
   float inverse_gamma;
   // Contains an opsin matrix that converts to the primaries of the output
   // encoding.

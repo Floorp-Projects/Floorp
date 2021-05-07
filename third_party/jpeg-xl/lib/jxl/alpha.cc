@@ -77,16 +77,6 @@ void PerformAlphaWeightedAdd(const float* bg, const float* fg, const float* fga,
   }
 }
 
-void PerformMulBlending(const AlphaBlendingInputLayer& bg,
-                        const AlphaBlendingInputLayer& fg,
-                        const AlphaBlendingOutput& out, size_t num_pixels) {
-  for (size_t x = 0; x < num_pixels; ++x) {
-    out.r[x] = bg.r[x] * fg.r[x];
-    out.g[x] = bg.g[x] * fg.g[x];
-    out.b[x] = bg.b[x] * fg.b[x];
-    out.a[x] = bg.a[x] * fg.a[x];
-  }
-}
 void PerformMulBlending(const float* bg, const float* fg, float* out,
                         size_t num_pixels) {
   for (size_t x = 0; x < num_pixels; ++x) {

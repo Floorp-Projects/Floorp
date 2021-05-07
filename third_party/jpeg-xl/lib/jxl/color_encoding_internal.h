@@ -201,6 +201,12 @@ struct CustomTransferFunction : public Fields {
   bool IsHLG() const {
     return !have_gamma_ && (transfer_function_ == TransferFunction::kHLG);
   }
+  bool Is709() const {
+    return !have_gamma_ && (transfer_function_ == TransferFunction::k709);
+  }
+  bool IsDCI() const {
+    return !have_gamma_ && (transfer_function_ == TransferFunction::kDCI);
+  }
   bool IsSame(const CustomTransferFunction& other) const {
     if (have_gamma_ != other.have_gamma_) return false;
     if (have_gamma_) {
