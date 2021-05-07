@@ -860,11 +860,16 @@ static BOOL gMenuItemsExecuteCommands = YES;
     return;
   }
 
-  int tag = [aSender tag];
+  if (![aSender isKindOfClass:[NSMenuItem class]]) {
+    return;
+  }
+
+  NSMenuItem* nativeMenuItem = (NSMenuItem*)aSender;
+  NSInteger tag = nativeMenuItem.tag;
 
   nsMenuGroupOwnerX* menuGroupOwner = nullptr;
   nsMenuBarX* menuBar = nullptr;
-  MOZMenuItemRepresentedObject* representedObject = [aSender representedObject];
+  MOZMenuItemRepresentedObject* representedObject = nativeMenuItem.representedObject;
 
   if (representedObject) {
     menuGroupOwner = representedObject.menuGroupOwner;
