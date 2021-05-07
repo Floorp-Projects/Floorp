@@ -482,6 +482,14 @@ checkbox {
   stroke: var(--in-content-item-selected);
 }
 
+@media (prefers-contrast) {
+  #engineList > treechildren::-moz-tree-image(hover),
+  #blocklistsTree > treechildren::-moz-tree-image(hover) {
+    fill: var(--in-content-item-hover-text);
+    stroke: var(--in-content-item-hover);
+  }
+}
+
 #engineList > treechildren::-moz-tree-row,
 #blocklistsTree > treechildren::-moz-tree-row {
   min-height: 36px;

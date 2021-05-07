@@ -106,7 +106,6 @@ tr:is([selected], :hover) > td > .action-icon {
 
 #dispatch-thead > tr > td {
   border: none;
-  background-color: var(--in-content-button-background);
 }
 #dispatch-thead > tr > td:not(:first-child) {
   border-inline-start-width: 1px;
@@ -117,7 +116,6 @@ tr:is([selected], :hover) > td > .action-icon {
 td {
   padding: 5px 10px;
   min-height: 2em;
-  color: var(--in-content-text-color);
   max-width: 70vw;
   overflow: hidden;
   white-space: nowrap;
@@ -181,12 +179,13 @@ td {
   fill: #808080;
 }
 
-#dispatch-tbody > tr[selected] > td {
-  background-color: var(--in-content-item-selected);
-  color: var(--in-content-item-selected-text);
-}
 #dispatch-tbody > tr:hover {
   background-color: var(--in-content-item-hover);
+  color: var(--in-content-item-hover-text);
+}
+#dispatch-tbody > tr[selected] {
+  background-color: var(--in-content-item-selected);
+  color: var(--in-content-item-selected-text);
 }
 
 .clickable {
@@ -208,9 +207,11 @@ td {
 }
 #dispatch-thead > tr > td.clickable:hover {
   background-color: var(--in-content-button-background-hover);
+  color: var(--in-content-button-text-color-hover);
 }
-#dispatch-thead > tr > td.clickable:active {
+#dispatch-thead > tr > td.clickable:hover:active {
   background-color: var(--in-content-button-background-active);
+  color: var(--in-content-button-text-color-hover);
 }
 
 .energy-impact {
