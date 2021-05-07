@@ -58,9 +58,6 @@ class XMLParser(object):
         self._parser.SetParamEntityParsing(expat.XML_PARAM_ENTITY_PARSING_UNLESS_STANDALONE)
         # parser callbacks
         self._parser.XmlDeclHandler = self._xml_decl
-        # mypy generates a type error in py2 because it wants
-        # StartElementHandler to take str, List[str]. But the code
-        # seems to always pass in Text to this function
         self._parser.StartElementHandler = self._start
         self._parser.EndElementHandler = self._end
         self._parser.CharacterDataHandler = self._data
