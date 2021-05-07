@@ -1342,8 +1342,7 @@ class MOZ_RAII GetPropIRGenerator : public IRGenerator {
 
   AttachDecision tryAttachProxyElement(HandleObject obj, ObjOperandId objId);
 
-  void attachMegamorphicNativeSlot(ObjOperandId objId, jsid id,
-                                   bool handleMissing);
+  void attachMegamorphicNativeSlot(ObjOperandId objId, jsid id);
 
   ValOperandId getElemKeyValueId() const {
     MOZ_ASSERT(cacheKind_ == CacheKind::GetElem ||
