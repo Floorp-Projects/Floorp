@@ -82,6 +82,11 @@ using mozilla::FilePreferences::kPathSeparator;
 #  define DRIVE_REMOTE 4
 #endif
 
+// MinGW does not know about this error, ensure we do.
+#ifndef ERROR_DEVICE_HARDWARE_ERROR
+#  define ERROR_DEVICE_HARDWARE_ERROR 483L
+#endif
+
 namespace {
 
 nsresult NewLocalFile(const nsAString& aPath, bool aUseDOSDevicePathSyntax,
