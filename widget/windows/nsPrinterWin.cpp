@@ -37,7 +37,7 @@ already_AddRefed<nsPrinterWin> nsPrinterWin::Create(
 template <class T>
 static nsTArray<T> GetDeviceCapabilityArray(const LPWSTR aPrinterName,
                                             WORD aCapabilityID,
-                                            const DEVMODEW* aDevmodeW,
+                                            mozilla::Mutex& aDriverMutex,
                                             int& aCount) {
   MOZ_ASSERT(aCount >= 0, "Possibly passed aCount from previous error case.");
 
@@ -59,8 +59,9 @@ static nsTArray<T> GetDeviceCapabilityArray(const LPWSTR aPrinterName,
     // sense. Also, the printer set-up seems to stop you from having two
     // printers with the same name. Note: this (and the call below) are blocking
     // calls, which could be slow.
+    MutexAutoLock autoLock(aDriverMutex);
     aCount = ::DeviceCapabilitiesW(aPrinterName, nullptr, aCapabilityID,
-                                   nullptr, aDevmodeW);
+                                   nullptr, nullptr);
     if (aCount <= 0) {
       return caps;
     }
@@ -69,9 +70,10 @@ static nsTArray<T> GetDeviceCapabilityArray(const LPWSTR aPrinterName,
   // As DeviceCapabilitiesW doesn't take a size, there is a greater risk of the
   // buffer being overflowed, so we over-allocate for safety.
   caps.SetLength(aCount * 2);
-  int count = ::DeviceCapabilitiesW(aPrinterName, nullptr, aCapabilityID,
-                                    reinterpret_cast<LPWSTR>(caps.Elements()),
-                                    aDevmodeW);
+  MutexAutoLock autoLock(aDriverMutex);
+  int count =
+      ::DeviceCapabilitiesW(aPrinterName, nullptr, aCapabilityID,
+                            reinterpret_cast<LPWSTR>(caps.Elements()), nullptr);
   if (count <= 0) {
     caps.Clear();
     return caps;
@@ -100,29 +102,15 @@ nsPrinterWin::GetSystemName(nsAString& aName) {
 }
 
 bool nsPrinterWin::SupportsDuplex() const {
-  // Some printer drivers have threading issues around using their default
-  // DEVMODE, so we use a copy of our cached one.
-  nsTArray<uint8_t> devmodeWStorage = CopyDefaultDevmodeW();
-  if (devmodeWStorage.IsEmpty()) {
-    return false;
-  }
-  auto* devmode = reinterpret_cast<DEVMODEW*>(devmodeWStorage.Elements());
-
+  MutexAutoLock autoLock(mDriverMutex);
   return ::DeviceCapabilitiesW(mName.get(), nullptr, DC_DUPLEX, nullptr,
-                               devmode) == 1;
+                               nullptr) == 1;
 }
 
 bool nsPrinterWin::SupportsColor() const {
-  // Some printer drivers have threading issues around using their default
-  // DEVMODE, so we use a copy of our cached one.
-  nsTArray<uint8_t> devmodeWStorage = CopyDefaultDevmodeW();
-  if (devmodeWStorage.IsEmpty()) {
-    return false;
-  }
-  auto* devmode = reinterpret_cast<DEVMODEW*>(devmodeWStorage.Elements());
-
+  MutexAutoLock autoLock(mDriverMutex);
   return ::DeviceCapabilitiesW(mName.get(), nullptr, DC_COLORDEVICE, nullptr,
-                               devmode) == 1;
+                               nullptr) == 1;
 }
 
 bool nsPrinterWin::SupportsMonochrome() const {
@@ -148,6 +136,7 @@ bool nsPrinterWin::SupportsMonochrome() const {
   // Try to modify the devmode settings and see if the setting sticks.
   //
   // This has been the only reliable way to detect it that we've found.
+  MutexAutoLock autoLock(mDriverMutex);
   LONG ret =
       ::DocumentPropertiesW(nullptr, autoPrinter.get(), mName.get(), devmode,
                             devmode, DM_IN_BUFFER | DM_OUT_BUFFER);
@@ -159,16 +148,9 @@ bool nsPrinterWin::SupportsMonochrome() const {
 }
 
 bool nsPrinterWin::SupportsCollation() const {
-  // Some printer drivers have threading issues around using their default
-  // DEVMODE, so we use a copy of our cached one.
-  nsTArray<uint8_t> devmodeWStorage = CopyDefaultDevmodeW();
-  if (devmodeWStorage.IsEmpty()) {
-    return false;
-  }
-  auto* devmode = reinterpret_cast<DEVMODEW*>(devmodeWStorage.Elements());
-
+  MutexAutoLock autoLock(mDriverMutex);
   return ::DeviceCapabilitiesW(mName.get(), nullptr, DC_COLLATE, nullptr,
-                               devmode) == 1;
+                               nullptr) == 1;
 }
 
 nsPrinterBase::PrinterInfo nsPrinterWin::CreatePrinterInfo() const {
@@ -188,7 +170,12 @@ mozilla::gfx::MarginDouble nsPrinterWin::GetMarginsForPaper(
 
   devmode->dmFields = DM_PAPERSIZE;
   devmode->dmPaperSize = _wtoi((const wchar_t*)aPaperId.BeginReading());
-  nsAutoHDC printerDc(::CreateICW(nullptr, mName.get(), nullptr, devmode));
+  HDC dc;
+  {
+    MutexAutoLock autoLock(mDriverMutex);
+    dc = ::CreateICW(nullptr, mName.get(), nullptr, devmode);
+  }
+  nsAutoHDC printerDc(dc);
   MOZ_ASSERT(printerDc, "CreateICW failed");
   if (!printerDc) {
     return margin;
@@ -215,6 +202,7 @@ nsTArray<uint8_t> nsPrinterWin::CopyDefaultDevmodeW() const {
     }
     nsAutoPrinter autoPrinter(hPrinter);
     // Allocate devmode storage of the correct size.
+    MutexAutoLock autoLock(mDriverMutex);
     LONG bytesNeeded = ::DocumentPropertiesW(nullptr, autoPrinter.get(),
                                              mName.get(), nullptr, nullptr, 0);
     // Note that we must cast the sizeof() to a signed type so that comparison
@@ -244,25 +232,17 @@ nsTArray<uint8_t> nsPrinterWin::CopyDefaultDevmodeW() const {
 }
 
 nsTArray<mozilla::PaperInfo> nsPrinterWin::PaperList() const {
-  // Some printer drivers have threading issues around using their default
-  // DEVMODE, so we use a copy of our cached one.
-  nsTArray<uint8_t> devmodeWStorage = CopyDefaultDevmodeW();
-  if (devmodeWStorage.IsEmpty()) {
-    return {};
-  }
-  auto* devmode = reinterpret_cast<DEVMODEW*>(devmodeWStorage.Elements());
-
   // Paper IDs are returned as WORDs.
   int requiredArrayCount = 0;
-  auto paperIds = GetDeviceCapabilityArray<WORD>(mName.get(), DC_PAPERS,
-                                                 devmode, requiredArrayCount);
+  auto paperIds = GetDeviceCapabilityArray<WORD>(
+      mName.get(), DC_PAPERS, mDriverMutex, requiredArrayCount);
   if (!paperIds.Length()) {
     return {};
   }
 
   // Paper names are returned in 64 long character buffers.
   auto paperNames = GetDeviceCapabilityArray<Array<wchar_t, 64>>(
-      mName.get(), DC_PAPERNAMES, devmode, requiredArrayCount);
+      mName.get(), DC_PAPERNAMES, mDriverMutex, requiredArrayCount);
   // Check that we have the same number of names as IDs.
   if (paperNames.Length() != paperIds.Length()) {
     return {};
@@ -271,7 +251,7 @@ nsTArray<mozilla::PaperInfo> nsPrinterWin::PaperList() const {
   // Paper sizes are returned as POINT structs with a tenth of a millimeter as
   // the unit.
   auto paperSizes = GetDeviceCapabilityArray<POINT>(
-      mName.get(), DC_PAPERSIZE, devmode, requiredArrayCount);
+      mName.get(), DC_PAPERSIZE, mDriverMutex, requiredArrayCount);
   // Check that we have the same number of sizes as IDs.
   if (paperSizes.Length() != paperIds.Length()) {
     return {};
@@ -333,7 +313,12 @@ PrintSettingsInitializer nsPrinterWin::DefaultSettings() const {
     color = devmode->dmColor != DMCOLOR_MONOCHROME;
   }
 
-  nsAutoHDC printerDc(::CreateICW(nullptr, mName.get(), nullptr, devmode));
+  HDC dc;
+  {
+    MutexAutoLock autoLock(mDriverMutex);
+    dc = ::CreateICW(nullptr, mName.get(), nullptr, devmode);
+  }
+  nsAutoHDC printerDc(dc);
   MOZ_ASSERT(printerDc, "CreateICW failed");
   if (!printerDc) {
     return {};
