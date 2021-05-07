@@ -544,12 +544,11 @@ class CGNativePropertyHooks(CGThing):
 
         return fill(
             """
-            bool sNativePropertiesInited = false;
             const NativePropertyHooks sNativePropertyHooks[] = { {
               ${resolveOwnProperty},
               ${enumerateOwnProperties},
               ${deleteNamedProperty},
-              { ${regular}, ${chrome}, &sNativePropertiesInited },
+              { ${regular}, ${chrome} },
               ${prototypeID},
               ${constructorID},
               ${parentHooks},
@@ -3615,6 +3614,36 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
             getConstructorProto=getConstructorProto,
         )
 
+        idsToInit = []
+        # There is no need to init any IDs in bindings that don't want Xrays.
+        if self.descriptor.wantsXrays:
+            if self.properties.hasNonChromeOnly():
+                idsToInit.append("sNativeProperties")
+            if self.properties.hasChromeOnly():
+                idsToInit.append("sChromeOnlyNativeProperties")
+        if len(idsToInit) > 0:
+            initIdCalls = [
+                "!InitIds(aCx, %s.Upcast())" % (properties) for properties in idsToInit
+            ]
+            idsInitedFlag = CGGeneric(
+                "static Atomic<bool, Relaxed> sIdsInited(false);\n"
+            )
+            setFlag = CGGeneric("sIdsInited = true;\n")
+            initIdConditionals = [
+                CGIfWrapper(CGGeneric("return;\n"), call) for call in initIdCalls
+            ]
+            initIds = CGList(
+                [
+                    idsInitedFlag,
+                    CGIfWrapper(
+                        CGList(initIdConditionals + [setFlag]),
+                        "!sIdsInited && NS_IsMainThread()",
+                    ),
+                ]
+            )
+        else:
+            initIds = None
+
         if self.descriptor.interface.ctor():
             constructArgs = methodLength(self.descriptor.interface.ctor())
         else:
@@ -3907,6 +3936,7 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
             [
                 getParentProto,
                 getConstructorProto,
+                initIds,
                 CGGeneric(call),
                 defineAliases,
                 unforgeableHolderSetup,
