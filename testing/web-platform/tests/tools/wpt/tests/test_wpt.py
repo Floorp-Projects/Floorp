@@ -97,6 +97,8 @@ def test_help():
 
 
 @pytest.mark.slow
+@pytest.mark.skipif(sys.platform == "win32",
+                    reason="https://github.com/web-platform-tests/wpt/issues/28745")
 def test_list_tests(manifest_dir):
     """The `--list-tests` option should not produce an error under normal
     conditions."""
@@ -161,6 +163,8 @@ def test_list_tests_invalid_manifest(manifest_dir):
 
 @pytest.mark.slow
 @pytest.mark.remote_network
+@pytest.mark.skipif(sys.platform == "win32",
+                    reason="https://github.com/web-platform-tests/wpt/issues/28745")
 def test_run_zero_tests():
     """A test execution describing zero tests should be reported as an error
     even in the presence of the `--no-fail-on-unexpected` option."""
@@ -181,6 +185,8 @@ def test_run_zero_tests():
 
 @pytest.mark.slow
 @pytest.mark.remote_network
+@pytest.mark.skipif(sys.platform == "win32",
+                    reason="https://github.com/web-platform-tests/wpt/issues/28745")
 def test_run_failing_test():
     """Failing tests should be reported with a non-zero exit status unless the
     `--no-fail-on-unexpected` option has been specified."""
@@ -203,6 +209,8 @@ def test_run_failing_test():
 
 @pytest.mark.slow
 @pytest.mark.remote_network
+@pytest.mark.skipif(sys.platform == "win32",
+                    reason="https://github.com/web-platform-tests/wpt/issues/28745")
 def test_run_verify_unstable(temp_test):
     """Unstable tests should be reported with a non-zero exit status. Stable
     tests should be reported with a zero exit status."""
