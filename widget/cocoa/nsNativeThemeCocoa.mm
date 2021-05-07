@@ -2080,83 +2080,9 @@ static SegmentedControlRenderSettings RenderSettingsForSegmentType(
   }
 }
 
-void nsNativeThemeCocoa::DrawSegmentBackground(CGContextRef cgContext, const HIRect& inBoxRect,
-                                               const SegmentParams& aParams) {
-  // On earlier macOS versions, the segment background is automatically
-  // drawn correctly and this method should not be used. ASSERT here
-  // to catch unnecessary usage, but the method implementation is not
-  // dependent on Big Sur in any way.
-  MOZ_ASSERT(nsCocoaFeatures::OnBigSurOrLater());
-
-  // Use colors resembling 10.15.
-  if (aParams.selected) {
-    DeviceColor color = ToDeviceColor(mozilla::gfx::sRGBColor::FromU8(93, 93, 93, 255));
-    CGContextSetRGBFillColor(cgContext, color.r, color.g, color.b, color.a);
-  } else {
-    DeviceColor color = ToDeviceColor(mozilla::gfx::sRGBColor::FromU8(247, 247, 247, 255));
-    CGContextSetRGBFillColor(cgContext, color.r, color.g, color.b, color.a);
-  }
-
-  // Create a rect for the background fill.
-  CGRect bgRect = inBoxRect;
-  bgRect.size.height -= 3.0;
-  bgRect.size.width -= 4.0;
-  bgRect.origin.x += 2.0;
-  bgRect.origin.y += 1.0;
-
-  // Round the corners unless the button is a middle button. Buttons in
-  // a grouping but on the edge will have the inner edge filled below.
-  if (aParams.atLeftEnd || aParams.atRightEnd) {
-    CGPathRef path = CGPathCreateWithRoundedRect(bgRect, 5, 4, nullptr);
-    CGContextAddPath(cgContext, path);
-    CGPathRelease(path);
-    CGContextClosePath(cgContext);
-    CGContextFillPath(cgContext);
-  }
-
-  // Handle buttons grouped together where either or both of
-  // the side edges do not have curved corners.
-  if (!aParams.atLeftEnd && aParams.atRightEnd) {
-    // Shift the rect left to draw the left side of the
-    // rect with right angle corners leaving the right side
-    // to have rounded corners drawn with the curve above.
-    // For example, the left side of the forward button in
-    // the Library window.
-    CGRect leftRectEdge = bgRect;
-    leftRectEdge.size.width -= 10;
-    leftRectEdge.origin.x -= 2;
-    CGContextFillRect(cgContext, leftRectEdge);
-  } else if (aParams.atLeftEnd && !aParams.atRightEnd) {
-    // Shift the rect right to draw the right side of the
-    // rect with right angle corners leaving the left side
-    // to have rounded corners drawn with the curve above.
-    // For example, the right side of the back button in
-    // the Library window.
-    CGRect rightRectEdge = bgRect;
-    rightRectEdge.size.width -= 10;
-    rightRectEdge.origin.x += 12;
-    CGContextFillRect(cgContext, rightRectEdge);
-  } else if (!aParams.atLeftEnd && !aParams.atRightEnd) {
-    // The middle button in a group of buttons. Widen the
-    // background rect to meet adjacent buttons seamlessly.
-    CGRect middleRect = bgRect;
-    middleRect.size.width += 4;
-    middleRect.origin.x -= 2;
-    CGContextFillRect(cgContext, middleRect);
-  }
-}
-
 void nsNativeThemeCocoa::DrawSegment(CGContextRef cgContext, const HIRect& inBoxRect,
                                      const SegmentParams& aParams) {
   SegmentedControlRenderSettings renderSettings = RenderSettingsForSegmentType(aParams.segmentType);
-
-  // On Big Sur, manually draw the background of the buttons to workaround a
-  // change in Big Sur where the backround is filled with the toolbar gradient.
-  if (nsCocoaFeatures::OnBigSurOrLater() &&
-      (aParams.segmentType == nsNativeThemeCocoa::SegmentType::eToolbarButton)) {
-    DrawSegmentBackground(cgContext, inBoxRect, aParams);
-  }
-
   NSControlSize controlSize = FindControlSize(inBoxRect.size.height, renderSettings.heights, 4.0f);
   CGRect drawRect = SeparatorAdjustedRect(inBoxRect, aParams);
 
@@ -3526,7 +3452,6 @@ bool nsNativeThemeCocoa::ThemeSupportsWidget(nsPresContext* aPresContext, nsIFra
     case StyleAppearance::Textarea:
     case StyleAppearance::Searchfield:
     case StyleAppearance::Toolbox:
-    // case StyleAppearance::Toolbarbutton:
     case StyleAppearance::ProgressBar:
     case StyleAppearance::Progresschunk:
     case StyleAppearance::Meter:
