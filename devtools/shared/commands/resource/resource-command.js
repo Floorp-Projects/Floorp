@@ -44,7 +44,7 @@ class ResourceCommand {
 
     // Cache for all resources by the order that the resource was taken.
     this._cache = [];
-    this._listenerCount = new Map();
+    this._listenedResources = new Set();
 
     // WeakMap used to avoid starting a legacy listener twice for the same
     // target + resource-type pair. Legacy listener creation can be subject to
@@ -154,11 +154,7 @@ class ResourceCommand {
 
     const promises = [];
     for (const resource of resources) {
-      // If we are registering the first listener, so start listening from the server about
-      // this one resource.
-      if (!this._hasListenerForResource(resource)) {
-        promises.push(this._startListening(resource));
-      }
+      promises.push(this._startListening(resource));
     }
     await Promise.all(promises);
 
@@ -214,12 +210,6 @@ class ResourceCommand {
       );
     }
 
-    const watchedResources = [];
-    for (const resource of resources) {
-      if (this._hasListenerForResource(resource)) {
-        watchedResources.push(resource);
-      }
-    }
     // Unregister the callbacks from the watchers registries.
     // Check _watchers for the fully initialized watchers, as well as
     // `_pendingWatchers` for new watchers still being created by `watchResources`
@@ -239,19 +229,21 @@ class ResourceCommand {
       return entry.resources.length > 0;
     });
 
-    // Stop listening to all resources that no longer have any watcher callback
-    for (const resource of watchedResources) {
-      if (!this._hasListenerForResource(resource)) {
+    // Stop listening to all resources for which we removed the last watcher
+    for (const resource of resources) {
+      const isResourceWatched = allWatchers.some(watcherEntry =>
+        watcherEntry.resources.includes(resource)
+      );
+
+      // Also check in _listenedResources as we may call unwatchResources
+      // for resources that we haven't started watching for.
+      if (!isResourceWatched && this._listenedResources.has(resource)) {
         this._stopListening(resource);
       }
     }
 
     // Stop watching for targets if we removed the last listener.
-    let listeners = 0;
-    for (const count of this._listenerCount.values()) {
-      listeners += count;
-    }
-    if (listeners <= 0) {
+    if (this._listenedResources.size == 0) {
       this._unwatchAllTargets();
     }
   }
@@ -312,7 +304,7 @@ class ResourceCommand {
       // level target.
       for (const resourceType of Object.values(ResourceCommand.TYPES)) {
         // ...which has at least one listener...
-        if (!this._listenerCount.get(resourceType)) {
+        if (!this._listenedResources.has(resourceType)) {
           continue;
         }
 
@@ -337,7 +329,7 @@ class ResourceCommand {
       // For each resource type...
       for (const resourceType of Object.values(ResourceCommand.TYPES)) {
         // ...which has at least one listener...
-        if (!this._listenerCount.get(resourceType)) {
+        if (!this._listenedResources.has(resourceType)) {
           continue;
         }
         // ...request existing resource and new one to come from this one target
@@ -567,18 +559,6 @@ class ResourceCommand {
     this._throttledNotifyWatchers();
   }
 
-  /**
-   * Check if there is at least one listener registered for the given resource type.
-   *
-   * @param {String} resourceType
-   *        Watched resource type
-   */
-  _hasListenerForResource(resourceType) {
-    return this._watchers.some(({ resources }) => {
-      return resources.includes(resourceType);
-    });
-  }
-
   _queueResourceEvent(callbackType, resourceType, update) {
     for (const { resources, pendingEvents } of this._watchers) {
       // This watcher doesn't listen to this type of resource
@@ -730,13 +710,10 @@ class ResourceCommand {
    */
   async _startListening(resourceType, { bypassListenerCount = false } = {}) {
     if (!bypassListenerCount) {
-      let listeners = this._listenerCount.get(resourceType) || 0;
-      listeners++;
-      this._listenerCount.set(resourceType, listeners);
-
-      if (listeners > 1) {
+      if (this._listenedResources.has(resourceType)) {
         return;
       }
+      this._listenedResources.add(resourceType);
     }
 
     this._processingExistingResources.add(resourceType);
@@ -874,17 +851,12 @@ class ResourceCommand {
    */
   _stopListening(resourceType, { bypassListenerCount = false } = {}) {
     if (!bypassListenerCount) {
-      let listeners = this._listenerCount.get(resourceType);
-      if (!listeners || listeners <= 0) {
+      if (!this._listenedResources.has(resourceType)) {
         throw new Error(
           `Stopped listening for resource '${resourceType}' that isn't being listened to`
         );
       }
-      listeners--;
-      this._listenerCount.set(resourceType, listeners);
-      if (listeners > 0) {
-        return;
-      }
+      this._listenedResources.delete(resourceType);
     }
 
     // Clear the cached resources of the type.
