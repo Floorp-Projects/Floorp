@@ -7028,13 +7028,6 @@ static bool TypeFailureWarning(frontend::ParserBase& parser, const char* str) {
 // asm.js requires Ion to be available on the current hardware/OS and to be
 // enabled for wasm, since asm.js compilation goes via wasm.
 static bool IsAsmJSCompilerAvailable(JSContext* cx) {
-#ifdef JS_CODEGEN_ARM64
-  // Disable asm.js-via-wasm on arm64 until such time as that pathway, along
-  // with the associated compiler-option logic, is better tested.  asm.js will
-  // still be available on arm64, but will be forced along the JS pathway,
-  // with the associated performance lossage.  See bugs 1699379 and 1697560.
-  return false;
-#endif
   return HasPlatformSupport(cx) && WasmCompilerForAsmJSAvailable(cx);
 }
 
