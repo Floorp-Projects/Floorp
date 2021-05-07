@@ -994,6 +994,9 @@ class IDLInterfaceOrNamespace(IDLInterfaceOrInterfaceMixinOrNamespace):
     def isIteratorInterface(self):
         return self.iterableInterface is not None
 
+    def getClassName(self):
+        return self.identifier.name
+
     def finish(self, scope):
         if self._finished:
             return
@@ -1811,7 +1814,7 @@ class IDLInterface(IDLInterfaceOrNamespace):
     def getClassName(self):
         if self.classNameOverride:
             return self.classNameOverride
-        return self.identifier.name
+        return IDLInterfaceOrNamespace.getClassName(self)
 
     def addExtendedAttributes(self, attrs):
         for attr in attrs:
