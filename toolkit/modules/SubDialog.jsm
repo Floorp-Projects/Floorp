@@ -368,6 +368,11 @@ SubDialog.prototype = {
       this._frame.style.height = frameHeight + resizeByHeight + "px";
       this._box.style.minHeight = boxMinHeight + resizeByHeight + "px";
 
+      this._overlay.parentNode.style.setProperty(
+        "--inner-height",
+        frameHeight + resizeByHeight + "px"
+      );
+
       oldResizeBy.call(
         this._frame.contentWindow,
         resizeByWidth,
