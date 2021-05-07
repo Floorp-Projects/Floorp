@@ -223,6 +223,11 @@ void CanonicalBrowsingContext::ReplacedBy(
     BackgroundSessionStorageManager::PropagateManager(Id(), aNewContext->Id());
   }
 
+  // Transfer the ownership of the priority active status from the old context
+  // to the new context.
+  aNewContext->mPriorityActive = mPriorityActive;
+  mPriorityActive = false;
+
   MOZ_ASSERT(aNewContext->mLoadingEntries.IsEmpty());
   mLoadingEntries.SwapElements(aNewContext->mLoadingEntries);
   MOZ_ASSERT(!aNewContext->mActiveEntry);
