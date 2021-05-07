@@ -136,12 +136,6 @@ add_task(async function test_open_managedbookmark() {
 
   let openInNewTabOption = document.getElementById("placesContext_open:newtab");
   context.activateItem(openInNewTabOption);
-  if (Services.prefs.getBoolPref("widget.macos.native-context-menus", false)) {
-    // TODO: Remove this workaround. Clicking items in a native
-    // context menu atop a non-native menu like the managed bookmarks menu does
-    // not close the latter. Fixing this is tracked in bug 1705120.
-    managedBookmarksMenu.open = false;
-  }
   info("Click open in new tab");
 
   let lastOpenedTab = await tabCreatedPromise;
@@ -188,12 +182,6 @@ add_task(async function test_copy_managedbookmark() {
       "https://example.com/",
       () => {
         context.activateItem(copyOption);
-        if (
-          Services.prefs.getBoolPref("widget.macos.native-context-menus", false)
-        ) {
-          // TODO bug 1705120: Remove this workaround.
-          managedBookmarksMenu.open = false;
-        }
       },
       resolve,
       () => {
