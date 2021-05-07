@@ -13,6 +13,7 @@ import androidx.test.uiautomator.UiScrollable
 import androidx.test.uiautomator.UiSelector
 import org.junit.After
 import org.junit.Assert
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TestRule
@@ -191,6 +192,7 @@ class SwitchLocaleTest {
         TestHelper.mDevice.pressBack()
     }
 
+    @Ignore("Failing, see https://github.com/mozilla-mobile/focus-android/issues/4851")
     @Suppress("LongMethod")
     @Test
     @Throws(UiObjectNotFoundException::class)
