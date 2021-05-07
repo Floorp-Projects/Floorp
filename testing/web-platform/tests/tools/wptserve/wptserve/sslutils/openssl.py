@@ -71,7 +71,7 @@ class OpenSSL(object):
         self.cmd += list(args)
 
         # Copy the environment, converting to plain strings. Win32 StartProcess
-        # is picky about all the keys/values being str (on both Py2/3).
+        # is picky about all the keys/values being str.
         env = {}
         for k, v in os.environ.items():
             env[_ensure_str(k, "utf8")] = _ensure_str(v, "utf8")
