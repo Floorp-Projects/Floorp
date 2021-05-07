@@ -9472,7 +9472,8 @@ var gDialogBox = {
       gBrowser.selectedBrowser
     ).top;
     let parentElement = document.getElementById("window-modal-dialog");
-    parentElement.style.setProperty("--chrome-offset", offset + "px");
+    // The dialog has 1em padding; compensate for that:
+    parentElement.style.marginTop = `calc(${offset}px - 1em)`;
     parentElement.style.removeProperty("visibility");
     parentElement.style.removeProperty("width");
     parentElement.style.removeProperty("height");

@@ -245,7 +245,6 @@ SubDialog.prototype = {
     this._box.removeAttribute("height");
     this._box.style.removeProperty("min-height");
     this._box.style.removeProperty("min-width");
-    this._overlay.parentNode.style.removeProperty("--inner-height");
 
     let onClosed = () => {
       this._openedURL = null;
@@ -367,11 +366,6 @@ SubDialog.prototype = {
 
       this._frame.style.height = frameHeight + resizeByHeight + "px";
       this._box.style.minHeight = boxMinHeight + resizeByHeight + "px";
-
-      this._overlay.parentNode.style.setProperty(
-        "--inner-height",
-        frameHeight + resizeByHeight + "px"
-      );
 
       oldResizeBy.call(
         this._frame.contentWindow,
@@ -558,10 +552,7 @@ SubDialog.prototype = {
 
     // Now check if the frame height we calculated is possible at this window size,
     // accounting for titlebar, padding/border and some spacing.
-    let maxHeight =
-      this._window.innerHeight -
-      frameSizeDifference -
-      (this._titleBar ? 30 : 0);
+    let maxHeight = this._window.innerHeight - frameSizeDifference - 30;
     // Do this with a frame height in pixels...
     let comparisonFrameHeight;
     if (frameHeight.endsWith("em")) {
@@ -603,7 +594,6 @@ SubDialog.prototype = {
     }
 
     this._frame.style.height = frameHeight;
-    this._overlay.parentNode.style.setProperty("--inner-height", frameHeight);
     this._box.style.minHeight =
       "calc(" +
       (boxVerticalBorder + titleBarHeight + frameVerticalMargin) +
