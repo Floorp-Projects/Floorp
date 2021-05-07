@@ -26,6 +26,8 @@ struct AsyncScrollThumbTransformer {
   // Intermediate results
   AsyncTransformComponentMatrix mAsyncTransform;
   AsyncTransformComponentMatrix mScrollbarTransform;
+  CSSToParentLayerScale mEffectiveZoom;
+  float mUnitlessThumbRatio;
 
   LayerToParentLayerMatrix4x4 ComputeTransform();
 
@@ -35,7 +37,35 @@ struct AsyncScrollThumbTransformer {
   // If the thumb's orientation is along |aAxis|, add transformations
   // of the thumb into |mScrollbarTransform|.
   void ApplyTransformForAxis(const Axis& aAxis);
+
+  // Scale the thumb by |aScale| along |aAxis|, while keeping the position
+  // of the top of the thumb constant.
+  void ScaleThumbBy(const Axis& aAxis, float aScale);
 };
+
+void AsyncScrollThumbTransformer::ScaleThumbBy(const Axis& aAxis,
+                                               float aScale) {
+  // To keep the position of the top of the thumb constant, the thumb needs to
+  // translated to compensate for the scale applied. The origin with respect to
+  // which the scale is applied is the origin of the entire scrollbar, rather
+  // than the origin of the scroll thumb (meaning, for a vertical scrollbar it's
+  // at the top of the composition bounds). This means that empty space above
+  // the thumb is scaled too, effectively translating the thumb. We undo that
+  // translation here.
+  // (One can think of the adjustment being done to the translation here as
+  // a change of basis. We have a method to help with that,
+  // Matrix4x4::ChangeBasis(), but it wouldn't necessarily make the code
+  // cleaner in this case).
+  const CSSCoord thumbOrigin =
+      (aAxis.GetPointOffset(mMetrics.GetVisualScrollOffset()) *
+       mUnitlessThumbRatio);
+  const CSSCoord thumbOriginScaled = thumbOrigin * aScale;
+  const CSSCoord thumbOriginDelta = thumbOriginScaled - thumbOrigin;
+  const ParentLayerCoord thumbOriginDeltaPL = thumbOriginDelta * mEffectiveZoom;
+
+  aAxis.PostScale(mScrollbarTransform, aScale);
+  aAxis.PostTranslate(mScrollbarTransform, -thumbOriginDeltaPL);
+}
 
 void AsyncScrollThumbTransformer::ApplyTransformForAxis(const Axis& aAxis) {
   ParentLayerCoord asyncScroll = aAxis.GetTransformTranslation(mAsyncTransform);
@@ -47,7 +77,7 @@ void AsyncScrollThumbTransformer::ApplyTransformForAxis(const Axis& aAxis) {
   const float scale = 1.f / asyncZoom;
 
   // Note: |metrics.GetZoom()| doesn't yet include the async zoom.
-  const CSSToParentLayerScale effectiveZoom(
+  mEffectiveZoom = CSSToParentLayerScale(
       aAxis.GetAxisScale(mMetrics.GetZoom()).scale * asyncZoom);
 
   if (gfxPlatform::UseDesktopZoomingScrollbars()) {
@@ -66,38 +96,21 @@ void AsyncScrollThumbTransformer::ApplyTransformForAxis(const Axis& aAxis) {
 
     asyncScroll -= aAxis.GetPointOffset(
         (mMetrics.GetLayoutScrollOffset() - mMetrics.GetVisualScrollOffset()) *
-        effectiveZoom);
+        mEffectiveZoom);
   }
 
   // Here we convert the scrollbar thumb ratio into a true unitless ratio by
   // dividing out the conversion factor from the scrollframe's parent's space
   // to the scrollframe's space.
-  const float ratio = mScrollbarData.mThumbRatio /
-                      (mMetrics.GetPresShellResolution() * asyncZoom);
+  mUnitlessThumbRatio = mScrollbarData.mThumbRatio /
+                        (mMetrics.GetPresShellResolution() * asyncZoom);
+
   // The scroll thumb needs to be translated in opposite direction of the
   // async scroll. This is because scrolling down, which translates the layer
   // content up, should result in moving the scroll thumb down.
-  ParentLayerCoord translation = -asyncScroll * ratio;
+  ParentLayerCoord translation = -asyncScroll * mUnitlessThumbRatio;
 
-  // The scroll thumb additionally needs to be translated to compensate for
-  // the scale applied above. The origin with respect to which the scale is
-  // applied is the origin of the entire scrollbar, rather than the origin of
-  // the scroll thumb (meaning, for a vertical scrollbar it's at the top of
-  // the composition bounds). This means that empty space above the thumb
-  // is scaled too, effectively translating the thumb. We undo that
-  // translation here.
-  // (One can think of the adjustment being done to the translation here as
-  // a change of basis. We have a method to help with that,
-  // Matrix4x4::ChangeBasis(), but it wouldn't necessarily make the code
-  // cleaner in this case).
-  const CSSCoord thumbOrigin =
-      (aAxis.GetPointOffset(mMetrics.GetVisualScrollOffset()) * ratio);
-  const CSSCoord thumbOriginScaled = thumbOrigin * scale;
-  const CSSCoord thumbOriginDelta = thumbOriginScaled - thumbOrigin;
-  const ParentLayerCoord thumbOriginDeltaPL = thumbOriginDelta * effectiveZoom;
-  translation -= thumbOriginDeltaPL;
-
-  aAxis.PostScale(mScrollbarTransform, scale);
+  ScaleThumbBy(aAxis, scale);
   aAxis.PostTranslate(mScrollbarTransform, translation);
 }
 
