@@ -260,9 +260,6 @@ EXPORTS.ipc = ["nsGUIEventIPC.h"]
 
 if CONFIG["MOZ_X11"]:
     DIRS += ["x11"]
-    SOURCES += [
-        "GfxInfoX11.cpp",
-    ]
 
 if toolkit in ("cocoa", "windows"):
     UNIFIED_SOURCES += [

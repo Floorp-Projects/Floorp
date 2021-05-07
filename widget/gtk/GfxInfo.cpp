@@ -5,31 +5,26 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/wait.h>
-#include <errno.h>
-#include <sys/utsname.h>
-#include <string>
+#include "GfxInfo.h"
+
 #include <cctype>
-#include "nsCRTGlue.h"
-#include "nsExceptionHandler.h"
-#include "nsUnicharUtils.h"
-#include "prenv.h"
-#include "nsPrintfCString.h"
-#include "nsWhitespaceTokenizer.h"
-#include "mozilla/Telemetry.h"
+#include <errno.h>
+#include <unistd.h>
+#include <string>
+#include <sys/types.h>
+#include <sys/utsname.h>
+#include <sys/wait.h>
+
 #include "mozilla/gfx/Logging.h"
 #include "mozilla/SSE.h"
-
-#include "GfxInfoX11.h"
-
-#include <gdk/gdkx.h>
-#ifdef MOZ_WAYLAND
-#  include "mozilla/WidgetUtilsGtk.h"
-#  include "mozilla/widget/nsWaylandDisplay.h"
-#  include "mozilla/widget/DMABufLibWrapper.h"
-#endif
+#include "mozilla/Telemetry.h"
+#include "nsCRTGlue.h"
+#include "nsExceptionHandler.h"
+#include "nsPrintfCString.h"
+#include "nsUnicharUtils.h"
+#include "nsWhitespaceTokenizer.h"
+#include "prenv.h"
+#include "WidgetUtilsGtk.h"
 
 #define EXIT_STATUS_BUFFER_TOO_SMALL 2
 #ifdef DEBUG
@@ -459,13 +454,11 @@ void GfxInfo::GetData() {
   }
 
   mAdapterDescription.Assign(glRenderer);
-#ifdef MOZ_WAYLAND
-  mIsWayland = GdkIsWaylandDisplay();
-#endif
 
   // Make a best effort guess at whether or not we are using the XWayland compat
   // layer. For all intents and purposes, we should otherwise believe we are
   // using X11.
+  mIsWayland = GdkIsWaylandDisplay();
   const char* waylandDisplay = getenv("WAYLAND_DISPLAY");
   mIsXWayland = !mIsWayland && waylandDisplay;
 
