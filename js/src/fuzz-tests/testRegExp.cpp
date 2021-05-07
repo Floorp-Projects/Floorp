@@ -28,7 +28,7 @@ static int testRegExpInit(int* argc, char*** argv) { return 0; }
 static int testRegExpFuzz(const uint8_t* buf, size_t size) {
   auto gcGuard = mozilla::MakeScopeExit([&] {
     JS::PrepareForFullGC(gCx);
-    JS::NonIncrementalGC(gCx, GC_NORMAL, JS::GCReason::API);
+    JS::NonIncrementalGC(gCx, JS::GCOptions::Normal, JS::GCReason::API);
   });
 
   const uint32_t HEADER_LEN = 2;

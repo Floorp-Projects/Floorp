@@ -80,10 +80,10 @@ bool testPreserveJitCode(bool preserveJitCode, unsigned remainingIonScripts) {
   CHECK_EQUAL(value.toInt32(), 45);
   CHECK_EQUAL(countIonScripts(global), 1u);
 
-  NonIncrementalGC(cx, GC_NORMAL, GCReason::API);
+  NonIncrementalGC(cx, JS::GCOptions::Normal, GCReason::API);
   CHECK_EQUAL(countIonScripts(global), remainingIonScripts);
 
-  NonIncrementalGC(cx, GC_SHRINK, GCReason::API);
+  NonIncrementalGC(cx, JS::GCOptions::Shrink, GCReason::API);
   CHECK_EQUAL(countIonScripts(global), 0u);
 
   return true;

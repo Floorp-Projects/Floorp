@@ -331,13 +331,12 @@ class GCRuntime {
                               const HeapThreshold& threshold);
   // The return value indicates whether a major GC was performed.
   bool gcIfRequested();
-  void gc(JSGCInvocationKind gckind, JS::GCReason reason);
-  void startGC(JSGCInvocationKind gckind, JS::GCReason reason,
-               int64_t millis = 0);
+  void gc(JS::GCOptions options, JS::GCReason reason);
+  void startGC(JS::GCOptions options, JS::GCReason reason, int64_t millis = 0);
   void gcSlice(JS::GCReason reason, int64_t millis = 0);
   void finishGC(JS::GCReason reason);
   void abortGC();
-  void startDebugGC(JSGCInvocationKind gckind, SliceBudget& budget);
+  void startDebugGC(JS::GCOptions options, SliceBudget& budget);
   void debugGCSlice(SliceBudget& budget);
 
   void triggerFullGCForAtoms(JSContext* cx);
@@ -444,7 +443,7 @@ class GCRuntime {
 
   bool isCompactingGCEnabled() const;
 
-  bool isShrinkingGC() const { return invocationKind == GC_SHRINK; }
+  bool isShrinkingGC() const { return gcOptions == JS::GCOptions::Shrink; }
 
   bool initSweepActions();
 
@@ -692,10 +691,10 @@ class GCRuntime {
 
   gcstats::ZoneGCStats scanZonesBeforeGC();
 
-  using MaybeInvocationKind = mozilla::Maybe<JSGCInvocationKind>;
+  using MaybeGCOptions = mozilla::Maybe<JS::GCOptions>;
 
   void collect(bool nonincrementalByAPI, const SliceBudget& budget,
-               const MaybeInvocationKind& gckind,
+               const MaybeGCOptions& options,
                JS::GCReason reason) JS_HAZ_GC_CALL;
 
   /*
@@ -709,18 +708,18 @@ class GCRuntime {
    */
   [[nodiscard]] IncrementalResult gcCycle(bool nonincrementalByAPI,
                                           const SliceBudget& budgetArg,
-                                          const MaybeInvocationKind& gckind,
+                                          const MaybeGCOptions& options,
                                           JS::GCReason reason);
   bool shouldRepeatForDeadZone(JS::GCReason reason);
 
-  void incrementalSlice(SliceBudget& budget, const MaybeInvocationKind& gckind,
+  void incrementalSlice(SliceBudget& budget, const MaybeGCOptions& options,
                         JS::GCReason reason);
 
   void waitForBackgroundTasksBeforeSlice();
   bool mightSweepInThisSlice(bool nonIncremental);
-  void collectNurseryFromMajorGC(const MaybeInvocationKind& gckind,
+  void collectNurseryFromMajorGC(const MaybeGCOptions& options,
                                  JS::GCReason reason);
-  void collectNursery(JSGCInvocationKind kind, JS::GCReason reason,
+  void collectNursery(JS::GCOptions options, JS::GCReason reason,
                       gcstats::PhaseKind phase);
 
   friend class AutoCallGCCallbacks;
@@ -1024,7 +1023,7 @@ class GCRuntime {
   MainThreadData<bool> isCompacting;
 
   /* The invocation kind of the current GC, taken from the first slice. */
-  MainThreadOrGCTaskData<JSGCInvocationKind> invocationKind;
+  MainThreadOrGCTaskData<JS::GCOptions> gcOptions;
 
   /* The initial GC reason, taken from the first slice. */
   MainThreadData<JS::GCReason> initialReason;

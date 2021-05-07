@@ -20,7 +20,7 @@ static void NonIncrementalGCSliceCallback(JSContext* cx,
   MOZ_RELEASE_ASSERT(gSliceCallbackCount < std::size(expect));
   MOZ_RELEASE_ASSERT(progress == expect[gSliceCallbackCount++]);
   MOZ_RELEASE_ASSERT(desc.isZone_ == false);
-  MOZ_RELEASE_ASSERT(desc.invocationKind_ == GC_NORMAL);
+  MOZ_RELEASE_ASSERT(desc.options_ == JS::GCOptions::Normal);
   MOZ_RELEASE_ASSERT(desc.reason_ == JS::GCReason::API);
   if (progress == GC_CYCLE_END) {
     mozilla::UniquePtr<char16_t> summary(desc.formatSummaryMessage(cx));
@@ -60,7 +60,7 @@ static void RootsRemovedGCSliceCallback(JSContext* cx, JS::GCProgress progress,
   MOZ_RELEASE_ASSERT(gSliceCallbackCount < std::size(expectProgress));
   MOZ_RELEASE_ASSERT(progress == expectProgress[gSliceCallbackCount]);
   MOZ_RELEASE_ASSERT(desc.isZone_ == false);
-  MOZ_RELEASE_ASSERT(desc.invocationKind_ == GC_SHRINK);
+  MOZ_RELEASE_ASSERT(desc.options_ == JS::GCOptions::Shrink);
   MOZ_RELEASE_ASSERT(desc.reason_ == expectReasons[gSliceCallbackCount]);
   gSliceCallbackCount++;
 }
@@ -80,7 +80,7 @@ BEGIN_TEST(testGCRootsRemoved) {
 
   JS::PrepareForFullGC(cx);
   js::SliceBudget budget(js::WorkBudget(1));
-  cx->runtime()->gc.startDebugGC(GC_SHRINK, budget);
+  cx->runtime()->gc.startDebugGC(JS::GCOptions::Shrink, budget);
   CHECK(JS::IsIncrementalGCInProgress(cx));
 
   // Trigger another GC after the current one in shrinking / shutdown GCs.

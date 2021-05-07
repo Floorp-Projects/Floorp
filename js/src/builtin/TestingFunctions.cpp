@@ -575,7 +575,7 @@ static bool GC(JSContext* cx, unsigned argc, Value* vp) {
     }
   }
 
-  JSGCInvocationKind gckind = GC_NORMAL;
+  JS::GCOptions options = JS::GCOptions::Normal;
   JS::GCReason reason = JS::GCReason::API;
   if (args.length() >= 2) {
     Value arg = args[1];
@@ -591,9 +591,9 @@ static bool GC(JSContext* cx, unsigned argc, Value* vp) {
         return false;
       }
       if (shrinking) {
-        gckind = GC_SHRINK;
+        options = JS::GCOptions::Shrink;
       } else if (last_ditch) {
-        gckind = GC_SHRINK;
+        options = JS::GCOptions::Shrink;
         reason = JS::GCReason::LAST_DITCH;
       }
     }
@@ -607,7 +607,7 @@ static bool GC(JSContext* cx, unsigned argc, Value* vp) {
     JS::PrepareForFullGC(cx);
   }
 
-  JS::NonIncrementalGC(cx, gckind, reason);
+  JS::NonIncrementalGC(cx, options, reason);
 
   char buf[256] = {'\0'};
   if (!js::SupportDifferentialTesting()) {
@@ -782,7 +782,7 @@ static bool RelazifyFunctions(JSContext* cx, unsigned argc, Value* vp) {
   cx->runtime()->allowRelazificationForTesting = true;
 
   JS::PrepareForFullGC(cx);
-  JS::NonIncrementalGC(cx, GC_SHRINK, JS::GCReason::API);
+  JS::NonIncrementalGC(cx, JS::GCOptions::Shrink, JS::GCReason::API);
 
   cx->runtime()->allowRelazificationForTesting = false;
 
@@ -2405,8 +2405,9 @@ static bool StartGC(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  JSGCInvocationKind gckind = shrinking ? GC_SHRINK : GC_NORMAL;
-  rt->gc.startDebugGC(gckind, budget);
+  JS::GCOptions options =
+      shrinking ? JS::GCOptions::Shrink : JS::GCOptions::Normal;
+  rt->gc.startDebugGC(options, budget);
 
   args.rval().setUndefined();
   return true;
@@ -2465,7 +2466,7 @@ static bool GCSlice(JSContext* cx, unsigned argc, Value* vp) {
   if (rt->gc.isIncrementalGCInProgress()) {
     rt->gc.debugGCSlice(budget);
   } else if (!dontStart) {
-    rt->gc.startDebugGC(GC_NORMAL, budget);
+    rt->gc.startDebugGC(JS::GCOptions::Normal, budget);
   }
 
   args.rval().setUndefined();
@@ -6047,7 +6048,7 @@ static void majorGC(JSContext* cx, JSGCStatus status, JS::GCReason reason,
   if (info->depth > 0) {
     info->depth--;
     JS::PrepareForFullGC(cx);
-    JS::NonIncrementalGC(cx, GC_NORMAL, JS::GCReason::API);
+    JS::NonIncrementalGC(cx, JS::GCOptions::Normal, JS::GCReason::API);
     info->depth++;
   }
 }
