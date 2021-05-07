@@ -192,7 +192,6 @@ class FunctionBox;
    *   - the precedence list in Parser.cpp                       \
    *   - the JSOp code list in BytecodeEmitter.cpp               \
    */                                                            \
-  F(PipelineExpr, ListNode)                                      \
   F(CoalesceExpr, ListNode)                                      \
   F(OrExpr, ListNode)                                            \
   F(AndExpr, ListNode)                                           \
@@ -256,7 +255,7 @@ enum class ParseNodeKind : uint16_t {
 #undef EMIT_ENUM
       Limit,
   Start = LastUnused + 1,
-  BinOpFirst = ParseNodeKind::PipelineExpr,
+  BinOpFirst = ParseNodeKind::CoalesceExpr,
   BinOpLast = ParseNodeKind::PowExpr,
   AssignmentStart = ParseNodeKind::AssignExpr,
   AssignmentLast = ParseNodeKind::PowAssignExpr,
@@ -451,7 +450,7 @@ inline bool IsTypeofKind(ParseNodeKind kind) {
  *   kid1: cond
  *   kid2: thenExpr
  *   kid3: elseExpr
- * PipelineExpr, CoalesceExpr, OrExpr, AndExpr, BitOrExpr, BitXorExpr,
+ * CoalesceExpr, OrExpr, AndExpr, BitOrExpr, BitXorExpr,
  * BitAndExpr, StrictEqExpr, EqExpr, StrictNeExpr, NeExpr, LtExpr, LeExpr,
  * GtExpr, GeExpr, InstanceOfExpr, InExpr, LshExpr, RshExpr, UrshExpr, AddExpr,
  * SubExpr, MulExpr, DivExpr, ModExpr, PowExpr (ListNode)
