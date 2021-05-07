@@ -1017,15 +1017,18 @@
             android:label="@string/preferences_nimbus_experiments"
             tools:layout="@layout/mozac_service_nimbus_experiments">
             <action
-                android:id="@+id/action_nimbusExperimentsFragment_to_nimbusDetailsFragment"
-                app:destination="@+id/nimbusDetailsFragment" />
+                android:id="@+id/action_nimbusExperimentsFragment_to_nimbusBranchesFragment"
+                app:destination="@+id/nimbusBranchesFragment" />
         </fragment>
         <fragment
-            android:id="@+id/nimbusDetailsFragment"
-            android:name="org.mozilla.fenix.nimbus.NimbusDetailsFragment"
+            android:id="@+id/nimbusBranchesFragment"
+            android:name="org.mozilla.fenix.nimbus.NimbusBranchesFragment"
             tools:layout="@layout/mozac_service_nimbus_experiment_details">
             <argument
-                android:name="experiment"
+                android:name="experimentId"
+                app:argType="string" />
+            <argument
+                android:name="experimentName"
                 app:argType="string" />
         </fragment>
     </navigation>

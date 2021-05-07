@@ -22,6 +22,7 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.runIfFragmentIsAttached
 import org.mozilla.fenix.ext.showToolbar
+import org.mozilla.fenix.nimbus.view.NimbusExperimentsView
 
 /**
  * Fragment use for managing Nimbus experiments.
@@ -60,7 +61,7 @@ class NimbusExperimentsFragment : Fragment(R.layout.mozac_service_nimbus_experim
         lifecycleScope.launch(IO) {
             try {
                 val experiments =
-                    requireContext().components.analytics.experiments.getActiveExperiments()
+                    requireContext().components.analytics.experiments.getAvailableExperiments()
 
                 lifecycleScope.launch(Main) {
                     runIfFragmentIsAttached {
@@ -72,7 +73,7 @@ class NimbusExperimentsFragment : Fragment(R.layout.mozac_service_nimbus_experim
                         }
 
                         view.findViewById<TextView>(R.id.nimbus_experiments_empty_message).isVisible =
-                            false
+                            experiments.isEmpty()
                         recyclerView.adapter = adapter
                     }
                 }

@@ -2,12 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.fenix.nimbus
+package org.mozilla.fenix.nimbus.view
 
 import androidx.navigation.NavController
 import mozilla.components.service.nimbus.ui.NimbusExperimentsAdapterDelegate
-import org.mozilla.experiments.nimbus.EnrolledExperiment
+import org.mozilla.experiments.nimbus.AvailableExperiment
 import org.mozilla.fenix.ext.navigateBlockingForAsyncNavGraph
+import org.mozilla.fenix.nimbus.NimbusExperimentsFragmentDirections
 
 /**
  * View used for managing Nimbus experiments.
@@ -16,10 +17,11 @@ class NimbusExperimentsView(
     private val navController: NavController
 ) : NimbusExperimentsAdapterDelegate {
 
-    override fun onExperimentItemClicked(experiment: EnrolledExperiment) {
+    override fun onExperimentItemClicked(experiment: AvailableExperiment) {
         val directions =
-            NimbusExperimentsFragmentDirections.actionNimbusExperimentsFragmentToNimbusDetailsFragment(
-                experiment.userFacingName
+            NimbusExperimentsFragmentDirections.actionNimbusExperimentsFragmentToNimbusBranchesFragment(
+                experimentId = experiment.slug,
+                experimentName = experiment.userFacingName
             )
 
         navController.navigateBlockingForAsyncNavGraph(directions)
