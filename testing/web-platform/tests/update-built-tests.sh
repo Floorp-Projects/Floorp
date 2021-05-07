@@ -1,6 +1,7 @@
 #!/usr/bin/env sh
 set -ex
 
+conformance-checkers/tools/build.sh
 html/canvas/tools/build.sh
 infrastructure/assumptions/tools/build.sh
 html/tools/build.sh
