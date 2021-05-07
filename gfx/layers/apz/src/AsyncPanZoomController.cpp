@@ -4328,7 +4328,8 @@ void AsyncPanZoomController::RequestContentRepaint(
   ParentLayerPoint velocity = GetVelocityVector();
   ScreenMargin displayportMargins = CalculatePendingDisplayPort(
       Metrics(), velocity,
-      mState == PINCHING ? ZoomInProgress::Yes : ZoomInProgress::No);
+      (mState == PINCHING || mState == ANIMATING_ZOOM) ? ZoomInProgress::Yes
+                                                       : ZoomInProgress::No);
   Metrics().SetPaintRequestTime(TimeStamp::Now());
   RequestContentRepaint(Metrics(), velocity, displayportMargins, aUpdateType);
 }
@@ -5650,35 +5651,7 @@ void AsyncPanZoomController::ZoomToRect(const ZoomTarget& aZoomTarget,
         *this, Metrics().GetVisualScrollOffset(), Metrics().GetZoom(),
         endZoomToMetrics.GetVisualScrollOffset(), endZoomToMetrics.GetZoom()));
 
-    FrameMetrics metricsToRequestRepaintWith = Metrics();
-
-    ParentLayerPoint velocity(0, 0);
-    ScreenMargin displayportMargins = CalculatePendingDisplayPort(
-        metricsToRequestRepaintWith, velocity, ZoomInProgress::Yes);
-    metricsToRequestRepaintWith.SetPaintRequestTime(TimeStamp::Now());
-
-    RefPtr<GeckoContentController> controller = GetGeckoContentController();
-    if (!controller) {
-      return;
-    }
-    if (controller->IsRepaintThread()) {
-      RequestContentRepaint(metricsToRequestRepaintWith, velocity,
-                            displayportMargins, RepaintUpdateType::eUserAction);
-    } else {
-      // See comment on similar code in RequestContentRepaint
-      mExpectedGeckoMetrics.UpdateFrom(metricsToRequestRepaintWith);
-
-      // use a local var to resolve the function overload
-      auto func = static_cast<void (AsyncPanZoomController::*)(
-          const FrameMetrics&, const ParentLayerPoint&, const ScreenMargin&,
-          RepaintUpdateType)>(&AsyncPanZoomController::RequestContentRepaint);
-      controller->DispatchToRepaintThread(
-          NewRunnableMethod<FrameMetrics, ParentLayerPoint, ScreenMargin,
-                            RepaintUpdateType>(
-              "layers::AsyncPanZoomController::ZoomToRect", this, func,
-              metricsToRequestRepaintWith, velocity, displayportMargins,
-              RepaintUpdateType::eUserAction));
-    }
+    RequestContentRepaint(RepaintUpdateType::eUserAction);
   }
 }
 
