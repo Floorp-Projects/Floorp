@@ -1516,7 +1516,7 @@ bool CycleCollectedJSRuntime::AreGCGrayBitsValid() const {
 void CycleCollectedJSRuntime::GarbageCollect(JS::GCReason aReason) const {
   JSContext* cx = CycleCollectedJSContext::Get()->Context();
   JS::PrepareForFullGC(cx);
-  JS::NonIncrementalGC(cx, GC_NORMAL, aReason);
+  JS::NonIncrementalGC(cx, JS::GCOptions::Normal, aReason);
 }
 
 void CycleCollectedJSRuntime::JSObjectsTenured() {

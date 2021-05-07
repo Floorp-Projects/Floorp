@@ -1092,7 +1092,8 @@ void nsJSContext::GarbageCollectNow(JS::GCReason aReason,
     return;
   }
 
-  JSGCInvocationKind gckind = aShrinking == ShrinkingGC ? GC_SHRINK : GC_NORMAL;
+  JS::GCOptions options =
+      aShrinking == ShrinkingGC ? JS::GCOptions::Shrink : JS::GCOptions::Normal;
 
   if (aIncremental == NonIncrementalGC ||
       aReason == JS::GCReason::FULL_GC_TIMER) {
@@ -1107,9 +1108,9 @@ void nsJSContext::GarbageCollectNow(JS::GCReason aReason,
     // Incremental GC slices will be triggered by the sGCRunner. If one doesn't
     // already exist, create it in the GC_SLICE_END callback for the first
     // slice being executed here.
-    JS::StartIncrementalGC(cx, gckind, aReason, aSliceMillis);
+    JS::StartIncrementalGC(cx, options, aReason, aSliceMillis);
   } else {
-    JS::NonIncrementalGC(cx, gckind, aReason);
+    JS::NonIncrementalGC(cx, options, aReason);
   }
 }
 
