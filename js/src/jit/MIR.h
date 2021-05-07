@@ -2926,27 +2926,7 @@ class MCompare : public MBinaryInstruction, public ComparePolicy::Data {
   }
 };
 
-class MSameValueDouble : public MBinaryInstruction,
-                         public AllDoublePolicy::Data {
-  MSameValueDouble(MDefinition* left, MDefinition* right)
-      : MBinaryInstruction(classOpcode, left, right) {
-    setResultType(MIRType::Boolean);
-    setMovable();
-  }
-
- public:
-  INSTRUCTION_HEADER(SameValueDouble)
-  TRIVIAL_NEW_WRAPPERS
-
-  bool congruentTo(const MDefinition* ins) const override {
-    return congruentIfOperandsEqual(ins);
-  }
-  AliasSet getAliasSet() const override { return AliasSet::None(); }
-
-  ALLOW_CLONE(MSameValueDouble)
-};
-
-class MSameValue : public MBinaryInstruction, public BoxInputsPolicy::Data {
+class MSameValue : public MBinaryInstruction, public AllDoublePolicy::Data {
   MSameValue(MDefinition* left, MDefinition* right)
       : MBinaryInstruction(classOpcode, left, right) {
     setResultType(MIRType::Boolean);
