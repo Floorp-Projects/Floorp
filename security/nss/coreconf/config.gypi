@@ -573,11 +573,6 @@
               'NSS_DISABLE_DBM',
             ],
           }],
-          [ 'enable_draft_hpke==1', {
-            'defines': [
-              'NSS_ENABLE_DRAFT_HPKE',
-            ],
-          }],
           [ 'disable_libpkix==1', {
             'defines': [
               'NSS_DISABLE_LIBPKIX',

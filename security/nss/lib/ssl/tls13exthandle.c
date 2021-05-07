@@ -1460,7 +1460,7 @@ tls13_ServerHandleEchXtn(const sslSocket *ss, TLSExtensionData *xtnData,
     HpkeKdfId kdf;
     HpkeAeadId aead;
     PRUint32 tmp;
-    SECItem configId;
+    PRUint8 configId;
     SECItem senderPubKey;
     SECItem encryptedCh;
 
@@ -1504,11 +1504,12 @@ tls13_ServerHandleEchXtn(const sslSocket *ss, TLSExtensionData *xtnData,
     aead = (HpkeAeadId)tmp;
 
     /* config_id */
-    rv = ssl3_ExtConsumeHandshakeVariable(ss, &configId, 1,
-                                          &data->data, &data->len);
+    rv = ssl3_ExtConsumeHandshakeNumber(ss, &tmp, 1,
+                                        &data->data, &data->len);
     if (rv != SECSuccess) {
         goto alert_loser;
     }
+    configId = tmp;
 
     /* enc */
     rv = ssl3_ExtConsumeHandshakeVariable(ss, &senderPubKey, 2,
@@ -1530,16 +1531,11 @@ tls13_ServerHandleEchXtn(const sslSocket *ss, TLSExtensionData *xtnData,
     if (!ss->ssl3.hs.helloRetry) {
         /* In the real ECH HRR case, config_id and enc should be empty. This
          * is checked after acceptance, because it might be GREASE ECH. */
-        if (!configId.len || !senderPubKey.len) {
+        if (!senderPubKey.len) {
             goto alert_loser;
         }
 
         rv = SECITEM_CopyItem(NULL, &xtnData->ech->senderPubKey, &senderPubKey);
-        if (rv == SECFailure) {
-            return SECFailure;
-        }
-
-        rv = SECITEM_CopyItem(NULL, &xtnData->ech->configId, &configId);
         if (rv == SECFailure) {
             return SECFailure;
         }
@@ -1549,6 +1545,7 @@ tls13_ServerHandleEchXtn(const sslSocket *ss, TLSExtensionData *xtnData,
     if (rv == SECFailure) {
         return SECFailure;
     }
+    xtnData->ech->configId = configId;
     xtnData->ech->kdfId = kdf;
     xtnData->ech->aeadId = aead;
 

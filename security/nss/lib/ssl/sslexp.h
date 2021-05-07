@@ -10,6 +10,7 @@
 
 #include "ssl.h"
 #include "sslerr.h"
+#include "pk11hpke.h"
 
 SEC_BEGIN_PROTOS
 
@@ -566,30 +567,33 @@ typedef SECStatus(PR_CALLBACK *SSLResumptionTokenCallback)(
 /*
  * Generate an encoded ECHConfig structure (presumably server side).
  *
+ * configId -- an identifier for the configuration.
  * publicName -- the public_name value to be placed in SNI.
+ * maxNameLen -- the maximum length of protected names
+ * kemId -- the HKPE KEM ID value
+ * pubKey -- the public key for the key pair
  * hpkeSuites -- the HPKE cipher suites that can be used
  * hpkeSuitesCount -- the number of suites in hpkeSuites
- * kemId -- the HKPE KEM ID value
- * group -- the named group this key corresponds to
- * pubKey -- the public key for the key pair
- * pad -- the maximum length to pad to
  * out/outlen/maxlen -- where to output the data
  */
-#define SSL_EncodeEchConfig(publicName, hpkeSuites, hpkeSuitesCount, \
-                            kemId, pubKey, maxNameLen, out, outlen,  \
-                            maxlen)                                  \
-    SSL_EXPERIMENTAL_API("SSL_EncodeEchConfig",                      \
-                         (const char *_publicName,                   \
-                          const PRUint32 *_hpkeSuites,               \
-                          unsigned int _hpkeSuitesCount,             \
-                          HpkeKemId _kemId,                          \
-                          const SECKEYPublicKey *_pubKey,            \
-                          PRUint16 _maxNameLen,                      \
-                          PRUint8 *_out, unsigned int *_outlen,      \
-                          unsigned int _maxlen),                     \
-                         (publicName, hpkeSuites, hpkeSuitesCount,   \
-                          kemId, pubKey, maxNameLen, out, outlen,    \
-                          maxlen))
+typedef struct HpkeSymmetricSuiteStr {
+    HpkeKdfId kdfId;
+    HpkeAeadId aeadId;
+} HpkeSymmetricSuite;
+#define SSL_EncodeEchConfigId(configId, publicName, maxNameLen,          \
+                              kemId, pubKey, hpkeSuites, hpkeSuiteCount, \
+                              out, outlen, maxlen)                       \
+    SSL_EXPERIMENTAL_API("SSL_EncodeEchConfigId",                        \
+                         (PRUint8 _configId, const char *_publicName,    \
+                          unsigned int _maxNameLen, HpkeKemId _kemId,    \
+                          const SECKEYPublicKey *_pubKey,                \
+                          const HpkeSymmetricSuite *_hpkeSuites,         \
+                          unsigned int _hpkeSuiteCount,                  \
+                          PRUint8 *_out, unsigned int *_outlen,          \
+                          unsigned int _maxlen),                         \
+                         (configId, publicName, maxNameLen,              \
+                          kemId, pubKey, hpkeSuites, hpkeSuiteCount,     \
+                          out, outlen, maxlen))
 
 /* SSL_SetSecretCallback installs a callback that TLS calls when it installs new
  * traffic secrets.
@@ -1035,6 +1039,7 @@ typedef struct SSLMaskingContextStr {
 #define SSL_EnableESNI(a, b, c, d) SSL_DEPRECATED_EXPERIMENTAL_API
 #define SSL_EncodeESNIKeys(a, b, c, d, e, f, g, h, i, j) SSL_DEPRECATED_EXPERIMENTAL_API
 #define SSL_SetESNIKeyPair(a, b, c, d) SSL_DEPRECATED_EXPERIMENTAL_API
+#define SSL_EncodeEchConfig(a, b, c, d, e, f, g, h, i) SSL_DEPRECATED_EXPERIMENTAL_API
 
 SEC_END_PROTOS
 

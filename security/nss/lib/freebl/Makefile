@@ -299,8 +299,9 @@ ifdef USE_64
     ifeq ($(PPC_ABI),2)
         ASFILES += sha512-p8.s
     ifeq ($(OS_TEST),ppc64le)
-        EXTRA_SRCS += chacha20poly1305-ppc.c
-        ASFILES += chacha20-ppc64le.s
+        DEFINES += -DPPC_GCM
+        EXTRA_SRCS += chacha20poly1305-ppc.c ppc-gcm-wrap.c
+        ASFILES += chacha20-ppc64le.s ppc-gcm.s
     endif # ppc64le
     endif
 endif # USE_64

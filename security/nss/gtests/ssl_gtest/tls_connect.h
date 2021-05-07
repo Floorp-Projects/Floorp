@@ -147,12 +147,10 @@ class TlsConnectTestBase : public ::testing::Test {
   void RestoreAlgorithmPolicy();
 
   static void MakeEcKeyParams(SECItem* params, SSLNamedGroup group);
-  static void GenerateEchConfig(HpkeKemId kem_id,
-                                const std::vector<uint32_t>& cipher_suites,
-                                const std::string& public_name,
-                                uint16_t max_name_len, DataBuffer& record,
-                                ScopedSECKEYPublicKey& pubKey,
-                                ScopedSECKEYPrivateKey& privKey);
+  static void GenerateEchConfig(
+      HpkeKemId kem_id, const std::vector<HpkeSymmetricSuite>& cipher_suites,
+      const std::string& public_name, uint16_t max_name_len, DataBuffer& record,
+      ScopedSECKEYPublicKey& pubKey, ScopedSECKEYPrivateKey& privKey);
   void SetupEch(std::shared_ptr<TlsAgent>& client,
                 std::shared_ptr<TlsAgent>& server,
                 HpkeKemId kem_id = HpkeDhKemX25519Sha256,
