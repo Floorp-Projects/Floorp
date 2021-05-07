@@ -12,7 +12,6 @@ edition = "2018"
 default = ["freetype-lib"]
 freetype-lib = ["freetype/freetype-sys"]
 profiler = ["tracy-rs/enable_profiler"]
-debugger = ["ws", "serde_json", "serde", "image_loader", "base64"]
 capture = ["api/serialize", "ron", "serde", "smallvec/serde", "etagere/serialization"]
 replay = ["api/deserialize", "ron", "serde", "smallvec/serde", "etagere/serialization"]
 display_list_stats = ["api/display_list_stats"]
@@ -28,16 +27,13 @@ glslopt = "0.1.9"
 webrender_build = { version = "0.0.1", path = "../webrender_build" }
 
 [dependencies]
-base64 = { optional = true, version = "0.12" }
 bincode = "1.0"
 bitflags = "1.2"
 byteorder = "1.0"
-cfg-if = "0.1.2"
 cstr = "0.2"
 euclid = { version = "0.22.0", features = ["serde"] }
 fxhash = "0.2.1"
 gleam = "0.13.1"
-image_loader = { optional = true, version = "0.23", package = "image", default-features = false, features = ["png"] }
 lazy_static = "1"
 log = "0.4"
 malloc_size_of_derive = "0.1"
@@ -47,14 +43,12 @@ png = { optional = true, version = "0.16" }
 rayon = "1"
 ron = { optional = true, version = "0.6.2" }
 serde = { optional = true, version = "1.0", features = ["serde_derive"] }
-serde_json = { optional = true, version = "1.0" }
 smallvec = "1"
 time = "0.1"
 uuid = { version = "0.8", features = ["v4"] }
 api = { version = "0.61.0", path = "../webrender_api", package = "webrender_api" }
 webrender_build = { version = "0.0.1", path = "../webrender_build" }
 malloc_size_of = { version = "0.0.1", path = "../wr_malloc_size_of", package = "wr_malloc_size_of" }
-ws = { optional = true, version = "0.9" }
 svg_fmt = "0.4"
 tracy-rs = "0.1.2"
 derive_more = "0.99"
