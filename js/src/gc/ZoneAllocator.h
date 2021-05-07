@@ -66,8 +66,7 @@ class ZoneAllocator : public JS::shadow::Zone,
   }
 
   void updateMemoryCountersOnGCStart();
-  void updateGCStartThresholds(gc::GCRuntime& gc,
-                               JSGCInvocationKind invocationKind,
+  void updateGCStartThresholds(gc::GCRuntime& gc, JS::GCOptions options,
                                const js::AutoLockGC& lock);
   void setGCSliceThresholds(gc::GCRuntime& gc);
   void clearGCSliceThresholds();

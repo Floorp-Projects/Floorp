@@ -284,7 +284,8 @@ bool TestJSWeakMapWithGrayUnmarking(MarkKeyOrDelegate markKey,
     // Start an incremental GC and run until gray roots have been pushed onto
     // the mark stack.
     JS::PrepareForFullGC(cx);
-    JS::StartIncrementalGC(cx, GC_NORMAL, JS::GCReason::DEBUG_GC, 1000000);
+    JS::StartIncrementalGC(cx, JS::GCOptions::Normal, JS::GCReason::DEBUG_GC,
+                           1000000);
     MOZ_ASSERT(cx->runtime()->gc.state() == gc::State::Sweep);
     MOZ_ASSERT(cx->zone()->gcState() == Zone::MarkBlackAndGray);
 
@@ -411,7 +412,8 @@ bool TestInternalWeakMapWithGrayUnmarking(CellColor keyMarkColor,
     // Start an incremental GC and run until gray roots have been pushed onto
     // the mark stack.
     JS::PrepareForFullGC(cx);
-    JS::StartIncrementalGC(cx, GC_NORMAL, JS::GCReason::DEBUG_GC, 1000000);
+    JS::StartIncrementalGC(cx, JS::GCOptions::Normal, JS::GCReason::DEBUG_GC,
+                           1000000);
     MOZ_ASSERT(cx->runtime()->gc.state() == gc::State::Sweep);
     MOZ_ASSERT(cx->zone()->gcState() == Zone::MarkBlackAndGray);
 
@@ -502,7 +504,7 @@ bool TestCCWs() {
   JSRuntime* rt = cx->runtime();
   JS::PrepareForFullGC(cx);
   js::SliceBudget budget(js::WorkBudget(1));
-  rt->gc.startDebugGC(GC_NORMAL, budget);
+  rt->gc.startDebugGC(JS::GCOptions::Normal, budget);
   while (rt->gc.state() == gc::State::Prepare) {
     rt->gc.debugGCSlice(budget);
   }
@@ -530,7 +532,7 @@ bool TestCCWs() {
   // Incremental zone GC started: the source is now unmarked.
   JS::PrepareZoneForGC(cx, wrapper->zone());
   budget = js::SliceBudget(js::WorkBudget(1));
-  rt->gc.startDebugGC(GC_NORMAL, budget);
+  rt->gc.startDebugGC(JS::GCOptions::Normal, budget);
   while (rt->gc.state() == gc::State::Prepare) {
     rt->gc.debugGCSlice(budget);
   }
@@ -793,7 +795,7 @@ void EvictNursery() { cx->runtime()->gc.evictNursery(); }
 
 bool ZoneGC(JS::Zone* zone) {
   JS::PrepareZoneForGC(cx, zone);
-  cx->runtime()->gc.gc(GC_NORMAL, JS::GCReason::API);
+  cx->runtime()->gc.gc(JS::GCOptions::Normal, JS::GCReason::API);
   CHECK(!cx->runtime()->gc.isFullGc());
   return true;
 }

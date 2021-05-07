@@ -1005,7 +1005,7 @@ static inline bool IsFullStoreBufferReason(JS::GCReason reason,
          reason == JS::GCReason::FULL_SHAPE_BUFFER;
 }
 
-void js::Nursery::collect(JSGCInvocationKind kind, JS::GCReason reason) {
+void js::Nursery::collect(JS::GCOptions options, JS::GCReason reason) {
   JSRuntime* rt = runtime();
   MOZ_ASSERT(!rt->mainContextFromOwnThread()->suppressGC);
 
@@ -1059,7 +1059,7 @@ void js::Nursery::collect(JSGCInvocationKind kind, JS::GCReason reason) {
   }
 
   // Resize the nursery.
-  maybeResizeNursery(kind, reason);
+  maybeResizeNursery(options, reason);
 
   // Poison/initialise the first chunk.
   if (previousGC.nurseryUsedBytes) {
@@ -1521,7 +1521,7 @@ MOZ_ALWAYS_INLINE void js::Nursery::setStartPosition() {
   currentStartPosition_ = position();
 }
 
-void js::Nursery::maybeResizeNursery(JSGCInvocationKind kind,
+void js::Nursery::maybeResizeNursery(JS::GCOptions options,
                                      JS::GCReason reason) {
 #ifdef JS_GC_ZEAL
   // This zeal mode disabled nursery resizing.
@@ -1532,9 +1532,9 @@ void js::Nursery::maybeResizeNursery(JSGCInvocationKind kind,
 
   decommitTask.join();
 
-  size_t newCapacity =
-      mozilla::Clamp(targetSize(kind, reason), tunables().gcMinNurseryBytes(),
-                     tunables().gcMaxNurseryBytes());
+  size_t newCapacity = mozilla::Clamp(targetSize(options, reason),
+                                      tunables().gcMinNurseryBytes(),
+                                      tunables().gcMaxNurseryBytes());
 
   MOZ_ASSERT(roundSize(newCapacity) == newCapacity);
 
@@ -1565,10 +1565,10 @@ static inline double ClampDouble(double value, double min, double max) {
   return value;
 }
 
-size_t js::Nursery::targetSize(JSGCInvocationKind kind, JS::GCReason reason) {
-  // Shrink the nursery as much as possible if shrinking was requested or in low
+size_t js::Nursery::targetSize(JS::GCOptions options, JS::GCReason reason) {
+  // Shrink the nursery as much as possible if purging was requested or in low
   // memory situations.
-  if (kind == GC_SHRINK || gc::IsOOMReason(reason) ||
+  if (options == JS::GCOptions::Shrink || gc::IsOOMReason(reason) ||
       gc->systemHasLowMemory()) {
     clearRecentGrowthData();
     return 0;

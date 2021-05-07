@@ -29,7 +29,7 @@ BEGIN_TEST(testMemoryAssociation) {
   void* initial = obj;
   JS::AddAssociatedMemory(obj, 300, TestUse1);
   JS::PrepareForFullGC(cx);
-  JS::NonIncrementalGC(cx, GC_SHRINK, JS::GCReason::DEBUG_GC);
+  JS::NonIncrementalGC(cx, JS::GCOptions::Shrink, JS::GCReason::DEBUG_GC);
   CHECK(obj != initial);
   JS::RemoveAssociatedMemory(obj, 300, TestUse1);
 

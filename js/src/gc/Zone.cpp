@@ -61,13 +61,13 @@ void js::ZoneAllocator::updateMemoryCountersOnGCStart() {
   mallocHeapSize.updateOnGCStart();
 }
 
-void js::ZoneAllocator::updateGCStartThresholds(
-    GCRuntime& gc, JSGCInvocationKind invocationKind,
-    const js::AutoLockGC& lock) {
+void js::ZoneAllocator::updateGCStartThresholds(GCRuntime& gc,
+                                                JS::GCOptions options,
+                                                const js::AutoLockGC& lock) {
   bool isAtomsZone = JS::Zone::from(this)->isAtomsZone();
-  gcHeapThreshold.updateStartThreshold(gcHeapSize.retainedBytes(),
-                                       invocationKind, gc.tunables,
-                                       gc.schedulingState, isAtomsZone, lock);
+  gcHeapThreshold.updateStartThreshold(gcHeapSize.retainedBytes(), options,
+                                       gc.tunables, gc.schedulingState,
+                                       isAtomsZone, lock);
   mallocHeapThreshold.updateStartThreshold(mallocHeapSize.retainedBytes(),
                                            gc.tunables, lock);
 }
@@ -194,7 +194,7 @@ JS::Zone::Zone(JSRuntime* rt, Kind kind)
 
   // We can't call updateGCStartThresholds until the Zone has been constructed.
   AutoLockGC lock(rt);
-  updateGCStartThresholds(rt->gc, GC_NORMAL, lock);
+  updateGCStartThresholds(rt->gc, JS::GCOptions::Normal, lock);
 }
 
 Zone::~Zone() {

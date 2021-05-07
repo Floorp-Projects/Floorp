@@ -54,13 +54,15 @@ static inline auto MajorGCPhaseKinds() {
                                       PhaseKind(size_t(PhaseKind::GC_END) + 1));
 }
 
-const char* js::gcstats::ExplainInvocationKind(JSGCInvocationKind gckind) {
-  MOZ_ASSERT(gckind == GC_NORMAL || gckind == GC_SHRINK);
-  if (gckind == GC_NORMAL) {
-    return "Normal";
-  } else {
-    return "Shrinking";
+static const char* ExplainGCOptions(JS::GCOptions options) {
+  switch (options) {
+    case JS::GCOptions::Normal:
+      return "Normal";
+    case JS::GCOptions::Shrink:
+      return "Shrink";
   }
+
+  MOZ_CRASH("Unexpected GCOptions value");
 }
 
 JS_PUBLIC_API const char* JS::ExplainGCReason(JS::GCReason reason) {
@@ -376,11 +378,11 @@ UniqueChars Statistics::formatCompactSummaryMessage() const {
     return UniqueChars(nullptr);
   }
 
-  MOZ_ASSERT_IF(counts[COUNT_ARENA_RELOCATED], gckind == GC_SHRINK);
-  if (gckind == GC_SHRINK) {
+  MOZ_ASSERT_IF(counts[COUNT_ARENA_RELOCATED],
+                gcOptions == JS::GCOptions::Shrink);
+  if (gcOptions == JS::GCOptions::Shrink) {
     SprintfLiteral(
-        buffer, "Kind: %s; Relocated: %.3f MiB; ",
-        ExplainInvocationKind(gckind),
+        buffer, "Kind: %s; Relocated: %.3f MiB; ", ExplainGCOptions(gcOptions),
         double(ArenaSize * counts[COUNT_ARENA_RELOCATED]) / BYTES_PER_MB);
     if (!fragments.append(DuplicateString(buffer))) {
       return UniqueChars(nullptr);
@@ -473,7 +475,7 @@ UniqueChars Statistics::formatDetailedDescription() const {
 
   char buffer[1024];
   SprintfLiteral(
-      buffer, format, ExplainInvocationKind(gckind),
+      buffer, format, ExplainGCOptions(gcOptions),
       ExplainGCReason(slices_[0].reason), nonincremental() ? "no - " : "yes",
       nonincremental() ? ExplainAbortReason(nonincrementalReason_) : "",
       zoneStats.collectedZoneCount, zoneStats.zoneCount,
@@ -973,11 +975,10 @@ void Statistics::printStats() {
   fflush(gcTimerFile);
 }
 
-void Statistics::beginGC(JSGCInvocationKind kind,
-                         const TimeStamp& currentTime) {
+void Statistics::beginGC(JS::GCOptions options, const TimeStamp& currentTime) {
   slices_.clearAndFree();
   sccTimes.clearAndFree();
-  gckind = kind;
+  gcOptions = options;
   nonincrementalReason_ = GCAbortReason::None;
 
   preTotalHeapBytes = gc->heapSize.bytes();
@@ -1131,8 +1132,7 @@ Statistics::SliceData::SliceData(const SliceBudget& budget,
       start(start),
       startFaults(startFaults) {}
 
-void Statistics::beginSlice(const ZoneGCStats& zoneStats,
-                            JSGCInvocationKind gckind,
+void Statistics::beginSlice(const ZoneGCStats& zoneStats, JS::GCOptions options,
                             const SliceBudget& budget, JS::GCReason reason) {
   MOZ_ASSERT(phaseStack.empty() ||
              (phaseStack.length() == 1 && phaseStack[0] == Phase::MUTATOR));
@@ -1143,7 +1143,7 @@ void Statistics::beginSlice(const ZoneGCStats& zoneStats,
 
   bool first = !gc->isIncrementalGCInProgress();
   if (first) {
-    beginGC(gckind, currentTime);
+    beginGC(options, currentTime);
   }
 
   JSRuntime* runtime = gc->rt;
@@ -1169,7 +1169,7 @@ void Statistics::beginSlice(const ZoneGCStats& zoneStats,
   bool wasFullGC = zoneStats.isFullCollection();
   if (sliceCallback) {
     JSContext* cx = context();
-    JS::GCDescription desc(!wasFullGC, false, gckind, reason);
+    JS::GCDescription desc(!wasFullGC, false, options, reason);
     if (first) {
       (*sliceCallback)(cx, JS::GC_CYCLE_BEGIN, desc);
     }
@@ -1217,7 +1217,8 @@ void Statistics::endSlice() {
     bool wasFullGC = zoneStats.isFullCollection();
     if (sliceCallback) {
       JSContext* cx = context();
-      JS::GCDescription desc(!wasFullGC, last, gckind, slices_.back().reason);
+      JS::GCDescription desc(!wasFullGC, last, gcOptions,
+                             slices_.back().reason);
       (*sliceCallback)(cx, JS::GC_SLICE_END, desc);
       if (last) {
         (*sliceCallback)(cx, JS::GC_CYCLE_END, desc);
@@ -1577,7 +1578,7 @@ void Statistics::printSliceProfile() {
 
   TimeDuration ts = slice.end - creationTime();
 
-  bool shrinking = gckind == GC_SHRINK;
+  bool shrinking = gcOptions == JS::GCOptions::Shrink;
   bool reset = slice.resetReason != GCAbortReason::None;
   bool nonIncremental = nonincrementalReason_ != GCAbortReason::None;
   bool full = zoneStats.isFullCollection();

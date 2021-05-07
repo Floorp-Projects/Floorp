@@ -120,7 +120,6 @@ struct Trigger {
   _(Barriers, "brrier", PhaseKind::BARRIER)
 
 const char* ExplainAbortReason(GCAbortReason reason);
-const char* ExplainInvocationKind(JSGCInvocationKind gckind);
 
 /*
  * Struct for collecting timing statistics on a "phase tree". The tree is
@@ -178,7 +177,7 @@ struct Statistics {
   // Resume a suspended stack of phases.
   void resumePhases();
 
-  void beginSlice(const ZoneGCStats& zoneStats, JSGCInvocationKind gckind,
+  void beginSlice(const ZoneGCStats& zoneStats, JS::GCOptions options,
                   const SliceBudget& budget, JS::GCReason reason);
   void endSlice();
 
@@ -333,7 +332,7 @@ struct Statistics {
 
   ZoneGCStats zoneStats;
 
-  JSGCInvocationKind gckind;
+  JS::GCOptions gcOptions;
 
   GCAbortReason nonincrementalReason_;
 
@@ -444,7 +443,7 @@ struct Statistics {
   Phase currentPhase() const;
   Phase lookupChildPhase(PhaseKind phaseKind) const;
 
-  void beginGC(JSGCInvocationKind kind, const TimeStamp& currentTime);
+  void beginGC(JS::GCOptions options, const TimeStamp& currentTime);
   void endGC();
 
   void sendGCTelemetry();
@@ -481,10 +480,10 @@ struct Statistics {
 
 struct MOZ_RAII AutoGCSlice {
   AutoGCSlice(Statistics& stats, const ZoneGCStats& zoneStats,
-              JSGCInvocationKind gckind, const SliceBudget& budget,
+              JS::GCOptions options, const SliceBudget& budget,
               JS::GCReason reason)
       : stats(stats) {
-    stats.beginSlice(zoneStats, gckind, budget, reason);
+    stats.beginSlice(zoneStats, options, budget, reason);
   }
   ~AutoGCSlice() { stats.endSlice(); }
 

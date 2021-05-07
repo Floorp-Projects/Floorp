@@ -2130,7 +2130,8 @@ static void my_LargeAllocFailCallback() {
   MOZ_ASSERT(!JS::RuntimeHeapIsBusy());
 
   JS::PrepareForFullGC(cx);
-  cx->runtime()->gc.gc(GC_SHRINK, JS::GCReason::SHARED_MEMORY_LIMIT);
+  cx->runtime()->gc.gc(JS::GCOptions::Shrink,
+                       JS::GCReason::SHARED_MEMORY_LIMIT);
 }
 
 static const uint32_t CacheEntry_SOURCE = 0;

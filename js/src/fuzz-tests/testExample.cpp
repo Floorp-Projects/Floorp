@@ -37,7 +37,7 @@ static int testExampleFuzz(const uint8_t* buf, size_t size) {
      if it is not required in your use case, which will speed up fuzzing. */
   auto gcGuard = mozilla::MakeScopeExit([&] {
     JS::PrepareForFullGC(gCx);
-    JS::NonIncrementalGC(gCx, GC_NORMAL, JS::GCReason::API);
+    JS::NonIncrementalGC(gCx, JS::GCOptions::Normal, JS::GCReason::API);
   });
 
   /* Add code here that processes the given buffer.

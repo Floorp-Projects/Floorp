@@ -109,7 +109,7 @@ BEGIN_TEST(testGCUID) {
   // Force a compaction to move the object and check that the uid moved to
   // the new tenured heap location.
   JS::PrepareForFullGC(cx);
-  JS::NonIncrementalGC(cx, GC_SHRINK, JS::GCReason::API);
+  JS::NonIncrementalGC(cx, JS::GCOptions::Shrink, JS::GCReason::API);
 
   // There's a very low probability that this check could fail, but it is
   // possible.  If it becomes an annoying intermittent then we should make
