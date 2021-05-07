@@ -129,9 +129,9 @@ class nsObjectLoadingContent : public nsImageLoadingContent,
   void NotifyOwnerDocumentActivityChanged();
 
   // Helper for WebIDL NeedResolve
-  bool DoResolve(JSContext* aCx, JS::Handle<JSObject*> aObject,
-                 JS::Handle<jsid> aId,
-                 JS::MutableHandle<JS::PropertyDescriptor> aDesc);
+  bool DoResolve(
+      JSContext* aCx, JS::Handle<JSObject*> aObject, JS::Handle<jsid> aId,
+      JS::MutableHandle<mozilla::Maybe<JS::PropertyDescriptor>> aDesc);
   // The return value is whether DoResolve might end up resolving the given
   // id.  If in doubt, return true.
   static bool MayResolve(jsid aId);

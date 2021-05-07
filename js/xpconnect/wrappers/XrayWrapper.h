@@ -64,7 +64,7 @@ class XrayTraits {
   virtual bool resolveOwnProperty(
       JSContext* cx, JS::HandleObject wrapper, JS::HandleObject target,
       JS::HandleObject holder, JS::HandleId id,
-      JS::MutableHandle<JS::PropertyDescriptor> desc);
+      JS::MutableHandle<mozilla::Maybe<JS::PropertyDescriptor>> desc);
 
   bool delete_(JSContext* cx, JS::HandleObject wrapper, JS::HandleId id,
                JS::ObjectOpResult& result) {
@@ -149,7 +149,7 @@ class DOMXrayTraits : public XrayTraits {
   virtual bool resolveOwnProperty(
       JSContext* cx, JS::HandleObject wrapper, JS::HandleObject target,
       JS::HandleObject holder, JS::HandleId id,
-      JS::MutableHandle<JS::PropertyDescriptor> desc) override;
+      JS::MutableHandle<mozilla::Maybe<JS::PropertyDescriptor>> desc) override;
 
   bool delete_(JSContext* cx, JS::HandleObject wrapper, JS::HandleId id,
                JS::ObjectOpResult& result);
@@ -190,7 +190,7 @@ class JSXrayTraits : public XrayTraits {
   virtual bool resolveOwnProperty(
       JSContext* cx, JS::HandleObject wrapper, JS::HandleObject target,
       JS::HandleObject holder, JS::HandleId id,
-      JS::MutableHandle<JS::PropertyDescriptor> desc) override;
+      JS::MutableHandle<mozilla::Maybe<JS::PropertyDescriptor>> desc) override;
 
   bool delete_(JSContext* cx, JS::HandleObject wrapper, JS::HandleId id,
                JS::ObjectOpResult& result);
@@ -276,14 +276,14 @@ class JSXrayTraits : public XrayTraits {
   // Operates in the wrapper compartment.
   static bool getOwnPropertyFromWrapperIfSafe(
       JSContext* cx, JS::HandleObject wrapper, JS::HandleId id,
-      JS::MutableHandle<JS::PropertyDescriptor> desc);
+      JS::MutableHandle<mozilla::Maybe<JS::PropertyDescriptor>> desc);
 
   // Like the above, but operates in the target compartment. wrapperGlobal is
   // the caller's global (must be in the wrapper compartment).
   static bool getOwnPropertyFromTargetIfSafe(
       JSContext* cx, JS::HandleObject target, JS::HandleObject wrapper,
       JS::HandleObject wrapperGlobal, JS::HandleId id,
-      JS::MutableHandle<JS::PropertyDescriptor> desc);
+      JS::MutableHandle<mozilla::Maybe<JS::PropertyDescriptor>> desc);
 
   static const JSClass HolderClass;
   static JSXrayTraits singleton;
@@ -299,7 +299,7 @@ class OpaqueXrayTraits : public XrayTraits {
   virtual bool resolveOwnProperty(
       JSContext* cx, JS::HandleObject wrapper, JS::HandleObject target,
       JS::HandleObject holder, JS::HandleId id,
-      JS::MutableHandle<JS::PropertyDescriptor> desc) override;
+      JS::MutableHandle<mozilla::Maybe<JS::PropertyDescriptor>> desc) override;
 
   bool defineProperty(
       JSContext* cx, JS::HandleObject wrapper, JS::HandleId id,

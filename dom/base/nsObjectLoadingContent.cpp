@@ -2282,7 +2282,7 @@ Document* nsObjectLoadingContent::GetContentDocument(
 
 bool nsObjectLoadingContent::DoResolve(
     JSContext* aCx, JS::Handle<JSObject*> aObject, JS::Handle<jsid> aId,
-    JS::MutableHandle<JS::PropertyDescriptor> aDesc) {
+    JS::MutableHandle<mozilla::Maybe<JS::PropertyDescriptor>> aDesc) {
   return true;
 }
 

@@ -2212,10 +2212,11 @@ bool Constructor(JSContext* cx, unsigned argc, JS::Value* vp);
  * obj is the target object of the Xray, a binding's instance object or a
  *     interface or interface prototype object.
  */
-bool XrayResolveOwnProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
-                            JS::Handle<JSObject*> obj, JS::Handle<jsid> id,
-                            JS::MutableHandle<JS::PropertyDescriptor> desc,
-                            bool& cacheOnHolder);
+bool XrayResolveOwnProperty(
+    JSContext* cx, JS::Handle<JSObject*> wrapper, JS::Handle<JSObject*> obj,
+    JS::Handle<jsid> id,
+    JS::MutableHandle<mozilla::Maybe<JS::PropertyDescriptor>> desc,
+    bool& cacheOnHolder);
 
 /**
  * Define a property on obj through an Xray wrapper.
@@ -2309,7 +2310,7 @@ namespace binding_detail {
 // mEnumerateOwnProperties for WebIDL bindings implemented as proxies.
 bool ResolveOwnProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
                         JS::Handle<JSObject*> obj, JS::Handle<jsid> id,
-                        JS::MutableHandle<JS::PropertyDescriptor> desc);
+                        JS::MutableHandle<mozilla::Maybe<JS::PropertyDescriptor>> desc);
 bool EnumerateOwnProperties(JSContext* cx, JS::Handle<JSObject*> wrapper,
                             JS::Handle<JSObject*> obj,
                             JS::MutableHandleVector<jsid> props);
