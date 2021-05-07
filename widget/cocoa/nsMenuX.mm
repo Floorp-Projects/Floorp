@@ -189,6 +189,13 @@ void nsMenuX::OnMenuDidOpen(dom::Element* aPopupElement) {
   }
 }
 
+void nsMenuX::OnMenuWillActivateItem(dom::Element* aPopupElement, dom::Element* aMenuItemElement) {
+  RefPtr<nsMenuX> kungFuDeathGrip(this);
+  if (mObserver) {
+    mObserver->OnMenuWillActivateItem(aPopupElement, aMenuItemElement);
+  }
+}
+
 void nsMenuX::OnMenuClosed(dom::Element* aPopupElement) {
   RefPtr<nsMenuX> kungFuDeathGrip(this);
   if (mObserver) {
@@ -681,6 +688,22 @@ void nsMenuX::OnHighlightedItemChanged(const Maybe<uint32_t>& aNewHighlightedInd
   mHighlightedItemIndex = aNewHighlightedIndex;
 }
 
+void nsMenuX::OnWillActivateItem(NSMenuItem* aItem) {
+  if (!mIsOpenForGecko) {
+    return;
+  }
+
+  if (mMenuGroupOwner && mObserver) {
+    nsMenuItemX* item = mMenuGroupOwner->GetMenuItemForCommandID(uint32_t(aItem.tag));
+    if (item && item->Content()->IsElement()) {
+      RefPtr<dom::Element> itemElement = item->Content()->AsElement();
+      if (nsCOMPtr<nsIContent> popupContent = GetMenuPopupContent()) {
+        mObserver->OnMenuWillActivateItem(popupContent->AsElement(), itemElement);
+      }
+    }
+  }
+}
+
 void nsMenuX::RebuildMenu() {
   MOZ_RELEASE_ASSERT(mNeedsRebuild);
   gConstructingMenu = true;
@@ -1159,6 +1182,13 @@ void nsMenuX::Dump(uint32_t aIndent) const {
 
 // This is called after menuDidClose:.
 - (void)menu:(NSMenu*)aMenu willActivateItem:(NSMenuItem*)aItem {
+  if (!mGeckoMenu) {
+    return;
+  }
+
+  // Hold a strong reference to mGeckoMenu while calling its methods.
+  RefPtr<nsMenuX> geckoMenu = mGeckoMenu;
+  geckoMenu->OnWillActivateItem(aItem);
 }
 
 @end
