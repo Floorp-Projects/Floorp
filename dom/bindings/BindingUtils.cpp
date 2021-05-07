@@ -1275,8 +1275,8 @@ static inline JSPropertySpec::Name ToPropertySpecName(const char* name) {
 }
 
 template <typename SpecT>
-static bool InitPropertyInfos(JSContext* cx, const Prefable<SpecT>* pref,
-                              PropertyInfo* infos, PropertyType type) {
+static bool InitIdsInternal(JSContext* cx, const Prefable<SpecT>* pref,
+                            PropertyInfo* infos, PropertyType type) {
   MOZ_ASSERT(pref);
   MOZ_ASSERT(pref->specs);
 
@@ -1308,25 +1308,24 @@ static bool InitPropertyInfos(JSContext* cx, const Prefable<SpecT>* pref,
   return true;
 }
 
-#define INIT_PROPERTY_INFOS_IF_DEFINED(TypeName)                        \
-  {                                                                     \
-    if (nativeProperties->Has##TypeName##s() &&                         \
-        !InitPropertyInfos(cx, nativeProperties->TypeName##s(),         \
-                           nativeProperties->TypeName##PropertyInfos(), \
-                           e##TypeName)) {                              \
-      return false;                                                     \
-    }                                                                   \
+#define INIT_IDS_IF_DEFINED(TypeName)                                 \
+  {                                                                   \
+    if (nativeProperties->Has##TypeName##s() &&                       \
+        !InitIdsInternal(cx, nativeProperties->TypeName##s(),         \
+                         nativeProperties->TypeName##PropertyInfos(), \
+                         e##TypeName)) {                              \
+      return false;                                                   \
+    }                                                                 \
   }
 
-static bool InitPropertyInfos(JSContext* cx,
-                              const NativeProperties* nativeProperties) {
-  INIT_PROPERTY_INFOS_IF_DEFINED(StaticMethod);
-  INIT_PROPERTY_INFOS_IF_DEFINED(StaticAttribute);
-  INIT_PROPERTY_INFOS_IF_DEFINED(Method);
-  INIT_PROPERTY_INFOS_IF_DEFINED(Attribute);
-  INIT_PROPERTY_INFOS_IF_DEFINED(UnforgeableMethod);
-  INIT_PROPERTY_INFOS_IF_DEFINED(UnforgeableAttribute);
-  INIT_PROPERTY_INFOS_IF_DEFINED(Constant);
+bool InitIds(JSContext* cx, const NativeProperties* nativeProperties) {
+  INIT_IDS_IF_DEFINED(StaticMethod);
+  INIT_IDS_IF_DEFINED(StaticAttribute);
+  INIT_IDS_IF_DEFINED(Method);
+  INIT_IDS_IF_DEFINED(Attribute);
+  INIT_IDS_IF_DEFINED(UnforgeableMethod);
+  INIT_IDS_IF_DEFINED(UnforgeableAttribute);
+  INIT_IDS_IF_DEFINED(Constant);
 
   // Initialize and sort the index array.
   uint16_t* indices = nativeProperties->sortedPropertyIndices;
@@ -1342,26 +1341,7 @@ static bool InitPropertyInfos(JSContext* cx,
   return true;
 }
 
-#undef INIT_PROPERTY_INFOS_IF_DEFINED
-
-static inline bool InitPropertyInfos(
-    JSContext* aCx, const NativePropertiesHolder& nativeProperties) {
-  MOZ_ASSERT(NS_IsMainThread());
-
-  if (!*nativeProperties.inited) {
-    if (nativeProperties.regular &&
-        !InitPropertyInfos(aCx, nativeProperties.regular)) {
-      return false;
-    }
-    if (nativeProperties.chromeOnly &&
-        !InitPropertyInfos(aCx, nativeProperties.chromeOnly)) {
-      return false;
-    }
-    *nativeProperties.inited = true;
-  }
-
-  return true;
-}
+#undef INIT_IDS_IF_DEFINED
 
 void GetInterfaceImpl(JSContext* aCx, nsIInterfaceRequestor* aRequestor,
                       nsWrapperCache* aCache, JS::Handle<JS::Value> aIID,
@@ -1704,11 +1684,6 @@ static bool ResolvePrototypeOrConstructor(
 
   const NativePropertiesHolder& nativePropertiesHolder =
       nativePropertyHooks->mNativeProperties;
-
-  if (!InitPropertyInfos(cx, nativePropertiesHolder)) {
-    return false;
-  }
-
   const NativeProperties* nativeProperties = nullptr;
   const PropertyInfo* found = nullptr;
 
@@ -1986,10 +1961,6 @@ bool XrayOwnNativePropertyKeys(JSContext* cx, JS::Handle<JSObject*> wrapper,
 
   const NativePropertiesHolder& nativeProperties =
       nativePropertyHooks->mNativeProperties;
-
-  if (!InitPropertyInfos(cx, nativeProperties)) {
-    return false;
-  }
 
   if (nativeProperties.regular &&
       !XrayOwnPropertyKeys(cx, wrapper, obj, flags, props, type,
