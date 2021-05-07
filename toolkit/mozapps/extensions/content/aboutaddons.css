@@ -441,11 +441,6 @@ recommended-addon-card .addon-description:not(:empty) {
   margin-inline-end: 0;
 }
 
-.disco-cta-button[action="install-addon"]::before {
-  content: "+";
-  padding-inline-end: 4px;
-}
-
 .discopane-notice {
   margin: 24px 0;
 }
