@@ -121,8 +121,7 @@
 
     <!-- Content of about focus. Argument 1 is the app name (Firefox Focus/Firefox Klar/etc).
          Argument 2 is the url for the learn-more link. -->
-    <string name="about_content"><![CDATA[
-<p>%1$s puts you in control.</p>
+    <string name="about_content"><![CDATA[<p>%1$s puts you in control.</p>
 <p>Use it as a private browser:
   <ul>
     <li>Search and browse right in the app</li>
@@ -131,8 +130,7 @@
   </ul>
 </p>
 <p>%1$s is produced by Mozilla. Our mission is to foster a healthy, open Internet.<br/>
-<a href="%2$s">Learn more</a></p>
-    ]]></string>
+<a href="%2$s">Learn more</a></p>]]></string>
 
     <!-- Header for the Privacy and Security settings menu -->
     <string name="preference_privacy_and_security_header">Privacy &amp; Security</string>
