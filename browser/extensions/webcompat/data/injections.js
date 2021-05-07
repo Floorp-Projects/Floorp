@@ -432,6 +432,21 @@ const AVAILABLE_INJECTIONS = [
       ],
     },
   },
+  {
+    id: "bug1707795",
+    platform: "desktop",
+    domain: "Office Excel spreadsheets",
+    bug: "1707795",
+    contentScripts: {
+      matches: ["*://onedrive.live.com/*", "*://*.sharepoint.com/*"],
+      css: [
+        {
+          file:
+            "injections/css/bug1707795-office365-sheets-overscroll-disable.css",
+        },
+      ],
+    },
+  },
 ];
 
 module.exports = AVAILABLE_INJECTIONS;
