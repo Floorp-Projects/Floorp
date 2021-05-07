@@ -49,6 +49,8 @@ class NativeMenuMac : public NativeMenu,
   // nsMenuX::Observer
   void OnMenuWillOpen(mozilla::dom::Element* aPopupElement) override;
   void OnMenuDidOpen(mozilla::dom::Element* aPopupElement) override;
+  void OnMenuWillActivateItem(mozilla::dom::Element* aPopupElement,
+                              mozilla::dom::Element* aMenuItemElement) override;
   void OnMenuClosed(mozilla::dom::Element* aPopupElement) override;
 
   NSMenu* NativeNSMenu() { return mMenu ? mMenu->NativeNSMenu() : nil; }
