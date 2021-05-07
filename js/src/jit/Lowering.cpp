@@ -1070,7 +1070,7 @@ void LIRGenerator::visitCompare(MCompare* comp) {
   MOZ_CRASH("Unrecognized compare type.");
 }
 
-void LIRGenerator::visitSameValue(MSameValue* ins) {
+void LIRGenerator::visitSameValueDouble(MSameValueDouble* ins) {
   MDefinition* lhs = ins->lhs();
   MDefinition* rhs = ins->rhs();
 
@@ -1078,7 +1078,7 @@ void LIRGenerator::visitSameValue(MSameValue* ins) {
   MOZ_ASSERT(rhs->type() == MIRType::Double);
 
   auto* lir = new (alloc())
-      LSameValueD(useRegister(lhs), useRegister(rhs), tempDouble());
+      LSameValueDouble(useRegister(lhs), useRegister(rhs), tempDouble());
   define(lir, ins);
 }
 
