@@ -175,7 +175,16 @@ class Axis {
   void ClearOverscroll();
 
   /**
+   * Returns whether the overscroll animation is alive.
+   */
+  bool IsOverscrollAnimationAlive() const;
+
+  /**
    * Returns whether the overscroll animation is running.
+   * Note that unlike the above IsOverscrollAnimationAlive, this function
+   * returns false even if the animation is still there but is very close to
+   * the destination position and its velocity is quite low, i.e. it's time to
+   * finish.
    */
   bool IsOverscrollAnimationRunning() const;
 
