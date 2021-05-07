@@ -1082,6 +1082,18 @@ void LIRGenerator::visitSameValueDouble(MSameValueDouble* ins) {
   define(lir, ins);
 }
 
+void LIRGenerator::visitSameValue(MSameValue* ins) {
+  MDefinition* lhs = ins->lhs();
+  MDefinition* rhs = ins->rhs();
+
+  MOZ_ASSERT(lhs->type() == MIRType::Value);
+  MOZ_ASSERT(rhs->type() == MIRType::Value);
+
+  auto* lir = new (alloc()) LSameValue(useBox(lhs), useBox(rhs));
+  define(lir, ins);
+  assignSafepoint(lir, ins);
+}
+
 void LIRGenerator::lowerBitOp(JSOp op, MBinaryBitwiseInstruction* ins) {
   MDefinition* lhs = ins->getOperand(0);
   MDefinition* rhs = ins->getOperand(1);
