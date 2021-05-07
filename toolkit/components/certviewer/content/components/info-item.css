@@ -34,6 +34,7 @@ label {
 .long-hex:hover {
   border-block: 1px solid var(--in-content-border-color);
   background-color: var(--in-content-item-hover);
+  color: var(--in-content-item-hover-text);
   padding: 0;
 }
 
