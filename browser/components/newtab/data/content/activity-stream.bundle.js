@@ -14758,7 +14758,9 @@ class CustomizeMenu_CustomizeMenu extends external_React_default.a.PureComponent
       in: this.props.showing,
       appear: true
     }, /*#__PURE__*/external_React_default.a.createElement("div", {
-      className: "customize-menu"
+      className: "customize-menu",
+      role: "dialog",
+      "data-l10n-id": "newtab-personalize-dialog-label"
     }, /*#__PURE__*/external_React_default.a.createElement("button", {
       onClick: () => this.props.onClose(),
       className: "close-button",
