@@ -605,14 +605,25 @@ function sendBasicNativePointerInput(
   aState,
   aX,
   aY,
-  aObserver
+  aObserver,
+  { pressure = 1, twist = 0, tiltX = 0, tiltY = 0 } = {}
 ) {
   switch (aPointerType) {
     case "touch":
-      utils.sendNativeTouchPoint(aId, aState, aX, aY, 1, 90, aObserver);
+      utils.sendNativeTouchPoint(aId, aState, aX, aY, pressure, 90, aObserver);
       break;
     case "pen":
-      utils.sendNativePenInput(aId, aState, aX, aY, 1, 0, 0, 0, aObserver);
+      utils.sendNativePenInput(
+        aId,
+        aState,
+        aX,
+        aY,
+        pressure,
+        twist,
+        tiltX,
+        tiltY,
+        aObserver
+      );
       break;
     default:
       throw new Error(`Not supported: ${aPointerType}`);
@@ -644,7 +655,8 @@ function synthesizeNativePointerSequences(
   aPointerType,
   aPositions,
   aObserver = null,
-  aPointerIds = [0]
+  aPointerIds = [0],
+  options
 ) {
   // We use lastNonNullValue to figure out which synthesizeNativeTouch call
   // will be the last one we make, so that we can register aObserver on it.
@@ -712,7 +724,8 @@ function synthesizeNativePointerSequences(
             SpecialPowers.DOMWindowUtils.TOUCH_REMOVE,
             currentPositions[j].x,
             currentPositions[j].y,
-            observer
+            observer,
+            options
           );
           currentPositions[j] = null;
         }
@@ -724,7 +737,8 @@ function synthesizeNativePointerSequences(
           SpecialPowers.DOMWindowUtils.TOUCH_CONTACT,
           aPositions[i][j].x,
           aPositions[i][j].y,
-          null
+          null,
+          options
         );
         currentPositions[j] = aPositions[i][j];
       }
@@ -756,7 +770,8 @@ function synthesizeNativePointerDrag(
   aDeltaX,
   aDeltaY,
   aObserver = null,
-  aPointerId = 0
+  aPointerId = 0,
+  options
 ) {
   var steps = Math.max(Math.abs(aDeltaX), Math.abs(aDeltaY));
   var positions = [[{ x: aX, y: aY }]];
@@ -772,7 +787,8 @@ function synthesizeNativePointerDrag(
     aPointerType,
     positions,
     aObserver,
-    [aPointerId]
+    [aPointerId],
+    options
   );
 }
 
@@ -807,7 +823,8 @@ function promiseNativePointerDrag(
   aY,
   aDeltaX,
   aDeltaY,
-  aPointerId = 0
+  aPointerId = 0,
+  options
 ) {
   return new Promise((resolve, reject) => {
     try {
@@ -819,7 +836,8 @@ function promiseNativePointerDrag(
         aDeltaX,
         aDeltaY,
         resolve,
-        aPointerId
+        aPointerId,
+        options
       );
     } catch (err) {
       reject(err);

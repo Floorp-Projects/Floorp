@@ -8575,6 +8575,9 @@ bool nsWindow::DispatchTouchEventFromWMPointer(
                             ScreenSize(1, 1),  // pixel size radius for pen
                             0.0f,              // no radius rotation
                             aPointerInfo.mPressure);
+  touchData.mTiltX = aPointerInfo.tiltX;
+  touchData.mTiltY = aPointerInfo.tiltY;
+  touchData.mTwist = aPointerInfo.twist;
 
   MultiTouchInput touchInput;
   touchInput.mType = touchType;
@@ -8675,6 +8678,7 @@ bool nsWindow::OnPointerEvents(UINT msg, WPARAM aWParam, LPARAM aLParam) {
                                  : MouseButtonsFlag::eNoButtons;
   WinPointerInfo pointerInfo(pointerId, penInfo.tiltX, penInfo.tiltY, pressure,
                              buttons);
+  pointerInfo.twist = penInfo.rotation;
 
   if (StaticPrefs::dom_w3c_pointer_events_scroll_by_pen_enabled() &&
       DispatchTouchEventFromWMPointer(msg, aLParam, pointerInfo)) {
