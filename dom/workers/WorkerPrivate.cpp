@@ -4936,19 +4936,22 @@ void WorkerPrivate::GarbageCollectInternal(JSContext* aCx, bool aShrinking,
     JS::PrepareForFullGC(aCx);
 
     if (aShrinking && mSyncLoopStack.IsEmpty()) {
-      JS::NonIncrementalGC(aCx, GC_SHRINK, JS::GCReason::DOM_WORKER);
+      JS::NonIncrementalGC(aCx, JS::GCOptions::Shrink,
+                           JS::GCReason::DOM_WORKER);
 
       // Check whether the CC collected anything and if so GC again. This is
       // necessary to collect all garbage.
       if (data->mCCCollectedAnything) {
-        JS::NonIncrementalGC(aCx, GC_NORMAL, JS::GCReason::DOM_WORKER);
+        JS::NonIncrementalGC(aCx, JS::GCOptions::Normal,
+                             JS::GCReason::DOM_WORKER);
       }
 
       if (!aCollectChildren) {
         LOG(WorkerLog(), ("Worker %p collected idle garbage\n", this));
       }
     } else {
-      JS::NonIncrementalGC(aCx, GC_NORMAL, JS::GCReason::DOM_WORKER);
+      JS::NonIncrementalGC(aCx, JS::GCOptions::Normal,
+                           JS::GCReason::DOM_WORKER);
       LOG(WorkerLog(), ("Worker %p collected garbage\n", this));
     }
   } else {
