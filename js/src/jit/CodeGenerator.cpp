@@ -9762,35 +9762,13 @@ void CodeGenerator::visitIsNullOrLikeUndefinedAndBranchT(
   testObjectEmulatesUndefined(input, ifTrueLabel, ifFalseLabel, scratch, ool);
 }
 
-void CodeGenerator::visitSameValueDouble(LSameValueDouble* lir) {
+void CodeGenerator::visitSameValueD(LSameValueD* lir) {
   FloatRegister left = ToFloatRegister(lir->left());
   FloatRegister right = ToFloatRegister(lir->right());
   FloatRegister temp = ToFloatRegister(lir->tempFloat());
   Register output = ToRegister(lir->output());
 
   masm.sameValueDouble(left, right, temp, output);
-}
-
-void CodeGenerator::visitSameValue(LSameValue* lir) {
-  ValueOperand lhs = ToValue(lir, LSameValue::LhsIndex);
-  ValueOperand rhs = ToValue(lir, LSameValue::RhsIndex);
-  Register output = ToRegister(lir->output());
-
-  Label call, done;
-
-  using Fn = bool (*)(JSContext*, HandleValue, HandleValue, bool*);
-  OutOfLineCode* ool =
-      oolCallVM<Fn, SameValue>(lir, ArgList(lhs, rhs), StoreRegisterTo(output));
-
-  // First check to see if the values have identical bits.
-  // This is correct for SameValue because SameValue(NaN,NaN) is true,
-  // and SameValue(0,-0) is false.
-  masm.branch64(Assembler::NotEqual, lhs.toRegister64(), rhs.toRegister64(),
-                ool->entry());
-  masm.move32(Imm32(1), output);
-
-  // If this fails, call SameValue.
-  masm.bind(ool->rejoin());
 }
 
 void CodeGenerator::emitConcat(LInstruction* lir, Register lhs, Register rhs,

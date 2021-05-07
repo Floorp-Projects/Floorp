@@ -2566,14 +2566,6 @@
     lhs: NumberId
     rhs: NumberId
 
-- name: SameValueResult
-  shared: false
-  transpile: true
-  cost_estimate: 4
-  args:
-    lhs: ValId
-    rhs: ValId
-
 - name: IndirectTruncateInt32Result
   shared: true
   transpile: true
