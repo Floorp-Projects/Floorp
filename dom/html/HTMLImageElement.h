@@ -264,10 +264,7 @@ class HTMLImageElement final : public nsGenericHTMLElement,
       const nsAString& aTypeAttr, const nsAString& aMediaAttr,
       nsAString& aResult);
 
-  enum class FromIntersectionObserver : bool { No, Yes };
-  enum class StartLoading : bool { No, Yes };
-  void StopLazyLoading(FromIntersectionObserver, StartLoading);
-
+  void StopLazyLoadingAndStartLoadIfNeeded(bool aFromIntersectionObserver);
   void LazyLoadImageReachedViewport();
 
  protected:

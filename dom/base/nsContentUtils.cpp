@@ -9717,19 +9717,6 @@ void nsContentUtils::AppendNativeAnonymousChildren(const nsIContent* aContent,
   }
 }
 
-bool nsContentUtils::IsImageAvailable(nsIContent* aLoadingNode, nsIURI* aURI,
-                                      nsIPrincipal* aDefaultTriggeringPrincipal,
-                                      CORSMode aCORSMode) {
-  nsCOMPtr<nsIPrincipal> triggeringPrincipal;
-  QueryTriggeringPrincipal(aLoadingNode, aDefaultTriggeringPrincipal,
-                           getter_AddRefs(triggeringPrincipal));
-  MOZ_ASSERT(triggeringPrincipal);
-
-  Document* doc = aLoadingNode->OwnerDoc();
-  imgLoader* imgLoader = GetImgLoaderForDocument(doc);
-  return imgLoader->IsImageAvailable(aURI, triggeringPrincipal, aCORSMode, doc);
-}
-
 /* static */
 bool nsContentUtils::QueryTriggeringPrincipal(
     nsIContent* aLoadingNode, nsIPrincipal* aDefaultPrincipal,
