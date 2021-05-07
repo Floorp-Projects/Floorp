@@ -127,8 +127,6 @@ interface mixin MozImageLoadingContent {
    */
   [ChromeOnly,Throws]
   void forceReload(optional boolean aNotify = true);
-  [ChromeOnly]
-  void forceImageState(boolean aForce, unsigned long long aState);
 };
 
 HTMLImageElement includes MozImageLoadingContent;
