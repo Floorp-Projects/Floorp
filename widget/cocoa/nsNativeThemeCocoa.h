@@ -440,6 +440,7 @@ class nsNativeThemeCocoa : private nsNativeTheme, public nsITheme {
   NSComboBoxCell* mComboBoxCell;
   NSProgressBarCell* mProgressBarCell;
   NSLevelIndicatorCell* mMeterBarCell;
+  NSTableHeaderCell* mTreeHeaderCell;
   MOZCellDrawWindow* mCellDrawWindow = nil;
   MOZCellDrawView* mCellDrawView;
 };
