@@ -25,6 +25,7 @@ body {
 
 :root:not([chromehidden~="toolbar"]) {
   min-width: 450px;
+  min-height: 120px;
 }
 
 :root[customizing] {
@@ -1616,18 +1617,28 @@ toolbar[keyNav=true]:not([collapsed=true], [customizing=true]) toolbartabstop {
   grid-auto-rows: min(90%, var(--doc-height-px));
 }
 
-#window-modal-dialog > .dialogOverlay > .dialogBox,
-.tab-prompt-dialog > .dialogOverlay > .dialogBox:not([sizeto=available]) {
-  /* For content-prompts, we size the item using the grid-auto-rows.
-   * For tab and window prompts, where we fully control the content,
-   * we use the document height directly.  */
-  min-height: var(--doc-height-px);
-}
-
-
 :not(.content-prompt-dialog) > .dialogOverlay > .dialogBox {
   /* Make dialogs overlap with upper chrome UI. */
   margin-top: -5px;
+}
+
+#window-modal-dialog {
+  overflow: visible;
+  padding: 0;
+  --chrome-offset: 20px; /* gets overridden from JS, but pick some default... */
+  margin-top: max(
+    /* Do not go below 8px, corresponding to the negative margin above plus
+     * a tiny bit of space, as otherwise the top of the dialog would be
+     * adjacent to or clipped by the top of the window. */
+    8px,
+    /* Otherwise, use the chrome height,
+     * or the height of the parent window minus the height of the dialog,
+     * whichever is smaller. */
+    min(
+      var(--chrome-offset),
+      calc(100vh - var(--inner-height))
+    )
+  );
 }
 
 .dialogFrame {
