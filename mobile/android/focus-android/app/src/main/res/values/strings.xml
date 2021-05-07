@@ -711,18 +711,6 @@
     <!-- Label for button to close the tab-->
     <string name="tab_crash_report_close_tab_button_label">Close Tab</string>
 
-    <!-- Title for the fatal crash report window
-        %1$s will be replaced by the app name (e.g. Firefox Focus) -->
-    <string name="fatal_crash_report_title">Sorry. %1$s had a problem and crashed.</string>
-    <!-- Description for the fatal crash report window -->
-    <string name="fatal_crash_report_description">As a private browser, we never save and cannot restore your last browsing session.</string>
-    <!-- Label for the button that closes the window -->
-    <string name="fatal_crash_report_close_button_label">Close</string>
-    <!-- Label for the button to restart Firefox
-        %1$s will be replaced by the app name (e.g. Firefox Focus) -->
-    <string name="fatal_crash_report_restart_firefox_label">Restart %1$s</string>
-
-
     <!-- Label for the checkbox to send the tab crash report to Mozilla -->
     <string name="crash_report_send_crash_label">Send crash report to Mozilla</string>
 </resources>
