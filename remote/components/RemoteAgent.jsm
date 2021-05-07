@@ -114,7 +114,7 @@ class RemoteAgentClass {
       Services.obs.notifyObservers(
         null,
         "remote-listening",
-        `DevTools listening on ${mainTarget.wsDebuggerURL}`
+        mainTarget.wsDebuggerURL
       );
     } catch (e) {
       await this.close();
