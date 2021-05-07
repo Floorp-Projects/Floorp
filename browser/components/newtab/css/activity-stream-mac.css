@@ -1694,7 +1694,7 @@ main {
   inset-inline-end: 0;
   z-index: 1001;
   padding: 16px;
-  transition: transform 250ms cubic-bezier(0.46, 0.03, 0.52, 0.96);
+  transition: transform 250ms cubic-bezier(0.46, 0.03, 0.52, 0.96), visibility 250ms;
   overflow: auto;
   transform: translateX(435px);
   visibility: hidden;
@@ -1704,21 +1704,12 @@ main {
       border-inline-start: solid 1px; } }
   .customize-menu:dir(rtl) {
     transform: translateX(-435px); }
-  .customize-menu.customize-animate-enter-done {
+  .customize-menu.customize-animate-enter-done, .customize-menu.customize-animate-enter-active {
+    box-shadow: 0 0 64px var(--customize-menu-first-shadow), 0 0 24px var(--customize-menu-second-shadow);
+    visibility: visible;
     transform: translateX(0); }
-  .customize-menu.customize-animate-enter-done, .customize-menu.customize-animate-enter-active, .customize-menu.customize-animate-enter {
-    box-shadow: 0 0 64px var(--customize-menu-first-shadow), 0 0 24px var(--customize-menu-second-shadow);
-    transition: transform 250ms cubic-bezier(0.46, 0.03, 0.52, 0.96), visibility 1ms;
-    visibility: visible; }
-  .customize-menu.customize-animate-exit-active, .customize-menu.customize-animate-exit {
-    box-shadow: 0 0 64px var(--customize-menu-first-shadow), 0 0 24px var(--customize-menu-second-shadow);
-    transition: transform 250ms cubic-bezier(0.46, 0.03, 0.52, 0.96), visibility 1ms 250ms;
-    visibility: visible; }
-  .customize-menu.customize-animate-exit-done {
-    transform: translateX(435px);
-    transition: transform 250ms cubic-bezier(0.46, 0.03, 0.52, 0.96), visibility 1ms 250ms; }
-    .customize-menu.customize-animate-exit-done:dir(rtl) {
-      transform: translateX(-435px); }
+  .customize-menu.customize-animate-exit-active {
+    box-shadow: 0 0 64px var(--customize-menu-first-shadow), 0 0 24px var(--customize-menu-second-shadow); }
   .customize-menu .close-button {
     margin-inline-start: auto;
     margin-bottom: 28px;
