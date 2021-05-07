@@ -4328,25 +4328,16 @@ bool Document::HasFocus(ErrorResult& rv) const {
     return false;
   }
 
-  // Is there a focused DOMWindow?
-  nsCOMPtr<mozIDOMWindowProxy> focusedWindow;
-  fm->GetFocusedWindow(getter_AddRefs(focusedWindow));
-  if (!focusedWindow) {
+  BrowsingContext* bc = GetBrowsingContext();
+  if (!bc) {
     return false;
   }
 
-  nsPIDOMWindowOuter* piWindow = nsPIDOMWindowOuter::From(focusedWindow);
-
-  // Are we an ancestor of the focused DOMWindow?
-  for (Document* currentDoc = piWindow->GetDoc(); currentDoc;
-       currentDoc = currentDoc->GetInProcessParentDocument()) {
-    if (currentDoc == this) {
-      // Yes, we are an ancestor
-      return true;
-    }
+  if (!fm->IsInActiveWindow(bc)) {
+    return false;
   }
 
-  return false;
+  return fm->IsSameOrAncestor(bc, fm->GetFocusedBrowsingContext());
 }
 
 void Document::GetDesignMode(nsAString& aDesignMode) {
