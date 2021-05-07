@@ -879,6 +879,12 @@ static BOOL gMenuItemsExecuteCommands = YES;
     menuBar = menuGroupOwner->GetMenuBar();
   }
 
+  // Notify containing menu about the fact that a menu item will be activated.
+  NSMenu* menu = nativeMenuItem.menu;
+  if ([menu.delegate isKindOfClass:[MenuDelegate class]]) {
+    [(MenuDelegate*)menu.delegate menu:menu willActivateItem:nativeMenuItem];
+  }
+
   // Get the modifier flags and button for this menu item activation. The menu system does not pass
   // an NSEvent to our action selector, but we can query the current NSEvent instead. The current
   // NSEvent can be a key event or a mouseup event, depending on how the menu item is activated.
