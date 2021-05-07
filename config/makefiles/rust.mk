@@ -296,10 +296,6 @@ endef
 cargo_host_linker_env_var := CARGO_TARGET_$(call varize,$(RUST_HOST_TARGET))_LINKER
 cargo_linker_env_var := CARGO_TARGET_$(call varize,$(RUST_TARGET))_LINKER
 
-# Cargo needs the same linker flags as the C/C++ compiler,
-# but not the final libraries. Filter those out because they
-# cause problems on macOS 10.7; see bug 1365993 for details.
-# Also, we don't want to pass PGO flags until cargo supports them.
 export MOZ_CARGO_WRAP_LDFLAGS
 export MOZ_CARGO_WRAP_LD
 export MOZ_CARGO_WRAP_HOST_LDFLAGS
@@ -323,17 +319,20 @@ export $(cargo_linker_env_var):=$(topsrcdir)/build/cargo-linker
 WRAP_HOST_LINKER_LIBPATHS:=$(HOST_LINKER_LIBPATHS)
 endif
 
-# Defining all of this for TSan builds results in crashes while running
-# some crates's build scripts (!), so disable it for now.
-# See https://github.com/rust-lang/cargo/issues/5754
-ifndef NATIVE_TSAN
+# Cargo needs the same linker flags as the C/C++ compiler,
+# but not the final libraries. Filter those out because they
+# cause problems on macOS 10.7; see bug 1365993 for details.
+# Also, we don't want to pass PGO flags until cargo supports them.
 $(TARGET_RECIPES): MOZ_CARGO_WRAP_LDFLAGS:=$(filter-out -fsanitize=cfi% -framework Cocoa -lobjc AudioToolbox ExceptionHandling -fprofile-%,$(LDFLAGS))
-endif # NATIVE_TSAN
 
-# When building programs with sanitizer, rustc links its own runtime, which
-# conflicts with the one that passing -fsanitize=* to the linker would add.
+# When building with sanitizer, rustc links its own runtime, which conflicts
+# with the one that passing -fsanitize=* to the linker would add.
+# Ideally, we'd always do this filtering, but because the flags may also apply
+# to build scripts because cargo doesn't allow the distinction, we only filter
+# when building programs, except when using thread sanitizer where we filter
+# everywhere.
 ifneq (,$(filter -Zsanitizer=%,$(RUSTFLAGS)))
-force-cargo-program-build: MOZ_CARGO_WRAP_LDFLAGS:=$(filter-out -fsanitize=%,$(MOZ_CARGO_WRAP_LDFLAGS))
+$(if $(filter -Zsanitizer=thread,$(RUSTFLAGS)),$(TARGET_RECIPES),force-cargo-program-build): MOZ_CARGO_WRAP_LDFLAGS:=$(filter-out -fsanitize=%,$(MOZ_CARGO_WRAP_LDFLAGS))
 endif
 
 # Rustc assumes that *-windows-gnu targets build with mingw-gcc and manually
