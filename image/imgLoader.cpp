@@ -2100,23 +2100,6 @@ static void MakeRequestStaticIfNeeded(
   proxy.forget(aProxyAboutToGetReturned);
 }
 
-bool imgLoader::IsImageAvailable(nsIURI* aURI,
-                                 nsIPrincipal* aTriggeringPrincipal,
-                                 CORSMode aCORSMode, Document* aDocument) {
-  ImageCacheKey key(aURI, aTriggeringPrincipal->OriginAttributesRef(),
-                    aDocument);
-  RefPtr<imgCacheEntry> entry;
-  imgCacheTable& cache = GetCache(key);
-  if (!cache.Get(key, getter_AddRefs(entry)) || !entry) {
-    return false;
-  }
-  RefPtr<imgRequest> request = entry->GetRequest();
-  if (!request) {
-    return false;
-  }
-  return ValidateCORSMode(request, false, aCORSMode, aTriggeringPrincipal);
-}
-
 nsresult imgLoader::LoadImage(
     nsIURI* aURI, nsIURI* aInitialDocumentURI, nsIReferrerInfo* aReferrerInfo,
     nsIPrincipal* aTriggeringPrincipal, uint64_t aRequestContextID,

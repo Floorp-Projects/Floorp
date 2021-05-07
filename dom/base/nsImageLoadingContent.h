@@ -151,6 +151,7 @@ class nsImageLoadingContent : public nsIImageLoadingContent {
    * @param aNotify If true, nsIDocumentObserver state change notifications
    *                will be sent as needed.
    * @param aImageLoadType The ImageLoadType for this request
+   * @param aLoadStart If true, dispatch "loadstart" event.
    * @param aDocument Optional parameter giving the document this node is in.
    *        This is purely a performance optimization.
    * @param aLoadFlags Optional parameter specifying load flags to use for
@@ -160,6 +161,7 @@ class nsImageLoadingContent : public nsIImageLoadingContent {
    */
   nsresult LoadImage(nsIURI* aNewURI, bool aForce, bool aNotify,
                      ImageLoadType aImageLoadType, nsLoadFlags aLoadFlags,
+                     bool aLoadStart = true,
                      mozilla::dom::Document* aDocument = nullptr,
                      nsIPrincipal* aTriggeringPrincipal = nullptr);
 
@@ -167,7 +169,7 @@ class nsImageLoadingContent : public nsIImageLoadingContent {
                      ImageLoadType aImageLoadType,
                      nsIPrincipal* aTriggeringPrincipal) {
     return LoadImage(aNewURI, aForce, aNotify, aImageLoadType, LoadFlags(),
-                     nullptr, aTriggeringPrincipal);
+                     true, nullptr, aTriggeringPrincipal);
   }
 
   /**

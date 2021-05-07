@@ -241,9 +241,6 @@ class imgLoader final : public imgILoader,
   imgLoader();
   nsresult Init();
 
-  bool IsImageAvailable(nsIURI*, nsIPrincipal* aTriggeringPrincipal,
-                        mozilla::CORSMode, mozilla::dom::Document*);
-
   [[nodiscard]] nsresult LoadImage(
       nsIURI* aURI, nsIURI* aInitialDocumentURI, nsIReferrerInfo* aReferrerInfo,
       nsIPrincipal* aLoadingPrincipal, uint64_t aRequestContextID,
