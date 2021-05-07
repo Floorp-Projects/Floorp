@@ -304,7 +304,6 @@ var BookmarkPropertiesPanel = {
     // grow at every opening.
     // Since elements can be uncollapsed asynchronously, we must observe their
     // mutations and resize the dialog using a cached element size.
-    this._height = window.outerHeight;
     this._mutationObserver = new MutationObserver(mutations => {
       for (let mutation of mutations) {
         let target = mutation.target;
@@ -313,33 +312,21 @@ var BookmarkPropertiesPanel = {
           continue;
         }
 
-        if (
-          Services.prefs.getBoolPref("browser.proton.modals.enabled", false)
-        ) {
-          this._height = window.innerHeight;
-        }
-
         let collapsed = target.getAttribute("collapsed") === "true";
         let wasCollapsed = mutation.oldValue === "true";
         if (collapsed == wasCollapsed) {
           continue;
         }
 
+        let heightDiff;
         if (collapsed) {
-          this._height -= elementsHeight.get(id);
+          heightDiff = -elementsHeight.get(id);
           elementsHeight.delete(id);
         } else {
-          elementsHeight.set(id, target.getBoundingClientRect().height);
-          this._height += elementsHeight.get(id);
+          heightDiff = target.getBoundingClientRect().height;
+          elementsHeight.set(id, heightDiff);
         }
-        window.resizeTo(window.outerWidth, this._height);
-
-        if (
-          Services.prefs.getBoolPref("browser.proton.modals.enabled", false)
-        ) {
-          let frame = window.parent.document.querySelector(".dialogFrame");
-          frame.style.height = this._height + "px";
-        }
+        window.resizeBy(0, heightDiff);
       }
     });
 
@@ -417,11 +404,9 @@ var BookmarkPropertiesPanel = {
         }
         break;
       case "resize":
-        for (let [id, oldHeight] of elementsHeight) {
-          let newHeight = document.getElementById(id).getBoundingClientRect()
-            .height;
-          this._height += -oldHeight + newHeight;
-          elementsHeight.set(id, newHeight);
+        for (let id of elementsHeight.keys()) {
+          let { height } = document.getElementById(id).getBoundingClientRect();
+          elementsHeight.set(id, height);
         }
         break;
     }
