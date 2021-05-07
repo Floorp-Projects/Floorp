@@ -348,7 +348,7 @@ class SubtestResult(Result):
         return rv
 
     def is_triaged(self):
-        return bool(self.parent.bugs or self.bugs)
+        return bool(not self.regressions or self.parent.bugs or self.bugs)
 
 
 def run(logger, src_root, obj_root, **kwargs):
