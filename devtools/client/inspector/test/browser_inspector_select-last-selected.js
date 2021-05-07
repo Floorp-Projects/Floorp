@@ -54,7 +54,7 @@ var TEST_DATA = [
 ];
 
 add_task(async function() {
-  const { inspector, toolbox } = await openInspectorForURL(PAGE_1);
+  const { inspector } = await openInspectorForURL(PAGE_1);
 
   for (const { url, nodeToSelect, selectedNode } of TEST_DATA) {
     if (nodeToSelect) {
@@ -62,7 +62,7 @@ add_task(async function() {
       await selectNode(nodeToSelect, inspector);
     }
 
-    await navigateToAndWaitForNewRoot(url);
+    await navigateTo(url);
 
     const nodeFront = await getNodeFront(selectedNode, inspector);
     ok(nodeFront, "Got expected node front");
@@ -71,29 +71,5 @@ add_task(async function() {
       nodeFront,
       selectedNode + " is selected after navigation."
     );
-  }
-
-  async function navigateToAndWaitForNewRoot(url) {
-    info("Navigating and waiting for new-root event after navigation.");
-
-    const current = await SpecialPowers.spawn(
-      gBrowser.selectedBrowser,
-      [],
-      () => content.location.href
-    );
-    if (url == current) {
-      info("Reloading page.");
-      const markuploaded = inspector.once("markuploaded");
-      const onNewRoot = inspector.once("new-root");
-      const onUpdated = inspector.once("inspector-updated");
-
-      await toolbox.target.reload();
-      info("Waiting for inspector to be ready.");
-      await markuploaded;
-      await onNewRoot;
-      await onUpdated;
-    } else {
-      await navigateTo(url);
-    }
   }
 });
