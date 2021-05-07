@@ -56,7 +56,7 @@
     await scrollPromise;
 
     const pointerdown = await pointerPromise;
-    // is(pointerdown.pointerType, "pen"); // TODO: bug 1706420
+    is(pointerdown.pointerType, "pen");
     is(pointerdown.type, "pointerdown", ".type");
     is(pointerdown.button, 0, ".button");
     is(pointerdown.buttons, 1, ".buttons");
