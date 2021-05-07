@@ -257,8 +257,7 @@ bool ReferrerInfo::IsReferrerSchemeAllowed(nsIURI* aReferrer) {
     return false;
   }
 
-  return scheme.EqualsIgnoreCase("https") || scheme.EqualsIgnoreCase("http") ||
-         scheme.EqualsIgnoreCase("ftp");
+  return scheme.EqualsIgnoreCase("https") || scheme.EqualsIgnoreCase("http");
 }
 
 /* static */
@@ -1199,7 +1198,7 @@ nsresult ReferrerInfo::ComputeReferrer(nsIHttpChannel* aChannel) {
     return NS_OK;
   }
 
-  // Enforce Referrer allowlist, only http, https, ftp scheme are allowed
+  // Enforce Referrer allowlist, only http, https scheme are allowed
   if (!IsReferrerSchemeAllowed(mOriginalReferrer)) {
     return NS_OK;
   }
