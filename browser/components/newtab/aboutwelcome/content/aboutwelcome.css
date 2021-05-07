@@ -38,7 +38,6 @@ body {
   --newtab-button-secondary-color: #0060DF;
   --newtab-card-background-color: #FFF;
   --newtab-card-shadow: 0 1px 4px 0 rgba(12, 12, 13, 0.4);
-  --tiles-theme-section-border-width: 1px;
   --welcome-header-text-color-1: #20133A;
   --welcome-button-box-shadow-color: #0A84FF;
   --welcome-button-text-color: #FFF;
@@ -136,8 +135,7 @@ body {
       width: 20px;
       height: 20px; }
   .onboardingContainer .tiles-theme-container {
-    margin: 10px auto;
-    border: 0; }
+    margin: 10px auto; }
   .onboardingContainer .sr-only {
     opacity: 0;
     overflow: hidden;
@@ -149,17 +147,13 @@ body {
     display: grid;
     grid-gap: 21px;
     grid-template-columns: repeat(4, auto);
-    /* --newtab-background-color-1 will be invisible, but it's necessary to
-     * keep the content from jumping around when it gets focus-within and
-     * does sprout a dotted border.  This way it keeps a 1 pixel wide border
-     * either way so things don't change position.
-     */
-    border: var(--tiles-theme-section-border-width) solid var(--newtab-background-color-1); }
+    border: 0; }
     @media (max-width: 610px) {
       .onboardingContainer .tiles-theme-section {
         grid-template-columns: repeat(2, auto); } }
-    .onboardingContainer .tiles-theme-section:focus-within {
-      border: var(--tiles-theme-section-border-width) dotted; }
+    .onboardingContainer .tiles-theme-section:hover, .onboardingContainer .tiles-theme-section:active, .onboardingContainer .tiles-theme-section:focus-within {
+      outline: 1px #0090ED solid;
+      border-radius: 10px; }
     .onboardingContainer .tiles-theme-section .theme {
       display: flex;
       flex-direction: column;
@@ -453,10 +447,11 @@ body {
     .onboardingContainer.proton .tiles-theme-container {
       margin: auto 0; }
     .onboardingContainer.proton .tiles-theme-section {
-      border: var(--tiles-theme-section-border-width) solid var(--in-content-page-background);
-      transition: var(--transition); }
-      .onboardingContainer.proton .tiles-theme-section:focus-within {
-        border: var(--tiles-theme-section-border-width) dotted; }
+      transition: var(--transition);
+      margin: 10px;
+      padding: 12px; }
+      .onboardingContainer.proton .tiles-theme-section:hover, .onboardingContainer.proton .tiles-theme-section:active, .onboardingContainer.proton .tiles-theme-section:focus-within {
+        outline-color: var(--in-content-primary-button-background); }
     .onboardingContainer.proton .theme {
       align-items: center;
       width: auto;
