@@ -101,6 +101,16 @@ function globalOf(func)
     return self;
 }
 
+// https://esdiscuss.org/topic/isconstructor#content-11
+function isConstructor(o) {
+    try {
+        new (new Proxy(o, {construct: () => ({})}));
+        return true;
+    } catch(e) {
+        return false;
+    }
+}
+
 function throwOrReject(a_test, operation, fn, obj, args, message, cb)
 {
     if (operation.idlType.generic !== "Promise") {
@@ -1430,8 +1440,6 @@ IdlInterface.prototype.test_self = function()
 {
     subsetTestByKey(this.name, test, function()
     {
-        // This function tests WebIDL as of 2015-01-13.
-
         if (!this.should_have_interface_object()) {
             return;
         }
@@ -1473,8 +1481,6 @@ IdlInterface.prototype.test_self = function()
 
         // "* Its [[Construct]] internal property is set as described in
         //    ECMA-262 section 19.2.2.3."
-        // Tested below if no constructor is defined.  TODO: test constructors
-        // if defined.
 
         // "* Its @@hasInstance property is set as described in ECMA-262
         //    section 19.2.3.8, unless otherwise specified."
@@ -1506,6 +1512,10 @@ IdlInterface.prototype.test_self = function()
             assert_equals(prototype, Function.prototype,
                           "prototype of self's property " + format_value(this.name) + " is not Function.prototype");
         }
+
+        // Always test for [[Construct]]:
+        // https://github.com/heycam/webidl/issues/698
+        assert_true(isConstructor(this.get_interface_object()), "interface object must pass IsConstructor check");
 
         if (!this.constructors().length) {
             // "If I was not declared with a constructor operation, then throw a TypeError."
