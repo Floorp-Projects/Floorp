@@ -1993,26 +1993,6 @@ JS_PUBLIC_API bool JS_SetImmutablePrototype(JSContext* cx, JS::HandleObject obj,
 
 JS_PUBLIC_API bool JS_GetOwnPropertyDescriptorById(
     JSContext* cx, HandleObject obj, HandleId id,
-    MutableHandle<PropertyDescriptor> desc) {
-  AssertHeapIsIdle();
-  CHECK_THREAD(cx);
-  cx->check(obj, id);
-
-  Rooted<Maybe<PropertyDescriptor>> desc_(cx);
-  if (!GetOwnPropertyDescriptor(cx, obj, id, &desc_)) {
-    return false;
-  }
-
-  if (desc_.isNothing()) {
-    desc.object().set(nullptr);
-  } else {
-    desc.set(*desc_);
-  }
-  return true;
-}
-
-JS_PUBLIC_API bool JS_GetOwnPropertyDescriptorById(
-    JSContext* cx, HandleObject obj, HandleId id,
     MutableHandle<Maybe<PropertyDescriptor>> desc) {
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
@@ -2022,7 +2002,7 @@ JS_PUBLIC_API bool JS_GetOwnPropertyDescriptorById(
 
 JS_PUBLIC_API bool JS_GetOwnPropertyDescriptor(
     JSContext* cx, HandleObject obj, const char* name,
-    MutableHandle<PropertyDescriptor> desc) {
+    MutableHandle<Maybe<PropertyDescriptor>> desc) {
   JSAtom* atom = Atomize(cx, name, strlen(name));
   if (!atom) {
     return false;
@@ -2033,7 +2013,7 @@ JS_PUBLIC_API bool JS_GetOwnPropertyDescriptor(
 
 JS_PUBLIC_API bool JS_GetOwnUCPropertyDescriptor(
     JSContext* cx, HandleObject obj, const char16_t* name, size_t namelen,
-    MutableHandle<PropertyDescriptor> desc) {
+    MutableHandle<Maybe<PropertyDescriptor>> desc) {
   JSAtom* atom = AtomizeChars(cx, name, namelen);
   if (!atom) {
     return false;
@@ -3170,7 +3150,6 @@ JS_PUBLIC_API bool JS::ObjectToCompletePropertyDescriptor(
     return false;
   }
   CompletePropertyDescriptor(desc);
-  desc.object().set(obj);
   return true;
 }
 

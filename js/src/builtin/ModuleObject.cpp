@@ -562,7 +562,6 @@ bool ModuleNamespaceObject::ProxyHandler::getOwnPropertyDescriptor(
     if (JSID_TO_SYMBOL(id) == cx->wellKnownSymbols().toStringTag) {
       RootedValue value(cx, StringValue(cx->names().Module));
       Rooted<PropertyDescriptor> desc_(cx);
-      desc_.object().set(proxy);
       desc_.setWritable(false);
       desc_.setEnumerable(false);
       desc_.setConfigurable(false);
@@ -591,7 +590,6 @@ bool ModuleNamespaceObject::ProxyHandler::getOwnPropertyDescriptor(
   }
 
   Rooted<PropertyDescriptor> desc_(cx);
-  desc_.object().set(env);
   desc_.setConfigurable(false);
   desc_.setEnumerable(true);
   desc_.setValue(value);

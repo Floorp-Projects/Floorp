@@ -475,13 +475,13 @@ bool TypedObject::obj_getOwnPropertyDescriptor(
   uint32_t offset;
   FieldType type;
   if (typedObj->rttValue().lookupProperty(cx, typedObj, id, &offset, &type)) {
-    Rooted<PropertyDescriptor> desc_(cx);
-    if (!typedObj->loadValue(cx, offset, type, desc_.value())) {
+    RootedValue value(cx);
+    if (!typedObj->loadValue(cx, offset, type, &value)) {
       return false;
     }
-    desc_.setAttributes(JSPROP_ENUMERATE | JSPROP_PERMANENT);
-    desc_.object().set(obj);
-    desc.set(mozilla::Some(desc_.get()));
+    desc.set(mozilla::Some(PropertyDescriptor::Data(
+        value,
+        {JS::PropertyAttribute::Enumerable, JS::PropertyAttribute::Writable})));
     return true;
   }
 

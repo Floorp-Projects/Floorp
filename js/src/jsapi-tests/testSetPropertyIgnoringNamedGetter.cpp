@@ -21,7 +21,6 @@ class CustomProxyHandler : public Wrapper {
     if (JSID_IS_STRING(id) &&
         JS_LinearStringEqualsLiteral(JSID_TO_LINEAR_STRING(id), "phantom")) {
       Rooted<PropertyDescriptor> desc_(cx);
-      desc_.object().set(proxy);
       desc_.attributesRef() = JSPROP_ENUMERATE;
       desc_.value().setInt32(42);
       desc.set(mozilla::Some(desc_.get()));
