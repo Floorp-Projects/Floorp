@@ -95,7 +95,7 @@ nsresult GetJSValFromKeyPathString(
 
       // We call JS_GetOwnUCPropertyDescriptor on purpose (as opposed to
       // JS_GetUCPropertyDescriptor) to avoid searching the prototype chain.
-      JS::Rooted<JS::PropertyDescriptor> desc(aCx);
+      JS::Rooted<mozilla::Maybe<JS::PropertyDescriptor>> desc(aCx);
       QM_TRY(OkIf(JS_GetOwnUCPropertyDescriptor(aCx, obj, keyPathChars,
                                                 keyPathLen, &desc)),
              NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR,
@@ -104,8 +104,9 @@ nsresult GetJSValFromKeyPathString(
       JS::Rooted<JS::Value> intermediate(aCx);
       bool hasProp = false;
 
-      if (desc.object()) {
-        intermediate = desc.value();
+      // Bug 1710041: This should check for isDataDescriptor!
+      if (desc.isSome()) {
+        intermediate = desc->value();
         hasProp = true;
       } else {
         // If we get here it means the object doesn't have the property or the
