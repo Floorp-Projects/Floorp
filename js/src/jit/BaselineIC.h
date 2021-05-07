@@ -851,8 +851,7 @@ extern bool DoBinaryArithFallback(JSContext* cx, BaselineFrame* frame,
                                   HandleValue rhs, MutableHandleValue ret);
 
 extern bool DoNewArrayFallback(JSContext* cx, BaselineFrame* frame,
-                               ICNewArray_Fallback* stub, uint32_t length,
-                               MutableHandleValue res);
+                               ICNewArray_Fallback* stub, MutableHandleValue res);
 
 extern bool DoNewObjectFallback(JSContext* cx, BaselineFrame* frame,
                                 ICNewObject_Fallback* stub,

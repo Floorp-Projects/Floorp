@@ -2793,9 +2793,6 @@ template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_NewArray() {
   frame.syncStack(0);
 
-  // Pass length in R0.
-  loadInt32LengthBytecodeOperand(R0.scratchReg());
-
   if (!emitNextIC()) {
     return false;
   }

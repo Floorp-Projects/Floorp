@@ -89,6 +89,7 @@ const uint32_t js::jit::CacheIROpHealth[] = {
 #ifdef DEBUG
 size_t js::jit::NumInputsForCacheKind(CacheKind kind) {
   switch (kind) {
+    case CacheKind::NewArray:
     case CacheKind::NewObject:
     case CacheKind::GetIntrinsic:
       return 0;
@@ -102,7 +103,6 @@ size_t js::jit::NumInputsForCacheKind(CacheKind kind) {
     case CacheKind::BindName:
     case CacheKind::Call:
     case CacheKind::OptimizeSpreadCall:
-    case CacheKind::NewArray:
       return 1;
     case CacheKind::Compare:
     case CacheKind::GetElem:
@@ -11027,9 +11027,6 @@ AttachDecision NewArrayIRGenerator::tryAttachArrayObject() {
 
   writer.guardNoAllocationMetadataBuilder(
       cx_->realm()->addressOfMetadataBuilder());
-
-  // Length input is not currently used.
-  mozilla::Unused << writer.setInputOperandId(0);
 
   Shape* shape = arrayObj->lastProperty();
   uint32_t length = arrayObj->length();
