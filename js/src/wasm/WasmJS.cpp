@@ -234,6 +234,11 @@ bool wasm::IonAvailable(JSContext* cx) {
   return !isDisabled && !CraneliftAvailable(cx);
 }
 
+bool wasm::WasmCompilerForAsmJSAvailable(JSContext* cx) {
+  // For now, restrict this to Ion - we have not tested Cranelift properly.
+  return IonAvailable(cx);
+}
+
 template <size_t ArrayLength>
 static inline bool Append(JSStringBuilder* reason, const char (&s)[ArrayLength],
                           char* sep) {

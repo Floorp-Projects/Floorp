@@ -71,7 +71,8 @@ namespace JS {
 
 enum class AsmJSOption : uint8_t {
   Enabled,
-  Disabled,
+  DisabledByAsmJSPref,
+  DisabledByNoWasmCompiler,
   DisabledByDebugger,
 };
 
@@ -121,7 +122,7 @@ class JS_PUBLIC_API TransitiveCompileOptions {
  public:
   // POD options.
   bool selfHostingMode = false;
-  AsmJSOption asmJSOption = AsmJSOption::Disabled;
+  AsmJSOption asmJSOption = AsmJSOption::DisabledByAsmJSPref;
   bool throwOnAsmJSValidationFailureOption = false;
   bool forceAsync = false;
   bool discardSource = false;

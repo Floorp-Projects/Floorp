@@ -12496,6 +12496,16 @@ int main(int argc, char** argv) {
     cx->runtime()->setSelfHostedXDRWriterCallback(&WriteSelfHostedXDRFile);
   }
 
+#ifndef __wasi__
+  // This must be set before self-hosted code is initialized, as self-hosted
+  // code reads the property and the property may not be changed later.
+  bool disabledHugeMemory = false;
+  if (op.getBoolOption("disable-wasm-huge-memory")) {
+    disabledHugeMemory = JS::DisableWasmHugeMemory();
+    MOZ_RELEASE_ASSERT(disabledHugeMemory);
+  }
+#endif
+
   if (!JS::InitSelfHostedCode(cx)) {
     return 1;
   }
@@ -12566,12 +12576,9 @@ int main(int argc, char** argv) {
 
 #ifndef __wasi__
   // --disable-wasm-huge-memory needs to be propagated.  See bug 1518210.
-  if (op.getBoolOption("disable-wasm-huge-memory")) {
-    if (!sCompilerProcessFlags.append("--disable-wasm-huge-memory")) {
-      return EXIT_FAILURE;
-    }
-    bool disabledHugeMemory = JS::DisableWasmHugeMemory();
-    MOZ_RELEASE_ASSERT(disabledHugeMemory);
+  if (disabledHugeMemory &&
+      !sCompilerProcessFlags.append("--disable-wasm-huge-memory")) {
+    return EXIT_FAILURE;
   }
 
   // Also the following are to be propagated.
