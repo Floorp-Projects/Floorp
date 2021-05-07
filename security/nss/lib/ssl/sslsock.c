@@ -4296,7 +4296,7 @@ struct {
     EXP(DestroyResumptionTokenInfo),
     EXP(EnableTls13BackendEch),
     EXP(EnableTls13GreaseEch),
-    EXP(EncodeEchConfig),
+    EXP(EncodeEchConfigId),
     EXP(GetCurrentEpoch),
     EXP(GetEchRetryConfigs),
     EXP(GetExtensionSupport),

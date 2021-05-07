@@ -262,7 +262,7 @@ void TlsConnectTestBase::MakeEcKeyParams(SECItem* params, SSLNamedGroup group) {
 }
 
 void TlsConnectTestBase::GenerateEchConfig(
-    HpkeKemId kem_id, const std::vector<uint32_t>& cipher_suites,
+    HpkeKemId kem_id, const std::vector<HpkeSymmetricSuite>& cipher_suites,
     const std::string& public_name, uint16_t max_name_len, DataBuffer& record,
     ScopedSECKEYPublicKey& pubKey, ScopedSECKEYPrivateKey& privKey) {
   bool gen_keys = !pubKey && !privKey;
@@ -282,9 +282,9 @@ void TlsConnectTestBase::GenerateEchConfig(
   SECITEM_FreeItem(&ecParams, PR_FALSE);
   PRUint8 encoded[1024];
   unsigned int encoded_len = 0;
-  SECStatus rv = SSL_EncodeEchConfig(
-      public_name.c_str(), cipher_suites.data(), cipher_suites.size(), kem_id,
-      pub, max_name_len, encoded, &encoded_len, sizeof(encoded));
+  SECStatus rv = SSL_EncodeEchConfigId(
+      77, public_name.c_str(), max_name_len, kem_id, pub, cipher_suites.data(),
+      cipher_suites.size(), encoded, &encoded_len, sizeof(encoded));
   EXPECT_EQ(SECSuccess, rv);
   EXPECT_GT(encoded_len, 0U);
 
@@ -305,10 +305,9 @@ void TlsConnectTestBase::SetupEch(std::shared_ptr<TlsAgent>& client,
   ScopedSECKEYPublicKey pub;
   ScopedSECKEYPrivateKey priv;
   DataBuffer record;
-  static const std::vector<uint32_t> kDefaultSuites = {
-      (static_cast<uint16_t>(HpkeKdfHkdfSha256) << 16) |
-          HpkeAeadChaCha20Poly1305,
-      (static_cast<uint16_t>(HpkeKdfHkdfSha256) << 16) | HpkeAeadAes128Gcm};
+  static const std::vector<HpkeSymmetricSuite> kDefaultSuites = {
+      {HpkeKdfHkdfSha256, HpkeAeadChaCha20Poly1305},
+      {HpkeKdfHkdfSha256, HpkeAeadAes128Gcm}};
 
   GenerateEchConfig(kem_id, kDefaultSuites, "public.name", 100, record, pub,
                     priv);

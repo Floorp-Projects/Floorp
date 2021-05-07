@@ -38,6 +38,7 @@ extern PRBool sec_pkcs12_convert_item_to_unicode(PLArenaPool *arena, SECItem *de
                                                  SECItem *src, PRBool zeroTerm,
                                                  PRBool asciiConvert, PRBool toUnicode);
 extern CK_MECHANISM_TYPE sec_pkcs12_algtag_to_mech(SECOidTag algtag);
+extern CK_MECHANISM_TYPE sec_pkcs12_algtag_to_keygen_mech(SECOidTag algtag);
 
 /* create functions */
 extern SEC_PKCS12PFXItem *sec_pkcs12_new_pfx(void);

@@ -6,6 +6,7 @@
 #include "secoid.h"
 #include "secport.h"
 #include "secpkcs5.h"
+#include "secerr.h"
 
 #define PKCS12_NULL 0x0000
 
@@ -32,31 +33,32 @@ static pkcs12SuiteMap pkcs12SuiteMaps[] = {
 };
 
 /* determine if algid is an algorithm which is allowed */
+static PRBool
+sec_PKCS12Allowed(SECOidTag alg)
+{
+    PRUint32 policy;
+    SECStatus rv;
+
+    rv = NSS_GetAlgorithmPolicy(alg, &policy);
+    if (rv != SECSuccess) {
+        return PR_FALSE;
+    }
+    if (policy & NSS_USE_ALG_IN_PKCS12) {
+        return PR_TRUE;
+    }
+    return PR_FALSE;
+}
+
 PRBool
 SEC_PKCS12DecryptionAllowed(SECAlgorithmID *algid)
 {
-    unsigned int keyLengthBits;
     SECOidTag algId;
-    int i;
 
     algId = SEC_PKCS5GetCryptoAlgorithm(algid);
     if (algId == SEC_OID_UNKNOWN) {
         return PR_FALSE;
     }
-
-    keyLengthBits = (unsigned int)(SEC_PKCS5GetKeyLength(algid) * 8);
-
-    i = 0;
-    while (pkcs12SuiteMaps[i].algTag != SEC_OID_UNKNOWN) {
-        if ((pkcs12SuiteMaps[i].algTag == algId) &&
-            (pkcs12SuiteMaps[i].keyLengthBits == keyLengthBits)) {
-
-            return pkcs12SuiteMaps[i].allowed;
-        }
-        i++;
-    }
-
-    return PR_FALSE;
+    return sec_PKCS12Allowed(algId);
 }
 
 /* is any encryption allowed? */
@@ -65,61 +67,45 @@ SEC_PKCS12IsEncryptionAllowed(void)
 {
     int i;
 
-    i = 0;
-    while (pkcs12SuiteMaps[i].algTag != SEC_OID_UNKNOWN) {
-        if (pkcs12SuiteMaps[i].allowed == PR_TRUE) {
+    for (i = 0; pkcs12SuiteMaps[i].algTag != SEC_OID_UNKNOWN; i++) {
+        /* we're going to return true here if any of the traditional
+         * algorithms are enabled */
+        if (sec_PKCS12Allowed(pkcs12SuiteMaps[i].algTag)) {
             return PR_TRUE;
         }
-        i++;
     }
 
     return PR_FALSE;
 }
 
+/* keep the traditional enable/disable for old ciphers so old applications
+ * continue to work. This only works for the traditional pkcs12 values,
+ * you need to use NSS_SetAlgorithmPolicy directly for other ciphers. */
 SECStatus
 SEC_PKCS12EnableCipher(long which, int on)
 {
     int i;
+    SECStatus rv;
+    PRUint32 set = on ? NSS_USE_ALG_IN_PKCS12 : 0;
+    PRUint32 clear = on ? 0 : NSS_USE_ALG_IN_PKCS12;
 
-    i = 0;
-    while (pkcs12SuiteMaps[i].suite != 0L) {
+    for (i = 0; pkcs12SuiteMaps[i].suite != 0L; i++) {
         if (pkcs12SuiteMaps[i].suite == (unsigned long)which) {
-            if (on) {
-                pkcs12SuiteMaps[i].allowed = PR_TRUE;
-            } else {
-                pkcs12SuiteMaps[i].allowed = PR_FALSE;
+            rv = NSS_SetAlgorithmPolicy(pkcs12SuiteMaps[i].algTag, set, clear);
+            /* could fail if the policy has been locked */
+            if (rv != SECSuccess) {
+                return rv;
             }
-            return SECSuccess;
         }
-        i++;
     }
-
+    PORT_SetError(SEC_ERROR_INVALID_ALGORITHM);
     return SECFailure;
 }
 
 SECStatus
 SEC_PKCS12SetPreferredCipher(long which, int on)
 {
-    int i;
-    PRBool turnedOff = PR_FALSE;
-    PRBool turnedOn = PR_FALSE;
-
-    i = 0;
-    while (pkcs12SuiteMaps[i].suite != 0L) {
-        if (pkcs12SuiteMaps[i].preferred == PR_TRUE) {
-            pkcs12SuiteMaps[i].preferred = PR_FALSE;
-            turnedOff = PR_TRUE;
-        }
-        if (pkcs12SuiteMaps[i].suite == (unsigned long)which) {
-            pkcs12SuiteMaps[i].preferred = PR_TRUE;
-            turnedOn = PR_TRUE;
-        }
-        i++;
-    }
-
-    if ((turnedOn) && (turnedOff)) {
-        return SECSuccess;
-    }
-
-    return SECFailure;
+    /* nothing looked at the preferences in the suite maps, so this function
+     * has always been a noop */
+    return SECSuccess;
 }

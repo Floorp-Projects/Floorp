@@ -8,9 +8,6 @@
 #include "blapit.h"
 #include "seccomon.h"
 
-#ifdef NSS_ENABLE_DRAFT_HPKE
-#define HPKE_DRAFT_VERSION 7
-
 #define CLEANUP                    \
     PORT_Assert(rv == SECSuccess); \
     cleanup
@@ -35,14 +32,12 @@
         goto cleanup;             \
     }
 
-#endif /* NSS_ENABLE_DRAFT_HPKE */
-
 typedef enum {
     HpkeModeBase = 0,
     HpkeModePsk = 1,
 } HpkeModeId;
 
-/* https://tools.ietf.org/html/draft-irtf-cfrg-hpke-07#section-7.1 */
+/* https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-hpke-08#section-7.1 */
 typedef enum {
     HpkeDhKemX25519Sha256 = 0x20,
 } HpkeKemId;
@@ -55,6 +50,7 @@ typedef enum {
 
 typedef enum {
     HpkeAeadAes128Gcm = 1,
+    HpkeAeadAes256Gcm = 2,
     HpkeAeadChaCha20Poly1305 = 3,
 } HpkeAeadId;
 

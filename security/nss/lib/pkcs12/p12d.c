@@ -1353,32 +1353,10 @@ sec_pkcs12_decoder_verify_mac(SEC_PKCS12DecoderContext *p12dcx)
                                   iteration);
 
     algtag = SECOID_GetAlgorithmTag(&p12dcx->macData.safeMac.digestAlgorithm);
-    switch (algtag) {
-        case SEC_OID_SHA1:
-            integrityMech = CKM_NSS_PBE_SHA1_HMAC_KEY_GEN;
-            break;
-        case SEC_OID_MD5:
-            integrityMech = CKM_NSS_PBE_MD5_HMAC_KEY_GEN;
-            break;
-        case SEC_OID_MD2:
-            integrityMech = CKM_NSS_PBE_MD2_HMAC_KEY_GEN;
-            break;
-        case SEC_OID_SHA224:
-            integrityMech = CKM_NSS_PKCS12_PBE_SHA224_HMAC_KEY_GEN;
-            break;
-        case SEC_OID_SHA256:
-            integrityMech = CKM_NSS_PKCS12_PBE_SHA256_HMAC_KEY_GEN;
-            break;
-        case SEC_OID_SHA384:
-            integrityMech = CKM_NSS_PKCS12_PBE_SHA384_HMAC_KEY_GEN;
-            break;
-        case SEC_OID_SHA512:
-            integrityMech = CKM_NSS_PKCS12_PBE_SHA512_HMAC_KEY_GEN;
-            break;
-        default:
-            goto loser;
+    integrityMech = sec_pkcs12_algtag_to_keygen_mech(algtag);
+    if (integrityMech == CKM_INVALID_MECHANISM) {
+        goto loser;
     }
-
     symKey = PK11_KeyGen(NULL, integrityMech, params, 0, NULL);
     PK11_DestroyPBEParams(params);
     params = NULL;

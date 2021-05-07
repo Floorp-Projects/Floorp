@@ -214,7 +214,6 @@ TEST_F(Tls13CompatTest, EnabledHrrZeroRtt) {
   CheckForCompatHandshake();
 }
 
-#ifdef NSS_ENABLE_DRAFT_HPKE
 TEST_F(Tls13CompatTest, EnabledAcceptedEch) {
   EnsureTlsSetup();
   SetupEch(client_, server_);
@@ -237,7 +236,6 @@ TEST_F(Tls13CompatTest, EnabledRejectedEch) {
   // Reset expectations for the TlsAgent dtor.
   server_->ExpectReceiveAlert(kTlsAlertCloseNotify, kTlsAlertWarning);
 }
-#endif
 
 class TlsSessionIDEchoFilter : public TlsHandshakeFilter {
  public:

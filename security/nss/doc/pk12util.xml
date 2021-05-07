@@ -28,11 +28,17 @@
     <cmdsynopsis>
       <command>pk12util</command>
       <arg>-i p12File|-l p12File|-o p12File</arg>
+      <arg>-c keyCipher</arg>
+      <arg>-C certCipher</arg>
       <arg>-d [sql:]directory</arg>
       <arg>-h tokenname</arg>
+      <arg>-m | --key-len  keyLength</arg>
+      <arg>-M hashAlg</arg>
+      <arg>-n certname</arg>
       <arg>-P dbprefix</arg>
       <arg>-r</arg>
       <arg>-v</arg>
+      <arg>--cert-key-len  certKeyLength</arg>
       <arg>-k slotPasswordFile|-K slotPassword</arg>
       <arg>-w p12filePasswordFile|-W p12filePassword</arg>
     </cmdsynopsis>
@@ -106,6 +112,12 @@
         <term>-m | --key-len  keyLength</term>
         <listitem><para>Specify the desired length of the symmetric key to be used to encrypt the private key.</para></listitem>
       </varlistentry>
+
+      <varlistentry>
+        <term>-M hashAlg</term>
+        <listitem><para>Specify the hash algorithm used in the pkcs #12 mac. This algorithm also specifies the HMAC used in the prf when using pkcs #5 v2.</para></listitem>
+      </varlistentry>
+
 
       <varlistentry>
         <term>--cert-key-len  certKeyLength</term>
