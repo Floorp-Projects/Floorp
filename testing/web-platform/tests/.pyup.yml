@@ -10,6 +10,7 @@ requirements:
  - docs/requirements.txt
  - tools/requirements_flake8.txt
  - tools/requirements_mypy.txt
+ - tools/requirements_pytest.txt
  - tools/wpt/requirements.txt
  - tools/wptrunner/requirements.txt
  - tools/wptrunner/requirements_android_webview.txt
