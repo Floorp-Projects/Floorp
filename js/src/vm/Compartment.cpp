@@ -407,10 +407,6 @@ bool Compartment::rewrap(JSContext* cx, MutableHandleObject obj,
 
 bool Compartment::wrap(JSContext* cx,
                        MutableHandle<JS::PropertyDescriptor> desc) {
-  if (!wrap(cx, desc.object())) {
-    return false;
-  }
-
   if (desc.hasGetterObject()) {
     if (!wrap(cx, desc.getterObject())) {
       return false;

@@ -689,19 +689,15 @@ extern JS_PUBLIC_API bool JS_SetImmutablePrototype(JSContext* cx,
  */
 extern JS_PUBLIC_API bool JS_GetOwnPropertyDescriptorById(
     JSContext* cx, JS::HandleObject obj, JS::HandleId id,
-    JS::MutableHandle<JS::PropertyDescriptor> desc);
-
-extern JS_PUBLIC_API bool JS_GetOwnPropertyDescriptorById(
-    JSContext* cx, JS::HandleObject obj, JS::HandleId id,
     JS::MutableHandle<mozilla::Maybe<JS::PropertyDescriptor>> desc);
 
 extern JS_PUBLIC_API bool JS_GetOwnPropertyDescriptor(
     JSContext* cx, JS::HandleObject obj, const char* name,
-    JS::MutableHandle<JS::PropertyDescriptor> desc);
+    JS::MutableHandle<mozilla::Maybe<JS::PropertyDescriptor>> desc);
 
 extern JS_PUBLIC_API bool JS_GetOwnUCPropertyDescriptor(
     JSContext* cx, JS::HandleObject obj, const char16_t* name, size_t namelen,
-    JS::MutableHandle<JS::PropertyDescriptor> desc);
+    JS::MutableHandle<mozilla::Maybe<JS::PropertyDescriptor>> desc);
 
 /**
  * DEPRECATED

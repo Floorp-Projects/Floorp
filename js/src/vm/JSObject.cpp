@@ -2396,7 +2396,7 @@ bool js::DefineAccessorProperty(JSContext* cx, HandleObject obj, HandleId id,
                                 HandleObject getter, HandleObject setter,
                                 unsigned attrs, ObjectOpResult& result) {
   Rooted<PropertyDescriptor> desc(cx);
-  desc.initFields(nullptr, UndefinedHandleValue, attrs, getter, setter);
+  desc.initFields(UndefinedHandleValue, attrs, getter, setter);
 
   if (DefinePropertyOp op = obj->getOpsDefineProperty()) {
     MOZ_ASSERT(!cx->isHelperThreadContext());
@@ -2409,7 +2409,7 @@ bool js::DefineDataProperty(JSContext* cx, HandleObject obj, HandleId id,
                             HandleValue value, unsigned attrs,
                             ObjectOpResult& result) {
   Rooted<PropertyDescriptor> desc(cx);
-  desc.initFields(nullptr, value, attrs, nullptr, nullptr);
+  desc.initFields(value, attrs, nullptr, nullptr);
   if (DefinePropertyOp op = obj->getOpsDefineProperty()) {
     MOZ_ASSERT(!cx->isHelperThreadContext());
     return op(cx, obj, id, desc, result);
@@ -2502,7 +2502,7 @@ bool js::GetPropertyDescriptor(
     }
 
     if (desc.isSome()) {
-      holder.set(desc->objectDoNotUse());
+      holder.set(pobj);
       return true;
     }
 

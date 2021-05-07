@@ -181,7 +181,6 @@ class ContextChecks {
   void check(AbstractFramePtr frame, int argIndex);
 
   void check(const PropertyDescriptor& desc, int argIndex) {
-    check(desc.objectDoNotUse(), argIndex);
     if (desc.hasGetterObject()) {
       check(desc.getterObject(), argIndex);
     }
