@@ -37,6 +37,12 @@ class nsPrinterWin final : public nsPrinterBase {
 
   const nsString mName;
   mutable mozilla::DataMutex<nsTArray<uint8_t>> mDefaultDevmodeWStorage;
+  // Even though some documentation seems to suggest that you should be able to
+  // use printer drivers on separate threads if you have separate handles, we
+  // see threading issues with multiple drivers. This Mutex is used to lock
+  // around all calls to DeviceCapabilitiesW, DocumentPropertiesW and
+  // CreateICW/DCW, to hopefully prevent these issues.
+  mutable mozilla::Mutex mDriverMutex{"nsPrinterWin::Driver"};
 };
 
 #endif  // nsPrinterWin_h_
