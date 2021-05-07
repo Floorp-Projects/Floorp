@@ -45,7 +45,8 @@ function setupServiceContainer({
     getJsTermTooltipAnchor: () => webConsoleUI.getJsTermTooltipAnchor(),
     emitForTests: (event, value) => webConsoleUI.emitForTests(event, value),
     attachRefToWebConsoleUI: (id, node) => webConsoleUI.attachRef(id, node),
-    requestData: (id, type) => webConsoleWrapper.requestData(id, type),
+    requestData: (id, type) =>
+      webConsoleUI.networkDataProvider.requestData(id, type),
     createElement: nodename => webConsoleWrapper.createElement(nodename),
   };
 
