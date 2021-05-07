@@ -149,8 +149,7 @@ pub struct Script {
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub enum Command {
-    // Needs to be updated to "WebDriver:AcceptAlert" for Firefox 63
-    #[serde(rename = "WebDriver:AcceptDialog")]
+    #[serde(rename = "WebDriver:AcceptAlert")]
     AcceptAlert,
     #[serde(
         rename = "WebDriver:AddCookie",
