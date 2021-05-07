@@ -60,6 +60,9 @@ if (this.Components) {
   let Meta = PromiseWorker.Meta;
 
   self.addEventListener("message", msg => worker.handleMessage(msg));
+  self.addEventListener("unhandledrejection", function(error) {
+    throw error.reason;
+  });
 
   /**
    * A data structure used to track opened resources

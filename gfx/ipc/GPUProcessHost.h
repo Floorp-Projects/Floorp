@@ -46,6 +46,8 @@ class GPUProcessHost final : public mozilla::ipc::GeckoChildProcessHost {
     virtual void OnProcessUnexpectedShutdown(GPUProcessHost* aHost) {}
 
     virtual void OnRemoteProcessDeviceReset(GPUProcessHost* aHost) {}
+
+    virtual void OnProcessDeclaredStable() {}
   };
 
   explicit GPUProcessHost(Listener* listener);

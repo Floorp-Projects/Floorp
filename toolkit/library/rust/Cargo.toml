@@ -7,7 +7,6 @@ description = "Rust code for libxul"
 
 [features]
 quantum_render = ["gkrust-shared/quantum_render"]
-webrender_debugger = ["gkrust-shared/webrender_debugger"]
 cubeb-remoting = ["gkrust-shared/cubeb-remoting"]
 cubeb_pulse_rust = ["gkrust-shared/cubeb_pulse_rust"]
 cubeb_coreaudio_rust = ["gkrust-shared/cubeb_coreaudio_rust"]

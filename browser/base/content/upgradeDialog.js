@@ -10,6 +10,11 @@ const {
   Services,
 } = window.docShell.chromeEventHandler.ownerGlobal;
 
+// Number of height pixels to switch to compact mode to avoid showing scrollbars
+// on the non-compact mode. This is based on the natural height of the full-size
+// "accented" content while also accounting for the dialog container margins.
+const COMPACT_MODE_HEIGHT = 679;
+
 const SHELL = getShellService();
 const IS_DEFAULT = SHELL.isDefaultBrowser();
 const NEED_PIN = SHELL.doesAppNeedPin();
@@ -109,6 +114,7 @@ function onLoad(ready) {
   // Change content for Windows 7 because non-light themes aren't quite right.
   const win7Content = AppConstants.isPlatformAndVersionAtMost("win", "6.1");
 
+  const { body, head } = document;
   const title = document.getElementById("title");
   const subtitle = document.getElementById("subtitle");
   const items = document.querySelector(".items");
@@ -132,13 +138,18 @@ function onLoad(ready) {
         primary.addEventListener("click", advance);
         secondary.addEventListener("click", advance);
 
+        // Check parent window's height to determine if we should be compact.
+        if (gDoc.ownerGlobal.outerHeight < COMPACT_MODE_HEIGHT) {
+          body.classList.add("compact");
+          recordEvent("show", "compact");
+        }
+
         // Windows 7 has a single screen so hide steps.
         if (win7Content) {
           steps.style.visibility = "hidden";
 
           // If already default, reuse "Okay" for primary and hide secondary.
           if (IS_DEFAULT) {
-            const { head } = document;
             head.appendChild(
               head.querySelector("[rel=localization]").cloneNode()
             ).href = "browser/newtab/asrouter.ftl";
@@ -230,7 +241,7 @@ function onLoad(ready) {
 
       // Save first screen height, so later screens can flex and anchor content.
       if (current === 0) {
-        document.body.style.minHeight = getComputedStyle(document.body).height;
+        body.style.minHeight = getComputedStyle(body).height;
 
         // Record which of four primary button was shown for the first screen.
         recordEvent("show", primary.dataset.l10nId);

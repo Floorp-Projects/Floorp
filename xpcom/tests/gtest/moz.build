@@ -38,6 +38,7 @@ UNIFIED_SOURCES += [
     "TestObserverService.cpp",
     "TestPLDHash.cpp",
     "TestPriorityQueue.cpp",
+    "TestQueue.cpp",
     "TestRacingServiceManager.cpp",
     "TestRecursiveMutex.cpp",
     "TestRWLock.cpp",

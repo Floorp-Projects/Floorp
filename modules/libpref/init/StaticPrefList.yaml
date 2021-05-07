@@ -5063,15 +5063,6 @@
   mirror: once
 #endif
 
-#ifdef NIGHTLY_BUILD
-  # Keep this pref hidden on non-nightly builds to avoid people accidentally
-  # turning it on.
--   name: gfx.webrender.start-debug-server
-    type: RelaxedAtomicBool
-    value: false
-    mirror: always
-#endif
-
 #ifdef XP_WIN
   # Enables display of performance debugging counters when DirectComposition
   # is used.
@@ -6176,6 +6167,7 @@
   value: 10000
   mirror: once
 
+# How many unstable GPU process restarts we allow for a given configuration.
 - name: layers.gpu-process.max_restarts
   type: RelaxedAtomicInt32
 #if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
@@ -6187,6 +6179,21 @@
 #else
   value: 1
 #endif
+  mirror: always
+
+# How many frames we must render before declaring the GPU process stable, and
+# allow restarts without it counting against our maximum restarts.
+- name: layers.gpu-process.stable.frame-threshold
+  type: RelaxedAtomicUint32
+  value: 10
+  mirror: always
+
+# How many milliseconds the GPU process must have lived before we accept that
+# it is stable, and allow restarts without it counting against our maximum
+# restarts.
+- name: layers.gpu-process.stable.min-uptime-ms
+  type: RelaxedAtomicInt32
+  value: 4 * 60000
   mirror: always
 
 # Note: This pref will only be used if it is less than layers.gpu-process.max_restarts.

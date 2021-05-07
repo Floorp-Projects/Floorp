@@ -1176,7 +1176,7 @@ class MultiStageProtonScreen extends react__WEBPACK_IMPORTED_MODULE_0___default.
     }))), content.secondary_button ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_MultiStageAboutWelcome__WEBPACK_IMPORTED_MODULE_3__["SecondaryCTA"], {
       content: content,
       handleAction: this.props.handleAction
-    }) : null, !isWelcomeScreen && total > 1 ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("nav", {
+    }) : null, !isWelcomeScreen ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("nav", {
       className: "steps",
       "data-l10n-id": "onboarding-welcome-steps-indicator",
       "data-l10n-args": JSON.stringify({

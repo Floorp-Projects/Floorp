@@ -36,11 +36,6 @@ use crate::util::drain_filter;
 use std::thread;
 use std::time::Duration;
 
-#[cfg(feature = "debugger")]
-use crate::debug_server;
-#[cfg(feature = "debugger")]
-use api::{BuiltDisplayListIter, DisplayItem};
-
 fn rasterize_blobs(txn: &mut TransactionMsg, is_low_priority: bool) {
     profile_scope!("rasterize_blobs");
 
@@ -110,7 +105,6 @@ pub enum SceneBuilderRequest {
     StartCaptureSequence(CaptureConfig),
     #[cfg(feature = "capture")]
     StopCaptureSequence,
-    DocumentsForDebugger
 }
 
 // Message from scene builder to render backend.
@@ -124,7 +118,6 @@ pub enum SceneBuilderResult {
     GetGlyphIndices(GlyphIndexRequest),
     StopRenderBackend,
     ShutDown(Option<Sender<()>>),
-    DocumentsForDebugger(String),
 
     #[cfg(feature = "capture")]
     /// The same as `Transactions`, but also supplies a `CaptureConfig` that the
@@ -384,10 +377,6 @@ impl SceneBuilderThread {
                     self.capture_config = None;
                     self.send(SceneBuilderResult::StopCaptureSequence);
                 }
-                Ok(SceneBuilderRequest::DocumentsForDebugger) => {
-                    let json = self.get_docs_for_debugger();
-                    self.send(SceneBuilderResult::DocumentsForDebugger(json));
-                }
                 Err(_) => {
                     break;
                 }
@@ -500,70 +489,6 @@ impl SceneBuilderThread {
     ) {
         self.capture_config = Some(config);
         self.save_capture_sequence();
-    }
-
-    #[cfg(feature = "debugger")]
-    fn traverse_items<'a>(
-        &self,
-        traversal: &mut BuiltDisplayListIter<'a>,
-        node: &mut debug_server::TreeNode,
-    ) {
-        loop {
-            let subtraversal = {
-                let item = match traversal.next() {
-                    Some(item) => item,
-                    None => break,
-                };
-
-                match *item.item() {
-                    display_item @ DisplayItem::PushStackingContext(..) => {
-                        let mut subtraversal = item.sub_iter();
-                        let mut child_node =
-                            debug_server::TreeNode::new(&display_item.debug_name().to_string());
-                        self.traverse_items(&mut subtraversal, &mut child_node);
-                        node.add_child(child_node);
-                        Some(subtraversal)
-                    }
-                    DisplayItem::PopStackingContext => {
-                        return;
-                    }
-                    display_item => {
-                        node.add_item(&display_item.debug_name().to_string());
-                        None
-                    }
-                }
-            };
-
-            // If flatten_item created a sub-traversal, we need `traversal` to have the
-            // same state as the completed subtraversal, so we reinitialize it here.
-            if let Some(subtraversal) = subtraversal {
-                *traversal = subtraversal;
-            }
-        }
-    }
-
-    #[cfg(not(feature = "debugger"))]
-    fn get_docs_for_debugger(&self) -> String {
-        String::new()
-    }
-
-    #[cfg(feature = "debugger")]
-    fn get_docs_for_debugger(&self) -> String {
-        let mut docs = debug_server::DocumentList::new();
-
-        for (_, doc) in &self.documents {
-            let mut debug_doc = debug_server::TreeNode::new("document");
-
-            for (_, pipeline) in &doc.scene.pipelines {
-                let mut debug_dl = debug_server::TreeNode::new("display-list");
-                self.traverse_items(&mut pipeline.display_list.iter(), &mut debug_dl);
-                debug_doc.add_child(debug_dl);
-            }
-
-            docs.add(debug_doc);
-        }
-
-        serde_json::to_string(&docs).unwrap()
     }
 
     /// Do the bulk of the work of the scene builder thread.

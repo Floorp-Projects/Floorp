@@ -32,6 +32,9 @@ worker.close = function() {
 };
 
 self.addEventListener("message", msg => worker.handleMessage(msg));
+self.addEventListener("unhandledrejection", function(error) {
+  throw error.reason;
+});
 
 var Agent = {
   // Checks if the specified file exists and has an age less than as
