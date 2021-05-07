@@ -152,13 +152,6 @@ class ResourceCommand {
       );
     }
 
-    // First ensuring enabling listening to targets.
-    // This will call onTargetAvailable for all already existing targets,
-    // as well as for the one created later.
-    // Do this *before* calling _startListening in order to register
-    // "resource-available" listener before requesting for the resources in _startListening.
-    await this._watchAllTargets();
-
     const promises = [];
     for (const resource of resources) {
       // If we are registering the first listener, so start listening from the server about
@@ -748,32 +741,41 @@ class ResourceCommand {
 
     this._processingExistingResources.add(resourceType);
 
+    const shouldRunLegacyListeners =
+      !this.hasResourceCommandSupport(resourceType) ||
+      this._shouldRunLegacyListenerEvenWithWatcherSupport(resourceType);
+    if (shouldRunLegacyListeners) {
+      // If this is the very first listener registered, of all kind of resource types:
+      // 1) TargetCommand may not be initialized yet, so that targetCommand.getAllTargets will return an empty array
+      // 2) The following call to watchAllTargets will process all existing targets when it will call onTargetAvailable
+      //
+      // So this code is meant for all but the very first registered listener of all kinds.
+      // TargetCommand will already be watching for targets and the following call to watchAllTargets will be a no-op.
+      // So that we have to manually process all existing targets here.
+      const promises = [];
+      const targets = this.targetCommand.getAllTargets(
+        this.targetCommand.ALL_TYPES
+      );
+      for (const target of targets) {
+        promises.push(this._watchResourcesForTarget(target, resourceType));
+      }
+      await Promise.all(promises);
+    }
+
+    // Ensuring enabling listening to targets.
+    // This will be a no-op expect for the very first call to `_startListening`,
+    // where it is going to call `onTargetAvailable` for all already existing targets,
+    // as well as for those who will be created later.
+    //
+    // Do this *before* calling WatcherActor.watchResources in order to register "resource-available"
+    // listeners on targets before these events start being emitted.
+    await this._watchAllTargets();
+
     // If the server supports the Watcher API and the Watcher supports
     // this resource type, use this API
     if (this.hasResourceCommandSupport(resourceType)) {
       await this.watcherFront.watchResources([resourceType]);
-
-      const shouldRunLegacyListeners = this._shouldRunLegacyListenerEvenWithWatcherSupport(
-        resourceType
-      );
-      if (!shouldRunLegacyListeners) {
-        this._processingExistingResources.delete(resourceType);
-        return;
-      }
     }
-    // Otherwise, fallback on backward compat mode and use LegacyListeners.
-
-    // If this is the first listener for this type of resource,
-    // we should go through all the existing targets as onTargetAvailable
-    // has already been called for these existing targets.
-    const promises = [];
-    const targets = this.targetCommand.getAllTargets(
-      this.targetCommand.ALL_TYPES
-    );
-    for (const target of targets) {
-      promises.push(this._watchResourcesForTarget(target, resourceType));
-    }
-    await Promise.all(promises);
     this._processingExistingResources.delete(resourceType);
   }
 
