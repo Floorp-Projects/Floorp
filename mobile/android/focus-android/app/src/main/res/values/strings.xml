@@ -20,7 +20,7 @@
 
     <string name="teaser">Automatic private browsing.\nBrowse. Erase. Repeat.</string>
 
-    <!-- "Snackbar" shown after the user has pressed the 'erase' button at the end of ra browsing session -->
+    <!-- "Snackbar" shown after the user has pressed the 'erase' button at the end of a browsing session -->
     <string name="feedback_erase">Your browsing history has been erased.</string>
 
     <!-- "Snackbar" shown after the user has pressed the 'erase' button at the end of a custom tab browsing session -->
