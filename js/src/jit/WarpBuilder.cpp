@@ -2433,9 +2433,7 @@ bool WarpBuilder::build_CallSiteObj(BytecodeLocation loc) {
 }
 
 bool WarpBuilder::build_NewArray(BytecodeLocation loc) {
-  // Bug 1709288: This input to NewArray is unused.
-  MDefinition* dummy = constant(UndefinedValue());
-  return buildIC(loc, CacheKind::NewArray, {dummy});
+  return buildIC(loc, CacheKind::NewArray, {});
 }
 
 bool WarpBuilder::build_NewObject(BytecodeLocation loc) {
@@ -3230,7 +3228,6 @@ bool WarpBuilder::buildIC(BytecodeLocation loc, CacheKind kind,
       return resumeAfter(ins, loc);
     }
     case CacheKind::NewArray: {
-      MOZ_ASSERT(numInputs == 1);
       uint32_t length = loc.getNewArrayLength();
       MConstant* templateConst = constant(NullValue());
       MNewArray* ins =
