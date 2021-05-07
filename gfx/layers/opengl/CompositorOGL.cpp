@@ -1005,8 +1005,8 @@ Maybe<IntRect> CompositorOGL::BeginFrame(const nsIntRegion& aInvalidRegion,
 
     mWidgetSize = LayoutDeviceIntSize::FromUnknownSize(rect.Size());
 #ifdef MOZ_WAYLAND
-    if (mWidget && mWidget->AsX11()) {
-      mWidget->AsX11()->SetEGLNativeWindowSize(mWidgetSize);
+    if (mWidget && mWidget->AsGTK()) {
+      mWidget->AsGTK()->SetEGLNativeWindowSize(mWidgetSize);
     }
 #endif
   } else {
