@@ -5694,7 +5694,6 @@ dependencies = [
  "bitflags",
  "build-parallel",
  "byteorder",
- "cfg-if 0.1.10",
  "core-foundation",
  "core-graphics",
  "core-text",

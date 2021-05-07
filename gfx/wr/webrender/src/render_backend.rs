@@ -25,14 +25,14 @@ use crate::filterdata::FilterDataIntern;
 #[cfg(any(feature = "capture", feature = "replay"))]
 use crate::capture::CaptureConfig;
 use crate::composite::{CompositorKind, CompositeDescriptor};
-#[cfg(feature = "debugger")]
-use crate::debug_server;
 use crate::frame_builder::{FrameBuilder, FrameBuilderConfig, FrameScratchBuffer};
 use crate::glyph_rasterizer::{FontInstance};
 use crate::gpu_cache::GpuCache;
 use crate::hit_test::{HitTest, HitTester, SharedHitTester};
 use crate::intern::DataStore;
-use crate::internal_types::{DebugOutput, FastHashMap, RenderedDocument, ResultMsg};
+#[cfg(any(feature = "capture", feature = "replay"))]
+use crate::internal_types::DebugOutput;
+use crate::internal_types::{FastHashMap, RenderedDocument, ResultMsg};
 use malloc_size_of::{MallocSizeOf, MallocSizeOfOps};
 use crate::picture::{TileCacheLogger, PictureScratchBuffer, SliceId, TileCacheInstance, TileCacheParams};
 use crate::prim_store::{PrimitiveScratchBuffer, PrimitiveInstance};
@@ -52,8 +52,6 @@ use crate::scene::{BuiltScene, SceneProperties};
 use crate::scene_builder_thread::*;
 #[cfg(feature = "serialize")]
 use serde::{Serialize, Deserialize};
-#[cfg(feature = "debugger")]
-use serde_json;
 #[cfg(feature = "replay")]
 use std::collections::hash_map::Entry::{Occupied, Vacant};
 use std::sync::Arc;
@@ -1135,16 +1133,6 @@ impl RenderBackend {
 
                         return RenderBackendStatus::Continue;
                     }
-                    DebugCommand::FetchDocuments => {
-                        // Ask SceneBuilderThread to send JSON presentation of the documents,
-                        // that will be forwarded to Renderer.
-                        self.send_backend_message(SceneBuilderRequest::DocumentsForDebugger);
-                        return RenderBackendStatus::Continue;
-                    }
-                    DebugCommand::FetchClipScrollTree => {
-                        let json = self.get_spatial_tree_for_debugger();
-                        ResultMsg::DebugOutput(DebugOutput::FetchClipScrollTree(json))
-                    }
                     #[cfg(feature = "capture")]
                     DebugCommand::SaveCapture(root, bits) => {
                         let output = self.save_capture(root, bits);
@@ -1357,11 +1345,6 @@ impl RenderBackend {
             SceneBuilderResult::ShutDown(sender) => {
                 info!("Recycling stats: {:?}", self.recycler);
                 return RenderBackendStatus::ShutDown(sender);
-            }
-            SceneBuilderResult::DocumentsForDebugger(json) => {
-                let msg = ResultMsg::DebugOutput(DebugOutput::FetchDocuments(json));
-                self.result_tx.send(msg).unwrap();
-                self.notifier.wake_up(false);
             }
         }
 
@@ -1663,29 +1646,6 @@ impl RenderBackend {
 
     fn send_backend_message(&self, msg: SceneBuilderRequest) {
         self.scene_tx.send(msg).unwrap();
-    }
-
-    #[cfg(not(feature = "debugger"))]
-    fn get_spatial_tree_for_debugger(&self) -> String {
-        String::new()
-    }
-
-    #[cfg(feature = "debugger")]
-    fn get_spatial_tree_for_debugger(&self) -> String {
-        use crate::print_tree::PrintableTree;
-
-        let mut debug_root = debug_server::SpatialTreeList::new();
-
-        for (_, doc) in &self.documents {
-            let debug_node = debug_server::TreeNode::new("document spatial tree");
-            let mut builder = debug_server::TreeNodeBuilder::new(debug_node);
-
-            doc.scene.spatial_tree.print_with(&mut builder);
-
-            debug_root.add(builder.build());
-        }
-
-        serde_json::to_string(&debug_root).unwrap()
     }
 
     fn report_memory(&mut self, tx: Sender<Box<MemoryReport>>) {

@@ -508,8 +508,6 @@ pub struct RenderedDocument {
 }
 
 pub enum DebugOutput {
-    FetchDocuments(String),
-    FetchClipScrollTree(String),
     #[cfg(feature = "capture")]
     SaveCapture(CaptureConfig, Vec<ExternalCaptureImage>),
     #[cfg(feature = "replay")]

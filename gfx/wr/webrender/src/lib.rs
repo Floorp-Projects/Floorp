@@ -57,8 +57,6 @@ macro_rules! matches {
 #[macro_use]
 extern crate bitflags;
 #[macro_use]
-extern crate cfg_if;
-#[macro_use]
 extern crate cstr;
 #[macro_use]
 extern crate lazy_static;
@@ -92,8 +90,6 @@ mod compositor;
 mod debug_colors;
 mod debug_font_data;
 mod debug_item;
-#[cfg(feature = "debugger")]
-mod debug_server;
 mod device;
 mod ellipse;
 mod filterdata;
@@ -192,17 +188,9 @@ extern crate plane_split;
 extern crate rayon;
 #[cfg(feature = "ron")]
 extern crate ron;
-#[cfg(feature = "debugger")]
-extern crate serde_json;
 #[macro_use]
 extern crate smallvec;
 extern crate time;
-#[cfg(feature = "debugger")]
-extern crate ws;
-#[cfg(feature = "debugger")]
-extern crate image_loader;
-#[cfg(feature = "debugger")]
-extern crate base64;
 #[cfg(all(feature = "capture", feature = "png"))]
 extern crate png;
 #[cfg(test)]

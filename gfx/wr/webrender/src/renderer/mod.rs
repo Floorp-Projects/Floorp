@@ -46,11 +46,11 @@ use api::{RenderNotifier, ImageBufferKind, SharedFontInstanceMap};
 #[cfg(feature = "replay")]
 use api::ExternalImage;
 use api::units::*;
-use api::channel::{unbounded_channel, Sender, Receiver};
+use api::channel::{unbounded_channel, Receiver};
 pub use api::DebugFlags;
 use core::time::Duration;
 
-use crate::render_api::{RenderApiSender, DebugCommand, ApiMsg, FrameMsg, MemoryReport};
+use crate::render_api::{RenderApiSender, DebugCommand, FrameMsg, MemoryReport};
 use crate::batch::{AlphaBatchContainer, BatchKind, BatchFeatures, BatchTextures, BrushBatchKind, ClipBatchList};
 #[cfg(any(feature = "capture", feature = "replay"))]
 use crate::capture::{CaptureConfig, ExternalCaptureImage, PlainExternalImage};
@@ -75,7 +75,9 @@ use crate::gpu_cache::{GpuCacheDebugChunk, GpuCacheDebugCmd};
 use crate::gpu_types::{PrimitiveInstanceData, ScalingInstance, SvgFilterInstance};
 use crate::gpu_types::{BlurInstance, ClearInstance, CompositeInstance, ZBufferId};
 use crate::internal_types::{TextureSource, ResourceCacheError};
-use crate::internal_types::{CacheTextureId, DebugOutput, FastHashMap, FastHashSet, RenderedDocument, ResultMsg};
+#[cfg(any(feature = "capture", feature = "replay"))]
+use crate::internal_types::DebugOutput;
+use crate::internal_types::{CacheTextureId, FastHashMap, FastHashSet, RenderedDocument, ResultMsg};
 use crate::internal_types::{TextureCacheAllocInfo, TextureCacheAllocationKind, TextureUpdateList};
 use crate::internal_types::{RenderTargetInfo, Swizzle, DeferredResolveIndex};
 use crate::picture::{self, ResolvedSurfaceTexture};
@@ -120,13 +122,6 @@ use std::{
 use std::collections::hash_map::Entry;
 use tracy_rs::register_thread_with_profiler;
 use time::precise_time_ns;
-
-cfg_if! {
-    if #[cfg(feature = "debugger")] {
-        use serde_json;
-        use crate::debug_server;
-    }
-}
 
 mod debug;
 mod gpu_cache;
@@ -280,25 +275,6 @@ const GPU_TAG_CLEAR: GpuProfileTag = GpuProfileTag {
 pub const TEXTURE_CACHE_DBG_CLEAR_COLOR: [f32; 4] = [0.0, 0.0, 0.8, 1.0];
 
 impl BatchKind {
-    #[cfg(feature = "debugger")]
-    fn debug_name(&self) -> &'static str {
-        match *self {
-            BatchKind::SplitComposite => "SplitComposite",
-            BatchKind::Brush(kind) => {
-                match kind {
-                    BrushBatchKind::Solid => "Brush (Solid)",
-                    BrushBatchKind::Image(..) => "Brush (Image)",
-                    BrushBatchKind::Blend => "Brush (Blend)",
-                    BrushBatchKind::MixBlend { .. } => "Brush (Composite)",
-                    BrushBatchKind::YuvImage(..) => "Brush (YuvImage)",
-                    BrushBatchKind::LinearGradient => "Brush (LinearGradient)",
-                    BrushBatchKind::Opacity => "Brush (Opacity)",
-                }
-            }
-            BatchKind::TextRun(_) => "TextRun",
-        }
-    }
-
     fn sampler_tag(&self) -> GpuProfileTag {
         match *self {
             BatchKind::SplitComposite => GPU_TAG_PRIM_SPLIT_COMPOSITE,
@@ -747,7 +723,6 @@ impl BufferDamageTracker {
 /// one per OS window), and all instances share the same thread.
 pub struct Renderer {
     result_rx: Receiver<ResultMsg>,
-    debug_server: Box<dyn DebugServer>,
     pub device: Device,
     pending_texture_updates: Vec<TextureUpdateList>,
     /// True if there are any TextureCacheUpdate pending.
@@ -941,8 +916,6 @@ impl Renderer {
         let (api_tx, api_rx) = unbounded_channel();
         let (result_tx, result_rx) = unbounded_channel();
         let gl_type = gl.get_type();
-
-        let debug_server = new_debug_server(options.start_debug_server, api_tx.clone());
 
         let mut device = Device::new(
             gl,
@@ -1312,7 +1285,6 @@ impl Renderer {
 
         let mut renderer = Renderer {
             result_rx,
-            debug_server,
             device,
             active_documents: FastHashMap::default(),
             pending_texture_updates: Vec::new(),
@@ -1595,10 +1567,6 @@ impl Renderer {
                     self.pending_shader_updates.push(path);
                 }
                 ResultMsg::DebugOutput(output) => match output {
-                    DebugOutput::FetchDocuments(string) |
-                    DebugOutput::FetchClipScrollTree(string) => {
-                        self.debug_server.send(string);
-                    }
                     #[cfg(feature = "capture")]
                     DebugOutput::SaveCapture(config, deferred) => {
                         self.save_capture(config, deferred);
@@ -1616,221 +1584,11 @@ impl Renderer {
         }
     }
 
-    #[cfg(not(feature = "debugger"))]
-    fn get_screenshot_for_debugger(&mut self) -> String {
-        // Avoid unused param warning.
-        let _ = &self.debug_server;
-        String::new()
-    }
-
-    #[cfg(feature = "debugger")]
-    fn get_screenshot_for_debugger(&mut self) -> String {
-        use api::{ImageDescriptor, ImageDescriptorFlags};
-
-        let desc = ImageDescriptor::new(1024, 768, ImageFormat::BGRA8, ImageDescriptorFlags::IS_OPAQUE);
-        let data = self.device.read_pixels(&desc);
-        let screenshot = debug_server::Screenshot::new(desc.size, data);
-
-        serde_json::to_string(&screenshot).unwrap()
-    }
-
-    #[cfg(not(feature = "debugger"))]
-    fn get_passes_for_debugger(&self) -> String {
-        // Avoid unused param warning.
-        let _ = &self.debug_server;
-        String::new()
-    }
-
-    #[cfg(feature = "debugger")]
-    fn debug_alpha_target(target: &AlphaRenderTarget) -> debug_server::Target {
-        let mut debug_target = debug_server::Target::new("A8");
-
-        debug_target.add(
-            debug_server::BatchKind::Cache,
-            "Scalings",
-            target.scalings.len(),
-        );
-        debug_target.add(
-            debug_server::BatchKind::Cache,
-            "Zero Clears",
-            target.zero_clears.len(),
-        );
-        debug_target.add(
-            debug_server::BatchKind::Cache,
-            "One Clears",
-            target.one_clears.len(),
-        );
-        debug_target.add(
-            debug_server::BatchKind::Clip,
-            "BoxShadows [p]",
-            target.clip_batcher.primary_clips.box_shadows.len(),
-        );
-        debug_target.add(
-            debug_server::BatchKind::Clip,
-            "BoxShadows [s]",
-            target.clip_batcher.secondary_clips.box_shadows.len(),
-        );
-        debug_target.add(
-            debug_server::BatchKind::Cache,
-            "Vertical Blur",
-            target.vertical_blurs.len(),
-        );
-        debug_target.add(
-            debug_server::BatchKind::Cache,
-            "Horizontal Blur",
-            target.horizontal_blurs.len(),
-        );
-        debug_target.add(
-            debug_server::BatchKind::Clip,
-            "Slow Rectangles [p]",
-            target.clip_batcher.primary_clips.slow_rectangles.len(),
-        );
-        debug_target.add(
-            debug_server::BatchKind::Clip,
-            "Fast Rectangles [p]",
-            target.clip_batcher.primary_clips.fast_rectangles.len(),
-        );
-        debug_target.add(
-            debug_server::BatchKind::Clip,
-            "Slow Rectangles [s]",
-            target.clip_batcher.secondary_clips.slow_rectangles.len(),
-        );
-        debug_target.add(
-            debug_server::BatchKind::Clip,
-            "Fast Rectangles [s]",
-            target.clip_batcher.secondary_clips.fast_rectangles.len(),
-        );
-        for (_, items) in target.clip_batcher.primary_clips.images.iter() {
-            debug_target.add(debug_server::BatchKind::Clip, "Image mask [p]", items.len());
-        }
-        for (_, items) in target.clip_batcher.secondary_clips.images.iter() {
-            debug_target.add(debug_server::BatchKind::Clip, "Image mask [s]", items.len());
-        }
-
-        debug_target
-    }
-
-    #[cfg(feature = "debugger")]
-    fn debug_color_target(target: &ColorRenderTarget) -> debug_server::Target {
-        let mut debug_target = debug_server::Target::new("RGBA8");
-
-        debug_target.add(
-            debug_server::BatchKind::Cache,
-            "Scalings",
-            target.scalings.len(),
-        );
-        debug_target.add(
-            debug_server::BatchKind::Cache,
-            "Vertical Blur",
-            target.vertical_blurs.len(),
-        );
-        debug_target.add(
-            debug_server::BatchKind::Cache,
-            "Horizontal Blur",
-            target.horizontal_blurs.len(),
-        );
-        debug_target.add(
-            debug_server::BatchKind::Cache,
-            "SVG Filters",
-            target.svg_filters.iter().map(|(_, batch)| batch.len()).sum(),
-        );
-
-        for alpha_batch_container in &target.alpha_batch_containers {
-            for batch in alpha_batch_container.opaque_batches.iter().rev() {
-                debug_target.add(
-                    debug_server::BatchKind::Opaque,
-                    batch.key.kind.debug_name(),
-                    batch.instances.len(),
-                );
-            }
-
-            for batch in &alpha_batch_container.alpha_batches {
-                debug_target.add(
-                    debug_server::BatchKind::Alpha,
-                    batch.key.kind.debug_name(),
-                    batch.instances.len(),
-                );
-            }
-        }
-
-        debug_target
-    }
-
-    #[cfg(feature = "debugger")]
-    fn debug_texture_cache_target(target: &TextureCacheRenderTarget) -> debug_server::Target {
-        let mut debug_target = debug_server::Target::new("Texture Cache");
-
-        debug_target.add(
-            debug_server::BatchKind::Cache,
-            "Horizontal Blur",
-            target.horizontal_blurs.len(),
-        );
-
-        debug_target
-    }
-
-    #[cfg(feature = "debugger")]
-    fn get_passes_for_debugger(&self) -> String {
-        let mut debug_passes = debug_server::PassList::new();
-
-        for (_, render_doc) in &self.active_documents {
-            for pass in &render_doc.frame.passes {
-                let mut debug_targets = Vec::new();
-                debug_targets.extend(pass.alpha.targets.iter().map(Self::debug_alpha_target));
-                debug_targets.extend(pass.color.targets.iter().map(Self::debug_color_target));
-                debug_targets.extend(pass.texture_cache.iter().map(|(_, target)| Self::debug_texture_cache_target(target)));
-
-                debug_passes.add(debug_server::Pass { targets: debug_targets });
-            }
-        }
-
-        serde_json::to_string(&debug_passes).unwrap()
-    }
-
-    #[cfg(not(feature = "debugger"))]
-    fn get_render_tasks_for_debugger(&self) -> String {
-        String::new()
-    }
-
-    #[cfg(feature = "debugger")]
-    fn get_render_tasks_for_debugger(&self) -> String {
-        let mut debug_root = debug_server::RenderTaskList::new();
-
-        for (_, render_doc) in &self.active_documents {
-            let debug_node = debug_server::TreeNode::new("document render tasks");
-            let mut builder = debug_server::TreeNodeBuilder::new(debug_node);
-
-            let render_tasks = &render_doc.frame.render_tasks;
-            match render_tasks.tasks.first() {
-                Some(main_task) => main_task.print_with(&mut builder, render_tasks),
-                None => continue,
-            };
-
-            debug_root.add(builder.build());
-        }
-
-        serde_json::to_string(&debug_root).unwrap()
-    }
-
     fn handle_debug_command(&mut self, command: DebugCommand) {
         match command {
             DebugCommand::EnableDualSourceBlending(_) |
             DebugCommand::SetPictureTileSize(_) => {
                 panic!("Should be handled by render backend");
-            }
-            DebugCommand::FetchDocuments |
-            DebugCommand::FetchClipScrollTree => {}
-            DebugCommand::FetchRenderTasks => {
-                let json = self.get_render_tasks_for_debugger();
-                self.debug_server.send(json);
-            }
-            DebugCommand::FetchPasses => {
-                let json = self.get_passes_for_debugger();
-                self.debug_server.send(json);
-            }
-            DebugCommand::FetchScreenshot => {
-                let json = self.get_screenshot_for_debugger();
-                self.debug_server.send(json);
             }
             DebugCommand::SaveCapture(..) |
             DebugCommand::LoadCapture(..) |
@@ -5595,8 +5353,6 @@ pub struct RendererOptions {
     /// This helps to work around some Intel drivers
     /// that incorrectly synchronize clears to following draws.
     pub clear_caches_with_quads: bool,
-    /// Start the debug server for this renderer.
-    pub start_debug_server: bool,
     /// Output the source of the shader with the given name.
     pub dump_shader_source: Option<String>,
     pub surface_origin_is_top_left: bool,
@@ -5668,11 +5424,6 @@ impl Default for RendererOptions {
             allow_texture_storage_support: true,
             allow_texture_swizzling: true,
             clear_caches_with_quads: true,
-            // For backwards compatibility we set this to true by default, so
-            // that if the debugger feature is enabled, the debug server will
-            // be started automatically. Users can explicitly disable this as
-            // needed.
-            start_debug_server: true,
             dump_shader_source: None,
             surface_origin_is_top_left: false,
             compositor_config: CompositorConfig::default(),
@@ -5685,36 +5436,6 @@ impl Default for RendererOptions {
             enable_instancing: true,
         }
     }
-}
-
-pub trait DebugServer {
-    fn send(&mut self, _message: String);
-}
-
-struct NoopDebugServer;
-
-impl NoopDebugServer {
-    fn new(_: Sender<ApiMsg>) -> Self {
-        NoopDebugServer
-    }
-}
-
-impl DebugServer for NoopDebugServer {
-    fn send(&mut self, _: String) {}
-}
-
-#[cfg(feature = "debugger")]
-fn new_debug_server(enable: bool, api_tx: Sender<ApiMsg>) -> Box<dyn DebugServer> {
-    if enable {
-        Box::new(debug_server::DebugServerImpl::new(api_tx))
-    } else {
-        Box::new(NoopDebugServer::new(api_tx))
-    }
-}
-
-#[cfg(not(feature = "debugger"))]
-fn new_debug_server(_enable: bool, api_tx: Sender<ApiMsg>) -> Box<dyn DebugServer> {
-    Box::new(NoopDebugServer::new(api_tx))
 }
 
 /// The cumulative times spent in each painting phase to generate this frame.
