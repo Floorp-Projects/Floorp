@@ -210,9 +210,8 @@ inline uint32_t GetArrayIndexFromId(JS::Handle<jsid> id) {
 inline bool IsArrayIndex(uint32_t index) { return index < UINT32_MAX; }
 
 inline void FillPropertyDescriptor(
-    JS::MutableHandle<JS::PropertyDescriptor> desc, JSObject* obj,
-    bool readonly, bool enumerable = true) {
-  desc.object().set(obj);
+    JS::MutableHandle<JS::PropertyDescriptor> desc, JSObject*, bool readonly,
+    bool enumerable = true) {
   desc.setAttributes((readonly ? JSPROP_READONLY : 0) |
                      (enumerable ? JSPROP_ENUMERATE : 0));
   desc.setGetter(nullptr);
@@ -235,9 +234,8 @@ inline void FillPropertyDescriptor(
 }
 
 inline void FillPropertyDescriptor(
-    JS::MutableHandle<JS::PropertyDescriptor> desc, JSObject* obj,
+    JS::MutableHandle<JS::PropertyDescriptor> desc, JSObject*,
     unsigned attributes, const JS::Value& v) {
-  desc.object().set(obj);
   desc.value().set(v);
   desc.setAttributes(attributes);
   desc.setGetter(nullptr);

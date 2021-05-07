@@ -86,7 +86,6 @@ bool WrapResult(JSContext* aCx, JS::Handle<JSObject*> aProxy,
 
   JS::Rooted<JS::PropertyDescriptor> desc(aCx);
   desc.setDataDescriptor(v, attrs);
-  desc.object().set(aProxy);
   aDesc.set(Some(desc.get()));
   return true;
 }
