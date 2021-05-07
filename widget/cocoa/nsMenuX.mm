@@ -1157,6 +1157,10 @@ void nsMenuX::Dump(uint32_t aIndent) const {
   geckoMenu->MenuClosed();
 }
 
+// This is called after menuDidClose:.
+- (void)menu:(NSMenu*)aMenu willActivateItem:(NSMenuItem*)aItem {
+}
+
 @end
 
 // OS X Leopard (at least as of 10.5.2) has an obscure bug triggered by some
