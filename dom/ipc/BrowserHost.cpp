@@ -10,6 +10,7 @@
 #include "mozilla/dom/CancelContentJSOptionsBinding.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/WindowGlobalParent.h"
+#include "mozilla/ProcessPriorityManager.h"
 
 #include "nsIObserverService.h"
 
@@ -116,6 +117,8 @@ BrowserHost::SetRenderLayers(bool aRenderLayers) {
   if (!mRoot) {
     return NS_OK;
   }
+  ProcessPriorityManager::ActivityChanged(GetBrowsingContext()->Canonical(),
+                                          aRenderLayers);
   mRoot->SetRenderLayers(aRenderLayers);
   return NS_OK;
 }
@@ -149,8 +152,8 @@ BrowserHost::Deprioritize(void) {
   if (!mRoot) {
     return NS_OK;
   }
-  VisitAll(
-      [](BrowserParent* aBrowserParent) { aBrowserParent->Deprioritize(); });
+  ProcessPriorityManager::ActivityChanged(GetBrowsingContext()->Canonical(),
+                                          /* aIsActive = */ false);
   return NS_OK;
 }
 

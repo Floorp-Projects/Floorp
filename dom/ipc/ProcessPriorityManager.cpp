@@ -6,6 +6,7 @@
 
 #include "ProcessPriorityManager.h"
 #include "mozilla/ClearOnShutdown.h"
+#include "mozilla/dom/CanonicalBrowsingContext.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/BrowserHost.h"
@@ -142,6 +143,7 @@ class ProcessPriorityManagerImpl final : public nsIObserver,
       ParticularProcessPriorityManager* aParticularManager,
       hal::ProcessPriority aOldPriority);
 
+  void ActivityChanged(CanonicalBrowsingContext* aBC, bool aIsActive);
   void ActivityChanged(BrowserParent* aBrowserParent, bool aIsActive);
 
   void ResetPriority(ContentParent* aContentParent);
@@ -442,6 +444,31 @@ void ProcessPriorityManagerImpl::NotifyProcessPriorityChanged(
              aOldPriority >= PROCESS_PRIORITY_FOREGROUND_HIGH) {
     mHighPriorityChildIDs.Remove(aParticularManager->ChildID());
   }
+}
+
+void ProcessPriorityManagerImpl::ActivityChanged(
+    dom::CanonicalBrowsingContext* aBC, bool aIsActive) {
+  MOZ_ASSERT(aBC->IsTop());
+
+  bool alreadyActive = aBC->IsPriorityActive();
+  if (alreadyActive == aIsActive) {
+    return;
+  }
+
+  Telemetry::ScalarAdd(
+      Telemetry::ScalarID::DOM_CONTENTPROCESS_OS_PRIORITY_CHANGE_CONSIDERED, 1);
+
+  aBC->SetPriorityActive(aIsActive);
+
+  aBC->PreOrderWalk([&](BrowsingContext* aContext) {
+    CanonicalBrowsingContext* canonical = aContext->Canonical();
+    if (ContentParent* cp = canonical->GetContentParent()) {
+      if (RefPtr<ParticularProcessPriorityManager> pppm =
+              GetParticularProcessPriorityManager(cp)) {
+        pppm->ActivityChanged(canonical->GetBrowserParent(), aIsActive);
+      }
+    }
+  });
 }
 
 void ProcessPriorityManagerImpl::ActivityChanged(BrowserParent* aBrowserParent,
@@ -855,6 +882,14 @@ void ProcessPriorityManager::SetProcessPriority(ContentParent* aContentParent,
 /* static */
 bool ProcessPriorityManager::CurrentProcessIsForeground() {
   return ProcessPriorityManagerChild::Singleton()->CurrentProcessIsForeground();
+}
+
+/* static */
+void ProcessPriorityManager::ActivityChanged(CanonicalBrowsingContext* aBC,
+                                             bool aIsActive) {
+  if (auto* singleton = ProcessPriorityManagerImpl::GetSingleton()) {
+    singleton->ActivityChanged(aBC, aIsActive);
+  }
 }
 
 /* static */
