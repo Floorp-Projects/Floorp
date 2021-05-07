@@ -40,7 +40,7 @@
     <title>Description</title>
 
     <para><command>pp </command>pretty-prints private and public key, certificate, certificate-request,
-                     pkcs7 or crl files
+                     pkcs7, pkcs12 or crl files
     </para>
 
   </refsection>
@@ -53,7 +53,7 @@
       <varlistentry>
         <term><option>-t </option> <replaceable>type</replaceable></term>
         <listitem>
-          <simpara>specify the input, one of {private-key | public-key | certificate | certificate-request | pkcs7 | crl}</simpara>
+          <simpara>specify the input, one of {private-key | public-key | certificate | certificate-request | pkcs7 | pkcs12 | crl | name}</simpara>
           <simpara></simpara>
         </listitem>
       </varlistentry>

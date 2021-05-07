@@ -21,7 +21,7 @@
  * - Some of the buffering (construction/compression/decompression) could likely
  *   be optimized, but the spec is still evolving so that work is deferred.
  */
-#define TLS13_ECH_VERSION 0xfe09
+#define TLS13_ECH_VERSION 0xfe0a
 #define TLS13_ECH_SIGNAL_LEN 8
 
 static const char kHpkeInfoEch[] = "tls ech";
@@ -29,21 +29,21 @@ static const char hHkdfInfoEchConfigID[] = "tls ech config id";
 static const char kHkdfInfoEchConfirm[] = "ech accept confirmation";
 
 struct sslEchConfigContentsStr {
-    char *publicName;
-    SECItem publicKey; /* NULL on server. Use the keypair in sslEchConfig instead. */
+    PRUint8 configId;
     HpkeKemId kemId;
+    SECItem publicKey; /* NULL on server. Use the keypair in sslEchConfig instead. */
     HpkeKdfId kdfId;
     HpkeAeadId aeadId;
     SECItem suites; /* One or more HpkeCipherSuites. The selected s
                      * suite is placed in kdfId and aeadId. */
     PRUint16 maxNameLen;
+    char *publicName;
     /* No supported extensions. */
 };
 
 struct sslEchConfigStr {
     PRCList link;
     SECItem raw;
-    PRUint8 configId[8];
     PRUint16 version;
     sslEchConfigContents contents;
 };
@@ -51,7 +51,7 @@ struct sslEchConfigStr {
 struct sslEchXtnStateStr {
     SECItem innerCh;          /* Server: ClientECH.payload */
     SECItem senderPubKey;     /* Server: ClientECH.enc */
-    SECItem configId;         /* Server: ClientECH.config_id  */
+    PRUint8 configId;         /* Server: ClientECH.config_id  */
     HpkeKdfId kdfId;          /* Server: ClientECH.cipher_suite.kdf */
     HpkeAeadId aeadId;        /* Server: ClientECH.cipher_suite.aead */
     SECItem retryConfigs;     /* Client: ServerECH.retry_configs*/
@@ -60,10 +60,10 @@ struct sslEchXtnStateStr {
                                *  verified to the ECHConfig public name). */
 };
 
-SECStatus SSLExp_EncodeEchConfig(const char *publicName, const PRUint32 *hpkeSuites,
-                                 unsigned int hpkeSuiteCount, HpkeKemId kemId,
-                                 const SECKEYPublicKey *pubKey, PRUint16 maxNameLen,
-                                 PRUint8 *out, unsigned int *outlen, unsigned int maxlen);
+SECStatus SSLExp_EncodeEchConfigId(PRUint8 configId, const char *publicName, unsigned int maxNameLen,
+                                   HpkeKemId kemId, const SECKEYPublicKey *pubKey,
+                                   const HpkeSymmetricSuite *hpkeSuites, unsigned int hpkeSuiteCount,
+                                   PRUint8 *out, unsigned int *outlen, unsigned int maxlen);
 SECStatus SSLExp_GetEchRetryConfigs(PRFileDesc *fd, SECItem *retryConfigs);
 SECStatus SSLExp_SetClientEchConfigs(PRFileDesc *fd, const PRUint8 *echConfigs,
                                      unsigned int echConfigsLen);

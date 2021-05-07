@@ -1969,14 +1969,20 @@ PK11_ExportPrivateKeyInfo(CERTCertificate *cert, void *wincx)
     return pki;
 }
 
+/* V2 refers to PKCS #5 V2 here. If a PKCS #5 v1 or PKCS #12 pbe is passed
+ * for pbeTag, then encTag and hashTag are ignored. If pbe is an encryption
+ * algorithm, then PKCS #5 V2 is used with prfTag for the prf. If prfTag isn't
+ * supplied prf will be SEC_OID_HMAC_SHA1 */
 SECKEYEncryptedPrivateKeyInfo *
-PK11_ExportEncryptedPrivKeyInfo(
+PK11_ExportEncryptedPrivKeyInfoV2(
     PK11SlotInfo *slot,   /* optional, encrypt key in this slot */
-    SECOidTag algTag,     /* encrypt key with this algorithm */
+    SECOidTag pbeAlg,     /* PBE algorithm to encrypt the with key */
+    SECOidTag encAlg,     /* Encryption algorithm to Encrypt the key with */
+    SECOidTag prfAlg,     /* Hash algorithm for PRF */
     SECItem *pwitem,      /* password for PBE encryption */
     SECKEYPrivateKey *pk, /* encrypt this private key */
     int iteration,        /* interations for PBE alg */
-    void *wincx)          /* context for password callback ? */
+    void *pwArg)          /* context for password callback */
 {
     SECKEYEncryptedPrivateKeyInfo *epki = NULL;
     PLArenaPool *arena = NULL;
@@ -1997,7 +2003,7 @@ PK11_ExportEncryptedPrivKeyInfo(
         return NULL;
     }
 
-    algid = sec_pkcs5CreateAlgorithmID(algTag, SEC_OID_UNKNOWN, SEC_OID_UNKNOWN,
+    algid = sec_pkcs5CreateAlgorithmID(pbeAlg, encAlg, prfAlg,
                                        &pbeAlgTag, 0, NULL, iteration);
     if (algid == NULL) {
         return NULL;
@@ -2026,7 +2032,7 @@ PK11_ExportEncryptedPrivKeyInfo(
             slot = pk->pkcs11Slot;
         }
     }
-    key = PK11_PBEKeyGen(slot, algid, pwitem, PR_FALSE, wincx);
+    key = PK11_PBEKeyGen(slot, algid, pwitem, PR_FALSE, pwArg);
     if (key == NULL) {
         rv = SECFailure;
         goto loser;
@@ -2121,22 +2127,57 @@ loser:
 }
 
 SECKEYEncryptedPrivateKeyInfo *
+PK11_ExportEncryptedPrivKeyInfo(
+    PK11SlotInfo *slot,   /* optional, encrypt key in this slot */
+    SECOidTag algTag,     /* PBE algorithm to encrypt the with key */
+    SECItem *pwitem,      /* password for PBE encryption */
+    SECKEYPrivateKey *pk, /* encrypt this private key */
+    int iteration,        /* interations for PBE alg */
+    void *pwArg)          /* context for password callback */
+{
+    return PK11_ExportEncryptedPrivKeyInfoV2(slot, algTag, SEC_OID_UNKNOWN,
+                                             SEC_OID_UNKNOWN, pwitem, pk,
+                                             iteration, pwArg);
+}
+
+/* V2 refers to PKCS #5 V2 here. If a PKCS #5 v1 or PKCS #12 pbe is passed
+ * for pbeTag, then encTag and hashTag are ignored. If pbe is an encryption
+ * algorithm, then PKCS #5 V2 is used with prfTag for the prf. If prfTag isn't
+ * supplied prf will be SEC_OID_HMAC_SHA1 */
+SECKEYEncryptedPrivateKeyInfo *
+PK11_ExportEncryptedPrivateKeyInfoV2(
+    PK11SlotInfo *slot,    /* optional, encrypt key in this slot */
+    SECOidTag pbeAlg,      /* PBE algorithm to encrypt the with key */
+    SECOidTag encAlg,      /* Encryption algorithm to Encrypt the key with */
+    SECOidTag prfAlg,      /* HMAC algorithm for PRF*/
+    SECItem *pwitem,       /* password for PBE encryption */
+    CERTCertificate *cert, /* wrap priv key for this user cert */
+    int iteration,         /* interations for PBE alg */
+    void *pwArg)           /* context for password callback */
+{
+    SECKEYEncryptedPrivateKeyInfo *epki = NULL;
+    SECKEYPrivateKey *pk = PK11_FindKeyByAnyCert(cert, pwArg);
+    if (pk != NULL) {
+        epki = PK11_ExportEncryptedPrivKeyInfoV2(slot, pbeAlg, encAlg, prfAlg,
+                                                 pwitem, pk, iteration,
+                                                 pwArg);
+        SECKEY_DestroyPrivateKey(pk);
+    }
+    return epki;
+}
+
+SECKEYEncryptedPrivateKeyInfo *
 PK11_ExportEncryptedPrivateKeyInfo(
     PK11SlotInfo *slot,    /* optional, encrypt key in this slot */
     SECOidTag algTag,      /* encrypt key with this algorithm */
     SECItem *pwitem,       /* password for PBE encryption */
     CERTCertificate *cert, /* wrap priv key for this user cert */
     int iteration,         /* interations for PBE alg */
-    void *wincx)           /* context for password callback ? */
+    void *pwArg)           /* context for password callback */
 {
-    SECKEYEncryptedPrivateKeyInfo *epki = NULL;
-    SECKEYPrivateKey *pk = PK11_FindKeyByAnyCert(cert, wincx);
-    if (pk != NULL) {
-        epki = PK11_ExportEncryptedPrivKeyInfo(slot, algTag, pwitem, pk,
-                                               iteration, wincx);
-        SECKEY_DestroyPrivateKey(pk);
-    }
-    return epki;
+    return PK11_ExportEncryptedPrivateKeyInfoV2(slot, algTag, SEC_OID_UNKNOWN,
+                                                SEC_OID_UNKNOWN, pwitem, cert,
+                                                iteration, pwArg);
 }
 
 SECItem *

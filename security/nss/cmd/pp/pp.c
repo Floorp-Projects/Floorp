@@ -27,14 +27,13 @@ Usage(char *progName)
             progName);
     fprintf(stderr, "Pretty prints a file containing ASN.1 data in DER or ascii format.\n");
     fprintf(stderr, "%-14s Specify input and display type:", "-t type");
-#ifdef HAVE_EPV_TEMPLATE
     fprintf(stderr, " %s (sk),", SEC_CT_PRIVATE_KEY);
-#endif
     fprintf(stderr, "\n");
     fprintf(stderr, "%-14s %s (pk), %s (c), %s (cr),\n", "", SEC_CT_PUBLIC_KEY,
             SEC_CT_CERTIFICATE, SEC_CT_CERTIFICATE_REQUEST);
-    fprintf(stderr, "%-14s %s (ci), %s (p7), %s or %s (n).\n", "", SEC_CT_CERTIFICATE_ID,
-            SEC_CT_PKCS7, SEC_CT_CRL, SEC_CT_NAME);
+    fprintf(stderr, "%-14s %s (ci), %s (p7), %s (p12), %s or %s (n).\n", "",
+            SEC_CT_CERTIFICATE_ID, SEC_CT_PKCS7, SEC_CT_PKCS12,
+            SEC_CT_CRL, SEC_CT_NAME);
     fprintf(stderr, "%-14s (Use either the long type name or the shortcut.)\n", "");
     fprintf(stderr, "%-14s Input is in ascii encoded form (RFC1113)\n",
             "-a");
@@ -159,11 +158,9 @@ main(int argc, char **argv)
                                   SECU_PrintCertificateRequest);
     } else if (PORT_Strcmp(typeTag, SEC_CT_CRL) == 0) {
         rv = SECU_PrintSignedData(outFile, &data, "CRL", 0, SECU_PrintCrl);
-#ifdef HAVE_EPV_TEMPLATE
     } else if (PORT_Strcmp(typeTag, SEC_CT_PRIVATE_KEY) == 0 ||
                PORT_Strcmp(typeTag, "sk") == 0) {
         rv = SECU_PrintPrivateKey(outFile, &data, "Private Key", 0);
-#endif
     } else if (PORT_Strcmp(typeTag, SEC_CT_PUBLIC_KEY) == 0 ||
                PORT_Strcmp(typeTag, "pk") == 0) {
         rv = SECU_PrintSubjectPublicKeyInfo(outFile, &data, "Public Key", 0);
@@ -174,6 +171,9 @@ main(int argc, char **argv)
     } else if (PORT_Strcmp(typeTag, SEC_CT_NAME) == 0 ||
                PORT_Strcmp(typeTag, "n") == 0) {
         rv = SECU_PrintDERName(outFile, &data, "Name", 0);
+    } else if (PORT_Strcmp(typeTag, SEC_CT_PKCS12) == 0 ||
+               PORT_Strcmp(typeTag, "p12") == 0) {
+        rv = SECU_PrintPKCS12(outFile, &data, "PKCS #12 File", 0);
     } else {
         fprintf(stderr, "%s: don't know how to print out '%s' files\n",
                 progName, typeTag);

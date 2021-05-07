@@ -1894,14 +1894,21 @@ configureEchWithPublicName(PRFileDesc *model_sock, const char *public_name)
     SECKEYPrivateKey *privKey = NULL;
     SECOidData *oidData;
     char *echConfigBase64 = NULL;
+    PRUint8 configId = 0;
     PRUint8 configBuf[1000];
     unsigned int len = 0;
-    unsigned int echCipherSuite = ((unsigned int)HpkeKdfHkdfSha256 << 16) |
-                                  HpkeAeadChaCha20Poly1305;
+    HpkeSymmetricSuite echCipherSuite = { HpkeKdfHkdfSha256,
+                                          HpkeAeadChaCha20Poly1305 };
+
     PK11SlotInfo *slot = PK11_GetInternalKeySlot();
     if (!slot) {
         errWarn("PK11_GetInternalKeySlot failed");
         return SECFailure;
+    }
+
+    if (PK11_GenerateRandom(&configId, sizeof(configId)) != SECSuccess) {
+        errWarn("Failed to generate random configId");
+        goto loser;
     }
 
     oidData = SECOID_FindOIDByTag(SEC_OID_CURVE25519);
@@ -1916,16 +1923,17 @@ configureEchWithPublicName(PRFileDesc *model_sock, const char *public_name)
     }
     privKey = PK11_GenerateKeyPair(slot, CKM_EC_KEY_PAIR_GEN, &ecParams,
                                    &pubKey, PR_FALSE, PR_FALSE, NULL);
-
     if (!privKey || !pubKey) {
         errWarn("Failed to generate ECH keypair");
         goto loser;
     }
-    rv = SSL_EncodeEchConfig(echParamsStr, &echCipherSuite, 1,
-                             HpkeDhKemX25519Sha256, pubKey, 50,
-                             configBuf, &len, sizeof(configBuf));
+
+    rv = SSL_EncodeEchConfigId(configId, echParamsStr, 100,
+                               HpkeDhKemX25519Sha256, pubKey,
+                               &echCipherSuite, 1,
+                               configBuf, &len, sizeof(configBuf));
     if (rv != SECSuccess) {
-        errWarn("SSL_EncodeEchConfig failed");
+        errWarn("SSL_EncodeEchConfigId failed");
         goto loser;
     }
 

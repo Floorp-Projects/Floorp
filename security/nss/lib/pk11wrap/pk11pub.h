@@ -627,10 +627,20 @@ SECKEYPrivateKeyInfo *PK11_ExportPrivateKeyInfo(
     CERTCertificate *cert, void *wincx);
 SECKEYEncryptedPrivateKeyInfo *PK11_ExportEncryptedPrivKeyInfo(
     PK11SlotInfo *slot, SECOidTag algTag, SECItem *pwitem,
-    SECKEYPrivateKey *pk, int iteration, void *wincx);
+    SECKEYPrivateKey *pk, int iteration, void *pwArg);
 SECKEYEncryptedPrivateKeyInfo *PK11_ExportEncryptedPrivateKeyInfo(
     PK11SlotInfo *slot, SECOidTag algTag, SECItem *pwitem,
-    CERTCertificate *cert, int iteration, void *wincx);
+    CERTCertificate *cert, int iteration, void *pwArg);
+/* V2 refers to PKCS #5 V2 here. If a PKCS #5 v1 or PKCS #12 pbe is passed
+ * for pbeTag, then encTag and hashTag are ignored. If pbe is an encryption
+ * algorithm, then PKCS #5 V2 is used with prfTag for the prf. If prfTag isn't
+ * supplied prf will be SEC_OID_HMAC_SHA1 */
+SECKEYEncryptedPrivateKeyInfo *PK11_ExportEncryptedPrivKeyInfoV2(
+    PK11SlotInfo *slot, SECOidTag pbeTag, SECOidTag encTag, SECOidTag prfTag,
+    SECItem *pwitem, SECKEYPrivateKey *pk, int iteration, void *pwArg);
+SECKEYEncryptedPrivateKeyInfo *PK11_ExportEncryptedPrivateKeyInfoV2(
+    PK11SlotInfo *slot, SECOidTag pbeTag, SECOidTag encTag, SECOidTag prfTag,
+    SECItem *pwitem, CERTCertificate *cert, int iteration, void *pwArg);
 SECKEYPrivateKey *PK11_FindKeyByDERCert(PK11SlotInfo *slot,
                                         CERTCertificate *cert, void *wincx);
 SECKEYPublicKey *PK11_MakeKEAPubKey(unsigned char *data, int length);
@@ -728,14 +738,8 @@ CK_BBOOL PK11_HasAttributeSet(PK11SlotInfo *slot,
                               PRBool haslock /* must be set to PR_FALSE */);
 
 /**********************************************************************
- *                   Hybrid Public Key Encryption  (draft-07)
+ *                   Hybrid Public Key Encryption
  **********************************************************************/
-/*
- * NOTE: All HPKE functions will fail with SEC_ERROR_INVALID_ALGORITHM
- * unless NSS is compiled with NSS_ENABLE_DRAFT_HPKE while spec (and
- * implementation) is in draft. The eventual RFC number is an input to
- * the key schedule, so applications opting into this MUST be prepared for
- * outputs to change when the implementation is updated or finalized. */
 
 /* Some of the various HPKE arguments would ideally be const, but the
  * underlying PK11 functions take them as non-const. To avoid lying to

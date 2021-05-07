@@ -547,7 +547,7 @@ typedef enum {
     ssl_tls13_short_header_xtn = 0xff03, /* Deprecated. */
     ssl_tls13_ech_is_inner_xtn = 0xda09,
     ssl_tls13_outer_extensions_xtn = 0xfd00,
-    ssl_tls13_encrypted_client_hello_xtn = 0xfe09,
+    ssl_tls13_encrypted_client_hello_xtn = 0xfe0a,
     ssl_tls13_encrypted_sni_xtn = 0xffce, /* Deprecated. */
 } SSLExtensionType;
 

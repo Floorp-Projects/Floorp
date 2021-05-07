@@ -44,6 +44,37 @@ sec_pkcs12_algtag_to_mech(SECOidTag algtag)
     return CKM_INVALID_MECHANISM;
 }
 
+CK_MECHANISM_TYPE
+sec_pkcs12_algtag_to_keygen_mech(SECOidTag algtag)
+{
+    switch (algtag) {
+        case SEC_OID_SHA1:
+            return CKM_NSS_PBE_SHA1_HMAC_KEY_GEN;
+            break;
+        case SEC_OID_MD5:
+            return CKM_NSS_PBE_MD5_HMAC_KEY_GEN;
+            break;
+        case SEC_OID_MD2:
+            return CKM_NSS_PBE_MD2_HMAC_KEY_GEN;
+            break;
+        case SEC_OID_SHA224:
+            return CKM_NSS_PKCS12_PBE_SHA224_HMAC_KEY_GEN;
+            break;
+        case SEC_OID_SHA256:
+            return CKM_NSS_PKCS12_PBE_SHA256_HMAC_KEY_GEN;
+            break;
+        case SEC_OID_SHA384:
+            return CKM_NSS_PKCS12_PBE_SHA384_HMAC_KEY_GEN;
+            break;
+        case SEC_OID_SHA512:
+            return CKM_NSS_PKCS12_PBE_SHA512_HMAC_KEY_GEN;
+            break;
+        default:
+            break;
+    }
+    return CKM_INVALID_MECHANISM;
+}
+
 /* helper functions */
 /* returns proper bag type template based upon object type tag */
 const SEC_ASN1Template *

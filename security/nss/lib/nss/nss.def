@@ -1224,6 +1224,9 @@ PK11_HPKE_ImportContext;
 ;+    global:
 PK11_CreateContextByPubKey;
 PK11_CreateContextByPrivKey;
+PK11_ExportEncryptedPrivKeyInfoV2;
+PK11_ExportEncryptedPrivateKeyInfoV2;
+HASH_GetHMACOidTagByHashOidTag;
 ;+    local:
 ;+       *;
 ;+};

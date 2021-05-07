@@ -25,6 +25,10 @@
 #undef USE_HW_AES
 #endif
 
+#ifdef __powerpc64__
+#include "ppc-crypto.h"
+#endif
+
 #ifdef USE_HW_AES
 #ifdef NSS_X86_OR_X64
 #include "intel-aes.h"
@@ -35,6 +39,9 @@
 #ifdef INTEL_GCM
 #include "intel-gcm.h"
 #endif /* INTEL_GCM */
+#if defined(USE_PPC_CRYPTO) && defined(PPC_GCM)
+#include "ppc-gcm.h"
+#endif
 
 /* Forward declarations */
 void rijndael_native_key_expansion(AESContext *cx, const unsigned char *key,
@@ -1018,6 +1025,16 @@ AES_InitContext(AESContext *cx, const unsigned char *key, unsigned int keysize,
                 cx->worker_aead = (freeblAeadFunc)(encrypt ? intel_AES_GCM_EncryptAEAD
                                                            : intel_AES_GCM_DecryptAEAD);
                 cx->destroy = (freeblDestroyFunc)intel_AES_GCM_DestroyContext;
+                cx->isBlock = PR_FALSE;
+            } else
+#elif defined(USE_PPC_CRYPTO) && defined(PPC_GCM)
+            if (ppc_crypto_support() && (keysize % 8) == 0) {
+                cx->worker_cx = ppc_AES_GCM_CreateContext(cx, cx->worker, iv);
+                cx->worker = (freeblCipherFunc)(encrypt ? ppc_AES_GCM_EncryptUpdate
+                                                        : ppc_AES_GCM_DecryptUpdate);
+                cx->worker_aead = (freeblAeadFunc)(encrypt ? ppc_AES_GCM_EncryptAEAD
+                                                           : ppc_AES_GCM_DecryptAEAD);
+                cx->destroy = (freeblDestroyFunc)ppc_AES_GCM_DestroyContext;
                 cx->isBlock = PR_FALSE;
             } else
 #endif

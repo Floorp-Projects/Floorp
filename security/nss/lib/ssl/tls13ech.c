@@ -64,7 +64,6 @@ tls13_DestroyEchXtnState(sslEchXtnState *state)
     }
     SECITEM_FreeItem(&state->innerCh, PR_FALSE);
     SECITEM_FreeItem(&state->senderPubKey, PR_FALSE);
-    SECITEM_FreeItem(&state->configId, PR_FALSE);
     SECITEM_FreeItem(&state->retryConfigs, PR_FALSE);
     PORT_ZFree(state, sizeof(*state));
 }
@@ -103,12 +102,12 @@ tls13_CopyEchConfigs(PRCList *oConfigs, PRCList *configs)
         if (rv != SECSuccess) {
             goto loser;
         }
+        newConfig->contents.configId = config->contents.configId;
         newConfig->contents.kemId = config->contents.kemId;
         newConfig->contents.kdfId = config->contents.kdfId;
         newConfig->contents.aeadId = config->contents.aeadId;
         newConfig->contents.maxNameLen = config->contents.maxNameLen;
         newConfig->version = config->version;
-        PORT_Memcpy(newConfig->configId, config->configId, sizeof(newConfig->configId));
         PR_APPEND_LINK(&newConfig->link, configs);
     }
     return SECSuccess;
@@ -119,69 +118,34 @@ loser:
     return SECFailure;
 }
 
-static SECStatus
-tls13_DigestEchConfig(const sslEchConfig *cfg, PRUint8 *digest, size_t maxDigestLen)
-{
-    SECStatus rv;
-    PK11SymKey *configKey = NULL;
-    PK11SymKey *derived = NULL;
-    SECItem *derivedItem = NULL;
-    CK_HKDF_PARAMS params = { 0 };
-    SECItem paramsi = { siBuffer, (unsigned char *)&params, sizeof(params) };
-    PK11SlotInfo *slot = PK11_GetInternalSlot();
-
-    if (!slot) {
-        goto loser;
-    }
-
-    configKey = PK11_ImportDataKey(slot, CKM_HKDF_DATA, PK11_OriginUnwrap,
-                                   CKA_DERIVE, CONST_CAST(SECItem, &cfg->raw), NULL);
-    if (!configKey) {
-        goto loser;
-    }
-
-    /* We only support SHA256 KDF. */
-    PORT_Assert(cfg->contents.kdfId == HpkeKdfHkdfSha256);
-    params.bExtract = CK_TRUE;
-    params.bExpand = CK_TRUE;
-    params.prfHashMechanism = CKM_SHA256;
-    params.ulSaltType = CKF_HKDF_SALT_NULL;
-    params.pInfo = CONST_CAST(CK_BYTE, hHkdfInfoEchConfigID);
-    params.ulInfoLen = strlen(hHkdfInfoEchConfigID);
-    derived = PK11_DeriveWithFlags(configKey, CKM_HKDF_DATA,
-                                   &paramsi, CKM_HKDF_DERIVE, CKA_DERIVE, 8,
-                                   CKF_SIGN | CKF_VERIFY);
-
-    rv = PK11_ExtractKeyValue(derived);
-    if (rv != SECSuccess) {
-        goto loser;
-    }
-
-    derivedItem = PK11_GetKeyData(derived);
-    if (!derivedItem) {
-        goto loser;
-    }
-
-    if (derivedItem->len != maxDigestLen) {
-        PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
-        goto loser;
-    }
-
-    PORT_Memcpy(digest, derivedItem->data, derivedItem->len);
-    PK11_FreeSymKey(configKey);
-    PK11_FreeSymKey(derived);
-    PK11_FreeSlot(slot);
-    return SECSuccess;
-
-loser:
-    PK11_FreeSymKey(configKey);
-    PK11_FreeSymKey(derived);
-    if (slot) {
-        PK11_FreeSlot(slot);
-    }
-    return SECFailure;
-}
-
+/*
+ * struct {
+ *     HpkeKdfId kdf_id;
+ *     HpkeAeadId aead_id;
+ * } HpkeSymmetricCipherSuite;
+ *
+ * struct {
+ *     uint8 config_id;
+ *     HpkeKemId kem_id;
+ *     HpkePublicKey public_key;
+ *     HpkeSymmetricCipherSuite cipher_suites<4..2^16-4>;
+ * } HpkeKeyConfig;
+ *
+ * struct {
+ *     HpkeKeyConfig key_config;
+ *     uint16 maximum_name_length;
+ *     opaque public_name<1..2^16-1>;
+ *     Extension extensions<0..2^16-1>;
+ * } ECHConfigContents;
+ *
+ * struct {
+ *     uint16 version;
+ *     uint16 length;
+ *     select (ECHConfig.version) {
+ *       case 0xfe0a: ECHConfigContents contents;
+ *     }
+ * } ECHConfig;
+ */
 static SECStatus
 tls13_DecodeEchConfigContents(const sslReadBuffer *rawConfig,
                               sslEchConfig **outConfig)
@@ -199,30 +163,22 @@ tls13_DecodeEchConfigContents(const sslReadBuffer *rawConfig,
     sslReader extensionReader;
     PRBool hasValidSuite = PR_FALSE;
 
-    /* Parse the public_name. */
-    rv = sslRead_ReadVariable(&configReader, 2, &tmpBuf);
+    /* HpkeKeyConfig key_config */
+    /* uint8 config_id */
+    rv = sslRead_ReadNumber(&configReader, 1, &tmpn);
     if (rv != SECSuccess) {
         goto loser;
     }
+    contents.configId = tmpn;
 
-    if (tmpBuf.len == 0) {
-        PORT_SetError(SSL_ERROR_RX_MALFORMED_ECH_CONFIG);
+    /* HpkeKemId kem_id */
+    rv = sslRead_ReadNumber(&configReader, 2, &tmpn);
+    if (rv != SECSuccess) {
         goto loser;
     }
-    for (tmpn = 0; tmpn < tmpBuf.len; tmpn++) {
-        if (tmpBuf.buf[tmpn] == '\0') {
-            PORT_SetError(SSL_ERROR_RX_MALFORMED_ECH_CONFIG);
-            goto loser;
-        }
-    }
+    contents.kemId = tmpn;
 
-    contents.publicName = PORT_ZAlloc(tmpBuf.len + 1);
-    if (!contents.publicName) {
-        goto loser;
-    }
-    PORT_Memcpy(contents.publicName, (PRUint8 *)tmpBuf.buf, tmpBuf.len);
-
-    /* Public key. */
+    /* HpkePublicKey public_key */
     rv = sslRead_ReadVariable(&configReader, 2, &tmpBuf);
     if (rv != SECSuccess) {
         goto loser;
@@ -232,13 +188,7 @@ tls13_DecodeEchConfigContents(const sslReadBuffer *rawConfig,
         goto loser;
     }
 
-    rv = sslRead_ReadNumber(&configReader, 2, &tmpn);
-    if (rv != SECSuccess) {
-        goto loser;
-    }
-    contents.kemId = tmpn;
-
-    /* Parse HPKE cipher suites. */
+    /* HpkeSymmetricCipherSuite cipher_suites<4..2^16-4> */
     rv = sslRead_ReadVariable(&configReader, 2, &tmpBuf);
     if (rv != SECSuccess) {
         goto loser;
@@ -249,12 +199,12 @@ tls13_DecodeEchConfigContents(const sslReadBuffer *rawConfig,
     }
     suiteReader = (sslReader)SSL_READER(tmpBuf.buf, tmpBuf.len);
     while (SSL_READER_REMAINING(&suiteReader)) {
-        /* kdf_id */
+        /* HpkeKdfId kdf_id */
         rv = sslRead_ReadNumber(&suiteReader, 2, &tmpn);
         if (rv != SECSuccess) {
             goto loser;
         }
-        /* aead_id */
+        /* HpkeAeadId aead_id */
         rv = sslRead_ReadNumber(&suiteReader, 2, &tmpn2);
         if (rv != SECSuccess) {
             goto loser;
@@ -276,12 +226,35 @@ tls13_DecodeEchConfigContents(const sslReadBuffer *rawConfig,
         goto loser;
     }
 
-    /* Read the max name length. */
+    /* uint16 maximum_name_length */
     rv = sslRead_ReadNumber(&configReader, 2, &tmpn);
     if (rv != SECSuccess) {
         goto loser;
     }
     contents.maxNameLen = (PRUint16)tmpn;
+
+    /* opaque public_name<1..2^16-1> */
+    rv = sslRead_ReadVariable(&configReader, 2, &tmpBuf);
+    if (rv != SECSuccess) {
+        goto loser;
+    }
+
+    if (tmpBuf.len == 0) {
+        PORT_SetError(SSL_ERROR_RX_MALFORMED_ECH_CONFIG);
+        goto loser;
+    }
+    for (tmpn = 0; tmpn < tmpBuf.len; tmpn++) {
+        if (tmpBuf.buf[tmpn] == '\0') {
+            PORT_SetError(SSL_ERROR_RX_MALFORMED_ECH_CONFIG);
+            goto loser;
+        }
+    }
+
+    contents.publicName = PORT_ZAlloc(tmpBuf.len + 1);
+    if (!contents.publicName) {
+        goto loser;
+    }
+    PORT_Memcpy(contents.publicName, (PRUint8 *)tmpBuf.buf, tmpBuf.len);
 
     /* Extensions. We don't support any, but must
      * check for any that are marked critical. */
@@ -356,7 +329,7 @@ loser:
     return SECFailure;
 }
 
-/* Decode an ECHConfigs struct and store each ECHConfig
+/* Decode an ECHConfigList struct and store each ECHConfig
  * into |configs|.  */
 SECStatus
 tls13_DecodeEchConfigs(const SECItem *data, PRCList *configs)
@@ -390,12 +363,12 @@ tls13_DecodeEchConfigs(const SECItem *data, PRCList *configs)
     /* Handle each ECHConfig. */
     while (SSL_READER_REMAINING(&configsReader)) {
         singleConfig.buf = SSL_READER_CURRENT(&configsReader);
-        /* Version */
+        /* uint16 version */
         rv = sslRead_ReadNumber(&configsReader, 2, &version);
         if (rv != SECSuccess) {
             goto loser;
         }
-        /* Length */
+        /* uint16 length */
         rv = sslRead_ReadNumber(&configsReader, 2, &length);
         if (rv != SECSuccess) {
             goto loser;
@@ -421,11 +394,6 @@ tls13_DecodeEchConfigs(const SECItem *data, PRCList *configs)
                     goto loser;
                 }
 
-                rv = tls13_DigestEchConfig(decodedConfig, decodedConfig->configId,
-                                           sizeof(decodedConfig->configId));
-                if (rv != SECSuccess) {
-                    goto loser;
-                }
                 PR_APPEND_LINK(&decodedConfig->link, configs);
                 decodedConfig = NULL;
             }
@@ -438,14 +406,14 @@ loser:
     return SECFailure;
 }
 
-/* Encode an ECHConfigs structure. We only allow one config, and as the
+/* Encode an ECHConfigList structure. We only create one config, and as the
  * primary use for this function is to generate test inputs, we don't
  * validate against what HPKE and libssl can actually support. */
 SECStatus
-SSLExp_EncodeEchConfig(const char *publicName, const PRUint32 *hpkeSuites,
-                       unsigned int hpkeSuiteCount, HpkeKemId kemId,
-                       const SECKEYPublicKey *pubKey, PRUint16 maxNameLen,
-                       PRUint8 *out, unsigned int *outlen, unsigned int maxlen)
+SSLExp_EncodeEchConfigId(PRUint8 configId, const char *publicName, unsigned int maxNameLen,
+                         HpkeKemId kemId, const SECKEYPublicKey *pubKey,
+                         const HpkeSymmetricSuite *hpkeSuites, unsigned int hpkeSuiteCount,
+                         PRUint8 *out, unsigned int *outlen, unsigned int maxlen)
 {
     SECStatus rv;
     unsigned int savedOffset;
@@ -460,11 +428,21 @@ SSLExp_EncodeEchConfig(const char *publicName, const PRUint32 *hpkeSuites,
         return SECFailure;
     }
 
+    /* ECHConfig ECHConfigList<1..2^16-1>; */
     rv = sslBuffer_Skip(&b, 2, NULL);
     if (rv != SECSuccess) {
         goto loser;
     }
 
+    /*
+     * struct {
+     *     uint16 version;
+     *     uint16 length;
+     *     select (ECHConfig.version) {
+     *       case 0xfe0a: ECHConfigContents contents;
+     *     }
+     * } ECHConfig;
+    */
     rv = sslBuffer_AppendNumber(&b, TLS13_ECH_VERSION, 2);
     if (rv != SECSuccess) {
         goto loser;
@@ -475,8 +453,20 @@ SSLExp_EncodeEchConfig(const char *publicName, const PRUint32 *hpkeSuites,
         goto loser;
     }
 
-    len = PORT_Strlen(publicName);
-    rv = sslBuffer_AppendVariable(&b, (const PRUint8 *)publicName, len, 2);
+    /*
+     * struct {
+     *     uint8 config_id;
+     *     HpkeKemId kem_id;
+     *     HpkePublicKey public_key;
+     *     HpkeSymmetricCipherSuite cipher_suites<4..2^16-4>;
+     * } HpkeKeyConfig;
+     */
+    rv = sslBuffer_AppendNumber(&b, configId, 1);
+    if (rv != SECSuccess) {
+        goto loser;
+    }
+
+    rv = sslBuffer_AppendNumber(&b, kemId, 2);
     if (rv != SECSuccess) {
         goto loser;
     }
@@ -490,23 +480,40 @@ SSLExp_EncodeEchConfig(const char *publicName, const PRUint32 *hpkeSuites,
         goto loser;
     }
 
-    rv = sslBuffer_AppendNumber(&b, kemId, 2);
-    if (rv != SECSuccess) {
-        goto loser;
-    }
-
     rv = sslBuffer_AppendNumber(&b, hpkeSuiteCount * 4, 2);
     if (rv != SECSuccess) {
         goto loser;
     }
     for (unsigned int i = 0; i < hpkeSuiteCount; i++) {
-        rv = sslBuffer_AppendNumber(&b, hpkeSuites[i], 4);
+        rv = sslBuffer_AppendNumber(&b, hpkeSuites[i].kdfId, 2);
+        if (rv != SECSuccess) {
+            goto loser;
+        }
+        rv = sslBuffer_AppendNumber(&b, hpkeSuites[i].aeadId, 2);
         if (rv != SECSuccess) {
             goto loser;
         }
     }
 
+    /*
+     * struct {
+     *     HpkeKeyConfig key_config;
+     *     uint16 maximum_name_length;
+     *     opaque public_name<1..2^16-1>;
+     *     Extension extensions<0..2^16-1>;
+     * } ECHConfigContents;
+     */
     rv = sslBuffer_AppendNumber(&b, maxNameLen, 2);
+    if (rv != SECSuccess) {
+        goto loser;
+    }
+
+    len = PORT_Strlen(publicName);
+    if (len > 0xffff) {
+        PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        goto loser;
+    }
+    rv = sslBuffer_AppendVariable(&b, (const PRUint8 *)publicName, len, 2);
     if (rv != SECSuccess) {
         goto loser;
     }
@@ -622,10 +629,6 @@ SSLExp_SetServerEchConfigs(PRFileDesc *fd,
                            const SECKEYPublicKey *pubKey, const SECKEYPrivateKey *privKey,
                            const PRUint8 *echConfigs, unsigned int echConfigsLen)
 {
-#ifndef NSS_ENABLE_DRAFT_HPKE
-    PORT_SetError(SSL_ERROR_FEATURE_DISABLED);
-    return SECFailure;
-#else
     sslSocket *ss;
     SECStatus rv;
     SECItem data = { siBuffer, CONST_CAST(PRUint8, echConfigs), echConfigsLen };
@@ -675,7 +678,6 @@ loser:
     ss->echPubKey = NULL;
     ss->echPrivKey = NULL;
     return SECFailure;
-#endif
 }
 
 /* Client enable. For now, we'll use the first
@@ -685,10 +687,6 @@ SSLExp_SetClientEchConfigs(PRFileDesc *fd,
                            const PRUint8 *echConfigs,
                            unsigned int echConfigsLen)
 {
-#ifndef NSS_ENABLE_DRAFT_HPKE
-    PORT_SetError(SSL_ERROR_FEATURE_DISABLED);
-    return SECFailure;
-#else
     SECStatus rv;
     sslSocket *ss;
     SECItem data = { siBuffer, CONST_CAST(PRUint8, echConfigs), echConfigsLen };
@@ -722,7 +720,6 @@ SSLExp_SetClientEchConfigs(PRFileDesc *fd,
     }
 
     return SECSuccess;
-#endif
 }
 
 /* Set up ECH. This generates an ephemeral sender
@@ -823,16 +820,16 @@ loser:
 
 /*
  *  enum {
- *     encrypted_client_hello(0xfe09), (65535)
+ *     encrypted_client_hello(0xfe0a), (65535)
  *  } ExtensionType;
  *
  *  struct {
  *      HpkeKdfId kdf_id;
  *      HpkeAeadId aead_id;
- *  } ECHCipherSuite;
+ *  } HpkeSymmetricCipherSuite;
  *  struct {
- *     ECHCipherSuite cipher_suite;
- *     opaque config_id<0..255>;
+ *     HpkeSymmetricCipherSuite cipher_suite;
+ *     uint8 config_id;
  *     opaque enc<1..2^16-1>;
  *     opaque payload<1..2^16-1>;
  *  } ClientECH;
@@ -889,18 +886,18 @@ tls13_EncryptClientHello(sslSocket *ss, sslBuffer *outerAAD, sslBuffer *chInner)
         goto loser;
     }
 
+    rv = sslBuffer_AppendNumber(chInner, cfg->contents.configId, 1);
+    if (rv != SECSuccess) {
+        goto loser;
+    }
     if (!ss->ssl3.hs.helloRetry) {
-        rv = sslBuffer_AppendVariable(chInner, cfg->configId, sizeof(cfg->configId), 1);
-        if (rv != SECSuccess) {
-            goto loser;
-        }
         rv = sslBuffer_AppendVariable(chInner, hpkeEnc->data, hpkeEnc->len, 2);
         if (rv != SECSuccess) {
             goto loser;
         }
     } else {
-        /* one byte for empty configId, two for empty Enc. */
-        rv = sslBuffer_AppendNumber(chInner, 0, 3);
+        /* |enc| is empty. */
+        rv = sslBuffer_AppendNumber(chInner, 0, 2);
         if (rv != SECSuccess) {
             goto loser;
         }
@@ -919,21 +916,18 @@ loser:
 
 SECStatus
 tls13_GetMatchingEchConfigs(const sslSocket *ss, HpkeKdfId kdf, HpkeAeadId aead,
-                            const SECItem *configId, const sslEchConfig *cur, sslEchConfig **next)
+                            const PRUint8 configId, const sslEchConfig *cur, sslEchConfig **next)
 {
-    PRINT_BUF(50, (ss, "Server GetMatchingEchConfig with digest:",
-                   configId->data, configId->len));
+    SSL_TRC(50, ("%d: TLS13[%d]: GetMatchingEchConfig %d",
+                 SSL_GETPID(), ss->fd, configId));
 
     /* If |cur|, resume the search at that node, else the list head. */
     for (PRCList *cur_p = cur ? ((PRCList *)cur)->next : PR_LIST_HEAD(&ss->echConfigs);
          cur_p != &ss->echConfigs;
          cur_p = PR_NEXT_LINK(cur_p)) {
         sslEchConfig *echConfig = (sslEchConfig *)cur_p;
-        if (configId->len != sizeof(echConfig->configId) ||
-            PORT_Memcmp(echConfig->configId, configId->data, sizeof(echConfig->configId))) {
-            continue;
-        }
-        if (echConfig->contents.aeadId == aead &&
+        if (echConfig->contents.configId == configId &&
+            echConfig->contents.aeadId == aead &&
             echConfig->contents.kdfId == kdf) {
             *next = echConfig;
             return SECSuccess;
@@ -1016,10 +1010,9 @@ tls13_CopyChPreamble(sslReader *reader, const SECItem *explicitSid, sslBuffer *w
 
 /*
  *   struct {
- *      HpkeKdfId kdfId;               // ClientECH.cipher_suite.kdf
- *      HpkeAeadId aeadId;             // ClientECH.cipher_suite.aead
- *      opaque config_id<0..255>;      // ClientECH.config_id
- *      opaque enc<1..2^16-1>;         // ClientECH.enc
+ *      HpkeSymmetricCipherSuite cipher_suite;  // kdfid_, aead_id
+ *      uint8 config_id;
+ *      opaque enc<1..2^16-1>;
  *      opaque outer_hello<1..2^24-1>;
  *   } ClientHelloOuterAAD;
  */
@@ -1045,17 +1038,17 @@ tls13_MakeChOuterAAD(sslSocket *ss, const SECItem *outer, SECItem *outerAAD)
         goto loser;
     }
 
+    rv = sslBuffer_AppendNumber(&aad, ss->xtnData.ech->configId, 1);
+    if (rv != SECSuccess) {
+        goto loser;
+    }
+
     if (!ss->ssl3.hs.helloRetry) {
-        rv = sslBuffer_AppendVariable(&aad, ss->xtnData.ech->configId.data,
-                                      ss->xtnData.ech->configId.len, 1);
-        if (rv != SECSuccess) {
-            goto loser;
-        }
         rv = sslBuffer_AppendVariable(&aad, ss->xtnData.ech->senderPubKey.data,
                                       ss->xtnData.ech->senderPubKey.len, 2);
     } else {
-        /* 1B config_id length, 2B enc length. */
-        rv = sslBuffer_AppendNumber(&aad, 0, 3);
+        /* |enc| is empty for HelloRetryRequest. */
+        rv = sslBuffer_AppendNumber(&aad, 0, 2);
     }
     if (rv != SECSuccess) {
         goto loser;
@@ -1506,7 +1499,7 @@ tls13_ConstructClientHelloWithEch(sslSocket *ss, const sslSessionID *sid, PRBool
      * Post-encryption, we'll assert that this was correct. */
     encodedChLen = 4 + 1 + 2 + 2 + encodedChInner.len + 16;
     if (!ss->ssl3.hs.helloRetry) {
-        encodedChLen += 8 + 32; /* configId || enc */
+        encodedChLen += 32; /* enc */
     }
     rv = ssl_InsertPaddingExtension(ss, chOuter->len + encodedChLen, chOuterXtnsBuf);
     if (rv != SECSuccess) {
@@ -1523,12 +1516,12 @@ tls13_ConstructClientHelloWithEch(sslSocket *ss, const sslSessionID *sid, PRBool
     if (rv != SECSuccess) {
         goto loser;
     }
+    rv = sslBuffer_AppendNumber(&aad, cfg->contents.configId, 1);
+    if (rv != SECSuccess) {
+        goto loser;
+    }
 
     if (!ss->ssl3.hs.helloRetry) {
-        rv = sslBuffer_AppendVariable(&aad, cfg->configId, sizeof(cfg->configId), 1);
-        if (rv != SECSuccess) {
-            goto loser;
-        }
         hpkeEnc = PK11_HPKE_GetEncapPubKey(ss->ssl3.hs.echHpkeCtx);
         if (!hpkeEnc) {
             FATAL_ERROR(ss, SEC_ERROR_LIBRARY_FAILURE, internal_error);
@@ -1536,8 +1529,8 @@ tls13_ConstructClientHelloWithEch(sslSocket *ss, const sslSessionID *sid, PRBool
         }
         rv = sslBuffer_AppendVariable(&aad, hpkeEnc->data, hpkeEnc->len, 2);
     } else {
-        /* 1B config_id length, 2B enc length. */
-        rv = sslBuffer_AppendNumber(&aad, 0, 3);
+        /* 2B for empty enc length. */
+        rv = sslBuffer_AppendNumber(&aad, 0, 2);
     }
     if (rv != SECSuccess) {
         goto loser;
@@ -1721,8 +1714,8 @@ tls13_MaybeGreaseEch(sslSocket *ss, unsigned int preambleLen, sslBuffer *buf)
     SECItem *rawData;
     CK_HKDF_PARAMS params;
     SECItem paramsi;
-    /* 1B aead determinant (don't send), 8B config_id, 32B enc, payload */
-    const int kNonPayloadLen = 41;
+    /* 1B aead determinant (don't send), 1B config_id, 32B enc, payload */
+    const int kNonPayloadLen = 34;
 
     if (!ss->opt.enableTls13GreaseEch || ss->ssl3.hs.echHpkeCtx) {
         return SECSuccess;
@@ -1787,9 +1780,8 @@ tls13_MaybeGreaseEch(sslSocket *ss, unsigned int preambleLen, sslBuffer *buf)
     PORT_Assert(rawData->len == kNonPayloadLen + payloadLen);
 
     /* struct {
-       HpkeKdfId kdf_id;
-       HpkeAeadId aead_id;
-       opaque config_id<0..255>;
+       HpkeSymmetricCipherSuite cipher_suite; // kdf_id, aead_id
+       PRUint8 config_id;
        opaque enc<1..2^16-1>;
        opaque payload<1..2^16-1>;
     } ClientECH; */
@@ -1807,14 +1799,14 @@ tls13_MaybeGreaseEch(sslSocket *ss, unsigned int preambleLen, sslBuffer *buf)
         goto loser;
     }
 
-    /* config_id, 8B */
-    rv = sslBuffer_AppendVariable(&greaseBuf, &rawData->data[1], 8, 1);
+    /* config_id */
+    rv = sslBuffer_AppendNumber(&greaseBuf, rawData->data[1], 1);
     if (rv != SECSuccess) {
         goto loser;
     }
 
     /* enc len is fixed 32B for X25519. */
-    rv = sslBuffer_AppendVariable(&greaseBuf, &rawData->data[9], 32, 2);
+    rv = sslBuffer_AppendVariable(&greaseBuf, &rawData->data[2], 32, 2);
     if (rv != SECSuccess) {
         goto loser;
     }
@@ -1958,14 +1950,12 @@ tls13_MaybeHandleEchSignal(sslSocket *ss, const PRUint8 *sh, PRUint32 shLen)
             FATAL_ERROR(ss, SSL_ERROR_RX_MALFORMED_SERVER_HELLO, illegal_parameter);
             return SECFailure;
         }
-        if (ss->ssl3.hs.helloRetry && ss->sec.isServer) {
-            /* Enc and ConfigId are stored in the cookie and must not
-                * be included in CH2.ClientECH. */
-            if (ss->xtnData.ech->senderPubKey.len || ss->xtnData.ech->configId.len) {
-                ssl3_ExtSendAlert(ss, alert_fatal, illegal_parameter);
-                PORT_SetError(SSL_ERROR_BAD_2ND_CLIENT_HELLO);
-                return SECFailure;
-            }
+        /* |enc| must not be included in CH2.ClientECH. */
+        if (ss->ssl3.hs.helloRetry && ss->sec.isServer &&
+            ss->xtnData.ech->senderPubKey.len) {
+            ssl3_ExtSendAlert(ss, alert_fatal, illegal_parameter);
+            PORT_SetError(SSL_ERROR_BAD_2ND_CLIENT_HELLO);
+            return SECFailure;
         }
 
         ss->xtnData.negotiated[ss->xtnData.numNegotiated++] = ssl_tls13_encrypted_client_hello_xtn;
@@ -2137,12 +2127,8 @@ tls13_MaybeAcceptEch(sslSocket *ss, const SECItem *sidBytes, const PRUint8 *chOu
     SECStatus rv;
     SECItem outer = { siBuffer, CONST_CAST(PRUint8, chOuter), chOuterLen };
     SECItem *decryptedChInner = NULL;
-    SECItem hrrCh1ConfigId = { siBuffer, NULL, 0 };
     SECItem outerAAD = { siBuffer, NULL, 0 };
     SECItem cookieData = { siBuffer, NULL, 0 };
-    HpkeContext *ch1EchHpkeCtx = NULL;
-    HpkeKdfId echKdfId;
-    HpkeAeadId echAeadId;
     sslEchConfig *candidate = NULL; /* non-owning */
     TLSExtension *hrrXtn;
 
@@ -2160,7 +2146,6 @@ tls13_MaybeAcceptEch(sslSocket *ss, const SECItem *sidBytes, const PRUint8 *chOu
             return SECSuccess;
         }
 
-        PORT_Assert(!ss->xtnData.ech->configId.data);
         PORT_Assert(!ss->ssl3.hs.echHpkeCtx);
 
         PRUint8 *tmp = hrrXtn->data.data;
@@ -2174,17 +2159,21 @@ tls13_MaybeAcceptEch(sslSocket *ss, const SECItem *sidBytes, const PRUint8 *chOu
         /* Extract ECH info without restoring hash state. If there's
          * something wrong with the cookie, continue without ECH
          * and let HRR code handle the problem. */
+        HpkeContext *ch1EchHpkeCtx = NULL;
+        PRUint8 echConfigId;
+        HpkeKdfId echKdfId;
+        HpkeAeadId echAeadId;
         rv = tls13_HandleHrrCookie(ss, cookieData.data, cookieData.len,
                                    NULL, NULL, NULL, &echKdfId, &echAeadId,
-                                   &hrrCh1ConfigId, &ch1EchHpkeCtx, PR_FALSE);
+                                   &echConfigId, &ch1EchHpkeCtx, PR_FALSE);
         if (rv != SECSuccess) {
             return SECSuccess;
         }
 
-        ss->xtnData.ech->configId = hrrCh1ConfigId;
         ss->ssl3.hs.echHpkeCtx = ch1EchHpkeCtx;
 
-        if (echKdfId != ss->xtnData.ech->kdfId ||
+        if (echConfigId != ss->xtnData.ech->configId ||
+            echKdfId != ss->xtnData.ech->kdfId ||
             echAeadId != ss->xtnData.ech->aeadId) {
             FATAL_ERROR(ss, SSL_ERROR_BAD_2ND_CLIENT_HELLO,
                         illegal_parameter);
@@ -2197,9 +2186,8 @@ tls13_MaybeAcceptEch(sslSocket *ss, const SECItem *sidBytes, const PRUint8 *chOu
     }
 
     /* Cookie data was good, proceed with ECH. */
-    PORT_Assert(ss->xtnData.ech->configId.data);
     rv = tls13_GetMatchingEchConfigs(ss, ss->xtnData.ech->kdfId, ss->xtnData.ech->aeadId,
-                                     &ss->xtnData.ech->configId, candidate, &candidate);
+                                     ss->xtnData.ech->configId, candidate, &candidate);
     if (rv != SECSuccess) {
         FATAL_ERROR(ss, SEC_ERROR_LIBRARY_FAILURE, internal_error);
         return SECFailure;
@@ -2217,7 +2205,7 @@ tls13_MaybeAcceptEch(sslSocket *ss, const SECItem *sidBytes, const PRUint8 *chOu
         if (rv != SECSuccess) {
             /* Get the next matching config */
             rv = tls13_GetMatchingEchConfigs(ss, ss->xtnData.ech->kdfId, ss->xtnData.ech->aeadId,
-                                             &ss->xtnData.ech->configId, candidate, &candidate);
+                                             ss->xtnData.ech->configId, candidate, &candidate);
             if (rv != SECSuccess) {
                 FATAL_ERROR(ss, SEC_ERROR_LIBRARY_FAILURE, internal_error);
                 SECITEM_FreeItem(&outerAAD, PR_FALSE);
