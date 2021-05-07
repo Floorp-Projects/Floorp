@@ -6,8 +6,7 @@ WPT_ROOT=$SCRIPT_DIR/../..
 cd $WPT_ROOT
 
 test_infrastructure() {
-    PY2_FLAG="$2"
-    TERM=dumb ./wpt $PY2_FLAG run --log-mach - --yes --manifest ~/meta/MANIFEST.json --metadata infrastructure/metadata/ --install-fonts --install-webdriver $1 $PRODUCT infrastructure/
+    TERM=dumb ./wpt run --log-mach - --yes --manifest ~/meta/MANIFEST.json --metadata infrastructure/metadata/ --install-fonts --install-webdriver $1 $PRODUCT infrastructure/
 }
 
 main() {
