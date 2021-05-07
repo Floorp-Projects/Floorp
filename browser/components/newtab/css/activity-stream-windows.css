@@ -508,37 +508,6 @@ main {
   .prefs-button button:active {
     background-color: var(--newtab-element-active-color); }
 
-@media (max-height: 701px) {
-  .personalize-button {
-    position: absolute;
-    top: 16px;
-    inset-inline-end: 16px; } }
-
-@media (min-height: 700px) {
-  .personalize-button {
-    position: fixed;
-    top: 16px;
-    inset-inline-end: 16px;
-    z-index: 1000; } }
-
-.personalize-button {
-  font-size: 12px;
-  font-weight: 600;
-  border: 0;
-  border-radius: 4px;
-  background-color: var(--newtab-background-button-color);
-  color: var(--newtab-background-button-text-color);
-  padding: 3px 10px;
-  min-height: 32px; }
-  .personalize-button:hover {
-    background-color: var(--newtab-background-button-hover-color); }
-  .personalize-button:active {
-    background-color: var(--newtab-background-button-active-color); }
-  .personalize-button:focus-visible {
-    border: 0;
-    outline: 0;
-    box-shadow: 0 0 0 3px var(--newtab-focus-outline), 0 0 0 1px var(--newtab-focus-border); }
-
 .as-error-fallback {
   align-items: center;
   border-radius: 3px;
@@ -1678,6 +1647,37 @@ main {
   border-radius: 5px;
   font-size: 15px;
   z-index: 11002; }
+
+@media (max-height: 701px) {
+  .personalize-button {
+    position: absolute;
+    top: 16px;
+    inset-inline-end: 16px; } }
+
+@media (min-height: 700px) {
+  .personalize-button {
+    position: fixed;
+    top: 16px;
+    inset-inline-end: 16px;
+    z-index: 1000; } }
+
+.personalize-button {
+  font-size: 12px;
+  font-weight: 600;
+  border: 0;
+  border-radius: 4px;
+  background-color: var(--newtab-background-button-color);
+  color: var(--newtab-background-button-text-color);
+  padding: 3px 10px;
+  min-height: 32px; }
+  .personalize-button:hover {
+    background-color: var(--newtab-background-button-hover-color); }
+  .personalize-button:active {
+    background-color: var(--newtab-background-button-active-color); }
+  .personalize-button:focus-visible {
+    border: 0;
+    outline: 0;
+    box-shadow: 0 0 0 3px var(--newtab-focus-outline), 0 0 0 1px var(--newtab-focus-border); }
 
 .customize-menu {
   color: var(--customize-menu-primary-text-color);

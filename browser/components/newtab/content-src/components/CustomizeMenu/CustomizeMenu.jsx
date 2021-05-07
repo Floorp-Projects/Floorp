@@ -7,28 +7,45 @@ import { BackgroundsSection } from "content-src/components/CustomizeMenu/Backgro
 import { ContentSection } from "content-src/components/CustomizeMenu/ContentSection/ContentSection";
 import { connect } from "react-redux";
 import React from "react";
+import { CSSTransition } from "react-transition-group";
 
 export class _CustomizeMenu extends React.PureComponent {
   render() {
     return (
-      <div className="customize-menu">
+      <span>
         <button
-          onClick={this.props.onClose}
-          className="close-button"
-          data-l10n-id="newtab-custom-close-button"
+          className="personalize-button"
+          onClick={() => this.props.onOpen()}
+          data-l10n-id="newtab-personalize-button-label"
         />
-        <ThemesSection />
-        <BackgroundsSection />
-        <ContentSection
-          openPreferences={this.props.openPreferences}
-          setPref={this.props.setPref}
-          enabledSections={this.props.enabledSections}
-          pocketRegion={this.props.pocketRegion}
-          mayHaveSponsoredTopSites={this.props.mayHaveSponsoredTopSites}
-          mayHaveSponsoredStories={this.props.DiscoveryStream.config.show_spocs}
-          dispatch={this.props.dispatch}
-        />
-      </div>
+        <CSSTransition
+          timeout={0}
+          classNames="customize-animate"
+          in={this.props.showing}
+          appear={true}
+        >
+          <div className="customize-menu">
+            <button
+              onClick={() => this.props.onClose()}
+              className="close-button"
+              data-l10n-id="newtab-custom-close-button"
+            />
+            <ThemesSection />
+            <BackgroundsSection />
+            <ContentSection
+              openPreferences={this.props.openPreferences}
+              setPref={this.props.setPref}
+              enabledSections={this.props.enabledSections}
+              pocketRegion={this.props.pocketRegion}
+              mayHaveSponsoredTopSites={this.props.mayHaveSponsoredTopSites}
+              mayHaveSponsoredStories={
+                this.props.DiscoveryStream.config.show_spocs
+              }
+              dispatch={this.props.dispatch}
+            />
+          </div>
+        </CSSTransition>
+      </span>
     );
   }
 }
