@@ -445,18 +445,6 @@
     <!-- Snackbar action to immediately open the successfully downloaded file. -->
     <string name="download_snackbar_open">Open</string>
 
-    <!-- Download dialog: Warns users that downloaded files will not be deleted even when erasing history. %1$s will be replaced with the app name (i.e. Firefox Focus). -->
-    <string name="download_dialog_warning"><![CDATA[Downloaded files <b>will not be deleted</b> when you erase %1$s history.]]></string>
-
-    <!-- Title of download dialogue -->
-    <string name="download_dialog_title">Download File</string>
-
-    <!-- Option in download dialogue to cancel a download -->
-    <string name="download_dialog_action_cancel">Cancel</string>
-
-    <!-- Option in download dialogue to start a download -->
-     <string name="download_dialog_action_download">Download</string>
-
     <string name="error_hostLookup_title">Server not found</string>
 
     <!-- Label used in the contextmenu shown when long-pressing on a link -->
