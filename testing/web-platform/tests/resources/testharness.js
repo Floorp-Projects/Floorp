@@ -1566,7 +1566,8 @@ policies and contribution forms [3].
     function _assert_inherits(name) {
         return function (object, property_name, description)
         {
-            assert(typeof object === "object" || typeof object === "function" ||
+            assert((typeof object === "object" && object !== null) ||
+                   typeof object === "function" ||
                    // Or has [[IsHTMLDDA]] slot
                    String(object) === "[object HTMLAllCollection]",
                    name, description,
