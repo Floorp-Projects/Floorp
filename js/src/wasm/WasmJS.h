@@ -100,6 +100,11 @@ bool CraneliftAvailable(JSContext* cx);
 
 bool AnyCompilerAvailable(JSContext* cx);
 
+// Asm.JS is translated to wasm and then compiled using the wasm optimizing
+// compiler; test whether this compiler is available.
+
+bool WasmCompilerForAsmJSAvailable(JSContext* cx);
+
 // Predicates for white-box compiler disablement testing.
 //
 // These predicates determine whether the optimizing compilers were disabled by

@@ -91,6 +91,8 @@ extern bool InstantiateAsmJS(JSContext* cx, unsigned argc, JS::Value* vp);
 extern bool IsAsmJSCompilationAvailable(JSContext* cx, unsigned argc,
                                         JS::Value* vp);
 
+extern bool IsAsmJSCompilationAvailable(JSContext* cx);
+
 extern bool IsAsmJSModule(JSContext* cx, unsigned argc, JS::Value* vp);
 
 extern bool IsAsmJSFunction(JSContext* cx, unsigned argc, JS::Value* vp);
