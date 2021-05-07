@@ -112,7 +112,7 @@ class HTMLItem(pytest.Item, pytest.Collector):
         includes_variants_script = False
         self.expected = None
 
-        for element in parsed.getiterator():
+        for element in parsed.iter():
             if not name and element.tag == 'title':
                 name = element.text
                 continue
