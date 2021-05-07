@@ -4,17 +4,19 @@
 
 @import url("chrome://browser/skin/error-pages.css");
 
-:root {
-  --in-content-page-background: #A4000F;
-  --in-content-page-color: white;
-  --in-content-text-color: white;
-  --in-content-primary-button-text-color: black;
-  --in-content-button-background: transparent;
-  --in-content-button-background-hover: #5a0002;
-  --in-content-button-background-active: #3e0200;
-  --in-content-primary-button-background: white;
-  --in-content-primary-button-background-hover: rgba(255, 255, 255, 0.8);
-  --in-content-primary-button-background-active: rgba(255, 255, 255, 0.7);
+@media not (prefers-contrast) {
+  :root {
+    --in-content-page-background: #A4000F;
+    --in-content-page-color: white;
+    --in-content-text-color: white;
+    --in-content-primary-button-text-color: black;
+    --in-content-button-background: transparent;
+    --in-content-button-background-hover: #5a0002;
+    --in-content-button-background-active: #3e0200;
+    --in-content-primary-button-background: white;
+    --in-content-primary-button-background-hover: rgba(255, 255, 255, 0.8);
+    --in-content-primary-button-background-active: rgba(255, 255, 255, 0.7);
+  }
 }
 
 .title {
