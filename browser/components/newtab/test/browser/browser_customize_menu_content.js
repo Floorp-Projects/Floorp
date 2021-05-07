@@ -188,6 +188,14 @@ test_newtab({
       "Close button should be focused when menu becomes visible"
     );
 
+    await ContentTaskUtils.waitForCondition(
+      () =>
+        content.getComputedStyle(
+          content.document.querySelector(".personalize-button")
+        ).visibility === "hidden",
+      "Personalize button should become hidden"
+    );
+
     // Test close button.
     let closeButton = content.document.querySelector(".close-button");
     closeButton.click();
@@ -203,6 +211,14 @@ test_newtab({
       () =>
         content.document.activeElement.classList.contains("personalize-button"),
       "Personalize button should be focused when menu closes"
+    );
+
+    await ContentTaskUtils.waitForCondition(
+      () =>
+        content.getComputedStyle(
+          content.document.querySelector(".personalize-button")
+        ).visibility === "visible",
+      "Personalize button should become visible"
     );
 
     // Reopen the customize menu
