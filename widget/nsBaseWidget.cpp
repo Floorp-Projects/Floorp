@@ -1070,8 +1070,12 @@ class DispatchInputOnControllerThread : public Runnable {
   nsBaseWidget* mWidget;
 };
 
-void nsBaseWidget::DispatchTouchInput(MultiTouchInput& aInput) {
+void nsBaseWidget::DispatchTouchInput(MultiTouchInput& aInput,
+                                      uint16_t aInputSource) {
   MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aInputSource ==
+                 mozilla::dom::MouseEvent_Binding::MOZ_SOURCE_TOUCH ||
+             aInputSource == mozilla::dom::MouseEvent_Binding::MOZ_SOURCE_PEN);
   if (mAPZC) {
     MOZ_ASSERT(APZThreadUtils::IsControllerThread());
 
@@ -1080,10 +1084,10 @@ void nsBaseWidget::DispatchTouchInput(MultiTouchInput& aInput) {
       return;
     }
 
-    WidgetTouchEvent event = aInput.ToWidgetEvent(this);
+    WidgetTouchEvent event = aInput.ToWidgetEvent(this, aInputSource);
     ProcessUntransformedAPZEvent(&event, result);
   } else {
-    WidgetTouchEvent event = aInput.ToWidgetEvent(this);
+    WidgetTouchEvent event = aInput.ToWidgetEvent(this, aInputSource);
 
     nsEventStatus status;
     DispatchEvent(&event, status);

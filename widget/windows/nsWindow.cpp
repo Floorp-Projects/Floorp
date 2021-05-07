@@ -8582,7 +8582,7 @@ bool nsWindow::DispatchTouchEventFromWMPointer(
   touchInput.mTimeStamp = GetMessageTimeStamp(touchInput.mTime);
   touchInput.mTouches.AppendElement(touchData);
 
-  DispatchTouchInput(touchInput);
+  DispatchTouchInput(touchInput, MouseEvent_Binding::MOZ_SOURCE_PEN);
   return true;
 }
 

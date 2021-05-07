@@ -231,7 +231,10 @@ class MultiTouchInput : public InputData {
 
   void Translate(const ScreenPoint& aTranslation);
 
-  WidgetTouchEvent ToWidgetEvent(nsIWidget* aWidget) const;
+  WidgetTouchEvent ToWidgetEvent(
+      nsIWidget* aWidget,
+      uint16_t aInputSource =
+          /* MouseEvent_Binding::MOZ_SOURCE_TOUCH = */ 5) const;
 
   // Return the index into mTouches of the SingleTouchData with the given
   // identifier, or -1 if there is no such SingleTouchData.

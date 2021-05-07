@@ -327,10 +327,11 @@ struct ParamTraits<mozilla::WidgetPointerEvent> {
 
 template <>
 struct ParamTraits<mozilla::WidgetTouchEvent> {
-  typedef mozilla::WidgetTouchEvent paramType;
+  using paramType = mozilla::WidgetTouchEvent;
 
   static void Write(Message* aMsg, const paramType& aParam) {
     WriteParam(aMsg, static_cast<const mozilla::WidgetInputEvent&>(aParam));
+    WriteParam(aMsg, aParam.mInputSource);
     // Sigh, Touch bites us again!  We want to be able to do
     //   WriteParam(aMsg, aParam.mTouches);
     const paramType::TouchArray& touches = aParam.mTouches;
@@ -350,6 +351,7 @@ struct ParamTraits<mozilla::WidgetTouchEvent> {
     paramType::TouchArray::size_type numTouches;
     if (!ReadParam(aMsg, aIter,
                    static_cast<mozilla::WidgetInputEvent*>(aResult)) ||
+        !ReadParam(aMsg, aIter, &aResult->mInputSource) ||
         !ReadParam(aMsg, aIter, &numTouches)) {
       return false;
     }
