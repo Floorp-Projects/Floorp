@@ -878,6 +878,9 @@ void nsXULPopupManager::OnNativeMenuClosed() {
 
   RefPtr<nsXULPopupManager> kungFuDeathGrip(this);
 
+  bool shouldHideChain =
+      (mNativeMenuActivatedItemCloseMenuMode == Some(CloseMenuMode_Auto));
+
   nsCOMPtr<nsIContent> popup = mNativeMenu->Element();
   nsMenuPopupFrame* popupFrame = GetPopupFrameForContent(popup, true);
   if (popupFrame) {
@@ -886,12 +889,22 @@ void nsXULPopupManager::OnNativeMenuClosed() {
   }
   mNativeMenu->RemoveObserver(this);
   mNativeMenu = nullptr;
+  mNativeMenuActivatedItemCloseMenuMode = Nothing();
   mNativeMenuSubmenuStates.Clear();
 
   // Stop hiding the menu from accessibility code, in case it gets opened as a
   // non-native menu in the future.
   popup->AsElement()->UnsetAttr(kNameSpaceID_None, nsGkAtoms::aria_hidden,
                                 true);
+
+  if (shouldHideChain && mPopups && mPopups->PopupType() == ePopupTypeMenu) {
+    // A menu item was activated before this menu closed, and the item requested
+    // the entire popup chain to be closed, which includes any open non-native
+    // menus.
+    // Close the non-native menus now. This matches the HidePopup call in
+    // nsXULMenuCommandEvent::Run.
+    HidePopup(mPopups->Content(), true, false, false, false);
+  }
 }
 
 void nsXULPopupManager::OnNativeSubMenuWillOpen(
@@ -910,7 +923,21 @@ void nsXULPopupManager::OnNativeSubMenuClosed(
 }
 
 void nsXULPopupManager::OnNativeMenuWillActivateItem(
-    mozilla::dom::Element* aMenuItemElement) {}
+    mozilla::dom::Element* aMenuItemElement) {
+  if (!mNativeMenu) {
+    return;
+  }
+
+  CloseMenuMode cmm = GetCloseMenuMode(aMenuItemElement);
+  mNativeMenuActivatedItemCloseMenuMode = Some(cmm);
+
+  if (cmm == CloseMenuMode_Auto) {
+    // If any non-native menus are visible (for example because the context menu
+    // was opened on a non-native menu item, e.g. in a bookmarks folder), hide
+    // the non-native menus before executing the item.
+    HideOpenMenusBeforeExecutingMenu(CloseMenuMode_Auto);
+  }
+}
 
 void nsXULPopupManager::ShowPopupAtScreenRect(
     nsIContent* aPopup, const nsAString& aPosition, const nsIntRect& aRect,
