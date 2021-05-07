@@ -11,6 +11,7 @@
 #include "mozilla/BaseProfilerDetail.h"
 #include "mozilla/ProfileBufferChunkManager.h"
 #include "mozilla/ProfileBufferControlledChunkManager.h"
+#include "mozilla/mozalloc.h"
 
 #include <utility>
 
@@ -54,6 +55,8 @@ class ProfileBufferChunkManagerWithLocalLimit final
     // `mMaxTotalBytes` is `const` so there is no need to lock the mutex.
     return mMaxTotalBytes;
   }
+
+  [[nodiscard]] size_t TotalSize() const { return mTotalBytes; }
 
   [[nodiscard]] UniquePtr<ProfileBufferChunk> GetChunk() final {
     AUTO_PROFILER_STATS(Local_GetChunk);
@@ -282,7 +285,7 @@ class ProfileBufferChunkManagerWithLocalLimit final
   void UnlockAfterPeekExtantReleasedChunks() final { mMutex.Unlock(); }
 
  private:
-  void MaybeRecycleChunk(
+  size_t MaybeRecycleChunkAndGetDeallocatedSize(
       UniquePtr<ProfileBufferChunk>&& chunk,
       const baseprofiler::detail::BaseProfilerAutoLock& aLock) {
     // Try to recycle big-enough chunks. (All chunks should have the same size,
@@ -292,10 +295,13 @@ class ProfileBufferChunkManagerWithLocalLimit final
       // We keep up to two recycled chunks at any time.
       if (!mRecycledChunks) {
         mRecycledChunks = std::move(chunk);
+        return 0;
       } else if (!mRecycledChunks->GetNext()) {
         mRecycledChunks->InsertNext(std::move(chunk));
+        return 0;
       }
     }
+    return moz_malloc_usable_size(chunk.get());
   }
 
   UniquePtr<ProfileBufferChunk> TakeRecycledChunk(
@@ -318,7 +324,9 @@ class ProfileBufferChunkManagerWithLocalLimit final
       // Inform the user that we're going to destroy this chunk.
       mChunkDestroyedCallback(*oldest);
     }
-    MaybeRecycleChunk(std::move(oldest), aLock);
+
+    mTotalBytes -=
+        MaybeRecycleChunkAndGetDeallocatedSize(std::move(oldest), aLock);
   }
 
   using ChunkAndUpdate = std::pair<UniquePtr<ProfileBufferChunk>, Update>;
@@ -350,6 +358,7 @@ class ProfileBufferChunkManagerWithLocalLimit final
     if (!chunk) {
       // No recycled chunk -> Create a chunk now. (This could still fail.)
       chunk = ProfileBufferChunk::Create(mChunkMinBufferBytes);
+      mTotalBytes += moz_malloc_usable_size(chunk.get());
     }
 
     if (chunk) {
@@ -398,6 +407,9 @@ class ProfileBufferChunkManagerWithLocalLimit final
   // Number of bytes currently held in chunks that have been released and stored
   // in `mReleasedChunks` below.
   size_t mReleasedBufferBytes = 0;
+
+  // Total allocated size (used to substract it from memory counters).
+  size_t mTotalBytes = 0;
 
   // List of all released chunks. The oldest one should be at the start of the
   // list, and may be destroyed or recycled when the memory limit is reached.

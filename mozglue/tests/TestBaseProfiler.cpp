@@ -14,6 +14,7 @@
 #  include "mozilla/BlocksRingBuffer.h"
 #  include "mozilla/leb128iterator.h"
 #  include "mozilla/ModuloBuffer.h"
+#  include "mozilla/mozalloc.h"
 #  include "mozilla/PowerOfTwo.h"
 #  include "mozilla/ProfileBufferChunk.h"
 #  include "mozilla/ProfileBufferChunkManagerSingle.h"
