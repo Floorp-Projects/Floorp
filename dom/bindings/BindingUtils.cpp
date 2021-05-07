@@ -1472,12 +1472,12 @@ static const PropertyInfo* XrayFindOwnPropertyInfo(
   return nullptr;
 }
 
-static bool XrayResolveAttribute(JSContext* cx, JS::Handle<JSObject*> wrapper,
-                                 JS::Handle<JSObject*> obj, JS::Handle<jsid> id,
-                                 const Prefable<const JSPropertySpec>& pref,
-                                 const JSPropertySpec& attrSpec,
-                                 JS::MutableHandle<JS::PropertyDescriptor> desc,
-                                 bool& cacheOnHolder) {
+static bool XrayResolveAttribute(
+    JSContext* cx, JS::Handle<JSObject*> wrapper, JS::Handle<JSObject*> obj,
+    JS::Handle<jsid> id, const Prefable<const JSPropertySpec>& pref,
+    const JSPropertySpec& attrSpec,
+    JS::MutableHandle<Maybe<JS::PropertyDescriptor>> desc,
+    bool& cacheOnHolder) {
   if (!pref.isEnabled(cx, obj)) {
     return true;
   }
@@ -1493,36 +1493,36 @@ static bool XrayResolveAttribute(JSContext* cx, JS::Handle<JSObject*> wrapper,
   // Because of centralization, we need to make sure we fault in the JitInfos as
   // well. At present, until the JSAPI changes, the easiest way to do this is
   // wrap them up as functions ourselves.
-  desc.setAttributes(attrSpec.attributes());
+
   // They all have getters, so we can just make it.
-  JS::Rooted<JSObject*> funobj(
+  JS::Rooted<JSObject*> getter(
       cx, XrayCreateFunction(cx, wrapper, attrSpec.u.accessors.getter.native, 0,
                              id));
-  if (!funobj) return false;
-  desc.setGetterObject(funobj);
-  desc.attributesRef() |= JSPROP_GETTER;
+  if (!getter) {
+    return false;
+  }
+
+  JS::Rooted<JSObject*> setter(cx);
   if (attrSpec.u.accessors.setter.native.op) {
     // We have a setter! Make it.
-    funobj = XrayCreateFunction(cx, wrapper, attrSpec.u.accessors.setter.native,
+    setter = XrayCreateFunction(cx, wrapper, attrSpec.u.accessors.setter.native,
                                 1, id);
-    if (!funobj) return false;
-    desc.setSetterObject(funobj);
-    desc.attributesRef() |= JSPROP_SETTER;
-  } else {
-    desc.setSetter(nullptr);
+    if (!setter) {
+      return false;
+    }
   }
-  desc.object().set(wrapper);
-  desc.value().setUndefined();
 
+  desc.set(Some(
+      JS::PropertyDescriptor::Accessor(getter, setter, attrSpec.attributes())));
   return true;
 }
 
-static bool XrayResolveMethod(JSContext* cx, JS::Handle<JSObject*> wrapper,
-                              JS::Handle<JSObject*> obj, JS::Handle<jsid> id,
-                              const Prefable<const JSFunctionSpec>& pref,
-                              const JSFunctionSpec& methodSpec,
-                              JS::MutableHandle<JS::PropertyDescriptor> desc,
-                              bool& cacheOnHolder) {
+static bool XrayResolveMethod(
+    JSContext* cx, JS::Handle<JSObject*> wrapper, JS::Handle<JSObject*> obj,
+    JS::Handle<jsid> id, const Prefable<const JSFunctionSpec>& pref,
+    const JSFunctionSpec& methodSpec,
+    JS::MutableHandle<Maybe<JS::PropertyDescriptor>> desc,
+    bool& cacheOnHolder) {
   if (!pref.isEnabled(cx, obj)) {
     return true;
   }
@@ -1548,31 +1548,26 @@ static bool XrayResolveMethod(JSContext* cx, JS::Handle<JSObject*> wrapper,
       return false;
     }
   }
-  desc.value().setObject(*funobj);
-  desc.setAttributes(methodSpec.flags);
-  desc.object().set(wrapper);
-  desc.setSetter(nullptr);
-  desc.setGetter(nullptr);
 
+  desc.set(Some(JS::PropertyDescriptor::Data(JS::ObjectValue(*funobj),
+                                             methodSpec.flags)));
   return true;
 }
 
-static bool XrayResolveConstant(JSContext* cx, JS::Handle<JSObject*> wrapper,
-                                JS::Handle<JSObject*> obj, JS::Handle<jsid>,
-                                const Prefable<const ConstantSpec>& pref,
-                                const ConstantSpec& constantSpec,
-                                JS::MutableHandle<JS::PropertyDescriptor> desc,
-                                bool& cacheOnHolder) {
+static bool XrayResolveConstant(
+    JSContext* cx, JS::Handle<JSObject*> wrapper, JS::Handle<JSObject*> obj,
+    JS::Handle<jsid>, const Prefable<const ConstantSpec>& pref,
+    const ConstantSpec& constantSpec,
+    JS::MutableHandle<Maybe<JS::PropertyDescriptor>> desc,
+    bool& cacheOnHolder) {
   if (!pref.isEnabled(cx, obj)) {
     return true;
   }
 
   cacheOnHolder = true;
 
-  desc.setAttributes(JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT);
-  desc.object().set(wrapper);
-  desc.value().set(constantSpec.value);
-
+  desc.set(Some(JS::PropertyDescriptor::Data(
+      constantSpec.value, {JS::PropertyAttribute::Enumerable})));
   return true;
 }
 
@@ -1585,12 +1580,12 @@ static bool XrayResolveConstant(JSContext* cx, JS::Handle<JSObject*> wrapper,
                     pref.specs[propertyInfo.specIndex], desc, cacheOnHolder); \
   }
 
-static bool XrayResolveProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
-                                JS::Handle<JSObject*> obj, JS::Handle<jsid> id,
-                                JS::MutableHandle<JS::PropertyDescriptor> desc,
-                                bool& cacheOnHolder, DOMObjectType type,
-                                const NativeProperties* nativeProperties,
-                                const PropertyInfo& propertyInfo) {
+static bool XrayResolveProperty(
+    JSContext* cx, JS::Handle<JSObject*> wrapper, JS::Handle<JSObject*> obj,
+    JS::Handle<jsid> id, JS::MutableHandle<Maybe<JS::PropertyDescriptor>> desc,
+    bool& cacheOnHolder, DOMObjectType type,
+    const NativeProperties* nativeProperties,
+    const PropertyInfo& propertyInfo) {
   MOZ_ASSERT(type != eGlobalInterfacePrototype);
 
   // Make sure we resolve for matched object type.
@@ -1638,7 +1633,8 @@ static bool XrayResolveProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
 static bool ResolvePrototypeOrConstructor(
     JSContext* cx, JS::Handle<JSObject*> wrapper, JS::Handle<JSObject*> obj,
     size_t protoAndIfaceCacheIndex, unsigned attrs,
-    JS::MutableHandle<JS::PropertyDescriptor> desc, bool& cacheOnHolder) {
+    JS::MutableHandle<Maybe<JS::PropertyDescriptor>> desc,
+    bool& cacheOnHolder) {
   JS::Rooted<JSObject*> global(cx, JS::GetNonCCWObjectGlobal(obj));
   {
     JSAutoRealm ar(cx, global);
@@ -1655,19 +1651,17 @@ static bool ResolvePrototypeOrConstructor(
 
     cacheOnHolder = true;
 
-    desc.object().set(wrapper);
-    desc.setAttributes(attrs);
-    desc.setGetter(nullptr);
-    desc.setSetter(nullptr);
-    desc.value().set(JS::ObjectValue(*protoOrIface));
+    desc.set(Some(
+        JS::PropertyDescriptor::Data(JS::ObjectValue(*protoOrIface), attrs)));
   }
   return JS_WrapPropertyDescriptor(cx, desc);
 }
 
 /* static */ bool XrayResolveOwnProperty(
     JSContext* cx, JS::Handle<JSObject*> wrapper, JS::Handle<JSObject*> obj,
-    JS::Handle<jsid> id, JS::MutableHandle<JS::PropertyDescriptor> desc,
+    JS::Handle<jsid> id, JS::MutableHandle<Maybe<JS::PropertyDescriptor>> desc,
     bool& cacheOnHolder) {
+  MOZ_ASSERT(desc.isNothing());
   cacheOnHolder = false;
 
   DOMObjectType type;
@@ -1705,7 +1699,7 @@ static bool ResolvePrototypeOrConstructor(
         return false;
       }
 
-      if (desc.object()) {
+      if (desc.isSome()) {
         return true;
       }
     }
@@ -1715,7 +1709,7 @@ static bool ResolvePrototypeOrConstructor(
         return false;
       }
 
-      if (desc.object()) {
+      if (desc.isSome()) {
         // None of these should be cached on the holder, since they're dynamic.
         return true;
       }
@@ -1748,11 +1742,9 @@ static bool ResolvePrototypeOrConstructor(
           return false;
         }
 
-        desc.value().setObject(*funObj);
-        desc.setAttributes(0);
-        desc.object().set(wrapper);
-        desc.setSetter(nullptr);
-        desc.setGetter(nullptr);
+        desc.set(Some(JS::PropertyDescriptor::Data(
+            JS::ObjectValue(*funObj), {JS::PropertyAttribute::Configurable,
+                                       JS::PropertyAttribute::Writable})));
         return true;
       }
     }
@@ -1771,11 +1763,8 @@ static bool ResolvePrototypeOrConstructor(
           return false;
         }
 
-        desc.value().setObject(*funObj);
-        desc.setAttributes(JSPROP_READONLY | JSPROP_PERMANENT);
-        desc.object().set(wrapper);
-        desc.setSetter(nullptr);
-        desc.setGetter(nullptr);
+        desc.set(
+            Some(JS::PropertyDescriptor::Data(JS::ObjectValue(*funObj), {})));
         return true;
       }
     }
@@ -1800,11 +1789,9 @@ static bool ResolvePrototypeOrConstructor(
         return false;
       }
 
-      desc.value().setString(nameStr);
-      desc.setAttributes(JSPROP_READONLY);
-      desc.object().set(wrapper);
-      desc.setSetter(nullptr);
-      desc.setGetter(nullptr);
+      desc.set(
+        Some(JS::PropertyDescriptor::Data(JS::StringValue(nameStr),
+          { JS::PropertyAttribute::Configurable })));
       return true;
     }
 
@@ -2036,20 +2023,9 @@ namespace binding_detail {
 
 bool ResolveOwnProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
                         JS::Handle<JSObject*> obj, JS::Handle<jsid> id,
-                        JS::MutableHandle<JS::PropertyDescriptor> desc) {
-  JS::Rooted<mozilla::Maybe<JS::PropertyDescriptor>> ownDesc(cx);
-  if (!js::GetProxyHandler(obj)->getOwnPropertyDescriptor(cx, wrapper, id,
-                                                          &ownDesc)) {
-    return false;
-  }
-
-  if (ownDesc.isNothing()) {
-    desc.object().set(nullptr);
-  } else {
-    desc.set(*ownDesc);
-  }
-
-  return true;
+                        JS::MutableHandle<Maybe<JS::PropertyDescriptor>> desc) {
+  return js::GetProxyHandler(obj)->getOwnPropertyDescriptor(cx, wrapper, id,
+                                                            desc);
 }
 
 bool EnumerateOwnProperties(JSContext* cx, JS::Handle<JSObject*> wrapper,

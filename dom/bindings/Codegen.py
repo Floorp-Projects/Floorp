@@ -10797,19 +10797,20 @@ class CGResolveHook(CGAbstractClassHook):
     def generate_code(self):
         return dedent(
             """
-            JS::Rooted<JS::PropertyDescriptor> desc(cx);
+            JS::Rooted<mozilla::Maybe<JS::PropertyDescriptor>> desc(cx);
             if (!self->DoResolve(cx, obj, id, &desc)) {
               return false;
             }
-            if (!desc.object()) {
+            if (desc.isNothing()) {
               return true;
             }
             // If desc.value() is undefined, then the DoResolve call
             // has already defined it on the object.  Don't try to also
             // define it.
-            if (!desc.value().isUndefined()) {
-              desc.attributesRef() |= JSPROP_RESOLVING;
-              if (!JS_DefinePropertyById(cx, obj, id, desc)) {
+            if (!desc->value().isUndefined()) {
+              JS::Rooted<JS::PropertyDescriptor> defineDesc(cx, *desc);
+              defineDesc.attributesRef() |= JSPROP_RESOLVING;
+              if (!JS_DefinePropertyById(cx, obj, id, defineDesc)) {
                 return false;
               }
             }
@@ -13658,7 +13659,7 @@ class CGResolveOwnPropertyViaResolve(CGAbstractBindingMethod):
             Argument("JS::Handle<JSObject*>", "wrapper"),
             Argument("JS::Handle<JSObject*>", "obj"),
             Argument("JS::Handle<jsid>", "id"),
-            Argument("JS::MutableHandle<JS::PropertyDescriptor>", "desc"),
+            Argument("JS::MutableHandle<Maybe<JS::PropertyDescriptor>>", "desc"),
         ]
         CGAbstractBindingMethod.__init__(
             self,
@@ -13682,17 +13683,19 @@ class CGResolveOwnPropertyViaResolve(CGAbstractBindingMethod):
               // them.
               JSAutoRealm ar(cx, obj);
               JS_MarkCrossZoneId(cx, id);
-              JS::Rooted<JS::PropertyDescriptor> objDesc(cx);
+              JS::Rooted<mozilla::Maybe<JS::PropertyDescriptor>> objDesc(cx);
               if (!self->DoResolve(cx, obj, id, &objDesc)) {
                 return false;
               }
-              // If desc.value() is undefined, then the DoResolve call
+              // If desc->value() is undefined, then the DoResolve call
               // has already defined the property on the object.  Don't
               // try to also define it.
-              if (objDesc.object() &&
-                  !objDesc.value().isUndefined() &&
-                  !JS_DefinePropertyById(cx, obj, id, objDesc)) {
-                return false;
+              if (objDesc.isSome() &&
+                  !objDesc->value().isUndefined()) {
+                JS::Rooted<JS::PropertyDescriptor> defineDesc(cx, *objDesc);
+                if (!JS_DefinePropertyById(cx, obj, id, defineDesc)) {
+                  return false;
+                }
               }
             }
             return self->DoResolve(cx, wrapper, id, desc);
