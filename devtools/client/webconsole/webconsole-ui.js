@@ -20,6 +20,8 @@ const {
   getAdHocFrontOrPrimitiveGrip,
 } = require("devtools/client/fronts/object");
 
+const FirefoxDataProvider = require("devtools/client/netmonitor/src/connector/firefox-data-provider");
+
 loader.lazyRequireGetter(
   this,
   "AppConstants",
@@ -410,12 +412,12 @@ class WebConsoleUI {
       }
 
       if (resource.resourceType === TYPES.NETWORK_EVENT_STACKTRACE) {
-        this.wrapper.networkDataProvider?.onStackTraceAvailable(resource);
+        this.networkDataProvider?.onStackTraceAvailable(resource);
         continue;
       }
 
       if (resource.resourceType === TYPES.NETWORK_EVENT) {
-        this.wrapper.networkDataProvider?.onNetworkResourceAvailable(resource);
+        this.networkDataProvider?.onNetworkResourceAvailable(resource);
       }
       messages.push(resource);
     }
@@ -429,7 +431,7 @@ class WebConsoleUI {
           resource.resourceType == this.hud.resourceCommand.TYPES.NETWORK_EVENT
       )
       .map(({ resource }) => {
-        this.wrapper.networkDataProvider?.onNetworkResourceUpdated(resource);
+        this.networkDataProvider?.onNetworkResourceUpdated(resource);
         return resource;
       });
     this.wrapper.dispatchMessagesUpdate(messageUpdates);
@@ -459,6 +461,16 @@ class WebConsoleUI {
     // This is a top level target. It may update on process switches
     // when navigating to another domain.
     if (targetFront.isTopLevel) {
+      const webConsoleFront = await this.hud.currentTarget.getFront("console");
+      this.networkDataProvider = new FirefoxDataProvider({
+        actions: {
+          updateRequest: (id, data) =>
+            this.wrapper.batchedRequestUpdates({ id, data }),
+        },
+        webConsoleFront,
+        resourceCommand: this.hud.resourceCommand,
+      });
+
       this.proxy = new WebConsoleConnectionProxy(this, targetFront);
       await this.proxy.connect();
       dispatchTargetAvailable();
