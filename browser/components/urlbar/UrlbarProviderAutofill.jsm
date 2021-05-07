@@ -219,7 +219,6 @@ const kProtocolsWithIcons = [
   "about:",
   "http:",
   "https:",
-  "ftp:",
 ];
 function iconHelper(url) {
   if (typeof url == "string") {
