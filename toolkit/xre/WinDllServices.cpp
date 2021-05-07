@@ -57,6 +57,8 @@ DllServices* DllServices::Get() {
   return sInstance;
 }
 
+DllServices::~DllServices() { DisableFull(); }
+
 void DllServices::StartUntrustedModulesProcessor() {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!mUntrustedModulesProcessor);
