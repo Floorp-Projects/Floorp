@@ -18,7 +18,6 @@ packages = [
     "rusttype",
     # https://bugzilla.mozilla.org/show_bug.cgi?id=1615148
     "smallvec",
-    "winapi",
     "yaml-rust",
     # These are tracked in bug 1587468, see there for pending work.
     "proc-macro2",

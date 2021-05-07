@@ -20,7 +20,7 @@ chrono = "0.2"
 crossbeam = "0.2"
 osmesa-sys = { version = "0.1.2", optional = true }
 osmesa-src = { version = "0.2", git = "https://github.com/servo/osmesa-src", optional = true }
-webrender = { path = "../webrender", features = ["capture", "replay", "debugger", "png", "profiler", "no_static_freetype", "leak_checks"] }
+webrender = { path = "../webrender", features = ["capture", "replay", "png", "profiler", "no_static_freetype", "leak_checks"] }
 winit = "0.19"
 serde = { version = "1.0", features = ["derive"] }
 semver = "0.9.0"

@@ -157,11 +157,6 @@ class NewRenderer : public RendererEvent {
             mWindowKind == WindowKind::MAIN, supportLowPriorityTransactions,
             supportLowPriorityThreadpool, gfx::gfxVars::UseGLSwizzle(),
             gfx::gfxVars::UseWebRenderScissoredCacheClears(),
-#ifdef NIGHTLY_BUILD
-            StaticPrefs::gfx_webrender_start_debug_server(),
-#else
-            false,
-#endif
             swgl, gl, compositor->SurfaceOriginIsTopLeft(), progCache, shaders,
             aRenderThread.ThreadPool().Raw(),
             aRenderThread.ThreadPoolLP().Raw(), &WebRenderMallocSizeOf,

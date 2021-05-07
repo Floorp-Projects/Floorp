@@ -912,19 +912,6 @@ pub enum DebugCommand {
     SetFlags(DebugFlags),
     /// Configure if dual-source blending is used, if available.
     EnableDualSourceBlending(bool),
-    /// Fetch current documents and display lists.
-    FetchDocuments,
-    /// Fetch current passes and batches.
-    FetchPasses,
-    // TODO: This should be called FetchClipScrollTree. However, that requires making
-    // changes to webrender's web debugger ui, touching a 4Mb minified file that
-    // is too big to submit through the conventional means.
-    /// Fetch the spatial tree.
-    FetchClipScrollTree,
-    /// Fetch render tasks.
-    FetchRenderTasks,
-    /// Fetch screenshot.
-    FetchScreenshot,
     /// Save a capture of all the documents state.
     SaveCapture(PathBuf, CaptureBits),
     /// Load a capture of all the documents state.
