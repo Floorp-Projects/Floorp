@@ -47,6 +47,10 @@ class nsMenuXObserver {
   // No strong reference is held to the observer during the call.
   virtual void OnMenuDidOpen(mozilla::dom::Element* aPopupElement) = 0;
 
+  // Called before a menu item is activated.
+  virtual void OnMenuWillActivateItem(mozilla::dom::Element* aPopupElement,
+                                      mozilla::dom::Element* aMenuItemElement) = 0;
+
   // Called when a menu in this menu subtree closed, after popuphidden.
   // No strong reference is held to the observer during the call.
   virtual void OnMenuClosed(mozilla::dom::Element* aPopupElement) = 0;
@@ -79,6 +83,8 @@ class nsMenuX final : public nsMenuParentX,
   // nsMenuXObserver, to forward notifications from our children to our observer.
   void OnMenuWillOpen(mozilla::dom::Element* aPopupElement) override;
   void OnMenuDidOpen(mozilla::dom::Element* aPopupElement) override;
+  void OnMenuWillActivateItem(mozilla::dom::Element* aPopupElement,
+                              mozilla::dom::Element* aMenuItemElement) override;
   void OnMenuClosed(mozilla::dom::Element* aPopupElement) override;
 
   bool IsVisible() const { return mVisible; }
@@ -137,6 +143,10 @@ class nsMenuX final : public nsMenuParentX,
   // The index only accounts for visible items, i.e. items for which there exists an NSMenuItem* in
   // mNativeMenu.
   void OnHighlightedItemChanged(const mozilla::Maybe<uint32_t>& aNewHighlightedIndex);
+
+  // Called from the menu delegate before an item anywhere in this menu is activated.
+  // Called after MenuClosed().
+  void OnWillActivateItem(NSMenuItem* aItem);
 
   void SetRebuild(bool aMenuEvent);
   void SetupIcon();

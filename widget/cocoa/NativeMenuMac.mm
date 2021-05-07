@@ -192,6 +192,9 @@ void NativeMenuMac::OnMenuDidOpen(dom::Element* aPopupElement) {
   }
 }
 
+void NativeMenuMac::OnMenuWillActivateItem(mozilla::dom::Element* aPopupElement,
+                                           mozilla::dom::Element* aMenuItemElement) {}
+
 void NativeMenuMac::OnMenuClosed(dom::Element* aPopupElement) {
   // Our caller isn't keeping us alive, so make sure we stay alive throughout this function in case
   // one of the observer notifications destroys us.
@@ -309,14 +312,16 @@ void NativeMenuMac::ActivateItem(dom::Element* aItemElement, Modifiers aModifier
     aRv.ThrowInvalidStateError("Menu containing menu item is not open");
     return;
   }
-  Maybe<nsMenuX::MenuChild> item = menu->GetItemForElement(aItemElement);
-  if (!item || !item->is<RefPtr<nsMenuItemX>>()) {
+  Maybe<nsMenuX::MenuChild> child = menu->GetItemForElement(aItemElement);
+  if (!child || !child->is<RefPtr<nsMenuItemX>>()) {
     aRv.ThrowInvalidStateError("Could not find the supplied menu item");
     return;
   }
 
-  menu->ActivateItemAfterClosing(std::move(item->as<RefPtr<nsMenuItemX>>()),
-                                 ConvertModifierFlags(aModifiers), aButton);
+  RefPtr<nsMenuItemX> item = std::move(child->as<RefPtr<nsMenuItemX>>());
+  NSMenuItem* nativeItem = [item->NativeNSMenuItem() retain];
+
+  menu->ActivateItemAfterClosing(std::move(item), ConvertModifierFlags(aModifiers), aButton);
 
   // Notify the entire menu structure that the menu is closing in response to ActivateItem.
   mMenu->MenuClosed(true);
@@ -328,6 +333,13 @@ void NativeMenuMac::ActivateItem(dom::Element* aItemElement, Modifiers aModifier
   // handler, at least on macOS 11. However, the resulting MenuClosed call will not do anything
   // because we already called MenuClosed above.
   [mMenu->NativeNSMenu() cancelTrackingWithoutAnimation];
+
+  // Call OnWillActivateItem at the end, to match the order of calls that happen when a user
+  // activates a menu item in the real world: -[MenuDelegate menu:willActivateItem:] runs after
+  // menuDidClose.
+  menu->OnWillActivateItem(nativeItem);
+
+  [nativeItem release];
 }
 
 void NativeMenuMac::OpenSubmenu(dom::Element* aMenuElement) {
