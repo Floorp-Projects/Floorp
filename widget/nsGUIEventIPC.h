@@ -343,6 +343,9 @@ struct ParamTraits<mozilla::WidgetTouchEvent> {
       WriteParam(aMsg, touch->mRadius);
       WriteParam(aMsg, touch->mRotationAngle);
       WriteParam(aMsg, touch->mForce);
+      WriteParam(aMsg, touch->tiltX);
+      WriteParam(aMsg, touch->tiltY);
+      WriteParam(aMsg, touch->twist);
     }
   }
 
@@ -361,15 +364,23 @@ struct ParamTraits<mozilla::WidgetTouchEvent> {
       mozilla::LayoutDeviceIntPoint radius;
       float rotationAngle;
       float force;
+      uint32_t tiltX;
+      uint32_t tiltY;
+      uint32_t twist;
       if (!ReadParam(aMsg, aIter, &identifier) ||
           !ReadParam(aMsg, aIter, &refPoint) ||
           !ReadParam(aMsg, aIter, &radius) ||
           !ReadParam(aMsg, aIter, &rotationAngle) ||
-          !ReadParam(aMsg, aIter, &force)) {
+          !ReadParam(aMsg, aIter, &force) || !ReadParam(aMsg, aIter, &tiltX) ||
+          !ReadParam(aMsg, aIter, &tiltY) || !ReadParam(aMsg, aIter, &twist)) {
         return false;
       }
-      aResult->mTouches.AppendElement(new mozilla::dom::Touch(
-          identifier, refPoint, radius, rotationAngle, force));
+      auto* touch = new mozilla::dom::Touch(identifier, refPoint, radius,
+                                            rotationAngle, force);
+      touch->tiltX = tiltX;
+      touch->tiltY = tiltY;
+      touch->twist = twist;
+      aResult->mTouches.AppendElement(touch);
     }
     return true;
   }
@@ -1108,7 +1119,7 @@ struct ParamTraits<mozilla::SingleTouchData::HistoricalTouchData> {
 
 template <>
 struct ParamTraits<mozilla::SingleTouchData> {
-  typedef mozilla::SingleTouchData paramType;
+  using paramType = mozilla::SingleTouchData;
 
   static void Write(Message* aMsg, const paramType& aParam) {
     WriteParam(aMsg, aParam.mHistoricalData);
@@ -1118,6 +1129,9 @@ struct ParamTraits<mozilla::SingleTouchData> {
     WriteParam(aMsg, aParam.mRadius);
     WriteParam(aMsg, aParam.mRotationAngle);
     WriteParam(aMsg, aParam.mForce);
+    WriteParam(aMsg, aParam.mTiltX);
+    WriteParam(aMsg, aParam.mTiltY);
+    WriteParam(aMsg, aParam.mTwist);
   }
 
   static bool Read(const Message* aMsg, PickleIterator* aIter,
@@ -1128,7 +1142,10 @@ struct ParamTraits<mozilla::SingleTouchData> {
             ReadParam(aMsg, aIter, &aResult->mLocalScreenPoint) &&
             ReadParam(aMsg, aIter, &aResult->mRadius) &&
             ReadParam(aMsg, aIter, &aResult->mRotationAngle) &&
-            ReadParam(aMsg, aIter, &aResult->mForce));
+            ReadParam(aMsg, aIter, &aResult->mForce) &&
+            ReadParam(aMsg, aIter, &aResult->mTiltX) &&
+            ReadParam(aMsg, aIter, &aResult->mTiltY) &&
+            ReadParam(aMsg, aIter, &aResult->mTwist));
   }
 };
 

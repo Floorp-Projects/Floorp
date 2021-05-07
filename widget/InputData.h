@@ -195,6 +195,10 @@ class SingleTouchData {
 
   // How hard the screen is being pressed.
   float mForce;
+
+  uint32_t mTiltX = 0;
+  uint32_t mTiltY = 0;
+  uint32_t mTwist = 0;
 };
 
 /**

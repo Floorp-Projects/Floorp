@@ -69,6 +69,9 @@ already_AddRefed<Touch> SingleTouchData::ToNewDOMTouch() const {
                 LayoutDeviceIntPoint::Truncate(mScreenPoint.x, mScreenPoint.y),
                 LayoutDeviceIntPoint::Truncate(mRadius.width, mRadius.height),
                 mRotationAngle, mForce);
+  touch->tiltX = mTiltX;
+  touch->tiltY = mTiltY;
+  touch->twist = mTwist;
   return touch.forget();
 }
 
