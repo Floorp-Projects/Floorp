@@ -395,7 +395,7 @@ void GCRuntime::attemptLastDitchGC(JSContext* cx) {
   }
 
   JS::PrepareForFullGC(cx);
-  gc(GC_SHRINK, JS::GCReason::LAST_DITCH);
+  gc(JS::GCOptions::Shrink, JS::GCReason::LAST_DITCH);
   waitBackgroundAllocEnd();
   waitBackgroundFreeEnd();
 

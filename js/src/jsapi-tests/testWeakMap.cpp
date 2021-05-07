@@ -100,7 +100,7 @@ BEGIN_TEST(testWeakMap_keyDelegates) {
   JSRuntime* rt = cx->runtime();
   CHECK(newCCW(map, delegateRoot));
   js::SliceBudget budget(js::WorkBudget(1000));
-  rt->gc.startDebugGC(GC_NORMAL, budget);
+  rt->gc.startDebugGC(JS::GCOptions::Normal, budget);
   if (JS::IsIncrementalGCInProgress(cx)) {
     // Wait until we've started marking before finishing the GC
     // non-incrementally.
@@ -125,7 +125,7 @@ BEGIN_TEST(testWeakMap_keyDelegates) {
   key = nullptr;
   CHECK(newCCW(map, delegateRoot));
   budget = js::SliceBudget(js::WorkBudget(1000));
-  rt->gc.startDebugGC(GC_NORMAL, budget);
+  rt->gc.startDebugGC(JS::GCOptions::Normal, budget);
   if (JS::IsIncrementalGCInProgress(cx)) {
     // Wait until we've started marking before finishing the GC
     // non-incrementally.

@@ -462,7 +462,7 @@ BEGIN_TEST(testGCHeapPreBarriers) {
   JS::PrepareForFullGC(cx);
   SliceBudget budget(WorkBudget(1));
   gc::GCRuntime* gc = &cx->runtime()->gc;
-  gc->startDebugGC(GC_NORMAL, budget);
+  gc->startDebugGC(JS::GCOptions::Normal, budget);
   while (gc->state() != gc::State::Mark) {
     gc->debugGCSlice(budget);
   }

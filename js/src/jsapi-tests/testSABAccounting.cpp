@@ -8,7 +8,7 @@
 BEGIN_TEST(testSABAccounting) {
   // Purge what we can
   JS::PrepareForFullGC(cx);
-  NonIncrementalGC(cx, GC_SHRINK, JS::GCReason::API);
+  NonIncrementalGC(cx, JS::GCOptions::Shrink, JS::GCReason::API);
 
   // Self-hosting and chrome code should not use SABs, or the point of this
   // predicate is completely lost.
@@ -24,7 +24,7 @@ BEGIN_TEST(testSABAccounting) {
   obj = nullptr;
   obj2 = nullptr;
   JS::PrepareForFullGC(cx);
-  NonIncrementalGC(cx, GC_SHRINK, JS::GCReason::API);
+  NonIncrementalGC(cx, JS::GCOptions::Shrink, JS::GCReason::API);
 
   // Should be back to base state.
   CHECK(!JS::ContainsSharedArrayBuffer(cx));
