@@ -120,6 +120,7 @@ ol {
 @media (-moz-proton) {
 .login-list-item:not(.selected):hover {
   background-color: var(--in-content-button-background-hover);
+  color: var(--in-content-button-text-color-hover);
 }
 
 .login-list-item:not(.selected):hover:active {

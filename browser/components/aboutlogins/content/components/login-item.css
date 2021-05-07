@@ -120,7 +120,7 @@ input[type="url"]:read-only {
 
 .delete-button,
 .edit-button {
-  color: var(--edit-delete-button-color) !important;
+  color: var(--edit-delete-button-color);
   background-repeat: no-repeat;
   background-position: 8px;
   -moz-context-properties: fill;
