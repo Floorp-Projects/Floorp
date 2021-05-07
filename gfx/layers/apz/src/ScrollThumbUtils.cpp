@@ -47,18 +47,22 @@ void AsyncScrollThumbTransformer::ScaleThumbBy(const Axis& aAxis,
                                                float aScale) {
   // To keep the position of the top of the thumb constant, the thumb needs to
   // translated to compensate for the scale applied. The origin with respect to
-  // which the scale is applied is the origin of the entire scrollbar, rather
-  // than the origin of the scroll thumb (meaning, for a vertical scrollbar it's
-  // at the top of the composition bounds). This means that empty space above
-  // the thumb is scaled too, effectively translating the thumb. We undo that
-  // translation here.
-  // (One can think of the adjustment being done to the translation here as
-  // a change of basis. We have a method to help with that,
-  // Matrix4x4::ChangeBasis(), but it wouldn't necessarily make the code
-  // cleaner in this case).
-  const CSSCoord thumbOrigin =
+  // which the scale is applied is the origin of the layer tree, rather than
+  // the origin of the scroll thumb. This means that the space between the
+  // origin and the top of thumb (including the part of the scrollbar track
+  // above the thumb, plus whatever content is above the scroll frame) is scaled
+  // too, effectively translating the thumb. We undo that translation here.
+  // (One can think of the adjustment being done to the translation here as a
+  // change of basis. We have a method to help with that,
+  // Matrix4x4::ChangeBasis(), but it wouldn't necessarily make the code cleaner
+  // in this case).
+  CSSCoord thumbOriginRelativeToCompBounds =
       (aAxis.GetPointOffset(mMetrics.GetVisualScrollOffset()) *
        mUnitlessThumbRatio);
+  CSSCoord compBoundsOrigin = aAxis.GetPointOffset(
+      mMetrics.CalculateCompositionBoundsInCssPixelsOfSurroundingContent()
+          .TopLeft());
+  CSSCoord thumbOrigin = compBoundsOrigin + thumbOriginRelativeToCompBounds;
   const CSSCoord thumbOriginScaled = thumbOrigin * aScale;
   const CSSCoord thumbOriginDelta = thumbOriginScaled - thumbOrigin;
   const ParentLayerCoord thumbOriginDeltaPL = thumbOriginDelta * mEffectiveZoom;
