@@ -36,21 +36,6 @@ bool ChildProcessHost::CreateChannel() {
   return true;
 }
 
-bool ChildProcessHost::CreateChannel(FileDescriptor& aFileDescriptor) {
-  if (channel_.get()) {
-    channel_->Close();
-  }
-  channel_ =
-      mozilla::ipc::OpenDescriptor(aFileDescriptor, IPC::Channel::MODE_SERVER);
-  if (!channel_->Connect()) {
-    return false;
-  }
-
-  opening_channel_ = true;
-
-  return true;
-}
-
 ChildProcessHost::ListenerHook::ListenerHook(ChildProcessHost* host)
     : host_(host) {}
 
