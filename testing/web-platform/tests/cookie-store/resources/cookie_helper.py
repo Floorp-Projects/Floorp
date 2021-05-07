@@ -22,7 +22,7 @@ import encodings, re
 
 from six import PY3
 
-from six.moves.urllib.parse import parse_qs, quote
+from urllib.parse import parse_qs, quote
 
 from wptserve.utils import isomorphic_decode, isomorphic_encode
 
