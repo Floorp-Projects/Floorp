@@ -3085,14 +3085,6 @@ class nsContentUtils {
                                     aTriggeringPrincipal);
   }
 
-  // Returns whether the image for the given URI and triggering principal is
-  // already available. Ideally this should exactly match the "list of available
-  // images" in the HTML spec, but our implementation of that at best only
-  // resembles it.
-  static bool IsImageAvailable(nsIContent*, nsIURI*,
-                               nsIPrincipal* aDefaultTriggeringPrincipal,
-                               mozilla::CORSMode);
-
   /**
    * Returns the content policy type that should be used for loading images
    * for displaying in the UI.  The sources of such images can be <xul:image>,
