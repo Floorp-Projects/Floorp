@@ -543,7 +543,6 @@
 
 .identity-popup-connection-secure.security-view,
 .identity-popup-connection-not-secure.security-view {
-  padding: 2px;
   margin-inline-start: 36px;
 }
 
