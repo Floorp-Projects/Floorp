@@ -1016,8 +1016,7 @@ static void EmitCallDOMGetterResult(JSContext* cx, CacheIRWriter& writer,
 }
 
 void GetPropIRGenerator::attachMegamorphicNativeSlot(ObjOperandId objId,
-                                                     jsid id,
-                                                     bool handleMissing) {
+                                                     jsid id) {
   MOZ_ASSERT(mode_ == ICState::Mode::Megamorphic);
 
   if (cacheKind_ == CacheKind::GetProp ||
@@ -1049,7 +1048,7 @@ AttachDecision GetPropIRGenerator::tryAttachNative(HandleObject obj,
       auto* nobj = &obj->as<NativeObject>();
 
       if (mode_ == ICState::Mode::Megamorphic) {
-        attachMegamorphicNativeSlot(objId, id, holder == nullptr);
+        attachMegamorphicNativeSlot(objId, id);
         return AttachDecision::Attach;
       }
 
