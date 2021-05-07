@@ -2597,18 +2597,10 @@ StorageActors.createActor(
      * cannot be asynchronous.
      */
     async preListStores() {
-      if (this._pendingPreListStores) {
-        return this._pendingPreListStores;
-      }
-
       this.hostVsStores = new Map();
-      this._pendingPreListStores = (async () => {
-        for (const host of await this.getHosts()) {
-          await this.populateStoresForHost(host);
-        }
-        this._pendingPreListStores = null;
-      })();
-      return this._pendingPreListStores;
+      for (const host of await this.getHosts()) {
+        await this.populateStoresForHost(host);
+      }
     },
 
     async populateStoresForHost(host) {
@@ -3676,22 +3668,31 @@ const StorageActor = protocol.ActorClassWithSpec(specs.storageSpec, {
    * Lists the available hosts for all the registered storage types.
    *
    * @returns {object} An object containing with the following structure:
-   *  - <storageType> : [{
-   *      actor: <actorId>,
-   *      host: <hostname>
-   *    }]
+   *  - <storageType> : StorageActor's form specific to the storage type, which looks like this:
+   *                    {
+   *                      actor: <actorId>,
+   *                      host: <hostname>
+   *                    }
    */
   async listStores() {
-    const toReturn = {};
-
-    for (const [name, value] of this.childActorPool) {
-      if (value.preListStores) {
-        await value.preListStores();
-      }
-      toReturn[name] = value;
+    // Avoid trying to compute the list of storage actors more than once.
+    // `preListStores` is subject to issues if called more than once.
+    if (this._cachedStores) {
+      return this._cachedStores;
     }
+    this._cachedStores = (async () => {
+      const toReturn = {};
 
-    return toReturn;
+      for (const [name, value] of this.childActorPool) {
+        if (value.preListStores) {
+          await value.preListStores();
+        }
+        toReturn[name] = value;
+      }
+
+      return toReturn;
+    })();
+    return this._cachedStores;
   },
 
   /**
