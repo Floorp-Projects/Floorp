@@ -55,11 +55,11 @@ void WindowSurfaceProvider::Initialize(nsWindow* aWidget) {
 
 void WindowSurfaceProvider::CleanupResources() { mWindowSurface = nullptr; }
 
-UniquePtr<WindowSurface> WindowSurfaceProvider::CreateWindowSurface() {
+RefPtr<WindowSurface> WindowSurfaceProvider::CreateWindowSurface() {
 #ifdef MOZ_WAYLAND
   if (!mIsX11Display) {
     LOG(("Drawing to nsWindow %p will use wl_surface\n", mWidget));
-    return MakeUnique<WindowSurfaceWayland>(mWidget);
+    return MakeRefPtr<WindowSurfaceWayland>(mWidget);
   }
 #endif
 
@@ -69,20 +69,20 @@ UniquePtr<WindowSurface> WindowSurfaceProvider::CreateWindowSurface() {
   // 3. XPutImage
   if (!mIsShaped && gfx::gfxVars::UseXRender()) {
     LOG(("Drawing to Window 0x%lx will use XRender\n", mXWindow));
-    return MakeUnique<WindowSurfaceXRender>(DefaultXDisplay(), mXWindow,
+    return MakeRefPtr<WindowSurfaceXRender>(DefaultXDisplay(), mXWindow,
                                             mXVisual, mXDepth);
   }
 
 #ifdef MOZ_HAVE_SHMIMAGE
   if (!mIsShaped && nsShmImage::UseShm()) {
     LOG(("Drawing to Window 0x%lx will use MIT-SHM\n", mXWindow));
-    return MakeUnique<WindowSurfaceX11SHM>(DefaultXDisplay(), mXWindow,
+    return MakeRefPtr<WindowSurfaceX11SHM>(DefaultXDisplay(), mXWindow,
                                            mXVisual, mXDepth);
   }
 #endif  // MOZ_HAVE_SHMIMAGE
 
   LOG(("Drawing to Window 0x%lx will use XPutImage\n", mXWindow));
-  return MakeUnique<WindowSurfaceX11Image>(DefaultXDisplay(), mXWindow,
+  return MakeRefPtr<WindowSurfaceX11Image>(DefaultXDisplay(), mXWindow,
                                            mXVisual, mXDepth, mIsShaped);
 }
 
@@ -105,7 +105,7 @@ WindowSurfaceProvider::StartRemoteDrawingInRegion(
     // Lock() call on WindowSurfaceWayland should never fail.
     gfxWarningOnce()
         << "Failed to lock WindowSurface, falling back to XPutImage backend.";
-    mWindowSurface = MakeUnique<WindowSurfaceX11Image>(
+    mWindowSurface = MakeRefPtr<WindowSurfaceX11Image>(
         DefaultXDisplay(), mXWindow, mXVisual, mXDepth, mIsShaped);
     dt = mWindowSurface->Lock(aInvalidRegion);
   }
