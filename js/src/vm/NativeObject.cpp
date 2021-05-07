@@ -1785,7 +1785,7 @@ bool js::NativeDefineDataProperty(JSContext* cx, HandleNativeObject obj,
                                   HandleId id, HandleValue value,
                                   unsigned attrs, ObjectOpResult& result) {
   Rooted<PropertyDescriptor> desc(cx);
-  desc.initFields(nullptr, value, attrs, nullptr, nullptr);
+  desc.initFields(value, attrs, nullptr, nullptr);
   return NativeDefineProperty(cx, obj, id, desc, result);
 }
 
@@ -1793,7 +1793,7 @@ bool js::NativeDefineAccessorProperty(JSContext* cx, HandleNativeObject obj,
                                       HandleId id, HandleObject getter,
                                       HandleObject setter, unsigned attrs) {
   Rooted<PropertyDescriptor> desc(cx);
-  desc.initFields(nullptr, UndefinedHandleValue, attrs, getter, setter);
+  desc.initFields(UndefinedHandleValue, attrs, getter, setter);
 
   ObjectOpResult result;
   if (!NativeDefineProperty(cx, obj, id, desc, result)) {
@@ -2088,7 +2088,6 @@ bool js::NativeGetOwnPropertyDescriptor(
     }
   }
 
-  desc.object().set(obj);
   desc.assertComplete();
   desc_.set(mozilla::Some(desc.get()));
   return true;
@@ -2569,7 +2568,7 @@ static bool SetNonexistentProperty(JSContext* cx, HandleNativeObject obj,
       }
 
       Rooted<PropertyDescriptor> desc(cx);
-      desc.initFields(nullptr, v, JSPROP_ENUMERATE, nullptr, nullptr);
+      desc.initFields(v, JSPROP_ENUMERATE, nullptr, nullptr);
 
       MOZ_ASSERT(!cx->isHelperThreadContext());
       return op(cx, obj, id, desc, result);

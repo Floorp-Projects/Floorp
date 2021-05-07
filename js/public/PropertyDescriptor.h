@@ -137,7 +137,6 @@ using PropertyAttributes = mozilla::EnumSet<PropertyAttribute>;
  * fields.
  */
 struct JS_PUBLIC_API PropertyDescriptor {
-  JSObject* obj = nullptr;
   unsigned attrs = 0;
   JSObject* getter = nullptr;
   JSObject* setter = nullptr;
@@ -269,9 +268,6 @@ struct JS_PUBLIC_API PropertyDescriptor {
 
   bool hasGetterOrSetter() const { return getter || setter; }
 
-  JS::Handle<JSObject*> objectDoNotUse() const {
-    return JS::Handle<JSObject*>::fromMarkedLocation(&obj);
-  }
   unsigned attributes() const { return attrs; }
 
   void assertValid() const {
@@ -312,14 +308,6 @@ struct JS_PUBLIC_API PropertyDescriptor {
                   has(JSPROP_GETTER) && has(JSPROP_SETTER));
 #endif
   }
-
-  void assertCompleteIfFound() const {
-#ifdef DEBUG
-    if (obj) {
-      assertComplete();
-    }
-#endif
-  }
 };
 
 }  // namespace JS
@@ -356,7 +344,6 @@ class WrappedPtrOperations<JS::PropertyDescriptor, Wrapper> {
 
   bool hasGetterOrSetter() const { return desc().hasGetterObject(); }
 
-  JS::Handle<JSObject*> object() const { return desc().objectDoNotUse(); }
   unsigned attributes() const { return desc().attributes(); }
 
   void assertValid() const { desc().assertValid(); }
@@ -373,16 +360,14 @@ class MutableWrappedPtrOperations<JS::PropertyDescriptor, Wrapper>
 
  public:
   void clear() {
-    object().set(nullptr);
     setAttributes(0);
     setGetter(nullptr);
     setSetter(nullptr);
     value().setUndefined();
   }
 
-  void initFields(JS::Handle<JSObject*> obj, JS::Handle<JS::Value> v,
-                  unsigned attrs, JSObject* getter, JSObject* setter) {
-    object().set(obj);
+  void initFields(JS::Handle<JS::Value> v, unsigned attrs, JSObject* getter,
+                  JSObject* setter) {
     value().set(v);
     setAttributes(attrs);
     setGetter(getter);
@@ -390,7 +375,6 @@ class MutableWrappedPtrOperations<JS::PropertyDescriptor, Wrapper>
   }
 
   void assign(JS::PropertyDescriptor& other) {
-    object().set(other.obj);
     setAttributes(other.attrs);
     setGetter(other.getter);
     setSetter(other.setter);
@@ -402,16 +386,12 @@ class MutableWrappedPtrOperations<JS::PropertyDescriptor, Wrapper>
                           JSPROP_READONLY | JSPROP_IGNORE_ENUMERATE |
                           JSPROP_IGNORE_PERMANENT | JSPROP_IGNORE_READONLY)) ==
                0);
-    object().set(nullptr);
     setAttributes(attrs);
     setGetter(nullptr);
     setSetter(nullptr);
     value().set(v);
   }
 
-  JS::MutableHandle<JSObject*> object() {
-    return JS::MutableHandle<JSObject*>::fromMarkedLocation(&desc().obj);
-  }
   unsigned& attributesRef() { return desc().attrs; }
   JS::MutableHandle<JS::Value> value() { return desc().value(); }
   void setValue(JS::Handle<JS::Value> v) {

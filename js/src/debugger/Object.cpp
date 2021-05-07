@@ -2117,11 +2117,6 @@ bool DebuggerObject::getOwnPropertyDescriptor(
       desc.setSetterObject(set.toObjectOrNull());
     }
 
-    // Avoid tripping same-compartment assertions in
-    // JS::FromPropertyDescriptor().
-    // TODO: Remove this when PropertyDescriptor doesn't have an
-    // object anymore.
-    desc.object().set(object);
     desc_.set(mozilla::Some(desc.get()));
   }
 

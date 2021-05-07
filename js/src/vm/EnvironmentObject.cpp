@@ -542,7 +542,6 @@ bool ModuleEnvironmentObject::getOwnPropertyDescriptor(
   if (bindings.lookup(id, &env, &prop)) {
     Rooted<PropertyDescriptor> desc(cx);
     desc.setAttributes(JSPROP_ENUMERATE | JSPROP_PERMANENT);
-    desc.object().set(obj);
     RootedValue value(cx, env->getSlot(prop->slot()));
     desc.setValue(value);
     desc.assertComplete();
@@ -2000,7 +1999,6 @@ class DebugEnvironmentProxyHandler : public BaseProxyHandler {
     }
 
     Rooted<PropertyDescriptor> desc_(cx);
-    desc_.object().set(debugEnv);
     desc_.setAttributes(JSPROP_READONLY | JSPROP_ENUMERATE | JSPROP_PERMANENT);
     desc_.value().setObject(*argsObj);
     desc_.setGetter(nullptr);
@@ -2025,7 +2023,6 @@ class DebugEnvironmentProxyHandler : public BaseProxyHandler {
     }
 
     Rooted<PropertyDescriptor> desc_(cx);
-    desc_.object().set(debugEnv);
     desc_.setAttributes(JSPROP_READONLY | JSPROP_ENUMERATE | JSPROP_PERMANENT);
     desc_.value().set(thisv);
     desc_.setGetter(nullptr);
@@ -2058,7 +2055,6 @@ class DebugEnvironmentProxyHandler : public BaseProxyHandler {
     switch (access) {
       case ACCESS_UNALIASED: {
         Rooted<PropertyDescriptor> desc_(cx);
-        desc_.object().set(debugEnv);
         desc_.setAttributes(JSPROP_READONLY | JSPROP_ENUMERATE |
                             JSPROP_PERMANENT);
         desc_.value().set(v);

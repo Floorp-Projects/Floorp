@@ -15,23 +15,24 @@ static bool Getter(JSContext* cx, unsigned argc, JS::Value* vp) {
 
 enum PropertyDescriptorKind { DataDescriptor, AccessorDescriptor };
 
-static bool CheckDescriptor(JS::Handle<JS::PropertyDescriptor> desc,
-                            PropertyDescriptorKind kind, bool enumerable,
-                            bool writable, bool configurable) {
-  if (!desc.object()) {
+static bool CheckDescriptor(
+    JS::Handle<mozilla::Maybe<JS::PropertyDescriptor>> desc,
+    PropertyDescriptorKind kind, bool enumerable, bool writable,
+    bool configurable) {
+  if (desc.isNothing()) {
     return false;
   }
-  if (!(kind == DataDescriptor ? desc.isDataDescriptor()
-                               : desc.isAccessorDescriptor())) {
+  if (!(kind == DataDescriptor ? desc->isDataDescriptor()
+                               : desc->isAccessorDescriptor())) {
     return false;
   }
-  if (desc.enumerable() != enumerable) {
+  if (desc->enumerable() != enumerable) {
     return false;
   }
-  if (kind == DataDescriptor && desc.writable() != writable) {
+  if (kind == DataDescriptor && desc->writable() != writable) {
     return false;
   }
-  if (desc.configurable() != configurable) {
+  if (desc->configurable() != configurable) {
     return false;
   }
   return true;
@@ -39,7 +40,7 @@ static bool CheckDescriptor(JS::Handle<JS::PropertyDescriptor> desc,
 
 BEGIN_TEST(testDefinePropertyIgnoredAttributes) {
   JS::RootedObject obj(cx, JS_NewPlainObject(cx));
-  JS::Rooted<JS::PropertyDescriptor> desc(cx);
+  JS::Rooted<mozilla::Maybe<JS::PropertyDescriptor>> desc(cx);
   JS::RootedValue defineValue(cx);
 
   // Try a getter. Allow it to fill in the defaults. Because we're passing a
@@ -88,7 +89,7 @@ BEGIN_TEST(testDefinePropertyIgnoredAttributes) {
 
   CHECK(JS_GetOwnPropertyDescriptor(cx, obj, "quux", &desc));
   CHECK(CheckDescriptor(desc, DataDescriptor, false, true, true));
-  CHECK_SAME(JS::ObjectValue(*obj), desc.value());
+  CHECK_SAME(JS::ObjectValue(*obj), desc->value());
 
   return true;
 }
