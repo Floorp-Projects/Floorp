@@ -3,5 +3,5 @@ set -ex
 
 cd "${0%/*}"
 for script in *.py; do
-    python2.7 "$script"
+    python3 "$script"
 done
