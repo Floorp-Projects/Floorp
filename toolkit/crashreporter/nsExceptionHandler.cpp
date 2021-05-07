@@ -1964,6 +1964,11 @@ void RegisterRuntimeExceptionModule(void) {
   if (GetRuntimeExceptionModulePath(path, kPathLength)) {
     Unused << WerRegisterRuntimeExceptionModule(path, nullptr);
   }
+
+  DWORD dwFlags = 0;
+  if (WerGetFlags(GetCurrentProcess(), &dwFlags) == S_OK) {
+    Unused << WerSetFlags(dwFlags | WER_FAULT_REPORTING_DISABLE_SNAPSHOT_HANG);
+  }
 #endif  // XP_WIN
 }
 
