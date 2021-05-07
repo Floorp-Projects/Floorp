@@ -401,7 +401,14 @@ XPCOMUtils.defineLazyGetter(this, "gHighPriorityNotificationBox", () => {
     if (gProton) {
       // With Proton enabled all notification boxes are at the top, built into the browser chrome.
       let tabNotifications = document.getElementById("tab-notification-deck");
-      gNavToolbox.insertBefore(element, tabNotifications);
+      // With Proton enabled, notification messages use the CSS box model. When using
+      // negative margins on those notification messages to animate them in or out,
+      // if the ancestry of that node is all using the XUL box model, strange glitches
+      // arise. We sidestep this by containing the global notification box within a
+      // <div> that has CSS block layout.
+      let outer = document.createElement("div");
+      outer.appendChild(element);
+      gNavToolbox.insertBefore(outer, tabNotifications);
     } else {
       document.getElementById("appcontent").prepend(element);
     }
