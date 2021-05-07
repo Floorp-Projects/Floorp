@@ -1471,7 +1471,6 @@ pub extern "C" fn wr_window_new(
     support_low_priority_threadpool: bool,
     allow_texture_swizzling: bool,
     allow_scissored_cache_clears: bool,
-    start_debug_server: bool,
     swgl_context: *mut c_void,
     gl_context: *mut c_void,
     surface_origin_is_top_left: bool,
@@ -1637,7 +1636,6 @@ pub extern "C" fn wr_window_new(
         // SWGL supports KHR_blend_equation_advanced safely, but we haven't yet
         // tested other HW platforms determine if it is safe to allow them.
         allow_advanced_blend_equation: software,
-        start_debug_server,
         surface_origin_is_top_left,
         compositor_config,
         enable_gpu_markers,

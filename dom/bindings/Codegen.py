@@ -10347,9 +10347,7 @@ class FakeArgument:
     setters look like method calls or for special operations.
     """
 
-    def __init__(
-        self, type, interfaceMember, name="arg", allowTreatNonCallableAsNull=False
-    ):
+    def __init__(self, type, name="arg", allowTreatNonCallableAsNull=False):
         self.type = type
         self.optional = False
         self.variadic = False
@@ -10384,7 +10382,7 @@ class CGSetterCall(CGPerSignatureCall):
         CGPerSignatureCall.__init__(
             self,
             None,
-            [FakeArgument(argType, attr, allowTreatNonCallableAsNull=True)],
+            [FakeArgument(argType, allowTreatNonCallableAsNull=True)],
             nativeMethodName,
             attr.isStatic(),
             descriptor,
@@ -13884,9 +13882,7 @@ class CGProxySpecialOperation(CGPerSignatureCall):
         if self.idlNode.isGetter() or self.idlNode.isDeleter():
             args.append(
                 (
-                    FakeArgument(
-                        BuiltinTypes[IDLBuiltinType.Types.boolean], self.idlNode
-                    ),
+                    FakeArgument(BuiltinTypes[IDLBuiltinType.Types.boolean]),
                     self.foundVar,
                 )
             )
@@ -18993,7 +18989,7 @@ class CGExampleSetter(CGNativeMember):
             descriptor,
             attr,
             CGSpecializedSetter.makeNativeName(descriptor, attr),
-            (BuiltinTypes[IDLBuiltinType.Types.void], [FakeArgument(attr.type, attr)]),
+            (BuiltinTypes[IDLBuiltinType.Types.void], [FakeArgument(attr.type)]),
             descriptor.getExtendedAttributes(attr, setter=True),
         )
 
@@ -19072,7 +19068,7 @@ class CGBindingImplClass(CGClass):
                 # than trying to somehow make this pretty.
                 args.append(
                     FakeArgument(
-                        BuiltinTypes[IDLBuiltinType.Types.boolean], op, name="&found"
+                        BuiltinTypes[IDLBuiltinType.Types.boolean], name="&found"
                     )
                 )
             if name == "Stringifier":
@@ -19640,7 +19636,7 @@ class CGJSImplSetter(CGJSImplMember):
             descriptor,
             attr,
             CGSpecializedSetter.makeNativeName(descriptor, attr),
-            (BuiltinTypes[IDLBuiltinType.Types.void], [FakeArgument(attr.type, attr)]),
+            (BuiltinTypes[IDLBuiltinType.Types.void], [FakeArgument(attr.type)]),
             descriptor.getExtendedAttributes(attr, setter=True),
             passJSBitsAsNeeded=False,
         )
@@ -19650,7 +19646,7 @@ class CGJSImplSetter(CGJSImplMember):
             arg.name
             for arg in self.getArgs(
                 BuiltinTypes[IDLBuiltinType.Types.void],
-                [FakeArgument(self.member.type, self.member)],
+                [FakeArgument(self.member.type)],
             )
         ]
         return "mImpl->%s(%s);\n" % (
@@ -20973,7 +20969,7 @@ class CallbackSetter(CallbackAccessor):
         CallbackAccessor.__init__(
             self,
             attr,
-            (BuiltinTypes[IDLBuiltinType.Types.void], [FakeArgument(attr.type, attr)]),
+            (BuiltinTypes[IDLBuiltinType.Types.void], [FakeArgument(attr.type)]),
             callbackSetterName(attr, descriptor),
             descriptor,
             spiderMonkeyInterfacesAreStructs,
@@ -21041,11 +21037,7 @@ class CGJSImplEventHookOperation(CallbackOperationBase):
             self,
             (
                 BuiltinTypes[IDLBuiltinType.Types.void],
-                [
-                    FakeArgument(
-                        BuiltinTypes[IDLBuiltinType.Types.domstring], None, "aType"
-                    )
-                ],
+                [FakeArgument(BuiltinTypes[IDLBuiltinType.Types.domstring], "aType")],
             ),
             name,
             MakeNativeName(name),
@@ -21511,11 +21503,11 @@ class CGMaplikeOrSetlikeHelperFunctionGenerator(CallbackMember):
         )
 
         if needsKeyArg:
-            args.append(FakeArgument(maplikeOrSetlike.keyType, None, "aKey"))
+            args.append(FakeArgument(maplikeOrSetlike.keyType, "aKey"))
         if needsValueArg:
             assert needsKeyArg
             assert not needsValueTypeReturn
-            args.append(FakeArgument(maplikeOrSetlike.valueType, None, "aValue"))
+            args.append(FakeArgument(maplikeOrSetlike.valueType, "aValue"))
         # Run CallbackMember init function to generate argument conversion code.
         # wrapScope is set to 'obj' when generating maplike or setlike helper
         # functions, as we don't have access to the CallbackPreserveColor

@@ -40,6 +40,7 @@ class GPUChild final : public ipc::CrashReporterHelper<GeckoProcessType_GPU>,
 
   // PGPUChild overrides.
   mozilla::ipc::IPCResult RecvInitComplete(const GPUDeviceData& aData);
+  mozilla::ipc::IPCResult RecvDeclareStable();
   mozilla::ipc::IPCResult RecvReportCheckerboard(const uint32_t& aSeverity,
                                                  const nsCString& aLog);
   mozilla::ipc::IPCResult RecvCreateVRProcess();

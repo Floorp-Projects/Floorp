@@ -1027,3 +1027,12 @@
    fun:_ZN9selectors6parser14parse_selector17h*
    fun:_ZN9selectors6parser24SelectorList$LT$Impl$GT$16parse_with_state17h*
 }
+
+{
+   Starting with rust 1.52
+   Memcheck:Cond
+   fun:_ZN5style10properties10shorthands4font10parse_into17hdbde89d63594167dE
+   fun:_ZN5style10properties19PropertyDeclaration10parse_into17h5b1aaabefd80275aE
+   fun:_ZN5style10properties17declaration_block31parse_property_declaration_list17hd3d3e0b8230d638aE
+   fun:_ZN124_$LT$style..stylesheets..rule_parser..NestedRuleParser$u20$as$u20$cssparser..rules_and_declarations..QualifiedRuleParser$GT$11parse_block17hbbb5be28f1605266E
+}

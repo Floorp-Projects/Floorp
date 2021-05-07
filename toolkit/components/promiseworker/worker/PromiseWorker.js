@@ -89,6 +89,11 @@ exports.Meta = Meta;
  *
  * To connect it, use `onmessage`, as follows:
  *   self.addEventListener("message", msg => myWorkerInstance.handleMessage(msg));
+ * To handle rejected promises we receive from handleMessage, we must connect it to
+ * the onError handler as follows:
+ *   self.addEventListener("unhandledrejection", function(error) {
+ *    throw error.reason;
+ *   });
  */
 function AbstractWorker(agent) {
   this._agent = agent;
@@ -100,7 +105,7 @@ AbstractWorker.prototype = {
   /**
    * Handle a message.
    */
-  handleMessage(msg) {
+  async handleMessage(msg) {
     let data = msg.data;
     this.log("Received message", data);
     let id = data.id;
@@ -126,7 +131,7 @@ AbstractWorker.prototype = {
     let method = data.fun;
     try {
       this.log("Calling method", method);
-      result = this.dispatch(method, data.args);
+      result = await this.dispatch(method, data.args);
       this.log("Method", method, "succeeded");
     } catch (ex) {
       exn = ex;

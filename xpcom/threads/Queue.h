@@ -7,7 +7,10 @@
 #ifndef mozilla_Queue_h
 #define mozilla_Queue_h
 
+#include <utility>
+#include <stdint.h>
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/Assertions.h"
 
 namespace mozilla {
 
@@ -17,11 +20,6 @@ namespace mozilla {
 // A queue implements a singly linked list of pages, each of which contains some
 // number of elements. Since the queue needs to store a "next" pointer, the
 // actual number of elements per page won't be quite as many as were requested.
-//
-// This class should only be used if it's valid to construct T elements from all
-// zeroes. The class also fails to call the destructor on items. However, it
-// will only destroy items after it has moved out their contents. The queue is
-// required to be empty when it is destroyed.
 //
 // Each page consists of N entries.  We use the head buffer as a circular buffer
 // if it's the only buffer; if we have more than one buffer when the head is
@@ -53,11 +51,34 @@ class Queue {
  public:
   Queue() = default;
 
-  ~Queue() {
-    MOZ_ASSERT(IsEmpty());
+  Queue(Queue&& aOther) noexcept
+      : mHead(std::exchange(aOther.mHead, nullptr)),
+        mTail(std::exchange(aOther.mTail, nullptr)),
+        mOffsetHead(std::exchange(aOther.mOffsetHead, 0)),
+        mHeadLength(std::exchange(aOther.mHeadLength, 0)),
+        mTailLength(std::exchange(aOther.mTailLength, 0)) {}
 
+  Queue& operator=(Queue&& aOther) noexcept {
+    Clear();
+
+    mHead = std::exchange(aOther.mHead, nullptr);
+    mTail = std::exchange(aOther.mTail, nullptr);
+    mOffsetHead = std::exchange(aOther.mOffsetHead, 0);
+    mHeadLength = std::exchange(aOther.mHeadLength, 0);
+    mTailLength = std::exchange(aOther.mTailLength, 0);
+    return *this;
+  }
+
+  ~Queue() { Clear(); }
+
+  // Discard all elements form the queue, clearing it to be empty.
+  void Clear() {
+    while (!IsEmpty()) {
+      Pop();
+    }
     if (mHead) {
       free(mHead);
+      mHead = nullptr;
     }
   }
 
@@ -70,14 +91,14 @@ class Queue {
       MOZ_ASSERT(mHead);
 
       mTail = mHead;
-      T& eltLocation = mTail->mEvents[0];
-      eltLocation = std::move(aElement);
+      T* eltPtr = &mTail->mEvents[0];
+      new (eltPtr) T(std::move(aElement));
       mOffsetHead = 0;
       mHeadLength = 1;
 #ifdef EXTRA_ASSERTS
       MOZ_ASSERT(Count() == original_length + 1);
 #endif
-      return eltLocation;
+      return *eltPtr;
     }
     if ((mHead == mTail && mHeadLength == ItemsPerPage) ||
         (mHead != mTail && mTailLength == ItemsPerPage)) {
@@ -88,31 +109,31 @@ class Queue {
 
       mTail->mNext = page;
       mTail = page;
-      T& eltLocation = page->mEvents[0];
-      eltLocation = std::move(aElement);
+      T* eltPtr = &page->mEvents[0];
+      new (eltPtr) T(std::move(aElement));
       mTailLength = 1;
 #ifdef EXTRA_ASSERTS
       MOZ_ASSERT(Count() == original_length + 1);
 #endif
-      return eltLocation;
+      return *eltPtr;
     }
     if (mHead == mTail) {
       // we have space in the (single) head buffer
       uint16_t offset = (mOffsetHead + mHeadLength++) % ItemsPerPage;
-      T& eltLocation = mTail->mEvents[offset];
-      eltLocation = std::move(aElement);
+      T* eltPtr = &mTail->mEvents[offset];
+      new (eltPtr) T(std::move(aElement));
 #ifdef EXTRA_ASSERTS
       MOZ_ASSERT(Count() == original_length + 1);
 #endif
-      return eltLocation;
+      return *eltPtr;
     }
     // else we have space to insert into last buffer
-    T& eltLocation = mTail->mEvents[mTailLength++];
-    eltLocation = std::move(aElement);
+    T* eltPtr = &mTail->mEvents[mTailLength++];
+    new (eltPtr) T(std::move(aElement));
 #ifdef EXTRA_ASSERTS
     MOZ_ASSERT(Count() == original_length + 1);
 #endif
-    return eltLocation;
+    return *eltPtr;
   }
 
   bool IsEmpty() const {
@@ -126,6 +147,7 @@ class Queue {
     MOZ_ASSERT(!IsEmpty());
 
     T result = std::move(mHead->mEvents[mOffsetHead]);
+    mHead->mEvents[mOffsetHead].~T();
     mOffsetHead = (mOffsetHead + 1) % ItemsPerPage;
     mHeadLength -= 1;
 

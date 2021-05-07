@@ -100,19 +100,22 @@ add_task(async function test_cache_api_disallowed() {
   const extension = ExtensionTestUtils.loadExtension({
     async background() {
       try {
-        await window.caches.open("test-cache-api");
-        browser.test.fail(
-          `An extension page should not be allowed to use the Cache API successfully`
+        const cache = await window.caches.open("test-cache-api");
+        let url = browser.runtime.getURL("file.txt");
+        await browser.test.assertRejects(
+          cache.add(url),
+          new RegExp(`Cache.add: Request URL ${url} must be either`),
+          "Got the expected rejections on calling cache.add with a moz-extension:// url"
         );
       } catch (err) {
-        browser.test.assertEq(
-          String(err),
-          "SecurityError: The operation is insecure.",
-          "Got the expected error on registering a service worker from a script"
-        );
+        browser.test.fail(`Unexpected error on using Cache API: ${err}`);
+        throw err;
       } finally {
         browser.test.sendMessage("test-cache-api-disallowed");
       }
+    },
+    files: {
+      "file.txt": "file content",
     },
   });
 

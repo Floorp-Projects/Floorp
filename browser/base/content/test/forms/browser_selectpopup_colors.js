@@ -10,9 +10,9 @@ const gSelects = {
     '  <option value="One" style="color: #fff; background-color: #f00;">{"color": "rgb(255, 255, 255)", "backgroundColor": "rgb(255, 0, 0)"}</option>' +
     '  <option value="Two" class="blue">{"color": "rgb(255, 255, 255)", "backgroundColor": "rgb(0, 0, 255)"}</option>' +
     '  <option value="Three" class="green">{"color": "rgb(128, 0, 128)", "backgroundColor": "rgb(0, 128, 0)"}</option>' +
-    '  <option value="Four" class="defaultColor defaultBackground">{"color": "-moz-ComboboxText", "backgroundColor": "rgba(0, 0, 0, 0)", "unstyled": "true"}</option>' +
+    '  <option value="Four" class="defaultColor defaultBackground">{"color": "-moz-ComboboxText", "backgroundColor": "-moz-Combobox"}</option>' +
     '  <option value="Five" class="defaultColor">{"color": "-moz-ComboboxText", "backgroundColor": "rgba(0, 0, 0, 0)", "unstyled": "true"}</option>' +
-    '  <option value="Six" class="defaultBackground">{"color": "-moz-ComboboxText", "backgroundColor": "rgba(0, 0, 0, 0)", "unstyled": "true"}</option>' +
+    '  <option value="Six" class="defaultBackground">{"color": "-moz-ComboboxText", "backgroundColor": "-moz-Combobox"}</option>' +
     '  <option value="Seven" selected="true">{"unstyled": "true"}</option>' +
     "</select></body></html>",
 
@@ -72,22 +72,22 @@ const gSelects = {
     "<html><head>" +
     "<body><select id='one'>" +
     "  <optgroup label='{\"unstyled\": true}'>" +
-    '    <option disabled="">{"color": "GrayText", "backgroundColor": "rgba(0, 0, 0, 0)"}</option>' +
+    '    <option disabled="">{"color": "GrayText", "backgroundColor": "-moz-Combobox"}</option>' +
     '    <option>{"unstyled": true}</option>' +
-    '    <option disabled="">{"color": "GrayText", "backgroundColor": "rgba(0, 0, 0, 0)"}</option>' +
+    '    <option disabled="">{"color": "GrayText", "backgroundColor": "-moz-Combobox"}</option>' +
     '    <option>{"unstyled": true}</option>' +
     '    <option>{"unstyled": true}</option>' +
     '    <option>{"unstyled": true}</option>' +
     '    <option>{"unstyled": true}</option>' +
     "  </optgroup>" +
-    '  <optgroup label=\'{"color": "GrayText", "backgroundColor": "rgba(0, 0, 0, 0)"}\' disabled=\'\'>' +
-    '    <option>{"color": "GrayText", "backgroundColor": "rgba(0, 0, 0, 0)"}</option>' +
-    '    <option>{"color": "GrayText", "backgroundColor": "rgba(0, 0, 0, 0)"}</option>' +
-    '    <option>{"color": "GrayText", "backgroundColor": "rgba(0, 0, 0, 0)"}</option>' +
-    '    <option>{"color": "GrayText", "backgroundColor": "rgba(0, 0, 0, 0)"}</option>' +
-    '    <option>{"color": "GrayText", "backgroundColor": "rgba(0, 0, 0, 0)"}</option>' +
-    '    <option>{"color": "GrayText", "backgroundColor": "rgba(0, 0, 0, 0)"}</option>' +
-    '    <option>{"color": "GrayText", "backgroundColor": "rgba(0, 0, 0, 0)"}</option>' +
+    '  <optgroup label=\'{"color": "GrayText", "backgroundColor": "-moz-Combobox"}\' disabled=\'\'>' +
+    '    <option>{"color": "GrayText", "backgroundColor": "-moz-Combobox"}</option>' +
+    '    <option>{"color": "GrayText", "backgroundColor": "-moz-Combobox"}</option>' +
+    '    <option>{"color": "GrayText", "backgroundColor": "-moz-Combobox"}</option>' +
+    '    <option>{"color": "GrayText", "backgroundColor": "-moz-Combobox"}</option>' +
+    '    <option>{"color": "GrayText", "backgroundColor": "-moz-Combobox"}</option>' +
+    '    <option>{"color": "GrayText", "backgroundColor": "-moz-Combobox"}</option>' +
+    '    <option>{"color": "GrayText", "backgroundColor": "-moz-Combobox"}</option>' +
     "  </optgroup>" +
     '  <option value="Two" selected="true">{"end": "true"}</option>' +
     "</select></body></html>",
@@ -107,7 +107,7 @@ const gSelects = {
     "  option { color: white; }" +
     "</style></head>" +
     "<body><select id='one'>" +
-    '  <option>{"color": "rgb(255, 255, 255)", "backgroundColor": "rgba(0, 0, 0, 0)"}</option>' +
+    '  <option>{"color": "rgb(255, 255, 255)", "backgroundColor": "rgb(0, 0, 0)"}</option>' +
     '  <option selected="true">{"end": "true"}</option>' +
     "</select></body></html>",
 
@@ -146,7 +146,7 @@ const gSelects = {
     "  select:focus { text-shadow: 0 0 0 #303030; }" +
     "  option { color: red; /* It gets the default otherwise, which is fine but we don't have a good way to test for */ }" +
     "</style></head><body><select id='one'>" +
-    '  <option>{"color": "rgb(255, 0, 0)", "backgroundColor": "rgba(0, 0, 0, 0)", "textShadow": "rgb(48, 48, 48) 0px 0px 0px"}</option>' +
+    '  <option>{"color": "rgb(255, 0, 0)", "backgroundColor": "-moz-Combobox", "textShadow": "rgb(48, 48, 48) 0px 0px 0px"}</option>' +
     '  <option selected="true">{"end": "true"}</option>' +
     "</select></body></html>",
 
@@ -182,7 +182,7 @@ const gSelects = {
      .textShadow { text-shadow: 1px 1px 2px black; }
    </style></head><body><select id='one'>
      <option>{"color": "rgb(0, 0, 255)", "backgroundColor": "rgba(0, 0, 0, 0)"}</option>
-     <option class="redColor">{"color": "rgb(255, 0, 0)", "backgroundColor": "rgba(0, 0, 0, 0)"}</option>
+     <option class="redColor">{"color": "rgb(255, 0, 0)", "backgroundColor": "-moz-Combobox"}</option>
      <option class="textShadow">{"color": "rgb(0, 0, 255)", "textShadow": "rgb(0, 0, 0) 1px 1px 2px", "backgroundColor": "rgba(0, 0, 0, 0)"}</option>
      <option selected="true">{"end": "true"}</option>
    </select></body></html>
@@ -205,7 +205,44 @@ const gSelects = {
      <option style="font-family: sans-serif">Two</option>
    </select></body></html>
 `,
+  DEFAULT_DARKMODE: `
+   <html><body><select id='one'>
+     <option>{"unstyled": "true"}</option>
+     <option>{"unstyled": "true"}</option>
+     <option selected="true">{"end": "true"}</option>
+   </select></body></html>
+`,
+
+  SPLIT_FG_BG_OPTION_DARKMODE: `
+   <html><head><style>
+     select { background-color: #fff; }
+     option { color: #2b2b2b; }
+   </style></head><body><select id='one'>
+     <option>{"color": "rgb(43, 43, 43)", "backgroundColor": "-moz-Combobox"}</option>
+     <option>{"color": "rgb(43, 43, 43)", "backgroundColor": "-moz-Combobox"}</option>
+     <option selected="true">{"end": "true"}</option>
+   </select></body></html>
+`,
+
+  IDENTICAL_BG_DIFF_FG_OPTION_DARKMODE: `
+   <html><head><style>
+     select { background-color: #fff; }
+     option { color: #2b2b2b; background-color: #fff; }
+   </style></head><body><select id='one'>
+     <option>{"color": "rgb(43, 43, 43)", "backgroundColor": "-moz-Combobox"}</option>
+     <option>{"color": "rgb(43, 43, 43)", "backgroundColor": "-moz-Combobox"}</option>
+     <option selected="true">{"end": "true"}</option>
+   </select></body></html>
+`,
 };
+
+function rgbaToString(parsedColor) {
+  let { r, g, b, a } = parsedColor;
+  if (a == 1) {
+    return `rgb(${r}, ${g}, ${b})`;
+  }
+  return `rgba(${r}, ${g}, ${b}, ${a})`;
+}
 
 function testOptionColors(test, index, item, menulist) {
   // The label contains a JSON string of the expected colors for
@@ -768,3 +805,60 @@ add_task(async function test_scrollbar_props() {
   await hideSelectPopup(selectPopup, "escape");
   BrowserTestUtils.removeTab(tab);
 });
+
+if (AppConstants.isPlatformAndVersionAtLeast("win", "10")) {
+  add_task(async function test_darkmode() {
+    // Force dark mode:
+    await SpecialPowers.pushPrefEnv({ set: [["ui.systemUsesDarkTheme", 1]] });
+
+    // Determine colours from the main context menu:
+    let cs = getComputedStyle(document.documentElement);
+    let selectColor = rgbaToString(
+      InspectorUtils.colorToRGBA(cs.getPropertyValue("--menu-color"))
+    );
+    let selectBgColor = rgbaToString(
+      InspectorUtils.colorToRGBA(cs.getPropertyValue("--menu-background-color"))
+    );
+
+    // Check that by default, we use the dark mode styles:
+    let { tab, selectPopup } = await openSelectPopup(gSelects.DEFAULT_DARKMODE);
+
+    await testSelectColors("DEFAULT_DARKMODE", 3, {
+      selectColor,
+      selectBgColor,
+    });
+
+    await hideSelectPopup(selectPopup, "escape");
+    BrowserTestUtils.removeTab(tab);
+
+    ({ tab, selectPopup } = await openSelectPopup(
+      gSelects.IDENTICAL_BG_DIFF_FG_OPTION_DARKMODE
+    ));
+
+    // Custom styling on the options enforces using the select styling, too,
+    // even if it matched the UA style. They'll be overridden on individual
+    // options where necessary.
+    await testSelectColors("IDENTICAL_BG_DIFF_FG_OPTION_DARKMODE", 3, {
+      selectColor,
+      selectBgColor,
+    });
+
+    await hideSelectPopup(selectPopup, "escape");
+    BrowserTestUtils.removeTab(tab);
+
+    ({ tab, selectPopup } = await openSelectPopup(
+      gSelects.SPLIT_FG_BG_OPTION_DARKMODE
+    ));
+
+    // Like the previous case, but here the bg colour is defined on the
+    // select, and the fg colour on the option. The behaviour should be the
+    // same.
+    await testSelectColors("SPLIT_FG_BG_OPTION_DARKMODE", 3, {
+      selectColor,
+      selectBgColor,
+    });
+
+    await hideSelectPopup(selectPopup, "escape");
+    BrowserTestUtils.removeTab(tab);
+  });
+}
