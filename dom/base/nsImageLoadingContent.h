@@ -92,6 +92,13 @@ class nsImageLoadingContent : public nsIImageLoadingContent {
    */
   void NotifyOwnerDocumentActivityChanged();
 
+  /**
+   * Enables/disables image state forcing. When |aForce| is true, we force
+   * nsImageLoadingContent::ImageState() to return |aState|. Call again with
+   * |aForce| as false to revert ImageState() to its original behaviour.
+   */
+  void ForceImageState(bool aForce, mozilla::EventStates::InternalType aState);
+
  protected:
   enum ImageLoadType {
     // Most normal image loads
