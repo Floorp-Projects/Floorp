@@ -324,7 +324,7 @@ class ResourceCommand {
         }
 
         if (this._shouldRestartListenerOnTargetSwitching(resourceType)) {
-          await this._stopListening(resourceType, {
+          this._stopListening(resourceType, {
             bypassListenerCount: true,
           });
           resources.push(resourceType);
