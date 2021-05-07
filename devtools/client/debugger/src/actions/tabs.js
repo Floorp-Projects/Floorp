@@ -8,7 +8,6 @@
  */
 
 import { removeDocument } from "../utils/editor";
-import { recordEvent } from "../utils/telemetry";
 import { selectSource } from "./sources";
 
 import {
@@ -69,11 +68,6 @@ export function closeTab(cx, source, reason = "click") {
 
     const sourceId = getNewSelectedSourceId(getState(), tabs);
     dispatch(selectSource(cx, sourceId));
-
-    recordEvent("close_source_tab", {
-      reason,
-      num_tabs: tabs.length,
-    });
   };
 }
 
