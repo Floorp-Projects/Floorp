@@ -34,6 +34,7 @@ EXPORTS += [
 EXPORTS.mozilla += ["WidgetUtilsGtk.h"]
 
 UNIFIED_SOURCES += [
+    "GfxInfo.cpp",
     "IMContextWrapper.cpp",
     "MozContainer.cpp",
     "MPRISServiceHandler.cpp",
