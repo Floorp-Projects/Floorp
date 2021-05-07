@@ -96,7 +96,6 @@ class BrowsingContextGroup final : public nsWrapperCache {
 
   // Get or create a BrowsingContextGroup with the given ID.
   static already_AddRefed<BrowsingContextGroup> GetOrCreate(uint64_t aId);
-  static already_AddRefed<BrowsingContextGroup> GetExisting(uint64_t aId);
   static already_AddRefed<BrowsingContextGroup> Create();
   static already_AddRefed<BrowsingContextGroup> Select(
       WindowContext* aParent, BrowsingContext* aOpener);
@@ -153,8 +152,6 @@ class BrowsingContextGroup final : public nsWrapperCache {
 
   void IncInputEventSuspensionLevel();
   void DecInputEventSuspensionLevel();
-
-  void ChildDestroy();
 
  private:
   friend class CanonicalBrowsingContext;
