@@ -29,10 +29,12 @@
   height: 22px;
 }
 
-#viewGroup > radio[selected=true],
-#viewGroup > toolbarbutton[checked=true] {
-  color: #FFF !important;
-  text-shadow: rgba(0, 0, 0, 0.4) 0 1px;
+@media (-moz-mac-big-sur-theme: 0) {
+  #viewGroup > radio[selected=true],
+  #viewGroup > toolbarbutton[checked=true] {
+    color: #FFF !important;
+    text-shadow: rgba(0, 0, 0, 0.4) 0 1px;
+  }
 }
 
 #mainDeck {
