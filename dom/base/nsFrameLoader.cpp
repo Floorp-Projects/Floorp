@@ -288,8 +288,23 @@ static already_AddRefed<BrowsingContext> CreateBrowsingContext(
   RefPtr<BrowsingContext> opener;
   if (aOpenWindowInfo && !aOpenWindowInfo->GetForceNoOpener()) {
     opener = aOpenWindowInfo->GetParent();
-    // Must create BrowsingContext with opener in-process.
-    MOZ_ASSERT_IF(opener, opener->IsInProcess());
+    if (opener) {
+      // Must create BrowsingContext with opener in-process.
+      MOZ_ASSERT(opener->IsInProcess());
+
+      // This can only happen when the opener was closed from a nested event
+      // loop in the window provider code, and only when the open was triggered
+      // by a non-e10s tab, and the new tab is being opened in a new browser
+      // window. Since it is a corner case among corner cases, and the opener
+      // window will appear to be null to consumers after it is discarded
+      // anyway, just drop the opener entirely.
+      if (opener->IsDiscarded()) {
+        NS_WARNING(
+            "Opener was closed from a nested event loop in the parent process. "
+            "Please fix this.");
+        opener = nullptr;
+      }
+    }
   }
 
   RefPtr<nsGlobalWindowInner> parentInner =
