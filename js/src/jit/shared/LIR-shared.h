@@ -1958,11 +1958,11 @@ class LIsNullOrLikeUndefinedAndBranchT
   const LDefinition* temp() { return getTemp(0); }
 };
 
-class LSameValueDouble : public LInstructionHelper<1, 2, 1> {
+class LSameValueD : public LInstructionHelper<1, 2, 1> {
  public:
-  LIR_HEADER(SameValueDouble)
-  LSameValueDouble(const LAllocation& left, const LAllocation& right,
-                   const LDefinition& temp)
+  LIR_HEADER(SameValueD)
+  LSameValueD(const LAllocation& left, const LAllocation& right,
+              const LDefinition& temp)
       : LInstructionHelper(classOpcode) {
     setOperand(0, left);
     setOperand(1, right);
@@ -1972,19 +1972,6 @@ class LSameValueDouble : public LInstructionHelper<1, 2, 1> {
   const LAllocation* left() { return getOperand(0); }
   const LAllocation* right() { return getOperand(1); }
   const LDefinition* tempFloat() { return getTemp(0); }
-};
-
-class LSameValue : public LInstructionHelper<1, 2 * BOX_PIECES, 0> {
- public:
-  LIR_HEADER(SameValue)
-  LSameValue(const LBoxAllocation& lhs, const LBoxAllocation& rhs)
-      : LInstructionHelper(classOpcode) {
-    setBoxOperand(LhsIndex, lhs);
-    setBoxOperand(RhsIndex, rhs);
-  }
-
-  static const size_t LhsIndex = 0;
-  static const size_t RhsIndex = BOX_PIECES;
 };
 
 // Not operation on an integer.

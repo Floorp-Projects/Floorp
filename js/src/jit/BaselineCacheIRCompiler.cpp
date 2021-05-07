@@ -754,49 +754,6 @@ bool BaselineCacheIRCompiler::emitCompareStringResult(JSOp op,
   return true;
 }
 
-bool BaselineCacheIRCompiler::emitSameValueResult(ValOperandId lhsId,
-                                                  ValOperandId rhsId) {
-  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-
-  AutoOutputRegister output(*this);
-  AutoScratchRegister scratch(allocator, masm);
-  ValueOperand lhs = allocator.useValueRegister(masm, lhsId);
-  ValueOperand rhs = allocator.useValueRegister(masm, rhsId);
-
-  allocator.discardStack(masm);
-
-  Label done;
-  Label call;
-
-  // Check to see if the values have identical bits.
-  // This is correct for SameValue because SameValue(NaN,NaN) is true,
-  // and SameValue(0,-0) is false.
-  masm.branch64(Assembler::NotEqual, lhs.toRegister64(), rhs.toRegister64(),
-                &call);
-  masm.moveValue(BooleanValue(true), output.valueReg());
-  masm.jump(&done);
-
-  {
-    masm.bind(&call);
-
-    AutoStubFrame stubFrame(*this);
-    stubFrame.enter(masm, scratch);
-
-    masm.pushValue(lhs);
-    masm.pushValue(rhs);
-
-    using Fn = bool (*)(JSContext*, HandleValue, HandleValue, bool*);
-    callVM<Fn, SameValue>(masm);
-
-    stubFrame.leave(masm);
-    masm.mov(ReturnReg, scratch);
-    masm.tagValue(JSVAL_TYPE_BOOLEAN, scratch, output.valueReg());
-  }
-
-  masm.bind(&done);
-  return true;
-}
-
 bool BaselineCacheIRCompiler::emitStoreSlotShared(bool isFixed,
                                                   ObjOperandId objId,
                                                   uint32_t offsetOffset,
