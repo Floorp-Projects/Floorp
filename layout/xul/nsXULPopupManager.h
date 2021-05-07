@@ -895,6 +895,11 @@ class nsXULPopupManager final : public nsIDOMEventListener,
   // mNativeMenu has a strong reference to the menupopup nsIContent.
   RefPtr<mozilla::widget::NativeMenu> mNativeMenu;
 
+  // If the currently open native menu activated an item, this is the item's
+  // close menu mode. Nothing() if mNativeMenu is null or if no item was
+  // activated.
+  mozilla::Maybe<CloseMenuMode> mNativeMenuActivatedItemCloseMenuMode;
+
   // If a popup is displayed as a native menu, this map contains the popup state
   // for any of its non-closed submenus. This state cannot be stored on the
   // submenus' nsMenuPopupFrames, because we usually don't generate frames for
