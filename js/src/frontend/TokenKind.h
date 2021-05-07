@@ -164,14 +164,13 @@
    *   - the precedence list in Parser.cpp                             \
    *   - the JSOp code list in BytecodeEmitter.cpp                     \
    */                                                                  \
-  MACRO(Pipeline, "'|>'")                                              \
-  RANGE(BinOpFirst, Pipeline)                                          \
   MACRO(Coalesce, "'\?\?'") /* escapes to avoid trigraphs warning */   \
-  MACRO(Or, "'||'")         /* logical or */                           \
-  MACRO(And, "'&&'")        /* logical and */                          \
-  MACRO(BitOr, "'|'")       /* bitwise-or */                           \
-  MACRO(BitXor, "'^'")      /* bitwise-xor */                          \
-  MACRO(BitAnd, "'&'")      /* bitwise-and */                          \
+  RANGE(BinOpFirst, Coalesce)                                          \
+  MACRO(Or, "'||'")    /* logical or */                                \
+  MACRO(And, "'&&'")   /* logical and */                               \
+  MACRO(BitOr, "'|'")  /* bitwise-or */                                \
+  MACRO(BitXor, "'^'") /* bitwise-xor */                               \
+  MACRO(BitAnd, "'&'") /* bitwise-and */                               \
                                                                        \
   /* Equality operation tokens, per TokenKindIsEquality. */            \
   MACRO(StrictEq, "'==='")                                             \

@@ -109,7 +109,6 @@ enum BinaryOperator {
   /* misc */
   BINOP_IN,
   BINOP_INSTANCEOF,
-  BINOP_PIPELINE,
   BINOP_COALESCE,
 
   BINOP_LIMIT
@@ -189,7 +188,6 @@ static const char* const binopNames[] = {
     "&",          /* BINOP_BITAND */
     "in",         /* BINOP_IN */
     "instanceof", /* BINOP_INSTANCEOF */
-    "|>",         /* BINOP_PIPELINE */
     "??",         /* BINOP_COALESCE */
 };
 
@@ -1921,8 +1919,6 @@ BinaryOperator ASTSerializer::binop(ParseNodeKind kind) {
       return BINOP_IN;
     case ParseNodeKind::InstanceOfExpr:
       return BINOP_INSTANCEOF;
-    case ParseNodeKind::PipelineExpr:
-      return BINOP_PIPELINE;
     case ParseNodeKind::CoalesceExpr:
       return BINOP_COALESCE;
     default:
@@ -2880,7 +2876,6 @@ bool ASTSerializer::expression(ParseNode* pn, MutableHandleValue dst) {
                                           dst);
     }
 
-    case ParseNodeKind::PipelineExpr:
     case ParseNodeKind::AddExpr:
     case ParseNodeKind::SubExpr:
     case ParseNodeKind::StrictEqExpr:
