@@ -9,6 +9,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/ipc/GeckoChildProcessHost.h"
 #include "mozilla/UniquePtrExtensions.h"
+#include "nsPrintfCString.h"
 
 namespace mozilla {
 namespace ipc {
