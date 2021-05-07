@@ -23,7 +23,7 @@ win32-mingwclang/opt:
     treeherder:
         platform: windows-mingw32/all
         symbol: WMC32(Bo)
-        tier: 3
+        tier: 2
     worker:
         env:
             PERFHERDER_EXTRA_OPTIONS: "opt 32 clang"
@@ -58,7 +58,7 @@ win32-mingwclang/debug:
     treeherder:
         platform: windows-mingw32/all
         symbol: WMC32(Bd)
-        tier: 3
+        tier: 2
     worker:
         env:
             PERFHERDER_EXTRA_OPTIONS: "debug 32 clang"
@@ -93,7 +93,7 @@ win64-mingwclang/opt:
     treeherder:
         platform: windows-mingw32/all
         symbol: WMC64(Bo)
-        tier: 3
+        tier: 2
     worker:
         env:
             PERFHERDER_EXTRA_OPTIONS: "opt 64 clang"
@@ -128,7 +128,7 @@ win64-mingwclang/debug:
     treeherder:
         platform: windows-mingw32/all
         symbol: WMC64(Bd)
-        tier: 3
+        tier: 2
     worker:
         env:
             PERFHERDER_EXTRA_OPTIONS: "debug 64 clang"
