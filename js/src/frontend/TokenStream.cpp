@@ -3134,10 +3134,6 @@ template <typename Unit, class AnyCharsAccess>
       case '|':
         if (matchCodeUnit('|')) {
           simpleKind = matchCodeUnit('=') ? TokenKind::OrAssign : TokenKind::Or;
-#ifdef ENABLE_PIPELINE_OPERATOR
-        } else if (matchCodeUnit('>')) {
-          simpleKind = TokenKind::Pipeline;
-#endif
         } else {
           simpleKind =
               matchCodeUnit('=') ? TokenKind::BitOrAssign : TokenKind::BitOr;

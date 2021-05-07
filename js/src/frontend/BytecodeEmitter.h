@@ -880,8 +880,6 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
                                                CallOrNewEmitter& cone,
                                                OptionalEmitter& oe);
 
-  [[nodiscard]] bool emitPipeline(ListNode* node);
-
   [[nodiscard]] bool emitExportDefault(BinaryNode* exportNode);
 
   [[nodiscard]] bool emitReturnRval() {
