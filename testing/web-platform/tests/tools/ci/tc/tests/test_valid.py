@@ -1,6 +1,5 @@
 import json
 import os
-from io import open
 
 import jsone
 import mock
