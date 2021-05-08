@@ -70,12 +70,15 @@ async function test() {
     }
     div {
         transform-origin: top left;
-        transform: translateX(400px) scale(2) rotate(45deg);
+        transform: translateX(400px) scale(2) rotate(45deg) translate(-50px, -50px);
         width: 500px;
     }
     iframe {
         width: 400px;
         height: 300px;
+        position: absolute;
+        top: 50px;
+        left: 50px;
         border: solid 1px black;
     }
   </style>
