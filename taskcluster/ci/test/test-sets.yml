@@ -239,7 +239,6 @@ linux1804-tests:
     - mochitest-webgl2-ext
     - reftest
     - reftest-no-accel
-    - reftest-snapshot
     - telemetry-tests-client
     - test-verify
     - test-verify-gpu
