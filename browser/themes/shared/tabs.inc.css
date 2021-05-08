@@ -43,7 +43,7 @@
        (browser/components/newtab/content-src/styles/_variables.scss) */
     --tabpanel-background-color: #2A2A2E;
   }
-} /*** END prefers-color-scheme: dark ***/
+}
 } /*** END proton ***/
 
 :root[uidensity=compact] {
@@ -853,6 +853,14 @@
 @media (-moz-proton) {
 .tabbrowser-tab:hover > .tab-stack > .tab-background:not([selected=true], [multiselected]) {
   background-color: color-mix(in srgb, currentColor 11%, transparent);
+}
+
+@media (prefers-contrast) {
+  .tabbrowser-tab:hover:not(:focus) > .tab-stack > .tab-background:not(:-moz-lwtheme),
+  .tabbrowser-tab:not(:focus) > .tab-stack > .tab-background:is([selected], [multiselected]):not(:-moz-lwtheme) {
+    outline: 1px solid currentColor;
+    outline-offset: -1px;
+  }
 }
 } /* END proton */
 
