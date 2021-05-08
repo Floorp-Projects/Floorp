@@ -69,12 +69,10 @@
   height: 32px;
 }
 
-@media not (prefers-contrast) {
-  .fxaccounts-avatar-button:hover {
-    background-color: transparent !important;
-  }
+.fxaccounts-avatar-button:hover {
+  background-color: transparent !important;
+}
 
-  .fxaccounts-avatar-button:hover > .fxaccount-email {
-    text-decoration: underline;
-  }
+.fxaccounts-avatar-button:hover > .fxaccount-email {
+  text-decoration: underline;
 }
