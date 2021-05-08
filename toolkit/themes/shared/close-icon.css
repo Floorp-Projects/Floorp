@@ -20,8 +20,17 @@
 }
 } /*** END !proton ***/
 
-.close-icon:hover {
-  background-color: color-mix(in srgb, currentColor 10%, transparent);
+@media not (prefers-contrast) {
+  .close-icon:hover {
+    background-color: color-mix(in srgb, currentColor 10%, transparent);
+  }
+}
+
+@media (prefers-contrast) {
+  .close-icon:hover {
+    outline: 1px solid currentColor;
+    outline-offset: -1px;
+  }
 }
 
 .close-icon:hover:active {
