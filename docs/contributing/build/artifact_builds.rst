@@ -132,7 +132,7 @@ Things that are not supported
 -  Support for products other than Firefox for Desktop and
    Android are not supported and are unlikely to ever be supported.
    Other projects like Thunderbird may provide
-   <a href="https://developer.thunderbird.net/thunderbird-development/building-thunderbird/artifact-builds">their own support</a>
+   `their own support <https://developer.thunderbird.net/thunderbird-development/building-thunderbird/artifact-builds>`__
    for artifact builds.
 -  You cannot modify C, C++, or Rust source code anywhere in the tree.
    If it’s compiled to machine code, it can't be changed.
