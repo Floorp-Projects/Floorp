@@ -762,7 +762,11 @@
 
 - name: apz.zoom_animation_duration_ms
   type: RelaxedAtomicInt32
+#if defined(MOZ_WIDGET_ANDROID)
   value: 250
+#else
+  value: 350
+#endif
   mirror: always
 
 - name: apz.scale_repaint_delay_ms
