@@ -1,4 +1,3 @@
-import io
 import os
 import sys
 from atomicwrites import atomic_write
@@ -360,7 +359,7 @@ def _load(logger,  # type: Logger
         else:
             logger.debug("Creating new manifest at %s" % manifest)
         try:
-            with io.open(manifest, "r", encoding="utf-8") as f:
+            with open(manifest, "r", encoding="utf-8") as f:
                 rv = Manifest.from_json(tests_root,
                                         jsonlib.load(f),
                                         types=types,

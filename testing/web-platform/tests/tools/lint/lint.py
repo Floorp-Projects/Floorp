@@ -3,7 +3,6 @@ from __future__ import print_function, unicode_literals
 import abc
 import argparse
 import ast
-import io
 import json
 import logging
 import multiprocessing
@@ -833,7 +832,7 @@ def check_file_contents(repo_root, path, f=None):
     :returns: a list of errors found in ``f``
     """
     if f is None:
-        f = io.open(os.path.join(repo_root, path), 'rb')
+        f = open(os.path.join(repo_root, path), 'rb')
     with f:
         errors = []
         for file_fn in file_lints:
@@ -1016,7 +1015,7 @@ def lint(repo_root, paths, output_format, ignore_glob=None, github_checks_output
     if jobs == 0:
         jobs = multiprocessing.cpu_count()
 
-    with io.open(os.path.join(repo_root, "lint.ignore"), "r") as f:
+    with open(os.path.join(repo_root, "lint.ignore"), "r") as f:
         ignorelist, skipped_files = parse_ignorelist(f)
 
     if ignore_glob:
