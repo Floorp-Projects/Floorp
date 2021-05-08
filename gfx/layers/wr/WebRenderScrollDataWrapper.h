@@ -215,7 +215,7 @@ class MOZ_STACK_CLASS WebRenderScrollDataWrapper final {
       transform = mLayer->GetAncestorTransform();
     }
     if (AtBottomLayer()) {
-      transform = transform * mLayer->GetTransform();
+      transform = mLayer->GetTransform() * transform;;
     }
     return transform;
   }
