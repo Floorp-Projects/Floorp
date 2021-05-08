@@ -248,3 +248,18 @@ reftest-no-accel:
                 windows10-64.*/opt: false
                 macosx.*: false
                 default: true
+
+reftest-snapshot:
+    description: "Reftest snapshot"
+    treeherder-symbol: R(Rs)
+    virtualization: virtual
+    run-on-projects:
+        by-variant:
+            fission:
+                by-test-platform:
+                    linux1804-64/debug: ['trunk']
+                    default: []
+            default: []
+    chunks: 8
+    mozharness:
+        chunked: true
