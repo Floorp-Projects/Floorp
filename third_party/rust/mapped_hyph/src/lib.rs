@@ -9,7 +9,7 @@
 
 #[macro_use]
 extern crate arrayref;
-extern crate memmap;
+extern crate memmap2;
 #[macro_use]
 extern crate log;
 
@@ -19,7 +19,7 @@ use std::cmp::max;
 use std::fs::File;
 use std::mem;
 
-use memmap::Mmap;
+use memmap2::Mmap;
 
 // Make submodules available publicly.
 pub mod builder;
@@ -619,7 +619,7 @@ impl Hyphenator<'_> {
 /// Load the compiled hyphenation file at `dic_path`, if present.
 ///
 /// Returns `None` if the specified file cannot be opened or mapped,
-/// otherwise returns a `memmap::Mmap` mapping the file.
+/// otherwise returns a `memmap2::Mmap` mapping the file.
 ///
 /// # Safety
 ///

@@ -15,7 +15,7 @@ use std::io::Read;
 use std::os::raw::c_char;
 use std::str::Utf8Error;
 
-use memmap::Mmap;
+use memmap2::Mmap;
 
 use super::Hyphenator;
 

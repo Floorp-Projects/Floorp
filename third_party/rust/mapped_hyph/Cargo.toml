@@ -7,7 +7,7 @@ license = "MIT/Apache-2.0"
 edition = "2018"
 
 [dependencies]
-memmap = "0.7.0"
+memmap2 = "0.2.2"
 arrayref = "0.3.5"
 log = "0.4"
 
