@@ -50,11 +50,4 @@
 # Possible regressions throughout the app
 *.pro @mozilla-mobile/Performance
 *proguard* @mozilla-mobile/Performance
-
-# Possible startup regressions
-*Application.kt @mozilla-mobile/Performance
-
-# We want to be aware of new features behind flags as well as features
-# about to be enabled.
-FeatureFlags.kt @mozilla-mobile/Performance
 # --- PERFORMANCE END --- #
