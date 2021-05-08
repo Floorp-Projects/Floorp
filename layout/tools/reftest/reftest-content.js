@@ -34,7 +34,6 @@ var gTimeoutHook = null;
 var gFailureTimeout = null;
 var gFailureReason;
 var gAssertionCount = 0;
-var gUpdateCanvasPromiseResolver = null;
 
 var gDebug;
 var gVerbose = false;
@@ -1322,10 +1321,6 @@ function RegisterMessageListeners()
         "reftest:PrintDone",
         function (m) { RecvPrintDone(m.json.status, m.json.fileName); }
     );
-    addMessageListener(
-        "reftest:UpdateCanvasWithSnapshotDone",
-        function (m) { RecvUpdateCanvasWithSnapshotDone(m.json.painted); }
-    );
 }
 
 function RecvClear()
@@ -1360,11 +1355,6 @@ function RecvPrintDone(status, fileName)
     const currentTestRunTime = Date.now() - gCurrentTestStartTime;
     SendPrintResult(currentTestRunTime, status, fileName);
     FinishTestItem();
-}
-
-function RecvUpdateCanvasWithSnapshotDone(painted)
-{
-    gUpdateCanvasPromiseResolver(painted);
 }
 
 function SendAssertionCount(numAssertions)
@@ -1438,7 +1428,7 @@ function SendFailedAssignedLayer(why)
 }
 
 // Returns a promise that resolves to a bool that indicates if a snapshot was taken.
-async function SendInitCanvasWithSnapshot(forURL)
+function SendInitCanvasWithSnapshot(forURL)
 {
     if (forURL != gCurrentURL) {
         LogInfo("SendInitCanvasWithSnapshot called for previous document");
@@ -1455,12 +1445,13 @@ async function SendInitCanvasWithSnapshot(forURL)
     // NB: this is a test-harness optimization only, it must not
     // affect the validity of the tests.
     if (gBrowserIsRemote) {
-        await SynchronizeForSnapshot(SYNC_DEFAULT);
-        let promise = new Promise(resolve => { gUpdateCanvasPromiseResolver = resolve; });
-        sendAsyncMessage("reftest:InitCanvasWithSnapshot");
+        let promise = SynchronizeForSnapshot(SYNC_DEFAULT);
+        return promise.then(function () {
+            let ret = sendSyncMessage("reftest:InitCanvasWithSnapshot")[0];
 
-        gHaveCanvasSnapshot = await promise;
-        return gHaveCanvasSnapshot; 
+            gHaveCanvasSnapshot = ret.painted;
+            return ret.painted;
+        });
     }
 
     // For in-process browser, we have to make a synchronous request
@@ -1469,11 +1460,10 @@ async function SendInitCanvasWithSnapshot(forURL)
     // before we check the paint-wait counter.  For out-of-process
     // browser though, it doesn't wrt correctness whether this request
     // is sync or async.
-    let promise = new Promise(resolve => { gUpdateCanvasPromiseResolver = resolve; });
-    sendAsyncMessage("reftest:InitCanvasWithSnapshot");
+    let ret = sendSyncMessage("reftest:InitCanvasWithSnapshot")[0];
 
-    gHaveCanvasSnapshot = await promise;
-    return Promise.resolve(gHaveCanvasSnapshot);
+    gHaveCanvasSnapshot = ret.painted;
+    return Promise.resolve(ret.painted);
 }
 
 function SendScriptResults(runtimeMs, error, results)
@@ -1516,13 +1506,13 @@ function elementDescription(element)
         '>';
 }
 
-async function SendUpdateCanvasForEvent(forURL, rectList, contentRootElement)
+function SendUpdateCanvasForEvent(forURL, rectList, contentRootElement)
 {
     if (forURL != gCurrentURL) {
         LogInfo("SendUpdateCanvasForEvent called for previous document");
         // This is a test we are already done with that is clearing out.
         // Don't do anything.
-        return;
+        return Promise.resolve(undefined);
     }
 
     var win = content;
@@ -1535,12 +1525,12 @@ async function SendUpdateCanvasForEvent(forURL, rectList, contentRootElement)
       if (!gBrowserIsRemote) {
           sendSyncMessage("reftest:UpdateWholeCanvasForInvalidation");
       } else {
-          await SynchronizeForSnapshot(SYNC_ALLOW_DISABLE);
-          let promise = new Promise(resolve => { gUpdateCanvasPromiseResolver = resolve; });
-          sendAsyncMessage("reftest:UpdateWholeCanvasForInvalidation");
-          await promise;
+          let promise = SynchronizeForSnapshot(SYNC_ALLOW_DISABLE);
+          return promise.then(function () {
+            sendAsyncMessage("reftest:UpdateWholeCanvasForInvalidation");
+          });
       }
-      return;
+      return Promise.resolve(undefined);
     }
 
     var message;
@@ -1576,11 +1566,13 @@ async function SendUpdateCanvasForEvent(forURL, rectList, contentRootElement)
     if (!gBrowserIsRemote) {
         sendSyncMessage(message, { rects: rects });
     } else {
-        await SynchronizeForSnapshot(SYNC_ALLOW_DISABLE);
-        let promise = new Promise(resolve => { gUpdateCanvasPromiseResolver = resolve; });
-        sendAsyncMessage(message, { rects: rects });
-        await promise;
+        let promise = SynchronizeForSnapshot(SYNC_ALLOW_DISABLE);
+        return promise.then(function () {
+            sendAsyncMessage(message, { rects: rects });
+        });
     }
+
+    return Promise.resolve(undefined);
 }
 
 if (content.document.readyState == "complete") {
