@@ -77,6 +77,7 @@ for (let [key, val] of Object.entries({
     // Are we using <iframe mozbrowser>?
     browserIsIframe: undefined,        // bool
     browserMessageManager: undefined,  // bool
+    useDrawSnapshot: undefined,        // bool
     canvas1: undefined,
     canvas2: undefined,
     // gCurrentCanvas is non-null between InitCurrentCanvasWithSnapshot and the next

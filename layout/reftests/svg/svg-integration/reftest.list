@@ -15,7 +15,7 @@ fuzzy-if(Android,0-255,0-30) == clipPath-html-06.xhtml clipPath-html-06-ref.xhtm
 fuzzy-if(Android,0-255,0-30) == clipPath-html-06-extref.xhtml clipPath-html-06-ref.xhtml
 == clipPath-html-07.xhtml clipPath-html-07-ref.svg
 == clipPath-html-08.xhtml clipPath-html-07-ref.svg # reuse 07-ref.svg
-== clipPath-html-zoomed-01.xhtml clipPath-html-01-ref.svg
+fails-if(useDrawSnapshot) == clipPath-html-zoomed-01.xhtml clipPath-html-01-ref.svg
 == clipPath-transformed-html-01.xhtml ../pass.svg
 == clipPath-transformed-html-02.xhtml ../pass.svg
 == css-and-svg-filter-01.html css-and-svg-filter-01-ref.html  
@@ -28,11 +28,11 @@ fuzzy-if(Android,0-255,0-30) == clipPath-html-06-extref.xhtml clipPath-html-06-r
 == filter-html-01.xhtml filter-html-01-ref.svg
 == filter-html-dynamic-01.xhtml filter-html-dynamic-01-ref.xhtml
 random-if(Android) == filter-html-01-extref.xhtml filter-html-01-ref.svg # Android: bug 1198380
-== filter-html-zoomed-01.xhtml filter-html-01-ref.svg
+fails-if(useDrawSnapshot) == filter-html-zoomed-01.xhtml filter-html-01-ref.svg
 fuzzy-if(webrender,0-1,0-125414) == mask-html-01.xhtml mask-html-01-ref.svg
 fuzzy-if(webrender,0-1,0-125414) == mask-html-01-extref-01.xhtml mask-html-01-ref.svg
 random == mask-html-01-extref-02.xhtml mask-html-01-ref.svg # random due to bug 877661
-fuzzy-if(webrender,0-1,0-125414) == mask-html-zoomed-01.xhtml mask-html-01-ref.svg
+fuzzy-if(webrender,0-1,0-125414) fails-if(useDrawSnapshot) == mask-html-zoomed-01.xhtml mask-html-01-ref.svg
 == mask-transformed-html-01.xhtml ../pass.svg
 == mask-transformed-html-02.xhtml ../pass.svg
 fuzzy-if(skiaContent,0-1,0-5) == patterned-svg-under-transformed-html-01.xhtml ../pass.svg

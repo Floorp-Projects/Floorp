@@ -18,7 +18,7 @@ include position-relative/reftest.list
 # apng-mime
 include apng-mime/reftest.list
 
-include async-scrolling/reftest.list
+skip-if(unsupportedWithDrawSnapshot) include async-scrolling/reftest.list
 
 # bidi/
 include bidi/reftest.list
@@ -268,7 +268,7 @@ include margin-collapsing/reftest.list
 include marquee/reftest.list
 
 # meta viewport
-include meta-viewport/reftest.list
+skip-if(useDrawSnapshot) include meta-viewport/reftest.list
 
 # native-theme/
 # (no XUL theme on Android)
@@ -444,7 +444,7 @@ include invalidation/reftest.list
 include ../../dom/encoding/test/reftest/reftest.list
 
 # APZ/async positioning tests
-include ../../gfx/layers/apz/test/reftest/reftest.list
+skip-if(unsupportedWithDrawSnapshot) include ../../gfx/layers/apz/test/reftest/reftest.list
 
 # Display list building
 include display-list/reftest.list

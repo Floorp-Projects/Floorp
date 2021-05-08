@@ -19,17 +19,17 @@ fuzzy-if(Android,0-4,0-34) fuzzy-if(webrender,0-1,0-100) == image-opacity-02.svg
 == image-svg-inline-zoom-out-01b.html         ../pass.svg
 == image-svg-inline-zoom-out-01c.html         ../pass.svg
 == image-svg-inline-zoom-out-01d.html         ../pass.svg
-== image-svg-inline-sprite-zoom-in-01a.html   image-svg-inline-sprite-zoom-in-01-ref.html
-== image-svg-inline-sprite-zoom-in-01b.html   image-svg-inline-sprite-zoom-in-01-ref.html
-== image-svg-inline-sprite-zoom-out-01a.html  image-svg-inline-sprite-zoom-out-01-ref.html
-== image-svg-inline-sprite-zoom-out-01b.html  image-svg-inline-sprite-zoom-out-01-ref.html
+fails-if(useDrawSnapshot) == image-svg-inline-sprite-zoom-in-01a.html   image-svg-inline-sprite-zoom-in-01-ref.html
+fails-if(useDrawSnapshot) == image-svg-inline-sprite-zoom-in-01b.html   image-svg-inline-sprite-zoom-in-01-ref.html
+fails-if(useDrawSnapshot) == image-svg-inline-sprite-zoom-out-01a.html  image-svg-inline-sprite-zoom-out-01-ref.html
+fails-if(useDrawSnapshot) == image-svg-inline-sprite-zoom-out-01b.html  image-svg-inline-sprite-zoom-out-01-ref.html
 == image-translate-01.svg                     image-translate-01-ref.svg
 == image-with-following-content.svg           ../pass.svg
 == image-with-mask-and-clipPath.svg           ../pass.svg
 == image-x-01.svg                             image-x-01-ref.svg
 == image-xy-01.svg                            image-xy-01-ref.svg
 == image-y-01.svg                             image-y-01-ref.svg
-== image-zoom-02.svg                          image-zoom-02-ref.svg
+fails-if(useDrawSnapshot) == image-zoom-02.svg                          image-zoom-02-ref.svg
 == imported-image-01.svg                      imported-image-ref.svg
 == imported-image-02.svg                      imported-image-ref.svg
 
