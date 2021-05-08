@@ -1,11 +1,11 @@
-fuzzy-if(Android,0-8,0-30) == background-image-zoom-1.html background-image-zoom-1-ref.html
-fails-if(usesRepeatResampling&&!(webrender&&winWidget)) == background-image-zoom-2.html about:blank
+fuzzy-if(Android,0-8,0-30) fails-if(useDrawSnapshot) == background-image-zoom-1.html background-image-zoom-1-ref.html
+fails-if(usesRepeatResampling&&!(webrender&&winWidget)) fails-if(useDrawSnapshot) == background-image-zoom-2.html about:blank
 == image-in-iframe-1.html image-in-iframe-1-ref.html
 == image-seam-1a.html image-seam-1-ref.html
 == image-seam-1b.html image-seam-1-ref.html
 fuzzy-if(Android,0-255,0-154) == image-seam-2.html  image-seam-2-ref.html  # Bug 1128229
-== image-zoom-1.html image-zoom-1-ref.html
-== image-zoom-2.html image-zoom-1-ref.html
+fails-if(useDrawSnapshot) == image-zoom-1.html image-zoom-1-ref.html
+fails-if(useDrawSnapshot) == image-zoom-2.html image-zoom-1-ref.html
 == invalid-url-image-1.html invalid-url-image-1-ref.html
 == sync-image-switch-1a.html sync-image-switch-1-ref.html
 == sync-image-switch-1b.html sync-image-switch-1-ref.html
@@ -43,24 +43,24 @@ fuzzy(0-1,0-1) == image-orientation-dynamic.html image-orientation-dynamic-ref.h
 
 # <img srcset> tests
 == image-srcset-basic-selection-0.1x.html image-srcset-basic-selection-0.1x-ref.html
-== image-srcset-basic-selection-2x.html image-srcset-basic-selection-2x-ref.html
+fails-if(useDrawSnapshot) == image-srcset-basic-selection-2x.html image-srcset-basic-selection-2x-ref.html
 == image-srcset-basic-selection-0.5x.html image-srcset-basic-selection-0.5x-ref.html
 == image-srcset-basic-selection-0.6x.html image-srcset-basic-selection-0.6x-ref.html
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == image-srcset-basic-selection-1.5x.html image-srcset-basic-selection-1.5x-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fails-if(useDrawSnapshot) == image-srcset-basic-selection-1.5x.html image-srcset-basic-selection-1.5x-ref.html # Bug 1392106
 == image-srcset-basic-selection-1x.html image-srcset-basic-selection-1x-ref.html
 == image-srcset-basic-selection-width-0.5x.html image-srcset-basic-selection-width-0.5x-ref.html
-== image-srcset-basic-selection-width-10x.html image-srcset-basic-selection-width-10x-ref.html
-== image-srcset-basic-selection-width-2x.html image-srcset-basic-selection-width-2x-ref.html
+fails-if(useDrawSnapshot) == image-srcset-basic-selection-width-10x.html image-srcset-basic-selection-width-10x-ref.html
+fails-if(useDrawSnapshot) == image-srcset-basic-selection-width-2x.html image-srcset-basic-selection-width-2x-ref.html
 == image-srcset-basic-selection-width-1x.html image-srcset-basic-selection-width-1x-ref.html
-== image-srcset-default-2x.html image-srcset-default-2x-ref.html
+fails-if(useDrawSnapshot) == image-srcset-default-2x.html image-srcset-default-2x-ref.html
 == image-srcset-default-1x.html image-srcset-default-1x-ref.html
-== image-srcset-default-src-2x.html image-srcset-default-src-2x-ref.html
+fails-if(useDrawSnapshot) == image-srcset-default-src-2x.html image-srcset-default-src-2x-ref.html
 == image-srcset-default-src-1x.html image-srcset-default-src-1x-ref.html
-== image-srcset-isize.html image-srcset-isize-ref.html
-== image-srcset-svg-3x.html image-srcset-svg-3x-ref.html
+fails-if(useDrawSnapshot) == image-srcset-isize.html image-srcset-isize-ref.html
+fails-if(useDrawSnapshot) == image-srcset-svg-3x.html image-srcset-svg-3x-ref.html
 == image-srcset-svg-2x.html image-srcset-svg-2x-ref.html
 == image-srcset-svg-1x.html image-srcset-svg-1x-ref.html
-== image-srcset-svg-default-2x.html image-srcset-svg-default-2x-ref.html
+fails-if(useDrawSnapshot) == image-srcset-svg-default-2x.html image-srcset-svg-default-2x-ref.html
 == image-srcset-svg-default-1x.html image-srcset-svg-default-1x-ref.html
 
 == image-resize-percent-height.html image-resize-ref.html

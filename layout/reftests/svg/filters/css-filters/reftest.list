@@ -11,7 +11,7 @@ fuzzy-if(webrender,2-5,4764-8168) == blur-clip-rect.html ../feGaussianBlur-4-ref
 == blur-invalid-radius.html blur-invalid-radius-ref.html
 == blur-rem-radius.html blur-rem-radius-ref.html
 == blur-zero-radius.html blur-zero-radius-ref.html
-== blur-zoomed-page.html blur-zoomed-page-ref.html
+fails-if(useDrawSnapshot) == blur-zoomed-page.html blur-zoomed-page-ref.html
 == brightness.html brightness-ref.html
 == brightness-darken.html brightness-darken-ref.html
 == brightness-extreme.html brightness-extreme-ref.html

@@ -97,14 +97,14 @@ fuzzy-if(webrender&&winWidget,0-1,0-1875) == repeating-linear-onestopposition-1.
 fuzzy-if(webrender&&winWidget,0-1,0-1875) == repeating-radial-onestopposition-1a.html orange-square.html
 fuzzy-if(webrender&&winWidget,0-1,0-1875) == repeating-radial-onestopposition-1b.html orange-square.html
 fuzzy-if(webrender&&winWidget,0-1,0-2925) == bug-916535-background-repeat-linear.html bug-916535-background-repeat-linear-ref.html
-fuzzy(0-1,0-800000) == large-gradient-1.html large-gradient-1-ref.html
-fuzzy-if(Android,0-4,0-1) == large-gradient-2.html large-gradient-2-ref.html # Bug 1182082
-fuzzy(0-1,0-800000) == large-gradient-3.html large-gradient-3-ref.html
-== large-gradient-4.html large-gradient-4-ref.html
+fuzzy(0-1,0-800000) fails-if(useDrawSnapshot) == large-gradient-1.html large-gradient-1-ref.html
+fuzzy-if(Android,0-4,0-1) fails-if(useDrawSnapshot) == large-gradient-2.html large-gradient-2-ref.html # Bug 1182082
+fuzzy(0-1,0-800000) fails-if(useDrawSnapshot) == large-gradient-3.html large-gradient-3-ref.html
+fails-if(useDrawSnapshot) == large-gradient-4.html large-gradient-4-ref.html
 fuzzy(0-2,0-800000) == large-gradient-5.html large-gradient-5-ref.html
 == 1224761-1.html 1224761-1-ref.html
 
-fuzzy(0-4,0-800000) == mask-gradient-translucent-end-color-1.html mask-gradient-translucent-end-color-1-ref.html
+fuzzy(0-4,0-800000) fails-if(useDrawSnapshot) == mask-gradient-translucent-end-color-1.html mask-gradient-translucent-end-color-1-ref.html
 
 == scaled-color-stop-position.html scaled-color-stop-position-ref.html
 fuzzy-if(webrender&&winWidget,0-1,0-387) == color-stop-clamp-interpolation.html color-stop-clamp-interpolation-ref.html

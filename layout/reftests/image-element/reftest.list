@@ -26,10 +26,10 @@ fuzzy-if(asyncPan,0-2,0-140) fuzzy-if(skiaContent,0-24,0-106) fuzzy-if(webrender
 fails-if(usesRepeatResampling&&!(webrender&&winWidget)) == element-paint-subimage-sampling-restriction.html about:blank
 == element-paint-clippath.html element-paint-clippath-ref.html
 fuzzy-if(webrender,36-39,704-738) == element-paint-sharpness-01a.html element-paint-sharpness-01b.html
-fuzzy-if(skiaContent,0-1,0-326) == element-paint-sharpness-01b.html element-paint-sharpness-01c.html
+fuzzy-if(skiaContent,0-1,0-326) fails-if(useDrawSnapshot) == element-paint-sharpness-01b.html element-paint-sharpness-01c.html
 fuzzy-if(webrender,36-39,704-738) == element-paint-sharpness-01c.html element-paint-sharpness-01d.html
 == element-paint-sharpness-02a.html element-paint-sharpness-02b.html
-== element-paint-sharpness-02b.html element-paint-sharpness-02c.html
+fails-if(useDrawSnapshot) == element-paint-sharpness-02b.html element-paint-sharpness-02c.html
 == element-paint-paintserversize-rounding-01.html element-paint-paintserversize-rounding-01-ref.html
 fuzzy-if(skiaContent,0-187,0-1191) == element-paint-paintserversize-rounding-02.html element-paint-paintserversize-rounding-02-ref.html # Linux32 from GCC update
 fuzzy-if(webrender,0-1,0-625) == element-paint-multiple-backgrounds-01a.html element-paint-multiple-backgrounds-01-ref.html

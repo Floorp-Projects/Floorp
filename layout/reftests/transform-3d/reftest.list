@@ -60,16 +60,16 @@ fuzzy-if(webrender,0-1,0-4) == rotatex-transformorigin-1a.html rotatex-transform
 fuzzy-if((gtkWidget&&layersOMTC)||(winWidget&&!layersGPUAccelerated),0-1,0-86) == overflow-hidden-1a.html overflow-hidden-1-ref.html
 == transform-style-flat-1a.html transform-style-flat-1-ref.html
 == willchange-containing-block.html?willchange willchange-containing-block.html?ref
-!= willchange-containing-block.html?willchange willchange-containing-block.html?noblock
+fails-if(useDrawSnapshot) != willchange-containing-block.html?willchange willchange-containing-block.html?noblock
 fuzzy-if(winWidget&&!layersGPUAccelerated,0-1,0-606) fuzzy-if(webrender,0-3,0-304) == scroll-perspective-1.html scroll-perspective-1-ref.html
 # Bugs
 fails-if(!layersGPUAccelerated) fuzzy-if(webrender,0-29,0-826) == 1035611-1.html 1035611-1-ref.html # Bug 1072898 for !layersGPUAccelerated failures
-!= 1157984-1.html about:blank # Bug 1157984
+fails-if(useDrawSnapshot) != 1157984-1.html about:blank # Bug 1157984
 fuzzy(0-3,0-99) == animate-cube-radians.html animate-cube-radians-ref.html # subpixel AA
 fuzzy(0-3,0-99) fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)&&!layersGPUAccelerated,0-16,0-6) == animate-cube-radians-zoom.html animate-cube-radians-zoom-ref.html
 != animate-cube-radians-ref.html animate-cube-radians-zoom-ref.html
 fuzzy(0-3,0-99) == animate-cube-degrees.html animate-cube-degrees-ref.html # subpixel AA
-== animate-cube-degrees-zoom.html animate-cube-degrees-zoom-ref.html
+fails-if(useDrawSnapshot) == animate-cube-degrees-zoom.html animate-cube-degrees-zoom-ref.html
 != animate-cube-degrees-ref.html animate-cube-degrees-zoom-ref.html
 fuzzy-if(gtkWidget,0-128,0-100) fuzzy-if(Android||OSX==1010||(gtkWidget&&layersGPUAccelerated),0-143,0-100) fuzzy-if(winWidget||OSX,0-141,0-100) == preserves3d-nested.html preserves3d-nested-ref.html
 fuzzy-if(skiaContent,0-1,0-4) fuzzy-if(cocoaWidget,0-128,0-9) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == animate-preserve3d-parent.html animate-preserve3d-ref.html # intermittently fuzzy on Mac
@@ -85,9 +85,9 @@ fuzzy(0-1,0-10000) == opacity-preserve3d-4.html opacity-preserve3d-4-ref.html
 fuzzy-if(webrender&&Android,0-8,0-1) == mask-layer-1.html mask-layer-ref.html
 fuzzy-if(webrender&&Android,0-8,0-1) == mask-layer-2.html mask-layer-ref.html
 fuzzy-if(webrender,0-16,0-132) == mask-layer-3.html mask-layer-ref.html
-== split-intersect1.html split-intersect1-ref.html
-fuzzy(0-255,0-150) == split-intersect2.html split-intersect2-ref.html
-fuzzy(0-255,0-100) == split-non-ortho1.html split-non-ortho1-ref.html
+fails-if(useDrawSnapshot) == split-intersect1.html split-intersect1-ref.html
+fuzzy(0-255,0-150) fails-if(useDrawSnapshot) == split-intersect2.html split-intersect2-ref.html
+fuzzy(0-255,0-100) fails-if(useDrawSnapshot) == split-non-ortho1.html split-non-ortho1-ref.html
 fuzzy-if(winWidget,0-150,0-120) == component-alpha-1.html component-alpha-1-ref.html
 == nested-transform-1.html nested-transform-1-ref.html
 fuzzy-if(winWidget&&!nativeThemePref,0-4,0-51) == transform-geometry-1.html transform-geometry-1-ref.html
