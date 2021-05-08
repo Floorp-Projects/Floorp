@@ -65,7 +65,7 @@ rev = "21c26326f5f45f415c49eac4ba5bc41a2f961321"
 [source."https://github.com/jfkthame/mapped_hyph.git"]
 git = "https://github.com/jfkthame/mapped_hyph.git"
 replace-with = "vendored-sources"
-rev = "578d7058a638c955a597f035ce1a11049c3021d7"
+rev = "746743227485a83123784df0c53227ab466612ed"
 
 [source."https://github.com/hsivonen/xmldecl"]
 git = "https://github.com/hsivonen/xmldecl"
