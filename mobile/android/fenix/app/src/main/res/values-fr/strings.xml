@@ -1482,10 +1482,8 @@ Cependant, il peut être moins stable. Téléchargez la version bêta de notre n
     <string name="preferences_passwords_autofill">Remplissage automatique</string>
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">Synchroniser les identifiants</string>
-    <!-- Syncing saved logins in Fenix is on -->
-    <string name="preferences_passwords_sync_logins_on">Activé</string>
-    <!-- Syncing saved logins in Fenix is off -->
-    <string name="preferences_passwords_sync_logins_off">Désactivé</string>
+    <!-- Preference for syncing saved logins in Fenix, when not signed in-->
+    <string name="preferences_passwords_sync_logins_across_devices">Synchroniser les identifiants entre vos appareils</string>
     <!-- Syncing saved logins in Fenix needs reconnect to sync -->
     <string name="preferences_passwords_sync_logins_reconnect">Se reconnecter</string>
     <!-- Syncing saved logins in Fenix needs login -->
@@ -1585,6 +1583,8 @@ Cependant, il peut être moins stable. Téléchargez la version bêta de notre n
     <string name="preferences_credit_cards_save_and_autofill_cards_summary">Les données sont chiffrées</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
     <string name="preferences_credit_cards_sync_cards_across_devices">Synchroniser les cartes entre vos appareils</string>
+    <!-- Preference option for syncing credit cards across devices. This is displayed when the user is signed into sync -->
+    <string name="preferences_credit_cards_sync_cards">Synchroniser les cartes</string>
     <!-- Preference option for adding a credit card -->
     <string name="preferences_credit_cards_add_credit_card">Ajouter une carte de paiement</string>
 
@@ -1615,6 +1615,9 @@ Cependant, il peut être moins stable. Téléchargez la version bêta de notre n
 
     <!-- Title of the "Saved cards" screen -->
     <string name="credit_cards_saved_cards">Cartes enregistrées</string>
+
+    <!-- Error message for credit card number validation -->
+    <string name="credit_cards_number_validation_error_message">Veuillez saisir un numéro de carte bancaire valide</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Ajouter un moteur de recherche</string>

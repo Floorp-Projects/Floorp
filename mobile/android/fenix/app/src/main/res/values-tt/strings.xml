@@ -170,6 +170,10 @@
     <!-- Browser menu label for editing a bookmark -->
     <string name="browser_menu_edit">Үзгәртү</string>
 
+    <!-- Error message to show when the user tries to access a scheme not
+        handled by the app (Ex: blob, tel etc) -->
+    <string name="unknown_scheme_error_message">Тоташып булмады. Танылмаган URL схемасы.</string>
+
     <!-- Locale Settings Fragment -->
     <!-- Content description for tick mark on selected language -->
     <string name="a11y_selected_locale_content_description">Сайланган тел </string>
@@ -201,6 +205,9 @@
 
     <!-- Search engine suggestion title text. The first parameter is the name of teh suggested engine-->
     <string name="search_engine_suggestions_title">%s ярдәмендә эзләү</string>
+
+    <!-- Search engine suggestion description text -->
+    <string name="search_engine_suggestions_description">Адрес юлыннан турыдан-туры эзләү</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
@@ -395,6 +402,9 @@
     <string name="fxa_tab_received_notification_name">Таб кабул ителде</string>
     <!-- When multiple tabs have been received -->
     <string name="fxa_tabs_received_notification_name">Таблар кабул ителде</string>
+
+    <!-- %s is the device name -->
+    <string name="fxa_tab_received_from_notification_name">%s җиһазыннан таб</string>
 
     <!-- Advanced Preferences -->
     <!-- Preference for tracking protection settings -->
@@ -820,6 +830,8 @@
     <string name="preference_phone_feature_notification">Искәртү</string>
     <!-- Preference for altering the persistent storage access for all websites -->
     <string name="preference_phone_feature_persistent_storage">Даими саклагыч</string>
+    <!-- Preference for altering the EME access for all websites -->
+    <string name="preference_phone_feature_media_key_system_access">DRM белән идарә ителгән эчтәлек</string>
     <!-- Label that indicates that a permission must be asked always -->
     <string name="preference_option_phone_feature_ask_to_allow">Рөхсәт итүне сорау</string>
     <!-- Label that indicates that a permission must be blocked -->
@@ -925,6 +937,8 @@
     <!-- Confirmation dialog button -->
     <string name="sync_confirmation_button">Аңладым</string>
 
+    <!-- Share error message -->
+    <string name="share_error_snackbar">Бу кушымта белән бүлешеп булмый</string>
     <!-- Add new device screen title -->
     <string name="sync_add_new_device_title">Җиһазга җибәрү</string>
     <!-- Text for the warning message on the Add new device screen -->
@@ -1004,6 +1018,9 @@
     <!-- Title for Accessibility Text Size Scaling Preference -->
     <string name="preference_accessibility_font_size_title">Шрифт үлчәме</string>
 
+    <!-- Title for Accessibility Text Automatic Size Scaling Preference -->
+    <string name="preference_accessibility_auto_size_2">Автоматик шрифт үлчәме</string>
+
     <!-- Title for the Delete browsing data preference -->
     <string name="preferences_delete_browsing_data">Гизү мәгълүматларын бетерү</string>
     <!-- Title for the tabs item in Delete browsing data -->
@@ -1022,6 +1039,10 @@
     <string name="preferences_delete_browsing_data_browsing_history_subtitle">%d бит</string>
     <!-- Title for the cookies item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cookies">Кукилар</string>
+    <!-- Subtitle for the cookies item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cookies_subtitle">Сез күпчелек сайтлардан чыгачаксыз</string>
+    <!-- Title for the cached images and files item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cached_files">Кәшләнгән рәсемнәр һәм файллар</string>
     <!-- Subtitle for the cached images and files item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cached_files_subtitle">Саклагычта урын бушата</string>
 
@@ -1031,6 +1052,8 @@
     <string name="preferences_delete_browsing_data_downloads">Йөкләүләр</string>
     <!-- Text for the button to delete browsing data -->
     <string name="preferences_delete_browsing_data_button">Гизү мәгълүматларын бетерү</string>
+    <!-- Title for the Delete browsing data on quit preference -->
+    <string name="preferences_delete_browsing_data_on_quit">Чыкканда гизү мәгълүматларын бетерү</string>
     <!-- Action item in menu for the Delete browsing data on quit feature -->
     <string name="delete_browsing_data_on_quit_action">Чыгу</string>
 
@@ -1091,6 +1114,8 @@
     <string name="onboarding_firefox_account_sync_is_on">Синхронлау кабызылган</string>
     <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
     <string name="onboarding_firefox_account_automatic_signin_failed">Кереп булмады</string>
+    <!-- text for the tracking protection onboarding card header -->
+    <string name="onboarding_tracking_protection_header_3">Даими хосусыйлык</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">Стандарт (килешенгәнчә)</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
@@ -1269,10 +1294,6 @@
     <string name="preferences_passwords_autofill">Автотутыру</string>
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">Логиннарны синхронлау </string>
-    <!-- Syncing saved logins in Fenix is on -->
-    <string name="preferences_passwords_sync_logins_on">Кабынган</string>
-    <!-- Syncing saved logins in Fenix is off -->
-    <string name="preferences_passwords_sync_logins_off">Сүнгән</string>
     <!-- Syncing saved logins in Fenix needs reconnect to sync -->
     <string name="preferences_passwords_sync_logins_reconnect">Яңадан тоташу</string>
     <!-- Syncing saved logins in Fenix needs login -->

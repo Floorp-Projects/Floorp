@@ -1448,10 +1448,8 @@
     <string name="preferences_passwords_autofill">Awtomatiski wupołniś</string>
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">Pśizjawjenja synchronizěrowaś</string>
-    <!-- Syncing saved logins in Fenix is on -->
-    <string name="preferences_passwords_sync_logins_on">Zašaltowany</string>
-    <!-- Syncing saved logins in Fenix is off -->
-    <string name="preferences_passwords_sync_logins_off">Wušaltowany</string>
+    <!-- Preference for syncing saved logins in Fenix, when not signed in-->
+    <string name="preferences_passwords_sync_logins_across_devices">Pśizjawjenja mjazy rědami synchronizěrowaś</string>
     <!-- Syncing saved logins in Fenix needs reconnect to sync -->
     <string name="preferences_passwords_sync_logins_reconnect">Znowego zwězaś</string>
     <!-- Syncing saved logins in Fenix needs login -->
@@ -1553,6 +1551,8 @@
     <string name="preferences_credit_cards_save_and_autofill_cards_summary">Daty su skoděrowane</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
     <string name="preferences_credit_cards_sync_cards_across_devices">Kórty pśez rědy synchronizěrowaś</string>
+    <!-- Preference option for syncing credit cards across devices. This is displayed when the user is signed into sync -->
+    <string name="preferences_credit_cards_sync_cards">Kórty synchronizěrowaś</string>
     <!-- Preference option for adding a credit card -->
     <string name="preferences_credit_cards_add_credit_card">Kreditowu kórtu pśidaś</string>
 
@@ -1583,6 +1583,9 @@
 
     <!-- Title of the "Saved cards" screen -->
     <string name="credit_cards_saved_cards">Skłaźone kórty</string>
+
+    <!-- Error message for credit card number validation -->
+    <string name="credit_cards_number_validation_error_message">Pšosym zapódajśo płaśiwy numer kreditoweje kórty</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Pytnicu pśidaś</string>

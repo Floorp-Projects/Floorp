@@ -1464,10 +1464,8 @@
     <string name="preferences_passwords_autofill">Automaattinen täyttö</string>
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">Synkronoi kirjautumistiedot</string>
-    <!-- Syncing saved logins in Fenix is on -->
-    <string name="preferences_passwords_sync_logins_on">Päällä</string>
-    <!-- Syncing saved logins in Fenix is off -->
-    <string name="preferences_passwords_sync_logins_off">Pois</string>
+    <!-- Preference for syncing saved logins in Fenix, when not signed in-->
+    <string name="preferences_passwords_sync_logins_across_devices">Synkronoi kirjautumistiedot laitteiden välillä</string>
     <!-- Syncing saved logins in Fenix needs reconnect to sync -->
     <string name="preferences_passwords_sync_logins_reconnect">Yhdistä uudelleen</string>
     <!-- Syncing saved logins in Fenix needs login -->
@@ -1568,6 +1566,8 @@
     <string name="preferences_credit_cards_save_and_autofill_cards_summary">Tiedot on salattu</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
     <string name="preferences_credit_cards_sync_cards_across_devices">Synkronoi kortit laitteiden välillä</string>
+    <!-- Preference option for syncing credit cards across devices. This is displayed when the user is signed into sync -->
+    <string name="preferences_credit_cards_sync_cards">Synkronoi kortit</string>
     <!-- Preference option for adding a credit card -->
     <string name="preferences_credit_cards_add_credit_card">Lisää luottokortti</string>
 
@@ -1598,6 +1598,9 @@
 
     <!-- Title of the "Saved cards" screen -->
     <string name="credit_cards_saved_cards">Tallennetut kortit</string>
+
+    <!-- Error message for credit card number validation -->
+    <string name="credit_cards_number_validation_error_message">Kirjoita kelvollinen luottokortin numero</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Lisää hakukone</string>

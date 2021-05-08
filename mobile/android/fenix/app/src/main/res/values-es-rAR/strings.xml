@@ -1468,10 +1468,8 @@
     <string name="preferences_passwords_autofill">Autocompletar</string>
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">Sincronizar inicios de sesión</string>
-    <!-- Syncing saved logins in Fenix is on -->
-    <string name="preferences_passwords_sync_logins_on">Habilitado</string>
-    <!-- Syncing saved logins in Fenix is off -->
-    <string name="preferences_passwords_sync_logins_off">Deshabilitado</string>
+    <!-- Preference for syncing saved logins in Fenix, when not signed in-->
+    <string name="preferences_passwords_sync_logins_across_devices">Sincronizar inicios de sesión entre dispositivos</string>
     <!-- Syncing saved logins in Fenix needs reconnect to sync -->
     <string name="preferences_passwords_sync_logins_reconnect">Reconectar</string>
     <!-- Syncing saved logins in Fenix needs login -->
@@ -1571,6 +1569,8 @@
     <string name="preferences_credit_cards_save_and_autofill_cards_summary">Los datos están cifrados</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
     <string name="preferences_credit_cards_sync_cards_across_devices">Sincronizar tarjetas entre dispositivos</string>
+    <!-- Preference option for syncing credit cards across devices. This is displayed when the user is signed into sync -->
+    <string name="preferences_credit_cards_sync_cards">Sincronizar tarjetas</string>
     <!-- Preference option for adding a credit card -->
     <string name="preferences_credit_cards_add_credit_card">Agregar tarjeta de crédito</string>
 
@@ -1601,6 +1601,9 @@
 
     <!-- Title of the "Saved cards" screen -->
     <string name="credit_cards_saved_cards">Tarjetas guardadas</string>
+
+    <!-- Error message for credit card number validation -->
+    <string name="credit_cards_number_validation_error_message">Ingresá un número de tarjeta de crédito válido</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Agregar buscador</string>

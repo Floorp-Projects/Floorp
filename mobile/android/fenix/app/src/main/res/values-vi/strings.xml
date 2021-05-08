@@ -1440,10 +1440,8 @@
     <string name="preferences_passwords_autofill">Tự động điền</string>
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">Đồng bộ hóa thông tin đăng nhập</string>
-    <!-- Syncing saved logins in Fenix is on -->
-    <string name="preferences_passwords_sync_logins_on">Bật</string>
-    <!-- Syncing saved logins in Fenix is off -->
-    <string name="preferences_passwords_sync_logins_off">Tắt</string>
+    <!-- Preference for syncing saved logins in Fenix, when not signed in-->
+    <string name="preferences_passwords_sync_logins_across_devices">Đồng bộ hóa thông tin đăng nhập trên các thiết bị</string>
     <!-- Syncing saved logins in Fenix needs reconnect to sync -->
     <string name="preferences_passwords_sync_logins_reconnect">Kết nối lại</string>
     <!-- Syncing saved logins in Fenix needs login -->
@@ -1543,6 +1541,8 @@
     <string name="preferences_credit_cards_save_and_autofill_cards_summary">Dữ liệu được mã hóa</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
     <string name="preferences_credit_cards_sync_cards_across_devices">Đồng bộ thông tin thẻ tín dụng trên các thiết bị</string>
+    <!-- Preference option for syncing credit cards across devices. This is displayed when the user is signed into sync -->
+    <string name="preferences_credit_cards_sync_cards">Đồng bộ hóa các thẻ tín dụng</string>
     <!-- Preference option for adding a credit card -->
     <string name="preferences_credit_cards_add_credit_card">Thêm thẻ tín dụng</string>
 
@@ -1573,6 +1573,9 @@
 
     <!-- Title of the "Saved cards" screen -->
     <string name="credit_cards_saved_cards">Thẻ tín dụng đã lưu</string>
+
+    <!-- Error message for credit card number validation -->
+    <string name="credit_cards_number_validation_error_message">Vui lòng nhập số thẻ tín dụng hợp lệ</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Thêm công cụ tìm kiếm</string>

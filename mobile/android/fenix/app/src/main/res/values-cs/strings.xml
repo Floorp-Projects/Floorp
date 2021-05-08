@@ -451,9 +451,6 @@
     <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
     <string name="exceptions_empty_message_learn_more_link">Zjistit více</string>
 
-    <!-- Description in Quick Settings that tells user tracking protection is off globally for all sites, and links to Settings to turn it on -->
-    <string name="preferences_tracking_protection_turned_off_globally">Ochranu proti sledování můžete opět zapnout v nastavení aplikace.</string>
-
     <!-- Preference switch for Telemetry -->
     <string name="preferences_telemetry">Telemetrie</string>
     <!-- Preference switch for usage and technical data collection -->
@@ -464,6 +461,8 @@
     <string name="preferences_marketing_data">Marketingová data</string>
     <!-- Preference description for marketing data collection, parameter is the app name (e.g. Firefox) -->
     <string name="preferences_marketing_data_description">Sdílí data o funkcích, které v aplikaci %1$s používáte, se společností Leanplum, naším partnerem pro mobilní marketing.</string>
+    <!-- Preference description for marketing data collection -->
+    <string name="preferences_marketing_data_description2">Sdílí základní údaje a používání a technické údaje se společností Adjust, naším partnerem pro marketing</string>
     <!-- Title for studies preferences -->
     <string name="preference_experiments_2">Studie</string>
     <!-- Summary for studies preferences -->
@@ -811,8 +810,6 @@
     <string name="bookmark_delete_folder_snackbar">Složka %1$s smazána</string>
     <!-- Screen title for adding a bookmarks folder -->
     <string name="bookmark_add_folder">Přidat složku</string>
-    <!-- deprecated: Snackbar title shown after a bookmark has been created. -->
-    <string name="bookmark_created_snackbar">Záložka vytvořena.</string>
     <!-- Snackbar title shown after a bookmark has been created. -->
     <string name="bookmark_saved_snackbar">Záložka uložena</string>
     <!-- Snackbar edit button shown after a bookmark has been created. -->
@@ -1469,10 +1466,8 @@
     <string name="preferences_passwords_autofill">Automatické vyplňování</string>
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">Synchronizovat přihlašovací údaje</string>
-    <!-- Syncing saved logins in Fenix is on -->
-    <string name="preferences_passwords_sync_logins_on">Zapnuto</string>
-    <!-- Syncing saved logins in Fenix is off -->
-    <string name="preferences_passwords_sync_logins_off">Vypnuto</string>
+    <!-- Preference for syncing saved logins in Fenix, when not signed in-->
+    <string name="preferences_passwords_sync_logins_across_devices">Synchronizovat přihlašovací údaje mezi zařízeními</string>
     <!-- Syncing saved logins in Fenix needs reconnect to sync -->
     <string name="preferences_passwords_sync_logins_reconnect">Znovu připojit</string>
     <!-- Syncing saved logins in Fenix needs login -->
@@ -1574,6 +1569,8 @@
     <string name="preferences_credit_cards_save_and_autofill_cards_summary">Data jsou šifrována</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
     <string name="preferences_credit_cards_sync_cards_across_devices">Synchronizovat karty napříč zařízeními</string>
+    <!-- Preference option for syncing credit cards across devices. This is displayed when the user is signed into sync -->
+    <string name="preferences_credit_cards_sync_cards">Synchronizovat platební karty</string>
     <!-- Preference option for adding a credit card -->
     <string name="preferences_credit_cards_add_credit_card">Přidat platební kartu</string>
 
@@ -1604,6 +1601,9 @@
 
     <!-- Title of the "Saved cards" screen -->
     <string name="credit_cards_saved_cards">Uložené karty</string>
+
+    <!-- Error message for credit card number validation -->
+    <string name="credit_cards_number_validation_error_message">Zadejte prosím platné číslo platební karty</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Přidat vyhledávač</string>
@@ -1772,20 +1772,7 @@
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Odstranit</string>
 
-    <!-- Deprecated: text for the firefox account onboarding card header
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_firefox_account_header">Využijte aplikaci %s naplno.</string>
-
     <!-- Content description radio buttons with a link to more information -->
     <string name="radio_preference_info_content_description">Pro více informací klepněte zde</string>
-
-    <!-- Deprecated: No Open Tabs Message Header -->
-    <string name="no_collections_header1">Uložte si důležité věci do sbírek</string>
-    <!-- Deprecated: Label to describe what collections are to a new user without any collections -->
-    <string name="no_collections_description1">Podobná vyhledávání, stránky a panely si můžete seskupit a poté se k nim snadno vracet.</string>
-    <!-- Deprecated: text for the firefox account onboarding card header when we detect you're already signed in to -->
-    <string name="onboarding_firefox_account_auto_signin_header_2">V dalším prohlížeči Firefox na tomto telefonu už jste přihlášení jako %s. Chcete se přihlásit tímto účtem?</string>
-    <!-- Deprecated: Describes the add to homescreen functionality -->
-    <string name="add_to_homescreen_description">Tuto stránku si můžete snadno přidat na domovskou obrazovku svého telefonu. Budete k ní mít okamžitý přístup a prohlížení bude rychlejší se zážitkem jako v aplikaci.</string>
 
     </resources>

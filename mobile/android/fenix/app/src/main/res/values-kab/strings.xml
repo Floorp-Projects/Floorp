@@ -1464,10 +1464,8 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="preferences_passwords_autofill">Taččart tawurmant</string>
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">Mtawi inekcam</string>
-    <!-- Syncing saved logins in Fenix is on -->
-    <string name="preferences_passwords_sync_logins_on">Yermed</string>
-    <!-- Syncing saved logins in Fenix is off -->
-    <string name="preferences_passwords_sync_logins_off">Yensa</string>
+    <!-- Preference for syncing saved logins in Fenix, when not signed in-->
+    <string name="preferences_passwords_sync_logins_across_devices">Mtawi inekcam gqr yibenkan</string>
     <!-- Syncing saved logins in Fenix needs reconnect to sync -->
     <string name="preferences_passwords_sync_logins_reconnect">Ales tuqqna</string>
     <!-- Syncing saved logins in Fenix needs login -->
@@ -1569,6 +1567,8 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="preferences_credit_cards_save_and_autofill_cards_summary">Isefka ttwawgelhen</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
     <string name="preferences_credit_cards_sync_cards_across_devices">Mtawi tikarḍiwin gar yibenkan</string>
+    <!-- Preference option for syncing credit cards across devices. This is displayed when the user is signed into sync -->
+    <string name="preferences_credit_cards_sync_cards">Mtawi tikatḍiwin</string>
     <!-- Preference option for adding a credit card -->
     <string name="preferences_credit_cards_add_credit_card">Rnu takarḍa n usmad</string>
     <!-- Preference option for managing saved credit cards -->
@@ -1597,6 +1597,9 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="credit_cards_cancel_button">Sefsex</string>
     <!-- Title of the "Saved cards" screen -->
     <string name="credit_cards_saved_cards">Tikerḍiwin yettwasekles</string>
+
+    <!-- Error message for credit card number validation -->
+    <string name="credit_cards_number_validation_error_message">Ma ulac aɣilif sekcem uṭṭun ameɣtu n tkarḍa n usmad</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Rnu amsedday n unadi</string>

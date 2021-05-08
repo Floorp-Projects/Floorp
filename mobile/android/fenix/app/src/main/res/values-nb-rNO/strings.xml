@@ -1467,10 +1467,8 @@
     <string name="preferences_passwords_autofill">Autofyll</string>
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">Synkroniser innlogginger</string>
-    <!-- Syncing saved logins in Fenix is on -->
-    <string name="preferences_passwords_sync_logins_on">På</string>
-    <!-- Syncing saved logins in Fenix is off -->
-    <string name="preferences_passwords_sync_logins_off">Av</string>
+    <!-- Preference for syncing saved logins in Fenix, when not signed in-->
+    <string name="preferences_passwords_sync_logins_across_devices">Synkroniser innlogginger på tvers av enheter</string>
     <!-- Syncing saved logins in Fenix needs reconnect to sync -->
     <string name="preferences_passwords_sync_logins_reconnect">Koble til på nytt</string>
 
@@ -1575,6 +1573,8 @@
     <string name="preferences_credit_cards_save_and_autofill_cards_summary">Data er kryptert</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
     <string name="preferences_credit_cards_sync_cards_across_devices">Synkroniser kort på tvers av enheter</string>
+    <!-- Preference option for syncing credit cards across devices. This is displayed when the user is signed into sync -->
+    <string name="preferences_credit_cards_sync_cards">Synkroniser kort</string>
     <!-- Preference option for adding a credit card -->
     <string name="preferences_credit_cards_add_credit_card">Legg til betalingskort</string>
 
@@ -1604,6 +1604,9 @@
     <string name="credit_cards_cancel_button">Avbryt</string>
     <!-- Title of the "Saved cards" screen -->
     <string name="credit_cards_saved_cards">Lagrede kort</string>
+
+    <!-- Error message for credit card number validation -->
+    <string name="credit_cards_number_validation_error_message">Oppgi et gyldig betalingskortnummer</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Legg til søkemotor</string>
