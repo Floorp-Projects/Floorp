@@ -1,4 +1,3 @@
-import io
 from six import ensure_text
 
 MYPY = False
@@ -23,11 +22,7 @@ class GitHubChecksOutputter(object):
     def output(self, line):
         # type: (AnyStr) -> None
         text = ensure_text(line)
-        # NOTE: mypy types the "text mode" of open() in Python 2 as BinaryIO,
-        # which makes sense as we cannot specify its encoding (it's
-        # platform-dependent), while io.open() is closer to open() in Python 3.
-        # TODO: use the built-in open() when we are Py3-only.
-        with io.open(self.path, mode="a") as f:
+        with open(self.path, mode="a") as f:
             f.write(text)
             f.write(u"\n")
 
