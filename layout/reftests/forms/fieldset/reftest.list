@@ -10,7 +10,7 @@ fuzzy-if(winWidget&&!layersGPUAccelerated,0-142,0-276) == positioned-container-1
 == relpos-legend-2.html relpos-legend-2-ref.html
 == relpos-legend-3.html relpos-legend-3-ref.html
 == relpos-legend-4.html relpos-legend-4-ref.html
-== sticky-legend-1.html sticky-legend-1-ref.html
+fails-if(useDrawSnapshot) == sticky-legend-1.html sticky-legend-1-ref.html
 fuzzy-if(skiaContent,0-1,0-40768) == abs-pos-child-sizing.html abs-pos-child-sizing-ref.html
 fuzzy-if(geckoview&&webrender&&emulator,0-4,0-7) random-if(winWidget&&swgl) == overflow-hidden.html overflow-hidden-ref.html
 == legend-rtl.html legend-rtl-ref.html
