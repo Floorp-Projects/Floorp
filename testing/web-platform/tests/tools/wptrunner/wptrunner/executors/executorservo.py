@@ -23,7 +23,6 @@ from .base import (ConnectionlessProtocol,
                    WdspecProtocol)
 from .process import ProcessTestExecutor
 from ..browsers.base import browser_command
-from ..process import cast_env
 from ..webdriver_server import ServoDriverServer
 
 
@@ -103,11 +102,11 @@ class ServoTestharnessExecutor(ProcessTestExecutor):
             self.proc = ProcessHandler(self.command,
                                        processOutputLine=[self.on_output],
                                        onFinish=self.on_finish,
-                                       env=cast_env(env),
+                                       env=env,
                                        storeOutput=False)
             self.proc.run()
         else:
-            self.proc = subprocess.Popen(self.command, env=cast_env(env))
+            self.proc = subprocess.Popen(self.command, env=env)
 
         try:
             timeout = test.timeout * self.timeout_multiplier
@@ -235,7 +234,7 @@ class ServoRefTestExecutor(ProcessTestExecutor):
             if not self.interactive:
                 self.proc = ProcessHandler(self.command,
                                            processOutputLine=[self.on_output],
-                                           env=cast_env(env))
+                                           env=env)
 
 
                 try:
@@ -247,7 +246,7 @@ class ServoRefTestExecutor(ProcessTestExecutor):
                     raise
             else:
                 self.proc = subprocess.Popen(self.command,
-                                             env=cast_env(env))
+                                             env=env)
                 try:
                     rv = self.proc.wait()
                 except KeyboardInterrupt:
@@ -357,11 +356,11 @@ class ServoCrashtestExecutor(ProcessTestExecutor):
 
         if not self.interactive:
             self.proc = ProcessHandler(command,
-                                       env=cast_env(env),
+                                       env=env,
                                        storeOutput=False)
             self.proc.run()
         else:
-            self.proc = subprocess.Popen(command, env=cast_env(env))
+            self.proc = subprocess.Popen(command, env=env)
 
         self.proc.wait()
 
