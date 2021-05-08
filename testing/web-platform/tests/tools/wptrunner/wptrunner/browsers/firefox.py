@@ -27,7 +27,6 @@ from ..executors.executormarionette import (MarionetteTestharnessExecutor,  # no
                                             MarionettePrintRefTestExecutor,  # noqa: F401
                                             MarionetteWdspecExecutor,  # noqa: F401
                                             MarionetteCrashtestExecutor)  # noqa: F401
-from ..process import cast_env
 
 
 here = os.path.dirname(__file__)
@@ -328,7 +327,7 @@ class FirefoxInstanceManager(object):
         runner = FirefoxRunner(profile=profile,
                                binary=cmd[0],
                                cmdargs=cmd[1:],
-                               env=cast_env(env),
+                               env=env,
                                process_class=ProcessHandler,
                                process_args={"processOutputLine": [output_handler]})
         instance = BrowserInstance(self.logger, runner, marionette_port,
@@ -683,7 +682,7 @@ class ProfileCreator(object):
             cmd = [self.certutil_binary] + list(args)
             self.logger.process_output("certutil",
                                        subprocess.check_output(cmd,
-                                                               env=cast_env(env),
+                                                               env=env,
                                                                stderr=subprocess.STDOUT),
                                        " ".join(cmd))
 
