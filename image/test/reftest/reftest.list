@@ -44,7 +44,7 @@ include generic/reftest.list
 include color-management/reftest.list
 
 # Downscaling tests
-skip-if(useDrawSnapshot) include downscaling/reftest.list
+include downscaling/reftest.list
 
 # Lossless encoders
 include encoders-lossless/reftest.list

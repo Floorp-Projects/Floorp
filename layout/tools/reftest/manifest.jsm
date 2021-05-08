@@ -510,6 +510,9 @@ function BuildConditionSandbox(aURL) {
       g.windowUtils.usingAdvancedLayers == true;
     sandbox.layerChecksEnabled = !sandbox.webrender;
 
+    sandbox.retainedDisplayList =
+      prefs.getBoolPref("layout.display-list.retain");
+
     sandbox.usesOverlayScrollbars = g.windowUtils.usesOverlayScrollbars;
 
     // Shortcuts for widget toolkits.
@@ -520,17 +523,6 @@ function BuildConditionSandbox(aURL) {
     sandbox.winWidget = xr.widgetToolkit == "windows";
 
     sandbox.is64Bit = xr.is64Bit;
-
-    // Use this to annotate reftests that fail in drawSnapshot, but
-    // the reason hasn't been investigated (or fixed) yet.
-    sandbox.useDrawSnapshot = g.useDrawSnapshot;
-    // Use this to annotate reftests that use functionality
-    // that isn't available to drawSnapshot (like any sort of
-    // compositor feature such as async scrolling).
-    sandbox.unsupportedWithDrawSnapshot = g.useDrawSnapshot;
-    
-    sandbox.retainedDisplayList =
-      prefs.getBoolPref("layout.display-list.retain") && !sandbox.useDrawSnapshot;
 
     // GeckoView is currently uniquely identified by "android + e10s" but
     // we might want to make this condition more precise in the future.
@@ -570,7 +562,7 @@ function BuildConditionSandbox(aURL) {
 #endif
 
     let retainedDisplayListsEnabled = prefs.getBoolPref("layout.display-list.retain", false);
-    sandbox.retainedDisplayLists = retainedDisplayListsEnabled && !g.compareRetainedDisplayLists && !sandbox.useDrawSnapshot;
+    sandbox.retainedDisplayLists = retainedDisplayListsEnabled && !g.compareRetainedDisplayLists;
     sandbox.compareRetainedDisplayLists = g.compareRetainedDisplayLists;
 
 #ifdef RELEASE_OR_BETA
@@ -618,7 +610,7 @@ function BuildConditionSandbox(aURL) {
     sandbox.browserIsFission = g.browserIsFission;
 
     try {
-        sandbox.asyncPan = g.containingWindow.docShell.asyncPanZoomEnabled && !sandbox.useDrawSnapshot;
+        sandbox.asyncPan = g.containingWindow.docShell.asyncPanZoomEnabled;
     } catch (e) {
         sandbox.asyncPan = false;
     }

@@ -153,7 +153,6 @@ function OnRefTestLoad(win)
     var prefs = Cc["@mozilla.org/preferences-service;1"].
                 getService(Ci.nsIPrefBranch);
     g.browserIsIframe = prefs.getBoolPref("reftest.browser.iframe.enabled", false);
-    g.useDrawSnapshot = prefs.getBoolPref("reftest.use-draw-snapshot", false);
 
     g.logLevel = prefs.getStringPref("reftest.logLevel", "info");
 
@@ -878,14 +877,8 @@ function UpdateCanvasCache(url, canvas)
 // asynchronously resized (e.g. by the window manager, to make
 // it fit on screen) at unpredictable times.
 // Fortunately this is pretty cheap.
-async function DoDrawWindow(ctx, x, y, w, h)
+function DoDrawWindow(ctx, x, y, w, h)
 {
-    if (g.useDrawSnapshot) {
-      let image = await g.browser.drawSnapshot(x, y, w, h, 1.0, "#fff");
-      ctx.drawImage(image, x, y);
-      return;
-    }
-
     var flags = ctx.DRAWWINDOW_DRAW_CARET | ctx.DRAWWINDOW_DRAW_VIEW;
     var testRect = g.browser.getBoundingClientRect();
     if (g.ignoreWindowSize ||
@@ -920,14 +913,11 @@ async function DoDrawWindow(ctx, x, y, w, h)
     }
 
     TestBuffer("DoDrawWindow " + x + "," + y + "," + w + "," + h);
-    ctx.save();
-    ctx.translate(x, y);
     ctx.drawWindow(g.containingWindow, x, y, w, h, "rgb(255,255,255)",
                    g.drawWindowFlags);
-    ctx.restore();
 }
 
-async function InitCurrentCanvasWithSnapshot()
+function InitCurrentCanvasWithSnapshot()
 {
     TestBuffer("Initializing canvas snapshot");
 
@@ -941,11 +931,11 @@ async function InitCurrentCanvasWithSnapshot()
     }
 
     var ctx = g.currentCanvas.getContext("2d");
-    await DoDrawWindow(ctx, 0, 0, g.currentCanvas.width, g.currentCanvas.height);
+    DoDrawWindow(ctx, 0, 0, g.currentCanvas.width, g.currentCanvas.height);
     return true;
 }
 
-async function UpdateCurrentCanvasForInvalidation(rects)
+function UpdateCurrentCanvasForInvalidation(rects)
 {
     TestBuffer("Updating canvas for invalidation");
 
@@ -968,11 +958,14 @@ async function UpdateCurrentCanvasForInvalidation(rects)
         right = Math.max(0, Math.min(right, g.currentCanvas.width));
         bottom = Math.max(0, Math.min(bottom, g.currentCanvas.height));
 
-        await DoDrawWindow(ctx, left, top, right - left, bottom - top);
+        ctx.save();
+        ctx.translate(left, top);
+        DoDrawWindow(ctx, left, top, right - left, bottom - top);
+        ctx.restore();
     }
 }
 
-async function UpdateWholeCurrentCanvasForInvalidation()
+function UpdateWholeCurrentCanvasForInvalidation()
 {
     TestBuffer("Updating entire canvas for invalidation");
 
@@ -981,7 +974,7 @@ async function UpdateWholeCurrentCanvasForInvalidation()
     }
 
     var ctx = g.currentCanvas.getContext("2d");
-    await DoDrawWindow(ctx, 0, 0, g.currentCanvas.width, g.currentCanvas.height);
+    DoDrawWindow(ctx, 0, 0, g.currentCanvas.width, g.currentCanvas.height);
 }
 
 function RecordResult(testRunTime, errorMsg, typeSpecificResults)
@@ -1535,7 +1528,7 @@ function RegisterMessageListenersAndLoadContentScript(aReload)
     );
     g.browserMessageManager.addMessageListener(
         "reftest:InitCanvasWithSnapshot",
-        function (m) { RecvInitCanvasWithSnapshot(); }
+        function (m) { return RecvInitCanvasWithSnapshot(); }
     );
     g.browserMessageManager.addMessageListener(
         "reftest:Log",
@@ -1644,10 +1637,10 @@ function RecvFailedAssignedLayer(why) {
     g.failedAssignedLayerMessages.push(why);
 }
 
-async function RecvInitCanvasWithSnapshot()
+function RecvInitCanvasWithSnapshot()
 {
-    var painted = await InitCurrentCanvasWithSnapshot();
-    SendUpdateCurrentCanvasWithSnapshotDone(painted);
+    var painted = InitCurrentCanvasWithSnapshot();
+    return { painted: painted };
 }
 
 function RecvLog(type, msg)
@@ -1723,16 +1716,14 @@ function RecvTestDone(runtimeMs)
     RecordResult(runtimeMs, '', [ ]);
 }
 
-async function RecvUpdateCanvasForInvalidation(rects)
+function RecvUpdateCanvasForInvalidation(rects)
 {
-    await UpdateCurrentCanvasForInvalidation(rects);
-    SendUpdateCurrentCanvasWithSnapshotDone(true);
+    UpdateCurrentCanvasForInvalidation(rects);
 }
 
-async function RecvUpdateWholeCanvasForInvalidation()
+function RecvUpdateWholeCanvasForInvalidation()
 {
-    await UpdateWholeCurrentCanvasForInvalidation();
-    SendUpdateCurrentCanvasWithSnapshotDone(true);
+    UpdateWholeCurrentCanvasForInvalidation();
 }
 
 function OnProcessCrashed(subject, topic, data)
@@ -1803,11 +1794,6 @@ function SendResetRenderingState()
 function SendPrintDone(status, fileName)
 {
     g.browserMessageManager.sendAsyncMessage("reftest:PrintDone", { status, fileName });
-}
-
-function SendUpdateCurrentCanvasWithSnapshotDone(painted)
-{
-    g.browserMessageManager.sendAsyncMessage("reftest:UpdateCanvasWithSnapshotDone", { painted });
 }
 
 var pdfjsHasLoaded;
