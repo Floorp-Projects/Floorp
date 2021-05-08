@@ -365,9 +365,7 @@ androidExtensions {
     experimental = true
 }
 
-// Generate Kotlin code and markdown docs for the Fenix Glean metrics.
-ext.gleanGenerateMarkdownDocs = true
-ext.gleanDocsDirectory = "$rootDir/docs"
+// Generate Kotlin code for the Fenix Glean metrics.
 apply plugin: "org.mozilla.telemetry.glean-gradle-plugin"
 
 configurations {
