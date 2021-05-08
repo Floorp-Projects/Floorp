@@ -7,11 +7,8 @@ import sys
 import tempfile
 import time
 
-try:
-    from urllib.request import urlopen
-    from urllib.error import URLError
-except ImportError:
-    from urllib2 import urlopen, URLError
+from urllib.request import urlopen
+from urllib.error import URLError
 
 import pytest
 
