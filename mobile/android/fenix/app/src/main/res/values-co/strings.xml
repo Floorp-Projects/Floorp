@@ -1460,10 +1460,8 @@
     <string name="preferences_passwords_autofill">Riempiimentu autumaticu</string>
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">Sincrunizà l’identificazioni</string>
-    <!-- Syncing saved logins in Fenix is on -->
-    <string name="preferences_passwords_sync_logins_on">Attivatu</string>
-    <!-- Syncing saved logins in Fenix is off -->
-    <string name="preferences_passwords_sync_logins_off">Disattivatu</string>
+    <!-- Preference for syncing saved logins in Fenix, when not signed in-->
+    <string name="preferences_passwords_sync_logins_across_devices">Sincrunizà l’identificazioni di cunnessione trà tutti l’apparechji</string>
     <!-- Syncing saved logins in Fenix needs reconnect to sync -->
     <string name="preferences_passwords_sync_logins_reconnect">Ricunnettassi</string>
     <!-- Syncing saved logins in Fenix needs login -->
@@ -1566,6 +1564,8 @@
     <string name="preferences_credit_cards_save_and_autofill_cards_summary">I dati sò cifrati</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
     <string name="preferences_credit_cards_sync_cards_across_devices">Sincrunizate e carte trà i vostri apparechji</string>
+    <!-- Preference option for syncing credit cards across devices. This is displayed when the user is signed into sync -->
+    <string name="preferences_credit_cards_sync_cards">Sincrunizà e carte</string>
     <!-- Preference option for adding a credit card -->
     <string name="preferences_credit_cards_add_credit_card">Aghjunghje una carta bancaria</string>
     <!-- Preference option for managing saved credit cards -->
@@ -1595,6 +1595,9 @@
     <string name="credit_cards_cancel_button">Abbandunà</string>
     <!-- Title of the "Saved cards" screen -->
     <string name="credit_cards_saved_cards">Carte arregistrate</string>
+
+    <!-- Error message for credit card number validation -->
+    <string name="credit_cards_number_validation_error_message">Ci vole à scrive un numeru accettevule di carta bancaria</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Aghjunghje un mutore di ricerca</string>

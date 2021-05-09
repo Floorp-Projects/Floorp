@@ -19,10 +19,6 @@
     <!-- No Private Tabs Message Description -->
     <string name="no_private_tabs_description">زبانه های خصوصی شما در اینجا نشان داده می شود.</string>
 
-    <!-- Default title for pinned Baidu top site that links to Baidu home page  -->
-    <string name="default_top_site_baidu">بایدو</string>
-    <!-- Default title for pinned JD top site that links to JD home page  -->
-    <string name="default_top_site_jd">JD</string>
     <!-- Message announced to the user when tab tray is selected with 1 tab -->
     <string name="open_tab_tray_single">1 زبانه‌ي باز. برای تغییر زبانه ها ضربه بزنید.</string>
     <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
@@ -177,6 +173,11 @@
     <string name="browser_menu_open_app_link">باز کردن در برنامه</string>
     <!-- Browser menu button to configure reader mode appearance e.g. the used font type and size -->
     <string name="browser_menu_read_appearance">ظاهر</string>
+
+    <!-- Browser menu label for adding a bookmark -->
+    <string name="browser_menu_add">افزودن</string>
+    <!-- Browser menu label for editing a bookmark -->
+    <string name="browser_menu_edit">ویرایش</string>
 
     <!-- Error message to show when the user tries to access a scheme not
         handled by the app (Ex: blob, tel etc) -->
@@ -436,9 +437,6 @@
     <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
     <string name="exceptions_empty_message_learn_more_link">بیشتر بدانید</string>
 
-    <!-- Description in Quick Settings that tells user tracking protection is off globally for all sites, and links to Settings to turn it on -->
-    <string name="preferences_tracking_protection_turned_off_globally">در سطح جهان خاموش است ، برای روشن کردن آن به تنظیمات بروید.</string>
-
     <!-- Preference switch for Telemetry -->
     <string name="preferences_telemetry">دور سنجی</string>
     <!-- Preference switch for usage and technical data collection -->
@@ -595,12 +593,16 @@
     <string name="tabs_header_private_title">جلسه خصوصی</string>
     <!-- Title for the list of tabs in the current private session -->
     <string name="tabs_header_private_tabs_title">برگه خصوصی</string>
+    <!-- Title for the list of tabs in the synced tabs -->
+    <string name="tabs_header_synced_tabs_title">زبانه‌های همگام‌سازی شده</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
     <string name="add_tab">افزودن زبانه</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
     <string name="add_private_tab">افزودن زبانه خصوصی</string>
     <!-- Text for the new tab button to indicate adding a new private tab in the tab -->
     <string name="tab_drawer_fab_content">خصوصی</string>
+    <!-- Text for the new tab button to indicate syncing command on the synced tabs page -->
+    <string name="tab_drawer_fab_sync">هم‌گام‌سازی</string>
     <!-- Text shown as the title of the open tab tray -->
     <string name="tab_tray_title">زبانه‌های باز</string>
     <!-- Text shown in the menu for saving tabs to a collection -->
@@ -781,8 +783,6 @@
     <string name="bookmark_delete_folder_snackbar">%1$s حذف شد</string>
     <!-- Screen title for adding a bookmarks folder -->
     <string name="bookmark_add_folder">افزودن پوشه</string>
-    <!-- deprecated: Snackbar title shown after a bookmark has been created. -->
-    <string name="bookmark_created_snackbar">نشانک ایجاد شد.</string>
     <!-- Snackbar title shown after a bookmark has been created. -->
     <string name="bookmark_saved_snackbar">نشانک ذخیره شد!</string>
     <!-- Snackbar edit button shown after a bookmark has been created. -->
@@ -1158,9 +1158,6 @@
     <string name="onboarding_header">به %s خوش‌ آمدید!</string>
     <!-- text for the Firefox Accounts section header -->
     <string name="onboarding_fxa_section_header">پیش از این حساب داشته‌اید؟</string>
-    <!-- text for the Firefox Preview feature section header
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_feature_section_header">با %s آشنا شوید</string>
     <!-- text for the "What's New" onboarding card header -->
     <string name="onboarding_whats_new_header1">موارد جدید را ببینید</string>
     <!-- text for the "what's new" onboarding card description
@@ -1168,10 +1165,6 @@
     <string name="onboarding_whats_new_description">در مورد طراحی مجدد %s سؤالی دارید؟ آیا می خواهید بدانید چه چیزی تغییر کرده است؟</string>
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
     <string name="onboarding_whats_new_description_linktext">پاسخ را از اینجا دریافت کنید</string>
-    <!-- text for the Firefox account onboarding sign in card header -->
-    <string name="onboarding_account_sign_in_header">شروع به همگام سازی نشانک‌ها،‌ گذرواژه ها و چیزهای بیشتر با حساب Firefox شما.</string>
-    <!-- Text for the button to learn more about signing in to your Firefox account -->
-    <string name="onboarding_manual_sign_in_learn_more">اطلاعات بیشتر</string>
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
         another Firefox browser. (The word `Firefox` should not be translated)
         The first parameter is the email of the detected user's account -->
@@ -1180,36 +1173,21 @@
     <string name="onboarding_firefox_account_auto_signin_confirm">بله،‌ من را وارد کن</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
     <string name="onboarding_firefox_account_signing_in">در حال ورود به…</string>
-    <!-- text for the button to manually sign into Firefox account. The word "Firefox" should not be translated -->
-    <string name="onboarding_firefox_account_sign_in">واردشدن به فایرفاکس</string>
+    <!-- text for the button to manually sign into Firefox account. -->
+    <string name="onboarding_firefox_account_sign_in_1">ثبت نام کردن</string>
     <!-- text for the button to stay signed out when presented with an option to automatically sign-in. -->
     <string name="onboarding_firefox_account_stay_signed_out">از سیستم خارج شوید</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">همگام سازی روشن است</string>
     <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
     <string name="onboarding_firefox_account_automatic_signin_failed">ورود شکست خورد</string>
-    <!-- text for the tracking protection onboarding card header -->
-    <string name="onboarding_tracking_protection_header_2">حریم‌‌ خصوصی خودکار</string>
-    <!-- text for the tracking protection card description
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_tracking_protection_description_2">تنظیمات حریم خصوصی و امنیتی ردیاب ها ، بدافزارها و شرکت هایی که شما را ردیابی می کنند را مسدود می کند.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">استاندارد (پیش فرض)</string>
-    <!-- text for standard blocking option button description -->
-    <string name="onboarding_tracking_protection_standard_button_description_2">تعداد کمتر ردیاب را مسدود می کند. صفحات به صورت عادی بارگیری می شوند.</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_button">سختگیرانه (توصیه می‌شود)</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_option">شدید</string>
-    <!-- text for strict blocking option button description -->
-    <string name="onboarding_tracking_protection_strict_button_description_2">ردگیرها ، تبلیغات و پنجره های بیشتر را مسدود می کند. صفحات سریعتر بارگیری می شوند ، اما برخی از عملکردها ممکن است کار نکند.</string>
-    <!-- text for the toolbar position card header
-        In English this is an idiom for "choose a side as in an argument or fight"
-        but it is ok to make this more literally about "choosing a position in a physical space -->
-    <string name="onboarding_toolbar_position_header">یک موضع بگیرید</string>
 
-    <!-- text for the toolbar position card description -->
-    <string name="onboarding_toolbar_position_description">مرور یک دست را با نوار ابزار پایین امتحان کنید یا آن را به بالا منتقل کنید.</string>
     <!-- text for the private browsing onboarding card header -->
     <string name="onboarding_private_browsing_header">مرور ناشناس</string>
     <!-- text for the private browsing onboarding card description
@@ -1222,7 +1200,7 @@
     <!-- text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header">حریم‌ خصوصی شما</string>
     <!-- text for the privacy notice onboarding card description
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    The first parameter is the name of the app (e.g. Firefox Preview) Substitute %s for long browser name. -->
     <string name="onboarding_privacy_notice_description2">ما%s طراحی کرده ایم تا بتوانیم بر آنچه به صورت انلاین یا با ما اشتراک می گذارید کنترل داشته باشید.</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">اعلامیه حریم خصوصی ما را بخوانید</string>
@@ -1236,8 +1214,6 @@
     <!-- Onboarding theme -->
     <!-- text for the theme picker onboarding card header -->
     <string name="onboarding_theme_picker_header">انتخاب زمینه</string>
-    <!-- text for the theme picker onboarding card description -->
-    <string name="onboarding_theme_picker_description1">با فعال کردن حالت تاریک مقداری از باتری و بینایی خود را ذخیره کنید.</string>
     <!-- Automatic theme setting (will follow device setting) -->
     <string name="onboarding_theme_automatic_title">خودکار</string>
     <!-- Summary of automatic theme setting (will follow device setting) -->
@@ -1291,14 +1267,10 @@
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">بیشتر بدانید</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">استاندارد (پیش فرض)</string>
-    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_3">تعداد کمتر ردیاب را مسدود می کند. صفحات به صورت عادی بارگیری می شوند.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">آنچه توسط حفاظت ردیابی استاندارد مسدود شده است</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">سخت گیرانه</string>
-    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description_2">ردگیرها ، تبلیغات و پنجره های بیشتر را مسدود می کند. صفحات سریعتر بارگیری می شوند ، اما برخی از عملکردها ممکن است کار نکند.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">آنچه توسط حفاظت ردیابی سخت‌گیرانه مسدود شده است</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -1439,10 +1411,6 @@
     <string name="preferences_passwords_autofill">تکمیل خودکار</string>
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">همگام‌سازی ورود‌ها</string>
-    <!-- Syncing saved logins in Fenix is on -->
-    <string name="preferences_passwords_sync_logins_on">روشن</string>
-    <!-- Syncing saved logins in Fenix is off -->
-    <string name="preferences_passwords_sync_logins_off">خاموش</string>
     <!-- Syncing saved logins in Fenix needs reconnect to sync -->
     <string name="preferences_passwords_sync_logins_reconnect">اتصال مجدد</string>
     <!-- Syncing saved logins in Fenix needs login -->
@@ -1534,6 +1502,13 @@
     <string name="saved_logins_sort_strategy_last_used">آخرین بار استفاده</string>
     <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
     <string name="saved_logins_menu_dropdown_chevron_icon_content_description">مرتب سازی بر روی فهرست ورود</string>
+
+    <!-- The title for the "Save" menu item for saving a credit card -->
+    <string name="credit_cards_menu_save">ذخیره</string>
+    <!-- The text for the "Save" button for saving a credit card -->
+    <string name="credit_cards_save_button">ذخیره</string>
+    <!-- The text for the "Cancel" button for cancelling adding or updating a credit card -->
+    <string name="credit_cards_cancel_button">انصراف</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">افزودن موتور جست‌وجو</string>
@@ -1696,20 +1671,7 @@
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">حذف</string>
 
-    <!-- Deprecated: text for the firefox account onboarding card header
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_firefox_account_header">نهایت استفاده از %s ببرید.</string>
-
     <!-- Content description radio buttons with a link to more information -->
     <string name="radio_preference_info_content_description">برای جزئیات بیشتر کلیک کنید</string>
-
-    <!-- Deprecated: No Open Tabs Message Header -->
-    <string name="no_collections_header1">ذخیره کردن چیزهایی که برای شما اهمیت دارد</string>
-    <!-- Deprecated: Label to describe what collections are to a new user without any collections -->
-    <string name="no_collections_description1">برای دسترسی سریع در آینده، جستجوها ، سایتها و برگه های مشابه را با هم جمع کنید.</string>
-    <!-- Deprecated: text for the firefox account onboarding card header when we detect you're already signed in to -->
-    <string name="onboarding_firefox_account_auto_signin_header_2">شما به عنوان%s در یک مرورگر دیگر Firefox در این تلفن وارد شده اید. آیا می خواهید با این حساب وارد شوید؟</string>
-    <!-- Deprecated: Describes the add to homescreen functionality -->
-    <string name="add_to_homescreen_description">شما به راحتی می‌توانید این پایگاه اینترنتی را به صفحه خانگی تلفن خود اضافه کنید تا دسترسی مستقیم به آن داشته باشید و مرور سریعتی را مانند تجربه کردن یک برنامه داشته باشید.</string>
 
     </resources>

@@ -357,7 +357,7 @@
     <string name="preferences_open_links_in_apps">Otvárať odkazy v aplikáciách</string>
 
     <!-- Preference for open download with an external download manager app -->
-    <string name="preferences_external_download_manager">Externý správca preberania súborov</string>
+    <string name="preferences_external_download_manager">Externý správca sťahovania</string>
     <!-- Preference for add_ons -->
     <string name="preferences_addons">Doplnky</string>
 
@@ -452,9 +452,6 @@
     <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
     <string name="exceptions_empty_message_learn_more_link">Ďalšie informácie</string>
 
-    <!-- Description in Quick Settings that tells user tracking protection is off globally for all sites, and links to Settings to turn it on -->
-    <string name="preferences_tracking_protection_turned_off_globally">Ochranu pred sledovaním môžete opätovne zapnúť v nastaveniach.</string>
-
     <!-- Preference switch for Telemetry -->
     <string name="preferences_telemetry">Telemetria</string>
     <!-- Preference switch for usage and technical data collection -->
@@ -465,6 +462,8 @@
     <string name="preferences_marketing_data">Marketingové údaje</string>
     <!-- Preference description for marketing data collection, parameter is the app name (e.g. Firefox) -->
     <string name="preferences_marketing_data_description">Zdieľa údaje o používaní funkcií v aplikácii %1$s so spoločnosťou Leanplum, našim partnerom v oblasti mobilného marketingu.</string>
+    <!-- Preference description for marketing data collection -->
+    <string name="preferences_marketing_data_description2">Zdieľa základné údaje o používaní so spoločnosťou Adjust, našim partnerom pre marketing</string>
     <!-- Title for studies preferences -->
     <string name="preference_experiments_2">Štúdie</string>
     <!-- Summary for studies preferences -->
@@ -533,7 +532,7 @@
     <!-- Option in Library to open Screenshots page -->
     <string name="library_screenshots">Snímky obrazovky</string>
     <!-- Option in Library to open Downloads page -->
-    <string name="library_downloads">Prevzaté súbory</string>
+    <string name="library_downloads">Stiahnuté súbory</string>
     <!-- Option in library to open Bookmarks page -->
     <string name="library_bookmarks">Záložky</string>
     <!-- Option in library to open Desktop Bookmarks root page -->
@@ -750,15 +749,15 @@
 
     <!-- Downloads -->
     <!-- Text for the button to clear all downloads -->
-    <string name="download_delete_all">Vymazať zoznam prevzatých súborov</string>
+    <string name="download_delete_all">Vymazať zoznam stiahnutých súborov</string>
     <!-- Text for the dialog to confirm clearing all downloads -->
-    <string name="download_delete_all_dialog">Naozaj chcete vymazať svoju históriu preberania?</string>
+    <string name="download_delete_all_dialog">Naozaj chcete vymazať svoju históriu sťahovania?</string>
     <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
-    <string name="download_delete_multiple_items_snackbar_1">Prevzaté súbory boli odstránené</string>
+    <string name="download_delete_multiple_items_snackbar_1">Stiahnuté súbory boli odstránené</string>
     <!-- Text for the snackbar to confirm that a single download item has been removed. The first parameter is the name of the download item. -->
     <string name="download_delete_single_item_snackbar">Súbor %1$s bol odstránený</string>
     <!-- Text shown when no download exists -->
-    <string name="download_empty_message_1">Žiadne prevzaté súbory</string>
+    <string name="download_empty_message_1">Žiadne stiahnuté súbory</string>
     <!-- History multi select title in app bar
     The first parameter is the number of downloads selected -->
     <string name="download_multi_select_title">Počet vybraných položiek: %1$d</string>
@@ -804,8 +803,6 @@
     <string name="bookmark_delete_folder_snackbar">Bol odstránený priečinok %1$s</string>
     <!-- Screen title for adding a bookmarks folder -->
     <string name="bookmark_add_folder">Pridanie priečinku</string>
-    <!-- deprecated: Snackbar title shown after a bookmark has been created. -->
-    <string name="bookmark_created_snackbar">Záložka bola vytvorená.</string>
     <!-- Snackbar title shown after a bookmark has been created. -->
     <string name="bookmark_saved_snackbar">Záložka bola uložená!</string>
     <!-- Snackbar edit button shown after a bookmark has been created. -->
@@ -1127,7 +1124,7 @@
     <!-- Title for the site permissions item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_site_permissions">Povolenia stránok</string>
     <!-- Title for the downloads item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_downloads">Prevzaté súbory</string>
+    <string name="preferences_delete_browsing_data_downloads">Stiahnuté súbory</string>
     <!-- Text for the button to delete browsing data -->
     <string name="preferences_delete_browsing_data_button">Odstrániť údaje o prehliadaní</string>
 
@@ -1159,7 +1156,7 @@
     <string name="tip_firefox_preview_moved_header">Firefox Preview je odteraz Firefox Nightly</string>
     <!-- text for firefox preview moving tip description -->
     <string name="tip_firefox_preview_moved_description">Firefox Nightly je aktualizovaný každý deň a obsahuje experimentálne funkcie.
-        Môže však byť menej stabilný. Ak chcete stabilnejší prehliadač, prevezmite si beta verziu.</string>
+        Môže však byť menej stabilný. Ak chcete stabilnejší prehliadač, stiahnite si beta verziu.</string>
 
     <!-- text for firefox preview moving tip button. "Firefox for Android Beta" is intentionally hardcoded -->
     <string name="tip_firefox_preview_moved_button_2">Prevezmite si Firefox pre Android Beta</string>
@@ -1461,10 +1458,8 @@
     <string name="preferences_passwords_autofill">Automatické dopĺňanie</string>
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">Synchronizácia prihlasovacích údajov</string>
-    <!-- Syncing saved logins in Fenix is on -->
-    <string name="preferences_passwords_sync_logins_on">Zapnutá</string>
-    <!-- Syncing saved logins in Fenix is off -->
-    <string name="preferences_passwords_sync_logins_off">Vypnutá</string>
+    <!-- Preference for syncing saved logins in Fenix, when not signed in-->
+    <string name="preferences_passwords_sync_logins_across_devices">Synchronizovať prihlasovacie údaje medzi zariadeniami</string>
     <!-- Syncing saved logins in Fenix needs reconnect to sync -->
     <string name="preferences_passwords_sync_logins_reconnect">Znova pripojiť</string>
     <!-- Syncing saved logins in Fenix needs login -->
@@ -1564,6 +1559,8 @@
     <string name="preferences_credit_cards_save_and_autofill_cards_summary">Údaje sú šifrované</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
     <string name="preferences_credit_cards_sync_cards_across_devices">Synchronizovať karty naprieč zariadeniami</string>
+    <!-- Preference option for syncing credit cards across devices. This is displayed when the user is signed into sync -->
+    <string name="preferences_credit_cards_sync_cards">Synchronizovať platobné karty</string>
     <!-- Preference option for adding a credit card -->
     <string name="preferences_credit_cards_add_credit_card">Pridať platobnú kartu</string>
 
@@ -1593,6 +1590,9 @@
     <string name="credit_cards_cancel_button">Zrušiť</string>
     <!-- Title of the "Saved cards" screen -->
     <string name="credit_cards_saved_cards">Uložené karty</string>
+
+    <!-- Error message for credit card number validation -->
+    <string name="credit_cards_number_validation_error_message">Prosím, zadajte platné číslo platobnej karty</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Pridať vyhľadávací modul</string>
@@ -1759,20 +1759,7 @@
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Odstrániť</string>
 
-    <!-- Deprecated: text for the firefox account onboarding card header
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_firefox_account_header">Využite %s naplno.</string>
-
     <!-- Content description radio buttons with a link to more information -->
     <string name="radio_preference_info_content_description">Kliknutím zobrazíte viac podrobností</string>
-
-    <!-- Deprecated: No Open Tabs Message Header -->
-    <string name="no_collections_header1">Zbierajte veci, na ktorých vám záleží</string>
-    <!-- Deprecated: Label to describe what collections are to a new user without any collections -->
-    <string name="no_collections_description1">Zoskupte podobné vyhľadávania, weby a karty, aby ste k nim mali rýchly prístup neskôr.</string>
-    <!-- Deprecated: text for the firefox account onboarding card header when we detect you're already signed in to -->
-    <string name="onboarding_firefox_account_auto_signin_header_2">V inom Firefoxe na tomto telefóne ste prihlásení ako %s. Chceli by ste sa prihlásiť s týmto účtom?</string>
-    <!-- Deprecated: Describes the add to homescreen functionality -->
-    <string name="add_to_homescreen_description">Túto webovú stránku si môžete jednoducho pridať na svoju úvodnú obrazovku a mať tak okamžitý prístup k prehliadaniu.</string>
 
     </resources>

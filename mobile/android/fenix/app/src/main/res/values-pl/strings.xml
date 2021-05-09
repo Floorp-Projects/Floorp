@@ -1456,10 +1456,8 @@
     <string name="preferences_passwords_autofill">Automatyczne wypełnianie</string>
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">Synchronizowanie danych logowania</string>
-    <!-- Syncing saved logins in Fenix is on -->
-    <string name="preferences_passwords_sync_logins_on">Włączone</string>
-    <!-- Syncing saved logins in Fenix is off -->
-    <string name="preferences_passwords_sync_logins_off">Wyłączone</string>
+    <!-- Preference for syncing saved logins in Fenix, when not signed in-->
+    <string name="preferences_passwords_sync_logins_across_devices">Synchronizuj karty między urządzeniami</string>
     <!-- Syncing saved logins in Fenix needs reconnect to sync -->
     <string name="preferences_passwords_sync_logins_reconnect">Połącz ponownie</string>
     <!-- Syncing saved logins in Fenix needs login -->
@@ -1560,6 +1558,8 @@
     <string name="preferences_credit_cards_save_and_autofill_cards_summary">Dane są zaszyfrowane</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
     <string name="preferences_credit_cards_sync_cards_across_devices">Synchronizuj karty między urządzeniami</string>
+    <!-- Preference option for syncing credit cards across devices. This is displayed when the user is signed into sync -->
+    <string name="preferences_credit_cards_sync_cards">Synchronizuj karty</string>
     <!-- Preference option for adding a credit card -->
     <string name="preferences_credit_cards_add_credit_card">Dodaj kartę płatniczą</string>
 
@@ -1589,6 +1589,9 @@
     <string name="credit_cards_cancel_button">Anuluj</string>
     <!-- Title of the "Saved cards" screen -->
     <string name="credit_cards_saved_cards">Zachowane karty</string>
+
+    <!-- Error message for credit card number validation -->
+    <string name="credit_cards_number_validation_error_message">Wprowadź prawidłowy numer karty płatniczej</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Dodaj wyszukiwarkę</string>
@@ -1717,9 +1720,9 @@
     <!-- Text displayed to ask user to connect another device as no devices found with account -->
     <string name="synced_tabs_connect_another_device">Połącz inne urządzenie.</string>
     <!-- Text displayed asking user to re-authenticate -->
-    <string name="synced_tabs_reauth">Proszę uwierzytelnić się ponownie.</string>
+    <string name="synced_tabs_reauth">Uwierzytelnij się ponownie.</string>
     <!-- Text displayed when user has disabled tab syncing in Firefox Sync Account -->
-    <string name="synced_tabs_enable_tab_syncing">Proszę włączyć synchronizację kart.</string>
+    <string name="synced_tabs_enable_tab_syncing">Włącz synchronizację kart.</string>
 
     <!-- Text displayed when user has no tabs that have been synced -->
     <string name="synced_tabs_no_tabs">Brak otwartych kart w Firefoksach na innych urządzeniach.</string>
