@@ -90,7 +90,7 @@ var XPCOMUtils = {
     for (let name of aNames) {
       Object.defineProperty(aObject, name, {
         get: function() {
-          XPCOMUtils._scriptloader.loadSubScript(aResource, aObject);
+          Services.scriptloader.loadSubScript(aResource, aObject);
           return aObject[name];
         },
         set(value) {
@@ -100,18 +100,6 @@ var XPCOMUtils = {
         enumerable: true
       });
     }
-  },
-
-  /**
-   * Overrides the scriptloader definition for tests to help with globals
-   * tracking. Should only be used for tests.
-   *
-   * @param {object} aObject
-   *        The alternative script loader object to use.
-   */
-  overrideScriptLoaderForTests(aObject) {
-    Cu.crashIfNotInAutomation();
-    this._scriptloader = aObject;
   },
 
   /**
@@ -488,8 +476,6 @@ var XPCOMUtils = {
     return proxy;
   },
 };
-
-XPCOMUtils.defineLazyGetter(XPCOMUtils, "_scriptloader", () => { return Services.scriptloader; });
 
 /**
  * LazyProxyHandler
