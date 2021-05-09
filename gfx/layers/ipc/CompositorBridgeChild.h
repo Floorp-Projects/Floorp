@@ -92,10 +92,9 @@ class CompositorBridgeChild final : public PCompositorBridgeChild,
   // process). This may only be called on the main thread.
   static bool CompositorIsInGPUProcess();
 
-  mozilla::ipc::IPCResult RecvDidComposite(const LayersId& aId,
-                                           const TransactionId& aTransactionId,
-                                           const TimeStamp& aCompositeStart,
-                                           const TimeStamp& aCompositeEnd);
+  mozilla::ipc::IPCResult RecvDidComposite(
+      const LayersId& aId, const nsTArray<TransactionId>& aTransactionIds,
+      const TimeStamp& aCompositeStart, const TimeStamp& aCompositeEnd);
 
   mozilla::ipc::IPCResult RecvNotifyFrameStats(
       nsTArray<FrameStats>&& aFrameStats);
