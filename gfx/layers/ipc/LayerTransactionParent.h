@@ -79,8 +79,8 @@ class LayerTransactionParent final : public PLayerTransactionParent,
                                const TimeStamp& aTxnEndTime, bool aContainsSVG,
                                const nsCString& aURL,
                                const TimeStamp& aFwdTime);
-  void FlushPendingTransactions(const VsyncId& aId, TimeStamp& aCompositeEnd,
-                                nsTArray<TransactionId>& aOutTransactions);
+  TransactionId FlushTransactionId(const VsyncId& aId,
+                                   TimeStamp& aCompositeEnd);
 
   // CompositableParentManager
   void SendAsyncMessage(

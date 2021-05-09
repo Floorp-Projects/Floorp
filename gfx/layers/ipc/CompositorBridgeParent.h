@@ -772,9 +772,8 @@ class CompositorBridgeParent final : public CompositorBridgeParentBase,
   void DidComposite(const VsyncId& aId, TimeStamp& aCompositeStart,
                     TimeStamp& aCompositeEnd);
 
-  void NotifyDidComposite(const nsTArray<TransactionId>& aTransactionIds,
-                          VsyncId aId, TimeStamp& aCompositeStart,
-                          TimeStamp& aCompositeEnd);
+  void NotifyDidComposite(TransactionId aTransactionId, VsyncId aId,
+                          TimeStamp& aCompositeStart, TimeStamp& aCompositeEnd);
 
   // The indirect layer tree lock must be held before calling this function.
   // Callback should take (LayerTreeState* aState, const LayersId& aLayersId)
@@ -797,7 +796,7 @@ class CompositorBridgeParent final : public CompositorBridgeParentBase,
   CSSToLayoutDeviceScale mScale;
   TimeDuration mVsyncRate;
 
-  AutoTArray<TransactionId, 2> mPendingTransactions;
+  TransactionId mPendingTransaction;
   TimeStamp mRefreshStartTime;
   TimeStamp mTxnStartTime;
   TimeStamp mFwdTime;
