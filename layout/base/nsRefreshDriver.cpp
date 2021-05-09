@@ -771,12 +771,6 @@ class VsyncRefreshDriverTimer : public RefreshDriverTimer {
 
   void RunRefreshDrivers(VsyncId aId, TimeStamp aTimeStamp) {
     Tick(aId, aTimeStamp);
-    for (auto& driver : mContentRefreshDrivers) {
-      driver->FinishedVsyncTick();
-    }
-    for (auto& driver : mRootRefreshDrivers) {
-      driver->FinishedVsyncTick();
-    }
   }
 
   // When using local vsync source, we keep a strong ref to it here to ensure
@@ -1114,6 +1108,8 @@ nsRefreshDriver::nsRefreshDriver(nsPresContext* aPresContext)
       mPresContext(aPresContext),
       mRootRefresh(nullptr),
       mNextTransactionId{0},
+      mOutstandingTransactionId{0},
+      mCompletedTransaction{0},
       mFreezeCount(0),
       mThrottledFrameRequestInterval(
           TimeDuration::FromMilliseconds(GetThrottledTimerInterval())),
@@ -1129,8 +1125,6 @@ nsRefreshDriver::nsRefreshDriver(nsPresContext* aPresContext)
       mResizeSuppressed(false),
       mNotifyDOMContentFlushed(false),
       mNeedToUpdateIntersectionObservations(false),
-      mInNormalTick(false),
-      mAttemptedExtraTickSinceLastVsync(false),
       mWarningThreshold(REFRESH_WAIT_WARNING) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mPresContext,
@@ -1192,7 +1186,7 @@ void nsRefreshDriver::AdvanceTimeAndRefresh(int64_t aMilliseconds) {
 void nsRefreshDriver::RestoreNormalRefresh() {
   mTestControllingRefreshes = false;
   EnsureTimerStarted(eAllowTimeToGoBackwards);
-  mPendingTransactions.Clear();
+  mCompletedTransaction = mOutstandingTransactionId = mNextTransactionId;
 }
 
 TimeStamp nsRefreshDriver::MostRecentRefresh(bool aEnsureTimerStarted) const {
@@ -1409,36 +1403,6 @@ bool nsRefreshDriver::CanDoCatchUpTick() {
   return true;
 }
 
-bool nsRefreshDriver::CanDoExtraTick() {
-  // Only allow one extra tick per normal vsync tick.
-  if (mAttemptedExtraTickSinceLastVsync) {
-    return false;
-  }
-
-  // If we don't have a timer, or we didn't tick on the timer's
-  // refresh then we can't do an 'extra' tick (but we may still
-  // do a catch up tick).
-  if (!mActiveTimer ||
-      mActiveTimer->MostRecentRefresh() != mMostRecentRefresh) {
-    return false;
-  }
-
-  // Grab the current timestamp before checking the tick hint to be sure
-  // sure that it's equal or smaller than the value used within checking
-  // the tick hint.
-  TimeStamp now = TimeStamp::Now();
-  Maybe<TimeStamp> nextTick = mActiveTimer->GetNextTickHint();
-  int32_t minimumRequiredTime = StaticPrefs::layout_extra_tick_minimum_ms();
-  // If there's less than 4 milliseconds until the next tick, it's probably
-  // not worth trying to catch up.
-  if (minimumRequiredTime < 0 || !nextTick ||
-      (*nextTick - now) < TimeDuration::FromMilliseconds(minimumRequiredTime)) {
-    return false;
-  }
-
-  return true;
-}
-
 void nsRefreshDriver::EnsureTimerStarted(EnsureTimerStartedFlags aFlags) {
   // FIXME: Bug 1346065: We should also assert the case where we have
   // STYLO_THREADS=1.
@@ -1453,31 +1417,7 @@ void nsRefreshDriver::EnsureTimerStarted(EnsureTimerStartedFlags aFlags) {
   }
 
   // will it already fire, and no other changes needed?
-  if (mActiveTimer && !(aFlags & eForceAdjustTimer)) {
-    // If we're being called from within a user input handler, and we think
-    // there's time to rush an extra tick immediately, then schedule a runnable
-    // to run the extra tick.
-    if (mUserInputProcessingCount && CanDoExtraTick()) {
-      RefPtr<nsRefreshDriver> self = this;
-      NS_DispatchToCurrentThreadQueue(
-          NS_NewRunnableFunction(
-              "RefreshDriver::EnsureTimerStarted::extra",
-              [self]() -> void {
-                // Re-check if we can still do an extra tick, in case anything
-                // changed while the runnable was pending.
-                if (self->CanDoExtraTick()) {
-                  PROFILER_MARKER_UNTYPED("ExtraRefreshDriverTick", GRAPHICS);
-                  LOG("[%p] Doing extra tick for user input", self.get());
-                  self->mAttemptedExtraTickSinceLastVsync = true;
-                  self->Tick(self->mActiveTimer->MostRecentRefreshVsyncId(),
-                             self->mActiveTimer->MostRecentRefresh(),
-                             IsExtraTick::Yes);
-                }
-              }),
-          EventQueuePriority::Vsync);
-    }
-    return;
-  }
+  if (mActiveTimer && !(aFlags & eForceAdjustTimer)) return;
 
   if (IsFrozen() || !mPresContext) {
     // If we don't want to start it now, or we've been disconnected.
@@ -1517,7 +1457,6 @@ void nsRefreshDriver::EnsureTimerStarted(EnsureTimerStartedFlags aFlags) {
                 // Re-check if we can still do a catch-up, in case anything
                 // changed while the runnable was pending.
                 if (self->CanDoCatchUpTick()) {
-                  LOG("[%p] Doing catch up tick", self.get());
                   self->Tick(self->mActiveTimer->MostRecentRefreshVsyncId(),
                              self->mActiveTimer->MostRecentRefresh());
                 }
@@ -2027,8 +1966,7 @@ static CallState ReduceAnimations(Document& aDocument) {
   return CallState::Continue;
 }
 
-void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime,
-                           IsExtraTick aIsExtraTick /* = No */) {
+void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime) {
   MOZ_ASSERT(!nsContentUtils::GetCurrentJSContext(),
              "Shouldn't have a JSContext on the stack");
 
@@ -2045,14 +1983,9 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime,
   // go forward in time, not backwards. To prevent the refresh
   // driver from going back in time, just skip this tick and
   // wait until the next tick.
-  // If this is an 'extra' tick, then we expect it to be using the same
-  // vsync id and timestamp as the original tick, so also allow those.
-  if ((aNowTime <= mMostRecentRefresh) && !mTestControllingRefreshes &&
-      aIsExtraTick == IsExtraTick::No) {
+  if ((aNowTime <= mMostRecentRefresh) && !mTestControllingRefreshes) {
     return;
   }
-  auto cleanupInExtraTick = MakeScopeExit([&] { mInNormalTick = false; });
-  mInNormalTick = aIsExtraTick != IsExtraTick::Yes;
 
   bool isPresentingInVR = false;
 #if defined(MOZ_WIDGET_ANDROID)
@@ -2564,21 +2497,14 @@ void nsRefreshDriver::FinishedWaitingForTransaction() {
 
 mozilla::layers::TransactionId nsRefreshDriver::GetTransactionId(
     bool aThrottle) {
+  mOutstandingTransactionId = mOutstandingTransactionId.Next();
   mNextTransactionId = mNextTransactionId.Next();
-  LOG("[%p] Allocating transaction id %" PRIu64, this, mNextTransactionId.mId);
 
-  // If this a paint from within a normal tick, and the caller hasn't explicitly
-  // asked for it to skip being throttled, then record this transaction as
-  // pending and maybe disable painting until some transactions are processed.
-  if (aThrottle && mInNormalTick) {
-    mPendingTransactions.AppendElement(mNextTransactionId);
-    if (TooManyPendingTransactions() && !mWaitingForTransaction &&
-        !mTestControllingRefreshes) {
-      LOG("[%p] Hit max pending transaction limit, entering wait mode", this);
-      mWaitingForTransaction = true;
-      mSkippedPaints = false;
-      mWarningThreshold = 1;
-    }
+  if (aThrottle && mOutstandingTransactionId - mCompletedTransaction >= 2 &&
+      !mWaitingForTransaction && !mTestControllingRefreshes) {
+    mWaitingForTransaction = true;
+    mSkippedPaints = false;
+    mWarningThreshold = 1;
   }
 
   return mNextTransactionId;
@@ -2591,11 +2517,8 @@ mozilla::layers::TransactionId nsRefreshDriver::LastTransactionId() const {
 void nsRefreshDriver::RevokeTransactionId(
     mozilla::layers::TransactionId aTransactionId) {
   MOZ_ASSERT(aTransactionId == mNextTransactionId);
-  LOG("[%p] Revoking transaction id %" PRIu64, this, aTransactionId.mId);
-  if (AtPendingTransactionLimit() &&
-      mPendingTransactions.Contains(aTransactionId) && mWaitingForTransaction) {
-    LOG("[%p] No longer over pending transaction limit, leaving wait state",
-        this);
+  if (mOutstandingTransactionId - mCompletedTransaction == 2 &&
+      mWaitingForTransaction) {
     MOZ_ASSERT(!mSkippedPaints,
                "How did we skip a paint when we're in the middle of one?");
     FinishedWaitingForTransaction();
@@ -2607,21 +2530,21 @@ void nsRefreshDriver::RevokeTransactionId(
   if (pc) {
     pc->NotifyRevokingDidPaint(aTransactionId);
   }
-  // Remove aTransactionId from the set of outstanding transactions since we're
-  // no longer waiting on it to be completed, but don't revert
-  // mNextTransactionId since we can't use the id again.
-  mPendingTransactions.RemoveElement(aTransactionId);
+  // Revert the outstanding transaction since we're no longer waiting on it to
+  // be completed, but don't revert mNextTransactionId since we can't use the id
+  // again.
+  mOutstandingTransactionId = mOutstandingTransactionId.Prev();
 }
 
 void nsRefreshDriver::ClearPendingTransactions() {
-  LOG("[%p] ClearPendingTransactions", this);
-  mPendingTransactions.Clear();
+  mCompletedTransaction = mOutstandingTransactionId = mNextTransactionId;
   mWaitingForTransaction = false;
 }
 
 void nsRefreshDriver::ResetInitialTransactionId(
     mozilla::layers::TransactionId aTransactionId) {
-  mNextTransactionId = aTransactionId;
+  mCompletedTransaction = mOutstandingTransactionId = mNextTransactionId =
+      aTransactionId;
 }
 
 mozilla::TimeStamp nsRefreshDriver::GetTransactionStart() { return mTickStart; }
@@ -2632,12 +2555,20 @@ mozilla::TimeStamp nsRefreshDriver::GetVsyncStart() { return mTickVsyncTime; }
 
 void nsRefreshDriver::NotifyTransactionCompleted(
     mozilla::layers::TransactionId aTransactionId) {
-  LOG("[%p] Completed transaction id %" PRIu64, this, aTransactionId.mId);
-  mPendingTransactions.RemoveElement(aTransactionId);
-  if (mWaitingForTransaction && !TooManyPendingTransactions()) {
-    LOG("[%p] No longer over pending transaction limit, leaving wait state",
-        this);
-    FinishedWaitingForTransaction();
+  if (aTransactionId > mCompletedTransaction) {
+    if (mOutstandingTransactionId - mCompletedTransaction > 1 &&
+        mWaitingForTransaction) {
+      mCompletedTransaction = aTransactionId;
+      FinishedWaitingForTransaction();
+    } else {
+      mCompletedTransaction = aTransactionId;
+    }
+  }
+
+  // If completed transaction id get ahead of outstanding id, reset to distance
+  // id.
+  if (mCompletedTransaction > mOutstandingTransactionId) {
+    mOutstandingTransactionId = mCompletedTransaction;
   }
 }
 
@@ -2665,9 +2596,6 @@ bool nsRefreshDriver::IsWaitingForPaint(mozilla::TimeStamp aTime) {
       mWarningThreshold *= 2;
     }
 
-    LOG("[%p] Over max pending transaction limit when trying to paint, "
-        "skipping",
-        this);
     mSkippedPaints = true;
     return true;
   }
