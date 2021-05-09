@@ -6,13 +6,14 @@
 
 "use strict";
 
-ChromeUtils.import("resource://testing-common/Task.jsm", this);
-ChromeUtils.import("resource://testing-common/ContentTaskUtils.jsm", this);
+let { Task } = ChromeUtils.import("resource://testing-common/Task.jsm");
+let { ContentTaskUtils } = ChromeUtils.import(
+  "resource://testing-common/ContentTaskUtils.jsm"
+);
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const AssertCls = ChromeUtils.import(
-  "resource://testing-common/Assert.jsm",
-  null
-).Assert;
+const { Assert: AssertCls } = ChromeUtils.import(
+  "resource://testing-common/Assert.jsm"
+);
 
 // Injects EventUtils into ContentTask scope. To avoid leaks, this does not hold on
 // to the window global. This means you **need** to pass the window as an argument to
