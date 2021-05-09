@@ -33,7 +33,6 @@
 @media (-moz-proton) {
 :root:not(:-moz-lwtheme) {
   --focus-outline-color: -moz-accent-color;
-  --toolbarbutton-icon-fill-attention: -moz-accent-color;
 }
 
 #TabsToolbar:not(:-moz-lwtheme),
