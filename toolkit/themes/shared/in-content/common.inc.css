@@ -14,7 +14,7 @@
   --in-content-deemphasized-text: rgb(91, 91, 102);
   --in-content-box-background: #fff;
   --in-content-box-background-odd: rgba(12, 12, 13, 0.05); /* grey 90 a05 */
-  --in-content-box-border-color: rgb(143, 143, 157);
+  --in-content-box-border-color: color-mix(in srgb, currentColor 41%, transparent);
   --in-content-box-info-background: #f0f0f4;
   --in-content-item-hover: color-mix(in srgb, var(--in-content-primary-button-background) 20%, transparent);
   --in-content-item-hover-text: var(--in-content-page-color);
@@ -32,10 +32,10 @@
   --in-content-link-color-active: var(--blue-80);
   --in-content-link-color-visited: var(--blue-60);
    /* button background states are also used for checkboxes and radiobuttons */
-  --in-content-button-background: rgba(207, 207, 216, 0.33);
-  --in-content-button-background-hover: rgba(207, 207, 216, 0.66);
-  --in-content-button-background-active: rgba(207, 207, 216, 1);
-  --in-content-primary-button-text-color: rgb(255,255,255);
+  --in-content-button-background: rgba(207,207,216,.33);
+  --in-content-button-background-hover: rgba(207,207,216,.66);
+  --in-content-button-background-active: rgb(207,207,216);
+  --in-content-primary-button-text-color: rgb(251,251,254);
   --in-content-primary-button-background: #0061e0;
   --in-content-primary-button-background-hover: #0250bb;
   --in-content-primary-button-background-active: #053e94;
@@ -58,15 +58,15 @@
 
   --dialog-warning-text-color: var(--red-60);
 
-  --checkbox-border-color: rgb(143,143,157);
-  --checkbox-unchecked-bgcolor: rgb(240,240,244);
-  --checkbox-unchecked-hover-bgcolor: rgb(224,224,230);
-  --checkbox-unchecked-active-bgcolor: rgb(207,207,216);
-  --checkbox-checked-bgcolor: rgb(0,97,224);
-  --checkbox-checked-color: rgb(251,251,254);
+  --checkbox-border-color: var(--in-content-box-border-color);
+  --checkbox-unchecked-bgcolor: var(--in-content-button-background);
+  --checkbox-unchecked-hover-bgcolor: var(--in-content-button-background-hover);
+  --checkbox-unchecked-active-bgcolor: var(--in-content-button-background-active);
+  --checkbox-checked-bgcolor: var(--in-content-primary-button-background);
+  --checkbox-checked-color: var(--in-content-primary-button-text-color);
   --checkbox-checked-border-color: transparent;
-  --checkbox-checked-hover-bgcolor: rgb(2,80,187);
-  --checkbox-checked-active-bgcolor: rgb(5,62,148);
+  --checkbox-checked-hover-bgcolor: var(--in-content-primary-button-background-hover);
+  --checkbox-checked-active-bgcolor: var(--in-content-primary-button-background-active);
 
   --blue-40: #45a1ff;
   --blue-50: #0a84ff;
@@ -158,7 +158,7 @@
     --in-content-button-background-active: rgb(91,91,102);
     --in-content-icon-color: rgb(251,251,254);
 
-    --in-content-primary-button-text-color: rgb(21,20,26);
+    --in-content-primary-button-text-color: rgb(43,42,51);
     --in-content-primary-button-background: rgb(0,221,255);
     --in-content-primary-button-background-hover: rgb(128,235,255);
     --in-content-primary-button-background-active: rgb(170,242,255);
@@ -182,14 +182,6 @@
     --card-outline-color: var(--grey-60);
 
     --dialog-warning-text-color: var(--red-40);
-
-    --checkbox-unchecked-bgcolor: rgb(43, 42, 51);
-    --checkbox-unchecked-hover-bgcolor: rgb(82, 82, 94);
-    --checkbox-unchecked-active-bgcolor: rgb(91, 91, 102);
-    --checkbox-checked-bgcolor: rgb(0, 221, 255);
-    --checkbox-checked-color: rgb(43, 42, 51);
-    --checkbox-checked-hover-bgcolor: rgb(128, 235, 255);
-    --checkbox-checked-active-bgcolor: rgb(170, 242, 255);
 
     scrollbar-color: rgba(249,249,250,.4) rgba(20,20,25,.3);
   }
