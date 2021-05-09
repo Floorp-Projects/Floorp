@@ -7165,18 +7165,6 @@
   value: 1
   mirror: always
 
-# The minimum amount of time (milliseconds) required to be remaining
-# in the current vsync interval for us to attempt an extra tick, or
-# <0 to disable extra ticks entirely.
-- name: layout.extra-tick.minimum-ms
-  type: int32_t
-#if defined(NIGHTLY_BUILD)
-  value: 4
-#else
-  value: -1
-#endif
-  mirror: always
-
 # Enable/disable interruptible reflow, which allows reflows to stop
 # before completion (and display the partial results) when user events
 # are pending.

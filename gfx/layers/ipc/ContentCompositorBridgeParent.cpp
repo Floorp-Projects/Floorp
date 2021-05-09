@@ -395,10 +395,10 @@ void ContentCompositorBridgeParent::DidCompositeLocked(
     TimeStamp& aCompositeEnd) {
   sIndirectLayerTreesLock->AssertCurrentThreadOwns();
   if (LayerTransactionParent* layerTree = sIndirectLayerTrees[aId].mLayerTree) {
-    nsTArray<TransactionId> transactions;
-    layerTree->FlushPendingTransactions(aVsyncId, aCompositeEnd, transactions);
-    if (!transactions.IsEmpty()) {
-      Unused << SendDidComposite(aId, transactions, aCompositeStart,
+    TransactionId transactionId =
+        layerTree->FlushTransactionId(aVsyncId, aCompositeEnd);
+    if (transactionId.IsValid()) {
+      Unused << SendDidComposite(aId, transactionId, aCompositeStart,
                                  aCompositeEnd);
     }
   } else if (sIndirectLayerTrees[aId].mWrBridge) {
