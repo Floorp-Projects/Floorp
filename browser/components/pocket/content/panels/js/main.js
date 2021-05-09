@@ -11,6 +11,13 @@ PKT_PANEL.prototype = {
     this.panelId = pktPanelMessaging.panelIdFromURL(window.location.href);
     this.overlay = new PKT_PANEL_OVERLAY();
     this.setupMutationObserver();
+    // Mutation observer isn't always enough for fast loading, static pages.
+    // Sometimes the mutation observer fires before the page is totally visible.
+    // In this case, the resize tries to fire with 0 height,
+    // and because it's a static page, it only does one mutation.
+    // So in this case, we have a backup intersection observer that fires when
+    // the page is first visible, and thus, the page is going to guarantee a height.
+    this.setupIntersectionObserver();
 
     this.inited = true;
   },
@@ -21,6 +28,33 @@ PKT_PANEL.prototype = {
 
   sendMessage(messageId, payload, callback) {
     pktPanelMessaging.sendMessage(messageId, this.panelId, payload, callback);
+  },
+
+  resizeParent() {
+    let clientHeight = document.body.clientHeight;
+    if (this.overlay.tagsDropdownOpen) {
+      clientHeight = Math.max(clientHeight, 252);
+    }
+
+    // We can ignore 0 height here.
+    // We rely on intersection observer to do the
+    // resize for 0 height loads.
+    if (clientHeight) {
+      thePKT_PANEL.sendMessage("PKT_resizePanel", {
+        width: document.body.clientWidth,
+        height: clientHeight,
+      });
+    }
+  },
+
+  setupIntersectionObserver() {
+    const observer = new IntersectionObserver(entries => {
+      if (entries.find(e => e.isIntersecting)) {
+        this.resizeParent();
+        observer.unobserve(document.body);
+      }
+    });
+    observer.observe(document.body);
   },
 
   setupMutationObserver() {
@@ -38,14 +72,7 @@ PKT_PANEL.prototype = {
             /* One or more children have been added to and/or removed
                from the tree.
                (See mutation.addedNodes and mutation.removedNodes.) */
-            let clientHeight = document.body.clientHeight;
-            if (this.overlay.tagsDropdownOpen) {
-              clientHeight = Math.max(clientHeight, 252);
-            }
-            thePKT_PANEL.sendMessage("PKT_resizePanel", {
-              width: document.body.clientWidth,
-              height: clientHeight,
-            });
+            this.resizeParent();
             break;
           }
         }
