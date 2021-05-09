@@ -3,11 +3,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 :root {
-  --toolbarbutton-icon-fill-attention: var(--lwt-toolbarbutton-icon-fill-attention, rgb(0,97,224));
+  --toolbarbutton-icon-fill-attention: -moz-accent-color;
 }
 
 :root:-moz-lwtheme {
   --toolbarbutton-icon-fill-opacity: 1;
+  --toolbarbutton-icon-fill-attention: var(--lwt-toolbarbutton-icon-fill-attention, rgb(0,97,224));
 }
 
 :root[lwt-popup-brighttext] panel,
@@ -16,7 +17,7 @@ toolbar[brighttext]:-moz-lwtheme {
 }
 
 @media not (-moz-proton) {
-:root {
+:root:-moz-lwtheme {
   --toolbarbutton-icon-fill-attention: var(--lwt-toolbarbutton-icon-fill-attention, #0a84ff);
 }
 
