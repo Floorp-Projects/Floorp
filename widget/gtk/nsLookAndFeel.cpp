@@ -364,6 +364,11 @@ nsresult nsLookAndFeel::PerThemeData::GetColor(ColorID aID,
       aColor = mTextSelectedBackground;
       break;
     case ColorID::TextSelectForeground:
+      if (NS_GET_A(mTextSelectedBackground) < 155) {
+        aColor = NS_SAME_AS_FOREGROUND_COLOR;
+        break;
+      }
+      [[fallthrough]];
     case ColorID::WidgetSelectForeground:
     case ColorID::IMESelectedRawTextForeground:
     case ColorID::IMESelectedConvertedTextForeground:
