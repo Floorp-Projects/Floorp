@@ -888,11 +888,11 @@ void LayerTransactionParent::SetPendingTransactionId(
       aTxnEndTime, aFwdTime, aURL, aContainsSVG});
 }
 
-TransactionId LayerTransactionParent::FlushTransactionId(
-    const VsyncId& aCompositeId, TimeStamp& aCompositeEnd) {
-  TransactionId id;
+void LayerTransactionParent::FlushPendingTransactions(
+    const VsyncId& aCompositeId, TimeStamp& aCompositeEnd,
+    nsTArray<TransactionId>& aOutTransactions) {
   for (auto& transaction : mPendingTransactions) {
-    id = transaction.mId;
+    aOutTransactions.AppendElement(transaction.mId);
     if (mId.IsValid() && transaction.mId.IsValid() && !mVsyncRate.IsZero()) {
       RecordContentFrameTime(
           transaction.mTxnVsyncId, transaction.mVsyncStartTime,
@@ -924,7 +924,6 @@ TransactionId LayerTransactionParent::FlushTransactionId(
   }
 
   mPendingTransactions.Clear();
-  return id;
 }
 
 void LayerTransactionParent::SendAsyncMessage(
