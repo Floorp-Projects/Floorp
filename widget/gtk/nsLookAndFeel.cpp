@@ -317,37 +317,6 @@ void nsLookAndFeel::RefreshImpl() {
   mInitialized = false;
 }
 
-static bool IsSelectionColorForeground(LookAndFeel::ColorID aID) {
-  using ColorID = LookAndFeel::ColorID;
-  switch (aID) {
-    case ColorID::WidgetSelectForeground:
-    case ColorID::TextSelectForeground:
-    case ColorID::IMESelectedRawTextForeground:
-    case ColorID::IMESelectedConvertedTextForeground:
-    case ColorID::Highlighttext:
-    case ColorID::MozHtmlCellhighlighttext:
-      return true;
-    default:
-      return false;
-  }
-}
-
-static bool IsSelectionColorBackground(LookAndFeel::ColorID aID) {
-  using ColorID = LookAndFeel::ColorID;
-  switch (aID) {
-    case ColorID::WidgetSelectBackground:
-    case ColorID::TextSelectBackground:
-    case ColorID::IMESelectedRawTextBackground:
-    case ColorID::IMESelectedConvertedTextBackground:
-    case ColorID::MozDragtargetzone:
-    case ColorID::MozHtmlCellhighlight:
-    case ColorID::Highlight:
-      return true;
-    default:
-      return false;
-  }
-}
-
 nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme,
                                        nscolor& aColor) {
   EnsureInit();
@@ -359,16 +328,6 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme,
 nsresult nsLookAndFeel::PerThemeData::GetColor(ColorID aID,
                                                nscolor& aColor) const {
   nsresult res = NS_OK;
-
-  if (IsSelectionColorBackground(aID)) {
-    aColor = mTextSelectedBackground;
-    return NS_OK;
-  }
-
-  if (IsSelectionColorForeground(aID)) {
-    aColor = mTextSelectedText;
-    return NS_OK;
-  }
 
   switch (aID) {
       // These colors don't seem to be used for anything anymore in Mozilla
@@ -403,6 +362,14 @@ nsresult nsLookAndFeel::PerThemeData::GetColor(ColorID aID,
     case ColorID::MozHtmlCellhighlight:
     case ColorID::Highlight:  // preference selected item,
       aColor = mTextSelectedBackground;
+      break;
+    case ColorID::TextSelectForeground:
+    case ColorID::WidgetSelectForeground:
+    case ColorID::IMESelectedRawTextForeground:
+    case ColorID::IMESelectedConvertedTextForeground:
+    case ColorID::Highlighttext:
+    case ColorID::MozHtmlCellhighlighttext:
+      aColor = mTextSelectedText;
       break;
     case ColorID::MozAccentColor:
       aColor = mAccentColor;
