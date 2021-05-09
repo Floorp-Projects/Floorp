@@ -235,33 +235,40 @@ function Tester(aTests, structuredLogger, aCallback) {
 
   this._coverageCollector = null;
 
-  const { XPCOMUtils } = ChromeUtils.import(
-    "resource://gre/modules/XPCOMUtils.jsm"
+  const XPCOMUtilsMod = ChromeUtils.import(
+    "resource://gre/modules/XPCOMUtils.jsm",
+    null
   );
 
   // Avoid failing tests when XPCOMUtils.defineLazyScriptGetter is used.
-  XPCOMUtils.overrideScriptLoaderForTests({
-    loadSubScript: (url, obj) => {
-      let before = Object.keys(window);
-      try {
-        return this._scriptLoader.loadSubScript(url, obj);
-      } finally {
-        for (let property of Object.keys(window)) {
-          if (
-            !before.includes(property) &&
-            !this._globalProperties.includes(property)
-          ) {
-            this._globalProperties.push(property);
-            this.SimpleTest.info(
-              `Global property added while loading ${url}: ${property}`
-            );
+  XPCOMUtilsMod.Services = Object.create(Services, {
+    scriptloader: {
+      configurable: true,
+      writable: true,
+      value: {
+        loadSubScript: (url, obj) => {
+          let before = Object.keys(window);
+          try {
+            return this._scriptLoader.loadSubScript(url, obj);
+          } finally {
+            for (let property of Object.keys(window)) {
+              if (
+                !before.includes(property) &&
+                !this._globalProperties.includes(property)
+              ) {
+                this._globalProperties.push(property);
+                this.SimpleTest.info(
+                  "Global property added while loading " + url + ": " + property
+                );
+              }
+            }
           }
-        }
-      }
+        },
+        loadSubScriptWithOptions: this._scriptLoader.loadSubScriptWithOptions.bind(
+          this._scriptLoader
+        ),
+      },
     },
-    loadSubScriptWithOptions: this._scriptLoader.loadSubScriptWithOptions.bind(
-      this._scriptLoader
-    ),
   });
 }
 Tester.prototype = {
