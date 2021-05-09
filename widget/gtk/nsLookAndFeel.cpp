@@ -359,7 +359,6 @@ nsresult nsLookAndFeel::PerThemeData::GetColor(ColorID aID,
     case ColorID::IMESelectedRawTextBackground:
     case ColorID::IMESelectedConvertedTextBackground:
     case ColorID::MozDragtargetzone:
-    case ColorID::MozHtmlCellhighlight:
     case ColorID::Highlight:  // preference selected item,
       aColor = mTextSelectedBackground;
       break;
@@ -373,12 +372,13 @@ nsresult nsLookAndFeel::PerThemeData::GetColor(ColorID aID,
     case ColorID::IMESelectedRawTextForeground:
     case ColorID::IMESelectedConvertedTextForeground:
     case ColorID::Highlighttext:
-    case ColorID::MozHtmlCellhighlighttext:
       aColor = mTextSelectedText;
       break;
+    case ColorID::MozHtmlCellhighlight:
     case ColorID::MozAccentColor:
       aColor = mAccentColor;
       break;
+    case ColorID::MozHtmlCellhighlighttext:
     case ColorID::MozAccentColorForeground:
       aColor = mAccentColorForeground;
       break;
@@ -1446,12 +1446,34 @@ void nsLookAndFeel::PerThemeData::Init() {
       GrabSelectionColors(style);
     }
 
+    // Default accent color is the selection background / foreground colors.
     mAccentColor = mTextSelectedBackground;
     mAccentColorForeground = mTextSelectedText;
 
-    // Accent is the darker of the selection background / foreground, unless the
-    // foreground isn't really a color (is all white / black / gray) and the
-    // background is, in which case we stick to what we have.
+    // But prefer named colors, as those are more general purpose than the
+    // actual selection style, which might e.g. be too-transparent.
+    //
+    // NOTE(emilio): It's unclear which one of the theme_selected_* or the
+    // selected_* pairs should we prefer, in all themes that define both that
+    // I've found, they're always the same.
+    {
+      GdkRGBA bg, fg;
+      const bool found =
+          (gtk_style_context_lookup_color(style, "selected_bg_color", &bg) &&
+           gtk_style_context_lookup_color(style, "selected_fg_color", &fg)) ||
+          (gtk_style_context_lookup_color(style, "theme_selected_bg_color",
+                                          &bg) &&
+           gtk_style_context_lookup_color(style, "theme_selected_fg_color",
+                                          &fg));
+      if (found) {
+        mAccentColor = GDK_RGBA_TO_NS_RGBA(bg);
+        mAccentColorForeground = GDK_RGBA_TO_NS_RGBA(fg);
+      }
+    }
+
+    // Accent is the darker one, unless the foreground isn't really a color (is
+    // all white / black / gray) and the background is, in which case we stick
+    // to what we have.
     if (RelativeLuminanceUtils::Compute(mAccentColor) >
             RelativeLuminanceUtils::Compute(mAccentColorForeground) &&
         (AnyColorChannelIsDifferent(mAccentColorForeground) ||
