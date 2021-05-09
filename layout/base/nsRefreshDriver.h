@@ -147,6 +147,16 @@ class nsRefreshDriver final : public mozilla::layers::TransactionIdAllocator,
   void RemoveImageRequest(imgIRequest* aRequest);
 
   /**
+   * Marks that we're currently in the middle of processing user input.
+   * Called by EventDispatcher when it's handling an input event.
+   */
+  void EnterUserInputProcessing() { mUserInputProcessingCount++; }
+  void ExitUserInputProcessing() {
+    MOZ_ASSERT(mUserInputProcessingCount > 0);
+    mUserInputProcessingCount--;
+  }
+
+  /**
    * Add / remove presshells which have pending resize event.
    */
   void AddResizeEventFlushObserver(mozilla::PresShell* aPresShell,
@@ -408,6 +418,10 @@ class nsRefreshDriver final : public mozilla::layers::TransactionIdAllocator,
   void AddForceNotifyContentfulPaintPresContext(nsPresContext* aPresContext);
   void FlushForceNotifyContentfulPaintPresContext();
 
+  // Mark that we've just run a tick from vsync, used to throttle 'extra'
+  // paints to one per vsync (see CanDoExtraTick).
+  void FinishedVsyncTick() { mAttemptedExtraTickSinceLastVsync = false; }
+
  private:
   typedef nsTArray<RefPtr<VVPResizeEvent>> VisualViewportResizeEventArray;
   typedef nsTArray<RefPtr<mozilla::Runnable>> ScrollEventArray;
@@ -443,7 +457,13 @@ class nsRefreshDriver final : public mozilla::layers::TransactionIdAllocator,
   void RunFrameRequestCallbacks(mozilla::TimeStamp aNowTime);
   void UpdateIntersectionObservations(mozilla::TimeStamp aNowTime);
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
-  void Tick(mozilla::VsyncId aId, mozilla::TimeStamp aNowTime);
+
+  enum class IsExtraTick {
+    No,
+    Yes,
+  };
+  void Tick(mozilla::VsyncId aId, mozilla::TimeStamp aNowTime,
+            IsExtraTick aIsExtraTick = IsExtraTick::No);
 
   enum EnsureTimerStartedFlags {
     eNone = 0,
@@ -478,7 +498,18 @@ class nsRefreshDriver final : public mozilla::layers::TransactionIdAllocator,
 
   void FinishedWaitingForTransaction();
 
+  /**
+   * Returns true if we didn't tick on the most recent vsync, but we think
+   * we could run one now instead in order to reduce latency.
+   */
   bool CanDoCatchUpTick();
+  /**
+   * Returns true if we think it's possible to run an repeat tick (between
+   * vsyncs) to hopefully replace the original tick's paint on the compositor.
+   * We allow this sometimes for tick requests coming for user input handling
+   * to reduce latency.
+   */
+  bool CanDoExtraTick();
 
   bool AtPendingTransactionLimit() {
     return mPendingTransactions.Length() == 2;
@@ -502,6 +533,7 @@ class nsRefreshDriver final : public mozilla::layers::TransactionIdAllocator,
   AutoTArray<TransactionId, 3> mPendingTransactions;
 
   uint32_t mFreezeCount;
+  uint32_t mUserInputProcessingCount = 0;
 
   // How long we wait between ticks for throttled (which generally means
   // non-visible) documents registered with a non-throttled refresh driver.
@@ -553,6 +585,10 @@ class nsRefreshDriver final : public mozilla::layers::TransactionIdAllocator,
   // True if we're currently within the scope of Tick() handling a normal
   // (timer-driven) tick.
   bool mInNormalTick : 1;
+
+  // True if we attempted an extra tick (see CanDoExtraTick) since the last
+  // vsync and thus shouldn't allow another.
+  bool mAttemptedExtraTickSinceLastVsync : 1;
 
   // Number of seconds that the refresh driver is blocked waiting for a
   // compositor transaction to be completed before we append a note to the gfx
