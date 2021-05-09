@@ -3,8 +3,8 @@
     <!-- Text for the title of an alert dialog displayed by a web page. %1$s will be replaced with the URL of the current page (displaying the dialog). -->
     <string name="mozac_browser_engine_system_alert_title">Komunikat ze strony %1$s:</string>
     <!-- Text for the message of an auth dialog displayed by a web page.
-    %1$s will be replaced by the realm, %2$s will be replaced with the URL of the current page (displaying the dialog). -->
-    <string name="mozac_browser_engine_system_auth_message">Witryna %2$s prosi o podanie nazwy użytkownika i hasła. Komunikat witryny: „%1$s”</string>
+    %1$s will be replaced by the hostname or a description of the protected area/site, %2$s will be replaced with the URL of the current page (displaying the dialog). -->
+    <string name="mozac_browser_engine_system_auth_message">%2$s prosi o podanie nazwy użytkownika i hasła. Komunikat witryny: „%1$s”</string>
     <!-- Text for the message of an auth dialog displayed by a web page. %1$s will be replaced with the URL of the current page (displaying the dialog). -->
-    <string name="mozac_browser_engine_system_auth_no_realm_message">Witryna %1$s prosi o podanie nazwy użytkownika i hasła.</string>
+    <string name="mozac_browser_engine_system_auth_no_realm_message">%1$s prosi o podanie nazwy użytkownika i hasła.</string>
 </resources>
