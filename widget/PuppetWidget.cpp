@@ -939,8 +939,7 @@ void PuppetWidget::SetCursor(const Cursor& aCursor) {
       resolution.ScaleBy(GetDefaultScale().scale);
       resolution.ApplyInverseTo(width, height);
       surface = aCursor.mContainer->GetFrameAtSize(
-          {width, height},
-          imgIContainer::FRAME_CURRENT, flags);
+          {width, height}, imgIContainer::FRAME_CURRENT, flags);
     } else {
       // NOTE(emilio): We get the frame at the full size, ignoring resolution,
       // because we're going to rasterize it, and we'd effectively lose the
@@ -963,9 +962,9 @@ void PuppetWidget::SetCursor(const Cursor& aCursor) {
                                 length);
   if (!mBrowserChild->SendSetCursor(
           aCursor.mDefaultCursor, hasCustomCursor, cursorData,
-          customCursorSize.width, customCursorSize.height,
-          resolution.mX, resolution.mY, stride, format,
-          aCursor.mHotspotX, aCursor.mHotspotY, force)) {
+          customCursorSize.width, customCursorSize.height, resolution.mX,
+          resolution.mY, stride, format, aCursor.mHotspotX, aCursor.mHotspotY,
+          force)) {
     return;
   }
   mCursor = aCursor;

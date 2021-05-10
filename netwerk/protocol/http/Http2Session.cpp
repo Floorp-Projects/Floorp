@@ -4362,7 +4362,7 @@ nsHttpRequestHead* Http2Session::RequestHead() {
 uint32_t Http2Session::Http1xTransactionCount() { return 0; }
 
 nsresult Http2Session::TakeSubTransactions(
-    nsTArray<RefPtr<nsAHttpTransaction> >& outTransactions) {
+    nsTArray<RefPtr<nsAHttpTransaction>>& outTransactions) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   // Generally this cannot be done with http/2 as transactions are
   // started right away.
