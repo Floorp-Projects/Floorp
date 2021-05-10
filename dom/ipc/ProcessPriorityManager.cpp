@@ -307,7 +307,6 @@ void ProcessPriorityManagerImpl::PrefChangedCallback(const char* aPref,
 /* static */
 bool ProcessPriorityManagerImpl::PrefsEnabled() {
   return StaticPrefs::dom_ipc_processPriorityManager_enabled() &&
-         hal::SetProcessPrioritySupported() &&
          !StaticPrefs::dom_ipc_tabs_disabled();
 }
 
