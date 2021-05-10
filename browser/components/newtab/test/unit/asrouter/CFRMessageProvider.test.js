@@ -14,8 +14,8 @@ describe("CFRMessageProvider", () => {
   beforeEach(async () => {
     messages = await CFRMessageProvider.getMessages();
   });
-  it("should have a total of 14 messages", () => {
-    assert.lengthOf(messages, 14);
+  it("should have a total of 13 messages", () => {
+    assert.lengthOf(messages, 13);
   });
   it("should have one message each for the three regular addons", () => {
     for (const id of REGULAR_IDS) {
@@ -28,19 +28,5 @@ describe("CFRMessageProvider", () => {
       );
       assert.notInclude(cohort3.targeting, `providerCohorts.cfr`);
     }
-  });
-  it("should restrict locale for PIN_TAB message", () => {
-    const pinTabMessage = messages.find(m => m.id === "PIN_TAB");
-
-    // 6 en-* locales, fr and de
-    assert.lengthOf(pinTabMessage.targeting.match(/en-|fr|de/g), 8);
-  });
-  it("should contain `www.` version of the hosts", () => {
-    const pinTabMessage = messages.find(m => m.id === "PIN_TAB");
-
-    assert.isTrue(
-      !!pinTabMessage.trigger.params.filter(host => host.startsWith("www."))
-        .length
-    );
   });
 });

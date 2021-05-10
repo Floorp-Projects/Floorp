@@ -587,8 +587,6 @@ menupopup::part(drop-indicator) {
   font-size: 13px;
 }
 
-#contextual-feature-recommendation-notification[data-notification-category="message_and_animation"] .popup-notification-body-container,
-#contextual-feature-recommendation-notification[data-notification-category="message_and_animation"] #cfr-notification-footer-addon-info,
 #contextual-feature-recommendation-notification[data-notification-category="addon_recommendation"] #cfr-notification-feature-steps,
 #contextual-feature-recommendation-notification[data-notification-category="icon_and_message"] .popup-notification-footer-container {
   display: none;
@@ -634,11 +632,6 @@ menupopup::part(drop-indicator) {
 
 #cfr-notification-feature-steps li:not(:last-child) {
   margin-bottom: 5px;
-}
-
-#contextual-feature-recommendation-notification[data-notification-category="message_and_animation"] #cfr-notification-footer-text {
-  font-size: 14px;
-  font-weight: 600;
 }
 
 #cfr-notification-footer-text,
@@ -690,110 +683,6 @@ menupopup::part(drop-indicator) {
 
 #cfr-notification-footer-spacer {
   flex-grow: 1;
-}
-
-#cfr-notification-footer-pintab-animation-container {
-  height: 173px;
-  padding-top: 129px;
-  position: relative;
-  width: 343px;
-}
-
-#cfr-notification-footer-pintab-animation-container:before {
-  content: "";
-  background-image: url("chrome://activity-stream/content/data/content/assets/cfr_pinnedtab_animated.png");
-  background-position: top center;
-  background-repeat: no-repeat;
-  background-size: cover;
-  height: 100%;
-  left: 0;
-  position: absolute;
-  top: 0;
-  width: 100%;
-}
-
-#cfr-notification-footer-pintab-animation-container:-moz-locale-dir(rtl):before {
-  transform: scaleX(-1);
-}
-
-@media (min-resolution: 2dppx) {
-  #cfr-notification-footer-pintab-animation-container:before {
-    background-image: url("chrome://activity-stream/content/data/content/assets/cfr_pinnedtab_animated@2x.png");
-  }
-}
-
-#contextual-feature-recommendation-notification[data-notification-category="addon_recommendation"] #cfr-notification-footer-pintab-animation-container {
-  display: none;
-}
-
-#cfr-notification-footer-pintab-animation-container:not([animate]):before,
-#cfr-notification-footer-pintab-animation-container[paused]:before,
-:root[lwt-popup-brighttext] #cfr-notification-footer-pintab-animation-container:not([animate]):before,
-:root[lwt-popup-brighttext] #cfr-notification-footer-pintab-animation-container[paused]:before {
-  background-image: url("chrome://activity-stream/content/data/content/assets/cfr_pinnedtab_static.png");
-}
-
-@media (min-resolution: 2dppx) {
-  #cfr-notification-footer-pintab-animation-container:not([animate]):before,
-  #cfr-notification-footer-pintab-animation-container[paused]:before,
-  :root[lwt-popup-brighttext] #cfr-notification-footer-pintab-animation-container:not([animate]):before,
-  :root[lwt-popup-brighttext] #cfr-notification-footer-pintab-animation-container[paused]:before {
-    background-image: url("chrome://activity-stream/content/data/content/assets/cfr_pinnedtab_static@2x.png");
-  }
-}
-
-:root[lwt-popup-brighttext] #cfr-notification-footer-pintab-animation-container:before {
-  background-image: url("chrome://activity-stream/content/data/content/assets/cfr_pinnedtab_animated_darktheme.png");
-}
-
-@media (min-resolution: 2dppx) {
-  :root[lwt-popup-brighttext] #cfr-notification-footer-pintab-animation-container:before {
-    background-image: url("chrome://activity-stream/content/data/content/assets/cfr_pinnedtab_animated_darktheme@2x.png");
-  }
-}
-
-#cfr-notification-footer-animation-controls {
-  background: linear-gradient(transparent 0%, rgba(255, 255, 255, 0.95) 35%);
-  padding: 20px var(--arrowpanel-padding) 10px;
-  position: relative;
-  z-index: 1;
-}
-
-:root[lwt-popup-brighttext] #cfr-notification-footer-animation-controls {
-  margin-inline-start: 13px;
-}
-
-#cfr-notification-footer-pintab-animation-container:not([animate]) #cfr-notification-footer-animation-controls {
-  visibility: hidden;
-}
-
-#cfr-notification-footer-animation-button {
-  background-image: url("chrome://activity-stream/content/data/content/assets/glyph-pause-12.svg");
-  background-position: right center;
-  background-repeat: no-repeat;
-  background-size: 12px 10px;
-  -moz-context-properties: fill;
-  fill: rgba(12, 12, 13, 0.8);
-  padding-inline-end: 10px;
-}
-
-#cfr-notification-footer-pintab-animation-container[paused] #cfr-notification-footer-animation-button {
-  background-image: url("chrome://activity-stream/content/data/content/assets/glyph-play-12.svg");
-}
-
-#cfr-notification-footer-animation-button:-moz-locale-dir(rtl) {
-  background-position-x: left;
-}
-
-#cfr-notification-footer-animation-label {
-  font-weight: 600;
-  line-height: 11px;
-}
-
-#cfr-notification-footer-animation-button,
-#cfr-notification-footer-animation-label {
-  color: rgba(12, 12, 13, 0.8);
-  cursor: pointer;
 }
 
 #content-mask {
