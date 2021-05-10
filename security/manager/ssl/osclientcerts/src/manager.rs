@@ -390,7 +390,7 @@ struct Manager {
 
 impl Manager {
     pub fn new() -> Manager {
-        let mut manager = Manager {
+        Manager {
             sessions: BTreeMap::new(),
             searches: BTreeMap::new(),
             signs: BTreeMap::new(),
@@ -400,15 +400,12 @@ impl Manager {
             next_session: 1,
             next_handle: 1,
             last_scan_time: None,
-        };
-        manager.maybe_find_new_objects();
-        manager
+        }
     }
 
-    /// When a new `Manager` is created and when a new session is opened (provided at least 3
-    /// seconds have elapsed since the last session was opened), this searches for certificates and
-    /// keys to expose. We de-duplicate previously-found certificates and keys by / keeping track of
-    /// their IDs.
+    /// When a new search session is opened (provided at least 3 seconds have elapsed since the
+    /// last session was opened), this searches for certificates and keys to expose. We
+    /// de-duplicate previously-found certificates and keys by keeping track of their IDs.
     fn maybe_find_new_objects(&mut self) {
         let now = Instant::now();
         match self.last_scan_time {
