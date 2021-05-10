@@ -425,6 +425,59 @@ add_task(async function test_removeFinished() {
 });
 
 /**
+ * Tests that removeFinished method keeps the file that is currently downloading,
+ * even if it needs to remove failed download of the same file.
+ */
+add_task(async function test_removeFinished_keepsDownloadingFile() {
+  let targetFile = getTempFile(TEST_TARGET_FILE_NAME);
+
+  let oneDownload = await Downloads.createDownload({
+    source: httpUrl("empty.txt"),
+    target: targetFile.path,
+  });
+
+  let otherDownload = await Downloads.createDownload({
+    source: httpUrl("empty.txt"),
+    target: targetFile.path,
+  });
+
+  let list = await promiseNewList();
+  await list.add(oneDownload);
+  await list.add(otherDownload);
+
+  let deferred = PromiseUtils.defer();
+  let downloadView = {
+    async onDownloadRemoved(aDownload) {
+      Assert.equal(aDownload, oneDownload);
+      await TestUtils.waitForCondition(() => oneDownload._finalizeExecuted);
+      deferred.resolve();
+    },
+  };
+  await list.addView(downloadView);
+
+  await oneDownload.start();
+  await otherDownload.start();
+
+  oneDownload.hasPartialData = otherDownload.hasPartialData = true;
+  oneDownload.error = "Download failed";
+
+  list.removeFinished();
+  await deferred.promise;
+
+  let downloads = await list.getAll();
+  Assert.equal(
+    downloads.length,
+    1,
+    "Failed download should be removed, active download should be kept"
+  );
+
+  Assert.ok(
+    await OS.File.exists(otherDownload.target.path),
+    "The file should not have been deleted."
+  );
+});
+
+/**
  * Tests the global DownloadSummary objects for the public, private, and
  * combined download lists.
  */
