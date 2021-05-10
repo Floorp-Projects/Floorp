@@ -2169,6 +2169,9 @@ class MNewArrayObject : public MUnaryInstruction, public NoTypePolicy::Data {
 
   const Shape* shape() const { return getOperand(0)->toConstant()->toShape(); }
 
+  // See MNewArray::getAliasSet comment.
+  AliasSet getAliasSet() const override { return AliasSet::None(); }
+
   uint32_t length() const { return length_; }
   gc::InitialHeap initialHeap() const { return initialHeap_; }
 
