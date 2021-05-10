@@ -1172,6 +1172,7 @@ class HiddenXULWindow {
     const browser = chromeDoc.createXULElement("browser");
     browser.setAttribute("type", "content");
     browser.setAttribute("disableglobalhistory", "true");
+    browser.setAttribute("messagemanagergroup", "webext-browsers");
 
     for (const [name, value] of Object.entries(xulAttributes)) {
       if (value != null) {
