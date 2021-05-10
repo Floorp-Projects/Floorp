@@ -28,7 +28,6 @@ EXTRA_PATHS = (
     "third_party/python/futures",
     "third_party/python/jsmin",
     "third_party/python/which",
-    "toolkit/components/glean/sphinx",
 )
 
 sys.path[:0] = [os.path.join(topsrcdir, p) for p in EXTRA_PATHS]
@@ -49,7 +48,6 @@ extensions = [
     "sphinx_copybutton",
     "sphinx_markdown_tables",
     "sphinx_panels",
-    "glean",
 ]
 
 # JSDoc must run successfully for dirs specified, so running
