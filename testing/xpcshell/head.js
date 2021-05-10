@@ -41,34 +41,35 @@ var _XPCSHELL_PROCESS;
 
 // Register the testing-common resource protocol early, to have access to its
 // modules.
-var _Services = ChromeUtils.import("resource://gre/modules/Services.jsm", null)
-  .Services;
+let { Services: _Services } = ChromeUtils.import(
+  "resource://gre/modules/Services.jsm"
+);
 _register_modules_protocol_handler();
 
-var _AppConstants = ChromeUtils.import(
-  "resource://gre/modules/AppConstants.jsm",
-  null
-).AppConstants;
+let { AppConstants: _AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
 
-var _PromiseTestUtils = ChromeUtils.import(
-  "resource://testing-common/PromiseTestUtils.jsm",
-  null
-).PromiseTestUtils;
-var _Task = ChromeUtils.import("resource://testing-common/Task.jsm", null).Task;
+let { PromiseTestUtils: _PromiseTestUtils } = ChromeUtils.import(
+  "resource://testing-common/PromiseTestUtils.jsm"
+);
+let { Task: _Task } = ChromeUtils.import("resource://testing-common/Task.jsm");
 
-let _NetUtil = ChromeUtils.import("resource://gre/modules/NetUtil.jsm", null)
-  .NetUtil;
+let { NetUtil: _NetUtil } = ChromeUtils.import(
+  "resource://gre/modules/NetUtil.jsm"
+);
 
-let _XPCOMUtils = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm",
-  null
-).XPCOMUtils;
+let { XPCOMUtils: _XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
-let _OS = ChromeUtils.import("resource://gre/modules/osfile.jsm", null).OS;
+let { OS: _OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
 // Support a common assertion library, Assert.jsm.
-var AssertCls = ChromeUtils.import("resource://testing-common/Assert.jsm", null)
-  .Assert;
+var { Assert: AssertCls } = ChromeUtils.import(
+  "resource://testing-common/Assert.jsm"
+);
+
 // Pass a custom report function for xpcshell-test style reporting.
 var Assert = new AssertCls(function(err, message, stack) {
   if (err) {
@@ -94,10 +95,9 @@ var _dumpLog = function(raw_msg) {
   dump("\n" + JSON.stringify(raw_msg) + "\n");
 };
 
-var _LoggerClass = ChromeUtils.import(
-  "resource://testing-common/StructuredLog.jsm",
-  null
-).StructuredLogger;
+var { StructuredLogger: _LoggerClass } = ChromeUtils.import(
+  "resource://testing-common/StructuredLog.jsm"
+);
 var _testLogger = new _LoggerClass("xpcshell/head.js", _dumpLog, [_add_params]);
 
 // Disable automatic network detection, so tests work correctly when
@@ -1740,10 +1740,9 @@ try {
   // We only want to run this for local developer builds (which should have a "default" update channel).
   if (runningInParent && _AppConstants.MOZ_UPDATE_CHANNEL == "default") {
     let startTime = Cu.now();
-    let _TelemetryController = ChromeUtils.import(
-      "resource://gre/modules/TelemetryController.jsm",
-      null
-    ).TelemetryController;
+    let { TelemetryController: _TelemetryController } = ChromeUtils.import(
+      "resource://gre/modules/TelemetryController.jsm"
+    );
 
     let complete = false;
     _TelemetryController.testRegisterJsProbes().finally(() => {
