@@ -992,8 +992,8 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   // volume of all media elements.
   void DidSet(FieldIndex<IDX_Muted>);
 
-  CanSetResult CanSet(FieldIndex<IDX_OverrideDPPX>, const float& aValue,
-                      ContentParent* aSource);
+  bool CanSet(FieldIndex<IDX_OverrideDPPX>, const float& aValue,
+              ContentParent* aSource);
   void DidSet(FieldIndex<IDX_OverrideDPPX>, float aOldValue);
 
   bool CanSet(FieldIndex<IDX_EmbedderInnerWindowId>, const uint64_t& aValue,

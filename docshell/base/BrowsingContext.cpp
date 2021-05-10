@@ -2690,15 +2690,9 @@ void BrowsingContext::DidSet(FieldIndex<IDX_Muted>) {
   });
 }
 
-auto BrowsingContext::CanSet(FieldIndex<IDX_OverrideDPPX>, const float& aValue,
-                             ContentParent* aSource) -> CanSetResult {
-  // FIXME: Should only be settable by the parent process, but devtools code
-  // currently sets it from the child.
-  if (!IsTop()) {
-    return CanSetResult::Deny;
-  }
-
-  return LegacyRevertIfNotOwningOrParentProcess(aSource);
+bool BrowsingContext::CanSet(FieldIndex<IDX_OverrideDPPX>, const float& aValue,
+                             ContentParent* aSource) {
+  return XRE_IsParentProcess() && !aSource && IsTop();
 }
 
 void BrowsingContext::DidSet(FieldIndex<IDX_OverrideDPPX>, float aOldValue) {
