@@ -14733,7 +14733,7 @@ function extractSymbol(path, symbols, state) {
       end
     } = path.node.property.loc;
     symbols.memberExpressions.push({
-      name: path.node.property.name,
+      name: t.isPrivateName(path.node.property) ? `#${path.node.property.id.name}` : path.node.property.name,
       location: {
         start,
         end
@@ -14953,7 +14953,7 @@ function extendSnippet(name, expression, path, prevPath) {
 
 function getMemberSnippet(node, expression = "", optional = false) {
   if (t.isMemberExpression(node) || t.isOptionalMemberExpression(node)) {
-    const name = node.property.name;
+    const name = t.isPrivateName(node.property) ? `#${node.property.id.name}` : node.property.name;
     const snippet = getMemberSnippet(node.object, extendSnippet(name, expression, {
       node
     }), node.optional);
@@ -30066,7 +30066,7 @@ function getFunctionName(node, parent) {
     computed: false
   }) || t.isClassMethod(node, {
     computed: false
-  })) {
+  }) || t.isClassPrivateMethod(node)) {
     const {
       key
     } = node;
@@ -30082,6 +30082,10 @@ function getFunctionName(node, parent) {
     if (t.isNumericLiteral(key)) {
       return `${key.value}`;
     }
+
+    if (t.isPrivateName(key)) {
+      return `#${key.id.name}`;
+    }
   }
 
   if (t.isObjectProperty(parent, {
@@ -30091,6 +30095,8 @@ function getFunctionName(node, parent) {
   // here so that it is most flexible. Once Babylon 7 is used, this
   // can change to use computed: false like ObjectProperty.
   t.isClassProperty(parent, {
+    value: node
+  }) && !parent.computed || t.isClassPrivateProperty(parent, {
     value: node
   }) && !parent.computed) {
     const {
@@ -30107,6 +30113,10 @@ function getFunctionName(node, parent) {
 
     if (t.isNumericLiteral(key)) {
       return `${key.value}`;
+    }
+
+    if (t.isPrivateName(key)) {
+      return `#${key.id.name}`;
     }
   }
 

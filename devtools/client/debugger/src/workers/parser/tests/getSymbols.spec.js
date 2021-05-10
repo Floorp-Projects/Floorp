@@ -30,6 +30,7 @@ cases(
     { name: "call expression", file: "callExpressions" },
     { name: "object expressions", file: "object-expressions" },
     { name: "optional chaining", file: "optional-chaining" },
+    { name: "private fields", file: "private-fields" },
     {
       name: "finds symbols in an html file",
       file: "parseScriptTags",

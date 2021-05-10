@@ -116,6 +116,8 @@ describe("simplifying display names", () => {
     ],
 
     annonymousProperty: [["jQuery.each(^)", "each"]],
+
+    privateMethod: [["#privateFunc", "#privateFunc"]],
   };
 
   Object.keys(cases).forEach(type => {

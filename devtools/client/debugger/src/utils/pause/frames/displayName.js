@@ -7,7 +7,7 @@
 // Decodes an anonymous naming scheme that
 // spider monkey implements based on "Naming Anonymous JavaScript Functions"
 // http://johnjbarton.github.io/nonymous/index.html
-const objectProperty = /([\w\d\$]+)$/;
+const objectProperty = /([\w\d\$#]+)$/;
 const arrayProperty = /\[(.*?)\]$/;
 const functionProperty = /([\w\d]+)[\/\.<]*?$/;
 const annonymousProperty = /([\w\d]+)\(\^\)$/;
