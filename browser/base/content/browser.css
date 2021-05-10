@@ -1551,7 +1551,7 @@ toolbar[keyNav=true]:not([collapsed=true], [customizing=true]) toolbartabstop {
 
 .dialogBox {
   background-clip: content-box;
-  box-shadow: 0 2px 14px 0 rgba(58, 57, 68, 0.2);
+  box-shadow: 0 2px 14px 0 rgba(0, 0, 0, 0.2);
   display: -moz-box;
   margin: 0;
   padding: 0;
@@ -1659,11 +1659,11 @@ toolbar[keyNav=true]:not([collapsed=true], [customizing=true]) toolbartabstop {
 
 .dialogOverlay[topmost="true"],
 #window-modal-dialog::backdrop {
-  background-color: rgba(91, 91, 102, 0.45);
+  background-color: rgba(28, 27, 34, 0.45);
 }
 
 #window-modal-dialog.showToolbar::backdrop {
-  background: linear-gradient(transparent, rgba(91, 91, 102, 0.45) 20%);
+  background: linear-gradient(transparent, rgba(28, 27, 34, 0.45) 20%);
 }
 
 /* For the window-modal dialog, the background is supplied by the HTML dialog
