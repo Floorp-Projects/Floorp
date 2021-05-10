@@ -522,11 +522,7 @@ bool ICScript::initICEntries(JSContext* cx, JSScript* script) {
         break;
       }
       case JSOp::Rest: {
-        ArrayObject* templateObject = NewTenuredDenseEmptyArray(cx);
-        if (!templateObject) {
-          return false;
-        }
-        auto* stub = alloc.newStub<ICRest_Fallback>(Kind::Rest, templateObject);
+        auto* stub = alloc.newStub<ICRest_Fallback>(Kind::Rest);
         if (!addIC(loc, stub)) {
           return false;
         }
@@ -602,16 +598,6 @@ void ICCacheIRStub::trace(JSTracer* trc) {
 void ICFallbackStub::trace(JSTracer* trc) {
   // Fallback stubs use runtime-wide trampoline code we don't need to trace.
   MOZ_ASSERT(usesTrampolineCode());
-
-  switch (kind()) {
-    case ICStub::Rest_Fallback: {
-      ICRest_Fallback* stub = toRest_Fallback();
-      TraceEdge(trc, &stub->templateObject(), "baseline-rest-template");
-      break;
-    }
-    default:
-      break;
-  }
 }
 
 static void MaybeTransition(JSContext* cx, BaselineFrame* frame,
