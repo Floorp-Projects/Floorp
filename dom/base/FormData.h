@@ -107,8 +107,14 @@ class FormData final : public nsISupports,
 
   virtual nsresult AddNameValuePair(const nsAString& aName,
                                     const nsAString& aValue) override {
+    nsAutoString usvName(aName);
+    nsAutoString usvValue(aValue);
+    if (!NormalizeUSVString(usvName) || !NormalizeUSVString(usvValue)) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
     FormDataTuple* data = mFormData.AppendElement();
-    SetNameValuePair(data, aName, aValue);
+    SetNameValuePair(data, usvName, usvValue);
     return NS_OK;
   }
 
