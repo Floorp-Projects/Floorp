@@ -928,6 +928,19 @@ static bool IsInPreserve3DContext(const nsIFrame* aFrame) {
          aFrame->Combines3DTransformWithAncestors();
 }
 
+// Returns true if |aFrame| can store a display list building rect.
+// These limitations are necessary to guarantee that
+// 1) Just enough items are rebuilt to properly update display list
+// 2) Modified frames will be visited during a partial display list build.
+static bool CanStoreDisplayListBuildingRect(nsDisplayListBuilder* aBuilder,
+                                            nsIFrame* aFrame) {
+  return aFrame != aBuilder->RootReferenceFrame() &&
+         aFrame->IsStackingContext() && aFrame->IsFixedPosContainingBlock() &&
+         // Split frames might have placeholders for modified frames in their
+         // unmodified continuation frame.
+         !aFrame->GetPrevContinuation() && !aFrame->GetNextContinuation();
+}
+
 static bool ProcessFrameInternal(nsIFrame* aFrame,
                                  nsDisplayListBuilder* aBuilder,
                                  AnimatedGeometryRoot** aAGR, nsRect& aOverflow,
@@ -1037,9 +1050,7 @@ static bool ProcessFrameInternal(nsIFrame* aFrame,
       break;
     }
 
-    if (currentFrame != aBuilder->RootReferenceFrame() &&
-        currentFrame->IsStackingContext() &&
-        currentFrame->IsFixedPosContainingBlock()) {
+    if (CanStoreDisplayListBuildingRect(aBuilder, currentFrame)) {
       CRR_LOG("Frame belongs to stacking context frame %p\n", currentFrame);
       // If we found an intermediate stacking context with an existing display
       // item then we can store the dirty rect there and stop. If we couldn't
