@@ -354,35 +354,16 @@ static const uint64_t kCacheInitialized = ((uint64_t)0x1) << 63;
 }
 
 - (NSValue*)moxPosition {
-  MOZ_ASSERT(!mGeckoAccessible.IsNull());
+  CGRect frame = [[self moxFrame] rectValue];
 
-  nsIntRect rect = mGeckoAccessible.IsAccessible()
-                       ? mGeckoAccessible.AsAccessible()->Bounds()
-                       : mGeckoAccessible.AsProxy()->Bounds();
-
-  NSScreen* mainView = [[NSScreen screens] objectAtIndex:0];
-  CGFloat scaleFactor = nsCocoaUtils::GetBackingScaleFactor(mainView);
-  NSPoint p =
-      NSMakePoint(static_cast<CGFloat>(rect.x) / scaleFactor,
-                  [mainView frame].size.height -
-                      static_cast<CGFloat>(rect.y + rect.height) / scaleFactor);
-
-  return [NSValue valueWithPoint:p];
+  return [NSValue valueWithPoint:NSMakePoint(frame.origin.x, frame.origin.y)];
 }
 
 - (NSValue*)moxSize {
-  MOZ_ASSERT(!mGeckoAccessible.IsNull());
+  CGRect frame = [[self moxFrame] rectValue];
 
-  nsIntRect rect = mGeckoAccessible.IsAccessible()
-                       ? mGeckoAccessible.AsAccessible()->Bounds()
-                       : mGeckoAccessible.AsProxy()->Bounds();
-
-  CGFloat scaleFactor =
-      nsCocoaUtils::GetBackingScaleFactor([[NSScreen screens] objectAtIndex:0]);
-  return [NSValue
-      valueWithSize:NSMakeSize(
-                        static_cast<CGFloat>(rect.width) / scaleFactor,
-                        static_cast<CGFloat>(rect.height) / scaleFactor)];
+  return
+      [NSValue valueWithSize:NSMakeSize(frame.size.width, frame.size.height)];
 }
 
 - (NSString*)moxRole {
@@ -710,6 +691,25 @@ struct RoleDescrComparator {
 
 - (NSNumber*)moxSelected {
   return @NO;
+}
+
+- (NSValue*)moxFrame {
+  MOZ_ASSERT(!mGeckoAccessible.IsNull());
+
+  nsIntRect rect = mGeckoAccessible.IsAccessible()
+                       ? mGeckoAccessible.AsAccessible()->Bounds()
+                       : mGeckoAccessible.AsProxy()->Bounds();
+  NSScreen* mainView = [[NSScreen screens] objectAtIndex:0];
+  CGFloat scaleFactor = nsCocoaUtils::GetBackingScaleFactor(mainView);
+
+  return [NSValue
+      valueWithRect:NSMakeRect(
+                        static_cast<CGFloat>(rect.x) / scaleFactor,
+                        [mainView frame].size.height -
+                            static_cast<CGFloat>(rect.y + rect.height) /
+                                scaleFactor,
+                        static_cast<CGFloat>(rect.width) / scaleFactor,
+                        static_cast<CGFloat>(rect.height) / scaleFactor)];
 }
 
 - (NSString*)moxARIACurrent {
