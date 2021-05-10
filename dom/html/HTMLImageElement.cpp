@@ -1293,13 +1293,17 @@ void HTMLImageElement::StopLazyLoading(
   }
   mLazyLoading = false;
   Document* doc = OwnerDoc();
-  doc->GetLazyLoadImageObserver()->Unobserve(*this);
+  if (auto* obs = doc->GetLazyLoadImageObserver()) {
+    obs->Unobserve(*this);
+  }
 
   if (bool(aFromIntersectionObserver)) {
     doc->IncLazyLoadImageStarted();
   } else {
     doc->DecLazyLoadImageCount();
-    doc->GetLazyLoadImageObserverViewport()->Unobserve(*this);
+    if (auto* obs = doc->GetLazyLoadImageObserverViewport()) {
+      obs->Unobserve(*this);
+    }
   }
 
   if (bool(aStartLoading)) {
@@ -1309,7 +1313,9 @@ void HTMLImageElement::StopLazyLoading(
 
 void HTMLImageElement::LazyLoadImageReachedViewport() {
   Document* doc = OwnerDoc();
-  doc->GetLazyLoadImageObserverViewport()->Unobserve(*this);
+  if (auto* obs = doc->GetLazyLoadImageObserverViewport()) {
+    obs->Unobserve(*this);
+  }
   doc->IncLazyLoadImageReachViewport(!Complete());
 }
 
