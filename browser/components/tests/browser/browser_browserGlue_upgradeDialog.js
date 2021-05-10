@@ -218,8 +218,8 @@ add_task(async function win7_okay() {
   AssertEvents(
     "Dialog uses special windows 7 primary button",
     ["content", "show", "0"],
-    ["content", "show", "cfr-doorhanger-doh-primary-button-2"],
-    ["content", "button", "cfr-doorhanger-doh-primary-button-2"],
+    ["content", "show", "upgrade-dialog-new-primary-win7-button"],
+    ["content", "button", "upgrade-dialog-new-primary-win7-button"],
     ["content", "close", "win7"]
   );
 });
