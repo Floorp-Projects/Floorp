@@ -1380,18 +1380,6 @@ impl<J> ClipRegion<ComplexTranslateIter<J>> {
     }
 }
 
-impl ClipRegion<Option<ComplexClipRegion>> {
-    pub fn create_for_clip_node_with_local_clip(
-        local_clip: &LayoutRect,
-        reference_frame_relative_offset: &LayoutVector2D
-    ) -> Self {
-        ClipRegion {
-            main: local_clip.translate(*reference_frame_relative_offset),
-            complex_clips: None,
-        }
-    }
-}
-
 // The ClipItemKey is a hashable representation of the contents
 // of a clip item. It is used during interning to de-duplicate
 // clip nodes between frames and display lists. This allows quick
