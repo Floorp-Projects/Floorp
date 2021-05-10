@@ -21,6 +21,11 @@ pub type Kem = X25519HkdfSha256;
 #[global_allocator]
 static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
 
+pub const ODOH_VERSION: u16 = 0xff06;
+const KEM_ID: u16 = 0x0020;
+const KDF_ID: u16 = 0x0001;
+const AEAD_ID: u16 = 0x0001;
+
 // random bytes, should be 32 bytes for X25519 keys
 pub const IKM: &str = "871389a8727130974e3eb3ee528d440a871389a8727130974e3eb3ee528d440a";
 
@@ -53,9 +58,9 @@ fn generate_key_pair() -> ObliviousDoHKeyPair {
     let (secret_key, public_key) = Kem::derive_keypair(&ikm_bytes);
     let public_key_bytes = public_key.to_bytes().to_vec();
     let odoh_public_key = ObliviousDoHConfigContents {
-        kem_id: 0x0020,
-        kdf_id: 0x0001,
-        aead_id: 0x0001,
+        kem_id: KEM_ID,
+        kdf_id: KDF_ID,
+        aead_id: AEAD_ID,
         public_key: public_key_bytes,
     };
     ObliviousDoHKeyPair {
@@ -70,11 +75,11 @@ pub fn get_odoh_config() -> js_sys::Uint8Array {
     let public_key_bytes = key_pair.public_key.public_key;
     let length_bytes = (public_key_bytes.len() as u16).to_be_bytes();
     let odoh_config_length = 12 + public_key_bytes.len();
-    let version = 0xff04;
+    let version = ODOH_VERSION;
     let odoh_contents_length = 8 + public_key_bytes.len();
-    let kem_id = 0x0020; // DHKEM(X25519, HKDF-SHA256)
-    let kdf_id = 0x0001; // KDF(SHA-256)
-    let aead_id = 0x0001; // AEAD(AES-GCM-128)
+    let kem_id = KEM_ID; // DHKEM(X25519, HKDF-SHA256)
+    let kdf_id = KDF_ID; // KDF(SHA-256)
+    let aead_id = AEAD_ID; // AEAD(AES-GCM-128)
     let mut result = vec![];
     result.extend(&((odoh_config_length as u16).to_be_bytes()));
     result.extend(&((version as u16).to_be_bytes()));
@@ -123,15 +128,22 @@ pub fn create_response(
     unsafe {
         if let Some(body) = &QUERY_BODY {
             if let Some(secret) = &SERVER_SECRET {
+                // random bytes
+                let nonce = vec![0x1b, 0xff, 0xfd, 0xff, 0x1a, 0xff, 0xff, 0xff,
+                                 0xff, 0xff, 0xcf, 0xff, 0xff, 0xff, 0xff, 0xe];
                 let result = executor::block_on(create_response_msg(
                     &secret,
                     &response,
                     None,
+                    Some(nonce),
                     &body,
                 ));
                 let generated_response = match result {
                     Ok(r) => r,
-                    Err(_) => return js_sys::Uint8Array::new_with_length(0),
+                    Err(_) => {
+                        console_log!("create_response_msg failed!");
+                        return js_sys::Uint8Array::new_with_length(0);
+                    }
                 };
 
                 QUERY_BODY = None;
