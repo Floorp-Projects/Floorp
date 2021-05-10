@@ -4258,10 +4258,7 @@ void nsWindow::AddWindowOverlayWebRenderCommands(
     wr::IpcResourceUpdateQueue& aResources) {
   if (mWindowButtonsRect) {
     wr::LayoutRect rect = wr::ToLayoutRect(*mWindowButtonsRect);
-    auto complexRegion = wr::ToComplexClipRegion(
-        RoundedRect(IntRectToRect(mWindowButtonsRect->ToUnknownRect()),
-                    RectCornerRadii(0, 0, 3, 3)));
-    aBuilder.PushClearRectWithComplexRegion(rect, complexRegion);
+    aBuilder.PushClearRect(rect);
   }
 }
 
