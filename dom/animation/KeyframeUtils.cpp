@@ -232,7 +232,8 @@ nsTArray<Keyframe> KeyframeUtils::GetKeyframesFromObject(
   if (!dom::Document::AreWebAnimationsImplicitKeyframesEnabled(aCx, nullptr) &&
       HasImplicitKeyframeValues(keyframes, aDocument)) {
     keyframes.Clear();
-    aRv.Throw(NS_ERROR_DOM_ANIM_MISSING_PROPS_ERR);
+    aRv.ThrowNotSupportedError(
+        "Animation to or from an underlying value is not yet supported");
   }
 
   return keyframes;
@@ -1010,7 +1011,8 @@ static void GetKeyframeListFromPropertyIndexedKeyframe(
     // but not if the pref for supporting implicit keyframes is disabled.
     if (!StaticPrefs::dom_animations_api_implicit_keyframes_enabled() &&
         count == 1) {
-      aRv.Throw(NS_ERROR_DOM_ANIM_MISSING_PROPS_ERR);
+      aRv.ThrowNotSupportedError(
+          "Animation to or from an underlying value is not yet supported");
       return;
     }
 

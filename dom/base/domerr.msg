@@ -97,10 +97,6 @@ DOM_MSG_DEF(NS_ERROR_DOM_RETVAL_UNDEFINED, "Return value is undefined")
 DOM4_MSG_DEF(NotFoundError, "File was not found", NS_ERROR_DOM_FILE_NOT_FOUND_ERR)
 DOM4_MSG_DEF(NotReadableError, "File could not be read", NS_ERROR_DOM_FILE_NOT_READABLE_ERR)
 
-/* Web Animations errors */
-
-DOM4_MSG_DEF(NotSupportedError, "Animation to or from an underlying value is not yet supported.", NS_ERROR_DOM_ANIM_MISSING_PROPS_ERR)
-
 /* common global codes (from nsError.h) */
 
 DOM_MSG_DEF(NS_OK                                  , "Success")
