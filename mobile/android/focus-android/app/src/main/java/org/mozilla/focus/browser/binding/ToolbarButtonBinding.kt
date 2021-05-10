@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.mapNotNull
 import mozilla.components.browser.state.selector.findTabOrCustomTabOrSelectedTab
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.lib.state.helpers.AbstractBinding
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifAnyChanged
 
 /**
@@ -24,7 +25,7 @@ class ToolbarButtonBinding(
     private val backButton: View,
     private val refreshButton: View,
     private val stopButton: View
-) : AbstractBinding(store) {
+) : AbstractBinding<BrowserState>(store) {
     override suspend fun onState(flow: Flow<BrowserState>) {
         flow.mapNotNull { state -> state.findTabOrCustomTabOrSelectedTab(tabId) }
             .ifAnyChanged { tab -> arrayOf(tab.content.canGoBack, tab.content.canGoForward, tab.content.loading) }

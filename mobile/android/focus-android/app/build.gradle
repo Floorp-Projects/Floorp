@@ -156,6 +156,7 @@ dependencies {
     implementation "org.mozilla.components:feature-search:${AndroidComponents.VERSION}"
     implementation "org.mozilla.components:feature-tabs:${AndroidComponents.VERSION}"
     implementation "org.mozilla.components:lib-crash:${AndroidComponents.VERSION}"
+    implementation "org.mozilla.components:lib-state:${AndroidComponents.VERSION}"
     implementation "org.mozilla.components:service-telemetry:$mozilla_components_version_telemetry"
     implementation "org.mozilla.components:service-location:${AndroidComponents.VERSION}"
     implementation "org.mozilla.components:support-ktx:${AndroidComponents.VERSION}"

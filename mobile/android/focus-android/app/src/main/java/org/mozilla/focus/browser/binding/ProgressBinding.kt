@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.mapNotNull
 import mozilla.components.browser.state.selector.findTabOrCustomTabOrSelectedTab
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.lib.state.helpers.AbstractBinding
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 import org.mozilla.focus.widget.AnimatedProgressBar
 
@@ -14,7 +15,7 @@ class ProgressBinding(
     store: BrowserStore,
     private val tabId: String?,
     private val progressView: AnimatedProgressBar
-) : AbstractBinding(store) {
+) : AbstractBinding<BrowserState>(store) {
     override suspend fun onState(flow: Flow<BrowserState>) {
         flow.mapNotNull { state -> state.findTabOrCustomTabOrSelectedTab(tabId) }
             .map { tab -> tab.content.progress }

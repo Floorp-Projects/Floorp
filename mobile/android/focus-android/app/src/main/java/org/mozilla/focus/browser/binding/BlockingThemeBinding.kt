@@ -9,6 +9,7 @@ import android.view.View
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.mapNotNull
+import mozilla.components.lib.state.helpers.AbstractBinding
 import mozilla.components.browser.state.selector.findTabOrCustomTabOrSelectedTab
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.SessionState
@@ -29,7 +30,7 @@ class BlockingThemeBinding(
     private val statusBar: View,
     private val urlBar: View,
     private val blockView: View
-) : AbstractBinding(store) {
+) : AbstractBinding<BrowserState>(store) {
     private var backgroundTransitionGroup: TransitionDrawableGroup? = updateResources(
         isCustomTab, enabled = true
     )

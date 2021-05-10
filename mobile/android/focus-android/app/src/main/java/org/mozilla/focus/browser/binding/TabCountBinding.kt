@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.map
 import mozilla.components.browser.state.selector.privateTabs
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.lib.state.helpers.AbstractBinding
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 import org.mozilla.focus.widget.FloatingEraseButton
 import org.mozilla.focus.widget.FloatingSessionsButton
@@ -21,7 +22,7 @@ class TabCountBinding(
     store: BrowserStore,
     private val eraseButton: FloatingEraseButton,
     private val tabsButton: FloatingSessionsButton
-) : AbstractBinding(store) {
+) : AbstractBinding<BrowserState>(store) {
     override suspend fun onState(flow: Flow<BrowserState>) {
         flow.map { state -> state.privateTabs.size }
             .ifChanged()

@@ -14,6 +14,7 @@ import mozilla.components.browser.state.selector.findTabOrCustomTabOrSelectedTab
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.lib.state.helpers.AbstractBinding
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifAnyChanged
 import org.mozilla.focus.R
 import org.mozilla.focus.fragment.BrowserFragment
@@ -23,7 +24,7 @@ class SecurityInfoBinding(
     store: BrowserStore,
     private val tabId: String,
     private val securityView: ImageView
-) : AbstractBinding(store), View.OnClickListener {
+) : AbstractBinding<BrowserState>(store), View.OnClickListener {
     init {
         securityView.setImageResource(R.drawable.ic_internet)
         securityView.setOnClickListener(this)
