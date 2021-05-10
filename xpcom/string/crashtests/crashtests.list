@@ -1,3 +1,3 @@
 load 394275-1.html
 load 395651-1.html
-load 1113005.html
+skip-if(webrender&&gtkWidget) load 1113005.html # Bug 1683062
