@@ -198,28 +198,14 @@ void ProxyRoleChangedEvent(RemoteAccessible* aTarget, const a11y::role& aRole) {
 - (void)accessibilitySetValue:(id)value forAttribute:(NSString*)attribute {
   if ([attribute isEqualToString:@"AXEnhancedUserInterface"]) {
     mozilla::a11y::sA11yShouldBeEnabled = ([value intValue] == 1);
-    if (sA11yShouldBeEnabled) {
-      // If accessibility should be enabled, log the appropriate client
-      nsAutoString client;
-      if ([[NSWorkspace sharedWorkspace]
-              respondsToSelector:@selector(isVoiceOverEnabled)] &&
-          [[NSWorkspace sharedWorkspace] isVoiceOverEnabled]) {
-        client.Assign(u"VoiceOver"_ns);
-      } else if ([[NSWorkspace sharedWorkspace]
-                     respondsToSelector:@selector(isSwitchControlEnabled)] &&
-                 [[NSWorkspace sharedWorkspace] isSwitchControlEnabled]) {
-        client.Assign(u"SwitchControl"_ns);
-      } else {
-        client.Assign(u"Unknown"_ns);
-      }
-
 #if defined(MOZ_TELEMETRY_REPORTING)
-      Telemetry::ScalarSet(Telemetry::ScalarID::A11Y_INSTANTIATORS, client);
-#endif  // defined(MOZ_TELEMETRY_REPORTING)
-      CrashReporter::AnnotateCrashReport(
-          CrashReporter::Annotation::AccessibilityClient,
-          NS_ConvertUTF16toUTF8(client));
+    if ([[NSWorkspace sharedWorkspace]
+            respondsToSelector:@selector(isVoiceOverEnabled)] &&
+        [[NSWorkspace sharedWorkspace] isVoiceOverEnabled]) {
+      Telemetry::ScalarSet(Telemetry::ScalarID::A11Y_INSTANTIATORS,
+                           u"VoiceOver"_ns);
     }
+#endif  // defined(MOZ_TELEMETRY_REPORTING)
   }
 
   return [super accessibilitySetValue:value forAttribute:attribute];

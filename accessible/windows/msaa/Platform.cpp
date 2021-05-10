@@ -267,6 +267,8 @@ static bool GetInstantiatorExecutable(const DWORD aPid,
   return NS_SUCCEEDED(rv);
 }
 
+#if defined(MOZ_TELEMETRY_REPORTING) || defined(MOZ_CRASHREPORTER)
+
 /**
  * Appends version information in the format "|a.b.c.d".
  * If there is no version information, we append nothing.
@@ -299,12 +301,14 @@ static void AccumulateInstantiatorTelemetry(const nsAString& aValue) {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (!aValue.IsEmpty()) {
-#if defined(MOZ_TELEMETRY_REPORTING)
+#  if defined(MOZ_TELEMETRY_REPORTING)
     Telemetry::ScalarSet(Telemetry::ScalarID::A11Y_INSTANTIATORS, aValue);
-#endif  // defined(MOZ_TELEMETRY_REPORTING)
+#  endif  // defined(MOZ_TELEMETRY_REPORTING)
+#  if defined(MOZ_CRASHREPORTER)
     CrashReporter::AnnotateCrashReport(
         CrashReporter::Annotation::AccessibilityClient,
         NS_ConvertUTF16toUTF8(aValue));
+#  endif  // defined(MOZ_CRASHREPORTER)
   }
 }
 
@@ -328,11 +332,15 @@ static void GatherInstantiatorTelemetry(nsIFile* aClientExe) {
   NS_DispatchToMainThread(runnable.forget());
 }
 
+#endif  // defined(MOZ_TELEMETRY_REPORTING) || defined(MOZ_CRASHREPORTER)
+
 void a11y::SetInstantiator(const uint32_t aPid) {
   nsCOMPtr<nsIFile> clientExe;
   if (!GetInstantiatorExecutable(aPid, getter_AddRefs(clientExe))) {
+#if defined(MOZ_TELEMETRY_REPORTING) || defined(MOZ_CRASHREPORTER)
     AccumulateInstantiatorTelemetry(
         u"(Failed to retrieve client image name)"_ns);
+#endif  // defined(MOZ_TELEMETRY_REPORTING) || defined(MOZ_CRASHREPORTER)
     return;
   }
 
@@ -350,6 +358,7 @@ void a11y::SetInstantiator(const uint32_t aPid) {
 
   gInstantiator = clientExe;
 
+#if defined(MOZ_TELEMETRY_REPORTING) || defined(MOZ_CRASHREPORTER)
   nsCOMPtr<nsIRunnable> runnable(
       NS_NewRunnableFunction("a11y::GatherInstantiatorTelemetry",
                              [clientExe = std::move(clientExe)]() -> void {
@@ -359,6 +368,7 @@ void a11y::SetInstantiator(const uint32_t aPid) {
   DebugOnly<nsresult> rv =
       NS_DispatchBackgroundTask(runnable.forget(), NS_DISPATCH_EVENT_MAY_BLOCK);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
+#endif  // defined(MOZ_TELEMETRY_REPORTING) || defined(MOZ_CRASHREPORTER)
 }
 
 bool a11y::GetInstantiator(nsIFile** aOutInstantiator) {
