@@ -1013,6 +1013,17 @@ nsresult EventDispatcher::Dispatch(nsISupports* aTarget,
           chain[i].PreHandleEvent(preVisitor);
         }
 
+        RefPtr<nsRefreshDriver> refreshDriver;
+        if (aPresContext && aPresContext->GetRootPresContext() &&
+            aEvent->IsTrusted() &&
+            (aEvent->mMessage == eKeyPress ||
+             aEvent->mMessage == eMouseClick)) {
+          refreshDriver = aPresContext->GetRootPresContext()->RefreshDriver();
+          if (refreshDriver) {
+            refreshDriver->EnterUserInputProcessing();
+          }
+        }
+
         clearTargets = ShouldClearTargets(aEvent);
 
         // Handle the chain.
@@ -1126,6 +1137,10 @@ nsresult EventDispatcher::Dispatch(nsISupports* aTarget,
               default:
                 break;
             }
+          }
+
+          if (refreshDriver) {
+            driver->ExitUserInputProcessing();
           }
         }
 
