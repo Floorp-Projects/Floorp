@@ -37,9 +37,11 @@ const TEST_DATA = [
 ];
 
 const ABOUT_BLANK = "about:blank";
+const TEST_ENGINE_BASENAME = "searchSuggestionEngine.xml";
 const SUGGESTIONS_PREF = "browser.search.suggest.enabled";
 const PRIVATE_SUGGESTIONS_PREF = "browser.search.suggest.enabled.private";
 const SEEN_DIALOG_PREF = "browser.urlbar.quicksuggest.showedOnboardingDialog";
+const SUGGESTIONS_FIRST_PREF = "browser.urlbar.showSearchSuggestionsFirst";
 
 function sleep(ms) {
   // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
@@ -112,6 +114,31 @@ async function assertNoQuickSuggestResults() {
         !r.isSponsored,
       `Result at index ${i} should not be a QuickSuggest result`
     );
+  }
+}
+
+/**
+ * Adds a search engine that provides suggestions, calls your callback, and then
+ * remove the engine.
+ *
+ * @param {function} callback
+ *   Your callback function.
+ */
+async function withSuggestions(callback) {
+  await SpecialPowers.pushPrefEnv({
+    set: [[SUGGESTIONS_PREF, true]],
+  });
+  let engine = await SearchTestUtils.promiseNewSearchEngine(
+    getRootDirectory(gTestPath) + TEST_ENGINE_BASENAME
+  );
+  let oldDefaultEngine = await Services.search.getDefault();
+  await Services.search.setDefault(engine);
+  try {
+    await callback(engine);
+  } finally {
+    await Services.search.setDefault(oldDefaultEngine);
+    await Services.search.removeEngine(engine);
+    await SpecialPowers.popPrefEnv();
   }
 }
 
@@ -281,4 +308,57 @@ add_task(async function nonSponsored() {
   });
   await assertIsQuickSuggest({ index: 1, isSponsored: false });
   await UrlbarTestUtils.promisePopupClose(window);
+});
+
+// When general results are shown before search suggestions and the only general
+// result is a quick suggest result, it should be shown before suggestions.
+add_task(async function generalBeforeSuggestions_only() {
+  await SpecialPowers.pushPrefEnv({
+    set: [[SUGGESTIONS_FIRST_PREF, false]],
+  });
+  await withSuggestions(async () => {
+    await UrlbarTestUtils.promiseAutocompleteResultPopup({
+      window,
+      value: "fra",
+    });
+    Assert.equal(
+      UrlbarTestUtils.getResultCount(window),
+      4,
+      "Heuristic + quick suggest + 2 suggestions = 4 results"
+    );
+    await assertIsQuickSuggest({ index: 1 });
+    await UrlbarTestUtils.promisePopupClose(window);
+  });
+});
+
+// When general results are shown before search suggestions and there are other
+// general results besides quick suggest, the quick suggest result should be the
+// last general result.
+add_task(async function generalBeforeSuggestions_others() {
+  await SpecialPowers.pushPrefEnv({
+    set: [[SUGGESTIONS_FIRST_PREF, false]],
+  });
+
+  // Add some history that will match our query below.
+  let maxResults = UrlbarPrefs.get("maxRichResults");
+  for (let i = 0; i < maxResults; i++) {
+    await PlacesTestUtils.addVisits("http://example.com/frabbits" + i);
+  }
+
+  await withSuggestions(async () => {
+    await UrlbarTestUtils.promiseAutocompleteResultPopup({
+      window,
+      value: "fra",
+    });
+    Assert.equal(
+      UrlbarTestUtils.getResultCount(window),
+      maxResults,
+      "Result count is max result count"
+    );
+    // The quick suggest result should come before the 2 suggestions at the end.
+    await assertIsQuickSuggest({ index: maxResults - 3 });
+    await UrlbarTestUtils.promisePopupClose(window);
+  });
+
+  await PlacesUtils.history.clear();
 });
