@@ -1015,12 +1015,6 @@ NS_IMETHODIMP AppWindow::GetMainWidget(nsIWidget** aMainWidget) {
   return NS_OK;
 }
 
-NS_IMETHODIMP AppWindow::SetFocus() {
-  // XXX First Check In
-  NS_ASSERTION(false, "Not Yet Implemented");
-  return NS_OK;
-}
-
 NS_IMETHODIMP AppWindow::GetTitle(nsAString& aTitle) {
   aTitle = mTitle;
   return NS_OK;

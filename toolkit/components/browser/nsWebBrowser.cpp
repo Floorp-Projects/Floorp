@@ -1079,15 +1079,6 @@ nsWebBrowser::GetMainWidget(nsIWidget** aMainWidget) {
 }
 
 NS_IMETHODIMP
-nsWebBrowser::SetFocus() {
-  nsCOMPtr<nsPIDOMWindowOuter> window = GetWindow();
-  NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
-
-  nsFocusManager* fm = nsFocusManager::GetFocusManager();
-  return fm ? fm->SetFocusedWindow(window) : NS_OK;
-}
-
-NS_IMETHODIMP
 nsWebBrowser::GetTitle(nsAString& aTitle) {
   NS_ENSURE_STATE(mDocShell);
 

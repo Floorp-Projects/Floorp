@@ -368,11 +368,6 @@ NS_IMETHODIMP nsChromeTreeOwner::GetMainWidget(nsIWidget** aMainWidget) {
   return NS_OK;
 }
 
-NS_IMETHODIMP nsChromeTreeOwner::SetFocus() {
-  NS_ENSURE_STATE(mAppWindow);
-  return mAppWindow->SetFocus();
-}
-
 NS_IMETHODIMP nsChromeTreeOwner::GetTitle(nsAString& aTitle) {
   NS_ENSURE_STATE(mAppWindow);
   return mAppWindow->GetTitle(aTitle);
