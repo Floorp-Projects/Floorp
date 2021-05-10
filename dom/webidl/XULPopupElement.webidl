@@ -129,7 +129,8 @@ interface XULPopupElement : XULElement
    * Fires the command event for the item and then closes the menu.
    *
    * Throws an InvalidStateError if the menu is not currently open, or if the
-   * menuitem is not inside this menu, or if the menuitem is hidden.
+   * menuitem is not inside this menu, or if the menuitem is hidden. The menuitem
+   * may be an item in a submenu, but that submenu must be open.
    *
    * @param itemElement The menuitem to activate.
    * @param options Which modifier keys and button should be set on the command
