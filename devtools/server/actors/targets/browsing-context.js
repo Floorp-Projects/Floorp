@@ -560,10 +560,8 @@ const browsingContextTargetPrototype = {
         // @backward-compat { version 87 } Print & color scheme simulations
         // should now be set using reconfigure.
         reconfigureSupportsSimulationFeatures: true,
-        // @backward-compat { version 88 } Browsing context targets can compute
-        // the isTopLevelTarget flag on the server. Note that not all targets
-        // support this, so we might keep this trait until all top level targets
-        // can provide this flag consistently from the server.
+        // Browsing context targets can compute the isTopLevelTarget flag on the
+        // server. But other target actors don't support this yet. See Bug 1709314.
         supportsTopLevelTargetFlag: true,
       },
     };
