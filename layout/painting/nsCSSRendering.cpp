@@ -1123,38 +1123,34 @@ void nsImageRenderer::ComputeObjectAnchorPoint(const Position& aPos,
                            aImageSize.height, &aTopLeft->y, &aAnchorPoint->y);
 }
 
-nsIFrame* nsCSSRendering::FindNonTransparentBackgroundFrame(
-    nsIFrame* aFrame, bool aStartAtParent /*= false*/) {
+auto nsCSSRendering::FindNonTransparentBackgroundFrame(nsIFrame* aFrame,
+                                                       bool aStopAtThemed)
+    -> NonTransparentBackgroundFrame {
   NS_ASSERTION(aFrame,
                "Cannot find NonTransparentBackgroundFrame in a null frame");
 
-  nsIFrame* frame = nullptr;
-  if (aStartAtParent) {
-    frame = nsLayoutUtils::GetParentOrPlaceholderFor(aFrame);
-  }
-  if (!frame) {
-    frame = aFrame;
-  }
-
-  while (frame) {
-    // No need to call GetVisitedDependentColor because it always uses
-    // this alpha component anyway.
-    if (NS_GET_A(frame->StyleBackground()->BackgroundColor(frame)) > 0) {
-      break;
+  for (nsIFrame* frame = aFrame; frame;
+       frame = nsLayoutUtils::GetParentOrPlaceholderForCrossDoc(frame)) {
+    // No need to call GetVisitedDependentColor because it always uses this
+    // alpha component anyway.
+    if (NS_GET_A(frame->StyleBackground()->BackgroundColor(frame))) {
+      return {frame, false, false};
     }
 
-    if (frame->IsThemed()) {
-      break;
+    if (aStopAtThemed && frame->IsThemed()) {
+      return {frame, true, false};
     }
 
-    nsIFrame* parent = nsLayoutUtils::GetParentOrPlaceholderFor(frame);
-    if (!parent) {
-      break;
+    if (IsCanvasFrame(frame)) {
+      nsIFrame* bgFrame = nullptr;
+      if (FindBackgroundFrame(frame, &bgFrame) &&
+          NS_GET_A(bgFrame->StyleBackground()->BackgroundColor(bgFrame))) {
+        return {bgFrame, false, true};
+      }
     }
-
-    frame = parent;
   }
-  return frame;
+
+  return {};
 }
 
 // Returns true if aFrame is a canvas frame.
