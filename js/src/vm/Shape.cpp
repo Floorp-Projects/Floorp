@@ -974,6 +974,10 @@ void NativeObject::removeDictionaryPropertyWithoutReshape(ShapeTable* table,
                                                           Shape* shape) {
   // Removes a property from a dictionary object. The caller is responsible for
   // generating a new shape for the object.
+  //
+  // A dictionary-mode object owns mutable, unique shapes on a non-circular
+  // doubly linked list, hashed by lastProperty()->table. So we can edit the
+  // list and table in place.
 
   AutoCheckCannotGC nogc;
   MOZ_ASSERT(inDictionaryMode());
@@ -985,14 +989,10 @@ void NativeObject::removeDictionaryPropertyWithoutReshape(ShapeTable* table,
     freeDictionarySlot(table, shape->slot());
   }
 
-  // A dictionary-mode object owns mutable, unique shapes on a non-circular
-  // doubly linked list, hashed by lastProperty()->table. So we can edit the
-  // list and table in place.
-  table->remove(ptr);
-
-  // Remove shape from its non-circular doubly linked list.
+  // Remove shape from its non-circular doubly linked list and from the table.
   bool removingLastProperty = (shape == lastProperty());
   shape->removeFromDictionary(this);
+  table->remove(ptr);
 
   // If we just removed the object's last property, move its ShapeTable,
   // BaseShape and object flags to the new last property. Information in
@@ -1123,6 +1123,8 @@ bool NativeObject::densifySparseElements(JSContext* cx,
       obj->removeDictionaryPropertyWithoutReshape(table, ptr, shape);
       shape = previous;
     }
+
+    MOZ_ASSERT(obj->lastProperty()->maybeTable(nogc) == table);
   }
 
   // Generate a new shape for the object, infallibly.
