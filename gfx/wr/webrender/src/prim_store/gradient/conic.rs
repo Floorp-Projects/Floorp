@@ -156,7 +156,7 @@ impl From<ConicGradientKey> for ConicGradientTemplate {
             extend_mode: item.extend_mode,
             params: item.params,
             stretch_size,
-            task_size: task_size.to_i32(),
+            task_size: task_size.ceil().to_i32(),
             scale,
             tile_spacing: item.tile_spacing.into(),
             brush_segments,
