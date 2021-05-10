@@ -2185,6 +2185,7 @@ already_AddRefed<CanvasPattern> CanvasRenderingContext2D::CreatePattern(
   // The canvas spec says that createPattern should use the first frame
   // of animated images
   auto flags = nsLayoutUtils::SFE_WANT_FIRST_FRAME_IF_IMAGE |
+               nsLayoutUtils::SFE_EXACT_SIZE_SURFACE |
                nsLayoutUtils::SFE_TO_SRGB_COLORSPACE;
   SurfaceFromElementResult res =
       nsLayoutUtils::SurfaceFromElement(element, flags, mTarget);
@@ -4528,6 +4529,7 @@ void CanvasRenderingContext2D::DrawImage(const CanvasImageSource& aImage,
     // of animated images. We also don't want to rasterize vector images.
     uint32_t sfeFlags = nsLayoutUtils::SFE_WANT_FIRST_FRAME_IF_IMAGE |
                         nsLayoutUtils::SFE_NO_RASTERIZING_VECTORS |
+                        nsLayoutUtils::SFE_EXACT_SIZE_SURFACE |
                         nsLayoutUtils::SFE_TO_SRGB_COLORSPACE;
 
     SurfaceFromElementResult res =
