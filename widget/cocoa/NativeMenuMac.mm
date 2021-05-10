@@ -327,6 +327,11 @@ void NativeMenuMac::ActivateItem(dom::Element* aItemElement, Modifiers aModifier
   }
 
   RefPtr<nsMenuItemX> item = std::move(child->as<RefPtr<nsMenuItemX>>());
+  if (!item->IsVisible()) {
+    aRv.ThrowInvalidStateError("Menu item is not visible");
+    return;
+  }
+
   NSMenuItem* nativeItem = [item->NativeNSMenuItem() retain];
 
   menu->ActivateItemAfterClosing(std::move(item), ConvertModifierFlags(aModifiers), aButton);

@@ -1,0 +1,169 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+
+<window title="Menu Activation Test"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+
+  <label id="label" value="label" context="contextmenu"/>
+  <menupopup id="contextmenu">
+    <menuitem id="item1" label="Item 1"/>
+    <menu label="Submenu">
+      <menupopup id="submenu">
+        <menuitem id="item2" label="Item 2"/>
+        <menuitem id="item4" label="Item 4" hidden="true"/>
+        <menu label="Inner Submenu">
+          <menupopup id="innersubmenu">
+            <menuitem id="item3" label="Item 3"/>
+          </menupopup>
+        </menu>
+      </menupopup>
+    </menu>
+  </menupopup>
+
+  <script class="testbody" type="application/javascript">
+  <![CDATA[
+
+function waitForEvent(subject, eventName) {
+  return new Promise(resolve => {
+    subject.addEventListener(eventName, function listener(event) {
+      if (event.target == subject) {
+        subject.removeEventListener(eventName, listener);
+        resolve();
+      }
+    });
+  });
+}
+
+let doNothing = () => {};
+
+function checkActivate(desc, menu, item, expectedResult)
+{
+  let passed = true;
+  try {
+    menu.activateItem(item);
+  } catch (ex) {
+    passed = false;
+  }
+  is(passed, expectedResult, desc + " for " + menu.id + ".activateItem(" + item.id + ")");
+}
+
+async function checkActivateItems(desc, openFn, expectedResults)
+{
+  // Iterate over each menu/submenu and try activating the item from that menu.
+  // This should only pass when the item is a descedant of that menu and the
+  // menu is open.
+  let menus = [ "contextmenu", "submenu", "innersubmenu" ];
+  let items = [ "item1", "item2", "item3", "item4" ];
+
+  let needToOpen = true;
+
+  let contextmenu = document.getElementById("contextmenu");
+
+  for (let m = 0; m < menus.length; m++) {
+    let menu = document.getElementById(menus[m]);
+
+    for (let i = 0; i < items.length; i++) {
+      if (needToOpen) {
+        await openFn();
+      }
+
+      // If an activation is expected, the popup will hide. Wait for it to
+      // hide after calling checkActivate. If the popup is hidden, it will
+      // need to be reopened for the next step, so set needToOpen accordingly.
+      let popupHiddenPromise;
+      needToOpen = expectedResults[i];
+      if (expectedResults[i]) {
+        popupHiddenPromise = waitForEvent(contextmenu, "popuphidden");
+      }
+
+      checkActivate(desc, menu, document.getElementById(items[i]), expectedResults[i]);
+
+      await popupHiddenPromise;
+    }
+
+    // For the next iteration, we will be using the next submenu. The item
+    // in the first menu will never be activatable since it is in a higher
+    // part of the menu hierarchy.
+    expectedResults[m] = false;
+  }
+
+  if (!needToOpen && openFn != doNothing) {
+    // Hide the popup if it is still expected to be open. If doNothing is
+    // the opening function, then the popup would never have been opened.
+    let popupHiddenPromise = waitForEvent(contextmenu, "popuphidden");
+    contextmenu.hidePopup();
+    await popupHiddenPromise;
+  }
+}
+
+add_task(async function () {
+  await checkActivateItems("expected failure when no menus open", 
+                           doNothing, [false, false, false, false]);
+
+  let openContextMenu = async () => {
+    // Open the first level of the context menu
+    let contextmenu = document.getElementById("contextmenu");
+    let popupShownPromise = waitForEvent(contextmenu, "popupshown");
+    synthesizeMouseAtCenter(document.getElementById("label"), {
+      type: "contextmenu",
+      button: 2,
+    });
+    await popupShownPromise;
+  }
+ 
+  await checkActivateItems("one menu open", openContextMenu, [true, false, false, false]);
+
+  // Open the second level of the context menu
+  let openSubmenu = async () => {
+    await openContextMenu();
+    let submenu = document.getElementById("submenu");
+    let popupShownPromise = waitForEvent(submenu, "popupshown");
+    submenu.parentNode.openMenu(true);
+    await popupShownPromise;
+  }
+
+  await checkActivateItems("submenu menu open", openSubmenu, [true, true, false, false]);
+
+  // Open the last level of the context menu
+  let openInnerSubmenu = async () => {
+    await openSubmenu();
+
+    let innersubmenu = document.getElementById("innersubmenu");
+    let popupShownPromise = waitForEvent(innersubmenu, "popupshown");
+    innersubmenu.parentNode.openMenu(true);
+    await popupShownPromise;
+  };
+  await checkActivateItems("inner submenu menu open", openInnerSubmenu, [true, true, true, false]);
+
+  // Check that an item not in the menu is not valid.
+  await openInnerSubmenu();
+
+  let innersubmenu = document.getElementById("innersubmenu");
+  await checkActivate("item not in menu", innersubmenu, document.getElementById("item1"), false);
+
+  // Now check with all menus closed again
+  let contextmenu = document.getElementById("contextmenu");
+  let popupHiddenPromise = waitForEvent(contextmenu, "popuphidden");
+  contextmenu.hidePopup();
+  await popupHiddenPromise;
+
+  await checkActivateItems("all menus closed", doNothing, [false, false, false, false]);
+});
+
+  ]]>
+  </script>
+
+  <body xmlns="http://www.w3.org/1999/xhtml">
+    <p id="display">
+    </p>
+    <div id="content" style="display: none">
+    </div>
+    <pre id="test">
+    </pre>
+  </body>
+
+</window>
