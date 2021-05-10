@@ -133,17 +133,10 @@ class HomeMenu(
         ) {
             onItemTapped.invoke(Item.WhatsNew)
         }
-
         val experiments = context.components.analytics.experiments
-        val bookmarksIcon = experiments.withExperiment(Experiments.BOOKMARK_ICON) {
-            when (it) {
-                ExperimentBranch.TREATMENT -> R.drawable.ic_bookmark_list
-                else -> R.drawable.ic_bookmark_filled
-            }
-        }
         val bookmarksItem = BrowserMenuImageText(
             context.getString(R.string.library_bookmarks),
-            bookmarksIcon,
+            R.drawable.ic_bookmark_list,
             primaryTextColor
         ) {
             onItemTapped.invoke(Item.Bookmarks)
@@ -251,15 +244,9 @@ class HomeMenu(
         val experiments = context.components.analytics.experiments
         val settings = context.components.settings
 
-        val bookmarksIcon = experiments.withExperiment(Experiments.BOOKMARK_ICON) {
-            when (it) {
-                ExperimentBranch.TREATMENT -> R.drawable.ic_bookmark_list
-                else -> R.drawable.ic_bookmark_filled
-            }
-        }
         val bookmarksItem = BrowserMenuImageText(
             context.getString(R.string.library_bookmarks),
-            bookmarksIcon,
+            R.drawable.ic_bookmark_list,
             primaryTextColor
         ) {
             onItemTapped.invoke(Item.Bookmarks)
