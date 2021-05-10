@@ -16,7 +16,7 @@ class B {
     return this.#privF();
   }
 
-  #val = '';
+  #val = 'constructed';
   set #x(x) {
     this.#val = x + ' haha';
   }
@@ -29,7 +29,7 @@ class B {
   }
 
   callFunc(f) {
-    f();
+    return f();
   }
 
 }
@@ -38,12 +38,20 @@ var b = new B();
 
 assertEq(b.ef("this.callPriv()"), 12);
 assertEq(b.ef("this.callPrivF()"), 12);
-assertThrowsInstanceOf(() => b.ef(`this.callFunc(() => { this.#privF(); })`), Error);
 
+// Private fields don't need brand checking and should succeed.
+assertEq(b.ef("this.#val"), 'constructed')
+
+// PrivF is a field, not a method, and so isn't brand checked like a method.
+assertEq(b.ef(`this.callFunc(() => { return this.#privF() })`), 12);
+assertEq(b.ef(`this.#privF()`), 12);
+
+// Accesors are stored like fields, and so successfully execute, as they don't
+// need brand checking.
+assertEq(b.ef(`this.#x = 'Bye'; this.#x`), 'Bye haha');
+assertEq(b.ef(`var x = () => { this.#x = 'Hi'; return this.#x}; x()`), 'Hi haha');
+
+// These require brand checking, and some new development to support.
 // See EmitterScope::lookupPrivate for the reasoning here.
-assertThrowsInstanceOf(() => b.ef(`this.#privF();`), Error);
-assertThrowsInstanceOf(() => b.ef(`var x = () => { return this.#privF(); } x();`), Error);
-assertThrowsInstanceOf(() => b.ef(`this.#priv();`), Error);
+assertThrowsInstanceOf(() => b.ef(`this.#priv()`), Error);
 assertThrowsInstanceOf(() => b.ef(`var x = () => { return this.#priv(); } x();`), Error);
-assertThrowsInstanceOf(() => b.ef(`this.#x = 'Hi'; this.#x`), Error);
-assertThrowsInstanceOf(() => b.ef(`var x = () => { this.#x = 'Hi'; return this.#x} x();`), Error);
