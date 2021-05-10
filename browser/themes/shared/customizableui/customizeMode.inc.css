@@ -336,15 +336,12 @@ toolbarpaletteitem > #search-container > #searchbar > .searchbar-textbox {
 .customization-uidensity-menuitem,
 .customization-lwtheme-menu-theme {
   appearance: none;
+  color: inherit;
   border: 1px solid transparent;
   border-radius: 4px;
   padding-block: 0;
   padding-inline: 0 5px;
   margin: 2px 0;
-}
-
-.customization-uidensity-menuitem {
-  color: inherit;
 }
 
 #customization-uidensity-menuitem-normal {
