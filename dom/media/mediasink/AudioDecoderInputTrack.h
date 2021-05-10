@@ -87,6 +87,8 @@ class AudioDecoderInputTrack final : public ProcessedMediaTrack {
 
   // Decoder thread API
   void AppendData(AudioData* aAudio, const PrincipalHandle& aPrincipalHandle);
+  void AppendData(nsTArray<RefPtr<AudioData>>& aAudioArray,
+                  const PrincipalHandle& aPrincipalHandle);
   void NotifyEndOfStream();
   void ClearFutureData();
   void SetVolume(float aVolume);

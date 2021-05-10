@@ -85,30 +85,29 @@ void AudioDecoderInputTrack::AppendData(
     AudioData* aAudio, const PrincipalHandle& aPrincipalHandle) {
   AssertOnDecoderThread();
   MOZ_ASSERT(aAudio);
+  nsTArray<RefPtr<AudioData>> audio;
+  audio.AppendElement(aAudio);
+  AppendData(audio, aPrincipalHandle);
+}
+
+void AudioDecoderInputTrack::AppendData(
+    nsTArray<RefPtr<AudioData>>& aAudioArray,
+    const PrincipalHandle& aPrincipalHandle) {
+  AssertOnDecoderThread();
   MOZ_ASSERT(!mShutdownSPSCQueue);
 
-  // If SPSC queue doesn't have much available capacity now, we batch new data
-  // together to be pushed as a single unit when the SPSC queue has more space.
+  // Batching all new data together in order to push them as a single unit that
+  // gives the SPSC queue more spaces.
+  for (const auto& audio : aAudioArray) {
+    BatchData(audio, aPrincipalHandle);
+  }
+
+  // If SPSC queue doesn't have much available capacity now, we would push
+  // batched later.
   if (ShouldBatchData()) {
-    BatchData(aAudio, aPrincipalHandle);
     return;
   }
-
-  // Append new data into batched data and push them together.
-  if (HasBatchedData()) {
-    BatchData(aAudio, aPrincipalHandle);
-    PushBatchedDataIfNeeded();
-    return;
-  }
-
-  SPSCData data({SPSCData::DecodedData(aAudio->mTime, aAudio->GetEndTime())});
-  if (ConvertAudioDataToSegment(aAudio, data.AsDecodedData()->mSegment,
-                                aPrincipalHandle)) {
-    LOG("Append data [%" PRId64 ":%" PRId64 "], available SPSC sz=%u",
-        aAudio->mTime.ToMicroseconds(), aAudio->GetEndTime().ToMicroseconds(),
-        mSPSCQueue.AvailableWrite());
-    PushDataToSPSCQueue(data);
-  }
+  PushBatchedDataIfNeeded();
 }
 
 bool AudioDecoderInputTrack::ShouldBatchData() const {
