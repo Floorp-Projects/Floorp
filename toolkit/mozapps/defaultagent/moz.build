@@ -50,6 +50,7 @@ LOCAL_INCLUDES += [
 
 OS_LIBS += [
     "advapi32",
+    "comsupp",
     "kernel32",
     "netapi32",
     "ole32",
