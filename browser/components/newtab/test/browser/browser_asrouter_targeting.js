@@ -833,54 +833,6 @@ add_task(async function check_blockedCountByType() {
   );
 });
 
-add_task(async function checkCFRPinnedTabsTargetting() {
-  const now = Date.now();
-  const timeMinutesAgo = numMinutes => now - numMinutes * 60 * 1000;
-  const messages = await CFRMessageProvider.getMessages();
-  const trigger = {
-    id: "frequentVisits",
-    context: {
-      recentVisits: [
-        { timestamp: timeMinutesAgo(61) },
-        { timestamp: timeMinutesAgo(30) },
-        { timestamp: timeMinutesAgo(1) },
-      ],
-    },
-    param: { host: "github.com", url: "https://google.com" },
-  };
-
-  ok(
-    !(await ASRouterTargeting.findMatchingMessage({ messages, trigger })),
-    "should not select PIN_TAB mesage with only 2 visits in past hour"
-  );
-
-  trigger.context.recentVisits.push({ timestamp: timeMinutesAgo(59) });
-  is(
-    (await ASRouterTargeting.findMatchingMessage({ messages, trigger })).id,
-    "PIN_TAB",
-    "should select PIN_TAB mesage"
-  );
-
-  await BrowserTestUtils.withNewTab(
-    { gBrowser, url: "about:blank" },
-    async browser => {
-      let tab = gBrowser.getTabForBrowser(browser);
-      gBrowser.pinTab(tab);
-      ok(
-        !(await ASRouterTargeting.findMatchingMessage({ messages, trigger })),
-        "should not select PIN_TAB mesage if there is a pinned tab already"
-      );
-      gBrowser.unpinTab(tab);
-    }
-  );
-
-  trigger.param = { host: "foo.bar", url: "https://foo.bar" };
-  ok(
-    !(await ASRouterTargeting.findMatchingMessage({ messages, trigger })),
-    "should not select PIN_TAB mesage with a trigger param/host not in our hostlist"
-  );
-});
-
 add_task(async function checkPatternMatches() {
   const now = Date.now();
   const timeMinutesAgo = numMinutes => now - numMinutes * 60 * 1000;
