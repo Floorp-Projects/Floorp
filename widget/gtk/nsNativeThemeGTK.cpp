@@ -63,8 +63,7 @@ using namespace mozilla::gfx;
 using namespace mozilla::widget;
 using mozilla::dom::HTMLInputElement;
 
-NS_IMPL_ISUPPORTS_INHERITED(nsNativeThemeGTK, nsNativeTheme, nsITheme,
-                            nsIObserver)
+NS_IMPL_ISUPPORTS_INHERITED(nsNativeThemeGTK, nsNativeTheme, nsITheme)
 
 static int gLastGdkError;
 
@@ -109,27 +108,11 @@ nsNativeThemeGTK::nsNativeThemeGTK() {
     return;
   }
 
-  // We have to call moz_gtk_shutdown before the event loop stops running.
-  nsCOMPtr<nsIObserverService> obsServ =
-      mozilla::services::GetObserverService();
-  obsServ->AddObserver(this, "xpcom-shutdown", false);
-
   ThemeChanged();
 }
 
-nsNativeThemeGTK::~nsNativeThemeGTK() = default;
-
-NS_IMETHODIMP
-nsNativeThemeGTK::Observe(nsISupports* aSubject, const char* aTopic,
-                          const char16_t* aData) {
-  if (!nsCRT::strcmp(aTopic, "xpcom-shutdown")) {
-    moz_gtk_shutdown();
-  } else {
-    MOZ_ASSERT_UNREACHABLE("unexpected topic");
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  return NS_OK;
+nsNativeThemeGTK::~nsNativeThemeGTK() {
+  moz_gtk_shutdown();
 }
 
 void nsNativeThemeGTK::RefreshWidgetWindow(nsIFrame* aFrame) {
