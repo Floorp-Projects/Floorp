@@ -375,22 +375,17 @@ class WarpInlinedCall : public WarpOpSnapshot {
 #endif
 };
 
-// Template object for JSOp::Rest.
+// Shape for JSOp::Rest.
 class WarpRest : public WarpOpSnapshot {
-  WarpGCPtr<ArrayObject*> templateObject_;
-  size_t maxInlineElements_;
+  WarpGCPtr<Shape*> shape_;
 
  public:
   static constexpr Kind ThisKind = Kind::WarpRest;
 
-  WarpRest(uint32_t offset, ArrayObject* templateObject,
-           size_t maxInlineElements)
-      : WarpOpSnapshot(ThisKind, offset),
-        templateObject_(templateObject),
-        maxInlineElements_(maxInlineElements) {}
+  WarpRest(uint32_t offset, Shape* shape)
+      : WarpOpSnapshot(ThisKind, offset), shape_(shape) {}
 
-  ArrayObject* templateObject() const { return templateObject_; }
-  size_t maxInlineElements() const { return maxInlineElements_; }
+  Shape* shape() const { return shape_; }
 
   void traceData(JSTracer* trc);
 

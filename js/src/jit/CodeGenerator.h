@@ -194,7 +194,6 @@ class CodeGenerator final : public CodeGeneratorSpecific {
 
   void emitRest(LInstruction* lir, Register array, Register numActuals,
                 Register temp0, Register temp1, unsigned numFormals,
-                JSObject* templateObject, bool saveAndRestore,
                 Register resultreg);
   void emitInstanceOf(LInstruction* ins, const LAllocation* prototypeObject);
 
