@@ -125,6 +125,7 @@ class GlobalObject : public NativeObject {
     INSTRUMENTATION,
     SOURCE_URLS,
     REALM_KEY_OBJECT,
+    ARRAY_SHAPE,
 
     /* Total reserved-slot count for global objects. */
     RESERVED_SLOTS
@@ -903,6 +904,16 @@ class GlobalObject : public NativeObject {
   void clearSourceURLSHolder() {
     // This is called at the start of shrinking GCs, so avoids barriers.
     getSlotRef(SOURCE_URLS).unbarrieredSet(UndefinedValue());
+  }
+
+  void setArrayShape(Shape* shape) {
+    MOZ_ASSERT(getSlot(ARRAY_SHAPE).isUndefined());
+    initSlot(ARRAY_SHAPE, PrivateGCThingValue(shape));
+  }
+  Shape* maybeArrayShape() const {
+    Value v = getSlot(ARRAY_SHAPE);
+    MOZ_ASSERT(v.isUndefined() || v.isPrivateGCThing());
+    return v.isPrivateGCThing() ? v.toGCThing()->as<Shape>() : nullptr;
   }
 
   // Returns an object that represents the realm, used by embedder.

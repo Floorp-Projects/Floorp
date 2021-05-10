@@ -3887,6 +3887,9 @@ static MOZ_ALWAYS_INLINE ArrayObject* NewArray(JSContext* cx, uint32_t length,
     }
     shape = arr->lastProperty();
     EmptyShape::insertInitialShape(cx, shape);
+    if (proto == cx->global()->maybeGetArrayPrototype()) {
+      cx->global()->setArrayShape(shape);
+    }
   }
 
   if (isCachable) {
