@@ -55,8 +55,13 @@ add_agent_task(async function listen() {
 
   let boundURL;
   function observer(subject, topic, data) {
+    const prefix = "DevTools listening on ";
+    if (!data.startsWith(prefix)) {
+      return;
+    }
+
     Services.obs.removeObserver(observer, topic);
-    boundURL = Services.io.newURI(data);
+    boundURL = Services.io.newURI(data.split(prefix)[1]);
   }
   Services.obs.addObserver(observer, "remote-listening");
 

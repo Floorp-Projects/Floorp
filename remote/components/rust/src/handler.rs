@@ -132,8 +132,8 @@ impl RemoteAgentHandler {
             }
 
             "remote-listening" => {
-                let url = unsafe { wstring_to_cstring(data) }.map_err(|_| NS_ERROR_FAILURE)?;
-                eprintln!("DevTools listening on {}", url.to_string_lossy());
+                let output = unsafe { wstring_to_cstring(data) }.map_err(|_| NS_ERROR_FAILURE)?;
+                eprintln!("{}", output.to_string_lossy());
             }
 
             s => warn!("unknown system notification: {}", s),
