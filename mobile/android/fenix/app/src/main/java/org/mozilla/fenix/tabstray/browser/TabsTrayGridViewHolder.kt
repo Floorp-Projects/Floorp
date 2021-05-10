@@ -16,7 +16,6 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.increaseTapArea
 import kotlin.math.max
 import kotlinx.android.synthetic.main.tab_tray_grid_item.view.tab_tray_grid_item
-import org.mozilla.fenix.tabstray.TabsTrayViewHolder
 import org.mozilla.fenix.selection.SelectionHolder
 import org.mozilla.fenix.tabstray.TabsTrayStore
 

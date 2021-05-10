@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.fenix.tabstray
+package org.mozilla.fenix.tabstray.browser
 
 import android.view.View
 import android.widget.ImageButton
@@ -37,7 +37,8 @@ import org.mozilla.fenix.ext.showAndEnable
 import org.mozilla.fenix.ext.toShortUrl
 import org.mozilla.fenix.selection.SelectionHolder
 import org.mozilla.fenix.selection.SelectionInteractor
-import org.mozilla.fenix.tabstray.browser.BrowserTrayInteractor
+import org.mozilla.fenix.tabstray.TabsTrayState
+import org.mozilla.fenix.tabstray.TabsTrayStore
 import org.mozilla.fenix.tabstray.ext.isSelect
 
 /**

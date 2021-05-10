@@ -20,7 +20,6 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.selection.SelectionHolder
 import org.mozilla.fenix.tabstray.TabsTrayStore
-import org.mozilla.fenix.tabstray.TabsTrayViewHolder
 
 /**
  * A [RecyclerView.Adapter] for browser tabs.

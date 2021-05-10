@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.fenix.tabstray
+package org.mozilla.fenix.tabstray.browser
 
 import android.view.LayoutInflater
 import android.view.View
@@ -19,8 +19,7 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.selection.SelectionHolder
-import org.mozilla.fenix.tabstray.browser.BrowserTrayInteractor
-import org.mozilla.fenix.tabstray.browser.createTab
+import org.mozilla.fenix.tabstray.TabsTrayStore
 
 @RunWith(FenixRobolectricTestRunner::class)
 class TabsTrayViewHolderTest {

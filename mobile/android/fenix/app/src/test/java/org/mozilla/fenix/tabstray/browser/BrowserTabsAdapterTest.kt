@@ -17,7 +17,6 @@ import org.junit.runner.RunWith
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.selection.SelectionHolder
 import org.mozilla.fenix.tabstray.TabsTrayStore
-import org.mozilla.fenix.tabstray.TabsTrayViewHolder
 
 @RunWith(FenixRobolectricTestRunner::class)
 class BrowserTabsAdapterTest {
