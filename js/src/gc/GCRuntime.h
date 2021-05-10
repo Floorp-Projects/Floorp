@@ -735,7 +735,8 @@ class GCRuntime {
   void beginMarkPhase(AutoGCSession& session);
   bool shouldPreserveJITCode(JS::Realm* realm,
                              const mozilla::TimeStamp& currentTime,
-                             JS::GCReason reason, bool canAllocateMoreCode);
+                             JS::GCReason reason, bool canAllocateMoreCode,
+                             bool isActiveCompartment);
   void discardJITCodeForGC();
   void startBackgroundFreeAfterMinorGC();
   void relazifyFunctionsForShrinkingGC();
