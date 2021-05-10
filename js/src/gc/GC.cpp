@@ -3991,7 +3991,8 @@ void GCRuntime::purgeRuntime() {
 bool GCRuntime::shouldPreserveJITCode(Realm* realm,
                                       const TimeStamp& currentTime,
                                       JS::GCReason reason,
-                                      bool canAllocateMoreCode) {
+                                      bool canAllocateMoreCode,
+                                      bool isActiveCompartment) {
   if (cleanUpEverything) {
     return false;
   }
@@ -3999,17 +4000,18 @@ bool GCRuntime::shouldPreserveJITCode(Realm* realm,
     return false;
   }
 
+  if (isActiveCompartment) {
+    return true;
+  }
   if (alwaysPreserveCode) {
     return true;
   }
   if (realm->preserveJitCode()) {
     return true;
   }
-
   if (IsCurrentlyAnimating(realm->lastAnimationTime, currentTime)) {
     return true;
   }
-
   if (reason == JS::GCReason::DEBUG_GC) {
     return true;
   }
@@ -4369,27 +4371,28 @@ void GCRuntime::endPreparePhase(JS::GCReason reason) {
   bool canAllocateMoreCode = jit::CanLikelyAllocateMoreExecutableMemory();
   auto currentTime = ReallyNow();
 
+  Compartment* activeCompartment = nullptr;
+  jit::JitActivationIterator activation(rt->mainContextFromOwnThread());
+  if (!activation.done()) {
+    activeCompartment = activation->compartment();
+  }
+
   for (CompartmentsIter c(rt); !c.done(); c.next()) {
     c->gcState.scheduledForDestruction = false;
     c->gcState.maybeAlive = false;
     c->gcState.hasEnteredRealm = false;
+    bool isActiveCompartment = c == activeCompartment;
     for (RealmsInCompartmentIter r(c); !r.done(); r.next()) {
       if (r->shouldTraceGlobal() || !r->zone()->isGCScheduled()) {
         c->gcState.maybeAlive = true;
       }
-      if (shouldPreserveJITCode(r, currentTime, reason, canAllocateMoreCode)) {
+      if (shouldPreserveJITCode(r, currentTime, reason, canAllocateMoreCode,
+                                isActiveCompartment)) {
         r->zone()->setPreservingCode(true);
       }
       if (r->hasBeenEnteredIgnoringJit()) {
         c->gcState.hasEnteredRealm = true;
       }
-    }
-  }
-
-  if (!cleanUpEverything && canAllocateMoreCode) {
-    jit::JitActivationIterator activation(rt->mainContextFromOwnThread());
-    if (!activation.done()) {
-      activation->compartment()->zone()->setPreservingCode(true);
     }
   }
 
