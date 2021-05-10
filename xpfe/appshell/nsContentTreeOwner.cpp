@@ -645,29 +645,6 @@ nsSiteWindow::GetDimensions(uint32_t aFlags, int32_t* aX, int32_t* aY,
   return mAggregator->GetPositionAndSize(aX, aY, aCX, aCY);
 }
 
-NS_IMETHODIMP
-nsSiteWindow::SetFocus(void) {
-#if 0
-  /* This implementation focuses the main document and could make sense.
-     However this method is actually being used from within
-     nsGlobalWindow::Focus (providing a hook for MDI embedding apps)
-     and it's better for our purposes to not pick a document and
-     focus it, but allow nsGlobalWindow to carry on unhindered.
-  */
-  AppWindow *window = mAggregator->AppWindow();
-  if (window) {
-    nsCOMPtr<nsIDocShell> docshell;
-    window->GetDocShell(getter_AddRefs(docshell));
-    if (docShell) {
-      nsCOMPtr<nsPIDOMWindowOuter> domWindow(docShell->GetWindow());
-      if (domWindow)
-        domWindow->Focus();
-    }
-  }
-#endif
-  return NS_OK;
-}
-
 /* this implementation focuses another window. if there isn't another
    window to focus, we do nothing. */
 NS_IMETHODIMP
