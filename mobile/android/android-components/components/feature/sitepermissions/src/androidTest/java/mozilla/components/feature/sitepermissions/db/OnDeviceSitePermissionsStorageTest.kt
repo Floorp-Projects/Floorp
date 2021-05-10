@@ -11,10 +11,11 @@ import androidx.room.testing.MigrationTestHelper
 import androidx.sqlite.db.framework.FrameworkSQLiteOpenHelperFactory
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.platform.app.InstrumentationRegistry
-import mozilla.components.feature.sitepermissions.SitePermissions
-import mozilla.components.feature.sitepermissions.SitePermissions.AutoplayStatus
-import mozilla.components.feature.sitepermissions.SitePermissions.Status
-import mozilla.components.feature.sitepermissions.SitePermissionsStorage
+import kotlinx.coroutines.test.runBlockingTest
+import mozilla.components.concept.engine.permission.SitePermissions
+import mozilla.components.concept.engine.permission.SitePermissions.AutoplayStatus
+import mozilla.components.concept.engine.permission.SitePermissions.Status
+import mozilla.components.feature.sitepermissions.OnDiskSitePermissionsStorage
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Before
@@ -27,7 +28,7 @@ class OnDeviceSitePermissionsStorageTest {
     private val context: Context
         get() = ApplicationProvider.getApplicationContext()
 
-    private lateinit var storage: SitePermissionsStorage
+    private lateinit var storage: OnDiskSitePermissionsStorage
     private lateinit var database: SitePermissionsDatabase
 
     @get:Rule
@@ -40,7 +41,7 @@ class OnDeviceSitePermissionsStorageTest {
     @Before
     fun setUp() {
         database = Room.inMemoryDatabaseBuilder(context, SitePermissionsDatabase::class.java).build()
-        storage = SitePermissionsStorage(context)
+        storage = OnDiskSitePermissionsStorage(context)
         storage.databaseInitializer = {
             database
         }
@@ -52,7 +53,7 @@ class OnDeviceSitePermissionsStorageTest {
     }
 
     @Test
-    fun testStorageInteraction() {
+    fun testStorageInteraction() = runBlockingTest {
         val origin = "https://www.mozilla.org".toUri().host!!
         val sitePermissions = SitePermissions(
             origin = origin,

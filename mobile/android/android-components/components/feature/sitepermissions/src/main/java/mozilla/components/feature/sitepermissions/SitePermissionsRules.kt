@@ -6,10 +6,10 @@ package mozilla.components.feature.sitepermissions
 
 import mozilla.components.concept.engine.permission.Permission
 import mozilla.components.concept.engine.permission.PermissionRequest
-import mozilla.components.feature.sitepermissions.SitePermissions.AutoplayStatus
+import mozilla.components.concept.engine.permission.SitePermissions
 import mozilla.components.feature.sitepermissions.SitePermissionsRules.Action.ASK_TO_ALLOW
 import mozilla.components.feature.sitepermissions.SitePermissionsRules.Action.BLOCKED
-import mozilla.components.feature.sitepermissions.SitePermissionsRules.AutoplayAction
+import mozilla.components.concept.engine.permission.SitePermissions.AutoplayStatus
 
 /**
  * Indicate how site permissions must behave by permission category.

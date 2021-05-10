@@ -12,7 +12,7 @@ import androidx.room.TypeConverter
 import androidx.room.TypeConverters
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
-import mozilla.components.feature.sitepermissions.SitePermissions
+import mozilla.components.concept.engine.permission.SitePermissions
 
 /**
  * Internal database for saving site permissions.

@@ -50,15 +50,16 @@ import mozilla.components.support.ktx.kotlin.sanitizeFileName
 import mozilla.components.support.ktx.kotlin.tryGetHostFromUrl
 import mozilla.components.support.utils.DownloadUtils
 import org.json.JSONObject
-import org.mozilla.geckoview.WebResponse
 import org.mozilla.geckoview.AllowOrDeny
 import org.mozilla.geckoview.ContentBlocking
 import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoRuntime
 import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.GeckoSession.NavigationDelegate
+import org.mozilla.geckoview.GeckoSession.PermissionDelegate.ContentPermission
 import org.mozilla.geckoview.GeckoSessionSettings
 import org.mozilla.geckoview.WebRequestError
+import org.mozilla.geckoview.WebResponse
 import java.util.Locale
 import kotlin.coroutines.CoroutineContext
 
@@ -450,7 +451,7 @@ class GeckoEngineSession(
      */
     @Suppress("ComplexMethod")
     private fun createNavigationDelegate() = object : GeckoSession.NavigationDelegate {
-        override fun onLocationChange(session: GeckoSession, url: String?) {
+        override fun onLocationChange(session: GeckoSession, url: String?, geckoPermissions: List<ContentPermission>) {
             if (url == null) {
                 return // ¯\_(ツ)_/¯
             }
@@ -972,12 +973,14 @@ class GeckoEngineSession(
     private fun createPermissionDelegate() = object : GeckoSession.PermissionDelegate {
         override fun onContentPermissionRequest(
             session: GeckoSession,
-            uri: String?,
-            type: Int,
-            callback: GeckoSession.PermissionDelegate.Callback
-        ) {
-            val request = GeckoPermissionRequest.Content(uri ?: "", type, callback)
+            geckoContentPermission: ContentPermission
+        ): GeckoResult<Int> {
+            val geckoResult = GeckoResult<Int>()
+            val uri = geckoContentPermission.uri
+            val type = geckoContentPermission.permission
+            val request = GeckoPermissionRequest.Content(uri, type, geckoContentPermission, geckoResult)
             notifyObservers { onContentPermissionRequest(request) }
+            return geckoResult
         }
 
         override fun onMediaPermissionRequest(

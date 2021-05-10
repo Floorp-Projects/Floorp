@@ -43,8 +43,10 @@ import mozilla.components.concept.engine.permission.Permission.AppLocationFine
 import mozilla.components.concept.engine.permission.Permission.AppAudio
 import mozilla.components.concept.engine.permission.Permission.AppCamera
 import mozilla.components.concept.engine.permission.PermissionRequest
-import mozilla.components.feature.sitepermissions.SitePermissions.Status.ALLOWED
-import mozilla.components.feature.sitepermissions.SitePermissions.Status.BLOCKED
+import mozilla.components.concept.engine.permission.SitePermissions
+import mozilla.components.concept.engine.permission.SitePermissions.Status.ALLOWED
+import mozilla.components.concept.engine.permission.SitePermissions.Status.BLOCKED
+import mozilla.components.concept.engine.permission.SitePermissionsStorage
 import mozilla.components.feature.sitepermissions.SitePermissionsFeature.DialogConfig
 import mozilla.components.lib.state.ext.flowScoped
 import mozilla.components.support.base.feature.LifecycleAwareFeature
@@ -80,7 +82,7 @@ internal const val FRAGMENT_TAG = "mozac_feature_sitepermissions_prompt_dialog"
 class SitePermissionsFeature(
     private val context: Context,
     private var sessionId: String? = null,
-    private val storage: SitePermissionsStorage = SitePermissionsStorage(context),
+    private val storage: SitePermissionsStorage = OnDiskSitePermissionsStorage(context),
     var sitePermissionsRules: SitePermissionsRules? = null,
     private val fragmentManager: FragmentManager,
     var promptsStyling: PromptsStyling? = null,
@@ -124,6 +126,7 @@ class SitePermissionsFeature(
                     // Clears stale permission indicators in the toolbar,
                     // after the session starts loading.
                     store.dispatch(UpdatePermissionHighlightsStateAction(tab.id, PermissionHighlightsState()))
+                    storage.clearTemporaryPermissions()
                 }
             }
         }
@@ -269,6 +272,8 @@ class SitePermissionsFeature(
             getCurrentContentState()?.let { contentState ->
                 storeSitePermissions(contentState, permissionRequest, ALLOWED)
             }
+        } else {
+            storage.saveTemporary(permissionRequest)
         }
     }
 
@@ -314,23 +319,21 @@ class SitePermissionsFeature(
             return
         }
         coroutineScope.launch {
-            synchronized(storage) {
-                val host = contentState.url.tryGetHostFromUrl()
-                var sitePermissions =
-                    storage.findSitePermissionsBy(host)
+            val host = contentState.url.tryGetHostFromUrl()
+            var sitePermissions =
+                    storage.findSitePermissionsBy(host, includeTemporary = true)
 
-                if (sitePermissions == null) {
-                    sitePermissions =
+            if (sitePermissions == null) {
+                sitePermissions =
                         request.toSitePermissions(
                             host,
                             status = status,
                             permissions = request.permissions
                         )
-                    storage.save(sitePermissions)
-                } else {
-                    sitePermissions = request.toSitePermissions(host, status, sitePermissions)
-                    storage.update(sitePermissions)
-                }
+                storage.save(sitePermissions, request)
+            } else {
+                sitePermissions = request.toSitePermissions(host, status, sitePermissions)
+                storage.update(sitePermissions)
             }
         }
     }
@@ -344,6 +347,8 @@ class SitePermissionsFeature(
             getCurrentContentState()?.let { contentState ->
                 storeSitePermissions(contentState, permissionRequest, BLOCKED)
             }
+        } else {
+            storage.saveTemporary(permissionRequest)
         }
     }
 

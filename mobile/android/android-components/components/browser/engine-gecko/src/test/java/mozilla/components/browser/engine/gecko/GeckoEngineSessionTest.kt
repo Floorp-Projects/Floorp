@@ -12,6 +12,7 @@ import android.view.WindowManager
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runBlockingTest
+import mozilla.components.browser.engine.gecko.permission.geckoContentPermission
 import mozilla.components.browser.errorpages.ErrorType
 import mozilla.components.concept.engine.DefaultSettings
 import mozilla.components.concept.engine.EngineSession
@@ -256,7 +257,7 @@ class GeckoEngineSessionTest {
 
         geckoResult.complete(true)
 
-        navigationDelegate.value.onLocationChange(mock(), "http://mozilla.org")
+        navigationDelegate.value.onLocationChange(mock(), "http://mozilla.org", emptyList())
         assertEquals("http://mozilla.org", observedUrl)
         verify(mockedContentBlockingController).checkException(any())
 
@@ -344,16 +345,12 @@ class GeckoEngineSessionTest {
 
         permissionDelegate.value.onContentPermissionRequest(
             geckoSession,
-            "originContent",
-            GeckoSession.PermissionDelegate.PERMISSION_GEOLOCATION,
-            mock()
+            geckoContentPermission("originContent", GeckoSession.PermissionDelegate.PERMISSION_GEOLOCATION)
         )
 
         permissionDelegate.value.onContentPermissionRequest(
             geckoSession,
-            null,
-            GeckoSession.PermissionDelegate.PERMISSION_GEOLOCATION,
-            mock()
+            geckoContentPermission("", GeckoSession.PermissionDelegate.PERMISSION_GEOLOCATION)
         )
 
         permissionDelegate.value.onMediaPermissionRequest(
@@ -639,17 +636,17 @@ class GeckoEngineSessionTest {
 
         geckoResult.complete(true)
 
-        navigationDelegate.value.onLocationChange(mock(), "about:blank")
+        navigationDelegate.value.onLocationChange(mock(), "about:blank", emptyList())
         assertEquals("", observedUrl)
 
-        navigationDelegate.value.onLocationChange(mock(), "about:blank")
+        navigationDelegate.value.onLocationChange(mock(), "about:blank", emptyList())
         assertEquals("", observedUrl)
 
-        navigationDelegate.value.onLocationChange(mock(), "https://www.mozilla.org")
+        navigationDelegate.value.onLocationChange(mock(), "https://www.mozilla.org", emptyList())
         assertEquals("https://www.mozilla.org", observedUrl)
         verify(mockedContentBlockingController).checkException(any())
 
-        navigationDelegate.value.onLocationChange(mock(), "about:blank")
+        navigationDelegate.value.onLocationChange(mock(), "about:blank", emptyList())
         assertEquals("about:blank", observedUrl)
     }
 
@@ -664,7 +661,7 @@ class GeckoEngineSessionTest {
         captureDelegates()
         assertTrue(session.initialLoad)
 
-        navigationDelegate.value.onLocationChange(mock(), "https://mozilla.org")
+        navigationDelegate.value.onLocationChange(mock(), "https://mozilla.org", emptyList())
         assertFalse(session.initialLoad)
 
         navigationDelegate.value.onLoadRequest(mock(), mockLoadRequest("moz-extension://1234-test"))
@@ -674,13 +671,13 @@ class GeckoEngineSessionTest {
         session.register(object : EngineSession.Observer {
             override fun onLocationChange(url: String) { observedUrl = url }
         })
-        navigationDelegate.value.onLocationChange(mock(), "about:blank")
+        navigationDelegate.value.onLocationChange(mock(), "about:blank", emptyList())
         assertEquals("", observedUrl)
 
-        navigationDelegate.value.onLocationChange(mock(), "https://www.mozilla.org")
+        navigationDelegate.value.onLocationChange(mock(), "https://www.mozilla.org", emptyList())
         assertEquals("https://www.mozilla.org", observedUrl)
 
-        navigationDelegate.value.onLocationChange(mock(), "about:blank")
+        navigationDelegate.value.onLocationChange(mock(), "about:blank", emptyList())
         assertEquals("about:blank", observedUrl)
     }
 
@@ -703,7 +700,7 @@ class GeckoEngineSessionTest {
     fun `keeps track of current url via onLocationChange events`() {
         val mockedContentBlockingController = mock<ContentBlockingController>()
         val engineSession = GeckoEngineSession(runtime, geckoSessionProvider = geckoSessionProvider)
-        var geckoResult = GeckoResult<Boolean?>()
+        val geckoResult = GeckoResult<Boolean?>()
         whenever(runtime.contentBlockingController).thenReturn(mockedContentBlockingController)
         whenever(mockedContentBlockingController.checkException(any())).thenReturn(geckoResult)
 
@@ -711,10 +708,10 @@ class GeckoEngineSessionTest {
         geckoResult.complete(true)
 
         assertNull(engineSession.currentUrl)
-        navigationDelegate.value.onLocationChange(geckoSession, "https://www.mozilla.org")
+        navigationDelegate.value.onLocationChange(geckoSession, "https://www.mozilla.org", emptyList())
         assertEquals("https://www.mozilla.org", engineSession.currentUrl)
 
-        navigationDelegate.value.onLocationChange(geckoSession, "https://www.firefox.com")
+        navigationDelegate.value.onLocationChange(geckoSession, "https://www.firefox.com", emptyList())
         assertEquals("https://www.firefox.com", engineSession.currentUrl)
     }
 
@@ -724,7 +721,7 @@ class GeckoEngineSessionTest {
         val engineSession = GeckoEngineSession(runtime, geckoSessionProvider = geckoSessionProvider,
             context = coroutineContext)
         val historyTrackingDelegate: HistoryTrackingDelegate = mock()
-        var geckoResult = GeckoResult<Boolean?>()
+        val geckoResult = GeckoResult<Boolean?>()
         whenever(runtime.contentBlockingController).thenReturn(mockedContentBlockingController)
         whenever(mockedContentBlockingController.checkException(any())).thenReturn(geckoResult)
 
@@ -740,7 +737,7 @@ class GeckoEngineSessionTest {
         verify(historyTrackingDelegate, never()).onTitleChanged(anyString(), anyString())
 
         // This sets the currentUrl.
-        navigationDelegate.value.onLocationChange(geckoSession, "https://www.mozilla.com")
+        navigationDelegate.value.onLocationChange(geckoSession, "https://www.mozilla.com", emptyList())
 
         contentDelegate.value.onTitleChange(geckoSession, "Hello World!")
         verify(historyTrackingDelegate).onTitleChanged(eq("https://www.mozilla.com"), eq("Hello World!"))

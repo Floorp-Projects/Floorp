@@ -65,7 +65,7 @@ import mozilla.components.feature.session.HistoryDelegate
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.feature.session.middleware.LastAccessMiddleware
 import mozilla.components.feature.session.middleware.undo.UndoMiddleware
-import mozilla.components.feature.sitepermissions.SitePermissionsStorage
+import mozilla.components.feature.sitepermissions.OnDiskSitePermissionsStorage
 import mozilla.components.feature.tabs.CustomTabsUseCases
 import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.lib.crash.Crash
@@ -140,7 +140,7 @@ open class DefaultComponents(private val applicationContext: Context) {
 
     val sessionStorage by lazy { SessionStorage(applicationContext, engine) }
 
-    val permissionStorage by lazy { SitePermissionsStorage(applicationContext) }
+    val permissionStorage by lazy { OnDiskSitePermissionsStorage(applicationContext) }
 
     val thumbnailStorage by lazy { ThumbnailStorage(applicationContext) }
 

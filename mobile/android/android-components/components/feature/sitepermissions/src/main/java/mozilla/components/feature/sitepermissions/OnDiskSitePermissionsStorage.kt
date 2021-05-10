@@ -13,28 +13,31 @@ import kotlinx.coroutines.launch
 import mozilla.components.concept.engine.DataCleanable
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.Engine.BrowsingData.Companion.PERMISSIONS
-import mozilla.components.feature.sitepermissions.SitePermissions.Status
-import mozilla.components.feature.sitepermissions.SitePermissions.Status.ALLOWED
-import mozilla.components.feature.sitepermissions.SitePermissionsStorage.Permission.BLUETOOTH
-import mozilla.components.feature.sitepermissions.SitePermissionsStorage.Permission.CAMERA
-import mozilla.components.feature.sitepermissions.SitePermissionsStorage.Permission.LOCAL_STORAGE
-import mozilla.components.feature.sitepermissions.SitePermissionsStorage.Permission.LOCATION
-import mozilla.components.feature.sitepermissions.SitePermissionsStorage.Permission.MICROPHONE
-import mozilla.components.feature.sitepermissions.SitePermissionsStorage.Permission.NOTIFICATION
-import mozilla.components.feature.sitepermissions.SitePermissionsStorage.Permission.AUTOPLAY_AUDIBLE
-import mozilla.components.feature.sitepermissions.SitePermissionsStorage.Permission.AUTOPLAY_INAUDIBLE
-import mozilla.components.feature.sitepermissions.SitePermissionsStorage.Permission.MEDIA_KEY_SYSTEM_ACCESS
+import mozilla.components.concept.engine.permission.PermissionRequest
+import mozilla.components.concept.engine.permission.SitePermissionsStorage
+import mozilla.components.concept.engine.permission.SitePermissions
+import mozilla.components.concept.engine.permission.SitePermissions.Status
+import mozilla.components.concept.engine.permission.SitePermissions.Status.ALLOWED
+import mozilla.components.concept.engine.permission.SitePermissionsStorage.Permission
+import mozilla.components.concept.engine.permission.SitePermissionsStorage.Permission.BLUETOOTH
+import mozilla.components.concept.engine.permission.SitePermissionsStorage.Permission.CAMERA
+import mozilla.components.concept.engine.permission.SitePermissionsStorage.Permission.LOCAL_STORAGE
+import mozilla.components.concept.engine.permission.SitePermissionsStorage.Permission.LOCATION
+import mozilla.components.concept.engine.permission.SitePermissionsStorage.Permission.MICROPHONE
+import mozilla.components.concept.engine.permission.SitePermissionsStorage.Permission.NOTIFICATION
+import mozilla.components.concept.engine.permission.SitePermissionsStorage.Permission.AUTOPLAY_AUDIBLE
+import mozilla.components.concept.engine.permission.SitePermissionsStorage.Permission.AUTOPLAY_INAUDIBLE
+import mozilla.components.concept.engine.permission.SitePermissionsStorage.Permission.MEDIA_KEY_SYSTEM_ACCESS
 import mozilla.components.feature.sitepermissions.db.SitePermissionsDatabase
 import mozilla.components.feature.sitepermissions.db.toSitePermissionsEntity
 
 /**
- * A storage implementation to save [SitePermissions].
- *
+ * A storage implementation to save [SitePermissions] on disk.
  */
-class SitePermissionsStorage(
+class OnDiskSitePermissionsStorage(
     context: Context,
     private val dataCleanable: DataCleanable? = null
-) {
+) : SitePermissionsStorage {
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal var databaseInitializer = {
         SitePermissionsDatabase.get(context)
@@ -47,7 +50,7 @@ class SitePermissionsStorage(
      * Persists the [sitePermissions] provided as a parameter.
      * @param sitePermissions the [sitePermissions] to be stored.
      */
-    fun save(sitePermissions: SitePermissions) {
+    override suspend fun save(sitePermissions: SitePermissions, request: PermissionRequest?) {
         database
             .sitePermissionsDao()
             .insert(
@@ -59,22 +62,19 @@ class SitePermissionsStorage(
      * Replaces an existing SitePermissions with the values of [sitePermissions] provided as a parameter.
      * @param sitePermissions the sitePermissions to be updated.
      */
-    fun update(sitePermissions: SitePermissions) {
+    override suspend fun update(sitePermissions: SitePermissions) {
         coroutineScope.launch {
             dataCleanable?.clearData(Engine.BrowsingData.select(PERMISSIONS), sitePermissions.origin)
         }
-        database
-            .sitePermissionsDao()
-            .update(
-                sitePermissions.toSitePermissionsEntity()
-            )
+        database.sitePermissionsDao()
+                .update(sitePermissions.toSitePermissionsEntity())
     }
 
     /**
      * Finds all SitePermissions that match the [origin].
      * @param origin the site to be used as filter in the search.
      */
-    fun findSitePermissionsBy(origin: String): SitePermissions? {
+    override suspend fun findSitePermissionsBy(origin: String, includeTemporary: Boolean): SitePermissions? {
         return database
             .sitePermissionsDao()
             .getSitePermissionsBy(origin)
@@ -90,7 +90,7 @@ class SitePermissionsStorage(
      * - https://developer.android.com/topic/libraries/architecture/paging/data
      * - https://developer.android.com/topic/libraries/architecture/paging/ui
      */
-    fun getSitePermissionsPaged(): DataSource.Factory<Int, SitePermissions> {
+    override suspend fun getSitePermissionsPaged(): DataSource.Factory<Int, SitePermissions> {
         return database
             .sitePermissionsDao()
             .getSitePermissionsPaged()
@@ -103,7 +103,7 @@ class SitePermissionsStorage(
      * Finds all SitePermissions grouped by [Permission].
      * @return a map of site grouped by [Permission].
      */
-    fun findAllSitePermissionsGroupedByPermission(): Map<Permission, List<SitePermissions>> {
+    suspend fun findAllSitePermissionsGroupedByPermission(): Map<Permission, List<SitePermissions>> {
         val sitePermissions = all()
         val map = mutableMapOf<Permission, MutableList<SitePermissions>>()
 
@@ -127,7 +127,7 @@ class SitePermissionsStorage(
      * Deletes all sitePermissions that match the sitePermissions provided as a parameter.
      * @param sitePermissions the sitePermissions to be deleted from the storage.
      */
-    fun remove(sitePermissions: SitePermissions) {
+    override suspend fun remove(sitePermissions: SitePermissions) {
         coroutineScope.launch {
             dataCleanable?.clearData(Engine.BrowsingData.select(PERMISSIONS), sitePermissions.origin)
         }
@@ -141,7 +141,7 @@ class SitePermissionsStorage(
     /**
      * Deletes all sitePermissions sitePermissions.
      */
-    fun removeAll() {
+    override suspend fun removeAll() {
         coroutineScope.launch {
             dataCleanable?.clearData(Engine.BrowsingData.select(PERMISSIONS))
         }
@@ -150,7 +150,10 @@ class SitePermissionsStorage(
             .deleteAllSitePermissions()
     }
 
-    private fun all(): List<SitePermissions> {
+    /**
+     * Returns all sitePermissions in the store.
+     */
+    override suspend fun all(): List<SitePermissions> {
         return database
             .sitePermissionsDao()
             .getSitePermissions()
@@ -171,10 +174,5 @@ class SitePermissionsStorage(
                 this[permission] = mutableListOf(sitePermissions)
             }
         }
-    }
-
-    enum class Permission {
-        MICROPHONE, BLUETOOTH, CAMERA, LOCAL_STORAGE, NOTIFICATION, LOCATION, AUTOPLAY_AUDIBLE,
-        AUTOPLAY_INAUDIBLE, MEDIA_KEY_SYSTEM_ACCESS
     }
 }

@@ -9,21 +9,22 @@ import androidx.room.DatabaseConfiguration
 import androidx.room.InvalidationTracker
 import androidx.sqlite.db.SupportSQLiteOpenHelper
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runBlockingTest
 import mozilla.components.concept.engine.DataCleanable
 import mozilla.components.concept.engine.Engine.BrowsingData
-import mozilla.components.feature.sitepermissions.SitePermissions.AutoplayStatus
-import mozilla.components.feature.sitepermissions.SitePermissions.Status.ALLOWED
-import mozilla.components.feature.sitepermissions.SitePermissions.Status.BLOCKED
-import mozilla.components.feature.sitepermissions.SitePermissions.Status.NO_DECISION
-import mozilla.components.feature.sitepermissions.SitePermissionsStorage.Permission.BLUETOOTH
-import mozilla.components.feature.sitepermissions.SitePermissionsStorage.Permission.CAMERA
-import mozilla.components.feature.sitepermissions.SitePermissionsStorage.Permission.LOCAL_STORAGE
-import mozilla.components.feature.sitepermissions.SitePermissionsStorage.Permission.LOCATION
-import mozilla.components.feature.sitepermissions.SitePermissionsStorage.Permission.MICROPHONE
-import mozilla.components.feature.sitepermissions.SitePermissionsStorage.Permission.NOTIFICATION
-import mozilla.components.feature.sitepermissions.SitePermissionsStorage.Permission.AUTOPLAY_AUDIBLE
-import mozilla.components.feature.sitepermissions.SitePermissionsStorage.Permission.AUTOPLAY_INAUDIBLE
+import mozilla.components.concept.engine.permission.SitePermissions
+import mozilla.components.concept.engine.permission.SitePermissions.AutoplayStatus
+import mozilla.components.concept.engine.permission.SitePermissions.Status.ALLOWED
+import mozilla.components.concept.engine.permission.SitePermissions.Status.BLOCKED
+import mozilla.components.concept.engine.permission.SitePermissions.Status.NO_DECISION
+import mozilla.components.concept.engine.permission.SitePermissionsStorage.Permission.BLUETOOTH
+import mozilla.components.concept.engine.permission.SitePermissionsStorage.Permission.CAMERA
+import mozilla.components.concept.engine.permission.SitePermissionsStorage.Permission.LOCAL_STORAGE
+import mozilla.components.concept.engine.permission.SitePermissionsStorage.Permission.LOCATION
+import mozilla.components.concept.engine.permission.SitePermissionsStorage.Permission.MICROPHONE
+import mozilla.components.concept.engine.permission.SitePermissionsStorage.Permission.NOTIFICATION
+import mozilla.components.concept.engine.permission.SitePermissionsStorage.Permission.AUTOPLAY_AUDIBLE
+import mozilla.components.concept.engine.permission.SitePermissionsStorage.Permission.AUTOPLAY_INAUDIBLE
 import mozilla.components.feature.sitepermissions.db.SitePermissionsDao
 import mozilla.components.feature.sitepermissions.db.SitePermissionsDatabase
 import mozilla.components.feature.sitepermissions.db.SitePermissionsEntity
@@ -39,23 +40,23 @@ import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 
 @RunWith(AndroidJUnit4::class)
-class SitePermissionsStorageTest {
+class OnDiskSitePermissionsStorageTest {
 
     private lateinit var mockDAO: SitePermissionsDao
-    private lateinit var storage: SitePermissionsStorage
+    private lateinit var storage: OnDiskSitePermissionsStorage
     private lateinit var mockDataCleanable: DataCleanable
 
     @Before
     fun setup() {
         mockDAO = mock()
         mockDataCleanable = mock()
-        storage = spy(SitePermissionsStorage(mock(), mockDataCleanable).apply {
+        storage = spy(OnDiskSitePermissionsStorage(mock(), mockDataCleanable).apply {
             databaseInitializer = { mockDatabase(mockDAO) }
         })
     }
 
     @Test
-    fun `save a new SitePermission`() {
+    fun `save a new SitePermission`() = runBlockingTest {
         val sitePermissions = createNewSitePermission()
 
         storage.save(sitePermissions)
@@ -64,26 +65,24 @@ class SitePermissionsStorageTest {
     }
 
     @Test
-    fun `update a SitePermission`() {
+    fun `update a SitePermission`() = runBlockingTest {
         val sitePermissions = createNewSitePermission()
 
         storage.update(sitePermissions)
 
         verify(mockDAO).update(any())
-        runBlocking {
-            verify(mockDataCleanable).clearData(BrowsingData.select(BrowsingData.PERMISSIONS), sitePermissions.origin)
-        }
+        verify(mockDataCleanable).clearData(BrowsingData.select(BrowsingData.PERMISSIONS), sitePermissions.origin)
     }
 
     @Test
-    fun `find a SitePermissions by origin`() {
+    fun `find a SitePermissions by origin`() = runBlockingTest {
         storage.findSitePermissionsBy("mozilla.org")
 
         verify(mockDAO).getSitePermissionsBy("mozilla.org")
     }
 
     @Test
-    fun `find all sitePermissions grouped by permission`() {
+    fun `find all sitePermissions grouped by permission`() = runBlockingTest {
         doReturn(dummySitePermissionEntitiesList())
             .`when`(mockDAO).getSitePermissions()
 
@@ -102,29 +101,25 @@ class SitePermissionsStorageTest {
     }
 
     @Test
-    fun `remove a SitePermissions`() {
+    fun `remove a SitePermissions`() = runBlockingTest {
         val sitePermissions = createNewSitePermission()
 
         storage.remove(sitePermissions)
 
         verify(mockDAO).deleteSitePermissions(any())
-        runBlocking {
-            verify(mockDataCleanable).clearData(BrowsingData.select(BrowsingData.PERMISSIONS), sitePermissions.origin)
-        }
+        verify(mockDataCleanable).clearData(BrowsingData.select(BrowsingData.PERMISSIONS), sitePermissions.origin)
     }
 
     @Test
-    fun `remove all SitePermissions`() {
+    fun `remove all SitePermissions`() = runBlockingTest {
         storage.removeAll()
 
         verify(mockDAO).deleteAllSitePermissions()
-        runBlocking {
-            verify(mockDataCleanable).clearData(BrowsingData.select(BrowsingData.PERMISSIONS))
-        }
+        verify(mockDataCleanable).clearData(BrowsingData.select(BrowsingData.PERMISSIONS))
     }
 
     @Test
-    fun `get all SitePermissions paged`() {
+    fun `get all SitePermissions paged`() = runBlockingTest {
         val mockDataSource: DataSource<Int, SitePermissionsEntity> = mock()
 
         doReturn(object : DataSource.Factory<Int, SitePermissionsEntity>() {

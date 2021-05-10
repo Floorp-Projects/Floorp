@@ -14,9 +14,9 @@ import mozilla.components.browser.icons.Icon
 import mozilla.components.browser.icons.Icon.Source
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.webnotifications.WebNotification
-import mozilla.components.feature.sitepermissions.SitePermissions
-import mozilla.components.feature.sitepermissions.SitePermissions.Status
-import mozilla.components.feature.sitepermissions.SitePermissionsStorage
+import mozilla.components.concept.engine.permission.SitePermissions
+import mozilla.components.concept.engine.permission.SitePermissions.Status
+import mozilla.components.feature.sitepermissions.OnDiskSitePermissionsStorage
 import mozilla.components.support.test.any
 import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
@@ -25,6 +25,7 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.`when`
+import org.mockito.Mockito.anyBoolean
 import org.mockito.Mockito.doNothing
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
@@ -38,7 +39,7 @@ class WebNotificationFeatureTest {
     private val icon: Icon = mock()
     private val engine: Engine = mock()
     private val notificationManager: NotificationManager = mock()
-    private val permissionsStorage: SitePermissionsStorage = mock()
+    private val permissionsStorage: OnDiskSitePermissionsStorage = mock()
 
     private val testNotification = WebNotification(
         "Mozilla",
@@ -94,7 +95,7 @@ class WebNotificationFeatureTest {
         )
         val permission = SitePermissions(origin = "mozilla.org", notification = Status.ALLOWED, savedAt = 0)
 
-        `when`(permissionsStorage.findSitePermissionsBy(any())).thenReturn(permission)
+        `when`(permissionsStorage.findSitePermissionsBy(any(), anyBoolean())).thenReturn(permission)
 
         feature.onShowNotification(testNotification)
 
@@ -122,7 +123,7 @@ class WebNotificationFeatureTest {
         // When explicitly denied.
 
         val permission = SitePermissions(origin = "mozilla.org", notification = Status.BLOCKED, savedAt = 0)
-        `when`(permissionsStorage.findSitePermissionsBy(any())).thenReturn(permission)
+        `when`(permissionsStorage.findSitePermissionsBy(any(), anyBoolean())).thenReturn(permission)
 
         feature.onShowNotification(testNotification)
 

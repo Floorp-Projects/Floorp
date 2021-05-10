@@ -8,9 +8,13 @@ import android.Manifest.permission.ACCESS_COARSE_LOCATION
 import android.Manifest.permission.ACCESS_FINE_LOCATION
 import android.Manifest.permission.CAMERA
 import android.Manifest.permission.RECORD_AUDIO
+import androidx.annotation.VisibleForTesting
 import mozilla.components.concept.engine.permission.Permission
 import mozilla.components.concept.engine.permission.PermissionRequest
+import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoSession.PermissionDelegate
+import org.mozilla.geckoview.GeckoSession.PermissionDelegate.ContentPermission.VALUE_ALLOW
+import org.mozilla.geckoview.GeckoSession.PermissionDelegate.ContentPermission.VALUE_DENY
 import org.mozilla.geckoview.GeckoSession.PermissionDelegate.MediaSource
 import org.mozilla.geckoview.GeckoSession.PermissionDelegate.MediaSource.SOURCE_AUDIOCAPTURE
 import org.mozilla.geckoview.GeckoSession.PermissionDelegate.MediaSource.SOURCE_CAMERA
@@ -44,15 +48,16 @@ sealed class GeckoPermissionRequest constructor(
      * @property uri the URI of the content requesting the permissions.
      * @property type the type of the requested content permission (will be
      * mapped to corresponding [Permission]).
-     * @property callback the callback to grant/reject the requested permissions.
+     * @property geckoPermission Indicates which gecko permissions is requested.
+     * @property geckoResult the gecko result that serves as a callback to grant/reject the requested permissions.
      */
     data class Content(
         override val uri: String,
         private val type: Int,
-        private val callback: PermissionDelegate.Callback
+        internal val geckoPermission: PermissionDelegate.ContentPermission,
+        internal val geckoResult: GeckoResult<Int>
     ) : GeckoPermissionRequest(
-            listOf(permissionsMap.getOrElse(type) { Permission.Generic("$type", "Gecko permission type = $type") }),
-            callback
+            listOf(permissionsMap.getOrElse(type) { Permission.Generic("$type", "Gecko permission type = $type") })
     ) {
         companion object {
             val permissionsMap = mapOf(
@@ -63,6 +68,23 @@ sealed class GeckoPermissionRequest constructor(
                 PERMISSION_PERSISTENT_STORAGE to Permission.ContentPersistentStorage(),
                 PERMISSION_MEDIA_KEY_SYSTEM_ACCESS to Permission.ContentMediaKeySystemAccess()
             )
+        }
+
+        @VisibleForTesting
+        internal var isCompleted = false
+
+        override fun grant(permissions: List<Permission>) {
+            if (!isCompleted) {
+                geckoResult.complete(VALUE_ALLOW)
+            }
+            isCompleted = true
+        }
+
+        override fun reject() {
+            if (!isCompleted) {
+                geckoResult.complete(VALUE_DENY)
+            }
+            isCompleted = true
         }
     }
 

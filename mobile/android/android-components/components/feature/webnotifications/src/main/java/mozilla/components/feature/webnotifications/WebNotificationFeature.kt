@@ -17,9 +17,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import mozilla.components.browser.icons.BrowserIcons
 import mozilla.components.concept.engine.Engine
+import mozilla.components.concept.engine.permission.SitePermissionsStorage
 import mozilla.components.concept.engine.webnotifications.WebNotification
 import mozilla.components.concept.engine.webnotifications.WebNotificationDelegate
-import mozilla.components.feature.sitepermissions.SitePermissionsStorage
 import mozilla.components.support.base.ids.SharedIdsHelper
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.kotlin.tryGetHostFromUrl

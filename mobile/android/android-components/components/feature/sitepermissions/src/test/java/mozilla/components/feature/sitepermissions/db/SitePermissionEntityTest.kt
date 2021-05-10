@@ -4,11 +4,11 @@
 
 package mozilla.components.feature.sitepermissions.db
 
-import mozilla.components.feature.sitepermissions.SitePermissions
-import mozilla.components.feature.sitepermissions.SitePermissions.AutoplayStatus
-import mozilla.components.feature.sitepermissions.SitePermissions.Status.ALLOWED
-import mozilla.components.feature.sitepermissions.SitePermissions.Status.BLOCKED
-import mozilla.components.feature.sitepermissions.SitePermissions.Status.NO_DECISION
+import mozilla.components.concept.engine.permission.SitePermissions
+import mozilla.components.concept.engine.permission.SitePermissions.AutoplayStatus
+import mozilla.components.concept.engine.permission.SitePermissions.Status.ALLOWED
+import mozilla.components.concept.engine.permission.SitePermissions.Status.BLOCKED
+import mozilla.components.concept.engine.permission.SitePermissions.Status.NO_DECISION
 import org.junit.Assert.assertEquals
 import org.junit.Test
 

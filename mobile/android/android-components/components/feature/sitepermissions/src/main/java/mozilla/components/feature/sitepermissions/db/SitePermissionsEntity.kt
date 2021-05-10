@@ -7,7 +7,7 @@ package mozilla.components.feature.sitepermissions.db
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import mozilla.components.feature.sitepermissions.SitePermissions
+import mozilla.components.concept.engine.permission.SitePermissions
 
 /**
  * Internal entity representing a site permission as it gets saved to the database.

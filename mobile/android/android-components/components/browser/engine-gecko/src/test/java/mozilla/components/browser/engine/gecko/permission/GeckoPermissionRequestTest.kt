@@ -10,11 +10,15 @@ import mozilla.components.concept.engine.permission.Permission
 import mozilla.components.support.test.mock
 import mozilla.components.test.ReflectionUtils
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.verify
+import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoSession
+import org.mozilla.geckoview.GeckoSession.PermissionDelegate.ContentPermission.VALUE_ALLOW
+import org.mozilla.geckoview.GeckoSession.PermissionDelegate.ContentPermission.VALUE_DENY
 import org.mozilla.geckoview.GeckoSession.PermissionDelegate.MediaSource
 import org.mozilla.geckoview.GeckoSession.PermissionDelegate.PERMISSION_DESKTOP_NOTIFICATION
 import org.mozilla.geckoview.GeckoSession.PermissionDelegate.PERMISSION_GEOLOCATION
@@ -24,48 +28,56 @@ class GeckoPermissionRequestTest {
 
     @Test
     fun `create content permission request`() {
-        val callback: GeckoSession.PermissionDelegate.Callback = mock()
         val uri = "https://mozilla.org"
 
-        var request = GeckoPermissionRequest.Content(uri, PERMISSION_DESKTOP_NOTIFICATION, callback)
+        var request = GeckoPermissionRequest.Content(uri, PERMISSION_DESKTOP_NOTIFICATION, mock(), mock())
         assertEquals(uri, request.uri)
         assertEquals(listOf(Permission.ContentNotification()), request.permissions)
 
-        request = GeckoPermissionRequest.Content(uri, PERMISSION_GEOLOCATION, callback)
+        request = GeckoPermissionRequest.Content(uri, PERMISSION_GEOLOCATION, mock(), mock())
         assertEquals(uri, request.uri)
         assertEquals(listOf(Permission.ContentGeoLocation()), request.permissions)
 
-        request = GeckoPermissionRequest.Content(uri, GeckoSession.PermissionDelegate.PERMISSION_AUTOPLAY_AUDIBLE, callback)
+        request = GeckoPermissionRequest.Content(uri, GeckoSession.PermissionDelegate.PERMISSION_AUTOPLAY_AUDIBLE, mock(), mock())
         assertEquals(uri, request.uri)
         assertEquals(listOf(Permission.ContentAutoPlayAudible()), request.permissions)
 
-        request = GeckoPermissionRequest.Content(uri, GeckoSession.PermissionDelegate.PERMISSION_AUTOPLAY_INAUDIBLE, callback)
+        request = GeckoPermissionRequest.Content(uri, GeckoSession.PermissionDelegate.PERMISSION_AUTOPLAY_INAUDIBLE, mock(), mock())
         assertEquals(uri, request.uri)
         assertEquals(listOf(Permission.ContentAutoPlayInaudible()), request.permissions)
 
-        request = GeckoPermissionRequest.Content(uri, 1234, callback)
+        request = GeckoPermissionRequest.Content(uri, 1234, mock(), mock())
         assertEquals(uri, request.uri)
         assertEquals(listOf(Permission.Generic("1234", "Gecko permission type = 1234")), request.permissions)
     }
 
     @Test
     fun `grant content permission request`() {
-        val callback: GeckoSession.PermissionDelegate.Callback = mock()
         val uri = "https://mozilla.org"
+        val geckoResult = mock<GeckoResult<Int>>()
 
-        val request = GeckoPermissionRequest.Content(uri, PERMISSION_GEOLOCATION, callback)
+        val request = GeckoPermissionRequest.Content(uri, PERMISSION_GEOLOCATION, mock(), geckoResult)
+
+        assertFalse(request.isCompleted)
+
         request.grant()
-        verify(callback).grant()
+
+        verify(geckoResult).complete(VALUE_ALLOW)
+        assertTrue(request.isCompleted)
     }
 
     @Test
     fun `reject content permission request`() {
-        val callback: GeckoSession.PermissionDelegate.Callback = mock()
         val uri = "https://mozilla.org"
+        val geckoResult = mock<GeckoResult<Int>>()
 
-        val request = GeckoPermissionRequest.Content(uri, PERMISSION_GEOLOCATION, callback)
+        val request = GeckoPermissionRequest.Content(uri, PERMISSION_GEOLOCATION, mock(), geckoResult)
+
+        assertFalse(request.isCompleted)
+
         request.reject()
-        verify(callback).reject()
+        verify(geckoResult).complete(VALUE_DENY)
+        assertTrue(request.isCompleted)
     }
 
     @Test

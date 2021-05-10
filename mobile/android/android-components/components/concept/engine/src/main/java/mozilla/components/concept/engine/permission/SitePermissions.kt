@@ -2,12 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package mozilla.components.feature.sitepermissions
+package mozilla.components.concept.engine.permission
 
 import android.os.Parcelable
 import kotlinx.android.parcel.Parcelize
-import mozilla.components.feature.sitepermissions.SitePermissions.Status.NO_DECISION
-import mozilla.components.feature.sitepermissions.SitePermissionsStorage.Permission
+import mozilla.components.concept.engine.permission.SitePermissions.Status.NO_DECISION
+import mozilla.components.concept.engine.permission.SitePermissionsStorage.Permission
 
 /**
  * A site permissions and its state.
@@ -27,7 +27,7 @@ data class SitePermissions(
     val savedAt: Long
 ) : Parcelable {
     enum class Status(
-        internal val id: Int
+        val id: Int
     ) {
         BLOCKED(-1), NO_DECISION(0), ALLOWED(1);
 
@@ -54,7 +54,7 @@ data class SitePermissions(
     /**
      * An enum that represents the status that autoplay can have.
      */
-    enum class AutoplayStatus(internal val id: Int) {
+    enum class AutoplayStatus(val id: Int) {
         BLOCKED(Status.BLOCKED.id), ALLOWED(Status.ALLOWED.id);
         /**
          * Indicates if the status is allowed.

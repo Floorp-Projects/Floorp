@@ -13,9 +13,11 @@ import mozilla.components.concept.engine.permission.Permission.ContentGeoLocatio
 import mozilla.components.concept.engine.permission.Permission.ContentNotification
 import mozilla.components.concept.engine.permission.Permission.ContentVideoCapture
 import mozilla.components.concept.engine.permission.Permission.Generic
+import mozilla.components.concept.engine.permission.SitePermissionsStorage
 import mozilla.components.concept.engine.permission.PermissionRequest
-import mozilla.components.feature.sitepermissions.SitePermissions.AutoplayStatus
-import mozilla.components.feature.sitepermissions.SitePermissions.Status
+import mozilla.components.concept.engine.permission.SitePermissions
+import mozilla.components.concept.engine.permission.SitePermissions.AutoplayStatus
+import mozilla.components.concept.engine.permission.SitePermissions.Status
 import mozilla.components.feature.sitepermissions.SitePermissionsRules.Action.ASK_TO_ALLOW
 import mozilla.components.feature.sitepermissions.SitePermissionsRules.Action.BLOCKED
 import mozilla.components.feature.sitepermissions.SitePermissionsRules.AutoplayAction
