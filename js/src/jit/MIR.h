@@ -10872,13 +10872,13 @@ class MNewTarget : public MNullaryInstruction {
 
 class MRest : public MUnaryInstruction, public UnboxedInt32Policy<0>::Data {
   unsigned numFormals_;
-  CompilerGCPointer<ArrayObject*> templateObject_;
+  CompilerGCPointer<Shape*> shape_;
 
   MRest(TempAllocator& alloc, MDefinition* numActuals, unsigned numFormals,
-        ArrayObject* templateObject)
+        Shape* shape)
       : MUnaryInstruction(classOpcode, numActuals),
         numFormals_(numFormals),
-        templateObject_(templateObject) {
+        shape_(shape) {
     setResultType(MIRType::Object);
   }
 
@@ -10888,7 +10888,7 @@ class MRest : public MUnaryInstruction, public UnboxedInt32Policy<0>::Data {
   NAMED_OPERANDS((0, numActuals))
 
   unsigned numFormals() const { return numFormals_; }
-  ArrayObject* templateObject() const { return templateObject_; }
+  Shape* shape() const { return shape_; }
 
   AliasSet getAliasSet() const override { return AliasSet::None(); }
   bool possiblyCalls() const override { return true; }
