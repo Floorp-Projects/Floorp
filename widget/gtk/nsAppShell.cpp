@@ -42,6 +42,7 @@ using mozilla::widget::ScreenManager;
 LazyLogModule gWidgetLog("Widget");
 LazyLogModule gWidgetDragLog("WidgetDrag");
 LazyLogModule gWidgetWaylandLog("WidgetWayland");
+LazyLogModule gWidgetPopupLog("WidgetPopup");
 LazyLogModule gDmabufLog("Dmabuf");
 LazyLogModule gClipboardLog("WidgetClipboard");
 

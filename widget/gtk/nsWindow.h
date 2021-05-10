@@ -49,14 +49,18 @@
 
 extern mozilla::LazyLogModule gWidgetLog;
 extern mozilla::LazyLogModule gWidgetDragLog;
+extern mozilla::LazyLogModule gWidgetPopupLog;
 
 #  define LOG(args) MOZ_LOG(gWidgetLog, mozilla::LogLevel::Debug, args)
 #  define LOGDRAG(args) MOZ_LOG(gWidgetDragLog, mozilla::LogLevel::Debug, args)
+#  define LOG_POPUP(args) \
+    MOZ_LOG(gWidgetPopupLog, mozilla::LogLevel::Debug, args)
 
 #else
 
 #  define LOG(args)
 #  define LOGDRAG(args)
+#  define LOG_POPUP(args)
 
 #endif /* MOZ_LOGGING */
 
@@ -371,7 +375,6 @@ class nsWindow final : public nsBaseWidget {
   static bool GetTopLevelWindowActiveState(nsIFrame* aFrame);
   static bool TitlebarUseShapeMask();
   bool IsRemoteContent() { return HasRemoteContent(); }
-  static void HideWaylandOpenedPopups();
   void NativeMoveResizeWaylandPopupCB(const GdkRectangle* aFinalSize,
                                       bool aFlippedX, bool aFlippedY);
   static bool IsToplevelWindowTransparent();
@@ -439,6 +442,7 @@ class nsWindow final : public nsBaseWidget {
   bool mHandleTouchEvent;
   // true if this is a drag and drop feedback popup
   bool mIsDragPopup;
+  nsPopupType mPopupHint;
   bool mWindowScaleFactorChanged;
   int mWindowScaleFactor;
   bool mCompositedScreen;
@@ -615,13 +619,23 @@ class nsWindow final : public nsBaseWidget {
   GtkWidget* ConfigureWaylandPopupWindows();
   void PauseRemoteRenderer();
   void HideWaylandWindow();
-  void HideWaylandTooltips();
+  void HideWaylandTooltip();
   void HideWaylandPopupAndAllChildren();
-  void CleanupWaylandPopups();
+  void HideAllWaylandPopups();
+  void HidePopupsOfParentWindow(nsWindow* aParentWindow);
+  void HidePopupWindowAndAllChildPopups(nsWindow* aWindow);
+  void HideToplevelWindowAndAllChildPopups(nsWindow* aWindow);
+  void CloseUntrackedWaylandPopups();
+  void ConfigureWaylandPopupHierarchy();
   GtkWindow* GetCurrentTopmostWindow();
   GtkWindow* GetCurrentWindow();
   GtkWindow* GetTopmostWindow();
   bool IsWidgetOverflowWindow();
+  nsCString GetWindowNodeName();
+  nsCString GetPopupTypeName();
+#ifdef MOZ_LOGGING
+  void LogPopupHierarchy();
+#endif
   nsRect mPreferredPopupRect;
   bool mPreferredPopupRectFlushed;
   bool mWaitingForMoveToRectCB;
