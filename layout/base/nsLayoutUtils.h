@@ -2149,24 +2149,22 @@ class nsLayoutUtils {
    */
 
   enum {
-    /* When creating a new surface, create an image surface */
-    SFE_WANT_IMAGE_SURFACE = 1 << 0,
     /* Whether to extract the first frame (as opposed to the
        current frame) in the case that the element is an image. */
-    SFE_WANT_FIRST_FRAME_IF_IMAGE = 1 << 1,
+    SFE_WANT_FIRST_FRAME_IF_IMAGE = 1 << 0,
     /* Whether we should skip colorspace/gamma conversion */
-    SFE_NO_COLORSPACE_CONVERSION = 1 << 2,
+    SFE_NO_COLORSPACE_CONVERSION = 1 << 1,
     /* Caller handles SFER::mAlphaType = NonPremult */
-    SFE_ALLOW_NON_PREMULT = 1 << 3,
+    SFE_ALLOW_NON_PREMULT = 1 << 2,
     /* Whether we should skip getting a surface for vector images and
        return a DirectDrawInfo containing an imgIContainer instead. */
-    SFE_NO_RASTERIZING_VECTORS = 1 << 4,
+    SFE_NO_RASTERIZING_VECTORS = 1 << 3,
     /* If image type is vector, the return surface size will same as
        element size, not image's intrinsic size. */
-    SFE_USE_ELEMENT_SIZE_IF_VECTOR = 1 << 5,
+    SFE_USE_ELEMENT_SIZE_IF_VECTOR = 1 << 4,
     /* Instead of converting the colorspace to the display's colorspace,
        use sRGB. */
-    SFE_TO_SRGB_COLORSPACE = 1 << 6
+    SFE_TO_SRGB_COLORSPACE = 1 << 5,
   };
 
   // This function can be called on any thread.

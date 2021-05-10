@@ -204,11 +204,6 @@ interface imgIContainer : nsISupports
    * frame of any size (it could be neither the requested size, nor the
    * intrinsic size) to be substituted.
    *
-   * FLAG_WANT_DATA_SURFACE: Can be passed to GetFrame when the caller wants a
-   * DataSourceSurface instead of a hardware accelerated surface. This can be
-   * important for performance (by avoiding an upload to/readback from the GPU)
-   * when the caller knows they want a SourceSurface of type DATA.
-   *
    * FLAG_BYPASS_SURFACE_CACHE: Forces drawing to happen rather than taking
    * cached rendering from the surface cache. This is used when we are printing,
    * for example, where we want the vector commands from VectorImages to end up
@@ -248,12 +243,11 @@ interface imgIContainer : nsISupports
   const unsigned long FLAG_DECODE_NO_COLORSPACE_CONVERSION = 0x10;
   const unsigned long FLAG_CLAMP                           = 0x20;
   const unsigned long FLAG_HIGH_QUALITY_SCALING            = 0x40;
-  const unsigned long FLAG_WANT_DATA_SURFACE               = 0x80;
-  const unsigned long FLAG_BYPASS_SURFACE_CACHE            = 0x100;
-  const unsigned long FLAG_FORCE_PRESERVEASPECTRATIO_NONE  = 0x200;
-  const unsigned long FLAG_FORCE_UNIFORM_SCALING           = 0x400;
-  const unsigned long FLAG_AVOID_REDECODE_FOR_SIZE         = 0x800;
-  const unsigned long FLAG_DECODE_TO_SRGB_COLORSPACE       = 0x1000;
+  const unsigned long FLAG_BYPASS_SURFACE_CACHE            = 0x80;
+  const unsigned long FLAG_FORCE_PRESERVEASPECTRATIO_NONE  = 0x100;
+  const unsigned long FLAG_FORCE_UNIFORM_SCALING           = 0x200;
+  const unsigned long FLAG_AVOID_REDECODE_FOR_SIZE         = 0x400;
+  const unsigned long FLAG_DECODE_TO_SRGB_COLORSPACE       = 0x800;
 
   /**
    * A constant specifying the default set of decode flags (i.e., the default
