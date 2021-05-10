@@ -313,8 +313,8 @@ void TryInitGnome() {
   _gnome_program_init_fn gnome_program_init =
       (_gnome_program_init_fn)(dlsym(gnomeLib, "gnome_program_init"));
   _libgnomeui_module_info_get_fn libgnomeui_module_info_get =
-      (_libgnomeui_module_info_get_fn)(
-          dlsym(gnomeuiLib, "libgnomeui_module_info_get"));
+      (_libgnomeui_module_info_get_fn)(dlsym(gnomeuiLib,
+                                             "libgnomeui_module_info_get"));
 
   if (gnome_program_init && libgnomeui_module_info_get) {
     gnome_program_init("crashreporter", "1.0", libgnomeui_module_info_get(),

@@ -158,9 +158,10 @@ bool nsFilePicker::ShowFolderPicker(const nsString& aInitialDir) {
     }
   }
 
-  AutoDestroyTmpWindow adtw((HWND)(
-      mParentWidget.get() ? mParentWidget->GetNativeData(NS_NATIVE_TMP_WINDOW)
-                          : nullptr));
+  AutoDestroyTmpWindow adtw(
+      (HWND)(mParentWidget.get()
+                 ? mParentWidget->GetNativeData(NS_NATIVE_TMP_WINDOW)
+                 : nullptr));
 
   // display
   mozilla::BackgroundHangMonitor().NotifyWait();
@@ -320,9 +321,10 @@ bool nsFilePicker::ShowFilePicker(const nsString& aInitialDir) {
   // display
 
   {
-    AutoDestroyTmpWindow adtw((HWND)(
-        mParentWidget.get() ? mParentWidget->GetNativeData(NS_NATIVE_TMP_WINDOW)
-                            : nullptr));
+    AutoDestroyTmpWindow adtw(
+        (HWND)(mParentWidget.get()
+                   ? mParentWidget->GetNativeData(NS_NATIVE_TMP_WINDOW)
+                   : nullptr));
     AutoWidgetPickerState awps(mParentWidget);
 
     mozilla::BackgroundHangMonitor().NotifyWait();

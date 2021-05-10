@@ -107,9 +107,10 @@ AsyncColorChooser::Run() {
     mozilla::AutoRestore<AsyncColorChooser*> restoreColorChooser(gColorChooser);
     gColorChooser = this;
 
-    AutoDestroyTmpWindow adtw((HWND)(
-        mParentWidget.get() ? mParentWidget->GetNativeData(NS_NATIVE_TMP_WINDOW)
-                            : nullptr));
+    AutoDestroyTmpWindow adtw(
+        (HWND)(mParentWidget.get()
+                   ? mParentWidget->GetNativeData(NS_NATIVE_TMP_WINDOW)
+                   : nullptr));
 
     CHOOSECOLOR options;
     options.lStructSize = sizeof(options);

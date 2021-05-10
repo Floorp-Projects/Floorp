@@ -33,8 +33,8 @@ struct InvokeMemberFunction {
   mozilla::Tuple<std::decay_t<Args>...> args;
 
   template <class This, size_t... Indices>
-  auto matchInternal(This* obj, std::index_sequence<Indices...>) -> decltype(
-      ((*obj).*(MemberFunction<This>::get()))(mozilla::Get<Indices>(args)...)) {
+  auto matchInternal(This* obj, std::index_sequence<Indices...>) -> decltype((
+      (*obj).*(MemberFunction<This>::get()))(mozilla::Get<Indices>(args)...)) {
     return ((*obj).*
             (MemberFunction<This>::get()))(mozilla::Get<Indices>(args)...);
   }

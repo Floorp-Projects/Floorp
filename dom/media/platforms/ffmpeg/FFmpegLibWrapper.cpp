@@ -112,13 +112,13 @@ FFmpegLibWrapper::LinkResult FFmpegLibWrapper::Link() {
               #func))) {                                              \
     }                                                                 \
   } else {                                                            \
-    func = (decltype(func)) nullptr;                                  \
+    func = (decltype(func))nullptr;                                   \
   }
 
-#define AV_FUNC_OPTION(func, ver)                            \
-  AV_FUNC_OPTION_SILENT(func, ver)                           \
-  if ((ver)&version && (func) == (decltype(func)) nullptr) { \
-    FFMPEG_LOG("Couldn't load function " #func);             \
+#define AV_FUNC_OPTION(func, ver)                           \
+  AV_FUNC_OPTION_SILENT(func, ver)                          \
+  if ((ver)&version && (func) == (decltype(func))nullptr) { \
+    FFMPEG_LOG("Couldn't load function " #func);            \
   }
 
 #define AV_FUNC(func, ver)                              \
@@ -179,7 +179,7 @@ FFmpegLibWrapper::LinkResult FFmpegLibWrapper::Link() {
 #ifdef MOZ_WAYLAND
 #  define VA_FUNC_OPTION_SILENT(func)                             \
     if (!(func = (decltype(func))PR_FindSymbol(mVALib, #func))) { \
-      func = (decltype(func)) nullptr;                            \
+      func = (decltype(func))nullptr;                             \
     }
 
   // mVALib is optional and may not be present.

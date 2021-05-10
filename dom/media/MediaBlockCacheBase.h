@@ -37,10 +37,12 @@ class MediaBlockCacheBase {
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaBlockCacheBase)
 
-  static_assert(MediaCacheStream::BLOCK_SIZE <
-                    static_cast<std::remove_const<decltype(
-                        MediaCacheStream::BLOCK_SIZE)>::type>(INT32_MAX),
-                "MediaCacheStream::BLOCK_SIZE should fit in 31 bits");
+  static_assert(
+      MediaCacheStream::BLOCK_SIZE <
+          static_cast<
+              std::remove_const<decltype(MediaCacheStream::BLOCK_SIZE)>::type>(
+              INT32_MAX),
+      "MediaCacheStream::BLOCK_SIZE should fit in 31 bits");
   static const int32_t BLOCK_SIZE = MediaCacheStream::BLOCK_SIZE;
 
  protected:

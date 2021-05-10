@@ -923,11 +923,10 @@ struct ProfileBufferEntryReader::Deserializer<BlocksRingBuffer> {
     writer.WriteFromReader(aER, end - start);
     MOZ_ASSERT(writer.RemainingBytes() == 0);
     // Finally copy stats.
-    aBuffer.mMaybeUnderlyingBuffer->mPushedBlockCount = aER.ReadObject<decltype(
-        aBuffer.mMaybeUnderlyingBuffer->mPushedBlockCount)>();
-    aBuffer.mMaybeUnderlyingBuffer->mClearedBlockCount =
-        aER.ReadObject<decltype(
-            aBuffer.mMaybeUnderlyingBuffer->mClearedBlockCount)>();
+    aBuffer.mMaybeUnderlyingBuffer->mPushedBlockCount = aER.ReadObject<
+        decltype(aBuffer.mMaybeUnderlyingBuffer->mPushedBlockCount)>();
+    aBuffer.mMaybeUnderlyingBuffer->mClearedBlockCount = aER.ReadObject<
+        decltype(aBuffer.mMaybeUnderlyingBuffer->mClearedBlockCount)>();
   }
 
   // We cannot output a BlocksRingBuffer object (not copyable), use `ReadInto()`

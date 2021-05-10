@@ -1004,8 +1004,8 @@ class MozPromise : public MozPromiseBase {
     }
 
     template <typename... Ts>
-    auto Then(Ts&&... aArgs) -> decltype(
-        std::declval<PromiseType>().Then(std::forward<Ts>(aArgs)...)) {
+    auto Then(Ts&&... aArgs) -> decltype(std::declval<PromiseType>().Then(
+        std::forward<Ts>(aArgs)...)) {
       return static_cast<RefPtr<PromiseType>>(*this)->Then(
           std::forward<Ts>(aArgs)...);
     }
