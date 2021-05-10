@@ -884,6 +884,16 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
 }
 
 @media (-moz-proton) {
+  #appMenu-fxa-status2 {
+    display: flex;
+  }
+
+  #appMenu-fxa-text,
+  #appMenu-fxa-status2[fxastatus] > #appMenu-fxa-label2 {
+    flex: 1;
+    align-self: center;
+  }
+
   #appMenu-fxa-status2[fxastatus] {
     margin: 0;
     padding: 0;
@@ -896,10 +906,6 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
   #appMenu-fxa-status2[fxastatus] > #appMenu-fxa-label2 > vbox > #appMenu-header-description,
   #appMenu-fxa-text {
     font-weight: 600;
-  }
-
-  #appMenu-fxa-status2[fxastatus] > #appMenu-fxa-label2 {
-    -moz-box-flex: 1;
   }
 
   #appMenu-fxa-status2:not([fxastatus]) > #appMenu-fxa-label2 {
