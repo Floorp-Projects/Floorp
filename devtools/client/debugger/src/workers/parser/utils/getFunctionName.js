@@ -14,7 +14,8 @@ export default function getFunctionName(node, parent) {
 
   if (
     t.isObjectMethod(node, { computed: false }) ||
-    t.isClassMethod(node, { computed: false })
+    t.isClassMethod(node, { computed: false }) ||
+    t.isClassPrivateMethod(node)
   ) {
     const { key } = node;
 
@@ -27,6 +28,10 @@ export default function getFunctionName(node, parent) {
     if (t.isNumericLiteral(key)) {
       return `${key.value}`;
     }
+
+    if (t.isPrivateName(key)) {
+      return `#${key.id.name}`;
+    }
   }
 
   if (
@@ -34,7 +39,8 @@ export default function getFunctionName(node, parent) {
     // TODO: Babylon 6 doesn't support computed class props. It is included
     // here so that it is most flexible. Once Babylon 7 is used, this
     // can change to use computed: false like ObjectProperty.
-    (t.isClassProperty(parent, { value: node }) && !parent.computed)
+    (t.isClassProperty(parent, { value: node }) && !parent.computed) ||
+    (t.isClassPrivateProperty(parent, { value: node }) && !parent.computed)
   ) {
     const { key } = parent;
 
@@ -46,6 +52,10 @@ export default function getFunctionName(node, parent) {
     }
     if (t.isNumericLiteral(key)) {
       return `${key.value}`;
+    }
+
+    if (t.isPrivateName(key)) {
+      return `#${key.id.name}`;
     }
   }
 
