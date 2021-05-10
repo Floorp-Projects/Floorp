@@ -65,7 +65,7 @@ inline uint32_t BackendTypeBit(BackendType b) { return 1 << uint8_t(b); }
 namespace dom {
 class SystemFontListEntry;
 class SystemFontList;
-}
+}  // namespace dom
 }  // namespace mozilla
 
 #define MOZ_PERFORMANCE_WARNING(module, ...)      \

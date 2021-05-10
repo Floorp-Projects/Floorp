@@ -7340,10 +7340,10 @@ nsDisplayTransform::nsDisplayTransform(nsDisplayListBuilder* aBuilder,
   Init(aBuilder, aList);
 }
 
-nsDisplayTransform::nsDisplayTransform(
-    nsDisplayListBuilder* aBuilder, nsIFrame* aFrame, nsDisplayList* aList,
-    const nsRect& aChildrenBuildingRect,
-    decltype(WithTransformGetter))
+nsDisplayTransform::nsDisplayTransform(nsDisplayListBuilder* aBuilder,
+                                       nsIFrame* aFrame, nsDisplayList* aList,
+                                       const nsRect& aChildrenBuildingRect,
+                                       decltype(WithTransformGetter))
     : nsPaintedDisplayItem(aBuilder, aFrame),
       mAnimatedGeometryRootForChildren(mAnimatedGeometryRoot),
       mAnimatedGeometryRootForScrollMetadata(mAnimatedGeometryRoot),
@@ -7917,7 +7917,8 @@ const Matrix4x4Flagged& nsDisplayTransform::GetInverseTransform() const {
 
 Matrix4x4 nsDisplayTransform::GetTransformForRendering(
     LayoutDevicePoint* aOutOrigin) const {
-  if (!mFrame->HasPerspective() || mHasTransformGetter || mIsTransformSeparator) {
+  if (!mFrame->HasPerspective() || mHasTransformGetter ||
+      mIsTransformSeparator) {
     if (!mHasTransformGetter && !mIsTransformSeparator && aOutOrigin) {
       // If aOutOrigin is provided, put the offset to origin into it, because
       // we need to keep it separate for webrender. The combination of

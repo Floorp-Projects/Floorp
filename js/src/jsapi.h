@@ -1704,7 +1704,6 @@ JS_PUBLIC_API bool PropertySpecNameToPermanentId(JSContext* cx,
                                                  JSPropertySpec::Name name,
                                                  jsid* idp);
 
-
 } /* namespace JS */
 
 /************************************************************************/
