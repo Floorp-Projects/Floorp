@@ -154,15 +154,17 @@
     box-shadow: 0 1px 2px rgba(58, 57, 68, 0.1);
     background: var(--in-content-page-background);
   }
-}
 
-.close {
-  fill: var(--in-content-icon-color);
-}
+  .close {
+    fill: var(--in-content-icon-color);
+  }
 
-@media (-moz-toolbar-prefers-color-scheme: dark) {
-  .container.infobar {
-    background: rgb(66,65,77);
+  @media (-moz-toolbar-prefers-color-scheme: dark) {
+    /* Don't set the background in prefers-contrast mode or macOS can end up
+     * with black on black text. */
+    .container.infobar {
+      background: rgb(66,65,77);
+    }
   }
 }
 

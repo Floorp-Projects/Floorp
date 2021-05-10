@@ -52,6 +52,7 @@ button:dir(rtl) {
 
 button:enabled:hover {
   background-color: var(--in-content-button-background-hover);
+  color: var(--in-content-button-text-color-hover);
 }
 
 button:enabled:hover:active {

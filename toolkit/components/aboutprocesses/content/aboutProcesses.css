@@ -121,6 +121,7 @@ tr[selected] > td {
 }
 #process-tbody > tr:hover {
   background-color: var(--in-content-item-hover);
+  color: var(--in-content-item-hover-text);
 }
 
 /* Tab names and thread summary text can extend into memory and CPU columns. */
