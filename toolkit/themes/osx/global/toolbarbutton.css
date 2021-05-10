@@ -47,8 +47,8 @@ toolbarbutton[disabled="true"] {
   box-shadow: 0 1px 0 hsla(0, 100%, 100%, .2) inset,
               0 -1px 0 hsla(0, 0%, 0%, .1) inset,
               0 1px 0 hsla(206, 50%, 10%, .2);
-  margin: -6px 0 0 !important;
-  margin-inline-end: -6px !important;
+  margin: -5px 0 0 !important;
+  margin-inline-end: -4px !important;
   min-width: 14px;
   max-width: 24px;
   line-height: 10px;
