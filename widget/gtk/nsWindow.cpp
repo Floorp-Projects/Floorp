@@ -344,7 +344,6 @@ static nsWindow* gFocusWindow = nullptr;
 static bool gBlockActivateEvent = false;
 static bool gGlobalsInitialized = false;
 static bool gRaiseWindows = true;
-static bool gUseWaylandVsync = true;
 static bool gUseAspectRatio = true;
 static GList* gVisibleWaylandPopupWindows = nullptr;
 static uint32_t gLastTouchID = 0;
@@ -5571,7 +5570,8 @@ void nsWindow::HideWaylandWindow() {
 void nsWindow::WaylandStartVsync() {
 #ifdef MOZ_WAYLAND
   // only use for toplevel windows for now - see bug 1619246
-  if (!gUseWaylandVsync || mWindowType != eWindowType_toplevel) {
+  if (!StaticPrefs::widget_wayland_vsync_enabled_AtStartup() ||
+      mWindowType != eWindowType_toplevel) {
     return;
   }
 
@@ -7625,8 +7625,6 @@ static void drag_data_received_event_cb(GtkWidget* aWidget,
 static nsresult initialize_prefs(void) {
   gRaiseWindows =
       Preferences::GetBool("mozilla.widget.raise-on-setfocus", true);
-  gUseWaylandVsync =
-      Preferences::GetBool("widget.wayland_vsync.enabled", false);
 
   if (Preferences::HasUserValue("widget.use-aspect-ratio")) {
     gUseAspectRatio = Preferences::GetBool("widget.use-aspect-ratio", true);
@@ -8100,7 +8098,7 @@ gint nsWindow::GdkCeiledScaleFactor() {
 bool nsWindow::UseFractionalScale() {
 #ifdef MOZ_WAYLAND
   return (GdkIsWaylandDisplay() &&
-          StaticPrefs::widget_wayland_fractional_buffer_scale() > 0 &&
+          StaticPrefs::widget_wayland_fractional_buffer_scale_AtStartup() > 0 &&
           WaylandDisplayGet()->GetViewporter());
 #else
   return false;
@@ -8110,7 +8108,8 @@ bool nsWindow::UseFractionalScale() {
 double nsWindow::FractionalScaleFactor() {
 #ifdef MOZ_WAYLAND
   if (UseFractionalScale()) {
-    double scale = StaticPrefs::widget_wayland_fractional_buffer_scale();
+    double scale =
+        StaticPrefs::widget_wayland_fractional_buffer_scale_AtStartup();
     scale = std::max(scale, 0.5);
     scale = std::min(scale, 8.0);
     return scale;

@@ -231,7 +231,7 @@ static bool moz_gdk_wayland_window_add_frame_callback_surface_locked(
       (void (*)(GdkWindow*, struct wl_surface*))dlsym(
           RTLD_DEFAULT, "gdk_wayland_window_add_frame_callback_surface");
 
-  if (!StaticPrefs::widget_wayland_opaque_region_enabled() ||
+  if (!StaticPrefs::widget_wayland_opaque_region_enabled_AtStartup() ||
       !sGdkWaylandWindowAddCallbackSurface) {
     return false;
   }
