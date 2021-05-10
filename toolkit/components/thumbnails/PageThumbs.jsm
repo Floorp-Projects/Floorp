@@ -28,7 +28,6 @@ const { XPCOMUtils } = ChromeUtils.import(
 const { BasePromiseWorker } = ChromeUtils.import(
   "resource://gre/modules/PromiseWorker.jsm"
 );
-const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["FileReader"]);
 
@@ -619,9 +618,7 @@ var PageThumbsStorage = {
       aData,
       {
         tmpPath: path + ".tmp",
-        bytes: aData.byteLength,
-        noOverwrite: aNoOverwrite,
-        flush: false /* thumbnails do not require the level of guarantee provided by flush*/,
+        mode: aNoOverwrite ? "create" : "overwrite",
       },
     ];
     return PageThumbsWorker.post(
@@ -733,11 +730,11 @@ var PageThumbsStorage = {
   },
 
   /**
-   * For functions that take a noOverwrite option, OS.File throws an error if
+   * For functions that take a noOverwrite option, IOUtils throws an error if
    * the target file exists and noOverwrite is true.  We don't consider that an
    * error, and we don't want such errors propagated.
    *
-   * @param {aNoOverwrite} The noOverwrite option used in the OS.File operation.
+   * @param {aNoOverwrite} The noOverwrite option used in the IOUtils operation.
    *
    * @return {function} A function that should be passed as the second argument
    * to then() (the `onError` argument).
@@ -746,8 +743,8 @@ var PageThumbsStorage = {
     return function onError(err) {
       if (
         !aNoOverwrite ||
-        !(err instanceof OS.File.Error) ||
-        !err.becauseExists
+        !(err instanceof DOMException) ||
+        err.name !== "TypeMismatchError"
       ) {
         throw err;
       }
@@ -803,12 +800,12 @@ var PageThumbsStorageMigrator = {
    * Used for testing. Default argument is good for all non-testing uses.
    */
   migrateToVersion3: function Migrator_migrateToVersion3(
-    local = OS.Constants.Path.localProfileDir,
-    roaming = OS.Constants.Path.profileDir
+    local = Services.dirsvc.get("ProfLD", Ci.nsIFile).path,
+    roaming = Services.dirsvc.get("ProfD", Ci.nsIFile).path
   ) {
     PageThumbsWorker.post("moveOrDeleteAllThumbnails", [
-      OS.Path.join(roaming, THUMBNAIL_DIRECTORY),
-      OS.Path.join(local, THUMBNAIL_DIRECTORY),
+      PathUtils.join(roaming, THUMBNAIL_DIRECTORY),
+      PathUtils.join(local, THUMBNAIL_DIRECTORY),
     ]);
   },
 };
@@ -881,6 +878,3 @@ var PageThumbsExpiration = {
 var PageThumbsWorker = new BasePromiseWorker(
   "resource://gre/modules/PageThumbsWorker.js"
 );
-// As the PageThumbsWorker performs I/O, we can receive instances of
-// OS.File.Error, so we need to install a decoder.
-PageThumbsWorker.ExceptionHandlers["OS.File.Error"] = OS.File.Error.fromMsg;
