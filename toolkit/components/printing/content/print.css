@@ -323,4 +323,5 @@ input[type="number"].photon-number::-moz-number-spin-up {
 input[type="number"].photon-number::-moz-number-spin-up:hover,
 input[type="number"].photon-number::-moz-number-spin-down:hover {
   background-color: var(--in-content-button-background-hover);
+  color: var(--in-content-button-text-color-hover);
 }

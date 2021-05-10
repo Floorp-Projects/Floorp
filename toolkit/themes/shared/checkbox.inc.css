@@ -77,4 +77,22 @@ checkbox:not([native]):-moz-focusring > .checkbox-check {
   outline: 2px solid var(--focus-outline-color, -moz-accent-color);
   outline-offset: var(--focus-outline-offset, 2px);
 }
+
+@media (prefers-contrast) {
+  checkbox:not([disabled="true"]):hover > .checkbox-check {
+    /* color will set the border-color on the check due to how HCM works for in-content pages. */
+    color: var(--checkbox-checked-border-color, color-mix(in srgb, -moz-accent-color 4%, Field));
+  }
+
+  .checkbox-check[checked] {
+    color: var(--checkbox-checked-border-color, currentColor);
+    fill: var(--checkbox-checked-color, -moz-accent-color-foreground);
+  }
+
+  checkbox:not([disabled="true"]):hover:active > .checkbox-check[checked],
+  checkbox:not([disabled="true"]):hover > .checkbox-check[checked] {
+    color: var(--checkbox-checked-border-color-hover, -moz-accent-color-foreground);
+    fill: var(--checkbox-checked-border-color-hover, -moz-accent-color-foreground);
+  }
+}
 } /** END Proton **/
