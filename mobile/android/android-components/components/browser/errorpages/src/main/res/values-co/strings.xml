@@ -1,13 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- The default document title of an error page (i.e., the contents of the `<title>` tag). -->
-    <string name="mozac_browser_errorpages_page_title">Sbagliu di caricamentu di a pagina</string>
 
     <!-- The button that appears at the bottom of an error page. -->
     <string name="mozac_browser_errorpages_page_refresh">Ripruvà</string>
-
-    <!-- The button that appears at the bottom of an error page. -->
-    <string name="mozac_browser_errorpages_page_go_back">Ritornu</string>
 
     <!-- The document title and heading of an error page shown when a website cannot be loaded for an unknown reason. -->
     <string name="mozac_browser_errorpages_generic_title">Ùn si pò compie a richiesta</string>
@@ -30,7 +25,7 @@
     <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[¶
       <ul>¶
         <li>Stu penseru pò vene di a cunfigurazione di u servitore, osinnò ghjè qualchissia forse chì prova d’impatrunissi di u servitore.</li>¶
-        <li>S’è vo avete dighjà riesciutu à cunnettavvi à stu servitore, u sbagliu pò esse timpurariu, è pudete pruvà torna da quì à pocu.</li>¶
+        <li>S’è vo avete dighjà riesciutu à cunnettevi à stu servitore, u sbagliu pò esse timpurariu, è pudete pruvà torna da quì à pocu.</li>¶
       </ul>¶
     ]]></string>
 
@@ -51,7 +46,7 @@
     <string name="mozac_browser_errorpages_net_interrupt_title">A cunnessione hè stata interrotta</string>
     <!-- The error message shown when the user's network connection is interrupted while connecting to a website. -->
     <string name="mozac_browser_errorpages_net_interrupt_message"><![CDATA[¶
-      <p>U navigatore s’hè cunnettatu bè, ma a cunnessione hè stata interrotta durante u trasferimentu d’infurmazioni. Ci vole à pruvà torna.</p>¶
+      <p>U navigatore s’hè cunnessu bè, ma a cunnessione hè stata interrotta durante u trasferimentu d’infurmazioni. Ci vole à pruvà torna.</p>¶
       <ul>¶
         <li>Forse u site hè timpurariamente indispunibule o sopraccarcu. Pruvate torna da quì à pocu.</li>¶
         <li>S’ella ùn hè mancu pussibule di navigà nant’à un situ, verificate a cunnessione di dati o Wi-Fi di u vostru apparechju.</li>¶
@@ -72,7 +67,7 @@
       </ul>¶]]></string>
 
     <!-- The document title and heading of the error page shown when a website could not be reached. -->
-    <string name="mozac_browser_errorpages_connection_failure_title">Impussibule di cunnettassi</string>
+    <string name="mozac_browser_errorpages_connection_failure_title">Impussibule di cunnettesi</string>
     <!-- The error message shown when a website could not be reached. -->
     <string name="mozac_browser_errorpages_connection_failure_message"><![CDATA[¶
       <ul>¶
@@ -104,9 +99,9 @@
 
     <!-- The error message shown when a website cannot be loaded because the browser is in offline mode. -->
     <string name="mozac_browser_errorpages_offline_message"><![CDATA[¶
-      <p>U navigatore funziuneghja in u modu fora di cunnessione è ùn si pò cunnettà à l’indirizzu indicatu.</p>¶
+      <p>U navigatore funziuneghja in u modu fora di cunnessione è ùn si pò cunnette à l’indirizzu indicatu.</p>¶
       <ul>¶
-        <li>L’apparechju hè cunnettu à a reta ?</li>¶
+        <li>L’apparechju hè cunnessu à a reta ?</li>¶
         <li>Sciglite « Pruvà torna » per cambià ver di u modu in linea è ricaricà a pagina.</li>¶
       </ul>¶]]></string>
 
@@ -206,7 +201,7 @@
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_protocol_title">Protocollu scunnisciutu</string>
     <string name="mozac_browser_errorpages_unknown_protocol_message"><![CDATA[¶
-      <p>TL’indirizzu indicheghja un protocollu (i.e. : <q>wxyz://</q>) scunnisciutu da u navigatore chì ùn riesce micca à cunnettassi currettamente à u situ.</p>¶
+      <p>L’indirizzu indicheghja un protocollu (i.e. : <q>wxyz://</q>) scunnisciutu da u navigatore chì ùn riesce micca à cunnettesi currettamente à u situ.</p>¶
       <ul>¶
         <li>>Pruvate d’accede à cuntenutu multimedia o à d’altri servizii non-testu ? Verificate nant’à u situ i prugrammi chì sò richiesti.</li>¶
         <li>Certi protocolli ponu richiede un terzu prugramma o moduli d’estensione per chì u navigatore possi ricunnoscelli.</li>¶
@@ -248,8 +243,8 @@
       <p>U navigatore hè cunfiguratu per impiegà un servitore proxy, ma quessu ùn si trova micca.</p>¶
       <ul>¶
         <li>Hè curretta a cunfigurazione proxy di u navigatore ? Verificate e preferenze è pruvate torna.</li>¶
-        <li>L’apparechju hè cunnettu à una reta attiva ?</li>¶
-        <li>Avete sempre penseru ? Cuntattate u vostru amministratore di a reta o u vostru furnidore d’accessu à internet per ottene un aiutu.</li>¶
+        <li>Hè cunnessu à una reta attiva, l’apparechju ?</li>¶
+        <li>Avete sempre penseru ? Cuntattate u vostru amministratore di a reta o u vostru furnidore d’accessu à internet per ottene un aiutu.</li>¶
       </ul>¶]]></string>
 
     <!-- The document title and heading of an error page. -->

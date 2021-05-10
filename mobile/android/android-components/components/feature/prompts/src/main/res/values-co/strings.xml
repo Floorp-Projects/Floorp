@@ -11,7 +11,7 @@
     <!-- Text for a button that clears the selected input in the date/time picker. -->
     <string name="mozac_feature_prompts_clear">Squassà</string>
     <!-- Text for the title of an authentication dialog. -->
-    <string name="mozac_feature_prompt_sign_in">Cunnettassi</string>
+    <string name="mozac_feature_prompt_sign_in">Cunnettesi</string>
     <!-- Text for username field in an authentication dialog. -->
     <string name="mozac_feature_prompt_username_hint">Nome d’utilizatore</string>
     <!-- Text for password field in an authentication dialog. -->
