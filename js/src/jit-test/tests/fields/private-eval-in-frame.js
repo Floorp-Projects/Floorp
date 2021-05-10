@@ -11,4 +11,4 @@ class B {
 
 var b = new B();
 assertEq(b.ef(`this.x`), 'his');
-assertThrowsInstanceOf(() => b.ef(`this.#x`), Error);
+assertEq(b.ef(`this.#x`), 12);

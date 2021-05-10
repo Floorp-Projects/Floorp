@@ -1012,21 +1012,23 @@ bool EmitterScope::lookupPrivate(BytecodeEmitter* bce,
     MOZ_ASSERT(loc.kind() == NameLocation::Kind::Dynamic ||
                loc.kind() == NameLocation::Kind::Global);
     // Private fields don't require brand checking and can be correctly
-    // code-generated with dynamic name lookup bytecode we have today.
+    // code-generated with dynamic name lookup bytecode we have today. However,
+    // for that to happen we first need to figure out if we have a Private
+    // method or private field, which we cannot disambiguate based on the
+    // dynamic lookup.
     //
-    // In an ideal world, we could check if we have a private field or a private
-    // method, relying  on the private field eval cache; if we have dynamic or
-    // global name location kind, and we successfully parsed the private
-    // identifier, then it must be in the eval cache, which tracks binding kind.
-    // However, we don't initialize the eval cache on delazifications that are
-    // nested inside an eval execution, so we can't rely on it.
-    //
-    // Instead, at this point we throw up our hands and tell the user their
-    // invocation isn't supported (even if it's actually the invocation of a
-    // private field, which conceptually -should- work, but we cannot
-    // disambiguate from a private method invocation without the binding kind.)
-    bce->reportError(nullptr, JSMSG_DEBUG_NO_PRIVATE_METHOD);
-    return false;
+    // Hoewver, this is precisely the case that the private field eval case can
+    // help us handle. It knows the truth about these private bindings.
+    mozilla::Maybe<NameLocation> cacheEntry =
+        bce->compilationState.scopeContext.getPrivateFieldLocation(name);
+    MOZ_ASSERT(cacheEntry);
+
+    if (cacheEntry->bindingKind() == BindingKind::PrivateMethod) {
+      bce->reportError(nullptr, JSMSG_DEBUG_NO_PRIVATE_METHOD);
+      return false;
+    }
+    brandLoc = Nothing();
+    return true;
   }
 
   if (loc.bindingKind() == BindingKind::PrivateMethod) {
