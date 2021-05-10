@@ -114,7 +114,7 @@ function onLoad(ready) {
   // Change content for Windows 7 because non-light themes aren't quite right.
   const win7Content = AppConstants.isPlatformAndVersionAtMost("win", "6.1");
 
-  const { body, head } = document;
+  const { body } = document;
   const title = document.getElementById("title");
   const subtitle = document.getElementById("subtitle");
   const items = document.querySelector(".items");
@@ -148,13 +148,9 @@ function onLoad(ready) {
         if (win7Content) {
           steps.style.visibility = "hidden";
 
-          // If already default, reuse "Okay" for primary and hide secondary.
           if (IS_DEFAULT) {
-            head.appendChild(
-              head.querySelector("[rel=localization]").cloneNode()
-            ).href = "browser/newtab/asrouter.ftl";
             SCREEN_STRINGS[current].primary =
-              "cfr-doorhanger-doh-primary-button-2";
+              "upgrade-dialog-new-primary-win7-button";
             secondary.style.display = "none";
           }
         }
