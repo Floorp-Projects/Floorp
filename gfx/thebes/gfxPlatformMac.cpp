@@ -162,14 +162,23 @@ PRThread* gfxPlatformMac::sFontRegistrationThread = nullptr;
    our font list. */
 /* static */
 void gfxPlatformMac::RegisterSupplementalFonts() {
-  // On Catalina+, it appears to be sufficient to activate fonts in the parent
-  // process; they are then also usable in child processes. But on pre-Catalina
-  // systems we need to explicitly activate them in each child process (per bug
-  // 1704273).
-  if (XRE_IsParentProcess() || !nsCocoaFeatures::OnCatalinaOrLater()) {
+  if (XRE_IsParentProcess()) {
     sFontRegistrationThread = PR_CreateThread(
         PR_USER_THREAD, FontRegistrationCallback, nullptr, PR_PRIORITY_NORMAL,
         PR_GLOBAL_THREAD, PR_JOINABLE_THREAD, 0);
+  } else if (!nsCocoaFeatures::OnCatalinaOrLater()) {
+    // On Catalina+, it appears to be sufficient to activate fonts in the
+    // parent process; they are then also usable in child processes. But on
+    // pre-Catalina systems we need to explicitly activate them in each child
+    // process (per bug 1704273).
+    //
+    // But at least on 10.14 (Mojave), doing font registration on a separate
+    // thread in the content process seems crashy (bug 1708821), despite the
+    // CTFontManager.h header claiming that it's thread-safe. So we just do it
+    // immediately on the main thread, and accept the startup-time hit (sigh).
+    for (const auto& dir : kLangFontsDirs) {
+      ActivateFontsFromDir(dir);
+    }
   }
 }
 
