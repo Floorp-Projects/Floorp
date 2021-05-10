@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+    <meta charset="UTF-8">
+    <style>
+    a {
+        color: rgb(255, 0, 0);
+    }
+    </style>
+</head>
+
+<body>
+    <div style="display: flex;">
+        <div style="display: block;">
+            <div style="display: inline; filter: invert(0);">
+                <a href="#">
+                    <span>FOO</span>
+                </a>
+                <div style="position: absolute; top: 100px; left: 100px;">
+                    <a id="bar" href="#">BAR</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+    function doTest() {
+      const bar = document.getElementById('bar');
+      bar.style.color = 'rgb(0, 255, 0)';
+      document.documentElement.removeAttribute('class');
+    }
+    document.addEventListener("MozReftestInvalidate", doTest, false);
+    </script>
+</body>
+</html>
