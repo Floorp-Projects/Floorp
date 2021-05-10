@@ -31,8 +31,6 @@ XPCOMUtils.defineLazyPreferenceGetter(
 );
 
 const POPUP_NOTIFICATION_ID = "contextual-feature-recommendation";
-const ANIMATION_BUTTON_ID = "cfr-notification-footer-animation-button";
-const ANIMATION_LABEL_ID = "cfr-notification-footer-animation-label";
 const SUMO_BASE_URL = Services.urlFormatter.formatURLPref(
   "app.support.baseURL"
 );
@@ -236,15 +234,6 @@ class PageAction {
         this.urlbarinput.setAttribute("cfr-recommendation-state", "collapsed");
       }
     }
-
-    // TODO: FIXME: find a nicer way of cleaning this up. Maybe listening to "popuphidden"?
-    // Remove click listener on pause button;
-    if (this.onAnimationButtonClick) {
-      this.window.document
-        .getElementById(ANIMATION_BUTTON_ID)
-        .removeEventListener("click", this.onAnimationButtonClick);
-      delete this.onAnimationButtonClick;
-    }
   }
 
   _clearScheduledStateChanges() {
@@ -439,78 +428,6 @@ class PageAction {
     }
     parent.appendChild(element);
     return element;
-  }
-
-  async _renderPinTabAnimation() {
-    const ANIMATION_CONTAINER_ID =
-      "cfr-notification-footer-pintab-animation-container";
-    const footer = this.window.document.getElementById(
-      "cfr-notification-footer"
-    );
-    let animationContainer = this.window.document.getElementById(
-      ANIMATION_CONTAINER_ID
-    );
-    if (!animationContainer) {
-      animationContainer = this._createElementAndAppend(
-        { type: "vbox", id: ANIMATION_CONTAINER_ID },
-        footer
-      );
-
-      let controlsContainer = this._createElementAndAppend(
-        { type: "hbox", id: "cfr-notification-footer-animation-controls" },
-        animationContainer
-      );
-
-      // spacer
-      this._createElementAndAppend(
-        { type: "vbox" },
-        controlsContainer
-      ).setAttribute("flex", 1);
-
-      let animationButton = this._createElementAndAppend(
-        { type: "hbox", id: ANIMATION_BUTTON_ID },
-        controlsContainer
-      );
-
-      // animation button label
-      this._createElementAndAppend(
-        { type: "label", id: ANIMATION_LABEL_ID },
-        animationButton
-      );
-    }
-
-    animationContainer.toggleAttribute(
-      "animate",
-      !this.window.matchMedia("(prefers-reduced-motion: reduce)").matches
-    );
-    animationContainer.removeAttribute("paused");
-
-    this.window.document.getElementById(
-      ANIMATION_LABEL_ID
-    ).textContent = await this.getStrings({
-      string_id: "cfr-doorhanger-pintab-animation-pause",
-    });
-
-    if (!this.onAnimationButtonClick) {
-      let animationButton = this.window.document.getElementById(
-        ANIMATION_BUTTON_ID
-      );
-      this.onAnimationButtonClick = async () => {
-        let animationLabel = this.window.document.getElementById(
-          ANIMATION_LABEL_ID
-        );
-        if (animationContainer.toggleAttribute("paused")) {
-          animationLabel.textContent = await this.getStrings({
-            string_id: "cfr-doorhanger-pintab-animation-resume",
-          });
-        } else {
-          animationLabel.textContent = await this.getStrings({
-            string_id: "cfr-doorhanger-pintab-animation-pause",
-          });
-        }
-      };
-      animationButton.addEventListener("click", this.onAnimationButtonClick);
-    }
   }
 
   async _renderMilestonePopup(message, browser) {
@@ -740,50 +657,6 @@ class PageAction {
           learnMoreURL,
           ...options,
         };
-        break;
-      case "message_and_animation":
-        footerText.textContent = await this.getStrings(content.text);
-        const stepsContainerId = "cfr-notification-feature-steps";
-        let stepsContainer = this.window.document.getElementById(
-          stepsContainerId
-        );
-        primaryActionCallback = () => {
-          this._blockMessage(id);
-          this.dispatchUserAction(primary.action);
-          this.hideAddressBarNotifier();
-          this._sendTelemetry({
-            message_id: id,
-            bucket_id: content.bucket_id,
-            event: "PIN",
-            ...(modelVersion ? { event_context: { modelVersion } } : {}),
-          });
-          RecommendationMap.delete(browser);
-        };
-        panelTitle = await this.getStrings(content.heading_text);
-
-        if (content.descriptionDetails) {
-          if (stepsContainer) {
-            // If it exists we need to empty it
-            stepsContainer.remove();
-            stepsContainer = stepsContainer.cloneNode(false);
-          } else {
-            stepsContainer = this.window.document.createXULElement("vbox");
-            stepsContainer.setAttribute("id", stepsContainerId);
-          }
-          footerText.parentNode.appendChild(stepsContainer);
-          for (let step of content.descriptionDetails.steps) {
-            // This li is a generic xul element with custom styling
-            const li = this.window.document.createXULElement("li");
-            li.appendChild(
-              RemoteL10n.createElement(this.window.document, "span", {
-                content: step,
-              })
-            );
-            stepsContainer.appendChild(li);
-          }
-        }
-
-        await this._renderPinTabAnimation();
         break;
       default:
         panelTitle = await this.getStrings(content.addon.title);
