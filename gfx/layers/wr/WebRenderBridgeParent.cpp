@@ -2369,12 +2369,12 @@ static void RecordPaintPhaseTelemetry(wr::RendererStats* aStats) {
   RecordKey("fb"_ns, frameBuild);
 }
 
-Maybe<TransactionId> WebRenderBridgeParent::FlushTransactionIdsForEpoch(
+void WebRenderBridgeParent::FlushTransactionIdsForEpoch(
     const wr::Epoch& aEpoch, const VsyncId& aCompositeStartId,
     const TimeStamp& aCompositeStartTime, const TimeStamp& aRenderStartTime,
     const TimeStamp& aEndTime, UiCompositorControllerParent* aUiController,
-    wr::RendererStats* aStats, nsTArray<FrameStats>* aOutputStats) {
-  Maybe<TransactionId> id = Nothing();
+    wr::RendererStats* aStats, nsTArray<FrameStats>& aOutputStats,
+    nsTArray<TransactionId>& aOutputTransactions) {
   while (!mPendingTransactionIds.empty()) {
     const auto& transactionId = mPendingTransactionIds.front();
 
@@ -2398,7 +2398,7 @@ Maybe<TransactionId> WebRenderBridgeParent::FlushTransactionIdsForEpoch(
       RecordPaintPhaseTelemetry(aStats);
 
       if (contentFrameTime > 200) {
-        aOutputStats->AppendElement(FrameStats(
+        aOutputStats.AppendElement(FrameStats(
             transactionId.mId, aCompositeStartTime, aRenderStartTime, aEndTime,
             contentFrameTime,
             aStats ? (double(aStats->resource_upload_time) / 1000000.0) : 0.0,
@@ -2434,10 +2434,9 @@ Maybe<TransactionId> WebRenderBridgeParent::FlushTransactionIdsForEpoch(
 
     RecordCompositionPayloadsPresented(aEndTime, transactionId.mPayloads);
 
-    id = Some(transactionId.mId);
+    aOutputTransactions.AppendElement(transactionId.mId);
     mPendingTransactionIds.pop_front();
   }
-  return id;
 }
 
 LayersId WebRenderBridgeParent::GetLayersId() const {

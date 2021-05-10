@@ -480,6 +480,13 @@ class nsRefreshDriver final : public mozilla::layers::TransactionIdAllocator,
 
   bool CanDoCatchUpTick();
 
+  bool AtPendingTransactionLimit() {
+    return mPendingTransactions.Length() == 2;
+  }
+  bool TooManyPendingTransactions() {
+    return mPendingTransactions.Length() >= 2;
+  }
+
   mozilla::RefreshDriverTimer* ChooseTimer();
   mozilla::RefreshDriverTimer* mActiveTimer;
   RefPtr<mozilla::RefreshDriverTimer> mOwnTimer;
@@ -492,13 +499,7 @@ class nsRefreshDriver final : public mozilla::layers::TransactionIdAllocator,
 
   // The most recently allocated transaction id.
   TransactionId mNextTransactionId;
-  // This number is mCompletedTransaction + (pending transaction count).
-  // When we revoke a transaction id, we revert this number (since it's
-  // no longer outstanding), but not mNextTransactionId (since we don't
-  // want to reuse the number).
-  TransactionId mOutstandingTransactionId;
-  // The most recently completed transaction id.
-  TransactionId mCompletedTransaction;
+  AutoTArray<TransactionId, 3> mPendingTransactions;
 
   uint32_t mFreezeCount;
 
@@ -548,6 +549,10 @@ class nsRefreshDriver final : public mozilla::layers::TransactionIdAllocator,
   // True if we need to flush in order to update intersection observations in
   // all our documents.
   bool mNeedToUpdateIntersectionObservations : 1;
+
+  // True if we're currently within the scope of Tick() handling a normal
+  // (timer-driven) tick.
+  bool mInNormalTick : 1;
 
   // Number of seconds that the refresh driver is blocked waiting for a
   // compositor transaction to be completed before we append a note to the gfx
