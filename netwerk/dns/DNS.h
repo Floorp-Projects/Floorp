@@ -13,7 +13,6 @@
 #include "prnetdb.h"
 #include "plstr.h"
 #include "nsISupportsImpl.h"
-#include "mozilla/LinkedList.h"
 #include "mozilla/MemoryReporting.h"
 #include "nsTArray.h"
 
@@ -287,6 +286,8 @@ void PRNetAddrToNetAddr(const PRNetAddr* prAddr, NetAddr* addr);
 void NetAddrToPRNetAddr(const NetAddr* addr, PRNetAddr* prAddr);
 
 bool IsLoopbackHostname(const nsACString& aAsciiHost);
+
+bool HostIsIPLiteral(const nsACString& aAsciiHost);
 
 }  // namespace net
 }  // namespace mozilla

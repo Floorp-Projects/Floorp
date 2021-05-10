@@ -901,13 +901,12 @@ bool nsDNSService::DNSForbiddenByActiveProxy(const nsACString& aHostname,
   }
 
   // We should avoid doing DNS when a proxy is in use.
-  PRNetAddr tempAddr;
+  NetAddr tempAddr;
   if (StaticPrefs::network_proxy_type() ==
           nsIProtocolProxyService::PROXYCONFIG_MANUAL &&
       mHasSocksProxy && StaticPrefs::network_proxy_socks_remote_dns()) {
     // Allow IP lookups through, but nothing else.
-    if (PR_StringToNetAddr(nsCString(aHostname).get(), &tempAddr) !=
-        PR_SUCCESS) {
+    if (!HostIsIPLiteral(aHostname)) {
       return true;
     }
   }
