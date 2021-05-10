@@ -1035,6 +1035,11 @@ Download.prototype = {
   _finalized: false,
 
   /**
+   * True if the "finalize" has been called and fully finished it's execution.
+   */
+  _finalizeExecuted: false,
+
+  /**
    * Ensures that the download is stopped, and optionally removes any partial
    * data kept as part of a canceled or failed download.  After this method has
    * been called, the download cannot be started again.
@@ -1056,16 +1061,24 @@ Download.prototype = {
   finalize(aRemovePartialData) {
     // Prevents the download from starting again after having been stopped.
     this._finalized = true;
+    let promise;
 
     if (aRemovePartialData) {
       // Cancel the download, in case it is currently in progress, then remove
       // any partially downloaded data.  The removal operation waits for
       // cancellation to be completed before resolving the promise it returns.
       this.cancel();
-      return this.removePartialData();
+      promise = this.removePartialData();
+    } else {
+      // Just cancel the download, in case it is currently in progress.
+      promise = this.cancel();
     }
-    // Just cancel the download, in case it is currently in progress.
-    return this.cancel();
+    promise.then(() => {
+      // At this point, either removing data / just cancelling the download should be done.
+      this._finalizeExecuted = true;
+    });
+
+    return promise;
   },
 
   /**

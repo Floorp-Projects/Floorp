@@ -221,11 +221,23 @@ DownloadList.prototype = {
           // Remove the download first, so that the views don't get the change
           // notifications that may occur during finalization.
           await this.remove(download);
+          // Find if a file with the same path is also downloading.
+          let sameFileIsDownloading = false;
+          for (let otherDownload of await this.getAll()) {
+            if (
+              download !== otherDownload &&
+              download.target.path == otherDownload.target.path &&
+              !otherDownload.error
+            ) {
+              sameFileIsDownloading = true;
+            }
+          }
           // Ensure that the download is stopped and no partial data is kept.
           // This works even if the download state has changed meanwhile.  We
           // don't need to wait for the procedure to be complete before
           // processing the other downloads in the list.
-          download.finalize(true).catch(Cu.reportError);
+          let removePartialData = !sameFileIsDownloading;
+          download.finalize(removePartialData).catch(Cu.reportError);
         }
       }
     })().catch(Cu.reportError);
