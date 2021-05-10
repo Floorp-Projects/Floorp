@@ -263,10 +263,10 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme, nscolor
       color = GetColorFromNSColor(NSColor.alternateSelectedControlTextColor);
       break;
     case ColorID::Windowframe:
-      color = GetColorFromNSColor(NSColor.gridColor);
+      color = GetColorFromNSColor(NSColor.windowFrameColor);
       break;
     case ColorID::Window:
-      color = NS_RGB(0xff, 0xff, 0xff);
+      color = GetColorFromNSColor(NSColor.windowBackgroundColor);
       break;
     case ColorID::Field:
     case ColorID::MozCombobox:
