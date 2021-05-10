@@ -74,52 +74,6 @@ const REDDIT_ENHANCEMENT_PARAMS = {
   sumo_path: "extensionrecommendations",
   min_frecency: 10000,
 };
-const PINNED_TABS_TARGET_SITES = [
-  "docs.google.com",
-  "www.docs.google.com",
-  "calendar.google.com",
-  "messenger.com",
-  "www.messenger.com",
-  "web.whatsapp.com",
-  "mail.google.com",
-  "outlook.live.com",
-  "facebook.com",
-  "www.facebook.com",
-  "twitter.com",
-  "www.twitter.com",
-  "reddit.com",
-  "www.reddit.com",
-  "github.com",
-  "www.github.com",
-  "youtube.com",
-  "www.youtube.com",
-  "feedly.com",
-  "www.feedly.com",
-  "drive.google.com",
-  "amazon.com",
-  "www.amazon.com",
-  "messages.android.com",
-  "amazon.ca",
-  "www.amazon.ca",
-  "amazon.com.au",
-  "www.amazon.com.au",
-  "amazon.co.uk",
-  "www.amazon.co.uk",
-  "amazon.fr",
-  "www.amazon.fr",
-  "amazon.de",
-  "www.amazon.de",
-];
-const PINNED_TABS_TARGET_LOCALES = [
-  "en-US",
-  "en-CA",
-  "en-AU",
-  "en-GB",
-  "en-ZA",
-  "en-NZ",
-  "fr",
-  "de",
-];
 
 const CFR_MESSAGES = [
   {
@@ -140,8 +94,7 @@ const CFR_MESSAGES = [
       addon: {
         id: "954390",
         title: "Facebook Container",
-        icon:
-          "chrome://activity-stream/content/data/content/assets/cfr_fb_container.png",
+        icon: "chrome://browser/skin/addons/addon-install-downloading.svg",
         rating: 4.6,
         users: 299019,
         author: "Mozilla",
@@ -211,8 +164,7 @@ const CFR_MESSAGES = [
       addon: {
         id: "445852",
         title: "To Google Translate",
-        icon:
-          "chrome://activity-stream/content/data/content/assets/cfr_google_translate.png",
+        icon: "chrome://browser/skin/addons/addon-install-downloading.svg",
         rating: 4.1,
         users: 313474,
         author: "Juan Escobar",
@@ -283,8 +235,7 @@ const CFR_MESSAGES = [
       addon: {
         id: "700308",
         title: "Enhancer for YouTube\u2122",
-        icon:
-          "chrome://activity-stream/content/data/content/assets/cfr_enhancer_youtube.png",
+        icon: "chrome://browser/skin/addons/addon-install-downloading.svg",
         rating: 4.8,
         users: 357328,
         author: "Maxime RF",
@@ -356,8 +307,7 @@ const CFR_MESSAGES = [
       addon: {
         id: "659026",
         title: "Wikipedia Context Menu Search",
-        icon:
-          "chrome://activity-stream/content/data/content/assets/cfr_wiki_search.png",
+        icon: "chrome://browser/skin/addons/addon-install-downloading.svg",
         rating: 4.9,
         users: 3095,
         author: "Nick Diedrich",
@@ -432,8 +382,7 @@ const CFR_MESSAGES = [
       addon: {
         id: "387429",
         title: "Reddit Enhancement Suite",
-        icon:
-          "chrome://activity-stream/content/data/content/assets/cfr_reddit_enhancement.png",
+        icon: "chrome://browser/skin/addons/addon-install-downloading.svg",
         rating: 4.6,
         users: 258129,
         author: "honestbleeps",
@@ -485,62 +434,6 @@ const CFR_MESSAGES = [
       REDDIT_ENHANCEMENT_PARAMS.min_frecency
     }]|mapToProperty('host'))|length > 0`,
     trigger: { id: "openURL", params: REDDIT_ENHANCEMENT_PARAMS.open_urls },
-  },
-  {
-    id: "PIN_TAB",
-    template: "cfr_doorhanger",
-    content: {
-      layout: "message_and_animation",
-      category: "cfrFeatures",
-      bucket_id: "CFR_PIN_TAB",
-      notification_text: { string_id: "cfr-doorhanger-feature-notification" },
-      heading_text: { string_id: "cfr-doorhanger-pintab-heading" },
-      info_icon: {
-        label: { string_id: "cfr-doorhanger-extension-sumo-link" },
-        sumo_path: REDDIT_ENHANCEMENT_PARAMS.sumo_path,
-      },
-      text: { string_id: "cfr-doorhanger-pintab-description" },
-      descriptionDetails: {
-        steps: [
-          { string_id: "cfr-doorhanger-pintab-step1" },
-          { string_id: "cfr-doorhanger-pintab-step2" },
-          { string_id: "cfr-doorhanger-pintab-step3" },
-        ],
-      },
-      buttons: {
-        primary: {
-          label: { string_id: "cfr-doorhanger-pintab-ok-button" },
-          action: {
-            type: "PIN_CURRENT_TAB",
-          },
-        },
-        secondary: [
-          {
-            label: { string_id: "cfr-doorhanger-extension-cancel-button" },
-            action: { type: "CANCEL" },
-          },
-          {
-            label: {
-              string_id: "cfr-doorhanger-extension-never-show-recommendation",
-            },
-          },
-          {
-            label: {
-              string_id: "cfr-doorhanger-extension-manage-settings-button",
-            },
-            action: {
-              type: "OPEN_PREFERENCES_PAGE",
-              data: { category: "general-cfrfeatures" },
-            },
-          },
-        ],
-      },
-    },
-    targeting: `locale in ${JSON.stringify(
-      PINNED_TABS_TARGET_LOCALES
-    )} && !hasPinnedTabs && recentVisits[.timestamp > (currentDate|date - 3600 * 1000 * 1)]|length >= 3`,
-    frequency: { lifetime: 3 },
-    trigger: { id: "frequentVisits", params: PINNED_TABS_TARGET_SITES },
   },
   {
     id: "DOH_ROLLOUT_CONFIRMATION",
