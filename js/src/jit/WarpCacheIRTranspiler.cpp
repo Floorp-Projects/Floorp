@@ -4702,10 +4702,10 @@ bool WarpCacheIRTranspiler::emitNewArrayObjectResult(uint32_t length,
   add(shapeConstant);
 
   auto* obj = MNewArrayObject::New(alloc(), shapeConstant, length, heap);
-  addEffectful(obj);
+  add(obj);
 
   pushResult(obj);
-  return resumeAfter(obj);
+  return true;
 }
 
 static void MaybeSetImplicitlyUsed(uint32_t numInstructionIdsBefore,
