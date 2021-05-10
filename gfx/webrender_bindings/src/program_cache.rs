@@ -7,7 +7,7 @@ use std::ffi::OsString;
 use std::fs::{create_dir_all, read_dir, read_to_string, File};
 use std::io::{Error, ErrorKind};
 use std::io::{Read, Write};
-use std::path::{PathBuf, Path};
+use std::path::{Path, PathBuf};
 use std::rc::Rc;
 use std::sync::Arc;
 
