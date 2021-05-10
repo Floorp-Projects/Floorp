@@ -505,11 +505,6 @@ NS_IMETHODIMP nsContentTreeOwner::GetMainWidget(nsIWidget** aMainWidget) {
   return NS_OK;
 }
 
-NS_IMETHODIMP nsContentTreeOwner::SetFocus() {
-  NS_ENSURE_STATE(mAppWindow);
-  return mAppWindow->SetFocus();
-}
-
 NS_IMETHODIMP nsContentTreeOwner::GetTitle(nsAString& aTitle) {
   NS_ENSURE_STATE(mAppWindow);
 
