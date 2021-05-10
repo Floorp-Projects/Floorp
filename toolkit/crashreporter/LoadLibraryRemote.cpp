@@ -248,8 +248,9 @@ static int BuildImportTable(PMEMORYMODULE module) {
   if (directory->Size > 0) {
     PIMAGE_IMPORT_DESCRIPTOR importDesc =
         (PIMAGE_IMPORT_DESCRIPTOR)(codeBase + directory->VirtualAddress);
-    PIMAGE_IMPORT_DESCRIPTOR importEnd = (PIMAGE_IMPORT_DESCRIPTOR)(
-        codeBase + directory->VirtualAddress + directory->Size);
+    PIMAGE_IMPORT_DESCRIPTOR importEnd =
+        (PIMAGE_IMPORT_DESCRIPTOR)(codeBase + directory->VirtualAddress +
+                                   directory->Size);
 
     for (; importDesc < importEnd && importDesc->Name; importDesc++) {
       POINTER_TYPE* thunkRef;

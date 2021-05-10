@@ -16,8 +16,8 @@ using std::wstring;
 
 extern "C" __declspec(dllexport) int ReturnResult() { return 2; }
 
-static mozilla::CrossProcessDllInterceptor::FuncHookType<decltype(
-    &ReturnResult)>
+static mozilla::CrossProcessDllInterceptor::FuncHookType<
+    decltype(&ReturnResult)>
     gOrigReturnResult;
 
 static int ReturnResultHook() {

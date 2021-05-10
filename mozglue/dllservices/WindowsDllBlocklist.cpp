@@ -70,8 +70,8 @@ typedef NTSTATUS(NTAPI* LdrLoadDll_func)(PWCHAR filePath, PULONG flags,
 static WindowsDllInterceptor::FuncHookType<LdrLoadDll_func> stub_LdrLoadDll;
 
 #ifdef _M_AMD64
-typedef decltype(
-    RtlInstallFunctionTableCallback)* RtlInstallFunctionTableCallback_func;
+typedef decltype(RtlInstallFunctionTableCallback)*
+    RtlInstallFunctionTableCallback_func;
 static WindowsDllInterceptor::FuncHookType<RtlInstallFunctionTableCallback_func>
     stub_RtlInstallFunctionTableCallback;
 

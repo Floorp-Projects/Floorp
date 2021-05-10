@@ -85,10 +85,10 @@ template <typename T, CheckingSupport = T::SupportsChecking::value>
 class CheckedUnsafePtrBase;
 
 template <typename T, typename U, typename S = std::nullptr_t>
-using EnableIfCompatible =
-    std::enable_if_t<std::is_base_of<T, std::remove_reference_t<decltype(
-                                            *std::declval<U>())>>::value,
-                     S>;
+using EnableIfCompatible = std::enable_if_t<
+    std::is_base_of<
+        T, std::remove_reference_t<decltype(*std::declval<U>())>>::value,
+    S>;
 
 template <typename T>
 class CheckedUnsafePtrBase<T, CheckingSupport::Enabled>

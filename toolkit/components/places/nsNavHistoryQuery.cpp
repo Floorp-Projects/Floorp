@@ -56,8 +56,8 @@ static void SetQueryKeyInt64(const nsCString& aValue,
                              Int64QuerySetter setter);
 
 // options setters
-typedef decltype(
-    &nsINavHistoryQueryOptions::SetExpandQueries) BoolOptionsSetter;
+typedef decltype(&nsINavHistoryQueryOptions::SetExpandQueries)
+    BoolOptionsSetter;
 typedef decltype(&nsINavHistoryQueryOptions::SetMaxResults) Uint32OptionsSetter;
 typedef decltype(&nsINavHistoryQueryOptions::SetResultType) Uint16OptionsSetter;
 static void SetOptionsKeyBool(const nsCString& aValue,

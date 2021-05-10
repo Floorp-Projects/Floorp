@@ -993,8 +993,9 @@ already_AddRefed<Promise> ServiceWorkerGlobalScope::SkipWaiting(
   }
 
   if (ServiceWorkerParentInterceptEnabled()) {
-    using MozPromiseType = decltype(
-        mWorkerPrivate->SetServiceWorkerSkipWaitingFlag())::element_type;
+    using MozPromiseType =
+        decltype(mWorkerPrivate
+                     ->SetServiceWorkerSkipWaitingFlag())::element_type;
     auto holder = MakeRefPtr<DOMMozPromiseRequestHolder<MozPromiseType>>(this);
 
     mWorkerPrivate->SetServiceWorkerSkipWaitingFlag()

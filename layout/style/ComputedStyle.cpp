@@ -323,8 +323,9 @@ static nscolor ExtractColor(const ComputedStyle& aStyle,
 #define STYLE_FIELD(struct_, field_) aField == &struct_::field_ ||
 #define STYLE_STRUCT(name_, fields_)                                           \
   template <>                                                                  \
-  nscolor ComputedStyle::GetVisitedDependentColor(decltype(                    \
-      nsStyle##name_::MOZ_ARG_1 fields_) nsStyle##name_::*aField) const {      \
+  nscolor ComputedStyle::GetVisitedDependentColor(                             \
+      decltype(nsStyle##name_::MOZ_ARG_1 fields_) nsStyle##name_::*aField)     \
+      const {                                                                  \
     MOZ_ASSERT(MOZ_FOR_EACH(STYLE_FIELD, (nsStyle##name_, ), fields_) false,   \
                "Getting visited-dependent color for a field in nsStyle" #name_ \
                " which is not listed in nsCSSVisitedDependentPropList.h");     \
