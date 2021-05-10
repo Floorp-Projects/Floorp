@@ -1160,10 +1160,10 @@ acorn@^6.0.1:
   resolved "https://registry.yarnpkg.com/acorn/-/acorn-6.4.2.tgz#35866fd710528e92de10cf06016498e47e39e1e6"
   integrity sha512-XtGIhXwF8YM8bJhGxG5kXgjkEuNGLTkoYqVE+KMR+aspr4KGYmKYg7yUe3KghyQ9yheNwLnjmzh/7+gfDBmHCQ==
 
-acorn@~8.0.4:
-  version "8.0.4"
-  resolved "https://registry.yarnpkg.com/acorn/-/acorn-8.0.4.tgz#7a3ae4191466a6984eee0fe3407a4f3aa9db8354"
-  integrity sha512-XNP0PqF1XD19ZlLKvB7cMmnZswW4C/03pRHgirB30uSJTaS3A3V1/P4sS3HPvFmjoriPCJQs+JDSbm4bL1TxGQ==
+acorn@~8.2.4:
+  version "8.2.4"
+  resolved "https://registry.yarnpkg.com/acorn/-/acorn-8.2.4.tgz#caba24b08185c3b56e3168e97d15ed17f4d31fd0"
+  integrity sha512-Ibt84YwBDDA890eDiDCEqcbwvHlBvzzDkU2cGBBDDI1QWT12jTiXIOn2CIw5KK4i6N5Z2HUxwYjzriDyqaqqZg==
 
 airbnb-prop-types@^2.15.0:
   version "2.16.0"
@@ -6292,12 +6292,12 @@ preserve@^0.2.0:
   resolved "https://registry.yarnpkg.com/preserve/-/preserve-0.2.0.tgz#815ed1f6ebc65926f865b310c0713bcb3315ce4b"
   integrity sha1-gV7R9uvGWSb4ZbMQwHE7yzMVzks=
 
-pretty-fast@^0.2.4:
-  version "0.2.4"
-  resolved "https://registry.yarnpkg.com/pretty-fast/-/pretty-fast-0.2.4.tgz#b83691ab02ad91500b0bd25118927abe975b63cd"
-  integrity sha512-tF4PFYo+JW1MtvtZx7lgGaSDO8EXwIh9ir78Uy4oSpZtk6nuKDUCdB1mqynQ44ZqFVORbFUgDCuip/C44KXn5Q==
+pretty-fast@^0.2.5:
+  version "0.2.5"
+  resolved "https://registry.yarnpkg.com/pretty-fast/-/pretty-fast-0.2.5.tgz#b4dbc37a945d0de52eb268f81f6ca696623aa96b"
+  integrity sha512-olVM1CpLIrLhD0q8ZW42dMdTFuEfHynJhmuWirTS5EmWwN2w/v1Dl3WV4PeBLU7SH/a70Hy/HdeztVaLTqwaJw==
   dependencies:
-    acorn "~8.0.4"
+    acorn "~8.2.4"
     optimist "~0.6.1"
     source-map "^0.5.7"
 

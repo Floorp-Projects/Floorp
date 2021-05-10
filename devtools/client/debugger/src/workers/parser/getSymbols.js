@@ -106,7 +106,9 @@ function extractSymbol(path, symbols, state) {
   if (t.isMemberExpression(path) || t.isOptionalMemberExpression(path)) {
     const { start, end } = path.node.property.loc;
     symbols.memberExpressions.push({
-      name: path.node.property.name,
+      name: t.isPrivateName(path.node.property)
+        ? `#${path.node.property.id.name}`
+        : path.node.property.name,
       location: { start, end },
       expression: getSnippet(path),
       computed: path.node.computed,
@@ -282,7 +284,9 @@ function extendSnippet(name, expression, path, prevPath) {
 
 function getMemberSnippet(node, expression = "", optional = false) {
   if (t.isMemberExpression(node) || t.isOptionalMemberExpression(node)) {
-    const name = node.property.name;
+    const name = t.isPrivateName(node.property)
+      ? `#${node.property.id.name}`
+      : node.property.name;
     const snippet = getMemberSnippet(
       node.object,
       extendSnippet(name, expression, { node }),

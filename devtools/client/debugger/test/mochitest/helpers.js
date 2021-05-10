@@ -1115,7 +1115,7 @@ const keyMappings = {
   fileSearchPrev: { code: "g", modifiers: cmdShift },
   goToLine: { code: "g", modifiers: { ctrlKey: true } },
   Enter: { code: "VK_RETURN" },
-  ShiftEnter: { code: "VK_RETURN", modifiers: shiftOrAlt },
+  ShiftEnter: { code: "VK_RETURN", modifiers: { shiftKey: true } },
   AltEnter: {
     code: "VK_RETURN",
     modifiers: { altKey: true },

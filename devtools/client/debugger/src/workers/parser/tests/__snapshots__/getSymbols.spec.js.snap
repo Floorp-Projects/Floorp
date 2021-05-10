@@ -1297,6 +1297,83 @@ loading: false
 framework: undefined"
 `;
 
+exports[`Parser.getSymbols private fields 1`] = `
+"functions:
+[(2, 2), (6, 3)]  constructor(secret, ) MyClass
+[(13, 2), (15, 3)]  #getSalt() MyClass
+[(17, 2), (23, 3)]  debug() MyClass
+
+callExpressions:
+[(21, 22), (21, 30)]
+
+memberExpressions:
+[(4, 9), (4, 16)] this.#secret #secret
+[(5, 9), (5, 20)] self.#restParams #restParams
+[(14, 16), (14, 21)] this.#salt #salt
+[(19, 30), (19, 42)] this.creationDate creationDate
+[(20, 24), (20, 31)] this.#secret #secret
+[(21, 22), (21, 30)] self.#getSalt #getSalt
+
+objectProperties:
+
+
+comments:
+
+
+identifiers:
+[(1, 6), (1, 13)] MyClass MyClass
+[(2, 14), (2, 20)] secret secret
+[(2, 25), (2, 29)] rest rest
+[(3, 10), (3, 14)] self self
+[(3, 17), (3, 21)] this this
+[(4, 4), (4, 8)] this this
+[(4, 10), (4, 16)] secret secret
+[(4, 19), (4, 25)] secret secret
+[(5, 4), (5, 8)] self self
+[(5, 10), (5, 20)] restParams restParams
+[(5, 23), (5, 27)] rest rest
+[(8, 3), (8, 9)] secret secret
+[(9, 3), (9, 13)] restParams restParams
+[(10, 3), (10, 7)] salt salt
+[(10, 10), (10, 17)] \\"bloup\\" bloup
+[(11, 2), (11, 14)] new Date() creationDate
+[(11, 21), (11, 25)] Date Date
+[(13, 3), (13, 10)] getSalt getSalt
+[(14, 11), (14, 15)] this this
+[(14, 17), (14, 21)] salt salt
+[(18, 10), (18, 14)] self self
+[(18, 17), (18, 21)] this this
+[(19, 10), (19, 22)] creationDate creationDate
+[(19, 25), (19, 29)] this this
+[(19, 30), (19, 42)] creationDate creationDate
+[(20, 10), (20, 16)] secret secret
+[(20, 19), (20, 23)] this this
+[(20, 25), (20, 31)] secret secret
+[(21, 10), (21, 14)] salt salt
+[(21, 17), (21, 21)] self self
+[(21, 23), (21, 30)] getSalt getSalt
+[(22, 14), (22, 26)] creationDate creationDate
+[(22, 30), (22, 34)] salt salt
+[(22, 38), (22, 44)] secret secret
+
+classes:
+[(1, 0), (24, 1)]  MyClass
+
+imports:
+
+
+literals:
+
+
+hasJsx: false
+
+hasTypes: false
+
+loading: false
+
+framework: undefined"
+`;
+
 exports[`Parser.getSymbols proto 1`] = `
 "functions:
 [(1, 12), (1, 25)]  foo()
