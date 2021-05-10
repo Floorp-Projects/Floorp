@@ -169,9 +169,9 @@ vec4 sample_yuv(
     vec3 yuv = yuv_value * coefficient - yuv_offset_vector;
     vec3 rgb = yuv_color_matrix * yuv;
     #if defined(WR_FEATURE_ALPHA_PASS) && defined(SWGL_CLIP_MASK)
-        // Avoid negative RGB values that can mess with blending. These occur due to invalid
+        // Avoid out-of-range RGB values that can mess with blending. These occur due to invalid
         // YUV values outside the mappable space that never the less can be generated.
-        rgb = max(rgb, 0.0);
+        rgb = clamp(rgb, 0.0, 1.0);
     #endif
     vec4 color = vec4(rgb, 1.0);
 
