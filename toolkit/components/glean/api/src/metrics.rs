@@ -23,7 +23,6 @@ include!(concat!(
 #[allow(dead_code)]
 pub(crate) mod __glean_metric_maps {
     use std::collections::HashMap;
-    use std::sync::RwLock;
 
     use crate::private::*;
     use once_cell::sync::Lazy;
@@ -31,25 +30,40 @@ pub(crate) mod __glean_metric_maps {
     pub static TIMESPAN_MAP: Lazy<HashMap<MetricId, &Lazy<TimespanMetric>>> =
         Lazy::new(HashMap::new);
 
-    pub static COUNTER_MAP: Lazy<HashMap<MetricId, &Lazy<CounterMetric>>> = Lazy::new(HashMap::new);
-
     pub static BOOLEAN_MAP: Lazy<HashMap<MetricId, &Lazy<BooleanMetric>>> = Lazy::new(HashMap::new);
 
-    pub static DATETIME_MAP: Lazy<HashMap<MetricId, &Lazy<DatetimeMetric>>> =
-        Lazy::new(HashMap::new);
-
-    pub static STRING_MAP: Lazy<HashMap<MetricId, &Lazy<StringMetric>>> = Lazy::new(HashMap::new);
+    pub static COUNTER_MAP: Lazy<HashMap<MetricId, &Lazy<CounterMetric>>> = Lazy::new(HashMap::new);
 
     pub static MEMORY_DISTRIBUTION_MAP: Lazy<HashMap<MetricId, &Lazy<MemoryDistributionMetric>>> =
         Lazy::new(HashMap::new);
 
+    pub static TIMING_DISTRIBUTION_MAP: Lazy<HashMap<MetricId, &Lazy<TimingDistributionMetric>>> =
+        Lazy::new(HashMap::new);
+
+    pub static STRING_MAP: Lazy<HashMap<MetricId, &Lazy<StringMetric>>> = Lazy::new(HashMap::new);
+
     pub static STRING_LIST_MAP: Lazy<HashMap<MetricId, &Lazy<StringListMetric>>> =
+        Lazy::new(HashMap::new);
+
+    pub static DATETIME_MAP: Lazy<HashMap<MetricId, &Lazy<DatetimeMetric>>> =
         Lazy::new(HashMap::new);
 
     pub static UUID_MAP: Lazy<HashMap<MetricId, &Lazy<UuidMetric>>> = Lazy::new(HashMap::new);
 
-    pub static LABELED_COUNTER_MAP: Lazy<RwLock<HashMap<MetricId, LabeledCounterMetric>>> =
-        Lazy::new(|| RwLock::new(HashMap::new()));
+    pub static LABELED_COUNTER_MAP: Lazy<
+        HashMap<MetricId, &Lazy<LabeledMetric<LabeledCounterMetric>>>,
+    > = Lazy::new(HashMap::new);
+
+    pub static LABELED_BOOLEAN_MAP: Lazy<
+        HashMap<MetricId, &Lazy<LabeledMetric<LabeledBooleanMetric>>>,
+    > = Lazy::new(HashMap::new);
+
+    pub static LABELED_STRING_MAP: Lazy<
+        HashMap<MetricId, &Lazy<LabeledMetric<LabeledStringMetric>>>,
+    > = Lazy::new(HashMap::new);
+
+    pub static QUANTITY_MAP: Lazy<HashMap<MetricId, &Lazy<QuantityMetric>>> =
+        Lazy::new(HashMap::new);
 
     pub(crate) fn record_event_by_id(
         _metric_id: u32,

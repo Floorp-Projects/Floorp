@@ -86,8 +86,7 @@ impl<K: 'static + ExtraKeys + Send + Sync> Event for EventMetric<K> {
                     if let Some(v) = payload.events.get_mut(&c.0) {
                         v.push((now, extra));
                     } else {
-                        let mut v = vec![];
-                        v.push((now, extra));
+                        let v = vec![(now, extra)];
                         payload.events.insert(c.0, v);
                     }
                 });
