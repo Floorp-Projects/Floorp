@@ -5,7 +5,7 @@ fuzzy-if(skiaContent,0-1,0-408) == img-zoomIn-1.html   squaredCircle-150x150-ref
 fuzzy-if(skiaContent,0-1,0-74) == img-zoomOut-1.html  squaredCircle-50x50-ref.html
 
 # Ensure that scaled SVG images aren't fuzzy when tiled.
-== img-fuzzy-zoomOut-1.html           img-fuzzy-zoomOut-1-ref.html
-== img-fuzzy-zoomIn-1.html            img-fuzzy-zoomIn-1-ref.html
+fails-if(useDrawSnapshot) == img-fuzzy-zoomOut-1.html           img-fuzzy-zoomOut-1-ref.html
+fails-if(useDrawSnapshot) == img-fuzzy-zoomIn-1.html            img-fuzzy-zoomIn-1-ref.html
 == img-fuzzy-transform-zoomOut-1.html img-fuzzy-zoomOut-1-ref.html
 == img-fuzzy-transform-zoomIn-1.html  img-fuzzy-zoomIn-1-ref.html

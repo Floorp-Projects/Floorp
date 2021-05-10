@@ -68,7 +68,7 @@ skip-if(Android) needs-focus != spellcheck-textarea-attr-dynamic-override-inheri
 skip-if(Android) needs-focus != spellcheck-textarea-property-dynamic-override.html spellcheck-textarea-ref.html
 skip-if(Android) needs-focus != spellcheck-textarea-property-dynamic-override-inherit.html spellcheck-textarea-ref.html
 needs-focus == caret_on_focus.html caret_on_focus-ref.html
-needs-focus != caret_on_textarea_lastline.html caret_on_textarea_lastline-ref.html
+needs-focus fails-if(useDrawSnapshot) != caret_on_textarea_lastline.html caret_on_textarea_lastline-ref.html
 fuzzy-if(Android,0-1,0-1) needs-focus == input-text-onfocus-reframe.html input-text-onfocus-reframe-ref.html
 fuzzy-if(skiaContent,0-3,0-1) fuzzy-if(!nativeThemePref,0-5,0-1) needs-focus == input-text-notheme-onfocus-reframe.html input-text-notheme-onfocus-reframe-ref.html
 needs-focus == caret_after_reframe.html caret_after_reframe-ref.html

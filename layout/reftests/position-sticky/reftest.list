@@ -40,7 +40,7 @@ fuzzy-if(Android,0-4,0-810) == containing-block-1.html containing-block-1-ref.ht
 == inline-1.html inline-1-ref.html
 == inline-2.html inline-2-ref.html
 fuzzy-if(OSX,0-99,0-210) == inline-3.html inline-3-ref.html
-skip-if(!asyncPan) fuzzy-if(webrender&&swgl,1-1,2-3) == inline-4.html inline-4-ref.html
+skip-if(!asyncPan) fuzzy-if(webrender&&swgl,1-1,2-3) fails-if(useDrawSnapshot) == inline-4.html inline-4-ref.html
 == column-contain-1a.html column-contain-1-ref.html
 == column-contain-1b.html column-contain-1-ref.html
 == column-contain-2.html column-contain-2-ref.html
@@ -50,6 +50,6 @@ fuzzy-if(Android,0-8,0-630) fuzzy-if(OSX,0-1,0-11) fuzzy-if(skiaContent,0-1,0-22
 == block-in-inline-continuations.html block-in-inline-continuations-ref.html
 == iframe-1.html iframe-1-ref.html
 == transformed-1.html transformed-1-ref.html
-fuzzy-if(Android,0-4,0-4) fuzzy-if(webrender&&gtkWidget,10-17,12-32) fuzzy-if(webrender&&cocoaWidget,7-8,18-42) skip-if(!asyncPan) == transformed-2.html transformed-2-ref.html # Bug 1604644
-skip-if(!asyncPan) fuzzy-if(Android,0-10,0-4) fuzzy-if(webrender&&gtkWidget,19-30,12-32) fuzzy-if(webrender&&cocoaWidget,13-16,20-44) == nested-sticky-1.html nested-sticky-1-ref.html # Bug 1604644
-skip-if(!asyncPan) fuzzy-if(Android,0-10,0-4) fuzzy-if(webrender&&gtkWidget,19-30,12-32) fuzzy-if(webrender&&cocoaWidget,13-16,20-44) fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu),0-4,0-104) == nested-sticky-2.html nested-sticky-2-ref.html # Bug 1604644
+fuzzy-if(Android,0-4,0-4) fuzzy-if(webrender&&gtkWidget,10-17,12-32) fuzzy-if(webrender&&cocoaWidget,7-8,18-42) skip-if(!asyncPan) fails-if(useDrawSnapshot) == transformed-2.html transformed-2-ref.html # Bug 1604644
+skip-if(!asyncPan) fuzzy-if(Android,0-10,0-4) fuzzy-if(webrender&&gtkWidget,19-30,12-32) fuzzy-if(webrender&&cocoaWidget,13-16,20-44) fails-if(useDrawSnapshot) == nested-sticky-1.html nested-sticky-1-ref.html # Bug 1604644
+skip-if(!asyncPan) fuzzy-if(Android,0-10,0-4) fuzzy-if(webrender&&gtkWidget,19-30,12-32) fuzzy-if(webrender&&cocoaWidget,13-16,20-44) fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu),0-4,0-104) fails-if(useDrawSnapshot) == nested-sticky-2.html nested-sticky-2-ref.html # Bug 1604644

@@ -46,7 +46,7 @@ pref(layout.animated-image-layers.enabled,true) skip-if(gtkWidget) == test-anima
 
 fails-if(webrender) != scroll-inactive-layers.html about:blank
 fails-if(webrender) != scroll-inactive-layers-2.html about:blank
-!= inactive-layertree-visible-region-1.html about:blank
+random-if(useDrawSnapshot) != inactive-layertree-visible-region-1.html about:blank
 != inactive-layertree-visible-region-2.html about:blank
 != transform-floating-point-invalidation.html about:blank
 != transform-floating-point-invalidation.html?reverse about:blank

@@ -12,5 +12,5 @@ fuzzy(0-80,0-1500) fails-if(webrender) == border-dashed-no-radius.html masked.ht
 fuzzy(0-80,0-1500) fails-if(webrender) == border-dashed-radius.html masked.html
 fuzzy(0-80,0-1500) fails-if(webrender) == border-mixed.html masked.html
 fuzzy(0-80,0-1500) fails-if(webrender) == border-dashed-non-integer.html masked.html
-fuzzy(0-80,0-1500) fails-if(webrender) == border-dashed-radius-zoom.html masked-zoom.html
+fuzzy(0-80,0-1500) fails-if(webrender) fails-if(useDrawSnapshot) == border-dashed-radius-zoom.html masked-zoom.html
 fuzzy(0-80,0-1500) fails-if(webrender) == border-dotted-radius-zero.html masked-small.html

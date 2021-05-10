@@ -14,5 +14,5 @@ fuzzy-if(OSX,0-76,0-2) == numbering-4.html numbering-4-ref.html
 == bullet-intrinsic-isize-2.html bullet-intrinsic-isize-2-ref.html
 == bullet-justify-1.html bullet-justify-1-ref.html
 == image-rendering-css.html image-rendering-ref.html
-== image-rendering-script.html image-rendering-ref.html
+fails-if(useDrawSnapshot) == image-rendering-script.html image-rendering-ref.html
 != image-rendering-css.html image-rendering-css-auto.html
