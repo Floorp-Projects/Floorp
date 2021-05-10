@@ -162,7 +162,7 @@ void WarpLambda::dumpData(GenericPrinter& out) const {
 }
 
 void WarpRest::dumpData(GenericPrinter& out) const {
-  out.printf("    template: 0x%p\n", templateObject());
+  out.printf("    shape: 0x%p\n", shape());
 }
 
 void WarpBindGName::dumpData(GenericPrinter& out) const {
@@ -287,7 +287,7 @@ void WarpLambda::traceData(JSTracer* trc) {
 }
 
 void WarpRest::traceData(JSTracer* trc) {
-  TraceWarpGCPtr(trc, templateObject_, "warp-rest-template");
+  TraceWarpGCPtr(trc, shape_, "warp-rest-shape");
 }
 
 void WarpBindGName::traceData(JSTracer* trc) {

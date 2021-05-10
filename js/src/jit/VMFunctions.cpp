@@ -1385,12 +1385,10 @@ JSObject* CopyLexicalEnvironmentObject(JSContext* cx, HandleObject env,
 }
 
 JSObject* InitRestParameter(JSContext* cx, uint32_t length, Value* rest,
-                            HandleObject templateObj, HandleObject objRes) {
+                            HandleObject objRes) {
   if (objRes) {
-    Rooted<ArrayObject*> arrRes(cx, &objRes->as<ArrayObject>());
-
-    MOZ_ASSERT(!arrRes->getDenseInitializedLength());
-    MOZ_ASSERT(arrRes->shape() == templateObj->shape());
+    Handle<ArrayObject*> arrRes = objRes.as<ArrayObject>();
+    MOZ_ASSERT(arrRes->getDenseInitializedLength() == 0);
 
     // Fast path: we managed to allocate the array inline; initialize the
     // slots.
