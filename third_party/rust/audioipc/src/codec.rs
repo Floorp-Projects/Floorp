@@ -77,10 +77,10 @@ impl<In, Out> Default for LengthDelimitedCodec<In, Out> {
 
 impl<In, Out> LengthDelimitedCodec<In, Out> {
     // Lengths are encoded as little endian u32
-    fn decode_length(&mut self, buf: &mut BytesMut) -> io::Result<Option<usize>> {
+    fn decode_length(&mut self, buf: &mut BytesMut) -> Option<usize> {
         if buf.len() < MESSAGE_LENGTH_SIZE {
             // Not enough data
-            return Ok(None);
+            return None;
         }
 
         let n = LittleEndian::read_u32(buf.as_ref());
@@ -88,7 +88,7 @@ impl<In, Out> LengthDelimitedCodec<In, Out> {
         // Consume the length field
         let _ = buf.split_to(MESSAGE_LENGTH_SIZE);
 
-        Ok(Some(n as usize))
+        Some(n as usize)
     }
 
     fn decode_data(&mut self, buf: &mut BytesMut, n: usize) -> io::Result<Option<Out>>
@@ -125,7 +125,7 @@ where
     fn decode(&mut self, buf: &mut BytesMut) -> io::Result<Option<Self::Out>> {
         let n = match self.state {
             State::Length => {
-                match self.decode_length(buf)? {
+                match self.decode_length(buf) {
                     Some(n) => {
                         self.state = State::Data(n);
 
@@ -170,6 +170,7 @@ where
 
         buf.put_u32_le(encoded_len as u32);
 
+        #[allow(deprecated)]
         if let Err(e) = bincode::config()
             .limit(encoded_len)
             .serialize_into::<_, Self::In>(&mut buf.writer(), &item)

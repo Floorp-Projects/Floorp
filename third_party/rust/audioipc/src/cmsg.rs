@@ -111,6 +111,8 @@ impl ControlMsgBuilder {
             // fields we don't care about.
             let zeroed = unsafe { mem::zeroed() };
             #[allow(clippy::needless_update)]
+            // `cmsg_len` is `usize` on some platforms, `u32` on others.
+            #[allow(clippy::useless_conversion)]
             let cmsghdr = cmsghdr {
                 cmsg_len: len(msg.len()).try_into().unwrap(),
                 cmsg_level: level,

@@ -3,6 +3,8 @@
 // This program is made available under an ISC-style license.  See the
 // accompanying file LICENSE for details.
 
+#![allow(clippy::missing_safety_doc)]
+
 use crate::errors::*;
 use crate::PlatformHandle;
 use std::{convert::TryInto, ffi::c_void, slice};
@@ -43,19 +45,43 @@ impl SharedMemView {
 #[cfg(unix)]
 mod unix {
     use super::*;
-    use memmap::{MmapMut, MmapOptions};
-    use std::env::temp_dir;
-    use std::fs::{remove_file, File, OpenOptions};
+    use memmap2::{MmapMut, MmapOptions};
+    use std::fs::File;
     use std::os::unix::io::FromRawFd;
 
-    fn open_shm_file(id: &str) -> Result<File> {
+    #[cfg(target_os = "android")]
+    fn open_shm_file(_id: &str, size: usize) -> Result<File> {
+        unsafe {
+            let fd = ashmem::ASharedMemory_create(std::ptr::null(), size);
+            if fd >= 0 {
+                // Drop PROT_EXEC
+                let r = ashmem::ASharedMemory_setProt(fd, libc::PROT_READ | libc::PROT_WRITE);
+                assert_eq!(r, 0);
+                return Ok(File::from_raw_fd(fd.try_into().unwrap()));
+            }
+            Err(std::io::Error::last_os_error().into())
+        }
+    }
+
+    #[cfg(not(target_os = "android"))]
+    fn open_shm_file(id: &str, size: usize) -> Result<File> {
+        let file = open_shm_file_impl(id)?;
+        allocate_file(&file, size)?;
+        Ok(file)
+    }
+
+    #[cfg(not(target_os = "android"))]
+    fn open_shm_file_impl(id: &str) -> Result<File> {
+        use std::env::temp_dir;
+        use std::fs::{remove_file, OpenOptions};
+
+        let id_cstring = std::ffi::CString::new(id).unwrap();
+
         #[cfg(target_os = "linux")]
         {
-            let id_cstring = std::ffi::CString::new(id).unwrap();
             unsafe {
                 let r = libc::syscall(libc::SYS_memfd_create, id_cstring.as_ptr(), 0);
                 if r >= 0 {
-                    use std::os::unix::io::FromRawFd as _;
                     return Ok(File::from_raw_fd(r.try_into().unwrap()));
                 }
             }
@@ -74,6 +100,18 @@ mod unix {
             }
         }
 
+        unsafe {
+            let fd = libc::shm_open(
+                id_cstring.as_ptr(),
+                libc::O_RDWR | libc::O_CREAT | libc::O_EXCL,
+                0o600,
+            );
+            if fd >= 0 {
+                libc::shm_unlink(id_cstring.as_ptr());
+                return Ok(File::from_raw_fd(fd));
+            }
+        }
+
         let mut path = temp_dir();
         path.push(id);
 
@@ -87,6 +125,7 @@ mod unix {
         Ok(file)
     }
 
+    #[cfg(not(target_os = "android"))]
     fn handle_enospc(s: &str) -> Result<()> {
         let err = std::io::Error::last_os_error();
         let errno = err.raw_os_error().unwrap_or(0);
@@ -98,6 +137,7 @@ mod unix {
         Ok(())
     }
 
+    #[cfg(not(target_os = "android"))]
     fn allocate_file(file: &File, size: usize) -> Result<()> {
         use std::os::unix::io::AsRawFd;
 
@@ -156,8 +196,7 @@ mod unix {
 
     impl SharedMem {
         pub fn new(id: &str, size: usize) -> Result<(SharedMem, PlatformHandle)> {
-            let file = open_shm_file(id)?;
-            allocate_file(&file, size)?;
+            let file = open_shm_file(id, size)?;
             let mut mmap = unsafe { MmapOptions::new().map_mut(&file)? };
             assert_eq!(mmap.len(), size);
             let view = SharedMemView {

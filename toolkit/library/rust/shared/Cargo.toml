@@ -23,8 +23,8 @@ cubeb-coreaudio = { git = "https://github.com/mozilla/cubeb-coreaudio-rs", rev =
 cubeb-pulse = { git = "https://github.com/mozilla/cubeb-pulse-rs", rev="c87b50aebfa088c1ad30c74819d4e9829f88b2e3", optional = true, features=["pulse-dlopen"] }
 cubeb-sys = { version = "0.9", optional = true, features=["gecko-in-tree"] }
 encoding_glue = { path = "../../../../intl/encoding_glue" }
-audioipc-client = { git = "https://github.com/mozilla/audioipc-2", rev = "8fb5ff19fba7b09e8e66598122421e68a5c573ac", optional = true }
-audioipc-server = { git = "https://github.com/mozilla/audioipc-2", rev = "8fb5ff19fba7b09e8e66598122421e68a5c573ac", optional = true }
+audioipc-client = { git = "https://github.com/mozilla/audioipc-2", rev = "7537bfadad2e981577eb75e4f13662fc517e1a09", optional = true }
+audioipc-server = { git = "https://github.com/mozilla/audioipc-2", rev = "7537bfadad2e981577eb75e4f13662fc517e1a09", optional = true }
 authenticator = "0.3.1"
 gkrust_utils = { path = "../../../../xpcom/rust/gkrust_utils" }
 gecko_logger = { path = "../../../../xpcom/rust/gecko_logger" }

@@ -60,10 +60,11 @@ where
 
 fn assert_not_in_callback() {
     IN_CALLBACK.with(|b| {
-        assert_eq!(*b.borrow(), false);
+        assert!(!*b.borrow());
     });
 }
 
+#[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 /// Entry point from C code.
 pub unsafe extern "C" fn audioipc_client_init(

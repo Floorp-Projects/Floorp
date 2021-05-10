@@ -25,6 +25,7 @@ impl MessageStream {
         Ok((MessageStream::new(pair.0), MessageStream::new(pair.1)))
     }
 
+    #[allow(clippy::missing_safety_doc)]
     pub unsafe fn from_raw_fd(raw: super::PlatformHandleType) -> MessageStream {
         MessageStream::new(net::UnixStream::from_raw_fd(raw))
     }
