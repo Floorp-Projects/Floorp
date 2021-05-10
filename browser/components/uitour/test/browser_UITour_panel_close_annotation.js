@@ -9,7 +9,6 @@
 
 var gTestTab;
 var gContentAPI;
-var gContentWindow;
 var highlight = UITour.getHighlightContainerAndMaybeCreate(document);
 var tooltip = UITour.getTooltipAndMaybeCreate(document);
 

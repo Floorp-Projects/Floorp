@@ -9,8 +9,9 @@
 
 var gTestTab;
 var gContentAPI;
-var gContentWindow;
 var gContentDoc;
+
+var detachedWindow;
 
 function test() {
   registerCleanupFunction(function() {
@@ -30,16 +31,6 @@ var tests = [
       "Hello, I'm a unique expando to identify this document.";
 
     let highlight = document.getElementById("UITourHighlight");
-    let windowDestroyedDeferred = PromiseUtils.defer();
-    let onDOMWindowDestroyed = aWindow => {
-      if (gContentWindow && aWindow == gContentWindow) {
-        Services.obs.removeObserver(
-          onDOMWindowDestroyed,
-          "dom-window-destroyed"
-        );
-        windowDestroyedDeferred.resolve();
-      }
-    };
 
     let browserStartupDeferred = PromiseUtils.defer();
     Services.obs.addObserver(function onBrowserDelayedStartup(aWindow) {
@@ -70,16 +61,16 @@ var tests = [
 
     await elementVisiblePromise(highlight, "old window highlight");
 
-    gContentWindow = gBrowser.replaceTabWithWindow(gBrowser.selectedTab);
+    detachedWindow = gBrowser.replaceTabWithWindow(gBrowser.selectedTab);
     await browserStartupDeferred.promise;
 
     // This highlight should be shown thanks to the pageshow listener.
     let newWindowHighlight = UITour.getHighlightAndMaybeCreate(
-      gContentWindow.document
+      detachedWindow.document
     );
     await elementVisiblePromise(newWindowHighlight, "new window highlight");
 
-    let selectedTab = gContentWindow.gBrowser.selectedTab;
+    let selectedTab = detachedWindow.gBrowser.selectedTab;
     await SpecialPowers.spawn(
       selectedTab.linkedBrowser,
       [myDocIdentifier],
@@ -93,12 +84,12 @@ var tests = [
     );
     ok(
       UITour.tourBrowsersByWindow &&
-        UITour.tourBrowsersByWindow.has(gContentWindow),
+        UITour.tourBrowsersByWindow.has(detachedWindow),
       "Window should be known"
     );
     ok(
       UITour.tourBrowsersByWindow
-        .get(gContentWindow)
+        .get(detachedWindow)
         .has(selectedTab.linkedBrowser),
       "Selected browser should be known"
     );
@@ -106,20 +97,17 @@ var tests = [
     // Need this because gContentAPI in e10s land will try to use gTestTab to
     // spawn a content task, which doesn't work if the tab is dead, for obvious
     // reasons.
-    gTestTab = gContentWindow.gBrowser.selectedTab;
+    gTestTab = detachedWindow.gBrowser.selectedTab;
 
-    let shownPromise = promisePanelShown(gContentWindow);
+    let shownPromise = promisePanelShown(detachedWindow);
     gContentAPI.showMenu("appMenu");
     await shownPromise;
 
-    isnot(gContentWindow.PanelUI.panel.state, "closed", "Panel should be open");
+    isnot(detachedWindow.PanelUI.panel.state, "closed", "Panel should be open");
     gContentAPI.hideHighlight();
     gContentAPI.hideMenu("appMenu");
     gTestTab = null;
 
-    Services.obs.addObserver(onDOMWindowDestroyed, "dom-window-destroyed");
-    gContentWindow.close();
-
-    await windowDestroyedDeferred.promise;
+    await BrowserTestUtils.closeWindow(detachedWindow);
   }),
 ];

@@ -2,7 +2,6 @@
 
 var gTestTab;
 var gContentAPI;
-var gContentWindow;
 
 const MOCK_FLOW_ID =
   "5445b28b8b7ba6cf71e345f8fff4bc59b2a514f78f3e2cc99b696449427fd445";
