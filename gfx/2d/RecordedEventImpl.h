@@ -1937,9 +1937,15 @@ inline void RecordedDrawTargetDestruction::OutputSimpleEventInfo(
 
 inline bool RecordedCreateSimilarDrawTarget::PlayEvent(
     Translator* aTranslator) const {
+  RefPtr<DrawTarget> drawTarget = aTranslator->GetReferenceDrawTarget();
+  if (!drawTarget) {
+    // We might end up with a null reference draw target due to a device
+    // failure, just return false so that we can recover.
+    return false;
+  }
+
   RefPtr<DrawTarget> newDT =
-      aTranslator->GetReferenceDrawTarget()->CreateSimilarDrawTarget(mSize,
-                                                                     mFormat);
+      drawTarget->CreateSimilarDrawTarget(mSize, mFormat);
 
   // If we couldn't create a DrawTarget this will probably cause us to crash
   // with nullptr later in the playback, so return false to abort.
@@ -2024,8 +2030,7 @@ inline bool RecordedCreateDrawTargetForFilter::PlayEvent(
   }
 
   RefPtr<DrawTarget> newDT =
-      aTranslator->GetReferenceDrawTarget()->CreateSimilarDrawTarget(
-          transformedRect.Size(), mFormat);
+      dt->CreateSimilarDrawTarget(transformedRect.Size(), mFormat);
   newDT =
       gfx::Factory::CreateOffsetDrawTarget(newDT, transformedRect.TopLeft());
 
@@ -2924,8 +2929,14 @@ inline RecordedPathCreation::RecordedPathCreation(PathRecording* aPath)
       mPath(aPath) {}
 
 inline bool RecordedPathCreation::PlayEvent(Translator* aTranslator) const {
-  RefPtr<PathBuilder> builder =
-      aTranslator->GetReferenceDrawTarget()->CreatePathBuilder(mFillRule);
+  RefPtr<DrawTarget> drawTarget = aTranslator->GetReferenceDrawTarget();
+  if (!drawTarget) {
+    // We might end up with a null reference draw target due to a device
+    // failure, just return false so that we can recover.
+    return false;
+  }
+
+  RefPtr<PathBuilder> builder = drawTarget->CreatePathBuilder(mFillRule);
   if (!mPathOps->StreamToSink(*builder)) {
     return false;
   }
@@ -3138,8 +3149,14 @@ inline RecordedFilterNodeCreation::~RecordedFilterNodeCreation() = default;
 
 inline bool RecordedFilterNodeCreation::PlayEvent(
     Translator* aTranslator) const {
-  RefPtr<FilterNode> node =
-      aTranslator->GetReferenceDrawTarget()->CreateFilter(mType);
+  RefPtr<DrawTarget> drawTarget = aTranslator->GetReferenceDrawTarget();
+  if (!drawTarget) {
+    // We might end up with a null reference draw target due to a device
+    // failure, just return false so that we can recover.
+    return false;
+  }
+
+  RefPtr<FilterNode> node = drawTarget->CreateFilter(mType);
   aTranslator->AddFilterNode(mRefPtr, node);
   return true;
 }
