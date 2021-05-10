@@ -701,15 +701,7 @@ class TargetCommand extends EventEmitter {
       dump(" target reload exception: " + e + " >>> " + e.message + " <<<\n");
       // If the target follows the window global lifecycle, the reload request
       // will fail, and we should swallow the error. Re-throw it otherwise.
-      // Reload request will fail because the target actor is going to be destroyed
-      // during the reload and so the ongoing reload request will most likely fail in some way.
-      // @backward-compat { version 88 } The trait check can be removed after
-      // version 88 hits the release channel.
-      const shouldSwallowReloadError =
-        targetFront.getTrait("supportsFollowWindowGlobalLifeCycleFlag") &&
-        targetFront.targetForm.followWindowGlobalLifeCycle;
-
-      if (!shouldSwallowReloadError) {
+      if (!targetFront.targetForm.followWindowGlobalLifeCycle) {
         throw e;
       }
     }
