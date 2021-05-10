@@ -46,6 +46,14 @@ static inline AllocKind GetGCObjectKind(const JSClass* clasp) {
   return GetGCObjectKind(nslots);
 }
 
+static bool CanUseFixedElementsForArray(size_t numElements) {
+  if (numElements > NativeObject::MAX_DENSE_ELEMENTS_COUNT) {
+    return false;
+  }
+  size_t numSlots = numElements + ObjectElements::VALUES_PER_HEADER;
+  return numSlots < SLOTS_TO_THING_KIND_LIMIT;
+}
+
 /* As for GetGCObjectKind, but for dense array allocation. */
 static inline AllocKind GetGCArrayKind(size_t numElements) {
   /*
@@ -55,9 +63,7 @@ static inline AllocKind GetGCArrayKind(size_t numElements) {
    * unused.
    */
   static_assert(ObjectElements::VALUES_PER_HEADER == 2);
-  if (numElements > NativeObject::MAX_DENSE_ELEMENTS_COUNT ||
-      numElements + ObjectElements::VALUES_PER_HEADER >=
-          SLOTS_TO_THING_KIND_LIMIT) {
+  if (!CanUseFixedElementsForArray(numElements)) {
     return AllocKind::OBJECT2;
   }
   return slotsToThingKind[numElements + ObjectElements::VALUES_PER_HEADER];
