@@ -24,8 +24,9 @@ interface nsIMediaManagerService : nsISupports
   const unsigned short STATE_CAPTURE_ENABLED = 1;
   const unsigned short STATE_CAPTURE_DISABLED = 2;
 
-  /* Get the capture state for the given window and, optionally, all descendant
-   * windows (iframes, etc).
+  /* Get the capture state for the given window. This will not check
+   * descendants, such as iframes. Callers who need to check descendants should
+   * iterate descendants manually and call this on each.
    */
   void mediaCaptureWindowState(in nsIDOMWindow aWindow,
                                out unsigned short aCamera,
