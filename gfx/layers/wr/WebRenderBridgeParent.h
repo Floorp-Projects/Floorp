@@ -204,12 +204,12 @@ class WebRenderBridgeParent final : public PWebRenderBridgeParent,
       nsTArray<CompositionPayload>&& aPayloads,
       const bool aUseForTelemetry = true);
   TransactionId LastPendingTransactionId();
-  Maybe<TransactionId> FlushTransactionIdsForEpoch(
+  void FlushTransactionIdsForEpoch(
       const wr::Epoch& aEpoch, const VsyncId& aCompositeStartId,
       const TimeStamp& aCompositeStartTime, const TimeStamp& aRenderStartTime,
       const TimeStamp& aEndTime, UiCompositorControllerParent* aUiController,
-      wr::RendererStats* aStats = nullptr,
-      nsTArray<FrameStats>* aOutputStats = nullptr);
+      wr::RendererStats* aStats, nsTArray<FrameStats>& aOutputStats,
+      nsTArray<TransactionId>& aOutputTransactions);
   void NotifySceneBuiltForEpoch(const wr::Epoch& aEpoch,
                                 const TimeStamp& aEndTime);
 
