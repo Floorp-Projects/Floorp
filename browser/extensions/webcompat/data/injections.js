@@ -438,13 +438,18 @@ const AVAILABLE_INJECTIONS = [
     domain: "Office Excel spreadsheets",
     bug: "1707795",
     contentScripts: {
-      matches: ["*://onedrive.live.com/*", "*://*.sharepoint.com/*"],
+      matches: [
+        "*://*.live.com/*",
+        "*://*.office.com/*",
+        "*://*.sharepoint.com/*",
+      ],
       css: [
         {
           file:
             "injections/css/bug1707795-office365-sheets-overscroll-disable.css",
         },
       ],
+      allFrames: true,
     },
   },
 ];
