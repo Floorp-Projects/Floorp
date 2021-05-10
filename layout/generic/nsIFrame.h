@@ -2075,6 +2075,11 @@ class nsIFrame : public nsQueryFrame {
   void RecomputePerspectiveChildrenOverflow(const nsIFrame* aStartFrame);
 
   /**
+   * Returns whether z-index applies to this frame.
+   */
+  bool ZIndexApplies() const;
+
+  /**
    * Returns the computed z-index for this frame, returning Nothing() for
    * z-index: auto, and for frames that don't support z-index.
    */
