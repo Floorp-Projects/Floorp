@@ -156,7 +156,6 @@ class ProviderQuickSuggest extends UrlbarProvider {
       UrlbarUtils.RESULT_SOURCE.SEARCH,
       ...UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, payload)
     );
-    result.suggestedIndex = UrlbarPrefs.get("quicksuggest.suggestedIndex");
     addCallback(this, result);
 
     this._addedResultInLastQuery = true;
