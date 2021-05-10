@@ -132,21 +132,16 @@ void XULPopupElement::ActivateItem(Element& aItemElement,
     }
   }
 
-  nsMenuPopupFrame* menuPopupFrame =
-      do_QueryFrame(GetPrimaryFrame(FlushType::Frames));
-
-  if (!menuPopupFrame || !menuPopupFrame->IsOpen()) {
-    return aRv.ThrowInvalidStateError("Menu is closed");
-  }
+  // Used only to flush frames.
+  GetPrimaryFrame(FlushType::Frames);
 
   nsMenuFrame* itemFrame = do_QueryFrame(aItemElement.GetPrimaryFrame());
   if (!itemFrame) {
-    return aRv.ThrowInvalidStateError("Couldn't get frame for menuitem");
+    return aRv.ThrowInvalidStateError("Menu item is not visible");
   }
 
-  if (itemFrame->GetMenuParent() != menuPopupFrame) {
-    return aRv.ThrowInvalidStateError(
-        "Menu item is not directly inside this menu");
+  if (!itemFrame->GetMenuParent() || !itemFrame->GetMenuParent()->IsOpen()) {
+    return aRv.ThrowInvalidStateError("Menu is closed");
   }
 
   itemFrame->ActivateItem(modifiers, aOptions.mButton);
