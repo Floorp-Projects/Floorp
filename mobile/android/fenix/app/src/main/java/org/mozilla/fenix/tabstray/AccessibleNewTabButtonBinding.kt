@@ -6,13 +6,11 @@ package org.mozilla.fenix.tabstray
 
 import android.view.View
 import android.widget.ImageButton
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.map
-import mozilla.components.lib.state.ext.flowScoped
-import mozilla.components.support.base.feature.LifecycleAwareFeature
+import mozilla.components.lib.state.helpers.AbstractBinding
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifAnyChanged
 import org.mozilla.fenix.R
 import org.mozilla.fenix.tabstray.browser.BrowserTrayInteractor
@@ -24,38 +22,33 @@ import org.mozilla.fenix.utils.Settings
  * This binding is coupled with [FloatingActionButtonBinding].
  * When [FloatingActionButtonBinding] is visible this should not be visible
  */
+@OptIn(ExperimentalCoroutinesApi::class)
 class AccessibleNewTabButtonBinding(
     private val store: TabsTrayStore,
     private val settings: Settings,
     private val newTabButton: ImageButton,
     private val browserTrayInteractor: BrowserTrayInteractor
-) : LifecycleAwareFeature {
+) : AbstractBinding<TabsTrayState>(store) {
 
-    private var scope: CoroutineScope? = null
-
-    @OptIn(ExperimentalCoroutinesApi::class)
     override fun start() {
         if (!settings.accessibilityServicesEnabled) {
             newTabButton.visibility = View.GONE
             return
         }
-
-        scope = store.flowScoped { flow ->
-            flow.map { it }
-                .ifAnyChanged { state ->
-                    arrayOf(
-                        state.selectedPage,
-                        state.syncing
-                    )
-                }
-                .collect { state ->
-                    setAccessibleNewTabButton(state.selectedPage, state.syncing)
-                }
-        }
+        super.start()
     }
 
-    override fun stop() {
-        scope?.cancel()
+    override suspend fun onState(flow: Flow<TabsTrayState>) {
+        flow.map { it }
+            .ifAnyChanged { state ->
+                arrayOf(
+                    state.selectedPage,
+                    state.syncing
+                )
+            }
+            .collect { state ->
+                setAccessibleNewTabButton(state.selectedPage, state.syncing)
+            }
     }
 
     private fun setAccessibleNewTabButton(selectedPage: Page, syncing: Boolean) {

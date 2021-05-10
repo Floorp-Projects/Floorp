@@ -4,41 +4,31 @@
 
 package org.mozilla.fenix.tabstray
 
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.map
 import mozilla.components.browser.state.selector.normalTabs
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.store.BrowserStore
-import mozilla.components.lib.state.ext.flowScoped
-import mozilla.components.support.base.feature.LifecycleAwareFeature
+import mozilla.components.lib.state.helpers.AbstractBinding
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 import mozilla.components.ui.tabcounter.TabCounter
 
 /**
  * Updates the tab counter to the size of [BrowserState.normalTabs].
  */
+@OptIn(ExperimentalCoroutinesApi::class)
 class TabCounterBinding(
     private val store: BrowserStore,
     private val counter: TabCounter
-) : LifecycleAwareFeature {
+) : AbstractBinding<BrowserState>(store) {
 
-    private var scope: CoroutineScope? = null
-
-    @OptIn(ExperimentalCoroutinesApi::class)
-    override fun start() {
-        scope = store.flowScoped { flow ->
-            flow.map { it.normalTabs }
-                .ifChanged()
-                .collect {
-                    counter.setCount(it.size)
-                }
-        }
-    }
-
-    override fun stop() {
-        scope?.cancel()
+    override suspend fun onState(flow: Flow<BrowserState>) {
+        flow.map { it.normalTabs }
+            .ifChanged()
+            .collect {
+                counter.setCount(it.size)
+            }
     }
 }

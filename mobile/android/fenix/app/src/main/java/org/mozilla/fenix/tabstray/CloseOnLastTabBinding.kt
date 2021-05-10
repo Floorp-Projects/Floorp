@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.tabstray
 
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.drop
@@ -12,12 +13,13 @@ import mozilla.components.browser.state.selector.normalTabs
 import mozilla.components.browser.state.selector.privateTabs
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.lib.state.helpers.AbstractBinding
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
-import org.mozilla.fenix.components.AbstractBinding
 
 /**
  * A binding that closes the tabs tray when the last tab is closed.
  */
+@OptIn(ExperimentalCoroutinesApi::class)
 class CloseOnLastTabBinding(
     browserStore: BrowserStore,
     private val tabsTrayStore: TabsTrayStore,
