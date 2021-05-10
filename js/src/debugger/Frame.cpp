@@ -937,7 +937,11 @@ static bool EvaluateInEnv(JSContext* cx, Handle<Env*> env,
        * javascript executions sent through the debugger. Besides making up
        * a filename for these codepaths, we must allow arbitrary JS execution
        * for the Browser toolbox to function. */
-      .setSkipFilenameValidation(true);
+      .setSkipFilenameValidation(true)
+      /* Don't lazy parse. We need full-parsing to correctly support bytecode
+       * emission for private fields/methods. See EmitterScope::lookupPrivate.
+       */
+      .setForceFullParse();
 
   if (frame && frame.hasScript() && frame.script()->strict()) {
     options.setForceStrictMode();
