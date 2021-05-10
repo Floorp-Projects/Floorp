@@ -178,9 +178,12 @@ class BrowserToolbarTest {
         toolbar.displayProgress(50)
         toolbar.displayProgress(100)
 
+        // make sure multiple calls to 100% does not trigger "loading" announcement
+        toolbar.displayProgress(100)
+
         val captor = ArgumentCaptor.forClass(AccessibilityEvent::class.java)
 
-        verify(root, times(4)).requestSendAccessibilityEvent(any(), captor.capture())
+        verify(root, times(5)).requestSendAccessibilityEvent(any(), captor.capture())
 
         assertEquals(AccessibilityEvent.TYPE_ANNOUNCEMENT, captor.allValues[0].eventType)
         assertEquals(testContext.getString(R.string.mozac_browser_toolbar_progress_loading), captor.allValues[0].text[0])
@@ -194,6 +197,10 @@ class BrowserToolbarTest {
         assertEquals(100, captor.allValues[2].maxScrollY)
 
         assertEquals(AccessibilityEvent.TYPE_VIEW_SCROLLED, captor.allValues[3].eventType)
+        assertEquals(100, captor.allValues[3].scrollY)
+        assertEquals(100, captor.allValues[3].maxScrollY)
+
+        assertEquals(AccessibilityEvent.TYPE_VIEW_SCROLLED, captor.allValues[4].eventType)
         assertEquals(100, captor.allValues[3].scrollY)
         assertEquals(100, captor.allValues[3].maxScrollY)
     }

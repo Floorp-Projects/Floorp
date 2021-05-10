@@ -558,10 +558,14 @@ class DisplayToolbar internal constructor(
      */
     internal fun updateProgress(progress: Int) {
         if (!views.progress.isVisible && progress > 0) {
-            // Loading has just started, make visible and announce "loading" for accessibility.
+            // Loading has just started, make visible.
             views.progress.visibility = View.VISIBLE
-            views.progress.announceForAccessibility(
-                context.getString(R.string.mozac_browser_toolbar_progress_loading))
+
+            // Announce "loading" for accessibility if it has not been completed
+            if (progress < views.progress.max) {
+                views.progress.announceForAccessibility(
+                    context.getString(R.string.mozac_browser_toolbar_progress_loading))
+            }
         }
 
         views.progress.progress = progress

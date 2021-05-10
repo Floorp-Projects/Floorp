@@ -69,17 +69,25 @@ class DisplayToolbarTest {
 
         val progressView = displayToolbar.views.progress
 
+        displayToolbar.updateProgress(0)
+        assertEquals(0, progressView.progress)
+        assertEquals(View.GONE, progressView.visibility)
+
         displayToolbar.updateProgress(10)
         assertEquals(10, progressView.progress)
+        assertEquals(View.VISIBLE, progressView.visibility)
 
         displayToolbar.updateProgress(50)
         assertEquals(50, progressView.progress)
+        assertEquals(View.VISIBLE, progressView.visibility)
 
         displayToolbar.updateProgress(75)
         assertEquals(75, progressView.progress)
+        assertEquals(View.VISIBLE, progressView.visibility)
 
         displayToolbar.updateProgress(100)
         assertEquals(100, progressView.progress)
+        assertEquals(View.GONE, progressView.visibility)
     }
 
     @Test
