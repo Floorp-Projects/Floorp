@@ -1651,7 +1651,6 @@ mozilla::ipc::IPCResult CompositorBridgeParent::RecvAdoptChild(
   APZCTreeManagerParent* parent;
   bool scheduleComposition = false;
   bool apzEnablementChanged = false;
-  RefPtr<ContentCompositorBridgeParent> cpcp;
   RefPtr<WebRenderBridgeParent> childWrBridge;
 
   // Before adopting the child, save the old compositor's root content
@@ -1706,7 +1705,6 @@ mozilla::ipc::IPCResult CompositorBridgeParent::RecvAdoptChild(
     }
     if (mWrBridge) {
       childWrBridge = sIndirectLayerTrees[child].mWrBridge;
-      cpcp = sIndirectLayerTrees[child].mContentCompositorBridgeParent;
     }
     parent = sIndirectLayerTrees[child].mApzcTreeManagerParent;
   }
