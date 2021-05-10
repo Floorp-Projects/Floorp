@@ -2097,6 +2097,10 @@ void nsWindow::Resize(double aWidth, double aHeight, bool aRepaint) {
 
   NS_ASSERTION((width >= 0), "Negative width passed to nsWindow::Resize");
   NS_ASSERTION((height >= 0), "Negative height passed to nsWindow::Resize");
+  if (width < 0 || height < 0) {
+    gfxCriticalNoteOnce << "Negative passed to Resize(" << width << ", "
+                        << height << ") repaint: " << aRepaint;
+  }
 
   ConstrainSize(&width, &height);
 
@@ -2167,6 +2171,11 @@ void nsWindow::Resize(double aX, double aY, double aWidth, double aHeight,
 
   NS_ASSERTION((width >= 0), "Negative width passed to nsWindow::Resize");
   NS_ASSERTION((height >= 0), "Negative height passed to nsWindow::Resize");
+  if (width < 0 || height < 0) {
+    gfxCriticalNoteOnce << "Negative passed to Resize(" << x << " ," << y
+                        << ", " << width << ", " << height
+                        << ") repaint: " << aRepaint;
+  }
 
   ConstrainSize(&width, &height);
 
