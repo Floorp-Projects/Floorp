@@ -11371,17 +11371,23 @@
   value: true
   mirror: always
 
-# Use opaque region for MozContainer wl_surface
-- name: widget.wayland.opaque-region.enabled
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-
 # Force fractional scaling using wp_viewporter. Valid values: 0.5 - 8
 - name: widget.wayland.fractional_buffer_scale
-  type: AtomicFloat
+  type: float
   value: 0.0f
-  mirror: always
+  mirror: once
+
+# Use opaque region for MozContainer wl_surface
+- name: widget.wayland.opaque-region.enabled
+  type: bool
+  value: true
+  mirror: once
+
+# Use frame callback based vsync
+- name: widget.wayland.vsync.enabled
+  type: bool
+  value: true
+  mirror: once
 #endif
 
 #---------------------------------------------------------------------------
