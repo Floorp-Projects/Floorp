@@ -168,6 +168,11 @@ bool FormData::Has(const nsAString& aName) {
 nsresult FormData::AddNameBlobPair(const nsAString& aName, Blob* aBlob) {
   MOZ_ASSERT(aBlob);
 
+  nsAutoString usvName(aName);
+  if (!NormalizeUSVString(usvName)) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
   RefPtr<File> file;
   ErrorResult rv;
   file = GetOrCreateFileCalledBlob(*aBlob, rv);
@@ -176,7 +181,7 @@ nsresult FormData::AddNameBlobPair(const nsAString& aName, Blob* aBlob) {
   }
 
   FormDataTuple* data = mFormData.AppendElement();
-  SetNameFilePair(data, aName, file);
+  SetNameFilePair(data, usvName, file);
   return NS_OK;
 }
 
@@ -184,8 +189,13 @@ nsresult FormData::AddNameDirectoryPair(const nsAString& aName,
                                         Directory* aDirectory) {
   MOZ_ASSERT(aDirectory);
 
+  nsAutoString usvName(aName);
+  if (!NormalizeUSVString(usvName)) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
   FormDataTuple* data = mFormData.AppendElement();
-  SetNameDirectoryPair(data, aName, aDirectory);
+  SetNameDirectoryPair(data, usvName, aDirectory);
   return NS_OK;
 }
 
