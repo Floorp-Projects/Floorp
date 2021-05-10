@@ -20,7 +20,7 @@ include text/reftest.list
 include load-only/reftest.list
 
 # Mozilla only tests (i.e. those containing XUL/XBL/etc.)
-include moz-only/reftest.list
+skip-if(useDrawSnapshot) include moz-only/reftest.list
 
 # svg-integration tests (using svg effects in e.g. HTML)
 include svg-integration/reftest.list
@@ -330,7 +330,7 @@ fuzzy-if(d2d||skiaContent,0-1,0-6400) == mask-type-04.svg mask-type-01-ref.svg
 fuzzy-if(skiaContent,0-3,0-448000) == nesting-invalid-01.svg nesting-invalid-01-ref.svg
 
 fuzzy-if(d2d&&/^Windows\x20NT\x20(6\.1|10\.0)/.test(http.oscpu),0-63,0-168) fuzzy-if(cocoaWidget,0-1,0-122) fuzzy-if(skiaContent,0-2,0-1000) == non-scaling-stroke-01.svg non-scaling-stroke-01-ref.svg # bug 1074161 for Win7 and OSX 10.8
-fuzzy-if(gtkWidget,0-1,0-99) fuzzy-if(!contentSameGfxBackendAsCanvas,0-9,0-99) fuzzy-if(Android,0-9,0-586) == non-scaling-stroke-02.svg non-scaling-stroke-02-ref.svg
+fuzzy-if(gtkWidget,0-1,0-99) fuzzy-if(!contentSameGfxBackendAsCanvas,0-9,0-99) fuzzy-if(Android,0-9,0-586) fails-if(useDrawSnapshot) == non-scaling-stroke-02.svg non-scaling-stroke-02-ref.svg
 == non-scaling-stroke-03.svg non-scaling-stroke-03-ref.svg
 
 == objectBoundingBox-and-clipPath.svg pass.svg
@@ -429,7 +429,7 @@ fuzzy-if(skiaContent,0-1,0-3600) == rect-01.svg pass.svg
 fuzzy-if(skiaContent,0-1,0-340) == stroke-dasharray-02.svg pass.svg
 fuzzy-if(skiaContent,0-1,0-340) == stroke-dasharray-03.svg pass.svg
 == stroke-dasharray-and-pathLength-01.svg pass.svg
-== stroke-dasharray-and-text-01.svg stroke-dasharray-and-text-01-ref.svg
+fails-if(useDrawSnapshot) == stroke-dasharray-and-text-01.svg stroke-dasharray-and-text-01-ref.svg
 == stroke-dashoffset-01.svg pass.svg
 == stroke-dashoffset-and-pathLength-01.svg pass.svg
 == stroke-linecap-circle-ellipse-01.svg stroke-linecap-circle-ellipse-01-ref.svg
