@@ -1270,9 +1270,7 @@ void DisplayListBuilder::PushBackdropFilter(
   WRDL_LOG("PushBackdropFilter b=%s c=%s\n", mWrState,
            ToString(aBounds).c_str(), ToString(clip).c_str());
 
-  AutoTArray<wr::ComplexClipRegion, 1> clips;
-  clips.AppendElement(aRegion);
-  auto clipId = DefineClip(Nothing(), aBounds, &clips);
+  auto clipId = DefineRoundedRectClip(aRegion);
   auto spaceAndClip = WrSpaceAndClip{mCurrentSpaceAndClipChain.space, clipId};
 
   wr_dp_push_backdrop_filter_with_parent_clip(
