@@ -140,6 +140,12 @@ union NetAddr {
   NetAddr() { memset(this, 0, sizeof(NetAddr)); }
   explicit NetAddr(const PRNetAddr* prAddr);
 
+  // Will parse aString into a NetAddr using PR_StringToNetAddr.
+  // Returns an error code if parsing fails.
+  // If aPort is non-0 will set the NetAddr's port to (the network endian
+  // value of) that.
+  nsresult InitFromString(const nsACString& aString, uint16_t aPort = 0);
+
   bool IsIPAddrAny() const;
   bool IsLoopbackAddr() const;
   bool IsLoopBackAddressWithoutIPv6Mapping() const;
