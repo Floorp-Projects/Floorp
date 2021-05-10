@@ -132,10 +132,6 @@ void SetProcessPriority(int aPid, ProcessPriority aPriority) {
   MOZ_CRASH("Only the main process may set processes' priorities.");
 }
 
-bool SetProcessPrioritySupported() {
-  MOZ_CRASH("Only the main process may call SetProcessPrioritySupported().");
-}
-
 class HalParent : public PHalParent,
                   public BatteryObserver,
                   public NetworkObserver,
