@@ -5,12 +5,15 @@
 
 .pkt_ext_home {
   line-height: 20px;
-  font-size: 12px;
   color: #363636;
 
   a {
     color: #008078;
     text-decoration: none;
+  }
+
+  a, p {
+    font-size: 0.9em;
   }
 
   .pkt_ext_hr {
@@ -29,8 +32,8 @@
     .pkt_ext_mylist_icon {
       background: url(../img/list-view.svg) no-repeat;
       background-size: contain;
-      height: 16px;
-      width: 16px;
+      height: 1.2em;
+      width: 1.2em;
       margin-inline-end: 8px;
     }
     a {
@@ -59,7 +62,7 @@
     }
     h2 {
       font-weight: 600;
-      font-size: 14px;
+      font-size: 1em;
     }
     h2,
     p {
@@ -67,6 +70,7 @@
     }
     h3 {
       font-weight: 600;
+      font-size: 1em;
       margin: 12px 0;
     }
     .pkt_ext_more {
@@ -74,8 +78,8 @@
       .pkt_ext_chevron_right {
         background: url(../img/chevron-right.svg) no-repeat;
         background-size: contain;
-        height: 16px;
-        width: 16px;
+        height: 1.2em;
+        width: 1.2em;
       }
       ul {
         list-style-type: none;

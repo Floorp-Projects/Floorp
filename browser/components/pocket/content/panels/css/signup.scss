@@ -18,8 +18,6 @@
     background-color: #ebebeb;
     color: #333;
     display: block;
-    font-size: 16px;
-    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
     margin: 0;
     padding: 0;
     position: relative;
@@ -54,9 +52,8 @@
 /*=Core detail
 --------------------------------------------------------------------------------------- */
 .pkt_ext_containersignup p {
-    font-size: 14px;
+    font-size: 1em;
     color: #333;
-    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
     line-height: 1.3;
     margin: 0 auto 1.5em;
     max-width: 260px;
@@ -107,7 +104,7 @@
     margin-bottom: 0.5em;
 }
 .pkt_ext_containersignup .pkt_ext_learnmore {
-    font-size: 12px;
+    font-size: 0.9em;
 }
 .pkt_ext_containersignup .pkt_ext_learnmoreinactive {
     visibility: hidden;
@@ -117,7 +114,7 @@
     overflow: hidden;
 }
 .pkt_ext_signupdetail h4 {
-    font-size: 12px;
+    font-size: 0.9em;
     font-weight: normal;
 }
 .pkt_ext_signupdetail .btn-container {
@@ -142,7 +139,7 @@
     }
 }
 .pkt_ext_containersignup .alreadyhave {
-    font-size: 12px;
+    font-size: 0.9em;
     max-width: 320px;
     margin-top: 15px;
 }
@@ -151,7 +148,7 @@
 }
 .pkt_ext_signupdetail p.pkt_ext_tos {
     color: #777;
-    font-size: 10px;
+    font-size: 0.7em;
     line-height: 1.5;
     margin-top: 17px;
     padding-top: 0;
@@ -242,8 +239,7 @@
     border-radius: 2px;
     color: #fff;
     display: inline-block;
-    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-    font-size: 16px;
+    font-size: 1.1em;
     font-weight: normal;
     line-height: 1;
     margin: 0;
@@ -262,10 +258,6 @@
 }
 .pkt_ext_containersignup .btn-small {
     padding: 6px 20px;
-}
-.pkt_ext_containersignup .btn-mini {
-    font-size: 14px;
-    padding: 5px 15px 4px;
 }
 .pkt_ext_containersignup .btn:hover {
     background-color: #008acb;
@@ -355,19 +347,6 @@
 .pkt_ext_signup_ru .pkt_ext_introstorytwo .pkt_ext_tagline {
     margin-bottom: 0.5em;
 }
-.pkt_ext_signup_de .signup-btn-firefox .text,
-.pkt_ext_signup_de .signup-btn-tryitnow .text,
-.pkt_ext_signup_de .signup-btn-email,
-.pkt_ext_signup_es .pkt_ext_signupdetail_hero .signup-btn-firefox .text,
-.pkt_ext_signup_es .pkt_ext_signupdetail_hero .signup-btn-email,
-.pkt_ext_signup_ja .signup-btn-firefox .text,
-.pkt_ext_signup_ja .signup-btn-tryitnow .text,
-.pkt_ext_signup_ja .signup-btn-email,
-.pkt_ext_signup_ru .signup-btn-firefox .text,
-.pkt_ext_signup_ru .signup-btn-tryitnow .text,
-.pkt_ext_signup_ru .signup-btn-email {
-    font-size: 15px;
-}
 .pkt_ext_signup_ja .signup-btn-firefox .text,
 .pkt_ext_signup_ja .signup-btn-tryitnow .text,
 .pkt_ext_signup_ru .signup-btn-firefox .text,
@@ -432,7 +411,7 @@
 .los_variant_bottom .los_variant_button {
     font-style: normal;
     font-weight: 500;
-    font-size: 16px;
+    font-size: 1.1em;
     line-height: 24px;
     text-align: center;
     color: #FFFFFF;
@@ -459,7 +438,7 @@
 .los_variant_bottom .los_variant_sub {
     font-style: normal;
     font-weight: normal;
-    font-size: 13px;
+    font-size: 0.9em;
     line-height: 16px;
     color: #737373;
 }
@@ -469,7 +448,7 @@
 }
 
 .los_variant_top a {
-    font-size: 15px;
+    font-size: 1em;
 }
 
 .los_variant_a .los_variant_top {
@@ -495,7 +474,7 @@
 }
 
 .los_variant_b .los_variant_top a {
-    font-size: 15px;
+    font-size: 1em;
     line-height: 18px;
     text-decoration-line: underline;
     color: #0C0C0D;
@@ -509,7 +488,7 @@
 
 .los_variant h1 {
     font-weight: 600;
-    font-size: 17px;
+    font-size: 1.1em;
     line-height: 20px;
     color: #0C0C0D;
 }
@@ -517,7 +496,7 @@
 .los_variant p {
     font-style: normal;
     font-weight: normal;
-    font-size: 15px;
+    font-size: 1em;
     line-height: 18px;
     color: #0C0C0D;
 }

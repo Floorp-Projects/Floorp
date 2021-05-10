@@ -83,7 +83,7 @@ var pktUI = (function() {
   // Initial sizes are only here to help visual load jank before the panel is ready.
   const initialPanelSize = {
     signup: {
-      control: { height: 442, width: 300 },
+      control: { height: 450, width: 300 },
       button_control: { height: 442, width: 300 },
       variant_a: { height: 408, width: 300 },
       variant_b: { height: 383, width: 300 },
@@ -91,10 +91,10 @@ var pktUI = (function() {
       button_variant: { height: 388, width: 300 },
     },
     saved: {
-      control: { height: 133, width: 350 },
+      control: { height: 132, width: 350 },
     },
     home: {
-      control: { height: 474, width: 328 },
+      control: { height: 477, width: 328 },
       // This is for non English sizes, this is not for an AB experiment.
       no_topics: { height: 247, width: 328 },
     },
