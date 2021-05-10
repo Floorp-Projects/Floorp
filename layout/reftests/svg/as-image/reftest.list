@@ -21,8 +21,8 @@ include zoom/reftest.list
 == background-stretch-1.html background-stretch-1-ref.html
 
 # Tests for scaling background images
-== background-scale-no-viewbox-1.html   background-scale-no-viewbox-1-ref.html
-== background-scale-with-viewbox-1.html background-scale-with-viewbox-1-ref.html
+fails-if(useDrawSnapshot) == background-scale-no-viewbox-1.html   background-scale-no-viewbox-1-ref.html
+fails-if(useDrawSnapshot) == background-scale-with-viewbox-1.html background-scale-with-viewbox-1-ref.html
 
 # Tests with -moz-image-rect()
 == background-image-rect-1svg.html  lime100x100-ref.html

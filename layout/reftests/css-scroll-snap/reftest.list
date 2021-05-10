@@ -1,2 +1,2 @@
-== scroll-margin-on-anchor.html#target scroll-margin-on-anchor-ref.html
-== scroll-padding-on-anchor.html#target scroll-padding-on-anchor-ref.html
+fails-if(useDrawSnapshot) == scroll-margin-on-anchor.html#target scroll-margin-on-anchor-ref.html
+fails-if(useDrawSnapshot) == scroll-padding-on-anchor.html#target scroll-padding-on-anchor-ref.html

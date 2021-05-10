@@ -6,4 +6,4 @@ skip-if(Android) skip-if(MinGW) skip-if((/^Windows\x20NT\x2010\.0/.test(http.osc
 skip-if(Android) skip-if(MinGW) skip-if((/^Windows\x20NT\x2010\.0/.test(http.oscpu))&&(/^aarch64-msvc/.test(xulRuntime.XPCOMABI))) fuzzy(0-10,0-778536) == image-10bits-rendering-90-video.html image-10bits-rendering-90-ref.html
 skip-if(Android) fuzzy(0-26,0-567562) fuzzy-if(appleSilicon,46-46,575885-575885) == image-10bits-rendering-720-video.html image-10bits-rendering-720-ref.html
 skip-if(Android) fuzzy(0-31,0-573249) == image-10bits-rendering-720-90-video.html image-10bits-rendering-720-90-ref.html
-skip-if(Android) skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fuzzy(0-84,0-771156) == uneven_frame_duration_video.html uneven_frame_duration_video-ref.html # Skip on Windows 7 as the resolution of the video is too high for test machines and will fail in the decoder.
+skip-if(Android) skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fuzzy(0-84,0-771156) fails-if(useDrawSnapshot) == uneven_frame_duration_video.html uneven_frame_duration_video-ref.html # Skip on Windows 7 as the resolution of the video is too high for test machines and will fail in the decoder.

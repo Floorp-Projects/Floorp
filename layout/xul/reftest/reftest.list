@@ -7,8 +7,8 @@ fuzzy-if(skiaContent,0-16,0-128) random-if(Android) == chrome://reftest/content/
 == chrome://reftest/content/xul/reftest/radio-dynamic-change.xhtml chrome://reftest/content/xul/reftest/radio-dynamic-change-ref.xhtml
 
 # These test find marks appearing on the scrollbar
-!= chrome://reftest/content/xul/reftest/scrollbar-marks.html chrome://reftest/content/xul/reftest/scrollbar-marks-ref.html
-!= chrome://reftest/content/xul/reftest/scrollbar-marks2.html chrome://reftest/content/xul/reftest/scrollbar-marks-ref.html
-!= chrome://reftest/content/xul/reftest/scrollbar-marks2.html chrome://reftest/content/xul/reftest/scrollbar-marks.html
+fails-if(useDrawSnapshot) != chrome://reftest/content/xul/reftest/scrollbar-marks.html chrome://reftest/content/xul/reftest/scrollbar-marks-ref.html
+fails-if(useDrawSnapshot) != chrome://reftest/content/xul/reftest/scrollbar-marks2.html chrome://reftest/content/xul/reftest/scrollbar-marks-ref.html
+fails-if(useDrawSnapshot) != chrome://reftest/content/xul/reftest/scrollbar-marks2.html chrome://reftest/content/xul/reftest/scrollbar-marks.html
 # This test is fuzzy as the marks cannot be positioned exactly as the real ones are measured in dev pixels.
 fuzzy(0-10,0-75) == chrome://reftest/content/xul/reftest/scrollbar-marks-overlay.html chrome://reftest/content/xul/reftest/scrollbar-marks-overlay-ref.html

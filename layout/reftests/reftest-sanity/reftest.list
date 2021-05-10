@@ -7,7 +7,7 @@
 == test-async.html test-async-ref.html
 
 # test that zoom works (and really zooms, not just scales)
-== test-zoom.html test-zoom-ref.html
+fails-if(useDrawSnapshot) == test-zoom.html test-zoom-ref.html
 
 == text-zoom.html text-zoom-ref.html
 != text-zoom.html text-zoom-notref.html
@@ -44,7 +44,7 @@ fails-if(geckoview&&webrender&&device) == filter-2.xhtml filter-2-ref.xhtml
 
 # test that the MozReftestInvalidate event fires
 == invalidation.html about:blank
-== zoom-invalidation.html zoom-invalidation-ref.html # bug 773482
+fails-if(useDrawSnapshot) == zoom-invalidation.html zoom-invalidation-ref.html # bug 773482
 
 # test that xulRuntime.OS works
 fails-if(xulRuntime.OS!="Linux"&&!Android) == data:text/html,<body>Linux data:text/html,<script>document.write(navigator.platform.substr(0,5))</script>
@@ -93,7 +93,7 @@ fails == data:text/plain,HELLO about:blank
 needs-focus == data:text/plain, about:blank
 
 # Sanity check of viewport+displayport overrides
-pref(dom.meta-viewport.enabled,true) skip-if(!browserIsRemote) != test-displayport-2.html test-displayport-ref.html # bug 593168
+pref(dom.meta-viewport.enabled,true) skip-if(!browserIsRemote) fails-if(useDrawSnapshot) != test-displayport-2.html test-displayport-ref.html # bug 593168
 skip-if(!browserIsRemote) fails-if(OSX&&layersGPUAccelerated) fuzzy-if(layersOMTC,0-1,0-1390) random-if(Android) random-if(transparentScrollbars) == 647192-1.html 647192-1-ref.html
 skip-if(!browserIsRemote) == 656041-1.html 656041-1-ref.html
 pref(dom.meta-viewport.enabled,true) skip-if(!browserIsRemote||layersOMTC) == test-displayport-bg.html test-displayport-ref.html # bug 694706
@@ -212,6 +212,6 @@ fails-if(layerChecksEnabled) != reftest-assigned-layer-fail-3.html about:blank
 fails-if(layerChecksEnabled) != reftest-assigned-layer-fail-4.html about:blank
 
 # reftest-resolution
-pref(apz.allow_zooming,true) == reftest-resolution.html reftest-resolution-ref.html
+pref(apz.allow_zooming,true) fails-if(useDrawSnapshot) == reftest-resolution.html reftest-resolution-ref.html
 
 == reftest-no-flush.html reftest-no-flush-ref.html

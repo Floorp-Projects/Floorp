@@ -1,1 +1,1 @@
-pref(ui.caretWidth,16) needs-focus == caret-color-01.html caret-color-01-ref.html
+fails-if(useDrawSnapshot) pref(ui.caretWidth,16) needs-focus == caret-color-01.html caret-color-01-ref.html

@@ -30,7 +30,7 @@ skip-if(Android) == number-max-height-1.html number-max-height-1-ref.html
 skip-if(Android) == number-max-height-2.html number-max-height-2-ref.html
 
 # number of significant fractional digits:
-fuzzy-if(!nativeThemePref,0-1,0-1) == number-significant-fractional-digits.html number-significant-fractional-digits-ref.html
+fuzzy-if(!nativeThemePref,0-1,0-1) fails-if(useDrawSnapshot) == number-significant-fractional-digits.html number-significant-fractional-digits-ref.html
 
 # focus
 fuzzy-if(skiaContent,0-2,0-5) fuzzy-if(winWidget&&!nativeThemePref&&!webrender,0-127,0-4) needs-focus == focus-handling.html focus-handling-ref.html # Win: Antialiasing underinvalidation, looks like.

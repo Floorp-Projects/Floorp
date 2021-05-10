@@ -8,7 +8,7 @@
 == in-visibility-hidden-animation-pseudo-element.html in-visibility-hidden-animation-pseudo-element-ref.html
 pref(layout.css.marker.restricted,false) == in-visibility-hidden-animation-marker-pseudo-element.html in-visibility-hidden-animation-marker-pseudo-element-ref.html
 == partially-out-of-view-animation.html partially-out-of-view-animation-ref.html
-== animate-display-table-opacity.html animate-display-table-opacity-ref.html
+fails-if(useDrawSnapshot) == animate-display-table-opacity.html animate-display-table-opacity-ref.html
 # We need to run 100% opacity test case when OMTA is disabled to check that the animation creates a stacking context even if the animation is not running on the compositor
 test-pref(layers.offmainthreadcomposition.async-animations,false) == stacking-context-opacity-1-animation.html stacking-context-animation-ref.html
 # We need to run transform:none test case when OMTA is disabled to check that the animation creates a stacking context even if the animation is not running on the compositor

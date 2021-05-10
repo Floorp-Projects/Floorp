@@ -18,7 +18,7 @@ random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 1090159-1.html 1090159-1
 == 1090168-2.html 1090168-2-ref.html
 fuzzy-if(azureSkia,0-255,0-2700) == 1090168-3.html 1090168-3-ref.html # bug 1230357 mark fuzzy for skia.
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 1091058-1.html 1091058-1-ref.html # Bug 1392106
-== 1094434-1.html 1094434-1-ref.html
+random-if(useDrawSnapshot) == 1094434-1.html 1094434-1-ref.html
 == 1094434-2.html 1094434-2-ref.html
 == 1094914-1a.html 1094914-1-ref.html
 == 1094914-1b.html 1094914-1-ref.html
