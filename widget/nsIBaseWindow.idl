@@ -206,11 +206,6 @@ interface nsIBaseWindow : nsISupports
 	*/
 	readonly attribute double devicePixelsPerDesktopPixel;
 
-	/**
-	* Give the window focus.
-	*/
-	void setFocus();
-
 	/*
 	Title of the window.
 	*/

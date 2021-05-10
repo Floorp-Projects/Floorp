@@ -5052,9 +5052,6 @@ NS_IMETHODIMP
 nsDocShell::SetEnabled(bool aEnabled) { return NS_ERROR_NOT_IMPLEMENTED; }
 
 NS_IMETHODIMP
-nsDocShell::SetFocus() { return NS_OK; }
-
-NS_IMETHODIMP
 nsDocShell::GetMainWidget(nsIWidget** aMainWidget) {
   // We don't create our own widget, so simply return the parent one.
   return GetParentWidget(aMainWidget);
