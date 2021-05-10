@@ -729,10 +729,10 @@ void DecodedStream::SendAudio(const PrincipalHandle& aPrincipalHandle) {
   AutoTArray<RefPtr<AudioData>, 10> audio;
   mAudioQueue.GetElementsAfter(mData->mNextAudioTime, &audio);
 
-  // Append data which haven't been sent to audio track before.
+  // Append data which hasn't been sent to audio track before.
+  mData->mAudioTrack->AppendData(audio, aPrincipalHandle);
   for (uint32_t i = 0; i < audio.Length(); ++i) {
     CheckIsDataAudible(audio[i]);
-    mData->mAudioTrack->AppendData(audio[i], aPrincipalHandle);
     mData->mNextAudioTime = audio[i]->GetEndTime();
     mData->mAudioFramesWritten += audio[i]->Frames();
   }
