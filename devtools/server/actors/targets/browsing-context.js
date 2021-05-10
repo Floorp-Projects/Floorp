@@ -565,9 +565,6 @@ const browsingContextTargetPrototype = {
         // support this, so we might keep this trait until all top level targets
         // can provide this flag consistently from the server.
         supportsTopLevelTargetFlag: true,
-        // @backward-compat { version 88 } Added in version 88, will not be
-        // available on targets from older servers.
-        supportsFollowWindowGlobalLifeCycleFlag: true,
       },
     };
 
