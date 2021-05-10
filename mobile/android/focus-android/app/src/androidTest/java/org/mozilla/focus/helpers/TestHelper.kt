@@ -43,22 +43,15 @@ object TestHelper {
     const val webPageLoadwaitingTime = DateUtils.SECOND_IN_MILLIS * 15
 
     @JvmStatic
-    val packageName: String
-        get() = InstrumentationRegistry.getInstrumentation()
-            .targetContext
-            .packageName
+    val appContext: Context = InstrumentationRegistry.getInstrumentation().targetContext
 
     @JvmStatic
-    val appName: String = InstrumentationRegistry.getInstrumentation()
-        .targetContext
-        .getString(R.string.app_name)
+    val packageName: String = appContext.packageName
 
     @JvmStatic
-    val appContext: Context = InstrumentationRegistry.getInstrumentation()
-        .targetContext
-        .applicationContext
+    val appName: String = appContext.getString(R.string.app_name)
 
-    fun getStringResource(id: Int) = appContext.getString(id)
+    fun getStringResource(id: Int) = appContext.resources.getString(id, appName)
 
     fun verifySnackBarText(text: String) {
         val snackbarText = mDevice.findObject(

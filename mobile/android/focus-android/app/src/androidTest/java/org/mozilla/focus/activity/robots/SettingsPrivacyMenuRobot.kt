@@ -7,11 +7,14 @@ package org.mozilla.focus.activity.robots
 
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.ViewInteraction
+import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.uiautomator.UiScrollable
 import androidx.test.uiautomator.UiSelector
+import org.mozilla.focus.R
+import org.mozilla.focus.helpers.TestHelper.getStringResource
 import org.mozilla.focus.helpers.TestHelper.packageName
 import org.mozilla.focus.helpers.TestHelper.waitingTime
 
@@ -32,11 +35,13 @@ class SettingsPrivacyMenuRobot {
         sendDataSwitch().check(matches(isDisplayed()))
     }
 
+    fun switchSafeBrowsingToggle(): ViewInteraction = safeBrowsingSwitch().perform(click())
+
     class Transition
 }
 
 private val privacySettingsList =
-    UiScrollable(UiSelector().resourceId("$packageName:id/recycler_view"))
+        UiScrollable(UiSelector().resourceId("$packageName:id/recycler_view"))
 
 private fun adTrackersBlockSwitch(): ViewInteraction {
     privacySettingsList
@@ -81,25 +86,25 @@ private fun blockCookiesMenu(): ViewInteraction {
 }
 
 private fun useFingerprintSwitch(): ViewInteraction {
-    privacySettingsList
-        .scrollTextIntoView("Use fingerprint to unlock app")
-    return onView(withText("Use fingerprint to unlock app"))
+    val useFingerprintSwitchSummary = getStringResource(R.string.preference_security_biometric_summary)
+    privacySettingsList.scrollTextIntoView(useFingerprintSwitchSummary)
+    return onView(withText(useFingerprintSwitchSummary))
 }
 
 private fun stealthModeSwitch(): ViewInteraction {
-    privacySettingsList
-        .scrollTextIntoView("Stealth")
-    return onView(withText("Stealth"))
+    val stealthModeSwitchSummary = getStringResource(R.string.preference_privacy_stealth_summary)
+    privacySettingsList.scrollTextIntoView(stealthModeSwitchSummary)
+    return onView(withText(stealthModeSwitchSummary))
 }
 
 private fun safeBrowsingSwitch(): ViewInteraction {
-    privacySettingsList
-        .scrollTextIntoView("Block potentially dangerous and deceptive sites")
-    return onView(withText("Block potentially dangerous and deceptive sites"))
+    val safeBrowsingSwitchText = getStringResource(R.string.preference_safe_browsing_summary)
+    privacySettingsList.scrollTextIntoView(safeBrowsingSwitchText)
+    return onView(withText(safeBrowsingSwitchText))
 }
 
 private fun sendDataSwitch(): ViewInteraction {
-    privacySettingsList
-        .scrollTextIntoView("Send usage data")
-    return onView(withText("Send usage data"))
+    val sendDataSwitchSummary = getStringResource(R.string.preference_mozilla_telemetry_summary2)
+    privacySettingsList.scrollTextIntoView(sendDataSwitchSummary)
+    return onView(withText(sendDataSwitchSummary))
 }
