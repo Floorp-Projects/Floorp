@@ -4,16 +4,16 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Light theme color palette -->
-    <color name="primary_text_light_theme">#20123A</color>
+    <color name="primary_text_light_theme">@color/photonInk80</color>
     <color name="secondary_text_light_theme">@color/photonGrey50</color>
     <color name="contrast_text_light_theme">@color/primary_text_dark_theme</color>
     <color name="caption_text_light_theme">@color/photonLightGrey90</color>
-    <color name="foundation_light_theme">#F9F9FB</color>
-    <color name="inset_light_theme">#E0E0E6</color>
+    <color name="foundation_light_theme">@color/photonLightGrey10</color>
+    <color name="inset_light_theme">@color/photonLightGrey30</color>
     <color name="above_light_theme">#FFF</color>
-    <color name="accent_light_theme">#312A65</color>
-    <color name="accent_bright_light_theme">#592ACB</color>
-    <color name="about_link_normal_theme">#592ACB</color>
+    <color name="accent_light_theme">@color/photonInk20</color>
+    <color name="accent_bright_light_theme">@color/photonViolet70</color>
+    <color name="about_link_normal_theme">@color/photonViolet70</color>
     <color name="accent_high_contrast_light_theme">@color/accent_light_theme</color>
     <color name="tab_ring_light_theme">@color/accent_light_theme</color>
     <color name="neutral_light_theme">@color/photonGrey30</color>
@@ -39,7 +39,7 @@
     <color name="fill_link_from_clipboard_light_theme">@color/accent_light_theme</color>
     <color name="sync_disconnected_icon_fill_light_theme">#C45A27</color>
     <color name="sync_disconnected_background_light_theme">#FFFDE2</color>
-    <color name="swipe_delete_background_light_theme">#E0E0E6</color>
+    <color name="swipe_delete_background_light_theme">@color/photonLightGrey30</color>
     <color name="onboarding_card_button_light_theme">#F0F0F4</color>
     <color name="onboarding_card_finish_button_light_theme">@color/accent_light_theme</color>
     <color name="onboarding_illustration_selected_light_theme">@color/accent_bright_light_theme</color>
@@ -64,8 +64,8 @@
     <color name="tab_tray_item_selected_background_light_theme">#E5DFF4</color>
     <color name="tab_tray_toolbar_background_light_theme">@color/photonLightGrey10</color>
     <color name="tab_tray_item_divider_light_theme">@color/photonLightGrey30</color>
-    <color name="tab_tray_item_media_stroke">#ffffff</color>
-    <color name="tab_tray_item_media_background_light_theme">#312A65</color>
+    <color name="tab_tray_item_media_stroke">@color/photonWhite</color>
+    <color name="tab_tray_item_media_background_light_theme">@color/photonInk20</color>
     <color name="tab_tray_heading_icon_light_theme">@color/photonInk20</color>
     <color name="tab_tray_heading_icon_inactive_light_theme">@color/photonInk20A48</color>
     <color name="tab_tray_heading_icon_menu_light_theme">@color/accent_normal_theme</color>
@@ -77,15 +77,15 @@
     <color name="tab_history_item_selected_background_light_theme">@color/tab_tray_item_selected_background_light_theme</color>
 
     <!-- Dark theme color palette -->
-    <color name="primary_text_dark_theme">#FBFBFE</color>
+    <color name="primary_text_dark_theme">@color/photonLightGrey05</color>
     <color name="secondary_text_dark_theme">#A7A2B7</color>
     <color name="contrast_text_dark_theme">@color/primary_text_dark_theme</color>
     <color name="caption_text_dark_theme">@color/photonLightGrey70</color>
-    <color name="foundation_dark_theme">#1C1B22</color>
+    <color name="foundation_dark_theme">@color/photonDarkGrey80</color>
     <color name="inset_dark_theme">#32313C</color>
     <color name="above_dark_theme">#32313C</color>
-    <color name="accent_dark_theme">#9059FF</color>
-    <color name="accent_bright_dark_theme">#592ACB</color>
+    <color name="accent_dark_theme">@color/photonViolet50</color>
+    <color name="accent_bright_dark_theme">@color/photonViolet70</color>
     <color name="about_link_dark_theme">#AB71FF</color>
     <color name="accent_high_contrast_dark_theme">#AB71FF</color>
     <color name="tab_ring_dark_theme">@color/accent_dark_theme</color>
@@ -135,7 +135,7 @@
     <color name="tab_tray_item_selected_background_dark_theme">#412E69</color>
     <color name="tab_tray_toolbar_background_dark_theme">@color/photonDarkGrey50</color>
     <color name="tab_tray_item_divider_dark_theme">@color/photonDarkGrey10</color>
-    <color name="tab_tray_item_media_background_dark_theme">#9059FF</color>
+    <color name="tab_tray_item_media_background_dark_theme">@color/photonViolet50</color>
     <color name="tab_tray_heading_icon_dark_theme">@color/photonViolet50</color>
     <color name="tab_tray_heading_icon_inactive_dark_theme">@color/photonLightGrey05</color>
     <color name="tab_tray_heading_icon_menu_dark_theme">@color/photonLightGrey05</color>
@@ -147,15 +147,15 @@
     <color name="tab_history_item_selected_background_dark_theme">@color/tab_tray_item_selected_background_dark_theme</color>
 
     <!-- Private theme color palette -->
-    <color name="primary_text_private_theme">#FBFBFE</color>
+    <color name="primary_text_private_theme">@color/photonLightGrey05</color>
     <color name="secondary_text_private_theme">#A7A2B7</color>
     <color name="contrast_text_private_theme">@color/primary_text_private_theme</color>
     <color name="caption_text_private_theme">@color/photonLightGrey70</color>
     <color name="foundation_private_theme">#261E4B</color>
     <color name="inset_private_theme">@color/photonInk50</color>
     <color name="above_private_theme">@color/photonInk50</color>
-    <color name="accent_private_theme">#9059FF</color>
-    <color name="accent_bright_private_theme">#592ACB</color>
+    <color name="accent_private_theme">@color/photonViolet50</color>
+    <color name="accent_bright_private_theme">@color/photonViolet70</color>
     <color name="about_link_private_theme">#AB71FF</color>
     <color name="accent_high_contrast_private_theme">#AA71FF</color>
     <color name="tab_ring_private_theme">#F565FF</color>
@@ -198,7 +198,7 @@
     <color name="tab_tray_item_selected_background_private_theme">#422875</color>
     <color name="tab_tray_toolbar_background_private_theme">@color/photonInk50</color>
     <color name="tab_tray_item_divider_private_theme">@color/photonDarkGrey10</color>
-    <color name="tab_tray_item_media_background_private_theme">#9059FF</color>
+    <color name="tab_tray_item_media_background_private_theme">@color/photonViolet50</color>
     <color name="tab_tray_heading_icon_private_theme">@color/photonViolet50</color>
     <color name="tab_tray_heading_icon_inactive_private_theme">@color/photonViolet50A48</color>
 
@@ -309,8 +309,8 @@
     <color name="library_downloads_icon_background">#D4C1FA</color>
     <color name="library_downloads_icon">#2E2060</color>
 
-    <color name="library_app_links_icon_background">#E0E0E6</color>
-    <color name="library_app_links_icon">#20123A</color>
+    <color name="library_app_links_icon_background">@color/photonLightGrey30</color>
+    <color name="library_app_links_icon">@color/photonInk80</color>
 
     <color name="bookmarks_icon_background_filled">#C60084</color>
     <color name="bookmarks_icon_filled">#FFB4DB</color>
@@ -353,7 +353,7 @@
     <!-- Misc colors applied universally-->
     <color name="suggestion_highlight_color">#5C592ACB</color>
     <color name="private_browsing_button_accent_color">@color/foundation_private_theme</color>
-    <color name="white_color">#FBFBFE</color>
+    <color name="white_color">@color/photonLightGrey05</color>
     <color name="neutral_text">@color/white_color</color>
     <color name="disabled_text">#cccccc</color>
     <color name="text_scale_example_text_color">#232749</color>
@@ -368,35 +368,35 @@
 
     <!-- Onboarding colors -->
     <color name="onboarding_padded_background_color">#1F000000</color>
-    <color name="onboarding_card_background_dark">#20123A</color>
+    <color name="onboarding_card_background_dark">@color/photonInk80</color>
     <color name="onboarding_card_primary_text_dark">#FFFFFF</color>
-    <color name="onboarding_card_button_background_dark">#F9F9FB</color>
-    <color name="onboarding_card_button_text_dark">#312A65</color>
+    <color name="onboarding_card_button_background_dark">@color/photonLightGrey10</color>
+    <color name="onboarding_card_button_text_dark">@color/photonInk20</color>
 
     <!-- Share UI -->
     <color name="default_share_background">#E3E2E3</color>
     <color name="device_type_desktop_background">#F091C3</color>
     <color name="device_type_mobile_background">#D4C1FA</color>
-    <color name="device_foreground">#20123A</color>
+    <color name="device_foreground">@color/photonInk80</color>
 
     <!-- Launcher Icon colors -->
     <color name="default_launcher_background">#FDFDFD</color>
     <color name="nightly_launcher_background">#220033</color>
-    <color name="debug_launcher_background">#312A65</color>
+    <color name="debug_launcher_background">@color/photonInk20</color>
     <color name="ic_launcher_background">@color/default_launcher_background</color>
 
     <!-- Button Colors -->
-    <color name="grey_button_color">#E0E0E6</color>
+    <color name="grey_button_color">@color/photonLightGrey30</color>
     <color name="destructive_button_text_color">#C50042</color>
-    <color name="button_text_color">#312A65</color>
+    <color name="button_text_color">@color/photonInk20</color>
 
     <!-- Search Widget -->
     <color name="search_widget_background">@color/white_color</color>
     <color name="search_widget_mic_fill_color">#FF000000</color>
-    <color name="search_widget_text">#737373</color>
+    <color name="search_widget_text">@color/photonGrey50</color>
 
     <!-- Private Browsing Mode Persistent Notification -->
-    <color name="pbm_notification_color">#592ACB</color>
+    <color name="pbm_notification_color">@color/photonViolet70</color>
 
     <!-- Notification Color -->
     <color name="whats_new_notification_color">#00B3F4</color>
@@ -405,7 +405,7 @@
     <color name="static_shortcut_background">#F5F5F5</color>
 
     <!-- SearchView Hint Color -->
-    <color name="search_view_hint_color">#5B5B66</color>
+    <color name="search_view_hint_color">@color/photonDarkGrey05</color>
 
     <!-- TextInputLayout default Error Color -->
     <color name="design_error" tools:override="true">@color/destructive_light_theme</color>
