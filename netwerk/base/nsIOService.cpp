@@ -743,16 +743,10 @@ nsresult nsIOService::RecheckCaptivePortalIfLocalRedirect(nsIChannel* newChan) {
     return rv;
   }
 
-  PRNetAddr prAddr;
-  if (PR_StringToNetAddr(host.BeginReading(), &prAddr) != PR_SUCCESS) {
-    // The redirect wasn't to an IP literal, so there's probably no need
-    // to trigger the captive portal detection right now. It can wait.
-    return NS_OK;
-  }
-
-  NetAddr netAddr(&prAddr);
-  if (netAddr.IsIPAddrLocal()) {
-    // Redirects to local IP addresses are probably captive portals
+  NetAddr addr;
+  // If the redirect wasn't to an IP literal, so there's probably no need
+  // to trigger the captive portal detection right now. It can wait.
+  if (NS_SUCCEEDED(addr.InitFromString(host)) && addr.IsIPAddrLocal()) {
     RecheckCaptivePortal();
   }
 
@@ -947,13 +941,9 @@ nsIOService::HostnameIsLocalIPAddress(nsIURI* aURI, bool* aResult) {
 
   *aResult = false;
 
-  PRNetAddr addr;
-  PRStatus result = PR_StringToNetAddr(host.get(), &addr);
-  if (result == PR_SUCCESS) {
-    NetAddr netAddr(&addr);
-    if (netAddr.IsIPAddrLocal()) {
-      *aResult = true;
-    }
+  NetAddr addr;
+  if (NS_SUCCEEDED(addr.InitFromString(host)) && addr.IsIPAddrLocal()) {
+    *aResult = true;
   }
 
   return NS_OK;
@@ -974,13 +964,9 @@ nsIOService::HostnameIsSharedIPAddress(nsIURI* aURI, bool* aResult) {
 
   *aResult = false;
 
-  PRNetAddr addr;
-  PRStatus result = PR_StringToNetAddr(host.get(), &addr);
-  if (result == PR_SUCCESS) {
-    NetAddr netAddr(&addr);
-    if (netAddr.IsIPAddrShared()) {
-      *aResult = true;
-    }
+  NetAddr addr;
+  if (NS_SUCCEEDED(addr.InitFromString(host)) && addr.IsIPAddrShared()) {
+    *aResult = true;
   }
 
   return NS_OK;

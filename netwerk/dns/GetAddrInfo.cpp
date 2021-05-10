@@ -312,8 +312,7 @@ bool FindAddrOverride(const nsACString& aHost, uint16_t aAddressFamily,
     if (aAddressFamily != AF_UNSPEC && ip.raw.family != aAddressFamily) {
       continue;
     }
-    NetAddr addr(&ip);
-    addresses.AppendElement(addr);
+    addresses.AppendElement(ip);
   }
 
   if (!cname) {
@@ -412,10 +411,7 @@ NS_IMPL_ISUPPORTS(NativeDNSResolverOverride, nsINativeDNSResolverOverride)
 
 NS_IMETHODIMP NativeDNSResolverOverride::AddIPOverride(
     const nsACString& aHost, const nsACString& aIPLiteral) {
-  PRNetAddr tempAddr;
-  // Unfortunately, PR_StringToNetAddr does not properly initialize
-  // the output buffer in the case of IPv6 input. See bug 223145.
-  memset(&tempAddr, 0, sizeof(PRNetAddr));
+  NetAddr tempAddr;
 
   if (aIPLiteral.Equals("N/A"_ns)) {
     AutoWriteLock lock(mLock);
@@ -424,8 +420,7 @@ NS_IMETHODIMP NativeDNSResolverOverride::AddIPOverride(
     return NS_OK;
   }
 
-  if (PR_StringToNetAddr(nsCString(aIPLiteral).get(), &tempAddr) !=
-      PR_SUCCESS) {
+  if (NS_FAILED(tempAddr.InitFromString(aIPLiteral))) {
     return NS_ERROR_UNEXPECTED;
   }
 
