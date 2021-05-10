@@ -1064,9 +1064,10 @@ bool OculusSession::InitState(VRSystemState& aSystemState) {
   UpdateEyeParameters(aSystemState);
 
   VRHMDSensorState& sensorState = aSystemState.sensorState;
-  sensorState.flags = (VRDisplayCapabilityFlags)(
-      (int)VRDisplayCapabilityFlags::Cap_Orientation |
-      (int)VRDisplayCapabilityFlags::Cap_Position);
+  sensorState.flags =
+      (VRDisplayCapabilityFlags)((int)
+                                     VRDisplayCapabilityFlags::Cap_Orientation |
+                                 (int)VRDisplayCapabilityFlags::Cap_Position);
   sensorState.pose.orientation[3] = 1.0f;  // Default to an identity quaternion
 
   return true;

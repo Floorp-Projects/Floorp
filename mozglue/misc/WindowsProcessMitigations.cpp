@@ -19,8 +19,8 @@ namespace mozilla {
 
 static decltype(&::GetProcessMitigationPolicy)
 FetchGetProcessMitigationPolicyFunc() {
-  static const StaticDynamicallyLinkedFunctionPtr<decltype(
-      &::GetProcessMitigationPolicy)>
+  static const StaticDynamicallyLinkedFunctionPtr<
+      decltype(&::GetProcessMitigationPolicy)>
       pGetProcessMitigationPolicy(L"kernel32.dll",
                                   "GetProcessMitigationPolicy");
   return pGetProcessMitigationPolicy;

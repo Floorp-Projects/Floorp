@@ -870,11 +870,11 @@ TEST(TArray, RemoveLastElements_One)
   ASSERT_EQ((nsTArray<int>{1, 2, 3}), array);
 }
 
-static_assert(std::is_copy_assignable<decltype(
-                  MakeBackInserter(std::declval<nsTArray<int>&>()))>::value,
+static_assert(std::is_copy_assignable<decltype(MakeBackInserter(
+                  std::declval<nsTArray<int>&>()))>::value,
               "output iteraror must be copy-assignable");
-static_assert(std::is_copy_constructible<decltype(
-                  MakeBackInserter(std::declval<nsTArray<int>&>()))>::value,
+static_assert(std::is_copy_constructible<decltype(MakeBackInserter(
+                  std::declval<nsTArray<int>&>()))>::value,
               "output iterator must be copy-constructible");
 
 TEST(TArray, MakeBackInserter)

@@ -24,19 +24,17 @@ static HMODULE gWinWebAuthnModule = 0;
 
 static decltype(WebAuthNIsUserVerifyingPlatformAuthenticatorAvailable)*
     gWinWebauthnIsUVPAA = nullptr;
-static decltype(
-    WebAuthNAuthenticatorMakeCredential)* gWinWebauthnMakeCredential = nullptr;
-static decltype(
-    WebAuthNFreeCredentialAttestation)* gWinWebauthnFreeCredentialAttestation =
-    nullptr;
+static decltype(WebAuthNAuthenticatorMakeCredential)*
+    gWinWebauthnMakeCredential = nullptr;
+static decltype(WebAuthNFreeCredentialAttestation)*
+    gWinWebauthnFreeCredentialAttestation = nullptr;
 static decltype(WebAuthNAuthenticatorGetAssertion)* gWinWebauthnGetAssertion =
     nullptr;
 static decltype(WebAuthNFreeAssertion)* gWinWebauthnFreeAssertion = nullptr;
 static decltype(WebAuthNGetCancellationId)* gWinWebauthnGetCancellationId =
     nullptr;
-static decltype(
-    WebAuthNCancelCurrentOperation)* gWinWebauthnCancelCurrentOperation =
-    nullptr;
+static decltype(WebAuthNCancelCurrentOperation)*
+    gWinWebauthnCancelCurrentOperation = nullptr;
 static decltype(WebAuthNGetErrorName)* gWinWebauthnGetErrorName = nullptr;
 static decltype(WebAuthNGetApiVersionNumber)* gWinWebauthnGetApiVersionNumber =
     nullptr;
@@ -57,8 +55,8 @@ WinWebAuthnManager::WinWebAuthnManager() {
   gWinWebAuthnModule = LoadLibrarySystem32(L"webauthn.dll");
 
   if (gWinWebAuthnModule) {
-    gWinWebauthnIsUVPAA = reinterpret_cast<decltype(
-        WebAuthNIsUserVerifyingPlatformAuthenticatorAvailable)*>(
+    gWinWebauthnIsUVPAA = reinterpret_cast<
+        decltype(WebAuthNIsUserVerifyingPlatformAuthenticatorAvailable)*>(
         GetProcAddress(
             gWinWebAuthnModule,
             "WebAuthNIsUserVerifyingPlatformAuthenticatorAvailable"));

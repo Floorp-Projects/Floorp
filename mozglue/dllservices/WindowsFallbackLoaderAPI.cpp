@@ -47,8 +47,8 @@ void FallbackLoaderAPI::NotifyEndDllLoad(void* aContext, NTSTATUS aLoadNtStatus,
 
 nt::AllocatedUnicodeString FallbackLoaderAPI::GetSectionName(
     void* aSectionAddr) {
-  static const StaticDynamicallyLinkedFunctionPtr<decltype(
-      &::NtQueryVirtualMemory)>
+  static const StaticDynamicallyLinkedFunctionPtr<
+      decltype(&::NtQueryVirtualMemory)>
       pNtQueryVirtualMemory(L"ntdll.dll", "NtQueryVirtualMemory");
   MOZ_ASSERT(pNtQueryVirtualMemory);
 

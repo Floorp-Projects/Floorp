@@ -717,7 +717,7 @@
 #    define MOZ_STATIC_CLASS __attribute__((annotate("moz_global_class")))
 #    define MOZ_STATIC_LOCAL_CLASS                        \
       __attribute__((annotate("moz_static_local_class"))) \
-          __attribute__((annotate("moz_trivial_dtor")))
+      __attribute__((annotate("moz_trivial_dtor")))
 #    define MOZ_STACK_CLASS __attribute__((annotate("moz_stack_class")))
 #    define MOZ_NONHEAP_CLASS __attribute__((annotate("moz_nonheap_class")))
 #    define MOZ_HEAP_CLASS __attribute__((annotate("moz_heap_class")))
@@ -757,8 +757,8 @@
 #    define MOZ_NO_DANGLING_ON_TEMPORARIES \
       __attribute__((annotate("moz_no_dangling_on_temporaries")))
 #    define MOZ_INHERIT_TYPE_ANNOTATIONS_FROM_TEMPLATE_ARGS \
-      __attribute__(                                        \
-          (annotate("moz_inherit_type_annotations_from_template_args")))
+      __attribute__((                                       \
+          annotate("moz_inherit_type_annotations_from_template_args")))
 #    define MOZ_NON_AUTOABLE __attribute__((annotate("moz_non_autoable")))
 #    define MOZ_INIT_OUTSIDE_CTOR
 #    define MOZ_IS_CLASS_INIT
@@ -781,7 +781,7 @@
         _Pragma("clang diagnostic push")                         \
             _Pragma("clang diagnostic ignored \"-Wgcc-compat\"") \
                 __attribute__((annotate("moz_heap_allocator")))  \
-                    _Pragma("clang diagnostic pop")
+                _Pragma("clang diagnostic pop")
 #    else
 #      define MOZ_HEAP_ALLOCATOR __attribute__((annotate("moz_heap_allocator")))
 #    endif

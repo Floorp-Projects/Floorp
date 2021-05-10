@@ -637,8 +637,9 @@ already_AddRefed<mozilla::CancelableRunnable> NS_NewCancelableRunnableFunction(
     const char* aName, Function&& aFunc) {
   class FuncCancelableRunnable final : public mozilla::CancelableRunnable {
    public:
-    static_assert(std::is_void_v<decltype(
-                      std::declval<std::remove_reference_t<Function>>()())>);
+    static_assert(
+        std::is_void_v<
+            decltype(std::declval<std::remove_reference_t<Function>>()())>);
 
     NS_INLINE_DECL_REFCOUNTING_INHERITED(FuncCancelableRunnable,
                                          CancelableRunnable)
@@ -1111,8 +1112,9 @@ struct ParameterStorage
 };
 
 template <class T>
-static auto HasSetDeadlineTest(int) -> SFINAE1True<decltype(
-    std::declval<T>().SetDeadline(std::declval<mozilla::TimeStamp>()))>;
+static auto HasSetDeadlineTest(int)
+    -> SFINAE1True<decltype(std::declval<T>().SetDeadline(
+        std::declval<mozilla::TimeStamp>()))>;
 
 template <class T>
 static auto HasSetDeadlineTest(long) -> std::false_type;

@@ -959,8 +959,8 @@ nsresult nsSystemInfo::Init() {
   }
 #  endif  // __MINGW32__
 
-  mozilla::DynamicallyLinkedFunctionPtr<decltype(
-      &IsUserCetAvailableInEnvironment)>
+  mozilla::DynamicallyLinkedFunctionPtr<
+      decltype(&IsUserCetAvailableInEnvironment)>
       isUserCetAvailable(L"api-ms-win-core-sysinfo-l1-2-6.dll",
                          "IsUserCetAvailableInEnvironment");
   bool hasUserCET = isUserCetAvailable &&

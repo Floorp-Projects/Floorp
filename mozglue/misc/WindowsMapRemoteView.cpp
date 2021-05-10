@@ -38,8 +38,8 @@ NTSTATUS NTAPI NtMapViewOfSection(
 NTSTATUS NTAPI NtUnmapViewOfSection(HANDLE aProcess, PVOID aBaseAddress);
 
 static DWORD GetWin32ErrorCode(NTSTATUS aNtStatus) {
-  static const mozilla::StaticDynamicallyLinkedFunctionPtr<decltype(
-      &RtlNtStatusToDosError)>
+  static const mozilla::StaticDynamicallyLinkedFunctionPtr<
+      decltype(&RtlNtStatusToDosError)>
       pRtlNtStatusToDosError(L"ntdll.dll", "RtlNtStatusToDosError");
 
   MOZ_ASSERT(!!pRtlNtStatusToDosError);
@@ -107,8 +107,8 @@ MFBT_API bool UnmapRemoteViewOfFile(HANDLE aProcess, PVOID aBaseAddress) {
     return !!pUnmapViewOfFile2(aProcess, aBaseAddress, 0);
   }
 
-  static const StaticDynamicallyLinkedFunctionPtr<decltype(
-      &NtUnmapViewOfSection)>
+  static const StaticDynamicallyLinkedFunctionPtr<
+      decltype(&NtUnmapViewOfSection)>
       pNtUnmapViewOfSection(L"ntdll.dll", "NtUnmapViewOfSection");
 
   MOZ_ASSERT(!!pNtUnmapViewOfSection);

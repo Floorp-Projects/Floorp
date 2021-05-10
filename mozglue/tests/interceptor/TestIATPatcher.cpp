@@ -69,8 +69,8 @@ extern "C" int wmain(int argc, wchar_t* argv[]) {
     return 1;
   }
 
-  static const mozilla::StaticDynamicallyLinkedFunctionPtr<decltype(
-      &::GetSystemMetrics)>
+  static const mozilla::StaticDynamicallyLinkedFunctionPtr<
+      decltype(&::GetSystemMetrics)>
       pRealGetSystemMetrics(L"user32.dll", "GetSystemMetrics");
   if (!pRealGetSystemMetrics) {
     PRINT_FAIL("Failed resolving real GetSystemMetrics pointer");

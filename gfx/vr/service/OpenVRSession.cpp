@@ -713,14 +713,17 @@ bool OpenVRSession::InitState(VRSystemState& aSystemState) {
   state.isConnected =
       mVRSystem->IsTrackedDeviceConnected(::vr::k_unTrackedDeviceIndex_Hmd);
   state.isMounted = false;
-  state.capabilityFlags = (VRDisplayCapabilityFlags)(
-      (int)VRDisplayCapabilityFlags::Cap_None |
-      (int)VRDisplayCapabilityFlags::Cap_Orientation |
-      (int)VRDisplayCapabilityFlags::Cap_Position |
-      (int)VRDisplayCapabilityFlags::Cap_External |
-      (int)VRDisplayCapabilityFlags::Cap_Present |
-      (int)VRDisplayCapabilityFlags::Cap_StageParameters |
-      (int)VRDisplayCapabilityFlags::Cap_ImmersiveVR);
+  state.capabilityFlags =
+      (VRDisplayCapabilityFlags)((int)VRDisplayCapabilityFlags::Cap_None |
+                                 (int)
+                                     VRDisplayCapabilityFlags::Cap_Orientation |
+                                 (int)VRDisplayCapabilityFlags::Cap_Position |
+                                 (int)VRDisplayCapabilityFlags::Cap_External |
+                                 (int)VRDisplayCapabilityFlags::Cap_Present |
+                                 (int)VRDisplayCapabilityFlags::
+                                     Cap_StageParameters |
+                                 (int)
+                                     VRDisplayCapabilityFlags::Cap_ImmersiveVR);
   state.blendMode = VRDisplayBlendMode::Opaque;
   state.reportsDroppedFrames = true;
 
@@ -729,9 +732,10 @@ bool OpenVRSession::InitState(VRSystemState& aSystemState) {
       ::vr::k_unTrackedDeviceIndex_Hmd, ::vr::Prop_ContainsProximitySensor_Bool,
       &err);
   if (err == ::vr::TrackedProp_Success && bHasProximitySensor) {
-    state.capabilityFlags = (VRDisplayCapabilityFlags)(
-        (int)state.capabilityFlags |
-        (int)VRDisplayCapabilityFlags::Cap_MountDetection);
+    state.capabilityFlags =
+        (VRDisplayCapabilityFlags)((int)state.capabilityFlags |
+                                   (int)VRDisplayCapabilityFlags::
+                                       Cap_MountDetection);
   }
 
   uint32_t w, h;
@@ -747,9 +751,10 @@ bool OpenVRSession::InitState(VRSystemState& aSystemState) {
   UpdateEyeParameters(aSystemState);
 
   VRHMDSensorState& sensorState = aSystemState.sensorState;
-  sensorState.flags = (VRDisplayCapabilityFlags)(
-      (int)VRDisplayCapabilityFlags::Cap_Orientation |
-      (int)VRDisplayCapabilityFlags::Cap_Position);
+  sensorState.flags =
+      (VRDisplayCapabilityFlags)((int)
+                                     VRDisplayCapabilityFlags::Cap_Orientation |
+                                 (int)VRDisplayCapabilityFlags::Cap_Position);
   sensorState.pose.orientation[3] = 1.0f;  // Default to an identity quaternion
 
   return true;
@@ -878,9 +883,10 @@ void OpenVRSession::UpdateHeadsetPose(VRSystemState& aState) {
     gfx::Quaternion rot;
     rot.SetFromRotationMatrix(m);
 
-    aState.sensorState.flags = (VRDisplayCapabilityFlags)(
-        (int)aState.sensorState.flags |
-        (int)VRDisplayCapabilityFlags::Cap_Orientation);
+    aState.sensorState.flags =
+        (VRDisplayCapabilityFlags)((int)aState.sensorState.flags |
+                                   (int)VRDisplayCapabilityFlags::
+                                       Cap_Orientation);
     aState.sensorState.pose.orientation[0] = rot.x;
     aState.sensorState.pose.orientation[1] = rot.y;
     aState.sensorState.pose.orientation[2] = rot.z;
