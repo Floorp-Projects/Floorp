@@ -2,6 +2,7 @@
 //
 // This program is made available under an ISC-style license.  See the
 // accompanying file LICENSE for details
+
 #![warn(unused_extern_crates)]
 #![recursion_limit = "1024"]
 #[macro_use]
@@ -146,6 +147,8 @@ impl PlatformHandle {
         PlatformHandle::new(from.into_raw_fd(), true)
     }
 
+    #[allow(clippy::missing_safety_doc)]
+    #[allow(clippy::wrong_self_convention)]
     pub unsafe fn into_raw(&self) -> PlatformHandleType {
         let mut h = self.0.borrow_mut();
         assert!(h.owned);
@@ -153,6 +156,7 @@ impl PlatformHandle {
         h.handle
     }
 
+    #[allow(clippy::missing_safety_doc)]
     pub unsafe fn as_raw(&self) -> PlatformHandleType {
         self.0.borrow().handle
     }

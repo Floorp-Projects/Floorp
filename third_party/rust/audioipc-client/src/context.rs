@@ -29,7 +29,7 @@ use std::os::raw::c_void;
 use std::sync::mpsc;
 use std::sync::{Arc, Mutex};
 use std::thread;
-use std::{fmt, io, mem, ptr};
+use std::{fmt, mem, ptr};
 use tokio::reactor;
 use tokio::runtime::current_thread;
 
@@ -189,13 +189,12 @@ impl ContextOps for ClientContext {
         fn bind_and_send_client(
             stream: audioipc::AsyncMessageStream,
             tx_rpc: &mpsc::Sender<rpc::ClientProxy<ServerMessage, ClientMessage>>,
-        ) -> io::Result<()> {
+        ) {
             let transport = framed_with_platformhandles(stream, Default::default());
             let rpc = rpc::bind_client::<CubebClient>(transport);
             // If send fails then the rx end has closed
             // which is unlikely here.
             let _ = tx_rpc.send(rpc);
-            Ok(())
         }
 
         assert_not_in_callback();
@@ -216,9 +215,9 @@ impl ContextOps for ClientContext {
 
                 register_thread(thread_create_callback);
 
-                server_stream
-                    .into_tokio_ipc(&handle)
-                    .and_then(|stream| bind_and_send_client(stream, &tx_rpc))
+                let stream = server_stream.into_tokio_ipc(&handle).unwrap();
+                bind_and_send_client(stream, &tx_rpc);
+                Ok(())
             },
             move || unregister_thread(thread_destroy_callback),
         )
@@ -344,20 +343,10 @@ impl ContextOps for ClientContext {
     ) -> Result<Stream> {
         assert_not_in_callback();
 
-        fn opt_stream_params(p: Option<&StreamParamsRef>) -> Option<messages::StreamParams> {
-            match p {
-                Some(p) => Some(messages::StreamParams::from(p)),
-                None => None,
-            }
-        }
+        let stream_name = stream_name.map(|name| name.to_bytes_with_nul().to_vec());
 
-        let stream_name = match stream_name {
-            Some(s) => Some(s.to_bytes_with_nul().to_vec()),
-            None => None,
-        };
-
-        let input_stream_params = opt_stream_params(input_stream_params);
-        let output_stream_params = opt_stream_params(output_stream_params);
+        let input_stream_params = input_stream_params.map(messages::StreamParams::from);
+        let output_stream_params = output_stream_params.map(messages::StreamParams::from);
 
         let init_params = messages::StreamInitParams {
             stream_name,

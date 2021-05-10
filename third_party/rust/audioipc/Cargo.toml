@@ -27,13 +27,16 @@ libc = "0.2"
 mio = "0.6.19"
 mio-uds = "0.6.7"
 tokio-reactor = "0.1"
-memmap = "0.7"
+memmap2 = "0.2"
 
 [target.'cfg(windows)'.dependencies]
 mio = "0.6.19"
 miow = "0.3.3"
 mio-named-pipes = { git = "https://github.com/kinetiknz/mio-named-pipes", rev = "21c26326f5f45f415c49eac4ba5bc41a2f961321" }
-winapi = { version = "0.3.6", features = ["combaseapi", "objbase"] }
+winapi = { version = "0.3.6", features = ["combaseapi", "memoryapi", "objbase"] }
+
+[target.'cfg(target_os = "android")'.dependencies]
+ashmem = { git = "https://github.com/kinetiknz/ashmem-rs", rev = "e47f470a54193532d60057ec54f864e06aeaff36" }
 
 [dependencies.error-chain]
 version = "0.11.0"

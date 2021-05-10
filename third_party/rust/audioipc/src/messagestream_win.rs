@@ -4,7 +4,6 @@
 // accompanying file LICENSE for details
 
 use super::tokio_named_pipes;
-use mio_named_pipes;
 use std::os::windows::fs::*;
 use std::os::windows::io::{AsRawHandle, FromRawHandle, IntoRawHandle, RawHandle};
 use std::sync::atomic::{AtomicUsize, Ordering};
@@ -38,6 +37,7 @@ impl MessageStream {
         ))
     }
 
+    #[allow(clippy::missing_safety_doc)]
     pub unsafe fn from_raw_fd(raw: super::PlatformHandleType) -> MessageStream {
         MessageStream::new(miow::pipe::NamedPipe::from_raw_handle(raw))
     }

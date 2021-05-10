@@ -87,6 +87,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "ashmem"
+version = "0.1.0"
+source = "git+https://github.com/kinetiknz/ashmem-rs?rev=e47f470a54193532d60057ec54f864e06aeaff36#e47f470a54193532d60057ec54f864e06aeaff36"
+dependencies = [
+ "ioctl-sys",
+ "libc",
+]
+
+[[package]]
 name = "atomic"
 version = "0.4.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -135,8 +144,9 @@ dependencies = [
 [[package]]
 name = "audioipc"
 version = "0.2.5"
-source = "git+https://github.com/mozilla/audioipc-2?rev=8fb5ff19fba7b09e8e66598122421e68a5c573ac#8fb5ff19fba7b09e8e66598122421e68a5c573ac"
+source = "git+https://github.com/mozilla/audioipc-2?rev=7537bfadad2e981577eb75e4f13662fc517e1a09#7537bfadad2e981577eb75e4f13662fc517e1a09"
 dependencies = [
+ "ashmem",
  "audio_thread_priority",
  "bincode",
  "bytes 0.4.9",
@@ -147,7 +157,7 @@ dependencies = [
  "iovec",
  "libc",
  "log",
- "memmap",
+ "memmap2",
  "mio",
  "mio-named-pipes",
  "mio-uds",
@@ -163,7 +173,7 @@ dependencies = [
 [[package]]
 name = "audioipc-client"
 version = "0.4.0"
-source = "git+https://github.com/mozilla/audioipc-2?rev=8fb5ff19fba7b09e8e66598122421e68a5c573ac#8fb5ff19fba7b09e8e66598122421e68a5c573ac"
+source = "git+https://github.com/mozilla/audioipc-2?rev=7537bfadad2e981577eb75e4f13662fc517e1a09#7537bfadad2e981577eb75e4f13662fc517e1a09"
 dependencies = [
  "audio_thread_priority",
  "audioipc",
@@ -177,7 +187,7 @@ dependencies = [
 [[package]]
 name = "audioipc-server"
 version = "0.2.3"
-source = "git+https://github.com/mozilla/audioipc-2?rev=8fb5ff19fba7b09e8e66598122421e68a5c573ac#8fb5ff19fba7b09e8e66598122421e68a5c573ac"
+source = "git+https://github.com/mozilla/audioipc-2?rev=7537bfadad2e981577eb75e4f13662fc517e1a09#7537bfadad2e981577eb75e4f13662fc517e1a09"
 dependencies = [
  "audio_thread_priority",
  "audioipc",
@@ -2473,6 +2483,12 @@ dependencies = [
  "tinystr",
  "unic-langid",
 ]
+
+[[package]]
+name = "ioctl-sys"
+version = "0.7.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7f9d0b6b23885487578d10590edc36fd95426257c7017973b20633e34df23b08"
 
 [[package]]
 name = "iovec"

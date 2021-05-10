@@ -369,12 +369,13 @@ mod test {
 
     #[test]
     fn stream_params_from() {
-        let mut raw = ffi::cubeb_stream_params::default();
-        raw.format = ffi::CUBEB_SAMPLE_FLOAT32BE;
-        raw.rate = 96_000;
-        raw.channels = 32;
-        raw.layout = ffi::CUBEB_LAYOUT_3F1_LFE;
-        raw.prefs = ffi::CUBEB_STREAM_PREF_LOOPBACK;
+        let raw = ffi::cubeb_stream_params {
+            format: ffi::CUBEB_SAMPLE_FLOAT32BE,
+            rate: 96_000,
+            channels: 32,
+            layout: ffi::CUBEB_LAYOUT_3F1_LFE,
+            prefs: ffi::CUBEB_STREAM_PREF_LOOPBACK,
+        };
         let wrapped = ::cubeb::StreamParams::from(raw);
         let params = StreamParams::from(wrapped.as_ref());
         assert_eq!(params.format, raw.format);
