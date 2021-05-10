@@ -196,10 +196,10 @@ bool nsDisplayFieldSetBorder::CreateWebRenderCommands(
           LayoutDeviceRect::FromAppUnits(legendRect, appUnitsPerDevPixel));
       region.mode = wr::ClipMode::ClipOut;
       region.radii = wr::EmptyBorderRadius();
-      nsTArray<mozilla::wr::ComplexClipRegion> array{region};
 
-      auto clip = aBuilder.DefineClip(Nothing(), layoutRect, &array);
-      auto clipChain = aBuilder.DefineClipChain({clip}, true);
+      auto rect_clip = aBuilder.DefineRectClip(layoutRect);
+      auto complex_clip = aBuilder.DefineRoundedRectClip(region);
+      auto clipChain = aBuilder.DefineClipChain({rect_clip, complex_clip}, true);
       clipOut.emplace(aBuilder, clipChain);
     }
   } else {
