@@ -440,11 +440,6 @@ class TestBackForwardNavigation(BaseNavigationTestCase):
         self.marionette.go_back()
         self.marionette.go_forward()
 
-    @skip_unless_browser_pref(
-        "Bug 1656208 - Always turn on session history in the parent for fission",
-        "fission.autostart",
-        lambda value: value is False,
-    )
     def test_dismissed_beforeunload_prompt(self):
         url_beforeunload = inline(
             """
@@ -468,11 +463,6 @@ class TestBackForwardNavigation(BaseNavigationTestCase):
 
         self.run_bfcache_test(test_pages)
 
-    @skip_unless_browser_pref(
-        "Bug 1656208 - Always turn on session history in the parent for fission",
-        "fission.autostart",
-        lambda value: value is False,
-    )
     def test_data_urls(self):
         test_pages = [
             {"url": inline("<p>foobar</p>")},
@@ -481,11 +471,6 @@ class TestBackForwardNavigation(BaseNavigationTestCase):
         ]
         self.run_bfcache_test(test_pages)
 
-    @skip_unless_browser_pref(
-        "Bug 1656208 - Always turn on session history in the parent for fission",
-        "fission.autostart",
-        lambda value: value is False,
-    )
     def test_same_document_hash_change(self):
         test_pages = [
             {"url": "{}#23".format(self.test_page_remote)},
@@ -494,11 +479,6 @@ class TestBackForwardNavigation(BaseNavigationTestCase):
         ]
         self.run_bfcache_test(test_pages)
 
-    @skip_unless_browser_pref(
-        "Bug 1656208 - Always turn on session history in the parent for fission",
-        "fission.autostart",
-        lambda value: value is False,
-    )
     def test_file_url(self):
         test_pages = [
             {"url": self.test_page_remote},
@@ -507,11 +487,6 @@ class TestBackForwardNavigation(BaseNavigationTestCase):
         ]
         self.run_bfcache_test(test_pages)
 
-    @skip_unless_browser_pref(
-        "Bug 1656208 - Always turn on session history in the parent for fission",
-        "fission.autostart",
-        lambda value: value is False,
-    )
     def test_frameset(self):
         test_pages = [
             {"url": self.marionette.absolute_url("frameset.html")},
@@ -520,11 +495,6 @@ class TestBackForwardNavigation(BaseNavigationTestCase):
         ]
         self.run_bfcache_test(test_pages)
 
-    @skip_unless_browser_pref(
-        "Bug 1656208 - Always turn on session history in the parent for fission",
-        "fission.autostart",
-        lambda value: value is False,
-    )
     def test_frameset_after_navigating_in_frame(self):
         test_element_locator = (By.ID, "email")
 
@@ -572,11 +542,6 @@ class TestBackForwardNavigation(BaseNavigationTestCase):
         self.marionette.find_element(*test_element_locator)
         self.assertEqual(self.marionette.get_url(), page)
 
-    @skip_unless_browser_pref(
-        "Bug 1656208 - Always turn on session history in the parent for fission",
-        "fission.autostart",
-        lambda value: value is False,
-    )
     def test_image_to_html_to_image(self):
         test_pages = [
             {"url": self.marionette.absolute_url("black.png")},
@@ -585,11 +550,6 @@ class TestBackForwardNavigation(BaseNavigationTestCase):
         ]
         self.run_bfcache_test(test_pages)
 
-    @skip_unless_browser_pref(
-        "Bug 1656208 - Always turn on session history in the parent for fission",
-        "fission.autostart",
-        lambda value: value is False,
-    )
     def test_image_to_image(self):
         test_pages = [
             {"url": self.marionette.absolute_url("black.png")},
@@ -600,11 +560,6 @@ class TestBackForwardNavigation(BaseNavigationTestCase):
         ]
         self.run_bfcache_test(test_pages)
 
-    @skip_unless_browser_pref(
-        "Bug 1656208 - Always turn on session history in the parent for fission",
-        "fission.autostart",
-        lambda value: value is False,
-    )
     def test_remoteness_change(self):
         test_pages = [
             {"url": "about:robots", "is_remote": False},
@@ -613,11 +568,6 @@ class TestBackForwardNavigation(BaseNavigationTestCase):
         ]
         self.run_bfcache_test(test_pages)
 
-    @skip_unless_browser_pref(
-        "Bug 1656208 - Always turn on session history in the parent for fission",
-        "fission.autostart",
-        lambda value: value is False,
-    )
     def test_non_remote_about_pages(self):
         test_pages = [
             {"url": "about:preferences", "is_remote": False},
@@ -626,11 +576,6 @@ class TestBackForwardNavigation(BaseNavigationTestCase):
         ]
         self.run_bfcache_test(test_pages)
 
-    @skip_unless_browser_pref(
-        "Bug 1656208 - Always turn on session history in the parent for fission",
-        "fission.autostart",
-        lambda value: value is False,
-    )
     def test_navigate_to_requested_about_page_after_error_page(self):
         test_pages = [
             {"url": "about:neterror"},
@@ -639,11 +584,6 @@ class TestBackForwardNavigation(BaseNavigationTestCase):
         ]
         self.run_bfcache_test(test_pages)
 
-    @skip_unless_browser_pref(
-        "Bug 1656208 - Always turn on session history in the parent for fission",
-        "fission.autostart",
-        lambda value: value is False,
-    )
     def test_timeout_error(self):
         urls = [
             self.marionette.absolute_url("slow?delay=3"),
@@ -688,8 +628,8 @@ class TestBackForwardNavigation(BaseNavigationTestCase):
         self.assertEqual(delay.text, "4")
 
     @skip_unless_browser_pref(
-        "Bug 1656208 - Always turn on session history in the parent for fission",
-        "fission.autostart",
+        "Bug 1710380 - Fails when session history in the parent for fission is enabled",
+        "fission.bfcacheInParent",
         lambda value: value is False,
     )
     def test_certificate_error(self):
