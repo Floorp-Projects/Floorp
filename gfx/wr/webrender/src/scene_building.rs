@@ -883,18 +883,20 @@ impl<'a> SceneBuilder<'a> {
         pipeline_id: PipelineId,
     ) {
         let current_offset = self.current_offset(parent_node_index);
-        let clip_region = ClipRegion::create_for_clip_node_with_local_clip(
-            &info.clip_rect,
-            &current_offset,
-        );
+        let clip_rect = info.clip_rect.translate(current_offset);
+
         // Just use clip rectangle as the frame rect for this scroll frame.
         // This is useful when calculating scroll extents for the
         // SpatialNode::scroll(..) API as well as for properly setting sticky
         // positioning offsets.
-        let frame_rect = clip_region.main;
+        let frame_rect = clip_rect;
         let content_size = info.content_rect.size;
 
-        self.add_clip_node(info.clip_id, &info.parent_space_and_clip, clip_region);
+        self.add_rect_clip_node(
+            info.clip_id,
+            &info.parent_space_and_clip,
+            &clip_rect,
+        );
 
         self.add_scroll_frame(
             info.scroll_frame_id,
@@ -924,13 +926,12 @@ impl<'a> SceneBuilder<'a> {
         };
 
         let current_offset = self.current_offset(spatial_node_index);
-        self.add_clip_node(
+        let clip_rect = info.clip_rect.translate(current_offset);
+
+        self.add_rect_clip_node(
             ClipId::root(iframe_pipeline_id),
             &info.space_and_clip,
-            ClipRegion::create_for_clip_node_with_local_clip(
-                &info.clip_rect,
-                &current_offset,
-            ),
+            &clip_rect,
         );
 
         self.clip_store.push_clip_root(
