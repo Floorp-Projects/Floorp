@@ -295,6 +295,5 @@ bool IsValidStackMapKey(bool debugEnabled, const uint8_t* nextPC) {
 }
 #endif
 
-
 }  // namespace wasm
 }  // namespace js

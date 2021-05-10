@@ -2211,8 +2211,8 @@ nsresult imgLoader::LoadImage(
 
   // Look in the preloaded images of loading document first.
   if (StaticPrefs::network_preload() && !aLinkPreload && aLoadingDocument) {
-    auto key = PreloadHashKey::CreateAsImage(aURI, aTriggeringPrincipal,
-                                             corsmode);
+    auto key =
+        PreloadHashKey::CreateAsImage(aURI, aTriggeringPrincipal, corsmode);
     if (RefPtr<PreloaderBase> preload =
             aLoadingDocument->Preloads().LookupPreload(key)) {
       RefPtr<imgRequestProxy> proxy = do_QueryObject(preload);
@@ -2441,8 +2441,8 @@ nsresult imgLoader::LoadImage(
     if (aLinkPreload) {
       MOZ_ASSERT(aLoadingDocument);
       proxy->PrioritizeAsPreload();
-      auto preloadKey = PreloadHashKey::CreateAsImage(
-          aURI, aTriggeringPrincipal, corsmode);
+      auto preloadKey =
+          PreloadHashKey::CreateAsImage(aURI, aTriggeringPrincipal, corsmode);
       proxy->NotifyOpen(preloadKey, aLoadingDocument, true);
     }
 
@@ -2544,8 +2544,7 @@ nsresult imgLoader::LoadImageWithChannel(nsIChannel* channel,
 
       if (ValidateEntry(entry, uri, nullptr, nullptr, nullptr, aObserver,
                         aLoadingDocument, requestFlags, policyType, false,
-                        nullptr, nullptr, nullptr, CORS_NONE,
-                        false)) {
+                        nullptr, nullptr, nullptr, CORS_NONE, false)) {
         request = entry->GetRequest();
       } else {
         nsCOMPtr<nsICacheInfoChannel> cacheChan(do_QueryInterface(channel));

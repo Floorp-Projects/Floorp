@@ -451,15 +451,14 @@ typedef nsTHashMap<nsUint64HashKey, SafeRefPtr<FullObjectStoreMetadata>>
     ObjectStoreTable;
 
 static_assert(
-    std::is_same_v<IndexOrObjectStoreId,
-                   std::remove_cv_t<std::remove_reference_t<
-                       decltype(std::declval<const ObjectStoreGetParams&>()
-                                    .objectStoreId())>>>);
-static_assert(
     std::is_same_v<
         IndexOrObjectStoreId,
-        std::remove_cv_t<std::remove_reference_t<
-            decltype(std::declval<const IndexGetParams&>().objectStoreId())>>>);
+        std::remove_cv_t<std::remove_reference_t<decltype(
+            std::declval<const ObjectStoreGetParams&>().objectStoreId())>>>);
+static_assert(std::is_same_v<
+              IndexOrObjectStoreId,
+              std::remove_cv_t<std::remove_reference_t<decltype(
+                  std::declval<const IndexGetParams&>().objectStoreId())>>>);
 
 struct FullDatabaseMetadata final : AtomicSafeRefCounted<FullDatabaseMetadata> {
   DatabaseMetadata mCommonMetadata;
@@ -20692,8 +20691,8 @@ CursorOpBaseHelperBase<CursorType>::PopulateResponseFromStatement(
   // inconsistent state.
 
   if (aInitializeResponse) {
-    mOp.mResponse = std::remove_reference_t<
-        decltype(populateResponseHelper.GetTypedResponse(&mOp.mResponse))>();
+    mOp.mResponse = std::remove_reference_t<decltype(
+        populateResponseHelper.GetTypedResponse(&mOp.mResponse))>();
   }
 
   auto& responses = populateResponseHelper.GetTypedResponse(&mOp.mResponse);
