@@ -58,7 +58,7 @@ rawPackets.set(`ReferenceError: asdf is not defined`, {
         "functionName": null
       },
       {
-        "filename": "resource://testing-common/content-task.js line 110 > eval",
+        "filename": "resource://testing-common/content-task.js line 111 > eval",
         "sourceId": null,
         "lineNumber": 6,
         "columnNumber": 29,
@@ -67,14 +67,14 @@ rawPackets.set(`ReferenceError: asdf is not defined`, {
       {
         "filename": "resource://testing-common/content-task.js",
         "sourceId": null,
-        "lineNumber": 111,
+        "lineNumber": 112,
         "columnNumber": 29,
         "functionName": null
       },
       {
         "filename": "resource://testing-common/content-task.js",
         "sourceId": null,
-        "lineNumber": 64,
+        "lineNumber": 65,
         "columnNumber": 19,
         "functionName": null,
         "asyncCause": "MessageListener.receiveMessage"
@@ -131,7 +131,7 @@ rawPackets.set(`SyntaxError: redeclaration of let a`, {
     "private": false,
     "stacktrace": [
       {
-        "filename": "resource://testing-common/content-task.js line 110 > eval",
+        "filename": "resource://testing-common/content-task.js line 111 > eval",
         "sourceId": null,
         "lineNumber": 6,
         "columnNumber": 29,
@@ -140,14 +140,14 @@ rawPackets.set(`SyntaxError: redeclaration of let a`, {
       {
         "filename": "resource://testing-common/content-task.js",
         "sourceId": null,
-        "lineNumber": 111,
+        "lineNumber": 112,
         "columnNumber": 29,
         "functionName": null
       },
       {
         "filename": "resource://testing-common/content-task.js",
         "sourceId": null,
-        "lineNumber": 64,
+        "lineNumber": 65,
         "columnNumber": 19,
         "functionName": null,
         "asyncCause": "MessageListener.receiveMessage"
@@ -228,7 +228,7 @@ rawPackets.set(`TypeError longString message`, {
         "functionName": null
       },
       {
-        "filename": "resource://testing-common/content-task.js line 110 > eval",
+        "filename": "resource://testing-common/content-task.js line 111 > eval",
         "sourceId": null,
         "lineNumber": 6,
         "columnNumber": 29,
@@ -237,14 +237,14 @@ rawPackets.set(`TypeError longString message`, {
       {
         "filename": "resource://testing-common/content-task.js",
         "sourceId": null,
-        "lineNumber": 111,
+        "lineNumber": 112,
         "columnNumber": 29,
         "functionName": null
       },
       {
         "filename": "resource://testing-common/content-task.js",
         "sourceId": null,
-        "lineNumber": 64,
+        "lineNumber": 65,
         "columnNumber": 19,
         "functionName": null,
         "asyncCause": "MessageListener.receiveMessage"
@@ -315,7 +315,7 @@ rawPackets.set(`throw string with URL`, {
         "functionName": null
       },
       {
-        "filename": "resource://testing-common/content-task.js line 110 > eval",
+        "filename": "resource://testing-common/content-task.js line 111 > eval",
         "sourceId": null,
         "lineNumber": 6,
         "columnNumber": 29,
@@ -324,14 +324,14 @@ rawPackets.set(`throw string with URL`, {
       {
         "filename": "resource://testing-common/content-task.js",
         "sourceId": null,
-        "lineNumber": 111,
+        "lineNumber": 112,
         "columnNumber": 29,
         "functionName": null
       },
       {
         "filename": "resource://testing-common/content-task.js",
         "sourceId": null,
-        "lineNumber": 64,
+        "lineNumber": 65,
         "columnNumber": 19,
         "functionName": null,
         "asyncCause": "MessageListener.receiveMessage"
@@ -373,7 +373,7 @@ rawPackets.set(`throw ""`, {
         "functionName": null
       },
       {
-        "filename": "resource://testing-common/content-task.js line 110 > eval",
+        "filename": "resource://testing-common/content-task.js line 111 > eval",
         "sourceId": null,
         "lineNumber": 6,
         "columnNumber": 29,
@@ -382,14 +382,14 @@ rawPackets.set(`throw ""`, {
       {
         "filename": "resource://testing-common/content-task.js",
         "sourceId": null,
-        "lineNumber": 111,
+        "lineNumber": 112,
         "columnNumber": 29,
         "functionName": null
       },
       {
         "filename": "resource://testing-common/content-task.js",
         "sourceId": null,
-        "lineNumber": 64,
+        "lineNumber": 65,
         "columnNumber": 19,
         "functionName": null,
         "asyncCause": "MessageListener.receiveMessage"
@@ -431,7 +431,7 @@ rawPackets.set(`throw "tomato"`, {
         "functionName": null
       },
       {
-        "filename": "resource://testing-common/content-task.js line 110 > eval",
+        "filename": "resource://testing-common/content-task.js line 111 > eval",
         "sourceId": null,
         "lineNumber": 6,
         "columnNumber": 29,
@@ -440,14 +440,14 @@ rawPackets.set(`throw "tomato"`, {
       {
         "filename": "resource://testing-common/content-task.js",
         "sourceId": null,
-        "lineNumber": 111,
+        "lineNumber": 112,
         "columnNumber": 29,
         "functionName": null
       },
       {
         "filename": "resource://testing-common/content-task.js",
         "sourceId": null,
-        "lineNumber": 64,
+        "lineNumber": 65,
         "columnNumber": 19,
         "functionName": null,
         "asyncCause": "MessageListener.receiveMessage"
@@ -489,7 +489,7 @@ rawPackets.set(`throw false`, {
         "functionName": null
       },
       {
-        "filename": "resource://testing-common/content-task.js line 110 > eval",
+        "filename": "resource://testing-common/content-task.js line 111 > eval",
         "sourceId": null,
         "lineNumber": 6,
         "columnNumber": 29,
@@ -498,14 +498,14 @@ rawPackets.set(`throw false`, {
       {
         "filename": "resource://testing-common/content-task.js",
         "sourceId": null,
-        "lineNumber": 111,
+        "lineNumber": 112,
         "columnNumber": 29,
         "functionName": null
       },
       {
         "filename": "resource://testing-common/content-task.js",
         "sourceId": null,
-        "lineNumber": 64,
+        "lineNumber": 65,
         "columnNumber": 19,
         "functionName": null,
         "asyncCause": "MessageListener.receiveMessage"
@@ -547,7 +547,7 @@ rawPackets.set(`throw 0`, {
         "functionName": null
       },
       {
-        "filename": "resource://testing-common/content-task.js line 110 > eval",
+        "filename": "resource://testing-common/content-task.js line 111 > eval",
         "sourceId": null,
         "lineNumber": 6,
         "columnNumber": 29,
@@ -556,14 +556,14 @@ rawPackets.set(`throw 0`, {
       {
         "filename": "resource://testing-common/content-task.js",
         "sourceId": null,
-        "lineNumber": 111,
+        "lineNumber": 112,
         "columnNumber": 29,
         "functionName": null
       },
       {
         "filename": "resource://testing-common/content-task.js",
         "sourceId": null,
-        "lineNumber": 64,
+        "lineNumber": 65,
         "columnNumber": 19,
         "functionName": null,
         "asyncCause": "MessageListener.receiveMessage"
@@ -605,7 +605,7 @@ rawPackets.set(`throw null`, {
         "functionName": null
       },
       {
-        "filename": "resource://testing-common/content-task.js line 110 > eval",
+        "filename": "resource://testing-common/content-task.js line 111 > eval",
         "sourceId": null,
         "lineNumber": 6,
         "columnNumber": 29,
@@ -614,14 +614,14 @@ rawPackets.set(`throw null`, {
       {
         "filename": "resource://testing-common/content-task.js",
         "sourceId": null,
-        "lineNumber": 111,
+        "lineNumber": 112,
         "columnNumber": 29,
         "functionName": null
       },
       {
         "filename": "resource://testing-common/content-task.js",
         "sourceId": null,
-        "lineNumber": 64,
+        "lineNumber": 65,
         "columnNumber": 19,
         "functionName": null,
         "asyncCause": "MessageListener.receiveMessage"
@@ -665,7 +665,7 @@ rawPackets.set(`throw undefined`, {
         "functionName": null
       },
       {
-        "filename": "resource://testing-common/content-task.js line 110 > eval",
+        "filename": "resource://testing-common/content-task.js line 111 > eval",
         "sourceId": null,
         "lineNumber": 6,
         "columnNumber": 29,
@@ -674,14 +674,14 @@ rawPackets.set(`throw undefined`, {
       {
         "filename": "resource://testing-common/content-task.js",
         "sourceId": null,
-        "lineNumber": 111,
+        "lineNumber": 112,
         "columnNumber": 29,
         "functionName": null
       },
       {
         "filename": "resource://testing-common/content-task.js",
         "sourceId": null,
-        "lineNumber": 64,
+        "lineNumber": 65,
         "columnNumber": 19,
         "functionName": null,
         "asyncCause": "MessageListener.receiveMessage"
@@ -725,7 +725,7 @@ rawPackets.set(`throw Symbol`, {
         "functionName": null
       },
       {
-        "filename": "resource://testing-common/content-task.js line 110 > eval",
+        "filename": "resource://testing-common/content-task.js line 111 > eval",
         "sourceId": null,
         "lineNumber": 6,
         "columnNumber": 29,
@@ -734,14 +734,14 @@ rawPackets.set(`throw Symbol`, {
       {
         "filename": "resource://testing-common/content-task.js",
         "sourceId": null,
-        "lineNumber": 111,
+        "lineNumber": 112,
         "columnNumber": 29,
         "functionName": null
       },
       {
         "filename": "resource://testing-common/content-task.js",
         "sourceId": null,
-        "lineNumber": 64,
+        "lineNumber": 65,
         "columnNumber": 19,
         "functionName": null,
         "asyncCause": "MessageListener.receiveMessage"
@@ -787,7 +787,7 @@ rawPackets.set(`throw Object`, {
         "functionName": null
       },
       {
-        "filename": "resource://testing-common/content-task.js line 110 > eval",
+        "filename": "resource://testing-common/content-task.js line 111 > eval",
         "sourceId": null,
         "lineNumber": 6,
         "columnNumber": 29,
@@ -796,14 +796,14 @@ rawPackets.set(`throw Object`, {
       {
         "filename": "resource://testing-common/content-task.js",
         "sourceId": null,
-        "lineNumber": 111,
+        "lineNumber": 112,
         "columnNumber": 29,
         "functionName": null
       },
       {
         "filename": "resource://testing-common/content-task.js",
         "sourceId": null,
-        "lineNumber": 64,
+        "lineNumber": 65,
         "columnNumber": 19,
         "functionName": null,
         "asyncCause": "MessageListener.receiveMessage"
@@ -872,7 +872,7 @@ rawPackets.set(`throw Error Object`, {
         "functionName": null
       },
       {
-        "filename": "resource://testing-common/content-task.js line 110 > eval",
+        "filename": "resource://testing-common/content-task.js line 111 > eval",
         "sourceId": null,
         "lineNumber": 6,
         "columnNumber": 29,
@@ -881,14 +881,14 @@ rawPackets.set(`throw Error Object`, {
       {
         "filename": "resource://testing-common/content-task.js",
         "sourceId": null,
-        "lineNumber": 111,
+        "lineNumber": 112,
         "columnNumber": 29,
         "functionName": null
       },
       {
         "filename": "resource://testing-common/content-task.js",
         "sourceId": null,
-        "lineNumber": 64,
+        "lineNumber": 65,
         "columnNumber": 19,
         "functionName": null,
         "asyncCause": "MessageListener.receiveMessage"
@@ -951,7 +951,7 @@ rawPackets.set(`throw Error Object with custom name`, {
         "functionName": null
       },
       {
-        "filename": "resource://testing-common/content-task.js line 110 > eval",
+        "filename": "resource://testing-common/content-task.js line 111 > eval",
         "sourceId": null,
         "lineNumber": 6,
         "columnNumber": 29,
@@ -960,14 +960,14 @@ rawPackets.set(`throw Error Object with custom name`, {
       {
         "filename": "resource://testing-common/content-task.js",
         "sourceId": null,
-        "lineNumber": 111,
+        "lineNumber": 112,
         "columnNumber": 29,
         "functionName": null
       },
       {
         "filename": "resource://testing-common/content-task.js",
         "sourceId": null,
-        "lineNumber": 64,
+        "lineNumber": 65,
         "columnNumber": 19,
         "functionName": null,
         "asyncCause": "MessageListener.receiveMessage"
@@ -1030,7 +1030,7 @@ rawPackets.set(`Promise reject ""`, {
         "functionName": null
       },
       {
-        "filename": "resource://testing-common/content-task.js line 110 > eval",
+        "filename": "resource://testing-common/content-task.js line 111 > eval",
         "sourceId": null,
         "lineNumber": 6,
         "columnNumber": 29,
@@ -1039,14 +1039,14 @@ rawPackets.set(`Promise reject ""`, {
       {
         "filename": "resource://testing-common/content-task.js",
         "sourceId": null,
-        "lineNumber": 111,
+        "lineNumber": 112,
         "columnNumber": 29,
         "functionName": null
       },
       {
         "filename": "resource://testing-common/content-task.js",
         "sourceId": null,
-        "lineNumber": 64,
+        "lineNumber": 65,
         "columnNumber": 19,
         "functionName": null,
         "asyncCause": "MessageListener.receiveMessage"
@@ -1088,7 +1088,7 @@ rawPackets.set(`Promise reject "tomato"`, {
         "functionName": null
       },
       {
-        "filename": "resource://testing-common/content-task.js line 110 > eval",
+        "filename": "resource://testing-common/content-task.js line 111 > eval",
         "sourceId": null,
         "lineNumber": 6,
         "columnNumber": 29,
@@ -1097,14 +1097,14 @@ rawPackets.set(`Promise reject "tomato"`, {
       {
         "filename": "resource://testing-common/content-task.js",
         "sourceId": null,
-        "lineNumber": 111,
+        "lineNumber": 112,
         "columnNumber": 29,
         "functionName": null
       },
       {
         "filename": "resource://testing-common/content-task.js",
         "sourceId": null,
-        "lineNumber": 64,
+        "lineNumber": 65,
         "columnNumber": 19,
         "functionName": null,
         "asyncCause": "MessageListener.receiveMessage"
@@ -1146,7 +1146,7 @@ rawPackets.set(`Promise reject false`, {
         "functionName": null
       },
       {
-        "filename": "resource://testing-common/content-task.js line 110 > eval",
+        "filename": "resource://testing-common/content-task.js line 111 > eval",
         "sourceId": null,
         "lineNumber": 6,
         "columnNumber": 29,
@@ -1155,14 +1155,14 @@ rawPackets.set(`Promise reject false`, {
       {
         "filename": "resource://testing-common/content-task.js",
         "sourceId": null,
-        "lineNumber": 111,
+        "lineNumber": 112,
         "columnNumber": 29,
         "functionName": null
       },
       {
         "filename": "resource://testing-common/content-task.js",
         "sourceId": null,
-        "lineNumber": 64,
+        "lineNumber": 65,
         "columnNumber": 19,
         "functionName": null,
         "asyncCause": "MessageListener.receiveMessage"
@@ -1204,7 +1204,7 @@ rawPackets.set(`Promise reject 0`, {
         "functionName": null
       },
       {
-        "filename": "resource://testing-common/content-task.js line 110 > eval",
+        "filename": "resource://testing-common/content-task.js line 111 > eval",
         "sourceId": null,
         "lineNumber": 6,
         "columnNumber": 29,
@@ -1213,14 +1213,14 @@ rawPackets.set(`Promise reject 0`, {
       {
         "filename": "resource://testing-common/content-task.js",
         "sourceId": null,
-        "lineNumber": 111,
+        "lineNumber": 112,
         "columnNumber": 29,
         "functionName": null
       },
       {
         "filename": "resource://testing-common/content-task.js",
         "sourceId": null,
-        "lineNumber": 64,
+        "lineNumber": 65,
         "columnNumber": 19,
         "functionName": null,
         "asyncCause": "MessageListener.receiveMessage"
@@ -1262,7 +1262,7 @@ rawPackets.set(`Promise reject null`, {
         "functionName": null
       },
       {
-        "filename": "resource://testing-common/content-task.js line 110 > eval",
+        "filename": "resource://testing-common/content-task.js line 111 > eval",
         "sourceId": null,
         "lineNumber": 6,
         "columnNumber": 29,
@@ -1271,14 +1271,14 @@ rawPackets.set(`Promise reject null`, {
       {
         "filename": "resource://testing-common/content-task.js",
         "sourceId": null,
-        "lineNumber": 111,
+        "lineNumber": 112,
         "columnNumber": 29,
         "functionName": null
       },
       {
         "filename": "resource://testing-common/content-task.js",
         "sourceId": null,
-        "lineNumber": 64,
+        "lineNumber": 65,
         "columnNumber": 19,
         "functionName": null,
         "asyncCause": "MessageListener.receiveMessage"
@@ -1322,7 +1322,7 @@ rawPackets.set(`Promise reject undefined`, {
         "functionName": null
       },
       {
-        "filename": "resource://testing-common/content-task.js line 110 > eval",
+        "filename": "resource://testing-common/content-task.js line 111 > eval",
         "sourceId": null,
         "lineNumber": 6,
         "columnNumber": 29,
@@ -1331,14 +1331,14 @@ rawPackets.set(`Promise reject undefined`, {
       {
         "filename": "resource://testing-common/content-task.js",
         "sourceId": null,
-        "lineNumber": 111,
+        "lineNumber": 112,
         "columnNumber": 29,
         "functionName": null
       },
       {
         "filename": "resource://testing-common/content-task.js",
         "sourceId": null,
-        "lineNumber": 64,
+        "lineNumber": 65,
         "columnNumber": 19,
         "functionName": null,
         "asyncCause": "MessageListener.receiveMessage"
@@ -1382,7 +1382,7 @@ rawPackets.set(`Promise reject Symbol`, {
         "functionName": null
       },
       {
-        "filename": "resource://testing-common/content-task.js line 110 > eval",
+        "filename": "resource://testing-common/content-task.js line 111 > eval",
         "sourceId": null,
         "lineNumber": 6,
         "columnNumber": 29,
@@ -1391,14 +1391,14 @@ rawPackets.set(`Promise reject Symbol`, {
       {
         "filename": "resource://testing-common/content-task.js",
         "sourceId": null,
-        "lineNumber": 111,
+        "lineNumber": 112,
         "columnNumber": 29,
         "functionName": null
       },
       {
         "filename": "resource://testing-common/content-task.js",
         "sourceId": null,
-        "lineNumber": 64,
+        "lineNumber": 65,
         "columnNumber": 19,
         "functionName": null,
         "asyncCause": "MessageListener.receiveMessage"
@@ -1444,7 +1444,7 @@ rawPackets.set(`Promise reject Object`, {
         "functionName": null
       },
       {
-        "filename": "resource://testing-common/content-task.js line 110 > eval",
+        "filename": "resource://testing-common/content-task.js line 111 > eval",
         "sourceId": null,
         "lineNumber": 6,
         "columnNumber": 29,
@@ -1453,14 +1453,14 @@ rawPackets.set(`Promise reject Object`, {
       {
         "filename": "resource://testing-common/content-task.js",
         "sourceId": null,
-        "lineNumber": 111,
+        "lineNumber": 112,
         "columnNumber": 29,
         "functionName": null
       },
       {
         "filename": "resource://testing-common/content-task.js",
         "sourceId": null,
-        "lineNumber": 64,
+        "lineNumber": 65,
         "columnNumber": 19,
         "functionName": null,
         "asyncCause": "MessageListener.receiveMessage"
@@ -1529,7 +1529,7 @@ rawPackets.set(`Promise reject Error Object`, {
         "functionName": null
       },
       {
-        "filename": "resource://testing-common/content-task.js line 110 > eval",
+        "filename": "resource://testing-common/content-task.js line 111 > eval",
         "sourceId": null,
         "lineNumber": 6,
         "columnNumber": 29,
@@ -1538,14 +1538,14 @@ rawPackets.set(`Promise reject Error Object`, {
       {
         "filename": "resource://testing-common/content-task.js",
         "sourceId": null,
-        "lineNumber": 111,
+        "lineNumber": 112,
         "columnNumber": 29,
         "functionName": null
       },
       {
         "filename": "resource://testing-common/content-task.js",
         "sourceId": null,
-        "lineNumber": 64,
+        "lineNumber": 65,
         "columnNumber": 19,
         "functionName": null,
         "asyncCause": "MessageListener.receiveMessage"
@@ -1608,7 +1608,7 @@ rawPackets.set(`Promise reject Error Object with custom name`, {
         "functionName": null
       },
       {
-        "filename": "resource://testing-common/content-task.js line 110 > eval",
+        "filename": "resource://testing-common/content-task.js line 111 > eval",
         "sourceId": null,
         "lineNumber": 6,
         "columnNumber": 29,
@@ -1617,14 +1617,14 @@ rawPackets.set(`Promise reject Error Object with custom name`, {
       {
         "filename": "resource://testing-common/content-task.js",
         "sourceId": null,
-        "lineNumber": 111,
+        "lineNumber": 112,
         "columnNumber": 29,
         "functionName": null
       },
       {
         "filename": "resource://testing-common/content-task.js",
         "sourceId": null,
-        "lineNumber": 64,
+        "lineNumber": 65,
         "columnNumber": 19,
         "functionName": null,
         "asyncCause": "MessageListener.receiveMessage"
