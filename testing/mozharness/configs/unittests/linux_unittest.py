@@ -218,6 +218,14 @@ config = {
             ],
             "tests": ["tests/reftest/tests/layout/reftests/reftest.list"],
         },
+        "reftest-snapshot": {
+            "options": [
+                "--suite=reftest",
+                "--setpref=reftest.use-draw-snapshot=true",
+                "--topsrcdir=tests/reftest/tests",
+            ],
+            "tests": ["tests/reftest/tests/layout/reftests/reftest.list"],
+        },
     },
     "all_xpcshell_suites": {
         "xpcshell": {
