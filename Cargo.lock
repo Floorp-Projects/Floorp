@@ -3045,12 +3045,12 @@ dependencies = [
 [[package]]
 name = "minidump_writer_linux"
 version = "0.1.0"
-source = "git+https://github.com/msirringhaus/minidump_writer_linux.git?rev=47cba046aabef76233942a09f31e6ef7a8a4eda9#47cba046aabef76233942a09f31e6ef7a8a4eda9"
+source = "git+https://github.com/msirringhaus/minidump_writer_linux.git?rev=5cea1c9a3d8ed3ed2d7bdd5be3285e7821400b7f#5cea1c9a3d8ed3ed2d7bdd5be3285e7821400b7f"
 dependencies = [
  "byteorder",
  "goblin",
  "libc",
- "memmap",
+ "memmap2",
  "memoffset",
  "nix",
  "tempfile",

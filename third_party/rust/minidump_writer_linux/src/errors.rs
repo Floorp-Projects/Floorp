@@ -11,6 +11,8 @@ pub enum InitError {
     NoAuxvEntryFound(Pid),
     #[error("crash thread does not reference principal mapping")]
     PrincipalMappingNotReferenced,
+    #[error("Failed Android specific late init")]
+    AndroidLateInitError(#[from] AndroidError),
 }
 
 #[derive(Error, Debug)]
@@ -54,6 +56,10 @@ pub enum CpuInfoError {
     IOError(#[from] std::io::Error),
     #[error("Not all entries of /proc/cpuinfo found!")]
     NotAllProcEntriesFound,
+    #[error("Couldn't parse core from file")]
+    UnparsableInteger(#[from] std::num::ParseIntError),
+    #[error("Couldn't parse cores: {0}")]
+    UnparsableCores(String),
 }
 
 #[derive(Error, Debug)]
@@ -73,13 +79,13 @@ pub enum ThreadInfoError {
 }
 
 #[derive(Debug, Error)]
-pub enum CpuSetError {
-    #[error("Couldn't read from file")]
-    IOError(#[from] std::io::Error),
-    #[error("Couldn't parse core from file")]
-    UnparsableInteger(#[from] std::num::ParseIntError),
-    #[error("Couldn't parse cores: {0}")]
-    UnparsableCores(String),
+pub enum AndroidError {
+    #[error("Failed to copy memory from process")]
+    CopyFromProcessError(#[from] DumperError),
+    #[error("Failed slice conversion")]
+    TryFromSliceError(#[from] std::array::TryFromSliceError),
+    #[error("No Android rel found")]
+    NoRelFound,
 }
 
 #[derive(Debug, Error)]
