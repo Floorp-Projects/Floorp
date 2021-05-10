@@ -10,9 +10,25 @@ pub mod imp;
 #[cfg(target_arch = "x86")]
 #[path = "crash_context_x86.rs"]
 pub mod imp;
+// Deactivated for now, as ucontext_t is missing from libc
+// #[cfg(target_arch = "arm")]
+// #[path = "crash_context_arm.rs"]
+// pub mod imp;
 #[cfg(target_arch = "arm")]
-#[path = "crash_context_arm.rs"]
-pub mod imp;
+use crate::minidump_cpu::RawContextCPU;
+#[cfg(target_arch = "arm")]
+impl CrashContext {
+    pub fn get_instruction_pointer(&self) -> usize {
+        0
+    }
+
+    pub fn get_stack_pointer(&self) -> usize {
+        0
+    }
+
+    pub fn fill_cpu_context(&self, _: &mut RawContextCPU) {}
+}
+
 #[cfg(target_arch = "aarch64")]
 #[path = "crash_context_aarch64.rs"]
 pub mod imp;
@@ -39,6 +55,7 @@ pub type fpstate_t = libc::user_fpregs_struct;
 pub struct CrashContext {
     pub siginfo: libc::siginfo_t,
     pub tid: libc::pid_t, // the crashing thread.
+    #[cfg(not(target_arch = "arm"))]
     pub context: libc::ucontext_t,
     // #ifdef this out because FP state is not part of user ABI for Linux ARM.
     // In case of MIPS Linux FP state is already part of ucontext_t so
