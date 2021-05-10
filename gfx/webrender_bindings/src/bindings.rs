@@ -3021,27 +3021,6 @@ pub extern "C" fn wr_dp_push_hit_test(
 }
 
 #[no_mangle]
-pub extern "C" fn wr_dp_push_clear_rect_with_parent_clip(
-    state: &mut WrState,
-    rect: LayoutRect,
-    clip_rect: LayoutRect,
-    parent: &WrSpaceAndClip,
-) {
-    debug_assert!(unsafe { !is_in_render_thread() });
-
-    let space_and_clip = parent.to_webrender(state.pipeline_id);
-
-    let prim_info = CommonItemProperties {
-        clip_rect,
-        clip_id: space_and_clip.clip_id,
-        spatial_id: space_and_clip.spatial_id,
-        flags: prim_flags(true, /* prefer_compositor_surface */ false),
-    };
-
-    state.frame_builder.dl_builder.push_clear_rect(&prim_info, rect);
-}
-
-#[no_mangle]
 pub extern "C" fn wr_dp_push_image(
     state: &mut WrState,
     bounds: LayoutRect,
