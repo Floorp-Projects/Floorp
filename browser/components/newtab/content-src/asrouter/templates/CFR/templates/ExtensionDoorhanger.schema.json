@@ -22,7 +22,7 @@
     "layout": {
       "type": "string",
       "description": "Attribute used for different groups of messages from the same provider",
-      "enum": ["short_message", "message_and_animation", "icon_and_message", "addon_recommendation"]
+      "enum": ["short_message", "icon_and_message", "addon_recommendation"]
     },
     "anchor_id": {
       "type": "string",
@@ -61,7 +61,7 @@
     },
     "info_icon": {
       "type": "object",
-      "description": "The small icon displayed in the top right corner of the pop-over. Should be 19x19px, svg or png. Defaults to a small question mark." ,
+      "description": "The small icon displayed in the top right corner of the pop-over. Should be 19x19px, svg or png. Defaults to a small question mark.",
       "properties": {
         "label": {
           "oneOf": [
@@ -127,8 +127,8 @@
     "icon": {
       "description": "The icon displayed in the pop-over. Should be 32x32px or 64x64px and png/svg.",
       "allOf": [
-        {"$ref": "#/definitions/linkUrl"},
-        {"description": "Icon associated with the message"}
+        { "$ref": "#/definitions/linkUrl" },
+        { "description": "Icon associated with the message" }
       ]
     },
     "icon_dark_theme": {
@@ -145,27 +145,27 @@
       "properties": {
         "id": {
           "allOf": [
-            {"$ref": "#/definitions/plainText"},
-            {"description": "Unique addon ID"}
+            { "$ref": "#/definitions/plainText" },
+            { "description": "Unique addon ID" }
           ]
         },
         "title": {
           "allOf": [
-            {"$ref": "#/definitions/plainText"},
-            {"description": "Addon name"}
+            { "$ref": "#/definitions/plainText" },
+            { "description": "Addon name" }
           ]
         },
         "author": {
           "allOf": [
-            {"$ref": "#/definitions/plainText"},
-            {"description": "Addon author"}
+            { "$ref": "#/definitions/plainText" },
+            { "description": "Addon author" }
           ]
         },
         "icon": {
           "description": "The icon displayed in the pop-over. Should be 64x64px and png/svg.",
           "allOf": [
-            {"$ref": "#/definitions/linkUrl"},
-            {"description": "Addon icon"}
+            { "$ref": "#/definitions/linkUrl" },
+            { "description": "Addon icon" }
           ]
         },
         "rating": {
@@ -181,8 +181,10 @@
         },
         "amo_url": {
           "allOf": [
-            {"$ref": "#/definitions/linkUrl"},
-            {"description": "Link that offers more information related to the addon."}
+            { "$ref": "#/definitions/linkUrl" },
+            {
+              "description": "Link that offers more information related to the addon."
+            }
           ]
         }
       },
@@ -242,8 +244,10 @@
                   "properties": {
                     "value": {
                       "allOf": [
-                        {"$ref": "#/definitions/plainText"},
-                        {"description": "Button label override used when a localized version is not available."}
+                        { "$ref": "#/definitions/plainText" },
+                        {
+                          "description": "Button label override used when a localized version is not available."
+                        }
                       ]
                     },
                     "attributes": {
@@ -264,8 +268,8 @@
                   "properties": {
                     "string_id": {
                       "allOf": [
-                        {"$ref": "#/definitions/plainText"},
-                        {"description": "Id of localized string for button"}
+                        { "$ref": "#/definitions/plainText" },
+                        { "description": "Id of localized string for button" }
                       ]
                     }
                   },
@@ -303,8 +307,10 @@
                     "properties": {
                       "value": {
                         "allOf": [
-                          {"$ref": "#/definitions/plainText"},
-                          {"description": "Button label override used when a localized version is not available."}
+                          { "$ref": "#/definitions/plainText" },
+                          {
+                            "description": "Button label override used when a localized version is not available."
+                          }
                         ]
                       },
                       "attributes": {
@@ -325,8 +331,8 @@
                     "properties": {
                       "string_id": {
                         "allOf": [
-                          {"$ref": "#/definitions/plainText"},
-                          {"description": "Id of localized string for button"}
+                          { "$ref": "#/definitions/plainText" },
+                          { "description": "Id of localized string for button" }
                         ]
                       }
                     },
@@ -346,8 +352,10 @@
                     "properties": {
                       "url": {
                         "allOf": [
-                          {"$ref": "#/definitions/linkUrl"},
-                          {"description": "URL used in combination with the primary action dispatched."}
+                          { "$ref": "#/definitions/linkUrl" },
+                          {
+                            "description": "URL used in combination with the primary action dispatched."
+                          }
                         ]
                       }
                     }
@@ -361,5 +369,13 @@
     }
   },
   "additionalProperties": false,
-  "required": ["layout", "category", "bucket_id", "notification_text", "heading_text", "text", "buttons"]
+  "required": [
+    "layout",
+    "category",
+    "bucket_id",
+    "notification_text",
+    "heading_text",
+    "text",
+    "buttons"
+  ]
 }
