@@ -73,7 +73,7 @@ function channelOpenPromise(chan, flags) {
 
 add_task(async function testRetryWithoutECH() {
   const ECH_CONFIG_FIXED =
-    "AFH+CABNAB1kZWxlZ2F0ZWQtZW5hYmxlZC5leGFtcGxlLmNvbQAgigdWOUn6xiMpNu1vNsT6c1kw7N6u9nNOMUrqw1pW/QoAIAAEAAEAAwAyAAA=";
+    "AFL+CgBOTQAgACCKB1Y5SfrGIyk27W82xPpzWTDs3q72c04xSurDWlb9CgAEAAEAAwBkAB1kZWxlZ2F0ZWQtZW5hYmxlZC5leGFtcGxlLmNvbQAA";
   trrServer = new TRRServer();
   await trrServer.start();
 

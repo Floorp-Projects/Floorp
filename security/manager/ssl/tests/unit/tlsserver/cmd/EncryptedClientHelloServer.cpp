@@ -117,9 +117,13 @@ SECStatus ConfigureServer(PRFileDesc* aFd) {
 
   std::vector<uint8_t> echConfig(1000, 0);
   unsigned int len = 0;
-  rv = SSL_EncodeEchConfig("ech-public.example.com", kSuiteChaCha.data(), 1,
-                           HpkeDhKemX25519Sha256, pubKey.get(), 50,
-                           echConfig.data(), &len, echConfig.size());
+  const PRUint8 configId = 77;
+  const HpkeSymmetricSuite echCipherSuite = {HpkeKdfHkdfSha256,
+                                             HpkeAeadChaCha20Poly1305};
+  rv = SSL_EncodeEchConfigId(configId, "ech-public.example.com", 100,
+                             HpkeDhKemX25519Sha256, pubKey.get(),
+                             &echCipherSuite, 1, echConfig.data(), &len,
+                             echConfig.size());
   if (rv != SECSuccess) {
     PrintPRError("SSL_EncodeEchConfig failed");
     return rv;

@@ -5,7 +5,7 @@
 
 // Public Name = delegated-enabled.example.com
 const ECH_CONFIG_FIXED =
-  "AFH+CQBNAB1kZWxlZ2F0ZWQtZW5hYmxlZC5leGFtcGxlLmNvbQAgigdWOUn6xiMpNu1vNsT6c1kw7N6u9nNOMUrqw1pW/QoAIAAEAAEAAwAyAAA=";
+  "AFL+CgBOTQAgACCKB1Y5SfrGIyk27W82xPpzWTDs3q72c04xSurDWlb9CgAEAAEAAwBkAB1kZWxlZ2F0ZWQtZW5hYmxlZC5leGFtcGxlLmNvbQAA";
 
 do_get_profile();
 
