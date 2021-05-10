@@ -5103,11 +5103,6 @@ void nsGlobalWindowOuter::FocusOuter(CallerType aCallerType,
       NS_WARNING("Should not try to set the focus on a disabled window");
       return;
     }
-
-    // XXXndeakin not sure what this is for or if it should go somewhere else
-    nsCOMPtr<nsIEmbeddingSiteWindow> embeddingWin(
-        do_GetInterface(treeOwnerAsWin));
-    if (embeddingWin) embeddingWin->SetFocus();
   }
 
   if (!mDocShell) {

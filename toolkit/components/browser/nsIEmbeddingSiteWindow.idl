@@ -122,11 +122,6 @@ interface nsIEmbeddingSiteWindow : nsISupports
     void getDimensions(in unsigned long flags, out long x, out long y, out long cx, out long cy);
 
     /**
-     * Give the window focus.
-     */
-    void setFocus();
-
-    /**
      * Visibility of the window.
      */
     attribute boolean visibility;

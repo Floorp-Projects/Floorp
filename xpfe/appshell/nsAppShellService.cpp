@@ -286,9 +286,6 @@ WebBrowserChrome2Stub::SetDimensions(uint32_t flags, int32_t x, int32_t y,
 }
 
 NS_IMETHODIMP
-WebBrowserChrome2Stub::SetFocus() { return NS_ERROR_NOT_IMPLEMENTED; }
-
-NS_IMETHODIMP
 WebBrowserChrome2Stub::GetVisibility(bool* aVisibility) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
