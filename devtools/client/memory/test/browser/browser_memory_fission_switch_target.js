@@ -16,11 +16,10 @@ add_task(async () => {
   info("Open the memory panel with empty page");
   const tab = await addTab();
   const { panel } = await openMemoryPanel(tab);
-  const { gToolbox: toolbox, gStore: store } = panel.panelWin;
+  const { gStore: store } = panel.panelWin;
 
   info("Open a page running on the content process");
-  BrowserTestUtils.loadURI(tab.linkedBrowser, CONTENT_PROCESS_URI);
-  await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
+  await navigateTo(CONTENT_PROCESS_URI);
   await takeAndWaitSnapshot(
     panel.panelWin,
     store,
@@ -29,7 +28,7 @@ add_task(async () => {
   ok(true, "Can take a snapshot for content process page correctly");
 
   info("Navigate to a page running on parent process");
-  await navigateTo(PARENT_PROCESS_URI, toolbox, tab);
+  await navigateTo(PARENT_PROCESS_URI);
   await takeAndWaitSnapshot(
     panel.panelWin,
     store,
@@ -38,7 +37,7 @@ add_task(async () => {
   ok(true, "Can take a snapshot for parent process page correctly");
 
   info("Return to a page running on content process again");
-  await navigateTo(CONTENT_PROCESS_URI, toolbox, tab);
+  await navigateTo(CONTENT_PROCESS_URI);
   await takeAndWaitSnapshot(
     panel.panelWin,
     store,
@@ -75,13 +74,4 @@ function getNodeNames(snapshot) {
     child => child.name === "domNode"
   );
   return domNodePart.children.map(child => child.name.toLowerCase());
-}
-
-async function navigateTo(uri, toolbox, tab) {
-  const onSwitched = toolbox.commands.targetCommand.once("switched-target");
-  const onLoaded = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
-  BrowserTestUtils.loadURI(tab.linkedBrowser, uri);
-  await onLoaded;
-  await onSwitched;
-  ok(true, "switched-target event is fired");
 }
