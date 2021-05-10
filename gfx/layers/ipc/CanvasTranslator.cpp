@@ -364,9 +364,13 @@ bool CanvasTranslator::CreateReferenceTexture() {
 
   mReferenceTextureData->Lock(OpenMode::OPEN_READ_WRITE);
   mBaseDT = mReferenceTextureData->BorrowDrawTarget();
-  if (mBaseDT) {
-    mBackendType = mBaseDT->GetBackendType();
+  if (!mBaseDT) {
+    // We might get a null draw target due to a device failure, just return
+    // false so that we can recover.
+    return false;
   }
+
+  mBackendType = mBaseDT->GetBackendType();
   return true;
 }
 
@@ -501,8 +505,15 @@ already_AddRefed<gfx::GradientStops> CanvasTranslator::GetOrCreateGradientStops(
     gfx::GradientStop* aRawStops, uint32_t aNumStops,
     gfx::ExtendMode aExtendMode) {
   nsTArray<gfx::GradientStop> rawStopArray(aRawStops, aNumStops);
+  RefPtr<DrawTarget> drawTarget = GetReferenceDrawTarget();
+  if (!drawTarget) {
+    // We might end up with a null reference draw target due to a device
+    // failure, just return false so that we can recover.
+    return nullptr;
+  }
+
   return gfx::gfxGradientCache::GetOrCreateGradientStops(
-      GetReferenceDrawTarget(), rawStopArray, aExtendMode);
+      drawTarget, rawStopArray, aExtendMode);
 }
 
 gfx::DataSourceSurface* CanvasTranslator::LookupDataSurface(
