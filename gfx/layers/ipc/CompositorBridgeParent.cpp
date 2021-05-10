@@ -2004,6 +2004,7 @@ Maybe<TimeStamp> CompositorBridgeParent::GetTestingTimeStamp() const {
 
 void EraseLayerState(LayersId aId) {
   RefPtr<APZUpdater> apz;
+  RefPtr<WebRenderBridgeParent> wrBridge;
 
   {  // scope lock
     MonitorAutoLock lock(*sIndirectLayerTreesLock);
@@ -2013,12 +2014,17 @@ void EraseLayerState(LayersId aId) {
       if (parent) {
         apz = parent->GetAPZUpdater();
       }
+      wrBridge = iter->second.mWrBridge;
       sIndirectLayerTrees.erase(iter);
     }
   }
 
   if (apz) {
     apz->NotifyLayerTreeRemoved(aId);
+  }
+
+  if (wrBridge) {
+    wrBridge->Destroy();
   }
 }
 
