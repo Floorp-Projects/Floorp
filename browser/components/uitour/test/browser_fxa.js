@@ -13,7 +13,6 @@ ChromeUtils.defineModuleGetter(
 
 var gTestTab;
 var gContentAPI;
-var gContentWindow;
 
 function test() {
   UITourTest();

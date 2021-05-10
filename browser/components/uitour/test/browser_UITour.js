@@ -5,7 +5,6 @@
 
 var gTestTab;
 var gContentAPI;
-var gContentWindow;
 
 const { TelemetryArchiveTesting } = ChromeUtils.import(
   "resource://testing-common/TelemetryArchiveTesting.jsm"

@@ -7,7 +7,6 @@ const { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
 
 var gTestTab;
 var gContentAPI;
-var gContentWindow;
 
 add_task(setup_UITourTest);
 

@@ -2,7 +2,6 @@
 
 var gTestTab;
 var gContentAPI;
-var gContentWindow;
 
 requestLongerTimeout(2);
 add_task(setup_UITourTest);

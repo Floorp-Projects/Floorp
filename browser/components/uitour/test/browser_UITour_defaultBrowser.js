@@ -2,7 +2,6 @@
 
 var gTestTab;
 var gContentAPI;
-var gContentWindow;
 var setDefaultBrowserCalled = false;
 
 Services.scriptloader.loadSubScript(

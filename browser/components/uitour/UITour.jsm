@@ -416,7 +416,11 @@ var UITour = {
         aEvent.pageVisibilityState == "unloaded") &&
       !BACKGROUND_PAGE_ACTIONS_ALLOWED.has(action)
     ) {
-      log.warn("Ignoring disallowed action from a hidden page:", action);
+      log.warn(
+        "Ignoring disallowed action from a hidden page:",
+        action,
+        aEvent.pageVisibilityState
+      );
       return false;
     }
 
