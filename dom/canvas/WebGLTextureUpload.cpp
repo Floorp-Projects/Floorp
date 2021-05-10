@@ -164,7 +164,6 @@ Maybe<webgl::TexUnpackBlobDesc> FromDomElem(const ClientWebGLContext& webgl,
   // animated images. The webgl spec doesn't mention the issue, so we do the
   // same as drawImage.
   uint32_t flags = nsLayoutUtils::SFE_WANT_FIRST_FRAME_IF_IMAGE |
-                   nsLayoutUtils::SFE_WANT_IMAGE_SURFACE |
                    nsLayoutUtils::SFE_USE_ELEMENT_SIZE_IF_VECTOR |
                    nsLayoutUtils::SFE_ALLOW_NON_PREMULT;
   const auto& unpacking = webgl.State().mPixelUnpackState;
