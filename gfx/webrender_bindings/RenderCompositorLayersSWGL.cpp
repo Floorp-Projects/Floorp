@@ -341,6 +341,9 @@ bool RenderCompositorLayersSWGL::MaybeRecordFrame(
 
 bool RenderCompositorLayersSWGL::MaybeGrabScreenshot(
     const gfx::IntSize& aWindowSize) {
+  if (!mCompositingStarted) {
+    return true;
+  }
   layers::WindowLMC window(mCompositor);
   mProfilerScreenshotGrabber.MaybeGrabScreenshot(window, aWindowSize);
   return true;
