@@ -1,7 +1,115 @@
 {
   "data": [
     {
-      "schema": 1619704685355,
+      "schema": 1620399434433,
+      "derHash": "Jv1MQ2fkY9OccXlq5AEOUzgNyTvBMvsBnWcYpoc+gfQ=",
+      "subject": "CN=SHECA RSA Organization Validation Server CA G3,O=UniTrust,C=CN",
+      "subjectDN": "MFkxCzAJBgNVBAYTAkNOMREwDwYDVQQKDAhVbmlUcnVzdDE3MDUGA1UEAwwuU0hFQ0EgUlNBIE9yZ2FuaXphdGlvbiBWYWxpZGF0aW9uIFNlcnZlciBDQSBHMw==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "a02a5c8205e62c2ef5dc42345a1585558c86f166ed9875d861601a465bcc4651",
+        "size": 2016,
+        "filename": "0JA1q1ctk_4J8qS0t-GhJaG5egVDq9SB33oMY7SMpfs=.pem",
+        "location": "security-state-staging/intermediates/caec957d-379a-4c23-bf42-3bd122e7cf33.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "0JA1q1ctk/4J8qS0t+GhJaG5egVDq9SB33oMY7SMpfs=",
+      "crlite_enrolled": true,
+      "id": "10ec0271-99d5-4c06-a20d-1c03ccf7d780",
+      "last_modified": 1620442645382
+    },
+    {
+      "schema": 1619790597514,
+      "derHash": "aGkkLNitKsd7wCiUe8fQxPbpy/CJnWVwmBDYn5S11w0=",
+      "subject": "CN=GDCA TrustAUTH R4 EV SSL CA G2,O=Global Digital Cybersecurity Authority Co.\\, Ltd.,C=CN",
+      "subjectDN": "MHExCzAJBgNVBAYTAkNOMTkwNwYDVQQKDDBHbG9iYWwgRGlnaXRhbCBDeWJlcnNlY3VyaXR5IEF1dGhvcml0eSBDby4sIEx0ZC4xJzAlBgNVBAMMHkdEQ0EgVHJ1c3RBVVRIIFI0IEVWIFNTTCBDQSBHMg==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "2e1f89d236b55a9e53ce42bf4e6c979ac2d4e9d9e836793810d01c10dc91ff0f",
+        "size": 1727,
+        "filename": "GlfrRgw9jW9VNC7Y1aXDsTsHh6dUPAEud8fhzOO-EdY=.pem",
+        "location": "security-state-staging/intermediates/76ca0f35-dc5e-4a6b-a715-cae8b21ba328.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "GlfrRgw9jW9VNC7Y1aXDsTsHh6dUPAEud8fhzOO+EdY=",
+      "crlite_enrolled": true,
+      "id": "15d2f4f5-d5d0-4fc9-8825-8c5fcf5cbe4f",
+      "last_modified": 1620399433383
+    },
+    {
+      "schema": 1620053384234,
+      "derHash": "S9FvSVXz88nI6kjvmZUyTaUSFyT4mRXV8skesLrvIzc=",
+      "subject": "OU=Public Certification Authority,O=Chunghwa Telecom Co.\\, Ltd.,C=TW",
+      "subjectDN": "MFsxCzAJBgNVBAYTAlRXMSMwIQYDVQQKDBpDaHVuZ2h3YSBUZWxlY29tIENvLiwgTHRkLjEnMCUGA1UECwweUHVibGljIENlcnRpZmljYXRpb24gQXV0aG9yaXR5",
+      "whitelist": false,
+      "attachment": {
+        "hash": "689c7ab13bb497838c62b566e5da7f914f4cf9354f08643500263bcfb46a32a3",
+        "size": 2105,
+        "filename": "qMjf0br8Ay71_wiJ0t25y4v3IWwirr3SF1bWHJzkbnE=.pem",
+        "location": "security-state-staging/intermediates/c2017a82-2237-4c28-8656-5764f263e185.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "qMjf0br8Ay71/wiJ0t25y4v3IWwirr3SF1bWHJzkbnE=",
+      "crlite_enrolled": false,
+      "id": "a869aa70-b82b-40fc-b8b7-123af99bb58e",
+      "last_modified": 1620399433364
+    },
+    {
+      "schema": 1620049795093,
+      "derHash": "RksOwKYC8Bk9tfM5EYhaOmGSGtFtJmTiW++rEM+m7SU=",
+      "subject": "OU=Public Certification Authority,O=Chunghwa Telecom Co.\\, Ltd.,C=TW",
+      "subjectDN": "MFsxCzAJBgNVBAYTAlRXMSMwIQYDVQQKDBpDaHVuZ2h3YSBUZWxlY29tIENvLiwgTHRkLjEnMCUGA1UECwweUHVibGljIENlcnRpZmljYXRpb24gQXV0aG9yaXR5",
+      "whitelist": false,
+      "attachment": {
+        "hash": "49845caec147a9f80e7f49b5e4b2b8629653bccf72d7aa8dfa0b7029f5d75514",
+        "size": 1934,
+        "filename": "qMjf0br8Ay71_wiJ0t25y4v3IWwirr3SF1bWHJzkbnE=.pem",
+        "location": "security-state-staging/intermediates/cabaf189-98ae-41ee-8da3-966fb99dbea2.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "qMjf0br8Ay71/wiJ0t25y4v3IWwirr3SF1bWHJzkbnE=",
+      "crlite_enrolled": false,
+      "id": "201bbcbe-98a9-4e1d-9ba8-1d91ccaef4d5",
+      "last_modified": 1620399433345
+    },
+    {
+      "schema": 1620396553896,
+      "derHash": "6DVm5vWZSBZ4wNmYkhach/d5FMYh/fHmWccIV3LUpIc=",
+      "subject": "CN=Aristotle University of Thessaloniki Central CA R5,O=Aristotle University of Thessaloniki,C=GR",
+      "subjectDN": "MHkxCzAJBgNVBAYTAkdSMS0wKwYDVQQKDCRBcmlzdG90bGUgVW5pdmVyc2l0eSBvZiBUaGVzc2Fsb25pa2kxOzA5BgNVBAMMMkFyaXN0b3RsZSBVbml2ZXJzaXR5IG9mIFRoZXNzYWxvbmlraSBDZW50cmFsIENBIFI1",
+      "whitelist": false,
+      "attachment": {
+        "hash": "72d6f4dedb28feb34f3a3986b58eeceeab329a5ee7d3f154ce96db96fb50c1b4",
+        "size": 2186,
+        "filename": "ZJk1YGaQpyFBeYVERrAwWxnil7BDdshNsfqH9K0pdvo=.pem",
+        "location": "security-state-staging/intermediates/63117ab3-bd65-4d26-803c-3950949c1422.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "ZJk1YGaQpyFBeYVERrAwWxnil7BDdshNsfqH9K0pdvo=",
+      "crlite_enrolled": false,
+      "id": "06321129-0f21-4f6f-8224-674cc72e0eda",
+      "last_modified": 1620399433326
+    },
+    {
+      "schema": 1620396345875,
+      "derHash": "6DVm5vWZSBZ4wNmYkhach/d5FMYh/fHmWccIV3LUpIc=",
+      "subject": "CN=Aristotle University of Thessaloniki Central CA R5,O=Aristotle University of Thessaloniki,C=GR",
+      "subjectDN": "MHkxCzAJBgNVBAYTAkdSMS0wKwYDVQQKDCRBcmlzdG90bGUgVW5pdmVyc2l0eSBvZiBUaGVzc2Fsb25pa2kxOzA5BgNVBAMMMkFyaXN0b3RsZSBVbml2ZXJzaXR5IG9mIFRoZXNzYWxvbmlraSBDZW50cmFsIENBIFI1",
+      "whitelist": false,
+      "attachment": {
+        "hash": "72d6f4dedb28feb34f3a3986b58eeceeab329a5ee7d3f154ce96db96fb50c1b4",
+        "size": 2186,
+        "filename": "ZJk1YGaQpyFBeYVERrAwWxnil7BDdshNsfqH9K0pdvo=.pem",
+        "location": "security-state-staging/intermediates/fae8e319-7dd8-4fcf-9e98-26823685553e.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "ZJk1YGaQpyFBeYVERrAwWxnil7BDdshNsfqH9K0pdvo=",
+      "crlite_enrolled": false,
+      "id": "1d3bbd98-9e9e-414a-a695-553391fbd175",
+      "last_modified": 1620399433307
+    },
+    {
+      "schema": 1619728730686,
       "derHash": "lzpBJ2/9AeAnoqrUnjTDeEbT6Xb/amILZxLjODIEGqY=",
       "subject": "CN=Go Daddy Secure Certificate Authority - G2,OU=http://certs.godaddy.com/repository/,O=GoDaddy.com\\, Inc.,L=Scottsdale,ST=Arizona,C=US",
       "subjectDN": "MIG0MQswCQYDVQQGEwJVUzEQMA4GA1UECBMHQXJpem9uYTETMBEGA1UEBxMKU2NvdHRzZGFsZTEaMBgGA1UEChMRR29EYWRkeS5jb20sIEluYy4xLTArBgNVBAsTJGh0dHA6Ly9jZXJ0cy5nb2RhZGR5LmNvbS9yZXBvc2l0b3J5LzEzMDEGA1UEAxMqR28gRGFkZHkgU2VjdXJlIENlcnRpZmljYXRlIEF1dGhvcml0eSAtIEcy",
@@ -14,9 +122,9 @@
         "mimetype": "application/x-pem-file"
       },
       "pubKeyHash": "8Rw90Ej3Ttt8RRkrg+WYDS9n7IS03bk5bjP/UXPtaY8=",
-      "crlite_enrolled": false,
+      "crlite_enrolled": true,
       "id": "549c92e2-3738-4c8c-ae37-407e4e6158ce",
-      "last_modified": 1619726251821
+      "last_modified": 1620399433269
     },
     {
       "schema": 1619683063017,
@@ -53,24 +161,6 @@
       "crlite_enrolled": false,
       "id": "1c345873-cf2f-48aa-a6a3-93a5661939df",
       "last_modified": 1619488657295
-    },
-    {
-      "schema": 1619380709281,
-      "derHash": "Jv1MQ2fkY9OccXlq5AEOUzgNyTvBMvsBnWcYpoc+gfQ=",
-      "subject": "CN=SHECA RSA Organization Validation Server CA G3,O=UniTrust,C=CN",
-      "subjectDN": "MFkxCzAJBgNVBAYTAkNOMREwDwYDVQQKDAhVbmlUcnVzdDE3MDUGA1UEAwwuU0hFQ0EgUlNBIE9yZ2FuaXphdGlvbiBWYWxpZGF0aW9uIFNlcnZlciBDQSBHMw==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "a02a5c8205e62c2ef5dc42345a1585558c86f166ed9875d861601a465bcc4651",
-        "size": 2016,
-        "filename": "0JA1q1ctk_4J8qS0t-GhJaG5egVDq9SB33oMY7SMpfs=.pem",
-        "location": "security-state-staging/intermediates/caec957d-379a-4c23-bf42-3bd122e7cf33.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "0JA1q1ctk/4J8qS0t+GhJaG5egVDq9SB33oMY7SMpfs=",
-      "crlite_enrolled": true,
-      "id": "10ec0271-99d5-4c06-a20d-1c03ccf7d780",
-      "last_modified": 1619402239418
     },
     {
       "schema": 1619359121536,
@@ -4537,24 +4627,6 @@
       "last_modified": 1613660250390
     },
     {
-      "schema": 1613659801160,
-      "derHash": "6DVm5vWZSBZ4wNmYkhach/d5FMYh/fHmWccIV3LUpIc=",
-      "subject": "CN=Aristotle University of Thessaloniki Central CA R5,O=Aristotle University of Thessaloniki,C=GR",
-      "subjectDN": "MHkxCzAJBgNVBAYTAkdSMS0wKwYDVQQKDCRBcmlzdG90bGUgVW5pdmVyc2l0eSBvZiBUaGVzc2Fsb25pa2kxOzA5BgNVBAMMMkFyaXN0b3RsZSBVbml2ZXJzaXR5IG9mIFRoZXNzYWxvbmlraSBDZW50cmFsIENBIFI1",
-      "whitelist": false,
-      "attachment": {
-        "hash": "72d6f4dedb28feb34f3a3986b58eeceeab329a5ee7d3f154ce96db96fb50c1b4",
-        "size": 2186,
-        "filename": "ZJk1YGaQpyFBeYVERrAwWxnil7BDdshNsfqH9K0pdvo=.pem",
-        "location": "security-state-staging/intermediates/fae8e319-7dd8-4fcf-9e98-26823685553e.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "ZJk1YGaQpyFBeYVERrAwWxnil7BDdshNsfqH9K0pdvo=",
-      "crlite_enrolled": true,
-      "id": "1d3bbd98-9e9e-414a-a695-553391fbd175",
-      "last_modified": 1613660250374
-    },
-    {
       "schema": 1613659802650,
       "derHash": "jAmUsq7QCF/lQoE+4DxLLXMuzcwleuZFMRTGyHWTO9Q=",
       "subject": "CN=HEAL-LINK Hellenic Academic Libraries Link TLS RSA SubCA R1,O=Hellenic Academic and Research Institutions CA,C=GR",
@@ -5651,24 +5723,6 @@
       "crlite_enrolled": true,
       "id": "41c2d272-026d-4e64-8e50-0fd47613f54d",
       "last_modified": 1613656686900
-    },
-    {
-      "schema": 1613656201172,
-      "derHash": "6DVm5vWZSBZ4wNmYkhach/d5FMYh/fHmWccIV3LUpIc=",
-      "subject": "CN=Aristotle University of Thessaloniki Central CA R5,O=Aristotle University of Thessaloniki,C=GR",
-      "subjectDN": "MHkxCzAJBgNVBAYTAkdSMS0wKwYDVQQKDCRBcmlzdG90bGUgVW5pdmVyc2l0eSBvZiBUaGVzc2Fsb25pa2kxOzA5BgNVBAMMMkFyaXN0b3RsZSBVbml2ZXJzaXR5IG9mIFRoZXNzYWxvbmlraSBDZW50cmFsIENBIFI1",
-      "whitelist": false,
-      "attachment": {
-        "hash": "72d6f4dedb28feb34f3a3986b58eeceeab329a5ee7d3f154ce96db96fb50c1b4",
-        "size": 2186,
-        "filename": "ZJk1YGaQpyFBeYVERrAwWxnil7BDdshNsfqH9K0pdvo=.pem",
-        "location": "security-state-staging/intermediates/63117ab3-bd65-4d26-803c-3950949c1422.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "ZJk1YGaQpyFBeYVERrAwWxnil7BDdshNsfqH9K0pdvo=",
-      "crlite_enrolled": true,
-      "id": "06321129-0f21-4f6f-8224-674cc72e0eda",
-      "last_modified": 1613656686890
     },
     {
       "schema": 1613656202663,
@@ -7019,42 +7073,6 @@
       "crlite_enrolled": false,
       "id": "382c3d21-f0c0-430a-9512-eb2ca7e514b4",
       "last_modified": 1611583082256
-    },
-    {
-      "schema": 1611517292726,
-      "derHash": "RksOwKYC8Bk9tfM5EYhaOmGSGtFtJmTiW++rEM+m7SU=",
-      "subject": "OU=Public Certification Authority,O=Chunghwa Telecom Co.\\, Ltd.,C=TW",
-      "subjectDN": "MFsxCzAJBgNVBAYTAlRXMSMwIQYDVQQKDBpDaHVuZ2h3YSBUZWxlY29tIENvLiwgTHRkLjEnMCUGA1UECwweUHVibGljIENlcnRpZmljYXRpb24gQXV0aG9yaXR5",
-      "whitelist": false,
-      "attachment": {
-        "hash": "49845caec147a9f80e7f49b5e4b2b8629653bccf72d7aa8dfa0b7029f5d75514",
-        "size": 1934,
-        "filename": "qMjf0br8Ay71_wiJ0t25y4v3IWwirr3SF1bWHJzkbnE=.pem",
-        "location": "security-state-staging/intermediates/cabaf189-98ae-41ee-8da3-966fb99dbea2.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "qMjf0br8Ay71/wiJ0t25y4v3IWwirr3SF1bWHJzkbnE=",
-      "crlite_enrolled": true,
-      "id": "201bbcbe-98a9-4e1d-9ba8-1d91ccaef4d5",
-      "last_modified": 1611539904877
-    },
-    {
-      "schema": 1611539375844,
-      "derHash": "S9FvSVXz88nI6kjvmZUyTaUSFyT4mRXV8skesLrvIzc=",
-      "subject": "OU=Public Certification Authority,O=Chunghwa Telecom Co.\\, Ltd.,C=TW",
-      "subjectDN": "MFsxCzAJBgNVBAYTAlRXMSMwIQYDVQQKDBpDaHVuZ2h3YSBUZWxlY29tIENvLiwgTHRkLjEnMCUGA1UECwweUHVibGljIENlcnRpZmljYXRpb24gQXV0aG9yaXR5",
-      "whitelist": false,
-      "attachment": {
-        "hash": "689c7ab13bb497838c62b566e5da7f914f4cf9354f08643500263bcfb46a32a3",
-        "size": 2105,
-        "filename": "qMjf0br8Ay71_wiJ0t25y4v3IWwirr3SF1bWHJzkbnE=.pem",
-        "location": "security-state-staging/intermediates/c2017a82-2237-4c28-8656-5764f263e185.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "qMjf0br8Ay71/wiJ0t25y4v3IWwirr3SF1bWHJzkbnE=",
-      "crlite_enrolled": true,
-      "id": "a869aa70-b82b-40fc-b8b7-123af99bb58e",
-      "last_modified": 1611539904857
     },
     {
       "schema": 1611431378144,
@@ -14885,24 +14903,6 @@
       "crlite_enrolled": false,
       "id": "23862319-a4da-4783-ae80-57929b6958f5",
       "last_modified": 1601517444281
-    },
-    {
-      "schema": 1601376775699,
-      "derHash": "aGkkLNitKsd7wCiUe8fQxPbpy/CJnWVwmBDYn5S11w0=",
-      "subject": "CN=GDCA TrustAUTH R4 EV SSL CA G2,O=Global Digital Cybersecurity Authority Co.\\, Ltd.,C=CN",
-      "subjectDN": "MHExCzAJBgNVBAYTAkNOMTkwNwYDVQQKDDBHbG9iYWwgRGlnaXRhbCBDeWJlcnNlY3VyaXR5IEF1dGhvcml0eSBDby4sIEx0ZC4xJzAlBgNVBAMMHkdEQ0EgVHJ1c3RBVVRIIFI0IEVWIFNTTCBDQSBHMg==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "2e1f89d236b55a9e53ce42bf4e6c979ac2d4e9d9e836793810d01c10dc91ff0f",
-        "size": 1727,
-        "filename": "GlfrRgw9jW9VNC7Y1aXDsTsHh6dUPAEud8fhzOO-EdY=.pem",
-        "location": "security-state-staging/intermediates/76ca0f35-dc5e-4a6b-a715-cae8b21ba328.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "GlfrRgw9jW9VNC7Y1aXDsTsHh6dUPAEud8fhzOO+EdY=",
-      "crlite_enrolled": false,
-      "id": "15d2f4f5-d5d0-4fc9-8825-8c5fcf5cbe4f",
-      "last_modified": 1601517444263
     },
     {
       "schema": 1601376779796,
