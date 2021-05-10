@@ -20,6 +20,8 @@ import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.createTab as createStateTab
 import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.browser.storage.sync.TabEntry
+import mozilla.components.browser.storage.sync.Tab as SyncTab
 import mozilla.components.concept.tabstray.Tab
 import mozilla.components.service.fxa.manager.FxaAccountManager
 import mozilla.components.support.test.rule.MainCoroutineRule
@@ -27,6 +29,8 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import org.mozilla.fenix.BrowserDirection
+import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.collections.CollectionsDialog
 import org.mozilla.fenix.collections.show
 import org.mozilla.fenix.components.TabCollectionStorage
@@ -50,6 +54,7 @@ class NavigationInteractorTest {
     private val context: Context = mockk(relaxed = true)
     private val collectionStorage: TabCollectionStorage = mockk(relaxed = true)
     private val accountManager: FxaAccountManager = mockk(relaxed = true)
+    private val activity: HomeActivity = mockk(relaxed = true)
 
     private val testDispatcher = TestCoroutineDispatcher()
 
@@ -65,6 +70,7 @@ class NavigationInteractorTest {
         tabsTrayStore = TabsTrayStore()
         navigationInteractor = DefaultNavigationInteractor(
             context,
+            activity,
             store,
             navController,
             metrics,
@@ -89,6 +95,7 @@ class NavigationInteractorTest {
         var onShareTabs = false
         var onSaveToCollections = false
         var onBookmarkTabs = false
+        var onSyncedTabsClicked = false
 
         class TestNavigationInteractor : NavigationInteractor {
 
@@ -120,6 +127,10 @@ class NavigationInteractorTest {
                 onBookmarkTabs = true
             }
 
+            override fun onSyncedTabClicked(tab: mozilla.components.browser.storage.sync.Tab) {
+                onSyncedTabsClicked = true
+            }
+
             override fun onShareTabsOfTypeClicked(private: Boolean) {
                 shareTabsOfTypeClicked = true
             }
@@ -148,6 +159,8 @@ class NavigationInteractorTest {
         assertTrue(onSaveToCollections)
         navigationInteractor.onSaveToBookmarks(emptyList())
         assertTrue(onBookmarkTabs)
+        navigationInteractor.onSyncedTabClicked(mockk())
+        assertTrue(onSyncedTabsClicked)
     }
 
     @Test
@@ -219,6 +232,7 @@ class NavigationInteractorTest {
     fun `onBookmarkTabs calls navigation on DefaultNavigationInteractor`() = runBlockingTest {
         navigationInteractor = DefaultNavigationInteractor(
             context,
+            activity,
             store,
             navController,
             metrics,
@@ -232,5 +246,25 @@ class NavigationInteractorTest {
         )
         navigationInteractor.onSaveToBookmarks(listOf(createTrayTab()))
         coVerify(exactly = 1) { bookmarksUseCase.addBookmark(any(), any(), any()) }
+    }
+
+    @Test
+    fun `onSyncedTabsClicked sets metrics and opens browser`() {
+        val tab = mockk<SyncTab>()
+        val entry = mockk<TabEntry>()
+
+        every { tab.active() }.answers { entry }
+        every { entry.url }.answers { "https://mozilla.org" }
+
+        navigationInteractor.onSyncedTabClicked(tab)
+
+        verify { metrics.track(Event.SyncedTabOpened) }
+        verify {
+            activity.openToBrowserAndLoad(
+                searchTermOrURL = "https://mozilla.org",
+                newTab = true,
+                from = BrowserDirection.FromTabTray
+            )
+        }
     }
 }

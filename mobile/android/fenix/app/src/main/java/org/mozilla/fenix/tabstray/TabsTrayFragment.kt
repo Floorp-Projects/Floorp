@@ -53,7 +53,6 @@ import org.mozilla.fenix.tabstray.browser.SelectionBannerBinding
 import org.mozilla.fenix.tabstray.browser.SelectionBannerBinding.VisibilityModifier
 import org.mozilla.fenix.tabstray.ext.getTrayPosition
 import org.mozilla.fenix.tabstray.ext.showWithTheme
-import org.mozilla.fenix.tabstray.syncedtabs.SyncedTabsInteractor
 import org.mozilla.fenix.utils.allowUndo
 import kotlin.math.max
 
@@ -111,6 +110,7 @@ class TabsTrayFragment : AppCompatDialogFragment(), TabsTrayInteractor {
         val navigationInteractor =
             DefaultNavigationInteractor(
                 context = requireContext(),
+                activity = activity,
                 tabsTrayStore = tabsTrayStore,
                 browserStore = requireComponents.core.store,
                 navController = findNavController(),
@@ -143,20 +143,13 @@ class TabsTrayFragment : AppCompatDialogFragment(), TabsTrayInteractor {
             requireComponents.analytics.metrics
         )
 
-        val syncedTabsTrayInteractor = SyncedTabsInteractor(
-            requireComponents.analytics.metrics,
-            requireActivity() as HomeActivity,
-            this,
-            controller = tabsTrayController
-        )
-
         setupMenu(view, navigationInteractor)
         setupPager(
             view.context,
             tabsTrayStore,
             this,
             browserTrayInteractor,
-            syncedTabsTrayInteractor
+            navigationInteractor
         )
 
         setupBackgroundDismissalListener {
@@ -216,8 +209,7 @@ class TabsTrayFragment : AppCompatDialogFragment(), TabsTrayInteractor {
                 store = tabsTrayStore,
                 settings = requireComponents.settings,
                 actionButton = new_tab_button,
-                browserTrayInteractor = browserTrayInteractor,
-                syncedTabsInteractor = syncedTabsTrayInteractor
+                browserTrayInteractor = browserTrayInteractor
             ),
             owner = this,
             view = view
@@ -228,8 +220,7 @@ class TabsTrayFragment : AppCompatDialogFragment(), TabsTrayInteractor {
                 store = tabsTrayStore,
                 settings = requireComponents.settings,
                 newTabButton = tab_tray_new_tab,
-                browserTrayInteractor = browserTrayInteractor,
-                syncedTabsInteractor = syncedTabsTrayInteractor
+                browserTrayInteractor = browserTrayInteractor
             ),
             owner = this,
             view = view
@@ -337,14 +328,14 @@ class TabsTrayFragment : AppCompatDialogFragment(), TabsTrayInteractor {
         store: TabsTrayStore,
         trayInteractor: TabsTrayInteractor,
         browserInteractor: BrowserTrayInteractor,
-        syncedTabsTrayInteractor: SyncedTabsInteractor
+        navigationInteractor: NavigationInteractor
     ) {
         tabsTray.apply {
             adapter = TrayPagerAdapter(
                 context,
                 store,
                 browserInteractor,
-                syncedTabsTrayInteractor,
+                navigationInteractor,
                 trayInteractor,
                 requireComponents.core.store
             )

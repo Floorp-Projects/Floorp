@@ -16,7 +16,6 @@ import mozilla.components.support.base.feature.LifecycleAwareFeature
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifAnyChanged
 import org.mozilla.fenix.R
 import org.mozilla.fenix.tabstray.browser.BrowserTrayInteractor
-import org.mozilla.fenix.tabstray.syncedtabs.SyncedTabsInteractor
 import org.mozilla.fenix.utils.Settings
 
 /**
@@ -29,8 +28,7 @@ class AccessibleNewTabButtonBinding(
     private val store: TabsTrayStore,
     private val settings: Settings,
     private val newTabButton: ImageButton,
-    private val browserTrayInteractor: BrowserTrayInteractor,
-    private val syncedTabsInteractor: SyncedTabsInteractor
+    private val browserTrayInteractor: BrowserTrayInteractor
 ) : LifecycleAwareFeature {
 
     private var scope: CoroutineScope? = null
@@ -94,7 +92,6 @@ class AccessibleNewTabButtonBinding(
                         // a sync was requested.
                         if (!syncing) {
                             store.dispatch(TabsTrayAction.SyncNow)
-                            syncedTabsInteractor.onRefresh()
                         }
                     }
                 }

@@ -20,7 +20,6 @@ import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.R
 import org.mozilla.fenix.tabstray.browser.BrowserTrayInteractor
-import org.mozilla.fenix.tabstray.syncedtabs.SyncedTabsInteractor
 import org.mozilla.fenix.utils.Settings
 
 class AccessibleNewTabButtonBindingTest {
@@ -32,7 +31,6 @@ class AccessibleNewTabButtonBindingTest {
     private val settings: Settings = mockk(relaxed = true)
     private val newTabButton: ImageButton = mockk(relaxed = true)
     private val browserTrayInteractor: BrowserTrayInteractor = mockk(relaxed = true)
-    private val syncedTabsInteractor: SyncedTabsInteractor = mockk(relaxed = true)
 
     @Before
     fun setup() {
@@ -44,7 +42,7 @@ class AccessibleNewTabButtonBindingTest {
     fun `WHEN tab selected page is normal tab THEN new tab button is visible`() {
         val tabsTrayStore = TabsTrayStore(TabsTrayState(selectedPage = Page.NormalTabs))
         val newTabButtonBinding = AccessibleNewTabButtonBinding(
-            tabsTrayStore, settings, newTabButton, browserTrayInteractor, syncedTabsInteractor
+            tabsTrayStore, settings, newTabButton, browserTrayInteractor
         )
         every { settings.accessibilityServicesEnabled } returns true
 
@@ -57,7 +55,7 @@ class AccessibleNewTabButtonBindingTest {
     fun `WHEN tab selected page is private tab THEN new tab button is visible`() {
         val tabsTrayStore = TabsTrayStore(TabsTrayState(selectedPage = Page.PrivateTabs))
         val newTabButtonBinding = AccessibleNewTabButtonBinding(
-            tabsTrayStore, settings, newTabButton, browserTrayInteractor, syncedTabsInteractor
+            tabsTrayStore, settings, newTabButton, browserTrayInteractor
         )
         every { settings.accessibilityServicesEnabled } returns true
 
@@ -70,7 +68,7 @@ class AccessibleNewTabButtonBindingTest {
     fun `WHEN tab selected page is sync tab THEN new tab button is visible`() {
         val tabsTrayStore = TabsTrayStore(TabsTrayState(selectedPage = Page.SyncedTabs))
         val newTabButtonBinding = AccessibleNewTabButtonBinding(
-            tabsTrayStore, settings, newTabButton, browserTrayInteractor, syncedTabsInteractor
+            tabsTrayStore, settings, newTabButton, browserTrayInteractor
         )
         every { settings.accessibilityServicesEnabled } returns true
 
@@ -83,7 +81,7 @@ class AccessibleNewTabButtonBindingTest {
     fun `WHEN accessibility is disabled THEN new tab button is not visible`() {
         var tabsTrayStore = TabsTrayStore(TabsTrayState(selectedPage = Page.NormalTabs))
         var newTabButtonBinding = AccessibleNewTabButtonBinding(
-            tabsTrayStore, settings, newTabButton, browserTrayInteractor, syncedTabsInteractor
+            tabsTrayStore, settings, newTabButton, browserTrayInteractor
         )
         every { settings.accessibilityServicesEnabled } returns false
 
@@ -93,7 +91,7 @@ class AccessibleNewTabButtonBindingTest {
 
         tabsTrayStore = TabsTrayStore(TabsTrayState(selectedPage = Page.PrivateTabs))
         newTabButtonBinding = AccessibleNewTabButtonBinding(
-            tabsTrayStore, settings, newTabButton, browserTrayInteractor, syncedTabsInteractor
+            tabsTrayStore, settings, newTabButton, browserTrayInteractor
         )
 
         newTabButtonBinding.start()
@@ -102,7 +100,7 @@ class AccessibleNewTabButtonBindingTest {
 
         tabsTrayStore = TabsTrayStore(TabsTrayState(selectedPage = Page.SyncedTabs))
         newTabButtonBinding = AccessibleNewTabButtonBinding(
-            tabsTrayStore, settings, newTabButton, browserTrayInteractor, syncedTabsInteractor
+            tabsTrayStore, settings, newTabButton, browserTrayInteractor
         )
 
         newTabButtonBinding.start()
@@ -114,7 +112,7 @@ class AccessibleNewTabButtonBindingTest {
     fun `WHEN selected page is updated THEN button is updated`() {
         val tabsTrayStore = TabsTrayStore(TabsTrayState(selectedPage = Page.NormalTabs))
         val newTabButtonBinding = AccessibleNewTabButtonBinding(
-            tabsTrayStore, settings, newTabButton, browserTrayInteractor, syncedTabsInteractor
+            tabsTrayStore, settings, newTabButton, browserTrayInteractor
         )
         every { settings.accessibilityServicesEnabled } returns true
 

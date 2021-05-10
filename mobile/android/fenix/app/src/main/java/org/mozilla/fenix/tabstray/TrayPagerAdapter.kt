@@ -12,10 +12,10 @@ import mozilla.components.browser.state.selector.normalTabs
 import mozilla.components.browser.state.selector.privateTabs
 import mozilla.components.browser.state.selector.selectedTab
 import mozilla.components.browser.state.store.BrowserStore
-import mozilla.components.feature.syncedtabs.view.SyncedTabsView
 import org.mozilla.fenix.sync.SyncedTabsAdapter
 import org.mozilla.fenix.tabstray.browser.BrowserTabsAdapter
 import org.mozilla.fenix.tabstray.browser.BrowserTrayInteractor
+import org.mozilla.fenix.tabstray.syncedtabs.TabClickDelegate
 import org.mozilla.fenix.tabstray.viewholders.AbstractTrayViewHolder
 import org.mozilla.fenix.tabstray.viewholders.NormalBrowserTabViewHolder
 import org.mozilla.fenix.tabstray.viewholders.PrivateBrowserTabViewHolder
@@ -25,14 +25,14 @@ class TrayPagerAdapter(
     private val context: Context,
     private val store: TabsTrayStore,
     private val browserInteractor: BrowserTrayInteractor,
-    private val syncedTabsInteractor: SyncedTabsView.Listener,
+    private val navInteractor: NavigationInteractor,
     private val interactor: TabsTrayInteractor,
     private val browserStore: BrowserStore
 ) : RecyclerView.Adapter<AbstractTrayViewHolder>() {
 
     private val normalAdapter by lazy { BrowserTabsAdapter(context, browserInteractor, store) }
     private val privateAdapter by lazy { BrowserTabsAdapter(context, browserInteractor, store) }
-    private val syncedTabsAdapter by lazy { SyncedTabsAdapter(syncedTabsInteractor) }
+    private val syncedTabsAdapter by lazy { SyncedTabsAdapter(TabClickDelegate(navInteractor)) }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): AbstractTrayViewHolder {
         val itemView = LayoutInflater.from(parent.context).inflate(viewType, parent, false)
@@ -59,7 +59,7 @@ class TrayPagerAdapter(
             SyncedTabViewHolder.LAYOUT_ID -> {
                 SyncedTabViewHolder(
                     itemView,
-                    syncedTabsInteractor
+                    store
                 )
             }
             else -> throw IllegalStateException("Unknown viewType.")

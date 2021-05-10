@@ -6,10 +6,8 @@ package org.mozilla.fenix.tabstray
 
 import androidx.navigation.NavController
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
 import mozilla.components.concept.base.profiler.Profiler
 import mozilla.components.service.fxa.manager.FxaAccountManager
-import mozilla.components.service.fxa.sync.SyncReason
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
 import org.mozilla.fenix.components.metrics.Event
@@ -23,11 +21,6 @@ interface TabsTrayController {
      * Called when user clicks the new tab button.
      */
     fun onNewTabTapped(isPrivate: Boolean)
-
-    /**
-     * Starts user account tab syncing.
-     * */
-    fun onSyncStarted()
 }
 
 class DefaultTabsTrayController(
@@ -52,22 +45,6 @@ class DefaultTabsTrayController(
             startTime
         )
         sendNewTabEvent(isPrivate)
-    }
-
-    override fun onSyncStarted() {
-        ioScope.launch {
-            metrics.track(Event.SyncAccountSyncNow)
-            // Trigger a sync.
-            accountManager.syncNow(SyncReason.User)
-            // Poll for device events & update devices.
-            accountManager.authenticatedAccount()
-                ?.deviceConstellation()?.run {
-                    refreshDevices()
-                    pollForCommands()
-                }
-        }.invokeOnCompletion {
-            store.dispatch(TabsTrayAction.SyncCompleted)
-        }
     }
 
     private fun sendNewTabEvent(isPrivateModeSelected: Boolean) {

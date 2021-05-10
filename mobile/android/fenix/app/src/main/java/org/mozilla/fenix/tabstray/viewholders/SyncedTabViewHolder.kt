@@ -7,12 +7,12 @@ package org.mozilla.fenix.tabstray.viewholders
 import android.view.View
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.component_sync_tabs_tray_layout.*
-import mozilla.components.feature.syncedtabs.view.SyncedTabsView
 import org.mozilla.fenix.R
+import org.mozilla.fenix.tabstray.TabsTrayStore
 
 class SyncedTabViewHolder(
     containerView: View,
-    private val listener: SyncedTabsView.Listener
+    private val tabsTrayStore: TabsTrayStore
 ) : AbstractTrayViewHolder(containerView) {
 
     override fun bind(
@@ -21,7 +21,8 @@ class SyncedTabViewHolder(
     ) {
         synced_tabs_list.layoutManager = layoutManager
         synced_tabs_list.adapter = adapter
-        synced_tabs_tray_layout.listener = listener
+
+        synced_tabs_tray_layout.tabsTrayStore = tabsTrayStore
     }
 
     companion object {

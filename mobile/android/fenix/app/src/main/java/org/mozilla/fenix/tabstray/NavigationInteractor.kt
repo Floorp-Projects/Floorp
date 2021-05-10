@@ -12,9 +12,12 @@ import kotlinx.coroutines.launch
 import mozilla.components.browser.state.selector.getNormalOrPrivateTabs
 import mozilla.components.browser.state.selector.normalTabs
 import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.browser.storage.sync.Tab as SyncTab
 import mozilla.components.concept.engine.prompt.ShareData
 import mozilla.components.concept.tabstray.Tab
 import mozilla.components.service.fxa.manager.FxaAccountManager
+import org.mozilla.fenix.BrowserDirection
+import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.collections.CollectionsDialog
 import org.mozilla.fenix.collections.show
 import org.mozilla.fenix.components.TabCollectionStorage
@@ -75,6 +78,11 @@ interface NavigationInteractor {
      * Used when adding [Tab]s as bookmarks.
      */
     fun onSaveToBookmarks(tabs: Collection<Tab>)
+
+    /**
+     * Called when clicking on a SyncedTab item.
+     */
+    fun onSyncedTabClicked(tab: SyncTab)
 }
 
 /**
@@ -83,6 +91,7 @@ interface NavigationInteractor {
 @Suppress("LongParameterList")
 class DefaultNavigationInteractor(
     private val context: Context,
+    private val activity: HomeActivity,
     private val browserStore: BrowserStore,
     private val navController: NavController,
     private val metrics: MetricController,
@@ -192,5 +201,14 @@ class DefaultNavigationInteractor(
         tabsTrayStore.dispatch(TabsTrayAction.ExitSelectMode)
 
         // TODO show successful snackbar here (regardless of operation succes).
+    }
+
+    override fun onSyncedTabClicked(tab: SyncTab) {
+        metrics.track(Event.SyncedTabOpened)
+        activity.openToBrowserAndLoad(
+            searchTermOrURL = tab.active().url,
+            newTab = true,
+            from = BrowserDirection.FromTabTray
+        )
     }
 }

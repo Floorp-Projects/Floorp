@@ -19,7 +19,6 @@ import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.R
 import org.mozilla.fenix.tabstray.browser.BrowserTrayInteractor
-import org.mozilla.fenix.tabstray.syncedtabs.SyncedTabsInteractor
 import org.mozilla.fenix.utils.Settings
 
 class FloatingActionButtonBindingTest {
@@ -31,7 +30,6 @@ class FloatingActionButtonBindingTest {
     private val settings: Settings = mockk(relaxed = true)
     private val actionButton: ExtendedFloatingActionButton = mockk(relaxed = true)
     private val browserTrayInteractor: BrowserTrayInteractor = mockk(relaxed = true)
-    private val syncedTabsInteractor: SyncedTabsInteractor = mockk(relaxed = true)
 
     @Before
     fun setup() {
@@ -43,7 +41,7 @@ class FloatingActionButtonBindingTest {
     fun `WHEN tab selected page is normal tab THEN shrink and show is called`() {
         val tabsTrayStore = TabsTrayStore(TabsTrayState(selectedPage = Page.NormalTabs))
         val fabBinding = FloatingActionButtonBinding(
-            tabsTrayStore, settings, actionButton, browserTrayInteractor, syncedTabsInteractor
+            tabsTrayStore, settings, actionButton, browserTrayInteractor
         )
         every { settings.accessibilityServicesEnabled } returns false
 
@@ -59,7 +57,7 @@ class FloatingActionButtonBindingTest {
     fun `WHEN tab selected page is private tab THEN extend and show is called`() {
         val tabsTrayStore = TabsTrayStore(TabsTrayState(selectedPage = Page.PrivateTabs))
         val fabBinding = FloatingActionButtonBinding(
-            tabsTrayStore, settings, actionButton, browserTrayInteractor, syncedTabsInteractor
+            tabsTrayStore, settings, actionButton, browserTrayInteractor
         )
         every { settings.accessibilityServicesEnabled } returns false
 
@@ -75,7 +73,7 @@ class FloatingActionButtonBindingTest {
     fun `WHEN tab selected page is sync tab THEN extend and show is called`() {
         val tabsTrayStore = TabsTrayStore(TabsTrayState(selectedPage = Page.SyncedTabs))
         val fabBinding = FloatingActionButtonBinding(
-            tabsTrayStore, settings, actionButton, browserTrayInteractor, syncedTabsInteractor
+            tabsTrayStore, settings, actionButton, browserTrayInteractor
         )
         every { settings.accessibilityServicesEnabled } returns false
 
@@ -91,7 +89,7 @@ class FloatingActionButtonBindingTest {
     fun `WHEN accessibility is enabled THEN show is not called`() {
         var tabsTrayStore = TabsTrayStore(TabsTrayState(selectedPage = Page.NormalTabs))
         var fabBinding = FloatingActionButtonBinding(
-            tabsTrayStore, settings, actionButton, browserTrayInteractor, syncedTabsInteractor
+            tabsTrayStore, settings, actionButton, browserTrayInteractor
         )
         every { settings.accessibilityServicesEnabled } returns true
 
@@ -102,7 +100,7 @@ class FloatingActionButtonBindingTest {
 
         tabsTrayStore = TabsTrayStore(TabsTrayState(selectedPage = Page.PrivateTabs))
         fabBinding = FloatingActionButtonBinding(
-            tabsTrayStore, settings, actionButton, browserTrayInteractor, syncedTabsInteractor
+            tabsTrayStore, settings, actionButton, browserTrayInteractor
         )
 
         fabBinding.start()
@@ -112,7 +110,7 @@ class FloatingActionButtonBindingTest {
 
         tabsTrayStore = TabsTrayStore(TabsTrayState(selectedPage = Page.SyncedTabs))
         fabBinding = FloatingActionButtonBinding(
-            tabsTrayStore, settings, actionButton, browserTrayInteractor, syncedTabsInteractor
+            tabsTrayStore, settings, actionButton, browserTrayInteractor
         )
 
         fabBinding.start()
@@ -125,7 +123,7 @@ class FloatingActionButtonBindingTest {
     fun `WHEN selected page is updated THEN button is updated`() {
         val tabsTrayStore = TabsTrayStore(TabsTrayState(selectedPage = Page.NormalTabs))
         val fabBinding = FloatingActionButtonBinding(
-            tabsTrayStore, settings, actionButton, browserTrayInteractor, syncedTabsInteractor
+            tabsTrayStore, settings, actionButton, browserTrayInteractor
         )
         every { settings.accessibilityServicesEnabled } returns false
 

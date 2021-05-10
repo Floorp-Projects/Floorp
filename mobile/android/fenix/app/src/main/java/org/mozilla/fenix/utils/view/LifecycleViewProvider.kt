@@ -14,7 +14,7 @@ import androidx.lifecycle.LifecycleRegistry
 /**
  * Provides a [LifecycleOwner] on a given [View] for features that function on lifecycle events.
  *
- * When the [View] is attached to the window, observers will receive the [Lifecycle.Event.ON_START] event.
+ * When the [View] is attached to the window, observers will receive the [Lifecycle.Event.ON_RESUME] event.
  * When the [View] is detached to the window, observers will receive the [Lifecycle.Event.ON_STOP] event.
  *
  * @param view The [View] that will be observed.
@@ -36,7 +36,7 @@ internal class ViewBinding(
     private val registry: LifecycleRegistry
 ) : View.OnAttachStateChangeListener {
     override fun onViewAttachedToWindow(v: View?) {
-        registry.currentState = State.STARTED
+        registry.currentState = State.RESUMED
     }
 
     override fun onViewDetachedFromWindow(v: View?) {
