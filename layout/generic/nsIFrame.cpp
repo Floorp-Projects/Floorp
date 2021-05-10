@@ -3231,8 +3231,12 @@ void nsIFrame::BuildDisplayListForStackingContext(
   // containing block), then we should assume we have one.
   // Either we have an explicit one, or nothing in our subtree changed and
   // we have an implicit empty rect.
+  //
+  // These conditions should match |CanStoreDisplayListBuildingRect()| in
+  // RetainedDisplayListBuilder.cpp
   if (aBuilder->IsPartialUpdate() && !aBuilder->InInvalidSubtree() &&
-      !IsFrameModified() && IsFixedPosContainingBlock()) {
+      !IsFrameModified() && IsFixedPosContainingBlock() &&
+      !GetPrevContinuation() && !GetNextContinuation()) {
     dirtyRect = nsRect();
     if (HasOverrideDirtyRegion()) {
       nsDisplayListBuilder::DisplayListBuildingData* data =
