@@ -34,29 +34,16 @@ fn get_ucontext() -> Result<libc::ucontext_t> {
     unsafe { Ok(context.assume_init()) }
 }
 
+#[cfg(not(any(target_arch = "mips", target_arch = "arm")))]
 fn get_crash_context(tid: Pid) -> CrashContext {
     let siginfo: libc::siginfo_t = unsafe { std::mem::zeroed() };
-    #[cfg(not(any(target_arch = "mips", target_arch = "arm")))]
-    {
-        let context = get_ucontext().expect("Failed to get ucontext");
-        let float_state: fpstate_t = unsafe { std::mem::zeroed() };
-        CrashContext {
-            siginfo,
-            tid,
-            context,
-            float_state,
-        }
-    }
-    #[cfg(any(target_arch = "mips", target_arch = "arm"))]
-    {
-        // TODO: `libc` doesn't provide `getcontext()` for ARM and mips, so
-        //       for now I just use zeroes. But this should be filled in properly!
-        let context: libc::ucontext_t = unsafe { std::mem::zeroed() };
-        CrashContext {
-            siginfo,
-            tid,
-            context,
-        }
+    let context = get_ucontext().expect("Failed to get ucontext");
+    let float_state: fpstate_t = unsafe { std::mem::zeroed() };
+    CrashContext {
+        siginfo,
+        tid,
+        context,
+        float_state,
     }
 }
 
@@ -71,6 +58,7 @@ fn test_write_dump_helper(context: Context) {
         .unwrap();
 
     let mut tmp = MinidumpWriter::new(pid, pid);
+    #[cfg(not(any(target_arch = "mips", target_arch = "arm")))]
     if context == Context::With {
         let crash_context = get_crash_context(pid);
         tmp.set_crash_context(crash_context);
@@ -95,6 +83,7 @@ fn test_write_dump_helper(context: Context) {
 fn test_write_dump() {
     test_write_dump_helper(Context::Without)
 }
+#[cfg(not(any(target_arch = "mips", target_arch = "arm")))]
 #[test]
 fn test_write_dump_with_context() {
     test_write_dump_helper(Context::With)
@@ -140,6 +129,7 @@ fn test_write_and_read_dump_from_parent_helper(context: Context) {
     };
 
     let mut tmp = MinidumpWriter::new(pid, pid);
+    #[cfg(not(any(target_arch = "mips", target_arch = "arm")))]
     if context == Context::With {
         let crash_context = get_crash_context(pid);
         tmp.set_crash_context(crash_context);
@@ -202,6 +192,7 @@ fn test_write_and_read_dump_from_parent_helper(context: Context) {
 fn test_write_and_read_dump_from_parent() {
     test_write_and_read_dump_from_parent_helper(Context::Without)
 }
+#[cfg(not(any(target_arch = "mips", target_arch = "arm")))]
 #[test]
 fn test_write_and_read_dump_from_parent_with_context() {
     test_write_and_read_dump_from_parent_helper(Context::With)
@@ -232,6 +223,7 @@ fn test_write_with_additional_memory_helper(context: Context) {
     };
 
     let mut tmp = MinidumpWriter::new(pid, pid);
+    #[cfg(not(any(target_arch = "mips", target_arch = "arm")))]
     if context == Context::With {
         let crash_context = get_crash_context(pid);
         tmp.set_crash_context(crash_context);
@@ -271,6 +263,7 @@ fn test_write_with_additional_memory_helper(context: Context) {
 fn test_write_with_additional_memory() {
     test_write_with_additional_memory_helper(Context::Without)
 }
+#[cfg(not(any(target_arch = "mips", target_arch = "arm")))]
 #[test]
 fn test_write_with_additional_memory_with_context() {
     test_write_with_additional_memory_helper(Context::With)
@@ -513,6 +506,7 @@ fn test_skip_if_requested_helper(context: Context) {
         .unwrap();
 
     let mut tmp = MinidumpWriter::new(pid, pid);
+    #[cfg(not(any(target_arch = "mips", target_arch = "arm")))]
     if context == Context::With {
         let crash_context = get_crash_context(pid);
         tmp.set_crash_context(crash_context);
@@ -545,6 +539,7 @@ fn test_skip_if_requested_helper(context: Context) {
 fn test_skip_if_requested() {
     test_skip_if_requested_helper(Context::Without)
 }
+#[cfg(not(any(target_arch = "mips", target_arch = "arm")))]
 #[test]
 fn test_skip_if_requested_with_context() {
     test_skip_if_requested_helper(Context::With)
@@ -561,6 +556,7 @@ fn test_sanitized_stacks_helper(context: Context) {
         .unwrap();
 
     let mut tmp = MinidumpWriter::new(pid, pid);
+    #[cfg(not(any(target_arch = "mips", target_arch = "arm")))]
     if context == Context::With {
         let crash_context = get_crash_context(pid);
         tmp.set_crash_context(crash_context);
@@ -607,6 +603,7 @@ fn test_sanitized_stacks_helper(context: Context) {
 fn test_sanitized_stacks() {
     test_sanitized_stacks_helper(Context::Without)
 }
+#[cfg(not(any(target_arch = "mips", target_arch = "arm")))]
 #[test]
 fn test_sanitized_stacks_with_context() {
     test_sanitized_stacks_helper(Context::Without)
@@ -640,6 +637,7 @@ fn test_write_early_abort_helper(context: Context) {
     };
 
     let mut tmp = MinidumpWriter::new(pid, pid);
+    #[cfg(not(any(target_arch = "mips", target_arch = "arm")))]
     if context == Context::With {
         let crash_context = get_crash_context(pid);
         tmp.set_crash_context(crash_context);
@@ -671,6 +669,7 @@ fn test_write_early_abort_helper(context: Context) {
 fn test_write_early_abort() {
     test_write_early_abort_helper(Context::Without)
 }
+#[cfg(not(any(target_arch = "mips", target_arch = "arm")))]
 #[test]
 fn test_write_early_abort_with_context() {
     test_write_early_abort_helper(Context::With)

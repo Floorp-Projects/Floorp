@@ -1,8 +1,10 @@
 use super::{CommonThreadInfo, Pid};
 use crate::errors::ThreadInfoError;
-use crate::minidump_cpu::imp::{MD_CONTEXT_ARM_FULL, MD_CONTEXT_ARM_GPR_COUNT};
+use crate::minidump_cpu::imp::{
+    MD_CONTEXT_ARM_FULL, MD_CONTEXT_ARM_GPR_COUNT, MD_FLOATINGSAVEAREA_ARM_FPEXTRA_COUNT,
+    MD_FLOATINGSAVEAREA_ARM_FPR_COUNT,
+};
 use crate::minidump_cpu::RawContextCPU;
-use crate::Result;
 use libc;
 use nix::sys::ptrace;
 
@@ -89,7 +91,7 @@ impl ThreadInfoArm {
 
         #[cfg(not(target_os = "android"))]
         {
-            out.float_save.fpscr = self.fpregs.fpsr | (self.fpregs.fpcr as u64) << 32;
+            out.float_save.fpscr = self.fpregs.fpsr as u64 | ((self.fpregs.fpcr as u64) << 32);
             out.float_save.regs = [0; MD_FLOATINGSAVEAREA_ARM_FPR_COUNT];
             out.float_save.extra = [0; MD_FLOATINGSAVEAREA_ARM_FPEXTRA_COUNT];
         }

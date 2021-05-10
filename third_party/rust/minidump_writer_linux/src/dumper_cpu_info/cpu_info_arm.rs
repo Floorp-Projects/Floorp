@@ -1,12 +1,49 @@
-use crate::cpu_set::*;
 use crate::errors::CpuInfoError;
 use crate::minidump_format::*;
-use crate::Result;
+use std::collections::HashSet;
 use std::fs::File;
+use std::io::Read;
 use std::io::{BufRead, BufReader};
 use std::path;
 
 type Result<T> = std::result::Result<T, CpuInfoError>;
+
+pub fn parse_cpus_from_sysfile(file: &mut File) -> Result<HashSet<u32>> {
+    let mut res = HashSet::new();
+    let mut content = String::new();
+    file.read_to_string(&mut content)?;
+    // Expected format: comma-separated list of items, where each
+    // item can be a decimal integer, or two decimal integers separated
+    // by a dash.
+    // E.g.:
+    //       0
+    //       0,1,2,3
+    //       0-3
+    //       1,10-23
+    for items in content.split(',') {
+        let items = items.trim();
+        if items.is_empty() {
+            continue;
+        }
+        let cores: std::result::Result<Vec<_>, _> =
+            items.split("-").map(|x| x.parse::<u32>()).collect();
+        let cores = cores?;
+        match cores.as_slice() {
+            [x] => {
+                res.insert(*x);
+            }
+            [x, y] => {
+                for core in *x..=*y {
+                    res.insert(core);
+                }
+            }
+            _ => {
+                return Err(CpuInfoError::UnparsableCores(format!("{:?}", cores)));
+            }
+        }
+    }
+    Ok(res)
+}
 
 struct CpuInfoEntry {
     field: &'static str,
@@ -109,18 +146,15 @@ pub fn write_cpu_information(sys_info: &mut MDRawSystemInfo) -> Result<()> {
     // because the content of /proc/cpuinfo will only mirror the number
     // of 'online' cores, and thus will vary with time.
     // See http://www.kernel.org/doc/Documentation/cputopology.txt
-    let mut cpus_present = CpuSet::new();
-    let mut cpus_possible = CpuSet::new();
-
     if let Ok(mut present_file) = File::open("/sys/devices/system/cpu/present") {
         // Ignore unparsable content
-        let _ = cpus_present.parse_sys_file(&mut present_file);
+        let cpus_present = parse_cpus_from_sysfile(&mut present_file).unwrap_or_default();
 
         if let Ok(mut possible_file) = File::open("/sys/devices/system/cpu/possible") {
             // Ignore unparsable content
-            let _ = cpus_possible.parse_sys_file(&mut possible_file);
-            cpus_present.intersect_with(&cpus_possible);
-            let cpu_count = std::cmp::min(255, cpus_present.get_count()) as u8;
+            let cpus_possible = parse_cpus_from_sysfile(&mut possible_file).unwrap_or_default();
+            let intersection = cpus_present.intersection(&cpus_possible).count();
+            let cpu_count = std::cmp::min(255, intersection) as u8;
             sys_info.number_of_processors = cpu_count;
         }
     }
@@ -228,4 +262,110 @@ pub fn write_cpu_information(sys_info: &mut MDRawSystemInfo) -> Result<()> {
         }
     }
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    // In tests we can have access to std
+    extern crate std;
+    use std::io::Write;
+
+    fn new_file(content: &str) -> File {
+        let mut file = tempfile::Builder::new()
+            .prefix("cpu_sets")
+            .tempfile()
+            .unwrap();
+        write!(file, "{}", content).unwrap();
+        std::fs::File::open(file).unwrap()
+    }
+
+    #[test]
+    fn test_empty_count() {
+        let mut file = new_file("");
+        let set = parse_cpus_from_sysfile(&mut file).expect("Failed to parse empty file");
+        assert_eq!(set.len(), 0);
+    }
+
+    #[test]
+    fn test_one_cpu() {
+        let mut file = new_file("10");
+        let set = parse_cpus_from_sysfile(&mut file).expect("Failed to file");
+        assert_eq!(set, [10,].iter().map(|x| *x).collect());
+    }
+
+    #[test]
+    fn test_one_cpu_newline() {
+        let mut file = new_file("10\n");
+        let set = parse_cpus_from_sysfile(&mut file).expect("Failed to file");
+        assert_eq!(set, [10,].iter().map(|x| *x).collect());
+    }
+
+    #[test]
+    fn test_two_cpus() {
+        let mut file = new_file("1,10\n");
+        let set = parse_cpus_from_sysfile(&mut file).expect("Failed to file");
+        assert_eq!(set, [1, 10].iter().map(|x| *x).collect());
+    }
+
+    #[test]
+    fn test_two_cpus_with_range() {
+        let mut file = new_file("1-2\n");
+        let set = parse_cpus_from_sysfile(&mut file).expect("Failed to file");
+        assert_eq!(set, [1, 2].iter().map(|x| *x).collect());
+    }
+
+    #[test]
+    fn test_ten_cpus_with_range() {
+        let mut file = new_file("9-18\n");
+        let set = parse_cpus_from_sysfile(&mut file).expect("Failed to file");
+        assert_eq!(set, (9..=18).collect());
+    }
+
+    #[test]
+    fn test_multiple_items() {
+        let mut file = new_file("0, 2-4, 128\n");
+        let set = parse_cpus_from_sysfile(&mut file).expect("Failed to file");
+        assert_eq!(set, [0, 2, 3, 4, 128].iter().map(|x| *x).collect());
+    }
+
+    #[test]
+    fn test_intersects_with() {
+        let mut file1 = new_file("9-19\n");
+        let mut set1 = parse_cpus_from_sysfile(&mut file1).expect("Failed to file");
+        assert_eq!(set1, (9..=19).collect());
+
+        let mut file2 = new_file("16-24\n");
+        let set2 = parse_cpus_from_sysfile(&mut file2).expect("Failed to file");
+        assert_eq!(set2, (16..=24).collect());
+
+        set1 = set1.intersection(&set2).map(|x| *x).collect();
+        assert_eq!(set1, (16..=19).collect());
+    }
+
+    #[test]
+    fn test_intersects_with_discontinuous() {
+        let mut file1 = new_file("0, 2-4, 7, 10\n");
+        let mut set1 = parse_cpus_from_sysfile(&mut file1).expect("Failed to file");
+        assert_eq!(set1, [0, 2, 3, 4, 7, 10].iter().map(|x| *x).collect());
+
+        let mut file2 = new_file("0-2, 5, 8-10\n");
+        let set2 = parse_cpus_from_sysfile(&mut file2).expect("Failed to file");
+        assert_eq!(set2, [0, 1, 2, 5, 8, 9, 10].iter().map(|x| *x).collect());
+
+        set1 = set1.intersection(&set2).map(|x| *x).collect();
+        assert_eq!(set1, [0, 2, 10].iter().map(|x| *x).collect());
+    }
+
+    #[test]
+    fn test_bad_input() {
+        let mut file = new_file("abc\n");
+        let _set = parse_cpus_from_sysfile(&mut file).expect_err("Did not fail to parse");
+    }
+
+    #[test]
+    fn test_bad_input_range() {
+        let mut file = new_file("1-abc\n");
+        let _set = parse_cpus_from_sysfile(&mut file).expect_err("Did not fail to parse");
+    }
 }

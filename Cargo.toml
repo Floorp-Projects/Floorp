@@ -82,7 +82,7 @@ packed_simd = { git = "https://github.com/hsivonen/packed_simd", rev="0917fe7800
 rlbox_lucet_sandbox = { git = "https://github.com/PLSysSec/rlbox_lucet_sandbox/", rev="f3cace4fb8b53db0849c62af4fa62bade5a620f7" }
 nix = { git = "https://github.com/shravanrn/nix/", rev="4af6c367603869a30fddb5ffb0aba2b9477ba92e" }
 spirv_cross = { git = "https://github.com/kvark/spirv_cross", branch = "wgpu5" }
-minidump_writer_linux = { git = "https://github.com/msirringhaus/minidump_writer_linux.git", rev = "47cba046aabef76233942a09f31e6ef7a8a4eda9" }
+minidump_writer_linux = { git = "https://github.com/msirringhaus/minidump_writer_linux.git", rev = "5cea1c9a3d8ed3ed2d7bdd5be3285e7821400b7f" }
 xmldecl = { git = "https://github.com/hsivonen/xmldecl", rev="a74f7df5bf6cb11194fb74daa0c3cf42f326fd90" }
 
 [patch.crates-io.cranelift-codegen]

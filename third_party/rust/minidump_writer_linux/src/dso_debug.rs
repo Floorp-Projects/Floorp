@@ -9,14 +9,10 @@ use std::io::Cursor;
 
 type Result<T> = std::result::Result<T, SectionDsoDebugError>;
 
-#[cfg(all(target_pointer_width = "64", target_arch = "arm"))]
-type ElfPhdr = u64;
-#[cfg(all(target_pointer_width = "64", not(target_arch = "arm")))]
-type ElfPhdr = libc::Elf64_Phdr; // Not defined on ARM
-#[cfg(all(target_pointer_width = "32", target_arch = "arm"))]
-type ElfPhdr = u32;
-#[cfg(all(target_pointer_width = "32", not(target_arch = "arm")))]
-type ElfPhdr = libc::Elf32_Phdr;
+#[cfg(all(target_pointer_width = "32"))]
+use goblin::elf::program_header::program_header32::SIZEOF_PHDR;
+#[cfg(all(target_pointer_width = "64"))]
+use goblin::elf::program_header::program_header64::SIZEOF_PHDR;
 
 #[cfg(all(target_pointer_width = "64", target_arch = "arm"))]
 type ElfAddr = u64;
@@ -99,11 +95,10 @@ pub fn write_dso_debug_stream(
         .get(&at_phdr)
         .ok_or(SectionDsoDebugError::CouldNotFind("AT_PHDR in auxv"))? as usize;
 
-    let phdr_size = std::mem::size_of::<ElfPhdr>();
     let ph = LinuxPtraceDumper::copy_from_process(
         blamed_thread,
         phdr as *mut libc::c_void,
-        phdr_size * phnum_max,
+        SIZEOF_PHDR * phnum_max,
     )?;
     let program_headers;
     #[cfg(target_pointer_width = "64")]

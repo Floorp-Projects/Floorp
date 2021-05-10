@@ -1,5 +1,8 @@
+use crate::errors::AndroidError;
 use crate::linux_ptrace_dumper::LinuxPtraceDumper;
 use crate::maps_reader::MappingInfo;
+use crate::thread_info::Pid;
+use goblin::elf;
 #[cfg(target_pointer_width = "32")]
 use goblin::elf::dynamic::dyn32::{Dyn, SIZEOF_DYN};
 #[cfg(target_pointer_width = "64")]
@@ -12,12 +15,10 @@ use goblin::elf::header::header64 as elf_header;
 use goblin::elf::program_header::program_header32::ProgramHeader;
 #[cfg(target_pointer_width = "64")]
 use goblin::elf::program_header::program_header64::ProgramHeader;
-
-use crate::thread_info::Pid;
-use crate::Result;
-use goblin::elf;
 use std::convert::TryInto;
 use std::ffi::c_void;
+
+type Result<T> = std::result::Result<T, AndroidError>;
 
 // From /usr/include/elf.h of the android SDK
 // #define DT_ANDROID_REL (DT_LOOS + 2)
@@ -54,7 +55,7 @@ fn has_android_packed_relocations(pid: Pid, load_bias: usize, vaddrs: DynVaddres
             return Ok(());
         }
     }
-    Err("no Android rel found".into())
+    Err(AndroidError::NoRelFound)
 }
 
 fn get_effective_load_bias(pid: Pid, ehdr: &elf_header::Header, address: usize) -> usize {
@@ -86,7 +87,7 @@ fn parse_loaded_elf_program_headers(
     let phdr_opt = LinuxPtraceDumper::copy_from_process(
         pid,
         phdr_addr as *mut c_void,
-        elf_header::SIZEOF_EHDR as isize * ehdr.e_phnum,
+        elf_header::SIZEOF_EHDR * ehdr.e_phnum as usize,
     );
     if let Ok(ph_data) = phdr_opt {
         // TODO: The original C code doesn't have error-handling here at all.

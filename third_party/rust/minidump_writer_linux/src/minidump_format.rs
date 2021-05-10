@@ -178,6 +178,7 @@ pub struct MDCPUInformation {
 pub struct MDCPUInformation {
     pub cpuid: u32,
     pub elf_hwcaps: u32, /* linux specific, 0 otherwise */
+    _padding: [u32; 4],
 }
 
 #[cfg(target_arch = "mips")]
@@ -185,6 +186,7 @@ pub struct MDCPUInformation {
 #[derive(Debug, Default, PartialEq)]
 pub struct MDCPUInformation {
     pub cpuid: [u64; 2],
+    _padding: [u32; 2],
 }
 
 /* For (MDCPUInformation).arm_cpu_info.elf_hwcaps.
