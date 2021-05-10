@@ -9677,12 +9677,6 @@
 # Prefs starting with "plugin."
 #---------------------------------------------------------------------------
 
-# Whether sending WM_MOUSEWHEEL and WM_MOUSEHWHEEL to plugins on Windows.
-- name: plugin.mousewheel.enabled
-  type: bool
-  value: true
-  mirror: always
-
 - name: plugin.state.flash
   type: uint32_t
   # Flash is Click-to-Activate by default on all channels. Disabled for ARM builds.
