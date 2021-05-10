@@ -349,10 +349,13 @@ SubDialog.prototype = {
       this.injectXMLStylesheet(styleSheetURL);
     }
 
+    let { contentDocument } = this._frame;
     // Provide the ability for the dialog to know that it is being loaded "in-content".
-    for (let dialog of this._frame.contentDocument.querySelectorAll("dialog")) {
+    for (let dialog of contentDocument.querySelectorAll("dialog")) {
       dialog.setAttribute("subdialog", "true");
     }
+    // Used by CSS to give the appropriate background colour in dark mode.
+    contentDocument.documentElement.setAttribute("dialogroot", "true");
 
     this._frame.contentWindow.addEventListener("dialogclosing", this);
 
@@ -414,9 +417,7 @@ SubDialog.prototype = {
     this._overlay.style.opacity = "0.01";
 
     // Ensure the document gets an a11y role of dialog.
-    const a11yDoc =
-      this._frame.contentDocument.body ||
-      this._frame.contentDocument.documentElement;
+    const a11yDoc = contentDocument.body || contentDocument.documentElement;
     a11yDoc.setAttribute("role", "dialog");
 
     Services.obs.notifyObservers(this._frame.contentWindow, "subdialog-loaded");
