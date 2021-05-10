@@ -503,16 +503,10 @@ CssRuleView.prototype = {
   },
 
   /**
-   * Initializes the content-viewer front and enable the print and color scheme simulation
-   * if they are supported in the current target.
+   * Enables the print and color scheme simulation if they are supported in the
+   * current target.
    */
   async _initSimulationFeatures() {
-    // @backward-compat { version 87 } Print & color scheme simulations should
-    // now be set using updateConfiguration (formerly target::reconfigure).
-    if (!this.currentTarget.getTrait("reconfigureSupportsSimulationFeatures")) {
-      return;
-    }
-
     if (!this.currentTarget.chrome) {
       this.printSimulationButton.removeAttribute("hidden");
       this.printSimulationButton.addEventListener(
