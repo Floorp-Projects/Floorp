@@ -105,6 +105,7 @@ class HistoryFragment : LibraryPageFragment<HistoryItem>(), UserInteractionHandl
             view.historyLayout,
             historyInteractor
         )
+        showToolbar(getString(R.string.library_history))
 
         return view
     }
@@ -161,7 +162,6 @@ class HistoryFragment : LibraryPageFragment<HistoryItem>(), UserInteractionHandl
 
     override fun onResume() {
         super.onResume()
-        showToolbar(getString(R.string.library_history))
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {

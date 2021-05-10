@@ -1713,4 +1713,7 @@
 
     <!-- Content description radio buttons with a link to more information -->
     <string name="radio_preference_info_content_description">Click for more details</string>
+
+    <!-- Content description for the action bar "up" button -->
+    <string name="action_bar_up_description">Navigate up</string>
 </resources>

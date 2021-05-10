@@ -12,9 +12,12 @@ import android.app.role.RoleManager
 import android.content.Intent
 import android.os.Build
 import android.provider.Settings
+import androidx.annotation.DrawableRes
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.os.bundleOf
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
+import org.mozilla.fenix.R
 import org.mozilla.fenix.settings.SupportUtils
 
 /**
@@ -105,6 +108,20 @@ private fun Activity.navigateToDefaultBrowserAppsSettings() {
             bundleOf(SETTINGS_SELECT_OPTION_KEY to DEFAULT_BROWSER_APP_OPTION)
         )
         startActivity(intent)
+    }
+}
+
+/**
+ * Sets the icon for the back (up) navigation button.
+ * @param icon The resource id of the icon.
+ */
+fun Activity.setNavigationIcon(
+    @DrawableRes icon: Int
+) {
+    (this as? AppCompatActivity)?.supportActionBar?.let {
+        it.setDisplayHomeAsUpEnabled(true)
+        it.setHomeAsUpIndicator(icon)
+        it.setHomeActionContentDescription(R.string.action_bar_up_description)
     }
 }
 

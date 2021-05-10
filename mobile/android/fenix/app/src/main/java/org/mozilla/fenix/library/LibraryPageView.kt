@@ -44,5 +44,7 @@ open class LibraryPageView(
         activity?.title = title
         val toolbar = activity?.findViewById<Toolbar>(R.id.navigationToolbar)
         toolbar?.setToolbarColors(foregroundColor, backgroundColor)
+        toolbar?.setNavigationIcon(R.drawable.ic_back_button)
+        toolbar?.navigationIcon?.setTint(foregroundColor)
     }
 }

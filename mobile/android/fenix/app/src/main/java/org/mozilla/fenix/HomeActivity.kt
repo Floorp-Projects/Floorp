@@ -82,6 +82,7 @@ import org.mozilla.fenix.ext.navigateBlockingForAsyncNavGraph
 import org.mozilla.fenix.ext.measureNoInline
 import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.ext.nav
+import org.mozilla.fenix.ext.setNavigationIcon
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.home.HomeFragmentDirections
 import org.mozilla.fenix.home.intent.CrashReporterIntentProcessor
@@ -717,6 +718,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
             setSupportActionBar(navigationToolbar)
             // Add ids to this that we don't want to have a toolbar back button
             setupNavigationToolbar()
+            setNavigationIcon(R.drawable.ic_back_button)
 
             isToolbarInflated = true
         }
