@@ -771,6 +771,12 @@ class VsyncRefreshDriverTimer : public RefreshDriverTimer {
 
   void RunRefreshDrivers(VsyncId aId, TimeStamp aTimeStamp) {
     Tick(aId, aTimeStamp);
+    for (auto& driver : mContentRefreshDrivers) {
+      driver->FinishedVsyncTick();
+    }
+    for (auto& driver : mRootRefreshDrivers) {
+      driver->FinishedVsyncTick();
+    }
   }
 
   // When using local vsync source, we keep a strong ref to it here to ensure
@@ -1124,6 +1130,7 @@ nsRefreshDriver::nsRefreshDriver(nsPresContext* aPresContext)
       mNotifyDOMContentFlushed(false),
       mNeedToUpdateIntersectionObservations(false),
       mInNormalTick(false),
+      mAttemptedExtraTickSinceLastVsync(false),
       mWarningThreshold(REFRESH_WAIT_WARNING) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mPresContext,
@@ -1402,6 +1409,36 @@ bool nsRefreshDriver::CanDoCatchUpTick() {
   return true;
 }
 
+bool nsRefreshDriver::CanDoExtraTick() {
+  // Only allow one extra tick per normal vsync tick.
+  if (mAttemptedExtraTickSinceLastVsync) {
+    return false;
+  }
+
+  // If we don't have a timer, or we didn't tick on the timer's
+  // refresh then we can't do an 'extra' tick (but we may still
+  // do a catch up tick).
+  if (!mActiveTimer ||
+      mActiveTimer->MostRecentRefresh() != mMostRecentRefresh) {
+    return false;
+  }
+
+  // Grab the current timestamp before checking the tick hint to be sure
+  // sure that it's equal or smaller than the value used within checking
+  // the tick hint.
+  TimeStamp now = TimeStamp::Now();
+  Maybe<TimeStamp> nextTick = mActiveTimer->GetNextTickHint();
+  int32_t minimumRequiredTime = StaticPrefs::layout_extra_tick_minimum_ms();
+  // If there's less than 4 milliseconds until the next tick, it's probably
+  // not worth trying to catch up.
+  if (minimumRequiredTime < 0 || !nextTick ||
+      (*nextTick - now) < TimeDuration::FromMilliseconds(minimumRequiredTime)) {
+    return false;
+  }
+
+  return true;
+}
+
 void nsRefreshDriver::EnsureTimerStarted(EnsureTimerStartedFlags aFlags) {
   // FIXME: Bug 1346065: We should also assert the case where we have
   // STYLO_THREADS=1.
@@ -1416,7 +1453,31 @@ void nsRefreshDriver::EnsureTimerStarted(EnsureTimerStartedFlags aFlags) {
   }
 
   // will it already fire, and no other changes needed?
-  if (mActiveTimer && !(aFlags & eForceAdjustTimer)) return;
+  if (mActiveTimer && !(aFlags & eForceAdjustTimer)) {
+    // If we're being called from within a user input handler, and we think
+    // there's time to rush an extra tick immediately, then schedule a runnable
+    // to run the extra tick.
+    if (mUserInputProcessingCount && CanDoExtraTick()) {
+      RefPtr<nsRefreshDriver> self = this;
+      NS_DispatchToCurrentThreadQueue(
+          NS_NewRunnableFunction(
+              "RefreshDriver::EnsureTimerStarted::extra",
+              [self]() -> void {
+                // Re-check if we can still do an extra tick, in case anything
+                // changed while the runnable was pending.
+                if (self->CanDoExtraTick()) {
+                  PROFILER_MARKER_UNTYPED("ExtraRefreshDriverTick", GRAPHICS);
+                  LOG("[%p] Doing extra tick for user input", self.get());
+                  self->mAttemptedExtraTickSinceLastVsync = true;
+                  self->Tick(self->mActiveTimer->MostRecentRefreshVsyncId(),
+                             self->mActiveTimer->MostRecentRefresh(),
+                             IsExtraTick::Yes);
+                }
+              }),
+          EventQueuePriority::Vsync);
+    }
+    return;
+  }
 
   if (IsFrozen() || !mPresContext) {
     // If we don't want to start it now, or we've been disconnected.
@@ -1456,6 +1517,7 @@ void nsRefreshDriver::EnsureTimerStarted(EnsureTimerStartedFlags aFlags) {
                 // Re-check if we can still do a catch-up, in case anything
                 // changed while the runnable was pending.
                 if (self->CanDoCatchUpTick()) {
+                  LOG("[%p] Doing catch up tick", self.get());
                   self->Tick(self->mActiveTimer->MostRecentRefreshVsyncId(),
                              self->mActiveTimer->MostRecentRefresh());
                 }
@@ -1965,7 +2027,8 @@ static CallState ReduceAnimations(Document& aDocument) {
   return CallState::Continue;
 }
 
-void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime) {
+void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime,
+                           IsExtraTick aIsExtraTick /* = No */) {
   MOZ_ASSERT(!nsContentUtils::GetCurrentJSContext(),
              "Shouldn't have a JSContext on the stack");
 
@@ -1982,11 +2045,14 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime) {
   // go forward in time, not backwards. To prevent the refresh
   // driver from going back in time, just skip this tick and
   // wait until the next tick.
-  if ((aNowTime <= mMostRecentRefresh) && !mTestControllingRefreshes) {
+  // If this is an 'extra' tick, then we expect it to be using the same
+  // vsync id and timestamp as the original tick, so also allow those.
+  if ((aNowTime <= mMostRecentRefresh) && !mTestControllingRefreshes &&
+      aIsExtraTick == IsExtraTick::No) {
     return;
   }
   auto cleanupInExtraTick = MakeScopeExit([&] { mInNormalTick = false; });
-  mInNormalTick = true;
+  mInNormalTick = aIsExtraTick != IsExtraTick::Yes;
 
   bool isPresentingInVR = false;
 #if defined(MOZ_WIDGET_ANDROID)
