@@ -3,6 +3,18 @@
 Given the multiple API languages, processes, and dependencies,
 testing FOG is a matter of choosing the right tool for the situation.
 
+## One Big Command
+
+To run all the things, here's the tl;dr:
+
+`MOZ_LOG="timestamp,sync,glean::*:5,fog::*:5,fog_control::*:5,glean_core::*:5"
+./mach build && ./mach lint -Ww -o --fix
+&& ./mach lint --linter clippy toolkit/components/glean/api/src
+&& ./mach rusttests && ./mach gtest FOG*
+&& python3 ./mach python-test toolkit/components/glean/pytest
+&& ./mach test toolkit/components/glean/xpcshell
+&& ./mach telemetry-tests-client toolkit/components/telemetry/tests/marionette/tests/client/test_fog* --gecko-log "-"`
+
 ## Logging
 
 An often-overlooked first line of testing is "what do the logs say?".
@@ -27,6 +39,21 @@ For more information on logging in Firefox Desktop, see the
 [debug the Glean SDK](https://mozilla.github.io/glean/book/user/debugging/index.html)
 in Firefox Desktop.
 It does this through the displayed user interface (just follow the instructions).
+
+## Linting
+
+To keep in accordance with Mozilla's various and several Coding Styles,
+we rely on `mach lint`.
+
+To lint the code in the "usual" way, automatically fixing where possible, run:
+`./mach lint -Ww -o --fix`
+
+This should keep you from checking in code that will automatically be backed out.
+
+In addition, we need to run the Rust formatter `clippy` on the `fog` crate:
+`./mach lint --linter clippy toolkit/components/glean/api/src`
+
+This will ensure that clippy-only builds will have all the symbols they need to lint our code.
 
 ## Rust
 
@@ -140,8 +167,12 @@ and
 [Marionette's Documentation](/testing/marionette/Testing.md).
 
 To run these integration tests, run:
-`./mach test toolkit/components/telemetry/tests/marionette/tests/client/`
+`./mach telemetry-tests-client toolkit/components/telemetry/tests/marionette/tests/client/`
 
 To capture the Firefox under test's logs, use the `--gecko-log` parameter.
 For example, to echo to stdout:
-`./mach test toolkit/components/telemetry/tests/marionette/tests/client/test_fog* --gecko-log "-"`
+`./mach telemetry-tests-client toolkit/components/telemetry/tests/marionette/tests/client/test_fog* --gecko-log "-"`
+
+**Note:** Running the `tt(c)` suite in this way ignored skip directives in the manifest.
+This means that you might run tests that are not expected to succeed on your platform.
+Check `toolkit/components/telemetry/tests/marionette/tests/client/manifest.ini` for details.
