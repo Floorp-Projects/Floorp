@@ -417,10 +417,6 @@ void UnlockScreenOrientation() {
   PROXY_IF_SANDBOXED(UnlockScreenOrientation());
 }
 
-bool SetProcessPrioritySupported() {
-  RETURN_PROXY_IF_SANDBOXED(SetProcessPrioritySupported(), false);
-}
-
 void SetProcessPriority(int aPid, ProcessPriority aPriority) {
   // n.b. The sandboxed implementation crashes; SetProcessPriority works only
   // from the main process.

@@ -731,7 +731,6 @@ NS_CycleCollectorSuspect3
 ?RegisterGhostWindowsDistinguishedAmount@mozilla@@YA?AW4nsresult@@P6A_JXZ@Z
 ?Init@SVGElementFactory@dom@mozilla@@SAXXZ
 ?FromMessagesToSharedParent@SharedMessageBody@dom@mozilla@@SA_NAEAV?$nsTArray@VMessageData@dom@mozilla@@@@AEAV?$FallibleTArray@V?$RefPtr@VSharedMessageBody@dom@mozilla@@@@@@W4TransferringSupport@StructuredCloneHolder@23@@Z
-?SetProcessPrioritySupported@hal@mozilla@@YA_NXZ
 ?Get@LogModule@mozilla@@SAPEAV12@PEBD@Z
 ?SetProcessPriority@hal_impl@mozilla@@YAXHW4ProcessPriority@hal@2@@Z
 ?GetHalLog@hal@mozilla@@YAPEAVLogModule@2@XZ

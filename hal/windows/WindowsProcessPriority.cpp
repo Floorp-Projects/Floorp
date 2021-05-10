@@ -12,8 +12,6 @@ using namespace mozilla::hal;
 namespace mozilla {
 namespace hal_impl {
 
-bool SetProcessPrioritySupported() { return true; }
-
 void SetProcessPriority(int aPid, ProcessPriority aPriority) {
   HAL_LOG("WindowsProcessPriority - SetProcessPriority(%d, %s)\n", aPid,
           ProcessPriorityToString(aPriority));
