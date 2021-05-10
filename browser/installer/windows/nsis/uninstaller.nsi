@@ -610,8 +610,12 @@ Section "Uninstall"
   DeleteRegValue HKCU ${MOZ_LAUNCHER_SUBKEY} "$INSTDIR\${FileMainEXE}|Telemetry"
 !endif
 
-  ; Uninstall the default browser agent scheduled task.
-  ; This also removes the registry entries it creates.
+  ; Uninstall the default browser agent scheduled task and all other scheduled
+  ; tasks registered by Firefox.
+  ; This also removes the registry entries that the WDBA creates.
+  ; One of the scheduled tasks that this will remove is the Background Update
+  ; Task. Ideally, this will eventually be changed so that it doesn't rely on
+  ; the WDBA. See Bug 1710143.
   ExecWait '"$INSTDIR\default-browser-agent.exe" uninstall $AppUserModelID'
   ${RemoveDefaultBrowserAgentShortcut}
 
