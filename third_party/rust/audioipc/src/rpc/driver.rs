@@ -44,7 +44,7 @@ where
     fn receive_incoming(&mut self) -> io::Result<()> {
         while self.run {
             if let Async::Ready(req) = self.handler.transport().poll()? {
-                self.process_incoming(req)?;
+                self.process_incoming(req);
             } else {
                 break;
             }
@@ -53,7 +53,7 @@ where
     }
 
     /// Process an incoming message
-    fn process_incoming(&mut self, req: Option<T::In>) -> io::Result<()> {
+    fn process_incoming(&mut self, req: Option<T::In>) {
         trace!("process_incoming");
         // At this point, the service & transport are ready to process the
         // request, no matter what it is.
@@ -74,8 +74,6 @@ where
                 self.run = false;
             }
         }
-
-        Ok(())
     }
 
     /// Send outgoing messages to the transport.

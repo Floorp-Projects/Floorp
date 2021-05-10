@@ -121,12 +121,11 @@ where
                     // encoded in cmsg format inside frame.fds. Use
                     // the cmsg iterator to access msg and extract
                     // RawFds.
-                    frame.fds.take().and_then(|cmsg| {
+                    if let Some(cmsg) = frame.fds.take() {
                         for fds in cmsg::iterator(cmsg) {
                             close_fds(&*fds)
                         }
-                        Some(())
-                    });
+                    }
 
                     if n != frame.msgs.len() {
                         // If only part of the message was sent then

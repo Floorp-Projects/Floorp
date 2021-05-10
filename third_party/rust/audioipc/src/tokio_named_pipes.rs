@@ -105,7 +105,7 @@ impl AsyncRead for NamedPipe {
         match bytes_read {
             Err(ref e) if e.kind() == std::io::ErrorKind::WouldBlock => {
                 self.io_mut().clear_read_ready(Ready::readable())?;
-                return Ok(Async::NotReady);
+                Ok(Async::NotReady)
             }
             Err(e) => Err(e),
             Ok(bytes_read) => {
@@ -131,7 +131,7 @@ impl AsyncWrite for NamedPipe {
         match bytes_wrt {
             Err(ref e) if e.kind() == std::io::ErrorKind::WouldBlock => {
                 self.io_mut().clear_write_ready()?;
-                return Ok(Async::NotReady);
+                Ok(Async::NotReady)
             }
             Err(e) => Err(e),
             Ok(bytes_wrt) => {

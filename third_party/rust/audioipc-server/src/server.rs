@@ -60,7 +60,7 @@ impl CubebDeviceCollectionManager {
             self.internal_register(context, true)?;
         }
         server.borrow_mut().devtype.insert(devtype);
-        if servers.iter().find(|s| Rc::ptr_eq(s, server)).is_none() {
+        if !servers.iter().any(|s| Rc::ptr_eq(s, server)) {
             servers.push(server.clone());
         }
         Ok(())
@@ -149,7 +149,7 @@ impl DevIdMap {
 
     // Given a cubeb_devid, return a unique stable value suitable for use
     // over IPC.
-    fn to_handle(&mut self, devid: usize) -> usize {
+    fn make_handle(&mut self, devid: usize) -> usize {
         if let Some(i) = self.devices.iter().position(|&d| d == devid) {
             return i;
         }
@@ -157,9 +157,9 @@ impl DevIdMap {
         self.devices.len() - 1
     }
 
-    // Given a handle produced by `to_handle`, return the associated
+    // Given a handle produced by `make_handle`, return the associated
     // cubeb_devid.  Invalid handles result in a panic.
-    fn from_handle(&self, handle: usize) -> usize {
+    fn handle_to_id(&self, handle: usize) -> usize {
         self.devices[handle]
     }
 }
@@ -174,11 +174,7 @@ thread_local!(static CONTEXT_KEY: RefCell<Option<CubebContextState>> = RefCell::
 fn cubeb_init_from_context_params() -> cubeb::Result<cubeb::Context> {
     let params = super::G_CUBEB_CONTEXT_PARAMS.lock().unwrap();
     let context_name = Some(params.context_name.as_c_str());
-    let backend_name = if let Some(ref name) = params.backend_name {
-        Some(name.as_c_str())
-    } else {
-        None
-    };
+    let backend_name = params.backend_name.as_deref();
     let r = cubeb::Context::init(context_name, backend_name);
     r.map_err(|e| {
         info!("cubeb::Context::init failed r={:?}", e);
@@ -271,7 +267,7 @@ impl ServerStreamCallbacks {
                     trace!("Reslice output to {}", nbytes);
                     unsafe {
                         if let Some(shm) = &self.output_shm {
-                            &mut output[..nbytes].copy_from_slice(shm.get_slice(nbytes).unwrap());
+                            output[..nbytes].copy_from_slice(shm.get_slice(nbytes).unwrap());
                         }
                     }
                 }
@@ -477,7 +473,7 @@ impl CubebServer {
                         .map(|i| {
                             let mut tmp: DeviceInfo = i.as_ref().into();
                             // Replace each cubeb_devid with a unique handle suitable for IPC.
-                            tmp.devid = self.devidmap.to_handle(tmp.devid);
+                            tmp.devid = self.devidmap.make_handle(tmp.devid);
                             tmp
                         })
                         .collect();
@@ -752,13 +748,13 @@ impl CubebServer {
             .and_then(|name| CStr::from_bytes_with_nul(name).ok());
 
         // Map IPC handle back to cubeb_devid.
-        let input_device = self.devidmap.from_handle(params.input_device) as *const _;
+        let input_device = self.devidmap.handle_to_id(params.input_device) as *const _;
         let input_stream_params = params.input_stream_params.as_ref().map(|isp| unsafe {
             cubeb::StreamParamsRef::from_ptr(isp as *const StreamParams as *mut _)
         });
 
         // Map IPC handle back to cubeb_devid.
-        let output_device = self.devidmap.from_handle(params.output_device) as *const _;
+        let output_device = self.devidmap.handle_to_id(params.output_device) as *const _;
         let output_stream_params = params.output_stream_params.as_ref().map(|osp| unsafe {
             cubeb::StreamParamsRef::from_ptr(osp as *const StreamParams as *mut _)
         });
