@@ -453,9 +453,6 @@
     <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
     <string name="exceptions_empty_message_learn_more_link">詳細情報</string>
 
-    <!-- Description in Quick Settings that tells user tracking protection is off globally for all sites, and links to Settings to turn it on -->
-    <string name="preferences_tracking_protection_turned_off_globally">すべてのサイトで無効にしました。有効にするには設定から変更してください。</string>
-
     <!-- Preference switch for Telemetry -->
     <string name="preferences_telemetry">Telemetry</string>
     <!-- Preference switch for usage and technical data collection -->
@@ -806,8 +803,6 @@
     <string name="bookmark_delete_folder_snackbar">%1$s フォルダーを削除しました</string>
     <!-- Screen title for adding a bookmarks folder -->
     <string name="bookmark_add_folder">フォルダー追加</string>
-    <!-- deprecated: Snackbar title shown after a bookmark has been created. -->
-    <string name="bookmark_created_snackbar">ブックマークを作成しました。</string>
     <!-- Snackbar title shown after a bookmark has been created. -->
     <string name="bookmark_saved_snackbar">ブックマークを保存しました!</string>
     <!-- Snackbar edit button shown after a bookmark has been created. -->
@@ -1470,10 +1465,8 @@
     <string name="preferences_passwords_autofill">自動補完</string>
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">ログイン情報を同期</string>
-    <!-- Syncing saved logins in Fenix is on -->
-    <string name="preferences_passwords_sync_logins_on">オン</string>
-    <!-- Syncing saved logins in Fenix is off -->
-    <string name="preferences_passwords_sync_logins_off">オフ</string>
+    <!-- Preference for syncing saved logins in Fenix, when not signed in-->
+    <string name="preferences_passwords_sync_logins_across_devices">端末間でログイン情報を同期します</string>
     <!-- Syncing saved logins in Fenix needs reconnect to sync -->
     <string name="preferences_passwords_sync_logins_reconnect">再接続</string>
     <!-- Syncing saved logins in Fenix needs login -->
@@ -1575,6 +1568,8 @@
     <string name="preferences_credit_cards_save_and_autofill_cards_summary">データは暗号化されています</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
     <string name="preferences_credit_cards_sync_cards_across_devices">端末間でカード情報を同期する</string>
+    <!-- Preference option for syncing credit cards across devices. This is displayed when the user is signed into sync -->
+    <string name="preferences_credit_cards_sync_cards">クレジットカード情報を同期</string>
     <!-- Preference option for adding a credit card -->
     <string name="preferences_credit_cards_add_credit_card">クレジットカードを追加</string>
     <!-- Preference option for managing saved credit cards -->
@@ -1605,6 +1600,9 @@
 
     <!-- Title of the "Saved cards" screen -->
     <string name="credit_cards_saved_cards">保存したカード</string>
+
+    <!-- Error message for credit card number validation -->
+    <string name="credit_cards_number_validation_error_message">有効なクレジットカード番号を入力してください</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">検索エンジンの追加</string>
@@ -1772,20 +1770,7 @@
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">削除</string>
 
-    <!-- Deprecated: text for the firefox account onboarding card header
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_firefox_account_header">%s を最大限に活用しよう。</string>
-
     <!-- Content description radio buttons with a link to more information -->
     <string name="radio_preference_info_content_description">詳細はこちら</string>
-
-    <!-- Deprecated: No Open Tabs Message Header -->
-    <string name="no_collections_header1">あなたにとって関心のある事柄を集めましょう</string>
-    <!-- Deprecated: Label to describe what collections are to a new user without any collections -->
-    <string name="no_collections_description1">類似の検索結果、サイト、タブをグループ化して、後ですばやくアクセスできます。</string>
-    <!-- Deprecated: text for the firefox account onboarding card header when we detect you're already signed in to -->
-    <string name="onboarding_firefox_account_auto_signin_header_2">すでに、この端末の別の Firefox ブラウザーで %s としてログインしています。このアカウントでログインしますか？</string>
-    <!-- Deprecated: Describes the add to homescreen functionality -->
-    <string name="add_to_homescreen_description">このウェブサイトを簡単な操作で端末のホーム画面に追加しましょう。アプリのような感覚で手軽にアクセスして素早く閲覧できます。</string>
 
     </resources>

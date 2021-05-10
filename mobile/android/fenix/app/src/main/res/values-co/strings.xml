@@ -190,7 +190,7 @@
 
     <!-- Error message to show when the user tries to access a scheme not
         handled by the app (Ex: blob, tel etc) -->
-    <string name="unknown_scheme_error_message">Impussibule di cunnettassi. Schema d’URL scunnisciutu.</string>
+    <string name="unknown_scheme_error_message">Impussibule di cunnettesi. Schema d’URL scunnisciutu.</string>
 
     <!-- Locale Settings Fragment -->
     <!-- Content description for tick mark on selected language -->
@@ -302,7 +302,7 @@
     <!-- Preference category for account information -->
     <string name="preferences_category_account">Contu</string>
     <!-- Preference shown on banner to sign into account -->
-    <string name="preferences_sign_in">Cunnettassi</string>
+    <string name="preferences_sign_in">Cunnettesi</string>
     <!-- Preference for changing where the toolbar is positioned -->
     <string name="preferences_toolbar">Barra d’attrezzi</string>
     <!-- Preference for changing default theme to dark or light mode -->
@@ -318,7 +318,7 @@
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
     <string name="preferences_account_default_name">Contu Firefox</string>
     <!-- Preference text for account title when there was an error syncing FxA -->
-    <string name="preferences_account_sync_error">Ricunnettatevi per cuntinuà a sincrunizazione</string>
+    <string name="preferences_account_sync_error">Ricunnittetevi per cuntinuà a sincrunizazione</string>
     <!-- Preference for language -->
     <string name="preferences_language">Lingua</string>
     <!-- Preference for data choices -->
@@ -399,7 +399,7 @@
     <!-- Preference for syncing tabs -->
     <string name="preferences_sync_tabs_2">Apre l’unghjette</string>
     <!-- Preference for signing out -->
-    <string name="preferences_sign_out">Scunnettassi</string>
+    <string name="preferences_sign_out">Scunnettesi</string>
     <!-- Preference displays and allows changing current FxA device name -->
     <string name="preferences_sync_device_name">Nome di l’apparechju</string>
     <!-- Text shown when user enters empty device name -->
@@ -483,9 +483,9 @@
     <!-- Preference for pairing -->
     <string name="preferences_sync_pair">Numerizà u codice d’associu nant’à Firefox per l’urdinatore</string>
     <!-- Preference for account login -->
-    <string name="preferences_sync_sign_in">Cunnettassi</string>
+    <string name="preferences_sync_sign_in">Cunnettesi</string>
     <!-- Preference for reconnecting to FxA sync -->
-    <string name="preferences_sync_sign_in_to_reconnect">Autenticassi per ricunnettassi</string>
+    <string name="preferences_sync_sign_in_to_reconnect">Autenticassi per ricunnettesi</string>
     <!-- Preference for removing FxA account -->
     <string name="preferences_sync_remove_account">Caccià u contu</string>
 
@@ -830,7 +830,7 @@
     <!-- Bookmark folder editing screen title -->
     <string name="edit_bookmark_folder_fragment_title">Mudificà u cartulare</string>
     <!-- Bookmark sign in button message -->
-    <string name="bookmark_sign_in_button">Cunnettatevi per fighjà l’indette sincrunizate</string>
+    <string name="bookmark_sign_in_button">Cunnittetevi per fighjà l’indette sincrunizate</string>
     <!-- Bookmark URL editing field label -->
     <string name="bookmark_url_label">URL</string>
     <!-- Bookmark FOLDER editing field label -->
@@ -990,19 +990,19 @@
     <!-- Sub-header in the dialog to share a link to an app from the most-recent sorted list -->
     <string name="share_link_recent_apps_subheader">Impiegate pocu fà</string>
     <!-- An option from the three dot menu to into sync -->
-    <string name="sync_menu_sign_in">Cunnettassi per sincrunizà</string>
+    <string name="sync_menu_sign_in">Cunnettesi per sincrunizà</string>
     <!-- An option from the share dialog to sign into sync -->
-    <string name="sync_sign_in">Cunnettassi à Sync</string>
+    <string name="sync_sign_in">Cunnettesi à Sync</string>
     <!-- An option from the share dialog to send link to all other sync devices -->
     <string name="sync_send_to_all">Mandà à tutti l’apparechji</string>
     <!-- An option from the share dialog to reconnect to sync -->
-    <string name="sync_reconnect">Ricunnettassi à Sync</string>
+    <string name="sync_reconnect">Ricunnettesi à Sync</string>
     <!-- Text displayed when sync is offline and cannot be accessed -->
     <string name="sync_offline">Fora di cunnessione</string>
     <!-- An option to connect additional devices -->
-    <string name="sync_connect_device">Cunnettà un altru apparechju</string>
+    <string name="sync_connect_device">Cunnette un altru apparechju</string>
     <!-- The dialog text shown when additional devices are not available -->
-    <string name="sync_connect_device_dialog">Per mandà un’unghjetta, cunnettatevi à u vostru contu Firefox nant’à omancu un altru apparechju.</string>
+    <string name="sync_connect_device_dialog">Per mandà un’unghjetta, cunnittetevi à u vostru contu Firefox nant’à omancu un altru apparechju.</string>
     <!-- Confirmation dialog button -->
     <string name="sync_confirmation_button">Ahju capitu</string>
     <!-- Share error message -->
@@ -1010,11 +1010,11 @@
     <!-- Add new device screen title -->
     <string name="sync_add_new_device_title">Mandà à un apparechju</string>
     <!-- Text for the warning message on the Add new device screen -->
-    <string name="sync_add_new_device_message">Alcunu apparechju cunnettu</string>
+    <string name="sync_add_new_device_message">Alcunu apparechju cunnessu</string>
     <!-- Text for the button to learn about sending tabs -->
     <string name="sync_add_new_device_learn_button">Sapene di più nant’à u mandà d’unghjette…</string>
     <!-- Text for the button to connect another device -->
-    <string name="sync_add_new_device_connect_button">Cunnettà un altru apparechju…</string>
+    <string name="sync_add_new_device_connect_button">Cunnette un altru apparechju…</string>
 
     <!-- Notifications -->
     <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active. -->
@@ -1199,9 +1199,9 @@
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
         another Firefox browser. (The word `Firefox` should not be translated)
         The first parameter is the email of the detected user's account -->
-    <string name="onboarding_firefox_account_auto_signin_header_3">Site cunnettu cum’è %s nant’à un altru navigatore Firefox cù st’apparechju. Vulete cunnettavvi cù stu contu ?</string>
+    <string name="onboarding_firefox_account_auto_signin_header_3">Site cunnessi cum’è %s nant’à un altru navigatore Firefox cù st’apparechju. Vulete cunnettevi cù stu contu ?</string>
     <!-- text for the button to confirm automatic sign-in -->
-    <string name="onboarding_firefox_account_auto_signin_confirm">Iè, cunnettatemi</string>
+    <string name="onboarding_firefox_account_auto_signin_confirm">Iè, cunnittetemi</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
     <string name="onboarding_firefox_account_signing_in">Cunnessione…</string>
     <!-- text for the button to manually sign into Firefox account. -->
@@ -1283,7 +1283,7 @@
     <!-- Text shown for sign in pairing when ready -->
     <string name="sign_in_ready_for_scan">Prontu à numerizà</string>
     <!-- Text shown for settings option for sign with pairing -->
-    <string name="sign_in_with_camera">Cunnettatevi cù u vostru apparechju-fotò</string>
+    <string name="sign_in_with_camera">Cunnittetevi cù u vostru apparechju-fotò</string>
     <!-- Text shown for settings option for sign with email -->
     <string name="sign_in_with_email">Impiegà piuttostu un messaghju elettronicu</string>
     <!-- Text shown for settings option for create new account text.'Firefox' intentionally hardcoded here.-->
@@ -1463,9 +1463,9 @@
     <!-- Preference for syncing saved logins in Fenix, when not signed in-->
     <string name="preferences_passwords_sync_logins_across_devices">Sincrunizà l’identificazioni di cunnessione trà tutti l’apparechji</string>
     <!-- Syncing saved logins in Fenix needs reconnect to sync -->
-    <string name="preferences_passwords_sync_logins_reconnect">Ricunnettassi</string>
+    <string name="preferences_passwords_sync_logins_reconnect">Ricunnettesi</string>
     <!-- Syncing saved logins in Fenix needs login -->
-    <string name="preferences_passwords_sync_logins_sign_in">Cunnettassi à Sync</string>
+    <string name="preferences_passwords_sync_logins_sign_in">Cunnettesi à Sync</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins">Identificazioni di cunnessione arregistrate</string>
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
@@ -1724,7 +1724,7 @@
 
     <!-- Synced Tabs -->
     <!-- Text displayed to ask user to connect another device as no devices found with account -->
-    <string name="synced_tabs_connect_another_device">Cunnettate un altru apparechju.</string>
+    <string name="synced_tabs_connect_another_device">Cunnittete un altru apparechju.</string>
     <!-- Text displayed asking user to re-authenticate -->
     <string name="synced_tabs_reauth">Ci vole à autenticassi torna.</string>
     <!-- Text displayed when user has disabled tab syncing in Firefox Sync Account -->
@@ -1736,7 +1736,7 @@
     <!-- Text displayed in the synced tabs screen when a user is not signed in to Firefox Sync describing Synced Tabs -->
     <string name="synced_tabs_sign_in_message">Affissate a lista di l’unghjette di i vostri altri apparechji.</string>
     <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->
-    <string name="synced_tabs_sign_in_button">Cunnettassi à Sync</string>
+    <string name="synced_tabs_sign_in_button">Cunnettesi per sincrunizà</string>
 
     <!-- The text displayed when a synced device has no tabs to show in the list of Synced Tabs. -->
     <string name="synced_tabs_no_open_tabs">Alcuna unghjetta aperta</string>
