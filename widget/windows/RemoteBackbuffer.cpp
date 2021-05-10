@@ -258,8 +258,29 @@ class PresentableSharedImage {
                  WS_EX_LAYERED);
 
       BLENDFUNCTION bf = {AC_SRC_OVER, 0, 255, AC_SRC_ALPHA};
-      SIZE winSize = {mSharedImage.GetWidth(), mSharedImage.GetHeight()};
       POINT srcPos = {0, 0};
+      RECT clientRect = {};
+      if (!::GetClientRect(aWindowHandle, &clientRect)) {
+        return false;
+      }
+      MOZ_ASSERT(clientRect.left == 0);
+      MOZ_ASSERT(clientRect.top == 0);
+      int32_t width = clientRect.right;
+      int32_t height = clientRect.bottom;
+      SIZE winSize = {width, height};
+      // Window resize could cause the client area to be different than
+      // mSharedImage's size. If the client area doesn't match,
+      // PresentToWindow() returns false without calling UpdateLayeredWindow().
+      // Another call to UpdateLayeredWindow() will follow shortly, since the
+      // resize will eventually force the backbuffer to repaint itself again.
+      // When client area is larger than mSharedImage's size,
+      // UpdateLayeredWindow() draws the window completely invisible. But it
+      // does not return false.
+      if (width != mSharedImage.GetWidth() ||
+          height != mSharedImage.GetHeight()) {
+        return false;
+      }
+
       return !!::UpdateLayeredWindow(
           topLevelWindow, nullptr /*paletteDC*/, nullptr /*newPos*/, &winSize,
           mDeviceContext, &srcPos, 0 /*colorKey*/, &bf, ULW_ALPHA);
