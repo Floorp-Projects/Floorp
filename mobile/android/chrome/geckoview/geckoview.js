@@ -500,6 +500,7 @@ function createBrowser() {
   browser.setAttribute("maychangeremoteness", "true");
   browser.setAttribute("remote", "true");
   browser.setAttribute("remoteType", E10SUtils.DEFAULT_REMOTE_TYPE);
+  browser.setAttribute("messagemanagergroup", "browsers");
 
   return browser;
 }

@@ -11,7 +11,7 @@
 
 add_task(async function test_content_script_cross_origin_frame() {
 
-  const extension = ExtensionTestUtils.loadExtension({
+  const extensionData = {
     manifest: {
       content_scripts: [{
         matches: ["http://example.net/*/file_sample.html"],
@@ -84,17 +84,26 @@ add_task(async function test_content_script_cross_origin_frame() {
         port.postMessage(7);
       },
     },
-  });
+  };
 
-  await extension.startup();
+  info("Load first extension");
+  let ext1 = ExtensionTestUtils.loadExtension(extensionData);
+  await ext1.startup();
 
+  info("Load a page, test content scripts in new frame with extension loaded");
   let base = "http://example.org/tests/toolkit/components/extensions/test";
   let win = window.open(`${base}/mochitest/file_with_xorigin_frame.html`);
 
-  await extension.awaitFinish();
-  win.close();
+  await ext1.awaitFinish();
+  await ext1.unload();
 
-  await extension.unload();
+  info("Load second extension, test content scripts in existing frame");
+  let ext2 = ExtensionTestUtils.loadExtension(extensionData);
+  await ext2.startup();
+  await ext2.awaitFinish();
+
+  win.close();
+  await ext2.unload();
 });
 
 </script>
