@@ -21,8 +21,6 @@
     background-color: #fbfbfb;
     border-radius: 4px;
     display: block;
-    font-size: 16px;
-    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
     padding: 0;
     position: relative;
     text-align: center;
@@ -48,9 +46,6 @@
     to {
         transform: rotate(1turn);
     }
-}
-.pkt_ext_containersaved {
-    font-size: 16px;
 }
 .pkt_ext_containersaved .pkt_ext_loadingspinner {
     position: relative;
@@ -142,7 +137,7 @@
     color: #333;
     display: block;
     float: none;
-    font-size: 18px;
+    font-size: 1.2em;
     font-weight: normal;
     letter-spacing: normal;
     line-height: 1;
@@ -172,7 +167,7 @@
 }
 .pkt_ext_containersaved .pkt_ext_errordetail {
     display: none;
-    font-size: 12px;
+    font-size: 0.9em;
     font-weight: normal;
     inset-inline-start: 6.4em;
     max-width: 21em;
@@ -254,7 +249,6 @@
     background: none;
     display: block;
     float: none;
-    font-size: 16px;
     height: auto;
     margin: 0;
     padding: 0;
@@ -276,7 +270,7 @@
 }
 .pkt_ext_containersaved .pkt_ext_item_actions .pkt_ext_actions_separator {
     border-inline-start: 2px solid #777;
-    height: 0.75em;
+    height: 1em;
     margin-top: 0.3em;
     padding: 0;
     width: 10px;
@@ -286,7 +280,7 @@
     color: #0095dd;
     display: block;
     font-feature-settings: normal;
-    font-size: 12px;
+    font-size: 0.9em;
     font-weight: normal;
     letter-spacing: normal;
     line-height: inherit;
@@ -349,7 +343,6 @@
 .pkt_ext_containersaved .pkt_ext_tag_detail {
     border: 1px solid #c1c1c1;
     border-radius: 2px;
-    font-size: 16px;
     clear: both;
     margin: 0 1em;
     padding: 0;
@@ -386,7 +379,7 @@
 }
 .pkt_ext_containersaved .pkt_ext_tag_input_wrapper .token-input-list,
 .pkt_ext_containersaved .pkt_ext_tag_input_wrapper li {
-    font-size: 14px;
+    font-size: 1em;
 }
 .pkt_ext_containersaved .pkt_ext_tag_input_wrapper li {
     height: auto;
@@ -400,7 +393,7 @@
     box-shadow: none;
     background-color: #fff;
     color: #333;
-    font-size: 14px;
+    font-size: 1em;
     float: inline-start;
     line-height: normal;
     height: auto;
@@ -422,8 +415,7 @@
     box-sizing: border-box;
     color: #333;
     float: none;
-    font-size: 0.875em;
-    font-size: 14px;
+    font-size: 1em;
     letter-spacing: normal;
     height: 2.2em;
     min-width: 4em;
@@ -478,7 +470,7 @@
 .pkt_ext_containersaved .pkt_ext_recenttag_detail h4,
 .pkt_ext_containersaved .pkt_ext_suggestedtag_detail h4 {
     color: #333;
-    font-size: 13px;
+    font-size: 1em;
     font-weight: normal;
     font-style: normal;
     letter-spacing: normal;
@@ -543,8 +535,7 @@
     background: #f7f7f7;
     border: 1px solid #c3c3c3;
     color: #333;
-    font-size: 0.875em;
-    font-size: 14px;
+    font-size: 1em;
     font-weight: normal;
     letter-spacing: normal;
     margin-inline-end: 0.5em;
@@ -695,7 +686,7 @@
 }
 .pkt_ext_containersaved .token-input-token p {
     display: inline-block;
-    font-size: 14px;
+    font-size: 1em;
     font-weight: normal;
     line-height: inherit;
     letter-spacing: normal;
@@ -782,7 +773,7 @@ button {
     width: 320px;
     margin: 0 auto;
     border-radius: 2px;
-    font-size: 14px;
+    font-size: 1em;
 }
 
 .pkt_ext_button:hover,
@@ -849,7 +840,7 @@ button {
 
 .pkt_ext_item_recs header h4 {
     color: #333;
-    font-size: 13px;
+    font-size: 1em;
     font-weight: normal;
     font-style: normal;
     letter-spacing: normal;
@@ -861,7 +852,7 @@ button {
 .pkt_ext_item_recs header a {
     font-style: normal;
     font-weight: 500;
-    font-size: 12px;
+    font-size: 1em;
     line-height: 20px;
     color: #0095DD;
 }
@@ -877,7 +868,6 @@ button {
     display: flex;
     font-style: normal;
     font-weight: normal;
-    font-size: 15px;
     line-height: 18px;
     margin: 0 -1em;
 }
@@ -931,14 +921,14 @@ button {
 
 .pkt_ext_containersaved .pkt_ext_item_recs .rec-title {
     -webkit-line-clamp: 2;
-    font-size: 15px;
+    font-size: 1em;
     line-height: 18px;
     color: #0C0C0D;
 }
 
 .pkt_ext_containersaved .pkt_ext_item_recs .rec-source {
     -webkit-line-clamp: 1;
-    font-size: 13px;
+    font-size: 0.9em;
     line-height: 16px;
     color: #737373;
 }
