@@ -9,6 +9,7 @@
 #include <string>
 #include <time.h>
 
+#include <comutil.h>
 #include <taskschd.h>
 
 #include "readstrings.h"
@@ -72,14 +73,14 @@ HRESULT RegisterTask(const wchar_t* uniqueToken,
                      BSTR startTime /* = nullptr */) {
   // Do data migration during the task installation. This might seem like it
   // belongs in UpdateTask, but we want to be able to call
-  //    RemoveTask();
+  //    RemoveTasks();
   //    RegisterTask();
   // and still have data migration happen. Also, UpdateTask calls this function,
   // so migration will still get run in that case.
   MaybeMigrateCurrentDefault();
 
   // Make sure we don't try to register a task that already exists.
-  RemoveTask(uniqueToken);
+  RemoveTasks(uniqueToken, WhichTasks::WdbaTaskOnly);
 
   // If we create a folder and then fail to create the task, we need to
   // remember to delete the folder so that whatever set of permissions it ends
@@ -301,7 +302,21 @@ HRESULT UpdateTask(const wchar_t* uniqueToken) {
   return RegisterTask(uniqueToken, startTime.get());
 }
 
-HRESULT RemoveTask(const wchar_t* uniqueToken) {
+bool EndsWith(const wchar_t* string, const wchar_t* suffix) {
+  size_t string_len = wcslen(string);
+  size_t suffix_len = wcslen(suffix);
+  if (suffix_len > string_len) {
+    return false;
+  }
+  const wchar_t* substring = string + string_len - suffix_len;
+  return wcscmp(substring, suffix) == 0;
+}
+
+HRESULT RemoveTasks(const wchar_t* uniqueToken, WhichTasks tasksToRemove) {
+  if (!uniqueToken || wcslen(uniqueToken) == 0) {
+    return E_INVALIDARG;
+  }
+
   RefPtr<ITaskService> scheduler;
   HRESULT hr = S_OK;
   ENSURE(CoCreateInstance(CLSID_TaskScheduler, nullptr, CLSCTX_INPROC_SERVER,
@@ -310,7 +325,7 @@ HRESULT RemoveTask(const wchar_t* uniqueToken) {
   ENSURE(scheduler->Connect(VARIANT{}, VARIANT{}, VARIANT{}, VARIANT{}));
 
   RefPtr<ITaskFolder> taskFolder;
-  BStrPtr folderBStr = BStrPtr(SysAllocString(kTaskVendor));
+  BStrPtr folderBStr(SysAllocString(kTaskVendor));
 
   hr = scheduler->GetFolder(folderBStr.get(), getter_AddRefs(taskFolder));
   if (FAILED(hr)) {
@@ -323,28 +338,61 @@ HRESULT RemoveTask(const wchar_t* uniqueToken) {
     }
   }
 
-  std::wstring taskName(kTaskName);
-  taskName += uniqueToken;
-  BStrPtr taskNameBStr = BStrPtr(SysAllocString(taskName.c_str()));
-
-  hr = taskFolder->DeleteTask(taskNameBStr.get(), 0);
-  if (FAILED(hr)) {
-    if (hr == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND)) {
-      // Failing to delete the task because it didn't exist also isn't fatal.
-      return S_OK;
-    } else {
-      return hr;
-    }
-  }
-
-  // See if there are any tasks left in our folder, and delete it if not.
   RefPtr<IRegisteredTaskCollection> tasksInFolder;
   ENSURE(taskFolder->GetTasks(TASK_ENUM_HIDDEN, getter_AddRefs(tasksInFolder)));
 
   LONG numTasks = 0;
   ENSURE(tasksInFolder->get_Count(&numTasks));
 
-  if (numTasks <= 0) {
+  std::wstring WdbaTaskName(kTaskName);
+  WdbaTaskName += uniqueToken;
+
+  // This will be set to the last error that we encounter while deleting tasks.
+  // This allows us to keep attempting to remove the remaining tasks, even if
+  // we encounter an error, while still preserving what error we encountered so
+  // we can return it from this function.
+  HRESULT deleteResult = S_OK;
+  // Set to true if we intentionally skip any tasks.
+  bool tasksSkipped = false;
+
+  for (LONG i = 0; i < numTasks; ++i) {
+    RefPtr<IRegisteredTask> task;
+    // IRegisteredTaskCollection's are 1-indexed.
+    hr = tasksInFolder->get_Item(_variant_t(i + 1), getter_AddRefs(task));
+    if (FAILED(hr)) {
+      deleteResult = hr;
+      continue;
+    }
+
+    BSTR taskName;
+    hr = task->get_Name(&taskName);
+    if (FAILED(hr)) {
+      deleteResult = hr;
+      continue;
+    }
+    // Automatically free taskName when we are done with it.
+    BStrPtr uniqueTaskName(taskName);
+
+    if (tasksToRemove == WhichTasks::WdbaTaskOnly) {
+      if (WdbaTaskName.compare(taskName) != 0) {
+        tasksSkipped = true;
+        continue;
+      }
+    } else {  // tasksToRemove == WhichTasks::AllTasksForInstallation
+      if (!EndsWith(taskName, uniqueToken)) {
+        tasksSkipped = true;
+        continue;
+      }
+    }
+
+    hr = taskFolder->DeleteTask(taskName, 0 /* flags */);
+    if (FAILED(hr)) {
+      deleteResult = hr;
+    }
+  }
+
+  // If we successfully removed all the tasks, delete the folder too.
+  if (!tasksSkipped && SUCCEEDED(deleteResult)) {
     RefPtr<ITaskFolder> rootFolder;
     BStrPtr rootFolderBStr = BStrPtr(SysAllocString(L"\\"));
     ENSURE(
@@ -352,5 +400,5 @@ HRESULT RemoveTask(const wchar_t* uniqueToken) {
     ENSURE(rootFolder->DeleteFolder(folderBStr.get(), 0));
   }
 
-  return hr;
+  return deleteResult;
 }
