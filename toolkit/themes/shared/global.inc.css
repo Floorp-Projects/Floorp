@@ -211,3 +211,27 @@ xul|label[disabled="true"] {
   padding: 0;
 }
 } /** END not Proton **/
+
+/* Combobox dropdown renderer */
+#ContentSelectDropdown > menupopup {
+  /* The menupopup itself should always be rendered LTR to ensure the scrollbar aligns with
+   * the dropdown arrow on the dropdown widget. If a menuitem is RTL, its style will be set accordingly */
+  direction: ltr;
+}
+
+#ContentSelectDropdown > menupopup::part(arrowscrollbox-scrollbox) {
+  scrollbar-width: var(--content-select-scrollbar-width, auto);
+}
+
+#ContentSelectDropdown > menupopup[customoptionstyling="true"]::part(arrowscrollbox) {
+  /* When authors specify a custom background, we use background-image to specify the author-supplied color.
+   * In that case, we don't want stuff like custom appearance or custom
+   * backgrounds, so we make sure to apply it on top of the default background. */
+  background-image: var(--content-select-background-image, none);
+  background-color: -moz-Combobox;
+}
+
+/* Indent options in optgroups */
+.contentSelectDropdown-ingroup .menu-iconic-text {
+  padding-inline-start: 2em;
+}
