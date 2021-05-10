@@ -89,7 +89,7 @@ class CompactBufferReader {
     return *reinterpret_cast<const uint32_t*>(buffer_);
   }
   uint32_t readUnsigned() { return readVariableLength(); }
-  uint32_t readUnsigned64() { return readVariableLength64(); }
+  uint64_t readUnsigned64() { return readVariableLength64(); }
   int32_t readSigned() {
     uint8_t b = readByte();
     bool isNegative = !!(b & (1 << 0));
