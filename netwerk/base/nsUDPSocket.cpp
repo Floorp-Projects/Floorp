@@ -519,30 +519,19 @@ nsUDPSocket::Init2(const nsACString& aAddr, int32_t aPort,
     return NS_ERROR_INVALID_ARG;
   }
 
-  PRNetAddr prAddr;
-  memset(&prAddr, 0, sizeof(prAddr));
-  if (PR_StringToNetAddr(aAddr.BeginReading(), &prAddr) != PR_SUCCESS) {
-    return NS_ERROR_FAILURE;
-  }
-
   if (aPort < 0) {
     aPort = 0;
   }
 
-  switch (prAddr.raw.family) {
-    case PR_AF_INET:
-      prAddr.inet.port = PR_htons(aPort);
-      break;
-    case PR_AF_INET6:
-      prAddr.ipv6.port = PR_htons(aPort);
-      break;
-    default:
-      MOZ_ASSERT_UNREACHABLE("Dont accept address other than IPv4 and IPv6");
-      return NS_ERROR_ILLEGAL_VALUE;
+  NetAddr addr;
+  if (NS_FAILED(addr.InitFromString(aAddr, uint16_t(aPort)))) {
+    return NS_ERROR_FAILURE;
   }
 
-  NetAddr addr;
-  PRNetAddrToNetAddr(&prAddr, &addr);
+  if (addr.raw.family != PR_AF_INET && addr.raw.family != PR_AF_INET6) {
+    MOZ_ASSERT_UNREACHABLE("Dont accept address other than IPv4 and IPv6");
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
 
   return InitWithAddress(&addr, aPrincipal, aAddressReuse, aOptionalArgc);
 }

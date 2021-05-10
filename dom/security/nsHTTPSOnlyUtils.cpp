@@ -578,18 +578,10 @@ bool nsHTTPSOnlyUtils::LoopbackOrLocalException(nsIURI* aURI) {
     return true;
   }
 
-  // The local-ip and loopback checks expect a NetAddr struct. We only have a
-  // host-string but can convert it to a NetAddr by first converting it to
-  // PRNetAddr.
-  PRNetAddr tempAddr;
-  memset(&tempAddr, 0, sizeof(PRNetAddr));
-  // PR_StringToNetAddr does not properly initialize the output buffer in the
-  // case of IPv6 input. See bug 223145.
-  if (PR_StringToNetAddr(asciiHost.get(), &tempAddr) != PR_SUCCESS) {
+  mozilla::net::NetAddr addr;
+  if (NS_FAILED(addr.InitFromString(asciiHost))) {
     return false;
   }
-
-  mozilla::net::NetAddr addr(&tempAddr);
   // Loopback IPs are always exempt
   if (addr.IsLoopbackAddr()) {
     return true;
