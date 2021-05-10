@@ -2165,6 +2165,12 @@ class nsLayoutUtils {
     /* Instead of converting the colorspace to the display's colorspace,
        use sRGB. */
     SFE_TO_SRGB_COLORSPACE = 1 << 5,
+    /* Ensure that the returned surface has a size that matches the
+     * SurfaceFromElementResult::mSize. This is mostly a convenience thing so
+     * that callers who want this don't have to deal with it themselves.
+     * The surface might be different for, e.g., a EXIF-scaled raster image, if
+     * we don't rescale during decode. */
+    SFE_EXACT_SIZE_SURFACE = 1 << 6,
   };
 
   // This function can be called on any thread.
