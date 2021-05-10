@@ -2,7 +2,6 @@
 
 var gTestTab;
 var gContentAPI;
-var gContentWindow;
 
 var hasPocket = Services.prefs.getBoolPref("extensions.pocket.enabled");
 var hasQuit = AppConstants.platform != "macosx";
