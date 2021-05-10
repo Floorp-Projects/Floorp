@@ -12,14 +12,13 @@ import mozilla.components.feature.tabs.tabstray.TabsFeature
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.tabstray.TabsTrayInteractor
 import org.mozilla.fenix.tabstray.TabsTrayStore
-import org.mozilla.fenix.tabstray.TrayItem
 import org.mozilla.fenix.tabstray.ext.filterFromConfig
 
 abstract class BaseBrowserTrayList @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
-) : RecyclerView(context, attrs, defStyleAttr), TrayItem {
+) : RecyclerView(context, attrs, defStyleAttr) {
 
     /**
      * The browser tab types we would want to show.

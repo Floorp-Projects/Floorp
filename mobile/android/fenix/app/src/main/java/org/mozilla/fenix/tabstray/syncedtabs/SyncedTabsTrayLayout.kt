@@ -27,14 +27,13 @@ import org.mozilla.fenix.sync.ext.toStringRes
 import org.mozilla.fenix.tabstray.TabsTrayAction
 import org.mozilla.fenix.tabstray.TabsTrayFragment
 import org.mozilla.fenix.tabstray.TabsTrayStore
-import org.mozilla.fenix.tabstray.TrayItem
 import org.mozilla.fenix.utils.view.LifecycleViewProvider
 
 class SyncedTabsTrayLayout @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
-) : ConstraintLayout(context, attrs, defStyleAttr), SyncedTabsView, TrayItem,
+) : ConstraintLayout(context, attrs, defStyleAttr), SyncedTabsView,
     Observable<SyncedTabsView.Listener> by ObserverRegistry() {
 
     private val lifecycleProvider = LifecycleViewProvider(this)
