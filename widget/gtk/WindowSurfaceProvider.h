@@ -7,18 +7,18 @@
 #ifndef _MOZILLA_WIDGET_GTK_WINDOW_SURFACE_PROVIDER_H
 #define _MOZILLA_WIDGET_GTK_WINDOW_SURFACE_PROVIDER_H
 
+#include <gdk/gdk.h>
+
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/Types.h"
 #include "mozilla/layers/LayersTypes.h"
 #include "mozilla/widget/WindowSurface.h"
 #include "Units.h"
 
-#include <gdk/gdk.h>
-#ifdef MOZ_WAYLAND
-#  include <gdk/gdkwayland.h>
+#ifdef MOZ_X11
+#  include <X11/Xlib.h>  // for Window, Display, Visual, etc.
+#  include "X11UndefineNone.h"
 #endif
-#include <X11/Xlib.h>  // for Window, Display, Visual, etc.
-#include "X11UndefineNone.h"
 
 class nsWindow;
 
@@ -40,10 +40,11 @@ class WindowSurfaceProvider final {
    * own the Display, Window, etc, and they must continue to exist
    * while WindowSurfaceProvider is used.
    */
-  void Initialize(Window aWindow, Visual* aVisual, int aDepth, bool aIsShaped);
-
 #ifdef MOZ_WAYLAND
   void Initialize(nsWindow* aWidget);
+#endif
+#ifdef MOZ_X11
+  void Initialize(Window aWindow, Visual* aVisual, int aDepth, bool aIsShaped);
 #endif
 
   /**
@@ -62,16 +63,16 @@ class WindowSurfaceProvider final {
  private:
   RefPtr<WindowSurface> CreateWindowSurface();
 
-  // Can we access X?
-  bool mIsX11Display;
-  Window mXWindow;
-  Visual* mXVisual;
-  int mXDepth;
   RefPtr<WindowSurface> mWindowSurface;
 #ifdef MOZ_WAYLAND
   nsWindow* mWidget;
 #endif
+#ifdef MOZ_X11
   bool mIsShaped;
+  int mXDepth;
+  Window mXWindow;
+  Visual* mXVisual;
+#endif
 };
 
 }  // namespace widget
