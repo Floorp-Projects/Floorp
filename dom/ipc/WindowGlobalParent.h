@@ -96,6 +96,8 @@ class WindowGlobalParent final : public WindowContext,
   already_AddRefed<JSWindowActorParent> GetActor(JSContext* aCx,
                                                  const nsACString& aName,
                                                  ErrorResult& aRv);
+  already_AddRefed<JSWindowActorParent> GetExistingActor(
+      const nsACString& aName);
 
   // Get this actor's manager if it is not an in-process actor. Returns
   // |nullptr| if the actor has been torn down, or is in-process.

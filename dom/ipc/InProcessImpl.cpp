@@ -156,6 +156,15 @@ InProcessParent::GetActor(const nsACString& aName, JSContext* aCx,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+InProcessParent::GetExistingActor(const nsACString& aName,
+                                  JSProcessActorParent** aActor) {
+  RefPtr<JSProcessActorParent> actor =
+      JSActorManager::GetExistingActor(aName).downcast<JSProcessActorParent>();
+  actor.forget(aActor);
+  return NS_OK;
+}
+
 already_AddRefed<JSActor> InProcessParent::InitJSActor(
     JS::HandleObject aMaybeActor, const nsACString& aName, ErrorResult& aRv) {
   RefPtr<JSProcessActorParent> actor;
@@ -204,6 +213,15 @@ InProcessChild::GetActor(const nsACString& aName, JSContext* aCx,
   if (error.MaybeSetPendingException(aCx)) {
     return NS_ERROR_FAILURE;
   }
+  actor.forget(aActor);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+InProcessChild::GetExistingActor(const nsACString& aName,
+                                 JSProcessActorChild** aActor) {
+  RefPtr<JSProcessActorChild> actor =
+      JSActorManager::GetExistingActor(aName).downcast<JSProcessActorChild>();
   actor.forget(aActor);
   return NS_OK;
 }

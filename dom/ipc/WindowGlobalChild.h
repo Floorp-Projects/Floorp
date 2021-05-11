@@ -98,6 +98,8 @@ class WindowGlobalChild final : public WindowGlobalActor,
   already_AddRefed<JSWindowActorChild> GetActor(JSContext* aCx,
                                                 const nsACString& aName,
                                                 ErrorResult& aRv);
+  already_AddRefed<JSWindowActorChild> GetExistingActor(
+      const nsACString& aName);
 
   // Create and initialize the WindowGlobalChild object.
   static already_AddRefed<WindowGlobalChild> Create(

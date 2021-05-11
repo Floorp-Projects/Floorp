@@ -103,6 +103,14 @@ already_AddRefed<JSActor> JSActorManager::GetActor(JSContext* aCx,
   return actor.forget();
 }
 
+already_AddRefed<JSActor> JSActorManager::GetExistingActor(
+    const nsACString& aName) {
+  if (!AsNativeActor()->CanSend()) {
+    return nullptr;
+  }
+  return mJSActors.Get(aName);
+}
+
 #define CHILD_DIAGNOSTIC_ASSERT(test, msg) \
   do {                                     \
     if (XRE_IsParentProcess()) {           \
