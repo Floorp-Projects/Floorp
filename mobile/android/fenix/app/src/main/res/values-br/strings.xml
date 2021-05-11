@@ -440,9 +440,6 @@
     <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
     <string name="exceptions_empty_message_learn_more_link">Gouzout hirocʼh</string>
 
-    <!-- Description in Quick Settings that tells user tracking protection is off globally for all sites, and links to Settings to turn it on -->
-    <string name="preferences_tracking_protection_turned_off_globally">Diweredekaet en holl. Kit en arventennoù evit e weredekaat.</string>
-
     <!-- Preference switch for Telemetry -->
     <string name="preferences_telemetry">Telemetry</string>
     <!-- Preference switch for usage and technical data collection -->
@@ -453,6 +450,8 @@
     <string name="preferences_marketing_data">Roadennoù Marketing</string>
     <!-- Preference description for marketing data collection, parameter is the app name (e.g. Firefox) -->
     <string name="preferences_marketing_data_description">Rann ar roadennoù diwar-benn ar cʼheweriusterioù arveret ganeocʼh e %1$s gant Leanplim, hor cʼheveler marketing hezoug.</string>
+    <!-- Preference description for marketing data collection -->
+    <string name="preferences_marketing_data_description2">Rannañ titouroù implijoù diazez gant Adjust, hor cʼheveler marketing hezoug</string>
     <!-- Title for studies preferences -->
     <string name="preference_experiments_2">Studioù</string>
     <!-- Summary for studies preferences -->
@@ -789,8 +788,6 @@
     <string name="bookmark_delete_folder_snackbar">Dilamet %1$s</string>
     <!-- Screen title for adding a bookmarks folder -->
     <string name="bookmark_add_folder">Ouzhnenañ an teuliad</string>
-    <!-- deprecated: Snackbar title shown after a bookmark has been created. -->
-    <string name="bookmark_created_snackbar">Sined krouet.</string>
     <!-- Snackbar title shown after a bookmark has been created. -->
     <string name="bookmark_saved_snackbar">Sined enrollet!</string>
     <!-- Snackbar edit button shown after a bookmark has been created. -->
@@ -1444,10 +1441,8 @@
     <string name="preferences_passwords_autofill">Leuniañ ent emgefreek</string>
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">Goubredañ an titouroù kennaskañ</string>
-    <!-- Syncing saved logins in Fenix is on -->
-    <string name="preferences_passwords_sync_logins_on">YA</string>
-    <!-- Syncing saved logins in Fenix is off -->
-    <string name="preferences_passwords_sync_logins_off">KET</string>
+    <!-- Preference for syncing saved logins in Fenix, when not signed in-->
+    <string name="preferences_passwords_sync_logins_across_devices">Goubredañ an titouroù kennaskañ dre an trevnadoù</string>
     <!-- Syncing saved logins in Fenix needs reconnect to sync -->
     <string name="preferences_passwords_sync_logins_reconnect">Adkennaskañ</string>
     <!-- Syncing saved logins in Fenix needs login -->
@@ -1547,6 +1542,8 @@
     <string name="preferences_credit_cards_save_and_autofill_cards_summary">Rineget eo ar roadennoù</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
     <string name="preferences_credit_cards_sync_cards_across_devices">Goubredañ ar c’hartennoù kred etre ho trevnadoù</string>
+    <!-- Preference option for syncing credit cards across devices. This is displayed when the user is signed into sync -->
+    <string name="preferences_credit_cards_sync_cards">Goubredañ ar c\'hartennoù</string>
     <!-- Preference option for adding a credit card -->
     <string name="preferences_credit_cards_add_credit_card">Ouzhpennañ ur gartenn gred</string>
     <!-- Preference option for managing saved credit cards -->
@@ -1576,6 +1573,9 @@
     <string name="credit_cards_cancel_button">Nullañ</string>
     <!-- Title of the "Saved cards" screen -->
     <string name="credit_cards_saved_cards">Kartennoù enrollet</string>
+
+    <!-- Error message for credit card number validation -->
+    <string name="credit_cards_number_validation_error_message">Biziatait un niverenn kartenn gred talvoudek mar plij.</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Ouzhpennañ ul lusker klask</string>
@@ -1741,20 +1741,7 @@
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Dilemel</string>
 
-    <!-- Deprecated: text for the firefox account onboarding card header
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_firefox_account_header">Tennit gounid eus %s.</string>
-
     <!-- Content description radio buttons with a link to more information -->
     <string name="radio_preference_info_content_description">Klikit da gaout muioc’h a vunudoù</string>
-
-    <!-- Deprecated: No Open Tabs Message Header -->
-    <string name="no_collections_header1">Dastumit ar pezh a zo pouezus evidoc‘h</string>
-    <!-- Deprecated: Label to describe what collections are to a new user without any collections -->
-    <string name="no_collections_description1">Strollit ar cʼhlaskoù, al lecʼhiennoù hag an ivinelloù heñvel evit mont daveto buanocʼh.</string>
-    <!-- Deprecated: text for the firefox account onboarding card header when we detect you're already signed in to -->
-    <string name="onboarding_firefox_account_auto_signin_header_2">Kennasket hoc’h evel %s war ur merdeer Firefox all war ar pellgomzer-mañ. Fellout a ra deoc’h kennaskañ gant ar gont-mañ?</string>
-    <!-- Deprecated: Describes the add to homescreen functionality -->
-    <string name="add_to_homescreen_description">Gallout a rit ouzhpennañ al lec’hienn d’ho pennbajenn en un doare aes evit gallout he haeziñ ha merdeiñ buanoc’h, evel un arload.</string>
 
     </resources>

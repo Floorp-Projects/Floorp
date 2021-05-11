@@ -1,0 +1,227 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="app_name_private_5">تایبەت %s</string>
+    <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="app_name_private_4">%s (تایبەت)</string>
+    <!-- Home Fragment -->
+    <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
+    <string name="content_description_menu">هەڵبژاردەی زیاتر</string>
+    <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
+    <string name="content_description_private_browsing_button">گەڕانی تایبەتی شاراوە کارابکە</string>
+    <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
+    <string name="content_description_disable_private_browsing_button">گەڕانی تایبەتی شاراوە ناچالاک بکە</string>
+    <!-- Placeholder text shown in the search bar before a user enters text -->
+    <string name="search_hint">بگەڕێ یان ناونیشان بنووسە</string>
+    <!-- No Open Tabs Message Description -->
+    <string name="no_open_tabs_description">بازدەرە کراوەکانت لێرە پیشان دەدرێت.</string>
+    <!-- No Private Tabs Message Description -->
+    <string name="no_private_tabs_description">بازدەرە تایبەتە شاراوەکان لێرە پیشان دەدرێت</string>
+    <!-- Message announced to the user when tab tray is selected with 1 tab -->
+    <string name="open_tab_tray_single">١ بازدەر کراوەیە. پەنجەدابگرە بۆ گۆڕینی بازدەرەکان.</string>
+    <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
+    <string name="open_tab_tray_plural">%1$s بازدەر کراوەیە. پەنجەدابگرە بۆ گۆڕینی بازدەرەکان.</string>
+    <!-- Tab tray multi select title in app bar. The first parameter is the number of tabs selected -->
+    <string name="tab_tray_multi_select_title">%1$d دیاریکراوە</string>
+    <!-- Label of button in create collection dialog for creating a new collection  -->
+    <string name="tab_tray_add_new_collection">کۆمەڵەیەکی نوێ زیادبکە</string>
+    <!-- Label of editable text in create collection dialog for naming a new collection  -->
+    <string name="tab_tray_add_new_collection_name">ناو</string>
+    <!-- Label of button in save to collection dialog for selecting a current collection  -->
+    <string name="tab_tray_select_collection">کۆمەڵە هەڵبژێرە</string>
+    <!-- Content description for close button while in multiselect mode in tab tray -->
+    <string name="tab_tray_close_multiselect_content_description">لە دۆخی دیاریکردنی چەندیی دەربچۆ</string>
+    <!-- Content description for save to collection button while in multiselect mode in tab tray -->
+    <string name="tab_tray_collection_button_multiselect_content_description">بازدەرە دیاریکراوەکان هەڵبگرە لە کۆمەڵەکە</string>
+
+
+    <!-- Content description for checkmark while tab is selected while in multiselect mode in tab tray. The first parameter is the title of the tab selected -->
+    <string name="tab_tray_item_selected_multiselect_content_description">%1$s دیاریکرا</string>
+    <!-- Content description when tab is unselected while in multiselect mode in tab tray. The first parameter is the title of the tab unselected -->
+    <string name="tab_tray_item_unselected_multiselect_content_description">%1$s گێڕاوە لە دیاریکردن</string>
+    <!-- Content description announcement when exiting multiselect mode in tab tray -->
+    <string name="tab_tray_exit_multiselect_content_description">دەرچووی لە دۆخی دیارتکردنی چەندی</string>
+    <!-- Content description on checkmark while tab is selected in multiselect mode in tab tray -->
+    <string name="tab_tray_multiselect_selected_content_description">دیاریکرا</string>
+
+    <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
+    <string name="about_content">%1$s بەرهەم هێنراوە لە لایەن مۆزیلاوە.</string>
+
+    <!-- Private Browsing -->
+    <!-- Title for private session option -->
+    <string name="private_browsing_title">تۆ لە دانیشتنێکی تایبەتدایت</string>
+    <!-- Delete session button to erase your history in a private session -->
+    <string name="private_browsing_delete_session">دانیشتن بسڕەوە</string>
+
+    <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
+    <!-- Text for the main message -->
+    <string name="cfr_message">قەدبڕێک درووستبکە بۆ کردنەوەی بازدەری تایبەتی شاراوە لە شاشەی سەرەکەییەوە.</string>
+    <!-- Text for the positive button -->
+    <string name="cfr_pos_button_text">قەدبڕ زیادبکە</string>
+    <!-- Text for the negative button -->
+    <string name="cfr_neg_button_text">نا سوپاس</string>
+
+    <!-- Open in App "contextual feature recommendation" (CFR) -->
+    <!-- Text for the info message. 'Firefox' intentionally hardcoded here.-->
+    <string name="open_in_app_cfr_info_message">دەتوانیت وا لە فایەرفۆکس بکەیت کە خۆاکارانە بەستەرەکان لەناو بەرنامەکان بکاتەوە.</string>
+    <!-- Text for the positive action button -->
+    <string name="open_in_app_cfr_positive_button_text">بڕۆ بۆ ڕێکخستن</string>
+    <!-- Text for the negative action button -->
+    <string name="open_in_app_cfr_negative_button_text">پشتگوێخستن</string>
+
+    <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
+    <string name="camera_permissions_needed_message">داواکاری کامێرا چالاک کرا. بڕۆ بۆ ڕێکخستنەکانی ئاندرۆید، پەنجەبنێ بە دەسەڵاتەکان و ئینجا ڕێگەپێدان هەڵبژێرە.</string>
+    <!-- Text for the positive action button to go to Android Settings to grant permissions. -->
+    <string name="camera_permissions_needed_positive_button_text">بڕۆ بۆ ڕێکخستن</string>
+    <!-- Text for the negative action button to dismiss the dialog. -->
+    <string name="camera_permissions_needed_negative_button_text">پشتگوێخستن</string>
+
+    <!-- Text for the positive action button to go to Settings for auto close tabs. -->
+    <string name="tab_tray_close_tabs_banner_positive_button_text">هەڵبژاردەکان پیشان بدە</string>
+    <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
+    <string name="tab_tray_close_tabs_banner_negative_button_text">پشتگوێخستن</string>
+
+    <!-- Text for the positive action button to go to Settings for auto close tabs. -->
+    <string name="tab_tray_grid_view_banner_positive_button_text">بڕۆ بۆ ڕێکخستن</string>
+    <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
+    <string name="tab_tray_grid_view_banner_negative_button_text">پشتگوێخستن</string>
+
+    <!-- Home screen icons - Long press shortcuts -->
+    <!-- Shortcut action to open new tab -->
+    <string name="home_screen_shortcut_open_new_tab_2">بازدەری نوێ</string>
+    <!-- Shortcut action to open new private tab -->
+    <string name="home_screen_shortcut_open_new_private_tab_2">بازدەری تایبەتی نوێ</string>
+    <!-- Heading for the Top Sites block -->
+    <string name="home_screen_top_sites_heading">ماڵپەڕە بەرزەکان</string>
+
+    <!-- Browser Fragment -->
+    <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
+    <string name="browser_tabs_button">بازدەرەکان بکەرەوە</string>
+    <!-- Content description (not visible, for screen readers etc.): Navigate backward (browsing history) -->
+    <string name="browser_menu_back">دواوە</string>
+    <!-- Content description (not visible, for screen readers etc.): Navigate forward (browsing history) -->
+    <string name="browser_menu_forward">پێشەوە</string>
+    <!-- Content description (not visible, for screen readers etc.): Refresh current website -->
+    <string name="browser_menu_refresh">نوێکردنەوە</string>
+    <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
+    <string name="browser_menu_stop">بوەستە</string>
+    <!-- Content description (not visible, for screen readers etc.): Bookmark the current page -->
+    <string name="browser_menu_bookmark">دڵخواز</string>
+    <!-- Content description (not visible, for screen readers etc.): Un-bookmark the current page -->
+    <string name="browser_menu_edit_bookmark">دڵخوازەکان دەستکاریبکە</string>
+    <!-- Browser menu button that opens the addon manager -->
+    <string name="browser_menu_add_ons">پێوەکراوەکان</string>
+    <!-- Browser menu button that opens the addon extensions manager -->
+    <string name="browser_menu_extensions">زیادکراوەکان</string>
+    <!-- Text displayed when there are no add-ons to be shown -->
+    <string name="no_add_ons">هیچ پێوەکراوێک نیە</string>
+    <!-- Browser menu button that sends a user to help articles -->
+    <string name="browser_menu_help">یارمەتی</string>
+    <!-- Browser menu button that sends a to a the what's new article -->
+    <string name="browser_menu_whats_new">چی نوێ هەیە</string>
+    <!-- Browser menu button that opens the settings menu -->
+    <string name="browser_menu_settings">ڕێکخستنەکان</string>
+    <!-- Browser menu button that opens a user's library -->
+    <string name="browser_menu_library">کتێبخانە</string>
+    <!-- Browser menu toggle that requests a desktop site -->
+    <string name="browser_menu_desktop_site">پیشاندانی ماڵپەڕ وەک ڕوومێز</string>
+    <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
+    <string name="browser_menu_add_to_homescreen">زیادی بکە بۆ شاشەی سەرەکی</string>
+    <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
+    <string name="browser_menu_install_on_homescreen">دامەزراندن</string>
+    <!-- Menu option on the toolbar that takes you to synced tabs page-->
+    <string name="synced_tabs">بازدەرە هاوکاتپێکراوەکان</string>
+
+
+    <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
+    <string name="resync_button_content_description">هاوکاتپێکردنەوە</string>
+    <!-- Browser menu button that opens the find in page menu -->
+    <string name="browser_menu_find_in_page">لە ناو پەڕگە بگەڕێ</string>
+    <!-- Browser menu button that creates a private tab -->
+    <string name="browser_menu_private_tab">بازدەری تایبەت</string>
+    <!-- Browser menu button that saves the current tab to a collection -->
+    <string name="browser_menu_save_to_collection_2">هەڵگرتن لە کۆمەڵە</string>
+    <!-- Browser menu button that open a share menu to share the current site -->
+    <string name="browser_menu_share">بڵاوکردنەوە</string>
+    <!-- Share menu title, displayed when a user is sharing their current site -->
+    <string name="menu_share_with">بڵاوەپێکردن لەگەڵ...</string>
+    <!-- Browser menu button shown in custom tabs that opens the current tab in Fenix
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="browser_menu_open_in_fenix">کردنەوە لە %1$s</string>
+    <!-- Browser menu text shown in custom tabs to indicate this is a Fenix tab
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="browser_menu_powered_by">پشتگیریکراوە لە لایەن %1$s</string>
+    <!-- Browser menu text shown in custom tabs to indicate this is a Fenix tab
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="browser_menu_powered_by2">پشتگیریکراوە لە لایەن %1$s</string>
+    <!-- Browser menu button to put the current page in reader mode -->
+    <string name="browser_menu_read">شێوازی دۆخی خوێندنەوە</string>
+    <!-- Browser menu button content description to close reader mode and return the user to the regular browser -->
+    <string name="browser_menu_read_close">شێوازی دۆخی خوێندنەوە دابخە</string>
+    <!-- Browser menu button to open the current page in an external app -->
+    <string name="browser_menu_open_app_link">کردنەوە لە بەرنامە</string>
+    <!-- Browser menu button to configure reader mode appearance e.g. the used font type and size -->
+    <string name="browser_menu_read_appearance">ڕووکار</string>
+    <!-- Browser menu button to show reader view appearance controls e.g. the used font type and size -->
+    <string name="browser_menu_customize_reader_view">شێوازی خوێندنەوە ڕێکبخە</string>
+    <!-- Browser menu label for adding a bookmark -->
+    <string name="browser_menu_add">زیادکردن</string>
+    <!-- Browser menu label for editing a bookmark -->
+    <string name="browser_menu_edit">دەستکاریکردن</string>
+
+    <!-- Error message to show when the user tries to access a scheme not
+        handled by the app (Ex: blob, tel etc) -->
+    <string name="unknown_scheme_error_message">نەتوانرا پەیوەندی بکرێت. شێوەی بەستەرەکە نەناسراوە.</string>
+
+    <!-- Locale Settings Fragment -->
+    <!-- Content description for tick mark on selected language -->
+    <string name="a11y_selected_locale_content_description">زمانی هەڵبژێردراو</string>
+    <!-- Content description for search icon -->
+    <string name="a11y_search_icon_content_description">گەڕان</string>
+    <!-- Text for default locale item -->
+    <string name="default_locale_text">وەکوو زمانی ئامێرەکە</string>
+    <!-- Placeholder text shown in the search bar before a user enters text -->
+    <string name="locale_search_hint">گەڕان بۆ زمان</string>
+
+    <!-- Search Fragment -->
+    <!-- Button in the search view that lets a user search by scanning a QR code -->
+    <string name="search_scan_button">گەڕانی QR</string>
+    <!-- Button in the search view that lets a user change their search engine -->
+    <string name="search_engine_button">بزوێنەری گەڕان</string>
+    <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
+    <string name="search_shortcuts_engine_settings">ڕێکخستنەکانی بزوێنەری گەڕان</string>
+    <!-- Header displayed when selecting a shortcut search engine -->
+    <string name="search_engines_search_with">لەم کاتەدا، بگەڕێ لەگەڵ:</string>
+    <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
+    <string name="awesomebar_clipboard_title">بەستەر بهێنە لە گرتەتەختەوە</string>
+    <!-- Button in the search suggestions onboarding that allows search suggestions in private sessions -->
+    <string name="search_suggestions_onboarding_allow_button">ڕێگەبدە</string>
+    <!-- Button in the search suggestions onboarding that does not allow search suggestions in private sessions -->
+    <string name="search_suggestions_onboarding_do_not_allow_button">ڕێگە مەدە</string>
+    <!-- Search suggestion onboarding hint title text -->
+    <string name="search_suggestions_onboarding_title">ڕێگە دەدەی  بە پێشنیاری گەڕان لە دانییشتنی شاراوەی تایبەت؟</string>
+    <!-- Search suggestion onboarding hint Learn more link text -->
+    <string name="search_suggestions_onboarding_learn_more_link">زیاتر بزانە</string>
+    <!-- Search engine suggestion title text. The first parameter is the name of teh suggested engine-->
+    <string name="search_engine_suggestions_title">بگەڕێ بۆ %s</string>
+
+
+    <!-- Search engine suggestion description text -->
+    <string name="search_engine_suggestions_description">ڕاستەوخۆ گەڕان بکە لە توڵی ناونیشانەوە</string>
+
+    <!-- Search Widget -->
+    <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
+    <string name="search_widget_content_description">بازدەرێکی نوێی فایەرفۆکس بکەرەوە</string>
+    <!-- Text preview for smaller sized widgets -->
+    <string name="search_widget_text_short">گەڕان</string>
+    <!-- Text preview for larger sized widgets -->
+    <string name="search_widget_text_long">بگەڕێ کە وێبدا</string>
+    <!-- Content description (not visible, for screen readers etc.): Voice search -->
+    <string name="search_widget_voice">گەڕانی دەنگی</string>
+
+    <!-- Preferences -->
+    <!-- Title for the settings page-->
+    <string name="settings">ڕێکخستنەکان</string>
+
+
+    </resources>
