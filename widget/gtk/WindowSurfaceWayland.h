@@ -173,13 +173,13 @@ class WindowSurfaceWayland : public WindowSurface {
 
   // Buffer screen rects helps us understand if we operate on
   // the same window size as we're called on WindowSurfaceWayland::Lock().
-  // mMozContainerRect is MozContainer size when our wayland buffer was
+  // mMozContainerSize is MozContainer size when our wayland buffer was
   // allocated.
-  LayoutDeviceIntRect mMozContainerRect;
+  LayoutDeviceIntSize mMozContainerSize;
 
   // mWLBufferRect is size of allocated wl_buffer where we paint to.
   // It needs to match MozContainer widget size.
-  LayoutDeviceIntRect mWLBufferRect;
+  LayoutDeviceIntSize mWLBufferSize;
   RefPtr<nsWaylandDisplay> mWaylandDisplay;
 
   // Actual buffer (backed by wl_buffer) where all drawings go into.
