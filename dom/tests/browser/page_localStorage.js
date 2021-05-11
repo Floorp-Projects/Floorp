@@ -1,13 +1,8 @@
-<!doctype html>
-<html>
-<head>
-  <meta charset="utf-8">
-<script>
 /**
- * Helper page used by browser_localStorage_e10s.js.
+ * Helper page used by browser_localStorage_xxx.js.
  *
- * We expose methods to be invoked by ContentTask.spawn() calls.
- * ContentTask.spawn() uses the message manager and is PContent-based.  When
+ * We expose methods to be invoked by SpecialPowers.spawn() calls.
+ * SpecialPowers.spawn() uses the message manager and is PContent-based.  When
  * LocalStorage was PContent-managed, ordering was inherently ensured so we
  * could assume each page had already received all relevant events.  Now some
  * explicit type of coordination is required.
@@ -44,10 +39,11 @@
  * the batch.  All of our result-returning methods accordingly filter out the
  * sentinel key/value pair.
  **/
+
 var pageName = document.location.search.substring(1);
-window.addEventListener(
-  "load",
-  () => { document.getElementById("pageNameH").textContent = pageName; });
+window.addEventListener("load", () => {
+  document.getElementById("pageNameH").textContent = pageName;
+});
 
 // Key that conveys the end of a write batch.  Filtered out from state and
 // events.
@@ -57,22 +53,20 @@ var storageEventsPromise = null;
 function listenForStorageEvents(sentinelValue) {
   const recordedEvents = [];
   storageEventsPromise = new Promise(function(resolve, reject) {
-    window.addEventListener(
-      "storage",
-      function thisHandler(event) {
-        if (event.key === SENTINEL_KEY) {
-          // There should be no way for this to have the wrong value, but reject
-          // if it is wrong.
-          if (event.newValue === sentinelValue) {
-            window.removeEventListener("storage", thisHandler);
-            resolve(recordedEvents);
-          } else {
-            reject(event.newValue);
-          }
+    window.addEventListener("storage", function thisHandler(event) {
+      if (event.key === SENTINEL_KEY) {
+        // There should be no way for this to have the wrong value, but reject
+        // if it is wrong.
+        if (event.newValue === sentinelValue) {
+          window.removeEventListener("storage", thisHandler);
+          resolve(recordedEvents);
         } else {
-          recordedEvents.push([event.key, event.newValue, event.oldValue]);
+          reject(event.newValue);
         }
-      });
+      } else {
+        recordedEvents.push([event.key, event.newValue, event.oldValue]);
+      }
+    });
   });
 }
 
@@ -131,7 +125,3 @@ async function getStorageState(maybeSentinel) {
 function returnAndClearStorageEvents() {
   return storageEventsPromise;
 }
-</script>
-</head>
-<body><h2 id="pageNameH"></h2></body>
-</html>
