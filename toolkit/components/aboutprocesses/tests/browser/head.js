@@ -640,9 +640,10 @@ async function testAboutProcessesWithConfig({ showAllFrames, showThreads }) {
       let twisty = threads.getElementsByClassName("twisty")[0];
       twisty.click();
 
-      // Since `twisty.click()` is partially async, we need to wait
-      // until all the threads are properly displayed.
-      await promiseAboutProcessesUpdated({ doc, tbody, tabAboutProcesses });
+      // `twisty.click()` is sync, but Fluent will update the visible
+      // table content during the next refresh driver tick, wait for it.
+      await new Promise(doc.defaultView.requestAnimationFrame);
+
       let numberOfThreadsFound = 0;
       for (
         let threadRow = threads.nextSibling;
@@ -656,6 +657,7 @@ async function testAboutProcessesWithConfig({ showAllFrames, showThreads }) {
         number,
         `We should see ${number} threads, found ${numberOfThreadsFound}`
       );
+      let threadIds = [];
       for (
         let threadRow = threads.nextSibling;
         threadRow && threadRow.classList.contains("thread");
@@ -680,6 +682,7 @@ async function testAboutProcessesWithConfig({ showAllFrames, showThreads }) {
         // Sanity checks: tid
         let tidContent = l10nArgs.tid;
         let tid = Number.parseInt(tidContent);
+        threadIds.push(tid);
         Assert.notEqual(tid, 0, "The tid should be set");
         Assert.equal(tid, threadRow.thread.tid, "Displayed tid is correct");
 
@@ -691,6 +694,13 @@ async function testAboutProcessesWithConfig({ showAllFrames, showThreads }) {
           HARDCODED_ASSUMPTIONS_THREAD
         );
       }
+      // By default, threads are sorted by tid.
+      let threadList = threadIds.join(",");
+      Assert.equal(
+        threadList,
+        threadIds.sort((a, b) => a - b).join(","),
+        "The thread rows are in the default sort order."
+      );
     }
   }
 
