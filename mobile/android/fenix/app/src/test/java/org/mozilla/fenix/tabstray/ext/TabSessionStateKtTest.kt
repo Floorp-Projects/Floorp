@@ -11,9 +11,8 @@ import mozilla.components.browser.state.state.TabSessionState
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import org.mozilla.fenix.tabstray.browser.BaseBrowserTrayList.BrowserTabType.NORMAL
-import org.mozilla.fenix.tabstray.browser.BaseBrowserTrayList.BrowserTabType.PRIVATE
-import org.mozilla.fenix.tabstray.browser.BaseBrowserTrayList.Configuration
+import org.mozilla.fenix.tabstray.browser.BrowserTrayList.BrowserTabType.NORMAL
+import org.mozilla.fenix.tabstray.browser.BrowserTrayList.BrowserTabType.PRIVATE
 
 class TabSessionStateKtTest {
 
@@ -21,7 +20,7 @@ class TabSessionStateKtTest {
     fun `WHEN configuration is private THEN return true`() {
         val contentState = mockk<ContentState>()
         val state = TabSessionState(content = contentState)
-        val config = Configuration(PRIVATE)
+        val config = PRIVATE
 
         every { contentState.private } returns true
 
@@ -32,7 +31,7 @@ class TabSessionStateKtTest {
     fun `WHEN configuration is normal THEN return false`() {
         val contentState = mockk<ContentState>()
         val state = TabSessionState(content = contentState)
-        val config = Configuration(NORMAL)
+        val config = NORMAL
 
         every { contentState.private } returns false
 
@@ -43,13 +42,13 @@ class TabSessionStateKtTest {
     fun `WHEN configuration does not match THEN return false`() {
         val contentState = mockk<ContentState>()
         val state = TabSessionState(content = contentState)
-        val config = Configuration(NORMAL)
+        val config = NORMAL
 
         every { contentState.private } returns true
 
         assertFalse(state.filterFromConfig(config))
 
-        val config2 = Configuration(PRIVATE)
+        val config2 = PRIVATE
 
         every { contentState.private } returns false
 

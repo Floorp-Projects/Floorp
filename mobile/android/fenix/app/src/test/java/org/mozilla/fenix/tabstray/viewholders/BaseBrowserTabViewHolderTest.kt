@@ -19,7 +19,7 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.tabstray.TabsTrayInteractor
 import org.mozilla.fenix.tabstray.TabsTrayStore
-import org.mozilla.fenix.tabstray.browser.BaseBrowserTrayList
+import org.mozilla.fenix.tabstray.browser.BrowserTrayList
 import org.mozilla.fenix.tabstray.browser.BrowserTabsAdapter
 import org.mozilla.fenix.tabstray.browser.BrowserTrayInteractor
 import org.mozilla.fenix.tabstray.browser.createTab
@@ -36,7 +36,7 @@ class BaseBrowserTabViewHolderTest {
         val itemView =
             LayoutInflater.from(testContext).inflate(R.layout.normal_browser_tray_list, null)
         val viewHolder = NormalBrowserTabViewHolder(itemView, store, interactor, 5)
-        val trayList: BaseBrowserTrayList = itemView.findViewById(R.id.tray_list_item)
+        val trayList: BrowserTrayList = itemView.findViewById(R.id.tray_list_item)
         val emptyList: TextView = itemView.findViewById(R.id.tab_tray_empty_view)
 
         viewHolder.bind(adapter, LinearLayoutManager(testContext))
@@ -60,7 +60,7 @@ class BaseBrowserTabViewHolderTest {
         val itemView =
             LayoutInflater.from(testContext).inflate(R.layout.normal_browser_tray_list, null)
         val viewHolder = NormalBrowserTabViewHolder(itemView, store, interactor, 5)
-        val trayList: BaseBrowserTrayList = itemView.findViewById(R.id.tray_list_item)
+        val trayList: BrowserTrayList = itemView.findViewById(R.id.tray_list_item)
         val emptyList: TextView = itemView.findViewById(R.id.tab_tray_empty_view)
 
         viewHolder.bind(adapter, LinearLayoutManager(testContext))

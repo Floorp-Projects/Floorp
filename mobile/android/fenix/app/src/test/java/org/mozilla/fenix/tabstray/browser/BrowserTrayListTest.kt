@@ -4,7 +4,6 @@
 
 package org.mozilla.fenix.tabstray.browser
 
-import android.content.Context
 import io.mockk.mockk
 import io.mockk.verify
 import mozilla.components.support.test.robolectric.testContext
@@ -14,11 +13,11 @@ import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.tabstray.TabsTrayStore
 
 @RunWith(FenixRobolectricTestRunner::class)
-class BaseBrowserTrayListTest {
+class BrowserTrayListTest {
 
     @Test
     fun `WHEN recyclerview detaches from window THEN notify adapter`() {
-        val trayList = TestBaseBrowserTrayList(testContext)
+        val trayList = BrowserTrayList(testContext)
         val adapter = mockk<BrowserTabsAdapter>(relaxed = true)
 
         trayList.adapter = adapter
@@ -27,9 +26,5 @@ class BaseBrowserTrayListTest {
         trayList.onDetachedFromWindow()
 
         verify { adapter.onDetachedFromRecyclerView(trayList) }
-    }
-
-    class TestBaseBrowserTrayList(context: Context) : BaseBrowserTrayList(context) {
-        override val configuration = Configuration(BrowserTabType.PRIVATE)
     }
 }

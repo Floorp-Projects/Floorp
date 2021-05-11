@@ -11,6 +11,7 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.selection.SelectionHolder
 import org.mozilla.fenix.tabstray.TabsTrayInteractor
 import org.mozilla.fenix.tabstray.TabsTrayStore
+import org.mozilla.fenix.tabstray.browser.BrowserTrayList.BrowserTabType.NORMAL
 import org.mozilla.fenix.tabstray.browser.BrowserTabsAdapter
 
 /**
@@ -27,6 +28,10 @@ class NormalBrowserTabViewHolder(
     interactor,
     currentTabIndex
 ), SelectionHolder<Tab> {
+
+    init {
+        trayList.browserTabType = NORMAL
+    }
 
     /**
      * Holds the list of selected tabs.

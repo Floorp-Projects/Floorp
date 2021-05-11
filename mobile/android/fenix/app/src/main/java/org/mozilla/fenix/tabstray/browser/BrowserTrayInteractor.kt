@@ -22,7 +22,7 @@ import org.mozilla.fenix.tabstray.TabsTrayState.Mode
 import org.mozilla.fenix.tabstray.TabsTrayStore
 
 /**
- * For interacting with UI that is specifically for [BaseBrowserTrayList] and other browser
+ * For interacting with UI that is specifically for [BrowserTrayList] and other browser
  * tab tray views.
  */
 interface BrowserTrayInteractor : SelectionInteractor<Tab>, UserInteractionHandler {

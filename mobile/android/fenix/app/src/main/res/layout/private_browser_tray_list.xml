@@ -3,7 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <org.mozilla.fenix.tabstray.browser.PrivateBrowserTrayList
+    <org.mozilla.fenix.tabstray.browser.BrowserTrayList
         android:id="@+id/tray_list_item"
         android:layout_width="match_parent"
         android:layout_height="match_parent"

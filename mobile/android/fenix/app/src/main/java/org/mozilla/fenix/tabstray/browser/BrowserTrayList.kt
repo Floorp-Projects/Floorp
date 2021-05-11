@@ -14,7 +14,7 @@ import org.mozilla.fenix.tabstray.TabsTrayInteractor
 import org.mozilla.fenix.tabstray.TabsTrayStore
 import org.mozilla.fenix.tabstray.ext.filterFromConfig
 
-abstract class BaseBrowserTrayList @JvmOverloads constructor(
+class BrowserTrayList @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
@@ -25,13 +25,7 @@ abstract class BaseBrowserTrayList @JvmOverloads constructor(
      */
     enum class BrowserTabType { NORMAL, PRIVATE }
 
-    /**
-     * A configuration for classes that extend [BaseBrowserTrayList].
-     */
-    data class Configuration(val browserTabType: BrowserTabType)
-
-    abstract val configuration: Configuration
-
+    lateinit var browserTabType: BrowserTabType
     lateinit var interactor: TabsTrayInteractor
     lateinit var tabsTrayStore: TabsTrayStore
 
@@ -56,7 +50,7 @@ abstract class BaseBrowserTrayList @JvmOverloads constructor(
             context.components.core.store,
             selectTabUseCase,
             removeTabUseCase,
-            { it.filterFromConfig(configuration) },
+            { it.filterFromConfig(browserTabType) },
             { }
         )
     }

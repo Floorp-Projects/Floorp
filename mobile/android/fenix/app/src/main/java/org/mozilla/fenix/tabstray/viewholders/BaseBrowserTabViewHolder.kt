@@ -13,7 +13,7 @@ import androidx.recyclerview.widget.RecyclerView
 import org.mozilla.fenix.R
 import org.mozilla.fenix.tabstray.TabsTrayInteractor
 import org.mozilla.fenix.tabstray.TabsTrayStore
-import org.mozilla.fenix.tabstray.browser.BaseBrowserTrayList
+import org.mozilla.fenix.tabstray.browser.BrowserTrayList
 
 /**
  * A shared view holder for browser tabs tray list.
@@ -25,7 +25,7 @@ abstract class BaseBrowserTabViewHolder(
     private val currentTabIndex: Int
 ) : AbstractTrayViewHolder(containerView) {
 
-    private val trayList: BaseBrowserTrayList = itemView.findViewById(R.id.tray_list_item)
+    protected val trayList: BrowserTrayList = itemView.findViewById(R.id.tray_list_item)
     private val emptyList: TextView = itemView.findViewById(R.id.tab_tray_empty_view)
     abstract val emptyStringText: String
 
