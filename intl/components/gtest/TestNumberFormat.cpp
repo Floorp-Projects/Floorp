@@ -30,49 +30,54 @@ class Buffer {
 
 TEST(IntlNumberFormat, Basic)
 {
-  NumberFormat nf("en-US");
+  NumberFormatOptions options;
+  UniquePtr<NumberFormat> nf =
+      NumberFormat::TryCreate("en-US", options).unwrap();
   Buffer<uint8_t> buf8;
-  ASSERT_TRUE(nf.format(1234.56, buf8).isOk());
+  ASSERT_TRUE(nf->format(1234.56, buf8).isOk());
   ASSERT_EQ(
       std::string_view(static_cast<const char*>(buf8.data()), buf8.mWritten),
       "1,234.56");
   Buffer<char16_t> buf16;
-  ASSERT_TRUE(nf.format(1234.56, buf16).isOk());
+  ASSERT_TRUE(nf->format(1234.56, buf16).isOk());
   ASSERT_EQ(std::u16string_view(static_cast<const char16_t*>(buf16.data()),
                                 buf16.mWritten),
             u"1,234.56");
-  const char16_t* res16 = nf.format(1234.56).unwrap().data();
+  const char16_t* res16 = nf->format(1234.56).unwrap().data();
   ASSERT_TRUE(res16 != nullptr);
   ASSERT_EQ(std::u16string_view(res16), u"1,234.56");
 
-  NumberFormat nfAr("ar");
-  ASSERT_TRUE(nfAr.format(1234.56, buf8).isOk());
+  UniquePtr<NumberFormat> nfAr =
+      NumberFormat::TryCreate("ar", options).unwrap();
+  ASSERT_TRUE(nfAr->format(1234.56, buf8).isOk());
   ASSERT_EQ(
       std::string_view(static_cast<const char*>(buf8.data()), buf8.mWritten),
       "١٬٢٣٤٫٥٦");
-  ASSERT_TRUE(nfAr.format(1234.56, buf16).isOk());
+  ASSERT_TRUE(nfAr->format(1234.56, buf16).isOk());
   ASSERT_EQ(std::u16string_view(static_cast<const char16_t*>(buf16.data()),
                                 buf16.mWritten),
             u"١٬٢٣٤٫٥٦");
-  res16 = nfAr.format(1234.56).unwrap().data();
+  res16 = nfAr->format(1234.56).unwrap().data();
   ASSERT_TRUE(res16 != nullptr);
   ASSERT_EQ(std::u16string_view(res16), u"١٬٢٣٤٫٥٦");
 }
 
 TEST(IntlNumberFormat, Numbers)
 {
-  NumberFormat nf("es-ES");
+  NumberFormatOptions options;
+  UniquePtr<NumberFormat> nf =
+      NumberFormat::TryCreate("es-ES", options).unwrap();
   Buffer<uint8_t> buf8;
-  ASSERT_TRUE(nf.format(123456.789, buf8).isOk());
+  ASSERT_TRUE(nf->format(123456.789, buf8).isOk());
   ASSERT_EQ(
       std::string_view(static_cast<const char*>(buf8.data()), buf8.mWritten),
       "123.456,789");
   Buffer<char16_t> buf16;
-  ASSERT_TRUE(nf.format(123456.789, buf16).isOk());
+  ASSERT_TRUE(nf->format(123456.789, buf16).isOk());
   ASSERT_EQ(std::u16string_view(static_cast<const char16_t*>(buf16.data()),
                                 buf16.mWritten),
             u"123.456,789");
-  const char16_t* res = nf.format(123456.789).unwrap().data();
+  const char16_t* res = nf->format(123456.789).unwrap().data();
   ASSERT_TRUE(res != nullptr);
   ASSERT_EQ(std::u16string_view(res), u"123.456,789");
 }
@@ -81,13 +86,14 @@ TEST(IntlNumberFormat, SignificantDigits)
 {
   NumberFormatOptions options;
   options.mSignificantDigits = Some(std::make_pair(3, 5));
-  NumberFormat nf("es-ES", options);
+  UniquePtr<NumberFormat> nf =
+      NumberFormat::TryCreate("es-ES", options).unwrap();
   Buffer<uint8_t> buf8;
-  ASSERT_TRUE(nf.format(123456.789, buf8).isOk());
+  ASSERT_TRUE(nf->format(123456.789, buf8).isOk());
   ASSERT_EQ(
       std::string_view(static_cast<const char*>(buf8.data()), buf8.mWritten),
       "123.460");
-  ASSERT_TRUE(nf.format(0.7, buf8).isOk());
+  ASSERT_TRUE(nf->format(0.7, buf8).isOk());
   ASSERT_EQ(
       std::string_view(static_cast<const char*>(buf8.data()), buf8.mWritten),
       "0,700");
@@ -98,18 +104,19 @@ TEST(IntlNumberFormat, Currency)
   NumberFormatOptions options;
   options.mCurrency =
       Some(std::make_pair("MXN", NumberFormatOptions::CurrencyDisplay::Symbol));
-  NumberFormat nf("es-MX", options);
+  UniquePtr<NumberFormat> nf =
+      NumberFormat::TryCreate("es-MX", options).unwrap();
   Buffer<uint8_t> buf8;
-  ASSERT_TRUE(nf.format(123456.789, buf8).isOk());
+  ASSERT_TRUE(nf->format(123456.789, buf8).isOk());
   ASSERT_EQ(
       std::string_view(static_cast<const char*>(buf8.data()), buf8.mWritten),
       "$123,456.79");
   Buffer<char16_t> buf16;
-  ASSERT_TRUE(nf.format(123456.789, buf16).isOk());
+  ASSERT_TRUE(nf->format(123456.789, buf16).isOk());
   ASSERT_EQ(std::u16string_view(static_cast<const char16_t*>(buf16.data()),
                                 buf16.mWritten),
             u"$123,456.79");
-  const char16_t* res = nf.format(123456.789).unwrap().data();
+  const char16_t* res = nf->format(123456.789).unwrap().data();
   ASSERT_TRUE(res != nullptr);
   ASSERT_EQ(std::u16string_view(res), u"$123,456.79");
 }
@@ -119,18 +126,19 @@ TEST(IntlNumberFormat, Unit)
   NumberFormatOptions options;
   options.mUnit = Some(std::make_pair("meter-per-second",
                                       NumberFormatOptions::UnitDisplay::Long));
-  NumberFormat nf("es-MX", options);
+  UniquePtr<NumberFormat> nf =
+      NumberFormat::TryCreate("es-MX", options).unwrap();
   Buffer<uint8_t> buf8;
-  ASSERT_TRUE(nf.format(12.34, buf8).isOk());
+  ASSERT_TRUE(nf->format(12.34, buf8).isOk());
   ASSERT_EQ(
       std::string_view(static_cast<const char*>(buf8.data()), buf8.mWritten),
       "12.34 metros por segundo");
   Buffer<char16_t> buf16;
-  ASSERT_TRUE(nf.format(12.34, buf16).isOk());
+  ASSERT_TRUE(nf->format(12.34, buf16).isOk());
   ASSERT_EQ(std::u16string_view(static_cast<const char16_t*>(buf16.data()),
                                 buf16.mWritten),
             u"12.34 metros por segundo");
-  const char16_t* res = nf.format(12.34).unwrap().data();
+  const char16_t* res = nf->format(12.34).unwrap().data();
   ASSERT_TRUE(res != nullptr);
   ASSERT_EQ(std::u16string_view(res), u"12.34 metros por segundo");
 
@@ -139,24 +147,28 @@ TEST(IntlNumberFormat, Unit)
   const char* unit = "meter-per-second-with-some-trailing-garbage";
   options.mUnit = Some(std::make_pair(std::string_view(unit, 5),
                                       NumberFormatOptions::UnitDisplay::Long));
-  NumberFormat nf2("es-MX", options);
-  res = nf2.format(12.34).unwrap().data();
+  UniquePtr<NumberFormat> nf2 =
+      NumberFormat::TryCreate("es-MX", options).unwrap();
+  res = nf2->format(12.34).unwrap().data();
   ASSERT_TRUE(res != nullptr);
   ASSERT_EQ(std::u16string_view(res), u"12.34 metros");
 
   options.mUnit = Some(std::make_pair(std::string_view(unit, 16),
                                       NumberFormatOptions::UnitDisplay::Long));
-  NumberFormat nf3("es-MX", options);
-  res = nf3.format(12.34).unwrap().data();
+  UniquePtr<NumberFormat> nf3 =
+      NumberFormat::TryCreate("es-MX", options).unwrap();
+  res = nf3->format(12.34).unwrap().data();
   ASSERT_TRUE(res != nullptr);
   ASSERT_EQ(std::u16string_view(res), u"12.34 metros por segundo");
 }
 
 TEST(IntlNumberFormat, FormatToParts)
 {
-  NumberFormat nf("es-ES");
+  NumberFormatOptions options;
+  UniquePtr<NumberFormat> nf =
+      NumberFormat::TryCreate("es-ES", options).unwrap();
   NumberPartVector parts;
-  const char16_t* res = nf.formatToParts(123456.789, parts).unwrap().data();
+  const char16_t* res = nf->formatToParts(123456.789, parts).unwrap().data();
   ASSERT_TRUE(res != nullptr);
   ASSERT_EQ(std::u16string_view(res), u"123.456,789");
   ASSERT_EQ(parts.length(), 5U);
