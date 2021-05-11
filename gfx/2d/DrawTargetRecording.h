@@ -29,6 +29,8 @@ class DrawTargetRecording : public DrawTarget {
   }
   virtual bool IsRecording() const override { return true; }
 
+  virtual void Link(const char* aDestination, const Rect& aRect) override;
+
   virtual already_AddRefed<SourceSurface> Snapshot() override;
   virtual already_AddRefed<SourceSurface> IntoLuminanceSource(
       LuminanceType aLuminanceType, float aOpacity) override;

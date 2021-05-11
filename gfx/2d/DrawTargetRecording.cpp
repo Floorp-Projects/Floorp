@@ -198,6 +198,10 @@ DrawTargetRecording::~DrawTargetRecording() {
   mRecorder->RecordEvent(RecordedDrawTargetDestruction(ReferencePtr(this)));
 }
 
+void DrawTargetRecording::Link(const char* aDestination, const Rect& aRect) {
+  mRecorder->RecordEvent(RecordedLink(this, aDestination, aRect));
+}
+
 void DrawTargetRecording::FillRect(const Rect& aRect, const Pattern& aPattern,
                                    const DrawOptions& aOptions) {
   EnsurePatternDependenciesStored(aPattern);
