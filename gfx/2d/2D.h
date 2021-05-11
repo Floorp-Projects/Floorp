@@ -1077,6 +1077,11 @@ class DrawTarget : public external::AtomicRefCounted<DrawTarget> {
   virtual bool IsCaptureDT() const { return false; }
 
   /**
+   * Method to generate hyperlink in PDF output (with appropriate backend).
+   */
+  virtual void Link(const char* aDestination, const Rect& aRect) {}
+
+  /**
    * Returns a SourceSurface which is a snapshot of the current contents of the
    * DrawTarget. Multiple calls to Snapshot() without any drawing operations in
    * between will normally return the same SourceSurface object.
