@@ -2156,10 +2156,7 @@ class nsLayoutUtils {
     SFE_NO_RASTERIZING_VECTORS = 1 << 4,
     /* If image type is vector, the return surface size will same as
        element size, not image's intrinsic size. */
-    SFE_USE_ELEMENT_SIZE_IF_VECTOR = 1 << 5,
-    /* Instead of converting the colorspace to the display's colorspace,
-       use sRGB. */
-    SFE_TO_SRGB_COLORSPACE = 1 << 6
+    SFE_USE_ELEMENT_SIZE_IF_VECTOR = 1 << 5
   };
 
   // This function can be called on any thread.
