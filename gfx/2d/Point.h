@@ -85,11 +85,11 @@ struct IntPointTyped
       : Super(Coord(aX.value), Coord(aY.value)) {}
 
   static IntPointTyped<units> Round(float aX, float aY) {
-    return IntPointTyped(int32_t(floorf(aX + 0.5)), int32_t(floorf(aY + 0.5)));
+    return IntPointTyped(int32_t(floorf(aX + 0.5f)), int32_t(floorf(aY + 0.5f)));
   }
 
   static IntPointTyped<units> Ceil(float aX, float aY) {
-    return IntPointTyped(int32_t(ceil(aX)), int32_t(ceil(aY)));
+    return IntPointTyped(int32_t(ceilf(aX)), int32_t(ceilf(aY)));
   }
 
   static IntPointTyped<units> Floor(float aX, float aY) {
