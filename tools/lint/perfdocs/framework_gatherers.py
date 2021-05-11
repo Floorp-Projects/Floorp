@@ -281,3 +281,12 @@ class TalosGatherer(FrameworkGatherer):
     """
 
     pass
+
+
+class AWSYGatherer(FrameworkGatherer):
+    """
+    Placeholder to enable PerfDocs for AWSY.
+    Content is static so no gatherer is needed.
+    """
+
+    pass
