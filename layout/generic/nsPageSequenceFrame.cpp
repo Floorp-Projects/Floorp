@@ -673,7 +673,7 @@ nsresult nsPageSequenceFrame::PrintNextSheet() {
   nsRegion drawingRegion(drawingRect);
   nsLayoutUtils::PaintFrame(gCtx, currentSheetFrame, drawingRegion,
                             NS_RGBA(0, 0, 0, 0),
-                            nsDisplayListBuilderMode::Painting,
+                            nsDisplayListBuilderMode::PaintForPrinting,
                             nsLayoutUtils::PaintFrameFlags::SyncDecodeImages);
   return rv;
 }
