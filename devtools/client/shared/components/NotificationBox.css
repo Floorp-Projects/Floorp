@@ -95,12 +95,11 @@
   border-radius: 2px;
   border-width: 0;
   -moz-context-properties: fill;
-  fill: currentColor;
+  fill: var(--theme-icon-color);
 }
 
 .notificationbox .messageCloseButton:hover {
-  background-color: gray;
-  filter: invert(1);
+  background-color: var(--theme-button-active-background);
 }
 
 .notificationbox .messageCloseButton:active {
