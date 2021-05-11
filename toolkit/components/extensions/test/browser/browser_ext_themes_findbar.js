@@ -3,44 +3,12 @@
 // This test checks whether applied WebExtension themes that attempt to change
 // the toolbar and toolbar_field properties also theme the findbar.
 
-function getBorderColors(element) {
-  let computedStyle = window.getComputedStyle(element);
-  let {
-    borderLeftColor,
-    borderRightColor,
-    borderTopColor,
-    borderBottomColor,
-  } = computedStyle;
-  return {
-    borderLeftColor,
-    borderRightColor,
-    borderTopColor,
-    borderBottomColor,
-  };
-}
-
-function testBorderColorsUnchanged(element, expected) {
-  let computedStyle = window.getComputedStyle(element);
-  Assert.equal(
-    computedStyle.borderLeftColor,
-    expected.borderLeftColor,
-    "Element left border color should be unchanged."
-  );
-  Assert.equal(
-    computedStyle.borderRightColor,
-    expected.borderRightColor,
-    "Element right border color should be unchanged."
-  );
-  Assert.equal(
-    computedStyle.borderTopColor,
-    expected.borderTopColor,
-    "Element top border color should be unchanged."
-  );
-  Assert.equal(
-    computedStyle.borderBottomColor,
-    expected.borderBottomColor,
-    "Element bottom border color should be unchanged."
-  );
+function assertHasNoBorders(element) {
+  let cs = window.getComputedStyle(element);
+  Assert.equal(cs.borderTopWidth, "0px", "should have no top border");
+  Assert.equal(cs.borderRightWidth, "0px", "should have no right border");
+  Assert.equal(cs.borderBottomWidth, "0px", "should have no bottom border");
+  Assert.equal(cs.borderLeftWidth, "0px", "should have no left border");
 }
 
 add_task(async function test_support_toolbar_properties_on_findbar() {
@@ -106,8 +74,11 @@ add_task(async function test_support_toolbar_properties_on_findbar() {
 add_task(async function test_support_toolbar_field_properties_on_findbar() {
   let findbar_prev_button = gFindBar.getElement("find-previous");
   let findbar_next_button = gFindBar.getElement("find-next");
-  let prev_button_orig_borders = getBorderColors(findbar_prev_button);
-  let next_button_orig_borders = getBorderColors(findbar_next_button);
+
+  if (gProton) {
+    assertHasNoBorders(findbar_prev_button);
+    assertHasNoBorders(findbar_next_button);
+  }
 
   const TOOLBAR_FIELD_COLOR = "#ff00ff";
   const TOOLBAR_FIELD_TEXT_COLOR = "#9400ff";
@@ -150,12 +121,12 @@ add_task(async function test_support_toolbar_field_properties_on_findbar() {
     "Findbar textbox text color should be the same as toolbar field text color."
   );
   testBorderColor(findbar_textbox, TOOLBAR_FIELD_BORDER_COLOR);
-  if (!gProton) {
+  if (gProton) {
+    assertHasNoBorders(findbar_prev_button);
+    assertHasNoBorders(findbar_next_button);
+  } else {
     testBorderColor(findbar_prev_button, TOOLBAR_FIELD_BORDER_COLOR);
     testBorderColor(findbar_next_button, TOOLBAR_FIELD_BORDER_COLOR);
-  } else {
-    testBorderColorsUnchanged(findbar_prev_button, prev_button_orig_borders);
-    testBorderColorsUnchanged(findbar_next_button, next_button_orig_borders);
   }
 
   await extension.unload();
