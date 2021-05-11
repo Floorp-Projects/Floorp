@@ -42,13 +42,13 @@ struct MOZ_STACK_CLASS NumberFormatOptions {
    * https://github.com/unicode-org/icu/blob/master/docs/userguide/format_parse/numbers/skeletons.md#unit
    * https://github.com/unicode-org/icu/blob/master/docs/userguide/format_parse/numbers/skeletons.md#unit-width
    */
-  enum class CurrencyDisplayStyle {
+  enum class CurrencyDisplay {
     Symbol,
     Code,
     Name,
     NarrowSymbol,
   };
-  Maybe<std::pair<std::string_view, CurrencyDisplayStyle>> mCurrency;
+  Maybe<std::pair<std::string_view, CurrencyDisplay>> mCurrency;
 
   /**
    * Set the fraction digits settings. |min| can be zero, |max| must be
