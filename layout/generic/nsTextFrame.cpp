@@ -4038,12 +4038,12 @@ void nsTextPaintStyle::InitCommonColors() {
     return;
   }
 
-  nsIFrame* bgFrame = nsCSSRendering::FindNonTransparentBackgroundFrame(mFrame);
-  NS_ASSERTION(bgFrame, "Cannot find NonTransparentBackgroundFrame.");
-  nscolor bgColor =
-      bgFrame->GetVisitedDependentColor(&nsStyleBackground::mBackgroundColor);
-
+  auto bgFrame = nsCSSRendering::FindNonTransparentBackgroundFrame(mFrame);
   nscolor defaultBgColor = mPresContext->DefaultBackgroundColor();
+  nscolor bgColor = bgFrame.mFrame ? bgFrame.mFrame->GetVisitedDependentColor(
+                                         &nsStyleBackground::mBackgroundColor)
+                                   : defaultBgColor;
+
   mFrameBackgroundColor = NS_ComposeColors(defaultBgColor, bgColor);
 
   mSystemFieldForegroundColor =
@@ -4051,7 +4051,7 @@ void nsTextPaintStyle::InitCommonColors() {
   mSystemFieldBackgroundColor =
       LookAndFeel::Color(LookAndFeel::ColorID::Field, mFrame);
 
-  if (bgFrame->IsThemed()) {
+  if (bgFrame.mIsThemed) {
     // Assume a native widget has sufficient contrast always
     mSufficientContrast = 0;
     mInitCommonColors = true;
