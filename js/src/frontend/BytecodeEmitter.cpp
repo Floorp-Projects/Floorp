@@ -7713,6 +7713,32 @@ bool BytecodeEmitter::emitSelfHostedSetIsInlinableLargeFunction(
   return emit1(JSOp::Undefined);
 }
 
+bool BytecodeEmitter::emitSelfHostedSetCanonicalName(BinaryNode* callNode) {
+  ListNode* argsList = &callNode->right()->as<ListNode>();
+
+  if (argsList->count() != 2) {
+    reportNeedMoreArgsError(callNode, "_SetCanonicalName", "2", "s", argsList);
+    return false;
+  }
+
+#ifdef DEBUG
+  if (!checkSelfHostedExpectedTopLevel(callNode, argsList->head())) {
+    return false;
+  }
+#endif
+
+  ParseNode* nameNode = argsList->last();
+  MOZ_ASSERT(nameNode->isKind(ParseNodeKind::StringExpr));
+  TaggedParserAtomIndex specName = nameNode->as<NameNode>().atom();
+  compilationState.parserAtoms.markUsedByStencil(specName);
+
+  // Store the canonical name for instantiation.
+  prevSelfHostedTopLevelFunction->functionStencil().setSelfHostedCanonicalName(
+      specName);
+
+  return emit1(JSOp::Undefined);
+}
+
 #ifdef DEBUG
 bool BytecodeEmitter::checkSelfHostedUnsafeGetReservedSlot(
     BinaryNode* callNode) {
@@ -8225,6 +8251,9 @@ bool BytecodeEmitter::emitCallOrNew(
     if (calleeName ==
         TaggedParserAtomIndex::WellKnown::SetIsInlinableLargeFunction()) {
       return emitSelfHostedSetIsInlinableLargeFunction(callNode);
+    }
+    if (calleeName == TaggedParserAtomIndex::WellKnown::SetCanonicalName()) {
+      return emitSelfHostedSetCanonicalName(callNode);
     }
 #ifdef DEBUG
     if (calleeName ==

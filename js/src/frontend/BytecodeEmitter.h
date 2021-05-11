@@ -812,6 +812,7 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   [[nodiscard]] bool emitSelfHostedGetBuiltinPrototype(BinaryNode* callNode);
   [[nodiscard]] bool emitSelfHostedSetIsInlinableLargeFunction(
       BinaryNode* callNode);
+  [[nodiscard]] bool emitSelfHostedSetCanonicalName(BinaryNode* callNode);
 #ifdef DEBUG
   [[nodiscard]] bool checkSelfHostedExpectedTopLevel(BinaryNode* callNode,
                                                      ParseNode* node);

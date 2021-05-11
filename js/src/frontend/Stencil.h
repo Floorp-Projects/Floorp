@@ -774,7 +774,11 @@ class ScriptStencil {
   // partially initialized enclosing scopes, so we must avoid storing the
   // scope in the BaseScript until compilation has completed
   // successfully.)
-  ScopeIndex lazyFunctionEnclosingScopeIndex_;
+  //
+  // OR
+  //
+  // This may be used for self-hosting canonical name (TaggedParserAtomIndex).
+  TaggedScriptThingIndex enclosingScopeOrCanonicalName;
 
   // See: `FunctionFlags`.
   FunctionFlags functionFlags = {};
@@ -793,9 +797,14 @@ class ScriptStencil {
   // The shared data is stored into CompilationStencil.sharedData.
   static constexpr uint16_t HasSharedDataFlag = 1 << 2;
 
-  // True if this script is lazy function and has enclosing scope.
-  // `lazyFunctionEnclosingScopeIndex_` is valid only if this flag is set.
+  // True if this script is lazy function and has enclosing scope.  In that
+  // case, `enclosingScopeOrCanonicalName` will hold the ScopeIndex.
   static constexpr uint16_t HasLazyFunctionEnclosingScopeIndexFlag = 1 << 3;
+
+  // True if this script is a self-hosted function with a canonical name
+  // explicitly set. In that case, `enclosingScopeOrCanonicalName` will hold the
+  // TaggedParserAtomIndex.
+  static constexpr uint16_t HasSelfHostedCanonicalName = 1 << 4;
 
   uint16_t flags_ = 0;
 
@@ -835,25 +844,43 @@ class ScriptStencil {
     return flags_ & HasLazyFunctionEnclosingScopeIndexFlag;
   }
 
+  bool hasSelfHostedCanonicalName() const {
+    return flags_ & HasSelfHostedCanonicalName;
+  }
+
  private:
   void setHasLazyFunctionEnclosingScopeIndex() {
     flags_ |= HasLazyFunctionEnclosingScopeIndexFlag;
   }
 
+  void setHasSelfHostedCanonicalName() { flags_ |= HasSelfHostedCanonicalName; }
+
  public:
   void setLazyFunctionEnclosingScopeIndex(ScopeIndex index) {
-    lazyFunctionEnclosingScopeIndex_ = index;
+    MOZ_ASSERT(enclosingScopeOrCanonicalName.isNull());
+    enclosingScopeOrCanonicalName = TaggedScriptThingIndex(index);
     setHasLazyFunctionEnclosingScopeIndex();
   }
 
   void resetHasLazyFunctionEnclosingScopeIndexAfterStencilMerge() {
     flags_ &= ~HasLazyFunctionEnclosingScopeIndexFlag;
-    lazyFunctionEnclosingScopeIndex_ = ScopeIndex::invalid();
+    enclosingScopeOrCanonicalName = TaggedScriptThingIndex();
   }
 
   ScopeIndex lazyFunctionEnclosingScopeIndex() const {
     MOZ_ASSERT(hasLazyFunctionEnclosingScopeIndex());
-    return lazyFunctionEnclosingScopeIndex_;
+    return enclosingScopeOrCanonicalName.toScope();
+  }
+
+  void setSelfHostedCanonicalName(TaggedParserAtomIndex name) {
+    MOZ_ASSERT(enclosingScopeOrCanonicalName.isNull());
+    enclosingScopeOrCanonicalName = TaggedScriptThingIndex(name);
+    setHasSelfHostedCanonicalName();
+  }
+
+  TaggedParserAtomIndex selfHostedCanonicalName() const {
+    MOZ_ASSERT(hasSelfHostedCanonicalName());
+    return enclosingScopeOrCanonicalName.toAtom();
   }
 
 #if defined(DEBUG) || defined(JS_JITSPEW)
