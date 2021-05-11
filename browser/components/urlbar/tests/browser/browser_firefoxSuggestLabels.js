@@ -292,6 +292,93 @@ add_task(async function repeatLabels() {
   UrlbarProvidersManager.unregisterProvider(provider);
 });
 
+// Clicking a row label shouldn't do anything.
+add_task(async function clickLabel() {
+  await BrowserTestUtils.withNewTab("about:blank", async () => {
+    await withExperiment(async () => {
+      // Do a search. The mock history added in init() should appear with the
+      // Firefox Suggest label at index 1.
+      await UrlbarTestUtils.promiseAutocompleteResultPopup({
+        window,
+        value: "test",
+      });
+      await checkLabels(MAX_RESULTS, {
+        1: FIREFOX_SUGGEST_LABEL,
+      });
+
+      // Check the result at index 2.
+      let result2 = await UrlbarTestUtils.getDetailsOfResultAt(window, 2);
+      Assert.ok(result2.url, "Result at index 2 has a URL");
+      let url2 = result2.url;
+      Assert.ok(
+        url2.startsWith("http://example.com/"),
+        "Result at index 2 is one of our mock history results"
+      );
+
+      // Get the row at index 3 and click above it. The click should hit the row
+      // at index 2 and load its URL. We do this to make sure our click code
+      // here in the test works properly and that performing a similar click
+      // relative to index 1 (see below) would hit the row at index 0 if not for
+      // the label at index 1.
+      let result3 = await UrlbarTestUtils.getDetailsOfResultAt(window, 3);
+      let loadPromise = BrowserTestUtils.browserLoaded(
+        gBrowser.selectedBrowser
+      );
+      info("Performing click relative to index 3");
+      await UrlbarTestUtils.promisePopupClose(window, () =>
+        click(result3.element.row, { y: -2 })
+      );
+      info("Waiting for load after performing click relative to index 3");
+      await loadPromise;
+      Assert.equal(gBrowser.currentURI.spec, url2, "Loaded URL at index 2");
+
+      // Now do the search again.
+      await UrlbarTestUtils.promiseAutocompleteResultPopup({
+        window,
+        value: "test",
+      });
+      await checkLabels(MAX_RESULTS, {
+        1: FIREFOX_SUGGEST_LABEL,
+      });
+
+      // Check the result at index 1, the one with the label.
+      let result1 = await UrlbarTestUtils.getDetailsOfResultAt(window, 1);
+      Assert.ok(result1.url, "Result at index 1 has a URL");
+      let url1 = result1.url;
+      Assert.ok(
+        url1.startsWith("http://example.com/"),
+        "Result at index 1 is one of our mock history results"
+      );
+      Assert.notEqual(url1, url2, "URLs at indexes 1 and 2 are different");
+
+      // Do a click on the row at index 1 in the same way as before. This time
+      // nothing should happen because the click should hit the label, not the
+      // row at index 0.
+      info("Clicking row label at index 1");
+      click(result1.element.row, { y: -2 });
+      // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
+      await new Promise(r => setTimeout(r, 500));
+      Assert.ok(UrlbarTestUtils.isPopupOpen(window), "View remains open");
+      Assert.equal(
+        gBrowser.currentURI.spec,
+        url2,
+        "Current URL is still URL from index 2"
+      );
+
+      // Now click the main part of the row at index 1. Its URL should load.
+      loadPromise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+      let { height } = result1.element.row.getBoundingClientRect();
+      info(`Clicking main part of the row at index 1, height=${height}`);
+      await UrlbarTestUtils.promisePopupClose(window, () =>
+        click(result1.element.row)
+      );
+      info("Waiting for load after clicking row at index 1");
+      await loadPromise;
+      Assert.equal(gBrowser.currentURI.spec, url1, "Loaded URL at index 1");
+    });
+  });
+});
+
 /**
  * Provider that returns a suggested-index result.
  */
@@ -412,4 +499,16 @@ async function withSuggestions(callback) {
     await Services.search.removeEngine(engine);
     await SpecialPowers.popPrefEnv();
   }
+}
+
+function click(element, { x = undefined, y = undefined } = {}) {
+  let { width, height } = element.getBoundingClientRect();
+  if (typeof x != "number") {
+    x = width / 2;
+  }
+  if (typeof y != "number") {
+    y = height / 2;
+  }
+  EventUtils.synthesizeMouse(element, x, y, { type: "mousedown" });
+  EventUtils.synthesizeMouse(element, x, y, { type: "mouseup" });
 }
