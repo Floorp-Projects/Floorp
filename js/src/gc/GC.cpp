@@ -4594,14 +4594,14 @@ IncrementalProgress GCRuntime::markWeakReferences(
   // We may have already entered weak marking mode.
   if (!marker.isWeakMarking() && marker.enterWeakMarkingMode()) {
     // Do not rely on the information about not-yet-marked weak keys that have
-    // been collected by barriers. Clear out the gcWeakKeys entries and rebuild
-    // the full table. Note that this a cross-zone operation; delegate zone
-    // entries will be populated by map zone traversals, so everything needs to
-    // be cleared first, then populated.
+    // been collected by barriers. Clear out the gcEphemeronEdges entries and
+    // rebuild the full table. Note that this a cross-zone operation; delegate
+    // zone entries will be populated by map zone traversals, so everything
+    // needs to be cleared first, then populated.
     if (!marker.incrementalWeakMapMarkingEnabled) {
       for (ZoneIterT zone(this); !zone.done(); zone.next()) {
         AutoEnterOOMUnsafeRegion oomUnsafe;
-        if (!zone->gcWeakKeys().clear()) {
+        if (!zone->gcEphemeronEdges().clear()) {
           oomUnsafe.crash("clearing weak keys when entering weak marking mode");
         }
       }
@@ -4615,12 +4615,6 @@ IncrementalProgress GCRuntime::markWeakReferences(
       }
     }
   }
-
-#ifdef DEBUG
-  for (ZoneIterT zone(this); !zone.done(); zone.next()) {
-    zone->checkWeakMarkingMode();
-  }
-#endif
 
   // This is not strictly necessary; if we yield here, we could run the mutator
   // in weak marking mode and unmark gray would end up doing the key lookups.
@@ -5348,7 +5342,7 @@ void GCRuntime::sweepWeakMaps() {
   for (SweepGroupZonesIter zone(this); !zone.done(); zone.next()) {
     /* No need to look up any more weakmap keys from this sweep group. */
     AutoEnterOOMUnsafeRegion oomUnsafe;
-    if (!zone->gcWeakKeys().clear()) {
+    if (!zone->gcEphemeronEdges().clear()) {
       oomUnsafe.crash("clearing weak keys in beginSweepingSweepGroup()");
     }
 

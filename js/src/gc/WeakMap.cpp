@@ -34,10 +34,10 @@ WeakMapBase::~WeakMapBase() {
 
 void WeakMapBase::unmarkZone(JS::Zone* zone) {
   AutoEnterOOMUnsafeRegion oomUnsafe;
-  if (!zone->gcWeakKeys().clear()) {
-    oomUnsafe.crash("clearing weak keys table");
+  if (!zone->gcEphemeronEdges().clear()) {
+    oomUnsafe.crash("clearing ephemeron edges table");
   }
-  MOZ_ASSERT(zone->gcNurseryWeakKeys().count() == 0);
+  MOZ_ASSERT(zone->gcNurseryEphemeronEdges().count() == 0);
 
   for (WeakMapBase* m : zone->gcWeakMapList()) {
     m->mapColor = CellColor::White;
