@@ -52,16 +52,31 @@ class AboutStudies extends React.Component {
     for (const stateName of Object.values(this.remoteValueNameMap)) {
       this.state[stateName] = null;
     }
+    this.state.optInMessage = false;
   }
 
-  componentWillMount() {
+  initializeData() {
     for (const remoteName of Object.keys(this.remoteValueNameMap)) {
       document.addEventListener(`ReceiveRemoteValue:${remoteName}`, this);
       sendPageEvent(`GetRemoteValue:${remoteName}`);
     }
+  }
+
+  componentWillMount() {
     let optinParams = readOptinParams();
     if (optinParams.branch && optinParams.slug) {
+      const onOptIn = ({ detail: value }) => {
+        this.setState({ optInMessage: value });
+        this.initializeData();
+        document.removeEventListener(
+          `ReceiveRemoteValue:OptInMessage`,
+          onOptIn
+        );
+      };
+      document.addEventListener(`ReceiveRemoteValue:OptInMessage`, onOptIn);
       sendPageEvent(`ExperimentOptIn`, optinParams);
+    } else {
+      this.initializeData();
     }
   }
 
@@ -88,8 +103,8 @@ class AboutStudies extends React.Component {
       addonStudies,
       prefStudies,
       experiments,
+      optInMessage,
     } = this.state;
-
     // Wait for all values to be loaded before rendering. Some of the values may
     // be falsey, so an explicit null check is needed.
     if (Object.values(this.state).some(v => v === null)) {
@@ -100,6 +115,7 @@ class AboutStudies extends React.Component {
       "div",
       { className: "about-studies-container main-content" },
       r(WhatsThisBox, { translations, learnMoreHref, studiesEnabled }),
+      optInMessage && r(OptInBox, optInMessage),
       r(StudyList, { translations, addonStudies, prefStudies, experiments })
     );
   }
@@ -150,6 +166,16 @@ class WhatsThisBox extends React.Component {
       )
     );
   }
+}
+/**OptInMessage
+ * Explains the contents of the page, and offers a way to learn more and update preferences.
+ */
+function OptInBox({ error, message }) {
+  return r(
+    "div",
+    { className: "opt-in-box" + (error ? " opt-in-error" : "") },
+    message
+  );
 }
 
 /**
@@ -205,7 +231,6 @@ class StudyList extends React.Component {
 
     activeStudies.sort((a, b) => b.sortDate - a.sortDate);
     inactiveStudies.sort((a, b) => b.sortDate - a.sortDate);
-
     return r(
       "div",
       {},

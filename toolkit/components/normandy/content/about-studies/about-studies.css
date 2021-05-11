@@ -165,3 +165,14 @@ button > .button-box {
 .study-actions {
   flex: 0 0;
 }
+
+.opt-in-box {
+  border-radius: 3px;
+  padding: 10px;
+  color: var(--study-status-active-color);
+  border: 1px solid;
+}
+
+.opt-in-box.opt-in-error {
+  color: var(--in-content-error-text-color);
+}

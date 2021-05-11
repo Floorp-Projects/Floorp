@@ -753,6 +753,8 @@ add_task(async function test_getStudiesEnabled() {
 
 add_task(async function test_forceEnroll() {
   let sandbox = sinon.createSandbox();
+
+  // This simulates a succesful enrollment
   let stub = sandbox.stub(RemoteSettingsExperimentLoader, "optInToExperiment");
 
   await BrowserTestUtils.withNewTab(
@@ -764,8 +766,16 @@ add_task(async function test_forceEnroll() {
     async browser => {
       await SpecialPowers.spawn(browser, [], async () => {
         await ContentTaskUtils.waitForCondition(
-          () => content.document.querySelector(".info-box-content"),
-          "Wait for content to load"
+          () => content.document.querySelector(".opt-in-box"),
+          "Should show the opt in message"
+        );
+
+        Assert.equal(
+          content.document
+            .querySelector(".opt-in-box")
+            .classList.contains("opt-in-error"),
+          false,
+          "should not have an error class since the enrollment was successful"
         );
 
         return true;
@@ -773,11 +783,38 @@ add_task(async function test_forceEnroll() {
     }
   );
 
-  Assert.ok(stub.called, "Called optInToExperiment");
-  Assert.deepEqual(
-    stub.firstCall.args[0],
-    { slug: "slug123", branch: "branch123", collection: "collection123" },
-    "Called with correct arguments"
+  // Simulates a problem force enrolling
+  stub.rejects(new Error("Testing error"));
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url:
+        "about:studies?optin_collection=collection123&optin_branch=branch123&optin_slug=slug123",
+    },
+    async browser => {
+      await SpecialPowers.spawn(browser, [], async () => {
+        await ContentTaskUtils.waitForCondition(
+          () => content.document.querySelector(".opt-in-box"),
+          "Should show the opt in message"
+        );
+
+        Assert.ok(
+          content.document
+            .querySelector(".opt-in-box")
+            .classList.contains("opt-in-error"),
+          "should have an error class since the enrollment rejected"
+        );
+
+        Assert.equal(
+          content.document.querySelector(".opt-in-box").textContent,
+          "Testing error",
+          "should render the error"
+        );
+
+        return true;
+      });
+    }
   );
+
   sandbox.restore();
 });
