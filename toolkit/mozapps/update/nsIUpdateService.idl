@@ -483,6 +483,21 @@ interface nsIUpdateProcessor : nsISupports
    *        the permissions.
    */
   void fixUpdateDirectoryPerms(in boolean useServiceOnFailure);
+
+  /**
+   * The installer writes an installation-specific registry key if the
+   * Maintenance Service can be used for this installation. This function checks
+   * for that key's existence (it does not read or verify the key's contents).
+   *
+   * This function should only be called on Windows.
+   *
+   * @returns true if the registry key exists, false if it does not.
+   * @throws  NS_ERROR_NOT_AVAILABLE
+   *          If registry access fails.
+   * @throws  NS_ERROR_NOT_IMPLEMENTED
+   *          If this is called on a non-Windows platform.
+   */
+  bool getServiceRegKeyExists();
 };
 
 /**
