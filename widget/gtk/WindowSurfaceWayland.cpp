@@ -597,19 +597,19 @@ WindowBackBuffer* WindowSurfaceWayland::SetNewWaylandBuffer() {
   LOGWAYLAND(
       ("WindowSurfaceWayland::NewWaylandBuffer [%p] Requested buffer [%d "
        "x %d]\n",
-       (void*)this, mWLBufferRect.width, mWLBufferRect.height));
+       (void*)this, mWLBufferSize.width, mWLBufferSize.height));
 
   mWaylandBuffer =
-      WaylandBufferFindAvailable(mWLBufferRect.width, mWLBufferRect.height);
+      WaylandBufferFindAvailable(mWLBufferSize.width, mWLBufferSize.height);
   if (mWaylandBuffer) {
-    if (!mWaylandBuffer->Resize(mWLBufferRect.width, mWLBufferRect.height)) {
+    if (!mWaylandBuffer->Resize(mWLBufferSize.width, mWLBufferSize.height)) {
       return nullptr;
     }
     return mWaylandBuffer;
   }
 
   mWaylandBuffer =
-      CreateWaylandBuffer(mWLBufferRect.width, mWLBufferRect.height);
+      CreateWaylandBuffer(mWLBufferSize.width, mWLBufferSize.height);
   return mWaylandBuffer;
 }
 
@@ -618,7 +618,7 @@ WindowBackBuffer* WindowSurfaceWayland::GetWaylandBuffer() {
   LOGWAYLAND(
       ("WindowSurfaceWayland::GetWaylandBuffer [%p] Requested buffer [%d "
        "x %d] can switch %d\n",
-       (void*)this, mWLBufferRect.width, mWLBufferRect.height,
+       (void*)this, mWLBufferSize.width, mWLBufferSize.height,
        mCanSwitchWaylandBuffer));
 
 #if MOZ_LOGGING
@@ -648,18 +648,18 @@ WindowBackBuffer* WindowSurfaceWayland::GetWaylandBuffer() {
     return nullptr;
   }
 
-  if (mWaylandBuffer->IsMatchingSize(mWLBufferRect.width,
-                                     mWLBufferRect.height)) {
+  if (mWaylandBuffer->IsMatchingSize(mWLBufferSize.width,
+                                     mWLBufferSize.height)) {
     LOGWAYLAND(("    Size is ok, use the buffer [%d x %d]\n",
-                mWLBufferRect.width, mWLBufferRect.height));
+                mWLBufferSize.width, mWLBufferSize.height));
     return mWaylandBuffer;
   }
 
   if (mCanSwitchWaylandBuffer) {
     // Reuse existing buffer
-    LOGWAYLAND(("    Reuse buffer with resize [%d x %d]\n", mWLBufferRect.width,
-                mWLBufferRect.height));
-    if (mWaylandBuffer->Resize(mWLBufferRect.width, mWLBufferRect.height)) {
+    LOGWAYLAND(("    Reuse buffer with resize [%d x %d]\n", mWLBufferSize.width,
+                mWLBufferSize.height));
+    if (mWaylandBuffer->Resize(mWLBufferSize.width, mWLBufferSize.height)) {
       return mWaylandBuffer;
     }
     // OOM here, just return null to skip this frame.
@@ -670,18 +670,18 @@ WindowBackBuffer* WindowSurfaceWayland::GetWaylandBuffer() {
       ("    Buffer size does not match, requested %d x %d got %d x%d, return "
        "null.\n",
        mWaylandBuffer->GetWidth(), mWaylandBuffer->GetHeight(),
-       mWLBufferRect.width, mWLBufferRect.height));
+       mWLBufferSize.width, mWLBufferSize.height));
   return nullptr;
 }
 
 already_AddRefed<gfx::DrawTarget> WindowSurfaceWayland::LockWaylandBuffer() {
   // Allocated wayland buffer must match mozcontainer widget size.
-  mWLBufferRect = mWindow->GetMozContainerSize();
+  mWLBufferSize = mWindow->GetMozContainerSize();
 
   LOGWAYLAND(
       ("WindowSurfaceWayland::LockWaylandBuffer [%p] Requesting buffer %d x "
        "%d\n",
-       (void*)this, mWLBufferRect.width, mWLBufferRect.height));
+       (void*)this, mWLBufferSize.width, mWLBufferSize.height));
 
   WindowBackBuffer* buffer = GetWaylandBuffer();
   LOGWAYLAND(("WindowSurfaceWayland::LockWaylandBuffer [%p] Got buffer %p\n",
@@ -722,17 +722,17 @@ already_AddRefed<gfx::DrawTarget> WindowSurfaceWayland::LockImageSurface(
 }
 
 static bool IsWindowFullScreenUpdate(
-    LayoutDeviceIntRect& aScreenRect,
+    LayoutDeviceIntSize& aScreenSize,
     const LayoutDeviceIntRegion& aUpdatedRegion) {
   if (aUpdatedRegion.GetNumRects() > 1) return false;
 
   gfx::IntRect rect = aUpdatedRegion.RectIter().Get().ToUnknownRect();
-  return (rect.x == 0 && rect.y == 0 && aScreenRect.width == rect.width &&
-          aScreenRect.height == rect.height);
+  return (rect.x == 0 && rect.y == 0 && aScreenSize.width == rect.width &&
+          aScreenSize.height == rect.height);
 }
 
 static bool IsPopupFullScreenUpdate(
-    LayoutDeviceIntRect& aScreenRect,
+    LayoutDeviceIntSize& aScreenSize,
     const LayoutDeviceIntRegion& aUpdatedRegion) {
   // We know that popups can be drawn from two parts; a panel and an arrow.
   // Assume we redraw whole popups when we have two rects and bounding
@@ -741,8 +741,8 @@ static bool IsPopupFullScreenUpdate(
 
   gfx::IntRect lockSize = aUpdatedRegion.GetBounds().ToUnknownRect();
   return (lockSize.x == 0 && lockSize.y == 0 &&
-          aScreenRect.width == lockSize.width &&
-          aScreenRect.height == lockSize.height);
+          aScreenSize.width == lockSize.width &&
+          aScreenSize.height == lockSize.height);
 }
 
 already_AddRefed<gfx::DrawTarget> WindowSurfaceWayland::Lock(
@@ -759,11 +759,7 @@ already_AddRefed<gfx::DrawTarget> WindowSurfaceWayland::Lock(
   // until next WindowSurfaceWayland::Commit() call.
   mBufferCommitAllowed = false;
 
-  LayoutDeviceIntRect mozContainerSize = mWindow->GetMozContainerSize();
-  // The window bounds of popup windows contains relative position to
-  // the transient window. We need to remove that effect because by changing
-  // position of the popup window the buffer has not changed its size.
-  mozContainerSize.x = mozContainerSize.y = 0;
+  LayoutDeviceIntSize mozContainerSize = mWindow->GetMozContainerSize();
   gfx::IntRect lockSize = aRegion.GetBounds().ToUnknownRect();
 
   bool isTransparentPopup =
@@ -811,7 +807,7 @@ already_AddRefed<gfx::DrawTarget> WindowSurfaceWayland::Lock(
   LOGWAYLAND(("   mCanSwitchWaylandBuffer = %d\n", mCanSwitchWaylandBuffer));
   LOGWAYLAND(("   windowRedraw = %d\n", windowRedraw));
 
-  if (!(mMozContainerRect == mozContainerSize)) {
+  if (!(mMozContainerSize == mozContainerSize)) {
     LOGWAYLAND(("   screen size changed\n"));
     if (!windowRedraw) {
       LOGWAYLAND(("   screen size changed without redraw!\n"));
@@ -824,7 +820,7 @@ already_AddRefed<gfx::DrawTarget> WindowSurfaceWayland::Lock(
       mWLBufferIsDirty = false;
       mBufferNeedsClear = true;
     }
-    mMozContainerRect = mozContainerSize;
+    mMozContainerSize = mozContainerSize;
   }
 
   mDrawToWaylandBufferDirectly = windowRedraw || mSmoothRendering == CACHE_NONE;
@@ -1102,7 +1098,7 @@ void WindowSurfaceWayland::Commit(const LayoutDeviceIntRegion& aInvalidRegion) {
         ("WindowSurfaceWayland::Commit [%p] damage size [%d, %d] -> [%d x %d] "
          "MozContainer [%d x %d]\n",
          (void*)this, lockSize.x, lockSize.y, lockSize.width, lockSize.height,
-         mMozContainerRect.width, mMozContainerRect.height));
+         mMozContainerSize.width, mMozContainerSize.height));
     LOGWAYLAND(("    mDrawToWaylandBufferDirectly = %d\n",
                 mDrawToWaylandBufferDirectly));
   }
