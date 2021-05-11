@@ -153,7 +153,7 @@ class Event : public nsISupports, public nsWrapperCache {
   // Returns true if the event should be trusted.
   bool Init(EventTarget* aGlobal);
 
-  static const char* GetEventName(EventMessage aEventType);
+  static const char16_t* GetEventName(EventMessage aEventType);
   static CSSIntPoint GetClientCoords(nsPresContext* aPresContext,
                                      WidgetEvent* aEvent,
                                      LayoutDeviceIntPoint aPoint,
