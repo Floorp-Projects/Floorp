@@ -331,9 +331,21 @@ bool nsHTTPSOnlyUtils::ShouldUpgradeHttpsFirstRequest(nsIURI* aURI,
     return false;
   }
 
+  // 5. HTTPS-First Mode only upgrades default ports - do not upgrade the
+  // request to https if port is specified and not the default port of 80.
+  MOZ_ASSERT(aURI->SchemeIs("http"), "how come the request is not 'http'?");
+  int defaultPortforScheme = NS_GetDefaultPort("http");
+  // If no port is specified, then the API returns -1 to indicate the default
+  // port.
+  int32_t port = 0;
+  nsresult rv = aURI->GetPort(&port);
+  NS_ENSURE_SUCCESS(rv, false);
+  if (port != defaultPortforScheme && port != -1) {
+    return false;
+  }
+
   // We can upgrade the request - let's log to the console and set the status
   // so we know that we upgraded the request.
-  MOZ_ASSERT(aURI->SchemeIs("http"), "how come the request is not 'http'?");
   nsAutoCString scheme;
   aURI->GetScheme(scheme);
   scheme.AppendLiteral("s");
