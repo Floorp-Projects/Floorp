@@ -11,18 +11,16 @@
 namespace mozilla {
 namespace intl {
 
-NumberFormat::NumberFormat(std::string_view aLocale,
-                           const NumberFormatOptions& aOptions) {
-  mFormatForUnit = aOptions.mUnit.isSome();
-  NumberFormatterSkeleton skeleton(aOptions);
-  mNumberFormatter = skeleton.toFormatter(aLocale);
-  if (mNumberFormatter) {
-    UErrorCode status = U_ZERO_ERROR;
-    mFormattedNumber = unumf_openResult(&status);
-    if (U_SUCCESS(status)) {
-      mIsInitialized = true;
-    }
+/*static*/ Result<UniquePtr<NumberFormat>, NumberFormat::FormatError>
+NumberFormat::TryCreate(std::string_view aLocale,
+                        const NumberFormatOptions& aOptions) {
+  UniquePtr<NumberFormat> nf = MakeUnique<NumberFormat>();
+  Result<Ok, FormatError> result = nf->initialize(aLocale, aOptions);
+  if (result.isOk()) {
+    return nf;
   }
+
+  return Err(result.unwrapErr());
 }
 
 NumberFormat::~NumberFormat() {
@@ -32,6 +30,21 @@ NumberFormat::~NumberFormat() {
   if (mNumberFormatter) {
     unumf_close(mNumberFormatter);
   }
+}
+
+Result<Ok, NumberFormat::FormatError> NumberFormat::initialize(
+    std::string_view aLocale, const NumberFormatOptions& aOptions) {
+  mFormatForUnit = aOptions.mUnit.isSome();
+  NumberFormatterSkeleton skeleton(aOptions);
+  mNumberFormatter = skeleton.toFormatter(aLocale);
+  if (mNumberFormatter) {
+    UErrorCode status = U_ZERO_ERROR;
+    mFormattedNumber = unumf_openResult(&status);
+    if (U_SUCCESS(status)) {
+      return Ok();
+    }
+  }
+  return Err(FormatError::InternalError);
 }
 
 bool NumberFormat::formatInternal(double number) const {
