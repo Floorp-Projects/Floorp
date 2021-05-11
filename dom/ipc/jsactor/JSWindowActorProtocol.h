@@ -56,6 +56,7 @@ class JSWindowActorProtocol final : public JSActorProtocol,
     nsString mName;
     EventListenerFlags mFlags;
     Optional<bool> mPassive;
+    bool mCreateActor = true;
   };
 
   struct ChildSide : public Sided {
