@@ -174,21 +174,24 @@ using NumberPartVector = mozilla::Vector<NumberPart, 8 * sizeof(NumberPart)>;
  */
 class NumberFormat final {
  public:
+  enum class FormatError {
+    InternalError,
+    OutOfMemory,
+  };
+
   /**
    * Initialize a new NumberFormat for the provided locale and using the
    * provided options.
    *
    * https://tc39.es/ecma402/#sec-initializenumberformat
    */
-  explicit NumberFormat(std::string_view aLocale,
-                        const NumberFormatOptions& aOptions = {});
+  static Result<UniquePtr<NumberFormat>, NumberFormat::FormatError> TryCreate(
+      std::string_view aLocale, const NumberFormatOptions& aOptions);
 
+  NumberFormat() = default;
+  NumberFormat(const NumberFormat&) = delete;
+  NumberFormat& operator=(const NumberFormat&) = delete;
   ~NumberFormat();
-
-  enum class FormatError {
-    InternalError,
-    OutOfMemory,
-  };
 
   /**
    * Formats a double to a utf-16 string. The string view is valid until
@@ -199,7 +202,7 @@ class NumberFormat final {
    */
   Result<std::u16string_view, NumberFormat::FormatError> format(
       double number) const {
-    if (!mIsInitialized || !formatInternal(number)) {
+    if (!formatInternal(number)) {
       return Err(FormatError::InternalError);
     }
 
@@ -215,7 +218,7 @@ class NumberFormat final {
    */
   Result<std::u16string_view, NumberFormat::FormatError> formatToParts(
       double number, NumberPartVector& parts) const {
-    if (!mIsInitialized || !formatInternal(number)) {
+    if (!formatInternal(number)) {
       return Err(FormatError::InternalError);
     }
 
@@ -231,7 +234,7 @@ class NumberFormat final {
    */
   template <typename B>
   Result<Ok, NumberFormat::FormatError> format(double number, B& buffer) const {
-    if (!mIsInitialized || !formatInternal(number)) {
+    if (!formatInternal(number)) {
       return Err(FormatError::InternalError);
     }
 
@@ -247,7 +250,7 @@ class NumberFormat final {
    */
   Result<std::u16string_view, NumberFormat::FormatError> format(
       int64_t number) const {
-    if (!mIsInitialized || !formatInternal(number)) {
+    if (!formatInternal(number)) {
       return Err(FormatError::InternalError);
     }
 
@@ -263,7 +266,7 @@ class NumberFormat final {
    */
   Result<std::u16string_view, NumberFormat::FormatError> formatToParts(
       int64_t number, NumberPartVector& parts) const {
-    if (!mIsInitialized || !formatInternal(number)) {
+    if (!formatInternal(number)) {
       return Err(FormatError::InternalError);
     }
 
@@ -278,7 +281,7 @@ class NumberFormat final {
   template <typename B>
   Result<Ok, NumberFormat::FormatError> format(int64_t number,
                                                B& buffer) const {
-    if (!mIsInitialized || !formatInternal(number)) {
+    if (!formatInternal(number)) {
       return Err(FormatError::InternalError);
     }
 
@@ -294,7 +297,7 @@ class NumberFormat final {
    */
   Result<std::u16string_view, NumberFormat::FormatError> format(
       std::string_view number) const {
-    if (!mIsInitialized || !formatInternal(number)) {
+    if (!formatInternal(number)) {
       return Err(FormatError::InternalError);
     }
 
@@ -311,7 +314,7 @@ class NumberFormat final {
    */
   Result<std::u16string_view, NumberFormat::FormatError> formatToParts(
       std::string_view number, NumberPartVector& parts) const {
-    if (!mIsInitialized || !formatInternal(number)) {
+    if (!formatInternal(number)) {
       return Err(FormatError::InternalError);
     }
 
@@ -329,7 +332,7 @@ class NumberFormat final {
   template <typename B>
   Result<Ok, NumberFormat::FormatError> format(std::string_view number,
                                                B& buffer) const {
-    if (!mIsInitialized || !formatInternal(number)) {
+    if (!formatInternal(number)) {
       return Err(FormatError::InternalError);
     }
 
@@ -340,7 +343,9 @@ class NumberFormat final {
   UNumberFormatter* mNumberFormatter = nullptr;
   UFormattedNumber* mFormattedNumber = nullptr;
   bool mFormatForUnit = false;
-  bool mIsInitialized = false;
+
+  Result<Ok, NumberFormat::FormatError> initialize(
+      std::string_view aLocale, const NumberFormatOptions& aOptions);
 
   [[nodiscard]] bool formatInternal(double number) const;
   [[nodiscard]] bool formatInternal(int64_t number) const;
@@ -357,6 +362,10 @@ class NumberFormat final {
 
   template <typename C, typename B>
   Result<Ok, NumberFormat::FormatError> formatResult(B& buffer) const {
+    // We only support buffers with uint8_t or char16_t for now.
+    static_assert(std::is_same<C, uint8_t>::value ||
+                  std::is_same<C, char16_t>::value);
+
     return formatResult().andThen([&buffer](std::u16string_view result)
                                       -> Result<Ok, NumberFormat::FormatError> {
       if constexpr (std::is_same<C, uint8_t>::value) {
