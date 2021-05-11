@@ -3120,7 +3120,8 @@ bool nsGlobalWindowInner::DoResolve(
     aDesc.set(mozilla::Some(JS::PropertyDescriptor::Data(
         JS::ObjectValue(*shim),
         {JS::PropertyAttribute::Configurable, JS::PropertyAttribute::Enumerable,
-         JS::PropertyAttribute::Writable}))) return true;
+         JS::PropertyAttribute::Writable})));
+    return true;
   }
 #endif
 
