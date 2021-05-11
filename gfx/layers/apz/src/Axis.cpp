@@ -157,7 +157,7 @@ void Axis::OverscrollBy(ParentLayerCoord aOverscroll) {
   aOverscroll = ApplyResistance(aOverscroll);
   if (aOverscroll > 0) {
 #ifdef DEBUG
-    if (!FuzzyEqualsCoordinate(GetCompositionEnd().value, GetPageEnd().value)) {
+    if (!IsScrolledToEnd()) {
       nsPrintfCString message(
           "composition end (%f) is not equal (within error) to page end (%f)\n",
           GetCompositionEnd().value, GetPageEnd().value);
@@ -168,7 +168,7 @@ void Axis::OverscrollBy(ParentLayerCoord aOverscroll) {
     MOZ_ASSERT(mOverscroll >= 0);
   } else if (aOverscroll < 0) {
 #ifdef DEBUG
-    if (!FuzzyEqualsCoordinate(GetOrigin().value, GetPageStart().value)) {
+    if (!IsScrolledToStart()) {
       nsPrintfCString message(
           "composition origin (%f) is not equal (within error) to page origin "
           "(%f)\n",
@@ -242,6 +242,23 @@ bool Axis::IsOverscrollAnimationAlive() const {
 }
 
 bool Axis::IsOverscrolled() const { return mOverscroll != 0.f; }
+
+bool Axis::IsScrolledToStart() const {
+  return FuzzyEqualsCoordinate(GetOrigin().value, GetPageStart().value);
+}
+
+bool Axis::IsScrolledToEnd() const {
+  return FuzzyEqualsCoordinate(GetCompositionEnd().value, GetPageEnd().value);
+}
+
+bool Axis::IsInInvalidOverscroll() const {
+  if (mOverscroll > 0) {
+    return !IsScrolledToEnd();
+  } else if (mOverscroll < 0) {
+    return !IsScrolledToStart();
+  }
+  return false;
+}
 
 void Axis::ClearOverscroll() {
   EndOverscrollAnimation();

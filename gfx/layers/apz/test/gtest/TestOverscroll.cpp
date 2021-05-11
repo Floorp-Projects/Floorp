@@ -1416,7 +1416,7 @@ TEST_F(APZCOverscrollTester, DynamicallyLoadingContent) {
   // Pan to the bottom of the page, and further, into overscroll.
   ScreenIntPoint panPoint(50, 50);
   PanGesture(PanGestureInput::PANGESTURE_START, apzc, panPoint,
-             ScreenPoint(0, -1), mcc->Time());
+             ScreenPoint(0, 1), mcc->Time());
   for (int i = 0; i < 12; ++i) {
     mcc->AdvanceByMillis(10);
     PanGesture(PanGestureInput::PANGESTURE_PAN, apzc, panPoint,
@@ -1434,6 +1434,30 @@ TEST_F(APZCOverscrollTester, DynamicallyLoadingContent) {
 
   // Check that the modified scrollable rect cleared the overscroll.
   EXPECT_FALSE(apzc->IsOverscrolled());
+
+  // Pan back up to the top, and further, into overscroll.
+  PanGesture(PanGestureInput::PANGESTURE_START, apzc, panPoint,
+             ScreenPoint(0, -1), mcc->Time());
+  for (int i = 0; i < 12; ++i) {
+    mcc->AdvanceByMillis(10);
+    PanGesture(PanGestureInput::PANGESTURE_PAN, apzc, panPoint,
+               ScreenPoint(0, -100), mcc->Time());
+  }
+  EXPECT_TRUE(apzc->IsOverscrolled());
+  ParentLayerPoint overscrollAmount = apzc->GetOverscrollAmount();
+  EXPECT_TRUE(overscrollAmount.y < 0);  // overscrolled at top
+
+  // Grow the scrollable rect at the bottom again.
+  scrollableRect = metrics.GetScrollableRect();
+  scrollableRect.height += 500;
+  metrics.SetScrollableRect(scrollableRect);
+  apzc->NotifyLayersUpdated(metadata, false, true);
+
+  // Check that the modified scrollable rect did NOT clear overscroll at the
+  // top.
+  EXPECT_TRUE(apzc->IsOverscrolled());
+  EXPECT_EQ(overscrollAmount,
+            apzc->GetOverscrollAmount());  // overscroll did not change at all
 }
 #endif
 
