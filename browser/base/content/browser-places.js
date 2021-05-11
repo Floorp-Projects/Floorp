@@ -380,7 +380,6 @@ var StarUI = {
     }
 
     this._batchBlockingDeferred.resolve();
-    this._batchBlockingDeferred = null;
     this._batching = false;
   },
 
