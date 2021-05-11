@@ -560,6 +560,8 @@ GeckoDriver.prototype.newSession = async function(cmd) {
         this.registerBrowser(contentBrowser);
       }
     }
+
+    this.registerListenersForWindow(win);
   }
 
   if (this.mainFrame) {
@@ -576,10 +578,10 @@ GeckoDriver.prototype.newSession = async function(cmd) {
   this.dialogObserver = new modal.DialogObserver(() => this.curBrowser);
   this.dialogObserver.add(this.handleModalDialog.bind(this));
 
-  Services.obs.addObserver(this, "browsing-context-attached");
-
   // Check if there is already an open dialog for the selected browser window.
   this.dialog = modal.findModalDialogs(this.curBrowser);
+
+  Services.obs.addObserver(this, "browser-delayed-startup-finished");
 
   return {
     sessionId: this.currentSession.id,
@@ -587,37 +589,58 @@ GeckoDriver.prototype.newSession = async function(cmd) {
   };
 };
 
-GeckoDriver.prototype.observe = function(subject, topic, data) {
-  switch (topic) {
-    case "browsing-context-attached":
-      // For cross-group navigations the complete browsing context tree of a tab
-      // gets replaced. An indication for that is when the newly attached
-      // browsing context has the same browserId as the currently selected
-      // content browsing context, and doesn't have a parent.
-      //
-      // Also the current content browsing context gets only updated when it's
-      // the top-level one to not automatically switch away from the currently
-      // selected frame.
-      if (
-        subject.browserId ==
-          this.currentSession.contentBrowsingContext?.browserId &&
-        !subject.parent &&
-        !this.currentSession.contentBrowsingContext?.parent
-      ) {
+/**
+ * Register event listeners for the specified window.
+ *
+ * @param {ChromeWindow} win
+ *     Chrome window to register event listeners for.
+ */
+GeckoDriver.prototype.registerListenersForWindow = function(win) {
+  const tabBrowser = browser.getTabBrowser(win);
+
+  // Listen for any kind of top-level process switch
+  tabBrowser?.addEventListener("XULFrameLoaderCreated", this);
+};
+
+/**
+ * Unregister event listeners for the specified window.
+ *
+ * @param {ChromeWindow} win
+ *     Chrome window to unregister event listeners for.
+ */
+GeckoDriver.prototype.unregisterListenersForWindow = function(win) {
+  const tabBrowser = browser.getTabBrowser(win);
+
+  tabBrowser?.removeEventListener("XULFrameLoaderCreated", this);
+};
+
+GeckoDriver.prototype.handleEvent = function({ target, type }) {
+  switch (type) {
+    case "XULFrameLoaderCreated":
+      if (target === this.curBrowser.contentBrowser) {
         logger.trace(
           "Remoteness change detected. Set new top-level browsing context " +
-            `to ${subject.id}`
+            `to ${target.browsingContext.id}`
         );
-        this.currentSession.contentBrowsingContext = subject;
+
+        this.currentSession.contentBrowsingContext = target.browsingContext;
 
         // Manually update the stored browsing context id.
         // Switching to browserId instead of browsingContext.id would make
         // this call unnecessary. See Bug 1681973.
         windowManager.updateIdForBrowser(
           this.curBrowser.contentBrowser,
-          subject.id
+          target.browsingContext.id
         );
       }
+      break;
+  }
+};
+
+GeckoDriver.prototype.observe = function(subject, topic, data) {
+  switch (topic) {
+    case "browser-delayed-startup-finished":
+      this.registerListenersForWindow(subject);
       break;
   }
 };
@@ -2220,6 +2243,10 @@ GeckoDriver.prototype.deleteSession = function() {
   unregisterCommandsActor();
   unregisterEventsActor();
 
+  for (let win of windowManager.windows) {
+    this.unregisterListenersForWindow(win);
+  }
+
   // reset to the top-most frame
   this.mainFrame = null;
 
@@ -2228,7 +2255,7 @@ GeckoDriver.prototype.deleteSession = function() {
     this.dialogObserver = null;
   }
 
-  Services.obs.removeObserver(this, "browsing-context-attached");
+  Services.obs.removeObserver(this, "browser-delayed-startup-finished");
 
   this.currentSession.destroy();
   this.currentSession = null;

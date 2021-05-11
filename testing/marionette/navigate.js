@@ -273,10 +273,10 @@ navigate.waitForNavigationCompleted = async function waitForNavigationCompleted(
   };
 
   const onNavigation = (eventName, data) => {
-    // Only care about navigation events from the actor of the current frame.
-    // Bug 1674329: Always use the currently active browsing context,
-    // and not the original one to not cause hangs for remoteness changes.
-    if (data.browsingContext != browsingContextFn()) {
+    const browsingContext = browsingContextFn();
+
+    // Ignore events from other browsing contexts than the selected one.
+    if (data.browsingContext != browsingContext) {
       return;
     }
 
