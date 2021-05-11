@@ -1766,32 +1766,23 @@ static float GetSVGFontSizeScaleFactor(nsIFrame* aFrame) {
   return static_cast<SVGTextFrame*>(container)->GetFontSizeScaleFactor();
 }
 
-static nscoord LetterSpacing(nsIFrame* aFrame,
-                             const nsStyleText* aStyleText = nullptr) {
-  if (!aStyleText) {
-    aStyleText = aFrame->StyleText();
-  }
-
+static nscoord LetterSpacing(nsIFrame* aFrame, const nsStyleText& aStyleText) {
   if (SVGUtils::IsInSVGTextSubtree(aFrame)) {
     // SVG text can have a scaling factor applied so that very small or very
     // large font-sizes don't suffer from poor glyph placement due to app unit
     // rounding. The used letter-spacing value must be scaled by the same
     // factor.
-    Length spacing = aStyleText->mLetterSpacing;
+    Length spacing = aStyleText.mLetterSpacing;
     spacing.ScaleBy(GetSVGFontSizeScaleFactor(aFrame));
     return spacing.ToAppUnits();
   }
 
-  return aStyleText->mLetterSpacing.ToAppUnits();
+  return aStyleText.mLetterSpacing.ToAppUnits();
 }
 
 // This function converts non-coord values (e.g. percentages) to nscoord.
 static nscoord WordSpacing(nsIFrame* aFrame, const gfxTextRun* aTextRun,
-                           const nsStyleText* aStyleText = nullptr) {
-  if (!aStyleText) {
-    aStyleText = aFrame->StyleText();
-  }
-
+                           const nsStyleText& aStyleText) {
   if (SVGUtils::IsInSVGTextSubtree(aFrame)) {
     // SVG text can have a scaling factor applied so that very small or very
     // large font-sizes don't suffer from poor glyph placement due to app unit
@@ -1799,12 +1790,12 @@ static nscoord WordSpacing(nsIFrame* aFrame, const gfxTextRun* aTextRun,
     // factor, although any percentage basis has already effectively been
     // scaled, since it's the space glyph width, which is based on the already-
     // scaled font-size.
-    auto spacing = aStyleText->mWordSpacing;
+    auto spacing = aStyleText.mWordSpacing;
     spacing.ScaleLengthsBy(GetSVGFontSizeScaleFactor(aFrame));
     return spacing.Resolve([&] { return GetSpaceWidthAppUnits(aTextRun); });
   }
 
-  return aStyleText->mWordSpacing.Resolve(
+  return aStyleText.mWordSpacing.Resolve(
       [&] { return GetSpaceWidthAppUnits(aTextRun); });
 }
 
@@ -1978,8 +1969,8 @@ bool BuildTextRunsScanner::ContinueTextRunAcrossFrames(nsTextFrame* aFrame1,
 
   const nsStyleFont* fontStyle1 = sc1->StyleFont();
   const nsStyleFont* fontStyle2 = sc2->StyleFont();
-  nscoord letterSpacing1 = LetterSpacing(aFrame1);
-  nscoord letterSpacing2 = LetterSpacing(aFrame2);
+  nscoord letterSpacing1 = LetterSpacing(aFrame1, *textStyle1);
+  nscoord letterSpacing2 = LetterSpacing(aFrame2, *textStyle2);
   return fontStyle1->mFont == fontStyle2->mFont &&
          fontStyle1->mLanguage == fontStyle2->mLanguage &&
          nsLayoutUtils::GetTextRunFlagsForStyle(sc1, pc, fontStyle1, textStyle1,
@@ -2416,7 +2407,7 @@ already_AddRefed<gfxTextRun> BuildTextRunsScanner::BuildTextRunForFrames(
   // last frame's style
   flags |= nsLayoutUtils::GetTextRunFlagsForStyle(
       lastComputedStyle, firstFrame->PresContext(), fontStyle, textStyle,
-      LetterSpacing(firstFrame, textStyle));
+      LetterSpacing(firstFrame, *textStyle));
   // XXX this is a bit of a hack. For performance reasons, if we're favouring
   // performance over quality, don't try to get accurate glyph extents.
   if (!(flags & gfx::ShapedTextFlags::TEXT_OPTIMIZE_SPEED)) {
@@ -3250,8 +3241,8 @@ nsTextFrame::PropertyProvider::PropertyProvider(
       mTabWidths(nullptr),
       mTabWidthsAnalyzedLimit(0),
       mLength(aLength),
-      mWordSpacing(WordSpacing(aFrame, mTextRun, aTextStyle)),
-      mLetterSpacing(LetterSpacing(aFrame, aTextStyle)),
+      mWordSpacing(WordSpacing(aFrame, mTextRun, *aTextStyle)),
+      mLetterSpacing(LetterSpacing(aFrame, *aTextStyle)),
       mMinTabAdvance(-1.0),
       mHyphenWidth(-1),
       mOffsetFromBlockOriginForTabs(aOffsetFromBlockOriginForTabs),
@@ -3276,8 +3267,8 @@ nsTextFrame::PropertyProvider::PropertyProvider(
       mTabWidths(nullptr),
       mTabWidthsAnalyzedLimit(0),
       mLength(aFrame->GetContentLength()),
-      mWordSpacing(WordSpacing(aFrame, mTextRun)),
-      mLetterSpacing(LetterSpacing(aFrame)),
+      mWordSpacing(WordSpacing(aFrame, mTextRun, *mTextStyle)),
+      mLetterSpacing(LetterSpacing(aFrame, *mTextStyle)),
       mMinTabAdvance(-1.0),
       mHyphenWidth(-1),
       mOffsetFromBlockOriginForTabs(0),
