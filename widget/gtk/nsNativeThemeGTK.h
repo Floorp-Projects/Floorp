@@ -11,19 +11,26 @@
 #include "nsAtom.h"
 #include "nsNativeTheme.h"
 #include "nsStyleConsts.h"
+#include "nsNativeBasicThemeGTK.h"
 
 #include <gtk/gtk.h>
 #include "gtkdrawing.h"
 
-class nsNativeThemeGTK final : private nsNativeTheme, public nsITheme {
+class nsNativeThemeGTK final : public nsNativeBasicThemeGTK {
  public:
-  NS_DECL_ISUPPORTS_INHERITED
 
   // The nsITheme interface.
   NS_IMETHOD DrawWidgetBackground(gfxContext* aContext, nsIFrame* aFrame,
                                   StyleAppearance aAppearance,
                                   const nsRect& aRect, const nsRect& aDirtyRect,
                                   DrawOverflow) override;
+
+  bool CreateWebRenderCommandsForWidget(
+      mozilla::wr::DisplayListBuilder& aBuilder,
+      mozilla::wr::IpcResourceUpdateQueue& aResources,
+      const mozilla::layers::StackingContextHelper& aSc,
+      mozilla::layers::RenderRootStateManager* aManager, nsIFrame*,
+      StyleAppearance, const nsRect& aRect) override;
 
   [[nodiscard]] LayoutDeviceIntMargin GetWidgetBorder(
       nsDeviceContext* aContext, nsIFrame* aFrame,
@@ -36,6 +43,8 @@ class nsNativeThemeGTK final : private nsNativeTheme, public nsITheme {
   bool GetWidgetOverflow(nsDeviceContext* aContext, nsIFrame* aFrame,
                          StyleAppearance aAppearance,
                          nsRect* aOverflowRect) override;
+
+  static bool IsNonNativeWidgetType(StyleAppearance aAppearance);
 
   NS_IMETHOD GetMinimumWidgetSize(nsPresContext* aPresContext, nsIFrame* aFrame,
                                   StyleAppearance aAppearance,
@@ -59,7 +68,6 @@ class nsNativeThemeGTK final : private nsNativeTheme, public nsITheme {
 
   bool ThemeNeedsComboboxDropmarker() override;
   Transparency GetWidgetTransparency(nsIFrame*, StyleAppearance) override;
-  bool WidgetAppearanceDependsOnWindowFocus(StyleAppearance) override;
   ScrollbarSizes GetScrollbarSizes(nsPresContext*, StyleScrollbarWidth,
                                    Overlay) override;
 

@@ -63,8 +63,6 @@ using namespace mozilla::gfx;
 using namespace mozilla::widget;
 using mozilla::dom::HTMLInputElement;
 
-NS_IMPL_ISUPPORTS_INHERITED(nsNativeThemeGTK, nsNativeTheme, nsITheme)
-
 static int gLastGdkError;
 
 // Return scale factor of the monitor where the window is located
@@ -111,9 +109,7 @@ nsNativeThemeGTK::nsNativeThemeGTK() {
   ThemeChanged();
 }
 
-nsNativeThemeGTK::~nsNativeThemeGTK() {
-  moz_gtk_shutdown();
-}
+nsNativeThemeGTK::~nsNativeThemeGTK() { moz_gtk_shutdown(); }
 
 void nsNativeThemeGTK::RefreshWidgetWindow(nsIFrame* aFrame) {
   MOZ_ASSERT(aFrame);
@@ -194,12 +190,12 @@ gint nsNativeThemeGTK::GetTabMarginPixels(nsIFrame* aFrame) {
 
 static bool ShouldScrollbarButtonBeDisabled(int32_t aCurpos, int32_t aMaxpos,
                                             StyleAppearance aAppearance) {
-  return (
-      (aCurpos == 0 && (aAppearance == StyleAppearance::ScrollbarbuttonUp ||
-                        aAppearance == StyleAppearance::ScrollbarbuttonLeft)) ||
-      (aCurpos == aMaxpos &&
-       (aAppearance == StyleAppearance::ScrollbarbuttonDown ||
-        aAppearance == StyleAppearance::ScrollbarbuttonRight)));
+  return (aCurpos == 0 &&
+          (aAppearance == StyleAppearance::ScrollbarbuttonUp ||
+           aAppearance == StyleAppearance::ScrollbarbuttonLeft)) ||
+         (aCurpos == aMaxpos &&
+          (aAppearance == StyleAppearance::ScrollbarbuttonDown ||
+           aAppearance == StyleAppearance::ScrollbarbuttonRight));
 }
 
 bool nsNativeThemeGTK::GetGtkWidgetAndState(StyleAppearance aAppearance,
@@ -1069,7 +1065,13 @@ NS_IMETHODIMP
 nsNativeThemeGTK::DrawWidgetBackground(gfxContext* aContext, nsIFrame* aFrame,
                                        StyleAppearance aAppearance,
                                        const nsRect& aRect,
-                                       const nsRect& aDirtyRect, DrawOverflow) {
+                                       const nsRect& aDirtyRect,
+                                       DrawOverflow aDrawOverflow) {
+  if (IsNonNativeWidgetType(aAppearance)) {
+    return nsNativeBasicThemeGTK::DrawWidgetBackground(
+        aContext, aFrame, aAppearance, aRect, aDirtyRect, aDrawOverflow);
+  }
+
   GtkWidgetState state;
   WidgetNodeType gtkWidgetType;
   GtkTextDirection direction = GetTextDirection(aFrame);
@@ -1183,6 +1185,19 @@ nsNativeThemeGTK::DrawWidgetBackground(gfxContext* aContext, nsIFrame* aFrame,
   }
 
   return NS_OK;
+}
+
+bool nsNativeThemeGTK::CreateWebRenderCommandsForWidget(
+    mozilla::wr::DisplayListBuilder& aBuilder,
+    mozilla::wr::IpcResourceUpdateQueue& aResources,
+    const mozilla::layers::StackingContextHelper& aSc,
+    mozilla::layers::RenderRootStateManager* aManager, nsIFrame* aFrame,
+    StyleAppearance aAppearance, const nsRect& aRect) {
+  if (IsNonNativeWidgetType(aAppearance)) {
+    return nsNativeBasicThemeGTK::CreateWebRenderCommandsForWidget(
+        aBuilder, aResources, aSc, aManager, aFrame, aAppearance, aRect);
+  }
+  return false;
 }
 
 WidgetNodeType nsNativeThemeGTK::NativeThemeToGtkTheme(
@@ -1389,8 +1404,15 @@ bool nsNativeThemeGTK::GetWidgetOverflow(nsDeviceContext* aContext,
                                          nsIFrame* aFrame,
                                          StyleAppearance aAppearance,
                                          nsRect* aOverflowRect) {
+  if (IsNonNativeWidgetType(aAppearance)) {
+    return nsNativeBasicThemeGTK::GetWidgetOverflow(aContext, aFrame,
+                                                    aAppearance, aOverflowRect);
+  }
+
   nsIntMargin extraSize;
-  if (!GetExtraSizeForWidget(aFrame, aAppearance, &extraSize)) return false;
+  if (!GetExtraSizeForWidget(aFrame, aAppearance, &extraSize)) {
+    return false;
+  }
 
   int32_t p2a = aContext->AppUnitsPerDevPixel();
   nsMargin m(NSIntPixelsToAppUnits(extraSize.top, p2a),
@@ -1402,12 +1424,22 @@ bool nsNativeThemeGTK::GetWidgetOverflow(nsDeviceContext* aContext,
   return true;
 }
 
+bool nsNativeThemeGTK::IsNonNativeWidgetType(StyleAppearance aAppearance) {
+  return StaticPrefs::widget_non_native_theme_enabled() &&
+         IsWidgetScrollbarPart(aAppearance);
+}
+
 NS_IMETHODIMP
 nsNativeThemeGTK::GetMinimumWidgetSize(nsPresContext* aPresContext,
                                        nsIFrame* aFrame,
                                        StyleAppearance aAppearance,
                                        LayoutDeviceIntSize* aResult,
                                        bool* aIsOverridable) {
+  if (IsNonNativeWidgetType(aAppearance)) {
+    return nsNativeBasicThemeGTK::GetMinimumWidgetSize(
+        aPresContext, aFrame, aAppearance, aResult, aIsOverridable);
+  }
+
   aResult->width = aResult->height = 0;
   *aIsOverridable = true;
 
@@ -1650,6 +1682,13 @@ nsNativeThemeGTK::WidgetStateChanged(nsIFrame* aFrame,
                                      StyleAppearance aAppearance,
                                      nsAtom* aAttribute, bool* aShouldRepaint,
                                      const nsAttrValue* aOldValue) {
+  *aShouldRepaint = false;
+
+  if (IsNonNativeWidgetType(aAppearance)) {
+    return nsNativeBasicThemeGTK::WidgetStateChanged(
+        aFrame, aAppearance, aAttribute, aShouldRepaint, aOldValue);
+  }
+
   // Some widget types just never change state.
   if (aAppearance == StyleAppearance::Toolbox ||
       aAppearance == StyleAppearance::Toolbar ||
@@ -1661,7 +1700,6 @@ nsNativeThemeGTK::WidgetStateChanged(nsIFrame* aFrame,
       aAppearance == StyleAppearance::Menubar ||
       aAppearance == StyleAppearance::Tooltip ||
       aAppearance == StyleAppearance::Menuseparator) {
-    *aShouldRepaint = false;
     return NS_OK;
   }
 
@@ -1717,20 +1755,22 @@ nsNativeThemeGTK::WidgetStateChanged(nsIFrame* aFrame,
   if (!aAttribute) {
     // Hover/focus/active changed.  Always repaint.
     *aShouldRepaint = true;
-  } else {
-    // Check the attribute to see if it's relevant.
-    // disabled, checked, dlgtype, default, etc.
-    *aShouldRepaint = false;
-    if (aAttribute == nsGkAtoms::disabled || aAttribute == nsGkAtoms::checked ||
-        aAttribute == nsGkAtoms::selected ||
-        aAttribute == nsGkAtoms::visuallyselected ||
-        aAttribute == nsGkAtoms::focused || aAttribute == nsGkAtoms::readonly ||
-        aAttribute == nsGkAtoms::_default ||
-        aAttribute == nsGkAtoms::menuactive || aAttribute == nsGkAtoms::open ||
-        aAttribute == nsGkAtoms::parentfocused)
-      *aShouldRepaint = true;
+    return NS_OK;
   }
 
+  // Check the attribute to see if it's relevant.
+  // disabled, checked, dlgtype, default, etc.
+  *aShouldRepaint = false;
+  if (aAttribute == nsGkAtoms::disabled || aAttribute == nsGkAtoms::checked ||
+      aAttribute == nsGkAtoms::selected ||
+      aAttribute == nsGkAtoms::visuallyselected ||
+      aAttribute == nsGkAtoms::focused || aAttribute == nsGkAtoms::readonly ||
+      aAttribute == nsGkAtoms::_default ||
+      aAttribute == nsGkAtoms::menuactive || aAttribute == nsGkAtoms::open ||
+      aAttribute == nsGkAtoms::parentfocused) {
+    *aShouldRepaint = true;
+    return NS_OK;
+  }
   return NS_OK;
 }
 
@@ -1753,6 +1793,11 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
                                       StyleAppearance aAppearance) {
   if (IsWidgetTypeDisabled(mDisabledWidgetTypes, aAppearance)) {
     return false;
+  }
+
+  if (IsNonNativeWidgetType(aAppearance)) {
+    return nsNativeBasicThemeGTK::ThemeSupportsWidget(aPresContext, aFrame,
+                                                      aAppearance);
   }
 
   if (IsWidgetScrollbarPart(aAppearance)) {
@@ -1903,6 +1948,10 @@ bool nsNativeThemeGTK::ThemeNeedsComboboxDropmarker() { return false; }
 
 nsITheme::Transparency nsNativeThemeGTK::GetWidgetTransparency(
     nsIFrame* aFrame, StyleAppearance aAppearance) {
+  if (IsNonNativeWidgetType(aAppearance)) {
+    return nsNativeBasicThemeGTK::GetWidgetTransparency(aFrame, aAppearance);
+  }
+
   switch (aAppearance) {
     case StyleAppearance::ScrollbarVertical:
     case StyleAppearance::ScrollbarHorizontal:
@@ -1923,28 +1972,14 @@ nsITheme::Transparency nsNativeThemeGTK::GetWidgetTransparency(
   }
 }
 
-bool nsNativeThemeGTK::WidgetAppearanceDependsOnWindowFocus(
-    StyleAppearance aAppearance) {
-  switch (aAppearance) {
-    case StyleAppearance::ScrollbarbuttonUp:
-    case StyleAppearance::ScrollbarbuttonDown:
-    case StyleAppearance::ScrollbarbuttonLeft:
-    case StyleAppearance::ScrollbarbuttonRight:
-    case StyleAppearance::ScrollbarVertical:
-    case StyleAppearance::ScrollbarHorizontal:
-    case StyleAppearance::ScrollbartrackHorizontal:
-    case StyleAppearance::ScrollbartrackVertical:
-    case StyleAppearance::ScrollbarthumbVertical:
-    case StyleAppearance::ScrollbarthumbHorizontal:
-      return true;
-    default:
-      return false;
-  }
-}
-
 auto nsNativeThemeGTK::GetScrollbarSizes(nsPresContext* aPresContext,
-                                         StyleScrollbarWidth aWidth, Overlay)
-    -> ScrollbarSizes {
+                                         StyleScrollbarWidth aWidth,
+                                         Overlay aOverlay) -> ScrollbarSizes {
+  if (StaticPrefs::widget_non_native_theme_enabled()) {
+    return nsNativeBasicThemeGTK::GetScrollbarSizes(aPresContext, aWidth,
+                                                    aOverlay);
+  }
+
   CSSIntCoord vertical;
   CSSIntCoord horizontal;
   if (aWidth != StyleScrollbarWidth::Thin) {
