@@ -224,7 +224,7 @@ class MOZ_STACK_CLASS BaselineStackBuilder {
   }
 
   bool needToSaveCallerArgs() const {
-    return op_ == JSOp::FunApply || IsIonInlinableGetterOrSetterOp(op_);
+    return IsIonInlinableGetterOrSetterOp(op_);
   }
 
   [[nodiscard]] bool enlarge() {
@@ -743,8 +743,8 @@ bool BaselineStackBuilder::buildFixedSlots() {
   return true;
 }
 
-// The caller side of inlined JSOp::FunCall, JSOp::FunApply, and
-// accessors must look like the function wasn't inlined.
+// The caller side of inlined JSOp::FunCall and accessors must look
+// like the function wasn't inlined.
 bool BaselineStackBuilder::fixUpCallerArgs(
     MutableHandleValueVector savedCallerArgs, bool* fixedUp) {
   MOZ_ASSERT(!*fixedUp);
@@ -763,11 +763,6 @@ bool BaselineStackBuilder::fixUpCallerArgs(
     // The first argument to an inlined FunCall becomes |this|,
     // if it exists. The rest are passed normally.
     inlinedArgs += GET_ARGC(pc_) > 0 ? GET_ARGC(pc_) - 1 : 0;
-  } else if (op_ == JSOp::FunApply) {
-    // We currently only support FunApplyArgs. The number of arguments
-    // passed to the inlined function is the number of arguments to the
-    // current frame.
-    inlinedArgs += blFrame()->numActualArgs();
   } else {
     MOZ_ASSERT(IsIonInlinableGetterOrSetterOp(op_));
     // Setters are passed one argument. Getters are passed none.
@@ -791,10 +786,10 @@ bool BaselineStackBuilder::fixUpCallerArgs(
     }
   }
 
-  // When we inline JSOp::FunCall or JSOp::FunApply, we bypass the
-  // native and inline the target directly. When rebuilding the stack,
-  // we need to fill in the right number of slots to make it look like
-  // the js_native was actually called.
+  // When we inline JSOp::FunCall, we bypass the native and inline the
+  // target directly. When rebuilding the stack, we need to fill in
+  // the right number of slots to make it look like the js_native was
+  // actually called.
   if (op_ == JSOp::FunCall) {
     // We must transform the stack from |target, this, args| to
     // |js_fun_call, target, this, args|. The value of |js_fun_call|
@@ -825,19 +820,6 @@ bool BaselineStackBuilder::fixUpCallerArgs(
       }
       // Skip |this|.
       iter_.skip();
-    }
-  } else if (op_ == JSOp::FunApply) {
-    // We currently only support FunApplyArgs. We must transform the
-    // stack from |target, this, arg1, ...| to |js_fun_apply, target,
-    // this, argObject|. These values will never be observed, so we
-    // can just push |undefined|.
-    JitSpew(JitSpew_BaselineBailouts,
-            "      pushing 4x undefined to fixup funapply");
-    if (!writeValue(UndefinedValue(), "StackValue") ||
-        !writeValue(UndefinedValue(), "StackValue") ||
-        !writeValue(UndefinedValue(), "StackValue") ||
-        !writeValue(UndefinedValue(), "StackValue")) {
-      return false;
     }
   }
 
@@ -988,14 +970,10 @@ bool BaselineStackBuilder::buildStubFrame(uint32_t frameSize,
   unsigned actualArgc;
   Value callee;
   if (needToSaveCallerArgs()) {
-    // For FunApply or an accessor, the arguments are not on the stack anymore,
+    // For accessors, the arguments are not on the stack anymore,
     // but they are copied in a vector and are written here.
-    if (op_ == JSOp::FunApply) {
-      actualArgc = blFrame()->numActualArgs();
-    } else {
-      actualArgc = IsSetPropOp(op_);
-    }
     callee = savedCallerArgs[0];
+    actualArgc = IsSetPropOp(op_) ? 1 : 0;
 
     // Align the stack based on the number of arguments.
     size_t afterFrameSize =
@@ -1317,13 +1295,6 @@ bool BaselineStackBuilder::validateFrame() {
     return true;
   }
 
-  // For FunApplyArgs, the reconstructed stack depth will be 4, but we
-  // may have inlined the funapply. In that case, exprStackSlots will
-  // have the real arguments in the slots, and the stack depth may not
-  // be 4. Don't assert.
-  if (op_ == JSOp::FunApply && iter_.moreFrames() && !resumeAfter()) {
-    return true;
-  }
   if (op_ == JSOp::FunCall) {
     // For fun.call(this, ...); the reconstructed stack depth will
     // include the this. When inlining that is not included.

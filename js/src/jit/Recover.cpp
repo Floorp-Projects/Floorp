@@ -90,19 +90,14 @@ bool MResumePoint::writeRecoverData(CompactBufferWriter& writer) const {
         // include the this. When inlining that is not included.  So the
         // exprStackSlots will be one less.
         MOZ_ASSERT(stackDepth - exprStack <= 1);
-      } else if (bailOp != JSOp::FunApply &&
-                 !IsIonInlinableGetterOrSetterOp(bailOp)) {
-        // For fun.apply({}, arguments) the reconstructStackDepth will
-        // have stackdepth 4, but it could be that we inlined the
-        // funapply. In that case exprStackSlots, will have the real
-        // arguments in the slots and not be 4.
-
+      } else {
         // With accessors, we have different stack depths depending on
         // whether or not we inlined the accessor, as the inlined stack
         // contains a callee function that should never have been there
         // and we might just be capturing an uneventful property site,
         // in which case there won't have been any violence.
-        MOZ_ASSERT(exprStack == stackDepth);
+        MOZ_ASSERT_IF(!IsIonInlinableGetterOrSetterOp(bailOp),
+                      exprStack == stackDepth);
       }
     }
   }
