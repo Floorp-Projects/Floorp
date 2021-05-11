@@ -14409,16 +14409,21 @@ class CGDOMJSProxyHandler_getOwnPropDescriptor(ClassMethod):
             xrayCheck = "!isXray &&"
 
         if self.descriptor.supportsIndexedProperties():
-            readonly = toStringBool(indexedSetter is None)
-            fillDescriptor = (
-                "FillPropertyDescriptor(cx, desc, proxy, value, %s);\nreturn true;\n"
-                % readonly
+            attributes = [
+                "JS::PropertyAttribute::Configurable",
+                "JS::PropertyAttribute::Enumerable",
+            ]
+            if indexedSetter is not None:
+                attributes.append("JS::PropertyAttribute::Writable")
+            setDescriptor = (
+                "desc.set(mozilla::Some(JS::PropertyDescriptor::Data(value, { %s })));\nreturn true;\n"
+                % ", ".join(attributes)
             )
             templateValues = {
                 "jsvalRef": "value",
                 "jsvalHandle": "&value",
                 "obj": "proxy",
-                "successCode": fillDescriptor,
+                "successCode": setDescriptor,
             }
             getIndexed = fill(
                 """
@@ -14440,17 +14445,20 @@ class CGDOMJSProxyHandler_getOwnPropDescriptor(ClassMethod):
 
         if self.descriptor.supportsNamedProperties():
             operations = self.descriptor.operations
-            readonly = toStringBool(operations["NamedSetter"] is None)
-            fillDescriptor = (
-                "FillPropertyDescriptor(cx, desc, proxy, value, %s, %s);\n"
-                "return true;\n"
-                % (readonly, toStringBool(self.descriptor.namedPropertiesEnumerable))
+            attributes = ["JS::PropertyAttribute::Configurable"]
+            if self.descriptor.namedPropertiesEnumerable:
+                attributes.append("JS::PropertyAttribute::Enumerable")
+            if operations["NamedSetter"] is not None:
+                attributes.append("JS::PropertyAttribute::Writable")
+            setDescriptor = (
+                "desc.set(mozilla::Some(JS::PropertyDescriptor::Data(value, { %s })));\nreturn true;\n"
+                % ", ".join(attributes)
             )
             templateValues = {
                 "jsvalRef": "value",
                 "jsvalHandle": "&value",
                 "obj": "proxy",
-                "successCode": fillDescriptor,
+                "successCode": setDescriptor,
             }
 
             computeCondition = dedent(

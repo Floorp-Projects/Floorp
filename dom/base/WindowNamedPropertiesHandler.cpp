@@ -85,9 +85,9 @@ bool WindowNamedPropertiesHandler::getOwnPropDescriptor(
         return false;
       }
 
-      JS::Rooted<JS::Value> v(aCx, JS::StringValue(toStringTagStr));
-      FillPropertyDescriptor(aCx, aDesc, aProxy, v, /* readonly = */ true,
-                             /* enumerable = */ false);
+      aDesc.set(Some(
+          JS::PropertyDescriptor::Data(JS::StringValue(toStringTagStr),
+                                       {JS::PropertyAttribute::Configurable})));
       return true;
     }
 
@@ -124,8 +124,9 @@ bool WindowNamedPropertiesHandler::getOwnPropDescriptor(
       if (!ToJSValue(aCx, WindowProxyHolder(std::move(child)), &v)) {
         return false;
       }
-      FillPropertyDescriptor(aCx, aDesc, aProxy, v, /* readonly = */ false,
-                             /* enumerable = */ false);
+      aDesc.set(mozilla::Some(
+          JS::PropertyDescriptor::Data(v, {JS::PropertyAttribute::Configurable,
+                                           JS::PropertyAttribute::Writable})));
       return true;
     }
   }
@@ -143,8 +144,9 @@ bool WindowNamedPropertiesHandler::getOwnPropDescriptor(
     if (!ToJSValue(aCx, element, &v)) {
       return false;
     }
-    FillPropertyDescriptor(aCx, aDesc, aProxy, v, /* readonly = */ false,
-                           /* enumerable = */ false);
+    aDesc.set(mozilla::Some(
+        JS::PropertyDescriptor::Data(v, {JS::PropertyAttribute::Configurable,
+                                         JS::PropertyAttribute::Writable})));
     return true;
   }
 
@@ -155,8 +157,9 @@ bool WindowNamedPropertiesHandler::getOwnPropDescriptor(
   }
 
   if (found) {
-    FillPropertyDescriptor(aCx, aDesc, aProxy, v, /* readonly = */ false,
-                           /* enumerable = */ false);
+    aDesc.set(mozilla::Some(
+        JS::PropertyDescriptor::Data(v, {JS::PropertyAttribute::Configurable,
+                                         JS::PropertyAttribute::Writable})));
   }
   return true;
 }
