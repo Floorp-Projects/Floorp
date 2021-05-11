@@ -1998,12 +1998,8 @@ class DebugEnvironmentProxyHandler : public BaseProxyHandler {
       return false;
     }
 
-    Rooted<PropertyDescriptor> desc_(cx);
-    desc_.setAttributes(JSPROP_READONLY | JSPROP_ENUMERATE | JSPROP_PERMANENT);
-    desc_.value().setObject(*argsObj);
-    desc_.setGetter(nullptr);
-    desc_.setSetter(nullptr);
-    desc.set(mozilla::Some(desc_.get()));
+    desc.set(mozilla::Some(PropertyDescriptor::Data(
+        ObjectValue(*argsObj), {JS::PropertyAttribute::Enumerable})));
     return true;
   }
   bool getMissingThisPropertyDescriptor(
@@ -2022,12 +2018,8 @@ class DebugEnvironmentProxyHandler : public BaseProxyHandler {
       return false;
     }
 
-    Rooted<PropertyDescriptor> desc_(cx);
-    desc_.setAttributes(JSPROP_READONLY | JSPROP_ENUMERATE | JSPROP_PERMANENT);
-    desc_.value().set(thisv);
-    desc_.setGetter(nullptr);
-    desc_.setSetter(nullptr);
-    desc.set(mozilla::Some(desc_.get()));
+    desc.set(mozilla::Some(
+        PropertyDescriptor::Data(thisv, {JS::PropertyAttribute::Enumerable})));
     return true;
   }
 
@@ -2054,13 +2046,8 @@ class DebugEnvironmentProxyHandler : public BaseProxyHandler {
 
     switch (access) {
       case ACCESS_UNALIASED: {
-        Rooted<PropertyDescriptor> desc_(cx);
-        desc_.setAttributes(JSPROP_READONLY | JSPROP_ENUMERATE |
-                            JSPROP_PERMANENT);
-        desc_.value().set(v);
-        desc_.setGetter(nullptr);
-        desc_.setSetter(nullptr);
-        desc.set(mozilla::Some(desc_.get()));
+        desc.set(mozilla::Some(
+            PropertyDescriptor::Data(v, {JS::PropertyAttribute::Enumerable})));
         return true;
       }
       case ACCESS_GENERIC:
