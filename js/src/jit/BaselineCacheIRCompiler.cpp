@@ -1881,7 +1881,7 @@ static void ResetEnteredCounts(ICFallbackStub* stub) {
 static ICStubSpace* StubSpaceForStub(bool makesGCCalls, JSScript* script,
                                      ICScript* icScript) {
   if (makesGCCalls) {
-    return icScript->fallbackStubSpace();
+    return icScript->jitScriptStubSpace();
   }
   return script->zone()->jitZone()->optimizedStubSpace();
 }
