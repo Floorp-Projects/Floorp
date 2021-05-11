@@ -776,18 +776,33 @@ bool nsNativeBasicTheme::ShouldUseDarkScrollbar(nsIFrame* aFrame,
   return nsNativeTheme::IsDarkBackground(aFrame);
 }
 
+// Don't use the theme color for dark scrollbars if it's not a color (if it's
+// grey-ish), as that'd either lack enough contrast, or be close to what we'd do
+// by default anyways.
+static bool ShouldUseColorForActiveDarkScrollbarThumb(nscolor aColor) {
+  auto IsDifferentEnough = [](int32_t aChannel, int32_t aOtherChannel) {
+    return std::abs(aChannel - aOtherChannel) > 10;
+  };
+  return IsDifferentEnough(NS_GET_R(aColor), NS_GET_G(aColor)) ||
+         IsDifferentEnough(NS_GET_R(aColor), NS_GET_B(aColor));
+}
+
 sRGBColor nsNativeBasicTheme::ComputeScrollbarThumbColor(
     nsIFrame* aFrame, const ComputedStyle& aStyle,
     const EventStates& aElementState, const EventStates& aDocumentState,
     UseSystemColors aUseSystemColors) {
   if (!bool(aUseSystemColors) && ShouldUseDarkScrollbar(aFrame, aStyle)) {
-    const bool forceThemed =
-        aElementState.HasState(NS_EVENT_STATE_ACTIVE) &&
-        StaticPrefs::widget_non_native_theme_scrollbar_active_always_themed();
-    if (!forceThemed) {
-      return sRGBColor::FromABGR(AdjustUnthemedScrollbarThumbColor(
-          NS_RGBA(249, 249, 250, 102), aElementState));
+    if (aElementState.HasState(NS_EVENT_STATE_ACTIVE) &&
+        StaticPrefs::widget_non_native_theme_scrollbar_active_always_themed()) {
+      auto color = LookAndFeel::GetColor(
+          StyleSystemColor::ThemedScrollbarThumbActive,
+          LookAndFeel::ColorScheme::Light, LookAndFeel::UseStandins::No);
+      if (color && ShouldUseColorForActiveDarkScrollbarThumb(*color)) {
+        return sRGBColor::FromABGR(*color);
+      }
     }
+    return sRGBColor::FromABGR(AdjustUnthemedScrollbarThumbColor(
+        NS_RGBA(249, 249, 250, 102), aElementState));
   }
 
   const nsStyleUI* ui = aStyle.StyleUI();
