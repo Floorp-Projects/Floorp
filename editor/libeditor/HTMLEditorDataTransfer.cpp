@@ -1629,9 +1629,24 @@ nsresult HTMLEditor::InsertObject(const nsACString& aType, nsISupports* aObject,
         return rv;
       }
     } else {
-      nsCOMPtr<nsIInputStream> imageStream = do_QueryInterface(aObject);
-      if (NS_WARN_IF(!imageStream)) {
-        return NS_ERROR_FAILURE;
+      nsCOMPtr<nsIInputStream> imageStream;
+      if (RefPtr<Blob> blob = do_QueryObject(aObject)) {
+        RefPtr<File> file = blob->ToFile();
+        if (!file) {
+          NS_WARNING("No mozilla::dom::File object");
+          return NS_ERROR_FAILURE;
+        }
+        ErrorResult error;
+        file->CreateInputStream(getter_AddRefs(imageStream), error);
+        if (error.Failed()) {
+          NS_WARNING("File::CreateInputStream() failed");
+          return error.StealNSResult();
+        }
+      } else {
+        imageStream = do_QueryInterface(aObject);
+        if (NS_WARN_IF(!imageStream)) {
+          return NS_ERROR_FAILURE;
+        }
       }
 
       nsresult rv = NS_ConsumeStream(imageStream, UINT32_MAX, imageData);
@@ -1825,12 +1840,13 @@ nsresult HTMLEditor::InsertFromDataTransfer(const DataTransfer* aDataTransfer,
                                             Document* aSourceDoc,
                                             const EditorDOMPoint& aDroppedAt,
                                             bool aDoDeleteSelection) {
-  MOZ_ASSERT(GetEditAction() == EditAction::eDrop);
-  MOZ_ASSERT(
-      mPlaceholderBatch,
-      "TextEditor::InsertFromDataTransfer() should be called only by OnDrop() "
-      "and there should've already been placeholder transaction");
-  MOZ_ASSERT(aDroppedAt.IsSet());
+  MOZ_ASSERT(GetEditAction() == EditAction::eDrop ||
+             GetEditAction() == EditAction::ePaste);
+  MOZ_ASSERT(mPlaceholderBatch,
+             "TextEditor::InsertFromDataTransfer() should be called by "
+             "OnDrop() or paste action "
+             "and there should've already been placeholder transaction");
+  MOZ_ASSERT_IF(GetEditAction() == EditAction::eDrop, aDroppedAt.IsSet());
 
   ErrorResult error;
   RefPtr<DOMStringList> types =
@@ -2080,6 +2096,8 @@ nsresult HTMLEditor::PasteTransferableAsAction(nsITransferable* aTransferable,
   if (NS_WARN_IF(!editActionData.CanHandle())) {
     return NS_ERROR_NOT_INITIALIZED;
   }
+  // InitializeDataTransfer may fetch input stream in aTransferable, so it
+  // may be invalid after calling this.
   editActionData.InitializeDataTransfer(aTransferable);
 
   // Use an invalid value for the clipboard type as data comes from
@@ -2097,11 +2115,23 @@ nsresult HTMLEditor::PasteTransferableAsAction(nsITransferable* aTransferable,
     return EditorBase::ToGenericNSResult(rv);
   }
 
-  nsAutoString contextStr, infoStr;
-  rv = InsertFromTransferable(aTransferable, nullptr, contextStr, infoStr,
-                              false, true);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "HTMLEditor::InsertFromTransferable() failed");
+  RefPtr<DataTransfer> dataTransfer = GetInputEventDataTransfer();
+  if (dataTransfer->HasFile() && dataTransfer->MozItemCount() > 0) {
+    // Now aTransferable has moved to DataTransfer. Use DataTransfer.
+    AutoPlaceholderBatch treatAsOneTransaction(*this,
+                                               ScrollSelectionIntoView::Yes);
+
+    rv = InsertFromDataTransfer(dataTransfer, 0, nullptr, EditorDOMPoint(),
+                                true);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                         "HTMLEditor::InsertFromDataTransfer() failed");
+  } else {
+    nsAutoString contextStr, infoStr;
+    rv = InsertFromTransferable(aTransferable, nullptr, contextStr, infoStr,
+                                false, true);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                         "HTMLEditor::InsertFromTransferable() failed");
+  }
   return EditorBase::ToGenericNSResult(rv);
 }
 
