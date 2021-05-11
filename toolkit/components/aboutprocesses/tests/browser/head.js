@@ -32,10 +32,6 @@ const HARDCODED_ASSUMPTIONS_THREAD = {
 // How close we accept our rounding up/down.
 const APPROX_FACTOR = 1.51;
 const MS_PER_NS = 1000000;
-const MEMORY_REGEXP = /([0-9.,]+)(TB|GB|MB|KB|B)( \(([-+]?)([0-9.,]+)(GB|MB|KB|B)\))?/;
-//Example: "383.55MB (-12.5MB)"
-const CPU_REGEXP = /(\~0%|idle|[0-9.,]+%|[?]) \(([0-9.,]+) ?(ns|µs|ms|s|m|h|d)\)/;
-//Example: "13% (4,470ms)"
 
 // Wait for `about:processes` to be updated.
 async function promiseAboutProcessesUpdated({
@@ -157,16 +153,19 @@ function getTimeMultiplier(unit) {
   }
   throw new Error("Invalid time unit: " + unit);
 }
-function testCpu(string, total, slope, assumptions) {
-  info(`Testing CPU display ${string} vs total ${total}, slope ${slope}`);
-  if (string == "(measuring)") {
+function testCpu(element, total, slope, assumptions) {
+  info(
+    `Testing CPU display ${element.textContent} - ${element.title} vs total ${total}, slope ${slope}`
+  );
+  if (element.textContent == "(measuring)") {
     info("Still measuring");
     return;
   }
-  let [, extractedPercentage, extractedTotal, extractedUnit] = CPU_REGEXP.exec(
-    string
-  );
 
+  const CPU_TEXT_CONTENT_REGEXP = /\~0%|idle|[0-9.,]+%|[?]/;
+  let extractedPercentage = CPU_TEXT_CONTENT_REGEXP.exec(
+    element.textContent
+  )[0];
   switch (extractedPercentage) {
     case "idle":
       Assert.equal(slope, 0, "Idle means exactly 0%");
@@ -204,6 +203,13 @@ function testCpu(string, total, slope, assumptions) {
     }
   }
 
+  const CPU_TOOLTIP_REGEXP = /(?:.*: ([0-9.,]+) ?(ns|µs|ms|s|m|h|d))/;
+  // Example: "Total CPU time: 4,470ms"
+
+  let [, extractedTotal, extractedUnit] = CPU_TOOLTIP_REGEXP.exec(
+    element.title
+  );
+
   let totalMS = total / MS_PER_NS;
   let computedTotal =
     // We produce localized numbers, with "," as a thousands separator in en-US builds,
@@ -222,26 +228,20 @@ function testCpu(string, total, slope, assumptions) {
   );
 }
 
-function testMemory(string, total, delta, assumptions) {
-  Assert.ok(
-    true,
-    `Testing memory display ${string} vs total ${total}, delta ${delta}`
+function testMemory(element, total, delta, assumptions) {
+  info(
+    `Testing memory display ${element.textContent} - ${element.title} vs total ${total}, delta ${delta}`
   );
-  let extracted = MEMORY_REGEXP.exec(string);
+  const MEMORY_TEXT_CONTENT_REGEXP = /([0-9.,]+)(TB|GB|MB|KB|B)/;
+  // Example: "383.55MB"
+  let extracted = MEMORY_TEXT_CONTENT_REGEXP.exec(element.textContent);
   Assert.notEqual(
     extracted,
     null,
-    `Can we parse ${string} with ${MEMORY_REGEXP}?`
+    `Can we parse ${element.textContent} with ${MEMORY_TEXT_CONTENT_REGEXP}?`
   );
-  let [
-    ,
-    extractedTotal,
-    extractedUnit,
-    ,
-    extractedDeltaSign,
-    extractedDeltaTotal,
-    extractedDeltaUnit,
-  ] = extracted;
+  let [, extractedTotal, extractedUnit] = extracted;
+
   let extractedTotalNumber = Number.parseFloat(extractedTotal);
   Assert.ok(
     extractedTotalNumber > 0,
@@ -270,6 +270,20 @@ function testMemory(string, total, delta, assumptions) {
     );
   }
 
+  const MEMORY_TOOLTIP_REGEXP = /(?:.*: ([-+]?)([0-9.,]+)(GB|MB|KB|B))?/;
+  // Example: "Evolution: -12.5MB"
+  extracted = MEMORY_TOOLTIP_REGEXP.exec(element.title);
+  Assert.notEqual(
+    extracted,
+    null,
+    `Can we parse ${element.title} with ${MEMORY_TOOLTIP_REGEXP}?`
+  );
+  let [
+    ,
+    extractedDeltaSign,
+    extractedDeltaTotal,
+    extractedDeltaUnit,
+  ] = extracted;
   if (extractedDeltaSign == null) {
     Assert.equal(delta || 0, 0);
     return;
@@ -301,12 +315,12 @@ function testMemory(string, total, delta, assumptions) {
 
 function extractProcessDetails(row) {
   let children = row.children;
-  let memoryResidentContent = children[1].textContent;
-  let cpuContent = children[2].textContent;
-  let fluentArgs = document.l10n.getAttributes(children[0].children[0]).args;
+  let memory = children[1];
+  let cpu = children[2];
+  let fluentArgs = document.l10n.getAttributes(children[0]).args;
   let process = {
-    memoryResidentContent,
-    cpuContent,
+    memory,
+    cpu,
     pidContent: fluentArgs.pid,
     typeContent: fluentArgs.type,
     threads: null,
@@ -335,7 +349,7 @@ function findTabRowByName(doc, name) {
     if (!row.parentNode.classList.contains("window")) {
       continue;
     }
-    let foundName = document.l10n.getAttributes(row.children[0]).args.name;
+    let foundName = document.l10n.getAttributes(row).args.name;
     if (foundName != name) {
       continue;
     }
@@ -539,8 +553,8 @@ async function testAboutProcessesWithConfig({ showAllFrames, showThreads }) {
     }
     Assert.ok(!!row, `found a table row for ${finder.name}`);
     let {
-      memoryResidentContent,
-      cpuContent,
+      memory,
+      cpu,
       pidContent,
       typeContent,
       threads,
@@ -559,7 +573,7 @@ async function testAboutProcessesWithConfig({ showAllFrames, showThreads }) {
 
     info("Sanity checks: memory resident");
     testMemory(
-      memoryResidentContent,
+      memory,
       row.process.totalRamSize,
       row.process.deltaRamSize,
       HARDCODED_ASSUMPTIONS_PROCESS
@@ -567,7 +581,7 @@ async function testAboutProcessesWithConfig({ showAllFrames, showThreads }) {
 
     info("Sanity checks: CPU (Total)");
     testCpu(
-      cpuContent,
+      cpu,
       row.process.totalCpu,
       row.process.slopeCpu,
       HARDCODED_ASSUMPTIONS_PROCESS
@@ -626,9 +640,8 @@ async function testAboutProcessesWithConfig({ showAllFrames, showThreads }) {
           "The thread row should be populated"
         );
         let children = threadRow.children;
-        let cpuContent = children[1].textContent;
-        let tidContent = document.l10n.getAttributes(children[0].children[0])
-          .args.tid;
+        let cpu = children[1];
+        let tidContent = document.l10n.getAttributes(children[0]).args.tid;
 
         // Sanity checks: tid
         let tid = Number.parseInt(tidContent);
@@ -637,7 +650,7 @@ async function testAboutProcessesWithConfig({ showAllFrames, showThreads }) {
 
         // Sanity checks: CPU (per thread)
         testCpu(
-          cpuContent,
+          cpu,
           threadRow.thread.totalCpu,
           threadRow.thread.slopeCpu,
           HARDCODED_ASSUMPTIONS_THREAD
@@ -654,7 +667,7 @@ async function testAboutProcessesWithConfig({ showAllFrames, showThreads }) {
     if (subframe.tab) {
       continue;
     }
-    let url = document.l10n.getAttributes(row.children[0].children[0]).args.url;
+    let url = document.l10n.getAttributes(row.children[0]).args.url;
     Assert.equal(url, subframe.documentURI.spec);
     if (!subframe.isProcessRoot) {
       foundAtLeastOneInProcessSubframe = true;
