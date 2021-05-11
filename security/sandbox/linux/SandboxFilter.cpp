@@ -1778,8 +1778,13 @@ class SocketProcessSandboxPolicy final : public SandboxPolicyCommon {
   }
 
   ResultExpr PrctlPolicy() const override {
-    // FIXME: bug 1619661
-    return Allow();
+    Arg<int> op(0);
+    return Switch(op)
+        .CASES((PR_SET_NAME,      // Thread creation
+                PR_SET_DUMPABLE,  // Crash reporting
+                PR_SET_PTRACER),  // Debug-mode crash handling
+               Allow())
+        .Default(InvalidSyscall());
   }
 
   ResultExpr EvaluateSyscall(int sysno) const override {
