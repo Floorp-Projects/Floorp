@@ -10,12 +10,15 @@
 #include "mozilla/gfx/Logging.h"
 #include "mozilla/layers/LayersTypes.h"
 #include "nsWindow.h"
-#include "WindowSurfaceX11Image.h"
-#include "WindowSurfaceX11SHM.h"
-#include "WindowSurfaceXRender.h"
-#include "mozilla/X11Util.h"
+
 #ifdef MOZ_WAYLAND
 #  include "WindowSurfaceWayland.h"
+#endif
+#ifdef MOZ_X11
+#  include "mozilla/X11Util.h"
+#  include "WindowSurfaceX11Image.h"
+#  include "WindowSurfaceX11SHM.h"
+#  include "WindowSurfaceXRender.h"
 #endif
 
 namespace mozilla {
@@ -24,32 +27,31 @@ namespace widget {
 using namespace mozilla::layers;
 
 WindowSurfaceProvider::WindowSurfaceProvider()
-    : mIsX11Display(false),
-      mXWindow(0),
-      mXVisual(nullptr),
-      mXDepth(0),
-      mWindowSurface(nullptr)
+    : mWindowSurface(nullptr)
 #ifdef MOZ_WAYLAND
       ,
       mWidget(nullptr)
 #endif
+#ifdef MOZ_X11
       ,
-      mIsShaped(false) {
+      mIsShaped(false),
+      mXDepth(0),
+      mXWindow(0),
+      mXVisual(nullptr)
+#endif
+{
 }
 
+#ifdef MOZ_WAYLAND
+void WindowSurfaceProvider::Initialize(nsWindow* aWidget) { mWidget = aWidget; }
+#endif
+#ifdef MOZ_X11
 void WindowSurfaceProvider::Initialize(Window aWindow, Visual* aVisual,
                                        int aDepth, bool aIsShaped) {
   mXWindow = aWindow;
   mXVisual = aVisual;
   mXDepth = aDepth;
   mIsShaped = aIsShaped;
-  mIsX11Display = true;
-}
-
-#ifdef MOZ_WAYLAND
-void WindowSurfaceProvider::Initialize(nsWindow* aWidget) {
-  mWidget = aWidget;
-  mIsX11Display = false;
 }
 #endif
 
@@ -57,33 +59,37 @@ void WindowSurfaceProvider::CleanupResources() { mWindowSurface = nullptr; }
 
 RefPtr<WindowSurface> WindowSurfaceProvider::CreateWindowSurface() {
 #ifdef MOZ_WAYLAND
-  if (!mIsX11Display) {
+  if (GdkIsWaylandDisplay()) {
     LOG(("Drawing to nsWindow %p will use wl_surface\n", mWidget));
     return MakeRefPtr<WindowSurfaceWayland>(mWidget);
   }
 #endif
+#ifdef MOZ_X11
+  if (GdkIsX11Display()) {
+    // Blit to the window with the following priority:
+    // 1. XRender (iff XRender is enabled && we are in-process)
+    // 2. MIT-SHM
+    // 3. XPutImage
+    if (!mIsShaped && gfx::gfxVars::UseXRender()) {
+      LOG(("Drawing to Window 0x%lx will use XRender\n", mXWindow));
+      return MakeRefPtr<WindowSurfaceXRender>(DefaultXDisplay(), mXWindow,
+                                              mXVisual, mXDepth);
+    }
 
-  // Blit to the window with the following priority:
-  // 1. XRender (iff XRender is enabled && we are in-process)
-  // 2. MIT-SHM
-  // 3. XPutImage
-  if (!mIsShaped && gfx::gfxVars::UseXRender()) {
-    LOG(("Drawing to Window 0x%lx will use XRender\n", mXWindow));
-    return MakeRefPtr<WindowSurfaceXRender>(DefaultXDisplay(), mXWindow,
-                                            mXVisual, mXDepth);
+#  ifdef MOZ_HAVE_SHMIMAGE
+    if (!mIsShaped && nsShmImage::UseShm()) {
+      LOG(("Drawing to Window 0x%lx will use MIT-SHM\n", mXWindow));
+      return MakeRefPtr<WindowSurfaceX11SHM>(DefaultXDisplay(), mXWindow,
+                                             mXVisual, mXDepth);
+    }
+#  endif  // MOZ_HAVE_SHMIMAGE
+
+    LOG(("Drawing to Window 0x%lx will use XPutImage\n", mXWindow));
+    return MakeRefPtr<WindowSurfaceX11Image>(DefaultXDisplay(), mXWindow,
+                                             mXVisual, mXDepth, mIsShaped);
   }
-
-#ifdef MOZ_HAVE_SHMIMAGE
-  if (!mIsShaped && nsShmImage::UseShm()) {
-    LOG(("Drawing to Window 0x%lx will use MIT-SHM\n", mXWindow));
-    return MakeRefPtr<WindowSurfaceX11SHM>(DefaultXDisplay(), mXWindow,
-                                           mXVisual, mXDepth);
-  }
-#endif  // MOZ_HAVE_SHMIMAGE
-
-  LOG(("Drawing to Window 0x%lx will use XPutImage\n", mXWindow));
-  return MakeRefPtr<WindowSurfaceX11Image>(DefaultXDisplay(), mXWindow,
-                                           mXVisual, mXDepth, mIsShaped);
+#endif
+  MOZ_RELEASE_ASSERT(false);
 }
 
 already_AddRefed<gfx::DrawTarget>
@@ -98,9 +104,9 @@ WindowSurfaceProvider::StartRemoteDrawingInRegion(
   }
 
   *aBufferMode = BufferMode::BUFFER_NONE;
-  RefPtr<gfx::DrawTarget> dt = nullptr;
-  if (!(dt = mWindowSurface->Lock(aInvalidRegion)) && mIsX11Display &&
-      !mWindowSurface->IsFallback()) {
+  RefPtr<gfx::DrawTarget> dt = mWindowSurface->Lock(aInvalidRegion);
+#ifdef MOZ_X11
+  if (!dt && GdkIsX11Display() && !mWindowSurface->IsFallback()) {
     // We can't use WindowSurfaceX11Image fallback on Wayland but
     // Lock() call on WindowSurfaceWayland should never fail.
     gfxWarningOnce()
@@ -109,6 +115,7 @@ WindowSurfaceProvider::StartRemoteDrawingInRegion(
         DefaultXDisplay(), mXWindow, mXVisual, mXDepth, mIsShaped);
     dt = mWindowSurface->Lock(aInvalidRegion);
   }
+#endif
   return dt.forget();
 }
 
