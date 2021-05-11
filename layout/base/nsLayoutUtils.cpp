@@ -3131,6 +3131,10 @@ nsresult nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext,
   TimeStamp startBuildDisplayList = TimeStamp::Now();
 
   const bool buildCaret = !(aFlags & PaintFrameFlags::HideCaret);
+
+  // Note that isForPainting here does not include the PaintForPrinting builder
+  // mode; that's OK because there is no point in using retained display lists
+  // for a print destination.
   const bool isForPainting = (aFlags & PaintFrameFlags::WidgetLayers) &&
                              aBuilderMode == nsDisplayListBuilderMode::Painting;
 
