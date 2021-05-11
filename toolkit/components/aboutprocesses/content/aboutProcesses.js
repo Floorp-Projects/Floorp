@@ -71,14 +71,14 @@ function wait(ms = 0) {
 /**
  * For the time being, Fluent doesn't support duration or memory formats, so we need
  * to fetch units from Fluent. To avoid re-fetching at each update, we prefetch these
- * units during initialization, asynchronously.
+ * units during initialization, asynchronously, and keep them.
  *
- * @type Promise<{
+ * @type {
  *   duration: { ns: String, us: String, ms: String, s: String, m: String, h: String, d: String },
  *   memory: { B: String, KB: String, MB: String, GB: String, TB: String, PB: String, EB: String }
  * }.
  */
-let gPromisePrefetchedUnits;
+let gLocalizedUnits;
 
 let tabFinder = {
   update() {
@@ -434,7 +434,7 @@ var View = {
   insertAfterRow(row) {
     let tbody = row.parentNode;
     let nextRow;
-    while ((nextRow = this._orderedRows.shift())) {
+    while ((nextRow = this._orderedRows.pop())) {
       tbody.insertBefore(nextRow, row.nextSibling);
     }
   },
@@ -465,7 +465,7 @@ var View = {
    * @param {ProcessDelta} data The data to display.
    * @return {DOMElement} The row displaying the process.
    */
-  displayProcessRow(data, units) {
+  displayProcessRow(data) {
     const cellCount = 4;
     let rowId = "p:" + data.pid;
     let row = this._getOrCreateRow(rowId, cellCount);
@@ -603,9 +603,9 @@ var View = {
           fluentName: "about-processes-total-memory-size-changed",
           fluentArgs: {
             total: formattedTotal.amount,
-            totalUnit: units.memory[formattedTotal.unit],
+            totalUnit: gLocalizedUnits.memory[formattedTotal.unit],
             delta: Math.abs(formattedDelta.amount),
-            deltaUnit: units.memory[formattedDelta.unit],
+            deltaUnit: gLocalizedUnits.memory[formattedDelta.unit],
             deltaSign: data.deltaRamSize > 0 ? "+" : "-",
           },
           classes: ["memory"],
@@ -615,7 +615,7 @@ var View = {
           fluentName: "about-processes-total-memory-size-no-change",
           fluentArgs: {
             total: formattedTotal.amount,
-            totalUnit: units.memory[formattedTotal.unit],
+            totalUnit: gLocalizedUnits.memory[formattedTotal.unit],
           },
           classes: ["memory"],
         });
@@ -631,7 +631,7 @@ var View = {
       });
     } else {
       let { duration, unit } = this._getDuration(data.totalCpu);
-      let localizedUnit = units.duration[unit];
+      let localizedUnit = gLocalizedUnits.duration[unit];
       if (data.slopeCpu == 0) {
         this._fillCell(cpuCell, {
           fluentName: "about-processes-cpu-idle",
@@ -846,7 +846,7 @@ var View = {
    *
    * @param {ThreadDelta} data The data to display.
    */
-  displayThreadRow(data, units) {
+  displayThreadRow(data) {
     const cellCount = 3;
     let rowId = "t:" + data.tid;
     let row = this._getOrCreateRow(rowId, cellCount);
@@ -873,7 +873,7 @@ var View = {
       });
     } else {
       let { duration, unit } = this._getDuration(data.totalCpu);
-      let localizedUnit = units.duration[unit];
+      let localizedUnit = gLocalizedUnits.duration[unit];
       if (data.slopeCpu == 0) {
         this._fillCell(cpuCell, {
           fluentName: "about-processes-cpu-idle",
@@ -991,7 +991,7 @@ var Control = {
     this._initHangReports();
 
     // Start prefetching units.
-    gPromisePrefetchedUnits = (async function() {
+    this._promisePrefetchedUnits = (async function() {
       let [
         ns,
         us,
@@ -1185,7 +1185,10 @@ var Control = {
   // moved recently.
   async _updateDisplay(force = false) {
     let counters = State.getCounters();
-    let units = await gPromisePrefetchedUnits;
+    if (this._promisePrefetchedUnits) {
+      gLocalizedUnits = await this._promisePrefetchedUnits;
+      this._promisePrefetchedUnits = null;
+    }
 
     // We reset `_hungItems`, based on the assumption that the process hang
     // monitor will inform us again before the next update. Since the process hang monitor
@@ -1201,7 +1204,7 @@ var Control = {
 
       process.isHung = process.childID && hungItems.has(process.childID);
 
-      let processRow = View.displayProcessRow(process, units);
+      let processRow = View.displayProcessRow(process);
 
       if (process.type != "extension") {
         // We do not want to display extensions.
@@ -1214,7 +1217,7 @@ var Control = {
 
       if (SHOW_THREADS) {
         if (View.displayThreadSummaryRow(process)) {
-          this._showThreads(processRow, units);
+          this._showThreads(processRow);
         }
       }
       if (
@@ -1250,11 +1253,11 @@ var Control = {
       this.selectedRow = null;
     }
   },
-  _showThreads(row, units) {
+  _showThreads(row) {
     let process = row.process;
     this._sortThreads(process.threads);
     for (let thread of process.threads) {
-      View.displayThreadRow(thread, units);
+      View.displayThreadRow(thread);
     }
   },
   _sortThreads(threads) {
@@ -1262,16 +1265,14 @@ var Control = {
       let order;
       switch (this._sortColumn) {
         case "column-name":
-          order = a.name.localeCompare(b.name) || a.pid - b.pid;
+          order = a.name.localeCompare(b.name) || a.tid - b.tid;
           break;
         case "column-cpu-total":
           order = b.slopeCpu - a.slopeCpu;
           break;
-
         case "column-memory-resident":
-        case "column-pid":
         case null:
-          order = b.tid - a.tid;
+          order = a.tid - b.tid;
           break;
         default:
           throw new Error("Unsupported order: " + this._sortColumn);
@@ -1286,9 +1287,6 @@ var Control = {
     return counters.sort((a, b) => {
       let order;
       switch (this._sortColumn) {
-        case "column-pid":
-          order = b.pid - a.pid;
-          break;
         case "column-name":
           order =
             String(a.origin).localeCompare(b.origin) ||
@@ -1383,13 +1381,10 @@ var Control = {
   },
 
   // Open/close list of threads.
-  async _handleTwisty(target) {
-    // We await immediately, to ensure that all DOM changes are made in the same tick.
-    // Otherwise, it's both wasteful and harder to test.
-    let units = await gPromisePrefetchedUnits;
+  _handleTwisty(target) {
     let row = target.parentNode.parentNode;
     if (target.classList.toggle("open")) {
-      this._showThreads(row, units);
+      this._showThreads(row);
       View.insertAfterRow(row);
     } else {
       this._removeSubtree(row);
