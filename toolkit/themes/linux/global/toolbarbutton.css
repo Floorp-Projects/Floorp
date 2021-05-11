@@ -30,20 +30,20 @@ toolbarbutton.tabbable {
   -moz-user-focus: normal !important;
 }
 
-toolbarbutton:where([checked="true"]) {
+toolbarbutton[checked="true"] {
   color: ButtonText;
 }
 
-toolbarbutton:where(:hover) {
+toolbarbutton:hover {
   color: -moz-buttonhovertext;
 }
 
-toolbarbutton:where(:hover:active:not([disabled="true"])),
-toolbarbutton:where([open="true"]) {
+toolbarbutton:hover:active:not([disabled="true"]),
+toolbarbutton[open="true"] {
   color: ButtonText;
 }
 
-toolbarbutton:where([disabled="true"]) {
+toolbarbutton[disabled="true"] {
   color: GrayText;
 }
 
