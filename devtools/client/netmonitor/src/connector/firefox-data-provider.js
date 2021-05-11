@@ -33,6 +33,7 @@ class FirefoxDataProvider {
    */
   constructor({ webConsoleFront, actions, owner, resourceCommand }) {
     // Options
+    this.client = webConsoleFront._client;
     this.webConsoleFront = webConsoleFront;
     this.actions = actions || {};
     this.actionsEnabled = true;
@@ -518,6 +519,12 @@ class FirefoxDataProvider {
     // Emit event that tell we just start fetching some data
     this.emitForTests(EVENTS[updatingEventName], actor);
 
+    // Make sure we fetch the real actor data instead of cloned actor
+    // e.g. CustomRequestPanel will clone a request with additional '-clone' actor id
+    const actorID = actor.replace("-clone", "");
+
+    // 'getStackTrace' is the only one to be fetched via the NetworkContent actor in content process
+    // while all other attributes are fetched from the NetworkEvent actors, running in the parent process
     let response;
     if (
       clientMethodName == "getStackTrace" &&
@@ -525,36 +532,23 @@ class FirefoxDataProvider {
         this.resourceCommand.TYPES.NETWORK_EVENT_STACKTRACE
       )
     ) {
-      const requestInfo = this.stackTraceRequestInfoByActorID.get(
-        actor.replace("-clone", "")
-      );
+      const requestInfo = this.stackTraceRequestInfoByActorID.get(actorID);
       const { stacktrace } = await this._getStackTraceFromWatcher(requestInfo);
       response = { from: actor, stacktrace };
     } else {
-      response = await new Promise((resolve, reject) => {
-        // Do a RDP request to fetch data from the actor.
-        if (typeof this.webConsoleFront[clientMethodName] === "function") {
-          // Make sure we fetch the real actor data instead of cloned actor
-          // e.g. CustomRequestPanel will clone a request with additional '-clone' actor id
-          this.webConsoleFront[clientMethodName](
-            actor.replace("-clone", ""),
-            res => {
-              if (res.error) {
-                reject(
-                  new Error(
-                    `Error while calling method ${clientMethodName}: ${res.message}`
-                  )
-                );
-              }
-              resolve(res);
-            }
-          );
-        } else {
-          reject(
-            new Error(`Error: No such client method '${clientMethodName}'!`)
-          );
-        }
-      });
+      // We don't create fronts for NetworkEvent actors,
+      // so that we have to do the request manually via DevToolsClient.request()
+      try {
+        const packet = {
+          to: actorID,
+          type: clientMethodName,
+        };
+        response = await this.client.request(packet);
+      } catch (e) {
+        throw new Error(
+          `Error while calling method ${clientMethodName}: ${e.message}`
+        );
+      }
     }
 
     // Restore clone actor id
