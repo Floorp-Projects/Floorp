@@ -101,6 +101,14 @@ class MobileTabBrowser {
   get selectedBrowser() {
     return this.selectedTab.linkedBrowser;
   }
+
+  addEventListener() {
+    this.window.addEventListener(...arguments);
+  }
+
+  removeEventListener() {
+    this.window.removeEventListener(...arguments);
+  }
 }
 
 /**
