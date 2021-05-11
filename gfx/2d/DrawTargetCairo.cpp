@@ -15,6 +15,7 @@
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Vector.h"
 #include "mozilla/StaticPrefs_print.h"
+#include "nsPrintfCString.h"
 
 #include "cairo.h"
 #include "cairo-tee.h"
@@ -654,6 +655,37 @@ SurfaceFormat GfxFormatForCairoSurface(cairo_surface_t* surface) {
   }
 #endif
   return CairoContentToGfxFormat(cairo_surface_get_content(surface));
+}
+
+void DrawTargetCairo::Link(const char* aDestination, const Rect& aRect) {
+  if (!aDestination || !*aDestination) {
+    // No destination? Just bail out.
+    return;
+  }
+
+  // We need to \-escape any single-quotes in the destination string, in order
+  // to pass it via the attributes arg to cairo_tag_begin.
+  // (Encoding of non-ASCII chars etc gets handled later by the PDF backend.)
+  nsAutoCString dest(aDestination);
+  for (size_t i = dest.Length(); i > 0;) {
+    --i;
+    if (dest[i] == '\'') {
+      dest.ReplaceLiteral(i, 1, "\\'");
+    }
+  }
+
+  double x = aRect.x, y = aRect.y, w = aRect.width, h = aRect.height;
+  cairo_user_to_device(mContext, &x, &y);
+  cairo_user_to_device_distance(mContext, &w, &h);
+
+  nsPrintfCString attributes("rect=[%f %f %f %f] uri='%s'", x, y, w, h,
+                             dest.get());
+
+  // We generate a begin/end pair with no content in between, because we are
+  // using the rect attribute of the begin tag to specify the link region
+  // rather than depending on cairo to accumulate the painted area.
+  cairo_tag_begin(mContext, CAIRO_TAG_LINK, attributes.get());
+  cairo_tag_end(mContext, CAIRO_TAG_LINK);
 }
 
 already_AddRefed<SourceSurface> DrawTargetCairo::Snapshot() {
