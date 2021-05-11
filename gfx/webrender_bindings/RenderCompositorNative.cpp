@@ -20,14 +20,13 @@
 #include "mozilla/widget/CompositorWidget.h"
 #include "RenderCompositorRecordedFrame.h"
 
-namespace mozilla {
-namespace wr {
+namespace mozilla::wr {
 
 RenderCompositorNative::RenderCompositorNative(
     const RefPtr<widget::CompositorWidget>& aWidget, gl::GLContext* aGL)
     : RenderCompositor(aWidget),
       mNativeLayerRoot(GetWidget()->GetNativeLayerRoot()) {
-#ifdef XP_MACOSX
+#if defined(XP_MACOSX) || defined(MOZ_WAYLAND)
   auto pool = RenderThread::Get()->SharedSurfacePool();
   if (pool) {
     mSurfacePoolHandle = pool->GetHandleForGL(aGL);
@@ -86,14 +85,20 @@ RenderedFrameId RenderCompositorNative::EndFrame(
   return frameId;
 }
 
-void RenderCompositorNative::Pause() {}
+void RenderCompositorNative::Pause() { mNativeLayerRoot->PauseCompositor(); }
 
-bool RenderCompositorNative::Resume() { return true; }
+bool RenderCompositorNative::Resume() {
+  return mNativeLayerRoot->ResumeCompositor();
+}
 
 inline layers::WebRenderCompositor RenderCompositorNative::CompositorType()
     const {
   if (gfx::gfxVars::UseWebRenderCompositor()) {
+#if defined(XP_MACOSX)
     return layers::WebRenderCompositor::CORE_ANIMATION;
+#elif defined(MOZ_WAYLAND)
+    return layers::WebRenderCompositor::WAYLAND;
+#endif
   }
   return layers::WebRenderCompositor::DRAW;
 }
@@ -639,5 +644,4 @@ void RenderCompositorNativeSWGL::UnmapTile() {
   }
 }
 
-}  // namespace wr
-}  // namespace mozilla
+}  // namespace mozilla::wr

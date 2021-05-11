@@ -88,6 +88,7 @@ class gfxPlatformGtk final : public gfxPlatform {
   void InitX11EGLConfig();
   void InitDmabufConfig();
   void InitPlatformGPUProcessPrefs() override;
+  void InitWebRenderConfig() override;
   bool CheckVariationFontSupport() override;
 
   int8_t mMaxGenericSubstitutions;
