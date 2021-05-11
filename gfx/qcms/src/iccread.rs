@@ -59,7 +59,7 @@ pub struct Profile {
     pub(crate) B2A0: Option<Box<lutType>>,
     pub(crate) mAB: Option<Box<lutmABType>>,
     pub(crate) mBA: Option<Box<lutmABType>>,
-    pub(crate) chromaticAdaption: Matrix,
+    pub(crate) chromaticAdaption: Option<Matrix>,
     pub(crate) output_table_r: Option<Arc<PrecacheOuput>>,
     pub(crate) output_table_g: Option<Arc<PrecacheOuput>>,
     pub(crate) output_table_b: Option<Arc<PrecacheOuput>>,
@@ -443,7 +443,6 @@ pub const CHROMATIC_TYPE: u32 = 0x73663332; // 'sf32'
 fn read_tag_s15Fixed16ArrayType(src: &mut MemSource, tag: &Tag) -> Matrix {
     let mut matrix: Matrix = Matrix {
         m: [[0.; 3]; 3],
-        invalid: false,
     };
     let offset: u32 = tag.offset;
     let type_0: u32 = read_u32(src, offset as usize);
@@ -456,7 +455,6 @@ fn read_tag_s15Fixed16ArrayType(src: &mut MemSource, tag: &Tag) -> Matrix {
             read_s15Fixed16Number(src, (offset + 8 + (i * 4) as u32) as usize),
         );
     }
-    matrix.invalid = false;
     matrix
 }
 fn read_tag_XYZType(src: &mut MemSource, index: &TagIndex, tag_id: u32) -> XYZNumber {
@@ -1162,9 +1160,9 @@ impl Profile {
         }
 
         if let Some(chad) = find_tag(&index, TAG_CHAD) {
-            profile.chromaticAdaption = read_tag_s15Fixed16ArrayType(src, chad)
+            profile.chromaticAdaption = Some(read_tag_s15Fixed16ArrayType(src, chad))
         } else {
-            profile.chromaticAdaption.invalid = true //Signal the data is not present
+            profile.chromaticAdaption = None; //Signal the data is not present
         }
 
         if profile.class_type == DISPLAY_DEVICE_PROFILE

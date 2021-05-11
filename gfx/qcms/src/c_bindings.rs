@@ -273,11 +273,11 @@ pub unsafe extern "C" fn qcms_data_create_rgb_with_gamma(
     }
     memset(data, 0, length as usize);
     // Part1 : write rXYZ, gXYZ and bXYZ
-    let colorants = get_rgb_colorants(white_point, primaries);
-    if colorants.invalid {
-        free(data);
-        return;
-    }
+    let colorants = match get_rgb_colorants(white_point, primaries) {
+        Some(colorants) => colorants,
+        None => { free(data); return }
+    };
+
     let data = std::slice::from_raw_parts_mut(data as *mut u8, length as usize);
     // the position of first tag's signature in tag table
     tag_table_offset = (128 + 4) as usize; // the start of tag data elements.
