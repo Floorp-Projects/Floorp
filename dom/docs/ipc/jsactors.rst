@@ -440,7 +440,7 @@ Let's look at the second chunk:
 
 We're similarly declaring where the ``PluginChild`` subclassing ``JSWindowActorChild`` can be found.
 
-Next, we declare the content events, if fired in a BrowsingContext, will cause the JSWindowActor pair to instantiate if it doesn't already exist, and then have ``handleEvent`` called on the ``PluginChild`` instance. For each event name, an Object of event listener options can be passed. You can use the same event listener options as accepted by ``addEventListener``.
+Next, we declare the content events which, when fired in a window, will cause the ``JSWindowActorChild`` to instantiate if it doesn't already exist, and then have ``handleEvent`` called on the ``PluginChild`` instance. For each event name, an Object of event listener options can be passed. You can use the same event listener options as accepted by ``addEventListener``. If an event listener has no useful effect when the actor hasn't been created yet, ``createActor: false`` may also be specified to avoid creating the actor when not needed.
 
 .. note::
   Content events make sense for ``JSWindowActorChild`` (which *have* a content) but are ignored for ``JSProcessActorChild`` (which don't).
