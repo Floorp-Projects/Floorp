@@ -5410,23 +5410,6 @@ browser.search.adclicks:
       - main
 
 browser.searchinit:
-  init_result_status_code:
-    bug_numbers:
-      - 1651194
-      - 1683105
-    description: >-
-          Status code (nsresult) for the search service initialization routine.
-          Stored as a string due to issues with large uint scalars when the scalar was created.
-    expires: "91"
-    kind: string
-    notification_emails:
-      - fx-search@mozilla.com
-      - mbanner@mozilla.com
-    release_channel_collection: opt-out
-    products:
-      - 'firefox'
-    record_in_processes:
-      - main
   engine_invalid_webextension:
     bug_numbers:
       - 1665938
