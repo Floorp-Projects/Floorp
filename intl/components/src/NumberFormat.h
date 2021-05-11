@@ -10,6 +10,8 @@
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/PodOperations.h"
+#include "mozilla/Result.h"
+#include "mozilla/ResultVariant.h"
 #include "mozilla/Utf8.h"
 #include "mozilla/Vector.h"
 
@@ -145,52 +147,62 @@ class NumberFormat final {
 
   ~NumberFormat();
 
-  const char16_t* format(double number) const {
+  enum class FormatError {
+    InternalError,
+    OutOfMemory,
+  };
+
+  Result<std::u16string_view, NumberFormat::FormatError> format(
+      double number) const {
     if (!mIsInitialized || !formatInternal(number)) {
-      return nullptr;
+      return Err(FormatError::InternalError);
     }
 
-    return formatResult().data();
+    return formatResult();
   }
 
   template <typename B>
-  bool format(double number, B& buffer) const {
+  Result<Ok, NumberFormat::FormatError> format(double number, B& buffer) const {
     if (!mIsInitialized || !formatInternal(number)) {
-      return false;
+      return Err(FormatError::InternalError);
     }
 
     return formatResult<typename B::CharType, B>(buffer);
   }
 
-  const char16_t* format(int64_t number) const {
+  Result<std::u16string_view, NumberFormat::FormatError> format(
+      int64_t number) const {
     if (!mIsInitialized || !formatInternal(number)) {
-      return nullptr;
+      return Err(FormatError::InternalError);
     }
 
-    return formatResult().data();
+    return formatResult();
   }
 
   template <typename B>
-  bool format(int64_t number, B& buffer) const {
+  Result<Ok, NumberFormat::FormatError> format(int64_t number,
+                                               B& buffer) const {
     if (!mIsInitialized || !formatInternal(number)) {
-      return false;
+      return Err(FormatError::InternalError);
     }
 
     return formatResult<typename B::CharType, B>(buffer);
   }
 
-  const char16_t* format(std::string_view number) const {
+  Result<std::u16string_view, NumberFormat::FormatError> format(
+      std::string_view number) const {
     if (!mIsInitialized || !formatInternal(number)) {
-      return nullptr;
+      return Err(FormatError::InternalError);
     }
 
-    return formatResult().data();
+    return formatResult();
   }
 
   template <typename B>
-  bool format(std::string_view number, B& buffer) const {
+  Result<Ok, NumberFormat::FormatError> format(std::string_view number,
+                                               B& buffer) const {
     if (!mIsInitialized || !formatInternal(number)) {
-      return false;
+      return Err(FormatError::InternalError);
     }
 
     return formatResult<typename B::CharType, B>(buffer);
@@ -201,41 +213,38 @@ class NumberFormat final {
   UFormattedNumber* mFormattedNumber = nullptr;
   bool mIsInitialized = false;
 
-  bool formatInternal(double number) const;
-  bool formatInternal(int64_t number) const;
-  bool formatInternal(std::string_view number) const;
-  std::u16string_view formatResult() const;
+  [[nodiscard]] bool formatInternal(double number) const;
+  [[nodiscard]] bool formatInternal(int64_t number) const;
+  [[nodiscard]] bool formatInternal(std::string_view number) const;
+  Result<std::u16string_view, NumberFormat::FormatError> formatResult() const;
 
   template <typename C, typename B>
-  bool formatResult(B& buffer) const {
-    std::u16string_view result = formatResult();
-
-    if (result.empty()) {
-      return false;
-    }
-
-    if constexpr (std::is_same<C, uint8_t>::value) {
-      // Reserve 3 * the UTF-16 length to guarantee enough space for the UTF-8
-      // result.
-      if (!buffer.allocate(3 * result.size())) {
-        return false;
+  Result<Ok, NumberFormat::FormatError> formatResult(B& buffer) const {
+    return formatResult().andThen([&buffer](std::u16string_view result)
+                                      -> Result<Ok, NumberFormat::FormatError> {
+      if constexpr (std::is_same<C, uint8_t>::value) {
+        // Reserve 3 * the UTF-16 length to guarantee enough space for the UTF-8
+        // result.
+        if (!buffer.allocate(3 * result.size())) {
+          return Err(FormatError::OutOfMemory);
+        }
+        size_t amount = ConvertUtf16toUtf8(
+            Span(result.data(), result.size()),
+            Span(static_cast<char*>(std::data(buffer)), std::size(buffer)));
+        buffer.written(amount);
+      } else {
+        // ICU provides APIs which accept a buffer, but they just copy from an
+        // internal buffer behind the scenes anyway.
+        if (!buffer.allocate(result.size())) {
+          return Err(FormatError::OutOfMemory);
+        }
+        PodCopy(static_cast<char16_t*>(buffer.data()), result.data(),
+                result.size());
+        buffer.written(result.size());
       }
-      size_t amount = ConvertUtf16toUtf8(
-          Span(result.data(), result.size()),
-          Span(static_cast<char*>(std::data(buffer)), std::size(buffer)));
-      buffer.written(amount);
-    } else {
-      // ICU provides APIs which accept a buffer, but they just copy from an
-      // internal buffer behind the scenes anyway.
-      if (!buffer.allocate(result.size())) {
-        return false;
-      }
-      PodCopy(static_cast<char16_t*>(buffer.data()), result.data(),
-              result.size());
-      buffer.written(result.size());
-    }
 
-    return true;
+      return Ok();
+    });
   }
 };
 
