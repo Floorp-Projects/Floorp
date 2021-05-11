@@ -634,11 +634,11 @@ InliningRoot* JitScript::getOrCreateInliningRoot(JSContext* cx,
   return inliningRoot_.get();
 }
 
-FallbackICStubSpace* ICScript::fallbackStubSpace() {
+JitScriptICStubSpace* ICScript::jitScriptStubSpace() {
   if (isInlined()) {
-    return inliningRoot_->fallbackStubSpace();
+    return inliningRoot_->jitScriptStubSpace();
   }
-  return outerJitScript()->fallbackStubSpace();
+  return outerJitScript()->jitScriptStubSpace();
 }
 
 JitScript* ICScript::outerJitScript() {
