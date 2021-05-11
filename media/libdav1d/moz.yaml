@@ -39,7 +39,7 @@ updatebot:
     maintainer-bz: tom@mozilla.com
     tasks:
       - type: vendoring
-        enabled: True
+        enabled: False
 
 vendoring:
   url: https://code.videolan.org/videolan/dav1d.git
