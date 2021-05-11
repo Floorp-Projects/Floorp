@@ -252,7 +252,7 @@ class nsWindow final : public nsBaseWidget {
       int32_t aVertical) override;
 
   MozContainer* GetMozContainer() { return mContainer; }
-  LayoutDeviceIntRect GetMozContainerSize();
+  LayoutDeviceIntSize GetMozContainerSize();
   // GetMozContainerWidget returns the MozContainer even for undestroyed
   // descendant windows
   GtkWidget* GetMozContainerWidget();
