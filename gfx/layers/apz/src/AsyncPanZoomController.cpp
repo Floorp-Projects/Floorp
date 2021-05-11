@@ -3119,6 +3119,10 @@ bool AsyncPanZoomController::IsOverscrolled() const {
   return mX.IsOverscrolled() || mY.IsOverscrolled();
 }
 
+bool AsyncPanZoomController::IsInInvalidOverscroll() const {
+  return mX.IsInInvalidOverscroll() || mY.IsInInvalidOverscroll();
+}
+
 ParentLayerPoint AsyncPanZoomController::PanStart() const {
   return ParentLayerPoint(mX.PanStart(), mY.PanStart());
 }
@@ -5331,19 +5335,18 @@ void AsyncPanZoomController::NotifyLayersUpdated(
   // state (for example, we may no longer be at the edge of our scroll range),
   // so clear overscroll and discontinue any overscroll animation.
   // Ideas for improvements here:
-  //   1. Limit this to only cases where we actually are in an invalid state
-  //      (for example, we are overscrolled at the bottom but no longer at
-  //      the bottom of the scroll range).
-  //   2. Instead of collapsing the overscroll gutter, try to "fill it"
+  //    - Instead of collapsing the overscroll gutter, try to "fill it"
   //      with newly loaded content. This would basically entail checking
   //      if (GetVisualScrollOffset() + GetOverscrollAmount()) is a valid
   //      visual scroll offset in our new scroll range, and if so, scrolling
   //      there.
   if (needToReclampScroll) {
-    if (mState == OVERSCROLL_ANIMATION) {
-      CancelAnimation();
-    } else if (IsOverscrolled()) {
-      ClearOverscroll();
+    if (IsInInvalidOverscroll()) {
+      if (mState == OVERSCROLL_ANIMATION) {
+        CancelAnimation();
+      } else if (IsOverscrolled()) {
+        ClearOverscroll();
+      }
     }
   }
 
