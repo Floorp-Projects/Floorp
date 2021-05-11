@@ -265,17 +265,6 @@ class ICStubIterator {
 class ICStub {
   friend class ICFallbackStub;
 
- public:
-  template <typename T, typename... Args>
-  static T* NewFallback(JSContext* cx, ICStubSpace* space, TrampolinePtr code,
-                        Args&&... args) {
-    T* result = space->allocate<T>(code, std::forward<Args>(args)...);
-    if (MOZ_UNLIKELY(!result)) {
-      ReportOutOfMemory(cx);
-    }
-    return result;
-  }
-
  protected:
   // The raw jitcode to call for this stub.
   uint8_t* stubCode_;
@@ -356,8 +345,8 @@ class ICFallbackStub final : public ICStub {
   ICState state_{};
 
  public:
-  explicit ICFallbackStub(TrampolinePtr stubCode)
-      : ICStub(stubCode.value, /* isFallback = */ true) {}
+  explicit ICFallbackStub(ICEntry* icEntry, TrampolinePtr stubCode)
+      : ICStub(stubCode.value, /* isFallback = */ true), icEntry_(icEntry) {}
 
   inline ICEntry* icEntry() const { return icEntry_; }
 
@@ -366,14 +355,6 @@ class ICFallbackStub final : public ICStub {
   bool newStubIsFirstStub() const { return state_.newStubIsFirstStub(); }
 
   ICState& state() { return state_; }
-
-  // The icEntry_ field can't be initialized when the stub is created since we
-  // won't know the ICEntry address until we add the stub to JitScript. This
-  // method allows this field to be fixed up at that point.
-  void fixupICEntry(ICEntry* icEntry) {
-    MOZ_ASSERT(icEntry_ == nullptr);
-    icEntry_ = icEntry;
-  }
 
   // Add a new stub to the IC chain terminated by this fallback stub.
   inline void addNewStub(ICCacheIRStub* stub);

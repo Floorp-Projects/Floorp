@@ -38,11 +38,13 @@ using namespace js::jit;
 
 using mozilla::CheckedInt;
 
-JitScript::JitScript(JSScript* script, Offset endOffset,
-                     const char* profileString)
+JitScript::JitScript(JSScript* script, Offset fallbackStubsOffset,
+                     Offset endOffset, const char* profileString)
     : profileString_(profileString),
       endOffset_(endOffset),
-      icScript_(script->getWarmUpCount(), endOffset - offsetOfICScript(),
+      icScript_(script->getWarmUpCount(),
+                fallbackStubsOffset - offsetOfICScript(),
+                endOffset - offsetOfICScript(),
                 /*depth=*/0) {
   // Ensure the baselineScript_ and ionScript_ fields match the BaselineDisabled
   // and IonDisabled script flags.
@@ -62,8 +64,6 @@ bool JSScript::createJitScript(JSContext* cx) {
   // we don't create a JitScript for scripts we shouldn't Baseline interpret.
   MOZ_ASSERT_IF(IsBaselineInterpreterEnabled(),
                 CanBaselineInterpretScript(this));
-
-  gc::AutoSuppressGC suppressGC(cx);
 
   // Store the profile string in the JitScript if the profiler is enabled.
   const char* profileString = nullptr;
@@ -86,6 +86,7 @@ bool JSScript::createJitScript(JSContext* cx) {
   // Calculate allocation size.
   CheckedInt<uint32_t> allocSize = sizeof(JitScript);
   allocSize += CheckedInt<uint32_t>(numICEntries()) * sizeof(ICEntry);
+  allocSize += CheckedInt<uint32_t>(numICEntries()) * sizeof(ICFallbackStub);
   if (!allocSize.isValid()) {
     ReportAllocationOverflow(cx);
     return false;
@@ -97,21 +98,17 @@ bool JSScript::createJitScript(JSContext* cx) {
     return false;
   }
 
-  UniquePtr<JitScript> jitScript(
-      new (raw) JitScript(this, allocSize.value(), profileString));
+  size_t fallbackStubsOffset =
+      sizeof(JitScript) + numICEntries() * sizeof(ICEntry);
+
+  UniquePtr<JitScript> jitScript(new (raw) JitScript(
+      this, fallbackStubsOffset, allocSize.value(), profileString));
 
   // Sanity check the length computation.
   MOZ_ASSERT(jitScript->numICEntries() == numICEntries());
 
-  // We need to call prepareForDestruction on JitScript before we |delete| it.
-  auto prepareForDestruction = mozilla::MakeScopeExit(
-      [&] { jitScript->prepareForDestruction(cx->zone()); });
+  jitScript->icScript()->initICEntries(cx, this);
 
-  if (!jitScript->icScript()->initICEntries(cx, this)) {
-    return false;
-  }
-
-  prepareForDestruction.release();
   warmUpData_.initJitScript(jitScript.release());
   AddCellMemory(this, allocSize.value(), MemoryUse::JitScript);
 

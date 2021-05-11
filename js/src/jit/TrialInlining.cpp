@@ -557,8 +557,10 @@ ICScript* TrialInliner::createInlinedICScript(JSFunction* target,
   // successfully allocated an ICScript with this number of entries
   // when creating the JitScript for the target function, and we
   // checked for overflow then.
-  uint32_t allocSize =
+  uint32_t fallbackStubsOffset =
       sizeof(ICScript) + targetScript->numICEntries() * sizeof(ICEntry);
+  uint32_t allocSize = fallbackStubsOffset +
+                       targetScript->numICEntries() * sizeof(ICFallbackStub);
 
   void* raw = cx()->pod_malloc<uint8_t>(allocSize);
   MOZ_ASSERT(uintptr_t(raw) % alignof(ICScript) == 0);
@@ -569,19 +571,10 @@ ICScript* TrialInliner::createInlinedICScript(JSFunction* target,
   uint32_t initialWarmUpCount = JitOptions.trialInliningInitialWarmUpCount;
 
   uint32_t depth = icScript_->depth() + 1;
-  UniquePtr<ICScript> inlinedICScript(
-      new (raw) ICScript(initialWarmUpCount, allocSize, depth, root_));
+  UniquePtr<ICScript> inlinedICScript(new (raw) ICScript(
+      initialWarmUpCount, fallbackStubsOffset, allocSize, depth, root_));
 
-  {
-    // Suppress GC. This matches the AutoSuppressGC in
-    // JSScript::createJitScript. It is needed for allocating the
-    // template object for JSOp::Rest and the object group for
-    // JSOp::NewArray.
-    gc::AutoSuppressGC suppress(cx());
-    if (!inlinedICScript->initICEntries(cx(), targetScript)) {
-      return nullptr;
-    }
-  }
+  inlinedICScript->initICEntries(cx(), targetScript);
 
   uint32_t pcOffset = loc.bytecodeToOffset(script_);
   ICScript* result = inlinedICScript.get();
