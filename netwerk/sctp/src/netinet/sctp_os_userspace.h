@@ -882,7 +882,7 @@ int sctp_userspace_get_mtu_from_ifn(uint32_t if_index, int af);
 
 #define SCTP_GATHER_MTU_FROM_ROUTE(sctp_ifa, sa, rt) ((rt != NULL) ? rt->rt_rmx.rmx_mtu : 0)
 
-#define SCTP_GATHER_MTU_FROM_INTFC(sctp_ifn)  sctp_userspace_get_mtu_from_ifn(if_nametoindex(((struct ifaddrs *) (sctp_ifn))->ifa_name), AF_INET)
+#define SCTP_GATHER_MTU_FROM_INTFC(sctp_ifn) (sctp_ifn->ifn_mtu)
 
 #define SCTP_SET_MTU_OF_ROUTE(sa, rt, mtu) do { \
                                               if (rt != NULL) \
