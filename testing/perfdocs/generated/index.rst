@@ -8,6 +8,7 @@ but `mozperftest </testing/perfdocs/mozperftest.html>`_ aims to provide this in 
 
 For more detailed information about each test suite, see each projects' documentation:
 
+  * :doc:`awsy`
   * :doc:`mozperftest`
   * :doc:`raptor`
   * :doc:`talos`
