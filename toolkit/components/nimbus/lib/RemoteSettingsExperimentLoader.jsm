@@ -322,35 +322,36 @@ class _RemoteSettingsExperimentLoader {
   }
 
   async optInToExperiment({ slug, branch: branchSlug, collection }) {
+    log.debug(`Attempting force enrollment with ${slug} / ${branchSlug}`);
+
     if (!NIMBUS_DEBUG) {
       log.debug(
         `Force enrollment only works when '${NIMBUS_DEBUG_PREF}' is enabled.`
       );
-      return null;
+      // More generic error if no debug preference is on.
+      throw new Error("Could not opt in.");
     }
 
     let recipes;
     try {
       recipes = await RemoteSettings(collection || COLLECTION_ID).get();
     } catch (e) {
-      log.debug("Error getting recipes from remote settings.");
       Cu.reportError(e);
+      throw new Error("Error getting recipes from remote settings.");
     }
 
     let recipe = recipes.find(r => r.slug === slug);
 
     if (!recipe) {
-      log.debug(
+      throw new Error(
         `Could not find experiment slug ${slug} in collection ${collection ||
           COLLECTION_ID}.`
       );
-      return null;
     }
 
     let branch = recipe.branches.find(b => b.slug === branchSlug);
     if (!branch) {
-      log.debug(`Could not find branch slug ${branch} in ${slug}.`);
-      return null;
+      throw new Error(`Could not find branch slug ${branchSlug} in ${slug}.`);
     }
 
     return ExperimentManager.forceEnroll(recipe, branch);

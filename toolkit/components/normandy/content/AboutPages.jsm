@@ -125,8 +125,19 @@ XPCOMUtils.defineLazyGetter(AboutPages, "aboutStudies", () => {
       return ExperimentManager.store.getAll();
     },
 
-    optInToExperiment(data) {
-      RemoteSettingsExperimentLoader.optInToExperiment(data);
+    async optInToExperiment(data) {
+      try {
+        await RemoteSettingsExperimentLoader.optInToExperiment(data);
+        return {
+          error: false,
+          message: "Opt-in was successful.",
+        };
+      } catch (error) {
+        return {
+          error: true,
+          message: error.message,
+        };
+      }
     },
 
     /** Add a browsing context to the weak set;

@@ -60,17 +60,21 @@ add_task(async function test_fetch_recipe_and_branch_no_debug() {
   let recipes = [ExperimentFakes.recipe("slug123")];
 
   await setup(recipes);
-  let result = await RemoteSettingsExperimentLoader.optInToExperiment({
-    slug: "slug123",
-    branch: "control",
-  });
 
-  Assert.ok(!result, "Pref is not turned on");
+  await Assert.rejects(
+    RemoteSettingsExperimentLoader.optInToExperiment({
+      slug: "slug123",
+      branch: "control",
+    }),
+    /Could not opt in/,
+    "should throw an error"
+  );
+
   Assert.ok(stub.notCalled, "forceEnroll is not called");
 
   Services.prefs.setBoolPref("nimbus.debug", true);
 
-  result = await RemoteSettingsExperimentLoader.optInToExperiment({
+  const result = await RemoteSettingsExperimentLoader.optInToExperiment({
     slug: "slug123",
     branch: "control",
   });
@@ -87,12 +91,16 @@ add_task(async function test_fetch_recipe_and_branch_badslug() {
   let recipes = [ExperimentFakes.recipe("slug123")];
 
   await setup(recipes);
-  let result = await RemoteSettingsExperimentLoader.optInToExperiment({
-    slug: "slug12",
-    branch: "control",
-  });
 
-  Assert.ok(!result, "Recipe slug doesn't exist");
+  await Assert.rejects(
+    RemoteSettingsExperimentLoader.optInToExperiment({
+      slug: "other_slug",
+      branch: "control",
+    }),
+    /Could not find experiment slug other_slug/,
+    "should throw an error"
+  );
+
   Assert.ok(stub.notCalled, "forceEnroll is not called");
 
   sandbox.restore();
@@ -104,12 +112,16 @@ add_task(async function test_fetch_recipe_and_branch_badbranch() {
   let recipes = [ExperimentFakes.recipe("slug123")];
 
   await setup(recipes);
-  let result = await RemoteSettingsExperimentLoader.optInToExperiment({
-    slug: "slug123",
-    branch: "branch",
-  });
 
-  Assert.ok(!result, "Recipe slug doesn't exist");
+  await Assert.rejects(
+    RemoteSettingsExperimentLoader.optInToExperiment({
+      slug: "slug123",
+      branch: "other_branch",
+    }),
+    /Could not find branch slug other_branch in slug123/,
+    "should throw an error"
+  );
+
   Assert.ok(stub.notCalled, "forceEnroll is not called");
 
   sandbox.restore();
@@ -118,11 +130,11 @@ add_task(async function test_fetch_recipe_and_branch_badbranch() {
 add_task(async function test_fetch_recipe_and_branch() {
   const sandbox = sinon.createSandbox();
   let stub = sandbox.stub(ExperimentManager, "forceEnroll").returns(true);
-  let recipes = [ExperimentFakes.recipe("slug123")];
+  let recipes = [ExperimentFakes.recipe("slug_fetch_recipe")];
 
   await setup(recipes);
   let result = await RemoteSettingsExperimentLoader.optInToExperiment({
-    slug: "slug123",
+    slug: "slug_fetch_recipe",
     branch: "control",
   });
 
