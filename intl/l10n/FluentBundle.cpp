@@ -218,15 +218,15 @@ ffi::RawNumberFormatter* FluentBuiltInNumberFormatterCreate(
       switch (aOptions->currency_display) {
         case ffi::FluentNumberCurrencyDisplayStyleRaw::Symbol:
           options.mCurrency = Some(std::make_pair(
-              currency, NumberFormatOptions::CurrencyDisplayStyle::Symbol));
+              currency, NumberFormatOptions::CurrencyDisplay::Symbol));
           break;
         case ffi::FluentNumberCurrencyDisplayStyleRaw::Code:
           options.mCurrency = Some(std::make_pair(
-              currency, NumberFormatOptions::CurrencyDisplayStyle::Code));
+              currency, NumberFormatOptions::CurrencyDisplay::Code));
           break;
         case ffi::FluentNumberCurrencyDisplayStyleRaw::Name:
           options.mCurrency = Some(std::make_pair(
-              currency, NumberFormatOptions::CurrencyDisplayStyle::Name));
+              currency, NumberFormatOptions::CurrencyDisplay::Name));
           break;
         default:
           MOZ_ASSERT_UNREACHABLE();
