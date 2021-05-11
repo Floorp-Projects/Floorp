@@ -10054,6 +10054,12 @@ bool nsDisplayForeignObject::CreateWebRenderCommands(
       aBuilder, aResources, aSc, aManager, aDisplayListBuilder);
 }
 
+void nsDisplayLink::Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) {
+  auto appPerDev = mFrame->PresContext()->AppUnitsPerDevPixel();
+  aCtx->GetDrawTarget()->Link(mLinkSpec.get(),
+                              NSRectToRect(GetPaintRect(), appPerDev));
+}
+
 void nsDisplayListCollection::SerializeWithCorrectZOrder(
     nsDisplayList* aOutResultList, nsIContent* aContent) {
   // Sort PositionedDescendants() in CSS 'z-order' order.  The list is already
