@@ -31,6 +31,15 @@ const ONE_MEGA = 1024 * 1024;
 const ONE_KILO = 1024;
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+
+XPCOMUtils.defineLazyModuleGetters(this, {
+  ContextualIdentityService:
+    "resource://gre/modules/ContextualIdentityService.jsm",
+});
+
 const { WebExtensionPolicy } = Cu.getGlobalForObject(Services);
 
 const SHOW_THREADS = Services.prefs.getBoolPref(
@@ -554,6 +563,33 @@ var View = {
           fluentArgs.type = data.type;
           break;
       }
+
+      // Show container names instead of raw origin attribute suffixes.
+      if (fluentArgs.origin?.includes("^")) {
+        let origin = fluentArgs.origin;
+        let privateBrowsingId, userContextId;
+        try {
+          ({
+            privateBrowsingId,
+            userContextId,
+          } = ChromeUtils.createOriginAttributesFromOrigin(origin));
+          fluentArgs.origin = origin.slice(0, origin.indexOf("^"));
+        } catch (e) {
+          // createOriginAttributesFromOrigin can throw NS_ERROR_FAILURE for incorrect origin strings.
+        }
+        if (userContextId) {
+          let identityLabel = ContextualIdentityService.getUserContextLabel(
+            userContextId
+          );
+          if (identityLabel) {
+            fluentArgs.origin += ` — ${identityLabel}`;
+          }
+        }
+        if (privateBrowsingId) {
+          fluentName += "-private";
+        }
+      }
+
       this._fillCell(nameCell, {
         fluentName,
         fluentArgs,
