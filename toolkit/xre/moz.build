@@ -57,6 +57,7 @@ if CONFIG["MOZ_WIDGET_TOOLKIT"] == "windows":
         "WinTokenUtils.h",
     ]
     UNIFIED_SOURCES += [
+        "/toolkit/mozapps/update/common/pathhash.cpp",
         "/toolkit/mozapps/update/common/updateutils_win.cpp",
         "DllPrefetchExperimentRegistryInfo.cpp",
         "ModuleEvaluator.cpp",
