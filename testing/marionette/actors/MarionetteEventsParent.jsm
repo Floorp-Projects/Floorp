@@ -71,7 +71,7 @@ function registerEventsActor() {
 
           click: {},
           dblclick: {},
-          unload: { capture: true },
+          unload: { capture: true, createActor: false },
         },
       },
 

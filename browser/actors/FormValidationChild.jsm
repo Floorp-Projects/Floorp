@@ -22,14 +22,6 @@ class FormValidationChild extends JSWindowActorChild {
     this._element = null;
   }
 
-  actorCreated() {
-    // Listening to ‘pageshow’ event is only relevant
-    // if an invalid form popup was open. So we add
-    // a listener here and not during registration to
-    // avoid a premature instantiation of the actor.
-    this.contentWindow.addEventListener("pageshow", this);
-  }
-
   /*
    * Events
    */
