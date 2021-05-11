@@ -5,6 +5,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 EXPORTS.mozilla.intl = [
     "src/NumberFormat.h",
+    # Bug 1704509: Remove NumberFormatterSkeleton.h from public API once we have
+    # an unified PluralRules implementation.
+    "src/NumberFormatterSkeleton.h",
 ]
 
 UNIFIED_SOURCES += [
@@ -13,6 +16,7 @@ UNIFIED_SOURCES += [
     "src/NumberFormatterSkeleton.cpp",
 ]
 
-TEST_DIRS += ["gtest"]
+if not CONFIG["JS_STANDALONE"]:
+    TEST_DIRS += ["gtest"]
 
 Library("intlcomponents")
