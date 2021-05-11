@@ -273,9 +273,8 @@
   text-align: right;
 }
 
-.urlbarView-row:not([type=tip], [type=dynamic], [has-help], [label]):hover > .urlbarView-row-inner,
-.urlbarView-row[has-help] > .urlbarView-row-inner:not([selected]):hover,
-.urlbarView-row[label] > .urlbarView-row-inner:not([selected]):hover {
+.urlbarView-row:not([type=tip], [type=dynamic], [has-help]):hover > .urlbarView-row-inner,
+.urlbarView-row[has-help] > .urlbarView-row-inner:not([selected]):hover {
   background-color: var(--autocomplete-popup-hover-background);
 }
 
@@ -521,17 +520,29 @@
 .urlbarView-row[label]::before {
   content: attr(label);
   display: block;
-  margin-block: 4px;
+  /* Remove the label from the document flow so it doesn't affect the row
+     selection and hover states. */
+  position: absolute;
+  /* `top` controls how far the label is from the main part of the row. */
+  top: -1.27em;
   margin-inline-start: var(--urlbarView-item-inline-padding);
   font-size: 0.8em;
   /* The color and opacity of labels is the same as the "This time, search with"
      text in the search shortcuts. See `.search-panel-header > label` in
      searchbar.inc.css. */
   opacity: 0.6;
+  pointer-events: none;
 }
 :root[lwt-toolbar-field-focus-brighttext] .urlbarView-row[label]::before {
   /* Same as `.search-panel-header > label` in searchbar.inc.css */
   opacity: 1;
+}
+
+.urlbarView-row[label] {
+  position: relative;
+  /* `margin-block-start` controls how far the main part of the row is from the
+     main part of the previous row. */
+  margin-block-start: 1.46em;
 }
 
 /* Title */
