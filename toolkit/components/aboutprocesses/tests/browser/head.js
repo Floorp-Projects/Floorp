@@ -318,30 +318,25 @@ function extractProcessDetails(row) {
   let memory = children[1];
   let cpu = children[2];
   let fluentArgs = document.l10n.getAttributes(children[0]).args;
-  let process = {
-    memory,
-    cpu,
-    pidContent: fluentArgs.pid,
-    typeContent: fluentArgs.type,
-    threads: null,
-  };
   let threadDetailsRow = row.nextSibling;
   while (threadDetailsRow) {
+    if (threadDetailsRow.classList.contains("process")) {
+      threadDetailsRow = null;
+      break;
+    }
     if (threadDetailsRow.classList.contains("thread-summary")) {
       break;
     }
     threadDetailsRow = threadDetailsRow.nextSibling;
   }
-  if (!threadDetailsRow) {
-    return process;
-  }
-  process.threads = {
-    row: threadDetailsRow,
-    numberContent: document.l10n.getAttributes(
-      threadDetailsRow.children[0].children[1]
-    ).args.number,
+
+  return {
+    memory,
+    cpu,
+    pidContent: fluentArgs.pid,
+    typeContent: fluentArgs.type,
+    threads: threadDetailsRow,
   };
-  return process;
 }
 
 function findTabRowByName(doc, name) {
@@ -596,22 +591,53 @@ async function testAboutProcessesWithConfig({ showAllFrames, showThreads }) {
         "In hidden threads mode, we shouldn't have any thread summary"
       );
     } else {
+      Assert.ok(threads, "We have a thread summary row");
+
+      let { number, active = 0, list } = document.l10n.getAttributes(
+        threads.children[0].children[1]
+      ).args;
+
       info("Sanity checks: number of threads");
-      let numberOfThreads = Number.parseInt(threads.numberContent);
-      Assert.ok(
-        numberOfThreads >= HARDCODED_ASSUMPTIONS_PROCESS.minimalNumberOfThreads
+      Assert.greaterOrEqual(
+        number,
+        HARDCODED_ASSUMPTIONS_PROCESS.minimalNumberOfThreads
       );
-      Assert.ok(
-        numberOfThreads <= HARDCODED_ASSUMPTIONS_PROCESS.maximalNumberOfThreads
+      Assert.lessOrEqual(
+        number,
+        HARDCODED_ASSUMPTIONS_PROCESS.maximalNumberOfThreads
       );
       Assert.equal(
-        numberOfThreads,
+        number,
         row.process.threads.length,
         "The number we display should be the number of threads"
       );
 
+      info("Sanity checks: number of active threads");
+      Assert.greaterOrEqual(
+        active,
+        0,
+        "The number of active threads should never be negative"
+      );
+      Assert.lessOrEqual(
+        active,
+        number,
+        "The number of active threads should not exceed the total number of threads"
+      );
+      Assert.equal(
+        active,
+        row.process.threads.filter(t => t.slopeCpu).length,
+        "The displayed number of active threads should be correct"
+      );
+
+      info("Sanity checks: thread list");
+      Assert.equal(
+        list ? list.split(", ").length : 0,
+        active,
+        "The thread summary list of active threads should have the expected length"
+      );
+
       info("Testing that we can open the list of threads");
-      let twisty = threads.row.getElementsByClassName("twisty")[0];
+      let twisty = threads.getElementsByClassName("twisty")[0];
       twisty.click();
 
       // Since `twisty.click()` is partially async, we need to wait
@@ -619,7 +645,7 @@ async function testAboutProcessesWithConfig({ showAllFrames, showThreads }) {
       await promiseAboutProcessesUpdated({ doc, tbody, tabAboutProcesses });
       let numberOfThreadsFound = 0;
       for (
-        let threadRow = threads.row.nextSibling;
+        let threadRow = threads.nextSibling;
         threadRow && threadRow.classList.contains("thread");
         threadRow = threadRow.nextSibling
       ) {
@@ -627,11 +653,11 @@ async function testAboutProcessesWithConfig({ showAllFrames, showThreads }) {
       }
       Assert.equal(
         numberOfThreadsFound,
-        numberOfThreads,
-        `We should see ${numberOfThreads} threads, found ${numberOfThreadsFound}`
+        number,
+        `We should see ${number} threads, found ${numberOfThreadsFound}`
       );
       for (
-        let threadRow = threads.row.nextSibling;
+        let threadRow = threads.nextSibling;
         threadRow && threadRow.classList.contains("thread");
         threadRow = threadRow.nextSibling
       ) {
@@ -641,9 +667,18 @@ async function testAboutProcessesWithConfig({ showAllFrames, showThreads }) {
         );
         let children = threadRow.children;
         let cpu = children[1];
-        let tidContent = document.l10n.getAttributes(children[0]).args.tid;
+        let l10nArgs = document.l10n.getAttributes(children[0]).args;
+
+        // Sanity checks: name
+        Assert.ok(threadRow.thread.name, "Thread name is not empty");
+        Assert.equal(
+          l10nArgs.name,
+          threadRow.thread.name,
+          "Displayed thread name is correct"
+        );
 
         // Sanity checks: tid
+        let tidContent = l10nArgs.tid;
         let tid = Number.parseInt(tidContent);
         Assert.notEqual(tid, 0, "The tid should be set");
         Assert.equal(tid, threadRow.thread.tid, "Displayed tid is correct");

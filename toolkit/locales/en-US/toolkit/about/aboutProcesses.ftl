@@ -57,18 +57,38 @@ about-processes-process-name = Process { $pid }: { $name }
 
 ## Details within processes
 
-# Single-line summary of threads
+# Single-line summary of threads (non-idle process)
 # Variables:
 #    $number (Number) The number of threads in the process. Typically larger
 #                     than 30. We don't expect to ever have processes with less
 #                     than 5 threads.
-about-processes-thread-summary = Threads ({ $number })
+#    $active (Number) The number of active threads in the process.
+#                     The value will be greater than 0 and will never be
+#                     greater than $number.
+#    $list (String) Comma separated list of active threads.
+#                   Can be an empty string if the process is idle.
+about-processes-active-threads = { $active ->
+  [one] { $active } active thread out of { $number }: { $list }
+  *[other] { $active } active threads out of { $number }: { $list }
+}
+
+# Single-line summary of threads (idle process)
+# Variables:
+#    $number (Number) The number of threads in the process. Typically larger
+#                     than 30. We don't expect to ever have processes with less
+#                     than 5 threads.
+#                     The process is idle so all threads are inactive.
+about-processes-inactive-threads = { $number ->
+   [one] { $number } inactive thread
+  *[other] { $number } inactive threads
+}
 
 # Thread details
 # Variables:
 #   $name (String) The name assigned to the thread.
 #   $tid (String) The thread id of this thread, assigned by the OS.
-about-processes-thread-name = Thread { $tid }: { $name }
+about-processes-thread-name-and-id = { $name }
+    .title = Thread id: { $tid }
 
 # Tab
 # Variables:
