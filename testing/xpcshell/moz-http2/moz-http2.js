@@ -840,6 +840,10 @@ function handleRequest(req, res) {
       }
     }
 
+    if (u.query.noResponse) {
+      return;
+    }
+
     if (u.query.push) {
       // push.example.org has AAAA entry 2018::2018
       let pcontent = dnsPacket.encode({
@@ -1246,9 +1250,6 @@ function handleRequest(req, res) {
     res.writeHead(200);
     res.write(rContent);
     res.end("");
-    return;
-  } else if (u.pathname === "/dns-750ms") {
-    // it's just meant to be this slow - the test doesn't care about the actual response
     return;
   }
   // for use with test_dns_by_type_resolve.js
