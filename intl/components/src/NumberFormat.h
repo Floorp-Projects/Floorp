@@ -166,8 +166,20 @@ using NumberPartVector = mozilla::Vector<NumberPart, 8 * sizeof(NumberPart)>;
  * ourselves to const APIs ICU is const-correct.
  */
 
+/**
+ * A NumberFormat implementation that roughly mirrors the API provided by
+ * the ECMA-402 Intl.NumberFormat object.
+ *
+ * https://tc39.es/ecma402/#numberformat-objects
+ */
 class NumberFormat final {
  public:
+  /**
+   * Initialize a new NumberFormat for the provided locale and using the
+   * provided options.
+   *
+   * https://tc39.es/ecma402/#sec-initializenumberformat
+   */
   explicit NumberFormat(std::string_view aLocale,
                         const NumberFormatOptions& aOptions = {});
 
@@ -178,6 +190,13 @@ class NumberFormat final {
     OutOfMemory,
   };
 
+  /**
+   * Formats a double to a utf-16 string. The string view is valid until
+   * another number is formatted. Accessing the string view after this event
+   * is undefined behavior.
+   *
+   * https://tc39.es/ecma402/#sec-formatnumberstring
+   */
   Result<std::u16string_view, NumberFormat::FormatError> format(
       double number) const {
     if (!mIsInitialized || !formatInternal(number)) {
@@ -187,6 +206,13 @@ class NumberFormat final {
     return formatResult();
   }
 
+  /**
+   * Formats a double to a utf-16 string, and fills the provided parts vector.
+   * The string view is valid until another number is formatted. Accessing the
+   * string view after this event is undefined behavior.
+   *
+   * https://tc39.es/ecma402/#sec-partitionnumberpattern
+   */
   Result<std::u16string_view, NumberFormat::FormatError> formatToParts(
       double number, NumberPartVector& parts) const {
     if (!mIsInitialized || !formatInternal(number)) {
@@ -198,6 +224,11 @@ class NumberFormat final {
     return formatResultToParts(Some(number), isNegative, parts);
   }
 
+  /**
+   * Formats a double to the provider buffer (either utf-8 or utf-16)
+   *
+   * https://tc39.es/ecma402/#sec-formatnumberstring
+   */
   template <typename B>
   Result<Ok, NumberFormat::FormatError> format(double number, B& buffer) const {
     if (!mIsInitialized || !formatInternal(number)) {
@@ -207,6 +238,13 @@ class NumberFormat final {
     return formatResult<typename B::CharType, B>(buffer);
   }
 
+  /**
+   * Formats an int64_t to a utf-16 string. The string view is valid until
+   * another number is formatted. Accessing the string view after this event is
+   * undefined behavior.
+   *
+   * https://tc39.es/ecma402/#sec-formatnumberstring
+   */
   Result<std::u16string_view, NumberFormat::FormatError> format(
       int64_t number) const {
     if (!mIsInitialized || !formatInternal(number)) {
@@ -216,6 +254,13 @@ class NumberFormat final {
     return formatResult();
   }
 
+  /**
+   * Formats a int64_t to a utf-16 string, and fills the provided parts vector.
+   * The string view is valid until another number is formatted. Accessing the
+   * string view after this event is undefined behavior.
+   *
+   * https://tc39.es/ecma402/#sec-partitionnumberpattern
+   */
   Result<std::u16string_view, NumberFormat::FormatError> formatToParts(
       int64_t number, NumberPartVector& parts) const {
     if (!mIsInitialized || !formatInternal(number)) {
@@ -225,6 +270,11 @@ class NumberFormat final {
     return formatResultToParts(Nothing(), number < 0, parts);
   }
 
+  /**
+   * Formats an int64_t to the provider buffer (either utf-8 or utf-16).
+   *
+   * https://tc39.es/ecma402/#sec-formatnumberstring
+   */
   template <typename B>
   Result<Ok, NumberFormat::FormatError> format(int64_t number,
                                                B& buffer) const {
@@ -235,6 +285,13 @@ class NumberFormat final {
     return formatResult<typename B::CharType, B>(buffer);
   }
 
+  /**
+   * Formats a string encoded big integer to a utf-16 string. The string view
+   * is valid until another number is formatted. Accessing the string view
+   * after this event is undefined behavior.
+   *
+   * https://tc39.es/ecma402/#sec-formatnumberstring
+   */
   Result<std::u16string_view, NumberFormat::FormatError> format(
       std::string_view number) const {
     if (!mIsInitialized || !formatInternal(number)) {
@@ -244,6 +301,14 @@ class NumberFormat final {
     return formatResult();
   }
 
+  /**
+   * Formats a string encoded big integer to a utf-16 string, and fills the
+   * provided parts vector. The string view is valid until another number is
+   * formatted. Accessing the string view after this event is undefined
+   * behavior.
+   *
+   * https://tc39.es/ecma402/#sec-partitionnumberpattern
+   */
   Result<std::u16string_view, NumberFormat::FormatError> formatToParts(
       std::string_view number, NumberPartVector& parts) const {
     if (!mIsInitialized || !formatInternal(number)) {
@@ -255,6 +320,12 @@ class NumberFormat final {
     return formatResultToParts(Nothing(), isNegative, parts);
   }
 
+  /**
+   * Formats a string encoded big integer to the provider buffer
+   * (either utf-8 or utf-16).
+   *
+   * https://tc39.es/ecma402/#sec-formatnumberstring
+   */
   template <typename B>
   Result<Ok, NumberFormat::FormatError> format(std::string_view number,
                                                B& buffer) const {
