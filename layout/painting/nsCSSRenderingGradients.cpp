@@ -245,17 +245,6 @@ static float Interpolate(float aF1, float aF2, float aFrac) {
   return aF1 + aFrac * (aF2 - aF1);
 }
 
-// Returns aFrac*aC2 + (1 - aFrac)*C1. The interpolation is done
-// in unpremultiplied space, which is what SVG gradients and cairo
-// gradients expect.
-static sRGBColor InterpolateColor(const sRGBColor& aC1, const sRGBColor& aC2,
-                                  float aFrac) {
-  double other = 1 - aFrac;
-  return sRGBColor(aC2.r * aFrac + aC1.r * other, aC2.g * aFrac + aC1.g * other,
-                   aC2.b * aFrac + aC1.b * other,
-                   aC2.a * aFrac + aC1.a * other);
-}
-
 static nscoord FindTileStart(nscoord aDirtyCoord, nscoord aTilePos,
                              nscoord aTileDim) {
   NS_ASSERTION(aTileDim > 0, "Non-positive tile dimension");
@@ -403,17 +392,6 @@ static void ResolveMidpoints(nsTArray<ColorStop>& stops) {
   }
 }
 
-static sRGBColor Premultiply(const sRGBColor& aColor) {
-  gfx::Float a = aColor.a;
-  return sRGBColor(aColor.r * a, aColor.g * a, aColor.b * a, a);
-}
-
-static sRGBColor Unpremultiply(const sRGBColor& aColor) {
-  gfx::Float a = aColor.a;
-  return (a > 0.f) ? sRGBColor(aColor.r / a, aColor.g / a, aColor.b / a, a)
-                   : aColor;
-}
-
 static sRGBColor TransparentColor(sRGBColor aColor) {
   aColor.a = 0;
   return aColor;
@@ -456,8 +434,8 @@ static void ResolvePremultipliedAlpha(nsTArray<ColorStop>& aStops) {
     // Now handle cases where one or both of the stops are partially
     // transparent.
     if (leftStop.mColor.a != 1.0f || rightStop.mColor.a != 1.0f) {
-      sRGBColor premulLeftColor = Premultiply(leftStop.mColor);
-      sRGBColor premulRightColor = Premultiply(rightStop.mColor);
+      sRGBColor premulLeftColor = leftStop.mColor.Premultiplied();
+      sRGBColor premulRightColor = rightStop.mColor.Premultiplied();
       // Calculate how many extra steps. We do a step per 10% transparency.
       size_t stepCount =
           NSToIntFloor(fabsf(leftStop.mColor.a - rightStop.mColor.a) /
@@ -466,8 +444,9 @@ static void ResolvePremultipliedAlpha(nsTArray<ColorStop>& aStops) {
         float frac = static_cast<float>(y) / stepCount;
         ColorStop newStop(
             Interpolate(leftStop.mPosition, rightStop.mPosition, frac), false,
-            Unpremultiply(
-                InterpolateColor(premulLeftColor, premulRightColor, frac)));
+            sRGBColor::InterpolatePremultiplied(premulLeftColor,
+                                                premulRightColor, frac)
+                .Unpremultiplied());
         aStops.InsertElementAt(x, newStop);
         x++;
       }
@@ -487,10 +466,10 @@ static ColorStop InterpolateColorStop(const ColorStop& aFirst,
     return ColorStop(aPosition, false, aDefault);
   }
 
-  return ColorStop(aPosition, false,
-                   Unpremultiply(InterpolateColor(
-                       Premultiply(aFirst.mColor), Premultiply(aSecond.mColor),
-                       (aPosition - aFirst.mPosition) / delta)));
+  return ColorStop(
+      aPosition, false,
+      sRGBColor::Interpolate(aFirst.mColor, aSecond.mColor,
+                             (aPosition - aFirst.mPosition) / delta));
 }
 
 // Clamp and extend the given ColorStop array in-place to fit exactly into the
@@ -861,8 +840,8 @@ void nsCSSGradientRenderer::Paint(gfxContext& aContext, const nsRect& aDest,
               // XXX Color interpolation (in cairo, too) should use the
               // CSS 'color-interpolation' property!
               float frac = float((0.0 - pos) / (nextPos - pos));
-              mStops[i].mColor = InterpolateColor(mStops[i].mColor,
-                                                  mStops[i + 1].mColor, frac);
+              mStops[i].mColor = sRGBColor::InterpolatePremultiplied(
+                  mStops[i].mColor, mStops[i + 1].mColor, frac);
             }
           }
         }
