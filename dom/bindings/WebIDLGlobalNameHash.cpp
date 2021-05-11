@@ -149,8 +149,9 @@ bool WebIDLGlobalNameHash::DefineIfEnabled(
       return Throw(aCx, NS_ERROR_FAILURE);
     }
 
-    FillPropertyDescriptor(aCx, aDesc, aObj, JS::ObjectValue(*constructor),
-                           false, false);
+    aDesc.set(mozilla::Some(JS::PropertyDescriptor::Data(
+        JS::ObjectValue(*constructor), {JS::PropertyAttribute::Configurable,
+                                        JS::PropertyAttribute::Writable})));
     return true;
   }
 
@@ -165,10 +166,9 @@ bool WebIDLGlobalNameHash::DefineIfEnabled(
   // We've already defined the property.  We indicate this to the caller
   // by filling a property descriptor with JS::UndefinedValue() as the
   // value.  We still have to fill in a property descriptor, though, so
-  // that the caller knows the property is in fact on this object.  It
-  // doesn't matter what we pass for the "readonly" argument here.
-  FillPropertyDescriptor(aCx, aDesc, aObj, JS::UndefinedValue(), false);
-
+  // that the caller knows the property is in fact on this object.
+  aDesc.set(
+      mozilla::Some(JS::PropertyDescriptor::Data(JS::UndefinedValue(), {})));
   return true;
 }
 
