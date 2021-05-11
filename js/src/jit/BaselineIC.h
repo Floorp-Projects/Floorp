@@ -399,8 +399,6 @@ class ICFallbackStub : public ICStub {
 
   ICState& state() { return state_; }
 
-  void trace(JSTracer* trc);
-
   // The icEntry_ field can't be initialized when the stub is created since we
   // won't know the ICEntry address until we add the stub to JitScript. This
   // method allows this field to be fixed up at that point.
