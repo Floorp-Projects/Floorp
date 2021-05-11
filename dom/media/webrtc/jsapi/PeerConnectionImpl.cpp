@@ -1843,13 +1843,15 @@ PeerConnectionImpl::ReplaceTrackNoRenegotiation(TransceiverImpl& aTransceiver,
   if (aTransceiver.IsVideo()) {
     // We update the media pipelines here so we can apply different codec
     // settings for different sources (e.g. screensharing as opposed to camera.)
-    MediaSourceEnum oldSource = oldSendTrack
-                                    ? oldSendTrack->GetSource().GetMediaSource()
-                                    : MediaSourceEnum::Camera;
-    MediaSourceEnum newSource = aWithTrack
-                                    ? aWithTrack->GetSource().GetMediaSource()
-                                    : MediaSourceEnum::Camera;
-    if (oldSource != newSource) {
+    Maybe<MediaSourceEnum> oldType;
+    Maybe<MediaSourceEnum> newType;
+    if (oldSendTrack) {
+      oldType = Some(oldSendTrack->GetSource().GetMediaSource());
+    }
+    if (aWithTrack) {
+      newType = Some(aWithTrack->GetSource().GetMediaSource());
+    }
+    if (oldType != newType) {
       if (NS_WARN_IF(NS_FAILED(rv = aTransceiver.UpdateConduit()))) {
         CSFLogError(LOGTAG, "Error Updating VideoConduit");
         return rv;
