@@ -481,76 +481,82 @@ var View = {
     // Column: Name
     let nameCell = row.firstChild;
     {
-      let fluentName;
       let classNames = [];
+      let fluentName;
+      let fluentArgs = {
+        pid: "" + data.pid, // Make sure that this number is not localized
+      };
       switch (data.type) {
         case "web":
-          fluentName = "about-processes-web-process-name";
+          fluentName = "about-processes-web-process";
           break;
         case "webIsolated":
-          fluentName = "about-processes-web-isolated-process-name";
+          fluentName = "about-processes-web-isolated-process";
+          fluentArgs.origin = data.origin;
           break;
         case "webLargeAllocation":
-          fluentName = "about-processes-web-large-allocation-process-name";
+          fluentName = "about-processes-web-large-allocation-process";
+          fluentArgs.origin = data.origin;
           break;
         case "file":
-          fluentName = "about-processes-file-process-name";
+          fluentName = "about-processes-file-process";
           break;
         case "extension":
-          fluentName = "about-processes-extension-process-name";
+          fluentName = "about-processes-extension-process";
           classNames = ["extensions"];
           break;
         case "privilegedabout":
-          fluentName = "about-processes-privilegedabout-process-name";
+          fluentName = "about-processes-privilegedabout-process";
+          break;
+        case "privilegemozilla":
+          fluentName = "about-processes-privilegedmozilla-process";
           break;
         case "withCoopCoep":
-          fluentName = "about-processes-with-coop-coep-process-name";
+          fluentName = "about-processes-with-coop-coep-process";
+          fluentArgs.origin = data.origin;
           break;
         case "browser":
-          fluentName = "about-processes-browser-process-name";
+          fluentName = "about-processes-browser-process";
           break;
         case "plugin":
-          fluentName = "about-processes-plugin-process-name";
+          fluentName = "about-processes-plugin-process";
           break;
         case "gmpPlugin":
-          fluentName = "about-processes-gmp-plugin-process-name";
+          fluentName = "about-processes-gmp-plugin-process";
           break;
         case "gpu":
-          fluentName = "about-processes-gpu-process-name";
+          fluentName = "about-processes-gpu-process";
           break;
         case "vr":
-          fluentName = "about-processes-vr-process-name";
+          fluentName = "about-processes-vr-process";
           break;
         case "rdd":
-          fluentName = "about-processes-rdd-process-name";
+          fluentName = "about-processes-rdd-process";
           break;
         case "socket":
-          fluentName = "about-processes-socket-process-name";
+          fluentName = "about-processes-socket-process";
           break;
         case "remoteSandboxBroker":
-          fluentName = "about-processes-remote-sandbox-broker-process-name";
+          fluentName = "about-processes-remote-sandbox-broker-process";
           break;
         case "forkServer":
-          fluentName = "about-processes-fork-server-process-name";
+          fluentName = "about-processes-fork-server-process";
           break;
         case "preallocated":
-          fluentName = "about-processes-preallocated-process-name";
+          fluentName = "about-processes-preallocated-process";
           break;
         // The following are probably not going to show up for users
         // but let's handle the case anyway to avoid heisenoranges
         // during tests in case of a leftover process from a previous
         // test.
         default:
-          fluentName = "about-processes-unknown-process-name";
+          fluentName = "about-processes-unknown-process";
+          fluentArgs.type = data.type;
           break;
       }
       this._fillCell(nameCell, {
         fluentName,
-        fluentArgs: {
-          pid: "" + data.pid, // Make sure that this number is not localized
-          origin: data.origin,
-          type: data.type,
-        },
+        fluentArgs,
         classes: ["type", "favicon", ...classNames],
       });
 
