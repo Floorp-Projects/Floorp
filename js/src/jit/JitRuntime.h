@@ -53,7 +53,7 @@ struct VMFunctionData;
 enum class TailCallVMFunctionId;
 enum class VMFunctionId;
 
-enum class BaselineICFallbackKind {
+enum class BaselineICFallbackKind : uint8_t {
 #define DEF_ENUM_KIND(kind) kind,
   IC_BASELINE_FALLBACK_CODE_KIND_LIST(DEF_ENUM_KIND)
 #undef DEF_ENUM_KIND

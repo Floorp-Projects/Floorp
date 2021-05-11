@@ -112,10 +112,6 @@ class ICStub;
 class ICCacheIRStub;
 class ICFallbackStub;
 
-#define FORWARD_DECLARE_STUBS(kindName) class IC##kindName;
-IC_BASELINE_STUB_KIND_LIST(FORWARD_DECLARE_STUBS)
-#undef FORWARD_DECLARE_STUBS
-
 #ifdef JS_JITSPEW
 void FallbackICSpew(JSContext* cx, ICFallbackStub* stub, const char* fmt, ...)
     MOZ_FORMAT_PRINTF(3, 4);
@@ -270,15 +266,6 @@ class ICStub {
   friend class ICFallbackStub;
 
  public:
-  // TODO(no-TI): move to ICFallbackStub, make enum class.
-  enum Kind : uint8_t {
-    INVALID = 0,
-#define DEF_ENUM_KIND(kindName) kindName,
-    IC_BASELINE_STUB_KIND_LIST(DEF_ENUM_KIND)
-#undef DEF_ENUM_KIND
-        LIMIT
-  };
-
   template <typename T, typename... Args>
   static T* NewFallback(JSContext* cx, ICStubSpace* space, TrampolinePtr code,
                         Args&&... args) {
@@ -355,7 +342,7 @@ class ICStub {
   }
 };
 
-class ICFallbackStub : public ICStub {
+class ICFallbackStub final : public ICStub {
   friend class ICStubConstIterator;
 
  protected:
@@ -368,30 +355,11 @@ class ICFallbackStub : public ICStub {
   // The state of this IC.
   ICState state_{};
 
-  Kind kind_;
-
-  ICFallbackStub(Kind kind, TrampolinePtr stubCode)
-      : ICStub(stubCode.value, /* isFallback = */ true), kind_(kind) {
-    isFallback_ = true;
-  }
-
  public:
+  explicit ICFallbackStub(TrampolinePtr stubCode)
+      : ICStub(stubCode.value, /* isFallback = */ true) {}
+
   inline ICEntry* icEntry() const { return icEntry_; }
-
-  inline Kind kind() const { return kind_; }
-
-#define KIND_METHODS(kindName)                                    \
-  inline bool is##kindName() const { return kind() == kindName; } \
-  inline const IC##kindName* to##kindName() const {               \
-    MOZ_ASSERT(is##kindName());                                   \
-    return reinterpret_cast<const IC##kindName*>(this);           \
-  }                                                               \
-  inline IC##kindName* to##kindName() {                           \
-    MOZ_ASSERT(is##kindName());                                   \
-    return reinterpret_cast<IC##kindName*>(this);                 \
-  }
-  IC_BASELINE_STUB_KIND_LIST(KIND_METHODS)
-#undef KIND_METHODS
 
   inline size_t numOptimizedStubs() const { return state_.numOptimizedStubs(); }
 
@@ -433,7 +401,7 @@ class ICFallbackStub : public ICStub {
   void unlinkStub(Zone* zone, ICCacheIRStub* prev, ICCacheIRStub* stub);
 };
 
-class ICCacheIRStub : public ICStub {
+class ICCacheIRStub final : public ICStub {
   // Pointer to next IC stub.
   ICStub* next_ = nullptr;
 
@@ -499,358 +467,113 @@ inline ICFallbackStub* ICStub::getChainFallback() {
 
 AllocatableGeneralRegisterSet BaselineICAvailableGeneralRegs(size_t numInputs);
 
-// ToBool
-//      JSOp::JumpIfTrue
-
-class ICToBool_Fallback : public ICFallbackStub {
-  friend class ICStubSpace;
-
-  explicit ICToBool_Fallback(TrampolinePtr stubCode)
-      : ICFallbackStub(ICStub::ToBool_Fallback, stubCode) {}
-};
-
-// GetElem
-//      JSOp::GetElem
-//      JSOp::GetElemSuper
-
-class ICGetElem_Fallback : public ICFallbackStub {
-  friend class ICStubSpace;
-
-  explicit ICGetElem_Fallback(TrampolinePtr stubCode)
-      : ICFallbackStub(ICStub::GetElem_Fallback, stubCode) {}
-};
-
-// SetElem
-//      JSOp::SetElem
-//      JSOp::InitElem
-
-class ICSetElem_Fallback : public ICFallbackStub {
-  friend class ICStubSpace;
-
-  explicit ICSetElem_Fallback(TrampolinePtr stubCode)
-      : ICFallbackStub(ICStub::SetElem_Fallback, stubCode) {}
-};
-
-// In
-//      JSOp::In
-class ICIn_Fallback : public ICFallbackStub {
-  friend class ICStubSpace;
-
-  explicit ICIn_Fallback(TrampolinePtr stubCode)
-      : ICFallbackStub(ICStub::In_Fallback, stubCode) {}
-};
-
-// HasOwn
-//      JSOp::HasOwn
-class ICHasOwn_Fallback : public ICFallbackStub {
-  friend class ICStubSpace;
-
-  explicit ICHasOwn_Fallback(TrampolinePtr stubCode)
-      : ICFallbackStub(ICStub::HasOwn_Fallback, stubCode) {}
-};
-
-// CheckPrivateField
-//      JSOp::CheckPrivateField
-class ICCheckPrivateField_Fallback : public ICFallbackStub {
-  friend class ICStubSpace;
-
-  explicit ICCheckPrivateField_Fallback(TrampolinePtr stubCode)
-      : ICFallbackStub(ICStub::CheckPrivateField_Fallback, stubCode) {}
-};
-
-// GetName
-//      JSOp::GetName
-//      JSOp::GetGName
-class ICGetName_Fallback : public ICFallbackStub {
-  friend class ICStubSpace;
-
-  explicit ICGetName_Fallback(TrampolinePtr stubCode)
-      : ICFallbackStub(ICStub::GetName_Fallback, stubCode) {}
-};
-
-// BindName
-//      JSOp::BindName
-class ICBindName_Fallback : public ICFallbackStub {
-  friend class ICStubSpace;
-
-  explicit ICBindName_Fallback(TrampolinePtr stubCode)
-      : ICFallbackStub(ICStub::BindName_Fallback, stubCode) {}
-};
-
-// GetIntrinsic
-//      JSOp::GetIntrinsic
-class ICGetIntrinsic_Fallback : public ICFallbackStub {
-  friend class ICStubSpace;
-
-  explicit ICGetIntrinsic_Fallback(TrampolinePtr stubCode)
-      : ICFallbackStub(ICStub::GetIntrinsic_Fallback, stubCode) {}
-};
-
-// GetProp
-//     JSOp::GetProp
-//     JSOp::GetPropSuper
-
-class ICGetProp_Fallback : public ICFallbackStub {
-  friend class ICStubSpace;
-
-  explicit ICGetProp_Fallback(TrampolinePtr stubCode)
-      : ICFallbackStub(ICStub::GetProp_Fallback, stubCode) {}
-};
-
-// SetProp
-//     JSOp::SetProp
-//     JSOp::SetName
-//     JSOp::SetGName
-//     JSOp::InitProp
-
-class ICSetProp_Fallback : public ICFallbackStub {
-  friend class ICStubSpace;
-
-  explicit ICSetProp_Fallback(TrampolinePtr stubCode)
-      : ICFallbackStub(ICStub::SetProp_Fallback, stubCode) {}
-};
-
-// Call
-//      JSOp::Call
-//      JSOp::CallIgnoresRv
-//      JSOp::CallIter
-//      JSOp::FunApply
-//      JSOp::FunCall
-//      JSOp::New
-//      JSOp::SuperCall
-//      JSOp::Eval
-//      JSOp::StrictEval
-//      JSOp::SpreadCall
-//      JSOp::SpreadNew
-//      JSOp::SpreadSuperCall
-//      JSOp::SpreadEval
-//      JSOp::SpreadStrictEval
-
-class ICCall_Fallback : public ICFallbackStub {
-  friend class ICStubSpace;
-
-  explicit ICCall_Fallback(TrampolinePtr stubCode)
-      : ICFallbackStub(ICStub::Call_Fallback, stubCode) {}
-};
-
-// IC for constructing an iterator from an input value.
-class ICGetIterator_Fallback : public ICFallbackStub {
-  friend class ICStubSpace;
-
-  explicit ICGetIterator_Fallback(TrampolinePtr stubCode)
-      : ICFallbackStub(ICStub::GetIterator_Fallback, stubCode) {}
-};
-
-class ICOptimizeSpreadCall_Fallback : public ICFallbackStub {
-  friend class ICStubSpace;
-
-  explicit ICOptimizeSpreadCall_Fallback(TrampolinePtr stubCode)
-      : ICFallbackStub(ICStub::OptimizeSpreadCall_Fallback, stubCode) {}
-};
-
-// InstanceOf
-//      JSOp::Instanceof
-class ICInstanceOf_Fallback : public ICFallbackStub {
-  friend class ICStubSpace;
-
-  explicit ICInstanceOf_Fallback(TrampolinePtr stubCode)
-      : ICFallbackStub(ICStub::InstanceOf_Fallback, stubCode) {}
-};
-
-// TypeOf
-//      JSOp::Typeof
-//      JSOp::TypeofExpr
-class ICTypeOf_Fallback : public ICFallbackStub {
-  friend class ICStubSpace;
-
-  explicit ICTypeOf_Fallback(TrampolinePtr stubCode)
-      : ICFallbackStub(ICStub::TypeOf_Fallback, stubCode) {}
-};
-
-class ICToPropertyKey_Fallback : public ICFallbackStub {
-  friend class ICStubSpace;
-
-  explicit ICToPropertyKey_Fallback(TrampolinePtr stubCode)
-      : ICFallbackStub(ICStub::ToPropertyKey_Fallback, stubCode) {}
-};
-
-class ICRest_Fallback : public ICFallbackStub {
-  friend class ICStubSpace;
-
-  explicit ICRest_Fallback(TrampolinePtr stubCode)
-      : ICFallbackStub(ICStub::Rest_Fallback, stubCode) {}
-};
-
-// UnaryArith
-//     JSOp::BitNot
-//     JSOp::Pos
-//     JSOp::Neg
-//     JSOp::Inc
-//     JSOp::Dec
-//     JSOp::ToNumeric
-
-class ICUnaryArith_Fallback : public ICFallbackStub {
-  friend class ICStubSpace;
-
-  explicit ICUnaryArith_Fallback(TrampolinePtr stubCode)
-      : ICFallbackStub(UnaryArith_Fallback, stubCode) {}
-};
-
-// Compare
-//      JSOp::Lt
-//      JSOp::Le
-//      JSOp::Gt
-//      JSOp::Ge
-//      JSOp::Eq
-//      JSOp::Ne
-//      JSOp::StrictEq
-//      JSOp::StrictNe
-
-class ICCompare_Fallback : public ICFallbackStub {
-  friend class ICStubSpace;
-
-  explicit ICCompare_Fallback(TrampolinePtr stubCode)
-      : ICFallbackStub(ICStub::Compare_Fallback, stubCode) {}
-};
-
-// BinaryArith
-//      JSOp::Add, JSOp::Sub, JSOp::Mul, JSOp::Div, JSOp::Mod, JSOp::Pow,
-//      JSOp::BitAnd, JSOp::BitXor, JSOp::BitOr
-//      JSOp::Lsh, JSOp::Rsh, JSOp::Ursh
-
-class ICBinaryArith_Fallback : public ICFallbackStub {
-  friend class ICStubSpace;
-
-  explicit ICBinaryArith_Fallback(TrampolinePtr stubCode)
-      : ICFallbackStub(BinaryArith_Fallback, stubCode) {}
-};
-
-// JSOp::NewArray
-
-class ICNewArray_Fallback : public ICFallbackStub {
-  friend class ICStubSpace;
-
-  explicit ICNewArray_Fallback(TrampolinePtr stubCode)
-      : ICFallbackStub(ICStub::NewArray_Fallback, stubCode) {}
-};
-
-// JSOp::NewObject
-
-class ICNewObject_Fallback : public ICFallbackStub {
-  friend class ICStubSpace;
-
-  explicit ICNewObject_Fallback(TrampolinePtr stubCode)
-      : ICFallbackStub(ICStub::NewObject_Fallback, stubCode) {}
-};
-
 struct IonOsrTempData;
 
 extern bool DoCallFallback(JSContext* cx, BaselineFrame* frame,
-                           ICCall_Fallback* stub, uint32_t argc, Value* vp,
+                           ICFallbackStub* stub, uint32_t argc, Value* vp,
                            MutableHandleValue res);
 
 extern bool DoSpreadCallFallback(JSContext* cx, BaselineFrame* frame,
-                                 ICCall_Fallback* stub, Value* vp,
+                                 ICFallbackStub* stub, Value* vp,
                                  MutableHandleValue res);
 
 extern bool DoToBoolFallback(JSContext* cx, BaselineFrame* frame,
-                             ICToBool_Fallback* stub, HandleValue arg,
+                             ICFallbackStub* stub, HandleValue arg,
                              MutableHandleValue ret);
 
 extern bool DoGetElemSuperFallback(JSContext* cx, BaselineFrame* frame,
-                                   ICGetElem_Fallback* stub, HandleValue lhs,
+                                   ICFallbackStub* stub, HandleValue lhs,
                                    HandleValue rhs, HandleValue receiver,
                                    MutableHandleValue res);
 
 extern bool DoGetElemFallback(JSContext* cx, BaselineFrame* frame,
-                              ICGetElem_Fallback* stub, HandleValue lhs,
+                              ICFallbackStub* stub, HandleValue lhs,
                               HandleValue rhs, MutableHandleValue res);
 
 extern bool DoSetElemFallback(JSContext* cx, BaselineFrame* frame,
-                              ICSetElem_Fallback* stub, Value* stack,
+                              ICFallbackStub* stub, Value* stack,
                               HandleValue objv, HandleValue index,
                               HandleValue rhs);
 
 extern bool DoInFallback(JSContext* cx, BaselineFrame* frame,
-                         ICIn_Fallback* stub, HandleValue key,
+                         ICFallbackStub* stub, HandleValue key,
                          HandleValue objValue, MutableHandleValue res);
 
 extern bool DoHasOwnFallback(JSContext* cx, BaselineFrame* frame,
-                             ICHasOwn_Fallback* stub, HandleValue keyValue,
+                             ICFallbackStub* stub, HandleValue keyValue,
                              HandleValue objValue, MutableHandleValue res);
 
 extern bool DoCheckPrivateFieldFallback(JSContext* cx, BaselineFrame* frame,
-                                        ICCheckPrivateField_Fallback* stub,
+                                        ICFallbackStub* stub,
                                         HandleValue objValue,
                                         HandleValue keyValue,
                                         MutableHandleValue res);
 
 extern bool DoGetNameFallback(JSContext* cx, BaselineFrame* frame,
-                              ICGetName_Fallback* stub, HandleObject envChain,
+                              ICFallbackStub* stub, HandleObject envChain,
                               MutableHandleValue res);
 
 extern bool DoBindNameFallback(JSContext* cx, BaselineFrame* frame,
-                               ICBindName_Fallback* stub, HandleObject envChain,
+                               ICFallbackStub* stub, HandleObject envChain,
                                MutableHandleValue res);
 
 extern bool DoGetIntrinsicFallback(JSContext* cx, BaselineFrame* frame,
-                                   ICGetIntrinsic_Fallback* stub,
+                                   ICFallbackStub* stub,
                                    MutableHandleValue res);
 
 extern bool DoGetPropFallback(JSContext* cx, BaselineFrame* frame,
-                              ICGetProp_Fallback* stub, MutableHandleValue val,
+                              ICFallbackStub* stub, MutableHandleValue val,
                               MutableHandleValue res);
 
 extern bool DoGetPropSuperFallback(JSContext* cx, BaselineFrame* frame,
-                                   ICGetProp_Fallback* stub,
-                                   HandleValue receiver, MutableHandleValue val,
+                                   ICFallbackStub* stub, HandleValue receiver,
+                                   MutableHandleValue val,
                                    MutableHandleValue res);
 
 extern bool DoSetPropFallback(JSContext* cx, BaselineFrame* frame,
-                              ICSetProp_Fallback* stub, Value* stack,
+                              ICFallbackStub* stub, Value* stack,
                               HandleValue lhs, HandleValue rhs);
 
 extern bool DoGetIteratorFallback(JSContext* cx, BaselineFrame* frame,
-                                  ICGetIterator_Fallback* stub,
-                                  HandleValue value, MutableHandleValue res);
+                                  ICFallbackStub* stub, HandleValue value,
+                                  MutableHandleValue res);
 
 extern bool DoOptimizeSpreadCallFallback(JSContext* cx, BaselineFrame* frame,
-                                         ICOptimizeSpreadCall_Fallback* stub,
+                                         ICFallbackStub* stub,
                                          HandleValue value,
                                          MutableHandleValue res);
 
 extern bool DoInstanceOfFallback(JSContext* cx, BaselineFrame* frame,
-                                 ICInstanceOf_Fallback* stub, HandleValue lhs,
+                                 ICFallbackStub* stub, HandleValue lhs,
                                  HandleValue rhs, MutableHandleValue res);
 
 extern bool DoTypeOfFallback(JSContext* cx, BaselineFrame* frame,
-                             ICTypeOf_Fallback* stub, HandleValue val,
+                             ICFallbackStub* stub, HandleValue val,
                              MutableHandleValue res);
 
 extern bool DoToPropertyKeyFallback(JSContext* cx, BaselineFrame* frame,
-                                    ICToPropertyKey_Fallback* stub,
-                                    HandleValue val, MutableHandleValue res);
+                                    ICFallbackStub* stub, HandleValue val,
+                                    MutableHandleValue res);
 
 extern bool DoRestFallback(JSContext* cx, BaselineFrame* frame,
-                           ICRest_Fallback* stub, MutableHandleValue res);
+                           ICFallbackStub* stub, MutableHandleValue res);
 
 extern bool DoUnaryArithFallback(JSContext* cx, BaselineFrame* frame,
-                                 ICUnaryArith_Fallback* stub, HandleValue val,
+                                 ICFallbackStub* stub, HandleValue val,
                                  MutableHandleValue res);
 
 extern bool DoBinaryArithFallback(JSContext* cx, BaselineFrame* frame,
-                                  ICBinaryArith_Fallback* stub, HandleValue lhs,
+                                  ICFallbackStub* stub, HandleValue lhs,
                                   HandleValue rhs, MutableHandleValue ret);
 
 extern bool DoNewArrayFallback(JSContext* cx, BaselineFrame* frame,
-                               ICNewArray_Fallback* stub, MutableHandleValue res);
+                               ICFallbackStub* stub, MutableHandleValue res);
 
 extern bool DoNewObjectFallback(JSContext* cx, BaselineFrame* frame,
-                                ICNewObject_Fallback* stub,
-                                MutableHandleValue res);
+                                ICFallbackStub* stub, MutableHandleValue res);
 
 extern bool DoCompareFallback(JSContext* cx, BaselineFrame* frame,
-                              ICCompare_Fallback* stub, HandleValue lhs,
+                              ICFallbackStub* stub, HandleValue lhs,
                               HandleValue rhs, MutableHandleValue ret);
 
 }  // namespace jit
