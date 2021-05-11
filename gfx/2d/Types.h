@@ -489,9 +489,36 @@ struct sRGBColor {
                      ((aColor >> 24) & 0xff) * (1.0f / 255.0f));
   }
 
-  uint32_t ToABGR() const {
+  constexpr uint32_t ToABGR() const {
     return uint32_t(r * 255.0f) | uint32_t(g * 255.0f) << 8 |
            uint32_t(b * 255.0f) << 16 | uint32_t(a * 255.0f) << 24;
+  }
+
+  constexpr sRGBColor Premultiplied() const {
+    return sRGBColor(r * a, g * a, b * a, a);
+  }
+
+  constexpr sRGBColor Unpremultiplied() const {
+    return a > 0.f ? sRGBColor(r / a, g / a, b / a, a) : *this;
+  }
+
+  // Returns aFrac*aC2 + (1 - aFrac)*C1. The interpolation is done in
+  // unpremultiplied space, which is what SVG gradients and cairo gradients
+  // expect.
+  constexpr static sRGBColor InterpolatePremultiplied(const sRGBColor& aC1,
+                                                      const sRGBColor& aC2,
+                                                      float aFrac) {
+    double other = 1 - aFrac;
+    return sRGBColor(
+        aC2.r * aFrac + aC1.r * other, aC2.g * aFrac + aC1.g * other,
+        aC2.b * aFrac + aC1.b * other, aC2.a * aFrac + aC1.a * other);
+  }
+
+  constexpr static sRGBColor Interpolate(const sRGBColor& aC1,
+                                         const sRGBColor& aC2, float aFrac) {
+    return InterpolatePremultiplied(aC1.Premultiplied(), aC2.Premultiplied(),
+                                    aFrac)
+        .Unpremultiplied();
   }
 
   // The "Unusual" prefix is to avoid unintentionally using this function when
