@@ -48,6 +48,8 @@ constexpr char ExtendedUnclonedSelfHostedFunctionNamePrefix = '$';
  */
 bool IsExtendedUnclonedSelfHostedFunctionName(JSAtom* name);
 
+void SetUnclonedSelfHostedCanonicalName(JSFunction* fun, JSAtom* name);
+
 bool IsCallSelfHostedNonGenericMethod(NativeImpl impl);
 
 bool ReportIncompatibleSelfHostedMethod(JSContext* cx, const CallArgs& args);

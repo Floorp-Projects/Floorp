@@ -411,6 +411,7 @@
   MACRO_(set, set, "set")                                                      \
   MACRO_(setBigInt64, setBigInt64, "setBigInt64")                              \
   MACRO_(setBigUint64, setBigUint64, "setBigUint64")                           \
+  MACRO_(SetCanonicalName, SetCanonicalName, "_SetCanonicalName")              \
   MACRO_(SetConstructorInit, SetConstructorInit, "SetConstructorInit")         \
   MACRO_(SetIsInlinableLargeFunction, SetIsInlinableLargeFunction,             \
          "_SetIsInlinableLargeFunction")                                       \

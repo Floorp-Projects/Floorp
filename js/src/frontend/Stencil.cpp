@@ -44,6 +44,7 @@
 #include "vm/RegExpObject.h"  // js::RegExpObject
 #include "vm/Scope.h"  // Scope, *Scope, ScopeKindString, ScopeIter, ScopeKindIsCatch, BindingIter, GetScopeDataTrailingNames
 #include "vm/ScopeKind.h"     // ScopeKind
+#include "vm/SelfHosting.h"   // SetClonedSelfHostedFunctionName
 #include "vm/StencilEnums.h"  // ImmutableScriptFlagsEnum
 #include "vm/StringType.h"    // JSAtom, js::CopyChars
 #include "vm/Xdr.h"           // XDRMode, XDRResult, XDREncoder
@@ -996,6 +997,15 @@ static bool InstantiateFunctions(JSContext* cx, CompilationInput& input,
                              index);
     if (!fun) {
       return false;
+    }
+
+    // Self-hosted functions may have an canonical name that differs from the
+    // function name.  In that case, store this canonical name in an extended
+    // slot.
+    if (scriptStencil.hasSelfHostedCanonicalName()) {
+      JSAtom* canonicalName = input.atomCache.getExistingAtomAt(
+          cx, scriptStencil.selfHostedCanonicalName());
+      SetUnclonedSelfHostedCanonicalName(fun, canonicalName);
     }
 
     gcOutput.functions[index] = fun;
@@ -2749,7 +2759,13 @@ void ScriptStencil::dumpFields(js::JSONPrinter& json,
 
     if (hasLazyFunctionEnclosingScopeIndex()) {
       json.formatProperty("lazyFunctionEnclosingScopeIndex", "ScopeIndex(%zu)",
-                          size_t(lazyFunctionEnclosingScopeIndex_));
+                          size_t(lazyFunctionEnclosingScopeIndex()));
+    }
+
+    if (hasSelfHostedCanonicalName()) {
+      json.beginObjectProperty("selfHostCanonicalName");
+      DumpTaggedParserAtomIndex(json, selfHostedCanonicalName(), stencil);
+      json.endObject();
     }
   }
 }
