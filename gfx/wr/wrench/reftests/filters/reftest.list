@@ -33,7 +33,7 @@ skip_on(android,device) == filter-hue-rotate-alpha-1.yaml filter-hue-rotate-alph
 skip_on(android,device) fuzzy(2,9072) fuzzy-if(platform(swgl),9,109897) == filter-long-chain.yaml filter-long-chain.png  # fails on Pixel2
 platform(linux,mac) == filter-drop-shadow.yaml filter-drop-shadow.png
 platform(linux,mac) == filter-drop-shadow-on-viewport-edge.yaml filter-drop-shadow-on-viewport-edge.png
-platform(linux,mac) == blend-clipped.yaml blend-clipped.png
+#platform(linux,mac) == blend-clipped.yaml blend-clipped.png #disabled in beta-89 to facilitate late uplift
 platform(linux,mac) == filter-drop-shadow-clip.yaml filter-drop-shadow-clip.png
 fuzzy(2,10) platform(linux,mac) == filter-drop-shadow-clip-2.yaml filter-drop-shadow-clip-2.png
 fuzzy(1,26) platform(linux) == filter-drop-shadow-clip-3.yaml filter-drop-shadow-clip-3.png
