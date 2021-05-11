@@ -170,12 +170,16 @@ already_AddRefed<RenderPassEncoder> CommandEncoder::BeginRenderPass(
     const dom::GPURenderPassDescriptor& aDesc) {
   for (const auto& at : aDesc.mColorAttachments) {
     auto* targetCanvasElement = at.mView->GetTargetCanvasElement();
-    if (targetCanvasElement) {
-      if (mTargetCanvasElement) {
-        NS_WARNING("Command encoder touches more than one canvas");
-      } else {
-        mTargetCanvasElement = targetCanvasElement;
-      }
+    if (!targetCanvasElement && at.mResolveTarget.WasPassed()) {
+      targetCanvasElement = at.mResolveTarget.Value().GetTargetCanvasElement();
+    }
+    if (!targetCanvasElement) {
+      continue;
+    }
+    if (mTargetCanvasElement) {
+      NS_WARNING("Command encoder touches more than one canvas");
+    } else {
+      mTargetCanvasElement = targetCanvasElement;
     }
   }
 
