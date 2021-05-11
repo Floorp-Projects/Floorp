@@ -199,12 +199,17 @@ void ICEntry::trace(JSTracer* trc) {
   // If we have filled our padding with a magic value, check it now.
   MOZ_DIAGNOSTIC_ASSERT(traceMagic_ == EXPECTED_TRACE_MAGIC);
 #endif
+
   ICStub* stub = firstStub();
+
+  // Trace CacheIR stubs.
   while (!stub->isFallback()) {
     stub->toCacheIRStub()->trace(trc);
     stub = stub->toCacheIRStub()->next();
   }
-  stub->toFallbackStub()->trace(trc);
+
+  // Fallback stubs use runtime-wide trampoline code we don't need to trace.
+  MOZ_ASSERT(stub->usesTrampolineCode());
 }
 
 // Allocator for Baseline IC fallback stubs. These stubs use trampoline code
@@ -593,11 +598,6 @@ void ICCacheIRStub::trace(JSTracer* trc) {
   TraceManuallyBarrieredEdge(trc, &stubJitCode, "baseline-ic-stub-code");
 
   TraceCacheIRStub(trc, this, stubInfo());
-}
-
-void ICFallbackStub::trace(JSTracer* trc) {
-  // Fallback stubs use runtime-wide trampoline code we don't need to trace.
-  MOZ_ASSERT(usesTrampolineCode());
 }
 
 static void MaybeTransition(JSContext* cx, BaselineFrame* frame,

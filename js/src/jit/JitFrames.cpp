@@ -1015,7 +1015,8 @@ static void TraceBaselineStubFrame(JSTracer* trc, const JSJitFrameIter& frame) {
 
   if (ICStub* stub = layout->maybeStubPtr()) {
     if (stub->isFallback()) {
-      stub->toFallbackStub()->trace(trc);
+      // Fallback stubs use runtime-wide trampoline code we don't need to trace.
+      MOZ_ASSERT(stub->usesTrampolineCode());
     } else {
       MOZ_ASSERT(stub->toCacheIRStub()->makesGCCalls());
       stub->toCacheIRStub()->trace(trc);
