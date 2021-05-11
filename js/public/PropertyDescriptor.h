@@ -137,7 +137,10 @@ using PropertyAttributes = mozilla::EnumSet<PropertyAttribute>;
  * fields.
  */
 struct JS_PUBLIC_API PropertyDescriptor {
-  unsigned attrs = 0;
+ private:
+  unsigned attrs_ = 0;
+
+ public:
   JSObject* getter = nullptr;
   JSObject* setter = nullptr;
 
@@ -164,7 +167,7 @@ struct JS_PUBLIC_API PropertyDescriptor {
     MOZ_ASSERT((attrs &
                 ~(JSPROP_PERMANENT | JSPROP_ENUMERATE | JSPROP_READONLY)) == 0);
     PropertyDescriptor desc;
-    desc.attrs = attrs;
+    desc.attrs_ = attrs;
     desc.value_ = value;
     return desc;
   }
@@ -174,14 +177,14 @@ struct JS_PUBLIC_API PropertyDescriptor {
     MOZ_ASSERT((attrs & ~(JSPROP_PERMANENT | JSPROP_ENUMERATE)) == 0);
     MOZ_ASSERT(getter || setter);
     PropertyDescriptor desc;
-    desc.attrs = attrs;
+    desc.attrs_ = attrs;
     if (getter) {
       desc.getter = getter;
-      desc.attrs |= JSPROP_GETTER;
+      desc.attrs_ |= JSPROP_GETTER;
     }
     if (setter) {
       desc.setter = setter;
-      desc.attrs |= JSPROP_SETTER;
+      desc.attrs_ |= JSPROP_SETTER;
     }
     return desc;
   }
@@ -190,20 +193,20 @@ struct JS_PUBLIC_API PropertyDescriptor {
   bool has(unsigned bit) const {
     MOZ_ASSERT(bit != 0);
     MOZ_ASSERT((bit & (bit - 1)) == 0);  // only a single bit
-    return (attrs & bit) != 0;
+    return (attrs_ & bit) != 0;
   }
 
-  bool hasAny(unsigned bits) const { return (attrs & bits) != 0; }
+  bool hasAny(unsigned bits) const { return (attrs_ & bits) != 0; }
 
-  bool hasAll(unsigned bits) const { return (attrs & bits) == bits; }
+  bool hasAll(unsigned bits) const { return (attrs_ & bits) == bits; }
 
  public:
   bool isAccessorDescriptor() const {
     return hasAny(JSPROP_GETTER | JSPROP_SETTER);
   }
   bool isGenericDescriptor() const {
-    return (attrs & (JSPROP_GETTER | JSPROP_SETTER | JSPROP_IGNORE_READONLY |
-                     JSPROP_IGNORE_VALUE)) ==
+    return (attrs_ & (JSPROP_GETTER | JSPROP_SETTER | JSPROP_IGNORE_READONLY |
+                      JSPROP_IGNORE_VALUE)) ==
            (JSPROP_IGNORE_READONLY | JSPROP_IGNORE_VALUE);
   }
   bool isDataDescriptor() const {
@@ -216,8 +219,8 @@ struct JS_PUBLIC_API PropertyDescriptor {
     return !has(JSPROP_PERMANENT);
   }
   void setConfigurable(bool configurable) {
-    attrs = (attrs & ~(JSPROP_IGNORE_PERMANENT | JSPROP_PERMANENT)) |
-            (configurable ? 0 : JSPROP_PERMANENT);
+    attrs_ = (attrs_ & ~(JSPROP_IGNORE_PERMANENT | JSPROP_PERMANENT)) |
+             (configurable ? 0 : JSPROP_PERMANENT);
   }
 
   bool hasEnumerable() const { return !has(JSPROP_IGNORE_ENUMERATE); }
@@ -226,8 +229,8 @@ struct JS_PUBLIC_API PropertyDescriptor {
     return has(JSPROP_ENUMERATE);
   }
   void setEnumerable(bool enumerable) {
-    attrs = (attrs & ~(JSPROP_IGNORE_ENUMERATE | JSPROP_ENUMERATE)) |
-            (enumerable ? JSPROP_ENUMERATE : 0);
+    attrs_ = (attrs_ & ~(JSPROP_IGNORE_ENUMERATE | JSPROP_ENUMERATE)) |
+             (enumerable ? JSPROP_ENUMERATE : 0);
   }
 
   bool hasValue() const {
@@ -239,6 +242,11 @@ struct JS_PUBLIC_API PropertyDescriptor {
   JS::MutableHandle<JS::Value> value() {
     return JS::MutableHandle<JS::Value>::fromMarkedLocation(&value_);
   }
+  void setValue(JS::Handle<JS::Value> v) {
+    MOZ_ASSERT(!isAccessorDescriptor());
+    attrs_ &= ~JSPROP_IGNORE_VALUE;
+    value_ = v;
+  }
 
   bool hasWritable() const {
     return !isAccessorDescriptor() && !has(JSPROP_IGNORE_READONLY);
@@ -249,8 +257,8 @@ struct JS_PUBLIC_API PropertyDescriptor {
   }
   void setWritable(bool writable) {
     MOZ_ASSERT(!isAccessorDescriptor());
-    attrs = (attrs & ~(JSPROP_IGNORE_READONLY | JSPROP_READONLY)) |
-            (writable ? 0 : JSPROP_READONLY);
+    attrs_ = (attrs_ & ~(JSPROP_IGNORE_READONLY | JSPROP_READONLY)) |
+             (writable ? 0 : JSPROP_READONLY);
   }
 
   bool hasGetterObject() const { return has(JSPROP_GETTER); }
@@ -259,16 +267,28 @@ struct JS_PUBLIC_API PropertyDescriptor {
     return JS::Handle<JSObject*>::fromMarkedLocation(
         reinterpret_cast<JSObject* const*>(&getter));
   }
+  void setGetterObject(JSObject* obj) {
+    getter = obj;
+    attrs_ &= ~(JSPROP_IGNORE_VALUE | JSPROP_IGNORE_READONLY | JSPROP_READONLY);
+    attrs_ |= JSPROP_GETTER;
+  }
+
   bool hasSetterObject() const { return has(JSPROP_SETTER); }
   JS::Handle<JSObject*> setterObject() const {
     MOZ_ASSERT(hasSetterObject());
     return JS::Handle<JSObject*>::fromMarkedLocation(
         reinterpret_cast<JSObject* const*>(&setter));
   }
+  void setSetterObject(JSObject* obj) {
+    setter = obj;
+    attrs_ &= ~(JSPROP_IGNORE_VALUE | JSPROP_IGNORE_READONLY | JSPROP_READONLY);
+    attrs_ |= JSPROP_SETTER;
+  }
 
   bool hasGetterOrSetter() const { return getter || setter; }
 
-  unsigned attributes() const { return attrs; }
+  unsigned attributes() const { return attrs_; }
+  void setAttributesDoNotUse(unsigned attrs) { attrs_ = attrs; }
 
   void assertValid() const {
 #ifdef DEBUG
@@ -378,7 +398,7 @@ class MutableWrappedPtrOperations<JS::PropertyDescriptor, Wrapper>
   }
 
   void assign(JS::PropertyDescriptor& other) {
-    setAttributes(other.attrs);
+    setAttributes(other.attributes());
     setGetter(other.getter);
     setSetter(other.setter);
     value().set(other.value());
@@ -395,33 +415,18 @@ class MutableWrappedPtrOperations<JS::PropertyDescriptor, Wrapper>
     value().set(v);
   }
 
-  unsigned& attributesRef() { return desc().attrs; }
   JS::MutableHandle<JS::Value> value() { return desc().value(); }
-  void setValue(JS::Handle<JS::Value> v) {
-    MOZ_ASSERT(!(desc().attrs & (JSPROP_GETTER | JSPROP_SETTER)));
-    attributesRef() &= ~JSPROP_IGNORE_VALUE;
-    value().set(v);
-  }
+  void setValue(JS::Handle<JS::Value> v) { desc().setValue(v); }
 
   void setConfigurable(bool configurable) {
     desc().setConfigurable(configurable);
   }
   void setEnumerable(bool enumerable) { desc().setEnumerable(enumerable); }
   void setWritable(bool writable) { desc().setWritable(writable); }
-  void setAttributes(unsigned attrs) { desc().attrs = attrs; }
+  void setAttributes(unsigned attrs) { desc().setAttributesDoNotUse(attrs); }
 
-  void setGetterObject(JSObject* obj) {
-    desc().getter = obj;
-    desc().attrs &=
-        ~(JSPROP_IGNORE_VALUE | JSPROP_IGNORE_READONLY | JSPROP_READONLY);
-    desc().attrs |= JSPROP_GETTER;
-  }
-  void setSetterObject(JSObject* obj) {
-    desc().setter = obj;
-    desc().attrs &=
-        ~(JSPROP_IGNORE_VALUE | JSPROP_IGNORE_READONLY | JSPROP_READONLY);
-    desc().attrs |= JSPROP_SETTER;
-  }
+  void setGetterObject(JSObject* obj) { desc().setGetterObject(obj); }
+  void setSetterObject(JSObject* obj) { desc().setSetterObject(obj); }
 
   JS::MutableHandle<JSObject*> getterObject() {
     MOZ_ASSERT(this->hasGetterObject());
