@@ -221,6 +221,34 @@ void gfxPlatformGtk::InitDmabufConfig() {
 #endif
 }
 
+void gfxPlatformGtk::InitWebRenderConfig() {
+  gfxPlatform::InitWebRenderConfig();
+
+  if (!XRE_IsParentProcess()) {
+    return;
+  }
+
+  FeatureState& feature = gfxConfig::GetFeature(Feature::WEBRENDER_COMPOSITOR);
+  if (feature.IsEnabled()) {
+    if (!gfxConfig::IsEnabled(Feature::WEBRENDER)) {
+      feature.ForceDisable(FeatureStatus::Unavailable, "WebRender disabled",
+                           "FEATURE_FAILURE_WR_DISABLED"_ns);
+    } else if (!IsWaylandDisplay()) {
+      feature.ForceDisable(FeatureStatus::Unavailable,
+                           "Wayland support missing",
+                           "FEATURE_FAILURE_NO_WAYLAND"_ns);
+    }
+#ifdef MOZ_WAYLAND
+    else if (!widget::WaylandDisplayGet()->GetViewporter()) {
+      feature.ForceDisable(FeatureStatus::Unavailable,
+                           "Requires wp_viewporter protocol support",
+                           "FEATURE_FAILURE_REQUIRES_WPVIEWPORTER"_ns);
+    }
+#endif
+  }
+  gfxVars::SetUseWebRenderCompositor(feature.IsEnabled());
+}
+
 void gfxPlatformGtk::FlushContentDrawing() {
   if (gfxVars::UseXRender()) {
     XFlush(DefaultXDisplay());

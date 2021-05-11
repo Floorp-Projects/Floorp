@@ -78,5 +78,7 @@ wl_surface* moz_gtk_widget_get_wl_surface(GtkWidget* aWidget);
 void moz_container_wayland_update_opaque_region(MozContainer* container,
                                                 bool aSubtractCorners);
 gboolean moz_container_wayland_can_draw(MozContainer* container);
+double moz_container_wayland_get_scale(MozContainer* container);
+struct wp_viewport* moz_container_wayland_get_viewport(MozContainer* container);
 
 #endif /* __MOZ_CONTAINER_WAYLAND_H__ */

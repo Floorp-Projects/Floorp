@@ -90,9 +90,11 @@ if CONFIG["MOZ_ENABLE_D3D10_LAYER"]:
 
 if CONFIG["MOZ_WAYLAND"]:
     EXPORTS.mozilla.webrender += [
+        "RenderCompositorNative.h",
         "RenderDMABUFTextureHost.h",
     ]
     SOURCES += [
+        "RenderCompositorNative.cpp",
         "RenderDMABUFTextureHost.cpp",
     ]
 

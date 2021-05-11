@@ -298,8 +298,14 @@ if CONFIG["MOZ_X11"]:
 if CONFIG["MOZ_WAYLAND"]:
     EXPORTS.mozilla.layers += [
         "DMABUFSurfaceImage.h",
+        "NativeLayerWayland.h",
         "opengl/DMABUFTextureClientOGL.h",
         "opengl/DMABUFTextureHostOGL.h",
+        "SurfacePoolWayland.h",
+    ]
+    UNIFIED_SOURCES += [
+        "NativeLayerWayland.cpp",
+        "SurfacePoolWayland.cpp",
     ]
     SOURCES += [
         "DMABUFSurfaceImage.cpp",
