@@ -752,6 +752,11 @@ SandboxBrokerPolicyFactory::GetSocketProcessPolicy(int aPid) {
   policy->AddDir(rdonly, "/usr/local/share");
   policy->AddDir(rdonly, "/etc");
 
+  // glibc will try to stat64("/") while populating nsswitch database
+  // https://sourceware.org/git/?p=glibc.git;a=blob;f=nss/nss_database.c;h=cf0306adc47f12d9bc761ab1b013629f4482b7e6;hb=9826b03b747b841f5fc6de2054bf1ef3f5c4bdf3#l396
+  // denying will make getaddrinfo() return ENONAME
+  policy->AddDir(access, "/");
+
   AddLdconfigPaths(policy.get());
 
   // Socket process sandbox needs to allow shmem in order to support
