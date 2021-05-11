@@ -677,6 +677,11 @@ TestHTTPAnswerRunnable::TestHTTPAnswerRunnable(
 /* static */
 bool TestHTTPAnswerRunnable::IsBackgroundRequestRedirected(
     nsIHttpChannel* aChannel) {
+  // If there is no background request (aChannel), then there is nothing
+  // to do here.
+  if (!aChannel) {
+    return false;
+  }
   // If the request was not redirected, then there is nothing to do here.
   nsCOMPtr<nsILoadInfo> loadinfo = aChannel->LoadInfo();
   if (loadinfo->RedirectChain().IsEmpty()) {
