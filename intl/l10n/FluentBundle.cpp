@@ -290,10 +290,13 @@ uint8_t* FluentBuiltInNumberFormatterFormat(
     UniquePtr<CharType[], FreePolicy> mBuffer;
   } buffer;
 
-  nf->format(input, buffer);
-  *aOutCount = buffer.mWritten;
-  *aOutCapacity = buffer.mCapacity;
-  return buffer.mBuffer.release();
+  if (nf->format(input, buffer).isOk()) {
+    *aOutCount = buffer.mWritten;
+    *aOutCapacity = buffer.mCapacity;
+    return buffer.mBuffer.release();
+  }
+
+  return nullptr;
 }
 
 void FluentBuiltInNumberFormatterDestroy(ffi::RawNumberFormatter* aFormatter) {
