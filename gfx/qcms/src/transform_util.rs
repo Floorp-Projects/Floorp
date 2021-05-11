@@ -173,7 +173,6 @@ pub(crate) fn build_input_gamma_table(TRC: Option<&curveType>) -> Option<Box<[f3
 pub fn build_colorant_matrix(p: &Profile) -> Matrix {
     let mut result: Matrix = Matrix {
         m: [[0.; 3]; 3],
-        invalid: false,
     };
     result.m[0][0] = s15Fixed16Number_to_float(p.redColorant.X);
     result.m[0][1] = s15Fixed16Number_to_float(p.greenColorant.X);
@@ -184,7 +183,6 @@ pub fn build_colorant_matrix(p: &Profile) -> Matrix {
     result.m[2][0] = s15Fixed16Number_to_float(p.redColorant.Z);
     result.m[2][1] = s15Fixed16Number_to_float(p.greenColorant.Z);
     result.m[2][2] = s15Fixed16Number_to_float(p.blueColorant.Z);
-    result.invalid = false;
     result
 }
 
