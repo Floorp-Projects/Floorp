@@ -784,7 +784,7 @@ nsresult TransceiverImpl::UpdateVideoConduit() {
   // actually be a send track, according to the specification; all that needs to
   // happen is for the transceiver to be configured to send...
   if (mJsepTransceiver->mSendTrack.GetNegotiatedDetails() &&
-      mJsepTransceiver->mSendTrack.GetActive() && mSendTrack) {
+      mJsepTransceiver->mSendTrack.GetActive()) {
     const auto& details(*mJsepTransceiver->mSendTrack.GetNegotiatedDetails());
 
     UpdateConduitRtpExtmap(*conduit, details, LocalDirection::kSend);
@@ -826,6 +826,11 @@ nsresult TransceiverImpl::UpdateVideoConduit() {
 
 nsresult TransceiverImpl::ConfigureVideoCodecMode(
     VideoSessionConduit& aConduit) {
+  if (!mSendTrack) {
+    // Nothing to do
+    return NS_OK;
+  }
+
   RefPtr<mozilla::dom::VideoStreamTrack> videotrack =
       mSendTrack->AsVideoStreamTrack();
 
