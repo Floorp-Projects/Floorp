@@ -84,20 +84,26 @@ class InliningRoot;
 
 class alignas(uintptr_t) ICScript final : public TrailingArray {
  public:
-  ICScript(uint32_t warmUpCount, Offset endOffset, uint32_t depth,
-           InliningRoot* inliningRoot = nullptr)
+  ICScript(uint32_t warmUpCount, Offset fallbackStubsOffset, Offset endOffset,
+           uint32_t depth, InliningRoot* inliningRoot = nullptr)
       : inliningRoot_(inliningRoot),
         warmUpCount_(warmUpCount),
+        fallbackStubsOffset_(fallbackStubsOffset),
         endOffset_(endOffset),
         depth_(depth) {}
 
   bool isInlined() const { return depth_ > 0; }
 
-  [[nodiscard]] bool initICEntries(JSContext* cx, JSScript* script);
+  void initICEntries(JSContext* cx, JSScript* script);
 
   ICEntry& icEntry(size_t index) {
     MOZ_ASSERT(index < numICEntries());
     return icEntries()[index];
+  }
+
+  ICFallbackStub* fallbackStub(size_t index) {
+    MOZ_ASSERT(index < numICEntries());
+    return fallbackStubs() + index;
   }
 
   InliningRoot* inliningRoot() const { return inliningRoot_; }
@@ -117,7 +123,7 @@ class alignas(uintptr_t) ICScript final : public TrailingArray {
 
   static constexpr Offset offsetOfICEntries() { return sizeof(ICScript); }
   uint32_t numICEntries() const {
-    return numElements<ICEntry>(icEntriesOffset(), endOffset());
+    return numElements<ICEntry>(icEntriesOffset(), fallbackStubsOffset());
   }
 
   ICEntry* interpreterICEntryFromPCOffset(uint32_t pcOffset);
@@ -166,6 +172,9 @@ class alignas(uintptr_t) ICScript final : public TrailingArray {
   // See also the ScriptWarmUpData class.
   mozilla::Atomic<uint32_t, mozilla::Relaxed> warmUpCount_ = {};
 
+  // The offset of the ICFallbackStub array.
+  Offset fallbackStubsOffset_;
+
   // The size of this allocation.
   Offset endOffset_;
 
@@ -173,9 +182,14 @@ class alignas(uintptr_t) ICScript final : public TrailingArray {
   uint32_t depth_;
 
   Offset icEntriesOffset() const { return offsetOfICEntries(); }
+  Offset fallbackStubsOffset() const { return fallbackStubsOffset_; }
   Offset endOffset() const { return endOffset_; }
 
   ICEntry* icEntries() { return offsetToPointer<ICEntry>(icEntriesOffset()); }
+
+  ICFallbackStub* fallbackStubs() {
+    return offsetToPointer<ICFallbackStub>(fallbackStubsOffset());
+  }
 
   JitScript* outerJitScript();
 
@@ -195,9 +209,9 @@ class alignas(uintptr_t) ICScript final : public TrailingArray {
 // stored in IonScript.
 //
 // For each IC we store an ICEntry, which points to the first ICStub in the
-// chain. Note that multiple stubs in the same zone can share Baseline IC code.
-// This works because the stub data is stored in the ICStub instead of baked in
-// in the stub code.
+// chain, and an ICFallbackStub. Note that multiple stubs in the same zone can
+// share Baseline IC code. This works because the stub data is stored in the
+// ICStub instead of baked in in the stub code.
 //
 // Storing this separate from BaselineScript allows us to use the same ICs in
 // the Baseline Interpreter and Baseline JIT. It also simplifies debug mode OSR
@@ -209,8 +223,8 @@ class alignas(uintptr_t) ICScript final : public TrailingArray {
 // JitScript. Other stubs are stored in the optimized stub space stored in
 // JitZone and can be purged more eagerly. See JitScript::purgeOptimizedStubs.
 //
-// An ICScript contains a list of IC entries. There's one IC for each JOF_IC
-// bytecode op.
+// An ICScript contains a list of IC entries and a list of fallback stubs.
+// There's one ICEntry and ICFallbackStub for each JOF_IC bytecode op.
 //
 // The ICScript also contains the warmUpCount for the script.
 //
@@ -221,14 +235,16 @@ class alignas(uintptr_t) ICScript final : public TrailingArray {
 //
 // Memory Layout
 // =============
-// JitScript contains an ICScript as the last field. ICScript has a trailing
-// (variable length) ICEntry array. The memory layout is as follows:
+// JitScript contains an ICScript as the last field. ICScript has trailing
+// (variable length) arrays for ICEntry and ICFallbackStub. The memory layout is
+// as follows:
 //
 //  Item                    | Offset
 //  ------------------------+------------------------
 //  JitScript               | 0
 //  -->ICScript  (field)    |
 //     ICEntry[]            | icEntriesOffset()
+//     ICFallbackStub[]     | fallbackStubsOffset()
 //
 // These offsets are also used to compute numICEntries.
 class alignas(uintptr_t) JitScript final : public TrailingArray {
@@ -312,7 +328,8 @@ class alignas(uintptr_t) JitScript final : public TrailingArray {
   }
 
  public:
-  JitScript(JSScript* script, Offset endOffset, const char* profileString);
+  JitScript(JSScript* script, Offset fallbackStubsOffset, Offset endOffset,
+            const char* profileString);
 
 #ifdef DEBUG
   ~JitScript() {
