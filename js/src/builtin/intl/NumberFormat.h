@@ -83,8 +83,7 @@ class NumberFormatObject : public NativeObject {
  *
  * Spec: ECMAScript Internationalization API Specification, 11.3.2.
  *
- * Usage: formatted = intl_FormatNumber(numberFormat, x, formatToParts,
- *                                      unitStyle)
+ * Usage: formatted = intl_FormatNumber(numberFormat, x, formatToParts)
  */
 [[nodiscard]] extern bool intl_FormatNumber(JSContext* cx, unsigned argc,
                                             Value* vp);
