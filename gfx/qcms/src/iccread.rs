@@ -440,29 +440,23 @@ pub const LUT_MAB_TYPE: u32 = 0x6d414220; // 'mAB '
 pub const LUT_MBA_TYPE: u32 = 0x6d424120; // 'mBA '
 pub const CHROMATIC_TYPE: u32 = 0x73663332; // 'sf32'
 
-fn read_tag_s15Fixed16ArrayType(src: &mut MemSource, index: &TagIndex, tag_id: u32) -> Matrix {
-    let tag = find_tag(index, tag_id);
+fn read_tag_s15Fixed16ArrayType(src: &mut MemSource, tag: &Tag) -> Matrix {
     let mut matrix: Matrix = Matrix {
         m: [[0.; 3]; 3],
         invalid: false,
     };
-    if let Some(tag) = tag {
-        let offset: u32 = tag.offset;
-        let type_0: u32 = read_u32(src, offset as usize);
-        // Check mandatory type signature for s16Fixed16ArrayType
-        if type_0 != CHROMATIC_TYPE {
-            invalid_source(src, "unexpected type, expected \'sf32\'");
-        }
-        for i in 0..=8 {
-            matrix.m[(i / 3) as usize][(i % 3) as usize] = s15Fixed16Number_to_float(
-                read_s15Fixed16Number(src, (offset + 8 + (i * 4) as u32) as usize),
-            );
-        }
-        matrix.invalid = false
-    } else {
-        matrix.invalid = true;
-        invalid_source(src, "missing sf32tag");
+    let offset: u32 = tag.offset;
+    let type_0: u32 = read_u32(src, offset as usize);
+    // Check mandatory type signature for s16Fixed16ArrayType
+    if type_0 != CHROMATIC_TYPE {
+        invalid_source(src, "unexpected type, expected \'sf32\'");
     }
+    for i in 0..=8 {
+        matrix.m[(i / 3) as usize][(i % 3) as usize] = s15Fixed16Number_to_float(
+            read_s15Fixed16Number(src, (offset + 8 + (i * 4) as u32) as usize),
+        );
+    }
+    matrix.invalid = false;
     matrix
 }
 fn read_tag_XYZType(src: &mut MemSource, index: &TagIndex, tag_id: u32) -> XYZNumber {
@@ -1167,8 +1161,8 @@ impl Profile {
             return None;
         }
 
-        if find_tag(&index, TAG_CHAD).is_some() {
-            profile.chromaticAdaption = read_tag_s15Fixed16ArrayType(src, &index, TAG_CHAD)
+        if let Some(chad) = find_tag(&index, TAG_CHAD) {
+            profile.chromaticAdaption = read_tag_s15Fixed16ArrayType(src, chad)
         } else {
             profile.chromaticAdaption.invalid = true //Signal the data is not present
         }
