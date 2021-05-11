@@ -417,7 +417,7 @@ void PathUtils::DirectoryCache::ResolveWithDirectory(
 
     case Directory::LocalProfile:
       MOZ_RELEASE_ASSERT(!mLocalProfileDir.IsVoid());
-      aPromise->MaybeResolve(mProfileDir);
+      aPromise->MaybeResolve(mLocalProfileDir);
       break;
 
     case Directory::Temp:
