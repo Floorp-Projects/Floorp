@@ -90,6 +90,10 @@
   color: var(--dialog-warning-text-color);
 }
 
+.not-imported-hidden {
+  visibility: hidden;
+}
+
 import-details-row:nth-child(odd) {
   background-color: var(--in-content-box-background-odd);
 }
