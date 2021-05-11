@@ -22,6 +22,7 @@ class ApplicationAccessibleWrap : public ApplicationAccessible {
 
   // nsAccessible
   virtual already_AddRefed<nsIPersistentProperties> NativeAttributes() override;
+  virtual void Shutdown() override;
 };
 
 }  // namespace a11y
