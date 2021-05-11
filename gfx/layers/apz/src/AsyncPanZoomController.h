@@ -1216,6 +1216,9 @@ class AsyncPanZoomController {
     return mScrollMetadata.GetMetrics().GetCumulativeResolution();
   }
 
+  // Returns the delta for the given InputData.
+  ParentLayerPoint GetDeltaForEvent(const InputData& aEvent) const;
+
  private:
   /**
    * Advances to the next sample, if there is one, the list of sampled states
@@ -1641,9 +1644,6 @@ class AsyncPanZoomController {
    * is transferred to any existing overscroll.
    */
   void OverscrollBy(ParentLayerPoint& aOverscroll);
-
-  // Helper function for CanScroll().
-  ParentLayerPoint GetDeltaForEvent(const InputData& aEvent) const;
 
   /* ===================================================================
    * The functions and members in this section are used to maintain the
