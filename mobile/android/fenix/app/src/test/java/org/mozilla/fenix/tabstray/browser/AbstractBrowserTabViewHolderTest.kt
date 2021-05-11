@@ -22,7 +22,7 @@ import org.mozilla.fenix.selection.SelectionHolder
 import org.mozilla.fenix.tabstray.TabsTrayStore
 
 @RunWith(FenixRobolectricTestRunner::class)
-class TabsTrayViewHolderTest {
+class AbstractBrowserTabViewHolderTest {
     val store = TabsTrayStore()
     val browserStore = BrowserStore()
     val interactor = mockk<BrowserTrayInteractor>(relaxed = true)
@@ -78,7 +78,7 @@ class TabsTrayViewHolderTest {
         store: BrowserStore,
         metrics: MetricController,
         override val browserTrayInteractor: BrowserTrayInteractor
-    ) : TabsTrayViewHolder(itemView, imageLoader, trayStore, selectionHolder, store, metrics) {
+    ) : AbstractBrowserTabViewHolder(itemView, imageLoader, trayStore, selectionHolder, store, metrics) {
         override val thumbnailSize: Int
             get() = 30
 

@@ -16,13 +16,13 @@ import kotlin.math.max
 /**
  * A RecyclerView ViewHolder implementation for "tab" items with list layout.
  */
-class TabsTrayListViewHolder(
+class BrowserTabListViewHolder(
     imageLoader: ImageLoader,
     override val browserTrayInteractor: BrowserTrayInteractor,
     store: TabsTrayStore,
     selectionHolder: SelectionHolder<Tab>? = null,
     itemView: View
-) : TabsTrayViewHolder(itemView, imageLoader, store, selectionHolder) {
+) : AbstractBrowserTabViewHolder(itemView, imageLoader, store, selectionHolder) {
     override val thumbnailSize: Int
         get() = max(
             itemView.resources.getDimensionPixelSize(R.dimen.tab_tray_list_item_thumbnail_height),

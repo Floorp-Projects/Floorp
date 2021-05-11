@@ -44,7 +44,7 @@ import org.mozilla.fenix.tabstray.ext.isSelect
 /**
  * A RecyclerView ViewHolder implementation for "tab" items.
  */
-abstract class TabsTrayViewHolder(
+abstract class AbstractBrowserTabViewHolder(
     itemView: View,
     private val imageLoader: ImageLoader,
     private val trayStore: TabsTrayStore,

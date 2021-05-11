@@ -22,13 +22,13 @@ import org.mozilla.fenix.tabstray.TabsTrayStore
 /**
  * A RecyclerView ViewHolder implementation for "tab" items with grid layout.
  */
-class TabsTrayGridViewHolder(
+class BrowserTabGridViewHolder(
     imageLoader: ImageLoader,
     override val browserTrayInteractor: BrowserTrayInteractor,
     store: TabsTrayStore,
     selectionHolder: SelectionHolder<Tab>? = null,
     itemView: View
-) : TabsTrayViewHolder(itemView, imageLoader, store, selectionHolder) {
+) : AbstractBrowserTabViewHolder(itemView, imageLoader, store, selectionHolder) {
 
     private val closeButton: AppCompatImageButton = itemView.findViewById(R.id.mozac_browser_tabstray_close)
 

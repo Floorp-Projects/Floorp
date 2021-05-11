@@ -29,7 +29,7 @@ class BrowserTabsAdapter(
     private val interactor: BrowserTrayInteractor,
     private val store: TabsTrayStore,
     delegate: Observable<TabsTray.Observer> = ObserverRegistry()
-) : TabsAdapter<TabsTrayViewHolder>(delegate) {
+) : TabsAdapter<AbstractBrowserTabViewHolder>(delegate) {
 
     /**
      * The layout types for the tabs.
@@ -55,18 +55,18 @@ class BrowserTabsAdapter(
         }
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TabsTrayViewHolder {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): AbstractBrowserTabViewHolder {
         val view = LayoutInflater.from(parent.context).inflate(viewType, parent, false)
 
         return when (viewType) {
             ViewType.GRID.layoutRes ->
-                TabsTrayGridViewHolder(imageLoader, interactor, store, selectionHolder, view)
+                BrowserTabGridViewHolder(imageLoader, interactor, store, selectionHolder, view)
             else ->
-                TabsTrayListViewHolder(imageLoader, interactor, store, selectionHolder, view)
+                BrowserTabListViewHolder(imageLoader, interactor, store, selectionHolder, view)
         }
     }
 
-    override fun onBindViewHolder(holder: TabsTrayViewHolder, position: Int) {
+    override fun onBindViewHolder(holder: AbstractBrowserTabViewHolder, position: Int) {
         super.onBindViewHolder(holder, position)
 
         holder.tab?.let { tab ->
@@ -84,7 +84,7 @@ class BrowserTabsAdapter(
      * Over-ridden [onBindViewHolder] that uses the payloads to notify the selected tab how to
      * display itself.
      */
-    override fun onBindViewHolder(holder: TabsTrayViewHolder, position: Int, payloads: List<Any>) {
+    override fun onBindViewHolder(holder: AbstractBrowserTabViewHolder, position: Int, payloads: List<Any>) {
         val tabs = tabs ?: return
 
         if (tabs.list.isEmpty()) return
