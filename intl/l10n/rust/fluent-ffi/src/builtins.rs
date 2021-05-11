@@ -13,7 +13,7 @@ use std::ptr::NonNull;
 use unic_langid::LanguageIdentifier;
 
 pub struct NumberFormat {
-    raw: Option<NonNull<ffi::RawNumberFormatter>>,
+    raw: NonNull<ffi::RawNumberFormatter>,
 }
 
 /**
@@ -28,7 +28,7 @@ impl NumberFormat {
         let loc: String = locale.to_string();
         Self {
             raw: unsafe {
-                NonNull::new(ffi::FluentBuiltInNumberFormatterCreate(
+                NonNull::new_unchecked(ffi::FluentBuiltInNumberFormatterCreate(
                     &loc.into(),
                     &options.into(),
                 ))
@@ -37,32 +37,26 @@ impl NumberFormat {
     }
 
     pub fn format(&self, input: f64) -> String {
-        if let Some(raw) = self.raw {
-            unsafe {
-                let mut byte_count = 0;
-                let mut capacity = 0;
-                let buffer = ffi::FluentBuiltInNumberFormatterFormat(
-                    raw.as_ptr(),
-                    input,
-                    &mut byte_count,
-                    &mut capacity,
-                );
-                if buffer.is_null() {
-                    return String::new();
-                }
-                String::from_raw_parts(buffer, byte_count, capacity)
+        unsafe {
+            let mut byte_count = 0;
+            let mut capacity = 0;
+            let buffer = ffi::FluentBuiltInNumberFormatterFormat(
+                self.raw.as_ptr(),
+                input,
+                &mut byte_count,
+                &mut capacity,
+            );
+            if buffer.is_null() {
+                return String::new();
             }
-        } else {
-            String::new()
+            String::from_raw_parts(buffer, byte_count, capacity)
         }
     }
 }
 
 impl Drop for NumberFormat {
     fn drop(&mut self) {
-        if let Some(raw) = self.raw {
-            unsafe { ffi::FluentBuiltInNumberFormatterDestroy(raw.as_ptr()) };
-        }
+        unsafe { ffi::FluentBuiltInNumberFormatterDestroy(self.raw.as_ptr()) };
     }
 }
 
