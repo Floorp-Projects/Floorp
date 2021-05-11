@@ -10,6 +10,8 @@ let win;
 add_task(async function setup() {
   await PlacesUtils.bookmarks.eraseEverything();
 
+  Services.prefs.clearUserPref("browser.bookmarks.defaultLocation");
+
   win = await BrowserTestUtils.openNewBrowserWindow();
   await BrowserTestUtils.openNewForegroundTab({
     gBrowser: win.gBrowser,
@@ -51,7 +53,7 @@ add_task(async function test_selectChoose() {
   Assert.equal(
     menuList.label,
     PlacesUtils.getString(expectedFolder),
-    "Should have the other bookmarks folder selected by default"
+    "Should have the expected bookmarks folder selected by default"
   );
   Assert.equal(
     menuList.getAttribute("selectedGuid"),
@@ -149,18 +151,13 @@ add_task(async function test_selectBookmarksMenu() {
   EventUtils.synthesizeMouseAtCenter(menuList, {}, win);
   await promisePopup;
 
-  // Click the choose item.
+  // Click the bookmarks menu item.
   EventUtils.synthesizeMouseAtCenter(
     win.document.getElementById("editBMPanel_bmRootItem"),
     {},
     win
   );
 
-  // TODO Bug 1695011: This delay is to stop the test impacting on other tests.
-  // It is likely that we need a different wait here, however we need to figure
-  // out what is going on in the background to impact the other tests.
-  // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
-  await new Promise(r => setTimeout(r, 100));
   await TestUtils.waitForCondition(
     () =>
       menuList.getAttribute("selectedGuid") == PlacesUtils.bookmarks.menuGuid,
