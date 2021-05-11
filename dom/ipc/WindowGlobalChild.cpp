@@ -631,6 +631,11 @@ already_AddRefed<JSWindowActorChild> WindowGlobalChild::GetActor(
       .downcast<JSWindowActorChild>();
 }
 
+already_AddRefed<JSWindowActorChild> WindowGlobalChild::GetExistingActor(
+    const nsACString& aName) {
+  return JSActorManager::GetExistingActor(aName).downcast<JSWindowActorChild>();
+}
+
 already_AddRefed<JSActor> WindowGlobalChild::InitJSActor(
     JS::HandleObject aMaybeActor, const nsACString& aName, ErrorResult& aRv) {
   RefPtr<JSWindowActorChild> actor;

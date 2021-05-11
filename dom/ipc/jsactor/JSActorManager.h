@@ -27,12 +27,18 @@ class JSActorService;
 class JSActorManager : public nsISupports {
  public:
   /**
-   * Get or create an actor by it's name.
+   * Get or create an actor by its name.
    *
    * Will set an error on |aRv| if the actor fails to be constructed.
    */
   already_AddRefed<JSActor> GetActor(JSContext* aCx, const nsACString& aName,
                                      ErrorResult& aRv);
+
+  /**
+   * Look up an existing actor by its name, returning nullptr if it doesn't
+   * already exist. Will not attempt to create the actor.
+   */
+  already_AddRefed<JSActor> GetExistingActor(const nsACString& aName);
 
   /**
    * Handle receiving a raw message from the other side.
