@@ -1,0 +1,48 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="pc.js"></script>
+  <script type="application/javascript" src="/tests/dom/canvas/test/captureStream_common.js"></script>
+</head>
+<body>
+<pre id="test">
+
+<video id="video" width="160" height="120" autoplay></video>
+
+<script type="application/javascript">
+  createHTML({
+    bug: "1709481",
+    title: "replaceTrack (null -> camera) test",
+    visible: true
+  });
+
+  runNetworkTest(async () => {
+    // Make sure we use the fake video device, and not loopback
+    await pushPrefs(
+      ['media.video_loopback_dev', ''],
+      ['media.navigator.streams.fake', true]);
+    const pc1 = new RTCPeerConnection(), pc2 = new RTCPeerConnection();
+    pc1.onicecandidate = e => pc2.addIceCandidate(e.candidate);
+    pc2.onicecandidate = e => pc1.addIceCandidate(e.candidate);
+    pc2.ontrack = ({track}) => video.srcObject = new MediaStream([track]);
+    pc1.addTransceiver("audio");
+    const tc1 = pc1.addTransceiver("video");
+    const stream = await navigator.mediaDevices.getUserMedia({video: true});
+    const [track] = stream.getVideoTracks();
+    await pc1.setLocalDescription();
+    await pc2.setRemoteDescription(pc1.localDescription);
+    await pc2.setLocalDescription();
+    await pc1.setRemoteDescription(pc2.localDescription);
+    await wait(100);
+    await tc1.sender.replaceTrack(track);
+    const h = new VideoStreamHelper();
+    await h.checkVideoPlaying(video);
+    pc1.close();
+    pc2.close();
+    await SpecialPowers.popPrefEnv();
+  });
+
+</script>
+</pre>
+</body>
+</html>
