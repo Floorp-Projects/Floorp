@@ -5439,7 +5439,8 @@ bool Document::QueryCommandState(const nsAString& aHTMLCommandName,
                                  ErrorResult& aRv) {
   // Only allow on HTML documents.
   if (!IsHTMLOrXHTML()) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_DOCUMENT_QUERY_COMMAND_STATE);
+    aRv.ThrowInvalidStateError(
+        "queryCommandState is only supported on HTML documents");
     return false;
   }
   // Otherwise, don't throw exception for compatibility with Chrome.
