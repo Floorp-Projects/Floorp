@@ -142,11 +142,11 @@ impl From<ConicGradientKey> for ConicGradientTemplate {
         let mut task_size: DeviceSize = stretch_size.cast_unit();
         let mut scale = vec2(1.0, 1.0);
         if task_size.width > MAX_SIZE {
-            scale.x = MAX_SIZE / task_size.width;
+            scale.x = task_size.width / MAX_SIZE;
             task_size.width = MAX_SIZE;
         }
         if task_size.height > MAX_SIZE {
-            scale.y = MAX_SIZE / task_size.height;
+            scale.y = task_size.height / MAX_SIZE;
             task_size.height = MAX_SIZE;
         }
 
@@ -156,7 +156,7 @@ impl From<ConicGradientKey> for ConicGradientTemplate {
             extend_mode: item.extend_mode,
             params: item.params,
             stretch_size,
-            task_size: task_size.to_i32(),
+            task_size: task_size.ceil().to_i32(),
             scale,
             tile_spacing: item.tile_spacing.into(),
             brush_segments,
