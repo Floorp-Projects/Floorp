@@ -115,7 +115,6 @@ bool TrialInliner::replaceICStub(const ICEntry& entry, CacheIRWriter& writer,
 
   MOZ_ASSERT(attached);
   MOZ_ASSERT(fallback->trialInliningState() == TrialInliningState::Inlined);
-  JitSpew(JitSpew_WarpTrialInlining, "Attached new stub %p", newStub);
   return true;
 }
 
@@ -495,6 +494,7 @@ bool TrialInliner::shouldInline(JSFunction* target, ICCacheIRStub* stub,
           baseScript ? baseScript->filename() : "<not-scripted>",
           baseScript ? baseScript->lineno() : 0,
           baseScript ? baseScript->column() : 0);
+  JitSpewIndent spewIndent(JitSpew_WarpTrialInlining);
 #endif
 
   if (!canInline(target, script_, loc)) {
@@ -586,8 +586,8 @@ ICScript* TrialInliner::createInlinedICScript(JSFunction* target,
   root_->addToTotalBytecodeSize(targetScript->length());
 
   JitSpew(JitSpew_WarpTrialInlining,
-          "Outer ICScript: %p Inner ICScript: %p pcOffset: %u", icScript_,
-          result, pcOffset);
+          "SUCCESS: Outer ICScript: %p Inner ICScript: %p pcOffset: %u",
+          icScript_, result, pcOffset);
 
   return result;
 }
