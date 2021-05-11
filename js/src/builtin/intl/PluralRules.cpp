@@ -10,11 +10,10 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/Casting.h"
-#include "mozilla/intl/NumberFormat.h"
-#include "mozilla/intl/NumberFormatterSkeleton.h"
 
 #include "builtin/Array.h"
 #include "builtin/intl/CommonFunctions.h"
+#include "builtin/intl/NumberFormat.h"
 #include "builtin/intl/ScopedICUObject.h"
 #include "gc/FreeOp.h"
 #include "js/CharacterEncoding.h"
@@ -189,7 +188,8 @@ static UNumberFormatter* NewUNumberFormatterForPluralRules(
     return nullptr;
   }
 
-  mozilla::intl::NumberFormatOptions options;
+  intl::NumberFormatterSkeleton skeleton(cx);
+
   bool hasMinimumSignificantDigits;
   if (!HasProperty(cx, internals, cx->names().minimumSignificantDigits,
                    &hasMinimumSignificantDigits)) {
@@ -209,8 +209,10 @@ static UNumberFormatter* NewUNumberFormatterForPluralRules(
     }
     uint32_t maximumSignificantDigits = AssertedCast<uint32_t>(value.toInt32());
 
-    options.mSignificantDigits = mozilla::Some(
-        std::make_pair(minimumSignificantDigits, maximumSignificantDigits));
+    if (!skeleton.significantDigits(minimumSignificantDigits,
+                                    maximumSignificantDigits)) {
+      return nullptr;
+    }
   } else {
     if (!GetProperty(cx, internals, internals,
                      cx->names().minimumFractionDigits, &value)) {
@@ -224,26 +226,27 @@ static UNumberFormatter* NewUNumberFormatterForPluralRules(
     }
     uint32_t maximumFractionDigits = AssertedCast<uint32_t>(value.toInt32());
 
-    options.mFractionDigits = mozilla::Some(
-        std::make_pair(minimumFractionDigits, maximumFractionDigits));
+    if (!skeleton.fractionDigits(minimumFractionDigits,
+                                 maximumFractionDigits)) {
+      return nullptr;
+    }
   }
 
   if (!GetProperty(cx, internals, internals, cx->names().minimumIntegerDigits,
                    &value)) {
     return nullptr;
   }
-  options.mMinIntegerDigits =
-      mozilla::Some(AssertedCast<uint32_t>(value.toInt32()));
-  options.mRoundingModeHalfUp = true;
+  uint32_t minimumIntegerDigits = AssertedCast<uint32_t>(value.toInt32());
 
-  mozilla::intl::NumberFormatterSkeleton skeleton(options);
-  UNumberFormatter* nf = skeleton.toFormatter(locale.get());
-  if (!nf) {
-    intl::ReportInternalError(cx);
+  if (!skeleton.integerWidth(minimumIntegerDigits)) {
     return nullptr;
   }
 
-  return nf;
+  if (!skeleton.roundingModeHalfUp()) {
+    return nullptr;
+  }
+
+  return skeleton.toFormatter(cx, locale.get());
 }
 
 static UFormattedNumber* NewUFormattedNumberForPluralRules(JSContext* cx) {

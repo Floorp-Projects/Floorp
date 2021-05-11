@@ -218,15 +218,15 @@ ffi::RawNumberFormatter* FluentBuiltInNumberFormatterCreate(
       switch (aOptions->currency_display) {
         case ffi::FluentNumberCurrencyDisplayStyleRaw::Symbol:
           options.mCurrency = Some(std::make_pair(
-              currency, NumberFormatOptions::CurrencyDisplay::Symbol));
+              currency, NumberFormatOptions::CurrencyDisplayStyle::Symbol));
           break;
         case ffi::FluentNumberCurrencyDisplayStyleRaw::Code:
           options.mCurrency = Some(std::make_pair(
-              currency, NumberFormatOptions::CurrencyDisplay::Code));
+              currency, NumberFormatOptions::CurrencyDisplayStyle::Code));
           break;
         case ffi::FluentNumberCurrencyDisplayStyleRaw::Name:
           options.mCurrency = Some(std::make_pair(
-              currency, NumberFormatOptions::CurrencyDisplay::Name));
+              currency, NumberFormatOptions::CurrencyDisplayStyle::Name));
           break;
         default:
           MOZ_ASSERT_UNREACHABLE();
@@ -254,17 +254,8 @@ ffi::RawNumberFormatter* FluentBuiltInNumberFormatterCreate(
         aOptions->minimum_fraction_digits, aOptions->maximum_fraction_digits));
   }
 
-  Result<UniquePtr<NumberFormat>, NumberFormat::FormatError> result =
-      NumberFormat::TryCreate(aLocale->get(), options);
-
-  MOZ_ASSERT(result.isOk());
-
-  if (result.isOk()) {
-    return reinterpret_cast<ffi::RawNumberFormatter*>(
-        result.unwrap().release());
-  }
-
-  return nullptr;
+  return reinterpret_cast<ffi::RawNumberFormatter*>(
+      new NumberFormat(aLocale->get(), options));
 }
 
 uint8_t* FluentBuiltInNumberFormatterFormat(
@@ -299,13 +290,10 @@ uint8_t* FluentBuiltInNumberFormatterFormat(
     UniquePtr<CharType[], FreePolicy> mBuffer;
   } buffer;
 
-  if (nf->format(input, buffer).isOk()) {
-    *aOutCount = buffer.mWritten;
-    *aOutCapacity = buffer.mCapacity;
-    return buffer.mBuffer.release();
-  }
-
-  return nullptr;
+  nf->format(input, buffer);
+  *aOutCount = buffer.mWritten;
+  *aOutCapacity = buffer.mCapacity;
+  return buffer.mBuffer.release();
 }
 
 void FluentBuiltInNumberFormatterDestroy(ffi::RawNumberFormatter* aFormatter) {

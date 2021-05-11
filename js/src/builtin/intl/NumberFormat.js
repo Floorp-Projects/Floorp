@@ -620,7 +620,7 @@ function createNumberFormatFormat(nf) {
         var x = ToNumeric(value);
 
         // Step 5.
-        return intl_FormatNumber(nf, x, /* formatToParts = */ false);
+        return intl_FormatNumber(nf, x, /* formatToParts = */ false, /* unitStyle = */ false);
     };
 }
 
@@ -671,8 +671,11 @@ function Intl_NumberFormat_formatToParts(value) {
     // Step 4.
     var x = ToNumeric(value);
 
+    var internals = getNumberFormatInternals(nf);
+    var unitStyle = internals.style === "unit";
+
     // Step 5.
-    return intl_FormatNumber(nf, x, /* formatToParts = */ true);
+    return intl_FormatNumber(nf, x, /* formatToParts = */ true, unitStyle);
 }
 
 /**
