@@ -772,13 +772,15 @@ double RemoteAccessible::Step() {
 void RemoteAccessible::TakeFocus() { Unused << mDoc->SendTakeFocus(mID); }
 
 RemoteAccessible* RemoteAccessible::FocusedChild() {
-  if (mOuterDoc) {
+  if (IsOuterDoc()) {
     // If FocusedChild was called on an outer doc, it should behave
     // like a non-doc accessible and return its focused child, or null.
     // If the inner doc is OOP (fission), calling FocusedChild on the outer
     // doc would return null.
-    MOZ_ASSERT(ChildCount() == 1);
     RemoteAccessible* child = RemoteFirstChild();
+    if (!child) {
+      return (State() & states::FOCUSED) ? this : nullptr;
+    }
     MOZ_ASSERT(child->IsDoc());
     return (child->State() & states::FOCUSED) ? child : nullptr;
   }
@@ -812,8 +814,15 @@ Accessible* RemoteAccessible::ChildAtPoint(
     int32_t aX, int32_t aY, LocalAccessible::EWhichChildAtPoint aWhichChild) {
   RemoteAccessible* target = this;
   do {
-    if (target->mOuterDoc) {
-      MOZ_ASSERT(target->ChildCount() == 1);
+    if (target->IsOuterDoc()) {
+      if (target->ChildCount() == 0) {
+        // Return the OuterDoc if the requested point is within its bounds.
+        nsIntRect rect = target->Bounds();
+        if (rect.Contains(aX, aY)) {
+          return target;
+        }
+        return nullptr;
+      }
       DocAccessibleParent* childDoc = target->RemoteChildAt(0)->AsDoc();
       MOZ_ASSERT(childDoc);
       if (childDoc->IsTopLevelInContentProcess()) {
@@ -839,7 +848,7 @@ Accessible* RemoteAccessible::ChildAtPoint(
     // If resultDoc is null, this means there is no child at this point.
     auto useDoc = static_cast<DocAccessibleParent*>(resultDoc);
     target = resultDoc ? useDoc->GetAccessible(resultID) : nullptr;
-  } while (target && target->mOuterDoc &&
+  } while (target && target->IsOuterDoc() &&
            aWhichChild == Accessible::EWhichChildAtPoint::DeepestChild);
   return target;
 }

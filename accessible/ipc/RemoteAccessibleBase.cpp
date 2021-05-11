@@ -32,7 +32,7 @@ void RemoteAccessibleBase<Derived>::Shutdown() {
   // XXX Ideally  this wouldn't be necessary, but it seems OuterDoc accessibles
   // can be destroyed before the doc they own.
   uint32_t childCount = mChildren.Length();
-  if (!mOuterDoc) {
+  if (!IsOuterDoc()) {
     for (uint32_t idx = 0; idx < childCount; idx++) mChildren[idx]->Shutdown();
   } else {
     if (childCount > 1) {
@@ -53,7 +53,6 @@ void RemoteAccessibleBase<Derived>::SetChildDoc(
   MOZ_ASSERT(aChildDoc);
   MOZ_ASSERT(mChildren.Length() == 0);
   mChildren.AppendElement(aChildDoc);
-  mOuterDoc = true;
 }
 
 template <class Derived>
