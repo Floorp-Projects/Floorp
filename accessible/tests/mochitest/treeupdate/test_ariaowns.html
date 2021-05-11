@@ -675,8 +675,19 @@
 
     var gQueue = null;
 
-    function doTest() {
+    async function doTest() {
+      let PromEvents = {};
+      Services.scriptloader.loadSubScript(
+      "chrome://mochitests/content/a11y/accessible/tests/mochitest/promisified-events.js",
+      PromEvents);
+
       gQueue = new eventQueue();
+      let queueFinished = new Promise(resolve => {
+        gQueue.onFinish = function() {
+          resolve();
+          return DO_NOT_FINISH_TEST;
+        };
+      });
 
       // test1
       gQueue.push(new changeARIAOwns());
@@ -720,7 +731,18 @@
       gQueue.push(new test10_removeARIAOwner());
       gQueue.push(new test10_finishTest());
 
-      gQueue.invoke(); // SimpleTest.finish() will be called in the end
+      gQueue.invoke();
+      await queueFinished;
+
+      let owned = document.createElement('div');
+      owned.id = 't11_child';
+      owned.textContent = 'owned';
+      let evtPromise = PromEvents.waitForEvent(EVENT_SHOW, "t11_child");
+      getNode("t11_container").append(owned);
+      let evt = await evtPromise;
+      is(evt.accessible.parent.name, "t11_owner");
+
+      SimpleTest.finish();
     }
 
     SimpleTest.waitForExplicitFinish();
@@ -792,6 +814,11 @@
     <div id="t10_owner" aria-owns="t10_child"></div>
     <input id="t10_child">
   </div>
+
+  <div id="t11_container" aria-label="t11_container">
+    <div aria-owns="t11_child" aria-label="t11_owner"></div>
+  </div>
+
 </body>
 
 </html>
