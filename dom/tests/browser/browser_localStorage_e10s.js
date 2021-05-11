@@ -1,219 +1,11 @@
 const HELPER_PAGE_URL =
-  "http://example.com/browser/dom/tests/browser/page_localstorage_e10s.html";
+  "http://example.com/browser/dom/tests/browser/page_localstorage.html";
 const HELPER_PAGE_ORIGIN = "http://example.com/";
 
 let testDir = gTestPath.substr(0, gTestPath.lastIndexOf("/"));
-Services.scriptloader.loadSubScript(
-  testDir + "/helper_localStorage_e10s.js",
-  this
-);
+Services.scriptloader.loadSubScript(testDir + "/helper_localStorage.js", this);
 
-/**
- * Wait for a LocalStorage flush to occur.  This notification can occur as a
- * result of any of:
- * - The normal, hardcoded 5-second flush timer.
- * - InsertDBOp seeing a preload op for an origin with outstanding changes.
- * - Us generating a "domstorage-test-flush-force" observer notification.
- */
-
-/* import-globals-from helper_localStorage_e10s.js */
-
-function waitForLocalStorageFlush() {
-  if (Services.domStorageManager.nextGenLocalStorageEnabled) {
-    return new Promise(resolve => executeSoon(resolve));
-  }
-
-  return new Promise(function(resolve) {
-    let observer = {
-      observe() {
-        SpecialPowers.removeObserver(observer, "domstorage-test-flushed");
-        resolve();
-      },
-    };
-    SpecialPowers.addObserver(observer, "domstorage-test-flushed");
-  });
-}
-
-/**
- * Trigger and wait for a flush.  This is only necessary for forcing
- * mOriginsHavingData to be updated.  Normal operations exposed to content know
- * to automatically flush when necessary for correctness.
- *
- * The notification we're waiting for to verify flushing is fundamentally
- * ambiguous (see waitForLocalStorageFlush), so we actually trigger the flush
- * twice and wait twice.  In the event there was a race, there will be 3 flush
- * notifications, but correctness is guaranteed after the second notification.
- */
-function triggerAndWaitForLocalStorageFlush() {
-  if (Services.domStorageManager.nextGenLocalStorageEnabled) {
-    return new Promise(resolve => executeSoon(resolve));
-  }
-
-  SpecialPowers.notifyObservers(null, "domstorage-test-flush-force");
-  // This first wait is ambiguous...
-  return waitForLocalStorageFlush().then(function() {
-    // So issue a second flush and wait for that.
-    SpecialPowers.notifyObservers(null, "domstorage-test-flush-force");
-    return waitForLocalStorageFlush();
-  });
-}
-
-/**
- * Clear the origin's storage so that "OriginsHavingData" will return false for
- * our origin.  Note that this is only the case for AsyncClear() which is
- * explicitly issued against a cache, or AsyncClearAll() which we can trigger
- * by wiping all storage.  However, the more targeted domain clearings that
- * we can trigger via observer, AsyncClearMatchingOrigin and
- * AsyncClearMatchingOriginAttributes will not clear the hashtable entry for
- * the origin.
- *
- * So we explicitly access the cache here in the parent for the origin and issue
- * an explicit clear.  Clearing all storage might be a little easier but seems
- * like asking for intermittent failures.
- */
-function clearOriginStorageEnsuringNoPreload() {
-  let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-    HELPER_PAGE_ORIGIN
-  );
-
-  if (Services.domStorageManager.nextGenLocalStorageEnabled) {
-    let request = Services.qms.clearStoragesForPrincipal(
-      principal,
-      "default",
-      "ls"
-    );
-    let promise = new Promise(resolve => {
-      request.callback = () => {
-        resolve();
-      };
-    });
-    return promise;
-  }
-
-  // We want to use createStorage to force the cache to be created so we can
-  // issue the clear.  It's possible for getStorage to return false but for the
-  // origin preload hash to still have our origin in it.
-  let storage = Services.domStorageManager.createStorage(
-    null,
-    principal,
-    principal,
-    ""
-  );
-  storage.clear();
-
-  // We also need to trigger a flush os that mOriginsHavingData gets updated.
-  // The inherent flush race is fine here because
-  return triggerAndWaitForLocalStorageFlush();
-}
-
-async function verifyTabPreload(knownTab, expectStorageExists) {
-  let storageExists = await SpecialPowers.spawn(
-    knownTab.tab.linkedBrowser,
-    [HELPER_PAGE_ORIGIN],
-    function(origin) {
-      let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-        origin
-      );
-      if (Services.domStorageManager.nextGenLocalStorageEnabled) {
-        return Services.domStorageManager.isPreloaded(principal);
-      }
-      return !!Services.domStorageManager.getStorage(
-        null,
-        principal,
-        principal
-      );
-    }
-  );
-  is(storageExists, expectStorageExists, "Storage existence === preload");
-}
-
-/**
- * Instruct the given tab to execute the given series of mutations.  For
- * simplicity, the mutations representation matches the expected events rep.
- */
-async function mutateTabStorage(knownTab, mutations, sentinelValue) {
-  await SpecialPowers.spawn(
-    knownTab.tab.linkedBrowser,
-    [{ mutations, sentinelValue }],
-    function(args) {
-      return content.wrappedJSObject.mutateStorage(Cu.cloneInto(args, content));
-    }
-  );
-}
-
-/**
- * Instruct the given tab to add a "storage" event listener and record all
- * received events.  verifyTabStorageEvents is the corresponding method to
- * check and assert the recorded events.
- */
-async function recordTabStorageEvents(knownTab, sentinelValue) {
-  await SpecialPowers.spawn(
-    knownTab.tab.linkedBrowser,
-    [sentinelValue],
-    function(sentinelValue) {
-      return content.wrappedJSObject.listenForStorageEvents(sentinelValue);
-    }
-  );
-}
-
-/**
- * Retrieve the current localStorage contents perceived by the tab and assert
- * that they match the provided expected state.
- *
- * If maybeSentinel is non-null, it's assumed to be a string that identifies the
- * value we should be waiting for the sentinel key to take on.  This is
- * necessary because we cannot make any assumptions about when state will be
- * propagated to the given process.  See the comments in
- * page_localstorage_e10s.js for more context.  In general, a sentinel value is
- * required for correctness unless the process in question is the one where the
- * writes were performed or verifyTabStorageEvents was used.
- */
-async function verifyTabStorageState(knownTab, expectedState, maybeSentinel) {
-  let actualState = await SpecialPowers.spawn(
-    knownTab.tab.linkedBrowser,
-    [maybeSentinel],
-    function(maybeSentinel) {
-      return content.wrappedJSObject.getStorageState(maybeSentinel);
-    }
-  );
-
-  for (let [expectedKey, expectedValue] of Object.entries(expectedState)) {
-    ok(actualState.hasOwnProperty(expectedKey), "key present: " + expectedKey);
-    is(actualState[expectedKey], expectedValue, "value correct");
-  }
-  for (let actualKey of Object.keys(actualState)) {
-    if (!expectedState.hasOwnProperty(actualKey)) {
-      ok(false, "actual state has key it shouldn't have: " + actualKey);
-    }
-  }
-}
-
-/**
- * Retrieve and clear the storage events recorded by the tab and assert that
- * they match the provided expected events.  For simplicity, the expected events
- * representation is the same as that used by mutateTabStorage.
- *
- * Note that by convention for test readability we are passed a 3rd argument of
- * the sentinel value, but we don't actually care what it is.
- */
-async function verifyTabStorageEvents(knownTab, expectedEvents) {
-  let actualEvents = await SpecialPowers.spawn(
-    knownTab.tab.linkedBrowser,
-    [],
-    function() {
-      return content.wrappedJSObject.returnAndClearStorageEvents();
-    }
-  );
-
-  is(actualEvents.length, expectedEvents.length, "right number of events");
-  for (let i = 0; i < actualEvents.length; i++) {
-    let [actualKey, actualNewValue, actualOldValue] = actualEvents[i];
-    let [expectedKey, expectedNewValue, expectedOldValue] = expectedEvents[i];
-    is(actualKey, expectedKey, "keys match");
-    is(actualNewValue, expectedNewValue, "new values match");
-    is(actualOldValue, expectedOldValue, "old values match");
-  }
-}
+/* import-globals-from helper_localStorage.js */
 
 // We spin up a ton of child processes.
 requestLongerTimeout(4);
@@ -290,38 +82,42 @@ add_task(async function() {
   // Ensure that there is no localstorage data or potential false positives for
   // localstorage preloads by forcing the origin to be cleared prior to the
   // start of our test.
-  await clearOriginStorageEnsuringNoPreload();
+  await clearOriginStorageEnsuringNoPreload(HELPER_PAGE_ORIGIN);
 
   // Make sure mOriginsHavingData gets updated.
   await triggerAndWaitForLocalStorageFlush();
 
   // - Open tabs.  Don't configure any of them yet.
   const knownTabs = new KnownTabs();
-  const writerTab = await openTestTabInOwnProcess(
+  const writerTab = await openTestTab(
     HELPER_PAGE_URL,
     "writer",
-    knownTabs
+    knownTabs,
+    true
   );
-  const listenerTab = await openTestTabInOwnProcess(
+  const listenerTab = await openTestTab(
     HELPER_PAGE_URL,
     "listener",
-    knownTabs
+    knownTabs,
+    true
   );
-  const readerTab = await openTestTabInOwnProcess(
+  const readerTab = await openTestTab(
     HELPER_PAGE_URL,
     "reader",
-    knownTabs
+    knownTabs,
+    true
   );
-  const lateWriteThenListenTab = await openTestTabInOwnProcess(
+  const lateWriteThenListenTab = await openTestTab(
     HELPER_PAGE_URL,
     "lateWriteThenListen",
-    knownTabs
+    knownTabs,
+    true
   );
 
   // Sanity check that preloading did not occur in the tabs.
-  await verifyTabPreload(writerTab, false);
-  await verifyTabPreload(listenerTab, false);
-  await verifyTabPreload(readerTab, false);
+  await verifyTabPreload(writerTab, false, HELPER_PAGE_ORIGIN);
+  await verifyTabPreload(listenerTab, false, HELPER_PAGE_ORIGIN);
+  await verifyTabPreload(readerTab, false, HELPER_PAGE_ORIGIN);
 
   // - Configure the tabs.
   const initialSentinel = "initial";
@@ -473,15 +269,16 @@ add_task(async function() {
 
   // - Open a fresh tab and make sure it sees the precache/preload
   info("late open preload check");
-  const lateOpenSeesPreload = await openTestTabInOwnProcess(
+  const lateOpenSeesPreload = await openTestTab(
     HELPER_PAGE_URL,
     "lateOpenSeesPreload",
-    knownTabs
+    knownTabs,
+    true
   );
-  await verifyTabPreload(lateOpenSeesPreload, true);
+  await verifyTabPreload(lateOpenSeesPreload, true, HELPER_PAGE_ORIGIN);
 
   // - Clean up.
   await cleanupTabs(knownTabs);
 
-  clearOriginStorageEnsuringNoPreload();
+  clearOriginStorageEnsuringNoPreload(HELPER_PAGE_ORIGIN);
 });
