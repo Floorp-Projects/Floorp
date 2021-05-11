@@ -501,10 +501,6 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
 
   bool UseHTTPSRRForSpeculativeConnection() const;
 
-  // So we can ensure that this is done during process preallocation to
-  // avoid first-use overhead
-  static void PresetAcceptLanguages();
-
  private:
   nsHttpHandler();
 
