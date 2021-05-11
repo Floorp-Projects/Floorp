@@ -51,10 +51,16 @@ function importReportDataHandler(event) {
         "about-logins-import-report-error",
         { count: report.error }
       );
-      detailedDuplicateCount.querySelector(".not-imported").hidden =
-        report.no_change === 0;
-      detailedErrorsCount.querySelector(".not-imported").hidden =
-        report.error === 0;
+      if (report.no_change > 0) {
+        detailedDuplicateCount
+          .querySelector(".not-imported")
+          .classList.toggle("not-imported-hidden");
+      }
+      if (report.error > 0) {
+        detailedErrorsCount
+          .querySelector(".not-imported")
+          .classList.toggle("not-imported-hidden");
+      }
 
       detailsLoginsList.innerHTML = "";
       let fragment = document.createDocumentFragment();
