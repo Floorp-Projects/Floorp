@@ -554,6 +554,47 @@ nsRect nsDisplayListBuilder::OutOfFlowDisplayData::ComputeVisibleRectForFrame(
   return visible;
 }
 
+nsDisplayListBuilder::Linkifier::Linkifier(nsDisplayListBuilder* aBuilder,
+                                           nsIFrame* aFrame) {
+  // Links don't nest, so if the builder already has a destination, no need to
+  // check for a link element here.
+  if (!aBuilder->mLinkSpec.IsEmpty()) {
+    return;
+  }
+
+  // Find the element that we need to check for link-ness, bailing out if
+  // we can't find one.
+  Element* elem = Element::FromNodeOrNull(aFrame->GetContent());
+  if (!elem) {
+    return;
+  }
+
+  // Check if we have actually found a link and it has a usable spec.
+  nsCOMPtr<nsIURI> linkURI;
+  if (!elem->IsLink(getter_AddRefs(linkURI))) {
+    return;
+  }
+  if (NS_FAILED(linkURI->GetSpec(aBuilder->mLinkSpec)) ||
+      aBuilder->mLinkSpec.IsEmpty()) {
+    return;
+  }
+
+  // Record that we need to reset the builder's state on destruction.
+  mBuilderToReset = aBuilder;
+}
+
+void nsDisplayListBuilder::Linkifier::MaybeAppendLink(
+    nsDisplayListBuilder* aBuilder, nsIFrame* aFrame, nsDisplayList* aList) {
+  // Note that we may generate a link here even if the constructor bailed out
+  // without updating aBuilder->LinkSpec(), because it may have been set by
+  // an ancestor that was associated with a link element.
+  if (!aBuilder->mLinkSpec.IsEmpty()) {
+    auto* link = MakeDisplayItem<nsDisplayLink>(
+        aBuilder, aFrame, aBuilder->mLinkSpec.get(), aFrame->GetRect());
+    aList->AppendToTop(link);
+  }
+}
+
 nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
                                            nsDisplayListBuilderMode aMode,
                                            bool aBuildCaret,
