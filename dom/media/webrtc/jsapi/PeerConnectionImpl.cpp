@@ -1857,6 +1857,11 @@ PeerConnectionImpl::ReplaceTrackNoRenegotiation(TransceiverImpl& aTransceiver,
         return rv;
       }
     }
+  } else if (!oldSendTrack != !aWithTrack) {
+    if (NS_WARN_IF(NS_FAILED(rv = aTransceiver.UpdateConduit()))) {
+      CSFLogError(LOGTAG, "Error Updating AudioConduit");
+      return rv;
+    }
   }
 
   return NS_OK;
