@@ -606,3 +606,23 @@ void moz_container_wayland_update_opaque_region(MozContainer* container,
 gboolean moz_container_wayland_can_draw(MozContainer* container) {
   return container ? container->wl_container.ready_to_draw : false;
 }
+
+double moz_container_wayland_get_scale(MozContainer* container) {
+  MozContainerWayland* wl_container = &container->wl_container;
+  MutexAutoLock lock(*wl_container->container_lock);
+
+  nsWindow* window = moz_container_get_nsWindow(container);
+  return window ? window->FractionalScaleFactor() : 1;
+}
+
+struct wp_viewport* moz_container_wayland_get_viewport(
+    MozContainer* container) {
+  MozContainerWayland* wl_container = &container->wl_container;
+  MutexAutoLock lock(*wl_container->container_lock);
+
+  if (!wl_container->viewport) {
+    wl_container->viewport = wp_viewporter_get_viewport(
+        WaylandDisplayGet()->GetViewporter(), wl_container->surface);
+  }
+  return wl_container->viewport;
+}

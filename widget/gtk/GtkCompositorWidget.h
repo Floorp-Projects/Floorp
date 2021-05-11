@@ -15,6 +15,11 @@ class nsIWidget;
 class nsWindow;
 
 namespace mozilla {
+
+namespace layers {
+class NativeLayerRootWayland;
+}  // namespace layers
+
 namespace widget {
 
 class PlatformCompositorWidgetDelegate : public CompositorWidgetDelegate {
@@ -68,6 +73,7 @@ class GtkCompositorWidget : public CompositorWidget,
 #endif
 #if defined(MOZ_WAYLAND)
   void SetEGLNativeWindowSize(const LayoutDeviceIntSize& aEGLWindowSize);
+  RefPtr<mozilla::layers::NativeLayerRoot> GetNativeLayerRoot() override;
 #endif
 
   // PlatformCompositorWidgetDelegate Overrides
@@ -92,6 +98,10 @@ class GtkCompositorWidget : public CompositorWidget,
   Window mXWindow = {};
 #endif
   int32_t mDepth = {};
+
+#ifdef MOZ_WAYLAND
+  RefPtr<mozilla::layers::NativeLayerRootWayland> mNativeLayerRoot;
+#endif
 };
 
 }  // namespace widget

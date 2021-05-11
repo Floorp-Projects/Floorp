@@ -965,7 +965,7 @@ RenderThread::GetProgramsForCompositorOGL() {
 }
 
 RefPtr<layers::SurfacePool> RenderThread::SharedSurfacePool() {
-#ifdef XP_MACOSX
+#if defined(XP_MACOSX) || defined(MOZ_WAYLAND)
   if (!mSurfacePool) {
     size_t poolSizeLimit =
         StaticPrefs::gfx_webrender_compositor_surface_pool_size_AtStartup();

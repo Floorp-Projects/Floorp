@@ -770,6 +770,14 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
         V(0, 0, 0, 0), "FEATURE_ROLLOUT_S_M_SCRN_SOFTWARE_WR", "");
 
     ////////////////////////////////////
+    // FEATURE_WEBRENDER_COMPOSITOR
+    APPEND_TO_DRIVER_BLOCKLIST(
+        OperatingSystem::Linux, DeviceFamily::All,
+        nsIGfxInfo::FEATURE_WEBRENDER_COMPOSITOR,
+        nsIGfxInfo::FEATURE_BLOCKED_DEVICE, DRIVER_COMPARISON_IGNORED,
+        V(0, 0, 0, 0), "FEATURE_FAILURE_WEBRENDER_COMPOSITOR_DISABLED", "");
+
+    ////////////////////////////////////
     // FEATURE_X11_EGL
     APPEND_TO_DRIVER_BLOCKLIST(
         OperatingSystem::Linux, DeviceFamily::All, nsIGfxInfo::FEATURE_X11_EGL,
