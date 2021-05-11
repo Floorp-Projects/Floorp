@@ -5538,7 +5538,8 @@ bool Document::QueryCommandSupported(const nsAString& aHTMLCommandName,
                                      CallerType aCallerType, ErrorResult& aRv) {
   // Only allow on HTML documents.
   if (!IsHTMLOrXHTML()) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_DOCUMENT_QUERY_COMMAND_SUPPORTED);
+    aRv.ThrowInvalidStateError(
+        "queryCommandSupported is only supported on HTML documents");
     return false;
   }
   // Otherwise, don't throw exception for compatibility with Chrome.
