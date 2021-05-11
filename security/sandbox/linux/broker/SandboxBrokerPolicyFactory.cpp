@@ -276,6 +276,13 @@ static void AddSharedMemoryPaths(SandboxBroker::Policy* aPolicy, pid_t aPid) {
   }
 }
 
+static void AddMemoryReporting(SandboxBroker::Policy* aPolicy, pid_t aPid) {
+  // Bug 1198552: memory reporting.
+  // Bug 1647957: memory reporting.
+  aPolicy->AddPath(rdonly, nsPrintfCString("/proc/%d/statm", aPid).get());
+  aPolicy->AddPath(rdonly, nsPrintfCString("/proc/%d/smaps", aPid).get());
+}
+
 static void AddDynamicPathList(SandboxBroker::Policy* policy,
                                const char* aPathListPref, int perms) {
   nsAutoCString pathList;
@@ -667,8 +674,7 @@ UniquePtr<SandboxBroker::Policy> SandboxBrokerPolicyFactory::GetContentPolicy(
   policy->AddPath(rdonly, nsPrintfCString("/proc/%d/maps", aPid).get());
 
   // Bug 1198552: memory reporting.
-  policy->AddPath(rdonly, nsPrintfCString("/proc/%d/statm", aPid).get());
-  policy->AddPath(rdonly, nsPrintfCString("/proc/%d/smaps", aPid).get());
+  AddMemoryReporting(policy.get(), aPid);
 
   // Bug 1384804, notably comment 15
   // Used by libnuma, included by x265/ffmpeg, who falls back
@@ -702,6 +708,9 @@ SandboxBrokerPolicyFactory::GetRDDPolicy(int aPid) {
   policy->AddDir(rdonly, "/usr/lib");
   policy->AddDir(rdonly, "/usr/lib32");
   policy->AddDir(rdonly, "/usr/lib64");
+
+  // Bug 1647957: memory reporting.
+  AddMemoryReporting(policy.get(), aPid);
 
   // Firefox binary dir.
   // Note that unlike the previous cases, we use NS_GetSpecialDirectory
@@ -762,6 +771,9 @@ SandboxBrokerPolicyFactory::GetSocketProcessPolicy(int aPid) {
   // Socket process sandbox needs to allow shmem in order to support
   // profiling.  See Bug 1626385.
   AddSharedMemoryPaths(policy.get(), aPid);
+
+  // Bug 1647957: memory reporting.
+  AddMemoryReporting(policy.get(), aPid);
 
   // Firefox binary dir.
   // Note that unlike the previous cases, we use NS_GetSpecialDirectory
