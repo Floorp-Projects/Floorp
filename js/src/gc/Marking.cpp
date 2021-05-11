@@ -804,125 +804,66 @@ struct ImplicitEdgeHolderType<BaseScript*> {
   using Type = BaseScript*;
 };
 
-void GCMarker::markEphemeronValues(gc::Cell* markedCell,
-                                   WeakEntryVector& values) {
-  DebugOnly<size_t> initialLen = values.length();
+void GCMarker::markEphemeronEdges(EphemeronEdgeVector& edges) {
+  DebugOnly<size_t> initialLength = edges.length();
 
-  for (const auto& markable : values) {
-    markable.weakmap->markKey(this, markedCell, markable.key);
+  for (auto& edge : edges) {
+    gc::AutoSetMarkColor autoColor(*this,
+                                   std::min(edge.color, CellColor(color)));
+    ApplyGCThingTyped(edge.target, edge.target->getTraceKind(),
+                      [this](auto t) { markAndTraverse(t); });
   }
 
-  // The vector should not be appended to during iteration because the key is
-  // already marked, and even in cases where we have a multipart key, we
-  // should only be inserting entries for the unmarked portions.
-  MOZ_ASSERT(values.length() == initialLen);
-}
-
-void GCMarker::forgetWeakKey(js::gc::WeakKeyTable& weakKeys, WeakMapBase* map,
-                             gc::Cell* keyOrDelegate, gc::Cell* keyToRemove) {
-  // Find and remove the exact pair <map,keyToRemove> from the values of the
-  // weak keys table.
-  //
-  // This function is called when 'keyToRemove' is removed from a weakmap
-  // 'map'. If 'keyToRemove' has a delegate, then the delegate will be used as
-  // the lookup key in gcWeakKeys; otherwise, 'keyToRemove' itself will be. In
-  // either case, 'keyToRemove' is what we will be filtering out of the
-  // Markable values in the weakKey table.
-  auto p = weakKeys.get(keyOrDelegate);
-
-  // Note that this is not guaranteed to find anything. The key will have
-  // only been inserted into the weakKeys table if it was unmarked when the
-  // map was traced.
-  if (p) {
-    // Entries should only have been added to weakKeys if the map was marked.
-    for (auto r = p->value.all(); !r.empty(); r.popFront()) {
-      MOZ_ASSERT(r.front().weakmap->mapColor);
-    }
-
-    p->value.eraseIfEqual(WeakMarkable(map, keyToRemove));
-  }
-}
-
-void GCMarker::forgetWeakMap(WeakMapBase* map, Zone* zone) {
-  for (auto table : {&zone->gcNurseryWeakKeys(), &zone->gcWeakKeys()}) {
-    for (auto p = table->all(); !p.empty(); p.popFront()) {
-      p.front().value.eraseIf([map](const WeakMarkable& markable) -> bool {
-        return markable.weakmap == map;
-      });
-    }
-  }
+  // The above marking always goes through markAndPush, which will not cause
+  // 'edges' to be appended to while iterating.
+  MOZ_ASSERT(edges.length() == initialLength);
 }
 
 // 'delegate' is no longer the delegate of 'key'.
 void GCMarker::severWeakDelegate(JSObject* key, JSObject* delegate) {
   JS::Zone* zone = delegate->zone();
   if (!zone->needsIncrementalBarrier()) {
-    MOZ_ASSERT(!zone->gcWeakKeys(delegate).get(delegate),
-               "non-collecting zone should not have populated gcWeakKeys");
+    MOZ_ASSERT(
+        !zone->gcEphemeronEdges(delegate).get(delegate),
+        "non-collecting zone should not have populated gcEphemeronEdges");
     return;
   }
-  auto p = zone->gcWeakKeys(delegate).get(delegate);
+  auto* p = zone->gcEphemeronEdges(delegate).get(delegate);
   if (!p) {
     return;
   }
 
-  // Remove all <weakmap, key> pairs associated with this delegate and key, and
-  // call postSeverDelegate on each of the maps found to record the key
-  // instead.
+  // We are losing the edges from the delegate to the value. Maintain
+  // snapshot-at-beginning by marking through those edges, conservatively (even
+  // if the containing weakmap has not yet been marked).
   //
-  // But be careful: if key and delegate are in different compartments but the
-  // same zone, then the same gcWeakKeys table will be mutated by both the
-  // eraseIf and the postSeverDelegate, so we cannot nest them.
-  js::Vector<WeakMapBase*, 10, SystemAllocPolicy> severedKeyMaps;
-  p->value.eraseIf(
-      [key, &severedKeyMaps](const WeakMarkable& markable) -> bool {
-        if (markable.key != key) {
-          return false;
-        }
-        AutoEnterOOMUnsafeRegion oomUnsafe;
-        if (!severedKeyMaps.append(markable.weakmap)) {
-          oomUnsafe.crash("OOM while recording all weakmaps with severed key");
-        }
-        return true;
-      });
-
-  for (WeakMapBase* weakmap : severedKeyMaps) {
-    if (weakmap->zone()->needsIncrementalBarrier()) {
-      weakmap->postSeverDelegate(this, key);
-    }
-  }
+  // If this ends up overmarking, we can change this to iterate through every
+  // live weakmap in the Zone instead.
+  EphemeronEdgeVector& edges = p->value;
+  gc::AutoSetMarkColor autoColor(
+      *this, gc::detail::GetEffectiveColor(runtime(), delegate));
+  markEphemeronEdges(edges);
 }
 
 // 'delegate' is now the delegate of 'key'. Update weakmap marking state.
 void GCMarker::restoreWeakDelegate(JSObject* key, JSObject* delegate) {
   if (!key->zone()->needsIncrementalBarrier() ||
       !delegate->zone()->needsIncrementalBarrier()) {
-    MOZ_ASSERT(!key->zone()->gcWeakKeys(key).get(key),
-               "non-collecting zone should not have populated gcWeakKeys");
+    MOZ_ASSERT(
+        !key->zone()->gcEphemeronEdges(key).has(key),
+        "non-collecting zone should not have populated gcEphemeronEdges");
     return;
   }
-  auto p = key->zone()->gcWeakKeys(key).get(key);
+  auto* p = key->zone()->gcEphemeronEdges(key).get(key);
   if (!p) {
     return;
   }
 
-  js::Vector<WeakMapBase*, 10, SystemAllocPolicy> maps;
-  p->value.eraseIf([key, &maps](const WeakMarkable& markable) -> bool {
-    if (markable.key != key) {
-      return false;
-    }
-    AutoEnterOOMUnsafeRegion oomUnsafe;
-    if (!maps.append(markable.weakmap)) {
-      oomUnsafe.crash("OOM while recording all weakmaps with severed key");
-    }
-    return true;
-  });
-
-  for (WeakMapBase* weakmap : maps) {
-    if (weakmap->zone()->needsIncrementalBarrier()) {
-      weakmap->postRestoreDelegate(this, key, delegate);
-    }
-  }
+  // Similar to severWeakDelegate above, mark through every key -> value edge.
+  EphemeronEdgeVector& edges = p->value;
+  gc::AutoSetMarkColor autoColor(*this,
+                                 gc::detail::GetEffectiveColor(runtime(), key));
+  markEphemeronEdges(edges);
 }
 
 template <typename T>
@@ -935,18 +876,19 @@ void GCMarker::markImplicitEdgesHelper(T markedThing) {
   MOZ_ASSERT(zone->isGCMarking());
   MOZ_ASSERT(!zone->isGCSweeping());
 
-  auto p = zone->gcWeakKeys().get(markedThing);
+  auto p = zone->gcEphemeronEdges().get(markedThing);
   if (!p) {
     return;
   }
-  WeakEntryVector& markables = p->value;
+  EphemeronEdgeVector& edges = p->value;
 
   // markedThing might be a key in a debugger weakmap, which can end up marking
   // values that are in a different compartment.
   AutoClearTracingSource acts(this);
 
-  markEphemeronValues(markedThing, markables);
-  markables.clear();  // If key address is reused, it should do nothing
+  CellColor thingColor = gc::detail::GetEffectiveColor(runtime(), markedThing);
+  gc::AutoSetMarkColor autoColor(*this, thingColor);
+  markEphemeronEdges(edges);
 }
 
 template <>
@@ -2366,10 +2308,10 @@ void GCMarker::stop() {
   setMainStackColor(MarkColor::Black);
   AutoEnterOOMUnsafeRegion oomUnsafe;
   for (GCZonesIter zone(runtime()); !zone.done(); zone.next()) {
-    if (!zone->gcWeakKeys().clear()) {
+    if (!zone->gcEphemeronEdges().clear()) {
       oomUnsafe.crash("clearing weak keys in GCMarker::stop()");
     }
-    if (!zone->gcNurseryWeakKeys().clear()) {
+    if (!zone->gcNurseryEphemeronEdges().clear()) {
       oomUnsafe.crash("clearing (nursery) weak keys in GCMarker::stop()");
     }
   }
@@ -2472,8 +2414,8 @@ bool GCMarker::enterWeakMarkingMode() {
   // the table will already hold all such keys.)
 
   // Set state before doing anything else, so any new key that is marked
-  // during the following gcWeakKeys scan will itself be looked up in
-  // gcWeakKeys and marked according to ephemeron rules.
+  // during the following gcEphemeronEdges scan will itself be looked up in
+  // gcEphemeronEdges and marked according to ephemeron rules.
   state = MarkingState::WeakMarking;
 
   // If there was an 'enter-weak-marking-mode' token in the queue, then it
@@ -2498,53 +2440,38 @@ IncrementalProgress JS::Zone::enterWeakMarkingMode(GCMarker* marker,
     return IncrementalProgress::Finished;
   }
 
-  // gcWeakKeys contains the keys from all weakmaps marked so far, or at least
-  // the keys that might still need to be marked through. Scan through
-  // gcWeakKeys and mark all values whose keys are marked. This marking may
-  // recursively mark through other weakmap entries (immediately since we are
-  // now in WeakMarking mode). The end result is a consistent state where all
-  // values are marked if both their map and key are marked -- though note that
-  // we may later leave weak marking mode, do some more marking, and then enter
-  // back in.
+  // gcEphemeronEdges contains the keys from all weakmaps marked so far, or at
+  // least the keys that might still need to be marked through. Scan through
+  // gcEphemeronEdges and mark all values whose keys are marked. This marking
+  // may recursively mark through other weakmap entries (immediately since we
+  // are now in WeakMarking mode). The end result is a consistent state where
+  // all values are marked if both their map and key are marked -- though note
+  // that we may later leave weak marking mode, do some more marking, and then
+  // enter back in.
   if (!isGCMarking()) {
     return IncrementalProgress::Finished;
   }
 
-  MOZ_ASSERT(gcNurseryWeakKeys().count() == 0);
+  MOZ_ASSERT(gcNurseryEphemeronEdges().count() == 0);
 
   // An OrderedHashMap::Range stays valid even when the underlying table
-  // (zone->gcWeakKeys) is mutated, which is useful here since we may add
+  // (zone->gcEphemeronEdges) is mutated, which is useful here since we may add
   // additional entries while iterating over the Range.
-  gc::WeakKeyTable::Range r = gcWeakKeys().all();
+  gc::EphemeronEdgeTable::Range r = gcEphemeronEdges().all();
   while (!r.empty()) {
-    gc::Cell* key = r.front().key;
-    gc::CellColor keyColor =
-        gc::detail::GetEffectiveColor(marker->runtime(), key);
-    if (keyColor) {
-      MOZ_ASSERT(key == r.front().key);
-      auto& markables = r.front().value;
+    gc::Cell* src = r.front().key;
+    gc::CellColor srcColor =
+        gc::detail::GetEffectiveColor(marker->runtime(), src);
+    if (srcColor) {
+      MOZ_ASSERT(src == r.front().key);
+      auto& edges = r.front().value;
       r.popFront();  // Pop before any mutations happen.
-      size_t end = markables.length();
-      for (size_t i = 0; i < end; i++) {
-        WeakMarkable& v = markables[i];
-        // Note: if the key is marked gray but not black, then the markables
-        // vector may be appended to within this loop body. So iterate just
-        // over the ones from before weak marking mode was switched on.
-        v.weakmap->markKey(marker, key, v.key);
-        budget.step();
+      if (edges.length() > 0) {
+        gc::AutoSetMarkColor autoColor(*marker, srcColor);
+        marker->markEphemeronEdges(edges);
+        budget.step(edges.length());
         if (budget.isOverBudget()) {
           return NotFinished;
-        }
-      }
-
-      if (keyColor == gc::CellColor::Black) {
-        // We can't mark the key any more than already is, so it no longer
-        // needs to be in the weak keys table.
-        if (end == markables.length()) {
-          bool found;
-          gcWeakKeys().remove(key, &found);
-        } else {
-          markables.erase(markables.begin(), &markables[end]);
         }
       }
     } else {
@@ -2555,17 +2482,6 @@ IncrementalProgress JS::Zone::enterWeakMarkingMode(GCMarker* marker,
   return IncrementalProgress::Finished;
 }
 
-#ifdef DEBUG
-void JS::Zone::checkWeakMarkingMode() {
-  for (auto r = gcWeakKeys().all(); !r.empty(); r.popFront()) {
-    for (auto markable : r.front().value) {
-      MOZ_ASSERT(markable.weakmap->mapColor,
-                 "unmarked weakmaps in weak keys table");
-    }
-  }
-}
-#endif
-
 void GCMarker::leaveWeakMarkingMode() {
   MOZ_ASSERT(state == MarkingState::WeakMarking ||
              state == MarkingState::IterativeMarking);
@@ -2574,8 +2490,8 @@ void GCMarker::leaveWeakMarkingMode() {
     state = MarkingState::RegularMarking;
   }
 
-  // The gcWeakKeys table is still populated and may be used during a future
-  // weak marking mode within this GC.
+  // The gcEphemeronEdges table is still populated and may be used during a
+  // future weak marking mode within this GC.
 }
 
 MOZ_NEVER_INLINE void GCMarker::delayMarkingChildrenOnOOM(Cell* cell) {

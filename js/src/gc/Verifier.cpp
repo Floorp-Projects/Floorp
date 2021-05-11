@@ -539,9 +539,9 @@ void js::gc::MarkingValidator::nonIncrementalMark(AutoGCSession& session) {
    * For saving, smush all of the keys into one big table and split them back
    * up into per-zone tables when restoring.
    */
-  gc::WeakKeyTable savedWeakKeys(SystemAllocPolicy(),
-                                 runtime->randomHashCodeScrambler());
-  if (!savedWeakKeys.init()) {
+  gc::EphemeronEdgeTable savedEphemeronEdges(
+      SystemAllocPolicy(), runtime->randomHashCodeScrambler());
+  if (!savedEphemeronEdges.init()) {
     return;
   }
 
@@ -551,15 +551,15 @@ void js::gc::MarkingValidator::nonIncrementalMark(AutoGCSession& session) {
     }
 
     AutoEnterOOMUnsafeRegion oomUnsafe;
-    for (gc::WeakKeyTable::Range r = zone->gcWeakKeys().all(); !r.empty();
-         r.popFront()) {
+    for (gc::EphemeronEdgeTable::Range r = zone->gcEphemeronEdges().all();
+         !r.empty(); r.popFront()) {
       MOZ_ASSERT(r.front().key->asTenured().zone() == zone);
-      if (!savedWeakKeys.put(r.front().key, std::move(r.front().value))) {
+      if (!savedEphemeronEdges.put(r.front().key, std::move(r.front().value))) {
         oomUnsafe.crash("saving weak keys table for validator");
       }
     }
 
-    if (!zone->gcWeakKeys().clear()) {
+    if (!zone->gcEphemeronEdges().clear()) {
       oomUnsafe.crash("clearing weak keys table for validator");
     }
   }
@@ -650,18 +650,19 @@ void js::gc::MarkingValidator::nonIncrementalMark(AutoGCSession& session) {
   for (GCZonesIter zone(gc); !zone.done(); zone.next()) {
     WeakMapBase::unmarkZone(zone);
     AutoEnterOOMUnsafeRegion oomUnsafe;
-    if (!zone->gcWeakKeys().clear()) {
+    if (!zone->gcEphemeronEdges().clear()) {
       oomUnsafe.crash("clearing weak keys table for validator");
     }
   }
 
   WeakMapBase::restoreMarkedWeakMaps(markedWeakMaps);
 
-  for (gc::WeakKeyTable::Range r = savedWeakKeys.all(); !r.empty();
+  for (gc::EphemeronEdgeTable::Range r = savedEphemeronEdges.all(); !r.empty();
        r.popFront()) {
     AutoEnterOOMUnsafeRegion oomUnsafe;
     Zone* zone = r.front().key->asTenured().zone();
-    if (!zone->gcWeakKeys().put(r.front().key, std::move(r.front().value))) {
+    if (!zone->gcEphemeronEdges().put(r.front().key,
+                                      std::move(r.front().value))) {
       oomUnsafe.crash("restoring weak keys table for validator");
     }
   }
