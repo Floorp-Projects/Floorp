@@ -46,7 +46,6 @@ fn lerp(a: f32, b: f32, t: f32) -> f32 {
 fn build_lut_matrix(lut: &lutType) -> Matrix {
     let mut result: Matrix = Matrix {
         m: [[0.; 3]; 3],
-        invalid: false,
     };
     result.m[0][0] = s15Fixed16Number_to_float(lut.e00);
     result.m[0][1] = s15Fixed16Number_to_float(lut.e01);
@@ -57,13 +56,11 @@ fn build_lut_matrix(lut: &lutType) -> Matrix {
     result.m[2][0] = s15Fixed16Number_to_float(lut.e20);
     result.m[2][1] = s15Fixed16Number_to_float(lut.e21);
     result.m[2][2] = s15Fixed16Number_to_float(lut.e22);
-    result.invalid = false;
     result
 }
 fn build_mAB_matrix(lut: &lutmABType) -> Matrix {
     let mut result: Matrix = Matrix {
         m: [[0.; 3]; 3],
-        invalid: false,
     };
 
     result.m[0][0] = s15Fixed16Number_to_float(lut.e00);
@@ -75,7 +72,6 @@ fn build_mAB_matrix(lut: &lutmABType) -> Matrix {
     result.m[2][0] = s15Fixed16Number_to_float(lut.e20);
     result.m[2][1] = s15Fixed16Number_to_float(lut.e21);
     result.m[2][2] = s15Fixed16Number_to_float(lut.e22);
-    result.invalid = false;
 
     result
 }
@@ -556,7 +552,6 @@ impl ModularTransform for MatrixTranslate {
     fn transform(&self, src: &[f32], dest: &mut [f32]) {
         let mut mat: Matrix = Matrix {
             m: [[0.; 3]; 3],
-            invalid: false,
         };
         /* store the results in column major mode
          * this makes doing the multiplication with sse easier */
@@ -590,7 +585,6 @@ impl ModularTransform for MatrixTransform {
     fn transform(&self, src: &[f32], dest: &mut [f32]) {
         let mut mat: Matrix = Matrix {
             m: [[0.; 3]; 3],
-            invalid: false,
         };
         /* store the results in column major mode
          * this makes doing the multiplication with sse easier */
@@ -667,9 +661,6 @@ fn modular_transform_create_mAB(lut: &lutmABType) -> Option<Vec<Box<dyn ModularT
         // Prepare Matrix
         let mut transform = Box::new(MatrixTranslate::default());
         transform.matrix = build_mAB_matrix(lut);
-        if transform.matrix.invalid {
-            return None;
-        }
         transform.tx = s15Fixed16Number_to_float(lut.e03);
         transform.ty = s15Fixed16Number_to_float(lut.e13);
         transform.tz = s15Fixed16Number_to_float(lut.e23);
@@ -706,7 +697,7 @@ fn modular_transform_create_lut(lut: &lutType) -> Option<Vec<Box<dyn ModularTran
     let mut transform = Box::new(MatrixTransform::default());
 
     transform.matrix = build_lut_matrix(lut);
-    if !transform.matrix.invalid {
+    if true {
         transforms.push(transform);
 
         // Prepare input curves
@@ -847,7 +838,6 @@ fn modular_transform_create_input(input: &Profile) -> Option<Vec<Box<dyn Modular
             transform.matrix.m[2][0] = 0.0;
             transform.matrix.m[2][1] = 0.0;
             transform.matrix.m[2][2] = 1. / 1.999_969_5;
-            transform.matrix.invalid = false;
             transforms.push(transform);
 
             let mut transform = Box::new(MatrixTransform::default());
@@ -883,7 +873,7 @@ fn modular_transform_create_output(out: &Profile) -> Option<Vec<Box<dyn ModularT
         (&out.redTRC, &out.greenTRC, &out.blueTRC)
     {
         let mut transform = Box::new(MatrixTransform::default());
-        transform.matrix = build_colorant_matrix(out).invert();
+        transform.matrix = build_colorant_matrix(out).invert().unwrap();
         transforms.push(transform);
 
         let mut transform = Box::new(MatrixTransform::default());
@@ -896,7 +886,6 @@ fn modular_transform_create_output(out: &Profile) -> Option<Vec<Box<dyn ModularT
         transform.matrix.m[2][0] = 0.0;
         transform.matrix.m[2][1] = 0.0;
         transform.matrix.m[2][2] = 1.999_969_5;
-        transform.matrix.invalid = false;
         transforms.push(transform);
 
         let mut transform = Box::new(GammaLut::default());
