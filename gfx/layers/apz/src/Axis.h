@@ -170,6 +170,14 @@ class Axis {
   bool IsOverscrolled() const;
 
   /**
+   * Return true if this axis is overscrolled but its scroll offset
+   * has changed in a way that makes the oversrolled state no longer
+   * valid (for example, it is overscrolled at the top but the
+   * scroll offset is no longer zero).
+   */
+  bool IsInInvalidOverscroll() const;
+
+  /**
    * Clear any overscroll amount on this axis.
    */
   void ClearOverscroll();
@@ -288,6 +296,9 @@ class Axis {
   ParentLayerCoord GetCompositionEnd() const;
   ParentLayerCoord GetPageEnd() const;
   ParentLayerCoord GetScrollRangeEnd() const;
+
+  bool IsScrolledToStart() const;
+  bool IsScrolledToEnd() const;
 
   ParentLayerCoord GetPos() const { return mPos; }
 
