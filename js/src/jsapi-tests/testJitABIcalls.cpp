@@ -236,9 +236,10 @@ struct ArgsOffsets<Size> {
 
 template <uint64_t Size, typename Arg, typename... Args>
 struct ArgsOffsets<Size, Arg, Args...> {
-  using type = Concat_t<
-      std::integer_sequence<uint64_t, Size + PadBytes(Size, alignof(Arg))>,
-      typename ArgsOffsets<Size + PadSize<Arg>(Size), Args...>::type>;
+  using type =
+      Concat_t<std::integer_sequence<
+                   uint64_t, Size + PadBytes(Size, ActualAlignOf<Arg>())>,
+               typename ArgsOffsets<Size + PadSize<Arg>(Size), Args...>::type>;
 };
 
 template <uint64_t Size, typename... Args>
@@ -246,11 +247,11 @@ using ArgsOffsets_t = typename ArgsOffsets<Size, Args...>::type;
 
 // Not all 32bits architecture align uint64_t type on 8 bytes, so check the
 // validity of the stored content based on the alignment of the architecture.
-static_assert(alignof(uint64_t) != 8 ||
+static_assert(ActualAlignOf<uint64_t>() != 8 ||
               std::is_same_v<ArgsOffsets_t<0, uint8_t, uint64_t, bool>,
                              std::integer_sequence<uint64_t, 0, 8, 16>>);
 
-static_assert(alignof(uint64_t) != 4 ||
+static_assert(ActualAlignOf<uint64_t>() != 4 ||
               std::is_same_v<ArgsOffsets_t<0, uint8_t, uint64_t, bool>,
                              std::integer_sequence<uint64_t, 0, 4, 12>>);
 
