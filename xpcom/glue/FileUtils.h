@@ -42,8 +42,7 @@ struct ScopedCloseFDTraits {
   static type empty() { return -1; }
   static void release(type aFd) {
     if (aFd != -1) {
-      while (close(aFd) == -1 && errno == EINTR) {
-      }
+      close(aFd);
     }
   }
 };
