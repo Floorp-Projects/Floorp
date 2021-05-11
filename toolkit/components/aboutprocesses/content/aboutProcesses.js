@@ -808,46 +808,31 @@ var View = {
     let nameCell = row.firstChild;
     let tab = tabFinder.get(data.outerWindowId);
     let fluentName;
-    let name;
+    let fluentArgs = {};
     let className;
-    if (parent.type == "extension") {
-      fluentName = "about-processes-extension-name";
-      if (data.addon) {
-        name = data.addon.name;
-      } else if (data.documentURI.scheme == "about") {
-        // about: URLs don't have an host.
-        name = data.documentURI.spec;
-      } else {
-        name = data.documentURI.host;
-      }
-    } else if (tab && tab.tabbrowser) {
+    if (tab && tab.tabbrowser) {
       fluentName = "about-processes-tab-name";
-      name = data.documentTitle;
+      fluentArgs.name = tab.tab.label;
       className = "tab";
     } else if (tab) {
       fluentName = "about-processes-preloaded-tab";
-      name = null;
       className = "preloaded-tab";
     } else if (data.count == 1) {
       fluentName = "about-processes-frame-name-one";
-      name = data.prePath;
+      fluentArgs.url = data.documentURI.spec;
       className = "frame-one";
     } else {
       fluentName = "about-processes-frame-name-many";
-      name = data.prePath;
+      fluentArgs.number = data.count;
+      fluentArgs.shortUrl =
+        data.documentURI.scheme == "about"
+          ? data.documentURI.spec
+          : data.documentURI.prePath;
       className = "frame-many";
     }
     this._fillCell(nameCell, {
       fluentName,
-      fluentArgs: {
-        name,
-        url: data.documentURI.spec,
-        number: data.count,
-        shortUrl:
-          data.documentURI.scheme == "about"
-            ? data.documentURI.spec
-            : data.documentURI.prePath,
-      },
+      fluentArgs,
       classes: ["name", "indent", "favicon", className],
     });
     let image = tab?.tab.getAttribute("image");
