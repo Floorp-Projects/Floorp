@@ -1073,7 +1073,13 @@ function clickElementInTab(selector) {
     gBrowser.selectedBrowser,
     [{ selector }],
     function({ selector }) {
-      content.wrappedJSObject.document.querySelector(selector).click();
+      const element = content.document.querySelector(selector);
+      // Run the click in another event loop in order to immediately resolve spawn's promise.
+      // Otherwise if we pause on click and navigate, the JSWindowActor used by spawn will
+      // be destroyed while its query is still pending. And this would reject the promise.
+      content.setTimeout(() => {
+        element.click();
+      });
     }
   );
 }
