@@ -2030,64 +2030,33 @@ bool js::NativeHasProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
 
 bool js::NativeGetOwnPropertyDescriptor(
     JSContext* cx, HandleNativeObject obj, HandleId id,
-    MutableHandle<mozilla::Maybe<PropertyDescriptor>> desc_) {
+    MutableHandle<mozilla::Maybe<PropertyDescriptor>> desc) {
   PropertyResult prop;
   if (!NativeLookupOwnProperty<CanGC>(cx, obj, id, &prop)) {
     return false;
   }
   if (prop.isNotFound()) {
-    desc_.reset();
+    desc.reset();
     return true;
   }
 
-  Rooted<PropertyDescriptor> desc(cx);
-  desc.setAttributes(GetPropertyAttributes(obj, prop));
-  if (desc.isAccessorDescriptor()) {
-    // The result of GetOwnPropertyDescriptor() must be either undefined or
-    // a complete property descriptor (per ES6 draft rev 32 (2015 Feb 2)
-    // 6.1.7.3, Invariants of the Essential Internal Methods).
-    //
-    // It is an unfortunate fact that in SM, properties can exist that have
-    // JSPROP_GETTER or JSPROP_SETTER but not both. In these cases, rather
-    // than return true with desc incomplete, we fill out the missing
-    // getter or setter with a null, following CompletePropertyDescriptor.
+  if (prop.isNativeProperty() && prop.shapeProperty().isAccessorProperty()) {
     ShapeProperty shapeProp = prop.shapeProperty();
-    if (desc.hasGetterObject()) {
-      desc.setGetterObject(obj->getGetter(shapeProp));
-    } else {
-      desc.setGetterObject(nullptr);
-    }
-    if (desc.hasSetterObject()) {
-      desc.setSetterObject(obj->getSetter(shapeProp));
-    } else {
-      desc.setSetterObject(nullptr);
-    }
-
-    desc.value().setUndefined();
-  } else {
-    if (prop.isDenseElement()) {
-      desc.value().set(obj->getDenseElement(prop.denseElementIndex()));
-    } else if (prop.isTypedArrayElement()) {
-      size_t idx = prop.typedArrayElementIndex();
-      if (!obj->as<TypedArrayObject>().getElement<CanGC>(cx, idx,
-                                                         desc.value())) {
-        return false;
-      }
-    } else {
-      // This is either a straight-up data property or (rarely) a custom data
-      // property. The latter must be reported to the caller as a plain data
-      // property, so mask away the JSPROP_CUSTOM_DATA_PROP flag.
-      desc.setAttributes(desc.attributes() & ~JSPROP_CUSTOM_DATA_PROP);
-
-      if (!NativeGetExistingProperty(cx, obj, obj, id, prop.shapeProperty(),
-                                     desc.value())) {
-        return false;
-      }
-    }
+    desc.set(mozilla::Some(PropertyDescriptor::Accessor(
+        obj->getGetter(shapeProp), obj->getSetter(shapeProp),
+        shapeProp.propAttributes())));
+    return true;
   }
 
-  desc.assertComplete();
-  desc_.set(mozilla::Some(desc.get()));
+  RootedValue value(cx);
+  if (!GetExistingPropertyValue(cx, obj, id, prop, &value)) {
+    return false;
+  }
+  // This is either a straight-up data property or (rarely) a custom data
+  // property. The latter must be reported to the caller as a plain data
+  // property, so mask away the JSPROP_CUSTOM_DATA_PROP flag.
+  uint8_t attrs = GetPropertyAttributes(obj, prop) & ~JSPROP_CUSTOM_DATA_PROP;
+  desc.set(mozilla::Some(PropertyDescriptor::Data(value, attrs)));
   return true;
 }
 

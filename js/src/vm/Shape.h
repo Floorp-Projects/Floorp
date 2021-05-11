@@ -168,6 +168,20 @@ class ShapeProperty {
   bool configurable() const { return !(attrs_ & JSPROP_PERMANENT); }
   bool enumerable() const { return attrs_ & JSPROP_ENUMERATE; }
 
+  JS::PropertyAttributes propAttributes() const {
+    JS::PropertyAttributes attrs{};
+    if (configurable()) {
+      attrs += JS::PropertyAttribute::Configurable;
+    }
+    if (enumerable()) {
+      attrs += JS::PropertyAttribute::Enumerable;
+    }
+    if (isDataDescriptor() && writable()) {
+      attrs += JS::PropertyAttribute::Writable;
+    }
+    return attrs;
+  }
+
   bool operator==(const ShapeProperty& other) const {
     return slot_ == other.slot_ && attrs_ == other.attrs_;
   }
