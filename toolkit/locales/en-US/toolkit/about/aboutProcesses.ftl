@@ -25,35 +25,37 @@ about-processes-column-cpu-total = CPU
 ## Process names
 ## Variables:
 ##    $pid (String) The process id of this process, assigned by the OS.
-##    $origin (String) The domain name for this process.
-##    $type (String) The raw type for this process. Used for unknown processes.
 
-about-processes-browser-process-name = { -brand-short-name } (process { $pid })
-about-processes-web-process-name = Web (process { $pid }, shared)
-about-processes-web-isolated-process-name = Web (process { $pid }) for { $origin }
-about-processes-web-large-allocation = Web (process { $pid }, large) for { $origin }
-about-processes-with-coop-coep-process-name = Web (process { $pid }, cross-origin isolated) for { $origin }
-about-processes-file-process-name = Files (process { $pid })
-about-processes-extension-process-name = Extensions (process { $pid })
-about-processes-privilegedabout-process-name = About (process { $pid })
-about-processes-plugin-process-name = Plugins (process { $pid })
-about-processes-privilegedmozilla-process-name = Web (process { $pid }) for { -vendor-short-name } sites
-about-processes-gmp-plugin-process-name = Gecko Media Plugins (process { $pid })
-about-processes-gpu-process-name = GPU (process { $pid })
-about-processes-vr-process-name = VR (process { $pid })
-about-processes-rdd-process-name = Data Decoder (process { $pid })
-about-processes-socket-process-name = Network (process { $pid })
-about-processes-remote-sandbox-broker-process-name = Remote Sandbox Broker (process { $pid })
-about-processes-fork-server-process-name = Fork Server (process { $pid })
-about-processes-preallocated-process-name = Preallocated (process { $pid })
-about-processes-unknown-process-name = Other ({ $type }, process { $pid })
+about-processes-browser-process = { -brand-short-name } ({ $pid })
+about-processes-web-process = Shared Web Process ({ $pid })
+about-processes-file-process = Files ({ $pid })
+about-processes-extension-process = Extensions ({ $pid })
+about-processes-privilegedabout-process = About pages ({ $pid })
+about-processes-plugin-process = Plugins ({ $pid })
+about-processes-privilegedmozilla-process = { -vendor-short-name } sites ({ $pid })
+about-processes-gmp-plugin-process = Gecko Media Plugins ({ $pid })
+about-processes-gpu-process = GPU ({ $pid })
+about-processes-vr-process = VR ({ $pid })
+about-processes-rdd-process = Data Decoder ({ $pid })
+about-processes-socket-process = Network ({ $pid })
+about-processes-remote-sandbox-broker-process = Remote Sandbox Broker ({ $pid })
+about-processes-fork-server-process = Fork Server ({ $pid })
+about-processes-preallocated-process = Preallocated ({ $pid })
 
-
-# Process
+# Unknown process names
 # Variables:
-#   $name (String) The name assigned to the process.
-#   $pid (String) The process id of this process, assigned by the OS.
-about-processes-process-name = Process { $pid }: { $name }
+#    $pid (String) The process id of this process, assigned by the OS.
+#    $type (String) The raw type for this process.
+about-processes-unknown-process = Other: { $type } ({ $pid })
+
+## Isolated process names
+## Variables:
+##    $pid (String) The process id of this process, assigned by the OS.
+##    $origin (String) The domain name for this process.
+
+about-processes-web-isolated-process = { $origin } ({ $pid })
+about-processes-web-large-allocation-process = { $origin } ({ $pid }, large)
+about-processes-with-coop-coep-process = { $origin } ({ $pid }, cross-origin isolated)
 
 ## Details within processes
 
