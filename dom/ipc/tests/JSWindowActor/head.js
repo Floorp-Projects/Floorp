@@ -13,12 +13,6 @@ let windowActorOptions = {
   },
   child: {
     moduleURI: "resource://testing-common/TestWindowChild.jsm",
-
-    events: {
-      mozshowdropdown: {},
-    },
-
-    observers: ["test-js-window-actor-child-observer", "audio-playback"],
   },
 };
 
@@ -30,14 +24,16 @@ function declTest(name, cfg) {
     matches,
     remoteTypes,
     messageManagerGroups,
+    events,
+    observers,
     test,
   } = cfg;
 
   // Build the actor options object which will be used to register & unregister
   // our window actor.
   let actorOptions = {
-    parent: Object.assign({}, windowActorOptions.parent),
-    child: Object.assign({}, windowActorOptions.child),
+    parent: { ...windowActorOptions.parent },
+    child: { ...windowActorOptions.child, events, observers },
   };
   actorOptions.allFrames = allFrames;
   actorOptions.includeChrome = includeChrome;
