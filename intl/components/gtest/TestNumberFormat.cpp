@@ -152,5 +152,20 @@ TEST(IntlNumberFormat, Unit)
   ASSERT_EQ(std::u16string_view(res), u"12.34 metros por segundo");
 }
 
+TEST(IntlNumberFormat, FormatToParts)
+{
+  NumberFormat nf("es-ES");
+  NumberPartVector parts;
+  const char16_t* res = nf.formatToParts(123456.789, parts).unwrap().data();
+  ASSERT_TRUE(res != nullptr);
+  ASSERT_EQ(std::u16string_view(res), u"123.456,789");
+  ASSERT_EQ(parts.length(), 5U);
+  ASSERT_EQ(parts[0], (NumberPart{NumberPartType::Integer, 3}));
+  ASSERT_EQ(parts[1], (NumberPart{NumberPartType::Group, 4}));
+  ASSERT_EQ(parts[2], (NumberPart{NumberPartType::Integer, 7}));
+  ASSERT_EQ(parts[3], (NumberPart{NumberPartType::Decimal, 8}));
+  ASSERT_EQ(parts[4], (NumberPart{NumberPartType::Fraction, 11}));
+}
+
 }  // namespace intl
 }  // namespace mozilla

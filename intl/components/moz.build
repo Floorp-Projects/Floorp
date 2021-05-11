@@ -9,6 +9,7 @@ EXPORTS.mozilla.intl = [
 
 UNIFIED_SOURCES += [
     "src/NumberFormat.cpp",
+    "src/NumberFormatFields.cpp",
     "src/NumberFormatterSkeleton.cpp",
 ]
 
