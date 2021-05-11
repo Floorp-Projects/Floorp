@@ -423,6 +423,18 @@ async function testAboutProcessesWithConfig({ showAllFrames, showThreads }) {
     return tab;
   })();
 
+  let promiseUserContextTab = (async function() {
+    let tab = BrowserTestUtils.addTab(gBrowser, "http://example.com", {
+      userContextId: 1,
+      skipAnimation: true,
+    });
+    await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
+    await SpecialPowers.spawn(tab.linkedBrowser, [], () => {
+      content.document.title = "Tab with User Context";
+    });
+    return tab;
+  })();
+
   info("Setting up tabs we intend to close");
 
   // The two following tabs share the same domain.
@@ -463,6 +475,7 @@ async function testAboutProcessesWithConfig({ showAllFrames, showThreads }) {
   // Wait for initialization to finish.
   let tabAboutProcesses = await promiseTabAboutProcesses;
   let tabHung = await promiseTabHung;
+  let tabUserContext = await promiseUserContextTab;
   let tabCloseSeparately1 = await promiseTabCloseSeparately1;
   let tabCloseSeparately2 = await promiseTabCloseSeparately2;
   let tabCloseProcess1 = await promiseTabCloseProcess1;
@@ -808,6 +821,22 @@ async function testAboutProcessesWithConfig({ showAllFrames, showThreads }) {
       );
     }
 
+    // Verify that the user context id has been correctly displayed.
+    let userContextProcessRow = findProcessRowByOrigin(
+      doc,
+      "http://example.com^userContextId=1"
+    );
+    Assert.ok(
+      userContextProcessRow,
+      "There is a separate process for the tab with a different user context"
+    );
+    Assert.equal(
+      document.l10n.getAttributes(userContextProcessRow.firstChild).args.origin,
+      "http://example.com — " +
+        ContextualIdentityService.getUserContextLabel(1),
+      "The user context ID should be replaced with the localized container name"
+    );
+
     // These origins will disappear.
     for (let origin of [
       "http://example.net", // tabCloseProcess*
@@ -946,6 +975,7 @@ async function testAboutProcessesWithConfig({ showAllFrames, showThreads }) {
   }
   BrowserTestUtils.removeTab(tabAboutProcesses);
   BrowserTestUtils.removeTab(tabHung);
+  BrowserTestUtils.removeTab(tabUserContext);
   BrowserTestUtils.removeTab(tabCloseSeparately2);
 
   // We still need to remove these tabs.
