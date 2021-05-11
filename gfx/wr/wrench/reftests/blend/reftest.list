@@ -23,3 +23,4 @@ fuzzy(1,2502) == transparent-composite-2.yaml transparent-composite-2-ref.yaml
 
 fuzzy(2,420) == multi-mix-blend-mode.yaml multi-mix-blend-mode-ref.yaml
 == mix-blend-invalid-backdrop.yaml mix-blend-invalid-backdrop-ref.yaml
+platform(linux) == mix-blend-complex-transform.yaml mix-blend-complex-transform.png

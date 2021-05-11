@@ -657,6 +657,57 @@ impl SpatialTree {
         false
     }
 
+    /// Does a conservative test to see if we can guarantee that the supplied spatial node
+    /// will never produce a complex (non-axis-aligned) transform. May return false even if
+    /// the transform is actually simple (e.g. an animated transform binding that may be
+    /// changed during APZ).
+    pub fn is_definitely_in_root_coord_system(
+        &self,
+        spatial_node_index: SpatialNodeIndex,
+    ) -> bool {
+        let mut node_index = spatial_node_index;
+
+        while node_index != ROOT_SPATIAL_NODE_INDEX {
+            let node = &self.spatial_nodes[node_index.0 as usize];
+            match node.node_type {
+                SpatialNodeType::ReferenceFrame(ref info) => {
+                    match info.kind {
+                        ReferenceFrameKind::Transform { is_2d_scale_translation: true, .. } => {
+                            // Client has guaranteed this transform will only be axis-aligned
+                        }
+                        ReferenceFrameKind::Transform { is_2d_scale_translation: false, .. } => {
+                            // Even if client hasn't promised it's an axis-aligned transform, we can still
+                            // check this so long as the transform isn't animated (and thus could change to
+                            // anything by APZ during frame building)
+                            match info.source_transform {
+                                PropertyBinding::Value(m) => {
+                                    if !m.is_2d_scale_translation() {
+                                        return false;
+                                    }
+                                }
+                                PropertyBinding::Binding(..) => {
+                                    // Animated, so assume it may introduce a complex transform
+                                    return false;
+                                }
+                            }
+                        }
+                        ReferenceFrameKind::Perspective { .. } => {
+                            // Any perspective transform may introduce a non-axis-aligned transform,
+                            // so conservatively assume it may not be in root coord system
+                            return false;
+                        }
+                    }
+                }
+                SpatialNodeType::StickyFrame(..) | SpatialNodeType::ScrollFrame(..) => {
+                    // Sticky and scroll frames can't introduce a non-axis-aligned transform
+                }
+            }
+            node_index = node.parent.expect("unable to find parent node");
+        }
+
+        true
+    }
+
     /// Find the spatial node that is the scroll root for a given spatial node.
     /// A scroll root is the first spatial node when found travelling up the
     /// spatial node tree that is an explicit scroll frame.

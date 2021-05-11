@@ -2082,7 +2082,8 @@ impl<'a> SceneBuilder<'a> {
         // are handled by doing partial reads of the picture cache tiles during rendering.
         if stacking_context.flags.contains(StackingContextFlags::IS_BLEND_CONTAINER) &&
            self.sc_stack.is_empty() &&
-           self.tile_cache_builder.can_add_container_tile_cache()
+           self.tile_cache_builder.can_add_container_tile_cache() &&
+           self.spatial_tree.is_definitely_in_root_coord_system(stacking_context.spatial_node_index)
         {
             self.tile_cache_builder.add_tile_cache(
                 stacking_context.prim_list,
