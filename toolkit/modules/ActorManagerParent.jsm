@@ -349,6 +349,9 @@ let JSWINDOWACTORS = {
       moduleURI: "resource://gre/actors/PopupBlockingChild.jsm",
       events: {
         DOMPopupBlocked: { capture: true },
+        // Only listen for the `pageshow` event after the actor has already been
+        // created for some other reason.
+        pageshow: { createActor: false },
       },
     },
     allFrames: true,
