@@ -1295,7 +1295,7 @@ impl<'a> SceneBuilder<'a> {
                 // which can cause issues.
                 simplify_repeated_primitive(&tile_size, &mut tile_spacing, &mut prim_rect);
 
-                if !tile_size.to_i32().is_empty() {
+                if !tile_size.ceil().is_empty() {
                     layout.rect = prim_rect;
                     let prim_key_kind = self.create_radial_gradient_prim(
                         &layout,
@@ -1333,7 +1333,7 @@ impl<'a> SceneBuilder<'a> {
                     info.tile_size,
                 );
 
-                if !tile_size.to_i32().is_empty() {
+                if !tile_size.ceil().is_empty() {
                     let prim_key_kind = self.create_conic_gradient_prim(
                         &layout,
                         info.gradient.center,

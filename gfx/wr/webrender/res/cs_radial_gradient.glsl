@@ -15,6 +15,7 @@ flat varying float v_start_radius;
 // Rectangle in origin+size format
 PER_INSTANCE in vec4 aTaskRect;
 PER_INSTANCE in vec2 aCenter;
+PER_INSTANCE in vec2 aScale;
 PER_INSTANCE in float aStartRadius;
 PER_INSTANCE in float aEndRadius;
 PER_INSTANCE in float aXYRatio;
@@ -37,7 +38,7 @@ void main(void) {
 
     // v_pos is in a coordinate space relative to the task rect
     // (so it is independent of the task origin).
-    v_pos = (aTaskRect.zw * aPosition.xy - aCenter) * radius_scale;
+    v_pos = (aTaskRect.zw * aPosition.xy * aScale - aCenter) * radius_scale;
     v_pos.y *= aXYRatio;
 
     v_gradient_repeat = float(aExtendMode == EXTEND_MODE_REPEAT);
