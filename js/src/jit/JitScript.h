@@ -141,7 +141,7 @@ class alignas(uintptr_t) ICScript final : public TrailingArray {
   void removeInlinedChild(uint32_t pcOffset);
   bool hasInlinedChild(uint32_t pcOffset);
 
-  FallbackICStubSpace* fallbackStubSpace();
+  JitScriptICStubSpace* jitScriptStubSpace();
   void purgeOptimizedStubs(Zone* zone);
 
   void trace(JSTracer* trc);
@@ -218,10 +218,10 @@ class alignas(uintptr_t) ICScript final : public TrailingArray {
 // because the JitScript can be reused when we have to recompile the
 // BaselineScript.
 //
-// The JitScript contains a fallback stub space. This stores all fallback stubs
-// and the "can GC" stubs. These stubs are never purged before destroying the
-// JitScript. Other stubs are stored in the optimized stub space stored in
-// JitZone and can be purged more eagerly. See JitScript::purgeOptimizedStubs.
+// The JitScript contains a stub space. This stores the "can GC" CacheIR stubs.
+// These stubs are never purged before destroying the JitScript. Other stubs are
+// stored in the optimized stub space stored in JitZone and can be purged more
+// eagerly. See JitScript::purgeOptimizedStubs.
 //
 // An ICScript contains a list of IC entries and a list of fallback stubs.
 // There's one ICEntry and ICFallbackStub for each JOF_IC bytecode op.
@@ -250,8 +250,8 @@ class alignas(uintptr_t) ICScript final : public TrailingArray {
 class alignas(uintptr_t) JitScript final : public TrailingArray {
   friend class ::JSScript;
 
-  // Allocated space for fallback IC stubs.
-  FallbackICStubSpace fallbackStubSpace_ = {};
+  // Allocated space for Can-GC CacheIR stubs.
+  JitScriptICStubSpace jitScriptStubSpace_ = {};
 
   // Profile string used by the profiler for Baseline Interpreter frames.
   const char* profileString_ = nullptr;
@@ -333,9 +333,9 @@ class alignas(uintptr_t) JitScript final : public TrailingArray {
 
 #ifdef DEBUG
   ~JitScript() {
-    // The contents of the fallback stub space are removed and freed
-    // separately after the next minor GC. See prepareForDestruction.
-    MOZ_ASSERT(fallbackStubSpace_.isEmpty());
+    // The contents of the stub space are removed and freed separately after the
+    // next minor GC. See prepareForDestruction.
+    MOZ_ASSERT(jitScriptStubSpace_.isEmpty());
 
     // BaselineScript and IonScript must have been destroyed at this point.
     MOZ_ASSERT(!hasBaselineScript());
@@ -384,15 +384,15 @@ class alignas(uintptr_t) JitScript final : public TrailingArray {
 
   void prepareForDestruction(Zone* zone) {
     // When the script contains pointers to nursery things, the store buffer can
-    // contain entries that point into the fallback stub space. Since we can
-    // destroy scripts outside the context of a GC, this situation could result
-    // in us trying to mark invalid store buffer entries.
+    // contain entries that point into the stub space. Since we can destroy
+    // scripts outside the context of a GC, this situation could result in us
+    // trying to mark invalid store buffer entries.
     //
     // Defer freeing any allocated blocks until after the next minor GC.
-    fallbackStubSpace_.freeAllAfterMinorGC(zone);
+    jitScriptStubSpace_.freeAllAfterMinorGC(zone);
   }
 
-  FallbackICStubSpace* fallbackStubSpace() { return &fallbackStubSpace_; }
+  JitScriptICStubSpace* jitScriptStubSpace() { return &jitScriptStubSpace_; }
 
   void addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf, size_t* data,
                               size_t* fallbackStubs) const {
@@ -400,7 +400,7 @@ class alignas(uintptr_t) JitScript final : public TrailingArray {
 
     // |data| already includes the ICStubSpace itself, so use
     // sizeOfExcludingThis.
-    *fallbackStubs += fallbackStubSpace_.sizeOfExcludingThis(mallocSizeOf);
+    *fallbackStubs += jitScriptStubSpace_.sizeOfExcludingThis(mallocSizeOf);
   }
 
   ICEntry& icEntry(size_t index) { return icScript_.icEntry(index); }

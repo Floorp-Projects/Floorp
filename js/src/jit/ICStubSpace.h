@@ -12,13 +12,16 @@
 namespace js {
 namespace jit {
 
-// ICStubSpace is an abstraction for allocation policy and storage for stub
-// data. There are two kinds of stubs: optimized stubs and fallback stubs (the
-// latter also includes stubs that can make non-tail calls that can GC).
+// ICStubSpace is an abstraction for allocation policy and storage for CacheIR
+// stub data. There are two kinds of Baseline CacheIR stubs:
 //
-// Optimized stubs are allocated per-compartment and are always purged when
-// JIT-code is discarded. Fallback stubs are allocated per BaselineScript and
-// are only destroyed when the BaselineScript is destroyed.
+// (1) CacheIR stubs that can make non-tail calls that can GC. These are
+//     allocated in a LifoAlloc stored in JitScript.
+//     See JitScriptICStubSpace.
+//
+// (2) Other CacheIR stubs (aka optimized IC stubs). Allocated in a per-Zone
+//     LifoAlloc and purged when JIT-code is discarded.
+//     See OptimizedICStubSpace.
 class ICStubSpace {
  protected:
   LifoAlloc allocator_;
@@ -41,8 +44,7 @@ class ICStubSpace {
   }
 };
 
-// Space for optimized stubs. Every JitRealm has a single
-// OptimizedICStubSpace.
+// Space for optimized stubs. Every JitZone has a single OptimizedICStubSpace.
 struct OptimizedICStubSpace : public ICStubSpace {
   static const size_t STUB_DEFAULT_CHUNK_SIZE = 4096;
 
@@ -50,13 +52,12 @@ struct OptimizedICStubSpace : public ICStubSpace {
   OptimizedICStubSpace() : ICStubSpace(STUB_DEFAULT_CHUNK_SIZE) {}
 };
 
-// Space for fallback stubs. Every BaselineScript has a
-// FallbackICStubSpace.
-struct FallbackICStubSpace : public ICStubSpace {
+// Space for Can-GC stubs. Every JitScript has a JitScriptICStubSpace.
+struct JitScriptICStubSpace : public ICStubSpace {
   static const size_t STUB_DEFAULT_CHUNK_SIZE = 4096;
 
  public:
-  FallbackICStubSpace() : ICStubSpace(STUB_DEFAULT_CHUNK_SIZE) {}
+  JitScriptICStubSpace() : ICStubSpace(STUB_DEFAULT_CHUNK_SIZE) {}
 };
 
 }  // namespace jit

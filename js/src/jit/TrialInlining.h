@@ -51,7 +51,7 @@ class InliningRoot {
         inlinedScripts_(cx),
         totalBytecodeSize_(owningScript->length()) {}
 
-  FallbackICStubSpace* fallbackStubSpace() { return &fallbackStubSpace_; }
+  JitScriptICStubSpace* jitScriptStubSpace() { return &jitScriptStubSpace_; }
 
   void trace(JSTracer* trc);
 
@@ -69,7 +69,7 @@ class InliningRoot {
   void addToTotalBytecodeSize(size_t size) { totalBytecodeSize_ += size; }
 
  private:
-  FallbackICStubSpace fallbackStubSpace_ = {};
+  JitScriptICStubSpace jitScriptStubSpace_ = {};
   HeapPtr<JSScript*> owningScript_;
   js::Vector<js::UniquePtr<ICScript>> inlinedScripts_;
 
