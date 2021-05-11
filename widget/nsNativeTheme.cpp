@@ -612,48 +612,47 @@ static nsIFrame* GetBodyFrame(nsIFrame* aCanvasFrame) {
   return body->GetPrimaryFrame();
 }
 
-/* static */
-bool nsNativeTheme::IsDarkBackground(nsIFrame* aFrame) {
-  // Try to find the scrolled frame. Note that for stuff like xul <tree> there
-  // might be none.
-  {
-    nsIFrame* frame = aFrame;
-    nsIScrollableFrame* scrollFrame = nullptr;
-    while (!scrollFrame && frame) {
-      scrollFrame = frame->GetScrollTargetFrame();
-      frame = frame->GetParent();
-    }
-    if (scrollFrame) {
-      aFrame = scrollFrame->GetScrolledFrame();
-    } else {
-      // Leave aFrame untouched.
-    }
-  }
-
-  auto backgroundFrame = nsCSSRendering::FindNonTransparentBackgroundFrame(
-      aFrame, /* aStopAtThemed = */ false);
-  if (!backgroundFrame.mFrame) {
-    return false;
-  }
-
-  nscolor color = backgroundFrame.mFrame->StyleBackground()->BackgroundColor(
-      backgroundFrame.mFrame);
-
-  if (backgroundFrame.mIsForCanvas) {
+static const ComputedStyle* GetBackgroundStyle(nsIFrame* aFrame) {
+  if (nsCSSRendering::IsCanvasFrame(aFrame)) {
     // For canvas frames, prefer to look at the body first, because the body
     // background color is most likely what will be visible as the background
     // color of the page, even if the html element has a different background
     // color which prevents that of the body frame to propagate to the viewport.
     if (nsIFrame* bodyFrame = GetBodyFrame(aFrame)) {
-      nscolor bodyColor =
-          bodyFrame->StyleBackground()->BackgroundColor(bodyFrame);
-      if (NS_GET_A(bodyColor)) {
-        color = bodyColor;
+      if (!bodyFrame->StyleBackground()->IsTransparent(bodyFrame->Style())) {
+        return bodyFrame->Style();
       }
     }
   }
+  ComputedStyle* bgSC = nullptr;
+  if (nsCSSRendering::FindBackground(aFrame, &bgSC) &&
+      !bgSC->StyleBackground()->IsTransparent(bgSC)) {
+    return bgSC;
+  }
 
-  return IsDarkColor(color);
+  nsIFrame* backgroundFrame =
+      nsCSSRendering::FindNonTransparentBackgroundFrame(aFrame, true);
+  if (!backgroundFrame) {
+    return nullptr;
+  }
+  return backgroundFrame->Style();
+}
+
+/* static */
+bool nsNativeTheme::IsDarkBackground(nsIFrame* aFrame) {
+  nsIScrollableFrame* scrollFrame = nullptr;
+  while (!scrollFrame && aFrame) {
+    scrollFrame = aFrame->GetScrollTargetFrame();
+    aFrame = aFrame->GetParent();
+  }
+  if (!scrollFrame) {
+    return false;
+  }
+
+  if (const auto* style = GetBackgroundStyle(scrollFrame->GetScrolledFrame())) {
+    return IsDarkColor(style->StyleBackground()->BackgroundColor(style));
+  }
+  return false;
 }
 
 /*static*/
