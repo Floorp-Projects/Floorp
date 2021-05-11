@@ -115,6 +115,8 @@ std::string RecordedEvent::GetEventName(EventType aType) {
       return "UnscaledFontDestruction";
     case EXTERNALSURFACECREATION:
       return "ExternalSourceSurfaceCreation";
+    case LINK:
+      return "Link";
     default:
       return "Unknown";
   }
