@@ -48,6 +48,7 @@
 #include "cairo-surface-backend-private.h"
 #include "cairo-surface-clipper-private.h"
 #include "cairo-recording-surface-private.h"
+#include "cairo-tag-attributes-private.h"
 
 #include <dlfcn.h>
 
@@ -2313,6 +2314,70 @@ _cairo_quartz_surface_clipper_intersect_clip_path (cairo_surface_clipper_t *clip
     return CAIRO_STATUS_SUCCESS;
 }
 
+static cairo_int_status_t
+_cairo_quartz_surface_tag (void			       *abstract_surface,
+			   cairo_bool_t                 begin,
+			   const char                  *tag_name,
+			   const char                  *attributes,
+			   const cairo_pattern_t       *source,
+			   const cairo_stroke_style_t  *style,
+			   const cairo_matrix_t	       *ctm,
+			   const cairo_matrix_t	       *ctm_inverse,
+			   const cairo_clip_t	       *clip)
+{
+    cairo_link_attrs_t link_attrs;
+    cairo_int_status_t status = CAIRO_STATUS_SUCCESS;
+    int i, num_rects;
+    cairo_quartz_surface_t *surface = (cairo_quartz_surface_t *) abstract_surface;
+
+    /* Currently the only tag we support is "Link" */
+    if (strcmp (tag_name, "Link"))
+        return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    /* We only process the 'begin' tag, and expect a rect attribute;
+       using the extents of the drawing operations enclosed by the begin/end
+       link tags to define the clickable area is not implemented. */
+    if (!begin)
+        return status;
+
+    status = _cairo_tag_parse_link_attributes (attributes, &link_attrs);
+    if (unlikely (status))
+	return status;
+
+    num_rects = _cairo_array_num_elements (&link_attrs.rects);
+    if (num_rects > 0) {
+        CFURLRef url = CFURLCreateWithBytes (NULL,
+                                             (const UInt8 *) link_attrs.uri,
+                                             strlen (link_attrs.uri),
+                                             kCFStringEncodingUTF8,
+                                             NULL);
+
+        for (i = 0; i < num_rects; i++) {
+            CGRect link_rect;
+            cairo_rectangle_t rectf;
+
+            _cairo_array_copy_element (&link_attrs.rects, i, &rectf);
+
+            link_rect =
+                CGRectMake (rectf.x,
+                            surface->extents.height - rectf.y - rectf.height,
+                            rectf.width,
+                            rectf.height);
+
+            CGPDFContextSetURLForRect (surface->cgContext, url, link_rect);
+        }
+
+        CFRelease (url);
+    }
+
+    _cairo_array_fini (&link_attrs.rects);
+    free (link_attrs.dest);
+    free (link_attrs.uri);
+    free (link_attrs.file);
+
+    return status;
+}
+
 // XXXtodo implement show_page; need to figure out how to handle begin/end
 
 static const struct _cairo_surface_backend cairo_quartz_surface_backend = {
@@ -2346,6 +2411,11 @@ static const struct _cairo_surface_backend cairo_quartz_surface_backend = {
     _cairo_quartz_surface_fill,
     NULL,  /* fill-stroke */
     _cairo_quartz_surface_glyphs,
+
+    NULL,  /* has_show_text_glyphs */
+    NULL,  /* show_text_glyphs */
+    NULL,  /* get_supported_mime_types */
+    _cairo_quartz_surface_tag   /* tag */
 };
 
 cairo_quartz_surface_t *
