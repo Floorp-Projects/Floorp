@@ -221,6 +221,7 @@ navigate.waitForNavigationCompleted = async function waitForNavigationCompleted(
   let rejectNavigation;
   let resolveNavigation;
 
+  let browsingContextChanged = false;
   let seenBeforeUnload = false;
   let seenUnload = false;
 
@@ -279,7 +280,9 @@ navigate.waitForNavigationCompleted = async function waitForNavigationCompleted(
       return;
     }
 
-    logger.trace(truncate`Received event ${data.type} for ${data.documentURI}`);
+    logger.trace(
+      truncate`[${data.browsingContext.id}] Received event ${data.type} for ${data.documentURI}`
+    );
 
     switch (data.type) {
       case "beforeunload":
@@ -297,7 +300,9 @@ navigate.waitForNavigationCompleted = async function waitForNavigationCompleted(
 
       case "DOMContentLoaded":
       case "pageshow":
-        if (!seenUnload) {
+        // Don't require an unload event when a top-level browsing context
+        // change occurred.
+        if (!seenUnload && !browsingContextChanged) {
           return;
         }
         const result = checkReadyState(pageLoadStrategy, data);
@@ -321,6 +326,14 @@ navigate.waitForNavigationCompleted = async function waitForNavigationCompleted(
     }
   };
 
+  // Detect changes to the top-level browsing context to not
+  // necessarily require an unload event.
+  const onBrowsingContextChanged = event => {
+    if (event.target === driver.curBrowser.contentBrowser) {
+      browsingContextChanged = true;
+    }
+  };
+
   const onUnload = event => {
     logger.trace(
       "Canceled page load listener " +
@@ -331,6 +344,10 @@ navigate.waitForNavigationCompleted = async function waitForNavigationCompleted(
 
   chromeWindow.addEventListener("TabClose", onUnload);
   chromeWindow.addEventListener("unload", onUnload);
+  driver.curBrowser.tabBrowser?.addEventListener(
+    "XULFrameLoaderCreated",
+    onBrowsingContextChanged
+  );
   driver.dialogObserver.add(onDialogOpened);
   Services.obs.addObserver(
     onBrowsingContextDiscarded,
@@ -377,6 +394,10 @@ navigate.waitForNavigationCompleted = async function waitForNavigationCompleted(
     );
     chromeWindow.removeEventListener("TabClose", onUnload);
     chromeWindow.removeEventListener("unload", onUnload);
+    driver.curBrowser.tabBrowser?.removeEventListener(
+      "XULFrameLoaderCreated",
+      onBrowsingContextChanged
+    );
     driver.dialogObserver?.remove(onDialogOpened);
     unloadTimer?.cancel();
 
