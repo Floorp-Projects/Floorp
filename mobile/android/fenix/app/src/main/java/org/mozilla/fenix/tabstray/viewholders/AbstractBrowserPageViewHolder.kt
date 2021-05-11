@@ -18,12 +18,12 @@ import org.mozilla.fenix.tabstray.browser.BrowserTrayList
 /**
  * A shared view holder for browser tabs tray list.
  */
-abstract class BaseBrowserTabViewHolder(
+abstract class AbstractBrowserPageViewHolder(
     containerView: View,
     tabsTrayStore: TabsTrayStore,
     interactor: TabsTrayInteractor,
     private val currentTabIndex: Int
-) : AbstractTrayViewHolder(containerView) {
+) : AbstractPageViewHolder(containerView) {
 
     protected val trayList: BrowserTrayList = itemView.findViewById(R.id.tray_list_item)
     private val emptyList: TextView = itemView.findViewById(R.id.tab_tray_empty_view)

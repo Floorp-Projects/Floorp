@@ -25,7 +25,7 @@ import org.mozilla.fenix.tabstray.browser.BrowserTrayInteractor
 import org.mozilla.fenix.tabstray.browser.createTab
 
 @RunWith(FenixRobolectricTestRunner::class)
-class BaseBrowserTabViewHolderTest {
+class AbstractBrowserPageViewHolderTest {
     val store: TabsTrayStore = TabsTrayStore()
     val interactor = mockk<TabsTrayInteractor>(relaxed = true)
     val browserTrayInteractor = mockk<BrowserTrayInteractor>(relaxed = true)
@@ -35,7 +35,7 @@ class BaseBrowserTabViewHolderTest {
     fun `WHEN tabs inserted THEN show tray`() {
         val itemView =
             LayoutInflater.from(testContext).inflate(R.layout.normal_browser_tray_list, null)
-        val viewHolder = NormalBrowserTabViewHolder(itemView, store, interactor, 5)
+        val viewHolder = NormalBrowserPageViewHolder(itemView, store, interactor, 5)
         val trayList: BrowserTrayList = itemView.findViewById(R.id.tray_list_item)
         val emptyList: TextView = itemView.findViewById(R.id.tab_tray_empty_view)
 
@@ -59,7 +59,7 @@ class BaseBrowserTabViewHolderTest {
     fun `WHEN no tabs THEN show empty view`() {
         val itemView =
             LayoutInflater.from(testContext).inflate(R.layout.normal_browser_tray_list, null)
-        val viewHolder = NormalBrowserTabViewHolder(itemView, store, interactor, 5)
+        val viewHolder = NormalBrowserPageViewHolder(itemView, store, interactor, 5)
         val trayList: BrowserTrayList = itemView.findViewById(R.id.tray_list_item)
         val emptyList: TextView = itemView.findViewById(R.id.tab_tray_empty_view)
 

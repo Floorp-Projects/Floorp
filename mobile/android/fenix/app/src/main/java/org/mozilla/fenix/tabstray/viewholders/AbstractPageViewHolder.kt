@@ -12,7 +12,7 @@ import org.mozilla.fenix.tabstray.TrayPagerAdapter
 /**
  * An abstract [RecyclerView.ViewHolder] for [TrayPagerAdapter] items.
  */
-abstract class AbstractTrayViewHolder constructor(
+abstract class AbstractPageViewHolder constructor(
     override val containerView: View
 ) : RecyclerView.ViewHolder(containerView), LayoutContainer {
 

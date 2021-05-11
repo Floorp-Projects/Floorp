@@ -17,12 +17,12 @@ import org.mozilla.fenix.tabstray.browser.BrowserTabsAdapter
 /**
  * View holder for the normal tabs tray list.
  */
-class NormalBrowserTabViewHolder(
+class NormalBrowserPageViewHolder(
     containerView: View,
     private val store: TabsTrayStore,
     interactor: TabsTrayInteractor,
     currentTabIndex: Int
-) : BaseBrowserTabViewHolder(
+) : AbstractBrowserPageViewHolder(
     containerView,
     store,
     interactor,

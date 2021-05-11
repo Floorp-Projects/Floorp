@@ -10,10 +10,10 @@ import kotlinx.android.synthetic.main.component_sync_tabs_tray_layout.*
 import org.mozilla.fenix.R
 import org.mozilla.fenix.tabstray.TabsTrayStore
 
-class SyncedTabViewHolder(
+class SyncedTabsPageViewHolder(
     containerView: View,
     private val tabsTrayStore: TabsTrayStore
-) : AbstractTrayViewHolder(containerView) {
+) : AbstractPageViewHolder(containerView) {
 
     override fun bind(
         adapter: RecyclerView.Adapter<out RecyclerView.ViewHolder>,

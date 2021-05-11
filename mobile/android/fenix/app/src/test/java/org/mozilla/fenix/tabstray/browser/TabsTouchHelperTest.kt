@@ -15,7 +15,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
-import org.mozilla.fenix.tabstray.viewholders.SyncedTabViewHolder
+import org.mozilla.fenix.tabstray.viewholders.SyncedTabsPageViewHolder
 
 @RunWith(FenixRobolectricTestRunner::class)
 class TabsTouchHelperTest {
@@ -24,7 +24,7 @@ class TabsTouchHelperTest {
     fun `movement flags remain unchanged if onSwipeToDelete is true`() {
         val recyclerView = RecyclerView(testContext)
         val layout = FrameLayout(testContext)
-        val viewHolder = SyncedTabViewHolder(layout, mockk())
+        val viewHolder = SyncedTabsPageViewHolder(layout, mockk())
         val callback = TouchCallback(mockk(), { true }, mockk())
 
         assertEquals(0, callback.getDragDirs(recyclerView, viewHolder))
@@ -43,7 +43,7 @@ class TabsTouchHelperTest {
     fun `movement flags remain unchanged if onSwipeToDelete is false`() {
         val recyclerView = RecyclerView(testContext)
         val layout = FrameLayout(testContext)
-        val viewHolder = SyncedTabViewHolder(layout, mockk())
+        val viewHolder = SyncedTabsPageViewHolder(layout, mockk())
         val callback = TouchCallback(mockk(), { false }, mockk())
 
         assertEquals(0, callback.getDragDirs(recyclerView, viewHolder))

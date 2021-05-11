@@ -13,12 +13,12 @@ import org.mozilla.fenix.tabstray.browser.BrowserTrayList.BrowserTabType.PRIVATE
 /**
  * View holder for the private tabs tray list.
  */
-class PrivateBrowserTabViewHolder(
+class PrivateBrowserPageViewHolder(
     containerView: View,
     store: TabsTrayStore,
     interactor: TabsTrayInteractor,
     currentTabIndex: Int
-) : BaseBrowserTabViewHolder(
+) : AbstractBrowserPageViewHolder(
     containerView,
     store,
     interactor,
