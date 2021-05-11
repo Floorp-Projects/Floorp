@@ -242,11 +242,11 @@ void StackBaseShape::trace(JSTracer* trc) { proto.trace(trc); }
 
 void PropertyDescriptor::trace(JSTracer* trc) {
   TraceRoot(trc, &value_, "Descriptor::value");
-  if (getter) {
-    TraceRoot(trc, &getter, "Descriptor::getter");
+  if (getter_) {
+    TraceRoot(trc, &getter_, "Descriptor::getter");
   }
-  if (setter) {
-    TraceRoot(trc, &setter, "Descriptor::setter");
+  if (setter_) {
+    TraceRoot(trc, &setter_, "Descriptor::setter");
   }
 }
 

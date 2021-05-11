@@ -139,12 +139,8 @@ using PropertyAttributes = mozilla::EnumSet<PropertyAttribute>;
 struct JS_PUBLIC_API PropertyDescriptor {
  private:
   unsigned attrs_ = 0;
-
- public:
-  JSObject* getter = nullptr;
-  JSObject* setter = nullptr;
-
- private:
+  JSObject* getter_ = nullptr;
+  JSObject* setter_ = nullptr;
   Value value_;
 
  public:
@@ -179,11 +175,11 @@ struct JS_PUBLIC_API PropertyDescriptor {
     PropertyDescriptor desc;
     desc.attrs_ = attrs;
     if (getter) {
-      desc.getter = getter;
+      desc.getter_ = getter;
       desc.attrs_ |= JSPROP_GETTER;
     }
     if (setter) {
-      desc.setter = setter;
+      desc.setter_ = setter;
       desc.attrs_ |= JSPROP_SETTER;
     }
     return desc;
@@ -262,33 +258,38 @@ struct JS_PUBLIC_API PropertyDescriptor {
   }
 
   bool hasGetterObject() const { return has(JSPROP_GETTER); }
-  JS::Handle<JSObject*> getterObject() const {
+  JSObject* getterObject() const {
     MOZ_ASSERT(hasGetterObject());
-    return JS::Handle<JSObject*>::fromMarkedLocation(
-        reinterpret_cast<JSObject* const*>(&getter));
+    return getter_;
   }
   void setGetterObject(JSObject* obj) {
-    getter = obj;
+    getter_ = obj;
     attrs_ &= ~(JSPROP_IGNORE_VALUE | JSPROP_IGNORE_READONLY | JSPROP_READONLY);
     attrs_ |= JSPROP_GETTER;
   }
 
   bool hasSetterObject() const { return has(JSPROP_SETTER); }
-  JS::Handle<JSObject*> setterObject() const {
+  JSObject* setterObject() const {
     MOZ_ASSERT(hasSetterObject());
-    return JS::Handle<JSObject*>::fromMarkedLocation(
-        reinterpret_cast<JSObject* const*>(&setter));
+    return setter_;
   }
   void setSetterObject(JSObject* obj) {
-    setter = obj;
+    setter_ = obj;
     attrs_ &= ~(JSPROP_IGNORE_VALUE | JSPROP_IGNORE_READONLY | JSPROP_READONLY);
     attrs_ |= JSPROP_SETTER;
   }
 
-  bool hasGetterOrSetter() const { return getter || setter; }
+  bool hasGetterOrSetter() const { return getter_ || setter_; }
 
   unsigned attributes() const { return attrs_; }
   void setAttributesDoNotUse(unsigned attrs) { attrs_ = attrs; }
+
+  JSObject** getterDoNotUse() { return &getter_; }
+  JSObject* const* getterDoNotUse() const { return &getter_; }
+  void setGetterDoNotUse(JSObject* obj) { getter_ = obj; }
+  JSObject** setterDoNotUse() { return &setter_; }
+  JSObject* const* setterDoNotUse() const { return &setter_; }
+  void setSetterDoNotUse(JSObject* obj) { setter_ = obj; }
 
   void assertValid() const {
 #ifdef DEBUG
@@ -304,8 +305,8 @@ struct JS_PUBLIC_API PropertyDescriptor {
       MOZ_ASSERT(!has(JSPROP_IGNORE_READONLY));
       MOZ_ASSERT(!has(JSPROP_IGNORE_VALUE));
       MOZ_ASSERT(value().isUndefined());
-      MOZ_ASSERT_IF(!has(JSPROP_GETTER), !getter);
-      MOZ_ASSERT_IF(!has(JSPROP_SETTER), !setter);
+      MOZ_ASSERT_IF(!has(JSPROP_GETTER), !getter_);
+      MOZ_ASSERT_IF(!has(JSPROP_SETTER), !setter_);
     } else {
       MOZ_ASSERT(!hasAll(JSPROP_IGNORE_READONLY | JSPROP_READONLY));
       MOZ_ASSERT_IF(has(JSPROP_IGNORE_VALUE), value().isUndefined());
@@ -358,9 +359,15 @@ class WrappedPtrOperations<JS::PropertyDescriptor, Wrapper> {
   bool writable() const { return desc().writable(); }
 
   bool hasGetterObject() const { return desc().hasGetterObject(); }
-  JS::Handle<JSObject*> getterObject() const { return desc().getterObject(); }
+  JS::Handle<JSObject*> getterObject() const {
+    MOZ_ASSERT(hasGetterObject());
+    return JS::Handle<JSObject*>::fromMarkedLocation(desc().getterDoNotUse());
+  }
   bool hasSetterObject() const { return desc().hasSetterObject(); }
-  JS::Handle<JSObject*> setterObject() const { return desc().setterObject(); }
+  JS::Handle<JSObject*> setterObject() const {
+    MOZ_ASSERT(hasSetterObject());
+    return JS::Handle<JSObject*>::fromMarkedLocation(desc().setterDoNotUse());
+  }
 
   bool hasGetterOrSetter() const { return desc().hasGetterObject(); }
 
@@ -369,8 +376,6 @@ class WrappedPtrOperations<JS::PropertyDescriptor, Wrapper> {
   void assertValid() const { desc().assertValid(); }
 
   void assertComplete() const { desc().assertComplete(); }
-
-  void assertCompleteIfFound() const { desc().assertCompleteIfFound(); }
 };
 
 template <typename Wrapper>
@@ -378,14 +383,11 @@ class MutableWrappedPtrOperations<JS::PropertyDescriptor, Wrapper>
     : public js::WrappedPtrOperations<JS::PropertyDescriptor, Wrapper> {
   JS::PropertyDescriptor& desc() { return static_cast<Wrapper*>(this)->get(); }
 
-  void setGetter(JSObject* obj) { desc().getter = obj; }
-  void setSetter(JSObject* obj) { desc().setter = obj; }
-
  public:
   void clear() {
     setAttributes(0);
-    setGetter(nullptr);
-    setSetter(nullptr);
+    desc().setGetterDoNotUse(nullptr);
+    desc().setSetterDoNotUse(nullptr);
     value().setUndefined();
   }
 
@@ -393,14 +395,14 @@ class MutableWrappedPtrOperations<JS::PropertyDescriptor, Wrapper>
                   JSObject* setter) {
     value().set(v);
     setAttributes(attrs);
-    setGetter(getter);
-    setSetter(setter);
+    desc().setGetterDoNotUse(getter);
+    desc().setSetterDoNotUse(setter);
   }
 
   void assign(JS::PropertyDescriptor& other) {
     setAttributes(other.attributes());
-    setGetter(other.getter);
-    setSetter(other.setter);
+    desc().setGetterDoNotUse(*other.getterDoNotUse());
+    desc().setSetterDoNotUse(*other.setterDoNotUse());
     value().set(other.value());
   }
 
@@ -410,8 +412,8 @@ class MutableWrappedPtrOperations<JS::PropertyDescriptor, Wrapper>
                           JSPROP_IGNORE_PERMANENT | JSPROP_IGNORE_READONLY)) ==
                0);
     setAttributes(attrs);
-    setGetter(nullptr);
-    setSetter(nullptr);
+    desc().setGetterDoNotUse(nullptr);
+    desc().setSetterDoNotUse(nullptr);
     value().set(v);
   }
 
@@ -429,12 +431,14 @@ class MutableWrappedPtrOperations<JS::PropertyDescriptor, Wrapper>
   void setSetterObject(JSObject* obj) { desc().setSetterObject(obj); }
 
   JS::MutableHandle<JSObject*> getterObject() {
-    MOZ_ASSERT(this->hasGetterObject());
-    return JS::MutableHandleObject::fromMarkedLocation(&desc().getter);
+    MOZ_ASSERT(desc().hasGetterObject());
+    return JS::MutableHandle<JSObject*>::fromMarkedLocation(
+        desc().getterDoNotUse());
   }
   JS::MutableHandle<JSObject*> setterObject() {
-    MOZ_ASSERT(this->hasSetterObject());
-    return JS::MutableHandleObject::fromMarkedLocation(&desc().setter);
+    MOZ_ASSERT(desc().hasSetterObject());
+    return JS::MutableHandle<JSObject*>::fromMarkedLocation(
+        desc().setterDoNotUse());
   }
 };
 

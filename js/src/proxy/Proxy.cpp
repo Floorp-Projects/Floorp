@@ -82,7 +82,7 @@ static bool ProxyGetOnExpando(JSContext* cx, HandleObject proxy,
 
   // If the private name has a getter, delegate to that.
   if (desc->hasGetterObject()) {
-    RootedValue getter(cx, JS::ObjectValue(*desc->getterObject().get()));
+    RootedValue getter(cx, JS::ObjectValue(*desc->getterObject()));
     return js::CallGetter(cx, receiver, getter, vp);
   }
 
