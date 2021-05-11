@@ -3991,6 +3991,20 @@ void nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder* aBuilder,
     return;
   }
 
+  // If we're generating a display list for printing, include Link items for
+  // frames that correspond to HTML link elements so that we can have active
+  // links in saved PDF output. Note that the state of "within a link" is
+  // set on the display-list builder, such that all descendants of the link
+  // element will generate display-list links.
+  // TODO: we should be able to optimize this so as to avoid creating links
+  // for the same destination that entirely overlap each other, which adds
+  // nothing useful to the final PDF.
+  Maybe<nsDisplayListBuilder::Linkifier> linkifier;
+  if (aBuilder->IsForPrinting()) {
+    linkifier.emplace(aBuilder, aChild);
+    linkifier->MaybeAppendLink(aBuilder, aChild, aLists.Content());
+  }
+
   nsIFrame* child = aChild;
   auto* placeholder = child->IsPlaceholderFrame()
                           ? static_cast<nsPlaceholderFrame*>(child)
