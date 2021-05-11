@@ -334,7 +334,6 @@ function extractProcessDetails(row) {
     memory,
     cpu,
     pidContent: fluentArgs.pid,
-    typeContent: fluentArgs.type,
     threads: threadDetailsRow,
   };
 }
@@ -517,24 +516,23 @@ async function testAboutProcessesWithConfig({ showAllFrames, showThreads }) {
     // The browser process.
     {
       name: "browser",
-      type: ["browser"],
       predicate: row => row.process.type == "browser",
     },
     // The hung process.
     {
       name: "hung",
-      type: ["web", "webIsolated"],
       predicate: row =>
-        row.classList.contains("hung") && row.classList.contains("process"),
+        row.classList.contains("hung") &&
+        row.classList.contains("process") &&
+        ["web", "webIsolated"].includes(row.process.type),
     },
     // Any non-hung process
     {
       name: "non-hung",
-      type: ["web", "webIsolated"],
       predicate: row =>
         !row.classList.contains("hung") &&
         row.classList.contains("process") &&
-        row.process.type == "web",
+        ["web", "webIsolated"].includes(row.process.type),
     },
   ];
   for (let finder of processesToBeFound) {
@@ -547,19 +545,7 @@ async function testAboutProcessesWithConfig({ showAllFrames, showThreads }) {
       row = row.nextSibling;
     }
     Assert.ok(!!row, `found a table row for ${finder.name}`);
-    let {
-      memory,
-      cpu,
-      pidContent,
-      typeContent,
-      threads,
-    } = extractProcessDetails(row);
-
-    info("Sanity checks: type");
-    Assert.ok(
-      finder.type.includes(typeContent),
-      `Type ${typeContent} should be one of ${finder.type}`
-    );
+    let { memory, cpu, pidContent, threads } = extractProcessDetails(row);
 
     info("Sanity checks: pid");
     let pid = Number.parseInt(pidContent);
@@ -955,8 +941,7 @@ async function testAboutProcessesWithConfig({ showAllFrames, showThreads }) {
 
   info("Additional sanity check for all processes");
   for (let row of document.getElementsByClassName("process")) {
-    let { pidContent, typeContent } = extractProcessDetails(row);
-    Assert.equal(typeContent, row.process.type);
+    let { pidContent } = extractProcessDetails(row);
     Assert.equal(Number.parseInt(pidContent), row.process.pid);
   }
   BrowserTestUtils.removeTab(tabAboutProcesses);
