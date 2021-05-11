@@ -56,6 +56,9 @@ about-processes-unknown-process = Other: { $type } ({ $pid })
 about-processes-web-isolated-process = { $origin } ({ $pid })
 about-processes-web-large-allocation-process = { $origin } ({ $pid }, large)
 about-processes-with-coop-coep-process = { $origin } ({ $pid }, cross-origin isolated)
+about-processes-web-isolated-process-private = { $origin } — Private ({ $pid })
+about-processes-web-large-allocation-process-private = { $origin } — Private ({ $pid }, large)
+about-processes-with-coop-coep-process-private = { $origin } — Private ({ $pid }, cross-origin isolated)
 
 ## Details within processes
 
