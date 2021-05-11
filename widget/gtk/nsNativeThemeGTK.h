@@ -9,15 +9,20 @@
 #include "nsITheme.h"
 #include "nsCOMPtr.h"
 #include "nsAtom.h"
+#include "nsIObserver.h"
 #include "nsNativeTheme.h"
 #include "nsStyleConsts.h"
 
 #include <gtk/gtk.h>
 #include "gtkdrawing.h"
 
-class nsNativeThemeGTK final : private nsNativeTheme, public nsITheme {
+class nsNativeThemeGTK final : private nsNativeTheme,
+                               public nsITheme,
+                               public nsIObserver {
  public:
   NS_DECL_ISUPPORTS_INHERITED
+
+  NS_DECL_NSIOBSERVER
 
   // The nsITheme interface.
   NS_IMETHOD DrawWidgetBackground(gfxContext* aContext, nsIFrame* aFrame,
