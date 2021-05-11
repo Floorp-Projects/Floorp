@@ -1882,12 +1882,10 @@ static bool RecreateLostWaivers(JSContext* cx, const PropertyDescriptor* orig,
   bool valueWasWaived =
       orig->value().isObject() &&
       WrapperFactory::HasWaiveXrayFlag(&orig->value().toObject());
-  bool getterWasWaived = (orig->attrs & JSPROP_GETTER) && orig->getter &&
-                         WrapperFactory::HasWaiveXrayFlag(
-                             JS_FUNC_TO_DATA_PTR(JSObject*, orig->getter));
-  bool setterWasWaived = (orig->attrs & JSPROP_SETTER) && orig->setter &&
-                         WrapperFactory::HasWaiveXrayFlag(
-                             JS_FUNC_TO_DATA_PTR(JSObject*, orig->setter));
+  bool getterWasWaived = orig->hasGetterObject() && orig->getterObject() &&
+                         WrapperFactory::HasWaiveXrayFlag(orig->getterObject());
+  bool setterWasWaived = orig->hasSetterObject() && orig->setterObject() &&
+                         WrapperFactory::HasWaiveXrayFlag(orig->setterObject());
 
   // Recreate waivers. Note that for value, we need an extra UncheckedUnwrap
   // to handle same-compartment security wrappers (see above). This should

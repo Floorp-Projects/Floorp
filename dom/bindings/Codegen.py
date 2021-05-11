@@ -10780,7 +10780,7 @@ class CGResolveHook(CGAbstractClassHook):
             // define it.
             if (!desc->value().isUndefined()) {
               JS::Rooted<JS::PropertyDescriptor> defineDesc(cx, *desc);
-              defineDesc.attributesRef() |= JSPROP_RESOLVING;
+              defineDesc.setAttributes(defineDesc.attributes() | JSPROP_RESOLVING);
               if (!JS_DefinePropertyById(cx, obj, id, defineDesc)) {
                 return false;
               }

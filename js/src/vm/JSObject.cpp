@@ -447,27 +447,46 @@ Result<> js::CheckPropertyDescriptorAccessors(JSContext* cx,
   return Ok();
 }
 
+// 6.2.5.6 CompletePropertyDescriptor(Desc)
 void js::CompletePropertyDescriptor(MutableHandle<PropertyDescriptor> desc) {
+  // Step 1.
   desc.assertValid();
 
+  // Step 2.
+  // Let like be the Record { [[Value]]: undefined, [[Writable]]: false,
+  //                          [[Get]]: undefined, [[Set]]: undefined,
+  //                          [[Enumerable]]: false, [[Configurable]]: false }.
+
+  // Step 3.
   if (desc.isGenericDescriptor() || desc.isDataDescriptor()) {
-    if (!desc.hasWritable()) {
-      desc.attributesRef() |= JSPROP_READONLY;
+    // Step 3.a.
+    if (!desc.hasValue()) {
+      desc.setValue(UndefinedHandleValue);
     }
-    desc.attributesRef() &= ~(JSPROP_IGNORE_READONLY | JSPROP_IGNORE_VALUE);
+    // Step 3.b.
+    if (!desc.hasWritable()) {
+      desc.setWritable(false);
+    }
   } else {
+    // Step 4.a.
     if (!desc.hasGetterObject()) {
       desc.setGetterObject(nullptr);
     }
+    // Step 4.b.
     if (!desc.hasSetterObject()) {
       desc.setSetterObject(nullptr);
     }
-    desc.attributesRef() |= JSPROP_GETTER | JSPROP_SETTER;
   }
+
+  // Step 5.
+  if (!desc.hasEnumerable()) {
+    desc.setEnumerable(false);
+  }
+
+  // Step 6.
   if (!desc.hasConfigurable()) {
-    desc.attributesRef() |= JSPROP_PERMANENT;
+    desc.setConfigurable(false);
   }
-  desc.attributesRef() &= ~(JSPROP_IGNORE_PERMANENT | JSPROP_IGNORE_ENUMERATE);
 
   desc.assertComplete();
 }
