@@ -755,9 +755,6 @@ with modules["DOM"]:
     errors["NS_ERROR_DOM_IMAGE_INVALID_REQUEST"] = FAILURE(1028)
     errors["NS_ERROR_DOM_IMAGE_BROKEN"] = FAILURE(1029)
 
-    # Editing command errors.
-    errors["NS_ERROR_DOM_INVALID_STATE_DOCUMENT_QUERY_COMMAND_VALUE"] = FAILURE(1035)
-
     # Used to indicate that a resource with the Cross-Origin-Resource-Policy
     # response header set failed the origin check.
     # https://fetch.spec.whatwg.org/#cross-origin-resource-policy-header
