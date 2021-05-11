@@ -46,6 +46,7 @@
 #  include <strsafe.h>
 #  include "commonupdatedir.h"
 #  include "nsWindowsHelpers.h"
+#  include "pathhash.h"
 #  define getcwd(path, size) _getcwd(path, size)
 #  define getpid() GetCurrentProcessId()
 #elif defined(XP_UNIX)
@@ -1076,4 +1077,48 @@ void nsUpdateProcessor::UpdateDone() {
   }
 
   ShutdownWatcherThread();
+}
+
+NS_IMETHODIMP
+nsUpdateProcessor::GetServiceRegKeyExists(bool* aResult) {
+#ifndef XP_WIN
+  return NS_ERROR_NOT_IMPLEMENTED;
+#else   // #ifdef XP_WIN
+  nsCOMPtr<nsIProperties> dirSvc(
+      do_GetService("@mozilla.org/file/directory_service;1"));
+  NS_ENSURE_TRUE(dirSvc, NS_ERROR_SERVICE_NOT_AVAILABLE);
+
+  nsCOMPtr<nsIFile> installBin;
+  nsresult rv = dirSvc->Get(XRE_EXECUTABLE_FILE, NS_GET_IID(nsIFile),
+                            getter_AddRefs(installBin));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIFile> installDir;
+  rv = installBin->GetParent(getter_AddRefs(installDir));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsAutoString installPath;
+  rv = installDir->GetPath(installPath);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  wchar_t maintenanceServiceKey[MAX_PATH + 1];
+  BOOL success = CalculateRegistryPathFromFilePath(
+      PromiseFlatString(installPath).get(), maintenanceServiceKey);
+  NS_ENSURE_TRUE(success, NS_ERROR_FAILURE);
+
+  HKEY regHandle;
+  LSTATUS ls = RegOpenKeyExW(HKEY_LOCAL_MACHINE, maintenanceServiceKey, 0,
+                             KEY_QUERY_VALUE | KEY_WOW64_64KEY, &regHandle);
+  if (ls == ERROR_SUCCESS) {
+    RegCloseKey(regHandle);
+    *aResult = true;
+    return NS_OK;
+  }
+  if (ls == ERROR_FILE_NOT_FOUND) {
+    *aResult = false;
+    return NS_OK;
+  }
+  // We got an error we weren't expecting reading the registry.
+  return NS_ERROR_NOT_AVAILABLE;
+#endif  // #ifdef XP_WIN
 }
