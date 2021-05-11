@@ -358,6 +358,9 @@ class MutableWrappedPtrOperations<JS::PropertyDescriptor, Wrapper>
     : public js::WrappedPtrOperations<JS::PropertyDescriptor, Wrapper> {
   JS::PropertyDescriptor& desc() { return static_cast<Wrapper*>(this)->get(); }
 
+  void setGetter(JSObject* obj) { desc().getter = obj; }
+  void setSetter(JSObject* obj) { desc().setter = obj; }
+
  public:
   void clear() {
     setAttributes(0);
@@ -407,8 +410,6 @@ class MutableWrappedPtrOperations<JS::PropertyDescriptor, Wrapper>
   void setWritable(bool writable) { desc().setWritable(writable); }
   void setAttributes(unsigned attrs) { desc().attrs = attrs; }
 
-  void setGetter(JSObject* obj) { desc().getter = obj; }
-  void setSetter(JSObject* obj) { desc().setter = obj; }
   void setGetterObject(JSObject* obj) {
     desc().getter = obj;
     desc().attrs &=

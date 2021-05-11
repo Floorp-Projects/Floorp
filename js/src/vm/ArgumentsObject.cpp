@@ -825,8 +825,6 @@ bool MappedArgumentsObject::obj_defineProperty(JSContext* cx, HandleObject obj,
         RootedValue v(cx, argsobj->element(JSID_TO_INT(id)));
         newArgDesc.setValue(v);
       }
-      newArgDesc.setGetter(nullptr);
-      newArgDesc.setSetter(nullptr);
     } else {
       // In this case the live mapping is supposed to keep working.
       defineMapped = true;
