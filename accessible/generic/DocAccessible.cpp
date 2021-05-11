@@ -1878,15 +1878,7 @@ void DocAccessible::AddDependentIDsFor(LocalAccessible* aRelProvider,
       const nsDependentSubstring id = iter.NextID();
       if (id.IsEmpty()) break;
 
-      nsIContent* dependentContent = iter.GetElem(id);
-      if (!dependentContent ||
-          (relAttr == nsGkAtoms::aria_owns &&
-           !aRelProvider->IsAcceptableChild(dependentContent))) {
-        continue;
-      }
-
-      AttrRelProviders* providers =
-          GetOrCreateRelProviders(dependentContent->AsElement(), id);
+      AttrRelProviders* providers = GetOrCreateRelProviders(relProviderEl, id);
       if (providers) {
         AttrRelProvider* provider = new AttrRelProvider(relAttr, relProviderEl);
         if (provider) {
@@ -1896,6 +1888,7 @@ void DocAccessible::AddDependentIDsFor(LocalAccessible* aRelProvider,
           // content is not accessible then store it to pend its container
           // children invalidation (this happens immediately after the caching
           // is finished).
+          nsIContent* dependentContent = iter.GetElem(id);
           if (dependentContent) {
             if (!HasAccessible(dependentContent)) {
               mInvalidationList.AppendElement(dependentContent);
