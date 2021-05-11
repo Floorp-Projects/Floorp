@@ -82,19 +82,19 @@ bool NumberFormatterSkeleton::currency(std::string_view currency) {
 }
 
 bool NumberFormatterSkeleton::currencyDisplay(
-    NumberFormatOptions::CurrencyDisplay display) {
+    NumberFormatOptions::CurrencyDisplayStyle display) {
   switch (display) {
-    case NumberFormatOptions::CurrencyDisplay::Code:
+    case NumberFormatOptions::CurrencyDisplayStyle::Code:
       return appendToken(u"unit-width-iso-code");
       break;
-    case NumberFormatOptions::CurrencyDisplay::Name:
+    case NumberFormatOptions::CurrencyDisplayStyle::Name:
       return appendToken(u"unit-width-full-name");
       break;
-    case NumberFormatOptions::CurrencyDisplay::Symbol:
+    case NumberFormatOptions::CurrencyDisplayStyle::Symbol:
       // Default, no additional tokens needed.
       return true;
       break;
-    case NumberFormatOptions::CurrencyDisplay::NarrowSymbol:
+    case NumberFormatOptions::CurrencyDisplayStyle::NarrowSymbol:
       return appendToken(u"unit-width-narrow");
       break;
     default:

@@ -273,12 +273,7 @@ def check_style(enable_fixup):
     # - "js/public/Vector.h"        -> "js/Vector.h"
     # - "js/src/vm/String.h"        -> "vm/String.h"
 
-    non_js_dirnames = (
-        "mfbt/",
-        "memory/mozalloc/",
-        "mozglue/",
-        "intl/components/",
-    )  # type: tuple(str)
+    non_js_dirnames = ("mfbt/", "memory/mozalloc/", "mozglue/")  # type: tuple(str)
     non_js_inclnames = set()  # type: set(inclname)
     js_names = dict()  # type: dict(filename, inclname)
 
@@ -309,8 +304,6 @@ def check_style(enable_fixup):
             for filename in filenames:
                 if filename.endswith(".h"):
                     inclname = "mozilla/" + filename
-                    if non_js_dir == "intl/components/":
-                        inclname = "mozilla/intl/" + filename
                     non_js_inclnames.add(inclname)
 
     # Look for header files in js/public.
