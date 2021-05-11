@@ -20,6 +20,7 @@
 
 #include "nsObjCExceptions.h"
 
+#include "nsComputedDOMStyle.h"
 #include "nsThreadUtils.h"
 #include "nsToolkit.h"
 #include "nsCocoaUtils.h"
@@ -704,6 +705,23 @@ void nsMenuX::OnWillActivateItem(NSMenuItem* aItem) {
   }
 }
 
+// Flushes style.
+static NSUserInterfaceLayoutDirection DirectionForElement(dom::Element* aElement) {
+  // Get the direction from the computed style so that inheritance into submenus is respected.
+  // aElement may not have a frame.
+  RefPtr<ComputedStyle> sc = nsComputedDOMStyle::GetComputedStyle(aElement, nullptr);
+  if (!sc) {
+    return NSApp.userInterfaceLayoutDirection;
+  }
+
+  switch (sc->StyleVisibility()->mDirection) {
+    case StyleDirection::Ltr:
+      return NSUserInterfaceLayoutDirectionLeftToRight;
+    case StyleDirection::Rtl:
+      return NSUserInterfaceLayoutDirectionRightToLeft;
+  }
+}
+
 void nsMenuX::RebuildMenu() {
   MOZ_RELEASE_ASSERT(mNeedsRebuild);
   gConstructingMenu = true;
@@ -713,6 +731,10 @@ void nsMenuX::RebuildMenu() {
   if (!menuPopup) {
     gConstructingMenu = false;
     return;
+  }
+
+  if (menuPopup->IsElement()) {
+    mNativeMenu.userInterfaceLayoutDirection = DirectionForElement(menuPopup->AsElement());
   }
 
   // Iterate over the kids
