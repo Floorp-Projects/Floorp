@@ -68,7 +68,7 @@
         app:layout_constraintBottom_toBottomOf="@id/collection_icon"
         app:layout_constraintEnd_toStartOf="@id/collection_overflow_button"
         app:layout_constraintTop_toTopOf="@id/collection_icon"
-        app:srcCompat="@drawable/ic_share_filled"
+        app:srcCompat="@drawable/ic_share"
         tools:visibility="visible" />
 
     <ImageButton

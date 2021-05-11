@@ -32,7 +32,7 @@
         app:layout_constraintBottom_toBottomOf="@id/topBar"
         app:layout_constraintEnd_toStartOf="@id/menu_multi_select"
         app:layout_constraintTop_toTopOf="@id/topBar"
-        app:srcCompat="@drawable/ic_share_filled"
+        app:srcCompat="@drawable/ic_share"
         app:tint="@color/contrast_text_normal_theme" />
 
     <ImageButton

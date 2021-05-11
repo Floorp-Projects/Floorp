@@ -15,7 +15,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:text="@string/onboarding_privacy_notice_header"
-            tools:drawableStart="@drawable/ic_onboarding_privacy_notice"
+            tools:drawableStart="@drawable/ic_info"
             android:drawablePadding="12dp"
             android:textAppearance="@style/HeaderTextStyle"
             android:gravity="center_vertical"

@@ -27,7 +27,7 @@
         android:layout_height="48dp"
         android:background="?android:attr/selectableItemBackgroundBorderless"
         android:contentDescription="@string/tabs_menu_share_tabs"
-        app:srcCompat="@drawable/ic_share_filled"
+        app:srcCompat="@drawable/ic_share"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/close_tabs_button"
         app:layout_constraintTop_toTopOf="parent" />

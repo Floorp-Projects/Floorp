@@ -8,6 +8,9 @@
     android:viewportHeight="24"
     android:autoMirrored="true">
   <path
-      android:fillColor="@color/disabled_text"
-      android:pathData="M2,20h20v-4L2,16v4zM4,17h2v2L4,19v-2zM2,4v4h20L22,4L2,4zM6,7L4,7L4,5h2v2zM2,14h20v-4L2,10v4zM4,11h2v2L4,13v-2z"/>
-</vector>
+      android:pathData="M7.2,11h-0.9l-0.3,0.3v0.9l0.3,0.3h0.9l0.3,-0.3v-0.9l-0.3,-0.3z"
+      android:fillColor="@color/disabled_text"/>
+  <path
+      android:pathData="M3.78,2.22a0.75,0.75 0,1 0,-1.061 1.061L5.439,6H4.5A2.5,2.5 0,0 0,2 8.5v6A2.5,2.5 0,0 0,4.5 17h11.939l3.78,3.78a0.748,0.748 0,0 0,1.06 0,0.75 0.75,0 0,0 0,-1.061L3.78,2.22zM4.3,15.5l-0.8,-0.8V8.3l0.8,-0.8h2.639l8,8H4.3zM19.5,6H9.691l1.5,1.5H19.7l0.8,0.8v6.4l-0.8,0.8h-0.509l1.296,1.296A2.499,2.499 0,0 0,22 14.5v-6A2.5,2.5 0,0 0,19.5 6z"
+      android:fillColor="@color/disabled_text"/>
+ </vector>

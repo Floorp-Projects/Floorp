@@ -11,5 +11,8 @@
     android:autoMirrored="true">
   <path
       android:fillColor="?primaryText"
-      android:pathData="M2,20h20v-4L2,16v4zM4,17h2v2L4,19v-2zM2,4v4h20L22,4L2,4zM6,7L4,7L4,5h2v2zM2,14h20v-4L2,10v4zM4,11h2v2L4,13v-2z"/>
-</vector>
+      android:pathData="M7.2 11H6.3L6 11.3v0.9l0.3 0.3h0.9l0.3-0.3v-0.9L7.2 11z" />
+  <path
+      android:fillColor="?primaryText"
+      android:pathData="M19.7 7.5l0.8 0.8v6.4l-0.8 0.8H4.3l-0.8-0.8V8.3l0.8-0.8h15.4zM19.5 6h-15A2.5 2.5 0 0 0 2 8.5v6A2.5 2.5 0 0 0 4.5 17h15a2.5 2.5 0 0 0 2.5-2.5v-6A2.5 2.5 0 0 0 19.5 6z" />
+ </vector>
