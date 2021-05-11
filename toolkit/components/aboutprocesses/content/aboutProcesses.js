@@ -194,10 +194,9 @@ var State = {
   },
 
   _getThreadDelta(cur, prev, deltaT) {
-    let name = cur.name || "???";
     let result = {
       tid: cur.tid,
-      name,
+      name: cur.name || `(${cur.tid})`,
       // Total amount of CPU used, in ns (user).
       totalCpuUser: cur.cpuUser,
       slopeCpuUser: null,
@@ -701,8 +700,36 @@ var View = {
 
     // Column: Name
     let nameCell = row.firstChild;
-    let fluentName = "about-processes-thread-summary";
-    let fluentArgs = { number: data.threads.length };
+    let threads = data.threads;
+    let activeThreads = data.threads.filter(t => t.slopeCpu);
+    let fluentName, fluentArgs;
+    if (activeThreads.length) {
+      let percentFormatter = new Intl.NumberFormat(undefined, {
+        style: "percent",
+        minimumSignificantDigits: 1,
+      });
+      activeThreads.sort((t1, t2) => (t2.slopeCpu || 0) - (t1.slopeCpu || 0));
+      fluentName = "about-processes-active-threads";
+      fluentArgs = {
+        number: threads.length,
+        active: activeThreads.length,
+        list: new Intl.ListFormat(undefined, { style: "narrow" }).format(
+          activeThreads.map(t => {
+            let percent = Math.round((t.slopeCpu || 0) * 1000) / 1000;
+            if (percent) {
+              return `${t.name} ${percentFormatter.format(percent)}`;
+            }
+            return t.name;
+          })
+        ),
+      };
+    } else {
+      fluentName = "about-processes-inactive-threads";
+      fluentArgs = {
+        number: threads.length,
+      };
+    }
+
     let span;
     if (!nameCell.firstChild) {
       nameCell.className = "name indent";
@@ -829,7 +856,7 @@ var View = {
     // Column: filename
     let nameCell = row.firstChild;
     this._fillCell(nameCell, {
-      fluentName: "about-processes-thread-name",
+      fluentName: "about-processes-thread-name-and-id",
       fluentArgs: {
         name: data.name,
         tid: "" + data.tid /* Make sure that this number is not localized */,
