@@ -63,9 +63,9 @@
 #define PROP_DESC_GETTER_INDEX 1
 #define PROP_DESC_SETTER_INDEX 2
 
-// The extended slot of uncloned self-hosted function, in which the original
+// The extended slot of uncloned self-hosted function, in which the canonical
 // name for self-hosted builtins is stored by `_SetCanonicalName`.
-#define ORIGINAL_FUNCTION_NAME_SLOT 0
+#define CANONICAL_FUNCTION_NAME_SLOT 0
 
 // The extended slot of cloned self-hosted function, in which the self-hosted
 // name for self-hosted builtins is stored.
