@@ -1530,6 +1530,30 @@ class RecordedFilterNodeSetInput
   MOZ_IMPLICIT RecordedFilterNodeSetInput(S& aStream);
 };
 
+class RecordedLink : public RecordedDrawingEvent<RecordedLink> {
+ public:
+  RecordedLink(DrawTarget* aDT, const char* aDestination, const Rect& aRect)
+      : RecordedDrawingEvent(LINK, aDT),
+        mDestination(aDestination),
+        mRect(aRect) {}
+
+  bool PlayEvent(Translator* aTranslator) const override;
+  template <class S>
+  void Record(S& aStream) const;
+  void OutputSimpleEventInfo(std::stringstream& aStringStream) const override;
+
+  std::string GetName() const override { return "Link"; }
+
+ private:
+  friend class RecordedEvent;
+
+  std::string mDestination;
+  Rect mRect;
+
+  template <class S>
+  MOZ_IMPLICIT RecordedLink(S& aStream);
+};
+
 static std::string NameFromBackend(BackendType aType) {
   switch (aType) {
     case BackendType::NONE:
@@ -3864,6 +3888,42 @@ inline void RecordedFilterNodeSetInput::OutputSimpleEventInfo(
   aStringStream << ")";
 }
 
+inline bool RecordedLink::PlayEvent(Translator* aTranslator) const {
+  DrawTarget* dt = aTranslator->LookupDrawTarget(mDT);
+  if (!dt) {
+    return false;
+  }
+  dt->Link(mDestination.c_str(), mRect);
+  return true;
+}
+
+template <class S>
+void RecordedLink::Record(S& aStream) const {
+  RecordedDrawingEvent::Record(aStream);
+  WriteElement(aStream, mRect);
+  uint32_t len = mDestination.length();
+  WriteElement(aStream, len);
+  if (len) {
+    aStream.write(mDestination.data(), len);
+  }
+}
+
+template <class S>
+RecordedLink::RecordedLink(S& aStream) : RecordedDrawingEvent(LINK, aStream) {
+  ReadElement(aStream, mRect);
+  uint32_t len;
+  ReadElement(aStream, len);
+  mDestination.resize(size_t(len));
+  if (len && aStream.good()) {
+    aStream.read(&mDestination.front(), len);
+  }
+}
+
+inline void RecordedLink::OutputSimpleEventInfo(
+    std::stringstream& aStringStream) const {
+  aStringStream << "Link [" << mDestination << " @ " << mRect << "]";
+}
+
 #define FOR_EACH_EVENT(f)                                          \
   f(DRAWTARGETCREATION, RecordedDrawTargetCreation);               \
   f(DRAWTARGETDESTRUCTION, RecordedDrawTargetDestruction);         \
@@ -3912,7 +3972,8 @@ inline void RecordedFilterNodeSetInput::OutputSimpleEventInfo(
   f(EXTERNALSURFACECREATION, RecordedExternalSurfaceCreation);     \
   f(FLUSH, RecordedFlush);                                         \
   f(DETACHALLSNAPSHOTS, RecordedDetachAllSnapshots);               \
-  f(OPTIMIZESOURCESURFACE, RecordedOptimizeSourceSurface);
+  f(OPTIMIZESOURCESURFACE, RecordedOptimizeSourceSurface);         \
+  f(LINK, RecordedLink);
 
 #define DO_WITH_EVENT_TYPE(_typeenum, _class) \
   case _typeenum: {                           \
