@@ -209,39 +209,6 @@ inline uint32_t GetArrayIndexFromId(JS::Handle<jsid> id) {
 
 inline bool IsArrayIndex(uint32_t index) { return index < UINT32_MAX; }
 
-inline void FillPropertyDescriptor(
-    JS::MutableHandle<JS::PropertyDescriptor> desc, JSObject*, bool readonly,
-    bool enumerable = true) {
-  desc.setAttributes((readonly ? JSPROP_READONLY : 0) |
-                     (enumerable ? JSPROP_ENUMERATE : 0));
-  desc.setGetter(nullptr);
-  desc.setSetter(nullptr);
-}
-
-inline void FillPropertyDescriptor(
-    JS::MutableHandle<JS::PropertyDescriptor> desc, JSObject* obj,
-    const JS::Value& v, bool readonly, bool enumerable = true) {
-  desc.value().set(v);
-  FillPropertyDescriptor(desc, obj, readonly, enumerable);
-}
-
-inline void FillPropertyDescriptor(
-    JSContext* cx, JS::MutableHandle<Maybe<JS::PropertyDescriptor>> desc,
-    JSObject* obj, const JS::Value& v, bool readonly, bool enumerable = true) {
-  JS::Rooted<JS::PropertyDescriptor> pd(cx);
-  FillPropertyDescriptor(&pd, obj, v, readonly, enumerable);
-  desc.set(Some(pd.get()));
-}
-
-inline void FillPropertyDescriptor(
-    JS::MutableHandle<JS::PropertyDescriptor> desc, JSObject*,
-    unsigned attributes, const JS::Value& v) {
-  desc.value().set(v);
-  desc.setAttributes(attributes);
-  desc.setGetter(nullptr);
-  desc.setSetter(nullptr);
-}
-
 }  // namespace dom
 }  // namespace mozilla
 
