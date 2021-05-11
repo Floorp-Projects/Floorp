@@ -120,12 +120,12 @@ PerformanceEventTiming::TryGenerateEventTiming(const EventTarget* aTarget,
   }
 
   if (Performance* performance = innerWindow->GetPerformance()) {
-    const char* eventName = Event::GetEventName(aEvent->mMessage);
+    const char16_t* eventName = Event::GetEventName(aEvent->mMessage);
     MOZ_ASSERT(eventName,
                "User defined events shouldn't be considered as event timing");
     return RefPtr<PerformanceEventTiming>(
                new PerformanceEventTiming(
-                   performance, NS_ConvertUTF8toUTF16(eventName),
+                   performance, nsDependentString(eventName),
                    aEvent->mTimeStamp, aEvent->mFlags.mCancelable,
                    aEvent->mMessage))
         .forget();
