@@ -119,6 +119,20 @@ dictionary WindowActorSidedOptions {
   required ByteString moduleURI;
 };
 
+dictionary WindowActorEventListenerOptions : AddEventListenerOptions {
+  /**
+   * If this attribute is set to true (the default), this event will cause the
+   * actor to be created when it is fired. If the attribute is set false, the
+   * actor will not receive the event unless it had already been created through
+   * some other mechanism.
+   *
+   * This should be set to `false` for event listeners which are only intended
+   * to perform cleanup operations, and will have no effect if the actor doesn't
+   * already exist.
+   */
+  boolean createActor = true;
+};
+
 dictionary WindowActorChildOptions : WindowActorSidedOptions {
   /**
    * Events which this actor wants to be listening to. When these events fire,
@@ -129,7 +143,7 @@ dictionary WindowActorChildOptions : WindowActorSidedOptions {
    * NOTE: `once` option is not support due to we register listeners in a shared
    * location.
    */
-  record<DOMString, AddEventListenerOptions> events;
+  record<DOMString, WindowActorEventListenerOptions> events;
 
  /**
   * An array of observer topics to listen to. An observer will be added for each

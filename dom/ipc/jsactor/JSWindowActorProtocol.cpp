@@ -53,6 +53,7 @@ JSWindowActorProtocol::FromIPC(const JSWindowActorInfo& aInfo) {
     if (ipc.passive()) {
       event->mPassive.Construct(ipc.passive().value());
     }
+    event->mCreateActor = ipc.createActor();
   }
 
   proto->mChild.mObservers = aInfo.observers().Clone();
@@ -80,6 +81,7 @@ JSWindowActorInfo JSWindowActorProtocol::ToIPC() {
     if (event.mPassive.WasPassed()) {
       ipc->passive() = Some(event.mPassive.Value());
     }
+    ipc->createActor() = event.mCreateActor;
   }
 
   info.observers() = mChild.mObservers.Clone();
@@ -151,6 +153,7 @@ JSWindowActorProtocol::FromWebIDLOptions(const nsACString& aName,
       if (entry.mValue.mPassive.WasPassed()) {
         evt->mPassive.Construct(entry.mValue.mPassive.Value());
       }
+      evt->mCreateActor = entry.mValue.mCreateActor;
     }
   }
 
@@ -188,15 +191,33 @@ NS_IMETHODIMP JSWindowActorProtocol::HandleEvent(Event* aEvent) {
   }
 
   // Ensure our actor is present.
-  AutoJSAPI jsapi;
-  jsapi.Init();
-  RefPtr<JSActor> actor = wgc->GetActor(jsapi.cx(), mName, IgnoreErrors());
+  RefPtr<JSActor> actor = wgc->GetExistingActor(mName);
+  if (!actor) {
+    // Check if we're supposed to create the actor when this event is fired.
+    bool createActor = true;
+    nsAutoString typeStr;
+    aEvent->GetType(typeStr);
+    for (auto& event : mChild.mEvents) {
+      if (event.mName == typeStr) {
+        createActor = event.mCreateActor;
+        break;
+      }
+    }
+
+    // If we're supposed to create the actor, call GetActor to cause it to be
+    // created.
+    if (createActor) {
+      AutoJSAPI jsapi;
+      jsapi.Init();
+      actor = wgc->GetActor(jsapi.cx(), mName, IgnoreErrors());
+    }
+  }
   if (!actor || NS_WARN_IF(!actor->GetWrapperPreserveColor())) {
     return NS_OK;
   }
 
   // Build our event listener & call it.
-  JS::Rooted<JSObject*> global(jsapi.cx(),
+  JS::Rooted<JSObject*> global(RootingCx(),
                                JS::GetNonCCWObjectGlobal(actor->GetWrapper()));
   RefPtr<EventListener> eventListener =
       new EventListener(actor->GetWrapper(), global, nullptr, nullptr);
