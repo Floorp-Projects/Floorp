@@ -148,6 +148,7 @@ struct JS_PUBLIC_API PropertyDescriptor {
 
   void trace(JSTracer* trc);
 
+  // Construct a new complete DataDescriptor.
   static PropertyDescriptor Data(const Value& value,
                                  PropertyAttributes attributes = {}) {
     PropertyDescriptor desc;
@@ -155,6 +156,7 @@ struct JS_PUBLIC_API PropertyDescriptor {
     desc.setEnumerable(attributes.contains(PropertyAttribute::Enumerable));
     desc.setWritable(attributes.contains(PropertyAttribute::Writable));
     desc.value_ = value;
+    desc.assertComplete();
     return desc;
   }
 
@@ -162,26 +164,39 @@ struct JS_PUBLIC_API PropertyDescriptor {
   static PropertyDescriptor Data(const Value& value, unsigned attrs) {
     MOZ_ASSERT((attrs &
                 ~(JSPROP_PERMANENT | JSPROP_ENUMERATE | JSPROP_READONLY)) == 0);
+
     PropertyDescriptor desc;
     desc.attrs_ = attrs;
     desc.value_ = value;
+    desc.assertComplete();
     return desc;
   }
 
+  // Construct a new complete AccessorDescriptor.
+  // Note: This means JSPROP_GETTER and JSPROP_SETTER are always set.
+  static PropertyDescriptor Accessor(JSObject* getter, JSObject* setter,
+                                     PropertyAttributes attributes = {}) {
+    MOZ_ASSERT(!attributes.contains(PropertyAttribute::Writable));
+
+    PropertyDescriptor desc;
+    desc.setConfigurable(attributes.contains(PropertyAttribute::Configurable));
+    desc.setEnumerable(attributes.contains(PropertyAttribute::Enumerable));
+    desc.setGetterObject(getter);
+    desc.setSetterObject(setter);
+    desc.assertComplete();
+    return desc;
+  }
+
+  // This constructor is only provided for legacy code!
   static PropertyDescriptor Accessor(JSObject* getter, JSObject* setter,
                                      unsigned attrs) {
     MOZ_ASSERT((attrs & ~(JSPROP_PERMANENT | JSPROP_ENUMERATE)) == 0);
-    MOZ_ASSERT(getter || setter);
+
     PropertyDescriptor desc;
     desc.attrs_ = attrs;
-    if (getter) {
-      desc.getter_ = getter;
-      desc.attrs_ |= JSPROP_GETTER;
-    }
-    if (setter) {
-      desc.setter_ = setter;
-      desc.attrs_ |= JSPROP_SETTER;
-    }
+    desc.setGetterObject(getter);
+    desc.setSetterObject(setter);
+    desc.assertComplete();
     return desc;
   }
 
