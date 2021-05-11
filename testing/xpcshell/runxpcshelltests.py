@@ -15,6 +15,7 @@ import random
 import re
 import shutil
 import signal
+import subprocess
 import sys
 import tempfile
 import time
@@ -319,7 +320,19 @@ class XPCShellTestThread(Thread):
             popen_func = psutil.Popen
         else:
             popen_func = Popen
-        proc = popen_func(cmd, stdout=stdout, stderr=stderr, env=env, cwd=cwd)
+
+        cleanup_hack = None
+        if mozinfo.isWin and sys.version_info[0] == 3 and sys.version_info < (3, 7, 5):
+            # Hack to work around https://bugs.python.org/issue37380
+            cleanup_hack = subprocess._cleanup
+
+        try:
+            if cleanup_hack:
+                subprocess._cleanup = lambda: None
+            proc = popen_func(cmd, stdout=stdout, stderr=stderr, env=env, cwd=cwd)
+        finally:
+            if cleanup_hack:
+                subprocess._cleanup = cleanup_hack
         return proc
 
     def checkForCrashes(self, dump_directory, symbols_path, test_name=None):
