@@ -2343,6 +2343,7 @@ security:
       contenttype: Information about the content-type we expect to receive
       remotetype: Information about the remoteType in which we triggered the load
       filedetails: Information about the file that triggered the load
+      redirects: Comma-separated string listing schemes for URLs that we redirected from
 
 pictureinpicture:
   create:
