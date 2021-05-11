@@ -601,7 +601,7 @@ var View = {
       if (data.deltaRamSize) {
         let formattedDelta = this._formatMemory(data.deltaRamSize);
         this._fillCell(memoryCell, {
-          fluentName: "about-processes-total-memory-size",
+          fluentName: "about-processes-total-memory-size-changed",
           fluentArgs: {
             total: formattedTotal.amount,
             totalUnit: units.memory[formattedTotal.unit],
@@ -635,7 +635,7 @@ var View = {
       let localizedUnit = units.duration[unit];
       if (data.slopeCpu == 0) {
         this._fillCell(cpuCell, {
-          fluentName: "about-processes-cpu-user-and-kernel-idle",
+          fluentName: "about-processes-cpu-idle",
           fluentArgs: {
             total: duration,
             unit: localizedUnit,
@@ -644,7 +644,7 @@ var View = {
         });
       } else {
         this._fillCell(cpuCell, {
-          fluentName: "about-processes-cpu-user-and-kernel",
+          fluentName: "about-processes-cpu",
           fluentArgs: {
             percent: data.slopeCpu,
             total: duration,
@@ -703,23 +703,23 @@ var View = {
     let nameCell = row.firstChild;
     let fluentName = "about-processes-thread-summary";
     let fluentArgs = { number: data.threads.length };
+    let span;
     if (!nameCell.firstChild) {
+      nameCell.className = "name indent";
       // Create the nodes
-      this._fillCell(nameCell, {
-        fluentName,
-        fluentArgs,
-        classes: ["name", "indent"],
-      });
       let img = document.createElement("span");
-      img.classList.add("twisty");
-      nameCell.insertBefore(img, nameCell.firstChild);
+      img.className = "twisty";
+      nameCell.appendChild(img);
+
+      span = document.createElement("span");
+      nameCell.appendChild(span);
     } else {
       // The only thing that can change is the thread count.
       let img = nameCell.firstChild;
       isOpen = img.classList.contains("open");
-      let span = img.nextSibling;
-      document.l10n.setAttributes(span, fluentName, fluentArgs);
+      span = img.nextSibling;
     }
+    document.l10n.setAttributes(span, fluentName, fluentArgs);
 
     // Column: action
     let actionCell = nameCell.nextSibling;
@@ -849,7 +849,7 @@ var View = {
       let localizedUnit = units.duration[unit];
       if (data.slopeCpu == 0) {
         this._fillCell(cpuCell, {
-          fluentName: "about-processes-cpu-user-and-kernel-idle",
+          fluentName: "about-processes-cpu-idle",
           fluentArgs: {
             total: duration,
             unit: localizedUnit,
@@ -858,7 +858,7 @@ var View = {
         });
       } else {
         this._fillCell(cpuCell, {
-          fluentName: "about-processes-cpu-user-and-kernel",
+          fluentName: "about-processes-cpu",
           fluentArgs: {
             percent: data.slopeCpu,
             total: duration,
@@ -874,12 +874,7 @@ var View = {
 
   _orderedRows: [],
   _fillCell(elt, { classes, fluentName, fluentArgs }) {
-    let span = elt.firstChild;
-    if (!span) {
-      span = document.createElement("span");
-      elt.appendChild(span);
-    }
-    document.l10n.setAttributes(span, fluentName, fluentArgs);
+    document.l10n.setAttributes(elt, fluentName, fluentArgs);
     elt.className = classes.join(" ");
   },
 
