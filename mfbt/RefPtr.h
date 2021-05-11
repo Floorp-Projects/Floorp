@@ -606,4 +606,13 @@ RefPtr<T> MakeRefPtr(Args&&... aArgs) {
 
 }  // namespace mozilla
 
+/**
+ * Deduction guide to allow simple `RefPtr` definitions from an
+ * already_AddRefed<T> without repeating the type, e.g.:
+ *
+ *   RefPtr ptr = MakeAndAddRef<SomeType>(...);
+ */
+template <typename T>
+RefPtr(already_AddRefed<T>) -> RefPtr<T>;
+
 #endif /* mozilla_RefPtr_h */
