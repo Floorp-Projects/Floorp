@@ -1263,20 +1263,10 @@ SearchService.prototype = {
       await this._init();
       TelemetryStopwatch.finish("SEARCH_SERVICE_INIT_MS");
     } catch (ex) {
-      Services.telemetry.scalarSet(
-        "browser.searchinit.init_result_status_code",
-        // Scalar is a string due to bug 1651210 when the scalar was created.
-        ex.result?.toString(10)
-      );
       TelemetryStopwatch.cancel("SEARCH_SERVICE_INIT_MS");
       this._initObservers.reject(ex.result);
       throw ex;
     }
-    Services.telemetry.scalarSet(
-      "browser.searchinit.init_result_status_code",
-      // Scalar is a string due to bug 1651210 when the scalar was created.
-      this._initRV?.toString(10)
-    );
 
     if (!Components.isSuccessCode(this._initRV)) {
       throw Components.Exception(
