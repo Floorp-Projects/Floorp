@@ -164,8 +164,6 @@ class DevToolsFrameChild extends JSWindowActorChild {
             forceOverridingFirstTarget || this.isServerTargetSwitchingEnabled,
         })
       ) {
-        const browsingContext = this.manager.browsingContext;
-
         // Bail if there is already an existing BrowsingContextTargetActor.
         // This means we are reloading or navigating (same-process) a Target
         // which has not been created using the Watcher, but from the client.
@@ -189,15 +187,7 @@ class DevToolsFrameChild extends JSWindowActorChild {
           return;
         }
 
-        const isTopLevelTarget =
-          !browsingContext.parent && browsingContext.browserId == browserId;
-
-        this._createTargetActor(
-          watcherActorID,
-          connectionPrefix,
-          watchedData,
-          isTopLevelTarget
-        );
+        this._createTargetActor(watcherActorID, connectionPrefix, watchedData);
       }
     }
   }
@@ -210,20 +200,12 @@ class DevToolsFrameChild extends JSWindowActorChild {
    * @param String parentConnectionPrefix
    *        The prefix of the DevToolsServerConnection of the Watcher Actor.
    *        This is used to compute a unique ID for the target actor.
-   * @param Object initialData
+   * @param Object watchedData
    *        All data managed by the Watcher Actor and WatcherRegistry.jsm, containing
    *        target types, resources types to be listened as well as breakpoints and any
    *        other data meant to be shared across processes and threads.
-   * @param Boolean isTopLevelTarget
-   *        To be set to true if we will instantiate a top level target.
-   *        This will typically be the top level document of a tab for the regular toolbox.
    */
-  _createTargetActor(
-    watcherActorID,
-    parentConnectionPrefix,
-    initialData,
-    isTopLevelTarget
-  ) {
+  _createTargetActor(watcherActorID, parentConnectionPrefix, watchedData) {
     if (this._connections.get(watcherActorID)) {
       throw new Error(
         "DevToolsFrameChild _createTargetActor was called more than once" +
@@ -245,6 +227,14 @@ class DevToolsFrameChild extends JSWindowActorChild {
       "Instantiate WindowGlobalTarget with prefix: " + forwardingPrefix
     );
 
+    // In the case of the browser toolbox, tab's BrowsingContext don't have
+    // any parent BC and shouldn't be considered as top-level.
+    // This is why we check for browserId's.
+    const browsingContext = this.manager.browsingContext;
+    const isTopLevelTarget =
+      !browsingContext.parent &&
+      browsingContext.browserId == watchedData.browserId;
+
     const { connection, targetActor } = this._createConnectionAndActor(
       forwardingPrefix,
       isTopLevelTarget
@@ -256,10 +246,10 @@ class DevToolsFrameChild extends JSWindowActorChild {
     });
 
     // Pass initialization data to the target actor
-    for (const type in initialData) {
-      // `initialData` will also contain `browserId` and `watcherTraits`,
+    for (const type in watchedData) {
+      // `watchedData` will also contain `browserId` and `watcherTraits`,
       // as well as entries with empty arrays, which shouldn't be processed.
-      const entries = initialData[type];
+      const entries = watchedData[type];
       if (!Array.isArray(entries) || entries.length == 0) {
         continue;
       }
@@ -333,10 +323,14 @@ class DevToolsFrameChild extends JSWindowActorChild {
     const targetActor = new FrameTargetActor(connection, {
       docShell: this.docShell,
       doNotFireFrameUpdates: true,
-      followWindowGlobalLifeCycle: true,
+      // Only toggle this flag ON when the target-switching pref is true for the top level target.
+      // Otherwise it is always true for iframe targets.
+      followWindowGlobalLifeCycle:
+        !isTopLevelTarget || this.isServerTargetSwitchingEnabled,
       isTopLevelTarget,
     });
     targetActor.manage(targetActor);
+    targetActor.createdFromJsWindowActor = true;
 
     return { connection, targetActor };
   }
@@ -413,17 +407,10 @@ class DevToolsFrameChild extends JSWindowActorChild {
       case "DevToolsFrameParent:instantiate-already-available": {
         const { watcherActorID, connectionPrefix, watchedData } = message.data;
 
-        // XXX: For now we only instantiate remote frame targets via this
-        // mechanism. When we want to support creating the first target via
-        // the Watcher (Bug 1686748), the message data should also provide the
-        // `isTopLevelTarget` information.
-        const isTopLevelTarget = false;
-
         return this._createTargetActor(
           watcherActorID,
           connectionPrefix,
-          watchedData,
-          isTopLevelTarget
+          watchedData
         );
       }
       case "DevToolsFrameParent:destroy": {
