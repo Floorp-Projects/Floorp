@@ -1006,6 +1006,10 @@ nsresult UpdateUsageFile(nsIFile* aUsageFile, nsIFile* aUsageJournalFile,
 
   QM_TRY(binaryStream->Write64(aUsage));
 
+#if defined(EARLY_BETA_OR_EARLIER) || defined(DEBUG)
+  QM_TRY(stream->Flush());
+#endif
+
   QM_TRY(stream->Close());
 
   return NS_OK;
