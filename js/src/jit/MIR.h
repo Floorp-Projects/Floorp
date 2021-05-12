@@ -2949,6 +2949,25 @@ class MSameValueDouble : public MBinaryInstruction,
   ALLOW_CLONE(MSameValueDouble)
 };
 
+class MSameValue : public MBinaryInstruction, public BoxInputsPolicy::Data {
+  MSameValue(MDefinition* left, MDefinition* right)
+      : MBinaryInstruction(classOpcode, left, right) {
+    setResultType(MIRType::Boolean);
+    setMovable();
+  }
+
+ public:
+  INSTRUCTION_HEADER(SameValue)
+  TRIVIAL_NEW_WRAPPERS
+
+  bool congruentTo(const MDefinition* ins) const override {
+    return congruentIfOperandsEqual(ins);
+  }
+  AliasSet getAliasSet() const override { return AliasSet::None(); }
+
+  ALLOW_CLONE(MSameValue)
+};
+
 // Takes a typed value and returns an untyped value.
 class MBox : public MUnaryInstruction, public NoTypePolicy::Data {
   explicit MBox(MDefinition* ins) : MUnaryInstruction(classOpcode, ins) {
