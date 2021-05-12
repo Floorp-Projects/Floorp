@@ -9762,7 +9762,7 @@ void CodeGenerator::visitIsNullOrLikeUndefinedAndBranchT(
   testObjectEmulatesUndefined(input, ifTrueLabel, ifFalseLabel, scratch, ool);
 }
 
-void CodeGenerator::visitSameValueD(LSameValueD* lir) {
+void CodeGenerator::visitSameValueDouble(LSameValueDouble* lir) {
   FloatRegister left = ToFloatRegister(lir->left());
   FloatRegister right = ToFloatRegister(lir->right());
   FloatRegister temp = ToFloatRegister(lir->tempFloat());
