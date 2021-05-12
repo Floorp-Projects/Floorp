@@ -68,6 +68,22 @@
     },
   });
 
+  // Get SessionStore module in the same as ProcessHangMonitor above.
+  Object.defineProperty(LazyModules, "SessionStore", {
+    configurable: true,
+    get() {
+      const kURL = "resource:///modules/sessionstore/SessionStore.jsm";
+      if (Cu.isModuleLoaded(kURL)) {
+        let { SessionStore } = ChromeUtils.import(kURL);
+        Object.defineProperty(LazyModules, "SessionStore", {
+          value: SessionStore,
+        });
+        return SessionStore;
+      }
+      return null;
+    },
+  });
+
   const elementsToDestroyOnUnload = new Set();
 
   window.addEventListener(
@@ -340,7 +356,7 @@
     get documentURI() {
       return this.isRemoteBrowser
         ? this._documentURI
-        : this.contentDocument.documentURIObject;
+        : this.contentDocument?.documentURIObject;
     }
 
     get documentContentType() {
@@ -884,6 +900,10 @@
     }
 
     onPageHide(aEvent) {
+      // If we're browsing from the tab crashed UI to a URI that keeps
+      // this browser non-remote, we'll handle that here.
+      LazyModules.SessionStore?.maybeExitCrashedState(this);
+
       if (!this.docShell || !this.fastFind) {
         return;
       }
@@ -1066,6 +1086,13 @@
      */
     destroy() {
       elementsToDestroyOnUnload.delete(this);
+
+      // If we're browsing from the tab crashed UI to a URI that causes the tab
+      // to go remote again, we catch this here, because swapping out the
+      // non-remote browser for a remote one doesn't cause the pagehide event
+      // to be fired. Previously, we used to do this in the frame script's
+      // unload handler.
+      LazyModules.SessionStore?.maybeExitCrashedState(this);
 
       // Make sure that any open select is closed.
       if (this.hasAttribute("selectmenulist")) {
