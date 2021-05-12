@@ -96,8 +96,8 @@ TEST(IntlNumberFormat, SignificantDigits)
 TEST(IntlNumberFormat, Currency)
 {
   NumberFormatOptions options;
-  options.mCurrency = Some(
-      std::make_pair("MXN", NumberFormatOptions::CurrencyDisplayStyle::Symbol));
+  options.mCurrency =
+      Some(std::make_pair("MXN", NumberFormatOptions::CurrencyDisplay::Symbol));
   NumberFormat nf("es-MX", options);
   Buffer<uint8_t> buf8;
   ASSERT_TRUE(nf.format(123456.789, buf8).isOk());
