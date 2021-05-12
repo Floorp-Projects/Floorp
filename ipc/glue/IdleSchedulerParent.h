@@ -47,6 +47,8 @@ class IdleSchedulerParent final
   IdleSchedulerParent();
   ~IdleSchedulerParent();
 
+  static void CalculateNumIdleTasks();
+
   static int32_t ActiveCount();
   static void Schedule(IdleSchedulerParent* aRequester);
   static bool HasSpareCycles(int32_t aActiveCount);
@@ -104,7 +106,7 @@ class IdleSchedulerParent final
   // mRequestingGC and mDoingGC fields for the GC state.
   static LinkedList<IdleSchedulerParent> sIdleAndGCRequests;
 
-  static Atomic<int32_t> sMaxConcurrentIdleTasksInChildProcesses;
+  static int32_t sMaxConcurrentIdleTasksInChildProcesses;
   static uint32_t sMaxConcurrentGCs;
   static uint32_t sActiveGCs;
 
@@ -116,6 +118,10 @@ class IdleSchedulerParent final
   static uint32_t sChildProcessesAlive;
 
   static nsITimer* sStarvationPreventer;
+
+  static uint32_t sNumCPUs;
+  static uint32_t sPrefConcurrentGCsMax;
+  static uint32_t sPrefConcurrentGCsCPUDivisor;
 };
 
 }  // namespace ipc

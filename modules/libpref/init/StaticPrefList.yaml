@@ -5756,6 +5756,19 @@
   value: @IS_NOT_ANDROID@
   mirror: always
 
+# We allow at most MIN(max, MAX(NUM_CPUS / cpu_divisor, 1)) concurrent GCs
+# between processes
+- name: javascript.options.concurrent_multiprocess_gcs.cpu_divisor
+  type: RelaxedAtomicUint32
+  value: 4
+  mirror: always
+
+# See 'cpu_divisor' above, 0 means UINT_32_MAX.
+- name: javascript.options.concurrent_multiprocess_gcs.max
+  type: RelaxedAtomicUint32
+  value: 0
+  mirror: always
+
 - name: javascript.options.mem.log
   type: bool
   value: false
