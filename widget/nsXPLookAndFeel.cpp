@@ -308,7 +308,6 @@ static const char sColorPrefs[][41] = {
     "ui.-moz-visitedhyperlinktext",
     "ui.-moz-comboboxtext",
     "ui.-moz-combobox",
-    "ui.-moz-gtk-info-bar-text",
     "ui.-moz-colheadertext",
     "ui.-moz-colheaderhovertext"};
 
