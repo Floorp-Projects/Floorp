@@ -59,8 +59,7 @@ add_task(async function() {
   });
   is(
     resources.length,
-    // We should get only 1 resource. This will be fixed in Bug 1710674
-    2,
+    1,
     "we retrieve the expected number of existing resources"
   );
   is(
