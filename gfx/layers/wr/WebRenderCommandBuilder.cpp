@@ -2499,12 +2499,18 @@ Maybe<wr::ImageMask> WebRenderCommandBuilder::BuildWrMaskImage(
       LayerIntRect::FromUnknownRect(bounds.ScaleToOutsidePixels(
           scale.width, scale.height, appUnitsPerDevPixel));
 
-  if (itemRect.IsEmpty()) {
+  LayerIntRect visibleRect =
+      LayerIntRect::FromUnknownRect(
+          aMaskItem->GetBuildingRect().ScaleToOutsidePixels(
+              scale.width, scale.height, appUnitsPerDevPixel))
+          .Intersect(itemRect);
+
+  if (visibleRect.IsEmpty()) {
     return Nothing();
   }
 
   LayoutDeviceToLayerScale2D layerScale(scale.width, scale.height);
-  LayoutDeviceRect imageRect = LayerRect(itemRect) / layerScale;
+  LayoutDeviceRect imageRect = LayerRect(visibleRect) / layerScale;
 
   nsPoint maskOffset = aMaskItem->ToReferenceFrame() - bounds.TopLeft();
 
@@ -2610,6 +2616,11 @@ Maybe<wr::ImageMask> WebRenderCommandBuilder::BuildWrMaskImage(
       maskData->mShouldHandleOpacity = aMaskItem->ShouldHandleOpacity();
     }
   }
+
+  aResources.SetBlobImageVisibleArea(
+      maskData->mBlobKey.value(),
+      ViewAs<ImagePixel>(visibleRect - itemRect.TopLeft(),
+                         PixelCastJustification::LayerIsImage));
 
   MOZ_DIAGNOSTIC_ASSERT(
       mManager->WrBridge()->MatchesNamespace(maskData->mBlobKey.ref()),
