@@ -10,6 +10,8 @@
     <string name="mozac_browser_menu_new_private_tab">Skedë e re private</string>
     <!-- Browser menu button to close tab. Closes the current session when pressed. -->
     <string name="mozac_close_tab">Mbylle skedën</string>
+    <!-- Menu option to duplicate the current tab -->
+    <string name="mozac_ui_tabcounter_duplicate_tab">Përdytëso skedën</string>
     <!-- Content description of the tab counter toolbar button -->
     <string name="mozac_tab_counter_content_description">Butoni i numrit të skedave te paneli.</string>
 </resources>
