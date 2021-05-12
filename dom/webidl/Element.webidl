@@ -170,7 +170,8 @@ interface Element : Node {
 dictionary FocusOptions {
   boolean preventScroll = false;
   // Prevents the focus ring if this is not a text control / editable element.
-  [ChromeOnly] boolean preventFocusRing = false;
+  [Func="nsContentUtils::IsCallerChromeOrErrorPage"]
+  boolean preventFocusRing = false;
 };
 
 interface mixin HTMLOrForeignElement {
