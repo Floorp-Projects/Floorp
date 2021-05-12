@@ -9,6 +9,7 @@ EXPORTS += [
     "XPCJSMemoryReporter.h",
     "xpcObjectHelper.h",
     "xpcpublic.h",
+    "XPCSelfHostedShmem.h",
 ]
 
 UNIFIED_SOURCES += [
@@ -30,6 +31,7 @@ UNIFIED_SOURCES += [
     "XPCMaps.cpp",
     "XPCModule.cpp",
     "XPCRuntimeService.cpp",
+    "XPCSelfHostedShmem.cpp",
     "XPCShellImpl.cpp",
     "XPCString.cpp",
     "XPCThrower.cpp",
