@@ -204,6 +204,8 @@ class JSFunction : public js::NativeObject {
     return hasBaseScript() && baseScript()->hasBytecode();
   }
 
+  bool isGhost() const { return flags_.isGhost(); }
+
   // Arrow functions store their lexical new.target in the first extended slot.
   bool isArrow() const { return flags_.isArrow(); }
   // Every class-constructor is also a method.

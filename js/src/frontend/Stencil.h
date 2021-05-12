@@ -819,6 +819,9 @@ class ScriptStencil {
 
   void setAllowRelazify() { flags_ |= AllowRelazifyFlag; }
 
+  bool isGhost() const { return functionFlags.isGhost(); }
+  void setIsGhost() { functionFlags.setIsGhost(); }
+
   bool hasSharedData() const { return flags_ & HasSharedDataFlag; }
 
   void setHasSharedData() { flags_ |= HasSharedDataFlag; }
