@@ -212,6 +212,48 @@ add_task(async function test_window_print_coop_site() {
   }
 });
 
+add_task(async function test_window_print_iframe_remove_on_afterprint() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["print.tab_modal.enabled", true]],
+  });
+  ok(
+    !document.querySelector(".printPreviewBrowser"),
+    "There shouldn't be any print preview browser"
+  );
+  await BrowserTestUtils.withNewTab(
+    `${TEST_PATH}file_window_print_iframe_remove_on_afterprint.html`,
+    async function(browser) {
+      info("Waiting for dialog");
+      await BrowserTestUtils.waitForCondition(
+        () => !!document.querySelector(".printPreviewBrowser")
+      );
+
+      let modalBefore = await SpecialPowers.spawn(browser, [], () => {
+        return content.windowUtils.isInModalState();
+      });
+
+      ok(modalBefore, "The tab should be in modal state");
+
+      // Clear the dialog.
+      gBrowser.getTabDialogBox(browser).abortAllDialogs();
+
+      let [modalAfter, hasIframe] = await SpecialPowers.spawn(
+        browser,
+        [],
+        () => {
+          return [
+            content.windowUtils.isInModalState(),
+            !!content.document.querySelector("iframe"),
+          ];
+        }
+      );
+
+      ok(!modalAfter, "Should've cleared the modal state properly");
+      ok(!hasIframe, "Iframe should've been removed from the DOM");
+    }
+  );
+});
+
 // FIXME(emilio): This test doesn't use window.print(), why is it on this file?
 add_task(async function test_focused_browsing_context() {
   await SpecialPowers.pushPrefEnv({
