@@ -526,41 +526,44 @@ var PKT_PANEL_OVERLAY = function(options) {
       ?.classList.remove(`pkt_ext_tag_error`);
   };
   this.showActiveTags = function() {
-    if (!$(".pkt_ext_suggestedtag_detail").length) {
+    if (!document.querySelector(`.pkt_ext_suggestedtag_detail`)) {
       return;
     }
-    var activetokenstext = "|";
-    $(".token-input-token").each(function(index, element) {
-      activetokenstext +=
-        $(element)
-          .find("p")
-          .text() + "|";
+
+    let activeTokens = [];
+
+    document.querySelectorAll(`.token-input-token p`).forEach(el => {
+      activeTokens.push(el.textContent);
     });
 
-    var inactivetags = $(".pkt_ext_suggestedtag_detail").find(
-      ".token_tag_inactive"
+    let elInactiveTags = document.querySelectorAll(
+      `.pkt_ext_suggestedtag_detail .token_tag_inactive`
     );
-    inactivetags.each(function(index, element) {
-      if (!activetokenstext.includes("|" + $(element).text() + "|")) {
-        $(element).removeClass("token_tag_inactive");
+
+    elInactiveTags.forEach(el => {
+      if (!activeTokens.includes(el.textContent)) {
+        el.classList.remove(`token_tag_inactive`);
       }
     });
   };
   this.hideInactiveTags = function() {
-    if (!$(".pkt_ext_suggestedtag_detail").length) {
+    if (!document.querySelector(`.pkt_ext_suggestedtag_detail`)) {
       return;
     }
-    var activetokenstext = "|";
-    $(".token-input-token").each(function(index, element) {
-      activetokenstext +=
-        $(element)
-          .find("p")
-          .text() + "|";
+
+    let activeTokens = [];
+
+    document.querySelectorAll(`.token-input-token p`).forEach(el => {
+      activeTokens.push(el.textContent);
     });
-    var activesuggestedtags = $(".token_tag").not(".token_tag_inactive");
-    activesuggestedtags.each(function(index, element) {
-      if (activetokenstext.indexOf("|" + $(element).text() + "|") > -1) {
-        $(element).addClass("token_tag_inactive");
+
+    let elActiveTags = document.querySelectorAll(
+      `.token_tag:not(.token_tag_inactive)`
+    );
+
+    elActiveTags.forEach(el => {
+      if (activeTokens.includes(el.textContent)) {
+        el.classList.add(`token_tag_inactive`);
       }
     });
   };
@@ -616,27 +619,39 @@ var PKT_PANEL_OVERLAY = function(options) {
       // so we can just use the first item's value for all.
       const model = data.recommendations[0].experiment;
       const renderedRecs = Handlebars.templates.item_recs(data);
-      $("body").addClass("recs_enabled");
-      $(".pkt_ext_subshell").show();
-      $(".pkt_ext_item_recs").append(renderedRecs);
-      $(".pkt_ext_learn_more").click(function(e) {
-        e.preventDefault();
-        thePKT_PANEL.sendMessage("PKT_openTabWithUrl", {
-          url: $(this).attr("href"),
-          activate: true,
-          source: "recs_learn_more",
+
+      document.querySelector(`body`).classList.add(`recs_enabled`);
+      document.querySelector(`.pkt_ext_subshell`).style.display = `block`;
+
+      document
+        .querySelector(`.pkt_ext_item_recs`)
+        .append(myself.parseHTML(renderedRecs));
+
+      document
+        .querySelector(`.pkt_ext_learn_more`)
+        .addEventListener(`click`, e => {
+          e.preventDefault();
+
+          thePKT_PANEL.sendMessage(`PKT_openTabWithUrl`, {
+            url: e.target.getAttribute(`href`),
+            activate: true,
+            source: `recs_learn_more`,
+          });
         });
-      });
-      $(".pkt_ext_item_recs_link").click(function(e) {
-        e.preventDefault();
-        const url = $(this).attr("href");
-        const position = $(".pkt_ext_item_recs_link").index(this);
-        thePKT_PANEL.sendMessage("PKT_openTabWithPocketUrl", {
-          url,
-          model,
-          position,
+
+      document
+        .querySelectorAll(`.pkt_ext_item_recs_link`)
+        .forEach((el, position) => {
+          el.addEventListener(`click`, e => {
+            e.preventDefault();
+
+            thePKT_PANEL.sendMessage(`PKT_openTabWithPocketUrl`, {
+              url: el.getAttribute(`href`),
+              model,
+              position,
+            });
+          });
         });
-      });
     }
   };
   this.sanitizeText = function(s) {
@@ -655,22 +670,25 @@ var PKT_PANEL_OVERLAY = function(options) {
     });
   };
   this.showStateFinalMsg = function(msg) {
-    $(".pkt_ext_containersaved")
-      .find(".pkt_ext_tag_detail")
-      .one(
-        "webkitTransitionEnd transitionend msTransitionEnd oTransitionEnd",
-        function(e) {
-          $(this).off(
-            "webkitTransitionEnd transitionend msTransitionEnd oTransitionEnd"
-          );
+    document
+      .querySelector(`.pkt_ext_containersaved .pkt_ext_tag_detail`)
+      .addEventListener(
+        `transitionend`,
+        () => {
           myself.preventCloseTimerCancel = true;
           myself.startCloseTimer(myself.autocloseTimingFinalState);
-          $(".pkt_ext_containersaved")
-            .find(".pkt_ext_detail h2")
-            .text(msg);
+          document.querySelector(
+            `.pkt_ext_containersaved .pkt_ext_detail h2`
+          ).textContent = msg;
+        },
+        {
+          once: true,
         }
       );
-    $(".pkt_ext_containersaved").addClass("pkt_ext_container_finalstate");
+
+    document
+      .querySelector(`.pkt_ext_containersaved`)
+      .classList.add(`pkt_ext_container_finalstate`);
   };
   this.showStateError = function(headline, detail) {
     document
