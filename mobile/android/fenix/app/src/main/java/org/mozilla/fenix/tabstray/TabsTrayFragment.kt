@@ -28,12 +28,12 @@ import kotlinx.android.synthetic.main.tabs_tray_tab_counter2.*
 import kotlinx.android.synthetic.main.tabstray_multiselect_items.*
 import kotlinx.android.synthetic.main.tabstray_multiselect_items.view.*
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.plus
 import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.selector.getNormalOrPrivateTabs
 import mozilla.components.browser.state.selector.normalTabs
 import mozilla.components.browser.state.selector.privateTabs
-import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.concept.tabstray.Tab
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import org.mozilla.fenix.HomeActivity
@@ -45,13 +45,13 @@ import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.navigateBlockingForAsyncNavGraph
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.settings
+import org.mozilla.fenix.home.HomeFragment
 import org.mozilla.fenix.home.HomeScreenViewModel
 import org.mozilla.fenix.tabstray.browser.BrowserTrayInteractor
 import org.mozilla.fenix.tabstray.browser.DefaultBrowserTrayInteractor
 import org.mozilla.fenix.tabstray.browser.SelectionHandleBinding
 import org.mozilla.fenix.tabstray.browser.SelectionBannerBinding
 import org.mozilla.fenix.tabstray.browser.SelectionBannerBinding.VisibilityModifier
-import org.mozilla.fenix.tabstray.ext.getTrayPosition
 import org.mozilla.fenix.tabstray.ext.showWithTheme
 import org.mozilla.fenix.utils.allowUndo
 import kotlin.math.max
@@ -289,22 +289,35 @@ class TabsTrayFragment : AppCompatDialogFragment(), TabsTrayInteractor {
         tab?.let {
             if (browserStore.state.getNormalOrPrivateTabs(it.content.private).size != 1) {
                 requireComponents.useCases.tabsUseCases.removeTab(tabId)
-                showUndoSnackbarForTab(it)
+                showUndoSnackbarForTab(it.content.private)
             } else {
                 dismissTabsTrayAndNavigateHome(tabId)
             }
         }
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     override fun onDeleteTabs(tabs: Collection<Tab>) {
-        tabs.forEach {
-            onDeleteTab(it.id)
+
+        val browserStore = requireComponents.core.store
+        val isPrivate = tabs.any { it.private }
+
+        // If user closes all the tabs from selected tabs page dismiss tray and navigate home.
+        if (tabs.size == browserStore.state.getNormalOrPrivateTabs(isPrivate).size) {
+            dismissTabsTrayAndNavigateHome(
+                if (isPrivate) HomeFragment.ALL_PRIVATE_TABS else HomeFragment.ALL_NORMAL_TABS
+            )
+        } else {
+            tabs.map { it.id }.let {
+                requireComponents.useCases.tabsUseCases.removeTabs(it)
+            }
         }
+        showUndoSnackbarForTab(isPrivate)
     }
 
-    private fun showUndoSnackbarForTab(removedTab: TabSessionState) {
+    private fun showUndoSnackbarForTab(isPrivate: Boolean) {
         val snackbarMessage =
-            when (removedTab.content.private) {
+            when (isPrivate) {
                 true -> getString(R.string.snackbar_private_tab_closed)
                 false -> getString(R.string.snackbar_tab_closed)
             }
@@ -315,7 +328,9 @@ class TabsTrayFragment : AppCompatDialogFragment(), TabsTrayInteractor {
             getString(R.string.snackbar_deleted_undo),
             {
                 requireComponents.useCases.tabsUseCases.undo.invoke()
-                tabLayoutMediator.withFeature { it.selectTabAtPosition(removedTab.getTrayPosition()) }
+                tabLayoutMediator.withFeature { it.selectTabAtPosition(
+                    if (isPrivate) Page.PrivateTabs.ordinal else Page.NormalTabs.ordinal
+                ) }
             },
             operation = { },
             elevation = ELEVATION,

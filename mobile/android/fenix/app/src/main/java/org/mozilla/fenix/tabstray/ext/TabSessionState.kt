@@ -17,6 +17,6 @@ fun TabSessionState.filterFromConfig(type: BrowserTabType): Boolean {
 
 fun TabSessionState.getTrayPosition(): Int =
     when (content.private) {
-        true -> Page.NormalTabs.ordinal
+        true -> Page.PrivateTabs.ordinal
         false -> Page.NormalTabs.ordinal
     }
