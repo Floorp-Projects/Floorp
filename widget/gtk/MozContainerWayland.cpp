@@ -260,7 +260,9 @@ static void moz_gdk_wayland_window_remove_frame_callback_surface_locked(
   GdkWindow* window = gtk_widget_get_window(GTK_WIDGET(container));
   MozContainerWayland* wl_container = &container->wl_container;
 
-  sGdkWaylandWindowRemoveCallbackSurface(window, wl_container->surface);
+  if (wl_container->surface) {
+    sGdkWaylandWindowRemoveCallbackSurface(window, wl_container->surface);
+  }
 
   GdkFrameClock* frame_clock = gdk_window_get_frame_clock(window);
   g_signal_handlers_disconnect_by_func(
