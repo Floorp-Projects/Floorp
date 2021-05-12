@@ -441,6 +441,12 @@ nsresult nsLookAndFeel::PerThemeData::GetColor(ColorID aID,
       // inactive window border
       aColor = mMozWindowInactiveBorder;
       break;
+    case ColorID::MozGtkTitlebarText:
+      aColor = mTitlebarText;
+      break;
+    case ColorID::MozGtkTitlebarInactiveText:
+      aColor = mTitlebarInactiveText;
+      break;
     case ColorID::Graytext:             // disabled text in windows, menus, etc.
     case ColorID::Inactivecaptiontext:  // text in inactive window caption
       aColor = mMenuTextInactive;
@@ -1375,6 +1381,15 @@ void nsLookAndFeel::PerThemeData::Init() {
     gtk_style_context_get_color(accelStyle, GTK_STATE_FLAG_INSENSITIVE, &color);
     mMenuTextInactive = GDK_RGBA_TO_NS_RGBA(color);
     g_object_unref(accelStyle);
+  }
+
+  style = GetStyleContext(MOZ_GTK_HEADER_BAR);
+  {
+    gtk_style_context_get_color(style, GTK_STATE_FLAG_NORMAL, &color);
+    mTitlebarText = GDK_RGBA_TO_NS_RGBA(color);
+
+    gtk_style_context_get_color(style, GTK_STATE_FLAG_BACKDROP, &color);
+    mTitlebarInactiveText = GDK_RGBA_TO_NS_RGBA(color);
   }
 
   style = GetStyleContext(MOZ_GTK_MENUPOPUP);
