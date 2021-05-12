@@ -296,47 +296,15 @@ static bool ComputeBinarySearchMid(ICEntries entries, uint32_t pcOffset,
       loc);
 }
 
-ICEntry* ICScript::maybeICEntryFromPCOffset(uint32_t pcOffset) {
-  // This method ignores prologue IC entries. There can be at most one
-  // non-prologue IC per bytecode op.
-
+ICEntry& ICScript::icEntryFromPCOffset(uint32_t pcOffset) {
   size_t mid;
-  if (!ComputeBinarySearchMid(ICEntries(this), pcOffset, &mid)) {
-    return nullptr;
-  }
+  MOZ_ALWAYS_TRUE(ComputeBinarySearchMid(ICEntries(this), pcOffset, &mid));
 
   MOZ_ASSERT(mid < numICEntries());
 
   ICEntry& entry = icEntry(mid);
   MOZ_ASSERT(entry.pcOffset() == pcOffset);
-  return &entry;
-}
-
-ICEntry& ICScript::icEntryFromPCOffset(uint32_t pcOffset) {
-  ICEntry* entry = maybeICEntryFromPCOffset(pcOffset);
-  MOZ_RELEASE_ASSERT(entry);
-  return *entry;
-}
-
-ICEntry* ICScript::maybeICEntryFromPCOffset(uint32_t pcOffset,
-                                            ICEntry* prevLookedUpEntry) {
-  // Do a linear forward search from the last queried PC offset, or fallback to
-  // a binary search if the last offset is too far away.
-  if (prevLookedUpEntry && pcOffset >= prevLookedUpEntry->pcOffset() &&
-      (pcOffset - prevLookedUpEntry->pcOffset()) <= 10) {
-    ICEntry* firstEntry = &icEntry(0);
-    ICEntry* lastEntry = &icEntry(numICEntries() - 1);
-    ICEntry* curEntry = prevLookedUpEntry;
-    while (curEntry >= firstEntry && curEntry <= lastEntry) {
-      if (curEntry->pcOffset() == pcOffset) {
-        return curEntry;
-      }
-      curEntry++;
-    }
-    return nullptr;
-  }
-
-  return maybeICEntryFromPCOffset(pcOffset);
+  return entry;
 }
 
 ICEntry* ICScript::interpreterICEntryFromPCOffset(uint32_t pcOffset) {

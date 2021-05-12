@@ -288,43 +288,27 @@ void CacheIRHealth::healthReportForScript(JSContext* cx, HandleScript script,
 
   spew->property("spewContext", uint8_t(context));
 
-  jsbytecode* next = script->code();
-  jsbytecode* end = script->codeEnd();
-
   spew->beginListProperty("entries");
-  ICEntry* prevEntry = nullptr;
+
   Happiness scriptHappiness = Happy;
-  while (next < end) {
-    uint32_t len = 0;
-    uint32_t pcOffset = script->pcToOffset(next);
 
-    jit::ICEntry* entry =
-        jitScript->maybeICEntryFromPCOffset(pcOffset, prevEntry);
-    if (entry) {
-      prevEntry = entry;
+  for (size_t i = 0; i < jitScript->numICEntries(); i++) {
+    ICEntry& entry = jitScript->icEntry(i);
+    jsbytecode* pc = entry.pc(script);
+    JSOp op = JSOp(*pc);
+
+    spew->beginObject();
+    Happiness entryHappiness = Happy;
+    if (!spewICEntryHealth(spew, script, &entry, pc, op, &entryHappiness)) {
+      cx->recoverFromOutOfMemory();
+      return;
     }
-
-    JSOp op = JSOp(*next);
-    const JSCodeSpec& cs = CodeSpec(op);
-    len = cs.length;
-    MOZ_ASSERT(len);
-
-    if (entry) {
-      spew->beginObject();
-      Happiness entryHappiness = Happy;
-      if (!spewICEntryHealth(spew, script, entry, next, op, &entryHappiness)) {
-        cx->recoverFromOutOfMemory();
-        return;
-      }
-
-      if (entryHappiness < scriptHappiness) {
-        scriptHappiness = entryHappiness;
-      }
-      spew->endObject();
+    if (entryHappiness < scriptHappiness) {
+      scriptHappiness = entryHappiness;
     }
-
-    next += len;
+    spew->endObject();
   }
+
   spew->endList();  // entries
 
   spew->property("scriptHappiness", uint8_t(scriptHappiness));
