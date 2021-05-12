@@ -24,8 +24,7 @@ const NON_CONTENT_ACCESSIBLE_PROPERTIES = [
   "-moz-script-size-multiplier",
   "-moz-default-appearance",
   "-moz-inert",
-  // TODO(emilio): Whenever we stop using `-moz-binding` in a gazillion tests
-  // we should add it here.
+  "-moz-control-character-visibility",
 ];
 
 const sheet = document.getElementById("sheet");
@@ -56,6 +55,8 @@ for (const prop of NON_CONTENT_ACCESSIBLE_PROPERTIES) {
       "",
       prop + " shouldn't be accessible via CSSOM in content"
     );
+    assert_false(CSS.supports(prop + ': initial'), prop + " shouldn't be exposed in CSS.supports");
+    assert_false(CSS.supports(prop, 'initial'), prop + " shouldn't be exposed in CSS.supports (2-value version)");
   }, prop);
 }
 </script>
