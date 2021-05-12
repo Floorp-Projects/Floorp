@@ -358,6 +358,8 @@ class MOZ_RAII CacheRegisterAllocator {
 
   void popPayload(MacroAssembler& masm, OperandLocation* loc, Register dest);
   void popValue(MacroAssembler& masm, OperandLocation* loc, ValueOperand dest);
+  Address payloadAddress(MacroAssembler& masm,
+                         const OperandLocation* loc) const;
   Address valueAddress(MacroAssembler& masm, const OperandLocation* loc) const;
 
 #ifdef DEBUG
@@ -494,8 +496,6 @@ class MOZ_RAII CacheRegisterAllocator {
   // Returns the register for the given operand. If the operand is currently
   // not in a register, it will load it into one.
   ValueOperand useValueRegister(MacroAssembler& masm, ValOperandId val);
-  ValueOperand useFixedValueRegister(MacroAssembler& masm, ValOperandId valId,
-                                     ValueOperand reg);
   Register useRegister(MacroAssembler& masm, TypedOperandId typedId);
 
   ConstantOrRegister useConstantOrRegister(MacroAssembler& masm,
@@ -518,6 +518,8 @@ class MOZ_RAII CacheRegisterAllocator {
   // Does not change the allocator's state.
   void copyToScratchRegister(MacroAssembler& masm, TypedOperandId typedId,
                              Register dest) const;
+  void copyToScratchValueRegister(MacroAssembler& masm, ValOperandId valId,
+                                  ValueOperand dest) const;
 
   // Returns |val|'s JSValueType or JSVAL_TYPE_UNKNOWN.
   JSValueType knownType(ValOperandId val) const;

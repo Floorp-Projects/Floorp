@@ -761,7 +761,13 @@ bool BaselineCacheIRCompiler::emitSameValueResult(ValOperandId lhsId,
   AutoOutputRegister output(*this);
   AutoScratchRegister scratch(allocator, masm);
   ValueOperand lhs = allocator.useValueRegister(masm, lhsId);
+#ifdef JS_CODEGEN_X86
+  // Use the output to avoid running out of registers.
+  allocator.copyToScratchValueRegister(masm, rhsId, output.valueReg());
+  ValueOperand rhs = output.valueReg();
+#else
   ValueOperand rhs = allocator.useValueRegister(masm, rhsId);
+#endif
 
   allocator.discardStack(masm);
 
