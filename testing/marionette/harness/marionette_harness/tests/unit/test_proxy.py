@@ -62,7 +62,6 @@ class TestProxyCapabilities(MarionetteTestCase):
         capabilities = {
             "proxy": {
                 "proxyType": "manual",
-                "ftpProxy": "{}:21".format(proxy_hostname),
                 "httpProxy": "{}:80".format(proxy_hostname),
                 "sslProxy": "{}:443".format(proxy_hostname),
                 "socksProxy": proxy_hostname,
