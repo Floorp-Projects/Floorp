@@ -1408,96 +1408,106 @@ performance.interaction:
       - perf-telemetry-alerts@mozilla.com
     expires: never
 
-js:
-  execution_percentage:
-    type: custom_distribution
-    description: >
-      Percentage of page load time spent executing Javascript.
-    range_min: 0
-    range_max: 100
-    bucket_count: 20
-    histogram_type: linear
-    unit: percentage of execution time
-    gecko_datapoint: JS_EXECUTION_PROPORTION
-    bugs:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1664475
-    data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1664475#c6
-    notification_emails:
-      - dpalmeiro@mozilla.com
-      - perf-telemetry-alerts@mozilla.com
-    expires: 2021-03-18
-  delazification_percentage:
-    type: custom_distribution
-    description: >
-      Percentage of execution time spent during delazification for
-      JS scripts up until the page load event fires.
-    range_min: 0
-    range_max: 100
-    bucket_count: 20
-    histogram_type: linear
-    unit: percentage of execution time
-    gecko_datapoint: JS_DELAZIFICATION_PROPORTION
-    bugs:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1664475
-    data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1664475#c6
-    notification_emails:
-      - dpalmeiro@mozilla.com
-      - perf-telemetry-alerts@mozilla.com
-    expires: 2021-03-18
-  xdr_encode_percentage:
-    type: custom_distribution
-    description: >
-      Percentage of execution time spent during XDR encoding for
-      JS scripts up until the page load event fires.
-    range_min: 0
-    range_max: 100
-    bucket_count: 20
-    histogram_type: linear
-    unit: percentage of execution time
-    gecko_datapoint: JS_XDR_ENCODING_PROPORTION
-    bugs:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1664475
-    data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1664475#c6
-    notification_emails:
-      - dpalmeiro@mozilla.com
-      - perf-telemetry-alerts@mozilla.com
-    expires: 2021-03-18
-  baseline_compile_percentage:
-    type: custom_distribution
-    description: >
-      Percentage of execution time spent during Baseline compilation for
-      JS scripts up until the page load event fires.
-    range_min: 0
-    range_max: 100
-    bucket_count: 20
-    histogram_type: linear
-    unit: percentage of execution time
-    gecko_datapoint: JS_BASELINE_COMPILE_PROPORTION
-    bugs:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1664475
-    data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1664475#c6
-    notification_emails:
-      - dpalmeiro@mozilla.com
-      - perf-telemetry-alerts@mozilla.com
-    expires: 2021-03-18
-  bytecode_caching_time:
+javascript.pageload:
+  execution_time:
     type: timing_distribution
-    unit: milliseconds
+    time_unit: millisecond
+    gecko_datapoint: JS_PAGELOAD_EXECUTION_MS
     description: >
-      Time spent caching JS bytecode for scripts executed during a page load.
-    gecko_datapoint: JS_BYTECODE_CACHING_TIME
+      Time spent during page load executing Javascript in ms.
     bugs:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1664475
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1709139
     data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1664475#c6
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1709139#c4
     notification_emails:
       - dpalmeiro@mozilla.com
       - perf-telemetry-alerts@mozilla.com
-    expires: 2021-03-18
+    expires: never
+  delazification_time:
+    type: timing_distribution
+    time_unit: millisecond
+    gecko_datapoint: JS_PAGELOAD_DELAZIFICATION_MS
+    description: >
+      Time spent during page load delazifying Javascript in ms.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1709139
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1709139#c4
+    notification_emails:
+      - dpalmeiro@mozilla.com
+      - perf-telemetry-alerts@mozilla.com
+    expires: never
+  xdr_encode_time:
+    type: timing_distribution
+    time_unit: millisecond
+    gecko_datapoint: JS_PAGELOAD_XDR_ENCODING_MS
+    description: >
+      Time spent during page load XDR encoding Javascript in ms.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1709139
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1709139#c4
+    notification_emails:
+      - dpalmeiro@mozilla.com
+      - perf-telemetry-alerts@mozilla.com
+    expires: never
+  baseline_compile_time:
+    type: timing_distribution
+    time_unit: millisecond
+    gecko_datapoint: JS_PAGELOAD_BASELINE_COMPILE_MS
+    description: >
+      Time spent during page load baseline compiling Javascript in ms.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1709139
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1709139#c4
+    notification_emails:
+      - dpalmeiro@mozilla.com
+      - perf-telemetry-alerts@mozilla.com
+    expires: never
+  gc_time:
+    type: timing_distribution
+    time_unit: millisecond
+    gecko_datapoint: JS_PAGELOAD_GC_MS
+    description: >
+      Time spent during page load in the GC in ms.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1709139
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1709139#c4
+    notification_emails:
+      - dpalmeiro@mozilla.com
+      - perf-telemetry-alerts@mozilla.com
+    expires: never
+  parse_time:
+    type: timing_distribution
+    time_unit: millisecond
+    gecko_datapoint: JS_PAGELOAD_PARSE_MS
+    description: >
+      Time spent during page load syntax parsing JS scripts on
+      the main thread in ms.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1709139
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1709139#c4
+    notification_emails:
+      - dpalmeiro@mozilla.com
+      - perf-telemetry-alerts@mozilla.com
+    expires: never
+  protect_time:
+    type: timing_distribution
+    time_unit: millisecond
+    gecko_datapoint: JS_PAGELOAD_PROTECT_MS
+    description: >
+      Time spent during page load protecting JIT executable memory.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1709139
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1709139#c4
+    notification_emails:
+      - dpalmeiro@mozilla.com
+      - perf-telemetry-alerts@mozilla.com
+    expires: never
 
 javascript.gc:
   total_time:
