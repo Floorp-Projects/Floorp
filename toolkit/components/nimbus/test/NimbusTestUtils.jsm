@@ -80,9 +80,44 @@ const ExperimentFakes = {
 
     return feature.ready();
   },
+  async enrollWithFeatureConfig(
+    featureConfig,
+    { manager = ExperimentManager } = {}
+  ) {
+    await manager.store.ready();
+    let recipe = this.recipe(
+      `${featureConfig.featureId}-experiment-${Math.random()}`,
+      {
+        bucketConfig: {
+          namespace: "mstest-utils",
+          randomizationUnit: "normandy_id",
+          start: 0,
+          count: 1000,
+          total: 1000,
+        },
+        branches: [
+          {
+            slug: "control",
+            ratio: 1,
+            feature: featureConfig,
+          },
+        ],
+      }
+    );
+    let {
+      enrollmentPromise,
+      doExperimentCleanup,
+    } = this.enrollmentHelper(recipe, { manager });
+
+    await enrollmentPromise;
+
+    return doExperimentCleanup;
+  },
   enrollmentHelper(recipe = {}, { manager = ExperimentManager } = {}) {
+    console.log("enroll", recipe.slug);
     let enrollmentPromise = new Promise(resolve =>
       manager.store.on(`update:${recipe.slug}`, (event, experiment) => {
+        console.log("experiment update", experiment.active);
         if (experiment.active) {
           resolve(experiment);
         }
@@ -181,14 +216,14 @@ const ExperimentFakes = {
         },
       ],
       bucketConfig: {
-        namespace: "mstest-utils",
+        namespace: "nimbus-test-utils",
         randomizationUnit: "normandy_id",
         start: 0,
         count: 100,
         total: 1000,
       },
-      userFacingName: "Messaging System recipe",
-      userFacingDescription: "Messaging System MSTestUtils recipe",
+      userFacingName: "Nimbus recipe",
+      userFacingDescription: "NimbusTestUtils recipe",
       ...props,
     };
   },

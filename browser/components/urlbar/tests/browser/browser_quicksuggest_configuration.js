@@ -52,7 +52,7 @@ add_task(async function test_override_wait_after_n_restarts() {
   let doExperimentCleanup = await UrlbarTestUtils.enrollExperiment({
     valueOverrides: {
       quickSuggestEnabled: true,
-      quickSuggestShuoldShowOnboardingDialog: true,
+      quickSuggestShouldShowOnboardingDialog: true,
       // Just wait for 1 browser restart instead of the default 2
       quickSuggestShowOnboardingDialogAfterNRestarts: 1,
     },

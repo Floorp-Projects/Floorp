@@ -304,27 +304,13 @@ add_task(async function setup() {
  */
 add_task(async function test_multistage_zeroOnboarding_experimentAPI() {
   await setAboutWelcomePref(true);
+  await ExperimentAPI.ready();
+  let doExperimentCleanup = await ExperimentFakes.enrollWithFeatureConfig({
+    enabled: false,
+    featureId: "aboutwelcome",
+    value: null,
+  });
 
-  let {
-    enrollmentPromise,
-    doExperimentCleanup,
-  } = ExperimentFakes.enrollmentHelper(
-    ExperimentFakes.recipe("mochitest-1-aboutwelcome", {
-      branches: [
-        {
-          slug: "mochitest-1-aboutwelcome",
-          feature: {
-            enabled: false,
-            featureId: "aboutwelcome",
-            value: null,
-          },
-        },
-      ],
-      active: true,
-    })
-  );
-
-  await enrollmentPromise;
   ExperimentAPI._store._syncToChildren({ flush: true });
 
   let tab = await BrowserTestUtils.openNewForegroundTab(
@@ -358,30 +344,17 @@ add_task(async function test_multistage_aboutwelcome_experimentAPI() {
   const sandbox = sinon.createSandbox();
   NimbusFeatures.aboutwelcome._sendExposureEventOnce = true;
   await setAboutWelcomePref(true);
+  await ExperimentAPI.ready();
 
-  let {
-    enrollmentPromise,
-    doExperimentCleanup,
-  } = ExperimentFakes.enrollmentHelper(
-    ExperimentFakes.recipe("mochitest-aboutwelcome", {
-      branches: [
-        {
-          slug: "mochitest-aboutwelcome-branch",
-          feature: {
-            enabled: true,
-            featureId: "aboutwelcome",
-            value: {
-              id: "my-mochitest-experiment",
-              screens: TEST_MULTISTAGE_CONTENT,
-            },
-          },
-        },
-      ],
-      active: true,
-    })
-  );
+  let doExperimentCleanup = await ExperimentFakes.enrollWithFeatureConfig({
+    enabled: true,
+    featureId: "aboutwelcome",
+    value: {
+      id: "my-mochitest-experiment",
+      screens: TEST_MULTISTAGE_CONTENT,
+    },
+  });
 
-  await enrollmentPromise;
   ExperimentAPI._store._syncToChildren({ flush: true });
 
   sandbox.spy(ExperimentAPI, "recordExposureEvent");
@@ -502,32 +475,19 @@ add_task(async function test_multistage_aboutwelcome_transitions() {
   const sandbox = sinon.createSandbox();
   await setAboutWelcomePref(true);
   await setProton(true);
+  await ExperimentAPI.ready();
 
-  let {
-    enrollmentPromise,
-    doExperimentCleanup,
-  } = ExperimentFakes.enrollmentHelper(
-    ExperimentFakes.recipe("mochitest-transitions-on", {
-      branches: [
-        {
-          slug: "mochitest-aboutwelcome-branch",
-          feature: {
-            enabled: true,
-            featureId: "aboutwelcome",
-            value: {
-              id: "my-mochitest-experiment",
-              screens: TEST_PROTON_CONTENT,
-              isProton: true,
-              transitions: true,
-            },
-          },
-        },
-      ],
-      active: true,
-    })
-  );
+  let doExperimentCleanup = await ExperimentFakes.enrollWithFeatureConfig({
+    enabled: true,
+    featureId: "aboutwelcome",
+    value: {
+      id: "my-mochitest-experiment",
+      screens: TEST_PROTON_CONTENT,
+      isProton: true,
+      transitions: true,
+    },
+  });
 
-  await enrollmentPromise;
   ExperimentAPI._store._syncToChildren({ flush: true });
 
   let tab = await BrowserTestUtils.openNewForegroundTab(
@@ -572,32 +532,19 @@ add_task(async function test_multistage_aboutwelcome_transitions() {
 add_task(async function test_multistage_aboutwelcome_transitions_off() {
   const sandbox = sinon.createSandbox();
   await setAboutWelcomePref(true);
+  await ExperimentAPI.ready();
 
-  let {
-    enrollmentPromise,
-    doExperimentCleanup,
-  } = ExperimentFakes.enrollmentHelper(
-    ExperimentFakes.recipe("mochitest-transitions-off", {
-      branches: [
-        {
-          slug: "mochitest-aboutwelcome-branch",
-          feature: {
-            enabled: true,
-            featureId: "aboutwelcome",
-            value: {
-              id: "my-mochitest-experiment",
-              screens: TEST_PROTON_CONTENT,
-              isProton: true,
-              transitions: false,
-            },
-          },
-        },
-      ],
-      active: true,
-    })
-  );
+  let doExperimentCleanup = await ExperimentFakes.enrollWithFeatureConfig({
+    enabled: true,
+    featureId: "aboutwelcome",
+    value: {
+      id: "my-mochitest-experiment",
+      screens: TEST_PROTON_CONTENT,
+      isProton: true,
+      transitions: false,
+    },
+  });
 
-  await enrollmentPromise;
   ExperimentAPI._store._syncToChildren({ flush: true });
 
   let tab = await BrowserTestUtils.openNewForegroundTab(
