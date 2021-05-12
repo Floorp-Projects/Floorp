@@ -21,14 +21,6 @@ const { BrowserTestUtils } = ChromeUtils.import(
 const { ExperimentFakes } = ChromeUtils.import(
   "resource://testing-common/NimbusTestUtils.jsm"
 );
-
-XPCOMUtils.defineLazyServiceGetter(
-  this,
-  "timerManager",
-  "@mozilla.org/updates/timer-manager;1",
-  "nsIUpdateTimerManager"
-);
-
 const { TelemetryEnvironment } = ChromeUtils.import(
   "resource://gre/modules/TelemetryEnvironment.jsm"
 );
@@ -100,19 +92,6 @@ async function setup(configuration) {
   return client;
 }
 
-add_task(async function setup() {
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      ["messaging-system.log", "all"],
-      ["app.normandy.run_interval_seconds", 1],
-    ],
-  });
-
-  registerCleanupFunction(async () => {
-    await SpecialPowers.popPrefEnv();
-  });
-});
-
 add_task(async function test_remote_fetch_and_ready() {
   const sandbox = sinon.createSandbox();
   const featureInstance = NimbusFeatures.aboutwelcome;
@@ -138,11 +117,11 @@ add_task(async function test_remote_fetch_and_ready() {
 
   let rsClient = await setup();
 
-  let callCount = spy.callCount;
   await RemoteDefaultsLoader.syncRemoteDefaults();
 
-  Assert.ok(
-    spy.callCount === callCount + 1,
+  Assert.equal(
+    spy.callCount,
+    1,
     "Called finalize after processing remote configs"
   );
 
@@ -208,10 +187,7 @@ add_task(async function test_remote_fetch_and_ready() {
   await rsClient.db.clear();
   await RemoteDefaultsLoader.syncRemoteDefaults();
 
-  Assert.ok(
-    spy.callCount === callCount + 2,
-    "Called a second time by syncRemoteDefaults"
-  );
+  Assert.equal(spy.callCount, 2, "Called a second time by syncRemoteDefaults");
 
   Assert.ok(stub.calledTwice, "Second update is from the removal");
   Assert.equal(
@@ -258,12 +234,19 @@ add_task(async function test_remote_fetch_on_updateRecipes() {
     RemoteDefaultsLoader,
     "syncRemoteDefaults"
   );
-  timerManager.unregisterTimer("rs-experiment-loader-timer");
+  // Work around the pref change callback that would trigger `setTimer`
+  sandbox.replaceGetter(
+    RemoteSettingsExperimentLoader,
+    "intervalInSeconds",
+    () => 1
+  );
+
+  // This will un-register the timer
+  RemoteSettingsExperimentLoader._initialized = true;
+  RemoteSettingsExperimentLoader.uninit();
   Services.prefs.clearUserPref(
     "app.update.lastUpdateTime.rs-experiment-loader-timer"
   );
-
-  Assert.ok(syncRemoteDefaultsStub.notCalled, "Not called");
 
   RemoteSettingsExperimentLoader.setTimer();
 
@@ -273,8 +256,18 @@ add_task(async function test_remote_fetch_on_updateRecipes() {
   );
 
   Assert.ok(syncRemoteDefaultsStub.calledOnce, "Timer calls function");
-  timerManager.unregisterTimer("rs-experiment-loader-timer");
+  Assert.equal(
+    syncRemoteDefaultsStub.firstCall.args[0],
+    "timer",
+    "Called by timer"
+  );
   sandbox.restore();
+  // This will un-register the timer
+  RemoteSettingsExperimentLoader._initialized = true;
+  RemoteSettingsExperimentLoader.uninit();
+  Services.prefs.clearUserPref(
+    "app.update.lastUpdateTime.rs-experiment-loader-timer"
+  );
 });
 
 // Test that awaiting `feature.ready()` resolves even when there is no remote
