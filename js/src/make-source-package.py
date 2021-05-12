@@ -143,6 +143,9 @@ rsync_filter_list = """
 - /intl/icu/source/tools
 + /intl/icu/**
 
+- /intl/components/gtest
++ /intl/components/**
+
 + /memory/replace/dmd/dmd.py
 + /memory/build/**
 + /memory/moz.build
