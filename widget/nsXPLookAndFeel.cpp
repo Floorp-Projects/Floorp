@@ -309,7 +309,10 @@ static const char sColorPrefs[][41] = {
     "ui.-moz-comboboxtext",
     "ui.-moz-combobox",
     "ui.-moz-colheadertext",
-    "ui.-moz-colheaderhovertext"};
+    "ui.-moz-colheaderhovertext",
+    "ui.-moz-gtk-titlebar-text",
+    "ui.-moz-gtk-titlebar-inactive-text",
+};
 
 static_assert(ArrayLength(sColorPrefs) == size_t(LookAndFeel::ColorID::End),
               "Should have a pref for each color value");

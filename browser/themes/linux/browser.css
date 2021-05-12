@@ -413,7 +413,7 @@ menuitem.bookmark-item {
 @media (-moz-gtk-csd-available) {
   /* Some Gtk+ themes use non-rectangular toplevel windows. To fully support
    * such themes we need to make toplevel window transparent.
-   * It may cause performanance issues so let's put it under a preference
+   * It may cause performance issues so let's put it under a preference
    * and enable it for desktop environment which do that by default.
    * See nsWindow::TopLevelWindowUseARGBVisual() for details. */
   @media (-moz-gtk-csd-transparent-background) {
@@ -426,7 +426,17 @@ menuitem.bookmark-item {
   :root[tabsintitlebar] #titlebar {
     appearance: auto;
     -moz-default-appearance: -moz-window-titlebar-maximized;
+    color: -moz-gtk-titlebar-text;
   }
+
+  :root[tabsintitlebar] #titlebar:-moz-window-inactive {
+    color: -moz-gtk-titlebar-inactive-text;
+  }
+
+  :root[tabsintitlebar] #titlebar:-moz-lwtheme {
+    color: inherit;
+  }
+
   :root[tabsintitlebar][sizemode="normal"]:not([gtktiledwindow="true"]) #titlebar {
     appearance: auto;
     -moz-default-appearance: -moz-window-titlebar;
@@ -454,6 +464,7 @@ menuitem.bookmark-item {
   :root[tabsintitlebar][sizemode="maximized"] #TabsToolbar,
   :root[tabsintitlebar] #toolbar-menubar {
     appearance: none;
+    color: inherit;
   }
 
   /* The button box must appear on top of the navigator-toolbox in order for
