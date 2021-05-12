@@ -24,8 +24,7 @@ const ISOLATE_UI_PREF =
 const FPI_PREF = "privacy.firstparty.isolate";
 
 const { EnterprisePolicyTesting, PoliciesPrefTracker } = ChromeUtils.import(
-  "resource://testing-common/EnterprisePolicyTesting.jsm",
-  null
+  "resource://testing-common/EnterprisePolicyTesting.jsm"
 );
 
 requestLongerTimeout(2);
