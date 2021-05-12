@@ -280,8 +280,17 @@ ffi::RawNumberFormatter* FluentBuiltInNumberFormatterCreate(
         aOptions->minimum_fraction_digits, aOptions->maximum_fraction_digits));
   }
 
-  return reinterpret_cast<ffi::RawNumberFormatter*>(
-      new NumberFormat(aLocale->get(), options));
+  Result<UniquePtr<NumberFormat>, NumberFormat::FormatError> result =
+      NumberFormat::TryCreate(aLocale->get(), options);
+
+  MOZ_ASSERT(result.isOk());
+
+  if (result.isOk()) {
+    return reinterpret_cast<ffi::RawNumberFormatter*>(
+        result.unwrap().release());
+  }
+
+  return nullptr;
 }
 
 uint8_t* FluentBuiltInNumberFormatterFormat(

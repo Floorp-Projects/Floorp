@@ -179,7 +179,9 @@ void js::NumberFormatObject::finalize(JSFreeOp* fop, JSObject* obj) {
 
   if (nf) {
     intl::RemoveICUCellMemory(fop, obj, NumberFormatObject::EstimatedMemoryUse);
-    js_delete(nf);
+    // This was allocated using `new` in mozilla::intl::NumberFormat, so we
+    // delete here.
+    delete nf;
   }
 }
 
@@ -310,7 +312,8 @@ static constexpr size_t MaxUnitLength() {
 
 /**
  * Returns a new mozilla::intl::NumberFormat with the locale and number
- * formatting options of the given NumberFormat.
+ * formatting options of the given NumberFormat, or a nullptr if
+ * initialization failed.
  */
 static mozilla::intl::NumberFormat* NewNumberFormat(
     JSContext* cx, Handle<NumberFormatObject*> numberFormat) {
@@ -630,12 +633,16 @@ static mozilla::intl::NumberFormat* NewNumberFormat(
 
   options.mRoundingModeHalfUp = true;
 
-  auto* formatter = js_new<mozilla::intl::NumberFormat>(locale.get(), options);
-  if (!formatter) {
-    ReportOutOfMemory(cx);
+  using NumberFormat = mozilla::intl::NumberFormat;
+  mozilla::Result<mozilla::UniquePtr<NumberFormat>, NumberFormat::FormatError>
+      result = NumberFormat::TryCreate(locale.get(), options);
+
+  if (result.isOk()) {
+    return result.unwrap().release();
   }
 
-  return formatter;
+  intl::ReportInternalError(cx);
+  return nullptr;
 }
 
 static JSString* FormattedNumberToString(

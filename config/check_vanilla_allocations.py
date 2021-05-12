@@ -160,6 +160,10 @@ def main():
         if filename == "Decimal.o":
             continue
 
+        # Ignore allocations from the m-c intl/components implementations.
+        if "intl_components" in filename:
+            continue
+
         fn = m.group(2)
         if filename == "Utility.o":
             util_Utility_cpp.add(fn)
