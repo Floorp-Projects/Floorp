@@ -113,7 +113,7 @@ void SVGMarkerElement::SetOrientToAuto() {
 void SVGMarkerElement::SetOrientToAngle(DOMSVGAngle& angle, ErrorResult& rv) {
   float f = angle.Value();
   if (!IsFinite(f)) {
-    rv.Throw(NS_ERROR_DOM_SVG_WRONG_TYPE_ERR);
+    rv.ThrowTypeError("Unknown or invalid type");
     return;
   }
   mOrient.SetBaseValue(f, angle.UnitType(), this, true);
