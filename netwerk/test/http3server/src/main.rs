@@ -85,6 +85,8 @@ impl HttpServer for Http3TestServer {
                 } => {
                     qtrace!("Headers (request={} fin={}): {:?}", request, fin, headers);
 
+                    // Some responses do not have content-type. This is on purpose to exercise
+                    // UnknownDecoder code.
                     let default_ret = b"Hello World".to_vec();
                     let default_headers = vec![
                         (String::from(":status"), String::from("200")),
@@ -108,6 +110,10 @@ impl HttpServer for Http3TestServer {
                                             (
                                                 String::from("cache-control"),
                                                 String::from("no-cache"),
+                                            ),
+                                            (
+                                                String::from("content-type"),
+                                                String::from("text/plain")
                                             ),
                                             (
                                                 String::from("content-length"),
@@ -198,6 +204,10 @@ impl HttpServer for Http3TestServer {
                                                 String::from("cache-control"),
                                                 String::from("no-cache"),
                                             ),
+                                            (
+                                                String::from("content-type"),
+                                                String::from("text/plain")
+                                            ),
                                             (String::from("content-length"), 4000.to_string()),
                                         ],
                                         &vec![b'a'; 8000],
@@ -215,6 +225,10 @@ impl HttpServer for Http3TestServer {
                                                 (
                                                     String::from("cache-control"),
                                                     String::from("no-cache"),
+                                                ),
+                                                (
+                                                    String::from("content-type"),
+                                                    String::from("text/plain")
                                                 ),
                                                 (String::from("content-length"), v.to_string()),
                                             ],
