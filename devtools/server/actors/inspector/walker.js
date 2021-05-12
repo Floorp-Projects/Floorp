@@ -2472,6 +2472,10 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
   },
 
   onFrameLoad: function({ window, isTopLevel }) {
+    // By the time we receive the DOMContentLoaded event, we might have been destroyed
+    if (this._destroyed) {
+      return;
+    }
     const { readyState } = window.document;
     if (readyState != "interactive" && readyState != "complete") {
       // The document is not loaded, so we want to register to fire again when the
