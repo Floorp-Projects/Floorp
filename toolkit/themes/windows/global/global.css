@@ -73,7 +73,15 @@
 
 @media (-moz-windows-default-theme) {
   :root {
-    --arrowpanel-border-color: hsla(210,4%,10%,.2);
+    --default-arrowpanel-border-color: hsla(210,4%,10%,.2);
+  }
+}
+
+@media (prefers-contrast) {
+  :root {
+    /* In high-contrast mode on Windows, ThreeDLightShadow provides more
+       contrast than ThreeDShadow. See bug 1022564. */
+    --default-arrowpanel-border-color: ThreeDLightShadow;
   }
 }
 
