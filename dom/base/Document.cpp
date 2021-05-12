@@ -1950,12 +1950,6 @@ void Document::LoadEventFired() {
   }
 }
 
-static uint32_t CalcPercentage(TimeDuration aSubTimer,
-                               TimeDuration aTotalTimer) {
-  return static_cast<uint32_t>(100.0 * aSubTimer.ToMilliseconds() /
-                               aTotalTimer.ToMilliseconds());
-}
-
 void Document::AccumulatePageLoadTelemetry() {
   // Interested only in top level documents for real websites that are in the
   // foreground.
@@ -2062,44 +2056,40 @@ void Document::AccumulateJSTelemetry() {
   JSAutoRealm ar(cx, globalObject);
   JS::JSTimers timers = JS::GetJSTimers(cx);
 
-  TimeDuration totalExecutionTime = timers.executionTime;
-  TimeDuration totalDelazificationTime = timers.delazificationTime;
-  TimeDuration totalXDREncodingTime = timers.xdrEncodingTime;
-  TimeDuration totalBaselineCompileTime = timers.baselineCompileTime;
-
-  if (totalExecutionTime.IsZero()) {
-    return;
-  }
-
-  if (!totalDelazificationTime.IsZero()) {
+  if (!timers.executionTime.IsZero()) {
     Telemetry::Accumulate(
-        Telemetry::JS_DELAZIFICATION_PROPORTION,
-        CalcPercentage(totalDelazificationTime, totalExecutionTime));
+        Telemetry::JS_PAGELOAD_EXECUTION_MS,
+        static_cast<uint32_t>(timers.executionTime.ToMilliseconds()));
   }
 
-  if (!totalXDREncodingTime.IsZero()) {
+  if (!timers.delazificationTime.IsZero()) {
     Telemetry::Accumulate(
-        Telemetry::JS_XDR_ENCODING_PROPORTION,
-        CalcPercentage(totalXDREncodingTime, totalExecutionTime));
+        Telemetry::JS_PAGELOAD_DELAZIFICATION_MS,
+        static_cast<uint32_t>(timers.delazificationTime.ToMilliseconds()));
   }
 
-  if (!totalBaselineCompileTime.IsZero()) {
+  if (!timers.xdrEncodingTime.IsZero()) {
     Telemetry::Accumulate(
-        Telemetry::JS_BASELINE_COMPILE_PROPORTION,
-        CalcPercentage(totalBaselineCompileTime, totalExecutionTime));
+        Telemetry::JS_PAGELOAD_XDR_ENCODING_MS,
+        static_cast<uint32_t>(timers.xdrEncodingTime.ToMilliseconds()));
   }
 
-  if (GetNavigationTiming()) {
-    TimeStamp loadEventStart =
-        GetNavigationTiming()->GetLoadEventStartTimeStamp();
-    TimeStamp navigationStart =
-        GetNavigationTiming()->GetNavigationStartTimeStamp();
+  if (!timers.baselineCompileTime.IsZero()) {
+    Telemetry::Accumulate(
+        Telemetry::JS_PAGELOAD_BASELINE_COMPILE_MS,
+        static_cast<uint32_t>(timers.baselineCompileTime.ToMilliseconds()));
+  }
 
-    if (loadEventStart && navigationStart) {
-      TimeDuration pageLoadTime = loadEventStart - navigationStart;
-      Telemetry::Accumulate(Telemetry::JS_EXECUTION_PROPORTION,
-                            CalcPercentage(totalExecutionTime, pageLoadTime));
-    }
+  if (!timers.gcTime.IsZero()) {
+    Telemetry::Accumulate(
+        Telemetry::JS_PAGELOAD_GC_MS,
+        static_cast<uint32_t>(timers.gcTime.ToMilliseconds()));
+  }
+
+  if (!timers.protectTime.IsZero()) {
+    Telemetry::Accumulate(
+        Telemetry::JS_PAGELOAD_PROTECT_MS,
+        static_cast<uint32_t>(timers.protectTime.ToMilliseconds()));
   }
 }
 
