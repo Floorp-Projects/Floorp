@@ -43,7 +43,6 @@ DOM4_MSG_DEF(OperationError, "The operation failed for an operation-specific rea
 /* SVG DOM errors from http://www.w3.org/TR/SVG11/svgdom.html */
 
 DOM4_MSG_DEF(TypeError, "Unknown or invalid type", NS_ERROR_DOM_SVG_WRONG_TYPE_ERR)
-DOM4_MSG_DEF(InvalidStateError, "The matrix could not be computed", NS_ERROR_DOM_SVG_MATRIX_NOT_INVERTABLE)
 
 /* XPath errors from http://www.w3.org/TR/DOM-Level-3-XPath/ */
 
