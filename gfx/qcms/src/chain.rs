@@ -873,7 +873,7 @@ fn modular_transform_create_output(out: &Profile) -> Option<Vec<Box<dyn ModularT
         (&out.redTRC, &out.greenTRC, &out.blueTRC)
     {
         let mut transform = Box::new(MatrixTransform::default());
-        transform.matrix = build_colorant_matrix(out).invert().unwrap();
+        transform.matrix = build_colorant_matrix(out).invert()?;
         transforms.push(transform);
 
         let mut transform = Box::new(MatrixTransform::default());
