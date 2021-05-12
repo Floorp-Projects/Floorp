@@ -5779,6 +5779,15 @@
   value: false
   mirror: always
 
+# Whether the Parent process allocates and shares memory with all content
+# processes. This is mirrored once, as the parent process will do this
+# allocation early on.
+- name: javascript.options.self_hosted.use_shared_memory
+  type: bool
+  value: true
+  mirror: always  # LoadStartupJSPrefs
+  do_not_use_directly: true
+
 # Streams API.
 - name: javascript.options.streams
   type: RelaxedAtomicBool
