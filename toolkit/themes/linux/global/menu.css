@@ -51,22 +51,24 @@ menucaption[disabled="true"] {
   color: GrayText;
 }
 
+menubar {
+  color: -moz-menubartext;
+}
+
 menubar > menu {
   padding: 0 4px;
-  color: -moz-menubartext;
 }
 
 menubar:-moz-lwtheme > menu {
   text-shadow: none;
 }
 
-menubar:-moz-lwtheme > menu:not([open="true"]) {
-  color: inherit;
+menubar:-moz-lwtheme > menu:not([open]) {
   text-shadow: inherit;
 }
 
-menubar > menu[_moz-menuactive="true"]:not([open], [disabled="true"], :-moz-lwtheme) {
-  color: -moz-menubartext;
+menubar > menu:not([open]) {
+  color: inherit;
 }
 
 menubar > menu[open] {
