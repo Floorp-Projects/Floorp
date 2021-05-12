@@ -55,7 +55,7 @@ void RestoreTabContentObserver::Shutdown() {
   gRestoreTabContentObserver = nullptr;
 
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
-  if (NS_WARN_IF(!obs)) {
+  if (!obs) {
     return;
   }
 
