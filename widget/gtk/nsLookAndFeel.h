@@ -108,6 +108,8 @@ class nsLookAndFeel final : public nsXPLookAndFeel {
     nscolor mMozScrollbar = kWhite;
     nscolor mMozColHeaderText = kBlack;
     nscolor mMozColHeaderHoverText = kBlack;
+    nscolor mTitlebarText = kBlack;
+    nscolor mTitlebarInactiveText = kBlack;
     nscolor mThemedScrollbar = kWhite;
     nscolor mThemedScrollbarInactive = kWhite;
     nscolor mThemedScrollbarThumb = kBlack;
