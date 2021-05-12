@@ -15,6 +15,7 @@
 add_task(async function test_cookies() {
   await SpecialPowers.pushPrefEnv({set: [
     ["extensions.allowPrivateBrowsingByDefault", false],
+    ["dom.security.https_first_pbm", false],
   ]});
 
   async function background() {

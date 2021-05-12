@@ -190,6 +190,8 @@ add_task(async function download_cookies_without_host_permissions() {
 // Checks that (sameSite) cookies from private browsing are included.
 add_task(async function download_cookies_in_perma_private_browsing() {
   Services.prefs.setBoolPref("browser.privatebrowsing.autostart", true);
+  Services.prefs.setBoolPref("dom.security.https_first_pbm", false);
+
   let extension = createDownloadTestExtension(["*://example.net/*"]);
   await extension.startup();
 
@@ -213,4 +215,5 @@ add_task(async function download_cookies_in_perma_private_browsing() {
   await extension.unload();
   await contentPage.close();
   Services.prefs.clearUserPref("browser.privatebrowsing.autostart");
+  Services.prefs.clearUserPref("dom.security.https_first_pbm");
 });
