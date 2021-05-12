@@ -1046,25 +1046,14 @@ static void OnLargeAllocationFailureCallback() {
   r->BlockUntilDone();
 }
 
+// Usually this is used through nsIPlatformInfo. However, being able to query
+// this interface on all threads risk triggering some main-thread assertions
+// which is not guaranteed by the callers of GetBuildId.
+extern const char gToolkitBuildID[];
+
 bool mozilla::GetBuildId(JS::BuildIdCharVector* aBuildID) {
-  nsCOMPtr<nsIPlatformInfo> info = do_GetService("@mozilla.org/xre/app-info;1");
-  if (!info) {
-    return false;
-  }
-
-  nsCString buildID;
-  nsresult rv = info->GetPlatformBuildID(buildID);
-  NS_ENSURE_SUCCESS(rv, false);
-
-  if (!aBuildID->resize(buildID.Length())) {
-    return false;
-  }
-
-  for (size_t i = 0; i < buildID.Length(); i++) {
-    (*aBuildID)[i] = buildID[i];
-  }
-
-  return true;
+  size_t length = std::char_traits<char>::length(gToolkitBuildID);
+  return aBuildID->append(gToolkitBuildID, length);
 }
 
 size_t XPCJSRuntime::SizeOfIncludingThis(MallocSizeOf mallocSizeOf) {
