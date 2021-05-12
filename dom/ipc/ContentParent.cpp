@@ -2512,6 +2512,12 @@ bool ContentParent::BeginSubprocessLaunch(ProcessPriority aPriority) {
   }
   mPrefSerializer->AddSharedPrefCmdLineArgs(*mSubprocess, extraArgs);
 
+  // The JS engine does some computation during the initialization which can be
+  // shared across processes. We add command line arguments to pass a file
+  // handle and its content length, to minimize the startup time of content
+  // processes.
+  ::mozilla::ipc::ExportSharedJSInit(*mSubprocess, extraArgs);
+
   // Register ContentParent as an observer for changes to any pref
   // whose prefix matches the empty string, i.e. all of them.  The
   // observation starts here in order to capture pref updates that

@@ -11,6 +11,8 @@
 #include "mozilla/UniquePtrExtensions.h"
 #include "nsPrintfCString.h"
 
+#include "XPCSelfHostedShmem.h"
+
 namespace mozilla {
 namespace ipc {
 
@@ -205,6 +207,112 @@ const FileDescriptor& SharedPreferenceDeserializer::GetPrefMapHandle() const {
   MOZ_ASSERT(mPrefMapHandle.isSome());
 
   return mPrefMapHandle.ref();
+}
+
+#ifdef XP_UNIX
+// On Unix, file descriptors are per-process. This value is used when mapping
+// a parent process handle to a content process handle.
+static const int kJSInitFileDescriptor = 11;
+#endif
+
+void ExportSharedJSInit(mozilla::ipc::GeckoChildProcessHost& procHost,
+                        std::vector<std::string>& aExtraOpts) {
+#ifdef ANDROID
+  // The code to support Android is added in a follow-up patch.
+  return;
+#else
+  // Formats a pointer or pointer-sized-integer as a string suitable for passing
+  // in an arguments list.
+  auto formatPtrArg = [](auto arg) {
+    return nsPrintfCString("%zu", uintptr_t(arg));
+  };
+
+  auto& shmem = xpc::SelfHostedShmem::GetSingleton();
+  const mozilla::UniqueFileHandle& uniqHandle = shmem.Handle();
+  size_t len = shmem.Content().Length();
+
+  // If the file is not found or the content is empty, then we would start the
+  // content process without this optimization.
+  if (!uniqHandle || !len) {
+    return;
+  }
+
+  mozilla::detail::FileHandleType handle = uniqHandle.get();
+
+  // command line: -jsInit [handle] length
+  aExtraOpts.push_back("-jsInit");
+
+#  if defined(XP_WIN)
+  // Record the handle as to-be-shared, and pass it via a command flag.
+  procHost.AddHandleToShare(HANDLE(handle));
+  aExtraOpts.push_back(formatPtrArg(HANDLE(handle)).get());
+#  else
+  // In contrast, Unix fds are per-process. So remap the fd to a fixed one that
+  // will be used in the child.
+  // XXX: bug 1440207 is about improving how fixed fds are used.
+  //
+  // Note: on Android, AddFdToRemap() sets up the fd to be passed via a Parcel,
+  // and the fixed fd isn't used. However, we still need to mark it for
+  // remapping so it doesn't get closed in the child.
+  procHost.AddFdToRemap(handle, kJSInitFileDescriptor);
+#  endif
+
+  // Pass the lengths via command line flags.
+  aExtraOpts.push_back(formatPtrArg(len).get());
+#endif
+}
+
+bool ImportSharedJSInit(char* aJsInitHandleStr, char* aJsInitLenStr) {
+  // This is an optimization, and as such we can safely recover if the command
+  // line argument are not provided.
+  if (!aJsInitLenStr) {
+    return true;
+  }
+
+#ifdef XP_WIN
+  if (!aJsInitHandleStr) {
+    return true;
+  }
+#endif
+
+  // Parses an arg containing a pointer-sized-integer.
+  auto parseUIntPtrArg = [](char*& aArg) {
+    // ContentParent uses %zu to print a word-sized unsigned integer. So even
+    // though strtoull() returns an unsigned long long int, it will fit in a
+    // uintptr_t.
+    return uintptr_t(strtoull(aArg, &aArg, 10));
+  };
+
+#ifdef XP_WIN
+  auto parseHandleArg = [&](char*& aArg) {
+    return HANDLE(parseUIntPtrArg(aArg));
+  };
+
+  base::SharedMemoryHandle handle(parseHandleArg(aJsInitHandleStr));
+  if (aJsInitHandleStr[0] != '\0') {
+    return false;
+  }
+#endif
+
+  size_t len = parseUIntPtrArg(aJsInitLenStr);
+  if (aJsInitLenStr[0] != '\0') {
+    return false;
+  }
+
+#ifdef XP_UNIX
+  auto handle = base::FileDescriptor(kJSInitFileDescriptor,
+                                     /* auto_close */ true);
+#endif
+
+  // Initialize the shared memory with the file handle and size of the content
+  // of the self-hosted Xdr.
+  auto& shmem = xpc::SelfHostedShmem::GetSingleton();
+  if (!shmem.InitFromChild(handle, len)) {
+    NS_ERROR("failed to open shared memory in the child");
+    return false;
+  }
+
+  return true;
 }
 
 }  // namespace ipc

@@ -99,6 +99,7 @@
 
 #include "jsapi.h"
 #include "js/Initialization.h"
+#include "XPCSelfHostedShmem.h"
 
 #include "gfxPlatform.h"
 
@@ -473,6 +474,7 @@ NS_InitXPCOM(nsIServiceManager** aResult, nsIFile* aBinDirectory,
   // The memory reporter manager is up and running -- register our reporters.
   RegisterStrongMemoryReporter(new ICUReporter());
   RegisterStrongMemoryReporter(new OggReporter());
+  xpc::SelfHostedShmem::GetSingleton().InitMemoryReporter();
 
   mozilla::Telemetry::Init();
 
@@ -730,6 +732,9 @@ nsresult ShutdownXPCOM(nsIServiceManager* aServMgr) {
     JS_ShutDown();
     sInitializedJS = false;
   }
+
+  // Release shared memory which might be borrowed by the JS engine.
+  xpc::SelfHostedShmem::Shutdown();
 
   // After all threads have been joined and the component manager has been shut
   // down, any remaining objects that could be holding NSS resources (should)
