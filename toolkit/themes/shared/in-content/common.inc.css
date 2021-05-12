@@ -189,11 +189,16 @@
     scrollbar-color: rgba(249,249,250,.4) rgba(20,20,25,.3);
   }
 
-  :root[dialogroot],
-  /* Also need this on dialog :hosts, or the rule above will override the
-   * value for this custom property again in the shadow DOM. */
-  :host(dialog) {
-    --in-content-page-background: #42414d;
+  /* For dialogs, use a different background colour. We don't do
+   * this in High Contrast mode, as we should be using system colours then.
+   */
+  @media not (prefers-contrast) {
+    :root[dialogroot],
+    /* Also need this on dialog :hosts, or the rule above will override the
+     * value for this custom property again in the shadow DOM. */
+    :host(dialog) {
+      --in-content-page-background: #42414d;
+    }
   }
 }
 

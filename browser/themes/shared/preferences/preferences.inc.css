@@ -588,8 +588,10 @@ checkbox {
 }
 
 @media (-moz-toolbar-prefers-color-scheme: dark) {
-  .dialogBox {
-    --in-content-page-background: #42414d;
+  @media not (prefers-contrast) {
+    .dialogBox {
+      --in-content-page-background: #42414d;
+    }
   }
 }
 
