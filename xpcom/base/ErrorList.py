@@ -1047,14 +1047,6 @@ with modules["IPC"]:
 
 
 # =======================================================================
-# 29: NS_ERROR_MODULE_SVG
-# =======================================================================
-with modules["SVG"]:
-    # SVG DOM error codes from http://www.w3.org/TR/SVG11/svgdom.html
-    errors["NS_ERROR_DOM_SVG_WRONG_TYPE_ERR"] = FAILURE(0)
-
-
-# =======================================================================
 # 30: NS_ERROR_MODULE_STORAGE
 # =======================================================================
 with modules["STORAGE"]:
