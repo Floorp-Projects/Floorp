@@ -1117,6 +1117,8 @@ class MozPromise : public MozPromiseBase {
     }
   }
 
+  bool IsResolved() const { return mValue.IsResolve(); }
+
  protected:
   bool IsPending() const { return mValue.IsNothing(); }
 

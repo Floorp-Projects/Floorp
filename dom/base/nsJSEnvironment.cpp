@@ -1611,30 +1611,34 @@ bool GCRunnerFired(TimeStamp aDeadline, void* /* aClosure */) {
     case GCRunnerAction::MajorGC: {
       RefPtr<MayGCPromise> mbPromise = MayGCNow(step.mReason);
       if (mbPromise) {
-        nsJSContext::KillGCRunner();
-        JS::GCReason reason = step.mReason;
-        mbPromise->Then(
-            GetMainThreadSerialEventTarget(), __func__,
-            [reason](bool aIgnored) {
-              sScheduler.NoteReadyForMajorGC(reason);
-              if (sGCRunner) {
-                // Cancel the current runner so we can re-create it with a 0
-                // delay.
-                sGCRunner->Cancel();
-              }
-              // Continue in idle time.
-              sGCRunner = IdleTaskRunner::Create(
-                  [](TimeStamp aDeadline) {
-                    return GCRunnerFired(aDeadline, nullptr);
-                  },
-                  "GCRunnerFired", 0,
-                  StaticPrefs::javascript_options_gc_delay_interslice(),
-                  int64_t(
-                      sScheduler.mActiveIntersliceGCBudget.ToMilliseconds()),
-                  true, [] { return sShuttingDown; });
-            },
-            [](mozilla::ipc::ResponseRejectReason r) {});
-        return true;
+        // Only use the promise if it's not resolved yet, otherwise fall through
+        // and begin the GC in the current idle time with our current deadline.
+        if (!mbPromise->IsResolved()) {
+          nsJSContext::KillGCRunner();
+          JS::GCReason reason = step.mReason;
+          mbPromise->Then(
+              GetMainThreadSerialEventTarget(), __func__,
+              [reason](bool aIgnored) {
+                sScheduler.NoteReadyForMajorGC(reason);
+                if (sGCRunner) {
+                  // Cancel the current runner so we can re-create it with a 0
+                  // delay.
+                  sGCRunner->Cancel();
+                }
+                // Continue in idle time.
+                sGCRunner = IdleTaskRunner::Create(
+                    [](TimeStamp aDeadline) {
+                      return GCRunnerFired(aDeadline, nullptr);
+                    },
+                    "GCRunnerFired", 0,
+                    StaticPrefs::javascript_options_gc_delay_interslice(),
+                    int64_t(
+                        sScheduler.mActiveIntersliceGCBudget.ToMilliseconds()),
+                    true, [] { return sShuttingDown; });
+              },
+              [](mozilla::ipc::ResponseRejectReason r) {});
+          return true;
+        }
       }
       break;
     }
