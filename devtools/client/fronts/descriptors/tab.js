@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
+const Services = require("Services");
 const { tabDescriptorSpec } = require("devtools/shared/specs/descriptors/tab");
 
 loader.lazyRequireGetter(
@@ -24,6 +25,9 @@ const {
 const {
   DescriptorMixin,
 } = require("devtools/client/fronts/descriptors/descriptor-mixin");
+
+const SERVER_TARGET_SWITCHING_ENABLED_PREF =
+  "devtools.target-switching.server.enabled";
 
 /**
  * DescriptorFront for tab targets.
@@ -88,6 +92,16 @@ class TabDescriptorFront extends DescriptorMixin(
     // but also ensure cleaning up the client and everything on tab closing.
     // (this flag is handled by DescriptorMixin)
     this.shouldCloseClient = true;
+
+    // When the target is created from the server side,
+    // it is not created via TabDescriptor.getTarget.
+    // Instead, it is retrieved by the TargetCommand which
+    // will call TabDescriptor.setTarget from TargetCommand.onTargetAvailable
+    if (this.isServerTargetSwitchingEnabled()) {
+      this._targetFrontPromise = new Promise(
+        r => (this._resolveTargetFrontPromise = r)
+      );
+    }
   }
 
   get isLocalTab() {
@@ -109,6 +123,14 @@ class TabDescriptorFront extends DescriptorMixin(
       "TabRemotenessChange",
       this._handleTabEvent
     );
+  }
+
+  isServerTargetSwitchingEnabled() {
+    const isEnabled = Services.prefs.getBoolPref(
+      SERVER_TARGET_SWITCHING_ENABLED_PREF,
+      false
+    );
+    return isEnabled && this.isLocalTab;
   }
 
   get isZombieTab() {
@@ -198,6 +220,10 @@ class TabDescriptorFront extends DescriptorMixin(
     targetFront.setDescriptor(this);
 
     targetFront.on("target-destroyed", this._onTargetDestroyed);
+
+    if (this.isServerTargetSwitchingEnabled()) {
+      this._resolveTargetFrontPromise(targetFront);
+    }
   }
 
   async getTarget() {
