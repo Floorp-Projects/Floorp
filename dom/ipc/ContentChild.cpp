@@ -118,6 +118,7 @@
 #include "nsBaseDragService.h"
 #include "nsDocShellLoadTypes.h"
 #include "nsFocusManager.h"
+#include "nsHttpHandler.h"
 #include "nsIConsoleService.h"
 #include "nsIInputStreamChannel.h"
 #include "nsILoadGroup.h"
@@ -2589,7 +2590,13 @@ mozilla::ipc::IPCResult ContentChild::RecvRemoteType(
 }
 
 // A method to initialize anything we need during the preallocation phase
-void ContentChild::PreallocInit() { EnsureNSSInitializedChromeOrContent(); }
+void ContentChild::PreallocInit() {
+  EnsureNSSInitializedChromeOrContent();
+
+  // SetAcceptLanguages() needs to read localized strings (file access),
+  // which is slow, so do this in prealloc
+  nsHttpHandler::PresetAcceptLanguages();
+}
 
 // Call RemoteTypePrefix() on the result to remove URIs if you want to use this
 // for telemetry.
