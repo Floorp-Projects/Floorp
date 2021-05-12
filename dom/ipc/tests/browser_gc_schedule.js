@@ -84,9 +84,8 @@ async function resolveInOrder(promisesAndStates) {
 
 // Check that the list of events returned by resolveInOrder are in a
 // sensible order.
-function checkOneAtATime(events, expectTabsCompleted) {
+function checkOneAtATime(events) {
   var cur = null;
-  var tabsCompleted = [];
   var lastWhen = null;
 
   info("Checking order of events");
@@ -109,23 +108,22 @@ function checkOneAtATime(events, expectTabsCompleted) {
       cur = e.tab;
     } else {
       is(e.tab, cur, `GC can end on tab ${e.tab}`);
-      tabsCompleted.push(e.tab);
       cur = null;
     }
   }
 
   is(cur, null, "No GC left running");
+}
+
+function checkAllCompleted(events, expectTabsCompleted) {
+  var tabsCompleted = events.filter(e => e.state === "end").map(e => e.tab);
+
   for (var t of expectTabsCompleted) {
     ok(tabsCompleted.includes(t), `Tab ${t} did a GC`);
   }
 }
 
-add_task(async function gcOneAtATime() {
-  SpecialPowers.pushPrefEnv({
-    set: [["javascript.options.concurrent_multiprocess_gcs.max", 1]],
-  });
-
-  const num_tabs = 12;
+async function setupTabs(num_tabs) {
   var tabs = [];
   var pids = [];
 
@@ -157,32 +155,101 @@ add_task(async function gcOneAtATime() {
     pids.push(tab_pid);
   }
 
+  return tabs;
+}
+
+function doContentRunNextCollectionTimer() {
+  content.windowUtils.pokeGC();
+  content.windowUtils.runNextCollectorTimer();
+}
+
+function startNextCollection(
+  tab,
+  tab_num,
+  waits,
+  fn = doContentRunNextCollectionTimer
+) {
+  var browser = tab.linkedBrowser;
+
+  // Finish any currently running GC.
+  SpecialPowers.spawn(browser, [], () => {
+    SpecialPowers.Cu.getJSTestingFunctions().finishgc();
+  });
+
+  var waitBegin = SpecialPowers.spawn(browser, [], waitForGCBegin);
+  var waitEnd = SpecialPowers.spawn(browser, [], waitForGCEnd);
+  waits.push({ promise: waitBegin, tab: tab_num, state: "begin" });
+  waits.push({ promise: waitEnd, tab: tab_num, state: "end" });
+
+  SpecialPowers.spawn(browser, [], fn);
+
+  // Return these so that the abort GC test can wait for the begin.
+  return { waitBegin, waitEnd };
+}
+
+add_task(async function gcOneAtATime() {
+  SpecialPowers.pushPrefEnv({
+    set: [["javascript.options.concurrent_multiprocess_gcs.max", 1]],
+  });
+
+  const num_tabs = 12;
+  var tabs = await setupTabs(num_tabs);
+
   info("Tabs ready, Asking for GCs");
   var waits = [];
-  for (i = 0; i < num_tabs; i++) {
-    var browser = tabs[i].linkedBrowser;
-
-    // Finish any currently running GC.
-    SpecialPowers.spawn(browser, [], () => {
-      SpecialPowers.Cu.getJSTestingFunctions().finishgc();
-    });
-
-    var waitBegin = SpecialPowers.spawn(browser, [], waitForGCBegin);
-    var waitEnd = SpecialPowers.spawn(browser, [], waitForGCEnd);
-    waits.push({ promise: waitBegin, tab: i, state: "begin" });
-    waits.push({ promise: waitEnd, tab: i, state: "end" });
-
-    SpecialPowers.spawn(browser, [], () => {
-      content.windowUtils.pokeGC();
-      content.windowUtils.runNextCollectorTimer();
-    });
+  for (var i = 0; i < num_tabs; i++) {
+    startNextCollection(tabs[i], i, waits);
   }
 
   let order = await resolveInOrder(waits);
   // We need these in the order they actually occurred, so far that's how
   // they're returned, but we'll sort them to be sure.
   order.sort((e1, e2) => e1.when - e2.when);
-  checkOneAtATime(
+  checkOneAtATime(order);
+  checkAllCompleted(
+    order,
+    Array.from({ length: num_tabs }, (_, n) => n)
+  );
+
+  for (var tab of tabs) {
+    BrowserTestUtils.removeTab(tab);
+  }
+
+  SpecialPowers.popPrefEnv();
+});
+
+add_task(async function gcAbort() {
+  SpecialPowers.pushPrefEnv({
+    set: [["javascript.options.concurrent_multiprocess_gcs.max", 1]],
+  });
+
+  const num_tabs = 2;
+  var tabs = await setupTabs(num_tabs);
+
+  info("Tabs ready, Asking for GCs");
+  var waits = [];
+
+  var tab0Waits = startNextCollection(tabs[0], 0, waits, () => {
+    SpecialPowers.Cu.getJSTestingFunctions().gcslice(1);
+  });
+  await tab0Waits.waitBegin;
+
+  // Tab 0 has started a GC. Now we schedule a GC in tab one.  It must not
+  // begin yet (but we don't check that, gcOneAtATime is assumed to check
+  // this.
+  startNextCollection(tabs[1], 1, waits);
+
+  // Request that tab 0 abort, this test checks that tab 1 can now begin.
+  SpecialPowers.spawn(tabs[0].linkedBrowser, [], () => {
+    SpecialPowers.Cu.getJSTestingFunctions().abortgc();
+  });
+
+  let order = await resolveInOrder(waits);
+  // We need these in the order they actually occurred, so far that's how
+  // they're returned, but we'll sort them to be sure.
+  order.sort((e1, e2) => e1.when - e2.when);
+  checkOneAtATime(order);
+  checkAllCompleted(
     order,
     Array.from({ length: num_tabs }, (_, n) => n)
   );
