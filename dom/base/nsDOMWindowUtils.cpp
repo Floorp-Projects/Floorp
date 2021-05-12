@@ -1330,6 +1330,16 @@ nsDOMWindowUtils::RunNextCollectorTimer() {
 }
 
 NS_IMETHODIMP
+nsDOMWindowUtils::PokeGC() {
+  // This is used for debugging a case where we want nsJSEnvironment to defer to
+  // the parent process for GC scheduling; we need to use one of a few
+  // GCReasons to get that behaviour, PAGE_HIDE will do.
+  nsJSContext::PokeGC(JS::GCReason::PAGE_HIDE, nullptr);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDOMWindowUtils::SendSimpleGestureEvent(const nsAString& aType, float aX,
                                          float aY, uint32_t aDirection,
                                          double aDelta, int32_t aModifiers,
