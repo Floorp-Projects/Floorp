@@ -94,8 +94,6 @@ definitions:
 
             - `uuid`: Record a UUID v4.
 
-            - `jwe`: Record a [JWE](https://tools.ietf.org/html/rfc7516) value.
-
             - `memory_distribution`: A histogram for recording memory usage
               values. Additional properties: `memory_unit`.
 
@@ -104,6 +102,11 @@ definitions:
               only allowed for metrics coming from GeckoView. Additional
               properties: `range_min`, `range_max`, `bucket_count`,
               `histogram_type`.
+
+            - `rate`: Used to record the rate something happens relative to some
+              other thing. For example, the number of HTTP connections that
+              experience an error relative to the number of total HTTP
+              connections made.
 
             - Additionally, labeled versions of many metric types are supported.
               These support the `labels`_ parameter, allowing multiple instances
@@ -177,7 +180,12 @@ definitions:
           in any ping.)
         type: array
         items:
-          $ref: "#/definitions/kebab_case"
+          anyOf:
+            - $ref: "#/definitions/kebab_case"
+            # Allow "special" ping names that start with "glean_" used
+            # internally by the Glean SDK
+            - type: string
+              pattern: "^glean_.*$"
         default:
           - default
 
@@ -318,7 +326,7 @@ definitions:
             uniqueItems: true
             items:
               $ref: "#/definitions/labeled_metric_id"
-            maxItems: 16
+            maxItems: 100
           - type: "null"
 
       extra_keys:
@@ -411,16 +419,6 @@ definitions:
         type: array
         items:
           type: string
-
-      decrypted_name:
-        title: Decrypted name
-        description: |
-          Name of the column where to persist the decrypted value
-          stored in the JWE after processing.
-
-          Required when `type`_ is `jwe`.
-        type: string
-        pattern: "^[a-z_][a-z0-9_]{0,29}(\\.[a-z_][a-z0-9_]{0,29})*$"
 
       data_sensitivity:
         title: The level of data sensitivity
@@ -615,9 +613,10 @@ additionalProperties:
               const: jwe
         then:
           required:
-            - decrypted_name
+            - jwe_support_was_removed
           description: |
-            `jwe` is missing required parameter `decrypted_name`.
+            JWE support was removed.
+            If you require this send an email to glean-team@mozilla.com.
       - if:
           not:
             properties:
