@@ -111,6 +111,7 @@ var XPCOMUtils = {
    */
   overrideScriptLoaderForTests(aObject) {
     Cu.crashIfNotInAutomation();
+    delete this._scriptloader;
     this._scriptloader = aObject;
   },
 
