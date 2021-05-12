@@ -611,6 +611,17 @@ class TextInputDelegateTest : BaseSessionTest() {
                                  ic, "aab", 3)
     }
 
+    // Test for setting large text on text box.
+    @WithDisplay(width = 512, height = 512) // Child process updates require having a display.
+    @Test fun inputConnection_largeText() {
+        val content = (1..1024000).map {
+            ('a'..'z').random()
+        }.joinToString("")
+        setupContent(content)
+        val ic = mainSession.textInput.onCreateInputConnection(EditorInfo())!!
+        assertText("Can set large initial text", ic, content, /* checkGecko */ false)
+    }
+
     // Bug 1133802, duplication when setting the same composing text more than once.
     @Ignore // Disable for frequent failures.
     @WithDisplay(width = 512, height = 512) // Child process updates require having a display.
