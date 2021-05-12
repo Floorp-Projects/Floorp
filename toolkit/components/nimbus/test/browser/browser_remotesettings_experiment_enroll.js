@@ -36,7 +36,7 @@ add_task(async function setup() {
 add_task(async function test_experimentEnrollment() {
   // Need to randomize the slug so subsequent test runs don't skip enrollment
   // due to a conflicting slug
-  const recipe = ExperimentFakes.recipe("foo" + Date.now(), {
+  const recipe = ExperimentFakes.recipe("foo" + Math.random(), {
     bucketConfig: {
       start: 0,
       // Make sure the experiment enrolls
@@ -77,6 +77,7 @@ add_task(async function test_experimentEnrollment() {
   });
 
   Assert.ok(!experiment.active, "Experiment is no longer active");
+  ExperimentAPI._store._deleteForTests(recipe.slug);
 });
 
 add_task(async function test_experimentEnrollment_startup() {
