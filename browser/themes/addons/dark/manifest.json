@@ -56,7 +56,7 @@
       "checkbox_checked_background_active": "rgb(170, 242, 255)",
       "error_text_color": "rgb(255, 154, 162)",
       "input_background": "#42414D",
-      "input_color": "#BFBFC9",
+      "input_color": "rgb(251,251,254)",
       "input_border": "#8f8f9d",
       "input_border_error": "rgb(255, 132, 138)",
       "zoom_controls": "rgb(74,74,85)",
