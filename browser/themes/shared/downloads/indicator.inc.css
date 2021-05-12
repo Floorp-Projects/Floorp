@@ -149,14 +149,15 @@ toolbarpaletteitem > #downloads-button > .toolbarbutton-badge-stack > #downloads
 }
 
 #downloads-indicator-finish-image {
-  --anim-steps: 65;
+  --anim-frames: 26;
+  --anim-steps: calc(var(--anim-frames) + 100); /* Add 100 frames for doing the pause in the middle */
 
   fill: var(--toolbarbutton-icon-fill-attention);
   fill-opacity: 1;
   stroke: var(--toolbarbutton-icon-fill-attention);
 
   list-style-image: url("chrome://browser/skin/downloads/notification-finish-animation.svg");
-  width: calc(20px * (var(--anim-steps) + 1));
+  width: calc(20px * (var(--anim-frames) + 1));
   height: 20px;
 
   /* initial state for animation */
@@ -168,19 +169,29 @@ toolbarpaletteitem > #downloads-button > .toolbarbutton-badge-stack > #downloads
 
 #downloads-button[animate][notification="finish"] > .toolbarbutton-badge-stack > #downloads-indicator-finish-box > #downloads-indicator-finish-image {
   visibility: visible;
-  /* Upon changing the animation-duration below, please keep the
-     setTimeout() identical in indicator.js#_showNotification.
-  */
-  animation-name: downloadsButtonNotification;
+  animation-name: downloadsButtonFinishedNotification;
   animation-duration: calc(var(--anim-steps) * 16.667ms);
-  animation-timing-function: steps(var(--anim-steps));
 
   /* end state for animation: */
-  transform: translateX(calc(var(--anim-steps) * -20px));
+  transform: translateX(calc(var(--anim-frames) * -20px));
 }
 
 @keyframes downloadsButtonNotification {
   from {
     transform: translateX(0);
+  }
+}
+
+@keyframes downloadsButtonFinishedNotification {
+  from {
+    animation-timing-function: steps(18);
+    transform: translateX(0);
+  }
+  14.28% { /* 18th frame (18/126) */
+    transform: translateX(calc(18 * -20px));
+  }
+  93.65% { /* Wait 100 frames of time, but resume from 18th frame (118/126) */
+    animation-timing-function: steps(8);
+    transform: translateX(calc(18 * -20px));
   }
 }
