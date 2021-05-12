@@ -53,6 +53,11 @@ class ResourceCommand {
     this._existingLegacyListeners = new WeakMap();
     this._processingExistingResources = new Set();
 
+    // List of targetFront event listener unregistration functions. These are called when
+    // unwatching resources, so if a consumer starts watching resources again, we don't
+    // have listeners registered twice.
+    this._offTargetFrontListeners = [];
+
     this._notifyWatchers = this._notifyWatchers.bind(this);
     this._throttledNotifyWatchers = throttle(this._notifyWatchers, 100);
   }
@@ -269,6 +274,10 @@ class ResourceCommand {
     if (!this._watchTargetsPromise) {
       return;
     }
+
+    this._offTargetFrontListeners.forEach(off => off());
+    this._offTargetFrontListeners = [];
+
     this._watchTargetsPromise = null;
     this.targetCommand.unwatchTargets(
       this.targetCommand.ALL_TYPES,
@@ -321,7 +330,9 @@ class ResourceCommand {
       return;
     }
 
-    targetFront.on("will-navigate", () => this._onWillNavigate(targetFront));
+    const offWillNavigate = targetFront.on("will-navigate", () =>
+      this._onWillNavigate(targetFront)
+    );
 
     // If we are target switching, we already stop & start listening to all the
     // currently monitored resources.
@@ -343,17 +354,24 @@ class ResourceCommand {
     // We do call Watcher.watchResources, but the events are fired on the target.
     // That's because the Watcher runs in the parent process/main thread, while resources
     // are available from the target's process/thread.
-    targetFront.on(
+    const offResourceAvailable = targetFront.on(
       "resource-available-form",
       this._onResourceAvailable.bind(this, { targetFront })
     );
-    targetFront.on(
+    const offResourceUpdated = targetFront.on(
       "resource-updated-form",
       this._onResourceUpdated.bind(this, { targetFront })
     );
-    targetFront.on(
+    const offResourceDestroyed = targetFront.on(
       "resource-destroyed-form",
       this._onResourceDestroyed.bind(this, { targetFront })
+    );
+
+    this._offTargetFrontListeners.push(
+      offWillNavigate,
+      offResourceAvailable,
+      offResourceUpdated,
+      offResourceDestroyed
     );
 
     if (isTargetSwitching) {

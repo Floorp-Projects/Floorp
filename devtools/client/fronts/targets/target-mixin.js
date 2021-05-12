@@ -79,7 +79,7 @@ function TargetMixin(parentClass) {
         delete this._resourceCache[eventName];
       }
 
-      super.on(eventName, listener);
+      return super.on(eventName, listener);
     }
 
     /**
