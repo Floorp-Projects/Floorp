@@ -140,7 +140,12 @@ async function testCrossOriginNavigation() {
     "There is no duplicated event and only the 3 expected DOCUMENT_EVENT states"
   );
 
-  if (isFissionEnabled()) {
+  // followWindowGlobalLifeCycle will be true when enabling server side target switching,
+  // even when fission is off.
+  if (
+    isFissionEnabled() ||
+    targetCommand.targetFront.targetForm.followWindowGlobalLifeCycle
+  ) {
     is(
       documentEvents[0].shouldBeIgnoredAsRedundantWithTargetAvailable,
       true,

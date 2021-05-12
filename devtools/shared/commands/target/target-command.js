@@ -8,8 +8,6 @@ const Services = require("Services");
 const EventEmitter = require("devtools/shared/event-emitter");
 
 const BROWSERTOOLBOX_FISSION_ENABLED = "devtools.browsertoolbox.fission";
-const SERVER_TARGET_SWITCHING_ENABLED =
-  "devtools.target-switching.server.enabled";
 
 const {
   LegacyProcessesWatcher,
@@ -64,6 +62,12 @@ class TargetCommand extends EventEmitter {
       );
     }
 
+    if (this.isServerTargetSwitchingEnabled()) {
+      // XXX: Will only be used for local tab server side target switching if
+      // the first target is generated from the server.
+      this._onFirstTarget = new Promise(r => (this._resolveOnFirstTarget = r));
+    }
+
     // Reports if we have at least one listener for the given target type
     this._listenersStarted = new Set();
 
@@ -112,6 +116,15 @@ class TargetCommand extends EventEmitter {
       false;
     this.listenForServiceWorkers = false;
     this.destroyServiceWorkersOnNavigation = false;
+
+    // Tells us if we received the first top level target.
+    // If target switching is done on:
+    // * client side, this is done from startListening => _createFirstTarget
+    //                and pull from the Descriptor front.
+    // * server side, this is also done from startListening,
+    //                but we wait for the watcher actor to notify us about it
+    //                via target-available-form avent.
+    this._gotFirstTopLevelTarget = false;
   }
 
   // Called whenever a new Target front is available.
@@ -123,6 +136,8 @@ class TargetCommand extends EventEmitter {
     // targets which should always have the topLevelTarget flag initialized
     // on the server.
     const isTargetSwitching = targetFront.isTopLevel;
+    const isFirstTarget =
+      targetFront.isTopLevel && !this._gotFirstTopLevelTarget;
 
     if (this._targets.has(targetFront)) {
       // The top level target front can be reported via listProcesses in the
@@ -146,23 +161,30 @@ class TargetCommand extends EventEmitter {
     // i.e. the one that is passed to TargetCommand constructor.
     if (targetFront.isTopLevel) {
       // First report that all existing targets are destroyed
-      for (const target of this._targets) {
-        // We only consider the top level target to be switched
-        const isDestroyedTargetSwitching = target == this.targetFront;
-        this._onTargetDestroyed(target, {
-          isTargetSwitching: isDestroyedTargetSwitching,
-        });
-      }
-      // Stop listening to legacy listeners as we now have to listen
-      // on the new target.
-      this.stopListening({ onlyLegacy: true });
+      if (!isFirstTarget) {
+        for (const target of this._targets) {
+          // We only consider the top level target to be switched
+          const isDestroyedTargetSwitching = target == this.targetFront;
+          this._onTargetDestroyed(target, {
+            isTargetSwitching: isDestroyedTargetSwitching,
+          });
+        }
+        // Stop listening to legacy listeners as we now have to listen
+        // on the new target.
+        this.stopListening({ onlyLegacy: true });
 
-      // Clear the cached target list
-      this._targets.clear();
+        // Clear the cached target list
+        this._targets.clear();
+      }
 
       // Update the reference to the memoized top level target
       this.targetFront = targetFront;
       this.descriptorFront.setTarget(targetFront);
+
+      if (isFirstTarget && this.isServerTargetSwitchingEnabled()) {
+        this._gotFirstTopLevelTarget = true;
+        this._resolveOnFirstTarget();
+      }
     }
 
     // Map the descriptor typeName to a target type.
@@ -194,7 +216,7 @@ class TargetCommand extends EventEmitter {
 
     // Re-register the listeners as the top level target changed
     // and some targets are fetched from it
-    if (targetFront.isTopLevel) {
+    if (targetFront.isTopLevel && !isFirstTarget) {
       await this.startListening({ onlyLegacy: true });
     }
 
@@ -297,7 +319,7 @@ class TargetCommand extends EventEmitter {
     // In such case, if the browser toolbox fission pref is disabled, we don't want to use watchers
     // (even if traits on the server are enabled).
     if (
-      this.targetFront.isParentProcess &&
+      this.descriptorFront.isParent &&
       !Services.prefs.getBoolPref(BROWSERTOOLBOX_FISSION_ENABLED, false)
     ) {
       return false;
@@ -311,16 +333,6 @@ class TargetCommand extends EventEmitter {
     }
 
     return !!this.watcherFront;
-  }
-
-  isServerTargetSwitchingEnabled() {
-    if (typeof this._isServerTargetSwitchingEnabled == "undefined") {
-      this._isServerTargetSwitchingEnabled = Services.prefs.getBoolPref(
-        SERVER_TARGET_SWITCHING_ENABLED,
-        false
-      );
-    }
-    return this._isServerTargetSwitchingEnabled;
   }
 
   /**
@@ -340,15 +352,11 @@ class TargetCommand extends EventEmitter {
    */
   async startListening({ onlyLegacy = false } = {}) {
     // The first time we call this method, we pull the current top level target from the descriptor
-    if (!this.targetFront) {
-      // Note that this is a public attribute, used outside of this class
-      // and helps knowing what is the current top level target we debug.
-      this.targetFront = await this.descriptorFront.getTarget();
-      this.targetFront.setTargetType(this.getTargetType(this.targetFront));
-      this.targetFront.setIsTopLevel(true);
-
-      // Add the top-level target to the list of targets.
-      this._targets.add(this.targetFront);
+    if (
+      !this.isServerTargetSwitchingEnabled() &&
+      !this._gotFirstTopLevelTarget
+    ) {
+      await this._createFirstTarget();
     }
 
     // Cache the Watcher once for all, the first time we call `startListening()`.
@@ -363,36 +371,10 @@ class TargetCommand extends EventEmitter {
       }
     }
 
-    let types = [];
-    if (this.targetFront.isParentProcess) {
-      const fissionBrowserToolboxEnabled = Services.prefs.getBoolPref(
-        BROWSERTOOLBOX_FISSION_ENABLED
-      );
-      if (fissionBrowserToolboxEnabled) {
-        types = TargetCommand.ALL_TYPES;
-      }
-    } else if (this.descriptorFront.isLocalTab) {
-      types = [TargetCommand.TYPES.FRAME];
-    }
-    if (this.listenForWorkers && !types.includes(TargetCommand.TYPES.WORKER)) {
-      types.push(TargetCommand.TYPES.WORKER);
-    }
-    if (
-      this.listenForWorkers &&
-      !types.includes(TargetCommand.TYPES.SHARED_WORKER)
-    ) {
-      types.push(TargetCommand.TYPES.SHARED_WORKER);
-    }
-    if (
-      this.listenForServiceWorkers &&
-      !types.includes(TargetCommand.TYPES.SERVICE_WORKER)
-    ) {
-      types.push(TargetCommand.TYPES.SERVICE_WORKER);
-    }
-
     // If no pref are set to true, nor is listenForWorkers set to true,
     // we won't listen for any additional target. Only the top level target
     // will be managed. We may still do target-switching.
+    const types = this._computeTargetTypes();
 
     for (const type of types) {
       if (this._isListening(type)) {
@@ -415,6 +397,54 @@ class TargetCommand extends EventEmitter {
         throw new Error(`Unsupported target type '${type}'`);
       }
     }
+
+    if (this.isServerTargetSwitchingEnabled()) {
+      await this._onFirstTarget;
+    }
+  }
+
+  async _createFirstTarget() {
+    // Note that this is a public attribute, used outside of this class
+    // and helps knowing what is the current top level target we debug.
+    this.targetFront = await this.descriptorFront.getTarget();
+    this.targetFront.setTargetType(this.getTargetType(this.targetFront));
+    this.targetFront.setIsTopLevel(true);
+    this._gotFirstTopLevelTarget = true;
+
+    // Add the top-level target to the list of targets.
+    this._targets.add(this.targetFront);
+  }
+
+  _computeTargetTypes() {
+    let types = [];
+
+    if (this.descriptorFront.isLocalTab) {
+      types = [TargetCommand.TYPES.FRAME];
+    } else if (this.targetFront.isParentProcess) {
+      const fissionBrowserToolboxEnabled = Services.prefs.getBoolPref(
+        BROWSERTOOLBOX_FISSION_ENABLED
+      );
+      if (fissionBrowserToolboxEnabled) {
+        types = TargetCommand.ALL_TYPES;
+      }
+    }
+    if (this.listenForWorkers && !types.includes(TargetCommand.TYPES.WORKER)) {
+      types.push(TargetCommand.TYPES.WORKER);
+    }
+    if (
+      this.listenForWorkers &&
+      !types.includes(TargetCommand.TYPES.SHARED_WORKER)
+    ) {
+      types.push(TargetCommand.TYPES.SHARED_WORKER);
+    }
+    if (
+      this.listenForServiceWorkers &&
+      !types.includes(TargetCommand.TYPES.SERVICE_WORKER)
+    ) {
+      types.push(TargetCommand.TYPES.SERVICE_WORKER);
+    }
+
+    return types;
   }
 
   /**
@@ -727,6 +757,13 @@ class TargetCommand extends EventEmitter {
 
   isDestroyed() {
     return this._isDestroyed;
+  }
+
+  isServerTargetSwitchingEnabled() {
+    if (this.descriptorFront.isServerTargetSwitchingEnabled) {
+      return this.descriptorFront.isServerTargetSwitchingEnabled();
+    }
+    return false;
   }
 
   destroy() {
