@@ -40,6 +40,7 @@
 #include "js/friend/UsageStatistics.h"   // JSAccumulateTelemetryDataCallback
 #include "js/GCVector.h"
 #include "js/HashTable.h"
+#include "js/Initialization.h"
 #include "js/Modules.h"  // JS::Module{DynamicImport,Metadata,Resolve}Hook
 #ifdef DEBUG
 #  include "js/Proxy.h"  // For AutoEnterPolicy
@@ -631,16 +632,6 @@ struct JSRuntime {
    */
   js::WriteOnceData<js::NativeObject*> selfHostingGlobal_;
 
-  // Optional reference to an array which contains the XDR content to be used
-  // instead of parsing the self-hosted source text. It is cleared once the
-  // self-hosted global is initialized.
-  JS::TranscodeRange selfHostedXDR = {};
-
-  // Callback to copy the XDR content of the self-hosted code.
-  using TranscodeBufferWriter = bool (*)(JSContext* cx,
-                                         const JS::TranscodeBuffer&);
-  TranscodeBufferWriter selfHostedXDRWriter = nullptr;
-
   static js::GlobalObject* createSelfHostingGlobal(JSContext* cx);
 
  public:
@@ -670,27 +661,10 @@ struct JSRuntime {
   // Self-hosting support
   //-------------------------------------------------------------------------
 
-  // Optional XDR compiled data for self-hosting. If set this, will be used to
-  // parse the self-hosting code instead of from source code.
-  //
-  // This field is cleared internally after self-hosting is initialized.
-  void setSelfHostedXDR(JS::TranscodeRange enctext) {
-    MOZ_RELEASE_ASSERT(!hasInitializedSelfHosting());
-    MOZ_RELEASE_ASSERT(enctext.length() > 0);
-    new (&selfHostedXDR) mozilla::Range(enctext);
-  }
-
-  // Register a callback which would be used to return a buffer if the
-  // self-hosted code should be serialized and stored in the returned buffer.
-  void setSelfHostedXDRWriterCallback(TranscodeBufferWriter writer) {
-    MOZ_RELEASE_ASSERT(!hasInitializedSelfHosting());
-    MOZ_RELEASE_ASSERT(!selfHostedXDRWriter);
-    selfHostedXDRWriter = writer;
-  }
-
   bool hasInitializedSelfHosting() const { return selfHostingGlobal_; }
 
-  bool initSelfHosting(JSContext* cx);
+  bool initSelfHosting(JSContext* cx, JS::SelfHostedCache xdrCache = nullptr,
+                       JS::SelfHostedWriter xdrWriter = nullptr);
   void finishSelfHosting();
   void traceSelfHostingGlobal(JSTracer* trc);
   bool isSelfHostingGlobal(JSObject* global) {

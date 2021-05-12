@@ -446,39 +446,6 @@ JS::ContextOptions& JS::ContextOptions::setFuzzing(bool flag) {
   return *this;
 }
 
-JS_PUBLIC_API bool JS::InitSelfHostedCode(JSContext* cx) {
-  MOZ_RELEASE_ASSERT(!cx->runtime()->hasInitializedSelfHosting(),
-                     "JS::InitSelfHostedCode() called more than once");
-
-  AutoNoteSingleThreadedRegion anstr;
-
-  JSRuntime* rt = cx->runtime();
-
-  if (!rt->initializeAtoms(cx)) {
-    return false;
-  }
-
-  if (!rt->initializeParserAtoms(cx)) {
-    return false;
-  }
-
-#ifndef JS_CODEGEN_NONE
-  if (!rt->createJitRuntime(cx)) {
-    return false;
-  }
-#endif
-
-  if (!rt->initSelfHosting(cx)) {
-    return false;
-  }
-
-  if (!rt->parentRuntime && !rt->initMainAtomsTables(cx)) {
-    return false;
-  }
-
-  return true;
-}
-
 JS_PUBLIC_API const char* JS_GetImplementationVersion(void) {
   return "JavaScript-C" MOZILLA_VERSION;
 }

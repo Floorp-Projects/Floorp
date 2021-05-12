@@ -11813,8 +11813,7 @@ static bool ReadSelfHostedXDRFile(JSContext* cx, FileContents& buf) {
   return true;
 }
 
-static bool WriteSelfHostedXDRFile(JSContext* cx,
-                                   const JS::TranscodeBuffer& buffer) {
+static bool WriteSelfHostedXDRFile(JSContext* cx, JS::SelfHostedCache buffer) {
   FILE* file = fopen(selfHostedXDRPath, "wb");
   if (!file) {
     JS_ReportErrorUTF8(cx, "Can't open self-hosted stencil XDR file.");
@@ -11822,8 +11821,8 @@ static bool WriteSelfHostedXDRFile(JSContext* cx,
   }
   AutoCloseFile autoClose(file);
 
-  size_t cc = fwrite(buffer.begin(), 1, buffer.length(), file);
-  if (cc != buffer.length()) {
+  size_t cc = fwrite(buffer.Elements(), 1, buffer.LengthBytes(), file);
+  if (cc != buffer.LengthBytes()) {
     JS_ReportErrorUTF8(cx, "Short write on self-hosted stencil XDR file.");
     return false;
   }
@@ -12481,19 +12480,22 @@ int main(int argc, char** argv) {
   // The file content should stay alive as long as Worker thread can be
   // initialized.
   Maybe<FileContents> buffer;
-  if (selfHostedXDRPath && !encodeSelfHostedCode) {
-    buffer.emplace(cx);
-    if (ReadSelfHostedXDRFile(cx, *buffer)) {
-      MOZ_ASSERT(buffer->length() > 0);
-      mozilla::Span<uint8_t> xdrSpan = buffer.ref();
-      cx->runtime()->setSelfHostedXDR(xdrSpan);
+  JS::SelfHostedCache xdrSpan = nullptr;
+  JS::SelfHostedWriter xdrWriter = nullptr;
+  if (selfHostedXDRPath) {
+    if (encodeSelfHostedCode) {
+      xdrWriter = WriteSelfHostedXDRFile;
     } else {
-      fprintf(stderr, "Falling back on parsing source.\n");
-      selfHostedXDRPath = nullptr;
+      buffer.emplace(cx);
+      if (ReadSelfHostedXDRFile(cx, *buffer)) {
+        MOZ_ASSERT(buffer->length() > 0);
+        JS::SelfHostedCache span(buffer->begin(), buffer->end());
+        xdrSpan = span;
+      } else {
+        fprintf(stderr, "Falling back on parsing source.\n");
+        selfHostedXDRPath = nullptr;
+      }
     }
-  }
-  if (selfHostedXDRPath && encodeSelfHostedCode) {
-    cx->runtime()->setSelfHostedXDRWriterCallback(&WriteSelfHostedXDRFile);
   }
 
 #ifndef __wasi__
@@ -12506,7 +12508,7 @@ int main(int argc, char** argv) {
   }
 #endif
 
-  if (!JS::InitSelfHostedCode(cx)) {
+  if (!JS::InitSelfHostedCode(cx, xdrSpan, xdrWriter)) {
     return 1;
   }
 
