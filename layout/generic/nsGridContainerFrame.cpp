@@ -3420,18 +3420,14 @@ static Subgrid* SubgridComputeMarginBorderPadding(
     const GridItemInfo& aGridItem, const LogicalSize& aPercentageBasis) {
   auto* subgridFrame = aGridItem.SubgridFrame();
   auto cbWM = aGridItem.mFrame->GetParent()->GetWritingMode();
-  nsMargin physicalMBP;
-  {
-    auto wm = subgridFrame->GetWritingMode();
-    auto pmPercentageBasis = cbWM.IsOrthogonalTo(wm)
-                                 ? aPercentageBasis.BSize(wm)
-                                 : aPercentageBasis.ISize(wm);
-    SizeComputationInput sz(subgridFrame, nullptr, cbWM, pmPercentageBasis);
-    physicalMBP =
-        sz.ComputedPhysicalMargin() + sz.ComputedPhysicalBorderPadding();
-  }
   auto* subgrid = subgridFrame->GetProperty(Subgrid::Prop());
-  subgrid->mMarginBorderPadding = LogicalMargin(cbWM, physicalMBP);
+  auto wm = subgridFrame->GetWritingMode();
+  auto pmPercentageBasis = cbWM.IsOrthogonalTo(wm) ? aPercentageBasis.BSize(wm)
+                                                   : aPercentageBasis.ISize(wm);
+  SizeComputationInput sz(subgridFrame, nullptr, cbWM, pmPercentageBasis);
+  subgrid->mMarginBorderPadding =
+      sz.ComputedLogicalMargin(cbWM) + sz.ComputedLogicalBorderPadding(cbWM);
+
   if (aGridItem.mFrame != subgridFrame) {
     nsIScrollableFrame* scrollFrame = aGridItem.mFrame->GetScrollTargetFrame();
     if (scrollFrame) {
