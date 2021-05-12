@@ -24,7 +24,7 @@ namespace JS {
 class ReadOnlyCompileOptions;
 
 using TranscodeBuffer = mozilla::Vector<uint8_t>;
-using TranscodeRange = mozilla::Range<uint8_t>;
+using TranscodeRange = mozilla::Range<const uint8_t>;
 
 struct TranscodeSource final {
   TranscodeSource(const TranscodeRange& range_, const char* file, uint32_t line)
@@ -80,7 +80,7 @@ inline bool IsTranscodingBytecodeOffsetAligned(size_t offset) {
   return offset % BytecodeOffsetAlignment == 0;
 }
 
-inline bool IsTranscodingBytecodeAligned(void* offset) {
+inline bool IsTranscodingBytecodeAligned(const void* offset) {
   return IsTranscodingBytecodeOffsetAligned(size_t(offset));
 }
 
