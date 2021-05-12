@@ -1,6 +1,30 @@
 # Changelog
 
-## Unreleased
+## 3.2.0 (2021-04-28)
+
+- Add option to add extra introductory text to generated markdown ([#298](https://github.com/mozilla/glean_parser/pull/298))
+- Add support for Qt in Javascript templates ([bug 1706252](https://bugzilla.mozilla.org/show_bug.cgi?id=1706252))
+  - Javascript templates will now accept the `platform` option. If this option is set to `qt`
+  the generated templates will be Qt compatible. Default value is `webext`.
+
+## 3.1.2 (2021-04-21)
+
+- BUGFIX: Remove the "DO NOT COMMIT" notice from the documentation.
+
+## 3.1.1 (2021-04-19)
+
+- Recommend to not commit as well as to not edit the generated files. ([bug 1706042](https://bugzilla.mozilla.org/show_bug.cgi?id=1706042))
+- BUGFIX: Include import statement for labeled metric subtypes in Javascript and Typescript templates.
+
+## 3.1.0 (2021-04-16)
+
+- Add support for labeled metric types in Javascript and Typescript templates.
+
+## 3.0.0 (2021-04-13)
+
+- Raise limit on number of statically-defined lables to 100. ([bug 1702263](https://bugzilla.mozilla.org/show_bug.cgi?id=1702263))
+- BUGFIX: Version 2.0.0 of the schema now allows the "special" `glean_.*` ping names for Glean-internal use again.
+- Remove support for JWE metric types.
 
 ## 2.5.0 (2021-02-23)
 
