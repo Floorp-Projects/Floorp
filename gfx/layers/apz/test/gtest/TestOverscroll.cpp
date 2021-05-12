@@ -1403,6 +1403,49 @@ TEST_F(APZCOverscrollTester, NoOverscrollForMousewheel) {
 #endif
 
 #ifndef MOZ_WIDGET_ANDROID  // Only applies to GenericOverscrollEffect
+TEST_F(APZCOverscrollTester, ClickWhileOverscrolled) {
+  SCOPED_GFX_PREF_BOOL("apz.overscroll.enabled", true);
+
+  ScrollMetadata metadata;
+  FrameMetrics& metrics = metadata.GetMetrics();
+  metrics.SetCompositionBounds(ParentLayerRect(0, 0, 100, 100));
+  metrics.SetScrollableRect(CSSRect(0, 0, 100, 1000));
+  metrics.SetVisualScrollOffset(CSSPoint(0, 0));
+  apzc->SetFrameMetrics(metrics);
+
+  // Pan into overscroll at the top.
+  ScreenIntPoint panPoint(50, 50);
+  PanGesture(PanGestureInput::PANGESTURE_START, apzc, panPoint,
+             ScreenPoint(0, -1), mcc->Time());
+  mcc->AdvanceByMillis(10);
+  PanGesture(PanGestureInput::PANGESTURE_PAN, apzc, panPoint,
+             ScreenPoint(0, -100), mcc->Time());
+  EXPECT_TRUE(apzc->IsOverscrolled());
+  EXPECT_TRUE(apzc->GetOverscrollAmount().y < 0);  // overscrolled at top
+
+  // End the pan. This should start an overscroll animation.
+  mcc->AdvanceByMillis(10);
+  PanGesture(PanGestureInput::PANGESTURE_END, apzc, panPoint, ScreenPoint(0, 0),
+             mcc->Time());
+  EXPECT_TRUE(apzc->GetOverscrollAmount().y < 0);  // overscrolled at top
+  EXPECT_TRUE(apzc->IsOverscrollAnimationRunning());
+
+  // Send a mouse-down. This should interrupt the animation but not relieve
+  // overscroll yet.
+  ParentLayerPoint overscrollBefore = apzc->GetOverscrollAmount();
+  MouseDown(apzc, panPoint, mcc->Time());
+  EXPECT_FALSE(apzc->IsOverscrollAnimationRunning());
+  EXPECT_EQ(overscrollBefore, apzc->GetOverscrollAmount());
+
+  // Send a mouse-up. This should start an overscroll animation again.
+  MouseUp(apzc, panPoint, mcc->Time());
+  EXPECT_TRUE(apzc->IsOverscrollAnimationRunning());
+
+  SampleAnimationUntilRecoveredFromOverscroll(ParentLayerPoint(0, 0));
+}
+#endif
+
+#ifndef MOZ_WIDGET_ANDROID  // Only applies to GenericOverscrollEffect
 TEST_F(APZCOverscrollTester, DynamicallyLoadingContent) {
   SCOPED_GFX_PREF_BOOL("apz.overscroll.enabled", true);
 

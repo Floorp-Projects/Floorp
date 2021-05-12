@@ -925,11 +925,15 @@ nsEventStatus AsyncPanZoomController::HandleDragEvent(
 
   {
     RecursiveMutexAutoLock lock(mRecursiveMutex);
-    if (aEvent.mType == MouseInput::MouseType::MOUSE_UP &&
-        mState == SCROLLBAR_DRAG) {
-      APZC_LOG("%p ending drag\n", this);
-      SetState(NOTHING);
-      ScrollSnap();
+
+    if (aEvent.mType == MouseInput::MouseType::MOUSE_UP) {
+      if (mState == SCROLLBAR_DRAG) {
+        APZC_LOG("%p ending drag\n", this);
+        SetState(NOTHING);
+      }
+
+      SnapBackIfOverscrolled();
+
       return nsEventStatus_eConsumeNoDefault;
     }
   }
