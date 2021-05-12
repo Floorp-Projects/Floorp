@@ -83,14 +83,14 @@ add_task(async function test_incognito_proxy_onRequest_access() {
   await pextension.startup();
 
   let contentPage = await ExtensionTestUtils.loadContentPage(
-    "http://example.com/dummy",
+    "https://example.com/dummy",
     { privateBrowsing: true }
   );
   await pextension.awaitMessage("proxy.onRequest.private");
   await contentPage.close();
 
   contentPage = await ExtensionTestUtils.loadContentPage(
-    "http://example.com/dummy"
+    "https://example.com/dummy"
   );
   await extension.awaitFinish("proxy.onRequest");
   await pextension.awaitFinish("proxy.onRequest.spanning");
