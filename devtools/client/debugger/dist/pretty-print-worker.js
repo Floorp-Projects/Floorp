@@ -3615,7 +3615,7 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_RESULT__;/* -*- indent-
    */
   function isIdentifierLike(token) {
     var ttl = token.type.label;
-    return ttl == "name" || ttl == "num" || !!token.type.keyword;
+    return ttl == "name" || ttl == "num" || ttl == "privateId" || !!token.type.keyword;
   }
 
   /**
@@ -3981,7 +3981,16 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_RESULT__;/* -*- indent-
             token.loc.start.line,
             token.loc.start.column);
     } else {
-      write(String(token.value != null ? token.value : token.type.label),
+      let value;
+      if (token.value != null) {
+        value = token.value;
+        if (token.type.label === "privateId") {
+          value = `#${value}`;
+        }
+      } else {
+        value = token.type.label;
+      }
+      write(String(value),
             token.loc.start.line,
             token.loc.start.column);
     }
