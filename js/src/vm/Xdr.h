@@ -134,7 +134,7 @@ class XDRBuffer<XDR_DECODE> : public XDRBufferBase {
 
   const uint8_t* read(size_t n) {
     MOZ_ASSERT(cursor_ < buffer_.length());
-    uint8_t* ptr = &buffer_[cursor_];
+    const uint8_t* ptr = &buffer_[cursor_];
     cursor_ += n;
 
     // Don't let buggy code read past our buffer
@@ -147,7 +147,7 @@ class XDRBuffer<XDR_DECODE> : public XDRBufferBase {
 
   const uint8_t* peek(size_t n) {
     MOZ_ASSERT(cursor_ < buffer_.length());
-    uint8_t* ptr = &buffer_[cursor_];
+    const uint8_t* ptr = &buffer_[cursor_];
 
     // Don't let buggy code read past our buffer
     if (cursor_ + n > buffer_.length()) {

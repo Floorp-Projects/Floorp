@@ -31,7 +31,7 @@ class SelfHostedShmem final : public nsIMemoryReporter {
 
   // NOTE: This type is identical to JS::SelfHostedCache, but we repeat it to
   // avoid including JS engine API in ipc code.
-  using ContentType = mozilla::Span<uint8_t>;
+  using ContentType = mozilla::Span<const uint8_t>;
 
   static SelfHostedShmem& GetSingleton();
 
