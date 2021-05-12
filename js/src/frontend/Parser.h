@@ -381,17 +381,17 @@ class MOZ_STACK_CLASS ParserBase : public ParserSharedBase,
   class Mark {
     friend class ParserBase;
     LifoAlloc::Mark mark;
-    CompilationState::RewindToken token;
+    CompilationState::CompilationStatePosition pos;
   };
   Mark mark() const {
     Mark m;
     m.mark = alloc_.mark();
-    m.token = compilationState_.getRewindToken();
+    m.pos = compilationState_.getPosition();
     return m;
   }
   void release(Mark m) {
     alloc_.release(m.mark);
-    compilationState_.rewind(m.token);
+    compilationState_.rewind(m.pos);
   }
 
  public:
