@@ -12,7 +12,6 @@ packages = [
     "core-graphics",
     "gl_generator",
     "gleam",
-    "rand",
     "rand_core",
     # https://github.com/trimental/andrew/issues/5
     "rusttype",
