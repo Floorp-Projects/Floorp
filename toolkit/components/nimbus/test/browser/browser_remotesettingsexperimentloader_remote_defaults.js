@@ -335,28 +335,14 @@ add_task(async function test_remote_ready_from_experiment() {
     foo: { description: "mochitests" },
   });
 
-  await ExperimentAPI._store.ready();
+  await ExperimentAPI.ready();
 
-  let {
-    enrollmentPromise,
-    doExperimentCleanup,
-  } = ExperimentFakes.enrollmentHelper(
-    ExperimentFakes.recipe("mochitest-1-foo", {
-      branches: [
-        {
-          slug: "mochitest-1-foo",
-          feature: {
-            enabled: true,
-            featureId: "foo",
-            value: null,
-          },
-        },
-      ],
-      active: true,
-    })
-  );
+  let doExperimentCleanup = await ExperimentFakes.enrollWithFeatureConfig({
+    enabled: true,
+    featureId: "foo",
+    value: null,
+  });
 
-  await enrollmentPromise;
   // featureFoo will also resolve when the remote defaults cycle finishes
   await featureFoo.ready();
 
