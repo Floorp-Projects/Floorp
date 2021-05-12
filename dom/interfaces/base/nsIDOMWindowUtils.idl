@@ -824,6 +824,12 @@ interface nsIDOMWindowUtils : nsISupports {
    */
   void runNextCollectorTimer();
 
+  /**
+   * Poke the GC, aka set a timer to run a GC soon (usually 4 seconds) if
+   * one is not set already.  This is used for testing.
+   */
+  void pokeGC();
+
   /** Synthesize a simple gesture event for a window. The event types
    *  supported are: MozSwipeGestureMayStart, MozSwipeGestureStart,
    *  MozSwipeGestureUpdate, MozSwipeGestureEnd, MozSwipeGesture,
