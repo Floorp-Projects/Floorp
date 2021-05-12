@@ -2649,7 +2649,7 @@ bool WarpCacheIRTranspiler::emitCompareDoubleSameValueResult(
   MDefinition* lhs = getOperand(lhsId);
   MDefinition* rhs = getOperand(rhsId);
 
-  auto* sameValue = MSameValue::New(alloc(), lhs, rhs);
+  auto* sameValue = MSameValueDouble::New(alloc(), lhs, rhs);
   add(sameValue);
 
   pushResult(sameValue);
