@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/StaticPrefs_page_load.h"
+#include "mozilla/StaticPrefs_javascript.h"
 #include "mozilla/Unused.h"
 #include "mozilla/ipc/IdleSchedulerParent.h"
 #include "nsSystemInfo.h"
@@ -19,52 +20,93 @@ base::SharedMemory* IdleSchedulerParent::sActiveChildCounter = nullptr;
 std::bitset<NS_IDLE_SCHEDULER_COUNTER_ARRAY_LENGHT>
     IdleSchedulerParent::sInUseChildCounters;
 LinkedList<IdleSchedulerParent> IdleSchedulerParent::sIdleAndGCRequests;
-Atomic<int32_t> IdleSchedulerParent::sMaxConcurrentIdleTasksInChildProcesses(
-    -1);
+int32_t IdleSchedulerParent::sMaxConcurrentIdleTasksInChildProcesses = 1;
 uint32_t IdleSchedulerParent::sMaxConcurrentGCs = 1;
 uint32_t IdleSchedulerParent::sActiveGCs = 0;
 uint32_t IdleSchedulerParent::sChildProcessesRunningPrioritizedOperation = 0;
 uint32_t IdleSchedulerParent::sChildProcessesAlive = 0;
 nsITimer* IdleSchedulerParent::sStarvationPreventer = nullptr;
 
+uint32_t IdleSchedulerParent::sNumCPUs = 0;
+uint32_t IdleSchedulerParent::sPrefConcurrentGCsMax = 0;
+uint32_t IdleSchedulerParent::sPrefConcurrentGCsCPUDivisor = 0;
+
 IdleSchedulerParent::IdleSchedulerParent() {
   sChildProcessesAlive++;
 
-  if (sMaxConcurrentIdleTasksInChildProcesses == -1) {
+  uint32_t max_gcs_pref =
+      StaticPrefs::javascript_options_concurrent_multiprocess_gcs_max();
+  uint32_t cpu_divisor_pref =
+      StaticPrefs::javascript_options_concurrent_multiprocess_gcs_cpu_divisor();
+  if (!max_gcs_pref) {
+    max_gcs_pref = UINT32_MAX;
+  }
+  if (!cpu_divisor_pref) {
+    cpu_divisor_pref = 4;
+  }
+
+  if (!sNumCPUs) {
+    // While waiting for the real logical core count behave as if there was
+    // just one core.
+    sNumCPUs = 1;
+
     // nsISystemInfo can be initialized only on the main thread.
-    // While waiting for the real logical core count behave as if there was just
-    // one core.
-    sMaxConcurrentIdleTasksInChildProcesses = 1;
     nsCOMPtr<nsIThread> thread = do_GetCurrentThread();
     nsCOMPtr<nsIRunnable> runnable =
         NS_NewRunnableFunction("cpucount getter", [thread]() {
-          // Always pretend that there is at least one core for child processes.
-          // If there are multiple logical cores, reserve one for the parent
-          // process and for the non-main threads.
           ProcessInfo processInfo = {};
-          if (NS_SUCCEEDED(CollectProcessInfo(processInfo)) &&
-              processInfo.cpuCount > 1) {
-            // On one and two processor (or hardware thread) systems this will
-            // allow one concurrent idle task.
-            sMaxConcurrentIdleTasksInChildProcesses =
-                std::max(processInfo.cpuCount - 1, 1);
-            sMaxConcurrentGCs = std::max(processInfo.cpuCount / 4, 1);
-            // We have a new cpu count, reschedule idle scheduler.
-            nsCOMPtr<nsIRunnable> runnable =
-                NS_NewRunnableFunction("IdleSchedulerParent::Schedule", []() {
-                  if (sActiveChildCounter && sActiveChildCounter->memory()) {
-                    static_cast<Atomic<int32_t>*>(sActiveChildCounter->memory())
-                        [NS_IDLE_SCHEDULER_INDEX_OF_CPU_COUNTER] =
-                            static_cast<int32_t>(
-                                sMaxConcurrentIdleTasksInChildProcesses);
-                  }
-                  IdleSchedulerParent::Schedule(nullptr);
+          if (NS_SUCCEEDED(CollectProcessInfo(processInfo))) {
+            uint32_t num_cpus = processInfo.cpuCount;
+            // We have a new cpu count, Update the number of idle tasks.
+            nsCOMPtr<nsIRunnable> runnable = NS_NewRunnableFunction(
+                "IdleSchedulerParent::CalculateNumIdleTasks", [num_cpus]() {
+                  // We're setting this within this lambda because it's run on
+                  // the correct thread and avoids a race.
+                  sNumCPUs = num_cpus;
+
+                  // This reads the sPrefConcurrentGCsMax and
+                  // sPrefConcurrentGCsCPUDivisor values set below, it will run
+                  // after the code that sets those.
+                  CalculateNumIdleTasks();
                 });
+
             thread->Dispatch(runnable, NS_DISPATCH_NORMAL);
           }
         });
     NS_DispatchBackgroundTask(runnable.forget(), NS_DISPATCH_EVENT_MAY_BLOCK);
   }
+
+  if (sPrefConcurrentGCsMax != max_gcs_pref ||
+      sPrefConcurrentGCsCPUDivisor != cpu_divisor_pref) {
+    // We execute this if these preferences have changed. We also want to make
+    // sure it executes for the first IdleSchedulerParent, which it does because
+    // sPrefConcurrentGCsMax and sPrefConcurrentGCsCPUDivisor are initially
+    // zero.
+    sPrefConcurrentGCsMax = max_gcs_pref;
+    sPrefConcurrentGCsCPUDivisor = cpu_divisor_pref;
+
+    CalculateNumIdleTasks();
+  }
+}
+
+void IdleSchedulerParent::CalculateNumIdleTasks() {
+  MOZ_ASSERT(sNumCPUs);
+  MOZ_ASSERT(sPrefConcurrentGCsMax);
+  MOZ_ASSERT(sPrefConcurrentGCsCPUDivisor);
+
+  // On one and two processor (or hardware thread) systems this will
+  // allow one concurrent idle task.
+  sMaxConcurrentIdleTasksInChildProcesses = int32_t(std::max(sNumCPUs, 1u));
+  sMaxConcurrentGCs =
+      std::min(std::max(sNumCPUs / sPrefConcurrentGCsCPUDivisor, 1u),
+               sPrefConcurrentGCsMax);
+
+  if (sActiveChildCounter && sActiveChildCounter->memory()) {
+    static_cast<Atomic<int32_t>*>(
+        sActiveChildCounter->memory())[NS_IDLE_SCHEDULER_INDEX_OF_CPU_COUNTER] =
+        static_cast<int32_t>(sMaxConcurrentIdleTasksInChildProcesses);
+  }
+  IdleSchedulerParent::Schedule(nullptr);
 }
 
 IdleSchedulerParent::~IdleSchedulerParent() {
