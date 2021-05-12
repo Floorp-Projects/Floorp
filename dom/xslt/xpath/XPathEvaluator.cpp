@@ -95,7 +95,7 @@ XPathExpression* XPathEvaluator::CreateExpression(const nsAString& aExpression,
   if (aRv.Failed()) {
     if (!aRv.ErrorCodeIs(NS_ERROR_DOM_NAMESPACE_ERR)) {
       aRv.SuppressException();
-      aRv.Throw(NS_ERROR_DOM_INVALID_EXPRESSION_ERR);
+      aRv.ThrowSyntaxError("The expression is not a legal expression");
     }
 
     return nullptr;
