@@ -543,9 +543,6 @@ nsresult nsLookAndFeel::PerThemeData::GetColor(ColorID aID,
     case ColorID::MozMenubarhovertext:
       aColor = mMenuBarHoverText;
       break;
-    case ColorID::MozGtkInfoBarText:
-      aColor = mInfoBarText;
-      break;
     case ColorID::MozColheadertext:
       aColor = mMozColHeaderText;
       break;
@@ -1560,18 +1557,6 @@ void nsLookAndFeel::PerThemeData::Init() {
     GetBorderColors(style, &mFrameOuterLightBorder, &mFrameInnerDarkBorder);
   }
 
-  // GtkInfoBar
-  // TODO - Use WidgetCache for it?
-  GtkWidget* infoBar = gtk_info_bar_new();
-  GtkWidget* infoBarContent =
-      gtk_info_bar_get_content_area(GTK_INFO_BAR(infoBar));
-  GtkWidget* infoBarLabel = gtk_label_new(nullptr);
-  gtk_container_add(GTK_CONTAINER(parent), infoBar);
-  gtk_container_add(GTK_CONTAINER(infoBarContent), infoBarLabel);
-  style = gtk_widget_get_style_context(infoBarLabel);
-  gtk_style_context_add_class(style, GTK_STYLE_CLASS_INFO);
-  gtk_style_context_get_color(style, GTK_STATE_FLAG_NORMAL, &color);
-  mInfoBarText = GDK_RGBA_TO_NS_RGBA(color);
   // Some themes have a unified menu bar, and support window dragging on it
   gboolean supports_menubar_drag = FALSE;
   GParamSpec* param_spec = gtk_widget_class_find_style_property(
