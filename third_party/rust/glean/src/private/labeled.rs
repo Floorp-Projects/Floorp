@@ -346,7 +346,7 @@ mod test {
 
         let invalid_label = "!#I'm invalid#--_";
         metric.get(invalid_label).set(true);
-        assert_eq!(true, metric.get("__other__").test_get_value(None).unwrap());
+        assert!(metric.get("__other__").test_get_value(None).unwrap());
         assert_eq!(
             1,
             metric.test_get_num_recorded_errors(ErrorType::InvalidLabel, None)

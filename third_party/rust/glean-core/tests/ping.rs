@@ -25,7 +25,7 @@ fn write_ping_to_disk() {
     });
     counter.add(&glean, 1);
 
-    assert!(ping.submit(&glean, None).unwrap());
+    assert!(ping.submit(&glean, None));
 
     assert_eq!(1, get_queued_pings(glean.get_data_path()).unwrap().len());
 }
@@ -46,7 +46,7 @@ fn disabling_upload_clears_pending_pings() {
     });
 
     counter.add(&glean, 1);
-    assert!(ping.submit(&glean, None).unwrap());
+    assert!(ping.submit(&glean, None));
     assert_eq!(1, get_queued_pings(glean.get_data_path()).unwrap().len());
     // At this point no deletion_request ping should exist
     // (that is: it's directory should not exist at all)
@@ -69,7 +69,7 @@ fn disabling_upload_clears_pending_pings() {
     assert_eq!(0, get_queued_pings(glean.get_data_path()).unwrap().len());
 
     counter.add(&glean, 1);
-    assert!(ping.submit(&glean, None).unwrap());
+    assert!(ping.submit(&glean, None));
     assert_eq!(1, get_queued_pings(glean.get_data_path()).unwrap().len());
 }
 
@@ -111,11 +111,11 @@ fn empty_pings_with_flag_are_sent() {
     // No data is stored in either of the custom pings
 
     // Sending this should succeed.
-    assert_eq!(true, ping1.submit(&glean, None).unwrap());
+    assert!(ping1.submit(&glean, None));
     assert_eq!(1, get_queued_pings(glean.get_data_path()).unwrap().len());
 
     // Sending this should fail.
-    assert_eq!(false, ping2.submit(&glean, None).unwrap());
+    assert!(!ping2.submit(&glean, None));
     assert_eq!(1, get_queued_pings(glean.get_data_path()).unwrap().len());
 }
 
@@ -152,7 +152,7 @@ fn test_pings_submitted_metric() {
     });
     counter.add(&glean, 1);
 
-    assert!(metrics_ping.submit(&glean, None).unwrap());
+    assert!(metrics_ping.submit(&glean, None));
 
     // Check recording in the metrics ping
     assert_eq!(
@@ -186,8 +186,8 @@ fn test_pings_submitted_metric() {
     // This should record a count of 2 baseline pings in the metrics ping, but
     // it resets each time on the baseline ping, so we should only ever get 1
     // baseline ping recorded in the baseline ping itsef.
-    assert!(baseline_ping.submit(&glean, None).unwrap());
-    assert!(baseline_ping.submit(&glean, None).unwrap());
+    assert!(baseline_ping.submit(&glean, None));
+    assert!(baseline_ping.submit(&glean, None));
 
     // Check recording in the metrics ping
     assert_eq!(

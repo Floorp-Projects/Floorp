@@ -30,4 +30,6 @@ pub struct Configuration {
     pub server_endpoint: Option<String>,
     /// The instance of the uploader used to send pings.
     pub uploader: Option<Box<dyn PingUploader + 'static>>,
+    /// Whether Glean should schedule "metrics" pings for you.
+    pub use_core_mps: bool,
 }

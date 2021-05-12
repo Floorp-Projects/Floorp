@@ -385,13 +385,13 @@ mod test {
                 assert!(thread::current().id() != main_thread_id);
                 // Use the canary bool to make sure this is getting called before
                 // the test completes.
-                assert_eq!(false, canary_clone.load(Ordering::SeqCst));
+                assert!(!canary_clone.load(Ordering::SeqCst));
                 canary_clone.store(true, Ordering::SeqCst);
             })
             .expect("Failed to dispatch the test task");
 
         dispatcher.block_on_queue();
-        assert_eq!(true, thread_canary.load(Ordering::SeqCst));
+        assert!(thread_canary.load(Ordering::SeqCst));
         assert_eq!(main_thread_id, thread::current().id());
     }
 
