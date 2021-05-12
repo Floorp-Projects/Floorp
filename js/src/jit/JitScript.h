@@ -128,10 +128,6 @@ class alignas(uintptr_t) ICScript final : public TrailingArray {
 
   ICEntry* interpreterICEntryFromPCOffset(uint32_t pcOffset);
 
-  ICEntry* maybeICEntryFromPCOffset(uint32_t pcOffset);
-  ICEntry* maybeICEntryFromPCOffset(uint32_t pcOffset,
-                                    ICEntry* prevLookedUpEntry);
-
   ICEntry& icEntryFromPCOffset(uint32_t pcOffset);
 
   [[nodiscard]] bool addInlinedChild(JSContext* cx,
@@ -407,11 +403,6 @@ class alignas(uintptr_t) JitScript final : public TrailingArray {
 
   void trace(JSTracer* trc);
   void purgeOptimizedStubs(JSScript* script);
-
-  ICEntry* maybeICEntryFromPCOffset(uint32_t pcOffset,
-                                    ICEntry* prevLookedUpEntry) {
-    return icScript_.maybeICEntryFromPCOffset(pcOffset, prevLookedUpEntry);
-  }
 
   ICEntry& icEntryFromPCOffset(uint32_t pcOffset) {
     return icScript_.icEntryFromPCOffset(pcOffset);
