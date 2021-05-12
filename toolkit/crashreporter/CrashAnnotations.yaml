@@ -367,6 +367,7 @@ GPUProcessLaunchCount:
   description: >
     Number of times the GPU process was launched.
   type: integer
+  ping: true
 
 GPUProcessStatus:
   description: >
