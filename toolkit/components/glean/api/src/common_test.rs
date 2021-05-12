@@ -38,6 +38,7 @@ fn setup_glean(tempdir: Option<tempfile::TempDir>) -> tempfile::TempDir {
         channel: None,
         server_endpoint: None,
         uploader: None,
+        use_core_mps: false,
     };
 
     let client_info = glean::ClientInfoMetrics {
