@@ -103,22 +103,14 @@ fluent.syntax==0.18.1 \
     #   -r requirements-mach-vendor-python.in
     #   compare-locales
     #   fluent.migrate
-glean_parser==2.5.0 \
-    --hash=sha256:50d53cb23c7b2ecdfed497187c63ea03bff8f78a0bbfd32dbaffb0affa0b6d2d \
-    --hash=sha256:b2c1b670b73e7df21de335de34e9ece457ef3996110567d7ad6f09fb546e6e5e
+glean_parser==3.2.0 \
+    --hash=sha256:2959462531ac088bd598530453aea45f6f2980d6a3794aa9dcd8a8bfaf1ba8da \
+    --hash=sha256:f6eb2259707155e18ee97c5b9c868011c4eebfcfe2c98c596f3e82a9d02af4dd
     # via -r requirements-mach-vendor-python.in
 idna==2.10 \
     --hash=sha256:b307872f855b18632ce0c21c5e45be78c0ea7ae4c15c828c20788b26921eb3f6 \
     --hash=sha256:b97d804b1e9b523befed77c48dacec60e6dcb0b5391d57af6a65a312a90648c0
     # via requests
-importlib-metadata==3.10.1 \
-    --hash=sha256:2ec0faae539743ae6aaa84b49a169670a465f7f5d64e6add98388cc29fd1f2f6 \
-    --hash=sha256:c9356b657de65c53744046fa8f7358afe0714a1af7d570c00c3835c2d724a7c1
-    # via jsonschema
-iso8601==0.1.14 \
-    --hash=sha256:8aafd56fa0290496c5edbb13c311f78fa3a241f0853540da09d9363eae3ebd79 \
-    --hash=sha256:e7e1122f064d626e17d47cd5106bed2c620cb38fe464999e0ddae2b6d2de6004
-    # via glean-parser
 jinja2==2.11.3 \
     --hash=sha256:03e47ad063331dd6a3f04a43eddca8a966a26ba0c5b7207a9a9e4e08f1b29419 \
     --hash=sha256:a6d58433de0ae800347cab1fa3043cebbabe8baa9d29e668f1c768cb87a333c6
@@ -286,14 +278,8 @@ six==1.13.0 \
     #   jsonschema
     #   more-itertools
     #   pathlib2
-    #   pyrsistent
     #   pytest
     #   responses
-typing-extensions==3.7.4.3 \
-    --hash=sha256:7cb407020f00f7bfc3cb3e7881628838e69d8f3fcab2f64742a5e76b2f841918 \
-    --hash=sha256:99d4073b617d30288f569d3f13d2bd7548c3a7e4c8de87db09a9d29bb3a4a60c \
-    --hash=sha256:dafc7639cde7f1b6e1acc0f457842a83e722ccca8eef5270af2d74792619a89f
-    # via importlib-metadata
 urllib3==1.25.9 \
     --hash=sha256:3018294ebefce6572a474f0604c2021e33b3fd8006ecd11d62107a5d2a963527 \
     --hash=sha256:88206b0eb87e6d677d424843ac5209e3fb9d0190d0ee169599165ec25e9d9115
@@ -310,10 +296,6 @@ yamllint==1.23 \
     # via
     #   -r requirements-mach-vendor-python.in
     #   glean-parser
-zipp==3.4.1 \
-    --hash=sha256:3607921face881ba3e026887d8150cca609d517579abe052ac81fc5aeffdbd76 \
-    --hash=sha256:51cb66cc54621609dd593d1787f286ee42a5c0adbb4b29abea5a63edc3e03098
-    # via importlib-metadata
 
 # WARNING: The following packages were not pinned, but pip requires them to be
 # pinned when the requirements file includes hashes. Consider using the --allow-unsafe flag.

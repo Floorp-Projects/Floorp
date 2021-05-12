@@ -325,8 +325,10 @@ class Jwe(Metric):
     typename = "jwe"
 
     def __init__(self, *args, **kwargs):
-        self.decrypted_name = kwargs.pop("decrypted_name")
-        super().__init__(*args, **kwargs)
+        raise ValueError(
+            "JWE support was removed. "
+            "If you require this send an email to glean-team@mozilla.com."
+        )
 
 
 class Labeled(Metric):

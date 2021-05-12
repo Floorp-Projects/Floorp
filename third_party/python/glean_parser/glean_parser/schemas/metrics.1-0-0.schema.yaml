@@ -107,6 +107,11 @@ definitions:
               properties: `range_min`, `range_max`, `bucket_count`,
               `histogram_type`.
 
+            - `rate`: Used to record the rate something happens relative to some
+              other thing. For example, the number of HTTP connections that
+              experience an error relative to the number of total HTTP
+              connections made.
+
             - Additionally, labeled versions of many metric types are supported.
               These support the `labels`_ parameter, allowing multiple instances
               of the metric to be stored at a given set of labels. The labeled
