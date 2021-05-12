@@ -220,7 +220,7 @@ const PREFS_CONFIG = new Map([
     "feeds.snippets",
     {
       title: "Show snippets on activity stream",
-      value: true,
+      value: false,
     },
   ],
   [

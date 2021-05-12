@@ -94,7 +94,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
   this,
   "snippetsUserPref",
   "browser.newtabpage.activity-stream.feeds.snippets",
-  true
+  false
 );
 
 XPCOMUtils.defineLazyServiceGetters(this, {
