@@ -49,7 +49,6 @@ def is_internal(prop):
     # There are some special cases we may want to remove eventually.
     OTHER_INTERNALS = [
         "-moz-context-properties",
-        "-moz-control-character-visibility",
     ]
     return prop.name in OTHER_INTERNALS
 

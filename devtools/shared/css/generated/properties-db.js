@@ -688,21 +688,6 @@ exports.CSS_PROPERTIES = {
       "unset"
     ]
   },
-  "-moz-control-character-visibility": {
-    "isInherited": true,
-    "subproperties": [
-      "-moz-control-character-visibility"
-    ],
-    "supports": [],
-    "values": [
-      "hidden",
-      "inherit",
-      "initial",
-      "revert",
-      "unset",
-      "visible"
-    ]
-  },
   "-moz-float-edge": {
     "isInherited": false,
     "subproperties": [
@@ -10939,6 +10924,10 @@ exports.PREFERENCES = [
   [
     "math-style",
     "layout.css.math-style.enabled"
+  ],
+  [
+    "-moz-control-character-visibility",
+    "layout.css.moz-control-character-visibility.enabled"
   ],
   [
     "-moz-osx-font-smoothing",

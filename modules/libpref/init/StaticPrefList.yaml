@@ -6633,6 +6633,16 @@
   mirror: always
   rust: true
 
+# Whether the `-moz-control-character-visibility` property is exposed to
+# content.
+#
+# Only for testing purposes.
+- name: layout.css.moz-control-character-visibility.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+  rust: true
+
 # Whether the `accent-color` css property is enabled.
 - name: layout.css.accent-color.enabled
   type: RelaxedAtomicBool
