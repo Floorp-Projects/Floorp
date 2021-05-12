@@ -3329,10 +3329,12 @@ nsresult ScriptLoader::EvaluateScript(ScriptLoadRequest* aRequest) {
                     MarkerInnerWindowIdFromDocShell(docShell),
                     profilerLabelString);
 
+                TimeStamp startTime = TimeStamp::Now();
                 rv =
                     maybeSource.constructed<SourceText<char16_t>>()
                         ? exec.Compile(maybeSource.ref<SourceText<char16_t>>())
                         : exec.Compile(maybeSource.ref<SourceText<Utf8Unit>>());
+                mMainThreadParseTime += TimeStamp::Now() - startTime;
               }
             }
 
@@ -3396,6 +3398,12 @@ void ScriptLoader::RegisterForBytecodeEncoding(ScriptLoadRequest* aRequest) {
 void ScriptLoader::LoadEventFired() {
   mLoadEventFired = true;
   MaybeTriggerBytecodeEncoding();
+
+  if (!mMainThreadParseTime.IsZero()) {
+    Telemetry::Accumulate(
+        Telemetry::JS_PAGELOAD_PARSE_MS,
+        static_cast<uint32_t>(mMainThreadParseTime.ToMilliseconds()));
+  }
 }
 
 void ScriptLoader::Destroy() {
@@ -3477,8 +3485,6 @@ void ScriptLoader::EncodeBytecode() {
     return;
   }
 
-  TimeStamp startTime = TimeStamp::Now();
-
   AutoEntryScript aes(globalObject, "encode bytecode", true);
   RefPtr<ScriptLoadRequest> request;
   while (!mBytecodeEncodingQueue.isEmpty()) {
@@ -3489,10 +3495,6 @@ void ScriptLoader::EncodeBytecode() {
     request->mScriptBytecode.clearAndFree();
     request->DropBytecodeCacheReferences();
   }
-
-  TimeDuration delta = TimeStamp::Now() - startTime;
-  Telemetry::Accumulate(Telemetry::JS_BYTECODE_CACHING_TIME,
-                        static_cast<uint32_t>(delta.ToMilliseconds()));
 }
 
 void ScriptLoader::EncodeRequestBytecode(JSContext* aCx,

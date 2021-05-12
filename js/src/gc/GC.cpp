@@ -7655,6 +7655,13 @@ struct MOZ_RAII AutoSetZoneSliceThresholds {
 
 void GCRuntime::collect(bool nonincrementalByAPI, const SliceBudget& budget,
                         const MaybeGCOptions& optionsArg, JS::GCReason reason) {
+  mozilla::TimeStamp startTime = TimeStamp::Now();
+  auto timer = mozilla::MakeScopeExit([&] {
+    if (Realm* realm = rt->mainContextFromOwnThread()->realm()) {
+      realm->timers.gcTime += TimeStamp::Now() - startTime;
+    }
+  });
+
   MOZ_ASSERT(reason != JS::GCReason::NO_REASON);
 
   MaybeGCOptions options = optionsArg;

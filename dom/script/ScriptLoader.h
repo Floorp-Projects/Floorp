@@ -759,6 +759,8 @@ class ScriptLoader final : public nsISupports {
   bool mLoadEventFired;
   bool mGiveUpEncoding;
 
+  TimeDuration mMainThreadParseTime;
+
   // Module map
   nsRefPtrHashtable<ModuleMapKey, mozilla::GenericNonExclusivePromise::Private>
       mFetchingModules;
