@@ -709,6 +709,9 @@ child:
 
     async LoadURL(nsDocShellLoadState loadState, ParentShowInfo info);
 
+    async CreateAboutBlankContentViewer(nsIPrincipal principal,
+                                        nsIPrincipal partitionedPrincipal);
+
     async ResumeLoad(uint64_t pendingSwitchID, ParentShowInfo info);
 
     [Compress=all] async UpdateDimensions(DimensionInfo dimensions);

@@ -1024,6 +1024,7 @@
           aboutBlank,
           this.loadContext
         );
+        this._contentPartitionedPrincipal = this._contentPrincipal;
         // CSP for about:blank is null; if we ever change _contentPrincipal above,
         // we should re-evaluate the CSP here.
         this._csp = null;
@@ -1238,35 +1239,6 @@
     }
 
     createAboutBlankContentViewer(aPrincipal, aPartitionedPrincipal) {
-      if (this.isRemoteBrowser) {
-        // Ensure that the content process has the permissions which are
-        // needed to create a document with the given principal.
-        let permissionPrincipal = BrowserUtils.principalWithMatchingOA(
-          aPrincipal,
-          this.contentPrincipal
-        );
-        this.frameLoader.remoteTab.transmitPermissionsForPrincipal(
-          permissionPrincipal
-        );
-
-        // This still uses the message manager, for the following reasons:
-        //
-        // 1. Due to bug 1523638, it's virtually certain that, if we've just created
-        //    this <xul:browser>, that the WindowGlobalParent for the top-level frame
-        //    of this browser doesn't exist yet, so it's not possible to get at a
-        //    JS Window Actor for it.
-        //
-        // 2. JS Window Actors are tied to the principals for the frames they're running
-        //    in - switching principals is therefore self-destructive and unexpected.
-        //
-        // So we'll continue to use the message manager until we come up with a better
-        // solution.
-        this.messageManager.sendAsyncMessage(
-          "BrowserElement:CreateAboutBlank",
-          { principal: aPrincipal, partitionedPrincipal: aPartitionedPrincipal }
-        );
-        return;
-      }
       let principal = BrowserUtils.principalWithMatchingOA(
         aPrincipal,
         this.contentPrincipal
@@ -1275,10 +1247,18 @@
         aPartitionedPrincipal,
         this.contentPartitionedPrincipal
       );
-      this.docShell.createAboutBlankContentViewer(
-        principal,
-        partitionedPrincipal
-      );
+
+      if (this.isRemoteBrowser) {
+        this.frameLoader.remoteTab.createAboutBlankContentViewer(
+          principal,
+          partitionedPrincipal
+        );
+      } else {
+        this.docShell.createAboutBlankContentViewer(
+          principal,
+          partitionedPrincipal
+        );
+      }
     }
 
     stopScroll() {
