@@ -73,6 +73,34 @@ bool IdleSchedulerChild::SetPaused() {
   return false;
 }
 
+RefPtr<IdleSchedulerChild::MayGCPromise> IdleSchedulerChild::MayGCNow() {
+  if (mIsRequestingGC || mIsDoingGC) {
+    return nullptr;
+  }
+
+  mIsRequestingGC = true;
+  return SendRequestGC()->Then(
+      GetMainThreadSerialEventTarget(), __func__,
+      [self = RefPtr(this)](bool aIgnored) {
+        MOZ_ASSERT(self->mIsRequestingGC && !self->mIsDoingGC);
+        // The parent process always says yes, sometimes after a delay.
+        self->mIsRequestingGC = false;
+        self->mIsDoingGC = true;
+        return MayGCPromise::CreateAndResolve(true, __func__);
+      },
+      [self = RefPtr(this)](ResponseRejectReason reason) {
+        self->mIsRequestingGC = false;
+        return MayGCPromise::CreateAndReject(reason, __func__);
+      });
+}
+
+void IdleSchedulerChild::DoneGC() {
+  if (mIsDoingGC) {
+    SendDoneGC();
+    mIsDoingGC = false;
+  }
+}
+
 IdleSchedulerChild* IdleSchedulerChild::GetMainThreadIdleScheduler() {
   MOZ_ASSERT(NS_IsMainThread());
 
