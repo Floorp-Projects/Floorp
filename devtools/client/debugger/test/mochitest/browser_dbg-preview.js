@@ -39,7 +39,17 @@ add_task(async function() {
   ]);
 
   await previews(dbg, "classPreview", [
-    { line: 49, column: 20, expression: "this.x", result: 1 },
+    { line: 50, column: 20, expression: "this.x", result: 1 },
+    { line: 50, column: 29, expression: "this.#privateVar", result: 2 },
+    {
+      line: 50,
+      column: 47,
+      expression: "Foo.#privateStatic",
+      fields: [
+        ["first", "a"],
+        ["second", "b"],
+      ],
+    },
   ]);
 });
 

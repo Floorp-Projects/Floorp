@@ -42,11 +42,12 @@ function classPreview() {
   class Foo {
     x = 1;
     #privateVar = 2;
+    static #privateStatic = { first: "a", second: "b" };
     #privateMethod() {
       return this.#privateVar;
     }
     breakFn() {
-      let i = this.x * this.#privateVar;
+      let i = this.x * this.#privateVar + Foo.#privateStatic;
       debugger;
     }
   }
