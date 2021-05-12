@@ -8,6 +8,7 @@
 #include "mozilla/StaticPrefs_javascript.h"
 #include "mozilla/Unused.h"
 #include "mozilla/ipc/IdleSchedulerParent.h"
+#include "mozilla/Telemetry.h"
 #include "nsSystemInfo.h"
 #include "nsThreadUtils.h"
 #include "nsITimer.h"
@@ -23,6 +24,8 @@ LinkedList<IdleSchedulerParent> IdleSchedulerParent::sIdleAndGCRequests;
 int32_t IdleSchedulerParent::sMaxConcurrentIdleTasksInChildProcesses = 1;
 uint32_t IdleSchedulerParent::sMaxConcurrentGCs = 1;
 uint32_t IdleSchedulerParent::sActiveGCs = 0;
+bool IdleSchedulerParent::sRecordGCTelemetry = false;
+uint32_t IdleSchedulerParent::sNumWaitingGC = 0;
 uint32_t IdleSchedulerParent::sChildProcessesRunningPrioritizedOperation = 0;
 uint32_t IdleSchedulerParent::sChildProcessesAlive = 0;
 nsITimer* IdleSchedulerParent::sStarvationPreventer = nullptr;
@@ -280,6 +283,8 @@ IPCResult IdleSchedulerParent::RecvRequestGC(RequestGCResolver&& aResolver) {
     sIdleAndGCRequests.insertBack(this);
   }
 
+  sRecordGCTelemetry = true;
+  sNumWaitingGC++;
   Schedule(nullptr);
   return IPC_OK();
 }
@@ -295,12 +300,15 @@ IPCResult IdleSchedulerParent::RecvDoneGC() {
   if (mRequestingGC) {
     mRequestingGC.value()(false);
     mRequestingGC = Nothing();
+    MOZ_ASSERT(sNumWaitingGC > 0);
+    sNumWaitingGC--;
   } else {
     // mDoingGC is true.
     sActiveGCs--;
     mDoingGC = false;
   }
 
+  sRecordGCTelemetry = true;
   Schedule(nullptr);
   return IPC_OK();
 }
@@ -345,6 +353,9 @@ void IdleSchedulerParent::SendMayGC() {
   mRequestingGC = Nothing();
   mDoingGC = true;
   sActiveGCs++;
+  sRecordGCTelemetry = true;
+  MOZ_ASSERT(sNumWaitingGC > 0);
+  sNumWaitingGC--;
 }
 
 void IdleSchedulerParent::Schedule(IdleSchedulerParent* aRequester) {
@@ -400,6 +411,11 @@ void IdleSchedulerParent::Schedule(IdleSchedulerParent* aRequester) {
 
   if (!sIdleAndGCRequests.isEmpty() && HasSpareCycles(activeCount)) {
     EnsureStarvationTimer();
+  }
+
+  if (sRecordGCTelemetry) {
+    sRecordGCTelemetry = false;
+    Telemetry::Accumulate(Telemetry::GC_WAIT_FOR_IDLE_COUNT, sNumWaitingGC);
   }
 }
 
