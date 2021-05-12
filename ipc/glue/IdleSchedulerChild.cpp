@@ -9,6 +9,7 @@
 #include "mozilla/ipc/PBackgroundChild.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/IdlePeriodState.h"
+#include "mozilla/Telemetry.h"
 #include "BackgroundChild.h"
 
 namespace mozilla {
@@ -77,13 +78,17 @@ RefPtr<IdleSchedulerChild::MayGCPromise> IdleSchedulerChild::MayGCNow() {
   if (mIsRequestingGC || mIsDoingGC) {
     return nullptr;
   }
+  TimeStamp wait_since = TimeStamp::Now();
 
   mIsRequestingGC = true;
   return SendRequestGC()->Then(
       GetMainThreadSerialEventTarget(), __func__,
-      [self = RefPtr(this)](bool aIgnored) {
+      [self = RefPtr(this), wait_since](bool aIgnored) {
         MOZ_ASSERT(self->mIsRequestingGC && !self->mIsDoingGC);
         // The parent process always says yes, sometimes after a delay.
+
+        Telemetry::AccumulateTimeDelta(Telemetry::GC_WAIT_FOR_IDLE_MS,
+                                       wait_since);
         self->mIsRequestingGC = false;
         self->mIsDoingGC = true;
         return MayGCPromise::CreateAndResolve(true, __func__);
