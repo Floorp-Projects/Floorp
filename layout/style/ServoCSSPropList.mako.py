@@ -44,13 +44,7 @@ class Alias(object):
 def is_internal(prop):
     # A property which is not controlled by pref and not enabled in
     # content by default is an internal property.
-    if not prop.gecko_pref and not prop.enabled_in_content():
-        return True
-    # There are some special cases we may want to remove eventually.
-    OTHER_INTERNALS = [
-        "-moz-context-properties",
-    ]
-    return prop.name in OTHER_INTERNALS
+    return not prop.gecko_pref and not prop.enabled_in_content()
 
 def method(prop):
     if prop.name == "float":

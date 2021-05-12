@@ -674,20 +674,6 @@ exports.CSS_PROPERTIES = {
       "unset"
     ]
   },
-  "-moz-context-properties": {
-    "isInherited": true,
-    "subproperties": [
-      "-moz-context-properties"
-    ],
-    "supports": [],
-    "values": [
-      "inherit",
-      "initial",
-      "none",
-      "revert",
-      "unset"
-    ]
-  },
   "-moz-float-edge": {
     "isInherited": false,
     "subproperties": [
@@ -11000,6 +10986,10 @@ exports.PREFERENCES = [
   [
     "justify-tracks",
     "layout.css.grid-template-masonry-value.enabled"
+  ],
+  [
+    "-moz-context-properties",
+    "svg.context-properties.content.enabled"
   ],
   [
     "offset-anchor",
