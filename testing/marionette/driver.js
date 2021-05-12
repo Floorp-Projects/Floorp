@@ -430,10 +430,6 @@ GeckoDriver.prototype.registerBrowser = function(browserElement) {
  *  <dd>Defines the URL for a proxy auto-config file if
  *   <code>proxyType</code> is equal to "<tt>pac</tt>".
  *
- *  <dt><code>ftpProxy</code> (string)
- *  <dd>Defines the proxy host for FTP traffic when the
- *   <code>proxyType</code> is "<tt>manual</tt>".
- *
  *  <dt><code>httpProxy</code> (string)
  *  <dd>Defines the proxy host for HTTP traffic when the
  *   <code>proxyType</code> is "<tt>manual</tt>".
@@ -1984,7 +1980,7 @@ GeckoDriver.prototype.addCookie = async function(cmd) {
 
   let { protocol, hostname } = this._getCurrentURL();
 
-  const networkSchemes = ["ftp:", "http:", "https:"];
+  const networkSchemes = ["http:", "https:"];
   if (!networkSchemes.includes(protocol)) {
     throw new error.InvalidCookieDomainError("Document is cookie-averse");
   }
