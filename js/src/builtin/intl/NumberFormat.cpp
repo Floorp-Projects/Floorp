@@ -1244,11 +1244,10 @@ static bool FormattedNumberToParts(JSContext* cx, HandleString str,
 
 bool js::intl_FormatNumber(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
-  MOZ_ASSERT(args.length() == 4);
+  MOZ_ASSERT(args.length() == 3);
   MOZ_ASSERT(args[0].isObject());
   MOZ_ASSERT(args[1].isNumeric());
   MOZ_ASSERT(args[2].isBoolean());
-  MOZ_ASSERT(args[3].isBoolean());
 
   Rooted<NumberFormatObject*> numberFormat(
       cx, &args[0].toObject().as<NumberFormatObject>());

@@ -35,7 +35,7 @@ function Number_toLocaleString() {
     }
 
     // Step 5.
-    return intl_FormatNumber(numberFormat, x, /* formatToParts = */ false, /* unitStyle = */ false);
+    return intl_FormatNumber(numberFormat, x, /* formatToParts = */ false);
 }
 #endif  // JS_HAS_INTL_API
 
