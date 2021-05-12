@@ -2080,14 +2080,6 @@ class nsIWidget : public nsISupports {
   virtual const SizeConstraints GetSizeConstraints() = 0;
 
   /**
-   * Apply the current size constraints to the given size.
-   *
-   * @param aWidth width to constrain
-   * @param aHeight height to constrain
-   */
-  virtual void ConstrainSize(int32_t* aWidth, int32_t* aHeight) = 0;
-
-  /**
    * If this is owned by a BrowserChild, return that.  Otherwise return
    * null.
    */
