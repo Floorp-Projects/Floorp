@@ -643,18 +643,6 @@ description#identity-popup-content-verifier,
   background-color: var(--arrowpanel-dimmed-further);
 }
 
-.protections-popup-category::after {
-  content: url(chrome://browser/skin/back-12.svg);
-  -moz-context-properties: fill, fill-opacity;
-  fill-opacity: .6;
-  transform: translateY(1px);
-  float: inline-end;
-}
-
-.protections-popup-category:-moz-locale-dir(ltr)::after {
-  scale: -1 1;
-}
-
 /* This subview could get filled with a lot of trackers, set a maximum size
  * and allow it to scroll vertically.*/
 #protections-popup-socialblockView,
@@ -832,11 +820,6 @@ description#identity-popup-content-verifier,
 
 .protections-popup-category.notFound:hover {
   background: none;
-}
-
-/* Hide the arrow for not found items */
-.protections-popup-category.notFound::after {
-  display: none;
 }
 
 .trackers-icon {

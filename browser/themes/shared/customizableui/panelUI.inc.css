@@ -1588,6 +1588,7 @@ panelview .toolbarbutton-1,
   color: var(--panel-shortcut-color);
 }
 
+#protections-popup-mainView .subviewbutton-nav:not(.notFound)::after,
 #identity-popup-mainView .subviewbutton-nav::after,
 .widget-overflow-list .subviewbutton-nav::after,
 .PanelUI-subView .subviewbutton-nav::after {
@@ -1598,6 +1599,7 @@ panelview .toolbarbutton-1,
   display: -moz-box;
 }
 
+#protections-popup-mainView .subviewbutton-nav:not(.notFound):-moz-locale-dir(rtl)::after,
 #identity-popup-mainView .subviewbutton-nav:-moz-locale-dir(rtl)::after,
 .widget-overflow-list .subviewbutton-nav:-moz-locale-dir(rtl)::after,
 .PanelUI-subView .subviewbutton-nav:-moz-locale-dir(rtl)::after {
