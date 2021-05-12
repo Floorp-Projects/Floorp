@@ -1052,8 +1052,6 @@ with modules["IPC"]:
 with modules["SVG"]:
     # SVG DOM error codes from http://www.w3.org/TR/SVG11/svgdom.html
     errors["NS_ERROR_DOM_SVG_WRONG_TYPE_ERR"] = FAILURE(0)
-    # Yes, the spec says "INVERTABLE", not "INVERTIBLE"
-    errors["NS_ERROR_DOM_SVG_MATRIX_NOT_INVERTABLE"] = FAILURE(2)
 
 
 # =======================================================================
