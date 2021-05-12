@@ -1025,9 +1025,7 @@ static LogicalSize CalculateContainingBlockSizeForAbsolutes(
 
   LogicalSize cbSize(aFrameSize);
   // Containing block is relative to the padding edge
-  const LogicalMargin& border =
-      LogicalMargin(aWM, aReflowInput.ComputedPhysicalBorderPadding() -
-                             aReflowInput.ComputedPhysicalPadding());
+  const LogicalMargin border = aReflowInput.ComputedLogicalBorder(aWM);
   cbSize.ISize(aWM) -= border.IStartEnd(aWM);
   cbSize.BSize(aWM) -= border.BStartEnd(aWM);
 

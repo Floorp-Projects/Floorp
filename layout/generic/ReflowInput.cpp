@@ -1390,8 +1390,7 @@ void ReflowInput::CalculateHypotheticalPosition(
   // The specified offsets are relative to the absolute containing block's
   // padding edge and our current values are relative to the border edge, so
   // translate.
-  LogicalMargin border = aCBReflowInput->ComputedLogicalBorderPadding(wm) -
-                         aCBReflowInput->ComputedLogicalPadding(wm);
+  const LogicalMargin border = aCBReflowInput->ComputedLogicalBorder(wm);
   aHypotheticalPos.mIStart -= border.IStart(wm);
   aHypotheticalPos.mBStart -= border.BStart(wm);
 

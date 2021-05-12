@@ -122,6 +122,10 @@ struct SizeComputationInput {
       mozilla::WritingMode aWM) const {
     return mComputedPadding.ConvertTo(aWM, mWritingMode);
   }
+  mozilla::LogicalMargin ComputedLogicalBorder(mozilla::WritingMode aWM) const {
+    return (mComputedBorderPadding - mComputedPadding)
+        .ConvertTo(aWM, mWritingMode);
+  }
 
   void SetComputedLogicalMargin(mozilla::WritingMode aWM,
                                 const mozilla::LogicalMargin& aMargin) {
