@@ -146,6 +146,7 @@ CFTypeRefPtr<IOSurfaceRef> SurfacePoolCA::LockedPool::ObtainSurfaceFromPool(cons
                                     });
   if (iterToRecycle != mAvailableEntries.end()) {
     CFTypeRefPtr<IOSurfaceRef> surface = iterToRecycle->mIOSurface;
+    MOZ_RELEASE_ASSERT(surface.get(), "Available surfaces should be non-null.");
     // Move the entry from mAvailableEntries to mInUseEntries.
     MutateEntryStorage("Recycle", aSize, [&]() {
       mInUseEntries.insert({surface, std::move(*iterToRecycle)});
@@ -187,6 +188,8 @@ void SurfacePoolCA::LockedPool::ReturnSurfaceToPool(CFTypeRefPtr<IOSurfaceRef> a
     });
   } else {
     // Move the entry from mInUseEntries to mAvailableEntries.
+    MOZ_RELEASE_ASSERT(inUseEntryIter->second.mIOSurface.get(),
+                       "In use surfaces should be non-null.");
     MutateEntryStorage("Retain", IntSize(inUseEntryIter->second.mSize), [&]() {
       mAvailableEntries.AppendElement(std::move(inUseEntryIter->second));
       mInUseEntries.erase(inUseEntryIter);
@@ -232,6 +235,8 @@ uint64_t SurfacePoolCA::LockedPool::CollectPendingSurfaces(uint64_t aCheckGenera
     } else {
       // The surface has become unused!
       // Move the entry from mPendingEntries to mAvailableEntries.
+      MOZ_RELEASE_ASSERT(pendingSurf.mEntry.mIOSurface.get(),
+                         "Pending surfaces should be non-null.");
       MutateEntryStorage("Stop waiting for", IntSize(pendingSurf.mEntry.mSize), [&]() {
         mAvailableEntries.AppendElement(std::move(pendingSurf.mEntry));
         mPendingEntries.RemoveElementAt(i);
