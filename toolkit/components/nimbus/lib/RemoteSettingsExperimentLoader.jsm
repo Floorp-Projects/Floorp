@@ -377,6 +377,10 @@ class _RemoteSettingsExperimentLoader {
    * Sets a timer to update recipes every this.intervalInSeconds
    */
   setTimer() {
+    if (this.intervalInSeconds === 0) {
+      // Used in tests where we want to turn this mechanism off
+      return;
+    }
     // The callbacks will be called soon after the timer is registered
     timerManager.registerTimer(
       TIMER_NAME,
