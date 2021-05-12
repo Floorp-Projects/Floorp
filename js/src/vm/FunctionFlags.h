@@ -85,7 +85,18 @@ class FunctionFlags {
     RESOLVED_NAME = 1 << 13,
     RESOLVED_LENGTH = 1 << 14,
 
-    // (1 << 15 is unused)
+    // This function is kept only for skipping it over during delazification.
+    //
+    // This function is inside arrow function's parameter expression, and
+    // parsed twice, once before finding "=>" token, and once after finding
+    // "=>" and rewinding to the beginning of the parameters.
+    // ScriptStencil is created for both case, and the first one is kept only
+    // for delazification, to make sure delazification sees the same sequence
+    // of inner function to skip over.
+    //
+    // We call the first one "ghost".
+    // It should be kept lazy, and shouldn't be exposed to debugger.
+    GHOST_FUNCTION = 1 << 15,
 
     // Shifted form of FunctionKinds.
     NORMAL_KIND = NormalFunction << FUNCTION_KIND_SHIFT,
@@ -118,7 +129,7 @@ class FunctionFlags {
 
     // Flags preserved when cloning a function.
     STABLE_ACROSS_CLONES =
-        CONSTRUCTOR | LAMBDA | SELF_HOSTED | FUNCTION_KIND_MASK
+        CONSTRUCTOR | LAMBDA | SELF_HOSTED | FUNCTION_KIND_MASK | GHOST_FUNCTION
   };
 
   uint16_t flags_;
@@ -306,6 +317,9 @@ class FunctionFlags {
   void setIsExtended() { setFlags(EXTENDED); }
 
   bool isNativeConstructor() const { return hasFlags(NATIVE_CTOR); }
+
+  void setIsGhost() { setFlags(GHOST_FUNCTION); }
+  bool isGhost() const { return hasFlags(GHOST_FUNCTION); }
 
   static uint16_t HasJitEntryFlags(bool isConstructing) {
     uint16_t flags = BASESCRIPT | SELFHOSTLAZY;

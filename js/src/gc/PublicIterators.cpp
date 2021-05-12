@@ -113,6 +113,13 @@ static void TraverseInnerLazyScriptsForLazyScript(
       continue;
     }
 
+    // If the function is "ghost", we shouldn't expose it to the debugger.
+    //
+    // See GHOST_FUNCTION in FunctionFlags.h for more details.
+    if (fun->isGhost()) {
+      continue;
+    }
+
     BaseScript* script = fun->baseScript();
     MOZ_ASSERT_IF(script->hasEnclosingScript(),
                   script->enclosingScript() == enclosingScript);
