@@ -913,8 +913,12 @@ class nsPIDOMWindowOuter : public mozIDOMWindowProxy {
   /**
    * Callback for notifying a window about a modal dialog being
    * opened/closed with the window as a parent.
+   *
+   * If any script can run between the enter and leave modal states, and the
+   * window isn't top, the LeaveModalState() should be called on the window
+   * returned by EnterModalState().
    */
-  virtual void EnterModalState() = 0;
+  virtual nsPIDOMWindowOuter* EnterModalState() = 0;
   virtual void LeaveModalState() = 0;
 
   virtual bool CanClose() = 0;
