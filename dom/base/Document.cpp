@@ -11675,6 +11675,8 @@ nsresult Document::CloneDocHelper(Document* clone) const {
       clone->ResetToURI(uri, loadGroup, NodePrincipal(), mPartitionedPrincipal);
     }
 
+    clone->mIsSrcdocDocument = mIsSrcdocDocument;
+
     clone->SetContainer(mDocumentContainer);
 
     // Setup the navigation time. This will be needed by any animations in the
