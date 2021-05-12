@@ -772,6 +772,20 @@ void XPCJSRuntime::GCSliceCallback(JSContext* cx, JS::GCProgress progress,
     return;
   }
 
+  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+  if (obs) {
+    switch (progress) {
+      case JS::GC_CYCLE_BEGIN:
+        obs->NotifyObservers(nullptr, "garbage-collector-begin", nullptr);
+        break;
+      case JS::GC_CYCLE_END:
+        obs->NotifyObservers(nullptr, "garbage-collector-end", nullptr);
+        break;
+      default:
+        break;
+    }
+  }
+
   CrashReporter::SetGarbageCollecting(progress == JS::GC_CYCLE_BEGIN);
 
   if (self->mPrevGCSliceCallback) {
