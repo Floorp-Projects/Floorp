@@ -8,6 +8,10 @@ import { Themes } from "./Themes";
 import { SecondaryCTA, StepsIndicator } from "./MultiStageAboutWelcome";
 
 export class MultiStageProtonScreen extends React.PureComponent {
+  componentDidMount() {
+    this.mainContentHeader.focus();
+  }
+
   render() {
     const { content, totalNumberOfScreens: total } = this.props;
     const isWelcomeScreen = this.props.order === 0;
@@ -47,7 +51,12 @@ export class MultiStageProtonScreen extends React.PureComponent {
             <div className="brand-logo" />
             <div className="welcome-text">
               <Localized text={content.title}>
-                <h1 />
+                <h1
+                  tabIndex="-1"
+                  ref={input => {
+                    this.mainContentHeader = input;
+                  }}
+                />
               </Localized>
               {!isWelcomeScreen ? (
                 <Localized text={content.subtitle}>
