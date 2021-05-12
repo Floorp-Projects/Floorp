@@ -932,14 +932,6 @@ with modules["SECURITY"]:
 
 
 # =======================================================================
-# 22: NS_ERROR_MODULE_DOM_XPATH
-# =======================================================================
-with modules["DOM_XPATH"]:
-    # DOM error codes from http://www.w3.org/TR/DOM-Level-3-XPath/
-    errors["NS_ERROR_DOM_INVALID_EXPRESSION_ERR"] = FAILURE(51)
-
-
-# =======================================================================
 # 24: NS_ERROR_MODULE_URILOADER
 # =======================================================================
 with modules["URILOADER"]:
