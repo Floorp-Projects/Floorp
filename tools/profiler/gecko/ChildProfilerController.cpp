@@ -75,20 +75,32 @@ void ChildProfilerController::ShutdownAndMaybeGrabShutdownProfileFirst(
     lockedmThread.swap(profilerChildThread);
   }
   if (profilerChildThread) {
-    CrashReporter::AnnotateCrashReport(
-        CrashReporter::Annotation::ProfilerChildShutdownPhase,
-        profiler_is_active()
-            ? "Profiling - Dispatching ShutdownProfilerChild"_ns
-            : "Not profiling - Dispatching ShutdownProfilerChild"_ns);
-    profilerChildThread->Dispatch(
-        NewRunnableMethod<nsCString*>(
-            "ChildProfilerController::ShutdownProfilerChild", this,
-            &ChildProfilerController::ShutdownProfilerChild,
-            aOutShutdownProfile),
-        NS_DISPATCH_NORMAL);
-    // Shut down the thread. This call will spin until all runnables (including
-    // the ShutdownProfilerChild runnable) have been processed.
-    profilerChildThread->Shutdown();
+    if (profiler_is_active()) {
+      CrashReporter::AnnotateCrashReport(
+          CrashReporter::Annotation::ProfilerChildShutdownPhase,
+          "Profiling - Dispatching ShutdownProfilerChild"_ns);
+      profilerChildThread->Dispatch(
+          NewRunnableMethod<nsCString*>(
+              "ChildProfilerController::ShutdownProfilerChild", this,
+              &ChildProfilerController::ShutdownProfilerChild,
+              aOutShutdownProfile),
+          NS_DISPATCH_NORMAL);
+      // Shut down the thread. This call will spin until all runnables
+      // (including the ShutdownProfilerChild runnable) have been processed.
+      profilerChildThread->Shutdown();
+    } else {
+      CrashReporter::AnnotateCrashReport(
+          CrashReporter::Annotation::ProfilerChildShutdownPhase,
+          "Not profiling - Running ShutdownProfilerChild"_ns);
+      // If we're not profiling, this operation will be very quick, so it can be
+      // done synchronously. This avoids having to manually shutdown the thread,
+      // which runs a risky inner event loop, see bug 1613798.
+      profilerChildThread->Dispatch(
+          NewRunnableMethod<nsCString*>(
+              "ChildProfilerController::ShutdownProfilerChild SYNC", this,
+              &ChildProfilerController::ShutdownProfilerChild, nullptr),
+          NS_DISPATCH_SYNC);
+    }
     // At this point, `profilerChildThread` should be the last reference to the
     // thread, so it will now get destroyed.
   }
