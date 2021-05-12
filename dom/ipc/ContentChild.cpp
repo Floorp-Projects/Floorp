@@ -9,6 +9,7 @@
 #endif
 
 #include "BrowserChild.h"
+#include "nsNSSComponent.h"
 #include "ContentChild.h"
 #include "GeckoProfiler.h"
 #include "HandlerServiceChild.h"
@@ -2588,7 +2589,7 @@ mozilla::ipc::IPCResult ContentChild::RecvRemoteType(
 }
 
 // A method to initialize anything we need during the preallocation phase
-void ContentChild::PreallocInit() {}
+void ContentChild::PreallocInit() { EnsureNSSInitializedChromeOrContent(); }
 
 // Call RemoteTypePrefix() on the result to remove URIs if you want to use this
 // for telemetry.
