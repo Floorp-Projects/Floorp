@@ -30,6 +30,11 @@ job-defaults:
             fission:
                 by-test-name:
                     talos-.*-profiling-fis: []
+                    talos-tabswitch-fis:
+                        by-test-platform:
+                            macosx1014.*: []
+                            (linux1804-64|windows10-64|macosx.*)-shippable-qr/opt: [mozilla-central]
+                            default: []
                     default:
                         by-test-platform:
                             (linux1804-64|windows10-64|macosx.*)-shippable-qr/opt: [mozilla-central]
@@ -43,6 +48,12 @@ job-defaults:
                             .*(?:shippable-qr).*: []
                             windows10-64.*(?!shippable-qr)shippable.*: []
                             default: [mozilla-central]
+                    talos-tabswitch:
+                        by-test-platform:
+                            windows.*-32.*: []
+                            macosx1014.*: []
+                            (linux|windows10-64|macos)(?!.*shippable).*: []
+                            default: [mozilla-beta, trunk]
                     default:
                         by-test-platform:
                             windows.*-32.*: []
