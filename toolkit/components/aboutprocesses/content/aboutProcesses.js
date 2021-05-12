@@ -517,7 +517,7 @@ var View = {
         case "privilegedabout":
           fluentName = "about-processes-privilegedabout-process";
           break;
-        case "privilegemozilla":
+        case "privilegedmozilla":
           fluentName = "about-processes-privilegedmozilla-process";
           break;
         case "withCoopCoep":
