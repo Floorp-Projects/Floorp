@@ -3918,6 +3918,7 @@ ParentLayerPoint AsyncPanZoomController::GetOverscrollAmount() const {
     AutoApplyAsyncTestAttributes testAttributeApplier(this, lock);
     return GetOverscrollAmountInternal();
   }
+  RecursiveMutexAutoLock lock(mRecursiveMutex);
   return GetOverscrollAmountInternal();
 }
 
