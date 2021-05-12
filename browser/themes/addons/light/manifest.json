@@ -46,6 +46,9 @@
       "button_primary_active": "rgb(5, 62, 148)",
       "button_primary_color": "rgb(251, 251, 254)",
       "error_text_color": "rgb(197,0,66)",
+      "input_color": "rgb(21,20,26)",
+      "input_background": "rgb(255,255,255)",
+      "input_border_error": "#E22850",
       "autocomplete_popup_hover": "rgb(240,240,244)",
       "autocomplete_popup_separator": "rgb(240,240,244)",
       "appmenu_update_icon_color": "#2AC3A2",
@@ -58,7 +61,8 @@
       "panel_hover": "color-mix(in srgb, currentColor 12%, transparent)",
       "panel_active": "color-mix(in srgb, currentColor 20%, transparent)",
       "panel_active_darker": "color-mix(in srgb, currentColor 27%, transparent)",
-      "toolbar_field_icon_opacity": "0.72"
+      "toolbar_field_icon_opacity": "0.72",
+      "input_border_color": "color-mix(in srgb, currentColor 41%, transparent)"
     }
   },
 
@@ -74,6 +78,10 @@
       "button_primary_active": "--button-primary-active-bgcolor",
       "button_primary_color": "--button-primary-color",
       "error_text_color": "--error-text-color",
+      "input_background": "--input-bgcolor",
+      "input_color": "--input-color",
+      "input_border": "--input-border-color",
+      "input_border_error": "--input-error-border-color",
       "autocomplete_popup_hover": "--autocomplete-popup-hover-background",
       "autocomplete_popup_separator": "--autocomplete-popup-separator-color",
       "appmenu_update_icon_color": "--panel-banner-item-update-supported-bgcolor",
@@ -86,7 +94,8 @@
       "panel_hover": "--arrowpanel-dimmed",
       "panel_active": "-arrowpanel-dimmed-further",
       "panel_active_darker": "--arrowpanel-dimmed-even-further",
-      "toolbar_field_icon_opacity": "--urlbar-icon-fill-opacity"
+      "toolbar_field_icon_opacity": "--urlbar-icon-fill-opacity",
+      "input_border_color": "--input-border-color"
     }
   }
 }
