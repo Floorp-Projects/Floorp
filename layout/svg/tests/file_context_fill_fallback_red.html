@@ -9,4 +9,9 @@
     fill: green;
   }
 </style>
-<img src="file_context_fill_fallback_red.svg" style="width: 100px; height: 100px;">
+<img style="width: 100px; height: 100px;">
+<script>
+  let domain = location.search.substring(1);
+  let img = document.querySelector("img");
+  img.src = img.alt = `http://${domain}/tests/layout/svg/tests/file_context_fill_fallback_red.svg`;
+</script>
