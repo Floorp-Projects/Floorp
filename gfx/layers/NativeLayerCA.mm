@@ -644,7 +644,6 @@ bool NativeLayerCA::NextSurface(const MutexAutoLock& aLock) {
     surf = Some(SurfaceWithInvalidRegion{newSurf, IntRect({}, mSize)});
   }
 
-  MOZ_RELEASE_ASSERT(surf);
   mInProgressSurface = std::move(surf);
   IOSurfaceIncrementUseCount(mInProgressSurface->mSurface.get());
   return true;
