@@ -135,6 +135,32 @@ struct MOZ_STACK_CLASS NumberFormatOptions {
   bool mRoundingModeHalfUp = true;
 };
 
+enum class NumberPartType {
+  Compact,
+  Currency,
+  Decimal,
+  ExponentInteger,
+  ExponentMinusSign,
+  ExponentSeparator,
+  Fraction,
+  Group,
+  Infinity,
+  Integer,
+  Literal,
+  MinusSign,
+  Nan,
+  Percent,
+  PlusSign,
+  Unit,
+};
+
+// Because parts fully partition the formatted string, we only track the
+// index of the end of each part -- the beginning is implicitly the last
+// part's end.
+using NumberPart = std::pair<NumberPartType, size_t>;
+
+using NumberPartVector = mozilla::Vector<NumberPart, 8 * sizeof(NumberPart)>;
+
 /**
  * According to http://userguide.icu-project.org/design, as long as we constrain
  * ourselves to const APIs ICU is const-correct.
@@ -161,6 +187,17 @@ class NumberFormat final {
     return formatResult();
   }
 
+  Result<std::u16string_view, NumberFormat::FormatError> formatToParts(
+      double number, NumberPartVector& parts) const {
+    if (!mIsInitialized || !formatInternal(number)) {
+      return Err(FormatError::InternalError);
+    }
+
+    bool isNegative = !IsNaN(number) && IsNegative(number);
+
+    return formatResultToParts(Some(number), isNegative, parts);
+  }
+
   template <typename B>
   Result<Ok, NumberFormat::FormatError> format(double number, B& buffer) const {
     if (!mIsInitialized || !formatInternal(number)) {
@@ -177,6 +214,15 @@ class NumberFormat final {
     }
 
     return formatResult();
+  }
+
+  Result<std::u16string_view, NumberFormat::FormatError> formatToParts(
+      int64_t number, NumberPartVector& parts) const {
+    if (!mIsInitialized || !formatInternal(number)) {
+      return Err(FormatError::InternalError);
+    }
+
+    return formatResultToParts(Nothing(), number < 0, parts);
   }
 
   template <typename B>
@@ -198,6 +244,17 @@ class NumberFormat final {
     return formatResult();
   }
 
+  Result<std::u16string_view, NumberFormat::FormatError> formatToParts(
+      std::string_view number, NumberPartVector& parts) const {
+    if (!mIsInitialized || !formatInternal(number)) {
+      return Err(FormatError::InternalError);
+    }
+
+    bool isNegative = !number.empty() && number[0] == '-';
+
+    return formatResultToParts(Nothing(), isNegative, parts);
+  }
+
   template <typename B>
   Result<Ok, NumberFormat::FormatError> format(std::string_view number,
                                                B& buffer) const {
@@ -211,12 +268,21 @@ class NumberFormat final {
  private:
   UNumberFormatter* mNumberFormatter = nullptr;
   UFormattedNumber* mFormattedNumber = nullptr;
+  bool mFormatForUnit = false;
   bool mIsInitialized = false;
 
   [[nodiscard]] bool formatInternal(double number) const;
   [[nodiscard]] bool formatInternal(int64_t number) const;
   [[nodiscard]] bool formatInternal(std::string_view number) const;
+
+  Maybe<NumberPartType> GetPartTypeForNumberField(UNumberFormatFields fieldName,
+                                                  Maybe<double> number,
+                                                  bool isNegative) const;
+
   Result<std::u16string_view, NumberFormat::FormatError> formatResult() const;
+  Result<std::u16string_view, NumberFormat::FormatError> formatResultToParts(
+      const Maybe<double> number, bool isNegative,
+      NumberPartVector& parts) const;
 
   template <typename C, typename B>
   Result<Ok, NumberFormat::FormatError> formatResult(B& buffer) const {
