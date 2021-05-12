@@ -951,8 +951,10 @@ bool BaselineStackBuilder::buildStubFrame(uint32_t frameSize,
 
   // Write stub pointer.
   uint32_t pcOff = script_->pcToOffset(pc_);
-  ICEntry& icEntry = script_->jitScript()->icEntryFromPCOffset(pcOff);
-  if (!writePtr(icEntry.fallbackStub(), "StubPtr")) {
+  JitScript* jitScript = script_->jitScript();
+  const ICEntry& icEntry = jitScript->icEntryFromPCOffset(pcOff);
+  ICFallbackStub* fallback = jitScript->fallbackStubForICEntry(&icEntry);
+  if (!writePtr(fallback, "StubPtr")) {
     return false;
   }
 

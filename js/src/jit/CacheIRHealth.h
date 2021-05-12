@@ -19,6 +19,7 @@ namespace jit {
 class ICEntry;
 class ICStub;
 class ICCacheIRStub;
+class ICFallbackStub;
 
 // [SMDOC] CacheIR Health Report
 //
@@ -68,8 +69,8 @@ class CacheIRHealth {
                                     Happiness* entryHappiness);
   // Health of all the stubs in an individual CacheIR Entry.
   bool spewICEntryHealth(AutoStructuredSpewer& spew, HandleScript script,
-                         ICEntry* entry, jsbytecode* pc, JSOp op,
-                         Happiness* entryHappiness);
+                         ICEntry* entry, ICFallbackStub* fallback,
+                         jsbytecode* pc, JSOp op, Happiness* entryHappiness);
 
  public:
   // Spews the final hit count for scripts where we care about its final hit
@@ -77,7 +78,8 @@ class CacheIRHealth {
   void spewScriptFinalWarmUpCount(JSContext* cx, const char* filename,
                                   JSScript* script, uint32_t warmUpCount);
   // Spew the health of a particular ICEntry only.
-  void healthReportForIC(JSContext* cx, ICEntry* entry, HandleScript script,
+  void healthReportForIC(JSContext* cx, ICEntry* entry,
+                         ICFallbackStub* fallback, HandleScript script,
                          SpewContext context);
   // If a JitScript exists, spew the health of all ICEntries that exist
   // for the specified script.

@@ -270,25 +270,26 @@ void JitScript::Destroy(Zone* zone, JitScript* script) {
   js_delete(script);
 }
 
-struct ICEntries {
+struct FallbackStubs {
   ICScript* const icScript_;
 
-  explicit ICEntries(ICScript* icScript) : icScript_(icScript) {}
+  explicit FallbackStubs(ICScript* icScript) : icScript_(icScript) {}
 
   size_t numEntries() const { return icScript_->numICEntries(); }
-  ICEntry& operator[](size_t index) const { return icScript_->icEntry(index); }
+  ICFallbackStub* operator[](size_t index) const {
+    return icScript_->fallbackStub(index);
+  }
 };
 
-static bool ComputeBinarySearchMid(ICEntries entries, uint32_t pcOffset,
+static bool ComputeBinarySearchMid(FallbackStubs stubs, uint32_t pcOffset,
                                    size_t* loc) {
   return mozilla::BinarySearchIf(
-      entries, 0, entries.numEntries(),
-      [pcOffset](const ICEntry& entry) {
-        uint32_t entryOffset = entry.pcOffset();
-        if (pcOffset < entryOffset) {
+      stubs, 0, stubs.numEntries(),
+      [pcOffset](const ICFallbackStub* stub) {
+        if (pcOffset < stub->pcOffset()) {
           return -1;
         }
-        if (entryOffset < pcOffset) {
+        if (stub->pcOffset() < pcOffset) {
           return 1;
         }
         return 0;
@@ -298,12 +299,12 @@ static bool ComputeBinarySearchMid(ICEntries entries, uint32_t pcOffset,
 
 ICEntry& ICScript::icEntryFromPCOffset(uint32_t pcOffset) {
   size_t mid;
-  MOZ_ALWAYS_TRUE(ComputeBinarySearchMid(ICEntries(this), pcOffset, &mid));
+  MOZ_ALWAYS_TRUE(ComputeBinarySearchMid(FallbackStubs(this), pcOffset, &mid));
 
   MOZ_ASSERT(mid < numICEntries());
 
   ICEntry& entry = icEntry(mid);
-  MOZ_ASSERT(entry.pcOffset() == pcOffset);
+  MOZ_ASSERT(fallbackStubForICEntry(&entry)->pcOffset() == pcOffset);
   return entry;
 }
 
@@ -318,11 +319,11 @@ ICEntry* ICScript::interpreterICEntryFromPCOffset(uint32_t pcOffset) {
   // Fortunately, ComputeBinarySearchMid returns exactly this entry.
 
   size_t mid;
-  ComputeBinarySearchMid(ICEntries(this), pcOffset, &mid);
+  ComputeBinarySearchMid(FallbackStubs(this), pcOffset, &mid);
 
   if (mid < numICEntries()) {
     ICEntry& entry = icEntry(mid);
-    MOZ_ASSERT(entry.pcOffset() >= pcOffset);
+    MOZ_ASSERT(fallbackStubForICEntry(&entry)->pcOffset() >= pcOffset);
     return &entry;
   }
 
@@ -370,7 +371,7 @@ void ICScript::purgeOptimizedStubs(Zone* zone) {
 
     while (stub != lastStub) {
       if (!stub->toCacheIRStub()->allocatedInFallbackSpace()) {
-        lastStub->toFallbackStub()->unlinkStub(zone, prev,
+        lastStub->toFallbackStub()->unlinkStub(zone, &entry, prev,
                                                stub->toCacheIRStub());
         stub = stub->toCacheIRStub()->next();
         continue;
@@ -513,12 +514,13 @@ void jit::JitSpewBaselineICStats(JSScript* script, const char* dumpReason) {
   spew->beginListProperty("entries");
   for (size_t i = 0; i < jitScript->numICEntries(); i++) {
     ICEntry& entry = jitScript->icEntry(i);
+    ICFallbackStub* fallback = jitScript->fallbackStub(i);
     if (!HasEnteredCounters(entry)) {
       continue;
     }
 
-    uint32_t pcOffset = entry.pcOffset();
-    jsbytecode* pc = entry.pc(script);
+    uint32_t pcOffset = fallback->pcOffset();
+    jsbytecode* pc = script->offsetToPC(pcOffset);
 
     unsigned column;
     unsigned int line = PCToLineNumber(script, pc, &column);
@@ -537,7 +539,7 @@ void jit::JitSpewBaselineICStats(JSScript* script, const char* dumpReason) {
       stub = stub->toCacheIRStub()->next();
     }
     spew->endList();
-    spew->property("fallback_count", entry.fallbackStub()->enteredCount());
+    spew->property("fallback_count", fallback->enteredCount());
     spew->endObject();
   }
   spew->endList();
