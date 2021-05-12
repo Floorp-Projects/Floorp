@@ -57,23 +57,24 @@ bool NumberFormat::formatInternal(std::string_view number) const {
   return U_SUCCESS(status);
 }
 
-std::u16string_view NumberFormat::formatResult() const {
+Result<std::u16string_view, NumberFormat::FormatError>
+NumberFormat::formatResult() const {
   UErrorCode status = U_ZERO_ERROR;
 
   const UFormattedValue* formattedValue =
       unumf_resultAsValue(mFormattedNumber, &status);
   if (U_FAILURE(status)) {
-    return {};
+    return Err(FormatError::InternalError);
   }
 
   int32_t utf16Length;
   const char16_t* utf16Str =
       ufmtval_getString(formattedValue, &utf16Length, &status);
   if (U_FAILURE(status)) {
-    return {};
+    return Err(FormatError::InternalError);
   }
 
-  return {utf16Str, static_cast<size_t>(utf16Length)};
+  return std::u16string_view(utf16Str, static_cast<size_t>(utf16Length));
 }
 
 }  // namespace intl

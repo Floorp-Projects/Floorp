@@ -18,6 +18,32 @@ using namespace mozilla::dom;
 namespace mozilla {
 namespace intl {
 
+class SizeableUTF8Buffer {
+ public:
+  using CharType = uint8_t;
+
+  bool allocate(size_t size) {
+    mBuffer.reset(reinterpret_cast<CharType*>(malloc(size)));
+    mCapacity = size;
+    return true;
+  }
+
+  void* data() { return mBuffer.get(); }
+
+  size_t size() const { return mCapacity; }
+
+  void written(size_t amount) { mWritten = amount; }
+
+  size_t mWritten = 0;
+  size_t mCapacity = 0;
+
+  struct FreePolicy {
+    void operator()(const void* ptr) { free(const_cast<void*>(ptr)); }
+  };
+
+  UniquePtr<CharType[], FreePolicy> mBuffer;
+};
+
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(FluentPattern, mParent)
 
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(FluentPattern, AddRef)
@@ -263,37 +289,14 @@ uint8_t* FluentBuiltInNumberFormatterFormat(
     size_t* aOutCapacity) {
   const NumberFormat* nf = reinterpret_cast<const NumberFormat*>(aFormatter);
 
-  class Buffer {
-   public:
-    using CharType = uint8_t;
+  SizeableUTF8Buffer buffer;
+  if (nf->format(input, buffer).isOk()) {
+    *aOutCount = buffer.mWritten;
+    *aOutCapacity = buffer.mCapacity;
+    return buffer.mBuffer.release();
+  }
 
-    bool allocate(size_t size) {
-      mBuffer.reset(reinterpret_cast<CharType*>(malloc(size)));
-      mCapacity = size;
-      return true;
-    }
-
-    void* data() { return mBuffer.get(); }
-
-    size_t size() const { return mCapacity; }
-
-    void written(size_t amount) { mWritten = amount; }
-
-    size_t mWritten = 0;
-    size_t mCapacity = 0;
-    CharType* mData = nullptr;
-
-    struct FreePolicy {
-      void operator()(const void* ptr) { free(const_cast<void*>(ptr)); }
-    };
-
-    UniquePtr<CharType[], FreePolicy> mBuffer;
-  } buffer;
-
-  nf->format(input, buffer);
-  *aOutCount = buffer.mWritten;
-  *aOutCapacity = buffer.mCapacity;
-  return buffer.mBuffer.release();
+  return nullptr;
 }
 
 void FluentBuiltInNumberFormatterDestroy(ffi::RawNumberFormatter* aFormatter) {
