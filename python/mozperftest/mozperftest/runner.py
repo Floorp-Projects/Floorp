@@ -52,9 +52,12 @@ SEARCH_PATHS = [
     "testing/mozbase/mozproxy",
     "third_party/python/attrs/src",
     "third_party/python/blessings",
+    "third_party/python/certifi",
+    "third_party/python/chardet",
     "third_party/python/distro",
     "third_party/python/dlmanager",
     "third_party/python/esprima",
+    "third_party/python/idna",
     "third_party/python/importlib_metadata",
     "third_party/python/jsmin",
     "third_party/python/jsonschema",
@@ -63,6 +66,8 @@ SEARCH_PATHS = [
     "third_party/python/redo",
     "third_party/python/requests",
     "third_party/python/six",
+    "third_party/python/typing_extensions/src_py3",
+    "third_party/python/urllib3/src",
     "third_party/python/zipp",
 ]
 
