@@ -1958,11 +1958,11 @@ class LIsNullOrLikeUndefinedAndBranchT
   const LDefinition* temp() { return getTemp(0); }
 };
 
-class LSameValueD : public LInstructionHelper<1, 2, 1> {
+class LSameValueDouble : public LInstructionHelper<1, 2, 1> {
  public:
-  LIR_HEADER(SameValueD)
-  LSameValueD(const LAllocation& left, const LAllocation& right,
-              const LDefinition& temp)
+  LIR_HEADER(SameValueDouble)
+  LSameValueDouble(const LAllocation& left, const LAllocation& right,
+                   const LDefinition& temp)
       : LInstructionHelper(classOpcode) {
     setOperand(0, left);
     setOperand(1, right);

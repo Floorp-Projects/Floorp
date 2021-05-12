@@ -2929,15 +2929,16 @@ class MCompare : public MBinaryInstruction, public ComparePolicy::Data {
   }
 };
 
-class MSameValue : public MBinaryInstruction, public AllDoublePolicy::Data {
-  MSameValue(MDefinition* left, MDefinition* right)
+class MSameValueDouble : public MBinaryInstruction,
+                         public AllDoublePolicy::Data {
+  MSameValueDouble(MDefinition* left, MDefinition* right)
       : MBinaryInstruction(classOpcode, left, right) {
     setResultType(MIRType::Boolean);
     setMovable();
   }
 
  public:
-  INSTRUCTION_HEADER(SameValue)
+  INSTRUCTION_HEADER(SameValueDouble)
   TRIVIAL_NEW_WRAPPERS
 
   bool congruentTo(const MDefinition* ins) const override {
@@ -2945,7 +2946,7 @@ class MSameValue : public MBinaryInstruction, public AllDoublePolicy::Data {
   }
   AliasSet getAliasSet() const override { return AliasSet::None(); }
 
-  ALLOW_CLONE(MSameValue)
+  ALLOW_CLONE(MSameValueDouble)
 };
 
 // Takes a typed value and returns an untyped value.
