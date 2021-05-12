@@ -5,12 +5,10 @@
 "use strict";
 
 const { EnterprisePolicyTesting, PoliciesPrefTracker } = ChromeUtils.import(
-  "resource://testing-common/EnterprisePolicyTesting.jsm",
-  null
+  "resource://testing-common/EnterprisePolicyTesting.jsm"
 );
 const { TestUtils } = ChromeUtils.import(
-  "resource://testing-common/TestUtils.jsm",
-  null
+  "resource://testing-common/TestUtils.jsm"
 );
 
 ChromeUtils.defineModuleGetter(
