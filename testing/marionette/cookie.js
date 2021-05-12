@@ -111,7 +111,7 @@ cookie.fromJSON = function(json) {
  * @param {string=} restrictToHost
  *     Perform test that ``newCookie``'s domain matches this.
  * @param {string=} protocol
- *     The protocol of the caller. It can be `ftp:`, `http:` or `https:`.
+ *     The protocol of the caller. It can be `http:` or `https:`.
  *
  * @throws {TypeError}
  *     If ``name``, ``value``, or ``domain`` are not present and
@@ -199,7 +199,7 @@ cookie.add = function(
       schemeType = Ci.nsICookie.SCHEME_HTTPS;
       break;
     default:
-      // ftp: or any other protocol is supported by the cookie service.
+      // Any other protocol that is supported by the cookie service.
       break;
   }
 
