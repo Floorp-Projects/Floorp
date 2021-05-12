@@ -100,7 +100,8 @@ pub fn shutdown() -> Result<(), DispatchError> {
 /// Resets the Glean state and triggers init again.
 pub(crate) fn reset_dispatcher() {
     // We don't care about shutdown errors, since they will
-    // definitely happen if this
+    // definitely happen if this is run concurrently.
+    // We will still replace the global dispatcher.
     let _ = shutdown();
 
     // Now that the dispatcher is shut down, replace it.

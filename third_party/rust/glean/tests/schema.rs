@@ -36,6 +36,7 @@ fn new_glean(configuration: Option<Configuration>) -> tempfile::TempDir {
             channel: Some("testing".into()),
             server_endpoint: Some("invalid-test-host".into()),
             uploader: None,
+            use_core_mps: false,
         },
     };
 
@@ -86,6 +87,7 @@ fn validate_against_schema() {
         channel: Some("testing".into()),
         server_endpoint: Some("invalid-test-host".into()),
         uploader: Some(Box::new(ValidatingUploader { sender: s })),
+        use_core_mps: false,
     };
     let _ = new_glean(Some(cfg));
 

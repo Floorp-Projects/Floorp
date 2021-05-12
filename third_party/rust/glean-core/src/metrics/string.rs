@@ -61,6 +61,12 @@ impl StringMetric {
         glean.storage().record(glean, &self.meta, &value)
     }
 
+    /// Non-exported API used for crate-internal storage.
+    /// Gets the current-stored value as a string, or None if there is no value.
+    pub(crate) fn get_value(&self, glean: &Glean, storage_name: &str) -> Option<String> {
+        self.test_get_value(&glean, &storage_name)
+    }
+
     /// **Test-only API (exported for FFI purposes).**
     ///
     /// Gets the currently stored value as a string.

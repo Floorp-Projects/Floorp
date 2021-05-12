@@ -8,7 +8,6 @@ use std::fs::{create_dir_all, File, OpenOptions};
 use std::io::BufRead;
 use std::io::BufReader;
 use std::io::Write;
-use std::iter::FromIterator;
 use std::path::{Path, PathBuf};
 use std::sync::RwLock;
 
@@ -161,15 +160,7 @@ impl EventDatabase {
 
         let mut ping_sent = false;
         for store_name in store_names {
-            if let Err(err) = glean.submit_ping_by_name(&store_name, Some("startup")) {
-                log::warn!(
-                    "Error flushing existing events to the '{}' ping: {}",
-                    store_name,
-                    err
-                );
-            } else {
-                ping_sent = true;
-            }
+            ping_sent |= glean.submit_ping_by_name(&store_name, Some("startup"));
         }
 
         ping_sent
@@ -225,14 +216,7 @@ impl EventDatabase {
         // If any of the event stores reached maximum size, submit the pings
         // containing those events immediately.
         for store_name in stores_to_submit {
-            if let Err(err) = glean.submit_ping_by_name(store_name, Some("max_capacity")) {
-                log::warn!(
-                    "Got more than {} events, but could not persist {} ping: {}",
-                    glean.get_max_events(),
-                    store_name,
-                    err
-                );
-            }
+            glean.submit_ping_by_name(store_name, Some("max_capacity"));
         }
     }
 
@@ -277,9 +261,11 @@ impl EventDatabase {
                     // in a single location.
                     store.sort_by(|a, b| a.timestamp.cmp(&b.timestamp));
                     let first_timestamp = store[0].timestamp;
-                    Some(JsonValue::from_iter(
-                        store.iter().map(|e| e.serialize_relative(first_timestamp)),
-                    ))
+                    let snapshot = store
+                        .iter()
+                        .map(|e| e.serialize_relative(first_timestamp))
+                        .collect();
+                    Some(snapshot)
                 } else {
                     log::warn!("Unexpectly got empty event store for '{}'", store_name);
                     None

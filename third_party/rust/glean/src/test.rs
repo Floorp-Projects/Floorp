@@ -45,6 +45,7 @@ fn send_a_ping() {
         channel: Some("testing".into()),
         server_endpoint: Some("invalid-test-host".into()),
         uploader: Some(Box::new(FakeUploader { sender: s })),
+        use_core_mps: false,
     };
 
     let _t = new_glean(Some(cfg), true);
@@ -57,7 +58,7 @@ fn send_a_ping() {
 
     // Wait for the ping to arrive.
     let url = r.recv().unwrap();
-    assert_eq!(url.contains(PING_NAME), true);
+    assert!(url.contains(PING_NAME));
 }
 
 #[test]
@@ -155,6 +156,7 @@ fn test_experiments_recording_before_glean_inits() {
             channel: Some("testing".into()),
             server_endpoint: Some("invalid-test-host".into()),
             uploader: None,
+            use_core_mps: false,
         },
         ClientInfoMetrics::unknown(),
         false,
@@ -215,6 +217,7 @@ fn sending_of_foreground_background_pings() {
         channel: Some("testing".into()),
         server_endpoint: Some("invalid-test-host".into()),
         uploader: Some(Box::new(FakeUploader { sender: s })),
+        use_core_mps: false,
     };
 
     let _t = new_glean(Some(cfg), true);
@@ -299,6 +302,7 @@ fn sending_of_startup_baseline_ping() {
             channel: Some("testing".into()),
             server_endpoint: Some("invalid-test-host".into()),
             uploader: Some(Box::new(FakeUploader { sender: s })),
+            use_core_mps: false,
         },
         ClientInfoMetrics::unknown(),
         false,
@@ -306,7 +310,7 @@ fn sending_of_startup_baseline_ping() {
 
     // Wait for the ping to arrive.
     let url = r.recv().unwrap();
-    assert_eq!(url.contains("baseline"), true);
+    assert!(url.contains("baseline"));
 }
 
 #[test]
@@ -359,6 +363,7 @@ fn no_dirty_baseline_on_clean_shutdowns() {
             channel: Some("testing".into()),
             server_endpoint: Some("invalid-test-host".into()),
             uploader: Some(Box::new(FakeUploader { sender: s })),
+            use_core_mps: false,
         },
         ClientInfoMetrics::unknown(),
         false,
@@ -390,17 +395,13 @@ fn initialize_must_not_crash_if_data_dir_is_messed_up() {
         channel: Some("testing".into()),
         server_endpoint: Some("invalid-test-host".into()),
         uploader: None,
+        use_core_mps: false,
     };
 
     test_reset_glean(cfg, ClientInfoMetrics::unknown(), false);
-    // TODO(bug 1675215): ensure initialize runs through dispatcher.
-    // Glean init is async and, for this test, it bails out early due to
-    // an caused by not being able to create the data dir: we can do nothing
-    // but wait. Tests in other bindings use the dispatcher's test mode, which
-    // runs tasks sequentially on the main thread, so no sleep is required,
-    // because we're guaranteed that, once we reach this point, the full
-    // init potentially ran.
-    std::thread::sleep(std::time::Duration::from_secs(3));
+
+    // We don't need to sleep here.
+    // The `test_reset_glean` already waited on the initialize task.
 }
 
 #[test]
@@ -453,14 +454,17 @@ fn initializing_twice_is_a_noop() {
             channel: Some("testing".into()),
             server_endpoint: Some("invalid-test-host".into()),
             uploader: None,
+            use_core_mps: false,
         },
         ClientInfoMetrics::unknown(),
         true,
     );
 
-    crate::block_on_dispatcher();
+    // Glean was initialized and it waited for a full initialization to finish.
+    // We now just want to try to initialize again.
+    // This will bail out early.
 
-    test_reset_glean(
+    crate::initialize(
         Configuration {
             data_path: tmpname,
             application_id: GLOBAL_APPLICATION_ID.into(),
@@ -470,17 +474,16 @@ fn initializing_twice_is_a_noop() {
             channel: Some("testing".into()),
             server_endpoint: Some("invalid-test-host".into()),
             uploader: None,
+            use_core_mps: false,
         },
         ClientInfoMetrics::unknown(),
-        false,
     );
 
-    // TODO(bug 1675215): ensure initialize runs through dispatcher.
-    // Glean init is async and, for this test, it bails out early due to
-    // being initialized: we can do nothing but wait. Tests in other bindings use
-    // the dispatcher's test mode, which runs tasks sequentially on the main
-    // thread, so no sleep is required. Bug 1675215 might fix this, as well.
-    std::thread::sleep(std::time::Duration::from_secs(3));
+    // We don't need to sleep here.
+    // The `test_reset_glean` already waited on the initialize task,
+    // and the 2nd initialize will bail out early.
+    //
+    // All we tested is that this didn't crash.
 }
 
 #[test]
@@ -508,6 +511,7 @@ fn the_app_channel_must_be_correctly_set_if_requested() {
             channel: None,
             server_endpoint: Some("invalid-test-host".into()),
             uploader: None,
+            use_core_mps: false,
         },
         ClientInfoMetrics::unknown(),
         true,
@@ -622,6 +626,7 @@ fn sending_deletion_ping_if_disabled_outside_of_run() {
         channel: Some("testing".into()),
         server_endpoint: Some("invalid-test-host".into()),
         uploader: None,
+        use_core_mps: false,
     };
 
     let _t = new_glean(Some(cfg), true);
@@ -640,6 +645,7 @@ fn sending_deletion_ping_if_disabled_outside_of_run() {
             channel: Some("testing".into()),
             server_endpoint: Some("invalid-test-host".into()),
             uploader: Some(Box::new(FakeUploader { sender: s })),
+            use_core_mps: false,
         },
         ClientInfoMetrics::unknown(),
         false,
@@ -647,7 +653,7 @@ fn sending_deletion_ping_if_disabled_outside_of_run() {
 
     // Wait for the ping to arrive.
     let url = r.recv().unwrap();
-    assert_eq!(url.contains("deletion-request"), true);
+    assert!(url.contains("deletion-request"));
 }
 
 #[test]
@@ -687,6 +693,7 @@ fn no_sending_of_deletion_ping_if_unchanged_outside_of_run() {
         channel: Some("testing".into()),
         server_endpoint: Some("invalid-test-host".into()),
         uploader: None,
+        use_core_mps: false,
     };
 
     let _t = new_glean(Some(cfg), true);
@@ -705,6 +712,7 @@ fn no_sending_of_deletion_ping_if_unchanged_outside_of_run() {
             channel: Some("testing".into()),
             server_endpoint: Some("invalid-test-host".into()),
             uploader: Some(Box::new(FakeUploader { sender: s })),
+            use_core_mps: false,
         },
         ClientInfoMetrics::unknown(),
         false,
@@ -770,6 +778,7 @@ fn setting_debug_view_tag_before_initialization_should_not_crash() {
         channel: Some("testing".into()),
         server_endpoint: Some("invalid-test-host".into()),
         uploader: Some(Box::new(FakeUploader { sender: s })),
+        use_core_mps: false,
     };
 
     let _t = new_glean(Some(cfg), true);
@@ -829,9 +838,77 @@ fn setting_source_tags_before_initialization_should_not_crash() {
         channel: Some("testing".into()),
         server_endpoint: Some("invalid-test-host".into()),
         uploader: Some(Box::new(FakeUploader { sender: s })),
+        use_core_mps: false,
     };
 
     let _t = new_glean(Some(cfg), true);
+    crate::block_on_dispatcher();
+
+    // Submit a baseline ping.
+    submit_ping_by_name("baseline", Some("background"));
+
+    // Wait for the ping to arrive.
+    let headers = r.recv().unwrap();
+    assert_eq!(
+        "valid-tag1,valid-tag2",
+        headers
+            .iter()
+            .find(|&kv| kv.0 == "X-Source-Tags")
+            .unwrap()
+            .1
+    );
+}
+
+#[test]
+fn setting_source_tags_after_initialization_should_not_crash() {
+    let _lock = lock_test();
+
+    destroy_glean(true);
+    assert!(!was_initialize_called());
+
+    // Define a fake uploader that reports back the submission headers
+    // using a crossbeam channel.
+    let (s, r) = crossbeam_channel::bounded::<Vec<(String, String)>>(1);
+
+    #[derive(Debug)]
+    pub struct FakeUploader {
+        sender: crossbeam_channel::Sender<Vec<(String, String)>>,
+    }
+    impl net::PingUploader for FakeUploader {
+        fn upload(
+            &self,
+            _url: String,
+            _body: Vec<u8>,
+            headers: Vec<(String, String)>,
+        ) -> net::UploadResult {
+            self.sender.send(headers).unwrap();
+            net::UploadResult::HttpStatus(200)
+        }
+    }
+
+    // Create a custom configuration to use a fake uploader.
+    let dir = tempfile::tempdir().unwrap();
+    let tmpname = dir.path().to_path_buf();
+
+    let cfg = Configuration {
+        data_path: tmpname,
+        application_id: GLOBAL_APPLICATION_ID.into(),
+        upload_enabled: true,
+        max_events: None,
+        delay_ping_lifetime_io: false,
+        channel: Some("testing".into()),
+        server_endpoint: Some("invalid-test-host".into()),
+        uploader: Some(Box::new(FakeUploader { sender: s })),
+        use_core_mps: false,
+    };
+
+    let _t = new_glean(Some(cfg), true);
+
+    // Attempt to set source tags after `Glean.initialize` is called,
+    // but before Glean is fully initialized.
+    assert!(was_initialize_called());
+    set_source_tags(vec!["valid-tag1".to_string(), "valid-tag2".to_string()]);
+
     crate::block_on_dispatcher();
 
     // Submit a baseline ping.
@@ -895,6 +972,7 @@ fn flipping_upload_enabled_respects_order_of_events() {
         channel: Some("testing".into()),
         server_endpoint: Some("invalid-test-host".into()),
         uploader: Some(Box::new(FakeUploader { sender: s })),
+        use_core_mps: false,
     };
 
     // We create a ping and a metric before we initialize Glean
@@ -919,7 +997,7 @@ fn flipping_upload_enabled_respects_order_of_events() {
 
     // Wait for the ping to arrive.
     let url = r.recv().unwrap();
-    assert_eq!(url.contains("deletion-request"), true);
+    assert!(url.contains("deletion-request"));
 }
 
 #[test]
@@ -965,6 +1043,7 @@ fn registering_pings_before_init_must_work() {
         channel: Some("testing".into()),
         server_endpoint: Some("invalid-test-host".into()),
         uploader: Some(Box::new(FakeUploader { sender: s })),
+        use_core_mps: false,
     };
 
     let _t = new_glean(Some(cfg), true);
@@ -1015,6 +1094,7 @@ fn test_a_ping_before_submission() {
         channel: Some("testing".into()),
         server_endpoint: Some("invalid-test-host".into()),
         uploader: Some(Box::new(FakeUploader { sender: s })),
+        use_core_mps: false,
     };
 
     let _t = new_glean(Some(cfg), true);

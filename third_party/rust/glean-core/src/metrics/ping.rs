@@ -2,7 +2,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use crate::error::Result;
 use crate::Glean;
 
 /// Stores information about a ping.
@@ -60,7 +59,7 @@ impl PingType {
     /// # Returns
     ///
     /// See [`Glean::submit_ping`](crate::Glean::submit_ping) for details.
-    pub fn submit(&self, glean: &Glean, reason: Option<&str>) -> Result<bool> {
+    pub fn submit(&self, glean: &Glean, reason: Option<&str>) -> bool {
         let corrected_reason = match reason {
             Some(reason) => {
                 if self.reason_codes.contains(&reason.to_string()) {

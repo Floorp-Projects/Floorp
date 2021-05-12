@@ -49,6 +49,7 @@ pub(crate) fn new_glean(
             channel: Some("testing".into()),
             server_endpoint: Some("invalid-test-host".into()),
             uploader: None,
+            use_core_mps: false,
         },
     };
 
