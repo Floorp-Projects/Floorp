@@ -162,103 +162,6 @@ class ICEntry {
   void trace(JSTracer* trc);
 };
 
-// Constant iterator that traverses arbitrary chains of ICStubs.
-// No requirements are made of the ICStub used to construct this
-// iterator, aside from that the stub be part of a nullptr-terminated
-// chain.
-// The iterator is considered to be at its end once it has been
-// incremented _past_ the last stub.  Thus, if 'atEnd()' returns
-// true, the '*' and '->' operations are not valid.
-class ICStubConstIterator {
-  friend class ICStub;
-  friend class ICFallbackStub;
-
- private:
-  ICStub* currentStub_;
-
- public:
-  explicit ICStubConstIterator(ICStub* currentStub)
-      : currentStub_(currentStub) {}
-
-  bool operator==(const ICStubConstIterator& other) const {
-    return currentStub_ == other.currentStub_;
-  }
-  bool operator!=(const ICStubConstIterator& other) const {
-    return !(*this == other);
-  }
-
-  ICStubConstIterator& operator++();
-
-  ICStubConstIterator operator++(int) {
-    ICStubConstIterator oldThis(*this);
-    ++(*this);
-    return oldThis;
-  }
-
-  ICStub* operator*() const {
-    MOZ_ASSERT(currentStub_);
-    return currentStub_;
-  }
-
-  ICStub* operator->() const {
-    MOZ_ASSERT(currentStub_);
-    return currentStub_;
-  }
-
-  bool atEnd() const { return currentStub_ == nullptr; }
-};
-
-// Iterator that traverses "regular" IC chains that start at an ICEntry
-// and are terminated with an ICFallbackStub.
-//
-// The iterator is considered to be at its end once it is _at_ the
-// fallback stub.  Thus, unlike the ICStubConstIterator, operators
-// '*' and '->' are valid even if 'atEnd()' returns true - they
-// will act on the fallback stub.
-//
-// This iterator also allows unlinking of stubs being traversed.
-// Note that 'unlink' does not implicitly advance the iterator -
-// it must be advanced explicitly using '++'.
-class ICStubIterator {
-  friend class ICFallbackStub;
-
- private:
-  ICEntry* icEntry_;
-  ICFallbackStub* fallbackStub_;
-  ICCacheIRStub* previousStub_;
-  ICStub* currentStub_;
-  bool unlinked_;
-
-  explicit ICStubIterator(ICFallbackStub* fallbackStub, bool end = false);
-
- public:
-  bool operator==(const ICStubIterator& other) const {
-    // == should only ever be called on stubs from the same chain.
-    MOZ_ASSERT(icEntry_ == other.icEntry_);
-    MOZ_ASSERT(fallbackStub_ == other.fallbackStub_);
-    return currentStub_ == other.currentStub_;
-  }
-  bool operator!=(const ICStubIterator& other) const {
-    return !(*this == other);
-  }
-
-  ICStubIterator& operator++();
-
-  ICStubIterator operator++(int) {
-    ICStubIterator oldThis(*this);
-    ++(*this);
-    return oldThis;
-  }
-
-  ICStub* operator*() const { return currentStub_; }
-
-  ICStub* operator->() const { return currentStub_; }
-
-  bool atEnd() const { return currentStub_ == (ICStub*)fallbackStub_; }
-
-  void unlink(JSContext* cx);
-};
-
 //
 // Base class for all IC stubs.
 //
@@ -358,12 +261,6 @@ class ICFallbackStub final : public ICStub {
 
   // Add a new stub to the IC chain terminated by this fallback stub.
   inline void addNewStub(ICCacheIRStub* stub);
-
-  ICStubConstIterator beginChainConst() const {
-    return ICStubConstIterator(icEntry_->firstStub());
-  }
-
-  ICStubIterator beginChain() { return ICStubIterator(this); }
 
   void discardStubs(JSContext* cx);
 

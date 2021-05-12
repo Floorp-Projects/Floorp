@@ -1920,11 +1920,15 @@ bool BaselineCacheIRCompiler::init(CacheKind kind) {
   return true;
 }
 
-static void ResetEnteredCounts(ICFallbackStub* stub) {
-  for (ICStubIterator iter = stub->beginChain(); *iter != stub; iter++) {
-    iter->toCacheIRStub()->resetEnteredCount();
+static void ResetEnteredCounts(ICFallbackStub* fallback) {
+  ICStub* stub = fallback->icEntry()->firstStub();
+  while (true) {
+    stub->resetEnteredCount();
+    if (stub->isFallback()) {
+      return;
+    }
+    stub = stub->toCacheIRStub()->next();
   }
-  stub->resetEnteredCount();
 }
 
 static ICStubSpace* StubSpaceForStub(bool makesGCCalls, JSScript* script,
@@ -2005,8 +2009,8 @@ ICCacheIRStub* js::jit::AttachBaselineCacheIRStub(
   // Ensure we don't attach duplicate stubs. This can happen if a stub failed
   // for some reason and the IR generator doesn't check for exactly the same
   // conditions.
-  for (ICStubConstIterator iter = stub->beginChainConst(); *iter != stub;
-       iter++) {
+  for (ICStub* iter = stub->icEntry()->firstStub(); iter != stub;
+       iter = iter->toCacheIRStub()->next()) {
     auto otherStub = iter->toCacheIRStub();
     if (otherStub->stubInfo() != stubInfo) {
       continue;

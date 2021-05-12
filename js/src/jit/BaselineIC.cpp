@@ -398,42 +398,6 @@ void ICScript::initICEntries(JSContext* cx, JSScript* script) {
   MOZ_ASSERT(icEntryIndex == numICEntries());
 }
 
-ICStubConstIterator& ICStubConstIterator::operator++() {
-  MOZ_ASSERT(currentStub_ != nullptr);
-  currentStub_ = currentStub_->toCacheIRStub()->next();
-  return *this;
-}
-
-ICStubIterator::ICStubIterator(ICFallbackStub* fallbackStub, bool end)
-    : icEntry_(fallbackStub->icEntry()),
-      fallbackStub_(fallbackStub),
-      previousStub_(nullptr),
-      currentStub_(end ? fallbackStub : icEntry_->firstStub()),
-      unlinked_(false) {}
-
-ICStubIterator& ICStubIterator::operator++() {
-  MOZ_ASSERT(!currentStub_->isFallback());
-  if (!unlinked_) {
-    previousStub_ = currentStub_->toCacheIRStub();
-  }
-  currentStub_ = currentStub_->toCacheIRStub()->next();
-  unlinked_ = false;
-  return *this;
-}
-
-void ICStubIterator::unlink(JSContext* cx) {
-  MOZ_ASSERT(currentStub_ != fallbackStub_);
-  MOZ_ASSERT(currentStub_->maybeNext() != nullptr);
-  MOZ_ASSERT(!unlinked_);
-
-  fallbackStub_->unlinkStub(cx->zone(), previousStub_,
-                            currentStub_->toCacheIRStub());
-
-  // Mark the current iterator position as unlinked, so operator++ works
-  // properly.
-  unlinked_ = true;
-}
-
 bool ICCacheIRStub::makesGCCalls() const { return stubInfo()->makesGCCalls(); }
 
 void ICFallbackStub::trackNotAttached() { state().trackNotAttached(); }
@@ -534,8 +498,10 @@ void ICFallbackStub::unlinkStub(Zone* zone, ICCacheIRStub* prev,
 }
 
 void ICFallbackStub::discardStubs(JSContext* cx) {
-  for (ICStubIterator iter = beginChain(); !iter.atEnd(); iter++) {
-    iter.unlink(cx);
+  ICStub* stub = icEntry()->firstStub();
+  while (stub != this) {
+    unlinkStub(cx->zone(), /* prev = */ nullptr, stub->toCacheIRStub());
+    stub = stub->toCacheIRStub()->next();
   }
 }
 
