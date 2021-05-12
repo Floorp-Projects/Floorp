@@ -42,7 +42,8 @@ async function createTargets(watcher) {
     // We need to set the watchedByDevTools flag on all top-level browsing context. In the
     // case of a content toolbox, this is done in the tab descriptor, but when we're in the
     // browser toolbox, such descriptor is not created.
-    if (browsingContext.top === browsingContext) {
+    // Then BrowsingContext will propagate to all the tree of children BbrowsingContext's.
+    if (!browsingContext.parent) {
       browsingContext.watchedByDevTools = true;
     }
 
@@ -80,8 +81,9 @@ async function createTargets(watcher) {
       //   contexts of all the tabs we want to handle.
       // - for the regular toolbox, browsing context that are being created when navigating
       //   to a page that forces a new browsing context.
+      // Then BrowsingContext will propagate to all the tree of children BbrowsingContext's.
       if (
-        browsingContext.top === browsingContext &&
+        !browsingContext.parent &&
         (!watcher.browserElement || browserId === browsingContext.browserId)
       ) {
         browsingContext.watchedByDevTools = true;
@@ -118,7 +120,7 @@ function destroyTargets(watcher) {
       "Existing WindowGlobal"
     );
 
-    if (browsingContext.top === browsingContext) {
+    if (!browsingContext.parent) {
       browsingContext.watchedByDevTools = false;
     }
 

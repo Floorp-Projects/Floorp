@@ -70,39 +70,23 @@ function shouldNotifyWindowGlobal(
   // For client-side target switching, only mention the "remote frames".
   // i.e. the frames which are in a distinct process compared to their parent document
   // If there is no parent, this is most likely the top level document.
-  // Ignore it only if this is the top level target we are watching.
+  //
+  // Ignore this check for the browser toolbox, as tab's BrowsingContext have no
+  // parent and aren't the top level target.
   //
   // `acceptTopLevelTarget` is set both when server side target switching is enabled
   // or when navigating to and from pages in the bfcache
-  if (
-    !browsingContext.parent &&
-    browsingContext.browserId == watchedBrowserId &&
-    !acceptTopLevelTarget
-  ) {
+  if (!acceptTopLevelTarget && watchedBrowserId && !browsingContext.parent) {
     return false;
   }
 
-  // `isInProcess` is always false, even if the window runs in the same process.
-  // `osPid` attribute is not set on WindowGlobalChild
-  // so it is hard to guess if the given WindowGlobal runs in this process or not,
-  // which is what we want to know here. Here is a workaround way to know it :/
-  // ---
-  // Also. It might be a bit surprising to have a DevToolsFrameChild/JSWindowActorChild
-  // to be instantiated for WindowGlobals that aren't from this process... Is that expected?
-  if (Cu.isRemoteProxy(windowGlobal.window)) {
-    return false;
-  }
-
-  // When Fission is turned off, we still process here the iframes that are running in the
-  // same process.
-  // As we can't use isInProcess, nor osPid (see previous block), we have
-  // to fallback to other checks. Here we check if we are able to access the parent document's window.
-  // If we can, it means that it runs in the same process as the current iframe we are processing.
-  if (
-    browsingContext.parent &&
-    browsingContext.parent.window &&
-    !Cu.isRemoteProxy(browsingContext.parent.window)
-  ) {
+  // We may process an iframe that runs in the same process as its parent
+  // and we don't want to create targets for them yet. Instead the BrowsingContextTargetActor
+  // will inspect these children document via docShell tree (typically via `docShells` or `windows` getters).
+  // This is quite common when Fission is off as any iframe will run in same process
+  // as their parent document. But it can also happen with Fission enabled if iframes have
+  // children iframes using the same origin.
+  if (!windowGlobal.isProcessRoot) {
     return false;
   }
 

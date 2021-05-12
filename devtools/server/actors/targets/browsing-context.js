@@ -1670,10 +1670,7 @@ DebuggerProgressListener.prototype = {
     // don't have the watcher enabled by default yet, and as a result we need to set it
     // here for the parent process browsing context.
     // This should be removed as part of Bug 1709529.
-    if (
-      this._targetActor.typeName === "parentProcessTarget" &&
-      docShell.browsingContext.top == docShell.browsingContext
-    ) {
+    if (this._targetActor.typeName === "parentProcessTarget") {
       docShell.browsingContext.watchedByDevTools = true;
     }
   },
@@ -1710,10 +1707,7 @@ DebuggerProgressListener.prototype = {
 
     // We only reset it for parent process target actor as the flag should be set in parent
     // process, and thus is set elsewhere for other type of BrowsingContextActor.
-    if (
-      this._targetActor.typeName === "parentProcessTarget" &&
-      docShell.browsingContext.top == docShell.browsingContext
-    ) {
+    if (this._targetActor.typeName === "parentProcessTarget") {
       docShell.browsingContext.watchedByDevTools = false;
     }
   },
