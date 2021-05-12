@@ -263,6 +263,9 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
   mozilla::ipc::IPCResult RecvLoadURL(nsDocShellLoadState* aLoadState,
                                       const ParentShowInfo& aInfo);
 
+  mozilla::ipc::IPCResult RecvCreateAboutBlankContentViewer(
+      nsIPrincipal* aPrincipal, nsIPrincipal* aPartitionedPrincipal);
+
   mozilla::ipc::IPCResult RecvResumeLoad(const uint64_t& aPendingSwitchID,
                                          const ParentShowInfo&);
 

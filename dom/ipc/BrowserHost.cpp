@@ -218,6 +218,27 @@ BrowserHost::TransmitPermissionsForPrincipal(nsIPrincipal* aPrincipal) {
   return GetContentParent()->TransmitPermissionsForPrincipal(aPrincipal);
 }
 
+/* void createAboutBlankContentViewer(in nsIPrincipal aPrincipal, in
+ * nsIPrincipal aPartitionedPrincipal); */
+NS_IMETHODIMP
+BrowserHost::CreateAboutBlankContentViewer(
+    nsIPrincipal* aPrincipal, nsIPrincipal* aPartitionedPrincipal) {
+  if (!mRoot) {
+    return NS_OK;
+  }
+
+  // Ensure the content process has permisisons for the new document we're about
+  // to create in it.
+  nsresult rv = GetContentParent()->TransmitPermissionsForPrincipal(aPrincipal);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  Unused << mRoot->SendCreateAboutBlankContentViewer(aPrincipal,
+                                                     aPartitionedPrincipal);
+  return NS_OK;
+}
+
 /* boolean startApzAutoscroll (in float aAnchorX, in float aAnchorY, in nsViewID
  * aScrollId, in uint32_t aPresShellId); */
 NS_IMETHODIMP
