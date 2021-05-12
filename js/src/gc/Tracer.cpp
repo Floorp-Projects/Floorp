@@ -96,8 +96,12 @@ void js::gc::TraceIncomingCCWs(JSTracer* trc,
 // inside SpiderMonkey, despite the lack of general applicability, for the
 // simplicity and performance of FireFox's embedding of this engine.
 void gc::TraceCycleCollectorChildren(JS::CallbackTracer* trc, Shape* shape) {
+  BaseShape* lastBaseShape = nullptr;
   do {
-    shape->base()->traceChildren(trc);
+    if (shape->base() != lastBaseShape) {
+      shape->base()->traceChildren(trc);
+      lastBaseShape = shape->base();
+    }
 
     // Don't trace the propid because the CC doesn't care about jsid.
 
