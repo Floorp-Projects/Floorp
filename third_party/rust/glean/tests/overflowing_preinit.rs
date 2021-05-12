@@ -71,6 +71,7 @@ fn overflowing_the_task_queue_records_telemetry() {
         channel: Some("testing".into()),
         server_endpoint: Some("invalid-test-host".into()),
         uploader: None,
+        use_core_mps: false,
     };
 
     // Insert a bunch of tasks to overflow the queue.

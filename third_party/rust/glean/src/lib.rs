@@ -28,6 +28,7 @@
 //!     channel: None,
 //!     server_endpoint: None,
 //!     uploader: None,
+//!     use_core_mps: false,
 //! };
 //! glean::initialize(cfg, ClientInfoMetrics::unknown());
 //!
@@ -172,12 +173,19 @@ fn launch_with_glean_mut(callback: impl FnOnce(&mut Glean) + Send + 'static) {
 /// * `client_info` - the [`ClientInfoMetrics`] values used to set Glean
 ///   core metrics.
 pub fn initialize(cfg: Configuration, client_info: ClientInfoMetrics) {
+    initialize_internal(cfg, client_info);
+}
+
+fn initialize_internal(
+    cfg: Configuration,
+    client_info: ClientInfoMetrics,
+) -> Option<std::thread::JoinHandle<()>> {
     if was_initialize_called() {
         log::error!("Glean should not be initialized multiple times");
-        return;
+        return None;
     }
 
-    std::thread::Builder::new()
+    let init_handle = std::thread::Builder::new()
         .name("glean.init".into())
         .spawn(move || {
             let core_cfg = glean_core::Configuration {
@@ -187,6 +195,8 @@ pub fn initialize(cfg: Configuration, client_info: ClientInfoMetrics) {
                 language_binding_name: LANGUAGE_BINDING_NAME.into(),
                 max_events: cfg.max_events,
                 delay_ping_lifetime_io: cfg.delay_ping_lifetime_io,
+                app_build: client_info.app_build.clone(),
+                use_core_mps: cfg.use_core_mps,
             };
 
             let glean = match Glean::new(core_cfg) {
@@ -302,7 +312,7 @@ pub fn initialize(cfg: Configuration, client_info: ClientInfoMetrics) {
                 // Set up information and scheduling for Glean owned pings. Ideally, the "metrics"
                 // ping startup check should be performed before any other ping, since it relies
                 // on being dispatched to the API context before any other metric.
-                // TODO: start the metrics ping scheduler, will happen in bug 1672951.
+                glean.start_metrics_ping_scheduler();
 
                 // Check if the "dirty flag" is set. That means the product was probably
                 // force-closed. If that's the case, submit a 'baseline' ping with the
@@ -313,10 +323,7 @@ pub fn initialize(cfg: Configuration, client_info: ClientInfoMetrics) {
                     // write lock on the `glean` object.
                     // Note that unwrapping below is safe: the function will return an
                     // `Ok` value for a known ping.
-                    if glean
-                        .submit_ping_by_name("baseline", Some("dirty_startup"))
-                        .unwrap()
-                    {
+                    if glean.submit_ping_by_name("baseline", Some("dirty_startup")) {
                         state.upload_manager.trigger_upload();
                     }
                 }
@@ -347,6 +354,7 @@ pub fn initialize(cfg: Configuration, client_info: ClientInfoMetrics) {
     // Mark the initialization as called: this needs to happen outside of the
     // dispatched block!
     INITIALIZE_CALLED.store(true, Ordering::SeqCst);
+    Some(init_handle)
 }
 
 /// Shuts down Glean.
@@ -364,6 +372,7 @@ pub fn shutdown() {
     }
 
     crate::launch_with_glean_mut(|glean| {
+        glean.cancel_metrics_ping_scheduler();
         glean.set_dirty_flag(false);
     });
 
@@ -464,16 +473,15 @@ pub fn set_upload_enabled(enabled: bool) {
         let old_enabled = glean.is_upload_enabled();
         glean.set_upload_enabled(enabled);
 
-        // TODO: Cancel upload and any outstanding metrics ping scheduler
-        // task. Will happen on bug 1672951.
-
         if !old_enabled && enabled {
+            glean.start_metrics_ping_scheduler();
             // If uploading is being re-enabled, we have to restore the
             // application-lifetime metrics.
             initialize_core_metrics(&glean, &state.client_info, state.channel.clone());
         }
 
         if old_enabled && !enabled {
+            glean.cancel_metrics_ping_scheduler();
             // If uploading is disabled, we need to send the deletion-request ping:
             // note that glean-core takes care of generating it.
             state.upload_manager.trigger_upload();
@@ -553,13 +561,13 @@ pub(crate) fn submit_ping_by_name_sync(ping: &str, reason: Option<&str>) {
             // This won't actually return from `submit_ping_by_name`, but
             // returning `false` here skips spinning up the uploader below,
             // which is basically the same.
-            return Some(false);
+            return false;
         }
 
-        glean.submit_ping_by_name(&ping, reason.as_deref()).ok()
+        glean.submit_ping_by_name(&ping, reason.as_deref())
     });
 
-    if let Some(true) = submitted_ping {
+    if submitted_ping {
         let state = global_state().lock().unwrap();
         state.upload_manager.trigger_upload();
     }
@@ -660,6 +668,19 @@ pub(crate) fn test_get_experiment_data(experiment_id: String) -> RecordedExperim
 pub(crate) fn destroy_glean(clear_stores: bool) {
     // Destroy the existing glean instance from glean-core.
     if was_initialize_called() {
+        // Reset the dispatcher first (it might still run tasks against the database)
+        dispatcher::reset_dispatcher();
+
+        // Wait for any background uploader thread to finish.
+        // This needs to be done before the check below,
+        // as the uploader will also try to acquire a lock on the global Glean.
+        //
+        // Note: requires the block here, so we drop the lock again.
+        {
+            let state = global_state().lock().unwrap();
+            state.upload_manager.test_wait_for_upload();
+        }
+
         // We need to check if the Glean object (from glean-core) is
         // initialized, otherwise this will crash on the first test
         // due to bug 1675215 (this check can be removed once that
@@ -674,8 +695,12 @@ pub(crate) fn destroy_glean(clear_stores: bool) {
         }
         // Allow us to go through initialization again.
         INITIALIZE_CALLED.store(false, Ordering::SeqCst);
-        // Reset the dispatcher.
-        dispatcher::reset_dispatcher();
+
+        // If Glean initialization previously didn't finish,
+        // then the global state might not have been reset
+        // and thus needs to be cleared here.
+        let state = global_state().lock().unwrap();
+        state.upload_manager.test_clear_upload_thread();
     }
 }
 
@@ -684,9 +709,9 @@ pub(crate) fn destroy_glean(clear_stores: bool) {
 pub fn test_reset_glean(cfg: Configuration, client_info: ClientInfoMetrics, clear_stores: bool) {
     destroy_glean(clear_stores);
 
-    // Always log pings for tests
-    //Glean.setLogPings(true)
-    initialize(cfg, client_info);
+    if let Some(handle) = initialize_internal(cfg, client_info) {
+        handle.join().unwrap();
+    }
 }
 
 /// Sets a debug view tag.
@@ -743,22 +768,16 @@ pub fn set_log_pings(value: bool) {
 ///
 /// * `tags` - A vector of at most 5 valid HTTP header values. Individual
 ///   tags must match the regex: "[a-zA-Z0-9-]{1,20}".
-///
-/// # Returns
-///
-/// This will return `false` in case `value` contains invalid tags and `true`
-/// otherwise or if the tag is set before Glean is initialized.
-pub fn set_source_tags(tags: Vec<String>) -> bool {
+pub fn set_source_tags(tags: Vec<String>) {
     if was_initialize_called() {
-        with_glean_mut(|glean| glean.set_source_tags(tags))
+        crate::launch_with_glean_mut(|glean| {
+            glean.set_source_tags(tags);
+        });
     } else {
         // Glean has not been initialized yet. Cache the provided source tags.
         let m = PRE_INIT_SOURCE_TAGS.get_or_init(Default::default);
         let mut lock = m.lock().unwrap();
         *lock = tags;
-        // When setting the source tags before initialization,
-        // we don't validate the tags, thus this function always returns true.
-        true
     }
 }
 
