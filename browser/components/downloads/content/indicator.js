@@ -407,7 +407,10 @@ const DownloadsIndicatorView = {
     this._currentNotificationType = aType;
 
     const onNotificationAnimEnd = event => {
-      if (event.animationName !== "downloadsButtonNotification") {
+      if (
+        event.animationName !== "downloadsButtonNotification" &&
+        event.animationName !== "downloadsButtonFinishedNotification"
+      ) {
         return;
       }
       anchor.removeEventListener("animationend", onNotificationAnimEnd);
