@@ -9887,7 +9887,7 @@ PresShell::Observe(nsISupports* aSubject, const char* aTopic,
 
   if (!nsCRT::strcmp(aTopic, "look-and-feel-changed")) {
     // See how LookAndFeel::NotifyChangedAllWindows encodes this.
-    auto kind = widget::ThemeChangeKind(reinterpret_cast<uintptr_t>(aData));
+    auto kind = widget::ThemeChangeKind(aData[0]);
     ThemeChanged(kind);
     return NS_OK;
   }
