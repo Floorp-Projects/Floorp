@@ -63,8 +63,9 @@ static const int64_t kNumCCNodesBetweenTimeChecks = 1000;
 
 // Actions performed by the GCRunner state machine.
 enum class GCRunnerAction {
-  MajorGC,  // Start a new major GC
-  GCSlice,  // Run a single slice of a major GC
+  MajorGC,       // We want to start a new major GC
+  MajorGCReady,  // The parent says we may begin our major GC
+  GCSlice,       // Run a single slice of a major GC
   None
 };
 
@@ -167,16 +168,23 @@ class CCGCScheduler {
     mNeedsGCAfterCC = true;
   }
 
+  void NoteReadyForMajorGC(JS::GCReason aReason) {
+    mMajorGCReason = aReason;
+    mReadyForMajorGC = true;
+  }
+
   void NoteGCBegin() {
     // Treat all GC as incremental here; non-incremental GC will just appear to
     // be one slice.
     mInIncrementalGC = true;
+    mReadyForMajorGC = false;
   }
 
   void NoteGCEnd() {
     mInIncrementalGC = false;
     mCCBlockStart = TimeStamp();
     mInIncrementalGC = false;
+    mReadyForMajorGC = false;
     mNeedsFullCC = true;
     mHasRunGC = true;
 
@@ -332,6 +340,9 @@ class CCGCScheduler {
   // An incremental GC is in progress, which blocks the CC from running for its
   // duration (or until it goes too long and is finished synchronously.)
   bool mInIncrementalGC = false;
+
+  // The parent process is ready for us to do a major GC.
+  bool mReadyForMajorGC = false;
 
   // When the CC started actually waiting for the GC to finish. This will be
   // set to non-null at a later time than mCCLockedOut.
@@ -651,6 +662,12 @@ CCRunnerStep CCGCScheduler::GetNextCCRunnerAction(TimeStamp aDeadline) {
 GCRunnerStep CCGCScheduler::GetNextGCRunnerAction(TimeStamp aDeadline) {
   if (InIncrementalGC()) {
     return {GCRunnerAction::GCSlice, JS::GCReason::INTER_SLICE_GC};
+  }
+
+  if (mReadyForMajorGC) {
+    GCRunnerStep step{GCRunnerAction::MajorGCReady, mMajorGCReason};
+    mMajorGCReason = JS::GCReason::NO_REASON;
+    return step;
   }
 
   if (mMajorGCReason != JS::GCReason::NO_REASON) {
