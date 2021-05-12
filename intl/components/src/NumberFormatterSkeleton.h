@@ -32,12 +32,14 @@ class MOZ_STACK_CLASS NumberFormatterSkeleton final {
   mozilla::Vector<char16_t, DefaultVectorSize> mVector;
   bool mValidSkeleton = false;
 
-  bool append(char16_t c) { return mVector.append(c); }
+  [[nodiscard]] bool append(char16_t c) { return mVector.append(c); }
 
-  bool appendN(char16_t c, size_t times) { return mVector.appendN(c, times); }
+  [[nodiscard]] bool appendN(char16_t c, size_t times) {
+    return mVector.appendN(c, times);
+  }
 
   template <size_t N>
-  bool append(const char16_t (&chars)[N]) {
+  [[nodiscard]] bool append(const char16_t (&chars)[N]) {
     static_assert(N > 0,
                   "should only be used with string literals or properly "
                   "null-terminated arrays");
@@ -49,37 +51,38 @@ class MOZ_STACK_CLASS NumberFormatterSkeleton final {
   }
 
   template <size_t N>
-  bool appendToken(const char16_t (&token)[N]) {
+  [[nodiscard]] bool appendToken(const char16_t (&token)[N]) {
     return append(token) && append(' ');
   }
 
-  bool append(const char* chars, size_t length) {
+  [[nodiscard]] bool append(const char* chars, size_t length) {
     return mVector.append(chars, length);
   }
 
-  bool currency(std::string_view currency);
+  [[nodiscard]] bool currency(std::string_view currency);
 
-  bool currencyDisplay(NumberFormatOptions::CurrencyDisplay display);
+  [[nodiscard]] bool currencyDisplay(
+      NumberFormatOptions::CurrencyDisplay display);
 
-  bool unit(std::string_view unit);
+  [[nodiscard]] bool unit(std::string_view unit);
 
-  bool unitDisplay(NumberFormatOptions::UnitDisplay display);
+  [[nodiscard]] bool unitDisplay(NumberFormatOptions::UnitDisplay display);
 
-  bool percent();
+  [[nodiscard]] bool percent();
 
-  bool fractionDigits(uint32_t min, uint32_t max);
+  [[nodiscard]] bool fractionDigits(uint32_t min, uint32_t max);
 
-  bool minIntegerDigits(uint32_t min);
+  [[nodiscard]] bool minIntegerDigits(uint32_t min);
 
-  bool significantDigits(uint32_t min, uint32_t max);
+  [[nodiscard]] bool significantDigits(uint32_t min, uint32_t max);
 
-  bool disableGrouping();
+  [[nodiscard]] bool disableGrouping();
 
-  bool notation(NumberFormatOptions::Notation style);
+  [[nodiscard]] bool notation(NumberFormatOptions::Notation style);
 
-  bool signDisplay(NumberFormatOptions::SignDisplay display);
+  [[nodiscard]] bool signDisplay(NumberFormatOptions::SignDisplay display);
 
-  bool roundingModeHalfUp();
+  [[nodiscard]] bool roundingModeHalfUp();
 };
 
 }  // namespace intl
