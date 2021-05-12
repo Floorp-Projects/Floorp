@@ -2656,6 +2656,18 @@ bool WarpCacheIRTranspiler::emitCompareDoubleSameValueResult(
   return true;
 }
 
+bool WarpCacheIRTranspiler::emitSameValueResult(ValOperandId lhsId,
+                                                ValOperandId rhsId) {
+  MDefinition* lhs = getOperand(lhsId);
+  MDefinition* rhs = getOperand(rhsId);
+
+  auto* sameValue = MSameValue::New(alloc(), lhs, rhs);
+  add(sameValue);
+
+  pushResult(sameValue);
+  return true;
+}
+
 bool WarpCacheIRTranspiler::emitIndirectTruncateInt32Result(
     Int32OperandId valId) {
   MDefinition* val = getOperand(valId);

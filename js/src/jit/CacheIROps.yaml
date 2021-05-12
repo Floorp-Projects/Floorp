@@ -2568,7 +2568,7 @@
 
 - name: SameValueResult
   shared: false
-  transpile: false
+  transpile: true
   cost_estimate: 4
   args:
     lhs: ValId
