@@ -800,10 +800,7 @@ async function reload(dbg, ...sources) {
  * @static
  */
 async function navigate(dbg, url, ...sources) {
-  info(`Navigating to ${url}`);
-  const navigated = waitForDispatch(dbg.store, "NAVIGATE");
-  await dbg.client.navigate(url);
-  await navigated;
+  await navigateTo(EXAMPLE_URL + url);
   return waitForSources(dbg, ...sources);
 }
 

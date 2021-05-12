@@ -10,7 +10,9 @@
 add_task(async function() {
   const dbg = await initDebugger("doc-sources.html");
 
-  await navigate(dbg, "doc-watchpoints.html", "doc-watchpoints.html");
+  // Do not await for navigation as an early breakpoint pauses the document load
+  const onNavigated = navigateTo(EXAMPLE_URL + "doc-watchpoints.html");
+  await waitForSources(dbg, "doc-watchpoints.html");
   await selectSource(dbg, "doc-watchpoints.html");
   await waitForPaused(dbg);
   const sourceId = findSource(dbg, "doc-watchpoints.html").id;
@@ -96,9 +98,13 @@ add_task(async function() {
 
   info("Resume and wait to pause on the final `obj.b;`");
   await resume(dbg);
-
   await waitForPaused(dbg);
   assertPausedAtSourceAndLine(dbg, sourceId, 25);
+
+  info("Do a last resume to finalize the document load");
+  await resume(dbg);
+  await onNavigated;
+
   await waitForRequestsToSettle(dbg);
 });
 

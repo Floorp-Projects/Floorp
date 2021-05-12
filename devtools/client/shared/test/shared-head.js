@@ -477,7 +477,7 @@ async function navigateTo(uri, { isErrorPage = false } = {}) {
   );
 
   uri = uri.replaceAll("\n", "");
-  info(`Load document "${uri}"`);
+  info(`Navigating to "${uri}"`);
   const browser = gBrowser.selectedBrowser;
   const currentPID = browser.browsingContext.currentWindowGlobal.osPid;
   const currentBrowsingContextID = browser.browsingContext.id;

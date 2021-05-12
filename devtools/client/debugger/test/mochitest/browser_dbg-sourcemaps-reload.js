@@ -22,7 +22,7 @@ add_task(async function() {
 
   info("Reload with a new version of the file");
   const syncBp = waitForDispatch(dbg.store, "SET_BREAKPOINT");
-  await navigate(dbg, "doc-sourcemaps-reload2.html", "v1.js");
+  await navigate(dbg, "sourcemaps-reload/doc-sourcemaps-reload2.html", "v1.js");
 
   await syncBp;
   breakpoint = getBreakpoints(dbg)[0];
@@ -37,7 +37,7 @@ add_task(async function() {
   // NOTE: When we reload, the `foo` function and the
   // module is no longer 13 lines long
   info("Reload and observe no breakpoints");
-  await navigate(dbg, "doc-sourcemaps-reload3.html", "v1.js");
+  await navigate(dbg, "sourcemaps-reload/doc-sourcemaps-reload3.html", "v1.js");
   await waitForSource(dbg, "v1");
 
   // There will initially be zero breakpoints, but wait to make sure none are
