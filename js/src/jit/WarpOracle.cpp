@@ -85,7 +85,8 @@ class MOZ_STACK_CLASS WarpScriptOracle {
 
   AbortReasonOr<WarpScriptSnapshot*> createScriptSnapshot();
 
-  const ICEntry& getICEntry(BytecodeLocation loc);
+  ICEntry& getICEntryAndFallback(BytecodeLocation loc,
+                                 ICFallbackStub** fallback);
 };
 
 WarpOracle::WarpOracle(JSContext* cx, MIRGenerator& mirGen,
@@ -230,17 +231,17 @@ template <typename T, typename... Args>
                                       numFixedSlots, slot, needsLexicalCheck);
 }
 
-const ICEntry& WarpScriptOracle::getICEntry(BytecodeLocation loc) {
+ICEntry& WarpScriptOracle::getICEntryAndFallback(BytecodeLocation loc,
+                                                 ICFallbackStub** fallback) {
   const uint32_t offset = loc.bytecodeToOffset(script_);
 
-  const ICEntry* entry;
   do {
-    entry = &icScript_->icEntry(icEntryIndex_);
+    *fallback = icScript_->fallbackStub(icEntryIndex_);
     icEntryIndex_++;
-  } while (entry->pcOffset() < offset);
+  } while ((*fallback)->pcOffset() < offset);
 
-  MOZ_ASSERT(entry->pcOffset() == offset);
-  return *entry;
+  MOZ_ASSERT((*fallback)->pcOffset() == offset);
+  return icScript_->icEntry(icEntryIndex_ - 1);
 }
 
 AbortReasonOr<WarpEnvironment> WarpScriptOracle::createEnvironment() {
@@ -764,9 +765,9 @@ AbortReasonOr<Ok> WarpScriptOracle::maybeInlineIC(WarpOpSnapshotList& snapshots,
     return Ok();
   }
 
-  const ICEntry& entry = getICEntry(loc);
+  ICFallbackStub* fallbackStub;
+  const ICEntry& entry = getICEntryAndFallback(loc, &fallbackStub);
   ICStub* firstStub = entry.firstStub();
-  ICFallbackStub* fallbackStub = entry.fallbackStub();
 
   uint32_t offset = loc.bytecodeToOffset(script_);
 
@@ -965,15 +966,17 @@ AbortReasonOr<bool> WarpScriptOracle::maybeInlineCall(
             CodeName(loc.getOp()));
 
     switch (maybeScriptSnapshot.unwrapErr()) {
-      case AbortReason::Disable:
+      case AbortReason::Disable: {
         // If the target script can't be warp-compiled, mark it as
         // uninlineable, clean up, and fall through to the non-inlined path.
+        ICEntry* entry = icScript_->icEntryForStub(fallbackStub);
         fallbackStub->setTrialInliningState(TrialInliningState::Failure);
-        fallbackStub->unlinkStub(cx_->zone(), /*prev=*/nullptr, stub);
+        fallbackStub->unlinkStub(cx_->zone(), entry, /*prev=*/nullptr, stub);
         targetScript->setUninlineable();
         info_->inlineScriptTree()->removeCallee(inlineScriptTree);
         icScript_->removeInlinedChild(loc.bytecodeToOffset(script_));
         return false;
+      }
       case AbortReason::Error:
       case AbortReason::Alloc:
         return Err(maybeScriptSnapshot.unwrapErr());

@@ -39,6 +39,7 @@ namespace jit {
 class BaselineFrame;
 class ICEntry;
 class ICScript;
+class ICFallbackStub;
 
 /*
  * An InliningRoot is owned by a JitScript. In turn, it owns the set
@@ -121,11 +122,11 @@ class MOZ_RAII TrialInliner {
   JSContext* cx() { return cx_; }
 
   [[nodiscard]] bool tryInlining();
-  [[nodiscard]] bool maybeInlineCall(const ICEntry& entry,
+  [[nodiscard]] bool maybeInlineCall(ICEntry& entry, ICFallbackStub* fallback,
                                      BytecodeLocation loc);
-  [[nodiscard]] bool maybeInlineGetter(const ICEntry& entry,
+  [[nodiscard]] bool maybeInlineGetter(ICEntry& entry, ICFallbackStub* fallback,
                                        BytecodeLocation loc);
-  [[nodiscard]] bool maybeInlineSetter(const ICEntry& entry,
+  [[nodiscard]] bool maybeInlineSetter(ICEntry& entry, ICFallbackStub* fallback,
                                        BytecodeLocation loc);
 
   static bool canInline(JSFunction* target, HandleScript caller,
@@ -136,8 +137,8 @@ class MOZ_RAII TrialInliner {
   void cloneSharedPrefix(ICCacheIRStub* stub, const uint8_t* endOfPrefix,
                          CacheIRWriter& writer);
   ICScript* createInlinedICScript(JSFunction* target, BytecodeLocation loc);
-  [[nodiscard]] bool replaceICStub(const ICEntry& entry, CacheIRWriter& writer,
-                                   CacheKind kind);
+  [[nodiscard]] bool replaceICStub(ICEntry& entry, ICFallbackStub* fallback,
+                                   CacheIRWriter& writer, CacheKind kind);
 
   bool shouldInline(JSFunction* target, ICCacheIRStub* stub,
                     BytecodeLocation loc);
