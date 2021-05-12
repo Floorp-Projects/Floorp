@@ -185,7 +185,7 @@ void CacheRegisterAllocator::ensureDoubleRegister(MacroAssembler& masm,
       MOZ_ASSERT(loc.payloadType() == JSVAL_TYPE_INT32,
                  "Caller must ensure the operand is a number value");
       MOZ_ASSERT(loc.payloadStack() <= stackPushed_);
-      Address addr(masm.getStackPointer(), stackPushed_ - loc.payloadStack());
+      Address addr = payloadAddress(masm, &loc);
       addr.offset += stackOffset;
       masm.convertInt32ToDouble(addr, dest);
       return;
@@ -237,7 +237,7 @@ void CacheRegisterAllocator::copyToScratchRegister(MacroAssembler& masm,
     case OperandLocation::PayloadStack: {
       MOZ_ASSERT(loc.payloadType() == typedId.type());
       MOZ_ASSERT(loc.payloadStack() <= stackPushed_);
-      Address addr(masm.getStackPointer(), stackPushed_ - loc.payloadStack());
+      Address addr = payloadAddress(masm, &loc);
       addr.offset += stackOffset;
       masm.loadPtr(addr, dest);
       return;
@@ -249,51 +249,46 @@ void CacheRegisterAllocator::copyToScratchRegister(MacroAssembler& masm,
   }
 }
 
-ValueOperand CacheRegisterAllocator::useFixedValueRegister(MacroAssembler& masm,
-                                                           ValOperandId valId,
-                                                           ValueOperand reg) {
-  allocateFixedValueRegister(masm, reg);
+void CacheRegisterAllocator::copyToScratchValueRegister(
+    MacroAssembler& masm, ValOperandId valId, ValueOperand dest) const {
+  MOZ_ASSERT(!addedFailurePath_);
+  MOZ_ASSERT(!hasAutoScratchFloatRegisterSpill());
 
-  OperandLocation& loc = operandLocations_[valId.id()];
+  const OperandLocation& loc = operandLocations_[valId.id()];
   switch (loc.kind()) {
     case OperandLocation::ValueReg:
-      masm.moveValue(loc.valueReg(), reg);
-      MOZ_ASSERT(!currentOpRegs_.aliases(loc.valueReg()),
-                 "Register shouldn't be in use");
-      availableRegs_.add(loc.valueReg());
+      masm.moveValue(loc.valueReg(), dest);
       break;
-    case OperandLocation::ValueStack:
-      popValue(masm, &loc, reg);
+    case OperandLocation::ValueStack: {
+      Address addr = valueAddress(masm, &loc);
+      masm.loadValue(addr, dest);
       break;
+    }
     case OperandLocation::BaselineFrame: {
       Address addr = addressOf(masm, loc.baselineFrameSlot());
-      masm.loadValue(addr, reg);
+      masm.loadValue(addr, dest);
       break;
     }
     case OperandLocation::Constant:
-      masm.moveValue(loc.constant(), reg);
+      masm.moveValue(loc.constant(), dest);
       break;
     case OperandLocation::PayloadReg:
-      masm.tagValue(loc.payloadType(), loc.payloadReg(), reg);
-      MOZ_ASSERT(!currentOpRegs_.has(loc.payloadReg()),
-                 "Register shouldn't be in use");
-      availableRegs_.add(loc.payloadReg());
+      masm.tagValue(loc.payloadType(), loc.payloadReg(), dest);
       break;
-    case OperandLocation::PayloadStack:
-      popPayload(masm, &loc, reg.scratchReg());
-      masm.tagValue(loc.payloadType(), reg.scratchReg(), reg);
+    case OperandLocation::PayloadStack: {
+      Address addr = payloadAddress(masm, &loc);
+      masm.loadPtr(addr, dest.scratchReg());
+      masm.tagValue(loc.payloadType(), dest.scratchReg(), dest);
       break;
+    }
     case OperandLocation::DoubleReg: {
       ScratchDoubleScope fpscratch(masm);
-      masm.boxDouble(loc.doubleReg(), reg, fpscratch);
+      masm.boxDouble(loc.doubleReg(), dest, fpscratch);
       break;
     }
     case OperandLocation::Uninitialized:
       MOZ_CRASH();
   }
-
-  loc.setValueReg(reg);
-  return reg;
 }
 
 Register CacheRegisterAllocator::useRegister(MacroAssembler& masm,
@@ -838,9 +833,7 @@ void CacheRegisterAllocator::popPayload(MacroAssembler& masm,
     stackPushed_ -= sizeof(uintptr_t);
   } else {
     MOZ_ASSERT(loc->payloadStack() < stackPushed_);
-    masm.loadPtr(
-        Address(masm.getStackPointer(), stackPushed_ - loc->payloadStack()),
-        dest);
+    masm.loadPtr(payloadAddress(masm, loc), dest);
     masm.propagateOOM(freePayloadSlots_.append(loc->payloadStack()));
   }
 
@@ -851,6 +844,12 @@ Address CacheRegisterAllocator::valueAddress(MacroAssembler& masm,
                                              const OperandLocation* loc) const {
   MOZ_ASSERT(loc >= operandLocations_.begin() && loc < operandLocations_.end());
   return Address(masm.getStackPointer(), stackPushed_ - loc->valueStack());
+}
+
+Address CacheRegisterAllocator::payloadAddress(
+    MacroAssembler& masm, const OperandLocation* loc) const {
+  MOZ_ASSERT(loc >= operandLocations_.begin() && loc < operandLocations_.end());
+  return Address(masm.getStackPointer(), stackPushed_ - loc->payloadStack());
 }
 
 void CacheRegisterAllocator::popValue(MacroAssembler& masm,
