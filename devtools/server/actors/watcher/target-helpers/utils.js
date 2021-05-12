@@ -53,11 +53,8 @@ function shouldNotifyWindowGlobal(
   }
 
   // If `acceptNonRemoteFrame` options isn't true, only mention the "remote frames".
-  // i.e. the frames which are in a distinct process compared to their parent document
-  return (
-    !browsingContext.parent ||
-    windowGlobal.osPid != browsingContext.parent.currentWindowGlobal.osPid
-  );
+  // i.e. the documents which have no parent, or are in a distinct process compared to their parent
+  return windowGlobal.isProcessRoot;
 }
 
 /**
