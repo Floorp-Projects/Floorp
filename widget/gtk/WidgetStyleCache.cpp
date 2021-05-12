@@ -120,12 +120,6 @@ static GtkWidget* CreateToolbarSeparatorWidget() {
   return widget;
 }
 
-static GtkWidget* CreateInfoBarWidget() {
-  GtkWidget* widget = gtk_info_bar_new();
-  AddToWindowContainer(widget);
-  return widget;
-}
-
 static GtkWidget* CreateButtonWidget() {
   GtkWidget* widget = gtk_button_new_with_label("M");
   AddToWindowContainer(widget);
@@ -701,8 +695,6 @@ static GtkWidget* CreateWidget(WidgetNodeType aAppearance) {
       return CreateToolbarWidget();
     case MOZ_GTK_TOOLBAR_SEPARATOR:
       return CreateToolbarSeparatorWidget();
-    case MOZ_GTK_INFO_BAR:
-      return CreateInfoBarWidget();
     case MOZ_GTK_SPINBUTTON:
       return CreateSpinWidget();
     case MOZ_GTK_BUTTON:
@@ -1072,10 +1064,6 @@ static GtkStyleContext* GetCssNodeStyleInternal(WidgetNodeType aNodeType) {
       // TODO - create from CSS node
       style = CreateSubStyleWithClass(MOZ_GTK_GRIPPER, GTK_STYLE_CLASS_GRIP);
       break;
-    case MOZ_GTK_INFO_BAR:
-      // TODO - create from CSS node
-      style = CreateSubStyleWithClass(MOZ_GTK_INFO_BAR, GTK_STYLE_CLASS_INFO);
-      break;
     case MOZ_GTK_SPINBUTTON_ENTRY:
       // TODO - create from CSS node
       style =
@@ -1250,9 +1238,6 @@ static GtkStyleContext* GetWidgetStyleInternal(WidgetNodeType aNodeType) {
       break;
     case MOZ_GTK_GRIPPER:
       style = CreateSubStyleWithClass(MOZ_GTK_GRIPPER, GTK_STYLE_CLASS_GRIP);
-      break;
-    case MOZ_GTK_INFO_BAR:
-      style = CreateSubStyleWithClass(MOZ_GTK_INFO_BAR, GTK_STYLE_CLASS_INFO);
       break;
     case MOZ_GTK_SPINBUTTON_ENTRY:
       style =

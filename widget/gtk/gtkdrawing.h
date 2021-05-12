@@ -305,8 +305,6 @@ enum WidgetNodeType : int {
   MOZ_GTK_HEADERBAR_WINDOW_MAXIMIZED,
   /* Window container for all widgets */
   MOZ_GTK_WINDOW_CONTAINER,
-  /* Paints a GtkInfoBar, for notifications. */
-  MOZ_GTK_INFO_BAR,
   /* Used for widget tree construction. */
   MOZ_GTK_COMBOBOX,
   /* Paints a GtkComboBox button widget. */

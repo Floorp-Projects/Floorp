@@ -2177,17 +2177,6 @@ static gint moz_gtk_check_menu_item_paint(WidgetNodeType widgetType,
   return MOZ_GTK_SUCCESS;
 }
 
-static gint moz_gtk_info_bar_paint(cairo_t* cr, GdkRectangle* rect,
-                                   GtkWidgetState* state) {
-  GtkStyleContext* style =
-      GetStyleContext(MOZ_GTK_INFO_BAR, state->scale, GTK_TEXT_DIR_LTR,
-                      GetStateFlagsFromGtkWidgetState(state));
-  gtk_render_background(style, cr, rect->x, rect->y, rect->width, rect->height);
-  gtk_render_frame(style, cr, rect->x, rect->y, rect->width, rect->height);
-
-  return MOZ_GTK_SUCCESS;
-}
-
 static gint moz_gtk_header_bar_paint(WidgetNodeType widgetType, cairo_t* cr,
                                      GdkRectangle* rect,
                                      GtkWidgetState* state) {
@@ -2390,9 +2379,6 @@ gint moz_gtk_get_widget_border(WidgetNodeType widget, gint* left, gint* top,
       }
       return MOZ_GTK_SUCCESS;
     }
-    case MOZ_GTK_INFO_BAR:
-      w = GetWidget(MOZ_GTK_INFO_BAR);
-      break;
     case MOZ_GTK_TOOLTIP: {
       // In GTK 3 there are 6 pixels of additional margin around the box.
       // See details there:
@@ -3194,8 +3180,6 @@ gint moz_gtk_widget_paint(WidgetNodeType widget, cairo_t* cr,
       return moz_gtk_hpaned_paint(cr, rect, state);
     case MOZ_GTK_WINDOW:
       return moz_gtk_window_paint(cr, rect, direction);
-    case MOZ_GTK_INFO_BAR:
-      return moz_gtk_info_bar_paint(cr, rect, state);
     case MOZ_GTK_HEADER_BAR:
     case MOZ_GTK_HEADER_BAR_MAXIMIZED:
       return moz_gtk_header_bar_paint(widget, cr, rect, state);

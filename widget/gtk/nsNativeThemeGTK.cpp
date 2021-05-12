@@ -707,9 +707,6 @@ bool nsNativeThemeGTK::GetGtkWidgetAndState(StyleAppearance aAppearance,
     case StyleAppearance::Radiomenuitem:
       aGtkWidgetType = MOZ_GTK_RADIOMENUITEM;
       break;
-    case StyleAppearance::MozGtkInfoBar:
-      aGtkWidgetType = MOZ_GTK_INFO_BAR;
-      break;
     case StyleAppearance::MozWindowTitlebar:
       aGtkWidgetType = MOZ_GTK_HEADER_BAR;
       break;
@@ -1883,7 +1880,6 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
     case StyleAppearance::Checkmenuitem:
     case StyleAppearance::Radiomenuitem:
     case StyleAppearance::Splitter:
-    case StyleAppearance::MozGtkInfoBar:
     case StyleAppearance::MozWindowButtonBox:
     case StyleAppearance::MozWindowButtonClose:
     case StyleAppearance::MozWindowButtonMinimize:
