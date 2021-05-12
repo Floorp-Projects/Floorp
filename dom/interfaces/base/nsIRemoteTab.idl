@@ -62,6 +62,18 @@ interface nsIRemoteTab : nsISupports
   void transmitPermissionsForPrincipal(in nsIPrincipal aPrincipal);
 
   /**
+   * Similar to `nsIDocShell.createAboutBlankContentViewer` but on a remote
+   * frame.  The docShell must not yet have navigated away from the initial
+   * about:blank document when this method is called.
+   *
+   * @param aPrincipal the principal to use for the new document.
+   * @param aPartitionedPrincipal the partitioned principal to use for the new
+   *        document.
+   */
+  void createAboutBlankContentViewer(in nsIPrincipal aPrincipal,
+                                     in nsIPrincipal aPartitionedPrincipal);
+
+  /**
    * Notify APZ to start autoscrolling.
    * (aAnchorX, aAnchorY) are the coordinates of the autoscroll anchor,
    * in CSS coordinates relative to the screen. aScrollId and

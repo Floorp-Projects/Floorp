@@ -31,7 +31,9 @@
 #include "VRManagerChild.h"
 #include "ipc/nsGUIEventIPC.h"
 #include "js/JSON.h"
+#include "mozilla/Assertions.h"
 #include "mozilla/AsyncEventDispatcher.h"
+#include "mozilla/BasePrincipal.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/EventListenerManager.h"
@@ -39,6 +41,7 @@
 #include "mozilla/IMEStateManager.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/MouseEvents.h"
+#include "mozilla/NullPrincipal.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/ProcessHangMonitor.h"
@@ -973,6 +976,39 @@ mozilla::ipc::IPCResult BrowserChild::RecvLoadURL(
   nsDocShell::Cast(docShell)->MaybeClearStorageAccessFlag();
 
   CrashReporter::AnnotateCrashReport(CrashReporter::Annotation::URL, spec);
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult BrowserChild::RecvCreateAboutBlankContentViewer(
+    nsIPrincipal* aPrincipal, nsIPrincipal* aPartitionedPrincipal) {
+  if (aPrincipal->GetIsExpandedPrincipal() ||
+      aPartitionedPrincipal->GetIsExpandedPrincipal()) {
+    return IPC_FAIL(this, "Cannot create document with an expanded principal");
+  }
+  if (aPrincipal->IsSystemPrincipal() ||
+      aPartitionedPrincipal->IsSystemPrincipal()) {
+    MOZ_ASSERT_UNREACHABLE(
+        "Cannot use CreateAboutBlankContentViewer to create system principal "
+        "document in content");
+    return IPC_OK();
+  }
+
+  nsCOMPtr<nsIDocShell> docShell = do_GetInterface(WebNavigation());
+  if (!docShell) {
+    MOZ_ASSERT_UNREACHABLE("WebNavigation does not have a docshell");
+    return IPC_OK();
+  }
+
+  nsCOMPtr<nsIURI> currentURI;
+  MOZ_ALWAYS_SUCCEEDS(
+      WebNavigation()->GetCurrentURI(getter_AddRefs(currentURI)));
+  if (!currentURI || !NS_IsAboutBlank(currentURI)) {
+    NS_WARNING("Can't create a ContentViewer unless on about:blank");
+    return IPC_OK();
+  }
+
+  docShell->CreateAboutBlankContentViewer(aPrincipal, aPartitionedPrincipal,
+                                          nullptr);
   return IPC_OK();
 }
 
