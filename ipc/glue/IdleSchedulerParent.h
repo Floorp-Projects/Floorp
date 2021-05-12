@@ -39,6 +39,8 @@ class IdleSchedulerParent final
   IPCResult RecvSchedule();
   IPCResult RecvRunningPrioritizedOperation();
   IPCResult RecvPrioritizedOperationDone();
+  IPCResult RecvRequestGC(RequestGCResolver&& aResolve);
+  IPCResult RecvDoneGC();
 
  private:
   friend class BackgroundParentImpl;
@@ -48,8 +50,10 @@ class IdleSchedulerParent final
   static int32_t ActiveCount();
   static void Schedule(IdleSchedulerParent* aRequester);
   static bool HasSpareCycles(int32_t aActiveCount);
+  static bool HasSpareGCCycles();
   using PIdleSchedulerParent::SendIdleTime;
   void SendIdleTime();
+  void SendMayGC();
 
   static void EnsureStarvationTimer();
   static void StarvationCallback(nsITimer* aTimer, void* aData);
@@ -62,17 +66,17 @@ class IdleSchedulerParent final
   // Counting all the prioritized operations the process is doing.
   uint32_t mRunningPrioritizedOperation = 0;
 
+  // Only one of these may be true at a time, giving three states:
+  // No active GC request, A pending GC request, or a granted GC request.
+  Maybe<RequestGCResolver> mRequestingGC;
+  bool mDoingGC = false;
+
   uint32_t mChildId = 0;
 
   // Current state, only one of these may be true at a time.
-  bool IsWaitingForIdle() const {
-    MOZ_ASSERT_IF(isInList(), mRequestedIdleBudget);
-    return isInList();
-  }
+  bool IsWaitingForIdle() const { return isInList() && mRequestedIdleBudget; }
   bool IsDoingIdleTask() const { return !isInList() && mRequestedIdleBudget; }
-  bool IsNotDoingIdleTask() const {
-    return !isInList() && !mRequestedIdleBudget;
-  }
+  bool IsNotDoingIdleTask() const { return !mRequestedIdleBudget; }
 
   // Shared memory for counting how many child processes are running
   // tasks. This memory is shared across all the child processes.
@@ -88,15 +92,21 @@ class IdleSchedulerParent final
   static std::bitset<NS_IDLE_SCHEDULER_COUNTER_ARRAY_LENGHT>
       sInUseChildCounters;
 
-  // Processes on this list have requested idle time, but haven't got it yet.
-  // Their mRequestedIdleBudget field is non-zero.
-  // Child processes not on this list have either been granted their request for
-  // idle time (mRequestedIdleBudget is non-zero) or have not requested idle
-  // time ever or since they last finished an idle task or (mRequestedIdleBudget
-  // is zero),
-  static LinkedList<IdleSchedulerParent> sWaitingForIdle;
+  // Processes on this list have requested (but the request hasn't yet been
+  // granted) idle time or to start a GC or both.
+  //
+  // Either or both their mRequestedIdleBudget or mRequestingGC fields are
+  // non-zero.  Child processes not on this list have either been granted all
+  // their requests not made a request ever or since they last finished an idle
+  // or GC task.
+  //
+  // Use the methods above to determine a process' idle time state, or check the
+  // mRequestingGC and mDoingGC fields for the GC state.
+  static LinkedList<IdleSchedulerParent> sIdleAndGCRequests;
 
   static Atomic<int32_t> sMaxConcurrentIdleTasksInChildProcesses;
+  static uint32_t sMaxConcurrentGCs;
+  static uint32_t sActiveGCs;
 
   // Counting all the child processes which have at least one prioritized
   // operation.

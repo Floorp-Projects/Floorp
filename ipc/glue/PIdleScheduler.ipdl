@@ -52,6 +52,11 @@ parent:
   async RunningPrioritizedOperation();
   async PrioritizedOperationDone();
 
+  // Ask if now would be a good time to GC
+  async RequestGC() returns (bool may_gc);
+
+  async DoneGC();
+
   // This message is never sent. Each PIdleScheduler actor will stay alive as long as
   // its PBackground manager.
   async __delete__();
