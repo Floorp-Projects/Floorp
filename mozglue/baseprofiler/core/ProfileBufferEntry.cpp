@@ -624,7 +624,7 @@ int ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter,
           // Bug 753041: We need a double cast here to tell GCC that we don't
           // want to sign extend 32-bit addresses starting with 0xFXXXXXX.
           unsigned long long pcULL = (unsigned long long)(uintptr_t)pc;
-          SprintfLiteral(buf, "%#llx", pcULL);
+          SprintfLiteral(buf, "0x%llx", pcULL);
 
           // If the "MOZ_PROFILER_SYMBOLICATE" env-var is set, we add a local
           // symbolication description to the PC address. This is off by
