@@ -326,7 +326,7 @@ bool DebuggerScript::CallData::getDisplayName() {
 }
 
 bool DebuggerScript::CallData::getParameterNames() {
-  if (!ensureScriptMaybeLazy()) {
+  if (!ensureScript()) {
     return false;
   }
 
