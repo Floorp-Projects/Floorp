@@ -8783,8 +8783,9 @@ var ToolbarIconColor = {
       luminances.set(toolbar, luminance);
     }
 
+    const luminanceThreshold = 127; // In between 0 and 255
     for (let [toolbar, luminance] of luminances) {
-      if (luminance <= 110) {
+      if (luminance <= luminanceThreshold) {
         toolbar.removeAttribute("brighttext");
       } else {
         toolbar.setAttribute("brighttext", "true");
