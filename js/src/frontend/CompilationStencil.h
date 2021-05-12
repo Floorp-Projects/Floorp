@@ -769,7 +769,7 @@ struct MOZ_RAII CompilationState : public ExtensibleCompilationStencil {
   // Track the state of key allocations and roll them back as parts of parsing
   // get retried. This ensures iteration during stencil instantiation does not
   // encounter discarded frontend state.
-  struct RewindToken {
+  struct CompilationStatePosition {
     // Temporarily share this token struct with CompilationState.
     size_t scriptDataLength = 0;
 
@@ -778,8 +778,17 @@ struct MOZ_RAII CompilationState : public ExtensibleCompilationStencil {
 
   bool prepareSharedDataStorage(JSContext* cx);
 
-  RewindToken getRewindToken();
-  void rewind(const RewindToken& pos);
+  CompilationStatePosition getPosition();
+  void rewind(const CompilationStatePosition& pos);
+
+  // When parsing arrow function, parameter is parsed twice, and if there are
+  // functions inside parameter expression, stencils will be created for them.
+  //
+  // Those functions exist only for lazy parsing.
+  // Mark them "ghost", so that they don't affect other parts.
+  //
+  // See GHOST_FUNCTION in FunctionFlags.h for more details.
+  void markGhost(const CompilationStatePosition& pos);
 
   // Allocate space for `length` gcthings, and return the address of the
   // first element to `cursor` to initialize on the caller.
