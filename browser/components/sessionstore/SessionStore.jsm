@@ -91,10 +91,6 @@ const MESSAGES = [
   // SSTabRestored at this time.
   "SessionStore:restoreTabContentComplete",
 
-  // A crashed tab was revived by navigating to a different page. Remove its
-  // browser from the list of crashed browsers to stop ignoring its messages.
-  "SessionStore:crashedTabRevived",
-
   // The content script encountered an error.
   "SessionStore:error",
 ];
@@ -104,9 +100,6 @@ const MESSAGES = [
 // ones that preload about:newtab pages, or from browsers where the window
 // has just been closed.
 const NOTAB_MESSAGES = new Set([
-  // For a description see above.
-  "SessionStore:crashedTabRevived",
-
   // For a description see above.
   "SessionStore:update",
 
@@ -118,9 +111,6 @@ const NOTAB_MESSAGES = new Set([
 // See getCurrentEpoch() and friends to find out what an "epoch" is.
 const NOEPOCH_MESSAGES = new Set([
   // For a description see above.
-  "SessionStore:crashedTabRevived",
-
-  // For a description see above.
   "SessionStore:error",
 ]);
 
@@ -128,9 +118,6 @@ const NOEPOCH_MESSAGES = new Set([
 // frame has been removed from the DOM and before its frame script has finished
 // unloading.
 const CLOSED_MESSAGES = new Set([
-  // For a description see above.
-  "SessionStore:crashedTabRevived",
-
   // For a description see above.
   "SessionStore:update",
 
@@ -436,6 +423,14 @@ var SessionStore = {
 
   resetBrowserToLazyState(tab) {
     return SessionStoreInternal.resetBrowserToLazyState(tab);
+  },
+
+  maybeExitCrashedState(browser) {
+    SessionStoreInternal.maybeExitCrashedState(browser);
+  },
+
+  isBrowserInCrashedSet(browser) {
+    return SessionStoreInternal.isBrowserInCrashedSet(browser);
   },
 
   /**
@@ -1415,11 +1410,6 @@ var SessionStoreInternal = {
         break;
       case "SessionStore:restoreTabContentComplete":
         this._restoreTabContentComplete(browser, data);
-        break;
-      case "SessionStore:crashedTabRevived":
-        // The browser was revived by navigating to a different page
-        // manually, so we remove it from the ignored browser set.
-        this._crashedBrowsers.delete(browser.permanentKey);
         break;
       case "SessionStore:error":
         TabStateFlusher.resolveAll(
@@ -2585,6 +2575,34 @@ var SessionStoreInternal = {
       userTypedValue,
       userTypedClear,
     });
+  },
+
+  /**
+   * Check if we are dealing with a crashed browser. If so, then the corresponding
+   * crashed tab was revived by navigating to a different page. Remove the browser
+   * from the list of crashed browsers to stop ignoring its messages.
+   * @param aBrowser
+   *        Browser reference
+   */
+  maybeExitCrashedState(aBrowser) {
+    let uri = aBrowser.documentURI;
+    if (uri?.spec?.startsWith("about:tabcrashed")) {
+      this._crashedBrowsers.delete(aBrowser.permanentKey);
+    }
+  },
+
+  /**
+   * A debugging-only function to check if a browser is in _crashedBrowsers.
+   * @param aBrowser
+   *        Browser reference
+   */
+  isBrowserInCrashedSet(aBrowser) {
+    if (gDebuggingEnabled) {
+      return this._crashedBrowsers.has(aBrowser.permanentKey);
+    }
+    throw new Error(
+      "SessionStore.isBrowserInCrashedSet() should only be called in debug mode!"
+    );
   },
 
   /**
