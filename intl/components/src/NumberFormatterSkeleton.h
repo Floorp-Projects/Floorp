@@ -59,7 +59,7 @@ class MOZ_STACK_CLASS NumberFormatterSkeleton final {
 
   bool currency(std::string_view currency);
 
-  bool currencyDisplay(NumberFormatOptions::CurrencyDisplayStyle display);
+  bool currencyDisplay(NumberFormatOptions::CurrencyDisplay display);
 
   bool unit(std::string_view unit);
 
