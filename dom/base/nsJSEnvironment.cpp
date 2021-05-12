@@ -79,6 +79,7 @@
 #include "mozilla/CycleCollectedJSContext.h"
 #include "nsCycleCollectionNoteRootCallback.h"
 #include "mozilla/IdleTaskRunner.h"
+#include "mozilla/ipc/IdleSchedulerChild.h"
 #include "nsViewManager.h"
 #include "mozilla/EventStateManager.h"
 #include "mozilla/ProfilerLabels.h"
@@ -109,6 +110,7 @@ static bool sShuttingDown;
 // after NS_SHRINKING_GC_DELAY ms later, if the appropriate pref is set.
 
 static bool sIsCompactingOnUserInactive = false;
+static bool sUserIsActive = true;
 
 static TimeDuration sGCUnnotifiedTotalTime;
 
@@ -331,10 +333,12 @@ nsJSEnvironmentObserver::Observe(nsISupports* aSubject, const char* aTopic,
   } else if (!nsCRT::strcmp(aTopic, "memory-pressure-stop")) {
     nsJSContext::SetLowMemoryState(false);
   } else if (!nsCRT::strcmp(aTopic, "user-interaction-inactive")) {
+    sUserIsActive = false;
     if (StaticPrefs::javascript_options_compact_on_user_inactive()) {
       nsJSContext::PokeShrinkingGC();
     }
   } else if (!nsCRT::strcmp(aTopic, "user-interaction-active")) {
+    sUserIsActive = true;
     nsJSContext::KillShrinkingGCTimer();
     if (sIsCompactingOnUserInactive) {
       AutoJSAPI jsapi;
@@ -1054,11 +1058,57 @@ void nsJSContext::SetProcessingScriptTag(bool aFlag) {
   mProcessingScriptTag = aFlag;
 }
 
+using MayGCPromise =
+    MozPromise<bool /* aIgnored */, mozilla::ipc::ResponseRejectReason, true>;
+
+// Returns null if we shouldn't GC now (eg a GC is already running).
+static RefPtr<MayGCPromise> MayGCNow(JS::GCReason reason) {
+  using namespace mozilla::ipc;
+
+  // We ask the parent if we should GC for GCs that aren't too timely, with the
+  // exception of MEM_PRESSURE, in that case we ask the parent because GCing on
+  // too many processes at the same time when under memory pressure could be a
+  // very bad experience for the user.
+  switch (reason) {
+    case JS::GCReason::PAGE_HIDE:
+    case JS::GCReason::MEM_PRESSURE:
+    case JS::GCReason::USER_INACTIVE:
+    case JS::GCReason::FULL_GC_TIMER:
+    case JS::GCReason::CC_FINISHED: {
+      if (XRE_IsContentProcess()) {
+        IdleSchedulerChild* child =
+            IdleSchedulerChild::GetMainThreadIdleScheduler();
+        if (child) {
+          return child->MayGCNow();
+        }
+      }
+      // The parent process doesn't ask IdleSchedulerParent if it can GC.
+      // TODO: but it should ask.
+      break;
+    }
+    default:
+      break;
+  }
+
+  return MayGCPromise::CreateAndResolve(true, __func__);
+}
+
 void FullGCTimerFired(nsITimer* aTimer, void* aClosure) {
   nsJSContext::KillFullGCTimer();
   MOZ_ASSERT(!aClosure, "Don't pass a closure to FullGCTimerFired");
-  nsJSContext::GarbageCollectNow(JS::GCReason::FULL_GC_TIMER,
-                                 nsJSContext::IncrementalGC);
+
+  RefPtr<MayGCPromise> mbPromise = MayGCNow(JS::GCReason::FULL_GC_TIMER);
+  if (mbPromise) {
+    mbPromise->Then(
+        GetMainThreadSerialEventTarget(), __func__,
+        [](bool aIgnored) {
+          nsJSContext::GarbageCollectNow(JS::GCReason::FULL_GC_TIMER,
+                                         nsJSContext::IncrementalGC);
+        },
+        [](mozilla::ipc::ResponseRejectReason r) {
+          // do nothing
+        });
+  }
 }
 
 // static
@@ -1558,7 +1608,37 @@ bool GCRunnerFired(TimeStamp aDeadline, void* /* aClosure */) {
       nsJSContext::KillGCRunner();
       return false;
 
-    case GCRunnerAction::MajorGC:
+    case GCRunnerAction::MajorGC: {
+      RefPtr<MayGCPromise> mbPromise = MayGCNow(step.mReason);
+      if (mbPromise) {
+        nsJSContext::KillGCRunner();
+        JS::GCReason reason = step.mReason;
+        mbPromise->Then(
+            GetMainThreadSerialEventTarget(), __func__,
+            [reason](bool aIgnored) {
+              sScheduler.NoteReadyForMajorGC(reason);
+              if (sGCRunner) {
+                // Cancel the current runner so we can re-create it with a 0
+                // delay.
+                sGCRunner->Cancel();
+              }
+              // Continue in idle time.
+              sGCRunner = IdleTaskRunner::Create(
+                  [](TimeStamp aDeadline) {
+                    return GCRunnerFired(aDeadline, nullptr);
+                  },
+                  "GCRunnerFired", 0,
+                  StaticPrefs::javascript_options_gc_delay_interslice(),
+                  int64_t(
+                      sScheduler.mActiveIntersliceGCBudget.ToMilliseconds()),
+                  true, [] { return sShuttingDown; });
+            },
+            [](mozilla::ipc::ResponseRejectReason r) {});
+        return true;
+      }
+      break;
+    }
+    case GCRunnerAction::MajorGCReady:
     case GCRunnerAction::GCSlice:
       break;
   }
@@ -1606,10 +1686,28 @@ bool GCRunnerFired(TimeStamp aDeadline, void* /* aClosure */) {
 // static
 void ShrinkingGCTimerFired(nsITimer* aTimer, void* aClosure) {
   nsJSContext::KillShrinkingGCTimer();
-  sIsCompactingOnUserInactive = true;
-  nsJSContext::GarbageCollectNow(JS::GCReason::USER_INACTIVE,
-                                 nsJSContext::IncrementalGC,
-                                 nsJSContext::ShrinkingGC);
+
+  RefPtr<MayGCPromise> mbPromise = MayGCNow(JS::GCReason::USER_INACTIVE);
+  if (mbPromise) {
+    mbPromise->Then(
+        GetMainThreadSerialEventTarget(), __func__,
+        [](bool aIgnored) {
+          if (!sUserIsActive) {
+            sIsCompactingOnUserInactive = true;
+            nsJSContext::GarbageCollectNow(JS::GCReason::USER_INACTIVE,
+                                           nsJSContext::IncrementalGC,
+                                           nsJSContext::ShrinkingGC);
+          } else {
+            using mozilla::ipc::IdleSchedulerChild;
+            IdleSchedulerChild* child =
+                IdleSchedulerChild::GetMainThreadIdleScheduler();
+            if (child) {
+              child->DoneGC();
+            }
+          }
+        },
+        [](mozilla::ipc::ResponseRejectReason r) {});
+  }
 }
 
 static bool CCRunnerFired(TimeStamp aDeadline) {
@@ -1925,6 +2023,13 @@ static void DOMGCSliceCallback(JSContext* aCx, JS::GCProgress aProgress,
 
       sScheduler.NoteGCEnd();
       sIsCompactingOnUserInactive = false;
+
+      using mozilla::ipc::IdleSchedulerChild;
+      IdleSchedulerChild* child =
+          IdleSchedulerChild::GetMainThreadIdleScheduler();
+      if (child) {
+        child->DoneGC();
+      }
 
       // May need to kill the GC runner
       nsJSContext::KillGCRunner();
