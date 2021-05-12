@@ -56,16 +56,16 @@ body.sepia {
 }
 
 body.dark {
-  --main-background: #333;
+  --main-background: rgb(28, 27, 34);
   --main-foreground: #eee;
   --toolbar-border: #4a4a4b;
   --toolbar-box-shadow: black;
   --toolbar-button-hover: var(--grey-90-a30);
   --toolbar-button-active: var(--grey-90-a80);
   --popup-button-active: hsla(0,0%,70%,.6);
-  --popup-bgcolor: #4c4a50;
+  --popup-bgcolor: rgb(66,65,77);
   --popup-button: #5c5c61;
-  --popup-line: #5c5c61;
+  --popup-line: rgb(82, 82, 94);
   --selected-background: #3E6D9A;
   --link-foreground: #45a1ff;
   --visited-link-foreground: #e675fd;
@@ -153,7 +153,7 @@ body.dark blockquote {
 
 .dark-button {
   color: #eeeeee;
-  background-color: #333333;
+  background-color: #1c1b22;
 }
 
 .sepia-button {
@@ -398,7 +398,7 @@ button:disabled {
   visibility: hidden;
   border-radius: 4px;
   border: 1px solid var(--popup-border);
-  box-shadow: 0 4px 6px 0 var(--popup-shadow);
+  box-shadow: 0 0px 10px 0 var(--popup-shadow);
   border-bottom-width: 0;
   top: 0;
 }
