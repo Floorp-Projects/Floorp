@@ -9,8 +9,8 @@ import android.os.Bundle
 import androidx.annotation.MainThread
 import androidx.appcompat.app.AppCompatActivity
 import kotlinx.android.synthetic.main.activity_main.*
-import mozilla.components.service.nimbus.NimbusApi
 import org.mozilla.experiments.nimbus.EnrolledExperiment
+import org.mozilla.experiments.nimbus.NimbusInterface
 import org.mozilla.samples.glean.GleanMetrics.BrowserEngagement
 import org.mozilla.samples.glean.GleanMetrics.Test
 import org.mozilla.samples.glean.library.SamplesGleanLibrary
@@ -18,7 +18,7 @@ import org.mozilla.samples.glean.library.SamplesGleanLibrary
 /**
  * Main Activity of the glean-sample-app
  */
-open class MainActivity : AppCompatActivity(), NimbusApi.Observer {
+open class MainActivity : AppCompatActivity(), NimbusInterface.Observer {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
