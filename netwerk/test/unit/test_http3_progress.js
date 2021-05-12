@@ -1,20 +1,16 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
+// This test can be merged with test_progress.js once HTTP/3 tests are
+// enabled on all plaforms.
 
-XPCOMUtils.defineLazyGetter(this, "URL", function() {
-  return "http://localhost:" + httpserver.identity.primaryPort;
-});
+var last = 0;
+var max = 0;
 
-var httpserver = new HttpServer();
-var testpath = "/simple";
-var httpbody = "0123456789";
-
-var last = 0,
-  max = 0;
-
+const RESPONSE_LENGTH = 3000000;
 const STATUS_RECEIVING_FROM = 0x804b0006;
-const LOOPS = 50000;
 
 const TYPE_ONSTATUS = 1;
 const TYPE_ONPROGRESS = 2;
@@ -105,7 +101,11 @@ ProgressCallback.prototype = {
 };
 
 registerCleanupFunction(async () => {
-  await httpserver.stop();
+  http3_clear_prefs();
+});
+
+add_task(async function setup() {
+  await http3_setup_tests("h3-27");
 });
 
 function chanPromise(uri, statusArg) {
@@ -124,20 +124,14 @@ function chanPromise(uri, statusArg) {
   });
 }
 
-add_task(async function test_http1_1() {
-  httpserver.registerPathHandler(testpath, serverHandler);
-  httpserver.start(-1);
-  await chanPromise(URL + testpath, "localhost");
-});
-
-function serverHandler(metadata, response) {
-  response.setHeader("Content-Type", "text/plain", false);
-  for (let i = 0; i < LOOPS; i++) {
-    response.bodyOutputStream.write(httpbody, httpbody.length);
-  }
-}
-
 function checkRequest(request, data, context) {
-  Assert.equal(last, httpbody.length * LOOPS);
-  Assert.equal(max, httpbody.length * LOOPS);
+  Assert.equal(last, RESPONSE_LENGTH);
+  Assert.equal(max, RESPONSE_LENGTH);
 }
+
+add_task(async function test_http3() {
+  await chanPromise(
+    "https://foo.example.com/" + RESPONSE_LENGTH,
+    "foo.example.com"
+  );
+});
