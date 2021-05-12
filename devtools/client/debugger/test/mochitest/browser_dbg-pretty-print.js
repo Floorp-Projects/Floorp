@@ -3,6 +3,7 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 // Tests basic pretty-printing functionality.
+requestLongerTimeout(2);
 
 add_task(async function() {
   const dbg = await initDebugger("doc-minified.html", "math.min.js");
@@ -37,4 +38,87 @@ add_task(async function() {
 
   await selectSource(dbg, "math.min.js");
   ok(findElement(dbg, "prettyPrintButton"), "Pretty Print Button is visible");
+});
+
+add_task(async function testPrivateFields() {
+  // Create a source containing a class with private fields
+  const httpServer = createTestHTTPServer();
+  httpServer.registerContentType("html", "text/html");
+  httpServer.registerContentType("js", "application/javascript");
+
+  httpServer.registerPathHandler(`/`, function(request, response) {
+    response.setStatusLine(request.httpVersion, 200, "OK");
+    response.write(`
+      <html>
+          Test pretty-printing class with private fields
+          <script type="text/javascript" src="class-with-private-fields.js"></script>
+      </html>`);
+  });
+
+  httpServer.registerPathHandler("/class-with-private-fields.js", function(
+    request,
+    response
+  ) {
+    response.setHeader("Content-Type", "application/javascript");
+    response.write(`
+      class MyClass {
+        constructor(a) {
+          this.#a = a;this.#b = Math.random();this.ab = this.#getAB();
+        }
+        #a
+        #b = "default value"
+        static #someStaticPrivate
+        #getA() {
+          return this.#a;
+        }
+        #getAB() {
+          return this.#getA()+this.
+            #b
+        }
+      }
+  `);
+  });
+  const port = httpServer.identity.primaryPort;
+  const TEST_URL = `http://localhost:${port}/`;
+
+  info("Open toolbox");
+  const dbg = await initDebuggerWithAbsoluteURL(TEST_URL);
+
+  info("Select script with private fields");
+  await selectSource(dbg, "class-with-private-fields.js", 2);
+
+  info("Pretty print the script");
+  clickElement(dbg, "prettyPrintButton");
+
+  info("Wait until the script is pretty-printed");
+  await waitForSelectedSource(dbg, "class-with-private-fields.js:formatted");
+
+  info("Check that the script was pretty-printed as expected");
+  const prettyPrintedSource = await findSourceContent(
+    dbg,
+    "class-with-private-fields.js:formatted"
+  );
+
+  is(
+    prettyPrintedSource.value.trim(),
+    `
+class MyClass {
+  constructor(a) {
+    this.#a = a;
+    this.#b = Math.random();
+    this.ab = this.#getAB();
+  }
+  #a
+  #b = 'default value'
+  static #someStaticPrivate
+  #getA() {
+    return this.#a;
+  }
+  #getAB() {
+    return this.#getA() + this.#b
+  }
+}
+  `.trim(),
+    "script was pretty printed as expected"
+  );
 });
