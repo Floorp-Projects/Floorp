@@ -7551,11 +7551,6 @@ AttachDecision CallIRGenerator::tryAttachObjectIs(HandleFunction callee) {
     return AttachDecision::NoAction;
   }
 
-  if (!isFirstStub_) {
-    // Attach only once to prevent slowdowns for polymorphic calls.
-    return AttachDecision::NoAction;
-  }
-
   // Initialize the input operand.
   Int32OperandId argcId(writer.setInputOperandId(0));
 
@@ -7568,7 +7563,10 @@ AttachDecision CallIRGenerator::tryAttachObjectIs(HandleFunction callee) {
   HandleValue lhs = args_[0];
   HandleValue rhs = args_[1];
 
-  if (lhs.isNumber() && rhs.isNumber() && !(lhs.isInt32() && rhs.isInt32())) {
+  if (!isFirstStub_) {
+    writer.sameValueResult(lhsId, rhsId);
+  } else if (lhs.isNumber() && rhs.isNumber() &&
+             !(lhs.isInt32() && rhs.isInt32())) {
     NumberOperandId lhsNumId = writer.guardIsNumber(lhsId);
     NumberOperandId rhsNumId = writer.guardIsNumber(rhsId);
     writer.compareDoubleSameValueResult(lhsNumId, rhsNumId);

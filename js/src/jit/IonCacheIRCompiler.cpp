@@ -2014,6 +2014,11 @@ bool IonCacheIRCompiler::emitHasClassResult(ObjOperandId objId,
   MOZ_CRASH("Call ICs not used in ion");
 }
 
+bool IonCacheIRCompiler::emitSameValueResult(ValOperandId lhs,
+                                             ValOperandId rhs) {
+  MOZ_CRASH("Call ICs not used in ion");
+}
+
 bool IonCacheIRCompiler::emitNewArrayObjectResult(uint32_t arrayLength,
                                                   uint32_t shapeOffset) {
   MOZ_CRASH("NewArray ICs not used in ion");
