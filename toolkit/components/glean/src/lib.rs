@@ -130,6 +130,7 @@ pub unsafe extern "C" fn fog_init(
         channel: Some(channel),
         server_endpoint: Some(server),
         uploader: Some(Box::new(crate::ViaductUploader) as Box<dyn glean::net::PingUploader>),
+        use_core_mps: true,
     };
 
     log::debug!("Configuration: {:#?}", configuration);
