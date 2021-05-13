@@ -28,12 +28,10 @@ var PdfJsDefaultPreferences = Object.freeze({
  "enablePermissions": false,
  "enablePrintAutoRotate": true,
  "enableScripting": true,
- "enableWebGL": false,
  "externalLinkTarget": 0,
  "historyUpdateUrl": false,
  "ignoreDestinationZoom": false,
  "pdfBugEnabled": false,
- "renderer": "canvas",
  "renderInteractiveForms": true,
  "sidebarViewOnLoad": -1,
  "scrollModeOnLoad": -1,
@@ -45,5 +43,6 @@ var PdfJsDefaultPreferences = Object.freeze({
  "disableAutoFetch": false,
  "disableFontFace": false,
  "disableRange": false,
- "disableStream": false
+ "disableStream": false,
+ "enableXfa": false
 });
