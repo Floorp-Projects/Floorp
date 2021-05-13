@@ -3522,10 +3522,7 @@ EditorDOMRange WSRunScanner::GetRangeForDeletingBlockElementBoundaries(
   if (NS_WARN_IF(!textFragmentDataAtEndOfLeftBlockElement.IsInitialized())) {
     return EditorDOMRange();  // TODO: Make here return error with Err.
   }
-  if (textFragmentDataAtEndOfLeftBlockElement.StartsFromBRElement() &&
-      !HTMLEditUtils::IsVisibleBRElement(
-          *textFragmentDataAtEndOfLeftBlockElement.StartReasonBRElementPtr(),
-          editingHost)) {
+  if (textFragmentDataAtEndOfLeftBlockElement.StartsFromInvisibleBRElement()) {
     // If the left block element ends with an invisible `<br>` element,
     // it'll be deleted (and it means there is no invisible trailing
     // white-spaces).  Therefore, the range should start from the invisible
@@ -3685,11 +3682,8 @@ WSRunScanner::ShrinkRangeIfStartsFromOrEndsAfterAtomicContent(
     if (NS_WARN_IF(!textFragmentDataAtStart.IsInitialized())) {
       return Err(NS_ERROR_FAILURE);
     }
-    if (textFragmentDataAtStart.EndsByBRElement()) {
-      if (HTMLEditUtils::IsVisibleBRElement(
-              *textFragmentDataAtStart.EndReasonBRElementPtr(), aEditingHost)) {
-        startContent = textFragmentDataAtStart.EndReasonBRElementPtr();
-      }
+    if (textFragmentDataAtStart.EndsByVisibleBRElement()) {
+      startContent = textFragmentDataAtStart.EndReasonBRElementPtr();
     } else if (textFragmentDataAtStart.EndsBySpecialContent() ||
                (textFragmentDataAtStart.EndsByOtherBlockElement() &&
                 !HTMLEditUtils::IsContainerNode(
@@ -3710,11 +3704,8 @@ WSRunScanner::ShrinkRangeIfStartsFromOrEndsAfterAtomicContent(
     if (NS_WARN_IF(!textFragmentDataAtEnd.IsInitialized())) {
       return Err(NS_ERROR_FAILURE);
     }
-    if (textFragmentDataAtEnd.StartsFromBRElement()) {
-      if (HTMLEditUtils::IsVisibleBRElement(
-              *textFragmentDataAtEnd.StartReasonBRElementPtr(), aEditingHost)) {
-        endContent = textFragmentDataAtEnd.StartReasonBRElementPtr();
-      }
+    if (textFragmentDataAtEnd.StartsFromVisibleBRElement()) {
+      endContent = textFragmentDataAtEnd.StartReasonBRElementPtr();
     } else if (textFragmentDataAtEnd.StartsFromSpecialContent() ||
                (textFragmentDataAtEnd.StartsFromOtherBlockElement() &&
                 !HTMLEditUtils::IsContainerNode(

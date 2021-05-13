@@ -339,10 +339,7 @@ HTMLEditor::HTMLWithContextInserter::GetInvisibleBRElementAtPoint(
     const EditorDOMPoint& aPointToInsert) const {
   WSRunScanner wsRunScannerAtInsertionPoint(mHTMLEditor.GetActiveEditingHost(),
                                             aPointToInsert);
-  if (wsRunScannerAtInsertionPoint.GetEndReasonContent() &&
-      HTMLEditUtils::IsInvisibleBRElement(
-          *wsRunScannerAtInsertionPoint.GetEndReasonContent(),
-          wsRunScannerAtInsertionPoint.GetEditingHost())) {
+  if (wsRunScannerAtInsertionPoint.EndsByInvisibleBRElement()) {
     return wsRunScannerAtInsertionPoint.EndReasonBRElementPtr();
   }
   return nullptr;
@@ -403,9 +400,7 @@ HTMLEditor::HTMLWithContextInserter::GetNewCaretPointAfterInsertingHTML(
   WSRunScanner wsRunScannerAtCaret(editingHost, pointToPutCaret);
   if (wsRunScannerAtCaret
           .ScanPreviousVisibleNodeOrBlockBoundaryFrom(pointToPutCaret)
-          .ReachedBRElement() &&
-      HTMLEditUtils::IsInvisibleBRElement(
-          *wsRunScannerAtCaret.GetStartReasonContent(), editingHost)) {
+          .ReachedInvisibleBRElement()) {
     WSRunScanner wsRunScannerAtStartReason(
         editingHost,
         EditorDOMPoint(wsRunScannerAtCaret.GetStartReasonContent()));
