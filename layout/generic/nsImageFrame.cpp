@@ -30,6 +30,7 @@
 #include "mozilla/MouseEvents.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/PresShellInlines.h"
+#include "mozilla/StaticPrefs_image.h"
 #include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/SVGImageContext.h"
 #include "mozilla/Unused.h"
@@ -1998,6 +1999,10 @@ bool nsDisplayImage::CreateWebRenderCommands(
   if (aDisplayListBuilder->UseHighQualityScaling()) {
     flags |= imgIContainer::FLAG_HIGH_QUALITY_SCALING;
   }
+  if (StaticPrefs::image_svg_blob_image() &&
+      mImage->GetType() == imgIContainer::TYPE_VECTOR) {
+    flags |= imgIContainer::FLAG_RECORD_BLOB;
+  }
 
   const int32_t factor = mFrame->PresContext()->AppUnitsPerDevPixel();
   LayoutDeviceRect destRect(
@@ -2021,13 +2026,25 @@ bool nsDisplayImage::CreateWebRenderCommands(
     case ImgDrawResult::INCOMPLETE:
     case ImgDrawResult::TEMPORARY_ERROR:
       if (mPrevImage && mPrevImage != mImage) {
+        // The current image and the previous image might be switching between
+        // rasterized surfaces and blob recordings, so we need to update the
+        // flags appropriately.
+        uint32_t prevFlags = flags;
+        if (StaticPrefs::image_svg_blob_image() &&
+            mPrevImage->GetType() == imgIContainer::TYPE_VECTOR) {
+          prevFlags |= imgIContainer::FLAG_RECORD_BLOB;
+        } else {
+          prevFlags &= ~imgIContainer::FLAG_RECORD_BLOB;
+        }
+
         RefPtr<ImageContainer> prevContainer;
         ImgDrawResult newDrawResult = mPrevImage->GetImageContainerAtSize(
-            aManager->LayerManager(), decodeSize, svgContext, flags,
+            aManager->LayerManager(), decodeSize, svgContext, prevFlags,
             getter_AddRefs(prevContainer));
         if (prevContainer && newDrawResult == ImgDrawResult::SUCCESS) {
           drawResult = newDrawResult;
           container = std::move(prevContainer);
+          flags = prevFlags;
           break;
         }
 
@@ -2054,8 +2071,13 @@ bool nsDisplayImage::CreateWebRenderCommands(
   // failure will be due to resource constraints and fallback is unlikely to
   // help us. Hence we can ignore the return value from PushImage.
   if (container) {
-    aManager->CommandBuilder().PushImage(this, container, aBuilder, aResources,
-                                         aSc, destRect, destRect);
+    if (flags & imgIContainer::FLAG_RECORD_BLOB) {
+      aManager->CommandBuilder().PushBlobImage(this, container, aBuilder,
+                                               aResources, destRect, destRect);
+    } else {
+      aManager->CommandBuilder().PushImage(this, container, aBuilder,
+                                           aResources, aSc, destRect, destRect);
+    }
   }
 
   nsDisplayItemGenericImageGeometry::UpdateDrawResult(this, drawResult);

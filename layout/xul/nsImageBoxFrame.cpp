@@ -48,6 +48,7 @@
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/StaticPrefs_image.h"
 #include "mozilla/SVGImageContext.h"
 #include "Units.h"
 #include "mozilla/layers/RenderRootStateManager.h"
@@ -419,6 +420,10 @@ ImgDrawResult nsImageBoxFrame::CreateWebRenderCommands(
   if (aFlags & nsImageRenderer::FLAG_SYNC_DECODE_IMAGES) {
     containerFlags |= imgIContainer::FLAG_SYNC_DECODE;
   }
+  if (StaticPrefs::image_svg_blob_image() &&
+      imgCon->GetType() == imgIContainer::TYPE_VECTOR) {
+    containerFlags |= imgIContainer::FLAG_RECORD_BLOB;
+  }
 
   const int32_t appUnitsPerDevPixel = PresContext()->AppUnitsPerDevPixel();
   LayoutDeviceRect fillRect =
@@ -440,6 +445,20 @@ ImgDrawResult nsImageBoxFrame::CreateWebRenderCommands(
 
   mozilla::wr::ImageRendering rendering = wr::ToImageRendering(
       nsLayoutUtils::GetSamplingFilterForFrame(aItem->Frame()));
+  wr::LayoutRect fill = wr::ToLayoutRect(fillRect);
+
+  if (containerFlags & imgIContainer::FLAG_RECORD_BLOB) {
+    Maybe<wr::BlobImageKey> key = aManager->CommandBuilder().CreateBlobImageKey(
+        aItem, container, aResources);
+    if (key.isNothing()) {
+      return result;
+    }
+
+    aBuilder.PushImage(fill, fill, !BackfaceIsHidden(), rendering,
+                       wr::AsImageKey(key.value()));
+    return result;
+  }
+
   gfx::IntSize size;
   Maybe<wr::ImageKey> key = aManager->CommandBuilder().CreateImageKey(
       aItem, container, aBuilder, aResources, rendering, aSc, size, Nothing());
@@ -447,7 +466,6 @@ ImgDrawResult nsImageBoxFrame::CreateWebRenderCommands(
     return result;
   }
 
-  wr::LayoutRect fill = wr::ToLayoutRect(fillRect);
   aBuilder.PushImage(fill, fill, !BackfaceIsHidden(), rendering, key.value());
 
   return result;
