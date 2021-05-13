@@ -1064,8 +1064,8 @@ add_old_configure_assignment("FT2_CFLAGS", ft2_info.cflags)
 
 @depends(build_project)
 def remote_default(build_project):
-    # enable for Firefox only
-    return build_project in ("browser", "mobile/android")
+    # enable for Firefox and Thunderbird only
+    return build_project in ("browser", "comm/mail", "mobile/android")
 
 
 option("--enable-cdp", default=remote_default, help="{Enable|Disable} remote agent")
