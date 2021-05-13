@@ -924,6 +924,15 @@ class UrlbarView {
       // result if the suggestedIndex values are different.
       return false;
     }
+    if (
+      (result.providerName == "UrlbarProviderQuickSuggest") !=
+      (row.result.providerName == "UrlbarProviderQuickSuggest")
+    ) {
+      // Don't replace a quick suggest result with a non-quick suggest result or
+      // vice versa.
+      // TODO (Bug 1710518): Come up with a more general solution.
+      return false;
+    }
     let resultIsSearchSuggestion = this._resultIsSearchSuggestion(result);
     // If the row is same type, just update it.
     if (
@@ -950,7 +959,7 @@ class UrlbarView {
     let rowIndex = 0;
     let resultIndex = 0;
     let visibleSpanCount = 0;
-    let seenMisplacedSuggestedIndex = false;
+    let seenMisplacedResult = false;
     let seenSearchSuggestion = false;
 
     // We can have more rows than the visible ones.
@@ -965,7 +974,7 @@ class UrlbarView {
       }
       // Continue updating rows as long as we haven't encountered a new
       // suggestedIndex result that couldn't replace a current result.
-      if (!seenMisplacedSuggestedIndex) {
+      if (!seenMisplacedResult) {
         seenSearchSuggestion =
           seenSearchSuggestion ||
           (!row.result.heuristic && this._resultIsSearchSuggestion(row.result));
@@ -978,8 +987,13 @@ class UrlbarView {
           resultIndex++;
           continue;
         }
-        if (result.hasSuggestedIndex || row.result.hasSuggestedIndex) {
-          seenMisplacedSuggestedIndex = true;
+        if (
+          result.hasSuggestedIndex ||
+          row.result.hasSuggestedIndex ||
+          result.providerName == "UrlbarProviderQuickSuggest" ||
+          row.result.providerName == "UrlbarProviderQuickSuggest"
+        ) {
+          seenMisplacedResult = true;
         }
       }
       row.setAttribute("stale", "true");
@@ -1002,7 +1016,7 @@ class UrlbarView {
       let row = this._createRow();
       let result = results[resultIndex];
       this._updateRow(row, result);
-      if (!seenMisplacedSuggestedIndex && result.hasSuggestedIndex) {
+      if (!seenMisplacedResult && result.hasSuggestedIndex) {
         // We need to check whether the new suggestedIndex result will end up at
         // its right index if we append it here. The "right" index is the final
         // index the result will occupy once the update is done and all stale
@@ -1016,14 +1030,25 @@ class UrlbarView {
             ? Math.min(results.length - 1, result.suggestedIndex)
             : Math.max(0, results.length + result.suggestedIndex);
         if (this._rows.children.length != finalIndex) {
-          seenMisplacedSuggestedIndex = true;
+          seenMisplacedResult = true;
         }
+      }
+      if (
+        !seenMisplacedResult &&
+        result.providerName == "UrlbarProviderQuickSuggest"
+      ) {
+        // Quick suggest results always come last in the general bucket, so we
+        // can't know at this point what their right indexes will be. To avoid
+        // all possible flicker, don't make new quick suggest rows (and all rows
+        // after quick suggest rows) visible until stale rows are removed.
+        // TODO (Bug 1710518): Come up with a more general solution.
+        seenMisplacedResult = true;
       }
       let newVisibleSpanCount =
         visibleSpanCount + UrlbarUtils.getSpanForResult(result);
       if (
         newVisibleSpanCount <= queryContext.maxResults &&
-        !seenMisplacedSuggestedIndex
+        !seenMisplacedResult
       ) {
         // The new row can be visible.
         visibleSpanCount = newVisibleSpanCount;
