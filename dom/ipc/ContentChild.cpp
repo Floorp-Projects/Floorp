@@ -2357,14 +2357,6 @@ mozilla::ipc::IPCResult ContentChild::RecvRebuildFontList(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult ContentChild::RecvFontListShmBlockAdded(
-    const uint32_t& aGeneration, const uint32_t& aIndex,
-    const base::SharedMemoryHandle& aHandle) {
-  gfxPlatformFontList::PlatformFontList()->ShmBlockAdded(aGeneration, aIndex,
-                                                         aHandle);
-  return IPC_OK();
-}
-
 mozilla::ipc::IPCResult ContentChild::RecvUpdateAppLocales(
     nsTArray<nsCString>&& aAppLocales) {
   LocaleService::GetInstance()->AssignAppLocales(aAppLocales);
