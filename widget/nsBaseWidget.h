@@ -578,7 +578,7 @@ class nsBaseWidget : public nsIWidget, public nsSupportsWeakReference {
    * @param aWidth width to constrain
    * @param aHeight height to constrain
    */
-  void ConstrainSize(int32_t* aWidth, int32_t* aHeight) {
+  void ConstrainSize(int32_t* aWidth, int32_t* aHeight) override {
     SizeConstraints c = GetSizeConstraints();
     *aWidth = std::max(c.mMinSize.width, std::min(c.mMaxSize.width, *aWidth));
     *aHeight =
