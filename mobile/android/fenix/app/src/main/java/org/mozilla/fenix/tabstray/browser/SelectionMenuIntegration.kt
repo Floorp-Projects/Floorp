@@ -8,6 +8,7 @@ import android.content.Context
 import androidx.annotation.VisibleForTesting
 import mozilla.components.browser.menu.BrowserMenuBuilder
 import org.mozilla.fenix.tabstray.NavigationInteractor
+import org.mozilla.fenix.tabstray.TabsTrayAction
 import org.mozilla.fenix.tabstray.TabsTrayInteractor
 import org.mozilla.fenix.tabstray.TabsTrayStore
 import org.mozilla.fenix.utils.Do
@@ -30,12 +31,14 @@ class SelectionMenuIntegration(
     @VisibleForTesting
     internal fun handleMenuClicked(item: SelectionMenu.Item) {
         Do exhaustive when (item) {
-            is SelectionMenu.Item.BookmarkTabs -> navInteractor.onSaveToBookmarks(
-                store.state.mode.selectedTabs
-            )
-            is SelectionMenu.Item.DeleteTabs -> trayInteractor.onDeleteTabs(
-                store.state.mode.selectedTabs
-            )
+            is SelectionMenu.Item.BookmarkTabs -> {
+                navInteractor.onSaveToBookmarks(store.state.mode.selectedTabs)
+                store.dispatch(TabsTrayAction.ExitSelectMode)
+            }
+            is SelectionMenu.Item.DeleteTabs -> {
+                trayInteractor.onDeleteTabs(store.state.mode.selectedTabs)
+                store.dispatch(TabsTrayAction.ExitSelectMode)
+            }
         }
     }
 }

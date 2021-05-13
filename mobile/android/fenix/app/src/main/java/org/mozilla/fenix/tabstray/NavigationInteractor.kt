@@ -198,8 +198,6 @@ class DefaultNavigationInteractor(
             }
         }
 
-        tabsTrayStore.dispatch(TabsTrayAction.ExitSelectMode)
-
         // TODO show successful snackbar here (regardless of operation succes).
     }
 
