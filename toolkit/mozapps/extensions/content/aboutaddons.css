@@ -748,5 +748,7 @@ section:not(:empty) ~ #empty-addons-message {
     border-radius: 50%;
     min-width: auto;
     padding: 0;
+    /* move the badged dot into the top-end (right in ltr, left in rtl) corner. */
+    margin-top: -20px;
   }
 }
