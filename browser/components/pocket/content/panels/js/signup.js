@@ -9,15 +9,7 @@ It does not contain any logic for saving or communication with the extension or 
 var PKT_PANEL_OVERLAY = function(options) {
   this.inited = false;
   this.active = false;
-  this.delayedStateSaved = false;
-  this.wrapper = null;
-  this.variant = window.___PKT__SIGNUP_VARIANT;
-  this.tagline = window.___PKT__SIGNUP_TAGLINE || "";
-  this.preventCloseTimerCancel = false;
   this.translations = {};
-  this.closeValid = true;
-  this.mouseInside = false;
-  this.autocloseTimer = null;
   this.variant = "";
   this.controlvariant;
   this.pockethost = "getpocket.com";
