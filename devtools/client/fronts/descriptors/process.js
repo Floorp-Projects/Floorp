@@ -64,6 +64,10 @@ class ProcessDescriptorFront extends DescriptorMixin(
     return front;
   }
 
+  get isProcessDescriptor() {
+    return true;
+  }
+
   getCachedTarget() {
     return this._processTargetFront;
   }

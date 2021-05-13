@@ -104,6 +104,10 @@ class TabDescriptorFront extends DescriptorMixin(
     }
   }
 
+  get isTabDescriptor() {
+    return true;
+  }
+
   get isLocalTab() {
     return !!this._localTab;
   }
