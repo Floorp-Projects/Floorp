@@ -179,4 +179,4 @@ def main(prog=None, argv=None):
 
 
 if __name__ == "__main__":
-    main()
+    main()  # type: ignore
