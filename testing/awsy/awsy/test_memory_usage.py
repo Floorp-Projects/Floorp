@@ -76,11 +76,9 @@ class TestMemoryUsage(AwsyTestCase):
             "pageManifest", default_tp6_pages_manifest
         )
         urls = []
-        recordings = set()
         with open(tp6_pages_manifest) as f:
             d = yaml.safe_load(f)
             for r in d:
-                recordings.add(r["rec"])
                 url = r["url"]
                 if isinstance(url, list):
                     urls.extend(url)
@@ -99,7 +97,7 @@ class TestMemoryUsage(AwsyTestCase):
         tp6_pageset_manifest = os.path.join(AWSY_PATH, "tp6-pageset.manifest")
         config = {
             "playback_tool": "mitmproxy",
-            "playback_version": "4.0.4",
+            "playback_version": "5.1.1",
             "playback_files": [tp6_pageset_manifest],
             "platform": mozinfo.os,
             "obj_path": self._webroot_dir,
