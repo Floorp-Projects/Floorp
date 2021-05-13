@@ -20,6 +20,7 @@ upgrade-dialog-new-primary-primary-button = Make { -brand-short-name } my primar
     .title = Sets { -brand-short-name } as default browser and pins to taskbar
 upgrade-dialog-new-primary-default-button = Make { -brand-short-name } my default browser
 upgrade-dialog-new-primary-pin-button = Pin { -brand-short-name } to my taskbar
+upgrade-dialog-new-primary-pin-alt-button = Pin to taskbar
 upgrade-dialog-new-primary-theme-button = Choose a theme
 upgrade-dialog-new-secondary-button = Not now
 # This string is only shown on Windows 7, where we intentionally suppress the
