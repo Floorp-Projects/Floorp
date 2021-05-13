@@ -2347,13 +2347,27 @@ mozilla::ipc::IPCResult ContentChild::RecvUpdateDictionaryList(
 mozilla::ipc::IPCResult ContentChild::RecvUpdateFontList(
     dom::SystemFontList&& aFontList) {
   mFontList = std::move(aFontList);
-  gfxPlatform::GetPlatform()->UpdateFontList(true);
+  if (gfxPlatform::Initialized()) {
+    gfxPlatform::GetPlatform()->UpdateFontList(true);
+  }
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult ContentChild::RecvRebuildFontList(
     const bool& aFullRebuild) {
-  gfxPlatform::GetPlatform()->UpdateFontList(aFullRebuild);
+  if (gfxPlatform::Initialized()) {
+    gfxPlatform::GetPlatform()->UpdateFontList(aFullRebuild);
+  }
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult ContentChild::RecvFontListShmBlockAdded(
+    const uint32_t& aGeneration, const uint32_t& aIndex,
+    const base::SharedMemoryHandle& aHandle) {
+  if (gfxPlatform::Initialized()) {
+    gfxPlatformFontList::PlatformFontList()->ShmBlockAdded(aGeneration, aIndex,
+                                                           aHandle);
+  }
   return IPC_OK();
 }
 
