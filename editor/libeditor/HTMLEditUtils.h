@@ -263,6 +263,18 @@ class HTMLEditUtils final {
                                     dom::Text& aText);
 
   /**
+   * IsVisibleBRElement() returns true if aContent is a visible HTML <br>
+   * element, i.e., not a padding <br> element for making last line in a
+   * block element visible.
+   *
+   * If aEditingHost is omitted, this computes parent editable block for you.
+   * But if you call this a lot, please specify proper editing host (or parent
+   * block) for the performance.
+   */
+  static bool IsVisibleBRElement(const nsIContent& aContent,
+                                 const Element* aEditingHost = nullptr);
+
+  /**
    * IsEmptyNode() returns false if aNode has some visible content nodes,
    * list elements or table elements.
    *
@@ -880,7 +892,7 @@ class HTMLEditUtils final {
    * editing host, returns the editing host instead.
    */
   static Element* GetInclusiveAncestorEditableBlockElementOrInlineEditingHost(
-      nsIContent& aContent);
+      const nsIContent& aContent);
   /**
    * GetClosestAncestorTableElement() returns the nearest inclusive ancestor
    * <table> element of aContent.
