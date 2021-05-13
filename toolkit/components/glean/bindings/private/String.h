@@ -7,8 +7,6 @@
 #ifndef mozilla_glean_GleanString_h
 #define mozilla_glean_GleanString_h
 
-#include "mozilla/glean/bindings/ScalarGIFFTMap.h"
-#include "mozilla/glean/fog_ffi_generated.h"
 #include "mozilla/Maybe.h"
 #include "nsIGleanMetrics.h"
 #include "nsString.h"
@@ -29,15 +27,7 @@ class StringMetric {
    *
    * @param aValue The string to set the metric to.
    */
-  void Set(const nsACString& aValue) const {
-    auto scalarId = ScalarIdForMetric(mId);
-    if (scalarId) {
-      Telemetry::ScalarSet(scalarId.extract(), NS_ConvertUTF8toUTF16(aValue));
-    }
-#ifndef MOZ_GLEAN_ANDROID
-    fog_string_set(mId, &aValue);
-#endif
-  }
+  void Set(const nsACString& aValue) const;
 
   /**
    * **Test-only API**
@@ -57,19 +47,7 @@ class StringMetric {
    * @return value of the stored metric, or Nothing() if there is no value.
    */
   Maybe<nsCString> TestGetValue(
-      const nsACString& aPingName = nsCString()) const {
-#ifdef MOZ_GLEAN_ANDROID
-    Unused << mId;
-    return Nothing();
-#else
-    if (!fog_string_test_has_value(mId, &aPingName)) {
-      return Nothing();
-    }
-    nsCString ret;
-    fog_string_test_get_value(mId, &aPingName, &ret);
-    return Some(ret);
-#endif
-  }
+      const nsACString& aPingName = nsCString()) const;
 
  private:
   const uint32_t mId;

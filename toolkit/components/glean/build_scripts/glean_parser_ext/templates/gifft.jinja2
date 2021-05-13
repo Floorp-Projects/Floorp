@@ -25,7 +25,7 @@ using Telemetry::{{ probe_type }}ID;
 {% if probe_type == "Histogram" %}
 typedef uint64_t TimerId; // Same as in TimingDistribution.h.
 typedef StaticDataMutex<UniquePtr<nsTHashMap<TimerId, TimeStamp>>> TimerToStampMutex;
-static TimerToStampMutex::AutoLock GetTimerIdToStartsLock() {
+static inline TimerToStampMutex::AutoLock GetTimerIdToStartsLock() {
   static TimerToStampMutex sTimerIdToStarts("sTimerIdToStarts");
   auto lock = sTimerIdToStarts.Lock();
   if (!*lock) {
@@ -39,7 +39,7 @@ typedef nsTHashMap<SubmetricIdHashKey, Tuple<ScalarID, nsString>>
     SubmetricToLabeledMirrorMapType;
 typedef StaticDataMutex<UniquePtr<SubmetricToLabeledMirrorMapType>>
     SubmetricToMirrorMutex;
-static SubmetricToMirrorMutex::AutoLock GetLabeledMirrorLock() {
+static inline SubmetricToMirrorMutex::AutoLock GetLabeledMirrorLock() {
   static SubmetricToMirrorMutex sLabeledMirrors("sLabeledMirrors");
   auto lock = sLabeledMirrors.Lock();
   if (!*lock) {
@@ -73,7 +73,7 @@ class ScalarIDHashKey : public PLDHashEntryHdr {
 };
 }  // namespace
 typedef StaticDataMutex<UniquePtr<nsTHashMap<ScalarIDHashKey, TimeStamp>>> TimesToStartsMutex;
-static TimesToStartsMutex::AutoLock GetTimesToStartsLock() {
+static inline TimesToStartsMutex::AutoLock GetTimesToStartsLock() {
   static TimesToStartsMutex sTimespanStarts("sTimespanStarts");
   auto lock = sTimespanStarts.Lock();
   if (!*lock) {

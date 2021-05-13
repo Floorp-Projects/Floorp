@@ -17,7 +17,7 @@ using Telemetry::HistogramID;
 
 typedef uint64_t TimerId; // Same as in TimingDistribution.h.
 typedef StaticDataMutex<UniquePtr<nsTHashMap<TimerId, TimeStamp>>> TimerToStampMutex;
-static TimerToStampMutex::AutoLock GetTimerIdToStartsLock() {
+static inline TimerToStampMutex::AutoLock GetTimerIdToStartsLock() {
   static TimerToStampMutex sTimerIdToStarts("sTimerIdToStarts");
   auto lock = sTimerIdToStarts.Lock();
   if (!*lock) {

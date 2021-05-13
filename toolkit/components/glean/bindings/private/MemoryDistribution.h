@@ -8,8 +8,6 @@
 #define mozilla_glean_GleanMemoryDistribution_h
 
 #include "mozilla/glean/bindings/DistributionData.h"
-#include "mozilla/glean/bindings/HistogramGIFFTMap.h"
-#include "mozilla/glean/fog_ffi_generated.h"
 #include "mozilla/Maybe.h"
 #include "nsIGleanMetrics.h"
 #include "nsTArray.h"
@@ -31,15 +29,7 @@ class MemoryDistributionMetric {
    * Notes: Values bigger than 1 Terabyte (2^40 bytes) are truncated and an
    * InvalidValue error is recorded.
    */
-  void Accumulate(uint64_t aSample) const {
-    auto hgramId = HistogramIdForMetric(mId);
-    if (hgramId) {
-      Telemetry::Accumulate(hgramId.extract(), aSample);
-    }
-#ifndef MOZ_GLEAN_ANDROID
-    fog_memory_distribution_accumulate(mId, aSample);
-#endif
-  }
+  void Accumulate(uint64_t aSample) const;
 
   /**
    * **Test-only API**
@@ -59,25 +49,7 @@ class MemoryDistributionMetric {
    * @return value of the stored metric, or Nothing() if there is no value.
    */
   Maybe<DistributionData> TestGetValue(
-      const nsACString& aPingName = nsCString()) const {
-#ifdef MOZ_GLEAN_ANDROID
-    Unused << mId;
-    return Nothing();
-#else
-    if (!fog_memory_distribution_test_has_value(mId, &aPingName)) {
-      return Nothing();
-    }
-    nsTArray<uint64_t> buckets;
-    nsTArray<uint64_t> counts;
-    DistributionData ret;
-    fog_memory_distribution_test_get_value(mId, &aPingName, &ret.sum, &buckets,
-                                           &counts);
-    for (size_t i = 0; i < buckets.Length(); ++i) {
-      ret.values.InsertOrUpdate(buckets[i], counts[i]);
-    }
-    return Some(std::move(ret));
-#endif
-  }
+      const nsACString& aPingName = nsCString()) const;
 
  private:
   const uint32_t mId;
