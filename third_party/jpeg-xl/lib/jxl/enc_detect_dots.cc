@@ -516,53 +516,6 @@ GaussianEllipse FitGaussianFast(const ConnectedComponent& cc,
   return ans;
 }
 
-// Probably slower, but optimizes the right thing
-GaussianEllipse FitGaussianOpt(const ConnectedComponent& cc,
-                               const ImageF& energy, const Image3F& img,
-                               const Image3F& background) {
-  const std::array<float, 3> colorFactor{1.0, 1.0, 1.0};
-  GaussianEllipse ans = FitGaussianFast(cc, energy, img, background);
-  auto l2_loss = [&img, &cc, &background,
-                  &colorFactor](const std::vector<double>& params) -> double {
-    GaussianEllipse ellipse;
-    ellipse.x = img.xsize() * params[0];
-    ellipse.y = img.ysize() * params[1];
-    ellipse.sigma_x = exp(params[2]);  // strictly positive
-    ellipse.sigma_y = exp(params[3]);  // strictly positive
-    ellipse.angle = params[4];
-    for (int c = 0; c < 3; c++) {
-      ellipse.intensity[c] = colorFactor[c] * params[5 + c];
-      ellipse.bgColor[c] = colorFactor[c] * params[8 + c];
-    }
-    ComputeDotLosses(&ellipse, cc, img, background);
-    return ellipse.l2_loss;
-  };
-  std::vector<double> init{ans.x / img.xsize(),
-                           ans.y / img.ysize(),
-                           log(ans.sigma_x),
-                           log(ans.sigma_y),
-                           ans.angle,
-                           ans.intensity[0] / colorFactor[0],
-                           ans.intensity[1] / colorFactor[1],
-                           ans.intensity[2] / colorFactor[2],
-                           ans.bgColor[0] / colorFactor[0],
-                           ans.bgColor[1] / colorFactor[1],
-                           ans.bgColor[2] / colorFactor[2]};
-  auto p = optimize::RunSimplex(11, 0.01, 77, init, l2_loss);
-
-  ans.l2_loss = p[0];
-  ans.x = img.xsize() * p[1];
-  ans.y = img.ysize() * p[2];
-  ans.sigma_x = exp(p[3]);
-  ans.sigma_y = exp(p[4]);
-  ans.angle = p[5];
-  for (int c = 0; c < 3; c++) {
-    ans.intensity[c] = colorFactor[c] * p[6 + c];
-    ans.bgColor[c] = colorFactor[c] * p[9 + c];
-  }
-  return ans;
-}
-
 GaussianEllipse FitGaussian(const ConnectedComponent& cc, const ImageF& energy,
                             const Image3F& img, const Image3F& background) {
   auto ellipse = FitGaussianFast(cc, energy, img, background);

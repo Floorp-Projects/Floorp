@@ -17,6 +17,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+#include <sstream>
 #include <string>
 #include <utility>
 #include <vector>
@@ -1487,51 +1488,56 @@ std::vector<PixelTestConfig> GeneratePixelTests() {
   return all_tests;
 }
 
-std::string PixelTestDescription(
-    const testing::TestParamInfo<DecodeTestParam::ParamType>& info) {
-  PixelTestConfig c = info.param;
-  std::string name;
-  name += std::to_string(c.xsize) + "x" + std::to_string(c.ysize);
+std::ostream& operator<<(std::ostream& os, const PixelTestConfig& c) {
+  os << c.xsize << "x" << c.ysize;
   const char* colors[] = {"", "G", "GA", "RGB", "RGBA"};
-  name += colors[(c.grayscale ? 1 : 3) + (c.include_alpha ? 1 : 0)];
-  name += "to";
-  name += colors[c.output_channels];
+  os << colors[(c.grayscale ? 1 : 3) + (c.include_alpha ? 1 : 0)];
+  os << "to";
+  os << colors[c.output_channels];
   switch (c.data_type) {
     case JXL_TYPE_UINT8:
-      name += "u8";
+      os << "u8";
       break;
     case JXL_TYPE_UINT16:
-      name += "u16";
+      os << "u16";
       break;
     case JXL_TYPE_FLOAT:
-      name += "f32";
+      os << "f32";
       break;
     case JXL_TYPE_FLOAT16:
-      name += "f16";
+      os << "f16";
       break;
     case JXL_TYPE_UINT32:
-      name += "u32";
+      os << "u32";
       break;
     case JXL_TYPE_BOOLEAN:
-      name += "b";
+      os << "b";
       break;
   };
   if (GetDataBits(c.data_type) > jxl::kBitsPerByte) {
     if (c.endianness == JXL_NATIVE_ENDIAN) {
       // add nothing
     } else if (c.endianness == JXL_BIG_ENDIAN) {
-      name += "BE";
+      os << "BE";
     } else if (c.endianness == JXL_LITTLE_ENDIAN) {
-      name += "LE";
+      os << "LE";
     }
   }
   if (c.add_container != CodeStreamBoxFormat::kCSBF_None) {
-    name += "Box" + std::to_string((size_t)c.add_container);
+    os << "Box";
+    os << (size_t)c.add_container;
   }
-  if (c.add_preview) name += "Preview";
-  if (c.use_callback) name += "Callback";
-  if (c.set_buffer_early) name += "EarlyBuffer";
-  return name;
+  if (c.add_preview) os << "Preview";
+  if (c.use_callback) os << "Callback";
+  if (c.set_buffer_early) os << "EarlyBuffer";
+  return os;
+}
+
+std::string PixelTestDescription(
+    const testing::TestParamInfo<DecodeTestParam::ParamType>& info) {
+  std::stringstream name;
+  name << info.param;
+  return name.str();
 }
 
 JXL_GTEST_INSTANTIATE_TEST_SUITE_P(DecodeTest, DecodeTestParam,
@@ -2300,6 +2306,8 @@ TEST(DecodeTest, AnimationTest) {
     char name;
     EXPECT_EQ(JXL_DEC_SUCCESS, JxlDecoderGetFrameName(dec, &name, 1));
     EXPECT_EQ(0, name);
+
+    EXPECT_EQ(i + 1 == num_frames, frame_header.is_last);
 
     EXPECT_EQ(JXL_DEC_NEED_IMAGE_OUT_BUFFER, JxlDecoderProcessInput(dec));
 

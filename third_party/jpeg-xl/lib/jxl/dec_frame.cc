@@ -90,14 +90,6 @@ Status DecodeFrameHeader(BitReader* JXL_RESTRICT reader,
                          FrameHeader* JXL_RESTRICT frame_header) {
   JXL_ASSERT(frame_header->nonserialized_metadata != nullptr);
   JXL_RETURN_IF_ERROR(ReadFrameHeader(reader, frame_header));
-
-  if (frame_header->encoding == FrameEncoding::kModular) {
-    if (frame_header->chroma_subsampling.MaxHShift() != 0 ||
-        frame_header->chroma_subsampling.MaxVShift() != 0) {
-      return JXL_FAILURE("Chroma subsampling in modular mode is not supported");
-    }
-  }
-
   return true;
 }
 
@@ -189,6 +181,7 @@ Status DecodeFrame(const DecompressParams& dparams,
     max_passes = std::min<size_t>(max_passes, frame_header.passes.num_passes);
     frame_decoder.SetMaxPasses(max_passes);
   }
+  frame_decoder.SetRenderSpotcolors(dparams.render_spotcolors);
 
   size_t processed_bytes = reader->TotalBitsConsumed() / kBitsPerByte;
 
@@ -296,9 +289,8 @@ Status FrameDecoder::InitFrame(BitReader* JXL_RESTRICT br, ImageBundle* decoded,
   if (!frame_header_.chroma_subsampling.Is444() &&
       !(frame_header_.flags & FrameHeader::kSkipAdaptiveDCSmoothing) &&
       frame_header_.encoding == FrameEncoding::kVarDCT) {
-    // TODO(veluca): actually implement this.
     return JXL_FAILURE(
-        "Non-444 chroma subsampling is not supported when adaptive DC "
+        "Non-444 chroma subsampling is not allowed when adaptive DC "
         "smoothing is enabled");
   }
   JXL_RETURN_IF_ERROR(
@@ -314,6 +306,9 @@ Status FrameDecoder::InitFrame(BitReader* JXL_RESTRICT br, ImageBundle* decoded,
     if (jpeg_data->components.size() != 1 &&
         jpeg_data->components.size() != 3) {
       return JXL_FAILURE("Invalid number of components");
+    }
+    if (frame_header_.nonserialized_metadata->m.xyb_encoded) {
+      return JXL_FAILURE("Cannot decode to JPEG an XYB image");
     }
     decoded->jpeg_data->width = frame_dim_.xsize;
     decoded->jpeg_data->height = frame_dim_.ysize;
@@ -342,10 +337,6 @@ Status FrameDecoder::InitFrame(BitReader* JXL_RESTRICT br, ImageBundle* decoded,
     }
   }
 
-  dec_state_->upsampler.Init(
-      frame_header_.upsampling,
-      frame_header_.nonserialized_metadata->m.transform_data);
-
   // Clear the state.
   decoded_dc_global_ = false;
   decoded_ac_global_ = false;
@@ -367,8 +358,19 @@ Status FrameDecoder::ProcessDCGlobal(BitReader* br) {
   PROFILER_FUNC;
   PassesSharedState& shared = dec_state_->shared_storage;
   if (shared.frame_header.flags & FrameHeader::kPatches) {
+    bool uses_extra_channels = false;
     JXL_RETURN_IF_ERROR(shared.image_features.patches.Decode(
-        br, frame_dim_.xsize_padded, frame_dim_.ysize_padded));
+        br, frame_dim_.xsize_padded, frame_dim_.ysize_padded,
+        &uses_extra_channels));
+    if (uses_extra_channels && frame_header_.upsampling != 1) {
+      for (size_t ecups : frame_header_.extra_channel_upsampling) {
+        if (ecups != frame_header_.upsampling) {
+          return JXL_FAILURE(
+              "Cannot use extra channels in patches if color channels are "
+              "subsampled differently from extra channels");
+        }
+      }
+    }
   }
   if (shared.frame_header.flags & FrameHeader::kSplines) {
     JXL_RETURN_IF_ERROR(shared.image_features.splines.Decode(
@@ -401,8 +403,8 @@ Status FrameDecoder::ProcessDCGroup(size_t dc_group_id, BitReader* br) {
     JXL_RETURN_IF_ERROR(
         modular_frame_decoder_.DecodeVarDCTDC(dc_group_id, br, dec_state_));
   }
-  const Rect mrect(gx * kDcGroupDim, gy * kDcGroupDim, kDcGroupDim,
-                   kDcGroupDim);
+  const Rect mrect(gx * frame_dim_.dc_group_dim, gy * frame_dim_.dc_group_dim,
+                   frame_dim_.dc_group_dim, frame_dim_.dc_group_dim);
   JXL_RETURN_IF_ERROR(modular_frame_decoder_.DecodeGroup(
       mrect, br, 3, 1000, ModularStreamId::ModularDC(dc_group_id),
       /*zerofill=*/false));
@@ -437,15 +439,16 @@ void FrameDecoder::AllocateOutput() {
   dec_state_->extra_channels.clear();
   if (metadata.m.num_extra_channels > 0) {
     for (size_t i = 0; i < metadata.m.num_extra_channels; i++) {
-      const auto eci = metadata.m.extra_channel_info[i];
+      uint32_t ecups = frame_header_.extra_channel_upsampling[i];
       dec_state_->extra_channels.emplace_back(
-          eci.Size(frame_dim_.xsize_upsampled_padded),
-          eci.Size(frame_dim_.ysize_upsampled_padded));
+          DivCeil(frame_dim_.xsize_upsampled_padded, ecups),
+          DivCeil(frame_dim_.ysize_upsampled_padded, ecups));
 #if MEMORY_SANITIZER
       // Avoid errors due to loading vectors on the outermost padding.
-      for (size_t y = 0; y < eci.Size(frame_dim_.ysize_upsampled_padded); y++) {
-        for (size_t x = eci.Size(frame_dim_.xsize_upsampled);
-             x < eci.Size(frame_dim_.xsize_upsampled_padded); x++) {
+      for (size_t y = 0; y < DivCeil(frame_dim_.ysize_upsampled_padded, ecups);
+           y++) {
+        for (size_t x = DivCeil(frame_dim_.xsize_upsampled, ecups);
+             x < DivCeil(frame_dim_.xsize_upsampled_padded, ecups); x++) {
           dec_state_->extra_channels.back().Row(y)[x] = 0;
         }
       }
@@ -543,8 +546,8 @@ Status FrameDecoder::ProcessACGlobal(BitReader* br) {
   // Set memory buffer for pre-color-transform frame, if needed.
   if (frame_header_.needs_color_transform() &&
       frame_header_.save_before_color_transform) {
-    dec_state_->pre_color_transform_frame = Image3F(
-        frame_dim_.xsize_upsampled_padded, frame_dim_.ysize_upsampled_padded);
+    dec_state_->pre_color_transform_frame =
+        Image3F(frame_dim_.xsize_upsampled, frame_dim_.ysize_upsampled);
   } else {
     // clear pre_color_transform_frame to ensure that previously moved-from
     // images are not used.
@@ -781,8 +784,6 @@ Status FrameDecoder::Flush() {
       decoded_passes_per_ac_group_.begin(), decoded_passes_per_ac_group_.end());
   if (completely_decoded_ac_pass < frame_header_.passes.num_passes) {
     // We don't have all AC yet: force a draw of all the missing areas.
-    dec_state_->dc_upsampler.Init(
-        /*upsampling=*/8, frame_header_.nonserialized_metadata->transform_data);
     // Mark all sections as not complete.
     for (size_t i = 0; i < decoded_passes_per_ac_group_.size(); i++) {
       if (decoded_passes_per_ac_group_[i] == frame_header_.passes.num_passes)
@@ -909,6 +910,36 @@ Status FrameDecoder::FinalizeFrame() {
     }
   }
 
+  if (render_spotcolors_) {
+    for (size_t i = 0; i < decoded_->extra_channels().size(); i++) {
+      // Don't use Find() because there may be multiple spot color channels.
+      const ExtraChannelInfo& eci = decoded_->metadata()->extra_channel_info[i];
+      if (eci.type == ExtraChannel::kOptional) {
+        continue;
+      }
+      if (eci.type == ExtraChannel::kUnknown ||
+          (int(ExtraChannel::kReserved0) <= int(eci.type) &&
+           int(eci.type) <= int(ExtraChannel::kReserved7))) {
+        return JXL_FAILURE(
+            "Unknown extra channel (bits %u, shift %u, name '%s')\n",
+            eci.bit_depth.bits_per_sample, eci.dim_shift, eci.name.c_str());
+      }
+      if (eci.type == ExtraChannel::kSpotColor) {
+        float scale = eci.spot_color[3];
+        for (size_t c = 0; c < 3; c++) {
+          for (size_t y = 0; y < decoded_->ysize(); y++) {
+            float* JXL_RESTRICT p = decoded_->color()->Plane(c).Row(y);
+            const float* JXL_RESTRICT s =
+                decoded_->extra_channels()[i].ConstRow(y);
+            for (size_t x = 0; x < decoded_->xsize(); x++) {
+              float mix = scale * s[x];
+              p[x] = mix * eci.spot_color[c] + (1.0 - mix) * p[x];
+            }
+          }
+        }
+      }
+    }
+  }
   return true;
 }
 

@@ -229,7 +229,7 @@ struct BlendingInfo : public Fields {
   // Frame ID to copy from (0-3). Only encoded if blend_mode is not kReplace.
   uint32_t source;
 
-  bool nonserialized_has_multiple_extra_channels = false;
+  size_t nonserialized_num_extra_channels = 0;
   bool nonserialized_is_partial_frame = false;
 };
 

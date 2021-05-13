@@ -547,13 +547,32 @@ Status DecodeImagePSD(const Span<const uint8_t> bytes, ThreadPool* pool,
     return JXL_FAILURE("PSD: extra channel data declared but not found");
   }
 
-  if (io->frames.empty()) return JXL_FAILURE("PSD: no layers");
-
-  if (!spotcolor.empty()) {
+  if (!spotcolor.empty() || (hasmergeddata && io->frames.empty())) {
     // PSD only has spot colors / extra alpha/mask data in the merged image
     // We don't redundantly store the merged image, so we put it in the first
     // layer (the next layers will kAdd zeroes to it)
     pos = after_layers_pos;
+    bool have_only_merged = false;
+    if (io->frames.empty()) {
+      // There is only the merged image, no layers
+      ImageBundle nlayer(&io->metadata.m);
+      Image3F rgb(xsize, ysize);
+      nlayer.SetFromImage(std::move(rgb), io->metadata.m.color_encoding);
+      std::vector<ImageF> ec;
+      for (const auto& ec_meta : nlayer.metadata()->extra_channel_info) {
+        ImageF extra(xsize, ysize);
+        if (ec_meta.type == ExtraChannel::kAlpha) {
+          FillPlane(1.0f, &extra, Rect(extra));  // opaque
+        } else {
+          ZeroFillPlane(&extra, Rect(extra));  // zeroes
+        }
+        ec.push_back(std::move(extra));
+      }
+      if (!ec.empty()) nlayer.SetExtraChannels(std::move(ec));
+      io->dec_pixels += nlayer.xsize() * nlayer.ysize();
+      io->frames.push_back(std::move(nlayer));
+      have_only_merged = true;
+    }
     ImageBundle& layer = io->frames[0];
     std::vector<int> chan_id(real_nb_channels);
     std::iota(chan_id.begin(), chan_id.end(), 0);
@@ -569,8 +588,11 @@ Status DecodeImagePSD(const Span<const uint8_t> bytes, ThreadPool* pool,
     }
     JXL_RETURN_IF_ERROR(decode_layer(pos, maxpos, layer, chan_id, invert,
                                      layer.xsize(), layer.ysize(), version,
-                                     colormodel, false, bitdepth));
+                                     (have_only_merged ? 0 : colormodel), false, bitdepth));
   }
+
+  if (io->frames.empty()) return JXL_FAILURE("PSD: no layers");
+
   io->SetSize(xsize, ysize);
 
   SetIntensityTarget(io);

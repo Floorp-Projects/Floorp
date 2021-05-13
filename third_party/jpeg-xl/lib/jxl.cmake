@@ -301,6 +301,10 @@ set(JPEGXL_DEC_INTERNAL_LIBS
   hwy
 )
 
+if(JPEGXL_ENABLE_PROFILER)
+list(APPEND JPEGXL_DEC_INTERNAL_LIBS jxl_profiler)
+endif()
+
 set(JPEGXL_INTERNAL_LIBS
   ${JPEGXL_DEC_INTERNAL_LIBS}
   brotlienc-static
@@ -347,6 +351,9 @@ target_include_directories(jxl_dec-obj PUBLIC
 target_compile_definitions(jxl_dec-obj PUBLIC
   ${OBJ_COMPILE_DEFINITIONS}
 )
+if (JPEGXL_ENABLE_PROFILER)
+target_link_libraries(jxl_dec-obj PUBLIC jxl_profiler)
+endif()
 
 # Object library. This is used to hold the set of objects and properties.
 add_library(jxl_enc-obj OBJECT ${JPEGXL_INTERNAL_SOURCES_ENC})
@@ -362,6 +369,9 @@ target_include_directories(jxl_enc-obj PUBLIC
 target_compile_definitions(jxl_enc-obj PUBLIC
   ${OBJ_COMPILE_DEFINITIONS}
 )
+if (JPEGXL_ENABLE_PROFILER)
+target_link_libraries(jxl_enc-obj PUBLIC jxl_profiler)
+endif()
 
 #TODO(lode): don't depend on CMS for the core library
 if (JPEGXL_ENABLE_SKCMS)

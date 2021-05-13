@@ -35,6 +35,15 @@
 #define JXL_OS_MAC 0
 #endif
 
+#define JXL_OS_IOS 0
+#ifdef __APPLE__
+#include <TargetConditionals.h>
+#if TARGET_OS_IPHONE
+#undef JXL_OS_IOS
+#define JXL_OS_IOS 1
+#endif
+#endif
+
 #ifdef __FreeBSD__
 #define JXL_OS_FREEBSD 1
 #else

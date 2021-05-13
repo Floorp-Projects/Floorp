@@ -325,22 +325,18 @@ Status MakeFrameHeader(const CompressParams& cparams,
     // work, see enc_cache.cc.
     return JXL_FAILURE("progressive_dc > 2 is not yet supported");
   }
-  if (cparams.progressive_dc > 0 && cparams.resampling != 1) {
+  if (cparams.progressive_dc > 0 &&
+      (cparams.ec_resampling != 1 || cparams.resampling != 1)) {
     return JXL_FAILURE("Resampling not supported with DC frames");
   }
   if (cparams.resampling != 1 && cparams.resampling != 2 &&
       cparams.resampling != 4 && cparams.resampling != 8) {
     return JXL_FAILURE("Invalid resampling factor");
   }
-  frame_header->upsampling = cparams.resampling;
-  frame_header->save_as_reference = frame_info.save_as_reference;
-
-  // Set blend_channel to the first alpha channel, the only implemented mode for
-  // now and what the encoder currently uses. These values are only encoded in
-  // case a blend mode involving alpha is used and there are more than one extra
-  // channels.
-  const std::vector<ExtraChannelInfo>& extra_channels =
-      frame_header->nonserialized_metadata->m.extra_channel_info;
+  if (cparams.ec_resampling != 1 && cparams.ec_resampling != 2 &&
+      cparams.ec_resampling != 4 && cparams.ec_resampling != 8) {
+    return JXL_FAILURE("Invalid ec_resampling factor");
+  }
   // Resized frames.
   if (frame_info.frame_type != FrameType::kDCFrame) {
     frame_header->frame_origin = ib.origin;
@@ -352,10 +348,20 @@ Status MakeFrameHeader(const CompressParams& cparams,
       frame_header->custom_size_or_origin = true;
     }
   }
+  // Upsampling.
+  frame_header->upsampling = cparams.resampling;
+  const std::vector<ExtraChannelInfo>& extra_channels =
+      frame_header->nonserialized_metadata->m.extra_channel_info;
+  frame_header->extra_channel_upsampling.clear();
+  frame_header->extra_channel_upsampling.resize(extra_channels.size(),
+                                                cparams.ec_resampling);
+  frame_header->save_as_reference = frame_info.save_as_reference;
 
-  // Set blending-related information. TODO(veluca): only supports kReplace or
-  // kBlend for now.
+  // Set blending-related information.
   if (ib.blend || frame_header->custom_size_or_origin) {
+    // Set blend_channel to the first alpha channel. These values are only
+    // encoded in case a blend mode involving alpha is used and there are more
+    // than one extra channels.
     size_t index = 0;
     if (extra_channels.size() > 1) {
       for (size_t i = 0; i < extra_channels.size(); i++) {
@@ -1023,6 +1029,9 @@ Status EncodeFrame(const CompressParams& cparams_orig,
       cparams.progressive_dc = 1;
     }
   }
+  if (cparams.ec_resampling < cparams.resampling) {
+    cparams.ec_resampling = cparams.resampling;
+  }
 
   if (frame_info.dc_level + cparams.progressive_dc > 4) {
     return JXL_FAILURE("Too many levels of progressive DC");
@@ -1122,6 +1131,9 @@ Status EncodeFrame(const CompressParams& cparams_orig,
   std::unique_ptr<ModularFrameEncoder> modular_frame_encoder =
       jxl::make_unique<ModularFrameEncoder>(*frame_header, cparams);
 
+  const std::vector<ImageF>* extra_channels = &ib.extra_channels();
+  std::vector<ImageF> extra_channels_storage;
+
   if (ib.IsJPEG()) {
     JXL_RETURN_IF_ERROR(lossy_frame_encoder.ComputeJPEGTranscodingData(
         *ib.jpeg_data, modular_frame_encoder.get(), frame_header.get()));
@@ -1154,7 +1166,8 @@ Status EncodeFrame(const CompressParams& cparams_orig,
     if (ib.HasAlpha() && !ib.AlphaIsPremultiplied() &&
         (frame_header->encoding == FrameEncoding::kVarDCT ||
          cparams.quality_pair.first < 100) &&
-        !cparams.keep_invisible) {
+        !cparams.keep_invisible &&
+        cparams.ec_resampling == cparams.resampling) {
       // if lossy, simplify invisible pixels
       SimplifyInvisible(&opsin, ib.alpha());
       if (want_linear) {
@@ -1171,19 +1184,27 @@ Status EncodeFrame(const CompressParams& cparams_orig,
       JXL_RETURN_IF_ERROR(lossy_frame_encoder.ComputeEncodingData(
           ib_or_linear, &opsin, pool, modular_frame_encoder.get(), writer,
           frame_header.get()));
-    } else if (cparams.resampling != 1) {
+    } else if (frame_header->upsampling != 1) {
       // In VarDCT mode, LossyFrameHeuristics takes care of running downsampling
       // after noise, if necessary.
-      DownsampleImage(&opsin, cparams.resampling);
+      DownsampleImage(&opsin, frame_header->upsampling);
     }
   } else {
     JXL_RETURN_IF_ERROR(lossy_frame_encoder.ComputeEncodingData(
         &ib, &opsin, pool, modular_frame_encoder.get(), writer,
         frame_header.get()));
   }
+  if (cparams.ec_resampling != 1) {
+    extra_channels = &extra_channels_storage;
+    for (size_t i = 0; i < ib.extra_channels().size(); i++) {
+      extra_channels_storage.emplace_back(CopyImage(ib.extra_channels()[i]));
+      DownsampleImage(&extra_channels_storage.back(), cparams.ec_resampling);
+    }
+  }
   // needs to happen *AFTER* VarDCT-ComputeEncodingData.
   JXL_RETURN_IF_ERROR(modular_frame_encoder->ComputeEncodingData(
-      *frame_header, ib, &opsin, lossy_frame_encoder.State(), pool, aux_out,
+      *frame_header, *ib.metadata(), &opsin, *extra_channels,
+      lossy_frame_encoder.State(), pool, aux_out,
       /* do_color=*/frame_header->encoding == FrameEncoding::kModular));
 
   writer->AppendByteAligned(lossy_frame_encoder.State()->special_frames);

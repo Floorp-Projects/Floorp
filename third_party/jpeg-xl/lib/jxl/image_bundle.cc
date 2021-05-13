@@ -30,9 +30,8 @@ namespace jxl {
 
 void ImageBundle::ShrinkTo(size_t xsize, size_t ysize) {
   if (HasColor()) color_.ShrinkTo(xsize, ysize);
-  for (size_t i = 0; i < extra_channels_.size(); ++i) {
-    const auto& eci = metadata_->extra_channel_info[i];
-    extra_channels_[i].ShrinkTo(eci.Size(xsize), eci.Size(ysize));
+  for (ImageF& ec : extra_channels_) {
+    ec.ShrinkTo(xsize, ysize);
   }
 }
 
@@ -68,10 +67,9 @@ void ImageBundle::VerifySizes() const {
 
   if (HasExtraChannels()) {
     JXL_CHECK(xs != 0 && ys != 0);
-    for (size_t ec = 0; ec < metadata_->extra_channel_info.size(); ++ec) {
-      const ExtraChannelInfo& eci = metadata_->extra_channel_info[ec];
-      JXL_CHECK(extra_channels_[ec].xsize() == eci.Size(xs));
-      JXL_CHECK(extra_channels_[ec].ysize() == eci.Size(ys));
+    for (const ImageF& ec : extra_channels_) {
+      JXL_CHECK(ec.xsize() == xs);
+      JXL_CHECK(ec.ysize() == ys);
     }
   }
 }

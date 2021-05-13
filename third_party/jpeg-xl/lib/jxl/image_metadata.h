@@ -112,11 +112,6 @@ struct ExtraChannelInfo : public Fields {
 
   Status VisitFields(Visitor* JXL_RESTRICT visitor) override;
 
-  size_t Size(size_t size) const {
-    const size_t mask = (1u << dim_shift) - 1;
-    return (size + mask) >> dim_shift;
-  }
-
   mutable bool all_default;
 
   ExtraChannel type;

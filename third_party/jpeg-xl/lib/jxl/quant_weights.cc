@@ -424,12 +424,13 @@ Status ComputeQuantTable(const QuantEncoding& encoding,
   size_t prev_pos = *pos;
   for (size_t c = 0; c < 3; c++) {
     for (size_t i = 0; i < num; i++) {
-      float val = 1.0f / weights[c * num + i];
-      if (val > std::numeric_limits<float>::max() || val < 0) {
+      float inv_val = weights[c * num + i];
+      if (inv_val > 1.0f / kAlmostZero || inv_val < kAlmostZero) {
         return JXL_FAILURE("Invalid quantization table");
       }
+      float val = 1.0f / inv_val;
       table[*pos] = val;
-      inv_table[*pos] = 1.0f / val;
+      inv_table[*pos] = inv_val;
       (*pos)++;
     }
   }

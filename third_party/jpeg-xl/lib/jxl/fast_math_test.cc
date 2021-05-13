@@ -237,8 +237,9 @@ HWY_NOINLINE void TestFastXYB() {
         Image3F xyb(kChunk * kChunk, kChunk);
         std::vector<uint8_t> roundtrip(kChunk * kChunk * kChunk * 3);
         ToXYB(ib, nullptr, &xyb);
-        jxl::HWY_NAMESPACE::FastXYBTosRGB8(xyb, Rect(xyb), Rect(xyb),
-                                           roundtrip.data(), xyb.xsize());
+        jxl::HWY_NAMESPACE::FastXYBTosRGB8(
+            xyb, Rect(xyb), Rect(xyb), nullptr, Rect(), /*is_rgba=*/false,
+            roundtrip.data(), xyb.xsize(), xyb.xsize() * 3);
         for (int ir = 0; ir < kChunk; ir++) {
           for (int ig = 0; ig < kChunk; ig++) {
             for (int ib = 0; ib < kChunk; ib++) {

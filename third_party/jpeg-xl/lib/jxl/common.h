@@ -78,16 +78,6 @@ constexpr size_t kBlockDim = 8;
 
 constexpr size_t kDCTBlockSize = kBlockDim * kBlockDim;
 
-// Group is the rectangular grid of blocks that can be decoded in parallel. This
-// is different for DC.
-// TODO(jon) : signal kDcGroupDimInBlocks and kGroupDim (and make them
-// variables),
-//             allowing powers of two between (say) 64 and 1024
-constexpr size_t kDcGroupDimInBlocks = 256;
-constexpr size_t kDcGroupDim = kDcGroupDimInBlocks * kBlockDim;
-// 512x512 DC = 4096x4096, enough for a 4K frame (3840x2160)
-// (setting it to 256 results in four DC groups of size 256x256, 224x256,
-// 256x14, 224x14)
 constexpr size_t kGroupDim = 256;
 static_assert(kGroupDim % kBlockDim == 0,
               "Group dim should be divisible by block dim");
@@ -107,9 +97,7 @@ struct FrameDimensions {
            size_t max_hshift, size_t max_vshift, bool modular_mode,
            size_t upsampling) {
     group_dim = (kGroupDim >> 1) << group_size_shift;
-    static_assert(
-        kGroupDim == kDcGroupDimInBlocks,
-        "DC groups (in blocks) and groups (in pixels) have different size");
+    dc_group_dim = group_dim * kBlockDim;
     xsize_upsampled = xsize;
     ysize_upsampled = ysize;
     this->xsize = DivCeil(xsize, upsampling);
@@ -159,6 +147,7 @@ struct FrameDimensions {
   size_t num_dc_groups;
   // Size of a group.
   size_t group_dim;
+  size_t dc_group_dim;
 };
 
 // Prior to C++14 (i.e. C++11): provide our own make_unique

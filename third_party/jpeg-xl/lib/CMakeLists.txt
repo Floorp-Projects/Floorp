@@ -139,6 +139,9 @@ install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/jxl
 install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/include/jxl
   DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
 
+# Profiler for libjxl
+include(jxl_profiler.cmake)
+
 if(BUILD_TESTING)
 # Unittests
 cmake_policy(SET CMP0057 NEW)  # https://gitlab.kitware.com/cmake/cmake/issues/18198
@@ -149,8 +152,5 @@ include(jxl_tests.cmake)
 
 # Google benchmark for the jxl library
 include(jxl_benchmark.cmake)
-
-# Profiler for libjxl
-include(jxl_profiler.cmake)
 
 endif()  # BUILD_TESTING

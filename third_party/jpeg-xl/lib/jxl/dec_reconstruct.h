@@ -45,20 +45,20 @@ Status FinalizeFrameDecoding(ImageBundle* JXL_RESTRICT decoded,
                              PassesDecoderState* dec_state, ThreadPool* pool,
                              bool force_fir, bool skip_blending);
 
-// Renders the `output_rect` portion of the final image to `output_image`
-// (unless the frame is upsampled - in which case, `output_rect` is scaled
+// Renders the `frame_rect` portion of the final image to `output_image`
+// (unless the frame is upsampled - in which case, `frame_rect` is scaled
 // accordingly). `input_rect` should have the same shape. `input_rect` always
-// refers to the non-padded pixels. `output_rect.x0()` is guaranteed to be a
-// multiple of GroupBorderAssigner::kPaddingRoundX. `output_rect.xsize()` is
+// refers to the non-padded pixels. `frame_rect.x0()` is guaranteed to be a
+// multiple of GroupBorderAssigner::kPaddingRoundX. `frame_rect.xsize()` is
 // either a multiple of GroupBorderAssigner::kPaddingRoundX, or is such that
-// `output_rect.x0() + output_rect.xsize() == frame_dim.xsize`. `input_image`
-// may be mutated by adding padding. If `output_rect` is on an image border, the
+// `frame_rect.x0() + frame_rect.xsize() == frame_dim.xsize`. `input_image`
+// may be mutated by adding padding. If `frame_rect` is on an image border, the
 // input will be padded. Otherwise, appropriate padding must already be present.
 Status FinalizeImageRect(
     Image3F* input_image, const Rect& input_rect,
-    const std::vector<std::pair<const ImageF*, Rect>>& extra_channels,
+    const std::vector<std::pair<ImageF*, Rect>>& extra_channels,
     PassesDecoderState* dec_state, size_t thread,
-    ImageBundle* JXL_RESTRICT output_image, const Rect& output_rect);
+    ImageBundle* JXL_RESTRICT output_image, const Rect& frame_rect);
 
 // Fills padding around `img:rect` in the x direction by mirroring. Padding is
 // applied so that a full border of xpadding and ypadding is available, except

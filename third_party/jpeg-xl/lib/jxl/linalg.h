@@ -175,7 +175,7 @@ void ComputeQRFactorization(const ImageD& A, ImageD* JXL_RESTRICT Q,
 
 // Inverts a 3x3 matrix in place
 template <typename T>
-void Inv3x3Matrix(T* matrix) {
+Status Inv3x3Matrix(T* matrix) {
   // Intermediate computation is done in double precision.
   double temp[9];
   temp[0] = static_cast<double>(matrix[4]) * matrix[8] -
@@ -196,11 +196,15 @@ void Inv3x3Matrix(T* matrix) {
             static_cast<double>(matrix[0]) * matrix[7];
   temp[8] = static_cast<double>(matrix[0]) * matrix[4] -
             static_cast<double>(matrix[1]) * matrix[3];
-  double idet =
-      1.0 / (matrix[0] * temp[0] + matrix[1] * temp[3] + matrix[2] * temp[6]);
+  double det = matrix[0] * temp[0] + matrix[1] * temp[3] + matrix[2] * temp[6];
+  if (std::abs(det) < 1e-10) {
+    return JXL_FAILURE("Matrix determinant is too close to 0");
+  }
+  double idet = 1.0 / det;
   for (int i = 0; i < 9; i++) {
     matrix[i] = temp[i] * idet;
   }
+  return true;
 }
 
 // Solves system of linear equations A * X = B using the conjugate gradient
