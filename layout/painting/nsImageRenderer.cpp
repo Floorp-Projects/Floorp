@@ -24,6 +24,7 @@
 #include "nsIFrame.h"
 #include "nsLayoutUtils.h"
 #include "nsStyleStructInlines.h"
+#include "mozilla/StaticPrefs_image.h"
 #include "mozilla/ISVGDisplayableFrame.h"
 #include "mozilla/SVGIntegrationUtils.h"
 #include "mozilla/SVGPaintServerFrame.h"
@@ -588,6 +589,11 @@ ImgDrawResult nsImageRenderer::BuildWebRenderDisplayItems(
       if (mFlags & nsImageRenderer::FLAG_SYNC_DECODE_IMAGES) {
         containerFlags |= imgIContainer::FLAG_SYNC_DECODE;
       }
+      if (mExtendMode == ExtendMode::CLAMP &&
+          StaticPrefs::image_svg_blob_image() &&
+          mImageContainer->GetType() == imgIContainer::TYPE_VECTOR) {
+        containerFlags |= imgIContainer::FLAG_RECORD_BLOB;
+      }
 
       CSSIntSize destCSSSize{
           nsPresContext::AppUnitsToIntCSSPixels(aDest.width),
@@ -613,6 +619,15 @@ ImgDrawResult nsImageRenderer::BuildWebRenderDisplayItems(
           getter_AddRefs(container));
       if (!container) {
         NS_WARNING("Failed to get image container");
+        break;
+      }
+
+      if (containerFlags & imgIContainer::FLAG_RECORD_BLOB) {
+        MOZ_ASSERT(mExtendMode == ExtendMode::CLAMP);
+        LayoutDeviceRect clipRect =
+            LayoutDeviceRect::FromAppUnits(aFill, appUnitsPerDevPixel);
+        aManager->CommandBuilder().PushBlobImage(
+            aItem, container, aBuilder, aResources, destRect, clipRect);
         break;
       }
 
