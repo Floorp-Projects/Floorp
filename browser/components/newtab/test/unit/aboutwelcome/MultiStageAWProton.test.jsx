@@ -62,7 +62,7 @@ describe("MultiStageAboutWelcomeProton module", () => {
         "mr1-onboarding-set-default-pin-primary-button-label"
       );
     });
-    it("should keep caption for en-*", async () => {
+    it("should have an image caption", async () => {
       const data = await AboutWelcomeDefaults.prepareContentForReact({
         ...(await getData()),
         isProton: true,
@@ -70,11 +70,32 @@ describe("MultiStageAboutWelcomeProton module", () => {
 
       assert.property(data.screens[0].content, "help_text");
     });
-    it("should remove caption for not-en", async () => {
+    it("should remove the caption if deleteIfNotEn is true", async () => {
       sandbox.stub(global.Services.locale, "appLocaleAsBCP47").value("de");
 
+      let defaults = {
+        id: "DEFAULT_ABOUTWELCOME_PROTON",
+        template: "multistage",
+        transitions: true,
+        background_url: `chrome://activity-stream/content/data/content/assets/proton-bkg.jpg`,
+        screens: [
+          {
+            id: "AW_SET_DEFAULT",
+            order: 0,
+            content: {
+              help_text: {
+                deleteIfNotEn: true,
+                text: {
+                  string_id: "mr1-onboarding-welcome-image-caption",
+                },
+              },
+            },
+          },
+        ],
+      };
+
       const data = await AboutWelcomeDefaults.prepareContentForReact({
-        ...(await getData()),
+        ...defaults,
         isProton: true,
       });
 
