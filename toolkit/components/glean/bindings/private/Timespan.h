@@ -9,7 +9,6 @@
 
 #include "mozilla/Maybe.h"
 #include "nsIGleanMetrics.h"
-#include "mozilla/glean/fog_ffi_generated.h"
 
 namespace mozilla::glean {
 
@@ -26,18 +25,7 @@ class TimespanMetric {
    * called with no corresponding [stop]): in that case the original
    * start time will be preserved.
    */
-  void Start() const {
-    auto optScalarId = ScalarIdForMetric(mId);
-    if (optScalarId) {
-      auto scalarId = optScalarId.extract();
-      auto lock = GetTimesToStartsLock();
-      (void)NS_WARN_IF(lock.ref()->Remove(scalarId));
-      lock.ref()->InsertOrUpdate(scalarId, TimeStamp::Now());
-    }
-#ifndef MOZ_GLEAN_ANDROID
-    fog_timespan_start(mId);
-#endif
-  }
+  void Start() const;
 
   /**
    * Stop tracking time for the provided metric.
@@ -47,39 +35,14 @@ class TimespanMetric {
    * This will record an error if no [start] was called or there is an already
    * existing value.
    */
-  void Stop() const {
-    auto optScalarId = ScalarIdForMetric(mId);
-    if (optScalarId) {
-      auto scalarId = optScalarId.extract();
-      auto lock = GetTimesToStartsLock();
-      auto optStart = lock.ref()->Extract(scalarId);
-      if (!NS_WARN_IF(!optStart)) {
-        uint32_t delta = static_cast<uint32_t>(
-            (TimeStamp::Now() - optStart.extract()).ToMilliseconds());
-        Telemetry::ScalarSet(scalarId, delta);
-      }
-    }
-#ifndef MOZ_GLEAN_ANDROID
-    fog_timespan_stop(mId);
-#endif
-  }
+  void Stop() const;
 
   /**
    * Abort a previous Start.
    *
    * No error will be recorded if no Start was called.
    */
-  void Cancel() const {
-    auto optScalarId = ScalarIdForMetric(mId);
-    if (optScalarId) {
-      auto scalarId = optScalarId.extract();
-      auto lock = GetTimesToStartsLock();
-      lock.ref()->Remove(scalarId);
-    }
-#ifndef MOZ_GLEAN_ANDROID
-    fog_timespan_cancel(mId);
-#endif
-  }
+  void Cancel() const;
 
   /**
    * Explicitly sets the timespan value
@@ -90,16 +53,7 @@ class TimespanMetric {
    * @param aDuration The duration of this timespan, in units matching the
    *        `time_unit` of this metric's definition.
    */
-  void SetRaw(uint32_t aDuration) const {
-    auto optScalarId = ScalarIdForMetric(mId);
-    if (optScalarId) {
-      auto scalarId = optScalarId.extract();
-      Telemetry::ScalarSet(scalarId, aDuration);
-    }
-#ifndef MOZ_GLEAN_ANDROID
-    fog_timespan_set_raw(mId, aDuration);
-#endif
-  }
+  void SetRaw(uint32_t aDuration) const;
 
   /**
    * **Test-only API**
@@ -118,17 +72,7 @@ class TimespanMetric {
    *
    * @return value of the stored metric, or Nothing() if there is no value.
    */
-  Maybe<int64_t> TestGetValue(const nsACString& aPingName = nsCString()) const {
-#ifdef MOZ_GLEAN_ANDROID
-    Unused << mId;
-    return Nothing();
-#else
-    if (!fog_timespan_test_has_value(mId, &aPingName)) {
-      return Nothing();
-    }
-    return Some(fog_timespan_test_get_value(mId, &aPingName));
-#endif
-  }
+  Maybe<int64_t> TestGetValue(const nsACString& aPingName = nsCString()) const;
 
  private:
   const uint32_t mId;

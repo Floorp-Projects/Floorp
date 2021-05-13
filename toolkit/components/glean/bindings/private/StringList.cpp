@@ -8,11 +8,53 @@
 
 #include "mozilla/Components.h"
 #include "mozilla/dom/ToJSValue.h"
+#include "mozilla/glean/bindings/ScalarGIFFTMap.h"
+#include "mozilla/glean/fog_ffi_generated.h"
 #include "nsIClassInfoImpl.h"
 #include "nsString.h"
 #include "nsTArray.h"
 
 namespace mozilla::glean {
+
+namespace impl {
+
+void StringListMetric::Add(const nsACString& aValue) const {
+  auto scalarId = ScalarIdForMetric(mId);
+  if (scalarId) {
+    Telemetry::ScalarSet(scalarId.extract(), NS_ConvertUTF8toUTF16(aValue),
+                         true);
+  }
+#ifndef MOZ_GLEAN_ANDROID
+  fog_string_list_add(mId, &aValue);
+#endif
+}
+
+void StringListMetric::Set(const nsTArray<nsCString>& aValue) const {
+  // Calling `Set` on a mirrored labeled_string is likely an error.
+  // We can't remove keys from the mirror scalar and handle this 'properly',
+  // so you shouldn't use this operation at all.
+  (void)NS_WARN_IF(ScalarIdForMetric(mId).isSome());
+#ifndef MOZ_GLEAN_ANDROID
+  fog_string_list_set(mId, &aValue);
+#endif
+}
+
+Maybe<nsTArray<nsCString>> StringListMetric::TestGetValue(
+    const nsACString& aPingName) const {
+#ifdef MOZ_GLEAN_ANDROID
+  Unused << mId;
+  return Nothing();
+#else
+  if (!fog_string_list_test_has_value(mId, &aPingName)) {
+    return Nothing();
+  }
+  nsTArray<nsCString> ret;
+  fog_string_list_test_get_value(mId, &aPingName, &ret);
+  return Some(std::move(ret));
+#endif
+}
+
+}  // namespace impl
 
 NS_IMPL_CLASSINFO(GleanStringList, nullptr, 0, {0})
 NS_IMPL_ISUPPORTS_CI(GleanStringList, nsIGleanStringList)

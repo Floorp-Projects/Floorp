@@ -8,9 +8,39 @@
 
 #include "nsString.h"
 #include "mozilla/Components.h"
+#include "mozilla/glean/bindings/ScalarGIFFTMap.h"
+#include "mozilla/glean/fog_ffi_generated.h"
 #include "nsIClassInfoImpl.h"
 
 namespace mozilla::glean {
+
+namespace impl {
+
+void StringMetric::Set(const nsACString& aValue) const {
+  auto scalarId = ScalarIdForMetric(mId);
+  if (scalarId) {
+    Telemetry::ScalarSet(scalarId.extract(), NS_ConvertUTF8toUTF16(aValue));
+  }
+#ifndef MOZ_GLEAN_ANDROID
+  fog_string_set(mId, &aValue);
+#endif
+}
+
+Maybe<nsCString> StringMetric::TestGetValue(const nsACString& aPingName) const {
+#ifdef MOZ_GLEAN_ANDROID
+  Unused << mId;
+  return Nothing();
+#else
+  if (!fog_string_test_has_value(mId, &aPingName)) {
+    return Nothing();
+  }
+  nsCString ret;
+  fog_string_test_get_value(mId, &aPingName, &ret);
+  return Some(ret);
+#endif
+}
+
+}  // namespace impl
 
 NS_IMPL_CLASSINFO(GleanString, nullptr, 0, {0})
 NS_IMPL_ISUPPORTS_CI(GleanString, nsIGleanString)

@@ -8,12 +8,84 @@
 
 #include "mozilla/Components.h"
 #include "mozilla/dom/ToJSValue.h"
+#include "mozilla/glean/bindings/HistogramGIFFTMap.h"
+#include "mozilla/glean/fog_ffi_generated.h"
 #include "nsIClassInfoImpl.h"
 #include "nsJSUtils.h"
 #include "nsPrintfCString.h"
 #include "nsString.h"
 
 namespace mozilla::glean {
+
+namespace impl {
+
+#ifdef MOZ_GLEAN_ANDROID
+// No Glean around to generate these for us.
+static Atomic<uint64_t> gNextTimerId(1);
+#endif
+
+TimerId TimingDistributionMetric::Start() const {
+#ifdef MOZ_GLEAN_ANDROID
+  TimerId id = gNextTimerId++;
+#else
+  TimerId id = fog_timing_distribution_start(mId);
+#endif
+  auto mirrorId = HistogramIdForMetric(mId);
+  if (mirrorId) {
+    auto lock = GetTimerIdToStartsLock();
+    (void)NS_WARN_IF(lock.ref()->Remove(id));
+    lock.ref()->InsertOrUpdate(id, TimeStamp::Now());
+  }
+  return id;
+}
+
+void TimingDistributionMetric::StopAndAccumulate(const TimerId&& aId) const {
+  auto mirrorId = HistogramIdForMetric(mId);
+  if (mirrorId) {
+    auto lock = GetTimerIdToStartsLock();
+    auto optStart = lock.ref()->Extract(aId);
+    if (!NS_WARN_IF(!optStart)) {
+      AccumulateTimeDelta(mirrorId.extract(), optStart.extract());
+    }
+  }
+#ifndef MOZ_GLEAN_ANDROID
+  fog_timing_distribution_stop_and_accumulate(mId, aId);
+#endif
+}
+
+void TimingDistributionMetric::Cancel(const TimerId&& aId) const {
+  auto mirrorId = HistogramIdForMetric(mId);
+  if (mirrorId) {
+    auto lock = GetTimerIdToStartsLock();
+    (void)NS_WARN_IF(!lock.ref()->Remove(aId));
+  }
+#ifndef MOZ_GLEAN_ANDROID
+  fog_timing_distribution_cancel(mId, aId);
+#endif
+}
+
+Maybe<DistributionData> TimingDistributionMetric::TestGetValue(
+    const nsACString& aPingName) const {
+#ifdef MOZ_GLEAN_ANDROID
+  Unused << mId;
+  return Nothing();
+#else
+  if (!fog_timing_distribution_test_has_value(mId, &aPingName)) {
+    return Nothing();
+  }
+  nsTArray<uint64_t> buckets;
+  nsTArray<uint64_t> counts;
+  DistributionData ret;
+  fog_timing_distribution_test_get_value(mId, &aPingName, &ret.sum, &buckets,
+                                         &counts);
+  for (size_t i = 0; i < buckets.Length(); ++i) {
+    ret.values.InsertOrUpdate(buckets[i], counts[i]);
+  }
+  return Some(std::move(ret));
+#endif
+}
+
+}  // namespace impl
 
 NS_IMPL_CLASSINFO(GleanTimingDistribution, nullptr, 0, {0})
 NS_IMPL_ISUPPORTS_CI(GleanTimingDistribution, nsIGleanTimingDistribution)
