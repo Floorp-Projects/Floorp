@@ -1387,7 +1387,10 @@ Toolbox.prototype = {
       return this._sourceMapURLService;
     }
     const sourceMaps = this._createSourceMapService();
-    this._sourceMapURLService = new SourceMapURLService(this, sourceMaps);
+    this._sourceMapURLService = new SourceMapURLService(
+      this.commands,
+      sourceMaps
+    );
     return this._sourceMapURLService;
   },
 
