@@ -7,7 +7,7 @@ from distutils.spawn import find_executable
 wpt_root = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir))
 sys.path.insert(0, os.path.abspath(os.path.join(wpt_root, "tools")))
 
-from . import browser, install, testfiles, utils, virtualenv
+from . import browser, install, testfiles, virtualenv
 from ..serve import serve
 
 logger = None
@@ -67,10 +67,16 @@ def exit(msg=None):
 
 
 def args_general(kwargs):
-    kwargs.set_if_none("tests_root", wpt_root)
-    kwargs.set_if_none("metadata_root", wpt_root)
-    kwargs.set_if_none("manifest_update", True)
-    kwargs.set_if_none("manifest_download", True)
+
+    def set_if_none(name, value):
+        if kwargs.get(name) is None:
+            kwargs[name] = value
+            logger.info("Set %s to %s" % (name, value))
+
+    set_if_none("tests_root", wpt_root)
+    set_if_none("metadata_root", wpt_root)
+    set_if_none("manifest_update", True)
+    set_if_none("manifest_download", True)
 
     if kwargs["ssl_type"] in (None, "pregenerated"):
         cert_root = os.path.join(wpt_root, "tools", "certs")
@@ -757,7 +763,7 @@ def setup_logging(kwargs, default_config=None, formatter_defaults=None):
 def setup_wptrunner(venv, **kwargs):
     from wptrunner import wptcommandline
 
-    kwargs = utils.Kwargs(kwargs.items())
+    kwargs = kwargs.copy()
 
     kwargs["product"] = kwargs["product"].replace("-", "_")
 
