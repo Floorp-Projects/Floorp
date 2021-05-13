@@ -1293,7 +1293,7 @@ nsresult HTMLEditor::AutoDeleteRangesHandler::ComputeRangesToDelete(
                 *scanFromCaretPointResult.BRElementPtr(), EditorType::HTML)) {
           return NS_SUCCESS_DOM_NO_OPERATION;
         }
-        if (!HTMLEditUtils::IsVisibleBRElement(
+        if (HTMLEditUtils::IsInvisibleBRElement(
                 *scanFromCaretPointResult.BRElementPtr(), editingHost)) {
           EditorDOMPoint newCaretPosition =
               aDirectionAndAmount == nsIEditor::eNext
@@ -1567,7 +1567,7 @@ EditActionResult HTMLEditor::AutoDeleteRangesHandler::Run(
                 *scanFromCaretPointResult.BRElementPtr(), EditorType::HTML)) {
           return EditActionCanceled();
         }
-        if (!HTMLEditUtils::IsVisibleBRElement(
+        if (HTMLEditUtils::IsInvisibleBRElement(
                 *scanFromCaretPointResult.BRElementPtr(), editingHost)) {
           // TODO: We should extend the range to delete again before/after
           //       the caret point and use `HandleDeleteNonCollapsedRanges()`
@@ -1620,7 +1620,7 @@ EditActionResult HTMLEditor::AutoDeleteRangesHandler::Run(
               return EditActionResult(NS_ERROR_FAILURE);
             }
             if (scanFromCaretPointResult.ReachedBRElement() &&
-                !HTMLEditUtils::IsVisibleBRElement(
+                HTMLEditUtils::IsInvisibleBRElement(
                     *scanFromCaretPointResult.BRElementPtr(), editingHost)) {
               return EditActionHandled(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
             }
@@ -2387,9 +2387,8 @@ EditActionResult HTMLEditor::AutoDeleteRangesHandler::HandleDeleteAtomicContent(
     const EditorDOMPoint& aCaretPoint,
     const WSRunScanner& aWSRunScannerAtCaret) {
   MOZ_ASSERT(aHTMLEditor.IsEditActionDataAvailable());
-  MOZ_ASSERT_IF(aAtomicContent.IsHTMLElement(nsGkAtoms::br),
-                HTMLEditUtils::IsVisibleBRElement(
-                    aAtomicContent, aWSRunScannerAtCaret.GetEditingHost()));
+  MOZ_ASSERT(!HTMLEditUtils::IsInvisibleBRElement(
+      aAtomicContent, aWSRunScannerAtCaret.GetEditingHost()));
   MOZ_ASSERT(&aAtomicContent != aWSRunScannerAtCaret.GetEditingHost());
 
   nsresult rv =
@@ -3373,8 +3372,7 @@ bool HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::
             {EmptyCheckOption::TreatSingleBRElementAsVisible})) {
       continue;
     }
-    if (!content->IsHTMLElement(nsGkAtoms::br) ||
-        HTMLEditUtils::IsVisibleBRElement(*content)) {
+    if (!HTMLEditUtils::IsInvisibleBRElement(*content)) {
       return false;
     }
   }
@@ -4434,8 +4432,7 @@ nsresult HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::
       NS_WARNING_ASSERTION(editingHost, "There was no editing host");
       nsIContent* nextContent =
           atStart.IsEndOfContainer() && range.StartRef().GetChild() &&
-                  range.StartRef().GetChild()->IsHTMLElement(nsGkAtoms::br) &&
-                  !HTMLEditUtils::IsVisibleBRElement(
+                  HTMLEditUtils::IsInvisibleBRElement(
                       *range.StartRef().GetChild(), editingHost)
               ? HTMLEditUtils::GetNextContent(
                     *atStart.ContainerAsContent(),
