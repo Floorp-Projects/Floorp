@@ -3,6 +3,7 @@ import os
 import platform
 import sys
 from distutils.spawn import find_executable
+from typing import ClassVar, Type
 
 wpt_root = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir))
 sys.path.insert(0, os.path.abspath(os.path.join(wpt_root, "tools")))
@@ -152,8 +153,8 @@ in PowerShell with Administrator privileges.""" % (wpt_path, hosts_path)
 
 
 class BrowserSetup(object):
-    name = None
-    browser_cls = None
+    name = None  # type: ClassVar[str]
+    browser_cls = None  # type: ClassVar[Type[browser.Browser]]
 
     def __init__(self, venv, prompt=True):
         self.browser = self.browser_cls(logger)
@@ -873,6 +874,6 @@ if __name__ == "__main__":
     import pdb
     from tools import localpaths  # noqa: F401
     try:
-        main()
+        main()  # type: ignore
     except Exception:
         pdb.post_mortem()
