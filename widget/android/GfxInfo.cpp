@@ -599,10 +599,18 @@ nsresult GfxInfo::GetFeatureStatusImpl(
       const nsCString& gpu = mGLStrings->Renderer();
       NS_LossyConvertUTF16toASCII model(mModel);
 
-      // Enable Webrender on all Adreno 4xx, 5xx and 6xx GPUs
+      // Enable Webrender on all Adreno 4xx and 6xx GPUs
       isUnblocked |= gpu.Find("Adreno (TM) 4", /*ignoreCase*/ true) >= 0 ||
-                     gpu.Find("Adreno (TM) 5", /*ignoreCase*/ true) >= 0 ||
                      gpu.Find("Adreno (TM) 6", /*ignoreCase*/ true) >= 0;
+
+      // Enable Webrender on all Adreno 5xx GPUs...
+      isUnblocked |=
+          gpu.Find("Adreno (TM) 5", /*ignoreCase*/ true) >= 0 &&
+          // Excluding 505 and 506 on Android 9 due to crashes during
+          // shader compilation. See bug 1609191.
+          !((gpu.Find("Adreno (TM) 505", /*ignoreCase*/ true) >= 0 ||
+             gpu.Find("Adreno (TM) 506", /*ignoreCase*/ true) >= 0) &&
+            mSDKVersion == 28);
 
       // Enable Webrender on all Mali-Txxx GPUs
       isUnblocked |= gpu.Find("Mali-T", /*ignoreCase*/ true) >= 0;
