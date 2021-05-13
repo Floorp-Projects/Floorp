@@ -383,7 +383,7 @@ def get_revish(**kwargs):
     revish = kwargs.get("revish")
     if revish is None:
         revish = u"%s..HEAD" % branch_point()
-    return ensure_text(revish).strip()
+    return revish.strip()
 
 
 def run_changed_files(**kwargs):
