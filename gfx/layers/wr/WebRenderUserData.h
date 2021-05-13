@@ -91,6 +91,7 @@ class WebRenderUserData {
     eRemote,
     eGroup,
     eMask,
+    eBlobImage,  // SVG image
   };
 
   virtual UserDataType GetType() = 0;
@@ -181,6 +182,28 @@ class WebRenderImageData : public WebRenderUserData {
   // destruction of the key.
   // TODO: we surely can come up with a simpler/safer way to model this.
   bool mOwnsKey;
+};
+
+/// Holds some data used to share blob recordings from VectorImages with the
+/// parent process.
+class WebRenderBlobImageData : public WebRenderUserData {
+ public:
+  WebRenderBlobImageData(RenderRootStateManager* aManager,
+                         nsDisplayItem* aItem);
+  WebRenderBlobImageData(RenderRootStateManager* aManager,
+                         uint32_t aDisplayItemKey, nsIFrame* aFrame);
+  virtual ~WebRenderBlobImageData() {}
+
+  UserDataType GetType() override { return UserDataType::eBlobImage; }
+  static UserDataType Type() { return UserDataType::eBlobImage; }
+  Maybe<wr::BlobImageKey> GetImageKey() { return mKey; }
+
+  Maybe<wr::BlobImageKey> UpdateImageKey(
+      ImageContainer* aContainer, wr::IpcResourceUpdateQueue& aResources);
+
+ protected:
+  Maybe<wr::BlobImageKey> mKey;
+  RefPtr<ImageContainer> mContainer;
 };
 
 /// Used for fallback rendering.
