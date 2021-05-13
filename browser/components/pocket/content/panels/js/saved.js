@@ -6,7 +6,6 @@ PKT_PANEL_OVERLAY is the view itself and contains all of the methods to manipute
 It does not contain any logic for saving or communication with the extension or server.
 */
 
-
 var PKT_PANEL_OVERLAY = function(options) {
   var myself = this;
 
