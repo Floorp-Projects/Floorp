@@ -24,7 +24,6 @@ from ..wpt import testfiles
 from ..manifest.vcs import walk
 
 from ..manifest.sourcefile import SourceFile, js_meta_re, python_meta_re, space_chars, get_any_variants
-from six import ensure_binary, ensure_text
 
 MYPY = False
 if MYPY:
@@ -104,7 +103,7 @@ you could add the following line to the lint.ignore file.
 def all_filesystem_paths(repo_root, subdir=None):
     # type: (Text, Optional[Text]) -> Iterable[Text]
     path_filter = PathFilter(repo_root.encode("utf8"),
-                             extras=[ensure_binary(".git/")])
+                             extras=[b".git/"])
     if subdir:
         expanded_path = subdir.encode("utf8")
         subdir_str = expanded_path
@@ -116,7 +115,7 @@ def all_filesystem_paths(repo_root, subdir=None):
             if subdir:
                 path = os.path.join(subdir_str, path)
             assert not os.path.isabs(path), path
-            yield ensure_text(path)
+            yield path.decode("utf8")
 
 
 def _all_files_equal(paths):
