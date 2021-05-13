@@ -25,7 +25,7 @@ ChromeUtils.defineModuleGetter(
 
 const TOPICS = [
   "weave:connected",
-  "weave:service:login:change",
+  "weave:service:login:got-hashed-id",
   "weave:service:login:error",
   "weave:service:ready",
   "weave:service:sync:start",
