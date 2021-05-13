@@ -214,22 +214,28 @@
 .pkt_ext_containersaved .pkt_ext_topdetail {
     float: inline-start;
 }
-.pkt_ext_containersaved .pkt_ext_edit_msg {
-    box-sizing: border-box;
-    display: none;
-    font-size: 0.75em;
-    inset-inline-start: auto;
-    padding: 0 1.4em;
-    position: absolute;
-    text-align: start;
-    top: 8.7em;
-    width: 100%;
-}
-.pkt_ext_containersaved .pkt_ext_edit_msg_error {
-    color: #d74345;
-}
-.pkt_ext_containersaved .pkt_ext_edit_msg_active {
-    display: block;
+.pkt_ext_containersaved {
+  .pkt_ext_edit_msg_container {
+    position: relative;
+    .pkt_ext_edit_msg {
+      box-sizing: border-box;
+      display: none;
+      font-size: 0.75em;
+      inset-inline-start: auto;
+      padding: 0 1.4em;
+      position: absolute;
+      text-align: start;
+      top: 0;
+      width: 100%;
+      margin: 0;
+      &.pkt_ext_edit_msg_error {
+        color: #d74345;
+      }
+      &.pkt_ext_edit_msg_active {
+        display: block;
+      }
+    }
+  }
 }
 .pkt_ext_containersaved .pkt_ext_item_actions {
     background: transparent;
