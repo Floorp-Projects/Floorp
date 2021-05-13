@@ -12,14 +12,14 @@ const SOURCE_MAP_PREF = "devtools.source-map.client-service.enabled";
  * (which is used as a cookie by the devtools-source-map service) and
  * the source map URL.
  *
- * @param {object} toolbox
- *        The toolbox.
+ * @param {object} commands
+ *        The commands object with all interfaces defined from devtools/shared/commands/
  * @param {SourceMapService} sourceMapService
  *        The devtools-source-map functions
  */
 class SourceMapURLService {
-  constructor(toolbox, sourceMapService) {
-    this._toolbox = toolbox;
+  constructor(commands, sourceMapService) {
+    this._commands = commands;
     this._sourceMapService = sourceMapService;
 
     this._prefValue = Services.prefs.getBoolPref(SOURCE_MAP_PREF);
@@ -40,7 +40,7 @@ class SourceMapURLService {
   }
 
   get _target() {
-    return this._toolbox.target;
+    return this._commands.targetCommand.targetFront;
   }
 
   destroy() {
@@ -48,7 +48,7 @@ class SourceMapURLService {
     this._target.off("will-navigate", this._clearAllState);
     Services.prefs.removeObserver(SOURCE_MAP_PREF, this._syncPrevValue);
 
-    const { resourceCommand } = this._toolbox;
+    const { resourceCommand } = this._commands;
     try {
       resourceCommand.unwatchResources(
         [resourceCommand.TYPES.STYLESHEET, resourceCommand.TYPES.SOURCE],
@@ -421,7 +421,7 @@ class SourceMapURLService {
     }
 
     if (!this._sourcesLoading) {
-      const { resourceCommand } = this._toolbox;
+      const { resourceCommand } = this._commands;
       const { STYLESHEET, SOURCE } = resourceCommand.TYPES;
 
       this._sourcesLoading = resourceCommand.watchResources(
@@ -443,7 +443,7 @@ class SourceMapURLService {
   }
 
   _onResourceAvailable(resources) {
-    const { resourceCommand } = this._toolbox;
+    const { resourceCommand } = this._commands;
     const { STYLESHEET, SOURCE } = resourceCommand.TYPES;
     for (const resource of resources) {
       if (resource.resourceType == STYLESHEET) {
