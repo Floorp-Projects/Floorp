@@ -37,6 +37,11 @@ this.getStrings = async function(ids) {
   return document.l10n.formatValues(ids);
 };
 
+let zoomFactor = 1;
+this.getZoomFactor = function() {
+  return zoomFactor;
+};
+
 this.startBackground = (function() {
   const exports = { startTime };
 
@@ -65,6 +70,7 @@ this.startBackground = (function() {
           browser.tabs.query({ currentWindow: true, active: true }),
           loadIfNecessary(),
         ]);
+        zoomFactor = await browser.tabs.getZoom(tab.id);
         isContextMenuClick
           ? main.onClickedContextMenu(tab)
           : main.onClicked(tab);

@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* globals browser, communication, shot, main, auth, catcher, analytics, blobConverters, thumbnailGenerator */
+/* globals browser, communication, getZoomFactor, shot, main, auth, catcher, analytics, blobConverters, thumbnailGenerator */
 
 "use strict";
 
@@ -17,7 +17,12 @@ this.takeshot = (function() {
     }
   );
 
+  communication.register("getZoomFactor", sender => {
+    return getZoomFactor();
+  });
+
   function screenshotPage(pos, isFullPage, devicePixelRatio) {
+    let zoomFactor = getZoomFactor();
     pos.width = Math.min(pos.right - pos.left, MAX_CANVAS_DIMENSION);
     pos.height = Math.min(pos.bottom - pos.top, MAX_CANVAS_DIMENSION);
 
@@ -34,8 +39,9 @@ this.takeshot = (function() {
       options.rect = rectangle;
 
       // To avoid creating extremely large images (which causes
-      // performance problems), we set the scale to 1.
-      devicePixelRatio = options.scale = 1;
+      // performance problems), we set the devicePixelRatio to 1.
+      devicePixelRatio = 1;
+      options.scale = 1 / zoomFactor;
     } else {
       let rectangle = {
         x: pos.left,
