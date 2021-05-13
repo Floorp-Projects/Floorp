@@ -2354,8 +2354,7 @@ EditorDOMPoint HTMLEditor::GetGoodCaretPointFor(
   // If we are going backward, put caret to next node unless aContent is an
   // invisible `<br>` element.
   // XXX Shouldn't we put caret to first leaf of the next node?
-  if (!aContent.IsHTMLElement(nsGkAtoms::br) ||
-      HTMLEditUtils::IsVisibleBRElement(aContent)) {
+  if (!HTMLEditUtils::IsInvisibleBRElement(aContent)) {
     EditorDOMPoint ret(EditorDOMPoint::After(aContent));
     NS_WARNING_ASSERTION(ret.IsSet(), "Failed to set after aContent");
     return ret;
@@ -8203,8 +8202,8 @@ nsresult HTMLEditor::AdjustCaretPositionAndEnsurePaddingBRElement(
           previousEditableContent->IsHTMLElement(nsGkAtoms::br)) {
         // If it's an invisible `<br>` element, we need to insert a padding
         // `<br>` element for making empty line have one-line height.
-        if (!HTMLEditUtils::IsVisibleBRElement(*previousEditableContent,
-                                               editingHost)) {
+        if (HTMLEditUtils::IsInvisibleBRElement(*previousEditableContent,
+                                                editingHost)) {
           CreateElementResult createPaddingBRResult =
               InsertPaddingBRElementForEmptyLastLineWithTransaction(point);
           if (createPaddingBRResult.Failed()) {
