@@ -1528,9 +1528,6 @@ xul|*.help-icon {
 
 xul|*.addons-icon {
   list-style-image: url("chrome://mozapps/skin/extensions/extension.svg");
-  /* The add-ons icon doesn't have much (any?) margin, so make it a bit smaller. */
-  scale: 87.5%;
-  translate: 6.25%;
 }
 
 /* Back button */
