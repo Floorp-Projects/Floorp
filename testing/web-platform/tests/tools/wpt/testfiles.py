@@ -6,7 +6,6 @@ import subprocess
 import sys
 
 from collections import OrderedDict
-from six import ensure_text, ensure_str
 
 try:
     from ..manifest import manifest
@@ -38,7 +37,7 @@ if MYPY:
 
 DEFAULT_IGNORE_RULERS = ("resources/testharness*", "resources/testdriver*")
 
-here = ensure_text(os.path.dirname(__file__))
+here = os.path.dirname(__file__)
 wpt_root = os.path.abspath(os.path.join(here, os.pardir, os.pardir))
 
 logger = logging.getLogger()
@@ -136,7 +135,7 @@ def branch_point():
 
 def compile_ignore_rule(rule):
     # type: (Text) -> Pattern[Text]
-    rule = rule.replace(ensure_text(os.path.sep), u"/")
+    rule = rule.replace(os.path.sep, u"/")
     parts = rule.split(u"/")
     re_parts = []
     for part in parts:
@@ -398,7 +397,7 @@ def run_changed_files(**kwargs):
 
     for item in sorted(changed):
         line = os.path.relpath(item, wpt_root) + separator
-        sys.stdout.write(ensure_str(line))
+        sys.stdout.write(line)
 
 
 def run_tests_affected(**kwargs):
