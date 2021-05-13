@@ -15,6 +15,7 @@ import mozilla.components.support.test.robolectric.testContext
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -74,6 +75,11 @@ class AutofillCreditCardsAddressesStorageTest {
         val creditCard = storage.addCreditCard(creditCardFields)
 
         assertEquals(creditCard, storage.getCreditCard(creditCard.guid))
+    }
+
+    @Test
+    fun `GIVEN a non-existent credit card guid WHEN getCreditCard is called THEN null is returned`() = runBlocking {
+        assertNull(storage.getCreditCard("guid"))
     }
 
     @Test
@@ -150,7 +156,7 @@ class AutofillCreditCardsAddressesStorageTest {
 
         storage.updateCreditCard(creditCard.guid, newCreditCardFields)
 
-        creditCard = storage.getCreditCard(creditCard.guid)
+        creditCard = storage.getCreditCard(creditCard.guid)!!
 
         val key = storage.crypto.key()
 
@@ -173,7 +179,7 @@ class AutofillCreditCardsAddressesStorageTest {
 
         storage.updateCreditCard(creditCard.guid, newCreditCardFields)
 
-        creditCard = storage.getCreditCard(creditCard.guid)
+        creditCard = storage.getCreditCard(creditCard.guid)!!
 
         assertEquals(newCreditCardFields.billingName, creditCard.billingName)
         assertEquals(newCreditCardFields.cardNumber, creditCard.encryptedCardNumber)
@@ -203,7 +209,7 @@ class AutofillCreditCardsAddressesStorageTest {
         val isDeleteSuccessful = storage.deleteCreditCard(creditCard.guid)
 
         assertTrue(isDeleteSuccessful)
-        assertEquals(0, storage.getAllCreditCards().size)
+        assertNull(storage.getCreditCard(creditCard.guid))
     }
 
     @Test
@@ -259,6 +265,11 @@ class AutofillCreditCardsAddressesStorageTest {
         val address = storage.addAddress(addressFields)
 
         assertEquals(address, storage.getAddress(address.guid))
+    }
+
+    @Test
+    fun `GIVEN a non-existent address guid WHEN getAddress is called THEN null is returned`() = runBlocking {
+        assertNull(storage.getAddress("guid"))
     }
 
     @Test
@@ -356,7 +367,7 @@ class AutofillCreditCardsAddressesStorageTest {
 
         storage.updateAddress(address.guid, newAddressFields)
 
-        address = storage.getAddress(address.guid)
+        address = storage.getAddress(address.guid)!!
 
         assertEquals(newAddressFields.givenName, address.givenName)
         assertEquals(newAddressFields.additionalName, address.additionalName)
@@ -398,6 +409,6 @@ class AutofillCreditCardsAddressesStorageTest {
         val isDeleteSuccessful = storage.deleteAddress(address.guid)
 
         assertTrue(isDeleteSuccessful)
-        assertEquals(0, storage.getAllAddresses().size)
+        assertNull(storage.getAddress(address.guid))
     }
 }

@@ -9,6 +9,7 @@ import androidx.annotation.GuardedBy
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.withContext
+import mozilla.appservices.autofill.ErrorException.NoSuchRecord
 import mozilla.components.concept.storage.Address
 import mozilla.components.concept.storage.CreditCard
 import mozilla.components.concept.storage.CreditCardNumber
@@ -115,8 +116,12 @@ class AutofillCreditCardsAddressesStorage(
         conn.getStorage().updateCreditCard(guid, updatableCreditCardFields.into())
     }
 
-    override suspend fun getCreditCard(guid: String): CreditCard = withContext(coroutineContext) {
-        conn.getStorage().getCreditCard(guid).into()
+    override suspend fun getCreditCard(guid: String): CreditCard? = withContext(coroutineContext) {
+        try {
+            conn.getStorage().getCreditCard(guid).into()
+        } catch (e: NoSuchRecord) {
+            null
+        }
     }
 
     override suspend fun getAllCreditCards(): List<CreditCard> = withContext(coroutineContext) {
@@ -136,8 +141,12 @@ class AutofillCreditCardsAddressesStorage(
             conn.getStorage().addAddress(addressFields.into()).into()
         }
 
-    override suspend fun getAddress(guid: String): Address = withContext(coroutineContext) {
-        conn.getStorage().getAddress(guid).into()
+    override suspend fun getAddress(guid: String): Address? = withContext(coroutineContext) {
+        try {
+            conn.getStorage().getAddress(guid).into()
+        } catch (e: NoSuchRecord) {
+            null
+        }
     }
 
     override suspend fun getAllAddresses(): List<Address> = withContext(coroutineContext) {

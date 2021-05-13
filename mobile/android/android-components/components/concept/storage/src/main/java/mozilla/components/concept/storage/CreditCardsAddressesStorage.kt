@@ -34,9 +34,9 @@ interface CreditCardsAddressesStorage {
      * Retrieves the credit card from the underlying storage layer by its unique identifier.
      *
      * @param guid Unique identifier for the desired credit card.
-     * @return [CreditCard] record.
+     * @return [CreditCard] record if it exists or null otherwise.
      */
-    suspend fun getCreditCard(guid: String): CreditCard
+    suspend fun getCreditCard(guid: String): CreditCard?
 
     /**
      * Retrieves a list of all the credit cards.
@@ -72,9 +72,9 @@ interface CreditCardsAddressesStorage {
      * Retrieves the address from the underlying storage layer by its unique identifier.
      *
      * @param guid Unique identifier for the desired address.
-     * @return [Address] record.
+     * @return [Address] record if it exists or null otherwise.
      */
-    suspend fun getAddress(guid: String): Address
+    suspend fun getAddress(guid: String): Address?
 
     /**
      * Retrieves a list of all the addresses.
