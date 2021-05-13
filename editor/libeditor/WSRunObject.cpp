@@ -3523,8 +3523,9 @@ EditorDOMRange WSRunScanner::GetRangeForDeletingBlockElementBoundaries(
     return EditorDOMRange();  // TODO: Make here return error with Err.
   }
   if (textFragmentDataAtEndOfLeftBlockElement.StartsFromBRElement() &&
-      !aHTMLEditor.IsVisibleBRElement(
-          textFragmentDataAtEndOfLeftBlockElement.StartReasonBRElementPtr())) {
+      !HTMLEditUtils::IsVisibleBRElement(
+          *textFragmentDataAtEndOfLeftBlockElement.StartReasonBRElementPtr(),
+          editingHost)) {
     // If the left block element ends with an invisible `<br>` element,
     // it'll be deleted (and it means there is no invisible trailing
     // white-spaces).  Therefore, the range should start from the invisible
@@ -3685,8 +3686,8 @@ WSRunScanner::ShrinkRangeIfStartsFromOrEndsAfterAtomicContent(
       return Err(NS_ERROR_FAILURE);
     }
     if (textFragmentDataAtStart.EndsByBRElement()) {
-      if (aHTMLEditor.IsVisibleBRElement(
-              textFragmentDataAtStart.EndReasonBRElementPtr())) {
+      if (HTMLEditUtils::IsVisibleBRElement(
+              *textFragmentDataAtStart.EndReasonBRElementPtr(), aEditingHost)) {
         startContent = textFragmentDataAtStart.EndReasonBRElementPtr();
       }
     } else if (textFragmentDataAtStart.EndsBySpecialContent() ||
@@ -3710,8 +3711,8 @@ WSRunScanner::ShrinkRangeIfStartsFromOrEndsAfterAtomicContent(
       return Err(NS_ERROR_FAILURE);
     }
     if (textFragmentDataAtEnd.StartsFromBRElement()) {
-      if (aHTMLEditor.IsVisibleBRElement(
-              textFragmentDataAtEnd.StartReasonBRElementPtr())) {
+      if (HTMLEditUtils::IsVisibleBRElement(
+              *textFragmentDataAtEnd.StartReasonBRElementPtr(), aEditingHost)) {
         endContent = textFragmentDataAtEnd.StartReasonBRElementPtr();
       }
     } else if (textFragmentDataAtEnd.StartsFromSpecialContent() ||
