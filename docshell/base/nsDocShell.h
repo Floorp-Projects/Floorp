@@ -1088,6 +1088,12 @@ class nsDocShell final : public nsDocLoader,
 
   void RecordSingleChannelId();
 
+  void SetChannelToDisconnectOnPageHide(uint64_t aChannelId) {
+    MOZ_ASSERT(mChannelToDisconnectOnPageHide == 0);
+    mChannelToDisconnectOnPageHide = aChannelId;
+  }
+  void MaybeDisconnectChildListenersOnPageHide();
+
  private:  // data members
   nsString mTitle;
   nsCString mOriginalUriString;
@@ -1226,6 +1232,8 @@ class nsDocShell final : public nsDocLoader,
 
   // See WindowGlobalParent::mSingleChannelId.
   mozilla::Maybe<uint64_t> mSingleChannelId;
+
+  uint64_t mChannelToDisconnectOnPageHide;
 
   // The following two fields cannot be declared as bit fields
   // because of uses with AutoRestore.

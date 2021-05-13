@@ -2745,6 +2745,10 @@ void BrowsingContext::DidSet(FieldIndex<IDX_IsInBFCache>) {
         [&](BrowsingContext* aContext) { aContext->mIsInBFCache = false; });
   }
 
+  if (isInBFCache && XRE_IsContentProcess() && mDocShell) {
+    nsDocShell::Cast(mDocShell)->MaybeDisconnectChildListenersOnPageHide();
+  }
+
   PreOrderWalk([&](BrowsingContext* aContext) {
     nsCOMPtr<nsIDocShell> shell = aContext->GetDocShell();
     if (shell) {

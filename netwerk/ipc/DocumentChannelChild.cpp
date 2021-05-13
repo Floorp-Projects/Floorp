@@ -192,20 +192,29 @@ IPCResult DocumentChannelChild::RecvFailedAsyncOpen(
 IPCResult DocumentChannelChild::RecvDisconnectChildListeners(
     const nsresult& aStatus, const nsresult& aLoadGroupStatus,
     bool aSwitchedProcess) {
-  // If this is a normal failure, then we want to disconnect our listeners and
-  // notify them of the failure. If this is a process switch, then we can just
-  // ignore it silently, and trust that the switch will shut down our docshell
-  // and cancel us when it's ready.
-  // XXXBFCache This should be fixed in some better way.
-  bool disconnectChildListeners = !aSwitchedProcess;
-  if (!disconnectChildListeners && mozilla::BFCacheInParent()) {
-    nsDocShell* shell = GetDocShell();
-    disconnectChildListeners = shell && shell->GetBrowsingContext() &&
-                               shell->GetBrowsingContext()->IsTop();
-  }
-  if (disconnectChildListeners) {
+  // If this disconnect is not due to a process switch, perform the disconnect
+  // immediately.
+  if (!aSwitchedProcess) {
     DisconnectChildListeners(aStatus, aLoadGroupStatus);
+    return IPC_OK();
   }
+
+  // Otherwise, the disconnect will occur later using some other mechanism,
+  // depending on what's happening to the loading DocShell. If this is a
+  // toplevel navigation, and this BrowsingContext enters the BFCache, we will
+  // cancel this channel when the PageHide event is firing, whereas if it does
+  // not enter BFCache (e.g. due to being an object, subframe or non-bfcached
+  // toplevel navigation), we will cancel this channel when the DocShell is
+  // destroyed.
+  nsDocShell* shell = GetDocShell();
+  if (mLoadInfo->GetExternalContentPolicyType() ==
+          ExtContentPolicy::TYPE_DOCUMENT &&
+      shell) {
+    MOZ_ASSERT(shell->GetBrowsingContext()->IsTop());
+    // Tell the DocShell which channel to cancel if it enters the BFCache.
+    shell->SetChannelToDisconnectOnPageHide(mChannelId);
+  }
+
   return IPC_OK();
 }
 
