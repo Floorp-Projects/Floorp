@@ -395,6 +395,11 @@ class MOZ_STACK_CLASS JS_PUBLIC_API CompileOptions final
       JSContext* cx, const char* introductionType,
       JS::MutableHandle<JSScript*> introductionScript);
 
+  CompileOptions& setDiscardSource() {
+    discardSource = true;
+    return *this;
+  }
+
   CompileOptions& setForceFullParse() {
     forceFullParse_ = true;
     return *this;
