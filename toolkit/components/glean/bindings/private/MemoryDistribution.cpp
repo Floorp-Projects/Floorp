@@ -7,12 +7,49 @@
 #include "mozilla/glean/bindings/MemoryDistribution.h"
 
 #include "mozilla/Components.h"
+#include "mozilla/glean/bindings/HistogramGIFFTMap.h"
+#include "mozilla/glean/fog_ffi_generated.h"
 #include "nsIClassInfoImpl.h"
 #include "nsJSUtils.h"
 #include "nsPrintfCString.h"
 #include "nsString.h"
 
 namespace mozilla::glean {
+
+namespace impl {
+
+void MemoryDistributionMetric::Accumulate(uint64_t aSample) const {
+  auto hgramId = HistogramIdForMetric(mId);
+  if (hgramId) {
+    Telemetry::Accumulate(hgramId.extract(), aSample);
+  }
+#ifndef MOZ_GLEAN_ANDROID
+  fog_memory_distribution_accumulate(mId, aSample);
+#endif
+}
+
+Maybe<DistributionData> MemoryDistributionMetric::TestGetValue(
+    const nsACString& aPingName) const {
+#ifdef MOZ_GLEAN_ANDROID
+  Unused << mId;
+  return Nothing();
+#else
+  if (!fog_memory_distribution_test_has_value(mId, &aPingName)) {
+    return Nothing();
+  }
+  nsTArray<uint64_t> buckets;
+  nsTArray<uint64_t> counts;
+  DistributionData ret;
+  fog_memory_distribution_test_get_value(mId, &aPingName, &ret.sum, &buckets,
+                                         &counts);
+  for (size_t i = 0; i < buckets.Length(); ++i) {
+    ret.values.InsertOrUpdate(buckets[i], counts[i]);
+  }
+  return Some(std::move(ret));
+#endif
+}
+
+}  // namespace impl
 
 NS_IMPL_CLASSINFO(GleanMemoryDistribution, nullptr, 0, {0})
 NS_IMPL_ISUPPORTS_CI(GleanMemoryDistribution, nsIGleanMemoryDistribution)

@@ -8,10 +8,49 @@
 
 #include "jsapi.h"
 #include "mozilla/Components.h"
+#include "mozilla/glean/bindings/ScalarGIFFTMap.h"
+#include "mozilla/glean/fog_ffi_generated.h"
 #include "nsIClassInfoImpl.h"
 #include "nsString.h"
 
 namespace mozilla::glean {
+
+namespace impl {
+
+void UuidMetric::Set(const nsACString& aValue) const {
+  auto scalarId = ScalarIdForMetric(mId);
+  if (scalarId) {
+    Telemetry::ScalarSet(scalarId.extract(), NS_ConvertUTF8toUTF16(aValue));
+  }
+#ifndef MOZ_GLEAN_ANDROID
+  fog_uuid_set(mId, &aValue);
+#endif
+}
+
+void UuidMetric::GenerateAndSet() const {
+  // We don't have the generated value to mirror to the scalar,
+  // so calling this function on a mirrored metric is likely an error.
+  (void)NS_WARN_IF(ScalarIdForMetric(mId).isSome());
+#ifndef MOZ_GLEAN_ANDROID
+  fog_uuid_generate_and_set(mId);
+#endif
+}
+
+Maybe<nsCString> UuidMetric::TestGetValue(const nsACString& aPingName) const {
+#ifdef MOZ_GLEAN_ANDROID
+  Unused << mId;
+  return Nothing();
+#else
+  if (!fog_uuid_test_has_value(mId, &aPingName)) {
+    return Nothing();
+  }
+  nsCString ret;
+  fog_uuid_test_get_value(mId, &aPingName, &ret);
+  return Some(ret);
+#endif
+}
+
+}  // namespace impl
 
 NS_IMPL_CLASSINFO(GleanUuid, nullptr, 0, {0})
 NS_IMPL_ISUPPORTS_CI(GleanUuid, nsIGleanUuid)

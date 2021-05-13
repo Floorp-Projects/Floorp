@@ -8,9 +8,80 @@
 
 #include "nsString.h"
 #include "mozilla/Components.h"
+#include "mozilla/glean/bindings/ScalarGIFFTMap.h"
+#include "mozilla/glean/fog_ffi_generated.h"
 #include "nsIClassInfoImpl.h"
 
 namespace mozilla::glean {
+
+namespace impl {
+
+void TimespanMetric::Start() const {
+  auto optScalarId = ScalarIdForMetric(mId);
+  if (optScalarId) {
+    auto scalarId = optScalarId.extract();
+    auto lock = GetTimesToStartsLock();
+    (void)NS_WARN_IF(lock.ref()->Remove(scalarId));
+    lock.ref()->InsertOrUpdate(scalarId, TimeStamp::Now());
+  }
+#ifndef MOZ_GLEAN_ANDROID
+  fog_timespan_start(mId);
+#endif
+}
+
+void TimespanMetric::Stop() const {
+  auto optScalarId = ScalarIdForMetric(mId);
+  if (optScalarId) {
+    auto scalarId = optScalarId.extract();
+    auto lock = GetTimesToStartsLock();
+    auto optStart = lock.ref()->Extract(scalarId);
+    if (!NS_WARN_IF(!optStart)) {
+      uint32_t delta = static_cast<uint32_t>(
+          (TimeStamp::Now() - optStart.extract()).ToMilliseconds());
+      Telemetry::ScalarSet(scalarId, delta);
+    }
+  }
+#ifndef MOZ_GLEAN_ANDROID
+  fog_timespan_stop(mId);
+#endif
+}
+
+void TimespanMetric::Cancel() const {
+  auto optScalarId = ScalarIdForMetric(mId);
+  if (optScalarId) {
+    auto scalarId = optScalarId.extract();
+    auto lock = GetTimesToStartsLock();
+    lock.ref()->Remove(scalarId);
+  }
+#ifndef MOZ_GLEAN_ANDROID
+  fog_timespan_cancel(mId);
+#endif
+}
+
+void TimespanMetric::SetRaw(uint32_t aDuration) const {
+  auto optScalarId = ScalarIdForMetric(mId);
+  if (optScalarId) {
+    auto scalarId = optScalarId.extract();
+    Telemetry::ScalarSet(scalarId, aDuration);
+  }
+#ifndef MOZ_GLEAN_ANDROID
+  fog_timespan_set_raw(mId, aDuration);
+#endif
+}
+
+Maybe<int64_t> TimespanMetric::TestGetValue(const nsACString& aPingName) const {
+#ifdef MOZ_GLEAN_ANDROID
+  Unused << mId;
+  return Nothing();
+#else
+  if (!fog_timespan_test_has_value(mId, &aPingName)) {
+    return Nothing();
+  }
+  return Some(fog_timespan_test_get_value(mId, &aPingName));
+#endif
+}
+
+}  // namespace impl
 
 NS_IMPL_CLASSINFO(GleanTimespan, nullptr, 0, {0})
 NS_IMPL_ISUPPORTS_CI(GleanTimespan, nsIGleanTimespan)
