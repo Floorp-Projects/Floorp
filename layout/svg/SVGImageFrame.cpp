@@ -20,6 +20,7 @@
 #include "SVGGeometryProperty.h"
 #include "SVGGeometryFrame.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/StaticPrefs_image.h"
 #include "mozilla/SVGContentUtils.h"
 #include "mozilla/SVGImageContext.h"
 #include "mozilla/SVGObserverUtils.h"
@@ -602,6 +603,9 @@ bool SVGImageFrame::CreateWebRenderCommands(
 
   Maybe<SVGImageContext> svgContext;
   if (mImageContainer->GetType() == imgIContainer::TYPE_VECTOR) {
+    if (StaticPrefs::image_svg_blob_image()) {
+      flags |= imgIContainer::FLAG_RECORD_BLOB;
+    }
     // Forward preserveAspectRatio to inner SVGs
     svgContext.emplace(Some(CSSIntSize::Truncate(width, height)),
                        Some(imgElem->mPreserveAspectRatio.GetAnimValue()));
@@ -639,8 +643,13 @@ bool SVGImageFrame::CreateWebRenderCommands(
     // failure will be due to resource constraints and fallback is unlikely to
     // help us. Hence we can ignore the return value from PushImage.
     if (container) {
-      aManager->CommandBuilder().PushImage(aItem, container, aBuilder,
-                                           aResources, aSc, destRect, clipRect);
+      if (flags & imgIContainer::FLAG_RECORD_BLOB) {
+        aManager->CommandBuilder().PushBlobImage(
+            aItem, container, aBuilder, aResources, destRect, clipRect);
+      } else {
+        aManager->CommandBuilder().PushImage(
+            aItem, container, aBuilder, aResources, aSc, destRect, clipRect);
+      }
     }
 
     nsDisplayItemGenericImageGeometry::UpdateDrawResult(aItem, drawResult);
