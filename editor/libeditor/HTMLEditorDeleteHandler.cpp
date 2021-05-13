@@ -1619,9 +1619,7 @@ EditActionResult HTMLEditor::AutoDeleteRangesHandler::Run(
                   "VisibleNodeOrBlockBoundaryFrom() failed");
               return EditActionResult(NS_ERROR_FAILURE);
             }
-            if (scanFromCaretPointResult.ReachedBRElement() &&
-                HTMLEditUtils::IsInvisibleBRElement(
-                    *scanFromCaretPointResult.BRElementPtr(), editingHost)) {
+            if (scanFromCaretPointResult.ReachedInvisibleBRElement()) {
               return EditActionHandled(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
             }
           }
