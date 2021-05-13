@@ -8,6 +8,7 @@
 #include "SharedSurfacesParent.h"
 #include "CompositorManagerChild.h"
 #include "mozilla/gfx/gfxVars.h"
+#include "mozilla/image/SourceSurfaceBlobImage.h"
 #include "mozilla/layers/IpcResourceUpdateQueue.h"
 #include "mozilla/layers/SourceSurfaceSharedData.h"
 #include "mozilla/layers/WebRenderBridgeChild.h"
@@ -368,6 +369,43 @@ nsresult SharedSurfacesChild::Share(ImageContainer* aContainer,
   }
 
   return Share(sharedSurface, aManager, aResources, aKey);
+}
+
+/* static */
+nsresult SharedSurfacesChild::ShareBlob(ImageContainer* aContainer,
+                                        RenderRootStateManager* aManager,
+                                        wr::IpcResourceUpdateQueue& aResources,
+                                        wr::BlobImageKey& aKey) {
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aContainer);
+  MOZ_ASSERT(aManager);
+
+  if (aContainer->IsAsync()) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  AutoTArray<ImageContainer::OwningImage, 4> images;
+  aContainer->GetCurrentImages(&images);
+  if (images.IsEmpty()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  RefPtr<gfx::SourceSurface> surface = images[0].mImage->GetAsSourceSurface();
+  if (!surface || surface->GetType() != SurfaceType::BLOB_IMAGE) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  auto* blobSurface =
+      static_cast<image::SourceSurfaceBlobImage*>(surface.get());
+
+  Maybe<wr::BlobImageKey> key =
+      blobSurface->UpdateKey(aManager->LayerManager(), aResources);
+  if (!key) {
+    return NS_ERROR_FAILURE;
+  }
+
+  aKey = key.value();
+  return NS_OK;
 }
 
 /* static */

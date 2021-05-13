@@ -1942,6 +1942,38 @@ bool WebRenderCommandBuilder::PushImage(
   return true;
 }
 
+Maybe<wr::BlobImageKey> WebRenderCommandBuilder::CreateBlobImageKey(
+    nsDisplayItem* aItem, ImageContainer* aContainer,
+    mozilla::wr::IpcResourceUpdateQueue& aResources) {
+  MOZ_ASSERT(!aContainer->IsAsync());
+
+  RefPtr<WebRenderBlobImageData> imageData =
+      CreateOrRecycleWebRenderUserData<WebRenderBlobImageData>(aItem);
+  MOZ_ASSERT(imageData);
+  return imageData->UpdateImageKey(aContainer, aResources);
+}
+
+bool WebRenderCommandBuilder::PushBlobImage(
+    nsDisplayItem* aItem, ImageContainer* aContainer,
+    mozilla::wr::DisplayListBuilder& aBuilder,
+    mozilla::wr::IpcResourceUpdateQueue& aResources,
+    const LayoutDeviceRect& aRect, const LayoutDeviceRect& aClip) {
+  Maybe<wr::BlobImageKey> key =
+      CreateBlobImageKey(aItem, aContainer, aResources);
+  if (!key) {
+    return false;
+  }
+
+  mozilla::wr::ImageRendering rendering = wr::ToImageRendering(
+      nsLayoutUtils::GetSamplingFilterForFrame(aItem->Frame()));
+  auto r = wr::ToLayoutRect(aRect);
+  auto c = wr::ToLayoutRect(aClip);
+  aBuilder.PushImage(r, c, !aItem->BackfaceIsHidden(), rendering,
+                     wr::AsImageKey(key.value()));
+
+  return true;
+}
+
 bool BuildLayer(nsDisplayItem* aItem, BlobItemData* aData,
                 nsDisplayListBuilder* aDisplayListBuilder,
                 const gfx::Size& aScale) {
