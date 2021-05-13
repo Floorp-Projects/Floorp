@@ -352,6 +352,9 @@ class ContentChild final : public PContentChild,
 
   mozilla::ipc::IPCResult RecvUpdateFontList(SystemFontList&&);
   mozilla::ipc::IPCResult RecvRebuildFontList(const bool& aFullRebuild);
+  mozilla::ipc::IPCResult RecvFontListShmBlockAdded(
+      const uint32_t& aGeneration, const uint32_t& aIndex,
+      const base::SharedMemoryHandle& aHandle);
 
   mozilla::ipc::IPCResult RecvUpdateAppLocales(
       nsTArray<nsCString>&& aAppLocales);

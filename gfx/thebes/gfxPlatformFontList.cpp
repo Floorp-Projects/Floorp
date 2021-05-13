@@ -2657,6 +2657,19 @@ void gfxPlatformFontList::ShareFontListToProcess(
   }
 }
 
+base::SharedMemoryHandle gfxPlatformFontList::ShareShmBlockToProcess(
+    uint32_t aIndex, base::ProcessId aPid) {
+  MOZ_RELEASE_ASSERT(SharedFontList());
+  return SharedFontList()->ShareBlockToProcess(aIndex, aPid);
+}
+
+void gfxPlatformFontList::ShmBlockAdded(uint32_t aGeneration, uint32_t aIndex,
+                                        base::SharedMemoryHandle aHandle) {
+  if (SharedFontList()) {
+    SharedFontList()->ShmBlockAdded(aGeneration, aIndex, aHandle);
+  }
+}
+
 void gfxPlatformFontList::InitializeFamily(uint32_t aGeneration,
                                            uint32_t aFamilyIndex,
                                            bool aLoadCmaps) {
