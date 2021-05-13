@@ -234,6 +234,9 @@ interface imgIContainer : nsISupports
    *
    * FLAG_DECODE_TO_SRGB_COLORSPACE: Instead of converting the colorspace to
    * the display's colorspace, use sRGB.
+   *
+   * FLAG_RECORD_BLOB: Instead of rasterizing an SVG image on the main thread,
+   * record the drawing commands using blob images.
    */
   const unsigned long FLAG_NONE                            = 0x0;
   const unsigned long FLAG_SYNC_DECODE                     = 0x1;
@@ -248,6 +251,7 @@ interface imgIContainer : nsISupports
   const unsigned long FLAG_FORCE_UNIFORM_SCALING           = 0x200;
   const unsigned long FLAG_AVOID_REDECODE_FOR_SIZE         = 0x400;
   const unsigned long FLAG_DECODE_TO_SRGB_COLORSPACE       = 0x800;
+  const unsigned long FLAG_RECORD_BLOB                     = 0x1000;
 
   /**
    * A constant specifying the default set of decode flags (i.e., the default

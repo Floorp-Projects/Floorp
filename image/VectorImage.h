@@ -19,6 +19,7 @@ struct MediaFeatureChange;
 
 namespace image {
 
+class SourceSurfaceBlobImage;
 struct SVGDrawingParameters;
 class SVGDocumentWrapper;
 class SVGRootRenderingObserver;
@@ -80,6 +81,8 @@ class VectorImage final : public ImageResource, public nsIStreamListener {
   virtual bool ShouldAnimate() override;
 
  private:
+  friend class SourceSurfaceBlobImage;
+
   Tuple<ImgDrawResult, gfx::IntSize, RefPtr<gfx::SourceSurface>>
   GetFrameInternal(const gfx::IntSize& aSize,
                    const Maybe<SVGImageContext>& aSVGContext,

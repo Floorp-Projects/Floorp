@@ -37,6 +37,7 @@
 #include "ISurfaceProvider.h"
 #include "LookupResult.h"
 #include "Orientation.h"
+#include "SourceSurfaceBlobImage.h"
 #include "SVGDocumentWrapper.h"
 #include "SVGDrawingCallback.h"
 #include "SVGDrawingParameters.h"
@@ -711,6 +712,8 @@ VectorImage::GetFrameInternal(const IntSize& aSize,
     return MakeTuple(ImgDrawResult::NOT_READY, aSize, RefPtr<SourceSurface>());
   }
 
+  uint32_t whichFrame = mHaveAnimations ? aWhichFrame : FRAME_FIRST;
+
   RefPtr<SourceSurface> sourceSurface;
   IntSize decodeSize;
   Tie(sourceSurface, decodeSize) =
@@ -726,7 +729,7 @@ VectorImage::GetFrameInternal(const IntSize& aSize,
                      RefPtr<SourceSurface>());
   }
 
-  float animTime = (aWhichFrame == FRAME_FIRST)
+  float animTime = (whichFrame == FRAME_FIRST)
                        ? 0.0f
                        : mSVGDocumentWrapper->GetCurrentTimeAsFloat();
 
@@ -738,6 +741,16 @@ VectorImage::GetFrameInternal(const IntSize& aSize,
   SVGDrawingParameters params(
       nullptr, decodeSize, aSize, ImageRegion::Create(decodeSize),
       SamplingFilter::POINT, aSVGContext, animTime, aFlags, 1.0);
+
+  // Blob recorded vector images just create a simple surface responsible for
+  // generating blob keys and recording bindings. The recording won't happen
+  // until the caller requests the key after GetImageContainerAtSize.
+  if (aFlags & FLAG_RECORD_BLOB) {
+    RefPtr<SourceSurface> surface = new SourceSurfaceBlobImage(
+        mSVGDocumentWrapper, aSVGContext, decodeSize, whichFrame, aFlags);
+
+    return MakeTuple(ImgDrawResult::SUCCESS, decodeSize, std::move(surface));
+  }
 
   bool didCache;  // Was the surface put into the cache?
   bool contextPaint = aSVGContext && aSVGContext->GetContextPaint();
@@ -914,7 +927,9 @@ VectorImage::Draw(gfxContext* aContext, const nsIntSize& aSize,
              "Viewport size is required when using "
              "FLAG_FORCE_PRESERVEASPECTRATIO_NONE");
 
-  float animTime = (aWhichFrame == FRAME_FIRST)
+  uint32_t whichFrame = mHaveAnimations ? aWhichFrame : FRAME_FIRST;
+
+  float animTime = (whichFrame == FRAME_FIRST)
                        ? 0.0f
                        : mSVGDocumentWrapper->GetCurrentTimeAsFloat();
 
@@ -1019,6 +1034,7 @@ already_AddRefed<SourceSurface> VectorImage::CreateSurface(
     const SVGDrawingParameters& aParams, gfxDrawable* aSVGDrawable,
     bool& aWillCache) {
   MOZ_ASSERT(mSVGDocumentWrapper->IsDrawing());
+  MOZ_ASSERT(!(aParams.flags & FLAG_RECORD_BLOB));
 
   mSVGDocumentWrapper->UpdateViewportBounds(aParams.viewportSize);
   mSVGDocumentWrapper->FlushImageTransformInvalidation();
