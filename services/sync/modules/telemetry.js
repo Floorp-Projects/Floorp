@@ -61,7 +61,7 @@ const TOPICS = [
   "fxaccounts:new_device_id",
   "fxaccounts:onlogout",
   "weave:service:ready",
-  "weave:service:login:change",
+  "weave:service:login:got-hashed-id",
 
   // For whole-of-sync metrics.
   "weave:service:sync:start",
@@ -953,7 +953,7 @@ class SyncTelemetryImpl {
 
     switch (topic) {
       case "weave:service:ready":
-      case "weave:service:login:change":
+      case "weave:service:login:got-hashed-id":
       case "fxaccounts:new_device_id":
         this.onAccountInitOrChange();
         break;

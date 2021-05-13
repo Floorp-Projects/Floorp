@@ -223,7 +223,7 @@ add_task(async function test_observer_refreshState() {
   let refreshState = sinon.spy(UIStateInternal, "refreshState");
 
   let shouldRefresh = [
-    "weave:service:login:change",
+    "weave:service:login:got-hashed-id",
     "weave:service:login:error",
     "weave:service:ready",
     "fxaccounts:onverified",
