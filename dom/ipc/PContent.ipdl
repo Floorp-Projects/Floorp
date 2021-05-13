@@ -635,6 +635,13 @@ child:
      */
     async FontListChanged();
 
+    /**
+     * A new shmem block has been added to the font list; the child process
+     * should map the new block and add to its index.
+     */
+    async FontListShmBlockAdded(uint32_t aGeneration, uint32_t aIndex,
+                                SharedMemoryHandle aHandle);
+
     async UpdateAppLocales(nsCString[] appLocales);
     async UpdateRequestedLocales(nsCString[] requestedLocales);
 
