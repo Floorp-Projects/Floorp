@@ -6,7 +6,9 @@ package mozilla.components.feature.awesomebar.provider
 
 import kotlinx.coroutines.runBlocking
 import mozilla.components.concept.engine.Engine
+import mozilla.components.concept.storage.DocumentType
 import mozilla.components.concept.storage.HistoryMetadata
+import mozilla.components.concept.storage.HistoryMetadataKey
 import mozilla.components.concept.storage.HistoryMetadataStorage
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.whenever
@@ -34,24 +36,20 @@ class HistoryMetadataSuggestionProviderTest {
         val storage: HistoryMetadataStorage = mock()
 
         val result = HistoryMetadata(
-            guid = "testGuid",
-            url = "http://www.mozilla.com",
+            key = HistoryMetadataKey("http://www.mozilla.com", null, null),
             title = "mozilla",
             createdAt = System.currentTimeMillis(),
             updatedAt = System.currentTimeMillis(),
             totalViewTime = 10,
-            isMedia = false,
-            parentUrl = null,
-            searchTerm = null
+            documentType = DocumentType.Regular
         )
         whenever(storage.queryHistoryMetadata("moz", METADATA_SUGGESTION_LIMIT)).thenReturn(listOf(result))
 
         val provider = HistoryMetadataSuggestionProvider(storage, mock())
         val suggestions = provider.onInputChanged("moz")
         assertEquals(1, suggestions.size)
-        assertEquals(result.url, suggestions[0].description)
+        assertEquals(result.key.url, suggestions[0].description)
         assertEquals(result.title, suggestions[0].title)
-        assertEquals(result.guid, suggestions[0].id)
     }
 
     @Test
@@ -71,20 +69,17 @@ class HistoryMetadataSuggestionProviderTest {
         verify(engine, never()).speculativeConnect(anyString())
 
         val result = HistoryMetadata(
-            guid = "testGuid",
-            url = "http://www.mozilla.com",
+            key = HistoryMetadataKey("http://www.mozilla.com", null, null),
             title = "mozilla",
             createdAt = System.currentTimeMillis(),
             updatedAt = System.currentTimeMillis(),
             totalViewTime = 10,
-            isMedia = false,
-            parentUrl = null,
-            searchTerm = null
+            documentType = DocumentType.Regular
         )
         whenever(storage.queryHistoryMetadata("moz", METADATA_SUGGESTION_LIMIT)).thenReturn(listOf(result))
 
         suggestions = provider.onInputChanged("moz")
         assertEquals(1, suggestions.size)
-        verify(engine, times(1)).speculativeConnect(result.url)
+        verify(engine, times(1)).speculativeConnect(result.key.url)
     }
 }

@@ -47,22 +47,21 @@ class HistoryMetadataSuggestionProvider(
         val suggestions = historyStorage
             .queryHistoryMetadata(text, METADATA_SUGGESTION_LIMIT)
 
-        suggestions.firstOrNull()?.url?.let { url -> engine?.speculativeConnect(url) }
+        suggestions.firstOrNull()?.key?.url?.let { url -> engine?.speculativeConnect(url) }
         return suggestions.into()
     }
 
     private suspend fun Iterable<HistoryMetadata>.into(): List<AwesomeBar.Suggestion> {
-        val iconRequests = this.map { icons?.loadIcon(IconRequest(it.url)) }
+        val iconRequests = this.map { icons?.loadIcon(IconRequest(it.key.url)) }
         return this.zip(iconRequests) { result, icon ->
             AwesomeBar.Suggestion(
                 provider = this@HistoryMetadataSuggestionProvider,
-                id = result.guid ?: "",
                 icon = icon?.await()?.bitmap,
                 title = result.title,
-                description = result.url,
-                editSuggestion = result.url,
+                description = result.key.url,
+                editSuggestion = result.key.url,
                 onSuggestionClicked = {
-                    loadUrlUseCase.invoke(result.url)
+                    loadUrlUseCase.invoke(result.key.url)
                 }
             )
         }

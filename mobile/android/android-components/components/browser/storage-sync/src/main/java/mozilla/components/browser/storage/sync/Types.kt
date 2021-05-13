@@ -13,8 +13,11 @@ import mozilla.appservices.places.BookmarkTreeNode
 import mozilla.appservices.places.SyncAuthInfo
 import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.concept.storage.BookmarkNodeType
+import mozilla.components.concept.storage.DocumentType
 import mozilla.components.concept.storage.FrecencyThresholdOption
 import mozilla.components.concept.storage.HistoryMetadata
+import mozilla.components.concept.storage.HistoryMetadataKey
+import mozilla.components.concept.storage.HistoryMetadataObservation
 import mozilla.components.concept.storage.TopFrecentSiteInfo
 import mozilla.components.concept.storage.VisitInfo
 import mozilla.components.concept.storage.VisitType
@@ -103,21 +106,41 @@ internal fun BookmarkTreeNode.asBookmarkNode(): BookmarkNode {
     }
 }
 
+internal fun HistoryMetadataKey.into(): mozilla.appservices.places.HistoryMetadataKey {
+    return mozilla.appservices.places.HistoryMetadataKey(
+        url = this.url,
+        referrerUrl = this.referrerUrl,
+        searchTerm = this.searchTerm
+    )
+}
+
+internal fun mozilla.appservices.places.HistoryMetadataKey.into(): HistoryMetadataKey {
+    return HistoryMetadataKey(
+        url = this.url,
+        referrerUrl = if (this.referrerUrl.isNullOrEmpty()) { null } else { this.referrerUrl },
+        searchTerm = if (this.searchTerm.isNullOrEmpty()) { null } else { this.searchTerm }
+    )
+}
+
+internal fun mozilla.appservices.places.DocumentType.into(): DocumentType {
+    return when (this) {
+        mozilla.appservices.places.DocumentType.Regular -> DocumentType.Regular
+        mozilla.appservices.places.DocumentType.Media -> DocumentType.Media
+    }
+}
+
 internal fun mozilla.appservices.places.HistoryMetadata.into(): HistoryMetadata {
     // Protobuf doesn't support passing around `null` value, so these get converted to some defaults
     // as they go from Rust to Kotlin. E.g. an empty string in place of a `null`.
     // That means places.HistoryMetadata will never have `null` values.
     // But, we actually do want a real `null` value here - hence the explicit check.
     return HistoryMetadata(
-        guid = this.guid,
-        url = this.url,
+        key = this.key.into(),
         title = if (this.title.isNullOrEmpty()) null else this.title,
         createdAt = this.createdAt,
         updatedAt = this.updatedAt,
         totalViewTime = this.totalViewTime,
-        searchTerm = if (this.searchTerm.isNullOrEmpty()) null else this.searchTerm,
-        isMedia = this.isMedia,
-        parentUrl = if (this.parentUrl.isNullOrEmpty()) null else this.parentUrl
+        documentType = this.documentType.into()
     )
 }
 
@@ -125,16 +148,35 @@ internal fun List<mozilla.appservices.places.HistoryMetadata>.into(): List<Histo
     return map { it.into() }
 }
 
+internal fun DocumentType.into(): mozilla.appservices.places.DocumentType {
+    return when (this) {
+        DocumentType.Regular -> mozilla.appservices.places.DocumentType.Regular
+        DocumentType.Media -> mozilla.appservices.places.DocumentType.Media
+    }
+}
+
 internal fun HistoryMetadata.into(): mozilla.appservices.places.HistoryMetadata {
     return mozilla.appservices.places.HistoryMetadata(
-        guid = this.guid,
-        url = this.url,
+        key = this.key.into(),
         title = this.title,
         createdAt = this.createdAt,
         updatedAt = this.updatedAt,
         totalViewTime = this.totalViewTime,
-        searchTerm = this.searchTerm,
-        isMedia = this.isMedia,
-        parentUrl = this.parentUrl
+        documentType = this.documentType.into()
     )
+}
+
+internal fun HistoryMetadataObservation.into(): mozilla.appservices.places.HistoryMetadataObservation {
+    return when (this) {
+        is HistoryMetadataObservation.ViewTimeObservation -> {
+            mozilla.appservices.places.HistoryMetadataObservation.ViewTimeObservation(
+                viewTime = this.viewTime
+            )
+        }
+        is HistoryMetadataObservation.DocumentTypeObservation -> {
+            mozilla.appservices.places.HistoryMetadataObservation.DocumentTypeObservation(
+                documentType = this.documentType.into()
+            )
+        }
+    }
 }

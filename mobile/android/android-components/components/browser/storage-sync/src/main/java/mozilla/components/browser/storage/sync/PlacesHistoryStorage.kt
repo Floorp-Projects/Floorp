@@ -13,6 +13,8 @@ import mozilla.components.concept.base.crash.CrashReporting
 import mozilla.components.concept.storage.FrecencyThresholdOption
 import mozilla.components.concept.storage.HistoryAutocompleteResult
 import mozilla.components.concept.storage.HistoryMetadata
+import mozilla.components.concept.storage.HistoryMetadataKey
+import mozilla.components.concept.storage.HistoryMetadataObservation
 import mozilla.components.concept.storage.HistoryMetadataStorage
 import mozilla.components.concept.storage.HistoryStorage
 import mozilla.components.concept.storage.PageObservation
@@ -254,15 +256,14 @@ open class PlacesHistoryStorage(
         return places.reader().queryHistoryMetadata(query, limit).into()
     }
 
-    override suspend fun addHistoryMetadata(metadata: HistoryMetadata): String {
-        return places.writer().addHistoryMetadata(metadata.into())
-    }
-
-    override suspend fun updateHistoryMetadata(guid: String, totalViewTime: Int) {
-        places.writer().updateHistoryMetadata(guid, totalViewTime)
+    override suspend fun noteHistoryMetadataObservation(
+        key: HistoryMetadataKey,
+        observation: HistoryMetadataObservation
+    ) {
+        places.writer().noteHistoryMetadataObservation(key.into(), observation.into())
     }
 
     override suspend fun deleteHistoryMetadataOlderThan(olderThan: Long) {
-        places.writer().deleteOlderThan(olderThan)
+        places.writer().deleteHistoryMetadataOlderThan(olderThan)
     }
 }

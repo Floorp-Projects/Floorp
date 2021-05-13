@@ -5,34 +5,72 @@
 package mozilla.components.concept.storage
 
 /**
+ * The possible document types to record history metadata for.
+ */
+enum class DocumentType {
+    Regular,
+    Media
+}
+
+/**
+ * Represents the different types of history metadata observations.
+ */
+sealed class HistoryMetadataObservation {
+    /**
+     * A [HistoryMetadataObservation] to increment the total view time.
+     */
+    data class ViewTimeObservation(
+        val viewTime: Int
+    ) : HistoryMetadataObservation()
+
+    /**
+     * A [HistoryMetadataObservation] to update the document type.
+     */
+    data class DocumentTypeObservation(
+        val documentType: DocumentType
+    ) : HistoryMetadataObservation()
+}
+/**
+ * Represents a set of history metadata values that uniquely identify a record. Note that
+ * when recording observations, the same set of values may or may not cause a new record to be
+ * created, depending on the de-bouncing logic of the underlying storage i.e. recording history
+ * metadata observations with the exact same values may be combined into a single record.
+ *
+ * @property url A url of the page.
+ * @property searchTerm An optional search term if this record was
+ * created as part of a search by the user.
+ * @property referrerUrl An optional url of the parent/referrer if
+ * this record was created in response to a user opening
+ * a page in a new tab.
+ */
+data class HistoryMetadataKey(
+    val url: String,
+    val searchTerm: String? = null,
+    val referrerUrl: String? = null
+)
+
+/**
  * Represents a history metadata record, which describes metadata for a history visit, such as metadata
  * about the page itself as well as metadata about how the page was opened.
  *
- * @property guid A global unique ID assigned to a saved record.
- * @property url A url of the page.
+ * @property key The [HistoryMetadataKey] of this record.
  * @property title A title of the page.
  * @property createdAt When this metadata record was created.
  * @property updatedAt The last time this record was updated.
  * @property totalViewTime Total time the user viewed the page associated with this record.
- * @property searchTerm An optional search term if this record was created as part of a search by the user.
- * @property isMedia A boolean describing if the page associated with this record is considered a media page.
- * @property parentUrl An optional parent url if this record was created in response to a user opening
- * a page in a new tab.
+ * @property documentType The [DocumentType] of the page.
  */
 data class HistoryMetadata(
-    val guid: String? = null,
-    val url: String,
+    val key: HistoryMetadataKey,
     val title: String?,
     val createdAt: Long,
     val updatedAt: Long,
     val totalViewTime: Int,
-    val searchTerm: String?,
-    val isMedia: Boolean,
-    val parentUrl: String?
+    val documentType: DocumentType
 )
 
 /**
- * An interface for interacting with storage that manages [HistoryMetadata].
+ * An interface for interacting with a storage that manages [HistoryMetadata].
  */
 interface HistoryMetadataStorage {
     /**
@@ -63,8 +101,8 @@ interface HistoryMetadataStorage {
     suspend fun getHistoryMetadataBetween(start: Long, end: Long): List<HistoryMetadata>
 
     /**
-     * Searches through [HistoryMetadata] by [query], matching records by [HistoryMetadata.url],
-     * [HistoryMetadata.title] and [HistoryMetadata.searchTerm].
+     * Searches through [HistoryMetadata] by [query], matching records by [HistoryMetadataKey.url],
+     * [HistoryMetadata.title] and [HistoryMetadataKey.searchTerm].
      *
      * @param query A search query.
      * @param limit A maximum number of records to return.
@@ -74,24 +112,13 @@ interface HistoryMetadataStorage {
     suspend fun queryHistoryMetadata(query: String, limit: Int): List<HistoryMetadata>
 
     /**
-     * Adds a [HistoryMetadata] record to the storage.
+     * Records the provided [HistoryMetadataObservation] and updates the record identified by the
+     * provided [HistoryMetadataKey].
      *
-     * Note that if a corresponding history record already exists, we won't be updating
-     * its title. The title update is expected to happen as part of a call to
-     * [HistoryStorage.recordObservation]. Titles in [HistoryMetadata] and history are expected
-     * to come from the same source (i.e. the page itself).
-     *
-     * @param metadata A [HistoryMetadata] record to add. Must not have a set [HistoryMetadata.guid].
-     * @return A [HistoryMetadata.guid] of the added record.
+     * @param key the [HistoryMetadataKey] identifying the metadata records
+     * @param observation the [HistoryMetadataObservation] to record.
      */
-    suspend fun addHistoryMetadata(metadata: HistoryMetadata): String
-
-    /**
-     * Updates a [HistoryMetadata] based on [guid].
-     *
-     * @param totalViewTime A new [HistoryMetadata.totalViewTime].
-     */
-    suspend fun updateHistoryMetadata(guid: String, totalViewTime: Int)
+    suspend fun noteHistoryMetadataObservation(key: HistoryMetadataKey, observation: HistoryMetadataObservation)
 
     /**
      * Deletes [HistoryMetadata] with [HistoryMetadata.updatedAt] older than [olderThan].
