@@ -690,13 +690,15 @@ VectorImage::GetFrameAtSize(const IntSize& aSize, uint32_t aWhichFrame,
   NotifyDrawingObservers();
 #endif
 
-  auto result = GetFrameInternal(aSize, Nothing(), aWhichFrame, aFlags);
+  auto result =
+      GetFrameInternal(aSize, Nothing(), Nothing(), aWhichFrame, aFlags);
   return Get<2>(result).forget();
 }
 
 Tuple<ImgDrawResult, IntSize, RefPtr<SourceSurface>>
 VectorImage::GetFrameInternal(const IntSize& aSize,
                               const Maybe<SVGImageContext>& aSVGContext,
+                              const Maybe<ImageIntRegion>& aRegion,
                               uint32_t aWhichFrame, uint32_t aFlags) {
   MOZ_ASSERT(aWhichFrame <= FRAME_MAX_VALUE);
 
@@ -828,6 +830,7 @@ NS_IMETHODIMP_(ImgDrawResult)
 VectorImage::GetImageContainerAtSize(layers::LayerManager* aManager,
                                      const gfx::IntSize& aSize,
                                      const Maybe<SVGImageContext>& aSVGContext,
+                                     const Maybe<ImageIntRegion>& aRegion,
                                      uint32_t aFlags,
                                      layers::ImageContainer** aOutContainer) {
   Maybe<SVGImageContext> newSVGContext;
@@ -838,7 +841,7 @@ VectorImage::GetImageContainerAtSize(layers::LayerManager* aManager,
   uint32_t flags = aFlags & ~(FLAG_FORCE_PRESERVEASPECTRATIO_NONE);
   return GetImageContainerImpl(aManager, aSize,
                                newSVGContext ? newSVGContext : aSVGContext,
-                               flags, aOutContainer);
+                               aRegion, flags, aOutContainer);
 }
 
 bool VectorImage::MaybeRestrictSVGContext(

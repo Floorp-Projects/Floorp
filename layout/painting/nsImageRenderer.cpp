@@ -601,6 +601,7 @@ ImgDrawResult nsImageRenderer::BuildWebRenderDisplayItems(
 
       Maybe<SVGImageContext> svgContext(
           Some(SVGImageContext(Some(destCSSSize))));
+      Maybe<ImageIntRegion> region;
 
       const int32_t appUnitsPerDevPixel =
           mForFrame->PresContext()->AppUnitsPerDevPixel();
@@ -610,13 +611,13 @@ ImgDrawResult nsImageRenderer::BuildWebRenderDisplayItems(
 
       gfx::IntSize decodeSize =
           nsLayoutUtils::ComputeImageContainerDrawingParameters(
-              mImageContainer, mForFrame, destRect, aSc, containerFlags,
-              svgContext);
+              mImageContainer, mForFrame, destRect, destRect, aSc,
+              containerFlags, svgContext, region);
 
       RefPtr<layers::ImageContainer> container;
       drawResult = mImageContainer->GetImageContainerAtSize(
-          aManager->LayerManager(), decodeSize, svgContext, containerFlags,
-          getter_AddRefs(container));
+          aManager->LayerManager(), decodeSize, svgContext, region,
+          containerFlags, getter_AddRefs(container));
       if (!container) {
         NS_WARNING("Failed to get image container");
         break;

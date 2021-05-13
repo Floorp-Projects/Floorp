@@ -47,6 +47,7 @@ namespace mozilla {
 namespace image {
 
 class ImageRegion;
+class ImageIntRegion;
 struct Orientation;
 struct Resolution;
 
@@ -75,6 +76,7 @@ native Orientation(mozilla::image::Orientation);
 native ImageResolution(mozilla::image::Resolution);
 [ref] native TimeStamp(mozilla::TimeStamp);
 [ref] native MaybeSVGImageContext(mozilla::Maybe<mozilla::SVGImageContext>);
+[ref] native MaybeImageIntRegion(mozilla::Maybe<mozilla::image::ImageIntRegion>);
 native TempRefSourceSurface(already_AddRefed<mozilla::gfx::SourceSurface>);
 native TempRefImgIContainer(already_AddRefed<imgIContainer>);
 native nsIntSizeByVal(nsIntSize);
@@ -362,6 +364,7 @@ interface imgIContainer : nsISupports
   [noscript, notxpcom] ImgDrawResult getImageContainerAtSize(in LayerManager aManager,
                                                              [const] in nsIntSize aSize,
                                                              [const] in MaybeSVGImageContext aSVGContext,
+                                                             [const] in MaybeImageIntRegion aRegion,
                                                              in uint32_t aFlags,
                                                              out ImageContainer aOutContainer);
 

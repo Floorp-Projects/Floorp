@@ -6444,8 +6444,9 @@ CSSIntSize nsLayoutUtils::ComputeSizeForDrawingWithFallback(
 /* static */
 IntSize nsLayoutUtils::ComputeImageContainerDrawingParameters(
     imgIContainer* aImage, nsIFrame* aForFrame,
-    const LayoutDeviceRect& aDestRect, const StackingContextHelper& aSc,
-    uint32_t aFlags, Maybe<SVGImageContext>& aSVGContext) {
+    const LayoutDeviceRect& aDestRect, const LayoutDeviceRect& aFillRect,
+    const StackingContextHelper& aSc, uint32_t aFlags,
+    Maybe<SVGImageContext>& aSVGContext, Maybe<ImageIntRegion>& aRegion) {
   MOZ_ASSERT(aImage);
   MOZ_ASSERT(aForFrame);
 

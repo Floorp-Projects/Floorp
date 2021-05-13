@@ -14,6 +14,7 @@
 #include "BorderConsts.h"
 #include "DashedCornerFinder.h"
 #include "DottedCornerFinder.h"
+#include "ImageRegion.h"
 #include "nsLayoutUtils.h"
 #include "nsStyleConsts.h"
 #include "nsContentUtils.h"
@@ -3621,14 +3622,16 @@ ImgDrawResult nsCSSBorderImageRenderer::CreateWebRenderCommands(
           nsRect(nsPoint(), mImageRenderer.GetSize()), appUnitsPerDevPixel);
 
       Maybe<SVGImageContext> svgContext;
+      Maybe<ImageIntRegion> region;
       gfx::IntSize decodeSize =
           nsLayoutUtils::ComputeImageContainerDrawingParameters(
-              img, aForFrame, imageRect, aSc, flags, svgContext);
+              img, aForFrame, imageRect, imageRect, aSc, flags, svgContext,
+              region);
 
       RefPtr<layers::ImageContainer> container;
-      drawResult = img->GetImageContainerAtSize(aManager->LayerManager(),
-                                                decodeSize, svgContext, flags,
-                                                getter_AddRefs(container));
+      drawResult = img->GetImageContainerAtSize(
+          aManager->LayerManager(), decodeSize, svgContext, region, flags,
+          getter_AddRefs(container));
       if (!container) {
         break;
       }

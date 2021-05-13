@@ -187,10 +187,11 @@ NS_IMETHODIMP_(ImgDrawResult)
 ImageWrapper::GetImageContainerAtSize(layers::LayerManager* aManager,
                                       const gfx::IntSize& aSize,
                                       const Maybe<SVGImageContext>& aSVGContext,
+                                      const Maybe<ImageIntRegion>& aRegion,
                                       uint32_t aFlags,
                                       layers::ImageContainer** aOutContainer) {
   return mInnerImage->GetImageContainerAtSize(aManager, aSize, aSVGContext,
-                                              aFlags, aOutContainer);
+                                              aRegion, aFlags, aOutContainer);
 }
 
 NS_IMETHODIMP_(ImgDrawResult)

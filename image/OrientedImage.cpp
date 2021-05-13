@@ -185,7 +185,8 @@ OrientedImage::IsImageContainerAvailableAtSize(LayerManager* aManager,
 NS_IMETHODIMP_(ImgDrawResult)
 OrientedImage::GetImageContainerAtSize(
     layers::LayerManager* aManager, const gfx::IntSize& aSize,
-    const Maybe<SVGImageContext>& aSVGContext, uint32_t aFlags,
+    const Maybe<SVGImageContext>& aSVGContext,
+    const Maybe<ImageIntRegion>& aRegion, uint32_t aFlags,
     layers::ImageContainer** aOutContainer) {
   // XXX(seth): We currently don't have a way of orienting the result of
   // GetImageContainer. We work around this by always returning null, but if it
@@ -194,8 +195,8 @@ OrientedImage::GetImageContainerAtSize(
   // that method for performance reasons.
 
   if (mOrientation.IsIdentity()) {
-    return InnerImage()->GetImageContainerAtSize(aManager, aSize, aSVGContext,
-                                                 aFlags, aOutContainer);
+    return InnerImage()->GetImageContainerAtSize(
+        aManager, aSize, aSVGContext, aRegion, aFlags, aOutContainer);
   }
 
   return ImgDrawResult::NOT_SUPPORTED;
