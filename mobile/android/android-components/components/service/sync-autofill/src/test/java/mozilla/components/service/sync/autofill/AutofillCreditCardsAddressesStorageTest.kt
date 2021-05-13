@@ -84,9 +84,6 @@ class AutofillCreditCardsAddressesStorageTest {
 
     @Test
     fun `get all credit cards`() = runBlocking {
-        var creditCards = storage.getAllCreditCards()
-        assertEquals(0, creditCards.size)
-
         val plaintextNumber1 = CreditCardNumber.Plaintext("5500000000000004")
         val creditCardFields1 = NewCreditCardFields(
             billingName = "Jane Fields",
@@ -118,17 +115,19 @@ class AutofillCreditCardsAddressesStorageTest {
         val creditCard2 = storage.addCreditCard(creditCardFields2)
         val creditCard3 = storage.addCreditCard(creditCardFields3)
 
-        creditCards = storage.getAllCreditCards()
-
+        val creditCards = storage.getAllCreditCards()
         val key = storage.crypto.key()
 
-        assertEquals(3, creditCards.size)
-        assertEquals(creditCard1, creditCards[0])
-        assertEquals(plaintextNumber1, storage.crypto.decrypt(key, creditCards[0].encryptedCardNumber))
-        assertEquals(creditCard2, creditCards[1])
-        assertEquals(plaintextNumber2, storage.crypto.decrypt(key, creditCards[1].encryptedCardNumber))
-        assertEquals(creditCard3, creditCards[2])
-        assertEquals(plaintextNumber3, storage.crypto.decrypt(key, creditCards[2].encryptedCardNumber))
+        val savedCreditCard1 = creditCards.find { it == creditCard1 }
+        assertNotNull(savedCreditCard1)
+        val savedCreditCard2 = creditCards.find { it == creditCard2 }
+        assertNotNull(savedCreditCard2)
+        val savedCreditCard3 = creditCards.find { it == creditCard3 }
+        assertNotNull(savedCreditCard3)
+
+        assertEquals(plaintextNumber1, storage.crypto.decrypt(key, savedCreditCard1!!.encryptedCardNumber))
+        assertEquals(plaintextNumber2, storage.crypto.decrypt(key, savedCreditCard2!!.encryptedCardNumber))
+        assertEquals(plaintextNumber3, storage.crypto.decrypt(key, savedCreditCard3!!.encryptedCardNumber))
     }
 
     @Test
@@ -201,10 +200,7 @@ class AutofillCreditCardsAddressesStorageTest {
         )
 
         val creditCard = storage.addCreditCard(creditCardFields)
-        val creditCards = storage.getAllCreditCards()
-
-        assertEquals(1, creditCards.size)
-        assertEquals(creditCard, creditCards[0])
+        assertNotNull(storage.getCreditCard(creditCard.guid))
 
         val isDeleteSuccessful = storage.deleteCreditCard(creditCard.guid)
 
@@ -274,9 +270,6 @@ class AutofillCreditCardsAddressesStorageTest {
 
     @Test
     fun `get all addresses`() = runBlocking {
-        var addresses = storage.getAllAddresses()
-        assertEquals(0, addresses.size)
-
         val addressFields1 = UpdatableAddressFields(
             givenName = "John",
             additionalName = "",
@@ -323,12 +316,14 @@ class AutofillCreditCardsAddressesStorageTest {
         val address2 = storage.addAddress(addressFields2)
         val address3 = storage.addAddress(addressFields3)
 
-        addresses = storage.getAllAddresses()
+        val addresses = storage.getAllAddresses()
 
-        assertEquals(3, addresses.size)
-        assertEquals(address1, addresses[0])
-        assertEquals(address2, addresses[1])
-        assertEquals(address3, addresses[2])
+        val savedAddress1 = addresses.find { it == address1 }
+        assertNotNull(savedAddress1)
+        val savedAddress2 = addresses.find { it == address2 }
+        assertNotNull(savedAddress2)
+        val savedAddress3 = addresses.find { it == address3 }
+        assertNotNull(savedAddress3)
     }
 
     @Test
@@ -401,13 +396,10 @@ class AutofillCreditCardsAddressesStorageTest {
         )
 
         val address = storage.addAddress(addressFields)
-        val addresses = storage.getAllAddresses()
-
-        assertEquals(1, addresses.size)
-        assertEquals(address, addresses[0])
+        val savedAddress = storage.getAddress(address.guid)
+        assertEquals(address, savedAddress)
 
         val isDeleteSuccessful = storage.deleteAddress(address.guid)
-
         assertTrue(isDeleteSuccessful)
         assertNull(storage.getAddress(address.guid))
     }
