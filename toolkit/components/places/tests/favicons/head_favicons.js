@@ -20,7 +20,7 @@ const systemPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
 // This error icon must stay in sync with FAVICON_ERRORPAGE_URL in
 // nsIFaviconService.idl, aboutCertError.xhtml and netError.xhtml.
 const FAVICON_ERRORPAGE_URI = Services.io.newURI(
-  "chrome://global/skin/icons/warning.svg"
+  "chrome://global/skin/icons/info.svg"
 );
 
 /**
