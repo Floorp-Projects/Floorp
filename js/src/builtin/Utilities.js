@@ -26,13 +26,6 @@
 // All C++-implemented standard builtins library functions used in self-hosted
 // code are installed via the std_functions JSFunctionSpec[] in
 // SelfHosting.cpp.
-//
-// Do not create an alias to a self-hosted builtin, otherwise it will be cloned
-// twice.
-//
-// Symbol is a bare constructor without properties or methods.
-var std_Symbol = Symbol;
-
 
 /********** List / Record specification types **********/
 
