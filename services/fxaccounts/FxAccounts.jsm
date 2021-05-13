@@ -1290,6 +1290,7 @@ FxAccountsInternal.prototype = {
     try {
       await currentState.updateUserAccountData({ verified: true });
       const accountData = await currentState.getUserAccountData();
+      this._setLastUserPref(accountData.email);
       // Now that the user is verified, we can proceed to fetch keys
       if (currentState.whenVerifiedDeferred) {
         currentState.whenVerifiedDeferred.resolve(accountData);
@@ -1478,11 +1479,15 @@ FxAccountsInternal.prototype = {
     await this.notifyObservers(ON_DEVICE_DISCONNECTED_NOTIFICATION, data);
   },
 
-  async _handleEmailUpdated(newEmail) {
+  _setLastUserPref(newEmail) {
     Services.prefs.setStringPref(
       PREF_LAST_FXA_USER,
       CryptoUtils.sha256Base64(newEmail)
     );
+  },
+
+  async _handleEmailUpdated(newEmail) {
+    this._setLastUserPref(newEmail);
     await this.currentAccountState.updateUserAccountData({ email: newEmail });
   },
 
