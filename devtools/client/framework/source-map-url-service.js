@@ -47,6 +47,19 @@ class SourceMapURLService {
     this._clearAllState();
     this._target.off("will-navigate", this._clearAllState);
     Services.prefs.removeObserver(SOURCE_MAP_PREF, this._syncPrevValue);
+
+    const { resourceCommand } = this._toolbox;
+    try {
+      resourceCommand.unwatchResources(
+        [resourceCommand.TYPES.STYLESHEET, resourceCommand.TYPES.SOURCE],
+        { onAvailable: this._onResourceAvailable }
+      );
+    } catch (e) {
+      // If unwatchResources is called before finishing process of watchResources,
+      // it throws an error during stopping listener.
+    }
+
+    this._sourcesLoading = null;
   }
 
   /**
@@ -201,19 +214,6 @@ class SourceMapURLService {
     this._pendingIDSubscriptions.clear();
     this._pendingURLSubscriptions.clear();
     this._urlToIDMap.clear();
-
-    const { resourceCommand } = this._toolbox;
-    try {
-      resourceCommand.unwatchResources(
-        [resourceCommand.TYPES.STYLESHEET, resourceCommand.TYPES.SOURCE],
-        { onAvailable: this._onResourceAvailable }
-      );
-    } catch (e) {
-      // If unwatchResources is called before finishing process of watchResources,
-      // it throws an error during stopping listener.
-    }
-
-    this._sourcesLoading = null;
   }
 
   _onNewJavascript(source) {
