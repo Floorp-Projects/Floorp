@@ -625,14 +625,6 @@ body {
           .onboardingContainer.proton .screen-1 .section-main {
             width: 420px;
             height: auto; } }
-        .onboardingContainer.proton .screen-1 .section-main .brand-logo {
-          transition-delay: 0.6s; }
-        .onboardingContainer.proton .screen-1 .section-main .welcome-text {
-          transition-delay: 0.8s; }
-        .onboardingContainer.proton .screen-1 .section-main .primary,
-        .onboardingContainer.proton .screen-1 .section-main .secondary-cta,
-        .onboardingContainer.proton .screen-1 .section-main .steps {
-          transition-delay: 1s; }
       .onboardingContainer.proton .screen-1 .outline-L {
         width: 87px;
         height: 80px;
@@ -661,6 +653,21 @@ body {
         @media (max-width: 610px) {
           .onboardingContainer.proton .screen-1 .yellow-circle {
             transform: translate(185%, -5%); } }
+    .onboardingContainer.proton .dialog-initial .brand-logo {
+      transition-delay: 0.6s; }
+    .onboardingContainer.proton .dialog-initial .welcome-text {
+      transition-delay: 0.8s; }
+    .onboardingContainer.proton .dialog-initial .tiles-theme-section {
+      transition-delay: 0.9s; }
+    .onboardingContainer.proton .dialog-initial .primary,
+    .onboardingContainer.proton .dialog-initial .secondary-cta,
+    .onboardingContainer.proton .dialog-initial .steps {
+      transition-delay: 1s; }
+    .onboardingContainer.proton .screen:not(.dialog-initial):not(.screen-0) .tiles-theme-section {
+      transition-delay: 0.2s; }
+    .onboardingContainer.proton .screen:not(.dialog-initial):not(.screen-0) .primary,
+    .onboardingContainer.proton .screen:not(.dialog-initial):not(.screen-0) .secondary-cta {
+      transition-delay: 0.4s; }
     .onboardingContainer.proton .screen-2 {
       background-color: rgba(21, 20, 26, 0.5); }
       .onboardingContainer.proton .screen-2 .section-main {
@@ -676,11 +683,6 @@ body {
           .onboardingContainer.proton .screen-2 .section-main {
             width: 420px;
             height: auto; } }
-        .onboardingContainer.proton .screen-2 .section-main .tiles-theme-section {
-          transition-delay: 0.2s; }
-        .onboardingContainer.proton .screen-2 .section-main .primary,
-        .onboardingContainer.proton .screen-2 .section-main .secondary-cta {
-          transition-delay: 0.4s; }
       .onboardingContainer.proton .screen-2 .outline-L {
         width: 87px;
         height: 80px;
@@ -724,22 +726,18 @@ body {
     .onboardingContainer.proton.transition-in .screen-0 .attrib-text,
     .onboardingContainer.proton.transition-in .screen-0 .secondary-cta.top {
       opacity: 0; }
-    .onboardingContainer.proton.transition-in .screen-1 .main-content {
+    .onboardingContainer.proton.transition-in .dialog-initial .main-content {
       translate: 0 calc(-2 * var(--translate)); }
-    .onboardingContainer.proton.transition-in .screen-1 .brand-logo,
-    .onboardingContainer.proton.transition-in .screen-1 .steps {
+    .onboardingContainer.proton.transition-in .dialog-initial .brand-logo,
+    .onboardingContainer.proton.transition-in .dialog-initial .steps {
       opacity: 0;
       translate: 0 calc(-1 * var(--translate)); }
-    .onboardingContainer.proton.transition-in .screen-2 .steps {
+    .onboardingContainer.proton.transition-in .screen:not(.dialog-initial):not(.screen-0) .steps {
       opacity: 0.2; }
-    .onboardingContainer.proton.transition-in .screen-1 .welcome-text,
-    .onboardingContainer.proton.transition-in .screen-1 .tiles-theme-section,
-    .onboardingContainer.proton.transition-in .screen-1 .primary,
-    .onboardingContainer.proton.transition-in .screen-1 .secondary-cta:not(.top),
-    .onboardingContainer.proton.transition-in .screen-2 .welcome-text,
-    .onboardingContainer.proton.transition-in .screen-2 .tiles-theme-section,
-    .onboardingContainer.proton.transition-in .screen-2 .primary,
-    .onboardingContainer.proton.transition-in .screen-2 .secondary-cta:not(.top) {
+    .onboardingContainer.proton.transition-in .screen:not(.screen-0) .welcome-text,
+    .onboardingContainer.proton.transition-in .screen:not(.screen-0) .tiles-theme-section,
+    .onboardingContainer.proton.transition-in .screen:not(.screen-0) .primary,
+    .onboardingContainer.proton.transition-in .screen:not(.screen-0) .secondary-cta:not(.top) {
       opacity: 0;
       translate: 0 calc(-1 * var(--translate)); }
     .onboardingContainer.proton.transition-out .noodle {
@@ -760,23 +758,27 @@ body {
     .onboardingContainer.proton.transition-out .screen-0 .secondary-cta.top {
       opacity: 0;
       transition-delay: 0.2s; }
-    .onboardingContainer.proton.transition-out .screen-1 .main-content {
+    .onboardingContainer.proton.transition-out .screen:not(.dialog-last):not(.screen-0) .main-content {
       overflow: hidden; }
-    .onboardingContainer.proton.transition-out .screen-1 .welcome-text {
+    .onboardingContainer.proton.transition-out .screen:not(.dialog-last):not(.screen-0) .welcome-text {
       opacity: 0;
       translate: 0 var(--translate);
       transition-delay: 0.1s; }
-    .onboardingContainer.proton.transition-out .screen-1 .primary,
-    .onboardingContainer.proton.transition-out .screen-1 .secondary-cta:not(.top) {
+    .onboardingContainer.proton.transition-out .screen:not(.dialog-last):not(.screen-0) .tiles-theme-section {
+      opacity: 0;
+      translate: 0 var(--translate);
+      transition-delay: 0.2s; }
+    .onboardingContainer.proton.transition-out .screen:not(.dialog-last):not(.screen-0) .primary,
+    .onboardingContainer.proton.transition-out .screen:not(.dialog-last):not(.screen-0) .secondary-cta:not(.top) {
       opacity: 0;
       translate: 0 var(--translate);
       transition-delay: 0.3s; }
-    .onboardingContainer.proton.transition-out .screen-1 .steps {
+    .onboardingContainer.proton.transition-out .screen:not(.dialog-last):not(.screen-0) .steps {
       opacity: 0.2;
       transition-delay: 0.5s; }
-    .onboardingContainer.proton.transition-out .screen-2 .noodle {
+    .onboardingContainer.proton.transition-out .dialog-last .noodle {
       transition-delay: 0s; }
-    .onboardingContainer.proton.transition-out .screen-2 .main-content {
+    .onboardingContainer.proton.transition-out .dialog-last .main-content {
       opacity: 0;
       translate: 0 calc(2 * var(--translate));
       transition-delay: 0.4s; }
