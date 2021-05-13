@@ -9,7 +9,6 @@ import urllib
 import html5lib
 import py
 import pytest
-from six import text_type
 
 from wptserver import WPTServer
 
@@ -122,7 +121,7 @@ class HTMLItem(pytest.Item, pytest.Collector):
             if element.tag == 'script':
                 if element.attrib.get('id') == 'expected':
                     try:
-                        self.expected = json.loads(text_type(element.text))
+                        self.expected = json.loads(element.text)
                     except ValueError:
                         print("Failed parsing JSON in %s" % filename)
                         raise
