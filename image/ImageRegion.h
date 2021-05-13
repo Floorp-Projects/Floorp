@@ -150,6 +150,116 @@ class ImageRegion {
   bool mIsRestricted;
 };
 
+/**
+ * An axis-aligned rectangle in tiled image space, with an optional sampling
+ * restriction rect. The drawing code ensures that if a sampling restriction
+ * rect is present, any pixels sampled during the drawing process are found
+ * within that rect.
+ *
+ * The sampling restriction rect exists primarily for callers which perform
+ * pixel snapping. Other callers should generally use one of the Create()
+ * overloads.
+ */
+class ImageIntRegion {
+  typedef mozilla::gfx::ExtendMode ExtendMode;
+
+ public:
+  static ImageIntRegion Empty() {
+    return ImageIntRegion(mozilla::gfx::IntRect(), ExtendMode::CLAMP);
+  }
+
+  static ImageIntRegion Create(const mozilla::gfx::IntRect& aRect,
+                               ExtendMode aExtendMode = ExtendMode::CLAMP) {
+    return ImageIntRegion(aRect, aExtendMode);
+  }
+
+  static ImageIntRegion Create(const mozilla::gfx::IntSize& aSize,
+                               ExtendMode aExtendMode = ExtendMode::CLAMP) {
+    return ImageIntRegion(
+        mozilla::gfx::IntRect(0, 0, aSize.width, aSize.height), aExtendMode);
+  }
+
+  static ImageIntRegion CreateWithSamplingRestriction(
+      const mozilla::gfx::IntRect& aRect,
+      const mozilla::gfx::IntRect& aRestriction,
+      ExtendMode aExtendMode = ExtendMode::CLAMP) {
+    return ImageIntRegion(aRect, aRestriction, aExtendMode);
+  }
+
+  bool IsRestricted() const { return mIsRestricted; }
+  const mozilla::gfx::IntRect& Rect() const { return mRect; }
+
+  const mozilla::gfx::IntRect& Restriction() const {
+    MOZ_ASSERT(mIsRestricted);
+    return mRestriction;
+  }
+
+  bool RestrictionContains(const mozilla::gfx::IntRect& aRect) const {
+    if (!mIsRestricted) {
+      return true;
+    }
+    return mRestriction.Contains(aRect);
+  }
+
+  ImageIntRegion Intersect(const mozilla::gfx::IntRect& aRect) const {
+    if (mIsRestricted) {
+      return CreateWithSamplingRestriction(aRect.Intersect(mRect),
+                                           aRect.Intersect(mRestriction));
+    }
+    return Create(aRect.Intersect(mRect));
+  }
+
+  mozilla::gfx::IntRect IntersectAndRestrict(
+      const mozilla::gfx::IntRect& aRect) const {
+    mozilla::gfx::IntRect intersection = mRect.Intersect(aRect);
+    if (mIsRestricted) {
+      intersection = mRestriction.Intersect(intersection);
+    }
+    return intersection;
+  }
+
+  gfx::ExtendMode GetExtendMode() const { return mExtendMode; }
+
+  ImageRegion ToImageRegion() const {
+    if (mIsRestricted) {
+      return ImageRegion::CreateWithSamplingRestriction(
+          gfxRect(mRect.x, mRect.y, mRect.width, mRect.height),
+          gfxRect(mRestriction.x, mRestriction.y, mRestriction.width,
+                  mRestriction.height),
+          mExtendMode);
+    }
+    return ImageRegion::Create(
+        gfxRect(mRect.x, mRect.y, mRect.width, mRect.height), mExtendMode);
+  }
+
+  bool operator==(const ImageIntRegion& aOther) const {
+    return mExtendMode == aOther.mExtendMode &&
+           mIsRestricted == aOther.mIsRestricted &&
+           mRect.IsEqualEdges(aOther.mRect) &&
+           (!mIsRestricted || mRestriction.IsEqualEdges(aOther.mRestriction));
+  }
+
+  /* ImageIntRegion() : mIsRestricted(false) { } */
+
+ private:
+  explicit ImageIntRegion(const mozilla::gfx::IntRect& aRect,
+                          ExtendMode aExtendMode)
+      : mRect(aRect), mExtendMode(aExtendMode), mIsRestricted(false) {}
+
+  ImageIntRegion(const mozilla::gfx::IntRect& aRect,
+                 const mozilla::gfx::IntRect& aRestriction,
+                 ExtendMode aExtendMode)
+      : mRect(aRect),
+        mRestriction(aRestriction),
+        mExtendMode(aExtendMode),
+        mIsRestricted(true) {}
+
+  mozilla::gfx::IntRect mRect;
+  mozilla::gfx::IntRect mRestriction;
+  ExtendMode mExtendMode;
+  bool mIsRestricted;
+};
+
 }  // namespace image
 }  // namespace mozilla
 
