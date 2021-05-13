@@ -86,7 +86,8 @@ class VectorImage final : public ImageResource, public nsIStreamListener {
   Tuple<ImgDrawResult, gfx::IntSize, RefPtr<gfx::SourceSurface>>
   GetFrameInternal(const gfx::IntSize& aSize,
                    const Maybe<SVGImageContext>& aSVGContext,
-                   uint32_t aWhichFrame, uint32_t aFlags) override;
+                   const Maybe<ImageIntRegion>& aRegion, uint32_t aWhichFrame,
+                   uint32_t aFlags) override;
 
   Tuple<ImgDrawResult, gfx::IntSize> GetImageContainerSize(
       layers::LayerManager* aManager, const gfx::IntSize& aSize,

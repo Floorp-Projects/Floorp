@@ -69,7 +69,7 @@ TEST_F(ImageContainers, RasterImageContainer) {
   requestedSize.Scale(2, 2);
   RefPtr<layers::ImageContainer> upscaleContainer;
   drawResult = image->GetImageContainerAtSize(
-      layerManager, requestedSize, Nothing(),
+      layerManager, requestedSize, Nothing(), Nothing(),
       imgIContainer::FLAG_SYNC_DECODE |
           imgIContainer::FLAG_HIGH_QUALITY_SCALING,
       getter_AddRefs(upscaleContainer));
@@ -85,7 +85,7 @@ TEST_F(ImageContainers, RasterImageContainer) {
   requestedSize.height /= 2;
   RefPtr<layers::ImageContainer> downscaleContainer;
   drawResult = image->GetImageContainerAtSize(
-      layerManager, requestedSize, Nothing(),
+      layerManager, requestedSize, Nothing(), Nothing(),
       imgIContainer::FLAG_SYNC_DECODE |
           imgIContainer::FLAG_HIGH_QUALITY_SCALING,
       getter_AddRefs(downscaleContainer));
@@ -98,8 +98,8 @@ TEST_F(ImageContainers, RasterImageContainer) {
   // Get at native size again. Should give same container.
   RefPtr<layers::ImageContainer> againContainer;
   drawResult = image->GetImageContainerAtSize(
-      layerManager, testCase.mSize, Nothing(), imgIContainer::FLAG_SYNC_DECODE,
-      getter_AddRefs(againContainer));
+      layerManager, testCase.mSize, Nothing(), Nothing(),
+      imgIContainer::FLAG_SYNC_DECODE, getter_AddRefs(againContainer));
   EXPECT_EQ(drawResult, ImgDrawResult::SUCCESS);
   ASSERT_EQ(nativeContainer.get(), againContainer.get());
 }

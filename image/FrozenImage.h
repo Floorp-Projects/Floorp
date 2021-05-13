@@ -54,7 +54,7 @@ class FrozenImage : public ImageWrapper {
   GetImageContainerAtSize(layers::LayerManager* aManager,
                           const gfx::IntSize& aSize,
                           const Maybe<SVGImageContext>& aSVGContext,
-                          uint32_t aFlags,
+                          const Maybe<ImageIntRegion>& aRegion, uint32_t aFlags,
                           layers::ImageContainer** aOutContainer) override;
   NS_IMETHOD_(ImgDrawResult)
   Draw(gfxContext* aContext, const nsIntSize& aSize, const ImageRegion& aRegion,
