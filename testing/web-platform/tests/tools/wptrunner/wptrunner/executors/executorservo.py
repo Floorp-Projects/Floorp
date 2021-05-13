@@ -7,7 +7,6 @@ import tempfile
 import threading
 import traceback
 import uuid
-from six import ensure_str
 
 from mozprocess import ProcessHandler
 
@@ -263,7 +262,9 @@ class ServoRefTestExecutor(ProcessTestExecutor):
             with open(output_path, "rb") as f:
                 # Might need to strip variable headers or something here
                 data = f.read()
-                return True, [ensure_str(base64.b64encode(data))]
+                # Returning the screenshot as a string could potentially be avoided,
+                # see https://github.com/web-platform-tests/wpt/issues/28929.
+                return True, [base64.b64encode(data).decode()]
 
     def do_test(self, test):
         result = self.implementation.run_test(test)
