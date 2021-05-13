@@ -36,7 +36,12 @@ android {
 }
 
 dependencies {
-    api Dependencies.mozilla_nimbus
+    // These dependencies are part of this module's public API.
+    api(Dependencies.mozilla_nimbus) {
+        // Use our own version of the Glean dependency,
+        // which might be different from the version declared by A-S.
+        exclude group: 'org.mozilla.components', module: 'service-glean'
+    }
 
     implementation Dependencies.androidx_core_ktx
     implementation Dependencies.androidx_constraintlayout
