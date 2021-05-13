@@ -581,6 +581,11 @@ ImgDrawResult nsImageRenderer::BuildWebRenderDisplayItems(
     }
     case StyleImage::Tag::Rect:
     case StyleImage::Tag::Url: {
+      ExtendMode extendMode = mExtendMode;
+      if (aDest.Contains(aFill)) {
+        extendMode = ExtendMode::CLAMP;
+      }
+
       uint32_t containerFlags = imgIContainer::FLAG_ASYNC_NOTIFY;
       if (mFlags & (nsImageRenderer::FLAG_PAINTING_TO_WINDOW |
                     nsImageRenderer::FLAG_HIGH_QUALITY_SCALING)) {
@@ -589,7 +594,7 @@ ImgDrawResult nsImageRenderer::BuildWebRenderDisplayItems(
       if (mFlags & nsImageRenderer::FLAG_SYNC_DECODE_IMAGES) {
         containerFlags |= imgIContainer::FLAG_SYNC_DECODE;
       }
-      if (mExtendMode == ExtendMode::CLAMP &&
+      if (extendMode == ExtendMode::CLAMP &&
           StaticPrefs::image_svg_blob_image() &&
           mImageContainer->GetType() == imgIContainer::TYPE_VECTOR) {
         containerFlags |= imgIContainer::FLAG_RECORD_BLOB;
@@ -607,12 +612,18 @@ ImgDrawResult nsImageRenderer::BuildWebRenderDisplayItems(
           mForFrame->PresContext()->AppUnitsPerDevPixel();
       LayoutDeviceRect destRect =
           LayoutDeviceRect::FromAppUnits(aDest, appUnitsPerDevPixel);
+      LayoutDeviceRect clipRect =
+          LayoutDeviceRect::FromAppUnits(aFill, appUnitsPerDevPixel);
       auto stretchSize = wr::ToLayoutSize(destRect.Size());
 
       gfx::IntSize decodeSize =
           nsLayoutUtils::ComputeImageContainerDrawingParameters(
-              mImageContainer, mForFrame, destRect, destRect, aSc,
+              mImageContainer, mForFrame, destRect, clipRect, aSc,
               containerFlags, svgContext, region);
+
+      if (extendMode != ExtendMode::CLAMP) {
+        region = Nothing();
+      }
 
       RefPtr<layers::ImageContainer> container;
       drawResult = mImageContainer->GetImageContainerAtSize(
@@ -624,11 +635,9 @@ ImgDrawResult nsImageRenderer::BuildWebRenderDisplayItems(
       }
 
       if (containerFlags & imgIContainer::FLAG_RECORD_BLOB) {
-        MOZ_ASSERT(mExtendMode == ExtendMode::CLAMP);
-        LayoutDeviceRect clipRect =
-            LayoutDeviceRect::FromAppUnits(aFill, appUnitsPerDevPixel);
+        MOZ_ASSERT(extendMode == ExtendMode::CLAMP);
         aManager->CommandBuilder().PushBlobImage(
-            aItem, container, aBuilder, aResources, destRect, clipRect);
+            aItem, container, aBuilder, aResources, clipRect, clipRect);
         break;
       }
 
@@ -644,11 +653,9 @@ ImgDrawResult nsImageRenderer::BuildWebRenderDisplayItems(
       }
 
       wr::LayoutRect dest = wr::ToLayoutRect(destRect);
+      wr::LayoutRect clip = wr::ToLayoutRect(clipRect);
 
-      wr::LayoutRect clip = wr::ToLayoutRect(
-          LayoutDeviceRect::FromAppUnits(aFill, appUnitsPerDevPixel));
-
-      if (mExtendMode == ExtendMode::CLAMP) {
+      if (extendMode == ExtendMode::CLAMP) {
         // The image is not repeating. Just push as a regular image.
         aBuilder.PushImage(dest, clip, !aItem->BackfaceIsHidden(), rendering,
                            key.value());
@@ -662,7 +669,7 @@ ImgDrawResult nsImageRenderer::BuildWebRenderDisplayItems(
             appUnitsPerDevPixel);
         wr::LayoutRect fill = wr::ToLayoutRect(fillRect);
 
-        switch (mExtendMode) {
+        switch (extendMode) {
           case ExtendMode::REPEAT_Y:
             fill.origin.x = dest.origin.x;
             fill.size.width = dest.size.width;

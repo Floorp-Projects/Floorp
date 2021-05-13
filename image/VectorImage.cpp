@@ -735,21 +735,26 @@ VectorImage::GetFrameInternal(const IntSize& aSize,
                        ? 0.0f
                        : mSVGDocumentWrapper->GetCurrentTimeAsFloat();
 
+  // If we aren't given a region, create one that covers the whole SVG image.
+  ImageRegion region =
+      aRegion ? aRegion->ToImageRegion() : ImageRegion::Create(decodeSize);
+
   // By using a null gfxContext, we ensure that we will always attempt to
   // create a surface, even if we aren't capable of caching it (e.g. due to our
   // flags, having an animation, etc). Otherwise CreateSurface will assume that
   // the caller is capable of drawing directly to its own draw target if we
   // cannot cache.
-  SVGDrawingParameters params(
-      nullptr, decodeSize, aSize, ImageRegion::Create(decodeSize),
-      SamplingFilter::POINT, aSVGContext, animTime, aFlags, 1.0);
+  SVGDrawingParameters params(nullptr, decodeSize, aSize, region,
+                              SamplingFilter::POINT, aSVGContext, animTime,
+                              aFlags, 1.0);
 
   // Blob recorded vector images just create a simple surface responsible for
   // generating blob keys and recording bindings. The recording won't happen
   // until the caller requests the key after GetImageContainerAtSize.
   if (aFlags & FLAG_RECORD_BLOB) {
-    RefPtr<SourceSurface> surface = new SourceSurfaceBlobImage(
-        mSVGDocumentWrapper, aSVGContext, decodeSize, whichFrame, aFlags);
+    RefPtr<SourceSurface> surface =
+        new SourceSurfaceBlobImage(mSVGDocumentWrapper, aSVGContext, aRegion,
+                                   decodeSize, whichFrame, aFlags);
 
     return MakeTuple(ImgDrawResult::SUCCESS, decodeSize, std::move(surface));
   }
