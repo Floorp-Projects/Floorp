@@ -212,10 +212,10 @@ const DEFAULT_PROTON_WELCOME_CONTENT = {
         subtitle: {
           string_id: "mr1-welcome-screen-hero-text",
         },
-        // This is dynamically removed for non-en locales below.
         help_text: {
-          deleteIfNotEn: true,
-          text: "Soraya Osorio — Furniture designer, Firefox fan",
+          text: {
+            string_id: "mr1-onboarding-welcome-image-caption",
+          },
         },
         primary_button: {
           label: {
