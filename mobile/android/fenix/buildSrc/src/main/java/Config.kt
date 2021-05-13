@@ -44,12 +44,12 @@ object Config {
         return "$majorVersion.0a1"
     }
 
+    /**
+     * Generate a build date that follows the ISO-8601 format
+     */
     @JvmStatic
     fun generateBuildDate(): String {
-        val dateTime = LocalDateTime.now()
-        val timeFormatter = DateTimeFormatter.ofPattern("h:mm a")
-
-        return "${dateTime.dayOfWeek.toString().toLowerCase().capitalize()} ${dateTime.monthValue}/${dateTime.dayOfMonth} @ ${timeFormatter.format(dateTime)}"
+        return LocalDateTime.now().toString()
     }
 
     private val fennecBaseVersionCode by lazy {
