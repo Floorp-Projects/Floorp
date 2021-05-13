@@ -156,11 +156,6 @@ linux1804-64-ccov/opt:
 # Windows platforms (matching /windows.*/)
 
 # win32
-windows7-32/debug:
-    build-platform: win32/debug
-    test-sets:
-        - windows-7-tests
-
 windows7-32/opt:
     build-platform: win32/opt
     test-sets:
@@ -172,12 +167,6 @@ windows7-32-shippable/opt:
         - windows-7-tests
 
 # win7 qr builds for try purposes
-windows7-32-qr/debug:
-    build-platform: win32/debug
-    test-sets:
-        - mochitest-webgpu
-        - windows7-qr-tests
-
 windows7-32-qr/opt:
     build-platform: win32/opt
     test-sets:
@@ -189,6 +178,8 @@ windows10-32-qr/debug:
     test-sets:
         - web-platform-tests
         - windows32-qr-tests
+        - mochitest-webgpu
+        - windows7-qr-tests
 
 windows10-32-qr/opt:
     build-platform: win32/opt
@@ -229,6 +220,7 @@ windows10-32/debug:
     test-sets:
         - web-platform-tests
         - windows32-tests
+        - windows-7-tests
 
 
 # win64
