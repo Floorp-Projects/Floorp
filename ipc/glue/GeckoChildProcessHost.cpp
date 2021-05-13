@@ -251,8 +251,7 @@ class PosixProcessLauncher : public BaseProcessLauncher {
   PosixProcessLauncher(GeckoChildProcessHost* aHost,
                        std::vector<std::string>&& aExtraOpts)
       : BaseProcessLauncher(aHost, std::move(aExtraOpts)),
-        mProfileDir(aHost->mProfileDir),
-        mChannelDstFd(-1) {}
+        mProfileDir(aHost->mProfileDir) {}
 
  protected:
   bool SetChannel(IPC::Channel* aChannel) override {
@@ -1130,9 +1129,6 @@ bool LinuxProcessLauncher::DoSetup() {
 #ifdef OS_POSIX
 bool PosixProcessLauncher::DoSetup() {
   if (!BaseProcessLauncher::DoSetup()) {
-    return false;
-  }
-  if (mChannelDstFd < 0) {
     return false;
   }
 
