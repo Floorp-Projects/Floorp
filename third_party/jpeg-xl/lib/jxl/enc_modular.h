@@ -35,7 +35,9 @@ class ModularFrameEncoder {
   ModularFrameEncoder(const FrameHeader& frame_header,
                       const CompressParams& cparams_orig);
   Status ComputeEncodingData(const FrameHeader& frame_header,
-                             const ImageBundle& ib, Image3F* JXL_RESTRICT color,
+                             const ImageMetadata& metadata,
+                             Image3F* JXL_RESTRICT color,
+                             const std::vector<ImageF>& extra_channels,
                              PassesEncoderState* JXL_RESTRICT enc_state,
                              ThreadPool* pool, AuxOut* aux_out, bool do_color);
   // Encodes global info (tree + histograms) in the `writer`.

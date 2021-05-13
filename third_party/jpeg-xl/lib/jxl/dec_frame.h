@@ -21,6 +21,7 @@
 #include "lib/jxl/base/data_parallel.h"
 #include "lib/jxl/base/span.h"
 #include "lib/jxl/base/status.h"
+#include "lib/jxl/blending.h"
 #include "lib/jxl/codec_in_out.h"
 #include "lib/jxl/common.h"
 #include "lib/jxl/dec_bit_reader.h"
@@ -70,6 +71,7 @@ class FrameDecoder {
   void SetFrameSizeLimits(const SizeConstraints* constraints) {
     constraints_ = constraints;
   }
+  void SetRenderSpotcolors(bool rsc) { render_spotcolors_ = rsc; }
 
   // Read FrameHeader and table of contents from the given BitReader.
   // Also checks frame dimensions for their limits, and sets the output
@@ -139,11 +141,14 @@ class FrameDecoder {
     if (decoded_->metadata()->GetOrientation() != Orientation::kIdentity) {
       return;
     }
-    if (frame_header_.blending_info.mode != BlendMode::kReplace ||
-        frame_header_.custom_size_or_origin) {
+    if (ImageBlender::NeedsBlending(dec_state_)) {
       return;
     }
     if (frame_header_.CanBeReferenced()) {
+      return;
+    }
+    if (render_spotcolors_ &&
+        decoded_->metadata()->Find(ExtraChannel::kSpotColor)) {
       return;
     }
     dec_state_->rgb_output = rgb_output;
@@ -151,7 +156,7 @@ class FrameDecoder {
     dec_state_->rgb_stride = stride;
     JXL_ASSERT(dec_state_->pixel_callback == nullptr);
 #if !JXL_HIGH_PRECISION
-    if (!is_rgba && decoded_->metadata()->xyb_encoded &&
+    if (decoded_->metadata()->xyb_encoded &&
         dec_state_->output_encoding_info.color_encoding.IsSRGB() &&
         dec_state_->output_encoding_info.all_default_opsin &&
         HasFastXYBTosRGB8() && frame_header_.needs_color_transform()) {
@@ -174,6 +179,10 @@ class FrameDecoder {
       return;
     }
     if (frame_header_.CanBeReferenced()) {
+      return;
+    }
+    if (render_spotcolors_ &&
+        decoded_->metadata()->Find(ExtraChannel::kSpotColor)) {
       return;
     }
     dec_state_->pixel_callback = cb;
@@ -230,6 +239,7 @@ class FrameDecoder {
   ModularFrameDecoder modular_frame_decoder_;
   bool allow_partial_frames_;
   bool allow_partial_dc_global_;
+  bool render_spotcolors_ = true;
 
   std::vector<uint8_t> processed_section_;
   std::vector<uint8_t> decoded_passes_per_ac_group_;

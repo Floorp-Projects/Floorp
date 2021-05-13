@@ -245,43 +245,6 @@ void OptimizeNoiseParameters(const std::vector<NoiseLevel>& noise_level,
   }
 }
 
-std::vector<float> GetTextureStrength(const Image3F& opsin,
-                                      const size_t block_s) {
-  std::vector<float> texture_strength_index((opsin.ysize() / block_s) *
-                                            (opsin.xsize() / block_s));
-  size_t block_index = 0;
-
-  for (size_t y = 0; y + block_s <= opsin.ysize(); y += block_s) {
-    for (size_t x = 0; x + block_s <= opsin.xsize(); x += block_s) {
-      float texture_strength = 0;
-      for (size_t y_bl = 0; y_bl < block_s; ++y_bl) {
-        for (size_t x_bl = 0; x_bl + 1 < block_s; ++x_bl) {
-          float diff = opsin.PlaneRow(1, y)[x + x_bl + 1] -
-                       opsin.PlaneRow(1, y)[x + x_bl];
-          texture_strength += diff * diff;
-        }
-      }
-      for (size_t y_bl = 0; y_bl + 1 < block_s; ++y_bl) {
-        for (size_t x_bl = 0; x_bl < block_s; ++x_bl) {
-          float diff = opsin.PlaneRow(1, y + 1)[x + x_bl] -
-                       opsin.PlaneRow(1, y)[x + x_bl];
-          texture_strength += diff * diff;
-        }
-      }
-      texture_strength_index[block_index] = texture_strength;
-      ++block_index;
-    }
-  }
-  return texture_strength_index;
-}
-
-float GetThresholdFlatIndices(const std::vector<float>& texture_strength,
-                              const int n_patches) {
-  std::vector<float> kth_statistic = texture_strength;
-  std::stable_sort(kth_statistic.begin(), kth_statistic.end());
-  return kth_statistic[n_patches];
-}
-
 std::vector<NoiseLevel> GetNoiseLevel(
     const Image3F& opsin, const std::vector<float>& texture_strength,
     const float threshold, const size_t block_s) {

@@ -412,52 +412,53 @@ ModularFrameEncoder::ModularFrameEncoder(const FrameHeader& frame_header,
 }
 
 Status ModularFrameEncoder::ComputeEncodingData(
-    const FrameHeader& frame_header, const ImageBundle& ib,
-    Image3F* JXL_RESTRICT color, PassesEncoderState* JXL_RESTRICT enc_state,
-    ThreadPool* pool, AuxOut* aux_out, bool do_color) {
+    const FrameHeader& frame_header, const ImageMetadata& metadata,
+    Image3F* JXL_RESTRICT color, const std::vector<ImageF>& extra_channels,
+    PassesEncoderState* JXL_RESTRICT enc_state, ThreadPool* pool,
+    AuxOut* aux_out, bool do_color) {
   const FrameDimensions& frame_dim = enc_state->shared.frame_dim;
 
   if (do_color && frame_header.loop_filter.gab) {
     GaborishInverse(color, 0.9908511000000001f, pool);
   }
 
-  if (do_color && cparams.speed_tier < SpeedTier::kCheetah) {
-    FindBestPatchDictionary(*color, enc_state, nullptr, nullptr,
+  if (do_color && metadata.bit_depth.bits_per_sample <= 16 &&
+      cparams.speed_tier < SpeedTier::kCheetah) {
+    FindBestPatchDictionary(*color, enc_state, nullptr, aux_out,
                             cparams.color_transform == ColorTransform::kXYB);
     PatchDictionaryEncoder::SubtractFrom(
         enc_state->shared.image_features.patches, color);
   }
 
   // Convert ImageBundle to modular Image object
-  const size_t xsize = std::min(color->xsize(), ib.xsize());
-  const size_t ysize = std::min(color->ysize(), ib.ysize());
+  const size_t xsize = frame_dim.xsize;
+  const size_t ysize = frame_dim.ysize;
 
   int nb_chans = 3;
-  if (ib.IsGray() && cparams.color_transform == ColorTransform::kNone) {
+  if (metadata.color_encoding.IsGray() &&
+      cparams.color_transform == ColorTransform::kNone) {
     nb_chans = 1;
   }
   if (!do_color) nb_chans = 0;
 
-  if (ib.HasExtraChannels()) {
-    nb_chans += ib.extra_channels().size();
-  }
+  nb_chans += extra_channels.size();
 
-  bool fp = ib.metadata()->bit_depth.floating_point_sample;
+  bool fp = metadata.bit_depth.floating_point_sample;
 
   // bits_per_sample is just metadata for XYB images.
-  if (ib.metadata()->bit_depth.bits_per_sample >= 32 && do_color &&
+  if (metadata.bit_depth.bits_per_sample >= 32 && do_color &&
       cparams.color_transform != ColorTransform::kXYB) {
-    if (ib.metadata()->bit_depth.bits_per_sample == 32 && fp == false) {
+    if (metadata.bit_depth.bits_per_sample == 32 && fp == false) {
       return JXL_FAILURE("uint32_t not supported in enc_modular");
-    } else if (ib.metadata()->bit_depth.bits_per_sample > 32) {
+    } else if (metadata.bit_depth.bits_per_sample > 32) {
       return JXL_FAILURE("bits_per_sample > 32 not supported");
     }
   }
 
-  int maxval = (fp ? 1
-                   : (1u << static_cast<uint32_t>(
-                          ib.metadata()->bit_depth.bits_per_sample)) -
-                         1);
+  int maxval =
+      (fp ? 1
+          : (1u << static_cast<uint32_t>(metadata.bit_depth.bits_per_sample)) -
+                1);
 
   Image& gi = stream_images[0];
   gi = Image(xsize, ysize, maxval, nb_chans);
@@ -469,7 +470,8 @@ Status ModularFrameEncoder::ComputeEncodingData(
   }
   if (do_color) {
     for (; c < 3; c++) {
-      if (ib.IsGray() && cparams.color_transform == ColorTransform::kNone &&
+      if (metadata.color_encoding.IsGray() &&
+          cparams.color_transform == ColorTransform::kNone &&
           c != (cparams.color_transform == ColorTransform::kXYB ? 1 : 0))
         continue;
       int c_out = c;
@@ -491,34 +493,46 @@ Status ModularFrameEncoder::ComputeEncodingData(
           }
         }
       } else {
-        int bits = ib.metadata()->bit_depth.bits_per_sample;
-        int exp_bits = ib.metadata()->bit_depth.exponent_bits_per_sample;
-        for (size_t y = 0; y < ysize; ++y) {
+        int bits = metadata.bit_depth.bits_per_sample;
+        int exp_bits = metadata.bit_depth.exponent_bits_per_sample;
+        gi.channel[c_out].hshift =
+            enc_state->shared.frame_header.chroma_subsampling.HShift(c);
+        gi.channel[c_out].vshift =
+            enc_state->shared.frame_header.chroma_subsampling.VShift(c);
+        size_t xsize_shifted = DivCeil(xsize, 1 << gi.channel[c_out].hshift);
+        size_t ysize_shifted = DivCeil(ysize, 1 << gi.channel[c_out].vshift);
+        gi.channel[c_out].resize(xsize_shifted, ysize_shifted);
+        for (size_t y = 0; y < ysize_shifted; ++y) {
           const float* const JXL_RESTRICT row_in = color->PlaneRow(c, y);
           pixel_type* const JXL_RESTRICT row_out = gi.channel[c_out].Row(y);
-          JXL_RETURN_IF_ERROR(
-              float_to_int(row_in, row_out, xsize, bits, exp_bits, fp, factor));
+          JXL_RETURN_IF_ERROR(float_to_int(row_in, row_out, xsize_shifted, bits,
+                                           exp_bits, fp, factor));
         }
       }
     }
-    if (ib.IsGray() && cparams.color_transform == ColorTransform::kNone) c = 1;
+    if (metadata.color_encoding.IsGray() &&
+        cparams.color_transform == ColorTransform::kNone)
+      c = 1;
   }
-  if (ib.HasExtraChannels()) {
-    for (size_t ec = 0; ec < ib.extra_channels().size(); ec++, c++) {
-      const ExtraChannelInfo& eci = ib.metadata()->extra_channel_info[ec];
-      gi.channel[c].resize(eci.Size(ib.xsize()), eci.Size(ib.ysize()));
-      gi.channel[c].hshift = gi.channel[c].vshift = eci.dim_shift;
 
-      int bits = eci.bit_depth.bits_per_sample;
-      int exp_bits = eci.bit_depth.exponent_bits_per_sample;
-      bool fp = eci.bit_depth.floating_point_sample;
-      float factor = (fp ? 1 : ((1u << eci.bit_depth.bits_per_sample) - 1));
-      for (size_t y = 0; y < ysize; ++y) {
-        const float* const JXL_RESTRICT row_in = ib.extra_channels()[ec].Row(y);
-        pixel_type* const JXL_RESTRICT row_out = gi.channel[c].Row(y);
-        JXL_RETURN_IF_ERROR(
-            float_to_int(row_in, row_out, xsize, bits, exp_bits, fp, factor));
-      }
+  for (size_t ec = 0; ec < extra_channels.size(); ec++, c++) {
+    const ExtraChannelInfo& eci = metadata.extra_channel_info[ec];
+    size_t ecups = frame_header.extra_channel_upsampling[ec];
+    gi.channel[c].resize(DivCeil(frame_dim.xsize_upsampled, ecups),
+                         DivCeil(frame_dim.ysize_upsampled, ecups));
+    gi.channel[c].hshift = gi.channel[c].vshift =
+        CeilLog2Nonzero(ecups) - CeilLog2Nonzero(frame_header.upsampling);
+
+    int bits = eci.bit_depth.bits_per_sample;
+    int exp_bits = eci.bit_depth.exponent_bits_per_sample;
+    bool fp = eci.bit_depth.floating_point_sample;
+    float factor = (fp ? 1 : ((1u << eci.bit_depth.bits_per_sample) - 1));
+    for (size_t y = 0; y < gi.channel[c].plane.ysize(); ++y) {
+      const float* const JXL_RESTRICT row_in = extra_channels[ec].Row(y);
+      pixel_type* const JXL_RESTRICT row_out = gi.channel[c].Row(y);
+      JXL_RETURN_IF_ERROR(float_to_int(row_in, row_out,
+                                       gi.channel[c].plane.xsize(), bits,
+                                       exp_bits, fp, factor));
     }
   }
   JXL_ASSERT(c == nb_chans);
@@ -726,10 +740,9 @@ Status ModularFrameEncoder::ComputeEncodingData(
   for (size_t group_id = 0; group_id < frame_dim.num_dc_groups; group_id++) {
     const size_t gx = group_id % frame_dim.xsize_dc_groups;
     const size_t gy = group_id / frame_dim.xsize_dc_groups;
-    const Rect rect(gx * frame_dim.group_dim << 3,
-                    gy * frame_dim.group_dim << 3, frame_dim.group_dim << 3,
-                    frame_dim.group_dim << 3);
-    // minShift==3 because kDcGroupDim>>3 == frame_dim.group_dim
+    const Rect rect(gx * frame_dim.dc_group_dim, gy * frame_dim.dc_group_dim,
+                    frame_dim.dc_group_dim, frame_dim.dc_group_dim);
+    // minShift==3 because (frame_dim.dc_group_dim >> 3) == frame_dim.group_dim
     // maxShift==1000 is infinity
     stream_params.push_back(
         GroupParams{rect, 3, 1000, ModularStreamId::ModularDC(group_id)});

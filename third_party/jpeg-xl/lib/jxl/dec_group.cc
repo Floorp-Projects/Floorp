@@ -812,7 +812,7 @@ Status DecodeGroup(BitReader* JXL_RESTRICT* JXL_RESTRICT readers,
                       PassesDecoderState::kGroupDataYBorder, dst_rect.xsize(),
                       dst_rect.ysize());
     }
-    dec_state->dc_upsampler.UpsampleRect(
+    dec_state->upsamplers[2].UpsampleRect(
         dec_state->filter_input_storage[thread], copy_rect, upsampling_dst,
         dst_rect,
         static_cast<ssize_t>(src_rect.y0()) -

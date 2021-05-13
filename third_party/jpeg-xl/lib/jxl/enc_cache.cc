@@ -91,6 +91,8 @@ void InitializePassesEncoder(const Image3F& opsin, ThreadPool* pool,
     cparams.gaborish = Override::kOff;
     cparams.epf = 0;
     cparams.max_error_mode = true;
+    cparams.resampling = 1;
+    cparams.ec_resampling = 1;
     for (size_t c = 0; c < 3; c++) {
       cparams.max_error[c] = shared.quantizer.MulDC()[c];
     }
@@ -121,8 +123,7 @@ void InitializePassesEncoder(const Image3F& opsin, ThreadPool* pool,
       std::vector<ImageF> extra_channels;
       extra_channels.reserve(ib.metadata()->extra_channel_info.size());
       for (size_t i = 0; i < ib.metadata()->extra_channel_info.size(); i++) {
-        const auto& eci = ib.metadata()->extra_channel_info[i];
-        extra_channels.emplace_back(eci.Size(ib.xsize()), eci.Size(ib.ysize()));
+        extra_channels.emplace_back(ib.xsize(), ib.ysize());
         // Must initialize the image with data to not affect blending with
         // uninitialized memory.
         // TODO(lode): dc_level must copy and use the real extra channels

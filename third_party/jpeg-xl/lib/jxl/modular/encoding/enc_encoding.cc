@@ -24,6 +24,7 @@
 #include <unordered_map>
 #include <unordered_set>
 
+#include "lib/jxl/base/os_macros.h"
 #include "lib/jxl/base/status.h"
 #include "lib/jxl/common.h"
 #include "lib/jxl/dec_ans.h"
@@ -40,6 +41,12 @@
 #include "lib/jxl/modular/options.h"
 #include "lib/jxl/modular/transform/transform.h"
 #include "lib/jxl/toc.h"
+
+#if JXL_OS_IOS
+#define JXL_ENABLE_DOT 0
+#else
+#define JXL_ENABLE_DOT 1  // iOS lacks C89 system()
+#endif
 
 namespace jxl {
 
@@ -161,8 +168,10 @@ void PrintTree(const Tree &tree, const std::string &path) {
   }
   fprintf(f, "}\n");
   fclose(f);
+#if JXL_ENABLE_DOT
   JXL_ASSERT(
       system(("dot " + path + ".dot -T svg -o " + path + ".svg").c_str()) == 0);
+#endif
 }
 
 Status EncodeModularChannelMAANS(const Image &image, pixel_type chan,

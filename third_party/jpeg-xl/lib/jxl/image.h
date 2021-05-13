@@ -270,6 +270,11 @@ class Rect {
     return image.ConstPlaneRow(c, y + y0_) + x0_;
   }
 
+  bool IsInside(const Rect& other) const {
+    return x0_ >= other.x0() && x0_ + xsize_ <= other.x0() + other.xsize_ &&
+           y0_ >= other.y0() && y0_ + ysize_ <= other.y0() + other.ysize();
+  }
+
   // Returns true if this Rect fully resides in the given image. ImageT could be
   // Plane<T> or Image3<T>; however if ImageT is Rect, results are nonsensical.
   template <class ImageT>

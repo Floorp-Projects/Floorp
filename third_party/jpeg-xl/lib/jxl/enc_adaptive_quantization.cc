@@ -117,26 +117,7 @@ static const float kSGmul2 = 1.0f / 73.377132366608819f;
 static const float kLog2 = 0.693147181f;
 // Includes correction factor for std::log -> log2.
 static const float kSGRetMul = kSGmul2 * 18.6580932135f * kLog2;
-static const float kSGRetAdd = kSGmul2 * -20.2789020414f;
 static const float kSGVOffset = 7.14672470003f;
-
-template <typename D, typename V>
-V SimpleGamma(const D d, V v) {
-  // A simple HDR compatible gamma function.
-  const auto mul = Set(d, kSGmul);
-  const auto kRetMul = Set(d, kSGRetMul);
-  const auto kRetAdd = Set(d, kSGRetAdd);
-  const auto kVOffset = Set(d, kSGVOffset);
-
-  v *= mul;
-
-  // This should happen rarely, but may lead to a NaN, which is rather
-  // undesirable. Since negative photons don't exist we solve the NaNs by
-  // clamping here.
-  // TODO(veluca): with FastLog2f, this no longer leads to NaNs.
-  v = ZeroIfNegative(v);
-  return kRetMul * FastLog2f(d, v + kVOffset) + kRetAdd;
-}
 
 template <bool invert, typename D, typename V>
 V RatioOfDerivativesOfCubicRootToSimpleGamma(const D d, V v) {
@@ -168,7 +149,27 @@ static float RatioOfDerivativesOfCubicRootToSimpleGamma(float v) {
 
 // TODO(veluca): this function computes an approximation of the derivative of
 // SimpleGamma with (f(x+eps)-f(x))/eps. Consider two-sided approximation or
-// exact derivatives.
+// exact derivatives. For reference, SimpleGamma was:
+/*
+template <typename D, typename V>
+V SimpleGamma(const D d, V v) {
+  // A simple HDR compatible gamma function.
+  const auto mul = Set(d, kSGmul);
+  const auto kRetMul = Set(d, kSGRetMul);
+  const auto kRetAdd = Set(d, kSGmul2 * -20.2789020414f);
+  const auto kVOffset = Set(d, kSGVOffset);
+
+  v *= mul;
+
+  // This should happen rarely, but may lead to a NaN, which is rather
+  // undesirable. Since negative photons don't exist we solve the NaNs by
+  // clamping here.
+  // TODO(veluca): with FastLog2f, this no longer leads to NaNs.
+  v = ZeroIfNegative(v);
+  return kRetMul * FastLog2f(d, v + kVOffset) + kRetAdd;
+}
+*/
+
 template <class D, class V>
 V GammaModulation(const D d, const size_t x, const size_t y,
                   const ImageF& xyb_x, const ImageF& xyb_y, const V out_val) {
@@ -560,15 +561,6 @@ bool FLAGS_log_search_state = false;
 // If true, prints the quantization maps at each iteration.
 bool FLAGS_dump_quant_state = false;
 
-bool AdjustQuantVal(float* const JXL_RESTRICT q, const float d,
-                    const float factor, const float quant_max) {
-  if (*q >= 0.999f * quant_max) return false;
-  const float inv_q = 1.0f / *q;
-  const float adj_inv_q = inv_q - factor / (d + 1.0f);
-  *q = 1.0f / std::max(1.0f / quant_max, adj_inv_q);
-  return true;
-}
-
 void DumpHeatmap(const AuxOut* aux_out, const std::string& label,
                  const ImageF& image, float good_threshold,
                  float bad_threshold) {
@@ -664,40 +656,6 @@ ImageF TileDistMap(const ImageF& distmap, int tile_size, int margin,
     }
   }
   return tile_distmap;
-}
-
-ImageF DistToPeakMap(const ImageF& field, float peak_min, int local_radius,
-                     float peak_weight) {
-  ImageF result(field.xsize(), field.ysize());
-  FillImage(-1.0f, &result);
-  for (size_t y0 = 0; y0 < field.ysize(); ++y0) {
-    for (size_t x0 = 0; x0 < field.xsize(); ++x0) {
-      int x_min = std::max<int>(0, static_cast<int>(x0) - local_radius);
-      int y_min = std::max<int>(0, static_cast<int>(y0) - local_radius);
-      int x_max = std::min<size_t>(field.xsize(), x0 + 1 + local_radius);
-      int y_max = std::min<size_t>(field.ysize(), y0 + 1 + local_radius);
-      float local_max = peak_min;
-      for (int y = y_min; y < y_max; ++y) {
-        for (int x = x_min; x < x_max; ++x) {
-          local_max = std::max(local_max, field.Row(y)[x]);
-        }
-      }
-      if (field.Row(y0)[x0] >
-          (1.0f - peak_weight) * peak_min + peak_weight * local_max) {
-        for (int y = y_min; y < y_max; ++y) {
-          for (int x = x_min; x < x_max; ++x) {
-            float dist = std::max(std::abs(y - static_cast<int>(y0)),
-                                  std::abs(x - static_cast<int>(x0)));
-            float cur_dist = result.Row(y)[x];
-            if (cur_dist < 0.0 || cur_dist > dist) {
-              result.Row(y)[x] = dist;
-            }
-          }
-        }
-      }
-    }
-  }
-  return result;
 }
 
 constexpr float kDcQuantPow = 0.57f;
@@ -1043,15 +1001,13 @@ ImageBundle RoundtripImage(const Image3F& opsin, PassesEncoderState* enc_state,
   if (!metadata.extra_channel_info.empty()) {
     // Add dummy extra channels to the dec_state: FinalizeFrameDecoding moves
     // these extra channels to the ImageBundle, and is required that the amount
-    // of extra chanels matches its metadata()->extra_channel_info.size().
+    // of extra channels matches its metadata()->extra_channel_info.size().
     // Normally we'd place these extra channels in the ImageBundle, but in this
     // case FinalizeFrameDecoding is the one that does this.
     std::vector<ImageF> extra_channels;
     extra_channels.reserve(metadata.extra_channel_info.size());
     for (size_t i = 0; i < metadata.extra_channel_info.size(); i++) {
-      const auto& eci = metadata.extra_channel_info[i];
-      extra_channels.emplace_back(eci.Size(decoded.xsize()),
-                                  eci.Size(decoded.ysize()));
+      extra_channels.emplace_back(decoded.xsize(), decoded.ysize());
       // Must initialize the image with data to not affect blending with
       // uninitialized memory.
       ZeroFillImage(&extra_channels.back());

@@ -152,8 +152,4 @@ void Quantizer::DumpQuantizationMap(const ImageI& raw_quant_field) const {
   }
 }
 
-static constexpr JXL_INLINE int QuantizeValue(float value, float inv_step) {
-  return static_cast<int>(value * inv_step + (value >= 0 ? .5f : -.5f));
-}
-
 }  // namespace jxl

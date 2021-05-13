@@ -41,11 +41,8 @@ struct PassesDecoderState {
   // Allows avoiding copies for encoder loop.
   const PassesSharedState* JXL_RESTRICT shared = &shared_storage;
 
-  // Upsampler for the current frame.
-  Upsampler upsampler;
-
-  // DC upsampler
-  Upsampler dc_upsampler;
+  // Upsamplers for all the possible upsampling factors (2 to 8).
+  Upsampler upsamplers[3];
 
   // Storage for RNG output for noise synthesis.
   Image3F noise;
@@ -133,6 +130,11 @@ struct PassesDecoderState {
     size_t padding = shared->frame_header.loop_filter.Padding();
     padding += shared->frame_header.upsampling == 1 ? 0 : 2;
     JXL_DASSERT(padding <= kMaxFinalizeRectPadding);
+    for (auto ups : shared->frame_header.extra_channel_upsampling) {
+      if (ups > 1) {
+        padding = std::max(padding, size_t{2});
+      }
+    }
     return padding;
   }
 
@@ -144,6 +146,7 @@ struct PassesDecoderState {
   // We keep four arrays, one per upsampling level, to reduce memory usage in
   // the common case of no upsampling.
   std::vector<Image3F> output_pixel_data_storage[4] = {};
+  std::vector<ImageF> ec_temp_images;
 
   // Buffer for decoded pixel data for a group.
   std::vector<Image3F> group_data;
@@ -207,6 +210,29 @@ struct PassesDecoderState {
         }
       }
     }
+    if (shared->metadata->m.num_extra_channels * num_threads >
+        ec_temp_images.size()) {
+      ec_temp_images.resize(shared->metadata->m.num_extra_channels *
+                            num_threads);
+    }
+    for (size_t i = 0; i < shared->metadata->m.num_extra_channels; i++) {
+      if (shared->frame_header.extra_channel_upsampling[i] == 1) continue;
+      // We need up to 2 pixels of padding on each side. On the x axis, we round
+      // up padding so that 0 starts at a multiple of kBlockDim.
+      size_t xs = kApplyImageFeaturesTileDim * shared->frame_header.upsampling /
+                      shared->frame_header.extra_channel_upsampling[i] +
+                  2 * kBlockDim;
+      size_t ys = kApplyImageFeaturesTileDim * shared->frame_header.upsampling /
+                      shared->frame_header.extra_channel_upsampling[i] +
+                  4;
+      for (size_t t = 0; t < num_threads; t++) {
+        auto& eti =
+            ec_temp_images[t * shared->metadata->m.num_extra_channels + i];
+        if (eti.xsize() < xs || eti.ysize() < ys) {
+          eti = ImageF(xs, ys);
+        }
+      }
+    }
   }
 
   // Information for colour conversions.
@@ -231,6 +257,9 @@ struct PassesDecoderState {
     for (auto& fp : filter_pipelines) {
       // De-initialize FilterPipelines.
       fp.num_filters = 0;
+    }
+    for (size_t i = 0; i < 3; i++) {
+      upsamplers[i].Init(2 << i, shared->metadata->transform_data);
     }
   }
 

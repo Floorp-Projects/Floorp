@@ -122,7 +122,51 @@ void PatchDictionaryEncoder::Encode(const PatchDictionary& pdic,
 // static
 void PatchDictionaryEncoder::SubtractFrom(const PatchDictionary& pdic,
                                           Image3F* opsin) {
-  pdic.Apply</*add=*/false>(opsin, Rect(*opsin), Rect(*opsin));
+  // TODO(veluca): this can likely be optimized knowing it runs on full images.
+  for (size_t y = 0; y < opsin->ysize(); y++) {
+    if (y + 1 >= pdic.patch_starts_.size()) continue;
+    float* JXL_RESTRICT rows[3] = {
+        opsin->PlaneRow(0, y),
+        opsin->PlaneRow(1, y),
+        opsin->PlaneRow(2, y),
+    };
+    for (size_t id = pdic.patch_starts_[y]; id < pdic.patch_starts_[y + 1];
+         id++) {
+      const PatchPosition& pos = pdic.positions_[pdic.sorted_patches_[id]];
+      size_t by = pos.y;
+      size_t bx = pos.x;
+      size_t xsize = pos.ref_pos.xsize;
+      JXL_DASSERT(y >= by);
+      JXL_DASSERT(y < by + pos.ref_pos.ysize);
+      size_t iy = y - by;
+      size_t ref = pos.ref_pos.ref;
+      const float* JXL_RESTRICT ref_rows[3] = {
+          pdic.shared_->reference_frames[ref].frame->color()->ConstPlaneRow(
+              0, pos.ref_pos.y0 + iy) +
+              pos.ref_pos.x0,
+          pdic.shared_->reference_frames[ref].frame->color()->ConstPlaneRow(
+              1, pos.ref_pos.y0 + iy) +
+              pos.ref_pos.x0,
+          pdic.shared_->reference_frames[ref].frame->color()->ConstPlaneRow(
+              2, pos.ref_pos.y0 + iy) +
+              pos.ref_pos.x0,
+      };
+      for (size_t ix = 0; ix < xsize; ix++) {
+        for (size_t c = 0; c < 3; c++) {
+          if (pos.blending[0].mode == PatchBlendMode::kAdd) {
+            rows[c][bx + ix] -= ref_rows[c][ix];
+          } else if (pos.blending[0].mode == PatchBlendMode::kReplace) {
+            rows[c][bx + ix] = 0;
+          } else if (pos.blending[0].mode == PatchBlendMode::kNone) {
+            // Nothing to do.
+          } else {
+            JXL_ABORT("Blending mode %u not yet implemented",
+                      (uint32_t)pos.blending[0].mode);
+          }
+        }
+      }
+    }
+  }
 }
 
 namespace {
@@ -140,12 +184,12 @@ struct PatchColorspaceInfo {
       kChannelWeights[1] = 3.0;
       kChannelWeights[2] = 1.0;
     } else {
-      kChannelDequant[0] = 20;
-      kChannelDequant[1] = 22;
-      kChannelDequant[2] = 20;
-      kChannelWeights[0] = 0.017;
-      kChannelWeights[1] = 0.02;
-      kChannelWeights[2] = 0.017;
+      kChannelDequant[0] = 20.0f / 255;
+      kChannelDequant[1] = 22.0f / 255;
+      kChannelDequant[2] = 20.0f / 255;
+      kChannelWeights[0] = 0.017 * 255;
+      kChannelWeights[1] = 0.02 * 255;
+      kChannelWeights[2] = 0.017 * 255;
     }
   }
 
@@ -266,6 +310,7 @@ std::vector<PatchInfo> FindTextLikePatches(
   if (!ApplyOverride(state->cparams.patches, has_screenshot_areas)) {
     return {};
   }
+
   // Search for "similar enough" pixels near the screenshot-like areas.
   ImageB is_background(opsin.xsize(), opsin.ysize());
   ZeroFillImage(&is_background);
@@ -340,7 +385,11 @@ std::vector<PatchInfo> FindTextLikePatches(
   bool paint_ccs = false;
   if (WantDebugOutput(aux_out)) {
     aux_out->DumpPlaneNormalized("is_background", is_background);
-    aux_out->DumpXybImage("background", background);
+    if (is_xyb) {
+      aux_out->DumpXybImage("background", background);
+    } else {
+      aux_out->DumpImage("background", background);
+    }
     ccs = ImageF(opsin.xsize(), opsin.ysize());
     ZeroFillImage(&ccs);
     paint_ccs = true;
@@ -713,6 +762,7 @@ void FindBestPatchDictionary(const Image3F& opsin,
 
   CompressParams cparams = state->cparams;
   cparams.resampling = 1;
+  cparams.ec_resampling = 1;
   // Recursive application of patches could create very weird issues.
   cparams.patches = Override::kOff;
   cparams.dots = Override::kOff;

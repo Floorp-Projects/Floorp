@@ -31,6 +31,9 @@ struct Upsampler {
   void UpsampleRect(const Image3F& src, const Rect& src_rect, Image3F* dst,
                     const Rect& dst_rect, ssize_t image_y_offset,
                     size_t image_ysize) const;
+  void UpsampleRect(const ImageF& src, const Rect& src_rect, ImageF* dst,
+                    const Rect& dst_rect, ssize_t image_y_offset,
+                    size_t image_ysize) const;
 
  private:
   size_t upsampling_ = 1;
