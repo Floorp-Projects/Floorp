@@ -74,7 +74,7 @@ body {
 .category[badge-count]::after {
   display: inline-block;
   min-width: 20px;
-  background-color: var(--blue-50);
+  background-color: var(--in-content-accent-color);
   color: #fff;
   font-weight: bold;
   /* Use a large border-radius to get semi-circles on the sides. */
@@ -584,7 +584,7 @@ addon-details {
   width: 5px;
   height: 5px;
   border-radius: 50%;
-  background: var(--blue-50);
+  background: var(--in-content-accent-color);;
 }
 
 panel-item {
