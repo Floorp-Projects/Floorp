@@ -82,8 +82,14 @@ p {
 .search-inner-wrapper {
   display: flex;
   height: 48px;
-  margin-bottom: 64px;
   padding: 0 22px;
+  min-width: 70vw;
+}
+
+@media (min-width: 764px) {
+  .search-inner-wrapper {
+    min-width: 680px;
+  }
 }
 
 .search-handoff-button,
@@ -207,6 +213,7 @@ p {
 }
 
 .info {
+  margin-top: 64px;
   background-color: rgba(0, 0, 0, 0.2);
   background-image: url("chrome://browser/skin/indicator-private-browsing.svg");
   background-position: left 32px top 20px;
@@ -254,7 +261,11 @@ p {
   width: 22px;
 }
 
-#private-browsing-vpn-link {
+.promo {
+  text-align: center;
+}
+
+.promo a {
   color: inherit;
   text-decoration: underline;
 }

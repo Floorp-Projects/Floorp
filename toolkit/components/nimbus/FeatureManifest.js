@@ -84,4 +84,49 @@ const FeatureManifest = {
     description: "The dialog shown for major upgrades",
     enabledFallbackPref: "browser.startup.upgradeDialog.enabled",
   },
+  privatebrowsing: {
+    description: "about:privatebrowsing",
+    variables: {
+      infoEnabled: {
+        type: "boolean",
+        fallbackPref: "browser.privatebrowsing.infoEnabled",
+      },
+      infoIcon: {
+        type: "string",
+        fallbackPref: "browser.privatebrowsing.infoIcon",
+      },
+      infoTitle: {
+        type: "string",
+        fallbackPref: "browser.privatebrowsing.infoTitle",
+      },
+      infoBody: {
+        type: "string",
+        fallbackPref: "browser.privatebrowsing.infoBody",
+      },
+      infoLinkText: {
+        type: "string",
+        fallbackPref: "browser.privatebrowsing.infoLinkText",
+      },
+      infoLinkUrl: {
+        type: "string",
+        fallbackPref: "browser.privatebrowsing.infoLinkUrl",
+      },
+      promoEnabled: {
+        type: "boolean",
+        fallbackPref: "browser.privatebrowsing.promoEnabled",
+      },
+      promoTitle: {
+        type: "string",
+        fallbackPref: "browser.privatebrowsing.promoTitle",
+      },
+      promoLinkText: {
+        type: "string",
+        fallbackPref: "browser.privatebrowsing.promoLinkText",
+      },
+      promoLinkUrl: {
+        type: "string",
+        fallbackPref: "browser.privatebrowsing.promoLinkUrl",
+      },
+    },
+  },
 };

@@ -117,6 +117,20 @@ activity_stream:
       page: about:home or about_newtab - the page where the event occurred
       user_prefs: An integer representaing a user's A-S settings.
 
+aboutprivatebrowsing:
+  click:
+    objects: ["info_link", "promo_link"]
+    release_channel_collection: opt-out
+    record_in_processes: ["content"]
+    description: >
+      This is recorded when a user clicks a link on the private browsing newtab.
+    bug_numbers: [1709344]
+    notification_emails:
+      - "khudson@mozilla.com"
+    expiry_version: "93"
+    products:
+      - "firefox"
+
 readermode:
   view:
     objects: ["on", "off"]
