@@ -42,6 +42,10 @@ class WorkerDescriptorFront extends DescriptorMixin(
     return this.url.split("/").pop();
   }
 
+  get isWorkerDescriptor() {
+    return true;
+  }
+
   get isDedicatedWorker() {
     return this.type === Ci.nsIWorkerDebugger.TYPE_DEDICATED;
   }
