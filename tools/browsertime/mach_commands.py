@@ -32,13 +32,14 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import argparse
 import collections
+import contextlib
 import json
 import logging
 import os
+import re
 import stat
 import sys
-import re
-import contextlib
+import time
 
 from six import StringIO
 from mach.decorators import CommandArgument, CommandProvider, Command
@@ -618,6 +619,26 @@ class MachBrowsertime(MachCommandBase):
         browsertime_help=False,
     ):
         self._set_log_level(verbose)
+
+        # Output a message before going further to make sure the
+        # user knows that this tool is unsupported by the perftest
+        # team and point them to our supported tools. Pause a bit to
+        # make sure the user sees this message.
+        self.log(
+            logging.INFO,
+            "browsertime",
+            {},
+            "[WARNING] This tool is UNSUPPORTED by the perftest team and it is NOT recommended "
+            "to use for performance testing. Instead, if you are looking to perform "
+            "performance tests on your patch, use `./mach raptor --browsertime`.\n\n"
+            "You can get visual-metrics by using the --browsertime-video and "
+            "--browsertime-visualmetrics. Here is a sample command for raptor-browsertime: \n"
+            "\t./mach raptor --browsertime -t amazon --browsertime-video "
+            "--browsertime-visualmetrics\n\n"
+            "See this wiki page for more information if needed: "
+            "https://wiki.mozilla.org/TestEngineering/Performance/Raptor/Browsertime\n\n",
+        )
+        time.sleep(5)
 
         if update_upstream_url:
             return self.setup(new_upstream_url=update_upstream_url)
