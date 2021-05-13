@@ -35,6 +35,7 @@ import mozilla.components.service.fxa.sync.SyncReason
 import mozilla.components.service.fxa.sync.SyncStatusObserver
 import mozilla.components.service.fxa.sync.getLastSynced
 import mozilla.components.support.ktx.android.content.getColorFromAttr
+import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.StoreProvider
@@ -164,22 +165,22 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
         updateSyncEngineStates()
         setDisabledWhileSyncing(accountManager.isSyncActive())
 
-        fun updateSyncEngineState(context: Context, engine: SyncEngine, newState: Boolean) {
-            SyncEnginesStorage(context).setStatus(engine, newState)
-            viewLifecycleOwner.lifecycleScope.launch {
-                context.components.backgroundServices.accountManager.syncNow(SyncReason.EngineChange)
-            }
-        }
-
         fun SyncEngine.prefId(): Int = when (this) {
             SyncEngine.History -> R.string.pref_key_sync_history
             SyncEngine.Bookmarks -> R.string.pref_key_sync_bookmarks
             SyncEngine.Passwords -> R.string.pref_key_sync_logins
             SyncEngine.Tabs -> R.string.pref_key_sync_tabs
+            SyncEngine.CreditCards -> R.string.pref_key_sync_credit_cards
+            SyncEngine.Addresses -> R.string.pref_key_sync_address
             else -> throw IllegalStateException("Accessing internal sync engines")
         }
 
-        listOf(SyncEngine.History, SyncEngine.Bookmarks, SyncEngine.Tabs).forEach {
+        listOf(
+            SyncEngine.History,
+            SyncEngine.Bookmarks,
+            SyncEngine.Tabs,
+            SyncEngine.Addresses
+        ).forEach {
             requirePreference<CheckBoxPreference>(it.prefId()).apply {
                 setOnPreferenceChangeListener { _, newValue ->
                     updateSyncEngineState(context, it, newValue as Boolean)
@@ -188,19 +189,17 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
             }
         }
 
-        // 'Passwords' listener is special, since we also display a pin protection warning.
+        // 'Passwords' and 'Credit card' listeners are special, since we also display a pin protection warning.
         requirePreference<CheckBoxPreference>(SyncEngine.Passwords.prefId()).apply {
             setOnPreferenceChangeListener { _, newValue ->
-                val manager =
-                    activity?.getSystemService(Context.KEYGUARD_SERVICE) as KeyguardManager
-                if (manager.isKeyguardSecure ||
-                    newValue == false ||
-                    !context.settings().shouldShowSecurityPinWarningSync
-                ) {
-                    updateSyncEngineState(context, SyncEngine.Passwords, newValue as Boolean)
-                } else {
-                    showPinDialogWarning(newValue as Boolean)
-                }
+                updateSyncEngineStateWithPinWarning(SyncEngine.Passwords, newValue as Boolean)
+                true
+            }
+        }
+
+        requirePreference<CheckBoxPreference>(SyncEngine.CreditCards.prefId()).apply {
+            setOnPreferenceChangeListener { _, newValue ->
+                updateSyncEngineStateWithPinWarning(SyncEngine.CreditCards, newValue as Boolean)
                 true
             }
         }
@@ -218,7 +217,57 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
         )
     }
 
-    private fun showPinDialogWarning(newValue: Boolean) {
+    /**
+     * Prompts the user if they do not have a password/pin set up to secure their device, and
+     * updates the state of the sync engine with the new checkbox value.
+     *
+     * Currently used for logins and credit cards.
+     *
+     * @param engine the sync engine whose preference has changed.
+     * @param newValue the value denoting whether or not to sync the specified preference.
+     */
+    private fun CheckBoxPreference.updateSyncEngineStateWithPinWarning(
+        syncEngine: SyncEngine,
+        newValue: Boolean
+    ) {
+        val manager = activity?.getSystemService(Context.KEYGUARD_SERVICE) as KeyguardManager
+
+        if (manager.isKeyguardSecure ||
+            !newValue ||
+            !requireContext().settings().shouldShowSecurityPinWarningSync
+        ) {
+            updateSyncEngineState(context, syncEngine, newValue)
+        } else {
+            showPinDialogWarning(syncEngine, newValue)
+        }
+    }
+
+    /**
+     * Updates the sync engine status with the new state of the preference and triggers a sync
+     * event.
+     *
+     * @param engine the sync engine whose preference has changed.
+     * @param newValue the new value of the sync preference, where true indicates sync for that
+     * preference and false indicates not synced.
+     */
+    private fun updateSyncEngineState(context: Context, engine: SyncEngine, newValue: Boolean) {
+        SyncEnginesStorage(context).setStatus(engine, newValue)
+        viewLifecycleOwner.lifecycleScope.launch {
+            context.components.backgroundServices.accountManager.syncNow(SyncReason.EngineChange)
+        }
+    }
+
+    /**
+     * Creates and shows a warning dialog that prompts the user to create a pin/password to
+     * secure their device when none is detected. The user has the option to continue with
+     * updating their sync preferences (updates the [SyncEngine] state) or navigating to
+     * device security settings to create a pin/password.
+     *
+     * @param syncEngine the sync engine whose preference has changed.
+     * @param newValue the new value of the sync preference, where true indicates sync for that
+     * preference and false indicates not synced.
+     */
+    private fun showPinDialogWarning(syncEngine: SyncEngine, newValue: Boolean) {
         context?.let {
             AlertDialog.Builder(it).apply {
                 setTitle(getString(R.string.logins_warning_dialog_title))
@@ -227,11 +276,7 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
                 )
 
                 setNegativeButton(getString(R.string.logins_warning_dialog_later)) { _: DialogInterface, _ ->
-                    SyncEnginesStorage(context).setStatus(SyncEngine.Passwords, newValue)
-                    // Use fragment's lifecycle; the view may be gone by the time dialog is interacted with.
-                    lifecycleScope.launch {
-                        context.components.backgroundServices.accountManager.syncNow(SyncReason.EngineChange)
-                    }
+                    updateSyncEngineState(context, syncEngine, newValue)
                 }
 
                 setPositiveButton(getString(R.string.logins_warning_dialog_set_up_now)) { it: DialogInterface, _ ->
@@ -247,11 +292,19 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
         }
     }
 
+    /**
+     * Updates the status of all [SyncEngine] states.
+     */
     private fun updateSyncEngineStates() {
         val syncEnginesStatus = SyncEnginesStorage(requireContext()).getStatus()
         requirePreference<CheckBoxPreference>(R.string.pref_key_sync_bookmarks).apply {
             isEnabled = syncEnginesStatus.containsKey(SyncEngine.Bookmarks)
             isChecked = syncEnginesStatus.getOrElse(SyncEngine.Bookmarks) { true }
+        }
+        requirePreference<CheckBoxPreference>(R.string.pref_key_sync_credit_cards).apply {
+            isVisible = FeatureFlags.creditCardsFeature
+            isEnabled = syncEnginesStatus.containsKey(SyncEngine.CreditCards)
+            isChecked = syncEnginesStatus.getOrElse(SyncEngine.CreditCards) { true }
         }
         requirePreference<CheckBoxPreference>(R.string.pref_key_sync_history).apply {
             isEnabled = syncEnginesStatus.containsKey(SyncEngine.History)
@@ -265,8 +318,17 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
             isEnabled = syncEnginesStatus.containsKey(SyncEngine.Tabs)
             isChecked = syncEnginesStatus.getOrElse(SyncEngine.Tabs) { true }
         }
+        requirePreference<CheckBoxPreference>(R.string.pref_key_sync_address).apply {
+            isVisible = FeatureFlags.addressesFeature
+            isEnabled = syncEnginesStatus.containsKey(SyncEngine.Addresses)
+            isChecked = syncEnginesStatus.getOrElse(SyncEngine.Addresses) { true }
+        }
     }
 
+    /**
+     * Manual sync triggered by the user. This also checks account authentication and refreshes the
+     * device list.
+     */
     private fun syncNow() {
         viewLifecycleOwner.lifecycleScope.launch {
             requireComponents.analytics.metrics.track(Event.SyncAccountSyncNow)
@@ -281,8 +343,13 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
         }
     }
 
-    private fun syncDeviceName(newValue: String): Boolean {
-        if (newValue.trim().isEmpty()) {
+    /**
+     * Takes a non-empty value and sets the device name. May fail due to authentication.
+     *
+     * @param newDeviceName the new name of the device. Cannot be an empty string.
+     */
+    private fun syncDeviceName(newDeviceName: String): Boolean {
+        if (newDeviceName.trim().isEmpty()) {
             return false
         }
         // This may fail, and we'll have a disparity in the UI until `updateDeviceName` is called.
@@ -290,7 +357,7 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
             context?.let {
                 accountManager.authenticatedAccount()
                     ?.deviceConstellation()
-                    ?.setDeviceName(newValue, it)
+                    ?.setDeviceName(newDeviceName, it)
             }
         }
         return true
@@ -409,6 +476,5 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
 
     companion object {
         private const val DEVICE_NAME_MAX_LENGTH = 128
-        private const val DEVICE_NAME_EDIT_TEXT_MIN_HEIGHT_DP = 48
     }
 }

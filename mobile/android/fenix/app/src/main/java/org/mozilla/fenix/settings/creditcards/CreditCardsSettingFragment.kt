@@ -98,7 +98,6 @@ class CreditCardsSettingFragment : PreferenceFragmentCompat() {
         )
     }
 
-    @Suppress("MaxLineLength")
     override fun onPreferenceTreeClick(preference: Preference): Boolean {
         when (preference.key) {
             getPreferenceKey(R.string.pref_key_credit_cards_add_credit_card) -> {
