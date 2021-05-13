@@ -11,6 +11,7 @@
 #include "mozilla/SVGImageContext.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/layers/WebRenderLayerManager.h"
+#include "ImageRegion.h"
 
 #include <vector>
 
@@ -79,6 +80,7 @@ class SourceSurfaceBlobImage final : public gfx::SourceSurface {
 
   SourceSurfaceBlobImage(SVGDocumentWrapper* aSVGDocumentWrapper,
                          const Maybe<SVGImageContext>& aSVGContext,
+                         const Maybe<ImageIntRegion>& aRegion,
                          const gfx::IntSize& aSize, uint32_t aWhichFrame,
                          uint32_t aImageFlags);
 
@@ -116,6 +118,7 @@ class SourceSurfaceBlobImage final : public gfx::SourceSurface {
 
   RefPtr<image::SVGDocumentWrapper> mSVGDocumentWrapper;
   Maybe<SVGImageContext> mSVGContext;
+  Maybe<ImageIntRegion> mRegion;
   gfx::IntSize mSize;
   uint32_t mWhichFrame;
   uint32_t mImageFlags;
