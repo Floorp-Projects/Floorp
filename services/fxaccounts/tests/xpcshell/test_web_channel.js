@@ -451,12 +451,6 @@ add_task(async function test_helpers_login_without_customize_sync() {
             // verifiedCanLinkAccount should be stripped in the data.
             Assert.equal(false, "verifiedCanLinkAccount" in accountData);
 
-            // previously signed in user preference is updated.
-            Assert.equal(
-              helpers.getPreviousAccountNameHashPref(),
-              CryptoUtils.sha256Base64("testuser@testuser.com")
-            );
-
             resolve();
           });
         },
@@ -487,6 +481,87 @@ add_task(async function test_helpers_login_without_customize_sync() {
     helpers._fxAccounts.telemetry.recordConnection.calledWith([], "webchannel")
   );
 });
+
+add_task(async function test_helpers_login_set_previous_account_name_hash() {
+  let helpers = new FxAccountsWebChannelHelpers({
+    fxAccounts: {
+      _internal: {
+        setSignedInUser(accountData) {
+          return new Promise(resolve => {
+            // previously signed in user preference is updated.
+            Assert.equal(
+              helpers.getPreviousAccountNameHashPref(),
+              CryptoUtils.sha256Base64("newuser@testuser.com")
+            );
+            resolve();
+          });
+        },
+      },
+      telemetry: {
+        recordConnection() {},
+      },
+    },
+    weaveXPCOM: {
+      whenLoaded() {},
+      Weave: {
+        Service: {
+          configure() {},
+        },
+      },
+    },
+  });
+
+  // ensure the previous account pref is overwritten.
+  helpers.setPreviousAccountNameHashPref("lastuser@testuser.com");
+
+  await helpers.login({
+    email: "newuser@testuser.com",
+    verifiedCanLinkAccount: true,
+    customizeSync: false,
+    verified: true,
+  });
+});
+
+add_task(
+  async function test_helpers_login_dont_set_previous_account_name_hash_for_unverified_emails() {
+    let helpers = new FxAccountsWebChannelHelpers({
+      fxAccounts: {
+        _internal: {
+          setSignedInUser(accountData) {
+            return new Promise(resolve => {
+              // previously signed in user preference should not be updated.
+              Assert.equal(
+                helpers.getPreviousAccountNameHashPref(),
+                CryptoUtils.sha256Base64("lastuser@testuser.com")
+              );
+              resolve();
+            });
+          },
+        },
+        telemetry: {
+          recordConnection() {},
+        },
+      },
+      weaveXPCOM: {
+        whenLoaded() {},
+        Weave: {
+          Service: {
+            configure() {},
+          },
+        },
+      },
+    });
+
+    // ensure the previous account pref is overwritten.
+    helpers.setPreviousAccountNameHashPref("lastuser@testuser.com");
+
+    await helpers.login({
+      email: "newuser@testuser.com",
+      verifiedCanLinkAccount: true,
+      customizeSync: false,
+    });
+  }
+);
 
 add_task(async function test_helpers_login_with_customize_sync() {
   let helpers = new FxAccountsWebChannelHelpers({

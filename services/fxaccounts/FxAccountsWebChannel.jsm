@@ -437,7 +437,9 @@ FxAccountsWebChannelHelpers.prototype = {
     delete accountData.verifiedCanLinkAccount;
 
     // Remember who it was so we can log out next time.
-    this.setPreviousAccountNameHashPref(accountData.email);
+    if (accountData.verified) {
+      this.setPreviousAccountNameHashPref(accountData.email);
+    }
 
     await this._fxAccounts.telemetry.recordConnection(
       Object.keys(requestedServices || {}),
