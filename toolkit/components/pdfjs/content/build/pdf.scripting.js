@@ -126,14 +126,33 @@ function initSandbox(params) {
       obj.appObjects = appObjects;
       let field;
 
-      if (obj.type === "radiobutton") {
-        const otherButtons = annotations.slice(1);
-        field = new _field.RadioButtonField(otherButtons, obj);
-      } else if (obj.type === "checkbox") {
-        const otherButtons = annotations.slice(1);
-        field = new _field.CheckboxField(otherButtons, obj);
-      } else {
-        field = new _field.Field(obj);
+      switch (obj.type) {
+        case "radiobutton":
+          {
+            const otherButtons = annotations.slice(1);
+            field = new _field.RadioButtonField(otherButtons, obj);
+            break;
+          }
+
+        case "checkbox":
+          {
+            const otherButtons = annotations.slice(1);
+            field = new _field.CheckboxField(otherButtons, obj);
+            break;
+          }
+
+        case "text":
+          if (annotations.length <= 1) {
+            field = new _field.Field(obj);
+            break;
+          }
+
+          obj.siblings = annotations.map(x => x.id).slice(1);
+          field = new _field.Field(obj);
+          break;
+
+        default:
+          field = new _field.Field(obj);
       }
 
       const wrapped = new Proxy(field, proxyHandler);
@@ -438,7 +457,6 @@ class Field extends _pdf_object.PDFObject {
     this.multiline = data.multiline;
     this.multipleSelection = !!data.multipleSelection;
     this.name = data.name;
-    this.page = data.page;
     this.password = data.password;
     this.print = data.print;
     this.radiosInUnison = data.radiosInUnison;
@@ -465,14 +483,16 @@ class Field extends _pdf_object.PDFObject {
     this._fillColor = data.fillColor || ["T"];
     this._isChoice = Array.isArray(data.items);
     this._items = data.items || [];
+    this._page = data.page || 0;
     this._strokeColor = data.strokeColor || ["G", 0];
     this._textColor = data.textColor || ["G", 0];
     this._value = data.value || "";
-    this._valueAsString = data.valueAsString;
     this._kidIds = data.kidIds || null;
     this._fieldType = (0, _common.getFieldType)(this._actions);
+    this._siblings = data.siblings || null;
     this._globalEval = data.globalEval;
     this._appObjects = data.appObjects;
+    this.valueAsString = data.valueAsString || this._value;
   }
 
   get currentValueIndices() {
@@ -566,6 +586,14 @@ class Field extends _pdf_object.PDFObject {
     this.strokeColor = color;
   }
 
+  get page() {
+    return this._page;
+  }
+
+  set page(_) {
+    throw new Error("field.page is read-only");
+  }
+
   get textColor() {
     return this._textColor;
   }
@@ -631,6 +659,10 @@ class Field extends _pdf_object.PDFObject {
   }
 
   get valueAsString() {
+    if (this._valueAsString === undefined) {
+      this._valueAsString = this._value ? this._value.toString() : "";
+    }
+
     return this._valueAsString;
   }
 
@@ -945,7 +977,7 @@ class RadioButtonField extends Field {
   }
 
   set value(value) {
-    if (value === null) {
+    if (value === null || value === undefined) {
       this._value = "";
     }
 
@@ -1010,7 +1042,7 @@ class CheckboxField extends RadioButtonField {
   }
 
   set value(value) {
-    if (value === "Off") {
+    if (!value || value === "Off") {
       this._value = "Off";
     } else {
       super.value = value;
@@ -1964,7 +1996,6 @@ const FORMS_VERSION = undefined;
 class App extends _pdf_object.PDFObject {
   constructor(data) {
     super(data);
-    this.calculate = true;
     this._constants = null;
     this._focusRect = true;
     this._fs = null;
@@ -1991,6 +2022,7 @@ class App extends _pdf_object.PDFObject {
     this._timeoutCallbackId = 0;
     this._globalEval = data.globalEval;
     this._externalCall = data.externalCall;
+    this._document = data._document;
   }
 
   _dispatchEvent(pdfEvent) {
@@ -2145,6 +2177,14 @@ class App extends _pdf_object.PDFObject {
 
   set activeDocs(_) {
     throw new Error("app.activeDocs is read-only");
+  }
+
+  get calculate() {
+    return this._document.obj.calculate;
+  }
+
+  set calculate(calculate) {
+    this._document.obj.calculate = calculate;
   }
 
   get constants() {
@@ -2364,7 +2404,21 @@ class App extends _pdf_object.PDFObject {
   addToolButton() {}
 
   alert(cMsg, nIcon = 0, nType = 0, cTitle = "PDF.js", oDoc = null, oCheckbox = null) {
+    if (typeof cMsg === "object") {
+      nType = cMsg.nType;
+      cMsg = cMsg.cMsg;
+    }
+
+    cMsg = (cMsg || "").toString();
+    nType = typeof nType !== "number" || isNaN(nType) || nType < 0 || nType > 3 ? 0 : nType;
+
+    if (nType >= 2) {
+      return this._externalCall("confirm", [cMsg]) ? 4 : 3;
+    }
+
     this._externalCall("alert", [cMsg]);
+
+    return 1;
   }
 
   beep() {}
@@ -2428,10 +2482,22 @@ class App extends _pdf_object.PDFObject {
   removeToolButton() {}
 
   response(cQuestion, cTitle = "", cDefault = "", bPassword = "", cLabel = "") {
+    if (typeof cQuestion === "object") {
+      cDefault = cQuestion.cDefault;
+      cQuestion = cQuestion.cQuestion;
+    }
+
+    cQuestion = (cQuestion || "").toString();
+    cDefault = (cDefault || "").toString();
     return this._externalCall("prompt", [cQuestion, cDefault || ""]);
   }
 
-  setInterval(cExpr, nMilliseconds) {
+  setInterval(cExpr, nMilliseconds = 0) {
+    if (typeof cExpr === "object") {
+      nMilliseconds = cExpr.nMilliseconds || 0;
+      cExpr = cExpr.cExpr;
+    }
+
     if (typeof cExpr !== "string") {
       throw new TypeError("First argument of app.setInterval must be a string");
     }
@@ -2447,7 +2513,12 @@ class App extends _pdf_object.PDFObject {
     return this._registerTimeout(callbackId, true);
   }
 
-  setTimeOut(cExpr, nMilliseconds) {
+  setTimeOut(cExpr, nMilliseconds = 0) {
+    if (typeof cExpr === "object") {
+      nMilliseconds = cExpr.nMilliseconds || 0;
+      cExpr = cExpr.cExpr;
+    }
+
     if (typeof cExpr !== "string") {
       throw new TypeError("First argument of app.setTimeOut must be a string");
     }
@@ -2565,23 +2636,38 @@ class EventDispatcher {
       }
     }
 
-    if (name === "Keystroke") {
-      savedChange = {
-        value: event.value,
-        change: event.change,
-        selStart: event.selStart,
-        selEnd: event.selEnd
-      };
-    } else if (name === "Blur" || name === "Focus") {
-      Object.defineProperty(event, "value", {
-        configurable: false,
-        writable: false,
-        enumerable: true,
-        value: event.value
-      });
-    } else if (name === "Validate") {
-      this.runValidation(source, event);
-      return;
+    switch (name) {
+      case "Keystroke":
+        savedChange = {
+          value: event.value,
+          change: event.change,
+          selStart: event.selStart,
+          selEnd: event.selEnd
+        };
+        break;
+
+      case "Blur":
+      case "Focus":
+        Object.defineProperty(event, "value", {
+          configurable: false,
+          writable: false,
+          enumerable: true,
+          value: event.value
+        });
+        break;
+
+      case "Validate":
+        this.runValidation(source, event);
+        return;
+
+      case "Action":
+        this.runActions(source, source, event, name);
+
+        if (this._document.obj.calculate) {
+          this.runCalculate(source, event);
+        }
+
+        return;
     }
 
     this.runActions(source, source, event, name);
@@ -2609,8 +2695,10 @@ class EventDispatcher {
     if (event.rc) {
       if (hasRan) {
         source.wrapped.value = event.value;
+        source.wrapped.valueAsString = event.value;
       } else {
         source.obj.value = event.value;
+        source.obj.valueAsString = event.value;
       }
 
       if (this._document.obj.calculate) {
@@ -2650,6 +2738,10 @@ class EventDispatcher {
 
     for (const targetId of this._calculationOrder) {
       if (!(targetId in this._objects)) {
+        continue;
+      }
+
+      if (!this._document.obj.calculate) {
         continue;
       }
 
@@ -3651,6 +3743,10 @@ class Doc extends _pdf_object.PDFObject {
   getDataObjectContents() {}
 
   getField(cName) {
+    if (typeof cName === "object") {
+      cName = cName.cName;
+    }
+
     if (typeof cName !== "string") {
       throw new TypeError("Invalid field name: must be a string");
     }
@@ -3691,7 +3787,7 @@ class Doc extends _pdf_object.PDFObject {
       }
     }
 
-    return undefined;
+    return null;
   }
 
   _getChildren(fieldName) {
@@ -3719,6 +3815,10 @@ class Doc extends _pdf_object.PDFObject {
   getLinks() {}
 
   getNthFieldName(nIndex) {
+    if (typeof nIndex === "object") {
+      nIndex = nIndex.nIndex;
+    }
+
     if (typeof nIndex !== "number") {
       throw new TypeError("Invalid field index: must be a number");
     }
@@ -3797,6 +3897,18 @@ class Doc extends _pdf_object.PDFObject {
   openDataObject() {}
 
   print(bUI = true, nStart = 0, nEnd = -1, bSilent = false, bShrinkToFit = false, bPrintAsImage = false, bReverse = false, bAnnotations = true, printParams = null) {
+    if (typeof bUI === "object") {
+      nStart = bUI.nStart;
+      nEnd = bUI.nEnd;
+      bSilent = bUI.bSilent;
+      bShrinkToFit = bUI.bShrinkToFit;
+      bPrintAsImage = bUI.bPrintAsImage;
+      bReverse = bUI.bReverse;
+      bAnnotations = bUI.bAnnotations;
+      printParams = bUI.printParams;
+      bUI = bUI.bUI;
+    }
+
     if (printParams) {
       nStart = printParams.firstPage;
       nEnd = printParams.lastPage;
@@ -3842,17 +3954,27 @@ class Doc extends _pdf_object.PDFObject {
   replacePages() {}
 
   resetForm(aFields = null) {
+    if (aFields && !Array.isArray(aFields) && typeof aFields === "object") {
+      aFields = aFields.aFields;
+    }
+
     let mustCalculate = false;
 
     if (aFields) {
       for (const fieldName of aFields) {
+        if (!fieldName) {
+          continue;
+        }
+
         const field = this.getField(fieldName);
 
-        if (field) {
-          field.value = field.defaultValue;
-          field.valueAsString = field.value;
-          mustCalculate = true;
+        if (!field) {
+          continue;
         }
+
+        field.value = field.defaultValue;
+        field.valueAsString = field.value;
+        mustCalculate = true;
       }
     } else {
       mustCalculate = this._fields.size !== 0;
@@ -4083,6 +4205,12 @@ class ProxyHandler {
   }
 
   set(obj, prop, value) {
+    if (obj._kidIds) {
+      obj._kidIds.forEach(id => {
+        obj._appObjects[id].wrapped[prop] = value;
+      });
+    }
+
     if (typeof prop === "string" && !prop.startsWith("_") && prop in obj) {
       const old = obj[prop];
       obj[prop] = value;
@@ -4093,7 +4221,13 @@ class ProxyHandler {
         };
         data[prop] = obj[prop];
 
-        obj._send(data);
+        if (!obj._siblings) {
+          obj._send(data);
+        } else {
+          data.siblings = obj._siblings;
+
+          obj._send(data);
+        }
       }
     } else {
       obj._expandos[prop] = value;
@@ -4768,8 +4902,8 @@ Object.defineProperty(exports, "initSandbox", ({
 
 var _initialization = __w_pdfjs_require__(1);
 
-const pdfjsVersion = '2.9.142';
-const pdfjsBuild = 'd10da907d';
+const pdfjsVersion = '2.9.273';
+const pdfjsBuild = 'e394da586';
 })();
 
 /******/ 	return __webpack_exports__;

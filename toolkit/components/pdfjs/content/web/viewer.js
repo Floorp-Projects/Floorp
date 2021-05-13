@@ -76,10 +76,6 @@ const defaultOptions = {
     value: true,
     kind: OptionKind.VIEWER + OptionKind.PREFERENCE
   },
-  enableWebGL: {
-    value: false,
-    kind: OptionKind.VIEWER + OptionKind.PREFERENCE
-  },
   externalLinkRel: {
     value: "noopener noreferrer nofollow",
     kind: OptionKind.VIEWER
@@ -115,7 +111,7 @@ const defaultOptions = {
   },
   renderer: {
     value: "canvas",
-    kind: OptionKind.VIEWER + OptionKind.PREFERENCE
+    kind: OptionKind.VIEWER
   },
   renderInteractiveForms: {
     value: true,
@@ -179,7 +175,7 @@ const defaultOptions = {
   },
   enableXfa: {
     value: false,
-    kind: OptionKind.API
+    kind: OptionKind.API + OptionKind.PREFERENCE
   },
   fontExtraProperties: {
     value: false,
@@ -548,10 +544,6 @@ const PDFViewerApplication = {
       _app_options.AppOptions.set("disableHistory", hashParams.disablehistory === "true");
     }
 
-    if ("webgl" in hashParams) {
-      _app_options.AppOptions.set("enableWebGL", hashParams.webgl === "true");
-    }
-
     if ("verbosity" in hashParams) {
       _app_options.AppOptions.set("verbosity", hashParams.verbosity | 0);
     }
@@ -606,17 +598,20 @@ const PDFViewerApplication = {
     try {
       const styleSheet = document.styleSheets[0];
       const cssRules = styleSheet?.cssRules || [];
+      const mediaMatcher = "-moz-toolbar-prefers-color-scheme";
+      const mediaRule = `(${mediaMatcher}: dark)`;
+      const mediaRegex = new RegExp(`^@media \\(${mediaMatcher}: dark\\) {\\n\\s*([\\w\\s-.,:;/\\\\{}()]+)\\n}$`);
 
       for (let i = 0, ii = cssRules.length; i < ii; i++) {
         const rule = cssRules[i];
 
-        if (rule instanceof CSSMediaRule && rule.media?.[0] === "(prefers-color-scheme: dark)") {
+        if (rule instanceof CSSMediaRule && rule.media?.[0] === mediaRule) {
           if (cssTheme === ViewerCssTheme.LIGHT) {
             styleSheet.deleteRule(i);
             return;
           }
 
-          const darkRules = /^@media \(prefers-color-scheme: dark\) {\n\s*([\w\s-.,:;/\\{}()]+)\n}$/.exec(rule.cssText);
+          const darkRules = mediaRegex.exec(rule.cssText);
 
           if (darkRules?.[1]) {
             styleSheet.deleteRule(i);
@@ -674,7 +669,6 @@ const PDFViewerApplication = {
       findController,
       scriptingManager: pdfScriptingManager,
       renderer: _app_options.AppOptions.get("renderer"),
-      enableWebGL: _app_options.AppOptions.get("enableWebGL"),
       l10n: this.l10n,
       textLayerMode: _app_options.AppOptions.get("textLayerMode"),
       imageResourcesPath: _app_options.AppOptions.get("imageResourcesPath"),
@@ -1504,7 +1498,7 @@ const PDFViewerApplication = {
     this.metadata = metadata;
     this._contentDispositionFilename ??= contentDispositionFilename;
     this._contentLength ??= contentLength;
-    console.log(`PDF ${pdfDocument.fingerprint} [${info.PDFFormatVersion} ` + `${(info.Producer || "-").trim()} / ${(info.Creator || "-").trim()}] ` + `(PDF.js: ${_pdfjsLib.version || "-"}` + `${this.pdfViewer.enableWebGL ? " [WebGL]" : ""})`);
+    console.log(`PDF ${pdfDocument.fingerprint} [${info.PDFFormatVersion} ` + `${(info.Producer || "-").trim()} / ${(info.Creator || "-").trim()}] ` + `(PDF.js: ${_pdfjsLib.version || "-"})`);
     let pdfTitle = info?.Title;
     const metadataTitle = metadata?.get("dc:title");
 
@@ -1521,7 +1515,7 @@ const PDFViewerApplication = {
     }
 
     if (info.IsXFAPresent && !info.IsAcroFormPresent && !pdfDocument.isPureXfa) {
-      console.warn("Warning: XFA is not supported");
+      console.warn("Warning: XFA is not enabled");
       this.fallback(_pdfjsLib.UNSUPPORTED_FEATURES.forms);
     } else if ((info.IsAcroFormPresent || info.IsXFAPresent) && !this.pdfViewer.renderInteractiveForms) {
       console.warn("Warning: Interactive form support is not enabled");
@@ -8081,6 +8075,7 @@ class PDFScriptingManager {
     const isInPresentationMode = this._pdfViewer.isInPresentationMode || this._pdfViewer.isChangingPresentationMode;
     const {
       id,
+      siblings,
       command,
       value
     } = detail;
@@ -8134,15 +8129,19 @@ class PDFScriptingManager {
       }
     }
 
-    const element = document.getElementById(id);
+    delete detail.id;
+    const ids = siblings ? [id, ...siblings] : [id];
 
-    if (element) {
-      element.dispatchEvent(new CustomEvent("updatefromsandbox", {
-        detail
-      }));
-    } else {
-      delete detail.id;
-      this._pdfDocument?.annotationStorage.setValue(id, detail);
+    for (const elementId of ids) {
+      const element = document.getElementById(elementId);
+
+      if (element) {
+        element.dispatchEvent(new CustomEvent("updatefromsandbox", {
+          detail
+        }));
+      } else {
+        this._pdfDocument?.annotationStorage.setValue(elementId, detail);
+      }
     }
   }
 
@@ -8967,7 +8966,6 @@ class PDFThumbnailViewer {
           linkService: this.linkService,
           renderingQueue: this.renderingQueue,
           checkSetImageDisabled,
-          disableCanvasToImageConversion: false,
           l10n: this.l10n
         });
 
@@ -9133,7 +9131,6 @@ class PDFThumbnailView {
     linkService,
     renderingQueue,
     checkSetImageDisabled,
-    disableCanvasToImageConversion = false,
     l10n
   }) {
     this.id = id;
@@ -9154,7 +9151,6 @@ class PDFThumbnailView {
       return false;
     };
 
-    this.disableCanvasToImageConversion = disableCanvasToImageConversion;
     const pageWidth = this.viewport.width,
           pageHeight = this.viewport.height,
           pageRatio = pageWidth / pageHeight;
@@ -9273,21 +9269,6 @@ class PDFThumbnailView {
     }
 
     const reducedCanvas = this._reduceImage(canvas);
-
-    if (this.disableCanvasToImageConversion) {
-      reducedCanvas.className = "thumbnailImage";
-
-      this._thumbPageCanvas.then(msg => {
-        reducedCanvas.setAttribute("aria-label", msg);
-      });
-
-      reducedCanvas.style.width = this.canvasWidth + "px";
-      reducedCanvas.style.height = this.canvasHeight + "px";
-      this.canvas = reducedCanvas;
-      this.div.setAttribute("data-loaded", true);
-      this.ring.appendChild(reducedCanvas);
-      return;
-    }
 
     const image = document.createElement("img");
     image.className = "thumbnailImage";
@@ -9474,11 +9455,7 @@ class PDFThumbnailView {
     }
 
     this._thumbPageCanvas.then(msg => {
-      if (this.image) {
-        this.image.setAttribute("aria-label", msg);
-      } else if (this.canvas) {
-        this.canvas.setAttribute("aria-label", msg);
-      }
+      this.image?.setAttribute("aria-label", msg);
     });
   }
 
@@ -9667,7 +9644,7 @@ class BaseViewer {
       throw new Error("Cannot initialize BaseViewer.");
     }
 
-    const viewerVersion = '2.9.142';
+    const viewerVersion = '2.9.273';
 
     if (_pdfjsLib.version !== viewerVersion) {
       throw new Error(`The API version "${_pdfjsLib.version}" does not match the Viewer version "${viewerVersion}".`);
@@ -9687,7 +9664,6 @@ class BaseViewer {
     this.renderInteractiveForms = options.renderInteractiveForms !== false;
     this.enablePrintAutoRotate = options.enablePrintAutoRotate || false;
     this.renderer = options.renderer || _ui_utils.RendererType.CANVAS;
-    this.enableWebGL = options.enableWebGL || false;
     this.useOnlyCssZoom = options.useOnlyCssZoom || false;
     this.maxCanvasPixels = options.maxCanvasPixels;
     this.l10n = options.l10n || _l10n_utils.NullL10n;
@@ -9996,7 +9972,6 @@ class BaseViewer {
           imageResourcesPath: this.imageResourcesPath,
           renderInteractiveForms: this.renderInteractiveForms,
           renderer: this.renderer,
-          enableWebGL: this.enableWebGL,
           useOnlyCssZoom: this.useOnlyCssZoom,
           maxCanvasPixels: this.maxCanvasPixels,
           l10n: this.l10n
@@ -11279,7 +11254,6 @@ class PDFPageView {
     this.xfaLayerFactory = options.xfaLayerFactory;
     this.structTreeLayerFactory = options.structTreeLayerFactory;
     this.renderer = options.renderer || _ui_utils.RendererType.CANVAS;
-    this.enableWebGL = options.enableWebGL || false;
     this.l10n = options.l10n || _l10n_utils.NullL10n;
     this.paintTask = null;
     this.paintedViewportMap = new WeakMap();
@@ -11747,8 +11721,17 @@ class PDFPageView {
         this.eventBus._off("textlayerrendered", this._onTextLayerRendered);
 
         this._onTextLayerRendered = null;
+
+        if (!this.canvas) {
+          return;
+        }
+
         this.pdfPage.getStructTree().then(tree => {
           if (!tree) {
+            return;
+          }
+
+          if (!this.canvas) {
             return;
           }
 
@@ -11841,7 +11824,6 @@ class PDFPageView {
       canvasContext: ctx,
       transform,
       viewport: this.viewport,
-      enableWebGL: this.enableWebGL,
       renderInteractiveForms: this.renderInteractiveForms,
       optionalContentConfigPromise: this._optionalContentConfigPromise
     };
@@ -13835,12 +13817,10 @@ class BasePreferences {
         "enablePermissions": false,
         "enablePrintAutoRotate": true,
         "enableScripting": true,
-        "enableWebGL": false,
         "externalLinkTarget": 0,
         "historyUpdateUrl": false,
         "ignoreDestinationZoom": false,
         "pdfBugEnabled": false,
-        "renderer": "canvas",
         "renderInteractiveForms": true,
         "sidebarViewOnLoad": -1,
         "scrollModeOnLoad": -1,
@@ -13852,7 +13832,8 @@ class BasePreferences {
         "disableAutoFetch": false,
         "disableFontFace": false,
         "disableRange": false,
-        "disableStream": false
+        "disableStream": false,
+        "enableXfa": false
       }),
       writable: false,
       enumerable: true,
@@ -14116,8 +14097,8 @@ var _app_options = __webpack_require__(1);
 
 var _app = __webpack_require__(3);
 
-const pdfjsVersion = '2.9.142';
-const pdfjsBuild = 'd10da907d';
+const pdfjsVersion = '2.9.273';
+const pdfjsBuild = 'e394da586';
 window.PDFViewerApplication = _app.PDFViewerApplication;
 window.PDFViewerApplicationOptions = _app_options.AppOptions;
 ;
