@@ -433,15 +433,27 @@ add_task(async function correct_width_and_height_should_be_used_for_dialog() {
   await open_subdialog_and_test_generic_start_state(tab.linkedBrowser);
 
   await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
-    let frameStyle = content.window.gSubDialog._topDialog._frame.style;
-    Assert.equal(
-      frameStyle.width,
-      "32em",
+    function fuzzyEqual(value, expectedValue, fuzz, msg) {
+      Assert.greaterOrEqual(expectedValue + fuzz, value, msg);
+      Assert.lessOrEqual(expectedValue - fuzz, value, msg);
+    }
+    let frameStyle = content.getComputedStyle(
+      content.gSubDialog._topDialog._frame
+    );
+    let fontSize = parseFloat(frameStyle.fontSize, 10);
+    let height = parseFloat(frameStyle.height, 10);
+    let width = parseFloat(frameStyle.width, 10);
+
+    fuzzyEqual(
+      width,
+      fontSize * 32,
+      2,
       "Width should be set on the frame from the dialog"
     );
-    Assert.equal(
-      frameStyle.height,
-      "5em",
+    fuzzyEqual(
+      height,
+      fontSize * 5,
+      2,
       "Height should be set on the frame from the dialog"
     );
   });
@@ -484,11 +496,21 @@ add_task(
     await SpecialPowers.spawn(tab.linkedBrowser, [oldHeight], async function(
       contentOldHeight
     ) {
+      function fuzzyEqual(value, expectedValue, fuzz, msg) {
+        Assert.greaterOrEqual(expectedValue + fuzz, value, msg);
+        Assert.lessOrEqual(expectedValue - fuzz, value, msg);
+      }
       let frame = content.window.gSubDialog._topDialog._frame;
+      let frameStyle = content.getComputedStyle(frame);
+      let fontSize = parseFloat(frameStyle.fontSize, 10);
+      let height = parseFloat(frameStyle.height, 10);
+      let width = parseFloat(frameStyle.width, 10);
+
       let docEl = frame.contentDocument.documentElement;
-      Assert.equal(
-        frame.style.width,
-        "32em",
+      fuzzyEqual(
+        width,
+        32 * fontSize,
+        2,
         "Width should be set on the frame from the dialog"
       );
       Assert.ok(
@@ -499,9 +521,10 @@ add_task(
           docEl.scrollHeight +
           ")."
       );
-      Assert.equal(
-        frame.style.height,
-        docEl.scrollHeight + "px",
+      fuzzyEqual(
+        height,
+        docEl.scrollHeight,
+        2,
         "Height on the frame should be higher now. " +
           "This test may fail on certain screen resoluition. " +
           "See bug 1420576 and bug 1205717."
@@ -529,14 +552,24 @@ add_task(async function dialog_too_tall_should_get_reduced_in_height() {
   );
 
   await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+    function fuzzyEqual(value, expectedValue, fuzz, msg) {
+      Assert.greaterOrEqual(expectedValue + fuzz, value, msg);
+      Assert.lessOrEqual(expectedValue - fuzz, value, msg);
+    }
     let frame = content.window.gSubDialog._topDialog._frame;
-    Assert.equal(
-      frame.style.width,
-      "32em",
+    let frameStyle = content.getComputedStyle(frame);
+    let fontSize = parseFloat(frameStyle.fontSize, 10);
+    let height = parseFloat(frameStyle.height, 10);
+    let width = parseFloat(frameStyle.width, 10);
+    fuzzyEqual(
+      width,
+      32 * fontSize,
+      2,
       "Width should be set on the frame from the dialog"
     );
-    Assert.ok(
-      parseInt(frame.style.height, 10) < content.window.innerHeight,
+    Assert.less(
+      height,
+      content.window.innerHeight,
       "Height on the frame should be smaller than window's innerHeight"
     );
   });
@@ -570,10 +603,12 @@ add_task(
           frame.style.width +
           ") should be set to a px value of the scrollWidth from the dialog"
       );
-      Assert.ok(
-        frame.style.height.endsWith("px"),
+      let cs = content.getComputedStyle(frame);
+      Assert.stringMatches(
+        cs.getPropertyValue("--inner-height"),
+        /px$/,
         "Height (" +
-          frame.style.height +
+          cs.getPropertyValue("--inner-height") +
           ") should be set to a px value of the scrollHeight from the dialog"
       );
     });
