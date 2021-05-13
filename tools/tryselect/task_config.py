@@ -393,8 +393,7 @@ class GeckoProfile(TryConfig):
         **kwargs
     ):
         if profile or not all(
-            kwargs.get(s) is None
-            for s in (gecko_profile_features, gecko_profile_threads)
+            s is None for s in (gecko_profile_features, gecko_profile_threads)
         ):
             cfg = {
                 "gecko-profile": True,
