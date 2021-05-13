@@ -45,17 +45,13 @@ add_task(async function test_remove_tags_from_BookmarkStar() {
   });
 
   StarUI._createPanelIfNeeded();
-  let bookmarkPanel = document.getElementById("editBookmarkPanel");
-  let shownPromise = promisePopupShown(bookmarkPanel);
-  let bookmarkStar = BookmarkingUI.star;
-  bookmarkStar.click();
-  await shownPromise;
+  await clickBookmarkStar();
 
   // Check if the "Edit This Bookmark" panel is open.
   let bookmarkPanelTitle = document.getElementById("editBookmarkPanelTitle");
   Assert.equal(
-    bookmarkPanelTitle.textContent,
-    gFluentStrings.formatValueSync("bookmarks-edit-bookmark"),
+    document.l10n.getAttributes(bookmarkPanelTitle).id,
+    "bookmarks-edit-bookmark",
     "Bookmark panel title is correct."
   );
 
