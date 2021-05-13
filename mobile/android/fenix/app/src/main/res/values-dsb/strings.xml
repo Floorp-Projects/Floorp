@@ -1755,4 +1755,6 @@
     <!-- Content description radio buttons with a link to more information -->
     <string name="radio_preference_info_content_description">Klikniśo za dalšne drobnostki</string>
 
-    </resources>
+    <!-- Content description for the action bar "up" button -->
+    <string name="action_bar_up_description">Górjej</string>
+</resources>

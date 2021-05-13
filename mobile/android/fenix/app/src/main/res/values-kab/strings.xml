@@ -1568,7 +1568,7 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
     <string name="preferences_credit_cards_sync_cards_across_devices">Mtawi tikarḍiwin gar yibenkan</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is signed into sync -->
-    <string name="preferences_credit_cards_sync_cards">Mtawi tikatḍiwin</string>
+    <string name="preferences_credit_cards_sync_cards">Mtawi tikarḍiwin</string>
     <!-- Preference option for adding a credit card -->
     <string name="preferences_credit_cards_add_credit_card">Rnu takarḍa n usmad</string>
     <!-- Preference option for managing saved credit cards -->
@@ -1771,4 +1771,6 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Content description radio buttons with a link to more information -->
     <string name="radio_preference_info_content_description">Sit i wugar n telqayt</string>
 
-    </resources>
+    <!-- Content description for the action bar "up" button -->
+    <string name="action_bar_up_description">Inig d asawen</string>
+</resources>
