@@ -1632,21 +1632,6 @@ void ContentParent::BroadcastFontListChanged() {
   }
 }
 
-void ContentParent::BroadcastShmBlockAdded(uint32_t aGeneration,
-                                           uint32_t aIndex) {
-  auto* pfl = gfxPlatformFontList::PlatformFontList();
-  for (auto* cp : AllProcesses(eLive)) {
-    base::SharedMemoryHandle handle =
-        pfl->ShareShmBlockToProcess(aIndex, cp->Pid());
-    if (handle == base::SharedMemory::NULLHandle()) {
-      // If something went wrong here, we just skip it; the child will need to
-      // request the block as needed, at some performance cost.
-      continue;
-    }
-    Unused << cp->SendFontListShmBlockAdded(aGeneration, aIndex, handle);
-  }
-}
-
 void ContentParent::BroadcastThemeUpdate(widget::ThemeChangeKind aKind) {
   const FullLookAndFeel& lnf = *RemoteLookAndFeel::ExtractData();
   for (auto* cp : AllProcesses(eLive)) {

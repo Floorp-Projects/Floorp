@@ -266,11 +266,6 @@ class FontList {
   void ShareBlocksToProcess(nsTArray<base::SharedMemoryHandle>* aBlocks,
                             base::ProcessId aPid);
 
-  base::SharedMemoryHandle ShareBlockToProcess(uint32_t aIndex,
-                                               base::ProcessId aPid);
-
-  void ShmBlockAdded(uint32_t aGeneration, uint32_t aIndex,
-                     base::SharedMemoryHandle aHandle);
   /**
    * Support for memory reporter.
    */
