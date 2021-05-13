@@ -7126,7 +7126,7 @@ org.zw
 
 // newGTLDs
 
-// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2021-04-22T15:17:15Z
+// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2021-05-11T15:13:51Z
 // This list is auto-generated, don't edit it manually.
 // aaa : 2015-02-26 American Automobile Association, Inc.
 aaa
@@ -9092,6 +9092,9 @@ mtn
 
 // mtr : 2015-03-12 MTR Corporation Limited
 mtr
+
+// music : 2021-05-04 DotMusic Limited
+music
 
 // mutual : 2015-04-02 Northwestern Mutual MU TLD Registry, LLC
 mutual
