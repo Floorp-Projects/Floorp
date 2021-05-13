@@ -374,13 +374,13 @@ mozilla::LogModule* GetMacAccessibilityLog() {
 
 - (id)accessibilityHitTest:(NSPoint)point {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
-  return [self moxHitTest:point];
+  return GetObjectOrRepresentedView([self moxHitTest:point]);
   NS_OBJC_END_TRY_BLOCK_RETURN(nil);
 }
 
 - (id)accessibilityFocusedUIElement {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
-  return [self moxFocusedUIElement];
+  return GetObjectOrRepresentedView([self moxFocusedUIElement]);
   NS_OBJC_END_TRY_BLOCK_RETURN(nil);
 }
 
@@ -416,11 +416,11 @@ mozilla::LogModule* GetMacAccessibilityLog() {
 }
 
 - (id)moxHitTest:(NSPoint)point {
-  return GetObjectOrRepresentedView(self);
+  return self;
 }
 
 - (id)moxFocusedUIElement {
-  return GetObjectOrRepresentedView(self);
+  return self;
 }
 
 - (void)moxPostNotification:(NSString*)notification {
