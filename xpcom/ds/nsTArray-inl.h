@@ -8,17 +8,31 @@
 #  error "Don't include this file directly"
 #endif
 
+// NOTE: We don't use MOZ_COUNT_CTOR/MOZ_COUNT_DTOR to perform leak checking of
+// nsTArray_base objects intentionally for the following reasons:
+// * The leak logging isn't as useful as other types of logging, as
+//   nsTArray_base is frequently relocated without invoking a constructor, such
+//   as when stored within another nsTArray. This means that
+//   XPCOM_MEM_LOG_CLASSES cannot be used to identify specific leaks of nsTArray
+//   objects.
+// * The nsTArray type is layout compatible with the ThinVec crate with the
+//   correct flags, and ThinVec does not currently perform leak logging.
+//   This means that if a large number of arrays are transferred between Rust
+//   and C++ code using ThinVec, for example within another ThinVec, they
+//   will not be logged correctly and might appear as e.g. negative leaks.
+// * Leaks which have been found thanks to the leak logging added by this
+//   type have often not been significant, and/or have needed to be
+//   circumvented using some other mechanism. Most leaks found with this type
+//   in them also include other types which will continue to be tracked.
+
 template <class Alloc, class RelocationStrategy>
-nsTArray_base<Alloc, RelocationStrategy>::nsTArray_base() : mHdr(EmptyHdr()) {
-  MOZ_COUNT_CTOR(nsTArray_base);
-}
+nsTArray_base<Alloc, RelocationStrategy>::nsTArray_base() : mHdr(EmptyHdr()) {}
 
 template <class Alloc, class RelocationStrategy>
 nsTArray_base<Alloc, RelocationStrategy>::~nsTArray_base() {
   if (!HasEmptyHeader() && !UsesAutoArrayBuffer()) {
     Alloc::Free(mHdr);
   }
-  MOZ_COUNT_DTOR(nsTArray_base);
 }
 
 template <class Alloc, class RelocationStrategy>
@@ -26,7 +40,6 @@ nsTArray_base<Alloc, RelocationStrategy>::nsTArray_base(const nsTArray_base&)
     : mHdr(EmptyHdr()) {
   // Actual copying happens through nsTArray_CopyEnabler, we just need to do the
   // initialization of mHdr.
-  MOZ_COUNT_CTOR(nsTArray_base);
 }
 
 template <class Alloc, class RelocationStrategy>
