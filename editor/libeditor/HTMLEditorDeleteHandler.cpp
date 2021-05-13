@@ -1293,8 +1293,8 @@ nsresult HTMLEditor::AutoDeleteRangesHandler::ComputeRangesToDelete(
                 *scanFromCaretPointResult.BRElementPtr(), EditorType::HTML)) {
           return NS_SUCCESS_DOM_NO_OPERATION;
         }
-        if (!aHTMLEditor.IsVisibleBRElement(
-                scanFromCaretPointResult.BRElementPtr())) {
+        if (!HTMLEditUtils::IsVisibleBRElement(
+                *scanFromCaretPointResult.BRElementPtr(), editingHost)) {
           EditorDOMPoint newCaretPosition =
               aDirectionAndAmount == nsIEditor::eNext
                   ? EditorDOMPoint::After(
@@ -1560,16 +1560,15 @@ EditActionResult HTMLEditor::AutoDeleteRangesHandler::Run(
       }
       // Short circuit for invisible breaks.  delete them and recurse.
       if (scanFromCaretPointResult.ReachedBRElement()) {
-        if (scanFromCaretPointResult.BRElementPtr() ==
-            wsRunScannerAtCaret.GetEditingHost()) {
+        if (scanFromCaretPointResult.BRElementPtr() == editingHost) {
           return EditActionHandled();
         }
         if (!EditorUtils::IsEditableContent(
                 *scanFromCaretPointResult.BRElementPtr(), EditorType::HTML)) {
           return EditActionCanceled();
         }
-        if (!aHTMLEditor.IsVisibleBRElement(
-                scanFromCaretPointResult.BRElementPtr())) {
+        if (!HTMLEditUtils::IsVisibleBRElement(
+                *scanFromCaretPointResult.BRElementPtr(), editingHost)) {
           // TODO: We should extend the range to delete again before/after
           //       the caret point and use `HandleDeleteNonCollapsedRanges()`
           //       instead after we would create delete range computation
@@ -1621,8 +1620,8 @@ EditActionResult HTMLEditor::AutoDeleteRangesHandler::Run(
               return EditActionResult(NS_ERROR_FAILURE);
             }
             if (scanFromCaretPointResult.ReachedBRElement() &&
-                !aHTMLEditor.IsVisibleBRElement(
-                    scanFromCaretPointResult.BRElementPtr())) {
+                !HTMLEditUtils::IsVisibleBRElement(
+                    *scanFromCaretPointResult.BRElementPtr(), editingHost)) {
               return EditActionHandled(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
             }
           }
@@ -2389,7 +2388,8 @@ EditActionResult HTMLEditor::AutoDeleteRangesHandler::HandleDeleteAtomicContent(
     const WSRunScanner& aWSRunScannerAtCaret) {
   MOZ_ASSERT(aHTMLEditor.IsEditActionDataAvailable());
   MOZ_ASSERT_IF(aAtomicContent.IsHTMLElement(nsGkAtoms::br),
-                aHTMLEditor.IsVisibleBRElement(&aAtomicContent));
+                HTMLEditUtils::IsVisibleBRElement(
+                    aAtomicContent, aWSRunScannerAtCaret.GetEditingHost()));
   MOZ_ASSERT(&aAtomicContent != aWSRunScannerAtCaret.GetEditingHost());
 
   nsresult rv =
@@ -3374,7 +3374,7 @@ bool HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::
       continue;
     }
     if (!content->IsHTMLElement(nsGkAtoms::br) ||
-        aHTMLEditor.IsVisibleBRElement(content)) {
+        HTMLEditUtils::IsVisibleBRElement(*content)) {
       return false;
     }
   }
@@ -3716,7 +3716,8 @@ HTMLEditor::AutoDeleteRangesHandler::DeleteParentBlocksWithTransactionIfEmpty(
   MOZ_ASSERT(aHTMLEditor.mPlaceholderBatch);
 
   // First, check there is visible contents before the point in current block.
-  WSRunScanner wsScannerForPoint(aHTMLEditor.GetActiveEditingHost(), aPoint);
+  RefPtr<Element> editingHost = aHTMLEditor.GetActiveEditingHost();
+  WSRunScanner wsScannerForPoint(editingHost, aPoint);
   if (!wsScannerForPoint.StartsFromCurrentBlockBoundary()) {
     // If there is visible node before the point, we shouldn't remove the
     // parent block.
@@ -3726,8 +3727,7 @@ HTMLEditor::AutoDeleteRangesHandler::DeleteParentBlocksWithTransactionIfEmpty(
       NS_WARN_IF(!wsScannerForPoint.GetStartReasonContent()->GetParentNode())) {
     return NS_ERROR_FAILURE;
   }
-  if (wsScannerForPoint.GetEditingHost() ==
-      wsScannerForPoint.GetStartReasonContent()) {
+  if (editingHost == wsScannerForPoint.GetStartReasonContent()) {
     // If we reach editing host, there is no parent blocks which can be removed.
     return NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND;
   }
@@ -3756,16 +3756,15 @@ HTMLEditor::AutoDeleteRangesHandler::DeleteParentBlocksWithTransactionIfEmpty(
                      forwardScanFromPointResult.BRElementPtr(),
                  "End reason is not the reached <br> element");
     // If the <br> element is visible, we shouldn't remove the parent block.
-    if (aHTMLEditor.IsVisibleBRElement(
-            wsScannerForPoint.GetEndReasonContent())) {
+    if (HTMLEditUtils::IsVisibleBRElement(
+            *wsScannerForPoint.GetEndReasonContent(), editingHost)) {
       return NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND;
     }
     if (wsScannerForPoint.GetEndReasonContent()->GetNextSibling()) {
       WSScanResult scanResult =
           WSRunScanner::ScanNextVisibleNodeOrBlockBoundary(
-              wsScannerForPoint.GetEditingHost(),
-              EditorRawDOMPoint::After(
-                  *wsScannerForPoint.GetEndReasonContent()));
+              editingHost, EditorRawDOMPoint::After(
+                               *wsScannerForPoint.GetEndReasonContent()));
       if (scanResult.Failed()) {
         NS_WARNING("WSRunScanner::ScanNextVisibleNodeOrBlockBoundary() failed");
         return NS_ERROR_FAILURE;
@@ -3794,7 +3793,7 @@ HTMLEditor::AutoDeleteRangesHandler::DeleteParentBlocksWithTransactionIfEmpty(
     return rv;
   }
   // If we reach editing host, return NS_OK.
-  if (nextPoint.GetContainer() == wsScannerForPoint.GetEditingHost()) {
+  if (nextPoint.GetContainer() == editingHost) {
     return NS_OK;
   }
 
@@ -3806,13 +3805,13 @@ HTMLEditor::AutoDeleteRangesHandler::DeleteParentBlocksWithTransactionIfEmpty(
           NS_EVENT_BITS_MUTATION_NODEREMOVED |
           NS_EVENT_BITS_MUTATION_NODEREMOVEDFROMDOCUMENT |
           NS_EVENT_BITS_MUTATION_SUBTREEMODIFIED)) {
-    Element* editingHost = aHTMLEditor.GetActiveEditingHost();
-    if (NS_WARN_IF(!editingHost) ||
-        NS_WARN_IF(editingHost != wsScannerForPoint.GetEditingHost())) {
+    Element* newEditingHost = aHTMLEditor.GetActiveEditingHost();
+    if (NS_WARN_IF(!newEditingHost) ||
+        NS_WARN_IF(newEditingHost != editingHost)) {
       return NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE;
     }
     if (NS_WARN_IF(!EditorUtils::IsDescendantOf(*nextPoint.GetContainer(),
-                                                *editingHost))) {
+                                                *newEditingHost))) {
       return NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE;
     }
   }
@@ -4431,15 +4430,18 @@ nsresult HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::
       // If the range starts from end of a container, and computed block
       // boundaries range starts from an invisible `<br>` element,  we
       // may need to shrink the range.
+      Element* editingHost = aHTMLEditor.GetActiveEditingHost();
+      NS_WARNING_ASSERTION(editingHost, "There was no editing host");
       nsIContent* nextContent =
           atStart.IsEndOfContainer() && range.StartRef().GetChild() &&
                   range.StartRef().GetChild()->IsHTMLElement(nsGkAtoms::br) &&
-                  !aHTMLEditor.IsVisibleBRElement(range.StartRef().GetChild())
+                  !HTMLEditUtils::IsVisibleBRElement(
+                      *range.StartRef().GetChild(), editingHost)
               ? HTMLEditUtils::GetNextContent(
                     *atStart.ContainerAsContent(),
                     {WalkTreeOption::IgnoreDataNodeExceptText,
                      WalkTreeOption::StopAtBlockBoundary},
-                    aHTMLEditor.GetActiveEditingHost())
+                    editingHost)
               : nullptr;
       if (!nextContent || nextContent != range.StartRef().GetChild()) {
         noNeedToChangeStart = true;
@@ -5362,8 +5364,8 @@ bool HTMLEditor::AutoDeleteRangesHandler::ExtendRangeToIncludeInvisibleNodes(
         NS_ASSERTION(wsScannerAtEnd.GetEndReasonContent() ==
                          forwardScanFromEndResult.BRElementPtr(),
                      "End reason is not the reached <br> element");
-        if (aHTMLEditor.IsVisibleBRElement(
-                wsScannerAtEnd.GetEndReasonContent())) {
+        if (HTMLEditUtils::IsVisibleBRElement(
+                *wsScannerAtEnd.GetEndReasonContent(), editingHost)) {
           break;
         }
         if (!atFirstInvisibleBRElement.IsSet()) {

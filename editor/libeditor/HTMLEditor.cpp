@@ -969,68 +969,6 @@ void HTMLEditor::IsPrevCharInNodeWhiteSpace(nsIContent* aContent,
   }
 }
 
-bool HTMLEditor::IsVisibleBRElement(const nsINode* aNode) const {
-  MOZ_ASSERT(aNode);
-  if (!aNode->IsHTMLElement(nsGkAtoms::br)) {
-    return false;
-  }
-  // Check if there is another element or text node in block after current
-  // <br> element.
-  // Note that even if following node is non-editable, it may make the
-  // <br> element visible if it just exists.
-  // E.g., foo<br><button contenteditable="false">button</button>
-  // However, we need to ignore invisible data nodes like comment node.
-  Element* editingHost = GetActiveEditingHost();
-  if (NS_WARN_IF(!editingHost)) {
-    return false;
-  }
-  nsIContent* nextContent =
-      HTMLEditUtils::GetNextContent(*aNode,
-                                    {WalkTreeOption::IgnoreDataNodeExceptText,
-                                     WalkTreeOption::StopAtBlockBoundary},
-                                    editingHost);
-  if (nextContent && nextContent->IsHTMLElement(nsGkAtoms::br)) {
-    return true;
-  }
-
-  // A single line break before a block boundary is not displayed, so e.g.
-  // foo<p>bar<br></p> and foo<br><p>bar</p> display the same as foo<p>bar</p>.
-  // But if there are multiple <br>s in a row, all but the last are visible.
-  if (!nextContent) {
-    // This break is trailer in block, it's not visible
-    return false;
-  }
-  if (HTMLEditUtils::IsBlockElement(*nextContent)) {
-    // Break is right before a block, it's not visible
-    return false;
-  }
-
-  // If there's an inline node after this one that's not a break, and also a
-  // prior break, this break must be visible.
-  // Note that even if previous node is non-editable, it may make the
-  // <br> element visible if it just exists.
-  // E.g., <button contenteditable="false"><br>foo
-  // However, we need to ignore invisible data nodes like comment node.
-  nsIContent* previousContent = HTMLEditUtils::GetPreviousContent(
-      *aNode,
-      {WalkTreeOption::IgnoreDataNodeExceptText,
-       WalkTreeOption::StopAtBlockBoundary},
-      editingHost);
-  if (previousContent && previousContent->IsHTMLElement(nsGkAtoms::br)) {
-    return true;
-  }
-
-  // Sigh.  We have to use expensive white-space calculation code to
-  // determine what is going on
-  EditorRawDOMPoint afterBRElement(EditorRawDOMPoint::After(*aNode));
-  if (NS_WARN_IF(!afterBRElement.IsSet())) {
-    return false;
-  }
-  return !WSRunScanner::ScanNextVisibleNodeOrBlockBoundary(editingHost,
-                                                           afterBRElement)
-              .ReachedBlockBoundary();
-}
-
 NS_IMETHODIMP HTMLEditor::UpdateBaseURL() {
   RefPtr<Document> document = GetDocument();
   if (NS_WARN_IF(!document)) {

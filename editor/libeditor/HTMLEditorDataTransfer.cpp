@@ -342,8 +342,9 @@ HTMLEditor::HTMLWithContextInserter::GetInvisibleBRElementAtPoint(
   if (wsRunScannerAtInsertionPoint.GetEndReasonContent() &&
       wsRunScannerAtInsertionPoint.GetEndReasonContent()->IsHTMLElement(
           nsGkAtoms::br) &&
-      !mHTMLEditor.IsVisibleBRElement(
-          wsRunScannerAtInsertionPoint.EndReasonBRElementPtr())) {
+      !HTMLEditUtils::IsVisibleBRElement(
+          *wsRunScannerAtInsertionPoint.EndReasonBRElementPtr(),
+          wsRunScannerAtInsertionPoint.GetEditingHost())) {
     return wsRunScannerAtInsertionPoint.EndReasonBRElementPtr();
   }
   return nullptr;
@@ -405,8 +406,8 @@ HTMLEditor::HTMLWithContextInserter::GetNewCaretPointAfterInsertingHTML(
   if (wsRunScannerAtCaret
           .ScanPreviousVisibleNodeOrBlockBoundaryFrom(pointToPutCaret)
           .ReachedBRElement() &&
-      !mHTMLEditor.IsVisibleBRElement(
-          wsRunScannerAtCaret.GetStartReasonContent())) {
+      !HTMLEditUtils::IsVisibleBRElement(
+          *wsRunScannerAtCaret.GetStartReasonContent(), editingHost)) {
     WSRunScanner wsRunScannerAtStartReason(
         editingHost,
         EditorDOMPoint(wsRunScannerAtCaret.GetStartReasonContent()));

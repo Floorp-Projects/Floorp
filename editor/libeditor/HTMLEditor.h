@@ -868,11 +868,6 @@ class HTMLEditor final : public TextEditor,
   static dom::Element* GetLinkElement(nsINode* aNode);
 
   /**
-   * Small utility routine to test if a break node is visible to user.
-   */
-  bool IsVisibleBRElement(const nsINode* aNode) const;
-
-  /**
    * Helper routines for font size changing.
    */
   enum class FontSize { incr, decr };
