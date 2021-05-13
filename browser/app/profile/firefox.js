@@ -504,6 +504,17 @@ pref("browser.search.separatePrivateDefault.ui.banner.max", 0);
 // Enables the display of the Mozilla VPN banner in private browsing windows
 pref("browser.privatebrowsing.vpnpromourl", "https://vpn.mozilla.org/?utm_source=firefox-browser&utm_medium=firefox-%CHANNEL%-browser&utm_campaign=private-browsing-vpn-link");
 
+pref("browser.privatebrowsing.infoEnabled", true);
+pref("browser.privatebrowsing.infoIcon", "");
+pref("browser.privatebrowsing.infoTitle", "");
+pref("browser.privatebrowsing.infoBody","");
+pref("browser.privatebrowsing.infoLinkText", "");
+pref("browser.privatebrowsing.infoLinkUrl", "");
+pref("browser.privatebrowsing.promoEnabled", true);
+pref("browser.privatebrowsing.promoTitle", "");
+pref("browser.privatebrowsing.promoLinkText", "");
+pref("browser.privatebrowsing.promoLinkUrl", "");
+
 pref("browser.sessionhistory.max_entries", 50);
 
 // Built-in default permissions.

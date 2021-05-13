@@ -34,6 +34,10 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 let gSearchBannerShownThisSession;
 
 class AboutPrivateBrowsingParent extends JSWindowActorParent {
+  constructor() {
+    super();
+    Services.telemetry.setEventRecordingEnabled("aboutprivatebrowsing", true);
+  }
   // Used by tests
   static setShownThisSession(shown) {
     gSearchBannerShownThisSession = shown;
