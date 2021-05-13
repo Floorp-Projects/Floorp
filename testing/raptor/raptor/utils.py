@@ -49,8 +49,8 @@ def transform_platform(str_to_transform, config_platform, config_processor=None)
 
 
 def transform_subtest(str_to_transform, subtest_name):
-    """Transform subtest name i.e. 'mitm4-linux-firefox-{subtest}.manifest'
-    transforms to 'mitm4-linux-firefox-amazon.manifest'."""
+    """Transform subtest name i.e. 'mitm5-linux-firefox-{subtest}.manifest'
+    transforms to 'mitm5-linux-firefox-amazon.manifest'."""
     if "{subtest}" not in str_to_transform:
         return str_to_transform
 
