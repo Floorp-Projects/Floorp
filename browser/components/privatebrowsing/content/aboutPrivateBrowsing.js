@@ -4,7 +4,132 @@
 
 /* eslint-env mozilla/frame-script */
 
+/**
+ * Determines whether a given value is a fluent id or plain text and adds it to an element
+ * @param {Array<[HTMLElement, string]>} items An array of [element, value] where value is
+ *                                       a fluent id starting with "fluent:" or plain text
+ */
+async function translateElements(container, items) {
+  // We need to wait for fluent to initialize
+  await document.l10n.ready;
+
+  items.forEach(([element, value]) => {
+    // Skip empty text or elements
+    if (!element || !value) {
+      return;
+    }
+    const fluentId = value.replace(/^fluent:/, "");
+    if (fluentId !== value) {
+      document.l10n.setAttributes(element, fluentId);
+    } else {
+      element.textContent = value;
+      element.removeAttribute("data-l10n-id");
+    }
+  });
+
+  document.l10n.translateFragment(container);
+}
+
+async function renderInfo({
+  infoEnabled,
+  infoTitle,
+  infoBody,
+  infoLinkText,
+  infoLinkUrl,
+  infoIcon,
+}) {
+  const container = document.querySelector(".info");
+  if (infoEnabled === false) {
+    container.remove();
+    return;
+  }
+
+  const titleEl = document.getElementById("info-title");
+  const bodyEl = document.getElementById("info-body");
+  const linkEl = document.getElementById("private-browsing-myths");
+
+  if (infoIcon) {
+    container.style.backgroundImage = `url(${infoIcon})`;
+  }
+
+  await translateElements(container, [
+    [titleEl, infoTitle],
+    [bodyEl, infoBody],
+    [linkEl, infoLinkText],
+  ]);
+
+  linkEl.setAttribute(
+    "href",
+    infoLinkUrl ||
+      RPMGetFormatURLPref("app.support.baseURL") + "private-browsing-myths"
+  );
+
+  linkEl.addEventListener("click", () => {
+    window.PrivateBrowsingRecordClick("info_link");
+  });
+}
+
+async function renderPromo({
+  promoEnabled,
+  promoTitle,
+  promoLinkText,
+  promoLinkUrl,
+}) {
+  const container = document.querySelector(".promo");
+  if (promoEnabled === false) {
+    container.remove();
+    return;
+  }
+
+  // Check the current geo and remove if we're in the wrong one.
+  RPMSendQuery("ShouldShowVPNPromo", {}).then(shouldShow => {
+    if (!shouldShow) {
+      container.remove();
+    }
+  });
+
+  const titleEl = document.getElementById("private-browsing-vpn-text");
+  const linkEl = document.getElementById("private-browsing-vpn-link");
+
+  // Setup the private browsing VPN link.
+  const vpnPromoUrl =
+    promoLinkUrl || RPMGetFormatURLPref("browser.privatebrowsing.vpnpromourl");
+
+  linkEl.addEventListener("click", () => {
+    window.PrivateBrowsingRecordClick("promo_link");
+  });
+
+  if (vpnPromoUrl) {
+    linkEl.setAttribute("href", vpnPromoUrl);
+  } else {
+    // If the link is undefined, remove the promo completely
+    container.remove();
+    return;
+  }
+
+  await translateElements(container, [
+    [titleEl, promoTitle],
+    [linkEl, promoLinkText],
+  ]);
+}
+
+async function setupFeatureConfig() {
+  // Setup experiment data
+  let config = {};
+  try {
+    config = window.PrivateBrowsingFeatureConfig();
+  } catch (e) {}
+
+  await renderInfo(config);
+  await renderPromo(config);
+
+  // For tests
+  document.documentElement.setAttribute("PrivateBrowsingRenderComplete", true);
+}
+
 document.addEventListener("DOMContentLoaded", function() {
+  setupFeatureConfig();
+
   if (!RPMIsWindowPrivate()) {
     document.documentElement.classList.remove("private");
     document.documentElement.classList.add("normal");
@@ -15,34 +140,6 @@ document.addEventListener("DOMContentLoaded", function() {
       });
     return;
   }
-
-  // Setup the private browsing myths link.
-  document
-    .getElementById("private-browsing-myths")
-    .setAttribute(
-      "href",
-      RPMGetFormatURLPref("app.support.baseURL") + "private-browsing-myths"
-    );
-
-  // Setup the private browsing VPN link.
-  const vpnPromoUrl = RPMGetFormatURLPref(
-    "browser.privatebrowsing.vpnpromourl"
-  );
-  if (vpnPromoUrl) {
-    document
-      .getElementById("private-browsing-vpn-link")
-      .setAttribute("href", vpnPromoUrl);
-  } else {
-    // If the link is undefined, remove the promo completely
-    document.querySelectorAll(".vpn-promo").forEach(vpnEl => vpnEl.remove());
-  }
-
-  // Check ShouldShowVPNPromo
-  RPMSendQuery("ShouldShowVPNPromo", {}).then(shouldShow => {
-    if (!shouldShow) {
-      document.querySelectorAll(".vpn-promo").forEach(vpnEl => vpnEl.remove());
-    }
-  });
 
   // Set up the private search banner.
   const privateSearchBanner = document.getElementById("search-banner");
