@@ -148,7 +148,7 @@ mr1-welcome-screen-hero-text =
   Fire starts
   here
 
-# Caption for background image in about:welcome. "Soraya Osorio" is the name 
+# Caption for background image in about:welcome. "Soraya Osorio" is the name
 # of the person and shouldn't be translated.
 mr1-onboarding-welcome-image-caption = Soraya Osorio — Furniture designer, Firefox fan
 
