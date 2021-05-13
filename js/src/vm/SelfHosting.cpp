@@ -2619,7 +2619,9 @@ void js::FillSelfHostingCompileOptions(CompileOptions& options) {
   options.setSelfHostingMode(true);
   options.setForceFullParse();
   options.setForceStrictMode();
+  options.setDiscardSource();
   options.setIsRunOnce(true);
+  options.setNoScriptRval(true);
 }
 
 GlobalObject* JSRuntime::createSelfHostingGlobal(JSContext* cx) {
@@ -2631,7 +2633,6 @@ GlobalObject* JSRuntime::createSelfHostingGlobal(JSContext* cx) {
   // Debugging the selfHosted zone is not supported because CCWs are not
   // allowed in that zone.
   options.creationOptions().setInvisibleToDebugger(true);
-  options.behaviors().setDiscardSource(true);
 
   Realm* realm = NewRealm(cx, nullptr, options);
   if (!realm) {
