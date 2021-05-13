@@ -958,25 +958,24 @@ def create_parser():
                         help="Output machine-readable JSON format")
     parser.add_argument("--markdown", action="store_true",
                         help="Output markdown")
-    parser.add_argument("--repo-root", type=ensure_text,
+    parser.add_argument("--repo-root", type=str,
                         help="The WPT directory. Use this "
                         "option if the lint script exists outside the repository")
-    parser.add_argument("--ignore-glob", type=ensure_text, action="append",
+    parser.add_argument("--ignore-glob", type=str, action="append",
                         help="Additional file glob to ignore (repeat to add more). "
                         "Globs are matched against paths relative to REPO_ROOT "
                         "using fnmatch, except that path separators are normalized.")
     parser.add_argument("--all", action="store_true", help="If no paths are passed, try to lint the whole "
                         "working directory, not just files that changed")
-    parser.add_argument("--github-checks-text-file", type=ensure_text,
+    parser.add_argument("--github-checks-text-file", type=str,
                         help="Path to GitHub checks output file for Taskcluster runs")
     parser.add_argument("-j", "--jobs", type=int, default=0,
                         help="Level to parallelism to use (defaults to 0, which detects the number of CPUs)")
     return parser
 
 
-def main(**kwargs_str):
+def main(**kwargs):
     # type: (**Any) -> int
-    kwargs = {ensure_text(key): value for key, value in kwargs_str.items()}
 
     assert logger is not None
     if kwargs.get("json") and kwargs.get("markdown"):
