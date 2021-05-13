@@ -263,7 +263,7 @@ var withBookmarksDialog = async function(
   // Ensure overlay is loaded
   if (!skipOverlayWait) {
     info("waiting for the overlay to be loaded");
-    await waitForCondition(
+    await TestUtils.waitForCondition(
       () => dialogWin.gEditItemOverlay.initialized,
       "EditItemOverlay should be initialized"
     );
@@ -276,7 +276,7 @@ var withBookmarksDialog = async function(
 
   if (elt) {
     info("waiting for focus on the first textfield");
-    await waitForCondition(
+    await TestUtils.waitForCondition(
       () => doc.activeElement == elt,
       "The first non collapsed input should have been focused"
     );
@@ -341,48 +341,6 @@ var openContextMenuForContentSelector = async function(browser, selector) {
     );
   });
   await contextPromise;
-};
-
-/**
- * Waits for a specified condition to happen.
- *
- * @param conditionFn
- *        a Function or a generator function, returning a boolean for whether
- *        the condition is fulfilled.
- * @param errorMsg
- *        Error message to use if the condition has not been satisfied after a
- *        meaningful amount of tries.
- */
-var waitForCondition = async function(conditionFn, errorMsg) {
-  for (let tries = 0; tries < 100; ++tries) {
-    if (await conditionFn()) {
-      return;
-    }
-    await new Promise(resolve => {
-      if (!waitForCondition._timers) {
-        waitForCondition._timers = new Set();
-        registerCleanupFunction(() => {
-          is(
-            waitForCondition._timers.size,
-            0,
-            "All the wait timers have been removed"
-          );
-          delete waitForCondition._timers;
-        });
-      }
-      let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-      waitForCondition._timers.add(timer);
-      timer.init(
-        () => {
-          waitForCondition._timers.delete(timer);
-          resolve();
-        },
-        100,
-        Ci.nsITimer.TYPE_ONE_SHOT
-      );
-    });
-  }
-  ok(false, errorMsg);
 };
 
 /**

@@ -48,7 +48,7 @@ add_task(async function test() {
   // Check results.
   let testURIs = ["http://ubuntu.org/", "http://google.com/"];
 
-  await BrowserTestUtils.waitForCondition(
+  await TestUtils.waitForCondition(
     () =>
       library.ContentArea.currentView.associatedElement.itemChildren.length ==
       testURIs.length

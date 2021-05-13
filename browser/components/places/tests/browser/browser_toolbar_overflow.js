@@ -144,7 +144,7 @@ add_task(async function test_newWindow_noOverflow() {
     let toolbar = win.document.getElementById("PersonalToolbar");
     Assert.ok(!toolbar.collapsed, "The toolbar is not collapsed");
     let content = win.document.getElementById("PlacesToolbarItems");
-    await BrowserTestUtils.waitForCondition(() => {
+    await TestUtils.waitForCondition(() => {
       return (
         content.children.length == 1 &&
         content.children[0].hasAttribute("image")
