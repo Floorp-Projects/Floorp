@@ -560,7 +560,7 @@ this.SyncAuthManager.prototype = {
       this._fxaService.telemetry._setHashedUID(token.hashed_fxa_uid);
       return token;
     } finally {
-      Services.obs.notifyObservers(null, "weave:service:login:change");
+      Services.obs.notifyObservers(null, "weave:service:login:got-hashed-id");
     }
   },
 
