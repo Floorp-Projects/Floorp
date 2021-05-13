@@ -28,27 +28,28 @@ class SourceMapURLService {
     this._urlToIDMap = new Map();
     this._mapsById = new Map();
     this._sourcesLoading = null;
+    this._onTargetAvailable = this._onTargetAvailable.bind(this);
     this._onResourceAvailable = this._onResourceAvailable.bind(this);
     this._runningCallback = false;
 
     this._syncPrevValue = this._syncPrevValue.bind(this);
     this._clearAllState = this._clearAllState.bind(this);
 
-    this._target.on("will-navigate", this._clearAllState);
-
     Services.prefs.addObserver(SOURCE_MAP_PREF, this._syncPrevValue);
   }
 
-  get _target() {
-    return this._commands.targetCommand.targetFront;
-  }
-
   destroy() {
-    this._clearAllState();
-    this._target.off("will-navigate", this._clearAllState);
     Services.prefs.removeObserver(SOURCE_MAP_PREF, this._syncPrevValue);
 
-    const { resourceCommand } = this._commands;
+    // remove listener from the last registered top level target
+    const { targetCommand, resourceCommand } = this._commands;
+    targetCommand.targetFront.off("will-navigate", this._clearAllState);
+    this._clearAllState();
+
+    targetCommand.unwatchTargets(
+      targetCommand.ALL_TYPES,
+      this._onTargetAvailable
+    );
     try {
       resourceCommand.unwatchResources(
         [resourceCommand.TYPES.STYLESHEET, resourceCommand.TYPES.SOURCE],
@@ -421,15 +422,17 @@ class SourceMapURLService {
     }
 
     if (!this._sourcesLoading) {
-      const { resourceCommand } = this._commands;
+      const { targetCommand, resourceCommand } = this._commands;
       const { STYLESHEET, SOURCE } = resourceCommand.TYPES;
 
-      this._sourcesLoading = resourceCommand.watchResources(
-        [STYLESHEET, SOURCE],
-        {
-          onAvailable: this._onResourceAvailable,
-        }
+      const onTargets = targetCommand.watchTargets(
+        targetCommand.ALL_TYPES,
+        this._onTargetAvailable
       );
+      const onResources = resourceCommand.watchResources([STYLESHEET, SOURCE], {
+        onAvailable: this._onResourceAvailable,
+      });
+      this._sourcesLoading = Promise.all([onTargets, onResources]);
     }
 
     return this._sourcesLoading;
@@ -440,6 +443,19 @@ class SourceMapURLService {
       return this._sourcesLoading;
     }
     return Promise.resolve();
+  }
+
+  _onTargetAvailable({ targetFront, isTargetSwitching }) {
+    if (targetFront.isTopLevel) {
+      // For navigation within the same process, listen to will-navigate, as we won't have a new target front.
+      targetFront.on("will-navigate", this._clearAllState);
+      // For navigation to another process, we won't have a will-navigate,
+      // but instead we will have a new target front.
+      if (isTargetSwitching) {
+        // onTargetAvailable should be called before any STYLESHEET/SOURCE resource
+        this._clearAllState();
+      }
+    }
   }
 
   _onResourceAvailable(resources) {
