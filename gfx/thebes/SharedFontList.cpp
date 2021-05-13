@@ -9,7 +9,6 @@
 #include "nsReadableUtils.h"
 #include "prerror.h"
 #include "mozilla/dom/ContentChild.h"
-#include "mozilla/dom/ContentParent.h"
 #include "mozilla/Logging.h"
 
 #define LOG_FONTLIST(args) \
@@ -626,51 +625,7 @@ bool FontList::AppendShmBlock(uint32_t aSizeNeeded) {
 
   mReadOnlyShmems.AppendElement(std::move(readOnly));
 
-  // We don't need to broadcast the addition of the initial block,
-  // because child processes can't have initialized their list at all
-  // prior to the first block being set up.
-  if (mBlocks.Length() > 1) {
-    dom::ContentParent::BroadcastShmBlockAdded(GetGeneration(),
-                                               mBlocks.Length() - 1);
-  }
-
   return true;
-}
-
-void FontList::ShmBlockAdded(uint32_t aGeneration, uint32_t aIndex,
-                             base::SharedMemoryHandle aHandle) {
-  MOZ_ASSERT(!XRE_IsParentProcess());
-  MOZ_ASSERT(mBlocks.Length() > 0);
-
-  auto newShm = MakeUnique<base::SharedMemory>();
-  if (!newShm->IsHandleValid(aHandle)) {
-    return;
-  }
-  if (!newShm->SetHandle(aHandle, true)) {
-    MOZ_CRASH("failed to set shm handle");
-  }
-
-  if (aIndex != mBlocks.Length()) {
-    return;
-  }
-  if (aGeneration != GetGeneration()) {
-    return;
-  }
-
-  if (!newShm->Map(SHM_BLOCK_SIZE) || !newShm->memory()) {
-    MOZ_CRASH("failed to map shared memory");
-  }
-
-  uint32_t size = static_cast<BlockHeader*>(newShm->memory())->mBlockSize;
-  MOZ_ASSERT(size >= SHM_BLOCK_SIZE);
-  if (size != SHM_BLOCK_SIZE) {
-    newShm->Unmap();
-    if (!newShm->Map(size) || !newShm->memory()) {
-      MOZ_CRASH("failed to map shared memory");
-    }
-  }
-
-  mBlocks.AppendElement(new ShmBlock(std::move(newShm)));
 }
 
 void FontList::DetachShmBlocks() {
@@ -739,20 +694,6 @@ void FontList::ShareBlocksToProcess(nsTArray<base::SharedMemoryHandle>* aBlocks,
       return;
     }
   }
-}
-
-base::SharedMemoryHandle FontList::ShareBlockToProcess(uint32_t aIndex,
-                                                       base::ProcessId aPid) {
-  MOZ_RELEASE_ASSERT(XRE_IsParentProcess());
-  MOZ_RELEASE_ASSERT(mReadOnlyShmems.Length() == mBlocks.Length());
-  MOZ_RELEASE_ASSERT(aIndex < mReadOnlyShmems.Length());
-
-  base::SharedMemoryHandle handle = base::SharedMemory::NULLHandle();
-  if (mReadOnlyShmems[aIndex]->ShareToProcess(aPid, &handle)) {
-    return handle;
-  }
-
-  return base::SharedMemory::NULLHandle();
 }
 
 Pointer FontList::Alloc(uint32_t aSize) {
