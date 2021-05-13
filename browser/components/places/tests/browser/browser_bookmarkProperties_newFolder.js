@@ -62,7 +62,7 @@ add_task(async function test_newFolder() {
   await newFolderObserver;
 
   // Wait for the folder to be created and for editing to start.
-  await BrowserTestUtils.waitForCondition(
+  await TestUtils.waitForCondition(
     () => folderTree.hasAttribute("editing"),
     "Should be in edit mode for the new folder"
   );
@@ -84,7 +84,7 @@ add_task(async function test_newFolder() {
 
   await renameObserver;
 
-  await BrowserTestUtils.waitForCondition(
+  await TestUtils.waitForCondition(
     () => !folderTree.hasAttribute("editing"),
     "Should have stopped editing the new folder"
   );

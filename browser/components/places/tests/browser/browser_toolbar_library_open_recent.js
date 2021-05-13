@@ -29,7 +29,7 @@ async function openBookmarksPanelInLibraryToolbarButton() {
   await viewShownPromise;
 
   let bookmarksButton;
-  await BrowserTestUtils.waitForCondition(() => {
+  await TestUtils.waitForCondition(() => {
     bookmarksButton = document.getElementById(
       "appMenu-library-bookmarks-button"
     );
@@ -92,7 +92,7 @@ async function getRecentlyBookmarkedItems() {
   let items = historyMenu.querySelectorAll("toolbarbutton");
   Assert.ok(items, "Recently bookmarked items should exists");
 
-  await BrowserTestUtils.waitForCondition(
+  await TestUtils.waitForCondition(
     () => items[0].attributes !== "undefined",
     "Custom bookmark exists"
   );

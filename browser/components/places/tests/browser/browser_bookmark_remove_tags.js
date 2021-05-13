@@ -67,7 +67,7 @@ add_task(async function test_remove_tags_from_BookmarkStar() {
   // Update the "tags" field.
   fillBookmarkTextField("editBMPanel_tagsField", "tag1, tag2, tag3", window);
   let tagspicker = document.getElementById("editBMPanel_tagsField");
-  await waitForCondition(
+  await TestUtils.waitForCondition(
     () => tagspicker.value === "tag1, tag2, tag3",
     "Tags are correct after update."
   );
@@ -134,7 +134,7 @@ add_task(async function test_remove_tags_from_Toolbar() {
         dialogWin,
         false
       );
-      await waitForCondition(
+      await TestUtils.waitForCondition(
         () => tagspicker.value === "tag1, tag2",
         "Tags are correct after update."
       );
@@ -189,7 +189,7 @@ add_task(async function test_remove_tags_from_Sidebar() {
           dialogWin,
           false
         );
-        await waitForCondition(
+        await TestUtils.waitForCondition(
           () => tagspicker.value === "tag1",
           "Tags are correct after update."
         );

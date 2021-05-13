@@ -137,7 +137,7 @@ add_task(async function test_context_menu_link() {
       );
 
       // Check the initial state of the folder picker.
-      await BrowserTestUtils.waitForCondition(
+      await TestUtils.waitForCondition(
         () => folderPicker.selectedItem.label == expectedFolderName,
         "The folder is the expected one."
       );

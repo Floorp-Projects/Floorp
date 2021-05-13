@@ -133,7 +133,7 @@ add_task(async function test_export_json() {
     .click();
 
   let backupFile = await promiseImportExport();
-  await BrowserTestUtils.waitForCondition(backupFile.exists);
+  await TestUtils.waitForCondition(backupFile.exists);
   await promiseLibraryClosed(libraryWindow);
 
   await PlacesUtils.bookmarks.eraseEverything();
