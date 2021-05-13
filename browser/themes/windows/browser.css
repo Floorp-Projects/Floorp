@@ -813,6 +813,9 @@ panel[touchmode] .PanelUI-subView #appMenu-zoom-controls > .subviewbutton-iconic
   #context-navigation > .menuitem-iconic[_moz-menuactive="true"]:not([disabled="true"]) > .menu-iconic-left > .menu-iconic-icon {
     background-color: var(--menuitem-hover-background-color);
   }
+  #context-navigation > .menuitem-iconic[_moz-menuactive="true"][disabled="true"] > .menu-iconic-left > .menu-iconic-icon {
+    background-color: var(--menuitem-disabled-hover-background-color);
+  }
 
   /* If the menu is wider than the icons strictly need, the <menuitem> elements
    * will stretch to pick up the extra space. In that case, the outer icons
