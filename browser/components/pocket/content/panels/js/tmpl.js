@@ -33,7 +33,7 @@ templates['saved_shell'] = template({"compiler":[6,">= 2.0.0-beta.1"],"main":fun
     + alias3(((helper = (helper = helpers.addtags || (depth0 != null ? depth0.addtags : depth0)) != null ? helper : alias1),(typeof helper === alias2 ? helper.call(depth0,{"name":"addtags","hash":{},"data":data}) : helper)))
     + "\">\n        </div>\n        <a href=\"#\" class=\"pkt_ext_btn pkt_ext_btn_disabled\">"
     + alias3(((helper = (helper = helpers.save || (depth0 != null ? depth0.save : depth0)) != null ? helper : alias1),(typeof helper === alias2 ? helper.call(depth0,{"name":"save","hash":{},"data":data}) : helper)))
-    + "</a>\n    </div>\n    <p class=\"pkt_ext_edit_msg\"></p>\n</div>\n\n<div class=\"pkt_ext_subshell\">\n    <div class=\"pkt_ext_item_recs\"></div>\n</div>\n";
+    + "</a>\n    </div>\n    <div class=\"pkt_ext_edit_msg_container\">\n      <p class=\"pkt_ext_edit_msg\"></p>\n    </div>\n</div>\n\n<div class=\"pkt_ext_subshell\">\n    <div class=\"pkt_ext_item_recs\"></div>\n</div>\n";
 },"useData":true});
 templates['signup_shell'] = template({"1":function(depth0,helpers,partials,data) {
     var stack1;
