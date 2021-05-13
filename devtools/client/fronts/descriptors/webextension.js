@@ -60,6 +60,10 @@ class WebExtensionDescriptorFront extends DescriptorMixin(
     return this._form.isSystem;
   }
 
+  get isWebExtensionDescriptor() {
+    return true;
+  }
+
   get isWebExtension() {
     return this._form.isWebExtension;
   }
