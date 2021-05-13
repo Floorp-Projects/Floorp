@@ -1,9 +1,0 @@
-[
-    {
-        "algorithm": "sha512",
-        "visibility": "public",
-        "filename": "mitm4-linux-firefox-live.zip",
-        "digest": "85a7664be168bbc16a5affcd6597b896154244712f143bc4c3ac8eda82e2275991bfd13cb09ecc6689db33fdb7947b911ff2441c5d1e9c038586947a9d8cb27d",
-        "size": 22873466
-    }
-]

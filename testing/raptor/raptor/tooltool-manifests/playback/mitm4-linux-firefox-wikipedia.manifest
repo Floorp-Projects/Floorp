@@ -1,9 +1,0 @@
-[
-    {
-        "algorithm": "sha512",
-        "visibility": "public",
-        "filename": "mitm4-linux-firefox-wikipedia.zip",
-        "digest": "9d975e449ccf646bee9ab4026a555673a5e1c4b55c2e47446e6c147e811f4caf71f436537977bee18b729c203231984c758706df9696bc4589a1fffc866db295",
-        "size": 4223312
-    }
-]
