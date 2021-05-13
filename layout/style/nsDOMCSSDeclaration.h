@@ -137,26 +137,26 @@ class nsDOMCSSDeclaration : public nsICSSDeclaration {
 
  protected:
   // The reason for calling GetOrCreateCSSDeclaration.
-  enum Operation {
+  enum class Operation {
     // We are calling GetOrCreateCSSDeclaration so that we can read from it.
     // Does not allocate a new declaration if we don't have one yet; returns
     // nullptr in this case.
-    eOperation_Read,
+    Read,
 
     // We are calling GetOrCreateCSSDeclaration so that we can set a property on
     // it or re-parse the whole declaration.  Allocates a new declaration if we
     // don't have one yet. A nullptr return value indicates an error allocating
     // the declaration.
-    eOperation_Modify,
+    Modify,
 
     // We are calling GetOrCreateCSSDeclaration so that we can remove a property
     // from it. Does not allocate a new declaration if we don't have one yet;
     // returns nullptr in this case.
-    eOperation_RemoveProperty
+    RemoveProperty,
   };
 
-  // If aOperation is eOperation_Modify, aCreated must be non-null and
-  // the call may set it to point to the newly created object.
+  // If aOperation is Modify, aCreated must be non-null and the call may set it
+  // to point to the newly created object.
   virtual mozilla::DeclarationBlock* GetOrCreateCSSDeclaration(
       Operation aOperation, mozilla::DeclarationBlock** aCreated) = 0;
 

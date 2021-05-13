@@ -41,7 +41,7 @@ nsresult nsDOMCSSDeclaration::GetPropertyValue(const nsCSSPropertyID aPropID,
   MOZ_ASSERT(aValue.IsEmpty());
 
   if (DeclarationBlock* decl =
-          GetOrCreateCSSDeclaration(eOperation_Read, nullptr)) {
+          GetOrCreateCSSDeclaration(Operation::Read, nullptr)) {
     decl->GetPropertyValueByID(aPropID, aValue);
   }
   return NS_OK;
@@ -94,7 +94,7 @@ void nsDOMCSSDeclaration::SetPropertyValue(const nsCSSPropertyID aPropID,
 void nsDOMCSSDeclaration::GetCssText(nsACString& aCssText) {
   MOZ_ASSERT(aCssText.IsEmpty());
 
-  if (auto* decl = GetOrCreateCSSDeclaration(eOperation_Read, nullptr)) {
+  if (auto* decl = GetOrCreateCSSDeclaration(Operation::Read, nullptr)) {
     decl->ToString(aCssText);
   }
 }
@@ -110,7 +110,7 @@ void nsDOMCSSDeclaration::SetCssText(const nsACString& aCssText,
   // to ensure that it exists, or else SetCSSDeclaration may crash.
   RefPtr<DeclarationBlock> created;
   DeclarationBlock* olddecl =
-      GetOrCreateCSSDeclaration(eOperation_Modify, getter_AddRefs(created));
+      GetOrCreateCSSDeclaration(Operation::Modify, getter_AddRefs(created));
   if (!olddecl) {
     aRv.Throw(NS_ERROR_NOT_AVAILABLE);
     return;
@@ -147,7 +147,7 @@ void nsDOMCSSDeclaration::SetCssText(const nsACString& aCssText,
 }
 
 uint32_t nsDOMCSSDeclaration::Length() {
-  DeclarationBlock* decl = GetOrCreateCSSDeclaration(eOperation_Read, nullptr);
+  DeclarationBlock* decl = GetOrCreateCSSDeclaration(Operation::Read, nullptr);
 
   if (decl) {
     return decl->Count();
@@ -158,7 +158,7 @@ uint32_t nsDOMCSSDeclaration::Length() {
 
 void nsDOMCSSDeclaration::IndexedGetter(uint32_t aIndex, bool& aFound,
                                         nsACString& aPropName) {
-  DeclarationBlock* decl = GetOrCreateCSSDeclaration(eOperation_Read, nullptr);
+  DeclarationBlock* decl = GetOrCreateCSSDeclaration(Operation::Read, nullptr);
   aFound = decl && decl->GetNthProperty(aIndex, aPropName);
 }
 
@@ -166,7 +166,7 @@ NS_IMETHODIMP
 nsDOMCSSDeclaration::GetPropertyValue(const nsACString& aPropertyName,
                                       nsACString& aReturn) {
   MOZ_ASSERT(aReturn.IsEmpty());
-  if (auto* decl = GetOrCreateCSSDeclaration(eOperation_Read, nullptr)) {
+  if (auto* decl = GetOrCreateCSSDeclaration(Operation::Read, nullptr)) {
     decl->GetPropertyValue(aPropertyName, aReturn);
   }
   return NS_OK;
@@ -175,7 +175,7 @@ nsDOMCSSDeclaration::GetPropertyValue(const nsACString& aPropertyName,
 void nsDOMCSSDeclaration::GetPropertyPriority(const nsACString& aPropertyName,
                                               nsACString& aPriority) {
   MOZ_ASSERT(aPriority.IsEmpty());
-  DeclarationBlock* decl = GetOrCreateCSSDeclaration(eOperation_Read, nullptr);
+  DeclarationBlock* decl = GetOrCreateCSSDeclaration(Operation::Read, nullptr);
   if (decl && decl->GetPropertyIsImportant(aPropertyName)) {
     aPriority.AssignLiteral("important");
   }
@@ -273,7 +273,7 @@ nsresult nsDOMCSSDeclaration::ModifyDeclaration(
     Func aFunc) {
   RefPtr<DeclarationBlock> created;
   DeclarationBlock* olddecl =
-      GetOrCreateCSSDeclaration(eOperation_Modify, getter_AddRefs(created));
+      GetOrCreateCSSDeclaration(Operation::Modify, getter_AddRefs(created));
   if (!olddecl) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -351,7 +351,7 @@ nsresult nsDOMCSSDeclaration::ParseCustomPropertyValue(
 void nsDOMCSSDeclaration::RemovePropertyInternal(nsCSSPropertyID aPropID,
                                                  ErrorResult& aRv) {
   DeclarationBlock* olddecl =
-      GetOrCreateCSSDeclaration(eOperation_RemoveProperty, nullptr);
+      GetOrCreateCSSDeclaration(Operation::RemoveProperty, nullptr);
   if (IsReadOnly()) {
     return;
   }
@@ -385,7 +385,7 @@ void nsDOMCSSDeclaration::RemovePropertyInternal(
   }
 
   DeclarationBlock* olddecl =
-      GetOrCreateCSSDeclaration(eOperation_RemoveProperty, nullptr);
+      GetOrCreateCSSDeclaration(Operation::RemoveProperty, nullptr);
   if (!olddecl) {
     return;  // no decl, so nothing to remove
   }
