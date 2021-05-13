@@ -43,6 +43,7 @@ enum class SurfaceType : int8_t {
   OFFSET,                 /* Offset */
   DATA_ALIGNED,           /* Data surface using aligned heap memory */
   DATA_SHARED_WRAPPER,    /* Shared memory mapped in from another process */
+  BLOB_IMAGE,             /* Recorded blob image */
 };
 
 enum class SurfaceFormat : int8_t {

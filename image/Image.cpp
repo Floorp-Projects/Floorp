@@ -17,6 +17,7 @@
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Tuple.h"  // for Tie
 #include "mozilla/layers/SharedSurfacesChild.h"
+#include "SourceSurfaceBlobImage.h"
 
 namespace mozilla {
 namespace image {
@@ -161,10 +162,10 @@ ImgDrawResult ImageResource::GetImageContainerImpl(
     layers::ImageContainer** aOutContainer) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aManager);
-  MOZ_ASSERT(
-      (aFlags & ~(FLAG_SYNC_DECODE | FLAG_SYNC_DECODE_IF_FAST |
-                  FLAG_ASYNC_NOTIFY | FLAG_HIGH_QUALITY_SCALING)) == FLAG_NONE,
-      "Unsupported flag passed to GetImageContainer");
+  MOZ_ASSERT((aFlags &
+              ~(FLAG_SYNC_DECODE | FLAG_SYNC_DECODE_IF_FAST | FLAG_RECORD_BLOB |
+                FLAG_ASYNC_NOTIFY | FLAG_HIGH_QUALITY_SCALING)) == FLAG_NONE,
+             "Unsupported flag passed to GetImageContainer");
 
   ImgDrawResult drawResult;
   gfx::IntSize size;
@@ -309,6 +310,27 @@ bool ImageResource::UpdateImageContainer(
     ImageContainerEntry& entry = mImageContainers[i];
     RefPtr<layers::ImageContainer> container(entry.mContainer);
     if (container) {
+      // Blob recordings should just be marked as dirty. We will regenerate the
+      // recording when the display list update comes around.
+      if (entry.mFlags & FLAG_RECORD_BLOB) {
+        AutoTArray<layers::ImageContainer::OwningImage, 1> images;
+        container->GetCurrentImages(&images);
+        if (images.IsEmpty()) {
+          MOZ_ASSERT_UNREACHABLE("Empty container!");
+          continue;
+        }
+
+        RefPtr<gfx::SourceSurface> surface =
+            images[0].mImage->GetAsSourceSurface();
+        if (!surface || surface->GetType() != gfx::SurfaceType::BLOB_IMAGE) {
+          MOZ_ASSERT_UNREACHABLE("No/wrong surface in container!");
+          continue;
+        }
+
+        static_cast<SourceSurfaceBlobImage*>(surface.get())->MarkDirty();
+        continue;
+      }
+
       gfx::IntSize bestSize;
       RefPtr<gfx::SourceSurface> surface;
       Tie(entry.mLastDrawResult, bestSize, surface) = GetFrameInternal(

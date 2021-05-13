@@ -651,9 +651,12 @@ RasterImage::IsImageContainerAvailable(LayerManager* aManager,
 
 NS_IMETHODIMP_(already_AddRefed<ImageContainer>)
 RasterImage::GetImageContainer(LayerManager* aManager, uint32_t aFlags) {
+  // Strip out unsupported flags for raster images.
+  uint32_t flags = aFlags & ~(FLAG_RECORD_BLOB);
+
   RefPtr<ImageContainer> container;
   ImgDrawResult drawResult =
-      GetImageContainerImpl(aManager, mSize.ToUnknownSize(), Nothing(), aFlags,
+      GetImageContainerImpl(aManager, mSize.ToUnknownSize(), Nothing(), flags,
                             getter_AddRefs(container));
 
   // We silence the unused warning here because anything that needs the draw
