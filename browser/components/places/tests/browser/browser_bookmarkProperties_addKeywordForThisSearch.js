@@ -54,7 +54,7 @@ add_task(async function() {
           // After the notification, the keywords cache will update asynchronously.
           info("Check the keyword entry has been created");
           let entry;
-          await waitForCondition(async function() {
+          await TestUtils.waitForCondition(async function() {
             entry = await PlacesUtils.keywords.fetch("kw");
             return !!entry;
           }, "Unable to find the expected keyword");
@@ -136,7 +136,7 @@ add_task(async function reopen_same_field() {
           let elt = dialogWin.document.getElementById(
             "editBMPanel_keywordField"
           );
-          await BrowserTestUtils.waitForCondition(
+          await TestUtils.waitForCondition(
             () => elt.value == "kw",
             "Keyword should be the previous value"
           );

@@ -18,7 +18,7 @@ registerCleanupFunction(async () => {
 
 async function selectAppMenuView(buttonId, viewId) {
   let btn;
-  await BrowserTestUtils.waitForCondition(() => {
+  await TestUtils.waitForCondition(() => {
     btn = document.getElementById(buttonId);
     return btn;
   }, "Should have the " + buttonId + " button");
@@ -46,14 +46,14 @@ add_task(async function test_enable_toolbar() {
   Assert.ok(toolbar.collapsed, "Bookmarks Toolbar is hidden");
 
   let viewBookmarksToolbarBtn;
-  await BrowserTestUtils.waitForCondition(() => {
+  await TestUtils.waitForCondition(() => {
     viewBookmarksToolbarBtn = document.getElementById(
       "panelMenu_viewBookmarksToolbar"
     );
     return viewBookmarksToolbarBtn;
   }, "Should have the library 'View Bookmarks Toolbar' button.");
   viewBookmarksToolbarBtn.click();
-  await BrowserTestUtils.waitForCondition(
+  await TestUtils.waitForCondition(
     () => !toolbar.collapsed,
     "Should have the Bookmarks Toolbar enabled."
   );

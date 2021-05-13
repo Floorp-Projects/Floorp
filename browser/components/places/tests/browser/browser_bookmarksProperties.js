@@ -383,7 +383,7 @@ gTests.push({
         newFolderButton.doCommand();
 
         // Wait for the folder to be created and for editing to start.
-        await BrowserTestUtils.waitForCondition(
+        await TestUtils.waitForCondition(
           () => folderTree.hasAttribute("editing"),
           "We are editing new folder name in folder tree"
         );
@@ -502,10 +502,7 @@ async function open_properties_dialog(test) {
   var tree = sidebar.contentDocument.getElementById(sidebarTreeID);
   // The sidebar may take a moment to open from the doCommand, therefore wait
   // until it has opened before continuing.
-  await BrowserTestUtils.waitForCondition(
-    () => tree,
-    "Sidebar tree has been loaded"
-  );
+  await TestUtils.waitForCondition(() => tree, "Sidebar tree has been loaded");
 
   // Ask current test to select the node to edit.
   test.selectNode(tree);

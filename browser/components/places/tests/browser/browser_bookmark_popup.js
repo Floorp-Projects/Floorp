@@ -61,7 +61,7 @@ async function test_bookmarks_popup({
       }
 
       info(`BookmarkingUI.status is ${BookmarkingUI.status}`);
-      await BrowserTestUtils.waitForCondition(
+      await TestUtils.waitForCondition(
         () => BookmarkingUI.status != BookmarkingUI.STATUS_UPDATING,
         "BookmarkingUI should not be updating"
       );

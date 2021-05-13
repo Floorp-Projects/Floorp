@@ -108,7 +108,7 @@ add_task(async function test_change_location_from_Toolbar() {
         dialogWin,
         false
       );
-      await waitForCondition(
+      await TestUtils.waitForCondition(
         () => locationPicker.value === TEST_URL2,
         "The location is correct after update."
       );
@@ -167,7 +167,7 @@ add_task(async function test_change_location_from_Sidebar() {
           dialogWin,
           false
         );
-        await waitForCondition(
+        await TestUtils.waitForCondition(
           () => locationPicker.value === TEST_URL3,
           "The location is correct after update."
         );
