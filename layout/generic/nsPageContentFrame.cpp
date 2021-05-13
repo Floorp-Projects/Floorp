@@ -48,13 +48,15 @@ void nsPageContentFrame::Reflow(nsPresContext* aPresContext,
   // Set our size up front, since some parts of reflow depend on it
   // being already set.  Note that the computed height may be
   // unconstrained; that's ok.  Consumers should watch out for that.
-  nsSize maxSize(aReflowInput.ComputedWidth(), aReflowInput.ComputedHeight());
+  const nsSize maxSize(aReflowInput.ComputedWidth(),
+                       aReflowInput.ComputedHeight());
   SetSize(maxSize);
 
-  WritingMode wm = aReflowInput.GetWritingMode();
-  aReflowOutput.ISize(wm) = aReflowInput.ComputedISize();
+  // Writing mode for the page content frame.
+  const WritingMode pcfWM = aReflowInput.GetWritingMode();
+  aReflowOutput.ISize(pcfWM) = aReflowInput.ComputedISize();
   if (aReflowInput.ComputedBSize() != NS_UNCONSTRAINEDSIZE) {
-    aReflowOutput.BSize(wm) = aReflowInput.ComputedBSize();
+    aReflowOutput.BSize(pcfWM) = aReflowInput.ComputedBSize();
   }
   aReflowOutput.SetOverflowAreasToDesiredBounds();
 
@@ -62,11 +64,11 @@ void nsPageContentFrame::Reflow(nsPresContext* aPresContext,
   // Resize our frame allowing it only to be as big as we are
   // XXX Pay attention to the page's border and padding...
   if (mFrames.NotEmpty()) {
-    nsIFrame* frame = mFrames.FirstChild();
-    WritingMode wm = frame->GetWritingMode();
-    LogicalSize logicalSize(wm, maxSize);
+    nsIFrame* const frame = mFrames.FirstChild();
+    const WritingMode frameWM = frame->GetWritingMode();
+    const LogicalSize logicalSize(frameWM, maxSize);
     ReflowInput kidReflowInput(aPresContext, aReflowInput, frame, logicalSize);
-    kidReflowInput.SetComputedBSize(logicalSize.BSize(wm));
+    kidReflowInput.SetComputedBSize(logicalSize.BSize(frameWM));
     ReflowOutput kidReflowOutput(kidReflowInput);
     ReflowChild(frame, aPresContext, kidReflowOutput, kidReflowInput, 0, 0,
                 ReflowChildFlags::Default, aStatus);
@@ -89,10 +91,10 @@ void nsPageContentFrame::Reflow(nsPresContext* aPresContext,
       // for children sticking outside the child frame's padding edge
       nscoord xmost = kidReflowOutput.ScrollableOverflow().XMost();
       if (xmost > kidReflowOutput.Width()) {
-        nscoord widthToFit =
+        const nscoord widthToFit =
             xmost + padding.right +
             kidReflowInput.mStyleBorder->GetComputedBorderWidth(eSideRight);
-        float ratio = float(maxSize.width) / widthToFit;
+        const float ratio = float(maxSize.width) / float(widthToFit);
         NS_ASSERTION(ratio >= 0.0 && ratio < 1.0,
                      "invalid shrink-to-fit ratio");
         mPD->mShrinkToFitRatio = std::min(mPD->mShrinkToFitRatio, ratio);
@@ -103,10 +105,10 @@ void nsPageContentFrame::Reflow(nsPresContext* aPresContext,
       if (nsContentUtils::IsPDFJS(PresContext()->Document()->GetPrincipal())) {
         nscoord ymost = kidReflowOutput.ScrollableOverflow().YMost();
         if (ymost > kidReflowOutput.Height()) {
-          nscoord heightToFit =
+          const nscoord heightToFit =
               ymost + padding.bottom +
               kidReflowInput.mStyleBorder->GetComputedBorderWidth(eSideBottom);
-          float ratio = float(maxSize.height) / heightToFit;
+          const float ratio = float(maxSize.height) / float(heightToFit);
           MOZ_ASSERT(ratio >= 0.0 && ratio < 1.0);
           mPD->mShrinkToFitRatio = std::min(mPD->mShrinkToFitRatio, ratio);
         }
@@ -141,14 +143,15 @@ void nsPageContentFrame::Reflow(nsPresContext* aPresContext,
 
   if (StaticPrefs::layout_display_list_improve_fragmentation() &&
       mFrames.NotEmpty()) {
-    auto* previous = static_cast<nsPageContentFrame*>(GetPrevContinuation());
+    auto* const previous =
+        static_cast<nsPageContentFrame*>(GetPrevContinuation());
     const nscoord previousPageOverflow =
         previous ? previous->mRemainingOverflow : 0;
     const nsSize containerSize(aReflowInput.AvailableWidth(),
                                aReflowInput.AvailableHeight());
-    const nscoord pageBSize = GetLogicalRect(containerSize).BSize(wm);
+    const nscoord pageBSize = GetLogicalRect(containerSize).BSize(pcfWM);
     const nscoord overflowBSize =
-        LogicalRect(wm, ScrollableOverflowRect(), GetSize()).BEnd(wm);
+        LogicalRect(pcfWM, ScrollableOverflowRect(), GetSize()).BEnd(pcfWM);
     const nscoord currentPageOverflow = overflowBSize - pageBSize;
     nscoord remainingOverflow =
         std::max(currentPageOverflow, previousPageOverflow - pageBSize);
