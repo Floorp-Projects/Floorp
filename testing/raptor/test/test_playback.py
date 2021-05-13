@@ -38,7 +38,7 @@ def test_get_playback(get_binary):
             "raptor",
             "tooltool-manifests",
             "playback",
-            "mitm4-linux-firefox-amazon.manifest",
+            "mitm5-linux-firefox-amazon.manifest",
         )
     ]
     config["binary"] = get_binary("firefox")
