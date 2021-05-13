@@ -196,6 +196,22 @@ const TEST_PROTON_CONTENT = [
       },
     },
   },
+  {
+    id: "AW_STEP4",
+    order: 3,
+    content: {
+      title: "Step 4",
+      primary_button: {
+        label: "Next",
+        action: {
+          navigate: true,
+        },
+      },
+      secondary_button: {
+        label: "link",
+      },
+    },
+  },
 ];
 
 async function getAboutWelcomeParent(browser) {
@@ -1115,7 +1131,13 @@ add_task(async function test_multistage_aboutwelcome_proton() {
       "div.secondary-cta.top",
     ],
     // Unexpected selectors:
-    ["main.AW_STEP2", "main.AW_STEP3", "nav.steps"]
+    [
+      "main.AW_STEP2",
+      "main.AW_STEP3",
+      "nav.steps",
+      "main.dialog-initial",
+      "main.dialog-last",
+    ]
   );
 
   await onButtonClick(browser, "button.primary");
@@ -1141,14 +1163,14 @@ add_task(async function test_multistage_aboutwelcome_proton() {
     "multistage proton step 2",
     // Expected selectors:
     [
-      "main.AW_STEP2",
+      "main.AW_STEP2.dialog-initial",
       "div.onboardingContainer",
       "div.proton[style*='.jpg']",
       "div.section-main",
       "nav.steps",
     ],
     // Unexpected selectors:
-    ["main.AW_STEP1", "main.AW_STEP3", "div.section-left"]
+    ["main.AW_STEP1", "main.AW_STEP3", "div.section-left", "main.dialog-last"]
   );
 
   await onButtonClick(browser, "button.primary");
@@ -1169,8 +1191,35 @@ add_task(async function test_multistage_aboutwelcome_proton() {
       "nav.steps",
     ],
     // Unexpected selectors:
-    ["main.AW_STEP2", "main.AW_STEP1", "div.section-left"]
+    [
+      "main.AW_STEP2",
+      "main.AW_STEP1",
+      "div.section-left",
+      "main.dialog-initial",
+      "main.dialog-last",
+    ]
   );
 
   await onButtonClick(browser, "button.primary");
+
+  await test_screen_content(
+    browser,
+    "multistage proton step 4",
+    // Expected selectors:
+    [
+      "main.AW_STEP4.screen-1",
+      "main.AW_STEP4.dialog-last",
+      "div.onboardingContainer",
+    ],
+    // Unexpected selectors:
+    [
+      "main.AW_STEP2",
+      "main.AW_STEP1",
+      "main.AW_STEP3",
+      "main.dialog-initial",
+      "main.AW_STEP4.screen-0",
+      "main.AW_STEP4.screen-2",
+      "main.AW_STEP4.screen-3",
+    ]
+  );
 });

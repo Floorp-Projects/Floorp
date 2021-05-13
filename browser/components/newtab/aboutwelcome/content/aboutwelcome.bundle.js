@@ -1123,9 +1123,12 @@ class MultiStageProtonScreen extends react__WEBPACK_IMPORTED_MODULE_0___default.
       content,
       totalNumberOfScreens: total
     } = this.props;
-    const isWelcomeScreen = this.props.order === 0;
+    const isWelcomeScreen = this.props.order === 0; // Assign proton screen style 'screen-1' or 'screen-2' by checking
+    // if screen order is even or odd.
+
+    const screenClassName = isWelcomeScreen ? "screen-0" : `${this.props.order === 1 ? `dialog-initial` : ``} ${this.props.order === total ? `dialog-last` : ``} screen-${this.props.order % 2 !== 0 ? 1 : 2}`;
     return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("main", {
-      className: `screen ${this.props.id} screen-${this.props.order}`
+      className: `screen ${this.props.id} ${screenClassName}`
     }, isWelcomeScreen ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
       className: "section-left"
     }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {

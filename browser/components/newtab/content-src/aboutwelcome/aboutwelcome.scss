@@ -919,20 +919,6 @@ body {
           width: 420px;
           height: auto;
         }
-
-        .brand-logo {
-          transition-delay: 0.6s;
-        }
-
-        .welcome-text {
-          transition-delay: 0.8s;
-        }
-
-        .primary,
-        .secondary-cta,
-        .steps {
-          transition-delay: 1s;
-        }
       }
 
       //Position of noodles on second screen
@@ -975,6 +961,40 @@ body {
       }
     }
 
+    // Defining the timing of the transition-in for items within the dialog,
+    // These longer delays are to allow for the dialog to slide down on first screen
+    .dialog-initial {
+      .brand-logo {
+        transition-delay: 0.6s;
+      }
+
+      .welcome-text {
+        transition-delay: 0.8s;
+      }
+
+      .tiles-theme-section {
+        transition-delay: 0.9s;
+      }
+
+      .primary,
+      .secondary-cta,
+      .steps {
+        transition-delay: 1s;
+      }
+    }
+
+    // Delays for transitioning-in of intermediate screens
+    .screen:not(.dialog-initial):not(.screen-0) {
+      .tiles-theme-section {
+        transition-delay: 0.2s;
+      }
+
+      .primary,
+      .secondary-cta {
+        transition-delay: 0.4s;
+      }
+    }
+
     .screen-2 {
       background-color: rgba(21, 20, 26, 0.5);
 
@@ -992,15 +1012,6 @@ body {
         @media (max-width: $break-point-medium) {
           width: 420px;
           height: auto;
-        }
-
-        .tiles-theme-section {
-          transition-delay: 0.2s;
-        }
-
-        .primary,
-        .secondary-cta {
-          transition-delay: 0.4s;
         }
       }
 
@@ -1068,7 +1079,7 @@ body {
         }
       }
 
-      .screen-1 {
+      .dialog-initial {
         .main-content {
           translate: 0 calc(-2 * var(--translate));
         }
@@ -1080,14 +1091,13 @@ body {
         }
       }
 
-      .screen-2 {
+      .screen:not(.dialog-initial):not(.screen-0) {
         .steps {
           opacity: 0.2;
         }
       }
 
-      .screen-1,
-      .screen-2 {
+      .screen:not(.screen-0) {
         .welcome-text,
         .tiles-theme-section,
         .primary,
@@ -1129,7 +1139,7 @@ body {
         }
       }
 
-      .screen-1 {
+      .screen:not(.dialog-last):not(.screen-0) {
         .main-content {
           overflow: hidden;
         }
@@ -1138,6 +1148,13 @@ body {
           opacity: 0;
           translate: 0 var(--translate);
           transition-delay: 0.1s;
+        }
+
+        .tiles-theme-section {
+          opacity: 0;
+          translate: 0 var(--translate);
+          transition-delay: 0.2s;
+
         }
 
         .primary,
@@ -1153,7 +1170,7 @@ body {
         }
       }
 
-      .screen-2 {
+      .dialog-last {
         .noodle {
           transition-delay: 0s;
         }
