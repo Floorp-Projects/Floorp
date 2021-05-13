@@ -93,7 +93,7 @@ Document* nsDOMCSSAttributeDeclaration::DocToUpdate() {
 
 DeclarationBlock* nsDOMCSSAttributeDeclaration::GetOrCreateCSSDeclaration(
     Operation aOperation, DeclarationBlock** aCreated) {
-  MOZ_ASSERT(aOperation != eOperation_Modify || aCreated);
+  MOZ_ASSERT(aOperation != Operation::Modify || aCreated);
 
   if (!mElement) return nullptr;
 
@@ -108,7 +108,7 @@ DeclarationBlock* nsDOMCSSAttributeDeclaration::GetOrCreateCSSDeclaration(
     return declaration;
   }
 
-  if (aOperation != eOperation_Modify) {
+  if (aOperation != Operation::Modify) {
     return nullptr;
   }
 
@@ -144,7 +144,7 @@ nsresult nsDOMCSSAttributeDeclaration::SetSMILValueHelper(SetterFunc aFunc) {
   // scripted animation.
   RefPtr<DeclarationBlock> created;
   DeclarationBlock* olddecl =
-      GetOrCreateCSSDeclaration(eOperation_Modify, getter_AddRefs(created));
+      GetOrCreateCSSDeclaration(Operation::Modify, getter_AddRefs(created));
   if (!olddecl) {
     return NS_ERROR_NOT_AVAILABLE;
   }
