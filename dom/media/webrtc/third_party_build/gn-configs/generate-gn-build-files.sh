@@ -69,6 +69,10 @@ else
   exit 1
 fi
 
+IS_WIN=0
+IS_DARWIN=0
+IS_LINUX=0
+
 # Erase content of third_party/libwebrtc/moz.build to help with generating
 # files that may conflict with current moz.build files.  Each config calls
 # ./mach configure.  If there are conflicts in any moz.build files under
@@ -81,8 +85,10 @@ echo "" > third_party/libwebrtc/moz.build
 # For now, only macOS, Windows, and Linux (including Android builds) are supported here.
 if [ "x$SYS_NAME" = "xDarwin" ]; then
   CONFIGS="x64_False_arm64_mac x64_True_arm64_mac x64_False_x64_mac x64_True_x64_mac"
+  IS_DARWIN=1
 elif [ "x$SYS_NAME" = "xMINGW32_NT-6.2" ]; then
   CONFIGS="x64_True_x64_win x64_False_x64_win"
+  IS_WIN=1
 else
   # Ensure rust has the correct targets for building x86 and arm64.  These
   # operations succeed quickly if previously completed.
@@ -96,6 +102,7 @@ else
   CONFIGS="$CONFIGS x64_False_x64_android x64_True_x64_android"
   CONFIGS="$CONFIGS x64_False_x86_android x64_True_x86_android"
   CONFIGS="$CONFIGS x64_False_arm64_android x64_True_arm64_android"
+  IS_LINUX=1
 fi
 
 # The path to DEPOT_TOOLS should be on our path, and make sure that it doesn't
@@ -150,6 +157,10 @@ for THIS_CONFIG in $CONFIGS
 do
   echo "fixup file: $CONFIG_DIR/$THIS_CONFIG.json"
   ./$CONFIG_DIR/fixup_json.py $CONFIG_DIR/$THIS_CONFIG.json
+  if [ "$IS_WIN" == 1 ]; then
+    # Use Linux/UNIX line endings
+    dos2unix $file
+  fi
 done
 
 #  The symlinks are no longer needed after generating the .json files.
