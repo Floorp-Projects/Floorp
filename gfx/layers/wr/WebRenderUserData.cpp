@@ -282,6 +282,35 @@ void WebRenderImageData::CreateImageClientIfNeeded() {
   }
 }
 
+WebRenderBlobImageData::WebRenderBlobImageData(RenderRootStateManager* aManager,
+                                               nsDisplayItem* aItem)
+    : WebRenderUserData(aManager, aItem) {}
+
+WebRenderBlobImageData::WebRenderBlobImageData(RenderRootStateManager* aManager,
+                                               uint32_t aDisplayItemKey,
+                                               nsIFrame* aFrame)
+    : WebRenderUserData(aManager, aDisplayItemKey, aFrame) {}
+
+Maybe<wr::BlobImageKey> WebRenderBlobImageData::UpdateImageKey(
+    ImageContainer* aContainer, wr::IpcResourceUpdateQueue& aResources) {
+  MOZ_ASSERT(aContainer);
+
+  if (mContainer != aContainer) {
+    mContainer = aContainer;
+  }
+
+  wr::BlobImageKey key = {};
+  nsresult rv =
+      SharedSurfacesChild::ShareBlob(aContainer, mManager, aResources, key);
+  if (NS_SUCCEEDED(rv)) {
+    mKey = Some(key);
+  } else {
+    mKey.reset();
+  }
+
+  return mKey;
+}
+
 WebRenderFallbackData::WebRenderFallbackData(RenderRootStateManager* aManager,
                                              nsDisplayItem* aItem)
     : WebRenderUserData(aManager, aItem), mInvalid(false) {}
