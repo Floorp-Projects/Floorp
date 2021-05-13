@@ -1,7 +1,7 @@
 {
   "data": [
     {
-      "schema": 1620399434433,
+      "schema": 1620831450370,
       "derHash": "Jv1MQ2fkY9OccXlq5AEOUzgNyTvBMvsBnWcYpoc+gfQ=",
       "subject": "CN=SHECA RSA Organization Validation Server CA G3,O=UniTrust,C=CN",
       "subjectDN": "MFkxCzAJBgNVBAYTAkNOMREwDwYDVQQKDAhVbmlUcnVzdDE3MDUGA1UEAwwuU0hFQ0EgUlNBIE9yZ2FuaXphdGlvbiBWYWxpZGF0aW9uIFNlcnZlciBDQSBHMw==",
@@ -16,7 +16,43 @@
       "pubKeyHash": "0JA1q1ctk/4J8qS0t+GhJaG5egVDq9SB33oMY7SMpfs=",
       "crlite_enrolled": true,
       "id": "10ec0271-99d5-4c06-a20d-1c03ccf7d780",
-      "last_modified": 1620442645382
+      "last_modified": 1620871064876
+    },
+    {
+      "schema": 1620806257598,
+      "derHash": "ytA6WE5YU5uJGS7EnOp6bY7XJCrV3N+D+W0IfwnyMts=",
+      "subject": "CN=GEANT eScience SSL ECC CA 4,O=GEANT Vereniging,C=NL",
+      "subjectDN": "ME4xCzAJBgNVBAYTAk5MMRkwFwYDVQQKExBHRUFOVCBWZXJlbmlnaW5nMSQwIgYDVQQDExtHRUFOVCBlU2NpZW5jZSBTU0wgRUNDIENBIDQ=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "7db15ec19aae6dfd33627c70072ae0be041ec482c68931ac550f8e7ecbe82a38",
+        "size": 1276,
+        "filename": "nzYOlulDufoKXDgcAhC63BnT5t74_zG2ZFweTlq2pTA=.pem",
+        "location": "security-state-staging/intermediates/82fcc086-5e5e-43f4-b969-d11903a233b2.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "nzYOlulDufoKXDgcAhC63BnT5t74/zG2ZFweTlq2pTA=",
+      "crlite_enrolled": false,
+      "id": "3ae9678b-4310-42e4-8c4b-a2bd36359c71",
+      "last_modified": 1620827964640
+    },
+    {
+      "schema": 1620827870391,
+      "derHash": "ClUqZfIv+CDn7D1Du/iLAqvDS9JH4MNQWJG2NC8WpfI=",
+      "subject": "CN=SHECA RSA Domain Validation Server CA G3,O=UniTrust,C=CN",
+      "subjectDN": "MFMxCzAJBgNVBAYTAkNOMREwDwYDVQQKDAhVbmlUcnVzdDExMC8GA1UEAwwoU0hFQ0EgUlNBIERvbWFpbiBWYWxpZGF0aW9uIFNlcnZlciBDQSBHMw==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "42516b0068507cb60d6383aaefa05ac169921cff9e4616761151efe098d3e1fe",
+        "size": 2008,
+        "filename": "N6OrM0KKQgR1zORoDKkLLFEKAYCmS_84dpbLl_qNOnU=.pem",
+        "location": "security-state-staging/intermediates/525578e5-a94b-4525-b9e7-801be6e0ff89.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "N6OrM0KKQgR1zORoDKkLLFEKAYCmS/84dpbLl/qNOnU=",
+      "crlite_enrolled": true,
+      "id": "4b6a2421-1677-41c0-8103-bc13fb7e09f9",
+      "last_modified": 1620827964602
     },
     {
       "schema": 1619790597514,
@@ -125,24 +161,6 @@
       "crlite_enrolled": true,
       "id": "549c92e2-3738-4c8c-ae37-407e4e6158ce",
       "last_modified": 1620399433269
-    },
-    {
-      "schema": 1619683063017,
-      "derHash": "ClUqZfIv+CDn7D1Du/iLAqvDS9JH4MNQWJG2NC8WpfI=",
-      "subject": "CN=SHECA RSA Domain Validation Server CA G3,O=UniTrust,C=CN",
-      "subjectDN": "MFMxCzAJBgNVBAYTAkNOMREwDwYDVQQKDAhVbmlUcnVzdDExMC8GA1UEAwwoU0hFQ0EgUlNBIERvbWFpbiBWYWxpZGF0aW9uIFNlcnZlciBDQSBHMw==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "42516b0068507cb60d6383aaefa05ac169921cff9e4616761151efe098d3e1fe",
-        "size": 2008,
-        "filename": "N6OrM0KKQgR1zORoDKkLLFEKAYCmS_84dpbLl_qNOnU=.pem",
-        "location": "security-state-staging/intermediates/525578e5-a94b-4525-b9e7-801be6e0ff89.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "N6OrM0KKQgR1zORoDKkLLFEKAYCmS/84dpbLl/qNOnU=",
-      "crlite_enrolled": true,
-      "id": "4b6a2421-1677-41c0-8103-bc13fb7e09f9",
-      "last_modified": 1619704684320
     },
     {
       "schema": 1619405839700,
@@ -845,24 +863,6 @@
       "crlite_enrolled": true,
       "id": "6fe7a90f-5366-4061-a9ed-581dae6a646b",
       "last_modified": 1618102648455
-    },
-    {
-      "schema": 1617659386472,
-      "derHash": "ytA6WE5YU5uJGS7EnOp6bY7XJCrV3N+D+W0IfwnyMts=",
-      "subject": "CN=GEANT eScience SSL ECC CA 4,O=GEANT Vereniging,C=NL",
-      "subjectDN": "ME4xCzAJBgNVBAYTAk5MMRkwFwYDVQQKExBHRUFOVCBWZXJlbmlnaW5nMSQwIgYDVQQDExtHRUFOVCBlU2NpZW5jZSBTU0wgRUNDIENBIDQ=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "7db15ec19aae6dfd33627c70072ae0be041ec482c68931ac550f8e7ecbe82a38",
-        "size": 1276,
-        "filename": "nzYOlulDufoKXDgcAhC63BnT5t74_zG2ZFweTlq2pTA=.pem",
-        "location": "security-state-staging/intermediates/82fcc086-5e5e-43f4-b969-d11903a233b2.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "nzYOlulDufoKXDgcAhC63BnT5t74/zG2ZFweTlq2pTA=",
-      "crlite_enrolled": true,
-      "id": "3ae9678b-4310-42e4-8c4b-a2bd36359c71",
-      "last_modified": 1618102648436
     },
     {
       "schema": 1618073557744,
