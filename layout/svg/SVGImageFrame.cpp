@@ -614,7 +614,7 @@ bool SVGImageFrame::CreateWebRenderCommands(
 
   Maybe<ImageIntRegion> region;
   IntSize decodeSize = nsLayoutUtils::ComputeImageContainerDrawingParameters(
-      mImageContainer, this, destRect, destRect, aSc, flags, svgContext,
+      mImageContainer, this, destRect, clipRect, aSc, flags, svgContext,
       region);
 
   RefPtr<layers::ImageContainer> container;
