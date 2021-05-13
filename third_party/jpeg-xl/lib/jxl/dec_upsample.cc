@@ -51,37 +51,34 @@ float Kernel(size_t x, size_t y, size_t ix, size_t iy,
 }
 
 template <int N>
-void Upsample(const Image3F& src, const Rect& src_rect, Image3F* dst,
+void Upsample(const ImageF& src, const Rect& src_rect, ImageF* dst,
               const Rect& dst_rect, const float kernel[4][4][5][5],
               ssize_t image_y_offset, size_t image_ysize) {
   JXL_DASSERT(src_rect.x0() >= 2);
   JXL_DASSERT(src_rect.x0() + src_rect.xsize() + 2 <= src.xsize());
-  for (size_t c = 0; c < 3; c++) {
-    for (size_t y = 0; y < dst_rect.ysize(); y++) {
-      float* dst_row = dst_rect.PlaneRow(dst, c, y);
-      const float* src_rows[5];
-      for (int iy = -2; iy <= 2; iy++) {
-        ssize_t image_y =
-            static_cast<ssize_t>(y / N + src_rect.y0() + iy) + image_y_offset;
-        src_rows[iy + 2] =
-            src.PlaneRow(c, Mirror(image_y, image_ysize) - image_y_offset);
-      }
-      for (size_t x = 0; x < dst_rect.xsize(); x++) {
-        size_t xbase = x / N + src_rect.x0() - 2;
-        float result = 0;
-        float min = src_rows[0][xbase];
-        float max = src_rows[0][xbase];
-        for (size_t iy = 0; iy < 5; iy++) {
-          for (size_t ix = 0; ix < 5; ix++) {
-            float v = src_rows[iy][xbase + ix];
-            result += Kernel<N>(x, y, ix, iy, kernel) * v;
-            min = std::min(v, min);
-            max = std::max(v, max);
-          }
+  for (size_t y = 0; y < dst_rect.ysize(); y++) {
+    float* dst_row = dst_rect.Row(dst, y);
+    const float* src_rows[5];
+    for (int iy = -2; iy <= 2; iy++) {
+      ssize_t image_y =
+          static_cast<ssize_t>(y / N + src_rect.y0() + iy) + image_y_offset;
+      src_rows[iy + 2] = src.Row(Mirror(image_y, image_ysize) - image_y_offset);
+    }
+    for (size_t x = 0; x < dst_rect.xsize(); x++) {
+      size_t xbase = x / N + src_rect.x0() - 2;
+      float result = 0;
+      float min = src_rows[0][xbase];
+      float max = src_rows[0][xbase];
+      for (size_t iy = 0; iy < 5; iy++) {
+        for (size_t ix = 0; ix < 5; ix++) {
+          float v = src_rows[iy][xbase + ix];
+          result += Kernel<N>(x, y, ix, iy, kernel) * v;
+          min = std::min(v, min);
+          max = std::max(v, max);
         }
-        // Avoid overshooting.
-        dst_row[x] = std::min(std::max(result, min), max);
       }
+      // Avoid overshooting.
+      dst_row[x] = std::min(std::max(result, min), max);
     }
   }
 }
@@ -101,12 +98,12 @@ void Upsampler::Init(size_t upsampling, const CustomTransformData& data) {
   }
 }
 
-void Upsampler::UpsampleRect(const Image3F& src, const Rect& src_rect,
-                             Image3F* dst, const Rect& dst_rect,
+void Upsampler::UpsampleRect(const ImageF& src, const Rect& src_rect,
+                             ImageF* dst, const Rect& dst_rect,
                              ssize_t image_y_offset, size_t image_ysize) const {
   if (upsampling_ == 1) return;
-  JXL_ASSERT(dst_rect.xsize() == src_rect.xsize() * upsampling_);
-  JXL_ASSERT(dst_rect.ysize() == src_rect.ysize() * upsampling_);
+  JXL_ASSERT(DivCeil(dst_rect.xsize(), upsampling_) <= src_rect.xsize());
+  JXL_ASSERT(DivCeil(dst_rect.ysize(), upsampling_) <= src_rect.ysize());
   if (upsampling_ == 2) {
     Upsample<2>(src, src_rect, dst, dst_rect, kernel_, image_y_offset,
                 image_ysize);
@@ -118,6 +115,15 @@ void Upsampler::UpsampleRect(const Image3F& src, const Rect& src_rect,
                 image_ysize);
   } else {
     JXL_ABORT("Not implemented");
+  }
+}
+
+void Upsampler::UpsampleRect(const Image3F& src, const Rect& src_rect,
+                             Image3F* dst, const Rect& dst_rect,
+                             ssize_t image_y_offset, size_t image_ysize) const {
+  for (size_t c = 0; c < 3; c++) {
+    UpsampleRect(src.Plane(c), src_rect, &dst->Plane(c), dst_rect,
+                 image_y_offset, image_ysize);
   }
 }
 

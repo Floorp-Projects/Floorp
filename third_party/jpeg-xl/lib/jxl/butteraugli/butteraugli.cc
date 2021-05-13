@@ -1767,9 +1767,7 @@ Image3F* ButteraugliComparator::Temp() const {
   return &temp_;
 }
 
-void ButteraugliComparator::ReleaseTemp() const {
-  temp_in_use_.clear(std::memory_order_acq_rel);
-}
+void ButteraugliComparator::ReleaseTemp() const { temp_in_use_.clear(); }
 
 ButteraugliComparator::ButteraugliComparator(const Image3F& rgb0,
                                              const ButteraugliParams& params)
@@ -1910,15 +1908,9 @@ void ButteraugliComparator::DiffmapPsychoImage(const PsychoImage& pi1,
                  norm1MfX, &diffs, &block_diff_ac, 0);
 
   static const double wmul[9] = {
-      400.0,
-      1.50815703118,
-      0,
-      2150.0,
-      10.6195433239,
-      16.2176043152,
-      29.2353797994,
-      0.844626970982,
-      0.703646627719,
+      400.0,         1.50815703118,  0,
+      2150.0,        10.6195433239,  16.2176043152,
+      29.2353797994, 0.844626970982, 0.703646627719,
   };
   Image3F block_diff_dc(xsize_, ysize_);
   for (size_t c = 0; c < 3; ++c) {

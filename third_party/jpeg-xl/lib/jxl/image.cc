@@ -270,6 +270,39 @@ float DotProduct(const ImageF& a, const ImageF& b) {
   return sum;
 }
 
+static void DownsampleImage(const ImageF& input, size_t factor,
+                            ImageF* output) {
+  JXL_ASSERT(factor != 1);
+  output->ShrinkTo(DivCeil(input.xsize(), factor),
+                   DivCeil(input.ysize(), factor));
+  size_t in_stride = input.PixelsPerRow();
+  for (size_t y = 0; y < output->ysize(); y++) {
+    float* row_out = output->Row(y);
+    const float* row_in = input.Row(factor * y);
+    for (size_t x = 0; x < output->xsize(); x++) {
+      size_t cnt = 0;
+      float sum = 0;
+      for (size_t iy = 0; iy < factor && iy + factor * y < input.ysize();
+           iy++) {
+        for (size_t ix = 0; ix < factor && ix + factor * x < input.xsize();
+             ix++) {
+          sum += row_in[iy * in_stride + x * factor + ix];
+          cnt++;
+        }
+      }
+      row_out[x] = sum / cnt;
+    }
+  }
+}
+
+void DownsampleImage(ImageF* image, size_t factor) {
+  // Allocate extra space to avoid a reallocation when padding.
+  ImageF downsampled(DivCeil(image->xsize(), factor) + kBlockDim,
+                     DivCeil(image->ysize(), factor) + kBlockDim);
+  DownsampleImage(*image, factor, &downsampled);
+  *image = std::move(downsampled);
+}
+
 void DownsampleImage(Image3F* opsin, size_t factor) {
   JXL_ASSERT(factor != 1);
   // Allocate extra space to avoid a reallocation when padding.
@@ -277,25 +310,8 @@ void DownsampleImage(Image3F* opsin, size_t factor) {
                       DivCeil(opsin->ysize(), factor) + kBlockDim);
   downsampled.ShrinkTo(downsampled.xsize() - kBlockDim,
                        downsampled.ysize() - kBlockDim);
-  size_t in_stride = opsin->PixelsPerRow();
   for (size_t c = 0; c < 3; c++) {
-    for (size_t y = 0; y < downsampled.ysize(); y++) {
-      float* row_out = downsampled.PlaneRow(c, y);
-      const float* row_in = opsin->PlaneRow(c, factor * y);
-      for (size_t x = 0; x < downsampled.xsize(); x++) {
-        size_t cnt = 0;
-        float sum = 0;
-        for (size_t iy = 0; iy < factor && iy + factor * y < opsin->ysize();
-             iy++) {
-          for (size_t ix = 0; ix < factor && ix + factor * x < opsin->xsize();
-               ix++) {
-            sum += row_in[iy * in_stride + x * factor + ix];
-            cnt++;
-          }
-        }
-        row_out[x] = sum / cnt;
-      }
-    }
+    DownsampleImage(opsin->Plane(c), factor, &downsampled.Plane(c));
   }
   *opsin = std::move(downsampled);
 }

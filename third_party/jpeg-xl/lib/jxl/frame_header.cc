@@ -58,14 +58,18 @@ BlendingInfo::BlendingInfo() { Bundle::Init(this); }
 Status BlendingInfo::VisitFields(Visitor* JXL_RESTRICT visitor) {
   JXL_QUIET_RETURN_IF_ERROR(
       VisitBlendMode(visitor, BlendMode::kReplace, &mode));
-  if (visitor->Conditional(nonserialized_has_multiple_extra_channels &&
+  if (visitor->Conditional(nonserialized_num_extra_channels > 0 &&
                            (mode == BlendMode::kBlend ||
                             mode == BlendMode::kAlphaWeightedAdd))) {
     // Up to 11 alpha channels for blending.
     JXL_QUIET_RETURN_IF_ERROR(visitor->U32(
         Val(0), Val(1), Val(2), BitsOffset(3, 3), 0, &alpha_channel));
+    if (visitor->IsReading() &&
+        alpha_channel >= nonserialized_num_extra_channels) {
+      return JXL_FAILURE("Invalid alpha channel for blending");
+    }
   }
-  if (visitor->Conditional((nonserialized_has_multiple_extra_channels &&
+  if (visitor->Conditional((nonserialized_num_extra_channels > 0 &&
                             (mode == BlendMode::kBlend ||
                              mode == BlendMode::kAlphaWeightedAdd)) ||
                            mode == BlendMode::kMul)) {
@@ -200,10 +204,6 @@ Status FrameHeader::VisitFields(Visitor* JXL_RESTRICT visitor) {
                            ((flags & kUseDcFrame) == 0))) {
     JXL_QUIET_RETURN_IF_ERROR(visitor->VisitNested(&chroma_subsampling));
   }
-  if (is_modular && !chroma_subsampling.Is444()) {
-    return JXL_FAILURE(
-        "Chroma subsampling is not supported yet in modular mode");
-  }
 
   size_t num_extra_channels =
       nonserialized_metadata != nullptr
@@ -219,20 +219,21 @@ Status FrameHeader::VisitFields(Visitor* JXL_RESTRICT visitor) {
       const std::vector<ExtraChannelInfo>& extra_channels =
           nonserialized_metadata->m.extra_channel_info;
       extra_channel_upsampling.resize(extra_channels.size(), 1);
-      bool foundAlpha = false;
       for (size_t i = 0; i < extra_channels.size(); ++i) {
+        uint32_t dim_shift =
+            nonserialized_metadata->m.extra_channel_info[i].dim_shift;
         uint32_t& ec_upsampling = extra_channel_upsampling[i];
+        ec_upsampling >>= dim_shift;
         JXL_QUIET_RETURN_IF_ERROR(
             visitor->U32(Val(1), Val(2), Val(4), Val(8), 1, &ec_upsampling));
-        if (ec_upsampling != 1) {
+        ec_upsampling <<= dim_shift;
+        if (ec_upsampling < upsampling) {
           return JXL_FAILURE(
-              "Upsampling for extra channels not yet implemented");
+              "EC upsampling (%u) < color upsampling (%u), which is invalid.",
+              ec_upsampling, upsampling);
         }
-        if (!foundAlpha && extra_channels[i].type == ExtraChannel::kAlpha) {
-          foundAlpha = true;
-          if (ec_upsampling != upsampling) {
-            return JXL_FAILURE("Alpha upsampling != color upsampling");
-          }
+        if (ec_upsampling > 8) {
+          return JXL_FAILURE("EC upsampling too large (%u)", ec_upsampling);
         }
       }
     } else {
@@ -302,8 +303,7 @@ Status FrameHeader::VisitFields(Visitor* JXL_RESTRICT visitor) {
   // Blending info, animation info and whether this is the last frame or not.
   if (visitor->Conditional(frame_type == FrameType::kRegularFrame ||
                            frame_type == FrameType::kSkipProgressive)) {
-    blending_info.nonserialized_has_multiple_extra_channels =
-        num_extra_channels > 0;
+    blending_info.nonserialized_num_extra_channels = num_extra_channels;
     blending_info.nonserialized_is_partial_frame = is_partial_frame;
     JXL_QUIET_RETURN_IF_ERROR(visitor->VisitNested(&blending_info));
     bool replace_all = (blending_info.mode == BlendMode::kReplace);
@@ -311,8 +311,7 @@ Status FrameHeader::VisitFields(Visitor* JXL_RESTRICT visitor) {
     for (size_t i = 0; i < num_extra_channels; i++) {
       auto& ec_blending_info = extra_channel_blending_info[i];
       ec_blending_info.nonserialized_is_partial_frame = is_partial_frame;
-      ec_blending_info.nonserialized_has_multiple_extra_channels =
-          num_extra_channels > 0;
+      ec_blending_info.nonserialized_num_extra_channels = num_extra_channels;
       JXL_QUIET_RETURN_IF_ERROR(visitor->VisitNested(&ec_blending_info));
       replace_all &= (ec_blending_info.mode == BlendMode::kReplace);
     }

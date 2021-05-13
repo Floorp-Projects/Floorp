@@ -104,6 +104,8 @@ set(JPEGXL_ENABLE_PLUGINS false CACHE BOOL
     "Build third-party plugings to support JPEG XL in other applications.")
 set(JPEGXL_ENABLE_COVERAGE false CACHE BOOL
     "Enable code coverage tracking for libjxl. This also enables debug and disables optimizations.")
+set(JPEGXL_ENABLE_PROFILER false CACHE BOOL
+    "Builds in support for profiling (printed by tools if extra flags given")
 set(JPEGXL_STATIC false CACHE BOOL
     "Build tools as static binaries.")
 set(JPEGXL_WARNINGS_AS_ERRORS ${WARNINGS_AS_ERRORS_DEFAULT} CACHE BOOL
@@ -186,6 +188,11 @@ add_definitions(
   -D__TIMESTAMP__="redacted"
   -D__TIME__="redacted"
 )
+
+# Avoid log spam from fopen etc.
+if(MSVC)
+  add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+endif()
 
 if("${JPEGXL_ENABLE_FUZZERS}" OR "${JPEGXL_ENABLE_COVERAGE}")
   add_definitions(

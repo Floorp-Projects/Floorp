@@ -196,10 +196,22 @@ Status ModularFrameDecoder::DecodeGlobalInfo(BitReader* reader,
 
   Image gi(frame_dim.xsize, frame_dim.ysize, maxval, nb_chans + nb_extra);
 
+  if (frame_header.color_transform == ColorTransform::kYCbCr) {
+    for (size_t c = 0; c < nb_chans; c++) {
+      gi.channel[c].hshift = frame_header.chroma_subsampling.HShift(c);
+      gi.channel[c].vshift = frame_header.chroma_subsampling.VShift(c);
+      size_t xsize_shifted = DivCeil(frame_dim.xsize, 1 << gi.channel[c].hshift);
+      size_t ysize_shifted = DivCeil(frame_dim.ysize, 1 << gi.channel[c].vshift);
+      gi.channel[c].resize(xsize_shifted, ysize_shifted);
+    }
+  }
+
   for (size_t ec = 0, c = nb_chans; ec < nb_extra; ec++, c++) {
-    const ExtraChannelInfo& eci = metadata.extra_channel_info[ec];
-    gi.channel[c].resize(eci.Size(frame_dim.xsize), eci.Size(frame_dim.ysize));
-    gi.channel[c].hshift = gi.channel[c].vshift = eci.dim_shift;
+    size_t ecups = frame_header.extra_channel_upsampling[ec];
+    gi.channel[c].resize(DivCeil(frame_dim.xsize_upsampled, ecups),
+                         DivCeil(frame_dim.ysize_upsampled, ecups));
+    gi.channel[c].hshift = gi.channel[c].vshift =
+        CeilLog2Nonzero(ecups) - CeilLog2Nonzero(frame_header.upsampling);
   }
 
   ModularOptions options;
@@ -494,18 +506,20 @@ Status ModularFrameDecoder::FinalizeDecoding(PassesDecoderState* dec_state,
             },
             "ModularIntToFloat_losslessfloat");
       } else {
+        size_t xsize_shifted = DivCeil(xsize, 1 << gi.channel[c_in].hshift);
+        size_t ysize_shifted = DivCeil(ysize, 1 << gi.channel[c_in].vshift);
         RunOnPool(
-            pool, 0, ysize, jxl::ThreadPool::SkipInit(),
+            pool, 0, ysize_shifted, jxl::ThreadPool::SkipInit(),
             [&](const int task, const int thread) {
               const size_t y = task;
               const pixel_type* const JXL_RESTRICT row_in =
                   gi.channel[c_in].Row(y);
               if (rgb_from_gray) {
                 HWY_DYNAMIC_DISPATCH(RgbFromSingle)
-                (xsize, row_in, factor, &decoded, c, y);
+                (xsize_shifted, row_in, factor, &decoded, c, y);
               } else {
                 HWY_DYNAMIC_DISPATCH(SingleFromSingle)
-                (xsize, row_in, factor, &decoded, c, y);
+                (xsize_shifted, row_in, factor, &decoded, c, y);
               }
             },
             "ModularIntToFloat");
@@ -525,8 +539,9 @@ Status ModularFrameDecoder::FinalizeDecoding(PassesDecoderState* dec_state,
     bool fp = eci.bit_depth.floating_point_sample;
     JXL_ASSERT(fp || bits < 32);
     const float mul = fp ? 0 : (1.0f / ((1u << bits) - 1));
-    const size_t ec_xsize = eci.Size(xsize);  // includes shift
-    const size_t ec_ysize = eci.Size(ysize);
+    size_t ecups = frame_header.extra_channel_upsampling[ec];
+    const size_t ec_xsize = DivCeil(frame_dim.xsize_upsampled, ecups);
+    const size_t ec_ysize = DivCeil(frame_dim.ysize_upsampled, ecups);
     for (size_t y = 0; y < ec_ysize; ++y) {
       float* const JXL_RESTRICT row_out = dec_state->extra_channels[ec].Row(y);
       const pixel_type* const JXL_RESTRICT row_in = gi.channel[c].Row(y);

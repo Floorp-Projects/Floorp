@@ -723,7 +723,7 @@ Status PrimariesToXYZD50(float rx, float ry, float gx, float gy, float bx,
       rx, gx, bx, ry, gy, by, 1.0f - rx - ry, 1.0f - gx - gy, 1.0f - bx - by};
   float primaries_inv[9];
   memcpy(primaries_inv, primaries, sizeof(float) * 9);
-  Inv3x3Matrix(primaries_inv);
+  JXL_RETURN_IF_ERROR(Inv3x3Matrix(primaries_inv));
 
   float w[3] = {wx / wy, 1.0f, (1.0f - wx - wy) / wy};
   float xyz[3];

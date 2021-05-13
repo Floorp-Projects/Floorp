@@ -88,7 +88,7 @@ TEST(OpsinImageTest, VerifyOpsinAbsorbanceInverseMatrix) {
   for (int i = 0; i < 9; i++) {
     matrix[i] = GetOpsinAbsorbanceInverseMatrix()[i];
   }
-  Inv3x3Matrix(matrix);
+  EXPECT_TRUE(Inv3x3Matrix(matrix));
   for (int i = 0; i < 9; i++) {
     EXPECT_NEAR(matrix[i], kOpsinAbsorbanceMatrix[i], 1e-6);
   }

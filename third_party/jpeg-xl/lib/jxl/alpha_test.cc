@@ -29,17 +29,27 @@ TEST(AlphaTest, BlendingWithNonPremultiplied) {
   const float bg_a = 180.f / 255;
   const float fg_rgb[3] = {25, 21, 23};
   const float fg_a = 15420.f / 65535;
+  const float fg_a2 = 2.0f;
   float out_rgb[3];
   float out_a;
   PerformAlphaBlending(
       /*bg=*/{&bg_rgb[0], &bg_rgb[1], &bg_rgb[2], &bg_a},
       /*fg=*/{&fg_rgb[0], &fg_rgb[1], &fg_rgb[2], &fg_a},
       /*out=*/{&out_rgb[0], &out_rgb[1], &out_rgb[2], &out_a}, 1,
-      /*alpha_is_premultiplied=*/false);
+      /*alpha_is_premultiplied=*/false, /*clamp=*/false);
   EXPECT_THAT(out_rgb,
               ElementsAre(FloatNear(77.2f, .05f), FloatNear(83.0f, .05f),
                           FloatNear(90.6f, .05f)));
   EXPECT_NEAR(out_a, 3174.f / 4095, 1e-5);
+  PerformAlphaBlending(
+      /*bg=*/{&bg_rgb[0], &bg_rgb[1], &bg_rgb[2], &bg_a},
+      /*fg=*/{&fg_rgb[0], &fg_rgb[1], &fg_rgb[2], &fg_a2},
+      /*out=*/{&out_rgb[0], &out_rgb[1], &out_rgb[2], &out_a}, 1,
+      /*alpha_is_premultiplied=*/false, /*clamp=*/true);
+  EXPECT_THAT(out_rgb, ElementsAre(FloatNear(fg_rgb[0], .05f),
+                                   FloatNear(fg_rgb[1], .05f),
+                                   FloatNear(fg_rgb[2], .05f)));
+  EXPECT_NEAR(out_a, 1.0f, 1e-5);
 }
 
 TEST(AlphaTest, BlendingWithPremultiplied) {
@@ -47,42 +57,37 @@ TEST(AlphaTest, BlendingWithPremultiplied) {
   const float bg_a = 180.f / 255;
   const float fg_rgb[3] = {25, 21, 23};
   const float fg_a = 15420.f / 65535;
+  const float fg_a2 = 2.0f;
   float out_rgb[3];
   float out_a;
   PerformAlphaBlending(
       /*bg=*/{&bg_rgb[0], &bg_rgb[1], &bg_rgb[2], &bg_a},
       /*fg=*/{&fg_rgb[0], &fg_rgb[1], &fg_rgb[2], &fg_a},
       /*out=*/{&out_rgb[0], &out_rgb[1], &out_rgb[2], &out_a}, 1,
-      /*alpha_is_premultiplied=*/true);
+      /*alpha_is_premultiplied=*/true, /*clamp=*/false);
   EXPECT_THAT(out_rgb,
               ElementsAre(FloatNear(101.5f, .05f), FloatNear(105.1f, .05f),
                           FloatNear(114.8f, .05f)));
   EXPECT_NEAR(out_a, 3174.f / 4095, 1e-5);
-}
-
-TEST(AlphaTest, AlphaWeightedAdd) {
-  const float bg_rgb[3] = {100, 110, 120};
-  const float bg_a = 180.f / 255;
-  const float fg_rgb[3] = {25, 21, 23};
-  const float fg_a = 1.f / 4;
-  float out_rgb[3];
-  float out_a;
-  PerformAlphaWeightedAdd(
+  PerformAlphaBlending(
       /*bg=*/{&bg_rgb[0], &bg_rgb[1], &bg_rgb[2], &bg_a},
-      /*fg=*/{&fg_rgb[0], &fg_rgb[1], &fg_rgb[2], &fg_a},
-      /*out=*/{&out_rgb[0], &out_rgb[1], &out_rgb[2], &out_a}, 1);
-  EXPECT_THAT(out_rgb, ElementsAre(FloatNear(100.f + 25.f / 4, .05f),
-                                   FloatNear(110.f + 21.f / 4, .05f),
-                                   FloatNear(120.f + 23.f / 4, .05f)));
-  EXPECT_EQ(out_a, bg_a);
+      /*fg=*/{&fg_rgb[0], &fg_rgb[1], &fg_rgb[2], &fg_a2},
+      /*out=*/{&out_rgb[0], &out_rgb[1], &out_rgb[2], &out_a}, 1,
+      /*alpha_is_premultiplied=*/true, /*clamp=*/true);
+  EXPECT_THAT(out_rgb, ElementsAre(FloatNear(fg_rgb[0], .05f),
+                                   FloatNear(fg_rgb[1], .05f),
+                                   FloatNear(fg_rgb[2], .05f)));
+  EXPECT_NEAR(out_a, 1.0f, 1e-5);
 }
 
 TEST(AlphaTest, Mul) {
   const float bg = 100;
   const float fg = 25;
   float out;
-  PerformMulBlending(&bg, &fg, &out, 1);
+  PerformMulBlending(&bg, &fg, &out, 1, /*clamp=*/false);
   EXPECT_THAT(out, FloatNear(fg * bg, .05f));
+  PerformMulBlending(&bg, &fg, &out, 1, /*clamp=*/true);
+  EXPECT_THAT(out, FloatNear(bg, .05f));
 }
 
 TEST(AlphaTest, PremultiplyAndUnpremultiply) {

@@ -23,14 +23,11 @@
 
 #include <algorithm>
 #include <cmath>
+#include <hwy/base.h>
 #include <limits>
 #include <type_traits>
 #include <utility>
 #include <vector>
-
-#include "lib/jxl/base/compiler_specific.h"
-#include "lib/jxl/base/status.h"
-
 namespace jxl {
 
 template <typename T>
@@ -53,7 +50,7 @@ inline T Half(T x) {
 template <class T, typename std::enable_if<
                        !std::numeric_limits<T>::is_integer>::type* = nullptr>
 inline T Half(T x) {
-  return x * 0.5;
+  return x * T(0.5);
 }
 
 // Returns the median value. Side effect: values <= median will appear before,
@@ -61,7 +58,7 @@ inline T Half(T x) {
 // Guarantees average speed O(num_values).
 template <typename T>
 T Median(T* samples, const size_t num_samples) {
-  JXL_ASSERT(num_samples != 0);
+  HWY_ASSERT(num_samples != 0);
   std::nth_element(samples, samples + num_samples / 2, samples + num_samples);
   T result = samples[num_samples / 2];
   // If even size, find largest element in the partially sorted vector to
@@ -93,7 +90,7 @@ static inline T Median5(const T a, const T b, const T c, const T d, const T e) {
 template <typename T>
 T MedianAbsoluteDeviation(const T* samples, const size_t num_samples,
                           const T median) {
-  JXL_ASSERT(num_samples != 0);
+  HWY_ASSERT(num_samples != 0);
   std::vector<T> abs_deviations;
   abs_deviations.reserve(num_samples);
   for (size_t i = 0; i < num_samples; ++i) {
@@ -117,7 +114,7 @@ class HalfSampleMode {
  public:
   // Returns mode. "sorted" must be in ascending order.
   template <typename T>
-  T operator()(const T* const JXL_RESTRICT sorted,
+  T operator()(const T* const HWY_RESTRICT sorted,
                const size_t num_values) const {
     int64_t center = num_values / 2;
     int64_t width = num_values;
@@ -137,8 +134,8 @@ class HalfSampleMode {
  private:
   // Returns center of the densest region [c-radius, c+radius].
   template <typename T>
-  static JXL_INLINE int64_t CenterOfIntervalWithMinSlope(
-      const T* JXL_RESTRICT sorted, const int64_t total_values,
+  static HWY_INLINE int64_t CenterOfIntervalWithMinSlope(
+      const T* HWY_RESTRICT sorted, const int64_t total_values,
       const int64_t center, const int64_t width) {
     const int64_t radius = Half(width);
 
@@ -147,8 +144,8 @@ class HalfSampleMode {
       // For symmetry, check 2*radius+1 values, i.e. [min, max].
       const int64_t min = std::max(c - radius, int64_t(0));
       const int64_t max = std::min(c + radius, total_values - 1);
-      JXL_ASSERT(min < max);
-      JXL_ASSERT(sorted[min] <=
+      HWY_ASSERT(min < max);
+      HWY_ASSERT(sorted[min] <=
                  sorted[max] + std::numeric_limits<float>::epsilon());
       const float dx = max - min + 1;
       const float slope = (sorted[max] - sorted[min]) / dx;
@@ -177,7 +174,7 @@ class HalfSampleMode {
     }
 
     // Keep the median.
-    JXL_ASSERT(!candidates.empty());
+    HWY_ASSERT(!candidates.empty());
     if (candidates.size() == 1) return candidates[0];
     return Median(&candidates);
   }
@@ -189,7 +186,7 @@ class HalfRangeMode {
  public:
   // Returns mode expressed as a histogram bin index. "cdf" must be weakly
   // monotonically increasing, e.g. from std::partial_sum.
-  int operator()(const uint32_t* JXL_RESTRICT cdf,
+  int operator()(const uint32_t* HWY_RESTRICT cdf,
                  const size_t num_bins) const {
     int center = num_bins / 2;
     int width = num_bins;
@@ -208,8 +205,8 @@ class HalfRangeMode {
 
  private:
   // Returns center of the densest interval [c-radius, c+radius].
-  static JXL_INLINE int CenterOfIntervalWithMaxDensity(
-      const uint32_t* JXL_RESTRICT cdf, const int total_bins, const int center,
+  static HWY_INLINE int CenterOfIntervalWithMaxDensity(
+      const uint32_t* HWY_RESTRICT cdf, const int total_bins, const int center,
       const int width) {
     const int radius = Half(width);
 
@@ -218,8 +215,8 @@ class HalfRangeMode {
       // For symmetry, check 2*radius+1 bins, i.e. [min, max].
       const int min = std::max(c - radius, 1);  // for -1 below
       const int max = std::min(c + radius, total_bins - 1);
-      JXL_ASSERT(min < max);
-      JXL_ASSERT(cdf[min] <= cdf[max - 1]);
+      HWY_ASSERT(min < max);
+      HWY_ASSERT(cdf[min] <= cdf[max - 1]);
       const int num_bins = max - min + 1;
       // Sum over [min, max] == CDF(max) - CDF(min-1).
       const float density = float(cdf[max] - cdf[min - 1]) / num_bins;
@@ -248,7 +245,7 @@ class HalfRangeMode {
     }
 
     // Keep the median.
-    JXL_ASSERT(!candidates.empty());
+    HWY_ASSERT(!candidates.empty());
     if (candidates.size() == 1) return candidates[0];
     return Median(&candidates);
   }
@@ -277,12 +274,12 @@ void CountingSort(T* begin, T* end) {
   std::sort(unique.begin(), unique.end());
 
   // Write that many copies of each unique value to the array.
-  T* JXL_RESTRICT p = begin;
+  T* HWY_RESTRICT p = begin;
   for (const auto& value_count : unique) {
     std::fill(p, p + value_count.second, value_count.first);
     p += value_count.second;
   }
-  JXL_ASSERT(p == end);
+  HWY_ASSERT(p == end);
 }
 
 struct Bivariate {
@@ -303,7 +300,7 @@ class Line {
   explicit Line(const std::vector<Bivariate>& points) {
     const size_t N = points.size();
     // This straightforward N^2 implementation is OK for small N.
-    JXL_ASSERT(N < 10 * 1000);
+    HWY_ASSERT(N < 10 * 1000);
 
     // One for every point i.
     std::vector<float> medians;
@@ -321,10 +318,10 @@ class Line {
 
         const float dy = points[j].y - points[i].y;
         const float dx = points[j].x - points[i].x;
-        JXL_ASSERT(std::abs(dx) > 1E-7f);  // x must be distinct
+        HWY_ASSERT(std::abs(dx) > 1E-7f);  // x must be distinct
         slopes[idx_slope++] = dy / dx;
       }
-      JXL_ASSERT(idx_slope == N - 1);
+      HWY_ASSERT(idx_slope == N - 1);
 
       const float median = Median(&slopes);
       medians.push_back(median);
@@ -348,8 +345,8 @@ class Line {
 
 static inline void EvaluateQuality(const Line& line,
                                    const std::vector<Bivariate>& points,
-                                   float* JXL_RESTRICT max_l1,
-                                   float* JXL_RESTRICT median_abs_deviation) {
+                                   float* HWY_RESTRICT max_l1,
+                                   float* HWY_RESTRICT median_abs_deviation) {
   // For computing median_abs_deviation.
   std::vector<float> abs_deviations;
   abs_deviations.reserve(points.size());

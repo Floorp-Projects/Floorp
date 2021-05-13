@@ -252,7 +252,7 @@ Status DefaultEncoderHeuristics::LossyFrameHeuristics(
       shared.frame_header.flags &= ~FrameHeader::kNoise;
     }
   }
-  if (cparams.resampling != 1) {
+  if (enc_state->shared.frame_header.upsampling != 1) {
     // In VarDCT mode, LossyFrameHeuristics takes care of running downsampling
     // after noise, if necessary.
     DownsampleImage(opsin, cparams.resampling);

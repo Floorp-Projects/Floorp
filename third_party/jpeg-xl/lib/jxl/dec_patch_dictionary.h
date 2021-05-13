@@ -166,12 +166,13 @@ class PatchDictionary {
 
   bool HasAny() const { return !positions_.empty(); }
 
-  Status Decode(BitReader* br, size_t xsize, size_t ysize);
+  Status Decode(BitReader* br, size_t xsize, size_t ysize,
+                bool* uses_extra_channels);
 
   // Only adds patches that belong to the `image_rect` area of the decoded
   // image, writing them to the `opsin_rect` area of `opsin`.
-  void AddTo(Image3F* opsin, const Rect& opsin_rect,
-             const Rect& image_rect) const;
+  Status AddTo(Image3F* opsin, const Rect& opsin_rect,
+               float* const* extra_channels, const Rect& image_rect) const;
 
  private:
   friend class PatchDictionaryEncoder;
@@ -192,11 +193,6 @@ class PatchDictionary {
 
   // Compute patches_by_y_ after updating positions_.
   void ComputePatchCache();
-
-  // Implemented in patch_dictionary_internal.h
-  template <bool /*add*/>
-  void Apply(Image3F* opsin, const Rect& opsin_rect,
-             const Rect& image_rect) const;
 };
 
 }  // namespace jxl

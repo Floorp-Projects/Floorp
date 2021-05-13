@@ -18,8 +18,8 @@
 // High precision, low overhead time measurements. Returns exact call counts and
 // total elapsed time for user-defined 'zones' (code regions, i.e. C++ scopes).
 //
-// To use the profiler you must define PROFILER_ENABLED and link against the
-// libjxl_profiler library.
+// To use the profiler you must set the JPEGXL_ENABLE_PROFILER CMake flag, which
+// defines PROFILER_ENABLED and links against the libjxl_profiler library.
 
 // If zero, this file has no effect and no measurements will be recorded.
 #ifndef PROFILER_ENABLED

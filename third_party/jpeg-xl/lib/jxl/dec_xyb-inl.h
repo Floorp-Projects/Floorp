@@ -87,7 +87,7 @@ HWY_INLINE HWY_MAYBE_UNUSED void XybToRgb(D d, const V opsin_x, const V opsin_y,
   *linear_b = MulAdd(LoadDup128(d, &inverse_matrix[8 * 4]), mixed_b, *linear_b);
 }
 
-bool HasFastXYBTosRGB8() {
+static inline HWY_MAYBE_UNUSED bool HasFastXYBTosRGB8() {
 #if HWY_TARGET == HWY_NEON
   return true;
 #else
@@ -95,9 +95,10 @@ bool HasFastXYBTosRGB8() {
 #endif
 }
 
-void FastXYBTosRGB8(const Image3F& input, const Rect& input_rect,
-                    const Rect& output_buf_rect,
-                    uint8_t* JXL_RESTRICT output_buf, size_t xsize) {
+static inline HWY_MAYBE_UNUSED void FastXYBTosRGB8(
+    const Image3F& input, const Rect& input_rect, const Rect& output_buf_rect,
+    const ImageF* alpha, const Rect& alpha_rect, bool is_rgba,
+    uint8_t* JXL_RESTRICT output_buf, size_t xsize, size_t output_stride) {
   // This function is very NEON-specific. As such, it uses intrinsics directly.
 #if HWY_TARGET == HWY_NEON
   // WARNING: doing fixed point arithmetic correctly is very complicated.
@@ -185,8 +186,11 @@ void FastXYBTosRGB8(const Image3F& input, const Rect& input_rect,
     const float* JXL_RESTRICT row_in_x = input_rect.ConstPlaneRow(input, 0, y);
     const float* JXL_RESTRICT row_in_y = input_rect.ConstPlaneRow(input, 1, y);
     const float* JXL_RESTRICT row_in_b = input_rect.ConstPlaneRow(input, 2, y);
+    const float* JXL_RESTRICT row_in_a =
+        alpha == nullptr ? nullptr : alpha_rect.ConstRow(*alpha, y);
+    size_t cnt = !is_rgba ? 3 : 4;
     size_t base_ptr =
-        3 * (y + output_buf_rect.y0()) * xsize + 3 * output_buf_rect.x0();
+        (y + output_buf_rect.y0()) * output_stride + output_buf_rect.x0() * cnt;
     for (size_t x = 0; x < output_buf_rect.xsize(); x += 8) {
       // Normal ranges for xyb for in-gamut sRGB colors:
       // x: -0.015386 0.028100
@@ -305,18 +309,44 @@ void FastXYBTosRGB8(const Image3F& input, const Rect& input_rect,
           vqmovun_s16(vrshrq_n_s16(vsubq_s16(b, vshrq_n_s16(b, 8)), 6));
 
       size_t n = output_buf_rect.xsize() - x;
-      uint8x8x3_t data = {r8, g8, b8};
-      uint8_t* buf = output_buf + base_ptr + 3 * x;
-      if (n >= 8) {
-        vst3_u8(buf, data);
+      if (is_rgba) {
+        float32x4_t a_f32_left =
+            row_in_a ? vld1q_f32(row_in_a + x) : vdupq_n_f32(1.0f);
+        float32x4_t a_f32_right =
+            row_in_a ? vld1q_f32(row_in_a + x +
+                                 (x + 4 < output_buf_rect.xsize() ? 4 : 0))
+                     : vdupq_n_f32(1.0f);
+        int16x4_t a16_left = vqmovn_s32(vcvtq_n_s32_f32(a_f32_left, 8));
+        int16x4_t a16_right = vqmovn_s32(vcvtq_n_s32_f32(a_f32_right, 8));
+        uint8x8_t a8 = vqmovun_s16(vcombine_s16(a16_left, a16_right));
+        uint8_t* buf = output_buf + base_ptr + 4 * x;
+        uint8x8x4_t data = {r8, g8, b8, a8};
+        if (n >= 8) {
+          vst4_u8(buf, data);
+        } else {
+          uint8_t tmp[8 * 4];
+          vst4_u8(tmp, data);
+          memcpy(buf, tmp, n * 4);
+        }
       } else {
-        uint8_t tmp[8 * 3];
-        vst3_u8(tmp, data);
-        memcpy(buf, tmp, n * 3);
+        uint8_t* buf = output_buf + base_ptr + 3 * x;
+        uint8x8x3_t data = {r8, g8, b8};
+        if (n >= 8) {
+          vst3_u8(buf, data);
+        } else {
+          uint8_t tmp[8 * 3];
+          vst3_u8(tmp, data);
+          memcpy(buf, tmp, n * 3);
+        }
       }
     }
   }
 #else
+  (void)input;
+  (void)input_rect;
+  (void)output_buf_rect;
+  (void)output_buf;
+  (void)xsize;
   JXL_ABORT("Unreachable");
 #endif
 }

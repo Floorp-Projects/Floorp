@@ -33,6 +33,8 @@ struct DecompressParams {
 
   // If true, skip dequant and iDCT and decode to JPEG (only if possible)
   bool keep_dct = false;
+  // If true, render spot colors (otherwise only returned as extra channels)
+  bool render_spotcolors = true;
 
   // These cannot be kOn because they need encoder support.
   Override preview = Override::kDefault;
@@ -52,8 +54,9 @@ struct DecompressParams {
 
   bool operator==(const DecompressParams other) const {
     return check_decompressed_size == other.check_decompressed_size &&
-           keep_dct == other.keep_dct && preview == other.preview &&
-           max_passes == other.max_passes &&
+           keep_dct == other.keep_dct &&
+           render_spotcolors == other.render_spotcolors &&
+           preview == other.preview && max_passes == other.max_passes &&
            max_downsampling == other.max_downsampling &&
            allow_partial_files == other.allow_partial_files &&
            allow_more_progressive_steps == other.allow_more_progressive_steps;
