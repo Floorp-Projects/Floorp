@@ -553,13 +553,15 @@ RasterImage::GetFrameAtSize(const IntSize& aSize, uint32_t aWhichFrame,
   NotifyDrawingObservers();
 #endif
 
-  auto result = GetFrameInternal(aSize, Nothing(), aWhichFrame, aFlags);
+  auto result =
+      GetFrameInternal(aSize, Nothing(), Nothing(), aWhichFrame, aFlags);
   return mozilla::Get<2>(result).forget();
 }
 
 Tuple<ImgDrawResult, IntSize, RefPtr<SourceSurface>>
 RasterImage::GetFrameInternal(const IntSize& aSize,
                               const Maybe<SVGImageContext>& aSVGContext,
+                              const Maybe<ImageIntRegion>& aRegion,
                               uint32_t aWhichFrame, uint32_t aFlags) {
   MOZ_ASSERT(aWhichFrame <= FRAME_MAX_VALUE);
 
@@ -656,8 +658,8 @@ RasterImage::GetImageContainer(LayerManager* aManager, uint32_t aFlags) {
 
   RefPtr<ImageContainer> container;
   ImgDrawResult drawResult =
-      GetImageContainerImpl(aManager, mSize.ToUnknownSize(), Nothing(), flags,
-                            getter_AddRefs(container));
+      GetImageContainerImpl(aManager, mSize.ToUnknownSize(), Nothing(),
+                            Nothing(), flags, getter_AddRefs(container));
 
   // We silence the unused warning here because anything that needs the draw
   // result should be using GetImageContainerAtSize, not GetImageContainer.
@@ -687,12 +689,13 @@ NS_IMETHODIMP_(ImgDrawResult)
 RasterImage::GetImageContainerAtSize(layers::LayerManager* aManager,
                                      const gfx::IntSize& aSize,
                                      const Maybe<SVGImageContext>& aSVGContext,
+                                     const Maybe<ImageIntRegion>& aRegion,
                                      uint32_t aFlags,
                                      layers::ImageContainer** aOutContainer) {
   // We do not pass in the given SVG context because in theory it could differ
   // between calls, but actually have no impact on the actual contents of the
   // image container.
-  return GetImageContainerImpl(aManager, aSize, Nothing(), aFlags,
+  return GetImageContainerImpl(aManager, aSize, Nothing(), Nothing(), aFlags,
                                aOutContainer);
 }
 

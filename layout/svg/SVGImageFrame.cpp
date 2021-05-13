@@ -13,6 +13,7 @@
 #include "mozilla/layers/RenderRootStateManager.h"
 #include "mozilla/layers/WebRenderLayerManager.h"
 #include "imgIContainer.h"
+#include "ImageRegion.h"
 #include "nsContainerFrame.h"
 #include "nsIImageLoadingContent.h"
 #include "nsLayoutUtils.h"
@@ -611,12 +612,14 @@ bool SVGImageFrame::CreateWebRenderCommands(
                        Some(imgElem->mPreserveAspectRatio.GetAnimValue()));
   }
 
+  Maybe<ImageIntRegion> region;
   IntSize decodeSize = nsLayoutUtils::ComputeImageContainerDrawingParameters(
-      mImageContainer, this, destRect, aSc, flags, svgContext);
+      mImageContainer, this, destRect, destRect, aSc, flags, svgContext,
+      region);
 
   RefPtr<layers::ImageContainer> container;
   ImgDrawResult drawResult = mImageContainer->GetImageContainerAtSize(
-      aManager->LayerManager(), decodeSize, svgContext, flags,
+      aManager->LayerManager(), decodeSize, svgContext, region, flags,
       getter_AddRefs(container));
 
   // While we got a container, it may not contain a fully decoded surface. If

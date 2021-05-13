@@ -89,11 +89,12 @@ NS_IMETHODIMP_(ImgDrawResult)
 FrozenImage::GetImageContainerAtSize(layers::LayerManager* aManager,
                                      const gfx::IntSize& aSize,
                                      const Maybe<SVGImageContext>& aSVGContext,
+                                     const Maybe<ImageIntRegion>& aRegion,
                                      uint32_t aFlags,
                                      layers::ImageContainer** aOutContainer) {
   if (IsNonAnimated()) {
-    return InnerImage()->GetImageContainerAtSize(aManager, aSize, aSVGContext,
-                                                 aFlags, aOutContainer);
+    return InnerImage()->GetImageContainerAtSize(
+        aManager, aSize, aSVGContext, aRegion, aFlags, aOutContainer);
   }
 
   // XXX(seth): GetImageContainer does not currently support anything but the

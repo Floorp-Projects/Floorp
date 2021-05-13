@@ -16,6 +16,7 @@
 #include "gfx2DGlue.h"
 #include "imgIContainer.h"
 #include "ImageContainer.h"
+#include "ImageRegion.h"
 #include "LookupResult.h"
 #include "nsStringFwd.h"
 #include "ProgressTracker.h"
@@ -400,7 +401,8 @@ class ImageResource : public Image {
   virtual Tuple<ImgDrawResult, gfx::IntSize, RefPtr<gfx::SourceSurface>>
   GetFrameInternal(const gfx::IntSize& aSize,
                    const Maybe<SVGImageContext>& aSVGContext,
-                   uint32_t aWhichFrame, uint32_t aFlags) {
+                   const Maybe<ImageIntRegion>& aRegion, uint32_t aWhichFrame,
+                   uint32_t aFlags) {
     return MakeTuple(ImgDrawResult::BAD_IMAGE, aSize,
                      RefPtr<gfx::SourceSurface>());
   }
@@ -420,6 +422,7 @@ class ImageResource : public Image {
   ImgDrawResult GetImageContainerImpl(layers::LayerManager* aManager,
                                       const gfx::IntSize& aSize,
                                       const Maybe<SVGImageContext>& aSVGContext,
+                                      const Maybe<ImageIntRegion>& aRegion,
                                       uint32_t aFlags,
                                       layers::ImageContainer** aContainer);
 
@@ -467,15 +470,18 @@ class ImageResource : public Image {
   struct ImageContainerEntry {
     ImageContainerEntry(const gfx::IntSize& aSize,
                         const Maybe<SVGImageContext>& aSVGContext,
+                        const Maybe<ImageIntRegion>& aRegion,
                         layers::ImageContainer* aContainer, uint32_t aFlags)
         : mSize(aSize),
           mSVGContext(aSVGContext),
+          mRegion(aRegion),
           mContainer(aContainer),
           mLastDrawResult(ImgDrawResult::NOT_READY),
           mFlags(aFlags) {}
 
     gfx::IntSize mSize;
     Maybe<SVGImageContext> mSVGContext;
+    Maybe<ImageIntRegion> mRegion;
     // A weak pointer to our ImageContainer, which stays alive only as long as
     // the layer system needs it.
     ThreadSafeWeakPtr<layers::ImageContainer> mContainer;

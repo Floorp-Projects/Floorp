@@ -39,6 +39,7 @@
 #include "nsThreadUtils.h"
 #include "nsDisplayList.h"
 #include "ImageLayers.h"
+#include "ImageRegion.h"
 #include "ImageContainer.h"
 #include "nsIContent.h"
 
@@ -430,13 +431,15 @@ ImgDrawResult nsImageBoxFrame::CreateWebRenderCommands(
       LayoutDeviceRect::FromAppUnits(dest, appUnitsPerDevPixel);
 
   Maybe<SVGImageContext> svgContext;
+  Maybe<ImageIntRegion> region;
   gfx::IntSize decodeSize =
       nsLayoutUtils::ComputeImageContainerDrawingParameters(
-          imgCon, aItem->Frame(), fillRect, aSc, containerFlags, svgContext);
+          imgCon, aItem->Frame(), fillRect, fillRect, aSc, containerFlags,
+          svgContext, region);
 
   RefPtr<layers::ImageContainer> container;
   result = imgCon->GetImageContainerAtSize(aManager->LayerManager(), decodeSize,
-                                           svgContext, containerFlags,
+                                           svgContext, region, containerFlags,
                                            getter_AddRefs(container));
   if (!container) {
     NS_WARNING("Failed to get image container");

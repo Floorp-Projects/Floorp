@@ -186,6 +186,7 @@ NS_IMETHODIMP_(ImgDrawResult)
 DynamicImage::GetImageContainerAtSize(layers::LayerManager* aManager,
                                       const gfx::IntSize& aSize,
                                       const Maybe<SVGImageContext>& aSVGContext,
+                                      const Maybe<ImageIntRegion>& aRegion,
                                       uint32_t aFlags,
                                       layers::ImageContainer** aContainer) {
   return ImgDrawResult::NOT_SUPPORTED;

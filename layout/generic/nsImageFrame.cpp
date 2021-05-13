@@ -79,6 +79,7 @@
 
 #include "gfxRect.h"
 #include "ImageLayers.h"
+#include "ImageRegion.h"
 #include "ImageContainer.h"
 #include "mozilla/ServoStyleSet.h"
 #include "nsBlockFrame.h"
@@ -1671,13 +1672,15 @@ ImgDrawResult nsImageFrame::DisplayAltFeedbackWithoutLayer(
       LayoutDeviceRect destRect(LayoutDeviceRect::FromAppUnits(dest, factor));
 
       Maybe<SVGImageContext> svgContext;
+      Maybe<ImageIntRegion> region;
       IntSize decodeSize =
           nsLayoutUtils::ComputeImageContainerDrawingParameters(
-              imgCon, this, destRect, aSc, aFlags, svgContext);
+              imgCon, this, destRect, destRect, aSc, aFlags, svgContext,
+              region);
       RefPtr<ImageContainer> container;
-      result = imgCon->GetImageContainerAtSize(aManager->LayerManager(),
-                                               decodeSize, svgContext, aFlags,
-                                               getter_AddRefs(container));
+      result = imgCon->GetImageContainerAtSize(
+          aManager->LayerManager(), decodeSize, svgContext, region, aFlags,
+          getter_AddRefs(container));
       if (container) {
         bool wrResult = aManager->CommandBuilder().PushImage(
             aItem, container, aBuilder, aResources, aSc, destRect, bounds);
@@ -2009,12 +2012,13 @@ bool nsDisplayImage::CreateWebRenderCommands(
       LayoutDeviceRect::FromAppUnits(GetDestRect(), factor));
 
   Maybe<SVGImageContext> svgContext;
+  Maybe<ImageIntRegion> region;
   IntSize decodeSize = nsLayoutUtils::ComputeImageContainerDrawingParameters(
-      mImage, mFrame, destRect, aSc, flags, svgContext);
+      mImage, mFrame, destRect, destRect, aSc, flags, svgContext, region);
 
   RefPtr<layers::ImageContainer> container;
   ImgDrawResult drawResult = mImage->GetImageContainerAtSize(
-      aManager->LayerManager(), decodeSize, svgContext, flags,
+      aManager->LayerManager(), decodeSize, svgContext, region, flags,
       getter_AddRefs(container));
 
   // While we got a container, it may not contain a fully decoded surface. If
@@ -2039,7 +2043,7 @@ bool nsDisplayImage::CreateWebRenderCommands(
 
         RefPtr<ImageContainer> prevContainer;
         ImgDrawResult newDrawResult = mPrevImage->GetImageContainerAtSize(
-            aManager->LayerManager(), decodeSize, svgContext, prevFlags,
+            aManager->LayerManager(), decodeSize, svgContext, region, prevFlags,
             getter_AddRefs(prevContainer));
         if (prevContainer && newDrawResult == ImgDrawResult::SUCCESS) {
           drawResult = newDrawResult;
