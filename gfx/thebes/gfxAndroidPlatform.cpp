@@ -258,13 +258,8 @@ void gfxAndroidPlatform::GetCommonFallbackFonts(
   aFontList.AppendElement("Droid Sans Fallback");
 }
 
-gfxPlatformFontList* gfxAndroidPlatform::CreatePlatformFontList() {
-  gfxPlatformFontList* list = new gfxFT2FontList();
-  if (NS_SUCCEEDED(list->InitFontList())) {
-    return list;
-  }
-  gfxPlatformFontList::Shutdown();
-  return nullptr;
+bool gfxAndroidPlatform::CreatePlatformFontList() {
+  return gfxPlatformFontList::Initialize(new gfxFT2FontList);
 }
 
 void gfxAndroidPlatform::ReadSystemFontList(
