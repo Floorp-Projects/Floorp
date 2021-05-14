@@ -236,9 +236,6 @@ class nsWindow final : public nsBaseWidget {
 
   RefPtr<mozilla::gfx::VsyncSource> GetVsyncSource() override;
 
-  static void WithSettingsChangesIgnored(const std::function<void()>& aFn);
-
-  void ThemeChanged(void);
   void OnDPIChanged(void);
   void OnCheckResize(void);
   void OnCompositedChanged(void);

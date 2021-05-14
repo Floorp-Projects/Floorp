@@ -221,8 +221,6 @@ static void hierarchy_changed_cb(GtkWidget* widget,
                                  GtkWidget* previous_toplevel);
 static gboolean window_state_event_cb(GtkWidget* widget,
                                       GdkEventWindowState* event);
-static void settings_changed_cb(GtkSettings* settings, GParamSpec* pspec,
-                                nsWindow* data);
 static void settings_xft_dpi_changed_cb(GtkSettings* settings,
                                         GParamSpec* pspec, nsWindow* data);
 static void check_resize_cb(GtkContainer* container, gpointer user_data);
@@ -277,13 +275,6 @@ static SystemTimeConverter<guint32>& TimeConverter() {
 nsWindow::GtkWindowDecoration nsWindow::sGtkWindowDecoration =
     GTK_DECORATION_UNKNOWN;
 bool nsWindow::sTransparentMainWindow = false;
-static bool sIgnoreChangedSettings = false;
-
-void nsWindow::WithSettingsChangesIgnored(const std::function<void()>& aFn) {
-  AutoRestore ar(sIgnoreChangedSettings);
-  sIgnoreChangedSettings = true;
-  aFn();
-}
 
 namespace mozilla {
 
@@ -4302,30 +4293,6 @@ void nsWindow::OnWindowStateEvent(GtkWidget* aWidget,
   }
 }
 
-void nsWindow::ThemeChanged() {
-  // Everything could've changed.
-  NotifyThemeChanged(ThemeChangeKind::StyleAndLayout);
-
-  if (!mGdkWindow || MOZ_UNLIKELY(mIsDestroyed)) return;
-
-  // Dispatch theme change notification to all child windows
-  GList* children = gdk_window_peek_children(mGdkWindow);
-  while (children) {
-    GdkWindow* gdkWin = GDK_WINDOW(children->data);
-
-    auto* win = (nsWindow*)g_object_get_data(G_OBJECT(gdkWin), "nsWindow");
-
-    if (win && win != this) {  // guard against infinite recursion
-      RefPtr<nsWindow> kungFuDeathGrip = win;
-      win->ThemeChanged();
-    }
-
-    children = children->next;
-  }
-
-  IMContextWrapper::OnThemeChanged();
-}
-
 void nsWindow::OnDPIChanged() {
   if (mWidgetListener) {
     if (PresShell* presShell = mWidgetListener->GetPresShell()) {
@@ -5177,34 +5144,8 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
     }
 
     GtkSettings* default_settings = gtk_settings_get_default();
-    g_signal_connect_after(default_settings, "notify::gtk-theme-name",
-                           G_CALLBACK(settings_changed_cb), this);
-    g_signal_connect_after(default_settings, "notify::gtk-font-name",
-                           G_CALLBACK(settings_changed_cb), this);
-    g_signal_connect_after(default_settings, "notify::gtk-enable-animations",
-                           G_CALLBACK(settings_changed_cb), this);
-    g_signal_connect_after(default_settings, "notify::gtk-decoration-layout",
-                           G_CALLBACK(settings_changed_cb), this);
     g_signal_connect_after(default_settings, "notify::gtk-xft-dpi",
                            G_CALLBACK(settings_xft_dpi_changed_cb), this);
-    // Text resolution affects system fonts and widget sizes.
-    g_signal_connect_after(default_settings, "notify::resolution",
-                           G_CALLBACK(settings_changed_cb), this);
-    // For remote LookAndFeel, to refresh the content processes' copies:
-    g_signal_connect_after(default_settings, "notify::gtk-cursor-blink-time",
-                           G_CALLBACK(settings_changed_cb), this);
-    g_signal_connect_after(default_settings, "notify::gtk-cursor-blink",
-                           G_CALLBACK(settings_changed_cb), this);
-    g_signal_connect_after(default_settings,
-                           "notify::gtk-entry-select-on-focus",
-                           G_CALLBACK(settings_changed_cb), this);
-    g_signal_connect_after(default_settings,
-                           "notify::gtk-primary-button-warps-slider",
-                           G_CALLBACK(settings_changed_cb), this);
-    g_signal_connect_after(default_settings, "notify::gtk-menu-popup-delay",
-                           G_CALLBACK(settings_changed_cb), this);
-    g_signal_connect_after(default_settings, "notify::gtk-dnd-drag-threshold",
-                           G_CALLBACK(settings_changed_cb), this);
   }
 
   if (mContainer) {
@@ -7407,15 +7348,6 @@ static gboolean window_state_event_cb(GtkWidget* widget,
   window->OnWindowStateEvent(widget, event);
 
   return FALSE;
-}
-
-static void settings_changed_cb(GtkSettings* settings, GParamSpec* pspec,
-                                nsWindow* data) {
-  if (sIgnoreChangedSettings) {
-    return;
-  }
-  RefPtr<nsWindow> window = data;
-  window->ThemeChanged();
 }
 
 static void settings_xft_dpi_changed_cb(GtkSettings* gtk_settings,
