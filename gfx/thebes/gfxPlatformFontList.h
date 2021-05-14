@@ -171,13 +171,13 @@ class gfxPlatformFontList : public gfxFontInfoLoader {
 
   static gfxPlatformFontList* PlatformFontList() { return sPlatformFontList; }
 
-  static nsresult Init() {
-    NS_ASSERTION(!sPlatformFontList, "What's this doing here?");
-    gfxPlatform::GetPlatform()->CreatePlatformFontList();
-    if (!sPlatformFontList) {
-      return NS_ERROR_OUT_OF_MEMORY;
+  static bool Initialize(gfxPlatformFontList* aList) {
+    sPlatformFontList = aList;
+    if (aList->InitFontList()) {
+      return true;
     }
-    return NS_OK;
+    Shutdown();
+    return false;
   }
 
   static void Shutdown() {
@@ -187,8 +187,8 @@ class gfxPlatformFontList : public gfxFontInfoLoader {
 
   virtual ~gfxPlatformFontList();
 
-  // initialize font lists
-  nsresult InitFontList();
+  // Initialize font lists; return true on success, false if something fails.
+  bool InitFontList();
 
   void FontListChanged();
 
