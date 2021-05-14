@@ -73,6 +73,7 @@ MInstruction* WarpBuilderShared::makeSpreadCall(CallInfo& callInfo,
 
   auto* apply = MApplyArray::New(alloc(), target, callInfo.callee(), elements,
                                  callInfo.thisArg());
+
   if (callInfo.ignoresReturnValue()) {
     apply->setIgnoresReturnValue();
   }

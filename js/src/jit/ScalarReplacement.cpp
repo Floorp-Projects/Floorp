@@ -1743,6 +1743,7 @@ void ArgumentsReplacer::visitApplyArgsObj(MApplyArgsObj* ins) {
     // TODO: Should we rename MApplyArgs?
     auto* apply = MApplyArgs::New(alloc(), ins->getSingleTarget(),
                                   ins->getFunction(), numArgs, ins->getThis());
+    apply->setBailoutKind(ins->bailoutKind());
     if (!ins->maybeCrossRealm()) {
       apply->setNotCrossRealm();
     }
