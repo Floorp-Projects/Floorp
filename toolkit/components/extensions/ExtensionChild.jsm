@@ -464,10 +464,6 @@ class BrowserExtensionContent extends EventEmitter {
     return this.policy.allowedOrigins;
   }
 
-  get webAccessibleResources() {
-    return this.policy.webAccessibleResources;
-  }
-
   getSharedData(key, value) {
     return sharedData.get(`extension/${this.id}/${key}`);
   }

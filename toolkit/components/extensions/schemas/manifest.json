@@ -233,9 +233,27 @@
           },
 
           "web_accessible_resources": {
-            "type": "array",
-            "items": { "type": "string" },
-            "optional": true
+            "optional": true,
+            "choices": [
+              {
+                "max_manifest_version": 2,
+                "type": "array",
+                "items": { "type": "string" }
+              },
+              {
+                "min_manifest_version": 3,
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "resources": {
+                      "type": "array",
+                      "items": { "type": "string" }
+                    }
+                  }
+                }
+              }
+            ]
           },
 
           "developer": {
