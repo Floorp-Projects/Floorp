@@ -8,59 +8,173 @@
 const TEST_DATA = [
   {
     input: "this is a\ntest",
-    expected: "this is a test",
+    expected: {
+      urlbar: "this is a test",
+      autocomplete: "this is a test",
+      type: UrlbarUtils.RESULT_TYPE.SEARCH,
+    },
   },
   {
     input: "this is    a\n\ttest",
-    expected: "this is    a  test",
+    expected: {
+      urlbar: "this is    a  test",
+      autocomplete: "this is    a  test",
+      type: UrlbarUtils.RESULT_TYPE.SEARCH,
+    },
   },
   {
     input: "http:\n//\nexample.\ncom",
-    expected: "http://example.com",
+    expected: {
+      urlbar: "http://example.com",
+      autocomplete: "http://example.com/",
+      type: UrlbarUtils.RESULT_TYPE.URL,
+    },
   },
   {
     input: "htp:example.\ncom",
-    expected: "htp:example.com",
+    expected: {
+      urlbar: "htp:example.com",
+      autocomplete: "http://example.com/",
+      type: UrlbarUtils.RESULT_TYPE.URL,
+    },
   },
   {
     input: "example.\ncom",
-    expected: "example.com",
+    expected: {
+      urlbar: "example.com",
+      autocomplete: "http://example.com/",
+      type: UrlbarUtils.RESULT_TYPE.URL,
+    },
   },
   {
     input: "http://example.com/foo       bar/",
-    expected: "http://example.com/foo       bar/",
+    expected: {
+      urlbar: "http://example.com/foo       bar/",
+      autocomplete: "http://example.com/foo       bar/",
+      type: UrlbarUtils.RESULT_TYPE.URL,
+    },
   },
   {
     input: "javasc\nript:\nalert(1)",
-    expected: "alert(1)",
+    expected: {
+      urlbar: "alert(1)",
+      autocomplete: "alert(1)",
+      type: UrlbarUtils.RESULT_TYPE.SEARCH,
+    },
   },
   {
     input: "a\nb\nc",
-    expected: "a b c",
+    expected: {
+      urlbar: "a b c",
+      autocomplete: "a b c",
+      type: UrlbarUtils.RESULT_TYPE.SEARCH,
+    },
   },
   {
     input: "lo\ncal\nhost",
-    expected: "localhost",
+    expected: {
+      urlbar: "localhost",
+      autocomplete: "http://localhost/",
+      type: UrlbarUtils.RESULT_TYPE.URL,
+    },
   },
   {
     input: "data:text/html,<iframe\n src='example\n.com'>\n</iframe>",
-    expected: "data:text/html,<iframe src='example.com'></iframe>",
+    expected: {
+      urlbar: "data:text/html,<iframe src='example.com'></iframe>",
+      autocomplete: "data:text/html,<iframe src='example.com'></iframe>",
+      type: UrlbarUtils.RESULT_TYPE.URL,
+    },
+  },
+  {
+    input: "http://example.com\n",
+    expected: {
+      urlbar: "http://example.com",
+      autocomplete: "http://example.com/",
+      type: UrlbarUtils.RESULT_TYPE.URL,
+    },
+  },
+  {
+    input: "http://example.com\r",
+    expected: {
+      urlbar: "http://example.com",
+      autocomplete: "http://example.com/",
+      type: UrlbarUtils.RESULT_TYPE.URL,
+    },
+  },
+  {
+    input: "http://ex\ra\nmp\r\nle.com\r\n",
+    expected: {
+      urlbar: "http://example.com",
+      autocomplete: "http://example.com/",
+      type: UrlbarUtils.RESULT_TYPE.URL,
+    },
+  },
+  {
+    input: "127.0.0.1\r",
+    expected: {
+      urlbar: "127.0.0.1",
+      autocomplete: "http://127.0.0.1/",
+      type: UrlbarUtils.RESULT_TYPE.URL,
+    },
   },
 ];
 
-add_task(async function test_paste_multi_lines() {
-  for (const testData of TEST_DATA) {
+add_task(async function setup() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      // There are cases that URLBar loses focus before assertion of this test.
+      // In that case, this test will be failed since the result is closed
+      // before it. We use this pref so that keep the result even if lose focus.
+      ["ui.popup.disable_autohide", true],
+    ],
+  });
+
+  registerCleanupFunction(function() {
+    SpecialPowers.clipboardCopyString("");
+  });
+});
+
+add_task(async function test_paste_onto_urlbar() {
+  for (const { input, expected } of TEST_DATA) {
     gURLBar.value = "";
     gURLBar.focus();
 
-    await paste(testData.input);
+    await paste(input);
+    await assertResult(expected);
 
-    Assert.equal(gURLBar.value, testData.expected, "Pasted value is correct");
+    await UrlbarTestUtils.promisePopupClose(window);
   }
 });
 
+add_task(async function test_paste_after_opening_autocomplete_panel() {
+  for (const { input, expected } of TEST_DATA) {
+    await UrlbarTestUtils.promiseAutocompleteResultPopup({
+      window,
+      value: "",
+    });
+
+    await paste(input);
+    await assertResult(expected);
+
+    await UrlbarTestUtils.promisePopupClose(window);
+  }
+});
+
+async function assertResult(expected) {
+  Assert.equal(gURLBar.value, expected.urlbar, "Pasted value is correct");
+
+  const result = await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
+  Assert.equal(
+    result.title,
+    expected.autocomplete,
+    "Title of autocomplete is correct"
+  );
+  Assert.equal(result.type, expected.type, "Type of autocomplete is correct");
+}
+
 async function paste(input) {
-  await SimpleTest.promiseClipboardChange(input, () => {
+  await SimpleTest.promiseClipboardChange(input.replace(/\r\n?/g, "\n"), () => {
     clipboardHelper.copyString(input);
   });
 
