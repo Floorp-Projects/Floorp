@@ -2671,18 +2671,6 @@ void gfxPlatform::InitWebRenderConfig() {
 
   bool hasHardware = gfxConfig::IsEnabled(Feature::WEBRENDER);
   bool hasSoftware = gfxConfig::IsEnabled(Feature::WEBRENDER_SOFTWARE);
-
-#if defined(XP_WIN) && !defined(EARLY_BETA_OR_EARLIER)
-  // If we have D3D11 compositing, and Software WebRender isn't forced on, then
-  // we should prefer D3D11 compositing over Software WebRender in late beta and
-  // release by default. We may chose to fallback to Software WebRender in
-  // gfxPlatform::FallbackFromAcceleration.
-  if (gfxConfig::IsEnabled(Feature::D3D11_COMPOSITING) &&
-      !gfxConfig::IsForcedOnByUser(Feature::WEBRENDER_SOFTWARE)) {
-    hasSoftware = false;
-  }
-#endif
-
   bool hasWebRender = hasHardware || hasSoftware;
 
 #ifdef XP_WIN
