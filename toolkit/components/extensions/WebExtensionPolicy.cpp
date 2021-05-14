@@ -139,6 +139,16 @@ WebAccessibleResource::WebAccessibleResource(
     GlobalObject& aGlobal, const WebAccessibleResourceInit& aInit,
     ErrorResult& aRv) {
   ParseGlobs(aGlobal, aInit.mResources, mWebAccessiblePaths, aRv);
+  if (aRv.Failed()) {
+    return;
+  }
+
+  if (aInit.mMatches.WasPassed()) {
+    MatchPatternOptions options;
+    options.mRestrictSchemes = true;
+    mMatches = ParseMatches(aGlobal, aInit.mMatches.Value(), options,
+                            ErrorBehavior::CreateEmptyPattern, aRv);
+  }
 }
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(WebAccessibleResource)

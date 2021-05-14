@@ -669,6 +669,21 @@ nsScriptSecurityManager::CheckLoadURIWithPrincipal(nsIPrincipal* aPrincipal,
     return NS_ERROR_DOM_BAD_URI;
   }
 
+  // Extensions may allow access to a web accessible resource.
+  bool maybeWebAccessible = false;
+  NS_URIChainHasFlags(targetBaseURI,
+                      nsIProtocolHandler::WEBEXT_URI_WEB_ACCESSIBLE,
+                      &maybeWebAccessible);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (maybeWebAccessible) {
+    bool isWebAccessible = false;
+    rv = ExtensionPolicyService::GetSingleton().SourceMayLoadExtensionURI(
+        sourceURI, targetBaseURI, &isWebAccessible);
+    if (!(NS_SUCCEEDED(rv) && isWebAccessible)) {
+      return NS_ERROR_DOM_BAD_URI;
+    }
+  }
+
   // Check for uris that are only loadable by principals that subsume them
   bool targetURIIsLoadableBySubsumers = false;
   rv = NS_URIChainHasFlags(targetBaseURI,

@@ -575,11 +575,12 @@ nsresult ExtensionPolicyService::GetExtensionName(const nsAString& aAddonId,
   return NS_ERROR_INVALID_ARG;
 }
 
-nsresult ExtensionPolicyService::ExtensionURILoadableByAnyone(nsIURI* aURI,
-                                                              bool* aResult) {
-  URLInfo url(aURI);
+nsresult ExtensionPolicyService::SourceMayLoadExtensionURI(
+    nsIURI* aSourceURI, nsIURI* aExtensionURI, bool* aResult) {
+  URLInfo source(aSourceURI);
+  URLInfo url(aExtensionURI);
   if (WebExtensionPolicy* policy = GetByURL(url)) {
-    *aResult = policy->IsPathWebAccessible(url.FilePath());
+    *aResult = policy->SourceMayAccessPath(source, url.FilePath());
     return NS_OK;
   }
   return NS_ERROR_INVALID_ARG;
