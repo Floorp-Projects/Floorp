@@ -1993,6 +1993,13 @@ auto nsNativeThemeGTK::GetScrollbarSizes(nsPresContext* aPresContext,
   return {int32_t(vertical) * scale, int32_t(horizontal) * scale};
 }
 
+bool nsNativeThemeGTK::ThemeSupportsScrollbarButtons() {
+  if (StaticPrefs::widget_non_native_theme_enabled()) {
+    return nsNativeBasicThemeGTK::ThemeSupportsScrollbarButtons();
+  }
+  return true;
+}
+
 already_AddRefed<nsITheme> do_GetNativeThemeDoNotUseDirectly() {
   static nsCOMPtr<nsITheme> inst;
 

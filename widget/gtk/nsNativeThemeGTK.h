@@ -71,6 +71,8 @@ class nsNativeThemeGTK final : public nsNativeBasicThemeGTK {
   ScrollbarSizes GetScrollbarSizes(nsPresContext*, StyleScrollbarWidth,
                                    Overlay) override;
 
+  bool ThemeSupportsScrollbarButtons() override;
+
   nsNativeThemeGTK();
 
  protected:
