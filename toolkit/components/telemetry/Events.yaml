@@ -573,7 +573,7 @@ upgrade_dialog:
     description: >
       Content page behaviors of the upgrade dialog. Value for each object
       indicates a custom interaction.
-        show: displayed screen index, button string id, compact mode
+        show: total screens count, button string id, compact mode
         close: dismissed reason string
         button: clicked string id (upgradeDialog.ftl -button)
         theme: clicked theme index

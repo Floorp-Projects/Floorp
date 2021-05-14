@@ -56,25 +56,30 @@ add_task(async function set_as_default() {
   );
 });
 
-add_task(async function need_pin() {
-  const mock = mockShell({ canPin: true });
+add_task(async function need_only_pin() {
+  const mock = mockShell({ canPin: true, isDefault: true });
 
+  let screen1Default, screen1Pin;
   await showAndWaitForDialog(async win => {
     await BrowserTestUtils.waitForEvent(win, "ready");
     win.document.getElementById("primary").click();
     await BrowserTestUtils.waitForEvent(win, "ready");
-    win.close();
+    screen1Default = mock.setAsDefault.callCount;
+    screen1Pin = mock.pinCurrentAppToTaskbar.callCount;
+    win.document.getElementById("primary").click();
   });
 
+  Assert.equal(screen1Default, 0, "First screen didn't default");
+  Assert.equal(screen1Pin, 1, "First screen pinned");
   Assert.equal(
     mock.setAsDefault.callCount,
-    1,
-    "Primary button sets as default"
+    0,
+    "Primary buttons did not set as default"
   );
   Assert.equal(
     mock.pinCurrentAppToTaskbar.callCount,
     1,
-    "Primary button also pins"
+    "Primary button did not pin after second screen"
   );
 });
 
@@ -176,10 +181,10 @@ add_task(async function skip_screens() {
   );
   AssertEvents(
     "Displayed default button and skipped",
-    ["content", "show", "0"],
+    ["content", "show", "2-screens"],
     ["content", "show", "upgrade-dialog-new-primary-default-button"],
     ["content", "button", "upgrade-dialog-new-secondary-button"],
-    ["content", "show", "1"],
+    ["content", "show", "upgrade-dialog-theme-primary-button"],
     ["content", "button", "upgrade-dialog-theme-secondary-button"],
     ["content", "close", "complete"]
   );
@@ -200,15 +205,40 @@ add_task(async function exit_early() {
   );
   AssertEvents(
     "Displayed theme button and skipped",
-    ["content", "show", "0"],
+    ["content", "show", "2-screens"],
     ["content", "show", "upgrade-dialog-new-primary-theme-button"],
     ["content", "button", "upgrade-dialog-new-secondary-button"],
     ["content", "close", "early"]
   );
 });
 
+add_task(async function need_pin_and_default() {
+  mockShell({ canPin: true });
+
+  await showAndWaitForDialog(async win => {
+    await BrowserTestUtils.waitForEvent(win, "ready");
+    win.document.getElementById("primary").click();
+    await BrowserTestUtils.waitForEvent(win, "ready");
+    win.document.getElementById("primary").click();
+    await BrowserTestUtils.waitForEvent(win, "ready");
+    win.close();
+  });
+
+  AssertEvents(
+    "Pin and default shows 3 screens",
+    ["content", "show", "3-screens"],
+    ["content", "show", "upgrade-dialog-new-primary-pin-alt-button"],
+    ["content", "button", "upgrade-dialog-new-primary-pin-alt-button"],
+    ["content", "show", "upgrade-dialog-default-primary-button"],
+    ["content", "button", "upgrade-dialog-default-primary-button"],
+    ["content", "show", "upgrade-dialog-theme-primary-button"],
+    ["content", "close", "external"]
+  );
+});
+
 add_task(async function win7_okay() {
   mockAppConstants({ isWin7: true });
+  mockShell({ isDefault: true });
 
   await showAndWaitForDialog(async win => {
     await BrowserTestUtils.waitForEvent(win, "ready");
@@ -217,7 +247,7 @@ add_task(async function win7_okay() {
 
   AssertEvents(
     "Dialog uses special windows 7 primary button",
-    ["content", "show", "0"],
+    ["content", "show", "2-screens"],
     ["content", "show", "cfr-doorhanger-doh-primary-button-2"],
     ["content", "button", "cfr-doorhanger-doh-primary-button-2"],
     ["content", "close", "win7"]
@@ -234,7 +264,7 @@ add_task(async function win7_1screen() {
 
   AssertEvents(
     "Dialog closed after Windows 7's only screen",
-    ["content", "show", "0"],
+    ["content", "show", "2-screens"],
     ["content", "show", "upgrade-dialog-new-primary-default-button"],
     ["content", "button", "upgrade-dialog-new-secondary-button"],
     ["content", "close", "win7"]
@@ -260,7 +290,7 @@ add_task(async function quit_app() {
 
   AssertEvents(
     "Dialog closed on quit request",
-    ["content", "show", "0"],
+    ["content", "show", "2-screens"],
     ["content", "show", "upgrade-dialog-new-primary-default-button"],
     ["content", "close", "quit-application-requested"]
   );
@@ -314,7 +344,7 @@ add_task(async function show_major_upgrade() {
   AssertEvents(
     "Upgrade dialog opened and closed from major upgrade",
     ["trigger", "reason", "satisfied"],
-    ["content", "show", "0"],
+    ["content", "show", "2-screens"],
     ["content", "show", "upgrade-dialog-new-primary-default-button"],
     ["content", "close", "external"]
   );
