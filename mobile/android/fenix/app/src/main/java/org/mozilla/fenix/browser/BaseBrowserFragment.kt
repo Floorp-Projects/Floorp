@@ -571,6 +571,12 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Activit
                             NavGraphDirections.actionGlobalSavedLoginsAuthFragment()
                         findNavController().navigateBlockingForAsyncNavGraph(directions)
                     }
+                },
+                creditCardPickerView = creditCardSelectBar,
+                onManageCreditCards = {
+                    val directions =
+                        NavGraphDirections.actionGlobalCreditCardsSettingFragment()
+                    findNavController().navigateBlockingForAsyncNavGraph(directions)
                 }
             ),
             owner = this,

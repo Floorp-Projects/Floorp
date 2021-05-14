@@ -120,6 +120,7 @@ class Core(
             defaultSettings,
             GeckoProvider.getOrCreateRuntime(
                 context,
+                lazyAutofillStorage,
                 lazyPasswordsStorage,
                 trackingProtectionPolicyFactory.createTrackingProtectionPolicy()
             )
@@ -155,6 +156,7 @@ class Core(
             context,
             GeckoProvider.getOrCreateRuntime(
                 context,
+                lazyAutofillStorage,
                 lazyPasswordsStorage,
                 trackingProtectionPolicyFactory.createTrackingProtectionPolicy()
             )

@@ -127,6 +127,9 @@
         android:id="@+id/action_global_savedLoginsAuthFragment"
         app:destination="@id/savedLoginsAuthFragment" />
     <action
+        android:id="@+id/action_global_creditCardsSettingFragment"
+        app:destination="@id/credit_cards_graph" />
+    <action
         android:id="@+id/action_global_tabHistoryDialogFragment"
         app:destination="@id/tabHistoryDialogFragment" />
     <action

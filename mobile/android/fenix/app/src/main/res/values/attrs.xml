@@ -97,6 +97,7 @@
     </declare-styleable>
 
     <attr name="selectLoginHeaderTextColor" format="reference"/>
+    <attr name="selectCreditCardHeaderTextColor" format="reference"/>
 
     <declare-styleable name="TextPercentageSeekBarPreference">
         <attr format="integer" name="min"/>

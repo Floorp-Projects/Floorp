@@ -5,19 +5,21 @@
 package org.mozilla.fenix.gecko
 
 import android.content.Context
-import mozilla.components.browser.engine.gecko.autofill.GeckoLoginDelegateWrapper
+import mozilla.components.browser.engine.gecko.autofill.GeckoAutocompleteStorageDelegate
 import mozilla.components.browser.engine.gecko.ext.toContentBlockingSetting
 import mozilla.components.browser.engine.gecko.glean.GeckoAdapter
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy
+import mozilla.components.concept.storage.CreditCardsAddressesStorage
 import mozilla.components.concept.storage.LoginsStorage
 import mozilla.components.lib.crash.handler.CrashHandlerService
+import mozilla.components.service.sync.autofill.GeckoCreditCardsAddressesStorageDelegate
 import mozilla.components.service.sync.logins.GeckoLoginStorageDelegate
 import org.mozilla.fenix.Config
 import org.mozilla.fenix.ext.components
-import org.mozilla.geckoview.GeckoRuntime
-import org.mozilla.geckoview.GeckoRuntimeSettings
 import org.mozilla.geckoview.ContentBlocking
 import org.mozilla.geckoview.ContentBlocking.SafeBrowsingProvider
+import org.mozilla.geckoview.GeckoRuntime
+import org.mozilla.geckoview.GeckoRuntimeSettings
 
 object GeckoProvider {
     private var runtime: GeckoRuntime? = null
@@ -29,11 +31,13 @@ object GeckoProvider {
     @Synchronized
     fun getOrCreateRuntime(
         context: Context,
-        storage: Lazy<LoginsStorage>,
+        autofillStorage: Lazy<CreditCardsAddressesStorage>,
+        loginStorage: Lazy<LoginsStorage>,
         trackingProtectionPolicy: TrackingProtectionPolicy
     ): GeckoRuntime {
         if (runtime == null) {
-            runtime = createRuntime(context, storage, trackingProtectionPolicy)
+            runtime =
+                createRuntime(context, autofillStorage, loginStorage, trackingProtectionPolicy)
         }
 
         return runtime!!
@@ -41,7 +45,8 @@ object GeckoProvider {
 
     private fun createRuntime(
         context: Context,
-        storage: Lazy<LoginsStorage>,
+        autofillStorage: Lazy<CreditCardsAddressesStorage>,
+        loginStorage: Lazy<LoginsStorage>,
         policy: TrackingProtectionPolicy
     ): GeckoRuntime {
         val builder = GeckoRuntimeSettings.Builder()
@@ -84,9 +89,11 @@ object GeckoProvider {
         }
 
         val geckoRuntime = GeckoRuntime.create(context, runtimeSettings)
-        val loginStorageDelegate = GeckoLoginStorageDelegate(storage)
-        @Suppress("Deprecation")
-        geckoRuntime.loginStorageDelegate = GeckoLoginDelegateWrapper(loginStorageDelegate)
+
+        geckoRuntime.autocompleteStorageDelegate = GeckoAutocompleteStorageDelegate(
+            GeckoCreditCardsAddressesStorageDelegate(autofillStorage),
+            GeckoLoginStorageDelegate(loginStorage)
+        )
 
         return geckoRuntime
     }
