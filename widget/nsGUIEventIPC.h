@@ -164,8 +164,6 @@ struct ParamTraits<mozilla::WidgetWheelEvent> {
     WriteParam(aMsg, aParam.mDeltaY);
     WriteParam(aMsg, aParam.mDeltaZ);
     WriteParam(aMsg, aParam.mDeltaMode);
-    WriteParam(aMsg, aParam.mWheelTicksX);
-    WriteParam(aMsg, aParam.mWheelTicksY);
     WriteParam(aMsg, aParam.mCustomizedByUserPrefs);
     WriteParam(aMsg, aParam.mMayHaveMomentum);
     WriteParam(aMsg, aParam.mIsMomentum);
@@ -191,8 +189,6 @@ struct ParamTraits<mozilla::WidgetWheelEvent> {
         ReadParam(aMsg, aIter, &aResult->mDeltaY) &&
         ReadParam(aMsg, aIter, &aResult->mDeltaZ) &&
         ReadParam(aMsg, aIter, &aResult->mDeltaMode) &&
-        ReadParam(aMsg, aIter, &aResult->mWheelTicksX) &&
-        ReadParam(aMsg, aIter, &aResult->mWheelTicksY) &&
         ReadParam(aMsg, aIter, &aResult->mCustomizedByUserPrefs) &&
         ReadParam(aMsg, aIter, &aResult->mMayHaveMomentum) &&
         ReadParam(aMsg, aIter, &aResult->mIsMomentum) &&
@@ -1409,8 +1405,6 @@ struct ParamTraits<mozilla::ScrollWheelInput> {
     WriteParam(aMsg, aParam.mHandledByAPZ);
     WriteParam(aMsg, aParam.mDeltaX);
     WriteParam(aMsg, aParam.mDeltaY);
-    WriteParam(aMsg, aParam.mWheelTicksX);
-    WriteParam(aMsg, aParam.mWheelTicksY);
     WriteParam(aMsg, aParam.mLocalOrigin);
     WriteParam(aMsg, aParam.mLineOrPageDeltaX);
     WriteParam(aMsg, aParam.mLineOrPageDeltaY);
@@ -1433,8 +1427,6 @@ struct ParamTraits<mozilla::ScrollWheelInput> {
            ReadParam(aMsg, aIter, &aResult->mHandledByAPZ) &&
            ReadParam(aMsg, aIter, &aResult->mDeltaX) &&
            ReadParam(aMsg, aIter, &aResult->mDeltaY) &&
-           ReadParam(aMsg, aIter, &aResult->mWheelTicksX) &&
-           ReadParam(aMsg, aIter, &aResult->mWheelTicksY) &&
            ReadParam(aMsg, aIter, &aResult->mLocalOrigin) &&
            ReadParam(aMsg, aIter, &aResult->mLineOrPageDeltaX) &&
            ReadParam(aMsg, aIter, &aResult->mLineOrPageDeltaY) &&

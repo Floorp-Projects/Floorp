@@ -516,10 +516,6 @@ class WidgetWheelEvent : public WidgetMouseEventBase {
   double mDeltaY;
   double mDeltaZ;
 
-  // The mousewheel tick counts.
-  double mWheelTicksX = 0.0;
-  double mWheelTicksY = 0.0;
-
   enum class DeltaModeCheckingState : uint8_t {
     // Neither deltaMode nor the delta values have been accessed.
     Unknown,

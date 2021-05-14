@@ -57,41 +57,6 @@ void WheelEvent::InitWheelEvent(
   wheelEvent->mDeltaY = aDeltaY;
   wheelEvent->mDeltaZ = aDeltaZ;
   wheelEvent->mDeltaMode = aDeltaMode;
-  wheelEvent->mAllowToOverrideSystemScrollSpeed = false;
-}
-
-int32_t WheelEvent::WheelDeltaX(CallerType aCallerType) {
-  WidgetWheelEvent* ev = mEvent->AsWheelEvent();
-  if (ev->mWheelTicksX != 0.0) {
-    return int32_t(-ev->mWheelTicksX * kNativeTicksToWheelDelta);
-  }
-  if (IsTrusted()) {
-    // We always return pixels regardless of the checking-state.
-    double pixelDelta =
-        ev->mDeltaMode == WheelEvent_Binding::DOM_DELTA_PIXEL
-            ? DevToCssPixels(ev->OverriddenDeltaX())
-            : ev->OverriddenDeltaX() *
-                  CSSPixel::FromAppUnits(ev->mScrollAmount.width).Rounded();
-    return int32_t(-std::round(pixelDelta * kTrustedDeltaToWheelDelta));
-  }
-  return int32_t(-std::round(DeltaX(aCallerType)));  // This matches Safari.
-}
-
-int32_t WheelEvent::WheelDeltaY(CallerType aCallerType) {
-  WidgetWheelEvent* ev = mEvent->AsWheelEvent();
-  if (ev->mWheelTicksY != 0.0) {
-    return int32_t(-ev->mWheelTicksY * kNativeTicksToWheelDelta);
-  }
-
-  if (IsTrusted()) {
-    double pixelDelta =
-        ev->mDeltaMode == WheelEvent_Binding::DOM_DELTA_PIXEL
-            ? DevToCssPixels(ev->OverriddenDeltaY())
-            : ev->OverriddenDeltaY() *
-                  CSSPixel::FromAppUnits(ev->mScrollAmount.height).Rounded();
-    return int32_t(-std::round(pixelDelta * kTrustedDeltaToWheelDelta));
-  }
-  return int32_t(-std::round(DeltaY(aCallerType)));  // This matches Safari.
 }
 
 double WheelEvent::ToWebExposedDelta(WidgetWheelEvent& aWidgetEvent,
@@ -109,19 +74,22 @@ double WheelEvent::ToWebExposedDelta(WidgetWheelEvent& aWidgetEvent,
       return aDelta * CSSPixel::FromAppUnits(aLineOrPageAmount).Rounded();
     }
   }
-  return DevToCssPixels(aDelta);
+  if (!mAppUnitsPerDevPixel) {
+    return aDelta;
+  }
+  return aDelta * mAppUnitsPerDevPixel / AppUnitsPerCSSPixel();
 }
 
 double WheelEvent::DeltaX(CallerType aCallerType) {
   WidgetWheelEvent* ev = mEvent->AsWheelEvent();
-  return ToWebExposedDelta(*ev, ev->OverriddenDeltaX(), ev->mScrollAmount.width,
+  return ToWebExposedDelta(*ev, ev->mDeltaX, ev->mScrollAmount.width,
                            aCallerType);
 }
 
 double WheelEvent::DeltaY(CallerType aCallerType) {
   WidgetWheelEvent* ev = mEvent->AsWheelEvent();
-  return ToWebExposedDelta(*ev, ev->OverriddenDeltaY(),
-                           ev->mScrollAmount.height, aCallerType);
+  return ToWebExposedDelta(*ev, ev->mDeltaY, ev->mScrollAmount.height,
+                           aCallerType);
 }
 
 double WheelEvent::DeltaZ(CallerType aCallerType) {
