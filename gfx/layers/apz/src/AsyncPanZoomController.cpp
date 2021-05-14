@@ -1924,11 +1924,10 @@ ParentLayerPoint AsyncPanZoomController::GetScrollWheelDelta(
   delta.y *= aMultiplierY;
 
   // For the conditions under which we allow system scroll overrides, see
-  // EventStateManager::DeltaAccumulator::ComputeScrollAmountForDefaultAction
-  // and WheelTransaction::OverrideSystemScrollSpeed. Note that we do *not*
-  // restrict this to the root content, see bug 1217715 for discussion on this.
-  if (StaticPrefs::
-          mousewheel_system_scroll_override_on_root_content_enabled() &&
+  // WidgetWheelEvent::OverriddenDelta{X,Y}.
+  // Note that we do *not* restrict this to the root content, see bug 1217715
+  // for discussion on this.
+  if (StaticPrefs::mousewheel_system_scroll_override_enabled() &&
       !aEvent.IsCustomizedByUserPrefs() &&
       aEvent.mDeltaType == ScrollWheelInput::SCROLLDELTA_LINE &&
       aEvent.mAllowToOverrideSystemScrollSpeed) {

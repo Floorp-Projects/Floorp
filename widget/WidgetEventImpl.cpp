@@ -18,6 +18,7 @@
 #include "mozilla/TouchEvents.h"
 #include "mozilla/WritingModes.h"
 #include "mozilla/dom/KeyboardEventBinding.h"
+#include "mozilla/dom/WheelEventBinding.h"
 #include "nsCommandParams.h"
 #include "nsContentUtils.h"
 #include "nsIContent.h"
@@ -729,16 +730,13 @@ void WidgetDragEvent::InitDropEffectForTests() {
 /* static */
 double WidgetWheelEvent::ComputeOverriddenDelta(double aDelta,
                                                 bool aIsForVertical) {
-  if (!StaticPrefs::
-          mousewheel_system_scroll_override_on_root_content_enabled()) {
+  if (!StaticPrefs::mousewheel_system_scroll_override_enabled()) {
     return aDelta;
   }
   int32_t intFactor =
       aIsForVertical
-          ? StaticPrefs::
-                mousewheel_system_scroll_override_on_root_content_vertical_factor()
-          : StaticPrefs::
-                mousewheel_system_scroll_override_on_root_content_horizontal_factor();
+          ? StaticPrefs::mousewheel_system_scroll_override_vertical_factor()
+          : StaticPrefs::mousewheel_system_scroll_override_horizontal_factor();
   // Making the scroll speed slower doesn't make sense. So, ignore odd factor
   // which is less than 1.0.
   if (intFactor <= 100) {
@@ -749,14 +747,18 @@ double WidgetWheelEvent::ComputeOverriddenDelta(double aDelta,
 }
 
 double WidgetWheelEvent::OverriddenDeltaX() const {
-  if (!mAllowToOverrideSystemScrollSpeed) {
+  if (!mAllowToOverrideSystemScrollSpeed ||
+      mDeltaMode != dom::WheelEvent_Binding::DOM_DELTA_LINE ||
+      mCustomizedByUserPrefs) {
     return mDeltaX;
   }
   return ComputeOverriddenDelta(mDeltaX, false);
 }
 
 double WidgetWheelEvent::OverriddenDeltaY() const {
-  if (!mAllowToOverrideSystemScrollSpeed) {
+  if (!mAllowToOverrideSystemScrollSpeed ||
+      mDeltaMode != dom::WheelEvent_Binding::DOM_DELTA_LINE ||
+      mCustomizedByUserPrefs) {
     return mDeltaY;
   }
   return ComputeOverriddenDelta(mDeltaY, true);
