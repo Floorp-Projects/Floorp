@@ -6046,6 +6046,7 @@ void EventStateManager::DeltaAccumulator::InitLineOrPageDelta(
   // If it's handling neither a device that does not provide line or page deltas
   // nor delta values multiplied by prefs, we must not modify lineOrPageDelta
   // values.
+  // TODO(emilio): Does this care about overridden scroll speed?
   if (!mIsNoLineOrPageDeltaDevice &&
       !EventStateManager::WheelPrefs::GetInstance()
            ->NeedToComputeLineOrPageDelta(aEvent)) {
@@ -6105,13 +6106,7 @@ EventStateManager::DeltaAccumulator::ComputeScrollAmountForDefaultAction(
     WidgetWheelEvent* aEvent, const nsIntSize& aScrollAmountInDevPixels) {
   MOZ_ASSERT(aEvent);
 
-  // If the wheel event is line scroll and the delta value is computed from
-  // system settings, allow to override the system speed.
-  bool allowScrollSpeedOverride =
-      (!aEvent->mCustomizedByUserPrefs &&
-       aEvent->mDeltaMode == WheelEvent_Binding::DOM_DELTA_LINE);
-  DeltaValues acceleratedDelta =
-      WheelTransaction::AccelerateWheelDelta(aEvent, allowScrollSpeedOverride);
+  DeltaValues acceleratedDelta = WheelTransaction::AccelerateWheelDelta(aEvent);
 
   nsIntPoint result(0, 0);
   if (aEvent->mDeltaMode == WheelEvent_Binding::DOM_DELTA_PIXEL) {
