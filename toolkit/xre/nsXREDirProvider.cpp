@@ -934,7 +934,12 @@ nsXREDirProvider::DoStartup() {
 #endif
 
 #ifdef MOZ_THUNDERBIRD
-    if (mozilla::Preferences::GetBool(
+    bool bgtaskMode = false;
+#  ifdef MOZ_BACKGROUNDTASKS
+    bgtaskMode = mozilla::BackgroundTasks::IsBackgroundTaskMode();
+#  endif
+    if (!bgtaskMode &&
+        mozilla::Preferences::GetBool(
             "security.prompt_for_master_password_on_startup", false)) {
       // Prompt for the master password prior to opening application windows,
       // to avoid the race that triggers multiple prompts (see bug 177175).
