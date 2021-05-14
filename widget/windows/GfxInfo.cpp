@@ -1900,21 +1900,11 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
 
     ////////////////////////////////////
     // FEATURE_WEBRENDER_SOFTWARE - ALLOWLIST
-#ifdef EARLY_BETA_OR_EARLIER
     APPEND_TO_DRIVER_BLOCKLIST2(OperatingSystem::Windows, DeviceFamily::All,
                                 nsIGfxInfo::FEATURE_WEBRENDER_SOFTWARE,
                                 nsIGfxInfo::FEATURE_ALLOW_ALWAYS,
                                 DRIVER_COMPARISON_IGNORED, V(0, 0, 0, 0),
-                                "FEATURE_ROLLOUT_EARLY_BETA_SOFTWARE_WR");
-#endif
-
-    APPEND_TO_DRIVER_BLOCKLIST2_EXT(
-        OperatingSystem::Windows, ScreenSizeStatus::SmallAndMedium,
-        BatteryStatus::All, DesktopEnvironment::All, WindowProtocol::All,
-        DriverVendor::All, DeviceFamily::All,
-        nsIGfxInfo::FEATURE_WEBRENDER_SOFTWARE,
-        nsIGfxInfo::FEATURE_ALLOW_ALWAYS, DRIVER_COMPARISON_IGNORED,
-        V(0, 0, 0, 0), "FEATURE_ROLLOUT_RELEASE_S_M_SCRN_SOFTWARE_WR");
+                                "FEATURE_ROLLOUT_SOFTWARE_WR");
   }
   return *sDriverInfo;
 }
