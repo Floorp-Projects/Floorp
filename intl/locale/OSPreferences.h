@@ -42,7 +42,7 @@ namespace intl {
  */
 class OSPreferences : public mozIOSPreferences {
  public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_MOZIOSPREFERENCES
 
   enum class DateTimeFormatStyle {
