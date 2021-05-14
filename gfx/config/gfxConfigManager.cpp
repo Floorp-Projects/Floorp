@@ -170,13 +170,6 @@ void gfxConfigManager::ConfigureWebRenderSoftware() {
                                   "Not controlled by rollout", failureId);
       break;
   }
-
-  if (!mIsEarlyBetaOrEarlier && mFeatureD3D11Compositing &&
-      !mFeatureGPUProcess->IsEnabled()) {
-    mFeatureWrSoftware->Disable(FeatureStatus::Unavailable,
-                                "Requires GPU process on release",
-                                "FEATURE_FAILURE_RELEASE_NO_GPU_PROCESS"_ns);
-  }
 }
 
 void gfxConfigManager::ConfigureWebRenderQualified() {
