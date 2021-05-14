@@ -59,6 +59,40 @@ void WheelEvent::InitWheelEvent(
   wheelEvent->mDeltaMode = aDeltaMode;
 }
 
+int32_t WheelEvent::WheelDeltaX(CallerType aCallerType) {
+  WidgetWheelEvent* ev = mEvent->AsWheelEvent();
+  if (ev->mWheelTicksX != 0.0) {
+    return int32_t(-ev->mWheelTicksX * kNativeTicksToWheelDelta);
+  }
+  if (IsTrusted()) {
+    // We always return pixels regardless of the checking-state.
+    double pixelDelta =
+        ev->mDeltaMode == WheelEvent_Binding::DOM_DELTA_PIXEL
+            ? DevToCssPixels(ev->mDeltaX)
+            : ev->mDeltaX *
+                  CSSPixel::FromAppUnits(ev->mScrollAmount.width).Rounded();
+    return int32_t(-std::round(pixelDelta * kTrustedDeltaToWheelDelta));
+  }
+  return int32_t(-std::round(DeltaX(aCallerType)));  // This matches Safari.
+}
+
+int32_t WheelEvent::WheelDeltaY(CallerType aCallerType) {
+  WidgetWheelEvent* ev = mEvent->AsWheelEvent();
+  if (ev->mWheelTicksY != 0.0) {
+    return int32_t(-ev->mWheelTicksY * kNativeTicksToWheelDelta);
+  }
+
+  if (IsTrusted()) {
+    double pixelDelta =
+        ev->mDeltaMode == WheelEvent_Binding::DOM_DELTA_PIXEL
+            ? DevToCssPixels(ev->mDeltaY)
+            : ev->mDeltaY *
+                  CSSPixel::FromAppUnits(ev->mScrollAmount.height).Rounded();
+    return int32_t(-std::round(pixelDelta * kTrustedDeltaToWheelDelta));
+  }
+  return int32_t(-std::round(DeltaY(aCallerType)));  // This matches Safari.
+}
+
 double WheelEvent::ToWebExposedDelta(WidgetWheelEvent& aWidgetEvent,
                                      double aDelta, nscoord aLineOrPageAmount,
                                      CallerType aCallerType) {
@@ -74,10 +108,7 @@ double WheelEvent::ToWebExposedDelta(WidgetWheelEvent& aWidgetEvent,
       return aDelta * CSSPixel::FromAppUnits(aLineOrPageAmount).Rounded();
     }
   }
-  if (!mAppUnitsPerDevPixel) {
-    return aDelta;
-  }
-  return aDelta * mAppUnitsPerDevPixel / AppUnitsPerCSSPixel();
+  return DevToCssPixels(aDelta);
 }
 
 double WheelEvent::DeltaX(CallerType aCallerType) {
