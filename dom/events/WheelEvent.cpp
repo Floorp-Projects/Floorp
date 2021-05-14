@@ -57,6 +57,7 @@ void WheelEvent::InitWheelEvent(
   wheelEvent->mDeltaY = aDeltaY;
   wheelEvent->mDeltaZ = aDeltaZ;
   wheelEvent->mDeltaMode = aDeltaMode;
+  wheelEvent->mAllowToOverrideSystemScrollSpeed = false;
 }
 
 int32_t WheelEvent::WheelDeltaX(CallerType aCallerType) {
@@ -68,8 +69,8 @@ int32_t WheelEvent::WheelDeltaX(CallerType aCallerType) {
     // We always return pixels regardless of the checking-state.
     double pixelDelta =
         ev->mDeltaMode == WheelEvent_Binding::DOM_DELTA_PIXEL
-            ? DevToCssPixels(ev->mDeltaX)
-            : ev->mDeltaX *
+            ? DevToCssPixels(ev->OverriddenDeltaX())
+            : ev->OverriddenDeltaX() *
                   CSSPixel::FromAppUnits(ev->mScrollAmount.width).Rounded();
     return int32_t(-std::round(pixelDelta * kTrustedDeltaToWheelDelta));
   }
@@ -85,8 +86,8 @@ int32_t WheelEvent::WheelDeltaY(CallerType aCallerType) {
   if (IsTrusted()) {
     double pixelDelta =
         ev->mDeltaMode == WheelEvent_Binding::DOM_DELTA_PIXEL
-            ? DevToCssPixels(ev->mDeltaY)
-            : ev->mDeltaY *
+            ? DevToCssPixels(ev->OverriddenDeltaY())
+            : ev->OverriddenDeltaY() *
                   CSSPixel::FromAppUnits(ev->mScrollAmount.height).Rounded();
     return int32_t(-std::round(pixelDelta * kTrustedDeltaToWheelDelta));
   }
@@ -113,14 +114,14 @@ double WheelEvent::ToWebExposedDelta(WidgetWheelEvent& aWidgetEvent,
 
 double WheelEvent::DeltaX(CallerType aCallerType) {
   WidgetWheelEvent* ev = mEvent->AsWheelEvent();
-  return ToWebExposedDelta(*ev, ev->mDeltaX, ev->mScrollAmount.width,
+  return ToWebExposedDelta(*ev, ev->OverriddenDeltaX(), ev->mScrollAmount.width,
                            aCallerType);
 }
 
 double WheelEvent::DeltaY(CallerType aCallerType) {
   WidgetWheelEvent* ev = mEvent->AsWheelEvent();
-  return ToWebExposedDelta(*ev, ev->mDeltaY, ev->mScrollAmount.height,
-                           aCallerType);
+  return ToWebExposedDelta(*ev, ev->OverriddenDeltaY(),
+                           ev->mScrollAmount.height, aCallerType);
 }
 
 double WheelEvent::DeltaZ(CallerType aCallerType) {

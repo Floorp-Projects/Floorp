@@ -71,7 +71,7 @@ window.onload = function() {
   SpecialPowers.pushPrefEnv({
     "set":[["general.smoothScroll", true],
            ["mousewheel.acceleration.start", -1],
-           ["mousewheel.system_scroll_override_on_root_content.enabled", false]]}, runTest);
+           ["mousewheel.system_scroll_override.enabled", false]]}, runTest);
 }
 
 SimpleTest.waitForExplicitFinish();
