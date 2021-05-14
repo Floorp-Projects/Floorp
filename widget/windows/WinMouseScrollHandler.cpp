@@ -817,15 +817,21 @@ bool MouseScrollHandler::LastEventInfo::InitWheelEvent(
   aWheelEvent.mDeltaMode = mIsPage ? dom::WheelEvent_Binding::DOM_DELTA_PAGE
                                    : dom::WheelEvent_Binding::DOM_DELTA_LINE;
 
+  double ticks = double(mDelta) * orienter / double(WHEEL_DELTA);
+  if (mIsVertical) {
+    aWheelEvent.mWheelTicksY = ticks;
+  } else {
+    aWheelEvent.mWheelTicksX = ticks;
+  }
+
   double& delta = mIsVertical ? aWheelEvent.mDeltaY : aWheelEvent.mDeltaX;
   int32_t& lineOrPageDelta = mIsVertical ? aWheelEvent.mLineOrPageDeltaY
                                          : aWheelEvent.mLineOrPageDeltaX;
 
   double nativeDeltaPerUnit =
-      mIsPage ? static_cast<double>(WHEEL_DELTA)
-              : static_cast<double>(WHEEL_DELTA) / GetScrollAmount();
+      mIsPage ? double(WHEEL_DELTA) : double(WHEEL_DELTA) / GetScrollAmount();
 
-  delta = static_cast<double>(mDelta) * orienter / nativeDeltaPerUnit;
+  delta = double(mDelta) * orienter / nativeDeltaPerUnit;
   mAccumulatedDelta += mDelta;
   lineOrPageDelta =
       mAccumulatedDelta * orienter / RoundDelta(nativeDeltaPerUnit);
