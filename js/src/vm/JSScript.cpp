@@ -978,9 +978,10 @@ XDRResult js::XDRImmutableScriptData(XDRState<mode>* xdr,
   }
   MOZ_TRY(xdr->codeBytes(data, size));
   if (mode == XDR_DECODE) {
-#ifdef DEBUG
-    isd->validate(size);
-#endif
+    if (size != isd->computedSize()) {
+      MOZ_ASSERT(false, "Bad ImmutableScriptData");
+      return xdr->fail(JS::TranscodeResult::Failure_BadDecode);
+    }
   }
 
   return Ok();
@@ -3412,14 +3413,12 @@ js::UniquePtr<ImmutableScriptData> js::ImmutableScriptData::new_(
   return result;
 }
 
-#ifdef DEBUG
-void js::ImmutableScriptData::validate(uint32_t totalSize) {
+uint32_t js::ImmutableScriptData::computedSize() {
   auto size = sizeFor(codeLength(), noteLength(), resumeOffsets().size(),
                       scopeNotes().size(), tryNotes().size());
   MOZ_ASSERT(size.isValid());
-  MOZ_ASSERT(size.value() == totalSize);
+  return size.value();
 }
-#endif
 
 /* static */
 SharedImmutableScriptData* SharedImmutableScriptData::create(JSContext* cx) {
