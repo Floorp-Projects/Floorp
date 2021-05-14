@@ -598,6 +598,7 @@ enum class SectionMarker : uint32_t {
   ScriptData = 0x840458FF,
   ScriptExtra = 0xA90E489D,
   ModuleMetadata = 0x94FDCE6D,
+  End = 0x16DDA135,
 };
 
 template <XDRMode mode>
@@ -696,6 +697,8 @@ template <XDRMode mode>
     MOZ_TRY(CodeMarker(xdr, SectionMarker::ModuleMetadata));
     MOZ_TRY(codeModuleMetadata(xdr, *stencil.moduleMetadata));
   }
+
+  MOZ_TRY(CodeMarker(xdr, SectionMarker::End));
 
   return Ok();
 }
