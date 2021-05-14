@@ -216,6 +216,13 @@ function* testDeltaMultiplierPrefs()
     throw new Error("Unknown delta mode");
   }
 
+  function defaultScrollMultiplier(horizontal) {
+    if (!SpecialPowers.getBoolPref("mousewheel.system_scroll_override.enabled")) {
+      return 1;
+    }
+    return SpecialPowers.getIntPref(`mousewheel.system_scroll_override.${horizontal ? "horizontal" : "vertical"}.factor`) / 100;
+  }
+
   function wheelEventHandler(aEvent) {
     calledHandlers.wheel = true;
 
@@ -235,6 +242,9 @@ function* testDeltaMultiplierPrefs()
           expectedDeltaZ *= currentMultiplier;
           break;
       }
+    } else if (aEvent.isTrusted && aEvent.deltaMode == WheelEvent.DOM_DELTA_LINE) {
+      expectedDeltaX *= defaultScrollMultiplier(true);
+      expectedDeltaY *= defaultScrollMultiplier(false);
     }
     is(aEvent.deltaMode, currentEvent.deltaMode, description + "deltaMode (" + currentEvent.deltaMode + ") was invalid");
     is(aEvent.deltaX, expectedDeltaX, description + "deltaX (" + currentEvent.deltaX + ") was invalid");

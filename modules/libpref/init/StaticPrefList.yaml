@@ -8712,7 +8712,7 @@
   value: false
   mirror: always
 
-- name: mousewheel.system_scroll_override_on_root_content.enabled
+- name: mousewheel.system_scroll_override.enabled
   type: RelaxedAtomicBool
 #ifdef XP_WIN
   value: true
@@ -8723,18 +8723,18 @@
 
 # Prefs for overriding the system mouse wheel scrolling speed on
 # content of the web pages.  When
-# "mousewheel.system_scroll_override_on_root_content.enabled" is true and the
+# "mousewheel.system_scroll_override.enabled" is true and the
 # system scrolling speed isn't customized by the user, the content scrolling
 # speed is multiplied by the following factors.  The value will be used as
 # 1/100.  E.g., 200 means 2.00.
-# NOTE: Even if "mousewheel.system_scroll_override_on_root_content.enabled" is
+# NOTE: Even if "mousewheel.system_scroll_override.enabled" is
 # true, when Gecko detects the user customized the system scrolling speed
 # settings, the override isn't executed.
-- name: mousewheel.system_scroll_override_on_root_content.horizontal.factor
+- name: mousewheel.system_scroll_override.horizontal.factor
   type: RelaxedAtomicInt32
   value: 200
   mirror: always
-- name: mousewheel.system_scroll_override_on_root_content.vertical.factor
+- name: mousewheel.system_scroll_override.vertical.factor
   type: RelaxedAtomicInt32
   value: 200
   mirror: always

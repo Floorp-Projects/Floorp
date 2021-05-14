@@ -139,8 +139,7 @@ class WheelTransaction {
 
   static void OwnScrollbars(bool aOwn);
 
-  static DeltaValues AccelerateWheelDelta(WidgetWheelEvent* aEvent,
-                                          bool aAllowScrollSpeedOverride);
+  static DeltaValues AccelerateWheelDelta(WidgetWheelEvent* aEvent);
 
  protected:
   static void BeginTransaction(nsIFrame* aTargetFrame,
