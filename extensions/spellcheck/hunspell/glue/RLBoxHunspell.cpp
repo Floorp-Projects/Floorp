@@ -17,6 +17,9 @@ using namespace mozilla;
 // Helper function for allocating and copying nsAutoCString into sandbox
 static tainted_hunspell<char*> allocStrInSandbox(
     rlbox_sandbox_hunspell& aSandbox, const nsAutoCString& str) {
+  if (str.IsEmpty()) {
+    return nullptr;
+  }
   size_t size = str.Length() + 1;
   tainted_hunspell<char*> t_str = aSandbox.malloc_in_sandbox<char>(size);
   MOZ_RELEASE_ASSERT(t_str);
@@ -27,6 +30,9 @@ static tainted_hunspell<char*> allocStrInSandbox(
 // Helper function for allocating and copying std::string into sandbox
 static tainted_hunspell<char*> allocStrInSandbox(
     rlbox_sandbox_hunspell& aSandbox, const std::string& str) {
+  if (str.empty()) {
+    return nullptr;
+  }
   size_t size = str.size() + 1;
   tainted_hunspell<char*> t_str = aSandbox.malloc_in_sandbox<char>(size);
   MOZ_RELEASE_ASSERT(t_str);
@@ -52,8 +58,12 @@ RLBoxHunspell::RLBoxHunspell(const nsAutoCString& affpath,
 #endif
 
   // Add the aff and dict files to allow list
-  mozHunspellCallbacks::AllowFile(affpath);
-  mozHunspellCallbacks::AllowFile(dpath);
+  if (!affpath.IsEmpty()) {
+    mozHunspellCallbacks::AllowFile(affpath);
+  }
+  if (!dpath.IsEmpty()) {
+    mozHunspellCallbacks::AllowFile(dpath);
+  }
 
   // Register callbacks
   mCreateFilemgr =
@@ -84,8 +94,12 @@ RLBoxHunspell::RLBoxHunspell(const nsAutoCString& affpath,
       rlbox::sandbox_const_cast<const char*>(t_dpath));
   MOZ_RELEASE_ASSERT(mHandle);
 
-  mSandbox.free_in_sandbox(t_dpath);
-  mSandbox.free_in_sandbox(t_affpath);
+  if (t_dpath) {
+    mSandbox.free_in_sandbox(t_dpath);
+  }
+  if (t_affpath) {
+    mSandbox.free_in_sandbox(t_affpath);
+  }
 
   // Get dictionary encoding
   tainted_hunspell<char*> t_enc =
