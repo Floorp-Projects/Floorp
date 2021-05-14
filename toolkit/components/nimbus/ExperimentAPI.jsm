@@ -287,10 +287,11 @@ const ExperimentAPI = {
  */
 const NimbusFeatures = {};
 for (let feature in FeatureManifest) {
-  XPCOMUtils.defineLazyGetter(
-    NimbusFeatures,
-    feature,
-    () => new ExperimentFeature(feature)
+  XPCOMUtils.defineLazyGetter(NimbusFeatures, feature, () =>
+    // Alias upgradeDialog to reuse aboutwelcome, which has sync access in 88.
+    feature === "upgradeDialog"
+      ? NimbusFeatures.aboutwelcome
+      : new ExperimentFeature(feature)
   );
 }
 
