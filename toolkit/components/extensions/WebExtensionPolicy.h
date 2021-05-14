@@ -44,8 +44,13 @@ class WebAccessibleResource final : public nsISupports {
                         const WebAccessibleResourceInit& aInit,
                         ErrorResult& aRv);
 
-  bool IsPathWebAccessible(const nsAString& aPath) const {
+  bool IsWebAccessiblePath(const nsAString& aPath) const {
     return mWebAccessiblePaths.Matches(aPath);
+  }
+
+  bool SourceMayAccessPath(const URLInfo& aURI, const nsAString& aPath) {
+    return mWebAccessiblePaths.Matches(aPath) && mMatches &&
+           mMatches->Matches(aURI);
   }
 
  protected:
@@ -53,6 +58,7 @@ class WebAccessibleResource final : public nsISupports {
 
  private:
   MatchGlobSet mWebAccessiblePaths;
+  RefPtr<MatchPatternSet> mMatches;
 };
 
 class WebExtensionPolicy final : public nsISupports,
@@ -98,9 +104,21 @@ class WebExtensionPolicy final : public nsISupports,
                     bool aCheckRestricted = true,
                     bool aAllowFilePermission = false) const;
 
-  bool IsPathWebAccessible(const nsAString& aPath) const {
+  bool IsWebAccessiblePath(const nsAString& aPath) const {
     for (const auto& resource : mWebAccessibleResources) {
-      if (resource->IsPathWebAccessible(aPath)) {
+      if (resource->IsWebAccessiblePath(aPath)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  bool SourceMayAccessPath(const URLInfo& aURI, const nsAString& aPath) const {
+    if (mManifestVersion < 3) {
+      return IsWebAccessiblePath(aPath);
+    }
+    for (const auto& resource : mWebAccessibleResources) {
+      if (resource->SourceMayAccessPath(aURI, aPath)) {
         return true;
       }
     }
