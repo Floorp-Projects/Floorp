@@ -2574,7 +2574,6 @@ class MApplyArgs : public MTernaryInstruction,
       : MTernaryInstruction(classOpcode, fun, argc, self), target_(target) {
     MOZ_ASSERT(argc->type() == MIRType::Int32);
     setResultType(MIRType::Value);
-    setBailoutKind(BailoutKind::TooManyArguments);
   }
 
  public:
@@ -2609,7 +2608,6 @@ class MApplyArgsObj
         target_(target) {
     MOZ_ASSERT(argsObj->type() == MIRType::Object);
     setResultType(MIRType::Value);
-    setBailoutKind(BailoutKind::TooManyArguments);
   }
 
  public:
@@ -2643,7 +2641,6 @@ class MApplyArray : public MTernaryInstruction,
       : MTernaryInstruction(classOpcode, fun, elements, self), target_(target) {
     MOZ_ASSERT(elements->type() == MIRType::Elements);
     setResultType(MIRType::Value);
-    setBailoutKind(BailoutKind::TooManyArguments);
   }
 
  public:
@@ -2681,7 +2678,6 @@ class MConstructArray
         target_(target) {
     MOZ_ASSERT(elements->type() == MIRType::Elements);
     setResultType(MIRType::Value);
-    setBailoutKind(BailoutKind::TooManyArguments);
   }
 
  public:
