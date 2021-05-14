@@ -3,17 +3,23 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 package org.mozilla.focus.activity
 
+import okhttp3.mockwebserver.MockWebServer
+import org.junit.After
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.focus.R
 import org.mozilla.focus.activity.robots.homeScreen
 import org.mozilla.focus.activity.robots.searchScreen
 import org.mozilla.focus.helpers.MainActivityFirstrunTestRule
+import org.mozilla.focus.helpers.TestHelper.createMockResponseFromAsset
 import org.mozilla.focus.helpers.TestHelper.exitToTop
 import org.mozilla.focus.helpers.TestHelper.getStringResource
+import org.mozilla.focus.helpers.TestHelper.mDevice
 
 // These tests verify the Safe Browsing feature by visiting unsafe URLs and checking they are blocked
 class SafeBrowsingTest {
+    private lateinit var webServer: MockWebServer
     private val malwareWarning = getStringResource(R.string.mozac_browser_errorpages_safe_browsing_malware_uri_title)
     private val phishingWarning = getStringResource(R.string.mozac_browser_errorpages_safe_phishing_uri_title)
     private val unwantedSoftwareWarning =
@@ -23,6 +29,17 @@ class SafeBrowsingTest {
 
     @get: Rule
     val mActivityTestRule = MainActivityFirstrunTestRule(showFirstRun = false)
+
+    @Before
+    fun setUp() {
+        webServer = MockWebServer()
+        webServer.start()
+    }
+
+    @After
+    fun tearDown() {
+        webServer.shutdown()
+    }
 
     @Test
     fun blockMalwarePageTest() {
@@ -82,6 +99,37 @@ class SafeBrowsingTest {
         searchScreen {
         }.loadPage(malwareURl) {
             verifyPageContent("It’s an Attack!")
+        }
+    }
+
+    @Test
+    fun verifyPageSecurityIconAndInfo() {
+        val safePageUrl = "https://rpappalax.github.io/testapp"
+        val insecurePageUrl = "http://itisatrap.org/firefox/its-a-trap.html"
+
+        searchScreen {
+        }.loadPage(safePageUrl) {
+            verifyPageContent("Privacy & Security")
+            verifySiteSecurityIconShown()
+            verifySiteConnectionInfoIsSecure(true)
+            mDevice.pressBack()
+        }.openSearchBar {
+        }.loadPage(insecurePageUrl) {
+            verifySiteSecurityIconShown()
+            verifySiteConnectionInfoIsSecure(false)
+            mDevice.pressBack()
+        }
+    }
+
+    @Test
+    fun testLocationSharingNotAllowed() {
+        webServer.enqueue(createMockResponseFromAsset("permissionsPage.html"))
+        val permissionsPage = webServer.url("permissionsPage.html").toString()
+
+        searchScreen {
+        }.loadPage(permissionsPage) {
+            clickGetLocationButton()
+            verifyPageContent("No location info")
         }
     }
 }
