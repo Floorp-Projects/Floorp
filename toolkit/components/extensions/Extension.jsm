@@ -1132,10 +1132,18 @@ class ExtensionData {
 
       // Normalize all patterns to contain a single leading /
       if (manifest.web_accessible_resources) {
+        // Normalize into V3 objects
+        let wac =
+          this.manifestVersion >= 3
+            ? manifest.web_accessible_resources
+            : [{ resources: manifest.web_accessible_resources }];
         webAccessibleResources.push(
-          ...manifest.web_accessible_resources.map(path =>
-            path.replace(/^\/*/, "/")
-          )
+          ...wac.map(obj => {
+            obj.resources = obj.resources.map(path =>
+              path.replace(/^\/*/, "/")
+            );
+            return obj;
+          })
         );
       }
     } else if (this.type == "langpack") {
@@ -1270,9 +1278,7 @@ class ExtensionData {
     this.apiManager = this.getAPIManager();
     await this.apiManager.lazyInit();
 
-    this.webAccessibleResources = manifestData.webAccessibleResources.map(
-      res => new MatchGlob(res)
-    );
+    this.webAccessibleResources = manifestData.webAccessibleResources;
     this.allowedOrigins = new MatchPatternSet(manifestData.originPermissions, {
       restrictSchemes: this.restrictSchemes,
     });
@@ -2268,7 +2274,7 @@ class Extension extends ExtensionData {
       instanceId: this.instanceId,
       resourceURL: this.resourceURL,
       contentScripts: this.contentScripts,
-      webAccessibleResources: this.webAccessibleResources.map(res => res.glob),
+      webAccessibleResources: this.webAccessibleResources,
       allowedOrigins: this.allowedOrigins.patterns.map(pat => pat.pattern),
       permissions: this.permissions,
       optionalPermissions: this.optionalPermissions,

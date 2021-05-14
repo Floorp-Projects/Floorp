@@ -135,6 +135,20 @@ already_AddRefed<MatchPatternSet> ParseMatches(
   return result.forget();
 }
 
+WebAccessibleResource::WebAccessibleResource(
+    GlobalObject& aGlobal, const WebAccessibleResourceInit& aInit,
+    ErrorResult& aRv) {
+  ParseGlobs(aGlobal, aInit.mResources, mWebAccessiblePaths, aRv);
+}
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(WebAccessibleResource)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_CYCLE_COLLECTION(WebAccessibleResource)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(WebAccessibleResource)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(WebAccessibleResource)
+
 /*****************************************************************************
  * WebExtensionPolicy
  *****************************************************************************/
@@ -150,11 +164,6 @@ WebExtensionPolicy::WebExtensionPolicy(GlobalObject& aGlobal,
       mLocalizeCallback(aInit.mLocalizeCallback),
       mIsPrivileged(aInit.mIsPrivileged),
       mPermissions(new AtomSet(aInit.mPermissions)) {
-  if (!ParseGlobs(aGlobal, aInit.mWebAccessibleResources, mWebAccessiblePaths,
-                  aRv)) {
-    return;
-  }
-
   // We set this here to prevent this policy changing after creation.
   mAllowPrivateBrowsingByDefault =
       StaticPrefs::extensions_allowPrivateBrowsingByDefault();
@@ -181,6 +190,16 @@ WebExtensionPolicy::WebExtensionPolicy(GlobalObject& aGlobal,
 
   if (mExtensionPageCSP.IsVoid()) {
     EPS().GetDefaultCSP(mExtensionPageCSP);
+  }
+
+  mWebAccessibleResources.SetCapacity(aInit.mWebAccessibleResources.Length());
+  for (const auto& resourceInit : aInit.mWebAccessibleResources) {
+    RefPtr<WebAccessibleResource> resource =
+        new WebAccessibleResource(aGlobal, resourceInit, aRv);
+    if (aRv.Failed()) {
+      return;
+    }
+    mWebAccessibleResources.AppendElement(std::move(resource));
   }
 
   mContentScripts.SetCapacity(aInit.mContentScripts.Length());
@@ -557,7 +576,7 @@ uint64_t WebExtensionPolicy::GetBrowsingContextGroupId(ErrorResult& aRv) {
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_WEAK_PTR(WebExtensionPolicy, mParent,
                                                mLocalizeCallback,
                                                mHostPermissions,
-                                               mWebAccessiblePaths,
+                                               mWebAccessibleResources,
                                                mContentScripts)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(WebExtensionPolicy)
