@@ -1,4 +1,6 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" class="reftest-wait">
+<head>
 <title>CSS Test: Test for containing block for absolutely positioned elements being initial containing block</title>
 <link rel="author" title="Robert O'Callahan" href="mailto:robert@ocallahan.org" />
 <link rel="author" title="Mozilla Corporation" href="http://mozilla.com/" />
@@ -11,11 +13,14 @@ html { margin:10px; border:20px solid black; padding:30px; }
 body { height:10000px; margin:0; }
 div { position:absolute; width:100px; height:100px; }
 </style>
-</head>
-<body>
-<script type="text/javascript">
-window.scrollTo(0,50);
+<script>
+function run() {
+  window.scrollTo(0,50);
+  document.documentElement.classList.remove('reftest-wait');
+}
 </script>
+</head>
+<body onload="setTimeout('run()', 0)">
 <div style="top:0; background:yellow;"></div>
 <div style="right:0; background:orange;"></div>
 <div style="bottom:0; background:brown;"></div>
