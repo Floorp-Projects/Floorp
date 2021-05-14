@@ -16,14 +16,16 @@
 
 #include <pango/pango.h>
 #include <pango/pango-fontmap.h>
-
 #include <fontconfig/fontconfig.h>
+
+#include "nsGtkUtils.h"
 #include "gfxPlatformGtk.h"
 #include "mozilla/FontPropertyTypes.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/RelativeLuminanceUtils.h"
 #include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/StaticPrefs_widget.h"
+#include "mozilla/AutoRestore.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/ScopeExit.h"
 #include "ScreenHelperGTK.h"
@@ -62,9 +64,54 @@ extern mozilla::LazyLogModule gWidgetLog;
   ((nscolor)NS_RGBA((int)((c).red * 255), (int)((c).green * 255), \
                     (int)((c).blue * 255), (int)((c).alpha * 255)))
 
-nsLookAndFeel::nsLookAndFeel() = default;
+static bool sIgnoreChangedSettings = false;
+static void settings_changed_cb(GtkSettings*, GParamSpec*, void*) {
+  if (sIgnoreChangedSettings) {
+    return;
+  }
+  // TODO: We could be more granular here, but for now assume everything
+  // changed.
+  LookAndFeel::NotifyChangedAllWindows(widget::ThemeChangeKind::StyleAndLayout);
+  widget::IMContextWrapper::OnThemeChanged();
+}
 
-nsLookAndFeel::~nsLookAndFeel() = default;
+nsLookAndFeel::nsLookAndFeel() {
+  static constexpr nsLiteralCString kObservedSettings[] = {
+      // Affects system font sizes.
+      "notify::gtk-xft-dpi"_ns,
+      // Affects mSystemTheme and mAltTheme as expected.
+      "notify::gtk-theme-name"_ns,
+      // System fonts?
+      "notify::gtk-font-name"_ns,
+      // prefers-reduced-motion
+      "notify::gtk-enable-animations"_ns,
+      // CSD media queries, etc.
+      "notify::gtk-decoration-layout"_ns,
+      // Text resolution affects system font and widget sizes.
+      "notify::resolution"_ns,
+      // Affects mCaretBlinkTime
+      "notify::gtk-cursor-blink-time"_ns,
+      // Affects SelectTextfieldsOnKeyFocus
+      "notify::gtk-entry-select-on-focus"_ns,
+      // Affects ScrollToClick
+      "notify::gtk-primary-button-warps-slider"_ns,
+      // Affects SubmenuDelay
+      "notify::gtk-menu-popup-delay"_ns,
+      // Affects DragThresholdX/Y
+      "notify::gtk-dnd-drag-threshold"_ns,
+  };
+
+  GtkSettings* settings = gtk_settings_get_default();
+  for (const auto& setting : kObservedSettings) {
+    g_signal_connect_after(settings, setting.get(),
+                           G_CALLBACK(settings_changed_cb), nullptr);
+  }
+}
+
+nsLookAndFeel::~nsLookAndFeel() {
+  g_signal_handlers_disconnect_by_func(
+      gtk_settings_get_default(), FuncToGpointer(settings_changed_cb), nullptr);
+}
 
 // Modifies color |*aDest| as if a pattern of color |aSource| was painted with
 // CAIRO_OPERATOR_OVER to a surface with color |*aDest|.
@@ -1016,71 +1063,71 @@ void nsLookAndFeel::ConfigureTheme(const LookAndFeelTheme& aTheme) {
 
 void nsLookAndFeel::WithAltThemeConfigured(
     const std::function<void(bool)>& aFn) {
-  nsWindow::WithSettingsChangesIgnored([&]() {
-    // Available on Gtk 3.20+.
-    static auto sGtkSettingsResetProperty =
-        (void (*)(GtkSettings*, const gchar*))dlsym(
-            RTLD_DEFAULT, "gtk_settings_reset_property");
+  AutoRestore<bool> restoreIgnoreSettings(sIgnoreChangedSettings);
+  sIgnoreChangedSettings = true;
+  // Available on Gtk 3.20+.
+  static auto sGtkSettingsResetProperty =
+      (void (*)(GtkSettings*, const gchar*))dlsym(
+          RTLD_DEFAULT, "gtk_settings_reset_property");
 
-    GtkSettings* settings = gtk_settings_get_default();
+  GtkSettings* settings = gtk_settings_get_default();
 
-    bool fellBackToDefaultTheme = false;
+  bool fellBackToDefaultTheme = false;
 
-    // Try to select the opposite variant of the current theme first...
-    LOG(("    toggling gtk-application-prefer-dark-theme\n"));
-    g_object_set(settings, "gtk-application-prefer-dark-theme",
-                 !mSystemTheme.mIsDark, nullptr);
-    moz_gtk_refresh();
+  // Try to select the opposite variant of the current theme first...
+  LOG(("    toggling gtk-application-prefer-dark-theme\n"));
+  g_object_set(settings, "gtk-application-prefer-dark-theme",
+               !mSystemTheme.mIsDark, nullptr);
+  moz_gtk_refresh();
 
-    // Toggling gtk-application-prefer-dark-theme is not enough generally to
-    // switch from dark to light theme.  If the theme didn't change, and we have
-    // a dark theme, try to first remove -Dark{,er,est} from the theme name to
-    // find the light variant.
-    if (mSystemTheme.mIsDark && mSystemTheme.mIsDark == GetThemeIsDark()) {
-      nsCString potentialLightThemeName = mSystemTheme.mName;
-      constexpr nsLiteralCString kSubstringsToRemove[] = {
-          "-dark"_ns,    "-darker"_ns,  "-darkest"_ns, "-Dark"_ns,
-          "-Darker"_ns,  "-Darkest"_ns, "_dark"_ns,    "_darker"_ns,
-          "_darkest"_ns, "_Dark"_ns,    "_Darker"_ns,  "_Darkest"_ns,
-      };
-      bool found = false;
-      for (auto& s : kSubstringsToRemove) {
-        potentialLightThemeName = mSystemTheme.mName;
-        potentialLightThemeName.ReplaceSubstring(s, ""_ns);
-        if (potentialLightThemeName.Length() != mSystemTheme.mName.Length()) {
-          found = true;
-          break;
-        }
-      }
-      if (found) {
-        g_object_set(settings, "gtk-theme-name", potentialLightThemeName.get(),
-                     nullptr);
-        moz_gtk_refresh();
+  // Toggling gtk-application-prefer-dark-theme is not enough generally to
+  // switch from dark to light theme.  If the theme didn't change, and we have
+  // a dark theme, try to first remove -Dark{,er,est} from the theme name to
+  // find the light variant.
+  if (mSystemTheme.mIsDark && mSystemTheme.mIsDark == GetThemeIsDark()) {
+    nsCString potentialLightThemeName = mSystemTheme.mName;
+    constexpr nsLiteralCString kSubstringsToRemove[] = {
+        "-dark"_ns,    "-darker"_ns,  "-darkest"_ns, "-Dark"_ns,
+        "-Darker"_ns,  "-Darkest"_ns, "_dark"_ns,    "_darker"_ns,
+        "_darkest"_ns, "_Dark"_ns,    "_Darker"_ns,  "_Darkest"_ns,
+    };
+    bool found = false;
+    for (auto& s : kSubstringsToRemove) {
+      potentialLightThemeName = mSystemTheme.mName;
+      potentialLightThemeName.ReplaceSubstring(s, ""_ns);
+      if (potentialLightThemeName.Length() != mSystemTheme.mName.Length()) {
+        found = true;
+        break;
       }
     }
-
-    if (mSystemTheme.mIsDark == GetThemeIsDark()) {
-      // If the theme still didn't change enough, fall back to either Adwaita or
-      // Adwaita Dark.
-      g_object_set(settings, "gtk-theme-name",
-                   mSystemTheme.mIsDark ? "Adwaita" : "Adwaita Dark", nullptr);
+    if (found) {
+      g_object_set(settings, "gtk-theme-name", potentialLightThemeName.get(),
+                   nullptr);
       moz_gtk_refresh();
-      fellBackToDefaultTheme = true;
     }
+  }
 
-    aFn(fellBackToDefaultTheme);
-
-    // Restore the system theme.
-    if (sGtkSettingsResetProperty) {
-      sGtkSettingsResetProperty(settings, "gtk-theme-name");
-      sGtkSettingsResetProperty(settings, "gtk-application-prefer-dark-theme");
-    } else {
-      g_object_set(settings, "gtk-theme-name", mSystemTheme.mName.get(),
-                   "gtk-application-prefer-dark-theme",
-                   mSystemTheme.mPreferDarkTheme, nullptr);
-    }
+  if (mSystemTheme.mIsDark == GetThemeIsDark()) {
+    // If the theme still didn't change enough, fall back to either Adwaita or
+    // Adwaita Dark.
+    g_object_set(settings, "gtk-theme-name",
+                 mSystemTheme.mIsDark ? "Adwaita" : "Adwaita Dark", nullptr);
     moz_gtk_refresh();
-  });
+    fellBackToDefaultTheme = true;
+  }
+
+  aFn(fellBackToDefaultTheme);
+
+  // Restore the system theme.
+  if (sGtkSettingsResetProperty) {
+    sGtkSettingsResetProperty(settings, "gtk-theme-name");
+    sGtkSettingsResetProperty(settings, "gtk-application-prefer-dark-theme");
+  } else {
+    g_object_set(settings, "gtk-theme-name", mSystemTheme.mName.get(),
+                 "gtk-application-prefer-dark-theme",
+                 mSystemTheme.mPreferDarkTheme, nullptr);
+  }
+  moz_gtk_refresh();
 }
 
 static bool AnyColorChannelIsDifferent(nscolor aColor) {
