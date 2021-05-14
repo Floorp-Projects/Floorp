@@ -5003,10 +5003,8 @@
   type: bool
 #if defined(MOZ_WIDGET_ANDROID)
   value: false
-#elif defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
-  value: true
 #else
-  value: @IS_EARLY_BETA_OR_EARLIER@
+  value: true
 #endif
   mirror: once
 
