@@ -204,25 +204,6 @@ function* testDeltaMultiplierPrefs()
                          DOMMouseScroll: { horizontal: false, vertical: false },
                          MozMousePixelScroll: { horizontal: false, vertical: false } };
 
-  function deltaToPixels(mode, delta, horizontal) {
-    switch (mode) {
-      case WheelEvent.DOM_DELTA_PIXEL:
-        return delta;
-      case WheelEvent.DOM_DELTA_LINE:
-        return delta * (horizontal ? gHorizontalLine : gLineHeight);
-      case WheelEvent.DOM_DELTA_PAGE:
-        return delta * (horizontal ? gPageWidth : gPageHeight);
-    }
-    throw new Error("Unknown delta mode");
-  }
-
-  function defaultScrollMultiplier(horizontal) {
-    if (!SpecialPowers.getBoolPref("mousewheel.system_scroll_override.enabled")) {
-      return 1;
-    }
-    return SpecialPowers.getIntPref(`mousewheel.system_scroll_override.${horizontal ? "horizontal" : "vertical"}.factor`) / 100;
-  }
-
   function wheelEventHandler(aEvent) {
     calledHandlers.wheel = true;
 
@@ -242,17 +223,11 @@ function* testDeltaMultiplierPrefs()
           expectedDeltaZ *= currentMultiplier;
           break;
       }
-    } else if (aEvent.isTrusted && aEvent.deltaMode == WheelEvent.DOM_DELTA_LINE) {
-      expectedDeltaX *= defaultScrollMultiplier(true);
-      expectedDeltaY *= defaultScrollMultiplier(false);
     }
     is(aEvent.deltaMode, currentEvent.deltaMode, description + "deltaMode (" + currentEvent.deltaMode + ") was invalid");
     is(aEvent.deltaX, expectedDeltaX, description + "deltaX (" + currentEvent.deltaX + ") was invalid");
     is(aEvent.deltaY, expectedDeltaY, description + "deltaY (" + currentEvent.deltaY + ") was invalid");
     is(aEvent.deltaZ, expectedDeltaZ, description + "deltaZ (" + currentEvent.deltaZ + ") was invalid");
-    is(aEvent.wheelDeltaX, -Math.round(aEvent.isTrusted ? 3 * deltaToPixels(aEvent.deltaMode, expectedDeltaX, true) : expectedDeltaX), `${description}wheelDeltaX (${aEvent.wheelDeltaX}) was invalid`);
-    is(aEvent.wheelDeltaY, -Math.round(aEvent.isTrusted ? 3 * deltaToPixels(aEvent.deltaMode, expectedDeltaY, false) : expectedDeltaY), `${description}wheelDeltaY (${aEvent.wheelDeltaY}) was invalid`);
-    is(aEvent.wheelDelta, aEvent.wheelDeltaY || aEvent.wheelDeltaX, description + "wheelDelta was invalid");
 
     if (expectedAsyncHandlerCalls > 0 && --expectedAsyncHandlerCalls == 0) {
       setTimeout(continueTest, 0);
@@ -820,7 +795,6 @@ function runTest()
     ["layout.css.devPixelsPerPx", 1.0],
 
     ["dom.event.wheel-deltaMode-lines.disabled", true],
-    ["dom.event.wheelDelta.enabled", true],
 
     ["mousewheel.default.delta_multiplier_x", 100],
     ["mousewheel.default.delta_multiplier_y", 100],

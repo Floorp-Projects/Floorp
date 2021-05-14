@@ -781,8 +781,6 @@ ScrollWheelInput::ScrollWheelInput(const WidgetWheelEvent& aWheelEvent)
       mHandledByAPZ(aWheelEvent.mFlags.mHandledByAPZ),
       mDeltaX(aWheelEvent.mDeltaX),
       mDeltaY(aWheelEvent.mDeltaY),
-      mWheelTicksX(aWheelEvent.mWheelTicksX),
-      mWheelTicksY(aWheelEvent.mWheelTicksX),
       mLineOrPageDeltaX(aWheelEvent.mLineOrPageDeltaX),
       mLineOrPageDeltaY(aWheelEvent.mLineOrPageDeltaY),
       mScrollSeriesNumber(0),
@@ -856,8 +854,6 @@ WidgetWheelEvent ScrollWheelInput::ToWidgetEvent(nsIWidget* aWidget) const {
   wheelEvent.mIsMomentum = mIsMomentum;
   wheelEvent.mDeltaX = mDeltaX;
   wheelEvent.mDeltaY = mDeltaY;
-  wheelEvent.mWheelTicksX = mWheelTicksX;
-  wheelEvent.mWheelTicksY = mWheelTicksY;
   wheelEvent.mLineOrPageDeltaX = mLineOrPageDeltaX;
   wheelEvent.mLineOrPageDeltaY = mLineOrPageDeltaY;
   wheelEvent.mAllowToOverrideSystemScrollSpeed =
