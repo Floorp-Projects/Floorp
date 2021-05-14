@@ -258,6 +258,10 @@ interface WebExtensionPolicy {
   readonly attribute unsigned long long browsingContextGroupId;
 };
 
+dictionary WebAccessibleResourceInit {
+  required sequence<MatchGlobOrString> resources;
+};
+
 dictionary WebExtensionInit {
   required DOMString id;
 
@@ -275,7 +279,7 @@ dictionary WebExtensionInit {
 
   sequence<DOMString> permissions = [];
 
-  sequence<MatchGlobOrString> webAccessibleResources = [];
+  sequence<WebAccessibleResourceInit> webAccessibleResources = [];
 
   sequence<WebExtensionContentScriptInit> contentScripts = [];
 

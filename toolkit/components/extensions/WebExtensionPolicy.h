@@ -28,11 +28,32 @@ class Promise;
 
 namespace extensions {
 
+using dom::WebAccessibleResourceInit;
 using dom::WebExtensionInit;
 using dom::WebExtensionLocalizeCallback;
 
 class DocInfo;
 class WebExtensionContentScript;
+
+class WebAccessibleResource final : public nsISupports {
+ public:
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_CLASS(WebAccessibleResource)
+
+  WebAccessibleResource(dom::GlobalObject& aGlobal,
+                        const WebAccessibleResourceInit& aInit,
+                        ErrorResult& aRv);
+
+  bool IsPathWebAccessible(const nsAString& aPath) const {
+    return mWebAccessiblePaths.Matches(aPath);
+  }
+
+ protected:
+  virtual ~WebAccessibleResource() = default;
+
+ private:
+  MatchGlobSet mWebAccessiblePaths;
+};
 
 class WebExtensionPolicy final : public nsISupports,
                                  public nsWrapperCache,
@@ -78,7 +99,12 @@ class WebExtensionPolicy final : public nsISupports,
                     bool aAllowFilePermission = false) const;
 
   bool IsPathWebAccessible(const nsAString& aPath) const {
-    return mWebAccessiblePaths.Matches(aPath);
+    for (const auto& resource : mWebAccessibleResources) {
+      if (resource->IsPathWebAccessible(aPath)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   bool HasPermission(const nsAtom* aPermission) const {
@@ -205,11 +231,11 @@ class WebExtensionPolicy final : public nsISupports,
   bool mIsPrivileged;
   RefPtr<AtomSet> mPermissions;
   RefPtr<MatchPatternSet> mHostPermissions;
-  MatchGlobSet mWebAccessiblePaths;
 
   dom::Nullable<nsTArray<nsString>> mBackgroundScripts;
   nsString mBackgroundWorkerScript;
 
+  nsTArray<RefPtr<WebAccessibleResource>> mWebAccessibleResources;
   nsTArray<RefPtr<WebExtensionContentScript>> mContentScripts;
 
   RefPtr<dom::Promise> mReadyPromise;

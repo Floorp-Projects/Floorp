@@ -25,9 +25,11 @@ add_task(async function test_WebExtensionPolicy() {
       ignorePath: true,
     }),
     permissions: ["<all_urls>"],
-    webAccessibleResources: ["/foo/*", "/bar.baz"].map(
-      glob => new MatchGlob(glob)
-    ),
+    webAccessibleResources: [
+      {
+        resources: ["/foo/*", "/bar.baz"].map(glob => new MatchGlob(glob)),
+      },
+    ],
   });
 
   equal(policy.active, false, "Active attribute should initially be false");
