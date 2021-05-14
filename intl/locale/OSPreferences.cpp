@@ -27,6 +27,11 @@ mozilla::StaticRefPtr<OSPreferences> OSPreferences::sInstance;
 already_AddRefed<OSPreferences> OSPreferences::GetInstanceAddRefed() {
   RefPtr<OSPreferences> result = sInstance;
   if (!result) {
+    MOZ_ASSERT(NS_IsMainThread(),
+               "OSPreferences should be initialized on main thread!");
+    if (!NS_IsMainThread()) {
+      return nullptr;
+    }
     sInstance = new OSPreferences();
     result = sInstance;
 
