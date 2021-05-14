@@ -1175,6 +1175,8 @@ description#identity-popup-content-verifier,
   -moz-context-properties: fill, stroke;
   margin-inline-start: var(--horizontal-padding);
   margin-inline-end: 4px;
+  height: 40px;
+  width: 32px;
 }
 
 #protections-popup[milestone] #protections-popup-milestones-illustration {
