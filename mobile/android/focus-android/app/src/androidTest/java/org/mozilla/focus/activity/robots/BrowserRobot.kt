@@ -102,6 +102,34 @@ class BrowserRobot {
 
     fun verifyShareAppsListOpened() = assertTrue(shareAppsList.waitForExists(webPageLoadwaitingTime))
 
+    fun clickPlayButton() {
+        val playButton =
+                mDevice.findObject(UiSelector().text("Play"))
+        playButton.waitForExists(webPageLoadwaitingTime)
+        playButton.click()
+    }
+
+    fun clickPauseButton() {
+        val pauseButton =
+                mDevice.findObject(UiSelector().text("Pause"))
+        pauseButton.waitForExists(webPageLoadwaitingTime)
+        pauseButton.click()
+    }
+
+    fun waitForPlaybackToStart() {
+        val playStateMessage = mDevice.findObject(UiSelector().text("Media file is playing"))
+        assertTrue(playStateMessage.waitForExists(webPageLoadwaitingTime))
+    }
+
+    fun verifyPlaybackStopped() {
+        val playStateMessage = mDevice.findObject(UiSelector().text("Media file is paused"))
+        assertTrue(playStateMessage.waitForExists(webPageLoadwaitingTime))
+    }
+
+    fun dismissMediaPlayingAlert() {
+        mDevice.findObject(UiSelector().textContains("OK")).click()
+    }
+
     class Transition {
         fun openSearchBar(interact: SearchRobot.() -> Unit): SearchRobot.Transition {
             browserURLbar.waitForExists(webPageLoadwaitingTime)
