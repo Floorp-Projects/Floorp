@@ -1929,6 +1929,12 @@
   value: ""
   mirror: never
 
+# Whether WheelEvent should expose wheelDelta / wheelDeltaX / wheelDeltaY
+- name: dom.event.wheelDelta.enabled
+  type: bool
+  value: true
+  mirror: always
+
 #if defined(XP_MACOSX)
 # Whether to disable treating ctrl click as right click
 - name: dom.event.treat_ctrl_click_as_right_click.disabled
