@@ -357,17 +357,12 @@ LayoutDeviceIntPoint WheelTransaction::GetScreenPoint(WidgetGUIEvent* aEvent) {
 }
 
 /* static */
-DeltaValues WheelTransaction::AccelerateWheelDelta(
-    WidgetWheelEvent* aEvent, bool aAllowScrollSpeedOverride) {
-  DeltaValues result(aEvent);
+DeltaValues WheelTransaction::AccelerateWheelDelta(WidgetWheelEvent* aEvent) {
+  DeltaValues result = OverrideSystemScrollSpeed(aEvent);
 
   // Don't accelerate the delta values if the event isn't line scrolling.
   if (aEvent->mDeltaMode != dom::WheelEvent_Binding::DOM_DELTA_LINE) {
     return result;
-  }
-
-  if (aAllowScrollSpeedOverride) {
-    result = OverrideSystemScrollSpeed(aEvent);
   }
 
   // Accelerate by the sScrollSeriesCounter
@@ -394,7 +389,6 @@ double WheelTransaction::ComputeAcceleratedWheelDelta(double aDelta,
 DeltaValues WheelTransaction::OverrideSystemScrollSpeed(
     WidgetWheelEvent* aEvent) {
   MOZ_ASSERT(sTargetFrame, "We don't have mouse scrolling transaction");
-  MOZ_ASSERT(aEvent->mDeltaMode == dom::WheelEvent_Binding::DOM_DELTA_LINE);
 
   // If the event doesn't scroll to both X and Y, we don't need to do anything
   // here.
