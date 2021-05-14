@@ -3154,6 +3154,13 @@ class UrlbarInput {
       let newCursorPos = oldStart.length + pasteData.length;
       this.selectionStart = newCursorPos;
       this.selectionEnd = newCursorPos;
+
+      this.startQuery({
+        searchString: this.inputField.value,
+        allowAutofill: false,
+        resetSearchState: false,
+        event,
+      });
     }
   }
 
