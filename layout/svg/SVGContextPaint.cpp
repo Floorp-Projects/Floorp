@@ -12,6 +12,7 @@
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/SVGDocument.h"
+#include "mozilla/extensions/WebExtensionPolicy.h"
 #include "mozilla/StaticPrefs_svg.h"
 #include "mozilla/SVGObserverUtils.h"
 #include "mozilla/SVGUtils.h"
@@ -68,11 +69,21 @@ bool SVGContextPaint::IsAllowedForImageFromURI(nsIURI* aURI) {
   RefPtr<BasePrincipal> principal =
       BasePrincipal::CreateContentPrincipal(aURI, OriginAttributes());
 
-  nsString addonId;
-  if (NS_SUCCEEDED(principal->GetAddonId(addonId))) {
-    if (StringEndsWith(addonId, u"@mozilla.org"_ns) ||
-        StringEndsWith(addonId, u"@mozilla.com"_ns)) {
+  RefPtr<extensions::WebExtensionPolicy> addonPolicy = principal->AddonPolicy();
+  if (addonPolicy) {
+    if (addonPolicy->IsPrivileged()) {
       return true;
+    }
+
+    // Bug 1710917: verify if all users of these addon related special case
+    // are able to just use the check on the privileged signature, then
+    // possibly remove the additional special case based on the addon id.
+    nsString addonId;
+    if (NS_SUCCEEDED(principal->GetAddonId(addonId))) {
+      if (StringEndsWith(addonId, u"@mozilla.org"_ns) ||
+          StringEndsWith(addonId, u"@mozilla.com"_ns)) {
+        return true;
+      }
     }
   }
 
