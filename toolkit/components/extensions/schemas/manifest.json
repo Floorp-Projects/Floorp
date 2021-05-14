@@ -249,6 +249,10 @@
                     "resources": {
                       "type": "array",
                       "items": { "type": "string" }
+                    },
+                    "matches": {
+                      "type": "array",
+                      "items": { "$ref": "MatchPatternRestricted" }
                     }
                   }
                 }

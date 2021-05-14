@@ -58,9 +58,10 @@ interface nsIAddonPolicyService : nsISupports
   AString getExtensionName(in AString aAddonId);
 
   /**
-   * Returns true if a given extension:// URI is web-accessible.
+   * Returns true if a given extension:// URI is web-accessible and loadable by the source.
+   * This should be called if the protocol flags for the extension URI has URI_WEB_ACCESSIBLE.
    */
-  boolean extensionURILoadableByAnyone(in nsIURI aURI);
+  boolean sourceMayLoadExtensionURI(in nsIURI aSourceURI, in nsIURI aExtensionURI);
 
   /**
    * Maps an extension URI to the ID of the addon it belongs to.
