@@ -294,7 +294,8 @@ class GDIFontFamily final : public gfxFontFamily {
 class gfxGDIFontList final : public gfxPlatformFontList {
  public:
   static gfxGDIFontList* PlatformFontList() {
-    return static_cast<gfxGDIFontList*>(sPlatformFontList);
+    return static_cast<gfxGDIFontList*>(
+        gfxPlatformFontList::PlatformFontList());
   }
 
   // initialize font lists

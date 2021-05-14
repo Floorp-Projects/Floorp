@@ -968,9 +968,7 @@ void gfxPlatform::Init() {
 
   gPlatform->mHasVariationFontSupport = gPlatform->CheckVariationFontSupport();
 
-  nsresult rv;
-  rv = gfxPlatformFontList::Init();
-  if (NS_FAILED(rv)) {
+  if (!gPlatform->CreatePlatformFontList()) {
     MOZ_CRASH("Could not initialize gfxPlatformFontList");
   }
 
@@ -993,8 +991,7 @@ void gfxPlatform::Init() {
     }
   }
 
-  rv = gfxFontCache::Init();
-  if (NS_FAILED(rv)) {
+  if (NS_FAILED(gfxFontCache::Init())) {
     MOZ_CRASH("Could not initialize gfxFontCache");
   }
 
