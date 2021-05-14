@@ -723,10 +723,6 @@ class ScrollWheelInput : public InputData {
   double mDeltaX;
   double mDeltaY;
 
-  // The number of scroll wheel ticks.
-  double mWheelTicksX = 0.0;
-  double mWheelTicksY = 0.0;
-
   // The location of the scroll in local coordinates. This is set and used by
   // APZ.
   ParentLayerPoint mLocalOrigin;
