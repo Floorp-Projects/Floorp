@@ -2788,7 +2788,7 @@ bool WarpBuilder::build_SpreadCall(BytecodeLocation loc) {
   if (!call) {
     return false;
   }
-
+  call->setBailoutKind(BailoutKind::TooManyArguments);
   current->add(call);
   current->push(call);
   return resumeAfter(call, loc);
@@ -2813,6 +2813,7 @@ bool WarpBuilder::build_SpreadNew(BytecodeLocation loc) {
   WrappedFunction* wrappedTarget = nullptr;
   auto* apply = MConstructArray::New(alloc(), wrappedTarget, callee, elements,
                                      createThis, newTarget);
+  apply->setBailoutKind(BailoutKind::TooManyArguments);
   current->add(apply);
   current->push(apply);
   return resumeAfter(apply, loc);
