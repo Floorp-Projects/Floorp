@@ -6649,6 +6649,10 @@ class nsDisplayFilters : public nsDisplayEffectsBase {
   void PaintAsLayer(nsDisplayListBuilder* aBuilder, gfxContext* aCtx,
                     LayerManager* aManager);
 
+  void PaintWithContentsPaintCallback(
+      nsDisplayListBuilder* aBuilder, gfxContext* aCtx,
+      const std::function<void(gfxContext* aContext)>& aPaintChildren);
+
   bool CreateWebRenderCommands(
       mozilla::wr::DisplayListBuilder& aBuilder,
       mozilla::wr::IpcResourceUpdateQueue& aResources,
