@@ -204,26 +204,9 @@ class SVGIntegrationUtils final {
   static bool IsMaskResourceReady(nsIFrame* aFrame);
 
   /**
-   * Paint the frame contents.
-   * SVG frames will have had matrix propagation set to false already.
-   * Non-SVG frames have to do their own thing.
-   * The caller will do a Save()/Restore() as necessary so feel free
-   * to mess with context state.
-   * The context will be configured to use the "user space" coordinate
-   * system.
-   * @param aDirtyRect the dirty rect *in user space pixels*
-   * @param aTransformRoot the outermost frame whose transform should be taken
-   *                       into account when painting an SVG glyph
-   */
-  using SVGFilterPaintCallback = std::function<void(
-      gfxContext& aContext, nsIFrame* aTarget, const gfxMatrix& aTransform,
-      const nsIntRect* aDirtyRect, image::imgDrawingParams& aImgParams)>;
-
-  /**
    * Paint non-SVG frame with filter and opacity effect.
    */
-  static void PaintFilter(const PaintFramesParams& aParams,
-                          const SVGFilterPaintCallback& aCallback);
+  static void PaintFilter(const PaintFramesParams& aParams);
 
   /**
    * Build WebRender filters for a frame with CSS filters applied to it.
@@ -285,13 +268,6 @@ class SVGIntegrationUtils final {
    * For SVG frames, this returns a zero offset.
    */
   static nsPoint GetOffsetToBoundingBox(nsIFrame* aFrame);
-
-  /**
-   * The offset between the reference frame and the bounding box of the
-   * target frame in device units.
-   */
-  static gfxPoint GetOffsetToUserSpaceInDevPx(nsIFrame* aFrame,
-                                              const PaintFramesParams& aParams);
 };
 
 }  // namespace mozilla

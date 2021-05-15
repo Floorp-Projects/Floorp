@@ -1675,7 +1675,7 @@ fuzzy-if(skiaContent,0-1,0-3) needs-focus == 712130-2.html 712130-2-ref.html
 == 714519-1-q.html 714519-1-ref.html
 == 714519-2-as.html 714519-2-ref.html
 == 714519-2-q.html 714519-2-ref.html
-fuzzy-if(true,0-1,0-21) fuzzy-if(d2d,0-77,0-173) fuzzy-if(cocoaWidget,0-1,0-170) fuzzy-if(useDrawSnapshot,1-1,163-163) == 718521.html 718521-ref.html # bug 773482
+fuzzy-if(true,0-1,0-21) fuzzy-if(d2d,0-77,0-173) fuzzy-if(cocoaWidget,0-1,0-170) == 718521.html 718521-ref.html # bug 773482
 == 720987.html 720987-ref.html
 == 722888-1.html 722888-1-ref.html
 fuzzy(0-2,0-40000) == 722923-1.html 722923-1-ref.html
@@ -1766,7 +1766,7 @@ test-pref(font.minimum-size.x-western,32) fuzzy-if(Android,0-45,0-324) == 935056
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 936670-1.svg 936670-1-ref.svg # Bug 1392106
 == 941940-1.html 941940-1-ref.html
 fails == 942017.html 942017-ref.html # bug 942017
-fuzzy-if(Android,0-1,0-1) fuzzy-if(skiaContent,0-2,0-160000) fuzzy-if(d2d&&!webrender,1-1,215-215) == 942672-1.html 942672-1-ref.html
+fuzzy-if(Android,0-1,0-1) fuzzy-if(skiaContent,0-1,0-160000) == 942672-1.html 942672-1-ref.html
 == 953334-win32-clipping.html 953334-win32-clipping-ref.html
 fuzzy-if(skiaContent,0-1,0-5) == 956513-1.svg 956513-1-ref.svg
 == 944291-1.html 944291-1-ref.html
@@ -1825,9 +1825,9 @@ fails-if(webrender) == 1059498-3.html 1059498-1-ref.html # WebRender: see bug 14
 pref(layout.css.caption-side-non-standard.enabled,true) == 1062963-floatmanager-reflow.html 1062963-floatmanager-reflow-ref.html
 == 1066554-1.html 1066554-1-ref.html
 == 1069716-1.html 1069716-1-ref.html
-skip-if(geckoview&&!webrender) == 1078262-1.html about:blank # bug 1656792
+skip-if(geckoview&&!webrender) fails-if(useDrawSnapshot) == 1078262-1.html about:blank # bug 1656792
 test-pref(layout.testing.overlay-scrollbars.always-visible,false) == 1081072-1.html 1081072-1-ref.html
-fuzzy-if(webrender,63-64,142-845) fuzzy-if(useDrawSnapshot,33-33,218-218) == 1081185-1.html 1081185-1-ref.html
+fuzzy-if(webrender,63-64,142-845) == 1081185-1.html 1081185-1-ref.html
 == 1097437-1.html 1097437-1-ref.html
 == 1103258-1.html 1103258-1-ref.html # assertion crash test with layers culling test
 == 1105137-1.html 1105137-1-ref.html
@@ -1908,7 +1908,7 @@ fuzzy-if(webrender,0-128,0-22) == 1151145-1.html 1151145-1-ref.html # bug 164652
 fuzzy-if(webrender,0-128,0-22) == 1155828-1.html 1155828-1-ref.html # bug 1646527 for WR fuzz
 fuzzy-if(skiaContent,0-7,0-84) == 1156129-1.html 1156129-1-ref.html
 pref(dom.use_xbl_scopes_for_remote_xul,true) HTTP(..) == 1157127-1.html 1157127-1-ref.html
-fuzzy-if(Android,0-6,0-6) fuzzy-if(appleSilicon,1-1,4-4) fuzzy-if(useDrawSnapshot,1-1,16-16) == 1169331-1.html 1169331-1-ref.html
+fuzzy-if(Android,0-6,0-6) fuzzy-if(appleSilicon,1-1,4-4) == 1169331-1.html 1169331-1-ref.html
 fuzzy(0-3,0-110) random-if(winWidget||Android||gtkWidget) fails-if(!nativeThemePref) == 1174332-1.html 1174332-1-ref.html # bug 1312658, expected to fail w/ non-native theme because of bug 1699937
 == 1179078-1.html 1179078-1-ref.html
 == 1179288-1.html 1179288-1-ref.html
@@ -2047,7 +2047,7 @@ fails-if(useDrawSnapshot) == 1456111-1.html about:blank
 # the pref is enabled by default; we just need to be able to pref it off here.
 # For now, we use the "backdrop-filter" CSS property (and its pref).
 test-pref(layout.css.backdrop-filter.enabled,false) == 1466008.html 1466008-ref.html
-fuzzy(0-2,0-625) == 1466638-1.html 1466638-1-ref.html
+fuzzy(0-1,0-625) == 1466638-1.html 1466638-1-ref.html
 == bug1472465-1.html bug1472465-1-ref.html
 == 1475971-1.html 1475971-1-ref.html
 == chrome://reftest/content/bugs/1483649-1.xhtml chrome://reftest/content/bugs/1483649-1-ref.xhtml
