@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- String to show the number of results found in the page and the
+    position the user is at. The first argument is the position, the second argument is the total. -->
+    <string name="mozac_feature_findindpage_result">%1$d/%2$d</string>
+
+    </resources>
