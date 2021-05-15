@@ -1540,6 +1540,16 @@ void DrawTargetCairo::PushLayer(bool aOpaque, Float aOpacity,
                                 SourceSurface* aMask,
                                 const Matrix& aMaskTransform,
                                 const IntRect& aBounds, bool aCopyBackground) {
+  PushLayerWithBlend(aOpaque, aOpacity, aMask, aMaskTransform, aBounds,
+                     aCopyBackground, CompositionOp::OP_OVER);
+}
+
+void DrawTargetCairo::PushLayerWithBlend(bool aOpaque, Float aOpacity,
+                                         SourceSurface* aMask,
+                                         const Matrix& aMaskTransform,
+                                         const IntRect& aBounds,
+                                         bool aCopyBackground,
+                                         CompositionOp aCompositionOp) {
   cairo_content_t content = CAIRO_CONTENT_COLOR_ALPHA;
 
   if (mFormat == SurfaceFormat::A8) {
@@ -1561,7 +1571,7 @@ void DrawTargetCairo::PushLayer(bool aOpaque, Float aOpacity,
     cairo_push_group_with_content(mContext, content);
   }
 
-  PushedLayer layer(aOpacity, mPermitSubpixelAA);
+  PushedLayer layer(aOpacity, aCompositionOp, mPermitSubpixelAA);
 
   if (aMask) {
     cairo_surface_t* surf = GetCairoSurfaceForSourceSurface(aMask);
@@ -1595,6 +1605,7 @@ void DrawTargetCairo::PopLayer() {
   mPushedLayers.pop_back();
 
   if (!layer.mMaskPattern) {
+    cairo_set_operator(mContext, GfxOpToCairoOp(layer.mCompositionOp));
     cairo_paint_with_alpha(mContext, layer.mOpacity);
   } else {
     if (layer.mOpacity != Float(1.0)) {
@@ -1605,12 +1616,15 @@ void DrawTargetCairo::PopLayer() {
 
       cairo_pop_group_to_source(mContext);
     }
+    cairo_set_operator(mContext, GfxOpToCairoOp(layer.mCompositionOp));
     cairo_mask(mContext, layer.mMaskPattern);
   }
 
   cairo_matrix_t mat;
   GfxMatrixToCairoMatrix(mTransform, mat);
   cairo_set_matrix(mContext, &mat);
+
+  cairo_set_operator(mContext, CAIRO_OPERATOR_OVER);
 
   cairo_pattern_destroy(layer.mMaskPattern);
   SetPermitSubpixelAA(layer.mWasPermittingSubpixelAA);
