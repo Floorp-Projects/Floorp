@@ -939,14 +939,14 @@ static nsTArray<LayerPolygon> SortLayersWithBSPTree(nsTArray<Layer*>& aArray) {
   }
 
   // Build a BSP tree from the list of polygons.
-  BSPTree tree(inputLayers);
+  BSPTree<Layer> tree(inputLayers);
 
   nsTArray<LayerPolygon> orderedLayers(tree.GetDrawOrder());
 
   // Transform the polygons back to layer space.
   for (LayerPolygon& layerPolygon : orderedLayers) {
     gfx::Matrix4x4 inverse =
-        layerPolygon.layer->GetEffectiveTransform().Inverse();
+        layerPolygon.data->GetEffectiveTransform().Inverse();
 
     MOZ_ASSERT(layerPolygon.geometry);
     layerPolygon.geometry->TransformToLayerSpace(inverse);
@@ -961,11 +961,11 @@ static nsTArray<LayerPolygon> StripLayerGeometry(
   std::set<Layer*> uniqueLayers;
 
   for (const LayerPolygon& layerPolygon : aLayers) {
-    auto result = uniqueLayers.insert(layerPolygon.layer);
+    auto result = uniqueLayers.insert(layerPolygon.data);
 
     if (result.second) {
       // Layer was added to the set.
-      layers.AppendElement(LayerPolygon(layerPolygon.layer));
+      layers.AppendElement(LayerPolygon(layerPolygon.data));
     }
   }
 
@@ -1441,7 +1441,7 @@ void Layer::Dump(std::stringstream& aStream, const char* aPrefix,
     }
 
     for (LayerPolygon& child : children) {
-      child.layer->Dump(aStream, pfx.get(), aDumpHtml, aSorted, child.geometry);
+      child.data->Dump(aStream, pfx.get(), aDumpHtml, aSorted, child.geometry);
     }
 
     if (aDumpHtml) {
