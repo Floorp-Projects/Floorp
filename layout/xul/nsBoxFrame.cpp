@@ -1043,10 +1043,6 @@ class nsDisplayXULEventRedirector final : public nsDisplayWrapList {
   virtual bool ShouldFlattenAway(nsDisplayListBuilder* aBuilder) override {
     return false;
   }
-  void Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) override {
-    GetChildren()->Paint(aBuilder, aCtx,
-                         mFrame->PresContext()->AppUnitsPerDevPixel());
-  }
   NS_DISPLAY_DECL_NAME("XULEventRedirector", TYPE_XUL_EVENT_REDIRECTOR)
  private:
   nsIFrame* mTargetFrame;
@@ -1087,7 +1083,7 @@ void nsDisplayXULEventRedirector::HitTest(nsDisplayListBuilder* aBuilder,
   }
 }
 
-class nsXULEventRedirectorWrapper final : public nsDisplayItemWrapper {
+class nsXULEventRedirectorWrapper final : public nsDisplayWrapper {
  public:
   explicit nsXULEventRedirectorWrapper(nsIFrame* aTargetFrame)
       : mTargetFrame(aTargetFrame) {}
