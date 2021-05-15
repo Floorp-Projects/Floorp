@@ -16,7 +16,6 @@
 #include "nsDisplayList.h"
 #include "nsLayoutUtils.h"
 #include "gfxContext.h"
-#include "SVGFilterPaintCallback.h"
 #include "SVGPaintServerFrame.h"
 #include "FrameLayerBuilder.h"
 #include "BasicLayers.h"
@@ -200,6 +199,89 @@ nsPoint SVGIntegrationUtils::GetOffsetToBoundingBox(nsIFrame* aFrame) {
   // rects over all continuations, relative to the origin (top-left of the
   // border box) of its second argument (here, aFrame, the first continuation).
   return -nsLayoutUtils::GetAllInFlowRectsUnion(aFrame, aFrame).TopLeft();
+}
+
+struct EffectOffsets {
+  // The offset between the reference frame and the bounding box of the
+  // target frame in app unit.
+  nsPoint offsetToBoundingBox;
+  // The offset between the reference frame and the bounding box of the
+  // target frame in app unit.
+  nsPoint offsetToUserSpace;
+  // The offset between the reference frame and the bounding box of the
+  // target frame in device unit.
+  gfxPoint offsetToUserSpaceInDevPx;
+};
+
+static EffectOffsets ComputeEffectOffset(
+    nsIFrame* aFrame, const SVGIntegrationUtils::PaintFramesParams& aParams) {
+  EffectOffsets result;
+
+  result.offsetToBoundingBox =
+      aParams.builder->ToReferenceFrame(aFrame) -
+      SVGIntegrationUtils::GetOffsetToBoundingBox(aFrame);
+  if (!aFrame->IsFrameOfType(nsIFrame::eSVG)) {
+    /* Snap the offset if the reference frame is not a SVG frame,
+     * since other frames will be snapped to pixel when rendering. */
+    result.offsetToBoundingBox =
+        nsPoint(aFrame->PresContext()->RoundAppUnitsToNearestDevPixels(
+                    result.offsetToBoundingBox.x),
+                aFrame->PresContext()->RoundAppUnitsToNearestDevPixels(
+                    result.offsetToBoundingBox.y));
+  }
+
+  // After applying only "aOffsetToBoundingBox", aParams.ctx would have its
+  // origin at the top left corner of frame's bounding box (over all
+  // continuations).
+  // However, SVG painting needs the origin to be located at the origin of the
+  // SVG frame's "user space", i.e. the space in which, for example, the
+  // frame's BBox lives.
+  // SVG geometry frames and foreignObject frames apply their own offsets, so
+  // their position is relative to their user space. So for these frame types,
+  // if we want aParams.ctx to be in user space, we first need to subtract the
+  // frame's position so that SVG painting can later add it again and the
+  // frame is painted in the right place.
+  gfxPoint toUserSpaceGfx =
+      SVGUtils::FrameSpaceInCSSPxToUserSpaceOffset(aFrame);
+  nsPoint toUserSpace =
+      nsPoint(nsPresContext::CSSPixelsToAppUnits(float(toUserSpaceGfx.x)),
+              nsPresContext::CSSPixelsToAppUnits(float(toUserSpaceGfx.y)));
+
+  result.offsetToUserSpace = result.offsetToBoundingBox - toUserSpace;
+
+#ifdef DEBUG
+  bool hasSVGLayout = aFrame->HasAnyStateBits(NS_FRAME_SVG_LAYOUT);
+  NS_ASSERTION(
+      hasSVGLayout || result.offsetToBoundingBox == result.offsetToUserSpace,
+      "For non-SVG frames there shouldn't be any additional offset");
+#endif
+
+  result.offsetToUserSpaceInDevPx = nsLayoutUtils::PointToGfxPoint(
+      result.offsetToUserSpace, aFrame->PresContext()->AppUnitsPerDevPixel());
+
+  return result;
+}
+
+/**
+ * Setup transform matrix of a gfx context by a specific frame. Move the
+ * origin of aParams.ctx to the user space of aFrame.
+ */
+static EffectOffsets MoveContextOriginToUserSpace(
+    nsIFrame* aFrame, const SVGIntegrationUtils::PaintFramesParams& aParams) {
+  EffectOffsets offset = ComputeEffectOffset(aFrame, aParams);
+
+  aParams.ctx.SetMatrixDouble(aParams.ctx.CurrentMatrixDouble().PreTranslate(
+      offset.offsetToUserSpaceInDevPx));
+
+  return offset;
+}
+
+gfxPoint SVGIntegrationUtils::GetOffsetToUserSpaceInDevPx(
+    nsIFrame* aFrame, const PaintFramesParams& aParams) {
+  nsIFrame* firstFrame =
+      nsLayoutUtils::FirstContinuationOrIBSplitSibling(aFrame);
+  EffectOffsets offset = ComputeEffectOffset(firstFrame, aParams);
+  return offset.offsetToUserSpaceInDevPx;
 }
 
 /* static */
@@ -403,37 +485,6 @@ bool SVGIntegrationUtils::HitTestFrameForEffects(nsIFrame* aFrame,
   return SVGUtils::HitTestClip(firstFrame, userSpacePt);
 }
 
-class RegularFramePaintCallback : public SVGFilterPaintCallback {
- public:
-  RegularFramePaintCallback(nsDisplayListBuilder* aBuilder,
-                            LayerManager* aManager,
-                            const gfxPoint& aUserSpaceToFrameSpaceOffset)
-      : mBuilder(aBuilder),
-        mLayerManager(aManager),
-        mUserSpaceToFrameSpaceOffset(aUserSpaceToFrameSpaceOffset) {}
-
-  virtual void Paint(gfxContext& aContext, nsIFrame* aTarget,
-                     const gfxMatrix& aTransform, const nsIntRect* aDirtyRect,
-                     imgDrawingParams& aImgParams) override {
-    BasicLayerManager* basic = mLayerManager->AsBasicLayerManager();
-    RefPtr<gfxContext> oldCtx = basic->GetTarget();
-    basic->SetTarget(&aContext);
-
-    gfxContextMatrixAutoSaveRestore autoSR(&aContext);
-    aContext.SetMatrixDouble(aContext.CurrentMatrixDouble().PreTranslate(
-        -mUserSpaceToFrameSpaceOffset));
-
-    mLayerManager->EndTransaction(FrameLayerBuilder::DrawPaintedLayer,
-                                  mBuilder);
-    basic->SetTarget(oldCtx);
-  }
-
- private:
-  nsDisplayListBuilder* mBuilder;
-  LayerManager* mLayerManager;
-  gfxPoint mUserSpaceToFrameSpaceOffset;
-};
-
 using PaintFramesParams = SVGIntegrationUtils::PaintFramesParams;
 
 /**
@@ -633,81 +684,6 @@ static bool ValidateSVGFrame(nsIFrame* aFrame) {
   }
 
   return true;
-}
-
-struct EffectOffsets {
-  // The offset between the reference frame and the bounding box of the
-  // target frame in app unit.
-  nsPoint offsetToBoundingBox;
-  // The offset between the reference frame and the bounding box of the
-  // target frame in app unit.
-  nsPoint offsetToUserSpace;
-  // The offset between the reference frame and the bounding box of the
-  // target frame in device unit.
-  gfxPoint offsetToUserSpaceInDevPx;
-};
-
-static EffectOffsets ComputeEffectOffset(nsIFrame* aFrame,
-                                         const PaintFramesParams& aParams) {
-  EffectOffsets result;
-
-  result.offsetToBoundingBox =
-      aParams.builder->ToReferenceFrame(aFrame) -
-      SVGIntegrationUtils::GetOffsetToBoundingBox(aFrame);
-  if (!aFrame->IsFrameOfType(nsIFrame::eSVG)) {
-    /* Snap the offset if the reference frame is not a SVG frame,
-     * since other frames will be snapped to pixel when rendering. */
-    result.offsetToBoundingBox =
-        nsPoint(aFrame->PresContext()->RoundAppUnitsToNearestDevPixels(
-                    result.offsetToBoundingBox.x),
-                aFrame->PresContext()->RoundAppUnitsToNearestDevPixels(
-                    result.offsetToBoundingBox.y));
-  }
-
-  // After applying only "aOffsetToBoundingBox", aParams.ctx would have its
-  // origin at the top left corner of frame's bounding box (over all
-  // continuations).
-  // However, SVG painting needs the origin to be located at the origin of the
-  // SVG frame's "user space", i.e. the space in which, for example, the
-  // frame's BBox lives.
-  // SVG geometry frames and foreignObject frames apply their own offsets, so
-  // their position is relative to their user space. So for these frame types,
-  // if we want aParams.ctx to be in user space, we first need to subtract the
-  // frame's position so that SVG painting can later add it again and the
-  // frame is painted in the right place.
-  gfxPoint toUserSpaceGfx =
-      SVGUtils::FrameSpaceInCSSPxToUserSpaceOffset(aFrame);
-  nsPoint toUserSpace =
-      nsPoint(nsPresContext::CSSPixelsToAppUnits(float(toUserSpaceGfx.x)),
-              nsPresContext::CSSPixelsToAppUnits(float(toUserSpaceGfx.y)));
-
-  result.offsetToUserSpace = result.offsetToBoundingBox - toUserSpace;
-
-#ifdef DEBUG
-  bool hasSVGLayout = aFrame->HasAnyStateBits(NS_FRAME_SVG_LAYOUT);
-  NS_ASSERTION(
-      hasSVGLayout || result.offsetToBoundingBox == result.offsetToUserSpace,
-      "For non-SVG frames there shouldn't be any additional offset");
-#endif
-
-  result.offsetToUserSpaceInDevPx = nsLayoutUtils::PointToGfxPoint(
-      result.offsetToUserSpace, aFrame->PresContext()->AppUnitsPerDevPixel());
-
-  return result;
-}
-
-/**
- * Setup transform matrix of a gfx context by a specific frame. Move the
- * origin of aParams.ctx to the user space of aFrame.
- */
-static EffectOffsets MoveContextOriginToUserSpace(
-    nsIFrame* aFrame, const PaintFramesParams& aParams) {
-  EffectOffsets offset = ComputeEffectOffset(aFrame, aParams);
-
-  aParams.ctx.SetMatrixDouble(aParams.ctx.CurrentMatrixDouble().PreTranslate(
-      offset.offsetToUserSpaceInDevPx));
-
-  return offset;
 }
 
 bool SVGIntegrationUtils::IsMaskResourceReady(nsIFrame* aFrame) {
@@ -1067,7 +1043,8 @@ void SVGIntegrationUtils::PaintMaskAndClipPath(
   PaintMaskAndClipPathInternal(aParams, aPaintChild);
 }
 
-void SVGIntegrationUtils::PaintFilter(const PaintFramesParams& aParams) {
+void SVGIntegrationUtils::PaintFilter(const PaintFramesParams& aParams,
+                                      const SVGFilterPaintCallback& aCallback) {
   MOZ_ASSERT(!aParams.builder->IsForGenerateGlyphMask(),
              "Filter effect is discarded while generating glyph mask.");
   MOZ_ASSERT(aParams.frame->StyleEffects()->HasFilters(),
@@ -1106,11 +1083,9 @@ void SVGIntegrationUtils::PaintFilter(const PaintFramesParams& aParams) {
   EffectOffsets offsets = MoveContextOriginToUserSpace(firstFrame, aParams);
 
   /* Paint the child and apply filters */
-  RegularFramePaintCallback callback(aParams.builder, aParams.layerManager,
-                                     offsets.offsetToUserSpaceInDevPx);
   nsRegion dirtyRegion = aParams.dirtyRect - offsets.offsetToBoundingBox;
 
-  FilterInstance::PaintFilteredFrame(frame, &context, &callback, &dirtyRegion,
+  FilterInstance::PaintFilteredFrame(frame, &context, aCallback, &dirtyRegion,
                                      aParams.imgParams, opacity);
 }
 
