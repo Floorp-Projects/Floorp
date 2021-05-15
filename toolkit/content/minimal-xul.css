@@ -45,6 +45,8 @@
 
     /* These properties are not included in 'all'. */
     -moz-list-reversed: initial;
+    -moz-context-properties: initial;
+    -moz-control-character-visibility: initial;
     -moz-font-smoothing-background-color: initial;
     -moz-min-font-size-ratio: initial;
     math-depth: initial;
