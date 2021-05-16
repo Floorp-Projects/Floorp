@@ -498,15 +498,16 @@ fn add_clips(
     clip_nodes: &mut Vec<HitTestClipNode>,
     seen_clips: &mut FastHashSet<ClipId>,
 ) {
-    let template = &clip_store.templates[&clip_id];
-
     // If this clip-id has already been added to this hit-test item, skip it
     if seen_clips.contains(&clip_id) {
         return;
     }
     seen_clips.insert(clip_id);
 
-    for clip in &template.clips {
+    let template = &clip_store.templates[&clip_id];
+    let instances = &clip_store.instances[template.clips.start as usize .. template.clips.end as usize];
+
+    for clip in instances {
         clip_nodes.alloc().init(
             HitTestClipNode::new(
                 clip.key.into(),
