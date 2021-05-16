@@ -4610,15 +4610,6 @@
   value: true
   mirror: once
 
-- name: gfx.font-list.lazy-init.enabled
-  type: bool
-#if defined(XP_MACOSX)
-  value: true
-#else
-  value: false
-#endif
-  mirror: once
-
 # Whether to load fonts (e.g. Twemoji Mozilla) bundled with the application:
 #  -1 - Auto behavior based on OS version (currently, disables loading on
 #       "low-memory" Android devices)

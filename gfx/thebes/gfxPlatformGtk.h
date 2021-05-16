@@ -37,7 +37,7 @@ class gfxPlatformGtk final : public gfxPlatform {
                               eFontPresentation aPresentation,
                               nsTArray<const char*>& aFontList) override;
 
-  bool CreatePlatformFontList() override;
+  gfxPlatformFontList* CreatePlatformFontList() override;
 
   /**
    * Calls XFlush if xrender is enabled.
