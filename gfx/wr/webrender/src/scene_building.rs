@@ -1520,7 +1520,8 @@ impl<'a> SceneBuilder<'a> {
 
                 for clip_item in item.clip_chain_items() {
                     let template = self.clip_store.get_template(clip_item);
-                    clips.extend_from_slice(&template.clips);
+                    let instances = &self.clip_store.instances[template.clips.start as usize .. template.clips.end as usize];
+                    clips.extend_from_slice(instances);
                 }
 
                 self.clip_store.register_clip_template(
