@@ -15,8 +15,6 @@
 #include "mozilla/gfx/Polygon.h"
 #include "nsTArray.h"
 
-class nsDisplayTransform;
-
 namespace mozilla {
 namespace layers {
 
@@ -25,20 +23,19 @@ class Layer;
 /**
  * Represents a layer that might have a non-rectangular geometry.
  */
-template <typename T>
-struct BSPPolygon {
-  explicit BSPPolygon(T* aData) : data(aData) {}
+struct LayerPolygon {
+  explicit LayerPolygon(Layer* aLayer) : layer(aLayer) {}
 
-  BSPPolygon<T>(T* aData, gfx::Polygon&& aGeometry)
-      : data(aData), geometry(Some(std::move(aGeometry))) {}
+  LayerPolygon(Layer* aLayer, gfx::Polygon&& aGeometry)
+      : layer(aLayer), geometry(Some(std::move(aGeometry))) {}
 
-  BSPPolygon(T* aData, nsTArray<gfx::Point4D>&& aPoints,
-             const gfx::Point4D& aNormal)
-      : data(aData) {
+  LayerPolygon(Layer* aLayer, nsTArray<gfx::Point4D>&& aPoints,
+               const gfx::Point4D& aNormal)
+      : layer(aLayer) {
     geometry.emplace(std::move(aPoints), aNormal);
   }
 
-  T* data;
+  Layer* layer;
   Maybe<gfx::Polygon> geometry;
 };
 
@@ -53,19 +50,15 @@ typedef mozilla::ArenaAllocator<4096, 8> BSPTreeArena;
 /**
  * Aliases the container type used to store layers within BSPTreeNodes.
  */
-template <typename T>
-using PolygonList = std::list<BSPPolygon<T>>;
-
-using LayerPolygon = BSPPolygon<Layer>;
+typedef std::list<LayerPolygon> LayerList;
 
 /**
  * Represents a node in a BSP tree. The node contains at least one layer with
  * associated geometry that is used as a splitting plane, and at most two child
  * nodes that represent the splitting planes that further subdivide the space.
  */
-template <typename T>
 struct BSPTreeNode {
-  explicit BSPTreeNode(nsTArray<PolygonList<T>*>& aListPointers)
+  explicit BSPTreeNode(nsTArray<LayerList*>& aListPointers)
       : front(nullptr), back(nullptr) {
     // Store the layer list pointer to free memory when BSPTree is destroyed.
     aListPointers.AppendElement(&layers);
@@ -83,7 +76,7 @@ struct BSPTreeNode {
 
   BSPTreeNode* front;
   BSPTreeNode* back;
-  PolygonList<T> layers;
+  LayerList layers;
 };
 
 /**
@@ -95,13 +88,12 @@ struct BSPTreeNode {
  * https://en.wikipedia.org/wiki/Binary_space_partitioning
  * ftp://ftp.sgi.com/other/bspfaq/faq/bspfaq.html
  */
-template <typename T>
 class BSPTree final {
  public:
   /**
    * The constructor modifies layers in the given list.
    */
-  explicit BSPTree(std::list<BSPPolygon<T>>& aLayers) {
+  explicit BSPTree(std::list<LayerPolygon>& aLayers) {
     MOZ_ASSERT(!aLayers.empty());
 
     mRoot = new (mPool) BSPTreeNode(mListPointers);
@@ -109,33 +101,33 @@ class BSPTree final {
   }
 
   ~BSPTree() {
-    for (PolygonList<T>* listPtr : mListPointers) {
-      listPtr->~list();
+    for (LayerList* listPtr : mListPointers) {
+      listPtr->~LayerList();
     }
   }
 
   /**
    * Builds and returns the back-to-front draw order for the created BSP tree.
    */
-  nsTArray<BSPPolygon<T>> GetDrawOrder() const {
-    nsTArray<BSPPolygon<T>> layers;
+  nsTArray<LayerPolygon> GetDrawOrder() const {
+    nsTArray<LayerPolygon> layers;
     BuildDrawOrder(mRoot, layers);
     return layers;
   }
 
  private:
   BSPTreeArena mPool;
-  BSPTreeNode<T>* mRoot;
-  nsTArray<PolygonList<T>*> mListPointers;
+  BSPTreeNode* mRoot;
+  nsTArray<LayerList*> mListPointers;
 
   /**
    * BuildDrawOrder and BuildTree are called recursively. The depth of the
    * recursion depends on the amount of polygons and their intersections.
    */
-  void BuildDrawOrder(BSPTreeNode<T>* aNode,
-                      nsTArray<BSPPolygon<T>>& aLayers) const;
+  void BuildDrawOrder(BSPTreeNode* aNode,
+                      nsTArray<LayerPolygon>& aLayers) const;
 
-  void BuildTree(BSPTreeNode<T>* aRoot, PolygonList<T>& aLayers);
+  void BuildTree(BSPTreeNode* aRoot, std::list<LayerPolygon>& aLayers);
 };
 
 }  // namespace layers

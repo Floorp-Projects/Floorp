@@ -2431,37 +2431,6 @@ FrameLayerBuilder* nsDisplayList::BuildLayers(nsDisplayListBuilder* aBuilder,
   return layerBuilder;
 }
 
-void nsDisplayList::Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx,
-                          int32_t aAppUnitsPerDevPixel) {
-  FlattenedDisplayListIterator iter(aBuilder, this);
-  while (iter.HasNext()) {
-    nsPaintedDisplayItem* item = iter.GetNextItem()->AsPaintedDisplayItem();
-    if (!item) {
-      continue;
-    }
-
-    nsRegion visible(item->GetClippedBounds(aBuilder));
-    visible.And(visible, item->GetBuildingRect());
-    item->SetPaintRect(visible.GetBounds());
-    if (!item->ComputeVisibility(aBuilder, &visible)) {
-      continue;
-    }
-
-    DisplayItemClip currentClip = item->GetClip();
-    if (currentClip.HasClip()) {
-      aCtx->Save();
-      currentClip.ApplyTo(aCtx, aAppUnitsPerDevPixel);
-    }
-    aCtx->NewPath();
-
-    item->Paint(aBuilder, aCtx);
-
-    if (currentClip.HasClip()) {
-      aCtx->Restore();
-    }
-  }
-}
-
 /**
  * We paint by executing a layer manager transaction, constructing a
  * single layer representing the display list, and then making it the
@@ -2485,27 +2454,18 @@ already_AddRefed<LayerManager> nsDisplayList::PaintRoot(
       widgetTransaction = true;
     }
   }
-
-  nsIFrame* frame = aBuilder->RootReferenceFrame();
-  nsPresContext* presContext = frame->PresContext();
-  PresShell* presShell = presContext->PresShell();
-  Document* document = presShell->GetDocument();
-
   if (!layerManager) {
     if (!aCtx) {
       NS_WARNING("Nowhere to paint into");
       return nullptr;
     }
-    bool prevIsCompositingCheap = aBuilder->SetIsCompositingCheap(false);
-    Paint(aBuilder, aCtx, presContext->AppUnitsPerDevPixel());
-
-    if (document && document->IsBeingUsedAsImage()) {
-      frame->ClearInvalidationStateBits();
-    }
-
-    aBuilder->SetIsCompositingCheap(prevIsCompositingCheap);
-    return nullptr;
+    layerManager = new BasicLayerManager(BasicLayerManager::BLM_OFFSCREEN);
   }
+
+  nsIFrame* frame = aBuilder->RootReferenceFrame();
+  nsPresContext* presContext = frame->PresContext();
+  PresShell* presShell = presContext->PresShell();
+  Document* document = presShell->GetDocument();
 
   if (layerManager->GetBackendType() == layers::LayersBackend::LAYERS_WR) {
     if (doBeginTransaction) {
@@ -3681,10 +3641,7 @@ AppendedBackgroundType nsDisplayBackgroundImage::AppendBackgroundItemsToTop(
   if ((drawBackgroundColor && color != NS_RGBA(0, 0, 0, 0)) ||
       aBuilder->IsForEventDelivery()) {
     if (aAutoBuildingDisplayList && !*aAutoBuildingDisplayList) {
-      nsPoint offset = aBuilder->GetCurrentFrame()->GetOffsetTo(aFrame);
-      aAutoBuildingDisplayList->emplace(aBuilder, aFrame,
-                                        aBuilder->GetVisibleRect() + offset,
-                                        aBuilder->GetDirtyRect() + offset);
+      aAutoBuildingDisplayList->emplace(aBuilder, aFrame);
     }
     Maybe<DisplayListClipState::AutoSaveRestore> clipState;
     nsRect bgColorRect = bgRect;
@@ -3764,10 +3721,7 @@ AppendedBackgroundType nsDisplayBackgroundImage::AppendBackgroundItemsToTop(
     }
 
     if (aAutoBuildingDisplayList && !*aAutoBuildingDisplayList) {
-      nsPoint offset = aBuilder->GetCurrentFrame()->GetOffsetTo(aFrame);
-      aAutoBuildingDisplayList->emplace(aBuilder, aFrame,
-                                        aBuilder->GetVisibleRect() + offset,
-                                        aBuilder->GetDirtyRect() + offset);
+      aAutoBuildingDisplayList->emplace(aBuilder, aFrame);
     }
 
     if (bg->mImage.mLayers[i].mBlendMode != StyleBlend::Normal) {
@@ -5575,8 +5529,7 @@ void nsDisplayWrapList::MergeDisplayListFromItem(
   // Create a new nsDisplayWrapList using a copy-constructor. This is done
   // to preserve the information about bounds.
   nsDisplayWrapList* wrapper =
-      new (aBuilder) nsDisplayWrapper(aBuilder, *wrappedItem);
-  wrapper->SetType(nsDisplayWrapper::ItemType());
+      MakeClone<nsDisplayWrapList>(aBuilder, wrappedItem);
   MOZ_ASSERT(wrapper);
 
   // Set the display list pointer of the new wrapper item to the display list
@@ -5617,8 +5570,9 @@ Maybe<nscolor> nsDisplayWrapList::IsUniform(
   return Nothing();
 }
 
-void nsDisplayWrapper::Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) {
-  NS_ERROR("nsDisplayWrapper should have been flattened away for painting");
+void nsDisplayWrapList::Paint(nsDisplayListBuilder* aBuilder,
+                              gfxContext* aCtx) {
+  NS_ERROR("nsDisplayWrapList should have been flattened away for painting");
 }
 
 /**
@@ -5695,7 +5649,7 @@ bool nsDisplayWrapList::CreateWebRenderCommands(
 
 static nsresult WrapDisplayList(nsDisplayListBuilder* aBuilder,
                                 nsIFrame* aFrame, nsDisplayList* aList,
-                                nsDisplayItemWrapper* aWrapper) {
+                                nsDisplayWrapper* aWrapper) {
   if (!aList->GetTop()) {
     return NS_OK;
   }
@@ -5710,7 +5664,7 @@ static nsresult WrapDisplayList(nsDisplayListBuilder* aBuilder,
 
 static nsresult WrapEachDisplayItem(nsDisplayListBuilder* aBuilder,
                                     nsDisplayList* aList,
-                                    nsDisplayItemWrapper* aWrapper) {
+                                    nsDisplayWrapper* aWrapper) {
   nsDisplayList newList;
   nsDisplayItem* item;
   while ((item = aList->RemoveBottom())) {
@@ -5725,10 +5679,10 @@ static nsresult WrapEachDisplayItem(nsDisplayListBuilder* aBuilder,
   return NS_OK;
 }
 
-nsresult nsDisplayItemWrapper::WrapLists(nsDisplayListBuilder* aBuilder,
-                                         nsIFrame* aFrame,
-                                         const nsDisplayListSet& aIn,
-                                         const nsDisplayListSet& aOut) {
+nsresult nsDisplayWrapper::WrapLists(nsDisplayListBuilder* aBuilder,
+                                     nsIFrame* aFrame,
+                                     const nsDisplayListSet& aIn,
+                                     const nsDisplayListSet& aOut) {
   nsresult rv = WrapListsInPlace(aBuilder, aFrame, aIn);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -5744,9 +5698,9 @@ nsresult nsDisplayItemWrapper::WrapLists(nsDisplayListBuilder* aBuilder,
   return NS_OK;
 }
 
-nsresult nsDisplayItemWrapper::WrapListsInPlace(
-    nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-    const nsDisplayListSet& aLists) {
+nsresult nsDisplayWrapper::WrapListsInPlace(nsDisplayListBuilder* aBuilder,
+                                            nsIFrame* aFrame,
+                                            const nsDisplayListSet& aLists) {
   nsresult rv;
   if (WrapBorderBackground()) {
     // Our border-backgrounds are in-flow
@@ -5824,20 +5778,6 @@ already_AddRefed<Layer> nsDisplayOpacity::BuildLayer(
   nsDisplayListBuilder::AddAnimationsAndTransitionsToLayer(
       container, aBuilder, this, mFrame, GetType());
   return container.forget();
-}
-
-void nsDisplayOpacity::Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) {
-  if (GetOpacity() == 0.0f) {
-    return;
-  }
-
-  // TODO: Compute a bounds rect to pass to PushLayer for a smaller
-  // allocation.
-  aCtx->GetDrawTarget()->PushLayer(false, GetOpacity(), nullptr,
-                                   mozilla::gfx::Matrix());
-  GetChildren()->Paint(aBuilder, aCtx,
-                       mFrame->PresContext()->AppUnitsPerDevPixel());
-  aCtx->GetDrawTarget()->PopLayer();
 }
 
 /**
@@ -6042,8 +5982,10 @@ bool nsDisplayOpacity::ShouldFlattenAway(nsDisplayListBuilder* aBuilder) {
     return true;
   }
 
-  // Return true if we successfully applied opacity to child items.
-  return ApplyToChildren(aBuilder);
+  // Return true if we successfully applied opacity to child items, or if
+  // WebRender is not in use. In the latter case, the opacity gets flattened and
+  // applied during layer building.
+  return ApplyToChildren(aBuilder) || usingLayers;
 }
 
 nsDisplayItem::LayerState nsDisplayOpacity::GetLayerState(
@@ -6200,16 +6142,6 @@ already_AddRefed<Layer> nsDisplayBlendMode::BuildLayer(
   return container.forget();
 }
 
-void nsDisplayBlendMode::Paint(nsDisplayListBuilder* aBuilder,
-                               gfxContext* aCtx) {
-  aCtx->GetDrawTarget()->PushLayerWithBlend(false, 1.0, nullptr,
-                                            mozilla::gfx::Matrix(), IntRect(),
-                                            false, BlendMode());
-  GetChildren()->Paint(aBuilder, aCtx,
-                       mFrame->PresContext()->AppUnitsPerDevPixel());
-  aCtx->GetDrawTarget()->PopLayer();
-}
-
 mozilla::gfx::CompositionOp nsDisplayBlendMode::BlendMode() {
   return nsCSSRendering::GetGFXBlendMode(mBlendMode);
 }
@@ -6303,14 +6235,6 @@ LayerState nsDisplayBlendContainer::GetLayerState(
   return RequiredLayerStateForChildren(aBuilder, aManager, aParameters, mList,
                                        GetAnimatedGeometryRoot(),
                                        GetActiveScrolledRoot());
-}
-
-void nsDisplayBlendContainer::Paint(nsDisplayListBuilder* aBuilder,
-                                    gfxContext* aCtx) {
-  aCtx->GetDrawTarget()->PushLayer(false, 1.0, nullptr, mozilla::gfx::Matrix());
-  GetChildren()->Paint(aBuilder, aCtx,
-                       mFrame->PresContext()->AppUnitsPerDevPixel());
-  aCtx->GetDrawTarget()->PopLayer();
 }
 
 bool nsDisplayBlendContainer::CreateWebRenderCommands(
@@ -7532,7 +7456,14 @@ void nsDisplayTransform::Init(nsDisplayListBuilder* aBuilder,
 }
 
 bool nsDisplayTransform::ShouldFlattenAway(nsDisplayListBuilder* aBuilder) {
-  return false;
+  if (gfxVars::UseWebRender() ||
+      !StaticPrefs::layout_display_list_flatten_transform()) {
+    return false;
+  }
+
+  MOZ_ASSERT(!mShouldFlatten);
+  mShouldFlatten = GetTransform().Is2D();
+  return mShouldFlatten;
 }
 
 /* Returns the delta specified by the transform-origin property.
@@ -8249,163 +8180,6 @@ already_AddRefed<Layer> nsDisplayTransform::BuildLayer(
   return container.forget();
 }
 
-void nsDisplayTransform::Collect3DTransformLeaves(
-    nsTArray<nsDisplayTransform*>& aLeaves) {
-  if (!IsParticipating3DContext() || IsLeafOf3DContext()) {
-    aLeaves.AppendElement(this);
-    return;
-  }
-
-  for (nsDisplayItem* item : mChildren) {
-    if (item->GetType() == DisplayItemType::TYPE_PERSPECTIVE) {
-      auto* perspective = static_cast<nsDisplayPerspective*>(item);
-      if (!perspective->GetChildren()->GetTop()) {
-        continue;
-      }
-      item = perspective->GetChildren()->GetTop();
-    }
-    MOZ_RELEASE_ASSERT(item->GetType() == DisplayItemType::TYPE_TRANSFORM);
-    static_cast<nsDisplayTransform*>(item)->Collect3DTransformLeaves(aLeaves);
-  }
-}
-
-static RefPtr<gfx::Path> BuildPathFromPolygon(const RefPtr<DrawTarget>& aDT,
-                                              const gfx::Polygon& aPolygon) {
-  MOZ_ASSERT(!aPolygon.IsEmpty());
-
-  RefPtr<PathBuilder> pathBuilder = aDT->CreatePathBuilder();
-  const nsTArray<Point4D>& points = aPolygon.GetPoints();
-
-  pathBuilder->MoveTo(points[0].As2DPoint());
-
-  for (size_t i = 1; i < points.Length(); ++i) {
-    pathBuilder->LineTo(points[i].As2DPoint());
-  }
-
-  pathBuilder->Close();
-  return pathBuilder->Finish();
-}
-
-void nsDisplayTransform::CollectSorted3DTransformLeaves(
-    nsDisplayListBuilder* aBuilder, nsTArray<TransformPolygon>& aLeaves) {
-  std::list<TransformPolygon> inputLayers;
-
-  nsTArray<nsDisplayTransform*> leaves;
-  Collect3DTransformLeaves(leaves);
-  for (nsDisplayTransform* item : leaves) {
-    auto bounds = LayoutDeviceRect::FromAppUnits(
-        item->mChildBounds, item->mFrame->PresContext()->AppUnitsPerDevPixel());
-    Matrix4x4 transform = item->GetAccumulatedPreserved3DTransform(aBuilder);
-
-    if (!IsFrameVisible(item->mFrame, transform)) {
-      continue;
-    }
-    gfx::Polygon polygon =
-        gfx::Polygon::FromRect(gfx::Rect(bounds.ToUnknownRect()));
-
-    polygon.TransformToScreenSpace(transform);
-
-    if (polygon.GetPoints().Length() >= 3) {
-      inputLayers.push_back(TransformPolygon(item, std::move(polygon)));
-    }
-  }
-
-  if (inputLayers.empty()) {
-    return;
-  }
-
-  BSPTree<nsDisplayTransform> tree(inputLayers);
-  nsTArray<TransformPolygon> orderedLayers(tree.GetDrawOrder());
-
-  for (TransformPolygon& polygon : orderedLayers) {
-    Matrix4x4 inverse =
-        polygon.data->GetAccumulatedPreserved3DTransform(aBuilder).Inverse();
-
-    MOZ_ASSERT(polygon.geometry);
-    polygon.geometry->TransformToLayerSpace(inverse);
-  }
-
-  aLeaves = std::move(orderedLayers);
-}
-
-void nsDisplayTransform::Paint(nsDisplayListBuilder* aBuilder,
-                               gfxContext* aCtx) {
-  Paint(aBuilder, aCtx, Nothing());
-}
-
-void nsDisplayTransform::Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx,
-                               const Maybe<gfx::Polygon>& aPolygon) {
-  if (IsParticipating3DContext() && !IsLeafOf3DContext()) {
-    MOZ_ASSERT(!aPolygon);
-    nsTArray<TransformPolygon> leaves;
-    CollectSorted3DTransformLeaves(aBuilder, leaves);
-    for (TransformPolygon& item : leaves) {
-      item.data->Paint(aBuilder, aCtx, item.geometry);
-    }
-    return;
-  }
-
-  gfxContextMatrixAutoSaveRestore saveMatrix(aCtx);
-  Matrix4x4 trans = GetAccumulatedPreserved3DTransform(aBuilder);
-  if (!IsFrameVisible(mFrame, trans)) {
-    return;
-  }
-
-  Matrix trans2d;
-  if (trans.CanDraw2D(&trans2d)) {
-    aCtx->Multiply(ThebesMatrix(trans2d));
-
-    if (aPolygon) {
-      RefPtr<gfx::Path> path =
-          BuildPathFromPolygon(aCtx->GetDrawTarget(), *aPolygon);
-      aCtx->GetDrawTarget()->PushClip(path);
-    }
-
-    GetChildren()->Paint(aBuilder, aCtx,
-                         mFrame->PresContext()->AppUnitsPerDevPixel());
-
-    if (aPolygon) {
-      aCtx->GetDrawTarget()->PopClip();
-    }
-    return;
-  }
-
-  // TODO: Implement 3d transform handling, including plane splitting and
-  // sorting. See BasicCompositor.
-  auto pixelBounds = LayoutDeviceRect::FromAppUnitsToOutside(
-      mChildBounds, mFrame->PresContext()->AppUnitsPerDevPixel());
-  RefPtr<DrawTarget> untransformedDT =
-      gfxPlatform::GetPlatform()->CreateOffscreenContentDrawTarget(
-          IntSize(pixelBounds.Width(), pixelBounds.Height()),
-          SurfaceFormat::B8G8R8A8, true);
-  if (!untransformedDT || !untransformedDT->IsValid()) {
-    return;
-  }
-  untransformedDT->SetTransform(
-      Matrix::Translation(-Point(pixelBounds.X(), pixelBounds.Y())));
-
-  RefPtr<gfxContext> groupTarget =
-      gfxContext::CreatePreservingTransformOrNull(untransformedDT);
-
-  if (aPolygon) {
-    RefPtr<gfx::Path> path =
-        BuildPathFromPolygon(aCtx->GetDrawTarget(), *aPolygon);
-    aCtx->GetDrawTarget()->PushClip(path);
-  }
-
-  GetChildren()->Paint(aBuilder, groupTarget,
-                       mFrame->PresContext()->AppUnitsPerDevPixel());
-
-  if (aPolygon) {
-    aCtx->GetDrawTarget()->PopClip();
-  }
-
-  RefPtr<SourceSurface> untransformedSurf = untransformedDT->Snapshot();
-
-  trans.PreTranslate(pixelBounds.X(), pixelBounds.Y(), 0);
-  aCtx->GetDrawTarget()->Draw3DTransformedSurface(untransformedSurf, trans);
-}
-
 bool nsDisplayTransform::MayBeAnimated(nsDisplayListBuilder* aBuilder,
                                        bool aEnforceMinimumSize) const {
   // If EffectCompositor::HasAnimationsForCompositor() is true then we can
@@ -8946,14 +8720,6 @@ already_AddRefed<Layer> nsDisplayPerspective::BuildLayer(
   container->SetTransformIsPerspective(true);
 
   return container.forget();
-}
-
-void nsDisplayPerspective::Paint(nsDisplayListBuilder* aBuilder,
-                                 gfxContext* aCtx) {
-  // Just directly recurse into children, since we'll include the persepctive
-  // value in any nsDisplayTransform children.
-  GetChildren()->Paint(aBuilder, aCtx,
-                       mFrame->PresContext()->AppUnitsPerDevPixel());
 }
 
 LayerState nsDisplayPerspective::GetLayerState(
@@ -9715,17 +9481,6 @@ void nsDisplayMasksAndClipPaths::PaintWithContentsPaintCallback(
   nsDisplayMasksAndClipPathsGeometry::UpdateDrawResult(this, imgParams.result);
 }
 
-void nsDisplayMasksAndClipPaths::Paint(nsDisplayListBuilder* aBuilder,
-                                       gfxContext* aCtx) {
-  if (!IsValidMask()) {
-    return;
-  }
-  PaintWithContentsPaintCallback(aBuilder, aCtx, [&] {
-    GetChildren()->Paint(aBuilder, aCtx,
-                         mFrame->PresContext()->AppUnitsPerDevPixel());
-  });
-}
-
 static Maybe<wr::WrClipId> CreateSimpleClipRegion(
     const nsDisplayMasksAndClipPaths& aDisplayItem,
     wr::DisplayListBuilder& aBuilder) {
@@ -9995,14 +9750,6 @@ already_AddRefed<Layer> nsDisplayBackdropRootContainer::BuildLayer(
   return container.forget();
 }
 
-void nsDisplayBackdropRootContainer::Paint(nsDisplayListBuilder* aBuilder,
-                                           gfxContext* aCtx) {
-  aCtx->GetDrawTarget()->PushLayer(false, 1.0, nullptr, mozilla::gfx::Matrix());
-  GetChildren()->Paint(aBuilder, aCtx,
-                       mFrame->PresContext()->AppUnitsPerDevPixel());
-  aCtx->GetDrawTarget()->PopLayer();
-}
-
 LayerState nsDisplayBackdropRootContainer::GetLayerState(
     nsDisplayListBuilder* aBuilder, LayerManager* aManager,
     const ContainerLayerParameters& aParameters) {
@@ -10079,13 +9826,6 @@ bool nsDisplayBackdropFilters::CreateWebRenderCommands(
   return true;
 }
 
-void nsDisplayBackdropFilters::Paint(nsDisplayListBuilder* aBuilder,
-                                     gfxContext* aCtx) {
-  // TODO: Implement backdrop filters
-  GetChildren()->Paint(aBuilder, aCtx,
-                       mFrame->PresContext()->AppUnitsPerDevPixel());
-}
-
 /* static */
 nsDisplayFilters::nsDisplayFilters(nsDisplayListBuilder* aBuilder,
                                    nsIFrame* aFrame, nsDisplayList* aList)
@@ -10132,13 +9872,6 @@ LayerState nsDisplayFilters::GetLayerState(
   return LayerState::LAYER_SVG_EFFECTS;
 }
 
-void nsDisplayFilters::Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) {
-  PaintWithContentsPaintCallback(aBuilder, aCtx, [&](gfxContext* aContext) {
-    GetChildren()->Paint(aBuilder, aContext,
-                         mFrame->PresContext()->AppUnitsPerDevPixel());
-  });
-}
-
 bool nsDisplayFilters::ComputeVisibility(nsDisplayListBuilder* aBuilder,
                                          nsRegion* aVisibleRegion) {
   nsPoint offset = ToReferenceFrame();
@@ -10173,37 +9906,12 @@ void nsDisplayFilters::ComputeInvalidationRegion(
 
 void nsDisplayFilters::PaintAsLayer(nsDisplayListBuilder* aBuilder,
                                     gfxContext* aCtx, LayerManager* aManager) {
-  PaintWithContentsPaintCallback(aBuilder, aCtx, [&](gfxContext* aContext) {
-    BasicLayerManager* basic = aManager->AsBasicLayerManager();
-    RefPtr<gfxContext> oldCtx = basic->GetTarget();
-    basic->SetTarget(aContext);
-
-    aManager->EndTransaction(FrameLayerBuilder::DrawPaintedLayer, aBuilder);
-    basic->SetTarget(oldCtx);
-  });
-}
-
-void nsDisplayFilters::PaintWithContentsPaintCallback(
-    nsDisplayListBuilder* aBuilder, gfxContext* aCtx,
-    const std::function<void(gfxContext* aContext)>& aPaintChildren) {
   imgDrawingParams imgParams(aBuilder->GetImageDecodeFlags());
   nsRect borderArea = nsRect(ToReferenceFrame(), mFrame->GetSize());
   SVGIntegrationUtils::PaintFramesParams params(*aCtx, mFrame, GetPaintRect(),
-                                                borderArea, aBuilder, nullptr,
+                                                borderArea, aBuilder, aManager,
                                                 mHandleOpacity, imgParams);
-
-  gfxPoint userSpaceToFrameSpaceOffset =
-      SVGIntegrationUtils::GetOffsetToUserSpaceInDevPx(mFrame, params);
-
-  SVGIntegrationUtils::PaintFilter(
-      params,
-      [&](gfxContext& aContext, nsIFrame* aTarget, const gfxMatrix& aTransform,
-          const nsIntRect* aDirtyRect, image::imgDrawingParams& aImgParams) {
-        gfxContextMatrixAutoSaveRestore autoSR(&aContext);
-        aContext.SetMatrixDouble(aContext.CurrentMatrixDouble().PreTranslate(
-            -userSpaceToFrameSpaceOffset));
-        aPaintChildren(&aContext);
-      });
+  SVGIntegrationUtils::PaintFilter(params);
   nsDisplayFiltersGeometry::UpdateDrawResult(this, imgParams.result);
 }
 
