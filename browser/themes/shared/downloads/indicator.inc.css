@@ -58,9 +58,11 @@ toolbarpaletteitem > #downloads-button > .toolbarbutton-badge-stack > #downloads
   left: calc(50% - 9px); /* Horizontally center the 18px wide animatable image */
   width: 18px;
   height: 18px;
-  border-radius: 100%;
+  border-radius: 50%;
   border: 1px solid currentColor;
-  padding: 1px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 #downloads-button[progress]:not([notification]) > .toolbarbutton-badge-stack > #downloads-indicator-progress-outer {
@@ -74,7 +76,7 @@ toolbarpaletteitem > #downloads-button > .toolbarbutton-badge-stack > #downloads
     From javascript side we update the --download-progress-pcent variable to show the current progress
    */
   background: conic-gradient(var(--toolbarbutton-icon-fill-attention) var(--download-progress-pcent), transparent var(--download-progress-pcent));
-  border-radius: 100%;
+  border-radius: 50%;
 }
 
 /*** Status badges ***/
