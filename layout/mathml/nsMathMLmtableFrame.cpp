@@ -326,10 +326,6 @@ class nsDisplaymtdBorder final : public nsDisplayBorder {
       nsDisplayListBuilder* aDisplayListBuilder) override {
     return false;
   }
-
-  virtual bool IsInvisibleInRect(const nsRect& aRect) const override {
-    return false;
-  }
 };
 
 #ifdef DEBUG

@@ -16,7 +16,6 @@
 #include "mozilla/dom/HTMLVideoElement.h"
 #include "mozilla/dom/ShadowRoot.h"
 #include "mozilla/layers/RenderRootStateManager.h"
-#include "BasicLayers.h"
 #include "nsDisplayList.h"
 #include "nsGenericHTMLElement.h"
 #include "nsPresContext.h"
@@ -211,9 +210,7 @@ already_AddRefed<Layer> nsVideoFrame::BuildLayer(
   container->SetScaleHint(scaleHint);
 
   RefPtr<ImageLayer> layer = static_cast<ImageLayer*>(
-      aManager->GetLayerBuilder()
-          ? aManager->GetLayerBuilder()->GetLeafLayerFor(aBuilder, aItem)
-          : nullptr);
+      aManager->GetLayerBuilder()->GetLeafLayerFor(aBuilder, aItem));
   if (!layer) {
     layer = aManager->CreateImageLayer();
     if (!layer) return nullptr;
@@ -499,26 +496,6 @@ class nsDisplayVideo : public nsPaintedDisplayItem {
     nsVideoFrame* f = static_cast<nsVideoFrame*>(Frame());
     HTMLVideoElement* video = HTMLVideoElement::FromNode(f->GetContent());
     return video->VideoWidth() > 0;
-  }
-
-  virtual void Paint(nsDisplayListBuilder* aBuilder,
-                     gfxContext* aCtx) override {
-    // This currently uses BasicLayerManager to re-use the code for extracting
-    // the current Image and generating DrawTarget rendering commands for it.
-    // Ideally we'll factor out that code and use it directly soon.
-    RefPtr<BasicLayerManager> layerManager =
-        new BasicLayerManager(BasicLayerManager::BLM_OFFSCREEN);
-
-    layerManager->BeginTransactionWithTarget(aCtx);
-    RefPtr<Layer> layer =
-        BuildLayer(aBuilder, layerManager, ContainerLayerParameters());
-    if (!layer) {
-      layerManager->AbortTransaction();
-      return;
-    }
-
-    layerManager->SetRoot(layer);
-    layerManager->EndEmptyTransaction();
   }
 };
 
