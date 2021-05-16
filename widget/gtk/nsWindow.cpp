@@ -914,8 +914,9 @@ bool nsWindow::WidgetTypeSupportsAcceleration() {
   // We draw transparent popups on non-compositing screens by SW as we don't
   // implement X shape masks in WebRender.
   if (mWindowType == eWindowType_popup) {
-    return mCompositedScreen;
+    return HasRemoteContent() && mCompositedScreen;
   }
+
   return true;
 }
 
