@@ -10,13 +10,12 @@
 namespace mozilla {
 namespace layers {
 
-template <typename T>
-void BSPTree<T>::BuildDrawOrder(BSPTreeNode<T>* aNode,
-                                nsTArray<BSPPolygon<T>>& aLayers) const {
+void BSPTree::BuildDrawOrder(BSPTreeNode* aNode,
+                             nsTArray<LayerPolygon>& aLayers) const {
   const gfx::Point4D& normal = aNode->First().GetNormal();
 
-  BSPTreeNode<T>* front = aNode->front;
-  BSPTreeNode<T>* back = aNode->back;
+  BSPTreeNode* front = aNode->front;
+  BSPTreeNode* back = aNode->back;
 
   // Since the goal is to return the draw order from back to front, we reverse
   // the traversal order if the current polygon is facing towards the camera.
@@ -30,7 +29,7 @@ void BSPTree<T>::BuildDrawOrder(BSPTreeNode<T>* aNode,
     BuildDrawOrder(front, aLayers);
   }
 
-  for (BSPPolygon<T>& layer : aNode->layers) {
+  for (LayerPolygon& layer : aNode->layers) {
     MOZ_ASSERT(layer.geometry);
 
     if (layer.geometry->GetPoints().Length() >= 3) {
@@ -43,8 +42,7 @@ void BSPTree<T>::BuildDrawOrder(BSPTreeNode<T>* aNode,
   }
 }
 
-template <typename T>
-void BSPTree<T>::BuildTree(BSPTreeNode<T>* aRoot, PolygonList<T>& aLayers) {
+void BSPTree::BuildTree(BSPTreeNode* aRoot, std::list<LayerPolygon>& aLayers) {
   MOZ_ASSERT(!aLayers.empty());
 
   aRoot->layers.push_back(std::move(aLayers.front()));
@@ -60,8 +58,8 @@ void BSPTree<T>::BuildTree(BSPTreeNode<T>* aRoot, PolygonList<T>& aLayers) {
   const gfx::Point4D& planeNormal = plane.GetNormal();
   const gfx::Point4D& planePoint = plane.GetPoints()[0];
 
-  PolygonList<T> backLayers, frontLayers;
-  for (BSPPolygon<T>& layerPolygon : aLayers) {
+  std::list<LayerPolygon> backLayers, frontLayers;
+  for (LayerPolygon& layerPolygon : aLayers) {
     const nsTArray<gfx::Point4D>& geometry = layerPolygon.geometry->GetPoints();
 
     // Calculate the plane-point distances for the polygon classification.
@@ -90,14 +88,14 @@ void BSPTree<T>::BuildTree(BSPTreeNode<T>* aRoot, PolygonList<T>& aLayers) {
                           frontPoints);
 
       const gfx::Point4D& normal = layerPolygon.geometry->GetNormal();
-      T* data = layerPolygon.data;
+      Layer* layer = layerPolygon.layer;
 
       if (backPoints.Length() >= 3) {
-        backLayers.emplace_back(data, std::move(backPoints), normal);
+        backLayers.emplace_back(layer, std::move(backPoints), normal);
       }
 
       if (frontPoints.Length() >= 3) {
-        frontLayers.emplace_back(data, std::move(frontPoints), normal);
+        frontLayers.emplace_back(layer, std::move(frontPoints), normal);
       }
     }
   }
@@ -112,18 +110,6 @@ void BSPTree<T>::BuildTree(BSPTreeNode<T>* aRoot, PolygonList<T>& aLayers) {
     BuildTree(aRoot->front, frontLayers);
   }
 }
-
-template void BSPTree<Layer>::BuildTree(BSPTreeNode<Layer>* aRoot,
-                                        PolygonList<Layer>& aLayers);
-template void BSPTree<Layer>::BuildDrawOrder(
-    BSPTreeNode<Layer>* aNode, nsTArray<BSPPolygon<Layer>>& aLayers) const;
-
-template void BSPTree<nsDisplayTransform>::BuildTree(
-    BSPTreeNode<nsDisplayTransform>* aRoot,
-    PolygonList<nsDisplayTransform>& aLayers);
-template void BSPTree<nsDisplayTransform>::BuildDrawOrder(
-    BSPTreeNode<nsDisplayTransform>* aNode,
-    nsTArray<BSPPolygon<nsDisplayTransform>>& aLayers) const;
 
 }  // namespace layers
 }  // namespace mozilla
