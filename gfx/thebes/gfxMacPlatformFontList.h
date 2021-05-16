@@ -118,8 +118,7 @@ class gfxMacPlatformFontList final : public gfxPlatformFontList {
 
  public:
   static gfxMacPlatformFontList* PlatformFontList() {
-    return static_cast<gfxMacPlatformFontList*>(
-        gfxPlatformFontList::PlatformFontList());
+    return static_cast<gfxMacPlatformFontList*>(sPlatformFontList);
   }
 
   gfxFontFamily* CreateFontFamily(const nsACString& aName,

@@ -369,8 +369,7 @@ class gfxDWriteFontList final : public gfxPlatformFontList {
   gfxDWriteFontList();
 
   static gfxDWriteFontList* PlatformFontList() {
-    return static_cast<gfxDWriteFontList*>(
-        gfxPlatformFontList::PlatformFontList());
+    return static_cast<gfxDWriteFontList*>(sPlatformFontList);
   }
 
   // initialize font lists
