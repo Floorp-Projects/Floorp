@@ -472,8 +472,6 @@ SET TIMEOUT: css/css-writing-modes/orthogonal-parent-shrink-to-fit-001v.html
 SET TIMEOUT: css/css-writing-modes/orthogonal-parent-shrink-to-fit-001w.html
 SET TIMEOUT: css/css-writing-modes/orthogonal-parent-shrink-to-fit-001x.html
 SET TIMEOUT: css/css-writing-modes/support/text-orientation.js
-SET TIMEOUT: css/CSS2/abspos/abspos-containing-block-initial-001.xht
-SET TIMEOUT: css/CSS2/abspos/abspos-containing-block-initial-001-ref.xht
 SET TIMEOUT: css/CSS2/backgrounds/background-root-101.xht
 SET TIMEOUT: css/CSS2/backgrounds/background-root-102.xht
 SET TIMEOUT: css/CSS2/backgrounds/background-root-103.xht

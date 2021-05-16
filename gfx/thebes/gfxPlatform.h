@@ -377,7 +377,12 @@ class gfxPlatform : public mozilla::layers::MemoryPressureListener {
    * subclass). This function is responsible to create the appropriate subclass
    * of gfxPlatformFontList *and* to call its InitFontList() method.
    */
-  virtual bool CreatePlatformFontList() = 0;
+  virtual gfxPlatformFontList* CreatePlatformFontList() {
+    MOZ_ASSERT_UNREACHABLE(
+        "oops, this platform doesn't have a "
+        "gfxPlatformFontList implementation");
+    return nullptr;
+  }
 
   /**
    * Resolving a font name to family name. The result MUST be in the result of

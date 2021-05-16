@@ -558,16 +558,20 @@ mozilla::gfx::BackendType gfxWindowsPlatform::GetPreferredCanvasBackend() {
   return backend;
 }
 
-bool gfxWindowsPlatform::CreatePlatformFontList() {
+gfxPlatformFontList* gfxWindowsPlatform::CreatePlatformFontList() {
+  gfxPlatformFontList* pfl;
+
   // bug 630201 - older pre-RTM versions of Direct2D/DirectWrite cause odd
   // crashers so block them altogether
   if (IsNotWin7PreRTM() && DWriteEnabled()) {
-    if (gfxPlatformFontList::Initialize(new gfxDWriteFontList)) {
-      return true;
+    pfl = new gfxDWriteFontList();
+    if (NS_SUCCEEDED(pfl->InitFontList())) {
+      return pfl;
     }
     // DWrite font initialization failed! Don't know why this would happen,
     // but apparently it can - see bug 594865.
     // So we're going to fall back to GDI fonts & rendering.
+    gfxPlatformFontList::Shutdown();
     DisableD2D(FeatureStatus::Failed, "Failed to initialize fonts",
                "FEATURE_FAILURE_FONT_FAIL"_ns);
   }
@@ -576,7 +580,14 @@ bool gfxWindowsPlatform::CreatePlatformFontList() {
   // permit it, as we're using GDI fonts.
   mHasVariationFontSupport = false;
 
-  return gfxPlatformFontList::Initialize(new gfxGDIFontList);
+  pfl = new gfxGDIFontList();
+
+  if (NS_SUCCEEDED(pfl->InitFontList())) {
+    return pfl;
+  }
+
+  gfxPlatformFontList::Shutdown();
+  return nullptr;
 }
 
 // This function will permanently disable D2D for the session. It's intended to
