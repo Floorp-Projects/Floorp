@@ -29,7 +29,6 @@
 #include "mozilla/SVGFilterInstance.h"
 #include "mozilla/SVGUtils.h"
 #include "CSSFilterInstance.h"
-#include "SVGFilterPaintCallback.h"
 #include "SVGIntegrationUtils.h"
 
 using namespace mozilla::dom;
@@ -60,12 +59,10 @@ static UniquePtr<UserSpaceMetrics> UserSpaceMetricsForFrame(nsIFrame* aFrame) {
   return MakeUnique<NonSVGFrameUserSpaceMetrics>(aFrame);
 }
 
-void FilterInstance::PaintFilteredFrame(nsIFrame* aFilteredFrame,
-                                        gfxContext* aCtx,
-                                        SVGFilterPaintCallback* aPaintCallback,
-                                        const nsRegion* aDirtyArea,
-                                        imgDrawingParams& aImgParams,
-                                        float aOpacity) {
+void FilterInstance::PaintFilteredFrame(
+    nsIFrame* aFilteredFrame, gfxContext* aCtx,
+    const SVGFilterPaintCallback& aPaintCallback, const nsRegion* aDirtyArea,
+    imgDrawingParams& aImgParams, float aOpacity) {
   auto filterChain = aFilteredFrame->StyleEffects()->mFilters.AsSpan();
   UniquePtr<UserSpaceMetrics> metrics =
       UserSpaceMetricsForFrame(aFilteredFrame);
@@ -437,7 +434,7 @@ nsRect FilterInstance::GetPostFilterBounds(nsIFrame* aFilteredFrame,
 FilterInstance::FilterInstance(
     nsIFrame* aTargetFrame, nsIContent* aTargetContent,
     const UserSpaceMetrics& aMetrics, Span<const StyleFilter> aFilterChain,
-    bool aFilterInputIsTainted, SVGFilterPaintCallback* aPaintCallback,
+    bool aFilterInputIsTainted, const SVGFilterPaintCallback& aPaintCallback,
     const gfxMatrix& aPaintTransform, const nsRegion* aPostFilterDirtyRegion,
     const nsRegion* aPreFilterDirtyRegion,
     const nsRect* aPreFilterInkOverflowRectOverride,
@@ -733,7 +730,7 @@ void FilterInstance::BuildSourceImage(DrawTarget* aDest,
     imageFlags &= ~imgIContainer::FLAG_HIGH_QUALITY_SCALING;
   }
   imgDrawingParams imgParams(imageFlags);
-  mPaintCallback->Paint(*ctx, mTargetFrame, mPaintTransform, &dirty, imgParams);
+  mPaintCallback(*ctx, mTargetFrame, mPaintTransform, &dirty, imgParams);
   aImgParams.result = imgParams.result;
 
   mSourceGraphic.mSourceSurface = offscreenDT->Snapshot();
