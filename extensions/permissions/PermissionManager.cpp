@@ -127,16 +127,6 @@ static const nsLiteralCString kPreloadPermissions[] = {
     // removed.  See bug 1428130.
     "cookie"_ns};
 
-// Certain permissions should never be persisted to disk under GeckoView; it's
-// the responsibility of the app to manage storing these beyond the scope of
-// a single session.
-#ifdef ANDROID
-static const nsLiteralCString kGeckoViewRestrictedPermissions[] = {
-    "MediaManagerVideo"_ns,    "geolocation"_ns,
-    "desktop-notification"_ns, "persistent-storage"_ns,
-    "trackingprotection"_ns,   "trackingprotection-pb"_ns};
-#endif
-
 // NOTE: nullptr can be passed as aType - if it is this function will return
 // "false" unconditionally.
 bool IsPreloadPermission(const nsACString& aType) {
@@ -554,11 +544,6 @@ bool IsExpandedPrincipal(nsIPrincipal* aPrincipal) {
 bool IsPersistentExpire(uint32_t aExpire, const nsACString& aType) {
   bool res = (aExpire != nsIPermissionManager::EXPIRE_SESSION &&
               aExpire != nsIPermissionManager::EXPIRE_POLICY);
-#ifdef ANDROID
-  for (const auto& perm : kGeckoViewRestrictedPermissions) {
-    res = res && !perm.Equals(aType);
-  }
-#endif
   return res;
 }
 

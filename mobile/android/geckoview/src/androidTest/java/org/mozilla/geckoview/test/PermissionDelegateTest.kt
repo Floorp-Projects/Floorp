@@ -4,6 +4,7 @@
 
 package org.mozilla.geckoview.test
 
+import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.RejectedPromiseException
@@ -157,12 +158,12 @@ class PermissionDelegateTest : BaseSessionTest() {
             // Ensure the content permission is asked first, before the Android permission.
             @AssertCalled(count = 1, order = [1])
             override fun onContentPermissionRequest(
-                    session: GeckoSession, uri: String?, type: Int,
-                    callback: GeckoSession.PermissionDelegate.Callback) {
-                assertThat("URI should match", uri, endsWith(url))
-                assertThat("Type should match", type,
+                    session: GeckoSession, perm: GeckoSession.PermissionDelegate.ContentPermission):
+                    GeckoResult<Int>? {
+                assertThat("URI should match", perm.uri, endsWith(url))
+                assertThat("Type should match", perm.permission,
                         equalTo(GeckoSession.PermissionDelegate.PERMISSION_GEOLOCATION))
-                callback.grant()
+                return GeckoResult.fromValue(GeckoSession.PermissionDelegate.ContentPermission.VALUE_ALLOW)
             }
 
             @AssertCalled(count = 1, order = [2])
@@ -227,9 +228,9 @@ class PermissionDelegateTest : BaseSessionTest() {
         mainSession.delegateDuringNextWait(object : Callbacks.PermissionDelegate {
             @AssertCalled(count = 1)
             override fun onContentPermissionRequest(
-                    session: GeckoSession, uri: String?, type: Int,
-                    callback: GeckoSession.PermissionDelegate.Callback) {
-                callback.reject()
+                    session: GeckoSession, perm: GeckoSession.PermissionDelegate.ContentPermission):
+                    GeckoResult<Int>? {
+                return GeckoResult.fromValue(GeckoSession.PermissionDelegate.ContentPermission.VALUE_DENY)
             }
 
             @AssertCalled(count = 0)
@@ -286,12 +287,12 @@ class PermissionDelegateTest : BaseSessionTest() {
         mainSession.delegateDuringNextWait(object : Callbacks.PermissionDelegate {
             @AssertCalled(count = 1)
             override fun onContentPermissionRequest(
-                    session: GeckoSession, uri: String?, type: Int,
-                    callback: GeckoSession.PermissionDelegate.Callback) {
-                assertThat("URI should match", uri, endsWith(url))
-                assertThat("Type should match", type,
+                    session: GeckoSession, perm: GeckoSession.PermissionDelegate.ContentPermission):
+                    GeckoResult<Int>? {
+                assertThat("URI should match", perm.uri, endsWith(url))
+                assertThat("Type should match", perm.permission,
                         equalTo(GeckoSession.PermissionDelegate.PERMISSION_DESKTOP_NOTIFICATION))
-                callback.grant()
+                return GeckoResult.fromValue(GeckoSession.PermissionDelegate.ContentPermission.VALUE_ALLOW)
             }
         })
 
@@ -339,9 +340,9 @@ class PermissionDelegateTest : BaseSessionTest() {
         mainSession.delegateDuringNextWait(object : Callbacks.PermissionDelegate {
             @AssertCalled(count = 1)
             override fun onContentPermissionRequest(
-                    session: GeckoSession, uri: String?, type: Int,
-                    callback: GeckoSession.PermissionDelegate.Callback) {
-                callback.reject()
+                    session: GeckoSession, perm: GeckoSession.PermissionDelegate.ContentPermission):
+                    GeckoResult<Int>? {
+                return GeckoResult.fromValue(GeckoSession.PermissionDelegate.ContentPermission.VALUE_DENY)
             }
         })
 
@@ -390,10 +391,11 @@ class PermissionDelegateTest : BaseSessionTest() {
 
         mainSession.waitUntilCalled(object : Callbacks.PermissionDelegate {
             @AssertCalled(count = 2)
-            override fun onContentPermissionRequest(session: GeckoSession, uri: String?, type: Int, callback: GeckoSession.PermissionDelegate.Callback) {
+            override fun onContentPermissionRequest(session: GeckoSession, perm: GeckoSession.PermissionDelegate.ContentPermission):
+                    GeckoResult<Int>? {
                 val expectedType = if (sessionRule.currentCall.counter == 1) GeckoSession.PermissionDelegate.PERMISSION_AUTOPLAY_AUDIBLE else GeckoSession.PermissionDelegate.PERMISSION_AUTOPLAY_INAUDIBLE
-                assertThat("Type should match", type, equalTo(expectedType))
-                callback.reject()
+                assertThat("Type should match", perm.permission, equalTo(expectedType))
+                return GeckoResult.fromValue(GeckoSession.PermissionDelegate.ContentPermission.VALUE_DENY)
             }
         })
     }

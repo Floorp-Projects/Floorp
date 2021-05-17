@@ -9,6 +9,7 @@ package org.mozilla.geckoview;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.math.BigInteger;
+import java.nio.charset.Charset;
 import java.util.List;
 import java.util.Locale;
 
@@ -168,7 +169,7 @@ public final class StorageController {
             "GeckoView:ClearSessionContextData", bundle);
     }
 
-    /* package */ static @NonNull String createSafeSessionContextId(
+    /* package */ static @Nullable String createSafeSessionContextId(
             final @Nullable String contextId) {
         if (contextId == null) {
             return null;
@@ -182,6 +183,18 @@ public final class StorageController {
         // its hex representation.
         return String.format("gvctx%x", new BigInteger(contextId.getBytes()))
                .toLowerCase(Locale.ROOT);
+    }
+
+    /* package */ static @Nullable String retrieveUnsafeSessionContextId(
+            final @Nullable String contextId) {
+        if (contextId == null || contextId.isEmpty()) {
+            return null;
+        }
+        if ("gvctxempty".equals(contextId)) {
+            return "";
+        }
+        final byte[] bytes = new BigInteger(contextId.substring(5), 16).toByteArray();
+        return new String(bytes, Charset.forName("UTF-8"));
     }
 
     /**
@@ -199,7 +212,7 @@ public final class StorageController {
     }
 
     /**
-     * Get all currently stored permissions for a given URI.
+     * Get all currently stored permissions for a given URI and default (unset) context ID.
      *
      * @param uri A String representing the URI to get permissions for.
      *
@@ -208,11 +221,39 @@ public final class StorageController {
      */
     @AnyThread
     public @NonNull GeckoResult<List<ContentPermission>> getPermissions(final @NonNull String uri) {
-        final GeckoBundle msg = new GeckoBundle(1);
+        return getPermissions(uri, null);
+    }
+
+    /**
+     * Get all currently stored permissions for a given URI and context ID.
+     *
+     * @param uri A String representing the URI to get permissions for.
+     * @param contextId A String specifying the context ID.
+     *
+     * @return A {@link GeckoResult} that will complete with a list of all
+     *         currently stored {@link ContentPermission}s for the URI.
+     */
+    @AnyThread
+    public @NonNull GeckoResult<List<ContentPermission>> getPermissions(final @NonNull String uri, final @Nullable String contextId) {
+        final GeckoBundle msg = new GeckoBundle(2);
         msg.putString("uri", uri);
+        msg.putString("contextId", createSafeSessionContextId(contextId));
         return EventDispatcher.getInstance().queryBundle("GeckoView:GetPermissionsByURI", msg).map(bundle -> {
             final GeckoBundle[] permsArray = bundle.getBundleArray("permissions");
             return ContentPermission.fromBundleArray(permsArray);
         });
+    }
+
+    /**
+     * Set a new value for an existing permission.
+     *
+     * @param perm A {@link ContentPermission} that you wish to update the value of.
+     * @param value The new value for the permission.
+     */
+    @AnyThread
+    public void setPermission(final @NonNull ContentPermission perm, final @ContentPermission.Value int value) {
+        final GeckoBundle msg = perm.toGeckoBundle();
+        msg.putInt("newValue", value);
+        EventDispatcher.getInstance().dispatch("GeckoView:SetPermission", msg);
     }
 }
