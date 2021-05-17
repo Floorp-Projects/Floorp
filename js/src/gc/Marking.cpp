@@ -17,8 +17,6 @@
 #include <initializer_list>
 #include <type_traits>
 
-#include "jsfriendapi.h"
-
 #include "builtin/ModuleObject.h"
 #include "debugger/DebugAPI.h"
 #include "gc/GCInternals.h"
