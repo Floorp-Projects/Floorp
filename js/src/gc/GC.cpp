@@ -211,7 +211,6 @@
 #  include <unistd.h>
 #endif
 
-#include "jsapi.h"
 #include "jsfriendapi.h"
 #include "jstypes.h"
 
