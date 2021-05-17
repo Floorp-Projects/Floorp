@@ -10,7 +10,7 @@
  */
 
 add_task(
-  threadFrontTest(async ({ threadFront, debuggee }) => {
+  threadFrontTest(async ({ threadFront, debuggee, commands }) => {
     const packet1 = await executeOnNextTickAndWaitForPause(
       () => evalCode(debuggee),
       threadFront
@@ -18,7 +18,10 @@ add_task(
 
     const source = await getSourceById(threadFront, packet1.frame.where.actor);
 
-    threadFront.pauseOnExceptions(true, false);
+    await commands.threadConfigurationCommand.updateConfiguration({
+      pauseOnExceptions: true,
+      ignoreCaughtExceptions: false,
+    });
     const location = { sourceUrl: source.url, line: 3 };
     threadFront.setBreakpoint(location, { condition: "throw new Error()" });
 

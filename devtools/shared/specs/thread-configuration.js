@@ -8,7 +8,7 @@ const { generateActorSpec, Arg, types } = require("devtools/shared/protocol");
 
 types.addDictType("thread-configuration.configuration", {
   pauseOnExceptions: "nullable:boolean",
-  IgnoreCaughtExceptions: "nullable:boolean",
+  ignoreCaughtExceptions: "nullable:boolean",
 });
 
 const threadConfigurationSpec = generateActorSpec({
