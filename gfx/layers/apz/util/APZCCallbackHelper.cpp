@@ -339,8 +339,32 @@ void APZCCallbackHelper::UpdateRootFrame(const RepaintRequest& aRequest) {
 
     // The pres shell resolution is updated by the the async zoom since the
     // last paint.
+    // We want to calculate the new presshell resolution as
+    // |aRequest.GetPresShellResolution() * aRequest.GetAsyncZoom()| but that
+    // calculation can lead to small inaccuracies due to limited floating point
+    // precision. Specifically,
+    // clang-format off
+    // asyncZoom = zoom / layerPixelsPerCSSPixel
+    //           = zoom / (devPixelsPerCSSPixel * cumulativeResolution)
+    // clang-format on
+    // Since this is a root frame we generally do not allow css transforms to
+    // scale it, so it is very likely that cumulativeResolution ==
+    // presShellResoluion. So
+    // clang-format off
+    // newPresShellResoluion = presShellResoluion * asyncZoom
+    // = presShellResoluion * zoom / (devPixelsPerCSSPixel * presShellResoluion)
+    // = zoom / devPixelsPerCSSPixel
+    // clang-format on
+    // However, we want to keep the calculation general and so we do not assume
+    // presShellResoluion == cumulativeResolution, but rather factor those
+    // values out so they cancel and the floating point division has a very high
+    // probability of being exactly 1.
     presShellResolution =
-        aRequest.GetPresShellResolution() * aRequest.GetAsyncZoom().scale;
+        (aRequest.GetPresShellResolution() /
+         aRequest.GetCumulativeResolution().ToScaleFactor().scale) *
+        (aRequest.GetZoom().ToScaleFactor() /
+         aRequest.GetDevPixelsPerCSSPixel())
+            .scale;
     presShell->SetResolutionAndScaleTo(presShellResolution,
                                        ResolutionChangeOrigin::Apz);
 
