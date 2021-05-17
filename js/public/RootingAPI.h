@@ -1051,6 +1051,26 @@ class JS_PUBLIC_API AutoGCRooter {
   void operator=(AutoGCRooter& ida) = delete;
 } JS_HAZ_ROOTED_BASE;
 
+/**
+ * Custom rooting behavior for internal and external clients.
+ *
+ * Deprecated. Where possible, use Rooted<> instead.
+ */
+class MOZ_RAII JS_PUBLIC_API CustomAutoRooter : private AutoGCRooter {
+ public:
+  template <typename CX>
+  explicit CustomAutoRooter(const CX& cx)
+      : AutoGCRooter(cx, AutoGCRooter::Kind::Custom) {}
+
+  friend void AutoGCRooter::trace(JSTracer* trc);
+
+ protected:
+  virtual ~CustomAutoRooter() = default;
+
+  /** Supplied by derived class to trace roots. */
+  virtual void trace(JSTracer* trc) = 0;
+};
+
 namespace detail {
 
 template <typename T>
