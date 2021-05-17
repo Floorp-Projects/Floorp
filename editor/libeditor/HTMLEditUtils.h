@@ -120,21 +120,21 @@ class HTMLEditUtils final {
   static bool IsFormatNode(nsINode* aNode);
   static bool IsNodeThatCanOutdent(nsINode* aNode);
   static bool IsHeader(nsINode& aNode);
-  static bool IsListItem(nsINode* aNode);
+  static bool IsListItem(const nsINode* aNode);
   static bool IsTable(nsINode* aNode);
   static bool IsTableRow(nsINode* aNode);
   static bool IsAnyTableElement(nsINode* aNode);
   static bool IsAnyTableElementButNotTable(nsINode* aNode);
-  static bool IsTableCell(nsINode* node);
+  static bool IsTableCell(const nsINode* aNode);
   static bool IsTableCellOrCaption(nsINode& aNode);
   static bool IsAnyListElement(nsINode* aNode);
   static bool IsPre(nsINode* aNode);
   static bool IsImage(nsINode* aNode);
   static bool IsLink(nsINode* aNode);
-  static bool IsNamedAnchor(nsINode* aNode);
+  static bool IsNamedAnchor(const nsINode* aNode);
   static bool IsMozDiv(nsINode* aNode);
   static bool IsMailCite(nsINode* aNode);
-  static bool IsFormWidget(nsINode* aNode);
+  static bool IsFormWidget(const nsINode* aNode);
   static bool SupportsAlignAttr(nsINode& aNode);
 
   static bool CanNodeContain(const nsINode& aParent, const nsIContent& aChild) {
@@ -252,15 +252,15 @@ class HTMLEditUtils final {
    * But if you call this a lot, please specify proper editing host (or parent
    * block) for the performance.
    */
-  static bool IsVisibleTextNode(dom::Text& aText,
-                                Element* aEditingHost = nullptr);
+  static bool IsVisibleTextNode(const dom::Text& aText,
+                                const Element* aEditingHost = nullptr);
 
   /**
    * IsInVisibleTextFrames() returns true if all text in aText is in visible
    * text frames.  Callers have to guarantee that there is no pending reflow.
    */
   static bool IsInVisibleTextFrames(nsPresContext* aPresContext,
-                                    dom::Text& aText);
+                                    const dom::Text& aText);
 
   /**
    * IsVisibleBRElement() and IsInvisibleBRElement() return true if aContent is
@@ -298,14 +298,57 @@ class HTMLEditUtils final {
     SafeToAskLayout,
   };
   using EmptyCheckOptions = EnumSet<EmptyCheckOption, uint32_t>;
-  static bool IsEmptyNode(nsPresContext* aPresContext, nsINode& aNode,
+  static bool IsEmptyNode(nsPresContext* aPresContext, const nsINode& aNode,
                           const EmptyCheckOptions& aOptions = {},
                           bool* aSeenBR = nullptr);
-  static bool IsEmptyNode(nsINode& aNode,
+  static bool IsEmptyNode(const nsINode& aNode,
                           const EmptyCheckOptions& aOptions = {},
                           bool* aSeenBR = nullptr) {
     MOZ_ASSERT(!aOptions.contains(EmptyCheckOption::SafeToAskLayout));
     return IsEmptyNode(nullptr, aNode, aOptions, aSeenBR);
+  }
+
+  /**
+   * IsEmptyInlineContent() returns true if aContent is an inline node and it
+   * does not have meaningful content.
+   */
+  static bool IsEmptyInlineContent(const nsIContent& aContent) {
+    return HTMLEditUtils::IsInlineElement(aContent) &&
+           HTMLEditUtils::IsContainerNode(aContent) &&
+           HTMLEditUtils::IsEmptyNode(
+               aContent, {EmptyCheckOption::TreatSingleBRElementAsVisible});
+  }
+
+  /**
+   * IsEmptyOneHardLine() returns true if aArrayOfContents does not represent
+   * 2 or more lines and have meaningful content.
+   */
+  static bool IsEmptyOneHardLine(
+      nsTArray<OwningNonNull<nsIContent>>& aArrayOfContents) {
+    if (NS_WARN_IF(aArrayOfContents.IsEmpty())) {
+      return true;
+    }
+
+    bool brElementHasFound = false;
+    for (OwningNonNull<nsIContent>& content : aArrayOfContents) {
+      if (!EditorUtils::IsEditableContent(content,
+                                          EditorUtils::EditorType::HTML)) {
+        continue;
+      }
+      if (content->IsHTMLElement(nsGkAtoms::br)) {
+        // If there are 2 or more `<br>` elements, it's not empty line since
+        // there may be only one `<br>` element in a hard line.
+        if (brElementHasFound) {
+          return false;
+        }
+        brElementHasFound = true;
+        continue;
+      }
+      if (!HTMLEditUtils::IsEmptyInlineContent(content)) {
+        return false;
+      }
+    }
+    return true;
   }
 
   /**

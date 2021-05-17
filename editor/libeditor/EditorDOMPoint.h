@@ -85,8 +85,8 @@ class EditorDOMPointBase final {
       : mParent(nullptr), mChild(nullptr), mIsChildInitialized(false) {}
 
   template <typename ContainerType>
-  EditorDOMPointBase(ContainerType* aContainer, int32_t aOffset)
-      : mParent(aContainer),
+  EditorDOMPointBase(const ContainerType* aContainer, int32_t aOffset)
+      : mParent(const_cast<ContainerType*>(aContainer)),
         mChild(nullptr),
         mOffset(mozilla::Some(aOffset)),
         mIsChildInitialized(false) {
