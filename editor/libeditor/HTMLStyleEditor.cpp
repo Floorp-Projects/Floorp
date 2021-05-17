@@ -1456,7 +1456,8 @@ bool HTMLEditor::IsEndOfContainerOrEqualsOrAfterLastEditableChild(
     return false;
   }
 
-  nsIContent* lastEditableChild = GetLastEditableChild(*aPoint.GetContainer());
+  nsIContent* lastEditableChild = HTMLEditUtils::GetLastChild(
+      *aPoint.GetContainer(), {WalkTreeOption::IgnoreNonEditableNode});
   if (!lastEditableChild) {
     return true;
   }
