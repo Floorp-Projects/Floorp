@@ -2003,30 +2003,28 @@ fn is_ivec(ty: &Type) -> bool {
     }
 }
 
-fn compatible_type(lhs: &Type, rhs: &Type) -> bool {
+fn can_implicitly_convert_to(src: &Type, dst: &Type) -> bool {
     // XXX: use an underlying type helper
-    if lhs == &Type::new(TypeKind::Double) && rhs == &Type::new(TypeKind::Float) {
+    if src == &Type::new(TypeKind::Double) && dst == &Type::new(TypeKind::Float) {
+        // We're not supposed to implicitly convert from double to float but glsl 4 has a bug
+        // where it parses unannotated float constants as double.
         true
-    } else if rhs == &Type::new(TypeKind::Double) && lhs == &Type::new(TypeKind::Float) {
+    } else if dst == &Type::new(TypeKind::Double) && src == &Type::new(TypeKind::Float) {
         true
-    } else if rhs == &Type::new(TypeKind::Int) &&
-        (lhs == &Type::new(TypeKind::Float) || lhs == &Type::new(TypeKind::Double))
+    } else if (dst == &Type::new(TypeKind::Float) || dst == &Type::new(TypeKind::Double)) &&
+        src == &Type::new(TypeKind::Int)
     {
         true
-    } else if (rhs == &Type::new(TypeKind::Float) || rhs == &Type::new(TypeKind::Double)) &&
-        lhs == &Type::new(TypeKind::Int)
+    } else if (dst == &Type::new(TypeKind::Vec2) || dst == &Type::new(TypeKind::DVec2)) &&
+        src == &Type::new(TypeKind::IVec2)
     {
         true
-    } else if (rhs == &Type::new(TypeKind::Vec2) || rhs == &Type::new(TypeKind::DVec2)) &&
-        lhs == &Type::new(TypeKind::IVec2)
-    {
-        true
-    } else if rhs == &Type::new(TypeKind::IVec2) &&
-        (lhs == &Type::new(TypeKind::Vec2) || lhs == &Type::new(TypeKind::DVec2))
+    } else if dst == &Type::new(TypeKind::IVec2) &&
+        (src == &Type::new(TypeKind::Vec2) || src == &Type::new(TypeKind::DVec2))
     {
         true
     } else {
-        lhs.kind == rhs.kind && lhs.array_sizes == rhs.array_sizes
+        src.kind == dst.kind && src.array_sizes == dst.array_sizes
     }
 }
 
@@ -2340,6 +2338,8 @@ fn translate_expression(state: &mut State, e: &syntax::Expr) -> Expr {
                                     // Search for a signature where all parameter types are
                                     // compatible. If there are many compatible signatures,
                                     // then choose the one with the most exact matches.
+                                    // This is an approximation of the algorith described in
+                                    // the "Function Definitions" section of the spec.
                                     let mut ret = None;
                                     let mut best_score = 0;
                                     'next_sig: for sig in &fn_ty.signatures {
@@ -2347,7 +2347,7 @@ fn translate_expression(state: &mut State, e: &syntax::Expr) -> Expr {
                                         for (e, p) in params.iter().zip(sig.params.iter()) {
                                             if e.ty == *p {
                                                 score += 1;
-                                            } else if !compatible_type(&e.ty, p) {
+                                            } else if !can_implicitly_convert_to(&e.ty, p) {
                                                 continue 'next_sig;
                                             }
                                         }
@@ -2393,7 +2393,7 @@ fn translate_expression(state: &mut State, e: &syntax::Expr) -> Expr {
                                                     }
                                                     _ => {}
                                                 }
-                                                compatible_type(&e.ty, &d.ty)
+                                                can_implicitly_convert_to(&e.ty, &d.ty)
                                             }
                                             FunctionParameterDeclaration::Unnamed(..) => panic!(),
                                         };
