@@ -4086,7 +4086,8 @@ nsresult HTMLEditor::RemoveBlockContainerWithTransaction(Element& aElement) {
     if (nsIContent* nextSibling = HTMLEditUtils::GetNextSibling(
             aElement, {WalkTreeOption::IgnoreNonEditableNode})) {
       if (nextSibling && !HTMLEditUtils::IsBlockElement(*nextSibling)) {
-        if (nsIContent* lastChild = GetLastEditableChild(aElement)) {
+        if (nsIContent* lastChild = HTMLEditUtils::GetLastChild(
+                aElement, {WalkTreeOption::IgnoreNonEditableNode})) {
           if (!HTMLEditUtils::IsBlockElement(*lastChild) &&
               !lastChild->IsHTMLElement(nsGkAtoms::br)) {
             Result<RefPtr<Element>, nsresult> resultOfInsertingBRElement =
@@ -4947,21 +4948,14 @@ bool HTMLEditor::IsLastEditableChild(nsINode* aNode) const {
   if (NS_WARN_IF(!parentNode)) {
     return false;
   }
-  return GetLastEditableChild(*parentNode) == aNode;
+  return HTMLEditUtils::GetLastChild(
+             *parentNode, {WalkTreeOption::IgnoreNonEditableNode}) == aNode;
 }
 
 nsIContent* HTMLEditor::GetFirstEditableChild(nsINode& aNode) const {
   nsIContent* child = aNode.GetFirstChild();
   while (child && !EditorUtils::IsEditableContent(*child, EditorType::HTML)) {
     child = child->GetNextSibling();
-  }
-  return child;
-}
-
-nsIContent* HTMLEditor::GetLastEditableChild(nsINode& aNode) const {
-  nsIContent* child = aNode.GetLastChild();
-  while (child && !EditorUtils::IsEditableContent(*child, EditorType::HTML)) {
-    child = child->GetPreviousSibling();
   }
   return child;
 }
@@ -5557,7 +5551,8 @@ nsresult HTMLEditor::CopyLastEditableChildStylesWithTransaction(
   // Then, if found one is a <br> element, look for non-<br> element.
   nsIContent* deepestEditableContent = nullptr;
   for (nsCOMPtr<nsIContent> child = previousBlock.get(); child;
-       child = GetLastEditableChild(*child)) {
+       child = HTMLEditUtils::GetLastChild(
+           *child, {WalkTreeOption::IgnoreNonEditableNode})) {
     deepestEditableContent = child;
   }
   while (deepestEditableContent &&
