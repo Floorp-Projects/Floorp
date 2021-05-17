@@ -761,6 +761,10 @@ pub struct TextureCache {
     /// Maximum texture size supported by hardware.
     max_texture_size: i32,
 
+    /// Maximum texture size before it is considered preferable to break the
+    /// texture into tiles.
+    tiling_threshold: i32,
+
     /// Settings on using texture unit swizzling.
     swizzle: Option<SwizzleSettings>,
 
@@ -808,6 +812,7 @@ impl TextureCache {
 
     pub fn new(
         max_texture_size: i32,
+        tiling_threshold: i32,
         default_picture_tile_size: DeviceIntSize,
         color_formats: TextureFormatPair<ImageFormat>,
         swizzle: Option<SwizzleSettings>,
@@ -830,6 +835,7 @@ impl TextureCache {
                 default_picture_tile_size,
             ),
             max_texture_size,
+            tiling_threshold,
             swizzle,
             debug_flags: DebugFlags::empty(),
             next_id: next_texture_id,
@@ -853,6 +859,7 @@ impl TextureCache {
         image_format: ImageFormat,
     ) -> Self {
         let mut cache = Self::new(
+            max_texture_size,
             max_texture_size,
             crate::picture::TILE_SIZE_DEFAULT,
             TextureFormatPair::from(image_format),
@@ -1036,6 +1043,10 @@ impl TextureCache {
 
     pub fn max_texture_size(&self) -> i32 {
         self.max_texture_size
+    }
+
+    pub fn tiling_threshold(&self) -> i32 {
+        self.tiling_threshold
     }
 
     #[cfg(feature = "replay")]

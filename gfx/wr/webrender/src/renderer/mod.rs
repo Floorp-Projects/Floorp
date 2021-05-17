@@ -959,6 +959,9 @@ impl Renderer {
             max_internal_texture_size = max_internal_texture_size.min(internal_limit);
         }
 
+        let image_tiling_threshold = options.image_tiling_threshold
+            .min(max_internal_texture_size);
+
         device.begin_frame();
 
         let shaders = match shaders {
@@ -1230,6 +1233,7 @@ impl Renderer {
 
             let texture_cache = TextureCache::new(
                 max_internal_texture_size,
+                image_tiling_threshold,
                 picture_tile_size,
                 color_cache_formats,
                 swizzle_settings,
@@ -5316,6 +5320,7 @@ pub struct RendererOptions {
     pub clear_color: Option<ColorF>,
     pub enable_clear_scissor: bool,
     pub max_internal_texture_size: Option<i32>,
+    pub image_tiling_threshold: i32,
     pub upload_method: UploadMethod,
     /// The default size in bytes for PBOs used to upload texture data.
     pub upload_pbo_default_size: usize,
@@ -5400,6 +5405,7 @@ impl Default for RendererOptions {
             clear_color: Some(ColorF::new(1.0, 1.0, 1.0, 1.0)),
             enable_clear_scissor: true,
             max_internal_texture_size: None,
+            image_tiling_threshold: 4096,
             // This is best as `Immediate` on Angle, or `Pixelbuffer(Dynamic)` on GL,
             // but we are unable to make this decision here, so picking the reasonable medium.
             upload_method: UploadMethod::PixelBuffer(ONE_TIME_USAGE_HINT),
