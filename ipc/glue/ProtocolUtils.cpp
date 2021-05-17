@@ -233,11 +233,6 @@ void SentinelReadError(const char* aClassName) {
   MOZ_CRASH_UNSAFE_PRINTF("incorrect sentinel when reading %s", aClassName);
 }
 
-void TableToArray(const nsTHashSet<void*>& aTable, nsTArray<void*>& aArray) {
-  MOZ_ASSERT(aArray.IsEmpty());
-  aArray = ToArray(aTable);
-}
-
 ActorLifecycleProxy::ActorLifecycleProxy(IProtocol* aActor) : mActor(aActor) {
   MOZ_ASSERT(mActor);
   MOZ_ASSERT(mActor->CanSend(),
