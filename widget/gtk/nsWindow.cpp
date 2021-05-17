@@ -6866,7 +6866,10 @@ static GdkCursor* get_gtk_cursor(nsCursor aCursor) {
       if (!gdkcursor) newType = MOZ_CURSOR_NOT_ALLOWED;
       break;
     case eCursor_vertical_text:
-      newType = MOZ_CURSOR_VERTICAL_TEXT;
+      gdkcursor = gdk_cursor_new_from_name(defaultDisplay, "vertical-text");
+      if (!gdkcursor) {
+        newType = MOZ_CURSOR_VERTICAL_TEXT;
+      }
       break;
     case eCursor_all_scroll:
       gdkcursor = gdk_cursor_new_for_display(defaultDisplay, GDK_FLEUR);
