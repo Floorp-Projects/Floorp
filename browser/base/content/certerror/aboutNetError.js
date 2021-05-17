@@ -1273,18 +1273,9 @@ function addAutofocus(selector, position = "afterbegin") {
   if (window.top == window) {
     var button = document.querySelector(selector);
     var parent = button.parentNode;
+    button.remove();
+    button.setAttribute("autofocus", "true");
     parent.insertAdjacentElement(position, button);
-    // It's possible addAutofocus was called via the DOMContentLoaded event
-    // handler and that the button has no frame. Things without a frame cannot
-    // be focused. We use a requestAnimationFrame to queue up the focus to occur
-    // once the button has its frame. We also use a setTimeout(0) to try to queue
-    // the focus at the beginning of the next frame to reduce the chances of causing
-    // a sync layout flush.
-    requestAnimationFrame(() => {
-      setTimeout(() => {
-        button.focus({ preventFocusRing: true });
-      }, 0);
-    });
   }
 }
 
