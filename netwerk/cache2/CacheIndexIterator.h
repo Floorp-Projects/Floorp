@@ -40,14 +40,14 @@ class CacheIndexIterator {
   nsresult CloseInternal(nsresult aStatus);
 
   bool ShouldBeNewAdded() { return mAddNew; }
-  virtual void AddRecord(CacheIndexRecordWrapper* aRecord);
-  bool RemoveRecord(CacheIndexRecordWrapper* aRecord);
-  bool ReplaceRecord(CacheIndexRecordWrapper* aOldRecord,
-                     CacheIndexRecordWrapper* aNewRecord);
+  virtual void AddRecord(CacheIndexRecord* aRecord);
+  bool RemoveRecord(CacheIndexRecord* aRecord);
+  bool ReplaceRecord(CacheIndexRecord* aOldRecord,
+                     CacheIndexRecord* aNewRecord);
 
   nsresult mStatus;
   RefPtr<CacheIndex> mIndex;
-  nsTArray<RefPtr<CacheIndexRecordWrapper>> mRecords;
+  nsTArray<CacheIndexRecord*> mRecords;
   bool mAddNew;
 };
 
