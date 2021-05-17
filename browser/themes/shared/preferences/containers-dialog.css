@@ -4,12 +4,6 @@
 
 %include ../../../components/contextualidentity/content/usercontext.css
 
-:root {
-  --preference-selected-color: #0996f8;
-  --preference-unselected-color: #333;
-  --preference-active-color: #858585;
-}
-
 #name {
   -moz-box-flex: 1;
 }
@@ -31,7 +25,7 @@
 }
 
 .icon-buttons > radio > .userContext-icon {
-  fill: #4d4d4d;
+  fill: var(--in-content-text-color);
 }
 
 .radio-buttons > radio {
@@ -44,13 +38,13 @@ radio > .userContext-icon {
 }
 
 .radio-buttons > radio[selected=true] {
-  outline-color: var(--preference-unselected-color);
+  outline-color: var(--in-content-text-color);
 }
 
 .radio-buttons > radio[focused=true] {
-  outline-color: var(--preference-selected-color);
+  outline-color: var(--in-content-accent-color);
 }
 
 .radio-buttons > radio:hover:active {
-  outline-color: var(--preference-active-color);
+  outline-color: var(--in-content-accent-color-active);
 }
