@@ -919,7 +919,6 @@ class HTMLEditor final : public TextEditor,
 
   bool IsFirstEditableChild(nsINode* aNode) const;
   bool IsLastEditableChild(nsINode* aNode) const;
-  nsIContent* GetFirstEditableChild(nsINode& aNode) const;
 
   nsIContent* GetFirstEditableLeaf(nsINode& aNode) const;
   nsIContent* GetLastEditableLeaf(nsINode& aNode) const;

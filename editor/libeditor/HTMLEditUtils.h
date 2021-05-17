@@ -501,13 +501,29 @@ class HTMLEditUtils final {
   }
 
   /**
-   * GetLastChild() returns the first child of aNode which does not match with
-   * aOption.
+   * GetLastChild() and GetFirstChild() return the first or last child of aNode
+   * which does not match with aOption.
    */
   static nsIContent* GetLastChild(const nsINode& aNode,
                                   const WalkTreeOptions& aOptions) {
     for (nsIContent* child = aNode.GetLastChild(); child;
          child = child->GetPreviousSibling()) {
+      if (HTMLEditUtils::IsContentIgnored(*child, aOptions)) {
+        continue;
+      }
+      if (aOptions.contains(WalkTreeOption::StopAtBlockBoundary) &&
+          HTMLEditUtils::IsBlockElement(*child)) {
+        return nullptr;
+      }
+      return child;
+    }
+    return nullptr;
+  }
+
+  static nsIContent* GetFirstChild(const nsINode& aNode,
+                                   const WalkTreeOptions& aOptions) {
+    for (nsIContent* child = aNode.GetFirstChild(); child;
+         child = child->GetNextSibling()) {
       if (HTMLEditUtils::IsContentIgnored(*child, aOptions)) {
         continue;
       }

@@ -5272,8 +5272,8 @@ nsresult HTMLEditor::AlignBlockContentsWithDivElement(
 
   // XXX I don't understand why we should NOT align non-editable children
   //     with modifying EDITABLE `<div>` element.
-  nsCOMPtr<nsIContent> firstEditableContent =
-      GetFirstEditableChild(aBlockElement);
+  nsCOMPtr<nsIContent> firstEditableContent = HTMLEditUtils::GetFirstChild(
+      aBlockElement, {WalkTreeOption::IgnoreNonEditableNode});
   if (!firstEditableContent) {
     // This block has no editable content, nothing to align.
     return NS_OK;
@@ -5344,8 +5344,9 @@ size_t HTMLEditor::CollectChildren(
   MOZ_ASSERT(IsEditActionDataAvailable());
 
   size_t numberOfFoundChildren = 0;
-  for (nsIContent* content = GetFirstEditableChild(aNode); content;
-       content = content->GetNextSibling()) {
+  for (nsIContent* content = HTMLEditUtils::GetFirstChild(
+           aNode, {WalkTreeOption::IgnoreNonEditableNode});
+       content; content = content->GetNextSibling()) {
     if ((aCollectListChildren == CollectListChildren::Yes &&
          (HTMLEditUtils::IsAnyListElement(content) ||
           HTMLEditUtils::IsListItem(content))) ||
@@ -7766,7 +7767,8 @@ nsresult HTMLEditor::JoinNearestEditableNodesWithTransaction(
     return NS_ERROR_FAILURE;
   }
 
-  nsCOMPtr<nsIContent> firstRight = GetFirstEditableChild(aNodeRight);
+  nsCOMPtr<nsIContent> firstRight = HTMLEditUtils::GetFirstChild(
+      aNodeRight, {WalkTreeOption::IgnoreNonEditableNode});
   if (NS_WARN_IF(!firstRight)) {
     return NS_ERROR_FAILURE;
   }
@@ -8051,7 +8053,8 @@ nsresult HTMLEditor::EnsureCaretInBlockElement(Element& aElement) {
   }
 
   // selection is before block.  put at start of block.
-  nsIContent* firstEditableContent = GetFirstEditableChild(aElement);
+  nsIContent* firstEditableContent = HTMLEditUtils::GetFirstChild(
+      aElement, {WalkTreeOption::IgnoreNonEditableNode});
   if (!firstEditableContent) {
     firstEditableContent = &aElement;
   }
@@ -9017,8 +9020,8 @@ nsresult HTMLEditor::EnsureHardLineBeginsWithFirstChildOf(
     Element& aRemovingContainerElement) {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
-  nsIContent* firstEditableChild =
-      GetFirstEditableChild(aRemovingContainerElement);
+  nsIContent* firstEditableChild = HTMLEditUtils::GetFirstChild(
+      aRemovingContainerElement, {WalkTreeOption::IgnoreNonEditableNode});
   if (!firstEditableChild) {
     return NS_OK;
   }
