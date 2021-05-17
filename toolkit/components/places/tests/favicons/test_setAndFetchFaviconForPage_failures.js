@@ -111,7 +111,7 @@ add_task(async function() {
   // This error icon must stay in sync with FAVICON_ERRORPAGE_URL in
   // nsIFaviconService.idl, aboutCertError.xhtml and netError.xhtml.
   let faviconErrorPageURI = Services.io.newURI(
-    "chrome://global/skin/icons/warning.svg"
+    "chrome://global/skin/icons/info.svg"
   );
   pageURI = Services.io.newURI("http://example.com/errorIcon");
   await PlacesTestUtils.addVisits({
