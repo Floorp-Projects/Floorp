@@ -75,7 +75,7 @@ function TargetMixin(parentClass) {
     }
 
     on(eventName, listener) {
-      if (this._offResourceEvent.has(eventName)) {
+      if (this._offResourceEvent && this._offResourceEvent.has(eventName)) {
         // If a callsite sets an event listener for resource-(available|update)-form:
 
         // we want to remove the listener we set here in the constructor…
