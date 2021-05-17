@@ -51,7 +51,7 @@ interface nsIURI;
 native ReferrerPolicy(mozilla::dom::ReferrerPolicy);
 
 [scriptable, builtinclass, uuid(f75f502d-79fd-48be-a079-e5a7b8f80c8b)]
-interface nsIPrincipal : nsISerializable
+interface nsIPrincipal : nsISupports
 {
     /**
      * Returns whether the other principal is equivalent to this principal.

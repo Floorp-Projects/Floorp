@@ -21,6 +21,7 @@
 #include "nspr.h"
 #include "nsJSPrincipals.h"
 #include "mozilla/BasePrincipal.h"
+#include "mozilla/ContentPrincipal.h"
 #include "ExpandedPrincipal.h"
 #include "SystemPrincipal.h"
 #include "DomainPolicy.h"
@@ -1317,10 +1318,10 @@ nsScriptSecurityManager::PrincipalWithOA(
     if (!aOriginAttributes.isObject() || !attrs.Init(aCx, aOriginAttributes)) {
       return NS_ERROR_INVALID_ARG;
     }
-    RefPtr<ContentPrincipal> copy = new ContentPrincipal();
     auto* contentPrincipal = static_cast<ContentPrincipal*>(aPrincipal);
-    nsresult rv = copy->Init(contentPrincipal, attrs);
-    NS_ENSURE_SUCCESS(rv, rv);
+    RefPtr<ContentPrincipal> copy =
+        new ContentPrincipal(contentPrincipal, attrs);
+    NS_ENSURE_TRUE(copy, NS_ERROR_FAILURE);
     copy.forget(aReturnPrincipal);
   } else {
     // We do this for null principals, system principals (both fine)

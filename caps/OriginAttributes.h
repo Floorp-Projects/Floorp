@@ -85,6 +85,9 @@ class OriginAttributes : public dom::OriginAttributesDictionary {
   // returns an empty string.
   void CreateSuffix(nsACString& aStr) const;
 
+  // Like CreateSuffix, but returns an atom instead of producing a string.
+  already_AddRefed<nsAtom> CreateSuffixAtom() const;
+
   // Don't use this method for anything else than debugging!
   void CreateAnonymizedSuffix(nsACString& aStr) const;
 

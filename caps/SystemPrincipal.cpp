@@ -22,16 +22,20 @@ NS_IMPL_CLASSINFO(SystemPrincipal, nullptr,
 NS_IMPL_QUERY_INTERFACE_CI(SystemPrincipal, nsIPrincipal, nsISerializable)
 NS_IMPL_CI_INTERFACE_GETTER(SystemPrincipal, nsIPrincipal, nsISerializable)
 
-#define SYSTEM_PRINCIPAL_SPEC "[System Principal]"
+static constexpr nsLiteralCString kSystemPrincipalSpec =
+    "[System Principal]"_ns;
+
+SystemPrincipal::SystemPrincipal()
+    : BasePrincipal(eSystemPrincipal, kSystemPrincipalSpec,
+                    OriginAttributes()) {}
 
 already_AddRefed<SystemPrincipal> SystemPrincipal::Create() {
   RefPtr<SystemPrincipal> sp = new SystemPrincipal();
-  sp->FinishInit(nsLiteralCString(SYSTEM_PRINCIPAL_SPEC), OriginAttributes());
   return sp.forget();
 }
 
 nsresult SystemPrincipal::GetScriptLocation(nsACString& aStr) {
-  aStr.AssignLiteral(SYSTEM_PRINCIPAL_SPEC);
+  aStr.Assign(kSystemPrincipalSpec);
   return NS_OK;
 }
 
