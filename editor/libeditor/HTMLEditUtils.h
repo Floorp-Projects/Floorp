@@ -1095,6 +1095,47 @@ class HTMLEditUtils final {
   static Element* GetClosestAncestorAnyListElement(const nsIContent& aContent);
 
   /**
+   * GetMostDistantAncestorInlineElement() returns the most distant ancestor
+   * inline element between aContent and the aEditingHost.  Even if aEditingHost
+   * is an inline element, this method never returns aEditingHost as the result.
+   */
+  static nsIContent* GetMostDistantAncestorInlineElement(
+      const nsIContent& aContent, const Element* aEditingHost = nullptr) {
+    if (HTMLEditUtils::IsBlockElement(aContent)) {
+      return nullptr;
+    }
+
+    // If aNode is the editing host itself, there is no modifiable inline
+    // parent.
+    if (&aContent == aEditingHost) {
+      return nullptr;
+    }
+
+    // If aNode is outside of the <body> element, we don't support to edit
+    // such elements for now.
+    // XXX This should be MOZ_ASSERT after fixing bug 1413131 for avoiding
+    //     calling this expensive method.
+    if (aEditingHost && !aContent.IsInclusiveDescendantOf(aEditingHost)) {
+      return nullptr;
+    }
+
+    if (!aContent.GetParent()) {
+      return const_cast<nsIContent*>(&aContent);
+    }
+
+    // Looks for the highest inline parent in the editing host.
+    nsIContent* topMostInlineContent = const_cast<nsIContent*>(&aContent);
+    for (nsIContent* content : aContent.AncestorsOfType<nsIContent>()) {
+      if (content == aEditingHost ||
+          !HTMLEditUtils::IsInlineElement(*content)) {
+        break;
+      }
+      topMostInlineContent = content;
+    }
+    return topMostInlineContent;
+  }
+
+  /**
    * GetMostDistantAnscestorEditableEmptyInlineElement() returns most distant
    * ancestor which only has aEmptyContent or its ancestor, editable and
    * inline element.
