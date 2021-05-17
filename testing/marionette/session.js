@@ -565,7 +565,14 @@ class Capabilities extends Map {
    */
   toJSON() {
     let marshalled = marshal(this);
-    marshalled.timeouts = super.get("timeouts");
+
+    if (!("proxy" in marshalled)) {
+      marshalled.proxy = super.get("proxy");
+    }
+    if (!("timeouts" in marshalled)) {
+      marshalled.timeouts = super.get("timeouts");
+    }
+
     return marshalled;
   }
 
