@@ -601,6 +601,17 @@ toolbar:not(#TabsToolbar) > #personal-bookmarks {
  *
  * Attribute is controlled by browser.js:/gRemoteControl.
  */
+:root[remotecontrol] #remote-control-box {
+  visibility: visible;
+  padding-inline: var(--urlbar-icon-padding);
+}
+
+:root[remotecontrol] #remote-control-icon {
+  list-style-image: url(chrome://browser/content/static-robot.png);
+  width: 16px;
+  height: 16px;
+}
+
 :root[remotecontrol] #urlbar-background {
   background-image: repeating-linear-gradient(
     -45deg,
