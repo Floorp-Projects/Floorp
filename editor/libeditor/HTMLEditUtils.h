@@ -465,13 +465,29 @@ class HTMLEditUtils final {
                                     const Element* aAncestorLimiter = nullptr);
 
   /**
-   * GetPreviousSibling() returns the nearest sibling of aContent which does
-   * not match with aOption.
+   * GetPreviousSibling() and GetNextSibling() return the nearest sibling of
+   * aContent which does not match with aOption.
    */
   static nsIContent* GetPreviousSibling(const nsIContent& aContent,
                                         const WalkTreeOptions& aOptions) {
     for (nsIContent* sibling = aContent.GetPreviousSibling(); sibling;
          sibling = sibling->GetPreviousSibling()) {
+      if (HTMLEditUtils::IsContentIgnored(*sibling, aOptions)) {
+        continue;
+      }
+      if (aOptions.contains(WalkTreeOption::StopAtBlockBoundary) &&
+          HTMLEditUtils::IsBlockElement(*sibling)) {
+        return nullptr;
+      }
+      return sibling;
+    }
+    return nullptr;
+  }
+
+  static nsIContent* GetNextSibling(const nsIContent& aContent,
+                                    const WalkTreeOptions& aOptions) {
+    for (nsIContent* sibling = aContent.GetNextSibling(); sibling;
+         sibling = sibling->GetNextSibling()) {
       if (HTMLEditUtils::IsContentIgnored(*sibling, aOptions)) {
         continue;
       }

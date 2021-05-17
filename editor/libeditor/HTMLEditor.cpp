@@ -4083,7 +4083,8 @@ nsresult HTMLEditor::RemoveBlockContainerWithTransaction(Element& aElement) {
     // 3) last child of aNode is a br OR
     // 4) either is null
 
-    if (nsIContent* nextSibling = GetNextHTMLSibling(&aElement)) {
+    if (nsIContent* nextSibling = HTMLEditUtils::GetNextSibling(
+            aElement, {WalkTreeOption::IgnoreNonEditableNode})) {
       if (nextSibling && !HTMLEditUtils::IsBlockElement(*nextSibling)) {
         if (nsIContent* lastChild = GetLastEditableChild(aElement)) {
           if (!HTMLEditUtils::IsBlockElement(*lastChild) &&
@@ -4110,7 +4111,8 @@ nsresult HTMLEditor::RemoveBlockContainerWithTransaction(Element& aElement) {
     // 5) either is null
     if (!HTMLEditUtils::IsBlockElement(*previousSibling) &&
         !previousSibling->IsHTMLElement(nsGkAtoms::br)) {
-      if (nsIContent* nextSibling = GetNextHTMLSibling(&aElement)) {
+      if (nsIContent* nextSibling = HTMLEditUtils::GetNextSibling(
+              aElement, {WalkTreeOption::IgnoreNonEditableNode})) {
         if (!HTMLEditUtils::IsBlockElement(*nextSibling) &&
             !nextSibling->IsHTMLElement(nsGkAtoms::br)) {
           Result<RefPtr<Element>, nsresult> resultOfInsertingBRElement =
@@ -4926,20 +4928,6 @@ nsresult HTMLEditor::DeleteSelectionAndPrepareToCreateNode() {
   NS_WARNING_ASSERTION(!error.Failed(),
                        "Selection::CollapseInLimiter() failed");
   return error.StealNSResult();
-}
-
-nsIContent* HTMLEditor::GetNextHTMLSibling(nsINode* aNode,
-                                           SkipWhiteSpace aSkipWS) const {
-  MOZ_ASSERT(aNode);
-
-  nsIContent* content = aNode->GetNextSibling();
-  while (content &&
-         (!EditorUtils::IsEditableContent(*content, EditorType::HTML) ||
-          SkippableWhiteSpace(content, aSkipWS))) {
-    content = content->GetNextSibling();
-  }
-
-  return content;
 }
 
 bool HTMLEditor::IsFirstEditableChild(nsINode* aNode) const {
