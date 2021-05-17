@@ -518,7 +518,8 @@ nsresult HTMLEditor::SetInlinePropertyOnTextNode(
         return rv;
       }
     }
-    sibling = GetNextHTMLSibling(textNodeForTheRange);
+    sibling = HTMLEditUtils::GetNextSibling(
+        *textNodeForTheRange, {WalkTreeOption::IgnoreNonEditableNode});
     if (sibling && sibling->IsElement()) {
       OwningNonNull<Element> element(*sibling->AsElement());
       Result<bool, nsresult> result = ElementIsGoodContainerForTheStyle(
@@ -590,7 +591,8 @@ nsresult HTMLEditor::SetInlinePropertyOnNodeImpl(nsIContent& aContent,
   // First check if there's an adjacent sibling we can put our node into.
   nsCOMPtr<nsIContent> previousSibling = HTMLEditUtils::GetPreviousSibling(
       aContent, {WalkTreeOption::IgnoreNonEditableNode});
-  nsCOMPtr<nsIContent> nextSibling = GetNextHTMLSibling(&aContent);
+  nsCOMPtr<nsIContent> nextSibling = HTMLEditUtils::GetNextSibling(
+      aContent, {WalkTreeOption::IgnoreNonEditableNode});
   if (previousSibling && previousSibling->IsElement()) {
     OwningNonNull<Element> previousElement(*previousSibling->AsElement());
     Result<bool, nsresult> canMoveIntoPreviousSibling =
@@ -2433,7 +2435,8 @@ nsresult HTMLEditor::RelativeFontChangeOnTextNode(FontSize aDir,
                          "HTMLEditor::MoveNodeToEndWithTransaction() failed");
     return rv;
   }
-  sibling = GetNextHTMLSibling(textNodeForTheRange);
+  sibling = HTMLEditUtils::GetNextSibling(
+      *textNodeForTheRange, {WalkTreeOption::IgnoreNonEditableNode});
   if (sibling && sibling->IsHTMLElement(nodeType)) {
     // Following sib is already right kind of inline node; slide this over
     nsresult rv = MoveNodeWithTransaction(*textNodeForTheRange,
@@ -2565,7 +2568,8 @@ nsresult HTMLEditor::RelativeFontChangeOnNode(int32_t aSizeChange,
       return rv;
     }
 
-    sibling = GetNextHTMLSibling(aNode);
+    sibling = HTMLEditUtils::GetNextSibling(
+        *aNode, {WalkTreeOption::IgnoreNonEditableNode});
     if (sibling && sibling->IsHTMLElement(atom)) {
       // following sib is already right kind of inline node; slide this over
       // into it
