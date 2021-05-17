@@ -22,7 +22,7 @@ class PhabricatorCommandProvider(MachCommandBase):
         action="store_true",
         help="Force installation even if already installed.",
     )
-    def install_moz_phab(self, force=False):
+    def install_moz_phab(self, command_context, force=False):
         import logging
         import os
         import re

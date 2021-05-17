@@ -33,7 +33,7 @@ class WebIDLProvider(MachCommandBase):
     @CommandArgument(
         "interface", nargs="+", help="Interface(s) whose examples to generate."
     )
-    def webidl_example(self, interface):
+    def webidl_example(self, command_context, interface):
         from mozwebidlcodegen import BuildSystemWebIDL
 
         manager = self._spawn(BuildSystemWebIDL).manager
@@ -46,7 +46,7 @@ class WebIDLProvider(MachCommandBase):
         parser=get_test_parser,
         description="Run WebIDL tests (Interface Browser parser).",
     )
-    def webidl_test(self, **kwargs):
+    def webidl_test(self, command_context, **kwargs):
         sys.path.insert(0, os.path.join(self.topsrcdir, "other-licenses", "ply"))
 
         # Ensure the topobjdir exists. On a Taskcluster test run there won't be

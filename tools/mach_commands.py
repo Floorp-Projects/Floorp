@@ -38,7 +38,7 @@ class BustedProvider(MachCommandBase):
         category="misc",
         description="Query known bugs in our tooling, and file new ones.",
     )
-    def busted_default(self):
+    def busted_default(self, command_context):
         unresolved = _get_busted_bugs({"resolution": "---"})
         creation_time = datetime.now() - timedelta(days=15)
         creation_time = creation_time.strftime("%Y-%m-%dT%H-%M-%SZ")
@@ -72,7 +72,7 @@ class BustedProvider(MachCommandBase):
             "can also run `mach busted file general`."
         ),
     )
-    def busted_file(self, against):
+    def busted_file(self, command_context, against):
         import webbrowser
 
         if (
@@ -262,7 +262,9 @@ class PastebinProvider(MachCommandBase):
         default=None,
         help="Path to file for upload to paste.mozilla.org",
     )
-    def pastebin(self, list_highlighters, highlighter, expires, verbose, path):
+    def pastebin(
+        self, command_context, list_highlighters, highlighter, expires, verbose, path
+    ):
         import requests
 
         def verbose_print(*args, **kwargs):
@@ -436,7 +438,7 @@ class MozregressionCommand(MachCommandBase):
         description=("Regression range finder for nightly" " and inbound builds."),
         parser=mozregression_create_parser,
     )
-    def run(self, **options):
+    def run(self, command_context, **options):
         self.activate_virtualenv()
         mozregression = PypiBasedTool("mozregression")
         mozregression.run(**options)
@@ -450,7 +452,7 @@ class NodeCommands(MachCommandBase):
         description="Run the NodeJS interpreter used for building.",
     )
     @CommandArgument("args", nargs=argparse.REMAINDER)
-    def node(self, args):
+    def node(self, command_context, args):
         from mozbuild.nodeutil import find_node_executable
 
         # Avoid logging the command
@@ -470,7 +472,7 @@ class NodeCommands(MachCommandBase):
         description="Run the npm executable from the NodeJS used for building.",
     )
     @CommandArgument("args", nargs=argparse.REMAINDER)
-    def npm(self, args):
+    def npm(self, command_context, args):
         from mozbuild.nodeutil import find_npm_executable
 
         # Avoid logging the command
@@ -503,23 +505,23 @@ class LogspamCommand(MachCommandBase):
         category="misc",
         description=("Warning categorizer for treeherder test runs."),
     )
-    def logspam(self):
+    def logspam(self, command_context):
         pass
 
     @SubCommand("logspam", "report", parser=partial(logspam_create_parser, "report"))
-    def report(self, **options):
+    def report(self, command_context, **options):
         self.activate_virtualenv()
         logspam = PypiBasedTool("logspam")
         logspam.run(command="report", **options)
 
     @SubCommand("logspam", "bisect", parser=partial(logspam_create_parser, "bisect"))
-    def bisect(self, **options):
+    def bisect(self, command_context, **options):
         self.activate_virtualenv()
         logspam = PypiBasedTool("logspam")
         logspam.run(command="bisect", **options)
 
     @SubCommand("logspam", "file", parser=partial(logspam_create_parser, "file"))
-    def create(self, **options):
+    def create(self, command_context, **options):
         self.activate_virtualenv()
         logspam = PypiBasedTool("logspam")
         logspam.run(command="file", **options)

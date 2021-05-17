@@ -128,7 +128,7 @@ class BuiltinCommands(MachCommandBase):
         return commands_info
 
     @Command("mach-commands", category="misc", description="List all mach commands.")
-    def run_commands(self):
+    def run_commands(self, command_context):
         print("\n".join(self.commands))
 
     @Command(
@@ -143,7 +143,7 @@ class BuiltinCommands(MachCommandBase):
         nargs="?",
         help="Only display commands containing given substring.",
     )
-    def run_debug_commands(self, match=None):
+    def run_debug_commands(self, command_context, match=None):
         import inspect
 
         for command, handler in self.command_handlers.items():
@@ -169,7 +169,7 @@ class BuiltinCommands(MachCommandBase):
     @CommandArgument(
         "args", default=None, nargs=argparse.REMAINDER, help="Command to complete."
     )
-    def run_completion(self, args):
+    def run_completion(self, command_context, args):
         if not args:
             print("\n".join(self.commands))
             return
@@ -231,7 +231,7 @@ class BuiltinCommands(MachCommandBase):
         default=None,
         help="File path to save completion script.",
     )
-    def completion_bash(self, outfile):
+    def completion_bash(self, command_context, outfile):
         commands_subcommands = []
         case_options = []
         case_subcommands = []
@@ -325,7 +325,7 @@ class BuiltinCommands(MachCommandBase):
         default=None,
         help="File path to save completion script.",
     )
-    def completion_zsh(self, outfile):
+    def completion_zsh(self, command_context, outfile):
         commands_descriptions = []
         commands_subcommands = []
         case_options = []
@@ -420,7 +420,7 @@ class BuiltinCommands(MachCommandBase):
         default=None,
         help="File path to save completion script.",
     )
-    def completion_fish(self, outfile):
+    def completion_fish(self, command_context, outfile):
         def _append_opt_strs(comp, opt_strs):
             for opt in opt_strs:
                 if opt.startswith("--"):

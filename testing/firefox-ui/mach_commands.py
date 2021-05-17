@@ -98,7 +98,7 @@ class MachCommands(MachCommandBase):
         description="Run the functional test suite of Firefox UI tests.",
         parser=setup_argument_parser_functional,
     )
-    def run_firefox_ui_functional(self, **kwargs):
+    def run_firefox_ui_functional(self, command_context, **kwargs):
         try:
             kwargs["binary"] = kwargs["binary"] or self.get_binary_path("app")
         except BinaryNotFoundException as e:

@@ -57,7 +57,7 @@ class MachCommands(MachCommandBase):
         description="Run Android-specific commands.",
         conditions=[conditions.is_android],
     )
-    def android(self):
+    def android(self, command_context):
         pass
 
     @SubCommand(
@@ -67,8 +67,9 @@ class MachCommands(MachCommandBase):
         See http://firefox-source-docs.mozilla.org/build/buildsystem/toolchains.html#firefox-for-android-with-gradle""",  # NOQA: E501
     )
     @CommandArgument("args", nargs=argparse.REMAINDER)
-    def android_assemble_app(self, args):
+    def android_assemble_app(self, command_context, args):
         ret = self.gradle(
+            command_context,
             self.substs["GRADLE_ANDROID_APP_TASKS"] + ["-x", "lint"] + args,
             verbose=True,
         )
@@ -86,7 +87,7 @@ class MachCommands(MachCommandBase):
         help="config files, " "like [/path/to/ClassName-classes.txt]+",
     )
     @CommandArgument("args", nargs=argparse.REMAINDER)
-    def android_generate_sdk_bindings(self, inputs, args):
+    def android_generate_sdk_bindings(self, command_context, inputs, args):
         import itertools
 
         def stem(input):
@@ -101,6 +102,7 @@ class MachCommands(MachCommandBase):
         )
 
         ret = self.gradle(
+            command_context,
             self.substs["GRADLE_ANDROID_GENERATE_SDK_BINDINGS_TASKS"]
             + [bindings_args]
             + args,
@@ -115,8 +117,9 @@ class MachCommands(MachCommandBase):
         """Generate GeckoView JNI wrappers used when building GeckoView.""",
     )
     @CommandArgument("args", nargs=argparse.REMAINDER)
-    def android_generate_generated_jni_wrappers(self, args):
+    def android_generate_generated_jni_wrappers(self, command_context, args):
         ret = self.gradle(
+            command_context,
             self.substs["GRADLE_ANDROID_GENERATE_GENERATED_JNI_WRAPPERS_TASKS"] + args,
             verbose=True,
         )
@@ -129,7 +132,7 @@ class MachCommands(MachCommandBase):
         """Run Android api-lint.
 REMOVED/DEPRECATED: Use 'mach lint --linter android-api-lint'.""",
     )
-    def android_apilint_REMOVED(self):
+    def android_apilint_REMOVED(self, command_context):
         print(LINT_DEPRECATION_MESSAGE)
         return 1
 
@@ -139,7 +142,7 @@ REMOVED/DEPRECATED: Use 'mach lint --linter android-api-lint'.""",
         """Run Android test.
 REMOVED/DEPRECATED: Use 'mach lint --linter android-test'.""",
     )
-    def android_test_REMOVED(self):
+    def android_test_REMOVED(self, command_context):
         print(LINT_DEPRECATION_MESSAGE)
         return 1
 
@@ -149,7 +152,7 @@ REMOVED/DEPRECATED: Use 'mach lint --linter android-test'.""",
         """Run Android lint.
 REMOVED/DEPRECATED: Use 'mach lint --linter android-lint'.""",
     )
-    def android_lint_REMOVED(self):
+    def android_lint_REMOVED(self, command_context):
         print(LINT_DEPRECATION_MESSAGE)
         return 1
 
@@ -159,7 +162,7 @@ REMOVED/DEPRECATED: Use 'mach lint --linter android-lint'.""",
         """Run Android checkstyle.
 REMOVED/DEPRECATED: Use 'mach lint --linter android-checkstyle'.""",
     )
-    def android_checkstyle_REMOVED(self):
+    def android_checkstyle_REMOVED(self, command_context):
         print(LINT_DEPRECATION_MESSAGE)
         return 1
 
@@ -170,11 +173,12 @@ REMOVED/DEPRECATED: Use 'mach lint --linter android-checkstyle'.""",
         See http://firefox-source-docs.mozilla.org/build/buildsystem/toolchains.html#firefox-for-android-with-gradle""",  # NOQA: E501
     )
     @CommandArgument("args", nargs=argparse.REMAINDER)
-    def android_gradle_dependencies(self, args):
+    def android_gradle_dependencies(self, command_context, args):
         # We don't want to gate producing dependency archives on clean
         # lint or checkstyle, particularly because toolchain versions
         # can change the outputs for those processes.
         self.gradle(
+            command_context,
             self.substs["GRADLE_ANDROID_DEPENDENCIES_TASKS"] + ["--continue"] + args,
             verbose=True,
         )
@@ -188,17 +192,20 @@ REMOVED/DEPRECATED: Use 'mach lint --linter android-checkstyle'.""",
         See http://firefox-source-docs.mozilla.org/build/buildsystem/toolchains.html#firefox-for-android-with-gradle""",  # NOQA: E501
     )
     @CommandArgument("args", nargs=argparse.REMAINDER)
-    def android_archive_geckoview(self, args):
+    def android_archive_geckoview(self, command_context, args):
         ret = self.gradle(
-            self.substs["GRADLE_ANDROID_ARCHIVE_GECKOVIEW_TASKS"] + args, verbose=True
+            command_context,
+            self.substs["GRADLE_ANDROID_ARCHIVE_GECKOVIEW_TASKS"] + args,
+            verbose=True,
         )
 
         return ret
 
     @SubCommand("android", "build-geckoview_example", """Build geckoview_example """)
     @CommandArgument("args", nargs=argparse.REMAINDER)
-    def android_build_geckoview_example(self, args):
+    def android_build_geckoview_example(self, command_context, args):
         self.gradle(
+            command_context,
             self.substs["GRADLE_ANDROID_BUILD_GECKOVIEW_EXAMPLE_TASKS"] + args,
             verbose=True,
         )
@@ -214,8 +221,9 @@ REMOVED/DEPRECATED: Use 'mach lint --linter android-checkstyle'.""",
         "android", "install-geckoview_example", """Install geckoview_example """
     )
     @CommandArgument("args", nargs=argparse.REMAINDER)
-    def android_install_geckoview_example(self, args):
+    def android_install_geckoview_example(self, command_context, args):
         self.gradle(
+            command_context,
             self.substs["GRADLE_ANDROID_INSTALL_GECKOVIEW_EXAMPLE_TASKS"] + args,
             verbose=True,
         )
@@ -260,7 +268,13 @@ REMOVED/DEPRECATED: Use 'mach lint --linter android-checkstyle'.""",
         help="Use the specified message for commits.",
     )
     def android_geckoview_docs(
-        self, archive, upload, upload_branch, javadoc_path, upload_message
+        self,
+        command_context,
+        archive,
+        upload,
+        upload_branch,
+        javadoc_path,
+        upload_message,
     ):
 
         tasks = (
@@ -269,7 +283,7 @@ REMOVED/DEPRECATED: Use 'mach lint --linter android-checkstyle'.""",
             else self.substs["GRADLE_ANDROID_GECKOVIEW_DOCS_TASKS"]
         )
 
-        ret = self.gradle(tasks, verbose=True)
+        ret = self.gradle(command_context, tasks, verbose=True)
         if ret or not upload:
             return ret
 
@@ -383,7 +397,7 @@ REMOVED/DEPRECATED: Use 'mach lint --linter android-checkstyle'.""",
         help="Verbose output for what commands the build is running.",
     )
     @CommandArgument("args", nargs=argparse.REMAINDER)
-    def gradle(self, args, verbose=False):
+    def gradle(self, command_context, args, verbose=False):
         if not verbose:
             # Avoid logging the command
             self.log_manager.terminal_handler.setLevel(logging.CRITICAL)
@@ -442,7 +456,7 @@ REMOVED/DEPRECATED: Use 'mach lint --linter android-checkstyle'.""",
         )
 
     @Command("gradle-install", category="devenv", conditions=[REMOVED])
-    def gradle_install_REMOVED(self):
+    def gradle_install_REMOVED(self, command_context):
         pass
 
 
@@ -486,7 +500,13 @@ class AndroidEmulatorCommands(MachCommandBase):
         "--verbose", action="store_true", help="Log informative status messages."
     )
     def emulator(
-        self, version, wait=False, force_update=False, gpu=None, verbose=False
+        self,
+        command_context,
+        version,
+        wait=False,
+        force_update=False,
+        gpu=None,
+        verbose=False,
     ):
         from mozrunner.devices.android_device import AndroidEmulator
 

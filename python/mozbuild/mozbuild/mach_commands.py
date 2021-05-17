@@ -83,9 +83,8 @@ class Watch(MachCommandBase):
         action="store_true",
         help="Verbose output for what commands the watcher is running.",
     )
-    def watch(self, verbose=False):
+    def watch(self, command_context, verbose=False):
         """Watch and re-build (parts of) the source tree."""
-
         if not conditions.is_artifact_build(self):
             print(
                 "WARNING: mach watch only rebuilds the `mach build faster` parts of the tree!"
@@ -124,7 +123,7 @@ class CargoProvider(MachCommandBase):
     """Invoke cargo in useful ways."""
 
     @Command("cargo", category="build", description="Invoke cargo in useful ways.")
-    def cargo(self):
+    def cargo(self, command_context):
         self._sub_mach(["help", "cargo"])
         return 1
 
@@ -152,7 +151,9 @@ class CargoProvider(MachCommandBase):
         help="Run the tests in parallel using multiple processes.",
     )
     @CommandArgument("-v", "--verbose", action="store_true", help="Verbose output.")
-    def check(self, all_crates=None, crates=None, jobs=0, verbose=False):
+    def check(
+        self, command_context, all_crates=None, crates=None, jobs=0, verbose=False
+    ):
         # XXX duplication with `mach vendor rust`
         crates_and_roots = {
             "gkrust": "toolkit/library/rust",
@@ -208,7 +209,7 @@ class Doctor(MachCommandBase):
         action="store_true",
         help="Attempt to fix found problems.",
     )
-    def doctor(self, fix=None):
+    def doctor(self, command_context, fix=None):
         self.activate_virtualenv()
         from mozbuild.doctor import Doctor
 
@@ -234,7 +235,7 @@ class Clobber(MachCommandBase):
         "objdir and python).".format(", ".join(CLOBBER_CHOICES)),
     )
     @CommandArgument("--full", action="store_true", help="Perform a full clobber")
-    def clobber(self, what, full=False):
+    def clobber(self, command_context, what, full=False):
         """Clean up the source and object directories.
 
         Performing builds and running various commands generate various files.
@@ -357,7 +358,7 @@ class Logs(MachCommandBase):
         help="Filename to read log data from. Defaults to the log of the last "
         "mach command.",
     )
-    def show_log(self, log_file=None):
+    def show_log(self, command_context, log_file=None):
         if not log_file:
             path = self._get_state_filename("last_log.json")
             log_file = open(path, "rb")
@@ -446,7 +447,7 @@ class Warnings(MachCommandBase):
         help="Warnings report to display. If not defined, show the most "
         "recent report.",
     )
-    def summary(self, directory=None, report=None):
+    def summary(self, command_context, directory=None, report=None):
         database = self.database
 
         if directory:
@@ -487,7 +488,7 @@ class Warnings(MachCommandBase):
         help="Warnings report to display. If not defined, show the most "
         "recent report.",
     )
-    def list(self, directory=None, flags=None, report=None):
+    def list(self, command_context, directory=None, flags=None, report=None):
         database = self.database
 
         by_name = sorted(database.warnings)
@@ -645,6 +646,7 @@ class GTestCommands(MachCommandBase):
     )
     def gtest(
         self,
+        command_context,
         shuffle,
         jobs,
         gtest_filter,
@@ -876,7 +878,7 @@ class Package(MachCommandBase):
         action="store_true",
         help="Verbose output for what commands the packaging process is running.",
     )
-    def package(self, verbose=False):
+    def package(self, command_context, verbose=False):
         ret = self._run_make(
             directory=".", target="package", silent=not verbose, ensure_exit_code=False
         )
@@ -919,7 +921,7 @@ class Install(MachCommandBase):
         parser=setup_install_parser,
         description="Install the package on the machine (or device in the case of Android).",
     )
-    def install(self, **kwargs):
+    def install(self, command_context, **kwargs):
         if conditions.is_android(self):
             from mozrunner.devices.android_device import (
                 verify_android_device,
@@ -1228,7 +1230,7 @@ class RunProgram(MachCommandBase):
         parser=setup_run_parser,
         description="Run the compiled program, possibly under a debugger or DMD.",
     )
-    def run(self, **kwargs):
+    def run(self, command_context, **kwargs):
         if conditions.is_android(self):
             return self._run_android(**kwargs)
         if conditions.is_jsshell(self):
@@ -1838,7 +1840,7 @@ class Buildsymbols(MachCommandBase):
         category="post-build",
         description="Produce a package of Breakpad-format symbols.",
     )
-    def buildsymbols(self):
+    def buildsymbols(self, command_context):
         return self._run_make(
             directory=".", target="buildsymbols", ensure_exit_code=False
         )
@@ -1861,7 +1863,7 @@ class MachDebug(MachCommandBase):
     @CommandArgument(
         "--verbose", "-v", action="store_true", help="Print verbose output."
     )
-    def environment(self, format, output=None, verbose=False):
+    def environment(self, command_context, format, output=None, verbose=False):
         func = getattr(self, "_environment_%s" % format.replace(".", "_"))
 
         if output:
@@ -1960,7 +1962,7 @@ class Repackage(MachCommandBase):
         category="misc",
         description="Repackage artifacts into different formats.",
     )
-    def repackage(self):
+    def repackage(self, command_context):
         print("Usage: ./mach repackage [dmg|installer|mar] [args...]")
 
     @SubCommand(
@@ -1968,7 +1970,7 @@ class Repackage(MachCommandBase):
     )
     @CommandArgument("--input", "-i", type=str, required=True, help="Input filename")
     @CommandArgument("--output", "-o", type=str, required=True, help="Output filename")
-    def repackage_dmg(self, input, output):
+    def repackage_dmg(self, command_context, input, output):
         if not os.path.exists(input):
             print("Input file does not exist: %s" % input)
             return 1
@@ -2022,7 +2024,15 @@ class Repackage(MachCommandBase):
         help="Run UPX on the self-extraction stub.",
     )
     def repackage_installer(
-        self, tag, setupexe, package, output, package_name, sfx_stub, use_upx
+        self,
+        command_context,
+        tag,
+        setupexe,
+        package,
+        output,
+        package_name,
+        sfx_stub,
+        use_upx,
     ):
         from mozbuild.repackaging.installer import repackage_installer
 
@@ -2065,7 +2075,16 @@ class Repackage(MachCommandBase):
     )
     @CommandArgument("--output", "-o", type=str, required=True, help="Output filename")
     def repackage_msi(
-        self, wsx, version, locale, arch, setupexe, candle, light, output
+        self,
+        command_context,
+        wsx,
+        version,
+        locale,
+        arch,
+        setupexe,
+        candle,
+        light,
+        output,
     ):
         from mozbuild.repackaging.msi import repackage_msi
 
@@ -2089,7 +2108,7 @@ class Repackage(MachCommandBase):
         "--arch", type=str, required=True, help="The archtecture you are building."
     )
     @CommandArgument("--mar-channel-id", type=str, help="Mar channel id")
-    def repackage_mar(self, input, mar, output, arch, mar_channel_id):
+    def repackage_mar(self, command_context, input, mar, output, arch, mar_channel_id):
         from mozbuild.repackaging.mar import repackage_mar
 
         repackage_mar(
@@ -2120,7 +2139,7 @@ class L10NCommands(MachCommandBase):
     @CommandArgument(
         "--verbose", action="store_true", help="Log informative status messages."
     )
-    def package_l10n(self, verbose=False, locales=[]):
+    def package_l10n(self, command_context, verbose=False, locales=[]):
         if "RecursiveMake" not in self.substs["BUILD_BACKENDS"]:
             print(
                 "Artifact builds do not support localization. "
@@ -2258,7 +2277,7 @@ class CreateMachEnvironment(MachCommandBase):
         action="store_true",
         help=("Force re-creating the virtualenv even if it is already " "up-to-date."),
     )
-    def create_mach_environment(self, force=False):
+    def create_mach_environment(self, command_context, force=False):
         from mozboot.util import get_mach_virtualenv_root
         from mozbuild.virtualenv import VirtualenvManager
 

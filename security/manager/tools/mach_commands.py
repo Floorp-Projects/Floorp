@@ -76,7 +76,7 @@ class MachCommands(MachCommandBase):
         nargs="*",
         help="Specification files for test certs. If omitted, all certs are regenerated.",
     )
-    def generate_test_certs(self, specifications):
+    def generate_test_certs(self, command_context, specifications):
         """Generate test certificates and keys from specifications."""
 
         self.activate_virtualenv()

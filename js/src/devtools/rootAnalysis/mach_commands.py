@@ -111,7 +111,7 @@ class MachCommands(MachCommandBase):
         order="declaration",
         description="Commands for running the static analysis for GC rooting hazards",
     )
-    def hazards(self):
+    def hazards(self, command_context):
         """Commands related to performing the GC rooting hazard analysis"""
         print("See `mach hazards --help` for a list of subcommands")
 
@@ -121,7 +121,7 @@ class MachCommands(MachCommandBase):
         "bootstrap",
         description="Install prerequisites for the hazard analysis",
     )
-    def bootstrap(self, **kwargs):
+    def bootstrap(self, command_context, **kwargs):
         orig_dir = os.getcwd()
         os.chdir(self.ensure_dir_exists(self.tools_dir))
         try:
@@ -142,7 +142,7 @@ class MachCommands(MachCommandBase):
         metavar="FILENAME",
         help="Build with the given mozconfig.",
     )
-    def build_shell(self, **kwargs):
+    def build_shell(self, command_context, **kwargs):
         """Build a JS shell to use to run the rooting hazard analysis."""
         # The JS shell requires some specific configuration settings to execute
         # the hazard analysis code, and configuration is done via mozconfig.
@@ -215,7 +215,7 @@ no shell found in %s -- must build the JS shell with `mach hazards build-shell` 
     @CommandArgument(
         "--work-dir", default=None, help="Directory for output and working files."
     )
-    def gather_hazard_data(self, **kwargs):
+    def gather_hazard_data(self, command_context, **kwargs):
         """Gather analysis information by compiling the tree"""
         application = kwargs["application"]
         objdir = kwargs["haz_objdir"]
@@ -279,7 +279,7 @@ no shell found in %s -- must build the JS shell with `mach hazards build-shell` 
         default=os.environ.get("HAZ_OBJDIR"),
         help="Write object files to this directory.",
     )
-    def inner_compile(self, **kwargs):
+    def inner_compile(self, command_context, **kwargs):
         """Build a source tree and gather analysis information while running
         under the influence of the analysis collection server."""
 
@@ -346,7 +346,7 @@ no shell found in %s -- must build the JS shell with `mach hazards build-shell` 
     @CommandArgument(
         "--work-dir", default=None, help="Directory for output and working files."
     )
-    def analyze(self, application, shell_objdir, work_dir):
+    def analyze(self, command_context, application, shell_objdir, work_dir):
         """Analyzed gathered data for rooting hazards"""
 
         shell = self.ensure_shell(shell_objdir)
@@ -374,7 +374,7 @@ no shell found in %s -- must build the JS shell with `mach hazards build-shell` 
         default=None,
         help="objdir containing the optimized JS shell for running the analysis.",
     )
-    def self_test(self, shell_objdir):
+    def self_test(self, command_context, shell_objdir):
         """Analyzed gathered data for rooting hazards"""
         shell = self.ensure_shell(shell_objdir)
         args = [

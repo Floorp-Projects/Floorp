@@ -170,6 +170,7 @@ class AddTest(MachCommandBase):
     )
     def addtest(
         self,
+        command_context,
         suite=None,
         test=None,
         doc=None,
@@ -351,7 +352,7 @@ class Test(MachCommandBase):
         description="Run tests (detects the kind of test and runs it).",
         parser=get_test_parser,
     )
-    def test(self, what, extra_args, **log_args):
+    def test(self, command_context, what, extra_args, **log_args):
         """Run tests from names or paths.
 
         mach test accepts arguments specifying which tests to run. Each argument
@@ -489,7 +490,7 @@ class MachCommands(MachCommandBase):
         "directories, or omitted. If omitted, the entire test suite is "
         "executed.",
     )
-    def run_cppunit_test(self, **params):
+    def run_cppunit_test(self, command_context, **params):
         from mozlog import commandline
 
         log = params.get("log")
@@ -595,7 +596,7 @@ class SpiderMonkeyTests(MachCommandBase):
         nargs=argparse.REMAINDER,
         help="Extra arguments to pass down to the test harness.",
     )
-    def run_jstests(self, shell, params):
+    def run_jstests(self, command_context, shell, params):
         import subprocess
 
         self.virtualenv_manager.ensure()
@@ -628,7 +629,7 @@ class SpiderMonkeyTests(MachCommandBase):
         nargs=argparse.REMAINDER,
         help="Extra arguments to pass down to the test harness.",
     )
-    def run_jittests(self, shell, cgc, params):
+    def run_jittests(self, command_context, shell, cgc, params):
         import subprocess
 
         self.virtualenv_manager.ensure()
@@ -657,7 +658,7 @@ class SpiderMonkeyTests(MachCommandBase):
         help="Test to run. Can be a prefix or omitted. If "
         "omitted, the entire test suite is executed.",
     )
-    def run_jsapitests(self, test_name=None):
+    def run_jsapitests(self, command_context, test_name=None):
         import subprocess
 
         jsapi_tests_cmd = [os.path.join(self.bindir, executable_name("jsapi-tests"))]
@@ -697,7 +698,7 @@ class JsShellTests(MachCommandBase):
         parser=get_jsshell_parser,
         description="Run benchmarks in the SpiderMonkey JS shell.",
     )
-    def run_jsshelltests(self, **kwargs):
+    def run_jsshelltests(self, command_context, **kwargs):
         self.activate_virtualenv()
         from jsshell import benchmark
 
@@ -724,7 +725,9 @@ class CramTest(MachCommandBase):
         help="Extra arguments to pass down to the cram binary. See "
         "'./mach python -m cram -- -h' for a list of available options.",
     )
-    def cramtest(self, cram_args=None, test_paths=None, test_objects=None):
+    def cramtest(
+        self, command_context, cram_args=None, test_paths=None, test_objects=None
+    ):
         self.activate_virtualenv()
         import mozinfo
         from manifestparser import TestManifest
@@ -761,7 +764,7 @@ class TestInfoCommand(MachCommandBase):
     @Command(
         "test-info", category="testing", description="Display historical test results."
     )
-    def test_info(self):
+    def test_info(self, command_context):
         """
         All functions implemented as subcommands.
         """
@@ -795,6 +798,7 @@ class TestInfoCommand(MachCommandBase):
     @CommandArgument("--verbose", action="store_true", help="Enable debug logging.")
     def test_info_tests(
         self,
+        command_context,
         test_names,
         start,
         end,
@@ -875,6 +879,7 @@ class TestInfoCommand(MachCommandBase):
     @CommandArgument("--verbose", action="store_true", help="Enable debug logging.")
     def test_report(
         self,
+        command_context,
         components,
         flavor,
         subsuite,
@@ -897,7 +902,7 @@ class TestInfoCommand(MachCommandBase):
         except BuildEnvironmentNotFoundException:
             print("Looks like configure has not run yet, running it now...")
             builder = Build(self._mach_context, None)
-            builder.configure()
+            builder.configure(command_context)
 
         ti = testinfo.TestInfoReport(verbose)
         ti.report(
@@ -934,7 +939,7 @@ class TestInfoCommand(MachCommandBase):
         "will be written to standard output.",
     )
     @CommandArgument("--verbose", action="store_true", help="Enable debug logging.")
-    def test_report_diff(self, before, after, output_file, verbose):
+    def test_report_diff(self, command_context, before, after, output_file, verbose):
         import testinfo
 
         ti = testinfo.TestInfoReport(verbose)
@@ -949,7 +954,7 @@ class RustTests(MachCommandBase):
         conditions=[conditions.is_non_artifact_build],
         description="Run rust unit tests (via cargo test).",
     )
-    def run_rusttests(self, **kwargs):
+    def run_rusttests(self, command_context, **kwargs):
         return self._mach_context.commands.dispatch(
             "build",
             self._mach_context,
@@ -965,7 +970,7 @@ class TestFluentMigration(MachCommandBase):
         description="Test Fluent migration recipes.",
     )
     @CommandArgument("test_paths", nargs="*", metavar="N", help="Recipe paths to test.")
-    def run_migration_tests(self, test_paths=None, **kwargs):
+    def run_migration_tests(self, command_context, test_paths=None, **kwargs):
         if not test_paths:
             test_paths = []
         self.activate_virtualenv()

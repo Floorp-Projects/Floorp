@@ -29,7 +29,7 @@ class MachCommands(MachCommandBase):
     )
     @CommandArgument("ide", choices=["eclipse", "visualstudio", "vscode"])
     @CommandArgument("args", nargs=argparse.REMAINDER)
-    def run(self, ide, args):
+    def run(self, command_context, ide, args):
         if ide == "eclipse":
             backend = "CppEclipse"
         elif ide == "visualstudio":
@@ -61,7 +61,7 @@ class MachCommands(MachCommandBase):
             # Create the Build environment to configure the tree
             builder = Build(self._mach_context, None)
 
-            rc = builder.configure()
+            rc = builder.configure(command_context)
             if rc != 0:
                 return rc
 
@@ -334,7 +334,7 @@ class MachCommands(MachCommandBase):
         currentWorkingDir = os.getcwd()
         os.chdir(clang_tools_path)
         rc = self._artifact_manager.artifact_toolchain(
-            verbose=False, from_build=[job], no_unpack=False, retry=0
+            self, verbose=False, from_build=[job], no_unpack=False, retry=0
         )
         # Change back the cwd
         os.chdir(currentWorkingDir)

@@ -38,7 +38,7 @@ class Settings(MachCommandBase):
         action="store_true",
         help="Show settings in a concise list",
     )
-    def run_settings(self, short=None):
+    def run_settings(self, command_context, short=None):
         """List available settings."""
         types = {v: k for k, v in TYPE_CLASSES.items()}
         wrapper = TextWrapper(initial_indent="# ", subsequent_indent="# ")
