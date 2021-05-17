@@ -28,13 +28,20 @@ class Value;
 
 namespace mozilla {
 
-class SystemPrincipal final : public BasePrincipal {
-  SystemPrincipal() : BasePrincipal(eSystemPrincipal) {}
+class SystemPrincipal final : public BasePrincipal, public nsISerializable {
+  SystemPrincipal();
 
  public:
   static already_AddRefed<SystemPrincipal> Create();
 
   static PrincipalKind Kind() { return eSystemPrincipal; }
+
+  NS_IMETHOD_(MozExternalRefCountType) AddRef() override {
+    return nsJSPrincipals::AddRef();
+  };
+  NS_IMETHOD_(MozExternalRefCountType) Release() override {
+    return nsJSPrincipals::Release();
+  };
 
   NS_DECL_NSISERIALIZABLE
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr) override;
@@ -54,7 +61,7 @@ class SystemPrincipal final : public BasePrincipal {
   }
 
  protected:
-  virtual ~SystemPrincipal(void) {}
+  virtual ~SystemPrincipal() = default;
 
   bool SubsumesInternal(nsIPrincipal* aOther,
                         DocumentDomainConsideration aConsideration) override {

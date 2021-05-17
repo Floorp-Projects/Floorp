@@ -117,8 +117,8 @@ TEST(OriginAttributes, NullPrincipal)
   nsCOMPtr<nsIURI> uri;
   NS_NewURI(getter_AddRefs(uri), spec);
 
-  RefPtr<NullPrincipal> prin = new NullPrincipal();
-  prin->Init(OriginAttributes(), true, uri);
+  RefPtr<NullPrincipal> prin =
+      NullPrincipal::CreateInternal(OriginAttributes(), true, uri);
   EXPECT_TRUE(prin->OriginAttributesRef().mFirstPartyDomain.Equals(expected));
 
   Preferences::SetBool(FPI_PREF, oldFpiPref);

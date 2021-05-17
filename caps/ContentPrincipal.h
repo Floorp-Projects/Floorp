@@ -22,7 +22,6 @@ namespace mozilla {
 
 class ContentPrincipal final : public BasePrincipal {
  public:
-  NS_DECL_NSISERIALIZABLE
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr) override;
   uint32_t GetHashValue() override;
   NS_IMETHOD GetURI(nsIURI** aURI) override;
@@ -33,15 +32,12 @@ class ContentPrincipal final : public BasePrincipal {
   NS_IMETHOD GetSiteOriginNoSuffix(nsACString& aSiteOrigin) override;
   bool IsContentPrincipal() const override { return true; }
 
-  ContentPrincipal();
+  ContentPrincipal(nsIURI* aURI, const OriginAttributes& aOriginAttributes,
+                   const nsACString& aOriginNoSuffix);
+  ContentPrincipal(ContentPrincipal* aOther,
+                   const OriginAttributes& aOriginAttributes);
 
   static PrincipalKind Kind() { return eContentPrincipal; }
-
-  // Init() must be called before the principal is in a usable state.
-  nsresult Init(nsIURI* aURI, const OriginAttributes& aOriginAttributes,
-                const nsACString& aOriginNoSuffix);
-  nsresult Init(ContentPrincipal* aOther,
-                const OriginAttributes& aOriginAttributes);
 
   virtual nsresult GetScriptLocation(nsACString& aStr) override;
 
@@ -51,9 +47,6 @@ class ContentPrincipal final : public BasePrincipal {
                                                 nsACString& aOrigin);
 
   extensions::WebExtensionPolicy* AddonPolicy();
-
-  nsCOMPtr<nsIURI> mDomain;
-  nsCOMPtr<nsIURI> mURI;
 
   virtual nsresult PopulateJSONObject(Json::Value& aObject) override;
   // Serializable keys are the valid enum fields the serialization supports
@@ -68,6 +61,11 @@ class ContentPrincipal final : public BasePrincipal {
   static already_AddRefed<BasePrincipal> FromProperties(
       nsTArray<ContentPrincipal::KeyVal>& aFields);
 
+  class Deserializer : public BasePrincipal::Deserializer {
+   public:
+    NS_IMETHOD Read(nsIObjectInputStream* aStream) override;
+  };
+
  protected:
   virtual ~ContentPrincipal();
 
@@ -76,6 +74,8 @@ class ContentPrincipal final : public BasePrincipal {
   bool MayLoadInternal(nsIURI* aURI) override;
 
  private:
+  const nsCOMPtr<nsIURI> mURI;
+  nsCOMPtr<nsIURI> mDomain;
   Maybe<WeakPtr<extensions::WebExtensionPolicy>> mAddon;
 };
 

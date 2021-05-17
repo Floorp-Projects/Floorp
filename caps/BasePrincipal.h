@@ -15,6 +15,7 @@
 #include "mozilla/OriginAttributes.h"
 #include "mozilla/RefPtr.h"
 #include "nsAtom.h"
+#include "nsIObjectOutputStream.h"
 #include "nsIPrincipal.h"
 #include "nsJSPrincipals.h"
 #include "nsStringFwd.h"
@@ -88,8 +89,6 @@ class BasePrincipal : public nsJSPrincipals {
     eSystemPrincipal,
     eKindMax = eSystemPrincipal
   };
-
-  explicit BasePrincipal(PrincipalKind aKind);
 
   template <typename T>
   bool Is() const {
@@ -288,6 +287,11 @@ class BasePrincipal : public nsJSPrincipals {
   virtual nsresult GetSiteIdentifier(SiteIdentifier& aSite) = 0;
 
  protected:
+  BasePrincipal(PrincipalKind aKind, const nsACString& aOriginNoSuffix,
+                const OriginAttributes& aOriginAttributes);
+  BasePrincipal(BasePrincipal* aOther,
+                const OriginAttributes& aOriginAttributes);
+
   virtual ~BasePrincipal();
 
   // Note that this does not check OriginAttributes. Callers that depend on
@@ -307,14 +311,6 @@ class BasePrincipal : public nsJSPrincipals {
 
   void SetHasExplicitDomain() { mHasExplicitDomain = true; }
 
-  // Either of these functions should be called as the last step of the
-  // initialization of the principal objects.  It's typically called as the
-  // last step from the Init() method of the child classes.
-  void FinishInit(const nsACString& aOriginNoSuffix,
-                  const OriginAttributes& aOriginAttributes);
-  void FinishInit(BasePrincipal* aOther,
-                  const OriginAttributes& aOriginAttributes);
-
   // KeyValT holds a principal subtype-specific key value and the associated
   // parsed value after JSON parsing.
   template <typename SerializedKey>
@@ -326,6 +322,19 @@ class BasePrincipal : public nsJSPrincipals {
     nsCString value;
   };
 
+  // Common base class for all Deserializer implementations in concrete
+  // subclasses. Subclasses will initialize `mPrincipal` in `Read`, and then
+  // calls to `QueryInterface` will QI on the target object.
+  class Deserializer : public nsISerializable {
+   public:
+    NS_DECL_ISUPPORTS
+    NS_IMETHOD Write(nsIObjectOutputStream* aStream) override;
+
+   protected:
+    virtual ~Deserializer() = default;
+    RefPtr<BasePrincipal> mPrincipal;
+  };
+
  private:
   static already_AddRefed<BasePrincipal> CreateContentPrincipal(
       nsIURI* aURI, const OriginAttributes& aAttrs,
@@ -334,13 +343,12 @@ class BasePrincipal : public nsJSPrincipals {
   bool FastSubsumesIgnoringFPD(nsIPrincipal* aOther,
                                DocumentDomainConsideration aConsideration);
 
-  RefPtr<nsAtom> mOriginNoSuffix;
-  RefPtr<nsAtom> mOriginSuffix;
+  const RefPtr<nsAtom> mOriginNoSuffix;
+  const RefPtr<nsAtom> mOriginSuffix;
 
-  OriginAttributes mOriginAttributes;
-  PrincipalKind mKind;
+  const OriginAttributes mOriginAttributes;
+  const PrincipalKind mKind;
   bool mHasExplicitDomain;
-  bool mInitialized;
 };
 
 inline bool BasePrincipal::FastEquals(nsIPrincipal* aOther) {
