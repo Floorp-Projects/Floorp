@@ -1655,15 +1655,6 @@ class HTMLEditor final : public TextEditor,
   InsertParagraphSeparatorAsSubAction();
 
   /**
-   * Returns true if aNode1 or aNode2 or both is the descendant of some type of
-   * table element, but their nearest table element ancestors differ.  "Table
-   * element" here includes not just <table> but also <td>, <tbody>, <tr>, etc.
-   * The nodes count as being their own descendants for this purpose, so a
-   * table element is its own nearest table element ancestor.
-   */
-  static bool NodesInDifferentTableElements(nsINode& aNode1, nsINode& aNode2);
-
-  /**
    * ChangeListElementType() replaces child list items of aListElement with
    * new list item element whose tag name is aNewListItemTag.
    * Note that if there are other list elements as children of aListElement,
