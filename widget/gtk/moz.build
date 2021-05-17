@@ -87,6 +87,7 @@ if CONFIG["MOZ_WAYLAND"]:
         "MozContainerWayland.cpp",
         "nsClipboardWayland.cpp",
         "nsWaylandDisplay.cpp",
+        "WaylandShmBuffer.cpp",
         "WindowSurfaceWayland.cpp",
     ]
     EXPORTS.mozilla.widget += [
