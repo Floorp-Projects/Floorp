@@ -1092,6 +1092,16 @@ class HTMLEditUtils final {
     return nullptr;
   }
 
+  static Element* GetInclusiveAncestorAnyTableElement(
+      const nsIContent& aContent) {
+    for (Element* parent : aContent.InclusiveAncestorsOfType<Element>()) {
+      if (HTMLEditUtils::IsAnyTableElement(parent)) {
+        return parent;
+      }
+    }
+    return nullptr;
+  }
+
   static Element* GetClosestAncestorAnyListElement(const nsIContent& aContent);
 
   /**
