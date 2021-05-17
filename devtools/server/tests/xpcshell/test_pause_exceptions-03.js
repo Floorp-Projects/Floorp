@@ -11,13 +11,16 @@
 
 add_task(
   threadFrontTest(
-    async ({ threadFront, debuggee }) => {
+    async ({ threadFront, debuggee, commands }) => {
       await executeOnNextTickAndWaitForPause(
         () => evaluateTestCode(debuggee),
         threadFront
       );
 
-      threadFront.pauseOnExceptions(true, false);
+      await commands.threadConfigurationCommand.updateConfiguration({
+        pauseOnExceptions: true,
+        ignoreCaughtExceptions: false,
+      });
       await resume(threadFront);
       const paused = await waitForPause(threadFront);
       Assert.equal(paused.why.type, "exception");

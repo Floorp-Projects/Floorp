@@ -318,22 +318,10 @@ async function pauseOnExceptions(
   shouldPauseOnExceptions,
   shouldPauseOnCaughtExceptions
 ) {
-  if (commands.targetCommand.hasTargetWatcherSupport()) {
-    const threadConfigurationActor = await commands.targetCommand.watcherFront.getThreadConfigurationActor();
-    await threadConfigurationActor.updateConfiguration({
-      pauseOnExceptions: shouldPauseOnExceptions,
-      ignoreCaughtExceptions: !shouldPauseOnCaughtExceptions,
-    });
-  } else {
-    return forEachThread(thread =>
-      thread.pauseOnExceptions(
-        shouldPauseOnExceptions,
-        // Providing opposite value because server
-        // uses "shouldIgnoreCaughtExceptions"
-        !shouldPauseOnCaughtExceptions
-      )
-    );
-  }
+  await commands.threadConfigurationCommand.updateConfiguration({
+    pauseOnExceptions: shouldPauseOnExceptions,
+    ignoreCaughtExceptions: !shouldPauseOnCaughtExceptions,
+  });
 }
 
 async function blackBox(sourceActor, isBlackBoxed, range) {
