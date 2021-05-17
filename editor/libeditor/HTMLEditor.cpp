@@ -4052,9 +4052,8 @@ nsresult HTMLEditor::RemoveBlockContainerWithTransaction(Element& aElement) {
   // sibling and first child to determine if we need a leading br, and compare
   // following sibling and last child to determine if we need a trailing br.
 
-  nsCOMPtr<nsIContent> child = GetFirstEditableChild(aElement);
-
-  if (child) {
+  if (nsCOMPtr<nsIContent> child = HTMLEditUtils::GetFirstChild(
+          aElement, {WalkTreeOption::IgnoreNonEditableNode})) {
     // The case of aNode not being empty.  We need a br at start unless:
     // 1) previous sibling of aNode is a block, OR
     // 2) previous sibling of aNode is a br, OR
@@ -4938,7 +4937,8 @@ bool HTMLEditor::IsFirstEditableChild(nsINode* aNode) const {
   if (NS_WARN_IF(!parentNode)) {
     return false;
   }
-  return GetFirstEditableChild(*parentNode) == aNode;
+  return HTMLEditUtils::GetFirstChild(
+             *parentNode, {WalkTreeOption::IgnoreNonEditableNode}) == aNode;
 }
 
 bool HTMLEditor::IsLastEditableChild(nsINode* aNode) const {
@@ -4950,14 +4950,6 @@ bool HTMLEditor::IsLastEditableChild(nsINode* aNode) const {
   }
   return HTMLEditUtils::GetLastChild(
              *parentNode, {WalkTreeOption::IgnoreNonEditableNode}) == aNode;
-}
-
-nsIContent* HTMLEditor::GetFirstEditableChild(nsINode& aNode) const {
-  nsIContent* child = aNode.GetFirstChild();
-  while (child && !EditorUtils::IsEditableContent(*child, EditorType::HTML)) {
-    child = child->GetNextSibling();
-  }
-  return child;
 }
 
 nsIContent* HTMLEditor::GetFirstEditableLeaf(nsINode& aNode) const {
