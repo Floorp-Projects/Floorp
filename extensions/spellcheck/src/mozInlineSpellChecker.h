@@ -320,6 +320,8 @@ class mozInlineSpellChecker final : public nsIInlineSpellChecker,
   void StartToListenToEditSubActions() { mIsListeningToEditSubActions = true; }
   void EndListeningToEditSubActions() { mIsListeningToEditSubActions = false; }
 
+  // Creates an async request to check the words and add the ranges for the
+  // misspellings.
   void CheckWordsAndAddRangesForMisspellings(
       mozilla::dom::Selection* aSpellCheckSelection,
       const nsTArray<nsString>& aWords, nsTArray<NodeOffsetRange>&& aRanges);
