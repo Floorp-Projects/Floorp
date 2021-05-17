@@ -40,8 +40,7 @@
 #urlbar.searchButton > #urlbar-input-container > #identity-box[pageproxystate="invalid"],
 #identity-box[pageproxystate="invalid"] > #identity-permission-box,
 #identity-box[pageproxystate="invalid"] > #notification-popup-box,
-#identity-box[pageproxystate="invalid"] #identity-icon-label,
-#identity-box[pageproxystate="invalid"] #remote-control-icon {
+#identity-box[pageproxystate="invalid"] #identity-icon-label {
   display: none;
 }
 
@@ -372,18 +371,4 @@
 
 #urlbar-input-container[pageproxystate="invalid"] > #tracking-protection-icon-container {
   visibility: collapse;
-}
-
-/* REMOTE CONTROL ICON */
-
-#remote-control-icon {
-  visibility: collapse;
-}
-
-:root[remotecontrol] #remote-control-icon {
-  list-style-image: url(chrome://browser/content/static-robot.png);
-  visibility: visible;
-  width: 16px;
-  height: 16px;
-  margin-inline-start: 2px;
 }

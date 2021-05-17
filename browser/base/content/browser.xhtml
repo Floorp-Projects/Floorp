@@ -1826,6 +1826,12 @@
             <hbox id="urlbar-input-container"
                   flex="1"
                   pageproxystate="invalid">
+              <box id="remote-control-box"
+                   align="center"
+                   collapsed="true">
+                  <image id="remote-control-icon"
+                       data-l10n-id="urlbar-remote-control-notification-anchor"/>
+              </box>
               <box id="urlbar-search-button"
                    class="chromeclass-toolbar-additional"/>
               <!-- Use onclick instead of normal popup= syntax since the popup
@@ -1855,8 +1861,6 @@
                      onclick="gIdentityHandler.handleIdentityButtonEvent(event); PageProxyClickHandler(event);"
                      onkeypress="gIdentityHandler.handleIdentityButtonEvent(event);">
                   <image id="identity-icon"/>
-                  <image id="remote-control-icon"
-                       data-l10n-id="urlbar-remote-control-notification-anchor"/>
                   <label id="identity-icon-label" class="plain" crop="center" flex="1"/>
                 </box>
                 <box id="identity-permission-box"
