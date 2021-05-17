@@ -289,8 +289,8 @@ DECLARE_NULL_INSTANCE (hb_unicode_funcs_t);
 #define HB_MODIFIED_COMBINING_CLASS_CCC15 18 /* tsere */
 #define HB_MODIFIED_COMBINING_CLASS_CCC16 19 /* segol */
 #define HB_MODIFIED_COMBINING_CLASS_CCC17 20 /* patah */
-#define HB_MODIFIED_COMBINING_CLASS_CCC18 21 /* qamats */
-#define HB_MODIFIED_COMBINING_CLASS_CCC19 14 /* holam */
+#define HB_MODIFIED_COMBINING_CLASS_CCC18 21 /* qamats & qamats qatan */
+#define HB_MODIFIED_COMBINING_CLASS_CCC19 14 /* holam & holam haser for vav*/
 #define HB_MODIFIED_COMBINING_CLASS_CCC20 24 /* qubuts */
 #define HB_MODIFIED_COMBINING_CLASS_CCC21 12 /* dagesh */
 #define HB_MODIFIED_COMBINING_CLASS_CCC22 25 /* meteg */

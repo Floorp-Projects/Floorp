@@ -219,7 +219,7 @@ struct hb_array_t : hb_iter_with_fallback_t<hb_array_t<Type>, Type&>
 	    unsigned P = sizeof (Type),
 	    hb_enable_if (P == 1)>
   const T *as () const
-  { return length < hb_null_size (T) ? &Null (T) : reinterpret_cast<const T *> (arrayZ); }
+  { return length < hb_min_size (T) ? &Null (T) : reinterpret_cast<const T *> (arrayZ); }
 
   template <typename T,
 	    unsigned P = sizeof (Type),

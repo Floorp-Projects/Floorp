@@ -25,10 +25,8 @@ Input files:
 """
 
 import collections
+import html
 from html.parser import HTMLParser
-def write (s):
-	sys.stdout.flush ()
-	sys.stdout.buffer.write (s.encode ('utf-8'))
 import itertools
 import re
 import sys
@@ -37,15 +35,15 @@ import unicodedata
 if len (sys.argv) != 3:
 	sys.exit (__doc__)
 
-from html import unescape
-def html_unescape (parser, entity):
-	return unescape (entity)
-
 def expect (condition, message=None):
 	if not condition:
 		if message is None:
 			raise AssertionError
 		raise AssertionError (message)
+
+def write (s):
+	sys.stdout.flush ()
+	sys.stdout.buffer.write (s.encode ('utf-8'))
 
 DEFAULT_LANGUAGE_SYSTEM = ''
 
@@ -383,10 +381,10 @@ class OpenTypeRegistryParser (HTMLParser):
 			self._current_tr[-1] += data
 
 	def handle_charref (self, name):
-		self.handle_data (html_unescape (self, '&#%s;' % name))
+		self.handle_data (html.unescape ('&#%s;' % name))
 
 	def handle_entityref (self, name):
-		self.handle_data (html_unescape (self, '&%s;' % name))
+		self.handle_data (html.unescape ('&%s;' % name))
 
 	def parse (self, filename):
 		"""Parse the OpenType language system tag registry.

@@ -110,7 +110,7 @@ struct hdmx
     for (const hb_item_type<Iterator>& _ : +it)
       c->start_embed<DeviceRecord> ()->serialize (c, _.first, _.second);
 
-    return_trace (c->successful);
+    return_trace (c->successful ());
   }
 
 

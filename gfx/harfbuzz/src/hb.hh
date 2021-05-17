@@ -117,6 +117,9 @@
 #pragma GCC diagnostic ignored "-Wshadow"			// TODO fix
 #pragma GCC diagnostic ignored "-Wunsafe-loop-optimizations"	// TODO fix
 #pragma GCC diagnostic ignored "-Wunused-parameter"		// TODO fix
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic ignored "-Wunused-result"		// TODO fix
+#endif
 #endif
 
 /* Ignored intentionally. */
@@ -335,7 +338,6 @@ extern "C" void  hb_free_impl(void *ptr);
 #else
 #  define HB_NODISCARD
 #endif
-#define hb_success_t HB_NODISCARD bool
 
 /* https://github.com/harfbuzz/harfbuzz/issues/1852 */
 #if defined(__clang__) && !(defined(_AIX) && (defined(__IBMCPP__) || defined(__ibmxl__)))

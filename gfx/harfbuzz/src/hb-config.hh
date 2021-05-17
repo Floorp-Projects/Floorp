@@ -86,6 +86,9 @@
 #define HB_NO_LEGACY
 #endif
 
+#ifdef HAVE_CONFIG_OVERRIDE_H
+#include "config-override.h"
+#endif
 
 /* Closure of options. */
 
@@ -153,10 +156,6 @@
 #ifndef HB_OPTIMIZE_SIZE
 #define HB_OPTIMIZE_SIZE
 #endif
-#endif
-
-#ifdef HAVE_CONFIG_OVERRIDE_H
-#include "config-override.h"
 #endif
 
 
