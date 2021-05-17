@@ -1233,6 +1233,7 @@ xul|richlistbox:not(#categories) > xul|richlistitem[selected] {
   --in-content-button-background: color-mix(in srgb, currentColor 20%, transparent);
   --in-content-button-background-hover: color-mix(in srgb, currentColor 40%, transparent);
   --in-content-button-background-active: color-mix(in srgb, currentColor 60%, transparent);
+  --in-content-button-text-color-hover: var(--in-content-item-selected-text);
 }
 
 /* Use a 2px border so that selected row highlight is still visible behind
