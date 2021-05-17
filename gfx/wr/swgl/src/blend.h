@@ -146,6 +146,13 @@ static ALWAYS_INLINE P applyColor(P src, NoColor) {
   return src;
 }
 
+struct InvertColor {};
+
+template <typename P>
+static ALWAYS_INLINE P applyColor(P src, InvertColor) {
+  return 255 - src;
+}
+
 template <typename P>
 static ALWAYS_INLINE P applyColor(P src, P color) {
   return muldiv256(src, color);
@@ -168,6 +175,12 @@ static ALWAYS_INLINE auto packColor(P* buf, C color) {
 template <typename P>
 static ALWAYS_INLINE NoColor packColor(UNUSED P* buf, NoColor noColor) {
   return noColor;
+}
+
+template <typename P>
+static ALWAYS_INLINE InvertColor packColor(UNUSED P* buf,
+                                           InvertColor invertColor) {
+  return invertColor;
 }
 
 // Single argument variation that takes an explicit destination buffer type.
