@@ -1,0 +1,4 @@
+ac_add_options --target=i686
+
+mk_add_options MOZ_OBJDIR=obj-x64_False_x86_linux
+
