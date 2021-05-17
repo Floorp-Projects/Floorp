@@ -477,6 +477,8 @@ class nsHttpTransaction final : public nsAHttpTransaction,
   bool mSynchronousRatePaceRequest;
   nsCOMPtr<nsICancelable> mTokenBucketCancel;
 
+  void CollectTelemetryForUploads();
+
  public:
   uint32_t ClassOfService() { return mClassOfService; }
 
