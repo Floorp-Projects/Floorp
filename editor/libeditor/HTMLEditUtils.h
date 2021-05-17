@@ -320,6 +320,16 @@ class HTMLEditUtils final {
   }
 
   /**
+   * IsEmptyBlockElement() returns true if aElement is a block level element
+   * and it doesn't have any visible content.
+   */
+  static bool IsEmptyBlockElement(const Element& aElement,
+                                  const EmptyCheckOptions& aOptions) {
+    return HTMLEditUtils::IsBlockElement(aElement) &&
+           HTMLEditUtils::IsEmptyNode(aElement, aOptions);
+  }
+
+  /**
    * IsEmptyOneHardLine() returns true if aArrayOfContents does not represent
    * 2 or more lines and have meaningful content.
    */

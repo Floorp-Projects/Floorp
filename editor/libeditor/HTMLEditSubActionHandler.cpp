@@ -1388,7 +1388,8 @@ EditActionResult HTMLEditor::InsertParagraphSeparatorAsSubAction() {
   // contains the word "text".  The user selects "text" and types return.
   // "Text" is deleted leaving an empty block.  We want to put in one br to
   // make block have a line.  Then code further below will put in a second br.)
-  if (IsEmptyBlockElement(*blockElement, IgnoreSingleBR::No)) {
+  if (HTMLEditUtils::IsEmptyBlockElement(
+          *blockElement, {EmptyCheckOption::TreatSingleBRElementAsVisible})) {
     AutoEditorDOMPointChildInvalidator lockOffset(atStartOfSelection);
     EditorDOMPoint endOfBlockParent;
     endOfBlockParent.SetToEndOf(blockElement);
@@ -4714,18 +4715,6 @@ nsresult HTMLEditor::CreateStyleForInsertText(
   return rv;
 }
 
-bool HTMLEditor::IsEmptyBlockElement(Element& aElement,
-                                     IgnoreSingleBR aIgnoreSingleBR) const {
-  if (!HTMLEditUtils::IsBlockElement(aElement)) {
-    return false;
-  }
-  HTMLEditUtils::EmptyCheckOptions options;
-  if (aIgnoreSingleBR != IgnoreSingleBR::Yes) {
-    options += EmptyCheckOption::TreatSingleBRElementAsVisible;
-  }
-  return HTMLEditUtils::IsEmptyNode(aElement, options);
-}
-
 EditActionResult HTMLEditor::AlignAsSubAction(const nsAString& aAlignType) {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
@@ -6496,7 +6485,7 @@ nsresult HTMLEditor::HandleInsertParagraphInHeadingElement(Element& aHeader,
   }
 
   // If the new (righthand) header node is empty, delete it
-  if (IsEmptyBlockElement(aHeader, IgnoreSingleBR::Yes)) {
+  if (HTMLEditUtils::IsEmptyBlockElement(aHeader, {})) {
     nsresult rv = DeleteNodeWithTransaction(aHeader);
     if (NS_WARN_IF(Destroyed())) {
       return NS_ERROR_EDITOR_DESTROYED;
@@ -6896,7 +6885,7 @@ nsresult HTMLEditor::HandleInsertParagraphInListItemElement(Element& aListItem,
   // only if prefs say it's okay and if the parent isn't the active editing
   // host.
   if (editingHost != aListItem.GetParentElement() &&
-      IsEmptyBlockElement(aListItem, IgnoreSingleBR::Yes)) {
+      HTMLEditUtils::IsEmptyBlockElement(aListItem, {})) {
     nsCOMPtr<nsIContent> leftListNode = aListItem.GetParent();
     // Are we the last list item in the list?
     if (!HTMLEditUtils::IsLastChild(aListItem,
