@@ -8614,7 +8614,8 @@ nsresult HTMLEditor::LiftUpListItemElement(
 
   // if it's first or last list item, don't need to split the list
   // otherwise we do.
-  bool isFirstListItem = IsFirstEditableChild(&aListItemElement);
+  bool isFirstListItem = HTMLEditUtils::IsFirstChild(
+      aListItemElement, {WalkTreeOption::IgnoreNonEditableNode});
   bool isLastListItem = IsLastEditableChild(&aListItemElement);
 
   Element* leftListElement = aListItemElement.GetParentElement();
