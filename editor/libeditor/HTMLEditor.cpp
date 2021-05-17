@@ -929,35 +929,6 @@ void HTMLEditor::IsNextCharInNodeWhiteSpace(nsIContent* aContent,
   }
 }
 
-/**
- * IsPrevCharInNodeWhiteSpace() checks the adjacent content in the same node to
- * see if following selection is white-space.
- */
-void HTMLEditor::IsPrevCharInNodeWhiteSpace(nsIContent* aContent,
-                                            int32_t aOffset, bool* outIsSpace,
-                                            bool* outIsNBSP,
-                                            nsIContent** outNode,
-                                            int32_t* outOffset) {
-  MOZ_ASSERT(aContent && outIsSpace && outIsNBSP);
-  MOZ_ASSERT((outNode && outOffset) || (!outNode && !outOffset));
-  *outIsSpace = false;
-  *outIsNBSP = false;
-  if (outNode && outOffset) {
-    *outNode = nullptr;
-    *outOffset = -1;
-  }
-
-  if (aContent->IsText() && aOffset > 0) {
-    char16_t ch = aContent->GetText()->CharAt(aOffset - 1);
-    *outIsSpace = nsCRT::IsAsciiSpace(ch);
-    *outIsNBSP = (ch == kNBSP);
-    if (outNode && outOffset) {
-      NS_IF_ADDREF(*outNode = aContent);
-      *outOffset = aOffset - 1;
-    }
-  }
-}
-
 NS_IMETHODIMP HTMLEditor::UpdateBaseURL() {
   RefPtr<Document> document = GetDocument();
   if (NS_WARN_IF(!document)) {

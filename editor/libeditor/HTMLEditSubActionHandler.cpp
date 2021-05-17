@@ -5484,9 +5484,22 @@ nsresult HTMLEditor::MaybeExtendSelectionToHardLineEdgesForBlockEditAction() {
 template <typename PT, typename RT>
 EditorDOMPoint HTMLEditor::GetWhiteSpaceEndPoint(
     const RangeBoundaryBase<PT, RT>& aPoint, ScanDirection aScanDirection) {
-  if (NS_WARN_IF(!aPoint.IsSet()) ||
+  if (NS_WARN_IF(!aPoint.IsSetAndValid()) ||
       NS_WARN_IF(!aPoint.Container()->IsContent())) {
     return EditorDOMPoint();
+  }
+
+  if (aScanDirection == ScanDirection::Backward) {
+    EditorDOMPoint point(aPoint);
+    if (point.IsInTextNode()) {
+      while (!point.IsStartOfContainer()) {
+        if (!point.IsPreviousCharASCIISpaceOrNBSP()) {
+          break;
+        }
+        MOZ_ALWAYS_TRUE(point.RewindOffset());
+      }
+    }
+    return point;
   }
 
   bool isSpace = false, isNBSP = false;
@@ -5496,15 +5509,9 @@ EditorDOMPoint HTMLEditor::GetWhiteSpaceEndPoint(
   while (newContent) {
     int32_t offset = -1;
     nsCOMPtr<nsIContent> content;
-    if (aScanDirection == ScanDirection::Backward) {
-      HTMLEditor::IsPrevCharInNodeWhiteSpace(newContent, newOffset, &isSpace,
-                                             &isNBSP, getter_AddRefs(content),
-                                             &offset);
-    } else {
-      HTMLEditor::IsNextCharInNodeWhiteSpace(newContent, newOffset, &isSpace,
-                                             &isNBSP, getter_AddRefs(content),
-                                             &offset);
-    }
+    HTMLEditor::IsNextCharInNodeWhiteSpace(newContent, newOffset, &isSpace,
+                                           &isNBSP, getter_AddRefs(content),
+                                           &offset);
     if (!isSpace && !isNBSP) {
       break;
     }
