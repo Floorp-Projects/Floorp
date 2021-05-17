@@ -28,7 +28,6 @@
 #include "nsStyleStruct.h"
 #include "nsStyleTransformMatrix.h"
 #include "SVGAnimatedLength.h"
-#include "SVGFilterPaintCallback.h"
 #include "SVGPaintServerFrame.h"
 #include "nsTextFrame.h"
 #include "mozilla/CSSClipPathInstance.h"
@@ -381,37 +380,6 @@ void SVGUtils::NotifyChildrenOfSVGChange(nsIFrame* aFrame, uint32_t aFlags) {
 }
 
 // ************************************************************
-
-class SVGPaintCallback : public SVGFilterPaintCallback {
- public:
-  virtual void Paint(gfxContext& aContext, nsIFrame* aTarget,
-                     const gfxMatrix& aTransform, const nsIntRect* aDirtyRect,
-                     imgDrawingParams& aImgParams) override {
-    ISVGDisplayableFrame* svgFrame = do_QueryFrame(aTarget);
-    NS_ASSERTION(svgFrame, "Expected SVG frame here");
-
-    nsIntRect* dirtyRect = nullptr;
-    nsIntRect tmpDirtyRect;
-
-    // aDirtyRect is in user-space pixels, we need to convert to
-    // outer-SVG-frame-relative device pixels.
-    if (aDirtyRect) {
-      gfxMatrix userToDeviceSpace = aTransform;
-      if (userToDeviceSpace.IsSingular()) {
-        return;
-      }
-      gfxRect dirtyBounds = userToDeviceSpace.TransformBounds(gfxRect(
-          aDirtyRect->x, aDirtyRect->y, aDirtyRect->width, aDirtyRect->height));
-      dirtyBounds.RoundOut();
-      if (gfxUtils::GfxRectToIntRect(dirtyBounds, &tmpDirtyRect)) {
-        dirtyRect = &tmpDirtyRect;
-      }
-    }
-
-    svgFrame->PaintSVG(aContext, SVGUtils::GetCSSPxToDevPxMatrix(aTarget),
-                       aImgParams, dirtyRect);
-  }
-};
 
 float SVGUtils::ComputeOpacity(nsIFrame* aFrame, bool aHandleOpacity) {
   float opacity = aFrame->StyleEffects()->mOpacity;
@@ -790,9 +758,36 @@ void SVGUtils::PaintFrameWithEffects(nsIFrame* aFrame, gfxContext& aContext,
     target->SetMatrixDouble(reverseScaleMatrix * aTransform *
                             target->CurrentMatrixDouble());
 
-    SVGPaintCallback paintCallback;
-    FilterInstance::PaintFilteredFrame(aFrame, target, &paintCallback,
-                                       dirtyRegion, aImgParams);
+    auto callback = [](gfxContext& aContext, nsIFrame* aTarget,
+                       const gfxMatrix& aTransform, const nsIntRect* aDirtyRect,
+                       imgDrawingParams& aImgParams) {
+      ISVGDisplayableFrame* svgFrame = do_QueryFrame(aTarget);
+      NS_ASSERTION(svgFrame, "Expected SVG frame here");
+
+      nsIntRect* dirtyRect = nullptr;
+      nsIntRect tmpDirtyRect;
+
+      // aDirtyRect is in user-space pixels, we need to convert to
+      // outer-SVG-frame-relative device pixels.
+      if (aDirtyRect) {
+        gfxMatrix userToDeviceSpace = aTransform;
+        if (userToDeviceSpace.IsSingular()) {
+          return;
+        }
+        gfxRect dirtyBounds = userToDeviceSpace.TransformBounds(
+            gfxRect(aDirtyRect->x, aDirtyRect->y, aDirtyRect->width,
+                    aDirtyRect->height));
+        dirtyBounds.RoundOut();
+        if (gfxUtils::GfxRectToIntRect(dirtyBounds, &tmpDirtyRect)) {
+          dirtyRect = &tmpDirtyRect;
+        }
+      }
+
+      svgFrame->PaintSVG(aContext, SVGUtils::GetCSSPxToDevPxMatrix(aTarget),
+                         aImgParams, dirtyRect);
+    };
+    FilterInstance::PaintFilteredFrame(aFrame, target, callback, dirtyRegion,
+                                       aImgParams);
   } else {
     svgFrame->PaintSVG(*target, aTransform, aImgParams, aDirtyRect);
   }
