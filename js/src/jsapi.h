@@ -34,6 +34,7 @@
 #include "js/Context.h"
 #include "js/ErrorReport.h"
 #include "js/Exception.h"
+#include "js/GCAPI.h"
 #include "js/GCVector.h"
 #include "js/HashTable.h"
 #include "js/Id.h"
@@ -1714,21 +1715,6 @@ extern JS_PUBLIC_API JSObject* JS_NewObjectForConstructor(
     JSContext* cx, const JSClass* clasp, const JS::CallArgs& args);
 
 /************************************************************************/
-
-#ifdef JS_GC_ZEAL
-#  define JS_DEFAULT_ZEAL_FREQ 100
-
-extern JS_PUBLIC_API void JS_GetGCZealBits(JSContext* cx, uint32_t* zealBits,
-                                           uint32_t* frequency,
-                                           uint32_t* nextScheduled);
-
-extern JS_PUBLIC_API void JS_SetGCZeal(JSContext* cx, uint8_t zeal,
-                                       uint32_t frequency);
-
-extern JS_PUBLIC_API void JS_UnsetGCZeal(JSContext* cx, uint8_t zeal);
-
-extern JS_PUBLIC_API void JS_ScheduleGC(JSContext* cx, uint32_t count);
-#endif
 
 extern JS_PUBLIC_API void JS_SetParallelParsingEnabled(JSContext* cx,
                                                        bool enabled);
