@@ -33,7 +33,7 @@ You can set these environment variables to any of the following values.
 
 Full BloatView output contains per-class statistics on allocations and
 refcounts, and provides gross numbers on the amount of memory being
-leaked broken down by class. Here\'s a sample of the BloatView output.
+leaked broken down by class. Here's a sample of the BloatView output.
 
     == BloatView: ALL (cumulative) LEAK AND BLOAT STATISTICS, tab process 1862
         |<----------------Class--------------->|<-----Bytes------>|<----Objects---->|
@@ -59,7 +59,7 @@ Here's how you interpret the columns.
 -   **Bytes Per-Inst** - The number of bytes returned if you were to
     write `sizeof(Class)`. Note that this number does not reflect any
     memory held onto by the class, such as internal buffers, etc. (E.g.
-    for `nsString` you\'ll see the size of the header struct, not the
+    for `nsString` you'll see the size of the header struct, not the
     size of the string contents!)
 -   **Bytes Leaked** - The number of bytes per instance times the number
     of objects leaked: (Bytes Per-Inst) x (Objects Rem). Use this number
@@ -85,7 +85,7 @@ Interesting things to look for:
 -   **The number of objects remaining might not be equal to the total
     number of objects.** This could indicate a hand-written Release
     method (that doesn't use the `NS_LOG_RELEASE` macro from
-    nsTraceRefcnt.h), or perhaps you\'re just not freeing any of the
+    nsTraceRefcnt.h), or perhaps you're just not freeing any of the
     instances you've allocated. These sorts of leaks are easy to fix.
 -   **The total number of objects might be 1.** This might indicate a
     global variable or service. Usually this will have a large number of
@@ -147,7 +147,7 @@ net memory gain or loss by subtracting the amount of memory freed from
 the amount allocated.
 
 The **Show Objects** and **Show References** buttons show the same
-statistics but counting objects or `AddRef`\'d references rather than
+statistics but counting objects or `AddRef`'d references rather than
 bytes.
 
 ## Comparing Bloat Logs
@@ -182,8 +182,8 @@ to fewest. The delta numbers show the percentage change between runs for
 the amount of leaks and amount of bloat (negative numbers are better!).
 The bloat number is a metric determined by multiplying the total number
 of objects allocated of a given class by the class size. Note that
-although this isn\'t necessarily the amount of memory consumed at any
-given time, it does give an indication of how much memory we\'re
+although this isn't necessarily the amount of memory consumed at any
+given time, it does give an indication of how much memory we're
 consuming. The more memory in general, the worse the performance and
 footprint. The percentage 99999.99% will show up indicating an
 "infinite" amount of leakage. This happens when something that didn't
@@ -212,9 +212,9 @@ environment variables, which may be more convenient in some cases:
     mach mochitest --setenv=XPCOM_MEM_LOG_CLASSES=MyClass [options]
 
 For getting allocation stacks in automation, you can add the appropriate
-`--setenv` options to the test configurations for the platforms you\'re
+`--setenv` options to the test configurations for the platforms you're
 interested in. Those configurations are located in
-`testing/mozharness/configs/`. The most likely configs you\'ll want to
+`testing/mozharness/configs/`. The most likely configs you'll want to
 modify are listed below:
 
 -   Linux: `unittests/linux_unittest.py`
