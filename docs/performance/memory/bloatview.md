@@ -52,7 +52,7 @@ type of process.
 
 Here's how you interpret the columns.
 
--   The first, numerical column [is theindex](https://searchfox.org/mozilla-central/source/xpcom/base/nsTraceRefcnt.cpp#365)
+-   The first, numerical column [is the index](https://searchfox.org/mozilla-central/source/xpcom/base/nsTraceRefcnt.cpp#365)
     of the leaking class.
 -   **Class** - The name of the class in question (truncated to 20
     characters).
@@ -78,7 +78,7 @@ Interesting things to look for:
     having your classes in the list is *not* ok. That means no one is
     looking at them, and we won't be able to tell if someone introduces
     a leak. (See
-    [How_to_instrument_your_objects_for_BloatView](bloatview.html#how-to-instrument-your-objects-for-bloatview)
+    [below](bloatview.html#how-to-instrument-your-objects-for-bloatview)
     for how to fix this.)
 -   **The Bytes Leaked for your classes should be zero!** - Need I say
     more? If it isn't, you should use the other tools to fix it.
@@ -116,13 +116,13 @@ column).
        netscape   `netscape.txt`   Tue Aug 29 14:20:14 2000
        ---------- ---------------- --------------------------
 
-The numbers do not include malloc d data such as string contents.
+The numbers do not include malloc'd data such as string contents.
 
 Click on a column heading to sort by that column. Click on a class name
 to see details for that class.
 
        -------------------- --------------- ----------------- --------- --------- ---------- ---------- ------------------------------- --------- -------- ---------- ---------
-       Class Name           Instance Size   Bytes allocated                                             Bytes allocated but not freed                                 
+       Class Name           Instance Size   Bytes allocated                                             Bytes allocated but not freed
                                             blank             mozilla   yahoo     netscape   Total      blank                           mozilla   yahoo    netscape   Total
        TOTAL                                                                                            1754408                         432556    179828   404184     2770976
        nsStr                20              6261600           3781900   1120920   1791340    12955760   222760                          48760     13280    76160      360960
