@@ -2499,8 +2499,8 @@ HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::DeleteBRElement(
   }
 
   if (mLeftContent && mRightContent &&
-      HTMLEditor::NodesInDifferentTableElements(*mLeftContent,
-                                                *mRightContent)) {
+      HTMLEditUtils::GetInclusiveAncestorAnyTableElement(*mLeftContent) !=
+          HTMLEditUtils::GetInclusiveAncestorAnyTableElement(*mRightContent)) {
     return EditActionHandled();
   }
 
@@ -2536,8 +2536,8 @@ nsresult HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::
   MOZ_ASSERT(mLeftContent);
   MOZ_ASSERT(mRightContent);
 
-  if (HTMLEditor::NodesInDifferentTableElements(*mLeftContent,
-                                                *mRightContent)) {
+  if (HTMLEditUtils::GetInclusiveAncestorAnyTableElement(*mLeftContent) !=
+      HTMLEditUtils::GetInclusiveAncestorAnyTableElement(*mRightContent)) {
     if (!mDeleteRangesHandlerConst.CanFallbackToDeleteRangesWithTransaction(
             aRangesToDelete)) {
       nsresult rv = aRangesToDelete.Collapse(aCaretPoint);
@@ -2632,8 +2632,8 @@ EditActionResult HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::
   MOZ_ASSERT(mLeftContent);
   MOZ_ASSERT(mRightContent);
 
-  if (HTMLEditor::NodesInDifferentTableElements(*mLeftContent,
-                                                *mRightContent)) {
+  if (HTMLEditUtils::GetInclusiveAncestorAnyTableElement(*mLeftContent) !=
+      HTMLEditUtils::GetInclusiveAncestorAnyTableElement(*mRightContent)) {
     // If we have not deleted `<br>` element and are not called recursively,
     // we should call `DeleteRangesWithTransaction()` here.
     if (!mDeleteRangesHandler->CanFallbackToDeleteRangesWithTransaction(
@@ -2788,8 +2788,8 @@ bool HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::
   }
 
   // Don't cross table boundaries.
-  return !HTMLEditor::NodesInDifferentTableElements(*mLeftContent,
-                                                    *mRightContent);
+  return HTMLEditUtils::GetInclusiveAncestorAnyTableElement(*mLeftContent) ==
+         HTMLEditUtils::GetInclusiveAncestorAnyTableElement(*mRightContent);
 }
 
 nsresult HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::

@@ -2600,7 +2600,8 @@ EditActionResult HTMLEditor::ChangeSelectedHardLinesToList(
     // make sure we don't assemble content that is in different table cells
     // into the same list.  respect table cell boundaries when listifying.
     if (curList &&
-        HTMLEditor::NodesInDifferentTableElements(*curList, content)) {
+        HTMLEditUtils::GetInclusiveAncestorAnyTableElement(*curList) !=
+            HTMLEditUtils::GetInclusiveAncestorAnyTableElement(content)) {
       curList = nullptr;
     }
 
@@ -3900,7 +3901,8 @@ nsresult HTMLEditor::HandleHTMLIndentAtSelectionInternal() {
     // One reason it might not go in prio blockquote is if we are now
     // in a different table cell.
     if (curQuote &&
-        HTMLEditor::NodesInDifferentTableElements(*curQuote, content)) {
+        HTMLEditUtils::GetInclusiveAncestorAnyTableElement(*curQuote) !=
+            HTMLEditUtils::GetInclusiveAncestorAnyTableElement(content)) {
       curQuote = nullptr;
     }
 
@@ -8301,31 +8303,17 @@ nsIContent* HTMLEditor::FindNearEditableContent(
   }
 
   // don't cross any table elements
-  if (HTMLEditor::NodesInDifferentTableElements(*editableContent,
-                                                *aPoint.GetContainer())) {
+  if ((!aPoint.IsInContentNode() &&
+       !!HTMLEditUtils::GetInclusiveAncestorAnyTableElement(
+           *editableContent)) ||
+      (HTMLEditUtils::GetInclusiveAncestorAnyTableElement(*editableContent) !=
+       HTMLEditUtils::GetInclusiveAncestorAnyTableElement(
+           *aPoint.ContainerAsContent()))) {
     return nullptr;
   }
 
   // otherwise, ok, we have found a good spot to put the selection
   return editableContent;
-}
-
-// static
-bool HTMLEditor::NodesInDifferentTableElements(nsINode& aNode1,
-                                               nsINode& aNode2) {
-  nsINode* parentNode1;
-  for (parentNode1 = &aNode1;
-       parentNode1 && !HTMLEditUtils::IsAnyTableElement(parentNode1);
-       parentNode1 = parentNode1->GetParentNode()) {
-  }
-  nsINode* parentNode2;
-  for (parentNode2 = &aNode2;
-       parentNode2 && !HTMLEditUtils::IsAnyTableElement(parentNode2);
-       parentNode2 = parentNode2->GetParentNode()) {
-  }
-  // XXX Despite of the name, this returns true if only one node is in a
-  //     table related element.
-  return parentNode1 != parentNode2;
 }
 
 nsresult HTMLEditor::RemoveEmptyNodesIn(nsRange& aRange) {
