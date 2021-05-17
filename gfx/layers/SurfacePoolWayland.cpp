@@ -9,11 +9,9 @@
 
 namespace mozilla::layers {
 
-using gl::GLContext;
 using gl::GLContextEGL;
 
-NativeSurfaceWayland::NativeSurfaceWayland(const gfx::IntSize& aSize,
-                                           GLContext* aGL)
+NativeSurfaceWayland::NativeSurfaceWayland(const IntSize& aSize, GLContext* aGL)
     : mGL(aGL) {
   wl_compositor* compositor = widget::WaylandDisplayGet()->GetCompositor();
   mWlSurface = wl_compositor_create_surface(compositor);
@@ -60,12 +58,12 @@ void SurfacePoolWayland::DestroyGLResourcesForContext(GLContext* aGL) {
 }
 
 bool SurfacePoolWayland::CanRecycleSurfaceForRequest(
-    const SurfacePoolEntry& aEntry, const gfx::IntSize& aSize, GLContext* aGL) {
+    const SurfacePoolEntry& aEntry, const IntSize& aSize, GLContext* aGL) {
   return aEntry.mSize == aSize;
 }
 
 RefPtr<NativeSurfaceWayland> SurfacePoolWayland::ObtainSurfaceFromPool(
-    const gfx::IntSize& aSize, GLContext* aGL) {
+    const IntSize& aSize, GLContext* aGL) {
   auto iterToRecycle =
       std::find_if(mAvailableEntries.begin(), mAvailableEntries.end(),
                    [&](const SurfacePoolEntry& aEntry) {
@@ -112,7 +110,7 @@ void SurfacePoolHandleWayland::OnBeginFrame() {}
 void SurfacePoolHandleWayland::OnEndFrame() { mPool->EnforcePoolSizeLimit(); }
 
 RefPtr<NativeSurfaceWayland> SurfacePoolHandleWayland::ObtainSurfaceFromPool(
-    const gfx::IntSize& aSize) {
+    const IntSize& aSize) {
   return mPool->ObtainSurfaceFromPool(aSize, mGL);
 }
 
