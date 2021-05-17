@@ -48,6 +48,7 @@ namespace mozilla {
 using namespace dom;
 using EmptyCheckOption = HTMLEditUtils::EmptyCheckOption;
 using InvisibleWhiteSpaces = HTMLEditUtils::InvisibleWhiteSpaces;
+using LeafNodeType = HTMLEditUtils::LeafNodeType;
 using StyleDifference = HTMLEditUtils::StyleDifference;
 using TableBoundary = HTMLEditUtils::TableBoundary;
 using WalkTreeOption = HTMLEditUtils::WalkTreeOption;
@@ -2434,13 +2435,15 @@ bool HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::
 
   // First find the adjacent node in the block
   if (aDirectionAndAmount == nsIEditor::ePrevious) {
-    mLeafContentInOtherBlock =
-        aHTMLEditor.GetLastEditableLeaf(aOtherBlockElement);
+    mLeafContentInOtherBlock = HTMLEditUtils::GetLastLeafContent(
+        aOtherBlockElement, {LeafNodeType::OnlyEditableLeafNode},
+        &aOtherBlockElement);
     mLeftContent = mLeafContentInOtherBlock;
     mRightContent = aCaretPoint.GetContainerAsContent();
   } else {
-    mLeafContentInOtherBlock =
-        aHTMLEditor.GetFirstEditableLeaf(aOtherBlockElement);
+    mLeafContentInOtherBlock = HTMLEditUtils::GetFirstLeafContent(
+        aOtherBlockElement, {LeafNodeType::OnlyEditableLeafNode},
+        &aOtherBlockElement);
     mLeftContent = aCaretPoint.GetContainerAsContent();
     mRightContent = mLeafContentInOtherBlock;
   }
