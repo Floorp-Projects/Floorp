@@ -88,7 +88,6 @@ const PREFS_WHITELIST = [
   "plugin.",
   "plugins.",
   "privacy.",
-  "remote.enabled",
   "security.",
   "services.sync.declinedEngines",
   "services.sync.lastPing",

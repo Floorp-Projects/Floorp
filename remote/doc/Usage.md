@@ -14,7 +14,7 @@ three different programs/components running simultaneously:
 
   * and the __target__, which is the web document being debugging.
 
-The remote agent ships in [Firefox Nightly] only.
+Since Firefox 86 the remote agent ships in all Firefox releases by default.
 
 To check if your Firefox binary has the remote agent enabled, you
 can look in its help message for this:

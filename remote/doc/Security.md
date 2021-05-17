@@ -25,12 +25,6 @@ flag.  Connections are by default restricted to loopback devices
 (such as localhost and 127.0.0.1), but this can be overridden with
 the `remote.force-local` preference.
 
-The feature as a whole is guarded behind the `remote.enabled`
-preference.  This preference serves as a way to gate the remote
-agent component through release channels, and potentially for
-remotely disabling the remote agent through Normandy if the need
-should arise.
-
 Since the remote agent is not an in-document web feature, the
 security concerns we have for this feature are essentially different
 to other web platform features.  The primary concern is that the
@@ -91,9 +85,8 @@ It is our assumption that if an attacker has shell access to the
 user account, there is little we can do to prevent secrets from
 being accessed or leaked.
 
-The preference `remote.enabled` is true on the Firefox Nightly
-release channel.  The [security review] was completed in November
-2019.
+The remote agent is available on all release channels.
+The [security review] was completed in November 2019.
 
 
 [security review]: https://bugzilla.mozilla.org/show_bug.cgi?id=1542229
