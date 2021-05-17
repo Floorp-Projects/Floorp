@@ -171,6 +171,9 @@ void swgl_commitTextureColorRGBA8(sampler, vec2 uv, vec4 uv_bounds, vec4|float c
 
 void swgl_commitTextureRepeatRGBA8(sampler, vec2 uv, vec2 tile_repeat, vec4 uv_repeat, vec4 uv_bounds);
 void swgl_commitTextureRepeatColorRGBA8(sampler, vec2 uv, vec2 tile_repeat, vec4 uv_repeat, vec4 uv_bounds, vec4|float color);
+
+void swgl_commitPartialTextureLinearR8(int len, sampler, vec2 uv, vec4 uv_bounds);
+void swgl_commitPartialTextureLinearInvertR8(int len, sampler, vec2 uv, vec4 uv_bounds);
 ```
 
 Samples and commits an entire span of texture starting at the given uv and
@@ -192,6 +195,11 @@ scale and offset the UVs, assuming the UVs are normalized to repeat in the
 range 0 to 1. For NearestRepeat variations, it is assumed the repeat rect is
 always within the bounds. The tile repeat limit, if non-zero, specifies the
 maximum number of repetitions allowed.
+
+The Partial variations allow committing only a sub-span rather the entire
+remaining span. These are currently only implemented in linear R8 variants
+for optimizing clip shaders in WebRender. The Invert variant of these is
+useful for implementing clip-out modes by inverting the source texture value.
 
 ```
 // Premultiplied alpha over blend, but with source color set to source alpha modulated with a constant color.

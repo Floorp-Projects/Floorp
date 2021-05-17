@@ -2063,6 +2063,10 @@ SI vec4_scalar if_then_else(int32_t c, vec4_scalar t, vec4_scalar e) {
   return c ? t : e;
 }
 
+SI vec2 clamp(vec2 a, Float minVal, Float maxVal) {
+  return vec2(clamp(a.x, minVal, maxVal), clamp(a.y, minVal, maxVal));
+}
+
 SI vec2 clamp(vec2 a, vec2 minVal, vec2 maxVal) {
   return vec2(clamp(a.x, minVal.x, maxVal.x), clamp(a.y, minVal.y, maxVal.y));
 }
@@ -2070,6 +2074,10 @@ SI vec2 clamp(vec2 a, vec2 minVal, vec2 maxVal) {
 SI vec2_scalar clamp(vec2_scalar a, vec2_scalar minVal, vec2_scalar maxVal) {
   return vec2_scalar{clamp(a.x, minVal.x, maxVal.x),
                      clamp(a.y, minVal.y, maxVal.y)};
+}
+
+SI vec2_scalar clamp(vec2_scalar a, float minVal, float maxVal) {
+  return vec2_scalar{clamp(a.x, minVal, maxVal), clamp(a.y, minVal, maxVal)};
 }
 
 SI I32 clamp(I32 a, I32 minVal, I32 maxVal) {
@@ -2087,6 +2095,11 @@ SI vec3 clamp(vec3 a, vec3 minVal, vec3 maxVal) {
               clamp(a.z, minVal.z, maxVal.z));
 }
 
+SI vec4 clamp(vec4 a, Float minVal, Float maxVal) {
+  return vec4(clamp(a.x, minVal, maxVal), clamp(a.y, minVal, maxVal),
+              clamp(a.z, minVal, maxVal), clamp(a.w, minVal, maxVal));
+}
+
 SI vec4 clamp(vec4 a, vec4 minVal, vec4 maxVal) {
   return vec4(clamp(a.x, minVal.x, maxVal.x), clamp(a.y, minVal.y, maxVal.y),
               clamp(a.z, minVal.z, maxVal.z), clamp(a.w, minVal.w, maxVal.w));
@@ -2096,6 +2109,11 @@ SI vec4_scalar clamp(vec4_scalar a, vec4_scalar minVal, vec4_scalar maxVal) {
   return vec4_scalar{
       clamp(a.x, minVal.x, maxVal.x), clamp(a.y, minVal.y, maxVal.y),
       clamp(a.z, minVal.z, maxVal.z), clamp(a.w, minVal.w, maxVal.w)};
+}
+
+SI vec4_scalar clamp(vec4_scalar a, float minVal, float maxVal) {
+  return vec4_scalar{clamp(a.x, minVal, maxVal), clamp(a.y, minVal, maxVal),
+                     clamp(a.z, minVal, maxVal), clamp(a.w, minVal, maxVal)};
 }
 
 vec4 step(vec4 edge, vec4 x) {
@@ -2577,6 +2595,16 @@ SI Float mix(Float x, Float y, Float a) { return (y - x) * a + x; }
 template <typename T>
 SI T mix(T x, T y, float a) {
   return (y - x) * a + x;
+}
+
+template <typename T>
+SI T mix(T x, T y, vec2_scalar a) {
+  return T{mix(x.x, y.x, a.x), mix(x.y, y.y, a.y)};
+}
+
+template <typename T>
+SI T mix(T x, T y, vec3_scalar a) {
+  return T{mix(x.x, y.x, a.x), mix(x.y, y.y, a.y), mix(x.z, y.z, a.z)};
 }
 
 template <typename T>
