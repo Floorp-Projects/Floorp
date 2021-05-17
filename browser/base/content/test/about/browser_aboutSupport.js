@@ -3,6 +3,13 @@
 
 "use strict";
 
+const { ExperimentAPI, NimbusFeatures } = ChromeUtils.import(
+  "resource://nimbus/ExperimentAPI.jsm"
+);
+const { ExperimentFakes } = ChromeUtils.import(
+  "resource://testing-common/NimbusTestUtils.jsm"
+);
+
 add_task(async function() {
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "about:support" },
@@ -58,6 +65,72 @@ add_task(async function() {
         }
       );
       ok(keyMozillaStatus, "Mozilla API key status shown");
+    }
+  );
+});
+
+add_task(async function test_nimbus_experiments() {
+  await ExperimentAPI.ready();
+  let doExperimentCleanup = await ExperimentFakes.enrollWithFeatureConfig({
+    enabled: true,
+    featureId: "aboutwelcome",
+    value: null,
+  });
+
+  await BrowserTestUtils.withNewTab(
+    { gBrowser, url: "about:support" },
+    async function(browser) {
+      let experimentName = await SpecialPowers.spawn(
+        browser,
+        [],
+        async function() {
+          await ContentTaskUtils.waitForCondition(
+            () =>
+              content.document.querySelector(
+                "#remote-experiments-tbody tr:first-child td"
+              ).innerText
+          );
+          return content.document.querySelector(
+            "#remote-experiments-tbody tr:first-child td"
+          ).innerText;
+        }
+      );
+      ok(
+        experimentName.match("Nimbus"),
+        "Rendered the expected experiment slug"
+      );
+    }
+  );
+
+  await doExperimentCleanup();
+});
+
+add_task(async function test_remote_configuration() {
+  await ExperimentAPI.ready();
+  await ExperimentFakes.remoteDefaultsHelper({
+    feature: NimbusFeatures.aboutwelcome,
+    configuration: {
+      slug: "about:studies-configuration-slug",
+      enabled: true,
+      variables: {},
+    },
+  });
+
+  await BrowserTestUtils.withNewTab(
+    { gBrowser, url: "about:support" },
+    async function(browser) {
+      let featureId = await SpecialPowers.spawn(browser, [], async function() {
+        await ContentTaskUtils.waitForCondition(
+          () =>
+            content.document.querySelector(
+              "#remote-features-tbody tr:first-child td"
+            ).innerText
+        );
+        return content.document.querySelector(
+          "#remote-features-tbody tr:first-child td"
+        ).innerText;
+      });
+      ok(featureId.match("aboutwelcome"), "Rendered the expected featureId");
     }
   );
 });

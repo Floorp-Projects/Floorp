@@ -898,13 +898,28 @@ var dataProviders = {
     const {
       PreferenceRollouts: NormandyPreferenceRollouts,
     } = ChromeUtils.import("resource://normandy/lib/PreferenceRollouts.jsm");
+    const { ExperimentManager } = ChromeUtils.import(
+      "resource://nimbus/lib/ExperimentManager.jsm"
+    );
 
     // Get Normandy data in parallel, and sort each group by slug.
-    const [addonStudies, prefRollouts, prefStudies] = await Promise.all(
+    const [
+      addonStudies,
+      prefRollouts,
+      prefStudies,
+      nimbusExperiments,
+      remoteConfigs,
+    ] = await Promise.all(
       [
         NormandyAddonStudies.getAllActive(),
         NormandyPreferenceRollouts.getAllActive(),
         NormandyPreferenceStudies.getAllActive(),
+        ExperimentManager.store
+          .ready()
+          .then(() => ExperimentManager.store.getAllActive()),
+        ExperimentManager.store
+          .ready()
+          .then(() => ExperimentManager.store.getAllRemoteConfigs()),
       ].map(promise =>
         promise
           .catch(error => {
@@ -919,6 +934,8 @@ var dataProviders = {
       addonStudies,
       prefRollouts,
       prefStudies,
+      nimbusExperiments,
+      remoteConfigs,
     });
   },
 };
