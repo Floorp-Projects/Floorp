@@ -12,6 +12,7 @@
 #include "mozilla/AutoRestore.h"
 #include "mozilla/MiscEvents.h"
 #include "mozilla/MouseEvents.h"
+#include "mozilla/StaticPrefs_intl.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/TextEventDispatcher.h"
 #include "mozilla/TextEvents.h"
@@ -3789,6 +3790,8 @@ void IMEInputHandler::InsertTextAsCommittingComposition(NSAttributedString* aAtt
   nsCocoaUtils::GetStringForNSString([aAttrString string], str);
 
   if (!IsIMEComposing()) {
+    MOZ_DIAGNOSTIC_ASSERT(!str.IsEmpty());
+
     // If there is no selection and replacement range is specified, set the
     // range as selection.
     if (aReplacementRange && aReplacementRange->location != NSNotFound &&
@@ -3796,6 +3799,21 @@ void IMEInputHandler::InsertTextAsCommittingComposition(NSAttributedString* aAtt
       NS_ENSURE_TRUE_VOID(SetSelection(*aReplacementRange));
     }
 
+    if (!StaticPrefs::intl_ime_use_composition_events_for_insert_text()) {
+      // In the default settings, we should not use composition events for
+      // inserting text without key press nor IME composition because the
+      // other browsers do so.   This will cause only a cancelable `beforeinput`
+      // event whose `inputType` is `insertText`.
+      WidgetContentCommandEvent insertTextEvent(true, eContentCommandInsertText, mWidget);
+      insertTextEvent.mString = Some(str);
+      DispatchEvent(insertTextEvent);
+      return;
+    }
+
+    // Otherise, emulate an IME composition.  This is our traditional behavior,
+    // but `beforeinput` events are not cancelable since they should be so for
+    // native IME limitation.  So, this is now seriously imcompatible with the
+    // other browsers.
     if (!DispatchCompositionStartEvent()) {
       MOZ_LOG(gLog, LogLevel::Info,
               ("%p IMEInputHandler::InsertTextAsCommittingComposition, "
