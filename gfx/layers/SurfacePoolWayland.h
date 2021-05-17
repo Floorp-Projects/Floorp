@@ -11,9 +11,10 @@
 #include "mozilla/layers/SurfacePool.h"
 #include "mozilla/widget/nsWaylandDisplay.h"
 
-namespace mozilla {
+namespace mozilla::layers {
 
-namespace layers {
+using gfx::IntSize;
+using gl::GLContext;
 
 class NativeSurfaceWayland {
  public:
@@ -27,10 +28,10 @@ class NativeSurfaceWayland {
 
  private:
   friend class SurfacePoolWayland;
-  NativeSurfaceWayland(const gfx::IntSize& aSize, gl::GLContext* aGL);
+  NativeSurfaceWayland(const IntSize& aSize, GLContext* aGL);
   ~NativeSurfaceWayland();
 
-  gl::GLContext* mGL = nullptr;
+  GLContext* mGL = nullptr;
   struct wl_egl_window* mEGLWindow = nullptr;
   EGLSurface mEGLSurface = nullptr;
 };
@@ -38,10 +39,10 @@ class NativeSurfaceWayland {
 class SurfacePoolWayland final : public SurfacePool {
  public:
   // Get a handle for a new window. aGL can be nullptr.
-  RefPtr<SurfacePoolHandle> GetHandleForGL(gl::GLContext* aGL) override;
+  RefPtr<SurfacePoolHandle> GetHandleForGL(GLContext* aGL) override;
 
   // Destroy all GL resources associated with aGL managed by this pool.
-  void DestroyGLResourcesForContext(gl::GLContext* aGL) override;
+  void DestroyGLResourcesForContext(GLContext* aGL) override;
 
  private:
   friend class SurfacePoolHandleWayland;
@@ -49,19 +50,18 @@ class SurfacePoolWayland final : public SurfacePool {
 
   explicit SurfacePoolWayland(size_t aPoolSizeLimit);
 
-  RefPtr<NativeSurfaceWayland> ObtainSurfaceFromPool(const gfx::IntSize& aSize,
-                                                     gl::GLContext* aGL);
+  RefPtr<NativeSurfaceWayland> ObtainSurfaceFromPool(const IntSize& aSize,
+                                                     GLContext* aGL);
   void ReturnSurfaceToPool(const RefPtr<NativeSurfaceWayland>& aSurface);
   void EnforcePoolSizeLimit();
 
   struct SurfacePoolEntry {
-    gfx::IntSize mSize;
+    IntSize mSize;
     RefPtr<NativeSurfaceWayland> mNativeSurface;  // non-null
   };
 
   bool CanRecycleSurfaceForRequest(const SurfacePoolEntry& aEntry,
-                                   const gfx::IntSize& aSize,
-                                   gl::GLContext* aGL);
+                                   const IntSize& aSize, GLContext* aGL);
 
   // Stores the entries for surfaces that are in use by NativeLayerWayland, i.e.
   // an entry is inside mInUseEntries between calls to ObtainSurfaceFromPool()
@@ -91,7 +91,7 @@ class SurfacePoolHandleWayland final : public SurfacePoolHandle {
     return this;
   }
 
-  RefPtr<NativeSurfaceWayland> ObtainSurfaceFromPool(const gfx::IntSize& aSize);
+  RefPtr<NativeSurfaceWayland> ObtainSurfaceFromPool(const IntSize& aSize);
   void ReturnSurfaceToPool(const RefPtr<NativeSurfaceWayland>& aSurface);
   const auto& gl() { return mGL; }
 
@@ -101,14 +101,12 @@ class SurfacePoolHandleWayland final : public SurfacePoolHandle {
 
  private:
   friend class SurfacePoolWayland;
-  SurfacePoolHandleWayland(RefPtr<SurfacePoolWayland> aPool,
-                           gl::GLContext* aGL);
+  SurfacePoolHandleWayland(RefPtr<SurfacePoolWayland> aPool, GLContext* aGL);
 
   const RefPtr<SurfacePoolWayland> mPool;
-  const RefPtr<gl::GLContext> mGL;
+  const RefPtr<GLContext> mGL;
 };
 
-}  // namespace layers
-}  // namespace mozilla
+}  // namespace mozilla::layers
 
 #endif

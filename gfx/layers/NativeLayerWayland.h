@@ -18,13 +18,16 @@
 #include "nsRegion.h"
 #include "nsISupportsImpl.h"
 
-namespace mozilla {
+namespace mozilla::layers {
 
-namespace gl {
-class GLContextEGL;
-}  // namespace gl
-
-namespace layers {
+using gfx::BackendType;
+using gfx::DrawTarget;
+using gfx::IntPoint;
+using gfx::IntRect;
+using gfx::IntRegion;
+using gfx::IntSize;
+using gfx::Matrix4x4;
+using gfx::SamplingFilter;
 
 class NativeLayerRootWayland : public NativeLayerRoot {
  public:
@@ -33,7 +36,7 @@ class NativeLayerRootWayland : public NativeLayerRoot {
 
   // Overridden methods
   already_AddRefed<NativeLayer> CreateLayer(
-      const gfx::IntSize& aSize, bool aIsOpaque,
+      const IntSize& aSize, bool aIsOpaque,
       SurfacePoolHandle* aSurfacePoolHandle) override;
   void AppendLayer(NativeLayer* aLayer) override;
   void RemoveLayer(NativeLayer* aLayer) override;
@@ -76,25 +79,25 @@ class NativeLayerWayland : public NativeLayer {
   virtual NativeLayerWayland* AsNativeLayerWayland() override { return this; }
 
   // Overridden methods
-  gfx::IntSize GetSize() override;
-  void SetPosition(const gfx::IntPoint& aPosition) override;
-  gfx::IntPoint GetPosition() override;
-  void SetTransform(const gfx::Matrix4x4& aTransform) override;
-  gfx::Matrix4x4 GetTransform() override;
-  gfx::IntRect GetRect() override;
-  void SetSamplingFilter(gfx::SamplingFilter aSamplingFilter) override;
-  RefPtr<gfx::DrawTarget> NextSurfaceAsDrawTarget(
-      const gfx::IntRect& aDisplayRect, const gfx::IntRegion& aUpdateRegion,
-      gfx::BackendType aBackendType) override;
-  Maybe<GLuint> NextSurfaceAsFramebuffer(const gfx::IntRect& aDisplayRect,
-                                         const gfx::IntRegion& aUpdateRegion,
+  IntSize GetSize() override;
+  void SetPosition(const IntPoint& aPosition) override;
+  IntPoint GetPosition() override;
+  void SetTransform(const Matrix4x4& aTransform) override;
+  Matrix4x4 GetTransform() override;
+  IntRect GetRect() override;
+  void SetSamplingFilter(SamplingFilter aSamplingFilter) override;
+  RefPtr<DrawTarget> NextSurfaceAsDrawTarget(const IntRect& aDisplayRect,
+                                             const IntRegion& aUpdateRegion,
+                                             BackendType aBackendType) override;
+  Maybe<GLuint> NextSurfaceAsFramebuffer(const IntRect& aDisplayRect,
+                                         const IntRegion& aUpdateRegion,
                                          bool aNeedsDepth) override;
   void NotifySurfaceReady() override;
   void DiscardBackbuffers() override;
   bool IsOpaque() override;
-  void SetClipRect(const Maybe<gfx::IntRect>& aClipRect) override;
-  Maybe<gfx::IntRect> ClipRect() override;
-  gfx::IntRect CurrentSurfaceDisplayRect() override;
+  void SetClipRect(const Maybe<IntRect>& aClipRect) override;
+  Maybe<IntRect> ClipRect() override;
+  IntRect CurrentSurfaceDisplayRect() override;
   void SetSurfaceIsFlipped(bool aIsFlipped) override;
   bool SurfaceIsFlipped() override;
 
@@ -105,7 +108,7 @@ class NativeLayerWayland : public NativeLayer {
  protected:
   friend class NativeLayerRootWayland;
 
-  NativeLayerWayland(const gfx::IntSize& aSize, bool aIsOpaque,
+  NativeLayerWayland(const IntSize& aSize, bool aIsOpaque,
                      SurfacePoolHandleWayland* aSurfacePoolHandle);
   explicit NativeLayerWayland(bool aIsOpaque);
   ~NativeLayerWayland() override;
@@ -113,14 +116,14 @@ class NativeLayerWayland : public NativeLayer {
   Mutex mMutex;
 
   RefPtr<SurfacePoolHandleWayland> mSurfacePoolHandle;
-  gfx::IntPoint mPosition;
-  gfx::Matrix4x4 mTransform;
-  gfx::IntRect mDisplayRect;
-  gfx::IntRect mValidRect;
-  gfx::IntRegion mDirtyRegion;
-  gfx::IntSize mSize;
-  Maybe<gfx::IntRect> mClipRect;
-  gfx::SamplingFilter mSamplingFilter = gfx::SamplingFilter::POINT;
+  IntPoint mPosition;
+  Matrix4x4 mTransform;
+  IntRect mDisplayRect;
+  IntRect mValidRect;
+  IntRegion mDirtyRegion;
+  IntSize mSize;
+  Maybe<IntRect> mClipRect;
+  SamplingFilter mSamplingFilter = SamplingFilter::POINT;
   float mBackingScale = 1.0f;
   bool mSurfaceIsFlipped = false;
   const bool mIsOpaque = false;
@@ -129,7 +132,6 @@ class NativeLayerWayland : public NativeLayer {
   RefPtr<NativeSurfaceWayland> mNativeSurface;
 };
 
-}  // namespace layers
-}  // namespace mozilla
+}  // namespace mozilla::layers
 
 #endif  // mozilla_layers_NativeLayerWayland_h

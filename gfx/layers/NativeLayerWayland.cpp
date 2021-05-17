@@ -16,11 +16,6 @@
 
 namespace mozilla::layers {
 
-using gfx::IntPoint;
-using gfx::IntRect;
-using gfx::IntRegion;
-using gfx::IntSize;
-using gfx::Matrix4x4;
 using gfx::Point;
 using gfx::Rect;
 using gfx::Size;
@@ -393,8 +388,7 @@ void NativeLayerWayland::SetTransform(const Matrix4x4& aTransform) {
   }
 }
 
-void NativeLayerWayland::SetSamplingFilter(
-    gfx::SamplingFilter aSamplingFilter) {
+void NativeLayerWayland::SetSamplingFilter(SamplingFilter aSamplingFilter) {
   MutexAutoLock lock(mMutex);
 
   if (aSamplingFilter != mSamplingFilter) {
@@ -425,7 +419,7 @@ bool NativeLayerWayland::IsOpaque() {
   return mIsOpaque;
 }
 
-void NativeLayerWayland::SetClipRect(const Maybe<gfx::IntRect>& aClipRect) {
+void NativeLayerWayland::SetClipRect(const Maybe<IntRect>& aClipRect) {
   MutexAutoLock lock(mMutex);
 
   if (aClipRect != mClipRect) {
@@ -433,19 +427,19 @@ void NativeLayerWayland::SetClipRect(const Maybe<gfx::IntRect>& aClipRect) {
   }
 }
 
-Maybe<gfx::IntRect> NativeLayerWayland::ClipRect() {
+Maybe<IntRect> NativeLayerWayland::ClipRect() {
   MutexAutoLock lock(mMutex);
   return mClipRect;
 }
 
-gfx::IntRect NativeLayerWayland::CurrentSurfaceDisplayRect() {
+IntRect NativeLayerWayland::CurrentSurfaceDisplayRect() {
   MutexAutoLock lock(mMutex);
   return mDisplayRect;
 }
 
-RefPtr<gfx::DrawTarget> NativeLayerWayland::NextSurfaceAsDrawTarget(
+RefPtr<DrawTarget> NativeLayerWayland::NextSurfaceAsDrawTarget(
     const IntRect& aDisplayRect, const IntRegion& aUpdateRegion,
-    gfx::BackendType aBackendType) {
+    BackendType aBackendType) {
   MOZ_ASSERT(false);
   return nullptr;
 }
@@ -458,7 +452,6 @@ Maybe<GLuint> NativeLayerWayland::NextSurfaceAsFramebuffer(
   mValidRect = IntRect(aDisplayRect);
   mDirtyRegion = IntRegion(aUpdateRegion);
 
-  MOZ_ASSERT(!mSize.IsEmpty());
   if (!mNativeSurface) {
     mNativeSurface = mSurfacePoolHandle->ObtainSurfaceFromPool(mSize);
   }
