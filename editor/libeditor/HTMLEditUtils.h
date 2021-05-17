@@ -1095,6 +1095,34 @@ class HTMLEditUtils final {
   static Element* GetClosestAncestorAnyListElement(const nsIContent& aContent);
 
   /**
+   * GetClosestAncestorListItemElement() returns a list item element if
+   * aContent or its ancestor in editing host is one.  However, this won't
+   * cross table related element.
+   */
+  static Element* GetClosestAncestorListItemElement(
+      const nsIContent& aContent, const Element* aAncestorLimit = nullptr) {
+    MOZ_ASSERT_IF(aAncestorLimit,
+                  aContent.IsInclusiveDescendantOf(aAncestorLimit));
+
+    if (HTMLEditUtils::IsListItem(&aContent)) {
+      return const_cast<Element*>(aContent.AsElement());
+    }
+
+    for (Element* parentElement : aContent.AncestorsOfType<Element>()) {
+      if (HTMLEditUtils::IsAnyTableElement(parentElement)) {
+        return nullptr;
+      }
+      if (HTMLEditUtils::IsListItem(parentElement)) {
+        return parentElement;
+      }
+      if (parentElement == aAncestorLimit) {
+        return nullptr;
+      }
+    }
+    return nullptr;
+  }
+
+  /**
    * GetMostDistantAncestorInlineElement() returns the most distant ancestor
    * inline element between aContent and the aEditingHost.  Even if aEditingHost
    * is an inline element, this method never returns aEditingHost as the result.
