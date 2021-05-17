@@ -47,6 +47,16 @@ class HomeScreenRobot {
 
     fun clickOnboardingFinishBtn() = finishBtn.click()
 
+    fun verifyHomeScreenTipIsDisplayed(isDisplayed: Boolean) {
+        val teaser = getStringResource(R.string.teaser)
+        if (isDisplayed) {
+            homeScreenTips.waitForExists(waitingTime)
+            assertTrue(homeScreenTips.text != teaser)
+        } else {
+            assertTrue(homeScreenTips.text == teaser)
+        }
+    }
+
     class Transition {
         fun openMainMenu(interact: ThreeDotMainMenuRobot.() -> Unit): ThreeDotMainMenuRobot.Transition {
             searchBar.waitForExists(waitingTime)
@@ -101,3 +111,6 @@ private val finishBtn = mDevice.findObject(
         .resourceId("$packageName:id/finish")
         .enabled(true)
 )
+
+private val homeScreenTips =
+        mDevice.findObject(UiSelector().resourceId("$packageName:id/homeViewTipsLabel"))

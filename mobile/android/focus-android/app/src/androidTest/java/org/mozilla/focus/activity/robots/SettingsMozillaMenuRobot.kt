@@ -29,6 +29,12 @@ class SettingsMozillaMenuRobot {
         privacyNoticeLink.check(matches(isDisplayed()))
     }
 
+    fun switchHomeScreenTips() {
+        showTipsSwitch
+                .check(matches(isDisplayed()))
+                .perform(click())
+    }
+
     fun openAboutPage() {
         aboutFocusPageLink
             .check(matches(isDisplayed()))

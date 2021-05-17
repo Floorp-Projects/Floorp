@@ -11,6 +11,7 @@ import androidx.test.espresso.ViewInteraction
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.hasDescendant
+import androidx.test.espresso.matcher.ViewMatchers.isCompletelyDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withContentDescription
 import androidx.test.espresso.matcher.ViewMatchers.withId
@@ -159,7 +160,9 @@ class BrowserRobot {
         }
 
         fun clearBrowsingData(interact: HomeScreenRobot.() -> Unit): HomeScreenRobot.Transition {
-            floatingEraseButton.perform(click())
+            floatingEraseButton
+                    .check(matches(isCompletelyDisplayed()))
+                    .perform(click())
 
             HomeScreenRobot().interact()
             return HomeScreenRobot.Transition()

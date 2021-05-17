@@ -76,31 +76,25 @@ private val settingsMenuList = UiScrollable(UiSelector().resourceId("$packageNam
 
 private val generalSettingsMenu = settingsMenuList.getChild(
     UiSelector()
-        .resourceId("android:id/title")
         .text("General")
 )
 
 private val searchSettingsMenu = settingsMenuList.getChild(
     UiSelector()
-        .resourceId("android:id/title")
         .text("Search")
-        .enabled(true)
 )
 
 private val privacySettingsMenu = settingsMenuList.getChild(
     UiSelector()
-        .resourceId("android:id/title")
         .text("Privacy & Security")
 )
 
 private val advancedSettingsMenu = settingsMenuList.getChild(
     UiSelector()
         .text("Advanced")
-        .resourceId("android:id/title")
 )
 
 private val mozillaSettingsMenu = settingsMenuList.getChild(
     UiSelector()
         .text("Mozilla")
-        .resourceId("android:id/title")
 )

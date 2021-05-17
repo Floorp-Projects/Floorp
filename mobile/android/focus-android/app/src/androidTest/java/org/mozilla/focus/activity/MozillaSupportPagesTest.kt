@@ -12,6 +12,7 @@ import org.mozilla.focus.activity.robots.browserScreen
 import org.mozilla.focus.activity.robots.homeScreen
 import org.mozilla.focus.helpers.MainActivityFirstrunTestRule
 import org.mozilla.focus.helpers.TestHelper.appContext
+import org.mozilla.focus.helpers.TestHelper.exitToTop
 
 // This test visits each About page and checks whether some essential elements are being displayed
 @RunWith(AndroidJUnit4ClassRunner::class)
@@ -92,6 +93,20 @@ class MozillaSupportPagesTest {
         }
         browserScreen {
             verifyPageURL("privacy/firefox-focus")
+        }
+    }
+
+    @Test
+    fun turnOffHomeScreenTipsTest() {
+        homeScreen {
+        }.openMainMenu {
+        }.openSettings {
+        }.openMozillaSettingsMenu {
+            switchHomeScreenTips()
+            exitToTop()
+        }
+        homeScreen {
+            verifyHomeScreenTipIsDisplayed(false)
         }
     }
 }
