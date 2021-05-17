@@ -2883,7 +2883,7 @@ already_AddRefed<nsIPrincipal> Document::MaybeDowngradePrincipal(
       auto* parentWin = nsGlobalWindowOuter::Cast(parent->GetDOMWindow());
       if (!parentWin || !parentWin->GetPrincipal()->IsSystemPrincipal()) {
         nsCOMPtr<nsIPrincipal> nullPrincipal =
-            do_CreateInstance("@mozilla.org/nullprincipal;1");
+            NullPrincipal::CreateWithoutOriginAttributes();
         return nullPrincipal.forget();
       }
     }

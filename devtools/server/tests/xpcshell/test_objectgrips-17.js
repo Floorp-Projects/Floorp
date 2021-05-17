@@ -280,7 +280,7 @@ function check_prototype(
 }
 
 function createNullPrincipal() {
-  return Cc["@mozilla.org/nullprincipal;1"].createInstance(Ci.nsIPrincipal);
+  return Services.scriptSecurityManager.createNullPrincipal({});
 }
 
 async function run_tests_in_principal(

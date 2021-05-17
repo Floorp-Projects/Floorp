@@ -81,7 +81,6 @@ class ContentPrincipal final : public BasePrincipal {
 
 }  // namespace mozilla
 
-#define NS_PRINCIPAL_CONTRACTID "@mozilla.org/principal;1"
 #define NS_PRINCIPAL_CID                             \
   {                                                  \
     0x653e0e4d, 0x3ee4, 0x45fa, {                    \

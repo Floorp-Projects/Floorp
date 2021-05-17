@@ -416,9 +416,7 @@ add_task(
   )
 );
 
-const nullPrincipal = Cc["@mozilla.org/nullprincipal;1"].createInstance(
-  Ci.nsIPrincipal
-);
+const nullPrincipal = Services.scriptSecurityManager.createNullPrincipal({});
 add_task(
   threadFrontTest(
     options => {
