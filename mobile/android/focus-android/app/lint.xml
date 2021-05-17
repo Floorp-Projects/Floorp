@@ -4,9 +4,12 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <lint>
     <!-- While we are developing the app and importing/exporting strings from the l10n repository
-         there will always be missing or extra translations. Just printing a warning is enough.
-         No need to fail the builds. -->
-    <issue id="MissingTranslation" severity="warning" />
+         there will always be missing or extra translations. -->
+    <issue id="MissingTranslation" severity="ignore" />
+    <issue id="PluralsCandidate" severity="ignore" />
+    <issue id="StringFormatCount" severity="ignore" />
+    <issue id="TypographyEllipsis" severity="ignore" />
+    <issue id="ExtraTranslation" severity="warning" />
 
     <!-- Ignore support library lint bug: https://code.google.com/p/android/issues/detail?id=227098
          (Present in 25.3.1, despite claims of being fixed in 23) -->
