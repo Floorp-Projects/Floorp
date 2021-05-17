@@ -1,10 +1,11 @@
 // Test calling SavedFrame getters across wrappers from privileged and
 // un-privileged globals.
 
+const {Services} = ChromeUtils.import('resource://gre/modules/Services.jsm');
 const {addDebuggerToGlobal} = ChromeUtils.import("resource://gre/modules/jsdebugger.jsm");
 addDebuggerToGlobal(this);
 
-const lowP = Cc["@mozilla.org/nullprincipal;1"].createInstance(Ci.nsIPrincipal);
+const lowP = Services.scriptSecurityManager.createNullPrincipal({});
 const highP = Cc["@mozilla.org/systemprincipal;1"].createInstance(Ci.nsIPrincipal);
 
 const low  = new Cu.Sandbox(lowP);
