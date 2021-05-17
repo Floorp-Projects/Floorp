@@ -303,7 +303,7 @@ struct fvar
   protected:
   FixedVersion<>version;	/* Version of the fvar table
 				 * initially set to 0x00010000u */
-  OffsetTo<AxisRecord>
+  Offset16To<AxisRecord>
 		firstAxis;	/* Offset in bytes from the beginning of the table
 				 * to the start of the AxisRecord array. */
   HBUINT16	reserved;	/* This field is permanently reserved. Set to 2. */

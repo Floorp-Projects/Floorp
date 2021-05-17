@@ -623,7 +623,7 @@ _hb_directwrite_shape_full (hb_shape_plan_t    *shape_plan,
   * but we never attempt to shape a word longer than 64K characters
   * in a single gfxShapedWord, so we cannot exceed that limit.
   */
-  uint32_t textLength = buffer->len;
+  uint32_t textLength = chars_len;
 
   TextAnalysis analysis (textString, textLength, nullptr, readingDirection);
   TextAnalysis::Run *runHead;

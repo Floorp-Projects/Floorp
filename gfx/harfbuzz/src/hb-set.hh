@@ -337,6 +337,8 @@ struct hb_set_t
       while (count && (g = *array, start <= g && g < end));
     }
   }
+  template <typename T>
+  void add_array (const hb_array_t<const T>& arr) { add_array (&arr, arr.len ()); }
 
   /* Might return false if array looks unsorted.
    * Used for faster rejection of corrupt data. */
@@ -368,6 +370,8 @@ struct hb_set_t
     }
     return true;
   }
+  template <typename T>
+  bool add_sorted_array (const hb_sorted_array_t<const T>& arr) { return add_sorted_array (&arr, arr.len ()); }
 
   void del (hb_codepoint_t g)
   {
@@ -828,7 +832,7 @@ struct hb_set_t
   hb_codepoint_t get_max () const
   {
     unsigned int count = pages.length;
-    for (int i = count - 1; i >= 0; i++)
+    for (int i = count - 1; i >= 0; i--)
       if (!page_at (i).is_empty ())
 	return page_map[(unsigned) i].major * page_t::PAGE_BITS + page_at (i).get_max ();
     return INVALID;

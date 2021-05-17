@@ -29,6 +29,7 @@
 #define HB_OT_COLOR_COLR_TABLE_HH
 
 #include "hb-open-type.hh"
+#include "hb-ot-layout-common.hh"
 
 /*
  * COLR -- Color
@@ -38,7 +39,6 @@
 
 
 namespace OT {
-
 
 struct LayerRecord
 {
@@ -88,6 +88,467 @@ struct BaseGlyphRecord
 				 * associated with this glyph */
   public:
   DEFINE_SIZE_STATIC (6);
+};
+
+template <typename T>
+struct Variable
+{
+  bool sanitize (hb_sanitize_context_t *c) const
+  {
+    TRACE_SANITIZE (this);
+    return_trace (c->check_struct (this));
+  }
+
+  protected:
+  T      value;
+  VarIdx varIdx;
+  public:
+  DEFINE_SIZE_STATIC (4 + T::static_size);
+};
+
+template <typename T>
+struct NoVariable
+{
+  bool sanitize (hb_sanitize_context_t *c) const
+  {
+    TRACE_SANITIZE (this);
+    return_trace (c->check_struct (this));
+  }
+
+  T      value;
+  public:
+  DEFINE_SIZE_STATIC (T::static_size);
+};
+
+// Color structures
+
+template <template<typename> class Var>
+struct ColorIndex
+{
+  bool sanitize (hb_sanitize_context_t *c) const
+  {
+    TRACE_SANITIZE (this);
+    return_trace (c->check_struct (this));
+  }
+
+  HBUINT16	paletteIndex;
+  Var<F2DOT14>	alpha;
+  public:
+  DEFINE_SIZE_STATIC (2 + Var<F2DOT14>::static_size);
+};
+
+template <template<typename> class Var>
+struct ColorStop
+{
+  bool sanitize (hb_sanitize_context_t *c) const
+  {
+    TRACE_SANITIZE (this);
+    return_trace (c->check_struct (this));
+  }
+
+  Var<F2DOT14>		stopOffset;
+  ColorIndex<Var>		color;
+  public:
+  DEFINE_SIZE_STATIC (Var<F2DOT14>::static_size + ColorIndex<Var>::static_size);
+};
+
+struct Extend : HBUINT8
+{
+  enum {
+    EXTEND_PAD     = 0,
+    EXTEND_REPEAT  = 1,
+    EXTEND_REFLECT = 2,
+  };
+  public:
+  DEFINE_SIZE_STATIC (1);
+};
+
+template <template<typename> class Var>
+struct ColorLine
+{
+  bool sanitize (hb_sanitize_context_t *c) const
+  {
+    TRACE_SANITIZE (this);
+    return_trace (c->check_struct (this) &&
+                  stops.sanitize (c));
+  }
+
+  Extend			extend;
+  Array16Of<ColorStop<Var>>	stops;
+  public:
+  DEFINE_SIZE_ARRAY_SIZED (3, stops);
+};
+
+// Composition modes
+
+// Compositing modes are taken from https://www.w3.org/TR/compositing-1/
+// NOTE: a brief audit of major implementations suggests most support most
+// or all of the specified modes.
+struct CompositeMode : HBUINT8
+{
+  enum {
+    // Porter-Duff modes
+    // https://www.w3.org/TR/compositing-1/#porterduffcompositingoperators
+    COMPOSITE_CLEAR          =  0,  // https://www.w3.org/TR/compositing-1/#porterduffcompositingoperators_clear
+    COMPOSITE_SRC            =  1,  // https://www.w3.org/TR/compositing-1/#porterduffcompositingoperators_src
+    COMPOSITE_DEST           =  2,  // https://www.w3.org/TR/compositing-1/#porterduffcompositingoperators_dst
+    COMPOSITE_SRC_OVER       =  3,  // https://www.w3.org/TR/compositing-1/#porterduffcompositingoperators_srcover
+    COMPOSITE_DEST_OVER      =  4,  // https://www.w3.org/TR/compositing-1/#porterduffcompositingoperators_dstover
+    COMPOSITE_SRC_IN         =  5,  // https://www.w3.org/TR/compositing-1/#porterduffcompositingoperators_srcin
+    COMPOSITE_DEST_IN        =  6,  // https://www.w3.org/TR/compositing-1/#porterduffcompositingoperators_dstin
+    COMPOSITE_SRC_OUT        =  7,  // https://www.w3.org/TR/compositing-1/#porterduffcompositingoperators_srcout
+    COMPOSITE_DEST_OUT       =  8,  // https://www.w3.org/TR/compositing-1/#porterduffcompositingoperators_dstout
+    COMPOSITE_SRC_ATOP       =  9,  // https://www.w3.org/TR/compositing-1/#porterduffcompositingoperators_srcatop
+    COMPOSITE_DEST_ATOP      = 10,  // https://www.w3.org/TR/compositing-1/#porterduffcompositingoperators_dstatop
+    COMPOSITE_XOR            = 11,  // https://www.w3.org/TR/compositing-1/#porterduffcompositingoperators_xor
+    COMPOSITE_PLUS           = 12,  // https://www.w3.org/TR/compositing-1/#porterduffcompositingoperators_plus
+  
+    // Blend modes
+    // https://www.w3.org/TR/compositing-1/#blending
+    COMPOSITE_SCREEN         = 13,  // https://www.w3.org/TR/compositing-1/#blendingscreen
+    COMPOSITE_OVERLAY        = 14,  // https://www.w3.org/TR/compositing-1/#blendingoverlay
+    COMPOSITE_DARKEN         = 15,  // https://www.w3.org/TR/compositing-1/#blendingdarken
+    COMPOSITE_LIGHTEN        = 16,  // https://www.w3.org/TR/compositing-1/#blendinglighten
+    COMPOSITE_COLOR_DODGE    = 17,  // https://www.w3.org/TR/compositing-1/#blendingcolordodge
+    COMPOSITE_COLOR_BURN     = 18,  // https://www.w3.org/TR/compositing-1/#blendingcolorburn
+    COMPOSITE_HARD_LIGHT     = 19,  // https://www.w3.org/TR/compositing-1/#blendinghardlight
+    COMPOSITE_SOFT_LIGHT     = 20,  // https://www.w3.org/TR/compositing-1/#blendingsoftlight
+    COMPOSITE_DIFFERENCE     = 21,  // https://www.w3.org/TR/compositing-1/#blendingdifference
+    COMPOSITE_EXCLUSION      = 22,  // https://www.w3.org/TR/compositing-1/#blendingexclusion
+    COMPOSITE_MULTIPLY       = 23,  // https://www.w3.org/TR/compositing-1/#blendingmultiply
+  
+    // Modes that, uniquely, do not operate on components
+    // https://www.w3.org/TR/compositing-1/#blendingnonseparable
+    COMPOSITE_HSL_HUE        = 24,  // https://www.w3.org/TR/compositing-1/#blendinghue
+    COMPOSITE_HSL_SATURATION = 25,  // https://www.w3.org/TR/compositing-1/#blendingsaturation
+    COMPOSITE_HSL_COLOR      = 26,  // https://www.w3.org/TR/compositing-1/#blendingcolor
+    COMPOSITE_HSL_LUMINOSITY = 27,  // https://www.w3.org/TR/compositing-1/#blendingluminosity
+  };
+  public:
+  DEFINE_SIZE_STATIC (1);
+};
+
+template <template<typename> class Var>
+struct Affine2x3
+{
+  bool sanitize (hb_sanitize_context_t *c) const
+  {
+    TRACE_SANITIZE (this);
+    return_trace (c->check_struct (this));
+  }
+
+  Var<HBFixed> xx;
+  Var<HBFixed> yx;
+  Var<HBFixed> xy;
+  Var<HBFixed> yy;
+  Var<HBFixed> dx;
+  Var<HBFixed> dy;
+  public:
+  DEFINE_SIZE_STATIC (6 * Var<HBFixed>::static_size);
+};
+
+struct PaintColrLayers
+{
+  bool sanitize (hb_sanitize_context_t *c) const
+  {
+    TRACE_SANITIZE (this);
+    return_trace (c->check_struct (this));
+  }
+
+  HBUINT8	format; /* format = 1 */
+  HBUINT8	numLayers;
+  HBUINT32	firstLayerIndex;  /* index into COLRv1::layersV1 */
+  public:
+  DEFINE_SIZE_STATIC (6);
+};
+
+template <template<typename> class Var>
+struct PaintSolid
+{
+  bool sanitize (hb_sanitize_context_t *c) const
+  {
+    TRACE_SANITIZE (this);
+    return_trace (c->check_struct (this));
+  }
+
+  HBUINT8		format; /* format = 2(noVar) or 3(Var)*/
+  ColorIndex<Var>	color;
+  public:
+  DEFINE_SIZE_STATIC (1 + ColorIndex<Var>::static_size);
+};
+
+template <template<typename> class Var>
+struct PaintLinearGradient
+{
+  bool sanitize (hb_sanitize_context_t *c) const
+  {
+    TRACE_SANITIZE (this);
+    return_trace (c->check_struct (this) && colorLine.sanitize (c, this));
+  }
+
+  HBUINT8			format; /* format = 4(noVar) or 5 (Var) */
+  Offset24To<ColorLine<Var>>	colorLine; /* Offset (from beginning of PaintLinearGradient
+                                            * table) to ColorLine subtable. */
+  Var<FWORD>			x0;
+  Var<FWORD>			y0;
+  Var<FWORD>			x1;
+  Var<FWORD>			y1;
+  Var<FWORD>			x2;
+  Var<FWORD>			y2;
+  public:
+  DEFINE_SIZE_STATIC (4 + 6 * Var<FWORD>::static_size);
+};
+
+template <template<typename> class Var>
+struct PaintRadialGradient
+{
+  bool sanitize (hb_sanitize_context_t *c) const
+  {
+    TRACE_SANITIZE (this);
+    return_trace (c->check_struct (this) && colorLine.sanitize (c, this));
+  }
+
+  HBUINT8			format; /* format = 6(noVar) or 7 (Var) */
+  Offset24To<ColorLine<Var>>	colorLine; /* Offset (from beginning of PaintRadialGradient
+                                            * table) to ColorLine subtable. */
+  Var<FWORD>			x0;
+  Var<FWORD>			y0;
+  Var<UFWORD>			radius0;
+  Var<FWORD>			x1;
+  Var<FWORD>			y1;
+  Var<UFWORD>			radius1;
+  public:
+  DEFINE_SIZE_STATIC (4 + 6 * Var<FWORD>::static_size);
+};
+
+template <template<typename> class Var>
+struct PaintSweepGradient
+{
+  bool sanitize (hb_sanitize_context_t *c) const
+  {
+    TRACE_SANITIZE (this);
+    return_trace (c->check_struct (this) && colorLine.sanitize (c, this));
+  }
+
+  HBUINT8			format; /* format = 8(noVar) or 9 (Var) */
+  Offset24To<ColorLine<Var>>	colorLine; /* Offset (from beginning of PaintSweepGradient
+                                            * table) to ColorLine subtable. */
+  Var<FWORD>			centerX;
+  Var<FWORD>			centerY;
+  Var<HBFixed>			startAngle;
+  Var<HBFixed>			endAngle;
+  public:
+  DEFINE_SIZE_STATIC (2 * Var<FWORD>::static_size + 2 * Var<HBFixed>::static_size);
+};
+
+struct Paint;
+// Paint a non-COLR glyph, filled as indicated by paint.
+struct PaintGlyph
+{
+  bool sanitize (hb_sanitize_context_t *c) const
+  {
+    TRACE_SANITIZE (this);
+    return_trace (c->check_struct (this) && paint.sanitize (c, this));
+  }
+
+  HBUINT8		format; /* format = 10 */
+  Offset24To<Paint>	paint;  /* Offset (from beginning of PaintGlyph table) to Paint subtable. */
+  HBUINT16		gid;
+  public:
+  DEFINE_SIZE_STATIC (6);
+};
+
+struct PaintColrGlyph
+{
+  bool sanitize (hb_sanitize_context_t *c) const
+  {
+    TRACE_SANITIZE (this);
+    return_trace (c->check_struct (this));
+  }
+
+  HBUINT8	format; /* format = 11 */
+  HBUINT16	gid;
+  public:
+  DEFINE_SIZE_STATIC (3);
+};
+
+template <template<typename> class Var>
+struct PaintTransform
+{
+  bool sanitize (hb_sanitize_context_t *c) const
+  {
+    TRACE_SANITIZE (this);
+    return_trace (c->check_struct (this) && src.sanitize (c, this));
+  }
+
+  HBUINT8		format; /* format = 12(noVar) or 13 (Var) */
+  Offset24To<Paint>	src; /* Offset (from beginning of PaintTransform table) to Paint subtable. */
+  Affine2x3<Var>	transform;
+  public:
+  DEFINE_SIZE_STATIC (4 + Affine2x3<Var>::static_size);
+};
+
+template <template<typename> class Var>
+struct PaintTranslate
+{
+  bool sanitize (hb_sanitize_context_t *c) const
+  {
+    TRACE_SANITIZE (this);
+    return_trace (c->check_struct (this) && src.sanitize (c, this));
+  }
+
+  HBUINT8		format; /* format = 14(noVar) or 15 (Var) */
+  Offset24To<Paint>	src; /* Offset (from beginning of PaintTranslate table) to Paint subtable. */
+  Var<HBFixed>		dx;
+  Var<HBFixed>		dy;
+  public:
+  DEFINE_SIZE_STATIC (4 + Var<HBFixed>::static_size);
+};
+
+template <template<typename> class Var>
+struct PaintRotate
+{
+  bool sanitize (hb_sanitize_context_t *c) const
+  {
+    TRACE_SANITIZE (this);
+    return_trace (c->check_struct (this) && src.sanitize (c, this));
+  }
+
+  HBUINT8		format; /* format = 16 (noVar) or 17(Var) */
+  Offset24To<Paint>	src; /* Offset (from beginning of PaintRotate table) to Paint subtable. */
+  Var<HBFixed>		angle;
+  Var<HBFixed>		centerX;
+  Var<HBFixed>		centerY;
+  public:
+  DEFINE_SIZE_STATIC (4 + 3 * Var<HBFixed>::static_size);
+};
+
+template <template<typename> class Var>
+struct PaintSkew
+{
+  bool sanitize (hb_sanitize_context_t *c) const
+  {
+    TRACE_SANITIZE (this);
+    return_trace (c->check_struct (this) && src.sanitize (c, this));
+  }
+
+  HBUINT8		format; /* format = 18(noVar) or 19 (Var) */
+  Offset24To<Paint>	src; /* Offset (from beginning of PaintSkew table) to Paint subtable. */
+  Var<HBFixed>		xSkewAngle;
+  Var<HBFixed>		ySkewAngle;
+  Var<HBFixed>		centerX;
+  Var<HBFixed>		centerY;
+  public:
+  DEFINE_SIZE_STATIC (4 + 4 * Var<HBFixed>::static_size);
+};
+
+struct PaintComposite
+{
+  bool sanitize (hb_sanitize_context_t *c) const
+  {
+    TRACE_SANITIZE (this);
+    return_trace (c->check_struct (this) &&
+                  src.sanitize (c, this) &&
+                  backdrop.sanitize (c, this));
+  }
+
+  HBUINT8		format; /* format = 20 */
+  Offset24To<Paint>	src; /* Offset (from beginning of PaintComposite table) to source Paint subtable. */
+  CompositeMode		mode;   /* If mode is unrecognized use COMPOSITE_CLEAR */
+  Offset24To<Paint>	backdrop; /* Offset (from beginning of PaintComposite table) to backdrop Paint subtable. */
+  public:
+  DEFINE_SIZE_STATIC (8);
+};
+
+struct Paint
+{
+  template <typename context_t, typename ...Ts>
+  typename context_t::return_t dispatch (context_t *c, Ts&&... ds) const
+  {
+    TRACE_DISPATCH (this, u.format);
+    if (unlikely (!c->may_dispatch (this, &u.format))) return_trace (c->no_dispatch_return_value ());
+    switch (u.format) {
+    case 1: return_trace (c->dispatch (u.paintformat1, hb_forward<Ts> (ds)...));
+    case 2: return_trace (c->dispatch (u.paintformat2, hb_forward<Ts> (ds)...));
+    case 3: return_trace (c->dispatch (u.paintformat3, hb_forward<Ts> (ds)...));
+    case 4: return_trace (c->dispatch (u.paintformat4, hb_forward<Ts> (ds)...));
+    case 5: return_trace (c->dispatch (u.paintformat5, hb_forward<Ts> (ds)...));
+    case 6: return_trace (c->dispatch (u.paintformat6, hb_forward<Ts> (ds)...));
+    case 7: return_trace (c->dispatch (u.paintformat7, hb_forward<Ts> (ds)...));
+    case 8: return_trace (c->dispatch (u.paintformat8, hb_forward<Ts> (ds)...));
+    case 9: return_trace (c->dispatch (u.paintformat9, hb_forward<Ts> (ds)...));
+    case 10: return_trace (c->dispatch (u.paintformat10, hb_forward<Ts> (ds)...));
+    case 11: return_trace (c->dispatch (u.paintformat11, hb_forward<Ts> (ds)...));
+    case 12: return_trace (c->dispatch (u.paintformat12, hb_forward<Ts> (ds)...));
+    case 13: return_trace (c->dispatch (u.paintformat13, hb_forward<Ts> (ds)...));
+    case 14: return_trace (c->dispatch (u.paintformat14, hb_forward<Ts> (ds)...));
+    case 15: return_trace (c->dispatch (u.paintformat15, hb_forward<Ts> (ds)...));
+    case 16: return_trace (c->dispatch (u.paintformat16, hb_forward<Ts> (ds)...));
+    case 17: return_trace (c->dispatch (u.paintformat17, hb_forward<Ts> (ds)...));
+    case 18: return_trace (c->dispatch (u.paintformat18, hb_forward<Ts> (ds)...));
+    case 19: return_trace (c->dispatch (u.paintformat19, hb_forward<Ts> (ds)...));
+    case 20: return_trace (c->dispatch (u.paintformat20, hb_forward<Ts> (ds)...));
+    default:return_trace (c->default_return_value ());
+    }
+  }
+
+  protected:
+  union {
+  HBUINT8				format;
+  PaintColrLayers			paintformat1;
+  PaintSolid<NoVariable>		paintformat2;
+  PaintSolid<Variable>			paintformat3;
+  PaintLinearGradient<NoVariable>	paintformat4;
+  PaintLinearGradient<Variable>		paintformat5;
+  PaintRadialGradient<NoVariable>	paintformat6;
+  PaintRadialGradient<Variable>		paintformat7;
+  PaintSweepGradient<NoVariable>	paintformat8;
+  PaintSweepGradient<Variable>		paintformat9;
+  PaintGlyph				paintformat10;
+  PaintColrGlyph			paintformat11;
+  PaintTransform<NoVariable>		paintformat12;
+  PaintTransform<Variable>		paintformat13;
+  PaintTranslate<NoVariable>		paintformat14;
+  PaintTranslate<Variable>		paintformat15;
+  PaintRotate<NoVariable>		paintformat16;
+  PaintRotate<Variable>			paintformat17;
+  PaintSkew<NoVariable>			paintformat18;
+  PaintSkew<Variable>			paintformat19;
+  PaintComposite			paintformat20;
+  } u;
+};
+
+struct BaseGlyphV1Record
+{
+  int cmp (hb_codepoint_t g) const
+  { return g < glyphId ? -1 : g > glyphId ? 1 : 0; }
+
+  bool sanitize (hb_sanitize_context_t *c) const
+  {
+    TRACE_SANITIZE (this);
+    return_trace (likely (c->check_struct (this) && paint.sanitize (c, this)));
+  }
+
+  public:
+  HBGlyphID		glyphId;    /* Glyph ID of reference glyph */
+  Offset32To<Paint>	paint;      /* Offset (from beginning of BaseGlyphV1Record) to Paint,
+                                     * Typically PaintColrLayers */
+  public:
+  DEFINE_SIZE_STATIC (6);
+};
+
+typedef SortedArray32Of<BaseGlyphV1Record> BaseGlyphV1List;
+
+struct LayerV1List : Array32OfOffset32To<Paint>
+{
+  const Paint& get_paint (unsigned i) const
+  { return this+(*this)[i]; }
+
+  bool sanitize (hb_sanitize_context_t *c) const
+  {
+    TRACE_SANITIZE (this);
+    return_trace (Array32OfOffset32To<Paint>::sanitize (c, this));
+  }
 };
 
 struct COLR
@@ -150,9 +611,13 @@ struct COLR
   bool sanitize (hb_sanitize_context_t *c) const
   {
     TRACE_SANITIZE (this);
-    return_trace (likely (c->check_struct (this) &&
-			  (this+baseGlyphsZ).sanitize (c, numBaseGlyphs) &&
-			  (this+layersZ).sanitize (c, numLayers)));
+    return_trace (c->check_struct (this) &&
+                  (this+baseGlyphsZ).sanitize (c, numBaseGlyphs) &&
+                  (this+layersZ).sanitize (c, numLayers) &&
+                  (version == 0 || (version == 1 &&
+                                    baseGlyphsV1List.sanitize (c, this) &&
+                                    layersV1.sanitize (c, this) &&
+                                    varStore.sanitize (c, this))));
   }
 
   template<typename BaseIterator, typename LayerIterator,
@@ -263,13 +728,17 @@ struct COLR
   protected:
   HBUINT16	version;	/* Table version number (starts at 0). */
   HBUINT16	numBaseGlyphs;	/* Number of Base Glyph Records. */
-  LNNOffsetTo<SortedUnsizedArrayOf<BaseGlyphRecord>>
+  NNOffset32To<SortedUnsizedArrayOf<BaseGlyphRecord>>
 		baseGlyphsZ;	/* Offset to Base Glyph records. */
-  LNNOffsetTo<UnsizedArrayOf<LayerRecord>>
+  NNOffset32To<UnsizedArrayOf<LayerRecord>>
 		layersZ;	/* Offset to Layer Records. */
   HBUINT16	numLayers;	/* Number of Layer Records. */
+  // Version-1 additions
+  Offset32To<BaseGlyphV1List>		baseGlyphsV1List;
+  Offset32To<LayerV1List>		layersV1;
+  Offset32To<VariationStore>		varStore;
   public:
-  DEFINE_SIZE_STATIC (14);
+  DEFINE_SIZE_MIN (14);
 };
 
 } /* namespace OT */

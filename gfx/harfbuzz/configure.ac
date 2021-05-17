@@ -1,6 +1,6 @@
 AC_PREREQ([2.64])
 AC_INIT([HarfBuzz],
-        [2.8.0],
+        [2.8.1],
         [https://github.com/harfbuzz/harfbuzz/issues/new],
         [harfbuzz],
         [http://harfbuzz.org/])
@@ -214,21 +214,21 @@ AM_CONDITIONAL(HAVE_CAIRO_FT, $have_cairo_ft)
 
 dnl ==========================================================================
 
-AC_ARG_WITH(fontconfig,
-	[AS_HELP_STRING([--with-fontconfig=@<:@yes/no/auto@:>@],
-			[Use fontconfig @<:@default=auto@:>@])],,
-	[with_fontconfig=auto])
-have_fontconfig=false
-if test "x$with_fontconfig" = "xyes" -o "x$with_fontconfig" = "xauto"; then
-	PKG_CHECK_MODULES(FONTCONFIG, fontconfig, have_fontconfig=true, :)
+AC_ARG_WITH(chafa,
+	[AS_HELP_STRING([--with-chafa=@<:@yes/no/auto@:>@],
+			[Use chafa @<:@default=auto@:>@])],,
+	[with_chafa=auto])
+have_chafa=false
+if test "x$with_chafa" = "xyes" -o "x$with_chafa" = "xauto"; then
+	PKG_CHECK_MODULES(CHAFA, chafa >= 1.6.0, have_chafa=true, :)
 fi
-if test "x$with_fontconfig" = "xyes" -a "x$have_fontconfig" != "xtrue"; then
-	AC_MSG_ERROR([fontconfig support requested but not found])
+if test "x$with_chafa" = "xyes" -a "x$have_chafa" != "xtrue"; then
+	AC_MSG_ERROR([chafa support requested but not found])
 fi
-if $have_fontconfig; then
-	AC_DEFINE(HAVE_FONTCONFIG, 1, [Have fontconfig library])
+if $have_chafa; then
+	AC_DEFINE(HAVE_CHAFA, 1, [Have chafa terminal graphics library])
 fi
-AM_CONDITIONAL(HAVE_FONTCONFIG, $have_fontconfig)
+AM_CONDITIONAL(HAVE_CHAFA, $have_chafa)
 
 dnl ==========================================================================
 
@@ -432,6 +432,7 @@ test/shaping/data/in-house/Makefile
 test/shaping/data/text-rendering-tests/Makefile
 test/subset/Makefile
 test/subset/data/Makefile
+test/subset/data/repack_tests/Makefile
 docs/Makefile
 docs/version.xml
 ])
@@ -465,7 +466,7 @@ Font callbacks (the more the merrier):
 
 Tools used for command-line utilities:
 	Cairo:			${have_cairo}
-	Fontconfig:		${have_fontconfig}
+	Chafa:			${have_chafa}
 
 Additional shapers:
 	Graphite2:		${have_graphite2}

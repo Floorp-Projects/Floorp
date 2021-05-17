@@ -218,7 +218,7 @@ struct TTCHeaderVersion1
   Tag		ttcTag;		/* TrueType Collection ID string: 'ttcf' */
   FixedVersion<>version;	/* Version of the TTC Header (1.0),
 				 * 0x00010000u */
-  LArrayOf<LOffsetTo<OpenTypeOffsetTable>>
+  Array32Of<Offset32To<OpenTypeOffsetTable>>
 		table;		/* Array of offsets to the OffsetTable for each font
 				 * from the beginning of the file */
   public:
@@ -295,7 +295,7 @@ struct ResourceRecord
   HBINT16	nameOffset;	/* Offset from beginning of resource name list
 				 * to resource name, -1 means there is none. */
   HBUINT8	attrs;		/* Resource attributes */
-  NNOffsetTo<LArrayOf<HBUINT8>, HBUINT24>
+  NNOffset24To<Array32Of<HBUINT8>>
 		offset;		/* Offset from beginning of data block to
 				 * data for this resource */
   HBUINT32	reserved;	/* Reserved for handle to resource */
@@ -330,7 +330,7 @@ struct ResourceTypeRecord
   protected:
   Tag		tag;		/* Resource type. */
   HBUINT16	resCountM1;	/* Number of resources minus 1. */
-  NNOffsetTo<UnsizedArrayOf<ResourceRecord>>
+  NNOffset16To<UnsizedArrayOf<ResourceRecord>>
 		resourcesZ;	/* Offset from beginning of resource type list
 				 * to reference item list for this type. */
   public:
@@ -386,7 +386,7 @@ struct ResourceMap
   HBUINT32	reserved1;	/* Reserved for handle to next resource map */
   HBUINT16	resreved2;	/* Reserved for file reference number */
   HBUINT16	attrs;		/* Resource fork attribute */
-  NNOffsetTo<ArrayOfM1<ResourceTypeRecord>>
+  NNOffset16To<ArrayOfM1<ResourceTypeRecord>>
 		typeList;	/* Offset from beginning of map to
 				 * resource type list */
   Offset16	nameList;	/* Offset from beginning of map to
@@ -418,10 +418,10 @@ struct ResourceForkHeader
   }
 
   protected:
-  LNNOffsetTo<UnsizedArrayOf<HBUINT8>>
+  NNOffset32To<UnsizedArrayOf<HBUINT8>>
 		data;		/* Offset from beginning of resource fork
 				 * to resource data */
-  LNNOffsetTo<ResourceMap >
+  NNOffset32To<ResourceMap >
 		map;		/* Offset from beginning of resource fork
 				 * to resource map */
   HBUINT32	dataLen;	/* Length of resource data */

@@ -39,6 +39,7 @@
 #include "hb-ot-stat-table.hh"
 
 
+typedef hb_hashmap_t<unsigned, hb_set_t *, (unsigned)-1, nullptr> script_langsys_map;
 #ifndef HB_NO_SUBSET_CFF
 static inline void
 _add_cff_seac_components (const OT::cff1::accelerator_t &cff,
@@ -70,7 +71,8 @@ static inline void
 _gsub_closure_glyphs_lookups_features (hb_face_t *face,
 				       hb_set_t *gids_to_retain,
 				       hb_map_t *gsub_lookups,
-				       hb_map_t *gsub_features)
+				       hb_map_t *gsub_features,
+				       script_langsys_map *gsub_langsys)
 {
   hb_set_t lookup_indices;
   hb_ot_layout_collect_lookups (face,
@@ -96,7 +98,13 @@ _gsub_closure_glyphs_lookups_features (hb_face_t *face,
                                  nullptr,
                                  nullptr,
                                  &feature_indices);
+
   gsub->prune_features (gsub_lookups, &feature_indices);
+  hb_map_t duplicate_feature_map;
+  gsub->find_duplicate_features (gsub_lookups, &feature_indices, &duplicate_feature_map);
+
+  feature_indices.clear ();
+  gsub->prune_langsys (&duplicate_feature_map, gsub_langsys, &feature_indices);
   _remap_indexes (&feature_indices, gsub_features);
 
   gsub.destroy ();
@@ -106,7 +114,8 @@ static inline void
 _gpos_closure_lookups_features (hb_face_t      *face,
 				const hb_set_t *gids_to_retain,
 				hb_map_t       *gpos_lookups,
-				hb_map_t       *gpos_features)
+				hb_map_t       *gpos_features,
+				script_langsys_map *gpos_langsys)
 {
   hb_set_t lookup_indices;
   hb_ot_layout_collect_lookups (face,
@@ -129,8 +138,15 @@ _gpos_closure_lookups_features (hb_face_t      *face,
                                  nullptr,
                                  nullptr,
                                  &feature_indices);
+
   gpos->prune_features (gpos_lookups, &feature_indices);
+  hb_map_t duplicate_feature_map;
+  gpos->find_duplicate_features (gpos_lookups, &feature_indices, &duplicate_feature_map);
+
+  feature_indices.clear ();
+  gpos->prune_langsys (&duplicate_feature_map, gpos_langsys, &feature_indices);
   _remap_indexes (&feature_indices, gpos_features);
+
   gpos.destroy ();
 }
 #endif
@@ -231,10 +247,10 @@ _populate_gids_to_retain (hb_subset_plan_t* plan,
 #ifndef HB_NO_SUBSET_LAYOUT
   if (close_over_gsub)
     // closure all glyphs/lookups/features needed for GSUB substitutions.
-    _gsub_closure_glyphs_lookups_features (plan->source, plan->_glyphset_gsub, plan->gsub_lookups, plan->gsub_features);
+    _gsub_closure_glyphs_lookups_features (plan->source, plan->_glyphset_gsub, plan->gsub_lookups, plan->gsub_features, plan->gsub_langsys);
 
   if (close_over_gpos)
-    _gpos_closure_lookups_features (plan->source, plan->_glyphset_gsub, plan->gpos_lookups, plan->gpos_features);
+    _gpos_closure_lookups_features (plan->source, plan->_glyphset_gsub, plan->gpos_lookups, plan->gpos_features, plan->gpos_langsys);
 #endif
   _remove_invalid_gids (plan->_glyphset_gsub, plan->source->get_num_glyphs ());
 
@@ -356,10 +372,20 @@ hb_subset_plan_create (hb_face_t         *face,
   plan->reverse_glyph_map = hb_map_create ();
   plan->gsub_lookups = hb_map_create ();
   plan->gpos_lookups = hb_map_create ();
+
+  if (plan->check_success (plan->gsub_langsys = hb_object_create<script_langsys_map> ()))
+    plan->gsub_langsys->init_shallow ();
+  if (plan->check_success (plan->gpos_langsys = hb_object_create<script_langsys_map> ()))
+    plan->gpos_langsys->init_shallow ();
+
   plan->gsub_features = hb_map_create ();
   plan->gpos_features = hb_map_create ();
   plan->layout_variation_indices = hb_set_create ();
   plan->layout_variation_idx_map = hb_map_create ();
+
+  if (plan->in_error ()) {
+    return plan;
+  }
 
   _populate_gids_to_retain (plan,
 			    input->unicodes,
@@ -407,6 +433,25 @@ hb_subset_plan_destroy (hb_subset_plan_t *plan)
   hb_set_destroy (plan->layout_variation_indices);
   hb_map_destroy (plan->layout_variation_idx_map);
 
+  if (plan->gsub_langsys)
+  {
+    for (auto _ : plan->gsub_langsys->iter ())
+      hb_set_destroy (_.second);
+
+    hb_object_destroy (plan->gsub_langsys);
+    plan->gsub_langsys->fini_shallow ();
+    free (plan->gsub_langsys);
+  }
+
+  if (plan->gpos_langsys)
+  {
+    for (auto _ : plan->gpos_langsys->iter ())
+      hb_set_destroy (_.second);
+
+    hb_object_destroy (plan->gpos_langsys);
+    plan->gpos_langsys->fini_shallow ();
+    free (plan->gpos_langsys);
+  }
 
   free (plan);
 }
