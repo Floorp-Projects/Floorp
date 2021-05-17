@@ -1798,7 +1798,9 @@ nsresult HTMLEditor::InsertElementAtSelectionAsAction(
 
   // check for inserting a whole table at the end of a block. If so insert
   // a br after it.
-  if (!HTMLEditUtils::IsTable(aElement) || !IsLastEditableChild(aElement)) {
+  if (!HTMLEditUtils::IsTable(aElement) ||
+      !HTMLEditUtils::IsLastChild(*aElement,
+                                  {WalkTreeOption::IgnoreNonEditableNode})) {
     return NS_OK;
   }
 
@@ -4928,17 +4930,6 @@ nsresult HTMLEditor::DeleteSelectionAndPrepareToCreateNode() {
   NS_WARNING_ASSERTION(!error.Failed(),
                        "Selection::CollapseInLimiter() failed");
   return error.StealNSResult();
-}
-
-bool HTMLEditor::IsLastEditableChild(nsINode* aNode) const {
-  MOZ_ASSERT(aNode);
-  // find last editable child and compare it to aNode
-  nsCOMPtr<nsINode> parentNode = aNode->GetParentNode();
-  if (NS_WARN_IF(!parentNode)) {
-    return false;
-  }
-  return HTMLEditUtils::GetLastChild(
-             *parentNode, {WalkTreeOption::IgnoreNonEditableNode}) == aNode;
 }
 
 nsIContent* HTMLEditor::GetFirstEditableLeaf(nsINode& aNode) const {
