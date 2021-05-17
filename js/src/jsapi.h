@@ -76,26 +76,6 @@ using IdVector = JS::GCVector<jsid>;
 using ScriptVector = JS::GCVector<JSScript*>;
 using StringVector = JS::GCVector<JSString*>;
 
-/**
- * Custom rooting behavior for internal and external clients.
- */
-class MOZ_RAII JS_PUBLIC_API CustomAutoRooter : private AutoGCRooter {
- public:
-  template <typename CX>
-  explicit CustomAutoRooter(const CX& cx)
-      : AutoGCRooter(cx, AutoGCRooter::Kind::Custom) {}
-
-  friend void AutoGCRooter::trace(JSTracer* trc);
-
- protected:
-  virtual ~CustomAutoRooter() = default;
-
-  /** Supplied by derived class to trace roots. */
-  virtual void trace(JSTracer* trc) = 0;
-
- private:
-};
-
 } /* namespace JS */
 
 /* Callbacks and their arguments. */
