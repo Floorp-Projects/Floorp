@@ -1008,7 +1008,7 @@ EditResult HTMLEditor::ClearStyleAt(const EditorDOMPoint& aPoint,
   // the next node.  The first example should become
   // `<p><b><i>a</i></b><b><i></i></b><b><i>bc</i></b></p>`.
   //                    ^^^^^^^^^^^^^^
-  nsIContent* firstLeafChildOfNextNode = HTMLEditUtils::GetFirstLeafChild(
+  nsIContent* firstLeafChildOfNextNode = HTMLEditUtils::GetFirstLeafContent(
       *splitResult.GetNextNode(), {LeafNodeType::OnlyLeafNode});
   EditorDOMPoint atStartOfNextNode(firstLeafChildOfNextNode
                                        ? firstLeafChildOfNextNode
@@ -1070,7 +1070,7 @@ EditResult HTMLEditor::ClearStyleAt(const EditorDOMPoint& aPoint,
   // Now, we want to put `<br>` element into the empty split node if
   // it was in next node of the first split.
   // E.g., `<p><b><i>a</i></b><b><i><br></i></b><b><i>bc</i></b></p>`
-  nsIContent* firstLeafChildOfPreviousNode = HTMLEditUtils::GetFirstLeafChild(
+  nsIContent* firstLeafChildOfPreviousNode = HTMLEditUtils::GetFirstLeafContent(
       *splitResultAtStartOfNextNode.GetPreviousNode(),
       {LeafNodeType::OnlyLeafNode});
   EditorDOMPoint pointToPutCaret(

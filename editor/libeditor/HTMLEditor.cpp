@@ -2811,7 +2811,7 @@ already_AddRefed<Element> HTMLEditor::GetSelectedElement(const nsAtom* aTagName,
       if (nextSibling->IsHTMLElement(nsGkAtoms::br)) {
         return nullptr;
       }
-      nsIContent* firstEditableLeaf = HTMLEditUtils::GetFirstLeafChild(
+      nsIContent* firstEditableLeaf = HTMLEditUtils::GetFirstLeafContent(
           *nextSibling, {LeafNodeType::OnlyLeafNode});
       if (firstEditableLeaf &&
           firstEditableLeaf->IsHTMLElement(nsGkAtoms::br)) {
@@ -4939,7 +4939,7 @@ nsIContent* HTMLEditor::GetFirstEditableLeaf(nsINode& aNode) const {
     return nullptr;
   }
   nsIContent* child =
-      HTMLEditUtils::GetFirstLeafChild(aNode, {LeafNodeType::OnlyLeafNode});
+      HTMLEditUtils::GetFirstLeafContent(aNode, {LeafNodeType::OnlyLeafNode});
   while (child && (!EditorUtils::IsEditableContent(*child, EditorType::HTML) ||
                    child->HasChildren())) {
     child = HTMLEditUtils::GetNextContent(
@@ -4957,7 +4957,7 @@ nsIContent* HTMLEditor::GetLastEditableLeaf(nsINode& aNode) const {
     return nullptr;
   }
   nsIContent* child =
-      HTMLEditUtils::GetLastLeafChild(aNode, {LeafNodeType::OnlyLeafNode});
+      HTMLEditUtils::GetLastLeafContent(aNode, {LeafNodeType::OnlyLeafNode});
   while (child && (!EditorUtils::IsEditableContent(*child, EditorType::HTML) ||
                    child->HasChildren())) {
     child = HTMLEditUtils::GetPreviousContent(
