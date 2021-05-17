@@ -536,6 +536,15 @@ class HTMLEditUtils final {
     return nullptr;
   }
 
+  static bool IsFirstChild(const nsIContent& aContent,
+                           const WalkTreeOptions& aOptions) {
+    nsINode* parentNode = aContent.GetParentNode();
+    if (!parentNode) {
+      return false;
+    }
+    return HTMLEditUtils::GetFirstChild(*parentNode, aOptions) == &aContent;
+  }
+
   /**
    * GetLastLeafChild() returns rightmost leaf content in aNode.  It depends on
    * aLeafNodeTypes whether this which types of nodes are treated as leaf nodes.

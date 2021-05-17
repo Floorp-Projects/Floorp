@@ -917,7 +917,6 @@ class HTMLEditor final : public TextEditor,
   SplitAncestorStyledInlineElementsAt(const EditorDOMPoint& aPointToSplit,
                                       nsAtom* aProperty, nsAtom* aAttribute);
 
-  bool IsFirstEditableChild(nsINode* aNode) const;
   bool IsLastEditableChild(nsINode* aNode) const;
 
   nsIContent* GetFirstEditableLeaf(nsINode& aNode) const;

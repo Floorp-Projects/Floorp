@@ -4930,17 +4930,6 @@ nsresult HTMLEditor::DeleteSelectionAndPrepareToCreateNode() {
   return error.StealNSResult();
 }
 
-bool HTMLEditor::IsFirstEditableChild(nsINode* aNode) const {
-  MOZ_ASSERT(aNode);
-  // find first editable child and compare it to aNode
-  nsCOMPtr<nsINode> parentNode = aNode->GetParentNode();
-  if (NS_WARN_IF(!parentNode)) {
-    return false;
-  }
-  return HTMLEditUtils::GetFirstChild(
-             *parentNode, {WalkTreeOption::IgnoreNonEditableNode}) == aNode;
-}
-
 bool HTMLEditor::IsLastEditableChild(nsINode* aNode) const {
   MOZ_ASSERT(aNode);
   // find last editable child and compare it to aNode

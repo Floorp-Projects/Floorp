@@ -5139,7 +5139,8 @@ HTMLEditor::AutoDeleteRangesHandler::AutoEmptyBlockAncestorDeleter::
   //     last list item is deleted.  We should follow it since current
   //     behavior is annoying when you type new list item with selecting
   //     all list items.
-  if (!aHTMLEditor.IsFirstEditableChild(mEmptyInclusiveAncestorBlockElement)) {
+  if (!HTMLEditUtils::IsFirstChild(*mEmptyInclusiveAncestorBlockElement,
+                                   {WalkTreeOption::IgnoreNonEditableNode})) {
     return RefPtr<Element>();
   }
 
