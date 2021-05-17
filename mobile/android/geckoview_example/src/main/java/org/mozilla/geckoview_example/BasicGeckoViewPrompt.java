@@ -869,30 +869,32 @@ final class BasicGeckoViewPrompt implements GeckoSession.PromptDelegate {
         }
     }
 
-    public void onPermissionPrompt(final GeckoSession session, final String title,
-                                    final GeckoSession.PermissionDelegate.Callback callback) {
+    public GeckoResult<Integer> onPermissionPrompt(final GeckoSession session, final String title,
+                                                   final GeckoSession.PermissionDelegate.ContentPermission perm) {
         final Activity activity = mActivity;
+        final GeckoResult<Integer> res = new GeckoResult<>();
         if (activity == null) {
-            callback.reject();
-            return;
+            res.complete(GeckoSession.PermissionDelegate.ContentPermission.VALUE_PROMPT);
+            return res;
         }
         final AlertDialog.Builder builder = new AlertDialog.Builder(activity);
         builder.setTitle(title)
                .setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
                    @Override
                    public void onClick(final DialogInterface dialog, final int which) {
-                       callback.reject();
+                       res.complete(GeckoSession.PermissionDelegate.ContentPermission.VALUE_DENY);
                    }
                })
                .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                    @Override
                    public void onClick(final DialogInterface dialog, final int which) {
-                       callback.grant();
+                       res.complete(GeckoSession.PermissionDelegate.ContentPermission.VALUE_ALLOW);
                    }
                });
 
         final AlertDialog dialog = builder.create();
         dialog.show();
+        return res;
     }
 
     public void onSlowScriptPrompt(GeckoSession geckoSession, String title, GeckoResult<SlowScriptResponse> reportAction) {

@@ -10,6 +10,7 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  E10SUtils: "resource://gre/modules/E10SUtils.jsm",
   GeckoViewUtils: "resource://gre/modules/GeckoViewUtils.jsm",
   Services: "resource://gre/modules/Services.jsm",
 });
@@ -245,31 +246,37 @@ class GeckoViewPermission {
       .sendRequestForResult({
         type: "GeckoView:ContentPermission",
         uri: aRequest.principal.URI.displaySpec,
+        principal: E10SUtils.serializePrincipal(aRequest.principal),
         perm: perm.type,
+        value: perm.capability,
+        contextId:
+          aRequest.principal.originAttributes.geckoViewSessionContextId ?? null,
+        privateMode: aRequest.principal.privateBrowsingId != 0,
       })
-      .then(granted => {
-        if (!granted) {
-          return false;
+      .then(value => {
+        if (value == Services.perms.ALLOW_ACTION) {
+          // Ask for app permission after asking for content permission.
+          if (perm.type === "geolocation") {
+            return this.getAppPermissions(dispatcher, [
+              PERM_ACCESS_FINE_LOCATION,
+            ]);
+          }
         }
-        // Ask for app permission after asking for content permission.
-        if (perm.type === "geolocation") {
-          return this.getAppPermissions(dispatcher, [
-            PERM_ACCESS_FINE_LOCATION,
-          ]);
-        }
-        return true;
+        return value;
       })
       .catch(error => {
         Cu.reportError("Permission error: " + error);
-        return /* granted */ false;
+        return /* value */ Services.perms.DENY_ACTION;
       })
-      .then(granted => {
-        (granted ? aRequest.allow : aRequest.cancel)();
+      .then(value => {
+        (value == Services.perms.ALLOW_ACTION
+          ? aRequest.allow
+          : aRequest.cancel)();
         Services.perms.addFromPrincipal(
           aRequest.principal,
           perm.type,
-          granted ? Services.perms.ALLOW_ACTION : Services.perms.DENY_ACTION,
-          Services.perms.EXPIRE_SESSION
+          value,
+          Services.perms.EXPIRE_NEVER
         );
         // Manually release the target request here to facilitate garbage collection.
         aRequest = undefined;

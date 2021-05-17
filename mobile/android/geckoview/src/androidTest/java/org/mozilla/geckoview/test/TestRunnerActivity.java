@@ -100,8 +100,8 @@ public class TestRunnerActivity extends Activity {
 
     private GeckoSession.PermissionDelegate mPermissionDelegate = new GeckoSession.PermissionDelegate() {
         @Override
-        public void onContentPermissionRequest(@NonNull final GeckoSession session, @Nullable final String uri, final int type, @NonNull final Callback callback) {
-            callback.grant();
+        public GeckoResult<Integer> onContentPermissionRequest(@NonNull final GeckoSession session, @NonNull GeckoSession.PermissionDelegate.ContentPermission perm) {
+            return GeckoResult.fromValue(GeckoSession.PermissionDelegate.ContentPermission.VALUE_ALLOW);
         }
 
         @Override
