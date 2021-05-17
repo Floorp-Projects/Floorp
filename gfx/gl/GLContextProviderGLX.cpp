@@ -941,11 +941,7 @@ bool GLContextGLX::FindFBConfigForWindow(
   int numConfigs;
   const int webrenderAttribs[] = {LOCAL_GLX_ALPHA_SIZE,
                                   windowAttrs.depth == 32 ? 8 : 0,
-                                  LOCAL_GLX_DEPTH_SIZE,
-                                  24,
-                                  LOCAL_GLX_DOUBLEBUFFER,
-                                  X11True,
-                                  0};
+                                  LOCAL_GLX_DOUBLEBUFFER, X11True, 0};
 
   if (aWebRender) {
     cfgs = sGLXLibrary.fChooseFBConfig(display, screen, webrenderAttribs,
