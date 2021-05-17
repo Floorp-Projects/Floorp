@@ -50,6 +50,7 @@ using namespace dom;
 using EmptyCheckOption = HTMLEditUtils::EmptyCheckOption;
 using LeafNodeType = HTMLEditUtils::LeafNodeType;
 using LeafNodeTypes = HTMLEditUtils::LeafNodeTypes;
+using WalkTreeOption = HTMLEditUtils::WalkTreeOption;
 
 nsresult HTMLEditor::SetInlinePropertyAsAction(nsAtom& aProperty,
                                                nsAtom* aAttribute,
@@ -494,7 +495,8 @@ nsresult HTMLEditor::SetInlinePropertyOnTextNode(
 
   if (aAttribute) {
     // Look for siblings that are correct type of node
-    nsIContent* sibling = GetPriorHTMLSibling(textNodeForTheRange);
+    nsIContent* sibling = HTMLEditUtils::GetPreviousSibling(
+        *textNodeForTheRange, {WalkTreeOption::IgnoreNonEditableNode});
     if (sibling && sibling->IsElement()) {
       OwningNonNull<Element> element(*sibling->AsElement());
       Result<bool, nsresult> result = ElementIsGoodContainerForTheStyle(
@@ -586,7 +588,8 @@ nsresult HTMLEditor::SetInlinePropertyOnNodeImpl(nsIContent& aContent,
   }
 
   // First check if there's an adjacent sibling we can put our node into.
-  nsCOMPtr<nsIContent> previousSibling = GetPriorHTMLSibling(&aContent);
+  nsCOMPtr<nsIContent> previousSibling = HTMLEditUtils::GetPreviousSibling(
+      aContent, {WalkTreeOption::IgnoreNonEditableNode});
   nsCOMPtr<nsIContent> nextSibling = GetNextHTMLSibling(&aContent);
   if (previousSibling && previousSibling->IsElement()) {
     OwningNonNull<Element> previousElement(*previousSibling->AsElement());
@@ -2403,6 +2406,7 @@ nsresult HTMLEditor::RelativeFontChangeOnTextNode(FontSize aDir,
       NS_WARNING("HTMLEditor::SplitNodeWithTransaction() failed");
       return error.StealNSResult();
     }
+    MOZ_DIAGNOSTIC_ASSERT(textNodeForTheRange);
   }
 
   // Split at the start of the range.
@@ -2420,7 +2424,8 @@ nsresult HTMLEditor::RelativeFontChangeOnTextNode(FontSize aDir,
 
   // Look for siblings that are correct type of node
   nsAtom* nodeType = aDir == FontSize::incr ? nsGkAtoms::big : nsGkAtoms::small;
-  nsCOMPtr<nsIContent> sibling = GetPriorHTMLSibling(textNodeForTheRange);
+  nsCOMPtr<nsIContent> sibling = HTMLEditUtils::GetPreviousSibling(
+      *textNodeForTheRange, {WalkTreeOption::IgnoreNonEditableNode});
   if (sibling && sibling->IsHTMLElement(nodeType)) {
     // Previous sib is already right kind of inline node; slide this over
     nsresult rv = MoveNodeToEndWithTransaction(*textNodeForTheRange, *sibling);
@@ -2549,7 +2554,8 @@ nsresult HTMLEditor::RelativeFontChangeOnNode(int32_t aSizeChange,
     // ok, chuck it in.
     // first look at siblings of aNode for matching bigs or smalls.
     // if we find one, move aNode into it.
-    nsCOMPtr<nsIContent> sibling = GetPriorHTMLSibling(aNode);
+    nsCOMPtr<nsIContent> sibling = HTMLEditUtils::GetPreviousSibling(
+        *aNode, {WalkTreeOption::IgnoreNonEditableNode});
     if (sibling && sibling->IsHTMLElement(atom)) {
       // previous sib is already right kind of inline node; slide this over into
       // it
