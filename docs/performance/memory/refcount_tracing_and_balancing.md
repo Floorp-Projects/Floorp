@@ -14,7 +14,7 @@ figure out where refcounting went wrong.
 
 Build with `--enable-debug` or `--enable-logrefcnt`.
 
-## How to run with refcount tracing on 
+## How to run with refcount tracing on
 
 There are several environment variables that can be used.
 
@@ -115,7 +115,7 @@ if you care. Pick one of these pointers for use with Step 2.
 ## Post-processing step 2: filtering the log
 
 Once you've picked an object that leaked, you can use
-`tools/``rb``/filter-log.pl` to filter the log file to drop the call
+`tools/rb/filter-log.pl` to filter the log file to drop the call
 stack for other objects; This process reduces the size of the log file
 and also improves the performance.
 
@@ -228,8 +228,5 @@ computation of balance factors in the tree.
 
 ## How to instrument your objects for refcount tracing and balancing
 
-The process is the same as [instrumenting them for
-[BloatView](bloatview.md]
-todo
-How_to_instrument_your_objects_for_BloatView,
-because BloatView and refcount tracing share underlying infrastructure.
+The process is the same as instrumenting them for BloatView because BloatView
+and refcount tracing share underlying infrastructure.
