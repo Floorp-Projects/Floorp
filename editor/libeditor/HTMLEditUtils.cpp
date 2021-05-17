@@ -987,7 +987,7 @@ nsIContent* HTMLEditUtils::GetPreviousContent(
 
   // unless there isn't one, in which case we are at the end of the node
   // and want the deep-right child.
-  nsIContent* lastLeafContent = HTMLEditUtils::GetLastLeafChild(
+  nsIContent* lastLeafContent = HTMLEditUtils::GetLastLeafContent(
       *aPoint.GetContainer(),
       {aOptions.contains(WalkTreeOption::StopAtBlockBoundary)
            ? LeafNodeType::LeafNodeOrChildBlock
@@ -1032,7 +1032,7 @@ nsIContent* HTMLEditUtils::GetNextContent(
       return point.GetChild();
     }
 
-    nsIContent* firstLeafContent = HTMLEditUtils::GetFirstLeafChild(
+    nsIContent* firstLeafContent = HTMLEditUtils::GetFirstLeafContent(
         *point.GetChild(),
         {aOptions.contains(WalkTreeOption::StopAtBlockBoundary)
              ? LeafNodeType::LeafNodeOrChildBlock
@@ -1100,8 +1100,8 @@ nsIContent* HTMLEditUtils::GetAdjacentLeafContent(
               : LeafNodeType::OnlyLeafNode};
       nsIContent* leafContent =
           aWalkTreeDirection == WalkTreeDirection::Forward
-              ? HTMLEditUtils::GetFirstLeafChild(*sibling, leafNodeTypes)
-              : HTMLEditUtils::GetLastLeafChild(*sibling, leafNodeTypes);
+              ? HTMLEditUtils::GetFirstLeafContent(*sibling, leafNodeTypes)
+              : HTMLEditUtils::GetLastLeafContent(*sibling, leafNodeTypes);
       return leafContent ? leafContent : sibling;
     }
 

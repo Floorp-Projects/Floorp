@@ -555,8 +555,9 @@ class HTMLEditUtils final {
   }
 
   /**
-   * GetLastLeafChild() returns rightmost leaf content in aNode.  It depends on
-   * aLeafNodeTypes whether this which types of nodes are treated as leaf nodes.
+   * GetLastLeafContent() returns rightmost leaf content in aNode.  It depends
+   * on aLeafNodeTypes whether this which types of nodes are treated as leaf
+   * nodes.
    */
   enum class LeafNodeType {
     // Even if there is a child block, keep scanning a leaf content in it.
@@ -569,8 +570,8 @@ class HTMLEditUtils final {
     LeafNodeOrNonEditableNode,
   };
   using LeafNodeTypes = EnumSet<LeafNodeType>;
-  static nsIContent* GetLastLeafChild(nsINode& aNode,
-                                      const LeafNodeTypes& aLeafNodeTypes) {
+  static nsIContent* GetLastLeafContent(nsINode& aNode,
+                                        const LeafNodeTypes& aLeafNodeTypes) {
     for (nsIContent* content = aNode.GetLastChild(); content;
          content = content->GetLastChild()) {
       if (aLeafNodeTypes.contains(LeafNodeType::LeafNodeOrChildBlock) &&
@@ -589,12 +590,12 @@ class HTMLEditUtils final {
   }
 
   /**
-   * GetFirstLeafChild() returns leftmost leaf content in aNode.  It depends on
-   * aLeafNodeTypes whether this scans into a block child or treat
-   * block as a leaf.
+   * GetFirstLeafContent() returns leftmost leaf content in aNode.  It depends
+   * on aLeafNodeTypes whether this scans into a block child or treat block as a
+   * leaf.
    */
-  static nsIContent* GetFirstLeafChild(const nsINode& aNode,
-                                       const LeafNodeTypes& aLeafNodeTypes) {
+  static nsIContent* GetFirstLeafContent(const nsINode& aNode,
+                                         const LeafNodeTypes& aLeafNodeTypes) {
     for (nsIContent* content = aNode.GetFirstChild(); content;
          content = content->GetFirstChild()) {
       if (aLeafNodeTypes.contains(LeafNodeType::LeafNodeOrChildBlock) &&
@@ -671,8 +672,8 @@ class HTMLEditUtils final {
     }
     if (HTMLEditUtils::IsContainerNode(*nextContent)) {
       // Else if it's a container, get deep leftmost child
-      if (nsIContent* child =
-              HTMLEditUtils::GetFirstLeafChild(*nextContent, aLeafNodeTypes)) {
+      if (nsIContent* child = HTMLEditUtils::GetFirstLeafContent(
+              *nextContent, aLeafNodeTypes)) {
         return child;
       }
     }
@@ -729,8 +730,8 @@ class HTMLEditUtils final {
     }
     if (HTMLEditUtils::IsContainerNode(*nextContent)) {
       // else if it's a container, get deep leftmost child
-      if (nsIContent* child =
-              HTMLEditUtils::GetFirstLeafChild(*nextContent, aLeafNodeTypes)) {
+      if (nsIContent* child = HTMLEditUtils::GetFirstLeafContent(
+              *nextContent, aLeafNodeTypes)) {
         return child;
       }
     }
@@ -798,8 +799,8 @@ class HTMLEditUtils final {
     }
     if (HTMLEditUtils::IsContainerNode(*previousContent)) {
       // Else if it's a container, get deep rightmost child
-      if (nsIContent* child = HTMLEditUtils::GetLastLeafChild(*previousContent,
-                                                              aLeafNodeTypes)) {
+      if (nsIContent* child = HTMLEditUtils::GetLastLeafContent(
+              *previousContent, aLeafNodeTypes)) {
         return child;
       }
     }
@@ -861,8 +862,8 @@ class HTMLEditUtils final {
     }
     if (HTMLEditUtils::IsContainerNode(*previousContent)) {
       // Else if it's a container, get deep rightmost child
-      if (nsIContent* child = HTMLEditUtils::GetLastLeafChild(*previousContent,
-                                                              aLeafNodeTypes)) {
+      if (nsIContent* child = HTMLEditUtils::GetLastLeafContent(
+              *previousContent, aLeafNodeTypes)) {
         return child;
       }
     }
