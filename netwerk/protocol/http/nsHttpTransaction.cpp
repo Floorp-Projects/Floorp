@@ -2230,6 +2230,8 @@ nsresult nsHttpTransaction::HandleContentStart() {
       }
     }
 
+    CollectTelemetryForUploads();
+
     // Report telemetry
     if (mSupportsHTTP3) {
       Accumulate(Telemetry::TRANSACTION_WAIT_TIME_HTTP2_SUP_HTTP3,
@@ -3382,6 +3384,33 @@ nsHttpTransaction::Notify(nsITimer* aTimer) {
 }
 
 bool nsHttpTransaction::GetSupportsHTTP3() { return mSupportsHTTP3; }
+
+const int64_t TELEMETRY_REQUEST_SIZE_10M = (int64_t)10 * (int64_t)(1 << 20);
+const int64_t TELEMETRY_REQUEST_SIZE_50M = (int64_t)50 * (int64_t)(1 << 20);
+const int64_t TELEMETRY_REQUEST_SIZE_100M = (int64_t)100 * (int64_t)(1 << 20);
+
+void nsHttpTransaction::CollectTelemetryForUploads() {
+  if ((mHttpVersion != HttpVersion::v3_0) && !mSupportsHTTP3) {
+    return;
+  }
+  if ((mRequestSize < TELEMETRY_REQUEST_SIZE_10M) ||
+      mTimings.requestStart.IsNull() || mTimings.responseStart.IsNull()) {
+    return;
+  }
+
+  nsCString key = (mHttpVersion == HttpVersion::v3_0) ? "uses_http3"_ns
+                                                      : "supports_http3"_ns;
+  if (mRequestSize <= TELEMETRY_REQUEST_SIZE_50M) {
+    key.Append("_10_50"_ns);
+  } else if (mRequestSize <= TELEMETRY_REQUEST_SIZE_100M) {
+    key.Append("_50_100"_ns);
+  } else {
+    key.Append("_gt_100"_ns);
+  }
+
+  Telemetry::AccumulateTimeDelta(Telemetry::HTTP3_UPLOAD_TIME, key,
+                                 mTimings.responseStart, mTimings.requestStart);
+}
 
 }  // namespace net
 }  // namespace mozilla
