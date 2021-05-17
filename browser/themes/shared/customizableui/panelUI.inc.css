@@ -1620,7 +1620,7 @@ panelview .toolbarbutton-1,
 } /* END not Proton */
 
 .PanelUI-subView .subviewbutton-nav-down::after {
-  rotate: 90deg;
+  content: url(chrome://global/skin/icons/arrow-dropdown-16.svg);
 }
 
 .subviewbutton[shortcut]::after,
