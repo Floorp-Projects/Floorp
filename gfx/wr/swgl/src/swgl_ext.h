@@ -572,40 +572,47 @@ static inline LinearFilter needsTextureLinear(S sampler, T P, int span) {
 }
 
 // Commit an entire span with linear filtering
-#define swgl_commitTextureLinear(format, s, p, uv_rect, color)                 \
+#define swgl_commitTextureLinear(format, s, p, uv_rect, color, n)              \
   do {                                                                         \
     auto packed_color = packColor(swgl_Out##format, color);                    \
+    int len = (n);                                                             \
     int drawn = 0;                                                             \
-    if (LinearFilter filter = needsTextureLinear(s, p, swgl_SpanLength)) {     \
+    if (LinearFilter filter = needsTextureLinear(s, p, len)) {                 \
       if (blend_key) {                                                         \
-        drawn =                                                                \
-            blendTextureLinear<true>(s, p, swgl_SpanLength, uv_rect,           \
-                                     packed_color, swgl_Out##format, filter);  \
+        drawn = blendTextureLinear<true>(s, p, len, uv_rect, packed_color,     \
+                                         swgl_Out##format, filter);            \
       } else {                                                                 \
-        drawn =                                                                \
-            blendTextureLinear<false>(s, p, swgl_SpanLength, uv_rect,          \
-                                      packed_color, swgl_Out##format, filter); \
+        drawn = blendTextureLinear<false>(s, p, len, uv_rect, packed_color,    \
+                                          swgl_Out##format, filter);           \
       }                                                                        \
     } else if (blend_key) {                                                    \
-      drawn = blendTextureNearestFast<true>(s, p, swgl_SpanLength, uv_rect,    \
-                                            packed_color, swgl_Out##format);   \
+      drawn = blendTextureNearestFast<true>(s, p, len, uv_rect, packed_color,  \
+                                            swgl_Out##format);                 \
     } else {                                                                   \
-      drawn = blendTextureNearestFast<false>(s, p, swgl_SpanLength, uv_rect,   \
-                                             packed_color, swgl_Out##format);  \
+      drawn = blendTextureNearestFast<false>(s, p, len, uv_rect, packed_color, \
+                                             swgl_Out##format);                \
     }                                                                          \
     swgl_Out##format += drawn;                                                 \
     swgl_SpanLength -= drawn;                                                  \
   } while (0)
 #define swgl_commitTextureLinearRGBA8(s, p, uv_rect) \
-  swgl_commitTextureLinear(RGBA8, s, p, uv_rect, NoColor())
+  swgl_commitTextureLinear(RGBA8, s, p, uv_rect, NoColor(), swgl_SpanLength)
 #define swgl_commitTextureLinearR8(s, p, uv_rect) \
-  swgl_commitTextureLinear(R8, s, p, uv_rect, NoColor())
+  swgl_commitTextureLinear(R8, s, p, uv_rect, NoColor(), swgl_SpanLength)
+
+// Commit a partial span with linear filtering, optionally inverting the color
+#define swgl_commitPartialTextureLinearR8(len, s, p, uv_rect) \
+  swgl_commitTextureLinear(R8, s, p, uv_rect, NoColor(),      \
+                           min(int(len), swgl_SpanLength))
+#define swgl_commitPartialTextureLinearInvertR8(len, s, p, uv_rect) \
+  swgl_commitTextureLinear(R8, s, p, uv_rect, InvertColor(),        \
+                           min(int(len), swgl_SpanLength))
 
 // Commit an entire span with linear filtering that is scaled by a color
 #define swgl_commitTextureLinearColorRGBA8(s, p, uv_rect, color) \
-  swgl_commitTextureLinear(RGBA8, s, p, uv_rect, color)
+  swgl_commitTextureLinear(RGBA8, s, p, uv_rect, color, swgl_SpanLength)
 #define swgl_commitTextureLinearColorR8(s, p, uv_rect, color) \
-  swgl_commitTextureLinear(R8, s, p, uv_rect, color)
+  swgl_commitTextureLinear(R8, s, p, uv_rect, color, swgl_SpanLength)
 
 // Compute repeating UVs, possibly constrained by tile repeat limits
 static inline vec2 tileRepeatUV(vec2 uv, const vec2_scalar& tile_repeat) {

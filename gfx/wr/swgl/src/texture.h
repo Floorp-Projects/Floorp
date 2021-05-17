@@ -857,6 +857,11 @@ vec4 texture(sampler2DRect sampler, vec2 P) {
   }
 }
 
+template <typename S>
+vec4_scalar texture(S sampler, vec2_scalar P) {
+  return force_scalar(texture(sampler, vec2(P)));
+}
+
 ivec2_scalar textureSize(sampler2D sampler, int) {
   return ivec2_scalar{int32_t(sampler->width), int32_t(sampler->height)};
 }
