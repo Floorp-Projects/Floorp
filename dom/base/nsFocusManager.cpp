@@ -3642,8 +3642,7 @@ nsresult nsFocusManager::DetermineElementToMoveFocus(
   return NS_OK;
 }
 
-uint32_t nsFocusManager::FocusOptionsToFocusManagerFlags(
-    const mozilla::dom::FocusOptions& aOptions) {
+uint32_t nsFocusManager::ProgrammaticFocusFlags(const FocusOptions& aOptions) {
   uint32_t flags = 0;
   if (aOptions.mPreventScroll) {
     flags |= FLAG_NOSCROLL;
@@ -3651,6 +3650,11 @@ uint32_t nsFocusManager::FocusOptionsToFocusManagerFlags(
   if (aOptions.mPreventFocusRing) {
     flags |= FLAG_NOSHOWRING;
   }
+  if (UserActivation::IsHandlingKeyboardInput()) {
+    flags |= FLAG_BYKEY;
+  }
+  // TODO: We could do a similar thing if we're handling mouse input, but that
+  // changes focusability of some elements so may be more risky.
   return flags;
 }
 

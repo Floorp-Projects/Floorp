@@ -455,7 +455,7 @@ void Element::Focus(const FocusOptions& aOptions, CallerType aCallerType,
     fm->NeedsFlushBeforeEventHandling(this);
     return;
   }
-  uint32_t fmFlags = nsFocusManager::FocusOptionsToFocusManagerFlags(aOptions);
+  uint32_t fmFlags = nsFocusManager::ProgrammaticFocusFlags(aOptions);
   if (aCallerType == CallerType::NonSystem) {
     fmFlags |= nsIFocusManager::FLAG_NONSYSTEMCALLER;
   }
