@@ -48,7 +48,7 @@ class MachCommands(MachCommandBase):
         "--suppression multiple times to specify multiple suppression "
         "files.",
     )
-    def valgrind_test(self, suppressions):
+    def valgrind_test(self, command_context, suppressions):
 
         from mozfile import TemporaryDirectory
         from mozhttpd import MozHttpd

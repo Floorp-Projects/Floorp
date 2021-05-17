@@ -211,7 +211,7 @@ class Command(object):
     For example:
 
         @Command('foo', category='misc', description='Run the foo action')
-        def foo(self):
+        def foo(self, command_context):
             pass
     """
 
@@ -279,7 +279,7 @@ class CommandArgument(object):
         @Command('foo', help='Run the foo action')
         @CommandArgument('-b', '--bar', action='store_true', default=False,
             help='Enable bar mode.')
-        def foo(self):
+        def foo(self, command_context):
             pass
     """
 
@@ -315,7 +315,7 @@ class CommandArgumentGroup(object):
         @CommandArgumentGroup('group1')
         @CommandArgument('-b', '--bar', group='group1', action='store_true',
             default=False, help='Enable bar mode.')
-        def foo(self):
+        def foo(self, command_context):
             pass
 
     The name should be chosen so that it makes sense as part of the phrase

@@ -305,7 +305,7 @@ class MachRaptor(MachCommandBase):
         description="Run Raptor performance tests.",
         parser=create_parser,
     )
-    def run_raptor(self, **kwargs):
+    def run_raptor(self, command_context, **kwargs):
         # Defers this import so that a transitive dependency doesn't
         # stop |mach bootstrap| from running
         from raptor.power import enable_charging, disable_charging
@@ -381,5 +381,5 @@ class MachRaptor(MachCommandBase):
         description="Run Raptor performance tests.",
         parser=create_parser,
     )
-    def run_raptor_test(self, **kwargs):
+    def run_raptor_test(self, command_context, **kwargs):
         return self.run_raptor(**kwargs)

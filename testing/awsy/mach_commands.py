@@ -307,7 +307,7 @@ class MachCommands(MachCommandBase):
         default=False,
         help="Use the tp6 pageset during testing.",
     )
-    def run_awsy_test(self, tests, **kwargs):
+    def run_awsy_test(self, command_context, tests, **kwargs):
         """mach awsy-test runs the in-tree version of the Are We Slim Yet
         (AWSY) tests.
 

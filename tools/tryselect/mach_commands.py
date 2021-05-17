@@ -202,7 +202,7 @@ class TrySelect(MachCommandBase):
         description="Push selected tasks to the try server",
         parser=generic_parser,
     )
-    def try_default(self, argv=None, **kwargs):
+    def try_default(self, command_context, argv=None, **kwargs):
         """Push selected tests to the try server.
 
         The |mach try| command is a frontend for scheduling tasks to
@@ -234,7 +234,7 @@ class TrySelect(MachCommandBase):
         description="Select tasks on try using a fuzzy finder",
         parser=get_parser("fuzzy"),
     )
-    def try_fuzzy(self, **kwargs):
+    def try_fuzzy(self, command_context, **kwargs):
         """Select which tasks to run with a fuzzy finding interface (fzf).
 
         When entering the fzf interface you'll be confronted by two panes. The
@@ -337,7 +337,7 @@ class TrySelect(MachCommandBase):
         description="Schedule tasks by selecting them from a web " "interface.",
         parser=get_parser("chooser"),
     )
-    def try_chooser(self, **kwargs):
+    def try_chooser(self, command_context, **kwargs):
         """Push tasks selected from a web interface to try.
 
         This selector will build the taskgraph and spin up a dynamically
@@ -361,7 +361,7 @@ class TrySelect(MachCommandBase):
         "selector is EXPERIMENTAL.",
         parser=get_parser("auto"),
     )
-    def try_auto(self, **kwargs):
+    def try_auto(self, command_context, **kwargs):
         return self.run(**kwargs)
 
     @SubCommand(
@@ -370,7 +370,7 @@ class TrySelect(MachCommandBase):
         description="Schedule a previously generated (non try syntax) " "push again.",
         parser=get_parser("again"),
     )
-    def try_again(self, **kwargs):
+    def try_again(self, command_context, **kwargs):
         return self.run(**kwargs)
 
     @SubCommand(
@@ -379,7 +379,7 @@ class TrySelect(MachCommandBase):
         description="Push to try without scheduling any tasks.",
         parser=get_parser("empty"),
     )
-    def try_empty(self, **kwargs):
+    def try_empty(self, command_context, **kwargs):
         """Push to try, running no builds or tests
 
         This selector does not prompt you to run anything, it just pushes
@@ -396,7 +396,7 @@ class TrySelect(MachCommandBase):
         description="Select tasks on try using try syntax",
         parser=get_parser("syntax"),
     )
-    def try_syntax(self, **kwargs):
+    def try_syntax(self, command_context, **kwargs):
         """Push the current tree to try, with the specified syntax.
 
         Build options, platforms and regression tests may be selected
@@ -456,7 +456,7 @@ class TrySelect(MachCommandBase):
         description="Select tasks on try using coverage data",
         parser=get_parser("coverage"),
     )
-    def try_coverage(self, **kwargs):
+    def try_coverage(self, command_context, **kwargs):
         """Select which tasks to use using coverage data."""
         return self.run(**kwargs)
 
@@ -466,7 +466,7 @@ class TrySelect(MachCommandBase):
         description="Push the current tree to try, configured for a staging release.",
         parser=get_parser("release"),
     )
-    def try_release(self, **kwargs):
+    def try_release(self, command_context, **kwargs):
         """Push the current tree to try, configured for a staging release."""
         return self.run(**kwargs)
 
@@ -476,7 +476,7 @@ class TrySelect(MachCommandBase):
         description="Run scriptworker tasks against a recent release.",
         parser=get_parser("scriptworker"),
     )
-    def try_scriptworker(self, **kwargs):
+    def try_scriptworker(self, command_context, **kwargs):
         """Run scriptworker tasks against a recent release.
 
         Requires VPN and shipit access.
