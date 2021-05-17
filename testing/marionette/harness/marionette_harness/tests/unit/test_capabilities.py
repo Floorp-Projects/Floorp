@@ -43,31 +43,28 @@ class TestCapabilities(MarionetteTestCase):
             )
 
     def test_mandated_capabilities(self):
-        self.assertIn("acceptInsecureCerts", self.caps)
         self.assertIn("browserName", self.caps)
         self.assertIn("browserVersion", self.caps)
         self.assertIn("platformName", self.caps)
         self.assertIn("platformVersion", self.caps)
-        self.assertIn("proxy", self.caps)
+        self.assertIn("acceptInsecureCerts", self.caps)
         self.assertIn("setWindowRect", self.caps)
-        self.assertIn("strictFileInteractability", self.caps)
         self.assertIn("timeouts", self.caps)
+        self.assertIn("strictFileInteractability", self.caps)
 
-        self.assertFalse(self.caps["acceptInsecureCerts"])
         self.assertEqual(self.caps["browserName"], self.appinfo["name"].lower())
         self.assertEqual(self.caps["browserVersion"], self.appinfo["version"])
         self.assertEqual(self.caps["platformName"], self.os_name)
         self.assertEqual(self.caps["platformVersion"], self.os_version)
-        self.assertEqual(self.caps["proxy"], {})
-
+        self.assertFalse(self.caps["acceptInsecureCerts"])
         if self.appinfo["name"] == "Firefox":
             self.assertTrue(self.caps["setWindowRect"])
         else:
             self.assertFalse(self.caps["setWindowRect"])
-        self.assertTrue(self.caps["strictFileInteractability"])
         self.assertDictEqual(
             self.caps["timeouts"], {"implicit": 0, "pageLoad": 300000, "script": 30000}
         )
+        self.assertTrue(self.caps["strictFileInteractability"])
 
     def test_additional_capabilities(self):
         self.assertIn("moz:processID", self.caps)
