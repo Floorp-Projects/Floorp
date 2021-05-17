@@ -70,6 +70,7 @@ else
   CONFIGS="$CONFIGS x64_False_arm64_android x64_True_arm64_android"
 fi
 
+# Check for modified files and abort if present.
 MODIFIED_FILES=`hg status --modified --added --exclude "**/moz.build" --exclude "dom/media/webrtc/third_party_build/**.json"`
 if [ "x$MODIFIED_FILES" = "x" ]; then
   # Completely clean the mercurial checkout before proceeding
@@ -86,7 +87,7 @@ fi
 export PATH=$DEPOT_TOOLS:$PATH
 export DEPOT_TOOLS_UPDATE=0
 
-# Symlink in the buildtoosl and .git director from our copy of libwebrtc.
+# Symlink in the buildtools and .git directories from our copy of libwebrtc.
 if [ -L ./third_party/libwebrtc/buildtools ]; then
   rm ./third_party/libwebrtc/buildtools
 elif [ -d ./third_party/libwebrtc/buildtools ]; then
@@ -101,6 +102,9 @@ elif [ -d ./third_party/libwebrtc/.git ]; then
 fi
 ln -s $MOZ_LIBWEBRTC_GIT/.git ./third_party/libwebrtc/
 
+CONFIG_DIR=dom/media/webrtc/third_party_build/gn-configs
+echo "CONFIG_DIR is $CONFIG_DIR"
+
 # Each mozconfig is for a particular "platform" and defines debug/non-debug and a
 # MOZ_OBJDIR based on the name of the mozconfig to make it easier to know where to
 # find the generated gn json file.
@@ -113,7 +117,7 @@ ln -s $MOZ_LIBWEBRTC_GIT/.git ./third_party/libwebrtc/
 for THIS_BUILD in $CONFIGS
 do
   echo "Building gn json file for $THIS_BUILD"
-  export MOZCONFIG=dom/media/webrtc/third_party_build/gn-configs/$THIS_BUILD.mozconfig 
+  export MOZCONFIG=$CONFIG_DIR/$THIS_BUILD.mozconfig
   echo "Using MOZCONFIG=$MOZCONFIG"
 
   ./mach configure | tee $THIS_BUILD.configure.log
@@ -122,14 +126,14 @@ do
     exit 1
   fi
   ./mach build-backend -b GnConfigGen --verbose | tee $THIS_BUILD.build-backend.log
-  cp obj-$THIS_BUILD/third_party/libwebrtc/gn-output/$THIS_BUILD.json dom/media/webrtc/third_party_build/gn-configs
+  cp obj-$THIS_BUILD/third_party/libwebrtc/gn-output/$THIS_BUILD.json $CONFIG_DIR
 done
 
-# run some fixup (mostly removing dev-machine dependent info) from json files
-for file in `ls dom/media/webrtc/third_party_build/gn-configs/*.json`
+# run some fixup (mostly removing dev-machine dependent info) on json files
+for THIS_CONFIG in $CONFIGS
 do
-  echo "fixup file: $file"
-  ./dom/media/webrtc/third_party_build/gn-configs/fixup_json.py $file
+  echo "fixup file: $CONFIG_DIR/$THIS_CONFIG.json"
+  ./$CONFIG_DIR/fixup_json.py $CONFIG_DIR/$THIS_CONFIG.json
 done
 
 #  The symlinks are no longer needed after generating the .json files.
