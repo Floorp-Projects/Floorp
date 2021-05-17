@@ -1161,7 +1161,7 @@ impl BatchBuilder {
                 // TODO: it would be less error-prone to get this info from the texture cache.
                 let image_buffer_kind = ImageBufferKind::Texture2D;
 
-                let non_segmented_blend_mode = if !common_data.opacity.is_opaque ||
+                let blend_mode = if !common_data.opacity.is_opaque ||
                     prim_info.clip_task_index != ClipTaskIndex::INVALID ||
                     transform_kind == TransformedRectKind::Complex
                 {
@@ -1199,8 +1199,7 @@ impl BatchBuilder {
                     Some(border_data.brush_segments.as_slice()),
                     common_data.opacity,
                     &batch_params,
-                    specified_blend_mode,
-                    non_segmented_blend_mode,
+                    blend_mode,
                     batch_features,
                     prim_header_index,
                     bounding_rect,
@@ -1537,7 +1536,7 @@ impl BatchBuilder {
             }
             PrimitiveInstanceKind::Picture { pic_index, segment_instance_index, .. } => {
                 let picture = &ctx.prim_store.pictures[pic_index.0];
-                let non_segmented_blend_mode = BlendMode::PremultipliedAlpha;
+                let blend_mode = BlendMode::PremultipliedAlpha;
                 let prim_cache_address = gpu_cache.get_address(&ctx.globals.default_image_handle);
 
                 let prim_header = PrimitiveHeader {
@@ -1608,7 +1607,7 @@ impl BatchBuilder {
 
                                         let key = BatchKey::new(
                                             kind,
-                                            non_segmented_blend_mode,
+                                            blend_mode,
                                             textures,
                                         );
                                         let prim_header_index = prim_headers.push(
@@ -1682,8 +1681,8 @@ impl BatchBuilder {
                                         );
 
                                         // Build batch keys for shadow/content
-                                        let shadow_key = BatchKey::new(kind, non_segmented_blend_mode, shadow_textures);
-                                        let content_key = BatchKey::new(kind, non_segmented_blend_mode, content_textures);
+                                        let shadow_key = BatchKey::new(kind, blend_mode, shadow_textures);
+                                        let content_key = BatchKey::new(kind, blend_mode, content_textures);
 
                                         for (shadow, shadow_gpu_data) in shadows.iter().zip(picture.extra_gpu_data_handles.iter()) {
                                             // Get the GPU cache address of the extra data handle.
@@ -2125,7 +2124,7 @@ impl BatchBuilder {
                                     batch_params.prim_user_data,
                                 );
 
-                                let (opacity, specified_blend_mode) = if is_opaque {
+                                let (opacity, blend_mode) = if is_opaque {
                                     (PrimitiveOpacity::opaque(), BlendMode::None)
                                 } else {
                                     (PrimitiveOpacity::translucent(), BlendMode::PremultipliedAlpha)
@@ -2135,8 +2134,7 @@ impl BatchBuilder {
                                     segments,
                                     opacity,
                                     &batch_params,
-                                    specified_blend_mode,
-                                    non_segmented_blend_mode,
+                                    blend_mode,
                                     batch_features,
                                     prim_header_index,
                                     bounding_rect,
@@ -2167,7 +2165,7 @@ impl BatchBuilder {
                                 );
                                 let key = BatchKey::new(
                                     kind,
-                                    non_segmented_blend_mode,
+                                    blend_mode,
                                     textures,
                                 );
                                 let prim_header_index = prim_headers.push(
@@ -2216,12 +2214,11 @@ impl BatchBuilder {
 
                 let textures = TextureSet::prim_textured(texture);
                 let prim_cache_address = gpu_cache.get_address(&common_data.gpu_cache_handle);
-                let specified_blend_mode = BlendMode::PremultipliedAlpha;
-                let non_segmented_blend_mode = if !common_data.opacity.is_opaque ||
+                let blend_mode = if !common_data.opacity.is_opaque ||
                     prim_info.clip_task_index != ClipTaskIndex::INVALID ||
                     transform_kind == TransformedRectKind::Complex
                 {
-                    specified_blend_mode
+                    BlendMode::PremultipliedAlpha
                 } else {
                     BlendMode::None
                 };
@@ -2255,8 +2252,7 @@ impl BatchBuilder {
                     Some(border_data.brush_segments.as_slice()),
                     common_data.opacity,
                     &batch_params,
-                    specified_blend_mode,
-                    non_segmented_blend_mode,
+                    blend_mode,
                     batch_features,
                     prim_header_index,
                     bounding_rect,
@@ -2270,13 +2266,12 @@ impl BatchBuilder {
             }
             PrimitiveInstanceKind::Rectangle { data_handle, segment_instance_index, .. } => {
                 let prim_data = &ctx.data_stores.prim[data_handle];
-                let specified_blend_mode = BlendMode::PremultipliedAlpha;
 
-                let non_segmented_blend_mode = if !prim_data.opacity.is_opaque ||
+                let blend_mode = if !prim_data.opacity.is_opaque ||
                     prim_info.clip_task_index != ClipTaskIndex::INVALID ||
                     transform_kind == TransformedRectKind::Complex
                 {
-                    specified_blend_mode
+                    BlendMode::PremultipliedAlpha
                 } else {
                     BlendMode::None
                 };
@@ -2313,8 +2308,7 @@ impl BatchBuilder {
                     segments,
                     prim_data.opacity,
                     &batch_params,
-                    specified_blend_mode,
-                    non_segmented_blend_mode,
+                    blend_mode,
                     batch_features,
                     prim_header_index,
                     bounding_rect,
@@ -2380,14 +2374,13 @@ impl BatchBuilder {
                     0,
                 );
 
-                let specified_blend_mode = BlendMode::PremultipliedAlpha;
                 let prim_common_data = &ctx.data_stores.as_common_data(&prim_instance);
 
-                let non_segmented_blend_mode = if !prim_common_data.opacity.is_opaque ||
+                let blend_mode = if !prim_common_data.opacity.is_opaque ||
                     prim_info.clip_task_index != ClipTaskIndex::INVALID ||
                     transform_kind == TransformedRectKind::Complex
                 {
-                    specified_blend_mode
+                    BlendMode::PremultipliedAlpha
                 } else {
                     BlendMode::None
                 };
@@ -2418,8 +2411,7 @@ impl BatchBuilder {
                     segments,
                     prim_common_data.opacity,
                     &batch_params,
-                    specified_blend_mode,
-                    non_segmented_blend_mode,
+                    blend_mode,
                     batch_features,
                     prim_header_index,
                     bounding_rect,
@@ -2437,16 +2429,24 @@ impl BatchBuilder {
                 let image_data = &ctx.data_stores.image[data_handle].kind;
                 let common_data = &ctx.data_stores.image[data_handle].common;
                 let image_instance = &ctx.prim_store.images[image_instance_index];
-                let specified_blend_mode = match image_data.alpha_type {
-                    AlphaType::PremultipliedAlpha => BlendMode::PremultipliedAlpha,
-                    AlphaType::Alpha => BlendMode::Alpha,
-                };
                 let prim_user_data = ImageBrushData {
                     color_mode: ShaderColorMode::Image,
                     alpha_type: image_data.alpha_type,
                     raster_space: RasterizationSpace::Local,
                     opacity: 1.0,
                 }.encode();
+
+                let blend_mode = if !common_data.opacity.is_opaque ||
+                    prim_info.clip_task_index != ClipTaskIndex::INVALID ||
+                    transform_kind == TransformedRectKind::Complex
+                {
+                    match image_data.alpha_type {
+                        AlphaType::PremultipliedAlpha => BlendMode::PremultipliedAlpha,
+                        AlphaType::Alpha => BlendMode::Alpha,
+                    }
+                } else {
+                    BlendMode::None
+                };
 
                 if image_instance.visible_tiles.is_empty() {
                     if cfg!(debug_assertions) {
@@ -2463,15 +2463,6 @@ impl BatchBuilder {
                         None => {
                             return;
                         }
-                    };
-
-                    let non_segmented_blend_mode = if !common_data.opacity.is_opaque ||
-                        prim_info.clip_task_index != ClipTaskIndex::INVALID ||
-                        transform_kind == TransformedRectKind::Complex
-                    {
-                        specified_blend_mode
-                    } else {
-                        BlendMode::None
                     };
 
                     let batch_params = BrushBatchParameters::shared(
@@ -2507,8 +2498,7 @@ impl BatchBuilder {
                         segments,
                         common_data.opacity,
                         &batch_params,
-                        specified_blend_mode,
-                        non_segmented_blend_mode,
+                        blend_mode,
                         batch_features,
                         prim_header_index,
                         bounding_rect,
@@ -2565,7 +2555,7 @@ impl BatchBuilder {
                             );
 
                             let batch_key = BatchKey {
-                                blend_mode: specified_blend_mode,
+                                blend_mode,
                                 kind: BatchKind::Brush(BrushBatchKind::Image(texture.image_buffer_kind())),
                                 textures,
                             };
@@ -2589,7 +2579,6 @@ impl BatchBuilder {
             }
             PrimitiveInstanceKind::LinearGradient { data_handle, ref visible_tiles_range, .. } => {
                 let prim_data = &ctx.data_stores.linear_grad[data_handle];
-                let specified_blend_mode = BlendMode::PremultipliedAlpha;
 
                 let mut prim_header = PrimitiveHeader {
                     local_rect: prim_rect,
@@ -2598,11 +2587,11 @@ impl BatchBuilder {
                     transform_id,
                 };
 
-                let non_segmented_blend_mode = if !prim_data.opacity.is_opaque ||
+                let blend_mode = if !prim_data.opacity.is_opaque ||
                     prim_info.clip_task_index != ClipTaskIndex::INVALID ||
                     transform_kind == TransformedRectKind::Complex
                 {
-                    specified_blend_mode
+                    BlendMode::PremultipliedAlpha
                 } else {
                     BlendMode::None
                 };
@@ -2631,8 +2620,7 @@ impl BatchBuilder {
                         segments,
                         prim_data.opacity,
                         &batch_params,
-                        specified_blend_mode,
-                        non_segmented_blend_mode,
+                        blend_mode,
                         batch_features,
                         prim_header_index,
                         bounding_rect,
@@ -2652,7 +2640,7 @@ impl BatchBuilder {
                     ).unwrap();
 
                     let key = BatchKey {
-                        blend_mode: specified_blend_mode,
+                        blend_mode,
                         kind: BatchKind::Brush(BrushBatchKind::LinearGradient),
                         textures: BatchTextures::prim_untextured(clip_mask_texture_id),
                     };
@@ -2685,7 +2673,6 @@ impl BatchBuilder {
             PrimitiveInstanceKind::CachedLinearGradient { data_handle, ref visible_tiles_range, .. } => {
                 let prim_data = &ctx.data_stores.linear_grad[data_handle];
                 let common_data = &prim_data.common;
-                let specified_blend_mode = BlendMode::PremultipliedAlpha;
 
                 let src_color = render_tasks.resolve_location(prim_data.src_color, gpu_cache);
 
@@ -2712,11 +2699,11 @@ impl BatchBuilder {
                     opacity: 1.0,
                 }.encode();
 
-                let non_segmented_blend_mode = if !common_data.opacity.is_opaque ||
+                let blend_mode = if !common_data.opacity.is_opaque ||
                     prim_info.clip_task_index != ClipTaskIndex::INVALID ||
                     transform_kind == TransformedRectKind::Complex
                 {
-                    specified_blend_mode
+                    BlendMode::PremultipliedAlpha
                 } else {
                     BlendMode::None
                 };
@@ -2747,8 +2734,7 @@ impl BatchBuilder {
                         segments,
                         common_data.opacity,
                         &batch_params,
-                        specified_blend_mode,
-                        non_segmented_blend_mode,
+                        blend_mode,
                         batch_features,
                         prim_header_index,
                         bounding_rect,
@@ -2768,7 +2754,7 @@ impl BatchBuilder {
                     ).unwrap();
 
                     let batch_key = BatchKey {
-                        blend_mode: non_segmented_blend_mode,
+                        blend_mode,
                         kind: BatchKind::Brush(batch_kind),
                         textures: BatchTextures {
                             input: textures,
@@ -2803,7 +2789,6 @@ impl BatchBuilder {
             PrimitiveInstanceKind::RadialGradient { data_handle, ref visible_tiles_range, .. } => {
                 let prim_data = &ctx.data_stores.radial_grad[data_handle];
                 let common_data = &prim_data.common;
-                let specified_blend_mode = BlendMode::PremultipliedAlpha;
 
                 let src_color = render_tasks.resolve_location(prim_data.src_color, gpu_cache);
 
@@ -2831,11 +2816,11 @@ impl BatchBuilder {
                 }.encode();
 
 
-                let non_segmented_blend_mode = if !common_data.opacity.is_opaque ||
+                let blend_mode = if !common_data.opacity.is_opaque ||
                     prim_info.clip_task_index != ClipTaskIndex::INVALID ||
                     transform_kind == TransformedRectKind::Complex
                 {
-                    specified_blend_mode
+                    BlendMode::PremultipliedAlpha
                 } else {
                     BlendMode::None
                 };
@@ -2866,8 +2851,7 @@ impl BatchBuilder {
                         segments,
                         common_data.opacity,
                         &batch_params,
-                        specified_blend_mode,
-                        non_segmented_blend_mode,
+                        blend_mode,
                         batch_features,
                         prim_header_index,
                         bounding_rect,
@@ -2887,7 +2871,7 @@ impl BatchBuilder {
                     ).unwrap();
 
                     let batch_key = BatchKey {
-                        blend_mode: non_segmented_blend_mode,
+                        blend_mode,
                         kind: BatchKind::Brush(batch_kind),
                         textures: BatchTextures {
                             input: textures,
@@ -2923,7 +2907,6 @@ impl BatchBuilder {
             PrimitiveInstanceKind::ConicGradient { data_handle, ref visible_tiles_range, .. } => {
                 let prim_data = &ctx.data_stores.conic_grad[data_handle];
                 let common_data = &prim_data.common;
-                let specified_blend_mode = BlendMode::PremultipliedAlpha;
 
                 let src_color = render_tasks.resolve_location(prim_data.src_color, gpu_cache);
 
@@ -2951,11 +2934,11 @@ impl BatchBuilder {
                 }.encode();
 
 
-                let non_segmented_blend_mode = if !common_data.opacity.is_opaque ||
+                let blend_mode = if !common_data.opacity.is_opaque ||
                     prim_info.clip_task_index != ClipTaskIndex::INVALID ||
                     transform_kind == TransformedRectKind::Complex
                 {
-                    specified_blend_mode
+                    BlendMode::PremultipliedAlpha
                 } else {
                     BlendMode::None
                 };
@@ -2986,8 +2969,7 @@ impl BatchBuilder {
                         segments,
                         common_data.opacity,
                         &batch_params,
-                        specified_blend_mode,
-                        non_segmented_blend_mode,
+                        blend_mode,
                         batch_features,
                         prim_header_index,
                         bounding_rect,
@@ -3007,7 +2989,7 @@ impl BatchBuilder {
                     ).unwrap();
 
                     let batch_key = BatchKey {
-                        blend_mode: non_segmented_blend_mode,
+                        blend_mode,
                         kind: BatchKind::Brush(batch_kind),
                         textures: BatchTextures {
                             input: textures,
@@ -3164,8 +3146,7 @@ impl BatchBuilder {
         brush_segments: Option<&[BrushSegment]>,
         prim_opacity: PrimitiveOpacity,
         params: &BrushBatchParameters,
-        alpha_blend_mode: BlendMode,
-        non_segmented_blend_mode: BlendMode,
+        blend_mode: BlendMode,
         features: BatchFeatures,
         prim_header_index: PrimitiveHeaderIndex,
         bounding_rect: &PictureRect,
@@ -3192,7 +3173,7 @@ impl BatchBuilder {
                         segment_index as i32,
                         params.batch_kind,
                         prim_header_index,
-                        alpha_blend_mode,
+                        blend_mode,
                         features,
                         bounding_rect,
                         transform_kind,
@@ -3218,7 +3199,7 @@ impl BatchBuilder {
                         segment_index as i32,
                         params.batch_kind,
                         prim_header_index,
-                        alpha_blend_mode,
+                        blend_mode,
                         features,
                         bounding_rect,
                         transform_kind,
@@ -3246,7 +3227,7 @@ impl BatchBuilder {
                 };
 
                 let batch_key = BatchKey {
-                    blend_mode: non_segmented_blend_mode,
+                    blend_mode,
                     kind: BatchKind::Brush(params.batch_kind),
                     textures,
                 };
