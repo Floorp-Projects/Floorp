@@ -1311,6 +1311,59 @@ class HTMLEditUtils final {
                : 0;
   }
 
+  /**
+   * GetGoodCaretPointFor() returns a good point to collapse `Selection`
+   * after handling edit action with aDirectionAndAmount.
+   *
+   * @param aContent            The content where you want to put caret
+   *                            around.
+   * @param aDirectionAndAmount Muse be one of eNext, eNextWord, eToEndOfLine,
+   *                            ePrevious, ePreviousWord and eToBeggingOfLine.
+   *                            Set the direction of handled edit action.
+   */
+  template <typename EditorDOMPointType>
+  static EditorDOMPointType GetGoodCaretPointFor(
+      nsIContent& aContent, nsIEditor::EDirection aDirectionAndAmount) {
+    MOZ_ASSERT(aDirectionAndAmount == nsIEditor::eNext ||
+               aDirectionAndAmount == nsIEditor::eNextWord ||
+               aDirectionAndAmount == nsIEditor::ePrevious ||
+               aDirectionAndAmount == nsIEditor::ePreviousWord ||
+               aDirectionAndAmount == nsIEditor::eToBeginningOfLine ||
+               aDirectionAndAmount == nsIEditor::eToEndOfLine);
+
+    const bool goingForward = (aDirectionAndAmount == nsIEditor::eNext ||
+                               aDirectionAndAmount == nsIEditor::eNextWord ||
+                               aDirectionAndAmount == nsIEditor::eToEndOfLine);
+
+    // XXX Why don't we check whether the candidate position is enable or not?
+    //     When the result is not editable point, caret will be enclosed in
+    //     the non-editable content.
+
+    // If we can put caret in aContent, return start or end in it.
+    if (aContent.IsText() || HTMLEditUtils::IsContainerNode(aContent) ||
+        NS_WARN_IF(!aContent.GetParentNode())) {
+      return EditorDOMPointType(&aContent,
+                                goingForward ? 0 : aContent.Length());
+    }
+
+    // If we are going forward, put caret at aContent itself.
+    if (goingForward) {
+      return EditorDOMPointType(&aContent);
+    }
+
+    // If we are going backward, put caret to next node unless aContent is an
+    // invisible `<br>` element.
+    // XXX Shouldn't we put caret to first leaf of the next node?
+    if (!HTMLEditUtils::IsInvisibleBRElement(aContent)) {
+      EditorDOMPointType ret(EditorDOMPointType::After(aContent));
+      NS_WARNING_ASSERTION(ret.IsSet(), "Failed to set after aContent");
+      return ret;
+    }
+
+    // Otherwise, we should put caret at the invisible `<br>` element.
+    return EditorDOMPointType(&aContent);
+  }
+
  private:
   static bool CanNodeContain(nsHTMLTag aParentTagId, nsHTMLTag aChildTagId);
   static bool IsContainerNode(nsHTMLTag aTagId);

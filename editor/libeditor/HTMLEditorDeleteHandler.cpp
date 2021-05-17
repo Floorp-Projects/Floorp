@@ -2509,10 +2509,11 @@ HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::DeleteBRElement(
     // XXX This must be odd case.  The other block can be empty.
     return EditActionHandled(NS_ERROR_FAILURE);
   }
-  EditorDOMPoint newCaretPosition = aHTMLEditor.GetGoodCaretPointFor(
-      *mLeafContentInOtherBlock, aDirectionAndAmount);
+  EditorRawDOMPoint newCaretPosition =
+      HTMLEditUtils::GetGoodCaretPointFor<EditorRawDOMPoint>(
+          *mLeafContentInOtherBlock, aDirectionAndAmount);
   if (!newCaretPosition.IsSet()) {
-    NS_WARNING("HTMLEditor::GetGoodCaretPointFor() failed");
+    NS_WARNING("HTMLEditUtils::GetGoodCaretPointFor() failed");
     return EditActionHandled(NS_ERROR_FAILURE);
   }
   rv = aHTMLEditor.CollapseSelectionTo(newCaretPosition);
@@ -5183,10 +5184,10 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::AutoDeleteRangesHandler::
       MOZ_ASSERT(afterEmptyBlock.IsSet());
       if (nsIContent* nextContentOfEmptyBlock = HTMLEditUtils::GetNextContent(
               afterEmptyBlock, {}, aHTMLEditor.GetActiveEditingHost())) {
-        EditorDOMPoint pt = aHTMLEditor.GetGoodCaretPointFor(
+        EditorDOMPoint pt = HTMLEditUtils::GetGoodCaretPointFor<EditorDOMPoint>(
             *nextContentOfEmptyBlock, aDirectionAndAmount);
         if (!pt.IsSet()) {
-          NS_WARNING("HTMLEditor::GetGoodCaretPointFor() failed");
+          NS_WARNING("HTMLEditUtils::GetGoodCaretPointFor() failed");
           return Err(NS_ERROR_FAILURE);
         }
         return pt;
@@ -5206,10 +5207,10 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::AutoDeleteRangesHandler::
               HTMLEditUtils::GetPreviousContent(
                   atEmptyBlock, {WalkTreeOption::IgnoreNonEditableNode},
                   aHTMLEditor.GetActiveEditingHost())) {
-        EditorDOMPoint pt = aHTMLEditor.GetGoodCaretPointFor(
+        EditorDOMPoint pt = HTMLEditUtils::GetGoodCaretPointFor<EditorDOMPoint>(
             *previousContentOfEmptyBlock, aDirectionAndAmount);
         if (!pt.IsSet()) {
-          NS_WARNING("HTMLEditor::GetGoodCaretPointFor() failed");
+          NS_WARNING("HTMLEditUtils::GetGoodCaretPointFor() failed");
           return Err(NS_ERROR_FAILURE);
         }
         return pt;
