@@ -2930,7 +2930,7 @@ bool BytecodeEmitter::emitSetOrInitializeDestructuring(
 
       NameOpEmitter noe(this, name, loc, kind);
       if (!noe.prepareForRhs()) {
-        //        [stack] V ENV?
+        //          [stack] V ENV?
         return false;
       }
       if (noe.emittedBindOp()) {
@@ -2948,7 +2948,7 @@ bool BytecodeEmitter::emitSetOrInitializeDestructuring(
         // In the cases where we are emitting a name op, emit a swap
         // because of this.
         if (!emit1(JSOp::Swap)) {
-          //      [stack] ENV V
+          //        [stack] ENV V
           return false;
         }
       } else {
@@ -2956,7 +2956,7 @@ bool BytecodeEmitter::emitSetOrInitializeDestructuring(
         // nothing needs be done.
       }
       if (!noe.emitAssignment()) {
-        //        [stack] V
+        //          [stack] V
         return false;
       }
 
@@ -2965,10 +2965,10 @@ bool BytecodeEmitter::emitSetOrInitializeDestructuring(
 
     case ParseNodeKind::DotExpr: {
       // The reference is already pushed by emitDestructuringLHSRef.
-      //          [stack] # if Super
-      //          [stack] THIS SUPERBASE VAL
-      //          [stack] # otherwise
-      //          [stack] OBJ VAL
+      //            [stack] # if Super
+      //            [stack] THIS SUPERBASE VAL
+      //            [stack] # otherwise
+      //            [stack] OBJ VAL
       PropertyAccess* prop = &target->as<PropertyAccess>();
       bool isSuper = prop->isSuper();
       PropOpEmitter poe(this, PropOpEmitter::Kind::SimpleAssignment,
@@ -2977,7 +2977,7 @@ bool BytecodeEmitter::emitSetOrInitializeDestructuring(
       if (!poe.skipObjAndRhs()) {
         return false;
       }
-      //          [stack] # VAL
+      //            [stack] # VAL
       if (!poe.emitAssignment(prop->key().atom())) {
         return false;
       }
@@ -2986,10 +2986,10 @@ bool BytecodeEmitter::emitSetOrInitializeDestructuring(
 
     case ParseNodeKind::ElemExpr: {
       // The reference is already pushed by emitDestructuringLHSRef.
-      //          [stack] # if Super
-      //          [stack] THIS KEY SUPERBASE VAL
-      //          [stack] # otherwise
-      //          [stack] OBJ KEY VAL
+      //            [stack] # if Super
+      //            [stack] THIS KEY SUPERBASE VAL
+      //            [stack] # otherwise
+      //            [stack] OBJ KEY VAL
       PropertyByValue* elem = &target->as<PropertyByValue>();
       bool isSuper = elem->isSuper();
       MOZ_ASSERT(!elem->key().isKind(ParseNodeKind::PrivateName));
@@ -3000,7 +3000,7 @@ bool BytecodeEmitter::emitSetOrInitializeDestructuring(
         return false;
       }
       if (!eoe.emitAssignment()) {
-        //        [stack] VAL
+        //          [stack] VAL
         return false;
       }
       break;
@@ -3008,7 +3008,7 @@ bool BytecodeEmitter::emitSetOrInitializeDestructuring(
 
     case ParseNodeKind::PrivateMemberExpr: {
       // The reference is already pushed by emitDestructuringLHSRef.
-      //          [stack] OBJ NAME VAL
+      //            [stack] OBJ NAME VAL
       PrivateMemberAccess* privateExpr = &target->as<PrivateMemberAccess>();
       PrivateOpEmitter xoe(this, PrivateOpEmitter::Kind::SimpleAssignment,
                            privateExpr->privateName().name());
@@ -3016,7 +3016,7 @@ bool BytecodeEmitter::emitSetOrInitializeDestructuring(
         return false;
       }
       if (!xoe.emitAssignment()) {
-        //        [stack] VAL
+        //          [stack] VAL
         return false;
       }
       break;
@@ -3035,7 +3035,7 @@ bool BytecodeEmitter::emitSetOrInitializeDestructuring(
 
   // Pop the assigned value.
   if (!emit1(JSOp::Pop)) {
-    //            [stack] # empty
+    //              [stack] # empty
     return false;
   }
 
@@ -6036,7 +6036,7 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitFunction(
     }
   } else {
     if (!fe.emitAsmJSModule()) {
-      //              [stack]
+      //            [stack]
       return false;
     }
   }
@@ -8695,7 +8695,7 @@ bool BytecodeEmitter::emitOptionalPrivateExpression(
     PrivateMemberAccessBase* privateExpr, PrivateOpEmitter& xoe,
     OptionalEmitter& oe) {
   if (!emitOptionalTree(&privateExpr->expression(), oe)) {
-    //            [stack] OBJ
+    //              [stack] OBJ
     return false;
   }
 
@@ -10647,36 +10647,36 @@ bool BytecodeEmitter::emitNewPrivateName(TaggedParserAtomIndex bindingName,
   // TODO: Add a new bytecode to create private names.
   if (!emitAtomOp(JSOp::GetIntrinsic,
                   TaggedParserAtomIndex::WellKnown::NewPrivateName())) {
-    //            [stack] HERITAGE NEWPRIVATENAME
+    //              [stack] HERITAGE NEWPRIVATENAME
     return false;
   }
 
   // Push `undefined` as `this` parameter for call.
   if (!emit1(JSOp::Undefined)) {
-    //            [stack] HERITAGE NEWPRIVATENAME UNDEFINED
+    //              [stack] HERITAGE NEWPRIVATENAME UNDEFINED
     return false;
   }
 
   if (!emitAtomOp(JSOp::String, symbolName)) {
-    //            [stack] HERITAGE NEWPRIVATENAME UNDEFINED NAME
+    //              [stack] HERITAGE NEWPRIVATENAME UNDEFINED NAME
     return false;
   }
 
   int argc = 1;
   if (!emitCall(JSOp::Call, argc)) {
-    //            [stack] HERITAGE PRIVATENAME
+    //              [stack] HERITAGE PRIVATENAME
     return false;
   }
 
   // Add a binding for #name => privatename
   if (!emitLexicalInitialization(bindingName)) {
-    //            [stack] HERITAGE PRIVATENAME
+    //              [stack] HERITAGE PRIVATENAME
     return false;
   }
 
   // Pop Private name off the stack.
   if (!emit1(JSOp::Pop)) {
-    //            [stack] HERITAGE
+    //              [stack] HERITAGE
     return false;
   }
 
