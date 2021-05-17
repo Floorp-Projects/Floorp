@@ -1436,8 +1436,8 @@ bool HTMLEditor::IsStartOfContainerOrBeforeFirstEditableChild(
     return false;
   }
 
-  nsIContent* firstEditableChild =
-      GetFirstEditableChild(*aPoint.GetContainer());
+  nsIContent* firstEditableChild = HTMLEditUtils::GetFirstChild(
+      *aPoint.GetContainer(), {WalkTreeOption::IgnoreNonEditableNode});
   if (!firstEditableChild) {
     return true;
   }
