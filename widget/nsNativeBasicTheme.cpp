@@ -619,16 +619,6 @@ std::pair<sRGBColor, sRGBColor> nsNativeBasicTheme::ComputeMeterchunkColors(
   return std::make_pair(chunkColor, borderColor);
 }
 
-sRGBColor nsNativeBasicTheme::ComputeMenulistArrowButtonColor(
-    const EventStates& aState, UseSystemColors aUseSystemColors) {
-  bool isDisabled = aState.HasState(NS_EVENT_STATE_DISABLED);
-  if (bool(aUseSystemColors)) {
-    return SystemColor(isDisabled ? StyleSystemColor::Graytext
-                                  : StyleSystemColor::TextForeground);
-  }
-  return isDisabled ? sColorGrey60Alpha50 : sColorGrey60;
-}
-
 std::array<sRGBColor, 3> nsNativeBasicTheme::ComputeFocusRectColors(
     const AccentColor& aAccent, UseSystemColors aUseSystemColors) {
   if (bool(aUseSystemColors)) {
@@ -1356,8 +1346,8 @@ void nsNativeBasicTheme::PaintMenulistArrowButton(
 
   const float kPolygonSize = kMinimumDropdownArrowButtonWidth;
 
-  sRGBColor arrowColor =
-      ComputeMenulistArrowButtonColor(aState, aUseSystemColors);
+  const auto arrowColor = sRGBColor::FromABGR(
+      nsLayoutUtils::GetColor(aFrame, &nsStyleText::mWebkitTextFillColor));
   PaintArrow(aDrawTarget, aRect, kPolygonX, kPolygonY, kPolygonSize,
              ArrayLength(kPolygonX), arrowColor);
 }
