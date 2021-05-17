@@ -1097,13 +1097,6 @@ class HTMLEditor final : public TextEditor,
   InsertBRElement(const EditorDOMPoint& aInsertToBreak);
 
   /**
-   * GetMostAncestorInlineElement() returns the most ancestor inline element
-   * between aNode and the editing host.  Even if the editing host is an inline
-   * element, this method never returns the editing host as the result.
-   */
-  nsIContent* GetMostAncestorInlineElement(nsINode& aNode) const;
-
-  /**
    * SplitParentInlineElementsAtRangeEdges() splits parent inline nodes at both
    * start and end of aRangeItem.  If this splits at every point, this modifies
    * aRangeItem to point each split point (typically, right node).

@@ -6225,9 +6225,16 @@ nsresult HTMLEditor::SplitParentInlineElementsAtRangeEdges(
     RangeItem& aRangeItem) {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
-  if (!aRangeItem.IsCollapsed()) {
+  RefPtr<Element> editingHost = GetActiveEditingHost();
+  if (NS_WARN_IF(!editingHost)) {
+    return NS_OK;
+  }
+
+  if (!aRangeItem.IsCollapsed() && aRangeItem.mEndContainer &&
+      aRangeItem.mEndContainer->IsContent()) {
     nsCOMPtr<nsIContent> mostAncestorInlineContentAtEnd =
-        GetMostAncestorInlineElement(*aRangeItem.mEndContainer);
+        HTMLEditUtils::GetMostDistantAncestorInlineElement(
+            *aRangeItem.mEndContainer->AsContent(), editingHost);
 
     if (mostAncestorInlineContentAtEnd) {
       SplitNodeResult splitEndInlineResult = SplitNodeDeepWithTransaction(
@@ -6242,6 +6249,12 @@ nsresult HTMLEditor::SplitParentInlineElementsAtRangeEdges(
             "eDoNotCreateEmptyContainer) failed");
         return splitEndInlineResult.Rv();
       }
+      if (editingHost != GetActiveEditingHost()) {
+        NS_WARNING(
+            "HTMLEditor::SplitNodeDeepWithTransaction(SplitAtEdges::"
+            "eDoNotCreateEmptyContainer) caused changing editing host");
+        return NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE;
+      }
       EditorRawDOMPoint splitPointAtEnd(splitEndInlineResult.SplitPoint());
       if (!splitPointAtEnd.IsSet()) {
         NS_WARNING(
@@ -6254,8 +6267,13 @@ nsresult HTMLEditor::SplitParentInlineElementsAtRangeEdges(
     }
   }
 
+  if (!aRangeItem.mStartContainer || !aRangeItem.mStartContainer->IsContent()) {
+    return NS_OK;
+  }
+
   nsCOMPtr<nsIContent> mostAncestorInlineContentAtStart =
-      GetMostAncestorInlineElement(*aRangeItem.mStartContainer);
+      HTMLEditUtils::GetMostDistantAncestorInlineElement(
+          *aRangeItem.mStartContainer->AsContent(), editingHost);
 
   if (mostAncestorInlineContentAtStart) {
     SplitNodeResult splitStartInlineResult = SplitNodeDeepWithTransaction(
@@ -6348,47 +6366,6 @@ nsresult HTMLEditor::SplitElementsAtEveryBRElement(
   aOutArrayOfContents.AppendElement(*nextContent);
 
   return NS_OK;
-}
-
-nsIContent* HTMLEditor::GetMostAncestorInlineElement(nsINode& aNode) const {
-  MOZ_ASSERT(IsEditActionDataAvailable());
-
-  if (!aNode.IsContent() || HTMLEditUtils::IsBlockElement(*aNode.AsContent())) {
-    return nullptr;
-  }
-
-  Element* host = GetActiveEditingHost();
-  if (NS_WARN_IF(!host)) {
-    return nullptr;
-  }
-
-  // If aNode is the editing host itself, there is no modifiable inline
-  // parent.
-  if (&aNode == host) {
-    return nullptr;
-  }
-
-  // If aNode is outside of the <body> element, we don't support to edit
-  // such elements for now.
-  // XXX This should be MOZ_ASSERT after fixing bug 1413131 for avoiding
-  //     calling this expensive method.
-  if (NS_WARN_IF(!EditorUtils::IsDescendantOf(aNode, *host))) {
-    return nullptr;
-  }
-
-  if (!aNode.GetParent()) {
-    return aNode.AsContent();
-  }
-
-  // Looks for the highest inline parent in the editing host.
-  nsIContent* topMostInlineContent = aNode.AsContent();
-  for (nsIContent* content : aNode.AncestorsOfType<nsIContent>()) {
-    if (content == host || !HTMLEditUtils::IsInlineElement(*content)) {
-      break;
-    }
-    topMostInlineContent = content;
-  }
-  return topMostInlineContent;
 }
 
 // static
