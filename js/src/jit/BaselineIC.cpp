@@ -936,7 +936,7 @@ bool DoInFallback(JSContext* cx, BaselineFrame* frame, ICFallbackStub* stub,
   FallbackICSpew(cx, stub, "In");
 
   if (!objValue.isObject()) {
-    ReportInNotObjectError(cx, key, -2, objValue, -1);
+    ReportInNotObjectError(cx, key, objValue);
     return false;
   }
 
