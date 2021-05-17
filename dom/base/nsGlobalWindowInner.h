@@ -945,7 +945,20 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
 
   virtual bool IsInSyncOperation() override;
 
-  bool IsSharedMemoryAllowed() const override;
+  // Early during inner window creation, `IsSharedMemoryAllowedInternal`
+  // is called before the `mDoc` field has been initialized in order to
+  // determine whether to expose the `SharedArrayBuffer` constructor on the
+  // JS global. We still want to consider the document's principal to see if
+  // it is a privileged extension which should be exposed to
+  // `SharedArrayBuffer`, however the inner window doesn't know the document's
+  // principal yet. `aPrincipalOverride` is used in that situation to provide
+  // the principal for the to-be-loaded document.
+  bool IsSharedMemoryAllowed() const override {
+    return IsSharedMemoryAllowedInternal(
+        const_cast<nsGlobalWindowInner*>(this)->GetPrincipal());
+  }
+
+  bool IsSharedMemoryAllowedInternal(nsIPrincipal* aPrincipal = nullptr) const;
 
   // https://whatpr.org/html/4734/structured-data.html#cross-origin-isolated
   bool CrossOriginIsolated() const override;

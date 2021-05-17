@@ -1354,6 +1354,15 @@ class WorkerPrivate : public RelativeTimeline {
   // better consistency with the COEP spec.
   Maybe<nsILoadInfo::CrossOriginEmbedderPolicy> mEmbedderPolicy;
   Maybe<nsILoadInfo::CrossOriginEmbedderPolicy> mOwnerEmbedderPolicy;
+
+  /* Privileged add-on flag extracted from the AddonPolicy on the nsIPrincipal
+   * on the main thread when constructing a top-level worker. The flag is
+   * propagated to nested workers. The flag is only allowed to take effect in
+   * extension processes and is forbidden in content scripts in content
+   * processes. The flag may be read on either the parent/owner thread as well
+   * as on the worker thread itself. When bug 1443925 is fixed allowing
+   * nsIPrincipal to be used OMT, it may be possible to remove this flag. */
+  bool mIsPrivilegedAddonGlobal;
 };
 
 class AutoSyncLoopHolder {
