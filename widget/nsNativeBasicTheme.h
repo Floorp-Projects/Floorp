@@ -206,8 +206,6 @@ class nsNativeBasicTheme : protected nsNativeTheme, public nsITheme {
   std::pair<sRGBColor, sRGBColor> ComputeProgressTrackColors(UseSystemColors);
   std::pair<sRGBColor, sRGBColor> ComputeMeterchunkColors(
       const EventStates& aMeterState, UseSystemColors);
-  sRGBColor ComputeMenulistArrowButtonColor(const EventStates&,
-                                            UseSystemColors);
   std::array<sRGBColor, 3> ComputeFocusRectColors(UseSystemColors);
 
   static bool ShouldUseDarkScrollbar(nsIFrame*, const ComputedStyle&);
