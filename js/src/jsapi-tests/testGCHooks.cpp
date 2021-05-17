@@ -66,11 +66,9 @@ static void RootsRemovedGCSliceCallback(JSContext* cx, JS::GCProgress progress,
 }
 
 BEGIN_TEST(testGCRootsRemoved) {
-#ifdef JS_GC_ZEAL
   AutoLeaveZeal nozeal(cx);
-#endif /* JS_GC_ZEAL */
 
-  JS_SetGCParameter(cx, JSGC_INCREMENTAL_GC_ENABLED, true);
+  AutoGCParameter param1(cx, JSGC_INCREMENTAL_GC_ENABLED, true);
 
   gSliceCallbackCount = 0;
   JS::SetGCSliceCallback(cx, RootsRemovedGCSliceCallback);
@@ -90,8 +88,6 @@ BEGIN_TEST(testGCRootsRemoved) {
   CHECK(!JS::IsIncrementalGCInProgress(cx));
 
   JS::SetGCSliceCallback(cx, nullptr);
-
-  JS_SetGCParameter(cx, JSGC_INCREMENTAL_GC_ENABLED, false);
 
   return true;
 }
