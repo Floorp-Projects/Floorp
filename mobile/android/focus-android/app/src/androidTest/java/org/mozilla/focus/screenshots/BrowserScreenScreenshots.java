@@ -235,7 +235,7 @@ public class BrowserScreenScreenshots extends ScreenshotTest {
                 .enabled(true));
         UiObject openNewTabTitle = device.findObject(new UiSelector()
                 .resourceId(TestHelper.getAppName() + ":id/design_menu_item_text")
-                .text(getString(R.string.contextmenu_open_in_new_tab))
+                .text(getString(R.string.mozac_feature_contextmenu_open_link_in_private_tab))
                 .enabled(true));
         UiObject multiTabBtn = device.findObject(new UiSelector()
                 .resourceId(TestHelper.getAppName() + ":id/tabs")

@@ -19,7 +19,7 @@ class SafeBrowsingTest {
     private val unwantedSoftwareWarning =
             getStringResource(R.string.mozac_browser_errorpages_safe_browsing_unwanted_uri_title)
     private val harmfulSiteWarning = getStringResource(R.string.mozac_browser_errorpages_safe_harmful_uri_title)
-    private val tryAgainButton = getStringResource(R.string.errorpage_refresh)
+    private val tryAgainButton = getStringResource(R.string.mozac_browser_errorpages_page_refresh)
 
     @get: Rule
     val mActivityTestRule = MainActivityFirstrunTestRule(showFirstRun = false)
