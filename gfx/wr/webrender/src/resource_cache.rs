@@ -556,6 +556,12 @@ impl ResourceCache {
         self.texture_cache.max_texture_size()
     }
 
+    /// Maximum texture size before we consider it preferrable to break the texture
+    /// into tiles.
+    pub fn tiling_threshold(&self) -> i32 {
+        self.texture_cache.tiling_threshold()
+    }
+
     pub fn enable_multithreading(&mut self, enable: bool) {
         self.glyph_rasterizer.enable_multithreading(enable);
     }
@@ -776,7 +782,7 @@ impl ResourceCache {
         visible_rect: &DeviceIntRect,
         mut tiling: Option<TileSize>,
     ) {
-        if tiling.is_none() && Self::should_tile(self.max_texture_size(), &descriptor, &data) {
+        if tiling.is_none() && Self::should_tile(self.tiling_threshold(), &descriptor, &data) {
             // We aren't going to be able to upload a texture this big, so tile it, even
             // if tiling was not requested.
             tiling = Some(DEFAULT_TILE_SIZE);
@@ -800,14 +806,14 @@ impl ResourceCache {
         data: CachedImageData,
         dirty_rect: &ImageDirtyRect,
     ) {
-        let max_texture_size = self.max_texture_size();
+        let tiling_threshold = self.tiling_threshold();
         let image = match self.resources.image_templates.get_mut(image_key) {
             Some(res) => res,
             None => panic!("Attempt to update non-existent image"),
         };
 
         let mut tiling = image.tiling;
-        if tiling.is_none() && Self::should_tile(max_texture_size, &descriptor, &data) {
+        if tiling.is_none() && Self::should_tile(tiling_threshold, &descriptor, &data) {
             tiling = Some(DEFAULT_TILE_SIZE);
         }
 
@@ -2013,6 +2019,7 @@ impl ResourceCache {
                 self.current_frame_id = FrameId::INVALID;
                 self.texture_cache = TextureCache::new(
                     self.texture_cache.max_texture_size(),
+                    self.texture_cache.tiling_threshold(),
                     self.texture_cache.default_picture_tile_size(),
                     self.texture_cache.color_formats(),
                     self.texture_cache.swizzle_settings(),
