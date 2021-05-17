@@ -1648,13 +1648,6 @@ class HTMLEditor final : public TextEditor,
                                          int32_t aOffset);
 
   /**
-   * GetNearestAncestorListItemElement() returns a list item element if
-   * aContent or its ancestor in editing host is one.  However, this won't
-   * cross table related element.
-   */
-  Element* GetNearestAncestorListItemElement(nsIContent& aContent) const;
-
-  /**
    * InsertParagraphSeparatorAsSubAction() handles insertPargraph commad
    * (i.e., handling Enter key press) with the above helper methods.
    */

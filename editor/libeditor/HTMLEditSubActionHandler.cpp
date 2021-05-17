@@ -1402,7 +1402,8 @@ EditActionResult HTMLEditor::InsertParagraphSeparatorAsSubAction() {
     MOZ_ASSERT(resultOfInsertingBRElement.inspect());
   }
 
-  RefPtr<Element> listItem = GetNearestAncestorListItemElement(*blockElement);
+  RefPtr<Element> listItem = HTMLEditUtils::GetClosestAncestorListItemElement(
+      *blockElement, editingHost);
   if (listItem && listItem != editingHost) {
     nsresult rv = HandleInsertParagraphInListItemElement(
         *listItem, MOZ_KnownLive(*atStartOfSelection.GetContainer()),
@@ -3794,6 +3795,11 @@ nsresult HTMLEditor::HandleHTMLIndentAtSelectionInternal() {
     return rv;
   }
 
+  RefPtr<Element> editingHost = GetActiveEditingHost();
+  if (NS_WARN_IF(!editingHost)) {
+    return NS_ERROR_FAILURE;
+  }
+
   // Ok, now go through all the nodes and put them in a blockquote,
   // or whatever is appropriate.  Wohoo!
   RefPtr<Element> curList, curQuote, indentedLI;
@@ -3832,7 +3838,9 @@ nsresult HTMLEditor::HandleHTMLIndentAtSelectionInternal() {
     // we only want to indent that li once, we must keep track of the most
     // recent indented list item, and not indent it if we find another node
     // to act on that is still inside the same li.
-    if (RefPtr<Element> listItem = GetNearestAncestorListItemElement(content)) {
+    if (RefPtr<Element> listItem =
+            HTMLEditUtils::GetClosestAncestorListItemElement(content,
+                                                             editingHost)) {
       if (indentedLI == listItem) {
         // already indented this list item
         continue;
@@ -6378,27 +6386,6 @@ void HTMLEditor::MakeTransitionList(
     aTransitionArray[i] = aArrayOfContents[i]->GetParentNode() != prevParent;
     prevParent = aArrayOfContents[i]->GetParentNode();
   }
-}
-
-Element* HTMLEditor::GetNearestAncestorListItemElement(
-    nsIContent& aContent) const {
-  // XXX Why don't we test whether aContent is in an editing host?
-  if (HTMLEditUtils::IsListItem(&aContent)) {
-    return aContent.AsElement();
-  }
-
-  // XXX This loop is too expensive since calling IsDescendantOfEditorRoot()
-  //     a lot.  Rewrite this with caching active editing host and check
-  //     whether we reach it or not.
-  for (Element* parentElement = aContent.GetParentElement();
-       parentElement && IsDescendantOfEditorRoot(parentElement) &&
-       !HTMLEditUtils::IsAnyTableElement(parentElement);
-       parentElement = parentElement->GetParentElement()) {
-    if (HTMLEditUtils::IsListItem(parentElement)) {
-      return parentElement;
-    }
-  }
-  return nullptr;
 }
 
 nsresult HTMLEditor::HandleInsertParagraphInHeadingElement(Element& aHeader,
@@ -9346,6 +9333,11 @@ nsresult HTMLEditor::MoveSelectedContentsToDivElementToMakeItAbsolutePosition(
     return rv;
   }
 
+  RefPtr<Element> editingHost = GetActiveEditingHost();
+  if (NS_WARN_IF(!editingHost)) {
+    return NS_ERROR_FAILURE;
+  }
+
   // `<div>` element to be positioned absolutely.  This may have already
   // existed or newly created by this method.
   RefPtr<Element> targetDivElement;
@@ -9433,7 +9425,8 @@ nsresult HTMLEditor::MoveSelectedContentsToDivElementToMakeItAbsolutePosition(
     // node into the target `<div>` element with the list item element itself
     // because we want to keep indent level of the contents.
     if (RefPtr<Element> listItemElement =
-            GetNearestAncestorListItemElement(content)) {
+            HTMLEditUtils::GetClosestAncestorListItemElement(content,
+                                                             editingHost)) {
       if (handledListItemElement == listItemElement) {
         // Current node has already been moved into the `<div>` element.
         continue;
