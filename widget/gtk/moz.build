@@ -95,6 +95,7 @@ if CONFIG["MOZ_WAYLAND"]:
         "DMABufSurface.h",
         "MozContainerWayland.h",
         "nsWaylandDisplay.h",
+        "WaylandShmBuffer.h",
     ]
 
 if CONFIG["MOZ_X11"]:
