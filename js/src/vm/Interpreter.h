@@ -642,8 +642,7 @@ void ReportRuntimeLexicalError(JSContext* cx, unsigned errorNumber,
 void ReportRuntimeLexicalError(JSContext* cx, unsigned errorNumber,
                                HandleScript script, jsbytecode* pc);
 
-void ReportInNotObjectError(JSContext* cx, HandleValue lref, int lindex,
-                            HandleValue rref, int rindex);
+void ReportInNotObjectError(JSContext* cx, HandleValue lref, HandleValue rref);
 
 // The parser only reports redeclarations that occurs within a single
 // script. Due to the extensibility of the global lexical scope, we also check
