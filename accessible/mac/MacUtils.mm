@@ -18,7 +18,7 @@ namespace utils {
 
 // convert an array of Gecko accessibles to an NSArray of native accessibles
 NSArray<mozAccessible*>* ConvertToNSArray(nsTArray<LocalAccessible*>& aArray) {
-  NSMutableArray* nativeArray = [[NSMutableArray alloc] init];
+  NSMutableArray* nativeArray = [[[NSMutableArray alloc] init] autorelease];
 
   // iterate through the list, and get each native accessible.
   size_t totalCount = aArray.Length();
@@ -35,7 +35,7 @@ NSArray<mozAccessible*>* ConvertToNSArray(nsTArray<LocalAccessible*>& aArray) {
 // convert an array of Gecko proxy accessibles to an NSArray of native
 // accessibles
 NSArray<mozAccessible*>* ConvertToNSArray(nsTArray<RemoteAccessible*>& aArray) {
-  NSMutableArray* nativeArray = [[NSMutableArray alloc] init];
+  NSMutableArray* nativeArray = [[[NSMutableArray alloc] init] autorelease];
 
   // iterate through the list, and get each native accessible.
   size_t totalCount = aArray.Length();

@@ -80,7 +80,8 @@ using namespace mozilla::a11y;
   // don't come up short on the final result count.
   int resultLimit = [self shouldApplyPostFilter] ? -1 : mResultLimit;
 
-  NSMutableArray<mozAccessible*>* matches = [[NSMutableArray alloc] init];
+  NSMutableArray<mozAccessible*>* matches =
+      [[[NSMutableArray alloc] init] autorelease];
   AccessibleOrProxy geckoRootAcc = [self rootGeckoAccessible];
   AccessibleOrProxy geckoStartAcc = [self startGeckoAccessible];
   Pivot p = Pivot(geckoRootAcc);
@@ -130,7 +131,8 @@ using namespace mozilla::a11y;
     return matches;
   }
 
-  NSMutableArray<mozAccessible*>* postMatches = [[NSMutableArray alloc] init];
+  NSMutableArray<mozAccessible*>* postMatches =
+      [[[NSMutableArray alloc] init] autorelease];
 
   nsString searchText;
   nsCocoaUtils::GetStringForNSString(mSearchText, searchText);
@@ -225,7 +227,7 @@ using namespace mozilla::a11y;
 - (NSArray*)performSearch {
   AccessibleOrProxy geckoRootAcc = [self rootGeckoAccessible];
   AccessibleOrProxy geckoStartAcc = [self startGeckoAccessible];
-  NSMutableArray* matches = [[NSMutableArray alloc] init];
+  NSMutableArray* matches = [[[NSMutableArray alloc] init] autorelease];
   for (id key in mSearchKeys) {
     if ([key isEqualToString:@"AXAnyTypeSearchKey"]) {
       RotorRule rule =
