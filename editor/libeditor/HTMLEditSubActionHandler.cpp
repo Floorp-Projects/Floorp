@@ -2527,7 +2527,8 @@ EditActionResult HTMLEditor::ChangeSelectedHardLinesToList(
   bool bOnlyBreaks = true;
   for (auto& content : arrayOfContents) {
     // if content is not a Break or empty inline, we're done
-    if (!content->IsHTMLElement(nsGkAtoms::br) && !IsEmptyInlineNode(content)) {
+    if (!content->IsHTMLElement(nsGkAtoms::br) &&
+        !HTMLEditUtils::IsEmptyInlineContent(content)) {
       bOnlyBreaks = false;
       break;
     }
@@ -2647,7 +2648,8 @@ EditActionResult HTMLEditor::ChangeSelectedHardLinesToList(
     // list item element.
     // If current node is an empty inline node, just delete it.
     if (EditorUtils::IsEditableContent(content, EditorType::HTML) &&
-        (content->IsHTMLElement(nsGkAtoms::br) || IsEmptyInlineNode(content))) {
+        (content->IsHTMLElement(nsGkAtoms::br) ||
+         HTMLEditUtils::IsEmptyInlineContent(content))) {
       nsresult rv = DeleteNodeWithTransaction(*content);
       if (NS_WARN_IF(Destroyed())) {
         return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
@@ -3097,7 +3099,7 @@ nsresult HTMLEditor::FormatBlockContainerWithTransaction(nsAtom& blockType) {
   // If there is no visible and editable nodes in the edit targets, make an
   // empty block.
   // XXX Isn't this odd if there are only non-editable visible nodes?
-  if (IsEmptyOneHardLine(arrayOfContents)) {
+  if (HTMLEditUtils::IsEmptyOneHardLine(arrayOfContents)) {
     const nsRange* firstRange = SelectionRef().GetRangeAt(0);
     if (NS_WARN_IF(!firstRange)) {
       return NS_ERROR_FAILURE;
@@ -3555,7 +3557,7 @@ nsresult HTMLEditor::HandleCSSIndentAtSelectionInternal() {
   // If there is no visible and editable nodes in the edit targets, make an
   // empty block.
   // XXX Isn't this odd if there are only non-editable visible nodes?
-  if (IsEmptyOneHardLine(arrayOfContents)) {
+  if (HTMLEditUtils::IsEmptyOneHardLine(arrayOfContents)) {
     // get selection location
     const nsRange* firstRange = SelectionRef().GetRangeAt(0);
     if (NS_WARN_IF(!firstRange)) {
@@ -3776,7 +3778,7 @@ nsresult HTMLEditor::HandleHTMLIndentAtSelectionInternal() {
   // If there is no visible and editable nodes in the edit targets, make an
   // empty block.
   // XXX Isn't this odd if there are only non-editable visible nodes?
-  if (IsEmptyOneHardLine(arrayOfContents)) {
+  if (HTMLEditUtils::IsEmptyOneHardLine(arrayOfContents)) {
     const nsRange* firstRange = SelectionRef().GetRangeAt(0);
     if (NS_WARN_IF(!firstRange)) {
       return NS_ERROR_FAILURE;
@@ -9365,7 +9367,7 @@ nsresult HTMLEditor::MoveSelectedContentsToDivElementToMakeItAbsolutePosition(
   // If there is no visible and editable nodes in the edit targets, make an
   // empty block.
   // XXX Isn't this odd if there are only non-editable visible nodes?
-  if (IsEmptyOneHardLine(arrayOfContents)) {
+  if (HTMLEditUtils::IsEmptyOneHardLine(arrayOfContents)) {
     const nsRange* firstRange = SelectionRef().GetRangeAt(0);
     if (NS_WARN_IF(!firstRange)) {
       return NS_ERROR_FAILURE;

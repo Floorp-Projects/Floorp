@@ -899,17 +899,6 @@ NS_IMETHODIMP HTMLEditor::NodeIsBlock(nsINode* aNode, bool* aIsBlock) {
   return NS_OK;
 }
 
-bool HTMLEditor::IsEmptyInlineNode(nsIContent& aContent) const {
-  MOZ_ASSERT(IsEditActionDataAvailable());
-
-  if (!HTMLEditUtils::IsInlineElement(aContent) ||
-      !HTMLEditUtils::IsContainerNode(aContent)) {
-    return false;
-  }
-  return HTMLEditUtils::IsEmptyNode(
-      aContent, {EmptyCheckOption::TreatSingleBRElementAsVisible});
-}
-
 /**
  * IsNextCharInNodeWhiteSpace() checks the adjacent content in the same node to
  * see if following selection is white-space or nbsp.
