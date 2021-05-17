@@ -137,8 +137,6 @@ async function checkDialog(
 add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
     set: [
-      ["browser.proton.enabled", true],
-      ["browser.proton.modals.enabled", true],
       ["prompts.contentPromptSubDialog", true],
       ["prompts.modalType.httpAuth", Ci.nsIPrompt.MODAL_TYPE_TAB],
       ["prompts.tabChromePromptSubDialog", true],

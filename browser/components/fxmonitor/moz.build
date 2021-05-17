@@ -12,5 +12,3 @@ EXTRA_JS_MODULES += [
 ]
 
 JAR_MANIFESTS += ["jar.mn"]
-
-BROWSER_CHROME_MANIFESTS += ["test/browser/browser.ini"]

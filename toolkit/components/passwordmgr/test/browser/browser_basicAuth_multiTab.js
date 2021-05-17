@@ -112,22 +112,13 @@ add_task(async function test() {
 
   is(prompts.length, tabs.length, "Should have one prompt per tab");
 
-  if (Services.prefs.getBoolPref("browser.proton.modals.enabled", false)) {
-    for (let i = 0; i < prompts.length; i++) {
-      let titleEl = prompts[i].ui.prompt.document.querySelector("#titleText");
-      is(
-        titleEl.textContent,
-        new URL(tabs[i].origin).host,
-        "Prompt matches the tab's host"
-      );
-    }
-  } else {
-    for (let i = 0; i < prompts.length; i++) {
-      ok(
-        prompts[i].args.text.startsWith(tabs[i].origin),
-        "Prompt matches the tabs origin"
-      );
-    }
+  for (let i = 0; i < prompts.length; i++) {
+    let titleEl = prompts[i].ui.prompt.document.querySelector("#titleText");
+    is(
+      titleEl.textContent,
+      new URL(tabs[i].origin).host,
+      "Prompt matches the tab's host"
+    );
   }
 
   // Interact with the prompts. This is deliberately done out of order

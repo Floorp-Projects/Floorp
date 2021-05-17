@@ -14,15 +14,8 @@ add_task(async function testMoreToolsPanelInToolbar() {
   // We need to force DevToolsStartup to rebuild the developer tool toggle so that
   // proton prefs are applied to the new browser window for this test.
   DevToolsStartup.developerToggleCreated = false;
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      ["browser.proton.enabled", true],
-      ["browser.proton.doorhangers.enabled", true],
-    ],
-  });
   CustomizableUI.destroyWidget("developer-button");
 
-  // Now open a new window where the proton prefs will be applied.
   const win = await BrowserTestUtils.openNewBrowserWindow();
 
   CustomizableUI.addWidgetToArea(
