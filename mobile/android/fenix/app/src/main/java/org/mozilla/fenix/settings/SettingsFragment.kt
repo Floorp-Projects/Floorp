@@ -34,13 +34,11 @@ import mozilla.components.concept.sync.AccountObserver
 import mozilla.components.concept.sync.AuthType
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.concept.sync.Profile
-import mozilla.components.support.ktx.android.content.getColorFromAttr
 import mozilla.components.support.ktx.android.view.showKeyboard
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.Config
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
-import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.experiments.ExperimentBranch
 import org.mozilla.fenix.experiments.Experiments
@@ -153,17 +151,9 @@ class SettingsFragment : PreferenceFragmentCompat() {
      */
     private fun getPreferenceLayoutId() =
         if (isDefaultBrowserExperimentBranch() && !isFirefoxDefaultBrowser()) {
-            if (FeatureFlags.newIconSet) {
-                R.xml.preferences_without_icons_default_browser_experiment
-            } else {
-                R.xml.preferences_default_browser_experiment
-            }
+            R.xml.preferences_default_browser_experiment
         } else {
-            if (FeatureFlags.newIconSet) {
-                R.xml.preferences_without_icons
-            } else {
-                R.xml.preferences
-            }
+            R.xml.preferences
         }
 
     @SuppressLint("RestrictedApi")
@@ -395,20 +385,12 @@ class SettingsFragment : PreferenceFragmentCompat() {
     private fun setupPreferences() {
         val leakKey = getPreferenceKey(R.string.pref_key_leakcanary)
         val debuggingKey = getPreferenceKey(R.string.pref_key_remote_debugging)
-        val preferencePrivateBrowsing =
-            requirePreference<Preference>(R.string.pref_key_private_browsing)
         val preferenceLeakCanary = findPreference<Preference>(leakKey)
         val preferenceRemoteDebugging = findPreference<Preference>(debuggingKey)
         val preferenceMakeDefaultBrowser =
             requirePreference<Preference>(R.string.pref_key_make_default_browser)
         val preferenceOpenLinksInExternalApp =
             findPreference<Preference>(getPreferenceKey(R.string.pref_key_open_links_in_external_app))
-
-        if (!FeatureFlags.newIconSet) {
-            preferencePrivateBrowsing.icon.mutate().apply {
-                setTint(requireContext().getColorFromAttr(R.attr.primaryText))
-            }
-        }
 
         if (!Config.channel.isReleased) {
             preferenceLeakCanary?.setOnPreferenceChangeListener { _, newValue ->
