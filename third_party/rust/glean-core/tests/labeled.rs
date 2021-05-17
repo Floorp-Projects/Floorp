@@ -9,6 +9,7 @@ use serde_json::json;
 
 use glean_core::metrics::*;
 use glean_core::storage::StorageManager;
+use glean_core::{test_get_num_recorded_errors, ErrorType};
 use glean_core::{CommonMetricData, Lifetime};
 
 #[test]
@@ -142,6 +143,31 @@ fn can_use_multiple_labels() {
             }
         }),
         snapshot
+    );
+}
+
+#[test]
+fn can_record_error_for_submetric() {
+    let (glean, _t) = new_glean(None);
+    let labeled = LabeledMetric::new(
+        StringMetric::new(CommonMetricData {
+            name: "labeled_metric".into(),
+            category: "telemetry".into(),
+            send_in_pings: vec!["store1".into()],
+            disabled: false,
+            lifetime: Lifetime::Ping,
+            ..Default::default()
+        }),
+        Some(vec!["label1".into()]),
+    );
+
+    let metric = labeled.get("label1");
+    metric.set(&glean, "01234567890".repeat(20));
+
+    // Make sure that the errors have been recorded
+    assert_eq!(
+        Ok(1),
+        test_get_num_recorded_errors(&glean, metric.meta(), ErrorType::InvalidOverflow, None)
     );
 }
 
