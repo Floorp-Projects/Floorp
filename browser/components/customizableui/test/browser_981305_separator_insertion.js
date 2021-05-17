@@ -72,10 +72,7 @@ async function checkSeparatorInsertion(menuId, buttonId, subviewId) {
 }
 
 add_task(async function check_devtools_separator() {
-  const protonEnabled =
-    Services.prefs.getBoolPref("browser.proton.doorhangers.enabled", false) &&
-    Services.prefs.getBoolPref("browser.proton.enabled", false);
-  const panelviewId = protonEnabled ? "appmenu-moreTools" : "PanelUI-developer";
+  const panelviewId = "appmenu-moreTools";
 
   await checkSeparatorInsertion(
     "menuWebDeveloperPopup",

@@ -91,7 +91,7 @@ add_task(async function test_tabdialog_null_principal_title() {
   await BrowserTestUtils.withNewTab(TEST_DATA_URI, async function(browser) {
     info("Waiting for dialog to open.");
     await dialogShown;
-    await checkOriginText(browser, "ScriptDlgNullPrincipalHeading");
+    await checkOriginText(browser);
   });
 });
 
@@ -111,7 +111,7 @@ add_task(async function test_tabdialog_extension_title() {
   await BrowserTestUtils.withNewTab(url, async function(browser) {
     info("Waiting for dialog to open.");
     await dialogShown;
-    await checkOriginText(browser, "ScriptDlgHeading", "Test Extension");
+    await checkOriginText(browser, "Test Extension");
   });
 
   await extension.unload();
@@ -129,7 +129,7 @@ add_task(async function test_tabdialog_page_title() {
   await BrowserTestUtils.withNewTab(TEST_PAGE, async function(browser) {
     info("Waiting for dialog to open.");
     await dialogShown;
-    await checkOriginText(browser, "ScriptDlgHeading", TEST_ORIGIN);
+    await checkOriginText(browser, TEST_ORIGIN);
   });
 });
 
@@ -138,12 +138,10 @@ add_task(async function test_tabdialog_page_title() {
  *
  * @param {Object} browser
  *        The browser the dialog was opened from.
- * @param {String}  stringKey
- *        The bundle key for the text that should be displayed.
  * @param {String|null}  origin
  *        The page origin that should be displayed in the header, if any.
  */
-async function checkOriginText(browser, stringKey, origin = null) {
+async function checkOriginText(browser, origin = null) {
   info("Check the title is visible.");
   let dialogBox = gBrowser.getTabDialogBox(browser);
   let contentPromptManager = dialogBox.getContentDialogManager();
@@ -153,39 +151,24 @@ async function checkOriginText(browser, stringKey, origin = null) {
   await dialog._dialogReady;
 
   let dialogDoc = dialog._frame.contentWindow.document;
-  let protonModals = Services.prefs.getBoolPref(
-    "browser.proton.modals.enabled",
-    false
-  );
-  let titleSelector = protonModals ? "#titleText" : "#infoTitle";
+  let titleSelector = "#titleText";
   let infoTitle = dialogDoc.querySelector(titleSelector);
   ok(BrowserTestUtils.is_visible(infoTitle), "Title text is visible");
 
   info("Check the displayed origin text is correct.");
-  let titleText;
-
-  if (protonModals) {
-    if (origin) {
-      let host = origin;
-      try {
-        host = new URL(origin).host;
-      } catch (ex) {
-        /* will fail for the extension case. */
-      }
-      is(infoTitle.textContent, host, "Origin should be in header.");
-    } else {
-      is(
-        infoTitle.dataset.l10nId,
-        "common-dialog-title-null",
-        "Null principal string should be in header."
-      );
+  if (origin) {
+    let host = origin;
+    try {
+      host = new URL(origin).host;
+    } catch (ex) {
+      /* will fail for the extension case. */
     }
+    is(infoTitle.textContent, host, "Origin should be in header.");
   } else {
-    if (origin) {
-      titleText = commonDialogsBundle.formatStringFromName(stringKey, [origin]);
-    } else {
-      titleText = commonDialogsBundle.GetStringFromName(stringKey);
-    }
-    is(infoTitle.textContent, titleText, "Origin header is correct.");
+    is(
+      infoTitle.dataset.l10nId,
+      "common-dialog-title-null",
+      "Null principal string should be in header."
+    );
   }
 }
