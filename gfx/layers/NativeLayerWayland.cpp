@@ -40,41 +40,17 @@ NativeLayerRootWayland::NativeLayerRootWayland(MozContainer* aContainer)
 void NativeLayerRootWayland::EnsureSurfaceInitialized() {
   MutexAutoLock lock(mMutex);
 
-  if (mInitialized) {
+  if (mShmBuffer) {
     return;
   }
 
-  mEGLWindow = moz_container_wayland_get_egl_window(mContainer, 1);
-  if (!mEGLWindow) {
-    return;
-  }
+  mShmBuffer = widget::WaylandShmBuffer::Create(widget::WaylandDisplayGet(),
+                                                LayoutDeviceIntSize(1, 1));
+  mShmBuffer->Clear();
 
-  moz_container_wayland_egl_window_set_size(mContainer, 1, 1);
-  wp_viewport* viewporter = moz_container_wayland_get_viewport(mContainer);
-  wp_viewport_set_source(viewporter, wl_fixed_from_int(0), wl_fixed_from_int(0),
-                         wl_fixed_from_int(1), wl_fixed_from_int(1));
-  wp_viewport_set_destination(viewporter, 1, 1);
-
-  // TODO: use shm-buffer instead of GL
-  GLContextEGL* gl = GLContextEGL::Cast(wr::RenderThread::Get()->SingletonGL());
-  auto egl = gl->mEgl;
-
-  mEGLSurface = egl->fCreateWindowSurface(gl->mConfig, mEGLWindow, nullptr);
-  MOZ_ASSERT(mEGLSurface != EGL_NO_SURFACE);
-
-  gl->SetEGLSurfaceOverride(mEGLSurface);
-  gl->MakeCurrent();
-
-  gl->fClearColor(0.f, 0.f, 0.f, 0.f);
-  gl->fClear(LOCAL_GL_COLOR_BUFFER_BIT);
-
-  egl->fSwapInterval(0);
-  egl->fSwapBuffers(mEGLSurface);
-
-  gl->SetEGLSurfaceOverride(nullptr);
-  gl->MakeCurrent();
-
-  mInitialized = true;
+  wl_surface* wlSurface = moz_container_wayland_surface_lock(mContainer);
+  mShmBuffer->AttachAndCommit(wlSurface);
+  moz_container_wayland_surface_unlock(mContainer, &wlSurface);
 }
 
 already_AddRefed<NativeLayer> NativeLayerRootWayland::CreateLayer(
@@ -320,9 +296,7 @@ bool NativeLayerRootWayland::CommitToScreen() {
       }
     }
 
-    if (mInitialized) {
-      wl_surface_commit(wlSurface);
-    }
+    wl_surface_commit(wlSurface);
     moz_container_wayland_surface_unlock(mContainer, &wlSurface);
   }
 
@@ -337,12 +311,7 @@ void NativeLayerRootWayland::PauseCompositor() {
     UnmapLayer(layer);
   }
 
-  GLContextEGL* gl = GLContextEGL::Cast(wr::RenderThread::Get()->SingletonGL());
-  auto egl = gl->mEgl;
-  egl->fDestroySurface(mEGLSurface);
-  mEGLSurface = nullptr;
-  mEGLWindow = nullptr;
-  mInitialized = false;
+  mShmBuffer = nullptr;
 }
 
 bool NativeLayerRootWayland::ResumeCompositor() { return true; }

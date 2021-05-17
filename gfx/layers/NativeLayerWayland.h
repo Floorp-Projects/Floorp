@@ -14,6 +14,7 @@
 #include "mozilla/layers/NativeLayer.h"
 #include "mozilla/layers/SurfacePoolWayland.h"
 #include "mozilla/widget/MozContainerWayland.h"
+#include "mozilla/widget/WaylandShmBuffer.h"
 #include "nsRegion.h"
 #include "nsISupportsImpl.h"
 
@@ -67,10 +68,7 @@ class NativeLayerRootWayland : public NativeLayerRoot {
   nsTArray<RefPtr<NativeLayerWayland>> mSublayers;
   float mBackingScale = 1.0f;
   MozContainer* mContainer = nullptr;
-  bool mInitialized = false;
-  wl_egl_window* mEGLWindow = nullptr;
-  EGLSurface mEGLSurface = nullptr;
-  struct wp_viewport* mViewport = nullptr;
+  RefPtr<widget::WaylandShmBuffer> mShmBuffer;
 };
 
 class NativeLayerWayland : public NativeLayer {
