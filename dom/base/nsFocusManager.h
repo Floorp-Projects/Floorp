@@ -268,7 +268,7 @@ class nsFocusManager final : public nsIFocusManager,
   MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult
   FocusPlugin(mozilla::dom::Element* aPlugin);
 
-  static uint32_t FocusOptionsToFocusManagerFlags(
+  static uint32_t ProgrammaticFocusFlags(
       const mozilla::dom::FocusOptions& aOptions);
 
   /**
