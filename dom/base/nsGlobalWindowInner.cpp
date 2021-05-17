@@ -54,6 +54,7 @@
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventListenerManager.h"
 #include "mozilla/EventQueue.h"
+#include "mozilla/ExtensionPolicyService.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/FlushType.h"
 #include "mozilla/Likely.h"
@@ -178,6 +179,7 @@
 #include "mozilla/dom/XRPermissionRequest.h"
 #include "mozilla/dom/cache/CacheStorage.h"
 #include "mozilla/dom/cache/Types.h"
+#include "mozilla/extensions/WebExtensionPolicy.h"
 #include "mozilla/fallible.h"
 #include "mozilla/gfx/BasePoint.h"
 #include "mozilla/gfx/BaseRect.h"
@@ -2591,12 +2593,21 @@ bool nsGlobalWindowInner::IsInSyncOperation() {
   return GetExtantDoc() && GetExtantDoc()->IsInSyncOperation();
 }
 
-bool nsGlobalWindowInner::IsSharedMemoryAllowed() const {
+bool nsGlobalWindowInner::IsSharedMemoryAllowedInternal(
+    nsIPrincipal* aPrincipal) const {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (StaticPrefs::
           dom_postMessage_sharedArrayBuffer_bypassCOOP_COEP_insecure_enabled()) {
     return true;
+  }
+
+  if (ExtensionPolicyService::GetSingleton().IsExtensionProcess()) {
+    if (auto* basePrincipal = BasePrincipal::Cast(aPrincipal)) {
+      if (auto* policy = basePrincipal->AddonPolicy()) {
+        return policy->IsPrivileged();
+      }
+    }
   }
 
   return CrossOriginIsolated();

@@ -2244,7 +2244,8 @@ nsresult nsGlobalWindowOuter::SetNewDocument(Document* aDocument,
           cx, newInnerWindow, aDocument->GetDocumentURI(),
           aDocument->NodePrincipal(), &newInnerGlobal,
           ComputeIsSecureContext(aDocument),
-          newInnerWindow->IsSharedMemoryAllowed());
+          newInnerWindow->IsSharedMemoryAllowedInternal(
+              aDocument->NodePrincipal()));
       NS_ASSERTION(
           NS_SUCCEEDED(rv) && newInnerGlobal &&
               newInnerWindow->GetWrapperPreserveColor() == newInnerGlobal,

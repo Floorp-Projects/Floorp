@@ -18,6 +18,7 @@
 #include "MessageEventRunnable.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/CycleCollectedJSContext.h"
+#include "mozilla/ExtensionPolicyService.h"
 #include "mozilla/HoldDropJSObjects.h"
 #include "mozilla/ProfilerLabels.h"
 #include "mozilla/Result.h"
@@ -51,6 +52,7 @@
 #include "mozilla/dom/WorkerBinding.h"
 #include "mozilla/dom/JSExecutionManager.h"
 #include "mozilla/dom/WindowContext.h"
+#include "mozilla/extensions/WebExtensionPolicy.h"
 #include "mozilla/StorageAccess.h"
 #include "mozilla/StoragePrincipalHelper.h"
 #include "mozilla/Telemetry.h"
@@ -2218,7 +2220,8 @@ WorkerPrivate::WorkerPrivate(
       mDebuggerReady(true),
       mIsInAutomation(false),
       mId(std::move(aId)),
-      mAgentClusterOpenerPolicy(aAgentClusterOpenerPolicy) {
+      mAgentClusterOpenerPolicy(aAgentClusterOpenerPolicy),
+      mIsPrivilegedAddonGlobal(false) {
   MOZ_ASSERT_IF(!IsDedicatedWorker(), NS_IsMainThread());
 
   if (aParent) {
@@ -2236,6 +2239,8 @@ WorkerPrivate::WorkerPrivate(
     if (aParent->mParentFrozen) {
       Freeze(nullptr);
     }
+
+    mIsPrivilegedAddonGlobal = aParent->mIsPrivilegedAddonGlobal;
   } else {
     AssertIsOnMainThread();
 
@@ -2270,6 +2275,21 @@ WorkerPrivate::WorkerPrivate(
       if (mIsSecureContext) {
         chromeCreationOptions.setSecureContext(true);
         contentCreationOptions.setSecureContext(true);
+      }
+
+      // Check if it's a privileged addon executing in order to allow access
+      // to SharedArrayBuffer
+      if (mLoadInfo.mPrincipal) {
+        if (auto* policy =
+                BasePrincipal::Cast(mLoadInfo.mPrincipal)->AddonPolicy()) {
+          if (policy->IsPrivileged() &&
+              ExtensionPolicyService::GetSingleton().IsExtensionProcess()) {
+            // Privileged extensions are allowed to use SharedArrayBuffer in
+            // their extension process, but never in content scripts in
+            // content processes.
+            mIsPrivilegedAddonGlobal = true;
+          }
+        }
       }
 
       // The SharedArrayBuffer global constructor property should not be present
@@ -5302,6 +5322,10 @@ const nsAString& WorkerPrivate::Id() {
 bool WorkerPrivate::IsSharedMemoryAllowed() const {
   if (StaticPrefs::
           dom_postMessage_sharedArrayBuffer_bypassCOOP_COEP_insecure_enabled()) {
+    return true;
+  }
+
+  if (mIsPrivilegedAddonGlobal) {
     return true;
   }
 
