@@ -338,7 +338,12 @@ const MultiStageAboutWelcome = props => {
   }, [transition]); // Transition to next screen, opening about:home on last screen button CTA
 
   const handleTransition = () => {
-    // Start transitioning things "out" immediately when moving forwards.
+    // Only handle transitioning out from a screen once.
+    if (transition === "out") {
+      return;
+    } // Start transitioning things "out" immediately when moving forwards.
+
+
     setTransition(props.transitions ? "out" : ""); // Actually move forwards after all transitions finish.
 
     setTimeout(() => {
