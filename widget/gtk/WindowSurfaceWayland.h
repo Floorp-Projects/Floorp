@@ -8,97 +8,19 @@
 #define _MOZILLA_WIDGET_GTK_WINDOW_SURFACE_WAYLAND_H
 
 #include <prthread.h>
+
 #include "gfxImageSurface.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/Types.h"
+#include "mozilla/Mutex.h"
 #include "nsWaylandDisplay.h"
 #include "nsWindow.h"
+#include "WaylandShmBuffer.h"
 #include "WindowSurface.h"
-#include "mozilla/Mutex.h"
 
 #define BACK_BUFFER_NUM 3
 
-namespace mozilla {
-namespace widget {
-
-class WindowSurfaceWayland;
-
-// Allocates and owns shared memory for Wayland drawing surface
-class WaylandShmPool {
- public:
-  bool Create(RefPtr<nsWaylandDisplay> aWaylandDisplay, int aSize);
-  void Release();
-  wl_shm_pool* GetShmPool() { return mShmPool; };
-  void* GetImageData() { return mImageData; };
-  void SetImageDataFromPool(class WaylandShmPool* aSourcePool,
-                            int aImageDataSize);
-  WaylandShmPool();
-  ~WaylandShmPool();
-
- private:
-  wl_shm_pool* mShmPool;
-  int mShmPoolFd;
-  int mAllocatedSize;
-  void* mImageData;
-};
-
-// Holds actual graphics data for wl_surface
-class WindowBackBuffer {
- public:
-  explicit WindowBackBuffer(WindowSurfaceWayland* aWindowSurfaceWayland);
-  ~WindowBackBuffer();
-
-  already_AddRefed<gfx::DrawTarget> Lock();
-
-  void Attach(wl_surface* aSurface);
-  void Detach(wl_buffer* aBuffer);
-  bool IsAttached() { return mAttached; }
-
-  void Clear();
-  bool Create(int aWidth, int aHeight);
-  bool Resize(int aWidth, int aHeight);
-  bool SetImageDataFromBuffer(class WindowBackBuffer* aSourceBuffer);
-
-  int GetWidth() { return mWidth; };
-  int GetHeight() { return mHeight; };
-
-  wl_buffer* GetWlBuffer() { return mWLBuffer; };
-
-  bool IsMatchingSize(int aWidth, int aHeight) {
-    return aWidth == GetWidth() && aHeight == GetHeight();
-  }
-  bool IsMatchingSize(class WindowBackBuffer* aBuffer) {
-    return aBuffer->IsMatchingSize(GetWidth(), GetHeight());
-  }
-  static gfx::SurfaceFormat GetSurfaceFormat() { return mFormat; }
-
-#ifdef MOZ_LOGGING
-  void DumpToFile(const char* aHint);
-#endif
-
-  RefPtr<nsWaylandDisplay> GetWaylandDisplay();
-
- private:
-  void ReleaseWLBuffer();
-
-  static gfx::SurfaceFormat mFormat;
-  WindowSurfaceWayland* mWindowSurfaceWayland;
-
-  // WaylandShmPool provides actual shared memory we draw into
-  WaylandShmPool mShmPool;
-
-#ifdef MOZ_LOGGING
-  static int mDumpSerial;
-  static char* mDumpDir;
-#endif
-
-  // wl_buffer is a wayland object that encapsulates the shared memory
-  // and passes it to wayland compositor by wl_surface object.
-  wl_buffer* mWLBuffer;
-  int mWidth;
-  int mHeight;
-  bool mAttached;
-};
+namespace mozilla::widget {
 
 class WindowImageSurface {
  public:
@@ -120,7 +42,6 @@ class WindowImageSurface {
 class WindowSurfaceWayland : public WindowSurface {
  public:
   explicit WindowSurfaceWayland(nsWindow* aWindow);
-  ~WindowSurfaceWayland();
 
   // Lock() / Commit() are called by gecko when Firefox
   // wants to display something. Lock() returns a DrawTarget
@@ -136,24 +57,30 @@ class WindowSurfaceWayland : public WindowSurface {
       const LayoutDeviceIntRegion& aRegion) override;
   void Commit(const LayoutDeviceIntRegion& aInvalidRegion) final;
 
-  // It's called from wayland compositor when there's the right
-  // time to send wl_buffer to display. It's no-op if there's no
-  // queued commits.
-  void FrameCallbackHandler();
-
   // Try to commit all queued drawings to Wayland compositor. This is usually
   // called from other routines but can be used to explicitly flush
   // all drawings as we do when wl_buffer is released
-  // (see WindowBackBufferShm::Detach() for instance).
+  // (see WaylandShmBufferShm::Detach() for instance).
   void FlushPendingCommits();
 
   RefPtr<nsWaylandDisplay> GetWaylandDisplay() { return mWaylandDisplay; };
 
+  // It's called from wayland compositor when there's the right
+  // time to send wl_buffer to display. It's no-op if there's no
+  // queued commits.
+  static void FrameCallbackHandler(void* aData, struct wl_callback* aCallback,
+                                   uint32_t aTime);
+
+  static void BufferReleaseCallbackHandler(void* aData, wl_buffer* aBuffer);
+
  private:
-  WindowBackBuffer* GetWaylandBuffer();
-  WindowBackBuffer* SetNewWaylandBuffer();
-  WindowBackBuffer* CreateWaylandBuffer(int aWidth, int aHeight);
-  WindowBackBuffer* WaylandBufferFindAvailable(int aWidth, int aHeight);
+  ~WindowSurfaceWayland();
+
+  WaylandShmBuffer* GetWaylandBuffer();
+  WaylandShmBuffer* SetNewWaylandBuffer();
+  WaylandShmBuffer* CreateWaylandBuffer(const LayoutDeviceIntSize& aSize);
+  WaylandShmBuffer* WaylandBufferFindAvailable(
+      const LayoutDeviceIntSize& aSize);
 
   already_AddRefed<gfx::DrawTarget> LockWaylandBuffer();
 
@@ -168,7 +95,11 @@ class WindowSurfaceWayland : public WindowSurface {
   // Return true if we need to sync Wayland events after this call.
   bool FlushPendingCommitsLocked();
 
-  // TODO: Do we need to hold a reference to nsWindow object?
+  void FrameCallbackHandler();
+  void BufferReleaseCallbackHandler(wl_buffer* aBuffer);
+
+  // We can not hold a reference to nsWindow because nsBaseWidget
+  // is not thread-safe
   nsWindow* mWindow;
 
   // Buffer screen rects helps us understand if we operate on
@@ -186,8 +117,8 @@ class WindowSurfaceWayland : public WindowSurface {
   // Drawn areas are stored at mWaylandBufferDamage and if there's
   // any uncommited drawings which needs to be send to wayland compositor
   // the mWLBufferIsDirty is set.
-  WindowBackBuffer* mWaylandBuffer;
-  WindowBackBuffer* mShmBackupBuffer[BACK_BUFFER_NUM];
+  RefPtr<WaylandShmBuffer> mWaylandBuffer;
+  RefPtr<WaylandShmBuffer> mShmBackupBuffer[BACK_BUFFER_NUM];
 
   // When mWaylandFullscreenDamage we invalidate whole surface,
   // otherwise partial screen updates (mWaylandBufferDamage) are used.
@@ -251,11 +182,10 @@ class WindowSurfaceWayland : public WindowSurface {
   // Avoid any rendering artifacts for significant performance penality.
   unsigned int mSmoothRendering;
 
-  gint mSurfaceReadyTimerID;
+  int mSurfaceReadyTimerID;
   mozilla::Mutex mSurfaceLock;
 };
 
-}  // namespace widget
-}  // namespace mozilla
+}  // namespace mozilla::widget
 
 #endif  // _MOZILLA_WIDGET_GTK_WINDOW_SURFACE_WAYLAND_H
