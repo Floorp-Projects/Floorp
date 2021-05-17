@@ -143,7 +143,7 @@ add_task(async function open_10_tabs() {
 
   let knownProblematicPrefs = {
     "layout.css.dpi": {
-      max: 40,
+      max: 35,
     },
     "browser.zoom.full": {
       min: 10,

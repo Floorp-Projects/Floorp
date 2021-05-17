@@ -998,12 +998,14 @@ already_AddRefed<gfxDrawable> VectorImage::CreateSVGDrawable(
 Tuple<RefPtr<SourceSurface>, IntSize> VectorImage::LookupCachedSurface(
     const IntSize& aSize, const Maybe<SVGImageContext>& aSVGContext,
     uint32_t aFlags) {
-  // We can't use cached surfaces if we:
-  // - Explicitly disallow it via FLAG_BYPASS_SURFACE_CACHE
-  // - Want a blob recording which aren't supported by the cache.
-  // - Have animations which aren't supported by the cache.
-  if (aFlags & (FLAG_BYPASS_SURFACE_CACHE | FLAG_RECORD_BLOB) ||
-      mHaveAnimations) {
+  // If we're not allowed to use a cached surface, don't attempt a lookup.
+  if (aFlags & FLAG_BYPASS_SURFACE_CACHE) {
+    return MakeTuple(RefPtr<SourceSurface>(), aSize);
+  }
+
+  // We don't do any caching if we have animation, so don't bother with a lookup
+  // in this case either.
+  if (mHaveAnimations) {
     return MakeTuple(RefPtr<SourceSurface>(), aSize);
   }
 
