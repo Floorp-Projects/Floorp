@@ -276,23 +276,21 @@ already_AddRefed<GLContext> GLContextEGLFactory::CreateImpl(
     // Force enable alpha channel to make sure ANGLE use correct framebuffer
     // formart
     const int bpp = 32;
-    const bool withDepth = true;
-    if (!CreateConfig(*egl, &config, bpp, withDepth, aUseGles)) {
+    if (!CreateConfig(*egl, &config, bpp, false, aUseGles)) {
       gfxCriticalNote << "Failed to create EGLConfig for WebRender ANGLE!";
       return nullptr;
     }
   } else {
     if (aDepth) {
-      if (!CreateConfig(*egl, &config, aDepth, aHardwareWebRender, aUseGles,
-                        visualID)) {
+      if (!CreateConfig(*egl, &config, aDepth, false, aUseGles, visualID)) {
         gfxCriticalNote
             << "Failed to create EGLConfig for WebRender with depth!";
         return nullptr;
       }
     } else {
       if (!CreateConfigScreen(*egl, &config,
-                              /* aEnableDepthBuffer */ aHardwareWebRender,
-                              aUseGles, visualID)) {
+                              /* aEnableDepthBuffer */ false, aUseGles,
+                              visualID)) {
         gfxCriticalNote << "Failed to create EGLConfig!";
         return nullptr;
       }
