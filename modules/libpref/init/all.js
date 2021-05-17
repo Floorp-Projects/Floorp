@@ -4484,10 +4484,6 @@ pref("marionette.port", 2828);
 pref("marionette.prefs.recommended", true);
 
 #if defined(ENABLE_REMOTE_AGENT)
-  // Indicates whether the remote agent is enabled.
-  // If it is false, the remote agent will not be loaded.
-  pref("remote.enabled", true);
-
   // Limits remote agent to listen on loopback devices,
   // e.g. 127.0.0.1, localhost, and ::1.
   pref("remote.force-local", true);
