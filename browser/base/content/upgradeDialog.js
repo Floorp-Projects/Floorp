@@ -233,7 +233,7 @@ function onLoad(ready) {
     await document.l10n.ready;
     requestAnimationFrame(() => {
       // Ensure the primary button is focused on each screen.
-      primary.focus({ preventFocusRing: true });
+      primary.focus();
 
       // Save first screen height, so later screens can flex and anchor content.
       if (current === 0) {

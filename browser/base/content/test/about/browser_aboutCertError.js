@@ -48,10 +48,11 @@ add_task(async function checkReturnToAboutHome() {
     await SpecialPowers.spawn(bc, [useFrame], async function(subFrame) {
       let returnButton = content.document.getElementById("returnButton");
       if (!subFrame) {
-        if (!Services.focus.focusedElement == returnButton) {
-          await ContentTaskUtils.waitForEvent(returnButton, "focus");
-        }
-        Assert.ok(true, "returnButton has focus");
+        Assert.equal(
+          returnButton.getAttribute("autofocus"),
+          "true",
+          "returnButton has autofocus"
+        );
       }
       // Note that going back to about:newtab might cause a process flip, if
       // the browser is configured to run about:newtab in its own special

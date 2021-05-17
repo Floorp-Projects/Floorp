@@ -128,7 +128,7 @@ function showPrefChangeContainer() {
     .addEventListener("click", function resetPreferences() {
       RPMSendAsyncMessage("Browser:ResetSSLPreferences");
     });
-  setFocus("#prefResetButton", "beforeend");
+  addAutofocus("#prefResetButton", "beforeend");
 }
 
 function showTls10Container() {
@@ -140,7 +140,7 @@ function showTls10Container() {
     RPMSetBoolPref("security.tls.version.enable-deprecated", true);
     retryThis(button);
   });
-  setFocus("#enableTls10Button", "beforeend");
+  addAutofocus("#enableTls10Button", "beforeend");
 }
 
 function setupAdvancedButton() {
@@ -332,7 +332,7 @@ function initPage() {
     return;
   }
 
-  setFocus("#netErrorButtonContainer > .try-again");
+  addAutofocus("#netErrorButtonContainer > .try-again");
 
   document.body.classList.add("neterror");
 
@@ -617,7 +617,7 @@ function initPageCaptivePortal() {
       RPMSendAsyncMessage("Browser:OpenCaptivePortalPage");
     });
 
-  setFocus("#openPortalLoginPageButton");
+  addAutofocus("#openPortalLoginPageButton");
   setupAdvancedButton();
 
   // When the portal is freed, an event is sent by the parent process
@@ -633,7 +633,7 @@ function initPageCertError() {
     host.textContent = HOST_NAME;
   }
 
-  setFocus("#returnButton");
+  addAutofocus("#returnButton");
   setupAdvancedButton();
   document.getElementById("learnMoreContainer").style.display = "block";
 
@@ -1263,25 +1263,19 @@ function handleErrorCodeClick(event) {
   recordClickTelemetry(event);
 }
 
-/* Only focus if we're the toplevel frame; otherwise we
-   don't want to call attention to ourselves!
+/* Only do autofocus if we're the toplevel frame; otherwise we
+   don't want to call attention to ourselves!  The key part is
+   that autofocus happens on insertion into the tree, so we
+   can remove the button, add @autofocus, and reinsert the
+   button.
 */
-function setFocus(selector, position = "afterbegin") {
+function addAutofocus(selector, position = "afterbegin") {
   if (window.top == window) {
     var button = document.querySelector(selector);
     var parent = button.parentNode;
+    button.remove();
+    button.setAttribute("autofocus", "true");
     parent.insertAdjacentElement(position, button);
-    // It's possible setFocus was called via the DOMContentLoaded event
-    // handler and that the button has no frame. Things without a frame cannot
-    // be focused. We use a requestAnimationFrame to queue up the focus to occur
-    // once the button has its frame. We also use a setTimeout(0) to try to queue
-    // the focus at the beginning of the next frame to reduce the chances of causing
-    // a sync layout flush.
-    requestAnimationFrame(() => {
-      setTimeout(() => {
-        button.focus({ preventFocusRing: true });
-      }, 0);
-    });
   }
 }
 
