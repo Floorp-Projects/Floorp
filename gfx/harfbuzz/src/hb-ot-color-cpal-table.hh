@@ -87,15 +87,15 @@ struct CPALV1Tail
   }
 
   protected:
-  LNNOffsetTo<UnsizedArrayOf<HBUINT32>>
+  NNOffset32To<UnsizedArrayOf<HBUINT32>>
 		paletteFlagsZ;		/* Offset from the beginning of CPAL table to
 					 * the Palette Type Array. Set to 0 if no array
 					 * is provided. */
-  LNNOffsetTo<UnsizedArrayOf<NameID>>
+  NNOffset32To<UnsizedArrayOf<NameID>>
 		paletteLabelsZ;		/* Offset from the beginning of CPAL table to
 					 * the palette labels array. Set to 0 if no
 					 * array is provided. */
-  LNNOffsetTo<UnsizedArrayOf<NameID>>
+  NNOffset32To<UnsizedArrayOf<NameID>>
 		colorLabelsZ;		/* Offset from the beginning of CPAL table to
 					 * the color labels array. Set to 0
 					 * if no array is provided. */
@@ -173,7 +173,7 @@ struct CPAL
   HBUINT16	numPalettes;		/* Number of palettes in the table. */
   HBUINT16	numColorRecords;	/* Total number of color records, combined for
 					 * all palettes. */
-  LNNOffsetTo<UnsizedArrayOf<BGRAColor>>
+  NNOffset32To<UnsizedArrayOf<BGRAColor>>
 		colorRecordsZ;		/* Offset from the beginning of CPAL table to
 					 * the first ColorRecord. */
   UnsizedArrayOf<HBUINT16>

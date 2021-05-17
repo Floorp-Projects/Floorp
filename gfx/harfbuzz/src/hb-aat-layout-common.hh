@@ -164,7 +164,7 @@ struct LookupSegmentArray
 
   HBGlyphID	last;		/* Last GlyphID in this segment */
   HBGlyphID	first;		/* First GlyphID in this segment */
-  NNOffsetTo<UnsizedArrayOf<T>>
+  NNOffset16To<UnsizedArrayOf<T>>
 		valuesZ;	/* A 16-bit offset from the start of
 				 * the table to the data. */
   public:
@@ -659,7 +659,7 @@ struct ClassTable
   }
   protected:
   HBGlyphID		firstGlyph;	/* First glyph index included in the trimmed array. */
-  ArrayOf<HBUCHAR>	classArray;	/* The class codes (indexed by glyph index minus
+  Array16Of<HBUCHAR>	classArray;	/* The class codes (indexed by glyph index minus
 					 * firstGlyph). */
   public:
   DEFINE_SIZE_ARRAY (4, classArray);
@@ -678,7 +678,8 @@ struct ObsoleteTypes
 				     const void *base,
 				     const T *array)
   {
-    return (offset - ((const char *) array - (const char *) base)) / T::static_size;
+    /* https://github.com/harfbuzz/harfbuzz/issues/2816 */
+    return (offset - unsigned ((const char *) array - (const char *) base)) / T::static_size;
   }
   template <typename T>
   static unsigned int byteOffsetToIndex (unsigned int offset,

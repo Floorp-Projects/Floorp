@@ -177,6 +177,11 @@ struct hb_vector_t
   Type *push (T&& v)
   {
     Type *p = push ();
+    if (p == &Crap (Type))
+      // If push failed to allocate then don't copy v, since this may cause
+      // the created copy to leak memory since we won't have stored a
+      // reference to it.
+      return p;
     *p = hb_forward<T> (v);
     return p;
   }

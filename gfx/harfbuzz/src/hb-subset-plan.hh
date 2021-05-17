@@ -79,7 +79,11 @@ struct hb_subset_plan_t
   hb_map_t *gsub_lookups;
   hb_map_t *gpos_lookups;
 
-  //active features we'd like to retain
+  //active langsys we'd like to retain
+  hb_hashmap_t<unsigned, hb_set_t *, (unsigned)-1, nullptr> *gsub_langsys;
+  hb_hashmap_t<unsigned, hb_set_t *, (unsigned)-1, nullptr> *gpos_langsys;
+
+  //active features after removing redundant langsys and prune_features
   hb_map_t *gsub_features;
   hb_map_t *gpos_features;
 

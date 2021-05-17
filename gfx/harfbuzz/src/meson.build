@@ -477,6 +477,8 @@ if get_option('tests').enabled()
   compiled_tests = {
     'test-algs': ['test-algs.cc', 'hb-static.cc'],
     'test-array': ['test-array.cc'],
+    'test-repacker': ['test-repacker.cc', 'hb-static.cc'],
+    'test-priority-queue': ['test-priority-queue.cc', 'hb-static.cc'],
     'test-iter': ['test-iter.cc', 'hb-static.cc'],
     'test-meta': ['test-meta.cc', 'hb-static.cc'],
     'test-number': ['test-number.cc', 'hb-number.cc'],

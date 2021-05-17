@@ -50,6 +50,7 @@
 #include "hb-ot-layout-gpos-table.hh"
 #include "hb-ot-var-gvar-table.hh"
 #include "hb-ot-var-hvar-table.hh"
+#include "hb-repacker.hh"
 
 
 static unsigned
@@ -64,69 +65,132 @@ _plan_estimate_subset_table_size (hb_subset_plan_t *plan, unsigned table_len)
   return 512 + (unsigned) (table_len * sqrt ((double) dst_glyphs / src_glyphs));
 }
 
+/*
+ * Repack the serialization buffer if any offset overflows exist.
+ */
+static hb_blob_t*
+_repack (hb_tag_t tag, const hb_serialize_context_t& c)
+{
+  if (tag != HB_OT_TAG_GPOS
+      &&  tag != HB_OT_TAG_GSUB)
+  {
+    // Check for overflow in a non-handled table.
+    return c.successful () ? c.copy_blob () : nullptr;
+  }
+
+  if (!c.offset_overflow ())
+    return c.copy_blob ();
+
+  hb_vector_t<char> buf;
+  int buf_size = c.end - c.start;
+  if (unlikely (!buf.alloc (buf_size)))
+    return nullptr;
+
+  hb_serialize_context_t repacked ((void *) buf, buf_size);
+  hb_resolve_overflows (c.object_graph (), &repacked);
+
+  if (unlikely (repacked.in_error ()))
+    // TODO(garretrieger): refactor so we can share the resize/retry logic with the subset
+    //                     portion.
+    return nullptr;
+
+  return repacked.copy_blob ();
+}
+
+template<typename TableType>
+static
+bool
+_try_subset (const TableType *table,
+             hb_vector_t<char>* buf,
+             unsigned buf_size,
+             hb_subset_context_t* c /* OUT */)
+{
+  c->serializer->start_serialize<TableType> ();
+
+  bool needed = table->subset (c);
+  if (!c->serializer->ran_out_of_room ())
+  {
+    c->serializer->end_serialize ();
+    return needed;
+  }
+
+  buf_size += (buf_size >> 1) + 32;
+  DEBUG_MSG (SUBSET, nullptr, "OT::%c%c%c%c ran out of room; reallocating to %u bytes.",
+             HB_UNTAG (c->table_tag), buf_size);
+
+  if (unlikely (!buf->alloc (buf_size)))
+  {
+    DEBUG_MSG (SUBSET, nullptr, "OT::%c%c%c%c failed to reallocate %u bytes.",
+               HB_UNTAG (c->table_tag), buf_size);
+    return needed;
+  }
+
+  c->serializer->reset (buf->arrayZ, buf_size);
+  return _try_subset (table, buf, buf_size, c);
+}
+
 template<typename TableType>
 static bool
 _subset (hb_subset_plan_t *plan)
 {
-  bool result = false;
   hb_blob_t *source_blob = hb_sanitize_context_t ().reference_table<TableType> (plan->source);
   const TableType *table = source_blob->as<TableType> ();
 
   hb_tag_t tag = TableType::tableTag;
-  if (source_blob->data)
+  if (!source_blob->data)
   {
-    hb_vector_t<char> buf;
-    /* TODO Not all tables are glyph-related.  'name' table size for example should not be
-     * affected by number of glyphs.  Accommodate that. */
-    unsigned buf_size = _plan_estimate_subset_table_size (plan, source_blob->length);
-    DEBUG_MSG (SUBSET, nullptr, "OT::%c%c%c%c initial estimated table size: %u bytes.", HB_UNTAG (tag), buf_size);
-    if (unlikely (!buf.alloc (buf_size)))
-    {
-      DEBUG_MSG (SUBSET, nullptr, "OT::%c%c%c%c failed to allocate %u bytes.", HB_UNTAG (tag), buf_size);
-      hb_blob_destroy (source_blob);
-      return false;
-    }
-  retry:
-    hb_serialize_context_t serializer ((void *) buf, buf_size);
-    serializer.start_serialize<TableType> ();
-    hb_subset_context_t c (source_blob, plan, &serializer, tag);
-    bool needed = table->subset (&c);
-    if (serializer.ran_out_of_room)
-    {
-      buf_size += (buf_size >> 1) + 32;
-      DEBUG_MSG (SUBSET, nullptr, "OT::%c%c%c%c ran out of room; reallocating to %u bytes.", HB_UNTAG (tag), buf_size);
-      if (unlikely (!buf.alloc (buf_size)))
-      {
-	DEBUG_MSG (SUBSET, nullptr, "OT::%c%c%c%c failed to reallocate %u bytes.", HB_UNTAG (tag), buf_size);
-	hb_blob_destroy (source_blob);
-	return false;
-      }
-      goto retry;
-    }
-    serializer.end_serialize ();
-
-    result = !serializer.in_error ();
-
-    if (result)
-    {
-      if (needed)
-      {
-	hb_blob_t *dest_blob = serializer.copy_blob ();
-	DEBUG_MSG (SUBSET, nullptr, "OT::%c%c%c%c final subset table size: %u bytes.", HB_UNTAG (tag), dest_blob->length);
-	result = c.plan->add_table (tag, dest_blob);
-	hb_blob_destroy (dest_blob);
-      }
-      else
-      {
-	DEBUG_MSG (SUBSET, nullptr, "OT::%c%c%c%c::subset table subsetted to empty.", HB_UNTAG (tag));
-      }
-    }
+    DEBUG_MSG (SUBSET, nullptr,
+               "OT::%c%c%c%c::subset sanitize failed on source table.", HB_UNTAG (tag));
+    hb_blob_destroy (source_blob);
+    return false;
   }
-  else
-    DEBUG_MSG (SUBSET, nullptr, "OT::%c%c%c%c::subset sanitize failed on source table.", HB_UNTAG (tag));
 
+  hb_vector_t<char> buf;
+  /* TODO Not all tables are glyph-related.  'name' table size for example should not be
+   * affected by number of glyphs.  Accommodate that. */
+  unsigned buf_size = _plan_estimate_subset_table_size (plan, source_blob->length);
+  DEBUG_MSG (SUBSET, nullptr,
+             "OT::%c%c%c%c initial estimated table size: %u bytes.", HB_UNTAG (tag), buf_size);
+  if (unlikely (!buf.alloc (buf_size)))
+  {
+    DEBUG_MSG (SUBSET, nullptr, "OT::%c%c%c%c failed to allocate %u bytes.", HB_UNTAG (tag), buf_size);
+    hb_blob_destroy (source_blob);
+    return false;
+  }
+
+  bool needed = false;
+  hb_serialize_context_t serializer (buf.arrayZ, buf_size);
+  {
+    hb_subset_context_t c (source_blob, plan, &serializer, tag);
+    needed = _try_subset (table, &buf, buf_size, &c);
+  }
   hb_blob_destroy (source_blob);
-  DEBUG_MSG (SUBSET, nullptr, "OT::%c%c%c%c::subset %s", HB_UNTAG (tag), result ? "success" : "FAILED!");
+
+  if (serializer.in_error () && !serializer.only_offset_overflow ())
+  {
+    DEBUG_MSG (SUBSET, nullptr, "OT::%c%c%c%c::subset FAILED!", HB_UNTAG (tag));
+    return false;
+  }
+
+  if (!needed)
+  {
+    DEBUG_MSG (SUBSET, nullptr, "OT::%c%c%c%c::subset table subsetted to empty.", HB_UNTAG (tag));
+    return true;
+  }
+
+  bool result = false;
+  hb_blob_t *dest_blob = _repack (tag, serializer);
+  if (dest_blob)
+  {
+    DEBUG_MSG (SUBSET, nullptr,
+               "OT::%c%c%c%c final subset table size: %u bytes.",
+               HB_UNTAG (tag), dest_blob->length);
+    result = plan->add_table (tag, dest_blob);
+    hb_blob_destroy (dest_blob);
+  }
+
+  DEBUG_MSG (SUBSET, nullptr, "OT::%c%c%c%c::subset %s",
+             HB_UNTAG (tag), result ? "success" : "FAILED!");
   return result;
 }
 
@@ -241,8 +305,10 @@ hb_subset (hb_face_t *source, hb_subset_input_t *input)
   if (unlikely (!input || !source)) return hb_face_get_empty ();
 
   hb_subset_plan_t *plan = hb_subset_plan_create (source, input);
-  if (unlikely (plan->in_error ()))
+  if (unlikely (plan->in_error ())) {
+    hb_subset_plan_destroy (plan);
     return hb_face_get_empty ();
+  }
 
   hb_set_t tags_set;
   bool success = true;

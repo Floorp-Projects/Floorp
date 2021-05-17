@@ -374,7 +374,7 @@ struct GlyphVariationData
 				 * low 12 bits are the number of tuple variation tables
 				 * for this glyph. The number of tuple variation tables
 				 * can be any number between 1 and 4095. */
-  OffsetTo<HBUINT8>
+  Offset16To<HBUINT8>
 		data;		/* Offset from the start of the GlyphVariationData table
 				 * to the serialized data. */
   /* TupleVariationHeader tupleVariationHeaders[] *//* Array of tuple variation headers. */
@@ -676,7 +676,7 @@ no_more_gaps:
 				 * can be referenced within glyph variation data tables for
 				 * multiple glyphs, as opposed to other tuple records stored
 				 * directly within a glyph variation data table. */
-  LNNOffsetTo<UnsizedArrayOf<F2DOT14>>
+  NNOffset32To<UnsizedArrayOf<F2DOT14>>
 		sharedTuples;	/* Offset from the start of this table to the shared tuple records.
 				 * Array of tuple records shared across all glyph variation data tables. */
   HBUINT16	glyphCount;	/* The number of glyphs in this font. This must match the number of
@@ -684,7 +684,7 @@ no_more_gaps:
   HBUINT16	flags;		/* Bit-field that gives the format of the offset array that follows.
 				 * If bit 0 is clear, the offsets are uint16; if bit 0 is set, the
 				 * offsets are uint32. */
-  LOffsetTo<GlyphVariationData>
+  Offset32To<GlyphVariationData>
 		dataZ;		/* Offset from the start of this table to the array of
 				 * GlyphVariationData tables. */
   UnsizedArrayOf<HBUINT8>

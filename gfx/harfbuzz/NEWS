@@ -1,3 +1,12 @@
+Overview of changes leading to 2.8.1
+Tuesday, May 4, 2021
+====================================
+- Subsetter now fully supports GSUB/GPOS/GDEF tables (including variations); as
+  such, layout tables are retained by subsetter by default. (Garret Rieger, Qunxin Liu)
+- Build scripts no longer check for FontConfig as HarfBuzz does not use it.
+- hb-view supports iTerm2 and kitty inline image protocols (Khaled Hosny),
+  it can also use Chafa for terminal graphics if available (Hans Petter Jansson).
+
 Overview of changes leading to 2.8.0
 Tuesday, March 16, 2021
 ====================================

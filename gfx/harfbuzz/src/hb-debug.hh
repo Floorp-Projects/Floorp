@@ -438,6 +438,10 @@ struct hb_no_trace_t {
 #define TRACE_SUBSET(this) hb_no_trace_t<bool> trace
 #endif
 
+#ifndef HB_DEBUG_SUBSET_REPACK
+#define HB_DEBUG_SUBSET_REPACK (HB_DEBUG+0)
+#endif
+
 #ifndef HB_DEBUG_DISPATCH
 #define HB_DEBUG_DISPATCH ( \
 	HB_DEBUG_APPLY + \
