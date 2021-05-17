@@ -31,6 +31,9 @@ add_task(async () => {
   // Test with cookies enabled.
   Services.prefs.setIntPref("network.cookie.cookieBehavior", 0);
 
+  // Test with https-first-mode disabled in PBM
+  Services.prefs.setBoolPref("dom.security.https_first_pbm", false);
+
   CookieXPCShellUtils.createServer({ hosts: ["foo.com", "bar.com"] });
 
   // We need to keep a private-browsing window active, otherwise the
