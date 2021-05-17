@@ -12,6 +12,9 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/.config.yml)
 
+* **feature-prompts**:
+  * ⚠️ **This is a breaking change**: [#8989](https://github.com/mozilla-mobile/android-components/issues/8989) - Add support for multiple prompts in ContentState and help avoid some Exceptions.
+
 * **concept-engine** and **browser-engine-gecko**
   * 🌟️ Added `TrackingProtectionPolicy.cookiePolicyPrivateMode` it allows to control how cookies should behave in private mode, if not specified it defaults to the value of `TrackingProtectionPolicy.cookiePolicyPrivateMode`.
 

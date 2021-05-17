@@ -470,8 +470,8 @@ class ContentActionTest {
     }
 
     @Test
-    fun `UpdatePromptRequestAction updates request`() {
-        assertNull(tab.content.promptRequest)
+    fun `UpdatePromptRequestAction updates requests`() {
+        assertTrue(tab.content.promptRequests.isEmpty())
 
         val promptRequest1: PromptRequest = mock()
 
@@ -479,7 +479,8 @@ class ContentActionTest {
             ContentAction.UpdatePromptRequestAction(tab.id, promptRequest1)
         ).joinBlocking()
 
-        assertEquals(promptRequest1, tab.content.promptRequest)
+        assertEquals(1, tab.content.promptRequests.size)
+        assertEquals(promptRequest1, tab.content.promptRequests[0])
 
         val promptRequest2: PromptRequest = mock()
 
@@ -487,7 +488,9 @@ class ContentActionTest {
             ContentAction.UpdatePromptRequestAction(tab.id, promptRequest2)
         ).joinBlocking()
 
-        assertEquals(promptRequest2, tab.content.promptRequest)
+        assertEquals(2, tab.content.promptRequests.size)
+        assertEquals(promptRequest1, tab.content.promptRequests[0])
+        assertEquals(promptRequest2, tab.content.promptRequests[1])
     }
 
     @Test
@@ -498,13 +501,14 @@ class ContentActionTest {
             ContentAction.UpdatePromptRequestAction(tab.id, promptRequest)
         ).joinBlocking()
 
-        assertEquals(promptRequest, tab.content.promptRequest)
+        assertEquals(1, tab.content.promptRequests.size)
+        assertEquals(promptRequest, tab.content.promptRequests[0])
 
         store.dispatch(
-            ContentAction.ConsumePromptRequestAction(tab.id)
+            ContentAction.ConsumePromptRequestAction(tab.id, promptRequest)
         ).joinBlocking()
 
-        assertNull(tab.content.promptRequest)
+        assertTrue(tab.content.promptRequests.isEmpty())
     }
 
     @Test
@@ -722,7 +726,7 @@ class ContentActionTest {
 
     @Test
     fun `UpdateAppIntentAction updates request`() {
-        assertNull(tab.content.promptRequest)
+        assertTrue(tab.content.promptRequests.isEmpty())
 
         val appIntent1: AppIntentState = mock()
 

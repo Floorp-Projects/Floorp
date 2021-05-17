@@ -55,6 +55,8 @@ internal class ChoiceDialogFragment : PromptDialogFragment() {
         fun newInstance(
             choices: Array<Choice>,
             sessionId: String,
+            promptRequestUID: String,
+            shouldDismissOnLoad: Boolean,
             dialogType: Int
         ): ChoiceDialogFragment {
             val fragment = ChoiceDialogFragment()
@@ -63,6 +65,8 @@ internal class ChoiceDialogFragment : PromptDialogFragment() {
             with(arguments) {
                 putParcelableArray(KEY_CHOICES, choices)
                 putString(KEY_SESSION_ID, sessionId)
+                putString(KEY_PROMPT_UID, promptRequestUID)
+                putBoolean(KEY_SHOULD_DISMISS_ON_LOAD, shouldDismissOnLoad)
                 putInt(KEY_DIALOG_TYPE, dialogType)
             }
 
@@ -90,13 +94,13 @@ internal class ChoiceDialogFragment : PromptDialogFragment() {
     }
 
     fun onSelect(selectedChoice: Choice) {
-        feature?.onConfirm(sessionId, selectedChoice)
+        feature?.onConfirm(sessionId, promptRequestUID, selectedChoice)
         dismiss()
     }
 
     override fun onCancel(dialog: DialogInterface) {
         super.onCancel(dialog)
-        feature?.onCancel(sessionId)
+        feature?.onCancel(sessionId, promptRequestUID)
     }
 
     private fun createSingleChoiceDialog(): AlertDialog {
@@ -106,7 +110,7 @@ internal class ChoiceDialogFragment : PromptDialogFragment() {
 
         return builder.setView(view)
             .setOnDismissListener {
-                feature?.onCancel(sessionId)
+                feature?.onCancel(sessionId, promptRequestUID)
             }.create()
     }
 
@@ -117,12 +121,12 @@ internal class ChoiceDialogFragment : PromptDialogFragment() {
 
         return builder.setView(view)
             .setNegativeButton(R.string.mozac_feature_prompts_cancel) { _, _ ->
-                feature?.onCancel(sessionId)
+                feature?.onCancel(sessionId, promptRequestUID)
             }
             .setPositiveButton(R.string.mozac_feature_prompts_ok) { _, _ ->
-                feature?.onConfirm(sessionId, mapSelectChoice.keys.toTypedArray())
+                feature?.onConfirm(sessionId, promptRequestUID, mapSelectChoice.keys.toTypedArray())
             }.setOnDismissListener {
-                feature?.onCancel(sessionId)
+                feature?.onCancel(sessionId, promptRequestUID)
             }.create()
     }
 }

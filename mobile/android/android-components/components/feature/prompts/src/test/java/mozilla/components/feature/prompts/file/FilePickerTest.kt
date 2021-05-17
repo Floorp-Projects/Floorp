@@ -76,18 +76,18 @@ class FilePickerTest {
     @Test
     fun `FilePicker acts on a given (custom tab) session or the selected session`() {
         val customTabContent: ContentState = mock()
-        whenever(customTabContent.promptRequest).thenReturn(request)
+        whenever(customTabContent.promptRequests).thenReturn(listOf(request))
         val customTab = CustomTabSessionState("custom-tab", customTabContent, mock(), mock())
 
         whenever(state.customTabs).thenReturn(listOf(customTab))
         filePicker = FilePicker(fragment, store, customTab.id) { }
         filePicker.onActivityResult(FILE_PICKER_ACTIVITY_REQUEST_CODE, 0, null)
-        verify(store).dispatch(ContentAction.ConsumePromptRequestAction(customTab.id))
+        verify(store).dispatch(ContentAction.ConsumePromptRequestAction(customTab.id, request))
 
         val selected = prepareSelectedSession(request)
         filePicker = FilePicker(fragment, store) { }
         filePicker.onActivityResult(FILE_PICKER_ACTIVITY_REQUEST_CODE, 0, null)
-        verify(store).dispatch(ContentAction.ConsumePromptRequestAction(selected.id))
+        verify(store).dispatch(ContentAction.ConsumePromptRequestAction(selected.id, request))
     }
 
     @Test
@@ -157,7 +157,7 @@ class FilePickerTest {
         filePicker.onPermissionsDenied()
 
         assertTrue(onDismissWasCalled)
-        verify(store).dispatch(ContentAction.ConsumePromptRequestAction(selected.id))
+        verify(store).dispatch(ContentAction.ConsumePromptRequestAction(selected.id, filePickerRequest))
     }
 
     @Test
@@ -180,7 +180,7 @@ class FilePickerTest {
         filePicker.onActivityResult(FILE_PICKER_ACTIVITY_REQUEST_CODE, RESULT_OK, intent)
 
         assertTrue(onSingleFileSelectionWasCalled)
-        verify(store).dispatch(ContentAction.ConsumePromptRequestAction(selected.id))
+        verify(store).dispatch(ContentAction.ConsumePromptRequestAction(selected.id, filePickerRequest))
     }
 
     @Test
@@ -214,7 +214,7 @@ class FilePickerTest {
         filePicker.onActivityResult(FILE_PICKER_ACTIVITY_REQUEST_CODE, RESULT_OK, intent)
 
         assertTrue(onMultipleFileSelectionWasCalled)
-        verify(store).dispatch(ContentAction.ConsumePromptRequestAction(selected.id))
+        verify(store).dispatch(ContentAction.ConsumePromptRequestAction(selected.id, filePickerRequest))
     }
 
     @Test
@@ -231,7 +231,7 @@ class FilePickerTest {
         filePicker.onActivityResult(FILE_PICKER_ACTIVITY_REQUEST_CODE, RESULT_CANCELED, intent)
 
         assertTrue(onDismissWasCalled)
-        verify(store).dispatch(ContentAction.ConsumePromptRequestAction(selected.id))
+        verify(store).dispatch(ContentAction.ConsumePromptRequestAction(selected.id, filePickerRequest))
     }
 
     @Test
@@ -249,7 +249,7 @@ class FilePickerTest {
 
         assertFalse(wasConfirmed)
         assertFalse(wasDismissed)
-        verify(store, never()).dispatch(ContentAction.ConsumePromptRequestAction(selected.id))
+        verify(store, never()).dispatch(ContentAction.ConsumePromptRequestAction(selected.id, request))
         verify(spiedFilePicker, never()).handleFilePickerIntentResult(intent, request)
     }
 
@@ -361,7 +361,7 @@ class FilePickerTest {
     private fun prepareSelectedSession(request: PromptRequest? = null): TabSessionState {
         val promptRequest: PromptRequest = request ?: mock()
         val content: ContentState = mock()
-        whenever(content.promptRequest).thenReturn(promptRequest)
+        whenever(content.promptRequests).thenReturn(listOf(promptRequest))
 
         val selected = TabSessionState("browser-tab", content, mock(), mock())
         whenever(state.selectedTabId).thenReturn(selected.id)

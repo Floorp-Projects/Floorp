@@ -54,11 +54,11 @@ internal class TextPromptDialogFragment : AbstractPromptTextDialogFragment(), Te
     }
 
     override fun onCancel(dialog: DialogInterface) {
-        feature?.onCancel(sessionId)
+        feature?.onCancel(sessionId, promptRequestUID)
     }
 
     private fun onPositiveClickAction() {
-        feature?.onConfirm(sessionId, userSelectionNoMoreDialogs to userSelectionEditText)
+        feature?.onConfirm(sessionId, promptRequestUID, userSelectionNoMoreDialogs to userSelectionEditText)
     }
 
     @SuppressLint("InflateParams")
@@ -90,6 +90,9 @@ internal class TextPromptDialogFragment : AbstractPromptTextDialogFragment(), Te
         /**
          * A builder method for creating a [TextPromptDialogFragment]
          * @param sessionId to create the dialog.
+         * @param promptRequestUID identifier of the [PromptRequest] for which this dialog is shown.
+         * @param shouldDismissOnLoad whether or not the dialog should automatically be dismissed
+         * when a new page is loaded.
          * @param title the title of the dialog.
          * @param inputLabel
          * @param defaultInputValue
@@ -97,8 +100,11 @@ internal class TextPromptDialogFragment : AbstractPromptTextDialogFragment(), Te
          * in a short period of time, if is true a checkbox will be part of the dialog, for the user
          * to choose if wants to prevent this [sessionId] continuing showing dialogs.
          */
+        @Suppress("LongParameterList")
         fun newInstance(
             sessionId: String,
+            promptRequestUID: String,
+            shouldDismissOnLoad: Boolean,
             title: String,
             inputLabel: String,
             defaultInputValue: String,
@@ -110,6 +116,8 @@ internal class TextPromptDialogFragment : AbstractPromptTextDialogFragment(), Te
 
             with(arguments) {
                 putString(KEY_SESSION_ID, sessionId)
+                putString(KEY_PROMPT_UID, promptRequestUID)
+                putBoolean(KEY_SHOULD_DISMISS_ON_LOAD, shouldDismissOnLoad)
                 putString(KEY_TITLE, title)
                 putString(KEY_LABEL_INPUT, inputLabel)
                 putString(KEY_DEFAULT_INPUT_VALUE, defaultInputValue)

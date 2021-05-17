@@ -62,7 +62,7 @@ class ChoiceDialogFragmentTest {
     @Test
     fun `Build single choice dialog`() {
 
-        val fragment = spy(newInstance(arrayOf(), "sessionId", SINGLE_CHOICE_DIALOG_TYPE))
+        val fragment = spy(newInstance(arrayOf(), "sessionId", "uid", true, SINGLE_CHOICE_DIALOG_TYPE))
 
         doReturn(appCompatContext).`when`(fragment).requireContext()
 
@@ -73,7 +73,7 @@ class ChoiceDialogFragmentTest {
 
     @Test
     fun `cancelling the dialog cancels the feature`() {
-        val fragment = spy(newInstance(arrayOf(), "sessionId", SINGLE_CHOICE_DIALOG_TYPE))
+        val fragment = spy(newInstance(arrayOf(), "sessionId", "uid", false, SINGLE_CHOICE_DIALOG_TYPE))
 
         doReturn(appCompatContext).`when`(fragment).requireContext()
 
@@ -91,13 +91,13 @@ class ChoiceDialogFragmentTest {
 
         fragment.onCancel(dialog)
 
-        verify(mockFeature).onCancel("sessionId")
+        verify(mockFeature).onCancel("sessionId", "uid")
     }
 
     @Test
     fun `Build menu choice dialog`() {
 
-        val fragment = spy(newInstance(arrayOf(), "sessionId", MENU_CHOICE_DIALOG_TYPE))
+        val fragment = spy(newInstance(arrayOf(), "sessionId", "uid", true, MENU_CHOICE_DIALOG_TYPE))
 
         doReturn(appCompatContext).`when`(fragment).requireContext()
 
@@ -109,7 +109,7 @@ class ChoiceDialogFragmentTest {
     @Test
     fun `Build multiple choice dialog`() {
 
-        val fragment = spy(newInstance(arrayOf(), "sessionId", MULTIPLE_CHOICE_DIALOG_TYPE))
+        val fragment = spy(newInstance(arrayOf(), "sessionId", "uid", false, MULTIPLE_CHOICE_DIALOG_TYPE))
 
         doReturn(appCompatContext).`when`(fragment).requireContext()
 
@@ -121,7 +121,7 @@ class ChoiceDialogFragmentTest {
     @Test(expected = Exception::class)
     fun `Building a unknown dialog type will throw an exception`() {
 
-        val fragment = spy(newInstance(arrayOf(), "sessionId", -1))
+        val fragment = spy(newInstance(arrayOf(), "sessionId", "uid", true, -1))
 
         doReturn(appCompatContext).`when`(fragment).requireContext()
 
@@ -133,7 +133,7 @@ class ChoiceDialogFragmentTest {
 
         val choices = arrayOf(item)
 
-        val fragment = spy(newInstance(choices, "sessionId", SINGLE_CHOICE_DIALOG_TYPE))
+        val fragment = spy(newInstance(choices, "sessionId", "uid", false, SINGLE_CHOICE_DIALOG_TYPE))
 
         doReturn(appCompatContext).`when`(fragment).requireContext()
 
@@ -151,7 +151,7 @@ class ChoiceDialogFragmentTest {
 
         val choices = arrayOf(item)
 
-        val fragment = spy(newInstance(choices, "sessionId", MENU_CHOICE_DIALOG_TYPE))
+        val fragment = spy(newInstance(choices, "sessionId", "uid", true, MENU_CHOICE_DIALOG_TYPE))
 
         doReturn(appCompatContext).`when`(fragment).requireContext()
 
@@ -169,7 +169,7 @@ class ChoiceDialogFragmentTest {
 
         val choices = arrayOf(separator)
 
-        val fragment = spy(newInstance(choices, "sessionId", MENU_CHOICE_DIALOG_TYPE))
+        val fragment = spy(newInstance(choices, "sessionId", "uid", false, MENU_CHOICE_DIALOG_TYPE))
 
         doReturn(appCompatContext).`when`(fragment).requireContext()
 
@@ -186,7 +186,7 @@ class ChoiceDialogFragmentTest {
 
         val choices = arrayOf(separator)
 
-        val fragment = spy(newInstance(choices, "sessionId", MENU_CHOICE_DIALOG_TYPE))
+        val fragment = spy(newInstance(choices, "sessionId", "uid", true, MENU_CHOICE_DIALOG_TYPE))
 
         doReturn(appCompatContext).`when`(fragment).requireContext()
 
@@ -205,7 +205,7 @@ class ChoiceDialogFragmentTest {
             Choice(id = "", label = "multiple choice")
         )
 
-        var fragment = spy(newInstance(choices, "sessionId", SINGLE_CHOICE_DIALOG_TYPE))
+        var fragment = spy(newInstance(choices, "sessionId", "uid", false, SINGLE_CHOICE_DIALOG_TYPE))
 
         doReturn(appCompatContext).`when`(fragment).requireContext()
 
@@ -214,7 +214,7 @@ class ChoiceDialogFragmentTest {
 
         assertEquals(type, TYPE_SINGLE)
 
-        fragment = spy(newInstance(choices, "sessionId", MULTIPLE_CHOICE_DIALOG_TYPE))
+        fragment = spy(newInstance(choices, "sessionId", "uid", true, MULTIPLE_CHOICE_DIALOG_TYPE))
         doReturn(appCompatContext).`when`(fragment).requireContext()
 
         adapter = getAdapterFrom(fragment)
@@ -222,7 +222,7 @@ class ChoiceDialogFragmentTest {
         type = adapter.getItemViewType(1)
         assertEquals(type, TYPE_GROUP)
 
-        fragment = spy(newInstance(choices, "sessionId", MENU_CHOICE_DIALOG_TYPE))
+        fragment = spy(newInstance(choices, "sessionId", "uid", false, MENU_CHOICE_DIALOG_TYPE))
         doReturn(appCompatContext).`when`(fragment).requireContext()
 
         adapter = getAdapterFrom(fragment)
@@ -233,7 +233,7 @@ class ChoiceDialogFragmentTest {
         type = adapter.getItemViewType(3)
         assertEquals(type, TYPE_MENU_SEPARATOR)
 
-        fragment = spy(newInstance(choices, "sessionId", MULTIPLE_CHOICE_DIALOG_TYPE))
+        fragment = spy(newInstance(choices, "sessionId", "uid", true, MULTIPLE_CHOICE_DIALOG_TYPE))
         doReturn(appCompatContext).`when`(fragment).requireContext()
 
         adapter = getAdapterFrom(fragment)
@@ -248,7 +248,7 @@ class ChoiceDialogFragmentTest {
         val choices =
                 arrayOf(Choice(id = "", label = "item1", children = arrayOf(Choice(id = "", label = "sub-item1"))))
 
-        val fragment = spy(newInstance(choices, "sessionId", MULTIPLE_CHOICE_DIALOG_TYPE))
+        val fragment = spy(newInstance(choices, "sessionId", "uid", false, MULTIPLE_CHOICE_DIALOG_TYPE))
 
         doReturn(appCompatContext).`when`(fragment).requireContext()
 
@@ -276,7 +276,7 @@ class ChoiceDialogFragmentTest {
                 )
         )
 
-        val fragment = spy(newInstance(choices, "sessionId", MULTIPLE_CHOICE_DIALOG_TYPE))
+        val fragment = spy(newInstance(choices, "sessionId", "uid", true, MULTIPLE_CHOICE_DIALOG_TYPE))
 
         doReturn(appCompatContext).`when`(fragment).requireContext()
 
@@ -301,7 +301,7 @@ class ChoiceDialogFragmentTest {
 
         val choices = arrayOf(item)
 
-        val fragment = spy(newInstance(choices, "sessionId", SINGLE_CHOICE_DIALOG_TYPE))
+        val fragment = spy(newInstance(choices, "sessionId", "uid", false, SINGLE_CHOICE_DIALOG_TYPE))
 
         fragment.feature = mockFeature
 
@@ -319,9 +319,9 @@ class ChoiceDialogFragmentTest {
 
         holder.itemView.performClick()
 
-        verify(mockFeature).onConfirm("sessionId", choices.first())
+        verify(mockFeature).onConfirm("sessionId", "uid", choices.first())
         dialog.dismiss()
-        verify(mockFeature).onCancel("sessionId")
+        verify(mockFeature).onCancel("sessionId", "uid")
     }
 
     @Test
@@ -329,7 +329,7 @@ class ChoiceDialogFragmentTest {
 
         val choices = arrayOf(item)
 
-        val fragment = spy(newInstance(choices, "sessionId", MENU_CHOICE_DIALOG_TYPE))
+        val fragment = spy(newInstance(choices, "sessionId", "uid", true, MENU_CHOICE_DIALOG_TYPE))
 
         fragment.feature = mockFeature
 
@@ -347,9 +347,9 @@ class ChoiceDialogFragmentTest {
 
         holder.itemView.performClick()
 
-        verify(mockFeature).onConfirm("sessionId", choices.first())
+        verify(mockFeature).onConfirm("sessionId", "uid", choices.first())
         dialog.dismiss()
-        verify(mockFeature).onCancel("sessionId")
+        verify(mockFeature).onCancel("sessionId", "uid")
     }
 
     @Test
@@ -357,7 +357,7 @@ class ChoiceDialogFragmentTest {
 
         val choices =
                 arrayOf(Choice(id = "", label = "item1", children = arrayOf(subItem)))
-        val fragment = spy(newInstance(choices, "sessionId", MULTIPLE_CHOICE_DIALOG_TYPE))
+        val fragment = spy(newInstance(choices, "sessionId", "uid", false, MULTIPLE_CHOICE_DIALOG_TYPE))
 
         fragment.feature = mockFeature
         doReturn(appCompatContext).`when`(fragment).requireContext()
@@ -379,12 +379,12 @@ class ChoiceDialogFragmentTest {
         val positiveButton = (dialog as AlertDialog).getButton(BUTTON_POSITIVE)
         positiveButton.performClick()
 
-        verify(mockFeature).onConfirm("sessionId", fragment.mapSelectChoice.keys.toTypedArray())
+        verify(mockFeature).onConfirm("sessionId", "uid", fragment.mapSelectChoice.keys.toTypedArray())
 
         val negativeButton = dialog.getButton(BUTTON_NEGATIVE)
         negativeButton.performClick()
 
-        verify(mockFeature, times(2)).onCancel("sessionId")
+        verify(mockFeature, times(2)).onCancel("sessionId", "uid")
     }
 
     @Test
@@ -392,7 +392,7 @@ class ChoiceDialogFragmentTest {
 
         val choices =
                 arrayOf(item.copy(selected = true))
-        val fragment = spy(newInstance(choices, "sessionId", MULTIPLE_CHOICE_DIALOG_TYPE))
+        val fragment = spy(newInstance(choices, "sessionId", "uid", true, MULTIPLE_CHOICE_DIALOG_TYPE))
 
         fragment.feature = mockFeature
         doReturn(appCompatContext).`when`(fragment).requireContext()
@@ -417,7 +417,7 @@ class ChoiceDialogFragmentTest {
         val positiveButton = (dialog as AlertDialog).getButton(BUTTON_POSITIVE)
         positiveButton.performClick()
 
-        verify(mockFeature).onConfirm("sessionId", fragment.mapSelectChoice.keys.toTypedArray())
+        verify(mockFeature).onConfirm("sessionId", "uid", fragment.mapSelectChoice.keys.toTypedArray())
     }
 
     @Test
@@ -436,7 +436,7 @@ class ChoiceDialogFragmentTest {
             )
         )
 
-        val fragment = spy(newInstance(choices, "sessionId", SINGLE_CHOICE_DIALOG_TYPE))
+        val fragment = spy(newInstance(choices, "sessionId", "uid", false, SINGLE_CHOICE_DIALOG_TYPE))
         fragment.feature = mockFeature
         doReturn(appCompatContext).`when`(fragment).requireContext()
         doNothing().`when`(fragment).dismiss()
@@ -466,7 +466,7 @@ class ChoiceDialogFragmentTest {
             assertEquals(labelView.text, choiceGroup1.label)
 
             itemView.performClick()
-            verify(mockFeature).onConfirm("sessionId", choiceGroup1)
+            verify(mockFeature).onConfirm("sessionId", "uid", choiceGroup1)
         }
     }
 
@@ -480,7 +480,7 @@ class ChoiceDialogFragmentTest {
                 item.copy(label = "item$index")
             }
         }
-        val fragment = newInstance(choices, "sessionId", SINGLE_CHOICE_DIALOG_TYPE)
+        val fragment = newInstance(choices, "sessionId", "uid", true, SINGLE_CHOICE_DIALOG_TYPE)
         val inflater = LayoutInflater.from(testContext)
         val dialog = fragment.createDialogContentView(inflater)
         val recyclerView = dialog.findViewById<RecyclerView>(R.id.recyclerView)

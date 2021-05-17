@@ -13,8 +13,8 @@ import androidx.core.view.isVisible
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.feature.prompts.R
 import mozilla.components.feature.prompts.R.id
-import mozilla.components.support.test.mock
 import mozilla.components.support.test.ext.appCompatContext
+import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -43,6 +43,7 @@ class MultiButtonDialogFragmentTest {
         val fragment = spy(
             MultiButtonDialogFragment.newInstance(
                 "sessionId",
+                "uid",
                 "title",
                 "message",
                 true,
@@ -67,6 +68,7 @@ class MultiButtonDialogFragmentTest {
         val neutralButton = (dialog).getButton(DialogInterface.BUTTON_NEUTRAL)
 
         assertEquals(fragment.sessionId, "sessionId")
+        assertEquals(fragment.promptRequestUID, "uid")
         assertEquals(fragment.message, "message")
         assertEquals(fragment.hasShownManyDialogs, true)
 
@@ -86,6 +88,7 @@ class MultiButtonDialogFragmentTest {
         val fragment = spy(
             MultiButtonDialogFragment.newInstance(
                 "sessionId",
+                "uid",
                 "title",
                 "message",
                 false,
@@ -113,6 +116,7 @@ class MultiButtonDialogFragmentTest {
         val fragment = spy(
             MultiButtonDialogFragment.newInstance(
                 "sessionId",
+                "uid",
                 "title",
                 "message",
                 false,
@@ -131,7 +135,7 @@ class MultiButtonDialogFragmentTest {
         val positiveButton = (dialog as AlertDialog).getButton(BUTTON_POSITIVE)
         positiveButton.performClick()
 
-        verify(mockFeature).onConfirm("sessionId", false to MultiButtonDialogFragment.ButtonType.POSITIVE)
+        verify(mockFeature).onConfirm("sessionId", "uid", false to MultiButtonDialogFragment.ButtonType.POSITIVE)
     }
 
     @Test
@@ -140,6 +144,7 @@ class MultiButtonDialogFragmentTest {
         val fragment = spy(
             MultiButtonDialogFragment.newInstance(
                 "sessionId",
+                "uid",
                 "title",
                 "message",
                 false,
@@ -158,7 +163,7 @@ class MultiButtonDialogFragmentTest {
         val negativeButton = (dialog as AlertDialog).getButton(DialogInterface.BUTTON_NEGATIVE)
         negativeButton.performClick()
 
-        verify(mockFeature).onConfirm("sessionId", false to MultiButtonDialogFragment.ButtonType.NEGATIVE)
+        verify(mockFeature).onConfirm("sessionId", "uid", false to MultiButtonDialogFragment.ButtonType.NEGATIVE)
     }
 
     @Test
@@ -167,6 +172,7 @@ class MultiButtonDialogFragmentTest {
         val fragment = spy(
             MultiButtonDialogFragment.newInstance(
                 "sessionId",
+                "uid",
                 "title",
                 "message",
                 false,
@@ -185,7 +191,7 @@ class MultiButtonDialogFragmentTest {
         val neutralButton = (dialog as AlertDialog).getButton(DialogInterface.BUTTON_NEUTRAL)
         neutralButton.performClick()
 
-        verify(mockFeature).onConfirm("sessionId", false to MultiButtonDialogFragment.ButtonType.NEUTRAL)
+        verify(mockFeature).onConfirm("sessionId", "uid", false to MultiButtonDialogFragment.ButtonType.NEUTRAL)
     }
 
     @Test
@@ -194,6 +200,7 @@ class MultiButtonDialogFragmentTest {
         val fragment = spy(
             MultiButtonDialogFragment.newInstance(
                 "sessionId",
+                "uid",
                 "title",
                 "message",
                 true,
@@ -216,7 +223,7 @@ class MultiButtonDialogFragmentTest {
         val positiveButton = (dialog as AlertDialog).getButton(BUTTON_POSITIVE)
         positiveButton.performClick()
 
-        verify(mockFeature).onConfirm("sessionId", true to MultiButtonDialogFragment.ButtonType.POSITIVE)
+        verify(mockFeature).onConfirm("sessionId", "uid", true to MultiButtonDialogFragment.ButtonType.POSITIVE)
     }
 
     @Test
@@ -224,6 +231,7 @@ class MultiButtonDialogFragmentTest {
         val fragment = spy(
             MultiButtonDialogFragment.newInstance(
                 "sessionId",
+                "uid",
                 "title",
                 "message",
                 true,
@@ -238,6 +246,6 @@ class MultiButtonDialogFragmentTest {
 
         fragment.onCancel(mock())
 
-        verify(mockFeature).onCancel("sessionId")
+        verify(mockFeature).onCancel("sessionId", "uid")
     }
 }

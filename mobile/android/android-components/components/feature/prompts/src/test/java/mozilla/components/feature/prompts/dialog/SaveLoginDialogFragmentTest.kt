@@ -31,6 +31,8 @@ class SaveLoginDialogFragmentTest : TestCase() {
     @Test
     fun `dialog should always set the website icon if it is available`() {
         val sessionId = "sessionId"
+        val requestUID = "uid"
+        val shouldDismissOnLoad = true
         val hint = 42
         val loginUsername = "username"
         val loginPassword = "password"
@@ -39,7 +41,7 @@ class SaveLoginDialogFragmentTest : TestCase() {
         `when`(login.password).thenReturn(loginPassword)
         val icon: Bitmap = mock()
         val fragment = spy(SaveLoginDialogFragment.newInstance(
-            sessionId, hint, login, icon
+            sessionId, requestUID, shouldDismissOnLoad, hint, login, icon
         ))
         doReturn(appCompatContext).`when`(fragment).requireContext()
         doAnswer {
@@ -55,6 +57,7 @@ class SaveLoginDialogFragmentTest : TestCase() {
         verify(fragment).inflateRootView(any())
         verify(fragment).setupRootView(any())
         assertEquals(sessionId, fragment.sessionId)
+        assertEquals(requestUID, fragment.promptRequestUID)
         // Using assertTrue since assertEquals / assertSame would fail here
         assertTrue(loginUsername == fragmentView.findViewById<TextInputEditText>(R.id.username_field).text.toString())
         assertTrue(loginPassword == fragmentView.findViewById<TextInputEditText>(R.id.password_field).text.toString())
@@ -67,6 +70,8 @@ class SaveLoginDialogFragmentTest : TestCase() {
     @Test
     fun `dialog should use a default tinted icon if favicon is not available`() {
         val sessionId = "sessionId"
+        val requestUID = "uid"
+        val shouldDismissOnLoad = false
         val hint = 42
         val loginUsername = "username"
         val loginPassword = "password"
@@ -75,7 +80,7 @@ class SaveLoginDialogFragmentTest : TestCase() {
         `when`(login.password).thenReturn(loginPassword)
         val icon: Bitmap? = null // null favicon
         val fragment = spy(SaveLoginDialogFragment.newInstance(
-            sessionId, hint, login, icon
+            sessionId, requestUID, shouldDismissOnLoad, hint, login, icon
         ))
         val defaultIconResource = R.drawable.mozac_ic_globe
         doReturn(appCompatContext).`when`(fragment).requireContext()

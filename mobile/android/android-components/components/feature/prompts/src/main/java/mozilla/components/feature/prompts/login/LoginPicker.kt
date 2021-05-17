@@ -39,9 +39,10 @@ internal class LoginPicker(
     }
 
     override fun onOptionSelect(option: Login) {
-        store.consumePromptFrom(sessionId) {
-            if (it is PromptRequest.SelectLoginPrompt) it.onConfirm(option)
+        store.consumePromptFrom<PromptRequest.SelectLoginPrompt>(sessionId) {
+            it.onConfirm(option)
         }
+
         loginSelectBar.hidePrompt()
     }
 
@@ -53,9 +54,11 @@ internal class LoginPicker(
     @Suppress("TooGenericExceptionCaught")
     fun dismissCurrentLoginSelect(promptRequest: PromptRequest.SelectLoginPrompt? = null) {
         try {
-            promptRequest?.let { it.onDismiss() } ?: store.consumePromptFrom(sessionId) {
-                if (it is PromptRequest.SelectLoginPrompt) it.onDismiss()
-            }
+            promptRequest
+                ?.let { it.onDismiss() }
+                ?: store.consumePromptFrom<PromptRequest.SelectLoginPrompt>(sessionId) {
+                    it.onDismiss()
+                }
         } catch (e: RuntimeException) {
             Logger.error("Can't dismiss this login select prompt", e)
         }

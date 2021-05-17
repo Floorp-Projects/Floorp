@@ -15,7 +15,7 @@ import android.provider.MediaStore.EXTRA_OUTPUT
 import androidx.annotation.VisibleForTesting
 import androidx.annotation.VisibleForTesting.PRIVATE
 import androidx.fragment.app.Fragment
-import mozilla.components.browser.state.selector.findTabOrCustomTabOrSelectedTab
+import mozilla.components.browser.state.selector.findCustomTabOrSelectedTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.prompt.PromptRequest
 import mozilla.components.concept.engine.prompt.PromptRequest.File
@@ -117,7 +117,7 @@ internal class FilePicker(
         var resultHandled = false
         val request = getActivePromptRequest() ?: return false
         if (requestCode == FILE_PICKER_ACTIVITY_REQUEST_CODE && request is File) {
-            store.consumePromptFrom(sessionId) {
+            store.consumePromptFrom(sessionId, request.uid) {
                 if (resultCode == RESULT_OK) {
                     handleFilePickerIntentResult(intent, request)
                 } else {
@@ -134,7 +134,9 @@ internal class FilePicker(
     }
 
     private fun getActivePromptRequest(): PromptRequest? =
-            store.state.findTabOrCustomTabOrSelectedTab(sessionId)?.content?.promptRequest
+        store.state.findCustomTabOrSelectedTab(sessionId)?.content?.promptRequests?.lastOrNull {
+            prompt -> prompt is File
+        }
 
     /**
      * Notifies the feature that the permissions request was completed. It will then
@@ -175,8 +177,8 @@ internal class FilePicker(
     @VisibleForTesting(otherwise = PRIVATE)
     internal fun onPermissionsDenied() {
         // Nothing left to do. Consume / cleanup the requests.
-        store.consumePromptFrom(sessionId) { request ->
-            if (request is File) request.onDismiss()
+        store.consumePromptFrom<File>(sessionId) { request ->
+            request.onDismiss()
         }
     }
 

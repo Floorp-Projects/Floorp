@@ -78,10 +78,10 @@ internal object ContentStateReducer {
                 it.copy(hitResult = null)
             }
             is ContentAction.UpdatePromptRequestAction -> updateContentState(state, action.sessionId) {
-                it.copy(promptRequest = action.promptRequest)
+                it.copy(promptRequests = it.promptRequests + action.promptRequest)
             }
             is ContentAction.ConsumePromptRequestAction -> updateContentState(state, action.sessionId) {
-                it.copy(promptRequest = null)
+                it.copy(promptRequests = it.promptRequests - action.promptRequest)
             }
             is ContentAction.AddFindResultAction -> updateContentState(state, action.sessionId) {
                 it.copy(findResults = it.findResults + action.findResult)

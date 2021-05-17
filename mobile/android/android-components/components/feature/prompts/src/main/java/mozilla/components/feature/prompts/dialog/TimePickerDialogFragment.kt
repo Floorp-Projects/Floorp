@@ -190,9 +190,9 @@ internal class TimePickerDialogFragment : PromptDialogFragment(), DatePicker.OnD
 
     override fun onClick(dialog: DialogInterface?, which: Int) {
         when (which) {
-            BUTTON_POSITIVE -> feature?.onConfirm(sessionId, selectedDate)
-            BUTTON_NEGATIVE -> feature?.onCancel(sessionId)
-            BUTTON_NEUTRAL -> feature?.onClear(sessionId)
+            BUTTON_POSITIVE -> feature?.onConfirm(sessionId, promptRequestUID, selectedDate)
+            BUTTON_NEGATIVE -> feature?.onCancel(sessionId, promptRequestUID)
+            BUTTON_NEUTRAL -> feature?.onClear(sessionId, promptRequestUID)
         }
     }
 
@@ -200,6 +200,9 @@ internal class TimePickerDialogFragment : PromptDialogFragment(), DatePicker.OnD
         /**
          * A builder method for creating a [TimePickerDialogFragment]
          * @param sessionId to create the dialog.
+         * @param promptRequestUID identifier of the [PromptRequest] for which this dialog is shown.
+         * @param shouldDismissOnLoad whether or not the dialog should automatically be dismissed
+         * when a new page is loaded.
          * @param title of the dialog.
          * @param initialDate date that will be selected by default.
          * @param minDate the minimumDate date that will be allowed to be selected.
@@ -207,11 +210,14 @@ internal class TimePickerDialogFragment : PromptDialogFragment(), DatePicker.OnD
          * @param selectionType indicate which type of time should be selected, valid values are
          * ([TimePickerDialogFragment.SELECTION_TYPE_DATE], [TimePickerDialogFragment.SELECTION_TYPE_DATE_AND_TIME],
          * and [TimePickerDialogFragment.SELECTION_TYPE_TIME])
+         *
          * @return a new instance of [TimePickerDialogFragment]
          */
         @Suppress("LongParameterList")
         fun newInstance(
             sessionId: String,
+            promptRequestUID: String,
+            shouldDismissOnLoad: Boolean,
             initialDate: Date,
             minDate: Date?,
             maxDate: Date?,
@@ -222,6 +228,8 @@ internal class TimePickerDialogFragment : PromptDialogFragment(), DatePicker.OnD
             fragment.arguments = arguments
             with(arguments) {
                 putString(KEY_SESSION_ID, sessionId)
+                putString(KEY_PROMPT_UID, promptRequestUID)
+                putBoolean(KEY_SHOULD_DISMISS_ON_LOAD, shouldDismissOnLoad)
                 putSerializable(KEY_INITIAL_DATE, initialDate)
                 putSerializable(KEY_MIN_DATE, minDate)
                 putSerializable(KEY_MAX_DATE, maxDate)

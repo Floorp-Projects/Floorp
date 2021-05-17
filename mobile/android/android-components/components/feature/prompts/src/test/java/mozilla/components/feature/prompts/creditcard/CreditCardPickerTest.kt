@@ -104,7 +104,7 @@ class CreditCardPickerTest {
         val customTabContent: ContentState = mock()
         val customTab = CustomTabSessionState("custom-tab", customTabContent, mock(), mock())
 
-        whenever(customTabContent.promptRequest).thenReturn(promptRequest)
+        whenever(customTabContent.promptRequests).thenReturn(listOf(promptRequest))
         whenever(state.customTabs).thenReturn(listOf(customTab))
 
         creditCardPicker.handleSelectCreditCardRequest(promptRequest)
@@ -142,7 +142,7 @@ class CreditCardPickerTest {
         val promptRequest: PromptRequest = request ?: mock()
         val content: ContentState = mock()
 
-        whenever(content.promptRequest).thenReturn(promptRequest)
+        whenever(content.promptRequests).thenReturn(listOf(promptRequest))
 
         val selected = TabSessionState("browser-tab", content, mock(), mock())
 

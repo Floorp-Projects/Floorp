@@ -43,7 +43,7 @@ class PromptMiddleware : Middleware<BrowserState, BrowserAction> {
     ): Boolean {
         if (action.promptRequest is PromptRequest.Popup) {
             context.state.findTab(action.sessionId)?.let {
-                if (it.content.promptRequest is PromptRequest.Popup) {
+                if (it.content.promptRequests.lastOrNull { prompt -> prompt is PromptRequest.Popup } != null) {
                     scope.launch {
                         (action.promptRequest as PromptRequest.Popup).onDeny()
                     }

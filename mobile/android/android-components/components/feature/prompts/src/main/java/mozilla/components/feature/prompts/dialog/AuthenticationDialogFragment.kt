@@ -57,7 +57,7 @@ internal class AuthenticationDialogFragment : PromptDialogFragment() {
             .setMessage(message)
             .setCancelable(true)
             .setNegativeButton(R.string.mozac_feature_prompts_cancel) { _, _ ->
-                feature?.onCancel(sessionId)
+                feature?.onCancel(sessionId, promptRequestUID)
             }
             .setPositiveButton(android.R.string.ok) { _, _ ->
                 onPositiveClickAction()
@@ -67,11 +67,11 @@ internal class AuthenticationDialogFragment : PromptDialogFragment() {
 
     override fun onCancel(dialog: DialogInterface) {
         super.onCancel(dialog)
-        feature?.onCancel(sessionId)
+        feature?.onCancel(sessionId, promptRequestUID)
     }
 
     private fun onPositiveClickAction() {
-        feature?.onConfirm(sessionId, username to password)
+        feature?.onConfirm(sessionId, promptRequestUID, username to password)
     }
 
     @SuppressLint("InflateParams")
@@ -129,6 +129,9 @@ internal class AuthenticationDialogFragment : PromptDialogFragment() {
         /**
          * A builder method for creating a [AuthenticationDialogFragment]
          * @param sessionId the id of the session for which this dialog will be created.
+         * @param promptRequestUID identifier of the [PromptRequest] for which this dialog is shown.
+         * @param shouldDismissOnLoad whether or not the dialog should automatically be dismissed
+         * when a new page is loaded.
          * @param title the title of the dialog.
          * @param message the text that will go below title.
          * @param username the default value of the username text field.
@@ -138,6 +141,8 @@ internal class AuthenticationDialogFragment : PromptDialogFragment() {
         @Suppress("LongParameterList")
         fun newInstance(
             sessionId: String,
+            promptRequestUID: String,
+            shouldDismissOnLoad: Boolean,
             title: String,
             message: String,
             username: String,
@@ -151,6 +156,8 @@ internal class AuthenticationDialogFragment : PromptDialogFragment() {
 
             with(arguments) {
                 putString(KEY_SESSION_ID, sessionId)
+                putString(KEY_PROMPT_UID, promptRequestUID)
+                putBoolean(KEY_SHOULD_DISMISS_ON_LOAD, shouldDismissOnLoad)
                 putString(KEY_TITLE, title)
                 putString(KEY_MESSAGE, message)
                 putBoolean(KEY_ONLY_SHOW_PASSWORD, onlyShowPassword)

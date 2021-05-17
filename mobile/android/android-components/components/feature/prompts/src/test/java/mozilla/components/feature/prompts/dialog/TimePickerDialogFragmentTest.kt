@@ -57,7 +57,7 @@ class TimePickerDialogFragmentTest {
         val minDate = "2019-11-28".toDate("yyyy-MM-dd")
         val maxDate = "2019-11-30".toDate("yyyy-MM-dd")
         val fragment = spy(
-                TimePickerDialogFragment.newInstance("sessionId", initialDate, minDate, maxDate)
+                TimePickerDialogFragment.newInstance("sessionId", "uid", true, initialDate, minDate, maxDate)
         )
 
         doReturn(appCompatContext).`when`(fragment).requireContext()
@@ -66,7 +66,8 @@ class TimePickerDialogFragmentTest {
         dialog.show()
 
         val datePicker = (dialog as DatePickerDialog).datePicker
-
+        assertEquals("sessionId", fragment.sessionId)
+        assertEquals("uid", fragment.promptRequestUID)
         assertEquals(2019, datePicker.year)
         assertEquals(11, datePicker.month + 1)
         assertEquals(29, datePicker.dayOfMonth)
@@ -78,7 +79,7 @@ class TimePickerDialogFragmentTest {
     fun `Clicking on positive, neutral and negative button notifies the feature`() {
         val initialDate = "2019-11-29".toDate("yyyy-MM-dd")
         val fragment = spy(
-                TimePickerDialogFragment.newInstance("sessionId", initialDate, null, null)
+                TimePickerDialogFragment.newInstance("sessionId", "uid", false, initialDate, null, null)
         )
         fragment.feature = mockFeature
 
@@ -89,28 +90,28 @@ class TimePickerDialogFragmentTest {
 
         val positiveButton = (dialog as AlertDialog).getButton(BUTTON_POSITIVE)
         positiveButton.performClick()
-        verify(mockFeature).onConfirm(eq("sessionId"), any())
+        verify(mockFeature).onConfirm(eq("sessionId"), eq("uid"), any())
 
         val neutralButton = dialog.getButton(BUTTON_NEUTRAL)
         neutralButton.performClick()
-        verify(mockFeature).onClear("sessionId")
+        verify(mockFeature).onClear("sessionId", "uid")
     }
 
     @Test
     fun `touching outside of the dialog must notify the feature onCancel`() {
         val fragment = spy(
-                TimePickerDialogFragment.newInstance("sessionId", Date(), null, null)
+                TimePickerDialogFragment.newInstance("sessionId", "uid", true, Date(), null, null)
         )
         fragment.feature = mockFeature
         doReturn(testContext).`when`(fragment).requireContext()
         fragment.onCancel(mock())
-        verify(mockFeature).onCancel("sessionId")
+        verify(mockFeature).onCancel("sessionId", "uid")
     }
 
     @Test
     fun `onTimeChanged must update the selectedDate`() {
 
-        val dialogPicker = TimePickerDialogFragment.newInstance("sessionId", Date(), null, null)
+        val dialogPicker = TimePickerDialogFragment.newInstance("sessionId", "uid", false, Date(), null, null)
 
         dialogPicker.onTimeChanged(mock(), 1, 12)
 
@@ -128,6 +129,8 @@ class TimePickerDialogFragmentTest {
         val fragment = spy(
             TimePickerDialogFragment.newInstance(
                 "sessionId",
+                "uid",
+                true,
                 initialDate,
                 minDate,
                 maxDate,
@@ -168,6 +171,8 @@ class TimePickerDialogFragmentTest {
         val fragment = spy(
             TimePickerDialogFragment.newInstance(
                 "sessionId",
+                "uid",
+                false,
                 initialDate,
                 minDate,
                 maxDate,
@@ -209,6 +214,8 @@ class TimePickerDialogFragmentTest {
         val fragment = spy(
             TimePickerDialogFragment.newInstance(
                 "sessionId",
+                "uid",
+                true,
                 initialDate,
                 minDate,
                 maxDate,
@@ -231,6 +238,8 @@ class TimePickerDialogFragmentTest {
         val fragment = spy(
             TimePickerDialogFragment.newInstance(
                 "sessionId",
+                "uid",
+                false,
                 initialDate,
                 minDate,
                 maxDate,
@@ -252,6 +261,8 @@ class TimePickerDialogFragmentTest {
         val fragment = spy(
             TimePickerDialogFragment.newInstance(
                 "sessionId",
+                "uid",
+                true,
                 initialDate,
                 minDate,
                 maxDate,

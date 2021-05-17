@@ -10,8 +10,8 @@ import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.feature.prompts.R.id
-import mozilla.components.support.test.mock
 import mozilla.components.support.test.ext.appCompatContext
+import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
@@ -38,6 +38,8 @@ class AuthenticationDialogFragmentTest {
         val fragment = spy(
             AuthenticationDialogFragment.newInstance(
                 "sessionId",
+                "uid",
+                true,
                 "title",
                 "message",
                 "username",
@@ -59,6 +61,7 @@ class AuthenticationDialogFragmentTest {
         val passwordEditText = dialog.findViewById<AutofillEditText>(id.password)
 
         assertEquals(fragment.sessionId, "sessionId")
+        assertEquals(fragment.promptRequestUID, "uid")
         assertEquals(fragment.title, "title")
         assertEquals(fragment.message, "message")
         assertEquals(fragment.username, "username")
@@ -85,6 +88,8 @@ class AuthenticationDialogFragmentTest {
         val fragment = spy(
             AuthenticationDialogFragment.newInstance(
                 "sessionId",
+                "uid",
+                false,
                 "title",
                 "message",
                 "username",
@@ -111,6 +116,8 @@ class AuthenticationDialogFragmentTest {
         val fragment = spy(
             AuthenticationDialogFragment.newInstance(
                 "sessionId",
+                "uid",
+                true,
                 "",
                 "message",
                 "username",
@@ -137,6 +144,8 @@ class AuthenticationDialogFragmentTest {
         val fragment = spy(
             AuthenticationDialogFragment.newInstance(
                 "sessionId",
+                "uid",
+                false,
                 "title",
                 "message",
                 "username",
@@ -156,7 +165,7 @@ class AuthenticationDialogFragmentTest {
         val positiveButton = (dialog as AlertDialog).getButton(DialogInterface.BUTTON_POSITIVE)
         positiveButton.performClick()
 
-        verify(mockFeature).onConfirm("sessionId", "username" to "password")
+        verify(mockFeature).onConfirm("sessionId", "uid", "username" to "password")
     }
 
     @Test
@@ -164,6 +173,8 @@ class AuthenticationDialogFragmentTest {
         val fragment = spy(
             AuthenticationDialogFragment.newInstance(
                 "sessionId",
+                "uid",
+                true,
                 "title",
                 "message",
                 "username",
@@ -179,6 +190,6 @@ class AuthenticationDialogFragmentTest {
 
         fragment.onCancel(mock())
 
-        verify(mockFeature).onCancel("sessionId")
+        verify(mockFeature).onCancel("sessionId", "uid")
     }
 }

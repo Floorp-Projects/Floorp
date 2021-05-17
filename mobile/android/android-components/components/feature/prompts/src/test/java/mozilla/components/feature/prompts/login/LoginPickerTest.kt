@@ -55,7 +55,7 @@ class LoginPickerTest {
     @Test
     fun `LoginPicker shows the login select bar on a custom tab`() {
         val customTabContent: ContentState = mock()
-        whenever(customTabContent.promptRequest).thenReturn(request)
+        whenever(customTabContent.promptRequests).thenReturn(listOf(request))
         val customTab = CustomTabSessionState("custom-tab", customTabContent, mock(), mock())
 
         whenever(state.customTabs).thenReturn(listOf(customTab))
@@ -105,7 +105,7 @@ class LoginPickerTest {
     private fun prepareSelectedSession(request: PromptRequest? = null): TabSessionState {
         val promptRequest: PromptRequest = request ?: mock()
         val content: ContentState = mock()
-        whenever(content.promptRequest).thenReturn(promptRequest)
+        whenever(content.promptRequests).thenReturn(listOf(promptRequest))
 
         val selected = TabSessionState("browser-tab", content, mock(), mock())
         whenever(state.selectedTabId).thenReturn(selected.id)

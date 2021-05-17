@@ -31,7 +31,7 @@ internal class ConfirmDialogFragment : AbstractPromptTextDialogFragment() {
             .setCancelable(false)
             .setTitle(title)
             .setNegativeButton(negativeButtonText) { _, _ ->
-                feature?.onCancel(sessionId, userSelectionNoMoreDialogs)
+                feature?.onCancel(sessionId, promptRequestUID, userSelectionNoMoreDialogs)
             }
             .setPositiveButton(positiveButtonText) { _, _ ->
                 onPositiveClickAction()
@@ -42,17 +42,19 @@ internal class ConfirmDialogFragment : AbstractPromptTextDialogFragment() {
 
     override fun onCancel(dialog: DialogInterface) {
         super.onCancel(dialog)
-        feature?.onCancel(sessionId, userSelectionNoMoreDialogs)
+        feature?.onCancel(sessionId, promptRequestUID, userSelectionNoMoreDialogs)
     }
 
     private fun onPositiveClickAction() {
-        feature?.onConfirm(sessionId, userSelectionNoMoreDialogs)
+        feature?.onConfirm(sessionId, promptRequestUID, userSelectionNoMoreDialogs)
     }
 
     companion object {
         @Suppress("LongParameterList")
         fun newInstance(
             sessionId: String? = null,
+            promptRequestUID: String,
+            shouldDismissOnLoad: Boolean,
             title: String,
             message: String,
             positiveButtonText: String,
@@ -65,6 +67,8 @@ internal class ConfirmDialogFragment : AbstractPromptTextDialogFragment() {
 
             with(arguments) {
                 putString(KEY_SESSION_ID, sessionId)
+                putString(KEY_PROMPT_UID, promptRequestUID)
+                putBoolean(KEY_SHOULD_DISMISS_ON_LOAD, shouldDismissOnLoad)
                 putString(KEY_TITLE, title)
                 putString(KEY_MESSAGE, message)
                 putString(KEY_POSITIVE_BUTTON, positiveButtonText)

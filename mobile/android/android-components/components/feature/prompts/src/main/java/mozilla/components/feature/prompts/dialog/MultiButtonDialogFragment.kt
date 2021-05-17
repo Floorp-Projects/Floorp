@@ -9,7 +9,6 @@ import android.content.DialogInterface
 import android.os.Bundle
 import androidx.appcompat.app.AlertDialog
 
-private const val KEY_SHOULD_DISMISS_ON_LOAD = "KEY_SHOULD_DISMISS_ON_LOAD"
 private const val KEY_POSITIVE_BUTTON_TITLE = "KEY_POSITIVE_BUTTON_TITLE"
 private const val KEY_NEGATIVE_BUTTON_TITLE = "KEY_NEGATIVE_BUTTON_TITLE"
 private const val KEY_NEUTRAL_BUTTON_TITLE = "KEY_NEUTRAL_BUTTON_TITLE"
@@ -26,8 +25,6 @@ internal class MultiButtonDialogFragment : AbstractPromptTextDialogFragment() {
 
     internal val neutralButtonTitle: String? by lazy { safeArguments.getString(KEY_NEUTRAL_BUTTON_TITLE) }
 
-    override fun shouldDismissOnLoad() = safeArguments.getBoolean(KEY_SHOULD_DISMISS_ON_LOAD, true)
-
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         val builder = AlertDialog.Builder(requireContext())
             .setTitle(title)
@@ -39,23 +36,23 @@ internal class MultiButtonDialogFragment : AbstractPromptTextDialogFragment() {
 
     override fun onCancel(dialog: DialogInterface) {
         super.onCancel(dialog)
-        feature?.onCancel(sessionId)
+        feature?.onCancel(sessionId, promptRequestUID)
     }
 
     private fun AlertDialog.Builder.setupButtons(): AlertDialog.Builder {
         if (!positiveButtonTitle.isNullOrBlank()) {
             setPositiveButton(positiveButtonTitle) { _, _ ->
-                feature?.onConfirm(sessionId, userSelectionNoMoreDialogs to ButtonType.POSITIVE)
+                feature?.onConfirm(sessionId, promptRequestUID, userSelectionNoMoreDialogs to ButtonType.POSITIVE)
             }
         }
         if (!negativeButtonTitle.isNullOrBlank()) {
             setNegativeButton(negativeButtonTitle) { _, _ ->
-                feature?.onConfirm(sessionId, userSelectionNoMoreDialogs to ButtonType.NEGATIVE)
+                feature?.onConfirm(sessionId, promptRequestUID, userSelectionNoMoreDialogs to ButtonType.NEGATIVE)
             }
         }
         if (!neutralButtonTitle.isNullOrBlank()) {
             setNeutralButton(neutralButtonTitle) { _, _ ->
-                feature?.onConfirm(sessionId, userSelectionNoMoreDialogs to ButtonType.NEUTRAL)
+                feature?.onConfirm(sessionId, promptRequestUID, userSelectionNoMoreDialogs to ButtonType.NEUTRAL)
             }
         }
         return this
@@ -65,6 +62,7 @@ internal class MultiButtonDialogFragment : AbstractPromptTextDialogFragment() {
         @Suppress("LongParameterList")
         fun newInstance(
             sessionId: String,
+            promptRequestUID: String,
             title: String,
             message: String,
             hasShownManyDialogs: Boolean,
@@ -79,6 +77,7 @@ internal class MultiButtonDialogFragment : AbstractPromptTextDialogFragment() {
 
             with(arguments) {
                 putString(KEY_SESSION_ID, sessionId)
+                putString(KEY_PROMPT_UID, promptRequestUID)
                 putString(KEY_TITLE, title)
                 putString(KEY_MESSAGE, message)
                 putBoolean(KEY_MANY_ALERTS, hasShownManyDialogs)

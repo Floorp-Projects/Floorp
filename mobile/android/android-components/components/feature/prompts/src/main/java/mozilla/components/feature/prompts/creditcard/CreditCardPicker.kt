@@ -56,14 +56,12 @@ class CreditCardPicker(
      * Called on a successful authentication to confirm the selected credit card option.
      */
     fun onAuthSuccess() {
-        store.consumePromptFrom(sessionId) {
-            if (it is PromptRequest.SelectCreditCard) {
-                selectedCreditCard?.let { creditCard ->
-                    it.onConfirm(creditCard)
-                }
-
-                selectedCreditCard = null
+        store.consumePromptFrom<PromptRequest.SelectCreditCard>(sessionId) {
+            selectedCreditCard?.let { creditCard ->
+                it.onConfirm(creditCard)
             }
+
+            selectedCreditCard = null
         }
     }
 
@@ -73,10 +71,8 @@ class CreditCardPicker(
     fun onAuthFailure() {
         selectedCreditCard = null
 
-        store.consumePromptFrom(sessionId) {
-            if (it is PromptRequest.SelectCreditCard) {
-                it.onDismiss()
-            }
+        store.consumePromptFrom<PromptRequest.SelectCreditCard>(sessionId) {
+            it.onDismiss()
         }
     }
 
@@ -96,8 +92,8 @@ class CreditCardPicker(
                 return
             }
 
-            store.consumePromptFrom(sessionId) {
-                if (it is PromptRequest.SelectCreditCard) it.onDismiss()
+            store.consumePromptFrom<PromptRequest.SelectCreditCard>(sessionId) {
+                it.onDismiss()
             }
         } catch (e: RuntimeException) {
             Logger.error("Can't dismiss this select credit card prompt", e)

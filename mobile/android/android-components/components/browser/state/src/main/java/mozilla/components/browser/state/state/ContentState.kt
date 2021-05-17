@@ -36,7 +36,7 @@ import mozilla.components.concept.engine.window.WindowRequest
  * @property download Last unhandled download request.
  * @property share Last unhandled request to share an internet resource that first needs to be downloaded.
  * @property hitResult the target of the latest long click operation.
- * @property promptRequest the last received [PromptRequest].
+ * @property promptRequests current[PromptRequest]s.
  * @property findResults the list of results of the latest "find in page" operation.
  * @property windowRequest the last received [WindowRequest].
  * @property searchRequest the last received [SearchRequest]
@@ -74,7 +74,7 @@ data class ContentState(
     val download: DownloadState? = null,
     val share: ShareInternetResourceState? = null,
     val hitResult: HitResult? = null,
-    val promptRequest: PromptRequest? = null,
+    val promptRequests: List<PromptRequest> = emptyList(),
     val findResults: List<FindResultState> = emptyList(),
     val windowRequest: WindowRequest? = null,
     val searchRequest: SearchRequest? = null,

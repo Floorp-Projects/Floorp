@@ -11,8 +11,8 @@ import androidx.appcompat.app.AlertDialog
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.feature.prompts.R
-import mozilla.components.support.test.mock
 import mozilla.components.support.test.ext.appCompatContext
+import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Before
@@ -38,7 +38,7 @@ class ColorPickerDialogFragmentTest {
     fun `build dialog`() {
 
         val fragment = spy(
-            ColorPickerDialogFragment.newInstance("sessionId", "#e66465")
+            ColorPickerDialogFragment.newInstance("sessionId", "uid", true, "#e66465")
         )
 
         doReturn(appCompatContext).`when`(fragment).requireContext()
@@ -48,6 +48,7 @@ class ColorPickerDialogFragmentTest {
         dialog.show()
 
         assertEquals(fragment.sessionId, "sessionId")
+        assertEquals(fragment.promptRequestUID, "uid")
         assertEquals(fragment.selectedColor.toHexColor(), "#e66465")
     }
 
@@ -55,7 +56,7 @@ class ColorPickerDialogFragmentTest {
     fun `clicking on positive button notifies the feature`() {
 
         val fragment = spy(
-            ColorPickerDialogFragment.newInstance("sessionId", "#e66465")
+            ColorPickerDialogFragment.newInstance("sessionId", "uid", false, "#e66465")
         )
 
         fragment.feature = mockFeature
@@ -70,14 +71,14 @@ class ColorPickerDialogFragmentTest {
         val positiveButton = (dialog as AlertDialog).getButton(DialogInterface.BUTTON_POSITIVE)
         positiveButton.performClick()
 
-        verify(mockFeature).onConfirm("sessionId", "#4f4663")
+        verify(mockFeature).onConfirm("sessionId", "uid", "#4f4663")
     }
 
     @Test
     fun `clicking on negative button notifies the feature`() {
 
         val fragment = spy(
-            ColorPickerDialogFragment.newInstance("sessionId", "#e66465")
+            ColorPickerDialogFragment.newInstance("sessionId", "uid", true, "#e66465")
         )
 
         fragment.feature = mockFeature
@@ -90,14 +91,14 @@ class ColorPickerDialogFragmentTest {
         val negativeButton = (dialog as AlertDialog).getButton(DialogInterface.BUTTON_NEGATIVE)
         negativeButton.performClick()
 
-        verify(mockFeature).onCancel("sessionId")
+        verify(mockFeature).onCancel("sessionId", "uid")
     }
 
     @Test
     fun `touching outside of the dialog must notify the feature onCancel`() {
 
         val fragment = spy(
-            ColorPickerDialogFragment.newInstance("sessionId", "#e66465")
+            ColorPickerDialogFragment.newInstance("sessionId", "uid", false, "#e66465")
         )
 
         fragment.feature = mockFeature
@@ -106,14 +107,14 @@ class ColorPickerDialogFragmentTest {
 
         fragment.onCancel(mock())
 
-        verify(mockFeature).onCancel("sessionId")
+        verify(mockFeature).onCancel("sessionId", "uid")
     }
 
     @Test
     fun `will show a color item`() {
 
         val fragment = spy(
-            ColorPickerDialogFragment.newInstance("sessionId", "#e66465")
+            ColorPickerDialogFragment.newInstance("sessionId", "uid", true, "#e66465")
         )
         doReturn(appCompatContext).`when`(fragment).requireContext()
 
@@ -133,7 +134,7 @@ class ColorPickerDialogFragmentTest {
     fun `clicking on a item will update the selected color`() {
 
         val fragment = spy(
-            ColorPickerDialogFragment.newInstance("sessionId", "#e66465")
+            ColorPickerDialogFragment.newInstance("sessionId", "uid", false, "#e66465")
         )
         doReturn(appCompatContext).`when`(fragment).requireContext()
 

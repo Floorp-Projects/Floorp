@@ -383,7 +383,8 @@ sealed class ContentAction : BrowserAction() {
     /**
      * Removes the [PromptRequest] of the [ContentState] with the given [sessionId].
      */
-    data class ConsumePromptRequestAction(val sessionId: String) : ContentAction()
+    data class ConsumePromptRequestAction(val sessionId: String, val promptRequest: PromptRequest) :
+        ContentAction()
 
     /**
      * Adds a [FindResultState] to the [ContentState] with the given [sessionId].

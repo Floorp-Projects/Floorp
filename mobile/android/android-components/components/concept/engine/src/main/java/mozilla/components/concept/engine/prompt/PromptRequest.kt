@@ -6,15 +6,24 @@ package mozilla.components.concept.engine.prompt
 
 import android.content.Context
 import android.net.Uri
-import mozilla.components.concept.storage.Login
 import mozilla.components.concept.engine.prompt.PromptRequest.Authentication.Level
 import mozilla.components.concept.engine.prompt.PromptRequest.Authentication.Method
 import mozilla.components.concept.engine.prompt.PromptRequest.TimeSelection.Type
+import mozilla.components.concept.storage.Login
+import java.util.UUID
 
 /**
  * Value type that represents a request for showing a native dialog for prompt web content.
+ *
+ * @param shouldDismissOnLoad Whether or not the dialog should automatically be dismissed when a new page is loaded.
+ * Defaults to `true`.
+ * @param uid [PromptRequest] unique identifier. Defaults to a random UUID.
+ * (This two parameters, though present in all subclasses are not evaluated in subclasses equals() calls)
  */
-sealed class PromptRequest {
+sealed class PromptRequest(
+    val shouldDismissOnLoad: Boolean = true,
+    val uid: String = UUID.randomUUID().toString()
+) {
     /**
      * Value type that represents a request for a single choice prompt.
      * @property choices All the possible options.
