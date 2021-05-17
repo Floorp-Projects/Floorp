@@ -414,6 +414,11 @@
         and the third is the device model. -->
     <string name="default_device_name_2">%1$s wot %2$s %3$s</string>
 
+    <!-- Preference for syncing credit cards -->
+    <string name="preferences_sync_credit_cards">Kreditne karty</string>
+    <!-- Preference for syncing addresses -->
+    <string name="preferences_sync_address">Adresy</string>
+
     <!-- Send Tab -->
     <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="fxa_received_tab_channel_name">Přijate rajtarki</string>
@@ -1759,4 +1764,8 @@
 
     <!-- Content description for the action bar "up" button -->
     <string name="action_bar_up_description">Horje</string>
+
+    <!-- Content description for privacy content close button -->
+    <string name="privacy_content_close_button_content_description">Začinić</string>
+
 </resources>

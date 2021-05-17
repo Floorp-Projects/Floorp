@@ -424,6 +424,12 @@
         and the third is the device model. -->
     <string name="default_device_name_2">%2$s %3$s 上的 %1$s</string>
 
+    <!-- Preference for syncing credit cards -->
+    <string name="preferences_sync_credit_cards">信用卡</string>
+
+    <!-- Preference for syncing addresses -->
+    <string name="preferences_sync_address">邮政地址</string>
+
     <!-- Send Tab -->
     <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="fxa_received_tab_channel_name">收到标签页</string>
@@ -1794,4 +1800,10 @@
     <!-- Content description radio buttons with a link to more information -->
     <string name="radio_preference_info_content_description">点击了解更多信息</string>
 
-    </resources>
+    <!-- Content description for the action bar "up" button -->
+    <string name="action_bar_up_description">向上导航</string>
+
+    <!-- Content description for privacy content close button -->
+    <string name="privacy_content_close_button_content_description">关闭</string>
+
+</resources>

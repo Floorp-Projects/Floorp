@@ -420,6 +420,11 @@
         and the third is the device model. -->
     <string name="default_device_name_2">%1$s på %2$s %3$s</string>
 
+    <!-- Preference for syncing credit cards -->
+    <string name="preferences_sync_credit_cards">Kreditkort</string>
+    <!-- Preference for syncing addresses -->
+    <string name="preferences_sync_address">Adresser</string>
+
     <!-- Send Tab -->
     <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="fxa_received_tab_channel_name">Mottagna flikar</string>
@@ -1773,4 +1778,8 @@
 
     <!-- Content description for the action bar "up" button -->
     <string name="action_bar_up_description">Navigera uppåt</string>
+
+    <!-- Content description for privacy content close button -->
+    <string name="privacy_content_close_button_content_description">Stäng</string>
+
 </resources>

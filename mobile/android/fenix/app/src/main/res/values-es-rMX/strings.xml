@@ -412,6 +412,11 @@
         and the third is the device model. -->
     <string name="default_device_name_2">%1$s en %2$s %3$s</string>
 
+    <!-- Preference for syncing credit cards -->
+    <string name="preferences_sync_credit_cards">Tarjetas de crédito</string>
+    <!-- Preference for syncing addresses -->
+    <string name="preferences_sync_address">Direcciones</string>
+
     <!-- Send Tab -->
     <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="fxa_received_tab_channel_name">Pestañas recibidas</string>
@@ -452,6 +457,8 @@
     <string name="preferences_marketing_data">Datos de marketing</string>
     <!-- Preference description for marketing data collection, parameter is the app name (e.g. Firefox) -->
     <string name="preferences_marketing_data_description">Comparte datos acerca de las funcionalidades que usas en %1$s con Leanplum, nuestro proveedor de marketing para móviles.</string>
+    <!-- Preference description for marketing data collection -->
+    <string name="preferences_marketing_data_description2">Comparte datos de uso básicos con Adjust, nuestro proveedor de marketing móvil</string>
     <!-- Title for studies preferences -->
     <string name="preference_experiments_2">Estudios</string>
     <!-- Summary for studies preferences -->
@@ -533,6 +540,10 @@
     <string name="library_desktop_bookmarks_unfiled">Otros marcadores</string>
     <!-- Option in Library to open History page -->
     <string name="library_history">Historial</string>
+    <!-- Option in Library to open a new tab -->
+    <string name="library_new_tab">Nueva pestaña</string>
+    <!-- Option in Library to find text in page -->
+    <string name="library_find_in_page">Buscar en la página</string>
     <!-- Option in Library to open Synced Tabs page -->
     <string name="library_synced_tabs">Pestañas sincronizadas</string>
     <!-- Option in Library to open Reading List -->
@@ -595,12 +606,16 @@
     <string name="tabs_header_private_title">Sesión privada</string>
     <!-- Title for the list of tabs in the current private session -->
     <string name="tabs_header_private_tabs_title">Pestañas privadas</string>
+    <!-- Title for the list of tabs in the synced tabs -->
+    <string name="tabs_header_synced_tabs_title">Pestañas sincronizadas</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
     <string name="add_tab">Agregar pestaña</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
     <string name="add_private_tab">Agregar pestaña privada</string>
     <!-- Text for the new tab button to indicate adding a new private tab in the tab -->
     <string name="tab_drawer_fab_content">Privada</string>
+    <!-- Text for the new tab button to indicate syncing command on the synced tabs page -->
+    <string name="tab_drawer_fab_sync">Sincronizar</string>
     <!-- Text shown as the title of the open tab tray -->
     <string name="tab_tray_title">Pestañas abiertas</string>
     <!-- Text shown in the menu for saving tabs to a collection -->
@@ -611,6 +626,8 @@
     <string name="tab_tray_menu_item_share">Compartir todas las pestañas</string>
     <!-- Text shown in the menu to view recently closed tabs -->
     <string name="tab_tray_menu_recently_closed">Pestañas recientemente cerradas</string>
+    <!-- Text shown in the menu to view account settings -->
+    <string name="tab_tray_menu_account_settings">Ajustes de la cuenta</string>
     <!-- Text shown in the menu to view tab settings -->
     <string name="tab_tray_menu_tab_settings">Ajustes de pestañas</string>
     <!-- Text shown in the menu for closing all tabs -->
@@ -882,14 +899,20 @@
     <string name="tracking_protection_off">Desactivada</string>
     <!-- Label for global setting that indicates that all video and audio autoplay is allowed -->
     <string name="preference_option_autoplay_allowed2">Permitir audio y video</string>
+    <!-- Label for site specific setting that indicates that all video and audio autoplay is allowed -->
+    <string name="quick_setting_option_autoplay_allowed">Permitir audio y video</string>
     <!-- Label that indicates that video and audio autoplay is only allowed over Wi-Fi -->
     <string name="preference_option_autoplay_allowed_wifi_only2">Bloquear audio y video solo con datos móviles</string>
     <!-- Subtext that explains 'autoplay on Wi-Fi only' option -->
     <string name="preference_option_autoplay_allowed_wifi_subtext">El audio y el video se reproducirán con Wi-Fi</string>
     <!-- Label for global setting that indicates that video autoplay is allowed, but audio autoplay is blocked -->
     <string name="preference_option_autoplay_block_audio2">Bloquear solo audio</string>
+    <!-- Label for site specific setting that indicates that video autoplay is allowed, but audio autoplay is blocked -->
+    <string name="quick_setting_option_autoplay_block_audio">Bloquear solo audio</string>
     <!-- Label for global setting that indicates that all video and audio autoplay is blocked -->
     <string name="preference_option_autoplay_blocked3">Bloquear audio y video</string>
+    <!-- Label for site specific setting that indicates that all video and audio autoplay is blocked -->
+    <string name="quick_setting_option_autoplay_blocked">Bloquear audio y video</string>
     <!-- Summary of delete browsing data on quit preference if it is set to on -->
     <string name="delete_browsing_data_quit_on">Activado</string>
     <!-- Summary of delete browsing data on quit preference if it is set to off -->
@@ -955,6 +978,8 @@
     <string name="share_link_all_apps_subheader">Todas las acciones</string>
     <!-- Sub-header in the dialog to share a link to an app from the most-recent sorted list -->
     <string name="share_link_recent_apps_subheader">Usado recientemente</string>
+    <!-- An option from the three dot menu to into sync -->
+    <string name="sync_menu_sign_in">Iniciar sesión para sincronizar</string>
     <!-- An option from the share dialog to sign into sync -->
     <string name="sync_sign_in">Iniciar sesión en Sync</string>
     <!-- An option from the share dialog to send link to all other sync devices -->
@@ -1154,6 +1179,10 @@
     <string name="onboarding_whats_new_description">¿Tienes preguntas sobre el rediseño de %s? ¿Quieres saber qué ha cambiado?</string>
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
     <string name="onboarding_whats_new_description_linktext">Obtén respuestas aquí</string>
+    <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
+    <string name="onboarding_account_sign_in_header_1">Sincronizar Firefox entre dispositivos</string>
+    <!-- Text for the button to learn more about signing in to your Firefox account -->
+    <string name="onboarding_manual_sign_in_description">Traer marcadores, historial y contraseñas al Firefox de este dispositivo.</string>
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
         another Firefox browser. (The word `Firefox` should not be translated)
         The first parameter is the email of the detected user's account -->
@@ -1162,19 +1191,33 @@
     <string name="onboarding_firefox_account_auto_signin_confirm">Sí, iniciar sesión</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
     <string name="onboarding_firefox_account_signing_in">Iniciando sesión…</string>
+    <!-- text for the button to manually sign into Firefox account. -->
+    <string name="onboarding_firefox_account_sign_in_1">Registrarse</string>
     <!-- text for the button to stay signed out when presented with an option to automatically sign-in. -->
     <string name="onboarding_firefox_account_stay_signed_out">Mantenerme desconectado</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">Sync está activado</string>
     <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
     <string name="onboarding_firefox_account_automatic_signin_failed">Error al iniciar sesión</string>
+    <!-- text for the tracking protection onboarding card header -->
+    <string name="onboarding_tracking_protection_header_3">Privacidad siempre activada</string>
+    <!-- text for the tracking protection card description. 'Firefox' intentionally hardcoded here -->
+    <string name="onboarding_tracking_protection_description_3">Firefox automáticamente prohibe que las compañías te sigan en secreto en la web.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">Estándar (predeterminado)</string>
+    <!-- text for standard blocking option button description -->
+    <string name="onboarding_tracking_protection_standard_button_description_3">Equilibrado para privacidad y rendimiento. Las páginas se cargarán normalmente.</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_button">Estricta (recomendada)</string>
 
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_option">Estricto</string>
+    <!-- text for strict blocking option button description -->
+    <string name="onboarding_tracking_protection_strict_button_description_3">Bloquea más rastreadores para que las páginas se carguen más rápido, pero pueden fallar algunas funcionalidades de la página.</string>
+    <!-- text for the toolbar position card header  -->
+    <string name="onboarding_toolbar_placement_header_1">Escoge la posición de la barra de herramientas</string>
+    <!-- text for the toolbar position card description -->
+    <string name="onboarding_toolbar_placement_description_1">Coloca la barra de herramientas al alcance de la mano. Mantenla en la parte inferior o muévela hacia arriba.</string>
     <!-- text for the private browsing onboarding card header -->
     <string name="onboarding_private_browsing_header">Navegar de forma privada</string>
     <!-- text for the private browsing onboarding card description
@@ -1201,6 +1244,8 @@
     <!-- Onboarding theme -->
     <!-- text for the theme picker onboarding card header -->
     <string name="onboarding_theme_picker_header">Elige tu tema</string>
+    <!-- text for the theme picker onboarding card description -->
+    <string name="onboarding_theme_picker_description_2">Ahorra batería y vista con el modo oscuro.</string>
     <!-- Automatic theme setting (will follow device setting) -->
     <string name="onboarding_theme_automatic_title">Automático</string>
     <!-- Summary of automatic theme setting (will follow device setting) -->
@@ -1254,10 +1299,14 @@
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Saber más</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">Estándar (predeterminado)</string>
+    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_description_4">Equilibrado para privacidad y rendimiento. Las páginas se cargarán normalmente.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">Qué es lo que está bloqueado por la protección estándar contra el rastreo</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Estricto</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict_description_3">Bloquea más rastreadores para que las páginas se carguen más rápido, pero pueden fallar algunas funcionalidades de la página.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">Qué es lo que está bloqueado por la protección estricta contra el rastreo</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -1400,10 +1449,8 @@
     <string name="preferences_passwords_autofill">Autocompletar</string>
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">Sincronizar inicios de sesión</string>
-    <!-- Syncing saved logins in Fenix is on -->
-    <string name="preferences_passwords_sync_logins_on">Habilitado</string>
-    <!-- Syncing saved logins in Fenix is off -->
-    <string name="preferences_passwords_sync_logins_off">Deshabilitado</string>
+    <!-- Preference for syncing saved logins in Fenix, when not signed in-->
+    <string name="preferences_passwords_sync_logins_across_devices">Sincronizar inicios de sesión entre dispositivos</string>
     <!-- Syncing saved logins in Fenix needs reconnect to sync -->
     <string name="preferences_passwords_sync_logins_reconnect">Reconectar</string>
     <!-- Syncing saved logins in Fenix needs login -->
@@ -1494,6 +1541,49 @@
     <string name="saved_logins_sort_strategy_last_used">Último uso</string>
     <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
     <string name="saved_logins_menu_dropdown_chevron_icon_content_description">Ordenar menú de inicios de sesión</string>
+
+    <!-- Credit Cards Autofill -->
+    <!-- Preference and title for managing the settings for credit cards -->
+    <string name="preferences_credit_cards">Tarjetas de crédito </string>
+    <!-- Preference for saving and autofilling credit cards -->
+    <string name="preferences_credit_cards_save_and_autofill_cards">Guardar y autocompletar tarjetas</string>
+    <!-- Preference summary for saving and autofilling credit card data -->
+    <string name="preferences_credit_cards_save_and_autofill_cards_summary">Los datos están cifrados</string>
+
+    <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
+    <string name="preferences_credit_cards_sync_cards_across_devices">Sincronizar tarjetas entre dispositivos</string>
+    <!-- Preference option for syncing credit cards across devices. This is displayed when the user is signed into sync -->
+    <string name="preferences_credit_cards_sync_cards">Sincronizar tarjetas</string>
+    <!-- Preference option for adding a credit card -->
+    <string name="preferences_credit_cards_add_credit_card">Agregar tarjeta de crédito</string>
+    <!-- Preference option for managing saved credit cards -->
+    <string name="preferences_credit_cards_manage_saved_cards">Administrar tarjetas guardadas</string>
+    <!-- Title of the "Add card" screen -->
+    <string name="credit_cards_add_card">Agregar tarjeta</string>
+    <!-- Title of the "Edit card" screen -->
+    <string name="credit_cards_edit_card">Editar tarjeta</string>
+    <!-- The header for the card number of a credit card -->
+    <string name="credit_cards_card_number">Número de tarjeta</string>
+    <!-- The header for the expiration date of a credit card -->
+    <string name="credit_cards_expiration_date">Fecha de caducidad</string>
+    <!-- The header for the name on the credit card -->
+    <string name="credit_cards_name_on_card">Nombre en la tarjeta</string>
+    <!-- The header for the nickname for a credit card -->
+    <string name="credit_cards_card_nickname">Apodo de la tarjeta</string>
+    <!-- The text for the "Delete card" menu item for deleting a credit card -->
+    <string name="credit_cards_menu_delete_card">Eliminar tarjeta</string>
+    <!-- The text for the "Delete card" button for deleting a credit card -->
+    <string name="credit_cards_delete_card_button">Eliminar tarjeta</string>
+    <!-- The title for the "Save" menu item for saving a credit card -->
+    <string name="credit_cards_menu_save">Guardar</string>
+    <!-- The text for the "Save" button for saving a credit card -->
+    <string name="credit_cards_save_button">Guardar</string>
+    <!-- The text for the "Cancel" button for cancelling adding or updating a credit card -->
+    <string name="credit_cards_cancel_button">Cancelar</string>
+    <!-- Title of the "Saved cards" screen -->
+    <string name="credit_cards_saved_cards">Tarjetas guardadas</string>
+    <!-- Error message for credit card number validation -->
+    <string name="credit_cards_number_validation_error_message">Favor de ingresar un número de tarjeta de crédito válido</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Agregar motor de búsqueda</string>
@@ -1652,10 +1742,19 @@
 	<!-- Dialog button text for canceling the rename top site prompt. -->
 	<string name="top_sites_rename_dialog_cancel">Cancelar</string>
 
+    <!-- Default browser experiment -->
+    <string name="default_browser_experiment_card_text">Configura enlaces de sitios web, correos electrónicos y mensajes para que se abran automáticamente en Firefox.</string>
+
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Eliminar</string>
 
     <!-- Content description radio buttons with a link to more information -->
     <string name="radio_preference_info_content_description">Clic para más detalles</string>
 
-    </resources>
+    <!-- Content description for the action bar "up" button -->
+    <string name="action_bar_up_description">Navegar hacia arriba</string>
+
+    <!-- Content description for privacy content close button -->
+    <string name="privacy_content_close_button_content_description">Cerrar</string>
+
+</resources>

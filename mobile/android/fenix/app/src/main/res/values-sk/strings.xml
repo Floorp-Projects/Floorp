@@ -420,6 +420,11 @@
         and the third is the device model. -->
     <string name="default_device_name_2">%1$s na %2$s %3$s</string>
 
+    <!-- Preference for syncing credit cards -->
+    <string name="preferences_sync_credit_cards">Platobné karty</string>
+    <!-- Preference for syncing addresses -->
+    <string name="preferences_sync_address">Adresy</string>
+
     <!-- Send Tab -->
     <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="fxa_received_tab_channel_name">Prijaté karty</string>
@@ -1762,4 +1767,7 @@
     <!-- Content description radio buttons with a link to more information -->
     <string name="radio_preference_info_content_description">Kliknutím zobrazíte viac podrobností</string>
 
-    </resources>
+    <!-- Content description for privacy content close button -->
+    <string name="privacy_content_close_button_content_description">Zavrieť</string>
+
+</resources>

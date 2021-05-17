@@ -406,6 +406,11 @@
         and the third is the device model. -->
     <string name="default_device_name_2">%1$s, %2$s %3$s</string>
 
+    <!-- Preference for syncing credit cards -->
+    <string name="preferences_sync_credit_cards">Несиелік карталар</string>
+    <!-- Preference for syncing addresses -->
+    <string name="preferences_sync_address">Адрестер</string>
+
     <!-- Send Tab -->
     <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="fxa_received_tab_channel_name">Алынған беттер</string>
@@ -1747,4 +1752,10 @@
     <!-- Content description radio buttons with a link to more information -->
     <string name="radio_preference_info_content_description">Көбірек білу үшін шертіңіз</string>
 
-    </resources>
+    <!-- Content description for the action bar "up" button -->
+    <string name="action_bar_up_description">Жоғары жылжу</string>
+
+    <!-- Content description for privacy content close button -->
+    <string name="privacy_content_close_button_content_description">Жабу</string>
+
+</resources>

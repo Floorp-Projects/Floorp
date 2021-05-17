@@ -411,6 +411,11 @@
         and the third is the device model. -->
     <string name="default_device_name_2">%1$s дар %2$s %3$s</string>
 
+    <!-- Preference for syncing credit cards -->
+    <string name="preferences_sync_credit_cards">Кортҳои кредитӣ</string>
+    <!-- Preference for syncing addresses -->
+    <string name="preferences_sync_address">Нишониҳо</string>
+
     <!-- Send Tab -->
     <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="fxa_received_tab_channel_name">Варақаҳо аз дастгоҳҳои дигар</string>
@@ -1340,7 +1345,7 @@
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom_cryptominers">Криптомайнерҳо</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
-    <string name="preference_enhanced_tracking_protection_custom_fingerprinters">Хонандаи изи ангушт</string>
+    <string name="preference_enhanced_tracking_protection_custom_fingerprinters">Хонандаи нақши ангушт</string>
     <string name="enhanced_tracking_protection_blocked">Манъ карда мешавад</string>
     <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
     <string name="enhanced_tracking_protection_allowed">Иҷозат дода мешавад</string>
@@ -1357,7 +1362,7 @@
     <!-- Description of cryptominers that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cryptominers_description">Скриптҳои зараровареро, ки дастгоҳи шуморо барои истеҳсоли пули рақамӣ дастрас мекунанд, пешгирӣ менамояд.</string>
     <!-- Category of trackers (fingerprinters) that can be blocked by Enhanced Tracking Protection -->
-    <string name="etp_fingerprinters_title">Хонандаи изи ангушт</string>
+    <string name="etp_fingerprinters_title">Хонандаи нақши ангушт</string>
     <!-- Description of fingerprinters that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_fingerprinters_description">Ҷамъкунии маълумоти нодири муайяншавандаеро дар бораи дастгоҳи шумо, ки метавонад бо мақсадҳои пайгирӣ истифода шавад, манъ мекунад.</string>
     <!-- Category of trackers (tracking content) that can be blocked by Enhanced Tracking Protection -->
@@ -1756,4 +1761,10 @@
     <!-- Content description radio buttons with a link to more information -->
     <string name="radio_preference_info_content_description">Барои тафсилоти бештар зер кунед</string>
 
-    </resources>
+    <!-- Content description for the action bar "up" button -->
+    <string name="action_bar_up_description">Ба боло гузаред</string>
+
+    <!-- Content description for privacy content close button -->
+    <string name="privacy_content_close_button_content_description">Пӯшидан</string>
+
+</resources>

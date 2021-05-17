@@ -1450,10 +1450,8 @@
     <string name="preferences_passwords_autofill">Endataziun automatica</string>
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">Sincronisar las infurmaziuns d\'annunzia</string>
-    <!-- Syncing saved logins in Fenix is on -->
-    <string name="preferences_passwords_sync_logins_on">Activà</string>
-    <!-- Syncing saved logins in Fenix is off -->
-    <string name="preferences_passwords_sync_logins_off">Deactivà</string>
+    <!-- Preference for syncing saved logins in Fenix, when not signed in-->
+    <string name="preferences_passwords_sync_logins_across_devices">Sincronisar las datas d\'annunzia tranter tes apparats</string>
     <!-- Syncing saved logins in Fenix needs reconnect to sync -->
     <string name="preferences_passwords_sync_logins_reconnect">Reconnectar</string>
     <!-- Syncing saved logins in Fenix needs login -->
@@ -1556,6 +1554,8 @@
     <string name="preferences_credit_cards_save_and_autofill_cards_summary">Las datas èn criptadas</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
     <string name="preferences_credit_cards_sync_cards_across_devices">Sincronisar las cartas tranter ils apparats</string>
+    <!-- Preference option for syncing credit cards across devices. This is displayed when the user is signed into sync -->
+    <string name="preferences_credit_cards_sync_cards">Sincronisar las cartas</string>
     <!-- Preference option for adding a credit card -->
     <string name="preferences_credit_cards_add_credit_card">Agiuntar ina carta da credit</string>
 
@@ -1585,6 +1585,9 @@
     <string name="credit_cards_cancel_button">Interrumper</string>
     <!-- Title of the "Saved cards" screen -->
     <string name="credit_cards_saved_cards">Cartas memorisadas</string>
+
+    <!-- Error message for credit card number validation -->
+    <string name="credit_cards_number_validation_error_message">Endatescha per plaschair in numer da carta da credit valid</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Agiuntar ina maschina da tschertgar</string>
@@ -1755,4 +1758,6 @@
     <!-- Content description radio buttons with a link to more information -->
     <string name="radio_preference_info_content_description">Cliccar per ulteriurs detagls</string>
 
-    </resources>
+    <!-- Content description for the action bar "up" button -->
+    <string name="action_bar_up_description">Navigar ensi</string>
+</resources>

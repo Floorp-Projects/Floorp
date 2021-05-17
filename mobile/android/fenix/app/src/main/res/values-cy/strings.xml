@@ -413,6 +413,11 @@
         and the third is the device model. -->
     <string name="default_device_name_2">%1$s o %2$s %3$s</string>
 
+    <!-- Preference for syncing credit cards -->
+    <string name="preferences_sync_credit_cards">Cardiau credyd</string>
+    <!-- Preference for syncing addresses -->
+    <string name="preferences_sync_address">Cyfeiriadau</string>
+
     <!-- Send Tab -->
     <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="fxa_received_tab_channel_name">Tabiau derbyniwyd</string>
@@ -1753,4 +1758,10 @@ Fodd bynnag, gall fod yn llai sefydlog. Llwythwch ein porwr Beta i gael profiad 
     <!-- Content description radio buttons with a link to more information -->
     <string name="radio_preference_info_content_description">Cliciwch am ragor o fanylion</string>
 
-    </resources>
+    <!-- Content description for the action bar "up" button -->
+    <string name="action_bar_up_description">Llywio i fyny</string>
+
+    <!-- Content description for privacy content close button -->
+    <string name="privacy_content_close_button_content_description">Cau</string>
+
+</resources>
