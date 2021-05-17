@@ -470,12 +470,8 @@ function execute_test_in_sidebar(test) {
 }
 
 async function promise_properties_window(dialogUrl = DIALOG_URL) {
-  let protonModal = Services.prefs.getBoolPref(
-    "browser.proton.modals.enabled",
-    false
-  );
   let win = await BrowserTestUtils.promiseAlertDialogOpen(null, dialogUrl, {
-    isSubDialog: protonModal,
+    isSubDialog: true,
   });
   await SimpleTest.promiseFocus(win);
   await TestUtils.waitForCondition(
