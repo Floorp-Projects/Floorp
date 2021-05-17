@@ -101,6 +101,8 @@ struct CacheIndexRecord {
         mOnStopTime(kIndexTimeNotAvailable),
         mContentType(nsICacheEntry::CONTENT_TYPE_UNKNOWN),
         mFlags(0) {}
+
+  ~CacheIndexRecord();
 };
 #pragma pack(pop)
 
@@ -114,18 +116,6 @@ static_assert(sizeof(CacheIndexRecord::mHash) +
                   sizeof(CacheIndexRecord),
               "Unexpected sizeof(CacheIndexRecord)!");
 
-class CacheIndexRecordWrapper final {
- public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CacheIndexRecordWrapper)
-
-  CacheIndexRecordWrapper() : mRec(MakeUnique<CacheIndexRecord>()) {}
-  CacheIndexRecord* Get() { return mRec.get(); }
-
- private:
-  ~CacheIndexRecordWrapper() = default;
-  UniquePtr<CacheIndexRecord> mRec;
-};
-
 class CacheIndexEntry : public PLDHashEntryHdr {
  public:
   typedef const SHA1Sum::Hash& KeyType;
@@ -133,10 +123,10 @@ class CacheIndexEntry : public PLDHashEntryHdr {
 
   explicit CacheIndexEntry(KeyTypePointer aKey) {
     MOZ_COUNT_CTOR(CacheIndexEntry);
-    mRec = new CacheIndexRecordWrapper();
+    mRec = MakeUnique<CacheIndexRecord>();
     LOG(("CacheIndexEntry::CacheIndexEntry() - Created record [rec=%p]",
-         mRec->Get()));
-    memcpy(&mRec->Get()->mHash, aKey, sizeof(SHA1Sum::Hash));
+         mRec.get()));
+    memcpy(&mRec->mHash, aKey, sizeof(SHA1Sum::Hash));
   }
   CacheIndexEntry(const CacheIndexEntry& aOther) {
     MOZ_ASSERT_UNREACHABLE("CacheIndexEntry copy constructor is forbidden!");
@@ -144,12 +134,12 @@ class CacheIndexEntry : public PLDHashEntryHdr {
   ~CacheIndexEntry() {
     MOZ_COUNT_DTOR(CacheIndexEntry);
     LOG(("CacheIndexEntry::~CacheIndexEntry() - Deleting record [rec=%p]",
-         mRec->Get()));
+         mRec.get()));
   }
 
   // KeyEquals(): does this entry match this key?
   bool KeyEquals(KeyTypePointer aKey) const {
-    return memcmp(&mRec->Get()->mHash, aKey, sizeof(SHA1Sum::Hash)) == 0;
+    return memcmp(&mRec->mHash, aKey, sizeof(SHA1Sum::Hash)) == 0;
   }
 
   // KeyToPointer(): Convert KeyType to KeyTypePointer
@@ -165,93 +155,88 @@ class CacheIndexEntry : public PLDHashEntryHdr {
   enum { ALLOW_MEMMOVE = true };
 
   bool operator==(const CacheIndexEntry& aOther) const {
-    return KeyEquals(&aOther.mRec->Get()->mHash);
+    return KeyEquals(&aOther.mRec->mHash);
   }
 
   CacheIndexEntry& operator=(const CacheIndexEntry& aOther) {
-    MOZ_ASSERT(memcmp(&mRec->Get()->mHash, &aOther.mRec->Get()->mHash,
-                      sizeof(SHA1Sum::Hash)) == 0);
-    mRec->Get()->mFrecency = aOther.mRec->Get()->mFrecency;
-    mRec->Get()->mOriginAttrsHash = aOther.mRec->Get()->mOriginAttrsHash;
-    mRec->Get()->mOnStartTime = aOther.mRec->Get()->mOnStartTime;
-    mRec->Get()->mOnStopTime = aOther.mRec->Get()->mOnStopTime;
-    mRec->Get()->mContentType = aOther.mRec->Get()->mContentType;
-    mRec->Get()->mFlags = aOther.mRec->Get()->mFlags;
+    MOZ_ASSERT(
+        memcmp(&mRec->mHash, &aOther.mRec->mHash, sizeof(SHA1Sum::Hash)) == 0);
+    mRec->mFrecency = aOther.mRec->mFrecency;
+    mRec->mOriginAttrsHash = aOther.mRec->mOriginAttrsHash;
+    mRec->mOnStartTime = aOther.mRec->mOnStartTime;
+    mRec->mOnStopTime = aOther.mRec->mOnStopTime;
+    mRec->mContentType = aOther.mRec->mContentType;
+    mRec->mFlags = aOther.mRec->mFlags;
     return *this;
   }
 
   void InitNew() {
-    mRec->Get()->mFrecency = 0;
-    mRec->Get()->mOriginAttrsHash = 0;
-    mRec->Get()->mOnStartTime = kIndexTimeNotAvailable;
-    mRec->Get()->mOnStopTime = kIndexTimeNotAvailable;
-    mRec->Get()->mContentType = nsICacheEntry::CONTENT_TYPE_UNKNOWN;
-    mRec->Get()->mFlags = 0;
+    mRec->mFrecency = 0;
+    mRec->mOriginAttrsHash = 0;
+    mRec->mOnStartTime = kIndexTimeNotAvailable;
+    mRec->mOnStopTime = kIndexTimeNotAvailable;
+    mRec->mContentType = nsICacheEntry::CONTENT_TYPE_UNKNOWN;
+    mRec->mFlags = 0;
   }
 
   void Init(OriginAttrsHash aOriginAttrsHash, bool aAnonymous, bool aPinned) {
-    MOZ_ASSERT(mRec->Get()->mFrecency == 0);
-    MOZ_ASSERT(mRec->Get()->mOriginAttrsHash == 0);
-    MOZ_ASSERT(mRec->Get()->mOnStartTime == kIndexTimeNotAvailable);
-    MOZ_ASSERT(mRec->Get()->mOnStopTime == kIndexTimeNotAvailable);
-    MOZ_ASSERT(mRec->Get()->mContentType ==
-               nsICacheEntry::CONTENT_TYPE_UNKNOWN);
+    MOZ_ASSERT(mRec->mFrecency == 0);
+    MOZ_ASSERT(mRec->mOriginAttrsHash == 0);
+    MOZ_ASSERT(mRec->mOnStartTime == kIndexTimeNotAvailable);
+    MOZ_ASSERT(mRec->mOnStopTime == kIndexTimeNotAvailable);
+    MOZ_ASSERT(mRec->mContentType == nsICacheEntry::CONTENT_TYPE_UNKNOWN);
     // When we init the entry it must be fresh and may be dirty
-    MOZ_ASSERT((mRec->Get()->mFlags & ~kDirtyMask) == kFreshMask);
+    MOZ_ASSERT((mRec->mFlags & ~kDirtyMask) == kFreshMask);
 
-    mRec->Get()->mOriginAttrsHash = aOriginAttrsHash;
-    mRec->Get()->mFlags |= kInitializedMask;
+    mRec->mOriginAttrsHash = aOriginAttrsHash;
+    mRec->mFlags |= kInitializedMask;
     if (aAnonymous) {
-      mRec->Get()->mFlags |= kAnonymousMask;
+      mRec->mFlags |= kAnonymousMask;
     }
     if (aPinned) {
-      mRec->Get()->mFlags |= kPinnedMask;
+      mRec->mFlags |= kPinnedMask;
     }
   }
 
-  const SHA1Sum::Hash* Hash() const { return &mRec->Get()->mHash; }
+  const SHA1Sum::Hash* Hash() const { return &mRec->mHash; }
 
-  bool IsInitialized() const {
-    return !!(mRec->Get()->mFlags & kInitializedMask);
-  }
+  bool IsInitialized() const { return !!(mRec->mFlags & kInitializedMask); }
 
   mozilla::net::OriginAttrsHash OriginAttrsHash() const {
-    return mRec->Get()->mOriginAttrsHash;
+    return mRec->mOriginAttrsHash;
   }
 
-  bool Anonymous() const { return !!(mRec->Get()->mFlags & kAnonymousMask); }
+  bool Anonymous() const { return !!(mRec->mFlags & kAnonymousMask); }
 
-  bool IsRemoved() const { return !!(mRec->Get()->mFlags & kRemovedMask); }
-  void MarkRemoved() { mRec->Get()->mFlags |= kRemovedMask; }
+  bool IsRemoved() const { return !!(mRec->mFlags & kRemovedMask); }
+  void MarkRemoved() { mRec->mFlags |= kRemovedMask; }
 
-  bool IsDirty() const { return !!(mRec->Get()->mFlags & kDirtyMask); }
-  void MarkDirty() { mRec->Get()->mFlags |= kDirtyMask; }
-  void ClearDirty() { mRec->Get()->mFlags &= ~kDirtyMask; }
+  bool IsDirty() const { return !!(mRec->mFlags & kDirtyMask); }
+  void MarkDirty() { mRec->mFlags |= kDirtyMask; }
+  void ClearDirty() { mRec->mFlags &= ~kDirtyMask; }
 
-  bool IsFresh() const { return !!(mRec->Get()->mFlags & kFreshMask); }
-  void MarkFresh() { mRec->Get()->mFlags |= kFreshMask; }
+  bool IsFresh() const { return !!(mRec->mFlags & kFreshMask); }
+  void MarkFresh() { mRec->mFlags |= kFreshMask; }
 
-  bool IsPinned() const { return !!(mRec->Get()->mFlags & kPinnedMask); }
+  bool IsPinned() const { return !!(mRec->mFlags & kPinnedMask); }
 
-  void SetFrecency(uint32_t aFrecency) { mRec->Get()->mFrecency = aFrecency; }
-  uint32_t GetFrecency() const { return mRec->Get()->mFrecency; }
+  void SetFrecency(uint32_t aFrecency) { mRec->mFrecency = aFrecency; }
+  uint32_t GetFrecency() const { return mRec->mFrecency; }
 
   void SetHasAltData(bool aHasAltData) {
-    aHasAltData ? mRec->Get()->mFlags |= kHasAltDataMask
-                : mRec->Get()->mFlags &= ~kHasAltDataMask;
+    aHasAltData ? mRec->mFlags |= kHasAltDataMask
+                : mRec->mFlags &= ~kHasAltDataMask;
   }
-  bool GetHasAltData() const {
-    return !!(mRec->Get()->mFlags & kHasAltDataMask);
-  }
+  bool GetHasAltData() const { return !!(mRec->mFlags & kHasAltDataMask); }
 
-  void SetOnStartTime(uint16_t aTime) { mRec->Get()->mOnStartTime = aTime; }
-  uint16_t GetOnStartTime() const { return mRec->Get()->mOnStartTime; }
+  void SetOnStartTime(uint16_t aTime) { mRec->mOnStartTime = aTime; }
+  uint16_t GetOnStartTime() const { return mRec->mOnStartTime; }
 
-  void SetOnStopTime(uint16_t aTime) { mRec->Get()->mOnStopTime = aTime; }
-  uint16_t GetOnStopTime() const { return mRec->Get()->mOnStopTime; }
+  void SetOnStopTime(uint16_t aTime) { mRec->mOnStopTime = aTime; }
+  uint16_t GetOnStopTime() const { return mRec->mOnStopTime; }
 
-  void SetContentType(uint8_t aType) { mRec->Get()->mContentType = aType; }
-  uint8_t GetContentType() const { return GetContentType(mRec->Get()); }
+  void SetContentType(uint8_t aType) { mRec->mContentType = aType; }
+  uint8_t GetContentType() const { return GetContentType(mRec.get()); }
   static uint8_t GetContentType(CacheIndexRecord* aRec) {
     if (aRec->mContentType >= nsICacheEntry::CONTENT_TYPE_LAST) {
       LOG(
@@ -272,11 +257,11 @@ class CacheIndexEntry : public PLDHashEntryHdr {
            kFileSizeMask));
       aFileSize = kFileSizeMask;
     }
-    mRec->Get()->mFlags &= ~kFileSizeMask;
-    mRec->Get()->mFlags |= aFileSize;
+    mRec->mFlags &= ~kFileSizeMask;
+    mRec->mFlags |= aFileSize;
   }
   // Returns filesize in kilobytes.
-  uint32_t GetFileSize() const { return GetFileSize(*(mRec->Get())); }
+  uint32_t GetFileSize() const { return GetFileSize(*mRec); }
   static uint32_t GetFileSize(const CacheIndexRecord& aRec) {
     return aRec.mFlags & kFileSizeMask;
   }
@@ -287,39 +272,38 @@ class CacheIndexEntry : public PLDHashEntryHdr {
 
   void WriteToBuf(void* aBuf) {
     uint8_t* ptr = static_cast<uint8_t*>(aBuf);
-    memcpy(ptr, mRec->Get()->mHash, sizeof(SHA1Sum::Hash));
+    memcpy(ptr, mRec->mHash, sizeof(SHA1Sum::Hash));
     ptr += sizeof(SHA1Sum::Hash);
-    NetworkEndian::writeUint32(ptr, mRec->Get()->mFrecency);
+    NetworkEndian::writeUint32(ptr, mRec->mFrecency);
     ptr += sizeof(uint32_t);
-    NetworkEndian::writeUint64(ptr, mRec->Get()->mOriginAttrsHash);
+    NetworkEndian::writeUint64(ptr, mRec->mOriginAttrsHash);
     ptr += sizeof(uint64_t);
-    NetworkEndian::writeUint16(ptr, mRec->Get()->mOnStartTime);
+    NetworkEndian::writeUint16(ptr, mRec->mOnStartTime);
     ptr += sizeof(uint16_t);
-    NetworkEndian::writeUint16(ptr, mRec->Get()->mOnStopTime);
+    NetworkEndian::writeUint16(ptr, mRec->mOnStopTime);
     ptr += sizeof(uint16_t);
-    *ptr = mRec->Get()->mContentType;
+    *ptr = mRec->mContentType;
     ptr += sizeof(uint8_t);
     // Dirty and fresh flags should never go to disk, since they make sense only
     // during current session.
-    NetworkEndian::writeUint32(
-        ptr, mRec->Get()->mFlags & ~(kDirtyMask | kFreshMask));
+    NetworkEndian::writeUint32(ptr, mRec->mFlags & ~(kDirtyMask | kFreshMask));
   }
 
   void ReadFromBuf(void* aBuf) {
     const uint8_t* ptr = static_cast<const uint8_t*>(aBuf);
-    MOZ_ASSERT(memcmp(&mRec->Get()->mHash, ptr, sizeof(SHA1Sum::Hash)) == 0);
+    MOZ_ASSERT(memcmp(&mRec->mHash, ptr, sizeof(SHA1Sum::Hash)) == 0);
     ptr += sizeof(SHA1Sum::Hash);
-    mRec->Get()->mFrecency = NetworkEndian::readUint32(ptr);
+    mRec->mFrecency = NetworkEndian::readUint32(ptr);
     ptr += sizeof(uint32_t);
-    mRec->Get()->mOriginAttrsHash = NetworkEndian::readUint64(ptr);
+    mRec->mOriginAttrsHash = NetworkEndian::readUint64(ptr);
     ptr += sizeof(uint64_t);
-    mRec->Get()->mOnStartTime = NetworkEndian::readUint16(ptr);
+    mRec->mOnStartTime = NetworkEndian::readUint16(ptr);
     ptr += sizeof(uint16_t);
-    mRec->Get()->mOnStopTime = NetworkEndian::readUint16(ptr);
+    mRec->mOnStopTime = NetworkEndian::readUint16(ptr);
     ptr += sizeof(uint16_t);
-    mRec->Get()->mContentType = *ptr;
+    mRec->mContentType = *ptr;
     ptr += sizeof(uint8_t);
-    mRec->Get()->mFlags = NetworkEndian::readUint32(ptr);
+    mRec->mFlags = NetworkEndian::readUint32(ptr);
   }
 
   void Log() const {
@@ -328,20 +312,20 @@ class CacheIndexEntry : public PLDHashEntryHdr {
          " initialized=%u, removed=%u, dirty=%u, anonymous=%u, "
          "originAttrsHash=%" PRIx64 ", frecency=%u, hasAltData=%u, "
          "onStartTime=%u, onStopTime=%u, contentType=%u, size=%u]",
-         this, LOGSHA1(mRec->Get()->mHash), IsFresh(), IsInitialized(),
-         IsRemoved(), IsDirty(), Anonymous(), OriginAttrsHash(), GetFrecency(),
+         this, LOGSHA1(mRec->mHash), IsFresh(), IsInitialized(), IsRemoved(),
+         IsDirty(), Anonymous(), OriginAttrsHash(), GetFrecency(),
          GetHasAltData(), GetOnStartTime(), GetOnStopTime(), GetContentType(),
          GetFileSize()));
   }
 
-  static bool RecordMatchesLoadContextInfo(CacheIndexRecordWrapper* aRec,
+  static bool RecordMatchesLoadContextInfo(CacheIndexRecord* aRec,
                                            nsILoadContextInfo* aInfo) {
     MOZ_ASSERT(aInfo);
 
     if (!aInfo->IsPrivate() &&
         GetOriginAttrsHash(*aInfo->OriginAttributesPtr()) ==
-            aRec->Get()->mOriginAttrsHash &&
-        aInfo->IsAnonymous() == !!(aRec->Get()->mFlags & kAnonymousMask)) {
+            aRec->mOriginAttrsHash &&
+        aInfo->IsAnonymous() == !!(aRec->mFlags & kAnonymousMask)) {
       return true;
     }
 
@@ -350,7 +334,7 @@ class CacheIndexEntry : public PLDHashEntryHdr {
 
   // Memory reporting
   size_t SizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
-    return mallocSizeOf(mRec->Get());
+    return mallocSizeOf(mRec.get());
   }
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
@@ -389,7 +373,7 @@ class CacheIndexEntry : public PLDHashEntryHdr {
   // FileSize in kilobytes
   static const uint32_t kFileSizeMask = 0x00FFFFFF;
 
-  RefPtr<CacheIndexRecordWrapper> mRec;
+  UniquePtr<CacheIndexRecord> mRec;
 };
 
 class CacheIndexEntryUpdate : public CacheIndexEntry {
@@ -405,8 +389,8 @@ class CacheIndexEntryUpdate : public CacheIndexEntry {
   }
 
   CacheIndexEntryUpdate& operator=(const CacheIndexEntry& aOther) {
-    MOZ_ASSERT(memcmp(&mRec->Get()->mHash, &aOther.mRec->Get()->mHash,
-                      sizeof(SHA1Sum::Hash)) == 0);
+    MOZ_ASSERT(
+        memcmp(&mRec->mHash, &aOther.mRec->mHash, sizeof(SHA1Sum::Hash)) == 0);
     mUpdateFlags = 0;
     *(static_cast<CacheIndexEntry*>(this)) = aOther;
     return *this;
@@ -450,35 +434,34 @@ class CacheIndexEntryUpdate : public CacheIndexEntry {
   }
 
   void ApplyUpdate(CacheIndexEntry* aDst) {
-    MOZ_ASSERT(memcmp(&mRec->Get()->mHash, &aDst->mRec->Get()->mHash,
-                      sizeof(SHA1Sum::Hash)) == 0);
+    MOZ_ASSERT(
+        memcmp(&mRec->mHash, &aDst->mRec->mHash, sizeof(SHA1Sum::Hash)) == 0);
     if (mUpdateFlags & kFrecencyUpdatedMask) {
-      aDst->mRec->Get()->mFrecency = mRec->Get()->mFrecency;
+      aDst->mRec->mFrecency = mRec->mFrecency;
     }
-    aDst->mRec->Get()->mOriginAttrsHash = mRec->Get()->mOriginAttrsHash;
+    aDst->mRec->mOriginAttrsHash = mRec->mOriginAttrsHash;
     if (mUpdateFlags & kOnStartTimeUpdatedMask) {
-      aDst->mRec->Get()->mOnStartTime = mRec->Get()->mOnStartTime;
+      aDst->mRec->mOnStartTime = mRec->mOnStartTime;
     }
     if (mUpdateFlags & kOnStopTimeUpdatedMask) {
-      aDst->mRec->Get()->mOnStopTime = mRec->Get()->mOnStopTime;
+      aDst->mRec->mOnStopTime = mRec->mOnStopTime;
     }
     if (mUpdateFlags & kContentTypeUpdatedMask) {
-      aDst->mRec->Get()->mContentType = mRec->Get()->mContentType;
+      aDst->mRec->mContentType = mRec->mContentType;
     }
     if (mUpdateFlags & kHasAltDataUpdatedMask &&
-        ((aDst->mRec->Get()->mFlags ^ mRec->Get()->mFlags) & kHasAltDataMask)) {
+        ((aDst->mRec->mFlags ^ mRec->mFlags) & kHasAltDataMask)) {
       // Toggle the bit if we need to.
-      aDst->mRec->Get()->mFlags ^= kHasAltDataMask;
+      aDst->mRec->mFlags ^= kHasAltDataMask;
     }
 
     if (mUpdateFlags & kFileSizeUpdatedMask) {
       // Copy all flags except |HasAltData|.
-      aDst->mRec->Get()->mFlags |= (mRec->Get()->mFlags & ~kHasAltDataMask);
+      aDst->mRec->mFlags |= (mRec->mFlags & ~kHasAltDataMask);
     } else {
       // Copy all flags except |HasAltData| and file size.
-      aDst->mRec->Get()->mFlags &= kFileSizeMask;
-      aDst->mRec->Get()->mFlags |=
-          (mRec->Get()->mFlags & ~kHasAltDataMask & ~kFileSizeMask);
+      aDst->mRec->mFlags &= kFileSizeMask;
+      aDst->mRec->mFlags |= (mRec->mFlags & ~kHasAltDataMask & ~kFileSizeMask);
     }
   }
 
@@ -1053,10 +1036,10 @@ class CacheIndex final : public CacheFileIOListener, public nsIRunnable {
   void ReleaseBuffer();
 
   // Methods used by CacheIndexEntryAutoManage to keep the iterators up to date.
-  void AddRecordToIterators(CacheIndexRecordWrapper* aRecord);
-  void RemoveRecordFromIterators(CacheIndexRecordWrapper* aRecord);
-  void ReplaceRecordInIterators(CacheIndexRecordWrapper* aOldRecord,
-                                CacheIndexRecordWrapper* aNewRecord);
+  void AddRecordToIterators(CacheIndexRecord* aRecord);
+  void RemoveRecordFromIterators(CacheIndexRecord* aRecord);
+  void ReplaceRecordInIterators(CacheIndexRecord* aOldRecord,
+                                CacheIndexRecord* aNewRecord);
 
   // Memory reporting (private part)
   size_t SizeOfExcludingThisInternal(mozilla::MallocSizeOf mallocSizeOf) const;
@@ -1171,7 +1154,7 @@ class CacheIndex final : public CacheFileIOListener, public nsIRunnable {
   class FrecencyArray {
     class Iterator {
      public:
-      explicit Iterator(nsTArray<RefPtr<CacheIndexRecordWrapper>>* aRecs)
+      explicit Iterator(nsTArray<CacheIndexRecord*>* aRecs)
           : mRecs(aRecs), mIdx(0) {
         while (!Done() && !(*mRecs)[mIdx]) {
           mIdx++;
@@ -1180,7 +1163,7 @@ class CacheIndex final : public CacheFileIOListener, public nsIRunnable {
 
       bool Done() const { return mIdx == mRecs->Length(); }
 
-      CacheIndexRecordWrapper* Get() const {
+      CacheIndexRecord* Get() const {
         MOZ_ASSERT(!Done());
         return (*mRecs)[mIdx];
       }
@@ -1194,7 +1177,7 @@ class CacheIndex final : public CacheFileIOListener, public nsIRunnable {
       }
 
      private:
-      nsTArray<RefPtr<CacheIndexRecordWrapper>>* mRecs;
+      nsTArray<CacheIndexRecord*>* mRecs;
       uint32_t mIdx;
     };
 
@@ -1204,10 +1187,11 @@ class CacheIndex final : public CacheFileIOListener, public nsIRunnable {
     FrecencyArray() : mUnsortedElements(0), mRemovedElements(0) {}
 
     // Methods used by CacheIndexEntryAutoManage to keep the array up to date.
-    void AppendRecord(CacheIndexRecordWrapper* aRecord);
-    void RemoveRecord(CacheIndexRecordWrapper* aRecord);
-    void ReplaceRecord(CacheIndexRecordWrapper* aOldRecord,
-                       CacheIndexRecordWrapper* aNewRecord);
+    void AppendRecord(CacheIndexRecord* aRecord);
+    void RemoveRecord(CacheIndexRecord* aRecord);
+    void ReplaceRecord(CacheIndexRecord* aOldRecord,
+                       CacheIndexRecord* aNewRecord);
+    bool RecordExisted(CacheIndexRecord* aRecord);
     void SortIfNeeded();
 
     size_t Length() const { return mRecs.Length() - mRemovedElements; }
@@ -1216,7 +1200,7 @@ class CacheIndex final : public CacheFileIOListener, public nsIRunnable {
    private:
     friend class CacheIndex;
 
-    nsTArray<RefPtr<CacheIndexRecordWrapper>> mRecs;
+    nsTArray<CacheIndexRecord*> mRecs;
     uint32_t mUnsortedElements;
     // Instead of removing elements from the array immediately, we null them out
     // and the iterator skips them when accessing the array. The null pointers
@@ -1281,7 +1265,7 @@ class CacheIndex final : public CacheFileIOListener, public nsIRunnable {
   };
 
   // List of async observers that want to get disk consumption information
-  nsTArray<RefPtr<DiskConsumptionObserver>> mDiskConsumptionObservers;
+  nsTArray<RefPtr<DiskConsumptionObserver> > mDiskConsumptionObservers;
 
   // Number of bytes written to the cache since the last telemetry report
   uint64_t mTotalBytesWritten;
