@@ -264,7 +264,15 @@ export class ASRouterUISurface extends React.PureComponent {
       return null;
     }
     const SnippetComponent = SnippetsTemplates[message.template];
-    const { content } = this.state.message;
+    const { content, id: hasSnippet } = message;
+    const main = global.window.document.querySelector("main");
+    if (main) {
+      if (hasSnippet) {
+        main.classList.add("has-snippet");
+      } else {
+        main.classList.remove("has-snippet");
+      }
+    }
 
     return (
       <ImpressionsWrapper
