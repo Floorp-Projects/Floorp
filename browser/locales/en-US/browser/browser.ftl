@@ -504,8 +504,12 @@ urlbar-placeholder-search-mode-other-tabs =
 #  $name (String): the name of the user's default search engine
 urlbar-placeholder-with-name =
   .placeholder = Search with { $name } or enter address
-urlbar-remote-control-notification-anchor =
-  .tooltiptext = Browser is under remote control
+
+# Variables
+#  $component (String): the name of the component which forces remote control.
+#    Example: "DevTools", "Marionette", "RemoteAgent".
+urlbar-remote-control-notification-anchor2 =
+  .tooltiptext = Browser is under remote control (reason: { $component })
 urlbar-permissions-granted =
   .tooltiptext = You have granted this website additional permissions.
 urlbar-switch-to-tab =

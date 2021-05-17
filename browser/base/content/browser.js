@@ -8186,15 +8186,34 @@ const gRemoteControl = {
 
   updateVisualCue() {
     const mainWindow = document.documentElement;
-    if (
-      DevToolsSocketStatus.opened ||
-      Marionette.running ||
-      RemoteAgent.listening
-    ) {
+    const remoteControlComponent = this.getRemoteControlComponent();
+    if (remoteControlComponent) {
       mainWindow.setAttribute("remotecontrol", "true");
+      const remoteControlIcon = document.getElementById("remote-control-icon");
+      document.l10n.setAttributes(
+        remoteControlIcon,
+        "urlbar-remote-control-notification-anchor2",
+        { component: remoteControlComponent }
+      );
     } else {
       mainWindow.removeAttribute("remotecontrol");
     }
+  },
+
+  getRemoteControlComponent() {
+    if (DevToolsSocketStatus.opened) {
+      return "DevTools";
+    }
+
+    if (Marionette.running) {
+      return "Marionette";
+    }
+
+    if (RemoteAgent.listening) {
+      return "RemoteAgent";
+    }
+
+    return null;
   },
 };
 
