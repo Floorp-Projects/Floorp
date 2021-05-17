@@ -1108,6 +1108,8 @@ nsresult EditorBase::SelectAllInternal() {
 }
 
 MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHODIMP EditorBase::BeginningOfDocument() {
+  MOZ_ASSERT(IsTextEditor());
+
   AutoEditActionDataSetter editActionData(*this, EditAction::eNotEditing);
   if (NS_WARN_IF(!editActionData.CanHandle())) {
     return NS_ERROR_NOT_INITIALIZED;
@@ -1121,20 +1123,11 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHODIMP EditorBase::BeginningOfDocument() {
 
   // find first editable thingy
   nsCOMPtr<nsIContent> firstEditableLeaf;
-  if (IsTextEditor()) {
-    // If we're `TextEditor`, the first editable leaf node is a text node or
-    // padding `<br>` element.  In the first case, we need to collapse selection
-    // into it.
-    if (rootElement->GetFirstChild() &&
-        rootElement->GetFirstChild()->IsText()) {
-      firstEditableLeaf = rootElement->GetFirstChild();
-    }
-  } else {
-    MOZ_ASSERT(IsHTMLEditor());
-    // XXX Why not the editing host?  This scans all nodes until meeting first
-    //     editing host.
-    firstEditableLeaf =
-        HTMLEditUtils::GetFirstEditableLeafContent(*rootElement);
+  // If we're `TextEditor`, the first editable leaf node is a text node or
+  // padding `<br>` element.  In the first case, we need to collapse selection
+  // into it.
+  if (rootElement->GetFirstChild() && rootElement->GetFirstChild()->IsText()) {
+    firstEditableLeaf = rootElement->GetFirstChild();
   }
   if (!firstEditableLeaf) {
     // just the root node, set selection to inside the root

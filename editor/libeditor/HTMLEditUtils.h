@@ -817,23 +817,6 @@ class HTMLEditUtils final {
   }
 
   /**
-   * GetFirstEditableLeafContent() returns first editable leaf node in
-   * aRootElement.  When there is no editable leaf element in it, this returns
-   * nullptr.
-   */
-  static nsIContent* GetFirstEditableLeafContent(const Element& aRootElement) {
-    nsIContent* leafContent = HTMLEditUtils::GetFirstLeafChild(
-        aRootElement, {LeafNodeType::OnlyLeafNode});
-    if (leafContent && !EditorUtils::IsEditableContent(
-                           *leafContent, EditorBase::EditorType::HTML)) {
-      leafContent = HTMLEditUtils::GetNextContent(
-          *leafContent, {WalkTreeOption::IgnoreNonEditableNode}, &aRootElement);
-    }
-    MOZ_ASSERT(leafContent != &aRootElement);
-    return leafContent;
-  }
-
-  /**
    * Get previous/next editable point from start or end of aContent.
    */
   enum class InvisibleWhiteSpaces {
