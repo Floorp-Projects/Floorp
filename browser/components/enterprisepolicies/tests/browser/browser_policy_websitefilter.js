@@ -23,6 +23,10 @@ add_task(async function test_http() {
     "view-source:" + SUPPORT_FILES_PATH + BLOCKED_PAGE,
     true
   );
+  await checkBlockedPage(
+    "about:reader?url=" + SUPPORT_FILES_PATH + BLOCKED_PAGE,
+    true
+  );
   await checkBlockedPage(SUPPORT_FILES_PATH + EXCEPTION_PAGE, false);
 });
 
