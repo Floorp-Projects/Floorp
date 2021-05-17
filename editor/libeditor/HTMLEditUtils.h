@@ -568,12 +568,25 @@ class HTMLEditUtils final {
     // If there is a non-editable element if and only if scanning from editable
     // node, return it too.
     LeafNodeOrNonEditableNode,
+    // Ignore non-editable content at walking the tree.
+    OnlyEditableLeafNode,
   };
   using LeafNodeTypes = EnumSet<LeafNodeType>;
-  static nsIContent* GetLastLeafContent(nsINode& aNode,
-                                        const LeafNodeTypes& aLeafNodeTypes) {
-    for (nsIContent* content = aNode.GetLastChild(); content;
-         content = content->GetLastChild()) {
+  static nsIContent* GetLastLeafContent(
+      nsINode& aNode, const LeafNodeTypes& aLeafNodeTypes,
+      const Element* aAncestorLimiter = nullptr) {
+    MOZ_ASSERT_IF(
+        aLeafNodeTypes.contains(LeafNodeType::OnlyEditableLeafNode),
+        !aLeafNodeTypes.contains(LeafNodeType::LeafNodeOrNonEditableNode));
+    for (nsIContent* content = aNode.GetLastChild(); content;) {
+      if (aLeafNodeTypes.contains(LeafNodeType::OnlyEditableLeafNode) &&
+          !EditorUtils::IsEditableContent(*content,
+                                          EditorUtils::EditorType::HTML)) {
+        content = HTMLEditUtils::GetPreviousContent(
+            *content, {WalkTreeOption::IgnoreNonEditableNode},
+            aAncestorLimiter);
+        continue;
+      }
       if (aLeafNodeTypes.contains(LeafNodeType::LeafNodeOrChildBlock) &&
           HTMLEditUtils::IsBlockElement(*content)) {
         return content;
@@ -585,6 +598,7 @@ class HTMLEditUtils final {
           aNode.IsEditable() && !content->IsEditable()) {
         return content;
       }
+      content = content->GetLastChild();
     }
     return nullptr;
   }
@@ -594,10 +608,21 @@ class HTMLEditUtils final {
    * on aLeafNodeTypes whether this scans into a block child or treat block as a
    * leaf.
    */
-  static nsIContent* GetFirstLeafContent(const nsINode& aNode,
-                                         const LeafNodeTypes& aLeafNodeTypes) {
-    for (nsIContent* content = aNode.GetFirstChild(); content;
-         content = content->GetFirstChild()) {
+  static nsIContent* GetFirstLeafContent(
+      const nsINode& aNode, const LeafNodeTypes& aLeafNodeTypes,
+      const Element* aAncestorLimiter = nullptr) {
+    MOZ_ASSERT_IF(
+        aLeafNodeTypes.contains(LeafNodeType::OnlyEditableLeafNode),
+        !aLeafNodeTypes.contains(LeafNodeType::LeafNodeOrNonEditableNode));
+    for (nsIContent* content = aNode.GetFirstChild(); content;) {
+      if (aLeafNodeTypes.contains(LeafNodeType::OnlyEditableLeafNode) &&
+          !EditorUtils::IsEditableContent(*content,
+                                          EditorUtils::EditorType::HTML)) {
+        content = HTMLEditUtils::GetNextContent(
+            *content, {WalkTreeOption::IgnoreNonEditableNode},
+            aAncestorLimiter);
+        continue;
+      }
       if (aLeafNodeTypes.contains(LeafNodeType::LeafNodeOrChildBlock) &&
           HTMLEditUtils::IsBlockElement(*content)) {
         return content;
@@ -609,6 +634,7 @@ class HTMLEditUtils final {
           aNode.IsEditable() && !content->IsEditable()) {
         return content;
       }
+      content = content->GetFirstChild();
     }
     return nullptr;
   }
@@ -632,6 +658,10 @@ class HTMLEditUtils final {
       const nsIContent& aStartContent, const nsIContent& aCurrentBlock,
       const LeafNodeTypes& aLeafNodeTypes,
       const Element* aAncestorLimiter = nullptr) {
+    MOZ_ASSERT_IF(
+        aLeafNodeTypes.contains(LeafNodeType::OnlyEditableLeafNode),
+        !aLeafNodeTypes.contains(LeafNodeType::LeafNodeOrNonEditableNode));
+
     if (&aStartContent == aAncestorLimiter) {
       return nullptr;
     }
@@ -691,6 +721,11 @@ class HTMLEditUtils final {
       const nsIContent& aCurrentBlock, const LeafNodeTypes& aLeafNodeTypes,
       const Element* aAncestorLimiter = nullptr) {
     MOZ_ASSERT(aStartPoint.IsSet());
+    MOZ_ASSERT_IF(
+        aLeafNodeTypes.contains(LeafNodeType::OnlyEditableLeafNode),
+        !aLeafNodeTypes.contains(LeafNodeType::LeafNodeOrNonEditableNode));
+    NS_ASSERTION(!aLeafNodeTypes.contains(LeafNodeType::OnlyEditableLeafNode),
+                 "Not implemented yet");
 
     if (!aStartPoint.IsInContentNode()) {
       return nullptr;
@@ -759,6 +794,12 @@ class HTMLEditUtils final {
       const nsIContent& aStartContent, const nsIContent& aCurrentBlock,
       const LeafNodeTypes& aLeafNodeTypes,
       const Element* aAncestorLimiter = nullptr) {
+    MOZ_ASSERT_IF(
+        aLeafNodeTypes.contains(LeafNodeType::OnlyEditableLeafNode),
+        !aLeafNodeTypes.contains(LeafNodeType::LeafNodeOrNonEditableNode));
+    NS_ASSERTION(!aLeafNodeTypes.contains(LeafNodeType::OnlyEditableLeafNode),
+                 "Not implemented yet");
+
     if (&aStartContent == aAncestorLimiter) {
       return nullptr;
     }
@@ -818,6 +859,11 @@ class HTMLEditUtils final {
       const nsIContent& aCurrentBlock, const LeafNodeTypes& aLeafNodeTypes,
       const Element* aAncestorLimiter = nullptr) {
     MOZ_ASSERT(aStartPoint.IsSet());
+    MOZ_ASSERT_IF(
+        aLeafNodeTypes.contains(LeafNodeType::OnlyEditableLeafNode),
+        !aLeafNodeTypes.contains(LeafNodeType::LeafNodeOrNonEditableNode));
+    NS_ASSERTION(!aLeafNodeTypes.contains(LeafNodeType::OnlyEditableLeafNode),
+                 "Not implemented yet");
 
     if (!aStartPoint.IsInContentNode()) {
       return nullptr;
