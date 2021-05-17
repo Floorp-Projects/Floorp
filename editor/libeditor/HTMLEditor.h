@@ -3992,21 +3992,6 @@ class HTMLEditor final : public TextEditor,
   };
 
   /**
-   * GetBetterInsertionPointFor() returns better insertion point to insert
-   * aContentToInsert.
-   *
-   * @param aContentToInsert    The content to insert.
-   * @param aPointToInsert      A candidate point to insert the node.
-   * @return                    Better insertion point if next visible node
-   *                            is a <br> element and previous visible node
-   *                            is neither none, another <br> element nor
-   *                            different block level element.
-   */
-  EditorRawDOMPoint GetBetterInsertionPointFor(
-      nsIContent& aContentToInsert,
-      const EditorRawDOMPoint& aPointToInsert) const;
-
-  /**
    * MakeDefinitionListItemWithTransaction() replaces parent list of current
    * selection with <dl> or create new <dl> element and creates a definition
    * list item whose name is aTagName.

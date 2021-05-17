@@ -1364,6 +1364,24 @@ class HTMLEditUtils final {
     return EditorDOMPointType(&aContent);
   }
 
+  /**
+   * GetBetterInsertionPointFor() returns better insertion point to insert
+   * aContentToInsert.
+   *
+   * @param aContentToInsert    The content to insert.
+   * @param aPointToInsert      A candidate point to insert the node.
+   * @param aEditingHost        The editing host containing aPointToInsert.
+   * @return                    Better insertion point if next visible node
+   *                            is a <br> element and previous visible node
+   *                            is neither none, another <br> element nor
+   *                            different block level element.
+   */
+  template <typename EditorDOMPointType, typename EditorDOMPointTypeInput>
+  static EditorDOMPointType GetBetterInsertionPointFor(
+      const nsIContent& aContentToInsert,
+      const EditorDOMPointTypeInput& aPointToInsert,
+      const Element& aEditingHost);
+
  private:
   static bool CanNodeContain(nsHTMLTag aParentTagId, nsHTMLTag aChildTagId);
   static bool IsContainerNode(nsHTMLTag aTagId);
