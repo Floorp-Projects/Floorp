@@ -1221,8 +1221,8 @@ nsresult WhiteSpaceVisibilityKeeper::DeleteContentNodeAndJoinTextNodesAroundIt(
     return NS_OK;
   }
 
-  nsIContent* nextEditableSibling =
-      aHTMLEditor.GetNextHTMLSibling(previousEditableSibling);
+  nsIContent* nextEditableSibling = HTMLEditUtils::GetNextSibling(
+      *previousEditableSibling, {WalkTreeOption::IgnoreNonEditableNode});
   if (aCaretPoint.GetContainer() != nextEditableSibling) {
     return NS_OK;
   }
