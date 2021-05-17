@@ -16,7 +16,7 @@ class InspectorCommand {
    */
   async getAllInspectorFronts() {
     return this.commands.targetCommand.getAllFronts(
-      this.commands.targetCommand.TYPES.FRAME,
+      [this.commands.targetCommand.TYPES.FRAME],
       "inspector"
     );
   }
