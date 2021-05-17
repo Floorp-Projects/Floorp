@@ -90,11 +90,11 @@ static nsTHashMap<nsUint64HashKey, MOXTextMarkerDelegate*> sDelegates;
 
   // This is the base info object, includes the selected marker range and
   // the change type depending on the collapsed state of the selection.
-  NSMutableDictionary* info = [@{
+  NSMutableDictionary* info = [[@{
     @"AXSelectedTextMarkerRange" : selectedGeckoRange.IsValid() ? mSelection
                                                                 : [NSNull null],
     @"AXTextStateChangeType" : @(stateChangeType),
-  } mutableCopy];
+  } mutableCopy] autorelease];
 
   GeckoTextMarker caretMarker(mGeckoDocAccessible, mCaret);
   GeckoTextMarker prevCaretMarker(mGeckoDocAccessible, mPrevCaret);

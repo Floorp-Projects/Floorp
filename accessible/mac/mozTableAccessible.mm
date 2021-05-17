@@ -301,7 +301,7 @@ enum CachedBool { eCachedBoolMiss, eCachedTrue, eCachedFalse };
   }
 
   NSMutableArray* colHeaders =
-      [[NSMutableArray alloc] initWithCapacity:numCols];
+      [[[NSMutableArray alloc] initWithCapacity:numCols] autorelease];
 
   for (uint32_t i = 0; i < numCols; i++) {
     AccessibleOrProxy cell;
@@ -450,7 +450,7 @@ enum CachedBool { eCachedBoolMiss, eCachedTrue, eCachedFalse };
   // use pivot here to do a deep traversal of all rows nested
   // in this outline, not just those which are direct
   // children, since that's what VO expects.
-  NSMutableArray* allRows = [[NSMutableArray alloc] init];
+  NSMutableArray* allRows = [[[NSMutableArray alloc] init] autorelease];
   Pivot p = Pivot(mGeckoAccessible);
   OutlineRule rule = OutlineRule();
   AccessibleOrProxy firstChild = mGeckoAccessible.FirstChild();
@@ -466,7 +466,7 @@ enum CachedBool { eCachedBoolMiss, eCachedTrue, eCachedFalse };
   if (LocalAccessible* acc = mGeckoAccessible.AsAccessible()) {
     if (acc->IsContent() && acc->GetContent()->IsXULElement(nsGkAtoms::tree)) {
       XULTreeAccessible* treeAcc = (XULTreeAccessible*)acc;
-      NSMutableArray* cols = [[NSMutableArray alloc] init];
+      NSMutableArray* cols = [[[NSMutableArray alloc] init] autorelease];
       // XUL trees store their columns in a group at the tree's first
       // child. Here, we iterate over that group to get each column's
       // native accessible and add it to our col array.
@@ -487,7 +487,7 @@ enum CachedBool { eCachedBoolMiss, eCachedTrue, eCachedFalse };
 }
 
 - (NSArray*)moxSelectedRows {
-  NSMutableArray* selectedRows = [[NSMutableArray alloc] init];
+  NSMutableArray* selectedRows = [[[NSMutableArray alloc] init] autorelease];
   NSArray* allRows = [self moxRows];
   for (mozAccessible* row in allRows) {
     if ([row stateWithMask:states::SELECTED] != 0) {
