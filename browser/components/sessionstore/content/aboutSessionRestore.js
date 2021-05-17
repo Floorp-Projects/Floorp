@@ -81,7 +81,7 @@ window.onload = function() {
 
   initTreeView();
 
-  errorTryAgainButton.focus();
+  errorTryAgainButton.focus({ preventFocusRing: true });
 };
 
 function isTreeViewVisible() {
