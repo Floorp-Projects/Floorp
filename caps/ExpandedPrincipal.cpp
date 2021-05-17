@@ -6,6 +6,7 @@
 
 #include "ExpandedPrincipal.h"
 #include "nsIClassInfoImpl.h"
+#include "nsIObjectInputStream.h"
 #include "nsReadableUtils.h"
 #include "mozilla/Base64.h"
 
@@ -14,9 +15,9 @@ using namespace mozilla;
 NS_IMPL_CLASSINFO(ExpandedPrincipal, nullptr, nsIClassInfo::MAIN_THREAD_ONLY,
                   NS_EXPANDEDPRINCIPAL_CID)
 NS_IMPL_QUERY_INTERFACE_CI(ExpandedPrincipal, nsIPrincipal,
-                           nsIExpandedPrincipal, nsISerializable)
+                           nsIExpandedPrincipal)
 NS_IMPL_CI_INTERFACE_GETTER(ExpandedPrincipal, nsIPrincipal,
-                            nsIExpandedPrincipal, nsISerializable)
+                            nsIExpandedPrincipal)
 
 struct OriginComparator {
   bool LessThan(nsIPrincipal* a, nsIPrincipal* b) const {
@@ -41,29 +42,28 @@ struct OriginComparator {
 };
 
 ExpandedPrincipal::ExpandedPrincipal(
-    nsTArray<nsCOMPtr<nsIPrincipal>>& aAllowList)
-    : BasePrincipal(eExpandedPrincipal) {
-  // We force the principals to be sorted by origin so that ExpandedPrincipal
-  // origins can have a canonical form.
-  OriginComparator c;
-  for (size_t i = 0; i < aAllowList.Length(); ++i) {
-    mPrincipals.InsertElementSorted(aAllowList[i], c);
-  }
-}
+    nsTArray<nsCOMPtr<nsIPrincipal>>&& aPrincipals,
+    const nsACString& aOriginNoSuffix, const OriginAttributes& aAttrs)
+    : BasePrincipal(eExpandedPrincipal, aOriginNoSuffix, aAttrs),
+      mPrincipals(std::move(aPrincipals)) {}
 
-ExpandedPrincipal::ExpandedPrincipal() : BasePrincipal(eExpandedPrincipal) {}
-
-ExpandedPrincipal::~ExpandedPrincipal() {}
+ExpandedPrincipal::~ExpandedPrincipal() = default;
 
 already_AddRefed<ExpandedPrincipal> ExpandedPrincipal::Create(
     nsTArray<nsCOMPtr<nsIPrincipal>>& aAllowList,
     const OriginAttributes& aAttrs) {
-  RefPtr<ExpandedPrincipal> ep = new ExpandedPrincipal(aAllowList);
+  // We force the principals to be sorted by origin so that ExpandedPrincipal
+  // origins can have a canonical form.
+  nsTArray<nsCOMPtr<nsIPrincipal>> principals;
+  OriginComparator c;
+  for (size_t i = 0; i < aAllowList.Length(); ++i) {
+    principals.InsertElementSorted(aAllowList[i], c);
+  }
 
   nsAutoCString origin;
   origin.AssignLiteral("[Expanded Principal [");
   StringJoinAppend(
-      origin, ", "_ns, ep->mPrincipals,
+      origin, ", "_ns, principals,
       [](nsACString& dest, const nsCOMPtr<nsIPrincipal>& principal) {
         nsAutoCString subOrigin;
         DebugOnly<nsresult> rv = principal->GetOrigin(subOrigin);
@@ -72,7 +72,8 @@ already_AddRefed<ExpandedPrincipal> ExpandedPrincipal::Create(
       });
   origin.AppendLiteral("]]");
 
-  ep->FinishInit(origin, aAttrs);
+  RefPtr<ExpandedPrincipal> ep =
+      new ExpandedPrincipal(std::move(principals), origin, aAttrs);
   return ep.forget();
 }
 
@@ -221,7 +222,7 @@ nsresult ExpandedPrincipal::GetScriptLocation(nsACString& aStr) {
 static const uint32_t kSerializationVersion = 1;
 
 NS_IMETHODIMP
-ExpandedPrincipal::Read(nsIObjectInputStream* aStream) {
+ExpandedPrincipal::Deserializer::Read(nsIObjectInputStream* aStream) {
   uint32_t version;
   nsresult rv = aStream->Read32(&version);
   if (version != kSerializationVersion) {
@@ -236,7 +237,8 @@ ExpandedPrincipal::Read(nsIObjectInputStream* aStream) {
     return rv;
   }
 
-  if (!mPrincipals.SetCapacity(count, fallible)) {
+  nsTArray<nsCOMPtr<nsIPrincipal>> principals;
+  if (!principals.SetCapacity(count, fallible)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
@@ -255,16 +257,10 @@ ExpandedPrincipal::Read(nsIObjectInputStream* aStream) {
 
     // Play it safe and InsertElementSorted, in case the sort order
     // changed for some bizarre reason.
-    mPrincipals.InsertElementSorted(std::move(principal), c);
+    principals.InsertElementSorted(std::move(principal), c);
   }
 
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-ExpandedPrincipal::Write(nsIObjectOutputStream* aStream) {
-  // Read is used still for legacy principals
-  MOZ_RELEASE_ASSERT(false, "Old style serialization is removed");
+  mPrincipal = ExpandedPrincipal::Create(principals, OriginAttributes());
   return NS_OK;
 }
 

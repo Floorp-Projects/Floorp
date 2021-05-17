@@ -12,6 +12,7 @@
 
 #include "mozilla/ArrayUtils.h"
 
+#include "mozilla/dom/BlobURLProtocolHandler.h"
 #include "nsDocShell.h"
 #include "NullPrincipal.h"
 #include "NullPrincipalURI.h"
@@ -22,6 +23,7 @@
 #include "ContentPrincipal.h"
 #include "nsScriptSecurityManager.h"
 #include "pratom.h"
+#include "nsIObjectInputStream.h"
 
 #include "json/json.h"
 
@@ -29,8 +31,13 @@ using namespace mozilla;
 
 NS_IMPL_CLASSINFO(NullPrincipal, nullptr, nsIClassInfo::MAIN_THREAD_ONLY,
                   NS_NULLPRINCIPAL_CID)
-NS_IMPL_QUERY_INTERFACE_CI(NullPrincipal, nsIPrincipal, nsISerializable)
-NS_IMPL_CI_INTERFACE_GETTER(NullPrincipal, nsIPrincipal, nsISerializable)
+NS_IMPL_QUERY_INTERFACE_CI(NullPrincipal, nsIPrincipal)
+NS_IMPL_CI_INTERFACE_GETTER(NullPrincipal, nsIPrincipal)
+
+NullPrincipal::NullPrincipal(nsIURI* aURI, const nsACString& aOriginNoSuffix,
+                             const OriginAttributes& aOriginAttributes)
+    : BasePrincipal(eNullPrincipal, aOriginNoSuffix, aOriginAttributes),
+      mURI(aURI) {}
 
 /* static */
 already_AddRefed<NullPrincipal> NullPrincipal::CreateWithInheritedAttributes(
@@ -52,21 +59,13 @@ already_AddRefed<NullPrincipal> NullPrincipal::CreateWithInheritedAttributes(
 /* static */
 already_AddRefed<NullPrincipal> NullPrincipal::CreateWithInheritedAttributes(
     const OriginAttributes& aOriginAttributes, bool aIsFirstParty) {
-  RefPtr<NullPrincipal> nullPrin = new NullPrincipal();
-  nsresult rv = nullPrin->Init(aOriginAttributes, aIsFirstParty);
-  MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
-
-  return nullPrin.forget();
+  return CreateInternal(aOriginAttributes, aIsFirstParty);
 }
 
 /* static */
 already_AddRefed<NullPrincipal> NullPrincipal::Create(
     const OriginAttributes& aOriginAttributes, nsIURI* aURI) {
-  RefPtr<NullPrincipal> nullPrin = new NullPrincipal();
-  nsresult rv = nullPrin->Init(aOriginAttributes, aURI);
-  MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
-
-  return nullPrin.forget();
+  return CreateInternal(aOriginAttributes, false, aURI);
 }
 
 /* static */
@@ -74,64 +73,34 @@ already_AddRefed<NullPrincipal> NullPrincipal::CreateWithoutOriginAttributes() {
   return NullPrincipal::Create(OriginAttributes(), nullptr);
 }
 
-nsresult NullPrincipal::Init(const OriginAttributes& aOriginAttributes,
-                             nsIURI* aURI) {
-  if (aURI) {
-    nsAutoCString scheme;
-    nsresult rv = aURI->GetScheme(scheme);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    NS_ENSURE_TRUE(scheme.EqualsLiteral(NS_NULLPRINCIPAL_SCHEME),
-                   NS_ERROR_NOT_AVAILABLE);
-
-    mURI = aURI;
-  } else {
-    mURI = new NullPrincipalURI();
+already_AddRefed<NullPrincipal> NullPrincipal::CreateInternal(
+    const OriginAttributes& aOriginAttributes, bool aIsFirstParty,
+    nsIURI* aURI) {
+  nsCOMPtr<nsIURI> uri = aURI;
+  if (!uri) {
+    uri = new NullPrincipalURI();
   }
+  MOZ_RELEASE_ASSERT(uri->SchemeIs(NS_NULLPRINCIPAL_SCHEME));
 
   nsAutoCString originNoSuffix;
-  DebugOnly<nsresult> rv = mURI->GetSpec(originNoSuffix);
-  MOZ_ASSERT(NS_SUCCEEDED(rv));
-
-  FinishInit(originNoSuffix, aOriginAttributes);
-
-  return NS_OK;
-}
-
-nsresult NullPrincipal::Init(const OriginAttributes& aOriginAttributes,
-                             bool aIsFirstParty, nsIURI* aURI) {
-  if (aURI) {
-    nsAutoCString scheme;
-    nsresult rv = aURI->GetScheme(scheme);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    NS_ENSURE_TRUE(scheme.EqualsLiteral(NS_NULLPRINCIPAL_SCHEME),
-                   NS_ERROR_NOT_AVAILABLE);
-
-    mURI = aURI;
-  } else {
-    mURI = new NullPrincipalURI();
-  }
-
-  nsAutoCString originNoSuffix;
-  DebugOnly<nsresult> rv = mURI->GetSpec(originNoSuffix);
-  MOZ_ASSERT(NS_SUCCEEDED(rv));
-
-  nsAutoCString path;
-  rv = mURI->GetPathQueryRef(path);
+  DebugOnly<nsresult> rv = uri->GetSpec(originNoSuffix);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
 
   OriginAttributes attrs(aOriginAttributes);
   if (aIsFirstParty) {
+    nsAutoCString path;
+    rv = uri->GetPathQueryRef(path);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
+
     // remove the '{}' characters from both ends.
     path.Mid(path, 1, path.Length() - 2);
     path.AppendLiteral(".mozilla");
     attrs.SetFirstPartyDomain(true, path);
   }
 
-  FinishInit(originNoSuffix, attrs);
-
-  return NS_OK;
+  RefPtr<NullPrincipal> nullPrin =
+      new NullPrincipal(uri, originNoSuffix, attrs);
+  return nullPrin.forget();
 }
 
 nsresult NullPrincipal::GetScriptLocation(nsACString& aStr) {
@@ -199,13 +168,7 @@ NullPrincipal::GetAddonId(nsAString& aAddonId) {
  * nsISerializable implementation
  */
 NS_IMETHODIMP
-NullPrincipal::Read(nsIObjectInputStream* aStream) {
-  // Note - NullPrincipal use NS_GENERIC_FACTORY_CONSTRUCTOR_INIT, which means
-  // that the Init() method has already been invoked by the time we deserialize.
-  // This is in contrast to ContentPrincipal, which uses
-  // NS_GENERIC_FACTORY_CONSTRUCTOR, in which case ::Read needs to invoke
-  // Init().
-
+NullPrincipal::Deserializer::Read(nsIObjectInputStream* aStream) {
   nsAutoCString spec;
   nsresult rv = aStream->ReadCString(spec);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -222,13 +185,9 @@ NullPrincipal::Read(nsIObjectInputStream* aStream) {
   bool ok = attrs.PopulateFromSuffix(suffix);
   NS_ENSURE_TRUE(ok, NS_ERROR_FAILURE);
 
-  return Init(attrs, uri);
-}
+  mPrincipal = NullPrincipal::Create(attrs, uri);
+  NS_ENSURE_TRUE(mPrincipal, NS_ERROR_FAILURE);
 
-NS_IMETHODIMP
-NullPrincipal::Write(nsIObjectOutputStream* aStream) {
-  // Read is used still for legacy principals
-  MOZ_RELEASE_ASSERT(false, "Old style serialization is removed");
   return NS_OK;
 }
 
@@ -285,10 +244,5 @@ already_AddRefed<BasePrincipal> NullPrincipal::FromProperties(
     return nullptr;
   }
 
-  RefPtr<NullPrincipal> nullPrincipal = new NullPrincipal();
-  rv = nullPrincipal->Init(attrs, uri);
-  if (NS_FAILED(rv)) {
-    return nullptr;
-  }
-  return nullPrincipal.forget();
+  return NullPrincipal::Create(attrs, uri);
 }

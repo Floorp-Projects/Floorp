@@ -255,6 +255,12 @@ void OriginAttributes::CreateSuffix(nsACString& aStr) const {
 #endif
 }
 
+already_AddRefed<nsAtom> OriginAttributes::CreateSuffixAtom() const {
+  nsAutoCString suffix;
+  CreateSuffix(suffix);
+  return NS_Atomize(suffix);
+}
+
 void OriginAttributes::CreateAnonymizedSuffix(nsACString& aStr) const {
   OriginAttributes attrs = *this;
 

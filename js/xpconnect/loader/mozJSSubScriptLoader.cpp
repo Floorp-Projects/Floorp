@@ -431,16 +431,14 @@ nsresult mozJSSubScriptLoader::DoLoadSubScriptWithOptions(
   auto* principal = BasePrincipal::Cast(GetObjectPrincipal(targetObj));
   bool isSystem = principal->Is<SystemPrincipal>();
   if (!isSystem && principal->Is<ContentPrincipal>()) {
-    auto* content = principal->As<ContentPrincipal>();
-
     nsAutoCString scheme;
-    content->mURI->GetScheme(scheme);
+    principal->GetScheme(scheme);
 
     // We want to enable caching for scripts with Activity Stream's
     // codebase URLs.
     if (scheme.EqualsLiteral("about")) {
       nsAutoCString filePath;
-      content->mURI->GetFilePath(filePath);
+      principal->GetFilePath(filePath);
 
       useCompilationScope = filePath.EqualsLiteral("home") ||
                             filePath.EqualsLiteral("newtab") ||
