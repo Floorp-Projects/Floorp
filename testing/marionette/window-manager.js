@@ -22,6 +22,13 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 
 XPCOMUtils.defineLazyGetter(this, "logger", () => Log.get());
 
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "uuidGen",
+  "@mozilla.org/uuid-generator;1",
+  "nsIUUIDGenerator"
+);
+
 /**
  * Provides helpers to interact with Window objects.
  *
@@ -29,8 +36,10 @@ XPCOMUtils.defineLazyGetter(this, "logger", () => Log.get());
  */
 class WindowManager {
   constructor() {
-    // Maps permanentKey to browsing context id: WeakMap.<Object, number>
-    this._browserIds = new WeakMap();
+    // Maps browser's permanentKey to uuid: WeakMap.<Object, string>
+    this._windowHandles = new WeakMap();
+    // Maps ChromeWindow to uuid: WeakMap.<Object, string>
+    this._chromeWindowHandles = new WeakMap();
   }
 
   get windowHandles() {
@@ -70,7 +79,7 @@ class WindowManager {
   /**
    * Find a specific window matching the provided window handle.
    *
-   * @param {Number} handle
+   * @param {String} handle
    *     The unique handle of either a chrome window or a content browser, as
    *     returned by :js:func:`#getIdForBrowser` or :js:func:`#getIdForWindow`.
    *
@@ -135,55 +144,48 @@ class WindowManager {
 
     return {
       win,
-      id: win.browsingContext.id,
+      id: this.getIdForWindow(win),
       hasTabBrowser: !!browser.getTabBrowser(win),
       tabIndex: options.tabIndex,
     };
   }
 
   /**
-   * Forces an update for the given browser's id.
-   */
-  updateIdForBrowser(browserElement, newId) {
-    this._browserIds.set(browserElement.permanentKey, newId);
-  }
-
-  /**
-   * Retrieves an id for the given xul browser element. In case
-   * the browser is not known, an attempt is made to retrieve the id from
-   * a CPOW, and null is returned if this fails.
+   * Retrieves an id for the given xul browser element. The id is a dynamically
+   * generated uuid associated with the permanentKey property of the given
+   * browser element.
    *
    * @param {xul:browser} browserElement
    *     The <xul:browser> for which we want to retrieve the id.
-   * @return {Number} The unique id for this browser.
+   * @return {String} The unique id for this browser.
    */
   getIdForBrowser(browserElement) {
     if (browserElement === null) {
       return null;
     }
 
-    const permKey = browserElement.permanentKey;
-    if (this._browserIds.has(permKey)) {
-      return this._browserIds.get(permKey);
+    const key = browserElement.permanentKey;
+    if (!this._windowHandles.has(key)) {
+      const uuid = uuidGen.generateUUID().toString();
+      this._windowHandles.set(key, uuid.substring(1, uuid.length - 1));
     }
-
-    const winId = browserElement.browsingContext.id;
-    if (winId) {
-      this._browserIds.set(permKey, winId);
-      return winId;
-    }
-    return null;
+    return this._windowHandles.get(key);
   }
 
   /**
-   * Retrieves an id for the given chrome window.
+   * Retrieves an id for the given chrome window. The id is a dynamically
+   * generated uuid associated with the window object.
    *
    * @param {window} win
    *     The window object for which we want to retrieve the id.
-   * @return {Number} The unique id for this chrome window.
+   * @return {String} The unique id for this chrome window.
    */
   getIdForWindow(win) {
-    return win.browsingContext.id;
+    if (!this._chromeWindowHandles.has(win)) {
+      const uuid = uuidGen.generateUUID().toString();
+      this._chromeWindowHandles.set(win, uuid.substring(1, uuid.length - 1));
+    }
+    return this._chromeWindowHandles.get(win);
   }
 
   /**

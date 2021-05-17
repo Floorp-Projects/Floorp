@@ -424,13 +424,6 @@ browser.Context = class {
     if (!this.tab) {
       this.switchToTab();
     }
-
-    if (target === this.contentBrowser) {
-      // Note that browsing contexts can be swapped during navigation in which
-      // case this id would no longer match the target. See Bug 1680479.
-      const uid = target.browsingContext.id;
-      windowManager.updateIdForBrowser(this.contentBrowser, uid);
-    }
   }
 };
 
