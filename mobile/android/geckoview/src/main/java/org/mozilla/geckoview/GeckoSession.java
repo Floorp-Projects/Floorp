@@ -5430,6 +5430,12 @@ public class GeckoSession {
         int PERMISSION_MEDIA_KEY_SYSTEM_ACCESS = 6;
 
         /**
+         * Permission for trackers to operate on the page -- disables all tracking protection
+         * features for a given site.
+         */
+        int PERMISSION_TRACKING = 7;
+
+        /**
          * Represents a content permission -- including the type of permission,
          * the present value of the permission, the URL the permission pertains to,
          * and other information.
@@ -5504,6 +5510,40 @@ public class GeckoSession {
                 this.contextId = StorageController.retrieveUnsafeSessionContextId(bundle.getString("contextId"));
             }
 
+            /**
+             * Converts a JSONObject to a ContentPermission -- should only be used on the output of
+             * {@link #toJson()}.
+             *
+             * @param perm A JSONObject representing a ContentPermission, output by {@link #toJson()}.
+             *
+             * @return The corresponding ContentPermission.
+             */
+            @AnyThread
+            public static @Nullable ContentPermission fromJson(final @NonNull JSONObject perm) {
+                ContentPermission res = null;
+                try {
+                    res = new ContentPermission(GeckoBundle.fromJSONObject(perm));
+                } catch (final JSONException e) {
+                    Log.w(LOGTAG, "Failed to create ContentPermission; invalid JSONObject.", e);
+                }
+                return res;
+            }
+
+            /**
+             * Converts a ContentPermission to a JSONObject that can be converted back to
+             * a ContentPermission by {@link #fromJson(JSONObject)}.
+             *
+             * @return A JSONObject representing this ContentPermission. Modifying any of
+             *         the fields may result in undefined behavior when converted back
+             *         to a ContentPermission and used.
+             *
+             * @throws JSONException if the conversion fails for any reason.
+             */
+            @AnyThread
+            public @NonNull JSONObject toJson() throws JSONException {
+                return toGeckoBundle().toJSONObject();
+            }
+
             private static int convertType(final @NonNull String type) {
                 if ("geolocation".equals(type)) {
                     return PERMISSION_GEOLOCATION;
@@ -5519,12 +5559,14 @@ public class GeckoSession {
                     return PERMISSION_AUTOPLAY_AUDIBLE;
                 } else if ("media-key-system-access".equals(type)) {
                     return PERMISSION_MEDIA_KEY_SYSTEM_ACCESS;
+                } else if ("trackingprotection".equals(type) || "trackingprotection-pb".equals(type)) {
+                    return PERMISSION_TRACKING;
                 } else {
                     return -1;
                 }
             }
 
-            private static String convertType(final int type) {
+            private static String convertType(final int type, final boolean privateMode) {
                 switch (type) {
                     case PERMISSION_GEOLOCATION:
                         return "geolocation";
@@ -5540,6 +5582,8 @@ public class GeckoSession {
                         return "autoplay-media-audible";
                     case PERMISSION_MEDIA_KEY_SYSTEM_ACCESS:
                         return "media-key-system-access";
+                    case PERMISSION_TRACKING:
+                        return privateMode ? "trackingprotection-pb" : "trackingprotection";
                     default:
                         return "";
                 }
@@ -5566,7 +5610,7 @@ public class GeckoSession {
                 res.putString("uri", uri);
                 res.putString("principal", mPrincipal);
                 res.putBoolean("privateMode", privateMode);
-                res.putString("perm", convertType(permission));
+                res.putString("perm", convertType(permission, privateMode));
                 res.putInt("value", value);
                 res.putString("contextId", contextId);
                 return res;

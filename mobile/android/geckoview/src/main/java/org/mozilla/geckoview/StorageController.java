@@ -18,6 +18,8 @@ import androidx.annotation.LongDef;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import android.util.Log;
+
 import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.geckoview.GeckoSession.PermissionDelegate.ContentPermission;
@@ -28,6 +30,7 @@ import org.mozilla.geckoview.GeckoSession.PermissionDelegate.ContentPermission;
  * Retrieve an instance via {@link GeckoRuntime#getStorageController}.
  */
 public final class StorageController {
+    private static final String LOGTAG = "StorageController";
 
     // Keep in sync with GeckoViewStorageController.ClearFlags.
     /**
@@ -252,6 +255,11 @@ public final class StorageController {
      */
     @AnyThread
     public void setPermission(final @NonNull ContentPermission perm, final @ContentPermission.Value int value) {
+        if (perm.permission == GeckoSession.PermissionDelegate.PERMISSION_TRACKING &&
+                value == ContentPermission.VALUE_PROMPT) {
+            Log.w(LOGTAG, "Cannot set a tracking permission to VALUE_PROMPT, aborting.");
+            return;
+        }
         final GeckoBundle msg = perm.toGeckoBundle();
         msg.putInt("newValue", value);
         EventDispatcher.getInstance().dispatch("GeckoView:SetPermission", msg);
