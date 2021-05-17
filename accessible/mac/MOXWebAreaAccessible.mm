@@ -68,7 +68,8 @@ using namespace mozilla::a11y;
 
 - (NSArray*)moxUIElementsForSearchPredicate:(NSDictionary*)searchPredicate {
   MOXSearchInfo* search =
-      [[MOXSearchInfo alloc] initWithParameters:searchPredicate andRoot:self];
+      [[[MOXSearchInfo alloc] initWithParameters:searchPredicate
+                                         andRoot:self] autorelease];
 
   return [search performSearch];
 }

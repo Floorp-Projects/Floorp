@@ -32,8 +32,8 @@ using namespace mozilla::a11y;
                  andRoot:(MOXAccessibleBase*)root {
   if (id searchKeyParam = [params objectForKey:@"AXSearchKey"]) {
     mSearchKeys = [searchKeyParam isKindOfClass:[NSString class]]
-                      ? @[ searchKeyParam ]
-                      : searchKeyParam;
+                      ? [[NSArray alloc] initWithObjects:searchKeyParam, nil]
+                      : [searchKeyParam retain];
   }
 
   if (id startElemParam = [params objectForKey:@"AXStartElement"]) {

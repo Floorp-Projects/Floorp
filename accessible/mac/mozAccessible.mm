@@ -875,7 +875,8 @@ struct RoleDescrComparator {
   // reference to the web area to use as a start element if one is not
   // specified.
   MOXSearchInfo* search =
-      [[MOXSearchInfo alloc] initWithParameters:searchPredicate andRoot:self];
+      [[[MOXSearchInfo alloc] initWithParameters:searchPredicate
+                                         andRoot:self] autorelease];
 
   return [search performSearch];
 }
