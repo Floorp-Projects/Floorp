@@ -716,33 +716,13 @@ public class GeckoSession {
                             GeckoSession.this, message.getStringArray("perms"),
                             new PermissionCallback("android", callback));
                 } else if ("GeckoView:ContentPermission".equals(event)) {
-                    final String typeString = message.getString("perm");
-                    final int type;
-                    if ("geolocation".equals(typeString)) {
-                        type = PermissionDelegate.PERMISSION_GEOLOCATION;
-                    } else if ("desktop-notification".equals(typeString)) {
-                        type = PermissionDelegate.PERMISSION_DESKTOP_NOTIFICATION;
-                    } else if ("persistent-storage".equals(typeString)) {
-                        type = PermissionDelegate.PERMISSION_PERSISTENT_STORAGE;
-                    } else if ("xr".equals(typeString)) {
-                        type = PermissionDelegate.PERMISSION_XR;
-                    } else if ("midi".equals(typeString)) {
-                        // We can get this from WPT and presumably other content, but Gecko
-                        // doesn't support Web MIDI.
-                        callback.sendError("Unsupported");
+                    final GeckoResult<Integer> res = delegate.onContentPermissionRequest(GeckoSession.this, new PermissionDelegate.ContentPermission(message));
+                    if (res == null) {
+                        callback.sendSuccess(PermissionDelegate.ContentPermission.VALUE_PROMPT);
                         return;
-                    } else if ("autoplay-media-inaudible".equals(typeString)) {
-                        type = PermissionDelegate.PERMISSION_AUTOPLAY_INAUDIBLE;
-                    } else if ("autoplay-media-audible".equals(typeString)) {
-                        type = PermissionDelegate.PERMISSION_AUTOPLAY_AUDIBLE;
-                    } else if ("media-key-system-access".equals(typeString)) {
-                        type = PermissionDelegate.PERMISSION_MEDIA_KEY_SYSTEM_ACCESS;
-                    } else {
-                        throw new IllegalArgumentException("Unknown permission request: " + typeString);
                     }
-                    delegate.onContentPermissionRequest(
-                            GeckoSession.this, message.getString("uri"),
-                            type, new PermissionCallback(typeString, callback));
+
+                    callback.resolveTo(res);
                 } else if ("GeckoView:MediaPermission".equals(event)) {
                     final GeckoBundle[] videoBundles = message.getBundleArray("video");
                     final GeckoBundle[] audioBundles = message.getBundleArray("audio");
@@ -5495,6 +5475,12 @@ public class GeckoSession {
              */
             final public @Value int value;
 
+            /**
+             * The context ID associated with the permission if any.
+             * @see GeckoSessionSettings.Builder#contextId
+             */
+            final public @Nullable String contextId;
+
             final private String mPrincipal;
 
             protected ContentPermission() {
@@ -5503,6 +5489,7 @@ public class GeckoSession {
                 this.permission = PERMISSION_GEOLOCATION;
                 this.value = VALUE_ALLOW;
                 this.mPrincipal = "";
+                this.contextId = null;
             }
 
             private ContentPermission(final @NonNull GeckoBundle bundle) {
@@ -5510,10 +5497,11 @@ public class GeckoSession {
                 this.mPrincipal = bundle.getString("principal");
                 this.privateMode = bundle.getBoolean("privateMode");
 
-                final String permission = bundle.getString("type");
+                final String permission = bundle.getString("perm");
                 this.permission = convertType(permission);
 
                 this.value = bundle.getInt("value");
+                this.contextId = StorageController.retrieveUnsafeSessionContextId(bundle.getString("contextId"));
             }
 
             private static int convertType(final @NonNull String type) {
@@ -5536,6 +5524,27 @@ public class GeckoSession {
                 }
             }
 
+            private static String convertType(final int type) {
+                switch (type) {
+                    case PERMISSION_GEOLOCATION:
+                        return "geolocation";
+                    case PERMISSION_DESKTOP_NOTIFICATION:
+                        return "desktop-notification";
+                    case PERMISSION_PERSISTENT_STORAGE:
+                        return "persistent-storage";
+                    case PERMISSION_XR:
+                        return "xr";
+                    case PERMISSION_AUTOPLAY_INAUDIBLE:
+                        return "autoplay-media-inaudible";
+                    case PERMISSION_AUTOPLAY_AUDIBLE:
+                        return "autoplay-media-audible";
+                    case PERMISSION_MEDIA_KEY_SYSTEM_ACCESS:
+                        return "media-key-system-access";
+                    default:
+                        return "";
+                }
+            }
+
             /* package */ static @NonNull ArrayList<ContentPermission> fromBundleArray(final @NonNull GeckoBundle[] bundleArray) {
                 final ArrayList<ContentPermission> res = new ArrayList<ContentPermission>();
                 if (bundleArray == null) {
@@ -5549,6 +5558,17 @@ public class GeckoSession {
                     }
                     res.add(temp);
                 }
+                return res;
+            }
+
+            /* package */ @NonNull GeckoBundle toGeckoBundle() {
+                final GeckoBundle res = new GeckoBundle(5);
+                res.putString("uri", uri);
+                res.putString("principal", mPrincipal);
+                res.putBoolean("privateMode", privateMode);
+                res.putString("perm", convertType(permission));
+                res.putInt("value", value);
+                res.putString("contextId", contextId);
                 return res;
             }
         }
@@ -5599,18 +5619,14 @@ public class GeckoSession {
          * from being redisplayed to the user.
          *
          * @param session GeckoSession instance requesting the permission.
-         * @param uri The URI of the content requesting the permission.
-         * @param type The type of the requested permission; possible values are,
-         *             PERMISSION_GEOLOCATION
-         *             PERMISSION_DESKTOP_NOTIFICATION
-         *             PERMISSION_PERSISTENT_STORAGE
-         *             PERMISSION_XR
-         * @param callback Callback interface.
+         * @param perm An {@link ContentPermission} describing the permission being requested and its current status.
+         *
+         * @return A {@link GeckoResult} resolving to one of {@link ContentPermission#VALUE_PROMPT VALUE_*}, determining
+         *         the response to the permission request and updating the permissions for this site.
          */
         @UiThread
-        default void onContentPermissionRequest(@NonNull final GeckoSession session, @Nullable final String uri,
-                                                @Permission final int type, @NonNull final Callback callback) {
-            callback.reject();
+        default @Nullable GeckoResult<Integer> onContentPermissionRequest(@NonNull final GeckoSession session, @NonNull ContentPermission perm) {
+            return GeckoResult.fromValue(ContentPermission.VALUE_PROMPT);
         }
 
         class MediaSource {
