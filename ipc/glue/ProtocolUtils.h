@@ -727,8 +727,6 @@ class WeakActorLifecycleProxy final {
   const nsCOMPtr<nsISerialEventTarget> mActorEventTarget;
 };
 
-void TableToArray(const nsTHashSet<void*>& aTable, nsTArray<void*>& aArray);
-
 class IPDLResolverInner final {
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING_WITH_DESTROY(IPDLResolverInner,
@@ -755,22 +753,39 @@ class IPDLResolverInner final {
 }  // namespace ipc
 
 template <typename Protocol>
-class ManagedContainer : public nsTHashSet<Protocol*> {
-  typedef nsTHashSet<Protocol*> BaseClass;
-
+class ManagedContainer {
  public:
-  // Having the core logic work on void pointers, rather than typed pointers,
-  // means that we can have one instance of this code out-of-line, rather
-  // than several hundred instances of this code out-of-lined.  (Those
-  // repeated instances don't necessarily get folded together by the linker
-  // because they contain member offsets and such that differ between the
-  // functions.)  We do have to pay for it with some eye-bleedingly bad casts,
-  // though.
+  using iterator = typename nsTArray<Protocol*>::const_iterator;
+
+  iterator begin() const { return mArray.begin(); }
+  iterator end() const { return mArray.end(); }
+  iterator cbegin() const { return begin(); }
+  iterator cend() const { return end(); }
+
+  bool IsEmpty() const { return mArray.IsEmpty(); }
+  uint32_t Count() const { return mArray.Length(); }
+
   void ToArray(nsTArray<Protocol*>& aArray) const {
-    ::mozilla::ipc::TableToArray(*reinterpret_cast<const nsTHashSet<void*>*>(
-                                     static_cast<const BaseClass*>(this)),
-                                 reinterpret_cast<nsTArray<void*>&>(aArray));
+    aArray.AppendElements(mArray);
   }
+
+  bool EnsureRemoved(Protocol* aElement) {
+    return mArray.RemoveElementSorted(aElement);
+  }
+
+  void Insert(Protocol* aElement) {
+    // Equivalent to `InsertElementSorted`, avoiding inserting a duplicate
+    // element.
+    size_t index = mArray.IndexOfFirstElementGt(aElement);
+    if (index == 0 || mArray[index - 1] != aElement) {
+      mArray.InsertElementAt(index, aElement);
+    }
+  }
+
+  void Clear() { mArray.Clear(); }
+
+ private:
+  nsTArray<Protocol*> mArray;
 };
 
 template <typename Protocol>
