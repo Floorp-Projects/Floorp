@@ -8,7 +8,6 @@
 
 #include <string.h>
 
-#include "jsapi.h"
 #include "jsfriendapi.h"
 
 #include "gc/PublicIterators.h"
