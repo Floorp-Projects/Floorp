@@ -52,8 +52,12 @@ RLBoxHunspell::RLBoxHunspell(const nsAutoCString& affpath,
 #endif
 
   // Add the aff and dict files to allow list
-  mozHunspellCallbacks::AllowFile(affpath);
-  mozHunspellCallbacks::AllowFile(dpath);
+  if (!affpath.IsEmpty()) {
+    mozHunspellCallbacks::AllowFile(affpath);
+  }
+  if (!dpath.IsEmpty()) {
+    mozHunspellCallbacks::AllowFile(dpath);
+  }
 
   // Register callbacks
   mCreateFilemgr =
