@@ -36,7 +36,7 @@ nsresult CacheIndexIterator::GetNextHash(SHA1Sum::Hash* aHash) {
     return mStatus;
   }
 
-  memcpy(aHash, mRecords.PopLastElement()->mHash, sizeof(SHA1Sum::Hash));
+  memcpy(aHash, mRecords.PopLastElement()->Get()->mHash, sizeof(SHA1Sum::Hash));
 
   return NS_OK;
 }
@@ -70,21 +70,21 @@ nsresult CacheIndexIterator::CloseInternal(nsresult aStatus) {
   return NS_OK;
 }
 
-void CacheIndexIterator::AddRecord(CacheIndexRecord* aRecord) {
+void CacheIndexIterator::AddRecord(CacheIndexRecordWrapper* aRecord) {
   LOG(("CacheIndexIterator::AddRecord() [this=%p, record=%p]", this, aRecord));
 
   mRecords.AppendElement(aRecord);
 }
 
-bool CacheIndexIterator::RemoveRecord(CacheIndexRecord* aRecord) {
+bool CacheIndexIterator::RemoveRecord(CacheIndexRecordWrapper* aRecord) {
   LOG(("CacheIndexIterator::RemoveRecord() [this=%p, record=%p]", this,
        aRecord));
 
   return mRecords.RemoveElement(aRecord);
 }
 
-bool CacheIndexIterator::ReplaceRecord(CacheIndexRecord* aOldRecord,
-                                       CacheIndexRecord* aNewRecord) {
+bool CacheIndexIterator::ReplaceRecord(CacheIndexRecordWrapper* aOldRecord,
+                                       CacheIndexRecordWrapper* aNewRecord) {
   LOG(
       ("CacheIndexIterator::ReplaceRecord() [this=%p, oldRecord=%p, "
        "newRecord=%p]",
