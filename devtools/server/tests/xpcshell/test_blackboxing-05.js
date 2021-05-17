@@ -9,7 +9,7 @@
  */
 
 add_task(
-  threadFrontTest(async ({ threadFront, debuggee }) => {
+  threadFrontTest(async ({ threadFront, debuggee, commands }) => {
     await executeOnNextTickAndWaitForPause(
       () => evalCode(debuggee),
       threadFront
@@ -20,7 +20,10 @@ add_task(
 
     const sourceFront = await getSource(threadFront, BLACK_BOXED_URL);
     await blackBox(sourceFront);
-    threadFront.pauseOnExceptions(true, false);
+    await commands.threadConfigurationCommand.updateConfiguration({
+      pauseOnExceptions: true,
+      ignoreCaughtExceptions: false,
+    });
 
     threadFront.resume();
     const packet = await waitForPause(threadFront);

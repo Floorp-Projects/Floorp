@@ -9,8 +9,11 @@
  */
 
 add_task(
-  threadFrontTest(async ({ threadFront, debuggee }) => {
-    threadFront.pauseOnExceptions(true, false);
+  threadFrontTest(async ({ threadFront, debuggee, commands }) => {
+    await commands.threadConfigurationCommand.updateConfiguration({
+      pauseOnExceptions: true,
+      ignoreCaughtExceptions: false,
+    });
 
     const packet = await executeOnNextTickAndWaitForPause(
       () => evaluateTestCode(debuggee),
