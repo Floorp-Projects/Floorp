@@ -42,7 +42,7 @@ class Perftest(MachCommandBase):
         description="Run any flavor of perftest",
         parser=get_perftest_parser,
     )
-    def run_perftest(self, **kwargs):
+    def run_perftest(self, command_context, **kwargs):
         # original parser that brought us there
         original_parser = self.get_parser()
 
@@ -185,7 +185,7 @@ class PerftestTests(MachCommandBase):
         default=False,
         help="Verbose mode",
     )
-    def run_tests(self, **kwargs):
+    def run_tests(self, command_context, **kwargs):
         MachCommandBase.activate_virtualenv(self)
 
         from pathlib import Path

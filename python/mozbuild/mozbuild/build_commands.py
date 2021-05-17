@@ -64,7 +64,15 @@ class Build(MachCommandBase):
         action="store_true",
         help="Keep building after an error has occurred",
     )
-    def build(self, what=None, jobs=0, directory=None, verbose=False, keep_going=False):
+    def build(
+        self,
+        command_context,
+        what=None,
+        jobs=0,
+        directory=None,
+        verbose=False,
+        keep_going=False,
+    ):
         """Build the source tree.
 
         With no arguments, this will perform a full build.
@@ -168,7 +176,13 @@ class Build(MachCommandBase):
     @CommandArgument(
         "options", default=None, nargs=argparse.REMAINDER, help="Configure options"
     )
-    def configure(self, options=None, buildstatus_messages=False, line_handler=None):
+    def configure(
+        self,
+        command_context,
+        options=None,
+        buildstatus_messages=False,
+        line_handler=None,
+    ):
         from mozbuild.controller.building import BuildDriver
 
         self.log_manager.enable_all_structured_loggers()
@@ -203,7 +217,9 @@ class Build(MachCommandBase):
         help="Web browser to automatically open. See webbrowser Python module.",
     )
     @CommandArgument("--url", help="URL of JSON document to display")
-    def resource_usage(self, address=None, port=None, browser=None, url=None):
+    def resource_usage(
+        self, command_context, address=None, port=None, browser=None, url=None
+    ):
         import webbrowser
         from mozbuild.html_build_viewer import BuildViewerServer
 
@@ -258,7 +274,9 @@ class Build(MachCommandBase):
         action="store_true",
         help="Do everything except writing files out.",
     )
-    def build_backend(self, backend, diff=False, verbose=False, dry_run=False):
+    def build_backend(
+        self, command_context, backend, diff=False, verbose=False, dry_run=False
+    ):
         python = self.virtualenv_manager.python_path
         config_status = os.path.join(self.topobjdir, "config.status")
 

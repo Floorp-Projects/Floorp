@@ -31,7 +31,7 @@ class Introspection(MachCommandBase):
     @CommandArgument(
         "what", default=None, help="Source file to display compilation flags for"
     )
-    def compileflags(self, what):
+    def compileflags(self, command_context, what):
         from mozbuild.util import resolve_target_to_make
         from mozbuild.compilation import util
 

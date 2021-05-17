@@ -228,7 +228,7 @@ class MachCommands(MachCommandBase):
         conditions=[lambda *args: True],
         parser=get_parser,
     )
-    def run_xpcshell_test(self, test_objects=None, **params):
+    def run_xpcshell_test(self, command_context, test_objects=None, **params):
         from mozbuild.controller.building import BuildDriver
 
         if test_objects is not None:

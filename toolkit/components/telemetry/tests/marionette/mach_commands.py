@@ -74,7 +74,7 @@ class TelemetryTest(MachCommandBase):
         conditions=[conditions.is_firefox_or_android],
         parser=create_parser_tests,
     )
-    def telemetry_test(self, tests, **kwargs):
+    def telemetry_test(self, command_context, tests, **kwargs):
         if "test_objects" in kwargs:
             tests = []
             for obj in kwargs["test_objects"]:

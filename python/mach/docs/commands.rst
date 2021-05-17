@@ -17,7 +17,11 @@ The important decorators are as follows:
   A method decorator that denotes that the method should be called when
   the specified command is requested. The decorator takes a command name
   as its first argument and a number of additional arguments to
-  configure the behavior of the command.
+  configure the behavior of the command. The decorated method must take a
+  ``command_context`` argument as its first (after ``self``).
+  ``command_context`` is a properly configured instance of a ``MozbuildObject``
+  subclass, meaning it can be used for accessing things like the current config
+  and running processes.
 
 :py:func:`CommandArgument <mach.decorators.CommandArgument>`
   A method decorator that defines an argument to the command. Its
@@ -51,7 +55,7 @@ Here is a complete example:
        @Command('doit', help='Do ALL OF THE THINGS.')
        @CommandArgument('--force', '-f', action='store_true',
            help='Force doing it.')
-       def doit(self, force=False):
+       def doit(self, command_context, force=False):
            # Do stuff here.
 
 When the module is loaded, the decorators tell mach about all handlers.
@@ -101,7 +105,7 @@ Here is an example:
            self.build_path = ...
 
        @Command('run_tests', conditions=[build_available])
-       def run_tests(self):
+       def run_tests(self, command_context):
            # Do stuff here.
 
 It is important to make sure that any state needed by the condition is
