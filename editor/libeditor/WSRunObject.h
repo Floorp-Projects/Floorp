@@ -283,10 +283,10 @@ class MOZ_STACK_CLASS WSRunScanner final {
   using WSType = WSScanResult::WSType;
 
   template <typename EditorDOMPointType>
-  WSRunScanner(dom::Element* aEditingHost,
+  WSRunScanner(const dom::Element* aEditingHost,
                const EditorDOMPointType& aScanStartPoint)
       : mScanStartPoint(aScanStartPoint),
-        mEditingHost(aEditingHost),
+        mEditingHost(const_cast<dom::Element*>(aEditingHost)),
         mTextFragmentDataAtStart(mScanStartPoint, mEditingHost) {}
 
   // ScanNextVisibleNodeOrBlockBoundaryForwardFrom() returns the first visible
@@ -298,7 +298,8 @@ class MOZ_STACK_CLASS WSRunScanner final {
       const EditorDOMPointBase<PT, CT>& aPoint) const;
   template <typename PT, typename CT>
   static WSScanResult ScanNextVisibleNodeOrBlockBoundary(
-      dom::Element* aEditingHost, const EditorDOMPointBase<PT, CT>& aPoint) {
+      const dom::Element* aEditingHost,
+      const EditorDOMPointBase<PT, CT>& aPoint) {
     return WSRunScanner(aEditingHost, aPoint)
         .ScanNextVisibleNodeOrBlockBoundaryFrom(aPoint);
   }
@@ -312,7 +313,8 @@ class MOZ_STACK_CLASS WSRunScanner final {
       const EditorDOMPointBase<PT, CT>& aPoint) const;
   template <typename PT, typename CT>
   static WSScanResult ScanPreviousVisibleNodeOrBlockBoundary(
-      dom::Element* aEditingHost, const EditorDOMPointBase<PT, CT>& aPoint) {
+      const dom::Element* aEditingHost,
+      const EditorDOMPointBase<PT, CT>& aPoint) {
     return WSRunScanner(aEditingHost, aPoint)
         .ScanPreviousVisibleNodeOrBlockBoundaryFrom(aPoint);
   }
