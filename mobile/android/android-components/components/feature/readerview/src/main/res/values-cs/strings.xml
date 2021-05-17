@@ -10,10 +10,10 @@
     <string name="mozac_feature_readerview_serif_font_desc">Patkové písmo</string>
 
     <!-- Accessible description for decreasing the font size -->
-    <string name="mozac_feature_readerview_font_size_decrease_desc">Zmenšení velikost písma</string>
+    <string name="mozac_feature_readerview_font_size_decrease_desc">Zmenšení velikosti písma</string>
 
     <!-- Accessible description for increasing the font size -->
-    <string name="mozac_feature_readerview_font_size_increase_desc">Zvětšení velikost písma</string>
+    <string name="mozac_feature_readerview_font_size_increase_desc">Zvětšení velikosti písma</string>
     <!-- Color option for the background -->
     <string name="mozac_feature_readerview_dark">Tmavé</string>
     <!-- Accessible description for the color option -->

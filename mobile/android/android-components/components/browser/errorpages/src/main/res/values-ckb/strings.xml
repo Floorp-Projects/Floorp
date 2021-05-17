@@ -86,4 +86,13 @@
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_file_access_denied_title">چوونەناوی پەڕگە ڕەتکرایەوە</string>
 
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_proxy_host_title">ڕاژەخوازی پرۆکسی نەدۆزرایەوە</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_title">گرفتی ماڵپەڕی نەویستراو</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_title">گرفتی ماڵپەڕی بەزیان</string>
+
     </resources>
