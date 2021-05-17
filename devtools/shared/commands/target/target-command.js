@@ -635,16 +635,19 @@ class TargetCommand extends EventEmitter {
   }
 
   /**
-   * For all the target fronts of a given type, retrieve all the target-scoped fronts of a given type.
+   * For all the target fronts of given types, retrieve all the target-scoped fronts of the given types.
    *
-   * @param {String} targetType
-   *        The type of target to iterate over. Constant of TargetCommand.TYPES.
+   * @param {Array<String>} targetTypes
+   *        The types of target to iterate over. Constant of TargetCommand.TYPES.
    * @param {String} frontType
    *        The type of target-scoped front to retrieve. It can be "inspector", "console", "thread",...
    */
-  async getAllFronts(targetType, frontType) {
+  async getAllFronts(targetTypes, frontType) {
+    if (!Array.isArray(targetTypes) || !targetTypes?.length) {
+      throw new Error("getAllFronts expects a non-empty array of target types");
+    }
     const fronts = [];
-    const targets = this.getAllTargets([targetType]);
+    const targets = this.getAllTargets(targetTypes);
     for (const target of targets) {
       const front = await target.getFront(frontType);
       fronts.push(front);
