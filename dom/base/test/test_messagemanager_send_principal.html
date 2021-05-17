@@ -10,8 +10,7 @@
   <script type="application/javascript">
     "use strict";
 
-    var permManager = Cc["@mozilla.org/permissionmanager;1"]
-                        .getService(Ci.nsIPermissionManager);
+    const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
     SimpleTest.waitForExplicitFinish();
 
@@ -85,14 +84,12 @@
 
         mm.sendAsyncMessage("test:content", window.document.nodePrincipal);
 
-        let system = Cc["@mozilla.org/systemprincipal;1"].
-          createInstance(Ci.nsIPrincipal);
+        let system = Services.scriptSecurityManager.getSystemPrincipal();
         mm.sendAsyncMessage("test:system", system);
 
         mm.sendAsyncMessage("test:ep", ep);
 
-        let nullP = Cc["@mozilla.org/nullprincipal;1"].
-          createInstance(Ci.nsIPrincipal);
+        let nullP = Services.scriptSecurityManager.createNullPrincipal({});
         mm.sendAsyncMessage("test:null", nullP);
       });
 

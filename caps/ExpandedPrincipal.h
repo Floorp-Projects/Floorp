@@ -84,7 +84,6 @@ class ExpandedPrincipal : public nsIExpandedPrincipal,
   nsCOMPtr<nsIContentSecurityPolicy> mCSP;
 };
 
-#define NS_EXPANDEDPRINCIPAL_CONTRACTID "@mozilla.org/expandedprincipal;1"
 #define NS_EXPANDEDPRINCIPAL_CID                     \
   {                                                  \
     0xe8ee88b0, 0x5571, 0x4086, {                    \
