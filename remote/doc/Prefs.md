@@ -7,14 +7,6 @@ There are a couple of preferences associated with the remote agent:
 Configurable preferences
 ------------------------
 
-### `remote.enabled`
-
-Indicates whether the remote agent is enabled.  When the remote
-agent is enabled, it exposes a [`--remote-debugging-port` flag] for Firefox.
-When set to false, the remote agent will not be loaded on startup.
-
-[`--remote-debugging` flag]: Usage.html
-
 ### `remote.force-local`
 
 Limits the remote agent to be allowed to listen on loopback devices,
