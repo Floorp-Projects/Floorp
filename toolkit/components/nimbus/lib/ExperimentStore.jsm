@@ -297,6 +297,19 @@ class ExperimentStore extends SharedDataMap {
     ];
   }
 
+  getAllRemoteConfigs() {
+    const remoteDefaults = this.get(REMOTE_DEFAULTS_KEY);
+    if (!remoteDefaults) {
+      return [];
+    }
+
+    let featureIds = Object.keys(remoteDefaults);
+    return Object.values(remoteDefaults).map((rc, idx) => ({
+      ...rc,
+      featureId: featureIds[idx],
+    }));
+  }
+
   _deleteForTests(featureId) {
     super._deleteForTests(featureId);
     syncDataStore.deleteDefault(featureId);
