@@ -3376,7 +3376,9 @@ nsresult HTMLEditor::IndentListChild(RefPtr<Element>* aCurList,
   // We do this if the previous element is a list, and the list is of
   // the same type (li/ol) as aContent was a part of.
   if (nsCOMPtr<nsIContent> previousEditableSibling =
-          GetPriorHTMLSibling(&aContent, SkipWhiteSpace::Yes)) {
+          HTMLEditUtils::GetPreviousSibling(
+              aContent, {WalkTreeOption::IgnoreWhiteSpaceOnlyText,
+                         WalkTreeOption::IgnoreNonEditableNode})) {
     if (HTMLEditUtils::IsAnyListElement(previousEditableSibling) &&
         aCurPoint.GetContainer()->NodeInfo()->NameAtom() ==
             previousEditableSibling->NodeInfo()->NameAtom() &&
@@ -3396,7 +3398,10 @@ nsresult HTMLEditor::IndentListChild(RefPtr<Element>* aCurList,
   // check to see if aCurList is still appropriate.  Which it is if
   // aContent is still right after it in the same list.
   nsIContent* previousEditableSibling =
-      *aCurList ? GetPriorHTMLSibling(&aContent, SkipWhiteSpace::Yes) : nullptr;
+      *aCurList ? HTMLEditUtils::GetPreviousSibling(
+                      aContent, {WalkTreeOption::IgnoreWhiteSpaceOnlyText,
+                                 WalkTreeOption::IgnoreNonEditableNode})
+                : nullptr;
   if (!*aCurList ||
       (previousEditableSibling && previousEditableSibling != *aCurList)) {
     nsAtom* containerName = aCurPoint.GetContainer()->NodeInfo()->NameAtom();
@@ -3873,7 +3878,9 @@ nsresult HTMLEditor::HandleHTMLIndentAtSelectionInternal() {
       // check to see if curList is still appropriate.  Which it is if
       // content is still right after it in the same list.
       nsIContent* previousEditableSibling =
-          curList ? GetPriorHTMLSibling(listItem) : nullptr;
+          curList ? HTMLEditUtils::GetPreviousSibling(
+                        *listItem, {WalkTreeOption::IgnoreNonEditableNode})
+                  : nullptr;
       if (!curList ||
           (previousEditableSibling && previousEditableSibling != curList)) {
         EditorDOMPoint atListItem(listItem);
@@ -6506,7 +6513,8 @@ nsresult HTMLEditor::HandleInsertParagraphInHeadingElement(Element& aHeader,
 
   // If the previous heading of split point is empty, put a padding <br>
   // element for empty last line into it.
-  nsCOMPtr<nsIContent> prevItem = GetPriorHTMLSibling(&aHeader);
+  nsCOMPtr<nsIContent> prevItem = HTMLEditUtils::GetPreviousSibling(
+      aHeader, {WalkTreeOption::IgnoreNonEditableNode});
   if (prevItem) {
     MOZ_DIAGNOSTIC_ASSERT(HTMLEditUtils::IsHeader(*prevItem));
     if (HTMLEditUtils::IsEmptyNode(
@@ -6689,7 +6697,11 @@ EditActionResult HTMLEditor::HandleInsertParagraphInParagraph(
     // at beginning of text node?
     if (atStartOfSelection.IsStartOfContainer()) {
       // is there a BR prior to it?
-      brContent = GetPriorHTMLSibling(atStartOfSelection.GetContainer());
+      brContent = atStartOfSelection.IsInContentNode()
+                      ? HTMLEditUtils::GetPreviousSibling(
+                            *atStartOfSelection.ContainerAsContent(),
+                            {WalkTreeOption::IgnoreNonEditableNode})
+                      : nullptr;
       if (!brContent || !HTMLEditUtils::IsVisibleBRElement(*brContent) ||
           EditorUtils::IsPaddingBRElementForEmptyLastLine(*brContent)) {
         pointToInsertBR.Set(atStartOfSelection.GetContainer());
@@ -7031,7 +7043,8 @@ nsresult HTMLEditor::HandleInsertParagraphInListItemElement(Element& aListItem,
   // Hack: until I can change the damaged doc range code back to being
   // extra-inclusive, I have to manually detect certain list items that may be
   // left empty.
-  nsCOMPtr<nsIContent> prevItem = GetPriorHTMLSibling(&aListItem);
+  nsCOMPtr<nsIContent> prevItem = HTMLEditUtils::GetPreviousSibling(
+      aListItem, {WalkTreeOption::IgnoreNonEditableNode});
   if (prevItem && HTMLEditUtils::IsListItem(prevItem)) {
     if (HTMLEditUtils::IsEmptyNode(
             *prevItem, {EmptyCheckOption::TreatSingleBRElementAsVisible})) {
@@ -8094,7 +8107,8 @@ void HTMLEditor::SetSelectionInterlinePosition() {
   //     immediately after non-editable contents, but previous editable
   //     content is a block, does this do right thing?
   if (nsIContent* previousEditableContentInBlockAtCaret =
-          GetPriorHTMLSibling(atCaret.GetChild())) {
+          HTMLEditUtils::GetPreviousSibling(
+              *atCaret.GetChild(), {WalkTreeOption::IgnoreNonEditableNode})) {
     if (HTMLEditUtils::IsBlockElement(*previousEditableContentInBlockAtCaret)) {
       IgnoredErrorResult ignoredError;
       SelectionRef().SetInterlinePosition(true, ignoredError);
@@ -9003,8 +9017,8 @@ nsresult HTMLEditor::EnsureHardLineBeginsWithFirstChildOf(
     return NS_OK;
   }
 
-  nsIContent* previousEditableContent =
-      GetPriorHTMLSibling(&aRemovingContainerElement);
+  nsIContent* previousEditableContent = HTMLEditUtils::GetPreviousSibling(
+      aRemovingContainerElement, {WalkTreeOption::IgnoreNonEditableNode});
   if (!previousEditableContent) {
     return NS_OK;
   }
@@ -9040,8 +9054,8 @@ nsresult HTMLEditor::EnsureHardLineEndsWithLastChildOf(
     return NS_OK;
   }
 
-  nsIContent* nextEditableContent =
-      GetPriorHTMLSibling(&aRemovingContainerElement);
+  nsIContent* nextEditableContent = HTMLEditUtils::GetPreviousSibling(
+      aRemovingContainerElement, {WalkTreeOption::IgnoreNonEditableNode});
   if (!nextEditableContent) {
     return NS_OK;
   }
@@ -9418,7 +9432,10 @@ nsresult HTMLEditor::MoveSelectedContentsToDivElementToMakeItAbsolutePosition(
       // Therefore, duplicate same list element into the target `<div>`
       // element.
       nsIContent* previousEditableContent =
-          createdListElement ? GetPriorHTMLSibling(content) : nullptr;
+          createdListElement
+              ? HTMLEditUtils::GetPreviousSibling(
+                    content, {WalkTreeOption::IgnoreNonEditableNode})
+              : nullptr;
       if (!createdListElement ||
           (previousEditableContent &&
            previousEditableContent != createdListElement)) {
@@ -9480,7 +9497,10 @@ nsresult HTMLEditor::MoveSelectedContentsToDivElementToMakeItAbsolutePosition(
       // If we cannot move the list item element into created list element,
       // we need another list element in the target `<div>` element.
       nsIContent* previousEditableContent =
-          createdListElement ? GetPriorHTMLSibling(listItemElement) : nullptr;
+          createdListElement
+              ? HTMLEditUtils::GetPreviousSibling(
+                    *listItemElement, {WalkTreeOption::IgnoreNonEditableNode})
+              : nullptr;
       if (!createdListElement ||
           (previousEditableContent &&
            previousEditableContent != createdListElement)) {

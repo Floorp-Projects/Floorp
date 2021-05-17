@@ -38,6 +38,7 @@ using namespace dom;
 
 using LeafNodeType = HTMLEditUtils::LeafNodeType;
 using LeafNodeTypes = HTMLEditUtils::LeafNodeTypes;
+using WalkTreeOption = HTMLEditUtils::WalkTreeOption;
 
 const char16_t kNBSP = 160;
 
@@ -1201,7 +1202,8 @@ nsresult WhiteSpaceVisibilityKeeper::DeleteContentNodeAndJoinTextNodesAroundIt(
   }
 
   nsCOMPtr<nsIContent> previousEditableSibling =
-      aHTMLEditor.GetPriorHTMLSibling(&aContentToDelete);
+      HTMLEditUtils::GetPreviousSibling(
+          aContentToDelete, {WalkTreeOption::IgnoreNonEditableNode});
   // Delete the node, and join like nodes if appropriate
   rv = aHTMLEditor.DeleteNodeWithTransaction(aContentToDelete);
   if (NS_WARN_IF(aHTMLEditor.Destroyed())) {

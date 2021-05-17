@@ -917,14 +917,7 @@ class HTMLEditor final : public TextEditor,
   SplitAncestorStyledInlineElementsAt(const EditorDOMPoint& aPointToSplit,
                                       nsAtom* aProperty, nsAtom* aAttribute);
 
-  /**
-   * GetPriorHTMLSibling() returns the previous editable sibling, if there is
-   * one within the parent, optionally skipping text nodes that are only
-   * white-space.
-   */
   enum class SkipWhiteSpace { Yes, No };
-  nsIContent* GetPriorHTMLSibling(nsINode* aNode,
-                                  SkipWhiteSpace = SkipWhiteSpace::No) const;
 
   /**
    * GetNextHTMLSibling() returns the next editable sibling, if there is
@@ -934,7 +927,7 @@ class HTMLEditor final : public TextEditor,
   nsIContent* GetNextHTMLSibling(nsINode* aNode,
                                  SkipWhiteSpace = SkipWhiteSpace::No) const;
 
-  // Helper for GetPriorHTMLSibling/GetNextHTMLSibling.
+  // Helper for GetNextHTMLSibling.
   static bool SkippableWhiteSpace(nsINode* aNode, SkipWhiteSpace aSkipWS) {
     return aSkipWS == SkipWhiteSpace::Yes && aNode->IsText() &&
            aNode->AsText()->TextIsOnlyWhitespace();

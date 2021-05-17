@@ -996,10 +996,7 @@ nsIContent* HTMLEditUtils::GetPreviousContent(
     return nullptr;
   }
 
-  if ((!aOptions.contains(WalkTreeOption::IgnoreNonEditableNode) ||
-       EditorUtils::IsEditableContent(*lastLeafContent, EditorType::HTML)) &&
-      (!aOptions.contains(WalkTreeOption::IgnoreDataNodeExceptText) ||
-       EditorUtils::IsElementOrText(*lastLeafContent))) {
+  if (!HTMLEditUtils::IsContentIgnored(*lastLeafContent, aOptions)) {
     return lastLeafContent;
   }
 
@@ -1052,10 +1049,7 @@ nsIContent* HTMLEditUtils::GetNextContent(
       return nullptr;
     }
 
-    if ((!aOptions.contains(WalkTreeOption::IgnoreNonEditableNode) ||
-         EditorUtils::IsEditableContent(*firstLeafContent, EditorType::HTML)) &&
-        (!aOptions.contains(WalkTreeOption::IgnoreDataNodeExceptText) ||
-         EditorUtils::IsElementOrText(*firstLeafContent))) {
+    if (!HTMLEditUtils::IsContentIgnored(*firstLeafContent, aOptions)) {
       return firstLeafContent;
     }
 
@@ -1147,10 +1141,7 @@ nsIContent* HTMLEditUtils::GetAdjacentContent(
     return nullptr;
   }
 
-  if ((!aOptions.contains(WalkTreeOption::IgnoreNonEditableNode) ||
-       EditorUtils::IsEditableContent(*leafContent, EditorType::HTML)) &&
-      (!aOptions.contains(WalkTreeOption::IgnoreDataNodeExceptText) ||
-       EditorUtils::IsElementOrText(*leafContent))) {
+  if (!HTMLEditUtils::IsContentIgnored(*leafContent, aOptions)) {
     return leafContent;
   }
 
