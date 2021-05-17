@@ -99,7 +99,7 @@ to discover the root cause.
 You can view one or more bloat logs in your browser by running the
 following program.
 
-    perl tools/bloatview/bloattable.pl *log1* *log2* \... *logn* \>
+    perl tools/bloatview/bloattable.pl *log1* *log2* \... *logn* >
     *htmlfile*
 
 This will produce an HTML file that contains a table similar to the
@@ -156,7 +156,7 @@ You can also compare any two bloat logs (either those produced when the
 program shuts down, or written to the bloatlogs directory) by running
 the following program.
 
-    `perl tools/bloatview/bloatdiff.pl` \<previous-log\> \<current-log\>
+    `perl tools/bloatview/bloatdiff.pl` <previous-log> <current-log>
 
 This will give you output of the form:
 
