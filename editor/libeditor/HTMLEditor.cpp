@@ -4932,42 +4932,6 @@ nsresult HTMLEditor::DeleteSelectionAndPrepareToCreateNode() {
   return error.StealNSResult();
 }
 
-nsIContent* HTMLEditor::GetFirstEditableLeaf(nsINode& aNode) const {
-  Element* editingHost = GetActiveEditingHost();
-  if (NS_WARN_IF(!editingHost) ||
-      editingHost->IsInclusiveDescendantOf(&aNode)) {
-    return nullptr;
-  }
-  nsIContent* child =
-      HTMLEditUtils::GetFirstLeafContent(aNode, {LeafNodeType::OnlyLeafNode});
-  while (child && (!EditorUtils::IsEditableContent(*child, EditorType::HTML) ||
-                   child->HasChildren())) {
-    child = HTMLEditUtils::GetNextContent(
-        *child, {WalkTreeOption::IgnoreNonEditableNode},
-        aNode.IsElement() ? aNode.AsElement() : editingHost);
-  }
-
-  return child;
-}
-
-nsIContent* HTMLEditor::GetLastEditableLeaf(nsINode& aNode) const {
-  Element* editingHost = GetActiveEditingHost();
-  if (NS_WARN_IF(!editingHost) ||
-      editingHost->IsInclusiveDescendantOf(&aNode)) {
-    return nullptr;
-  }
-  nsIContent* child =
-      HTMLEditUtils::GetLastLeafContent(aNode, {LeafNodeType::OnlyLeafNode});
-  while (child && (!EditorUtils::IsEditableContent(*child, EditorType::HTML) ||
-                   child->HasChildren())) {
-    child = HTMLEditUtils::GetPreviousContent(
-        *child, {WalkTreeOption::IgnoreNonEditableNode},
-        aNode.IsElement() ? aNode.AsElement() : editingHost);
-  }
-
-  return child;
-}
-
 bool HTMLEditor::IsEmpty() const {
   if (mPaddingBRElementForEmptyEditor) {
     return true;
