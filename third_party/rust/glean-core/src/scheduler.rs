@@ -198,31 +198,42 @@ fn start_scheduler(
             loop {
                 let dur = when.until(now);
                 log::info!("Scheduling for {:?} after {}, reason {:?}", dur, now, when);
-                let result = condvar.wait_timeout_while(cancelled_lock.lock().unwrap(), dur, |cancelled| !*cancelled);
-                now = local_now_with_offset().0;
-                match result {
-                    Err(err) => {
-                        log::warn!("Condvar wait failure, {}", err);
-                        break;
-                    }
-                    Ok((cancelled, wait_result)) => {
-                        if *cancelled {
-                            log::info!("Metrics Ping Scheduler cancelled. Exiting.");
+                let mut timed_out = false;
+                {
+                    match condvar.wait_timeout_while(cancelled_lock.lock().unwrap(), dur, |cancelled| !*cancelled) {
+                        Err(err) => {
+                            log::warn!("Condvar wait failure. MPS exiting. {}", err);
                             break;
-                        } else if wait_result.timed_out() {
-                            log::info!("Time to submit our metrics ping, {:?}", when);
-                            let glean = crate::global_glean().expect("Global Glean not present when trying to send scheduled 'metrics' ping?!").lock().unwrap();
-                            submitter.submit_metrics_ping(&glean, Some(when.reason()), now);
-                            when = When::Reschedule;
-                        } else {
-                            // This should be impossible. `cancelled_lock` is acquired, and
-                            // `!*cancelled` is checked by the condvar before it is allowed
-                            // to return from `wait_timeout_while` (I checked).
-                            // So `Ok(_)` implies `*cancelled || wait_result.timed_out`.
-                            log::warn!("Spurious wakeup of the MPS condvar should be impossible.");
+                        }
+                        Ok((cancelled, wait_result)) => {
+                            if *cancelled {
+                                log::info!("Metrics Ping Scheduler cancelled. Exiting.");
+                                break;
+                            } else if wait_result.timed_out() {
+                                // Can't get the global glean while holding cancelled's lock.
+                                timed_out = true;
+                            } else {
+                                // This should be impossible. `cancelled_lock` is acquired, and
+                                // `!*cancelled` is checked by the condvar before it is allowed
+                                // to return from `wait_timeout_while` (I checked).
+                                // So `Ok(_)` implies `*cancelled || wait_result.timed_out`.
+                                log::warn!("Spurious wakeup of the MPS condvar should be impossible.");
+                            }
                         }
                     }
                 }
+                // Safety:
+                // We are okay dropping the condvar's cancelled lock here because it only guards
+                // whether we're cancelled, and we've established that we weren't when we timed out.
+                // We might _now_ be cancelled at any time, in which case when we loop back over
+                // we'll immediately exit. But first we need to submit our "metrics" ping.
+                if timed_out {
+                    log::info!("Time to submit our metrics ping, {:?}", when);
+                    let glean = crate::global_glean().expect("Global Glean not present when trying to send scheduled 'metrics' ping?!").lock().unwrap();
+                    submitter.submit_metrics_ping(&glean, Some(when.reason()), now);
+                    when = When::Reschedule;
+                }
+                now = local_now_with_offset().0;
             }
         }).expect("Unable to spawn Metrics Ping Scheduler thread.")
 }
