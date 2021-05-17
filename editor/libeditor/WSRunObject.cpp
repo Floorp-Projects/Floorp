@@ -2305,7 +2305,7 @@ WSRunScanner::TextFragmentData::GetInclusiveNextEditableCharPoint(
   if (nsIContent* child =
           aPoint.CanContainerHaveChildren() ? aPoint.GetChild() : nullptr) {
     nsIContent* leafContent = child->HasChildren()
-                                  ? HTMLEditUtils::GetFirstLeafChild(
+                                  ? HTMLEditUtils::GetFirstLeafContent(
                                         *child, {LeafNodeType::OnlyLeafNode})
                                   : child;
     if (NS_WARN_IF(!leafContent)) {
@@ -2385,8 +2385,8 @@ WSRunScanner::TextFragmentData::GetPreviousEditableCharPoint(
                                       : nullptr) {
     nsIContent* leafContent =
         previousChild->HasChildren()
-            ? HTMLEditUtils::GetLastLeafChild(*previousChild,
-                                              {LeafNodeType::OnlyLeafNode})
+            ? HTMLEditUtils::GetLastLeafContent(*previousChild,
+                                                {LeafNodeType::OnlyLeafNode})
             : previousChild;
     if (NS_WARN_IF(!leafContent)) {
       return EditorDOMPointInText();

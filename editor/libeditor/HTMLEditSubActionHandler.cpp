@@ -5418,7 +5418,7 @@ nsresult HTMLEditor::MaybeExtendSelectionToHardLineEdgesForBlockEditAction() {
     // of going "down" into a block and "up" out of a block.
     if (wsScannerAtEnd.StartsFromOtherBlockElement()) {
       // endpoint is just after the close of a block.
-      nsIContent* child = HTMLEditUtils::GetLastLeafChild(
+      nsIContent* child = HTMLEditUtils::GetLastLeafContent(
           *wsScannerAtEnd.StartReasonOtherBlockElementPtr(),
           {LeafNodeType::LeafNodeOrChildBlock});
       if (child) {
@@ -5455,7 +5455,7 @@ nsresult HTMLEditor::MaybeExtendSelectionToHardLineEdgesForBlockEditAction() {
     // of going "down" into a block and "up" out of a block.
     if (wsScannerAtStart.EndsByOtherBlockElement()) {
       // startpoint is just before the start of a block.
-      nsINode* child = HTMLEditUtils::GetFirstLeafChild(
+      nsINode* child = HTMLEditUtils::GetFirstLeafContent(
           *wsScannerAtStart.EndReasonOtherBlockElementPtr(),
           {LeafNodeType::LeafNodeOrChildBlock});
       if (child) {
@@ -6901,7 +6901,7 @@ nsresult HTMLEditor::SplitParagraph(
 
   // selection to beginning of right hand para;
   // look inside any containers that are up front.
-  nsCOMPtr<nsIContent> child = HTMLEditUtils::GetFirstLeafChild(
+  nsCOMPtr<nsIContent> child = HTMLEditUtils::GetFirstLeafContent(
       aParentDivOrP, {LeafNodeType::LeafNodeOrChildBlock});
   if (child && (child->IsText() || HTMLEditUtils::IsContainerNode(*child))) {
     nsresult rv = CollapseSelectionToStartOf(*child);

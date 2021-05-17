@@ -1021,7 +1021,7 @@ nsresult TextEditor::UndoAsAction(uint32_t aCount, nsIPrincipal* aPrincipal) {
       // at redo, or doing it everywhere else that might care.  Since undo
       // and redo are relatively rare, it makes sense to take the (small)
       // performance hit here.
-      nsIContent* firstLeafChild = HTMLEditUtils::GetFirstLeafChild(
+      nsIContent* firstLeafChild = HTMLEditUtils::GetFirstLeafContent(
           *mRootElement, {LeafNodeType::OnlyLeafNode});
       if (firstLeafChild &&
           EditorUtils::IsPaddingBRElementForEmptyEditor(*firstLeafChild)) {
