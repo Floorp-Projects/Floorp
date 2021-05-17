@@ -2234,6 +2234,19 @@
     "keyed": true,
     "description": "The time between navigationStart and the first contentful paint of a foreground http or https root content document, in milliseconds. The contentful paint timestamp is taken during display list building and does not include rasterization or compositing of that paint. This is collected only on page load where the main document uses or suppports HTTP3"
   },
+  "HTTP3_UPLOAD_TIME": {
+    "alert_emails": ["necko@mozilla.com", "ddamjanovic@mozilla.com"],
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox", "fennec"],
+    "bug_numbers": [1675496],
+    "expires_in_version": "96",
+    "kind": "exponential",
+    "high": 30000,
+    "n_buckets": 50,
+    "releaseChannelCollection": "opt-out",
+    "keyed": true,
+    "description": "HTTP transaction upload time (ms) (keys: uses_http3_10_50 (load size 10M to 50M), uses_http3_50_100 (load size 50M to 100M), uses_http3_gt_100 (load size > 100M), supports_http3_10_50, supports_http3_50_100, supports_http3_gt_100"
+  },
   "HTTPS_RR_OPEN_TO_FIRST_SENT": {
     "alert_emails": ["necko@mozilla.com", "kershaw@mozilla.com"],
     "record_in_processes": ["main", "content"],
