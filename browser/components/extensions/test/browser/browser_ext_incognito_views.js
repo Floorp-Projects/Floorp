@@ -53,7 +53,7 @@ add_task(async function testIncognitoViews() {
         );
       };
 
-      const URL = "http://example.com/incognito";
+      const URL = "https://example.com/incognito";
       let windowReady = new Promise(resolve => {
         browser.tabs.onUpdated.addListener(function listener(
           tabId,
