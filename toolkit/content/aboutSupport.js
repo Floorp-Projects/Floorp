@@ -1387,7 +1387,7 @@ var snapshotFormatters = {
       remoteConfigs.map(({ featureId, slug }) =>
         $.new("tr", [
           $.new("td", [document.createTextNode(featureId)]),
-          $.new("td", [document.createTextNode(`Active (${slug})`)]),
+          $.new("td", [document.createTextNode(`(${slug})`)]),
         ])
       )
     );
