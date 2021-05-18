@@ -32,8 +32,10 @@ function openLibrary(callback, aLeftPaneRoot) {
  * Returns a handle to a Library window.
  * If one is opens returns itm otherwise it opens a new one.
  *
- * @param aLeftPaneRoot
+ * @param {object} aLeftPaneRoot
  *        Hierarchy to open and select in the left pane.
+ * @returns {Promise}
+ *          Resolves to the handle to the library window.
  */
 function promiseLibrary(aLeftPaneRoot) {
   return new Promise(resolve => {
@@ -103,10 +105,12 @@ function checkLibraryPaneVisibility(library, selectedPane) {
  *
  * @see waitForClipboard
  *
- * @param aPopulateClipboardFn
+ * @param {function} aPopulateClipboardFn
  *        Function to populate the clipboard.
- * @param aFlavor
+ * @param {string} aFlavor
  *        Data flavor to expect.
+ * @returns {Promise}
+ *          A promise that is resolved with the data.
  */
 function promiseClipboard(aPopulateClipboardFn, aFlavor) {
   return new Promise((resolve, reject) => {
@@ -154,12 +158,13 @@ function synthesizeClickOnSelectedTreeCell(aTree, aOptions) {
  * Changes to this styling could cause the returned Promise object to be
  * resolved too early or not at all.
  *
- * @param aToolbar
+ * @param {object} aToolbar
  *        The toolbar to update.
- * @param aVisible
+ * @param {boolean} aVisible
  *        True to make the toolbar visible, false to make it hidden.
+ * @param {function} aCallback
  *
- * @return {Promise}
+ * @returns {Promise}
  * @resolves Any animation associated with updating the toolbar's visibility has
  *           finished.
  * @rejects Never.
@@ -179,9 +184,9 @@ function promiseSetToolbarVisibility(aToolbar, aVisible, aCallback) {
  * Helper function to determine if the given toolbar is in the visible
  * state according to its autohide/collapsed attribute.
  *
- * @aToolbar The toolbar to query.
+ * @param {object} aToolbar The toolbar to query.
  *
- * @returns True if the relevant attribute on |aToolbar| indicates it is
+ * @returns {boolean} True if the relevant attribute on |aToolbar| indicates it is
  *          visible, false otherwise.
  */
 function isToolbarVisible(aToolbar) {
@@ -195,15 +200,19 @@ function isToolbarVisible(aToolbar) {
 /**
  * Executes a task after opening the bookmarks dialog, then cancels the dialog.
  *
- * @param autoCancel
+ * @param {boolean} autoCancel
  *        whether to automatically cancel the dialog at the end of the task
- * @param openFn
+ * @param {function} openFn
  *        generator function causing the dialog to open
- * @param taskFn
+ * @param {function} taskFn
  *        the task to execute once the dialog is open
- * @param closeFn
+ * @param {function} closeFn
  *        A function to be used to wait for pending work when the dialog is
  *        closing. It is passed the dialog window handle and should return a promise.
+ * @param {string} [dialogUrl]
+ *        The URL of the dialog.
+ * @param {boolean} [skipOverlayWait]
+ *        Avoid waiting for the overlay.
  */
 var withBookmarksDialog = async function(
   autoCancel,
@@ -303,9 +312,11 @@ var withBookmarksDialog = async function(
 /**
  * Opens the contextual menu on the element pointed by the given selector.
  *
- * @param selector
+ * @param {object} browser
+ *        The associated browser element.
+ * @param {object} selector
  *        Valid selector syntax
- * @return Promise
+ * @returns {Promise}
  *         Returns a Promise that resolves once the context menu has been
  *         opened.
  */
@@ -344,13 +355,13 @@ var openContextMenuForContentSelector = async function(browser, selector) {
 /**
  * Fills a bookmarks dialog text field ensuring to cause expected edit events.
  *
- * @param id
+ * @param {string} id
  *        id of the text field
- * @param text
+ * @param {string} text
  *        text to fill in
- * @param win
+ * @param {object} win
  *        dialog window
- * @param [optional] blur
+ * @param {boolean} [blur]
  *        whether to blur at the end.
  */
 function fillBookmarkTextField(id, text, win, blur = true) {
@@ -373,9 +384,9 @@ function fillBookmarkTextField(id, text, win, blur = true) {
  * Executes a task after opening the bookmarks or history sidebar. Takes care
  * of closing the sidebar once done.
  *
- * @param type
+ * @param {string} type
  *        either "bookmarks" or "history".
- * @param taskFn
+ * @param {function} taskFn
  *        The task to execute once the sidebar is ready. Will get the Places
  *        tree view as input.
  */
@@ -412,9 +423,9 @@ var withSidebarTree = async function(type, taskFn) {
  * Executes a task after opening the Library on a given root. Takes care
  * of closing the library once done.
  *
- * @param hierarchy
+ * @param {string} hierarchy
  *        The left pane hierarchy to open.
- * @param taskFn
+ * @param {function} taskFn
  *        The task to execute once the Library is ready.
  *        Will get { left, right } trees as argument.
  */

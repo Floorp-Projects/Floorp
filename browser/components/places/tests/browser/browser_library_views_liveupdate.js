@@ -192,11 +192,12 @@ async function removeAndCheckItem(itemData) {
 /**
  * Get places node, index and cell text for a guid in a tree view.
  *
- * @param aItemGuid
+ * @param {string} aItemGuid
  *        item guid of the item to search.
- * @param aTree
+ * @param {object} aTree
  *        Tree to search in.
- * @returns [node, index, cellText] or [null, null, ""] if not found.
+ * @returns {array}
+ *          [node, index, cellText] or [null, null, ""] if not found.
  */
 function getNodeForTreeItem(aItemGuid, aTree) {
   function findNode(aContainerIndex) {
