@@ -19,9 +19,7 @@ async function testDocumentEventResources() {
   info("Test ResourceCommand for DOCUMENT_EVENT");
 
   // Open a test tab
-  const title = "DocumentEventsTitle";
-  const url = `data:text/html,<title>${title}</title>Document Events`;
-  const tab = await addTab(url);
+  const tab = await addTab("data:text/html,Document Events");
 
   const listener = new ResourceListener();
   const { client, resourceCommand, targetCommand } = await initResourceCommand(
@@ -49,40 +47,6 @@ async function testDocumentEventResources() {
     "shouldBeIgnoredAsRedundantWithTargetAvailable is true for already loaded page"
   );
 
-  is(
-    domLoadingResource.url,
-    url,
-    `resource ${domLoadingResource.name} has expected url`
-  );
-  is(
-    domLoadingResource.title,
-    undefined,
-    `resource ${domLoadingResource.name} does not have a title property`
-  );
-
-  let domInteractiveResource = await onInteractiveAtInit;
-  is(
-    domInteractiveResource.url,
-    undefined,
-    `resource ${domInteractiveResource.name} does not have a url property`
-  );
-  is(
-    domInteractiveResource.title,
-    title,
-    `resource ${domInteractiveResource.name} has expected title`
-  );
-  let domCompleteResource = await onCompleteAtInit;
-  is(
-    domCompleteResource.url,
-    undefined,
-    `resource ${domCompleteResource.name} does not have a url property`
-  );
-  is(
-    domCompleteResource.title,
-    undefined,
-    `resource ${domCompleteResource.name} does not have a title property`
-  );
-
   info("Check whether the document events are fired correctly when reloading");
   const onLoadingAtReloaded = listener.once("dom-loading");
   const onInteractiveAtReloaded = listener.once("dom-interactive");
@@ -100,40 +64,6 @@ async function testDocumentEventResources() {
     domLoadingResource.shouldBeIgnoredAsRedundantWithTargetAvailable,
     undefined,
     "shouldBeIgnoredAsRedundantWithTargetAvailable is not set after reloading"
-  );
-
-  is(
-    domLoadingResource.url,
-    url,
-    `resource ${domLoadingResource.name} has expected url after reloading`
-  );
-  is(
-    domLoadingResource.title,
-    undefined,
-    `resource ${domLoadingResource.name} does not have a title property after reloading`
-  );
-
-  domInteractiveResource = await onInteractiveAtInit;
-  is(
-    domInteractiveResource.url,
-    undefined,
-    `resource ${domInteractiveResource.name} does not have a url property after reloading`
-  );
-  is(
-    domInteractiveResource.title,
-    title,
-    `resource ${domInteractiveResource.name} has expected title after reloading`
-  );
-  domCompleteResource = await onCompleteAtInit;
-  is(
-    domCompleteResource.url,
-    undefined,
-    `resource ${domCompleteResource.name} does not have a url property after reloading`
-  );
-  is(
-    domCompleteResource.title,
-    undefined,
-    `resource ${domCompleteResource.name} does not have a title property after reloading`
   );
 
   targetCommand.destroy();
@@ -181,16 +111,15 @@ async function testCrossOriginNavigation() {
     onAvailable: resources => documentEvents.push(...resources),
     ignoreExistingResources: true,
   });
-  // Wait for some time for extra safety
-  await wait(1000);
   is(documentEvents.length, 0, "Existing document events are not fired");
 
   info("Navigate to another process");
   const onSwitched = targetCommand.once("switched-target");
-  const netUrl =
-    "http://example.net/document-builder.sjs?html=<head><title>titleNet</title></head>net";
   const onLoaded = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
-  BrowserTestUtils.loadURI(gBrowser.selectedBrowser, netUrl);
+  BrowserTestUtils.loadURI(
+    gBrowser.selectedBrowser,
+    "http://example.net/document-builder.sjs?html=net"
+  );
   await onLoaded;
 
   // We are switching to a new target only when fission is enabled...
@@ -210,7 +139,6 @@ async function testCrossOriginNavigation() {
     3,
     "There is no duplicated event and only the 3 expected DOCUMENT_EVENT states"
   );
-  const [loadingEvent, interactiveEvent, completeEvent] = documentEvents;
 
   // followWindowGlobalLifeCycle will be true when enabling server side target switching,
   // even when fission is off.
@@ -219,50 +147,17 @@ async function testCrossOriginNavigation() {
     targetCommand.targetFront.targetForm.followWindowGlobalLifeCycle
   ) {
     is(
-      loadingEvent.shouldBeIgnoredAsRedundantWithTargetAvailable,
+      documentEvents[0].shouldBeIgnoredAsRedundantWithTargetAvailable,
       true,
       "shouldBeIgnoredAsRedundantWithTargetAvailable is true for the new target which follows the WindowGlobal lifecycle"
     );
   } else {
     is(
-      loadingEvent.shouldBeIgnoredAsRedundantWithTargetAvailable,
+      documentEvents[0].shouldBeIgnoredAsRedundantWithTargetAvailable,
       undefined,
       "shouldBeIgnoredAsRedundantWithTargetAvailable is undefined if fission is disabled and we keep the same target"
     );
   }
-
-  is(
-    loadingEvent.url,
-    encodeURI(netUrl),
-    `resource ${loadingEvent.name} has expected url after reloading`
-  );
-  is(
-    loadingEvent.title,
-    undefined,
-    `resource ${loadingEvent.name} does not have a title property after reloading`
-  );
-
-  is(
-    interactiveEvent.url,
-    undefined,
-    `resource ${interactiveEvent.name} does not have a url property after reloading`
-  );
-  is(
-    interactiveEvent.title,
-    "titleNet",
-    `resource ${interactiveEvent.name} has expected title after reloading`
-  );
-
-  is(
-    completeEvent.url,
-    undefined,
-    `resource ${completeEvent.name} does not have a url property after reloading`
-  );
-  is(
-    completeEvent.title,
-    undefined,
-    `resource ${completeEvent.name} does not have a title property after reloading`
-  );
 
   targetCommand.destroy();
   await client.close();
