@@ -20,9 +20,10 @@ class BindGroupLayout final : public ObjectBase, public ChildOf<Device> {
   GPU_DECL_CYCLE_COLLECTION(BindGroupLayout)
   GPU_DECL_JS_WRAP(BindGroupLayout)
 
-  BindGroupLayout(Device* const aParent, RawId aId);
+  BindGroupLayout(Device* const aParent, RawId aId, bool aOwning);
 
   const RawId mId;
+  const bool mOwning;
 
  private:
   ~BindGroupLayout();

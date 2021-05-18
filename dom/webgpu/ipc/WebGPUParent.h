@@ -56,6 +56,8 @@ class WebGPUParent final : public PWebGPUParent {
   ipc::IPCResult RecvShaderModuleDestroy(RawId aSelfId);
   ipc::IPCResult RecvComputePipelineDestroy(RawId aSelfId);
   ipc::IPCResult RecvRenderPipelineDestroy(RawId aSelfId);
+  ipc::IPCResult RecvImplicitLayoutDestroy(
+      RawId aImplicitPlId, const nsTArray<RawId>& aImplicitBglIds);
   ipc::IPCResult RecvDeviceCreateSwapChain(RawId aSelfId, RawId aQueueId,
                                            const layers::RGBDescriptor& aDesc,
                                            const nsTArray<RawId>& aBufferIds,
