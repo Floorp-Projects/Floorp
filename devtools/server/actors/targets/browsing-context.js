@@ -1420,6 +1420,7 @@ const browsingContextTargetPrototype = {
       isTopLevel: isTopLevel,
       isBFCache,
       id: getWindowID(window),
+      isFrameSwitching,
     });
   },
 
