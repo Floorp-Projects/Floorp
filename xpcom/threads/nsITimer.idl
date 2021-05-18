@@ -11,6 +11,7 @@ interface nsIEventTarget;
 %{C++
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/TimeStamp.h"
+#include <functional>
 
 /**
  * The signature of the timer callback function passed to initWithFuncCallback.
@@ -302,6 +303,34 @@ mozilla::Result<nsCOMPtr<nsITimer>, nsresult>
 NS_NewTimerWithCallback(nsITimerCallback* aCallback,
                         const mozilla::TimeDuration& aDelay,
                         uint32_t aType,
+                        nsIEventTarget* aTarget = nullptr);
+
+nsresult
+NS_NewTimerWithCallback(nsITimer** aTimer,
+                        std::function<void(nsITimer*)>&& aCallback,
+                        uint32_t aDelay,
+                        uint32_t aType,
+                        const char* aNameString,
+                        nsIEventTarget* aTarget = nullptr);
+mozilla::Result<nsCOMPtr<nsITimer>, nsresult>
+NS_NewTimerWithCallback(std::function<void(nsITimer*)>&& aCallback,
+                        uint32_t aDelay,
+                        uint32_t aType,
+                        const char* aNameString,
+                        nsIEventTarget* aTarget = nullptr);
+
+nsresult
+NS_NewTimerWithCallback(nsITimer** aTimer,
+                        std::function<void(nsITimer*)>&& aCallback,
+                        const mozilla::TimeDuration& aDelay,
+                        uint32_t aType,
+                        const char* aNameString,
+                        nsIEventTarget* aTarget = nullptr);
+mozilla::Result<nsCOMPtr<nsITimer>, nsresult>
+NS_NewTimerWithCallback(std::function<void(nsITimer*)>&& aCallback,
+                        const mozilla::TimeDuration& aDelay,
+                        uint32_t aType,
+                        const char* aNameString,
                         nsIEventTarget* aTarget = nullptr);
 
 nsresult
