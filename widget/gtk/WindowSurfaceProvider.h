@@ -41,7 +41,7 @@ class WindowSurfaceProvider final {
    * while WindowSurfaceProvider is used.
    */
 #ifdef MOZ_WAYLAND
-  void Initialize(nsWindow* aWidget, bool aUseMultiBuffer);
+  void Initialize(nsWindow* aWidget);
 #endif
 #ifdef MOZ_X11
   void Initialize(Window aWindow, Visual* aVisual, int aDepth, bool aIsShaped);
@@ -59,9 +59,6 @@ class WindowSurfaceProvider final {
       layers::BufferMode* aBufferMode);
   void EndRemoteDrawingInRegion(gfx::DrawTarget* aDrawTarget,
                                 const LayoutDeviceIntRegion& aInvalidRegion);
-  bool ShouldDrawPreviousPartialPresentRegions();
-  size_t GetBufferAge() const;
-  void PrepareBufferForFrame();
 
  private:
   RefPtr<WindowSurface> CreateWindowSurface();
@@ -69,7 +66,6 @@ class WindowSurfaceProvider final {
   RefPtr<WindowSurface> mWindowSurface;
 #ifdef MOZ_WAYLAND
   nsWindow* mWidget;
-  bool mUseMultiBuffer;
 #endif
 #ifdef MOZ_X11
   bool mIsShaped;

@@ -38,9 +38,6 @@ class RenderCompositorSWGL : public RenderCompositor {
 
   bool UsePartialPresent() override { return true; }
   bool RequestFullRender() override;
-  uint32_t GetMaxPartialPresentRects() override;
-  bool ShouldDrawPreviousPartialPresentRegions() override;
-  size_t GetBufferAge() const override;
 
   void Pause() override;
   bool Resume() override;

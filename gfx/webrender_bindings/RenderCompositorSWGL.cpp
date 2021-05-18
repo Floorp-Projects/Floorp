@@ -9,11 +9,6 @@
 #include "mozilla/gfx/Logging.h"
 #include "mozilla/widget/CompositorWidget.h"
 
-#ifdef MOZ_WAYLAND
-#  include "mozilla/gfx/gfxVars.h"
-#  include "mozilla/widget/GtkCompositorWidget.h"
-#endif
-
 namespace mozilla {
 using namespace gfx;
 
@@ -57,11 +52,6 @@ bool RenderCompositorSWGL::BeginFrame() {
   ClearMappedBuffer();
   mDirtyRegion = LayoutDeviceIntRect(LayoutDeviceIntPoint(), GetBufferSize());
   wr_swgl_make_current(mContext);
-
-#ifdef MOZ_WAYLAND
-  mWidget->AsGTK()->PrepareBufferForFrame();
-#endif
-
   return true;
 }
 
@@ -256,26 +246,6 @@ bool RenderCompositorSWGL::RequestFullRender() {
   return true;
 #else
   return false;
-#endif
-}
-
-uint32_t RenderCompositorSWGL::GetMaxPartialPresentRects() {
-  return gfx::gfxVars::WebRenderMaxPartialPresentRects();
-}
-
-bool RenderCompositorSWGL::ShouldDrawPreviousPartialPresentRegions() {
-#ifdef MOZ_WAYLAND
-  return mWidget->AsGTK()->ShouldDrawPreviousPartialPresentRegions();
-#else
-  return false;
-#endif
-}
-
-size_t RenderCompositorSWGL::GetBufferAge() const {
-#ifdef MOZ_WAYLAND
-  return mWidget->AsGTK()->GetBufferAge();
-#else
-  return 0;
 #endif
 }
 
