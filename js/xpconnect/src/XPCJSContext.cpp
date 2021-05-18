@@ -981,13 +981,12 @@ static void ReloadPrefsCallback(const char* pref, void* aXpccx) {
   bool privateMethodsEnabled =
       Preferences::GetBool(JS_OPTIONS_DOT_STR "experimental.private_methods");
 
-  // Require Ergonomic brand checks disabled outside of nightly.
-  bool ergnomicBrandChecksEnabled = false;
+  bool ergnomicBrandChecksEnabled = Preferences::GetBool(
+      JS_OPTIONS_DOT_STR "experimental.ergonomic_brand_checks");
+
 #ifdef NIGHTLY_BUILD
   sIteratorHelpersEnabled =
       Preferences::GetBool(JS_OPTIONS_DOT_STR "experimental.iterator_helpers");
-  ergnomicBrandChecksEnabled = Preferences::GetBool(
-      JS_OPTIONS_DOT_STR "experimental.ergonomic_brand_checks");
 #endif
 
 #ifdef JS_GC_ZEAL

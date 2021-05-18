@@ -5737,7 +5737,7 @@
   # Experimental support for the ergonomic brand check proposal.
 - name: javascript.options.experimental.ergonomic_brand_checks
   type: bool
-  value: false
+  value: true
   mirror: always
 
   # Experimental support for Top-level Await in JavaScript.

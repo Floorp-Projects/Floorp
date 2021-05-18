@@ -1,5 +1,3 @@
-// |jit-test| --enable-ergonomic-brand-checks
-
 function rp(x) {
   return Reflect.parse(x);
 };
