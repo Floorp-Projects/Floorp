@@ -599,12 +599,10 @@ JSObject* GlobalObject::getOrCreateThrowTypeError(
     return nullptr;
   }
 
-  // The "length" property of %ThrowTypeError% is non-configurable, adjust
-  // the default property attributes accordingly.
-  Rooted<PropertyDescriptor> nonConfigurableDesc(cx);
-  nonConfigurableDesc.setAttributes(JSPROP_PERMANENT | JSPROP_IGNORE_READONLY |
-                                    JSPROP_IGNORE_ENUMERATE |
-                                    JSPROP_IGNORE_VALUE);
+  // The "length" property of %ThrowTypeError% is non-configurable.
+  Rooted<PropertyDescriptor> nonConfigurableDesc(cx,
+                                                 PropertyDescriptor::Empty());
+  nonConfigurableDesc.setConfigurable(false);
 
   RootedId lengthId(cx, NameToId(cx->names().length));
   ObjectOpResult lengthResult;
