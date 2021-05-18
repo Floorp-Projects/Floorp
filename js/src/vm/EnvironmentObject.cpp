@@ -534,23 +534,20 @@ bool ModuleEnvironmentObject::setProperty(JSContext* cx, HandleObject obj,
 /* static */
 bool ModuleEnvironmentObject::getOwnPropertyDescriptor(
     JSContext* cx, HandleObject obj, HandleId id,
-    MutableHandle<mozilla::Maybe<PropertyDescriptor>> desc_) {
+    MutableHandle<mozilla::Maybe<PropertyDescriptor>> desc) {
   const IndirectBindingMap& bindings =
       obj->as<ModuleEnvironmentObject>().importBindings();
   mozilla::Maybe<ShapeProperty> prop;
   ModuleEnvironmentObject* env;
   if (bindings.lookup(id, &env, &prop)) {
-    Rooted<PropertyDescriptor> desc(cx);
-    desc.setAttributes(JSPROP_ENUMERATE | JSPROP_PERMANENT);
-    RootedValue value(cx, env->getSlot(prop->slot()));
-    desc.setValue(value);
-    desc.assertComplete();
-    desc_.set(mozilla::Some(desc.get()));
+    desc.set(mozilla::Some(PropertyDescriptor::Data(
+        env->getSlot(prop->slot()),
+        {JS::PropertyAttribute::Enumerable, JS::PropertyAttribute::Writable})));
     return true;
   }
 
   RootedNativeObject self(cx, &obj->as<NativeObject>());
-  return NativeGetOwnPropertyDescriptor(cx, self, id, desc_);
+  return NativeGetOwnPropertyDescriptor(cx, self, id, desc);
 }
 
 /* static */
