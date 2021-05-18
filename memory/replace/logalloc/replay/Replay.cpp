@@ -236,7 +236,7 @@ class Buffer {
 
   bool operator!=(Buffer aOther) { return !(*this == aOther); }
 
-  /* Returns whether the buffer is empty. */
+  /* Returns true if the buffer is not empty. */
   explicit operator bool() { return mLength; }
 
   char operator[](size_t n) const { return mBuf[n]; }
