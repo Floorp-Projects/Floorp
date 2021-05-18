@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "mozilla/glean/GleanMetrics.h"
 #include "mozilla/glean/GleanPings.h"
@@ -111,13 +112,18 @@ TEST(FOG, TestCppBooleanWorks)
                        .value());
 }
 
+MATCHER_P(BitEq, x, "bit equal") {
+  static_assert(sizeof(x) == sizeof(arg));
+  return std::memcmp(&arg, &x, sizeof(x)) == 0;
+}
+
 TEST(FOG, TestCppDatetimeWorks)
 {
-  PRExplodedTime date = {0, 35, 10, 12, 6, 10, 2020, 0, 0, {5 * 60 * 60, 0}};
+  PRExplodedTime date{0, 35, 10, 12, 6, 10, 2020, 0, 0, {5 * 60 * 60, 0}};
   test_only::what_a_date.Set(&date);
 
   auto received = test_only::what_a_date.TestGetValue("test-ping"_ns);
-  ASSERT_STREQ(received.value().get(), "2020-11-06T12:10:35+05:00");
+  ASSERT_THAT(received.value(), BitEq(date));
 }
 
 using mozilla::MakeTuple;
