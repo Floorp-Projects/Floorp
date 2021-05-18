@@ -876,7 +876,7 @@ PendingDBLookup::HandleEvent(const nsACString& tables) {
 }
 
 NS_IMPL_ISUPPORTS(PendingLookup, nsIStreamListener, nsIRequestObserver,
-                  nsIObserver, nsISupportsWeakReference)
+                  nsIObserver, nsISupportsWeakReference, nsITimerCallback)
 
 PendingLookup::PendingLookup(nsIApplicationReputationQuery* aQuery,
                              nsIApplicationReputationCallback* aCallback)
