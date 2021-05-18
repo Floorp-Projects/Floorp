@@ -203,8 +203,9 @@ async function test_scroll_background_tabs(aURL) {
   );
 
   // Navigate to a different page and scroll there as well.
+  let browser2loaded = BrowserTestUtils.browserLoaded(browser, false, URL2);
   BrowserTestUtils.loadURI(browser, URL2);
-  await BrowserTestUtils.browserLoaded(browser);
+  await browser2loaded;
 
   // Scroll down a little.
   await setScrollPosition(browser, SCROLL2_X, SCROLL2_Y);
@@ -241,7 +242,11 @@ async function test_scroll_background_tabs(aURL) {
   newWin.gBrowser.selectedTab = tab;
   await promiseTabRestored(tab);
 
-  await checkScroll(tab, { scroll: SCROLL2_STR }, "scroll is still fine");
+  await checkScroll(
+    tab,
+    { scroll: SCROLL2_STR },
+    "scroll is correct for restored tab"
+  );
 
   // Now go back in history and check that the scroll position
   // is restored there as well.
@@ -254,7 +259,7 @@ async function test_scroll_background_tabs(aURL) {
   await checkScroll(
     tab,
     { scroll: SCROLL_STR },
-    "scroll is still fine after navigating back"
+    "scroll is correct after navigating back within the restored tab"
   );
 
   await BrowserTestUtils.closeWindow(newWin);

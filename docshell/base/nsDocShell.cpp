@@ -6554,6 +6554,7 @@ nsresult nsDocShell::EndPageLoad(nsIWebProgress* aProgress,
   // Test whether this is the top frame or a subframe
   bool isTopFrame = mBrowsingContext->IsTop();
 
+  bool hadErrorStatus = false;
   // If status code indicates an error it means that DocumentChannel already
   // tried to fixup the uri and failed. Throw an error dialog box here.
   if (NS_FAILED(aStatus)) {
@@ -6574,6 +6575,7 @@ nsresult nsDocShell::EndPageLoad(nsIWebProgress* aProgress,
                                        mBrowsingContext->GetUseErrorPages(),
                                        isInitialDocument,
                                        &skippedUnknownProtocolNavigation);
+    hadErrorStatus = true;
     if (NS_FAILED(aStatus)) {
       if (!mIsBeingDestroyed) {
         DisplayLoadError(aStatus, url, nullptr, aChannel);
@@ -6595,6 +6597,12 @@ nsresult nsDocShell::EndPageLoad(nsIWebProgress* aProgress,
     PredictorLearnRedirect(url, aChannel, loadInfo->GetOriginAttributes());
   }
 
+  if (hadErrorStatus) {
+    // Don't send session store updates if the reason EndPageLoad was called is
+    // because we are process switching. Sometimes the update takes too long and
+    // incorrectly overrides session store data from the following load.
+    return NS_OK;
+  }
   if constexpr (SessionStoreUtils::NATIVE_LISTENER) {
     if (Document* document = GetDocument()) {
       if (WindowGlobalChild* windowChild = document->GetWindowGlobalChild()) {
