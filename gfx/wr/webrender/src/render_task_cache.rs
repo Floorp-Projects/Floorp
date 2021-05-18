@@ -69,7 +69,6 @@ pub struct RenderTaskCacheEntry {
     user_data: Option<[f32; 4]>,
     target_kind: RenderTargetKind,
     is_opaque: bool,
-    frame_id: u64,
     pub handle: TextureCacheHandle,
     /// If a render task was generated for this cache entry on _this_ frame,
     /// we need to track the task id here. This allows us to hook it up as
@@ -90,7 +89,6 @@ pub enum RenderTaskCacheMarker {}
 pub struct RenderTaskCache {
     map: FastHashMap<RenderTaskCacheKey, FreeListHandle<RenderTaskCacheMarker>>,
     cache_entries: FreeList<RenderTaskCacheEntry, RenderTaskCacheMarker>,
-    frame_id: u64,
 }
 
 pub type RenderTaskCacheEntryHandle = WeakFreeListHandle<RenderTaskCacheMarker>;
@@ -100,7 +98,6 @@ impl RenderTaskCache {
         RenderTaskCache {
             map: FastHashMap::default(),
             cache_entries: FreeList::new(),
-            frame_id: 0,
         }
     }
 
@@ -113,7 +110,6 @@ impl RenderTaskCache {
         &mut self,
         texture_cache: &mut TextureCache,
     ) {
-        self.frame_id += 1;
         profile_scope!("begin_frame");
         // Drop any items from the cache that have been
         // evicted from the texture cache.
@@ -129,25 +125,15 @@ impl RenderTaskCache {
         // from here so that this hash map doesn't
         // grow indefinitely!
         let cache_entries = &mut self.cache_entries;
-        let frame_id = self.frame_id;
 
         self.map.retain(|_, handle| {
-            let mut retain = texture_cache.is_allocated(
+            let retain = texture_cache.is_allocated(
                 &cache_entries.get(handle).handle,
             );
-            if retain {
-                let entry = cache_entries.get_mut(&handle);
-                if frame_id > entry.frame_id + 10 {
-                    texture_cache.evict_handle(&entry.handle);
-                    retain = false;
-                }
-            }
-
             if !retain {
                 let handle = mem::replace(handle, FreeListHandle::invalid());
                 cache_entries.free(handle);
             }
-
             retain
         });
 
@@ -237,7 +223,6 @@ impl RenderTaskCache {
     where
         F: FnOnce(&mut RenderTaskGraphBuilder) -> Result<RenderTaskId, ()>,
     {
-        let frame_id = self.frame_id;
         let size = key.size;
         // Get the texture cache handle for this cache key,
         // or create one.
@@ -248,13 +233,11 @@ impl RenderTaskCache {
                 user_data,
                 target_kind: RenderTargetKind::Color, // will be set below.
                 is_opaque,
-                frame_id,
                 render_task_id: None,
             };
             cache_entries.insert(entry)
         });
         let cache_entry = cache_entries.get_mut(entry_handle);
-        cache_entry.frame_id = self.frame_id;
 
         // Check if this texture cache handle is valid.
         if texture_cache.request(&cache_entry.handle, gpu_cache) {

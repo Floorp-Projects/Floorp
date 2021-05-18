@@ -1217,29 +1217,21 @@ impl TextureCache {
 
     /// Evict a texture cache handle that was previously set to be in manual
     /// eviction mode.
-    pub fn evict_handle(&mut self, handle: &TextureCacheHandle) {
-        match handle {
-            TextureCacheHandle::Manual(handle) => {
-                // Find the strong handle that matches this weak handle. If this
-                // ever shows up in profiles, we can make it a hash (but the number
-                // of manual eviction handles is typically small).
-                // Alternatively, we could make a more forgiving FreeList variant
-                // which does not differentiate between strong and weak handles.
-                let index = self.manual_handles.iter().position(|strong_handle| {
-                    strong_handle.matches(handle)
-                });
-                if let Some(index) = index {
-                    let handle = self.manual_handles.swap_remove(index);
-                    let entry = self.manual_entries.free(handle);
-                    self.evict_impl(entry);
-                }
+    pub fn evict_manual_handle(&mut self, handle: &TextureCacheHandle) {
+        if let TextureCacheHandle::Manual(handle) = handle {
+            // Find the strong handle that matches this weak handle. If this
+            // ever shows up in profiles, we can make it a hash (but the number
+            // of manual eviction handles is typically small).
+            // Alternatively, we could make a more forgiving FreeList variant
+            // which does not differentiate between strong and weak handles.
+            let index = self.manual_handles.iter().position(|strong_handle| {
+                strong_handle.matches(handle)
+            });
+            if let Some(index) = index {
+                let handle = self.manual_handles.swap_remove(index);
+                let entry = self.manual_entries.free(handle);
+                self.evict_impl(entry);
             }
-            TextureCacheHandle::Auto(handle) => {
-                if let Some(entry) = self.lru_cache.remove(handle) {
-                    self.evict_impl(entry);
-                }
-            }
-            _ => {}
         }
     }
 
@@ -1920,7 +1912,7 @@ mod test_texture_cache {
         assert!(bytes_after_allocating > bytes_at_start);
 
         for handle in handles {
-            texture_cache.evict_handle(&handle);
+            texture_cache.evict_manual_handle(&handle);
         }
 
         let bytes_at_end = texture_cache.total_allocated_bytes_for_testing();
