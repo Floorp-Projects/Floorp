@@ -1735,11 +1735,6 @@ class EditorBase : public nsIEditor,
   bool IsDescendantOfEditorRoot(const nsINode* aNode) const;
 
   /**
-   * Counts number of editable child nodes.
-   */
-  uint32_t CountEditableChildren(nsINode* aNode);
-
-  /**
    * Returns true when inserting text should be a part of current composition.
    */
   bool ShouldHandleIMEComposition() const;
