@@ -181,7 +181,8 @@ var PKT_PANEL_OVERLAY = function(options) {
         }
         cb(returnlist);
       },
-      textToData(text) {
+      validateItem(item) {
+        const text = item.name;
         if ($.trim(text).length > 25 || !$.trim(text).length) {
           if (text.length > 25) {
             myself.showTagsError(myself.dictJSON.maxtaglength);
@@ -192,9 +193,13 @@ var PKT_PANEL_OVERLAY = function(options) {
                 .focus();
             }, 10);
           }
-          return null;
+          return false;
         }
+
         myself.hideTagsError();
+        return true;
+      },
+      textToData(text) {
         return { name: myself.sanitizeText(text.toLowerCase()) };
       },
       onReady() {
