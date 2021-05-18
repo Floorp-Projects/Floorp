@@ -136,6 +136,7 @@ nsCocoaWindow::nsCocoaWindow()
       mSheetNeedsShow(false),
       mInFullScreenMode(false),
       mInFullScreenTransition(false),
+      mIgnoreOcclusionCount(0),
       mModal(false),
       mFakeModal(false),
       mInNativeFullScreenMode(false),
@@ -1516,6 +1517,17 @@ static bool AlwaysUsesNativeFullScreen() {
   if (AlwaysUsesNativeFullScreen()) {
     return false;
   }
+
+  // Our fullscreen transition creates a new window occluding this window.
+  // That triggers an occlusion event which can cause DOM fullscreen requests
+  // to fail due to the context not being focused at the time the focus check
+  // is performed in the child process. Until the transition is cleaned up in
+  // CleanupFullscreenTransition(), ignore occlusion events for this window.
+  // If this method is changed to return false, the transition will not be
+  // performed and mIgnoreOcclusionCount should not be incremented.
+  MOZ_ASSERT(mIgnoreOcclusionCount >= 0);
+  mIgnoreOcclusionCount++;
+
   nsCOMPtr<nsIScreen> widgetScreen = GetWidgetScreen();
   NSScreen* cocoaScreen = ScreenHelperCocoa::CocoaScreenForScreen(widgetScreen);
 
@@ -1533,6 +1545,11 @@ static bool AlwaysUsesNativeFullScreen() {
   *aData = data;
   NS_ADDREF(data);
   return true;
+}
+
+/* virtual */ void nsCocoaWindow::CleanupFullscreenTransition() {
+  MOZ_ASSERT(mIgnoreOcclusionCount > 0);
+  mIgnoreOcclusionCount--;
 }
 
 /* virtual */ void nsCocoaWindow::PerformFullscreenTransition(FullscreenTransitionStage aStage,
@@ -2045,6 +2062,11 @@ void nsCocoaWindow::DispatchOcclusionEvent() {
 
   // Don't dispatch if the new occlustion state is the same as the current state.
   if (mIsFullyOccluded == newOcclusionState) {
+    return;
+  }
+
+  MOZ_ASSERT(mIgnoreOcclusionCount >= 0);
+  if (newOcclusionState && mIgnoreOcclusionCount > 0) {
     return;
   }
 
