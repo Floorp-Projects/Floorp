@@ -31,7 +31,7 @@ SYMBOL_REGEX = re.compile("^(.*)-[a-z0-9]{11}-bk$")
 GROUP_SYMBOL_REGEX = re.compile("^(.*)-bk$")
 
 
-def input_for_support_action(revision, task, times=1):
+def input_for_support_action(revision, task, times=1, retrigger=True):
     """Generate input for action to be scheduled.
 
     Define what label to schedule with 'label'.
@@ -43,6 +43,7 @@ def input_for_support_action(revision, task, times=1):
         "times": times,
         # We want the backfilled tasks to share the same symbol as the originating task
         "symbol": task["extra"]["treeherder"]["symbol"],
+        "retrigger": retrigger,
     }
 
     # Support tasks that are using manifest based scheduling
@@ -95,6 +96,15 @@ def input_for_support_action(revision, task, times=1):
                     "The number of times to execute each job you are backfilling."
                 ),
             },
+            "retrigger": {
+                "type": "boolean",
+                "default": True,
+                "title": "Retrigger",
+                "description": (
+                    "If False, the task won't retrigger on pushes that have already "
+                    "ran it."
+                ),
+            },
         },
         "additionalProperties": False,
     },
@@ -114,6 +124,7 @@ def backfill_action(parameters, graph_config, input, task_group_id, task_id):
         revision=parameters["head_rev"],
         task=task,
         times=input.get("times", 1),
+        retrigger=input.get("retrigger", True),
     )
 
     for push_id in pushes:
@@ -237,6 +248,15 @@ def new_label(label, tasks):
                     "The number of times to execute each job " "you are backfilling."
                 ),
             },
+            "retrigger": {
+                "type": "boolean",
+                "default": True,
+                "title": "Retrigger",
+                "description": (
+                    "If False, the task won't retrigger on pushes that have already "
+                    "ran it."
+                ),
+            },
         },
     },
 )
@@ -259,6 +279,12 @@ def add_task_with_original_manifests(
     )
 
     label = input.get("label")
+    if not input.get("retrigger") and label in label_to_taskid:
+        logger.info(
+            f"Skipping push with decision task ID {decision_task_id} as it already has this test."
+        )
+        return
+
     if label not in full_task_graph.tasks:
         label = new_label(label, full_task_graph.tasks)
 
