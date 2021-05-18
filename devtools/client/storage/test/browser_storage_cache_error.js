@@ -11,7 +11,7 @@ add_task(async function() {
   const win = await BrowserTestUtils.openNewBrowserWindow({ private: true });
   const tab = win.gBrowser.selectedBrowser;
   const systemPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
-  tab.loadURI(MAIN_DOMAIN + "storage-cache-error.html", {
+  tab.loadURI(ALT_DOMAIN_SECURED + "storage-cache-error.html", {
     triggeringPrincipal: systemPrincipal,
   });
   await BrowserTestUtils.browserLoaded(tab);
@@ -21,7 +21,7 @@ add_task(async function() {
   // this case.
   await openStoragePanel({ tab: win.gBrowser.selectedTab });
 
-  const cacheItemId = ["Cache", "http://test2.example.org"];
+  const cacheItemId = ["Cache", "https://test2.example.org"];
 
   await selectTreeItem(cacheItemId);
   ok(
