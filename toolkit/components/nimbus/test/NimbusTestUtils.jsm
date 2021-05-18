@@ -114,10 +114,8 @@ const ExperimentFakes = {
     return doExperimentCleanup;
   },
   enrollmentHelper(recipe = {}, { manager = ExperimentManager } = {}) {
-    console.log("enroll", recipe.slug);
     let enrollmentPromise = new Promise(resolve =>
       manager.store.on(`update:${recipe.slug}`, (event, experiment) => {
-        console.log("experiment update", experiment.active);
         if (experiment.active) {
           resolve(experiment);
         }

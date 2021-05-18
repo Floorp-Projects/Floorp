@@ -6,12 +6,28 @@ const { ASRouter } = ChromeUtils.import(
 const { AddonRepository } = ChromeUtils.import(
   "resource://gre/modules/addons/AddonRepository.jsm"
 );
-const { AttributionCode } = ChromeUtils.import(
-  "resource:///modules/AttributionCode.jsm"
+const { ExperimentFakes } = ChromeUtils.import(
+  "resource://testing-common/NimbusTestUtils.jsm"
+);
+const { ExperimentAPI } = ChromeUtils.import(
+  "resource://nimbus/ExperimentAPI.jsm"
 );
 
-async function openRTAMOWelcomePage() {
+add_task(function setup() {
   let sandbox = sinon.createSandbox();
+
+  sandbox
+    .stub(AddonRepository, "getAddonsByIDs")
+    .resolves([
+      { sourceURI: { scheme: "https", spec: "https://test.xpi" }, icons: {} },
+    ]);
+
+  registerCleanupFunction(() => {
+    sandbox.restore();
+  });
+});
+
+async function openRTAMOWelcomePage() {
   // Can't properly stub the child/parent actors so instead
   // we stub the modules they depend on for the RTAMO flow
   // to ensure the right thing is rendered.
@@ -27,19 +43,13 @@ async function openRTAMOWelcomePage() {
     dltoken: "00000000-0000-0000-0000-000000000000",
   });
 
-  sandbox
-    .stub(AddonRepository, "getAddonsByIDs")
-    .resolves([
-      { sourceURI: { scheme: "https", spec: "https://test.xpi" }, icons: {} },
-    ]);
-
   let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
     "about:welcome",
     true
   );
+
   registerCleanupFunction(async () => {
-    sandbox.restore();
     BrowserTestUtils.removeTab(tab);
     // Clear cache call is only possible in a testing environment
     let env = Cc["@mozilla.org/process/environment;1"].getService(
@@ -56,9 +66,6 @@ async function openRTAMOWelcomePage() {
       ua: "",
       dltoken: "",
     });
-    // Clear and refresh Attribution, and then fetch the messages again to update
-    AttributionCode._clearCache();
-    await AttributionCode.getAttrDataAsync();
   });
 
   return tab.linkedBrowser;
@@ -199,5 +206,51 @@ add_task(async function test_rtamo_aboutwelcome() {
     telemetryCall.args[1].message_id,
     "RTAMO_DEFAULT_WELCOME",
     "Message Id sent in telemetry for default RTAMO"
+  );
+});
+
+add_task(async function test_experiments_over_rtamo() {
+  let doExperimentCleanup = await ExperimentFakes.enrollWithFeatureConfig({
+    featureId: "aboutwelcome",
+    enabled: true,
+    value: { screens: [] },
+  });
+
+  let browser = await openRTAMOWelcomePage();
+
+  // We shouldn't see RTAMO
+  await test_screen_content(
+    browser,
+    "Experiment no RTAMO UI",
+    // Expected selectors:
+    [],
+    // Unexpected selectors:
+    ["h2[data-l10n-id='return-to-amo-addon-title']"]
+  );
+
+  await doExperimentCleanup();
+  ExperimentAPI._store._syncToChildren({ flush: true });
+
+  browser = await openRTAMOWelcomePage();
+
+  await test_screen_content(
+    browser,
+    "No Experiment RTAMO UI",
+    // Expected selectors:
+    [
+      "div.onboardingContainer",
+      "div.brand-logo",
+      "h2[data-l10n-id='return-to-amo-addon-title']",
+      "img[data-l10n-name='icon']",
+      "button.primary",
+      "button.secondary",
+    ],
+    // Unexpected selectors:
+    [
+      "main.AW_STEP1",
+      "main.AW_STEP2",
+      "main.AW_STEP3",
+      "div.tiles-container.info",
+    ]
   );
 });
