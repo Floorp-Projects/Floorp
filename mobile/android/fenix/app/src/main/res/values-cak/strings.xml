@@ -429,6 +429,11 @@
         and the third is the device model. -->
     <string name="default_device_name_2">%1$s pa %2$s %3$s</string>
 
+    <!-- Preference for syncing credit cards -->
+    <string name="preferences_sync_credit_cards">Rutarjeta\' kre\'ito\'</string>
+    <!-- Preference for syncing addresses -->
+    <string name="preferences_sync_address">Taq ochochib\'äl</string>
+
     <!-- Send Tab -->
     <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="fxa_received_tab_channel_name">Taq ruwi\' ek\'ulun</string>
@@ -1489,10 +1494,6 @@
     <string name="preferences_passwords_autofill">Nunojisaj pa ruyonil</string>
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">Sync tikirisanïk molojri\'ïl</string>
-    <!-- Syncing saved logins in Fenix is on -->
-    <string name="preferences_passwords_sync_logins_on">Tzijïl</string>
-    <!-- Syncing saved logins in Fenix is off -->
-    <string name="preferences_passwords_sync_logins_off">Chupül</string>
     <!-- Syncing saved logins in Fenix needs reconnect to sync -->
     <string name="preferences_passwords_sync_logins_reconnect">Tok chik</string>
     <!-- Syncing saved logins in Fenix needs login -->
@@ -1799,4 +1800,7 @@ Achi\'el: \nhttps://www.google.com/search?q=%s</string>
     <!-- Content description radio buttons with a link to more information -->
     <string name="radio_preference_info_content_description">Tipitz\' richin ch\'aqa\' rub\'anikil</string>
 
-    </resources>
+    <!-- Content description for privacy content close button -->
+    <string name="privacy_content_close_button_content_description">Titz\'apïx</string>
+
+</resources>
