@@ -107,8 +107,8 @@ bool js::obj_propertyIsEnumerable(JSContext* cx, unsigned argc, Value* vp) {
       }
 
       /* Step 5. */
-      unsigned attrs = GetPropertyAttributes(obj, prop);
-      args.rval().setBoolean((attrs & JSPROP_ENUMERATE) != 0);
+      JS::PropertyAttributes attrs = GetPropertyAttributes(obj, prop);
+      args.rval().setBoolean(attrs.enumerable());
       return true;
     }
   }
@@ -790,8 +790,8 @@ static bool PropertyIsEnumerable(JSContext* cx, HandleObject obj, HandleId id,
       return true;
     }
 
-    unsigned attrs = GetPropertyAttributes(obj, prop);
-    *enumerable = (attrs & JSPROP_ENUMERATE) != 0;
+    JS::PropertyAttributes attrs = GetPropertyAttributes(obj, prop);
+    *enumerable = attrs.enumerable();
     return true;
   }
 
