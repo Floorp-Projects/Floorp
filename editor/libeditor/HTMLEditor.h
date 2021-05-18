@@ -1204,17 +1204,6 @@ class HTMLEditor final : public TextEditor,
       CollectNonEditableNodes aCollectNonEditableNodes);
 
   /**
-   * GetWhiteSpaceEndPoint() returns point at first or last ASCII white-space
-   * or non-breakable space starting from aPoint.  I.e., this returns next or
-   * previous point whether the character is neither ASCII white-space nor
-   * non-brekable space.
-   */
-  enum class ScanDirection { Backward, Forward };
-  template <typename PT, typename RT>
-  static EditorDOMPoint GetWhiteSpaceEndPoint(
-      const RangeBoundaryBase<PT, RT>& aPoint, ScanDirection aScanDirection);
-
-  /**
    * GetCurrentHardLineStartPoint() returns start point of hard line
    * including aPoint.  If the line starts after a `<br>` element, returns
    * next sibling of the `<br>` element.  If the line is first line of a block,
@@ -1399,16 +1388,6 @@ class HTMLEditor final : public TextEditor,
       aOutArrayOfContents.AppendElement(*childContent);
     }
   }
-
-  /**
-   * GetDeepestEditableOnlyChildDivBlockquoteOrListElement() returns a `<div>`,
-   * `<blockquote>` or one of list elements.  This method climbs down from
-   * aContent while there is only one editable children and the editable child
-   * is `<div>`, `<blockquote>` or a list element.  When it reaches different
-   * kind of node, returns the last found element.
-   */
-  Element* GetDeepestEditableOnlyChildDivBlockquoteOrListElement(
-      nsINode& aNode);
 
   /**
    * Try to get parent list element at `Selection`.  This returns first find

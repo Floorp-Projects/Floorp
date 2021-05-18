@@ -2568,8 +2568,10 @@ EditActionResult HTMLEditor::ChangeSelectedHardLinesToList(
   // blockquote, then look inside of it until we find inner list or content.
   if (arrayOfContents.Length() == 1) {
     if (Element* deepestDivBlockquoteOrListElement =
-            GetDeepestEditableOnlyChildDivBlockquoteOrListElement(
-                arrayOfContents[0])) {
+            HTMLEditUtils::GetInclusiveDeepestFirstChildWhichHasOneChild(
+                arrayOfContents[0], {WalkTreeOption::IgnoreNonEditableNode},
+                nsGkAtoms::div, nsGkAtoms::blockquote, nsGkAtoms::ul,
+                nsGkAtoms::ol, nsGkAtoms::dl)) {
       if (deepestDivBlockquoteOrListElement->IsAnyOfHTMLElements(
               nsGkAtoms::div, nsGkAtoms::blockquote)) {
         arrayOfContents.Clear();
@@ -6083,8 +6085,10 @@ nsresult HTMLEditor::CollectEditTargetNodes(
         break;
       }
       Element* deepestDivBlockquoteOrListElement =
-          GetDeepestEditableOnlyChildDivBlockquoteOrListElement(
-              aOutArrayOfContents[0]);
+          HTMLEditUtils::GetInclusiveDeepestFirstChildWhichHasOneChild(
+              aOutArrayOfContents[0], {WalkTreeOption::IgnoreNonEditableNode},
+              nsGkAtoms::div, nsGkAtoms::blockquote, nsGkAtoms::ul,
+              nsGkAtoms::ol, nsGkAtoms::dl);
       if (!deepestDivBlockquoteOrListElement) {
         break;
       }
@@ -6189,26 +6193,6 @@ Element* HTMLEditor::GetParentListElementAtSelection() const {
     }
   }
   return nullptr;
-}
-
-Element* HTMLEditor::GetDeepestEditableOnlyChildDivBlockquoteOrListElement(
-    nsINode& aNode) {
-  if (!aNode.IsElement()) {
-    return nullptr;
-  }
-  // XXX If aNode is non-editable, shouldn't we return nullptr here?
-  Element* parentElement = nullptr;
-  for (nsIContent* content = aNode.AsContent();
-       content && content->IsElement() &&
-       (content->IsAnyOfHTMLElements(nsGkAtoms::div, nsGkAtoms::blockquote) ||
-        HTMLEditUtils::IsAnyListElement(content));
-       content = content->GetFirstChild()) {
-    if (CountEditableChildren(content) != 1) {
-      return content->AsElement();
-    }
-    parentElement = content->AsElement();
-  }
-  return parentElement;
 }
 
 nsresult HTMLEditor::SplitParentInlineElementsAtRangeEdges(
