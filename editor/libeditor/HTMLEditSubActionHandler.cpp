@@ -7737,8 +7737,8 @@ nsresult HTMLEditor::GetInlineStyles(nsIContent& aContent,
                      // at creating new StyleCache instance.
     // Don't use CSS for <font size>, we don't support it usefully (bug 780035)
     if (!useCSS || (property == nsGkAtoms::size)) {
-      isSet = IsTextPropertySetByContent(&aContent, tag, attribute, nullptr,
-                                         &value);
+      isSet = HTMLEditUtils::IsInlineStyleSetByElement(
+          aContent, *tag, attribute, nullptr, &value);
     } else {
       isSet = CSSEditUtils::IsComputedCSSEquivalentToHTMLInlineStyleSet(
           aContent, MOZ_KnownLive(tag), MOZ_KnownLive(attribute), value);

@@ -3802,41 +3802,6 @@ nsresult HTMLEditor::SelectAllInternal() {
   return error.StealNSResult();
 }
 
-// this will NOT find aAttribute unless aAttribute has a non-null value
-// so singleton attributes like <Table border> will not be matched!
-bool HTMLEditor::IsTextPropertySetByContent(nsINode* aNode, nsAtom* aProperty,
-                                            nsAtom* aAttribute,
-                                            const nsAString* aValue,
-                                            nsAString* outValue) {
-  MOZ_ASSERT(aNode && aProperty);
-
-  for (Element* element = aNode->GetAsElementOrParentElement(); element;
-       element = element->GetParentElement()) {
-    if (aProperty != element->NodeInfo()->NameAtom()) {
-      continue;
-    }
-    if (!aAttribute) {
-      return true;
-    }
-    nsAutoString value;
-    element->GetAttr(kNameSpaceID_None, aAttribute, value);
-    if (outValue) {
-      *outValue = value;
-    }
-    if (!value.IsEmpty()) {
-      if (!aValue) {
-        return true;
-      }
-      if (aValue->Equals(value, nsCaseInsensitiveStringComparator)) {
-        return true;
-      }
-      // We found the prop with the attribute, but the value doesn't match.
-      return false;
-    }
-  }
-  return false;
-}
-
 bool HTMLEditor::SetCaretInTableCell(Element* aElement) {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
