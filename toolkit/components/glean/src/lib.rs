@@ -36,22 +36,22 @@ extern crate cstr;
 extern crate xpcom;
 
 use std::env;
-use std::ffi::CString;
-use std::ops::DerefMut;
+use std::ffi::CStr;
+use std::os::raw::c_char;
 use std::path::PathBuf;
 
 use nserror::{nsresult, NS_ERROR_FAILURE, NS_OK};
-use nsstring::{nsACString, nsCString, nsString};
-use xpcom::interfaces::{mozIViaduct, nsIFile, nsIXULAppInfo};
-use xpcom::XpCom;
+use nsstring::{nsACString, nsCStr, nsCString, nsString};
+use xpcom::interfaces::{
+    mozIViaduct, nsIFile, nsIObserver, nsIPrefBranch, nsISupports, nsIXULAppInfo,
+};
+use xpcom::{RefPtr, XpCom};
 
 use glean::{ClientInfoMetrics, Configuration};
 
-mod upload_pref;
 mod user_activity;
 mod viaduct_uploader;
 
-use crate::upload_pref::UploadPrefObserver;
 use crate::user_activity::UserActivityObserver;
 use crate::viaduct_uploader::ViaductUploader;
 
@@ -89,7 +89,8 @@ pub unsafe extern "C" fn fog_init(
     };
     log::debug!("Client Info: {:#?}", client_info);
 
-    if let Err(e) = UploadPrefObserver::begin_observing() {
+    let pref_observer = UploadPrefObserver::allocate(InitUploadPrefObserver {});
+    if let Err(e) = pref_observer.begin_observing() {
         log::error!(
             "Could not observe data upload pref. Abandoning FOG init due to {:?}",
             e
@@ -203,23 +204,9 @@ fn get_data_path() -> Result<String, nsresult> {
 fn get_app_info() -> Result<(String, String, String), nsresult> {
     let xul = xpcom::services::get_XULRuntime().ok_or(NS_ERROR_FAILURE)?;
 
-    let pref_service = xpcom::services::get_PrefService().ok_or(NS_ERROR_FAILURE)?;
-    let branch = xpcom::getter_addrefs(|p| {
-        // Safe because:
-        //  * `null` is explicitly allowed per documentation
-        //  * `p` is a valid outparam guaranteed by `getter_addrefs`
-        unsafe { pref_service.GetDefaultBranch(std::ptr::null(), p) }
-    })?;
-    let pref_name = CString::new("app.update.channel").map_err(|_| NS_ERROR_FAILURE)?;
     let mut channel = nsCString::new();
-    // Safe because:
-    //  * `branch` is non-null (otherwise `getter_addrefs` would've been `Err`
-    //  * `pref_name` exists so a pointer to it is valid for the life of the function
-    //  * `channel` exists so a pointer to it is valid, and it can be written to
     unsafe {
-        (*branch)
-            .GetCharPref(pref_name.as_ptr(), channel.deref_mut() as *mut nsACString)
-            .to_result()?;
+        xul.GetDefaultUpdateChannel(&mut *channel).to_result()?;
     }
 
     let app_info = match xul.query_interface::<nsIXULAppInfo>() {
@@ -250,6 +237,55 @@ fn get_app_info() -> Result<(String, String, String), nsresult> {
         version.to_string(),
         channel.to_string(),
     ))
+}
+
+// Partially cargo-culted from https://searchfox.org/mozilla-central/rev/598e50d2c3cd81cd616654f16af811adceb08f9f/security/manager/ssl/cert_storage/src/lib.rs#1192
+#[derive(xpcom)]
+#[xpimplements(nsIObserver)]
+#[refcnt = "atomic"]
+struct InitUploadPrefObserver {}
+
+#[allow(non_snake_case)]
+impl UploadPrefObserver {
+    unsafe fn begin_observing(&self) -> Result<(), nsresult> {
+        let pref_service = xpcom::services::get_PrefService().ok_or(NS_ERROR_FAILURE)?;
+        let pref_branch: RefPtr<nsIPrefBranch> =
+            (*pref_service).query_interface().ok_or(NS_ERROR_FAILURE)?;
+        let pref_nscstr = &nsCStr::from("datareporting.healthreport.uploadEnabled") as &nsACString;
+        (*pref_branch)
+            .AddObserverImpl(pref_nscstr, self.coerce::<nsIObserver>(), false)
+            .to_result()?;
+        Ok(())
+    }
+
+    unsafe fn Observe(
+        &self,
+        _subject: *const nsISupports,
+        topic: *const c_char,
+        pref_name: *const i16,
+    ) -> nserror::nsresult {
+        let topic = CStr::from_ptr(topic).to_str().unwrap();
+        // Conversion utf16 to utf8 is messy.
+        // We should only ever observe changes to the one pref we want,
+        // but just to be on the safe side let's assert.
+
+        // cargo-culted from https://searchfox.org/mozilla-central/rev/598e50d2c3cd81cd616654f16af811adceb08f9f/security/manager/ssl/cert_storage/src/lib.rs#1606-1612
+        // (with a little transformation)
+        let len = (0..).take_while(|&i| *pref_name.offset(i) != 0).count(); // find NUL.
+        let slice = std::slice::from_raw_parts(pref_name as *const u16, len);
+        let pref_name = match String::from_utf16(slice) {
+            Ok(name) => name,
+            Err(_) => return NS_ERROR_FAILURE,
+        };
+        log::info!("Observed {:?}, {:?}", topic, pref_name);
+        debug_assert!(
+            topic == "nsPref:changed" && pref_name == "datareporting.healthreport.uploadEnabled"
+        );
+
+        let upload_enabled = static_prefs::pref!("datareporting.healthreport.uploadEnabled");
+        glean::set_upload_enabled(upload_enabled);
+        NS_OK
+    }
 }
 
 static mut PENDING_BUF: Vec<u8> = Vec::new();
