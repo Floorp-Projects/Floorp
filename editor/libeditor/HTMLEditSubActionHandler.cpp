@@ -5502,23 +5502,16 @@ EditorDOMPoint HTMLEditor::GetWhiteSpaceEndPoint(
     return point;
   }
 
-  bool isSpace = false, isNBSP = false;
-  nsIContent* newContent = aPoint.Container()->AsContent();
-  int32_t newOffset = *aPoint.Offset(
-      RangeBoundaryBase<PT, RT>::OffsetFilter::kValidOrInvalidOffsets);
-  while (newContent) {
-    int32_t offset = -1;
-    nsCOMPtr<nsIContent> content;
-    HTMLEditor::IsNextCharInNodeWhiteSpace(newContent, newOffset, &isSpace,
-                                           &isNBSP, getter_AddRefs(content),
-                                           &offset);
-    if (!isSpace && !isNBSP) {
-      break;
+  EditorDOMPoint point(aPoint);
+  if (point.IsInTextNode()) {
+    while (!point.IsEndOfContainer()) {
+      if (!point.IsCharASCIISpaceOrNBSP()) {
+        break;
+      }
+      MOZ_ALWAYS_TRUE(point.AdvanceOffset());
     }
-    newContent = content;
-    newOffset = offset;
   }
-  return EditorDOMPoint(newContent, newOffset);
+  return point;
 }
 
 template <typename PT, typename RT>
