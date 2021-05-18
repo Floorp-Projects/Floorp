@@ -327,6 +327,17 @@ add_task(async function testCookiesSubViewAllowed() {
     "indicates whether the cookie was blocked or allowed"
   );
 
+  let stateLabel = listItem.querySelector(
+    ".protections-popup-list-state-label"
+  );
+  ok(stateLabel, "List item has a state label");
+  ok(BrowserTestUtils.is_visible(stateLabel), "State label is visible");
+  is(
+    stateLabel.value,
+    gNavigatorBundle.getString("contentBlocking.cookiesView.allowed.label"),
+    "State label has correct text"
+  );
+
   let button = listItem.querySelector(
     ".permission-popup-permission-remove-button"
   );
