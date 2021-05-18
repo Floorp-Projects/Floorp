@@ -35,3 +35,18 @@ pub unsafe fn transmute_from_vtable_ptr<'a, T, U>(
 ) -> &'a U {
     &*((*this as *const *const ()).sub(vtable_index) as *const U)
 }
+
+/// On some ABIs, extra information is included before the vtable's function
+/// pointers which are used to implement RTTI. We build Gecko with RTTI
+/// disabled, however these fields may still be present to support
+/// `dynamic_cast<void*>` on our rust VTables in case they are accessed.
+///
+/// Itanium ABI Layout: https://refspecs.linuxbase.org/cxxabi-1.83.html#vtable
+#[repr(C)]
+pub struct VTableExtra<T> {
+    #[cfg(not(windows))]
+    pub offset: isize,
+    #[cfg(not(windows))]
+    pub typeinfo: *const libc::c_void,
+    pub vtable: T,
+}
