@@ -410,17 +410,17 @@ already_AddRefed<DocGroup> BrowsingContextGroup::AddDocument(
   return do_AddRef(docGroup);
 }
 
-void BrowsingContextGroup::RemoveDocument(const nsACString& aKey,
-                                          Document* aDocument) {
+void BrowsingContextGroup::RemoveDocument(Document* aDocument,
+                                          DocGroup* aDocGroup) {
   MOZ_ASSERT(NS_IsMainThread());
-  RefPtr<DocGroup> docGroup = aDocument->GetDocGroup();
+  RefPtr<DocGroup> docGroup = aDocGroup;
   // Removing the last document in DocGroup might decrement the
   // DocGroup BrowsingContextGroup's refcount to 0.
   RefPtr<BrowsingContextGroup> kungFuDeathGrip(this);
   docGroup->RemoveDocument(aDocument);
 
   if (docGroup->IsEmpty()) {
-    mDocGroups.Remove(aKey);
+    mDocGroups.Remove(docGroup->GetKey());
   }
 }
 

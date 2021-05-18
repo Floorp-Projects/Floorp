@@ -57,6 +57,7 @@
 #endif
 
 #include "mozpkix/pkix.h"
+#include "mozpkix/pkixder.h"
 #include "mozpkix/test/pkixtestutil.h"
 
 // PrintTo must be in the same namespace as the type we're overloading it for.
@@ -71,8 +72,8 @@ inline void PrintTo(const Result& result, ::std::ostream* os) {
     *os << "mozilla::pkix::Result(" << static_cast<unsigned int>(result) << ")";
   }
 }
-}
-}  // namespace mozilla::pkix
+}  // namespace pkix
+}  // namespace mozilla
 
 namespace mozilla {
 namespace pkix {
@@ -223,8 +224,26 @@ class DefaultNameMatchingPolicy : public NameMatchingPolicy {
     return Success;
   }
 };
+
+// python DottedOIDToCode.py --tlv id-kp-clientAuth 1.3.6.1.5.5.7.3.2
+const uint8_t tlv_id_kp_clientAuth[] = {0x06, 0x08, 0x2b, 0x06, 0x01,
+                                        0x05, 0x05, 0x07, 0x03, 0x02};
+
+// python DottedOIDToCode.py --tlv id-kp-codeSigning 1.3.6.1.5.5.7.3.3
+const uint8_t tlv_id_kp_codeSigning[] = {0x06, 0x08, 0x2b, 0x06, 0x01,
+                                         0x05, 0x05, 0x07, 0x03, 0x03};
+
+// python DottedOIDToCode.py --tlv id-ce-extKeyUsage 2.5.29.37
+const uint8_t tlv_id_ce_extKeyUsage[] = {0x06, 0x03, 0x55, 0x1d, 0x25};
+
+inline ByteString CreateEKUExtension(ByteString ekuOIDs) {
+  return TLV(der::SEQUENCE,
+             BytesToByteString(tlv_id_ce_extKeyUsage) +
+                 TLV(der::OCTET_STRING, TLV(der::SEQUENCE, ekuOIDs)));
 }
-}
-}  // namespace mozilla::pkix::test
+
+}  // namespace test
+}  // namespace pkix
+}  // namespace mozilla
 
 #endif  // mozilla_pkix_pkixgtest_h

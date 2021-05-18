@@ -178,7 +178,7 @@ bool ModuleLoader::dynamicImport(JSContext* cx,
   MOZ_ASSERT(promise);
   RootedValue moduleRequestValue(cx, ObjectValue(*moduleRequest));
   RootedValue promiseValue(cx, ObjectValue(*promise));
-  RootedObject closure(cx, JS_NewPlainObject(cx));
+  RootedObject closure(cx, JS_NewObjectWithGivenProto(cx, nullptr, nullptr));
   if (!closure ||
       !JS_DefineProperty(cx, closure, "referencingPrivate", referencingPrivate,
                          JSPROP_ENUMERATE) ||

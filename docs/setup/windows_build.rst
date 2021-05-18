@@ -15,8 +15,8 @@ Requirements
 
 -  **Memory:** 4GB RAM minimum, 8GB+ recommended.
 -  **Disk Space:** At least 40GB of free disk space.
--  **Operating System:** Windows 7 or later. It is advisable to have
-   Windows Update be fully up-to-date.
+-  **Operating System:** Windows 10. It is advisable to have Windows Update be fully
+   up-to-date. See :ref:`build_hosts` for more information.
 
 1. System preparation
 ---------------------

@@ -23,6 +23,18 @@ static uint16_t get16bit(const unsigned char* aData, unsigned int index) {
   return ((aData[index] << 8) | aData[index + 1]);
 }
 
+static bool get16bit(const Span<const uint8_t>& aData,
+                     Span<const uint8_t>::const_iterator& it,
+                     uint16_t& result) {
+  if (it >= aData.cend() || std::distance(it, aData.cend()) < 2) {
+    return false;
+  }
+
+  result = (*it << 8) | *(it + 1);
+  it += 2;
+  return true;
+}
+
 static uint32_t get32bit(const unsigned char* aData, unsigned int index) {
   return (aData[index] << 24) | (aData[index + 1] << 16) |
          (aData[index + 2] << 8) | aData[index + 3];
@@ -1085,54 +1097,55 @@ bool ODoHDNSPacket::ParseODoHConfigs(Span<const uint8_t> aData,
   //
   //  ObliviousDoHConfig ObliviousDoHConfigs<1..2^16-1>;
 
-  // At least we need two bytes to indicate the total length of ODoHConfig.
-  if (aData.Length() < 2) {
+  Span<const uint8_t>::const_iterator it = aData.begin();
+  uint16_t length = 0;
+  if (!get16bit(aData, it, length)) {
     return false;
   }
-
-  uint32_t index = 0;
-  uint16_t length = get16bit(aData.Elements(), index);
-  index += 2;
 
   if (length != aData.Length() - 2) {
     return false;
   }
 
   nsTArray<ObliviousDoHConfig> result;
-  while (length > 0) {
+  static const uint32_t kMinimumConfigContentLength = 12;
+  while (std::distance(it, aData.cend()) > kMinimumConfigContentLength) {
     ObliviousDoHConfig config;
-    config.mVersion = get16bit(aData.Elements(), index);
-    index += 2;
-    length -= 2;
-
-    config.mLength = get16bit(aData.Elements(), index);
-    index += 2;
-    length -= 2;
-
-    if (config.mLength > length) {
+    if (!get16bit(aData, it, config.mVersion)) {
       return false;
     }
 
-    config.mContents.mKemId = get16bit(aData.Elements(), index);
-    index += 2;
-    length -= 2;
-    config.mContents.mKdfId = get16bit(aData.Elements(), index);
-    index += 2;
-    length -= 2;
-    config.mContents.mAeadId = get16bit(aData.Elements(), index);
-    index += 2;
-    length -= 2;
-
-    uint16_t keyLength = get16bit(aData.Elements(), index);
-    index += 2;
-    length -= 2;
-    if (keyLength > length) {
+    if (!get16bit(aData, it, config.mLength)) {
       return false;
     }
 
-    config.mContents.mPublicKey.AppendElements(Span(&aData[index], keyLength));
-    index += keyLength;
-    length -= keyLength;
+    if (std::distance(it, aData.cend()) < config.mLength) {
+      return false;
+    }
+
+    if (!get16bit(aData, it, config.mContents.mKemId)) {
+      return false;
+    }
+
+    if (!get16bit(aData, it, config.mContents.mKdfId)) {
+      return false;
+    }
+
+    if (!get16bit(aData, it, config.mContents.mAeadId)) {
+      return false;
+    }
+
+    uint16_t keyLength = 0;
+    if (!get16bit(aData, it, keyLength)) {
+      return false;
+    }
+
+    if (!keyLength || std::distance(it, aData.cend()) < keyLength) {
+      return false;
+    }
+
+    config.mContents.mPublicKey.AppendElements(Span(it, it + keyLength));
+    it += keyLength;
 
     CreateConfigId(config);
 

@@ -871,6 +871,7 @@ pub unsafe extern "C" fn wgpu_client_create_compute_pipeline(
     device_id: id::DeviceId,
     desc: &ComputePipelineDescriptor,
     bb: &mut ByteBuf,
+    implicit_pipeline_layout_id: *mut Option<id::PipelineLayoutId>,
     implicit_bind_group_layout_ids: *mut Option<id::BindGroupLayoutId>,
 ) -> id::ComputePipelineId {
     let backend = device_id.backend();
@@ -887,6 +888,7 @@ pub unsafe extern "C" fn wgpu_client_create_compute_pipeline(
         Some(_) => None,
         None => {
             let implicit = ImplicitLayout::new(identities.select(backend), backend);
+            ptr::write(implicit_pipeline_layout_id, Some(implicit.pipeline));
             for (i, bgl_id) in implicit.bind_groups.iter().enumerate() {
                 *implicit_bind_group_layout_ids.add(i) = Some(*bgl_id);
             }
@@ -905,6 +907,7 @@ pub unsafe extern "C" fn wgpu_client_create_render_pipeline(
     device_id: id::DeviceId,
     desc: &RenderPipelineDescriptor,
     bb: &mut ByteBuf,
+    implicit_pipeline_layout_id: *mut Option<id::PipelineLayoutId>,
     implicit_bind_group_layout_ids: *mut Option<id::BindGroupLayoutId>,
 ) -> id::RenderPipelineId {
     let backend = device_id.backend();
@@ -925,6 +928,7 @@ pub unsafe extern "C" fn wgpu_client_create_render_pipeline(
         Some(_) => None,
         None => {
             let implicit = ImplicitLayout::new(identities.select(backend), backend);
+            ptr::write(implicit_pipeline_layout_id, Some(implicit.pipeline));
             for (i, bgl_id) in implicit.bind_groups.iter().enumerate() {
                 *implicit_bind_group_layout_ids.add(i) = Some(*bgl_id);
             }

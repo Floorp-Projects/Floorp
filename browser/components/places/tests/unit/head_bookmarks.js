@@ -66,15 +66,15 @@ const NUMBER_OF_TRIES = 30;
  * Similar to waitForConditionPromise, but poll for an asynchronous value
  * every SINGLE_TRY_TIMEOUT ms, for no more than tryCount times.
  *
- * @param promiseFn
+ * @param {function} promiseFn
  *        A function to generate a promise, which resolves to the expected
  *        asynchronous value.
- * @param timeoutMsg
+ * @param {msg} timeoutMsg
  *        The reason to reject the returned promise with.
- * @param [optional] tryCount
+ * @param {number} [tryCount]
  *        Maximum times to try before rejecting the returned promise with
  *        timeoutMsg, defaults to NUMBER_OF_TRIES.
- * @return {Promise}
+ * @returns {Promise}
  * @resolves to the asynchronous value being polled.
  * @rejects if the asynchronous value is not available after tryCount attempts.
  */

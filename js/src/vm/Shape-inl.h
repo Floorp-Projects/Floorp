@@ -161,18 +161,19 @@ template <class ObjectSubclass>
   return true;
 }
 
-static inline uint8_t GetPropertyAttributes(JSObject* obj,
-                                            PropertyResult prop) {
+static inline JS::PropertyAttributes GetPropertyAttributes(
+    JSObject* obj, PropertyResult prop) {
   MOZ_ASSERT(obj->is<NativeObject>());
 
   if (prop.isDenseElement()) {
     return obj->as<NativeObject>().getElementsHeader()->elementAttributes();
   }
   if (prop.isTypedArrayElement()) {
-    return JSPROP_ENUMERATE;
+    return {JS::PropertyAttribute::Configurable,
+            JS::PropertyAttribute::Enumerable, JS::PropertyAttribute::Writable};
   }
 
-  return prop.shapeProperty().attributes();
+  return prop.shapeProperty().propAttributes();
 }
 
 /*

@@ -3502,11 +3502,11 @@ void HTMLMediaElement::AddOutputTrackSourceToOutputStream(
   RefPtr<MediaStreamTrack> domTrack;
   if (aSource->Track()->mType == MediaSegment::AUDIO) {
     domTrack = new AudioStreamTrack(
-        aOutputStream.mStream->GetParentObject(), aSource->Track(), aSource,
+        aOutputStream.mStream->GetOwner(), aSource->Track(), aSource,
         MediaStreamTrackState::Live, aSource->Muted());
   } else {
     domTrack = new VideoStreamTrack(
-        aOutputStream.mStream->GetParentObject(), aSource->Track(), aSource,
+        aOutputStream.mStream->GetOwner(), aSource->Track(), aSource,
         MediaStreamTrackState::Live, aSource->Muted());
   }
 

@@ -96,6 +96,18 @@ void OverscrollHandoffChain::SnapBackOverscrolledApzc(
   }
 }
 
+void OverscrollHandoffChain::SnapBackOverscrolledApzcForMomentum(
+    const AsyncPanZoomController* aStart,
+    const ParentLayerPoint& aVelocity) const {
+  uint32_t i = IndexOf(aStart);
+  for (; i < Length(); ++i) {
+    AsyncPanZoomController* apzc = mChain[i];
+    if (!apzc->IsDestroyed()) {
+      apzc->SnapBackIfOverscrolledForMomentum(aVelocity);
+    }
+  }
+}
+
 bool OverscrollHandoffChain::CanBePanned(
     const AsyncPanZoomController* aApzc) const {
   // Find |aApzc| in the handoff chain.

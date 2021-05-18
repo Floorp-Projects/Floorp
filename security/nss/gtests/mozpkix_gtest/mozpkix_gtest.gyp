@@ -13,6 +13,7 @@
       'sources': [
         '<(DEPTH)/gtests/common/gtests.cc',
         'pkixbuild_tests.cpp',
+        'pkixc_tests.cpp',
         'pkixcert_extension_tests.cpp',
         'pkixcert_signature_algorithm_tests.cpp',
         'pkixcheck_CheckExtendedKeyUsage_tests.cpp',

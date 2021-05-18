@@ -18,6 +18,7 @@ class BindGroupLayout;
 class Device;
 
 class ComputePipeline final : public ObjectBase, public ChildOf<Device> {
+  const RawId mImplicitPipelineLayoutId;
   const nsTArray<RawId> mImplicitBindGroupLayoutIds;
 
  public:
@@ -27,6 +28,7 @@ class ComputePipeline final : public ObjectBase, public ChildOf<Device> {
   const RawId mId;
 
   ComputePipeline(Device* const aParent, RawId aId,
+                  RawId aImplicitPipelineLayoutId,
                   nsTArray<RawId>&& aImplicitBindGroupLayoutIds);
   already_AddRefed<BindGroupLayout> GetBindGroupLayout(uint32_t index) const;
 

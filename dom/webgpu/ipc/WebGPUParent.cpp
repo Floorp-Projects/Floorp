@@ -460,6 +460,15 @@ ipc::IPCResult WebGPUParent::RecvRenderPipelineDestroy(RawId aSelfId) {
   return IPC_OK();
 }
 
+ipc::IPCResult WebGPUParent::RecvImplicitLayoutDestroy(
+    RawId aImplicitPlId, const nsTArray<RawId>& aImplicitBglIds) {
+  ffi::wgpu_server_pipeline_layout_drop(mContext, aImplicitPlId);
+  for (const auto& id : aImplicitBglIds) {
+    ffi::wgpu_server_bind_group_layout_drop(mContext, id);
+  }
+  return IPC_OK();
+}
+
 // TODO: proper destruction
 static const uint64_t kBufferAlignment = 0x100;
 

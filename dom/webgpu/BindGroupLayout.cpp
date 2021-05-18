@@ -15,8 +15,8 @@ namespace webgpu {
 GPU_IMPL_CYCLE_COLLECTION(BindGroupLayout, mParent)
 GPU_IMPL_JS_WRAP(BindGroupLayout)
 
-BindGroupLayout::BindGroupLayout(Device* const aParent, RawId aId)
-    : ChildOf(aParent), mId(aId) {}
+BindGroupLayout::BindGroupLayout(Device* const aParent, RawId aId, bool aOwning)
+    : ChildOf(aParent), mId(aId), mOwning(aOwning) {}
 
 BindGroupLayout::~BindGroupLayout() { Cleanup(); }
 
@@ -24,7 +24,7 @@ void BindGroupLayout::Cleanup() {
   if (mValid && mParent) {
     mValid = false;
     auto bridge = mParent->GetBridge();
-    if (bridge && bridge->IsOpen()) {
+    if (mOwning && bridge && bridge->IsOpen()) {
       bridge->SendBindGroupLayoutDestroy(mId);
     }
   }
