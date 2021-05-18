@@ -22,7 +22,20 @@ explains how to use the Gecko profiler.
 * [AWSY](memory/awsy.md) (are we slim yet?) is a memory usage and regression tracker.
 * [Bloatview](memory/bloatview.md) prints per-class statistics on allocations and refcounts, and provides gross numbers on the amount of memory being leaked broken down by class. It is used as part of Mozilla's continuous integration testing.
 * [Refcount Tracing and Balancing](memory/refcount_tracing_and_balancing.md) are ways to track down leaks caused by incorrect uses of reference counting. They are slow and not particular easy to use, and thus most suitable for use by expert developers.
-* [GC and CC Logs](memory/GC_and_CC_logs.md)
+* [GC and CC Logs](memory/gc_and_cc_logs.md)
 * [Leak Gauge](memory/leak_gauge.md) can be generated and analyzed to in various ways. In particular, they can help you understand why a particular object is being kept alive.
 * [LogAlloc](https://searchfox.org/mozilla-central/source/memory/replace/logalloc/README) is a tool that dumps a log of memory allocations in Gecko. That log can then be replayed against Firefox's default memory allocator independently or through another replace-malloc library, allowing the testing of other allocators under the exact same workload.
 * [See also the documentation on Leak-hunting strategies and tips.](leak_hunting_strategies_and_tips.md) 
+
+
+## Power Profiling
+
+* [An overview of power profiling](power_profiling_overview.md). It includes details about hardware, what can be measured, and recommended approaches. It should be the starting point for anybody new to power profiling. 
+* **(Mac, Linux)** [tools/power/rapl](tools_power_rapl.md) is a command-line utility in the Mozilla codebase that uses the Intel RAPL interface to gather direct power estimates for the package, cores, GPU and memory.
+* **(Mac-only)** [powermetrics](powermetrics.md) is a command-line utility that gathers and displays a wide range of global and per-process measurements, including CPU usage, GPU usage, and various wakeups frequencies.
+* **(All-platforms)** [TimerFirings](timerfirings_logging.md) logging is a built-in logging mechanism that prints data on every time fired.
+* **(Mac-only)** [Activity Monitor and top](activity_monitor_and_top.md) The battery status menu, Activity Monitor and top are three related Mac tools that have major flaws but often consulted by users, and so are worth understanding.
+* **(Windows, Mac and Linux)** [Intel Power Gadget](intel_power_gadget.md) Intel Power Gadget provides real-time graphs for package and processor RAPL estimates. It also provides an API through which those estimates can be obtained.
+* **(Linux only)** [perf](perf.md) perf is a powerful command-line utility that can measure many different things, including energy estimates and high-context measurements of things such as wakeups.
+* **(Linux-only)** [turbostat](turbostat.md) is a command-line utility that gathers and displays various power-related measurements, with a focus on per-CPU measurements such as frequencies and C-states.
+* **(Linux-only)** [powertop](https://01.org/powertop) is an interactive command-line utility that gathers and displays various power-related measurements.
