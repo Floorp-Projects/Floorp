@@ -158,7 +158,7 @@ mochitest-browser-chrome:
     chunks:
         by-test-platform:
             linux.*/debug: 16
-            linux.*64-asan/opt: 16
+            linux.*64-asan(-qr)?/opt: 16
             linux.*64-tsan/opt: 32
             macosx.*64/debug: 16
             windows10-64-ccov.*/.*: 14
@@ -243,7 +243,7 @@ mochitest-chrome:
         by-test-platform:
             .*(-ccov|-qr).*/.*: 3
             windows10-64-ccov-qr/opt: 3
-            .*-asan/opt: 3
+            .*-asan(-qr)?/opt: 3
             .*-tsan/opt: 6
             (linux.*64|windows.*|macosx1015-64)/debug: 3
             default: 2
@@ -302,7 +302,7 @@ mochitest-devtools-chrome:
             .*-ccov.*/.*: 16
             linux.*64/debug: 12
             macosx.*64/debug: 8
-            .*-asan/opt: 8
+            .*-asan(-qr)?/opt: 8
             .*-tsan/opt: 16
             default: 5
     mozharness:
@@ -406,14 +406,16 @@ mochitest-media:
                     (linux.*64|windows10-64)-qr/debug: ['autoland', 'mozilla-central']
                     (linux.*64|windows10-64)-qr/opt: ['autoland']
                     (linux.*64|windows10-64)-shippable-qr/opt: ['mozilla-central']
-                    linux.*64-(asan|tsan)/opt: ['autoland', 'mozilla-central']
+                    linux.*64-asan-qr/opt: ['autoland', 'mozilla-central']
+                    linux.*64-tsan/opt: ['autoland', 'mozilla-central']
                     default: []
             fission-webgl-ipc:
                 by-test-platform:
                     (linux.*64|windows10-64)-qr/debug: ['autoland', 'mozilla-central']
                     (linux.*64|windows10-64)-qr/opt: ['autoland']
                     (linux.*64|windows10-64)-shippable-qr/opt: ['mozilla-central']
-                    linux.*64-(asan|tsan)/opt: ['autoland', 'mozilla-central']
+                    linux.*64-asan-qr/opt: ['autoland', 'mozilla-central']
+                    linux.*64-tsan/opt: ['autoland', 'mozilla-central']
                     default: []
             default:
                 by-test-platform:
@@ -554,7 +556,7 @@ mochitest-webgl1-core:
             android.*: []
             linux.*64-qr/debug: ['fission', 'webrender-sw', 'webgl-ipc']
             (linux.*64|macosx.*64|windows10-64)(-shippable)?-qr/(debug|opt): ['fission', 'webgl-ipc']
-            linux.*64-asan/opt: ['fission', 'webgl-ipc']
+            linux.*64-asan-qr/opt: ['fission', 'webgl-ipc']
             default: ['webgl-ipc']
     e10s: true
     test-manifest-loader: null  # don't load tests in the taskgraph
@@ -630,7 +632,7 @@ mochitest-webgl2-core:
             .*-ccov.*/.*: []
             android.*: []
             linux.*64-qr/debug: ['fission', 'webrender-sw', 'webgl-ipc']
-            linux.*64(-shippable)?-(qr|asan)/opt: ['fission', 'webgl-ipc']
+            linux.*64(-shippable)?(-asan)?-qr/opt: ['fission', 'webgl-ipc']
             windows10-64(-shippable)?-qr/(opt|debug): ['fission', 'webgl-ipc']
             default: ['webgl-ipc']
     chunks:
