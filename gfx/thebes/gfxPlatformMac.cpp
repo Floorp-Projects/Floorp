@@ -238,13 +238,8 @@ bool gfxPlatformMac::UsesTiling() const {
 
 bool gfxPlatformMac::ContentUsesTiling() const { return UsesTiling(); }
 
-gfxPlatformFontList* gfxPlatformMac::CreatePlatformFontList() {
-  gfxPlatformFontList* list = new gfxMacPlatformFontList();
-  if (NS_SUCCEEDED(list->InitFontList())) {
-    return list;
-  }
-  gfxPlatformFontList::Shutdown();
-  return nullptr;
+bool gfxPlatformMac::CreatePlatformFontList() {
+  return gfxPlatformFontList::Initialize(new gfxMacPlatformFontList);
 }
 
 void gfxPlatformMac::ReadSystemFontList(SystemFontList* aFontList) {

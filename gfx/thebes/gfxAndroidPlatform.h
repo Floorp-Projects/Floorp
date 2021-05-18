@@ -26,7 +26,7 @@ class gfxAndroidPlatform final : public gfxPlatform {
   gfxImageFormat GetOffscreenFormat() override { return mOffscreenFormat; }
 
   // platform implementations of font functions
-  gfxPlatformFontList* CreatePlatformFontList() override;
+  bool CreatePlatformFontList() override;
 
   void ReadSystemFontList(mozilla::dom::SystemFontList*) override;
 
