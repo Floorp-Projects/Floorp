@@ -602,13 +602,7 @@ class SMapsReader : private FdReader {
 /* Class to handle dispatching the replay function calls to replace-malloc. */
 class Replay {
  public:
-  Replay()
-      : mOps(0),
-        mNumUsedSlots(0),
-        mTotalRequestedSize(0),
-        mTotalAllocatedSize(0),
-        mCalculateSlop(false),
-        mDoMemset(false) {
+  Replay() {
 #ifdef _WIN32
     // See comment in FdPrintf.h as to why native win32 handles are used.
     mStdErr = reinterpret_cast<intptr_t>(GetStdHandle(STD_ERROR_HANDLE));
@@ -1027,19 +1021,19 @@ class Replay {
   }
 
   intptr_t mStdErr;
-  size_t mOps;
+  size_t mOps = 0;
 
   // The number of slots that have been used. It is used to iterate over slots
   // without accessing those we haven't initialised.
-  size_t mNumUsedSlots;
+  size_t mNumUsedSlots = 0;
 
   MemSlotList mSlots;
-  size_t mTotalRequestedSize;
-  size_t mTotalAllocatedSize;
+  size_t mTotalRequestedSize = 0;
+  size_t mTotalAllocatedSize = 0;
   // Whether to calculate slop for all allocations over the runtime of a
   // process.
-  bool mCalculateSlop;
-  bool mDoMemset;
+  bool mCalculateSlop = false;
+  bool mDoMemset = false;
 
 #ifdef XP_LINUX
   // If we have a failure reading smaps info then this is used to disable that
