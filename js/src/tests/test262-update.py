@@ -44,7 +44,6 @@ RELEASE_OR_BETA = set(
     ]
 )
 SHELL_OPTIONS = {
-    "class-fields-private-in": "--enable-ergonomic-brand-checks",
     "top-level-await": "--enable-top-level-await",
 }
 
