@@ -11,8 +11,9 @@ Requirements
 
 -  **Memory:** 4GB RAM minimum, 8GB+ recommended.
 -  **Disk Space:** At least 30GB of free disk space.
--  **Operating System:** macOS 10.12 or later. It is advisable to
-   upgrade to the latest “point” release.
+-  **Operating System:** macOS - most recent or prior release. It is advisable
+   to upgrade to the latest “point” release.  See :ref:`build_hosts` for more
+   information.
 
 
 1. System preparation

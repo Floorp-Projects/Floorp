@@ -137,8 +137,10 @@ class BrowsingContextGroup final : public nsWrapperCache {
   already_AddRefed<DocGroup> AddDocument(const nsACString& aKey,
                                          Document* aDocument);
 
-  // Called by Document when a Document needs to be removed to a DocGroup.
-  void RemoveDocument(const nsACString& aKey, Document* aDocument);
+  // Called by Document when a Document needs to be removed from a DocGroup.
+  // aDocGroup should be from aDocument. This is done to avoid the assert
+  // in GetDocGroup() which can crash when called during unlinking.
+  void RemoveDocument(Document* aDocument, DocGroup* aDocGroup);
 
   mozilla::ThrottledEventQueue* GetTimerEventQueue() const {
     return mTimerEventQueue;

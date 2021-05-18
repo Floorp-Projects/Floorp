@@ -16,15 +16,15 @@ var dragDirections = { LEFT: 0, UP: 1, RIGHT: 2, DOWN: 3 };
  *   - Dragging toward down should should open the container if the item is a
  *     container, drag the item otherwise.
  *
- * @param aElement
+ * @param {object} aElement
  *        DOM node element we will drag
- * @param aExpectedDragData
+ * @param {array} aExpectedDragData
  *        Array of flavors and values in the form:
  *        [ ["text/plain: sometext", "text/html: <b>sometext</b>"], [...] ]
  *        Pass an empty array to check that drag even has been canceled.
- * @param aDirection
+ * @param {number} aDirection
  *        Direction for the dragging gesture, see dragDirections helper object.
- * @return {Promise} Resolved once the drag gesture has been observed.
+ * @returns {Promise} Resolved once the drag gesture has been observed.
  */
 function synthesizeDragWithDirection(aElement, aExpectedDragData, aDirection) {
   let promise = new Promise(resolve => {

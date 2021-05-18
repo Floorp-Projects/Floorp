@@ -107,8 +107,9 @@ var BookmarkPropertiesPanel = {
   _hiddenRows: [],
 
   /**
-   * This method returns the correct label for the dialog's "accept"
-   * button based on the variant of the dialog.
+   * @returns {string}
+   *   This method returns the correct label for the dialog's "accept"
+   *   button based on the variant of the dialog.
    */
   _getAcceptLabel: function BPP__getAcceptLabel() {
     if (Services.prefs.getBoolPref("browser.proton.modals.enabled", false)) {
@@ -130,8 +131,9 @@ var BookmarkPropertiesPanel = {
   },
 
   /**
-   * This method returns the correct title for the current variant
-   * of this dialog.
+   * @returns {string}
+   *   This method returns the correct title for the current variant
+   *   of this dialog.
    */
   _getDialogTitle: function BPP__getDialogTitle() {
     if (this._action == ACTION_ADD) {
@@ -452,7 +454,7 @@ var BookmarkPropertiesPanel = {
   /**
    * This method checks to see if the input fields are in a valid state.
    *
-   * @returns  true if the input is valid, false otherwise
+   * @returns {boolean} true if the input is valid, false otherwise
    */
   _inputIsValid: function BPP__inputIsValid() {
     if (
@@ -475,10 +477,10 @@ var BookmarkPropertiesPanel = {
    * Determines whether the input with the given ID contains a
    * string that can be converted into an nsIURI.
    *
-   * @param aTextboxID
+   * @param {number} aTextboxID
    *        the ID of the textbox element whose contents we'll test
    *
-   * @returns true if the textbox contains a valid URI string, false otherwise
+   * @returns {boolean} true if the textbox contains a valid URI string, false otherwise
    */
   _containsValidURI: function BPP__containsValidURI(aTextboxID) {
     try {

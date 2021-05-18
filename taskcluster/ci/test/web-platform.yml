@@ -60,7 +60,7 @@ web-platform-tests:
         by-test-platform:
             android.*: 16
             linux.*64-tsan/opt: 26
-            linux.*64-asan/opt: 22
+            linux.*64-asan(-qr)?/opt: 22
             linux.*64-ccov.*/opt: 20
             linux.*/debug: 16
             macosx.*/debug: 18
@@ -72,7 +72,7 @@ web-platform-tests:
         by-test-platform:
             .*-ccov.*/.*: 10800
             linux.*64-tsan/opt: 14400
-            linux.*64-asan/opt: 14400
+            linux.*64-asan(-qr)?/opt: 14400
             linux.*64(-qr)?/debug: 10800
             macosx.*/debug: 10800
             android-em.*/.*: 10800
@@ -84,7 +84,7 @@ web-platform-tests:
                 by-test-platform:
                     (linux.*64|windows10-64)-qr/debug: ['trunk']
                     (linux.*64|windows10-64)(-shippable)?-qr/opt: ['trunk']
-                    linux.*64-asan/opt: ['trunk']
+                    linux.*64-asan(-qr)?/opt: ['trunk']
                     default: []
             default:
                 by-test-platform:
@@ -152,7 +152,7 @@ web-platform-tests-reftest:
         by-test-platform:
             .*-ccov.*/.*: 8
             linux.*64-tsan/opt: 8
-            linux1804-64(-qr|-asan)/.*: 6
+            linux1804-64(-asan)?(-qr)?/.*: 6
             linux1804-64(-shippable|-devedition)?/opt: 3
             macosx10.*-64/debug: 6
             macosx10.*-64/opt: 3
@@ -166,7 +166,7 @@ web-platform-tests-reftest:
                 by-test-platform:
                     (linux.*64|windows10-64)-qr/debug: ['trunk']
                     (linux.*64|windows10-64)(-shippable)?-qr/opt: ['trunk']
-                    linux.*64-asan/opt: ['trunk']
+                    linux.*64-asan(-qr)?/opt: ['trunk']
                     default: []
             default:
                 by-test-platform:
@@ -182,7 +182,7 @@ web-platform-tests-reftest:
                     default: 2
             default:
                 by-test-platform:
-                    linux1804-64-asan/opt: 2
+                    linux1804-64-asan(-qr)?/opt: 2
                     default: default
     mozharness:
         extra-options:
@@ -246,7 +246,7 @@ web-platform-tests-wdspec:
                 by-test-platform:
                     (linux.*64|windows10-64)-qr/debug: ['trunk']
                     (linux.*64|windows10-64)(-shippable)?-qr/opt: ['trunk']
-                    linux.*64-asan/opt: ['trunk']
+                    linux.*64-asan(-qr)?/opt: ['trunk']
                     default: []
             default:
                 by-test-platform:
@@ -264,7 +264,7 @@ web-platform-tests-wdspec:
             default:
                 by-test-platform:
                     android.*: 3
-                    linux.*64-asan/opt: 2
+                    linux.*64-asan(-qr)?/opt: 2
                     .*-qr/.*: 2  # can't be tier-1 if it's not running on integration branches
                     default: default
     fetches:
@@ -309,7 +309,7 @@ web-platform-tests-wdspec-headless:
                 by-test-platform:
                     (linux.*64|windows10-64)-qr/debug: ['trunk']
                     (linux.*64|windows10-64)(-shippable)?-qr/opt: ['trunk']
-                    linux.*64-asan/opt: ['trunk']
+                    linux.*64-asan(-qr)?/opt: ['trunk']
                     default: []
             webrender-sw: []
             default: built-projects
@@ -385,7 +385,7 @@ web-platform-tests-crashtest:
                 by-test-platform:
                     (linux.*64|windows10-64)-qr/debug: ['trunk']
                     (linux.*64|windows10-64)(-shippable)?-qr/opt: ['trunk']
-                    linux.*64-asan/opt: ['trunk']
+                    linux.*64-asan(-qr)?/opt: ['trunk']
                     default: []
             default:
                 by-test-platform:
@@ -402,7 +402,7 @@ web-platform-tests-crashtest:
                     default: 2
             default:
                 by-test-platform:
-                    linux1804-64-asan/opt: 2
+                    linux1804-64-asan(-qr)?/opt: 2
                     .*-qr/.*: 2  # can't be tier-1 if it's not running on integration branches
                     default: default
 
@@ -430,7 +430,7 @@ web-platform-tests-print-reftest:
                 by-test-platform:
                     (linux.*64|windows10-64)-qr/debug: ['trunk']
                     (linux.*64|windows10-64)(-shippable)?-qr/opt: ['trunk']
-                    linux.*64-asan/opt: ['trunk']
+                    linux.*64-asan(-qr)?/opt: ['trunk']
                     default: []
             default: built-projects
     mozharness:
@@ -457,7 +457,7 @@ test-verify-wpt:
                 by-test-platform:
                     # do not run on ccov or asan
                     .*-ccov.*/.*: []
-                    .*-asan/.*: []
+                    .*-asan.*/.*: []
                     .*shippable.*: []
                     # do not run on beta or release: usually just confirms earlier results
                     default: ['integration']

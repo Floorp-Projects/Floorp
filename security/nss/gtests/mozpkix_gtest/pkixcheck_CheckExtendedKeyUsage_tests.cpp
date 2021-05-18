@@ -49,15 +49,7 @@ protected:
 
 // tlv_id_kp_OCSPSigning and tlv_id_kp_serverAuth are defined in pkixtestutil.h
 
-// python DottedOIDToCode.py --tlv id-kp-clientAuth 1.3.6.1.5.5.7.3.2
-static const uint8_t tlv_id_kp_clientAuth[] = {
-  0x06, 0x08, 0x2b, 0x06, 0x01, 0x05, 0x05, 0x07, 0x03, 0x02
-};
-
-// python DottedOIDToCode.py --tlv id-kp-codeSigning 1.3.6.1.5.5.7.3.3
-static const uint8_t tlv_id_kp_codeSigning[] = {
-  0x06, 0x08, 0x2b, 0x06, 0x01, 0x05, 0x05, 0x07, 0x03, 0x03
-};
+// tlv_id_kp_clientAuth and tlv_id_kp_codeSigning are defined in pkixgtest.h
 
 // python DottedOIDToCode.py --tlv id_kp_emailProtection 1.3.6.1.5.5.7.3.4
 static const uint8_t tlv_id_kp_emailProtection[] = {
@@ -593,19 +585,6 @@ TEST_P(CheckExtendedKeyUsageChainTest, EKUChainTestcase)
                            param.keyPurposeId,
                            CertPolicyId::anyPolicy,
                            nullptr));
-}
-
-// python DottedOIDToCode.py --tlv id-ce-extKeyUsage 2.5.29.37
-static const uint8_t tlv_id_ce_extKeyUsage[] = {
-  0x06, 0x03, 0x55, 0x1d, 0x25
-};
-
-static inline ByteString
-CreateEKUExtension(ByteString ekuOIDs)
-{
-  return TLV(der::SEQUENCE,
-             BytesToByteString(tlv_id_ce_extKeyUsage) +
-               TLV(der::OCTET_STRING, TLV(der::SEQUENCE, ekuOIDs)));
 }
 
 static const EKUChainTestcase EKU_CHAIN_TESTCASES[] =

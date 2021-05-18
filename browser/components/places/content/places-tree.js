@@ -8,6 +8,9 @@
 // This is loaded into all XUL windows. Wrap in a block to prevent
 // leaking to window scope.
 {
+  /**
+   * Custom element definition for the places tree.
+   */
   class MozPlacesTree extends customElements.get("tree") {
     constructor() {
       super();
@@ -157,6 +160,7 @@
     }
     /**
      * overriding
+     * @param {object} val
      */
     set view(val) {
       // We save the view so that we can avoid expensive get calls when
@@ -460,6 +464,8 @@
      * Causes a particular node represented by the specified placeURI to be
      * selected in the tree. All containers above the node in the hierarchy
      * will be opened, so that the node is visible.
+     *
+     * @param {string} placeURI
      */
     selectPlaceURI(placeURI) {
       // Do nothing if a node matching the given uri is already selected
@@ -526,6 +532,8 @@
      * Causes a particular node to be selected in the tree, resulting in all
      * containers above the node in the hierarchy to be opened, so that the
      * node is visible.
+     *
+     * @param {object} node
      */
     selectNode(node) {
       var view = this.view;
@@ -659,6 +667,11 @@
      * This method will select the first node in the tree that matches
      * each given item guid. It will open any folder nodes that it needs
      * to in order to show the selected items.
+     *
+     * @param {array} aGuids
+     *   Guids to select.
+     * @param {boolean} aOpenContainers
+     *   Whether or not to open containers.
      */
     selectItems(aGuids, aOpenContainers) {
       // Never open containers in flat lists.
@@ -693,6 +706,10 @@
        *
        * NOTE: This method will leave open any node that had matching items
        * in its subtree.
+       *
+       * @param {object} node
+       * @returns {boolean}
+       *   Returns true if at least one item was found.
        */
       function findNodes(node) {
         var foundOne = false;

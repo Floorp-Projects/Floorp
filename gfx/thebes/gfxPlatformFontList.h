@@ -169,26 +169,41 @@ class gfxPlatformFontList : public gfxFontInfoLoader {
   // platform-specific font families.
   typedef nsTArray<FontFamily> PrefFontList;
 
-  static gfxPlatformFontList* PlatformFontList() { return sPlatformFontList; }
-
-  static nsresult Init() {
-    NS_ASSERTION(!sPlatformFontList, "What's this doing here?");
-    gfxPlatform::GetPlatform()->CreatePlatformFontList();
-    if (!sPlatformFontList) {
-      return NS_ERROR_OUT_OF_MEMORY;
+  static gfxPlatformFontList* PlatformFontList() {
+    if (sPlatformFontList->IsInitialized()) {
+      return sPlatformFontList;
     }
-    return NS_OK;
+    // Currently, only macOS uses OMT font-list initialization; on other
+    // platforms we initialize it directly during gfxPlatform::Init().
+    if (sInitFontListThread) {
+      PR_JoinThread(sInitFontListThread);
+      sInitFontListThread = nullptr;
+      // If font-list initialization failed, the thread will have cleared
+      // the static sPlatformFontList pointer; we cannot proceed without any
+      // usable fonts.
+      if (!sPlatformFontList) {
+        MOZ_CRASH("Could not initialize gfxPlatformFontList");
+      }
+    }
+    if (!sPlatformFontList->InitFontList()) {
+      MOZ_CRASH("Could not initialize gfxPlatformFontList");
+    }
+    return sPlatformFontList;
   }
+
+  static bool Initialize(gfxPlatformFontList* aList);
 
   static void Shutdown() {
     delete sPlatformFontList;
     sPlatformFontList = nullptr;
   }
 
+  bool IsInitialized() const { return mFontlistInitCount; }
+
   virtual ~gfxPlatformFontList();
 
-  // initialize font lists
-  nsresult InitFontList();
+  // Initialize font lists; return true on success, false if something fails.
+  bool InitFontList();
 
   void FontListChanged();
 
@@ -514,6 +529,11 @@ class gfxPlatformFontList : public gfxFontInfoLoader {
   // (The legacy (non-shared) list just returns 0 here.)
   uint32_t GetGeneration() const;
 
+  // Sometimes we need to know if we're on the InitFontList startup thread.
+  static bool IsInitFontListThread() {
+    return PR_GetCurrentThread() == sInitFontListThread;
+  }
+
  protected:
   friend class mozilla::fontlist::FontList;
   friend class InitOtherFamilyNamesForStylo;
@@ -710,9 +730,6 @@ class gfxPlatformFontList : public gfxFontInfoLoader {
                                            StretchRange aStretchForEntry,
                                            SlantStyleRange aStyleForEntry);
 
-  // commonly used fonts for which the name table should be loaded at startup
-  virtual void PreloadNamesList();
-
   // load the bad underline blocklist from pref.
   void LoadBadUnderlineList();
 
@@ -811,13 +828,13 @@ class gfxPlatformFontList : public gfxFontInfoLoader {
   FontFamilyTable mOtherFamilyNames;
 
   // flag set after InitOtherFamilyNames is called upon first name lookup miss
-  bool mOtherFamilyNamesInitialized;
+  bool mOtherFamilyNamesInitialized = false;
 
   // The pending InitOtherFamilyNames() task.
   RefPtr<mozilla::CancelableRunnable> mPendingOtherFamilyNameTask;
 
   // flag set after fullname and Postcript name lists are populated
-  bool mFaceNameListsInitialized;
+  bool mFaceNameListsInitialized = false;
 
   struct ExtraNames {
     ExtraNames() = default;
@@ -864,19 +881,21 @@ class gfxPlatformFontList : public gfxFontInfoLoader {
 
   // data used as part of the font cmap loading process
   nsTArray<RefPtr<gfxFontFamily>> mFontFamiliesToLoad;
-  uint32_t mStartIndex;
-  uint32_t mNumFamilies;
+  uint32_t mStartIndex = 0;
+  uint32_t mNumFamilies = 0;
 
   // xxx - info for diagnosing no default font aborts
   // see bugs 636957, 1070983, 1189129
-  uint32_t mFontlistInitCount;  // num times InitFontList called
+  uint32_t mFontlistInitCount = 0;  // num times InitFontList called
 
   nsTHashSet<gfxUserFontSet*> mUserFontSetList;
 
-  nsLanguageAtomService* mLangService;
+  nsLanguageAtomService* mLangService = nullptr;
 
   nsTArray<uint32_t> mCJKPrefLangs;
   nsTArray<mozilla::StyleGenericFontFamily> mDefaultGenericsLangGroup;
+
+  nsTArray<nsCString> mEnabledFontsList;
 
   mozilla::UniquePtr<mozilla::fontlist::FontList> mSharedFontList;
 
@@ -894,7 +913,9 @@ class gfxPlatformFontList : public gfxFontInfoLoader {
 
   FontVisibility mVisibilityLevel = FontVisibility::Unknown;
 
-  bool mFontFamilyWhitelistActive;
+  bool mFontFamilyWhitelistActive = false;
+
+  static PRThread* sInitFontListThread;
 };
 
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(gfxPlatformFontList::FindFamiliesFlags)

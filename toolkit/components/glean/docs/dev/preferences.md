@@ -23,6 +23,16 @@ This is how you emulate "recording enabled but upload disabled"
 like developer builds have in Firefox Telemetry.
 Defaults to 0.
 
+`telemetry.fog.test.activity_limit`
+`telemetry.fog.test.inactivity_limit`
+
+This pair of prefs control the length of time of activity before inactivity
+(or vice versa)
+needed before FOG informs the SDK's Client Activity API that the client was (in)active.
+Present to allow testing without figuring out how to mock Rust's clock.
+Their values are integer seconds.
+Defaults to 120 (activity), 1200 (inactivity).
+
 ## Defines
 
 `MOZ_GLEAN_ANDROID`
@@ -53,13 +63,3 @@ This mode can be overridden at runtime in two ways:
 including builds distributed by Linux distributions.
 It tends to not be set on local developer builds.
 See [bug 1680025](https://bugzilla.mozilla.org/show_bug.cgi?id=1680025) for details.
-
-`telemetry.fog.test.activity_limit`
-`telemetry.fog.test.inactivity_limit`
-
-This pair of prefs control the length of time of activity before inactivity
-(or vice versa)
-needed before FOG informs the SDK's Client Activity API that the client was (in)active.
-Present to allow testing without figuring out how to mock Rust's clock.
-Their values are integer seconds.
-Defaults to 120 (activity), 1200 (inactivity).

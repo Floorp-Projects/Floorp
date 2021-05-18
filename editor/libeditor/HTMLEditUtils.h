@@ -608,6 +608,78 @@ class HTMLEditUtils final {
   }
 
   /**
+   * GetAdjacentContentToPutCaret() walks the DOM tree to find an editable node
+   * near aPoint where may be a good point to put caret and keep typing or
+   * deleting.
+   *
+   * @param aPoint      The DOM point where to start to search from.
+   * @return            If found, returns non-nullptr.  Otherwise, nullptr.
+   *                    Note that if found node is in different table structure
+   *                    element, this returns nullptr.
+   */
+  enum class WalkTreeDirection { Forward, Backward };
+  template <typename PT, typename CT>
+  static nsIContent* GetAdjacentContentToPutCaret(
+      const EditorDOMPointBase<PT, CT>& aPoint,
+      WalkTreeDirection aWalkTreeDirection, const Element& aEditingHost) {
+    MOZ_ASSERT(aPoint.IsSetAndValid());
+
+    nsIContent* editableContent = nullptr;
+    if (aWalkTreeDirection == WalkTreeDirection::Backward) {
+      editableContent = HTMLEditUtils::GetPreviousContent(
+          aPoint, {WalkTreeOption::IgnoreNonEditableNode}, &aEditingHost);
+      if (!editableContent) {
+        return nullptr;  // Not illegal.
+      }
+    } else {
+      editableContent = HTMLEditUtils::GetNextContent(
+          aPoint, {WalkTreeOption::IgnoreNonEditableNode}, &aEditingHost);
+      if (NS_WARN_IF(!editableContent)) {
+        // Perhaps, illegal because the node pointed by aPoint isn't editable
+        // and nobody of previous nodes is editable.
+        return nullptr;
+      }
+    }
+
+    // scan in the right direction until we find an eligible text node,
+    // but don't cross any breaks, images, or table elements.
+    // XXX This comment sounds odd.  editableContent may have already crossed
+    //     breaks and/or images if they are non-editable.
+    while (editableContent && !editableContent->IsText() &&
+           !editableContent->IsHTMLElement(nsGkAtoms::br) &&
+           !HTMLEditUtils::IsImage(editableContent)) {
+      if (aWalkTreeDirection == WalkTreeDirection::Backward) {
+        editableContent = HTMLEditUtils::GetPreviousContent(
+            *editableContent, {WalkTreeOption::IgnoreNonEditableNode},
+            &aEditingHost);
+        if (NS_WARN_IF(!editableContent)) {
+          return nullptr;
+        }
+      } else {
+        editableContent = HTMLEditUtils::GetNextContent(
+            *editableContent, {WalkTreeOption::IgnoreNonEditableNode},
+            &aEditingHost);
+        if (NS_WARN_IF(!editableContent)) {
+          return nullptr;
+        }
+      }
+    }
+
+    // don't cross any table elements
+    if ((!aPoint.IsInContentNode() &&
+         !!HTMLEditUtils::GetInclusiveAncestorAnyTableElement(
+             *editableContent)) ||
+        (HTMLEditUtils::GetInclusiveAncestorAnyTableElement(*editableContent) !=
+         HTMLEditUtils::GetInclusiveAncestorAnyTableElement(
+             *aPoint.ContainerAsContent()))) {
+      return nullptr;
+    }
+
+    // otherwise, ok, we have found a good spot to put the selection
+    return editableContent;
+  }
+
+  /**
    * GetLastLeafContent() returns rightmost leaf content in aNode.  It depends
    * on aLeafNodeTypes whether this which types of nodes are treated as leaf
    * nodes.
@@ -1609,7 +1681,6 @@ class HTMLEditUtils final {
   /**
    * Helper for GetPreviousContent() and GetNextContent().
    */
-  enum class WalkTreeDirection { Forward, Backward };
   static nsIContent* GetAdjacentLeafContent(
       const nsINode& aNode, WalkTreeDirection aWalkTreeDirection,
       const WalkTreeOptions& aOptions,

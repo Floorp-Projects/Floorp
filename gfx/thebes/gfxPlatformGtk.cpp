@@ -370,13 +370,8 @@ void gfxPlatformGtk::ReadSystemFontList(
   gfxFcPlatformFontList::PlatformFontList()->ReadSystemFontList(retValue);
 }
 
-gfxPlatformFontList* gfxPlatformGtk::CreatePlatformFontList() {
-  gfxPlatformFontList* list = new gfxFcPlatformFontList();
-  if (NS_SUCCEEDED(list->InitFontList())) {
-    return list;
-  }
-  gfxPlatformFontList::Shutdown();
-  return nullptr;
+bool gfxPlatformGtk::CreatePlatformFontList() {
+  return gfxPlatformFontList::Initialize(new gfxFcPlatformFontList);
 }
 
 int32_t gfxPlatformGtk::GetFontScaleDPI() {

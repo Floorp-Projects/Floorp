@@ -23,6 +23,16 @@ DEFINES["IMPL_MFBT"] = True
 if CONFIG["MOZ_NEEDS_LIBATOMIC"]:
     OS_LIBS += ["atomic"]
 
+UNIFIED_SOURCES += [
+    "/mfbt/double-conversion/double-conversion/bignum-dtoa.cc",
+    "/mfbt/double-conversion/double-conversion/bignum.cc",
+    "/mfbt/double-conversion/double-conversion/cached-powers.cc",
+    "/mfbt/double-conversion/double-conversion/double-to-string.cc",
+    "/mfbt/double-conversion/double-conversion/fast-dtoa.cc",
+    "/mfbt/double-conversion/double-conversion/fixed-dtoa.cc",
+    "/mozglue/misc/Printf.cpp",
+]
+
 DisableStlWrapping()
 
 include("/mozglue/build/replace_malloc.mozbuild")

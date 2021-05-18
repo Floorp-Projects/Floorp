@@ -382,14 +382,16 @@ class ObjectElements {
 
   bool isPacked() const { return !(flags & NON_PACKED); }
 
-  uint8_t elementAttributes() const {
+  JS::PropertyAttributes elementAttributes() const {
     if (isFrozen()) {
-      return JSPROP_ENUMERATE | JSPROP_PERMANENT | JSPROP_READONLY;
+      return {JS::PropertyAttribute::Enumerable};
     }
     if (isSealed()) {
-      return JSPROP_ENUMERATE | JSPROP_PERMANENT;
+      return {JS::PropertyAttribute::Enumerable,
+              JS::PropertyAttribute::Writable};
     }
-    return JSPROP_ENUMERATE;
+    return {JS::PropertyAttribute::Configurable,
+            JS::PropertyAttribute::Enumerable, JS::PropertyAttribute::Writable};
   }
 
   uint32_t numShiftedElements() const {

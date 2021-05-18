@@ -68,7 +68,7 @@ var PlacesOrganizer = {
   /**
    * Selects a left pane built-in item.
    *
-   * @param {String} item The built-in item to select, may be one of (case sensitive):
+   * @param {string} item The built-in item to select, may be one of (case sensitive):
    *                      AllBookmarks, BookmarksMenu, BookmarksToolbar,
    *                      History, Downloads, Tags, UnfiledBookmarks.
    */
@@ -117,11 +117,12 @@ var PlacesOrganizer = {
    * Opens a given hierarchy in the left pane, stopping at the last reachable
    * container. Note: item ids should be considered deprecated.
    *
-   * @param aHierarchy A single container or an array of containers, sorted from
-   *                   the outmost to the innermost in the hierarchy. Each
-   *                   container may be either an item id, a Places URI string,
-   *                   or a named query, like:
-   *                   "BookmarksMenu", "BookmarksToolbar", "UnfiledBookmarks", "AllBookmarks".
+   * @param {array|string|number} aHierarchy
+   *        A single container or an array of containers, sorted from
+   *        the outmost to the innermost in the hierarchy. Each
+   *        container may be either an item id, a Places URI string,
+   *        or a named query, like:
+   *        "BookmarksMenu", "BookmarksToolbar", "UnfiledBookmarks", "AllBookmarks".
    */
   selectLeftPaneContainerByHierarchy(aHierarchy) {
     if (!aHierarchy) {
@@ -389,7 +390,7 @@ var PlacesOrganizer = {
 
   /**
    * Sets the search scope based on aNode's properties.
-   * @param   aNode
+   * @param {object} aNode
    *          the node to set up scope from
    */
   _setSearchScopeForNode: function PO__setScopeForNode(aNode) {
@@ -412,7 +413,7 @@ var PlacesOrganizer = {
    * Handle clicks on the places list.
    * Single Left click, right click or modified click do not result in any
    * special action, since they're related to selection.
-   * @param   aEvent
+   * @param {object} aEvent
    *          The mouse event.
    */
   onPlacesListClick: function PO_onPlacesListClick(aEvent) {
@@ -451,7 +452,7 @@ var PlacesOrganizer = {
 
   /**
    * Handle openFlatContainer events.
-   * @param aContainer
+   * @param {object} aContainer
    *        The node the event was dispatched on.
    */
   openFlatContainer(aContainer) {
@@ -464,6 +465,7 @@ var PlacesOrganizer = {
   },
 
   /**
+   * @returns {object}
    * Returns the options associated with the query currently loaded in the
    * main places pane.
    */
@@ -602,6 +604,8 @@ var PlacesOrganizer = {
 
   /**
    * Called when a menuitem is selected from the restore menu.
+   *
+   * @param {object} aMenuItem
    */
   async onRestoreMenuItemClick(aMenuItem) {
     let backupName = aMenuItem.getAttribute("value");
@@ -643,6 +647,9 @@ var PlacesOrganizer = {
 
   /**
    * Restores bookmarks from a JSON file.
+   *
+   * @param {string} aFilePath
+   *   The path of the file to restore from.
    */
   restoreBookmarksFromFile: function PO_restoreBookmarksFromFile(aFilePath) {
     // check file extension
@@ -841,7 +848,7 @@ var PlacesSearchBox = {
    * Run a search for the specified text, over the collection specified by
    * the dropdown arrow. The default is all bookmarks, but can be
    * localized to the active collection.
-   * @param   filterString
+   * @param {string} filterString
    *          The text to search for.
    */
   search: function PSB_search(filterString) {
@@ -917,7 +924,7 @@ var PlacesSearchBox = {
 
   /**
    * Updates the display with the title of the current collection.
-   * @param   aTitle
+   * @param {string} aTitle
    *          The title of the current collection.
    */
   updateCollectionTitle: function PSB_updateCollectionTitle(aTitle) {
@@ -987,7 +994,7 @@ var PlacesQueryBuilder = {
    * in that case, when the user does begin a search aScope will be used (see
    * PSB_search()).  If there is an active search, it's performed again to
    * update the content tree.
-   * @param   aScope
+   * @param {string} aScope
    *          The search scope: "bookmarks", "collection", "downloads" or
    *          "history".
    */
@@ -1026,22 +1033,22 @@ var PlacesQueryBuilder = {
 var ViewMenu = {
   /**
    * Removes content generated previously from a menupopup.
-   * @param   popup
+   * @param {object} popup
    *          The popup that contains the previously generated content.
-   * @param   startID
+   * @param {string} startID
    *          The id attribute of an element that is the start of the
    *          dynamically generated region - remove elements after this
    *          item only.
    *          Must be contained by popup. Can be null (in which case the
    *          contents of popup are removed).
-   * @param   endID
+   * @param {string} endID
    *          The id attribute of an element that is the end of the
    *          dynamically generated region - remove elements up to this
    *          item only.
    *          Must be contained by popup. Can be null (in which case all
    *          items until the end of the popup will be removed). Ignored
    *          if startID is null.
-   * @returns The element for the caller to insert new items before,
+   * @returns {object|null} The element for the caller to insert new items before,
    *          null if the caller should just append to the popup.
    */
   _clean: function VM__clean(popup, startID, endID) {
@@ -1079,17 +1086,17 @@ var ViewMenu = {
 
   /**
    * Fills a menupopup with a list of columns
-   * @param   event
+   * @param {object} event
    *          The popupshowing event that invoked this function.
-   * @param   startID
+   * @param {string} startID
    *          see _clean
-   * @param   endID
+   * @param {string} endID
    *          see _clean
-   * @param   type
+   * @param {string} type
    *          the type of the menuitem, e.g. "radio" or "checkbox".
    *          Can be null (no-type).
    *          Checkboxes are checked if the column is visible.
-   * @param   propertyPrefix
+   * @param {string} propertyPrefix
    *          If propertyPrefix is non-null:
    *          propertyPrefix + column ID + ".label" will be used to get the
    *          localized label string.
@@ -1156,6 +1163,8 @@ var ViewMenu = {
 
   /**
    * Set up the content of the view menu.
+   *
+   * @param {object} event
    */
   populateSortMenu: function VM_populateSortMenu(event) {
     this.fillWithColumns(
@@ -1189,7 +1198,7 @@ var ViewMenu = {
 
   /**
    * Shows/Hides a tree column.
-   * @param   element
+   * @param {object} element
    *          The menuitem element for the column
    */
   showHideColumn: function VM_showHideColumn(element) {
@@ -1209,7 +1218,7 @@ var ViewMenu = {
 
   /**
    * Gets the last column that was sorted.
-   * @returns  the currently sorted column, null if there is no sorted column.
+   * @returns {object|null} the currently sorted column, null if there is no sorted column.
    */
   _getSortColumn: function VM__getSortColumn() {
     var content = document.getElementById("placeContent");
@@ -1226,10 +1235,10 @@ var ViewMenu = {
 
   /**
    * Sorts the view by the specified column.
-   * @param   aColumn
+   * @param {object} aColumn
    *          The colum that is the sort key. Can be null - the
    *          current sort column or the title column will be used.
-   * @param   aDirection
+   * @param {string} aDirection
    *          The direction to sort - "ascending" or "descending".
    *          Can be null - the last direction or descending will be used.
    *
@@ -1302,9 +1311,9 @@ var ContentArea = {
    * If a custom view was set by setContentViewForQueryString, that
    * view would be returned, else the default tree view is returned
    *
-   * @param aQueryString
+   * @param {string} aQueryString
    *        a query string
-   * @return the view to be used for loading aQueryString.
+   * @returns {object} the view to be used for loading aQueryString.
    */
   getContentViewForQueryString: function CA_getContentViewForQueryString(
     aQueryString
@@ -1327,12 +1336,12 @@ var ContentArea = {
   /**
    * Sets a custom view to be used rather than the default places tree
    * whenever the given query is selected in the left pane.
-   * @param aQueryString
+   * @param {string} aQueryString
    *        a query string
-   * @param aView
+   * @param {object} aView
    *        Either the custom view or a function that will return the view
    *        the first (and only) time it's called.
-   * @param [optional] aOptions
+   * @param {object} [aOptions]
    *        Object defining special options for the view.
    * @see ContentTree.viewOptions for supported options and default values.
    */

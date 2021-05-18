@@ -106,6 +106,7 @@ add_task(async function impression() {
     assertScalars({ [TELEMETRY_SCALARS.IMPRESSION]: index + 1 });
     assertCustomImpression(index);
   });
+  await PlacesUtils.history.clear();
 });
 
 // Makes sure the impression scalar and the custom impression are not incremented
@@ -144,6 +145,7 @@ add_task(async function noImpression_noQuickSuggestResult() {
     assertScalars({});
     assertNoCustomImpression();
   });
+  await PlacesUtils.history.clear();
 });
 
 // Tests the click scalar and the custom click ping by picking a Quick Suggest
@@ -168,6 +170,7 @@ add_task(async function click_keyboard() {
     });
     assertCustomClick(index);
   });
+  await PlacesUtils.history.clear();
 });
 
 // Tests the click scalar and the custom click ping by picking a Quick Suggest
@@ -191,6 +194,44 @@ add_task(async function click_mouse() {
     });
     assertCustomClick(index);
   });
+  await PlacesUtils.history.clear();
+});
+
+// Tests the impression and click scalars and the custom click ping by picking a
+// Quick Suggest result when it's shown before search suggestions.
+add_task(async function click_beforeSearchSuggestions() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.urlbar.showSearchSuggestionsFirst", false]],
+  });
+  await BrowserTestUtils.withNewTab("about:blank", async () => {
+    await withSuggestions(async () => {
+      spy.resetHistory();
+      await UrlbarTestUtils.promiseAutocompleteResultPopup({
+        window,
+        value: TEST_SEARCH_STRING,
+        fireInputEvent: true,
+      });
+      let resultCount = UrlbarTestUtils.getResultCount(window);
+      Assert.greaterOrEqual(
+        resultCount,
+        4,
+        "Result count >= 1 heuristic + 1 quick suggest + 2 suggestions"
+      );
+      let index = resultCount - 3;
+      await assertIsQuickSuggest(index);
+      await UrlbarTestUtils.promisePopupClose(window, () => {
+        EventUtils.synthesizeKey("KEY_ArrowDown", { repeat: index });
+        EventUtils.synthesizeKey("KEY_Enter");
+      });
+      assertScalars({
+        [TELEMETRY_SCALARS.IMPRESSION]: index + 1,
+        [TELEMETRY_SCALARS.CLICK]: index + 1,
+      });
+      assertCustomClick(index);
+    });
+  });
+  await PlacesUtils.history.clear();
+  await SpecialPowers.popPrefEnv();
 });
 
 // Tests the help scalar by picking a Quick Suggest result help button with the
@@ -219,6 +260,7 @@ add_task(async function help_keyboard() {
   });
   assertNoCustomClick();
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  await PlacesUtils.history.clear();
 });
 
 // Tests the help scalar by picking a Quick Suggest result help button with the
@@ -246,6 +288,7 @@ add_task(async function help_mouse() {
   });
   assertNoCustomClick();
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  await PlacesUtils.history.clear();
 });
 
 // Tests the contextservices.quicksuggest enable_toggled event telemetry by
@@ -425,4 +468,29 @@ function assertCustomClick(index) {
 function assertNoCustomClick() {
   // Only called once for the impression
   Assert.ok(spy.calledOnce, "Should not send a custom impression");
+}
+
+/**
+ * Adds a search engine that provides suggestions, calls your callback, and then
+ * removes the engine.
+ *
+ * @param {function} callback
+ *   Your callback function.
+ */
+async function withSuggestions(callback) {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.urlbar.suggest.searches", true]],
+  });
+  let engine = await SearchTestUtils.promiseNewSearchEngine(
+    getRootDirectory(gTestPath) + "searchSuggestionEngine.xml"
+  );
+  let oldDefaultEngine = await Services.search.getDefault();
+  await Services.search.setDefault(engine);
+  try {
+    await callback(engine);
+  } finally {
+    await Services.search.setDefault(oldDefaultEngine);
+    await Services.search.removeEngine(engine);
+    await SpecialPowers.popPrefEnv();
+  }
 }
