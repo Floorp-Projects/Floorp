@@ -593,6 +593,7 @@ ipc::IPCResult DocAccessibleParent::AddChildDoc(DocAccessibleParent* aChildDoc,
       }
       return IPC_OK();
     }
+    MOZ_DIAGNOSTIC_ASSERT(false, "Binding to nonexistent proxy!");
     return IPC_FAIL(this, "binding to nonexistant proxy!");
   }
 
