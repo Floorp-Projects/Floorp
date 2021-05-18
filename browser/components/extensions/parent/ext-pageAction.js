@@ -252,26 +252,11 @@ this.pageAction = class extends ExtensionAPI {
       case "popupshowing":
         const menu = event.target;
         const trigger = menu.triggerNode;
-        let actionId = trigger?.getAttribute("actionid");
-        if (trigger && !actionId) {
-          // When a page action is clicked, triggerNode will be an ancestor of
-          // a node corresponding to an action. triggerNode will be the page
-          // action node itself when a page action is selected with the
-          // keyboard. That's because the semantic meaning of page action is on
-          // an hbox that contains an <image>.
-          for (let n = trigger.parentNode; n && !actionId; n = n.parentNode) {
-            if (n.id == "page-action-buttons" || n.localName == "panelview") {
-              // We reached the page-action-buttons or panelview container.
-              // Stop looking; no action was found.
-              break;
-            }
-            actionId = n.getAttribute("actionid");
-          }
-        }
+
         if (
           menu.id === "pageActionContextMenu" &&
           trigger &&
-          actionId === this.browserPageAction.id &&
+          trigger.getAttribute("actionid") === this.browserPageAction.id &&
           !this.browserPageAction.getDisabled(trigger.ownerGlobal)
         ) {
           global.actionContextMenu({

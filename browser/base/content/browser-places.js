@@ -1918,7 +1918,7 @@ var BookmarkingUI = {
       shortcut: ShortcutUtils.prettifyShortcut(shortcut),
     };
     document.l10n.setAttributes(
-      this.starBox,
+      this.star,
       starred ? "urlbar-star-edit-bookmark" : "urlbar-star-add-bookmark",
       l10nArgs
     );
