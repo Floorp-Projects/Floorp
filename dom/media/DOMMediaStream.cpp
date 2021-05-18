@@ -97,7 +97,6 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(DOMMediaStream)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(DOMMediaStream,
                                                 DOMEventTargetHelper)
   tmp->Destroy();
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mWindow)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mTracks)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mConsumersToKeepAlive)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_WEAK_PTR
@@ -105,7 +104,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(DOMMediaStream,
                                                   DOMEventTargetHelper)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mWindow)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTracks)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mConsumersToKeepAlive)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
@@ -118,7 +116,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DOMMediaStream)
 NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
 DOMMediaStream::DOMMediaStream(nsPIDOMWindowInner* aWindow)
-    : mWindow(aWindow),
+    : DOMEventTargetHelper(aWindow),
       mPlaybackTrackListener(MakeAndAddRef<PlaybackTrackListener>(this)) {
   nsresult rv;
   nsCOMPtr<nsIUUIDGenerator> uuidgen =
@@ -350,7 +348,7 @@ void DOMMediaStream::RemoveTrack(MediaStreamTrack& aTrack) {
 }
 
 already_AddRefed<DOMMediaStream> DOMMediaStream::Clone() {
-  auto newStream = MakeRefPtr<DOMMediaStream>(GetParentObject());
+  auto newStream = MakeRefPtr<DOMMediaStream>(GetOwner());
 
   LOG(LogLevel::Info,
       ("DOMMediaStream %p created clone %p", this, newStream.get()));
@@ -403,7 +401,7 @@ void DOMMediaStream::RemoveTrackInternal(MediaStreamTrack* aTrack) {
 
 already_AddRefed<nsIPrincipal> DOMMediaStream::GetPrincipal() {
   nsCOMPtr<nsIPrincipal> principal =
-      nsGlobalWindowInner::Cast(mWindow)->GetPrincipal();
+      nsGlobalWindowInner::Cast(GetOwner())->GetPrincipal();
   for (const auto& t : mTracks) {
     if (t->Ended()) {
       continue;
