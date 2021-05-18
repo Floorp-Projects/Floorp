@@ -4,7 +4,20 @@
 
 #![cfg(feature = "with_gecko")]
 
+use chrono::prelude::*;
 use nsstring::nsACString;
+
+#[repr(C)]
+pub struct FogDatetime {
+    year: i32,
+    month: u32,
+    day: u32,
+    hour: u32,
+    minute: u32,
+    second: u32,
+    nano: u32,
+    offset_seconds: i32,
+}
 
 #[no_mangle]
 pub extern "C" fn fog_datetime_test_has_value(id: u32, ping_name: &nsACString) -> bool {
@@ -15,28 +28,34 @@ pub extern "C" fn fog_datetime_test_has_value(id: u32, ping_name: &nsACString) -
 pub extern "C" fn fog_datetime_test_get_value(
     id: u32,
     ping_name: &nsACString,
-    value: &mut nsACString,
+    value: &mut FogDatetime,
 ) {
     let val = with_metric!(DATETIME_MAP, id, metric, test_get!(metric, ping_name));
-    value.assign(&val.to_rfc3339());
+    value.year = val.year();
+    value.month = val.month();
+    value.day = val.day();
+    value.hour = val.hour();
+    value.minute = val.minute();
+    value.second = val.second();
+    value.nano = val.nanosecond();
+    value.offset_seconds = val.offset().local_minus_utc();
 }
 
 #[no_mangle]
-pub extern "C" fn fog_datetime_set(
-    id: u32,
-    year: i32,
-    month: u32,
-    day: u32,
-    hour: u32,
-    minute: u32,
-    second: u32,
-    nano: u32,
-    offset_seconds: i32,
-) {
+pub extern "C" fn fog_datetime_set(id: u32, dt: &FogDatetime) {
     with_metric!(
         DATETIME_MAP,
         id,
         metric,
-        metric.set_with_details(year, month, day, hour, minute, second, nano, offset_seconds)
+        metric.set_with_details(
+            dt.year,
+            dt.month,
+            dt.day,
+            dt.hour,
+            dt.minute,
+            dt.second,
+            dt.nano,
+            dt.offset_seconds
+        )
     );
 }

@@ -136,14 +136,13 @@ add_task(async function test_fog_uuid_works() {
   Assert.notEqual(kTestUuid, Glean.testOnly.whatIdIt.testGetValue("test-ping"));
 });
 
-// Enable test after bug 1677448 is fixed.
-add_task({ skip_if: () => true }, function test_fog_datetime_works() {
+add_task(function test_fog_datetime_works() {
   const value = new Date("2020-06-11T12:00:00");
 
   Glean.testOnly.whatADate.set(value.getTime() * 1000);
 
   const received = Glean.testOnly.whatADate.testGetValue("test-ping");
-  Assert.ok(received.startsWith("2020-06-11T12:00:00"));
+  Assert.equal(received.getTime(), value.getTime());
 });
 
 add_task(function test_fog_boolean_works() {
