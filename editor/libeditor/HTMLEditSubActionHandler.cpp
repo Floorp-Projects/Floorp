@@ -140,10 +140,6 @@ template already_AddRefed<nsRange>
 HTMLEditor::CreateRangeExtendedToHardLineStartAndEnd(
     const RawRangeBoundary& aStartRef, const RawRangeBoundary& aEndRef,
     EditSubAction aEditSubAction) const;
-template EditorDOMPoint HTMLEditor::GetWhiteSpaceEndPoint(
-    const RangeBoundary& aPoint, ScanDirection aScanDirection);
-template EditorDOMPoint HTMLEditor::GetWhiteSpaceEndPoint(
-    const RawRangeBoundary& aPoint, ScanDirection aScanDirection);
 template EditorDOMPoint HTMLEditor::GetCurrentHardLineStartPoint(
     const RangeBoundary& aPoint, EditSubAction aEditSubAction) const;
 template EditorDOMPoint HTMLEditor::GetCurrentHardLineStartPoint(
@@ -5480,40 +5476,6 @@ nsresult HTMLEditor::MaybeExtendSelectionToHardLineEdgesForBlockEditAction() {
   return error.StealNSResult();
 }
 
-// static
-template <typename PT, typename RT>
-EditorDOMPoint HTMLEditor::GetWhiteSpaceEndPoint(
-    const RangeBoundaryBase<PT, RT>& aPoint, ScanDirection aScanDirection) {
-  if (NS_WARN_IF(!aPoint.IsSetAndValid()) ||
-      NS_WARN_IF(!aPoint.Container()->IsContent())) {
-    return EditorDOMPoint();
-  }
-
-  if (aScanDirection == ScanDirection::Backward) {
-    EditorDOMPoint point(aPoint);
-    if (point.IsInTextNode()) {
-      while (!point.IsStartOfContainer()) {
-        if (!point.IsPreviousCharASCIISpaceOrNBSP()) {
-          break;
-        }
-        MOZ_ALWAYS_TRUE(point.RewindOffset());
-      }
-    }
-    return point;
-  }
-
-  EditorDOMPoint point(aPoint);
-  if (point.IsInTextNode()) {
-    while (!point.IsEndOfContainer()) {
-      if (!point.IsCharASCIISpaceOrNBSP()) {
-        break;
-      }
-      MOZ_ALWAYS_TRUE(point.AdvanceOffset());
-    }
-  }
-  return point;
-}
-
 template <typename PT, typename RT>
 EditorDOMPoint HTMLEditor::GetCurrentHardLineStartPoint(
     const RangeBoundaryBase<PT, RT>& aPoint,
@@ -5761,12 +5723,10 @@ void HTMLEditor::SelectBRElementIfCollapsedInEmptyBlock(
     RangeBoundaryBase<SPT, SRT>& aStartRef,
     RangeBoundaryBase<EPT, ERT>& aEndRef) const {
   // MOOSE major hack:
-  // The GetWhiteSpaceEndPoint(), GetCurrentHardLineStartPoint() and
-  // GetCurrentHardLineEndPoint() don't really do the right thing for
-  // collapsed ranges inside block elements that contain nothing but a solo
-  // <br>.  It's easier/ to put a workaround here than to revamp them.  :-(
-  // XXX This sounds odd in the cases using `GetWhiteSpaceEndPoint()`.  Don't
-  //     we hack something in the edit sub-action handlers?
+  // The GetCurrentHardLineStartPoint() and GetCurrentHardLineEndPoint() don't
+  // really do the right thing for collapsed ranges inside block elements that
+  // contain nothing but a solo <br>.  It's easier/ to put a workaround here
+  // than to revamp them.  :-(
   if (aStartRef != aEndRef) {
     return;
   }
@@ -5823,25 +5783,45 @@ already_AddRefed<nsRange> HTMLEditor::CreateRangeIncludingAdjuscentWhiteSpaces(
   RangeBoundaryBase<EPT, ERT> endRef(aEndRef);
   SelectBRElementIfCollapsedInEmptyBlock(startRef, endRef);
 
+  if (NS_WARN_IF(!startRef.IsSet()) ||
+      NS_WARN_IF(!startRef.Container()->IsContent()) ||
+      NS_WARN_IF(!endRef.IsSet()) ||
+      NS_WARN_IF(!endRef.Container()->IsContent())) {
+    NS_WARNING("HTMLEditor::SelectBRElementIfCollapsedInEmptyBlock() failed");
+    return nullptr;
+  }
+
   // For text actions, we want to look backwards (or forwards, as
   // appropriate) for additional white-space or nbsp's.  We may have to act
   // on these later even though they are outside of the initial selection.
   // Even if they are in another node!
-  // XXX Although the comment mentioned that this may scan other text nodes,
-  //     GetWhiteSpaceEndPoint() scans only in given container node.
-  // XXX Looks like that we should make GetWhiteSpaceEndPoint() be a
-  //     instance method and stop scanning white-spaces when it reaches
-  //     active editing host.
-  EditorDOMPoint startPoint = HTMLEditor::GetWhiteSpaceEndPoint(
-      startRef, HTMLEditor::ScanDirection::Backward);
+  // XXX Those scanners do not treat siblings of the text nodes.  Perhaps,
+  //     we should use `WSRunScanner::GetFirstASCIIWhiteSpacePointCollapsedTo()`
+  //     and `WSRunScanner::GetEndOfCollapsibleASCIIWhiteSpaces()` instead.
+  EditorRawDOMPoint startPoint(startRef);
+  if (startPoint.IsInTextNode()) {
+    while (!startPoint.IsStartOfContainer()) {
+      if (!startPoint.IsPreviousCharASCIISpaceOrNBSP()) {
+        break;
+      }
+      MOZ_ALWAYS_TRUE(startPoint.RewindOffset());
+    }
+  }
   if (!IsDescendantOfEditorRoot(
           EditorBase::GetNodeAtRangeOffsetPoint(startPoint))) {
     return nullptr;
   }
-  EditorDOMPoint endPoint = HTMLEditor::GetWhiteSpaceEndPoint(
-      endRef, HTMLEditor::ScanDirection::Forward);
+  EditorRawDOMPoint endPoint(endRef);
+  if (endPoint.IsInTextNode()) {
+    while (!endPoint.IsEndOfContainer()) {
+      if (!endPoint.IsCharASCIISpaceOrNBSP()) {
+        break;
+      }
+      MOZ_ALWAYS_TRUE(endPoint.AdvanceOffset());
+    }
+  }
   EditorRawDOMPoint lastRawPoint(endPoint);
-  lastRawPoint.RewindOffset();
+  lastRawPoint.RewindOffset();  // XXX Fail if it's start of the container
   if (!IsDescendantOfEditorRoot(
           EditorBase::GetNodeAtRangeOffsetPoint(lastRawPoint))) {
     return nullptr;
