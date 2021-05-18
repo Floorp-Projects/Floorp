@@ -717,7 +717,7 @@ void BasicLayerManager::PaintSelfOrChildren(PaintLayerContext& aPaintContext,
         ContainerLayer::SortMode::WITHOUT_GEOMETRY);
 
     for (uint32_t i = 0; i < children.Length(); i++) {
-      Layer* layer = children.ElementAt(i).data;
+      Layer* layer = children.ElementAt(i).layer;
       if (layer->IsBackfaceHidden()) {
         continue;
       }
