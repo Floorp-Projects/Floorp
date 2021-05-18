@@ -49,7 +49,6 @@ DocumentEventsListener.prototype = {
     window,
     isTopLevel,
     shouldBeIgnoredAsRedundantWithTargetAvailable,
-    isFrameSwitching,
   }) {
     // Ignore iframes
     if (!isTopLevel) {
@@ -57,61 +56,51 @@ DocumentEventsListener.prototype = {
     }
 
     const time = window.performance.timing.navigationStart;
-
-    // As dom-loading is often used to clear the panel on navigation, and is typically
-    // sent before any other resource, we need to add a hint so the client knows when
-    // then event can be ignored.
-    // We should also ignore them if the Target was created via a JSWindowActor and is
-    // destroyed when the WindowGlobal is destroyed (i.e. when we navigate or reload),
-    // as this will come late and is redundant with onTargetAvailable.
-    shouldBeIgnoredAsRedundantWithTargetAvailable =
-      shouldBeIgnoredAsRedundantWithTargetAvailable ||
-      (this.targetActor.isTopLevelTarget &&
-        this.targetActor.followWindowGlobalLifeCycle);
-
-    this.emit("dom-loading", {
+    this.emit(
+      "dom-loading",
       time,
-      shouldBeIgnoredAsRedundantWithTargetAvailable,
-      isFrameSwitching,
-    });
+      // As dom-loading is often used to clear the panel on navigation, and is typically
+      // sent before any other resource, we need to add a hint so the client knows when
+      // then event can be ignored.
+      // We should also ignore them if the Target was created via a JSWindowActor and is
+      // destroyed when the WindowGlobal is destroyed (i.e. when we navigate or reload),
+      // as this will come late and is redundant with onTargetAvailable.
+      shouldBeIgnoredAsRedundantWithTargetAvailable ||
+        (this.targetActor.isTopLevelTarget &&
+          this.targetActor.followWindowGlobalLifeCycle)
+    );
 
     const { readyState } = window.document;
     if (readyState != "interactive" && readyState != "complete") {
-      window.addEventListener(
-        "DOMContentLoaded",
-        e => this.onContentLoaded(e, isFrameSwitching),
-        {
-          once: true,
-        }
-      );
-    } else {
-      this.onContentLoaded({ target: window.document }, isFrameSwitching);
-    }
-    if (readyState != "complete") {
-      window.addEventListener("load", e => this.onLoad(e, isFrameSwitching), {
+      window.addEventListener("DOMContentLoaded", this.onContentLoaded, {
         once: true,
       });
     } else {
-      this.onLoad({ target: window.document }, isFrameSwitching);
+      this.onContentLoaded({ target: window.document });
+    }
+    if (readyState != "complete") {
+      window.addEventListener("load", this.onLoad, { once: true });
+    } else {
+      this.onLoad({ target: window.document });
     }
   },
 
-  onContentLoaded(event, isFrameSwitching) {
+  onContentLoaded(event) {
     // milliseconds since the UNIX epoch, when the parser finished its work
     // on the main document, that is when its Document.readyState changes to
     // 'interactive' and the corresponding readystatechange event is thrown
     const window = event.target.defaultView;
     const time = window.performance.timing.domInteractive;
-    this.emit("dom-interactive", { time, isFrameSwitching });
+    this.emit("dom-interactive", time);
   },
 
-  onLoad(event, isFrameSwitching) {
+  onLoad(event) {
     // milliseconds since the UNIX epoch, when the parser finished its work
     // on the main document, that is when its Document.readyState changes to
     // 'complete' and the corresponding readystatechange event is thrown
     const window = event.target.defaultView;
     const time = window.performance.timing.domComplete;
-    this.emit("dom-complete", { time, isFrameSwitching });
+    this.emit("dom-complete", time);
   },
 
   destroy() {
