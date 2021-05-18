@@ -239,7 +239,8 @@ class gfxFcPlatformFontList final : public gfxPlatformFontList {
   gfxFcPlatformFontList();
 
   static gfxFcPlatformFontList* PlatformFontList() {
-    return static_cast<gfxFcPlatformFontList*>(sPlatformFontList);
+    return static_cast<gfxFcPlatformFontList*>(
+        gfxPlatformFontList::PlatformFontList());
   }
 
   // initialize font lists

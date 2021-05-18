@@ -107,7 +107,7 @@ class gfxWindowsPlatform final : public gfxPlatform {
   void EnsureDevicesInitialized() override;
   bool DevicesInitialized() override;
 
-  gfxPlatformFontList* CreatePlatformFontList() override;
+  bool CreatePlatformFontList() override;
 
   virtual already_AddRefed<gfxASurface> CreateOffscreenSurface(
       const IntSize& aSize, gfxImageFormat aFormat) override;
