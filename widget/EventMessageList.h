@@ -327,6 +327,9 @@ NS_EVENT_MESSAGE(eContentCommandPaste)
 NS_EVENT_MESSAGE(eContentCommandDelete)
 NS_EVENT_MESSAGE(eContentCommandUndo)
 NS_EVENT_MESSAGE(eContentCommandRedo)
+// eContentCommandInsertText tries to insert text with replacing selection
+// in focused editor.
+NS_EVENT_MESSAGE(eContentCommandInsertText)
 NS_EVENT_MESSAGE(eContentCommandPasteTransferable)
 NS_EVENT_MESSAGE(eContentCommandLookUpDictionary)
 // eContentCommandScroll scrolls the nearest scrollable element to the

@@ -9,10 +9,12 @@
 #include <stdint.h>
 
 #include "mozilla/BasicEvents.h"
+#include "mozilla/Maybe.h"
 #include "nsCOMPtr.h"
 #include "nsAtom.h"
 #include "nsGkAtoms.h"
 #include "nsITransferable.h"
+#include "nsString.h"
 
 namespace mozilla {
 
@@ -47,6 +49,9 @@ class WidgetContentCommandEvent : public WidgetGUIEvent {
     return nullptr;
   }
 
+  // eContentCommandInsertText
+  mozilla::Maybe<nsString> mString;  // [in]
+
   // eContentCommandPasteTransferable
   nsCOMPtr<nsITransferable> mTransferable;  // [in]
 
@@ -72,6 +77,7 @@ class WidgetContentCommandEvent : public WidgetGUIEvent {
                                      bool aCopyTargets) {
     AssignGUIEventData(aEvent, aCopyTargets);
 
+    mString = aEvent.mString;
     mScroll = aEvent.mScroll;
     mOnlyEnabledCheck = aEvent.mOnlyEnabledCheck;
     mSucceeded = aEvent.mSucceeded;

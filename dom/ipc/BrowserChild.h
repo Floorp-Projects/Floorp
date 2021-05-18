@@ -417,6 +417,11 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
   mozilla::ipc::IPCResult RecvSetIsUnderHiddenEmbedderElement(
       const bool& aIsUnderHiddenEmbedderElement);
 
+  mozilla::ipc::IPCResult RecvInsertText(const nsString& aStringToInsert);
+
+  mozilla::ipc::IPCResult RecvNormalPriorityInsertText(
+      const nsString& aStringToInsert);
+
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
   mozilla::ipc::IPCResult RecvPasteTransferable(
       const IPCDataTransfer& aDataTransfer, const bool& aIsPrivateData,
