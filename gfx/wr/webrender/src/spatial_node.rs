@@ -6,12 +6,12 @@
 use api::{ExternalScrollId, PipelineId, PropertyBinding, PropertyBindingId, ReferenceFrameKind, ScrollClamping, ScrollLocation};
 use api::{TransformStyle, ScrollSensitivity, StickyOffsetBounds};
 use api::units::*;
-use crate::spatial_tree::{CoordinateSystem, CoordinateSystemId, SpatialNodeIndex, TransformUpdateState};
+use crate::spatial_tree::{CoordinateSystem, SpatialNodeIndex, TransformUpdateState};
+use crate::spatial_tree::{CoordinateSystemId, StaticCoordinateSystemId};
 use euclid::{Point2D, Vector2D, SideOffsets2D};
 use crate::scene::SceneProperties;
 use crate::util::{LayoutFastTransform, MatrixHelpers, ScaleOffset, TransformedRectKind, PointHelpers};
 
-#[derive(Clone, Debug)]
 pub enum SpatialNodeType {
     /// A special kind of node that adjusts its position based on the position
     /// of its parent node and a given set of sticky positioning offset bounds.
@@ -28,7 +28,6 @@ pub enum SpatialNodeType {
 }
 
 /// Contains information common among all types of SpatialTree nodes.
-#[derive(Clone, Debug)]
 pub struct SpatialNode {
     /// The scale/offset of the viewport for this spatial node, relative to the
     /// coordinate system. Includes any accumulated scrolling offsets from nodes
@@ -44,6 +43,10 @@ pub struct SpatialNode {
 
     /// The axis-aligned coordinate system id of this node.
     pub coordinate_system_id: CoordinateSystemId,
+
+    /// Coordinate system statically assigned during scene building (doesn't change regardless of
+    /// the current property binding value during frame building).
+    pub static_coordinate_system_id: StaticCoordinateSystemId,
 
     /// The current transform kind of this node.
     pub transform_kind: TransformedRectKind,
@@ -132,12 +135,14 @@ impl SpatialNode {
         pipeline_id: PipelineId,
         parent_index: Option<SpatialNodeIndex>,
         node_type: SpatialNodeType,
+        static_coordinate_system_id: StaticCoordinateSystemId,
     ) -> Self {
         SpatialNode {
             viewport_transform: ScaleOffset::identity(),
             content_transform: ScaleOffset::identity(),
             snapping_transform: None,
             coordinate_system_id: CoordinateSystemId(0),
+            static_coordinate_system_id,
             transform_kind: TransformedRectKind::AxisAligned,
             parent: parent_index,
             children: Vec::new(),
@@ -158,6 +163,7 @@ impl SpatialNode {
         scroll_sensitivity: ScrollSensitivity,
         frame_kind: ScrollFrameKind,
         external_scroll_offset: LayoutVector2D,
+        static_coordinate_system_id: StaticCoordinateSystemId,
     ) -> Self {
         let node_type = SpatialNodeType::ScrollFrame(ScrollFrameInfo::new(
                 *frame_rect,
@@ -172,7 +178,12 @@ impl SpatialNode {
             )
         );
 
-        Self::new(pipeline_id, Some(parent_index), node_type)
+        Self::new(
+            pipeline_id,
+            Some(parent_index),
+            node_type,
+            static_coordinate_system_id,
+        )
     }
 
     pub fn new_reference_frame(
@@ -182,6 +193,7 @@ impl SpatialNode {
         kind: ReferenceFrameKind,
         origin_in_parent_reference_frame: LayoutVector2D,
         pipeline_id: PipelineId,
+        static_coordinate_system_id: StaticCoordinateSystemId,
     ) -> Self {
         let info = ReferenceFrameInfo {
             transform_style,
@@ -190,15 +202,26 @@ impl SpatialNode {
             origin_in_parent_reference_frame,
             invertible: true,
         };
-        Self::new(pipeline_id, parent_index, SpatialNodeType::ReferenceFrame(info))
+        Self::new(
+            pipeline_id,
+            parent_index,
+            SpatialNodeType::ReferenceFrame(info),
+            static_coordinate_system_id,
+        )
     }
 
     pub fn new_sticky_frame(
         parent_index: SpatialNodeIndex,
         sticky_frame_info: StickyFrameInfo,
         pipeline_id: PipelineId,
+        static_coordinate_system_id: StaticCoordinateSystemId,
     ) -> Self {
-        Self::new(pipeline_id, Some(parent_index), SpatialNodeType::StickyFrame(sticky_frame_info))
+        Self::new(
+            pipeline_id,
+            Some(parent_index),
+            SpatialNodeType::StickyFrame(sticky_frame_info),
+            static_coordinate_system_id,
+        )
     }
 
     pub fn add_child(&mut self, child: SpatialNodeIndex) {
