@@ -607,7 +607,8 @@ class Replay {
         mNumUsedSlots(0),
         mTotalRequestedSize(0),
         mTotalAllocatedSize(0),
-        mCalculateSlop(false) {
+        mCalculateSlop(false),
+        mDoMemset(false) {
 #ifdef _WIN32
     // See comment in FdPrintf.h as to why native win32 handles are used.
     mStdErr = reinterpret_cast<intptr_t>(GetStdHandle(STD_ERROR_HANDLE));
@@ -617,6 +618,7 @@ class Replay {
   }
 
   void enableSlopCalculation() { mCalculateSlop = true; }
+  void enableMemset() { mDoMemset = true; }
 
   MemSlot& operator[](size_t index) const { return mSlots[index]; }
 
@@ -627,6 +629,7 @@ class Replay {
     aSlot.mPtr = ::malloc_impl(size);
     if (aSlot.mPtr) {
       aSlot.mRequest = size;
+      MaybeCommit(aSlot);
       if (mCalculateSlop) {
         mTotalRequestedSize += size;
         mTotalAllocatedSize += ::malloc_usable_size_impl(aSlot.mPtr);
@@ -643,6 +646,7 @@ class Replay {
     if (::posix_memalign_impl(&ptr, alignment, size) == 0) {
       aSlot.mPtr = ptr;
       aSlot.mRequest = size;
+      MaybeCommit(aSlot);
       if (mCalculateSlop) {
         mTotalRequestedSize += size;
         mTotalAllocatedSize += ::malloc_usable_size_impl(aSlot.mPtr);
@@ -660,6 +664,7 @@ class Replay {
     aSlot.mPtr = ::aligned_alloc_impl(alignment, size);
     if (aSlot.mPtr) {
       aSlot.mRequest = size;
+      MaybeCommit(aSlot);
       if (mCalculateSlop) {
         mTotalRequestedSize += size;
         mTotalAllocatedSize += ::malloc_usable_size_impl(aSlot.mPtr);
@@ -675,6 +680,7 @@ class Replay {
     aSlot.mPtr = ::calloc_impl(num, size);
     if (aSlot.mPtr) {
       aSlot.mRequest = num * size;
+      MaybeCommit(aSlot);
       if (mCalculateSlop) {
         mTotalRequestedSize += num * size;
         mTotalAllocatedSize += ::malloc_usable_size_impl(aSlot.mPtr);
@@ -697,6 +703,7 @@ class Replay {
     aSlot.mPtr = ::realloc_impl(old_ptr, size);
     if (aSlot.mPtr) {
       aSlot.mRequest = size;
+      MaybeCommit(aSlot);
       if (mCalculateSlop) {
         mTotalRequestedSize += size;
         mTotalAllocatedSize += ::malloc_usable_size_impl(aSlot.mPtr);
@@ -727,6 +734,7 @@ class Replay {
     aSlot.mPtr = ::memalign_impl(alignment, size);
     if (aSlot.mPtr) {
       aSlot.mRequest = size;
+      MaybeCommit(aSlot);
       if (mCalculateSlop) {
         mTotalRequestedSize += size;
         mTotalAllocatedSize += ::malloc_usable_size_impl(aSlot.mPtr);
@@ -741,6 +749,7 @@ class Replay {
     aSlot.mPtr = ::valloc_impl(size);
     if (aSlot.mPtr) {
       aSlot.mRequest = size;
+      MaybeCommit(aSlot);
       if (mCalculateSlop) {
         mTotalRequestedSize += size;
         mTotalAllocatedSize += ::malloc_usable_size_impl(aSlot.mPtr);
@@ -1010,6 +1019,13 @@ class Replay {
     return mSlots[slot_id];
   }
 
+  void MaybeCommit(MemSlot& aSlot) {
+    if (mDoMemset) {
+      // Write any byte, 0x55 isn't significant.
+      memset(aSlot.mPtr, 0x55, aSlot.mRequest);
+    }
+  }
+
   intptr_t mStdErr;
   size_t mOps;
 
@@ -1023,6 +1039,7 @@ class Replay {
   // Whether to calculate slop for all allocations over the runtime of a
   // process.
   bool mCalculateSlop;
+  bool mDoMemset;
 
 #ifdef XP_LINUX
   // If we have a failure reading smaps info then this is used to disable that
@@ -1050,7 +1067,11 @@ int main(int argc, const char* argv[]) {
   for (int i = 1; i < argc; i++) {
     const char* option = argv[i];
     if (strcmp(option, "-s") == 0) {
+      // Do accounting to calculate allocation slop.
       replay.enableSlopCalculation();
+    } else if (strcmp(option, "-c") == 0) {
+      // Touch memory as we allocate it.
+      replay.enableMemset();
     } else {
       fprintf(stderr, "Unknown command line option: %s\n", option);
       return EXIT_FAILURE;
