@@ -4327,11 +4327,13 @@ inline void MozJemalloc::jemalloc_stats_internal(
     MOZ_ASSERT(arena_mapped >= arena_committed);
     MOZ_ASSERT(arena_committed >= arena_allocated + arena_dirty);
 
-    // "waste" is committed memory that is neither dirty nor
-    // allocated.
     aStats->mapped += arena_mapped;
     aStats->allocated += arena_allocated;
     aStats->page_cache += arena_dirty;
+    // "waste" is committed memory that is neither dirty nor
+    // allocated.  If you change this definition please update
+    // memory/replace/logalloc/replay/Replay.cpp's jemalloc_stats calculation of
+    // committed.
     aStats->waste += arena_committed - arena_allocated - arena_dirty -
                      arena_unused - arena_headers;
     aStats->bin_unused += arena_unused;

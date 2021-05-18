@@ -496,11 +496,17 @@ class Replay {
       }
     }
 
+    // This formula corresponds to the calculation of wasted (from committed and
+    // the other parameters) within jemalloc_stats()
+    size_t committed = stats.allocated + stats.waste + stats.page_cache +
+                       stats.bookkeeping + stats.bin_unused;
+
     FdPrintf(mStdErr, "\n");
     FdPrintf(mStdErr, "Objects:      %9zu\n", num_objects);
     FdPrintf(mStdErr, "Slots:        %9zu\n", mNumUsedSlots);
     FdPrintf(mStdErr, "Ops:          %9zu\n", mOps);
     FdPrintf(mStdErr, "mapped:       %9zu\n", stats.mapped);
+    FdPrintf(mStdErr, "committed:    %9zu\n", committed);
     FdPrintf(mStdErr, "allocated:    %9zu\n", stats.allocated);
     FdPrintf(mStdErr, "waste:        %9zu\n", stats.waste);
     FdPrintf(mStdErr, "dirty:        %9zu\n", stats.page_cache);
