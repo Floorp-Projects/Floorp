@@ -660,13 +660,18 @@ void gfxMacFontFamily::FindStyleVariations(FontInfoData* aFontInfoData) {
     nsAutoString postscriptFontName;
     GetStringForNSString(psname, postscriptFontName);
 
-    int32_t cssWeight = GetWeightOverride(postscriptFontName);
-    if (cssWeight) {
-      // scale down and clamp, to get a value from 1..9
-      cssWeight = ((cssWeight + 50) / 100);
-      cssWeight = std::max(1, std::min(cssWeight, 9));
-    } else {
-      cssWeight = gfxMacPlatformFontList::AppleWeightToCSSWeight(appKitWeight);
+    int32_t cssWeight = gfxMacPlatformFontList::AppleWeightToCSSWeight(appKitWeight);
+    // If we are on the startup-time InitFontList thread, we skip this as it
+    // wants to retrieve faces for the default font family, but cannot safely
+    // call the Preferences APIs. Fortunately, the default font doesn't actually
+    // depend on a weight override pref.
+    if (!gfxPlatformFontList::IsInitFontListThread()) {
+      int32_t weightOverride = GetWeightOverride(postscriptFontName);
+      if (weightOverride) {
+        // scale down and clamp, to get a value from 1..9
+        cssWeight = ((weightOverride + 50) / 100);
+        cssWeight = std::max(1, std::min(cssWeight, 9));
+      }
     }
     cssWeight *= 100;  // scale up to CSS values
 
@@ -822,23 +827,14 @@ gfxMacPlatformFontList::gfxMacPlatformFontList()
     : gfxPlatformFontList(false), mDefaultFont(nullptr), mUseSizeSensitiveSystemFont(false) {
   CheckFamilyList(kBaseFonts, ArrayLength(kBaseFonts));
 
-  // The font registration thread was created early in startup, to give the
-  // system a head start on activating all the supplemental-language fonts.
-  // Here, we need to wait until it has finished its work.
-  gfxPlatformMac::WaitForFontRegistration();
-
-  // Only the parent process listens for OS font-changed notifications;
-  // after rebuilding its list, it will update the content processes.
-  if (XRE_IsParentProcess()) {
-    ::CFNotificationCenterAddObserver(::CFNotificationCenterGetLocalCenter(), this,
-                                      RegisteredFontsChangedNotificationCallback,
-                                      kCTFontManagerRegisteredFontsChangedNotification, 0,
-                                      CFNotificationSuspensionBehaviorDeliverImmediately);
-  }
-
   // cache this in a static variable so that MacOSFontFamily objects
   // don't have to repeatedly look it up
   sFontManager = [NSFontManager sharedFontManager];
+
+  // Load the font-list preferences now, so that we don't have to do it from
+  // Init[Shared]FontListForPlatform, which may be called off-main-thread.
+  gfxFontUtils::GetPrefsFontList("font.single-face-list", mSingleFaceFonts);
+  gfxFontUtils::GetPrefsFontList("font.preload-names-list", mPreloadFonts);
 }
 
 gfxMacPlatformFontList::~gfxMacPlatformFontList() {
@@ -920,14 +916,49 @@ void gfxMacPlatformFontList::ReadSystemFontList(dom::SystemFontList* aList) {
   }
 }
 
+void gfxMacPlatformFontList::PreloadNamesList() {
+  uint32_t numFonts = mPreloadFonts.Length();
+  for (uint32_t i = 0; i < numFonts; i++) {
+    nsAutoCString key;
+    GenerateFontListKey(mPreloadFonts[i], key);
+
+    // only search canonical names!
+    gfxFontFamily* familyEntry = mFontFamilies.GetWeak(key);
+    if (familyEntry) {
+      familyEntry->ReadOtherFamilyNames(this);
+    }
+  }
+}
+
 nsresult gfxMacPlatformFontList::InitFontListForPlatform() {
   nsAutoreleasePool localPool;
+
+  // The font registration thread was created early in startup, to give the
+  // system a head start on activating all the supplemental-language fonts.
+  // Here, we need to wait until it has finished its work.
+  gfxPlatformMac::WaitForFontRegistration();
 
   Telemetry::AutoTimer<Telemetry::MAC_INITFONTLIST_TOTAL> timer;
 
   InitSystemFontNames();
 
-  if (XRE_IsContentProcess()) {
+  if (XRE_IsParentProcess()) {
+    static bool firstTime = true;
+    if (firstTime) {
+      ::CFNotificationCenterAddObserver(::CFNotificationCenterGetLocalCenter(), this,
+                                        RegisteredFontsChangedNotificationCallback,
+                                        kCTFontManagerRegisteredFontsChangedNotification, 0,
+                                        CFNotificationSuspensionBehaviorDeliverImmediately);
+      firstTime = false;
+    }
+
+    // We're not a content process, so get the available fonts directly
+    // from Core Text.
+    AutoCFRelease<CFArrayRef> familyNames = CTFontManagerCopyAvailableFontFamilyNames();
+    for (NSString* familyName in (NSArray*)(CFArrayRef)familyNames) {
+      AddFamily((CFStringRef)familyName);
+    }
+  } else {
     // Content process: use font list passed from the chrome process via
     // the GetXPCOMProcessAttributes message, because it's much faster than
     // querying Core Text again in the child.
@@ -954,13 +985,6 @@ nsresult gfxMacPlatformFontList::InitFontListForPlatform() {
       }
     }
     fontList.entries().Clear();
-  } else {
-    // We're not a content process, so get the available fonts directly
-    // from Core Text.
-    AutoCFRelease<CFArrayRef> familyNames = CTFontManagerCopyAvailableFontFamilyNames();
-    for (NSString* familyName in (NSArray*)(CFArrayRef)familyNames) {
-      AddFamily((CFStringRef)familyName);
-    }
   }
 
   InitSingleFaceList();
@@ -980,8 +1004,22 @@ nsresult gfxMacPlatformFontList::InitFontListForPlatform() {
 void gfxMacPlatformFontList::InitSharedFontListForPlatform() {
   nsAutoreleasePool localPool;
 
+  gfxPlatformMac::WaitForFontRegistration();
+
   InitSystemFontNames();
+
   if (XRE_IsParentProcess()) {
+    // Only the parent process listens for OS font-changed notifications;
+    // after rebuilding its list, it will update the content processes.
+    static bool firstTime = true;
+    if (firstTime) {
+      ::CFNotificationCenterAddObserver(::CFNotificationCenterGetLocalCenter(), this,
+                                        RegisteredFontsChangedNotificationCallback,
+                                        kCTFontManagerRegisteredFontsChangedNotification, 0,
+                                        CFNotificationSuspensionBehaviorDeliverImmediately);
+      firstTime = false;
+    }
+
     AutoCFRelease<CFArrayRef> familyNames = CTFontManagerCopyAvailableFontFamilyNames();
     nsTArray<fontlist::Family::InitData> families;
     for (NSString* familyName in (NSArray*)(CFArrayRef)familyNames) {
@@ -1000,10 +1038,7 @@ void gfxMacPlatformFontList::InitSharedFontListForPlatform() {
 }
 
 void gfxMacPlatformFontList::InitAliasesForSingleFaceList() {
-  AutoTArray<nsCString, 10> singleFaceFonts;
-  gfxFontUtils::GetPrefsFontList("font.single-face-list", singleFaceFonts);
-
-  for (auto& familyName : singleFaceFonts) {
+  for (auto& familyName : mSingleFaceFonts) {
     LOG_FONTLIST(("(fontlist-singleface) face name: %s\n", familyName.get()));
     // Each entry in the "single face families" list is expected to be a
     // colon-separated pair of FaceName:Family,
@@ -1072,10 +1107,7 @@ void gfxMacPlatformFontList::InitAliasesForSingleFaceList() {
 }
 
 void gfxMacPlatformFontList::InitSingleFaceList() {
-  AutoTArray<nsCString, 10> singleFaceFonts;
-  gfxFontUtils::GetPrefsFontList("font.single-face-list", singleFaceFonts);
-
-  for (auto& familyName : singleFaceFonts) {
+  for (auto& familyName : mSingleFaceFonts) {
     LOG_FONTLIST(("(fontlist-singleface) face name: %s\n", familyName.get()));
     // Each entry in the "single face families" list is expected to be a
     // colon-separated pair of FaceName:Family,
@@ -1272,6 +1304,9 @@ void gfxMacPlatformFontList::RegisteredFontsChangedNotificationCallback(
   }
 
   gfxMacPlatformFontList* fl = static_cast<gfxMacPlatformFontList*>(observer);
+  if (!fl->IsInitialized()) {
+    return;
+  }
 
   // xxx - should be carefully pruning the list of fonts, not rebuilding it from scratch
   fl->UpdateFontList();
@@ -1737,13 +1772,14 @@ void gfxMacPlatformFontList::GetFacesInitDataForFamily(const fontlist::Family* a
     nsAutoString postscriptFontName;
     GetStringForNSString(psname, postscriptFontName);
 
-    int32_t cssWeight = GetWeightOverride(postscriptFontName);
-    if (cssWeight) {
-      // scale down and clamp, to get a value from 1..9
-      cssWeight = ((cssWeight + 50) / 100);
-      cssWeight = std::max(1, std::min(cssWeight, 9));
-    } else {
-      cssWeight = gfxMacPlatformFontList::AppleWeightToCSSWeight(appKitWeight);
+    int32_t cssWeight = gfxMacPlatformFontList::AppleWeightToCSSWeight(appKitWeight);
+    if (PR_GetCurrentThread() != sInitFontListThread) {
+      int32_t weightOverride = GetWeightOverride(postscriptFontName);
+      if (weightOverride) {
+        // scale down and clamp, to get a value from 1..9
+        cssWeight = ((weightOverride + 50) / 100);
+        cssWeight = std::max(1, std::min(cssWeight, 9));
+      }
     }
     cssWeight *= 100;  // scale up to CSS values
 

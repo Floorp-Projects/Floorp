@@ -630,8 +630,16 @@ bool FontList::AppendShmBlock(uint32_t aSizeNeeded) {
   // because child processes can't have initialized their list at all
   // prior to the first block being set up.
   if (mBlocks.Length() > 1) {
-    dom::ContentParent::BroadcastShmBlockAdded(GetGeneration(),
-                                               mBlocks.Length() - 1);
+    if (NS_IsMainThread()) {
+      dom::ContentParent::BroadcastShmBlockAdded(GetGeneration(),
+                                                 mBlocks.Length() - 1);
+    } else {
+      NS_DispatchToMainThread(NS_NewRunnableFunction(
+          "ShmBlockAdded callback",
+          [generation = GetGeneration(), index = mBlocks.Length() - 1] {
+            dom::ContentParent::BroadcastShmBlockAdded(generation, index);
+          }));
+    }
   }
 
   return true;
