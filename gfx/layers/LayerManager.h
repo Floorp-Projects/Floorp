@@ -80,6 +80,7 @@ class FrameUniformityData;
 class PersistentBufferProvider;
 class GlyphArray;
 class WebRenderLayerManager;
+struct LayerPolygon;
 struct AnimData;
 
 namespace layerscope {
