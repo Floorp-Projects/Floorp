@@ -261,19 +261,6 @@ bool NeckoChild::DeallocPTransportProviderChild(
   return true;
 }
 
-mozilla::ipc::IPCResult NeckoChild::RecvAsyncAuthPromptForNestedFrame(
-    const TabId& aNestedFrameId, const nsCString& aUri, const nsString& aRealm,
-    const uint64_t& aCallbackId) {
-  RefPtr<dom::BrowserChild> browserChild =
-      dom::BrowserChild::FindBrowserChild(aNestedFrameId);
-  if (!browserChild) {
-    MOZ_CRASH();
-    return IPC_FAIL_NO_REASON(this);
-  }
-  browserChild->SendAsyncAuthPrompt(aUri, aRealm, aCallbackId);
-  return IPC_OK();
-}
-
 /* Predictor Messages */
 mozilla::ipc::IPCResult NeckoChild::RecvPredOnPredictPrefetch(
     nsIURI* aURI, const uint32_t& aHttpStatus) {

@@ -124,15 +124,6 @@ parent:
                                 nsresult aTopWindowURIResult,
                                 LoadInfoArgs? loadInfo);
 
-  /**
-   * These are called from the child with the results of the auth prompt.
-   * callbackId is the id that was passed in PBrowser::AsyncAuthPrompt,
-   * corresponding to an nsIAuthPromptCallback
-   */
-  async OnAuthAvailable(uint64_t callbackId, nsString user,
-                        nsString password, nsString domain);
-  async OnAuthCancelled(uint64_t callbackId, bool userCancel);
-
   async RequestContextLoadBegin(uint64_t rcid);
   async RequestContextAfterDOMContentLoaded(uint64_t rcid);
   async RemoveRequestContext(uint64_t rcid);
@@ -163,14 +154,6 @@ parent:
   async GetPageThumbStream(nsIURI uri) returns (nsIInputStream stream);
 
 child:
-  /*
-   * Bring up the http auth prompt for a nested remote mozbrowser.
-   * NestedFrameId is the id corresponding to the PBrowser.  It is the same id
-   * that was passed to the PBrowserOrId param in to the PHttpChannel constructor
-   */
-  async AsyncAuthPromptForNestedFrame(TabId nestedFrameId, nsCString uri,
-                                      nsString realm, uint64_t callbackId);
-
   /* Predictor Methods */
   async PredOnPredictPrefetch(nsIURI uri, uint32_t httpStatus);
   async PredOnPredictPreconnect(nsIURI uri);

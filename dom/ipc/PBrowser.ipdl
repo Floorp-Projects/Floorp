@@ -455,15 +455,6 @@ parent:
     async RespondStartSwipeEvent(uint64_t aInputBlockId, bool aStartSwipe);
 
     /**
-     * Brings up the auth prompt dialog.
-     * Called when this is the PBrowserParent for a nested remote iframe.
-     * aCallbackId corresponds to an nsIAuthPromptCallback that lives in the
-     * root process.  It will be passed back to the root process with either the
-     * OnAuthAvailable or OnAuthCancelled message.
-     */
-    async AsyncAuthPrompt(nsCString uri, nsString realm, uint64_t aCallbackId);
-
-    /**
      * Look up dictionary by selected word for OSX
      *
      * @param aText       The word to look up
