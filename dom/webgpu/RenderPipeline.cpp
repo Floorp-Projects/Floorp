@@ -16,8 +16,10 @@ GPU_IMPL_CYCLE_COLLECTION(RenderPipeline, mParent)
 GPU_IMPL_JS_WRAP(RenderPipeline)
 
 RenderPipeline::RenderPipeline(Device* const aParent, RawId aId,
+                               RawId aImplicitPipelineLayoutId,
                                nsTArray<RawId>&& aImplicitBindGroupLayoutIds)
     : ChildOf(aParent),
+      mImplicitPipelineLayoutId(aImplicitPipelineLayoutId),
       mImplicitBindGroupLayoutIds(std::move(aImplicitBindGroupLayoutIds)),
       mId(aId) {}
 
@@ -29,6 +31,8 @@ void RenderPipeline::Cleanup() {
     auto bridge = mParent->GetBridge();
     if (bridge && bridge->IsOpen()) {
       bridge->SendRenderPipelineDestroy(mId);
+      bridge->SendImplicitLayoutDestroy(mImplicitPipelineLayoutId,
+                                        mImplicitBindGroupLayoutIds);
     }
   }
 }
@@ -36,7 +40,7 @@ void RenderPipeline::Cleanup() {
 already_AddRefed<BindGroupLayout> RenderPipeline::GetBindGroupLayout(
     uint32_t index) const {
   RefPtr<BindGroupLayout> object =
-      new BindGroupLayout(mParent, mImplicitBindGroupLayoutIds[index]);
+      new BindGroupLayout(mParent, mImplicitBindGroupLayoutIds[index], false);
   return object.forget();
 }
 
