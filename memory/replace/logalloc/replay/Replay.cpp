@@ -15,6 +15,11 @@ typedef intptr_t ssize_t;
 #  include <sys/mman.h>
 #  include <unistd.h>
 #endif
+#ifdef XP_LINUX
+#  include <sys/types.h>
+#  include <sys/stat.h>
+#  include <fcntl.h>
+#endif
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
@@ -22,6 +27,7 @@ typedef intptr_t ssize_t;
 
 #include "mozilla/Assertions.h"
 #include "mozilla/MathAlgorithms.h"
+#include "mozilla/Maybe.h"
 #include "FdPrintf.h"
 
 static void die(const char* message) {
@@ -187,8 +193,32 @@ class Buffer {
 /* Helper class to read from a file descriptor line by line. */
 class FdReader {
  public:
-  explicit FdReader(int aFd)
-      : mFd(aFd), mData(&mRawBuf, 0), mBuf(&mRawBuf, sizeof(mRawBuf)) {}
+  explicit FdReader(int aFd, bool aNeedClose = false)
+      : mFd(aFd),
+        mNeedClose(aNeedClose),
+        mData(&mRawBuf, 0),
+        mBuf(&mRawBuf, sizeof(mRawBuf)) {}
+
+  FdReader(FdReader&& aOther) noexcept
+      : mFd(aOther.mFd),
+        mNeedClose(aOther.mNeedClose),
+        mData(&mRawBuf, 0),
+        mBuf(&mRawBuf, sizeof(mRawBuf)) {
+    memcpy(mRawBuf, aOther.mRawBuf, sizeof(mRawBuf));
+    aOther.mFd = -1;
+    aOther.mNeedClose = false;
+    aOther.mData = Buffer();
+    aOther.mBuf = Buffer();
+  }
+
+  FdReader& operator=(const FdReader&) = delete;
+  FdReader(const FdReader&) = delete;
+
+  ~FdReader() {
+    if (mNeedClose) {
+      close(mFd);
+    }
+  }
 
   /* Read a line from the file descriptor and returns it as a Buffer instance */
   Buffer ReadLine() {
@@ -245,6 +275,8 @@ class FdReader {
 
   /* File descriptor to read from. */
   int mFd;
+  bool mNeedClose;
+
   /* Part of data that was read from the file descriptor but not returned with
    * ReadLine yet. */
   Buffer mData;
