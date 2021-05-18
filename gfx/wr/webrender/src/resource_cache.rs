@@ -228,9 +228,7 @@ struct CachedImageInfo {
 
 impl CachedImageInfo {
     fn mark_unused(&mut self, texture_cache: &mut TextureCache) {
-        if self.manual_eviction {
-            texture_cache.evict_manual_handle(&self.texture_cache_handle);
-        }
+        texture_cache.evict_handle(&self.texture_cache_handle);
         self.manual_eviction = false;
     }
 }
