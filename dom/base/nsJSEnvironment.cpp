@@ -1608,7 +1608,7 @@ bool GCRunnerFired(TimeStamp aDeadline, void* /* aClosure */) {
       nsJSContext::KillGCRunner();
       return false;
 
-    case GCRunnerAction::MajorGC: {
+    case GCRunnerAction::WaitToMajorGC: {
       RefPtr<MayGCPromise> mbPromise = MayGCNow(step.mReason);
       if (!mbPromise || mbPromise->IsResolved()) {
         // Only use the promise if it's not resolved yet, otherwise fall through
@@ -1638,7 +1638,7 @@ bool GCRunnerFired(TimeStamp aDeadline, void* /* aClosure */) {
 
       return true;
     }
-    case GCRunnerAction::MajorGCReady:
+    case GCRunnerAction::StartMajorGC:
     case GCRunnerAction::GCSlice:
       break;
   }
