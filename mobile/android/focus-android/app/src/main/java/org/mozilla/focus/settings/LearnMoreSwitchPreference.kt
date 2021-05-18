@@ -1,10 +1,8 @@
 package org.mozilla.focus.settings
 
-import android.app.Activity
 import android.content.Context
 import android.graphics.Paint
 import android.util.AttributeSet
-import android.view.ContextThemeWrapper
 import android.view.View
 import android.widget.TextView
 import androidx.core.content.ContextCompat
@@ -13,6 +11,7 @@ import androidx.preference.SwitchPreferenceCompat
 import mozilla.components.browser.state.state.SessionState
 import org.mozilla.focus.R
 import org.mozilla.focus.ext.components
+import org.mozilla.focus.state.AppAction
 
 abstract class LearnMoreSwitchPreference(context: Context?, attrs: AttributeSet?) :
     SwitchPreferenceCompat(context, attrs) {
@@ -34,19 +33,15 @@ abstract class LearnMoreSwitchPreference(context: Context?, attrs: AttributeSet?
         learnMoreLink.paintFlags = learnMoreLink.paintFlags or Paint.UNDERLINE_TEXT_FLAG
         learnMoreLink.setTextColor(ContextCompat.getColor(context, R.color.colorAction))
         learnMoreLink.setOnClickListener {
-            context.components.tabsUseCases.addPrivateTab(
+            val tabId = context.components.tabsUseCases.addPrivateTab(
                 getLearnMoreUrl(),
                 source = SessionState.Source.MENU,
                 selectTab = true
             )
 
-            if (context is ContextThemeWrapper) {
-                if ((context as ContextThemeWrapper).baseContext is Activity) {
-                    ((context as ContextThemeWrapper).baseContext as Activity).finish()
-                }
-            } else {
-                (context as? Activity)?.finish()
-            }
+            context.components.appStore.dispatch(
+                AppAction.OpenTab(tabId)
+            )
         }
 
         val backgroundDrawableArray =

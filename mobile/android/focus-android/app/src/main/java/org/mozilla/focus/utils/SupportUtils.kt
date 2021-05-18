@@ -6,10 +6,8 @@
 package org.mozilla.focus.utils
 
 import android.annotation.TargetApi
-import android.app.Activity
 import android.content.ActivityNotFoundException
 import android.content.Context
-import android.content.ContextWrapper
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
@@ -17,6 +15,7 @@ import android.provider.Settings
 import mozilla.components.browser.state.state.SessionState
 import org.mozilla.focus.ext.components
 import org.mozilla.focus.locale.Locales
+import org.mozilla.focus.state.AppAction
 import java.io.UnsupportedEncodingException
 import java.net.URLEncoder
 import java.util.Locale
@@ -80,17 +79,15 @@ object SupportUtils {
     }
 
     fun openDefaultBrowserSumoPage(context: Context) {
-        context.components.tabsUseCases.addPrivateTab(
+        val tabId = context.components.tabsUseCases.addPrivateTab(
                 DEFAULT_BROWSER_URL,
                 source = SessionState.Source.MENU,
                 selectTab = true
         )
 
-        if (context is Activity) {
-            context.finish()
-        } else {
-            openDefaultBrowserSumoPage((context as ContextWrapper).baseContext)
-        }
+        context.components.appStore.dispatch(
+            AppAction.OpenTab(tabId)
+        )
     }
 
     @TargetApi(Build.VERSION_CODES.N)
