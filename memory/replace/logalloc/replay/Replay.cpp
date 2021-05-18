@@ -19,6 +19,8 @@ typedef intptr_t ssize_t;
 #  include <sys/types.h>
 #  include <sys/stat.h>
 #  include <fcntl.h>
+#  include <stdlib.h>
+#  include <ctype.h>
 #endif
 #include <algorithm>
 #include <cmath>
@@ -30,11 +32,17 @@ typedef intptr_t ssize_t;
 #include "mozilla/Maybe.h"
 #include "FdPrintf.h"
 
+using namespace mozilla;
+
 static void die(const char* message) {
   /* Here, it doesn't matter that fprintf may allocate memory. */
   fprintf(stderr, "%s\n", message);
   exit(1);
 }
+
+#ifdef XP_LINUX
+static size_t sPageSize = []() { return sysconf(_SC_PAGESIZE); }();
+#endif
 
 /* We don't want to be using malloc() to allocate our internal tracking
  * data, because that would change the parameters of what is being measured,
@@ -42,12 +50,21 @@ static void die(const char* message) {
 template <typename T, size_t Len>
 class MappedArray {
  public:
-  MappedArray() : mPtr(nullptr) {}
+  MappedArray() : mPtr(nullptr) {
+#ifdef XP_LINUX
+    MOZ_RELEASE_ASSERT(!((sizeof(T) * Len) & (sPageSize - 1)),
+                       "MappedArray size must be a multiple of the page size");
+#endif
+  }
 
   ~MappedArray() {
     if (mPtr) {
 #ifdef _WIN32
       VirtualFree(mPtr, sizeof(T) * Len, MEM_RELEASE);
+#elif defined(XP_LINUX)
+      munmap(reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(mPtr) -
+                                     sPageSize),
+             sizeof(T) * Len + sPageSize * 2);
 #else
       munmap(mPtr, sizeof(T) * Len);
 #endif
@@ -66,15 +83,35 @@ class MappedArray {
       die("VirtualAlloc error");
     }
 #else
-    mPtr = reinterpret_cast<T*>(mmap(nullptr, sizeof(T) * Len,
-                                     PROT_READ | PROT_WRITE,
+    size_t data_size = sizeof(T) * Len;
+    size_t size = data_size;
+#  ifdef XP_LINUX
+    // See below
+    size += sPageSize * 2;
+#  endif
+    mPtr = reinterpret_cast<T*>(mmap(nullptr, size, PROT_READ | PROT_WRITE,
                                      MAP_ANON | MAP_PRIVATE, -1, 0));
     if (mPtr == MAP_FAILED) {
       die("Mmap error");
     }
+#  ifdef XP_LINUX
+    // On Linux we request a page on either side of the allocation and
+    // mprotect them.  This prevents mappings in /proc/self/smaps from being
+    // merged and allows us to parse this file to calculate the allocator's RSS.
+    MOZ_ASSERT(0 == mprotect(mPtr, sPageSize, 0));
+    MOZ_ASSERT(0 == mprotect(reinterpret_cast<void*>(
+                                 reinterpret_cast<uintptr_t>(mPtr) + data_size +
+                                 sPageSize),
+                             sPageSize, 0));
+    mPtr = reinterpret_cast<T*>(reinterpret_cast<uintptr_t>(mPtr) + sPageSize);
+#  endif
 #endif
     return mPtr[aIndex];
   }
+
+  bool ownsMapping(uintptr_t addr) const { return addr == (uintptr_t)mPtr; }
+
+  bool allocated() const { return !!mPtr; }
 
  private:
   mutable T* mPtr;
@@ -99,8 +136,8 @@ struct MemSlot {
  * and 2 pages-sized on 64-bits.
  */
 class MemSlotList {
-  static const size_t kGroups = 1024 - 1;
-  static const size_t kGroupSize = (1024 * 1024) / sizeof(MemSlot);
+  static constexpr size_t kGroups = 1024 - 1;
+  static constexpr size_t kGroupSize = (1024 * 1024) / sizeof(MemSlot);
 
   MappedArray<MemSlot, kGroupSize> mSlots[kGroups];
   MappedArray<MemSlotList, 1> mNext;
@@ -112,6 +149,17 @@ class MemSlotList {
     }
     aIndex -= kGroupSize * kGroups;
     return mNext[0][aIndex];
+  }
+
+  // Ask if any of the memory-mapped buffers use this range.
+  bool ownsMapping(uintptr_t aStart) const {
+    for (const auto& slot : mSlots) {
+      if (slot.allocated() && slot.ownsMapping(aStart)) {
+        return true;
+      }
+    }
+    return mNext.ownsMapping(aStart) ||
+           (mNext.allocated() && mNext[0].ownsMapping(aStart));
   }
 };
 
@@ -145,6 +193,24 @@ class Buffer {
     return result;
   }
 
+  // Advance to the position after aNeedle.  This is like SplitChar but does not
+  // return the skipped portion.
+  void Skip(char aNeedle, unsigned nTimes = 1) {
+    for (unsigned i = 0; i < nTimes; i++) {
+      SplitChar(aNeedle);
+    }
+  }
+
+  void SkipWhitespace() {
+    while (mLength > 0) {
+      if (!isspace(mBuf[0])) {
+        break;
+      }
+      mBuf++;
+      mLength--;
+    }
+  }
+
   /* Returns a sub-buffer of at most aLength characters. The "parent" buffer is
    * amputated of those aLength characters. If the "parent" buffer is smaller
    * than aLength, then its length is used instead. */
@@ -168,8 +234,12 @@ class Buffer {
            (mBuf == aOther.mBuf || !strncmp(mBuf, aOther.mBuf, mLength));
   }
 
+  bool operator!=(Buffer aOther) { return !(*this == aOther); }
+
   /* Returns whether the buffer is empty. */
   explicit operator bool() { return mLength; }
+
+  char operator[](size_t n) const { return mBuf[n]; }
 
   /* Returns the memory location of the buffer. */
   const char* get() { return mBuf; }
@@ -184,6 +254,8 @@ class Buffer {
     MOZ_ASSERT(aOther.mBuf == GetEnd());
     mLength += aOther.mLength;
   }
+
+  size_t Length() const { return mLength; }
 
  private:
   const char* mBuf;
@@ -312,6 +384,7 @@ int pthread_atfork(void (*aPrepare)(void), void (*aParent)(void),
 
 MOZ_END_EXTERN_C
 
+template <unsigned Base = 10>
 size_t parseNumber(Buffer aBuf) {
   if (!aBuf) {
     die("Malformed input");
@@ -319,11 +392,16 @@ size_t parseNumber(Buffer aBuf) {
 
   size_t result = 0;
   for (const char *c = aBuf.get(), *end = aBuf.GetEnd(); c < end; c++) {
-    if (*c < '0' || *c > '9') {
+    result *= Base;
+    if ((*c >= '0' && *c <= '9')) {
+      result += *c - '0';
+    } else if (Base == 16 && *c >= 'a' && *c <= 'f') {
+      result += *c - 'a' + 10;
+    } else if (Base == 16 && *c >= 'A' && *c <= 'F') {
+      result += *c - 'A' + 10;
+    } else {
       die("Malformed input");
     }
-    result *= 10;
-    result += *c - '0';
   }
   return result;
 }
@@ -350,7 +428,7 @@ class Distribution {
   Distribution(size_t max_size, size_t next_smallest, size_t bucket_size)
       : mMaxSize(max_size),
         mNextSmallest(next_smallest),
-        mShift(mozilla::CeilingLog2(bucket_size)),
+        mShift(CeilingLog2(bucket_size)),
         mArrayOffset(1 + next_smallest),
         mArraySlots((max_size - next_smallest) >> mShift),
         mTotalRequests(0),
@@ -406,6 +484,120 @@ class Distribution {
   size_t mTotalRequests;
   size_t mRequests[MAX_NUM_BUCKETS];
 };
+
+#ifdef XP_LINUX
+struct MemoryMap {
+  uintptr_t mStart;
+  uintptr_t mEnd;
+  bool mReadable;
+  bool mPrivate;
+  bool mAnon;
+  bool mIsStack;
+  bool mIsSpecial;
+  size_t mRSS;
+
+  bool IsCandidate() const {
+    // Candidates mappings are:
+    //  * anonymous
+    //  * they are private (not shared),
+    //  * anonymous or "[heap]" (not another area such as stack),
+    //
+    // The only mappings we're falsely including are the .bss segments for
+    // shared libraries.
+    return mReadable && mPrivate && mAnon && !mIsStack && !mIsSpecial;
+  }
+};
+
+class SMapsReader : private FdReader {
+ private:
+  explicit SMapsReader(FdReader&& reader) : FdReader(std::move(reader)) {}
+
+ public:
+  static Maybe<SMapsReader> open() {
+    int fd = ::open(FILENAME, O_RDONLY);
+    if (fd < 0) {
+      perror(FILENAME);
+      return mozilla::Nothing();
+    }
+
+    return Some(SMapsReader(FdReader(fd, true)));
+  }
+
+  Maybe<MemoryMap> readMap(intptr_t aStdErr) {
+    // This is not very tolerant of format changes because things like
+    // parseNumber will crash if they get a bad value.  TODO: make this
+    // soft-fail.
+
+    Buffer line = ReadLine();
+    if (!line) {
+      return Nothing();
+    }
+
+    // We're going to be at the start of an entry, start tokenising the first
+    // line.
+
+    // Range
+    Buffer range = line.SplitChar(' ');
+    uintptr_t range_start = parseNumber<16>(range.SplitChar('-'));
+    uintptr_t range_end = parseNumber<16>(range);
+
+    // Mode.
+    Buffer mode = line.SplitChar(' ');
+    if (mode.Length() != 4) {
+      FdPrintf(aStdErr, "Couldn't parse SMAPS file\n");
+      return Nothing();
+    }
+    bool readable = mode[0] == 'r';
+    bool private_ = mode[3] == 'p';
+
+    // Offset, device and inode.
+    line.SkipWhitespace();
+    bool zero_offset = !parseNumber<16>(line.SplitChar(' '));
+    line.SkipWhitespace();
+    bool no_device = line.SplitChar(' ') == Buffer("00:00");
+    line.SkipWhitespace();
+    bool zero_inode = !parseNumber(line.SplitChar(' '));
+    bool is_anon = zero_offset && no_device && zero_inode;
+
+    // Filename, or empty for anon mappings.
+    line.SkipWhitespace();
+    Buffer filename = line.SplitChar(' ');
+
+    bool is_stack;
+    bool is_special;
+    if (filename && filename[0] == '[') {
+      is_stack = filename == Buffer("[stack]");
+      is_special = filename == Buffer("[vdso]") ||
+                   filename == Buffer("[vvar]") ||
+                   filename == Buffer("[vsyscall]");
+    } else {
+      is_stack = false;
+      is_special = false;
+    }
+
+    size_t rss = 0;
+    while ((line = ReadLine())) {
+      Buffer field = line.SplitChar(':');
+      if (field == Buffer("VmFlags")) {
+        // This is the last field, at least in the current format. Break this
+        // loop to read the next mapping.
+        break;
+      }
+
+      if (field == Buffer("Rss")) {
+        line.SkipWhitespace();
+        Buffer value = line.SplitChar(' ');
+        rss = parseNumber(value) * 1024;
+      }
+    }
+
+    return Some(MemoryMap({range_start, range_end, readable, private_, is_anon,
+                           is_stack, is_special, rss}));
+  }
+
+  static constexpr char FILENAME[] = "/proc/self/smaps";
+};
+#endif  // XP_LINUX
 
 /* Class to handle dispatching the replay function calls to replace-malloc. */
 class Replay {
@@ -565,6 +757,10 @@ class Replay {
     jemalloc_bin_stats_t bin_stats[JEMALLOC_MAX_STATS_BINS];
     ::jemalloc_stats_internal(&stats, bin_stats);
 
+#ifdef XP_LINUX
+    size_t rss = get_rss();
+#endif
+
     size_t num_objects = 0;
     size_t num_sloppy_objects = 0;
     size_t total_allocated = 0;
@@ -618,6 +814,11 @@ class Replay {
     FdPrintf(mStdErr, "Ops:          %9zu\n", mOps);
     FdPrintf(mStdErr, "mapped:       %9zu\n", stats.mapped);
     FdPrintf(mStdErr, "committed:    %9zu\n", committed);
+#ifdef XP_LINUX
+    if (rss) {
+      FdPrintf(mStdErr, "rss:          %9zu\n", rss);
+    }
+#endif
     FdPrintf(mStdErr, "allocated:    %9zu\n", stats.allocated);
     FdPrintf(mStdErr, "waste:        %9zu\n", stats.waste);
     FdPrintf(mStdErr, "dirty:        %9zu\n", stats.page_cache);
@@ -668,9 +869,6 @@ class Replay {
              percent(huge_slop, huge_used));
 
     print_distributions(stats, bin_stats);
-
-    /* TODO: Add more data, like actual RSS as measured by OS, but compensated
-     * for the replay internal data. */
   }
 
  private:
@@ -735,6 +933,69 @@ class Replay {
     }
   }
 
+#ifdef XP_LINUX
+  size_t get_rss() {
+    if (mGetRSSFailed) {
+      return 0;
+    }
+
+    // On Linux we can determine the RSS of the heap area by examining the
+    // smaps file.
+    mozilla::Maybe<SMapsReader> reader = SMapsReader::open();
+    if (!reader) {
+      mGetRSSFailed = true;
+      return 0;
+    }
+
+    size_t rss = 0;
+    while (Maybe<MemoryMap> map = reader->readMap(mStdErr)) {
+      if (map->IsCandidate() && !mSlots.ownsMapping(map->mStart) &&
+          !InitialMapsContains(map->mStart)) {
+        rss += map->mRSS;
+      }
+    }
+
+    return rss;
+  }
+
+  bool InitialMapsContains(uintptr_t aRangeStart) {
+    for (unsigned i = 0; i < mNumInitialMaps; i++) {
+      MOZ_ASSERT(i < MAX_INITIAL_MAPS);
+
+      if (mInitialMaps[i] == aRangeStart) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+ public:
+  void BuildInitialMapInfo() {
+    if (mGetRSSFailed) {
+      return;
+    }
+
+    Maybe<SMapsReader> reader = SMapsReader::open();
+    if (!reader) {
+      mGetRSSFailed = true;
+      return;
+    }
+
+    while (Maybe<MemoryMap> map = reader->readMap(mStdErr)) {
+      if (map->IsCandidate()) {
+        if (mNumInitialMaps >= MAX_INITIAL_MAPS) {
+          FdPrintf(mStdErr, "Too many initial mappings, can't compute RSS\n");
+          mGetRSSFailed = false;
+          return;
+        }
+
+        mInitialMaps[mNumInitialMaps++] = map->mStart;
+      }
+    }
+  }
+#endif
+
+ private:
   MemSlot& SlotForResult(Buffer& aResult) {
     /* Parse result value and get the corresponding slot. */
     Buffer dummy = aResult.SplitChar('=');
@@ -762,6 +1023,23 @@ class Replay {
   // Whether to calculate slop for all allocations over the runtime of a
   // process.
   bool mCalculateSlop;
+
+#ifdef XP_LINUX
+  // If we have a failure reading smaps info then this is used to disable that
+  // feature.
+  bool mGetRSSFailed = false;
+
+  // The initial memory mappings are recorded here at start up.  We exclude
+  // memory in these mappings when computing RSS.  We assume they do not grow
+  // and that no regions are allocated near them, this is true because they'll
+  // only record the .bss and .data segments from our binary and shared objects
+  // or regions that logalloc-replay has created for MappedArrays.
+  //
+  // 64 should be enough for anybody.
+  static constexpr unsigned MAX_INITIAL_MAPS = 64;
+  uintptr_t mInitialMaps[MAX_INITIAL_MAPS];
+  unsigned mNumInitialMaps = 0;
+#endif  // XP_LINUX
 };
 
 int main(int argc, const char* argv[]) {
@@ -778,6 +1056,10 @@ int main(int argc, const char* argv[]) {
       return EXIT_FAILURE;
     }
   }
+
+#ifdef XP_LINUX
+  replay.BuildInitialMapInfo();
+#endif
 
   /* Read log from stdin and dispatch function calls to the Replay instance.
    * The log format is essentially:
