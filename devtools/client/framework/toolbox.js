@@ -62,8 +62,9 @@ loader.lazyRequireGetter(
 loader.lazyRequireGetter(
   this,
   [
-    "registerWalkerListeners",
+    "refreshTargets",
     "registerTarget",
+    "registerWalkerListeners",
     "selectTarget",
     "unregisterTarget",
   ],
@@ -4319,7 +4320,6 @@ Toolbox.prototype = {
 
       if (
         resource.resourceType === this.resourceCommand.TYPES.DOCUMENT_EVENT &&
-        resource?.targetFront.isTopLevel &&
         !resource.isFrameSwitching &&
         // `url` is set on the targetFront when we receive dom-loading, and `title` when
         // `dom-interactive` is received. Here we're only updating the window title in
@@ -4330,9 +4330,14 @@ Toolbox.prototype = {
         // the host title a bit in order for the event listener in targetCommand to be
         // executed.
         setTimeout(() => {
-          this._refreshHostTitle();
+          // Update the EvaluationContext selector so url/title of targets can be updated
+          this.store.dispatch(refreshTargets());
+
+          if (resource.targetFront.isTopLevel) {
+            this._refreshHostTitle();
+            this._setDebugTargetData();
+          }
         }, 0);
-        this._setDebugTargetData();
       }
     }
 
