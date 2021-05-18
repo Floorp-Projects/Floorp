@@ -296,6 +296,85 @@ size_t parseNumber(Buffer aBuf) {
   return result;
 }
 
+static size_t percent(size_t a, size_t b) {
+  if (!b) {
+    return 0;
+  }
+  return size_t(round(double(a) / double(b) * 100.0));
+}
+
+class Distribution {
+ public:
+  // Default constructor used for array initialisation.
+  Distribution()
+      : mMaxSize(0),
+        mNextSmallest(0),
+        mShift(0),
+        mArrayOffset(0),
+        mArraySlots(0),
+        mTotalRequests(0),
+        mRequests{0} {}
+
+  Distribution(size_t max_size, size_t next_smallest, size_t bucket_size)
+      : mMaxSize(max_size),
+        mNextSmallest(next_smallest),
+        mShift(mozilla::CeilingLog2(bucket_size)),
+        mArrayOffset(1 + next_smallest),
+        mArraySlots((max_size - next_smallest) >> mShift),
+        mTotalRequests(0),
+        mRequests{
+            0,
+        } {
+    MOZ_ASSERT(mMaxSize);
+    MOZ_RELEASE_ASSERT(mArraySlots <= MAX_NUM_BUCKETS);
+  }
+
+  Distribution& operator=(const Distribution& aOther) = default;
+
+  void addRequest(size_t request) {
+    MOZ_ASSERT(mMaxSize);
+
+    mRequests[(request - mArrayOffset) >> mShift]++;
+    mTotalRequests++;
+  }
+
+  void printDist(intptr_t std_err) {
+    MOZ_ASSERT(mMaxSize);
+
+    // The translation to turn a slot index into a memory request size.
+    const size_t array_offset_add = (1 << mShift) + mNextSmallest;
+
+    FdPrintf(std_err, "\n%zu-bin Distribution:\n", mMaxSize);
+    FdPrintf(std_err, "   request   :  count percent\n");
+    size_t range_start = mNextSmallest + 1;
+    for (size_t j = 0; j < mArraySlots; j++) {
+      size_t range_end = (j << mShift) + array_offset_add;
+      FdPrintf(std_err, "%5zu - %5zu: %6zu %6zu%%\n", range_start, range_end,
+               mRequests[j], percent(mRequests[j], mTotalRequests));
+      range_start = range_end + 1;
+    }
+  }
+
+  size_t maxSize() const { return mMaxSize; }
+
+ private:
+  static constexpr size_t MAX_NUM_BUCKETS = 16;
+
+  // If size is zero this distribution is uninitialised.
+  size_t mMaxSize;
+  size_t mNextSmallest;
+
+  // Parameters to convert a size into a slot number.
+  unsigned mShift;
+  unsigned mArrayOffset;
+
+  // The number of slots.
+  unsigned mArraySlots;
+
+  size_t mTotalRequests;
+  size_t mRequests[MAX_NUM_BUCKETS];
+};
+
 /* Class to handle dispatching the replay function calls to replace-malloc. */
 class Replay {
  public:
@@ -556,85 +635,72 @@ class Replay {
     FdPrintf(mStdErr, "%5s %8zu %9zu %6zu%%\n", "huge", huge_slop, huge_used,
              percent(huge_slop, huge_used));
 
-    unsigned last_size = 0;
-    for (auto& bin : bin_stats) {
-      if (bin.size == 0) {
-        break;
-      }
-
-      if (bin.size <= 16) {
-        // 1 byte buckets.
-        print_distribution(bin.size, last_size, 1);
-      } else if (bin.size <= stats.quantum_max) {
-        // 4 buckets, (4 bytes per bucket with a 16 byte quantum).
-        print_distribution(bin.size, last_size, stats.quantum / 4);
-      } else {
-        // 16 buckets.
-        print_distribution(bin.size, last_size, (bin.size - last_size) / 16);
-      }
-
-      last_size = bin.size;
-    }
-
-    // 16 buckets.
-    print_distribution(stats.page_size, last_size,
-                       (stats.page_size - last_size) / 16);
-
-    // Buckets are 1/4 of the page size (12 buckets).
-    print_distribution(stats.page_size * 4, stats.page_size,
-                       stats.page_size / 4);
+    print_distributions(stats, bin_stats);
 
     /* TODO: Add more data, like actual RSS as measured by OS, but compensated
      * for the replay internal data. */
   }
 
  private:
-  const size_t MAX_NUM_BUCKETS = 16;
-
   /*
    * Create and print frequency distributions of memory requests.
    */
-  void print_distribution(size_t size, size_t next_smallest,
-                          size_t bucket_size) {
-    unsigned shift = mozilla::CeilingLog2(bucket_size);
+  void print_distributions(
+      jemalloc_stats_t& stats,
+      jemalloc_bin_stats_t (&bin_stats)[JEMALLOC_MAX_STATS_BINS]) {
+    // We compute distributions for all of the bins for small allocations
+    // (JEMALLOC_MAX_STATS_BINS) plus two more distributions for larger
+    // allocations.
+    Distribution dists[JEMALLOC_MAX_STATS_BINS + 2];
 
-    // The number of slots.
-    const unsigned array_slots = (size - next_smallest) >> shift;
+    unsigned last_size = 0;
+    unsigned num_dists = 0;
+    for (auto& bin : bin_stats) {
+      if (bin.size == 0) {
+        break;
+      }
+      auto& dist = dists[num_dists++];
 
-    // The translation to turn a slot index into a memory request size.
-    const unsigned array_offset = 1 + next_smallest;
-    const size_t array_offset_add = (1 << shift) + next_smallest;
+      if (bin.size <= 16) {
+        // 1 byte buckets.
+        dist = Distribution(bin.size, last_size, 1);
+      } else if (bin.size <= stats.quantum_max) {
+        // 4 buckets, (4 bytes per bucket with a 16 byte quantum).
+        dist = Distribution(bin.size, last_size, stats.quantum / 4);
+      } else {
+        // 16 buckets.
+        dist = Distribution(bin.size, last_size, (bin.size - last_size) / 16);
+      }
+      last_size = bin.size;
+    }
 
-    // Avoid a variable length array.
-    MOZ_RELEASE_ASSERT(array_slots <= MAX_NUM_BUCKETS);
-    size_t requests[MAX_NUM_BUCKETS];
-    memset(requests, 0, sizeof(size_t) * array_slots);
-    size_t total_requests = 0;
+    // 16 buckets.
+    dists[num_dists] = Distribution(stats.page_size, last_size,
+                                    (stats.page_size - last_size) / 16);
+    num_dists++;
+
+    // Buckets are 1/4 of the page size (12 buckets).
+    dists[num_dists] =
+        Distribution(stats.page_size * 4, stats.page_size, stats.page_size / 4);
+    num_dists++;
+
+    MOZ_RELEASE_ASSERT(num_dists <= JEMALLOC_MAX_STATS_BINS + 2);
 
     for (size_t slot_id = 0; slot_id < mNumUsedSlots; slot_id++) {
       MemSlot& slot = mSlots[slot_id];
-      if (slot.mPtr && slot.mRequest > next_smallest && slot.mRequest <= size) {
-        requests[(slot.mRequest - array_offset) >> shift]++;
-        total_requests++;
+      if (slot.mPtr) {
+        for (size_t i = 0; i < num_dists; i++) {
+          if (slot.mRequest <= dists[i].maxSize()) {
+            dists[i].addRequest(slot.mRequest);
+            break;
+          }
+        }
       }
     }
 
-    FdPrintf(mStdErr, "\n%zu-bin Distribution:\n", size);
-    FdPrintf(mStdErr, "   request   :  count percent\n");
-    size_t range_start = next_smallest + 1;
-    for (size_t j = 0; j < array_slots; j++) {
-      size_t range_end = (j << shift) + array_offset_add;
-      FdPrintf(mStdErr, "%5zu - %5zu: %6zu %6zu%%\n", range_start, range_end,
-               requests[j], percent(requests[j], total_requests));
-      range_start = range_end + 1;
+    for (unsigned i = 0; i < num_dists; i++) {
+      dists[i].printDist(mStdErr);
     }
-  }
-
-  static size_t percent(size_t a, size_t b) {
-    if (!b) {
-      return 0;
-    }
-    return size_t(round(double(a) / double(b) * 100.0));
   }
 
   MemSlot& SlotForResult(Buffer& aResult) {
