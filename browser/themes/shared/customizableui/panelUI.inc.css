@@ -1483,27 +1483,16 @@ panelview .toolbarbutton-1,
   color: unset;
   background-color: unset;
   box-shadow: unset;
-}
+ }
 
 #appMenu-zoomReduce-button2 > .toolbarbutton-icon,
-#appMenu-zoomEnlarge-button2 > .toolbarbutton-icon,
-#appMenu-fullscreen-button2 > .toolbarbutton-icon {
-  -moz-context-properties: fill;
+#appMenu-zoomEnlarge-button2 > .toolbarbutton-icon {
+  -moz-context-properties: fill, stroke;
   fill: var(--button-color);
-}
-
-#appMenu-zoomReduce-button2 > .toolbarbutton-icon,
-#appMenu-zoomEnlarge-button2 > .toolbarbutton-icon {
-  border-radius: 500px;
-}
-
-#appMenu-zoomReduce-button2 > .toolbarbutton-icon {
-  padding: 2px;
-}
-
-#appMenu-zoomEnlarge-button2 > .toolbarbutton-icon {
-  padding-block: 0 1px;
-  padding-inline: 0 1px;
+  /* the stroke color is used to fill the circle in the icon */
+  stroke: var(--zoom-controls-bgcolor, var(--button-bgcolor, ButtonFace));
+  border-radius: 50%;
+  padding: 0;
 }
 
 #appMenu-zoomReset-button2 > .toolbarbutton-text,
@@ -1513,33 +1502,34 @@ panelview .toolbarbutton-1,
 
 #appMenu-fullscreen-button2 > .toolbarbutton-icon {
   padding: 1px;
-}
-
-#appMenu-zoomReduce-button2 > .toolbarbutton-icon,
-#appMenu-zoomEnlarge-button2 > .toolbarbutton-icon,
-#appMenu-fullscreen-button2 > .toolbarbutton-icon {
   background-color: var(--zoom-controls-bgcolor, var(--button-bgcolor, ButtonFace));
 }
 
-#appMenu-zoomReduce-button2@buttonStateHover@ > .toolbarbutton-icon,
 #appMenu-zoomReset-button2@buttonStateHover@ > .toolbarbutton-text,
-#appMenu-zoomEnlarge-button2@buttonStateHover@ > .toolbarbutton-icon,
 #appMenu-fullscreen-button2@buttonStateHover@ > .toolbarbutton-icon {
   background-color: var(--button-hover-bgcolor);
 }
+#appMenu-zoomReduce-button2@buttonStateHover@ > .toolbarbutton-icon,
+#appMenu-zoomEnlarge-button2@buttonStateHover@ > .toolbarbutton-icon {
+  stroke: var(--button-hover-bgcolor);
+}
 
-#appMenu-zoomReduce-button2@buttonStateActive@ > .toolbarbutton-icon,
 #appMenu-zoomReset-button2@buttonStateActive@ > .toolbarbutton-text,
-#appMenu-zoomEnlarge-button2@buttonStateActive@ > .toolbarbutton-icon,
 #appMenu-fullscreen-button2@buttonStateActive@ > .toolbarbutton-icon {
   background-color: var(--button-active-bgcolor);
 }
+#appMenu-zoomReduce-button2@buttonStateActive@ > .toolbarbutton-icon,
+#appMenu-zoomEnlarge-button2@buttonStateActive@ > .toolbarbutton-icon {
+  stroke: var(--button-active-bgcolor);
+}
 
-#appMenu-zoomReduce-button2@buttonStateFocus@ > .toolbarbutton-icon,
 #appMenu-zoomReset-button2@buttonStateFocus@ > .toolbarbutton-text,
-#appMenu-zoomEnlarge-button2@buttonStateFocus@ > .toolbarbutton-icon,
 #appMenu-fullscreen-button2@buttonStateFocus@ > .toolbarbutton-icon {
   box-shadow: var(--panelview-toolbarbutton-focus-box-shadow);
+}
+#appMenu-zoomReduce-button2@buttonStateFocus@ > .toolbarbutton-icon,
+#appMenu-zoomEnlarge-button2@buttonStateFocus@ > .toolbarbutton-icon {
+  outline: var(--focus-outline);
 }
 
 #appMenu-zoom-controls2 > .subviewbutton {
