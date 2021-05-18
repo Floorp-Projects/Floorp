@@ -578,6 +578,11 @@ let ThirdPartyCookies = new (class ThirdPartyCookies extends ProtectionCategory 
       )
     );
 
+    // Cookie permission state label.
+    XPCOMUtils.defineLazyGetter(this.strings, "subViewAllowed", () =>
+      gNavigatorBundle.getString("contentBlocking.cookiesView.allowed.label")
+    );
+
     this.prefEnabledValues = [
       // These values match the ones exposed under the Content Blocking section
       // of the Preferences UI.
@@ -922,18 +927,15 @@ let ThirdPartyCookies = new (class ThirdPartyCookies extends ProtectionCategory 
       (isAllowed && exceptionState == Services.perms.ALLOW_ACTION) ||
       (!isAllowed && exceptionState == Services.perms.DENY_ACTION)
     ) {
-      let stateLabel;
+      listItem.classList.add("protections-popup-list-item-with-state");
+
+      let stateLabel = document.createXULElement("label");
+      stateLabel.className = "protections-popup-list-state-label";
       if (isAllowed) {
-        stateLabel = document.createXULElement("label");
         stateLabel.value = this.strings.subViewAllowed;
-        stateLabel.className = "protections-popup-list-state-label";
-        listItem.append(stateLabel);
         listItem.classList.toggle("allowed", true);
       } else {
-        stateLabel = document.createXULElement("label");
         stateLabel.value = this.strings.subViewBlocked;
-        stateLabel.className = "protections-popup-list-state-label";
-        listItem.append(stateLabel);
       }
 
       let removeException = document.createXULElement("button");
@@ -942,11 +944,12 @@ let ThirdPartyCookies = new (class ThirdPartyCookies extends ProtectionCategory 
         "contentBlocking.cookiesView.removeButton.tooltip",
         [origin]
       );
+      removeException.appendChild(stateLabel);
+
       removeException.addEventListener(
         "click",
         () => {
           this._clearException(origin);
-          stateLabel.remove();
           removeException.remove();
           listItem.classList.toggle("allowed", !isAllowed);
         },
