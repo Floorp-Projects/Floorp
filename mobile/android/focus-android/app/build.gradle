@@ -1,3 +1,7 @@
+plugins {
+    id "com.jetbrains.python.envs" version "0.0.26"
+}
+
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 apply plugin: 'jacoco'
@@ -124,6 +128,28 @@ tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
         }
 }
 
+// -------------------------------------------------------------------------------------------------
+// Generate Kotlin code for the Focus Glean metrics.
+// -------------------------------------------------------------------------------------------------
+apply plugin: "org.mozilla.telemetry.glean-gradle-plugin"
+
+configurations {
+    // There's an interaction between Gradle's resolution of dependencies with different types
+    // (@jar, @aar) for `implementation` and `testImplementation` and with Android Studio's built-in
+    // JUnit test runner.  The runtime classpath in the built-in JUnit test runner gets the
+    // dependency from the `implementation`, which is type @aar, and therefore the JNA dependency
+    // doesn't provide the JNI dispatch libraries in the correct Java resource directories.  I think
+    // what's happening is that @aar type in `implementation` resolves to the @jar type in
+    // `testImplementation`, and that it wins the dependency resolution battle.
+    //
+    // A workaround is to add a new configuration which depends on the @jar type and to reference
+    // the underlying JAR file directly in `testImplementation`.  This JAR file doesn't resolve to
+    // the @aar type in `implementation`.  This works when invoked via `gradle`, but also sets the
+    // correct runtime classpath when invoked with Android Studio's built-in JUnit test runner.
+    // Success!
+    jnaForTest
+}
+
 dependencies {
     implementation "androidx.appcompat:appcompat:$support_libraries_version"
     implementation "androidx.browser:browser:$support_libraries_version"
@@ -175,13 +201,17 @@ dependencies {
 
     implementation "androidx.palette:palette:$support_libraries_version"
 
+    jnaForTest "net.java.dev.jna:jna:${jna_version}@jar"
+    testImplementation files(configurations.jnaForTest.copyRecursive().files)
+    testImplementation "org.mozilla.telemetry:glean-forUnitTests:${project.ext.glean_version}"
+
     testImplementation "org.junit.jupiter:junit-jupiter-api:5.3.1"
     testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:5.3.1"
     testImplementation "org.junit.jupiter:junit-jupiter-params:5.3.1"
     testImplementation "junit:junit:4.12"
     testRuntimeOnly "org.junit.vintage:junit-vintage-engine:5.3.1"
     testImplementation "org.robolectric:robolectric:4.4" // required to support api level 28
-    testImplementation 'org.mockito:mockito-core:2.24.5'
+    testImplementation "org.mockito:mockito-core:3.11.0"
     testImplementation "androidx.arch.core:core-testing:${architecture_components_version}"
 
     androidTestImplementation "androidx.test.espresso:espresso-core:$espresso_version", {

@@ -1,0 +1,18 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+$schema: moz://mozilla.org/schemas/glean/pings/2-0-0
+
+activation:
+  description: |
+    This ping is intended to provide a measure of the activation of mobile
+    products. It's generated when Focus starts, right after Glean is
+    initialized.
+  include_client_id: false
+  bugs:
+    - https://github.com/mozilla-mobile/focus-android/issues/4545
+  data_reviews:
+    - https://github.com/mozilla-mobile/focus-android/issues/4901
+  notification_emails:
+    - jalmeida@mozilla.com

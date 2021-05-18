@@ -34,6 +34,7 @@ import mozilla.components.service.location.LocationService
 import mozilla.components.service.location.MozillaLocationService
 import org.mozilla.focus.activity.MainActivity
 import org.mozilla.focus.components.EngineProvider
+import org.mozilla.focus.telemetry.GleanMetricsService
 import org.mozilla.focus.downloads.DownloadService
 import org.mozilla.focus.engine.ClientWrapper
 import org.mozilla.focus.engine.LocalizedContentInterceptor
@@ -141,6 +142,8 @@ class Components(
     val customTabsUseCases: CustomTabsUseCases by lazy { CustomTabsUseCases(store, sessionUseCases.loadUrl) }
 
     val crashReporter: CrashReporter by lazy { createCrashReporter(context) }
+
+    val metrics: GleanMetricsService by lazy { GleanMetricsService(context) }
 }
 
 private fun determineInitialScreen(context: Context): Screen {

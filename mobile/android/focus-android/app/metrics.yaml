@@ -1,0 +1,85 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+$schema: moz://mozilla.org/schemas/glean/metrics/2-0-0
+
+browser:
+  is_default:
+    type: boolean
+    lifetime: application
+    description: |
+      Is Focus the default browser? This is true only if the user
+      changes the default browser through the app settings.
+    bugs:
+      - https://github.com/mozilla-mobile/focus-android/issues/4545
+    data_reviews:
+      - https://github.com/mozilla-mobile/focus-android/issues/4901
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - jalmeida@mozilla.com
+    expires: "2022-08-01"
+  default_search_engine:
+    type: string
+    lifetime: application
+    description: |
+      A string containing the default search engine name.
+    bugs:
+      - https://github.com/mozilla-mobile/focus-android/issues/4545
+    data_reviews:
+      - https://github.com/mozilla-mobile/focus-android/issues/4901
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - jalmeida@mozilla.com
+    expires: never
+  locale_override:
+    type: string
+    lifetime: application
+    description: |
+      The locale that differs from the system locale if a user
+      specifically overrides it for the app.
+    bugs:
+      - https://github.com/mozilla-mobile/focus-android/issues/4545
+    data_reviews:
+      - https://github.com/mozilla-mobile/focus-android/issues/4901
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - jalmeida@mozilla.com
+    expires: never
+
+activation:
+  activation_id:
+    type: uuid
+    lifetime: user
+    description: |
+      An alternate identifier, not correlated with the client_id, generated once
+      and only sent with the activation ping.
+    send_in_pings:
+      - activation
+    bugs:
+      - https://github.com/mozilla-mobile/focus-android/issues/4545
+    data_reviews:
+      - https://github.com/mozilla-mobile/focus-android/issues/4901
+    data_sensitivity:
+      - highly_sensitive
+    notification_emails:
+      - jalmeida@mozilla.com
+    expires: never
+
+legacy_ids:
+  client_id:
+    type: uuid
+    description: |
+      Sets the legacy client ID as part of the deletion-reqest ping.
+    send_in_pings:
+      - deletion-request
+    bugs:
+      - https://github.com/mozilla-mobile/focus-android/issues/4545
+    data_reviews:
+      - https://github.com/mozilla-mobile/focus-android/issues/4901
+    notification_emails:
+      - jalmeida@mozilla.com
+    expires: never

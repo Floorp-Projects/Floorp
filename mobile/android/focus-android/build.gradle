@@ -6,6 +6,7 @@ buildscript {
     ext.espresso_version = '3.1.0-alpha4'
     ext.kotlin_version = '1.4.30'
     ext.coroutines_version = '1.4.2'
+    ext.jna_version = "5.6.0"
     // Pinning the last working version of the service-telemetry component until we decide
     // what we want to do with telemetry in the app.
     ext.mozilla_components_version_telemetry = '57.0.9'
@@ -13,11 +14,19 @@ buildscript {
     repositories {
         google()
         mavenCentral()
+        maven {
+            // We will always need this repository for retrieving stable dependencies (like Glean).
+            url "https://maven.mozilla.org/maven2"
+        }
+        maven {
+            url "https://nightly.maven.mozilla.org/maven2"
+        }
     }
 
     dependencies {
         classpath 'com.android.tools.build:gradle:4.0.1'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        classpath "org.mozilla.components:tooling-glean-gradle:${AndroidComponents.VERSION}"
 
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files

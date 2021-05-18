@@ -46,6 +46,7 @@ open class FocusApplication : LocaleAwareApplication(), CoroutineScope {
             PreferenceManager.setDefaultValues(this, R.xml.settings, false)
 
             TelemetryWrapper.init(this)
+            components.metrics.initialize(this)
 
             enableStrictMode()
 
