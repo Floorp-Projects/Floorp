@@ -2856,19 +2856,6 @@ bool EditorBase::IsDescendantOfEditorRoot(const nsINode* aNode) const {
   return aNode->IsInclusiveDescendantOf(root);
 }
 
-uint32_t EditorBase::CountEditableChildren(nsINode* aNode) {
-  MOZ_ASSERT(aNode);
-  uint32_t count = 0;
-  EditorType editorType = GetEditorType();
-  for (nsIContent* child = aNode->GetFirstChild(); child;
-       child = child->GetNextSibling()) {
-    if (EditorUtils::IsEditableContent(*child, editorType)) {
-      ++count;
-    }
-  }
-  return count;
-}
-
 NS_IMETHODIMP EditorBase::IncrementModificationCount(int32_t inNumMods) {
   uint32_t oldModCount = mModCount;
 

@@ -1259,6 +1259,41 @@ class HTMLEditUtils final {
   }
 
   /**
+   * GetInclusiveFirstChildWhichHasOneChild() returns the deepest element whose
+   * tag name is one of `aFirstElementName` and `aOtherElementNames...` if and
+   * only if the elements have only one child node.   In other words, when
+   * this method meets an element which does not matches any of the tag name
+   * or it has no children or 2+ children.
+   *
+   * XXX This method must be implemented without treating edge cases.  So, the
+   *     behavior is odd.  E.g., why can we ignore non-editable node at counting
+   *     each children?  Why do we dig non-editable aNode or first child of its
+   *     descendants?
+   */
+  template <typename FirstElementName, typename... OtherElementNames>
+  static Element* GetInclusiveDeepestFirstChildWhichHasOneChild(
+      const nsINode& aNode, const WalkTreeOptions& aOptions,
+      FirstElementName aFirstElementName,
+      OtherElementNames... aOtherElementNames) {
+    if (!aNode.IsElement()) {
+      return nullptr;
+    }
+    Element* parentElement = nullptr;
+    for (nsIContent* content = const_cast<nsIContent*>(aNode.AsContent());
+         content && content->IsElement() &&
+         content->IsAnyOfHTMLElements(aFirstElementName, aOtherElementNames...);
+         // XXX Why do we scan only the first child of every element?  If it's
+         //     not editable, why do we ignore it when aOptions specifies so.
+         content = content->GetFirstChild()) {
+      if (HTMLEditUtils::CountChildren(*content, aOptions) != 1) {
+        return content->AsElement();
+      }
+      parentElement = content->AsElement();
+    }
+    return parentElement;
+  }
+
+  /**
    * IsInTableCellSelectionMode() returns true when Gecko's editor thinks that
    * selection is in a table cell selection mode.
    * Note that Gecko's editor traditionally treats selection as in table cell
@@ -1502,6 +1537,23 @@ class HTMLEditUtils final {
       return true;
     }
     return false;
+  }
+
+  static uint32_t CountChildren(const nsINode& aNode,
+                                const WalkTreeOptions& aOptions) {
+    uint32_t count = 0;
+    for (nsIContent* child = aNode.GetFirstChild(); child;
+         child = child->GetNextSibling()) {
+      if (HTMLEditUtils::IsContentIgnored(*child, aOptions)) {
+        continue;
+      }
+      if (aOptions.contains(WalkTreeOption::StopAtBlockBoundary) &&
+          HTMLEditUtils::IsBlockElement(*child)) {
+        break;
+      }
+      ++count;
+    }
+    return count;
   }
 
   /**
