@@ -59,6 +59,7 @@ parent:
   async ShaderModuleDestroy(RawId selfId);
   async ComputePipelineDestroy(RawId selfId);
   async RenderPipelineDestroy(RawId selfId);
+  async ImplicitLayoutDestroy(RawId implicitPlId, RawId[] implicitBglIds);
   async DeviceCreateSwapChain(RawId selfId, RawId queueId, RGBDescriptor desc, RawId[] bufferIds, ExternalImageId externalId);
   async SwapChainPresent(ExternalImageId externalId, RawId textureId, RawId commandEncoderId);
   async SwapChainDestroy(ExternalImageId externalId);

@@ -583,6 +583,7 @@ RawId WebGPUChild::DeviceCreateShaderModule(
 
 RawId WebGPUChild::DeviceCreateComputePipeline(
     RawId aSelfId, const dom::GPUComputePipelineDescriptor& aDesc,
+    RawId* const aImplicitPipelineLayoutId,
     nsTArray<RawId>* const aImplicitBindGroupLayoutIds) {
   ffi::WGPUComputePipelineDescriptor desc = {};
   nsCString label, entryPoint;
@@ -600,7 +601,8 @@ RawId WebGPUChild::DeviceCreateComputePipeline(
   ByteBuf bb;
   RawId implicit_bgl_ids[WGPUMAX_BIND_GROUPS] = {};
   RawId id = ffi::wgpu_client_create_compute_pipeline(
-      mClient, aSelfId, &desc, ToFFI(&bb), implicit_bgl_ids);
+      mClient, aSelfId, &desc, ToFFI(&bb), aImplicitPipelineLayoutId,
+      implicit_bgl_ids);
 
   for (const auto& cur : implicit_bgl_ids) {
     if (!cur) break;
@@ -658,6 +660,7 @@ static ffi::WGPUDepthStencilState ConvertDepthStencilState(
 
 RawId WebGPUChild::DeviceCreateRenderPipeline(
     RawId aSelfId, const dom::GPURenderPipelineDescriptor& aDesc,
+    RawId* const aImplicitPipelineLayoutId,
     nsTArray<RawId>* const aImplicitBindGroupLayoutIds) {
   // A bunch of stack locals that we can have pointers into
   nsTArray<ffi::WGPUVertexBufferLayout> vertexBuffers;
@@ -772,7 +775,8 @@ RawId WebGPUChild::DeviceCreateRenderPipeline(
   ByteBuf bb;
   RawId implicit_bgl_ids[WGPUMAX_BIND_GROUPS] = {};
   RawId id = ffi::wgpu_client_create_render_pipeline(
-      mClient, aSelfId, &desc, ToFFI(&bb), implicit_bgl_ids);
+      mClient, aSelfId, &desc, ToFFI(&bb), aImplicitPipelineLayoutId,
+      implicit_bgl_ids);
 
   for (const auto& cur : implicit_bgl_ids) {
     if (!cur) break;
