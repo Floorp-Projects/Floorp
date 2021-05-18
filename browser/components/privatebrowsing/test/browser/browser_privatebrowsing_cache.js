@@ -52,7 +52,7 @@ function getStorageEntryCount(device, goon) {
     onCacheEntryInfo(uri) {
       var urispec = uri.asciiSpec;
       info(device + ":" + urispec + "\n");
-      if (urispec.match(/^http:\/\/example.org\//)) {
+      if (urispec.match(/^https:\/\/example.com\//)) {
         ++this.entryCount;
       }
     },
@@ -69,7 +69,7 @@ function get_cache_for_private_window() {
     executeSoon(function() {
       ok(true, "The private window got loaded");
 
-      let tab = BrowserTestUtils.addTab(win.gBrowser, "http://example.org");
+      let tab = BrowserTestUtils.addTab(win.gBrowser, "https://example.com");
       win.gBrowser.selectedTab = tab;
       let newTabBrowser = win.gBrowser.getBrowserForTab(tab);
 

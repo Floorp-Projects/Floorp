@@ -2,7 +2,7 @@
 
 const PATH = getRootDirectory(gTestPath).replace(
   "chrome://mochitests/content",
-  "http://example.com"
+  "https://example.com"
 );
 const TEST_PAGE = PATH + "file_triggeringprincipal_oa.html";
 const DUMMY_PAGE = PATH + "empty_file.html";
