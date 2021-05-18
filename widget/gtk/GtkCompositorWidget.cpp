@@ -6,14 +6,10 @@
 #include "GtkCompositorWidget.h"
 
 #include "mozilla/layers/CompositorThread.h"
-#include "mozilla/Preferences.h"
 #include "mozilla/widget/InProcessCompositorWidget.h"
 #include "mozilla/widget/PlatformWidgetTypes.h"
 #include "nsWindow.h"
-
-#ifdef MOZ_X11
-#  include "mozilla/X11Util.h"
-#endif
+#include "mozilla/X11Util.h"
 
 #ifdef MOZ_WAYLAND
 #  include "mozilla/layers/NativeLayerWayland.h"
@@ -29,30 +25,16 @@ GtkCompositorWidget::GtkCompositorWidget(
       mWidget(aWindow),
       mClientSize("GtkCompositorWidget::mClientSize") {
 #if defined(MOZ_WAYLAND)
-  if (GdkIsWaylandDisplay() && (GetCompositorOptions().UseSoftwareWebRender() ||
-                                !GetCompositorOptions().UseWebRender())) {
+  if (!aInitData.IsX11Display()) {
     if (!aWindow) {
       NS_WARNING("GtkCompositorWidget: We're missing nsWindow!");
     }
-
-    // By default use multi-buffered backend for SW-WR and single-buffered
-    // for Basic. Assume that SW-WR and Basic never get mixed within the
-    // same process.
-    static bool useMultiBufferBackend =
-        [](const layers::CompositorOptions& aOptions) {
-          if (Preferences::HasUserValue(
-                  "widget.wayland.software-backend-multi-buffer")) {
-            return Preferences::GetBool(
-                "widget.wayland.software-backend-multi-buffer");
-          }
-          return aOptions.UseSoftwareWebRender();
-        }(GetCompositorOptions());
-
-    mProvider.Initialize(aWindow, useMultiBufferBackend);
+    mProvider.Initialize(aWindow);
+    mNativeLayerRoot = nullptr;
   }
 #endif
 #if defined(MOZ_X11)
-  if (GdkIsX11Display()) {
+  if (aInitData.IsX11Display()) {
     mXWindow = (Window)aInitData.XWindow();
 
     // Grab the window's visual and depth
@@ -65,10 +47,7 @@ GtkCompositorWidget::GtkCompositorWidget(
     mDepth = windowAttrs.depth;
 
     // Initialize the window surface provider
-    if (GetCompositorOptions().UseSoftwareWebRender() ||
-        !GetCompositorOptions().UseWebRender()) {
-      mProvider.Initialize(mXWindow, visual, mDepth, aInitData.Shaped());
-    }
+    mProvider.Initialize(mXWindow, visual, mDepth, aInitData.Shaped());
   }
 #endif
   auto size = mClientSize.Lock();
@@ -92,18 +71,6 @@ GtkCompositorWidget::StartRemoteDrawingInRegion(
 void GtkCompositorWidget::EndRemoteDrawingInRegion(
     gfx::DrawTarget* aDrawTarget, const LayoutDeviceIntRegion& aInvalidRegion) {
   mProvider.EndRemoteDrawingInRegion(aDrawTarget, aInvalidRegion);
-}
-
-void GtkCompositorWidget::PrepareBufferForFrame() {
-  return mProvider.PrepareBufferForFrame();
-}
-
-size_t GtkCompositorWidget::GetBufferAge() const {
-  return mProvider.GetBufferAge();
-}
-
-bool GtkCompositorWidget::ShouldDrawPreviousPartialPresentRegions() {
-  return mProvider.ShouldDrawPreviousPartialPresentRegions();
 }
 
 nsIWidget* GtkCompositorWidget::RealWidget() { return mWidget; }
