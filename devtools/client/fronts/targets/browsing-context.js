@@ -42,8 +42,16 @@ class BrowsingContextTargetFront extends TargetMixin(
 
     this.outerWindowID = json.outerWindowID;
     this.favicon = json.favicon;
-    this._title = json.title;
-    this._url = json.url;
+
+    // Initial value for the page title and url. Since the BrowsingContextTargetActor can
+    // be created very early, those might not represent the actual value we'd want to
+    // display for the user (e.g. the <title> might not have been parsed yet, and the
+    // url could still be about:blank, which is what the platform uses at the very start
+    // of a navigation to a new location).
+    // Those values are set again  from the targetCommand when receiving DOCUMENT_EVENT
+    // resource, at which point both values should be in their expected form.
+    this.setTitle(json.title);
+    this.setUrl(json.url);
   }
 
   /**
@@ -68,8 +76,8 @@ class BrowsingContextTargetFront extends TargetMixin(
     // is a WebExtension (where the addon name is always included in the title
     // and the url is supposed to be updated every time the selected frame changes).
     if (!packet.isFrameSwitching || this.isWebExtension) {
-      this._url = packet.url;
-      this._title = packet.title;
+      this.setTitle(packet.title);
+      this.setUrl(packet.url);
     }
 
     // Send any stored event payload (DOMWindow or nsIRequest) for backwards
@@ -79,6 +87,24 @@ class BrowsingContextTargetFront extends TargetMixin(
     } else {
       this.emit("navigate", event);
     }
+  }
+
+  /**
+   * Set the targetFront url.
+   *
+   * @param {string} url
+   */
+  setUrl(url) {
+    this._url = url;
+  }
+
+  /**
+   * Set the targetFront title.
+   *
+   * @param {string} title
+   */
+  setTitle(title) {
+    this._title = title;
   }
 
   async attach() {

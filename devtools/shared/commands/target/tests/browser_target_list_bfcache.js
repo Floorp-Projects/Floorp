@@ -147,7 +147,28 @@ async function testTopLevelNavigations(bfcacheInParent) {
   // Go forward and resurect the second page, this should also be a bfcache navigation, and,
   // get a new target.
   info("Go forward to the second page");
+
   onNavigate = bfcacheInParent ? null : targets[0].once("navigate");
+
+  // When a new target will be created, we need to wait until it's fully processed
+  // to avoid pending promises.
+  const onNewTargetProcessed = bfcacheInParent
+    ? new Promise(resolve => {
+        targetCommand.on(
+          "processed-available-target",
+          function onProcessedAvailableTarget(targetFront) {
+            if (targetFront === targets[3]) {
+              resolve();
+              targetCommand.off(
+                "processed-available-target",
+                onProcessedAvailableTarget
+              );
+            }
+          }
+        );
+      })
+    : null;
+
   gBrowser.selectedBrowser.goForward();
 
   if (bfcacheInParent) {
@@ -168,6 +189,7 @@ async function testTopLevelNavigations(bfcacheInParent) {
     // when navigating to another page and switching to new process and target.
     await targets[3].attachAndInitThread(targetCommand);
     await waitForAllTargetsToBeAttached(targetCommand);
+    await onNewTargetProcessed;
   } else {
     info("Wait for 'navigate'");
     await onNavigate;
