@@ -45,6 +45,13 @@ class DocumentEventWatcher {
           time,
           shouldBeIgnoredAsRedundantWithTargetAvailable,
           isFrameSwitching,
+          // only send `title` on dom interactive (once the HTML was parsed) so we don't
+          // make the payload bigger for events where we either don't have a title yet,
+          // or where we already had a chance to get the title.
+          title: name === "dom-interactive" ? targetActor.title : undefined,
+          // only send `url` on dom loading so we don't make the payload bigger for
+          // other events
+          url: name === "dom-loading" ? targetActor.url : undefined,
         },
       ]);
     };
