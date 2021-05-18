@@ -62,20 +62,12 @@ add_task(async function() {
   });
 
   // Wait until the new iframe is rendered in the context selector.
-  await waitFor(() => {
-    const items = getContextSelectorItems(hud);
-    return (
-      items.length === 4 &&
-      items.some(el =>
-        el
-          .querySelector(".label")
-          ?.textContent.includes("iframe-2|test1.example.org")
-      )
-    );
-  });
+  await waitFor(() => getContextSelectorItems(hud).length === 4);
 
   const expectedSecondIframeItem = {
-    label: `iframe-2|test1.example.org`,
+    // The title is set in a script, but we don't update the context selector entry (it
+    // should be "iframe-2|test1.example.org:80").
+    label: `http://test1.example.org/${IFRAME_PATH}?id=iframe-2`,
     tooltip: `http://test1.example.org/${IFRAME_PATH}?id=iframe-2`,
   };
 
@@ -86,11 +78,11 @@ add_task(async function() {
     },
     expectedSeparatorItem,
     {
-      ...expectedFirstIframeItem,
+      ...expectedSecondIframeItem,
       checked: false,
     },
     {
-      ...expectedSecondIframeItem,
+      ...expectedFirstIframeItem,
       checked: false,
     },
   ]);

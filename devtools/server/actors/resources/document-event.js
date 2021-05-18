@@ -29,14 +29,9 @@ class DocumentEventWatcher {
 
     const onDocumentEvent = (
       name,
-      {
-        time,
-        // This is only passed for dom-loading event
-        shouldBeIgnoredAsRedundantWithTargetAvailable,
-        // This will be `true` when the user selected a document in the frame picker tool,
-        // in the toolbox toolbar.
-        isFrameSwitching,
-      }
+      time,
+      // This is only passed for dom-loading event
+      shouldBeIgnoredAsRedundantWithTargetAvailable
     ) => {
       onAvailable([
         {
@@ -44,14 +39,6 @@ class DocumentEventWatcher {
           name,
           time,
           shouldBeIgnoredAsRedundantWithTargetAvailable,
-          isFrameSwitching,
-          // only send `title` on dom interactive (once the HTML was parsed) so we don't
-          // make the payload bigger for events where we either don't have a title yet,
-          // or where we already had a chance to get the title.
-          title: name === "dom-interactive" ? targetActor.title : undefined,
-          // only send `url` on dom loading so we don't make the payload bigger for
-          // other events
-          url: name === "dom-loading" ? targetActor.url : undefined,
         },
       ]);
     };

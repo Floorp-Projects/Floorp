@@ -62,9 +62,8 @@ loader.lazyRequireGetter(
 loader.lazyRequireGetter(
   this,
   [
-    "refreshTargets",
-    "registerTarget",
     "registerWalkerListeners",
+    "registerTarget",
     "selectTarget",
     "unregisterTarget",
   ],
@@ -331,6 +330,7 @@ function Toolbox(
   this._onResumedState = this._onResumedState.bind(this);
   this._onTargetAvailable = this._onTargetAvailable.bind(this);
   this._onTargetDestroyed = this._onTargetDestroyed.bind(this);
+  this._onNavigate = this._onNavigate.bind(this);
   this._onResourceAvailable = this._onResourceAvailable.bind(this);
   this._onResourceUpdated = this._onResourceUpdated.bind(this);
 
@@ -696,6 +696,7 @@ Toolbox.prototype = {
       // Attach to a new top-level target.
       // For now, register these event listeners only on the top level target
       targetFront.on("will-navigate", this._onWillNavigate);
+      targetFront.on("navigate", this._onNavigate);
       targetFront.on("frame-update", this._updateFrames);
       targetFront.on("inspect-object", this._onInspectObject);
     }
@@ -731,6 +732,7 @@ Toolbox.prototype = {
     if (targetFront.isTopLevel) {
       this.target.off("inspect-object", this._onInspectObject);
       this.target.off("will-navigate", this._onWillNavigate);
+      this.target.off("navigate", this._onNavigate);
       this.target.off("frame-update", this._updateFrames);
     }
 
@@ -799,10 +801,10 @@ Toolbox.prototype = {
         this._onTargetDestroyed
       );
 
+      // Watch for console API messages, errors and network events in order to populate
+      // the error count icon in the toolbox.
       const onResourcesWatched = this.resourceCommand.watchResources(
         [
-          // Watch for console API messages, errors and network events in order to populate
-          // the error count icon in the toolbox.
           this.resourceCommand.TYPES.CONSOLE_MESSAGE,
           this.resourceCommand.TYPES.ERROR_MESSAGE,
           // Independently of watching network event resources for the error count icon,
@@ -811,7 +813,6 @@ Toolbox.prototype = {
           // for network events across the lifetime of the various panels, so stopping
           // the resource command from clearing out its cache of network event resources.
           this.resourceCommand.TYPES.NETWORK_EVENT,
-          this.resourceCommand.TYPES.DOCUMENT_EVENT,
         ],
         {
           onAvailable: this._onResourceAvailable,
@@ -3761,7 +3762,6 @@ Toolbox.prototype = {
         this.resourceCommand.TYPES.CONSOLE_MESSAGE,
         this.resourceCommand.TYPES.ERROR_MESSAGE,
         this.resourceCommand.TYPES.NETWORK_EVENT,
-        this.resourceCommand.TYPES.DOCUMENT_EVENT,
       ],
       { onAvailable: this._onResourceAvailable }
     );
@@ -4280,6 +4280,14 @@ Toolbox.prototype = {
   },
 
   /**
+   * Fired when the user navigates to another page.
+   */
+  _onNavigate: function() {
+    this._refreshHostTitle();
+    this._setDebugTargetData();
+  },
+
+  /**
    * Sets basic information on the DebugTargetInfo component
    */
   _setDebugTargetData() {
@@ -4316,28 +4324,6 @@ Toolbox.prototype = {
         if (level === "clear") {
           errors = 0;
         }
-      }
-
-      if (
-        resource.resourceType === this.resourceCommand.TYPES.DOCUMENT_EVENT &&
-        !resource.isFrameSwitching &&
-        // `url` is set on the targetFront when we receive dom-loading, and `title` when
-        // `dom-interactive` is received. Here we're only updating the window title in
-        // the "newer" event.
-        resource.name === "dom-interactive"
-      ) {
-        // the targetFront title and url are update on dom-interactive, so delay refreshing
-        // the host title a bit in order for the event listener in targetCommand to be
-        // executed.
-        setTimeout(() => {
-          // Update the EvaluationContext selector so url/title of targets can be updated
-          this.store.dispatch(refreshTargets());
-
-          if (resource.targetFront.isTopLevel) {
-            this._refreshHostTitle();
-            this._setDebugTargetData();
-          }
-        }, 0);
       }
     }
 
