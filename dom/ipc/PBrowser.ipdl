@@ -870,12 +870,6 @@ child:
     async NormalPrioritySelectionEvent(WidgetSelectionEvent event);
 
     /**
-     * Dispatch eContentCommandInsertText event in the remote process.
-     */
-    [Priority=input] async InsertText(nsString aStringToInsert);
-    async NormalPriorityInsertText(nsString aStringToInsert);
-
-    /**
      * Call PasteTransferable via a controller on the content process
      * to handle the command content event, "pasteTransferable".
      */
