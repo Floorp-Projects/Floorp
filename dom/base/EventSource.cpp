@@ -361,8 +361,7 @@ class EventSourceImpl final : public nsIObserver,
 NS_IMPL_ISUPPORTS(EventSourceImpl, nsIObserver, nsIStreamListener,
                   nsIRequestObserver, nsIChannelEventSink,
                   nsIInterfaceRequestor, nsISupportsWeakReference,
-                  nsIEventTarget, nsIThreadRetargetableStreamListener,
-                  nsITimerCallback)
+                  nsIEventTarget, nsIThreadRetargetableStreamListener)
 
 EventSourceImpl::EventSourceImpl(EventSource* aEventSource,
                                  nsICookieJarSettings* aCookieJarSettings)

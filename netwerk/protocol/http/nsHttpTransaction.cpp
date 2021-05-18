@@ -2844,7 +2844,7 @@ nsHttpTransaction::Release() {
 }
 
 NS_IMPL_QUERY_INTERFACE(nsHttpTransaction, nsIInputStreamCallback,
-                        nsIOutputStreamCallback, nsITimerCallback)
+                        nsIOutputStreamCallback)
 
 //-----------------------------------------------------------------------------
 // nsHttpTransaction::nsIInputStreamCallback
