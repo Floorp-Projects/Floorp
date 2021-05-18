@@ -726,10 +726,6 @@ class BrowserParent final : public PBrowserParent,
       const nsString& aMessage, bool aSync, ipc::StructuredCloneData* aData,
       nsTArray<ipc::StructuredCloneData>* aJSONRetVal = nullptr);
 
-  mozilla::ipc::IPCResult RecvAsyncAuthPrompt(const nsCString& aUri,
-                                              const nsString& aRealm,
-                                              const uint64_t& aCallbackId);
-
   virtual mozilla::ipc::IPCResult Recv__delete__() override;
 
   virtual void ActorDestroy(ActorDestroyReason why) override;

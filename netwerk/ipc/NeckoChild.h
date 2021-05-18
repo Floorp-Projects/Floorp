@@ -62,9 +62,6 @@ class NeckoChild : public PNeckoChild {
   bool DeallocPSimpleChannelChild(PSimpleChannelChild* child);
   PTransportProviderChild* AllocPTransportProviderChild();
   bool DeallocPTransportProviderChild(PTransportProviderChild* aActor);
-  mozilla::ipc::IPCResult RecvAsyncAuthPromptForNestedFrame(
-      const TabId& aNestedFrameId, const nsCString& aUri,
-      const nsString& aRealm, const uint64_t& aCallbackId);
   PWebSocketEventListenerChild* AllocPWebSocketEventListenerChild(
       const uint64_t& aInnerWindowID);
   bool DeallocPWebSocketEventListenerChild(PWebSocketEventListenerChild*);
