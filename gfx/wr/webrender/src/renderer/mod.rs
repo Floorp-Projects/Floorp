@@ -4929,7 +4929,7 @@ impl Renderer {
         let fb_height = device_size.height;
         let surface_origin_is_top_left = draw_target.surface_origin_is_top_left();
 
-        let num_textures = textures.len() as i32;
+        let num_textures = textures.iter().filter(|t| t.flags().contains(TextureFlags::IS_SHARED_TEXTURE_CACHE)).count() as i32;
 
         if num_textures * (size + spacing) > fb_width {
             let factor = fb_width as f32 / (num_textures * (size + spacing)) as f32;
@@ -4952,6 +4952,9 @@ impl Renderer {
 
         let mut i = 0;
         for texture in textures.iter() {
+            if !texture.flags().contains(TextureFlags::IS_SHARED_TEXTURE_CACHE) {
+                continue;
+            }
             let dimensions = texture.get_dimensions();
             let src_rect = FramebufferIntRect::new(
                 FramebufferIntPoint::zero(),
