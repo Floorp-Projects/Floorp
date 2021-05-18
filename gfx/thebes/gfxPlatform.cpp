@@ -968,13 +968,11 @@ void gfxPlatform::Init() {
 
   gPlatform->mHasVariationFontSupport = gPlatform->CheckVariationFontSupport();
 
-  if (!StaticPrefs::gfx_font_list_lazy_init_enabled_AtStartup()) {
-    // On macOS we don't initialize the font list here because we want to allow
-    // more time for the RegisterFonts thread to complete. So it is initialized
-    // lazily on first use; see gfxPlatformFontList::PlatformFontList().
-    if (!gPlatform->CreatePlatformFontList()) {
-      MOZ_CRASH("Could not initialize gfxPlatformFontList");
-    }
+  // This *create* the platform font list instance, but may not *initialize* it
+  // yet if the gfx.font-list.lazy-init.enabled pref is set. The first *use*
+  // of the list will ensure it is initialized.
+  if (!gPlatform->CreatePlatformFontList()) {
+    MOZ_CRASH("Could not initialize gfxPlatformFontList");
   }
 
   gPlatform->mScreenReferenceSurface = gPlatform->CreateOffscreenSurface(
