@@ -11,8 +11,9 @@ Requirements
 
 -  **Memory:** 4GB RAM minimum, 8GB+ recommended.
 -  **Disk Space:** At least 30GB of free disk space.
--  **Operating System:** A 64-bit installation of Linux. It is advisable
-   to ensure that your system is fully up-to-date.
+-  **Operating System:** A 64-bit installation of Linux. It is strongly advised
+   that you use a supported distribution; see :ref:`build_hosts`.  We also
+   recommend that your system is fully up-to-date.
 
 .. note::
 
