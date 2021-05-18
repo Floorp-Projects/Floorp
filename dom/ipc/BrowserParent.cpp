@@ -3072,6 +3072,15 @@ bool BrowserParent::SendSelectionEvent(WidgetSelectionEvent& aEvent) {
   return true;
 }
 
+bool BrowserParent::SendInsertText(const nsString& aStringToInsert) {
+  if (mIsDestroyed) {
+    return false;
+  }
+  return Manager()->IsInputPriorityEventEnabled()
+             ? PBrowserParent::SendInsertText(aStringToInsert)
+             : PBrowserParent::SendNormalPriorityInsertText(aStringToInsert);
+}
+
 bool BrowserParent::SendPasteTransferable(
     const IPCDataTransfer& aDataTransfer, const bool& aIsPrivateData,
     nsIPrincipal* aRequestingPrincipal,
