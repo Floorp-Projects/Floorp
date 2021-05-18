@@ -34,9 +34,6 @@ nix = "0.13"
 rand = "0.7"
 lazy_static = ">=1.4.0"
 
-[target.'cfg(target_os = "macos")'.dependencies]
-mach = "0.3.2"
-
 [dev-dependencies]
 lucet-wasi-sdk = { path = "../lucet-wasi-sdk", version = "0.1.1" }
 lucetc = { path = "../lucetc", version = "0.1.1" }

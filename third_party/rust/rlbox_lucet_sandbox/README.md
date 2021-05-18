@@ -32,7 +32,6 @@ First, build the rlbox_lucet_sandbox repo with
 cmake -S . -B ./build
 cmake --build ./build --target all
 ```
-(Note: The parallel build is currently broken for first build. Incremental parallel build works fine.)
 
 This lucet/wasm integration with RLBox depends on 3 external tools/libraries that are pulled in **automatically** to run the tests included in this repo.
 
@@ -48,12 +47,12 @@ In order to sandbox a library of your choice.
 For instance, to edit an existing `make` based build system, you can run the commmand.
 
 ```bash
-build/_deps/wasiclang-src/opt/wasi-sdk/bin/clang --sysroot build/_deps/wasiclang-src/opt/wasi-sdk/share/wasi-sysroot/ c_src/lucet_sandbox_wrapper.c -c -o c_src/lucet_sandbox_wrapper.o
+build/_deps/wasiclang-src/bin/clang --sysroot build/_deps/wasiclang-src/share/wasi-sysroot/ c_src/lucet_sandbox_wrapper.c -c -o c_src/lucet_sandbox_wrapper.o
 
-CC=build/_deps/wasiclang-src/opt/wasi-sdk/bin/clang                            \
-CXX=build/_deps/wasiclang-src/opt/wasi-sdk/bin/clang++                         \
-CFLAGS="--sysroot build/_deps/wasiclang-src/opt/wasi-sdk/share/wasi-sysroot/"  \
-LD=build/_deps/wasiclang-src/opt/wasi-sdk/bin/wasm-ld                          \
+CC=build/_deps/wasiclang-src/bin/clang                            \
+CXX=build/_deps/wasiclang-src/bin/clang++                         \
+CFLAGS="--sysroot build/_deps/wasiclang-src/share/wasi-sysroot/"  \
+LD=build/_deps/wasiclang-src/bin/wasm-ld                          \
 LDLIBS=lucet_sandbox_wrapper.o                                                 \
 LDFLAGS=-Wl,--export-all                                                       \
 make
@@ -74,6 +73,8 @@ build/cargo/release/lucetc                                        \
 
 
 ```c++
+#define RLBOX_SINGLE_THREADED_INVOCATIONS
+
 #include "rlbox_lucet_sandbox.hpp"
 #include "rlbox.hpp"
 
@@ -91,7 +92,7 @@ int main()
 - To compile the above example, you must include the rlbox header files in `build/_deps/rlbox-src/code/include`, the integration header files in `include/` and the lucet_sandbox library in `build/cargo/{debug or release}/librlbox_lucet_sandbox.a` (make sure to use the whole archive and the rdynamic linker options). For instance, you can compile the above with
 
 ```bash
-g++ -std=c++17 example.cpp -o example -I build/_deps/rlbox-src/code/include -I include -Wl,--whole-archive -l:build/cargo/debug/librlbox_lucet_sandbox.a -Wl,--no-whole-archive -Wl,-rdynamic
+g++ -std=c++17 example.cpp -o example -I build/_deps/rlbox-src/code/include -I include -Wl,--whole-archive build/cargo/debug/librlbox_lucet_sandbox.a -Wl,--no-whole-archive -rdynamic -lpthread -ldl -lrt
 ```
 
 ## Contributing Code
