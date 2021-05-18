@@ -257,11 +257,9 @@ struct JS_PUBLIC_API PropertyDescriptor {
   bool hasValue() const {
     return !isAccessorDescriptor() && !has(JSPROP_IGNORE_VALUE);
   }
-  JS::Handle<JS::Value> value() const {
-    return JS::Handle<JS::Value>::fromMarkedLocation(&value_);
-  }
-  JS::MutableHandle<JS::Value> value() {
-    return JS::MutableHandle<JS::Value>::fromMarkedLocation(&value_);
+  Value value() const {
+    // TODO: Assert hasValue()
+    return value_;
   }
   void setValue(JS::Handle<JS::Value> v) {
     MOZ_ASSERT(!isAccessorDescriptor());
@@ -309,6 +307,8 @@ struct JS_PUBLIC_API PropertyDescriptor {
   unsigned attributes() const { return attrs_; }
   void setAttributesDoNotUse(unsigned attrs) { attrs_ = attrs; }
 
+  Value* valueDoNotUse() { return &value_; }
+  Value const* valueDoNotUse() const { return &value_; }
   JSObject** getterDoNotUse() { return &getter_; }
   JSObject* const* getterDoNotUse() const { return &getter_; }
   void setGetterDoNotUse(JSObject* obj) { getter_ = obj; }
@@ -378,7 +378,9 @@ class WrappedPtrOperations<JS::PropertyDescriptor, Wrapper> {
   bool enumerable() const { return desc().enumerable(); }
 
   bool hasValue() const { return desc().hasValue(); }
-  JS::HandleValue value() const { return desc().value(); }
+  JS::Handle<JS::Value> value() const {
+    return JS::Handle<JS::Value>::fromMarkedLocation(desc().valueDoNotUse());
+  }
 
   bool hasWritable() const { return desc().hasWritable(); }
   bool writable() const { return desc().writable(); }
@@ -442,7 +444,10 @@ class MutableWrappedPtrOperations<JS::PropertyDescriptor, Wrapper>
     value().set(v);
   }
 
-  JS::MutableHandle<JS::Value> value() { return desc().value(); }
+  JS::MutableHandle<JS::Value> value() {
+    return JS::MutableHandle<JS::Value>::fromMarkedLocation(
+        desc().valueDoNotUse());
+  }
   void setValue(JS::Handle<JS::Value> v) { desc().setValue(v); }
 
   void setConfigurable(bool configurable) {
