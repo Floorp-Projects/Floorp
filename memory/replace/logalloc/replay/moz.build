@@ -45,7 +45,7 @@ if CONFIG["MOZ_BUILD_APP"] == "memory":
         "/mozglue/misc/StackWalk.h",
     ]
 
-if CONFIG["MOZ_REPLACE_MALLOC_STATIC"]:
+if CONFIG["MOZ_BUILD_APP"] == "memory" or CONFIG["MOZ_REPLACE_MALLOC_STATIC"]:
     UNIFIED_SOURCES += [
         "/mfbt/double-conversion/double-conversion/bignum-dtoa.cc",
         "/mfbt/double-conversion/double-conversion/bignum.cc",
@@ -57,7 +57,8 @@ if CONFIG["MOZ_REPLACE_MALLOC_STATIC"]:
         "/mfbt/double-conversion/double-conversion/strtod.cc",
         "/mozglue/misc/Printf.cpp",
     ]
-else:
+
+if not CONFIG["MOZ_REPLACE_MALLOC_STATIC"]:
     SOURCES += [
         "../FdPrintf.cpp",
     ]
