@@ -476,7 +476,7 @@ class MachCommands(MachCommandBase):
     @Command(
         "web-platform-tests",
         category="testing",
-        conditions=[conditions.iss_firefox_or_android],
+        conditions=[conditions.is_firefox_or_android],
         description="Run web-platform-tests.",
         parser=create_parser_wpt,
     )
