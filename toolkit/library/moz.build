@@ -336,7 +336,6 @@ if CONFIG["OS_ARCH"] == "WINNT":
         "sensorsapi",
         "portabledeviceguids",
         "wininet",
-        "wbemuuid",
         "wintrust",
         "wtsapi32",
         "locationapi",
