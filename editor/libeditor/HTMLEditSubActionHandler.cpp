@@ -8293,7 +8293,11 @@ nsresult HTMLEditor::RemoveEmptyNodesIn(nsRange& aRange) {
         // These node types are candidates if selection is not in them.  If
         // it is one of these, don't delete if selection inside.  This is so
         // we can create empty headings, etc., for the user to type into.
-        isCandidate = !StartOrEndOfSelectionRangesIsIn(*content);
+        AutoRangeArray selectionRanges(SelectionRef());
+        isCandidate =
+            !selectionRanges
+                 .IsAtLeastOneContainerOfRangeBoundariesInclusiveDescendantOf(
+                     *content);
       }
     }
 
@@ -8370,36 +8374,6 @@ nsresult HTMLEditor::RemoveEmptyNodesIn(nsRange& aRange) {
   }
 
   return NS_OK;
-}
-
-bool HTMLEditor::StartOrEndOfSelectionRangesIsIn(nsIContent& aContent) const {
-  MOZ_ASSERT(IsEditActionDataAvailable());
-
-  for (uint32_t i = 0; i < SelectionRef().RangeCount(); ++i) {
-    const nsRange* range = SelectionRef().GetRangeAt(i);
-    nsINode* startContainer = range->GetStartContainer();
-    if (startContainer) {
-      if (&aContent == startContainer) {
-        return true;
-      }
-      if (EditorUtils::IsDescendantOf(*startContainer, aContent)) {
-        return true;
-      }
-    }
-    nsINode* endContainer = range->GetEndContainer();
-    if (startContainer == endContainer) {
-      continue;
-    }
-    if (endContainer) {
-      if (&aContent == endContainer) {
-        return true;
-      }
-      if (EditorUtils::IsDescendantOf(*endContainer, aContent)) {
-        return true;
-      }
-    }
-  }
-  return false;
 }
 
 nsresult HTMLEditor::LiftUpListItemElement(

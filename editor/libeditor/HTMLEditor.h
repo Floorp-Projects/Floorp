@@ -2552,12 +2552,6 @@ class HTMLEditor final : public TextEditor,
   AlignAsSubAction(const nsAString& aAlignType);
 
   /**
-   * StartOrEndOfSelectionRangesIsIn() returns true if start or end of one
-   * of selection ranges is in aContent.
-   */
-  bool StartOrEndOfSelectionRangesIsIn(nsIContent& aContent) const;
-
-  /**
    * AdjustCaretPositionAndEnsurePaddingBRElement() may adjust caret
    * position to nearest editable content and if padding `<br>` element is
    * necessary at caret position, this creates it.
