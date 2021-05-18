@@ -217,6 +217,13 @@
 #endif
   mirror: always
 
+# Whether to cache the entire accessibility trees of all content processes in
+# the parent process.
+- name: accessibility.cache.enabled
+  type: bool
+  value: false
+  mirror: once
+
 #---------------------------------------------------------------------------
 # Prefs starting with "alerts."
 #---------------------------------------------------------------------------
