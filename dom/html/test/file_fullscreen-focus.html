@@ -1,0 +1,67 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+
+Test that a fullscreen request fails if the window is not focused.
+
+Open window1, open window2, focus window2, and then attempt to fullscreen
+window1 while it is not focused. The fullscreen attempt should be rejected
+because the window is not focused.
+
+-->
+<head>
+  <title>Test fullscreen request is blocked when window is not focused</title>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="file_fullscreen-utils.js"></script>
+</head>
+<body>
+
+<script type="application/javascript">
+
+function ok(condition, msg) {
+  opener.ok(condition, "[focus] " + msg);
+}
+
+var window1, window2;
+
+function openWindow() {
+  var w = window.open("file_fullscreen-focus-inner.html", "",
+    "width=500,height=500");
+  return w;
+}
+
+function begin() {
+  window1 = openWindow();
+  window1.focus();
+
+  SimpleTest.waitForFocus(function(){
+    window2 = openWindow();
+    window2.focus();
+
+    SimpleTest.waitForFocus(function(){
+      // Now that window2 is focused, attempt to fullscreen window1.
+      // This should fail.
+      window1.enterFullscreen("one");
+    }, window2);
+
+  }, window1);
+}
+
+async function enteredFullscreen(enteredSuccessfully) {
+  ok(!enteredSuccessfully, "window1 did not enter fullscreen");
+
+  if (enteredSuccessfully) {
+    await window1.document.exitFullscreen()
+  }
+
+  window1.close();
+  window2.close();
+  opener.nextTest();
+}
+
+</script>
+</pre>
+<div id="full-screen-element"></div>
+</body>
+</html>
