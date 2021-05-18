@@ -4617,7 +4617,7 @@
   value: true
   mirror: once
 
-- name: gfx.font-list.lazy-init.enabled
+- name: gfx.font-list-omt.enabled
   type: bool
 #if defined(XP_MACOSX)
   value: true
