@@ -21,8 +21,13 @@ function selectTarget(targetActorID) {
   };
 }
 
+function refreshTargets() {
+  return { type: "REFRESH_TARGETS" };
+}
+
 module.exports = {
   registerTarget,
   unregisterTarget,
   selectTarget,
+  refreshTargets,
 };
