@@ -41,10 +41,18 @@ function finish_test(count) {
     info("Checking if the browser is still offline...");
 
     let tab = gBrowser.selectedTab;
-    ContentTask.spawn(tab.linkedBrowser, null, async function() {
-      await ContentTaskUtils.waitForEvent(this, "DOMContentLoaded", true);
-      return content.document.documentURI;
-    }).then(url => {
+    BrowserTestUtils.waitForContentEvent(
+      tab.linkedBrowser,
+      "DOMContentLoaded",
+      true
+    ).then(async function() {
+      let url = await ContentTask.spawn(
+        tab.linkedBrowser,
+        null,
+        async function() {
+          return content.document.documentURI;
+        }
+      );
       info("loaded: " + url);
       if (/^about:neterror\?e=netOffline/.test(url)) {
         wait_for_online();
