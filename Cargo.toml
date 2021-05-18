@@ -79,7 +79,7 @@ chardetng = { git = "https://github.com/hsivonen/chardetng", rev="39f95e2f7cd6e6
 chardetng_c = { git = "https://github.com/hsivonen/chardetng_c", rev="ed8a4c6f900a90d4dbc1d64b856e61490a1c3570" }
 libudev-sys = { path = "dom/webauthn/libudev-sys" }
 packed_simd = { git = "https://github.com/hsivonen/packed_simd", rev="0917fe780032a6bbb23d71be545f9c1834128d75" }
-rlbox_lucet_sandbox = { git = "https://github.com/PLSysSec/rlbox_lucet_sandbox/", rev="681af065e4f1f0f4d053604e47c04a7351c21d78" }
+rlbox_lucet_sandbox = { git = "https://github.com/PLSysSec/rlbox_lucet_sandbox/", rev="f3cace4fb8b53db0849c62af4fa62bade5a620f7" }
 nix = { git = "https://github.com/shravanrn/nix/", rev="4af6c367603869a30fddb5ffb0aba2b9477ba92e" }
 spirv_cross = { git = "https://github.com/kvark/spirv_cross", branch = "wgpu5" }
 minidump_writer_linux = { git = "https://github.com/msirringhaus/minidump_writer_linux.git", rev = "5cea1c9a3d8ed3ed2d7bdd5be3285e7821400b7f" }
