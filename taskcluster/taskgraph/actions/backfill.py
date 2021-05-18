@@ -22,7 +22,7 @@ from .util import (
     get_decision_task_id,
     get_pushes_from_params_input,
     trigger_action,
-    get_tasks_with_downstream,
+    get_downstream_browsertime_tasks,
     rename_browsertime_vismet_task,
 )
 
@@ -292,7 +292,9 @@ def add_task_with_original_manifests(
     if "browsertime" in label:
         if "vismet" in label:
             label = rename_browsertime_vismet_task(label)
-        to_run = get_tasks_with_downstream([label], full_task_graph, label_to_taskid)
+        to_run = get_downstream_browsertime_tasks(
+            [label], full_task_graph, label_to_taskid
+        )
 
     modifier = do_not_modify
     test_manifests = input.get("test_manifests")
