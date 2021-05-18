@@ -29,7 +29,6 @@
 #include "nsNetCID.h"
 #include "nsNetUtil.h"
 #include "nsISupportsPriority.h"
-#include "nsIAuthPromptProvider.h"
 #include "mozilla/net/BackgroundChannelRegistrar.h"
 #include "nsSerializationHelper.h"
 #include "nsISerializable.h"
@@ -265,7 +264,6 @@ NS_INTERFACE_MAP_BEGIN(HttpChannelParent)
   NS_INTERFACE_MAP_ENTRY(nsIRequestObserver)
   NS_INTERFACE_MAP_ENTRY(nsIStreamListener)
   NS_INTERFACE_MAP_ENTRY(nsIParentChannel)
-  NS_INTERFACE_MAP_ENTRY(nsIAuthPromptProvider)
   NS_INTERFACE_MAP_ENTRY(nsIParentRedirectingChannel)
   NS_INTERFACE_MAP_ENTRY(nsIDeprecationWarner)
   NS_INTERFACE_MAP_ENTRY(nsIAsyncVerifyRedirectReadyCallback)
@@ -282,12 +280,6 @@ NS_INTERFACE_MAP_END
 
 NS_IMETHODIMP
 HttpChannelParent::GetInterface(const nsIID& aIID, void** result) {
-  // Only support nsIAuthPromptProvider in Content process
-  if (XRE_IsParentProcess() && aIID.Equals(NS_GET_IID(nsIAuthPromptProvider))) {
-    *result = nullptr;
-    return NS_OK;
-  }
-
   // A system XHR can be created without reference to a window, hence mTabParent
   // may be null.  In that case we want to let the window watcher pick a prompt
   // directly.
@@ -1833,15 +1825,6 @@ nsresult HttpChannelParent::OpenAlternativeOutputStream(
     mCacheEntry->SetMetaDataElement("alt-data-from-child", "1");
   }
   return rv;
-}
-
-NS_IMETHODIMP
-HttpChannelParent::GetAuthPrompt(uint32_t aPromptReason, const nsIID& iid,
-                                 void** aResult) {
-  nsCOMPtr<nsIAuthPrompt2> prompt =
-      new NeckoParent::NestedFrameAuthPrompt(Manager(), TabId(0));
-  prompt.forget(aResult);
-  return NS_OK;
 }
 
 void HttpChannelParent::UpdateAndSerializeSecurityInfo(
