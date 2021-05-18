@@ -476,7 +476,7 @@ class MachCommands(MachCommandBase):
     @Command(
         "web-platform-tests",
         category="testing",
-        conditions=[conditions.is_firefox_or_android],
+        conditions=[conditions.iss_firefox_or_android],
         description="Run web-platform-tests.",
         parser=create_parser_wpt,
     )
@@ -524,7 +524,7 @@ class MachCommands(MachCommandBase):
         parser=create_parser_wpt,
     )
     def run_wpt(self, command_context, **params):
-        return self.run_web_platform_tests(**params)
+        return self.run_web_platform_tests(command_context, **params)
 
     @Command(
         "web-platform-tests-update",
@@ -549,7 +549,7 @@ class MachCommands(MachCommandBase):
         parser=create_parser_update,
     )
     def update_wpt(self, command_context, **params):
-        return self.update_web_platform_tests(**params)
+        return self.update_web_platform_tests(command_context, **params)
 
     @Command(
         "wpt-manifest-update",
