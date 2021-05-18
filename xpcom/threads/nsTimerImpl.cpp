@@ -246,6 +246,7 @@ nsTimerImpl::nsTimerImpl(nsITimer* aTimer, nsIEventTarget* aTarget)
       mGeneration(0),
       mITimer(aTimer),
       mMutex("nsTimerImpl::mMutex"),
+      mCallback(UnknownCallback{}),
       mFiring(0) {
   // XXX some code creates timers during xpcom shutdown, when threads are no
   // longer available, so we cannot turn this on yet.
@@ -308,7 +309,9 @@ nsresult nsTimerImpl::InitCommon(const TimeDuration& aDelay, uint32_t aType,
   }
 
   gThread->RemoveTimer(this);
-  mCallback.swap(newCallback);
+  // If we have an existing callback, using `swap` ensures it's destroyed after
+  // the mutex is unlocked in our caller.
+  std::swap(mCallback, newCallback);
   ++mGeneration;
 
   mType = (uint8_t)aType;
@@ -318,20 +321,14 @@ nsresult nsTimerImpl::InitCommon(const TimeDuration& aDelay, uint32_t aType,
   return gThread->AddTimer(this);
 }
 
-nsresult nsTimerImpl::InitWithFuncCallbackCommon(nsTimerCallbackFunc aFunc,
-                                                 void* aClosure,
-                                                 uint32_t aDelay,
-                                                 uint32_t aType,
-                                                 const Callback::Name& aName) {
+nsresult nsTimerImpl::InitWithFuncCallbackCommon(
+    nsTimerCallbackFunc aFunc, void* aClosure, uint32_t aDelay, uint32_t aType,
+    const FuncCallback::Name& aName) {
   if (NS_WARN_IF(!aFunc)) {
     return NS_ERROR_INVALID_ARG;
   }
 
-  Callback cb;  // Goes out of scope after the unlock, prevents deadlock
-  cb.mType = Callback::Type::Function;
-  cb.mCallback.c = aFunc;
-  cb.mClosure = aClosure;
-  cb.mName = aName;
+  Callback cb(FuncCallback{aFunc, aClosure, aName});
 
   MutexAutoLock lock(mMutex);
   return InitCommon(aDelay, aType, std::move(cb));
@@ -341,15 +338,15 @@ nsresult nsTimerImpl::InitWithNamedFuncCallback(nsTimerCallbackFunc aFunc,
                                                 void* aClosure, uint32_t aDelay,
                                                 uint32_t aType,
                                                 const char* aNameString) {
-  Callback::Name name(aNameString);
-  return InitWithFuncCallbackCommon(aFunc, aClosure, aDelay, aType, name);
+  return InitWithFuncCallbackCommon(aFunc, aClosure, aDelay, aType,
+                                    mozilla::AsVariant(aNameString));
 }
 
 nsresult nsTimerImpl::InitWithNameableFuncCallback(
     nsTimerCallbackFunc aFunc, void* aClosure, uint32_t aDelay, uint32_t aType,
     nsTimerNameCallbackFunc aNameFunc) {
-  Callback::Name name(aNameFunc);
-  return InitWithFuncCallbackCommon(aFunc, aClosure, aDelay, aType, name);
+  return InitWithFuncCallbackCommon(aFunc, aClosure, aDelay, aType,
+                                    mozilla::AsVariant(aNameFunc));
 }
 
 nsresult nsTimerImpl::InitWithCallback(nsITimerCallback* aCallback,
@@ -364,10 +361,8 @@ nsresult nsTimerImpl::InitHighResolutionWithCallback(
     return NS_ERROR_INVALID_ARG;
   }
 
-  Callback cb;  // Goes out of scope after the unlock, prevents deadlock
-  cb.mType = Callback::Type::Interface;
-  cb.mCallback.i = aCallback;
-  NS_ADDREF(cb.mCallback.i);
+  // Goes out of scope after the unlock, prevents deadlock
+  Callback cb(nsCOMPtr{aCallback});
 
   MutexAutoLock lock(mMutex);
   return InitCommon(aDelay, aType, std::move(cb));
@@ -379,10 +374,7 @@ nsresult nsTimerImpl::Init(nsIObserver* aObserver, uint32_t aDelayInMs,
     return NS_ERROR_INVALID_ARG;
   }
 
-  Callback cb;  // Goes out of scope after the unlock, prevents deadlock
-  cb.mType = Callback::Type::Observer;
-  cb.mCallback.o = aObserver;
-  NS_ADDREF(cb.mCallback.o);
+  Callback cb(nsCOMPtr{aObserver});
 
   MutexAutoLock lock(mMutex);
   return InitCommon(aDelayInMs, aType, std::move(cb));
@@ -394,7 +386,7 @@ nsresult nsTimerImpl::Cancel() {
 }
 
 void nsTimerImpl::CancelImpl(bool aClearITimer) {
-  Callback cbTrash;
+  Callback cbTrash(UnknownCallback{});
   RefPtr<nsITimer> timerTrash;
 
   {
@@ -403,7 +395,9 @@ void nsTimerImpl::CancelImpl(bool aClearITimer) {
       gThread->RemoveTimer(this);
     }
 
-    cbTrash.swap(mCallback);
+    // The swap ensures our callback isn't dropped until after the mutex is
+    // unlocked.
+    std::swap(cbTrash, mCallback);
     ++mGeneration;
 
     // Don't clear this if we're firing; once Fire returns, we'll get this call
@@ -420,7 +414,7 @@ void nsTimerImpl::CancelImpl(bool aClearITimer) {
 
 nsresult nsTimerImpl::SetDelay(uint32_t aDelay) {
   MutexAutoLock lock(mMutex);
-  if (GetCallback().mType == Callback::Type::Unknown && !IsRepeating()) {
+  if (GetCallback().is<UnknownCallback>() && !IsRepeating()) {
     // This may happen if someone tries to re-use a one-shot timer
     // by re-setting delay instead of reinitializing the timer.
     NS_ERROR(
@@ -467,18 +461,21 @@ nsresult nsTimerImpl::GetType(uint32_t* aType) {
 
 nsresult nsTimerImpl::GetClosure(void** aClosure) {
   MutexAutoLock lock(mMutex);
-  *aClosure = GetCallback().mClosure;
+  if (GetCallback().is<FuncCallback>()) {
+    *aClosure = GetCallback().as<FuncCallback>().mClosure;
+  } else {
+    *aClosure = nullptr;
+  }
   return NS_OK;
 }
 
 nsresult nsTimerImpl::GetCallback(nsITimerCallback** aCallback) {
   MutexAutoLock lock(mMutex);
-  if (GetCallback().mType == Callback::Type::Interface) {
-    NS_IF_ADDREF(*aCallback = GetCallback().mCallback.i);
+  if (GetCallback().is<InterfaceCallback>()) {
+    NS_IF_ADDREF(*aCallback = GetCallback().as<InterfaceCallback>());
   } else {
     *aCallback = nullptr;
   }
-
   return NS_OK;
 }
 
@@ -490,7 +487,7 @@ nsresult nsTimerImpl::GetTarget(nsIEventTarget** aTarget) {
 
 nsresult nsTimerImpl::SetTarget(nsIEventTarget* aTarget) {
   MutexAutoLock lock(mMutex);
-  if (NS_WARN_IF(mCallback.mType != Callback::Type::Unknown)) {
+  if (NS_WARN_IF(!mCallback.is<UnknownCallback>())) {
     return NS_ERROR_ALREADY_INITIALIZED;
   }
 
@@ -511,7 +508,7 @@ void nsTimerImpl::Fire(int32_t aGeneration) {
   uint8_t oldType;
   uint32_t oldDelay;
   TimeStamp oldTimeout;
-  Callback callbackDuringFire;
+  Callback callbackDuringFire(UnknownCallback{});
   nsCOMPtr<nsITimer> kungFuDeathGrip;
 
   {
@@ -557,19 +554,13 @@ void nsTimerImpl::Fire(int32_t aGeneration) {
     LogFiring(callbackDuringFire, oldType, oldDelay);
   }
 
-  switch (callbackDuringFire.mType) {
-    case Callback::Type::Function:
-      callbackDuringFire.mCallback.c(mITimer, callbackDuringFire.mClosure);
-      break;
-    case Callback::Type::Interface:
-      callbackDuringFire.mCallback.i->Notify(mITimer);
-      break;
-    case Callback::Type::Observer:
-      callbackDuringFire.mCallback.o->Observe(mITimer, NS_TIMER_CALLBACK_TOPIC,
-                                              nullptr);
-      break;
-    default:;
-  }
+  callbackDuringFire.match(
+      [](const UnknownCallback&) {},
+      [&](const InterfaceCallback& i) { i->Notify(mITimer); },
+      [&](const ObserverCallback& o) {
+        o->Observe(mITimer, NS_TIMER_CALLBACK_TOPIC, nullptr);
+      },
+      [&](const FuncCallback& f) { f.mFunc(mITimer, f.mClosure); });
 
   MutexAutoLock lock(mMutex);
   if (aGeneration == mGeneration) {
@@ -585,7 +576,9 @@ void nsTimerImpl::Fire(int32_t aGeneration) {
       }
     } else {
       // Non-repeating timer that has not been re-scheduled. Clear.
-      mCallback.clear();
+      // XXX(nika): Other callsites seem to go to some effort to avoid
+      // destroying mCallback when it's held. Why not this one?
+      mCallback = mozilla::AsVariant(UnknownCallback{});
     }
   }
 
@@ -630,138 +623,123 @@ void nsTimerImpl::LogFiring(const Callback& aCallback, uint8_t aType,
       MOZ_CRASH("bad type");
   }
 
-  switch (aCallback.mType) {
-    case Callback::Type::Function: {
-      bool needToFreeName = false;
-      const char* annotation = "";
-      const char* name;
-      static const size_t buflen = 1024;
-      char buf[buflen];
+  aCallback.match(
+      [&](const UnknownCallback&) {
+        MOZ_LOG(GetTimerFiringsLog(), LogLevel::Debug,
+                ("[%d]   ??? timer (%s, %5d ms)\n", getpid(), typeStr, aDelay));
+      },
+      [&](const InterfaceCallback& i) {
+        MOZ_LOG(GetTimerFiringsLog(), LogLevel::Debug,
+                ("[%d] iface timer (%s %5d ms): %p\n", getpid(), typeStr,
+                 aDelay, i.get()));
+      },
+      [&](const ObserverCallback& o) {
+        MOZ_LOG(GetTimerFiringsLog(), LogLevel::Debug,
+                ("[%d]   obs timer (%s %5d ms): %p\n", getpid(), typeStr,
+                 aDelay, o.get()));
+      },
+      [&](const FuncCallback& f) {
+        bool needToFreeName = false;
+        const char* annotation = "";
+        const char* name;
+        static const size_t buflen = 1024;
+        char buf[buflen];
 
-      if (aCallback.mName.is<Callback::NameString>()) {
-        name = aCallback.mName.as<Callback::NameString>();
+        if (f.mName.is<FuncCallback::NameString>()) {
+          name = f.mName.as<FuncCallback::NameString>();
 
-      } else if (aCallback.mName.is<Callback::NameFunc>()) {
-        aCallback.mName.as<Callback::NameFunc>()(
-            mITimer, /* aAnonymize = */ false, aCallback.mClosure, buf, buflen);
-        name = buf;
-
-      } else {
-        MOZ_ASSERT(aCallback.mName.is<Callback::NameNothing>());
-#ifdef USE_DLADDR
-        annotation = "[from dladdr] ";
-
-        Dl_info info;
-        void* addr = reinterpret_cast<void*>(aCallback.mCallback.c);
-        if (dladdr(addr, &info) == 0) {
-          name = "???[dladdr: failed]";
-
-        } else if (info.dli_sname) {
-          int status;
-          name = abi::__cxa_demangle(info.dli_sname, nullptr, nullptr, &status);
-          if (status == 0) {
-            // Success. Because we didn't pass in a buffer to __cxa_demangle it
-            // allocates its own one with malloc() which we must free() later.
-            MOZ_ASSERT(name);
-            needToFreeName = true;
-          } else if (status == -1) {
-            name = "???[__cxa_demangle: OOM]";
-          } else if (status == -2) {
-            name = "???[__cxa_demangle: invalid mangled name]";
-          } else if (status == -3) {
-            name = "???[__cxa_demangle: invalid argument]";
-          } else {
-            name = "???[__cxa_demangle: unexpected status value]";
-          }
-
-        } else if (info.dli_fname) {
-          // The "#0: " prefix is necessary for `fix_stacks.py` to interpret
-          // this string as something to convert.
-          SprintfLiteral(buf, "#0: ???[%s +0x%" PRIxPTR "]\n", info.dli_fname,
-                         uintptr_t(addr) - uintptr_t(info.dli_fbase));
+        } else if (f.mName.is<FuncCallback::NameFunc>()) {
+          f.mName.as<FuncCallback::NameFunc>()(
+              mITimer, /* aAnonymize = */ false, f.mClosure, buf, buflen);
           name = buf;
 
         } else {
-          name = "???[dladdr: no symbol or shared object obtained]";
-        }
+          MOZ_ASSERT(f.mName.is<FuncCallback::NameNothing>());
+#ifdef USE_DLADDR
+          annotation = "[from dladdr] ";
+
+          Dl_info info;
+          void* addr = reinterpret_cast<void*>(f.mFunc);
+          if (dladdr(addr, &info) == 0) {
+            name = "???[dladdr: failed]";
+
+          } else if (info.dli_sname) {
+            int status;
+            name =
+                abi::__cxa_demangle(info.dli_sname, nullptr, nullptr, &status);
+            if (status == 0) {
+              // Success. Because we didn't pass in a buffer to __cxa_demangle
+              // it allocates its own one with malloc() which we must free()
+              // later.
+              MOZ_ASSERT(name);
+              needToFreeName = true;
+            } else if (status == -1) {
+              name = "???[__cxa_demangle: OOM]";
+            } else if (status == -2) {
+              name = "???[__cxa_demangle: invalid mangled name]";
+            } else if (status == -3) {
+              name = "???[__cxa_demangle: invalid argument]";
+            } else {
+              name = "???[__cxa_demangle: unexpected status value]";
+            }
+
+          } else if (info.dli_fname) {
+            // The "#0: " prefix is necessary for `fix_stacks.py` to interpret
+            // this string as something to convert.
+            SprintfLiteral(buf, "#0: ???[%s +0x%" PRIxPTR "]\n", info.dli_fname,
+                           uintptr_t(addr) - uintptr_t(info.dli_fbase));
+            name = buf;
+
+          } else {
+            name = "???[dladdr: no symbol or shared object obtained]";
+          }
 #else
-        name = "???[dladdr is unimplemented or doesn't work well on this OS]";
+          name = "???[dladdr is unimplemented or doesn't work well on this OS]";
 #endif
-      }
+        }
 
-      MOZ_LOG(GetTimerFiringsLog(), LogLevel::Debug,
-              ("[%d]    fn timer (%s %5d ms): %s%s\n", getpid(), typeStr,
-               aDelay, annotation, name));
+        MOZ_LOG(GetTimerFiringsLog(), LogLevel::Debug,
+                ("[%d]    fn timer (%s %5d ms): %s%s\n", getpid(), typeStr,
+                 aDelay, annotation, name));
 
-      if (needToFreeName) {
-        free(const_cast<char*>(name));
-      }
-
-      break;
-    }
-
-    case Callback::Type::Interface: {
-      MOZ_LOG(GetTimerFiringsLog(), LogLevel::Debug,
-              ("[%d] iface timer (%s %5d ms): %p\n", getpid(), typeStr, aDelay,
-               aCallback.mCallback.i));
-      break;
-    }
-
-    case Callback::Type::Observer: {
-      MOZ_LOG(GetTimerFiringsLog(), LogLevel::Debug,
-              ("[%d]   obs timer (%s %5d ms): %p\n", getpid(), typeStr, aDelay,
-               aCallback.mCallback.o));
-      break;
-    }
-
-    case Callback::Type::Unknown:
-    default: {
-      MOZ_LOG(GetTimerFiringsLog(), LogLevel::Debug,
-              ("[%d]   ??? timer (%s, %5d ms)\n", getpid(), typeStr, aDelay));
-      break;
-    }
-  }
+        if (needToFreeName) {
+          free(const_cast<char*>(name));
+        }
+      });
 }
 
 void nsTimerImpl::GetName(nsACString& aName) {
   MutexAutoLock lock(mMutex);
-  Callback& cb(GetCallback());
-  switch (cb.mType) {
-    case Callback::Type::Function:
-      if (cb.mName.is<Callback::NameString>()) {
-        aName.Assign(cb.mName.as<Callback::NameString>());
-      } else if (cb.mName.is<Callback::NameFunc>()) {
-        static const size_t buflen = 1024;
-        char buf[buflen];
-        cb.mName.as<Callback::NameFunc>()(mITimer, /* aAnonymize = */ true,
-                                          cb.mClosure, buf, buflen);
-        aName.Assign(buf);
-      } else {
-        MOZ_ASSERT(cb.mName.is<Callback::NameNothing>());
-        aName.AssignLiteral("Anonymous_callback_timer");
-      }
-      break;
-
-    case Callback::Type::Interface:
-      if (nsCOMPtr<nsINamed> named = do_QueryInterface(cb.mCallback.i)) {
-        named->GetName(aName);
-      } else {
-        aName.AssignLiteral("Anonymous_interface_timer");
-      }
-      break;
-
-    case Callback::Type::Observer:
-      if (nsCOMPtr<nsINamed> named = do_QueryInterface(cb.mCallback.o)) {
-        named->GetName(aName);
-      } else {
-        aName.AssignLiteral("Anonymous_observer_timer");
-      }
-      break;
-
-    case Callback::Type::Unknown:
-      aName.AssignLiteral("Canceled_timer");
-      break;
-  }
+  GetCallback().match(
+      [&](const UnknownCallback&) { aName.AssignLiteral("Canceled_timer"); },
+      [&](const InterfaceCallback& i) {
+        if (nsCOMPtr<nsINamed> named = do_QueryInterface(i)) {
+          named->GetName(aName);
+        } else {
+          aName.AssignLiteral("Anonymous_interface_timer");
+        }
+      },
+      [&](const ObserverCallback& o) {
+        if (nsCOMPtr<nsINamed> named = do_QueryInterface(o)) {
+          named->GetName(aName);
+        } else {
+          aName.AssignLiteral("Anonymous_observer_timer");
+        }
+      },
+      [&](const FuncCallback& f) {
+        if (f.mName.is<FuncCallback::NameString>()) {
+          aName.Assign(f.mName.as<FuncCallback::NameString>());
+        } else if (f.mName.is<FuncCallback::NameFunc>()) {
+          static const size_t buflen = 1024;
+          char buf[buflen];
+          f.mName.as<FuncCallback::NameFunc>()(mITimer, /* aAnonymize = */ true,
+                                               f.mClosure, buf, buflen);
+          aName.Assign(buf);
+        } else {
+          MOZ_ASSERT(f.mName.is<FuncCallback::NameNothing>());
+          aName.AssignLiteral("Anonymous_callback_timer");
+        }
+      });
 }
 
 void nsTimerImpl::SetHolder(nsTimerImplHolder* aHolder) { mHolder = aHolder; }
@@ -792,9 +770,6 @@ nsresult nsTimer::XPCOMConstructor(nsISupports* aOuter, REFNSIID aIID,
 
   return timer->QueryInterface(aIID, aResult);
 }
-
-/* static */
-const nsTimerImpl::Callback::NameNothing nsTimerImpl::Callback::Nothing = 0;
 
 #ifdef MOZ_TASK_TRACER
 void nsTimerImpl::GetTLSTraceInfo() { mTracedTask.GetTLSTraceInfo(); }
