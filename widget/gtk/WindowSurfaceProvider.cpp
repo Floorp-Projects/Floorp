@@ -13,6 +13,7 @@
 
 #ifdef MOZ_WAYLAND
 #  include "WindowSurfaceWayland.h"
+#  include "WindowSurfaceWaylandMultiBuffer.h"
 #endif
 #ifdef MOZ_X11
 #  include "mozilla/X11Util.h"
@@ -30,7 +31,8 @@ WindowSurfaceProvider::WindowSurfaceProvider()
     : mWindowSurface(nullptr)
 #ifdef MOZ_WAYLAND
       ,
-      mWidget(nullptr)
+      mWidget(nullptr),
+      mUseMultiBuffer(false)
 #endif
 #ifdef MOZ_X11
       ,
@@ -43,7 +45,11 @@ WindowSurfaceProvider::WindowSurfaceProvider()
 }
 
 #ifdef MOZ_WAYLAND
-void WindowSurfaceProvider::Initialize(nsWindow* aWidget) { mWidget = aWidget; }
+void WindowSurfaceProvider::Initialize(nsWindow* aWidget,
+                                       bool aUseMultiBuffer) {
+  mWidget = aWidget;
+  mUseMultiBuffer = aUseMultiBuffer;
+}
 #endif
 #ifdef MOZ_X11
 void WindowSurfaceProvider::Initialize(Window aWindow, Visual* aVisual,
@@ -60,7 +66,17 @@ void WindowSurfaceProvider::CleanupResources() { mWindowSurface = nullptr; }
 RefPtr<WindowSurface> WindowSurfaceProvider::CreateWindowSurface() {
 #ifdef MOZ_WAYLAND
   if (GdkIsWaylandDisplay()) {
-    LOG(("Drawing to nsWindow %p will use wl_surface\n", mWidget));
+    if (mUseMultiBuffer) {
+      LOG(
+          ("Drawing to nsWindow %p will use wl_surface. Using multi-buffered "
+           "backend.\n",
+           mWidget));
+      return MakeRefPtr<WindowSurfaceWaylandMB>(mWidget);
+    }
+    LOG(
+        ("Drawing to nsWindow %p will use wl_surface. Using single-buffered "
+         "backend.\n",
+         mWidget));
     return MakeRefPtr<WindowSurfaceWayland>(mWidget);
   }
 #endif
@@ -122,6 +138,22 @@ WindowSurfaceProvider::StartRemoteDrawingInRegion(
 void WindowSurfaceProvider::EndRemoteDrawingInRegion(
     gfx::DrawTarget* aDrawTarget, const LayoutDeviceIntRegion& aInvalidRegion) {
   if (mWindowSurface) mWindowSurface->Commit(aInvalidRegion);
+}
+
+bool WindowSurfaceProvider::ShouldDrawPreviousPartialPresentRegions() {
+  return mWindowSurface
+             ? mWindowSurface->ShouldDrawPreviousPartialPresentRegions()
+             : false;
+}
+
+size_t WindowSurfaceProvider::GetBufferAge() const {
+  return mWindowSurface ? mWindowSurface->GetBufferAge() : 0;
+}
+
+void WindowSurfaceProvider::PrepareBufferForFrame() {
+  if (mWindowSurface) {
+    mWindowSurface->PrepareBufferForFrame();
+  }
 }
 
 }  // namespace widget
