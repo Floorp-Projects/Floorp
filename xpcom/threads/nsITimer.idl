@@ -11,7 +11,6 @@ interface nsIEventTarget;
 %{C++
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/TimeStamp.h"
-#include <functional>
 
 /**
  * The signature of the timer callback function passed to initWithFuncCallback.
@@ -23,9 +22,27 @@ interface nsIEventTarget;
  */
 class nsITimer;
 typedef void (*nsTimerCallbackFunc) (nsITimer *aTimer, void *aClosure);
+
+/**
+ * The signature of the timer name callback function passed to
+ * initWithNameableFuncCallback.
+ * This is the function that will get called when timer profiling is enabled
+ * via the "TimerFirings" log module.
+ *
+ * @param aTimer the timer which has expired
+ * @param aAnonymize whether the name should avoid including privacy sensitive info
+ * @param aClosure opaque parameter passed to initWithFuncCallback
+ * @param aBuf a buffer in which to put the name
+ * @param aLen the length of the buffer
+ */
+typedef void (*nsTimerNameCallbackFunc) (nsITimer *aTimer,
+                                         bool aAnonymize,
+                                         void *aClosure,
+                                         char *aBuf, size_t aLen);
 %}
 
 native nsTimerCallbackFunc(nsTimerCallbackFunc);
+native nsTimerNameCallbackFunc(nsTimerNameCallbackFunc);
 [ref] native TimeDuration(mozilla::TimeDuration);
 
 /**
@@ -185,6 +202,23 @@ interface nsITimer : nsISupports
                                             in string aName);
 
   /**
+   * Like initWithNamedFuncCallback, but instead of a timer name it takes a
+   * callback that will provide a name when the timer fires.
+   *
+   * @param aFunc      The function to invoke
+   * @param aClosure   An opaque pointer to pass to that function
+   * @param aDelay     The millisecond interval
+   * @param aType      Timer type per TYPE* consts defined above
+   * @param aNameCallback  The callback function
+   */
+  [noscript] void initWithNameableFuncCallback(
+                    in nsTimerCallbackFunc aCallback,
+                    in voidPtr aClosure,
+                    in unsigned long aDelay,
+                    in unsigned long aType,
+                    in nsTimerNameCallbackFunc aNameCallback);
+
+  /**
    * The millisecond delay of the timeout.
    *
    * NOTE: Re-setting the delay on a one-shot timer that has already fired
@@ -271,34 +305,6 @@ NS_NewTimerWithCallback(nsITimerCallback* aCallback,
                         nsIEventTarget* aTarget = nullptr);
 
 nsresult
-NS_NewTimerWithCallback(nsITimer** aTimer,
-                        std::function<void(nsITimer*)>&& aCallback,
-                        uint32_t aDelay,
-                        uint32_t aType,
-                        const char* aNameString,
-                        nsIEventTarget* aTarget = nullptr);
-mozilla::Result<nsCOMPtr<nsITimer>, nsresult>
-NS_NewTimerWithCallback(std::function<void(nsITimer*)>&& aCallback,
-                        uint32_t aDelay,
-                        uint32_t aType,
-                        const char* aNameString,
-                        nsIEventTarget* aTarget = nullptr);
-
-nsresult
-NS_NewTimerWithCallback(nsITimer** aTimer,
-                        std::function<void(nsITimer*)>&& aCallback,
-                        const mozilla::TimeDuration& aDelay,
-                        uint32_t aType,
-                        const char* aNameString,
-                        nsIEventTarget* aTarget = nullptr);
-mozilla::Result<nsCOMPtr<nsITimer>, nsresult>
-NS_NewTimerWithCallback(std::function<void(nsITimer*)>&& aCallback,
-                        const mozilla::TimeDuration& aDelay,
-                        uint32_t aType,
-                        const char* aNameString,
-                        nsIEventTarget* aTarget = nullptr);
-
-nsresult
 NS_NewTimerWithFuncCallback(nsITimer** aTimer,
                             nsTimerCallbackFunc aCallback,
                             void* aClosure,
@@ -312,6 +318,22 @@ NS_NewTimerWithFuncCallback(nsTimerCallbackFunc aCallback,
                             uint32_t aDelay,
                             uint32_t aType,
                             const char* aNameString,
+                            nsIEventTarget* aTarget = nullptr);
+
+nsresult
+NS_NewTimerWithFuncCallback(nsITimer** aTimer,
+                            nsTimerCallbackFunc aCallback,
+                            void* aClosure,
+                            uint32_t aDelay,
+                            uint32_t aType,
+                            nsTimerNameCallbackFunc aNameCallback,
+                            nsIEventTarget* aTarget = nullptr);
+mozilla::Result<nsCOMPtr<nsITimer>, nsresult>
+NS_NewTimerWithFuncCallback(nsTimerCallbackFunc aCallback,
+                            void* aClosure,
+                            uint32_t aDelay,
+                            uint32_t aType,
+                            nsTimerNameCallbackFunc aNameCallback,
                             nsIEventTarget* aTarget = nullptr);
 
 #define NS_TIMER_CONTRACTID "@mozilla.org/timer;1"

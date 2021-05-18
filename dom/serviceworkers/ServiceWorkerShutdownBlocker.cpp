@@ -23,8 +23,7 @@
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_ISUPPORTS(ServiceWorkerShutdownBlocker, nsIAsyncShutdownBlocker,
-                  nsITimerCallback)
+NS_IMPL_ISUPPORTS(ServiceWorkerShutdownBlocker, nsIAsyncShutdownBlocker)
 
 NS_IMETHODIMP ServiceWorkerShutdownBlocker::GetName(nsAString& aNameOut) {
   aNameOut = nsLiteralString(

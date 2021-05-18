@@ -67,29 +67,86 @@ class nsTimerImpl {
 
   int32_t GetGeneration() { return mGeneration; }
 
-  struct UnknownCallback {};
+  struct Callback {
+    Callback() : mType(Type::Unknown), mName(Nothing), mClosure(nullptr) {
+      mCallback.c = nullptr;
+    }
 
-  using InterfaceCallback = nsCOMPtr<nsITimerCallback>;
+    Callback(const Callback& other) : Callback() { *this = other; }
 
-  using ObserverCallback = nsCOMPtr<nsIObserver>;
+    enum class Type : uint8_t {
+      Unknown = 0,
+      Interface = 1,
+      Function = 2,
+      Observer = 3,
+    };
 
-  /// A raw function pointer and its closed-over state, along with its name for
-  /// logging purposes.
-  struct FuncCallback {
-    nsTimerCallbackFunc mFunc;
+    Callback& operator=(const Callback& other) {
+      if (this != &other) {
+        clear();
+        mType = other.mType;
+        switch (mType) {
+          case Type::Unknown:
+            break;
+          case Type::Interface:
+            mCallback.i = other.mCallback.i;
+            NS_ADDREF(mCallback.i);
+            break;
+          case Type::Function:
+            mCallback.c = other.mCallback.c;
+            break;
+          case Type::Observer:
+            mCallback.o = other.mCallback.o;
+            NS_ADDREF(mCallback.o);
+            break;
+        }
+        mName = other.mName;
+        mClosure = other.mClosure;
+      }
+      return *this;
+    }
+
+    ~Callback() { clear(); }
+
+    void clear() {
+      if (mType == Type::Interface) {
+        NS_RELEASE(mCallback.i);
+      } else if (mType == Type::Observer) {
+        NS_RELEASE(mCallback.o);
+      }
+      mType = Type::Unknown;
+    }
+
+    void swap(Callback& other) {
+      std::swap(mType, other.mType);
+      std::swap(mCallback, other.mCallback);
+      std::swap(mName, other.mName);
+      std::swap(mClosure, other.mClosure);
+    }
+
+    Type mType;
+
+    union CallbackUnion {
+      nsTimerCallbackFunc c;
+      // These refcounted references are managed manually, as they are in a
+      // union
+      nsITimerCallback* MOZ_OWNING_REF i;
+      nsIObserver* MOZ_OWNING_REF o;
+    } mCallback;
+
+    // |Name| is a tagged union type representing one of (a) nothing, (b) a
+    // string, or (c) a function. mozilla::Variant doesn't naturally handle the
+    // "nothing" case, so we define a dummy type and value (which is unused and
+    // so the exact value doesn't matter) for it.
+    typedef const int NameNothing;
+    typedef const char* NameString;
+    typedef nsTimerNameCallbackFunc NameFunc;
+    typedef mozilla::Variant<NameNothing, NameString, NameFunc> Name;
+    static const NameNothing Nothing;
+    Name mName;
+
     void* mClosure;
-    const char* mName;
   };
-
-  /// A callback defined by an owned closure and its name for logging purposes.
-  struct ClosureCallback {
-    std::function<void(nsITimer*)> mFunc;
-    const char* mName;
-  };
-
-  using Callback =
-      mozilla::Variant<UnknownCallback, InterfaceCallback, ObserverCallback,
-                       FuncCallback, ClosureCallback>;
 
   nsresult InitCommon(uint32_t aDelayMS, uint32_t aType,
                       Callback&& newCallback);
@@ -133,9 +190,9 @@ class nsTimerImpl {
 
   void LogFiring(const Callback& aCallback, uint8_t aType, uint32_t aDelay);
 
-  nsresult InitWithClosureCallback(std::function<void(nsITimer*)>&& aCallback,
-                                   const mozilla::TimeDuration& aDelay,
-                                   uint32_t aType, const char* aNameString);
+  nsresult InitWithFuncCallbackCommon(nsTimerCallbackFunc aFunc, void* aClosure,
+                                      uint32_t aDelay, uint32_t aType,
+                                      const Callback::Name& aName);
 
   // This weak reference must be cleared by the nsTimerImplHolder by calling
   // SetHolder(nullptr) before the holder is destroyed.
@@ -181,16 +238,6 @@ class nsTimer final : public nsITimer {
 
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_FORWARD_SAFE_NSITIMER(mImpl);
-
-  // NOTE: This constructor is not exposed on `nsITimer` as NS_FORWARD_SAFE_
-  // does not support forwarding rvalue references.
-  nsresult InitWithClosureCallback(std::function<void(nsITimer*)>&& aCallback,
-                                   const mozilla::TimeDuration& aDelay,
-                                   uint32_t aType, const char* aNameString) {
-    return mImpl ? mImpl->InitWithClosureCallback(std::move(aCallback), aDelay,
-                                                  aType, aNameString)
-                 : NS_ERROR_NULL_POINTER;
-  }
 
   virtual size_t SizeOfIncludingThis(
       mozilla::MallocSizeOf aMallocSizeOf) const override;
