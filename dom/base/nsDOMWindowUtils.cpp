@@ -2004,25 +2004,6 @@ nsDOMWindowUtils::GetIMEStatus(uint32_t* aState) {
 }
 
 NS_IMETHODIMP
-nsDOMWindowUtils::GetInputContextOrigin(uint32_t* aOrigin) {
-  NS_ENSURE_ARG_POINTER(aOrigin);
-
-  nsCOMPtr<nsIWidget> widget = GetWidget();
-  if (!widget) {
-    return NS_ERROR_FAILURE;
-  }
-
-  InputContext context = widget->GetInputContext();
-  static_assert(InputContext::Origin::ORIGIN_MAIN == INPUT_CONTEXT_ORIGIN_MAIN);
-  static_assert(InputContext::Origin::ORIGIN_CONTENT ==
-                INPUT_CONTEXT_ORIGIN_CONTENT);
-  MOZ_ASSERT(context.mOrigin == InputContext::Origin::ORIGIN_MAIN ||
-             context.mOrigin == InputContext::Origin::ORIGIN_CONTENT);
-  *aOrigin = static_cast<uint32_t>(context.mOrigin);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsDOMWindowUtils::GetFocusedInputType(nsAString& aType) {
   nsCOMPtr<nsIWidget> widget = GetWidget();
   if (!widget) {
@@ -2356,8 +2337,7 @@ nsDOMWindowUtils::SendSelectionSetEvent(uint32_t aOffset, uint32_t aLength,
 
 NS_IMETHODIMP
 nsDOMWindowUtils::SendContentCommandEvent(const nsAString& aType,
-                                          nsITransferable* aTransferable,
-                                          const nsAString& aString) {
+                                          nsITransferable* aTransferable) {
   // get the widget to send the event to
   nsCOMPtr<nsIWidget> widget = GetWidget();
   if (!widget) return NS_ERROR_FAILURE;
@@ -2375,8 +2355,6 @@ nsDOMWindowUtils::SendContentCommandEvent(const nsAString& aType,
     msg = eContentCommandUndo;
   } else if (aType.EqualsLiteral("redo")) {
     msg = eContentCommandRedo;
-  } else if (aType.EqualsLiteral("insertText")) {
-    msg = eContentCommandInsertText;
   } else if (aType.EqualsLiteral("pasteTransferable")) {
     msg = eContentCommandPasteTransferable;
   } else {
@@ -2384,9 +2362,6 @@ nsDOMWindowUtils::SendContentCommandEvent(const nsAString& aType,
   }
 
   WidgetContentCommandEvent event(true, msg, widget);
-  if (msg == eContentCommandInsertText) {
-    event.mString.emplace(aString);
-  }
   if (msg == eContentCommandPasteTransferable) {
     event.mTransferable = aTransferable;
   }

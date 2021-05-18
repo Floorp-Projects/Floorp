@@ -5569,20 +5569,6 @@
   value: false
   mirror: always
 
-#ifdef XP_MACOSX
-# Whether text input without keyboard press nor IME composition should cause a
-# set of composition events or not.  E.g., when you use Emoji picker on macOS,
-# it inserts an Emoji character directly.  If set to true, `compositionstart`,
-# `compositionupdate` and `compositionend` events will be fired, and the
-# correspnding `beforeinput` events are not cancelable.  Otherwise, if set to
-# false, any user input events are not exposed to web apps but only
-# `beforeinput` event is fired as "insert text" as a cancelable event.
-- name: intl.ime.use_composition_events_for_insert_text
-  type: bool
-  value: false
-  mirror: always
-#endif
-
 #---------------------------------------------------------------------------
 # Prefs starting with "javascript."
 #
