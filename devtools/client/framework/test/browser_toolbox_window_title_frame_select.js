@@ -81,8 +81,6 @@ add_task(async function() {
   // Listen to will-navigate to check if the view is empty
   const willNavigate = toolbox.target.once("will-navigate");
 
-  const onTitleChanged = waitForTitleChange(toolbox);
-
   // Only select the iframe after we are able to select an element from the top
   // level document.
   const onInspectorReloaded = toolbox.getPanel("inspector").once("reloaded");
@@ -91,7 +89,8 @@ add_task(async function() {
 
   await willNavigate;
   await onInspectorReloaded;
-  await onTitleChanged;
+  // wait a bit more in case an eventual title update would happen later
+  await wait(1000);
 
   info("Navigation to the iframe is done, the inspector should be back up");
   is(
