@@ -251,6 +251,8 @@ add_dependencies(test_rlbox_glue lucet_sandbox_rustlib_debug lucet_sandbox_rustl
 
 if(MSVC)
   set(LINK_LUCET_LIB -WHOLEARCHIVE lucet_sandbox_rustlib)
+elseif (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+  set(LINK_LUCET_LIB -Wl,-force_load lucet_sandbox_rustlib)
 else()
   set(LINK_LUCET_LIB -Wl,--whole-archive lucet_sandbox_rustlib -Wl,--no-whole-archive)
 endif()
@@ -271,5 +273,5 @@ catch_discover_tests(test_rlbox_glue)
 # Shortcuts ###################
 
 add_custom_target(check COMMAND ${CMAKE_CTEST_COMMAND} -V)
-add_dependencies(check test_rlbox_glue)
+add_dependencies(check test_rlbox_glue glue_lib_wasm)
 
