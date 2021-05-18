@@ -52,9 +52,9 @@ var prevSortKey = null;
 /**
  * Ensures that the sort of aTree is aSortingMode
  *
- * @param aTree
+ * @param {object} aTree
  *        the tree to check
- * @param aSortingMode
+ * @param {Ci.nsINavHistoryQueryOptions} aSortingMode
  *        one of the Ci.nsINavHistoryQueryOptions.SORT_BY_* constants
  */
 function checkSort(aTree, aSortingMode) {
@@ -74,18 +74,18 @@ function checkSort(aTree, aSortingMode) {
 /**
  * Sets the sort of aTree.
  *
- * @param aOrganizerWin
+ * @param {object} aOrganizerWin
  *        the Places window
- * @param aTree
+ * @param {object} aTree
  *        the tree to sort
- * @param aUnsortFirst
+ * @param {boolean} aUnsortFirst
  *        true if the sort should be set to SORT_BY_NONE before sorting by aCol
  *        and aDir
- * @param aShouldFail
+ * @param {boolean} aShouldFail
  *        true if setSortColumn should fail on aCol or aDir
- * @param aCol
+ * @param {object} aCol
  *        the column of aTree by which to sort
- * @param aDir
+ * @param {string} aDir
  *        either "ascending" or "descending"
  */
 function setSort(aOrganizerWin, aTree, aUnsortFirst, aShouldFail, aCol, aDir) {
@@ -141,9 +141,9 @@ function setSort(aOrganizerWin, aTree, aUnsortFirst, aShouldFail, aCol, aDir) {
 /**
  * Tries sorting by an invalid column and sort direction.
  *
- * @param aOrganizerWin
+ * @param {object} aOrganizerWin
  *        the Places window
- * @param aPlaceContentTree
+ * @param {object} aPlaceContentTree
  *        the placeContent tree in aOrganizerWin
  */
 function testInvalid(aOrganizerWin, aPlaceContentTree) {
@@ -161,11 +161,11 @@ function testInvalid(aOrganizerWin, aPlaceContentTree) {
  * Tests sorting aPlaceContentTree by column only and then by both column
  * and direction.
  *
- * @param aOrganizerWin
+ * @param {object} aOrganizerWin
  *        the Places window
- * @param aPlaceContentTree
+ * @param {object} aPlaceContentTree
  *        the placeContent tree in aOrganizerWin
- * @param aUnsortFirst
+ * @param {boolean} aUnsortFirst
  *        true if, before each sort we try, we should sort to SORT_BY_NONE
  */
 function testSortByColAndDir(aOrganizerWin, aPlaceContentTree, aUnsortFirst) {
@@ -210,11 +210,11 @@ function testSortByColAndDir(aOrganizerWin, aPlaceContentTree, aUnsortFirst) {
 /**
  * Tests sorting aPlaceContentTree by direction only.
  *
- * @param aOrganizerWin
+ * @param {object} aOrganizerWin
  *        the Places window
- * @param aPlaceContentTree
+ * @param {object} aPlaceContentTree
  *        the placeContent tree in aOrganizerWin
- * @param aUnsortFirst
+ * @param {boolean} aUnsortFirst
  *        true if, before each sort we try, we should sort to SORT_BY_NONE
  */
 function testSortByDir(aOrganizerWin, aPlaceContentTree, aUnsortFirst) {
