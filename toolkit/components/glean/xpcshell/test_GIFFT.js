@@ -61,7 +61,7 @@ add_task(function test_gifft_datetime() {
   Glean.testOnlyIpc.aDate.set(value.getTime() * 1000);
 
   let received = Glean.testOnlyIpc.aDate.testGetValue();
-  Assert.ok(received.startsWith(dateStr));
+  Assert.equal(value.getTime(), received.getTime());
   Assert.ok(scalarValue("telemetry.test.mirror_for_date").startsWith(dateStr));
 });
 
