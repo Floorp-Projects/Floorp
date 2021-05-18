@@ -85,7 +85,7 @@ static void CFReleaseSafe(CFTypeRef cf) {
   }
 }
 
-NS_IMPL_ISUPPORTS(nsNetworkLinkService, nsINetworkLinkService, nsIObserver)
+NS_IMPL_ISUPPORTS(nsNetworkLinkService, nsINetworkLinkService, nsIObserver, nsITimerCallback)
 
 nsNetworkLinkService::nsNetworkLinkService()
     : mLinkUp(true),
