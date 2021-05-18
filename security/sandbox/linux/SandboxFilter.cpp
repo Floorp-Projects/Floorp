@@ -1707,7 +1707,13 @@ class RDDSandboxPolicy final : public SandboxPolicyCommon {
     switch (sysno) {
       case __NR_getrusage:
         return Allow();
-
+      case __NR_ioctl: {
+        Arg<unsigned long> request(1);
+        // ffmpeg, and anything else that calls isatty(), will be told
+        // that nothing is a typewriter:
+        return If(request == TCGETS, Error(ENOTTY))
+            .Else(InvalidSyscall());
+       }
       // Pass through the common policy.
       default:
         return SandboxPolicyCommon::EvaluateSyscall(sysno);
