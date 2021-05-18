@@ -175,50 +175,13 @@ nsresult NS_NewTimerWithFuncCallback(nsITimer** aTimer,
   return NS_OK;
 }
 
-mozilla::Result<nsCOMPtr<nsITimer>, nsresult> NS_NewTimerWithFuncCallback(
-    nsTimerCallbackFunc aCallback, void* aClosure, uint32_t aDelay,
-    uint32_t aType, nsTimerNameCallbackFunc aNameCallback,
-    nsIEventTarget* aTarget) {
-  nsCOMPtr<nsITimer> timer;
-  MOZ_TRY(NS_NewTimerWithFuncCallback(getter_AddRefs(timer), aCallback,
-                                      aClosure, aDelay, aType, aNameCallback,
-                                      aTarget));
-  return std::move(timer);
-}
-nsresult NS_NewTimerWithFuncCallback(nsITimer** aTimer,
-                                     nsTimerCallbackFunc aCallback,
-                                     void* aClosure, uint32_t aDelay,
-                                     uint32_t aType,
-                                     nsTimerNameCallbackFunc aNameCallback,
-                                     nsIEventTarget* aTarget) {
-  auto timer = nsTimer::WithEventTarget(aTarget);
-
-  MOZ_TRY(timer->InitWithNameableFuncCallback(aCallback, aClosure, aDelay,
-                                              aType, aNameCallback));
-  timer.forget(aTimer);
-  return NS_OK;
-}
-
 // This module prints info about which timers are firing, which is useful for
 // wakeups for the purposes of power profiling. Set the following environment
 // variable before starting the browser.
 //
 //   MOZ_LOG=TimerFirings:4
 //
-// Then a line will be printed for every timer that fires. The name used for a
-// |Callback::Type::Function| timer depends on the circumstances.
-//
-// - If it was explicitly named (e.g. it was initialized with
-//   InitWithNamedFuncCallback()) then that explicit name will be shown.
-//
-// - Otherwise, if we are on a platform that supports function name lookup
-//   (Mac or Linux) then the looked-up name will be shown with a
-//   "[from dladdr]" annotation. On Mac the looked-up name will be immediately
-//   useful. On Linux it'll need post-processing with `tools/rb/fix_stacks.py`.
-//
-// - Otherwise, no name will be printed. If many timers hit this case then
-//   you'll need to re-run the workload on a Mac to find out which timers they
-//   are, and then give them explicit names.
+// Then a line will be printed for every timer that fires.
 //
 // If you redirect this output to a file called "out", you can then
 // post-process it with a command something like the following.
@@ -360,9 +323,10 @@ nsresult nsTimerImpl::InitCommon(const TimeDuration& aDelay, uint32_t aType,
   return gThread->AddTimer(this);
 }
 
-nsresult nsTimerImpl::InitWithFuncCallbackCommon(
-    nsTimerCallbackFunc aFunc, void* aClosure, uint32_t aDelay, uint32_t aType,
-    const FuncCallback::Name& aName) {
+nsresult nsTimerImpl::InitWithNamedFuncCallback(nsTimerCallbackFunc aFunc,
+                                                void* aClosure, uint32_t aDelay,
+                                                uint32_t aType,
+                                                const char* aName) {
   if (NS_WARN_IF(!aFunc)) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -371,21 +335,6 @@ nsresult nsTimerImpl::InitWithFuncCallbackCommon(
 
   MutexAutoLock lock(mMutex);
   return InitCommon(aDelay, aType, std::move(cb));
-}
-
-nsresult nsTimerImpl::InitWithNamedFuncCallback(nsTimerCallbackFunc aFunc,
-                                                void* aClosure, uint32_t aDelay,
-                                                uint32_t aType,
-                                                const char* aNameString) {
-  return InitWithFuncCallbackCommon(aFunc, aClosure, aDelay, aType,
-                                    mozilla::AsVariant(aNameString));
-}
-
-nsresult nsTimerImpl::InitWithNameableFuncCallback(
-    nsTimerCallbackFunc aFunc, void* aClosure, uint32_t aDelay, uint32_t aType,
-    nsTimerNameCallbackFunc aNameFunc) {
-  return InitWithFuncCallbackCommon(aFunc, aClosure, aDelay, aType,
-                                    mozilla::AsVariant(aNameFunc));
 }
 
 nsresult nsTimerImpl::InitWithCallback(nsITimerCallback* aCallback,
@@ -642,15 +591,6 @@ void nsTimerImpl::Fire(int32_t aGeneration) {
            (TimeStamp::Now() - now).ToMilliseconds()));
 }
 
-#if defined(HAVE_DLADDR) && defined(HAVE___CXA_DEMANGLE)
-#  define USE_DLADDR 1
-#endif
-
-#ifdef USE_DLADDR
-#  include <cxxabi.h>
-#  include <dlfcn.h>
-#endif
-
 // See the big comment above GetTimerFiringsLog() to understand this code.
 void nsTimerImpl::LogFiring(const Callback& aCallback, uint8_t aType,
                             uint32_t aDelay) {
@@ -693,72 +633,9 @@ void nsTimerImpl::LogFiring(const Callback& aCallback, uint8_t aType,
                  aDelay, o.get()));
       },
       [&](const FuncCallback& f) {
-        bool needToFreeName = false;
-        const char* annotation = "";
-        const char* name;
-        static const size_t buflen = 1024;
-        char buf[buflen];
-
-        if (f.mName.is<FuncCallback::NameString>()) {
-          name = f.mName.as<FuncCallback::NameString>();
-
-        } else if (f.mName.is<FuncCallback::NameFunc>()) {
-          f.mName.as<FuncCallback::NameFunc>()(
-              mITimer, /* aAnonymize = */ false, f.mClosure, buf, buflen);
-          name = buf;
-
-        } else {
-          MOZ_ASSERT(f.mName.is<FuncCallback::NameNothing>());
-#ifdef USE_DLADDR
-          annotation = "[from dladdr] ";
-
-          Dl_info info;
-          void* addr = reinterpret_cast<void*>(f.mFunc);
-          if (dladdr(addr, &info) == 0) {
-            name = "???[dladdr: failed]";
-
-          } else if (info.dli_sname) {
-            int status;
-            name =
-                abi::__cxa_demangle(info.dli_sname, nullptr, nullptr, &status);
-            if (status == 0) {
-              // Success. Because we didn't pass in a buffer to __cxa_demangle
-              // it allocates its own one with malloc() which we must free()
-              // later.
-              MOZ_ASSERT(name);
-              needToFreeName = true;
-            } else if (status == -1) {
-              name = "???[__cxa_demangle: OOM]";
-            } else if (status == -2) {
-              name = "???[__cxa_demangle: invalid mangled name]";
-            } else if (status == -3) {
-              name = "???[__cxa_demangle: invalid argument]";
-            } else {
-              name = "???[__cxa_demangle: unexpected status value]";
-            }
-
-          } else if (info.dli_fname) {
-            // The "#0: " prefix is necessary for `fix_stacks.py` to interpret
-            // this string as something to convert.
-            SprintfLiteral(buf, "#0: ???[%s +0x%" PRIxPTR "]\n", info.dli_fname,
-                           uintptr_t(addr) - uintptr_t(info.dli_fbase));
-            name = buf;
-
-          } else {
-            name = "???[dladdr: no symbol or shared object obtained]";
-          }
-#else
-          name = "???[dladdr is unimplemented or doesn't work well on this OS]";
-#endif
-        }
-
         MOZ_LOG(GetTimerFiringsLog(), LogLevel::Debug,
-                ("[%d]      fn timer (%s %5d ms): %s%s\n", getpid(), typeStr,
-                 aDelay, annotation, name));
-
-        if (needToFreeName) {
-          free(const_cast<char*>(name));
-        }
+                ("[%d]      fn timer (%s %5d ms): %s\n", getpid(), typeStr,
+                 aDelay, f.mName));
       },
       [&](const ClosureCallback& c) {
         MOZ_LOG(GetTimerFiringsLog(), LogLevel::Debug,
@@ -785,20 +662,7 @@ void nsTimerImpl::GetName(nsACString& aName) {
           aName.AssignLiteral("Anonymous_observer_timer");
         }
       },
-      [&](const FuncCallback& f) {
-        if (f.mName.is<FuncCallback::NameString>()) {
-          aName.Assign(f.mName.as<FuncCallback::NameString>());
-        } else if (f.mName.is<FuncCallback::NameFunc>()) {
-          static const size_t buflen = 1024;
-          char buf[buflen];
-          f.mName.as<FuncCallback::NameFunc>()(mITimer, /* aAnonymize = */ true,
-                                               f.mClosure, buf, buflen);
-          aName.Assign(buf);
-        } else {
-          MOZ_ASSERT(f.mName.is<FuncCallback::NameNothing>());
-          aName.AssignLiteral("Anonymous_callback_timer");
-        }
-      },
+      [&](const FuncCallback& f) { aName.Assign(f.mName); },
       [&](const ClosureCallback& c) { aName.Assign(c.mName); });
 }
 
