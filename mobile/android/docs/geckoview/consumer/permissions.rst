@@ -152,97 +152,45 @@ be requested through GeckoView are;
 
 `Geolocation <https://mozilla.github.io/geckoview/https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/GeckoSession.PermissionDelegate.html#PERMISSION_GEOLOCATION>`_,
 
-`Site Notifications <https://mozilla.github.io/geckoview/https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/GeckoSession.PermissionDelegate.html#PERMISSION_DESKTOP_NOTIFICATION>`_
+`Site Notifications <https://mozilla.github.io/geckoview/https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/GeckoSession.PermissionDelegate.html#PERMISSION_DESKTOP_NOTIFICATION>`_,
 
-`Persistent Storage <https://mozilla.github.io/geckoview/https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/GeckoSession.PermissionDelegate.html#PERMISSION_PERSISTENT_STORAGE>`_
+`Persistent Storage <https://mozilla.github.io/geckoview/https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/GeckoSession.PermissionDelegate.html#PERMISSION_PERSISTENT_STORAGE>`_,
+
+`XR <https://mozilla.github.io/geckoview/https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/GeckoSession.PermissionDelegate.html#PERMISSION_XR>`_,
+
+`Autoplay Inaudible <https://mozilla.github.io/geckoview/https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/GeckoSession.PermissionDelegate.html#PERMISSION_AUTOPLAY_INAUDIBLE>`_,
+
+`Autoplay Audible <https://mozilla.github.io/geckoview/https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/GeckoSession.PermissionDelegate.html#PERMISSION_AUTOPLAY_AUDIBLE>`_,
 
 and
 
-`XR <https://mozilla.github.io/geckoview/https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/GeckoSession.PermissionDelegate.html#PERMISSION_XR>`_
+`DRM Media <https://mozilla.github.io/geckoview/https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/GeckoSession.PermissionDelegate.html#PERMISSION_MEDIA_KEY_SYSTEM_ACCESS>`_
 
-access.
+access. Additionally, `tracking protection exceptions <https://mozilla.github.io/geckoview/https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/GeckoSession.PermissionDelegate.html#PERMISSION_TRACKING>`_
+are treated as a type of content permission.
 
 When you receive an
-`onContentPermissionRequest <https://mozilla.github.io/geckoview/https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/GeckoSession.PermissionDelegate.html#onContentPermissionRequest-org.mozilla.geckoview.GeckoSession-java.lang.String-int-org.mozilla.geckoview.GeckoSession.PermissionDelegate.Callback->`_
+`onContentPermissionRequest <https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/GeckoSession.PermissionDelegate.html#onContentPermissionRequest-org.mozilla.geckoview.GeckoSession-org.mozilla.geckoview.GeckoSession.PermissionDelegate.ContentPermission->`_
 call, you will also receive the ``GeckoSession`` the request was sent
-from, the URI of the site that requested the permission, as a String,
-the type of the content permission requested (geolocation, site
-notification or persistent storage), and a
-`Callback`_
-to respond to the request. It is then up to the app to present UI to the
-user asking for the permissions, and to notify GeckoView of the response
-via the ``Callback``.
+from, and all relevant information about the permission being requested
+stored in a `ContentPermission <https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/GeckoSession.PermissionDelegate.ContentPermission.html>`_.
+It is then up to the app to present UI to the user asking for the
+permissions, and to notify GeckoView of the response via the returned
+``GeckoResult``.
 
-*Please note, in the case of ``PERMISSION_DESKTOP_NOTIFICATION`` and
-``PERMISSION_PERSISTENT_STORAGE``, GeckoView does not track accepted
-permissions and prevent further requests being sent for a particular
-site. It is therefore up to the calling app to do this if that is the
-desired behaviour. The code below demonstrates how to track storage
-permissions by site and track notification permission rejection for the
-whole app*
-
-.. code:: java
-
-   private class ExamplePermissionDelegate implements GeckoSession.PermissionDelegate {
-       private boolean showNotificationsRejected;
-       private ArrayList<String> acceptedPersistentStorage = new ArrayList<String>();
-
-       @Override
-       public void onContentPermissionRequest(final GeckoSession session, 
-                                              final String uri,
-                                              final int type, 
-                                              final Callback callback) {
-           final int resId;
-           Callback contentPermissionCallback = callback;
-           if (PERMISSION_GEOLOCATION == type) {
-               resId = R.string.request_geolocation;
-           } else if (PERMISSION_DESKTOP_NOTIFICATION == type) {
-               if (showNotificationsRejected) {
-                   callback.reject();
-                   return;
-               }
-               resId = R.string.request_notification;
-           } else if (PERMISSION_PERSISTENT_STORAGE == type) {
-               if (acceptedPersistentStorage.contains(uri)) {
-                   callback.grant();
-                   return;
-               }
-               resId = R.string.request_storage;
-           } else if (PERMISSION_XR == type) {
-               resId = R.string.request_xr;
-           } else {    // unknown permission type
-               callback.reject();
-               return;
-           }
-
-           final String title = getString(resId, Uri.parse(uri).getAuthority());
-           final AlertDialog.Builder builder = new AlertDialog.Builder(activity);
-           builder.setTitle(title)
-                  .setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
-                      @Override
-                      public void onClick(final DialogInterface dialog, final int which) {
-                           if (PERMISSION_DESKTOP_NOTIFICATION == type) {
-                               showNotificationsRejected = false;
-                           }
-                          callback.reject();
-                      }
-                  })
-                  .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
-                      @Override
-                      public void onClick(final DialogInterface dialog, final int which) {
-                           if (PERMISSION_PERSISTENT_STORAGE == type) {
-                               acceptedPersistentStorage.add(mUri);
-                           } else if (PERMISSION_DESKTOP_NOTIFICATION == type) {
-                               showNotificationsRejected = true;
-                           }
-                          callback.grant();
-                      }
-                  });
-
-           final AlertDialog dialog = builder.create();
-           dialog.show();
-       }
-   }
+Once a permission has been set in this fashion, GeckoView will persist it
+across sessions until it is cleared or modified. When a page is loaded,
+the active permissions associated with it (both allowed and denied) will
+be reported in `onLocationChange <https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/GeckoSession.NavigationDelegate.html#onLocationChange-org.mozilla.geckoview.GeckoSession-java.lang.String-java.util.List->`_
+as a list of ``ContentPermission`` objects; additionally, one may check all stored
+content permissions by calling `getAllPermissions <https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/StorageController.html#getAllPermissions-->`_
+and the content permissions associated with a given URI by calling
+`getPermissions <https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/StorageController.html#getPermissions-java.lang.String-java.lang.String->`_.
+In order to modify an existing permission, you will need the associated
+``ContentPermission`` (which can be retrieved from any of the above methods);
+then, call `setPermission <https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/StorageController.html#setPermission-org.mozilla.geckoview.GeckoSession.PermissionDelegate.ContentPermission-int->`_
+with the desired new value, or `VALUE_PROMPT <https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/GeckoSession.PermissionDelegate.ContentPermission.html#VALUE_PROMPT>`_
+if you wish to unset the permission and let the site request it again in the future.
 
 Media Permissions
 ~~~~~~~~~~~~~~~~~
