@@ -1090,14 +1090,6 @@ interface nsIDOMWindowUtils : nsISupports {
   readonly attribute unsigned long IMEStatus;
 
   /**
-   * Get whether current input context (including IME status) in the widget
-   * is set by content or not.
-   */
-  const unsigned long INPUT_CONTEXT_ORIGIN_MAIN = 0;
-  const unsigned long INPUT_CONTEXT_ORIGIN_CONTENT = 1;
-  readonly attribute unsigned long inputContextOrigin;
-
-  /**
    * Get the number of screen pixels per CSS pixel.
    *
    * This is the same as window.devicePixelRatio, except it bypasses
@@ -1164,16 +1156,12 @@ interface nsIDOMWindowUtils : nsISupports {
    * Will throw a DOM security error if called without chrome privileges.
    *
    * @param aType Type of command content event to send.  Can be one of "cut",
-   *        "copy", "paste", "delete", "undo", "redo", "insertText" or
-   *        "pasteTransferable".
+   *        "copy", "paste", "delete", "undo", "redo", or "pasteTransferable".
    * @param aTransferable an instance of nsITransferable when aType is
    *        "pasteTransferable"
-   * @param aString The string to be inserted into focused editor when aType is
-   *        "insertText"
    */
   void sendContentCommandEvent(in AString aType,
-                               [optional] in nsITransferable aTransferable,
-                               [optional] in AString aString);
+                               [optional] in nsITransferable aTransferable);
 
   /**
    * If sendQueryContentEvent()'s aAdditionalFlags argument is
