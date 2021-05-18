@@ -24,7 +24,12 @@ NS_IMPL_ISUPPORTS(NetworkConnectivityService, nsIDNSListener, nsIObserver,
 static StaticRefPtr<NetworkConnectivityService> gConnService;
 
 NetworkConnectivityService::NetworkConnectivityService()
-    : mNAT64(UNKNOWN), mLock("nat64prefixes") {}
+    : mDNSv4(UNKNOWN),
+      mDNSv6(UNKNOWN),
+      mIPv4(UNKNOWN),
+      mIPv6(UNKNOWN),
+      mNAT64(UNKNOWN),
+      mLock("nat64prefixes") {}
 
 // static
 already_AddRefed<NetworkConnectivityService>

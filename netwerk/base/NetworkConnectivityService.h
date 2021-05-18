@@ -43,11 +43,11 @@ class NetworkConnectivityService : public nsINetworkConnectivityService,
   // Will be set to OK if the DNS request returned in IP of this type,
   //                NOT_AVAILABLE if that type of resolution is not available
   //                UNKNOWN if the check wasn't performed
-  ConnectivityState mDNSv4 = nsINetworkConnectivityService::UNKNOWN;
-  ConnectivityState mDNSv6 = nsINetworkConnectivityService::UNKNOWN;
+  Atomic<ConnectivityState, Relaxed> mDNSv4;
+  Atomic<ConnectivityState, Relaxed> mDNSv6;
 
-  ConnectivityState mIPv4 = nsINetworkConnectivityService::UNKNOWN;
-  ConnectivityState mIPv6 = nsINetworkConnectivityService::UNKNOWN;
+  Atomic<ConnectivityState, Relaxed> mIPv4;
+  Atomic<ConnectivityState, Relaxed> mIPv6;
 
   Atomic<ConnectivityState, Relaxed> mNAT64;
 
