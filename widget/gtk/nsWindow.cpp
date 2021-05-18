@@ -5280,12 +5280,11 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
       XShmQueryExtension(DefaultXDisplay());
     }
   }
-#  ifdef MOZ_WAYLAND
-  else if (GdkIsWaylandDisplay()) {
-    mSurfaceProvider.Initialize(this);
+#endif
+#ifdef MOZ_WAYLAND
+  if (GdkIsWaylandDisplay()) {
     WaylandStartVsync();
   }
-#  endif
 #endif
 
   // Set default application name when it's empty.

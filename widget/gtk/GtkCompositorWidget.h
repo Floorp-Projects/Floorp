@@ -55,6 +55,9 @@ class GtkCompositorWidget : public CompositorWidget,
   void EndRemoteDrawingInRegion(
       gfx::DrawTarget* aDrawTarget,
       const LayoutDeviceIntRegion& aInvalidRegion) override;
+  void PrepareBufferForFrame();
+  size_t GetBufferAge() const;
+  bool ShouldDrawPreviousPartialPresentRegions();
   uintptr_t GetWidgetKey() override;
 
   LayoutDeviceIntSize GetClientSize() override;
