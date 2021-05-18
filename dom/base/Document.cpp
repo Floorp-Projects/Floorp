@@ -2235,8 +2235,7 @@ Document::~Document() {
 
   if (mDocGroup) {
     MOZ_ASSERT(mDocGroup->GetBrowsingContextGroup());
-    mDocGroup->GetBrowsingContextGroup()->RemoveDocument(mDocGroup->GetKey(),
-                                                         this);
+    mDocGroup->GetBrowsingContextGroup()->RemoveDocument(this, mDocGroup);
   }
 
   UnlinkOriginalDocumentIfStatic();
@@ -2515,8 +2514,8 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(Document)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mPreloadReferrerInfo)
 
   if (tmp->mDocGroup && tmp->mDocGroup->GetBrowsingContextGroup()) {
-    tmp->mDocGroup->GetBrowsingContextGroup()->RemoveDocument(
-        tmp->mDocGroup->GetKey(), tmp);
+    tmp->mDocGroup->GetBrowsingContextGroup()->RemoveDocument(tmp,
+                                                              tmp->mDocGroup);
   }
   tmp->mDocGroup = nullptr;
 
