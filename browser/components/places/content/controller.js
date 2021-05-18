@@ -336,7 +336,7 @@ PlacesController.prototype = {
    * is a policy decision that a removable item not be placed inside a non-
    * removable item.
    *
-   * @return true if all nodes in the selection can be removed,
+   * @returns {boolean} true if all nodes in the selection can be removed,
    *         false otherwise.
    */
   _hasRemovableSelection() {
@@ -375,7 +375,7 @@ PlacesController.prototype = {
    *    "separator"         node is a separator line
    *    "host"              node is a host
    *
-   * @return an array of objects corresponding the selected nodes. Each
+   * @returns {array} an array of objects corresponding the selected nodes. Each
    *         object has each of the properties above set if its corresponding
    *         node matches the rule. In addition, the annotations names for each
    *         node are set on its corresponding object as properties.
@@ -430,12 +430,12 @@ PlacesController.prototype = {
 
   /**
    * Determines if a context-menu item should be shown
-   * @param   aMenuItem
-   *          the context menu item
-   * @param   aMetaData
-   *          meta data about the selection
-   * @return true if the conditions (see buildContextMenu) are satisfied
-   *         and the item can be displayed, false otherwise.
+   * @param {object} aMenuItem
+   *        the context menu item
+   * @param {object} aMetaData
+   *        meta data about the selection
+   * @returns {boolean} true if the conditions (see buildContextMenu) are satisfied
+   *          and the item can be displayed, false otherwise.
    */
   _shouldShowMenuItem(aMenuItem, aMetaData) {
     if (
@@ -536,9 +536,9 @@ PlacesController.prototype = {
    * 10) The boolean `hideifsingleclickopens` attribute may be set to hide a
    *     menuitem in views opening entries with a single click.
    *
-   * @param   aPopup
-   *          The menupopup to build children into.
-   * @return true if at least one item is visible, false otherwise.
+   * @param {object} aPopup
+   *        The menupopup to build children into.
+   * @returns {boolean} true if at least one item is visible, false otherwise.
    */
   buildContextMenu(aPopup) {
     var metadata = this._buildSelectionMetadata();
@@ -686,6 +686,9 @@ PlacesController.prototype = {
 
   /**
    * Opens the links in the selected folder, or the selected links in new tabs.
+   *
+   * @param {object} aEvent
+   *   The associated event.
    */
   openSelectionInTabs: function PC_openLinksInTabs(aEvent) {
     var node = this._view.selectedNode;
@@ -704,7 +707,7 @@ PlacesController.prototype = {
   /**
    * Shows the Add Bookmark UI for the current insertion point.
    *
-   * @param aType
+   * @param {string} aType
    *        the type of the new item (bookmark/folder)
    */
   async newItem(aType) {
@@ -755,20 +758,19 @@ PlacesController.prototype = {
    * Walk the list of folders we're removing in this delete operation, and
    * see if the selected node specified is already implicitly being removed
    * because it is a child of that folder.
-   * @param   node
-   *          Node to check for containment.
-   * @param   pastFolders
-   *          List of folders the calling function has already traversed
-   * @return true if the node should be skipped, false otherwise.
+   * @param {object} node
+   *        Node to check for containment.
+   * @param {array} pastFolders
+   *        List of folders the calling function has already traversed
+   * @returns {boolean} true if the node should be skipped, false otherwise.
    */
   _shouldSkipNode: function PC_shouldSkipNode(node, pastFolders) {
     /**
      * Determines if a node is contained by another node within a resultset.
-     * @param   node
-     *          The node to check for containment for
-     * @param   parent
-     *          The parent container to check for containment in
-     * @return true if node is a member of parent's children, false otherwise.
+     *
+     * @param {object} parent
+     *        The parent container to check for containment in
+     * @returns {boolean} true if node is a member of parent's children, false otherwise.
      */
     function isNodeContainedBy(parent) {
       var cursor = node.parent;
@@ -792,13 +794,13 @@ PlacesController.prototype = {
   /**
    * Creates a set of transactions for the removal of a range of items.
    * A range is an array of adjacent nodes in a view.
-   * @param   [in] range
+   * @param {array} range
    *          An array of nodes to remove. Should all be adjacent.
-   * @param   [out] transactions
-   *          An array of transactions.
-   * @param   [optional] removedFolders
+   * @param {array} transactions
+   *          An array of transactions (returned)
+   * @param  {array} [removedFolders]
    *          An array of folder nodes that have already been removed.
-   * @return {Integer} The total number of items affected.
+   * @returns {number} The total number of items affected.
    */
   async _removeRange(range, transactions, removedFolders) {
     if (!(transactions instanceof Array)) {
@@ -936,8 +938,8 @@ PlacesController.prototype = {
 
   /**
    * Removes history visits for an history container node.
-   * @param   [in] aContainerNode
-   *          The container node to remove.
+   * @param {object} aContainerNode
+   *        The container node to remove.
    *
    * @note history deletes are not undoable.
    */
@@ -1000,8 +1002,8 @@ PlacesController.prototype = {
   /**
    * Fills a DataTransfer object with the content of the selection that can be
    * dropped elsewhere.
-   * @param   aEvent
-   *          The dragstart event.
+   * @param {object} aEvent
+   *        The dragstart event.
    */
   setDataTransfer: function PC_setDataTransfer(aEvent) {
     let dt = aEvent.dataTransfer;
@@ -1269,8 +1271,9 @@ PlacesController.prototype = {
 
   /**
    * Checks if we can insert into a container.
-   * @param   container
+   * @param {object} container
    *          The container were we are want to drop
+   * @returns {boolean}
    */
   disallowInsertion(container) {
     if (!container) {
@@ -1287,9 +1290,9 @@ PlacesController.prototype = {
   /**
    * Determines if a node can be moved.
    *
-   * @param   aNode
-   *          A nsINavHistoryResultNode node.
-   * @return True if the node can be moved, false otherwise.
+   * @param {object} node
+   *        A nsINavHistoryResultNode node.
+   * @returns {boolean} True if the node can be moved, false otherwise.
    */
   canMoveNode(node) {
     // Only bookmark items are movable.
@@ -1334,9 +1337,9 @@ var PlacesControllerDragHelper = {
    * Determines if the mouse is currently being dragged over a child node of
    * this menu. This is necessary so that the menu doesn't close while the
    * mouse is dragging over one of its submenus
-   * @param   node
-   *          The container node
-   * @return true if the user is dragging over a node within the hierarchy of
+   * @param {object} node
+   *        The container node
+   * @returns {boolean} true if the user is dragging over a node within the hierarchy of
    *         the container, false otherwise.
    */
   draggingOverChildNode: function PCDH_draggingOverChildNode(node) {
@@ -1351,7 +1354,7 @@ var PlacesControllerDragHelper = {
   },
 
   /**
-   * @return The current active drag session. Returns null if there is none.
+   * @returns{object|null} The current active drag session. Returns null if there is none.
    */
   getSession: function PCDH__getSession() {
     return this.dragService.getCurrentSession();
@@ -1359,8 +1362,9 @@ var PlacesControllerDragHelper = {
 
   /**
    * Extract the first accepted flavor from a list of flavors.
-   * @param aFlavors
-   *        The flavors list of type DOMStringList.
+   * @param {DOMStringList} aFlavors
+   *        The flavors list.
+   * @returns {string}
    */
   getFirstValidFlavor: function PCDH_getFirstValidFlavor(aFlavors) {
     for (let i = 0; i < aFlavors.length; i++) {
@@ -1382,8 +1386,11 @@ var PlacesControllerDragHelper = {
   /**
    * Determines whether or not the data currently being dragged can be dropped
    * on a places view.
-   * @param ip
+   * @param {object} ip
    *        The insertion point where the items should be dropped.
+   * @param {object} dt
+   *        The data transfer object.
+   * @returns {boolean}
    */
   canDrop: function PCDH_canDrop(ip, dt) {
     let dropCount = dt.mozItemCount;
@@ -1450,10 +1457,10 @@ var PlacesControllerDragHelper = {
   /**
    * Handles the drop of one or more items onto a view.
    *
-   * @param {Object} insertionPoint The insertion point where the items should
+   * @param {object} insertionPoint The insertion point where the items should
    *                                be dropped.
-   * @param {Object} dt             The dataTransfer information for the drop.
-   * @param {Object} view           The view or the tree element. This allows
+   * @param {object} dt             The dataTransfer information for the drop.
+   * @param {object} view           The view or the tree element. This allows
    *                                batching to take place.
    */
   async onDrop(insertionPoint, dt, view) {

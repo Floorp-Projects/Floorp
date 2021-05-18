@@ -370,7 +370,7 @@ add_task(async function test_separator_first() {
 /**
  * If the passed-in condition is fulfilled, awaits for the toolbar nodes
  * visibility to have been updated.
- * @param [condition] Awaits for visibility only if this condition is true.
+ * @param {boolean} [condition] Awaits for visibility only if this condition is true.
  * @returns {Promise} resolved when the condition is not fulfilled or the
  *          visilibily update happened.
  */

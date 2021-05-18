@@ -93,9 +93,9 @@ add_task(async function() {
 /**
  * Get Element for a bookmark in the bookmarks toolbar.
  *
- * @param guid
+ * @param {string} guid
  *        GUID of the item to search.
- * @returns DOM Node of the element.
+ * @returns {object} DOM Node of the element.
  */
 function getNodeForToolbarItem(guid) {
   return Array.from(
@@ -106,9 +106,9 @@ function getNodeForToolbarItem(guid) {
 /**
  * Get a rect for a bookmark in the bookmarks sidebar
  *
- * @param guid
+ * @param {string} guid
  *        GUID of the item to search.
- * @returns DOM Node of the element.
+ * @returns {object} DOM Node of the element.
  */
 async function getRectForSidebarItem(guid) {
   let sidebar = document.getElementById("sidebar");
