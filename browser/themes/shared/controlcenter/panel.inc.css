@@ -696,10 +696,12 @@ description#identity-popup-content-verifier,
   text-align: match-parent;
 }
 
-.protections-popup-list-state-label {
-  -moz-box-flex: 1;
-  text-align: end;
-  margin-inline: 5px 2px;
+/* Special alignment for items which include a state label (e.g. "Allowed") */
+.protections-popup-list-item-with-state > label {
+  margin: auto 0;
+}
+.protections-popup-list-item-with-state {
+  justify-content: space-between;
 }
 
 .protections-popup-socialblockView-icon,
