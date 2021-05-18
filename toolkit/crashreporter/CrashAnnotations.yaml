@@ -143,11 +143,6 @@ AvailableVirtualMemory:
   type: string
   ping: true
 
-BIOS_Manufacturer:
-  description: >
-    Name of the BIOS manufacturer.
-  type: string
-
 BlockedDllList:
   description: >
     Comma-separated list of blocked DLLS, Windows-only
@@ -624,14 +619,6 @@ MarshalActCtxManifestPath:
   description: >
     Proxy stream marshalling current activation context manifest path.
   type: string
-
-MemoryErrorCorrection:
-  description: >
-    Windows only, type of error correction used by system memory.  See
-    documentation for MemoryErrorCorrection property of
-    Win32_PhysicalMemoryArray WMI class.
-  type: string
-  ping: true
 
 MozCrashReason:
   description: >
