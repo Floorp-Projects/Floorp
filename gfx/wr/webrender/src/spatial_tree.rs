@@ -25,6 +25,13 @@ pub type ScrollStates = FastHashMap<ExternalScrollId, ScrollFrameInfo>;
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct CoordinateSystemId(pub u32);
 
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub struct StaticCoordinateSystemId(pub u32);
+
+impl StaticCoordinateSystemId {
+    pub const ROOT: StaticCoordinateSystemId = StaticCoordinateSystemId(0);
+}
+
 /// A node in the hierarchy of coordinate system
 /// transforms.
 #[derive(Debug)]
@@ -120,6 +127,9 @@ pub struct SpatialTree {
 
     /// Temporary stack of nodes to update when traversing the tree.
     nodes_to_update: Vec<(SpatialNodeIndex, TransformUpdateState)>,
+
+    /// Next id to assign when creating a new static coordinate system
+    next_static_coord_system_id: u32,
 }
 
 #[derive(Clone)]
@@ -224,6 +234,7 @@ impl SpatialTree {
             pending_scroll_offsets: FastHashMap::default(),
             pipelines_to_discard: FastHashSet::default(),
             nodes_to_update: Vec::new(),
+            next_static_coord_system_id: 0,
         }
     }
 
@@ -554,6 +565,11 @@ impl SpatialTree {
         }
     }
 
+    /// Get the static coordinate system for a given spatial node index
+    pub fn get_static_coordinate_system_id(&self, node_index: SpatialNodeIndex) -> StaticCoordinateSystemId {
+        self.spatial_nodes[node_index.0 as usize].static_coordinate_system_id
+    }
+
     pub fn add_scroll_frame(
         &mut self,
         parent_index: SpatialNodeIndex,
@@ -565,6 +581,9 @@ impl SpatialTree {
         frame_kind: ScrollFrameKind,
         external_scroll_offset: LayoutVector2D,
     ) -> SpatialNodeIndex {
+        // Scroll frames are only 2d translations - they can't introduce a new static coord system
+        let static_coordinate_system_id = self.get_static_coordinate_system_id(parent_index);
+
         let node = SpatialNode::new_scroll_frame(
             pipeline_id,
             parent_index,
@@ -574,6 +593,7 @@ impl SpatialTree {
             scroll_sensitivity,
             frame_kind,
             external_scroll_offset,
+            static_coordinate_system_id,
         );
         self.add_spatial_node(node)
     }
@@ -587,6 +607,45 @@ impl SpatialTree {
         origin_in_parent_reference_frame: LayoutVector2D,
         pipeline_id: PipelineId,
     ) -> SpatialNodeIndex {
+
+        // Determine if this reference frame creates a new static coordinate system
+        let new_static_coord_system = match parent_index {
+            Some(..) => {
+                match kind {
+                    ReferenceFrameKind::Transform { is_2d_scale_translation: true, .. } => {
+                        // Client has guaranteed this transform will only be axis-aligned
+                        false
+                    }
+                    ReferenceFrameKind::Transform { is_2d_scale_translation: false, .. } | ReferenceFrameKind::Perspective { .. } => {
+                        // Even if client hasn't promised it's an axis-aligned transform, we can still
+                        // check this so long as the transform isn't animated (and thus could change to
+                        // anything by APZ during frame building)
+                        match source_transform {
+                            PropertyBinding::Value(m) => {
+                                !m.is_2d_scale_translation()
+                            }
+                            PropertyBinding::Binding(..) => {
+                                // Animated, so assume it may introduce a complex transform
+                                true
+                            }
+                        }
+                    }
+                }
+            }
+            None => {
+                // The root reference frame always creates a new static coord system
+                true
+            }
+        };
+
+        let static_coordinate_system_id = if new_static_coord_system {
+            let id = StaticCoordinateSystemId(self.next_static_coord_system_id);
+            self.next_static_coord_system_id += 1;
+            id
+        } else {
+            self.get_static_coordinate_system_id(parent_index.unwrap())
+        };
+
         let node = SpatialNode::new_reference_frame(
             parent_index,
             transform_style,
@@ -594,6 +653,7 @@ impl SpatialTree {
             kind,
             origin_in_parent_reference_frame,
             pipeline_id,
+            static_coordinate_system_id,
         );
         self.add_spatial_node(node)
     }
@@ -604,10 +664,14 @@ impl SpatialTree {
         sticky_frame_info: StickyFrameInfo,
         pipeline_id: PipelineId,
     ) -> SpatialNodeIndex {
+        // Sticky frames are only 2d translations - they can't introduce a new static coord system
+        let static_coordinate_system_id = self.get_static_coordinate_system_id(parent_index);
+
         let node = SpatialNode::new_sticky_frame(
             parent_index,
             sticky_frame_info,
             pipeline_id,
+            static_coordinate_system_id,
         );
         self.add_spatial_node(node)
     }
@@ -655,57 +719,6 @@ impl SpatialTree {
         }
 
         false
-    }
-
-    /// Does a conservative test to see if we can guarantee that the supplied spatial node
-    /// will never produce a complex (non-axis-aligned) transform. May return false even if
-    /// the transform is actually simple (e.g. an animated transform binding that may be
-    /// changed during APZ).
-    pub fn is_definitely_in_root_coord_system(
-        &self,
-        spatial_node_index: SpatialNodeIndex,
-    ) -> bool {
-        let mut node_index = spatial_node_index;
-
-        while node_index != ROOT_SPATIAL_NODE_INDEX {
-            let node = &self.spatial_nodes[node_index.0 as usize];
-            match node.node_type {
-                SpatialNodeType::ReferenceFrame(ref info) => {
-                    match info.kind {
-                        ReferenceFrameKind::Transform { is_2d_scale_translation: true, .. } => {
-                            // Client has guaranteed this transform will only be axis-aligned
-                        }
-                        ReferenceFrameKind::Transform { is_2d_scale_translation: false, .. } => {
-                            // Even if client hasn't promised it's an axis-aligned transform, we can still
-                            // check this so long as the transform isn't animated (and thus could change to
-                            // anything by APZ during frame building)
-                            match info.source_transform {
-                                PropertyBinding::Value(m) => {
-                                    if !m.is_2d_scale_translation() {
-                                        return false;
-                                    }
-                                }
-                                PropertyBinding::Binding(..) => {
-                                    // Animated, so assume it may introduce a complex transform
-                                    return false;
-                                }
-                            }
-                        }
-                        ReferenceFrameKind::Perspective { .. } => {
-                            // Any perspective transform may introduce a non-axis-aligned transform,
-                            // so conservatively assume it may not be in root coord system
-                            return false;
-                        }
-                    }
-                }
-                SpatialNodeType::StickyFrame(..) | SpatialNodeType::ScrollFrame(..) => {
-                    // Sticky and scroll frames can't introduce a non-axis-aligned transform
-                }
-            }
-            node_index = node.parent.expect("unable to find parent node");
-        }
-
-        true
     }
 
     /// Find the spatial node that is the scroll root for a given spatial node.
@@ -822,6 +835,7 @@ impl SpatialTree {
         pt.add_item(format!("viewport_transform: {:?}", node.viewport_transform));
         pt.add_item(format!("snapping_transform: {:?}", node.snapping_transform));
         pt.add_item(format!("coordinate_system_id: {:?}", node.coordinate_system_id));
+        pt.add_item(format!("static_coordinate_system_id: {:?}", node.static_coordinate_system_id));
 
         for child_index in &node.children {
             self.print_node(*child_index, pt);
