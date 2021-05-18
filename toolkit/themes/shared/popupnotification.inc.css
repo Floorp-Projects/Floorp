@@ -229,6 +229,17 @@ popupnotification {
   border-end-end-radius: 0;
 }
 
+/**
+ * The focus ring is an outline thicker than 1px, meaning that for split buttons,
+ * if the main button part of the split button has :focus-visible, the ring will
+ * be partially hidden behind the dropmarker button. We work around this by
+ * temporarily boosting the z-index of the main button while showing its focus
+ * ring.
+ */
+.panel-footer > .popup-notification-secondary-button:not([dropmarkerhidden="true"]):focus-visible {
+  z-index: 2;
+}
+
 .popup-notification-icon:not([hasicon]) {
   display: none;
 }
