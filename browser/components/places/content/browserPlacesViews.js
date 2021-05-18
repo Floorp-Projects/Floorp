@@ -7,6 +7,11 @@
 /**
  * The base view implements everything that's common to the toolbar and
  * menu views.
+ *
+ * @param {string} aPlace
+ *   The query string associated with the view.
+ * @param {object} aOptions
+ *   Associated options for the view.
  */
 function PlacesViewBase(aPlace, aOptions = {}) {
   if ("rootElt" in aOptions) {
@@ -116,10 +121,11 @@ PlacesViewBase.prototype = {
   /**
    * Gets the DOM node used for the given places node.
    *
-   * @param aPlacesNode
+   * @param {object} aPlacesNode
    *        a places result node.
-   * @param aAllowMissing
+   * @param {boolean} aAllowMissing
    *        whether the node may be missing
+   * @returns {object|null} The associated DOM node.
    * @throws if there is no DOM node set for aPlacesNode.
    */
   _getDOMNodeForPlacesNode: function PVB__getDOMNodeForPlacesNode(
@@ -680,7 +686,7 @@ PlacesViewBase.prototype = {
    * This method may be overridden by classes that extend this base class.
    *
    * @param  {Element} elt
-   * @return {Boolean}
+   * @returns {boolean}
    */
   _isPopupOpen(elt) {
     return !!elt.parentNode.open;
@@ -736,7 +742,7 @@ PlacesViewBase.prototype = {
 
   /**
    * Adds an "Open All in Tabs" menuitem to the bottom of the popup.
-   * @param aPopup
+   * @param {object} aPopup
    *        a Places popup.
    */
   _mayAddCommandsItems: function PVB__mayAddCommandsItems(aPopup) {
@@ -1582,10 +1588,14 @@ PlacesToolbar.prototype = {
 
   /**
    * This function returns information about where to drop when dragging over
-   * the toolbar.  The returned object has the following properties:
-   * - ip: the insertion point for the bookmarks service.
-   * - beforeIndex: child index to drop before, for the drop indicator.
-   * - folderElt: the folder to drop into, if applicable.
+   * the toolbar.
+   *
+   * @param {object} aEvent
+   *   The associated event.
+   * @returns {object}
+   *   - ip: the insertion point for the bookmarks service.
+   *   - beforeIndex: child index to drop before, for the drop indicator.
+   *   - folderElt: the folder to drop into, if applicable.
    */
   _getDropPoint: function PT__getDropPoint(aEvent) {
     if (!PlacesUtils.nodeIsFolder(this._resultNode)) {
@@ -2007,6 +2017,13 @@ PlacesToolbar.prototype = {
 /**
  * View for Places menus.  This object should be created during the first
  * popupshowing that's dispatched on the menu.
+ *
+ * @param {object} aPopupShowingEvent
+ *   The event associated with opening the menu.
+ * @param {string} aPlace
+ *   The query associated with the view on the menu.
+ * @param {object} aOptions
+ *   Options associated with the view.
  */
 function PlacesMenu(aPopupShowingEvent, aPlace, aOptions) {
   this._rootElt = aPopupShowingEvent.target; // <menupopup>

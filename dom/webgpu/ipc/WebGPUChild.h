@@ -66,9 +66,11 @@ class WebGPUChild final : public PWebGPUChild, public SupportsWeakPtr {
                                  const dom::GPUShaderModuleDescriptor& aDesc);
   RawId DeviceCreateComputePipeline(
       RawId aSelfId, const dom::GPUComputePipelineDescriptor& aDesc,
+      RawId* const aImplicitPipelineLayoutId,
       nsTArray<RawId>* const aImplicitBindGroupLayoutIds);
   RawId DeviceCreateRenderPipeline(
       RawId aSelfId, const dom::GPURenderPipelineDescriptor& aDesc,
+      RawId* const aImplicitPipelineLayoutId,
       nsTArray<RawId>* const aImplicitBindGroupLayoutIds);
 
   void DeviceCreateSwapChain(RawId aSelfId, const RGBDescriptor& aRgbDesc,

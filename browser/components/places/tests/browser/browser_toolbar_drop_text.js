@@ -32,9 +32,9 @@ add_task(async function test() {
   /**
    * Simulates a drop of a URI onto the bookmarks bar.
    *
-   * @param aEffect
+   * @param {string} aEffect
    *        The effect to use for the drop operation: move, copy, or link.
-   * @param aMimeType
+   * @param {string} aMimeType
    *        The mime type to use for the drop operation.
    */
   let simulateDragDrop = async function(aEffect, aMimeType) {
@@ -77,9 +77,9 @@ add_task(async function test() {
   /**
    * Simulates a drop of multiple URIs onto the bookmarks bar.
    *
-   * @param aEffect
+   * @param {string} aEffect
    *        The effect to use for the drop operation: move, copy, or link.
-   * @param aMimeType
+   * @param {string} aMimeType
    *        The mime type to use for the drop operation.
    */
   let simulateDragDropMultiple = async function(aEffect, aMimeType) {

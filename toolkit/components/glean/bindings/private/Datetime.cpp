@@ -6,6 +6,8 @@
 
 #include "mozilla/glean/bindings/Datetime.h"
 
+#include "jsapi.h"
+#include "js/Date.h"
 #include "nsString.h"
 #include "mozilla/Components.h"
 #include "mozilla/glean/bindings/ScalarGIFFTMap.h"
@@ -44,13 +46,19 @@ void DatetimeMetric::Set(const PRExplodedTime* aValue) const {
 #ifndef MOZ_GLEAN_ANDROID
   int32_t offset =
       exploded.tm_params.tp_gmt_offset + exploded.tm_params.tp_dst_offset;
-  fog_datetime_set(mId, exploded.tm_year, exploded.tm_month + 1,
-                   exploded.tm_mday, exploded.tm_hour, exploded.tm_min,
-                   exploded.tm_sec, exploded.tm_usec * 1000, offset);
+  FogDatetime dt{exploded.tm_year,
+                 static_cast<uint32_t>(exploded.tm_month + 1),
+                 static_cast<uint32_t>(exploded.tm_mday),
+                 static_cast<uint32_t>(exploded.tm_hour),
+                 static_cast<uint32_t>(exploded.tm_min),
+                 static_cast<uint32_t>(exploded.tm_sec),
+                 static_cast<uint32_t>(exploded.tm_usec * 1000),
+                 offset};
+  fog_datetime_set(mId, &dt);
 #endif
 }
 
-Maybe<nsCString> DatetimeMetric::TestGetValue(
+Maybe<PRExplodedTime> DatetimeMetric::TestGetValue(
     const nsACString& aPingName) const {
 #ifdef MOZ_GLEAN_ANDROID
   Unused << mId;
@@ -59,9 +67,18 @@ Maybe<nsCString> DatetimeMetric::TestGetValue(
   if (!fog_datetime_test_has_value(mId, &aPingName)) {
     return Nothing();
   }
-  nsCString ret;
+  FogDatetime ret{0};
   fog_datetime_test_get_value(mId, &aPingName, &ret);
-  return Some(ret);
+  PRExplodedTime pret{0};
+  pret.tm_year = static_cast<PRInt16>(ret.year);
+  pret.tm_month = static_cast<PRInt32>(ret.month - 1);
+  pret.tm_mday = static_cast<PRInt32>(ret.day);
+  pret.tm_hour = static_cast<PRInt32>(ret.hour);
+  pret.tm_min = static_cast<PRInt32>(ret.minute);
+  pret.tm_sec = static_cast<PRInt32>(ret.second);
+  pret.tm_usec = static_cast<PRInt32>(ret.nano / 1000);  // truncated is fine
+  pret.tm_params.tp_gmt_offset = static_cast<PRInt32>(ret.offset_seconds);
+  return Some(std::move(pret));
 #endif
 }
 
@@ -90,9 +107,10 @@ GleanDatetime::TestGetValue(const nsACString& aStorageName, JSContext* aCx,
   if (result.isNothing()) {
     aResult.set(JS::UndefinedValue());
   } else {
-    const NS_ConvertUTF8toUTF16 str(result.value());
-    aResult.set(
-        JS::StringValue(JS_NewUCStringCopyN(aCx, str.Data(), str.Length())));
+    double millis =
+        static_cast<double>(PR_ImplodeTime(result.ptr())) / PR_USEC_PER_MSEC;
+    JS::RootedObject root(aCx, JS::NewDateObject(aCx, JS::TimeClip(millis)));
+    aResult.setObject(*root);
   }
   return NS_OK;
 }

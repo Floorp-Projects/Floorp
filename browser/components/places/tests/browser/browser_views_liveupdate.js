@@ -12,6 +12,8 @@ var wasCollapsed = toolbar.collapsed;
 /**
  * Simulates popup opening causing it to populate.
  * We cannot just use menu.open, since it would not work on Mac due to native menubar.
+ *
+ * @param {object} aPopup
  */
 function fakeOpenPopup(aPopup) {
   var popupEvent = document.createEvent("MouseEvent");
@@ -302,13 +304,14 @@ var bookmarksObserver = {
 /**
  * Search an item guid in a view.
  *
- * @param itemGuid
+ * @param {string} itemGuid
  *        item guid of the item to search.
- * @param view
+ * @param {string} view
  *        either "toolbar", "menu" or "sidebar"
- * @param validator
+ * @param {function} validator
  *        function to check validity of the found node element.
- * @returns [node, index, valid] or [null, null, false] if not found.
+ * @returns {array}
+ *          [node, index, valid] or [null, null, false] if not found.
  */
 function searchItemInView(itemGuid, view, validator) {
   switch (view) {
@@ -326,9 +329,12 @@ function searchItemInView(itemGuid, view, validator) {
 /**
  * Get places node and index for an itemGuid in bookmarks toolbar view.
  *
- * @param itemGuid
+ * @param {string} itemGuid
  *        item guid of the item to search.
- * @returns [node, index] or [null, null] if not found.
+ * @param {function} validator
+ *        function to check validity of the found node element.
+ * @returns {array}
+ *        [node, index] or [null, null] if not found.
  */
 function getNodeForToolbarItem(itemGuid, validator) {
   var placesToolbarItems = document.getElementById("PlacesToolbarItems");
@@ -370,9 +376,12 @@ function getNodeForToolbarItem(itemGuid, validator) {
 /**
  * Get places node and index for an itemGuid in bookmarks menu view.
  *
- * @param itemGuid
+ * @param {string} itemGuid
  *        item guid of the item to search.
- * @returns [node, index] or [null, null] if not found.
+ * @param {function} validator
+ *        function to check validity of the found node element.
+ * @returns {array}
+ *        [node, index] or [null, null] if not found.
  */
 function getNodeForMenuItem(itemGuid, validator) {
   var menu = document.getElementById("bookmarksMenu");
@@ -415,9 +424,12 @@ function getNodeForMenuItem(itemGuid, validator) {
 /**
  * Get places node and index for an itemGuid in sidebar tree view.
  *
- * @param itemGuid
+ * @param {string} itemGuid
  *        item guid of the item to search.
- * @returns [node, index] or [null, null] if not found.
+ * @param {function} validator
+ *        function to check validity of the found node element.
+ * @returns {array}
+ *        [node, index] or [null, null] if not found.
  */
 function getNodeForSidebarItem(itemGuid, validator) {
   var sidebar = document.getElementById("sidebar");
@@ -479,9 +491,10 @@ function getNodeForSidebarItem(itemGuid, validator) {
 /**
  * Get views affected by changes to a folder.
  *
- * @param folderGuid:
+ * @param {string} folderGuid:
  *        item guid of the folder we have changed.
- * @returns a subset of views: ["toolbar", "menu", "sidebar"]
+ * @returns {array}
+ *          subset of views: ["toolbar", "menu", "sidebar"]
  */
 async function getViewsForFolder(folderGuid) {
   let rootGuid = folderGuid;

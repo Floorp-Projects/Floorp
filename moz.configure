@@ -591,7 +591,11 @@ def build_backend_defaults(
     # Normally, we'd use target.os == 'WINNT', but a dependency on target
     # would require target to depend on --help, as well as host and shell,
     # and this is not a can of worms we can open at the moment.
-    if sys.platform == "win32" and compile_environment and project != "mobile/android":
+    if (
+        sys.platform == "win32"
+        and compile_environment
+        and project not in ("mobile/android", "memory", "tools/update-programs")
+    ):
         all_backends.append("VisualStudio")
     return tuple(all_backends) or None
 

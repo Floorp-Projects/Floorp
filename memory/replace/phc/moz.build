@@ -7,6 +7,7 @@
 ReplaceMalloc("phc")
 
 DEFINES["MOZ_NO_MOZALLOC"] = True
+DEFINES["IMPL_MFBT"] = True
 
 LOCAL_INCLUDES += [
     "../logalloc",
@@ -21,8 +22,21 @@ UNIFIED_SOURCES += [
     "PHC.cpp",
 ]
 
+if CONFIG["MOZ_BUILD_APP"] == "memory":
+    UNIFIED_SOURCES += [
+        "/mfbt/double-conversion/double-conversion/bignum-dtoa.cc",
+        "/mfbt/double-conversion/double-conversion/bignum.cc",
+        "/mfbt/double-conversion/double-conversion/cached-powers.cc",
+        "/mfbt/double-conversion/double-conversion/double-to-string.cc",
+        "/mfbt/double-conversion/double-conversion/fast-dtoa.cc",
+        "/mfbt/double-conversion/double-conversion/fixed-dtoa.cc",
+        "/mfbt/double-conversion/double-conversion/string-to-double.cc",
+        "/mfbt/double-conversion/double-conversion/strtod.cc",
+        "/mozglue/misc/Printf.cpp",
+    ]
+
 if not CONFIG["MOZ_REPLACE_MALLOC_STATIC"]:
-    SOURCES += [
+    UNIFIED_SOURCES += [
         "../logalloc/FdPrintf.cpp",
         "/mozglue/misc/StackWalk.cpp",
     ]

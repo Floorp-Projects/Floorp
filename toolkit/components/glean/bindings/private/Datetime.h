@@ -30,7 +30,7 @@ class DatetimeMetric {
   /**
    * **Test-only API**
    *
-   * Gets the currently stored value as an integer.
+   * Gets the currently stored value as a PRExplodedTime.
    *
    * This function will attempt to await the last parent-process task (if any)
    * writing to the the metric's storage engine before returning a value.
@@ -44,7 +44,7 @@ class DatetimeMetric {
    *
    * @return value of the stored metric, or Nothing() if there is no value.
    */
-  Maybe<nsCString> TestGetValue(
+  Maybe<PRExplodedTime> TestGetValue(
       const nsACString& aPingName = nsCString()) const;
 
  private:

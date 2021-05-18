@@ -46,6 +46,7 @@ crashtest:
     variants:
         by-test-platform:
             linux1804-64-qr/debug: ['webrender-sw', 'fission']
+            linux1804-64-asan-qr/opt: ['webrender-sw', 'fission']
             windows10-64-qr/debug: ['webrender-sw', 'fission']
             macosx101.*64-qr/debug: ['webrender-sw', 'fission']
             android-em-7.0-x86_64-qr/debug: ['webrender-sw', 'fission']
@@ -150,6 +151,7 @@ reftest:
     variants:
         by-test-platform:
             linux1804-64-qr/debug: ['webrender-sw', 'fission']
+            linux1804-64-asan-qr/opt: ['webrender-sw', 'fission']
             windows10-64-qr/debug: ['webrender-sw', 'fission']
             macosx101.*64-qr/debug: ['webrender-sw', 'fission']
             default: ['fission']

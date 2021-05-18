@@ -301,16 +301,16 @@ def create_nss_release_archive():
     check_call_noisy(["mkdir", "-p", nss_stagedir])
     check_call_noisy(["hg", "archive", "-r", nssreltag, "--prefix=nss-" + nssrel + "/nss",
                       stagedir + "/" + nssreltag + "/src/" + nss_tar, "-X", ".hgtags"])
-    check_call_noisy(["tar", "-xz", "-C", nss_stagedir, "-f", nsprtar_with_path])
+    check_call_noisy(["gtar", "-xz", "-C", nss_stagedir, "-f", nsprtar_with_path])
     print("changing to directory " + nss_stagedir)
     os.chdir(nss_stagedir)
-    check_call_noisy(["tar", "-xz", "-f", nss_tar])
+    check_call_noisy(["gtar", "-xz", "-f", nss_tar])
     check_call_noisy(["mv", "-i", "nspr-" + nsprrel + "/nspr", "nss-" + nssrel + "/"])
     check_call_noisy(["rmdir", "nspr-" + nsprrel])
 
     nss_nspr_tar = "nss-" + nssrel + "-with-nspr-" + nsprrel + ".tar.gz"
 
-    check_call_noisy(["tar", "-cz", "--remove-files", "-f", nss_nspr_tar, "nss-" + nssrel])
+    check_call_noisy(["gtar", "-cz", "--remove-files", "-f", nss_nspr_tar, "nss-" + nssrel])
     check_call("sha1sum " + nss_tar + " " + nss_nspr_tar + " > SHA1SUMS", shell=True)
     check_call("sha256sum " + nss_tar + " " + nss_nspr_tar + " > SHA256SUMS", shell=True)
     print("created directory " + nss_stagedir + " with files:")

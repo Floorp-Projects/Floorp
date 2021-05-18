@@ -676,6 +676,8 @@ void Statistics::formatJsonDescription(JSONPrinter& json) const {
   json.property("total_zones", zoneStats.zoneCount);
   json.property("total_compartments", zoneStats.compartmentCount);
   json.property("minor_gcs", getCount(COUNT_MINOR_GC));
+  json.property("minor_gc_number", gc->minorGCCount());
+  json.property("major_gc_number", gc->majorGCCount());
   uint32_t storebufferOverflows = getCount(COUNT_STOREBUFFER_OVERFLOW);
   if (storebufferOverflows) {
     json.property("store_buffer_overflows", storebufferOverflows);

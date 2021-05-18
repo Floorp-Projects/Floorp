@@ -36,9 +36,9 @@ var gLibrary;
  * string.  Also ensures that the search scope button is as expected after the
  * search.
  *
- * @param  aFolderGuid
+ * @param {string} aFolderGuid
  *         the item guid of a node in the left pane's tree
- * @param  aSearchStr
+ * @param {string} aSearchStr
  *         the search text; may be empty to reset the search
  */
 async function search(aFolderGuid, aSearchStr) {

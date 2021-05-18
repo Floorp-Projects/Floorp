@@ -118,7 +118,8 @@ class gfxMacPlatformFontList final : public gfxPlatformFontList {
 
  public:
   static gfxMacPlatformFontList* PlatformFontList() {
-    return static_cast<gfxMacPlatformFontList*>(sPlatformFontList);
+    return static_cast<gfxMacPlatformFontList*>(
+        gfxPlatformFontList::PlatformFontList());
   }
 
   gfxFontFamily* CreateFontFamily(const nsACString& aName,
@@ -173,6 +174,10 @@ class gfxMacPlatformFontList final : public gfxPlatformFontList {
   // initialize font lists
   nsresult InitFontListForPlatform() override;
   void InitSharedFontListForPlatform() override;
+
+  // handle commonly used fonts for which the name table should be loaded at
+  // startup
+  void PreloadNamesList();
 
   // special case font faces treated as font families (set via prefs)
   void InitSingleFaceList();
@@ -234,6 +239,9 @@ class gfxMacPlatformFontList final : public gfxPlatformFontList {
   bool mUseSizeSensitiveSystemFont;
   nsCString mSystemTextFontFamilyName;
   nsCString mSystemDisplayFontFamilyName;  // only used on OSX 10.11
+
+  nsTArray<nsCString> mSingleFaceFonts;
+  nsTArray<nsCString> mPreloadFonts;
 };
 
 #endif /* gfxMacPlatformFontList_H_ */

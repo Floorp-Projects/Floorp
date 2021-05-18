@@ -128,7 +128,17 @@ enum class PropertyAttribute : uint8_t {
   Writable
 };
 
-using PropertyAttributes = mozilla::EnumSet<PropertyAttribute>;
+class PropertyAttributes : public mozilla::EnumSet<PropertyAttribute> {
+  // Re-use all EnumSet constructors.
+  using mozilla::EnumSet<PropertyAttribute>::EnumSet;
+
+ public:
+  bool configurable() const {
+    return contains(PropertyAttribute::Configurable);
+  }
+  bool enumerable() const { return contains(PropertyAttribute::Enumerable); }
+  bool writable() const { return contains(PropertyAttribute::Writable); }
+};
 
 /**
  * A structure that represents a property on an object, or the absence of a
@@ -152,9 +162,9 @@ struct JS_PUBLIC_API PropertyDescriptor {
   static PropertyDescriptor Data(const Value& value,
                                  PropertyAttributes attributes = {}) {
     PropertyDescriptor desc;
-    desc.setConfigurable(attributes.contains(PropertyAttribute::Configurable));
-    desc.setEnumerable(attributes.contains(PropertyAttribute::Enumerable));
-    desc.setWritable(attributes.contains(PropertyAttribute::Writable));
+    desc.setConfigurable(attributes.configurable());
+    desc.setEnumerable(attributes.enumerable());
+    desc.setWritable(attributes.writable());
     desc.value_ = value;
     desc.assertComplete();
     return desc;
@@ -176,11 +186,11 @@ struct JS_PUBLIC_API PropertyDescriptor {
   // Note: This means JSPROP_GETTER and JSPROP_SETTER are always set.
   static PropertyDescriptor Accessor(JSObject* getter, JSObject* setter,
                                      PropertyAttributes attributes = {}) {
-    MOZ_ASSERT(!attributes.contains(PropertyAttribute::Writable));
+    MOZ_ASSERT(!attributes.writable());
 
     PropertyDescriptor desc;
-    desc.setConfigurable(attributes.contains(PropertyAttribute::Configurable));
-    desc.setEnumerable(attributes.contains(PropertyAttribute::Enumerable));
+    desc.setConfigurable(attributes.configurable());
+    desc.setEnumerable(attributes.enumerable());
     desc.setGetterObject(getter);
     desc.setSetterObject(setter);
     desc.assertComplete();
@@ -247,11 +257,9 @@ struct JS_PUBLIC_API PropertyDescriptor {
   bool hasValue() const {
     return !isAccessorDescriptor() && !has(JSPROP_IGNORE_VALUE);
   }
-  JS::Handle<JS::Value> value() const {
-    return JS::Handle<JS::Value>::fromMarkedLocation(&value_);
-  }
-  JS::MutableHandle<JS::Value> value() {
-    return JS::MutableHandle<JS::Value>::fromMarkedLocation(&value_);
+  Value value() const {
+    // TODO: Assert hasValue()
+    return value_;
   }
   void setValue(JS::Handle<JS::Value> v) {
     MOZ_ASSERT(!isAccessorDescriptor());
@@ -299,6 +307,8 @@ struct JS_PUBLIC_API PropertyDescriptor {
   unsigned attributes() const { return attrs_; }
   void setAttributesDoNotUse(unsigned attrs) { attrs_ = attrs; }
 
+  Value* valueDoNotUse() { return &value_; }
+  Value const* valueDoNotUse() const { return &value_; }
   JSObject** getterDoNotUse() { return &getter_; }
   JSObject* const* getterDoNotUse() const { return &getter_; }
   void setGetterDoNotUse(JSObject* obj) { getter_ = obj; }
@@ -368,7 +378,9 @@ class WrappedPtrOperations<JS::PropertyDescriptor, Wrapper> {
   bool enumerable() const { return desc().enumerable(); }
 
   bool hasValue() const { return desc().hasValue(); }
-  JS::HandleValue value() const { return desc().value(); }
+  JS::Handle<JS::Value> value() const {
+    return JS::Handle<JS::Value>::fromMarkedLocation(desc().valueDoNotUse());
+  }
 
   bool hasWritable() const { return desc().hasWritable(); }
   bool writable() const { return desc().writable(); }
@@ -432,7 +444,10 @@ class MutableWrappedPtrOperations<JS::PropertyDescriptor, Wrapper>
     value().set(v);
   }
 
-  JS::MutableHandle<JS::Value> value() { return desc().value(); }
+  JS::MutableHandle<JS::Value> value() {
+    return JS::MutableHandle<JS::Value>::fromMarkedLocation(
+        desc().valueDoNotUse());
+  }
   void setValue(JS::Handle<JS::Value> v) { desc().setValue(v); }
 
   void setConfigurable(bool configurable) {

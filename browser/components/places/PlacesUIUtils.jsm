@@ -52,6 +52,10 @@ const PREF_LOAD_BOOKMARKS_IN_TABS = "browser.tabs.loadBookmarksInTabs";
 let InternalFaviconLoader = {
   /**
    * Actually cancel the request, and clear the timeout for cancelling it.
+   *
+   * @param {object} options
+   * @param {string} reason
+   *   The reason for cancelling the request.
    */
   _cancelRequest({ uri, innerWindowID, timerID, callback }, reason) {
     // Break cycle
@@ -74,6 +78,9 @@ let InternalFaviconLoader = {
 
   /**
    * Called for every inner that gets destroyed, only in the parent process.
+   *
+   * @param {number} innerID
+   *   The innerID of the window.
    */
   removeRequestsForInner(innerID) {
     for (let [window, loadDataForWindow] of gFaviconLoadDataMap) {
@@ -98,6 +105,9 @@ let InternalFaviconLoader = {
    * Called when a toplevel chrome window unloads. We use this to tidy up after ourselves,
    * avoid leaks, and cancel any remaining requests. The last part should in theory be
    * handled by the inner-window-destroyed handlers. We clean up just to be on the safe side.
+   *
+   * @param {DOMWindow} win
+   *   The window that was unloaded.
    */
   onUnload(win) {
     let loadDataForWindow = gFaviconLoadDataMap.get(win);
@@ -113,12 +123,13 @@ let InternalFaviconLoader = {
    * Remove a particular favicon load's loading data from our map tracking
    * load data per chrome window.
    *
-   * @param win
+   * @param {DOMWindow} win
    *        the chrome window in which we should look for this load
-   * @param filterData ({innerWindowID, uri, callback})
+   * @param {object} filterData ({innerWindowID, uri, callback})
    *        the data we should use to find this particular load to remove.
    *
-   * @return the loadData object we removed, or null if we didn't find any.
+   * @returns {object|null}
+   *   the loadData object we removed, or null if we didn't find any.
    */
   _removeLoadDataFromWindowMap(win, { innerWindowID, uri, callback }) {
     let loadDataForWindow = gFaviconLoadDataMap.get(win);
@@ -145,6 +156,10 @@ let InternalFaviconLoader = {
    * such as about: URIs with chrome:// favicons where the success callback is not invoked.
    * This is OK: we will 'cancel' the request after the timeout (or when the window goes
    * away) but that will be a no-op in such cases.
+   *
+   * @param {DOMWindow} win
+   * @param {number} id
+   * @returns {object}
    */
   _makeCompletionCallback(win, id) {
     return {
@@ -244,16 +259,16 @@ var PlacesUIUtils = {
    * Get a localized plural string for the specified key name and numeric value
    * substituting parameters.
    *
-   * @param   aKey
-   *          String, key for looking up the localized string in the bundle
-   * @param   aNumber
-   *          Number based on which the final localized form is looked up
-   * @param   aParams
-   *          Array whose items will substitute #1, #2,... #n parameters
-   *          in the string.
+   * @param {string} aKey
+   *        key for looking up the localized string in the bundle
+   * @param {number} aNumber
+   *        Number based on which the final localized form is looked up
+   * @param {array} aParams
+   *        Array whose items will substitute #1, #2,... #n parameters
+   *        in the string.
    *
    * @see https://developer.mozilla.org/en/Localization_and_Plurals
-   * @return The localized plural string.
+   * @returns {string} The localized plural string.
    */
   getPluralString: function PUIU_getPluralString(aKey, aNumber, aParams) {
     let str = PluralForm.get(aNumber, bundle.GetStringFromName(aKey));
@@ -279,7 +294,8 @@ var PlacesUIUtils = {
    *        Owner window for the new dialog.
    *
    * @see documentation at the top of bookmarkProperties.js
-   * @return The guid of the item that was created or edited, undefined otherwise.
+   * @returns {string} The guid of the item that was created or edited,
+   *                   undefined otherwise.
    */
   async showBookmarkDialog(aInfo, aParentWindow = null) {
     // Preserve size attributes differently based on the fact the dialog has
@@ -337,7 +353,7 @@ var PlacesUIUtils = {
    *   The list of URIs to bookmark.
    * @param {array.<string>} [hiddenRows]
    *   An array of rows to be hidden.
-   * @param {DOMWindow} [window]
+   * @param {DOMWindow} [win]
    *   The window to use as the parent to display the bookmark dialog.
    */
   async showBookmarkPagesDialog(URIList, hiddenRows = [], win = null) {
@@ -360,12 +376,18 @@ var PlacesUIUtils = {
 
   /**
    * set and fetch a favicon. Can only be used from the parent process.
-   * @param browser    {Browser}   The XUL browser element for which we're fetching a favicon.
-   * @param principal  {Principal} The loading principal to use for the fetch.
-   * @pram pageURI     {URI}       The page URI associated to this favicon load.
-   * @param uri        {URI}       The URI to fetch.
-   * @param expiration {Number}    An optional expiration time.
-   * @param iconURI    {URI}       An optional data: URI holding the icon's data.
+   * @param {object} browser
+   *        The XUL browser element for which we're fetching a favicon.
+   * @param {Principal} principal
+   *        The loading principal to use for the fetch.
+   * @param {URI} pageURI
+   *        The page URI associated to this favicon load.
+   * @param {URI} uri
+   *        The URI to fetch.
+   * @param {number} expiration
+   *        An optional expiration time.
+   * @param {URI} iconURI
+   *        An optional data: URI holding the icon's data.
    */
   loadFavicon(
     browser,
@@ -390,9 +412,9 @@ var PlacesUIUtils = {
 
   /**
    * Returns the closet ancestor places view for the given DOM node
-   * @param aNode
+   * @param {DOMNode} aNode
    *        a DOM node
-   * @return the closet ancestor places view if exists, null otherwsie.
+   * @returns {DOMNode} the closest ancestor places view if exists, null otherwsie.
    */
   getViewForNode: function PUIU_getViewForNode(aNode) {
     let node = aNode;
@@ -435,9 +457,9 @@ var PlacesUIUtils = {
   /**
    * Returns the active PlacesController for a given command.
    *
-   * @param win The window containing the affected view
-   * @param command The command
-   * @return a PlacesController
+   * @param {DOMWindow} win The window containing the affected view
+   * @param {string} command The command
+   * @returns {PlacesController} a places controller
    */
   getControllerForCommand(win, command) {
     // A context menu may be built for non-focusable views.  Thus, we first try
@@ -471,7 +493,7 @@ var PlacesUIUtils = {
   /**
    * Update all the Places commands for the given window.
    *
-   * @param win The window to update.
+   * @param {DOMWindow} win The window to update.
    */
   updateCommands(win) {
     // Get the controller for one of the places commands.
@@ -502,8 +524,8 @@ var PlacesUIUtils = {
   /**
    * Executes the given command on the currently active controller.
    *
-   * @param win The window containing the affected view
-   * @param command The command to execute
+   * @param {DOMWindow} win The window containing the affected view
+   * @param {string} command The command to execute
    */
   doCommand(win, command) {
     let controller = this.getControllerForCommand(win, command);
@@ -519,6 +541,9 @@ var PlacesUIUtils = {
    * url bar, url autocomplete results, and history searches from the places
    * organizer.  If this is not called visits will be marked as
    * TRANSITION_LINK.
+   *
+   * @param {string} aURL
+   *   The URL to mark as typed.
    */
   markPageAsTyped: function PUIU_markPageAsTyped(aURL) {
     PlacesUtils.history.markPageAsTyped(
@@ -532,6 +557,9 @@ var PlacesUIUtils = {
    * This is used when visiting pages from the bookmarks menu,
    * personal toolbar, and bookmarks from within the places organizer.
    * If this is not called visits will be marked as TRANSITION_LINK.
+   *
+   * @param {string} aURL
+   *   The URL to mark as TRANSITION_BOOKMARK.
    */
   markPageAsFollowedBookmark: function PUIU_markPageAsFollowedBookmark(aURL) {
     PlacesUtils.history.markPageAsFollowedBookmark(
@@ -544,6 +572,9 @@ var PlacesUIUtils = {
    * associated to a TRANSITION_FRAMED_LINK transition.
    * This is actually used to distinguish user-initiated visits in frames
    * so automatic visits can be correctly ignored.
+   *
+   * @param {string} aURL
+   *   The URL to mark as TRANSITION_FRAMED_LINK.
    */
   markPageAsFollowedLink: function PUIU_markPageAsFollowedLink(aURL) {
     PlacesUtils.history.markPageAsFollowedLink(
@@ -556,9 +587,9 @@ var PlacesUIUtils = {
    * if the window is determined to be a private browsing window.
    *
    * @param {string|URL|nsIURI} url The URL of the page to set the charset on.
-   * @param {String} charset character-set value.
-   * @param {window} window The window that the charset is being set from.
-   * @return {Promise}
+   * @param {string} charset character-set value.
+   * @param {DOMWindow} window The window that the charset is being set from.
+   * @returns {Promise}
    */
   async setCharsetForPage(url, charset, window) {
     if (PrivateBrowsingUtils.isWindowPrivate(window)) {
@@ -580,11 +611,11 @@ var PlacesUIUtils = {
   /**
    * Allows opening of javascript/data URI only if the given node is
    * bookmarked (see bug 224521).
-   * @param aURINode
+   * @param {object} aURINode
    *        a URI node
-   * @param aWindow
+   * @param {DOMWindow} aWindow
    *        a window on which a potential error alert is shown on.
-   * @return true if it's safe to open the node in the browser, false otherwise.
+   * @returns {boolean} true if it's safe to open the node in the browser, false otherwise.
    *
    */
   checkURLSecurity: function PUIU_checkURLSecurity(aURINode, aWindow) {
@@ -610,9 +641,9 @@ var PlacesUIUtils = {
    * Check whether or not the given node represents a removable entry (either in
    * history or in bookmarks).
    *
-   * @param aNode
+   * @param {object} aNode
    *        a node, except the root node of a query.
-   * @return true if the aNode represents a removable entry, false otherwise.
+   * @returns {boolean} true if the aNode represents a removable entry, false otherwise.
    */
   canUserRemove(aNode) {
     let parentNode = aNode.parent;
@@ -658,10 +689,10 @@ var PlacesUIUtils = {
    *
    * You should only pass folder nodes.
    *
-   * @param placesNode
+   * @param {object} placesNode
    *        any folder result node.
    * @throws if placesNode is not a folder result node or views is invalid.
-   * @return true if placesNode is a read-only folder, false otherwise.
+   * @returns {boolean} true if placesNode is a read-only folder, false otherwise.
    */
   isFolderReadOnly(placesNode) {
     if (
@@ -676,8 +707,14 @@ var PlacesUIUtils = {
     );
   },
 
-  /** aItemsToOpen needs to be an array of objects of the form:
-   * {uri: string, isBookmark: boolean}
+  /**
+   * @param {array<object>} aItemsToOpen
+   *   needs to be an array of objects of the form:
+   *   {uri: string, isBookmark: boolean}
+   * @param {object} aEvent
+   *   The associated event triggering the open.
+   * @param {DOMWindow} aWindow
+   *   The window associated with the event.
    */
   openTabset(aItemsToOpen, aEvent, aWindow) {
     if (!aItemsToOpen.length) {
@@ -777,9 +814,9 @@ var PlacesUIUtils = {
    * Loads the node's URL in the appropriate tab or window given the
    * user's preference specified by modifier keys tracked by a
    * DOM mouse/key event.
-   * @param   aNode
+   * @param {object} aNode
    *          An uri result node.
-   * @param   aEvent
+   * @param {object} aEvent
    *          The DOM mouse/key event with modifier keys set that track the
    *          user's preferred destination window or tab.
    */
@@ -804,6 +841,15 @@ var PlacesUIUtils = {
   /**
    * Loads the node's URL in the appropriate tab or window.
    * see also openUILinkIn
+   *
+   * @param {object} aNode
+   *        An uri result node.
+   * @param {string} aWhere
+   *        Where to open the URL.
+   * @param {object} aView
+   *        The associated view of the node being opened.
+   * @param {boolean} aPrivate
+   *        True if the window being opened is private.
    */
   openNodeIn: function PUIU_openNodeIn(aNode, aWhere, aView, aPrivate) {
     let window = aView.ownerWindow;
@@ -846,7 +892,7 @@ var PlacesUIUtils = {
    * Used to avoid nsIURI overhead in frequently called UI functions.
    *
    * @param {string} href The url to guess the scheme from.
-   * @return guessed scheme for this url string.
+   * @returns {string} guessed scheme for this url string.
    * @note this is not supposed be perfect, so use it only for UI purposes.
    */
   guessUrlSchemeForUI(href) {
@@ -896,9 +942,9 @@ var PlacesUIUtils = {
    *
    * Checks if a place: href represents a folder shortcut.
    *
-   * @param queryString
+   * @param {string} queryString
    *        the query string to check (a place: href)
-   * @return whether or not queryString represents a folder shortcut.
+   * @returns {boolean} whether or not queryString represents a folder shortcut.
    * @throws if queryString is malformed.
    */
   isFolderShortcutQueryString(queryString) {
@@ -928,9 +974,9 @@ var PlacesUIUtils = {
    * Bookmarks.fetch (see Bookmark.jsm), this creates a node-like object suitable for
    * initialising the edit overlay with it.
    *
-   * @param aFetchInfo
+   * @param {object} aFetchInfo
    *        a bookmark object returned by Bookmarks.fetch.
-   * @return a node-like object suitable for initialising editBookmarkOverlay.
+   * @returns {object} a node-like object suitable for initialising editBookmarkOverlay.
    * @throws if aFetchInfo is representing a separator.
    */
   async promiseNodeLikeFromFetchInfo(aFetchInfo) {
@@ -984,7 +1030,7 @@ var PlacesUIUtils = {
    * @param {nsINavHistoryResult} resultNode The result node to turn on batching.
    * @note If resultNode is not supplied, the function will pass-through to
    *       functionToWrap.
-   * @param {Integer} itemsBeingChanged The count of items being changed. If the
+   * @param {number} itemsBeingChanged The count of items being changed. If the
    *                                    count is lower than a threshold, then
    *                                    batching won't be set.
    * @param {Function} functionToWrap The function to
@@ -1012,12 +1058,12 @@ var PlacesUIUtils = {
    * Processes a set of transfer items that have been dropped or pasted.
    * Batching will be applied where necessary.
    *
-   * @param {Array} items A list of unwrapped nodes to process.
-   * @param {Object} insertionPoint The requested point for insertion.
-   * @param {Boolean} doCopy Set to true to copy the items, false will move them
+   * @param {array} items A list of unwrapped nodes to process.
+   * @param {object} insertionPoint The requested point for insertion.
+   * @param {boolean} doCopy Set to true to copy the items, false will move them
    *                         if possible.
-   * @paramt {Object} view The view that should be used for batching.
-   * @return {Array} Returns an empty array when the insertion point is a tag, else
+   * @param {object} view The view that should be used for batching.
+   * @returns {array} Returns an empty array when the insertion point is a tag, else
    *                 returns an array of copied or moved guids.
    */
   async handleTransferItems(items, insertionPoint, doCopy, view) {
@@ -1134,6 +1180,9 @@ var PlacesUIUtils = {
   /**
    * The following function displays the URL of a node that is being
    * hovered over.
+   *
+   * @param {object} event
+   *   The event that triggered the hover.
    */
   onSidebarTreeMouseMove(event) {
     let treechildren = event.target;
@@ -1675,9 +1724,9 @@ XPCOMUtils.defineLazyPreferenceGetter(
 /**
  * Determines if an unwrapped node can be moved.
  *
- * @param unwrappedNode
+ * @param {object} unwrappedNode
  *        A node unwrapped by PlacesUtils.unwrapNodes().
- * @return True if the node can be moved, false otherwise.
+ * @returns {boolean} True if the node can be moved, false otherwise.
  */
 function canMoveUnwrappedNode(unwrappedNode) {
   if (
@@ -1702,8 +1751,8 @@ function canMoveUnwrappedNode(unwrappedNode) {
  * For example, if it detects the left-hand library pane, then it will look for
  * and return the reference to the right-hand pane.
  *
- * @param {Object} viewOrElement The item to check.
- * @return {Object} Will return the best result node to batch, or null
+ * @param {object} viewOrElement The item to check.
+ * @returns {object} Will return the best result node to batch, or null
  *                  if one could not be found.
  */
 function getResultForBatching(viewOrElement) {
@@ -1730,12 +1779,12 @@ function getResultForBatching(viewOrElement) {
  * move them.
  *
  * @param {Array} items A list of unwrapped nodes to get transactions for.
- * @param {Integer} insertionIndex The requested index for insertion.
- * @param {String} insertionParentGuid The guid of the parent folder to insert
+ * @param {number} insertionIndex The requested index for insertion.
+ * @param {string} insertionParentGuid The guid of the parent folder to insert
  *                                     or move the items to.
- * @param {Boolean} doMove Set to true to MOVE the items if possible, false will
+ * @param {boolean} doMove Set to true to MOVE the items if possible, false will
  *                         copy them.
- * @return {Array} Returns an array of created PlacesTransactions.
+ * @returns {Array} Returns an array of created PlacesTransactions.
  */
 function getTransactionsForTransferItems(
   items,
@@ -1797,10 +1846,10 @@ function getTransactionsForTransferItems(
  * Processes a set of transfer items and returns an array of transactions.
  *
  * @param {Array} items A list of unwrapped nodes to get transactions for.
- * @param {Integer} insertionIndex The requested index for insertion.
- * @param {String} insertionParentGuid The guid of the parent folder to insert
+ * @param {number} insertionIndex The requested index for insertion.
+ * @param {string} insertionParentGuid The guid of the parent folder to insert
  *                                     or move the items to.
- * @return {Array} Returns an array of created PlacesTransactions.
+ * @returns {Array} Returns an array of created PlacesTransactions.
  */
 function getTransactionsForCopy(items, insertionIndex, insertionParentGuid) {
   let transactions = [];

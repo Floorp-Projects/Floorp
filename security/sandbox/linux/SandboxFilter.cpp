@@ -92,6 +92,19 @@ static_assert(F_GET_SEALS == (F_LINUX_SPECIFIC_BASE + 10));
 #  define DESKTOP
 #endif
 
+namespace {
+  static const unsigned long kIoctlTypeMask = _IOC_TYPEMASK << _IOC_TYPESHIFT;
+  static const unsigned long kTtyIoctls = TIOCSTI & kIoctlTypeMask;
+  // On some older architectures (but not x86 or ARM), ioctls are
+  // assigned type fields differently, and the TIOC/TC/FIO group
+  // isn't all the same type.  If/when we support those archs,
+  // this would need to be revised (but really this should be a
+  // default-deny policy; see below).
+  static_assert(kTtyIoctls == (TCSETA & kIoctlTypeMask) &&
+      kTtyIoctls == (FIOASYNC & kIoctlTypeMask),
+      "tty-related ioctls use the same type");
+};
+
 // This file defines the seccomp-bpf system call filter policies.
 // See also SandboxFilterUtil.h, for the CASES_FOR_* macros and
 // SandboxFilterBase::Evaluate{Socket,Ipc}Call.
@@ -1298,19 +1311,8 @@ class ContentSandboxPolicy : public SandboxPolicyCommon {
           return Allow();
         }
 #endif
-        static const unsigned long kTypeMask = _IOC_TYPEMASK << _IOC_TYPESHIFT;
-        static const unsigned long kTtyIoctls = TIOCSTI & kTypeMask;
-        // On some older architectures (but not x86 or ARM), ioctls are
-        // assigned type fields differently, and the TIOC/TC/FIO group
-        // isn't all the same type.  If/when we support those archs,
-        // this would need to be revised (but really this should be a
-        // default-deny policy; see below).
-        static_assert(kTtyIoctls == (TCSETA & kTypeMask) &&
-                          kTtyIoctls == (FIOASYNC & kTypeMask),
-                      "tty-related ioctls use the same type");
-
         Arg<unsigned long> request(1);
-        auto shifted_type = request & kTypeMask;
+        auto shifted_type = request & kIoctlTypeMask;
 
         // Rust's stdlib seems to use FIOCLEX instead of equivalent fcntls.
         return If(request == FIOCLEX, Allow())
@@ -1707,7 +1709,13 @@ class RDDSandboxPolicy final : public SandboxPolicyCommon {
     switch (sysno) {
       case __NR_getrusage:
         return Allow();
-
+      case __NR_ioctl: {
+        Arg<unsigned long> request(1);
+        // ffmpeg, and anything else that calls isatty(), will be told
+        // that nothing is a typewriter:
+        return If(request == TCGETS, Error(ENOTTY))
+            .Else(InvalidSyscall());
+       }
       // Pass through the common policy.
       default:
         return SandboxPolicyCommon::EvaluateSyscall(sysno);
@@ -1793,19 +1801,8 @@ class SocketProcessSandboxPolicy final : public SandboxPolicyCommon {
         return Allow();
 
       case __NR_ioctl: {
-        static const unsigned long kTypeMask = _IOC_TYPEMASK << _IOC_TYPESHIFT;
-        static const unsigned long kTtyIoctls = TIOCSTI & kTypeMask;
-        // On some older architectures (but not x86 or ARM), ioctls are
-        // assigned type fields differently, and the TIOC/TC/FIO group
-        // isn't all the same type.  If/when we support those archs,
-        // this would need to be revised (but really this should be a
-        // default-deny policy; see below).
-        static_assert(kTtyIoctls == (TCSETA & kTypeMask) &&
-                          kTtyIoctls == (FIOASYNC & kTypeMask),
-                      "tty-related ioctls use the same type");
-
         Arg<unsigned long> request(1);
-        auto shifted_type = request & kTypeMask;
+        auto shifted_type = request & kIoctlTypeMask;
 
         // Rust's stdlib seems to use FIOCLEX instead of equivalent fcntls.
         return If(request == FIOCLEX, Allow())

@@ -161,10 +161,12 @@ void gfxFontInfoLoader::StartLoader(uint32_t aDelay) {
     NS_ASSERTION(!gXPCOMThreadsShutDown,
                  "Bug 1508626 - Setting delay timer for font loader after "
                  "shutdown but before observer");
-    // Set up delay timer. We don't expect to be called with a delay once
-    // the timer already exists, but if that happens we'll just ignore the
-    // extra call and leave the existing timer to do its thing.
-    MOZ_ASSERT(!mTimer, "duplicate use of StartLoader() with delay?");
+    // Set up delay timer, or if there is already a timer in place, just
+    // leave it to do its thing. (This can happen if a StartLoader runnable
+    // was posted to the main thread from the InitFontList thread, but then
+    // before it had a chance to run and call StartLoader, the main thread
+    // re-initialized the list due to a platform notification and called
+    // StartLoader directly.)
     if (mTimer) {
       return;
     }

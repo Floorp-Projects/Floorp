@@ -14,6 +14,9 @@
     "resource://gre/modules/AppConstants.jsm"
   );
 
+  /**
+   * This class handles the custom element for the places popup menu.
+   */
   class MozPlacesPopup extends MozElements.MozMenuPopup {
     constructor() {
       super();
@@ -225,6 +228,10 @@
 
     /**
      * Check if we should hide the drop indicator for the target
+     *
+     * @param {object} aEvent
+     *   The event associated with the drop.
+     * @returns {boolean}
      */
     _hideDropIndicator(aEvent) {
       let target = aEvent.target;
@@ -244,6 +251,11 @@
     /**
      * This function returns information about where to drop when
      * dragging over this popup insertion point
+     *
+     * @param {object} aEvent
+     *   The event associated with the drop.
+     * @returns {object|null}
+     *   The associated drop point information.
      */
     _getDropPoint(aEvent) {
       // Can't drop if the menu isn't a folder
@@ -567,6 +579,9 @@
     extends: "menupopup",
   });
 
+  /**
+   * Custom element for the places popup arrow.
+   */
   class MozPlacesPopupArrow extends MozPlacesPopup {
     constructor() {
       super();

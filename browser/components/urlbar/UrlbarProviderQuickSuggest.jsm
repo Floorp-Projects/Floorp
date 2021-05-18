@@ -190,12 +190,20 @@ class ProviderQuickSuggest extends UrlbarProvider {
       return;
     }
 
-    // Get the index of the quick suggest result.
+    // Get the index of the quick suggest result. Usually it will be last, so to
+    // avoid an O(n) lookup in the common case, check the last result first. It
+    // may not be last if `browser.urlbar.showSearchSuggestionsFirst` is false.
     let resultIndex = queryContext.results.length - 1;
-    let lastResult = queryContext.results[resultIndex];
-    if (!lastResult?.payload.isSponsored) {
-      Cu.reportError(`Last result is not a quick suggest`);
-      return;
+    let result = queryContext.results[resultIndex];
+    if (result.providerName != this.name) {
+      resultIndex = queryContext.results.findIndex(
+        r => r.providerName == this.name
+      );
+      if (resultIndex < 0) {
+        Cu.reportError(`Could not find quick suggest result`);
+        return;
+      }
+      result = queryContext.results[resultIndex];
     }
 
     // Record telemetry.  We want to record the 1-based index of the result, so
@@ -229,7 +237,7 @@ class ProviderQuickSuggest extends UrlbarProvider {
         sponsoredImpressionUrl,
         sponsoredClickUrl,
         sponsoredBlockId,
-      } = lastResult.payload;
+      } = result.payload;
       // impression
       PartnerLinkAttribution.sendContextualServicesPing(
         {
