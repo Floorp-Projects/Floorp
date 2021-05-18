@@ -120,12 +120,12 @@ rev = "6b77786a6e758e91da9484a1c80b6fa5f88e1b3d"
 [source."https://github.com/PLSysSec/rlbox_lucet_sandbox/"]
 git = "https://github.com/PLSysSec/rlbox_lucet_sandbox/"
 replace-with = "vendored-sources"
-rev = "f3cace4fb8b53db0849c62af4fa62bade5a620f7"
+rev = "681af065e4f1f0f4d053604e47c04a7351c21d78"
 
 [source."https://github.com/PLSysSec/lucet_sandbox_compiler"]
 git = "https://github.com/PLSysSec/lucet_sandbox_compiler"
 replace-with = "vendored-sources"
-rev = "cd07861d1c92147b35b538e6f94fde7d1986f9ad"
+rev = "78bf9e2e59536489260d12f1871931e36b2c2e15"
 
 [source.crates-io]
 replace-with = "vendored-sources"
