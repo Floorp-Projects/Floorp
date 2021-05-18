@@ -177,11 +177,11 @@ toolbarpaletteitem[place="palette"] > #bookmarks-menu-button,
  * assets for zoom/fullscreen/sync.
  */
 #appMenu-zoomEnlarge-button2 {
-  list-style-image: url(chrome://browser/skin/zoom-in.svg);
+  list-style-image: url(chrome://browser/skin/add-circle-fill.svg);
 }
 
 #appMenu-zoomReduce-button2 {
-  list-style-image: url(chrome://browser/skin/zoom-out.svg);
+  list-style-image: url(chrome://browser/skin/subtract-circle-fill.svg);
 }
 
 #appMenu-fullscreen-button2 {
