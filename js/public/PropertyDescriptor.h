@@ -172,8 +172,8 @@ struct JS_PUBLIC_API PropertyDescriptor {
 
   // This constructor is only provided for legacy code!
   static PropertyDescriptor Data(const Value& value, unsigned attrs) {
-    MOZ_ASSERT((attrs &
-                ~(JSPROP_PERMANENT | JSPROP_ENUMERATE | JSPROP_READONLY)) == 0);
+    MOZ_ASSERT((attrs & ~(JSPROP_PERMANENT | JSPROP_ENUMERATE |
+                          JSPROP_READONLY | JSPROP_RESOLVING)) == 0);
 
     PropertyDescriptor desc;
     desc.attrs_ = attrs;
@@ -200,7 +200,8 @@ struct JS_PUBLIC_API PropertyDescriptor {
   // This constructor is only provided for legacy code!
   static PropertyDescriptor Accessor(JSObject* getter, JSObject* setter,
                                      unsigned attrs) {
-    MOZ_ASSERT((attrs & ~(JSPROP_PERMANENT | JSPROP_ENUMERATE)) == 0);
+    MOZ_ASSERT((attrs & ~(JSPROP_PERMANENT | JSPROP_ENUMERATE |
+                          JSPROP_RESOLVING)) == 0);
 
     PropertyDescriptor desc;
     desc.attrs_ = attrs;
@@ -423,7 +424,7 @@ class MutableWrappedPtrOperations<JS::PropertyDescriptor, Wrapper>
 
  public:
   void clear() {
-    setAttributes(0);
+    desc().setAttributesDoNotUse(0);
     desc().setGetterDoNotUse(nullptr);
     desc().setSetterDoNotUse(nullptr);
     value().setUndefined();
@@ -432,13 +433,13 @@ class MutableWrappedPtrOperations<JS::PropertyDescriptor, Wrapper>
   void initFields(JS::Handle<JS::Value> v, unsigned attrs, JSObject* getter,
                   JSObject* setter) {
     value().set(v);
-    setAttributes(attrs);
+    desc().setAttributesDoNotUse(attrs);
     desc().setGetterDoNotUse(getter);
     desc().setSetterDoNotUse(setter);
   }
 
   void assign(JS::PropertyDescriptor& other) {
-    setAttributes(other.attributes());
+    desc().setAttributesDoNotUse(other.attributes());
     desc().setGetterDoNotUse(*other.getterDoNotUse());
     desc().setSetterDoNotUse(*other.setterDoNotUse());
     value().set(other.value());
@@ -449,7 +450,7 @@ class MutableWrappedPtrOperations<JS::PropertyDescriptor, Wrapper>
                           JSPROP_READONLY | JSPROP_IGNORE_ENUMERATE |
                           JSPROP_IGNORE_PERMANENT | JSPROP_IGNORE_READONLY)) ==
                0);
-    setAttributes(attrs);
+    desc().setAttributesDoNotUse(attrs);
     desc().setGetterDoNotUse(nullptr);
     desc().setSetterDoNotUse(nullptr);
     value().set(v);
@@ -466,7 +467,6 @@ class MutableWrappedPtrOperations<JS::PropertyDescriptor, Wrapper>
   }
   void setEnumerable(bool enumerable) { desc().setEnumerable(enumerable); }
   void setWritable(bool writable) { desc().setWritable(writable); }
-  void setAttributes(unsigned attrs) { desc().setAttributesDoNotUse(attrs); }
 
   void setGetterObject(JSObject* obj) { desc().setGetterObject(obj); }
   void setSetterObject(JSObject* obj) { desc().setSetterObject(obj); }

@@ -10778,9 +10778,10 @@ class CGResolveHook(CGAbstractClassHook):
             // If desc.value() is undefined, then the DoResolve call
             // has already defined it on the object.  Don't try to also
             // define it.
+            MOZ_ASSERT(desc->isDataDescriptor());
             if (!desc->value().isUndefined()) {
-              JS::Rooted<JS::PropertyDescriptor> defineDesc(cx, *desc);
-              defineDesc.setAttributes(defineDesc.attributes() | JSPROP_RESOLVING);
+              JS::Rooted<JS::PropertyDescriptor> defineDesc(cx,
+                JS::PropertyDescriptor::Data(desc->value(), desc->attributes() | JSPROP_RESOLVING));
               if (!JS_DefinePropertyById(cx, obj, id, defineDesc)) {
                 return false;
               }
