@@ -452,8 +452,8 @@ nsresult HTMLEditor::SetInlinePropertyOnTextNode(
             aText, &aProperty, aAttribute, value)) {
       return NS_OK;
     }
-  } else if (IsTextPropertySetByContent(&aText, &aProperty, aAttribute,
-                                        &aValue)) {
+  } else if (HTMLEditUtils::IsInlineStyleSetByElement(aText, aProperty,
+                                                      aAttribute, &aValue)) {
     return NS_OK;
   }
 
@@ -654,8 +654,8 @@ nsresult HTMLEditor::SetInlinePropertyOnNodeImpl(nsIContent& aContent,
             aContent, &aProperty, aAttribute, value)) {
       return NS_OK;
     }
-  } else if (IsTextPropertySetByContent(&aContent, &aProperty, aAttribute,
-                                        &aValue)) {
+  } else if (HTMLEditUtils::IsInlineStyleSetByElement(aContent, aProperty,
+                                                      aAttribute, &aValue)) {
     return NS_OK;
   }
 
@@ -1524,9 +1524,10 @@ nsresult HTMLEditor::GetInlinePropertyBase(nsAtom& aHTMLProperty,
         return NS_OK;
       }
 
-      isSet = IsTextPropertySetByContent(collapsedNode, &aHTMLProperty,
-                                         aAttribute, aValue, outValue);
-      *aFirst = *aAny = *aAll = isSet;
+      *aFirst = *aAny = *aAll = collapsedNode->IsContent() &&
+                                HTMLEditUtils::IsInlineStyleSetByElement(
+                                    *collapsedNode->AsContent(), aHTMLProperty,
+                                    aAttribute, aValue, outValue);
       return NS_OK;
     }
 
@@ -1590,8 +1591,8 @@ nsresult HTMLEditor::GetInlinePropertyBase(nsAtom& aHTMLProperty,
             return NS_ERROR_EDITOR_DESTROYED;
           }
         } else {
-          isSet = IsTextPropertySetByContent(content, &aHTMLProperty,
-                                             aAttribute, aValue, &firstValue);
+          isSet = HTMLEditUtils::IsInlineStyleSetByElement(
+              *content, aHTMLProperty, aAttribute, aValue, &firstValue);
         }
         *aFirst = isSet;
         first = false;
@@ -1613,8 +1614,8 @@ nsresult HTMLEditor::GetInlinePropertyBase(nsAtom& aHTMLProperty,
             return NS_ERROR_EDITOR_DESTROYED;
           }
         } else {
-          isSet = IsTextPropertySetByContent(content, &aHTMLProperty,
-                                             aAttribute, aValue, &theValue);
+          isSet = HTMLEditUtils::IsInlineStyleSetByElement(
+              *content, aHTMLProperty, aAttribute, aValue, &theValue);
         }
 
         if (firstValue != theValue &&
