@@ -1506,6 +1506,56 @@ class HTMLEditUtils final {
       const EditorDOMPointTypeInput& aPointToInsert,
       const Element& aEditingHost);
 
+  /**
+   * Content-based query returns true if <aProperty aAttribute=aValue> effects
+   * aNode.  If <aProperty aAttribute=aValue> contains aNode, but
+   * <aProperty aAttribute=SomeOtherValue> also contains aNode and the second is
+   * more deeply nested than the first, then the first does not effect aNode.
+   *
+   * @param aNode       The target of the query
+   * @param aProperty   The property that we are querying for
+   * @param aAttribute  The attribute of aProperty, example: color in
+   *                    <FONT color="blue"> May be null.
+   * @param aValue      The value of aAttribute, example: blue in
+   *                    <FONT color="blue"> May be null.  Ignored if aAttribute
+   *                    is null.
+   * @param aOutValue   [OUT] the value of the attribute, if aIsSet is true
+   * @return            true if <aProperty aAttribute=aValue> effects
+   *                    aNode.
+   *
+   * The nsIContent variant returns aIsSet instead of using an out parameter.
+   */
+  static bool IsInlineStyleSetByElement(const nsIContent& aContent,
+                                        const nsAtom& aProperty,
+                                        const nsAtom* aAttribute,
+                                        const nsAString* aValue,
+                                        nsAString* aOutValue = nullptr) {
+    for (Element* element : aContent.InclusiveAncestorsOfType<Element>()) {
+      if (&aProperty != element->NodeInfo()->NameAtom()) {
+        continue;
+      }
+      if (!aAttribute) {
+        return true;
+      }
+      nsAutoString value;
+      element->GetAttr(kNameSpaceID_None, aAttribute, value);
+      if (aOutValue) {
+        *aOutValue = value;
+      }
+      if (!value.IsEmpty()) {
+        if (!aValue) {
+          return true;
+        }
+        if (aValue->Equals(value, nsCaseInsensitiveStringComparator)) {
+          return true;
+        }
+        // We found the prop with the attribute, but the value doesn't match.
+        return false;
+      }
+    }
+    return false;
+  }
+
  private:
   static bool CanNodeContain(nsHTMLTag aParentTagId, nsHTMLTag aChildTagId);
   static bool IsContainerNode(nsHTMLTag aTagId);

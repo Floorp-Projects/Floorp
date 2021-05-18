@@ -832,30 +832,6 @@ class HTMLEditor final : public TextEditor,
             !aElement->GetAttrNameAt(0)->Equals(nsGkAtoms::mozdirty));
   }
 
-  /**
-   * Content-based query returns true if <aProperty aAttribute=aValue> effects
-   * aNode.  If <aProperty aAttribute=aValue> contains aNode, but
-   * <aProperty aAttribute=SomeOtherValue> also contains aNode and the second is
-   * more deeply nested than the first, then the first does not effect aNode.
-   *
-   * @param aNode      The target of the query
-   * @param aProperty  The property that we are querying for
-   * @param aAttribute The attribute of aProperty, example: color in
-   *                   <FONT color="blue"> May be null.
-   * @param aValue     The value of aAttribute, example: blue in
-   *                   <FONT color="blue"> May be null.  Ignored if aAttribute
-   *                   is null.
-   * @param outValue   [OUT] the value of the attribute, if aIsSet is true
-   * @return           true if <aProperty aAttribute=aValue> effects
-   *                   aNode.
-   *
-   * The nsIContent variant returns aIsSet instead of using an out parameter.
-   */
-  static bool IsTextPropertySetByContent(nsINode* aNode, nsAtom* aProperty,
-                                         nsAtom* aAttribute,
-                                         const nsAString* aValue,
-                                         nsAString* outValue = nullptr);
-
   static dom::Element* GetLinkElement(nsINode* aNode);
 
   /**
