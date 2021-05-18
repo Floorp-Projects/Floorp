@@ -136,6 +136,7 @@
   skin/classic/browser/fxa/monitor.svg                         (../shared/fxa/monitor.svg)
   skin/classic/browser/fxa/add-device.svg                      (../shared/fxa/add-device.svg)
 
+  skin/classic/browser/add-circle-fill.svg            (../shared/icons/add-circle-fill.svg)
   skin/classic/browser/back.svg                       (../shared/icons/back.svg)
   skin/classic/browser/back-12.svg                    (../shared/icons/back-12.svg)
   skin/classic/browser/bookmark.svg                   (../shared/icons/bookmark.svg)
@@ -197,6 +198,7 @@
   skin/classic/browser/sort.svg                       (../shared/icons/sort.svg)
 #endif
   skin/classic/browser/stop-to-reload.svg             (../shared/icons/stop-to-reload.svg)
+  skin/classic/browser/subtract-circle-fill.svg       (../shared/icons/subtract-circle-fill.svg)
   skin/classic/browser/success-animation.svg          (../shared/icons/success-animation.svg)
   skin/classic/browser/sync.svg                       (../shared/icons/sync.svg)
   skin/classic/browser/tab.svg                        (../shared/icons/tab.svg)
