@@ -2,6 +2,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/* Some reason SubDialog browser sizing can result in scrollbars, so just hide
+ * the horizontal scrollbar that would have then required vertical scrollbar.
+ * This should be okay as we wrap content for this fixed width dialog unless the
+ * window is actually narrow and really does need horizontal scrollbars. */
+@media (min-width: 604px) {
+body {
+  overflow-x: hidden;
+}
+}
+
 body {
   --logo-pos: 45px;
   --margin: 3px;
@@ -48,6 +58,19 @@ spacer {
 body.compact #subtitle {
   font-size: 14px;
   line-height: 20px;
+}
+
+.image {
+  background: center / contain no-repeat;
+  height: calc(110px + 30 * var(--margin));
+  margin: auto;
+  width: calc(280px + 40 * var(--margin));
+}
+
+/* Force margins on the first screen as it determines the height of subsequent
+ * screens. This avoids scrollbars on the second screen if text is longer. */
+.image[screen="0"] {
+  margin-block: 30px;
 }
 
 .items {
@@ -208,11 +231,13 @@ body.compact .items p {
 
 .steps {
   color: var(--checkbox-border-color);
+  display: flex;
+  gap: 4px;
   line-height: 14px;
   margin: calc(3 * var(--margin)) auto;
   user-select: none;
 }
 
-.steps > span {
+.steps > .current {
   color: var(--checkbox-checked-bgcolor);
 }

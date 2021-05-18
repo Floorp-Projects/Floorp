@@ -20,21 +20,39 @@ const IS_DEFAULT = SHELL.isDefaultBrowser();
 const NEED_PIN = SHELL.doesAppNeedPin();
 
 // Strings for various elements with matching ids on each screen.
-const PIN_OR_THEME_STRING = NEED_PIN.then(pin =>
-  pin
-    ? "upgrade-dialog-new-primary-pin-button"
-    : "upgrade-dialog-new-primary-theme-button"
-);
-const PRIMARY_OR_DEFAULT_STRING = NEED_PIN.then(pin =>
-  pin
-    ? "upgrade-dialog-new-primary-primary-button"
-    : "upgrade-dialog-new-primary-default-button"
-);
+const PIN_OR_ALT_STRING = document.l10n.ready.then(async () => {
+  const ids = [
+    "upgrade-dialog-new-primary-pin-alt-button",
+    "upgrade-dialog-new-primary-pin-button",
+  ];
+  const [preferred, fallback] = await document.l10n.formatValues(ids);
+  // Use the former preferred string id (for "Pin to taskbar") if it's
+  // translated OR if the fallback id (for "Pin Firefox to my taskbar") isn't.
+  // This handles en-* case where neither appear translated and non-en-* too.
+  return preferred !== "Pin to taskbar" ||
+    fallback.match(/^Pin .+ to my taskbar$/)
+    ? ids[0]
+    : ids[1];
+});
+const THEME_OR_DEFAULT_STRING = IS_DEFAULT
+  ? "upgrade-dialog-new-primary-theme-button"
+  : "upgrade-dialog-new-primary-default-button";
 const SCREEN_STRINGS = [
   {
     title: "upgrade-dialog-new-title",
-    primary: IS_DEFAULT ? PIN_OR_THEME_STRING : PRIMARY_OR_DEFAULT_STRING,
+    subtitle: NEED_PIN.then(pin =>
+      pin ? "upgrade-dialog-new-alt-subtitle" : "upgrade-dialog-new-subtitle"
+    ),
+    primary: NEED_PIN.then(pin =>
+      pin ? PIN_OR_ALT_STRING : THEME_OR_DEFAULT_STRING
+    ),
     secondary: "upgrade-dialog-new-secondary-button",
+  },
+  {
+    title: "upgrade-dialog-default-title",
+    subtitle: "upgrade-dialog-default-subtitle",
+    primary: "upgrade-dialog-default-primary-button",
+    secondary: "upgrade-dialog-default-secondary-button",
   },
   {
     title: "upgrade-dialog-theme-title",
@@ -117,6 +135,7 @@ function onLoad(ready) {
   const { body } = document;
   const title = document.getElementById("title");
   const subtitle = document.getElementById("subtitle");
+  const image = document.querySelector(".image");
   const items = document.querySelector(".items");
   const themes = document.querySelector(".themes");
   const primary = document.getElementById("primary");
@@ -133,6 +152,7 @@ function onLoad(ready) {
 
     // Move to the next screen and perform screen-specific behavior.
     switch (++current) {
+      // Handle initial / first screen setup.
       case 0:
         // Wait for main button clicks on each screen.
         primary.addEventListener("click", advance);
@@ -154,16 +174,50 @@ function onLoad(ready) {
             secondary.style.display = "none";
           }
         }
+
+        // Show images instead of items for "pin" content.
+        let removeDefaultScreen = true;
+        if (await NEED_PIN) {
+          items.remove();
+          removeDefaultScreen = IS_DEFAULT;
+        } else {
+          image.remove();
+        }
+
+        // Keep the second screen only if we need to both pin and set default.
+        if (removeDefaultScreen) {
+          SCREEN_STRINGS.splice(1, 1);
+        }
+
+        // NB: We keep the screen count for win7 at 2, so actions are handled in
+        // "default" case. Send telemetry to be able to identify what users see.
+        recordEvent("show", `${SCREEN_STRINGS.length}-screens`);
+
+        // Copy the initial step indicator enough times for each screen.
+        for (let i = SCREEN_STRINGS.length; i > 1; i--) {
+          steps.append(steps.lastChild.cloneNode(true));
+        }
+        steps.lastChild.classList.add("current");
         break;
 
-      case 1:
-        // Handle first screen conditional actions.
+      // Handle actions and setup for not-first and not-last screens.
+      default:
+        const { l10nId } = primary.dataset;
         if (target === primary) {
-          if (!IS_DEFAULT) {
-            SHELL.setAsDefault();
+          switch (l10nId) {
+            case "upgrade-dialog-new-primary-default-button":
+            case "upgrade-dialog-default-primary-button":
+              SHELL.setAsDefault();
+              break;
+            case "upgrade-dialog-new-primary-pin-button":
+            case "upgrade-dialog-new-primary-pin-alt-button":
+              SHELL.pinToTaskbar();
+              break;
           }
-          SHELL.pinToTaskbar();
-        } else if (target === secondary && IS_DEFAULT && !(await NEED_PIN)) {
+        } else if (
+          target === secondary &&
+          l10nId === "upgrade-dialog-new-primary-theme-button"
+        ) {
           closeDialog("early");
           return;
         }
@@ -172,6 +226,11 @@ function onLoad(ready) {
         if (win7Content) {
           closeDialog("win7");
           return;
+        }
+
+        // Prepare theme screen content only when we're moving to the last one.
+        if (current !== SCREEN_STRINGS.length - 1) {
+          break;
         }
 
         // Prepare the initial theme selection and wait for theme button clicks.
@@ -207,13 +266,14 @@ function onLoad(ready) {
 
         // Update content and backdrop for theme screen.
         subtitle.remove();
+        image.remove();
         items.remove();
         themes.classList.remove("hidden");
-        steps.appendChild(steps.firstChild);
         adjustModalBackdrop();
         break;
 
-      case 2:
+      // Handle the last (theme) screen actions.
+      case SCREEN_STRINGS.length:
         // New theme is confirmed, so don't revert to previous.
         if (target === primary) {
           gPrevTheme = null;
@@ -223,14 +283,24 @@ function onLoad(ready) {
         return;
     }
 
+    // Update various elements reused across screens.
+    image.setAttribute("screen", current);
+    steps.prepend(steps.lastChild);
+
     // Update strings for reused elements that change between screens.
+    await document.l10n.ready;
+    const translatedElements = [];
     const strings = SCREEN_STRINGS[current];
-    document.l10n.setAttributes(title, strings.title);
-    document.l10n.setAttributes(primary, await strings.primary);
-    document.l10n.setAttributes(secondary, strings.secondary);
+    for (let el of [title, subtitle, primary, secondary]) {
+      const stringId = await strings[el.id];
+      if (stringId) {
+        document.l10n.setAttributes(el, stringId);
+        translatedElements.push(el);
+      }
+    }
 
     // Wait for initial translations to load before getting sizing information.
-    await document.l10n.ready;
+    await document.l10n.translateElements(translatedElements);
     requestAnimationFrame(() => {
       // Ensure the primary button is focused on each screen.
       primary.focus();
@@ -238,9 +308,6 @@ function onLoad(ready) {
       // Save first screen height, so later screens can flex and anchor content.
       if (current === 0) {
         body.style.minHeight = getComputedStyle(body).height;
-
-        // Record which of four primary button was shown for the first screen.
-        recordEvent("show", primary.dataset.l10nId);
 
         // Indicate to SubDialog that we're done sizing the first screen.
         ready();
@@ -250,8 +317,8 @@ function onLoad(ready) {
       dispatchEvent(new CustomEvent("ready"));
     });
 
-    // Record that the screen was shown.
-    recordEvent("show", current);
+    // Record which screen was shown identified by the primary button.
+    recordEvent("show", primary.dataset.l10nId);
   })();
 }
 document.mozSubdialogReady = new Promise(resolve =>
