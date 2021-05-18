@@ -270,15 +270,6 @@ class PromptParent extends JSWindowActorParent {
     let browsingContext = this.browsingContext.top;
 
     let browser = browsingContext.embedderElement;
-    let promptRequiresBrowser =
-      args.modalType === Services.prompt.MODAL_TYPE_TAB ||
-      args.modalType === Services.prompt.MODAL_TYPE_CONTENT;
-    if (promptRequiresBrowser && !browser) {
-      let modal_type =
-        args.modalType === Services.prompt.MODAL_TYPE_TAB ? "tab" : "content";
-      throw new Error(`Cannot ${modal_type}-prompt without a browser!`);
-    }
-
     let win;
 
     // If we are a chrome actor we can use the associated chrome win.
@@ -293,7 +284,7 @@ class PromptParent extends JSWindowActorParent {
     // passed window is the hidden window).
     // See bug 875157 comment 30 for more..
     if (win?.winUtils && !win.winUtils.isParentWindowMainWidgetVisible) {
-      throw new Error("Cannot open a prompt in a hidden window");
+      throw new Error("Cannot call openModalWindow on a hidden window");
     }
 
     try {
@@ -313,7 +304,18 @@ class PromptParent extends JSWindowActorParent {
       // Convert args object to a prop bag for the dialog to consume.
       let bag;
 
-      if (promptRequiresBrowser && win?.gBrowser?.getTabDialogBox) {
+      if (
+        (args.modalType === Services.prompt.MODAL_TYPE_TAB ||
+          args.modalType === Services.prompt.MODAL_TYPE_CONTENT) &&
+        win?.gBrowser?.getTabDialogBox
+      ) {
+        if (!browser) {
+          let modal_type =
+            args.modalType === Services.prompt.MODAL_TYPE_TAB
+              ? "tab"
+              : "content";
+          throw new Error(`Cannot ${modal_type}-prompt without a browser!`);
+        }
         // Tab or content level prompt
         let dialogBox = win.gBrowser.getTabDialogBox(browser);
 
