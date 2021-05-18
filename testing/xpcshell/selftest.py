@@ -138,7 +138,7 @@ add_test(function test_loop () {
 });
 """
 
-PASSING_TEST_UNICODE = """
+PASSING_TEST_UNICODE = b"""
 function run_test () { run_next_test(); }
 
 add_test(function test_unicode_print () {
@@ -483,7 +483,7 @@ class XPCShellTestsTests(unittest.TestCase):
         os.environ.pop("MOZ_OBJDIR", None)
         self.build_obj = MozbuildObject.from_environment()
 
-        objdir = self.build_obj.topobjdir.encode("utf-8")
+        objdir = self.build_obj.topobjdir
         self.testing_modules = os.path.join(objdir, "_tests", "modules")
 
         if mozinfo.isMac:
@@ -518,13 +518,13 @@ class XPCShellTestsTests(unittest.TestCase):
         shutil.rmtree(self.tempdir)
         self.x.shutdownNode()
 
-    def writeFile(self, name, contents):
+    def writeFile(self, name, contents, mode="w"):
         """
         Write |contents| to a file named |name| in the temp directory,
         and return the full path to the file.
         """
         fullpath = os.path.join(self.tempdir, name)
-        with open(fullpath, "w") as f:
+        with open(fullpath, mode) as f:
             f.write(contents)
         return fullpath
 
@@ -895,7 +895,7 @@ add_test({
         """
         Check that passing unicode characters through an assertion method works.
         """
-        self.writeFile("test_unicode_assert.js", PASSING_TEST_UNICODE)
+        self.writeFile("test_unicode_assert.js", PASSING_TEST_UNICODE, mode="wb")
         self.writeManifest(["test_unicode_assert.js"])
 
         self.assertTestResult(True, verbose=True)
