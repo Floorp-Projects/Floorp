@@ -1753,34 +1753,6 @@ class PromptFeatureTest {
     }
 
     @Test
-    fun `PromptFeature throws IllegalArgumentException when ClassCastException is triggered`() {
-        val feature = PromptFeature(
-            activity = mock(),
-            store = store,
-            fragmentManager = fragmentManager
-        ) { }
-        feature.start()
-
-        val singleChoiceRequest = SingleChoice(arrayOf()) {}
-        var illegalArgumentExceptionThrown = false
-        store.dispatch(ContentAction.UpdatePromptRequestAction(tabId, singleChoiceRequest))
-            .joinBlocking()
-
-        try {
-            feature.onConfirm(tabId, singleChoiceRequest.uid, "wrong")
-        } catch (e: IllegalArgumentException) {
-            illegalArgumentExceptionThrown = true
-            assertEquals(
-                "PromptFeature onConsume cast failed with class mozilla.components.concept.engine.prompt.PromptRequest\$SingleChoice",
-                e.message
-            )
-        }
-
-        store.waitUntilIdle()
-        assert(illegalArgumentExceptionThrown)
-    }
-
-    @Test
     fun `A Repost PromptRequest prompt will be shown as a ConfirmDialogFragment`() {
         val feature = PromptFeature(
             // Proper activity here to allow for the feature to properly execute "container.context.getString"
