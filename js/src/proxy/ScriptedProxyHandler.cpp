@@ -75,8 +75,9 @@ static bool IsCompatiblePropertyDescriptor(
       return true;
     }
 
+    RootedValue value(cx, current->value());
     bool same = false;
-    if (!SameValue(cx, desc.value(), current->value(), &same)) {
+    if (!SameValue(cx, desc.value(), value, &same)) {
       return false;
     }
 
@@ -136,8 +137,9 @@ static bool IsCompatiblePropertyDescriptor(
       }
 
       if (desc.hasValue()) {
+        RootedValue value(cx, current->value());
         bool same;
-        if (!SameValue(cx, desc.value(), current->value(), &same)) {
+        if (!SameValue(cx, desc.value(), value, &same)) {
           return false;
         }
         if (!same) {
@@ -1173,8 +1175,9 @@ bool ScriptedProxyHandler::get(JSContext* cx, HandleObject proxy,
     // Step 10a.
     if (desc->isDataDescriptor() && !desc->configurable() &&
         !desc->writable()) {
+      RootedValue value(cx, desc->value());
       bool same;
-      if (!SameValue(cx, trapResult, desc->value(), &same)) {
+      if (!SameValue(cx, trapResult, value, &same)) {
         return false;
       }
       if (!same) {
@@ -1259,8 +1262,9 @@ bool ScriptedProxyHandler::set(JSContext* cx, HandleObject proxy, HandleId id,
     // Step 11a.
     if (desc->isDataDescriptor() && !desc->configurable() &&
         !desc->writable()) {
+      RootedValue value(cx, desc->value());
       bool same;
-      if (!SameValue(cx, v, desc->value(), &same)) {
+      if (!SameValue(cx, v, value, &same)) {
         return false;
       }
       if (!same) {
