@@ -96,6 +96,11 @@ class PrivacySecuritySettingsFragment : BaseSettingsFragment(),
                     AppAction.OpenSettings(page = Screen.Settings.Page.PrivacyExceptions)
                 )
             }
+            resources.getString(R.string.pref_key_secure),
+            resources.getString(R.string.pref_key_biometric) -> {
+                // We need to recreate the activity to apply the SECURE flags.
+                requireActivity().recreate()
+            }
         }
         return super.onPreferenceTreeClick(preference)
     }
