@@ -265,6 +265,7 @@ class nsCocoaWindow final : public nsBaseWidget, public nsPIWidgetCocoa {
   virtual bool PrepareForFullscreenTransition(nsISupports** aData) override;
   virtual void PerformFullscreenTransition(FullscreenTransitionStage aStage, uint16_t aDuration,
                                            nsISupports* aData, nsIRunnable* aCallback) override;
+  virtual void CleanupFullscreenTransition() override;
   nsresult MakeFullScreen(bool aFullScreen, nsIScreen* aTargetScreen = nullptr) final;
   nsresult MakeFullScreenWithNativeTransition(bool aFullScreen,
                                               nsIScreen* aTargetScreen = nullptr) final;
@@ -409,6 +410,12 @@ class nsCocoaWindow final : public nsBaseWidget, public nsPIWidgetCocoa {
   bool mInFullScreenMode;
   bool mInFullScreenTransition;  // true from the request to enter/exit fullscreen
                                  // (MakeFullScreen() call) to EnteredFullScreen()
+
+  // Ignore occlusion events caused by displaying the temporary fullscreen
+  // window during the fullscreen transition animation because only focused
+  // contexts are permitted to enter DOM fullscreen.
+  int mIgnoreOcclusionCount;
+
   bool mModal;
   bool mFakeModal;
 
