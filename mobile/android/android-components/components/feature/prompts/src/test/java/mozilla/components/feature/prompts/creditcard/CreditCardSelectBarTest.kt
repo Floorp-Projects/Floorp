@@ -9,12 +9,17 @@ import androidx.appcompat.widget.AppCompatTextView
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import kotlinx.coroutines.runBlocking
 import mozilla.components.concept.engine.prompt.CreditCard
 import mozilla.components.feature.prompts.R
 import mozilla.components.feature.prompts.concept.SelectablePromptView
+import mozilla.components.support.base.facts.Fact
+import mozilla.components.support.base.facts.FactProcessor
+import mozilla.components.support.base.facts.Facts
 import mozilla.components.support.test.ext.appCompatContext
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
+import org.junit.Assert
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -73,9 +78,16 @@ class CreditCardSelectBarTest {
     }
 
     @Test
-    fun `GIVEN a listener WHEN a credit card is selected THEN onOptionSelect is called`() {
+    fun `GIVEN a listener WHEN a credit card is selected THEN onOptionSelect is called`() = runBlocking {
         val listener: SelectablePromptView.Listener<CreditCard> = mock()
         creditCardSelectBar.listener = listener
+
+        val facts = mutableListOf<Fact>()
+        Facts.registerProcessor(object : FactProcessor {
+            override fun process(fact: Fact) {
+                facts.add(fact)
+            }
+        })
 
         creditCardSelectBar.showPrompt(listOf(creditCard))
 
@@ -86,6 +98,7 @@ class CreditCardSelectBarTest {
         holder.itemView.performClick()
 
         verify(listener).onOptionSelect(creditCard)
+        Assert.assertEquals(1, facts.size)
     }
 
     @Test
