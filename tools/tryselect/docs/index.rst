@@ -21,17 +21,17 @@ Another very useful Try command is ``./mach try auto``, which will automatically
 that are mostly likely to be affected by your changes.
 See the :doc:`selectors page <selectors/index>` to view all the other ways to select which tasks to push.
 
-Resolving signature issues when downloading a Try build
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Resolving "<Try build> is damaged and can't be opened" error
+------------------------------------------------------------
 
-Try builds aren't signed the same way as release builds, so on modern platforms you may
-run into errors when you try run them. For example, on macOS, you'll see an error like "<app>
-is damaged and can't be opened."
+Apple automatically quarantines apps that are downloaded with a browser from an untrusted
+location. This "quarantine status" can be cleared by doing ``xattr -c <Try build>`` after
+downloading. You can avoid this "quarantine status" by downloading the build from the command
+line instead, such as by using ``curl``:
 
-This is because, when the app is downloaded, your browser adds an attribute noting that it
-originated from the internet and isn't as trustworthy.
-You can resolve this by clearing the attribute after downloading (``xattr -c <app>`` on Mac)
-or by downloading the app using `curl <https://curl.se/>`_ instead.
+.. code-block:: shell
+
+    curl -L <artifact-url> -o <file-name>
 
 Adding Try jobs to Phabricator patch
 ------------------------------------
