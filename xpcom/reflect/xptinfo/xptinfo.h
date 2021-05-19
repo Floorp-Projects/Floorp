@@ -21,7 +21,6 @@
 #include "js/Value.h"
 #include "nsString.h"
 #include "nsTArray.h"
-#include "xptdata.h"
 
 // Forward Declarations
 namespace mozilla {
@@ -36,6 +35,8 @@ struct nsXPTParamInfo;
 struct nsXPTMethodInfo;
 struct nsXPTConstantInfo;
 struct nsXPTDOMObjectInfo;
+
+enum class nsXPTInterface : uint16_t;
 
 // Internal helper methods.
 namespace xpt {
