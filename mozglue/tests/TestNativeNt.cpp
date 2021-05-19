@@ -145,6 +145,72 @@ class LongNameModule {
   operator const wchar_t*() const { return mTargetFile; }
 };
 
+// Make sure module info retrieved from nt::PEHeaders is the same as one
+// retrieved from GetModuleInformation API.
+bool CompareModuleInfo(HMODULE aModuleForApi, HMODULE aModuleForPEHeader) {
+  MODULEINFO moduleInfo;
+  if (!::GetModuleInformation(::GetCurrentProcess(), aModuleForApi, &moduleInfo,
+                              sizeof(moduleInfo))) {
+    printf("TEST-FAILED | NativeNt | GetModuleInformation failed - %08lx\n",
+           ::GetLastError());
+    return false;
+  }
+
+  PEHeaders headers(aModuleForPEHeader);
+  if (!headers) {
+    printf("TEST-FAILED | NativeNt | Failed to instantiate PEHeaders\n");
+    return false;
+  }
+
+  Maybe<Range<const uint8_t>> bounds = headers.GetBounds();
+  if (!bounds) {
+    printf("TEST-FAILED | NativeNt | PEHeaders::GetBounds failed\n");
+    return false;
+  }
+
+  if (bounds->length() != moduleInfo.SizeOfImage) {
+    printf("TEST-FAILED | NativeNt | SizeOfImage does not match\n");
+    return false;
+  }
+
+  // GetModuleInformation sets EntryPoint to 0 for executables
+  // except the running self.
+  static const HMODULE sSelf = ::GetModuleHandleW(nullptr);
+  if (aModuleForApi != sSelf &&
+      !(headers.GetFileCharacteristics() & IMAGE_FILE_DLL)) {
+    if (moduleInfo.EntryPoint) {
+      printf(
+          "TEST-FAIL | NativeNt | "
+          "GetModuleInformation returned a non-zero entrypoint "
+          "for an executable\n");
+      return false;
+    }
+
+    // Cannot verify PEHeaders::GetEntryPoint.
+    return true;
+  }
+
+  // For a module whose entrypoint is 0 (e.g. ntdll.dll or win32u.dll),
+  // MODULEINFO::EntryPoint is set to 0, while PEHeaders::GetEntryPoint
+  // returns the imagebase (RVA=0).
+  intptr_t rvaEntryPoint =
+      moduleInfo.EntryPoint
+          ? reinterpret_cast<uintptr_t>(moduleInfo.EntryPoint) -
+                reinterpret_cast<uintptr_t>(moduleInfo.lpBaseOfDll)
+          : 0;
+  if (rvaEntryPoint < 0) {
+    printf("TEST-FAILED | NativeNt | MODULEINFO is invalid\n");
+    return false;
+  }
+
+  if (headers.RVAToPtr<FARPROC>(rvaEntryPoint) != headers.GetEntryPoint()) {
+    printf("TEST-FAILED | NativeNt | Entrypoint does not match\n");
+    return false;
+  }
+
+  return true;
+}
+
 bool TestModuleInfo() {
   UNICODE_STRING newLeafName;
   ::RtlInitUnicodeString(&newLeafName,
@@ -162,6 +228,7 @@ bool TestModuleInfo() {
     nsModuleHandle module(::LoadLibraryW(longNameModule));
 
     bool detectedTarget = false;
+    bool passedAllModules = true;
     auto moduleCallback = [&](const wchar_t* aModulePath, HMODULE aModule) {
       UNICODE_STRING modulePath, moduleName;
       ::RtlInitUnicodeString(&modulePath, aModulePath);
@@ -169,6 +236,10 @@ bool TestModuleInfo() {
       if (::RtlEqualUnicodeString(&moduleName, &newLeafName,
                                   /*aCaseInsensitive*/ TRUE)) {
         detectedTarget = true;
+      }
+
+      if (!CompareModuleInfo(aModule, aModule)) {
+        passedAllModules = false;
       }
     };
 
@@ -183,11 +254,17 @@ bool TestModuleInfo() {
           "EnumerateProcessModules missed the target file\n");
       return false;
     }
+
+    if (!passedAllModules) {
+      return false;
+    }
   }
 
   return true;
 }
 
+// Make sure PEHeaders works for a module loaded with LOAD_LIBRARY_AS_DATAFILE
+// as well as a module loaded normally.
 bool TestModuleLoadedAsData() {
   const wchar_t kNewLeafName[] = L"\u03BC\u0061\u9EBA.txt";
 
@@ -213,6 +290,10 @@ bool TestModuleLoadedAsData() {
 
     // then load a module normally to map it on a different address.
     nsModuleHandle module(::LoadLibraryW(moduleName));
+
+    if (!CompareModuleInfo(module.get(), moduleAsData.get())) {
+      return false;
+    }
 
     PEHeaders peAsData(moduleAsData.get());
     PEHeaders pe(module.get());
