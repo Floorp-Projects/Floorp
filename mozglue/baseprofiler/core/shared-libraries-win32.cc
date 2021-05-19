@@ -4,7 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include <windows.h>
-#include <psapi.h>
 
 #include "BaseProfilerSharedLibraries.h"
 
@@ -49,85 +48,89 @@ static void AppendHex(T aValue, std::string& aOut, bool aWithPadding) {
   }
 }
 
+// Hackaround for Bug 1607574.  Nvidia's shim driver nvd3d9wrap[x].dll detours
+// LoadLibraryExW and it causes AV when the following conditions are met.
+//   1. LoadLibraryExW was called for "detoured.dll"
+//   2. nvinit[x].dll was unloaded
+//   3. OS version is older than 6.2
+static bool IsModuleUnsafeToLoad(const std::string& aModuleName) {
+#if defined(_M_ARM64)
+  return false;
+#else
+#  if defined(_M_AMD64)
+  LPCWSTR kNvidiaShimDriver = L"nvd3d9wrapx.dll";
+  LPCWSTR kNvidiaInitDriver = L"nvinitx.dll";
+#  elif defined(_M_IX86)
+  LPCWSTR kNvidiaShimDriver = L"nvd3d9wrap.dll";
+  LPCWSTR kNvidiaInitDriver = L"nvinit.dll";
+#  endif
+  constexpr std::string_view detoured_dll = "detoured.dll";
+  return std::equal(aModuleName.cbegin(), aModuleName.cend(),
+                    detoured_dll.cbegin(), detoured_dll.cend(),
+                    [](char aModuleChar, char aDetouredChar) {
+                      return std::tolower(aModuleChar) == aDetouredChar;
+                    }) &&
+         !mozilla::IsWin8OrLater() && ::GetModuleHandleW(kNvidiaShimDriver) &&
+         !::GetModuleHandleW(kNvidiaInitDriver);
+#endif  // defined(_M_ARM64)
+}
+
 SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf() {
   SharedLibraryInfo sharedLibraryInfo;
 
-  auto addSharedLibraryFromModuleInfo = [&sharedLibraryInfo](
-                                            const wchar_t* aModulePath,
-                                            HMODULE aModule) {
-    mozilla::UniquePtr<char[]> utf8ModulePath(
-        mozilla::glue::WideToUTF8(aModulePath));
-    if (!utf8ModulePath) {
-      return;
-    }
+  auto addSharedLibraryFromModuleInfo =
+      [&sharedLibraryInfo](const wchar_t* aModulePath, HMODULE aModule) {
+        mozilla::UniquePtr<char[]> utf8ModulePath(
+            mozilla::glue::WideToUTF8(aModulePath));
+        if (!utf8ModulePath) {
+          return;
+        }
 
-    MODULEINFO module = {0};
-    if (!GetModuleInformation(mozilla::nt::kCurrentProcess, aModule, &module,
-                              sizeof(MODULEINFO))) {
-      return;
-    }
+        std::string modulePathStr(utf8ModulePath.get());
+        size_t pos = modulePathStr.find_last_of("\\/");
+        std::string moduleNameStr = (pos != std::string::npos)
+                                        ? modulePathStr.substr(pos + 1)
+                                        : modulePathStr;
 
-    std::string modulePathStr(utf8ModulePath.get());
-    size_t pos = modulePathStr.find_last_of("\\/");
-    std::string moduleNameStr = (pos != std::string::npos)
-                                    ? modulePathStr.substr(pos + 1)
-                                    : modulePathStr;
+        // If the module is unsafe to call LoadLibraryEx for, we skip.
+        if (IsModuleUnsafeToLoad(moduleNameStr)) {
+          return;
+        }
 
-    // Hackaround for Bug 1607574.  Nvidia's shim driver nvd3d9wrap[x].dll
-    // detours LoadLibraryExW when it's loaded and the detour function causes
-    // AV when the code tries to access data pointing to an address within
-    // unloaded nvinit[x].dll.
-    // The crashing code is executed when a given parameter is "detoured.dll"
-    // and OS version is older than 6.2.  We hit that crash at the following
-    // call to LoadLibraryEx even if we specify LOAD_LIBRARY_AS_DATAFILE.
-    // We work around it by skipping LoadLibraryEx, and add a library info with
-    // a dummy breakpad id instead.
-#if !defined(_M_ARM64)
-#  if defined(_M_AMD64)
-    LPCWSTR kNvidiaShimDriver = L"nvd3d9wrapx.dll";
-    LPCWSTR kNvidiaInitDriver = L"nvinitx.dll";
-#  elif defined(_M_IX86)
-    LPCWSTR kNvidiaShimDriver = L"nvd3d9wrap.dll";
-    LPCWSTR kNvidiaInitDriver = L"nvinit.dll";
-#  endif
-    constexpr std::string_view detoured_dll = "detoured.dll";
-    if (std::equal(moduleNameStr.cbegin(), moduleNameStr.cend(),
-                   detoured_dll.cbegin(), detoured_dll.cend(),
-                   [](char aModuleChar, char aDetouredChar) {
-                     return std::tolower(aModuleChar) == aDetouredChar;
-                   }) &&
-        !mozilla::IsWin8OrLater() && ::GetModuleHandleW(kNvidiaShimDriver) &&
-        !::GetModuleHandleW(kNvidiaInitDriver)) {
-      const std::string pdbNameStr = "detoured.pdb";
-      SharedLibrary shlib((uintptr_t)module.lpBaseOfDll,
-                          (uintptr_t)module.lpBaseOfDll + module.SizeOfImage,
-                          0,  // DLLs are always mapped at offset 0 on Windows
-                          "000000000000000000000000000000000", moduleNameStr,
-                          modulePathStr, pdbNameStr, pdbNameStr, "", "");
-      sharedLibraryInfo.AddSharedLibrary(shlib);
-      return;
-    }
-#endif  // !defined(_M_ARM64)
+        // Load the module again to make sure that its handle will remain
+        // valid as we attempt to read the PDB information from it.  We load the
+        // DLL as a datafile so that we don't end up running the newly loaded
+        // module's DllMain function.  If the original handle |aModule| is
+        // valid, LoadLibraryEx just increments its refcount.
+        // LOAD_LIBRARY_AS_IMAGE_RESOURCE is needed to read information from the
+        // sections (not PE headers) which should be relocated by the loader,
+        // otherwise GetPdbInfo() will cause a crash.
+        nsModuleHandle handleLock(::LoadLibraryExW(
+            aModulePath, NULL,
+            LOAD_LIBRARY_AS_DATAFILE | LOAD_LIBRARY_AS_IMAGE_RESOURCE));
+        if (!handleLock) {
+          return;
+        }
 
-    // Load the module again to make sure that its handle will remain
-    // valid as we attempt to read the PDB information from it.  We load the
-    // DLL as a datafile so that we don't end up running the newly loaded
-    // module's DllMain function.  If the original handle |aModule| is valid,
-    // LoadLibraryEx just increments its refcount.
-    // LOAD_LIBRARY_AS_IMAGE_RESOURCE is needed to read information from the
-    // sections (not PE headers) which should be relocated by the loader,
-    // otherwise GetPdbInfo() will cause a crash.
-    nsModuleHandle handleLock(::LoadLibraryExW(
-        aModulePath, NULL,
-        LOAD_LIBRARY_AS_DATAFILE | LOAD_LIBRARY_AS_IMAGE_RESOURCE));
+        mozilla::nt::PEHeaders headers(handleLock.get());
+        if (!headers) {
+          return;
+        }
 
-    std::string breakpadId;
-    std::string pdbPathStr;
-    std::string pdbNameStr;
-    std::string versionStr;
-    if (handleLock) {
-      mozilla::nt::PEHeaders headers(handleLock.get());
-      if (headers) {
+        mozilla::Maybe<mozilla::Range<const uint8_t>> bounds =
+            headers.GetBounds();
+        if (!bounds) {
+          return;
+        }
+
+        // Put the original |aModule| into SharedLibrary, but we get debug info
+        // from |handleLock| as |aModule| might be inaccessible.
+        const uintptr_t modStart = reinterpret_cast<uintptr_t>(aModule);
+        const uintptr_t modEnd = modStart + bounds->length();
+
+        std::string breakpadId;
+        std::string pdbPathStr;
+        std::string pdbNameStr;
         if (const auto* debugInfo = headers.GetPdbInfo()) {
           MOZ_ASSERT(breakpadId.empty());
           const GUID& pdbSig = debugInfo->pdbSignature;
@@ -149,6 +152,7 @@ SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf() {
                                                   : pdbPathStr;
         }
 
+        std::string versionStr;
         uint64_t version;
         if (headers.GetVersionInfo(version)) {
           versionStr += std::to_string((version >> 48) & 0xFFFF);
@@ -159,16 +163,13 @@ SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf() {
           versionStr += '.';
           versionStr += std::to_string(version & 0xFFFF);
         }
-      }
-    }
 
-    SharedLibrary shlib((uintptr_t)module.lpBaseOfDll,
-                        (uintptr_t)module.lpBaseOfDll + module.SizeOfImage,
-                        0,  // DLLs are always mapped at offset 0 on Windows
-                        breakpadId, moduleNameStr, modulePathStr, pdbNameStr,
-                        pdbPathStr, versionStr, "");
-    sharedLibraryInfo.AddSharedLibrary(shlib);
-  };
+        SharedLibrary shlib(modStart, modEnd,
+                            0,  // DLLs are always mapped at offset 0 on Windows
+                            breakpadId, moduleNameStr, modulePathStr,
+                            pdbNameStr, pdbPathStr, versionStr, "");
+        sharedLibraryInfo.AddSharedLibrary(shlib);
+      };
 
   mozilla::EnumerateProcessModules(addSharedLibraryFromModuleInfo);
   return sharedLibraryInfo;
