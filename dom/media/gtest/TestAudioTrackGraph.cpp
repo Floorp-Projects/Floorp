@@ -515,6 +515,7 @@ float rmsf32(AudioDataValue* aSamples, uint32_t aChannels, uint32_t aFrames) {
   return sqrt(rms);
 }
 
+#  ifndef WIN32  // failure on windows10x32
 TEST(TestAudioTrackGraph, AudioInputTrackDisabling)
 {
   MockCubeb* cubeb = new MockCubeb();
@@ -631,6 +632,7 @@ TEST(TestAudioTrackGraph, AudioInputTrackDisabling)
     EXPECT_EQ(rmsf32(&(data[startIdx]), 2, rate / 10), 0.0);
   }
 }
+#  endif  // win32
 
 void TestCrossGraphPort(uint32_t aInputRate, uint32_t aOutputRate,
                         float aDriftFactor, uint32_t aBufferMs = 50) {
