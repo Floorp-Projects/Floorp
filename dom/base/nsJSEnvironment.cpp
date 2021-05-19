@@ -366,7 +366,7 @@ class AutoFree {
   ~AutoFree() {
     if (mPtr) free(mPtr);
   }
-  void Invalidate() { mPtr = 0; }
+  void Invalidate() { mPtr = nullptr; }
 
  private:
   void* mPtr;
@@ -2514,9 +2514,8 @@ nsJSArgArray::nsJSArgArray(JSContext* aContext, uint32_t argc,
 nsJSArgArray::~nsJSArgArray() { ReleaseJSObjects(); }
 
 void nsJSArgArray::ReleaseJSObjects() {
-  if (mArgv) {
-    delete[] mArgv;
-  }
+  delete[] mArgv;
+
   if (mArgc > 0) {
     mArgc = 0;
     mozilla::DropJSObjects(this);

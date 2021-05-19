@@ -2639,7 +2639,7 @@ nsDOMWindowUtils::AudioDevices(uint16_t aSide, nsIArray** aDevices) {
     enumerator->EnumerateAudioOutputDevices(collection);
   }
 
-  for (auto device : collection) {
+  for (const auto& device : collection) {
     devices->AppendElement(device);
   }
 
@@ -3162,8 +3162,9 @@ static bool CheckLeafLayers(Layer* aLayer, const nsIntPoint& aOffset,
                             nsIntRegion* aCoveredRegion) {
   gfx::Matrix transform;
   if (!aLayer->GetTransform().Is2D(&transform) ||
-      transform.HasNonIntegerTranslation())
+      transform.HasNonIntegerTranslation()) {
     return false;
+  }
   transform.NudgeToIntegers();
   IntPoint offset = aOffset + IntPoint::Truncate(transform._31, transform._32);
 
@@ -3761,7 +3762,7 @@ nsDOMWindowUtils::AddSheet(nsIPreloadedStyleSheet* aSheet,
   NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
 
   StyleSheet* sheet = nullptr;
-  auto preloadedSheet = static_cast<PreloadedStyleSheet*>(aSheet);
+  auto* preloadedSheet = static_cast<PreloadedStyleSheet*>(aSheet);
   nsresult rv = preloadedSheet->GetSheet(&sheet);
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(sheet, NS_ERROR_FAILURE);
