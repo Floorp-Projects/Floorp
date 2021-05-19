@@ -142,16 +142,7 @@ var tests = [
       if (my_debug) alert(testname);
       panel.getBoundingClientRect();
 
-      var gotMouseEvent = false;
-      function mouseMoved(event)
-      {
-        // eslint-disable-next-line no-unused-vars
-        gotMouseEvent = true;
-      }
-
-      panel.addEventListener("mousemove", mouseMoved, true);
       synthesizeMouse(panel, 10, 10, { type: "mousemove" });
-      panel.removeEventListener("mousemove", mouseMoved, true);
 
       var tree = $("tree");
       tree.currentIndex = 0;
