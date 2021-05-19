@@ -222,8 +222,8 @@ class MessagePumpForIO : public MessagePumpWin {
   //         delete context_;
   //      }
   //     }
-  //     virtual void OnIOCompleted(IOContext* context, DWORD bytes_transfered,
-  //                                DWORD error) {
+  //     virtual void OnIOCompleted(IOContext* context, DWORD bytes_transfered)
+  //     {
   //         pending_ = false;
   //     }
   //     void DoSomeIo() {
@@ -248,8 +248,8 @@ class MessagePumpForIO : public MessagePumpWin {
   //     // while there are pending IO operations.
   //     ~MyFile() {
   //     }
-  //     virtual void OnIOCompleted(IOContext* context, DWORD bytes_transfered,
-  //                                DWORD error) {
+  //     virtual void OnIOCompleted(IOContext* context, DWORD bytes_transfered)
+  //     {
   //       ...
   //       delete context;
   //     }
@@ -280,8 +280,7 @@ class MessagePumpForIO : public MessagePumpWin {
     // |context| completes. |error| is the Win32 error code of the IO operation
     // (ERROR_SUCCESS if there was no error). |bytes_transfered| will be zero
     // on error.
-    virtual void OnIOCompleted(IOContext* context, DWORD bytes_transfered,
-                               DWORD error) = 0;
+    virtual void OnIOCompleted(IOContext* context, DWORD bytes_transfered) = 0;
   };
 
   // The extended context that should be used as the base structure on every
@@ -326,13 +325,16 @@ class MessagePumpForIO : public MessagePumpWin {
     IOHandler* handler;
     IOContext* context;
     DWORD bytes_transfered;
-    DWORD error;
+  };
+  struct IOItemChunk {
+    IOItem values[8];
+    ULONG count;
   };
 
   virtual void DoRunLoop();
   void WaitForWork();
   bool MatchCompletedIOItem(IOHandler* filter, IOItem* item);
-  bool GetIOItem(DWORD timeout, IOItem* item);
+  bool GetIOItems(DWORD timeout, IOItemChunk* items);
   bool ProcessInternalIOItem(const IOItem& item);
 
   // The completion port associated with this thread.
