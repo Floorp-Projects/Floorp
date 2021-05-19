@@ -54,13 +54,16 @@ def test_make_hosts_file_windows():
 
 def test_ws_doc_root_default():
     with ConfigBuilder() as c:
+        assert c.doc_root == localpaths.repo_root
         assert c.ws_doc_root == os.path.join(localpaths.repo_root, "websockets", "handlers")
+        assert c.paths["ws_doc_root"] == c.ws_doc_root
 
 
 def test_init_ws_doc_root():
     with ConfigBuilder(ws_doc_root="/") as c:
         assert c.doc_root == localpaths.repo_root  # check this hasn't changed
         assert c.ws_doc_root == "/"
+        assert c.paths["ws_doc_root"] == c.ws_doc_root
 
 
 def test_set_ws_doc_root():
@@ -69,6 +72,7 @@ def test_set_ws_doc_root():
     with cb as c:
         assert c.doc_root == localpaths.repo_root  # check this hasn't changed
         assert c.ws_doc_root == "/"
+        assert c.paths["ws_doc_root"] == c.ws_doc_root
 
 
 def test_pickle():

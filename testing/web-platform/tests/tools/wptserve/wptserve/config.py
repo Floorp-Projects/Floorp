@@ -84,7 +84,7 @@ def json_types(obj):
 
 
 class ConfigBuilder(object):
-    """Builder object for setting the wptsync config.
+    """Builder object for setting the wptserve config.
 
     Configuration can be passed in as a dictionary to the constructor, or
     set via attributes after construction. Configuration options must match
