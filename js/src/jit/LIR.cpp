@@ -640,31 +640,40 @@ bool LMoveGroup::add(LAllocation from, LAllocation to, LDefinition::Type type) {
   }
 
   // Check that SIMD moves are aligned according to ABI requirements.
-#  ifdef ENABLE_WASM_SIMD
-  // Alignment is not currently required for SIMD on x86/x64.  See also
-  // CodeGeneratorShared::CodeGeneratorShared and in general everywhere
-  // SimdMemoryAignment is used.  Likely, alignment requirements will return.
-#    if !defined(JS_CODEGEN_X86) && !defined(JS_CODEGEN_X64)
-  if (LDefinition(type).type() == LDefinition::SIMD128) {
-    MOZ_ASSERT(from.isMemory() || from.isFloatReg());
-    if (from.isMemory()) {
-      if (from.isArgument()) {
-        MOZ_ASSERT(from.toArgument()->index() % SimdMemoryAlignment == 0);
-      } else {
-        MOZ_ASSERT(from.toStackSlot()->slot() % SimdMemoryAlignment == 0);
-      }
-    }
-    MOZ_ASSERT(to.isMemory() || to.isFloatReg());
-    if (to.isMemory()) {
-      if (to.isArgument()) {
-        MOZ_ASSERT(to.toArgument()->index() % SimdMemoryAlignment == 0);
-      } else {
-        MOZ_ASSERT(to.toStackSlot()->slot() % SimdMemoryAlignment == 0);
-      }
-    }
-  }
-#    endif
-#  endif
+  // clang-format off
+# ifdef ENABLE_WASM_SIMD
+    // Alignment is not currently required for SIMD on x86/x64/arm64.  See also
+    // CodeGeneratorShared::CodeGeneratorShared and in general everywhere
+    // SimdMemoryAignment is used.  Likely, alignment requirements will return.
+#   if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64) || \
+       defined(JS_CODEGEN_ARM64)
+      // No need for any check on x86/x64/arm64.
+#   else
+#     error "Need to consider SIMD alignment on this target."
+      // The following code may be of use if we need alignment checks on
+      // some future target.
+      //if (LDefinition(type).type() == LDefinition::SIMD128) {
+      //  MOZ_ASSERT(from.isMemory() || from.isFloatReg());
+      //  if (from.isMemory()) {
+      //    if (from.isArgument()) {
+      //      MOZ_ASSERT(from.toArgument()->index() % SimdMemoryAlignment == 0);
+      //    } else {
+      //      MOZ_ASSERT(from.toStackSlot()->slot() % SimdMemoryAlignment == 0);
+      //    }
+      //  }
+      //  MOZ_ASSERT(to.isMemory() || to.isFloatReg());
+      //  if (to.isMemory()) {
+      //    if (to.isArgument()) {
+      //      MOZ_ASSERT(to.toArgument()->index() % SimdMemoryAlignment == 0);
+      //    } else {
+      //      MOZ_ASSERT(to.toStackSlot()->slot() % SimdMemoryAlignment == 0);
+      //    }
+      //  }
+      //}
+#   endif
+# endif
+  // clang-format on
+
 #endif
   return moves_.append(LMove(from, to, type));
 }
