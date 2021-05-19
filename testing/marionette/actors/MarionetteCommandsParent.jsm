@@ -311,11 +311,20 @@ function getMarionetteCommandsActorProxy(browsingContextFn) {
           let attempts = 0;
           while (true) {
             try {
+              const browsingContext = browsingContextFn();
+              if (!browsingContext) {
+                throw new DOMException(
+                  "No BrowsingContext found",
+                  "NoBrowsingContext"
+                );
+              }
+
               // TODO: Scenarios where the window/tab got closed and
               // currentWindowGlobal is null will be handled in Bug 1662808.
-              const actor = browsingContextFn().currentWindowGlobal.getActor(
+              const actor = browsingContext.currentWindowGlobal.getActor(
                 "MarionetteCommands"
               );
+
               const result = await actor[methodName](...args);
               return result;
             } catch (e) {

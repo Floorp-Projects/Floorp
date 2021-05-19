@@ -4,22 +4,20 @@
 
 "use strict";
 
-const { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
+const {
+  getMarionetteCommandsActorProxy,
+  registerCommandsActor,
+  unregisterCommandsActor,
+} = ChromeUtils.import(
+  "chrome://marionette/content/actors/MarionetteCommandsParent.jsm"
 );
-
-XPCOMUtils.defineLazyModuleGetters(this, {
-  EventDispatcher:
-    "chrome://marionette/content/actors/MarionetteEventsParent.jsm",
-  registerCommandsActor:
-    "chrome://marionette/content/actors/MarionetteCommandsParent.jsm",
-  registerEventsActor:
-    "chrome://marionette/content/actors/MarionetteEventsParent.jsm",
-  unregisterCommandsActor:
-    "chrome://marionette/content/actors/MarionetteCommandsParent.jsm",
-  unregisterEventsActor:
-    "chrome://marionette/content/actors/MarionetteEventsParent.jsm",
-});
+const {
+  EventDispatcher,
+  registerEventsActor,
+  unregisterEventsActor,
+} = ChromeUtils.import(
+  "chrome://marionette/content/actors/MarionetteEventsParent.jsm"
+);
 
 registerCleanupFunction(function() {
   unregisterCommandsActor();
@@ -32,6 +30,24 @@ add_test(function test_commandsActor_register() {
 
   registerCommandsActor();
   registerCommandsActor();
+  unregisterCommandsActor();
+
+  run_next_test();
+});
+
+add_test(async function test_commandsActor_getActorProxy_noBrowsingContext() {
+  registerCommandsActor();
+
+  try {
+    await getMarionetteCommandsActorProxy(() => null).sendQuery("foo", "bar");
+    ok(false, "Expected NoBrowsingContext error not raised");
+  } catch (e) {
+    ok(
+      e.message.includes("No BrowsingContext found"),
+      "Expected default error message found"
+    );
+  }
+
   unregisterCommandsActor();
 
   run_next_test();
