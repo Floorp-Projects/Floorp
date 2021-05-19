@@ -70,6 +70,7 @@ def env_options():
     # allow the use of host-resolver-rules in lieu of modifying /etc/hosts file
     return {"server_host": "127.0.0.1"}
 
+
 class LogcatRunner(object):
     def __init__(self, logger, browser, remote_queue):
         self.logger = logger
@@ -119,6 +120,7 @@ class LogcatRunner(object):
             "data": line
         }
         self._send_message("log", "process_output", data)
+
 
 class ChromeAndroidBrowserBase(Browser):
     def __init__(self, logger,

@@ -602,7 +602,12 @@ class WdspecExecutor(TestExecutor):
         self.timeout_multiplier = timeout_multiplier
         self.capabilities = capabilities
         self.environ = environ if environ is not None else {}
-        self.protocol = self.protocol_cls(self, browser)
+        self.output_handler_kwargs = None
+        self.output_handler_start_kwargs = None
+
+    def setup(self, runner):
+        self.protocol = self.protocol_cls(self, self.browser)
+        super().setup(runner)
 
     def is_alive(self):
         return self.protocol.is_alive()
@@ -718,6 +723,8 @@ class WdspecProtocol(Protocol):
         self.server = None
         self.environ = os.environ.copy()
         self.environ.update(executor.environ)
+        self.output_handler_kwargs = executor.output_handler_kwargs
+        self.output_handler_start_kwargs = executor.output_handler_start_kwargs
 
     def connect(self):
         """Connect to browser via the HTTP server."""
@@ -726,7 +733,9 @@ class WdspecProtocol(Protocol):
             binary=self.webdriver_binary,
             args=self.webdriver_args,
             env=self.environ)
-        self.server.start(block=False)
+        self.server.start(block=False,
+                          output_handler_kwargs=self.output_handler_kwargs,
+                          output_handler_start_kwargs=self.output_handler_start_kwargs)
         self.logger.info(
             "WebDriver HTTP server listening at %s" % self.server.url)
         self.session_config = {"host": self.server.host,
