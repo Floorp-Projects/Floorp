@@ -188,6 +188,16 @@ impl<T, M> LRUCache<T, M> {
         }
     }
 
+    /// Manually evict a specific item.
+    pub fn remove(&mut self, handle: &WeakFreeListHandle<M>) -> Option<T> {
+        if let Some(entry) = self.entries.get_opt_mut(handle) {
+            let strong_handle = self.lru[entry.partition_index as usize].remove(entry.lru_index);
+            return Some(self.entries.free(strong_handle).value);
+        }
+
+        None
+    }
+
     /// This is used by the calling code to signal that the element that this handle
     /// references has been used on this frame. Internally, it updates the links in
     /// the LRU tracking element to move this item to the end of the LRU list. Returns
