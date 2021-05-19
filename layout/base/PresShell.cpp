@@ -797,6 +797,7 @@ PresShell::PresShell(Document* aDocument)
 #endif  // #ifdef ACCESSIBILITY
       mCurrentEventFrame(nullptr),
       mMouseLocation(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE),
+      mLastResolutionChangeOrigin(ResolutionChangeOrigin::Apz),
       mPaintCount(0),
       mAPZFocusSequenceNumber(0),
       mCanvasBackgroundColor(NS_RGBA(0, 0, 0, 0)),
@@ -5392,6 +5393,8 @@ nsresult PresShell::SetResolutionAndScaleTo(float aResolution,
   // GetResolution handles mResolution being nothing by returning 1 so this
   // is checking that the resolution is actually changing.
   bool resolutionUpdated = (aResolution != GetResolution());
+
+  mLastResolutionChangeOrigin = aOrigin;
 
   RenderingState state(this);
   state.mResolution = Some(aResolution);
