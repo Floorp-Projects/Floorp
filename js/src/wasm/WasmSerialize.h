@@ -159,7 +159,7 @@ static inline const uint8_t* DeserializeMaybe(const uint8_t* cursor,
     maybe->emplace();
     cursor = (*maybe)->deserialize(cursor);
   } else {
-    *maybe = Nothing();
+    *maybe = mozilla::Nothing();
   }
   return cursor;
 }
