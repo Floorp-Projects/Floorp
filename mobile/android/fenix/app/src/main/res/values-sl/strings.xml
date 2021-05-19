@@ -416,6 +416,11 @@
         and the third is the device model. -->
     <string name="default_device_name_2">%1$s na %2$s %3$s</string>
 
+    <!-- Preference for syncing credit cards -->
+    <string name="preferences_sync_credit_cards">Kreditne kartice</string>
+    <!-- Preference for syncing addresses -->
+    <string name="preferences_sync_address">Naslove</string>
+
     <!-- Send Tab -->
     <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="fxa_received_tab_channel_name">Prejeti zavihki</string>
@@ -446,9 +451,6 @@
     <string name="exceptions_empty_message_description">Izjeme vam omogočajo, da onemogočite zaščito pred sledenjem za izbrane strani.</string>
     <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
     <string name="exceptions_empty_message_learn_more_link">Več o tem</string>
-
-    <!-- Description in Quick Settings that tells user tracking protection is off globally for all sites, and links to Settings to turn it on -->
-    <string name="preferences_tracking_protection_turned_off_globally">Izklopljeno povsod, pojdite v Nastavitve in ga vklopite.</string>
 
     <!-- Preference switch for Telemetry -->
     <string name="preferences_telemetry">Telemetrija</string>
@@ -804,8 +806,6 @@
     <string name="bookmark_delete_folder_snackbar">Mapa %1$s izbrisana</string>
     <!-- Screen title for adding a bookmarks folder -->
     <string name="bookmark_add_folder">Dodaj mapo</string>
-    <!-- deprecated: Snackbar title shown after a bookmark has been created. -->
-    <string name="bookmark_created_snackbar">Zaznamek ustvarjen.</string>
     <!-- Snackbar title shown after a bookmark has been created. -->
     <string name="bookmark_saved_snackbar">Zaznamek shranjen!</string>
     <!-- Snackbar edit button shown after a bookmark has been created. -->
@@ -1465,10 +1465,6 @@
     <string name="preferences_passwords_autofill">Samodejno izpolnjevanje</string>
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">Sinhronizacija prijav</string>
-    <!-- Syncing saved logins in Fenix is on -->
-    <string name="preferences_passwords_sync_logins_on">Vključeno</string>
-    <!-- Syncing saved logins in Fenix is off -->
-    <string name="preferences_passwords_sync_logins_off">Izključeno</string>
     <!-- Syncing saved logins in Fenix needs reconnect to sync -->
     <string name="preferences_passwords_sync_logins_reconnect">Ponovno poveži</string>
     <!-- Syncing saved logins in Fenix needs login -->
@@ -1601,6 +1597,9 @@
 
     <!-- Title of the "Saved cards" screen -->
     <string name="credit_cards_saved_cards">Shranjene kartice</string>
+
+    <!-- Error message for credit card number validation -->
+    <string name="credit_cards_number_validation_error_message">Vnesite veljavno številko kreditne kartice</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Dodaj iskalnik</string>
@@ -1770,20 +1769,10 @@
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Odstrani</string>
 
-    <!-- Deprecated: text for the firefox account onboarding card header
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_firefox_account_header">Kar najbolje izkoristite %s.</string>
-
     <!-- Content description radio buttons with a link to more information -->
     <string name="radio_preference_info_content_description">Kliknite za podrobnosti</string>
 
-    <!-- Deprecated: No Open Tabs Message Header -->
-    <string name="no_collections_header1">Zbirajte stvari, ki vam kaj pomenijo</string>
-    <!-- Deprecated: Label to describe what collections are to a new user without any collections -->
-    <string name="no_collections_description1">Združite podobna iskanja, spletne strani in zavihke za hitrejši dostop.</string>
-    <!-- Deprecated: text for the firefox account onboarding card header when we detect you're already signed in to -->
-    <string name="onboarding_firefox_account_auto_signin_header_2">V drugem brskalniku Firefox na tem telefonu ste prijavljeni kot %s. Ali se želite prijaviti s tem računom?</string>
-    <!-- Deprecated: Describes the add to homescreen functionality -->
-    <string name="add_to_homescreen_description">To stran lahko preprosto dodate na svoj domači zaslon telefona za lažji dostop in hitrejše brskanje v načinu, podobnem aplikaciji.</string>
+    <!-- Content description for privacy content close button -->
+    <string name="privacy_content_close_button_content_description">Zapri</string>
 
-    </resources>
+</resources>
