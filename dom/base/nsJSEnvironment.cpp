@@ -1606,8 +1606,7 @@ bool GCRunnerFired(TimeStamp aDeadline, void* aClosure) {
   GCRunnerStep step = sScheduler.GetNextGCRunnerAction(aDeadline);
   switch (step.mAction) {
     case GCRunnerAction::None:
-      nsJSContext::KillGCRunner();
-      return false;
+      MOZ_CRASH("Unexpected GCRunnerAction");
 
     case GCRunnerAction::WaitToMajorGC: {
       RefPtr<MayGCPromise> mbPromise = MayGCNow(step.mReason);
@@ -1621,7 +1620,9 @@ bool GCRunnerFired(TimeStamp aDeadline, void* aClosure) {
       mbPromise->Then(
           GetMainThreadSerialEventTarget(), __func__,
           [](bool aIgnored) {
-            sScheduler.NoteReadyForMajorGC();
+            if (!sScheduler.NoteReadyForMajorGC()) {
+              return;  // Another GC completed while waiting.
+            }
             // If a new runner was started, recreate it with a 0 delay. The new
             // runner will continue in idle time.
             nsJSContext::KillGCRunner();
