@@ -1175,6 +1175,8 @@ static Element* GetPropagatedScrollStylesForViewport(
 }
 
 Element* nsPresContext::UpdateViewportScrollStylesOverride() {
+  ScrollStyles oldViewportScrollStyles = mViewportScrollStyles;
+
   // Start off with our default styles, and then update them as needed.
   mViewportScrollStyles =
       ScrollStyles(StyleOverflow::Auto, StyleOverflow::Auto);
@@ -1198,6 +1200,15 @@ Element* nsPresContext::UpdateViewportScrollStylesOverride() {
           ScrollStyles(StyleOverflow::Hidden, StyleOverflow::Hidden);
     }
   }
+
+  if (mViewportScrollStyles != oldViewportScrollStyles) {
+    if (mPresShell) {
+      if (nsIFrame* frame = mPresShell->GetRootFrame()) {
+        frame->SchedulePaint();
+      }
+    }
+  }
+
   return mViewportScrollOverrideElement;
 }
 
