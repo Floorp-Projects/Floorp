@@ -28,14 +28,12 @@ class TestServerQuitApplication(MarionetteTestCase):
         if flags is not None:
             body = {"flags": list(flags)}
 
-        try:
-            resp = self.marionette._send_message("Marionette:Quit", body)
-        finally:
-            self.marionette.session_id = None
-            self.marionette.session = None
-            self.marionette.process_id = None
-            self.marionette.profile = None
-            self.marionette.window = None
+        resp = self.marionette._send_message("Marionette:Quit", body)
+        self.marionette.session_id = None
+        self.marionette.session = None
+        self.marionette.process_id = None
+        self.marionette.profile = None
+        self.marionette.window = None
 
         self.assertIn("cause", resp)
 
