@@ -1988,38 +1988,44 @@
                   <hbox id="cfr-label-container">
                     <label id="cfr-label"/>
                   </hbox>
-                  <image id="cfr-button"
-                         class="urlbar-icon urlbar-page-action"
-                         role="presentation"/>
+                  <hbox id="cfr-button"
+                        role="presentation"
+                        class="urlbar-page-action urlbar-icon-wrapper">
+                    <image class="urlbar-icon"/>
+                  </hbox>
                 </hbox>
                 <hbox id="userContext-icons" hidden="true">
                   <label id="userContext-label"/>
                   <image id="userContext-indicator"/>
                 </hbox>
-                <image id="reader-mode-button"
-                       class="urlbar-icon urlbar-page-action"
-                       tooltip="dynamic-shortcut-tooltip"
-                       role="button"
-                       hidden="true"
-                       onclick="AboutReaderParent.buttonClick(event);"/>
+                <hbox id="reader-mode-button"
+                      class="urlbar-page-action urlbar-icon-wrapper"
+                      role="button"
+                      hidden="true"
+                      tooltip="dynamic-shortcut-tooltip"
+                      onclick="AboutReaderParent.buttonClick(event);">
+                  <image class="urlbar-icon"/>
+                </hbox>
                 <toolbarbutton id="urlbar-zoom-button"
                        onclick="FullZoom.reset(); FullZoom.resetScalingZoom();"
                        tooltip="dynamic-shortcut-tooltip"
                        hidden="true"/>
                 <box id="pageActionSeparator" class="urlbar-page-action"/>
-                <image id="pageActionButton"
-                       class="urlbar-icon urlbar-page-action"
-                       role="button"
-                       data-l10n-id="urlbar-page-action-button"
-                       onmousedown="BrowserPageActions.mainButtonClicked(event);"
-                       onkeypress="BrowserPageActions.mainButtonClicked(event);"/>
+                <hbox id="pageActionButton"
+                      class="urlbar-page-action urlbar-icon-wrapper"
+                      role="button"
+                      data-l10n-id="urlbar-page-action-button"
+                      onmousedown="BrowserPageActions.mainButtonClicked(event);"
+                      onkeypress="BrowserPageActions.mainButtonClicked(event);">
+                  <image class="urlbar-icon"/>
+                </hbox>
                 <hbox id="star-button-box"
                       hidden="true"
-                      class="urlbar-icon-wrapper urlbar-page-action"
+                      role="button"
+                      class="urlbar-page-action urlbar-icon-wrapper"
                       onclick="BrowserPageActions.doCommandForAction(PageActions.actionForID('bookmark'), event, this);">
                   <image id="star-button"
-                         class="urlbar-icon"
-                         role="button"/>
+                         class="urlbar-icon"/>
                 </hbox>
               </hbox>
             </hbox>

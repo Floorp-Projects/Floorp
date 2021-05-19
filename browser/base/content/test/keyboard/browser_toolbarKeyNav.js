@@ -263,7 +263,7 @@ add_task(async function testArrowsRoleButton() {
   await BrowserTestUtils.withNewTab("https://example.com", async function() {
     startFromUrlBar();
     await expectFocusAfterKey("Tab", "pageActionButton");
-    await expectFocusAfterKey("ArrowRight", "star-button");
+    await expectFocusAfterKey("ArrowRight", "star-button-box");
     await expectFocusAfterKey("ArrowLeft", "pageActionButton");
   });
 });
