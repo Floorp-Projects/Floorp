@@ -6208,12 +6208,26 @@ already_AddRefed<Layer> nsDisplayBlendMode::BuildLayer(
 
 void nsDisplayBlendMode::Paint(nsDisplayListBuilder* aBuilder,
                                gfxContext* aCtx) {
-  aCtx->GetDrawTarget()->PushLayerWithBlend(false, 1.0, nullptr,
-                                            mozilla::gfx::Matrix(), IntRect(),
-                                            false, BlendMode());
-  GetChildren()->Paint(aBuilder, aCtx,
+  // This should be switched to use PushLayerWithBlend, once it's
+  // been implemented for all DrawTarget backends.
+  int32_t appUnitsPerDevPixel = mFrame->PresContext()->AppUnitsPerDevPixel();
+  IntRect rect =
+      IntRect::RoundOut(NSRectToRect(GetPaintRect(), appUnitsPerDevPixel));
+
+  RefPtr<DrawTarget> dt = aCtx->GetDrawTarget()->CreateSimilarDrawTarget(
+      rect.Size(), SurfaceFormat::B8G8R8A8);
+  dt->SetTransform(Matrix::Translation(-rect.x, -rect.y));
+  RefPtr<gfxContext> ctx = gfxContext::CreatePreservingTransformOrNull(dt);
+
+  GetChildren()->Paint(aBuilder, ctx,
                        mFrame->PresContext()->AppUnitsPerDevPixel());
-  aCtx->GetDrawTarget()->PopLayer();
+
+  dt->Flush();
+  RefPtr<SourceSurface> surface = dt->Snapshot();
+  aCtx->GetDrawTarget()->DrawSurface(
+      surface, Rect(rect.x, rect.y, rect.width, rect.height),
+      Rect(0, 0, rect.width, rect.height), DrawSurfaceOptions(),
+      DrawOptions(1.0f, nsCSSRendering::GetGFXBlendMode(mBlendMode)));
 }
 
 mozilla::gfx::CompositionOp nsDisplayBlendMode::BlendMode() {
