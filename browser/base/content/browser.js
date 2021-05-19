@@ -9416,6 +9416,17 @@ var gDialogBox = {
         this._queued.push({ resolve, reject, uri, args });
       });
     }
+
+    // We're not open. If we're in a modal state though, we can't
+    // show the dialog effectively. To avoid hanging by deadlock,
+    // just return immediately for sync prompts:
+    if (window.windowUtils.isInModalState() && !args.getProperty("async")) {
+      throw Components.Exception(
+        "Prompt could not be shown.",
+        Cr.NS_ERROR_NOT_AVAILABLE
+      );
+    }
+
     // Indicate if we should wait for the dialog to close.
     this._didOpenHTMLDialog = false;
     let haveClosedPromise = new Promise(resolve => {
