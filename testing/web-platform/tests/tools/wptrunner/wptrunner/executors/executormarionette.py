@@ -43,7 +43,6 @@ from .protocol import (ActionSequenceProtocolPart,
                        SetPermissionProtocolPart,
                        PrintProtocolPart,
                        DebugProtocolPart)
-from ..webdriver_server import GeckoDriverServer
 
 
 def do_delayed_imports():
@@ -1124,11 +1123,31 @@ class InternalRefTestImplementation(RefTestImplementation):
 
 
 class GeckoDriverProtocol(WdspecProtocol):
-    server_cls = GeckoDriverServer
+    server_cls = None  # To avoid circular imports we set this at runtime
 
 
 class MarionetteWdspecExecutor(WdspecExecutor):
     protocol_cls = GeckoDriverProtocol
+
+    def __init__(self, logger, browser, server_config, webdriver_binary,
+                 webdriver_args, timeout_multiplier=1, capabilities=None,
+                 debug_info=None, environ=None, stackfix_dir=None,
+                 symbols_path=None, leak_report_file=None, asan=False,
+                 group_metadata=None, browser_settings=None, **kwargs):
+
+        from ..browsers.firefox import GeckoDriverServer
+        super().__init__(logger, browser, server_config, webdriver_binary,
+                         webdriver_args, timeout_multiplier=timeout_multiplier,
+                         capabilities=capabilities, debug_info=debug_info,
+                         environ=environ, **kwargs)
+        self.protocol_cls.server_cls = GeckoDriverServer
+        self.output_handler_kwargs = {"stackfix_dir": stackfix_dir,
+                                      "symbols_path": symbols_path,
+                                      "asan": asan,
+                                      "leak_report_file": leak_report_file}
+        self.output_handler_start_kwargs = {"group_metadata": group_metadata}
+        self.output_handler_start_kwargs.update(browser_settings)
+
 
 
 class MarionetteCrashtestExecutor(CrashtestExecutor):
