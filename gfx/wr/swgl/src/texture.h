@@ -1020,9 +1020,13 @@ static VectorType<uint16_t, 4 * sizeof(P)> gaussianBlurHorizontal(
   // texture bounds, we compute the valid radius that doesn't require clamping
   // and fall back to a slower clamping loop outside of that valid radius.
   int offset = 1;
+  // The left bound is how much we can offset the sample before the start of
+  // the row bounds.
   int leftBound = i.x - max(minX, 0);
-  int rightBound = min(maxX, sampler->width) - (i.x + 4);
-  int validRadius = min(radius, min(leftBound, rightBound));
+  // The right bound is how much we can offset the sample before the end of the
+  // row bounds.
+  int rightBound = min(maxX, sampler->width - 1) - i.x;
+  int validRadius = min(radius, min(leftBound, rightBound - (4 - 1)));
   for (; offset <= validRadius; offset++) {
     // Overwrite the pixel that needs to be shifted out with the new pixel, and
     // shift it into the correct location.
@@ -1091,7 +1095,7 @@ static VectorType<uint16_t, 4 * sizeof(P)> gaussianBlurVertical(
   // a slower clamping loop outside of that valid radius.
   int offset = 1;
   int belowBound = i.y - max(minY, 0);
-  int aboveBound = min(maxY, sampler->height) - (i.y + 1);
+  int aboveBound = min(maxY, sampler->height - 1) - i.y;
   int validRadius = min(radius, min(belowBound, aboveBound));
   for (; offset <= validRadius; offset++) {
     rowAbove += sampler->stride;
