@@ -470,6 +470,9 @@ def link_to_cpp(interfaces, fd, header_fd):
 
     header_fd.write(
         """
+#ifndef xptdata_h
+#define xptdata_h
+
 enum class nsXPTInterface : uint16_t {
 """
     )
@@ -480,6 +483,8 @@ enum class nsXPTInterface : uint16_t {
     header_fd.write(
         """
 };
+
+#endif
 """
     )
 
