@@ -245,6 +245,48 @@ add_task(async function test_suggestions() {
   Services.prefs.clearUserPref("browser.urlbar.maxHistoricalSearchSuggestions");
 });
 
+add_task(async function test_deduplicate_for_unitConversion() {
+  const searchSuggestion = new UrlbarResult(
+    UrlbarUtils.RESULT_TYPE.SEARCH,
+    UrlbarUtils.RESULT_SOURCE.SEARCH,
+    {
+      engine: "Google",
+      query: "10cm to m",
+      suggestion: "= 0.1 meters",
+    }
+  );
+  const searchProvider = registerBasicTestProvider(
+    [searchSuggestion],
+    null,
+    UrlbarUtils.PROVIDER_TYPE.PROFILE
+  );
+
+  const unitConversionSuggestion = new UrlbarResult(
+    UrlbarUtils.RESULT_TYPE.DYNAMIC,
+    UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
+    {
+      dynamicType: "unitConversion",
+      output: "0.1 m",
+      input: "10cm to m",
+    }
+  );
+  unitConversionSuggestion.suggestedIndex = 1;
+
+  const unitConversion = registerBasicTestProvider(
+    [unitConversionSuggestion],
+    null,
+    UrlbarUtils.PROVIDER_TYPE.PROFILE,
+    "UnitConversion"
+  );
+
+  const context = createContext(undefined, {
+    providers: [searchProvider.name, unitConversion.name],
+  });
+  const controller = UrlbarTestUtils.newMockController();
+  await UrlbarProvidersManager.startQuery(context, controller);
+  Assert.deepEqual(context.results, [unitConversionSuggestion]);
+});
+
 // These results are used in the badHeuristicBuckets tests below.  The order of
 // the results in the array isn't important because they all get added at the
 // same time.  It's the resultBuckets in each test that are important.

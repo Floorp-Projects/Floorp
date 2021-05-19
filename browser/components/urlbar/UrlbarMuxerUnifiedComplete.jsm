@@ -67,6 +67,7 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
       // is a search result.  All strings in the set are lowercased.
       suggestions: new Set(),
       canAddTabToSearch: true,
+      hasUnitConversionResult: false,
       // When you add state, update _copyState() as necessary.
     };
 
@@ -529,6 +530,18 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
       return false;
     }
 
+    // Google search engine might suggest a result for unit conversion with
+    // format that starts with "= ". If our UnitConversion can provide the
+    // result, we discard the suggestion of Google in order to deduplicate.
+    if (
+      result.type == UrlbarUtils.RESULT_TYPE.SEARCH &&
+      result.payload.engine == "Google" &&
+      result.payload.suggestion?.startsWith("= ") &&
+      state.hasUnitConversionResult
+    ) {
+      return false;
+    }
+
     // Include the result.
     return true;
   }
@@ -579,6 +592,9 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
     ) {
       state.canShowTailSuggestions = false;
     }
+
+    state.hasUnitConversionResult =
+      state.hasUnitConversionResult || result.providerName == "UnitConversion";
   }
 
   /**
