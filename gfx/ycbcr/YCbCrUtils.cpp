@@ -137,6 +137,7 @@ ConvertYCbCrToRGBInternal(const layers::PlanarYCbCrData& aData,
     dstData.mCbCrStride = (aData.mCbCrSize.width + 31) & ~31;
     dstData.mYUVColorSpace = aData.mYUVColorSpace;
     dstData.mColorDepth = ColorDepth::COLOR_8;
+    dstData.mColorRange = aData.mColorRange;
 
     size_t ySize = GetAlignedStride<1>(dstData.mYStride, aData.mYSize.height);
     size_t cbcrSize =
@@ -254,7 +255,8 @@ ConvertYCbCrToRGBInternal(const layers::PlanarYCbCrData& aData,
                           srcData.mCbCrStride,
                           aStride,
                           yuvtype,
-                          srcData.mYUVColorSpace);
+                          srcData.mYUVColorSpace,
+                          srcData.mColorRange);
   }
 }
 
