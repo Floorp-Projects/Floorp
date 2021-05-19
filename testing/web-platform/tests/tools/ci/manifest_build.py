@@ -193,6 +193,6 @@ def main():
 
 
 if __name__ == "__main__":
-    code = main()
+    code = main()  # type: ignore
     assert isinstance(code, int)
     sys.exit(code)
