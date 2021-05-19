@@ -9906,12 +9906,37 @@ void nsDisplayFilters::ComputeInvalidationRegion(
 
 void nsDisplayFilters::PaintAsLayer(nsDisplayListBuilder* aBuilder,
                                     gfxContext* aCtx, LayerManager* aManager) {
+  PaintWithContentsPaintCallback(aBuilder, aCtx, [&](gfxContext* aContext) {
+    BasicLayerManager* basic = aManager->AsBasicLayerManager();
+    RefPtr<gfxContext> oldCtx = basic->GetTarget();
+    basic->SetTarget(aContext);
+
+    aManager->EndTransaction(FrameLayerBuilder::DrawPaintedLayer, aBuilder);
+    basic->SetTarget(oldCtx);
+  });
+}
+
+void nsDisplayFilters::PaintWithContentsPaintCallback(
+    nsDisplayListBuilder* aBuilder, gfxContext* aCtx,
+    const std::function<void(gfxContext* aContext)>& aPaintChildren) {
   imgDrawingParams imgParams(aBuilder->GetImageDecodeFlags());
   nsRect borderArea = nsRect(ToReferenceFrame(), mFrame->GetSize());
   SVGIntegrationUtils::PaintFramesParams params(*aCtx, mFrame, GetPaintRect(),
-                                                borderArea, aBuilder, aManager,
+                                                borderArea, aBuilder, nullptr,
                                                 mHandleOpacity, imgParams);
-  SVGIntegrationUtils::PaintFilter(params);
+
+  gfxPoint userSpaceToFrameSpaceOffset =
+      SVGIntegrationUtils::GetOffsetToUserSpaceInDevPx(mFrame, params);
+
+  SVGIntegrationUtils::PaintFilter(
+      params,
+      [&](gfxContext& aContext, nsIFrame* aTarget, const gfxMatrix& aTransform,
+          const nsIntRect* aDirtyRect, image::imgDrawingParams& aImgParams) {
+        gfxContextMatrixAutoSaveRestore autoSR(&aContext);
+        aContext.SetMatrixDouble(aContext.CurrentMatrixDouble().PreTranslate(
+            -userSpaceToFrameSpaceOffset));
+        aPaintChildren(&aContext);
+      });
   nsDisplayFiltersGeometry::UpdateDrawResult(this, imgParams.result);
 }
 
