@@ -106,10 +106,20 @@ def browser_kwargs(logger, test_type, run_info_data, config, **kwargs):
             "specialpowers_path": kwargs["specialpowers_path"]}
 
 
-def executor_kwargs(logger, test_type, server_config, cache_manager, run_info_data,
+class WdSpecProfile(object):
+    def __init__(self, profile):
+        self.profile = profile
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args, **kwargs):
+        self.profile.cleanup()
+
+
+def executor_kwargs(logger, test_type, test_environment, run_info_data,
                     **kwargs):
-    executor_kwargs = base_executor_kwargs(test_type, server_config,
-                                           cache_manager, run_info_data,
+    executor_kwargs = base_executor_kwargs(test_type, test_environment, run_info_data,
                                            **kwargs)
     executor_kwargs["close_after_done"] = test_type != "reftest"
     executor_kwargs["timeout_multiplier"] = get_timeout_multiplier(test_type,
@@ -131,7 +141,7 @@ def executor_kwargs(logger, test_type, server_config, cache_manager, run_info_da
 
         profile_creator = ProfileCreator(logger,
                                          kwargs["prefs_root"],
-                                         server_config,
+                                         test_environment.config,
                                          test_type,
                                          kwargs["extra_prefs"],
                                          kwargs["gecko_e10s"],
@@ -139,7 +149,7 @@ def executor_kwargs(logger, test_type, server_config, cache_manager, run_info_da
                                          kwargs["browser_channel"],
                                          kwargs["binary"],
                                          kwargs["certutil_binary"],
-                                         server_config.ssl_config["ca_cert_path"])
+                                         test_environment.config.ssl_config["ca_cert_path"])
         if kwargs["processes"] > 1:
             # With multiple processes, we would need a profile directory per process, but we
             # don't have an easy way to do that, so include the profile in the capabilties
@@ -148,8 +158,7 @@ def executor_kwargs(logger, test_type, server_config, cache_manager, run_info_da
         else:
             profile = profile_creator.create()
             options["args"].extend(["--profile", profile.profile])
-            # Prevent the profile being deleted
-            executor_kwargs["profile"] = profile
+            test_environment.env_extras_cms.append(WdSpecProfile(profile))
 
         capabilities["moz:firefoxOptions"] = options
 
@@ -380,6 +389,7 @@ class SingleInstanceManager(FirefoxInstanceManager):
             if instance:
                 instance.stop(force)
                 instance.cleanup()
+        self.base_profile.cleanup()
 
 
 class PreloadInstanceManager(FirefoxInstanceManager):
@@ -408,6 +418,7 @@ class PreloadInstanceManager(FirefoxInstanceManager):
             if instance:
                 instance.stop(force, skip_marionette=skip_marionette)
                 instance.cleanup()
+        self.base_profile.cleanup()
 
 
 class BrowserInstance(object):
@@ -469,7 +480,7 @@ class BrowserInstance(object):
         return False
 
     def cleanup(self):
-        # mozprofile handles deleting the profile when the refcount reaches 0
+        self.runner.cleanup()
         self.runner = None
 
 
@@ -603,6 +614,7 @@ class ProfileCreator(object):
         preferences = self._load_prefs()
 
         profile = FirefoxProfile(preferences=preferences,
+                                 restore=False,
                                  **kwargs)
         self._set_required_prefs(profile)
         if self.ca_certificate_path is not None:
