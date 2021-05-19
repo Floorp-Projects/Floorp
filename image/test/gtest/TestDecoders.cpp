@@ -742,6 +742,102 @@ TEST_F(ImageDecoders, AVIFSingleChunkTransparent8bit444) {
   CheckDecoderSingleChunk(Transparent8bit444AVIFTestCase());
 }
 
+TEST_F(ImageDecoders, AVIFSingleChunkGray8bitLimitedRangeBT601) {
+  CheckDecoderSingleChunk(Gray8bitLimitedRangeBT601AVIFTestCase());
+}
+
+TEST_F(ImageDecoders, AVIFSingleChunkGray8bitLimitedRangeBT709) {
+  CheckDecoderSingleChunk(Gray8bitLimitedRangeBT709AVIFTestCase());
+}
+
+TEST_F(ImageDecoders, AVIFSingleChunkGray8bitLimitedRangeBT2020) {
+  CheckDecoderSingleChunk(Gray8bitLimitedRangeBT2020AVIFTestCase());
+}
+
+TEST_F(ImageDecoders, AVIFSingleChunkGray8bitFullRangeBT601) {
+  CheckDecoderSingleChunk(Gray8bitFullRangeBT601AVIFTestCase());
+}
+
+TEST_F(ImageDecoders, AVIFSingleChunkGray8bitFullRangeBT709) {
+  CheckDecoderSingleChunk(Gray8bitFullRangeBT709AVIFTestCase());
+}
+
+TEST_F(ImageDecoders, AVIFSingleChunkGray8bitFullRangeBT2020) {
+  CheckDecoderSingleChunk(Gray8bitFullRangeBT2020AVIFTestCase());
+}
+
+TEST_F(ImageDecoders, AVIFSingleChunkGray10bitLimitedRangeBT601) {
+  CheckDecoderSingleChunk(Gray10bitLimitedRangeBT601AVIFTestCase());
+}
+
+TEST_F(ImageDecoders, AVIFSingleChunkGray10bitLimitedRangeBT709) {
+  CheckDecoderSingleChunk(Gray10bitLimitedRangeBT709AVIFTestCase());
+}
+
+TEST_F(ImageDecoders, AVIFSingleChunkGray10bitLimitedRangeBT2020) {
+  CheckDecoderSingleChunk(Gray10bitLimitedRangeBT2020AVIFTestCase());
+}
+
+TEST_F(ImageDecoders, AVIFSingleChunkGray10bitFullRangeBT601) {
+  CheckDecoderSingleChunk(Gray10bitFullRangeBT601AVIFTestCase());
+}
+
+TEST_F(ImageDecoders, AVIFSingleChunkGray10bitFullRangeBT709) {
+  CheckDecoderSingleChunk(Gray10bitFullRangeBT709AVIFTestCase());
+}
+
+TEST_F(ImageDecoders, AVIFSingleChunkGray10bitFullRangeBT2020) {
+  CheckDecoderSingleChunk(Gray10bitFullRangeBT2020AVIFTestCase());
+}
+
+TEST_F(ImageDecoders, AVIFSingleChunkGray12bitLimitedRangeBT601) {
+  CheckDecoderSingleChunk(Gray12bitLimitedRangeBT601AVIFTestCase());
+}
+
+TEST_F(ImageDecoders, AVIFSingleChunkGray12bitLimitedRangeBT709) {
+  CheckDecoderSingleChunk(Gray12bitLimitedRangeBT709AVIFTestCase());
+}
+
+TEST_F(ImageDecoders, AVIFSingleChunkGray12bitLimitedRangeBT2020) {
+  CheckDecoderSingleChunk(Gray12bitLimitedRangeBT2020AVIFTestCase());
+}
+
+TEST_F(ImageDecoders, AVIFSingleChunkGray12bitFullRangeBT601) {
+  CheckDecoderSingleChunk(Gray12bitFullRangeBT601AVIFTestCase());
+}
+
+TEST_F(ImageDecoders, AVIFSingleChunkGray12bitFullRangeBT709) {
+  CheckDecoderSingleChunk(Gray12bitFullRangeBT709AVIFTestCase());
+}
+
+TEST_F(ImageDecoders, AVIFSingleChunkGray12bitFullRangeBT2020) {
+  CheckDecoderSingleChunk(Gray12bitFullRangeBT2020AVIFTestCase());
+}
+
+TEST_F(ImageDecoders, AVIFSingleChunkGray8bitLimitedRangeGrayscale) {
+  CheckDecoderSingleChunk(Gray8bitLimitedRangeGrayscaleAVIFTestCase());
+}
+
+TEST_F(ImageDecoders, AVIFSingleChunkGray8bitFullRangeGrayscale) {
+  CheckDecoderSingleChunk(Gray8bitFullRangeGrayscaleAVIFTestCase());
+}
+
+TEST_F(ImageDecoders, AVIFSingleChunkGray10bitLimitedRangeGrayscale) {
+  CheckDecoderSingleChunk(Gray10bitLimitedRangeGrayscaleAVIFTestCase());
+}
+
+TEST_F(ImageDecoders, AVIFSingleChunkGray10bitFullRangeGrayscale) {
+  CheckDecoderSingleChunk(Gray10bitFullRangeGrayscaleAVIFTestCase());
+}
+
+TEST_F(ImageDecoders, AVIFSingleChunkGray12bitLimitedRangeGrayscale) {
+  CheckDecoderSingleChunk(Gray12bitLimitedRangeGrayscaleAVIFTestCase());
+}
+
+TEST_F(ImageDecoders, AVIFSingleChunkGray12bitFullRangeGrayscale) {
+  CheckDecoderSingleChunk(Gray12bitFullRangeGrayscaleAVIFTestCase());
+}
+
 TEST_F(ImageDecoders, AVIFMultiLayerSingleChunk) {
   CheckDecoderSingleChunk(MultiLayerAVIFTestCase());
 }

@@ -693,6 +693,48 @@ int Android420ToABGR(const uint8_t* src_y,
                      int width,
                      int height);
 
+// Convert I420 to ARGB with matrix
+LIBYUV_API
+int I420ToARGBMatrix(const uint8_t* src_y,
+                     int src_stride_y,
+                     const uint8_t* src_u,
+                     int src_stride_u,
+                     const uint8_t* src_v,
+                     int src_stride_v,
+                     uint8_t* dst_argb,
+                     int dst_stride_argb,
+                     const struct YuvConstants* yuvconstants,
+                     int width,
+                     int height);
+
+// Convert I422 to ARGB with matrix
+LIBYUV_API
+int I422ToARGBMatrix(const uint8_t* src_y,
+                     int src_stride_y,
+                     const uint8_t* src_u,
+                     int src_stride_u,
+                     const uint8_t* src_v,
+                     int src_stride_v,
+                     uint8_t* dst_argb,
+                     int dst_stride_argb,
+                     const struct YuvConstants* yuvconstants,
+                     int width,
+                     int height);
+
+// Convert I444 to ARGB with matrix
+LIBYUV_API
+int I444ToARGBMatrix(const uint8_t* src_y,
+                     int src_stride_y,
+                     const uint8_t* src_u,
+                     int src_stride_u,
+                     const uint8_t* src_v,
+                     int src_stride_v,
+                     uint8_t* dst_argb,
+                     int dst_stride_argb,
+                     const struct YuvConstants* yuvconstants,
+                     int width,
+                     int height);
+
 // Convert camera sample to ARGB with cropping, rotation and vertical flip.
 // "sample_size" is needed to parse MJPG.
 // "dst_stride_argb" number of bytes in a row of the dst_argb plane.
