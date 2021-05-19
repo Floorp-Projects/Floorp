@@ -1491,11 +1491,10 @@ static bool DefinePropertyIsRedundant(JSContext* cx, HandleNativeObject obj,
         prop.shapeProperty().isCustomDataProperty()) {
       return true;
     }
-  } else {
+  } else if (desc.isAccessorDescriptor()) {
     if (!prop.isNativeProperty()) {
       return true;
     }
-
     ShapeProperty shapeProp = prop.shapeProperty();
     if (desc.hasGetterObject() &&
         (!(shapeProp.attributes() & JSPROP_GETTER) ||
