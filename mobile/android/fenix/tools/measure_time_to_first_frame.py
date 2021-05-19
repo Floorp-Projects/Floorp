@@ -4,7 +4,9 @@
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import argparse
+import datetime
 import os
+import re
 import subprocess
 import time
 from pprint import pprint
@@ -29,6 +31,11 @@ CHANNEL_TO_PKG = {
     'debug': 'org.mozilla.fenix.debug'
 }
 
+TEST_COLD_MAIN_FF = 'cold_main_first_frame'
+TEST_COLD_VIEW_FF = 'cold_view_first_frame'
+TEST_COLD_VIEW_NAV_START = 'cold_view_nav_start'
+TESTS = [TEST_COLD_MAIN_FF, TEST_COLD_VIEW_FF, TEST_COLD_VIEW_NAV_START]
+
 
 def parse_args():
     parser = argparse.ArgumentParser(description=DESC, formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -36,13 +43,14 @@ def parse_args():
         "release_channel", choices=['nightly', 'beta', 'release', 'debug'], help="the release channel to measure"
     )
     parser.add_argument(
-        "startup_type", choices=['cold_main', 'cold_view'], help="the type of start up to measure. see https://wiki.mozilla.org/Performance/Fenix#Terminology for descriptions of cold/warm/hot and main/view"
+        "test_name", choices=TESTS, help="the start up test to run; see https://wiki.mozilla.org/Performance/Fenix#Terminology for descriptions of cold/warm/hot and main/view"
     )
-    parser.add_argument("path", help="the path to save the measurement results; will be overwritten")
+    parser.add_argument("path", help="the path to save the measurement results; will abort if file exists")
 
     parser.add_argument("-c", "--iter-count", default=DEFAULT_ITER_COUNT, type=int,
                         help="the number of iterations to run. defaults to {}".format(DEFAULT_ITER_COUNT))
     parser.add_argument("-f", "--force", action="store_true", help="overwrite the given path rather than stopping on file existence")
+
     return parser.parse_args()
 
 
@@ -77,23 +85,22 @@ def disable_startup_profiling():
     subprocess.run(args, check=True)
 
 
-def get_start_cmd(startup_type, pkg_id):
+def get_start_cmd(test_name, pkg_id):
     args_prefix = get_activity_manager_args() + ['start-activity', '-W', '-n']
-    if startup_type == 'cold_main':
+    if test_name == TEST_COLD_MAIN_FF:
         cmd = args_prefix + ['{}/.App'.format(pkg_id)]
-    elif startup_type == 'cold_view':
+    elif test_name == TEST_COLD_VIEW_FF or test_name == TEST_COLD_VIEW_NAV_START:
         pkg_activity = '{}/org.mozilla.fenix.IntentReceiverActivity'.format(pkg_id)
         cmd = args_prefix + [
             pkg_activity,
             '-d', 'https://example.com',
             '-a', 'android.intent.action.VIEW'
         ]
-    else:
-        raise Exception('Should never happen (if argparse is set up correctly')
+    else: raise NotImplementedError('method unexpectedly undefined for test_name {}'.format(test_name))
     return cmd
 
 
-def measure(pkg_id, start_cmd_args, iter_count):
+def measure(test_name, pkg_id, start_cmd_args, iter_count):
     # Startup profiling may accidentally be left enabled and throw off the results.
     # To prevent this, we disable it.
     disable_startup_profiling()
@@ -105,17 +112,33 @@ def measure(pkg_id, start_cmd_args, iter_count):
     time.sleep(5)  # To hopefully reach visual completeness.
 
     measurements = []
-    for i in range(0, iter_count):
+    for _ in range(0, iter_count):
         force_stop(pkg_id)
         time.sleep(1)
+
+        # This is only necessary for nav start tests (to ensure logcat only contains the result from the current run).
+        # However, it's not known to be disruptive to other tests (to first frame) so we leave it in.
+        subprocess.run(['adb', 'logcat', '-c'], check=True)
+
         proc = subprocess.run(start_cmd_args, check=True, capture_output=True)  # expected to wait for app to start.
-        measurements.append(get_measurement_from_stdout(proc.stdout))
+        measurements.append(get_measurement(test_name, pkg_id, proc.stdout))
+
     return measurements
 
 
-def get_measurement_from_stdout(stdout):
-    # Sample input:
-    #
+def get_measurement(test_name, pkg_id, stdout):
+    if test_name == TEST_COLD_MAIN_FF or test_name == TEST_COLD_VIEW_FF:
+        measurement = get_measurement_from_am_start_log(stdout)
+    elif test_name == TEST_COLD_VIEW_NAV_START:
+        time.sleep(3)  # We must sleep until the navigation start event occurs.
+        proc = subprocess.run(['adb', 'logcat', '-d'], check=True, capture_output=True)
+        measurement = get_measurement_from_nav_start_logcat(pkg_id, proc.stdout)
+    else: raise NotImplementedError('method unexpectedly undefined for test_name {}'.format(test_name))
+    return measurement
+
+
+def get_measurement_from_am_start_log(stdout):
+    # Sample output:
     # Starting: Intent { cmp=org.mozilla.fenix/.App }
     # Status: ok
     # Activity: org.mozilla.fenix/.App
@@ -133,6 +156,45 @@ def get_measurement_from_stdout(stdout):
     return duration
 
 
+def get_measurement_from_nav_start_logcat(pkg_id, logcat_bytes):
+    # Relevant lines:
+    # 05-18 14:32:47.366  1759  6003 I ActivityManager: START u0 {act=android.intent.action.VIEW dat=https://example.com/... typ=text/html flg=0x10000000 cmp=org.mozilla.fenix/.IntentReceiverActivity} from uid 2000
+    # 05-18 14:32:47.402  1759  6003 I ActivityManager: Start proc 9007:org.mozilla.fenix/u0a170 for activity org.mozilla.fenix/.IntentReceiverActivity
+    # 05-18 14:32:50.809  9007  9007 I GeckoSession: handleMessage GeckoView:PageStart uri=
+    # 05-18 14:32:50.821  9007  9007 I GeckoSession: handleMessage GeckoView:PageStop uri=null
+    def line_to_datetime(line):
+        date_str = ' '.join(line.split(' ')[:2])  # e.g. "05-18 14:32:47.366"
+        # strptime needs microseconds. logcat outputs millis so we append zeroes
+        date_str_with_micros = date_str + '000'
+        return datetime.datetime.strptime(date_str_with_micros, '%m-%d %H:%M:%S.%f')
+
+    def get_proc_start_datetime():
+        # This regex may not work on older versions of Android: we don't care
+        # yet because supporting older versions isn't in our requirements.
+        proc_start_re = re.compile('ActivityManager: Start proc \d+:{}/'.format(pkg_id))
+        proc_start_lines = [line for line in lines if proc_start_re.search(line)]
+        assert len(proc_start_lines) == 1
+        return line_to_datetime(proc_start_lines[0])
+
+    def get_page_start_datetime():
+        page_start_re = re.compile('GeckoSession: handleMessage GeckoView:PageStart uri=')
+        page_start_lines = [line for line in lines if page_start_re.search(line)]
+        assert len(page_start_lines) == 2  # One for about:blank & one for target URL.
+        return line_to_datetime(page_start_lines[1])  # 2nd PageStart is for target URL.
+
+    logcat = logcat_bytes.decode('UTF-8')  # Easier to work with and must for strptime.
+    lines = logcat.split('\n')
+
+    # We measure the time from process start, rather than the earlier START
+    # activity line, because I assume we have no control over the duration
+    # before our process starts. If we wanted to put in more time, we could
+    # double-check this assumption by seeing what values `am start -W` returns
+    # compared to the time stamps.
+    elapsed_seconds = (get_page_start_datetime() - get_proc_start_datetime()).total_seconds()  # values < 1s are expressed in decimal.
+    elapsed_millis = round(elapsed_seconds * 1000)
+    return elapsed_millis
+
+
 def save_measurements(path, measurements):
     with open(path, 'w') as f:
         for measurement in measurements:
@@ -145,11 +207,11 @@ def main():
 
     # Exceptions and script piping like these are why we prefer mozperftest. :)
     print("Clear the onboarding experience manually, if it's desired and you haven't already done so.")
-    print("\nYou can use this script to find the average from the results file: https://github.com/mozilla-mobile/perf-tools/blob/9dd8bf1ea0ea8b2663e21d341a1572c5249c513d/average_times.py")
+    print("\nYou can use this script to find the average from the results file: https://github.com/mozilla-mobile/perf-tools/blob/master/analyze_durations.py")
 
     pkg_id = get_package_id(args.release_channel)
-    start_cmd = get_start_cmd(args.startup_type, pkg_id)
-    measurements = measure(pkg_id, start_cmd, args.iter_count)
+    start_cmd = get_start_cmd(args.test_name, pkg_id)
+    measurements = measure(args.test_name, pkg_id, start_cmd, args.iter_count)
     save_measurements(args.path, measurements)
 
 
