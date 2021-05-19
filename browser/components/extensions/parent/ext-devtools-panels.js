@@ -414,9 +414,6 @@ class ParentDevToolsInspectorSidebar extends BaseDevToolsPanel {
       this.containerEl = null;
     }
 
-    // Release the last selected actor on the remote debugging server.
-    this._updateLastExpressionResult(null);
-
     this.toolbox.off(
       `extension-sidebar-created-${this.id}`,
       this.onSidebarCreated
