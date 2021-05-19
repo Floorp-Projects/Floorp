@@ -658,7 +658,23 @@ fn xpcom(init: DeriveInput) -> Result<TokenStream, syn::Error> {
         coerce_impl.push(coerce);
     }
 
+    let size_for_logs = if real.generics.params.is_empty() {
+        quote!(::std::mem::size_of::<Self>() as u32)
+    } else {
+        // Refcount logging requires all types with the same name to have the
+        // same size, and generics aren't taken into account when creating our
+        // name string, so we need to make sure that all possible instantiations
+        // report the same size. To do that, we fake a size based on the number
+        // of vtable pointers and the known refcount field.
+        let fake_size_npointers = bases.len() + 1;
+        quote!((::std::mem::size_of::<usize>() * #fake_size_npointers) as u32)
+    };
+
     let (impl_generics, ty_generics, where_clause) = real.generics.split_for_impl();
+    let name_for_logs = quote!(
+        concat!(module_path!(), "::", stringify!(#name #ty_generics), "\0").as_ptr()
+            as *const ::xpcom::reexports::libc::c_char
+    );
     Ok(quote! {
         #real
 
@@ -695,12 +711,25 @@ fn xpcom(init: DeriveInput) -> Result<TokenStream, syn::Error> {
 
             /// Automatically generated implementation of AddRef for nsISupports.
             #vis unsafe fn AddRef(&self) -> ::xpcom::interfaces::nsrefcnt {
-                self.__refcnt.inc()
+                let new = self.__refcnt.inc();
+                ::xpcom::trace_refcnt::NS_LogAddRef(
+                    self as *const _ as *mut ::xpcom::reexports::libc::c_void,
+                    new,
+                    #name_for_logs,
+                    #size_for_logs,
+                );
+                new
             }
 
             /// Automatically generated implementation of Release for nsISupports.
             #vis unsafe fn Release(&self) -> ::xpcom::interfaces::nsrefcnt {
                 let new = self.__refcnt.dec();
+                ::xpcom::trace_refcnt::NS_LogRelease(
+                    self as *const _ as *mut ::xpcom::reexports::libc::c_void,
+                    new,
+                    #name_for_logs,
+                    #size_for_logs,
+                );
                 if new == 0 {
                     // dealloc
                     ::std::boxed::Box::from_raw(self as *const Self as *mut Self);
