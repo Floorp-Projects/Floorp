@@ -1499,7 +1499,7 @@ pub extern "C" fn Servo_StyleSheet_Empty(
     let global_style_data = &*GLOBAL_STYLE_DATA;
     let origin = mode_to_origin(mode);
     let shared_lock = &global_style_data.shared_lock;
-    Arc::new(StylesheetContents::from_str(
+    StylesheetContents::from_str(
         "",
         unsafe { dummy_url_data() }.clone(),
         origin,
@@ -1511,7 +1511,7 @@ pub extern "C" fn Servo_StyleSheet_Empty(
         /* use_counters = */ None,
         AllowImportRules::Yes,
         /* sanitization_data = */ None,
-    ))
+    )
     .into_strong()
 }
 
@@ -1562,7 +1562,7 @@ pub unsafe extern "C" fn Servo_StyleSheet_FromUTF8Bytes(
 
     let mut sanitization_data = SanitizationData::new(sanitization_kind);
 
-    let contents = Arc::new(StylesheetContents::from_str(
+    let contents = StylesheetContents::from_str(
         input,
         url_data.clone(),
         mode_to_origin(mode),
@@ -1574,7 +1574,7 @@ pub unsafe extern "C" fn Servo_StyleSheet_FromUTF8Bytes(
         use_counters,
         allow_import_rules,
         sanitization_data.as_mut(),
-    ));
+    );
 
     if let Some(data) = sanitization_data {
         sanitized_output
@@ -1635,12 +1635,12 @@ pub unsafe extern "C" fn Servo_StyleSheet_FromSharedData(
     shared_rules: &ServoCssRules,
 ) -> Strong<RawServoStyleSheetContents> {
     let shared_rules = Locked::<CssRules>::as_arc(&shared_rules);
-    Arc::new(StylesheetContents::from_shared_data(
+    StylesheetContents::from_shared_data(
         shared_rules.clone_arc(),
         Origin::UserAgent,
         UrlExtraData::new(extra_data),
         QuirksMode::NoQuirks,
-    ))
+    )
     .into_strong()
 }
 
