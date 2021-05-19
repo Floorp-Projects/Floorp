@@ -1850,29 +1850,25 @@ nsresult Navigator::GetPlatform(nsAString& aPlatform,
     }
   }
 
-  nsresult rv;
-
-  nsCOMPtr<nsIHttpProtocolHandler> service(
-      do_GetService(NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "http", &rv));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Sorry for the #if platform ugliness, but Communicator is likewise
-  // hardcoded and we are seeking backward compatibility here (bug 47080).
 #if defined(WIN32)
   aPlatform.AssignLiteral("Win32");
 #elif defined(XP_MACOSX)
   // Always return "MacIntel", even on ARM64 macOS like Safari does.
   aPlatform.AssignLiteral("MacIntel");
 #else
-  // XXX Communicator uses compiled-in build-time string defines
-  // to indicate the platform it was compiled *for*, not what it is
-  // currently running *on* which is what this does.
+  nsresult rv;
+  nsCOMPtr<nsIHttpProtocolHandler> service(
+      do_GetService(NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "http", &rv));
+  NS_ENSURE_SUCCESS(rv, rv);
+
   nsAutoCString plat;
   rv = service->GetOscpu(plat);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   CopyASCIItoUTF16(plat, aPlatform);
 #endif
 
-  return rv;
+  return NS_OK;
 }
 
 /* static */
