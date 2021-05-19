@@ -20,6 +20,7 @@
 #include "mozilla/gfx/2D.h"
 #include "mozilla/webrender/WebRenderTypes.h"
 #include "mozilla/ServoStyleConsts.h"
+#include "mozilla/SVGIntegrationUtils.h"
 
 class gfxContext;
 class nsIContent;
@@ -27,7 +28,6 @@ class nsIFrame;
 struct WrFiltersHolder;
 
 namespace mozilla {
-class SVGFilterPaintCallback;
 
 namespace dom {
 class UserSpaceMetrics;
@@ -61,6 +61,7 @@ class FilterInstance {
   using FilterDescription = gfx::FilterDescription;
   using UserSpaceMetrics = dom::UserSpaceMetrics;
   using imgDrawingParams = image::imgDrawingParams;
+  using SVGFilterPaintCallback = SVGIntegrationUtils::SVGFilterPaintCallback;
 
  public:
   /**
@@ -89,7 +90,7 @@ class FilterInstance {
    *   border box).
    */
   static void PaintFilteredFrame(nsIFrame* aFilteredFrame, gfxContext* aCtx,
-                                 SVGFilterPaintCallback* aPaintCallback,
+                                 const SVGFilterPaintCallback& aPaintCallback,
                                  const nsRegion* aDirtyArea,
                                  imgDrawingParams& aImgParams,
                                  float aOpacity = 1.0f);
@@ -158,16 +159,16 @@ class FilterInstance {
    * @param aOverrideBBox [optional] Use a different SVG bbox for the target
    *   element. Must be non-null if aTargetFrame is null.
    */
-  FilterInstance(nsIFrame* aTargetFrame, nsIContent* aTargetContent,
-                 const UserSpaceMetrics& aMetrics,
-                 Span<const StyleFilter> aFilterChain,
-                 bool aFilterInputIsTainted,
-                 SVGFilterPaintCallback* aPaintCallback,
-                 const gfxMatrix& aPaintTransform,
-                 const nsRegion* aPostFilterDirtyRegion = nullptr,
-                 const nsRegion* aPreFilterDirtyRegion = nullptr,
-                 const nsRect* aPreFilterInkOverflowRectOverride = nullptr,
-                 const gfxRect* aOverrideBBox = nullptr);
+  FilterInstance(
+      nsIFrame* aTargetFrame, nsIContent* aTargetContent,
+      const UserSpaceMetrics& aMetrics, Span<const StyleFilter> aFilterChain,
+      bool aFilterInputIsTainted,
+      const SVGIntegrationUtils::SVGFilterPaintCallback& aPaintCallback,
+      const gfxMatrix& aPaintTransform,
+      const nsRegion* aPostFilterDirtyRegion = nullptr,
+      const nsRegion* aPreFilterDirtyRegion = nullptr,
+      const nsRect* aPreFilterInkOverflowRectOverride = nullptr,
+      const gfxRect* aOverrideBBox = nullptr);
 
   /**
    * Returns true if the filter instance was created successfully.
@@ -336,7 +337,7 @@ class FilterInstance {
    */
   const UserSpaceMetrics& mMetrics;
 
-  SVGFilterPaintCallback* mPaintCallback;
+  const SVGFilterPaintCallback& mPaintCallback;
 
   /**
    * The SVG bbox of the element that is being filtered, in user space.
