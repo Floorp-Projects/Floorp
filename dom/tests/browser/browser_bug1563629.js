@@ -6,8 +6,8 @@ const DIRPATH = getRootDirectory(gTestPath).replace(
 );
 const PATH = DIRPATH + "file_postMessage_parent.html";
 
-const URL1 = `http://example.com/${PATH}`;
-const URL2 = `http://example.org/${PATH}`;
+const URL1 = `https://example.com/${PATH}`;
+const URL2 = `https://example.org/${PATH}`;
 
 function listenForCrash(win) {
   function listener(event) {
