@@ -2928,6 +2928,7 @@ void GCRuntime::protectAndHoldArenas(Arena* arenaList) {
     Arena* next = arena->next;
     if (!next) {
       // Prepend to hold list before we protect the memory.
+      AutoLockGC lock(this);
       arena->next = relocatedArenasToRelease;
       relocatedArenasToRelease = arenaList;
     }
@@ -2936,7 +2937,7 @@ void GCRuntime::protectAndHoldArenas(Arena* arenaList) {
   }
 }
 
-void GCRuntime::unprotectHeldRelocatedArenas() {
+void GCRuntime::unprotectHeldRelocatedArenas(const AutoLockGC& lock) {
   for (Arena* arena = relocatedArenasToRelease; arena; arena = arena->next) {
     UnprotectPages(arena, ArenaSize);
     MOZ_ASSERT(!arena->allocated());
@@ -2967,17 +2968,18 @@ void GCRuntime::releaseRelocatedArenasWithoutUnlocking(Arena* arenaList,
 
 void GCRuntime::releaseHeldRelocatedArenas() {
 #ifdef DEBUG
-  unprotectHeldRelocatedArenas();
+  AutoLockGC lock(this);
+  unprotectHeldRelocatedArenas(lock);
   Arena* arenas = relocatedArenasToRelease;
   relocatedArenasToRelease = nullptr;
-  releaseRelocatedArenas(arenas);
+  releaseRelocatedArenasWithoutUnlocking(arenas, lock);
 #endif
 }
 
 void GCRuntime::releaseHeldRelocatedArenasWithoutUnlocking(
     const AutoLockGC& lock) {
 #ifdef DEBUG
-  unprotectHeldRelocatedArenas();
+  unprotectHeldRelocatedArenas(lock);
   releaseRelocatedArenasWithoutUnlocking(relocatedArenasToRelease, lock);
   relocatedArenasToRelease = nullptr;
 #endif
@@ -6509,9 +6511,13 @@ void GCRuntime::beginCompactPhase() {
     }
   }
 
-  MOZ_ASSERT(!relocatedArenasToRelease);
   startedCompacting = true;
   zonesCompacted = 0;
+
+#ifdef DEBUG
+  AutoLockGC lock(this);
+  MOZ_ASSERT(!relocatedArenasToRelease);
+#endif
 }
 
 IncrementalProgress GCRuntime::compactPhase(JS::GCReason reason,
