@@ -1,4 +1,5 @@
 from .base import Browser, ExecutorBrowser, require_arg
+from .base import NullBrowser  # noqa: F401
 from .base import get_timeout_multiplier   # noqa: F401
 from ..webdriver_server import EdgeChromiumDriverServer
 from ..executors import executor_kwargs as base_executor_kwargs
@@ -9,7 +10,8 @@ from ..executors.executoredgechromium import EdgeChromiumDriverWdspecExecutor  #
 
 __wptrunner__ = {"product": "edgechromium",
                  "check_args": "check_args",
-                 "browser": "EdgeChromiumBrowser",
+                 "browser": {None: "EdgeChromiumBrowser",
+                             "wdspec": "NullBrowser"},
                  "executor": {"testharness": "WebDriverTestharnessExecutor",
                               "reftest": "WebDriverRefTestExecutor",
                               "wdspec": "EdgeChromiumDriverWdspecExecutor"},
