@@ -520,6 +520,15 @@ inline size_t StrlenASCII(const char* aStr) {
   return len;
 }
 
+struct CodeViewRecord70 {
+  uint32_t signature;
+  GUID pdbSignature;
+  uint32_t pdbAge;
+  // A UTF-8 string, according to
+  // https://github.com/Microsoft/microsoft-pdb/blob/082c5290e5aff028ae84e43affa8be717aa7af73/PDB/dbi/locator.cpp#L785
+  char pdbFileName[1];
+};
+
 class MOZ_RAII PEHeaders final {
   /**
    * This structure is documented on MSDN as VS_VERSIONINFO, but is not present
@@ -882,6 +891,19 @@ class MOZ_RAII PEHeaders final {
     // Use the unchecked version because the entrypoint may be tampered.
     return RVAToPtrUnchecked<FARPROC>(
         mPeHeader->OptionalHeader.AddressOfEntryPoint);
+  }
+
+  const CodeViewRecord70* GetPdbInfo() const {
+    PIMAGE_DEBUG_DIRECTORY debugDirectory =
+        GetImageDirectoryEntry<PIMAGE_DEBUG_DIRECTORY>(
+            IMAGE_DIRECTORY_ENTRY_DEBUG);
+    if (!debugDirectory) {
+      return nullptr;
+    }
+
+    const CodeViewRecord70* debugInfo =
+        RVAToPtr<CodeViewRecord70*>(debugDirectory->AddressOfRawData);
+    return (debugInfo && debugInfo->signature == 'SDSR') ? debugInfo : nullptr;
   }
 
  private:
