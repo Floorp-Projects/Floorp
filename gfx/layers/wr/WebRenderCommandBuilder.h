@@ -187,6 +187,13 @@ class WebRenderCommandBuilder final {
                                const StackingContextHelper& aSc,
                                nsDisplayListBuilder* aDisplayListBuilder);
 
+  bool ComputeInvalidationForDisplayItem(nsDisplayListBuilder* aBuilder,
+                                         const nsPoint& aShift,
+                                         nsDisplayItem* aItem);
+  bool ComputeInvalidationForDisplayList(nsDisplayListBuilder* aBuilder,
+                                         const nsPoint& aShift,
+                                         nsDisplayList* aList);
+
   ClipManager mClipManager;
   HitTestInfoManager mHitTestInfoManager;
 
