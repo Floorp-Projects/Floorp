@@ -638,6 +638,10 @@ class MOZ_RAII PEHeaders final {
     return Some(Range(base, imageSize));
   }
 
+  DWORD GetFileCharacteristics() const {
+    return mPeHeader ? mPeHeader->FileHeader.Characteristics : 0;
+  }
+
   bool IsWithinImage(const void* aAddress) const {
     uintptr_t addr = reinterpret_cast<uintptr_t>(aAddress);
     uintptr_t imageBase = reinterpret_cast<uintptr_t>(mMzHeader);
