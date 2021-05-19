@@ -40,11 +40,8 @@ UNIFIED_SOURCES += [
     "WasmRealm.cpp",
     "WasmStubs.cpp",
     "WasmTable.cpp",
-    "WasmTypeDef.cpp",
     "WasmTypes.cpp",
     "WasmValidate.cpp",
-    "WasmValType.cpp",
-    "WasmValue.cpp",
 ]
 
 # We don't support signals for wasi yet.

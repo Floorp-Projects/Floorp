@@ -28,8 +28,6 @@
 namespace js {
 namespace wasm {
 
-using mozilla::MallocSizeOf;
-
 // Factor out common serialization, cloning and about:memory size-computation
 // functions for reuse when serializing wasm and asm.js modules.
 
@@ -161,7 +159,7 @@ static inline const uint8_t* DeserializeMaybe(const uint8_t* cursor,
     maybe->emplace();
     cursor = (*maybe)->deserialize(cursor);
   } else {
-    *maybe = mozilla::Nothing();
+    *maybe = Nothing();
   }
   return cursor;
 }
@@ -213,45 +211,6 @@ static inline const uint8_t* DeserializePodVectorChecked(
   cursor = ReadBytesChecked(cursor, remain, vec->begin(), length * sizeof(T));
   return cursor;
 }
-
-// To call Vector::shrinkStorageToFit , a type must specialize mozilla::IsPod
-// which is pretty verbose to do within js::wasm, so factor that process out
-// into a macro.
-
-#define WASM_DECLARE_POD_VECTOR(Type, VectorName)   \
-  }                                                 \
-  }                                                 \
-  namespace mozilla {                               \
-  template <>                                       \
-  struct IsPod<js::wasm::Type> : std::true_type {}; \
-  }                                                 \
-  namespace js {                                    \
-  namespace wasm {                                  \
-  typedef Vector<Type, 0, SystemAllocPolicy> VectorName;
-
-// A wasm Module and everything it contains must support serialization and
-// deserialization. Some data can be simply copied as raw bytes and,
-// as a convention, is stored in an inline CacheablePod struct. Everything else
-// should implement the below methods which are called recusively by the
-// containing Module.
-
-#define WASM_DECLARE_SERIALIZABLE(Type)              \
-  size_t serializedSize() const;                     \
-  uint8_t* serialize(uint8_t* cursor) const;         \
-  const uint8_t* deserialize(const uint8_t* cursor); \
-  size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
-
-template <class T>
-struct SerializableRefPtr : RefPtr<T> {
-  using RefPtr<T>::operator=;
-
-  SerializableRefPtr() = default;
-
-  template <class U>
-  MOZ_IMPLICIT SerializableRefPtr(U&& u) : RefPtr<T>(std::forward<U>(u)) {}
-
-  WASM_DECLARE_SERIALIZABLE(SerializableRefPtr)
-};
 
 template <class T>
 inline size_t SerializableRefPtr<T>::serializedSize() const {
