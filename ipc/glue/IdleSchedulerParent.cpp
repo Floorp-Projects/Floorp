@@ -14,8 +14,7 @@
 #include "nsITimer.h"
 #include "nsIThread.h"
 
-namespace mozilla {
-namespace ipc {
+namespace mozilla::ipc {
 
 base::SharedMemory* IdleSchedulerParent::sActiveChildCounter = nullptr;
 std::bitset<NS_IDLE_SCHEDULER_COUNTER_ARRAY_LENGHT>
@@ -452,5 +451,4 @@ void IdleSchedulerParent::StarvationCallback(nsITimer* aTimer, void* aData) {
   NS_RELEASE(sStarvationPreventer);
 }
 
-}  // namespace ipc
-}  // namespace mozilla
+}  // namespace mozilla::ipc
