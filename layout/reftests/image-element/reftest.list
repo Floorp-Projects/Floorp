@@ -21,7 +21,7 @@ fuzzy-if(d2d,0-255,0-24) fuzzy-if(webrender,255-255,56-72) == element-paint-tran
 # For !nativeThemePref: element() uses fallback / skia in WebRender, which antialiases differently from WR.
 # For !nativeThemePref+Windows+WebRender: bug 1496542, the scrollframe snaps differently.
 # For the rest: -ref the scrollframe is active and layerized differently with APZ.
-fuzzy-if(asyncPan,0-2,0-140) fuzzy-if(skiaContent,0-24,0-106) fuzzy-if(winWidget&&isDebugBuild&&!layersGPUAccelerated,149-149,1203-1203) fuzzy-if(webrender&&geckoview,0-7,0-1321) fuzzy-if(webrender&&!nativeThemePref,40-48,20-68) fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu),0-53,0-1204) fuzzy-if(webrender&&winWidget,134-222,1197-1588) == element-paint-native-widget.html element-paint-native-widget-ref.html
+fuzzy-if(asyncPan,0-2,0-140) fuzzy-if(skiaContent,0-24,0-106) fuzzy-if(webrender&&geckoview,0-7,0-1321) fuzzy-if(webrender&&!nativeThemePref,40-48,20-68) fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu),0-53,0-1204) fuzzy-if(webrender&&winWidget,134-222,1197-1588) == element-paint-native-widget.html element-paint-native-widget-ref.html
 
 fails-if(usesRepeatResampling&&!(webrender&&winWidget)) == element-paint-subimage-sampling-restriction.html about:blank
 == element-paint-clippath.html element-paint-clippath-ref.html
