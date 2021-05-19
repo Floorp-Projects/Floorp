@@ -111,7 +111,7 @@ use crate::resource_cache::{ImageRequest, ResourceCache};
 use crate::space::SpaceMapper;
 use crate::util::{clamp_to_scale_factor, MaxRect, extract_inner_rect_safe, project_rect, ScaleOffset, VecHelper};
 use euclid::approxeq::ApproxEq;
-use std::{iter, ops, u32};
+use std::{iter, ops, u32, mem};
 
 // Type definitions for interning clip nodes.
 
@@ -498,7 +498,13 @@ pub struct ClipNodeInstance {
     pub handle: ClipDataHandle,
     pub spatial_node_index: SpatialNodeIndex,
     pub flags: ClipNodeFlags,
-    pub visible_tiles: Option<Vec<VisibleMaskImageTile>>,
+    pub visible_tiles: Option<ops::Range<usize>>,
+}
+
+impl ClipNodeInstance {
+    pub fn has_visible_tiles(&self) -> bool {
+        self.visible_tiles.is_some()
+    }
 }
 
 // A range of clip node instances that were found by
@@ -600,6 +606,7 @@ impl ClipNodeInfo {
         clipped_rect: &LayoutRect,
         gpu_cache: &mut GpuCache,
         resource_cache: &mut ResourceCache,
+        mask_tiles: &mut Vec<VisibleMaskImageTile>,
         spatial_tree: &SpatialTree,
         request_resources: bool,
     ) -> Option<ClipNodeInstance> {
@@ -630,7 +637,7 @@ impl ClipNodeInfo {
 
             if let Some(props) = resource_cache.get_image_properties(image) {
                 if let Some(tile_size) = props.tiling {
-                    let mut mask_tiles = Vec::new();
+                    let tile_range_start = mask_tiles.len();
 
                     let visible_rect = if repeat {
                         *clipped_rect
@@ -672,7 +679,7 @@ impl ClipNodeInfo {
                             });
                         }
                     }
-                    visible_tiles = Some(mask_tiles);
+                    visible_tiles = Some(tile_range_start..mask_tiles.len());
                 } else if request_resources {
                     resource_cache.request_image(request, gpu_cache);
                 }
@@ -747,12 +754,19 @@ impl ClipStoreStats {
     }
 }
 
+#[derive(Default)]
+pub struct ClipStoreScratchBuffer {
+    clip_node_instances: Vec<ClipNodeInstance>,
+    mask_tiles: Vec<VisibleMaskImageTile>,
+}
+
 /// The main clipping public interface that other modules access.
 #[derive(MallocSizeOf)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 pub struct ClipStore {
     pub clip_chain_nodes: Vec<ClipChainNode>,
     pub clip_node_instances: Vec<ClipNodeInstance>,
+    mask_tiles: Vec<VisibleMaskImageTile>,
 
     active_clip_node_info: Vec<ClipNodeInfo>,
     active_local_clip_rect: Option<LayoutRect>,
@@ -1004,6 +1018,7 @@ impl ClipStore {
         ClipStore {
             clip_chain_nodes: Vec::new(),
             clip_node_instances: Vec::new(),
+            mask_tiles: Vec::new(),
             active_clip_node_info: Vec::new(),
             active_local_clip_rect: None,
             active_pic_clip_rect: PictureRect::max_rect(),
@@ -1301,6 +1316,7 @@ impl ClipStore {
                         &local_bounding_rect,
                         gpu_cache,
                         resource_cache,
+                        &mut self.mask_tiles,
                         spatial_tree,
                         request_resources,
                     ) {
@@ -1357,8 +1373,24 @@ impl ClipStore {
         })
     }
 
-    pub fn clear_old_instances(&mut self) {
+    pub fn begin_frame(&mut self, scratch: &mut ClipStoreScratchBuffer) {
+        mem::swap(&mut self.clip_node_instances, &mut scratch.clip_node_instances);
+        mem::swap(&mut self.mask_tiles, &mut scratch.mask_tiles);
         self.clip_node_instances.clear();
+        self.mask_tiles.clear();
+    }
+
+    pub fn end_frame(&mut self, scratch: &mut ClipStoreScratchBuffer) {
+        mem::swap(&mut self.clip_node_instances, &mut scratch.clip_node_instances);
+        mem::swap(&mut self.mask_tiles, &mut scratch.mask_tiles);
+    }
+
+    pub fn visible_mask_tiles(&self, instance: &ClipNodeInstance) -> &[VisibleMaskImageTile] {
+        if let Some(range) = &instance.visible_tiles {
+            &self.mask_tiles[range.clone()]
+        } else {
+            &[]
+        }
     }
 }
 
