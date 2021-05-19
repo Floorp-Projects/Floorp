@@ -26,7 +26,13 @@ elif CONFIG['MOZ_TSAN']:
 GYP_DIRS['nICEr'].input = 'nICEr/nicer.gyp'
 GYP_DIRS['nICEr'].variables = gyp_vars_copy
 GYP_DIRS['nICEr'].sandbox_vars['FINAL_LIBRARY'] = 'xul'
-
 GYP_DIRS['nrappkit'].input = 'nrappkit/nrappkit.gyp'
 GYP_DIRS['nrappkit'].variables = gyp_vars_copy
 GYP_DIRS['nrappkit'].sandbox_vars['FINAL_LIBRARY'] = 'xul'
+
+
+if CONFIG["CC_TYPE"] == "gcc":
+    GYP_DIRS['nICEr'].sandbox_vars['CFLAGS'] = ['-Wno-stringop-overflow']
+    if int(CONFIG["CC_VERSION"].split(".")[0]) >= 8:
+        GYP_DIRS['nICEr'].sandbox_vars['CFLAGS'] += ['-Wno-stringop-truncation']
+        GYP_DIRS['nrappkit'].sandbox_vars['CFLAGS'] = ['-Wno-stringop-truncation']
