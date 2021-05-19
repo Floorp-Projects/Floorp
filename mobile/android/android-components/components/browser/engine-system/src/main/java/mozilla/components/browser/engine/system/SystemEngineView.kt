@@ -359,6 +359,7 @@ class SystemEngineView @JvmOverloads constructor(
             session.notifyObservers {
                 onPromptRequest(
                     PromptRequest.Authentication(
+                        formattedUrl,
                         "",
                         message,
                         userName,

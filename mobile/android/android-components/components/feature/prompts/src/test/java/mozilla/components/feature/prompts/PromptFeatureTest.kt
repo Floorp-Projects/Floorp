@@ -864,6 +864,7 @@ class PromptFeatureTest {
         var onDismissWasCalled = false
 
         val promptRequest = Authentication(
+            uri = "https://www.mozilla.org",
             title = "title",
             message = "message",
             userName = "username",
@@ -935,6 +936,7 @@ class PromptFeatureTest {
         var onDismissWasCalled = false
 
         val promptRequest = Authentication(
+            uri = "https://www.mozilla.org",
             title = "title",
             message = "message",
             userName = "username",

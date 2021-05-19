@@ -22,7 +22,7 @@ import mozilla.components.feature.prompts.R
 private const val KEY_USERNAME_EDIT_TEXT = "KEY_USERNAME_EDIT_TEXT"
 private const val KEY_PASSWORD_EDIT_TEXT = "KEY_PASSWORD_EDIT_TEXT"
 private const val KEY_ONLY_SHOW_PASSWORD = "KEY_ONLY_SHOW_PASSWORD"
-private const val KEY_SESSION_URL = "KEY_SESSION_URL"
+private const val KEY_URL = "KEY_SESSION_URL"
 
 /**
  * [android.support.v4.app.DialogFragment] implementation to display a
@@ -33,10 +33,10 @@ internal class AuthenticationDialogFragment : PromptDialogFragment() {
 
     internal val onlyShowPassword: Boolean by lazy { safeArguments.getBoolean(KEY_ONLY_SHOW_PASSWORD) }
 
-    private var sessionUrl: String
-        get() = safeArguments.getString(KEY_SESSION_URL, "")
+    private var url: String?
+        get() = safeArguments.getString(KEY_URL, null)
         set(value) {
-            safeArguments.putString(KEY_SESSION_URL, value)
+            safeArguments.putString(KEY_URL, value)
         }
 
     internal var username: String
@@ -89,7 +89,7 @@ internal class AuthenticationDialogFragment : PromptDialogFragment() {
         // Username field uses the AutofillEditText so if the user focus is here, the autofill
         // application can get the web domain info without searching through the view tree.
         val usernameEditText = view.findViewById<AutofillEditText>(R.id.username)
-        usernameEditText.sessionUrl = sessionUrl
+        usernameEditText.url = url
 
         if (onlyShowPassword) {
             usernameEditText.visibility = GONE
@@ -111,7 +111,7 @@ internal class AuthenticationDialogFragment : PromptDialogFragment() {
         // Password field uses the AutofillEditText so if the user focus is here, the autofill
         // application can get the web domain info without searching through the view tree.
         val passwordEditText = view.findViewById<AutofillEditText>(R.id.password)
-        passwordEditText.sessionUrl = sessionUrl
+        passwordEditText.url = url
 
         passwordEditText.setText(password)
         passwordEditText.addTextChangedListener(object : TextWatcher {
@@ -143,7 +143,7 @@ internal class AuthenticationDialogFragment : PromptDialogFragment() {
             username: String,
             password: String,
             onlyShowPassword: Boolean,
-            url: String
+            url: String?
         ): AuthenticationDialogFragment {
 
             val fragment = AuthenticationDialogFragment()
@@ -156,7 +156,7 @@ internal class AuthenticationDialogFragment : PromptDialogFragment() {
                 putBoolean(KEY_ONLY_SHOW_PASSWORD, onlyShowPassword)
                 putString(KEY_USERNAME_EDIT_TEXT, username)
                 putString(KEY_PASSWORD_EDIT_TEXT, password)
-                putString(KEY_SESSION_URL, url)
+                putString(KEY_URL, url)
             }
 
             fragment.arguments = arguments

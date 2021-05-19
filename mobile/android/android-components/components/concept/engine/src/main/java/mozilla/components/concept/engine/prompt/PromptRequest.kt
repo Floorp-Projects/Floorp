@@ -192,6 +192,7 @@ sealed class PromptRequest {
      * Value type that represents a request for an authentication prompt.
      * For more related info take a look at
      * <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Authentication>MDN docs</a>
+     * @property uri The URI for the auth request or null if unknown.
      * @property title of the dialog.
      * @property message the body of the dialog.
      * @property userName default value provide for this session.
@@ -206,6 +207,7 @@ sealed class PromptRequest {
      * @property onDismiss callback to indicate the user dismissed this request.
      */
     data class Authentication(
+        val uri: String?,
         val title: String,
         val message: String,
         val userName: String,

@@ -132,6 +132,7 @@ class PromptRequestTest {
     @Test
     fun `Authentication`() {
         val promptRequest = Authentication(
+            "example.org",
             "title",
             "message",
             "username",

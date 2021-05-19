@@ -74,9 +74,9 @@ class AuthenticationDialogFragmentTest {
         passwordEditText.setText("new_password")
 
         assertEquals(usernameEditText.text.toString(), "new_username")
-        assertEquals(usernameEditText.sessionUrl, "https://mozilla.com")
+        assertEquals(usernameEditText.url, "https://mozilla.com")
         assertEquals(passwordEditText.text.toString(), "new_password")
-        assertEquals(passwordEditText.sessionUrl, "https://mozilla.com")
+        assertEquals(passwordEditText.url, "https://mozilla.com")
     }
 
     @Test

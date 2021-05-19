@@ -14,7 +14,7 @@ import androidx.appcompat.widget.AppCompatEditText
  * allows autofill applications to detect which URL is requesting the authentication info.
  */
 internal class AutofillEditText : AppCompatEditText {
-    internal var sessionUrl: String = ""
+    internal var url: String? = null
 
     constructor (context: Context) : super(context)
 
@@ -23,8 +23,8 @@ internal class AutofillEditText : AppCompatEditText {
     constructor (context: Context, attrs: AttributeSet?, defStyleAttr: Int) : super(context, attrs, defStyleAttr)
 
     override fun onProvideAutofillStructure(structure: ViewStructure?, flags: Int) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            structure?.setWebDomain(sessionUrl)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && url != null) {
+            structure?.setWebDomain(url)
         }
         super.onProvideAutofillStructure(structure, flags)
     }
