@@ -345,42 +345,7 @@ It is possible to build multiple applications from the same source tree,
 as long as you `use a different objdir <#Building_with_an_Objdir>`__ for
 each application.
 
-You can either create multiple ``mozconfig`` files, or alternatively,
-use the ``MOZ_BUILD_PROJECTS`` make option.
-
-Using ``MOZ_BUILD_PROJECTS`` in a single ``mozconfig``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-To use ``MOZ_BUILD_PROJECTS``, you must specify a ``MOZ_OBJDIR`` and a
-``MOZ_BUILD_PROJECTS`` make option, containing space separated names.
-Each name can be an arbitrary directory name. For each name, a
-subdirectory is created under the toplevel objdir. You then need to use
-the ``ac_add_app_options`` with the specified names to enable different
-applications in each object directory.
-
-For example:
-
-.. code::
-
-    ac_add_options --disable-optimize --enable-debug
-    mk_add_options MOZ_OBJDIR=/mozilla/src/obj-@CONFIG_GUESS@
-    mk_add_options MOZ_BUILD_PROJECTS="browser mail"
-    ac_add_app_options browser --enable-application=browser
-    ac_add_app_options mail --enable-application=comm/mail
-
-If you want to build only one project using this ``mozconfig``, use the
-following command line:
-
-.. code::
-
-   MOZ_CURRENT_PROJECT=browser ./mach build
-
-This will build only the browser.
-
-Using multiple mozconfig files
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Alternatively, you may want to create separate ``mozconfig`` files.
+You need to create multiple ``mozconfig`` files.
 
 As an example, the following steps can be used to build Firefox and
 Thunderbird. You should first create three ``mozconfig`` files.
