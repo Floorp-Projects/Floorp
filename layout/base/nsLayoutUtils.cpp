@@ -3080,7 +3080,7 @@ static void DumpAfterPaintDisplayList(UniquePtr<std::stringstream>& aStream,
 
   std::stringstream lsStream;
   nsIFrame::PrintDisplayList(aBuilder, *aList, lsStream);
-  if (aManager->GetRoot()) {
+  if (aManager && aManager->GetRoot()) {
     aManager->GetRoot()->SetDisplayListLog(lsStream.str().c_str());
   }
 }
@@ -3510,7 +3510,7 @@ nsresult nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext,
   gfxUtils::sDumpPaintFile = savedDumpFile;
 #endif
 
-  if (StaticPrefs::layers_dump_client_layers()) {
+  if (StaticPrefs::layers_dump_client_layers() && layerManager) {
     std::stringstream ss;
     FrameLayerBuilder::DumpRetainedLayerTree(layerManager, ss, false);
     print_stderr(ss);
