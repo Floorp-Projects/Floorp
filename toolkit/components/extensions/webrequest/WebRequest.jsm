@@ -997,12 +997,11 @@ HttpObserverManager = {
             Cr.NS_ERROR_ABORT,
             Ci.nsILoadInfo.BLOCKING_REASON_EXTENSION_WEBREQUEST
           );
-          let { policy } = opts;
-          if (policy) {
+          if (opts.policy) {
             let properties = channel.channel.QueryInterface(
               Ci.nsIWritablePropertyBag
             );
-            properties.setProperty("cancelledByExtension", policy.id);
+            properties.setProperty("cancelledByExtension", opts.policy.id);
           }
           return;
         }
@@ -1018,6 +1017,12 @@ HttpObserverManager = {
             }
             channel.resume(text);
             channel.redirectTo(Services.io.newURI(result.redirectUrl));
+            if (opts.policy) {
+              let properties = channel.channel.QueryInterface(
+                Ci.nsIWritablePropertyBag
+              );
+              properties.setProperty("redirectedByExtension", opts.policy.id);
+            }
 
             // Web Extensions using the WebRequest API are allowed
             // to redirect a channel to a data: URI, hence we mark
