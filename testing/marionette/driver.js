@@ -233,16 +233,16 @@ GeckoDriver.prototype.getActor = function(options = {}) {
  *     otherwise the one from the currently selected frame. Defaults to false.
  *
  * @return {BrowsingContext}
- *     The browsing context.
+ *     The browsing context, or `null` if none is available
  */
 GeckoDriver.prototype.getBrowsingContext = function(options = {}) {
   const { context = this.context, parent = false, top = false } = options;
 
   let browsingContext = null;
   if (context === Context.Chrome) {
-    browsingContext = this.currentSession.chromeBrowsingContext;
+    browsingContext = this.currentSession?.chromeBrowsingContext;
   } else {
-    browsingContext = this.currentSession.contentBrowsingContext;
+    browsingContext = this.currentSession?.contentBrowsingContext;
   }
 
   if (browsingContext && parent) {
