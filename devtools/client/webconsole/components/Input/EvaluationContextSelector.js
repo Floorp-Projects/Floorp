@@ -48,6 +48,7 @@ class EvaluationContextSelector extends Component {
       updateInstantEvaluationResultForCurrentExpression:
         PropTypes.func.isRequired,
       selectedTarget: PropTypes.object,
+      lastTargetRefresh: PropTypes.number,
       targets: PropTypes.array,
       webConsoleUI: PropTypes.object.isRequired,
     };
@@ -57,9 +58,15 @@ class EvaluationContextSelector extends Component {
     if (this.props.selectedTarget !== nextProps.selectedTarget) {
       return true;
     }
+
+    if (this.props.lastTargetRefresh !== nextProps.lastTargetRefresh) {
+      return true;
+    }
+
     if (this.props.targets.length !== nextProps.targets.length) {
       return true;
     }
+
     for (let i = 0; i < nextProps.targets.length; i++) {
       const target = this.props.targets[i];
       const nextTarget = nextProps.targets[i];
@@ -206,6 +213,7 @@ const toolboxConnected = connect(
   state => ({
     targets: targetSelectors.getToolboxTargets(state),
     selectedTarget: targetSelectors.getSelectedTarget(state),
+    lastTargetRefresh: targetSelectors.getLastTargetRefresh(state),
   }),
   dispatch => ({
     selectTarget: actorID => dispatch(frameworkActions.selectTarget(actorID)),
