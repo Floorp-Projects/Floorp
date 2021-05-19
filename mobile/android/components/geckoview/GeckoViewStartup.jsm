@@ -103,7 +103,6 @@ class GeckoViewStartup {
             "GeckoView:ClearHostData",
             "GeckoView:GetAllPermissions",
             "GeckoView:GetPermissionsByURI",
-            "GeckoView:SetPermission",
           ],
         });
 
