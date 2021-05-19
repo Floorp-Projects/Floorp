@@ -4984,6 +4984,12 @@ nsDisplayCaret::nsDisplayCaret(nsDisplayListBuilder* aBuilder,
       mCaret(aBuilder->GetCaret()),
       mBounds(aBuilder->GetCaretRect() + ToReferenceFrame()) {
   MOZ_COUNT_CTOR(nsDisplayCaret);
+  // The presence of a caret doesn't change the overflow rect
+  // of the owning frame, so the normal building rect might not
+  // include the caret at all. We use MarkFrameForDisplay to ensure
+  // we build this item, and here we override the building rect
+  // to cover the pixels we're going to draw.
+  SetBuildingRect(mBounds);
 }
 
 #ifdef NS_BUILD_REFCNT_LOGGING
