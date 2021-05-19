@@ -544,6 +544,9 @@ private val Event.wrapper: EventWrapper<*>?
         is Event.TopSiteOpenGoogle -> EventWrapper<NoExtraKeys>(
             { TopSites.openGoogleSearchAttribution.record(it) }
         )
+        is Event.TopSiteOpenBaidu -> EventWrapper<NoExtraKeys>(
+            { TopSites.openBaiduSearchAttribution.record(it) }
+        )
         is Event.TopSiteOpenFrecent -> EventWrapper<NoExtraKeys>(
             { TopSites.openFrecency.record(it) }
         )

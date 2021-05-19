@@ -3886,6 +3886,19 @@ top_sites:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-02-01"
+  open_baidu_search_attribution:
+    type: event
+    description: |
+      A user opened the baidu top site
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/19490
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/20705
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-02-01"
   open_frecency:
     type: event
     description: |
