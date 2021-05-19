@@ -445,17 +445,6 @@ class MutableWrappedPtrOperations<JS::PropertyDescriptor, Wrapper>
     value().set(other.value());
   }
 
-  void setDataDescriptor(JS::Handle<JS::Value> v, unsigned attrs) {
-    MOZ_ASSERT((attrs & ~(JSPROP_ENUMERATE | JSPROP_PERMANENT |
-                          JSPROP_READONLY | JSPROP_IGNORE_ENUMERATE |
-                          JSPROP_IGNORE_PERMANENT | JSPROP_IGNORE_READONLY)) ==
-               0);
-    desc().setAttributesDoNotUse(attrs);
-    desc().setGetterDoNotUse(nullptr);
-    desc().setSetterDoNotUse(nullptr);
-    value().set(v);
-  }
-
   JS::MutableHandle<JS::Value> value() {
     return JS::MutableHandle<JS::Value>::fromMarkedLocation(
         desc().valueDoNotUse());

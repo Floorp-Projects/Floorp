@@ -1178,12 +1178,13 @@ bool nsOuterWindowProxy::MaybeGetPDFJSPrintMethod(
   JS::Rooted<JSObject*> funObj(cx, JS_GetFunctionObject(fun));
   js::SetFunctionNativeReserved(funObj, PDFJS_SLOT_CALLEE, targetFunc);
 
-  JS::Rooted<JS::Value> funVal(cx, JS::ObjectValue(*funObj));
-  JS::Rooted<JS::PropertyDescriptor> pd(cx);
-  // JSPROP_ENUMERATE because that's what it would have been in the same-origin
-  // case without the PDF viewer messing with things.
-  pd.setDataDescriptor(funVal, JSPROP_ENUMERATE);
-  desc.set(Some(pd.get()));
+  // { value: <print>, writable: true, enumerable: true, configurable: true }
+  // because that's what it would have been in the same-origin case without
+  // the PDF viewer messing with things.
+  desc.set(Some(JS::PropertyDescriptor::Data(
+      JS::ObjectValue(*funObj),
+      {JS::PropertyAttribute::Configurable, JS::PropertyAttribute::Enumerable,
+       JS::PropertyAttribute::Writable})));
   return true;
 }
 
