@@ -185,6 +185,10 @@ GeckoDriver.prototype.QueryInterface = ChromeUtils.generateQI([
  * during the session's lifetime.
  */
 GeckoDriver.prototype.handleModalDialog = function(action, dialog) {
+  if (!this.currentSession) {
+    return;
+  }
+
   if (action === modal.ACTION_OPENED) {
     this.dialog = new modal.Dialog(() => this.curBrowser, dialog);
     this.getActor().notifyDialogOpened();
