@@ -452,55 +452,45 @@ void MessagePumpForIO::WaitForWork() {
 }
 
 bool MessagePumpForIO::WaitForIOCompletion(DWORD timeout, IOHandler* filter) {
-  IOItemChunk items;
-  if (completed_io_.empty() || !MatchCompletedIOItem(filter, items.values)) {
-    if (!GetIOItems(timeout, &items)) return false;
-  } else {
-    items.count = 1;
+  IOItem item;
+  if (completed_io_.empty() || !MatchCompletedIOItem(filter, &item)) {
+    // We have to ask the system for another IO completion.
+    if (!GetIOItem(timeout, &item)) return false;
+
+    if (ProcessInternalIOItem(item)) return true;
   }
 
-  for (ULONG i = 0; i < items.count; ++i) {
-    IOItem& item = items.values[i];
-    if (ProcessInternalIOItem(item)) {
-      continue;
-    }
-
-    if (item.context->handler) {
-      if (filter && item.handler != filter) {
-        // Save this item for later
-        completed_io_.push_back(item);
-      } else {
-        DCHECK(item.context->handler == item.handler);
-        item.handler->OnIOCompleted(item.context, item.bytes_transfered);
-      }
+  if (item.context->handler) {
+    if (filter && item.handler != filter) {
+      // Save this item for later
+      completed_io_.push_back(item);
     } else {
-      // The handler must be gone by now, just cleanup the mess.
-      delete item.context;
+      DCHECK(item.context->handler == item.handler);
+      item.handler->OnIOCompleted(item.context, item.bytes_transfered,
+                                  item.error);
     }
+  } else {
+    // The handler must be gone by now, just cleanup the mess.
+    delete item.context;
   }
-
   return true;
 }
 
 // Asks the OS for another IO completion result.
-bool MessagePumpForIO::GetIOItems(DWORD timeout, IOItemChunk* items) {
-  memset(items, 0, sizeof(*items));
-  OVERLAPPED_ENTRY entries[arraysize(items->values)];
+bool MessagePumpForIO::GetIOItem(DWORD timeout, IOItem* item) {
+  memset(item, 0, sizeof(*item));
+  ULONG_PTR key = 0;
+  OVERLAPPED* overlapped = NULL;
   AUTO_PROFILER_LABEL("MessagePumpForIO::GetIOItem::Wait", IDLE);
-  if (!GetQueuedCompletionStatusEx(port_.Get(), entries,
-                                   arraysize(items->values), &items->count,
-                                   timeout, FALSE)) {
-    return false;  // Nothing in the queue.
+  if (!GetQueuedCompletionStatus(port_.Get(), &item->bytes_transfered, &key,
+                                 &overlapped, timeout)) {
+    if (!overlapped) return false;  // Nothing in the queue.
+    item->error = GetLastError();
+    item->bytes_transfered = 0;
   }
 
-  for (int i = 0; i < (int)items->count; ++i) {
-    items->values[i].handler =
-        reinterpret_cast<IOHandler*>(entries[i].lpCompletionKey);
-    items->values[i].bytes_transfered = entries[i].dwNumberOfBytesTransferred;
-    items->values[i].context =
-        reinterpret_cast<IOContext*>(entries[i].lpOverlapped);
-  }
-
+  item->handler = reinterpret_cast<IOHandler*>(key);
+  item->context = reinterpret_cast<IOContext*>(overlapped);
   return true;
 }
 
