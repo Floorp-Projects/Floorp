@@ -1904,7 +1904,7 @@ var BookmarkingUI = {
       }
     }
 
-    if (!this.star) {
+    if (!this.starBox) {
       // The BOOKMARK_BUTTON_SHORTCUT exists only in browser.xhtml.
       // Return early if we're not in this context, but still reset the
       // Bookmark This Page items.
@@ -2011,19 +2011,12 @@ var BookmarkingUI = {
         // We assume that menuItemL10nId has a single attribute.
         let label = l10n[0].attributes[0].value;
 
-        // Update the label, tooltip, and the starred state for the
-        // page action panel.
+        // Update the label for the page action panel.
         let panelButton = BrowserPageActions.panelButtonNodeForActionID(
           PageActions.ACTION_ID_BOOKMARK
         );
         if (panelButton) {
           panelButton.setAttribute("label", label);
-        }
-        let urlbarButton = BrowserPageActions.urlbarButtonNodeForActionID(
-          PageActions.ACTION_ID_BOOKMARK
-        );
-        if (urlbarButton) {
-          urlbarButton.setAttribute("tooltiptext", label);
         }
       });
     }
