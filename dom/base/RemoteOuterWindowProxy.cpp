@@ -76,17 +76,15 @@ BrowsingContext* GetBrowsingContext(JSObject* aProxy) {
       RemoteObjectProxyBase::GetNative(aProxy));
 }
 
-bool WrapResult(JSContext* aCx, JS::Handle<JSObject*> aProxy,
-                BrowsingContext* aResult, unsigned attrs,
-                JS::MutableHandle<Maybe<JS::PropertyDescriptor>> aDesc) {
+static bool WrapResult(JSContext* aCx, JS::Handle<JSObject*> aProxy,
+                       BrowsingContext* aResult, JS::PropertyAttributes attrs,
+                       JS::MutableHandle<Maybe<JS::PropertyDescriptor>> aDesc) {
   JS::Rooted<JS::Value> v(aCx);
   if (!ToJSValue(aCx, WindowProxyHolder(aResult), &v)) {
     return false;
   }
 
-  JS::Rooted<JS::PropertyDescriptor> desc(aCx);
-  desc.setDataDescriptor(v, attrs);
-  aDesc.set(Some(desc.get()));
+  aDesc.set(Some(JS::PropertyDescriptor::Data(v, attrs)));
   return true;
 }
 
@@ -99,7 +97,9 @@ bool RemoteOuterWindowProxy::getOwnPropertyDescriptor(
     Span<RefPtr<BrowsingContext>> children = bc->Children();
     if (index < children.Length()) {
       return WrapResult(aCx, aProxy, children[index],
-                        JSPROP_READONLY | JSPROP_ENUMERATE, aDesc);
+                        {JS::PropertyAttribute::Configurable,
+                         JS::PropertyAttribute::Enumerable},
+                        aDesc);
     }
     return ReportCrossOriginDenial(aCx, aId, "access"_ns);
   }
@@ -123,7 +123,8 @@ bool RemoteOuterWindowProxy::getOwnPropertyDescriptor(
 
     for (BrowsingContext* child : bc->Children()) {
       if (child->NameEquals(str)) {
-        return WrapResult(aCx, aProxy, child, JSPROP_READONLY, aDesc);
+        return WrapResult(aCx, aProxy, child,
+                          {JS::PropertyAttribute::Configurable}, aDesc);
       }
     }
   }

@@ -1904,13 +1904,13 @@ static bool DefineNonexistentProperty(JSContext* cx, HandleNativeObject obj,
     return result.fail(JSMSG_CANT_DEFINE_PROP_OBJECT_NOT_EXTENSIBLE);
   }
 
-  if (JSID_IS_INT(id)) {
+  if (id.isInt()) {
     // This might be a dense element. Use AddOrChangeProperty as it knows
     // how to deal with that.
-
-    Rooted<PropertyDescriptor> desc(cx);
-    desc.setDataDescriptor(v, JSPROP_ENUMERATE);
-
+    Rooted<PropertyDescriptor> desc(
+        cx, PropertyDescriptor::Data(v, {JS::PropertyAttribute::Configurable,
+                                         JS::PropertyAttribute::Enumerable,
+                                         JS::PropertyAttribute::Writable}));
     if (!AddOrChangeProperty<IsAddOrChange::Add>(cx, obj, id, desc)) {
       return false;
     }
@@ -1943,10 +1943,10 @@ bool js::AddOrUpdateSparseElementHelper(JSContext* cx, HandleArrayObject obj,
   // If we didn't find the shape, we're on the add path: delegate to
   // AddSparseElement:
   if (shape == nullptr) {
-    Rooted<PropertyDescriptor> desc(cx);
-    desc.setDataDescriptor(v, JSPROP_ENUMERATE);
-    desc.assertComplete();
-
+    Rooted<PropertyDescriptor> desc(
+        cx, PropertyDescriptor::Data(v, {JS::PropertyAttribute::Configurable,
+                                         JS::PropertyAttribute::Enumerable,
+                                         JS::PropertyAttribute::Writable}));
     return AddOrChangeProperty<IsAddOrChange::Add>(cx, obj, id, desc);
   }
 
@@ -2521,10 +2521,12 @@ static bool SetNonexistentProperty(JSContext* cx, HandleNativeObject obj,
         return false;
       }
 
-      Rooted<PropertyDescriptor> desc(cx);
-      desc.initFields(v, JSPROP_ENUMERATE, nullptr, nullptr);
-
       MOZ_ASSERT(!cx->isHelperThreadContext());
+
+      Rooted<PropertyDescriptor> desc(
+          cx, PropertyDescriptor::Data(v, {JS::PropertyAttribute::Configurable,
+                                           JS::PropertyAttribute::Enumerable,
+                                           JS::PropertyAttribute::Writable}));
       return op(cx, obj, id, desc, result);
     }
 
