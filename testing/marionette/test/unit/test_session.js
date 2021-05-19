@@ -486,8 +486,8 @@ add_test(function test_Capabilities_toJSON() {
   equal(caps.get("platformVersion"), json.platformVersion);
   equal(caps.get("pageLoadStrategy"), json.pageLoadStrategy);
   equal(caps.get("acceptInsecureCerts"), json.acceptInsecureCerts);
+  deepEqual(caps.get("proxy").toJSON(), json.proxy);
   deepEqual(caps.get("timeouts").toJSON(), json.timeouts);
-  equal(undefined, json.proxy);
   equal(caps.get("setWindowRect"), json.setWindowRect);
   equal(caps.get("strictFileInteractability"), json.strictFileInteractability);
 
