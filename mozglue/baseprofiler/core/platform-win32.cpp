@@ -212,6 +212,16 @@ static unsigned int __stdcall ThreadEntry(void* aArg) {
   return 0;
 }
 
+static bool ShouldAdjustTimerResolution() {
+  // Read PROFILER_ADJUST_TIMER_RESOLUTION env-var once per process, so Firefox
+  // should be restarted if it is changed.
+  // This is to ensure that each timeBeginPeriod is always paired with a
+  // timeEndPeriod.
+  static bool shouldAdjustTimerResolution =
+      static_cast<bool>(getenv("PROFILER_ADJUST_TIMER_RESOLUTION"));
+  return shouldAdjustTimerResolution;
+}
+
 SamplerThread::SamplerThread(PSLockRef aLock, uint32_t aActivityGeneration,
                              double aIntervalMilliseconds,
                              bool aStackWalkEnabled)
@@ -219,11 +229,16 @@ SamplerThread::SamplerThread(PSLockRef aLock, uint32_t aActivityGeneration,
       mActivityGeneration(aActivityGeneration),
       mIntervalMicroseconds(
           std::max(1, int(floor(aIntervalMilliseconds * 1000 + 0.5)))) {
-  // By default we'll not adjust the timer resolution which tends to be
-  // around 16ms. However, if the requested interval is sufficiently low
-  // we'll try to adjust the resolution to match.
-  if (mIntervalMicroseconds < 10 * 1000) {
-    ::timeBeginPeriod(mIntervalMicroseconds / 1000);
+  if (ShouldAdjustTimerResolution()) {
+    // By default we'll not adjust the timer resolution which tends to be
+    // around 16ms. However, if the requested interval is sufficiently low
+    // we'll try to adjust the resolution to match.
+    // This is only set if explicitly requested with e.g.:
+    // `PROFILER_ADJUST_TIMER_RESOLUTION=1`, because this affects all timers
+    // in Firefox, and could therefore hide issues while profiling.
+    if (mIntervalMicroseconds < 10 * 1000) {
+      ::timeBeginPeriod(mIntervalMicroseconds / 1000);
+    }
   }
 
   // Create a new thread. It is important to use _beginthreadex() instead of
@@ -270,16 +285,18 @@ void SamplerThread::SleepMicro(uint32_t aMicroseconds) {
 }
 
 void SamplerThread::Stop(PSLockRef aLock) {
-  // Disable any timer resolution changes we've made. Do it now while
-  // gPSMutex is locked, i.e. before any other SamplerThread can be created
-  // and call ::timeBeginPeriod().
-  //
-  // It's safe to do this now even though this SamplerThread is still alive,
-  // because the next time the main loop of Run() iterates it won't get past
-  // the mActivityGeneration check, and so it won't make any more ::Sleep()
-  // calls.
-  if (mIntervalMicroseconds < 10 * 1000) {
-    ::timeEndPeriod(mIntervalMicroseconds / 1000);
+  if (ShouldAdjustTimerResolution()) {
+    // Disable any timer resolution changes we've made. Do it now while
+    // gPSMutex is locked, i.e. before any other SamplerThread can be created
+    // and call ::timeBeginPeriod().
+    //
+    // It's safe to do this now even though this SamplerThread is still alive,
+    // because the next time the main loop of Run() iterates it won't get past
+    // the mActivityGeneration check, and so it won't make any more ::Sleep()
+    // calls.
+    if (mIntervalMicroseconds < 10 * 1000) {
+      ::timeEndPeriod(mIntervalMicroseconds / 1000);
+    }
   }
 
   mSampler.Disable(aLock);
