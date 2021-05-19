@@ -185,10 +185,12 @@ function convertToUtf8(str) {
  * @param {function} [onCancel] Optional, called when the query provider
  *                              receives a cancel instruction.
  * @param {UrlbarUtils.PROVIDER_TYPE} type The provider type.
+ * @param {string} [name] Optional, use as the provider name.
+ *                        If none, a default name is chosen.
  * @returns {UrlbarProvider} The provider
  */
-function registerBasicTestProvider(results = [], onCancel, type) {
-  let provider = new TestProvider({ results, onCancel, type });
+function registerBasicTestProvider(results = [], onCancel, type, name) {
+  let provider = new TestProvider({ results, onCancel, type, name });
   UrlbarProvidersManager.registerProvider(provider);
   registerCleanupFunction(() =>
     UrlbarProvidersManager.unregisterProvider(provider)
