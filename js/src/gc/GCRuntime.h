@@ -825,7 +825,7 @@ class GCRuntime {
   void updateZonePointersToRelocatedCells(Zone* zone);
   void updateRuntimePointersToRelocatedCells(AutoGCSession& session);
   void protectAndHoldArenas(Arena* arenaList);
-  void unprotectHeldRelocatedArenas();
+  void unprotectHeldRelocatedArenas(const AutoLockGC& lock);
   void clearRelocatedArenas(Arena* arenaList, JS::GCReason reason);
   void clearRelocatedArenasWithoutUnlocking(Arena* arenaList,
                                             JS::GCReason reason,
@@ -1111,7 +1111,7 @@ class GCRuntime {
    */
   MainThreadData<bool> startedCompacting;
   MainThreadData<ZoneList> zonesToMaybeCompact;
-  MainThreadData<Arena*> relocatedArenasToRelease;
+  GCLockData<Arena*> relocatedArenasToRelease;
   MainThreadData<size_t> zonesCompacted;
 
 #ifdef JS_GC_ZEAL
