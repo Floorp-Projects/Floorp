@@ -8,9 +8,11 @@
 #include "mozilla/NativeNt.h"
 #include "mozilla/ThreadLocal.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/WindowsEnumProcessModules.h"
 
 #include <stdio.h>
 #include <windows.h>
+#include <strsafe.h>
 
 const wchar_t kNormal[] = L"Foo.dll";
 const wchar_t kHex12[] = L"Foo.ABCDEF012345.dll";
@@ -60,6 +62,127 @@ bool TestVirtualQuery(HANDLE aProcess, LPCVOID aAddress) {
   if (memcmp(&info1, &info2, result1) != 0) {
     printf("TEST-FAILED | NativeNt | The returned structures mismatch\n");
     return false;
+  }
+
+  return true;
+}
+
+// This class copies the self executable file to the %temp%\<outer>\<inner>
+// folder.  The length of its path is longer than MAX_PATH.
+class LongNameModule {
+  wchar_t mOuterDirBuffer[MAX_PATH];
+  wchar_t mInnerDirBuffer[MAX_PATH * 2];
+  wchar_t mTargetFileBuffer[MAX_PATH * 2];
+
+  const wchar_t* mOuterDir;
+  const wchar_t* mInnerDir;
+  const wchar_t* mTargetFile;
+
+ public:
+  explicit LongNameModule(const wchar_t* aNewLeafNameAfterCopy)
+      : mOuterDir(nullptr), mInnerDir(nullptr), mTargetFile(nullptr) {
+    const wchar_t kFolderName160Chars[] =
+        L"0123456789ABCDEF0123456789ABCDEF"
+        L"0123456789ABCDEF0123456789ABCDEF"
+        L"0123456789ABCDEF0123456789ABCDEF"
+        L"0123456789ABCDEF0123456789ABCDEF"
+        L"0123456789ABCDEF0123456789ABCDEF";
+    UniquePtr<wchar_t[]> thisExe = GetFullBinaryPath();
+    if (!thisExe) {
+      return;
+    }
+
+    // If the buffer is too small, GetTempPathW returns the required
+    // length including a null character, while on a successful case
+    // it returns the number of copied characters which does not include
+    // a null character.  This means len == MAX_PATH should never happen
+    // and len > MAX_PATH means GetTempPathW failed.
+    wchar_t tempDir[MAX_PATH];
+    DWORD len = ::GetTempPathW(MAX_PATH, tempDir);
+    if (!len || len >= MAX_PATH) {
+      return;
+    }
+
+    if (FAILED(::StringCbPrintfW(mOuterDirBuffer, sizeof(mOuterDirBuffer),
+                                 L"\\\\?\\%s%s", tempDir,
+                                 kFolderName160Chars)) ||
+        !::CreateDirectoryW(mOuterDirBuffer, nullptr)) {
+      return;
+    }
+    mOuterDir = mOuterDirBuffer;
+
+    if (FAILED(::StringCbPrintfW(mInnerDirBuffer, sizeof(mInnerDirBuffer),
+                                 L"\\\\?\\%s%s\\%s", tempDir,
+                                 kFolderName160Chars, kFolderName160Chars)) ||
+        !::CreateDirectoryW(mInnerDirBuffer, nullptr)) {
+      return;
+    }
+    mInnerDir = mInnerDirBuffer;
+
+    if (FAILED(::StringCbPrintfW(mTargetFileBuffer, sizeof(mTargetFileBuffer),
+                                 L"\\\\?\\%s%s\\%s\\%s", tempDir,
+                                 kFolderName160Chars, kFolderName160Chars,
+                                 aNewLeafNameAfterCopy)) ||
+        !::CopyFileW(thisExe.get(), mTargetFileBuffer,
+                     /*bFailIfExists*/ TRUE)) {
+      return;
+    }
+    mTargetFile = mTargetFileBuffer;
+  }
+
+  ~LongNameModule() {
+    if (mTargetFile) {
+      ::DeleteFileW(mTargetFile);
+    }
+    if (mInnerDir) {
+      ::RemoveDirectoryW(mInnerDir);
+    }
+    if (mOuterDir) {
+      ::RemoveDirectoryW(mOuterDir);
+    }
+  }
+
+  operator const wchar_t*() const { return mTargetFile; }
+};
+
+bool TestModuleInfo() {
+  UNICODE_STRING newLeafName;
+  ::RtlInitUnicodeString(&newLeafName,
+                         L"\u672D\u5E4C\u5473\u564C.\u30E9\u30FC\u30E1\u30F3");
+
+  LongNameModule longNameModule(newLeafName.Buffer);
+  if (!longNameModule) {
+    printf(
+        "TEST-FAILED | NativeNt | "
+        "Failed to copy the executable to a long directory path\n");
+    return 1;
+  }
+
+  {
+    nsModuleHandle module(::LoadLibraryW(longNameModule));
+
+    bool detectedTarget = false;
+    auto moduleCallback = [&](const wchar_t* aModulePath, HMODULE aModule) {
+      UNICODE_STRING modulePath, moduleName;
+      ::RtlInitUnicodeString(&modulePath, aModulePath);
+      GetLeafName(&moduleName, &modulePath);
+      if (::RtlEqualUnicodeString(&moduleName, &newLeafName,
+                                  /*aCaseInsensitive*/ TRUE)) {
+        detectedTarget = true;
+      }
+    };
+
+    if (!mozilla::EnumerateProcessModules(moduleCallback)) {
+      printf("TEST-FAILED | NativeNt | EnumerateProcessModules failed\n");
+      return false;
+    }
+
+    if (!detectedTarget) {
+      printf(
+          "TEST-FAILED | NativeNt | "
+          "EnumerateProcessModules missed the target file\n");
+      return false;
+    }
   }
 
   return true;
@@ -287,6 +410,10 @@ int wmain(int argc, wchar_t* argv[]) {
     printf(
         "TEST-FAILED | NativeNt | "
         "GetModuleHandleFromLeafName unexpectedly returns a value.\n");
+    return 1;
+  }
+
+  if (!TestModuleInfo()) {
     return 1;
   }
 
