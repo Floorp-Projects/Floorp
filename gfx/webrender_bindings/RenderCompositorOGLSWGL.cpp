@@ -127,6 +127,10 @@ EGLSurface RenderCompositorOGLSWGL::CreateEGLSurface() {
   if (surface == EGL_NO_SURFACE) {
     gfxCriticalNote << "Failed to create EGLSurface";
   }
+
+  // The subsequent render after creating a new surface must be a full render.
+  mFullRender = true;
+
   return surface;
 }
 
@@ -157,6 +161,13 @@ bool RenderCompositorOGLSWGL::BeginFrame() {
   return true;
 }
 
+RenderedFrameId RenderCompositorOGLSWGL::EndFrame(
+    const nsTArray<DeviceIntRect>& aDirtyRects) {
+  mFullRender = false;
+
+  return RenderCompositorLayersSWGL::EndFrame(aDirtyRects);
+}
+
 void RenderCompositorOGLSWGL::HandleExternalImage(
     RenderTextureHost* aExternalImage, FrameSurface& aFrameSurface) {
   MOZ_ASSERT(aExternalImage);
@@ -184,6 +195,8 @@ void RenderCompositorOGLSWGL::HandleExternalImage(
                         aFrameSurface.mTransform, drawRect);
 #endif
 }
+
+bool RenderCompositorOGLSWGL::RequestFullRender() { return mFullRender; }
 
 void RenderCompositorOGLSWGL::Pause() {
 #ifdef MOZ_WIDGET_ANDROID
