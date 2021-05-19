@@ -192,7 +192,24 @@ data class CreditCard(
     val timeLastUsed: Long?,
     val timeLastModified: Long,
     val timesUsed: Long
-) : Parcelable
+) : Parcelable {
+    val obfuscatedCardNumber: String
+        get() = ellipsesStart +
+            ellipsis + ellipsis + ellipsis + ellipsis +
+            cardNumberLast4 +
+            ellipsesEnd
+
+    companion object {
+        // Left-To-Right Embedding (LTE) mark
+        const val ellipsesStart = "\u202A"
+
+        // One dot ellipsis
+        const val ellipsis = "\u2022\u2060\u2006\u2060"
+
+        // Pop Directional Formatting (PDF) mark
+        const val ellipsesEnd = "\u202C"
+    }
+}
 
 /**
  * Information about a new credit card.

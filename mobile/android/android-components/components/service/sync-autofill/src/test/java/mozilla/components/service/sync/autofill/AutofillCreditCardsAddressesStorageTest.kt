@@ -6,6 +6,7 @@ package mozilla.components.service.sync.autofill
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.runBlocking
+import mozilla.components.concept.storage.CreditCard
 import mozilla.components.concept.storage.CreditCardNumber
 import mozilla.components.concept.storage.NewCreditCardFields
 import mozilla.components.concept.storage.UpdatableAddressFields
@@ -59,6 +60,13 @@ class AutofillCreditCardsAddressesStorageTest {
         assertEquals(creditCardFields.expiryMonth, creditCard.expiryMonth)
         assertEquals(creditCardFields.expiryYear, creditCard.expiryYear)
         assertEquals(creditCardFields.cardType, creditCard.cardType)
+        assertEquals(
+            CreditCard.ellipsesStart +
+                CreditCard.ellipsis + CreditCard.ellipsis + CreditCard.ellipsis + CreditCard.ellipsis +
+                creditCardFields.cardNumberLast4 +
+                CreditCard.ellipsesEnd,
+            creditCard.obfuscatedCardNumber
+        )
     }
 
     @Test

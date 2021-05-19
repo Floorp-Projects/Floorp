@@ -29,7 +29,8 @@ class CreditCardItemViewHolder(
      * @param creditCard The [CreditCard] to display.
      */
     fun bind(creditCard: CreditCard) {
-        itemView.findViewById<TextView>(R.id.credit_card_number).text = creditCard.number
+        itemView.findViewById<TextView>(R.id.credit_card_number).text =
+            creditCard.obfuscatedCardNumber
 
         bindCreditCardExpiryDate(creditCard)
 

@@ -46,7 +46,7 @@ class CreditCardItemViewHolderTest {
     fun `GIVEN a credit card item WHEN bind is called THEN set the card number and expiry date text`() {
         CreditCardItemViewHolder(view, onCreditCardSelected).bind(creditCard)
 
-        assertEquals(creditCard.number, cardNumberView.text)
+        assertEquals(creditCard.obfuscatedCardNumber, cardNumberView.text)
         assertEquals("0${creditCard.expiryMonth}/${creditCard.expiryYear}", expirationDateView.text)
     }
 

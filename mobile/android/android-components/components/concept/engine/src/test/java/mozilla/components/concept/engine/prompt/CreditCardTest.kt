@@ -14,6 +14,7 @@ class CreditCardTest {
         val guid = "1"
         val name = "Banana Apple"
         val number = "4111111111111110"
+        val last4Digits = "1110"
         val expiryMonth = "5"
         val expiryYear = "2030"
         val cardType = "amex"
@@ -32,5 +33,12 @@ class CreditCardTest {
         assertEquals(expiryMonth, creditCard.expiryMonth)
         assertEquals(expiryYear, creditCard.expiryYear)
         assertEquals(cardType, creditCard.cardType)
+        assertEquals(
+            CreditCard.ellipsesStart +
+                CreditCard.ellipsis + CreditCard.ellipsis + CreditCard.ellipsis + CreditCard.ellipsis +
+                last4Digits +
+                CreditCard.ellipsesEnd,
+            creditCard.obfuscatedCardNumber
+        )
     }
 }
