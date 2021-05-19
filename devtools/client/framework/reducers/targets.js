@@ -8,6 +8,10 @@ const initialReducerState = {
   targets: [],
   // The selected targetFront instance
   selected: null,
+  // timestamp of the last time a target was updated (i.e. url/title was updated).
+  // This is used by the EvaluationContextSelector component to re-render the list of
+  // targets when the list itself did not change (no addition/removal)
+  lastTargetRefresh: Date.now(),
 };
 
 exports.reducer = targetsReducer;
@@ -40,6 +44,15 @@ function targetsReducer(state = initialReducerState, action) {
       };
     }
 
+    case "REFRESH_TARGETS": {
+      // The data _in_ targetFront was updated, so we only need to mutate the state,
+      // while keeping the same values.
+      return {
+        ...state,
+        lastTargetRefresh: Date.now(),
+      };
+    }
+
     case "UNREGISTER_TARGET": {
       const targets = state.targets.filter(
         target => target !== action.targetFront
@@ -56,12 +69,18 @@ function targetsReducer(state = initialReducerState, action) {
   return state;
 }
 
-exports.getToolboxTargets = getToolboxTargets;
 function getToolboxTargets(state) {
   return state.targets.targets;
 }
 
-exports.getSelectedTarget = getSelectedTarget;
 function getSelectedTarget(state) {
   return state.targets.selected;
 }
+
+function getLastTargetRefresh(state) {
+  return state.targets.lastTargetRefresh;
+}
+
+exports.getToolboxTargets = getToolboxTargets;
+exports.getSelectedTarget = getSelectedTarget;
+exports.getLastTargetRefresh = getLastTargetRefresh;
