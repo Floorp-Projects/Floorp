@@ -12,8 +12,7 @@
 #include "mozilla/Telemetry.h"
 #include "BackgroundChild.h"
 
-namespace mozilla {
-namespace ipc {
+namespace mozilla::ipc {
 
 static IdleSchedulerChild* sMainThreadIdleScheduler = nullptr;
 
@@ -122,5 +121,4 @@ IdleSchedulerChild* IdleSchedulerChild::GetMainThreadIdleScheduler() {
   return sMainThreadIdleScheduler;
 }
 
-}  // namespace ipc
-}  // namespace mozilla
+}  // namespace mozilla::ipc
