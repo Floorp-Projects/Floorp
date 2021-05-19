@@ -48,6 +48,10 @@ class nsDisplayOptionEventGrabber : public nsDisplayWrapList {
   virtual bool ShouldFlattenAway(nsDisplayListBuilder* aBuilder) override {
     return false;
   }
+  void Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) override {
+    GetChildren()->Paint(aBuilder, aCtx,
+                         mFrame->PresContext()->AppUnitsPerDevPixel());
+  }
   NS_DISPLAY_DECL_NAME("OptionEventGrabber", TYPE_OPTION_EVENT_GRABBER)
 };
 
@@ -74,7 +78,7 @@ void nsDisplayOptionEventGrabber::HitTest(nsDisplayListBuilder* aBuilder,
   }
 }
 
-class nsOptionEventGrabberWrapper : public nsDisplayWrapper {
+class nsOptionEventGrabberWrapper : public nsDisplayItemWrapper {
  public:
   nsOptionEventGrabberWrapper() = default;
   virtual nsDisplayItem* WrapList(nsDisplayListBuilder* aBuilder,
