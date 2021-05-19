@@ -104,10 +104,6 @@ experimental-features-multi-pip =
     .label = Multiple Picture-in-Picture Support
 experimental-features-multi-pip-description = Experimental support for allowing multiple Picture-in-Picture windows to be open at the same time.
 
-experimental-features-http3 =
-    .label = HTTP/3 protocol
-experimental-features-http3-description = Experimental support for the HTTP/3 protocol.
-
 # Search during IME
 experimental-features-ime-search =
     .label = Address Bar: show results during IME composition
