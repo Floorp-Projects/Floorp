@@ -72,6 +72,7 @@ namespace JS {
 enum class AsmJSOption : uint8_t {
   Enabled,
   DisabledByAsmJSPref,
+  DisabledByLinker,
   DisabledByNoWasmCompiler,
   DisabledByDebugger,
 };
