@@ -33,6 +33,9 @@ class RenderCompositorOGLSWGL : public RenderCompositorLayersSWGL {
   bool MakeCurrent() override;
 
   bool BeginFrame() override;
+  RenderedFrameId EndFrame(const nsTArray<DeviceIntRect>& aDirtyRects) override;
+
+  bool RequestFullRender() override;
 
   void Pause() override;
   bool Resume() override;
@@ -61,6 +64,7 @@ class RenderCompositorOGLSWGL : public RenderCompositorLayersSWGL {
   EGLSurface mEGLSurface = EGL_NO_SURFACE;
   // On android, we must track our own surface size.
   Maybe<LayoutDeviceIntSize> mEGLSurfaceSize;
+  bool mFullRender = false;
 
   class TileOGL : public RenderCompositorLayersSWGL::Tile {
    public:
