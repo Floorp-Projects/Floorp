@@ -1,8 +1,11 @@
+import base64
+import io
 import json
 import os
 import platform
 import signal
 import subprocess
+import zipfile
 from abc import ABCMeta, abstractmethod
 
 import mozinfo
@@ -120,21 +123,34 @@ def executor_kwargs(logger, test_type, server_config, cache_manager, run_info_da
         executor_kwargs["reftest_internal"] = kwargs["reftest_internal"]
         executor_kwargs["reftest_screenshot"] = kwargs["reftest_screenshot"]
     if test_type == "wdspec":
-        options = {}
+        options = {"args": []}
         if kwargs["binary"]:
             options["binary"] = kwargs["binary"]
         if kwargs["binary_args"]:
             options["args"] = kwargs["binary_args"]
-        if kwargs["headless"]:
-            if "args" not in options:
-                options["args"] = []
-            if "--headless" not in options["args"]:
-                options["args"].append("--headless")
-        options["prefs"] = {
-            "network.dns.localDomains": ",".join(server_config.domains_set)
-        }
-        for pref, value in kwargs["extra_prefs"]:
-            options["prefs"].update({pref: Preferences.cast(value)})
+
+        profile_creator = ProfileCreator(logger,
+                                         kwargs["prefs_root"],
+                                         server_config,
+                                         test_type,
+                                         kwargs["extra_prefs"],
+                                         kwargs["gecko_e10s"],
+                                         kwargs["enable_fission"],
+                                         kwargs["browser_channel"],
+                                         kwargs["binary"],
+                                         kwargs["certutil_binary"],
+                                         server_config.ssl_config["ca_cert_path"])
+        if kwargs["processes"] > 1:
+            # With multiple processes, we would need a profile directory per process, but we
+            # don't have an easy way to do that, so include the profile in the capabilties
+            # directly instead. This means recreating it per session, which is slow
+            options["profile"] = profile_creator.create_base64()
+        else:
+            profile = profile_creator.create()
+            options["args"].extend(["--profile", profile.profile])
+            # Prevent the profile being deleted
+            executor_kwargs["profile"] = profile
+
         capabilities["moz:firefoxOptions"] = options
 
         # This gets reused for firefox_android, but the environment setup
@@ -147,6 +163,9 @@ def executor_kwargs(logger, test_type, server_config, cache_manager, run_info_da
                                   kwargs["headless"],
                                   kwargs["enable_webrender"],
                                   kwargs["chaos_mode_flags"])
+        else:
+            if kwargs["headless"] and "--headless" not in options["args"]:
+                options["args"].append("--headless")
 
         # This doesn't work with wdspec tests
         # In particular tests can create a session without passing in the capabilites
@@ -590,6 +609,21 @@ class ProfileCreator(object):
             self._setup_ssl(profile)
 
         return profile
+
+    def create_base64(self, **kwargs):
+        profile = self.create(**kwargs)
+        try:
+            with io.BytesIO() as buf:
+                with zipfile.ZipFile(buf, "w", compression=zipfile.ZIP_DEFLATED) as zipf:
+                    for dirpath, _, filenames in os.walk(profile.profile):
+                        for filename in filenames:
+                            src_path = os.path.join(dirpath, filename)
+                            dest_path = os.path.relpath(src_path, profile.profile)
+                            with open(src_path, "rb") as f:
+                                zipf.writestr(dest_path, f.read())
+                return base64.b64encode(buf.getvalue()).decode("ascii").strip()
+        finally:
+            profile.cleanup()
 
     def _load_prefs(self):
         prefs = Preferences()
