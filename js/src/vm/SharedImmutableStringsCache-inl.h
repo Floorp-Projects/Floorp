@@ -12,9 +12,8 @@
 namespace js {
 
 template <typename IntoOwnedChars>
-[[nodiscard]] mozilla::Maybe<SharedImmutableString>
-SharedImmutableStringsCache::getOrCreate(const char* chars, size_t length,
-                                         IntoOwnedChars intoOwnedChars) {
+[[nodiscard]] SharedImmutableString SharedImmutableStringsCache::getOrCreate(
+    const char* chars, size_t length, IntoOwnedChars intoOwnedChars) {
   MOZ_ASSERT(inner_);
   MOZ_ASSERT(chars);
   Hasher::Lookup lookup(Hasher::hashLongString(chars, length), chars, length);
@@ -24,22 +23,22 @@ SharedImmutableStringsCache::getOrCreate(const char* chars, size_t length,
   if (!entry) {
     OwnedChars ownedChars(intoOwnedChars());
     if (!ownedChars) {
-      return mozilla::Nothing();
+      return SharedImmutableString();
     }
     MOZ_ASSERT(ownedChars.get() == chars ||
                memcmp(ownedChars.get(), chars, length) == 0);
-    auto box = StringBox::Create(std::move(ownedChars), length);
+    auto box = StringBox::Create(std::move(ownedChars), length, this->inner_);
     if (!box || !locked->set.add(entry, std::move(box))) {
-      return mozilla::Nothing();
+      return SharedImmutableString();
     }
   }
 
   MOZ_ASSERT(entry && *entry);
-  return mozilla::Some(SharedImmutableString(locked, entry->get()));
+  return SharedImmutableString(entry->get());
 }
 
 template <typename IntoOwnedTwoByteChars>
-[[nodiscard]] mozilla::Maybe<SharedImmutableTwoByteString>
+[[nodiscard]] SharedImmutableTwoByteString
 SharedImmutableStringsCache::getOrCreate(
     const char16_t* chars, size_t length,
     IntoOwnedTwoByteChars intoOwnedTwoByteChars) {
@@ -54,21 +53,21 @@ SharedImmutableStringsCache::getOrCreate(
   if (!entry) {
     OwnedTwoByteChars ownedTwoByteChars(intoOwnedTwoByteChars());
     if (!ownedTwoByteChars) {
-      return mozilla::Nothing();
+      return SharedImmutableTwoByteString();
     }
     MOZ_ASSERT(
         ownedTwoByteChars.get() == chars ||
         memcmp(ownedTwoByteChars.get(), chars, length * sizeof(char16_t)) == 0);
     OwnedChars ownedChars(reinterpret_cast<char*>(ownedTwoByteChars.release()));
-    auto box =
-        StringBox::Create(std::move(ownedChars), length * sizeof(char16_t));
+    auto box = StringBox::Create(std::move(ownedChars),
+                                 length * sizeof(char16_t), this->inner_);
     if (!box || !locked->set.add(entry, std::move(box))) {
-      return mozilla::Nothing();
+      return SharedImmutableTwoByteString();
     }
   }
 
   MOZ_ASSERT(entry && *entry);
-  return mozilla::Some(SharedImmutableTwoByteString(locked, entry->get()));
+  return SharedImmutableTwoByteString(entry->get());
 }
 
 }  // namespace js
