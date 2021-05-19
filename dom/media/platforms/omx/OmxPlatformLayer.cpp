@@ -244,13 +244,13 @@ OmxPlatformLayer::Config() {
     mStartPortNumber = portParam.nStartPortNumber;
     UniquePtr<OmxAudioConfig> conf(
         ConfigForMime<OmxAudioConfig>(mInfo->mMimeType));
-    MOZ_ASSERT(conf.get());
+    MOZ_RELEASE_ASSERT(conf.get());
     return conf->Apply(*this, *(mInfo->GetAsAudioInfo()));
   } else if (mInfo->IsVideo()) {
     GetParameter(OMX_IndexParamVideoInit, &portParam, sizeof(portParam));
     UniquePtr<OmxVideoConfig> conf(
         ConfigForMime<OmxVideoConfig>(mInfo->mMimeType));
-    MOZ_ASSERT(conf.get());
+    MOZ_RELEASE_ASSERT(conf.get());
     return conf->Apply(*this, *(mInfo->GetAsVideoInfo()));
   } else {
     MOZ_ASSERT_UNREACHABLE("non-AV data (text?) is not supported.");
