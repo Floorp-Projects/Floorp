@@ -118,4 +118,4 @@ if __name__ == "__main__":
                         help="Channel of the browser")
     parser.add_argument("wpt_args", nargs="*",
                         help="Arguments to forward to `wpt run` command")
-    main(**vars(parser.parse_args()))
+    main(**vars(parser.parse_args()))  # type: ignore
