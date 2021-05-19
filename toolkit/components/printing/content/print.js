@@ -3,7 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 const {
-  gBrowser,
   PrintUtils,
   Services,
   AppConstants,
@@ -281,9 +280,9 @@ var PrintEventHandler = {
       // We cannot close the window yet because the browsing context for the
       // print preview browser is needed to print the page.
       let sourceBrowser = this.getSourceBrowsingContext().top.embedderElement;
-      let dialogBoxManager = gBrowser
-        .getTabDialogBox(sourceBrowser)
-        .getTabDialogManager();
+      let dialogBoxManager = PrintUtils.getTabDialogBox(
+        sourceBrowser
+      ).getTabDialogManager();
       dialogBoxManager.hideDialog(sourceBrowser);
 
       // Use our settings to prepopulate the system dialog.

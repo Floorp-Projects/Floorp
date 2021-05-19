@@ -116,8 +116,18 @@ var PrintUtils = {
     return true;
   },
 
+  /**
+   * This call exists in a separate method so it can be easily overridden where
+   * `gBrowser` doesn't exist (e.g. Thunderbird).
+   *
+   * @see getTabDialogBox in tabbrowser.js
+   */
+  getTabDialogBox(sourceBrowser) {
+    return gBrowser.getTabDialogBox(sourceBrowser);
+  },
+
   getPreviewBrowser(sourceBrowser) {
-    let dialogBox = gBrowser.getTabDialogBox(sourceBrowser);
+    let dialogBox = this.getTabDialogBox(sourceBrowser);
     for (let dialog of dialogBox.getTabDialogManager()._dialogs) {
       let browser = dialog._box.querySelector(".printPreviewBrowser");
       if (browser) {
@@ -143,6 +153,16 @@ var PrintUtils = {
     }
   },
 
+  /**
+   * This call exists in a separate method so it can be easily overridden where
+   * `gBrowser` doesn't exist (e.g. Thunderbird).
+   *
+   * @see createBrowser in tabbrowser.js
+   */
+  createBrowser(params) {
+    return gBrowser.createBrowser(params);
+  },
+
   createPreviewBrowsers(aBrowsingContext, aDialogBrowser, aPrintFrameOnly) {
     let _createPreviewBrowser = previewType => {
       // When we're not previewing the selection or printing only the frame, we
@@ -151,7 +171,7 @@ var PrintUtils = {
         previewType == "selection" || aPrintFrameOnly
           ? aBrowsingContext
           : aBrowsingContext.top.embedderElement.browsingContext;
-      let browser = gBrowser.createBrowser({
+      let browser = this.createBrowser({
         remoteType: browsingContext.currentRemoteType,
         userContextId: browsingContext.originAttributes.userContextId,
         initialBrowsingContextGroupId: browsingContext.group.id,
@@ -263,7 +283,7 @@ var PrintUtils = {
       hasSelection,
       printFrameOnly: !!aPrintFrameOnly,
     });
-    let dialogBox = gBrowser.getTabDialogBox(sourceBrowser);
+    let dialogBox = this.getTabDialogBox(sourceBrowser);
     return dialogBox.open(
       `chrome://global/content/print.html?browsingContextId=${aBrowsingContext.id}&printInitiationTime=${aPrintInitiationTime}`,
       { features: "resizable=no", sizeTo: "available" },
