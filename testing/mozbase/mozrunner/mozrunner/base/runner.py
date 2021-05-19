@@ -78,8 +78,7 @@ class BaseRunner(object):
 
     def __del__(self):
         if not self.explicit_cleanup:
-            # If we're relying on the gc for cleanup do the same with the profile
-            self.cleanup(keep_profile=True)
+            self.cleanup()
 
     @abstractproperty
     def command(self):
@@ -275,10 +274,8 @@ class BaseRunner(object):
 
         return crash_count
 
-    def cleanup(self, keep_profile=False):
+    def cleanup(self):
         """
         Cleanup all runner state
         """
         self.stop()
-        if not keep_profile:
-            self.profile.cleanup()
