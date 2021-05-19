@@ -226,7 +226,7 @@ void ContainerPrepare(ContainerT* aContainer, LayerManagerComposite* aManager,
 
   for (LayerPolygon& layer : polygons) {
     LayerComposite* layerToRender =
-        static_cast<LayerComposite*>(layer.layer->ImplData());
+        static_cast<LayerComposite*>(layer.data->ImplData());
 
     RenderTargetIntRect clipRect =
         layerToRender->GetLayer()->CalculateScissorRect(aClipRect);
