@@ -29,13 +29,15 @@ add_task(async function bookmark() {
   // Open a unique page.
   let url = "http://example.com/browser_page_action_menu";
   await BrowserTestUtils.withNewTab(url, async () => {
-    // The bookmark button should read "Bookmark Current Tab" and not be starred.
+    // The bookmark button should read "Bookmark this page ([shortcut])" and not
+    // be starred.
     let bookmarkButton = BrowserPageActions.urlbarButtonNodeForActionID(
       "bookmark"
     );
-    Assert.equal(
-      bookmarkButton.getAttribute("tooltiptext"),
-      "Bookmark Current Tab"
+    let tooltipText = bookmarkButton.getAttribute("tooltiptext");
+    Assert.ok(
+      tooltipText.startsWith("Bookmark this page"),
+      `Expecting the tooltip text to be updated. Tooltip text: ${tooltipText}`
     );
     Assert.ok(!bookmarkButton.hasAttribute("starred"));
 
@@ -60,10 +62,12 @@ add_task(async function bookmark() {
       "true",
       "Star has open attribute"
     );
-    // The bookmark button should now read "Edit This Bookmark" and be starred.
-    Assert.equal(
-      bookmarkButton.getAttribute("tooltiptext"),
-      "Edit This Bookmark"
+    // The bookmark button should now read "Edit this bookmark ([shortcut])" and
+    // be starred.
+    tooltipText = bookmarkButton.getAttribute("tooltiptext");
+    Assert.ok(
+      tooltipText.startsWith("Edit this bookmark"),
+      `Expecting the tooltip text to be updated. Tooltip text: ${tooltipText}`
     );
     Assert.equal(bookmarkButton.firstChild.getAttribute("starred"), "true");
 
