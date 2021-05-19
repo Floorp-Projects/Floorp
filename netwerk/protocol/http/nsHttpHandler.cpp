@@ -944,39 +944,33 @@ void nsHttpHandler::InitUserAgentComponents() {
   // Gather OS/CPU.
 #if defined(XP_WIN)
   OSVERSIONINFO info = {sizeof(OSVERSIONINFO)};
-#    pragma warning(push)
-#    pragma warning(disable : 4996)
-  if (GetVersionEx(&info)) {
-#    pragma warning(pop)
+  if (!GetVersionEx(&info) || info.dwMajorVersion >= 10) {
+    // Cap the reported Windows version to 10.0. This way, Microsoft doesn't
+    // get to change Web compat-sensitive values without our veto. The
+    // compat-sensitivity keeps going up as 10.0 stays as the current value
+    // for longer and longer. If the system-reported version ever changes,
+    // we'll be able to take our time to evaluate the Web compat impact
+    // instead of having to scramble to react like happened with macOS
+    // changing from 10.x to 11.x.
+    info.dwMajorVersion = 10;
+    info.dwMinorVersion = 0;
+  }
 
-    if (info.dwMajorVersion >= 10) {
-      // Cap the reported Windows version to 10.0. This way, Microsoft doesn't
-      // get to change Web compat-sensitive values without our veto. The
-      // compat-sensitivity keeps going up as 10.0 stays as the current value
-      // for longer and longer. If the system-reported version ever changes,
-      // we'll be able to take our time to evaluate the Web compat impact
-      // instead of having to scamble to react like happened with macOS
-      // changing from 10.x to 11.x.
-      info.dwMajorVersion = 10;
-      info.dwMinorVersion = 0;
-    }
-
-    const char* format;
+  const char* format;
 #  if defined _M_X64 || defined _M_AMD64
-    format = OSCPU_WIN64;
+  format = OSCPU_WIN64;
 #  else
-    BOOL isWow64 = FALSE;
-    if (!IsWow64Process(GetCurrentProcess(), &isWow64)) {
-      isWow64 = FALSE;
-    }
-    format = isWow64 ? OSCPU_WIN64 : OSCPU_WINDOWS;
+  BOOL isWow64 = FALSE;
+  if (!IsWow64Process(GetCurrentProcess(), &isWow64)) {
+    isWow64 = FALSE;
+  }
+  format = isWow64 ? OSCPU_WIN64 : OSCPU_WINDOWS;
 #  endif
 
-    SmprintfPointer buf =
-        mozilla::Smprintf(format, info.dwMajorVersion, info.dwMinorVersion);
-    if (buf) {
-      mOscpu = buf.get();
-    }
+  SmprintfPointer buf =
+      mozilla::Smprintf(format, info.dwMajorVersion, info.dwMinorVersion);
+  if (buf) {
+    mOscpu = buf.get();
   }
 #elif defined(XP_MACOSX)
   SInt32 majorVersion = nsCocoaFeatures::macOSVersionMajor();
