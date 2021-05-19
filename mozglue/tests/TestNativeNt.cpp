@@ -188,6 +188,67 @@ bool TestModuleInfo() {
   return true;
 }
 
+bool TestModuleLoadedAsData() {
+  const wchar_t kNewLeafName[] = L"\u03BC\u0061\u9EBA.txt";
+
+  LongNameModule longNameModule(kNewLeafName);
+  if (!longNameModule) {
+    printf(
+        "TEST-FAILED | NativeNt | "
+        "Failed to copy the executable to a long directory path\n");
+    return 1;
+  }
+
+  const wchar_t* kManualLoadModules[] = {
+      L"mshtml.dll",
+      L"shell32.dll",
+      longNameModule,
+  };
+
+  for (const auto moduleName : kManualLoadModules) {
+    // Must load a module as data first,
+    nsModuleHandle moduleAsData(::LoadLibraryExW(
+        moduleName, nullptr,
+        LOAD_LIBRARY_AS_DATAFILE | LOAD_LIBRARY_AS_IMAGE_RESOURCE));
+
+    // then load a module normally to map it on a different address.
+    nsModuleHandle module(::LoadLibraryW(moduleName));
+
+    PEHeaders peAsData(moduleAsData.get());
+    PEHeaders pe(module.get());
+    if (!peAsData || !pe) {
+      printf("TEST-FAIL | NativeNt | Failed to load the module\n");
+      return false;
+    }
+
+    if (peAsData.RVAToPtr<HMODULE>(0) == pe.RVAToPtr<HMODULE>(0)) {
+      printf(
+          "TEST-FAIL | NativeNt | "
+          "The module should have been mapped onto two different places\n");
+      return false;
+    }
+
+    const auto* pdb1 = peAsData.GetPdbInfo();
+    const auto* pdb2 = pe.GetPdbInfo();
+    if (pdb1 && pdb2) {
+      if (pdb1->pdbSignature != pdb2->pdbSignature ||
+          pdb1->pdbAge != pdb2->pdbAge ||
+          strcmp(pdb1->pdbFileName, pdb2->pdbFileName)) {
+        printf(
+            "TEST-FAIL | NativeNt | "
+            "PDB info from the same module did not match.\n");
+        return false;
+      }
+    } else if (pdb1 || pdb2) {
+      printf(
+          "TEST-FAIL | NativeNt | Failed to get PDB info from the module.\n");
+      return false;
+    }
+  }
+
+  return true;
+}
+
 LauncherResult<HMODULE> GetModuleHandleFromLeafName(const wchar_t* aName) {
   UNICODE_STRING name;
   ::RtlInitUnicodeString(&name, aName);
@@ -360,6 +421,22 @@ int wmain(int argc, wchar_t* argv[]) {
     return 1;
   }
 
+  const mozilla::nt::CodeViewRecord70* debugInfo = k32headers.GetPdbInfo();
+  if (!debugInfo) {
+    printf(
+        "TEST-FAILED | NativeNt | Unable to obtain debug information from "
+        "kernel32.dll\n");
+    return 1;
+  }
+
+  if (stricmp(debugInfo->pdbFileName, "kernel32.pdb")) {
+    printf(
+        "TEST-FAILED | NativeNt | Unexpected PDB filename "
+        "in kernel32.dll: %s\n",
+        debugInfo->pdbFileName);
+    return 1;
+  }
+
   PEHeaders ntdllheaders(::GetModuleHandleW(L"ntdll.dll"));
 
   auto ntdllBoundaries = ntdllheaders.GetBounds();
@@ -414,6 +491,10 @@ int wmain(int argc, wchar_t* argv[]) {
   }
 
   if (!TestModuleInfo()) {
+    return 1;
+  }
+
+  if (!TestModuleLoadedAsData()) {
     return 1;
   }
 
