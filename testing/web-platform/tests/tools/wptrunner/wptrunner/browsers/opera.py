@@ -30,12 +30,11 @@ def browser_kwargs(logger, test_type, run_info_data, config, **kwargs):
             "webdriver_args": kwargs.get("webdriver_args")}
 
 
-def executor_kwargs(logger, test_type, server_config, cache_manager, run_info_data,
+def executor_kwargs(logger, test_type, test_environment, run_info_data,
                     **kwargs):
     from selenium.webdriver import DesiredCapabilities
 
-    executor_kwargs = base_executor_kwargs(test_type, server_config,
-                                           cache_manager, run_info_data, **kwargs)
+    executor_kwargs = base_executor_kwargs(test_type, test_environment, run_info_data, **kwargs)
     executor_kwargs["close_after_done"] = True
     capabilities = dict(DesiredCapabilities.OPERA.items())
     capabilities.setdefault("operaOptions", {})["prefs"] = {
