@@ -940,10 +940,10 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **page cycles**: 25
    * **page timeout**: 60000
    * **playback**: mitmproxy-android
-   * **playback pageset manifest**: mitm4-pixel2-fennec-bing-search-restaurants.manifest
-   * **playback recordings**: mitm4-pixel2-fennec-bing-search-restaurants.mp
+   * **playback pageset manifest**: mitm6-android-fenix-bing-search-restaurants.manifest
+   * **playback recordings**: mitm6-android-fenix-bing-search-restaurants.mp
    * **playback version**: 6.0.2
-   * **test url**: `<https://www.bing.com/search?q=restaurants>`__
+   * **test url**: `<https://www.bing.com/search?q=restaurants+in+exton+pa+19341>`__
    * **type**: pageload
    * **unit**: ms
    * **use live sites**: false
@@ -1003,8 +1003,8 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **page cycles**: 25
    * **page timeout**: 60000
    * **playback**: mitmproxy-android
-   * **playback pageset manifest**: mitm4-pixel2-fennec-cnn-ampstories.manifest
-   * **playback recordings**: mitm4-pixel2-fennec-cnn-ampstories.mp
+   * **playback pageset manifest**: mitm6-android-fenix-cnn-ampstories.manifest
+   * **playback recordings**: mitm6-android-fenix-cnn-ampstories.mp
    * **playback version**: 6.0.2
    * **test url**: `<https://cnn.com/ampstories/us/why-hurricane-michael-is-a-monster-unlike-any-other>`__
    * **type**: pageload
@@ -1364,8 +1364,8 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **page cycles**: 25
    * **page timeout**: 60000
    * **playback**: mitmproxy-android
-   * **playback pageset manifest**: mitm4-pixel2-fennec-youtube.manifest
-   * **playback recordings**: mitm4-pixel2-fennec-youtube.mp
+   * **playback pageset manifest**: mitm6-android-fenix-youtube.manifest
+   * **playback recordings**: mitm6-android-fenix-youtube.mp
    * **playback version**: 6.0.2
    * **test url**: `<https://m.youtube.com>`__
    * **type**: pageload
