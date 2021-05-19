@@ -614,7 +614,7 @@ class SourceCompressionTask : public HelperThreadTask {
   // than the original, or we OOM'd during compression, or nothing else
   // except the task is holding the ScriptSource alive when scheduled to
   // compress, this will remain None upon completion.
-  mozilla::Maybe<SharedImmutableString> resultString_;
+  SharedImmutableString resultString_;
 
  public:
   // The majorGCNumber is used for scheduling tasks.

@@ -2258,10 +2258,10 @@ template <typename Unit>
 
   if (retrievable == SourceRetrievable::Yes) {
     data = SourceType(
-        Uncompressed<Unit, SourceRetrievable::Yes>(std::move(*deduped)));
+        Uncompressed<Unit, SourceRetrievable::Yes>(std::move(deduped)));
   } else {
     data = SourceType(
-        Uncompressed<Unit, SourceRetrievable::No>(std::move(*deduped)));
+        Uncompressed<Unit, SourceRetrievable::No>(std::move(deduped)));
   }
   return true;
 }
@@ -2373,7 +2373,7 @@ template <typename Unit>
              "are pinned -- that only makes sense with a ScriptSource actively "
              "being inspected");
 
-  data = SourceType(Compressed<Unit, SourceRetrievable::No>(std::move(*deduped),
+  data = SourceType(Compressed<Unit, SourceRetrievable::No>(std::move(deduped),
                                                             sourceLength));
 
   return true;
@@ -2408,8 +2408,8 @@ bool ScriptSource::assignSource(JSContext* cx,
     return false;
   }
 
-  data = SourceType(
-      Uncompressed<Unit, SourceRetrievable::No>(std::move(*deduped)));
+  data =
+      SourceType(Uncompressed<Unit, SourceRetrievable::No>(std::move(deduped)));
   return true;
 }
 
@@ -2585,9 +2585,8 @@ void ScriptSource::triggerConvertToCompressedSourceFromTask(
 }
 
 void SourceCompressionTask::complete() {
-  if (!shouldCancel() && resultString_.isSome()) {
-    source_->triggerConvertToCompressedSourceFromTask(
-        std::move(*resultString_));
+  if (!shouldCancel() && resultString_) {
+    source_->triggerConvertToCompressedSourceFromTask(std::move(resultString_));
   }
 }
 
@@ -3238,8 +3237,8 @@ bool ScriptSource::initFromOptions(JSContext* cx,
 // Use the SharedImmutableString map to deduplicate input string. The input
 // string must be null-terminated.
 template <typename SharedT, typename CharT>
-static Maybe<SharedT> GetOrCreateStringZ(
-    JSContext* cx, UniquePtr<CharT[], JS::FreePolicy>&& str) {
+static SharedT GetOrCreateStringZ(JSContext* cx,
+                                  UniquePtr<CharT[], JS::FreePolicy>&& str) {
   JSRuntime* rt = cx->runtime();
   size_t lengthWithNull = std::char_traits<CharT>::length(str.get()) + 1;
   auto res =
@@ -3250,12 +3249,12 @@ static Maybe<SharedT> GetOrCreateStringZ(
   return res;
 }
 
-Maybe<SharedImmutableString> ScriptSource::getOrCreateStringZ(
-    JSContext* cx, UniqueChars&& str) {
+SharedImmutableString ScriptSource::getOrCreateStringZ(JSContext* cx,
+                                                       UniqueChars&& str) {
   return GetOrCreateStringZ<SharedImmutableString>(cx, std::move(str));
 }
 
-Maybe<SharedImmutableTwoByteString> ScriptSource::getOrCreateStringZ(
+SharedImmutableTwoByteString ScriptSource::getOrCreateStringZ(
     JSContext* cx, UniqueTwoByteChars&& str) {
   return GetOrCreateStringZ<SharedImmutableTwoByteString>(cx, std::move(str));
 }
@@ -3271,7 +3270,7 @@ bool ScriptSource::setFilename(JSContext* cx, const char* filename) {
 bool ScriptSource::setFilename(JSContext* cx, UniqueChars&& filename) {
   MOZ_ASSERT(!filename_);
   filename_ = getOrCreateStringZ(cx, std::move(filename));
-  return filename_.isSome();
+  return bool(filename_);
 }
 
 bool ScriptSource::setIntroducerFilename(JSContext* cx, const char* filename) {
@@ -3286,7 +3285,7 @@ bool ScriptSource::setIntroducerFilename(JSContext* cx,
                                          UniqueChars&& filename) {
   MOZ_ASSERT(!introducerFilename_);
   introducerFilename_ = getOrCreateStringZ(cx, std::move(filename));
-  return introducerFilename_.isSome();
+  return bool(introducerFilename_);
 }
 
 bool ScriptSource::setDisplayURL(JSContext* cx, const char16_t* url) {
@@ -3313,7 +3312,7 @@ bool ScriptSource::setDisplayURL(JSContext* cx, UniqueTwoByteChars&& url) {
   }
 
   displayURL_ = getOrCreateStringZ(cx, std::move(url));
-  return displayURL_.isSome();
+  return bool(displayURL_);
 }
 
 bool ScriptSource::setSourceMapURL(JSContext* cx, const char16_t* url) {
@@ -3331,7 +3330,7 @@ bool ScriptSource::setSourceMapURL(JSContext* cx, UniqueTwoByteChars&& url) {
   }
 
   sourceMapURL_ = getOrCreateStringZ(cx, std::move(url));
-  return sourceMapURL_.isSome();
+  return bool(sourceMapURL_);
 }
 
 /* static */ mozilla::Atomic<uint32_t, mozilla::SequentiallyConsistent>
