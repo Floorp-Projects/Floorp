@@ -33,7 +33,7 @@ The three panes display the following information:
     (\"IA\") and the GPU (\"GT\"). These measurements aren\'t
     particularly useful for power profiling purposes.
 -   **Temperature**: Shows the package temperature. This is interesting,
-    but again not useful for power profiling purposes. Specificially,
+    but again not useful for power profiling purposes. Specifically,
     the temperature is a proxy measurement that is *affected by*
     processor power consumption, rather than one that *affects* it,
     which makes it even less useful than most proxy measurements.

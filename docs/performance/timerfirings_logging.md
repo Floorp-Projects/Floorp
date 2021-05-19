@@ -78,7 +78,7 @@ post-processed by that script.
     2088737280[7f606bf68140]: [30710]    fn timer (ONE_SHOT    16 ms): [from dladdr] #0: mozilla::RefreshDriverTimer::TimerTick(nsITimer*, void*) (/home/njn/moz/mi1/o64/layout/b
 
 Third, on other platforms `dladdr` is not implemented or doesn\'t work
-well, and the output will look like the followin.
+well, and the output will look like the following.
 
     711637568[7f3219c48000]: [6835]    fn timer (ONE_SHOT    16 ms): ???[dladdr is unimplemented or doesn't work well on this OS]
 
@@ -109,7 +109,7 @@ The following is sample output from this command.
         135 -495057024[7f74e105ba00]: [7108]    fn timer (ONE_SHOT     4 ms): [content] https://self-repair.mozilla.org/en-US/repair/:7:13669
         118 801266240[7f7c1f248000]: [7163]    fn timer (ONE_SHOT   100 ms): [content] http://a.visualrevenue.com/vrs.js:6:9423
         103 801266240[7f7c1f248000]: [7163]    fn timer (ONE_SHOT    50 ms): [content] http://static.dynamicyield.com/scripts/12086/dy-min.js?v=12086:3:3389
-         94 801266240[7f7c1f248000]: [7163]    fn timer (ONE_SHOT    50 ms): [content] https://ad.doubleclick.net/ddm/adi/N7921.1283839CADREON.COM.AU/B9038144.122190976;sz=300x600;click=http://pixel.mathtag.com/click/img?mt_aid=2744535504761193354&mt_id=1895890&mt_adid=148611&mt_sid=973379&mt_exid=9&mt_inapp=0&mt_uuid=353d5460-19f6-4400-9bbd-d0fcc3bcf595&mt_3pck=http%3A//beacon-apac-hkg1.rubiconproject.com/beacon/t/d1f9921d-4e47-448f-b6ba-36cae1c31b65/&redirect=;ord=2744535504761193354?:83:0
+         94 801266240[7f7c1f248000]: [7163]    fn timer (ONE_SHOT    50 ms): [content] https://ad.double-click.net/ddm/adi/N7921.1283839CADREON.COM.AU/B9038144.122190976;sz=300x600;click=http://pixel.mathtag.com/click/img?mt_aid=2744535504761193354&mt_id=1895890&mt_adid=148611&mt_sid=973379&mt_exid=9&mt_inapp=0&mt_uuid=353d5460-19f6-4400-9bbd-d0fcc3bcf595&mt_3pck=http%3A//beacon-apac-hkg1.rubiconproject.com/beacon/t/d1f9921d-4e47-448f-b6ba-36cae1c31b65/&redirect=;ord=2744535504761193354?:83:0
          94 801266240[7f7c1f248000]: [7163]    fn timer (ONE_SHOT   160 ms): nsBrowserStatusFilter::TimeoutHandler
          92 -495057024[7f74e105ba00]: [7108]    fn timer (ONE_SHOT   160 ms): nsBrowserStatusFilter::TimeoutHandler
 
