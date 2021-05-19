@@ -41,7 +41,7 @@ here = os.path.dirname(__file__)
 __wptrunner__ = {"product": "firefox",
                  "check_args": "check_args",
                  "browser": {None: "FirefoxBrowser",
-                             "wdspec": "NullBrowser"},
+                             "wdspec": "FirefoxWdSpecBrowser"},
                  "executor": {"crashtest": "MarionetteCrashtestExecutor",
                               "testharness": "MarionetteTestharnessExecutor",
                               "reftest": "MarionetteRefTestExecutor",
@@ -889,6 +889,20 @@ class FirefoxBrowser(Browser):
         except IOError:
             self.logger.warning("Looking for crash dump files failed")
             return False
+
+
+class FirefoxWdSpecBrowser(NullBrowser):
+    def __init__(self, logger, leak_check=False, **kwargs):
+        super().__init__(logger, **kwargs)
+        self.leak_check = leak_check
+
+    def settings(self, test):
+        return {"check_leaks": self.leak_check and not test.leaks,
+                "lsan_disabled": test.lsan_disabled,
+                "lsan_allowed": test.lsan_allowed,
+                "lsan_max_stack_depth": test.lsan_max_stack_depth,
+                "mozleak_allowed": self.leak_check and test.mozleak_allowed,
+                "mozleak_thresholds": self.leak_check and test.mozleak_threshold}
 
 
 class GeckoDriverServer(WebDriverServer):
