@@ -244,6 +244,20 @@ bool TestModuleLoadedAsData() {
           "TEST-FAIL | NativeNt | Failed to get PDB info from the module.\n");
       return false;
     }
+
+    uint64_t version1, version2;
+    bool result1 = peAsData.GetVersionInfo(version1);
+    bool result2 = pe.GetVersionInfo(version2);
+    if (result1 && result2) {
+      if (version1 != version2) {
+        printf("TEST-FAIL | NativeNt | Version mismatch\n");
+        return false;
+      }
+    } else if (result1 || result2) {
+      printf(
+          "TEST-FAIL | NativeNt | Failed to get PDB info from the module.\n");
+      return false;
+    }
   }
 
   return true;

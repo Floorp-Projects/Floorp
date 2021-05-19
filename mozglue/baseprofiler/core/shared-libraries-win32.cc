@@ -49,33 +49,6 @@ static void AppendHex(T aValue, std::string& aOut, bool aWithPadding) {
   }
 }
 
-static std::string GetVersion(const wchar_t* dllPath) {
-  DWORD infoSize = GetFileVersionInfoSizeW(dllPath, nullptr);
-  if (infoSize == 0) {
-    return {};
-  }
-
-  mozilla::UniquePtr<unsigned char[]> infoData =
-      mozilla::MakeUnique<unsigned char[]>(infoSize);
-  if (!GetFileVersionInfoW(dllPath, 0, infoSize, infoData.get())) {
-    return {};
-  }
-
-  VS_FIXEDFILEINFO* vInfo;
-  UINT vInfoLen;
-  if (!VerQueryValueW(infoData.get(), L"\\", (LPVOID*)&vInfo, &vInfoLen)) {
-    return {};
-  }
-  if (!vInfo) {
-    return {};
-  }
-
-  return std::to_string(vInfo->dwFileVersionMS >> 16) + '.' +
-         std::to_string(vInfo->dwFileVersionMS & 0xFFFF) + '.' +
-         std::to_string(vInfo->dwFileVersionLS >> 16) + '.' +
-         std::to_string(vInfo->dwFileVersionLS & 0xFFFF);
-}
-
 SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf() {
   SharedLibraryInfo sharedLibraryInfo;
 
@@ -151,6 +124,7 @@ SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf() {
     std::string breakpadId;
     std::string pdbPathStr;
     std::string pdbNameStr;
+    std::string versionStr;
     if (handleLock) {
       mozilla::nt::PEHeaders headers(handleLock.get());
       if (headers) {
@@ -174,6 +148,17 @@ SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf() {
           pdbNameStr = (pos != std::string::npos) ? pdbPathStr.substr(pos + 1)
                                                   : pdbPathStr;
         }
+
+        uint64_t version;
+        if (headers.GetVersionInfo(version)) {
+          versionStr += std::to_string((version >> 48) & 0xFFFF);
+          versionStr += '.';
+          versionStr += std::to_string((version >> 32) & 0xFFFF);
+          versionStr += '.';
+          versionStr += std::to_string((version >> 16) & 0xFFFF);
+          versionStr += '.';
+          versionStr += std::to_string(version & 0xFFFF);
+        }
       }
     }
 
@@ -181,7 +166,7 @@ SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf() {
                         (uintptr_t)module.lpBaseOfDll + module.SizeOfImage,
                         0,  // DLLs are always mapped at offset 0 on Windows
                         breakpadId, moduleNameStr, modulePathStr, pdbNameStr,
-                        pdbPathStr, GetVersion(aModulePath), "");
+                        pdbPathStr, versionStr, "");
     sharedLibraryInfo.AddSharedLibrary(shlib);
   };
 
