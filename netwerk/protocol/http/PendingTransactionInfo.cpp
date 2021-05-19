@@ -95,18 +95,24 @@ bool PendingTransactionInfo::IsAlreadyClaimedInitializingConn() {
   return alreadyDnsAndSockOrWaitingForTLS;
 }
 
-nsWeakPtr PendingTransactionInfo::ForgetDnsAndConnectSocketAndActiveConn() {
-  nsWeakPtr dnsAndSock = mDnsAndSock;
-
+void PendingTransactionInfo::AbandonDnsAndConnectSocketAndForgetActiveConn() {
+  // Abandon all DnsAndConnectSockets belonging to the given transaction.
+  RefPtr<DnsAndConnectSocket> dnsAndSock = do_QueryReferent(mDnsAndSock);
+  if (dnsAndSock) {
+    dnsAndSock->Abandon();
+  }
   mDnsAndSock = nullptr;
   mActiveConn = nullptr;
-  return dnsAndSock;
 }
 
-void PendingTransactionInfo::RememberDnsAndConnectSocket(
+bool PendingTransactionInfo::TryClaimingDnsAndConnectSocket(
     DnsAndConnectSocket* sock) {
-  mDnsAndSock =
-      do_GetWeakReference(static_cast<nsISupportsWeakReference*>(sock));
+  if (sock->Claim()) {
+    mDnsAndSock =
+        do_GetWeakReference(static_cast<nsISupportsWeakReference*>(sock));
+    return true;
+  }
+  return false;
 }
 
 bool PendingTransactionInfo::TryClaimingActiveConn(HttpConnectionBase* conn) {
