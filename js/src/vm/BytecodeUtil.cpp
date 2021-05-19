@@ -214,14 +214,16 @@ bool js::DumpRealmPCCounts(JSContext* cx) {
       return false;
     }
 
-    fprintf(stdout, "--- SCRIPT %s:%u ---\n", script->filename(),
-            script->lineno());
+    const char* filename = script->filename();
+    if (!filename) {
+      filename = "(unknown)";
+    }
+    fprintf(stdout, "--- SCRIPT %s:%u ---\n", filename, script->lineno());
     if (!DumpPCCounts(cx, script, &sprinter)) {
       return false;
     }
     fputs(sprinter.string(), stdout);
-    fprintf(stdout, "--- END SCRIPT %s:%u ---\n", script->filename(),
-            script->lineno());
+    fprintf(stdout, "--- END SCRIPT %s:%u ---\n", filename, script->lineno());
   }
 
   return true;
