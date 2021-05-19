@@ -2862,6 +2862,18 @@
     "n_values": 16,
     "description": "SSL Handshake Key Exchange Algorithm for resumed handshake (null=0, rsa=1, dh=2, fortezza=3, ecdh=4)"
   },
+  "CLIENT_CERTIFICATE_SCAN_TIME": {
+    "record_in_processes": ["main"],
+    "products": ["firefox"],
+    "alert_emails": ["seceng-telemetry@mozilla.com", "dkeeler@mozilla.com"],
+    "expires_in_version": "96",
+    "releaseChannelCollection": "opt-out",
+    "kind": "exponential",
+    "high": 60000,
+    "n_buckets": 100,
+    "description": "ms elapsed time scanning for client certificates",
+    "bug_numbers": [1711154]
+  },
   "WEBSOCKETS_HANDSHAKE_TYPE": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],
