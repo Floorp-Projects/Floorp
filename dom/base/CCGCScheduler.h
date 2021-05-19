@@ -63,9 +63,9 @@ static const int64_t kNumCCNodesBetweenTimeChecks = 1000;
 
 // Actions performed by the GCRunner state machine.
 enum class GCRunnerAction {
-  MajorGC,       // We want to start a new major GC
-  MajorGCReady,  // The parent says we may begin our major GC
-  GCSlice,       // Run a single slice of a major GC
+  WaitToMajorGC,  // We want to start a new major GC
+  StartMajorGC,   // The parent says we may begin our major GC
+  GCSlice,        // Run a single slice of a major GC
   None
 };
 
@@ -665,13 +665,13 @@ GCRunnerStep CCGCScheduler::GetNextGCRunnerAction(TimeStamp aDeadline) {
   }
 
   if (mReadyForMajorGC) {
-    GCRunnerStep step{GCRunnerAction::MajorGCReady, mMajorGCReason};
+    GCRunnerStep step{GCRunnerAction::StartMajorGC, mMajorGCReason};
     mMajorGCReason = JS::GCReason::NO_REASON;
     return step;
   }
 
   if (mMajorGCReason != JS::GCReason::NO_REASON) {
-    GCRunnerStep step{GCRunnerAction::MajorGC, mMajorGCReason};
+    GCRunnerStep step{GCRunnerAction::WaitToMajorGC, mMajorGCReason};
     mMajorGCReason = JS::GCReason::NO_REASON;
     return step;
   }
