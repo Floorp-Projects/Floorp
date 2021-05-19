@@ -1039,10 +1039,6 @@ static const unsigned MaxResultsForJitInlineCall = MaxResultsForJitEntry;
 // The maximum number of results of a function call or block that may be
 // returned in registers.
 static const unsigned MaxRegisterResults = 1;
-// An asm.js heap can in principle be up to INT32_MAX bytes but requirements
-// on the format restrict it further to the largest pseudo-ARM-immediate.
-// See IsValidAsmJSHeapLength().
-static const uint64_t MaxAsmJSHeapLength = 0x7f000000;
 
 // A magic value of the FramePointer to indicate after a return to the entry
 // stub that an exception has been caught and that we should throw.

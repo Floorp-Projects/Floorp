@@ -6746,19 +6746,12 @@ static bool CheckBuffer(JSContext* cx, const AsmJSMetadata& metadata,
   size_t memoryLength = buffer->byteLength();
 
   if (!IsValidAsmJSHeapLength(memoryLength)) {
-    UniqueChars msg;
-    if (memoryLength > MaxAsmJSHeapLength) {
-      msg = JS_smprintf("ArrayBuffer byteLength 0x%" PRIx64
-                        " is not a valid heap length - it is too long."
-                        " The longest valid length is 0x%" PRIx64,
-                        uint64_t(memoryLength), MaxAsmJSHeapLength);
-    } else {
-      msg = JS_smprintf("ArrayBuffer byteLength 0x%" PRIx64
-                        " is not a valid heap length. The next "
-                        "valid length is 0x%" PRIx64,
-                        uint64_t(memoryLength),
-                        RoundUpToNextValidAsmJSHeapLength(memoryLength));
-    }
+    UniqueChars msg(
+        JS_smprintf("ArrayBuffer byteLength 0x%" PRIx64
+                    " is not a valid heap length. The next "
+                    "valid length is 0x%" PRIx64,
+                    uint64_t(memoryLength),
+                    RoundUpToNextValidAsmJSHeapLength(memoryLength)));
     if (!msg) {
       return false;
     }
@@ -6933,7 +6926,7 @@ static bool HandleInstantiationFailure(JSContext* cx, CallArgs args,
   options.setMutedErrors(source->mutedErrors())
       .setFile(source->filename())
       .setNoScriptRval(false);
-  options.asmJSOption = AsmJSOption::DisabledByLinker;
+  options.asmJSOption = AsmJSOption::DisabledByAsmJSPref;
 
   // The exported function inherits an implicit strict context if the module
   // also inherited it somehow.
@@ -7047,9 +7040,6 @@ static bool EstablishPreconditions(JSContext* cx,
   switch (parser.options().asmJSOption) {
     case AsmJSOption::DisabledByAsmJSPref:
       return TypeFailureWarning(parser, "Disabled by 'asmjs' runtime option");
-    case AsmJSOption::DisabledByLinker:
-      return TypeFailureWarning(parser,
-                                "Disabled by linker (instantiation failure)");
     case AsmJSOption::DisabledByNoWasmCompiler:
       return TypeFailureWarning(
           parser, "Disabled because no suitable wasm compiler is available");
