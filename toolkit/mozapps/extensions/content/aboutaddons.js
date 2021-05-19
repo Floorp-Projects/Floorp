@@ -3136,6 +3136,10 @@ class AddonCard extends HTMLElement {
         case "remove":
           {
             this.panel.hide();
+            if (!hasPermission(addon, "uninstall")) {
+              this.sendEvent("remove-disabled");
+              return;
+            }
             let { BrowserAddonUI } = windowRoot.ownerGlobal;
             let { remove, report } = await BrowserAddonUI.promptRemoveExtension(
               addon
