@@ -6,9 +6,13 @@
 
 SOURCES += [
     '../third_party/libdisasm/ia32_invariant.c',
+    '../third_party/libdisasm/ia32_reg.c',
     'disassembler_x86.cc',
     'exploitability_win.cc',
 ]
+
+if CONFIG["CC_TYPE"] == "gcc" and int(CONFIG["CC_VERSION"].split(".")[0]) >= 8:
+    SOURCES['../third_party/libdisasm/ia32_reg.c'].flags += ["-Wno-stringop-truncation"]
 
 UNIFIED_SOURCES += [
     '../third_party/libdisasm/ia32_implicit.c',
@@ -16,7 +20,6 @@ UNIFIED_SOURCES += [
     '../third_party/libdisasm/ia32_modrm.c',
     '../third_party/libdisasm/ia32_opcode_tables.c',
     '../third_party/libdisasm/ia32_operand.c',
-    '../third_party/libdisasm/ia32_reg.c',
     '../third_party/libdisasm/ia32_settings.c',
     '../third_party/libdisasm/x86_disasm.c',
     '../third_party/libdisasm/x86_imm.c',
