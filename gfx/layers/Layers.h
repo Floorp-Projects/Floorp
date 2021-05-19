@@ -35,6 +35,7 @@
 #include "mozilla/layers/LayerAttributes.h"  // for SimpleLayerAttributes, ScrollbarData (ptr only)
 #include "mozilla/layers/LayerManager.h"  // for LayerManager, LayerManager::PaintedLayerCreationHint
 #include "mozilla/layers/ScrollableLayerGuid.h"  // for ScrollableLayerGuid, ScrollableLayerGuid::ViewID
+#include "mozilla/layers/BSPTree.h"
 #include "nsISupports.h"    // for NS_INLINE_DECL_REFCOUNTING
 #include "nsPoint.h"        // for nsIntPoint
 #include "nsRect.h"         // for nsIntRect
@@ -77,7 +78,6 @@ class ShadowableLayer;
 class SpecificLayerAttributes;
 class Compositor;
 class TransformData;
-struct LayerPolygon;
 struct PropertyAnimationGroup;
 
 namespace layerscope {
