@@ -115,9 +115,8 @@ const GeckoViewStorageController = {
           return {
             uri: Services.io.createExposableURI(p.principal.URI).displaySpec,
             principal: E10SUtils.serializePrincipal(p.principal),
-            perm: p.type,
+            type: p.type,
             value: p.capability,
-            contextId: p.principal.originAttributes.geckoViewSessionContextId,
             privateMode: p.principal.privateBrowsingId != 0,
           };
         });
@@ -126,32 +125,21 @@ const GeckoViewStorageController = {
       }
       case "GeckoView:GetPermissionsByURI": {
         const uri = Services.io.newURI(aData.uri);
-        const principal = Services.scriptSecurityManager.createContentPrincipal(
+        const prin = Services.scriptSecurityManager.createContentPrincipal(
           uri,
-          aData.contextId ? { geckoViewSessionContextId: aData.contextId } : {}
+          {}
         );
-        const rawPerms = Services.perms.getAllForPrincipal(principal);
+        const rawPerms = Services.perms.getAllForPrincipal(prin);
         const permissions = rawPerms.map(p => {
           return {
             uri: Services.io.createExposableURI(p.principal.URI).displaySpec,
             principal: E10SUtils.serializePrincipal(p.principal),
-            perm: p.type,
+            type: p.type,
             value: p.capability,
-            contextId: p.principal.originAttributes.geckoViewSessionContextId,
             privateMode: p.principal.privateBrowsingId != 0,
           };
         });
         aCallback.onSuccess({ permissions });
-        break;
-      }
-      case "GeckoView:SetPermission": {
-        const principal = E10SUtils.deserializePrincipal(aData.principal);
-        Services.perms.addFromPrincipal(
-          principal,
-          aData.perm,
-          aData.newValue,
-          Ci.nsIPermissionManager.EXPIRE_NEVER
-        );
         break;
       }
     }
