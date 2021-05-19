@@ -38,14 +38,6 @@ already_AddRefed<BrowsingContextGroup> BrowsingContextGroup::GetOrCreate(
       aId, [&aId] { return do_AddRef(new BrowsingContextGroup(aId)); }));
 }
 
-already_AddRefed<BrowsingContextGroup> BrowsingContextGroup::GetExisting(
-    uint64_t aId) {
-  if (sBrowsingContextGroups) {
-    return do_AddRef(sBrowsingContextGroups->Get(aId));
-  }
-  return nullptr;
-}
-
 already_AddRefed<BrowsingContextGroup> BrowsingContextGroup::Create() {
   return GetOrCreate(nsContentUtils::GenerateBrowsingContextId());
 }
@@ -117,7 +109,7 @@ static void CollectContextInitializers(
   // content process consistent.
   for (auto& context : aContexts) {
     aInits.AppendElement(context->GetIPCInitializer());
-    for (const auto& window : context->GetWindowContexts()) {
+    for (auto& window : context->GetWindowContexts()) {
       aInits.AppendElement(window->GetIPCInitializer());
       CollectContextInitializers(window->Children(), aInits);
     }
@@ -243,7 +235,7 @@ void BrowsingContextGroup::Destroy() {
   // Make sure to call `RemoveBrowsingContextGroup` for every entry in both
   // `mHosts` and `mSubscribers`. This will visit most entries twice, but
   // `RemoveBrowsingContextGroup` is safe to call multiple times.
-  for (const auto& entry : mHosts.Values()) {
+  for (auto& entry : mHosts.Values()) {
     entry->RemoveBrowsingContextGroup(this);
   }
   for (const auto& key : mSubscribers) {
@@ -259,42 +251,27 @@ void BrowsingContextGroup::Destroy() {
 
 void BrowsingContextGroup::AddKeepAlive() {
   MOZ_DIAGNOSTIC_ASSERT(!mDestroyed);
-  MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
   mKeepAliveCount++;
 }
 
 void BrowsingContextGroup::RemoveKeepAlive() {
   MOZ_DIAGNOSTIC_ASSERT(!mDestroyed);
   MOZ_DIAGNOSTIC_ASSERT(mKeepAliveCount > 0);
-  MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
   mKeepAliveCount--;
 
   MaybeDestroy();
 }
 
-auto BrowsingContextGroup::MakeKeepAlivePtr() -> KeepAlivePtr {
-  AddKeepAlive();
-  return KeepAlivePtr{do_AddRef(this).take()};
-}
-
 void BrowsingContextGroup::MaybeDestroy() {
-  // Once there are no synced contexts referencing a `BrowsingContextGroup`, we
-  // can clear subscribers and destroy this group. We only do this in the parent
-  // process, as it will orchestrate destruction of BCGs in content processes.
-  if (XRE_IsParentProcess() && mContexts.IsEmpty() && mKeepAliveCount == 0 &&
-      this != sChromeGroup) {
+  if (mContexts.IsEmpty() && mKeepAliveCount == 0 && this != sChromeGroup) {
+    // There are no synced contexts still referencing this group. We can clear
+    // all subscribers, and destroy ourselves.
     Destroy();
 
-    // We may have been deleted here, as `Destroy()` will clear references. Do
-    // not access any members at this point.
+    // We may have been deleted here as the ContentChild/Parent may
+    // have held the last references to `this`.
+    // Do not access any members at this point.
   }
-}
-
-void BrowsingContextGroup::ChildDestroy() {
-  MOZ_DIAGNOSTIC_ASSERT(XRE_IsContentProcess());
-  MOZ_DIAGNOSTIC_ASSERT(!mDestroyed);
-  MOZ_DIAGNOSTIC_ASSERT(mContexts.IsEmpty());
-  Destroy();
 }
 
 nsISupports* BrowsingContextGroup::GetParentObject() const {
