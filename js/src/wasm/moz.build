@@ -40,6 +40,7 @@ UNIFIED_SOURCES += [
     "WasmRealm.cpp",
     "WasmStubs.cpp",
     "WasmTable.cpp",
+    "WasmTypeDef.cpp",
     "WasmTypes.cpp",
     "WasmValidate.cpp",
     "WasmValType.cpp",
