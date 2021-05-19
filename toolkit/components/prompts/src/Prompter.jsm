@@ -1303,8 +1303,10 @@ class ModalPrompter {
       return;
     }
     let propBag = PromptUtils.objectToPropBag(args);
+    propBag.setProperty("async", this.async);
     let uri = args.promptType == "select" ? SELECT_DIALOG : COMMON_DIALOG;
     await parentWindow.gDialogBox.open(uri, propBag);
+    propBag.deleteProperty("async");
     PromptUtils.propBagToObject(propBag, args);
   }
 
