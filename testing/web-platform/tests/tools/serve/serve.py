@@ -987,11 +987,6 @@ class ConfigBuilder(config.ConfigBuilder):
         else:
             return os.path.join(data["doc_root"], "websockets", "handlers")
 
-    def ws_doc_root(self, v):
-        self._ws_doc_root = v
-
-    ws_doc_root = property(None, ws_doc_root)
-
     def _get_paths(self, data):
         rv = super(ConfigBuilder, self)._get_paths(data)
         rv["ws_doc_root"] = data["ws_doc_root"]
