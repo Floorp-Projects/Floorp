@@ -217,9 +217,13 @@ fn get_app_info() -> Result<(String, String, String), nsresult> {
     //  * `pref_name` exists so a pointer to it is valid for the life of the function
     //  * `channel` exists so a pointer to it is valid, and it can be written to
     unsafe {
-        (*branch)
+        if (*branch)
             .GetCharPref(pref_name.as_ptr(), channel.deref_mut() as *mut nsACString)
-            .to_result()?;
+            .to_result()
+            .is_err()
+        {
+            channel = "unknown".into();
+        }
     }
 
     let app_info = match xul.query_interface::<nsIXULAppInfo>() {
