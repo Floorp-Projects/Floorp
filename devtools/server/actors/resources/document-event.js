@@ -29,9 +29,14 @@ class DocumentEventWatcher {
 
     const onDocumentEvent = (
       name,
-      time,
-      // This is only passed for dom-loading event
-      shouldBeIgnoredAsRedundantWithTargetAvailable
+      {
+        time,
+        // This is only passed for dom-loading event
+        shouldBeIgnoredAsRedundantWithTargetAvailable,
+        // This will be `true` when the user selected a document in the frame picker tool,
+        // in the toolbox toolbar.
+        isFrameSwitching,
+      }
     ) => {
       onAvailable([
         {
@@ -39,6 +44,7 @@ class DocumentEventWatcher {
           name,
           time,
           shouldBeIgnoredAsRedundantWithTargetAvailable,
+          isFrameSwitching,
         },
       ]);
     };
