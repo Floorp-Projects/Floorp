@@ -8,11 +8,9 @@ import traceback
 
 import mozprocess
 
-from .browsers.base import OutputHandler
-
 
 __all__ = ["SeleniumServer", "ChromeDriverServer", "CWTChromeDriverServer",
-           "EdgeChromiumDriverServer", "OperaDriverServer",
+           "EdgeChromiumDriverServer", "OperaDriverServer", "GeckoDriverServer",
            "InternetExplorerDriverServer", "EdgeDriverServer",
            "ServoDriverServer", "WebKitDriverServer", "WebDriverServer"]
 
@@ -21,7 +19,6 @@ class WebDriverServer(object):
     __metaclass__ = abc.ABCMeta
 
     default_base_path = "/"
-    output_handler_cls = OutputHandler
 
     def __init__(self, logger, binary, host="127.0.0.1", port=None,
                  base_path="", env=None, args=None):
@@ -32,14 +29,12 @@ class WebDriverServer(object):
         self.logger = logger
         self.binary = binary
         self.host = host
-
         if base_path == "":
             self.base_path = self.default_base_path
         else:
             self.base_path = base_path
         self.env = os.environ.copy() if env is None else env
 
-        self._output_handler = None
         self._port = port
         self._cmd = None
         self._args = args if args is not None else []
@@ -49,27 +44,17 @@ class WebDriverServer(object):
     def make_command(self):
         """Returns the full command for starting the server process as a list."""
 
-    def start(self,
-              block=False,
-              output_handler_kwargs=None,
-              output_handler_start_kwargs=None):
+    def start(self, block=False):
         try:
-            self._run(block, output_handler_kwargs, output_handler_start_kwargs)
+            self._run(block)
         except KeyboardInterrupt:
             self.stop()
 
-    def _run(self, block, output_handler_kwargs, output_handler_start_kwargs):
-        if output_handler_kwargs is None:
-            output_handler_kwargs = {}
-        if output_handler_start_kwargs is None:
-            output_handler_start_kwargs = {}
+    def _run(self, block):
         self._cmd = self.make_command()
-        self._output_handler = self.output_handler_cls(self.logger,
-                                                       self._cmd,
-                                                       **output_handler_kwargs)
         self._proc = mozprocess.ProcessHandler(
             self._cmd,
-            processOutputLine=self._output_handler,
+            processOutputLine=self.on_output,
             env=self.env,
             storeOutput=False)
 
@@ -81,7 +66,6 @@ class WebDriverServer(object):
                 raise IOError(
                     "WebDriver executable not found: %s" % self.binary)
             raise
-        self._output_handler.after_process_start(self._proc.pid)
 
         self.logger.debug(
             "Waiting for WebDriver to become accessible: %s" % self.url)
@@ -92,27 +76,26 @@ class WebDriverServer(object):
                 "WebDriver was not accessible "
                 "within the timeout:\n%s" % traceback.format_exc())
             raise
-        self._output_handler.start(**output_handler_start_kwargs)
+
         if block:
             self._proc.wait()
 
     def stop(self, force=False):
         self.logger.debug("Stopping WebDriver")
-        clean = True
         if self.is_alive():
             kill_result = self._proc.kill()
             if force and kill_result != 0:
-                clean = False
-                self._proc.kill(9)
-        success = not self.is_alive()
-        if success and self._output_handler is not None:
-            # Only try to do output post-processing if we managed to shut down
-            self._output_handler.after_process_stop(clean)
-            self._output_handler = None
-        return success
+                return self._proc.kill(9)
+            return kill_result
+        return not self.is_alive()
 
     def is_alive(self):
         return hasattr(self._proc, "proc") and self._proc.poll() is None
+
+    def on_output(self, line):
+        self.logger.process_output(self.pid,
+                                   line.decode("utf8", "replace"),
+                                   command=" ".join(self._cmd))
 
     @property
     def pid(self):
@@ -138,42 +121,88 @@ class SeleniumServer(WebDriverServer):
 
 
 class ChromeDriverServer(WebDriverServer):
+    def __init__(self, logger, binary="chromedriver", port=None,
+                 base_path="", args=None):
+        WebDriverServer.__init__(
+            self, logger, binary, port=port, base_path=base_path, args=args)
+
     def make_command(self):
         return [self.binary,
                 cmd_arg("port", str(self.port)),
                 cmd_arg("url-base", self.base_path) if self.base_path else "",
                 cmd_arg("enable-chrome-logs")] + self._args
 
-
 class CWTChromeDriverServer(WebDriverServer):
+    def __init__(self, logger, binary, port=None, args=None):
+        WebDriverServer.__init__(self, logger, binary, port=port, args=args)
+
     def make_command(self):
         return [self.binary,
                 "--port=%s" % str(self.port)] + self._args
 
-
 class EdgeChromiumDriverServer(WebDriverServer):
+    def __init__(self, logger, binary="msedgedriver", port=None,
+                 base_path="", args=None):
+        WebDriverServer.__init__(
+            self, logger, binary, port=port, base_path=base_path, args=args)
+
     def make_command(self):
         return [self.binary,
                 cmd_arg("port", str(self.port)),
                 cmd_arg("url-base", self.base_path) if self.base_path else ""] + self._args
 
-
 class EdgeDriverServer(WebDriverServer):
+    def __init__(self, logger, binary="microsoftwebdriver.exe", port=None,
+                 base_path="", host="localhost", args=None):
+        WebDriverServer.__init__(
+            self, logger, binary, host=host, port=port, args=args)
+
     def make_command(self):
         return [self.binary,
                 "--port=%s" % str(self.port)] + self._args
-
 
 class OperaDriverServer(ChromeDriverServer):
-    pass
+    def __init__(self, logger, binary="operadriver", port=None,
+                 base_path="", args=None):
+        ChromeDriverServer.__init__(
+            self, logger, binary, port=port, base_path=base_path, args=args)
+
 
 class InternetExplorerDriverServer(WebDriverServer):
+    def __init__(self, logger, binary="IEDriverServer.exe", port=None,
+                 base_path="", host="localhost", args=None):
+        WebDriverServer.__init__(
+            self, logger, binary, host=host, port=port, args=args)
+
     def make_command(self):
         return [self.binary,
                 "--port=%s" % str(self.port)] + self._args
+
+
+class GeckoDriverServer(WebDriverServer):
+    def __init__(self, logger, marionette_port=2828, binary="geckodriver",
+                 host="127.0.0.1", port=None, args=None):
+        env = os.environ.copy()
+        env["RUST_BACKTRACE"] = "1"
+        WebDriverServer.__init__(self, logger, binary,
+                                 host=host,
+                                 port=port,
+                                 env=env,
+                                 args=args)
+        self.marionette_port = marionette_port
+
+    def make_command(self):
+        return [self.binary,
+                "--marionette-port", str(self.marionette_port),
+                "--host", self.host,
+                "--port", str(self.port)] + self._args
 
 
 class SafariDriverServer(WebDriverServer):
+    def __init__(self, logger, binary="safaridriver", port=None, args=None):
+        WebDriverServer.__init__(
+            self, logger, binary, port=port, args=args)
+
     def make_command(self):
         return [self.binary,
                 "--port=%s" % str(self.port)] + self._args
@@ -181,7 +210,7 @@ class SafariDriverServer(WebDriverServer):
 
 class ServoDriverServer(WebDriverServer):
     def __init__(self, logger, binary="servo", binary_args=None, host="127.0.0.1",
-                 env=None, port=None, args=None):
+                 port=None, args=None):
         env = os.environ.copy()
         env["RUST_BACKTRACE"] = "1"
         WebDriverServer.__init__(self, logger, binary,
@@ -202,6 +231,9 @@ class ServoDriverServer(WebDriverServer):
 
 
 class WebKitDriverServer(WebDriverServer):
+    def __init__(self, logger, binary=None, port=None, args=None):
+        WebDriverServer.__init__(self, logger, binary, port=port, args=args)
+
     def make_command(self):
         return [self.binary, "--port=%s" % str(self.port)] + self._args
 
