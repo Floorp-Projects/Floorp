@@ -59,6 +59,7 @@ if CONFIG["OS_ARCH"] == "WINNT":
         "DynamicallyLinkedFunctionPtr.h",
         "ImportDir.h",
         "NativeNt.h",
+        "WindowsEnumProcessModules.h",
         "WindowsMapRemoteView.h",
         "WindowsProcessMitigations.h",
     ]

@@ -12,6 +12,7 @@
 #include "nsWindowsHelpers.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
+#include "mozilla/WindowsEnumProcessModules.h"
 #include "mozilla/WindowsProcessMitigations.h"
 #include "mozilla/WindowsVersion.h"
 #include "nsNativeCharsetUtils.h"
@@ -79,7 +80,7 @@ static bool GetPdbInfo(uintptr_t aStart, nsID& aSignature, uint32_t& aAge,
   return true;
 }
 
-static nsCString GetVersion(WCHAR* dllPath) {
+static nsCString GetVersion(const WCHAR* dllPath) {
   DWORD infoSize = GetFileVersionInfoSizeW(dllPath, nullptr);
   if (infoSize == 0) {
     return ""_ns;
@@ -110,40 +111,16 @@ static nsCString GetVersion(WCHAR* dllPath) {
 SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf() {
   SharedLibraryInfo sharedLibraryInfo;
 
-  HANDLE hProcess = GetCurrentProcess();
-  mozilla::UniquePtr<HMODULE[]> hMods;
-  size_t modulesNum = 0;
-  if (hProcess != NULL) {
-    DWORD modulesSize;
-    if (!EnumProcessModules(hProcess, nullptr, 0, &modulesSize)) {
-      return sharedLibraryInfo;
-    }
-    modulesNum = modulesSize / sizeof(HMODULE);
-    hMods = mozilla::MakeUnique<HMODULE[]>(modulesNum);
-    if (!EnumProcessModules(hProcess, hMods.get(), modulesNum * sizeof(HMODULE),
-                            &modulesSize)) {
-      return sharedLibraryInfo;
-    }
-    // The list may have shrunk between calls
-    if (modulesSize / sizeof(HMODULE) < modulesNum) {
-      modulesNum = modulesSize / sizeof(HMODULE);
-    }
-  }
-
-  for (unsigned int i = 0; i < modulesNum; i++) {
-    WCHAR modulePath[MAX_PATH + 1];
-    if (!GetModuleFileNameEx(hProcess, hMods[i], modulePath,
-                             sizeof(modulePath) / sizeof(WCHAR))) {
-      continue;
-    }
-
+  auto addSharedLibraryFromModuleInfo = [&sharedLibraryInfo](
+                                            const wchar_t* aModulePath,
+                                            HMODULE aModule) {
     MODULEINFO module = {0};
-    if (!GetModuleInformation(hProcess, hMods[i], &module,
+    if (!GetModuleInformation(mozilla::nt::kCurrentProcess, aModule, &module,
                               sizeof(MODULEINFO))) {
-      continue;
+      return;
     }
 
-    nsAutoString modulePathStr(modulePath);
+    nsAutoString modulePathStr(aModulePath);
     nsAutoString moduleNameStr = modulePathStr;
     int32_t pos = moduleNameStr.RFindCharInSet(u"\\/");
     if (pos != kNotFound) {
@@ -177,7 +154,7 @@ SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf() {
                           "000000000000000000000000000000000"_ns, moduleNameStr,
                           modulePathStr, pdbNameStr, pdbNameStr, ""_ns, "");
       sharedLibraryInfo.AddSharedLibrary(shlib);
-      continue;
+      return;
     }
 #endif  // !defined(_M_ARM64)
 
@@ -199,7 +176,7 @@ SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf() {
     // can read the memory mapped at the base address before we can safely
     // proceed to actually access those pages.
     HMODULE handleLock =
-        LoadLibraryEx(modulePath, NULL, LOAD_LIBRARY_AS_DATAFILE);
+        LoadLibraryEx(aModulePath, NULL, LOAD_LIBRARY_AS_DATAFILE);
     MEMORY_BASIC_INFORMATION vmemInfo = {0};
     nsID pdbSig;
     uint32_t pdbAge;
@@ -233,12 +210,13 @@ SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf() {
                         (uintptr_t)module.lpBaseOfDll + module.SizeOfImage,
                         0,  // DLLs are always mapped at offset 0 on Windows
                         breakpadId, moduleNameStr, modulePathStr, pdbNameStr,
-                        pdbPathStr, GetVersion(modulePath), "");
+                        pdbPathStr, GetVersion(aModulePath), "");
     sharedLibraryInfo.AddSharedLibrary(shlib);
 
     FreeLibrary(handleLock);  // ok to free null handles
-  }
+  };
 
+  mozilla::EnumerateProcessModules(addSharedLibraryFromModuleInfo);
   return sharedLibraryInfo;
 }
 
