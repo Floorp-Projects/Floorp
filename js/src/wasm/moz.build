@@ -43,6 +43,7 @@ UNIFIED_SOURCES += [
     "WasmTypes.cpp",
     "WasmValidate.cpp",
     "WasmValType.cpp",
+    "WasmValue.cpp",
 ]
 
 # We don't support signals for wasi yet.
