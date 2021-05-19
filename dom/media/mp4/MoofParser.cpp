@@ -856,6 +856,7 @@ Result<Ok, nsresult> Tkhd::Parse(Box& aBox) {
     MOZ_TRY_VAR(reserved, reader->ReadU32());
     MOZ_TRY_VAR(duration, reader->ReadU32());
 
+    (void)reserved;
     NS_ASSERTION(!reserved, "reserved should be 0");
 
     mCreationTime = creationTime;
@@ -867,6 +868,7 @@ Result<Ok, nsresult> Tkhd::Parse(Box& aBox) {
     MOZ_TRY_VAR(mModificationTime, reader->ReadU64());
     MOZ_TRY_VAR(mTrackId, reader->ReadU32());
     MOZ_TRY_VAR(reserved, reader->ReadU32());
+    (void)reserved;
     NS_ASSERTION(!reserved, "reserved should be 0");
     MOZ_TRY_VAR(mDuration, reader->ReadU64());
   }
