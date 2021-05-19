@@ -16,6 +16,7 @@
 #include "nsRefPtrHashtable.h"
 #include "nsTHashSet.h"
 #include "ImageTypes.h"
+#include "DisplayItemClip.h"
 
 class nsDisplayItemGeometry;
 
@@ -234,8 +235,8 @@ class WebRenderFallbackData : public WebRenderUserData {
   WebRenderImageData* PaintIntoImage();
 
   std::vector<RefPtr<gfx::SourceSurface>> mExternalSurfaces;
-  RefPtr<BasicLayerManager> mBasicLayerManager;
   UniquePtr<nsDisplayItemGeometry> mGeometry;
+  DisplayItemClip mClip;
   nsRect mBounds;
   nsRect mBuildingRect;
   gfx::Size mScale;

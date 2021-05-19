@@ -7402,8 +7402,6 @@ class FlattenedDisplayListIterator {
                                nsDisplayList* aList)
       : FlattenedDisplayListIterator(aBuilder, aList, true) {}
 
-  ~FlattenedDisplayListIterator() { MOZ_ASSERT(!HasNext()); }
-
   virtual bool HasNext() const { return mNext || !mStack.IsEmpty(); }
 
   nsDisplayItem* GetNextItem() {
