@@ -1104,11 +1104,6 @@ class nsDisplayListBuilder {
    */
   class AutoBuildingDisplayList {
    public:
-    AutoBuildingDisplayList(nsDisplayListBuilder* aBuilder, nsIFrame* aForChild)
-        : AutoBuildingDisplayList(
-              aBuilder, aForChild, aBuilder->GetVisibleRect(),
-              aBuilder->GetDirtyRect(), aForChild->IsTransformed()) {}
-
     AutoBuildingDisplayList(nsDisplayListBuilder* aBuilder, nsIFrame* aForChild,
                             const nsRect& aVisibleRect,
                             const nsRect& aDirtyRect)
