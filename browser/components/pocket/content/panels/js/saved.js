@@ -1,4 +1,4 @@
-/* global $:false, Handlebars:false, thePKT_PANEL:false */
+/* global Handlebars:false, thePKT_PANEL:false */
 /* import-globals-from messages.js */
 
 /*
@@ -151,7 +151,8 @@ var PKT_PANEL_OVERLAY = function(options) {
       elTokenInput.style.width = `200px`;
     }
   };
-  // TODO: Remove jQuery from this method once tokenInput is re-written as a React component
+  // TODO: Remove jQuery and re-enable eslint for this method once tokenInput is re-written as a React component
+  /* eslint-disable no-undef */
   this.initTagInput = function() {
     var inputwrapper = $(".pkt_ext_tag_input_wrapper");
     inputwrapper.find(".pkt_ext_tag_input").tokenInput([], {
@@ -293,6 +294,7 @@ var PKT_PANEL_OVERLAY = function(options) {
       }
     });
   };
+  /* eslint-enable no-undef */
   this.disableInput = function() {
     document
       .querySelector(`.pkt_ext_containersaved .pkt_ext_item_actions`)
