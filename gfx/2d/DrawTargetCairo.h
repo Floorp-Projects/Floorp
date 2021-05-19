@@ -131,6 +131,11 @@ class DrawTargetCairo final : public DrawTarget {
                          const Matrix& aMaskTransform,
                          const IntRect& aBounds = IntRect(),
                          bool aCopyBackground = false) override;
+  virtual void PushLayerWithBlend(
+      bool aOpaque, Float aOpacity, SourceSurface* aMask,
+      const Matrix& aMaskTransform, const IntRect& aBounds = IntRect(),
+      bool aCopyBackground = false,
+      CompositionOp = CompositionOp::OP_OVER) override;
   virtual void PopLayer() override;
 
   virtual already_AddRefed<PathBuilder> CreatePathBuilder(
@@ -220,11 +225,14 @@ class DrawTargetCairo final : public DrawTarget {
   cairo_font_options_t* mFontOptions;
 
   struct PushedLayer {
-    PushedLayer(Float aOpacity, bool aWasPermittingSubpixelAA)
+    PushedLayer(Float aOpacity, CompositionOp aCompositionOp,
+                bool aWasPermittingSubpixelAA)
         : mOpacity(aOpacity),
+          mCompositionOp(aCompositionOp),
           mMaskPattern(nullptr),
           mWasPermittingSubpixelAA(aWasPermittingSubpixelAA) {}
     Float mOpacity;
+    CompositionOp mCompositionOp;
     cairo_pattern_t* mMaskPattern;
     bool mWasPermittingSubpixelAA;
   };
