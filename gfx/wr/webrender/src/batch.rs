@@ -3625,37 +3625,34 @@ impl ClipBatcher {
                     let clip_spatial_node = &spatial_tree.spatial_nodes[clip_instance.spatial_node_index.0 as usize];
                     let clip_is_axis_aligned = clip_spatial_node.coordinate_system_id == CoordinateSystemId::root();
 
-                    match clip_instance.visible_tiles {
-                        Some(ref tiles) => {
-                            let sub_rect_bounds = actual_rect.size.into();
+                    if clip_instance.has_visible_tiles() {
+                        let sub_rect_bounds = actual_rect.size.into();
 
-                            for tile in tiles {
-                                let tile_sub_rect = if clip_is_axis_aligned {
-                                    let tile_world_rect = map_local_to_world
-                                        .map(&tile.tile_rect)
-                                        .expect("bug: should always map as axis-aligned");
-                                    let tile_device_rect = tile_world_rect * surface_device_pixel_scale;
-                                    tile_device_rect
-                                        .translate(-actual_rect.origin.to_vector())
-                                        .round_out()
-                                        .intersection(&sub_rect_bounds)
-                                } else {
-                                    Some(common.sub_rect)
-                                };
+                        for tile in clip_store.visible_mask_tiles(&clip_instance) {
+                            let tile_sub_rect = if clip_is_axis_aligned {
+                                let tile_world_rect = map_local_to_world
+                                    .map(&tile.tile_rect)
+                                    .expect("bug: should always map as axis-aligned");
+                                let tile_device_rect = tile_world_rect * surface_device_pixel_scale;
+                                tile_device_rect
+                                    .translate(-actual_rect.origin.to_vector())
+                                    .round_out()
+                                    .intersection(&sub_rect_bounds)
+                            } else {
+                                Some(common.sub_rect)
+                            };
 
-                                if let Some(tile_sub_rect) = tile_sub_rect {
-                                    assert!(sub_rect_bounds.contains_rect(&tile_sub_rect));
-                                    add_image(
-                                        request.with_tile(tile.tile_offset),
-                                        tile.tile_rect,
-                                        tile_sub_rect,
-                                    )
-                                }
+                            if let Some(tile_sub_rect) = tile_sub_rect {
+                                assert!(sub_rect_bounds.contains_rect(&tile_sub_rect));
+                                add_image(
+                                    request.with_tile(tile.tile_offset),
+                                    tile.tile_rect,
+                                    tile_sub_rect,
+                                )
                             }
                         }
-                        None => {
-                            add_image(request, rect, common.sub_rect)
-                        }
+                    } else {
+                        add_image(request, rect, common.sub_rect)
                     }
 
                     // If this is the first clip and either there is a transform or the image rect
