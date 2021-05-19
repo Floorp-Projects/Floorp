@@ -3,6 +3,7 @@ import subprocess
 
 from .base import Browser, ExecutorBrowser, require_arg
 from .base import get_timeout_multiplier   # noqa: F401
+from .base import NullBrowser  # noqa: F401
 from .chrome import executor_kwargs as chrome_executor_kwargs
 from ..webdriver_server import ChromeDriverServer
 from ..executors.executorwebdriver import (WebDriverTestharnessExecutor,  # noqa: F401
@@ -12,7 +13,8 @@ from ..executors.executorchrome import ChromeDriverWdspecExecutor  # noqa: F401
 
 __wptrunner__ = {"product": "chrome_android",
                  "check_args": "check_args",
-                 "browser": "ChromeAndroidBrowser",
+                 "browser": {None: "ChromeAndroidBrowser",
+                             "wdspec": "NullBrowser"},
                  "executor": {"testharness": "WebDriverTestharnessExecutor",
                               "reftest": "WebDriverRefTestExecutor",
                               "wdspec": "ChromeDriverWdspecExecutor"},
