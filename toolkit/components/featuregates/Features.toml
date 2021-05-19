@@ -188,16 +188,6 @@ bug-numbers = [1676162]
 is-public = true
 default-value = true
 
-[http3]
-title = "experimental-features-http3"
-description = "experimental-features-http3-description"
-restart-required = false
-preference = "network.http.http3.enabled"
-type = "boolean"
-bug-numbers = [1682539]
-is-public = true
-default-value = {default = false, early_beta_or_earlier = true}
-
 [url-bar-ime-search]
 title = "experimental-features-ime-search"
 description = "experimental-features-ime-search-description"
