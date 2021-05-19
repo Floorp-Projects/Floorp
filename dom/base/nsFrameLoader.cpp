@@ -2311,6 +2311,19 @@ nsresult nsFrameLoader::MaybeCreateDocShell() {
   ReallyLoadFrameScripts();
   InitializeBrowserAPI();
 
+  // Previously we would forcibly create the initial about:blank document for
+  // in-process content frames from a frame script which eagerly loaded in
+  // every tab.  This lead to other frontend components growing dependencies on
+  // the initial about:blank document being created eagerly.  See bug 1471327
+  // for details.
+  //
+  // We also eagerly create the initial about:blank document for remote loads
+  // separately when initializing BrowserChild.
+  if (mIsTopLevelContent &&
+      mPendingBrowsingContext->GetMessageManagerGroup() == u"browsers"_ns) {
+    Unused << mDocShell->GetDocument();
+  }
+
   return NS_OK;
 }
 
