@@ -3,7 +3,6 @@ import subprocess
 
 from .base import Browser, ExecutorBrowser, require_arg
 from .base import get_timeout_multiplier   # noqa: F401
-from .base import NullBrowser  # noqa: F401
 from .chrome import executor_kwargs as chrome_executor_kwargs
 from ..webdriver_server import ChromeDriverServer
 from ..executors.executorwebdriver import (WebDriverTestharnessExecutor,  # noqa: F401
@@ -13,8 +12,7 @@ from ..executors.executorchrome import ChromeDriverWdspecExecutor  # noqa: F401
 
 __wptrunner__ = {"product": "chrome_android",
                  "check_args": "check_args",
-                 "browser": {None: "ChromeAndroidBrowser",
-                             "wdspec": "NullBrowser"},
+                 "browser": "ChromeAndroidBrowser",
                  "executor": {"testharness": "WebDriverTestharnessExecutor",
                               "reftest": "WebDriverRefTestExecutor",
                               "wdspec": "ChromeDriverWdspecExecutor"},
@@ -41,15 +39,16 @@ def browser_kwargs(logger, test_type, run_info_data, config, **kwargs):
             "symbols_path": kwargs.get("symbols_path")}
 
 
-def executor_kwargs(logger, test_type, test_environment, run_info_data,
+def executor_kwargs(logger, test_type, server_config, cache_manager, run_info_data,
                     **kwargs):
     # Use update() to modify the global list in place.
     _wptserve_ports.update(set(
-        test_environment.config['ports']['http'] + test_environment.config['ports']['https'] +
-        test_environment.config['ports']['ws'] + test_environment.config['ports']['wss']
+        server_config['ports']['http'] + server_config['ports']['https'] +
+        server_config['ports']['ws'] + server_config['ports']['wss']
     ))
 
-    executor_kwargs = chrome_executor_kwargs(logger, test_type, test_environment, run_info_data,
+    executor_kwargs = chrome_executor_kwargs(logger, test_type, server_config,
+                                             cache_manager, run_info_data,
                                              **kwargs)
     # Remove unsupported options on mobile.
     del executor_kwargs["capabilities"]["goog:chromeOptions"]["prefs"]
@@ -71,7 +70,6 @@ def env_extras(**kwargs):
 def env_options():
     # allow the use of host-resolver-rules in lieu of modifying /etc/hosts file
     return {"server_host": "127.0.0.1"}
-
 
 class LogcatRunner(object):
     def __init__(self, logger, browser, remote_queue):
@@ -122,7 +120,6 @@ class LogcatRunner(object):
             "data": line
         }
         self._send_message("log", "process_output", data)
-
 
 class ChromeAndroidBrowserBase(Browser):
     def __init__(self, logger,

@@ -22,7 +22,10 @@ def test_webkitgtk_certificate_domain_list(product):
     if product not in ["epiphany", "webkit", "webkitgtk_minibrowser"]:
         pytest.skip("%s doesn't support certificate_domain_list" % product)
 
-    product_data = products.Product({}, product)
+    (check_args,
+     target_browser_cls, get_browser_kwargs,
+     executor_classes, get_executor_kwargs,
+     env_options, get_env_extras, run_info_extras) = products.load_product({}, product)
 
     cert_file = "/home/user/wpt/tools/certs/cacert.pem"
     valid_domains_test = ["a.example.org", "b.example.org", "example.org",
@@ -44,18 +47,7 @@ def test_webkitgtk_certificate_domain_list(product):
                        subdomains={"a", "b"},
                        not_subdomains={"x", "y"}) as env_config:
 
-        # We don't want to actually create a test environment; the get_executor_kwargs
-        # function only really wants an object with the config key
-
-        class MockEnvironment:
-            def __init__(self, config):
-                self.config = config
-
-        executor_args = product_data.get_executor_kwargs(None,
-                                                         None,
-                                                         MockEnvironment(env_config),
-                                                         {},
-                                                         **kwargs)
+        executor_args = get_executor_kwargs(None, None, env_config, None, None, **kwargs)
         assert('capabilities' in executor_args)
         assert('webkitgtk:browserOptions' in executor_args['capabilities'])
         assert('certificates' in executor_args['capabilities']['webkitgtk:browserOptions'])

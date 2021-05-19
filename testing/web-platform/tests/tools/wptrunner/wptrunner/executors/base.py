@@ -17,17 +17,19 @@ from .protocol import Protocol, BaseProtocolPart
 here = os.path.dirname(__file__)
 
 
-def executor_kwargs(test_type, test_environment, run_info_data, **kwargs):
+
+def executor_kwargs(test_type, server_config, cache_manager, run_info_data,
+                    **kwargs):
     timeout_multiplier = kwargs["timeout_multiplier"]
     if timeout_multiplier is None:
         timeout_multiplier = 1
 
-    executor_kwargs = {"server_config": test_environment.config,
+    executor_kwargs = {"server_config": server_config,
                        "timeout_multiplier": timeout_multiplier,
                        "debug_info": kwargs["debug_info"]}
 
     if test_type in ("reftest", "print-reftest"):
-        executor_kwargs["screenshot_cache"] = test_environment.cache_manager.dict()
+        executor_kwargs["screenshot_cache"] = cache_manager.dict()
 
     if test_type == "wdspec":
         executor_kwargs["binary"] = kwargs.get("binary")
@@ -602,12 +604,7 @@ class WdspecExecutor(TestExecutor):
         self.timeout_multiplier = timeout_multiplier
         self.capabilities = capabilities
         self.environ = environ if environ is not None else {}
-        self.output_handler_kwargs = None
-        self.output_handler_start_kwargs = None
-
-    def setup(self, runner):
-        self.protocol = self.protocol_cls(self, self.browser)
-        super().setup(runner)
+        self.protocol = self.protocol_cls(self, browser)
 
     def is_alive(self):
         return self.protocol.is_alive()
@@ -632,7 +629,8 @@ class WdspecExecutor(TestExecutor):
         return pytestrunner.run(path,
                                 self.server_config,
                                 session_config,
-                                timeout=timeout)
+                                timeout=timeout,
+                                environ=self.environ)
 
     def do_delayed_imports(self):
         global pytestrunner
@@ -721,21 +719,14 @@ class WdspecProtocol(Protocol):
         self.capabilities = self.executor.capabilities
         self.session_config = None
         self.server = None
-        self.environ = os.environ.copy()
-        self.environ.update(executor.environ)
-        self.output_handler_kwargs = executor.output_handler_kwargs
-        self.output_handler_start_kwargs = executor.output_handler_start_kwargs
 
     def connect(self):
         """Connect to browser via the HTTP server."""
         self.server = self.server_cls(
             self.logger,
             binary=self.webdriver_binary,
-            args=self.webdriver_args,
-            env=self.environ)
-        self.server.start(block=False,
-                          output_handler_kwargs=self.output_handler_kwargs,
-                          output_handler_start_kwargs=self.output_handler_start_kwargs)
+            args=self.webdriver_args)
+        self.server.start(block=False)
         self.logger.info(
             "WebDriver HTTP server listening at %s" % self.server.url)
         self.session_config = {"host": self.server.host,
