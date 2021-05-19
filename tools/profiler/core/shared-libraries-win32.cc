@@ -9,39 +9,10 @@
 #include "shared-libraries.h"
 #include "nsWindowsHelpers.h"
 #include "mozilla/NativeNt.h"
-#include "mozilla/UniquePtr.h"
 #include "mozilla/WindowsEnumProcessModules.h"
 #include "mozilla/WindowsProcessMitigations.h"
 #include "mozilla/WindowsVersion.h"
 #include "nsPrintfCString.h"
-
-static nsCString GetVersion(const WCHAR* dllPath) {
-  DWORD infoSize = GetFileVersionInfoSizeW(dllPath, nullptr);
-  if (infoSize == 0) {
-    return ""_ns;
-  }
-
-  mozilla::UniquePtr<unsigned char[]> infoData =
-      mozilla::MakeUnique<unsigned char[]>(infoSize);
-  if (!GetFileVersionInfoW(dllPath, 0, infoSize, infoData.get())) {
-    return ""_ns;
-  }
-
-  VS_FIXEDFILEINFO* vInfo;
-  UINT vInfoLen;
-  if (!VerQueryValueW(infoData.get(), L"\\", (LPVOID*)&vInfo, &vInfoLen)) {
-    return ""_ns;
-  }
-  if (!vInfo) {
-    return ""_ns;
-  }
-
-  nsPrintfCString version("%d.%d.%d.%d", vInfo->dwFileVersionMS >> 16,
-                          vInfo->dwFileVersionMS & 0xFFFF,
-                          vInfo->dwFileVersionLS >> 16,
-                          vInfo->dwFileVersionLS & 0xFFFF);
-  return std::move(version);
-}
 
 SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf() {
   SharedLibraryInfo sharedLibraryInfo;
@@ -111,6 +82,7 @@ SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf() {
         LOAD_LIBRARY_AS_DATAFILE | LOAD_LIBRARY_AS_IMAGE_RESOURCE));
 
     nsAutoCString breakpadId;
+    nsAutoCString versionStr;
     nsAutoString pdbPathStr;
     nsAutoString pdbNameStr;
     if (handleLock && canGetPdbInfo) {
@@ -139,6 +111,13 @@ SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf() {
             pdbNameStr.Cut(0, pos + 1);
           }
         }
+
+        uint64_t version;
+        if (headers.GetVersionInfo(version)) {
+          versionStr.AppendPrintf("%d.%d.%d.%d", (version >> 48) & 0xFFFF,
+                                  (version >> 32) & 0xFFFF,
+                                  (version >> 16) & 0xFFFF, version & 0xFFFF);
+        }
       }
     }
 
@@ -146,7 +125,7 @@ SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf() {
                         (uintptr_t)module.lpBaseOfDll + module.SizeOfImage,
                         0,  // DLLs are always mapped at offset 0 on Windows
                         breakpadId, moduleNameStr, modulePathStr, pdbNameStr,
-                        pdbPathStr, GetVersion(aModulePath), "");
+                        pdbPathStr, versionStr, "");
     sharedLibraryInfo.AddSharedLibrary(shlib);
   };
 
