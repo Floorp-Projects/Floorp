@@ -48,10 +48,12 @@ function afterpaint() {
          lastScrollX <= window.scrollX :
          lastScrollX >= window.scrollX,
          "scrollx monotonic");
-    ok(zoomingIn ?
-         lastScrollY >= window.scrollY :
-         lastScrollY <= window.scrollY,
-         "scrolly monotonic");
+    if (!within(lastScrollY, window.scrollY, 2)) {
+      ok(zoomingIn ?
+           lastScrollY >= window.scrollY :
+           lastScrollY <= window.scrollY,
+           "scrolly monotonic");
+    }
 
     // At the upper and lower limits of zoom constraints we can briefly go over
     // the limit and then back because of floating point inaccuracies.
@@ -86,7 +88,9 @@ function afterpaint() {
   lastVVWidth = visualViewport.width;
   lastVVHeight = visualViewport.height;
   lastScrollX = window.scrollX;
-  lastScrollY = window.scrollY;
+  if (!within(lastScrollY, window.scrollY, 2)) {
+    lastScrollY = window.scrollY;
+  }
   lastResolution = getResolution();
 }
 
