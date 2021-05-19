@@ -167,8 +167,14 @@ class CCGCScheduler {
     mNeedsGCAfterCC = true;
   }
 
-  void NoteReadyForMajorGC() {
+  // Returns false if we started and finished a major GC while waiting for a
+  // response.
+  [[nodiscard]] bool NoteReadyForMajorGC() {
+    if (mMajorGCReason == JS::GCReason::NO_REASON) {
+      return false;
+    }
     mReadyForMajorGC = true;
+    return true;
   }
 
   void NoteGCBegin() {
@@ -681,6 +687,8 @@ CCRunnerStep CCGCScheduler::AdvanceCCRunner(TimeStamp aDeadline) {
 }
 
 GCRunnerStep CCGCScheduler::GetNextGCRunnerAction(TimeStamp aDeadline) {
+  MOZ_ASSERT(mMajorGCReason != JS::GCReason::NO_REASON);
+
   if (InIncrementalGC()) {
     return {GCRunnerAction::GCSlice, mMajorGCReason};
   }
