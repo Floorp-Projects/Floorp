@@ -66,7 +66,7 @@ class SharedImmutableStringsCache {
    * returned.
    */
   template <typename IntoOwnedChars>
-  [[nodiscard]] mozilla::Maybe<SharedImmutableString> getOrCreate(
+  [[nodiscard]] SharedImmutableString getOrCreate(
       const char* chars, size_t length, IntoOwnedChars intoOwnedChars);
 
   /**
@@ -76,8 +76,8 @@ class SharedImmutableStringsCache {
    * On success, `Some` is returned. In the case of OOM failure, `Nothing` is
    * returned.
    */
-  [[nodiscard]] mozilla::Maybe<SharedImmutableString> getOrCreate(
-      OwnedChars&& chars, size_t length);
+  [[nodiscard]] SharedImmutableString getOrCreate(OwnedChars&& chars,
+                                                  size_t length);
 
   /**
    * Do not take ownership of the given `chars`. Return the canonical, shared
@@ -87,8 +87,8 @@ class SharedImmutableStringsCache {
    * On success, `Some` is returned. In the case of OOM failure, `Nothing` is
    * returned.
    */
-  [[nodiscard]] mozilla::Maybe<SharedImmutableString> getOrCreate(
-      const char* chars, size_t length);
+  [[nodiscard]] SharedImmutableString getOrCreate(const char* chars,
+                                                  size_t length);
 
   /**
    * Get the canonical, shared, and de-duplicated version of the given `const
@@ -109,7 +109,7 @@ class SharedImmutableStringsCache {
    * returned.
    */
   template <typename IntoOwnedTwoByteChars>
-  [[nodiscard]] mozilla::Maybe<SharedImmutableTwoByteString> getOrCreate(
+  [[nodiscard]] SharedImmutableTwoByteString getOrCreate(
       const char16_t* chars, size_t length,
       IntoOwnedTwoByteChars intoOwnedTwoByteChars);
 
@@ -120,7 +120,7 @@ class SharedImmutableStringsCache {
    * On success, `Some` is returned. In the case of OOM failure, `Nothing` is
    * returned.
    */
-  [[nodiscard]] mozilla::Maybe<SharedImmutableTwoByteString> getOrCreate(
+  [[nodiscard]] SharedImmutableTwoByteString getOrCreate(
       OwnedTwoByteChars&& chars, size_t length);
 
   /**
@@ -131,8 +131,8 @@ class SharedImmutableStringsCache {
    * On success, `Some` is returned. In the case of OOM failure, `Nothing` is
    * returned.
    */
-  [[nodiscard]] mozilla::Maybe<SharedImmutableTwoByteString> getOrCreate(
-      const char16_t* chars, size_t length);
+  [[nodiscard]] SharedImmutableTwoByteString getOrCreate(const char16_t* chars,
+                                                         size_t length);
 
   size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
     MOZ_ASSERT(inner_);
@@ -231,24 +231,31 @@ class SharedImmutableStringsCache {
   }
 
  private:
+  struct Inner;
   class StringBox {
     friend class SharedImmutableString;
 
     OwnedChars chars_;
     size_t length_;
+    const ExclusiveData<Inner>* cache_;
 
    public:
     mutable size_t refcount;
 
     using Ptr = js::UniquePtr<StringBox>;
 
-    StringBox(OwnedChars&& chars, size_t length)
-        : chars_(std::move(chars)), length_(length), refcount(0) {
+    StringBox(OwnedChars&& chars, size_t length,
+              const ExclusiveData<Inner>* cache)
+        : chars_(std::move(chars)),
+          length_(length),
+          cache_(cache),
+          refcount(0) {
       MOZ_ASSERT(chars_);
     }
 
-    static Ptr Create(OwnedChars&& chars, size_t length) {
-      return js::MakeUnique<StringBox>(std::move(chars), length);
+    static Ptr Create(OwnedChars&& chars, size_t length,
+                      const ExclusiveData<Inner>* cache) {
+      return js::MakeUnique<StringBox>(std::move(chars), length, cache);
     }
 
     StringBox(const StringBox&) = delete;
@@ -358,12 +365,9 @@ class SharedImmutableString {
   friend class SharedImmutableStringsCache;
   friend class SharedImmutableTwoByteString;
 
-  mutable SharedImmutableStringsCache cache_;
   mutable SharedImmutableStringsCache::StringBox* box_;
 
-  SharedImmutableString(
-      ExclusiveData<SharedImmutableStringsCache::Inner>::Guard& locked,
-      SharedImmutableStringsCache::StringBox* box);
+  explicit SharedImmutableString(SharedImmutableStringsCache::StringBox* box);
 
  public:
   /**
@@ -372,6 +376,7 @@ class SharedImmutableString {
    */
   SharedImmutableString(SharedImmutableString&& rhs);
   SharedImmutableString& operator=(SharedImmutableString&& rhs);
+  SharedImmutableString() { box_ = nullptr; }
 
   /**
    * Create another shared reference to the underlying string.
@@ -380,6 +385,7 @@ class SharedImmutableString {
 
   // If you want a copy, take one explicitly with `clone`!
   SharedImmutableString& operator=(const SharedImmutableString&) = delete;
+  explicit operator bool() const { return box_ != nullptr; }
 
   ~SharedImmutableString();
 
@@ -418,8 +424,7 @@ class SharedImmutableTwoByteString {
   SharedImmutableString string_;
 
   explicit SharedImmutableTwoByteString(SharedImmutableString&& string);
-  SharedImmutableTwoByteString(
-      ExclusiveData<SharedImmutableStringsCache::Inner>::Guard& locked,
+  explicit SharedImmutableTwoByteString(
       SharedImmutableStringsCache::StringBox* box);
 
  public:
@@ -429,6 +434,7 @@ class SharedImmutableTwoByteString {
    */
   SharedImmutableTwoByteString(SharedImmutableTwoByteString&& rhs);
   SharedImmutableTwoByteString& operator=(SharedImmutableTwoByteString&& rhs);
+  SharedImmutableTwoByteString() { string_.box_ = nullptr; }
 
   /**
    * Create another shared reference to the underlying string.
@@ -438,7 +444,7 @@ class SharedImmutableTwoByteString {
   // If you want a copy, take one explicitly with `clone`!
   SharedImmutableTwoByteString& operator=(const SharedImmutableTwoByteString&) =
       delete;
-
+  explicit operator bool() const { return string_.box_ != nullptr; }
   /**
    * Get a raw pointer to the underlying string. It is only safe to use the
    * resulting pointer while this `SharedImmutableTwoByteString` exists.
