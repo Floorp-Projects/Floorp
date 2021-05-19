@@ -22,14 +22,13 @@ def browser_kwargs(logger, test_type, run_info_data, config, **kwargs):
     return {"webdriver_binary": kwargs["webdriver_binary"],
             "webdriver_args": kwargs.get("webdriver_args")}
 
-def executor_kwargs(logger, test_type, server_config, cache_manager, run_info_data,
+def executor_kwargs(logger, test_type, test_environment, run_info_data,
                     **kwargs):
     options = {}
     options["requireWindowFocus"] = True
     capabilities = {}
     capabilities["se:ieOptions"] = options
-    executor_kwargs = base_executor_kwargs(test_type, server_config,
-                                           cache_manager, run_info_data, **kwargs)
+    executor_kwargs = base_executor_kwargs(test_type, test_environment, run_info_data, **kwargs)
     executor_kwargs["close_after_done"] = True
     executor_kwargs["capabilities"] = capabilities
     return executor_kwargs
