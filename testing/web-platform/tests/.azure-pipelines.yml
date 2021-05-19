@@ -204,7 +204,7 @@ jobs:
       directory: tools/wpt/
       toxenv: py36
 
-- job: wpt_integratio_mac_py39
+- job: wpt_integration_mac_py39
   displayName: 'tools/wpt/ tests: macOS + Python 3.9'
   dependsOn: decision
   condition: dependencies.decision.outputs['test_jobs.wpt_integration']
