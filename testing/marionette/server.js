@@ -132,6 +132,22 @@ class TCPListener {
     let output = clientSocket.openOutputStream(0, 0, 0);
     let transport = new DebuggerTransport(input, output);
 
+    // Only allow a single active WebDriver session at a time
+    const hasActiveSession = [...this.conns].find(
+      conn => !!conn.driver.currentSession
+    );
+    if (hasActiveSession) {
+      logger.warn(
+        "Connection attempt denied because an active session has been found"
+      );
+
+      // Ideally we should stop the server to listen for new connection
+      // attempts, but the current architecture doesn't allow us to do that.
+      // As such just close the transport if no further connections are allowed.
+      transport.close();
+      return;
+    }
+
     let conn = new TCPConnection(
       this.nextConnID++,
       transport,
