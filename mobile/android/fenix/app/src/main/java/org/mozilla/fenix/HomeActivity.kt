@@ -302,9 +302,12 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
         super.onResume()
 
         // Even if screenshots are allowed, we hide private content in the recents screen in onPause
-        // so onResume we should go back to setting these flags with the user screenshot setting
+        // only when we are in private mode, so in onResume we should go back to setting these flags
+        // with the user screenshot setting only when we are in private mode.
         // See https://github.com/mozilla-mobile/fenix/issues/11153
-        updateSecureWindowFlags(settings().lastKnownMode)
+        if (settings().lastKnownMode == BrowsingMode.Private) {
+            updateSecureWindowFlags(settings().lastKnownMode)
+        }
 
         // Diagnostic breadcrumb for "Display already aquired" crash:
         // https://github.com/mozilla-mobile/android-components/issues/7960
@@ -372,6 +375,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
             components.core.store.state.getNormalOrPrivateTabs(private = false).isNotEmpty()
 
         // Even if screenshots are allowed, we want to hide private content in the recents screen
+        // only when we are in private mode
         // See https://github.com/mozilla-mobile/fenix/issues/11153
         if (settings().lastKnownMode.isPrivate) {
             window.addFlags(FLAG_SECURE)

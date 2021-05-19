@@ -9,11 +9,11 @@ import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
-import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import org.mozilla.fenix.R
+import org.mozilla.fenix.SecureFragment
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.settings.creditcards.controller.DefaultCreditCardEditorController
@@ -24,7 +24,7 @@ import org.mozilla.fenix.settings.creditcards.view.CreditCardEditorView
 /**
  * Display a credit card editor for adding and editing a credit card.
  */
-class CreditCardEditorFragment : Fragment(R.layout.fragment_credit_card_editor) {
+class CreditCardEditorFragment : SecureFragment(R.layout.fragment_credit_card_editor) {
 
     private lateinit var creditCardEditorState: CreditCardEditorState
     private lateinit var creditCardEditorView: CreditCardEditorView

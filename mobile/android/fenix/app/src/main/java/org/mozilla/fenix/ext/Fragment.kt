@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.ext
 
+import android.view.WindowManager
 import androidx.annotation.IdRes
 import androidx.annotation.StringRes
 import androidx.appcompat.app.AppCompatActivity
@@ -88,5 +89,23 @@ fun Fragment.breadcrumb(
             ),
             level = Breadcrumb.Level.INFO
         )
+    )
+}
+
+/**
+ * Sets the [WindowManager.LayoutParams.FLAG_SECURE] flag for the current activity window.
+ */
+fun Fragment.secure() {
+    this.activity?.window?.addFlags(
+        WindowManager.LayoutParams.FLAG_SECURE
+    )
+}
+
+/**
+ * Clears the [WindowManager.LayoutParams.FLAG_SECURE] flag for the current activity window.
+ */
+fun Fragment.removeSecure() {
+    this.activity?.window?.clearFlags(
+        WindowManager.LayoutParams.FLAG_SECURE
     )
 }
