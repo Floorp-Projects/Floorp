@@ -332,8 +332,18 @@ void APZCCallbackHelper::UpdateRootFrame(const RepaintRequest& aRequest) {
     // the time this repaint request was fired, consider this request out of
     // date and drop it; setting a zoom based on the out-of-date resolution can
     // have the effect of getting us stuck with the stale resolution.
+    // One might think that if the last ResolutionChangeOrigin was apz then the
+    // pres shell resolutions should match but
+    // that is not the case. We can get multiple repaint requests that has the
+    // same pres shell resolution (because apz didn't receive a content layers
+    // update inbetween) if the first has async zoom we apply that and chance
+    // the content pres shell resolution and thus when handling the second
+    // repaint request the pres shell resolution won't match. So that's why we
+    // also check if the last resolution change origin was apz (aka 'us').
     if (!FuzzyEqualsMultiplicative(presShellResolution,
-                                   aRequest.GetPresShellResolution())) {
+                                   aRequest.GetPresShellResolution()) &&
+        presShell->GetLastResolutionChangeOrigin() !=
+            ResolutionChangeOrigin::Apz) {
       return;
     }
 
