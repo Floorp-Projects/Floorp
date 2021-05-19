@@ -283,11 +283,11 @@ add_task(async function test_zoom_api() {
     extension.sendMessage("msg-done", id, resp);
   });
 
-  let url = "http://example.com/";
+  let url = "https://example.com/";
   let tab1 = await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
   let tab2 = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
-    "http://example.net/"
+    "http://example.org/"
   );
 
   let privateWindow = await BrowserTestUtils.openNewBrowserWindow({
