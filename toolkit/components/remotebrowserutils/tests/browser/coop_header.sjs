@@ -5,6 +5,13 @@ function handleRequest(request, response)
 
   response.setStatusLine(request.httpVersion, 200, "OK");
 
+  // The tests for Cross-Origin-Opener-Policy unfortunately depend on
+  // BFCacheInParent not kicking in, as with that enabled, it is not possible to
+  // tell whether the BrowsingContext switch was caused by the BFCache
+  // navigation or by the COOP mismatch. This header disables BFCache for the
+  // coop documents, and should avoid the issue.
+  response.setHeader("Cache-Control", "no-store", false);
+
   let isDownloadPage = false;
   let isDownloadFile = false;
 
