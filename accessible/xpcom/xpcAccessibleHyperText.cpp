@@ -182,18 +182,7 @@ xpcAccessibleHyperText::GetTextAttributes(
     props = Intl()->TextAttributes(aIncludeDefAttrs, aOffset, aStartOffset,
                                    aEndOffset);
   } else {
-#if defined(XP_WIN)
     return NS_ERROR_NOT_IMPLEMENTED;
-#else
-    AutoTArray<Attribute, 10> attrs;
-    mIntl->AsRemote()->TextAttributes(aIncludeDefAttrs, aOffset, &attrs,
-                                      aStartOffset, aEndOffset);
-    uint32_t attrCount = attrs.Length();
-    nsAutoString unused;
-    for (uint32_t i = 0; i < attrCount; i++) {
-      props->SetStringProperty(attrs[i].Name(), attrs[i].Value(), unused);
-    }
-#endif
   }
   props.forget(aAttributes);
 
@@ -212,17 +201,7 @@ xpcAccessibleHyperText::GetDefaultTextAttributes(
   if (mIntl->IsLocal()) {
     props = Intl()->DefaultTextAttributes();
   } else {
-#if defined(XP_WIN)
     return NS_ERROR_NOT_IMPLEMENTED;
-#else
-    AutoTArray<Attribute, 10> attrs;
-    mIntl->AsRemote()->DefaultTextAttributes(&attrs);
-    uint32_t attrCount = attrs.Length();
-    nsAutoString unused;
-    for (uint32_t i = 0; i < attrCount; i++) {
-      props->SetStringProperty(attrs[i].Name(), attrs[i].Value(), unused);
-    }
-#endif
   }
   props.forget(aAttributes);
 
