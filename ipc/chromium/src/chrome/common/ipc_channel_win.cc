@@ -286,7 +286,7 @@ bool Channel::ChannelImpl::Connect() {
     // to true, we indicate to OnIOCompleted that this is the special
     // initialization signal.
     MessageLoopForIO::current()->PostTask(factory_.NewRunnableMethod(
-        &Channel::ChannelImpl::OnIOCompleted, &input_state_.context, 0, 0));
+        &Channel::ChannelImpl::OnIOCompleted, &input_state_.context, 0));
   }
 
   if (!waiting_connect_) ProcessOutgoingMessages(NULL, 0);
@@ -556,7 +556,7 @@ bool Channel::ChannelImpl::ProcessOutgoingMessages(
 }
 
 void Channel::ChannelImpl::OnIOCompleted(MessageLoopForIO::IOContext* context,
-                                         DWORD bytes_transfered, DWORD error) {
+                                         DWORD bytes_transfered) {
   bool ok;
   ASSERT_OWNINGTHREAD(ChannelImpl);
   if (context == &input_state_.context) {
