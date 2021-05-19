@@ -828,6 +828,8 @@ class TestTLSNavigation(BaseNavigationTestCase):
     def test_deactivation(self):
         invalid_cert_url = self.test_page_insecure
 
+        self.marionette.delete_session()
+
         print("with safe session")
         with self.safe_session() as session:
             with self.assertRaises(errors.InsecureCertificateException):
