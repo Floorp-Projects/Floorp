@@ -1934,7 +1934,7 @@ impl Renderer {
                 // Profile marker for the number of invalidated picture cache
                 if thread_is_being_profiled() {
                     let duration = Duration::new(0,0);
-                    if let Some(n) = self.profiler.get(profiler::RENDERED_PICTURE_TILES) {
+                    if let Some(n) = self.profile.get(profiler::RENDERED_PICTURE_TILES) {
                         let message = (n as usize).to_string();
                         add_text_marker(cstr!("NumPictureCacheInvalidated"), &message, duration);
                     }
