@@ -1306,6 +1306,88 @@ const struct YuvConstants SIMD_ALIGNED(kYvuH709Constants) = {
 #undef VR
 #undef YG
 
+// BT.709 full range YUV to RGB reference
+//  R = Y               + V * 1.5748
+//  G = Y - U * 0.18732 - V * 0.46812
+//  B = Y + U * 1.8556
+//  KR = 0.2126, KB = 0.0722
+
+// Y contribution to R,G,B.  Scale and bias.
+#define YG 16320 /* round(1 * 64 * 256 * 256 / 257) */
+#define YGB 32    /* 64 / 2 */
+
+// U and V contributions to R,G,B.
+#define UB -119 /* round(-1.8556 * 64) */
+#define UG 12  /* round(0.18732 * 64) */
+#define VG 30  /* round(0.46812 * 64) */
+#define VR -101 /* round(-1.5748 * 64) */
+
+// Bias values to round, and subtract 128 from U and V.
+#define BB (UB * 128 + YGB)
+#define BG (UG * 128 + VG * 128 + YGB)
+#define BR (VR * 128 + YGB)
+
+#if defined(__aarch64__)
+const struct YuvConstants SIMD_ALIGNED(kYuvF709Constants) = {
+    {-UB, -VR, -UB, -VR, -UB, -VR, -UB, -VR},
+    {-UB, -VR, -UB, -VR, -UB, -VR, -UB, -VR},
+    {UG, VG, UG, VG, UG, VG, UG, VG},
+    {UG, VG, UG, VG, UG, VG, UG, VG},
+    {BB, BG, BR, 0, 0, 0, 0, 0},
+    {0x0101 * YG, 0, 0, 0}};
+const struct YuvConstants SIMD_ALIGNED(kYvuF709Constants) = {
+    {-VR, -UB, -VR, -UB, -VR, -UB, -VR, -UB},
+    {-VR, -UB, -VR, -UB, -VR, -UB, -VR, -UB},
+    {VG, UG, VG, UG, VG, UG, VG, UG},
+    {VG, UG, VG, UG, VG, UG, VG, UG},
+    {BR, BG, BB, 0, 0, 0, 0, 0},
+    {0x0101 * YG, 0, 0, 0}};
+#elif defined(__arm__)
+const struct YuvConstants SIMD_ALIGNED(kYuvF709Constants) = {
+    {-UB, -UB, -UB, -UB, -VR, -VR, -VR, -VR, 0, 0, 0, 0, 0, 0, 0, 0},
+    {UG, UG, UG, UG, VG, VG, VG, VG, 0, 0, 0, 0, 0, 0, 0, 0},
+    {BB, BG, BR, 0, 0, 0, 0, 0},
+    {0x0101 * YG, 0, 0, 0}};
+const struct YuvConstants SIMD_ALIGNED(kYvuF709Constants) = {
+    {-VR, -VR, -VR, -VR, -UB, -UB, -UB, -UB, 0, 0, 0, 0, 0, 0, 0, 0},
+    {VG, VG, VG, VG, UG, UG, UG, UG, 0, 0, 0, 0, 0, 0, 0, 0},
+    {BR, BG, BB, 0, 0, 0, 0, 0},
+    {0x0101 * YG, 0, 0, 0}};
+#else
+const struct YuvConstants SIMD_ALIGNED(kYuvF709Constants) = {
+    {UB, 0, UB, 0, UB, 0, UB, 0, UB, 0, UB, 0, UB, 0, UB, 0,
+     UB, 0, UB, 0, UB, 0, UB, 0, UB, 0, UB, 0, UB, 0, UB, 0},
+    {UG, VG, UG, VG, UG, VG, UG, VG, UG, VG, UG, VG, UG, VG, UG, VG,
+     UG, VG, UG, VG, UG, VG, UG, VG, UG, VG, UG, VG, UG, VG, UG, VG},
+    {0, VR, 0, VR, 0, VR, 0, VR, 0, VR, 0, VR, 0, VR, 0, VR,
+     0, VR, 0, VR, 0, VR, 0, VR, 0, VR, 0, VR, 0, VR, 0, VR},
+    {BB, BB, BB, BB, BB, BB, BB, BB, BB, BB, BB, BB, BB, BB, BB, BB},
+    {BG, BG, BG, BG, BG, BG, BG, BG, BG, BG, BG, BG, BG, BG, BG, BG},
+    {BR, BR, BR, BR, BR, BR, BR, BR, BR, BR, BR, BR, BR, BR, BR, BR},
+    {YG, YG, YG, YG, YG, YG, YG, YG, YG, YG, YG, YG, YG, YG, YG, YG}};
+const struct YuvConstants SIMD_ALIGNED(kYvuF709Constants) = {
+    {VR, 0, VR, 0, VR, 0, VR, 0, VR, 0, VR, 0, VR, 0, VR, 0,
+     VR, 0, VR, 0, VR, 0, VR, 0, VR, 0, VR, 0, VR, 0, VR, 0},
+    {VG, UG, VG, UG, VG, UG, VG, UG, VG, UG, VG, UG, VG, UG, VG, UG,
+     VG, UG, VG, UG, VG, UG, VG, UG, VG, UG, VG, UG, VG, UG, VG, UG},
+    {0, UB, 0, UB, 0, UB, 0, UB, 0, UB, 0, UB, 0, UB, 0, UB,
+     0, UB, 0, UB, 0, UB, 0, UB, 0, UB, 0, UB, 0, UB, 0, UB},
+    {BR, BR, BR, BR, BR, BR, BR, BR, BR, BR, BR, BR, BR, BR, BR, BR},
+    {BG, BG, BG, BG, BG, BG, BG, BG, BG, BG, BG, BG, BG, BG, BG, BG},
+    {BB, BB, BB, BB, BB, BB, BB, BB, BB, BB, BB, BB, BB, BB, BB, BB},
+    {YG, YG, YG, YG, YG, YG, YG, YG, YG, YG, YG, YG, YG, YG, YG, YG}};
+#endif
+
+#undef BB
+#undef BG
+#undef BR
+#undef YGB
+#undef UB
+#undef UG
+#undef VG
+#undef VR
+#undef YG
+
 // BT.2020 YUV to RGB reference
 //  R = (Y - 16) * 1.164384                - V * -1.67867
 //  G = (Y - 16) * 1.164384 - U * 0.187326 - V * -0.65042
@@ -1364,6 +1446,88 @@ const struct YuvConstants SIMD_ALIGNED(kYuv2020Constants) = {
     {BR, BR, BR, BR, BR, BR, BR, BR, BR, BR, BR, BR, BR, BR, BR, BR},
     {YG, YG, YG, YG, YG, YG, YG, YG, YG, YG, YG, YG, YG, YG, YG, YG}};
 const struct YuvConstants SIMD_ALIGNED(kYvu2020Constants) = {
+    {VR, 0, VR, 0, VR, 0, VR, 0, VR, 0, VR, 0, VR, 0, VR, 0,
+     VR, 0, VR, 0, VR, 0, VR, 0, VR, 0, VR, 0, VR, 0, VR, 0},
+    {VG, UG, VG, UG, VG, UG, VG, UG, VG, UG, VG, UG, VG, UG, VG, UG,
+     VG, UG, VG, UG, VG, UG, VG, UG, VG, UG, VG, UG, VG, UG, VG, UG},
+    {0, UB, 0, UB, 0, UB, 0, UB, 0, UB, 0, UB, 0, UB, 0, UB,
+     0, UB, 0, UB, 0, UB, 0, UB, 0, UB, 0, UB, 0, UB, 0, UB},
+    {BR, BR, BR, BR, BR, BR, BR, BR, BR, BR, BR, BR, BR, BR, BR, BR},
+    {BG, BG, BG, BG, BG, BG, BG, BG, BG, BG, BG, BG, BG, BG, BG, BG},
+    {BB, BB, BB, BB, BB, BB, BB, BB, BB, BB, BB, BB, BB, BB, BB, BB},
+    {YG, YG, YG, YG, YG, YG, YG, YG, YG, YG, YG, YG, YG, YG, YG, YG}};
+#endif
+
+#undef BB
+#undef BG
+#undef BR
+#undef YGB
+#undef UB
+#undef UG
+#undef VG
+#undef VR
+#undef YG
+
+// BT.2020 full range YUV to RGB reference
+//  R = Y                + V * 1.474600
+//  G = Y - U * 0.164553 - V * 0.571353
+//  B = Y + U * 1.881400
+// KR = 0.2627; KB = 0.0593
+
+// Y contribution to R,G,B.  Scale and bias.
+#define YG 16320 /* round(1 * 64 * 256 * 256 / 257) */
+#define YGB 32    /* 64 / 2 */
+
+// U and V contributions to R,G,B.
+#define UB -120 /* round(-1.881400 * 64) */
+#define UG 11  /* round(0.164553 * 64) */
+#define VG 37  /* round(0.571353 * 64) */
+#define VR -94  /* round(-1.474600 * 64) */
+
+// Bias values to round, and subtract 128 from U and V.
+#define BB (UB * 128 + YGB)
+#define BG (UG * 128 + VG * 128 + YGB)
+#define BR (VR * 128 + YGB)
+
+#if defined(__aarch64__)
+const struct YuvConstants SIMD_ALIGNED(kYuvV2020Constants) = {
+    {-UB, -VR, -UB, -VR, -UB, -VR, -UB, -VR},
+    {-UB, -VR, -UB, -VR, -UB, -VR, -UB, -VR},
+    {UG, VG, UG, VG, UG, VG, UG, VG},
+    {UG, VG, UG, VG, UG, VG, UG, VG},
+    {BB, BG, BR, 0, 0, 0, 0, 0},
+    {0x0101 * YG, 0, 0, 0}};
+const struct YuvConstants SIMD_ALIGNED(kYvuV2020Constants) = {
+    {-VR, -UB, -VR, -UB, -VR, -UB, -VR, -UB},
+    {-VR, -UB, -VR, -UB, -VR, -UB, -VR, -UB},
+    {VG, UG, VG, UG, VG, UG, VG, UG},
+    {VG, UG, VG, UG, VG, UG, VG, UG},
+    {BR, BG, BB, 0, 0, 0, 0, 0},
+    {0x0101 * YG, 0, 0, 0}};
+#elif defined(__arm__)
+const struct YuvConstants SIMD_ALIGNED(kYuvV2020Constants) = {
+    {-UB, -UB, -UB, -UB, -VR, -VR, -VR, -VR, 0, 0, 0, 0, 0, 0, 0, 0},
+    {UG, UG, UG, UG, VG, VG, VG, VG, 0, 0, 0, 0, 0, 0, 0, 0},
+    {BB, BG, BR, 0, 0, 0, 0, 0},
+    {0x0101 * YG, 0, 0, 0}};
+const struct YuvConstants SIMD_ALIGNED(kYvuV2020Constants) = {
+    {-VR, -VR, -VR, -VR, -UB, -UB, -UB, -UB, 0, 0, 0, 0, 0, 0, 0, 0},
+    {VG, VG, VG, VG, UG, UG, UG, UG, 0, 0, 0, 0, 0, 0, 0, 0},
+    {BR, BG, BB, 0, 0, 0, 0, 0},
+    {0x0101 * YG, 0, 0, 0}};
+#else
+const struct YuvConstants SIMD_ALIGNED(kYuvV2020Constants) = {
+    {UB, 0, UB, 0, UB, 0, UB, 0, UB, 0, UB, 0, UB, 0, UB, 0,
+     UB, 0, UB, 0, UB, 0, UB, 0, UB, 0, UB, 0, UB, 0, UB, 0},
+    {UG, VG, UG, VG, UG, VG, UG, VG, UG, VG, UG, VG, UG, VG, UG, VG,
+     UG, VG, UG, VG, UG, VG, UG, VG, UG, VG, UG, VG, UG, VG, UG, VG},
+    {0, VR, 0, VR, 0, VR, 0, VR, 0, VR, 0, VR, 0, VR, 0, VR,
+     0, VR, 0, VR, 0, VR, 0, VR, 0, VR, 0, VR, 0, VR, 0, VR},
+    {BB, BB, BB, BB, BB, BB, BB, BB, BB, BB, BB, BB, BB, BB, BB, BB},
+    {BG, BG, BG, BG, BG, BG, BG, BG, BG, BG, BG, BG, BG, BG, BG, BG},
+    {BR, BR, BR, BR, BR, BR, BR, BR, BR, BR, BR, BR, BR, BR, BR, BR},
+    {YG, YG, YG, YG, YG, YG, YG, YG, YG, YG, YG, YG, YG, YG, YG, YG}};
+const struct YuvConstants SIMD_ALIGNED(kYvuV2020Constants) = {
     {VR, 0, VR, 0, VR, 0, VR, 0, VR, 0, VR, 0, VR, 0, VR, 0,
      VR, 0, VR, 0, VR, 0, VR, 0, VR, 0, VR, 0, VR, 0, VR, 0},
     {VG, UG, VG, UG, VG, UG, VG, UG, VG, UG, VG, UG, VG, UG, VG, UG,
