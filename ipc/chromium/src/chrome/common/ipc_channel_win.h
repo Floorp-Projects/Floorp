@@ -68,7 +68,7 @@ class Channel::ChannelImpl : public MessageLoopForIO::IOHandler {
 
   // MessageLoop::IOHandler implementation.
   virtual void OnIOCompleted(MessageLoopForIO::IOContext* context,
-                             DWORD bytes_transfered);
+                             DWORD bytes_transfered, DWORD error);
 
  private:
   struct State {
