@@ -40,7 +40,7 @@ class ResizingProcessorTest {
     @Test
     fun `icons of the correct size are not resized`() {
         val icon = Icon(mockBitmap(64), source = Icon.Source.DISK)
-        val resized = process(icon = icon, desiredSize = DesiredSize(64, 100, 3f))
+        val resized = process(icon = icon, desiredSize = DesiredSize(64, 64, 100, 3f))
 
         assertEquals(icon.bitmap, resized?.bitmap)
 
@@ -52,7 +52,7 @@ class ResizingProcessorTest {
         val icon = Icon(mockBitmap(120), source = Icon.Source.DISK)
         val smallerIcon = mockBitmap(64)
         doReturn(smallerIcon).`when`(processor).resize(eq(icon.bitmap), anyInt())
-        val resized = process(icon = icon, desiredSize = DesiredSize(64, 64, 3f))
+        val resized = process(icon = icon, desiredSize = DesiredSize(64, 64, 64, 3f))
 
         assertNotEquals(icon.bitmap, resized?.bitmap)
         assertEquals(smallerIcon, resized?.bitmap)
@@ -65,7 +65,7 @@ class ResizingProcessorTest {
         val icon = Icon(mockBitmap(34), source = Icon.Source.DISK)
         val largerIcon = mockBitmap(64)
         doReturn(largerIcon).`when`(processor).resize(eq(icon.bitmap), anyInt())
-        val resized = process(icon = icon, desiredSize = DesiredSize(64, 70, 3f))
+        val resized = process(icon = icon, desiredSize = DesiredSize(64, 64, 70, 3f))
 
         assertNotEquals(icon.bitmap, resized?.bitmap)
         assertEquals(largerIcon, resized?.bitmap)
@@ -105,7 +105,7 @@ class ResizingProcessorTest {
         request: IconRequest = IconRequest("https://mozilla.org"),
         resource: IconRequest.Resource = mock(),
         icon: Icon = Icon(mockBitmap(64), source = Icon.Source.DISK),
-        desiredSize: DesiredSize = DesiredSize(96, 1000, 3f)
+        desiredSize: DesiredSize = DesiredSize(96, 96, 1000, 3f)
     ) = p.process(context, request, resource, icon, desiredSize)
 
     private fun mockContext(density: Float): Context {

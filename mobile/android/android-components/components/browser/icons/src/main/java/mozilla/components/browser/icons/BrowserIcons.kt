@@ -105,6 +105,7 @@ class BrowserIcons @Suppress("LongParameterList") constructor(
 ) : MemoryConsumer {
     private val logger = Logger("BrowserIcons")
     private val maximumSize = context.resources.getDimensionPixelSize(R.dimen.mozac_browser_icons_maximum_size)
+    private val minimumSize = context.resources.getDimensionPixelSize(R.dimen.mozac_browser_icons_minimum_size)
     private val scope = CoroutineScope(jobDispatcher)
 
     /**
@@ -120,6 +121,7 @@ class BrowserIcons @Suppress("LongParameterList") constructor(
     private fun loadIconInternal(initialRequest: IconRequest): Icon {
         val desiredSize = DesiredSize(
             targetSize = context.resources.getDimensionPixelSize(initialRequest.size.dimen),
+            minSize = minimumSize,
             maxSize = maximumSize,
             maxScaleFactor = MAXIMUM_SCALE_FACTOR
         )

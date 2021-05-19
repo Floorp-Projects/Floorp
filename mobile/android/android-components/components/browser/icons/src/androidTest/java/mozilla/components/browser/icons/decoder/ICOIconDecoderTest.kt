@@ -47,7 +47,7 @@ class ICOIconDecoderTest {
         val icon = loadIcon("microsoft_favicon.ico")
 
         val decoder = ICOIconDecoder()
-        val bitmap = decoder.decode(icon, DesiredSize(192, 256, 2.0f))
+        val bitmap = decoder.decode(icon, DesiredSize(192, 192, 256, 2.0f))
 
         assertNotNull(bitmap)
 
@@ -60,7 +60,7 @@ class ICOIconDecoderTest {
         val icon = loadIcon("microsoft_favicon.ico")
 
         val decoder = ICOIconDecoder()
-        val bitmap = decoder.decode(icon, DesiredSize(64, 120, 2.0f))
+        val bitmap = decoder.decode(icon, DesiredSize(64, 64, 120, 2.0f))
 
         assertNotNull(bitmap)
 

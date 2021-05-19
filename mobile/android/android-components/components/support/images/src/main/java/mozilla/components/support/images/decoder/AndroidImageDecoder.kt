@@ -38,14 +38,14 @@ class AndroidImageDecoder : ImageDecoder {
         }
 
     private fun isGoodSize(bounds: Size, desiredSize: DesiredSize): Boolean {
-        val (targetSize, maxSize, maxScaleFactor) = desiredSize
+        val (_, minSize, maxSize, maxScaleFactor) = desiredSize
         return when {
             min(bounds.width, bounds.height) <= 0 -> {
                 logger.debug("BitmapFactory returned too small bitmap with width or height <= 0")
                 false
             }
 
-            min(bounds.width, bounds.height) * maxScaleFactor < targetSize -> {
+            min(bounds.width, bounds.height) * maxScaleFactor < minSize -> {
                 logger.debug("BitmapFactory returned too small bitmap")
                 false
             }

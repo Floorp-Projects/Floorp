@@ -14,7 +14,6 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mockito.`when`
 import org.mockito.Mockito.anyInt
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.doThrow
@@ -29,6 +28,7 @@ class AndroidImageDecoderTest {
 
         val bitmap = decoder.decode(loadImage("png/mozac.png"), DesiredSize(
             targetSize = 32,
+            minSize = 32,
             maxSize = 256,
             maxScaleFactor = 2.0f
         ))
@@ -43,6 +43,7 @@ class AndroidImageDecoderTest {
 
         val bitmap = decoder.decode(ByteArray(0), DesiredSize(
             targetSize = 64,
+            minSize = 32,
             maxSize = 256,
             maxScaleFactor = 2.0f
         ))
@@ -57,6 +58,7 @@ class AndroidImageDecoderTest {
 
         val decodedBitmap = decoder.decode(ByteArray(0), DesiredSize(
             targetSize = 64,
+            minSize = 32,
             maxSize = 256,
             maxScaleFactor = 2.0f
         ))
@@ -71,6 +73,7 @@ class AndroidImageDecoderTest {
 
         val decodedBitmap = decoder.decode(ByteArray(0), DesiredSize(
             targetSize = 64,
+            minSize = 32,
             maxSize = 256,
             maxScaleFactor = 2.0f
         ))
@@ -85,6 +88,7 @@ class AndroidImageDecoderTest {
 
         val decodedBitmap = decoder.decode(ByteArray(0), DesiredSize(
             targetSize = 64,
+            minSize = 32,
             maxSize = 256,
             maxScaleFactor = 2.0f
         ))
@@ -94,17 +98,16 @@ class AndroidImageDecoderTest {
 
     @Test
     fun `WHEN bitmap width too small THEN returns null`() {
-        val bitmap: Bitmap = mock()
-        `when`(bitmap.width).thenReturn(50)
-        `when`(bitmap.height).thenReturn(250)
+        val size = Size(63, 250)
 
         val decoder = spy(AndroidImageDecoder())
-        doReturn(bitmap).`when`(decoder).decodeBitmap(any(), anyInt())
+        doReturn(size).`when`(decoder).decodeBitmapBounds(any())
 
         val decodedBitmap = decoder.decode(ByteArray(0), DesiredSize(
             targetSize = 256,
+            minSize = 64,
             maxSize = 256,
-            maxScaleFactor = 2.0f
+            maxScaleFactor = 1.0f
         ))
 
         assertNull(decodedBitmap)
@@ -112,17 +115,33 @@ class AndroidImageDecoderTest {
 
     @Test
     fun `WHEN bitmap height too small THEN returns null`() {
-        val bitmap: Bitmap = mock()
-        `when`(bitmap.width).thenReturn(250)
-        `when`(bitmap.height).thenReturn(50)
+        val size = Size(250, 63)
 
         val decoder = spy(AndroidImageDecoder())
-        doReturn(bitmap).`when`(decoder).decodeBitmap(any(), anyInt())
+        doReturn(size).`when`(decoder).decodeBitmapBounds(any())
 
         val decodedBitmap = decoder.decode(ByteArray(0), DesiredSize(
             targetSize = 256,
+            minSize = 64,
             maxSize = 256,
-            maxScaleFactor = 2.0f
+            maxScaleFactor = 1.0f
+        ))
+
+        assertNull(decodedBitmap)
+    }
+
+    @Test
+    fun `WHEN bitmap height size too small with maxScaleFactor THEN returns null`() {
+        val size = Size(128, 64)
+
+        val decoder = spy(AndroidImageDecoder())
+        doReturn(size).`when`(decoder).decodeBitmapBounds(any())
+
+        val decodedBitmap = decoder.decode(ByteArray(0), DesiredSize(
+            targetSize = 256,
+            minSize = 64,
+            maxSize = 256,
+            maxScaleFactor = 0.9f
         ))
 
         assertNull(decodedBitmap)
@@ -130,17 +149,16 @@ class AndroidImageDecoderTest {
 
     @Test
     fun `WHEN bitmap width too large THEN returns null`() {
-        val bitmap: Bitmap = mock()
-        `when`(bitmap.width).thenReturn(2000)
-        `when`(bitmap.height).thenReturn(250)
+        val size = Size(2000, 250)
 
         val decoder = spy(AndroidImageDecoder())
-        doReturn(bitmap).`when`(decoder).decodeBitmap(any(), anyInt())
+        doReturn(size).`when`(decoder).decodeBitmapBounds(any())
 
         val decodedBitmap = decoder.decode(ByteArray(0), DesiredSize(
             targetSize = 256,
+            minSize = 32,
             maxSize = 256,
-            maxScaleFactor = 2.0f
+            maxScaleFactor = 1.0f
         ))
 
         assertNull(decodedBitmap)
@@ -148,20 +166,54 @@ class AndroidImageDecoderTest {
 
     @Test
     fun `WHEN bitmap height too large THEN returns null`() {
-        val bitmap: Bitmap = mock()
-        `when`(bitmap.width).thenReturn(250)
-        `when`(bitmap.height).thenReturn(2000)
+        val size = Size(250, 2000)
 
         val decoder = spy(AndroidImageDecoder())
+        doReturn(size).`when`(decoder).decodeBitmapBounds(any())
+
+        val decodedBitmap = decoder.decode(ByteArray(0), DesiredSize(
+            targetSize = 256,
+            minSize = 32,
+            maxSize = 256,
+            maxScaleFactor = 1.0f
+        ))
+
+        assertNull(decodedBitmap)
+    }
+
+    @Test
+    fun `WHEN bitmap height too large with maxScaleFactor THEN returns null`() {
+        val size = Size(32, 256)
+
+        val decoder = spy(AndroidImageDecoder())
+        doReturn(size).`when`(decoder).decodeBitmapBounds(any())
+
+        val decodedBitmap = decoder.decode(ByteArray(0), DesiredSize(
+            targetSize = 256,
+            minSize = 32,
+            maxSize = 256,
+            maxScaleFactor = 0.9f
+        ))
+
+        assertNull(decodedBitmap)
+    }
+
+    @Test
+    fun `WHEN bitmap size is good THEN returns non null`() {
+        val bitmap: Bitmap = mock()
+        val size = Size(128, 128)
+        val decoder = spy(AndroidImageDecoder())
+        doReturn(size).`when`(decoder).decodeBitmapBounds(any())
         doReturn(bitmap).`when`(decoder).decodeBitmap(any(), anyInt())
 
         val decodedBitmap = decoder.decode(ByteArray(0), DesiredSize(
             targetSize = 256,
+            minSize = 64,
             maxSize = 256,
             maxScaleFactor = 2.0f
         ))
 
-        assertNull(decodedBitmap)
+        assertNotNull(decodedBitmap)
     }
 
     private fun loadImage(fileName: String): ByteArray =

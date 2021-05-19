@@ -28,7 +28,7 @@ class ResizingProcessor(
     ): Icon? {
         val originalBitmap = icon.bitmap
         val size = originalBitmap.width
-        val (targetSize, _, maxScaleFactor) = desiredSize
+        val (targetSize, _, _, maxScaleFactor) = desiredSize
 
         // The bitmap has exactly the size we are looking for.
         if (size == targetSize) return icon

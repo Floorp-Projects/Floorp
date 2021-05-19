@@ -86,6 +86,7 @@ class ThumbnailStorage(
     private fun loadThumbnailInternal(request: ImageLoadRequest): Bitmap? {
         val desiredSize = DesiredSize(
             targetSize = request.size,
+            minSize = request.size,
             maxSize = maximumSize,
             maxScaleFactor = MAXIMUM_SCALE_FACTOR
         )

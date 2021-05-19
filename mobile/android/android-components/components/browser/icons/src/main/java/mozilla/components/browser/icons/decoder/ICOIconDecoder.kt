@@ -24,7 +24,7 @@ internal const val ZERO_BYTE = 0.toByte()
  */
 class ICOIconDecoder : ImageDecoder {
     override fun decode(data: ByteArray, desiredSize: DesiredSize): Bitmap? {
-        val (targetSize, maxSize, maxScaleFactor) = desiredSize
+        val (targetSize, _, maxSize, maxScaleFactor) = desiredSize
         val entries = decodeDirectoryEntries(data, maxSize)
 
         val bestEntry = entries.map { entry ->
