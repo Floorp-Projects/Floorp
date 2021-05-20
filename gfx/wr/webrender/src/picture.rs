@@ -2316,8 +2316,6 @@ pub struct TileCacheInstance {
     /// The currently considered tile size override. Used to check if we should
     /// re-evaluate tile size, even if the frame timer hasn't expired.
     tile_size_override: Option<DeviceIntSize>,
-    /// z-buffer ID assigned to the opaque backdrop, if there is one, in this slice
-    pub z_id_backdrop: ZBufferId,
     /// A cache of compositor surfaces that are retained between frames
     pub external_native_surface_cache: FastHashMap<ExternalNativeSurfaceKey, ExternalNativeSurface>,
     /// Current frame ID of this tile cache instance. Used for book-keeping / garbage collecting
@@ -2378,7 +2376,6 @@ impl TileCacheInstance {
             compare_cache: FastHashMap::default(),
             device_position: DevicePoint::zero(),
             tile_size_override: None,
-            z_id_backdrop: ZBufferId::invalid(),
             external_native_surface_cache: FastHashMap::default(),
             frame_id: FrameId::INVALID,
         }
@@ -2503,10 +2500,6 @@ impl TileCacheInstance {
         for sub_slice in &mut self.sub_slices {
             sub_slice.reset();
         }
-
-        // Backdrop surfaces get the first z_id. Subslices and compositor surfaces then get
-        // allocated a z_id each.
-        self.z_id_backdrop = frame_state.composite_state.z_generator.next();
 
         // Reset the opaque rect + subpixel mode, as they are calculated
         // during the prim dependency checks.
@@ -3843,29 +3836,6 @@ impl TileCacheInstance {
             frame_context.spatial_tree,
         );
 
-        // Register the opaque region of this tile cache as an occluder, which
-        // is used later in the frame to occlude other tiles.
-        if !self.backdrop.opaque_rect.is_empty() {
-            let backdrop_rect = self.backdrop.opaque_rect
-                .intersection(&self.local_rect)
-                .and_then(|r| {
-                    r.intersection(&self.local_clip_rect)
-                });
-
-            if let Some(backdrop_rect) = backdrop_rect {
-                let world_backdrop_rect = map_pic_to_world
-                    .map(&backdrop_rect)
-                    .expect("bug: unable to map backdrop to world space");
-
-                // Since we register the entire backdrop rect, use the opaque z-id for the
-                // picture cache slice.
-                frame_state.composite_state.register_occluder(
-                    self.z_id_backdrop,
-                    world_backdrop_rect,
-                );
-            }
-        }
-
         // A simple GC of the native external surface cache, to remove and free any
         // surfaces that were not referenced during the update_prim_dependencies pass.
         self.external_native_surface_cache.retain(|_, surface| {
@@ -3918,12 +3888,12 @@ impl TileCacheInstance {
             pic_to_world_mapper,
             global_device_pixel_scale: frame_context.global_device_pixel_scale,
             local_clip_rect: self.local_clip_rect,
-            backdrop: Some(self.backdrop),
+            backdrop: None,
             opacity_bindings: &self.opacity_bindings,
             color_bindings: &self.color_bindings,
             current_tile_size: self.current_tile_size,
             local_rect: self.local_rect,
-            z_id: self.z_id_backdrop,
+            z_id: ZBufferId::invalid(),
             invalidate_all: root_scale_changed || frame_context.config.force_invalidation,
         };
 
@@ -3936,18 +3906,21 @@ impl TileCacheInstance {
 
         // Step through each tile and invalidate if the dependencies have changed. Determine
         // the current opacity setting and whether it's changed.
-        for sub_slice in &mut self.sub_slices {
-            for tile in sub_slice.tiles.values_mut() {
-                tile.post_update(&ctx, &mut state, frame_context);
+        for (i, sub_slice) in self.sub_slices.iter_mut().enumerate().rev() {
+            // The backdrop is only relevant for the first sub-slice
+            if i == 0 {
+                ctx.backdrop = Some(self.backdrop);
             }
 
-            for compositor_surface in &mut sub_slice.compositor_surfaces {
+            for compositor_surface in sub_slice.compositor_surfaces.iter_mut().rev() {
                 compositor_surface.descriptor.z_id = state.composite_state.z_generator.next();
             }
 
-            // After the first sub-slice, the backdrop is no longer relevant
-            ctx.backdrop = None;
             ctx.z_id = state.composite_state.z_generator.next();
+
+            for tile in sub_slice.tiles.values_mut() {
+                tile.post_update(&ctx, &mut state, frame_context);
+            }
         }
 
         // Register any opaque external compositor surfaces as potential occluders. This
@@ -3977,6 +3950,31 @@ impl TileCacheInstance {
                         );
                     }
                 }
+            }
+        }
+
+        // Register the opaque region of this tile cache as an occluder, which
+        // is used later in the frame to occlude other tiles.
+        if !self.backdrop.opaque_rect.is_empty() {
+            let z_id_backdrop = frame_state.composite_state.z_generator.next();
+
+            let backdrop_rect = self.backdrop.opaque_rect
+                .intersection(&self.local_rect)
+                .and_then(|r| {
+                    r.intersection(&self.local_clip_rect)
+                });
+
+            if let Some(backdrop_rect) = backdrop_rect {
+                let world_backdrop_rect = map_pic_to_world
+                    .map(&backdrop_rect)
+                    .expect("bug: unable to map backdrop to world space");
+
+                // Since we register the entire backdrop rect, use the opaque z-id for the
+                // picture cache slice.
+                frame_state.composite_state.register_occluder(
+                    z_id_backdrop,
+                    world_backdrop_rect,
+                );
             }
         }
     }

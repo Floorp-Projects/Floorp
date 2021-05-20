@@ -812,7 +812,7 @@ impl CompositeState {
             );
             return ResolvedExternalSurfaceIndex::INVALID;
         }
-            
+
         let external_surface_index = ResolvedExternalSurfaceIndex(self.external_surfaces.len());
 
         // If the external surface descriptor reports that the native surface
@@ -864,7 +864,7 @@ impl CompositeState {
 
     pub fn end_frame(&mut self) {
         // Sort tiles from front to back.
-        self.tiles.sort_by_key(|tile| -tile.z_id.0);        
+        self.tiles.sort_by_key(|tile| tile.z_id.0);
     }
 }
 
@@ -1198,7 +1198,7 @@ impl OcclusionEvent {
 pub struct Occluders {
     occluders: Vec<Occluder>,
 
-    // The two vectors below are kept to avoid unnecessary reallocations in area(). 
+    // The two vectors below are kept to avoid unnecessary reallocations in area().
 
     #[cfg_attr(feature = "serde", serde(skip))]
     events: Vec<OcclusionEvent>,
@@ -1270,7 +1270,7 @@ impl Occluders {
         // Step through each rectangle and build the y-axis event list
         for occluder in &self.occluders {
             // Only consider occluders in front of this rect
-            if occluder.z_id.0 > z_id.0 {
+            if occluder.z_id.0 < z_id.0 {
                 // Clip the source rect to the rectangle we care about, since we only
                 // want to record area for the tile we are comparing to.
                 if let Some(rect) = occluder.device_rect.intersection(clip_rect) {
