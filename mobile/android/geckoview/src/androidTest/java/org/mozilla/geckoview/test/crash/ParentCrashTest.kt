@@ -16,6 +16,7 @@ import org.junit.Assume.assumeThat
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.TemporaryFolder
 import org.junit.runner.RunWith
 import org.mozilla.geckoview.test.TestCrashHandler
 import org.mozilla.geckoview.test.util.Environment
@@ -29,6 +30,9 @@ class ParentCrashTest {
 
     @get:Rule val rule = ServiceTestRule()
 
+    @get:Rule
+    var folder = TemporaryFolder()
+
     @Before
     fun setup() {
         // Since this test starts up its own GeckoRuntime via
@@ -37,7 +41,14 @@ class ParentCrashTest {
         RuntimeCreator.shutdownRuntime()
 
         val context = InstrumentationRegistry.getInstrumentation().targetContext
-        val binder = rule.bindService(Intent(context, RemoteGeckoService::class.java))
+        val intent = Intent(context, RemoteGeckoService::class.java)
+
+        // We need to run in a different profile so we don't conflict with other tests running
+        // in parallel in other processes.
+        val profileFolder = folder.newFolder("remote-gecko-test")
+        intent.putExtra("args", "-profile ${profileFolder.absolutePath}")
+
+        val binder = rule.bindService(intent)
         messenger = Messenger(binder)
         assertThat("messenger should not be null", binder, notNullValue())
     }

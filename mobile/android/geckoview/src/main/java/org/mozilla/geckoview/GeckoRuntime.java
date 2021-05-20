@@ -805,12 +805,15 @@ public final class GeckoRuntime implements Parcelable {
      * Get the profile directory for this runtime. This is where Gecko stores
      * internal data.
      *
+     * @deprecated This API is deprecated and is kept here just for compatibility, as of
+     *             GeckoView 89 it always returns null.
      * @return Profile directory
      */
     @UiThread
+    @Deprecated
+    @DeprecationSchedule(id = "get-profile-dir", version = 93)
     public @Nullable File getProfileDir() {
-        ThreadUtils.assertOnUiThread();
-        return GeckoThread.getActiveProfile().getDir();
+        return null;
     }
 
     /**

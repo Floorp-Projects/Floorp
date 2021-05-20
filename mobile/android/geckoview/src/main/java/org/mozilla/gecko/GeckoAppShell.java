@@ -5,7 +5,6 @@
 
 package org.mozilla.gecko;
 
-import java.io.File;
 import java.net.Proxy;
 import java.nio.ByteBuffer;
 import java.util.Iterator;
@@ -1362,17 +1361,6 @@ public class GeckoAppShell {
             throw new IllegalArgumentException();
         }
         setWakeLockState(topic, intState);
-    }
-
-    @WrapForJNI(calledFrom = "gecko")
-    private static boolean unlockProfile() {
-        // Then force unlock this profile
-        final GeckoProfile profile = GeckoThread.getActiveProfile();
-        if (profile != null) {
-            final File lock = profile.getFile(".parentlock");
-            return lock != null && lock.exists() && lock.delete();
-        }
-        return false;
     }
 
     @WrapForJNI(calledFrom = "gecko")

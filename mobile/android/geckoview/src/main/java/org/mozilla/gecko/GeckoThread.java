@@ -147,7 +147,6 @@ public class GeckoThread extends Thread {
     private InitInfo mInitInfo;
 
     public static class InitInfo {
-        public GeckoProfile profile;
         public String[] args;
         public Bundle extras;
         public int flags;
@@ -280,16 +279,6 @@ public class GeckoThread extends Thread {
         if (!mInitInfo.xpcshell) {
             args.add("-greomni");
             args.add(context.getPackageResourcePath());
-
-            final GeckoProfile profile = getProfile();
-            if (profile.isCustomProfile()) {
-                args.add("-profile");
-                args.add(profile.getDir().getAbsolutePath());
-            } else {
-                profile.getDir(); // Make sure the profile dir exists.
-                args.add("-P");
-                args.add(profile.getName());
-            }
         }
 
         if (mInitInfo.args != null) {
@@ -301,15 +290,7 @@ public class GeckoThread extends Thread {
         if (extraArgs != null) {
             final StringTokenizer st = new StringTokenizer(extraArgs);
             while (st.hasMoreTokens()) {
-                final String token = st.nextToken();
-                if ("-P".equals(token) || "-profile".equals(token)) {
-                    // Skip -P and -profile arguments because we added them above.
-                    if (st.hasMoreTokens()) {
-                        st.nextToken();
-                    }
-                    continue;
-                }
-                args.add(token);
+                args.add(st.nextToken());
             }
         }
 
@@ -320,27 +301,6 @@ public class GeckoThread extends Thread {
         }
 
         return args.toArray(new String[args.size()]);
-    }
-
-    @RobocopTarget
-    public static @Nullable GeckoProfile getActiveProfile() {
-        return INSTANCE.getProfile();
-    }
-
-    public synchronized @Nullable GeckoProfile getProfile() {
-        if (!mInitialized) {
-            return null;
-        }
-        if (isChildProcess()) {
-            throw new UnsupportedOperationException(
-                    "Cannot access profile from child process");
-        }
-        if (mInitInfo.profile == null) {
-            final Context context = GeckoAppShell.getApplicationContext();
-            mInitInfo.profile = GeckoProfile.initFromArgs(context,
-                    mInitInfo.extras.getString(EXTRA_ARGS, null));
-        }
-        return mInitInfo.profile;
     }
 
     public static @Nullable Bundle getActiveExtras() {
