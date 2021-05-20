@@ -145,13 +145,31 @@ lazy_static! {
         ("security.certerrors.mitm.priming.enabled", Pref::new(false)),
 
         // Ensure blocklist updates don't hit the network
-        ("services.settings.server", Pref::new("http://%(server)s/dummy/blocklist/")),
+        ("services.settings.server", Pref::new("")),
 
         // Disable first run pages
         ("startup.homepage_welcome_url", Pref::new("about:blank")),
         ("startup.homepage_welcome_url.additional", Pref::new("")),
 
+        // asrouter expects a plain object or null
+        ("browser.newtabpage.activity-stream.asrouter.providers.cfr", Pref::new("null")),
+        ("browser.newtabpage.activity-stream.asrouter.providers.cfr-fxa", Pref::new("null")),
+        ("browser.newtabpage.activity-stream.asrouter.providers.snippets", Pref::new("null")),
+        ("browser.newtabpage.activity-stream.asrouter.providers.message-groups", Pref::new("null")),
+        ("browser.newtabpage.activity-stream.asrouter.providers.whats-new-panel", Pref::new("null")),
+        ("browser.newtabpage.activity-stream.asrouter.providers.messaging-experiments", Pref::new("null")),
+        ("browser.newtabpage.activity-stream.feeds.system.topstories", Pref::new(false)),
+        ("browser.newtabpage.activity-stream.feeds.snippets", Pref::new(false)),
+        ("browser.newtabpage.activity-stream.tippyTop.service.endpoint", Pref::new("")),
+        ("browser.newtabpage.activity-stream.discoverystream.config", Pref::new("[]")),
+
+        // For Activity Stream firstrun page, use an empty string to avoid fetching.
+        ("browser.newtabpage.activity-stream.fxaccounts.endpoint", Pref::new("")),
+
         // Prevent starting into safe mode after application crashes
         ("toolkit.startup.max_resumed_crashes", Pref::new(-1)),
+
+        // Disable webapp updates.
+        ("browser.webapps.checkForUpdates", Pref::new(0)),
     ];
 }
