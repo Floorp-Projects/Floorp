@@ -209,7 +209,7 @@ add_task(async function test_rtamo_aboutwelcome() {
   );
 });
 
-add_task(async function test_experiments_over_rtamo() {
+add_task(async function test_rtamo_over_experimnts() {
   let doExperimentCleanup = await ExperimentFakes.enrollWithFeatureConfig({
     featureId: "aboutwelcome",
     enabled: true,
@@ -218,14 +218,15 @@ add_task(async function test_experiments_over_rtamo() {
 
   let browser = await openRTAMOWelcomePage();
 
-  // We shouldn't see RTAMO
+  // If addon attribution exist, we should see RTAMO even if enrolled
+  // in about:welcome experiment
   await test_screen_content(
     browser,
-    "Experiment no RTAMO UI",
+    "Experiment RTAMO UI",
     // Expected selectors:
-    [],
+    ["h2[data-l10n-id='return-to-amo-addon-title']"],
     // Unexpected selectors:
-    ["h2[data-l10n-id='return-to-amo-addon-title']"]
+    []
   );
 
   await doExperimentCleanup();
