@@ -27,6 +27,7 @@ const sourceOptions = {
       "classProperties",
       "objectRestSpread",
       "optionalChaining",
+      "privateIn",
       "nullishCoalescingOperator",
     ],
   },
