@@ -9,14 +9,14 @@
 #include "mozilla/mozalloc_oom.h"
 #include "mozilla/Assertions.h"
 
-static size_t gMozallocOOMAllocationSize = 0;
-
 #define OOM_MSG_LEADER "out of memory: 0x"
 #define OOM_MSG_DIGITS "0000000000000000"  // large enough for 2^64
 #define OOM_MSG_TRAILER " bytes requested"
 #define OOM_MSG_FIRST_DIGIT_OFFSET sizeof(OOM_MSG_LEADER) - 1
 #define OOM_MSG_LAST_DIGIT_OFFSET \
   sizeof(OOM_MSG_LEADER) + sizeof(OOM_MSG_DIGITS) - 3
+
+MFBT_DATA size_t gOOMAllocationSize = 0;
 
 static const char* hex = "0123456789ABCDEF";
 
@@ -36,7 +36,7 @@ void mozalloc_handle_oom(size_t size) {
   // which might be in use at the time under querySelector or
   // querySelectorAll.
 
-  gMozallocOOMAllocationSize = size;
+  gOOMAllocationSize = size;
 
   static_assert(OOM_MSG_FIRST_DIGIT_OFFSET > 0,
                 "Loop below will never terminate (i can't go below 0)");
@@ -50,5 +50,3 @@ void mozalloc_handle_oom(size_t size) {
 
   mozalloc_abort(oomMsg);
 }
-
-size_t mozalloc_get_oom_abort_size(void) { return gMozallocOOMAllocationSize; }
