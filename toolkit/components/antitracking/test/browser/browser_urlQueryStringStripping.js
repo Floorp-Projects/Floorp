@@ -11,6 +11,7 @@ requestLongerTimeout(6);
 
 const TEST_URI = TEST_DOMAIN + TEST_PATH + "file_stripping.html";
 const TEST_THIRD_PARTY_URI = TEST_DOMAIN_2 + TEST_PATH + "file_stripping.html";
+const TEST_REDIRECT_URI = TEST_DOMAIN + TEST_PATH + "redirect.sjs";
 
 const TEST_CASES = [
   { testQueryString: "paramToStrip1=123", strippedQueryString: "" },
@@ -63,6 +64,7 @@ add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["privacy.query_stripping.strip_list", "paramToStrip1 paramToStrip2"],
+      ["privacy.query_stripping.redirect", true],
     ],
   });
 });
@@ -518,6 +520,81 @@ add_task(async function doTestsForNoStrippingForIframeNavigation() {
 
         // Verify the query string in the content window.
         await verifyQueryString(iframeBC, expectedQueryString);
+      });
+    }
+  }
+});
+
+add_task(async function doTestsForRedirect() {
+  info("Start testing query stripping for redirects.");
+
+  for (const strippingEnabled of [false, true]) {
+    await SpecialPowers.pushPrefEnv({
+      set: [["privacy.query_stripping.enabled", strippingEnabled]],
+    });
+
+    for (const test of TEST_CASES) {
+      let testFirstPartyURI =
+        TEST_REDIRECT_URI + "?" + TEST_URI + "?" + test.testQueryString;
+      let testThirdPartyURI = `${TEST_REDIRECT_URI}?${TEST_THIRD_PARTY_URI}?${test.testQueryString}`;
+
+      let originalQueryString = test.testQueryString;
+      let expectedQueryString = strippingEnabled
+        ? test.strippedQueryString
+        : test.testQueryString;
+
+      await BrowserTestUtils.withNewTab(TEST_URI, async browser => {
+        // Observe the channel and check if the query string is intact when
+        // redirecting to a same-origin URI .
+        let networkPromise = observeChannel(TEST_URI, originalQueryString);
+
+        let targetURI = `${TEST_URI}?${originalQueryString}`;
+
+        // Create the promise to wait for the location change.
+        let locationChangePromise = BrowserTestUtils.waitForLocationChange(
+          gBrowser,
+          targetURI
+        );
+
+        // Trigger the redirect.
+        await SpecialPowers.spawn(browser, [testFirstPartyURI], async url => {
+          content.postMessage({ type: "script", url }, "*");
+        });
+
+        await networkPromise;
+        await locationChangePromise;
+
+        // Verify the query string in the content window.
+        await verifyQueryString(browser, originalQueryString);
+
+        // Second, trigger a redirect to a cross-origin site where the query
+        // string should be stripped.
+
+        targetURI = expectedQueryString
+          ? `${TEST_THIRD_PARTY_URI}?${expectedQueryString}`
+          : TEST_THIRD_PARTY_URI;
+
+        // Observe the channel and check if the query string is expected.
+        networkPromise = observeChannel(
+          TEST_THIRD_PARTY_URI,
+          expectedQueryString
+        );
+
+        locationChangePromise = BrowserTestUtils.waitForLocationChange(
+          gBrowser,
+          targetURI
+        );
+
+        // Trigger the cross-origin redirect.
+        await SpecialPowers.spawn(browser, [testThirdPartyURI], async url => {
+          content.postMessage({ type: "script", url }, "*");
+        });
+
+        await networkPromise;
+        await locationChangePromise;
+
+        // Verify the query string in the content window.
+        await verifyQueryString(browser, expectedQueryString);
       });
     }
   }
