@@ -411,6 +411,11 @@
         and the third is the device model. -->
     <string name="default_device_name_2">%1$s on %2$s %3$s</string>
 
+    <!-- Preference for syncing credit cards -->
+    <string name="preferences_sync_credit_cards">Credit cards</string>
+    <!-- Preference for syncing addresses -->
+    <string name="preferences_sync_address">Addresses</string>
+
     <!-- Send Tab -->
     <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="fxa_received_tab_channel_name">Received tabs</string>
@@ -1745,4 +1750,8 @@
 
     <!-- Content description for the action bar "up" button -->
     <string name="action_bar_up_description">Navigate up</string>
+
+    <!-- Content description for privacy content close button -->
+    <string name="privacy_content_close_button_content_description">Close</string>
+
 </resources>

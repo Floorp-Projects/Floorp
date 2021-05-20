@@ -423,6 +423,11 @@
         and the third is the device model. -->
     <string name="default_device_name_2">%2$s %3$s ਉੱਤੇ %1$s</string>
 
+    <!-- Preference for syncing credit cards -->
+    <string name="preferences_sync_credit_cards">ਕਰੈਡਿਟ ਕਾਰਡ</string>
+    <!-- Preference for syncing addresses -->
+    <string name="preferences_sync_address">ਸਿਰਨਾਵੇਂ</string>
+
     <!-- Send Tab -->
     <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="fxa_received_tab_channel_name">ਮਿਲੀਆਂ ਟੈਬਾਂ</string>
@@ -1470,10 +1475,8 @@
     <string name="preferences_passwords_autofill">ਆਪੇ-ਭਰੋ</string>
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">ਲਾਗਇਨ ਸਿੰਕ ਕਰੋ</string>
-    <!-- Syncing saved logins in Fenix is on -->
-    <string name="preferences_passwords_sync_logins_on">ਚਾਲੂ</string>
-    <!-- Syncing saved logins in Fenix is off -->
-    <string name="preferences_passwords_sync_logins_off">ਬੰਦ</string>
+    <!-- Preference for syncing saved logins in Fenix, when not signed in-->
+    <string name="preferences_passwords_sync_logins_across_devices">ਡਿਵਾਈਸਾਂ ਵਿਚਾਲੇ ਲਾਗਇਨਾਂ ਨੂੰ ਸਿੰਕ ਕਰੋ</string>
     <!-- Syncing saved logins in Fenix needs reconnect to sync -->
     <string name="preferences_passwords_sync_logins_reconnect">ਮੁੜ-ਕਨੈਕਟ ਕਰੋ</string>
     <!-- Syncing saved logins in Fenix needs login -->
@@ -1574,6 +1577,8 @@
     <string name="preferences_credit_cards_save_and_autofill_cards_summary">ਡਾਟਾ ਇੰਕ੍ਰਿਪਟ ਕੀਤਾ ਹੈ</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
     <string name="preferences_credit_cards_sync_cards_across_devices">ਡਿਵਾਈਸਾਂ ਵਿਚਾਲੇ ਕਾਰਡਾਂ ਨੂੰ ਸਿੰਕ ਕਰੋ</string>
+    <!-- Preference option for syncing credit cards across devices. This is displayed when the user is signed into sync -->
+    <string name="preferences_credit_cards_sync_cards">ਕਾਰਡ ਸਿੰਕ ਕਰੋ</string>
     <!-- Preference option for adding a credit card -->
     <string name="preferences_credit_cards_add_credit_card">ਕਰੈਡਿਟ ਕਾਰਡ ਜੋੜੋ</string>
     <!-- Preference option for managing saved credit cards -->
@@ -1603,6 +1608,9 @@
 
     <!-- Title of the "Saved cards" screen -->
     <string name="credit_cards_saved_cards">ਸੰਭਾਲੇ ਹੋਏ ਕਾਰਡ</string>
+
+    <!-- Error message for credit card number validation -->
+    <string name="credit_cards_number_validation_error_message">ਵਾਜਬ ਕਰੈਡਿਟ ਕਾਰਡ ਨੰਬਰ ਦਿਓ ਜੀ</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">ਖੋਜ ਇੰਜਣ ਜੋੜੋ</string>
@@ -1771,4 +1779,10 @@
     <!-- Content description radio buttons with a link to more information -->
     <string name="radio_preference_info_content_description">ਹੋਰ ਵੇਰਵਿਆਂ ਲਈ ਕਲਿੱਕ ਕਰੋ</string>
 
-    </resources>
+    <!-- Content description for the action bar "up" button -->
+    <string name="action_bar_up_description">ਉੱਤੇ ਜਾਓ</string>
+
+    <!-- Content description for privacy content close button -->
+    <string name="privacy_content_close_button_content_description">ਬੰਦ ਕਰੋ</string>
+
+</resources>

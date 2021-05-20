@@ -347,4 +347,105 @@
     <string name="preferences_open_links_in_apps">Ôtwiyrej linki w aplikacyjach</string>
 
 
+    <!-- Preference for open download with an external download manager app -->
+    <string name="preferences_external_download_manager">Zewnyntrzny menedżer pobiyranio</string>
+    <!-- Preference for add_ons -->
+    <string name="preferences_addons">Rozszyrzynia</string>
+    <!-- Preference for notifications -->
+    <string name="preferences_notifications">Powiadōmiynia</string>
+
+    <!-- Add-on Preferences -->
+    <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
+    <string name="preferences_customize_amo_collection">Włosno kolekcyjo rozszyrzyń</string>
+    <!-- Button caption to confirm the add-on collection configuration -->
+    <string name="customize_addon_collection_ok">OK</string>
+    <!-- Button caption to abort the add-on collection configuration -->
+    <string name="customize_addon_collection_cancel">Pociep</string>
+    <!-- Hint displayed on input field for custom collection name -->
+    <string name="customize_addon_collection_hint">Miano kolekcyje</string>
+    <!-- Hint displayed on input field for custom collection user ID-->
+    <string name="customize_addon_collection_user_hint">Posiedziciel kolekcyje (ID ôd używocza)</string>
+
+
+    <!-- Toast shown after confirming the custom add-on collection configuration -->
+    <string name="toast_customize_addon_collection_done">Kolekcyjo rozszyrzyń je zmiyniōno. Wyłōnczynie aplikacyji, coby przidać zmiany…</string>
+
+    <!-- Add-on Installation from AMO-->
+    <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
+    <string name="addon_not_supported_error">Rozszyrzynie niy ma ôbsugowane</string>
+    <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is already installed -->
+    <string name="addon_already_installed">Rozszyrzynie je już zainstalowane</string>
+
+    <!-- Account Preferences -->
+    <!-- Preference for triggering sync -->
+    <string name="preferences_sync_now">Synchrōnizuj teroz</string>
+    <!-- Preference category for sync -->
+    <string name="preferences_sync_category">Ôbier, co synchrōnizować</string>
+    <!-- Preference for syncing history -->
+    <string name="preferences_sync_history">Historyjo</string>
+    <!-- Preference for syncing bookmarks -->
+    <string name="preferences_sync_bookmarks">Zokłodki</string>
+    <!-- Preference for syncing logins -->
+    <string name="preferences_sync_logins">Dane logowanio</string>
+    <!-- Preference for syncing tabs -->
+    <string name="preferences_sync_tabs_2">Ôtwarte karty</string>
+    <!-- Preference for signing out -->
+    <string name="preferences_sign_out">Wyloguj</string>
+    <!-- Preference displays and allows changing current FxA device name -->
+    <string name="preferences_sync_device_name">Miano masziny</string>
+    <!-- Text shown when user enters empty device name -->
+    <string name="empty_device_name_error">Miano masziny niy śmiy być prōżne.</string>
+    <!-- Label indicating that sync is in progress -->
+    <string name="sync_syncing_in_progress">Synchrōnizacyjo…</string>
+    <!-- Label summary indicating that sync failed. The first parameter is the date stamp showing last time it succeeded -->
+    <string name="sync_failed_summary">Synchronizacyjo sie niy podarziła. Ôstatnio udano: %s</string>
+    <!-- Label summary showing never synced -->
+    <string name="sync_failed_never_synced_summary">Synchronizacyjo sie niy podarziła. Ôstatnio udano: żodno</string>
+    <!-- Label summary the date we last synced. The first parameter is date stamp showing last time synced -->
+    <string name="sync_last_synced_summary">Ôstatnio synchrōnizacyjo: %s</string>
+    <!-- Label summary showing never synced -->
+    <string name="sync_never_synced_summary">Ôstatnio synchrōnizacyjo: żodno</string>
+    <!-- Text for displaying the default device name.
+        The first parameter is the application name, the second is the device manufacturer name
+        and the third is the device model. -->
+    <string name="default_device_name_2">%1$s na %2$s %3$s</string>
+    <!-- Preference for syncing credit cards -->
+    <string name="preferences_sync_credit_cards">Kredytowe karty</string>
+    <!-- Preference for syncing addresses -->
+    <string name="preferences_sync_address">Adresy</string>
+
+    <!-- Send Tab -->
+    <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
+    <string name="fxa_received_tab_channel_name">Przijynte karty</string>
+    <!-- Description of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
+    <string name="fxa_received_tab_channel_description">Powiadōmiynia ô kartach przijyntych z inkszych maszin z aplikacyjōm Firefox.</string>
+    <!--  The body for these is the URL of the tab received  -->
+    <string name="fxa_tab_received_notification_name">Karta je przijynto</string>
+    <!-- When multiple tabs have been received -->
+    <string name="fxa_tabs_received_notification_name">Karty sōm przijynte</string>
+    <!-- %s is the device name -->
+    <string name="fxa_tab_received_from_notification_name">Karty ze %s</string>
+
+    <!-- Advanced Preferences -->
+    <!-- Preference for tracking protection settings -->
+    <string name="preferences_tracking_protection_settings">Ôchrōna ôd śledzynio</string>
+    <!-- Preference switch for tracking protection -->
+    <string name="preferences_tracking_protection">Ôchrōna ôd śledzynio</string>
+    <!-- Preference switch description for tracking protection -->
+    <string name="preferences_tracking_protection_description">Szperuj zawartość i skrypty, co cie śledzōm w necu</string>
+    <!-- Preference for tracking protection exceptions -->
+    <string name="preferences_tracking_protection_exceptions">Wyjōntki</string>
+    <!-- Preference description for tracking protection exceptions -->
+    <string name="preferences_tracking_protection_exceptions_description">Na tych strōnach ôchrōna ôd śledzynio je wyłōnczōno</string>
+    <!-- Button in Exceptions Preference to turn on tracking protection for all sites (remove all exceptions) -->
+    <string name="preferences_tracking_protection_exceptions_turn_on_for_all">Załōncz do wszyskich strōn</string>
+    <!-- Text displayed when there are no exceptions -->
+    <string name="exceptions_empty_message_description">Z wyjōntkami możesz zastawić ôchrōna ôd śledzynio na ôbranych strōnach.</string>
+    <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
+    <string name="exceptions_empty_message_learn_more_link">Przewiydz sie wiyncyj</string>
+
+    <!-- Preference switch for Telemetry -->
+    <string name="preferences_telemetry">Telemetryjo</string>
+
+
     </resources>
