@@ -25,7 +25,7 @@ linux64-gcc-7:
     fetches:
         fetch:
             - binutils-2.31.1
-            - gcc-7.4.0
+            - gcc-7.5.0
             - gmp-6.1.0
             - isl-0.16.1
             - mpc-1.0.3
@@ -40,7 +40,7 @@ linux64-gcc-8:
     fetches:
         fetch:
             - binutils-2.31.1
-            - gcc-8.3.0
+            - gcc-8.5.0
             - gmp-6.1.0
             - isl-0.16.1
             - mpc-1.0.3
