@@ -6043,8 +6043,14 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitFunction(
 
   // Track the last emitted top-level self-hosted function, so that intrinsics
   // can adjust attributes at parse time.
+  //
+  // NOTE: We also disallow lambda functions in the top-level body. This is done
+  // to simplify handling of the self-hosted stencil. Within normal function
+  // declarations there are no such restrictions.
   if (emitterMode == EmitterMode::SelfHosting) {
-    if (sc->isTopLevelContext() && funbox->explicitName()) {
+    if (sc->isTopLevelContext()) {
+      MOZ_ASSERT(!funbox->isLambda());
+      MOZ_ASSERT(funbox->explicitName());
       prevSelfHostedTopLevelFunction = funbox;
     }
   }
