@@ -82,6 +82,16 @@ HRESULT MFCreateDXGISurfaceBuffer(REFIID riid, IUnknown* punkSurface,
                                   BOOL fButtomUpWhenLinear,
                                   IMFMediaBuffer** ppBuffer);
 
+HRESULT MFTEnumEx(GUID guidCategory, UINT32 Flags,
+                  const MFT_REGISTER_TYPE_INFO* pInputType,
+                  const MFT_REGISTER_TYPE_INFO* pOutputType,
+                  IMFActivate*** pppMFTActivate, UINT32* pnumMFTActivate);
+
+HRESULT MFTGetInfo(CLSID clsidMFT, LPWSTR* pszName,
+                   MFT_REGISTER_TYPE_INFO** ppInputTypes, UINT32* pcInputTypes,
+                   MFT_REGISTER_TYPE_INFO** ppOutputTypes,
+                   UINT32* pcOutputTypes, IMFAttributes** ppAttributes);
+
 }  // end namespace wmf
 }  // end namespace mozilla
 
