@@ -20,8 +20,7 @@
   <!-- test code goes here -->
   <script type="application/javascript"><![CDATA[
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const PROTON_ENABLED = Services.prefs.getBoolPref("browser.proton.enabled", false);
-const NOTIFICATION_LOCAL_NAME = PROTON_ENABLED ?  "notification-message" : "notification";
+const NOTIFICATION_LOCAL_NAME = "notification-message"
 SimpleTest.waitForExplicitFinish();
 
 var testtag_notificationbox_buttons = [
@@ -336,7 +335,7 @@ var tests =
     result(nb, ntf) {
       testtag_notificationbox_State(nb, "append link with callback", ntf, 1);
 
-      let buttonContainer = PROTON_ENABLED ? ntf.buttonContainer : ntf.messageDetails;
+      let buttonContainer = ntf.buttonContainer;
       let button = buttonContainer.lastElementChild;
       SimpleTest.is(button.localName, "button", "button is a button");
       SimpleTest.ok(!button.href, "button href is not set");
@@ -385,9 +384,7 @@ var tests =
     result(nb, ntf) {
       testtag_notificationbox_State(nb, "append link with callback", ntf, 1);
 
-      let link = PROTON_ENABLED
-        ? ntf.messageText.lastElementChild.previousSibling.previousSibling
-        : ntf.messageText.lastElementChild.previousSibling;
+      let link = ntf.messageText.lastElementChild.previousSibling.previousSibling;
       SimpleTest.is(link.localName, "label", "link 1 is a label");
       SimpleTest.ok(link.value != "", "link 1 label is set");
       SimpleTest.ok(link.href.endsWith("/test1"), "link 1 href is set");
@@ -416,11 +413,8 @@ var tests =
       return ntf;
     },
     result(nb, ntf) {
-      let expectedValue = "10";
-      if (PROTON_ENABLED) {
-        expectedValue = "3";
-        ntf = nb.getNotificationWithValue(expectedValue);
-      }
+      let expectedValue = "3";
+      ntf = nb.getNotificationWithValue(expectedValue);
       is(nb.currentNotification, ntf, "appendNotification last notification");
       is(nb.currentNotification.getAttribute("value"), expectedValue, "appendNotification order");
       return 1;
@@ -430,35 +424,10 @@ var tests =
     // test closing notifications to make sure that the current notification is still set properly
     repeat: true,
     test(nb, testidx) {
-      if (PROTON_ENABLED) {
-        this.repeat = false;
-        return undefined;
-      }
-
-      switch (testidx) {
-        case 1:
-          nb.getNotificationWithValue("10").close();
-          return [1, 9];
-        case 2:
-          nb.removeNotification(nb.getNotificationWithValue("9"));
-          return [2, 8];
-        case 3:
-          nb.removeCurrentNotification();
-          return [3, 7];
-        case 4:
-          nb.getNotificationWithValue("6").close();
-          return [4, 7];
-        case 5:
-          nb.removeNotification(nb.getNotificationWithValue("5"));
-          return [5, 7];
-        case 6:
-          nb.removeCurrentNotification();
-          return [6, 4];
-      }
-      return testidx;
+      this.repeat = false;
+      return undefined;
     },
     result(nb, arr) {
-      if (PROTON_ENABLED) {
         let notificationOrder = [4, 7, 2, 8, 5, 6, 1, 9, 10, 3];
         let allNotificationValues = [...nb.stack.children].map(n => n.getAttribute("value"));
         is(allNotificationValues.length, notificationOrder.length, "Expected number of notifications");
@@ -470,13 +439,6 @@ var tests =
           );
         }
         return undefined;
-      }
-      // arr is [testindex, expectedvalue]
-      is(nb.currentNotification.getAttribute("value"), "" + arr[1], "close order " + arr[0]);
-      is(nb.allNotifications.length, 10 - arr[0], "close order " + arr[0] + " count");
-      if (arr[0] == 6)
-        this.repeat = false;
-      return ++arr[0];
     }
   },
   {
@@ -564,17 +526,13 @@ function testtag_notification_State(nb, ntf, testid, label, value, image, priori
 
   is(ntf.getAttribute("type"), type, testid + " notification type");
 
-  if (PROTON_ENABLED) {
-    let icons = {
-      info: "chrome://global/skin/icons/info-filled.svg",
-      warning: "chrome://global/skin/icons/warning.svg",
-      critical: "chrome://global/skin/icons/error.svg",
-    };
-    let icon = icons[type];
-    is(getComputedStyle(ntf.messageImage, "::after").content, `url("${icon}")`, "notification image is set");
-  } else {
-    is(ntf.messageImage.getAttribute("src"), image, testid + " notification image");
-  }
+  let icons = {
+    info: "chrome://global/skin/icons/info-filled.svg",
+    warning: "chrome://global/skin/icons/warning.svg",
+    critical: "chrome://global/skin/icons/error.svg",
+  };
+  let icon = icons[type];
+  is(getComputedStyle(ntf.messageImage, "::after").content, `url("${icon}")`, "notification image is set");
 }
 
 function checkPopupTest(nb, ntf)
@@ -585,11 +543,7 @@ function checkPopupTest(nb, ntf)
     var evt = new Event("");
     ntf.dispatchEvent(evt);
     evt.target.buttonInfo = testtag_notificationbox_buttons[0];
-    if (PROTON_ENABLED) {
-      ntf.handleEvent(evt);
-    } else {
-      ntf._doButtonCommand(evt);
-    }
+    ntf.handleEvent(evt);
   }
 }
 

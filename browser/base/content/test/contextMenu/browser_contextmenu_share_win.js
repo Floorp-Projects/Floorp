@@ -10,13 +10,6 @@ const BASE = getRootDirectory(gTestPath).replace(
 );
 const TEST_URL = BASE + "browser_contextmenu_shareurl.html";
 
-// Setup.
-add_task(async function setup() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.proton.enabled", true]],
-  });
-});
-
 // Setup spies for observing function calls from MacSharingService
 let shareUrlSpy = sinon.spy();
 

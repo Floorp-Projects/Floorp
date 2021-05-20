@@ -15,7 +15,6 @@ ChromeUtils.defineModuleGetter(
   "resource:///modules/HomePage.jsm"
 );
 
-const kPrefProtonToolbarEnabled = "browser.proton.enabled";
 const kPrefProtonToolbarVersion = "browser.proton.toolbar.version";
 const kPrefHomeButtonUsed = "browser.engagement.home-button.has-used";
 const kPrefLibraryButtonUsed = "browser.engagement.library-button.has-used";
@@ -112,7 +111,7 @@ add_task(async function testButtonRemoval() {
   let tests = [
     // Proton enabled without home and library engagement
     {
-      prefs: [[kPrefProtonToolbarEnabled, true]],
+      prefs: [],
       actions: {
         shouldRemoveHomeButton: true,
         shouldRemoveLibraryButton: true,
@@ -122,10 +121,7 @@ add_task(async function testButtonRemoval() {
     },
     // Proton enabled with home engagement
     {
-      prefs: [
-        [kPrefProtonToolbarEnabled, true],
-        [kPrefHomeButtonUsed, true],
-      ],
+      prefs: [[kPrefHomeButtonUsed, true]],
       actions: {
         shouldRemoveHomeButton: false,
         shouldRemoveLibraryButton: true,
@@ -133,19 +129,9 @@ add_task(async function testButtonRemoval() {
         shouldUpdateVersion: true,
       },
     },
-    // Proton disabled
-    {
-      prefs: [[kPrefProtonToolbarEnabled, false]],
-      actions: {
-        shouldRemoveHomeButton: false,
-        shouldRemoveLibraryButton: false,
-        shouldRemoveSidebarButton: false,
-        shouldUpdateVersion: false,
-      },
-    },
     // Proton enabled with custom homepage
     {
-      prefs: [[kPrefProtonToolbarEnabled, true]],
+      prefs: [],
       actions: {
         shouldRemoveHomeButton: false,
         shouldRemoveLibraryButton: true,
@@ -158,10 +144,7 @@ add_task(async function testButtonRemoval() {
     },
     // Proton enabled with library engagement
     {
-      prefs: [
-        [kPrefProtonToolbarEnabled, true],
-        [kPrefLibraryButtonUsed, true],
-      ],
+      prefs: [[kPrefLibraryButtonUsed, true]],
       actions: {
         shouldRemoveHomeButton: true,
         shouldRemoveLibraryButton: false,
@@ -171,10 +154,7 @@ add_task(async function testButtonRemoval() {
     },
     // Proton enabled with sidebar engagement
     {
-      prefs: [
-        [kPrefProtonToolbarEnabled, true],
-        [kPrefSidebarButtonUsed, true],
-      ],
+      prefs: [[kPrefSidebarButtonUsed, true]],
       actions: {
         shouldRemoveHomeButton: true,
         shouldRemoveLibraryButton: true,
@@ -202,10 +182,7 @@ add_task(async function testButtonRemoval() {
  */
 add_task(async function testNullSavedState() {
   await SpecialPowers.pushPrefEnv({
-    set: [
-      [kPrefProtonToolbarVersion, 0],
-      [kPrefProtonToolbarEnabled, true],
-    ],
+    set: [[kPrefProtonToolbarVersion, 0]],
   });
   let oldState = CustomizableUIBSPass.gSavedState;
 
@@ -250,10 +227,7 @@ add_task(async function testNullSavedState() {
  */
 add_task(async function testNoNavbarPlacements() {
   await SpecialPowers.pushPrefEnv({
-    set: [
-      [kPrefProtonToolbarVersion, 0],
-      [kPrefProtonToolbarEnabled, true],
-    ],
+    set: [[kPrefProtonToolbarVersion, 0]],
   });
 
   let oldState = CustomizableUIBSPass.gSavedState;
@@ -284,10 +258,7 @@ add_task(async function testNoNavbarPlacements() {
  */
 add_task(async function testNullPlacements() {
   await SpecialPowers.pushPrefEnv({
-    set: [
-      [kPrefProtonToolbarVersion, 0],
-      [kPrefProtonToolbarEnabled, true],
-    ],
+    set: [[kPrefProtonToolbarVersion, 0]],
   });
 
   let oldState = CustomizableUIBSPass.gSavedState;

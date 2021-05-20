@@ -12,12 +12,6 @@ async function addNotification(box, label, value, priorityName) {
   return notification;
 }
 
-add_task(async function setup() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.proton.enabled", true]],
-  });
-});
-
 add_task(async function testStackingOrder() {
   const tabNotificationBox = gBrowser.getNotificationBox();
   ok(

@@ -36,7 +36,6 @@ add_task(async function proton_shows_prompt() {
   await SpecialPowers.pushPrefEnv({
     set: [
       [CHECK_PREF, true],
-      ["browser.proton.enabled", true],
       ["browser.shell.didSkipDefaultBrowserCheckOnFirstRun", true],
     ],
   });
