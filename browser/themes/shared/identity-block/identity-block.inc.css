@@ -193,15 +193,21 @@
 #tracking-protection-icon,
 .notification-anchor-icon,
 #blocked-permissions-container > .blocked-permission-icon {
-  width: 16px;
-  height: 16px;
   -moz-context-properties: fill, fill-opacity;
 }
 
 .sharing-icon,
 #identity-icon,
+#permissions-granted-icon,
 #tracking-protection-icon,
-.notification-anchor-icon,
+#blocked-permissions-container > .blocked-permission-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.sharing-icon,
+#identity-icon,
+#tracking-protection-icon,
 #blocked-permissions-container > .blocked-permission-icon {
   margin-inline-start: 4px;
 }

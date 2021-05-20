@@ -58,10 +58,6 @@ panel[type="arrow"][side="right"] {
 #BMB_bookmarksPopup {
   margin-top: -4px; /* Overrides value from panelUI.inc.css */
 }
-
-#notification-popup {
-  margin-top: 5px; /* Overrides value from panelUI.inc.css */
-}
 } /** END Proton **/
 
 panelmultiview .toolbaritem-combined-buttons > spacer.before-label {
