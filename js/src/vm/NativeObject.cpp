@@ -1535,8 +1535,7 @@ bool js::NativeDefineProperty(JSContext* cx, HandleNativeObject obj,
       }
 
       MOZ_ASSERT(!cx->isHelperThreadContext());
-      return ArraySetLength(cx, arr, id, desc_.attributes(), desc_.value(),
-                            result);
+      return ArraySetLength(cx, arr, id, desc_, result);
     }
 
     // 9.4.2.1 step 3. Don't extend a fixed-length array.
@@ -2456,10 +2455,16 @@ bool js::SetPropertyByDefining(JSContext* cx, HandleId id, HandleValue v,
   }
 
   // Steps 5.e.iii-iv. and 5.f.i. Define the new data property.
-  unsigned attrs = existing ? JSPROP_IGNORE_ENUMERATE | JSPROP_IGNORE_READONLY |
-                                  JSPROP_IGNORE_PERMANENT
-                            : JSPROP_ENUMERATE;
-  return DefineDataProperty(cx, receiver, id, v, attrs, result);
+  Rooted<PropertyDescriptor> desc(cx);
+  if (existing) {
+    desc = PropertyDescriptor::Empty();
+    desc.setValue(v);
+  } else {
+    desc = PropertyDescriptor::Data(v, {JS::PropertyAttribute::Configurable,
+                                        JS::PropertyAttribute::Enumerable,
+                                        JS::PropertyAttribute::Writable});
+  }
+  return DefineProperty(cx, receiver, id, desc, result);
 }
 
 // When setting |id| for |receiver| and |obj| has no property for id, continue
