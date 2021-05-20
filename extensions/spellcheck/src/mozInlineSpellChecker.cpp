@@ -34,6 +34,7 @@
 
 #include "mozInlineSpellChecker.h"
 
+#include "mozilla/Assertions.h"
 #include "mozilla/EditAction.h"
 #include "mozilla/EditorSpellCheck.h"
 #include "mozilla/EditorUtils.h"
@@ -1269,25 +1270,30 @@ nsresult mozInlineSpellChecker::DoSpellCheckSelection(
 
 class mozInlineSpellChecker::SpellCheckerTimeSlice {
  public:
+  /**
+   * @param aStatus must be non-nullptr.
+   */
   SpellCheckerTimeSlice(mozInlineSpellChecker& aInlineSpellChecker,
                         mozInlineSpellWordUtil& aWordUtil,
-                        mozilla::dom::Selection* aSpellCheckSelection,
+                        mozilla::dom::Selection& aSpellCheckSelection,
                         const mozilla::UniquePtr<mozInlineSpellStatus>& aStatus,
-                        bool* aDoneChecking)
+                        bool& aDoneChecking)
       : mInlineSpellChecker{aInlineSpellChecker},
         mWordUtil{aWordUtil},
         mSpellCheckSelection{aSpellCheckSelection},
         mStatus{aStatus},
-        mDoneChecking{aDoneChecking} {}
+        mDoneChecking{aDoneChecking} {
+    MOZ_ASSERT(aStatus);
+  }
 
   [[nodiscard]] nsresult Execute();
 
  private:
   mozInlineSpellChecker& mInlineSpellChecker;
   mozInlineSpellWordUtil& mWordUtil;
-  mozilla::dom::Selection* mSpellCheckSelection;
+  mozilla::dom::Selection& mSpellCheckSelection;
   const mozilla::UniquePtr<mozInlineSpellStatus>& mStatus;
-  bool* mDoneChecking;
+  bool& mDoneChecking;
 };
 
 // mozInlineSpellChecker::SpellCheckerTimeSlice::Execute
@@ -1324,7 +1330,7 @@ class mozInlineSpellChecker::SpellCheckerTimeSlice {
 nsresult mozInlineSpellChecker::SpellCheckerTimeSlice::Execute() {
   MOZ_LOG(sInlineSpellCheckerLog, LogLevel::Debug, ("%s", __FUNCTION__));
 
-  *mDoneChecking = true;
+  mDoneChecking = true;
 
   if (NS_WARN_IF(!mInlineSpellChecker.mSpellCheck)) {
     return NS_ERROR_NOT_INITIALIZED;
@@ -1348,7 +1354,7 @@ nsresult mozInlineSpellChecker::SpellCheckerTimeSlice::Execute() {
   // see if the selection has any ranges, if not, then we can optimize checking
   // range inclusion later (we have no ranges when we are initially checking or
   // when there are no misspelled words yet).
-  int32_t originalRangeCount = mSpellCheckSelection->RangeCount();
+  int32_t originalRangeCount = mSpellCheckSelection.RangeCount();
 
   // set the starting DOM position to be the beginning of our range
   {
@@ -1409,7 +1415,7 @@ nsresult mozInlineSpellChecker::SpellCheckerTimeSlice::Execute() {
           ("%s: we have run out of time, schedule next round.", __FUNCTION__));
 
       mInlineSpellChecker.CheckWordsAndAddRangesForMisspellings(
-          mSpellCheckSelection, words, std::move(checkRanges));
+          &mSpellCheckSelection, words, std::move(checkRanges));
 
       // move the range to encompass the stuff that needs checking.
       nsresult rv = mStatus->mRange->SetStart(beginNode, beginOffset);
@@ -1419,7 +1425,7 @@ nsresult mozInlineSpellChecker::SpellCheckerTimeSlice::Execute() {
         // of a word, just ignore this situation and assume we're done.
         return NS_OK;
       }
-      *mDoneChecking = false;
+      mDoneChecking = false;
       return NS_OK;
     }
 
@@ -1441,11 +1447,11 @@ nsresult mozInlineSpellChecker::SpellCheckerTimeSlice::Execute() {
                 ("%s: removing ranges for some interval.", __FUNCTION__));
 
         nsTArray<RefPtr<nsRange>> ranges;
-        mSpellCheckSelection->GetRangesForInterval(
+        mSpellCheckSelection.GetRangesForInterval(
             *beginNode, beginOffset, *endNode, endOffset, true, ranges, erv);
         ENSURE_SUCCESS(erv, erv.StealNSResult());
         for (uint32_t i = 0; i < ranges.Length(); i++) {
-          mInlineSpellChecker.RemoveRange(mSpellCheckSelection, ranges[i]);
+          mInlineSpellChecker.RemoveRange(&mSpellCheckSelection, ranges[i]);
         }
       }
     }
@@ -1480,7 +1486,7 @@ nsresult mozInlineSpellChecker::SpellCheckerTimeSlice::Execute() {
     wordsChecked++;
     if (words.Length() >= requestChunkSize) {
       mInlineSpellChecker.CheckWordsAndAddRangesForMisspellings(
-          mSpellCheckSelection, words, std::move(checkRanges));
+          &mSpellCheckSelection, words, std::move(checkRanges));
       // Set new empty data for spellcheck range in DOM to avoid
       // clang-tidy detection.
       words.Clear();
@@ -1489,7 +1495,7 @@ nsresult mozInlineSpellChecker::SpellCheckerTimeSlice::Execute() {
   }
 
   mInlineSpellChecker.CheckWordsAndAddRangesForMisspellings(
-      mSpellCheckSelection, words, std::move(checkRanges));
+      &mSpellCheckSelection, words, std::move(checkRanges));
 
   return NS_OK;
 }
@@ -1497,8 +1503,10 @@ nsresult mozInlineSpellChecker::SpellCheckerTimeSlice::Execute() {
 nsresult mozInlineSpellChecker::DoSpellCheck(
     mozInlineSpellWordUtil& aWordUtil, Selection* aSpellCheckSelection,
     const UniquePtr<mozInlineSpellStatus>& aStatus, bool* aDoneChecking) {
+  MOZ_ASSERT(aDoneChecking);
+
   SpellCheckerTimeSlice spellCheckerTimeSlice{
-      *this, aWordUtil, aSpellCheckSelection, aStatus, aDoneChecking};
+      *this, aWordUtil, *aSpellCheckSelection, aStatus, *aDoneChecking};
 
   return spellCheckerTimeSlice.Execute();
 }
