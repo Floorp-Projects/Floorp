@@ -4,6 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/SandboxSettings.h"
 #include "mozISandboxSettings.h"
 
 #include "mozilla/Components.h"
@@ -13,9 +14,70 @@
 
 #include "prenv.h"
 
+#ifdef XP_WIN
+#  include "mozilla/gfx/gfxVars.h"
+#  include "mozilla/WindowsVersion.h"
+
+#endif  // XP_WIN
+
 using namespace mozilla;
 
 namespace mozilla {
+
+const char* ContentWin32kLockdownStateToString(
+    ContentWin32kLockdownState aValue) {
+  switch (aValue) {
+    case ContentWin32kLockdownState::LockdownEnabled:
+      return "Win32k Lockdown enabled";
+
+    case ContentWin32kLockdownState::MissingWebRender:
+      return "Win32k Lockdown disabled -- Missing WebRender";
+
+    case ContentWin32kLockdownState::OperatingSystemNotSupported:
+      return "Win32k Lockdown disabled -- Operating system not supported";
+
+    case ContentWin32kLockdownState::PrefNotSet:
+      return "Win32k Lockdown disabled -- Preference not set";
+  }
+
+  MOZ_CRASH("Should never reach here");
+}
+
+ContentWin32kLockdownState GetContentWin32kLockdownState() {
+#ifdef XP_WIN
+  static ContentWin32kLockdownState result = [] {
+    if (!IsWin8OrLater()) {
+      return ContentWin32kLockdownState::OperatingSystemNotSupported;
+    }
+
+    // Win32k Lockdown requires WebRender, but WR is not currently guaranteed
+    // on all computers. It can also fail to initialize and fallback to
+    // non-WR render path.
+    //
+    // We don't want a situation where "Win32k Lockdown + No WR" occurs
+    // without the user explicitly requesting unsupported behavior.
+    if (!gfx::gfxVars::UseWebRender()) {
+      return ContentWin32kLockdownState::MissingWebRender;
+    }
+
+    // It's important that this goes last, as we'd like to know in
+    // telemetry and crash reporting if the only thing holding the user
+    // back from Win32k Lockdown is the-lack-of-asking-for-it
+    if (!StaticPrefs::security_sandbox_content_win32k_disable()) {
+      return ContentWin32kLockdownState::PrefNotSet;
+    }
+
+    return ContentWin32kLockdownState::LockdownEnabled;
+  }();
+
+  return result;
+
+#else  // XP_WIN
+
+  return ContentWin32kLockdownState::OperatingSystemNotSupported;
+
+#endif  // XP_WIN
+}
 
 int GetEffectiveContentSandboxLevel() {
   if (PR_GetEnv("MOZ_DISABLE_CONTENT_SANDBOX")) {
