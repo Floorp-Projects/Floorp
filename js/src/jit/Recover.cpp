@@ -1883,8 +1883,10 @@ bool RSetArrayLength::recover(JSContext* cx, SnapshotIterator& iter) const {
   RootedValue len(cx, iter.read());
 
   RootedId id(cx, NameToId(cx->names().length));
+  Rooted<PropertyDescriptor> desc(
+      cx, PropertyDescriptor::Data(len, JS::PropertyAttribute::Writable));
   ObjectOpResult error;
-  if (!ArraySetLength(cx, obj, id, JSPROP_PERMANENT, len, error)) {
+  if (!ArraySetLength(cx, obj, id, desc, error)) {
     return false;
   }
 
