@@ -621,7 +621,7 @@ package org.mozilla.geckoview {
     method @NonNull @UiThread public static synchronized GeckoRuntime getDefault(@NonNull Context);
     method @Nullable @UiThread public GeckoRuntime.Delegate getDelegate();
     method @Deprecated @DeprecationSchedule(version=93,id="login-storage") @Nullable @UiThread public Autocomplete.LoginStorageDelegate getLoginStorageDelegate();
-    method @Nullable @UiThread public File getProfileDir();
+    method @Deprecated @DeprecationSchedule(id="get-profile-dir",version=93) @Nullable @UiThread public File getProfileDir();
     method @NonNull @UiThread public ProfilerController getProfilerController();
     method @AnyThread @NonNull public GeckoRuntimeSettings getSettings();
     method @NonNull @UiThread public StorageController getStorageController();
