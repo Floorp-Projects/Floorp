@@ -5,12 +5,12 @@
 /**
  * ListFormat internal properties.
  */
-function listFormatInternalProperties_localeData() {
+function listFormatLocaleData() {
     // ListFormat don't support any extension keys.
     return {};
 }
 var listFormatInternalProperties = {
-    localeData: listFormatInternalProperties_localeData,
+    localeData: listFormatLocaleData,
     relevantExtensionKeys: []
 };
 
