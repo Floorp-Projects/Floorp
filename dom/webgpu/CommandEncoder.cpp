@@ -170,16 +170,12 @@ already_AddRefed<RenderPassEncoder> CommandEncoder::BeginRenderPass(
     const dom::GPURenderPassDescriptor& aDesc) {
   for (const auto& at : aDesc.mColorAttachments) {
     auto* targetCanvasElement = at.mView->GetTargetCanvasElement();
-    if (!targetCanvasElement && at.mResolveTarget.WasPassed()) {
+    if (targetCanvasElement) {
+      mTargetCanvases.AppendElement(targetCanvasElement);
+    }
+    if (at.mResolveTarget.WasPassed()) {
       targetCanvasElement = at.mResolveTarget.Value().GetTargetCanvasElement();
-    }
-    if (!targetCanvasElement) {
-      continue;
-    }
-    if (mTargetCanvasElement) {
-      NS_WARNING("Command encoder touches more than one canvas");
-    } else {
-      mTargetCanvasElement = targetCanvasElement;
+      mTargetCanvases.AppendElement(targetCanvasElement);
     }
   }
 
@@ -217,7 +213,7 @@ already_AddRefed<CommandBuffer> CommandEncoder::Finish(
     id = mBridge->CommandEncoderFinish(mId, mParent->mId, aDesc);
   }
   RefPtr<CommandBuffer> comb =
-      new CommandBuffer(mParent, id, mTargetCanvasElement);
+      new CommandBuffer(mParent, id, std::move(mTargetCanvases));
   return comb.forget();
 }
 
