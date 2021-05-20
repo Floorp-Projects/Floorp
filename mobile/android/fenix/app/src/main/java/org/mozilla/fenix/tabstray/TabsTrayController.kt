@@ -18,23 +18,20 @@ import org.mozilla.fenix.tabtray.TabTrayDialogFragmentDirections
 interface TabsTrayController {
 
     /**
-     * Called when user clicks the new tab button.
+     * Called to open a new tab.
      */
-    fun onNewTabTapped(isPrivate: Boolean)
+    fun handleOpeningNewTab(isPrivate: Boolean)
 }
 
 class DefaultTabsTrayController(
-    private val store: TabsTrayStore,
     private val browsingModeManager: BrowsingModeManager,
     private val navController: NavController,
     private val profiler: Profiler?,
     private val navigationInteractor: NavigationInteractor,
     private val metrics: MetricController,
-    private val ioScope: CoroutineScope,
-    private val accountManager: FxaAccountManager
 ) : TabsTrayController {
 
-    override fun onNewTabTapped(isPrivate: Boolean) {
+    override fun handleOpeningNewTab(isPrivate: Boolean) {
         val startTime = profiler?.getProfilerTime()
         browsingModeManager.mode = BrowsingMode.fromBoolean(isPrivate)
         navController.navigateBlockingForAsyncNavGraph(

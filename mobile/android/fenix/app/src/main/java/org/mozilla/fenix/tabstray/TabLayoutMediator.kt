@@ -78,7 +78,7 @@ internal class TabLayoutObserver(
             true
         }
 
-        interactor.setCurrentTrayPosition(tab.position, animate)
+        interactor.onTrayPositionSelected(tab.position, animate)
 
         Do exhaustive when (Page.positionToPage(tab.position)) {
             Page.NormalTabs -> metrics.track(Event.TabsTrayNormalModeTapped)

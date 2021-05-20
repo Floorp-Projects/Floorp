@@ -37,7 +37,7 @@ class TabLayoutObserverTest {
 
         store.waitUntilIdle()
 
-        verify { interactor.setCurrentTrayPosition(1, false) }
+        verify { interactor.onTrayPositionSelected(1, false) }
         verify { metrics.track(Event.TabsTrayPrivateModeTapped) }
 
         every { tab.position } returns 0
@@ -46,7 +46,7 @@ class TabLayoutObserverTest {
 
         store.waitUntilIdle()
 
-        verify { interactor.setCurrentTrayPosition(0, true) }
+        verify { interactor.onTrayPositionSelected(0, true) }
         verify { metrics.track(Event.TabsTrayNormalModeTapped) }
 
         every { tab.position } returns 2
@@ -55,7 +55,7 @@ class TabLayoutObserverTest {
 
         store.waitUntilIdle()
 
-        verify { interactor.setCurrentTrayPosition(2, true) }
+        verify { interactor.onTrayPositionSelected(2, true) }
         verify { metrics.track(Event.TabsTraySyncedModeTapped) }
     }
 
@@ -67,12 +67,12 @@ class TabLayoutObserverTest {
 
         observer.onTabSelected(tab)
 
-        verify { interactor.setCurrentTrayPosition(1, false) }
+        verify { interactor.onTrayPositionSelected(1, false) }
         verify { metrics.track(Event.TabsTrayPrivateModeTapped) }
 
         observer.onTabSelected(tab)
 
-        verify { interactor.setCurrentTrayPosition(1, true) }
+        verify { interactor.onTrayPositionSelected(1, true) }
         verify { metrics.track(Event.TabsTrayPrivateModeTapped) }
     }
 }

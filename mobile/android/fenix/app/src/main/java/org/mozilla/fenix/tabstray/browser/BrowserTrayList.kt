@@ -36,7 +36,7 @@ class BrowserTrayList @JvmOverloads constructor(
             context.components.analytics.metrics,
             context.components.useCases.tabsUseCases.selectTab
         ) {
-            interactor.navigateToBrowser()
+            interactor.onBrowserTabSelected()
         }
 
         val removeTabUseCase = RemoveTabUseCaseWrapper(

@@ -29,7 +29,6 @@ import kotlinx.android.synthetic.main.tabstray_multiselect_items.*
 import kotlinx.android.synthetic.main.tabstray_multiselect_items.view.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.plus
 import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.selector.getNormalOrPrivateTabs
 import mozilla.components.browser.state.selector.normalTabs
@@ -124,14 +123,11 @@ class TabsTrayFragment : AppCompatDialogFragment(), TabsTrayInteractor {
             )
 
         tabsTrayController = DefaultTabsTrayController(
-            store = tabsTrayStore,
             browsingModeManager = activity.browsingModeManager,
             navController = findNavController(),
             navigationInteractor = navigationInteractor,
             profiler = requireComponents.core.engine.profiler,
-            accountManager = requireComponents.backgroundServices.accountManager,
             metrics = requireComponents.analytics.metrics,
-            ioScope = lifecycleScope + Dispatchers.IO
         )
 
         browserTrayInteractor = DefaultBrowserTrayInteractor(
@@ -262,13 +258,13 @@ class TabsTrayFragment : AppCompatDialogFragment(), TabsTrayInteractor {
         )
     }
 
-    override fun setCurrentTrayPosition(position: Int, smoothScroll: Boolean) {
+    override fun onTrayPositionSelected(position: Int, smoothScroll: Boolean) {
         tabsTray.setCurrentItem(position, smoothScroll)
         tab_layout.getTabAt(position)?.select()
         tabsTrayStore.dispatch(TabsTrayAction.PageSelected(Page.positionToPage(position)))
     }
 
-    override fun navigateToBrowser() {
+    override fun onBrowserTabSelected() {
         dismissTabsTray()
 
         val navController = findNavController()

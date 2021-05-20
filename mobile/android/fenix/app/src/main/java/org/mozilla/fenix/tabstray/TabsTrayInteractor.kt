@@ -13,12 +13,12 @@ interface TabsTrayInteractor {
      * @param position The position on the tray to focus.
      * @param smoothScroll If true, animate the scrolling from the current tab to [position].
      */
-    fun setCurrentTrayPosition(position: Int, smoothScroll: Boolean)
+    fun onTrayPositionSelected(position: Int, smoothScroll: Boolean)
 
     /**
      * Dismisses the tabs tray and navigates to the browser.
      */
-    fun navigateToBrowser()
+    fun onBrowserTabSelected()
 
     /**
      * Invoked when a tab is removed from the tabs tray with the given [tabId].

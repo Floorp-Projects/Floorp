@@ -57,7 +57,7 @@ class DefaultBrowserTrayInteractor(
 
     private val selectTabWrapper by lazy {
         SelectTabUseCaseWrapper(metrics, selectTab) {
-            trayInteractor.navigateToBrowser()
+            trayInteractor.onBrowserTabSelected()
         }
     }
 
@@ -73,7 +73,6 @@ class DefaultBrowserTrayInteractor(
      */
     override fun open(item: Tab) {
         selectTabWrapper.invoke(item.id)
-        trayInteractor.navigateToBrowser()
     }
 
     /**
@@ -133,6 +132,6 @@ class DefaultBrowserTrayInteractor(
      * See [BrowserTrayInteractor.onFabClicked]
      */
     override fun onFabClicked(isPrivate: Boolean) {
-        controller.onNewTabTapped(isPrivate)
+        controller.handleOpeningNewTab(isPrivate)
     }
 }
