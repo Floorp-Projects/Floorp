@@ -82,7 +82,7 @@ def iter_elf_symbols(target, binary, all=False):
         ty = ELF
     assert ty == ELF
     for line in get_output(
-        target["readelf"], "--syms" if all else "--dyn-syms", binary
+        target["readelf"], "--wide", "--syms" if all else "--dyn-syms", binary
     ):
         data = line.split()
         if not (len(data) >= 8 and data[0].endswith(":") and data[0][:-1].isdigit()):
