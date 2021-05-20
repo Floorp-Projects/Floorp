@@ -513,6 +513,13 @@ nsHttpServer.prototype = {
     this._start(port, "localhost");
   },
 
+  //
+  // see nsIHttpServer.start_ipv6
+  //
+  start_ipv6(port) {
+    this._start(port, "[::1]");
+  },
+
   _start(port, host) {
     if (this._socket) {
       throw Components.Exception("", Cr.NS_ERROR_ALREADY_INITIALIZED);
