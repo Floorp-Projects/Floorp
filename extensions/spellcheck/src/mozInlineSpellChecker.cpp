@@ -35,6 +35,7 @@
 #include "mozInlineSpellChecker.h"
 
 #include "mozilla/Assertions.h"
+#include "mozilla/Attributes.h"
 #include "mozilla/EditAction.h"
 #include "mozilla/EditorSpellCheck.h"
 #include "mozilla/EditorUtils.h"
@@ -1268,7 +1269,7 @@ nsresult mozInlineSpellChecker::DoSpellCheckSelection(
   return NS_OK;
 }
 
-class mozInlineSpellChecker::SpellCheckerTimeSlice {
+class MOZ_STACK_CLASS mozInlineSpellChecker::SpellCheckerTimeSlice {
  public:
   /**
    * @param aStatus must be non-nullptr.
