@@ -69,8 +69,7 @@ class CommandEncoder final : public ObjectBase, public ChildOf<Device> {
   void Cleanup();
 
   RefPtr<WebGPUChild> mBridge;
-  // TODO: support multiple target canvases per command encoder
-  WeakPtr<dom::HTMLCanvasElement> mTargetCanvasElement;
+  nsTArray<WeakPtr<dom::HTMLCanvasElement>> mTargetCanvases;
 
  public:
   void EndComputePass(ffi::WGPUComputePass& aPass, ErrorResult& aRv);
