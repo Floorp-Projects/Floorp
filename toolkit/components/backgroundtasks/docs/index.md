@@ -31,12 +31,15 @@ async function runBackgroundTask(commandLine) {
 
 When invoked like `--backgroundtask TASKNAME EXITCODE`, this task will simply complete with the exit code given on the command line.
 
+Task module can optionally export an integer value called `backgroundTaskTimeoutSec`, which will control how long the task can run before it times out. If no value is specified, the timeout value stored in the pref `toolkit.backgroundtasks.defaultTimeoutSec` will be used.
+
 ## Special exit codes
 
-The exit codes 2 and 3 have special meaning:
+The exit codes 2-4 have special meaning:
 
 * Exit code 2 (`EXIT_CODE.NOT_FOUND`) means the background task with the given `TASKNAME` was not found or could not be loaded.
 * Exit code 3 (`EXIT_CODE.EXCEPTION`) means the background task invocation rejected with an exception.
+* Exit code 4 (`EXIT_CODE.TIMEOUT`) means that the background task timed out before it could complete.
 
 See [`BackgroundTasksManager.EXIT_CODE`](https://searchfox.org/mozilla-central/source/toolkit/components/backgroundtasks/BackgroundTasksManager.jsm) for details.
 

@@ -171,6 +171,7 @@ pref("app.update.langpack.enabled", true);
 
 #if defined(MOZ_UPDATE_AGENT)
   pref("app.update.background.loglevel", "error");
+  pref("app.update.background.timeoutSec", 600);
   // If set to true, on Windows, the browser will attempt to schedule OS-level
   // background tasks to update itself even when it is not running.  This pref
   // is special: any profile that believes itself the default profile will
@@ -187,6 +188,12 @@ pref("app.update.langpack.enabled", true);
 #endif
   // By default, check for updates when the browser is not running every 7 hours.
   pref("app.update.background.interval", 25200);
+#endif
+
+#if defined(MOZ_BACKGROUNDTASKS)
+  // The amount of time, in seconds, before background tasks time out and exit.
+  // Tasks can override this default (10 minutes).
+  pref("toolkit.backgroundtasks.defaultTimeoutSec", 600);
 #endif
 
 // Symmetric (can be overridden by individual extensions) update preferences.
