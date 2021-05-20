@@ -1,0 +1,182 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for permissions</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <link rel="stylesheet" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+</head>
+<body>
+  <style>
+    img {
+      -moz-context-properties: fill;
+      fill: green;
+    }
+
+    img, div.ref {
+      width: 100px;
+      height: 100px;
+    }
+
+    div#green {
+      background: green;
+    }
+
+    div#red {
+      background: red;
+    }
+  </style>
+  <h3>Testing on: <span id="test-params"></span></h3>
+  <table>
+   <thead>
+     <tr>
+       <th>webext image</th>
+       <th>allowed ref</th>
+       <th>disallowed ref</th>
+    </tr>
+   </thead>
+   <tbody>
+     <tr>
+       <td>
+         <img id="actual">
+       </td>
+       <td>
+         <div id="green" class="ref"></div>
+       </td>
+       <td>
+         <div id="red" class="ref"></div>
+       </td>
+     </tr>
+   </tbody>
+  </table>
+
+<script type="text/javascript">
+"use strict";
+
+const { TestUtils } = SpecialPowers.Cu.import(
+  "resource://testing-common/TestUtils.jsm"
+);
+
+function screenshotPage(win, elementSelector) {
+  const el = win.document.querySelector(elementSelector);
+  return TestUtils.screenshotArea(el, win);
+}
+
+async function test_moz_extension_svg_context_fill({
+  addonId,
+  isPrivileged,
+  expectAllowed,
+}) {
+  // Include current test params in the rendered html page (to be included in failure
+  // screenshots).
+  document.querySelector("#test-params").textContent = JSON.stringify({
+    addonId,
+    isPrivileged,
+    expectAllowed,
+  });
+
+  const extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      applications: { gecko: { id: addonId } },
+    },
+    background() {
+      browser.test.sendMessage("svg-url", browser.runtime.getURL("context-fill-fallback-red.svg"));
+    },
+    isPrivileged,
+    files: {
+      "context-fill-fallback-red.svg": `
+        <svg xmlns="http://www.w3.org/2000/svg" version="1.1"
+             xmlns:xlink="http://www.w3.org/1999/xlink">
+          <rect height="100%" width="100%" fill="context-fill red" />
+        </svg>
+      `,
+    },
+  });
+
+  await extension.startup();
+
+  // Set the extension url on the img element part of the
+  // comparison table defined in the html part of this test file.
+  const svgURL = await extension.awaitMessage("svg-url");
+  document.querySelector("#actual").src = svgURL;
+
+  let screenshots;
+
+  // Wait until the svg context fill has been applied
+  // (unfortunately waiting for a document reflow does
+  // not seem to be enough).
+  const expectedColor = expectAllowed ? "green" : "red";
+  await TestUtils.waitForCondition(
+    async () => {
+      const result = await screenshotPage(window, "#actual");
+      const reference = await screenshotPage(window, `#${expectedColor}`);
+      screenshots = {result, reference};
+      return result == reference;
+    },
+    `Context-fill should be ${
+      expectAllowed ? "allowed" : "disallowed"
+    } (resulting in ${expectedColor}) on "${addonId}" extension`
+  );
+
+  // At least an assertion is required to prevent the test from
+  // failing.
+  is(
+    screenshots.result,
+    screenshots.reference,
+    "svg context-fill test completed, result does match reference"
+  );
+
+  await extension.unload();
+}
+
+add_task(async function test_allowed_on_privileged_ext() {
+  await test_moz_extension_svg_context_fill({
+    addonId: "privileged-addon@mochi.test",
+    isPrivileged: true,
+    expectAllowed: true,
+  });
+});
+
+add_task(async function test_disallowed_on_non_privileged_ext() {
+  await test_moz_extension_svg_context_fill({
+    addonId: "non-privileged-arbitrary-addon-id@mochi.test",
+    isPrivileged: false,
+    expectAllowed: false,
+  });
+});
+
+add_task(async function test_allowed_on_privileged_ext_with_mozilla_id() {
+  await test_moz_extension_svg_context_fill({
+    addonId: "privileged-addon@mozilla.org",
+    isPrivileged: true,
+    expectAllowed: true,
+  });
+
+  await test_moz_extension_svg_context_fill({
+    addonId: "privileged-addon@mozilla.com",
+    isPrivileged: true,
+    expectAllowed: true,
+  });
+});
+
+// Bug 1710917 TODO: we may have to re-evalute this test (along with removing the
+// special case based on the addon id suffixes and replace it with some better
+// approach to be determined as part of that bug).
+add_task(async function test_allowed_on_non_privileged_ext_with_mozilla_id() {
+  await test_moz_extension_svg_context_fill({
+    addonId: "non-privileged-addon@mozilla.org",
+    isPrivileged: false,
+    expectAllowed: true,
+  });
+
+  await test_moz_extension_svg_context_fill({
+    addonId: "non-privileged-addon@mozilla.com",
+    isPrivileged: false,
+    expectAllowed: true,
+  });
+});
+</script>
+
+</body>
+</html>
