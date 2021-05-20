@@ -316,6 +316,8 @@ windows-qr-tests:
 
 windows7-qr-tests:
     - mochitest-browser-chrome
+    - mochitest-webgl1-core
+    - mochitest-webgl2-core
     - reftest
 
 windows32-qr-tests:
@@ -328,6 +330,8 @@ windows32-qr-tests:
     - test-verify
 
 windows-7-tests:
+    - cppunit
+    - gtest
     - mochitest-browser-chrome
     - mochitest-webgpu
     - reftest
@@ -335,8 +339,6 @@ windows-7-tests:
     - xpcshell
 
 windows32-tests:
-    - cppunit
-    - gtest
     - crashtest
     - firefox-ui-functional-local
     - firefox-ui-functional-remote
