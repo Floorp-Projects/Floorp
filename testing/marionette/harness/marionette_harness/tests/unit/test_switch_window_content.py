@@ -7,13 +7,19 @@ from __future__ import absolute_import
 import sys
 from unittest import skipIf
 
-from marionette_driver import By
+from six.moves.urllib.parse import quote
+
+from marionette_driver import By, Wait
 from marionette_driver.keys import Keys
 
 from marionette_harness import (
     MarionetteTestCase,
     WindowManagerMixin,
 )
+
+
+def inline(doc):
+    return "data:text/html;charset=utf-8,{}".format(quote(doc))
 
 
 class TestSwitchToWindowContent(WindowManagerMixin, MarionetteTestCase):
@@ -152,6 +158,41 @@ class TestSwitchToWindowContent(WindowManagerMixin, MarionetteTestCase):
         self.marionette.switch_to_window(self.start_tab)
         self.assertEqual(self.marionette.current_window_handle, self.start_tab)
         self.assertEqual(self.get_selected_tab_index(), self.selected_tab_index)
+
+    def test_switch_to_unloaded_tab(self):
+        first_page = inline("<p>foo")
+        second_page = inline("<p>bar")
+
+        self.assertEqual(len(self.marionette.window_handles), 1)
+        self.marionette.navigate(first_page)
+
+        new_tab = self.open_tab()
+        self.assertEqual(self.marionette.current_window_handle, self.start_tab)
+        self.assertEqual(self.get_selected_tab_index(), self.selected_tab_index)
+
+        self.marionette.switch_to_window(new_tab)
+        self.assertEqual(self.marionette.current_window_handle, new_tab)
+        self.assertNotEqual(self.get_selected_tab_index(), self.selected_tab_index)
+        self.marionette.navigate(second_page)
+
+        # The restart will cause the background tab to stay unloaded
+        self.marionette.restart(in_app=True)
+        self.assertEqual(len(self.marionette.window_handles), 2)
+
+        # Refresh window handles
+        window_handles = self.marionette.window_handles
+        self.assertEqual(len(window_handles), 2)
+
+        current_tab = self.marionette.current_window_handle
+        [other_tab] = filter(lambda handle: handle != current_tab, window_handles)
+
+        self.assertEqual(self.marionette.get_url(), second_page)
+
+        self.marionette.switch_to_window(other_tab)
+        Wait(self.marionette, timeout=5).until(
+            lambda _: self.marionette.get_url() == first_page,
+            message="Expected URL in the first tab has been loaded",
+        )
 
     def test_switch_from_content_to_chrome_window_should_not_change_selected_tab(self):
         new_tab = self.open_tab(focus=True)
