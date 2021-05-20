@@ -12,6 +12,13 @@
 interface mozISandboxSettings : nsISupports
 {
   readonly attribute long effectiveContentSandboxLevel;
+
+  /*
+   * The possible values for this are defined in the ContentWin32kLockdownState
+   * enum in security/sandbox/common/SandboxSettings.h
+   */
+  readonly attribute long contentWin32kLockdownState;
+  readonly attribute AString contentWin32kLockdownStateString;
 };
 
 %{ C++

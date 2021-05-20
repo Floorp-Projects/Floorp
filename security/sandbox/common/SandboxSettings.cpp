@@ -17,7 +17,7 @@
 #ifdef XP_WIN
 #  include "mozilla/gfx/gfxVars.h"
 #  include "mozilla/WindowsVersion.h"
-
+#  include "nsExceptionHandler.h"
 #endif  // XP_WIN
 
 using namespace mozilla;
@@ -46,28 +46,37 @@ const char* ContentWin32kLockdownStateToString(
 ContentWin32kLockdownState GetContentWin32kLockdownState() {
 #ifdef XP_WIN
   static ContentWin32kLockdownState result = [] {
-    if (!IsWin8OrLater()) {
-      return ContentWin32kLockdownState::OperatingSystemNotSupported;
-    }
+    ContentWin32kLockdownState state = [] {
+      if (!IsWin8OrLater()) {
+        return ContentWin32kLockdownState::OperatingSystemNotSupported;
+      }
 
-    // Win32k Lockdown requires WebRender, but WR is not currently guaranteed
-    // on all computers. It can also fail to initialize and fallback to
-    // non-WR render path.
-    //
-    // We don't want a situation where "Win32k Lockdown + No WR" occurs
-    // without the user explicitly requesting unsupported behavior.
-    if (!gfx::gfxVars::UseWebRender()) {
-      return ContentWin32kLockdownState::MissingWebRender;
-    }
+      // Win32k Lockdown requires WebRender, but WR is not currently guaranteed
+      // on all computers. It can also fail to initialize and fallback to
+      // non-WR render path.
+      //
+      // We don't want a situation where "Win32k Lockdown + No WR" occurs
+      // without the user explicitly requesting unsupported behavior.
+      if (!gfx::gfxVars::UseWebRender()) {
+        return ContentWin32kLockdownState::MissingWebRender;
+      }
 
-    // It's important that this goes last, as we'd like to know in
-    // telemetry and crash reporting if the only thing holding the user
-    // back from Win32k Lockdown is the-lack-of-asking-for-it
-    if (!StaticPrefs::security_sandbox_content_win32k_disable()) {
-      return ContentWin32kLockdownState::PrefNotSet;
-    }
+      // It's important that this goes last, as we'd like to know in
+      // telemetry and crash reporting if the only thing holding the user
+      // back from Win32k Lockdown is the-lack-of-asking-for-it
+      if (!StaticPrefs::security_sandbox_content_win32k_disable()) {
+        return ContentWin32kLockdownState::PrefNotSet;
+      }
 
-    return ContentWin32kLockdownState::LockdownEnabled;
+      return ContentWin32kLockdownState::LockdownEnabled;
+    }();
+
+    const char* stateStr = ContentWin32kLockdownStateToString(state);
+    CrashReporter::AnnotateCrashReport(
+        CrashReporter::Annotation::ContentSandboxWin32kState,
+        nsDependentCString(stateStr));
+
+    return state;
   }();
 
   return result;
@@ -146,6 +155,20 @@ NS_IMPL_ISUPPORTS(SandboxSettings, mozISandboxSettings)
 NS_IMETHODIMP SandboxSettings::GetEffectiveContentSandboxLevel(
     int32_t* aRetVal) {
   *aRetVal = mozilla::GetEffectiveContentSandboxLevel();
+  return NS_OK;
+}
+
+NS_IMETHODIMP SandboxSettings::GetContentWin32kLockdownState(int32_t* aRetVal) {
+  *aRetVal = static_cast<int32_t>(mozilla::GetContentWin32kLockdownState());
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+SandboxSettings::GetContentWin32kLockdownStateString(nsAString& aString) {
+  ContentWin32kLockdownState lockdownState =
+      mozilla::GetContentWin32kLockdownState();
+  aString = NS_ConvertASCIItoUTF16(
+      mozilla::ContentWin32kLockdownStateToString(lockdownState));
   return NS_OK;
 }
 
