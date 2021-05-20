@@ -1,0 +1,109 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=2100"/>
+  <title>Check that tall element wider than the viewport after zooming in doesn't scroll up</title>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <script type="application/javascript">
+
+async function test() {
+  let useTouchpad = (location.search == "?touchpad");
+
+  let resolution = getResolution();
+  ok(resolution > 0,
+     "The initial_resolution is " + resolution + ", which is some sane value");
+
+  // instant scroll down so the rect is roughly halfway down
+  window.scrollTo({
+    top: window.innerHeight * 3.5,
+    left: 0,
+    behavior: 'auto'
+  });
+
+  await promiseApzFlushedRepaints();
+
+  let scrollPos = window.scrollY;
+  ok(scrollPos > window.innerHeight * 3.5 - 50, "window scrolled down");
+
+  info("window.scrollY " + window.scrollY);
+
+  info("window.innerHeight " + window.innerHeight);
+
+  info("document.documentElement.scrollHeight " + document.documentElement.scrollHeight);
+
+  let target = document.getElementById("target");
+
+  // Check that first double tap does not scroll up
+  info("sending first double tap");
+  await doubleTapOn(target, 15, 15, useTouchpad);
+  let prev_resolution = resolution;
+  resolution = getResolution();
+  ok(resolution > prev_resolution, "After double-tap the resolution increased to " + resolution);
+
+  // These values were determined experimentally, have not investigated the
+  // reason for the difference between platforms or the large tolerance needed.
+  let tolerance = 2;
+  if (getPlatform() == "mac") {
+    tolerance = 24;
+  }
+
+  ok(window.scrollY > window.innerHeight * 3.5 - tolerance, "window is still scrolled down");
+  ok(Math.abs(window.scrollY - scrollPos) < tolerance, "window didnt scroll: " + Math.abs(window.scrollY - scrollPos));
+  info("window.scrollY " + window.scrollY);
+
+  // Check that second double tap does not scroll up
+  // Intentionally miss the target and hit the large spacer div, which
+  // should cause us to zoom out, but not scroll up (too much).
+  info("sending second double tap");
+  await doubleTapOn(target, -10, 15, useTouchpad);
+  prev_resolution = resolution;
+  resolution = getResolution();
+  ok(resolution < prev_resolution, "After double-tap the resolution decreased to " + resolution);
+
+  // These values were determined experimentally, have not investigated the
+  // reason for the difference between platforms or the large tolerance needed.
+  let amountToExpectScrollUp = 0;
+  if (getPlatform() == "android") {
+    amountToExpectScrollUp = 767;
+    tolerance = 4.6;
+  }
+  scrollPos -= amountToExpectScrollUp;
+
+  ok(window.scrollY > window.innerHeight * 3.5 - tolerance - amountToExpectScrollUp, "window is still scrolled down");
+  ok(Math.abs(window.scrollY - scrollPos) < tolerance, "window didnt scroll: " + Math.abs(window.scrollY - scrollPos));
+  info("window.scrollY " + window.scrollY);
+}
+
+waitUntilApzStable()
+.then(test)
+.then(subtestDone, subtestFailed);
+
+  </script>
+  <style>
+    .spacer {
+      background-color: #eee;
+      height: 800vh;
+      width: 1600vw;
+    }
+    .rect {
+      position: absolute;
+      width: 30px;
+      height: 30px;
+      background-color: #aaa;
+      top: 400vh;
+      right: 0;
+    }
+</style>
+</head>
+<body>
+<div id="target" class="rect">
+</div>
+
+<div class="spacer">
+</div>
+
+</body>
+</html>

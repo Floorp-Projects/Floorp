@@ -5600,6 +5600,7 @@ void AsyncPanZoomController::ZoomToRect(const ZoomTarget& aZoomTarget,
     }
 
     FrameMetrics endZoomToMetrics = Metrics();
+    CSSSize sizeBeforeZoom = Metrics().CalculateCompositedSizeInCssPixels();
     if (zoomOut) {
       // Set our zoom to the min zoom and then calculate what the after-zoom
       // composited size is, and then calculate the new scroll offset so that we
@@ -5609,8 +5610,6 @@ void AsyncPanZoomController::ZoomToRect(const ZoomTarget& aZoomTarget,
 
       CSSSize sizeAfterZoom =
           endZoomToMetrics.CalculateCompositedSizeInCssPixels();
-
-      CSSSize sizeBeforeZoom = Metrics().CalculateCompositedSizeInCssPixels();
 
       rect = CSSRect(
           scrollOffset.x + (sizeBeforeZoom.width - sizeAfterZoom.width) / 2,
@@ -5667,6 +5666,30 @@ void AsyncPanZoomController::ZoomToRect(const ZoomTarget& aZoomTarget,
       if (rect.X() < 0.0f) {
         rect.MoveToX(0.0f);
       }
+    }
+
+    bool intersectRectAgain = false;
+    // If we can't zoom out enough to show the full rect then shift the rect we
+    // are able to show to center what was visible.
+    // Note that this calculation works no matter the relation of sizeBeforeZoom
+    // to sizeAfterZoom, ie whether we are increasing or decreasing zoom.
+    if (!zoomOut && (sizeAfterZoom.height < rect.Height())) {
+      rect.y =
+          scrollOffset.y + (sizeBeforeZoom.height - sizeAfterZoom.height) / 2;
+      rect.height = sizeAfterZoom.Height();
+
+      intersectRectAgain = true;
+    }
+
+    if (!zoomOut && (sizeAfterZoom.width < rect.Width())) {
+      rect.x =
+          scrollOffset.x + (sizeBeforeZoom.width - sizeAfterZoom.width) / 2;
+      rect.width = sizeAfterZoom.Width();
+
+      intersectRectAgain = true;
+    }
+    if (intersectRectAgain) {
+      rect = rect.Intersect(cssPageRect);
     }
 
     // If any of these conditions are met, the page will be overscrolled after
