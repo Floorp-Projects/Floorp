@@ -47,6 +47,7 @@
 #include "mozilla/StaticPrefs_fission.h"
 #include "mozilla/StartupTimeline.h"
 #include "mozilla/StorageAccess.h"
+#include "mozilla/StoragePrincipalHelper.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/Tuple.h"
 #include "mozilla/Unused.h"
@@ -3700,13 +3701,20 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI* aURI,
           UsePrivateBrowsing() ? nsISocketProvider::NO_PERMANENT_STORAGE : 0;
       bool isStsHost = false;
       bool isPinnedHost = false;
+      OriginAttributes attrsForHSTS;
+      if (aFailedChannel) {
+        StoragePrincipalHelper::GetOriginAttributesForHSTS(aFailedChannel,
+                                                           attrsForHSTS);
+      } else {
+        attrsForHSTS = GetOriginAttributes();
+      }
+
       if (XRE_IsParentProcess()) {
         nsCOMPtr<nsISiteSecurityService> sss =
             do_GetService(NS_SSSERVICE_CONTRACTID, &rv);
         NS_ENSURE_SUCCESS(rv, rv);
         rv = sss->IsSecureURI(nsISiteSecurityService::HEADER_HSTS, aURI, flags,
-                              GetOriginAttributes(), nullptr, nullptr,
-                              &isStsHost);
+                              attrsForHSTS, nullptr, nullptr, &isStsHost);
         NS_ENSURE_SUCCESS(rv, rv);
         rv = sss->IsSecureURI(nsISiteSecurityService::STATIC_PINNING, aURI,
                               flags, GetOriginAttributes(), nullptr, nullptr,
@@ -3716,7 +3724,7 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI* aURI,
         mozilla::dom::ContentChild* cc =
             mozilla::dom::ContentChild::GetSingleton();
         cc->SendIsSecureURI(nsISiteSecurityService::HEADER_HSTS, aURI, flags,
-                            GetOriginAttributes(), &isStsHost);
+                            attrsForHSTS, &isStsHost);
         cc->SendIsSecureURI(nsISiteSecurityService::STATIC_PINNING, aURI, flags,
                             GetOriginAttributes(), &isPinnedHost);
       }
