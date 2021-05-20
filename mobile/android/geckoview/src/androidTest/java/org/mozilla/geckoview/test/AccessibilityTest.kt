@@ -118,7 +118,7 @@ class AccessibilityTest : BaseSessionTest() {
 
         // Force on accessibility and assign the session's accessibility
         // object a view.
-        sessionRule.setPrefsUntilTestEnd(mapOf("accessibility.force_disabled" to -1))
+        sessionRule.runtime.settings.forceEnableAccessibility = true;
         mainSession.accessibility.view = view
 
         // Set up an external delegate that will intercept accessibility events.
@@ -149,6 +149,7 @@ class AccessibilityTest : BaseSessionTest() {
     }
 
     @After fun teardown() {
+        sessionRule.runtime.settings.forceEnableAccessibility = false
         sessionRule.session.accessibility.view = null
         nodeInfos.forEach { node -> node.recycle() }
     }

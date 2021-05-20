@@ -7,9 +7,7 @@ package org.mozilla.geckoview;
 
 import org.mozilla.gecko.GeckoThread;
 import org.mozilla.gecko.annotation.WrapForJNI;
-import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.GeckoAppShell;
-import org.mozilla.gecko.PrefsHelper;
 import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.mozglue.JNIObject;
@@ -596,6 +594,10 @@ public class SessionAccessibility {
         Settings.updateAccessibilitySettings();
     }
 
+    /* package */ static void setForceEnabled(final boolean forceEnabled) {
+        Settings.setForceEnabled(forceEnabled);
+    }
+
     /**
       * Get the View instance that delegates accessibility to this session.
       *
@@ -664,11 +666,14 @@ public class SessionAccessibility {
     }
 
     private static class Settings {
-        private static final String FORCE_ACCESSIBILITY_PREF = "accessibility.force_disabled";
-
         private static volatile boolean sEnabled;
         private static volatile boolean sTouchExplorationEnabled;
-        /* package */ static volatile boolean sForceEnabled;
+        private static volatile boolean sForceEnabled;
+
+        public static void setForceEnabled(final boolean forceEnabled) {
+            sForceEnabled = forceEnabled;
+            dispatch();
+        }
 
         static {
             final Context context = GeckoAppShell.getApplicationContext();
@@ -682,21 +687,6 @@ public class SessionAccessibility {
                 accessibilityManager.addTouchExplorationStateChangeListener(enabled ->
                         updateAccessibilitySettings());
             }
-
-            final PrefsHelper.PrefHandler prefHandler = new PrefsHelper.PrefHandlerBase() {
-                @Override
-                public void prefValue(final String pref, final int value) {
-                    if (pref.equals(FORCE_ACCESSIBILITY_PREF)) {
-                        sForceEnabled = value < 0;
-                        dispatch();
-                    }
-                }
-            };
-            PrefsHelper.addObserver(new String[]{ FORCE_ACCESSIBILITY_PREF }, prefHandler);
-        }
-
-        public static boolean isPlatformEnabled() {
-            return sEnabled;
         }
 
         public static boolean isEnabled() {
@@ -716,11 +706,6 @@ public class SessionAccessibility {
         }
 
         /* package */ static void dispatch() {
-            final GeckoBundle ret = new GeckoBundle(2);
-            ret.putBoolean("touchEnabled", isTouchExplorationEnabled());
-            ret.putBoolean("enabled", isEnabled());
-            EventDispatcher.getInstance().dispatch("GeckoView:AccessibilityEnabled", ret);
-
             if (GeckoThread.isStateAtLeast(GeckoThread.State.PROFILE_READY)) {
                 toggleNativeAccessibility(isEnabled());
             } else {
