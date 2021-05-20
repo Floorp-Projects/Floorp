@@ -660,19 +660,13 @@ void SandboxBroker::SetSecurityLevelForContentProcess(int32_t aSandboxLevel,
   MOZ_RELEASE_ASSERT(sandbox::SBOX_ALL_OK == result,
                      "Invalid flags for SetProcessMitigations.");
 
-  ContentWin32kLockdownState win32kLockdownState =
-      GetContentWin32kLockdownState();
-
-  LOG_W("Win32k Lockdown State: '%s'",
-        ContentWin32kLockdownStateToString(win32kLockdownState));
-
   // The file content process has some win32k usage particular to it, for
   // example at least moz-icon usage, but we don't want to block enabling for
   // other content processes. We might want to use moz-icon in the privileged
   // about content process in the future, so we would need to exclude that as
   // well or remote moz-icon.
   if (!aIsFileProcess &&
-      (win32kLockdownState == ContentWin32kLockdownState::LockdownEnabled)) {
+      StaticPrefs::security_sandbox_content_win32k_disable()) {
     result = AddWin32kLockdownPolicy(mPolicy, false);
     MOZ_RELEASE_ASSERT(result == sandbox::SBOX_ALL_OK,
                        "Failed to add the win32k lockdown policy");

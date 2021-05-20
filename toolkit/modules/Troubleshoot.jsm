@@ -1001,8 +1001,6 @@ if (AppConstants.MOZ_SANDBOX) {
       );
       data.effectiveContentSandboxLevel =
         sandboxSettings.effectiveContentSandboxLevel;
-      data.contentWin32kLockdownState =
-        sandboxSettings.contentWin32kLockdownStateString;
     }
 
     done(data);
