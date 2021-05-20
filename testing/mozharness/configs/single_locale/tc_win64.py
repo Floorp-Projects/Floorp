@@ -15,5 +15,5 @@ config = {
         "TOOLTOOL_CACHE": os.environ.get("TOOLTOOL_CACHE"),
         "EN_US_PACKAGE_NAME": "target.zip",
     },
-    "tooltool_manifest_src": "browser/config/tooltool-manifests/win64/releng.manifest",
+    "tooltool_manifest_src": "browser/config/tooltool-manifests/vs2017-15.8.manifest",
 }
