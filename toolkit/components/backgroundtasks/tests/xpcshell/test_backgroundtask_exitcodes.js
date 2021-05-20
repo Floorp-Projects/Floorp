@@ -36,3 +36,14 @@ add_task(async function test_not_found() {
   Assert.equal(2, exitCode);
   Assert.equal(EXIT_CODE.NOT_FOUND, exitCode);
 });
+
+add_task(async function test_timeout() {
+  const startTime = new Date();
+  let exitCode = await do_backgroundtask("timeout");
+  const endTime = new Date();
+  const elapsedMs = endTime - startTime;
+  const fiveMinutesInMs = 5 * 60 * 1000;
+  Assert.less(elapsedMs, fiveMinutesInMs);
+  Assert.equal(4, exitCode);
+  Assert.equal(EXIT_CODE.TIMEOUT, exitCode);
+});
