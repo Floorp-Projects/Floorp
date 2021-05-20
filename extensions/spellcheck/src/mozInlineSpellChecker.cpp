@@ -1105,8 +1105,9 @@ nsresult mozInlineSpellChecker::SpellCheckBetweenNodes(nsINode* aStartNode,
 //    particular quotations, moz signatures, etc. This routine returns false
 //    for these cases.
 
+// static
 bool mozInlineSpellChecker::ShouldSpellCheckNode(TextEditor* aTextEditor,
-                                                 nsINode* aNode) const {
+                                                 nsINode* aNode) {
   MOZ_ASSERT(aNode);
   if (!aNode->IsContent()) return false;
 
@@ -1467,7 +1468,7 @@ nsresult mozInlineSpellChecker::SpellCheckerTimeSlice::Execute() {
     }
 
     // some nodes we don't spellcheck
-    if (!mInlineSpellChecker.ShouldSpellCheckNode(textEditor, beginNode)) {
+    if (!mozInlineSpellChecker::ShouldSpellCheckNode(textEditor, beginNode)) {
       continue;
     }
 
