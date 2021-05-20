@@ -13,6 +13,18 @@
 #include "prnetdb.h" /* for PR_ntohl */
 #include "sftkdb.h"
 #include "softoken.h"
+#include "secoid.h"
+
+#if !defined(NSS_FIPS_DISABLED) && defined(NSS_ENABLE_FIPS_INDICATORS)
+/* this file should be supplied by the vendor and include all the
+ * algorithms which have Algorithm certs and have been reviewed by
+ * the lab. A blank file is included for the base so that FIPS mode
+ * will still be compiled and run, but FIPS indicators will always
+ * return PR_FALSE
+ */
+#include "fips_algorithms.h"
+#define NSS_HAS_FIPS_INDICATORS 1
+#endif
 
 /*
  * ******************** Error mapping *******************************
@@ -1081,6 +1093,7 @@ sftk_NewObject(SFTKSlot *slot)
     object->handle = 0;
     object->next = object->prev = NULL;
     object->slot = slot;
+    object->isFIPS = sftk_isFIPS(slot->slotID);
 
     object->refCount = 1;
     sessObject->sessionList.next = NULL;
@@ -1634,6 +1647,7 @@ sftk_CopyObject(SFTKObject *destObject, SFTKObject *srcObject)
     SFTKSessionObject *src_so = sftk_narrowToSessionObject(srcObject);
     unsigned int i;
 
+    destObject->isFIPS = srcObject->isFIPS;
     if (src_so == NULL) {
         return sftk_CopyTokenObject(destObject, srcObject);
     }
@@ -1871,6 +1885,8 @@ sftk_NewSession(CK_SLOT_ID slotID, CK_NOTIFY notify, CK_VOID_PTR pApplication,
     session->info.slotID = slotID;
     session->info.ulDeviceError = 0;
     sftk_update_state(slot, session);
+    /* no ops completed yet, so the last one couldn't be a FIPS op */
+    session->lastOpWasFIPS = PR_FALSE;
     return session;
 }
 
@@ -1994,6 +2010,7 @@ sftk_NewTokenObject(SFTKSlot *slot, SECItem *dbKey, CK_OBJECT_HANDLE handle)
         goto loser;
     }
     object->slot = slot;
+    object->isFIPS = sftk_isFIPS(slot->slotID);
     object->objectInfo = NULL;
     object->infoFree = NULL;
     if (!hasLocks) {
@@ -2121,4 +2138,251 @@ sftk_EncodeInteger(PRUint64 integer, CK_ULONG num_bits, CK_BBOOL littleEndian,
             output[offset] = (unsigned char)((integer >> shift) & 0xFF);
         }
     }
+}
+
+CK_FLAGS
+sftk_AttributeToFlags(CK_ATTRIBUTE_TYPE op)
+{
+    CK_FLAGS flags = 0;
+
+    switch (op) {
+        case CKA_ENCRYPT:
+            flags = CKF_ENCRYPT;
+            break;
+        case CKA_DECRYPT:
+            flags = CKF_DECRYPT;
+            break;
+        case CKA_WRAP:
+            flags = CKF_WRAP;
+            break;
+        case CKA_UNWRAP:
+            flags = CKF_UNWRAP;
+            break;
+        case CKA_SIGN:
+            flags = CKF_SIGN;
+            break;
+        case CKA_SIGN_RECOVER:
+            flags = CKF_SIGN_RECOVER;
+            break;
+        case CKA_VERIFY:
+            flags = CKF_VERIFY;
+            break;
+        case CKA_VERIFY_RECOVER:
+            flags = CKF_VERIFY_RECOVER;
+            break;
+        case CKA_DERIVE:
+            flags = CKF_DERIVE;
+            break;
+        /* fake attribute to select digesting */
+        case CKA_DIGEST:
+            flags = CKF_DIGEST;
+            break;
+        case CKA_NSS_MESSAGE | CKA_ENCRYPT:
+            flags = CKF_MESSAGE_ENCRYPT;
+            break;
+        case CKA_NSS_MESSAGE | CKA_DECRYPT:
+            flags = CKF_MESSAGE_DECRYPT;
+            break;
+        case CKA_NSS_MESSAGE | CKA_SIGN:
+            flags = CKF_MESSAGE_SIGN;
+            break;
+        case CKA_NSS_MESSAGE | CKA_VERIFY:
+            flags = CKF_MESSAGE_VERIFY;
+            break;
+        default:
+            break;
+    }
+    return flags;
+}
+
+#ifdef NSS_HAS_FIPS_INDICATORS
+/* sigh, we probably need a version of this in secutil so that both
+ * softoken and NSS can use it */
+static SECOidTag
+sftk_quickGetECCCurveOid(SFTKObject *source)
+{
+    SFTKAttribute *attribute = sftk_FindAttribute(source, CKA_EC_PARAMS);
+    unsigned char *encoded;
+    int len;
+    SECItem oid;
+    SECOidTag tag;
+
+    if (attribute == NULL) {
+        return SEC_OID_UNKNOWN;
+    }
+    encoded = attribute->attrib.pValue;
+    len = attribute->attrib.ulValueLen;
+    if ((len < 2) || (encoded[0] != SEC_ASN1_OBJECT_ID) ||
+        (len != encoded[1] + 2)) {
+        sftk_FreeAttribute(attribute);
+        return SEC_OID_UNKNOWN;
+    }
+    oid.data = encoded + 2;
+    oid.len = len - 2;
+    tag = SECOID_FindOIDTag(&oid);
+    sftk_FreeAttribute(attribute);
+    return tag;
+}
+
+/* This function currently only returns valid lengths for
+ * FIPS approved ECC curves. If we want to make this generic
+ * in the future, that Curve determination can be done in
+ * the sftk_handleSpecial. Since it's currently only used
+ * in FIPS indicators, it's currently only compiled with
+ * the FIPS indicator code */
+static int
+sftk_getKeyLength(SFTKObject *source)
+{
+    CK_KEY_TYPE keyType = CK_INVALID_HANDLE;
+    CK_ATTRIBUTE_TYPE keyAttribute;
+    CK_ULONG keyLength = 0;
+    SFTKAttribute *attribute;
+    CK_RV crv;
+
+    /* If we don't have a key, then it doesn't have a length.
+     * this may be OK (say we are hashing). The mech info will
+     * sort this out because algorithms which expect no keys
+     * will accept zero length for the keys */
+    if (source == NULL) {
+        return 0;
+    }
+
+    crv = sftk_GetULongAttribute(source, CKA_KEY_TYPE, &keyType);
+    if (crv != CKR_OK) {
+        /* sometimes we're passed a data object, in that case the
+         * key length is CKA_VALUE, which is the default */
+        keyType = CKK_INVALID_KEY_TYPE;
+    }
+    if (keyType == CKK_EC) {
+        SECOidTag curve = sftk_quickGetECCCurveOid(source);
+        switch (curve) {
+            case SEC_OID_CURVE25519:
+                /* change when we start algorithm testing on curve25519 */
+                return 0;
+            case SEC_OID_SECG_EC_SECP256R1:
+                return 256;
+            case SEC_OID_SECG_EC_SECP384R1:
+                return 384;
+            case SEC_OID_SECG_EC_SECP521R1:
+                /* this is a lie, but it makes the table easier. We don't
+                 * have to have a double entry for every ECC mechanism */
+                return 512;
+            default:
+                break;
+        }
+        /* other curves aren't NIST approved, returning 0 will cause these
+         * curves to fail FIPS length criteria */
+        return 0;
+    }
+
+    switch (keyType) {
+        case CKK_RSA:
+            keyAttribute = CKA_MODULUS;
+            break;
+        case CKK_DSA:
+        case CKK_DH:
+            keyAttribute = CKA_PRIME;
+            break;
+        default:
+            keyAttribute = CKA_VALUE;
+            break;
+    }
+    attribute = sftk_FindAttribute(source, keyAttribute);
+    if (attribute) {
+        keyLength = attribute->attrib.ulValueLen * 8;
+        sftk_FreeAttribute(attribute);
+    }
+    return keyLength;
+}
+
+/*
+ * handle specialized FIPS semantics that are too complicated to
+ * handle with just a table. NOTE: this means any additional semantics
+ * would have to be coded here before they can be added to the table */
+static PRBool
+sftk_handleSpecial(SFTKSlot *slot, CK_MECHANISM *mech,
+                   SFTKFIPSAlgorithmList *mechInfo, SFTKObject *source)
+{
+    switch (mechInfo->special) {
+        case SFTKFIPSDH: {
+            SECItem dhPrime;
+            const SECItem *dhSubPrime;
+            CK_RV crv = sftk_Attribute2SecItem(NULL, &dhPrime,
+                                               source, CKA_PRIME);
+            if (crv != CKR_OK) {
+                return PR_FALSE;
+            }
+            dhSubPrime = sftk_VerifyDH_Prime(&dhPrime);
+            SECITEM_ZfreeItem(&dhPrime, PR_FALSE);
+            return (dhSubPrime) ? PR_TRUE : PR_FALSE;
+        }
+        case SFTKFIPSNone:
+            return PR_FALSE;
+        case SFTKFIPSECC:
+            /* we've already handled the curve selection in the 'getlength'
+          * function */
+            return PR_TRUE;
+        case SFTKFIPSAEAD: {
+            if (mech->ulParameterLen == 0) {
+                /* AEAD ciphers are only in FIPS mode if we are using the
+                 * MESSAGE interface. This takes an empty parameter
+                 * in the init function */
+                return PR_TRUE;
+            }
+            return PR_FALSE;
+        }
+        default:
+            break;
+    }
+    /* if we didn't understand the special processing, mark it non-fips */
+    return PR_FALSE;
+}
+#endif
+
+PRBool
+sftk_operationIsFIPS(SFTKSlot *slot, CK_MECHANISM *mech, CK_ATTRIBUTE_TYPE op,
+                     SFTKObject *source)
+{
+#ifndef NSS_HAS_FIPS_INDICATORS
+    return PR_FALSE;
+#else
+    int i;
+    CK_FLAGS opFlags;
+    CK_ULONG keyLength;
+
+    /* handle all the quick stuff first */
+    if (!sftk_isFIPS(slot->slotID)) {
+        return PR_FALSE;
+    }
+    if (source && !source->isFIPS) {
+        return PR_FALSE;
+    }
+    if (mech == NULL) {
+        return PR_FALSE;
+    }
+
+    /* now get the calculated values */
+    opFlags = sftk_AttributeToFlags(op);
+    if (opFlags == 0) {
+        return PR_FALSE;
+    }
+    keyLength = sftk_getKeyLength(source);
+
+    /* check against our algorithm array */
+    for (i = 0; i < SFTK_NUMBER_FIPS_ALGORITHMS; i++) {
+        SFTKFIPSAlgorithmList *mechs = &sftk_fips_mechs[i];
+        /* if we match the number of records exactly, then we are an
+         * approved algorithm in the approved mode with an approved key */
+        if (((mech->mechanism == mechs->type) &&
+             (opFlags == (mechs->info.flags & opFlags)) &&
+             (keyLength <= mechs->info.ulMaxKeySize) &&
+             (keyLength >= mechs->info.ulMinKeySize) &&
+             ((keyLength - mechs->info.ulMinKeySize) % mechs->step) == 0) &&
+            ((mechs->special == SFTKFIPSNone) ||
+             sftk_handleSpecial(slot, mech, mechs, source))) {
+            return PR_TRUE;
+        }
+    }
+    return PR_FALSE;
+#endif
 }

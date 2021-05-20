@@ -373,6 +373,11 @@ typedef struct SSLChannelInfoStr {
      * with TLS 1.3 Encrypted Client Hello. */
     PRBool echAccepted;
 
+    /* The following field was added in NSS 3.66 */
+    /* This filed is PR_TRUE if the FIPS indicator is true for the
+     * current connection */
+    PRBool isFIPS;
+
     /* When adding new fields to this structure, please document the
      * NSS version in which they were added. */
 } SSLChannelInfo;

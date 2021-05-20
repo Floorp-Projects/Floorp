@@ -74,6 +74,9 @@ struct SECMODModuleStr {
                                   * events (SECMOD_WaitForAnyTokenEvent) */
     CK_VERSION cryptokiVersion;  /* version of this library */
     CK_FLAGS flags;              /* pkcs11 v3 flags */
+    /* Warning this could go way in future versions of NSS
+     * when FIPS indicators wind up in the functionList */
+    CK_NSS_GetFIPSStatus fipsIndicator;
 };
 
 /* evControlMask flags */

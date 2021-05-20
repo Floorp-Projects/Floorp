@@ -301,10 +301,11 @@ static CK_FUNCTION_LIST sftk_fipsTable_v2 = {
 static CK_INTERFACE fips_interfaces[] = {
     { (CK_UTF8CHAR_PTR) "PKCS 11", &sftk_fipsTable, NSS_INTERFACE_FLAGS },
     { (CK_UTF8CHAR_PTR) "PKCS 11", &sftk_fipsTable_v2, NSS_INTERFACE_FLAGS },
-    { (CK_UTF8CHAR_PTR) "Vendor NSS Module Interface", &sftk_module_funcList, NSS_INTERFACE_FLAGS }
+    { (CK_UTF8CHAR_PTR) "Vendor NSS Module Interface", &sftk_module_funcList, NSS_INTERFACE_FLAGS },
+    { (CK_UTF8CHAR_PTR) "Vendor NSS FIPS Interface", &sftk_fips_funcList, NSS_INTERFACE_FLAGS }
 };
 /* must match the count of interfaces in fips_interfaces above*/
-#define FIPS_INTERFACE_COUNT 3
+#define FIPS_INTERFACE_COUNT 4
 
 /* CKO_NOT_A_KEY can be any object class that's not a key object. */
 #define CKO_NOT_A_KEY CKO_DATA

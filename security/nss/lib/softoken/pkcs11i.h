@@ -191,6 +191,7 @@ struct SFTKObjectStr {
     SFTKSlot *slot;
     void *objectInfo;
     SFTKFree infoFree;
+    PRBool isFIPS;
 };
 
 struct SFTKTokenObjectStr {
@@ -266,6 +267,7 @@ struct SFTKSessionContextStr {
     PRBool rsa;                 /* is rsa */
     PRBool doPad;               /* use PKCS padding for block ciphers */
     PRBool isXCBC;              /* xcbc, use special handling in final */
+    PRBool isFIPS;              /* current operation is in FIPS mode */
     unsigned int blockSize;     /* blocksize for padding */
     unsigned int padDataLength; /* length of the valid data in padbuf */
     /** latest incomplete block of data for block cipher */
@@ -307,6 +309,7 @@ struct SFTKSessionStr {
     SFTKSessionContext *enc_context;
     SFTKSessionContext *hash_context;
     SFTKSessionContext *sign_context;
+    PRBool lastOpWasFIPS;
     SFTKObjectList *objects[1];
 };
 
@@ -689,6 +692,7 @@ struct sftk_MACCtxStr {
 typedef struct sftk_MACCtxStr sftk_MACCtx;
 
 extern CK_NSS_MODULE_FUNCTIONS sftk_module_funcList;
+extern CK_NSS_FIPS_FUNCTIONS sftk_fips_funcList;
 
 SEC_BEGIN_PROTOS
 
@@ -795,6 +799,7 @@ extern void sftk_CleanupFreeLists(void);
  * Helper functions to handle the session crypto contexts
  */
 extern CK_RV sftk_InitGeneric(SFTKSession *session,
+                              CK_MECHANISM *pMechanism,
                               SFTKSessionContext **contextPtr,
                               SFTKContextType ctype, SFTKObject **keyPtr,
                               CK_OBJECT_HANDLE hKey, CK_KEY_TYPE *keyTypePtr,
@@ -944,7 +949,12 @@ char **NSC_ModuleDBFunc(unsigned long function, char *parameters, void *args);
 const SECItem *sftk_VerifyDH_Prime(SECItem *dhPrime);
 /* check if dhSubPrime claims dhPrime is a safe prime. */
 SECStatus sftk_IsSafePrime(SECItem *dhPrime, SECItem *dhSubPrime, PRBool *isSafe);
-
+/* map an operation Attribute to a Mechanism flag */
+CK_FLAGS sftk_AttributeToFlags(CK_ATTRIBUTE_TYPE op);
+/* check the FIPS table to determine if this current operation is allowed by
+ * FIPS security policy */
+PRBool sftk_operationIsFIPS(SFTKSlot *slot, CK_MECHANISM *mech,
+                            CK_ATTRIBUTE_TYPE op, SFTKObject *source);
 SEC_END_PROTOS
 
 #endif /* _PKCS11I_H_ */

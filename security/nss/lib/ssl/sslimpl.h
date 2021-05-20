@@ -1847,6 +1847,9 @@ PK11SymKey *ssl_unwrapSymKey(PK11SymKey *wrapKey,
                              CK_MECHANISM_TYPE target, CK_ATTRIBUTE_TYPE operation,
                              int keySize, CK_FLAGS keyFlags, void *pinArg);
 
+/* determine if the current ssl connection is operating in FIPS mode */
+PRBool ssl_isFIPS(sslSocket *ss);
+
 /* Experimental APIs. Remove when stable. */
 
 SECStatus SSLExp_SetResumptionTokenCallback(PRFileDesc *fd,
