@@ -6,26 +6,6 @@
 const PAGE =
   "http://mochi.test:8888/browser/browser/components/extensions/test/browser/context.html";
 
-async function openContextMenuInPageActionPanel(extension, win = window) {
-  win.gURLBar.setPageProxyState("valid");
-  await promiseAnimationFrame(win);
-  const mainPanelshown = BrowserTestUtils.waitForEvent(
-    BrowserPageActions.panelNode,
-    "popupshown"
-  );
-  EventUtils.synthesizeMouseAtCenter(
-    BrowserPageActions.mainButtonNode,
-    {},
-    win
-  );
-  await mainPanelshown;
-  let buttonID =
-    "#" +
-    BrowserPageActions.panelButtonNodeIDForActionID(makeWidgetId(extension.id));
-  let menuID = "pageActionContextMenu";
-  return openChromeContextMenu(menuID, buttonID, win);
-}
-
 add_task(async function test_permissions() {
   function background() {
     browser.test.sendMessage("apis", {
@@ -168,67 +148,6 @@ add_task(async function test_actionContextMenus() {
     is(tab.id, tabId, "Click event tab ID is correct");
   }
 
-  BrowserTestUtils.removeTab(tab);
-  await extension.unload();
-});
-
-add_task(async function test_hiddenPageActionContextMenu() {
-  // In Proton the disabled pageAction are hidden in the urlbar
-  // and in the overflow menu, and so the pageAction context menu
-  // cannot be triggered on a disabled pageACtion.
-  //
-  // When we will sunset the proton about:config pref, this test
-  // won't be necessary anymore since the user won't be able to
-  // open the context menu on disabled actions.
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.proton.enabled", false]],
-  });
-  const manifest = {
-    page_action: {},
-    permissions: ["menus"],
-  };
-
-  async function background() {
-    const contexts = ["page_action"];
-
-    const parentId = browser.menus.create({ contexts, title: "parent" });
-    browser.menus.create({ parentId, title: "click A" });
-    browser.menus.create({ parentId, title: "click B" });
-
-    for (let i = 1; i < 9; i++) {
-      browser.menus.create({ contexts, id: `${i}`, title: `click ${i}` });
-    }
-
-    const [tab] = await browser.tabs.query({ active: true });
-    await browser.pageAction.hide(tab.id);
-    browser.test.sendMessage("ready", tab.id);
-  }
-
-  const extension = ExtensionTestUtils.loadExtension({ manifest, background });
-  const tab = await BrowserTestUtils.openNewForegroundTab(
-    gBrowser,
-    "http://example.com/"
-  );
-
-  await extension.startup();
-  await extension.awaitMessage("ready");
-
-  const menu = await openContextMenuInPageActionPanel(extension);
-  const menuItems = Array.prototype.filter.call(menu.children, node => {
-    return window.getComputedStyle(node).visibility == "visible";
-  });
-
-  is(menuItems.length, 2, "Correct number of children");
-  const [manageItem, removeItem] = menuItems;
-
-  is(manageItem.label, "Manage Extension\u2026", "Correct first child");
-  is(removeItem.label, "Remove Extension", "Correct second child");
-
-  await closeChromeContextMenu(menu.id);
-  await closeChromeContextMenu(BrowserPageActions.panelNode.id);
-
-  // Undo the Proton pref change.
-  await SpecialPowers.popPrefEnv();
   BrowserTestUtils.removeTab(tab);
   await extension.unload();
 });

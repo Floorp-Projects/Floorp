@@ -4,9 +4,6 @@
 "use strict";
 
 add_task(async function test_pip_label_changes_tab() {
-  SpecialPowers.pushPrefEnv({
-    set: [["browser.proton.enabled", true]],
-  });
   let newWin = await BrowserTestUtils.openNewWindowWithFlushedXULCacheForMozSupports();
 
   let pipTab = newWin.document.querySelector(".tabbrowser-tab[selected]");
