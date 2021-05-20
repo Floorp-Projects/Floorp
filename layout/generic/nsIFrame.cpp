@@ -29,6 +29,7 @@
 #include "mozilla/Sprintf.h"
 #include "mozilla/StaticAnalysisFunctions.h"
 #include "mozilla/StaticPrefs_layout.h"
+#include "mozilla/StaticPrefs_print.h"
 #include "mozilla/SVGMaskFrame.h"
 #include "mozilla/SVGObserverUtils.h"
 #include "mozilla/SVGTextFrame.h"
@@ -4000,7 +4001,8 @@ void nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder* aBuilder,
   // for the same destination that entirely overlap each other, which adds
   // nothing useful to the final PDF.
   Maybe<nsDisplayListBuilder::Linkifier> linkifier;
-  if (aBuilder->IsForPrinting()) {
+  if (StaticPrefs::print_save_as_pdf_links_enabled() &&
+      aBuilder->IsForPrinting()) {
     linkifier.emplace(aBuilder, aChild);
     linkifier->MaybeAppendLink(aBuilder, aChild, aLists.Content());
   }

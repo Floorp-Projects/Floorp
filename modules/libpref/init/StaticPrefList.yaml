@@ -9837,6 +9837,12 @@
   value: true
   mirror: always
 
+# Whether we attempt to generate links in Save As PDF output.
+- name: print.save_as_pdf.links.enabled
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
 # The default DPI for printing.
 #
 # For PDF-based output, DPI should ideally be irrelevant, but in fact it is not
