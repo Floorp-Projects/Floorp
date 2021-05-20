@@ -1,4 +1,5 @@
 from .base import Browser, ExecutorBrowser, require_arg
+from .base import NullBrowser  # noqa: F401
 from .base import get_timeout_multiplier   # noqa: F401
 from ..webdriver_server import OperaDriverServer
 from ..executors import executor_kwargs as base_executor_kwargs
@@ -9,7 +10,8 @@ from ..executors.executoropera import OperaDriverWdspecExecutor  # noqa: F401
 
 __wptrunner__ = {"product": "opera",
                  "check_args": "check_args",
-                 "browser": "OperaBrowser",
+                 "browser": {None: "OperaBrowser",
+                             "wdspec": "NullBrowser"},
                  "executor": {"testharness": "SeleniumTestharnessExecutor",
                               "reftest": "SeleniumRefTestExecutor",
                               "wdspec": "OperaDriverWdspecExecutor"},

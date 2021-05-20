@@ -1,5 +1,5 @@
 from .base import Browser, ExecutorBrowser, require_arg
-from .base import get_timeout_multiplier, certificate_domain_list  # noqa: F401
+from .base import NullBrowser, get_timeout_multiplier, certificate_domain_list  # noqa: F401
 from ..executors import executor_kwargs as base_executor_kwargs
 from ..executors.executorwebdriver import (WebDriverTestharnessExecutor,  # noqa: F401
                                            WebDriverRefTestExecutor,  # noqa: F401
@@ -10,7 +10,8 @@ from ..webdriver_server import WebKitDriverServer
 
 __wptrunner__ = {"product": "webkit",
                  "check_args": "check_args",
-                 "browser": "WebKitBrowser",
+                 "browser": {None: "WebKitBrowser",
+                             "wdspec": "NullBrowser"},
                  "browser_kwargs": "browser_kwargs",
                  "executor": {"testharness": "WebDriverTestharnessExecutor",
                               "reftest": "WebDriverRefTestExecutor",

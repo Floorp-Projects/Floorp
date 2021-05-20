@@ -575,7 +575,9 @@ def load_wpt_tests(xul_tester, requested_paths, excluded_paths, update_manifest=
             if tests:
                 yield item_type, path, tests
 
-    run_info_extras = products.load_product(kwargs["config"], "firefox")[-1](**kwargs)
+    run_info_extras = products.Product(kwargs["config"], "firefox").run_info_extras(
+        **kwargs
+    )
     run_info = wpttest.get_run_info(
         kwargs["run_info"],
         "firefox",
