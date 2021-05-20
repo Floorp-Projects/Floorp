@@ -62,13 +62,6 @@ endif
 # fallback
 $(TOPOBJDIR)/faster/%: ;
 
-ifeq ($(MOZ_BUILD_APP),mobile/android)
-# The generic rule doesn't handle relative directories, which are used
-# extensively in mobile/android/base.
-$(TOPOBJDIR)/mobile/android/base/% : $(TOPOBJDIR)/buildid.h FORCE
-	$(MAKE) -C $(TOPOBJDIR)/mobile/android/base $*
-endif
-
 # Generic rule to fall back to the recursive make backend.
 # This needs to stay after other $(TOPOBJDIR)/* rules because GNU Make
 # <3.82 apply pattern rules in definition order, not stem length like
