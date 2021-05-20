@@ -14,7 +14,7 @@ use crate::render_api::{ApiMsg, FrameMsg, SceneMsg, ResourceUpdate, TransactionM
 use crate::capture::CaptureConfig;
 use crate::frame_builder::FrameBuilderConfig;
 use crate::scene_building::SceneBuilder;
-use crate::clip::ClipIntern;
+use crate::clip::{ClipIntern, PolygonIntern};
 use crate::filterdata::FilterDataIntern;
 use crate::intern::{Internable, Interner, UpdateList};
 use crate::internal_types::{FastHashMap, FastHashSet};

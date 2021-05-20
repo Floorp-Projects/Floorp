@@ -409,12 +409,12 @@ impl From<ClipItemKey> for ClipNode {
                     mode,
                 }
             }
-            ClipItemKeyKind::ImageMask(rect, image, repeat, polygon) => {
+            ClipItemKeyKind::ImageMask(rect, image, repeat, polygon_handle) => {
                 ClipItemKind::Image {
                     image,
                     rect: rect.into(),
                     repeat,
-                    polygon,
+                    polygon_handle,
                 }
             }
             ClipItemKeyKind::BoxShadow(shadow_rect_fract_offset, shadow_rect_size, shadow_radius, prim_shadow_rect, blur_radius, clip_mode) => {
@@ -1449,7 +1449,7 @@ impl<J> ClipRegion<ComplexTranslateIter<J>> {
 pub enum ClipItemKeyKind {
     Rectangle(RectangleKey, ClipMode),
     RoundedRectangle(RectangleKey, BorderRadiusAu, ClipMode),
-    ImageMask(RectangleKey, ImageKey, bool, PolygonKey),
+    ImageMask(RectangleKey, ImageKey, bool, Option<PolygonDataHandle>),
     BoxShadow(PointKey, SizeKey, BorderRadiusAu, RectangleKey, Au, BoxShadowClipMode),
 }
 
@@ -1472,12 +1472,12 @@ impl ClipItemKeyKind {
     }
 
     pub fn image_mask(image_mask: &ImageMask, mask_rect: LayoutRect,
-                      points: Vec<LayoutPoint>, fill_rule: FillRule) -> Self {
+                      polygon_handle: Option<PolygonDataHandle>) -> Self {
         ClipItemKeyKind::ImageMask(
             mask_rect.into(),
             image_mask.image,
             image_mask.repeat,
-            PolygonKey::new(&points, fill_rule)
+            polygon_handle,
         )
     }
 
@@ -1559,7 +1559,7 @@ pub enum ClipItemKind {
         image: ImageKey,
         rect: LayoutRect,
         repeat: bool,
-        polygon: PolygonKey,
+        polygon_handle: Option<PolygonDataHandle>,
     },
     BoxShadow {
         source: BoxShadowClipSource,
@@ -2206,4 +2206,25 @@ mod tests {
             "Empty rectangle is considered to include a non-empty!"
         );
     }
+}
+
+/// PolygonKeys get interned, because it's a convenient way to move the data
+/// for the polygons out of the ClipItemKind and ClipItemKeyKind enums. The
+/// polygon data is both interned and retrieved by the scene builder, and not
+/// accessed at all by the frame builder. Another oddity is that the
+/// PolygonKey contains the totality of the information about the polygon, so
+/// the InternData and StoreData types are both PolygonKey.
+#[derive(Copy, Clone, Debug, Hash, MallocSizeOf, PartialEq, Eq)]
+#[cfg_attr(any(feature = "serde"), derive(Deserialize, Serialize))]
+pub enum PolygonIntern {}
+
+pub type PolygonDataHandle = intern::Handle<PolygonIntern>;
+
+impl intern::InternDebug for PolygonKey {}
+
+impl intern::Internable for PolygonIntern {
+    type Key = PolygonKey;
+    type StoreData = PolygonKey;
+    type InternData = PolygonKey;
+    const PROFILE_COUNTER: usize = crate::profiler::INTERNED_POLYGONS;
 }
