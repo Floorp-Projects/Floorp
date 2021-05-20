@@ -512,7 +512,11 @@ class SharedImmutableScriptData {
   // script data table.
   mozilla::Atomic<uint32_t, mozilla::SequentiallyConsistent> refCount_ = {};
 
-  js::UniquePtr<ImmutableScriptData> isd_ = nullptr;
+ public:
+  bool isExternal = false;
+
+ private:
+  ImmutableScriptData* isd_ = nullptr;
 
   // End of fields.
 
@@ -522,6 +526,17 @@ class SharedImmutableScriptData {
  public:
   SharedImmutableScriptData() = default;
 
+  ~SharedImmutableScriptData() { reset(); }
+
+ private:
+  void reset() {
+    if (isd_ && !isExternal) {
+      js_delete(isd_);
+    }
+    isd_ = nullptr;
+  }
+
+ public:
   // Hash over the contents of SharedImmutableScriptData and its
   // ImmutableScriptData.
   struct Hasher;
@@ -532,7 +547,7 @@ class SharedImmutableScriptData {
     MOZ_ASSERT(refCount_ != 0);
     uint32_t remain = --refCount_;
     if (remain == 0) {
-      isd_ = nullptr;
+      reset();
       js_free(this);
     }
   }
@@ -549,7 +564,8 @@ class SharedImmutableScriptData {
       JSContext* cx, js::UniquePtr<ImmutableScriptData>&& isd);
 
   size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) {
-    return mallocSizeOf(this) + mallocSizeOf(isd_.get());
+    size_t isdSize = isExternal ? 0 : mallocSizeOf(isd_);
+    return mallocSizeOf(this) + isdSize;
   }
 
   // SharedImmutableScriptData has trailing data so isn't copyable or movable.
@@ -562,6 +578,20 @@ class SharedImmutableScriptData {
 
   size_t immutableDataLength() const { return isd_->immutableData().Length(); }
   uint32_t nfixed() const { return isd_->nfixed; }
+
+  ImmutableScriptData* get() { return isd_; }
+
+  void setOwn(js::UniquePtr<ImmutableScriptData>&& isd) {
+    MOZ_ASSERT(!isd_);
+    isd_ = isd.release();
+    isExternal = false;
+  }
+
+  void setExternal(ImmutableScriptData* isd) {
+    MOZ_ASSERT(!isd_);
+    isd_ = isd;
+    isExternal = true;
+  }
 };
 
 // Matches SharedImmutableScriptData objects that have the same atoms as well as

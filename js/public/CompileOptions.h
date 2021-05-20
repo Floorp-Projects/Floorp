@@ -154,6 +154,13 @@ class JS_PUBLIC_API TransitiveCompileOptions {
   // CompilationStencil back to main thread before allocating GC objects.
   bool useOffThreadParseGlobal = true;
 
+  // When decoding from XDR, borrow ImmutableScriptData from the XDR buffer
+  // instead of copying out of it.
+  //
+  // NOTE: When using this mode, the XDR buffer must live until JS_Shutdown is
+  // called. There is currently no mechanism to release the data sooner.
+  bool usePinnedBytecode = false;
+
   /**
    * |introductionType| is a statically allocated C string: one of "eval",
    * "Function", or "GeneratorFunction".

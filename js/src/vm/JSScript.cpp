@@ -946,7 +946,7 @@ ImmutableScriptData::ImmutableScriptData(uint32_t codeLength,
 
 template <XDRMode mode>
 XDRResult js::XDRImmutableScriptData(XDRState<mode>* xdr,
-                                     UniquePtr<ImmutableScriptData>& isd) {
+                                     SharedImmutableScriptData& sisd) {
   static_assert(frontend::CanCopyDataToDisk<ImmutableScriptData>::value,
                 "ImmutableScriptData cannot be bulk-copied to disk");
   static_assert(frontend::CanCopyDataToDisk<jsbytecode>::value,
@@ -960,25 +960,36 @@ XDRResult js::XDRImmutableScriptData(XDRState<mode>* xdr,
 
   uint32_t size;
   if (mode == XDR_ENCODE) {
-    size = isd->immutableData().size();
+    size = sisd.immutableDataLength();
   }
   MOZ_TRY(xdr->codeUint32(&size));
 
-  uint8_t* data;
+  MOZ_TRY(xdr->align32());
+  static_assert(alignof(ImmutableScriptData) <= alignof(uint32_t));
+
   if (mode == XDR_ENCODE) {
-    data = const_cast<uint8_t*>(isd->immutableData().data());
-    MOZ_ASSERT(data == reinterpret_cast<const uint8_t*>(isd.get()),
+    uint8_t* data = const_cast<uint8_t*>(sisd.get()->immutableData().data());
+    MOZ_ASSERT(data == reinterpret_cast<const uint8_t*>(sisd.get()),
                "Decode below relies on the data placement");
+    MOZ_TRY(xdr->codeBytes(data, size));
   } else {
-    isd = ImmutableScriptData::new_(xdr->cx(), size);
-    if (!isd) {
-      return xdr->fail(JS::TranscodeResult::Throw);
+    MOZ_ASSERT(!sisd.get());
+
+    if (xdr->hasOptions() && xdr->options().usePinnedBytecode) {
+      ImmutableScriptData* isd;
+      MOZ_TRY(xdr->borrowedData(&isd, size));
+      sisd.setExternal(isd);
+    } else {
+      auto isd = ImmutableScriptData::new_(xdr->cx(), size);
+      if (!isd) {
+        return xdr->fail(JS::TranscodeResult::Throw);
+      }
+      uint8_t* data = reinterpret_cast<uint8_t*>(isd.get());
+      MOZ_TRY(xdr->codeBytes(data, size));
+      sisd.setOwn(std::move(isd));
     }
-    data = reinterpret_cast<uint8_t*>(isd.get());
-  }
-  MOZ_TRY(xdr->codeBytes(data, size));
-  if (mode == XDR_DECODE) {
-    if (size != isd->computedSize()) {
+
+    if (size != sisd.get()->computedSize()) {
       MOZ_ASSERT(false, "Bad ImmutableScriptData");
       return xdr->fail(JS::TranscodeResult::Failure_BadDecode);
     }
@@ -987,10 +998,10 @@ XDRResult js::XDRImmutableScriptData(XDRState<mode>* xdr,
   return Ok();
 }
 
-template XDRResult js::XDRImmutableScriptData(
-    XDRState<XDR_ENCODE>* xdr, UniquePtr<ImmutableScriptData>& isd);
-template XDRResult js::XDRImmutableScriptData(
-    XDRState<XDR_DECODE>* xdr, UniquePtr<ImmutableScriptData>& isd);
+template XDRResult js::XDRImmutableScriptData(XDRState<XDR_ENCODE>* xdr,
+                                              SharedImmutableScriptData& sisd);
+template XDRResult js::XDRImmutableScriptData(XDRState<XDR_DECODE>* xdr,
+                                              SharedImmutableScriptData& sisd);
 
 template <XDRMode mode>
 XDRResult js::XDRSourceExtent(XDRState<mode>* xdr, SourceExtent* extent) {
@@ -3433,7 +3444,7 @@ SharedImmutableScriptData* SharedImmutableScriptData::createWith(
     return nullptr;
   }
 
-  sisd->isd_ = std::move(isd);
+  sisd->setOwn(std::move(isd));
   return sisd;
 }
 

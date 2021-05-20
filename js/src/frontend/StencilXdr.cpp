@@ -244,7 +244,7 @@ template <XDRMode mode>
 XDRResult StencilXDR::codeSharedData(XDRState<mode>* xdr,
                                      RefPtr<SharedImmutableScriptData>& sisd) {
   if (mode == XDR_ENCODE) {
-    MOZ_TRY(XDRImmutableScriptData<mode>(xdr, sisd->isd_));
+    MOZ_TRY(XDRImmutableScriptData<mode>(xdr, *sisd));
   } else {
     JSContext* cx = xdr->cx();
     UniquePtr<SharedImmutableScriptData> data(
@@ -252,7 +252,7 @@ XDRResult StencilXDR::codeSharedData(XDRState<mode>* xdr,
     if (!data) {
       return xdr->fail(JS::TranscodeResult::Throw);
     }
-    MOZ_TRY(XDRImmutableScriptData<mode>(xdr, data->isd_));
+    MOZ_TRY(XDRImmutableScriptData<mode>(xdr, *data));
     sisd = data.release();
 
     if (!SharedImmutableScriptData::shareScriptData(cx, sisd)) {
