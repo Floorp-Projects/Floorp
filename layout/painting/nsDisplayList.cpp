@@ -3443,8 +3443,7 @@ nsDisplayBackgroundImage::nsDisplayBackgroundImage(
       mLayer(aInitData.layer),
       mIsRasterImage(aInitData.isRasterImage),
       mShouldFixToViewport(aInitData.shouldFixToViewport),
-      mImageFlags(0),
-      mOpacity(1.0f) {
+      mImageFlags(0) {
   MOZ_COUNT_CTOR(nsDisplayBackgroundImage);
 #ifdef DEBUG
   if (mBackgroundStyle && mBackgroundStyle != mFrame->Style()) {
@@ -4050,8 +4049,6 @@ already_AddRefed<Layer> nsDisplayBackgroundImage::BuildLayer(
   RefPtr<ImageContainer> imageContainer = GetContainer(aManager, aBuilder);
   layer->SetContainer(imageContainer);
   ConfigureLayer(layer, aParameters);
-  // ConfigureLayer doesn't know about our opacity, so apply it to layer here.
-  layer->SetOpacity(mOpacity);
   return layer.forget();
 }
 
@@ -4082,7 +4079,7 @@ bool nsDisplayBackgroundImage::CreateWebRenderCommands(
   nsCSSRendering::PaintBGParams params =
       nsCSSRendering::PaintBGParams::ForSingleLayer(
           *StyleFrame()->PresContext(), GetPaintRect(), mBackgroundRect,
-          StyleFrame(), mImageFlags, mLayer, CompositionOp::OP_OVER, mOpacity);
+          StyleFrame(), mImageFlags, mLayer, CompositionOp::OP_OVER);
   params.bgClipRect = &mBounds;
   ImgDrawResult result =
       nsCSSRendering::BuildWebRenderDisplayItemsForStyleImageLayer(
@@ -4147,7 +4144,7 @@ nsRegion nsDisplayBackgroundImage::GetOpaqueRegion(
   nsRegion result;
   *aSnap = false;
 
-  if (!mBackgroundStyle || mOpacity != 1.0f) {
+  if (!mBackgroundStyle) {
     return result;
   }
 
@@ -4239,7 +4236,7 @@ void nsDisplayBackgroundImage::PaintInternal(nsDisplayListBuilder* aBuilder,
   nsCSSRendering::PaintBGParams params =
       nsCSSRendering::PaintBGParams::ForSingleLayer(
           *StyleFrame()->PresContext(), aBounds, mBackgroundRect, StyleFrame(),
-          mImageFlags, mLayer, CompositionOp::OP_OVER, mOpacity);
+          mImageFlags, mLayer, CompositionOp::OP_OVER);
   params.bgClipRect = aClipRect;
   ImgDrawResult result = nsCSSRendering::PaintStyleImageLayer(params, *aCtx);
 
