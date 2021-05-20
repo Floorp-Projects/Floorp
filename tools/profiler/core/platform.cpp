@@ -3530,12 +3530,20 @@ void SamplerThread::Run() {
                 (now - CorePS::ProcessStartTime()).ToMilliseconds();
 
             // If the thread is asleep and has been sampled before in the same
-            // sleep episode, find and copy the previous sample, as that's
-            // cheaper than taking a new sample.
+            // sleep episode, or otherwise(*) if there was zero CPU activity
+            // since the previous sampling, find and copy the previous sample,
+            // as that's cheaper than taking a new sample.
+            // (*) Tech note: The asleep check is done first and always, because
+            //     it is more reliable, and knows if it's the first asleep
+            //     sample, which cannot be duplicated; if the test was the other
+            //     way around, it could find zero CPU and then short-circuit
+            //     that state-changing second-asleep-check operation, which
+            //     could result in an unneeded sample.
             // However we're using current running times (instead of copying the
             // old ones) because some work could have happened.
             if (registeredThread->RacyRegisteredThread()
-                    .CanDuplicateLastSampleDueToSleep()) {
+                    .CanDuplicateLastSampleDueToSleep() ||
+                runningTimesDiff.GetThreadCPUDelta() == Some(uint64_t(0))) {
               const bool dup_ok = ActivePS::Buffer(lock).DuplicateLastSample(
                   info->ThreadId(), threadSampleDeltaMs,
                   profiledThreadData->LastSample(), runningTimesDiff);
