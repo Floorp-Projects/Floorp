@@ -46,6 +46,7 @@ EXPORTS.mozilla = [
     "StorageAccess.h",
     "StoragePrincipalHelper.h",
     "URLDecorationStripper.h",
+    "URLQueryStringStripper.h",
 ]
 
 UNIFIED_SOURCES += [
@@ -65,6 +66,7 @@ UNIFIED_SOURCES += [
     "StoragePrincipalHelper.cpp",
     "TemporaryAccessGrantObserver.cpp",
     "URLDecorationStripper.cpp",
+    "URLQueryStringStripper.cpp",
 ]
 
 LOCAL_INCLUDES += [
