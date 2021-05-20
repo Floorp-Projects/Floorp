@@ -212,44 +212,38 @@ class AboutWelcomeChild extends JSWindowActorChild {
    * Send initial data to page including experiment information
    */
   async getAWContent() {
+    let attributionData = await this.sendQuery("AWPage:GET_ATTRIBUTION_DATA");
+
+    // Return to AMO gets returned early.
+    if (attributionData?.template) {
+      log.debug("Loading about:welcome with RTAMO attribution data");
+      return Cu.cloneInto(attributionData, this.contentWindow);
+    } else if (attributionData?.ua) {
+      log.debug("Loading about:welcome with UA attribution");
+    }
+
     let experimentMetadata =
       ExperimentAPI.getExperimentMetaData({
         featureId: "aboutwelcome",
       }) || {};
-    let featureConfig = NimbusFeatures.aboutwelcome.getValue() || {};
 
-    if (experimentMetadata?.slug) {
-      log.debug(
-        `Loading about:welcome with experiment: ${experimentMetadata.slug}`
-      );
-    } else {
-      log.debug("Loading about:welcome without experiment");
-      let attributionData = await this.sendQuery("AWPage:GET_ATTRIBUTION_DATA");
+    log.debug(
+      `Loading about:welcome with ${experimentMetadata?.slug ??
+        "no"} experiment`
+    );
 
-      if (attributionData && attributionData.template) {
-        log.debug("Loading about:welcome with RTAMO attribution data");
-        featureConfig = { ...attributionData, ...featureConfig };
-      } else {
-        log.debug("Loading about:welcome with default data and UA attribution");
-        let ua = attributionData ? attributionData.ua : "";
-        featureConfig = { ...featureConfig, ua };
-        let defaults = await AboutWelcomeDefaults.getDefaults(featureConfig);
-        // FeatureConfig (from prefs or experiments) has higher precendence
-        // to defaults. But the `screens` property isn't defined we shouldn't
-        // override the default with `null`
-        let screens = featureConfig.screens || defaults.screens;
-        featureConfig = {
-          ...defaults,
-          ...featureConfig,
-          screens,
-        };
-      }
-    }
-
+    let featureConfig = NimbusFeatures.aboutwelcome.getValue();
+    let defaults = await AboutWelcomeDefaults.getDefaults(featureConfig);
+    // FeatureConfig (from prefs or experiments) has higher precendence
+    // to defaults. But the `screens` property isn't defined we shouldn't
+    // override the default with `null`
     return Cu.cloneInto(
       await AboutWelcomeDefaults.prepareContentForReact({
+        ...attributionData,
         ...experimentMetadata,
+        ...defaults,
         ...featureConfig,
+        screens: featureConfig.screens ?? defaults.screens,
       }),
       this.contentWindow
     );
