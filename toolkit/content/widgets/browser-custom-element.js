@@ -1029,11 +1029,6 @@
         // we should re-evaluate the CSP here.
         this._csp = null;
 
-        this.messageManager.loadFrameScript(
-          "chrome://global/content/browser-child.js",
-          true
-        );
-
         if (!this.hasAttribute("disablehistory")) {
           Services.obs.addObserver(
             this.observer,

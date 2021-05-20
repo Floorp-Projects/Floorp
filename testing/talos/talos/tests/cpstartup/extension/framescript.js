@@ -1,4 +1,11 @@
 (function() {
+  const { Services } = ChromeUtils.import(
+    "resource://gre/modules/Services.jsm"
+  );
+  sendAsyncMessage("CPStartup:BrowserChildReady", {
+    time: Services.telemetry.msSystemNow(),
+  });
+
   addEventListener(
     "CPStartup:Ping",
     e => {
