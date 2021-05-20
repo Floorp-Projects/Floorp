@@ -256,7 +256,7 @@ add_task(async function testBookmarkButtonPress() {
   await BrowserTestUtils.withNewTab("https://example.com", async function(
     aBrowser
   ) {
-    let button = document.getElementById("star-button");
+    let button = document.getElementById("star-button-box");
     forceFocus(button);
     StarUI._createPanelIfNeeded();
     let panel = document.getElementById("editBookmarkPanel");

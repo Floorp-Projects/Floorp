@@ -47,12 +47,6 @@ const ONECRL_COLLECTION_PREF = "services.settings.security.onecrl.collection";
 const ONECRL_SIGNER_PREF = "services.settings.security.onecrl.signer";
 const ONECRL_CHECKED_PREF = "services.settings.security.onecrl.checked";
 
-const PINNING_ENABLED_PREF = "services.blocklist.pinning.enabled";
-const PINNING_BUCKET_PREF = "services.blocklist.pinning.bucket";
-const PINNING_COLLECTION_PREF = "services.blocklist.pinning.collection";
-const PINNING_CHECKED_SECONDS_PREF = "services.blocklist.pinning.checked";
-const PINNING_SIGNER_PREF = "services.blocklist.pinning.signer";
-
 const CRLITE_FILTERS_BUCKET_PREF =
   "security.remote_settings.crlite_filters.bucket";
 const CRLITE_FILTERS_CHECKED_SECONDS_PREF =
@@ -253,42 +247,6 @@ const updateCertBlocklist = async function({
   }
 };
 
-/**
- * Modify the appropriate security pins based on records from the remote
- * collection.
- *
- * @param {Object} data   Current records in the local db.
- */
-async function updatePinningList({ data: { current: records } }) {
-  if (!Services.prefs.getBoolPref(PINNING_ENABLED_PREF)) {
-    return;
-  }
-
-  const siteSecurityService = Cc["@mozilla.org/ssservice;1"].getService(
-    Ci.nsISiteSecurityService
-  );
-
-  // clear the current preload list
-  siteSecurityService.clearPreloads();
-
-  // write each KeyPin entry to the preload list
-  for (let item of records) {
-    try {
-      const { pinType, versions } = item;
-      if (versions.includes(Services.appinfo.version) && pinType == "STSPin") {
-        siteSecurityService.setHSTSPreload(
-          item.hostName,
-          item.includeSubdomains,
-          item.expires
-        );
-      }
-    } catch (e) {
-      // Prevent errors relating to individual preload entries from causing sync to fail.
-      Cu.reportError(e);
-    }
-  }
-}
-
 var RemoteSecuritySettings = {
   /**
    * Initialize the clients (cheap instantiation) and setup their sync event.
@@ -307,27 +265,15 @@ var RemoteSecuritySettings = {
     );
     OneCRLBlocklistClient.on("sync", updateCertBlocklist);
 
-    const PinningBlocklistClient = RemoteSettings(
-      Services.prefs.getCharPref(PINNING_COLLECTION_PREF),
-      {
-        bucketNamePref: PINNING_BUCKET_PREF,
-        lastCheckTimePref: PINNING_CHECKED_SECONDS_PREF,
-        signerName: Services.prefs.getCharPref(PINNING_SIGNER_PREF),
-      }
-    );
-    PinningBlocklistClient.on("sync", updatePinningList);
-
     let IntermediatePreloadsClient = new IntermediatePreloads();
     let CRLiteFiltersClient = new CRLiteFilters();
 
     this.OneCRLBlocklistClient = OneCRLBlocklistClient;
-    this.PinningBlocklistClient = PinningBlocklistClient;
     this.IntermediatePreloadsClient = IntermediatePreloadsClient;
     this.CRLiteFiltersClient = CRLiteFiltersClient;
 
     return {
       OneCRLBlocklistClient,
-      PinningBlocklistClient,
       IntermediatePreloadsClient,
       CRLiteFiltersClient,
     };

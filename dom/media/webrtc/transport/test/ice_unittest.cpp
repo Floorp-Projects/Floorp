@@ -1898,7 +1898,8 @@ class WebRtcIcePrioritizerTest : public StunTest {
     int r = nr_str_port_to_transport_addr(str_addr.c_str(), 0, IPPROTO_UDP,
                                           &(local_addr.addr));
     ASSERT_EQ(0, r);
-    strncpy(local_addr.addr.ifname, ifname.c_str(), MAXIFNAME);
+    strncpy(local_addr.addr.ifname, ifname.c_str(), MAXIFNAME - 1);
+    local_addr.addr.ifname[MAXIFNAME - 1] = '\0';
 
     r = nr_interface_prioritizer_add_interface(prioritizer_, &local_addr);
     ASSERT_EQ(0, r);

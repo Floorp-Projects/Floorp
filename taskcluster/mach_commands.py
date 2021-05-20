@@ -176,7 +176,7 @@ class MachCommands(MachCommandBase):
         return self.show_taskgraph("full_task_set", options)
 
     @ShowTaskGraphSubCommand("taskgraph", "full", description="Show the full taskgraph")
-    def taskgraph_full(self, **options):
+    def taskgraph_full(self, command_context, **options):
         return self.show_taskgraph("full_task_graph", options)
 
     @ShowTaskGraphSubCommand(

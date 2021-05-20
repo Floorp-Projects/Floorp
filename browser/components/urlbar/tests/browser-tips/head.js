@@ -688,7 +688,6 @@ async function withDNSRedirect(domain, path, callback) {
     Ci.nsISiteSecurityService
   );
   sss.clearAll();
-  sss.clearPreloads();
 }
 
 function resetSearchTipsProvider() {

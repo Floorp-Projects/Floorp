@@ -53,7 +53,6 @@ class Security extends Domain {
 
       // clear collected HSTS and HPKP state
       sss.clearAll();
-      sss.clearPreloads();
     }
 
     certOverrideService.setDisableAllSecurityChecksAndLetAttackersInterceptMyData(

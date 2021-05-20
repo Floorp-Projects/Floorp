@@ -62,5 +62,4 @@ allowAllCerts.disable = function() {
   // clear collected HSTS and HPKP state
   // through the site security service
   sss.clearAll();
-  sss.clearPreloads();
 };

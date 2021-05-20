@@ -30,6 +30,9 @@
 #include "hb-aat-layout.hh"
 #include "hb-open-type.hh"
 
+namespace OT {
+struct GDEF;
+};
 
 namespace AAT {
 
@@ -863,6 +866,7 @@ struct hb_aat_apply_context_t :
   hb_buffer_t *buffer;
   hb_sanitize_context_t sanitizer;
   const ankr *ankr_table;
+  const OT::GDEF *gdef_table;
 
   /* Unused. For debug tracing only. */
   unsigned int lookup_index;

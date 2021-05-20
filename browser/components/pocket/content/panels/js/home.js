@@ -1,4 +1,4 @@
-/* global $:false, Handlebars:false, thePKT_PANEL:false */
+/* global Handlebars:false, thePKT_PANEL:false */
 /* import-globals-from messages.js */
 
 /*
@@ -12,6 +12,11 @@ var PKT_PANEL_OVERLAY = function(options) {
   this.translations = {};
   this.pockethost = "getpocket.com";
   this.dictJSON = {};
+
+  this.parseHTML = function(htmlString) {
+    const parser = new DOMParser();
+    return parser.parseFromString(htmlString, `text/html`).documentElement;
+  };
   this.initCloseTabEvents = function() {
     function clickHelper(e, linkData) {
       e.preventDefault();
@@ -22,24 +27,28 @@ var PKT_PANEL_OVERLAY = function(options) {
         position: linkData.position,
       });
     }
-    $(".pkt_ext_mylist").click(function(e) {
+
+    document.querySelector(`.pkt_ext_mylist`).addEventListener(`click`, e => {
       clickHelper(e, {
         source: "home_view_list",
-        url: $(this).attr("href"),
+        url: e.target.getAttribute(`href`),
       });
     });
-    $(".pkt_ext_topic").click(function(e) {
-      const position = $(".pkt_ext_topic").index(this);
-      clickHelper(e, {
-        source: "home_topic",
-        url: $(this).attr("href"),
-        position,
+
+    document.querySelectorAll(`.pkt_ext_topic`).forEach((el, index) => {
+      el.addEventListener(`click`, e => {
+        clickHelper(e, {
+          source: "home_topic",
+          url: e.target.getAttribute(`href`),
+          index,
+        });
       });
     });
-    $(".pkt_ext_discover").click(function(e) {
+
+    document.querySelector(`.pkt_ext_discover`).addEventListener(`click`, e => {
       clickHelper(e, {
         source: "home_discover",
-        url: $(this).attr("href"),
+        url: e.target.getAttribute(`href`),
       });
     });
   };
@@ -76,11 +85,15 @@ PKT_PANEL_OVERLAY.prototype = {
 
     // extra modifier class for language
     if (this.locale) {
-      $("body").addClass("pkt_ext_home_" + this.locale);
+      document
+        .querySelector(`body`)
+        .classList.add(`pkt_ext_home_${this.locale}`);
     }
 
     // Create actual content
-    $("body").append(Handlebars.templates.home_shell(this.dictJSON));
+    document
+      .querySelector(`body`)
+      .append(this.parseHTML(Handlebars.templates.home_shell(this.dictJSON)));
 
     // We only have topic pages in English,
     // so ensure we only show a topics section for English browsers.
@@ -97,12 +110,16 @@ PKT_PANEL_OVERLAY.prototype = {
           { title: "Science", topic: "science" },
         ],
       };
-      const topics = Handlebars.templates.popular_topics(data);
-      $(".pkt_ext_more").append(topics);
+      document
+        .querySelector(`.pkt_ext_more`)
+        .append(this.parseHTML(Handlebars.templates.popular_topics(data)));
     } else if (enableLocalizedExploreMore) {
       // For non English, we have a slightly different component to the page.
-      const explore = Handlebars.templates.explore_more(this.dictJSON);
-      $(".pkt_ext_more").append(explore);
+      document
+        .querySelector(`.pkt_ext_more`)
+        .append(
+          this.parseHTML(Handlebars.templates.explore_more(this.dictJSON))
+        );
     }
 
     // close events

@@ -614,9 +614,10 @@ static double JoulesToWatts(double aJoules) {
 
 // "Normalize" here means convert kUnsupported_j to zero so it can be used in
 // additive expressions. All printed values are 5 or maybe 6 chars (though 6
-// chars would require a value > 100 W, which is unlikely).
+// chars would require a value > 100 W, which is unlikely). Values above 1000 W
+// are normalized to " n/a ", so 6 chars is the longest that may be printed.
 static void NormalizeAndPrintAsWatts(char* aBuf, double& aValue_J) {
-  if (aValue_J == kUnsupported_j) {
+  if (aValue_J == kUnsupported_j || aValue_J >= 1000) {
     aValue_J = 0;
     sprintf(aBuf, "%s", " n/a ");
   } else {

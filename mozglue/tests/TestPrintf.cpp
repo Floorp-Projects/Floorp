@@ -78,7 +78,7 @@ static bool MOZ_FORMAT_PRINTF(5, 6)
   bool ret = output && cmp(output.get(), expect);
   if (!ret && strcmp(expect, "ignore") != 0) {
     fprintf(stderr, "(actual) \"%s\" != (expected) \"%s\" (%s:%d)\n",
-            output.get(), expect, file, line);
+            output.get() ? output.get() : "null", expect, file, line);
   }
   return ret;
 }

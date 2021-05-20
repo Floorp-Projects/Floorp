@@ -1599,50 +1599,48 @@ void nsJSContext::EndCycleCollectionCallback(CycleCollectorResults& aResults) {
 }
 
 // static
-bool GCRunnerFired(TimeStamp aDeadline, void* /* aClosure */) {
+bool GCRunnerFired(TimeStamp aDeadline, void* aClosure) {
+  MOZ_ASSERT(!aClosure, "Don't pass a closure to GCRunnerFired");
   MOZ_ASSERT(!sShuttingDown, "GCRunner still alive during shutdown");
 
   GCRunnerStep step = sScheduler.GetNextGCRunnerAction(aDeadline);
   switch (step.mAction) {
     case GCRunnerAction::None:
-      nsJSContext::KillGCRunner();
-      return false;
+      MOZ_CRASH("Unexpected GCRunnerAction");
 
-    case GCRunnerAction::MajorGC: {
+    case GCRunnerAction::WaitToMajorGC: {
       RefPtr<MayGCPromise> mbPromise = MayGCNow(step.mReason);
-      if (mbPromise) {
+      if (!mbPromise || mbPromise->IsResolved()) {
         // Only use the promise if it's not resolved yet, otherwise fall through
         // and begin the GC in the current idle time with our current deadline.
-        if (!mbPromise->IsResolved()) {
-          nsJSContext::KillGCRunner();
-          JS::GCReason reason = step.mReason;
-          mbPromise->Then(
-              GetMainThreadSerialEventTarget(), __func__,
-              [reason](bool aIgnored) {
-                sScheduler.NoteReadyForMajorGC(reason);
-                if (sGCRunner) {
-                  // Cancel the current runner so we can re-create it with a 0
-                  // delay.
-                  sGCRunner->Cancel();
-                }
-                // Continue in idle time.
-                sGCRunner = IdleTaskRunner::Create(
-                    [](TimeStamp aDeadline) {
-                      return GCRunnerFired(aDeadline, nullptr);
-                    },
-                    "GCRunnerFired", 0,
-                    StaticPrefs::javascript_options_gc_delay_interslice(),
-                    int64_t(
-                        sScheduler.mActiveIntersliceGCBudget.ToMilliseconds()),
-                    true, [] { return sShuttingDown; });
-              },
-              [](mozilla::ipc::ResponseRejectReason r) {});
-          return true;
-        }
+        break;
       }
-      break;
+
+      nsJSContext::KillGCRunner();
+      mbPromise->Then(
+          GetMainThreadSerialEventTarget(), __func__,
+          [](bool aIgnored) {
+            if (!sScheduler.NoteReadyForMajorGC()) {
+              return;  // Another GC completed while waiting.
+            }
+            // If a new runner was started, recreate it with a 0 delay. The new
+            // runner will continue in idle time.
+            nsJSContext::KillGCRunner();
+            sGCRunner = IdleTaskRunner::Create(
+                [](TimeStamp aDeadline) {
+                  return GCRunnerFired(aDeadline, nullptr);
+                },
+                "GCRunnerFired", 0,
+                StaticPrefs::javascript_options_gc_delay_interslice(),
+                int64_t(sScheduler.mActiveIntersliceGCBudget.ToMilliseconds()),
+                true, [] { return sShuttingDown; });
+          },
+          [](mozilla::ipc::ResponseRejectReason r) {});
+
+      return true;
     }
-    case GCRunnerAction::MajorGCReady:
+
+    case GCRunnerAction::StartMajorGC:
     case GCRunnerAction::GCSlice:
       break;
   }
@@ -1726,7 +1724,7 @@ static bool CCRunnerFired(TimeStamp aDeadline) {
   // `Yield` in step.mYield.
   CCRunnerStep step;
   do {
-    step = sScheduler.GetNextCCRunnerAction(aDeadline);
+    step = sScheduler.AdvanceCCRunner(aDeadline);
     switch (step.mAction) {
       case CCRunnerAction::None:
         break;
@@ -1802,10 +1800,14 @@ void nsJSContext::RunNextCollectorTimer(JS::GCReason aReason,
 
   RefPtr<IdleTaskRunner> runnable;
   if (sGCRunner) {
-    // If the GC has already started, we will just run the next slice here and
-    // this call will have no effect (the reason will be ignored, and the
-    // trigger will be cleared at the end of the GC.)
-    sScheduler.SetWantMajorGC(aReason);
+    // To maintain pre-bug 1692308 GCReason handling: RunNextCollectorTimer
+    // should override the PokeGC reason, but only if the first slice has not
+    // happened yet. If there was no PokeGC reason (ie, this is an
+    // internally-generated GC), then do not override the reason (which will be
+    // INTER_SLICE_GC).
+    if (!sScheduler.InIncrementalGC() && sScheduler.mMajorGCReason != JS::GCReason::INTER_SLICE_GC) {
+      sScheduler.SetWantMajorGC(aReason);
+    }
     sGCRunner->SetIdleDeadline(aDeadline);
     runnable = sGCRunner;
   } else {
@@ -2065,6 +2067,8 @@ static void DOMGCSliceCallback(JSContext* aCx, JS::GCProgress aProgress,
       break;
 
     case JS::GC_SLICE_END:
+      sScheduler.NoteGCSliceEnd();
+
       sGCUnnotifiedTotalTime +=
           aDesc.lastSliceEnd(aCx) - aDesc.lastSliceStart(aCx);
 
