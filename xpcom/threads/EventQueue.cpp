@@ -33,6 +33,8 @@ void EventQueueInternal<ItemsPerPage>::PutEvent(
       static_cast<uint32_t>(EventQueuePriority::InputHigh));
   static_assert(static_cast<uint32_t>(nsIRunnablePriority::PRIORITY_VSYNC) ==
                 static_cast<uint32_t>(EventQueuePriority::Vsync));
+  static_assert(static_cast<uint32_t>(nsIRunnablePriority::PRIORITY_CONTROL) ==
+                static_cast<uint32_t>(EventQueuePriority::Control));
 
   if (mForwardToTC) {
     TaskController* tc = TaskController::Get();

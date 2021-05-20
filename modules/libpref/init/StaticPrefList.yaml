@@ -10645,6 +10645,12 @@
   value: true
   mirror: always
 
+# If control tasks aren't enabled, they get medium high priority.
+- name: threads.control_event_queue.enabled
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "timer."
 #---------------------------------------------------------------------------
