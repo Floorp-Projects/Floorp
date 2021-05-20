@@ -165,6 +165,13 @@
         "parameters": []
       },
       {
+        "name":  "getProfilePath",
+        "type": "function",
+        "async": true,
+        "description": "Gets the path of the current profile",
+        "parameters": []
+      },
+      {
         "name": "killContentProcess",
         "type": "function",
         "async": true,

@@ -1225,7 +1225,7 @@ public class GeckoSessionTestRule implements TestRule {
     }
 
     protected void deleteCrashDumps() {
-        final File dumpDir = new File(getRuntime().getProfileDir(), "minidumps");
+        final File dumpDir = new File(getProfilePath(), "minidumps");
         for (final File dump : dumpDir.listFiles()) {
             dump.delete();
         }
@@ -1919,6 +1919,10 @@ public class GeckoSessionTestRule implements TestRule {
     public int getSessionPid(final @NonNull GeckoSession session) {
         final Double dblPid = (Double) webExtensionApiCall(session, "GetPidForTab", null);
         return dblPid.intValue();
+    }
+
+    public String getProfilePath() {
+        return (String) webExtensionApiCall("GetProfilePath", null);
     }
 
     public int[] getAllSessionPids() {
