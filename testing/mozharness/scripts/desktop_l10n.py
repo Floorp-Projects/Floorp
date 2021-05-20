@@ -255,18 +255,6 @@ class DesktopSingleLocale(LocalesMixin, AutomationMixin, VCSMixin, BaseScript):
     def _get_mach_executable(self):
         return [sys.executable, "mach"]
 
-    def _get_make_executable(self):
-        config = self.config
-        dirs = self.query_abs_dirs()
-        if config.get("enable_mozmake"):  # e.g. windows
-            make = r"/".join([dirs["abs_src_dir"], "mozmake.exe"])
-            # mysterious subprocess errors, let's try to fix this path...
-            make = make.replace("\\", "/")
-            make = [make]
-        else:
-            make = ["make"]
-        return make
-
     def _make(
         self,
         target,
@@ -277,7 +265,7 @@ class DesktopSingleLocale(LocalesMixin, AutomationMixin, VCSMixin, BaseScript):
         output_parser=None,
     ):
         """Runs make. Returns the exit code"""
-        make = self._get_make_executable()
+        make = ["make"]
         if target:
             make = make + target
         return self.run_command(
@@ -293,9 +281,8 @@ class DesktopSingleLocale(LocalesMixin, AutomationMixin, VCSMixin, BaseScript):
         self, target, cwd, env, halt_on_failure=True, ignore_errors=False
     ):
         """runs make and returns the output of the command"""
-        make = self._get_make_executable()
         return self.get_output_from_command(
-            make + target,
+            ["make"] + target,
             cwd=cwd,
             env=env,
             silent=True,
