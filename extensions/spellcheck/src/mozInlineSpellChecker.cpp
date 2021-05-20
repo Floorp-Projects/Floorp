@@ -1293,6 +1293,8 @@ class MOZ_STACK_CLASS mozInlineSpellChecker::SpellCheckerTimeSlice {
  private:
   // Creates an async request to check the words and add the ranges for the
   // misspellings.
+  //
+  // @param aWords normalized words corresponding to aRanges.
   void CheckWordsAndAddRangesForMisspellings(
       const nsTArray<nsString>& aWords, nsTArray<NodeOffsetRange>&& aRanges);
 
