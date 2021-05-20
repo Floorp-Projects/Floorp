@@ -8605,16 +8605,17 @@
 # effect and determine the timing to stop controlling media.
 - name: media.mediacontrol.stopcontrol.timer
   type: bool
-  value: false
+  value: true
   mirror: always
 
 # If media is being paused after a certain period, then we would think that
 # media doesn't need to be controlled anymore. Therefore, that media would stop
 # listening to the media control key events. The value of this pref is how long
-# media would stop listening to the event after it's paused.
+# media would stop listening to the event after it's paused. The default value
+# is set to 24 hrs (24*60*60*1000)
 - name: media.mediacontrol.stopcontrol.timer.ms
   type: RelaxedAtomicUint32
-  value: 60000
+  value: 86400000
   mirror: always
 
 # If this pref is on, we would stop controlling media after it reaches to the
