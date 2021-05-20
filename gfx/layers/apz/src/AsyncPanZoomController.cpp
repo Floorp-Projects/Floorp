@@ -3572,6 +3572,19 @@ ScrollDirections AsyncPanZoomController::GetOverscrollableDirections() const {
   return result;
 }
 
+ScrollDirections AsyncPanZoomController::GetScrollableDirections() const {
+  ScrollDirections result;
+  RecursiveMutexAutoLock lock(mRecursiveMutex);
+
+  if (mX.CanScroll()) {
+    result += ScrollDirection::eHorizontal;
+  }
+  if (mY.CanScroll()) {
+    result += ScrollDirection::eVertical;
+  }
+  return result;
+}
+
 void AsyncPanZoomController::OverscrollBy(ParentLayerPoint& aOverscroll) {
   if (!StaticPrefs::apz_overscroll_enabled()) {
     return;
