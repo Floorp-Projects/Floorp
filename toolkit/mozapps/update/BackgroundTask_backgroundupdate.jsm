@@ -5,7 +5,7 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["runBackgroundTask"];
+var EXPORTED_SYMBOLS = ["backgroundTaskTimeoutSec", "runBackgroundTask"];
 
 const { EXIT_CODE } = ChromeUtils.import(
   "resource://gre/modules/BackgroundUpdate.jsm"
@@ -45,6 +45,11 @@ XPCOMUtils.defineLazyGetter(this, "log", () => {
 });
 
 Cu.importGlobalProperties(["Glean", "GleanPings"]);
+
+const backgroundTaskTimeoutSec = Services.prefs.getIntPref(
+  "app.update.background.timeoutSec",
+  10 * 60
+);
 
 /**
  * Verify that pre-conditions to update this installation (both persistent and
