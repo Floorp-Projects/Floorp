@@ -10220,6 +10220,20 @@
   value: false
   mirror: always
 
+# The global switch to control the URL query sting stripping which strips query
+# parameters from loading URIs to prevent bounce (redirect) tracking.
+- name: privacy.query_stripping.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
+# The list which contains query parameters that are needed to be stripped from
+# URIs. The query parameters are separated by a space.
+- name: privacy.query_stripping.strip_list
+  type: String
+  value: ""
+  mirror: never
+
 #---------------------------------------------------------------------------
 # Prefs starting with "prompts."
 #---------------------------------------------------------------------------
