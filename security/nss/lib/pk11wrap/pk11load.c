@@ -409,6 +409,8 @@ secmod_LoadPKCS11Module(SECMODModule *mod, SECMODModule **oldModule)
     if (mod->loaded)
         return SECSuccess;
 
+    mod->fipsIndicator = NULL;
+
     /* internal modules get loaded from their internal list */
     if (mod->internal && (mod->dllName == NULL)) {
 #ifdef NSS_STATIC_SOFTOKEN
@@ -514,6 +516,11 @@ secmod_LoadPKCS11Module(SECMODModule *mod, SECMODModule **oldModule)
         }
         mod->functionList = interface->pFunctionList;
         mod->flags = interface->flags;
+        /* if we have a fips indicator, grab it */
+        if ((*ientry)((CK_UTF8CHAR_PTR) "Vendor NSS FIPS Interface", NULL,
+                      &interface, 0) == CKR_OK) {
+            mod->fipsIndicator = ((CK_NSS_FIPS_FUNCTIONS *)(interface->pFunctionList))->NSC_NSSGetFIPSStatus;
+        }
     } else {
         if ((*fentry)((CK_FUNCTION_LIST_PTR *)&mod->functionList) != CKR_OK)
             goto fail;

@@ -269,6 +269,16 @@
 
 #define CKM_TLS_PRF_GENERAL 0x80000373UL
 
+/* FIPS Indicator defines */
+#define CKS_NSS_UNINITIALIZED 0xffffffffUL
+#define CKS_NSS_FIPS_NOT_OK 0UL
+#define CKS_NSS_FIPS_OK 1UL
+
+#define CKT_NSS_SESSION_CHECK 1UL
+#define CKT_NSS_OBJECT_CHECK 2UL
+#define CKT_NSS_BOTH_CHECK 3UL
+#define CKT_NSS_SESSION_LAST_CHECK 4UL
+
 typedef struct CK_NSS_JPAKEPublicValue {
     CK_BYTE *pGX;
     CK_ULONG ulGXLen;
@@ -589,6 +599,18 @@ typedef struct CK_NSS_MODULE_FUNCTIONS {
     CK_NSS_ModuleDBFunc NSC_ModuleDBFunc;
 } CK_NSS_MODULE_FUNCTIONS;
 
+/* FIPS Indicator Interface. This may move to the normal PKCS #11 table
+ * in the future. For now it's called "Vendor NSS FIPS Interface" */
+typedef CK_RV (*CK_NSS_GetFIPSStatus)(CK_SESSION_HANDLE hSession,
+                                      CK_OBJECT_HANDLE hObject,
+                                      CK_ULONG ulOperationType,
+                                      CK_ULONG *pulFIPSStatus);
+
+typedef struct CK_NSS_FIPS_FUNCTIONS {
+    CK_VERSION version;
+    CK_NSS_GetFIPSStatus NSC_NSSGetFIPSStatus;
+} CK_NSS_FIPS_FUNCTIONS;
+
 /* There was an inconsistency between the spec and the header file in defining
  * the CK_GCM_PARAMS structure. The authoritative reference is the header file,
  * but NSS used the spec when adding it to its own header. In V3 we've
@@ -613,7 +635,7 @@ typedef CK_NSS_GCM_PARAMS CK_PTR CK_NSS_GCM_PARAMS_PTR;
 #define CK_INVALID_SESSION CK_INVALID_HANDLE
 #define CKR_KEY_PARAMS_INVALID 0x0000006B
 
-/* use the old wrong CK_GCM_PARAMS is NSS_PCKS11_2_0_COMPAT is defined */
+/* use the old wrong CK_GCM_PARAMS if NSS_PCKS11_2_0_COMPAT is defined */
 typedef struct CK_NSS_GCM_PARAMS CK_GCM_PARAMS;
 typedef CK_NSS_GCM_PARAMS CK_PTR CK_GCM_PARAMS_PTR;
 

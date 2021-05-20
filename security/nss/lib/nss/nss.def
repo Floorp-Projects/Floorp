@@ -1222,11 +1222,19 @@ PK11_HPKE_ImportContext;
 ;+};
 ;+NSS_3.65 { 	# NSS 3.65 release
 ;+    global:
+HASH_GetHMACOidTagByHashOidTag;
 PK11_CreateContextByPubKey;
 PK11_CreateContextByPrivKey;
 PK11_ExportEncryptedPrivKeyInfoV2;
 PK11_ExportEncryptedPrivateKeyInfoV2;
-HASH_GetHMACOidTagByHashOidTag;
+;+    local:
+;+       *;
+;+};
+;+NSS_3.66 { 	# NSS 3.66 release
+;+    global:
+PK11_ContextGetFIPSStatus;
+PK11_ObjectGetFIPSStatus;
+PK11_SlotGetLastFIPSStatus;
 ;+    local:
 ;+       *;
 ;+};

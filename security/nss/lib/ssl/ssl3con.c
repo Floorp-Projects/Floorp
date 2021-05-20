@@ -13876,6 +13876,41 @@ ssl3_DestroySSL3Info(sslSocket *ss)
     sslBuffer_Clear(&ss->ssl3.hs.greaseEchBuf);
 }
 
+/* check if the current cipher spec is FIPS. We only need to
+ * check the contexts here, if the kea, prf or keys were not FIPS,
+ * that status would have been rolled up in the create context
+ * call */
+static PRBool
+ssl_cipherSpecIsFips(ssl3CipherSpec *spec)
+{
+    if (!spec || !spec->cipherDef) {
+        return PR_FALSE;
+    }
+
+    if (spec->cipherDef->type != type_aead) {
+        if (spec->keyMaterial.macContext == NULL) {
+            return PR_FALSE;
+        }
+        if (!PK11_ContextGetFIPSStatus(spec->keyMaterial.macContext)) {
+            return PR_FALSE;
+        }
+    }
+    if (!spec->cipherContext) {
+        return PR_FALSE;
+    }
+    return PK11_ContextGetFIPSStatus(spec->cipherContext);
+}
+
+/* return true if the current operation is running in FIPS mode */
+PRBool
+ssl_isFIPS(sslSocket *ss)
+{
+    if (!ssl_cipherSpecIsFips(ss->ssl3.crSpec)) {
+        return PR_FALSE;
+    }
+    return ssl_cipherSpecIsFips(ss->ssl3.cwSpec);
+}
+
 /*
  * parse the policy value for a single algorithm in a cipher_suite,
  *   return TRUE if we disallow by the cipher suite by policy

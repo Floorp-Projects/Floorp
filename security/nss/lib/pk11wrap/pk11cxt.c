@@ -1783,3 +1783,13 @@ PK11_DigestFinal(PK11Context *context, unsigned char *data,
     *outLen = (unsigned int)len;
     return SECSuccess;
 }
+
+PRBool
+PK11_ContextGetFIPSStatus(PK11Context *context)
+{
+    if (context->slot == NULL) {
+        return PR_FALSE;
+    }
+    return pk11slot_GetFIPSStatus(context->slot, context->session,
+                                  CK_INVALID_HANDLE, context->init ? CKT_NSS_SESSION_CHECK : CKT_NSS_SESSION_LAST_CHECK);
+}
