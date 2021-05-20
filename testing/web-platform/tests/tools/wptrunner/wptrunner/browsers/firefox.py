@@ -148,7 +148,13 @@ def executor_kwargs(logger, test_type, server_config, cache_manager, run_info_da
                                   kwargs["enable_webrender"],
                                   kwargs["chaos_mode_flags"])
 
-            executor_kwargs["environ"] = environ
+        # This doesn't work with wdspec tests
+        # In particular tests can create a session without passing in the capabilites
+        # and in those cases we get the default geckodriver profile which doesn't
+        # guarantee zero network access
+        del environ["MOZ_DISABLE_NONLOCAL_CONNECTIONS"]
+
+        executor_kwargs["environ"] = environ
     if kwargs["certutil_binary"] is None:
         capabilities["acceptInsecureCerts"] = True
     if capabilities:
