@@ -11,10 +11,6 @@
 #include "Zip.h"
 #include "mozilla/RefPtr.h"
 
-#ifdef MOZ_CRASHREPORTER
-#  include "minidump-analyzer.h"
-#endif
-
 extern "C" __attribute__((visibility("default"))) void MOZ_JNICALL
 Java_org_mozilla_gecko_mozglue_GeckoLoader_putenv(JNIEnv* jenv, jclass,
                                                   jstring map) {
@@ -26,19 +22,3 @@ Java_org_mozilla_gecko_mozglue_GeckoLoader_putenv(JNIEnv* jenv, jclass,
   putenv(strdup(str));
   jenv->ReleaseStringUTFChars(map, str);
 }
-
-#ifdef MOZ_CRASHREPORTER
-
-extern "C" __attribute__((visibility("default"))) jboolean MOZ_JNICALL
-Java_org_mozilla_gecko_mozglue_MinidumpAnalyzer_GenerateStacks(
-    JNIEnv* jenv, jclass, jstring minidumpPath, jboolean fullStacks) {
-  const char* str;
-  str = jenv->GetStringUTFChars(minidumpPath, nullptr);
-
-  bool res = CrashReporter::GenerateStacks(str, fullStacks);
-
-  jenv->ReleaseStringUTFChars(minidumpPath, str);
-  return res;
-}
-
-#endif  // MOZ_CRASHREPORTER

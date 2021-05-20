@@ -17,15 +17,6 @@ SOURCES += [
     "SharedMemNatives.cpp",
 ]
 
-if CONFIG["MOZ_CRASHREPORTER"]:
-    USE_LIBS += [
-        "minidump-analyzer",
-    ]
-
-    LOCAL_INCLUDES += [
-        "/toolkit/crashreporter/minidump-analyzer",
-    ]
-
 FINAL_LIBRARY = "mozglue"
 
 for var in ("ANDROID_PACKAGE_NAME", "ANDROID_CPU_ARCH"):
