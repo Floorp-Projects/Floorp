@@ -318,7 +318,7 @@ win64-winchecksec:
         symbol: TW64(winchecksec)
     worker:
         env:
-            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/vs2017.manifest"
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.8.manifest"
     run:
         script: build-winchecksec.sh
         toolchain-artifact: public/build/winchecksec.tar.bz2

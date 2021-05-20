@@ -61,7 +61,7 @@ win32-fix-stacks:
         symbol: TW32(fix-stacks)
     worker:
         env:
-            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/vs2017.manifest"
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.8.manifest"
     run:
         arguments: ['i686-pc-windows-msvc']
         toolchain-artifact: public/build/fix-stacks.tar.bz2
