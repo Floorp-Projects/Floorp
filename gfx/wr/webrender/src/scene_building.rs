@@ -1340,7 +1340,7 @@ impl<'a> SceneBuilder<'a> {
                     }
                 );
 
-                // TODO: create_radial_gradient_prim already calls 
+                // TODO: create_radial_gradient_prim already calls
                 // this, but it leaves the info variable that is
                 // passed to add_nonshadowable_primitive unmodified
                 // which can cause issues.
@@ -1703,6 +1703,7 @@ impl<'a> SceneBuilder<'a> {
             spatial_node_index,
             clip_id,
             &self.clip_store,
+            self.interners,
         );
     }
 
