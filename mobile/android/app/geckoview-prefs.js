@@ -70,9 +70,6 @@ pref("browser.safebrowsing.features.cryptomining.update", true);
 // Enable fingerprinting protection blocklist updates
 pref("browser.safebrowsing.features.fingerprinting.update", true);
 
-// Treat mouse as touch only on TV-ish devices
-pref("ui.android.mouse_as_touch", 2);
-
 // Enable autoplay permission prompts
 pref("media.geckoview.autoplay.request", true);
 
