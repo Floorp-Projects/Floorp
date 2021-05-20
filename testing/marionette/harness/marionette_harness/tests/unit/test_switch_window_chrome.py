@@ -26,6 +26,10 @@ class TestSwitchWindowChrome(TestSwitchToWindowContent):
 
         super(TestSwitchWindowChrome, self).tearDown()
 
+    def test_switch_to_unloaded_tab(self):
+        # Can only run in content context
+        pass
+
     @skipIf(
         sys.platform.startswith("linux"),
         "Bug 1511970 - New window isn't moved to the background on Linux",
