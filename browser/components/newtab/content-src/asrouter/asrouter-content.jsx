@@ -216,23 +216,13 @@ export class ASRouterUISurface extends React.PureComponent {
     ASRouterUtils.removeListener(this.onMessageFromParent);
   }
 
-  componentDidUpdate(prevProps, prevState) {
+  componentDidUpdate(prevProps) {
     if (
       prevProps.adminContent &&
       JSON.stringify(prevProps.adminContent) !==
         JSON.stringify(this.props.adminContent)
     ) {
       this.updateContent();
-    }
-    if (prevState.message.id !== this.state.message.id) {
-      const main = global.window.document.querySelector("main");
-      if (main) {
-        if (this.state.message.id) {
-          main.classList.add("has-snippet");
-        } else {
-          main.classList.remove("has-snippet");
-        }
-      }
     }
   }
 
@@ -274,7 +264,7 @@ export class ASRouterUISurface extends React.PureComponent {
       return null;
     }
     const SnippetComponent = SnippetsTemplates[message.template];
-    const { content } = message;
+    const { content } = this.state.message;
 
     return (
       <ImpressionsWrapper

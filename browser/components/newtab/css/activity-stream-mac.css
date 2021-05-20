@@ -442,7 +442,7 @@ input[type='text'], input[type='search'] {
 main {
   margin: auto;
   width: 274px;
-  padding: 0; }
+  padding-bottom: 68px; }
   main section {
     margin-bottom: 20px;
     position: relative; }
@@ -457,8 +457,6 @@ main {
   @media (min-width: 1122px) {
     main {
       width: 1042px; } }
-  main.has-snippet {
-    padding-bottom: 68px; }
 
 .below-search-snippet.withButton {
   margin: auto;
@@ -469,7 +467,7 @@ main {
 
 .ds-outer-wrapper-breakpoint-override main {
   width: 266px;
-  padding-bottom: 0; }
+  padding-bottom: 68px; }
   @media (min-width: 610px) {
     .ds-outer-wrapper-breakpoint-override main {
       width: 510px; } }
@@ -479,8 +477,6 @@ main {
   @media (min-width: 1122px) {
     .ds-outer-wrapper-breakpoint-override main {
       width: 986px; } }
-  .ds-outer-wrapper-breakpoint-override main.has-snippet {
-    padding-bottom: 68px; }
 
 .base-content-fallback {
   height: 100vh; }
