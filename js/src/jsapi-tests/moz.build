@@ -32,7 +32,6 @@ UNIFIED_SOURCES += [
     "testDeepFreeze.cpp",
     "testDefineGetterSetterNonEnumerable.cpp",
     "testDefineProperty.cpp",
-    "testDefinePropertyIgnoredAttributes.cpp",
     "testDeflateStringToUTF8Buffer.cpp",
     "testDifferentNewTargetInvokeConstructor.cpp",
     "testEmptyWindowIsOmitted.cpp",

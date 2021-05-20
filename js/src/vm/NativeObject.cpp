@@ -1771,16 +1771,19 @@ bool js::NativeDefineProperty(JSContext* cx, HandleNativeObject obj,
 bool js::NativeDefineDataProperty(JSContext* cx, HandleNativeObject obj,
                                   HandleId id, HandleValue value,
                                   unsigned attrs, ObjectOpResult& result) {
-  Rooted<PropertyDescriptor> desc(cx);
-  desc.initFields(value, attrs, nullptr, nullptr);
+  Rooted<PropertyDescriptor> desc(cx, PropertyDescriptor::Data(value, attrs));
   return NativeDefineProperty(cx, obj, id, desc, result);
 }
 
 bool js::NativeDefineAccessorProperty(JSContext* cx, HandleNativeObject obj,
                                       HandleId id, HandleObject getter,
                                       HandleObject setter, unsigned attrs) {
-  Rooted<PropertyDescriptor> desc(cx);
-  desc.initFields(UndefinedHandleValue, attrs, getter, setter);
+  Rooted<PropertyDescriptor> desc(
+      cx,
+      PropertyDescriptor::Accessor(
+          (attrs & JSPROP_GETTER) ? mozilla::Some(getter) : mozilla::Nothing(),
+          (attrs & JSPROP_SETTER) ? mozilla::Some(setter) : mozilla::Nothing(),
+          attrs & ~(JSPROP_GETTER | JSPROP_SETTER)));
 
   ObjectOpResult result;
   if (!NativeDefineProperty(cx, obj, id, desc, result)) {
