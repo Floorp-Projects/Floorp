@@ -48,26 +48,74 @@ SimpleTest.waitForExplicitFinish();
   const testCases = [
     {
       testString: "<p>hello</p>",
-      testExpected: "<p>hello</p>"
+      testExpected: "<p>hello</p>",
+      sanitizerOptions: {}
     },
     {
       // script element encoded to not confuse the HTML parser and end execution here
       testString: "<p>second test</p><script>alert(1)\x3C/script>",
-      testExpected: "<p>second test</p>"
+      testExpected: "<p>second test</p>",
+      sanitizerOptions: {},
+    },
+    {
+      // test for the allowElements option
+      testString: "<p>hello <i>folks</i></p>",
+      testExpected: "<p>hello folks</p>",
+      sanitizerOptions: { allowElements: ["p"] },
+    },
+    {
+      // test for the blockElements option
+      testString: "<p>hello <i>folks</i></p>",
+      testExpected: "<p>hello folks</p>",
+      sanitizerOptions: { blockElements: ["i"] },
+    },
+    {
+      // test for the allowAttributes option
+      testString: `<p haha="lol">hello</p>`,
+      testExpected: `<p haha="lol">hello</p>`,
+      sanitizerOptions: { allowAttributes: { 'haha': ['p'] } },
+    },
+    {
+      // confirming the inverse
+      testString: `<p haha="lol">hello</p>`,
+      testExpected: `<p>hello</p>`,
+      sanitizerOptions: {},
+    },
+    {
+      // test for the dropAttributes option
+      testString: `<p title="dropme">hello</p>`,
+      testExpected: `<p>hello</p>`,
+      sanitizerOptions: { dropAttributes: { 'title': ['p'] } },
+    },
+    {
+      // confirming the inverse
+      testString: `<p title="dontdropme">hello</p>`,
+      testExpected: `<p title="dontdropme">hello</p>`,
+      sanitizerOptions: {},
+    },
+    {
+      // if an attribute is allowed and dropped, the drop will take preference
+      testString: `<p title="lol">hello</p>`,
+      testExpected: `<p>hello</p>`,
+      sanitizerOptions: {
+        allowAttributes: { 'title': ['p'] },
+        dropAttributes: { 'title': ['p'] },
+      },
     },
   ];
 
 
   const div = document.getElementById("div");
   for (let test of testCases) {
-    const {testString, testExpected} = test;
+    const {testString, testExpected, sanitizerOptions} = test;
+    const testSanitizer = new Sanitizer(sanitizerOptions);
 
     for (let testInputAndType of possibleInputTypes(testString)) {
       const {testInput, testType} = testInputAndType;
 
       // test documentfragment API
       div.innerHTML = "";
-      const docFragment = mySanitizer.sanitize(testInput);
+      const docFragment = testSanitizer.sanitize(testInput);
       div.append(docFragment);
       is(div.innerHTML, testExpected, `Sanitizer.sanitize() should turn (${testType}) '${testInput}' into '${testExpected}'`);
 
