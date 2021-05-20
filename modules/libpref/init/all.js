@@ -297,8 +297,6 @@ pref("dom.mouseevent.click.hack.use_legacy_non-primary_dispatch", "");
 // Fastback caching - if this pref is negative, then we calculate the number
 // of content viewers to cache based on the amount of available memory.
 pref("browser.sessionhistory.max_total_viewers", -1);
-// 0 = false, 1 = true, 2 = autodetect.
-pref("ui.android.mouse_as_touch", 1);
 
 pref("browser.display.force_inline_alttext", false); // true = force ALT text for missing images to be layed out inline
 // 0 = no external leading,
