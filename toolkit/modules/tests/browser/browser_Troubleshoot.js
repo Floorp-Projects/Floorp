@@ -1000,6 +1000,10 @@ const SNAPSHOT_SCHEMA = {
           required: AppConstants.MOZ_SANDBOX,
           type: "number",
         },
+        contentWin32kLockdownState: {
+          required: AppConstants.MOZ_SANDBOX,
+          type: "string",
+        },
         syscallLog: {
           required: AppConstants.platform == "linux",
           type: "array",
