@@ -2187,7 +2187,7 @@ var gBrowserInit = {
       // property set to true, if yes remove focus from urlbar for about:welcome
       const aboutWelcomeSkipUrlBarFocus =
         uriToLoad == "about:welcome" &&
-        NimbusFeatures.aboutwelcome.getVariable("skipFocus");
+        NimbusFeatures.aboutwelcome.getValue()?.skipFocus;
 
       if (
         (isBlankPageURL(uriToLoad) && !aboutWelcomeSkipUrlBarFocus) ||

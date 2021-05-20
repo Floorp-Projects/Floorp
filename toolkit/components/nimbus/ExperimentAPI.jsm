@@ -28,7 +28,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   setTimeout: "resource://gre/modules/Timer.jsm",
   clearTimeout: "resource://gre/modules/Timer.jsm",
   FeatureManifest: "resource://nimbus/FeatureManifest.js",
-  AppConstants: "resource://gre/modules/AppConstants.jsm",
 });
 
 const IS_MAIN_PROCESS =
@@ -381,10 +380,6 @@ class ExperimentFeature {
     }
   }
 
-  getPreferenceName(variable) {
-    return this.manifest?.variables?.[variable]?.fallbackPref;
-  }
-
   _getUserPrefsValues() {
     let userPrefs = {};
     Object.keys(this.manifest?.variables || {}).forEach(variable => {
@@ -482,48 +477,6 @@ class ExperimentFeature {
       ...this.getRemoteConfig()?.variables,
       ...userPrefs,
     };
-  }
-
-  getVariable(variable, { sendExposureEvent } = {}) {
-    const prefName = this.getPreferenceName(variable);
-    const prefValue = prefName ? this.prefGetters[variable] : undefined;
-
-    if (!this.manifest?.variables?.[variable]) {
-      // Only throw in nightly/tests
-      if (Cu.isInAutomation || AppConstants.NIGHTLY_BUILD) {
-        throw new Error(
-          `Nimbus: Warning - variable "${variable}" is not defined in FeatureManifest.js`
-        );
-      }
-    }
-
-    // If a user value is set for the defined preference, always return that first
-    if (prefName && Services.prefs.prefHasUserValue(prefName)) {
-      return prefValue;
-    }
-
-    // Next, check if an experiment is defined
-    const experimentValue = ExperimentAPI.activateBranch({
-      featureId: this.featureId,
-      sendExposureEvent: sendExposureEvent && this._sendExposureEventOnce,
-    })?.feature?.value?.[variable];
-
-    // Prevent future exposure events if user is enrolled in an experiment
-    if (experimentValue && sendExposureEvent) {
-      this._sendExposureEventOnce = false;
-    }
-
-    if (typeof experimentValue !== "undefined") {
-      return experimentValue;
-    }
-
-    // Next, check remote defaults
-    const remoteValue = this.getRemoteConfig()?.variables?.[variable];
-    if (typeof remoteValue !== "undefined") {
-      return remoteValue;
-    }
-    // Return the default preference value
-    return prefValue;
   }
 
   getRemoteConfig() {
