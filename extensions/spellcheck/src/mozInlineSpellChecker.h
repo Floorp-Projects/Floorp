@@ -201,6 +201,8 @@ class mozInlineSpellChecker final : public nsIInlineSpellChecker,
   // the editor.
   bool mIsListeningToEditSubActions;
 
+  class SpellCheckerTimeSlice;
+
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_NSIINLINESPELLCHECKER
@@ -242,6 +244,7 @@ class mozInlineSpellChecker final : public nsIInlineSpellChecker,
   MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult
   DoSpellCheckSelection(mozInlineSpellWordUtil& aWordUtil,
                         mozilla::dom::Selection* aSpellCheckSelection);
+
   nsresult DoSpellCheck(mozInlineSpellWordUtil& aWordUtil,
                         mozilla::dom::Selection* aSpellCheckSelection,
                         const mozilla::UniquePtr<mozInlineSpellStatus>& aStatus,
