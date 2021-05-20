@@ -631,9 +631,6 @@ case "$target" in
         MOZ_OPTIMIZE_FLAGS="-O2"
         MOZ_FIX_LINK_PATHS=
         LDFLAGS="$LDFLAGS -LARGEADDRESSAWARE"
-        if test -z "$DEVELOPER_OPTIONS"; then
-            LDFLAGS="$LDFLAGS -RELEASE"
-        fi
     fi
     AC_DEFINE(HAVE__MSIZE)
     AC_DEFINE(WIN32_LEAN_AND_MEAN)
