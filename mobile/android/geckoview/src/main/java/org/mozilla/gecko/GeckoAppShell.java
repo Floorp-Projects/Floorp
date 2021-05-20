@@ -7,7 +7,6 @@ package org.mozilla.gecko;
 
 import java.net.Proxy;
 import java.nio.ByteBuffer;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.StringTokenizer;
@@ -35,13 +34,11 @@ import android.content.pm.ResolveInfo;
 import android.content.res.TypedArray;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
-import android.graphics.ImageFormat;
 import android.graphics.PixelFormat;
 import android.graphics.Point;
 import android.graphics.Rect;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
-import android.hardware.Camera;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -1173,106 +1170,6 @@ public class GeckoAppShell {
         sApplicationContext = context;
     }
 
-    /* package */ static Camera sCamera;
-
-    private static final int kPreferredFPS = 25;
-    private static byte[] sCameraBuffer;
-
-    private static class CameraCallback implements Camera.PreviewCallback {
-        @WrapForJNI(calledFrom = "gecko")
-        private static native void onFrameData(int camera, byte[] data);
-
-        private final int mCamera;
-
-        public CameraCallback(final int camera) {
-            mCamera = camera;
-        }
-
-        @Override
-        public void onPreviewFrame(final byte[] data, final Camera camera) {
-            onFrameData(mCamera, data);
-
-            if (sCamera != null) {
-                sCamera.addCallbackBuffer(sCameraBuffer);
-            }
-        }
-    }
-
-    @WrapForJNI(calledFrom = "gecko")
-    private static int[] initCamera(final String aContentType, final int aCamera, final int aWidth,
-                                    final int aHeight) {
-        // [0] = 0|1 (failure/success)
-        // [1] = width
-        // [2] = height
-        // [3] = fps
-        final int[] result = new int[4];
-        result[0] = 0;
-
-        if (Camera.getNumberOfCameras() == 0) {
-            return result;
-        }
-
-        try {
-            sCamera = Camera.open(aCamera);
-
-            Camera.Parameters params = sCamera.getParameters();
-            params.setPreviewFormat(ImageFormat.NV21);
-
-            // use the preview fps closest to 25 fps.
-            int fpsDelta = 1000;
-            try {
-                final Iterator<Integer> it = params.getSupportedPreviewFrameRates().iterator();
-                while (it.hasNext()) {
-                    final int nFps = it.next();
-                    if (Math.abs(nFps - kPreferredFPS) < fpsDelta) {
-                        fpsDelta = Math.abs(nFps - kPreferredFPS);
-                        params.setPreviewFrameRate(nFps);
-                    }
-                }
-            } catch (final Exception e) {
-                params.setPreviewFrameRate(kPreferredFPS);
-            }
-
-            // set up the closest preview size available
-            final Iterator<Camera.Size> sit = params.getSupportedPreviewSizes().iterator();
-            int sizeDelta = 10000000;
-            int bufferSize = 0;
-            while (sit.hasNext()) {
-                final Camera.Size size = sit.next();
-                if (Math.abs(size.width * size.height - aWidth * aHeight) < sizeDelta) {
-                    sizeDelta = Math.abs(size.width * size.height - aWidth * aHeight);
-                    params.setPreviewSize(size.width, size.height);
-                    bufferSize = size.width * size.height;
-                }
-            }
-
-            sCamera.setParameters(params);
-            sCameraBuffer = new byte[(bufferSize * 12) / 8];
-            sCamera.addCallbackBuffer(sCameraBuffer);
-            sCamera.setPreviewCallbackWithBuffer(new CameraCallback(aCamera));
-            sCamera.startPreview();
-            params = sCamera.getParameters();
-            result[0] = 1;
-            result[1] = params.getPreviewSize().width;
-            result[2] = params.getPreviewSize().height;
-            result[3] = params.getPreviewFrameRate();
-        } catch (final RuntimeException e) {
-            Log.w(LOGTAG, "initCamera RuntimeException.", e);
-            result[0] = result[1] = result[2] = result[3] = 0;
-        }
-        return result;
-    }
-
-    @WrapForJNI(calledFrom = "gecko")
-    private static synchronized void closeCamera() {
-        if (sCamera != null) {
-            sCamera.stopPreview();
-            sCamera.release();
-            sCamera = null;
-            sCameraBuffer = null;
-        }
-    }
-
     /*
      * Battery API related methods.
      */
@@ -1289,11 +1186,6 @@ public class GeckoAppShell {
     @WrapForJNI(calledFrom = "gecko")
     private static double[] getCurrentBatteryInformation() {
         return GeckoBatteryManager.getCurrentInformation();
-    }
-
-    @WrapForJNI(calledFrom = "gecko")
-    private static void hideProgressDialog() {
-        // unused stub
     }
 
     /* Called by JNI from AndroidBridge, and by reflection from tests/BaseTest.java.in */
