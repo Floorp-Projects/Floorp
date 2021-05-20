@@ -63,6 +63,7 @@ class Message : public Pickle {
     INPUT_PRIORITY = 1,
     VSYNC_PRIORITY = 2,
     MEDIUMHIGH_PRIORITY = 3,
+    CONTROL_PRIORITY = 4,
   };
 
   enum MessageCompression {
@@ -96,17 +97,16 @@ class Message : public Pickle {
 
     enum {
       NESTED_MASK = 0x0003,
-      PRIO_MASK = 0x000C,
-      SYNC_BIT = 0x0010,
-      REPLY_BIT = 0x0020,
-      REPLY_ERROR_BIT = 0x0040,
-      INTERRUPT_BIT = 0x0080,
-      COMPRESS_BIT = 0x0100,
-      COMPRESSALL_BIT = 0x0200,
-      COMPRESS_MASK = 0x0300,
-      CONSTRUCTOR_BIT = 0x0400,
+      PRIO_MASK = 0x001C,
+      SYNC_BIT = 0x0020,
+      REPLY_BIT = 0x0040,
+      REPLY_ERROR_BIT = 0x0080,
+      INTERRUPT_BIT = 0x0100,
+      COMPRESS_BIT = 0x0200,
+      COMPRESSALL_BIT = 0x0400,
+      CONSTRUCTOR_BIT = 0x0800,
 #ifdef MOZ_TASK_TRACER
-      TASKTRACER_BIT = 0x0800,
+      TASKTRACER_BIT = 0x1000,
 #endif
     };
 

@@ -9,11 +9,14 @@ parent:
     [Priority=vsync] sync PMsg4();
     [Priority=mediumhigh] async PMsg5();
     [Priority=mediumhigh] sync PMsg6();
+    [Priority=control] async PMsg7();
+    [Priority=control] sync PMsg8();
 
 child:
     [Priority=input] async CMsg1();
     [Priority=vsync] async CMsg2();
     [Priority=mediumhigh] async CMsg3();
+    [Priority=control] async CMsg4();
 };
 
 } // namespace _ipdltest
