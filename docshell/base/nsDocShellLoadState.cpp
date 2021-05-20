@@ -21,6 +21,7 @@
 #include "mozilla/dom/LoadURIOptionsBinding.h"
 #include "mozilla/StaticPrefs_browser.h"
 #include "mozilla/StaticPrefs_fission.h"
+#include "mozilla/URLQueryStringStripper.h"
 
 #include "mozilla/OriginAttributes.h"
 #include "mozilla/NullPrincipal.h"
@@ -567,6 +568,41 @@ bool nsDocShellLoadState::LoadIsFromSessionHistory() const {
   return mLoadingSessionHistoryInfo
              ? mLoadingSessionHistoryInfo->mLoadIsFromSessionHistory
              : !!mSHEntry;
+}
+
+void nsDocShellLoadState::MaybeStripTrackerQueryStrings(
+    BrowsingContext* aContext) {
+  MOZ_ASSERT(aContext);
+
+  // We don't need to strip for sub frames because the query string has been
+  // stripped in the top-level content. Also, we don't apply stripping if it
+  // is triggered by addons.
+  //
+  // Note that we don't need to do the stripping if the channel has been
+  // initialized. This means that this has been loaded speculatively in the
+  // parent process before and the stripping was happening by then.
+  if (GetChannelInitialized() || !aContext->IsTopContent() ||
+      BasePrincipal::Cast(TriggeringPrincipal())->AddonPolicy()) {
+    return;
+  }
+
+  // We don't strip the URI if it's the same-site navigation. Note that we will
+  // consider the system principal triggered load as third-party in case the
+  // user copies and pastes a URL which has tracking query parameters or an
+  // loading from external applications, such as clicking a link in an email
+  // client.
+  bool isThirdPartyURI = false;
+  if (!TriggeringPrincipal()->IsSystemPrincipal() &&
+      (NS_FAILED(
+           TriggeringPrincipal()->IsThirdPartyURI(URI(), &isThirdPartyURI)) ||
+       !isThirdPartyURI)) {
+    return;
+  }
+
+  nsCOMPtr<nsIURI> strippedURI;
+  if (URLQueryStringStripper::Strip(URI(), strippedURI)) {
+    SetURI(strippedURI);
+  }
 }
 
 const nsString& nsDocShellLoadState::Target() const { return mTarget; }
