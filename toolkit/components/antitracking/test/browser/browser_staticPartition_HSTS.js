@@ -16,6 +16,14 @@ var secureImgURL =
   "https://example.com/browser/toolkit/components/antitracking/test/browser/browser_staticPartition_HSTS.sjs?image";
 var unsecureImgURL =
   "http://example.com/browser/toolkit/components/antitracking/test/browser/browser_staticPartition_HSTS.sjs?image";
+var secureIncludeSubURL =
+  "https://example.com/browser/toolkit/components/antitracking/test/browser/browser_staticPartition_HSTS.sjs?includeSub";
+var unsecureSubEmptyURL =
+  "http://test1.example.com/browser/toolkit/components/antitracking/test/browser/empty.html";
+var secureSubEmptyURL =
+  "https://test1.example.com/browser/toolkit/components/antitracking/test/browser/empty.html";
+var unsecureNoCertSubEmptyURL =
+  "http://nocert.example.com/browser/toolkit/components/antitracking/test/browser/empty.html";
 
 function cleanupHSTS(aPartitionEnabled, aUseSite) {
   // Ensure to remove example.com from the HSTS list.
@@ -195,6 +203,51 @@ add_task(async function test_subresource() {
       } else {
         is(await finalURL, secureImgURL, "HSTS works for 3rd parties");
       }
+
+      gBrowser.removeCurrentTab();
+      cleanupHSTS(networkIsolation, partitionPerSite);
+    }
+  }
+});
+
+add_task(async function test_includeSubDomains() {
+  for (let networkIsolation of [true, false]) {
+    for (let partitionPerSite of [true, false]) {
+      await SpecialPowers.pushPrefEnv({
+        set: [
+          ["privacy.partition.network_state", networkIsolation],
+          ["privacy.dynamic_firstparty.use_site", partitionPerSite],
+          ["security.mixed_content.upgrade_display_content", false],
+        ],
+      });
+
+      let tab = (gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser));
+
+      // Load a secure page as first party to activate HSTS.
+      await promiseTabLoadEvent(tab, secureIncludeSubURL, secureIncludeSubURL);
+
+      // Load a unsecure sub-domain page as first party to see if it's upgraded.
+      await promiseTabLoadEvent(tab, unsecureSubEmptyURL, secureSubEmptyURL);
+
+      // Load a sub domain page which will trigger the cert error page.
+      let certErrorLoaded = BrowserTestUtils.waitForErrorPage(
+        tab.linkedBrowser
+      );
+      BrowserTestUtils.loadURI(tab.linkedBrowser, unsecureNoCertSubEmptyURL);
+      await certErrorLoaded;
+
+      // Verify the error page has the 'badStsCert' in its query string
+      await SpecialPowers.spawn(tab.linkedBrowser, [], () => {
+        let searchParams = new content.URLSearchParams(
+          content.document.documentURI
+        );
+
+        is(
+          searchParams.get("s"),
+          "badStsCert",
+          "The cert error page has 'badStsCert' set"
+        );
+      });
 
       gBrowser.removeCurrentTab();
       cleanupHSTS(networkIsolation, partitionPerSite);
