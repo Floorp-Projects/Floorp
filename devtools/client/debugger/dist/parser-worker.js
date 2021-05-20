@@ -8314,7 +8314,7 @@ const sourceOptions = {
   generated: {
     sourceType: "unambiguous",
     tokens: true,
-    plugins: ["classPrivateProperties", "classPrivateMethods", "classProperties", "objectRestSpread", "optionalChaining", "nullishCoalescingOperator"]
+    plugins: ["classPrivateProperties", "classPrivateMethods", "classProperties", "objectRestSpread", "optionalChaining", "privateIn", "nullishCoalescingOperator"]
   },
   original: {
     sourceType: "unambiguous",

@@ -48,6 +48,9 @@ function classPreview() {
     }
     breakFn() {
       let i = this.x * this.#privateVar + Foo.#privateStatic;
+      if (#privateVar in this && this.#privateVar !== 0) {
+        i = i * 2;
+      }
       debugger;
     }
   }
