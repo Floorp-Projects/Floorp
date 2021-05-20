@@ -26,6 +26,9 @@ const APIS = {
   GetPidForTab({ tab }) {
     return browser.test.getPidForTab(tab.id);
   },
+  GetProfilePath() {
+    return browser.test.getProfilePath();
+  },
   GetAllBrowserPids() {
     return browser.test.getAllBrowserPids();
   },
