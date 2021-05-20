@@ -5,19 +5,19 @@
 <head>
 <title></title>
 
-<link id="badcss" rel="stylesheet" type="text/css" href="http://tracking.example.com/tests/toolkit/components/url-classifier/tests/mochitest/evil.css"></link>
+<link id="badcss" rel="stylesheet" type="text/css" href="https://tracking.example.com/tests/toolkit/components/url-classifier/tests/mochitest/evil.css"></link>
 
 </head>
 <body>
 
-<script id="badscript" data-touched="not sure" src="http://tracking.example.com/tests/toolkit/components/url-classifier/tests/mochitest/evil.js" onload="this.dataset.touched = 'yes';" onerror="this.dataset.touched = 'no';"></script>
+<script id="badscript" data-touched="not sure" src="https://tracking.example.com/tests/toolkit/components/url-classifier/tests/mochitest/evil.js" onload="this.dataset.touched = 'yes';" onerror="this.dataset.touched = 'no';"></script>
 
-<script id="goodscript" data-touched="not sure" src="http://itisatracker.org/tests/toolkit/components/url-classifier/tests/mochitest/good.js" onload="this.dataset.touched = 'yes';" onerror="this.dataset.touched = 'no';"></script>
+<script id="goodscript" data-touched="not sure" src="https://itisatracker.org/tests/toolkit/components/url-classifier/tests/mochitest/good.js" onload="this.dataset.touched = 'yes';" onerror="this.dataset.touched = 'no';"></script>
 
 <!-- The image cache can cache JS handlers, so make sure we use a different URL for raptor.jpg each time -->
-<img id="badimage" data-touched="not sure" src="http://tracking.example.com/tests/toolkit/components/url-classifier/tests/mochitest/raptor.jpg?pbmode=test" onload="this.dataset.touched = 'yes';" onerror="this.dataset.touched = 'no';"/>
+<img id="badimage" data-touched="not sure" src="https://tracking.example.com/tests/toolkit/components/url-classifier/tests/mochitest/raptor.jpg?pbmode=test" onload="this.dataset.touched = 'yes';" onerror="this.dataset.touched = 'no';"/>
 
-<img id="goodimage" data-touched="not sure" src="http://tracking.example.org/tests/toolkit/components/url-classifier/tests/mochitest/raptor.jpg?pbmode=test2" onload="this.dataset.touched = 'yes';" onerror="this.dataset.touched = 'no';"/>
+<img id="goodimage" data-touched="not sure" src="https://tracking.example.org/tests/toolkit/components/url-classifier/tests/mochitest/raptor.jpg?pbmode=test2" onload="this.dataset.touched = 'yes';" onerror="this.dataset.touched = 'no';"/>
 
 The following should not be hidden:
 <div id="styleCheck">STYLE TEST</div>
