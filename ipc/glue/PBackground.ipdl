@@ -211,7 +211,7 @@ parent:
   async RemoveBackgroundSessionStorageManager(uint64_t topContextId);
 
   async GetSessionStorageManagerData(
-      uint64_t aTopContextId, uint32_t aSizeLimit)
+      uint64_t aTopContextId, uint32_t aSizeLimit, bool aCancelSessionStoreTimer)
       returns(SSCacheCopy[] aCacheCopy);
 
   async PFileSystemRequest(FileSystemParams params);
