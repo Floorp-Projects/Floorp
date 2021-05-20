@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.Timer;
 
 import org.mozilla.gecko.annotation.WrapForJNI;
-import org.mozilla.gecko.util.GamepadUtils;
 import org.mozilla.gecko.util.ThreadUtils;
 
 import android.content.Context;
@@ -204,8 +203,22 @@ public class AndroidGamepadManager {
         }
     }
 
+    private static float sDeadZoneThresholdOverride = 1e-2f;
+
+    private static boolean isValueInDeadZone(final MotionEvent event, final int axis) {
+        final float threshold;
+        if (sDeadZoneThresholdOverride >= 0) {
+            threshold = sDeadZoneThresholdOverride;
+        } else {
+            final InputDevice.MotionRange range = event.getDevice().getMotionRange(axis);
+            threshold = range.getFlat() + range.getFuzz();
+        }
+        final float value = event.getAxisValue(axis);
+        return (Math.abs(value) < threshold);
+    }
+
     private static float deadZone(final MotionEvent ev, final int axis) {
-        if (GamepadUtils.isValueInDeadZone(ev, axis)) {
+        if (isValueInDeadZone(ev, axis)) {
             return 0.0f;
         }
         return ev.getAxisValue(axis);
