@@ -10,6 +10,10 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
+XPCOMUtils.defineLazyModuleGetters(this, {
+  setTimeout: "resource://gre/modules/Timer.jsm",
+});
+
 XPCOMUtils.defineLazyGetter(this, "log", () => {
   let ConsoleAPI = ChromeUtils.import("resource://gre/modules/Console.jsm", {})
     .ConsoleAPI;
@@ -53,18 +57,18 @@ function registerModulesProtocolHandler() {
 }
 
 /**
- * Find a JSM named like `backgroundtasks/BackgroundTask_${name}.jsm`
- * and return its `runBackgroundTask` function.
+ * Find a JSM named like `backgroundtasks/BackgroundTask_${name}.jsm`,
+ * import it, and return the whole module.
  *
  * When testing, allow to load from `XPCSHELL_TESTING_MODULES_URI`,
  * which is registered at `resource://testing-common`, the standard
  * location for test-only modules.
  *
- * @return {function} `runBackgroundTask` function.
+ * @return {Object} The imported module.
  * @throws NS_ERROR_NOT_AVAILABLE if a background task with the given `name` is
  * not found.
  */
-function findRunBackgroundTask(name) {
+function findBackgroundTaskModule(name) {
   const subModules = [
     "resource:///modules", // App-specific first.
     "resource://gre/modules", // Toolkit/general second.
@@ -79,9 +83,9 @@ function findRunBackgroundTask(name) {
     log.debug(`Looking for background task at URI: ${URI}`);
 
     try {
-      const { runBackgroundTask } = ChromeUtils.import(URI);
+      const taskModule = ChromeUtils.import(URI);
       log.info(`Found background task at URI: ${URI}`);
-      return runBackgroundTask;
+      return taskModule;
     } catch (ex) {
       if (ex.result != Cr.NS_ERROR_FILE_NOT_FOUND) {
         throw ex;
@@ -109,12 +113,27 @@ var BackgroundTasksManager = {
 
     let exitCode = BackgroundTasksManager.EXIT_CODE.NOT_FOUND;
     try {
-      let runBackgroundTask = findRunBackgroundTask(name);
+      let taskModule = findBackgroundTaskModule(name);
       addMarker("BackgroundTasksManager:AfterFindRunBackgroundTask");
 
+      let timeoutSec = Services.prefs.getIntPref(
+        "toolkit.backgroundtasks.defaultTimeoutSec",
+        10 * 60
+      );
+      if (taskModule.backgroundTaskTimeoutSec) {
+        timeoutSec = taskModule.backgroundTaskTimeoutSec;
+      }
+
       try {
-        // TODO: timeout tasks that run too long.
-        exitCode = await runBackgroundTask(commandLine);
+        exitCode = await Promise.race([
+          new Promise(resolve =>
+            setTimeout(() => {
+              log.error(`Background task named '${name}' timed out`);
+              resolve(BackgroundTasksManager.EXIT_CODE.TIMEOUT);
+            }, timeoutSec * 1000)
+          ),
+          taskModule.runBackgroundTask(commandLine),
+        ]);
         log.info(
           `Backgroundtask named '${name}' completed with exit code ${exitCode}`
         );
@@ -165,6 +184,15 @@ BackgroundTasksManager.EXIT_CODE = {
    * The `runBackgroundTask(...)` promise rejected with an exception.
    */
   EXCEPTION: 3,
+
+  /**
+   * The task took too long and timed out.
+   *
+   * The default timeout is controlled by the pref:
+   * "toolkit.backgroundtasks.defaultTimeoutSec", but tasks can override this
+   * by exporting a non-zero `backgroundTaskTimeoutSec` value.
+   */
+  TIMEOUT: 4,
 
   /**
    * The last exit code reserved by this structure.  Use codes larger than this
