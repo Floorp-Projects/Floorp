@@ -97,6 +97,13 @@ interface nsISHEntry : nsISupports
      */
     [infallible] attribute boolean hasUserInteraction;
 
+    /**
+     * Whether the load that created this entry was triggered by user activation.
+     * (e.g.: The user clicked a link)
+     * Remembering this flag enables replaying the sec-fetch-* headers.
+     */
+    [infallible] attribute boolean hasUserActivation;
+
     /** Referrer Info*/
     [infallible] attribute nsIReferrerInfo referrerInfo;
 
@@ -321,7 +328,8 @@ interface nsISHEntry : nsISupports
                            in bool srcdocEntry,
                            in nsIURI baseURI,
                            in bool saveLayoutState,
-                           in bool expired);
+                           in bool expired,
+                           in bool userActivation);
 
     nsISHEntry clone();
 

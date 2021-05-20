@@ -169,6 +169,7 @@ class SessionHistoryInfo {
   bool mScrollRestorationIsManual = false;
   bool mPersist = true;
   bool mHasUserInteraction = false;
+  bool mHasUserActivation = false;
 
   union SharedState {
     SharedState();
