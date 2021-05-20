@@ -117,6 +117,12 @@
 #include "mozilla/dom/BrowserBridgeHost.h"
 #include "mozilla/dom/BrowsingContextGroup.h"
 
+#include "mozilla/dom/SessionStorageManager.h"
+#include "mozilla/ipc/BackgroundChild.h"
+#include "mozilla/ipc/PBackgroundChild.h"
+#include "mozilla/dom/PBackgroundSessionStorageCache.h"
+#include "mozilla/ipc/BackgroundUtils.h"
+
 #include "mozilla/dom/HTMLBodyElement.h"
 
 #include "mozilla/ContentPrincipal.h"
@@ -134,6 +140,7 @@ using namespace mozilla;
 using namespace mozilla::hal;
 using namespace mozilla::dom;
 using namespace mozilla::dom::ipc;
+using namespace mozilla::ipc;
 using namespace mozilla::layers;
 using namespace mozilla::layout;
 typedef ScrollableLayerGuid::ViewID ViewID;
@@ -3189,42 +3196,28 @@ already_AddRefed<Promise> nsFrameLoader::RequestTabStateFlush(
   if (mSessionStoreListener) {
     context->FlushSessionStore();
     mSessionStoreListener->ForceFlushFromParent(false);
+    context->Canonical()->UpdateSessionStoreSessionStorage(
+        [promise]() { promise->MaybeResolveWithUndefined(); });
 
-    // No async ipc call is involved in parent only case
-    promise->MaybeResolveWithUndefined();
     return promise.forget();
   }
 
-  // XXX(farre): We hack around not having fully implemented session
-  // store session storage collection in the parent. What we need to
-  // do is to make sure that we always flush the toplevel context
-  // first. And also to wait for that flush to resolve. This will be
-  // fixed by moving session storage collection to the parent, which
-  // will happen in Bug 1700623.
-  RefPtr<ContentParent> contentParent =
-      context->Canonical()->GetContentParent();
   using FlushPromise = ContentParent::FlushTabStatePromise;
-  contentParent->SendFlushTabState(context)->Then(
-      GetCurrentSerialEventTarget(), __func__,
-      [promise, context,
-       contentParent](const FlushPromise::ResolveOrRejectValue&) {
-        nsTArray<RefPtr<FlushPromise>> flushPromises;
-        context->Group()->EachOtherParent(
-            contentParent, [&](ContentParent* aParent) {
-              if (aParent->CanSend()) {
-                flushPromises.AppendElement(
-                    aParent->SendFlushTabState(context));
-              }
-            });
+  nsTArray<RefPtr<FlushPromise>> flushPromises;
+  context->Group()->EachParent([&](ContentParent* aParent) {
+    if (aParent->CanSend()) {
+      flushPromises.AppendElement(aParent->SendFlushTabState(context));
+    }
+  });
 
-        FlushPromise::All(GetCurrentSerialEventTarget(), flushPromises)
-            ->Then(
-                GetCurrentSerialEventTarget(), __func__,
-                [promise](
-                    const FlushPromise::AllPromiseType::ResolveOrRejectValue&) {
-                  promise->MaybeResolveWithUndefined();
-                });
-      });
+  RefPtr<FlushPromise::AllPromiseType> flushPromise =
+      FlushPromise::All(GetCurrentSerialEventTarget(), flushPromises);
+
+  context->Canonical()->UpdateSessionStoreSessionStorage([flushPromise,
+                                                          promise]() {
+    flushPromise->Then(GetCurrentSerialEventTarget(), __func__,
+                       [promise]() { promise->MaybeResolveWithUndefined(); });
+  });
 
   return promise.forget();
 }
@@ -3241,7 +3234,6 @@ void nsFrameLoader::RequestTabStateFlush() {
     // No async ipc call is involved in parent only case
     return;
   }
-
   context->Group()->EachParent([&](ContentParent* aParent) {
     if (aParent->CanSend()) {
       aParent->SendFlushTabState(
