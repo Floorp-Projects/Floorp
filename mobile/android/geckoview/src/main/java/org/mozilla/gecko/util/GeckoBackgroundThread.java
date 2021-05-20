@@ -69,8 +69,4 @@ final class GeckoBackgroundThread extends Thread {
         }
         getHandler().post(runnable);
     }
-
-    /*package*/ static void postDelayed(final Runnable runnable, final long timeout) {
-        getHandler().postDelayed(runnable, timeout);
-    }
 }
