@@ -1270,16 +1270,16 @@ nsresult mozInlineSpellChecker::DoSpellCheckSelection(
   return NS_OK;
 }
 
-class MOZ_STACK_CLASS mozInlineSpellChecker::SpellCheckerTimeSlice {
+class MOZ_STACK_CLASS mozInlineSpellChecker::SpellCheckerSlice {
  public:
   /**
    * @param aStatus must be non-nullptr.
    */
-  SpellCheckerTimeSlice(mozInlineSpellChecker& aInlineSpellChecker,
-                        mozInlineSpellWordUtil& aWordUtil,
-                        mozilla::dom::Selection& aSpellCheckSelection,
-                        const mozilla::UniquePtr<mozInlineSpellStatus>& aStatus,
-                        bool& aDoneChecking)
+  SpellCheckerSlice(mozInlineSpellChecker& aInlineSpellChecker,
+                    mozInlineSpellWordUtil& aWordUtil,
+                    mozilla::dom::Selection& aSpellCheckSelection,
+                    const mozilla::UniquePtr<mozInlineSpellStatus>& aStatus,
+                    bool& aDoneChecking)
       : mInlineSpellChecker{aInlineSpellChecker},
         mWordUtil{aWordUtil},
         mSpellCheckSelection{aSpellCheckSelection},
@@ -1309,7 +1309,7 @@ class MOZ_STACK_CLASS mozInlineSpellChecker::SpellCheckerTimeSlice {
   bool& mDoneChecking;
 };
 
-bool mozInlineSpellChecker::SpellCheckerTimeSlice::ShouldSpellCheckRange(
+bool mozInlineSpellChecker::SpellCheckerSlice::ShouldSpellCheckRange(
     const nsRange& aRange) const {
   if (aRange.Collapsed()) {
     return false;
@@ -1324,14 +1324,14 @@ bool mozInlineSpellChecker::SpellCheckerTimeSlice::ShouldSpellCheckRange(
          endNode->IsShadowIncludingInclusiveDescendantOf(rootNode);
 }
 
-void mozInlineSpellChecker::SpellCheckerTimeSlice::RemoveRanges(
+void mozInlineSpellChecker::SpellCheckerSlice::RemoveRanges(
     const nsTArray<RefPtr<nsRange>>& aRanges) {
   for (uint32_t i = 0; i < aRanges.Length(); i++) {
     mInlineSpellChecker.RemoveRange(&mSpellCheckSelection, aRanges[i]);
   }
 }
 
-// mozInlineSpellChecker::SpellCheckerTimeSlice::Execute
+// mozInlineSpellChecker::SpellCheckerSlice::Execute
 //
 //    This function checks words intersecting the given range, excluding those
 //    inside mStatus->mNoCheckRange (can be nullptr). Words inside aNoCheckRange
@@ -1362,7 +1362,7 @@ void mozInlineSpellChecker::SpellCheckerTimeSlice::RemoveRanges(
 //    but we ran out of time, this will be false and the range will be
 //    updated with the stuff that still needs checking.
 
-nsresult mozInlineSpellChecker::SpellCheckerTimeSlice::Execute() {
+nsresult mozInlineSpellChecker::SpellCheckerSlice::Execute() {
   MOZ_LOG(sInlineSpellCheckerLog, LogLevel::Debug, ("%s", __FUNCTION__));
 
   mDoneChecking = true;
@@ -1518,10 +1518,10 @@ nsresult mozInlineSpellChecker::DoSpellCheck(
     const UniquePtr<mozInlineSpellStatus>& aStatus, bool* aDoneChecking) {
   MOZ_ASSERT(aDoneChecking);
 
-  SpellCheckerTimeSlice spellCheckerTimeSlice{
-      *this, aWordUtil, *aSpellCheckSelection, aStatus, *aDoneChecking};
+  SpellCheckerSlice spellCheckerSlice{*this, aWordUtil, *aSpellCheckSelection,
+                                      aStatus, *aDoneChecking};
 
-  return spellCheckerTimeSlice.Execute();
+  return spellCheckerSlice.Execute();
 }
 
 // An RAII helper that calls ChangeNumPendingSpellChecks on destruction.
@@ -1540,7 +1540,7 @@ class MOZ_RAII AutoChangeNumPendingSpellChecks final {
   int32_t mDelta;
 };
 
-void mozInlineSpellChecker::SpellCheckerTimeSlice::
+void mozInlineSpellChecker::SpellCheckerSlice::
     CheckWordsAndAddRangesForMisspellings(const nsTArray<nsString>& aWords,
                                           nsTArray<NodeOffsetRange>&& aRanges) {
   MOZ_ASSERT(aWords.Length() == aRanges.Length());
