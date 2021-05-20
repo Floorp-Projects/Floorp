@@ -79,6 +79,11 @@ const FeatureManifest = {
   },
   "password-autocomplete": {
     description: "A special autocomplete UI for password fields.",
+    variables: {
+      directMigrateSingleProfile: {
+        type: "boolean",
+      },
+    },
   },
   upgradeDialog: {
     description: "The dialog shown for major upgrades",
