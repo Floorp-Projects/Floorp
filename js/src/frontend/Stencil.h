@@ -153,7 +153,7 @@ FunctionFlags InitialFunctionFlags(FunctionSyntaxKind kind,
                                    GeneratorKind generatorKind,
                                    FunctionAsyncKind asyncKind,
                                    bool isSelfHosting = false,
-                                   bool hasUnclonedName = false);
+                                   bool forceExtended = false);
 
 // A syntax-checked regular expression string.
 class RegExpStencil {

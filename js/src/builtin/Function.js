@@ -57,9 +57,12 @@ function FunctionBind(thisArg, ...boundArgs) {
  *
  * All bind_bindFunction{X} functions have the same signature to enable simple
  * reading out of closed-over state by debugging functions.
+ *
+ * Note: We use the '$' prefix on the function to force it to be an extended
+ *       function so that `finishBoundFunctionInit` can track length.
  */
 function bind_bindFunction0(fun, thisArg, boundArgs) {
-    return function bound() {
+    return function $bound() {
         // Ensure we allocate a call-object slot for |boundArgs|, so the
         // debugger can access this value.
         if (false) void boundArgs;
@@ -67,7 +70,7 @@ function bind_bindFunction0(fun, thisArg, boundArgs) {
         var newTarget;
         if (_IsConstructing()) {
             newTarget = new.target;
-            if (newTarget === bound)
+            if (newTarget === $bound)
                 newTarget = fun;
             switch (arguments.length) {
               case 0:
@@ -110,7 +113,7 @@ function bind_bindFunction0(fun, thisArg, boundArgs) {
 function bind_bindFunction1(fun, thisArg, boundArgs) {
     var bound1 = boundArgs[0];
     var combiner = null;
-    return function bound() {
+    return function $bound() {
         // Ensure we allocate a call-object slot for |boundArgs|, so the
         // debugger can access this value.
         if (false) void boundArgs;
@@ -118,7 +121,7 @@ function bind_bindFunction1(fun, thisArg, boundArgs) {
         var newTarget;
         if (_IsConstructing()) {
             newTarget = new.target;
-            if (newTarget === bound)
+            if (newTarget === $bound)
                 newTarget = fun;
             switch (arguments.length) {
               case 0:
@@ -173,7 +176,7 @@ function bind_bindFunction2(fun, thisArg, boundArgs) {
     var bound1 = boundArgs[0];
     var bound2 = boundArgs[1];
     var combiner = null;
-    return function bound() {
+    return function $bound() {
         // Ensure we allocate a call-object slot for |boundArgs|, so the
         // debugger can access this value.
         if (false) void boundArgs;
@@ -181,7 +184,7 @@ function bind_bindFunction2(fun, thisArg, boundArgs) {
         var newTarget;
         if (_IsConstructing()) {
             newTarget = new.target;
-            if (newTarget === bound)
+            if (newTarget === $bound)
                 newTarget = fun;
             switch (arguments.length) {
               case 0:
@@ -236,11 +239,11 @@ function bind_bindFunction2(fun, thisArg, boundArgs) {
 function bind_bindFunctionN(fun, thisArg, boundArgs) {
     assert(boundArgs.length > 2, "Fast paths should be used for few-bound-args cases.");
     var combiner = null;
-    return function bound() {
+    return function $bound() {
         var newTarget;
         if (_IsConstructing()) {
             newTarget = new.target;
-            if (newTarget === bound)
+            if (newTarget === $bound)
                 newTarget = fun;
         }
         if (arguments.length === 0) {

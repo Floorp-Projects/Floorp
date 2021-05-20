@@ -2202,12 +2202,14 @@ static AwaitHandling GetAwaitHandling(FunctionAsyncKind asyncKind) {
 FunctionFlags InitialFunctionFlags(FunctionSyntaxKind kind,
                                    GeneratorKind generatorKind,
                                    FunctionAsyncKind asyncKind,
-                                   bool isSelfHosting, bool hasUnclonedName) {
+                                   bool isSelfHosting, bool forceExtended) {
   FunctionFlags flags = {};
   gc::AllocKind allocKind = gc::AllocKind::FUNCTION;
 
-  // The SetCanonicalName mechanism is only allowed on normal functions.
-  MOZ_ASSERT_IF(hasUnclonedName, kind == FunctionSyntaxKind::Statement);
+  // Only normal function statements/expressions may force extended mode. Other
+  // types of functions use extended slots for their own purposes.
+  MOZ_ASSERT_IF(forceExtended, kind == FunctionSyntaxKind::Statement ||
+                                   kind == FunctionSyntaxKind::Expression);
 
   switch (kind) {
     case FunctionSyntaxKind::Expression:
@@ -2240,9 +2242,6 @@ FunctionFlags InitialFunctionFlags(FunctionSyntaxKind kind,
       break;
     default:
       MOZ_ASSERT(kind == FunctionSyntaxKind::Statement);
-      if (hasUnclonedName) {
-        allocKind = gc::AllocKind::FUNCTION_EXTENDED;
-      }
       flags = (generatorKind == GeneratorKind::NotGenerator &&
                        asyncKind == FunctionAsyncKind::SyncFunction
                    ? FunctionFlags::INTERPRETED_NORMAL
@@ -2253,7 +2252,7 @@ FunctionFlags InitialFunctionFlags(FunctionSyntaxKind kind,
     flags.setIsSelfHostedBuiltin();
   }
 
-  if (allocKind == gc::AllocKind::FUNCTION_EXTENDED) {
+  if ((allocKind == gc::AllocKind::FUNCTION_EXTENDED) || forceExtended) {
     flags.setIsExtended();
   }
 
@@ -3081,14 +3080,15 @@ GeneralParser<ParseHandler, Unit>::functionDefinition(
     return funNode;
   }
 
+  // Self-hosted functions with special function names require extended slots
+  // for various purposes.
   bool isSelfHosting = options().selfHostingMode;
-  bool hasUnclonedName =
+  bool forceExtended =
       isSelfHosting && funName &&
       this->parserAtoms().isExtendedUnclonedSelfHostedFunctionName(funName);
-  MOZ_ASSERT_IF(hasUnclonedName, !pc_->isFunctionBox());
 
   FunctionFlags flags = InitialFunctionFlags(kind, generatorKind, asyncKind,
-                                             isSelfHosting, hasUnclonedName);
+                                             isSelfHosting, forceExtended);
 
   // Speculatively parse using the directives of the parent parsing context.
   // If a directive is encountered (e.g., "use strict") that changes how the
