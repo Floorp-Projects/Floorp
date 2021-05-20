@@ -266,6 +266,13 @@ class MOZ_STACK_CLASS WSScanResult final {
   }
 
   /**
+   * The scanner reached other block element that isn't editable
+   */
+  bool ReachedNonEditableOtherBlockElement() const {
+    return ReachedOtherBlockElement() && !GetContent()->IsEditable();
+  }
+
+  /**
    * The scanner reached something non-text node.
    */
   bool ReachedSomething() const { return !InNormalWhiteSpacesOrText(); }
