@@ -306,6 +306,13 @@ const GfxDeviceFamily* GfxDriverInfo::GetDeviceFamily(DeviceFamily id) {
       APPEND_DEVICE(0x0122);
       APPEND_DEVICE(0x0126);
       break;
+    case DeviceFamily::IntelGen7Baytrail:
+      APPEND_DEVICE(0x0f30);
+      APPEND_DEVICE(0x0f31);
+      APPEND_DEVICE(0x0f33);
+      APPEND_DEVICE(0x0155);
+      APPEND_DEVICE(0x0157);
+      break;
     case DeviceFamily::IntelHD520:
       APPEND_DEVICE(0x1916);
       break;
@@ -905,6 +912,7 @@ const nsAString& GfxDriverInfo::GetDeviceVendor(DeviceFamily id) {
     case DeviceFamily::IntelHDGraphicsToSandyBridge:
     case DeviceFamily::IntelHaswell:
     case DeviceFamily::IntelSandyBridge:
+    case DeviceFamily::IntelGen7Baytrail:
     case DeviceFamily::IntelHD520:
     case DeviceFamily::IntelMobileHDGraphics:
     case DeviceFamily::IntelRolloutWebRender:
