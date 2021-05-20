@@ -2884,7 +2884,7 @@
 # request headers to be set.
 - name: dom.security.secFetch.enabled
   type: RelaxedAtomicBool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
 
 # This pref enables the featurePolicy header support.
