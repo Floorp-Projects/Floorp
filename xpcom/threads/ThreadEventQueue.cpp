@@ -15,6 +15,7 @@
 #include "ThreadEventTarget.h"
 #include "mozilla/ProfilerLabels.h"
 #include "mozilla/TaskController.h"
+#include "mozilla/StaticPrefs_threads.h"
 
 using namespace mozilla;
 
@@ -81,7 +82,9 @@ bool ThreadEventQueue::PutEventInternal(already_AddRefed<nsIRunnable>&& aEvent,
       if (nsCOMPtr<nsIRunnablePriority> runnablePrio = do_QueryInterface(e)) {
         uint32_t prio = nsIRunnablePriority::PRIORITY_NORMAL;
         runnablePrio->GetPriority(&prio);
-        if (prio == nsIRunnablePriority::PRIORITY_VSYNC) {
+        if (prio == nsIRunnablePriority::PRIORITY_CONTROL) {
+          aPriority = EventQueuePriority::Control;
+        } else if (prio == nsIRunnablePriority::PRIORITY_VSYNC) {
           aPriority = EventQueuePriority::Vsync;
         } else if (prio == nsIRunnablePriority::PRIORITY_INPUT_HIGH) {
           aPriority = EventQueuePriority::InputHigh;
@@ -92,6 +95,11 @@ bool ThreadEventQueue::PutEventInternal(already_AddRefed<nsIRunnable>&& aEvent,
         } else if (prio == nsIRunnablePriority::PRIORITY_IDLE) {
           aPriority = EventQueuePriority::Idle;
         }
+      }
+
+      if (aPriority == EventQueuePriority::Control &&
+          !StaticPrefs::threads_control_event_queue_enabled()) {
+        aPriority = EventQueuePriority::MediumHigh;
       }
     }
 
