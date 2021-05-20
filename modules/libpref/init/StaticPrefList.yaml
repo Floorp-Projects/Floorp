@@ -10234,6 +10234,12 @@
   value: ""
   mirror: never
 
+# This controls if we will do the query string stripping for redirects.
+- name: privacy.query_stripping.redirect
+  type: bool
+  value: true
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "prompts."
 #---------------------------------------------------------------------------
