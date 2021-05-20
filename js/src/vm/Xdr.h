@@ -536,6 +536,15 @@ class XDRStencilDecoder : public XDRDecoderBase {
 
   XDRResult codeStencil(frontend::CompilationInput& input,
                         frontend::CompilationStencil& stencil);
+
+  bool hasOptions() const override { return !!options_; }
+  const JS::ReadOnlyCompileOptions& options() override {
+    MOZ_ASSERT(options_);
+    return *options_;
+  }
+
+ private:
+  const JS::ReadOnlyCompileOptions* options_ = nullptr;
 };
 
 class XDRStencilEncoder : public XDREncoder {

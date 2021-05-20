@@ -431,7 +431,10 @@ XDRResult XDRStencilDecoder::codeStencil(
       [&] { MOZ_ASSERT(validateResultCode(cx(), resultCode())); });
 #endif
 
-  MOZ_TRY(XDRStencilHeader(this, &input.options, stencil.source));
+  auto resetOptions = mozilla::MakeScopeExit([&] { options_ = nullptr; });
+  options_ = &input.options;
+
+  MOZ_TRY(XDRStencilHeader(this, options_, stencil.source));
   MOZ_TRY(frontend::StencilXDR::codeCompilationStencil(this, stencil));
 
   return Ok();
