@@ -200,6 +200,11 @@ SECStatus pk11_setGlobalOptions(PRBool noSingleThreadedModules,
 /* return whether NSS is allowed to call C_Finalize */
 PRBool pk11_getFinalizeModulesOption(void);
 
+/* fetch the FIPS state from the fips indicator, public versions of
+ * this function operate on the slot, the context, and the object */
+PRBool pk11slot_GetFIPSStatus(PK11SlotInfo *slot, CK_SESSION_HANDLE session,
+                              CK_OBJECT_HANDLE object, CK_ULONG operationType);
+
 SEC_END_PROTOS
 
 #endif

@@ -400,6 +400,7 @@ void
 sftk_TerminateOp(SFTKSession *session, SFTKContextType ctype,
                  SFTKSessionContext *context)
 {
+    session->lastOpWasFIPS = context->isFIPS;
     sftk_FreeContext(context);
     sftk_SetContextByType(session, ctype, NULL);
 }
@@ -413,7 +414,8 @@ sftk_TerminateOp(SFTKSession *session, SFTKContextType ctype,
  * all need to do at the beginning. This is done here.
  */
 CK_RV
-sftk_InitGeneric(SFTKSession *session, SFTKSessionContext **contextPtr,
+sftk_InitGeneric(SFTKSession *session, CK_MECHANISM *pMechanism,
+                 SFTKSessionContext **contextPtr,
                  SFTKContextType ctype, SFTKObject **keyPtr,
                  CK_OBJECT_HANDLE hKey, CK_KEY_TYPE *keyTypePtr,
                  CK_OBJECT_CLASS pubKeyType, CK_ATTRIBUTE_TYPE operation)
@@ -435,7 +437,9 @@ sftk_InitGeneric(SFTKSession *session, SFTKSessionContext **contextPtr,
         }
 
         /* make sure it's a valid  key for this operation */
-        if (((key->objclass != CKO_SECRET_KEY) && (key->objclass != pubKeyType)) || !sftk_isTrue(key, operation)) {
+        if (((key->objclass != CKO_SECRET_KEY) &&
+             (key->objclass != pubKeyType)) ||
+            !sftk_isTrue(key, operation)) {
             sftk_FreeObject(key);
             return CKR_KEY_TYPE_INCONSISTENT;
         }
@@ -473,7 +477,8 @@ sftk_InitGeneric(SFTKSession *session, SFTKSessionContext **contextPtr,
     context->key = key;
     context->blockSize = 0;
     context->maxLen = 0;
-
+    context->isFIPS = sftk_operationIsFIPS(session->slot, pMechanism,
+                                           operation, key);
     *contextPtr = context;
     return CKR_OK;
 }
@@ -813,8 +818,10 @@ sftk_CryptInit(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMechanism,
     if (session == NULL)
         return CKR_SESSION_HANDLE_INVALID;
 
-    crv = sftk_InitGeneric(session, &context, contextType, &key, hKey, &key_type,
-                           isEncrypt ? CKO_PUBLIC_KEY : CKO_PRIVATE_KEY, keyUsage);
+    crv = sftk_InitGeneric(session, pMechanism, &context, contextType, &key,
+                           hKey, &key_type,
+                           isEncrypt ? CKO_PUBLIC_KEY : CKO_PRIVATE_KEY,
+                           keyUsage);
 
     if (crv != CKR_OK) {
         sftk_FreeSession(session);
@@ -1900,7 +1907,8 @@ NSC_DigestInit(CK_SESSION_HANDLE hSession,
     session = sftk_SessionFromHandle(hSession);
     if (session == NULL)
         return CKR_SESSION_HANDLE_INVALID;
-    crv = sftk_InitGeneric(session, &context, SFTK_HASH, NULL, 0, NULL, 0, 0);
+    crv = sftk_InitGeneric(session, pMechanism, &context, SFTK_HASH,
+                           NULL, 0, NULL, 0, CKA_DIGEST);
     if (crv != CKR_OK) {
         sftk_FreeSession(session);
         return crv;
@@ -2766,8 +2774,8 @@ NSC_SignInit(CK_SESSION_HANDLE hSession,
     session = sftk_SessionFromHandle(hSession);
     if (session == NULL)
         return CKR_SESSION_HANDLE_INVALID;
-    crv = sftk_InitGeneric(session, &context, SFTK_SIGN, &key, hKey, &key_type,
-                           CKO_PRIVATE_KEY, CKA_SIGN);
+    crv = sftk_InitGeneric(session, pMechanism, &context, SFTK_SIGN, &key,
+                           hKey, &key_type, CKO_PRIVATE_KEY, CKA_SIGN);
     if (crv != CKR_OK) {
         sftk_FreeSession(session);
         return crv;
@@ -3565,8 +3573,8 @@ NSC_VerifyInit(CK_SESSION_HANDLE hSession,
     session = sftk_SessionFromHandle(hSession);
     if (session == NULL)
         return CKR_SESSION_HANDLE_INVALID;
-    crv = sftk_InitGeneric(session, &context, SFTK_VERIFY, &key, hKey, &key_type,
-                           CKO_PUBLIC_KEY, CKA_VERIFY);
+    crv = sftk_InitGeneric(session, pMechanism, &context, SFTK_VERIFY, &key,
+                           hKey, &key_type, CKO_PUBLIC_KEY, CKA_VERIFY);
     if (crv != CKR_OK) {
         sftk_FreeSession(session);
         return crv;
@@ -3894,7 +3902,7 @@ NSC_VerifyRecoverInit(CK_SESSION_HANDLE hSession,
     session = sftk_SessionFromHandle(hSession);
     if (session == NULL)
         return CKR_SESSION_HANDLE_INVALID;
-    crv = sftk_InitGeneric(session, &context, SFTK_VERIFY_RECOVER,
+    crv = sftk_InitGeneric(session, pMechanism, &context, SFTK_VERIFY_RECOVER,
                            &key, hKey, &key_type, CKO_PUBLIC_KEY, CKA_VERIFY_RECOVER);
     if (crv != CKR_OK) {
         sftk_FreeSession(session);
@@ -6536,6 +6544,9 @@ NSC_UnwrapKey(CK_SESSION_HANDLE hSession,
         return CKR_SESSION_HANDLE_INVALID;
     }
 
+    /* mark the key as FIPS if the previous operation was all FIPS */
+    key->isFIPS = session->lastOpWasFIPS;
+
     /*
      * handle the base object stuff
      */
@@ -7006,6 +7017,16 @@ sftk_HKDF(CK_HKDF_PARAMS_PTR params, CK_SESSION_HANDLE hSession,
                 if (saltKey == NULL) {
                     return CKR_KEY_HANDLE_INVALID;
                 }
+                /* if the base key is not fips, but the salt key is, the
+                 * resulting key can be fips */
+                if (isFIPS && (key->isFIPS == 0) && (saltKey->isFIPS == 1)) {
+                    CK_MECHANISM mech;
+                    mech.mechanism = CKM_HKDF_DERIVE;
+                    mech.pParameter = params;
+                    mech.ulParameterLen = sizeof(*params);
+                    key->isFIPS = sftk_operationIsFIPS(saltKey->slot, &mech,
+                                                       CKA_DERIVE, saltKey);
+                }
                 saltKey_att = sftk_FindAttribute(saltKey, CKA_VALUE);
                 if (saltKey_att == NULL) {
                     sftk_FreeObject(saltKey);
@@ -7251,6 +7272,9 @@ NSC_DeriveKey(CK_SESSION_HANDLE hSession,
 
     sourceKey = sftk_ObjectFromHandle(hBaseKey, session);
     sftk_FreeSession(session);
+    /* is this eventually succeeds, lastOpWasFIPS will be set the resulting key's
+     * FIPS state below. */
+    session->lastOpWasFIPS = PR_FALSE;
     if (sourceKey == NULL) {
         sftk_FreeObject(key);
         return CKR_KEY_HANDLE_INVALID;
@@ -7265,6 +7289,7 @@ NSC_DeriveKey(CK_SESSION_HANDLE hSession,
             return CKR_KEY_HANDLE_INVALID;
         }
     }
+    key->isFIPS = sftk_operationIsFIPS(slot, pMechanism, CKA_DERIVE, sourceKey);
 
     switch (mechanism) {
         /* get a public key from a private key. nsslowkey_ConvertToPublickey()
@@ -8704,6 +8729,7 @@ NSC_DeriveKey(CK_SESSION_HANDLE hSession,
         }
 
         crv = sftk_handleObject(key, session);
+        session->lastOpWasFIPS = key->isFIPS;
         sftk_FreeSession(session);
         *phKey = key->handle;
         sftk_FreeObject(key);

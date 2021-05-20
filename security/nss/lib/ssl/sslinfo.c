@@ -110,6 +110,7 @@ SSL_GetChannelInfo(PRFileDesc *fd, SSLChannelInfo *info, PRUintn len)
             sidLen = PR_MIN(sidLen, sizeof inf.sessionID);
             inf.sessionIDLength = sidLen;
             memcpy(inf.sessionID, sid->u.ssl3.sessionID, sidLen);
+            inf.isFIPS = ssl_isFIPS(ss);
         }
     }
 

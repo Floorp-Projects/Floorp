@@ -1029,6 +1029,24 @@ PRBool SECMOD_HasRootCerts(void);
  */
 int SECMOD_GetSystemFIPSEnabled(void);
 
+/* FIPS indicator functions. Some operations are physically allowed, but
+ * are against the NSS FIPS security policy. This is because sometimes NSS
+ * functions are used in non-security contexts. You can call these functions
+ * to determine if you are operating inside or outside the the current vendor's
+ * FIPS Security Policy for NSS. NOTE: if the current version of NSS is not
+ * actually FIPS certified, then these functions will always return PR_FALSE */
+
+/* This function tells if if the last single shot operation on the slot
+ * was inside or outside the FIPS security policy */
+PRBool PK11_SlotGetLastFIPSStatus(PK11SlotInfo *slot);
+/* This tells you if the current operation is within the FIPS security policy. If
+ * you have called finalize on the context, it tells you if the last operation
+ * was within the FIPS security policy */
+PRBool PK11_ContextGetFIPSStatus(PK11Context *context);
+/* This tells you if the requested object was created in accordance to the
+ * NSS FIPS security policy. */
+PRBool PK11_ObjectGetFIPSStatus(PK11ObjectType objType, void *objSpec);
+
 SEC_END_PROTOS
 
 #endif

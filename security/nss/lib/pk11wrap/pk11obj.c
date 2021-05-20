@@ -2265,3 +2265,18 @@ pk11_GetLowLevelKeyFromHandle(PK11SlotInfo *slot, CK_OBJECT_HANDLE handle)
 
     return item;
 }
+
+PRBool
+PK11_ObjectGetFIPSStatus(PK11ObjectType objType, void *objSpec)
+{
+    PK11SlotInfo *slot = NULL;
+    CK_OBJECT_HANDLE handle = 0;
+
+    handle = PK11_GetObjectHandle(objType, objSpec, &slot);
+    if (handle == CK_INVALID_HANDLE) {
+        PORT_SetError(SEC_ERROR_UNKNOWN_OBJECT_TYPE);
+        return PR_FALSE;
+    }
+    return pk11slot_GetFIPSStatus(slot, slot->session, handle,
+                                  CKT_NSS_OBJECT_CHECK);
+}

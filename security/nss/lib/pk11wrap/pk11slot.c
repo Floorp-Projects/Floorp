@@ -2665,6 +2665,39 @@ PK11Slot_GetNSSToken(PK11SlotInfo *sl)
     return sl->nssToken;
 }
 
+PRBool
+pk11slot_GetFIPSStatus(PK11SlotInfo *slot, CK_SESSION_HANDLE session,
+                       CK_OBJECT_HANDLE object, CK_ULONG operationType)
+{
+    SECMODModule *mod = slot->module;
+    CK_RV crv;
+    CK_ULONG fipsState = CKS_NSS_FIPS_NOT_OK;
+
+    /* handle the obvious conditions:
+     * 1) the module doesn't have a fipsIndicator - fips state must be false */
+    if (mod->fipsIndicator == NULL) {
+        return PR_FALSE;
+    }
+    /* 2) the session doesn't exist - fips state must be false */
+    if (session == CK_INVALID_HANDLE) {
+        return PR_FALSE;
+    }
+
+    /* go fetch the state */
+    crv = mod->fipsIndicator(session, object, operationType, &fipsState);
+    if (crv != CKR_OK) {
+        return PR_FALSE;
+    }
+    return (fipsState == CKS_NSS_FIPS_OK) ? PR_TRUE : PR_FALSE;
+}
+
+PRBool
+PK11_SlotGetLastFIPSStatus(PK11SlotInfo *slot)
+{
+    return pk11slot_GetFIPSStatus(slot, slot->session, CK_INVALID_HANDLE,
+                                  CKT_NSS_SESSION_LAST_CHECK);
+}
+
 /*
  * wait for a token to change it's state. The application passes in the expected
  * new state in event.

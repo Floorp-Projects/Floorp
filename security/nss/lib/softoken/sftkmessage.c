@@ -72,8 +72,8 @@ sftk_MessageCryptInit(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMechanism,
     if (session == NULL)
         return CKR_SESSION_HANDLE_INVALID;
 
-    crv = sftk_InitGeneric(session, &context, contextType, &key, hKey,
-                           &key_type, CKO_SECRET_KEY, operation);
+    crv = sftk_InitGeneric(session, pMechanism, &context, contextType, &key,
+                           hKey, &key_type, CKO_SECRET_KEY, operation);
     if (crv != CKR_OK) {
         sftk_FreeSession(session);
         return crv;

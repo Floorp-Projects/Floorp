@@ -1,0 +1,10 @@
+
+1 function with some indirect sub-type change:
+
+  [C]'function SECStatus SSL_GetChannelInfo(PRFileDesc*, SSLChannelInfo*, PRUintn)' at sslinfo.c:14:1 has some indirect sub-type changes:
+    parameter 2 of type 'SSLChannelInfo*' has sub-type changes:
+      in pointed to type 'typedef SSLChannelInfo' at sslt.h:383:1:
+        underlying type 'struct SSLChannelInfoStr' at sslt.h:299:1 changed:
+          type size changed from 1024 to 1088 bits
+          1 data member insertion:
+            'PRBool SSLChannelInfoStr::isFIPS', at offset 1024 (in bits) at sslt.h:379:1
