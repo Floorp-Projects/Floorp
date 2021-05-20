@@ -309,9 +309,8 @@ bool WebExtensionPolicy::Enable() {
   }
 
   if (XRE_IsParentProcess()) {
-    // Reserve a BrowsingContextGroup for use by this WebExtensionPolicy.
-    RefPtr<BrowsingContextGroup> group = BrowsingContextGroup::Create();
-    mBrowsingContextGroup = group->MakeKeepAlivePtr();
+    // Reserve a BrowsingContextGroup ID for use by this WebExtensionPolicy.
+    mBrowsingContextGroupId = nsContentUtils::GenerateBrowsingContextId();
   }
 
   Unused << Proto()->SetSubstitution(MozExtensionHostname(), mBaseURI);
@@ -326,12 +325,6 @@ bool WebExtensionPolicy::Disable() {
 
   if (!EPS().UnregisterExtension(*this)) {
     return false;
-  }
-
-  if (XRE_IsParentProcess()) {
-    // Clear our BrowsingContextGroup reference. A new instance will be created
-    // when the extension is next activated.
-    mBrowsingContextGroup = nullptr;
   }
 
   Unused << Proto()->SetSubstitution(MozExtensionHostname(), nullptr);
@@ -577,7 +570,7 @@ void WebExtensionPolicy::GetReadyPromise(
 
 uint64_t WebExtensionPolicy::GetBrowsingContextGroupId() const {
   MOZ_ASSERT(XRE_IsParentProcess() && mActive);
-  return mBrowsingContextGroup ? mBrowsingContextGroup->Id() : 0;
+  return mBrowsingContextGroupId;
 }
 
 uint64_t WebExtensionPolicy::GetBrowsingContextGroupId(ErrorResult& aRv) {
@@ -590,9 +583,11 @@ uint64_t WebExtensionPolicy::GetBrowsingContextGroupId(ErrorResult& aRv) {
   return 0;
 }
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_WEAK_PTR(
-    WebExtensionPolicy, mParent, mBrowsingContextGroup, mLocalizeCallback,
-    mHostPermissions, mWebAccessibleResources, mContentScripts)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_WEAK_PTR(WebExtensionPolicy, mParent,
+                                               mLocalizeCallback,
+                                               mHostPermissions,
+                                               mWebAccessibleResources,
+                                               mContentScripts)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(WebExtensionPolicy)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY

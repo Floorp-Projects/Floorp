@@ -152,6 +152,8 @@ class TestCapabilityMatching(MarionetteTestCase):
                 self.marionette.session_capabilities["pageLoadStrategy"], strategy
             )
 
+        self.delete_session()
+
         for value in ["", "EAGER", True, 42, {}, [], None]:
             print("invalid strategy {}".format(value))
             with self.assertRaisesRegexp(

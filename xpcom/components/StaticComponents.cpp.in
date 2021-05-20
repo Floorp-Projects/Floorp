@@ -25,6 +25,7 @@
 #include "nsString.h"
 #include "nsStringEnumerator.h"
 #include "nsTArray.h"
+#include "xptdata.h"
 #include "xptinfo.h"
 
 // Cleanup pollution from zipstruct.h

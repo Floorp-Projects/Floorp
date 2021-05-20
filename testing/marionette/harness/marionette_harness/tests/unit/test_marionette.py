@@ -32,32 +32,37 @@ class TestMarionette(MarionetteTestCase):
         self.assertRaises(socket.timeout, self.marionette.raise_for_port, timeout=5)
         self.assertLess(time.time() - start_time, 5)
 
+    def test_single_active_session(self):
+        self.assertEqual(1, self.marionette.execute_script("return 1"))
+
+        # Use a new Marionette instance for the connection attempt, while there is
+        # still an active session present.
+        marionette = Marionette(host=self.marionette.host, port=self.marionette.port)
+        self.assertRaises(socket.timeout, marionette.raise_for_port, timeout=1.0)
+
     def test_disable_enable_new_connections(self):
         # Do not re-create socket if it already exists
         self.marionette._send_message("Marionette:AcceptConnections", {"value": True})
 
         try:
-            # Disabling new connections does not affect existing ones...
+            # Disabling new connections does not affect the existing one.
             self.marionette._send_message(
                 "Marionette:AcceptConnections", {"value": False}
             )
             self.assertEqual(1, self.marionette.execute_script("return 1"))
 
-            # but only new connection attempts
+            # Delete the current active session to allow new connection attempts.
+            self.marionette.delete_session()
+
+            # Use a new Marionette instance for the connection attempt, that doesn't
+            # handle an instance of the application to prevent a connection lost error.
             marionette = Marionette(
                 host=self.marionette.host, port=self.marionette.port
             )
             self.assertRaises(socket.timeout, marionette.raise_for_port, timeout=1.0)
 
-            self.marionette._send_message(
-                "Marionette:AcceptConnections", {"value": True}
-            )
-            marionette.raise_for_port(timeout=10.0)
-
         finally:
-            self.marionette._send_message(
-                "Marionette:AcceptConnections", {"value": True}
-            )
+            self.marionette.quit()
 
     def test_client_socket_uses_expected_socket_timeout(self):
         current_socket_timeout = self.marionette.socket_timeout

@@ -816,6 +816,22 @@ void BrowsingContext::Detach(bool aFromIPC) {
     mGroup->Toplevels().RemoveElement(this);
   }
 
+  auto callSendDiscard = [&](auto* aActor) {
+    // Hold a strong reference to ourself, and keep our BrowsingContextGroup
+    // alive, until the responses comes back to ensure we don't die while
+    // messages relating to this context are in-flight.
+    //
+    // When the callback is called, the keepalive on our group will be
+    // destroyed, and the reference to the BrowsingContext will be dropped,
+    // which may cause it to be fully destroyed.
+    mGroup->AddKeepAlive();
+    auto callback = [self = RefPtr{this}](auto) {
+      self->mGroup->RemoveKeepAlive();
+    };
+
+    aActor->SendDiscardBrowsingContext(this, callback, callback);
+  };
+
   if (XRE_IsParentProcess()) {
     Group()->EachParent([&](ContentParent* aParent) {
       // Only the embedder process is allowed to initiate a BrowsingContext
@@ -827,25 +843,11 @@ void BrowsingContext::Detach(bool aFromIPC) {
       // destroyed.
       if (!Canonical()->IsEmbeddedInProcess(aParent->ChildID()) &&
           !Canonical()->IsOwnedByProcess(aParent->ChildID())) {
-        // Hold a strong reference to ourself, and keep our BrowsingContextGroup
-        // alive, until the responses comes back to ensure we don't die while
-        // messages relating to this context are in-flight.
-        //
-        // When the callback is called, the keepalive on our group will be
-        // destroyed, and the reference to the BrowsingContext will be dropped,
-        // which may cause it to be fully destroyed.
-        mGroup->AddKeepAlive();
-        auto callback = [self = RefPtr{this}](auto) {
-          self->mGroup->RemoveKeepAlive();
-        };
-
-        aParent->SendDiscardBrowsingContext(this, callback, callback);
+        callSendDiscard(aParent);
       }
     });
   } else if (!aFromIPC) {
-    auto callback = [](auto) {};
-    ContentChild::GetSingleton()->SendDiscardBrowsingContext(this, callback,
-                                                             callback);
+    callSendDiscard(ContentChild::GetSingleton());
   }
 
   mGroup->Unregister(this);

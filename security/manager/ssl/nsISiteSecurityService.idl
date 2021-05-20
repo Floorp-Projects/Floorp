@@ -5,24 +5,9 @@
 #include "nsISupports.idl"
 
 interface nsIURI;
-interface nsIObserver;
-interface nsIHttpChannel;
 interface nsITransportSecurityInfo;
 interface nsISimpleEnumerator;
 
-%{C++
-#include "nsStringFwd.h"
-#include "nsTArrayForwardDeclare.h"
-namespace mozilla
-{
-  namespace pkix
-  {
-    class Time;
-  }
-}
-%}
-[ref] native nsCStringTArrayRef(nsTArray<nsCString>);
-[ref] native mozillaPkixTime(mozilla::pkix::Time);
 [ref] native const_OriginAttributesRef(const mozilla::OriginAttributes);
 
 // [infallible] attributes are only allowed on [builtinclass]
@@ -45,13 +30,10 @@ interface nsISiteSecurityState : nsISupports
    * SECURITY_PROPERTY_KNOCKOUT indicates a value on a preloaded
    * list is being overridden, and the associated site does not have the
    * security property in question.
-   * SECURITY_PROPERTY_NEGATIVE is used when we've gotten a negative result from
-   * HSTS priming.
    */
   const short SECURITY_PROPERTY_UNSET = 0;
   const short SECURITY_PROPERTY_SET = 1;
   const short SECURITY_PROPERTY_KNOCKOUT = 2;
-  const short SECURITY_PROPERTY_NEGATIVE = 3;
 };
 
 // This has to be a builtinclass because it derives from a builtinclass.
@@ -114,7 +96,7 @@ interface nsISiteSecurityService : nsISupports
      *                          the-middle attacks before trust-on-second-use
      *                          happens).
      * @param aSource the source of the header, whether it was from the preload
-     *                list, an organic header, or HSTS priming, or unknown.
+     *                list, an organic header, or unknown.
      * @param aMaxAge the parsed max-age directive of the header.
      * @param aIncludeSubdomains the parsed includeSubdomains directive.
      * @param aFailureResult a more specific failure result if NS_ERROR_FAILURE
@@ -194,8 +176,7 @@ interface nsISiteSecurityService : nsISupports
      * @param aCached true if we have cached information about this host, even
      *                if the security state is false.
      * @param aSource the source of the HSTS entry. One of SOURCE_PRELOAD_LIST,
-     *                SOURCE_ORGANIC_REQUEST, SOURCE_HSTS_PRIMING, or
-     *                SOURCE_UNKNOWN.
+     *                SOURCE_ORGANIC_REQUEST, or SOURCE_UNKNOWN.
      */
     [binaryname(IsSecureURI), noscript, must_use]
     boolean isSecureURINative(in uint32_t aType, in nsIURI aURI,
@@ -219,32 +200,10 @@ interface nsISiteSecurityService : nsISupports
     void clearAll();
 
     /**
-     * Removes all preloaded security state.
-     */
-    [must_use]
-    void clearPreloads();
-
-    /**
-     * Set an HSTS preload entry for a host. The resulting entries will be
-     * permanent and visible from private and non-private contexts. These
-     * entries replace any already set by this mechanism or those built-in to
-     * Gecko.
-     *
-     * @param aHost the hostname (punycode) that the entry applies to
-     * @param aIncludeSubdomains whether this entry also applies to subdomains
-     * @param aExpires the time this entry should expire (millis since epoch)
-     */
-    [must_use]
-    boolean setHSTSPreload(in ACString aHost,
-                           in boolean aIncludesSubdomains,
-                           in int64_t aExpires);
-
-    /**
      * Returns an enumerator of the nsISiteSecurityService storage. Each item in
      * the enumeration is a nsISiteSecurityState that can be QueryInterfaced to
      * nsISiteHSTSState.
-     * Doesn't include preloaded entries (either the hard-coded ones or the
-     * preloaded-delivered-by-kinto ones).
+     * Doesn't include hard-coded preloaded entries.
      *
      * @param aType the type of security state in question.
      */

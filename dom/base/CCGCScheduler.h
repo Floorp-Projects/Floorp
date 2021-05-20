@@ -63,9 +63,9 @@ static const int64_t kNumCCNodesBetweenTimeChecks = 1000;
 
 // Actions performed by the GCRunner state machine.
 enum class GCRunnerAction {
-  MajorGC,       // We want to start a new major GC
-  MajorGCReady,  // The parent says we may begin our major GC
-  GCSlice,       // Run a single slice of a major GC
+  WaitToMajorGC,  // We want to start a new major GC
+  StartMajorGC,   // The parent says we may begin our major GC
+  GCSlice,        // Run a single slice of a major GC
   None
 };
 
@@ -146,11 +146,10 @@ class CCGCScheduler {
   void SetNeedsFullGC(bool aNeedGC = true) { mNeedsFullGC = aNeedGC; }
 
   void SetWantMajorGC(JS::GCReason aReason) {
-    if (mMajorGCReason == JS::GCReason::NO_REASON) {
-      // If there was already a reason for doing a major GC, do not override it
-      // with a newer reason. When looking at the profiler, the initial reason
-      // is probably more useful to know than any followup reasons while things
-      // are getting worse.
+    if (aReason != JS::GCReason::DOM_WINDOW_UTILS ||
+        mMajorGCReason == JS::GCReason::NO_REASON) {
+      // DOM_WINDOW_UTILS is used for testing interprocess GC coordination and
+      // so should not override a pre-existing reason.
       mMajorGCReason = aReason;
     }
 
@@ -168,9 +167,14 @@ class CCGCScheduler {
     mNeedsGCAfterCC = true;
   }
 
-  void NoteReadyForMajorGC(JS::GCReason aReason) {
-    mMajorGCReason = aReason;
+  // Returns false if we started and finished a major GC while waiting for a
+  // response.
+  [[nodiscard]] bool NoteReadyForMajorGC() {
+    if (mMajorGCReason == JS::GCReason::NO_REASON) {
+      return false;
+    }
     mReadyForMajorGC = true;
+    return true;
   }
 
   void NoteGCBegin() {
@@ -181,6 +185,8 @@ class CCGCScheduler {
   }
 
   void NoteGCEnd() {
+    mMajorGCReason = JS::GCReason::NO_REASON;
+
     mInIncrementalGC = false;
     mCCBlockStart = TimeStamp();
     mInIncrementalGC = false;
@@ -192,6 +198,27 @@ class CCGCScheduler {
     mCCollectedWaitingForGC = 0;
     mCCollectedZonesWaitingForGC = 0;
     mLikelyShortLivingObjectsNeedingGC = 0;
+  }
+
+  void NoteGCSliceEnd() {
+    if (mMajorGCReason == JS::GCReason::NO_REASON) {
+      // If the GC was internally triggered, then we won't have a reason set
+      // and want to use INTER_SLICE_GC for every subsequent slice. If the GC
+      // was triggered by PokeGC, then we will have a reason and want every
+      // subsequent slice to inherit that reason (*unless*
+      // RunNextCollectorTimer provides a new reason before the initial timer
+      // fires, in which case the PokeGC reason will be replaced.)
+      //
+      // This behavior doesn't make all that much sense, but reverts to the
+      // behavior before bug 1692308. A following patch will change the
+      // behavior.
+      mMajorGCReason = JS::GCReason::INTER_SLICE_GC;
+
+      // Also, internally-triggered GCs do not wait for the parent's permission
+      // to proceed. This flag won't be checked during an incremental GC, but
+      // it better reflects reality.
+      mReadyForMajorGC = true;
+    }
   }
 
   // When we decide to do a cycle collection but we're in the middle of an
@@ -327,7 +354,7 @@ class CCGCScheduler {
 
   inline GCRunnerStep GetNextGCRunnerAction(TimeStamp aDeadline);
 
-  inline CCRunnerStep GetNextCCRunnerAction(TimeStamp aDeadline);
+  inline CCRunnerStep AdvanceCCRunner(TimeStamp aDeadline);
 
   // aStartTimeStamp : when the ForgetSkippable timer fired. This may be some
   // time ago, if an incremental GC needed to be finished.
@@ -369,11 +396,11 @@ class CCGCScheduler {
   bool mNeedsGCAfterCC = false;
   uint32_t mPreviousSuspectedCount = 0;
 
-  JS::GCReason mMajorGCReason = JS::GCReason::NO_REASON;
-
   uint32_t mCleanupsSinceLastGC = UINT32_MAX;
 
  public:
+  JS::GCReason mMajorGCReason = JS::GCReason::NO_REASON;
+
   uint32_t mCCollectedWaitingForGC = 0;
   uint32_t mCCollectedZonesWaitingForGC = 0;
   uint32_t mLikelyShortLivingObjectsNeedingGC = 0;
@@ -476,7 +503,7 @@ bool CCGCScheduler::ShouldScheduleCC() const {
   return IsCCNeeded(now);
 }
 
-CCRunnerStep CCGCScheduler::GetNextCCRunnerAction(TimeStamp aDeadline) {
+CCRunnerStep CCGCScheduler::AdvanceCCRunner(TimeStamp aDeadline) {
   struct StateDescriptor {
     // When in this state, should we first check to see if we still have
     // enough reason to CC?
@@ -660,23 +687,17 @@ CCRunnerStep CCGCScheduler::GetNextCCRunnerAction(TimeStamp aDeadline) {
 }
 
 GCRunnerStep CCGCScheduler::GetNextGCRunnerAction(TimeStamp aDeadline) {
+  MOZ_ASSERT(mMajorGCReason != JS::GCReason::NO_REASON);
+
   if (InIncrementalGC()) {
-    return {GCRunnerAction::GCSlice, JS::GCReason::INTER_SLICE_GC};
+    return {GCRunnerAction::GCSlice, mMajorGCReason};
   }
 
   if (mReadyForMajorGC) {
-    GCRunnerStep step{GCRunnerAction::MajorGCReady, mMajorGCReason};
-    mMajorGCReason = JS::GCReason::NO_REASON;
-    return step;
+    return {GCRunnerAction::StartMajorGC, mMajorGCReason};
   }
 
-  if (mMajorGCReason != JS::GCReason::NO_REASON) {
-    GCRunnerStep step{GCRunnerAction::MajorGC, mMajorGCReason};
-    mMajorGCReason = JS::GCReason::NO_REASON;
-    return step;
-  }
-
-  return {GCRunnerAction::None, JS::GCReason::NO_REASON};
+  return {GCRunnerAction::WaitToMajorGC, mMajorGCReason};
 }
 
 inline js::SliceBudget CCGCScheduler::ComputeForgetSkippableBudget(

@@ -776,6 +776,16 @@ add_task(async function testSideloadRemoveButton() {
   ok(removeButton.disabled, "Remove is disabled");
   ok(!removeButton.hidden, "Remove is visible");
 
+  // Remove but cancel.
+  let prevented = BrowserTestUtils.waitForEvent(card, "remove-disabled");
+  removeButton.click();
+  await prevented;
+
+  // reopen the panel
+  panelOpened = BrowserTestUtils.waitForEvent(moreOptionsPanel, "shown");
+  EventUtils.synthesizeMouseAtCenter(moreOptionsButton, {}, win);
+  await panelOpened;
+
   let sumoLink = removeButton.querySelector("a");
   ok(sumoLink, "There's a link");
   is(
