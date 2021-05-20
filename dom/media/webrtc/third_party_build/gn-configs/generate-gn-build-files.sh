@@ -89,6 +89,18 @@ if [ "x$SYS_NAME" = "xLinux" ]; then
   fi
 fi
 
+# Check for modified files and abort if present.
+MODIFIED_FILES=`hg status --modified --added --exclude "**/moz.build" --exclude "dom/media/webrtc/third_party_build/**.json"`
+if [ "x$MODIFIED_FILES" = "x" ]; then
+  # Completely clean the mercurial checkout before proceeding
+  hg update -C -r .
+  hg purge
+else
+  echo "There are modified files in the checkout. Cowardly aborting!"
+  echo "$MODIFIED_FILES"
+  exit 1
+fi
+
 # For now, only macOS, Windows, and Linux (including Android builds) are supported here.
 if [ "x$SYS_NAME" = "xDarwin" ]; then
   CONFIGS="x64_False_arm64_mac x64_True_arm64_mac x64_False_x64_mac x64_True_x64_mac"
@@ -119,18 +131,6 @@ else
       ./mach bootstrap --application-choice 'Firefox for Desktop' --no-interactive
     fi
   fi
-fi
-
-# Check for modified files and abort if present.
-MODIFIED_FILES=`hg status --modified --added --exclude "**/moz.build" --exclude "dom/media/webrtc/third_party_build/**.json"`
-if [ "x$MODIFIED_FILES" = "x" ]; then
-  # Completely clean the mercurial checkout before proceeding
-  hg update -C -r .
-  hg purge
-else
-  echo "There are modified files in the checkout. Cowardly aborting!"
-  echo "$MODIFIED_FILES"
-  exit 1
 fi
 
 # The path to DEPOT_TOOLS should be on our path, and make sure that it doesn't
