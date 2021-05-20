@@ -7,9 +7,6 @@
 @media (-moz-proton) {
 #notification-popup-box {
   height: calc(var(--urlbar-min-height) - 2px /* border */ - 2 * var(--urlbar-container-padding));
-  padding: var(--urlbar-icon-padding);
-  /* subtract identity-block.inc-css margin-inline-start */
-  padding-inline-start: calc(var(--urlbar-icon-padding) - 4px);
   -moz-context-properties: fill, fill-opacity;
   fill: currentColor;
   fill-opacity: var(--urlbar-icon-fill-opacity);
@@ -50,6 +47,7 @@
    for its list-style-image to be overridden. */
 .notification-anchor-icon {
   list-style-image: url(chrome://global/skin/icons/info-filled.svg);
+  padding: var(--urlbar-icon-padding);
 }
 
 /* INDIVIDUAL NOTIFICATIONS */
