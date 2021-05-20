@@ -1595,15 +1595,27 @@ EnvironmentCache.prototype = {
 
   _getSandboxData() {
     let effectiveContentProcessLevel = null;
+    let contentWin32kLockdownState = null;
     try {
       let sandboxSettings = Cc[
         "@mozilla.org/sandbox/sandbox-settings;1"
       ].getService(Ci.mozISandboxSettings);
       effectiveContentProcessLevel =
         sandboxSettings.effectiveContentSandboxLevel;
+
+      // See `ContentWin32kLockdownState` in
+      // <security/sandbox/common/SandboxSettings.h>
+      //
+      // Values:
+      // 1 = LockdownEnabled
+      // 2 = MissingWebRender
+      // 3 = OperatingSystemNotSupported
+      // 4 = PrefNotSet
+      contentWin32kLockdownState = sandboxSettings.contentWin32kLockdownState;
     } catch (e) {}
     return {
       effectiveContentProcessLevel,
+      contentWin32kLockdownState,
     };
   },
 
