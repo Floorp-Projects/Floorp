@@ -43,7 +43,7 @@ asserts-if(gtkWidget,0-6) != backgr_border-table-quirks.html empty.html
 fuzzy-if(d2d,0-1,0-1083) fuzzy-if(skiaContent,0-1,0-2200) == border-collapse-opacity-table-cell.html border-collapse-opacity-table-cell-ref.html
 fuzzy-if(d2d,0-1,0-33174) fuzzy-if(skiaContent,0-1,0-16863) == border-collapse-opacity-table-column-group.html border-collapse-opacity-table-column-group-ref.html
 fuzzy-if(d2d,0-1,0-11058) fuzzy-if(skiaContent,0-1,0-5625) == border-collapse-opacity-table-column.html border-collapse-opacity-table-column-ref.html
-fuzzy-if(d2d,0-1,0-24606) fuzzy-if(skiaContent,0-1,0-32718) == border-collapse-opacity-table-row-group.html border-collapse-opacity-table-row-group-ref.html
+fuzzy-if(d2d,0-1,0-24606) fuzzy-if(skiaContent,0-1,0-17000) == border-collapse-opacity-table-row-group.html border-collapse-opacity-table-row-group-ref.html
 fuzzy-if(d2d,0-1,0-11000) fuzzy-if(skiaContent,0-1,0-11000) == border-collapse-opacity-table-row.html border-collapse-opacity-table-row-ref.html
 fuzzy-if(d2d||skiaContent,0-1,0-60000) == border-collapse-opacity-table.html border-collapse-opacity-table-ref.html
 fuzzy-if(d2d,0-1,0-2478) fuzzy-if(skiaContent,0-1,0-2500) == border-separate-opacity-table-cell.html border-separate-opacity-table-cell-ref.html
