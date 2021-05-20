@@ -8,6 +8,7 @@ use api::units::*;
 use crate::clip::{ClipItemKind, ClipStore, ClipNode, rounded_rectangle_contains_point};
 use crate::clip::{polygon_contains_point};
 use crate::prim_store::PolygonKey;
+use crate::scene_builder_thread::Interners;
 use crate::spatial_tree::{SpatialNodeIndex, SpatialTree};
 use crate::internal_types::{FastHashMap, FastHashSet, LayoutPrimitiveInfo};
 use std::ops;
@@ -80,6 +81,7 @@ impl HitTestClipNode {
     fn new(
         node: ClipNode,
         spatial_node_index: SpatialNodeIndex,
+        interners: &Interners,
     ) -> Self {
         let region = match node.item.kind {
             ClipItemKind::Rectangle { rect, mode } => {
@@ -211,6 +213,7 @@ impl HitTestingScene {
         spatial_node_index: SpatialNodeIndex,
         clip_id: ClipId,
         clip_store: &ClipStore,
+        interners: &Interners,
     ) {
         let clip_range = match self.cached_clip_id {
             Some((cached_clip_id, ref range)) if cached_clip_id == clip_id => {
@@ -229,6 +232,7 @@ impl HitTestingScene {
                         clip_store,
                         &mut self.clip_nodes,
                         &mut self.seen_clips,
+                        interners,
                     );
                 }
 
@@ -238,6 +242,7 @@ impl HitTestingScene {
                     clip_store,
                     &mut self.clip_nodes,
                     &mut self.seen_clips,
+                    interners,
                 );
 
                 let end = ClipNodeIndex(self.clip_nodes.len() as u32);
@@ -497,6 +502,7 @@ fn add_clips(
     clip_store: &ClipStore,
     clip_nodes: &mut Vec<HitTestClipNode>,
     seen_clips: &mut FastHashSet<ClipId>,
+    interners: &Interners,
 ) {
     // If this clip-id has already been added to this hit-test item, skip it
     if seen_clips.contains(&clip_id) {
@@ -512,6 +518,7 @@ fn add_clips(
             HitTestClipNode::new(
                 clip.key.into(),
                 clip.clip.spatial_node_index,
+                interners,
             )
         );
     }
@@ -523,6 +530,7 @@ fn add_clips(
             clip_store,
             clip_nodes,
             seen_clips,
+            interners,
         );
     }
 }
