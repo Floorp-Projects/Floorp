@@ -975,13 +975,6 @@ pref("print.print_edge_left", 0);
 pref("print.print_edge_right", 0);
 pref("print.print_edge_bottom", 0);
 
-// Print via the parent process. This is only used when e10s is enabled.
-#if !defined(MOZ_WIDGET_ANDROID)
-  pref("print.print_via_parent", true);
-#else
-  pref("print.print_via_parent", false);
-#endif
-
 // Should this just be checking for MOZ_WIDGET_GTK?
 #if defined(ANDROID) || defined(XP_UNIX) && !defined(XP_MACOSX)
   pref("print.print_reversed", false);
