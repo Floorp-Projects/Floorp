@@ -101,4 +101,39 @@ add_task(async function() {
       "`foo3` was not added to the content window"
     );
   });
+  await resume(dbg);
+
+  info(
+    "Check executing expression with private properties access while paused in class method"
+  );
+  const onPaused = waitForPaused(dbg);
+  // breakFn has a debugger statement that will pause the debugger
+  execute(hud, `x = new Foo(); x.breakFn()`);
+  await onPaused;
+  // pausing opens the debugger, switch to the console again
+  await openConsole();
+
+  await executeAndWaitForMessage(
+    hud,
+    "this.#privateProp",
+    "privatePropValue",
+    ".result"
+  );
+  ok(
+    true,
+    "evaluating a private properties while paused in a class method does work"
+  );
+
+  await executeAndWaitForMessage(
+    hud,
+    "Foo.#privateStatic",
+    `Object { first: "a", second: "b" }`,
+    ".result"
+  );
+  ok(
+    true,
+    "evaluating a static private properties while paused in a class method does work"
+  );
+
+  await resume(dbg);
 });
