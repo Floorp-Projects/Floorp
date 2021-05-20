@@ -18,11 +18,14 @@ exclude: true
   support. See also [Web/API/Notification/silent][90.3] and
   [Web/API/Notification/vibrate][90.4].
   ([bug 1696145]({{bugzilla}}1696145))
+- ⚠️ Deprecated [`GeckoRuntime.getProfileDir`][90.5], the API is being kept for
+  compatibility but it always returns null.
 
 [90.1]: {{javadoc_uri}}/WebNotification.html#silent
 [90.2]: {{javadoc_uri}}/WebNotification.html#vibrate
 [90.3]: https://developer.mozilla.org/en-US/docs/Web/API/Notification/silent
 [90.4]: https://developer.mozilla.org/en-US/docs/Web/API/Notification/vibrate
+[90.5]: {{javadoc_uri}}/GeckoRuntime.html#getProfileDir--
 
 ## v89
 - Added [`ContentPermission`][89.1], which is used to report what permissions content
@@ -990,4 +993,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: d2704dbc8956197877f3a4e3ea3d7fc6f3cb4fc1
+[api-version]: 599ceb11d5142c22816a4ef904d4d46b30f25914
