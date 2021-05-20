@@ -1296,6 +1296,8 @@ class MOZ_STACK_CLASS mozInlineSpellChecker::SpellCheckerTimeSlice {
   void CheckWordsAndAddRangesForMisspellings(
       const nsTArray<nsString>& aWords, nsTArray<NodeOffsetRange>&& aRanges);
 
+  void RemoveRanges(const nsTArray<RefPtr<nsRange>>& aRanges);
+
   bool ShouldSpellCheckRange(const nsRange& aRange) const;
 
   mozInlineSpellChecker& mInlineSpellChecker;
@@ -1318,6 +1320,13 @@ bool mozInlineSpellChecker::SpellCheckerTimeSlice::ShouldSpellCheckRange(
   return beginNode->IsInComposedDoc() && endNode->IsInComposedDoc() &&
          beginNode->IsShadowIncludingInclusiveDescendantOf(rootNode) &&
          endNode->IsShadowIncludingInclusiveDescendantOf(rootNode);
+}
+
+void mozInlineSpellChecker::SpellCheckerTimeSlice::RemoveRanges(
+    const nsTArray<RefPtr<nsRange>>& aRanges) {
+  for (uint32_t i = 0; i < aRanges.Length(); i++) {
+    mInlineSpellChecker.RemoveRange(&mSpellCheckSelection, aRanges[i]);
+  }
 }
 
 // mozInlineSpellChecker::SpellCheckerTimeSlice::Execute
@@ -1456,9 +1465,7 @@ nsresult mozInlineSpellChecker::SpellCheckerTimeSlice::Execute() {
         mSpellCheckSelection.GetRangesForInterval(
             *beginNode, beginOffset, *endNode, endOffset, true, ranges, erv);
         ENSURE_SUCCESS(erv, erv.StealNSResult());
-        for (uint32_t i = 0; i < ranges.Length(); i++) {
-          mInlineSpellChecker.RemoveRange(&mSpellCheckSelection, ranges[i]);
-        }
+        RemoveRanges(ranges);
       }
     }
 
