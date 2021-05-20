@@ -33,6 +33,7 @@ GYP_DIRS['nrappkit'].sandbox_vars['FINAL_LIBRARY'] = 'xul'
 
 if CONFIG["CC_TYPE"] == "gcc":
     GYP_DIRS['nICEr'].sandbox_vars['CFLAGS'] = ['-Wno-stringop-overflow']
+    GYP_DIRS['nrappkit'].sandbox_vars['CFLAGS'] = ['-Wno-stringop-overflow']
     if int(CONFIG["CC_VERSION"].split(".")[0]) >= 8:
         GYP_DIRS['nICEr'].sandbox_vars['CFLAGS'] += ['-Wno-stringop-truncation']
-        GYP_DIRS['nrappkit'].sandbox_vars['CFLAGS'] = ['-Wno-stringop-truncation']
+        GYP_DIRS['nrappkit'].sandbox_vars['CFLAGS'] += ['-Wno-stringop-truncation']
