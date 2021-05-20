@@ -14,6 +14,7 @@ add_task(async function flush_on_tabclose() {
   let browser = tab.linkedBrowser;
 
   await modifySessionStorage(browser, { test: "on-tab-close" });
+  await TabStateFlusher.flush(browser);
   await promiseRemoveTabAndSessionState(tab);
 
   let [
