@@ -69,6 +69,7 @@
 #include "mozilla/net/BackgroundDataBridgeParent.h"
 #include "mozilla/net/HttpBackgroundChannelParent.h"
 #include "mozilla/psm/VerifySSLServerCertParent.h"
+#include "nsIPrincipal.h"
 #include "nsNetUtil.h"
 #include "nsProxyRelease.h"
 #include "nsThreadUtils.h"
@@ -1136,6 +1137,24 @@ BackgroundParentImpl::RecvRemoveBackgroundSessionStorageManager(
   if (!mozilla::dom::RecvRemoveBackgroundSessionStorageManager(aTopContextId)) {
     return IPC_FAIL_NO_REASON(this);
   }
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult BackgroundParentImpl::RecvGetSessionStorageManagerData(
+    const uint64_t& aTopContextId, const uint32_t& aSizeLimit,
+    GetSessionStorageManagerDataResolver&& aResolver) {
+  AssertIsInMainProcess();
+  AssertIsOnBackgroundThread();
+
+  if (BackgroundParent::IsOtherProcessActor(this)) {
+    return IPC_FAIL(this, "Wrong actor");
+  }
+
+  if (!mozilla::dom::RecvGetSessionStorageData(aTopContextId, aSizeLimit,
+                                               std::move(aResolver))) {
+    return IPC_FAIL(this, "Couldn't get session storage data");
+  }
+
   return IPC_OK();
 }
 
