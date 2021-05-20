@@ -414,7 +414,7 @@ impl FrameBuilder {
                 composite_state,
             };
 
-            for pic_index in &scene.tile_cache_pictures {
+            for pic_index in scene.tile_cache_pictures.iter().rev() {
                 update_primitive_visibility(
                     &mut scene.prim_store,
                     *pic_index,
