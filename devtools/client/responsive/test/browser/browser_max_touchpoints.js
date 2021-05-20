@@ -56,12 +56,8 @@ addRDMTask(TEST_COM_URL, async function({ ui, browser, tab }) {
     "Check that maxTouchPoints persist after navigating to a page that forces the creation of a new browsing context"
   );
   const previousBrowsingContextId = browser.browsingContext.id;
+  const onPageReloaded = BrowserTestUtils.browserLoaded(browser, true);
   onViewportLoad = waitForViewportLoad(ui);
-  let onPageReloaded = BrowserTestUtils.browserLoaded(
-    browser,
-    true,
-    loadedUrl => loadedUrl.includes(URL_ROOT_ORG_SSL)
-  );
   BrowserTestUtils.loadURI(
     browser,
     URL_ROOT_ORG_SSL + TEST_DOCUMENT + "?crossOriginIsolated=true"
@@ -81,9 +77,7 @@ addRDMTask(TEST_COM_URL, async function({ ui, browser, tab }) {
   );
 
   info("Check that the value is reset when closing RDM");
-  onPageReloaded = BrowserTestUtils.browserLoaded(browser, true);
   await closeRDM(tab);
-  await onPageReloaded;
 
   is(
     await getMaxTouchPoints(browser),
