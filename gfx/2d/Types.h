@@ -44,6 +44,7 @@ enum class SurfaceType : int8_t {
   DATA_ALIGNED,           /* Data surface using aligned heap memory */
   DATA_SHARED_WRAPPER,    /* Shared memory mapped in from another process */
   BLOB_IMAGE,             /* Recorded blob image */
+  DATA_MAPPED,            /* Data surface wrapping a ScopedMap */
 };
 
 enum class SurfaceFormat : int8_t {

@@ -12,6 +12,7 @@
 #include "nsContentUtils.h"
 #include "mozilla/gfx/Point.h"
 #include "mozilla/gfx/Rect.h"
+#include "mozilla/gfx/SourceSurfaceRawData.h"
 #include "mozilla/Services.h"
 #include "mozilla/SizeOfState.h"
 #include "mozilla/TimeStamp.h"
@@ -355,6 +356,78 @@ bool ImageResource::UpdateImageContainer(
   }
 
   return !mImageContainers.IsEmpty();
+}
+
+void ImageResource::CollectSizeOfSurfaces(
+    nsTArray<SurfaceMemoryCounter>& aCounters,
+    MallocSizeOf aMallocSizeOf) const {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  for (const auto& entry : mImageContainers) {
+    RefPtr<layers::ImageContainer> container(entry.mContainer);
+    if (!container) {
+      continue;
+    }
+
+    AutoTArray<layers::ImageContainer::OwningImage, 1> images;
+    container->GetCurrentImages(&images);
+    if (images.IsEmpty()) {
+      continue;
+    }
+
+    RefPtr<gfx::SourceSurface> surface = images[0].mImage->GetAsSourceSurface();
+    if (!surface) {
+      MOZ_ASSERT_UNREACHABLE("No surface in container!");
+      continue;
+    }
+
+    // The surface might be wrapping another.
+    bool isMappedSurface = surface->GetType() == gfx::SurfaceType::DATA_MAPPED;
+    const gfx::SourceSurface* actualSurface =
+        isMappedSurface
+            ? static_cast<gfx::SourceSurfaceMappedData*>(surface.get())
+                  ->GetScopedSurface()
+            : surface.get();
+
+    // Check if the surface is already in the report. Ignore if so.
+    bool found = false;
+    for (const auto& counter : aCounters) {
+      if (counter.Surface() == actualSurface) {
+        found = true;
+        break;
+      }
+    }
+    if (found) {
+      continue;
+    }
+
+    // The surface isn't in the report, so it isn't stored in SurfaceCache. We
+    // need to add our own entry here so that it will be included in the memory
+    // report.
+    gfx::SourceSurface::SizeOfInfo info;
+    surface->SizeOfExcludingThis(aMallocSizeOf, info);
+
+    uint32_t heapBytes = aMallocSizeOf(actualSurface);
+    if (isMappedSurface) {
+      heapBytes += aMallocSizeOf(surface.get());
+    }
+
+    SurfaceKey key = ContainerSurfaceKey(surface->GetSize(), entry.mSVGContext,
+                                         ToSurfaceFlags(entry.mFlags));
+    SurfaceMemoryCounter counter(key, actualSurface, /* aIsLocked */ false,
+                                 /* aCannotSubstitute */ false,
+                                 /* aIsFactor2 */ false, /* aFinished */ true,
+                                 SurfaceMemoryCounterType::CONTAINER);
+
+    counter.Values().SetDecodedHeap(info.mHeapBytes + heapBytes);
+    counter.Values().SetDecodedNonHeap(info.mNonHeapBytes);
+    counter.Values().SetDecodedUnknown(info.mUnknownBytes);
+    counter.Values().SetExternalHandles(info.mExternalHandles);
+    counter.Values().SetExternalId(info.mExternalId);
+    counter.Values().SetSurfaceTypes(info.mTypes);
+
+    aCounters.AppendElement(counter);
+  }
 }
 
 void ImageResource::ReleaseImageContainer() {

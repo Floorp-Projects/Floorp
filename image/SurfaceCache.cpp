@@ -193,10 +193,10 @@ class CachedSurface {
       // for surfaces with PlaybackType::eAnimated.)
       aCachedSurface->mProvider->AddSizeOfExcludingThis(
           mMallocSizeOf, [&](ISurfaceProvider::AddSizeOfCbData& aMetadata) {
-            SurfaceMemoryCounter counter(aCachedSurface->GetSurfaceKey(),
-                                         aCachedSurface->IsLocked(),
-                                         aCachedSurface->CannotSubstitute(),
-                                         aIsFactor2, aMetadata.mFinished);
+            SurfaceMemoryCounter counter(
+                aCachedSurface->GetSurfaceKey(), aMetadata.mSurface,
+                aCachedSurface->IsLocked(), aCachedSurface->CannotSubstitute(),
+                aIsFactor2, aMetadata.mFinished);
 
             counter.Values().SetDecodedHeap(aMetadata.mHeapBytes);
             counter.Values().SetDecodedNonHeap(aMetadata.mNonHeapBytes);

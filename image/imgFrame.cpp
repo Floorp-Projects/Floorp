@@ -933,8 +933,9 @@ void imgFrame::AddSizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
   MonitorAutoLock lock(mMonitor);
 
   AddSizeOfCbData metadata;
-
+  metadata.mSurface = mOptSurface ? mOptSurface.get() : mRawSurface.get();
   metadata.mFinished = mFinished;
+
   if (mLockedSurface) {
     // The locked surface should only be present if we have mRawSurface. Hence
     // we only need to get its allocation size to avoid double counting.
