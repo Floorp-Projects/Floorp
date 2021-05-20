@@ -567,6 +567,12 @@ class ProviderInterventions extends UrlbarProvider {
         // how this special tip is handled.
         this.currentTip = TIPS.UPDATE_CHECKING;
         break;
+      case AppUpdater.STATUS.NO_UPDATER:
+      case AppUpdater.STATUS.UPDATE_DISABLED_BY_POLICY:
+        // If the updater is disabled at build time or at runtime, either by
+        // policy or because we're in a package, do not select any update tips.
+        this.currentTip = TIPS.NONE;
+        break;
       default:
         // Give up and ask the user to download the latest version from the
         // web. We default to this case when the update is still downloading
