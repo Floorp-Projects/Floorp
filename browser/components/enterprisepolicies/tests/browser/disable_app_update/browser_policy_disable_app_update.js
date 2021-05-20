@@ -2,11 +2,6 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 "use strict";
-
-XPCOMUtils.defineLazyModuleGetters(this, {
-  UrlbarTestUtils: "resource://testing-common/UrlbarTestUtils.jsm",
-});
-
 var updateService = Cc["@mozilla.org/updates/update-service;1"].getService(
   Ci.nsIApplicationUpdateService
 );
@@ -95,14 +90,3 @@ function waitForAboutDialog() {
     openAboutDialog();
   });
 }
-
-add_task(async function test_no_update_intervention() {
-  let context = await UrlbarTestUtils.promiseAutocompleteResultPopup({
-    window,
-    value: "update firefox",
-    waitForFocus,
-    fireInputEvent: true,
-  });
-  // If there was an intervention, this would be 2 or greater.
-  Assert.ok(context.results.length == 1);
-});
