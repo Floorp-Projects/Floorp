@@ -503,6 +503,7 @@ class TestRunnerManager(threading.Thread):
                                                    self.state.failure_count + 1)
         else:
             self.executor_kwargs["group_metadata"] = self.state.group_metadata
+            self.executor_kwargs["browser_settings"] = self.browser.browser_settings
             self.start_test_runner()
 
     def start_test_runner(self):
