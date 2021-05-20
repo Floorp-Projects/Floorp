@@ -341,7 +341,6 @@ struct JS_PUBLIC_API PropertyDescriptor {
   bool hasGetterOrSetter() const { return getter_ || setter_; }
 
   unsigned attributes() const { return attrs_; }
-  void setAttributesDoNotUse(unsigned attrs) { attrs_ = attrs; }
 
   Value* valueDoNotUse() { return &value_; }
   Value const* valueDoNotUse() const { return &value_; }
@@ -448,20 +447,6 @@ class MutableWrappedPtrOperations<JS::PropertyDescriptor, Wrapper>
   JS::PropertyDescriptor& desc() { return static_cast<Wrapper*>(this)->get(); }
 
  public:
-  void clear() {
-    desc().setAttributesDoNotUse(0);
-    desc().setGetterDoNotUse(nullptr);
-    desc().setSetterDoNotUse(nullptr);
-    value().setUndefined();
-  }
-
-  void assign(JS::PropertyDescriptor& other) {
-    desc().setAttributesDoNotUse(other.attributes());
-    desc().setGetterDoNotUse(*other.getterDoNotUse());
-    desc().setSetterDoNotUse(*other.setterDoNotUse());
-    value().set(other.value());
-  }
-
   JS::MutableHandle<JS::Value> value() {
     return JS::MutableHandle<JS::Value>::fromMarkedLocation(
         desc().valueDoNotUse());
