@@ -6,6 +6,7 @@
 
 /* globals Services */
 
+const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 const { E10SUtils } = ChromeUtils.import(
   "resource://gre/modules/E10SUtils.jsm"
 );
@@ -212,6 +213,10 @@ this.test = class extends ExtensionAPI {
         async getActive(tabId) {
           const tab = context.extension.tabManager.get(tabId);
           return tab.browser.docShellIsActive;
+        },
+
+        async getProfilePath() {
+          return OS.Constants.Path.profileDir;
         },
 
         async flushApzRepaints(tabId) {
