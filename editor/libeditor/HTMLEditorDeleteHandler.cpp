@@ -1676,8 +1676,7 @@ HTMLEditor::AutoDeleteRangesHandler::ComputeRangesToDeleteAroundCollapsedRanges(
   }
 
   if (aScanFromCaretPointResult.ReachedSpecialContent() ||
-      aScanFromCaretPointResult.ReachedBRElement() ||
-      aScanFromCaretPointResult.ReachedNonEditableOtherBlockElement()) {
+      aScanFromCaretPointResult.ReachedBRElement()) {
     if (aScanFromCaretPointResult.GetContent() ==
         aWSRunScannerAtCaret.GetEditingHost()) {
       return NS_OK;
@@ -1718,6 +1717,10 @@ HTMLEditor::AutoDeleteRangesHandler::ComputeRangesToDeleteAroundCollapsedRanges(
     if (NS_WARN_IF(!aScanFromCaretPointResult.GetContent()->IsElement())) {
       return NS_ERROR_FAILURE;
     }
+    // TODO(m_kato):
+    // When aScanFromCaretPointResult.GetContent isn't editable and is
+    // removable, PrepareToDeleteAtOtherBlockBoundary will return false.
+    // But this should be removed.
     AutoBlockElementsJoiner joiner(*this);
     if (!joiner.PrepareToDeleteAtOtherBlockBoundary(
             aHTMLEditor, aDirectionAndAmount,
@@ -1812,8 +1815,7 @@ HTMLEditor::AutoDeleteRangesHandler::HandleDeleteAroundCollapsedRanges(
   }
 
   if (aScanFromCaretPointResult.ReachedSpecialContent() ||
-      aScanFromCaretPointResult.ReachedBRElement() ||
-      aScanFromCaretPointResult.ReachedNonEditableOtherBlockElement()) {
+      aScanFromCaretPointResult.ReachedBRElement()) {
     if (aScanFromCaretPointResult.GetContent() ==
         aWSRunScannerAtCaret.GetEditingHost()) {
       return EditActionHandled();
