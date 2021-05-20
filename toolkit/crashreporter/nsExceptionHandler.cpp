@@ -449,8 +449,6 @@ static XP_CHAR* Concat(XP_CHAR* str, const XP_CHAR* toAppend, size_t* size) {
   return str;
 }
 
-static size_t gOOMAllocationSize = 0;
-
 void AnnotateOOMAllocationSize(size_t size) { gOOMAllocationSize = size; }
 
 static size_t gTexturesSize = 0;
@@ -1286,17 +1284,6 @@ static void WriteMainThreadRunnableName(AnnotationWriter& aWriter) {
 }
 
 static void WriteOOMAllocationSize(AnnotationWriter& aWriter) {
-  // See bug 1683288 and bug 1682975#c7 for context
-  //
-  // We have two cases: either gOOMAllocationSize can be set from remote
-  // via CrashReporter::AnnotateOOMAllocationSize()
-  //
-  // BUT if gOOMAllocationSize is 0 we should try and fetch value from mozalloc
-  if (!gOOMAllocationSize) {
-    gOOMAllocationSize = mozalloc_get_oom_abort_size();
-  }
-
-  // This way we still are guarded by a gOOMAllocationSize=0
   if (gOOMAllocationSize) {
     aWriter.Write(Annotation::OOMAllocationSize, gOOMAllocationSize);
   }
