@@ -12,6 +12,7 @@
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/SVGDocument.h"
+#include "mozilla/extensions/WebExtensionPolicy.h"
 #include "mozilla/StaticPrefs_svg.h"
 #include "mozilla/SVGObserverUtils.h"
 #include "mozilla/SVGUtils.h"
@@ -68,11 +69,24 @@ bool SVGContextPaint::IsAllowedForImageFromURI(nsIURI* aURI) {
   RefPtr<BasePrincipal> principal =
       BasePrincipal::CreateContentPrincipal(aURI, OriginAttributes());
 
-  nsString addonId;
-  if (NS_SUCCEEDED(principal->GetAddonId(addonId))) {
-    if (StringEndsWith(addonId, u"@mozilla.org"_ns) ||
-        StringEndsWith(addonId, u"@mozilla.com"_ns)) {
+  RefPtr<extensions::WebExtensionPolicy> addonPolicy = principal->AddonPolicy();
+  if (addonPolicy) {
+    if (addonPolicy->IsPrivileged()) {
       return true;
+    }
+
+    // Bug 1710917: look for a different approach to achieve the same goal
+    // (restrict this to the subset of addons that are owned by Mozilla and/or
+    // part of the browser itself) without having to maintain the list of the
+    // allowed addon id suffixes in two places (here in Firefox and also on
+    // the AMO side to prevent arbitrary third party extensions to use that
+    // same suffix in their manifest.json files).
+    nsString addonId;
+    if (NS_SUCCEEDED(principal->GetAddonId(addonId))) {
+      if (StringEndsWith(addonId, u"@mozilla.org"_ns) ||
+          StringEndsWith(addonId, u"@mozilla.com"_ns)) {
+        return true;
+      }
     }
   }
 
