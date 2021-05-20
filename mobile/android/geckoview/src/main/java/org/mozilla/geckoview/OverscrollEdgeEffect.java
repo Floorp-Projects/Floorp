@@ -8,6 +8,7 @@ package org.mozilla.geckoview;
 import org.mozilla.gecko.util.ThreadUtils;
 
 import android.content.Context;
+import android.graphics.BlendMode;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.PorterDuff;
@@ -17,9 +18,11 @@ import android.os.Build;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.UiThread;
+
 import android.widget.EdgeEffect;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 
 @UiThread
 public final class OverscrollEdgeEffect {
@@ -44,6 +47,61 @@ public final class OverscrollEdgeEffect {
         mSession = session;
     }
 
+    private static Field sPaintField;
+    private static Method sSetType;
+
+    // By default on SDK_INT 31 and above the edge effect default changed to "TYPE_STRETCH"
+    // which is an effect that we can't support due to using SurfaceTexture.
+    // This restores the edge effect type to TYPE_GLOW which is the default (and only option) on
+    // lower versions.
+    private void setType(final EdgeEffect edgeEffect) {
+        if (Build.VERSION.SDK_INT < 31 && !Build.VERSION.CODENAME.equals("S")) {
+            // setType is only available on 31 (early builds advertise themselves as 30,
+            // with codename S)
+            return;
+        }
+
+        // TODO: remove reflection once 31 is stable
+        if (sSetType == null) {
+            try {
+                sSetType = EdgeEffect.class.getDeclaredMethod("setType", int.class);
+            } catch (final NoSuchMethodException e) {
+                // Nothing we can do here
+                return;
+            }
+        }
+
+        try {
+            sSetType.invoke(edgeEffect, /* TYPE_GLOW */ 0);
+        } catch (final Exception ex) {
+        }
+    }
+
+    private void setBlendMode(final EdgeEffect edgeEffect) {
+        if (Build.VERSION.SDK_INT >= 29) {
+            edgeEffect.setBlendMode(BlendMode.SRC);
+            return;
+        }
+
+        if (sPaintField == null) {
+            try {
+                sPaintField = EdgeEffect.class.getDeclaredField("mPaint");
+                sPaintField.setAccessible(true);
+            } catch (final NoSuchFieldException e) {
+                // Cannot get the field, nothing we can do here
+                return;
+            }
+        }
+
+        try {
+            final Paint paint = (Paint) sPaintField.get(edgeEffect);
+            final PorterDuffXfermode mode = new PorterDuffXfermode(PorterDuff.Mode.SRC);
+            paint.setXfermode(mode);
+        } catch (final IllegalAccessException ex) {
+            // Nothing we can do
+        }
+    }
+
     /**
      * Set the theme to use for overscroll from a given Context.
      *
@@ -52,34 +110,11 @@ public final class OverscrollEdgeEffect {
     public void setTheme(final @NonNull Context context) {
         ThreadUtils.assertOnUiThread();
 
-        final PorterDuffXfermode mode = new PorterDuffXfermode(PorterDuff.Mode.SRC);
-        Field paintField = null;
-
-        if (Build.VERSION.SDK_INT >= 21) {
-            try {
-                paintField = EdgeEffect.class.getDeclaredField("mPaint");
-                paintField.setAccessible(true);
-            } catch (final NoSuchFieldException e) {
-            }
-        }
-
         for (int i = 0; i < mEdges.length; i++) {
-            mEdges[i] = new EdgeEffect(context);
-
-            if (paintField == null) {
-                continue;
-            }
-
-            try {
-                final Paint p = (Paint) paintField.get(mEdges[i]);
-
-                // The Android EdgeEffect class uses a mode of SRC_ATOP here, which means
-                // it will only draw the effect where there are non-transparent pixels in
-                // the destination. Since the LayerView itself is fully transparent, it
-                // doesn't display at all. We need to use SRC instead.
-                p.setXfermode(mode);
-            } catch (final IllegalAccessException e) {
-            }
+            final EdgeEffect edgeEffect = new EdgeEffect(context);
+            setBlendMode(edgeEffect);
+            setType(edgeEffect);
+            mEdges[i] = edgeEffect;
         }
     }
 
