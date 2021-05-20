@@ -32,6 +32,19 @@
         };
         debugger;
       }
+
+      class Foo {
+        x = 1;
+        #privateProp = "privatePropValue";
+        static #privateStatic = { first: "a", second: "b" };
+        #privateMethod() {
+          return this.#privateProp;
+        }
+        breakFn() {
+          let i = this.x * this.#privateProp + Foo.#privateStatic;
+          debugger;
+        }
+      }
     </script>
   </head>
   <body>
