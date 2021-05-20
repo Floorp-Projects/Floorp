@@ -10,7 +10,11 @@ const PAGE = "<!DOCTYPE html><html><body><p>HSTS page</p></body></html>";
 
 function handleRequest(request, response) {
   response.setStatusLine(request.httpVersion, "200", "OK");
-  response.setHeader("Strict-Transport-Security", "max-age=60");
+  if (request.queryString == "includeSub") {
+    response.setHeader("Strict-Transport-Security", "max-age=60; includeSubDomains");
+  } else {
+    response.setHeader("Strict-Transport-Security", "max-age=60");
+  }
 
   if (request.queryString == "image") {
     response.setHeader("Content-Type", "image/png", false);
