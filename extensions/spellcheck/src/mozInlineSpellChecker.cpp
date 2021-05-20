@@ -1290,6 +1290,11 @@ class MOZ_STACK_CLASS mozInlineSpellChecker::SpellCheckerTimeSlice {
   [[nodiscard]] nsresult Execute();
 
  private:
+  // Creates an async request to check the words and add the ranges for the
+  // misspellings.
+  void CheckWordsAndAddRangesForMisspellings(
+      const nsTArray<nsString>& aWords, nsTArray<NodeOffsetRange>&& aRanges);
+
   mozInlineSpellChecker& mInlineSpellChecker;
   mozInlineSpellWordUtil& mWordUtil;
   mozilla::dom::Selection& mSpellCheckSelection;
@@ -1415,8 +1420,7 @@ nsresult mozInlineSpellChecker::SpellCheckerTimeSlice::Execute() {
           sInlineSpellCheckerLog, LogLevel::Verbose,
           ("%s: we have run out of time, schedule next round.", __FUNCTION__));
 
-      mInlineSpellChecker.CheckWordsAndAddRangesForMisspellings(
-          &mSpellCheckSelection, words, std::move(checkRanges));
+      CheckWordsAndAddRangesForMisspellings(words, std::move(checkRanges));
 
       // move the range to encompass the stuff that needs checking.
       nsresult rv = mStatus->mRange->SetStart(beginNode, beginOffset);
@@ -1486,8 +1490,7 @@ nsresult mozInlineSpellChecker::SpellCheckerTimeSlice::Execute() {
     checkRanges.AppendElement(wordNodeOffsetRange);
     wordsChecked++;
     if (words.Length() >= requestChunkSize) {
-      mInlineSpellChecker.CheckWordsAndAddRangesForMisspellings(
-          &mSpellCheckSelection, words, std::move(checkRanges));
+      CheckWordsAndAddRangesForMisspellings(words, std::move(checkRanges));
       // Set new empty data for spellcheck range in DOM to avoid
       // clang-tidy detection.
       words.Clear();
@@ -1495,8 +1498,7 @@ nsresult mozInlineSpellChecker::SpellCheckerTimeSlice::Execute() {
     }
   }
 
-  mInlineSpellChecker.CheckWordsAndAddRangesForMisspellings(
-      &mSpellCheckSelection, words, std::move(checkRanges));
+  CheckWordsAndAddRangesForMisspellings(words, std::move(checkRanges));
 
   return NS_OK;
 }
@@ -1528,53 +1530,55 @@ class MOZ_RAII AutoChangeNumPendingSpellChecks final {
   int32_t mDelta;
 };
 
-void mozInlineSpellChecker::CheckWordsAndAddRangesForMisspellings(
-    Selection* aSpellCheckSelection, const nsTArray<nsString>& aWords,
-    nsTArray<NodeOffsetRange>&& aRanges) {
+void mozInlineSpellChecker::SpellCheckerTimeSlice::
+    CheckWordsAndAddRangesForMisspellings(const nsTArray<nsString>& aWords,
+                                          nsTArray<NodeOffsetRange>&& aRanges) {
   MOZ_ASSERT(aWords.Length() == aRanges.Length());
 
   if (aWords.IsEmpty()) {
     return;
   }
 
-  ChangeNumPendingSpellChecks(1);
+  mInlineSpellChecker.ChangeNumPendingSpellChecks(1);
 
-  RefPtr<mozInlineSpellChecker> self = this;
-  RefPtr<Selection> spellCheckerSelection = aSpellCheckSelection;
-  uint32_t token = mDisabledAsyncToken;
-  mSpellCheck->CheckCurrentWordsNoSuggest(aWords)->Then(
+  RefPtr<mozInlineSpellChecker> inlineSpellChecker = &mInlineSpellChecker;
+  RefPtr<Selection> spellCheckerSelection = &mSpellCheckSelection;
+  uint32_t token = mInlineSpellChecker.mDisabledAsyncToken;
+  mInlineSpellChecker.mSpellCheck->CheckCurrentWordsNoSuggest(aWords)->Then(
       GetMainThreadSerialEventTarget(), __func__,
-      [self, spellCheckerSelection, ranges = std::move(aRanges),
+      [inlineSpellChecker, spellCheckerSelection, ranges = std::move(aRanges),
        token](const nsTArray<bool>& aIsMisspelled) {
-        if (token != self->GetDisabledAsyncToken()) {
+        if (token != inlineSpellChecker->GetDisabledAsyncToken()) {
           // This result is never used
           return;
         }
 
-        if (!self->mTextEditor || self->mTextEditor->Destroyed()) {
+        if (!inlineSpellChecker->mTextEditor ||
+            inlineSpellChecker->mTextEditor->Destroyed()) {
           return;
         }
 
-        AutoChangeNumPendingSpellChecks pendingChecks(self, -1);
+        AutoChangeNumPendingSpellChecks pendingChecks(inlineSpellChecker, -1);
 
-        if (self->IsSpellCheckSelectionFull()) {
+        if (inlineSpellChecker->IsSpellCheckSelectionFull()) {
           return;
         }
 
-        self->AddRangesForMisspelledWords(ranges, aIsMisspelled,
-                                          *spellCheckerSelection);
+        inlineSpellChecker->AddRangesForMisspelledWords(ranges, aIsMisspelled,
+                                                        *spellCheckerSelection);
       },
-      [self, token](nsresult aRv) {
-        if (!self->mTextEditor || self->mTextEditor->Destroyed()) {
+      [inlineSpellChecker, token](nsresult aRv) {
+        if (!inlineSpellChecker->mTextEditor ||
+            inlineSpellChecker->mTextEditor->Destroyed()) {
           return;
         }
 
-        if (token != self->GetDisabledAsyncToken()) {
+        if (token != inlineSpellChecker->GetDisabledAsyncToken()) {
           // This result is never used
           return;
         }
 
-        self->ChangeNumPendingSpellChecks(-1);
+        inlineSpellChecker->ChangeNumPendingSpellChecks(-1);
       });
 }
 
