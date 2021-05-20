@@ -5,24 +5,9 @@
 #include "nsISupports.idl"
 
 interface nsIURI;
-interface nsIObserver;
-interface nsIHttpChannel;
 interface nsITransportSecurityInfo;
 interface nsISimpleEnumerator;
 
-%{C++
-#include "nsStringFwd.h"
-#include "nsTArrayForwardDeclare.h"
-namespace mozilla
-{
-  namespace pkix
-  {
-    class Time;
-  }
-}
-%}
-[ref] native nsCStringTArrayRef(nsTArray<nsCString>);
-[ref] native mozillaPkixTime(mozilla::pkix::Time);
 [ref] native const_OriginAttributesRef(const mozilla::OriginAttributes);
 
 // [infallible] attributes are only allowed on [builtinclass]
