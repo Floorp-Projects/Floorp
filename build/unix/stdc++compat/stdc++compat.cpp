@@ -4,6 +4,7 @@
 
 #include <ostream>
 #include <istream>
+#include <sstream>
 #include <memory>
 #include <string>
 #include <stdarg.h>
@@ -16,7 +17,13 @@
    GLIBCXX_3.4.20 is from gcc 4.9.0 (199307)
    GLIBCXX_3.4.21 is from gcc 5.0 (210290)
    GLIBCXX_3.4.22 is from gcc 6.0 (222482)
-   GLIBCXX_3.4.23 is from gcc 7.0
+   GLIBCXX_3.4.23 is from gcc 7
+   GLIBCXX_3.4.24 is from gcc 8
+   GLIBCXX_3.4.25 is from gcc 8
+   GLIBCXX_3.4.26 is from gcc 9
+   GLIBCXX_3.4.27 is from gcc 10
+   GLIBCXX_3.4.28 is from gcc 10
+   GLIBCXX_3.4.29 is from gcc 11
 
 This file adds the necessary compatibility tricks to avoid symbols with
 version GLIBCXX_3.4.20 and bigger, keeping binary compatibility with
@@ -57,6 +64,14 @@ extern "C" void __attribute__((weak)) __cxa_throw_bad_array_new_length() {
   MOZ_CRASH();
 }
 }  // namespace __cxxabiv1
+#endif
+
+#if MOZ_LIBSTDCXX_VERSION >= GLIBCXX_VERSION(3, 4, 29)
+namespace std {
+
+void __attribute__((weak)) __throw_bad_array_new_length() { MOZ_CRASH(); }
+
+}  // namespace std
 #endif
 
 #if MOZ_LIBSTDCXX_VERSION >= GLIBCXX_VERSION(3, 4, 21)
@@ -111,6 +126,22 @@ __attribute__((weak)) void thread::_M_start_thread(unique_ptr<_State> aState,
  * even though the destructor is default there too */
 __attribute__((weak)) thread::_State::~_State() = default;
 #  endif
+
+#  if MOZ_LIBSTDCXX_VERSION >= GLIBCXX_VERSION(3, 4, 26)
+// Ideally we'd define
+//    bool _Sp_make_shared_tag::_S_eq(const type_info& ti) noexcept
+// but we wouldn't be able to change its visibility because of the existing
+// definition in C++ headers. We do need to change its visibility because we
+// don't want it to be shadowing the one provided by libstdc++ itself, because
+// it doesn't support RTTI. Not supporting RTTI doesn't matter for Firefox
+// itself because it's built with RTTI disabled.
+// So we define via the mangled symbol.
+extern "C" __attribute__((visibility("hidden"))) bool
+_ZNSt19_Sp_make_shared_tag5_S_eqERKSt9type_info(const type_info*) noexcept {
+  return false;
+}
+#  endif
+
 }  // namespace std
 #endif
 
@@ -136,6 +167,22 @@ namespace std {
  * depending on optimization level */
 template basic_string<char, char_traits<char>, allocator<char>>::basic_string(
     const basic_string&, size_t, const allocator<char>&);
+
+#  if MOZ_LIBSTDCXX_VERSION >= GLIBCXX_VERSION(3, 4, 26)
+template basic_stringstream<char, char_traits<char>,
+                            allocator<char>>::basic_stringstream();
+
+template basic_ostringstream<char, char_traits<char>,
+                             allocator<char>>::basic_ostringstream();
+#  endif
+
+#  if MOZ_LIBSTDCXX_VERSION >= GLIBCXX_VERSION(3, 4, 29)
+template void basic_string<char, char_traits<char>, allocator<char>>::reserve();
+
+template void
+basic_string<wchar_t, char_traits<wchar_t>, allocator<wchar_t>>::reserve();
+#  endif
+
 }  // namespace std
 #endif
 
