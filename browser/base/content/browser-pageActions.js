@@ -532,8 +532,8 @@ var BrowserPageActions = {
   },
 
   _makeUrlbarButtonNode(action) {
-    let buttonNode = document.createXULElement("image");
-    buttonNode.classList.add("urlbar-icon", "urlbar-page-action");
+    let buttonNode = document.createXULElement("hbox");
+    buttonNode.classList.add("urlbar-icon-wrapper", "urlbar-page-action");
     if (action.extensionID) {
       buttonNode.classList.add("urlbar-addon-page-action");
     }
@@ -544,6 +544,10 @@ var BrowserPageActions = {
     };
     buttonNode.addEventListener("click", commandHandler);
     buttonNode.addEventListener("keypress", commandHandler);
+
+    let imageNode = document.createXULElement("image");
+    imageNode.classList.add("urlbar-icon");
+    buttonNode.appendChild(imageNode);
     return buttonNode;
   },
 
@@ -684,14 +688,7 @@ var BrowserPageActions = {
       }
     }
     if (urlbarNode) {
-      // Some actions (e.g. Save Page to Pocket) have a wrapper node with the
-      // actual controls inside that wrapper. The wrapper is semantically
-      // meaningless, so it doesn't get reflected in the accessibility tree.
-      // In these cases, we don't want to set aria-label because that will
-      // force the element to be exposed to accessibility.
-      if (urlbarNode.nodeName != "hbox") {
-        urlbarNode.setAttribute("aria-label", title);
-      }
+      urlbarNode.setAttribute("aria-label", title);
       // tooltiptext falls back to the title, so update it too if necessary.
       let tooltip = action.getTooltip(window);
       if (!tooltip) {
@@ -800,13 +797,15 @@ var BrowserPageActions = {
     let actionID = this._actionIDForNodeID(node.id);
     let action = PageActions.actionForID(actionID);
     if (!action) {
-      // The given node may be an ancestor of a node corresponding to an action,
-      // like how #star-button is contained in #star-button-box, the latter
-      // being the bookmark action's node.  Look up the ancestor chain.
+      // When a page action is clicked, `node` will be an ancestor of
+      // a node corresponding to an action. `node` will be the page action node
+      // itself when a page action is selected with the keyboard. That's because
+      // the semantic meaning of page action is on an hbox that contains an
+      // <image>.
       for (let n = node.parentNode; n && !action; n = n.parentNode) {
         if (n.id == "page-action-buttons" || n.localName == "panelview") {
           // We reached the page-action-buttons or panelview container.
-          // Stop looking; no acton was found.
+          // Stop looking; no action was found.
           break;
         }
         actionID = this._actionIDForNodeID(n.id);

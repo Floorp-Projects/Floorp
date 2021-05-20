@@ -534,6 +534,8 @@ if CONFIG["MOZ_VTUNE"]:
     ]
     if CONFIG["CC_TYPE"] == "gcc":
         SOURCES["vtune/ittnotify_static.c"].flags += ["-Wno-stringop-overflow"]
+        if int(CONFIG["CC_VERSION"].split(".")[0]) >= 8:
+            SOURCES["vtune/ittnotify_static.c"].flags += ["-Wno-stringop-truncation"]
 
 DIRS += ["build", "debugger", "frontend", "gc", "irregexp", "jit", "wasm"]
 

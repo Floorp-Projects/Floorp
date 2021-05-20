@@ -43,7 +43,6 @@ enum SecurityPropertyState {
   SecurityPropertyUnset = nsISiteSecurityState::SECURITY_PROPERTY_UNSET,
   SecurityPropertySet = nsISiteSecurityState::SECURITY_PROPERTY_SET,
   SecurityPropertyKnockout = nsISiteSecurityState::SECURITY_PROPERTY_KNOCKOUT,
-  SecurityPropertyNegative = nsISiteSecurityState::SECURITY_PROPERTY_NEGATIVE,
 };
 
 enum SecurityPropertySource {
@@ -158,7 +157,6 @@ class nsSiteSecurityService : public nsISiteSecurityService,
   bool mUsePreloadList;
   int64_t mPreloadListTimeOffset;
   RefPtr<mozilla::DataStorage> mSiteStateStorage;
-  RefPtr<mozilla::DataStorage> mPreloadStateStorage;
   const mozilla::Dafsa mDafsa;
 };
 

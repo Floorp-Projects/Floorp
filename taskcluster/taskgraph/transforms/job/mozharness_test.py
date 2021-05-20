@@ -102,10 +102,10 @@ def mozharness_test_on_docker(config, job, taskdesc):
 
     artifacts = [
         # (artifact name prefix, in-image path)
-        ("public/logs/", "{workdir}/workspace/logs/".format(**run)),
+        ("public/logs", "{workdir}/workspace/logs/".format(**run)),
         ("public/test", "{workdir}/artifacts/".format(**run)),
         (
-            "public/test_info/",
+            "public/test_info",
             "{workdir}/workspace/build/blobber_upload_dir/".format(**run),
         ),
     ]

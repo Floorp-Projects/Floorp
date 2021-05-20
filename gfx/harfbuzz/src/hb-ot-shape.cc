@@ -193,6 +193,12 @@ hb_ot_shape_planner_t::compile (hb_ot_shape_plan_t           &plan,
 				   script_fallback_mark_positioning;
 
 #ifndef HB_NO_AAT_SHAPE
+  /* If we're using morx shaping, we cancel mark position adjustment because
+     Apple Color Emoji assumes this will NOT be done when forming emoji sequences;
+     https://github.com/harfbuzz/harfbuzz/issues/2967. */
+  if (plan.apply_morx)
+    plan.adjust_mark_positioning_when_zeroing = false;
+
   /* Currently we always apply trak. */
   plan.apply_trak = plan.requested_tracking && hb_aat_layout_has_tracking (face);
 #endif
@@ -1164,7 +1170,7 @@ _hb_ot_shape (hb_shape_plan_t    *shape_plan,
  * @lookup_indexes: (out): The #hb_set_t set of lookups returned
  *
  * Computes the complete set of GSUB or GPOS lookups that are applicable
- * under a given @shape_plan. 
+ * under a given @shape_plan.
  *
  * Since: 0.9.7
  **/

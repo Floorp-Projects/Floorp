@@ -7,7 +7,6 @@
 #define mozilla_extensions_WebExtensionPolicy_h
 
 #include "mozilla/dom/BindingDeclarations.h"
-#include "mozilla/dom/BrowsingContextGroup.h"
 #include "mozilla/dom/Nullable.h"
 #include "mozilla/dom/WebExtensionPolicyBinding.h"
 #include "mozilla/dom/WindowProxyHolder.h"
@@ -240,7 +239,7 @@ class WebExtensionPolicy final : public nsISupports,
   nsString mExtensionPageCSP;
   nsString mBaseCSP;
 
-  dom::BrowsingContextGroup::KeepAlivePtr mBrowsingContextGroup;
+  uint64_t mBrowsingContextGroupId = 0;
 
   bool mActive = false;
   bool mAllowPrivateBrowsingByDefault = true;
