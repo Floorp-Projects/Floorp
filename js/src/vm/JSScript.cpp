@@ -4199,22 +4199,14 @@ static JSObject* CloneInnerInterpretedFunction(
     return nullptr;
   }
 
-  gc::AllocKind allocKind = srcFun->getAllocKind();
-  FunctionFlags flags = srcFun->flags();
-  if (srcFun->isSelfHostedBuiltin()) {
-    // Functions in the self-hosting compartment are only extended in
-    // debug mode. For top-level functions, FUNCTION_EXTENDED gets used by
-    // the cloning algorithm. Do the same for inner functions here.
-    allocKind = gc::AllocKind::FUNCTION_EXTENDED;
-    flags.setIsExtended();
-  }
   RootedAtom atom(cx, srcFun->displayAtom());
   if (atom) {
     cx->markAtom(atom);
   }
   RootedFunction clone(
-      cx, NewFunctionWithProto(cx, nullptr, srcFun->nargs(), flags, nullptr,
-                               atom, cloneProto, allocKind, TenuredObject));
+      cx, NewFunctionWithProto(cx, nullptr, srcFun->nargs(), srcFun->flags(),
+                               nullptr, atom, cloneProto,
+                               srcFun->getAllocKind(), TenuredObject));
   if (!clone) {
     return nullptr;
   }
