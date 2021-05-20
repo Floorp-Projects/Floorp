@@ -39,7 +39,6 @@ import org.mozilla.gecko.GeckoNetworkManager;
 import org.mozilla.gecko.GeckoScreenOrientation;
 import org.mozilla.gecko.GeckoSystemStateListener;
 import org.mozilla.gecko.GeckoThread;
-import org.mozilla.gecko.PrefsHelper;
 import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.util.BundleEventListener;
 import org.mozilla.gecko.util.DebugConfig;
@@ -795,10 +794,6 @@ public final class GeckoRuntime implements Parcelable {
     @SuppressWarnings("checkstyle:javadocmethod")
     public @NonNull GeckoRuntimeSettings getSettings() {
         return mSettings;
-    }
-
-    /* package */ void setPref(final String name, final Object value) {
-        PrefsHelper.setPref(name, value, /* flush */ false);
     }
 
     /**

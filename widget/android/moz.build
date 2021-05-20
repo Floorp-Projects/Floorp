@@ -65,7 +65,6 @@ classes_with_WrapForJNI = [
     "ImageDecoder",
     "MediaDrmProxy",
     "PanZoomController",
-    "PrefsHelper",
     "RuntimeTelemetry",
     "Sample",
     "SampleBuffer",
