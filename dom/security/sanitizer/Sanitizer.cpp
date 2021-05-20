@@ -13,8 +13,7 @@
 #include "nsTreeSanitizer.h"
 #include "Sanitizer.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(Sanitizer, mGlobal)
 
@@ -33,15 +32,14 @@ JSObject* Sanitizer::WrapObject(JSContext* aCx,
 
 /* static */
 already_AddRefed<Sanitizer> Sanitizer::Constructor(
-    const GlobalObject& aGlobal, const SanitizerOptions& aOptions,
+    const GlobalObject& aGlobal, const SanitizerConfig& aOptions,
     ErrorResult& aRv) {
-  // Note: Later, aOptions will be interpreted and stored as a member.
-  // We'll just ignore it for now.
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
-  RefPtr<Sanitizer> sanitizer = new Sanitizer(global);
+  RefPtr<Sanitizer> sanitizer = new Sanitizer(global, aOptions);
   AutoTArray<nsString, 1> params = {};
   sanitizer->LogLocalizedString("SanitizerOptionsDiscarded", params,
                                 nsIScriptError::infoFlag);
+
   return sanitizer.forget();
 }
 
@@ -121,9 +119,8 @@ already_AddRefed<DocumentFragment> Sanitizer::Sanitize(
   if (error.Failed()) {
     return fragment.forget();
   }
-  nsTreeSanitizer treeSanitizer(mSanitizationFlags);
 
-  treeSanitizer.Sanitize(fragment);
+  mTreeSanitizer.Sanitize(fragment);
   return fragment.forget();
 }
 
@@ -137,9 +134,8 @@ void Sanitizer::SanitizeToString(
   if (error.Failed()) {
     return;
   }
-  nsTreeSanitizer treeSanitizer(mSanitizationFlags);
 
-  treeSanitizer.Sanitize(fragment);
+  mTreeSanitizer.Sanitize(fragment);
   fragment->GetInnerHTML(outSanitized);
 }
 
@@ -185,5 +181,4 @@ void Sanitizer::LogMessage(const nsAString& aMessage, uint32_t aFlags,
   }
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

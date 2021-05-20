@@ -11,13 +11,19 @@
 #include "mozilla/BindingStyleRule.h"
 #include "mozilla/DeclarationBlock.h"
 #include "mozilla/StyleSheetInlines.h"
+#include "mozilla/UniquePtr.h"
 #include "mozilla/css/Rule.h"
+#include "mozilla/dom/SanitizerBinding.h"
 #include "mozilla/dom/CSSRuleList.h"
 #include "mozilla/dom/DocumentFragment.h"
 #include "mozilla/dom/HTMLTemplateElement.h"
 #include "mozilla/dom/SRIMetadata.h"
 #include "mozilla/NullPrincipal.h"
+#include "nsAtom.h"
 #include "nsCSSPropertyID.h"
+#include "nsHashtablesFwd.h"
+#include "nsString.h"
+#include "nsTHashtable.h"
 #include "nsUnicharInputStream.h"
 #include "nsAttrName.h"
 #include "nsIScriptError.h"
@@ -986,6 +992,10 @@ nsTreeSanitizer::nsTreeSanitizer(uint32_t aFlags)
     // Sanitizing styles for external references is not supported.
     mAllowStyles = false;
   }
+
+  mAllowedElements = nullptr;
+  mBlockedElements = nullptr;
+
   if (!sElementsHTML) {
     // Initialize lazily to avoid having to initialize at all if the user
     // doesn't paste HTML or load feeds.
@@ -1001,6 +1011,12 @@ nsTreeSanitizer::nsTreeSanitizer(uint32_t aFlags)
 
 bool nsTreeSanitizer::MustFlatten(int32_t aNamespace, nsAtom* aLocal) {
   if (aNamespace == kNameSpaceID_XHTML) {
+    if (mIsCustomized) {
+      // TODO(freddy): Make it work for other namespaces.
+      // See https://github.com/WICG/sanitizer-api/issues/72
+      return ((mAllowedElements && !mAllowedElements->Contains(aLocal)) ||
+              ((mBlockedElements && mBlockedElements->Contains(aLocal))));
+    }
     if (mDropNonCSSPresentation &&
         (nsGkAtoms::font == aLocal || nsGkAtoms::center == aLocal)) {
       return true;
@@ -1089,11 +1105,8 @@ bool nsTreeSanitizer::MustPrune(int32_t aNamespace, nsAtom* aLocal,
     }
   }
   if (mAllowStyles) {
-    if (nsGkAtoms::style == aLocal &&
-        !(aNamespace == kNameSpaceID_XHTML || aNamespace == kNameSpaceID_SVG)) {
-      return true;
-    }
-    return false;
+    return nsGkAtoms::style == aLocal && !(aNamespace == kNameSpaceID_XHTML ||
+                                           aNamespace == kNameSpaceID_SVG);
   }
   if (nsGkAtoms::style == aLocal) {
     return true;
@@ -1152,12 +1165,47 @@ static bool UTF16StringStartsWith(const char16_t* aStr, uint32_t aLength,
 
 void nsTreeSanitizer::SanitizeAttributes(mozilla::dom::Element* aElement,
                                          AllowedAttributes aAllowed) {
-  uint32_t ac = aElement->GetAttrCount();
+  int32_t ac = (int)aElement->GetAttrCount();
 
   for (int32_t i = ac - 1; i >= 0; --i) {
     const nsAttrName* attrName = aElement->GetAttrNameAt(i);
     int32_t attrNs = attrName->NamespaceID();
     RefPtr<nsAtom> attrLocal = attrName->LocalName();
+
+    if (mIsCustomized) {
+      bool shouldRemove = true;
+      RefPtr<nsAtom> elemName = aElement->NodeInfo()->NameAtom();
+
+      // check allow list
+      if (mAllowedAttributes) {
+        auto allowedElements = mAllowedAttributes->Lookup(attrLocal);
+        if (allowedElements) {
+          if (allowedElements.Data()->Contains(elemName) ||
+              allowedElements.Data()->Contains(nsGkAtoms::_asterisk)) {
+            shouldRemove = false;
+          }
+        }
+      }
+      // checking drop list last
+      // i.e., if listd as both allowed and dropped, it will still be dropped
+      if (mDroppedAttributes) {
+        auto dropElements = mDroppedAttributes->Lookup(attrLocal);
+        if (dropElements) {
+          if (dropElements.Data()->Contains(elemName) ||
+              dropElements.Data()->Contains(nsGkAtoms::_asterisk)) {
+            shouldRemove = true;
+          }
+        }
+      }
+      if (shouldRemove) {
+        aElement->UnsetAttr(kNameSpaceID_None, attrLocal, false);
+        // in case the attribute removal shuffled the attribute order, start
+        // the loop again.
+        --ac;
+        i = ac;  // i will be decremented immediately thanks to the for loop
+      }
+      continue;
+    }
 
     if (kNameSpaceID_None == attrNs) {
       if (aAllowed.mStyle && nsGkAtoms::style == attrLocal) {
@@ -1553,4 +1601,86 @@ void nsTreeSanitizer::ReleaseStatics() {
   sAttributesMathML = nullptr;
 
   NS_IF_RELEASE(sNullPrincipal);
+}
+
+void nsTreeSanitizer::WithWebSanitizerOptions(
+    const mozilla::dom::SanitizerConfig& aOptions) {
+  if (!aOptions.IsAnyMemberPresent()) {
+    return;
+  }
+  if (aOptions.mAllowElements.WasPassed()) {
+    mIsCustomized = true;
+    const Sequence<nsString>& allowedElements = aOptions.mAllowElements.Value();
+    mAllowedElements = MakeUnique<DynamicAtomsTable>(allowedElements.Length());
+    for (const nsString& elem : allowedElements) {
+      nsAutoString lowercaseElem;
+      nsContentUtils::ASCIIToLower(elem, lowercaseElem);
+      RefPtr<nsAtom> elAsAtom = NS_Atomize(lowercaseElem);
+      mAllowedElements->Insert(elAsAtom);
+    }
+  } else {
+    mAllowedElements = nullptr;
+  }
+  if (aOptions.mBlockElements.WasPassed()) {
+    mIsCustomized = true;
+    const Sequence<nsString>& blockedElements = aOptions.mBlockElements.Value();
+    mBlockedElements = MakeUnique<DynamicAtomsTable>(blockedElements.Length());
+    for (const nsString& elem : blockedElements) {
+      nsAutoString lowercaseElem;
+      nsContentUtils::ASCIIToLower(elem, lowercaseElem);
+      RefPtr<nsAtom> elAsAtom = NS_Atomize(lowercaseElem);
+      mBlockedElements->Insert(elAsAtom);
+    }
+  } else {
+    mBlockedElements = nullptr;
+  }
+  if (aOptions.mAllowAttributes.WasPassed()) {
+    mIsCustomized = true;
+    const Record<nsString, Sequence<nsString>>& allowedAttributes =
+        aOptions.mAllowAttributes.Value();
+    mAllowedAttributes = MakeUnique<
+        nsTHashMap<RefPtr<nsAtom>, mozilla::UniquePtr<DynamicAtomsTable>>>();
+    nsAutoString name;
+    for (const auto& entries : allowedAttributes.Entries()) {
+      UniquePtr<DynamicAtomsTable> elems =
+          MakeUnique<DynamicAtomsTable>(allowedAttributes.Entries().Length());
+      for (const auto& elem : entries.mValue) {
+        nsAutoString lowercaseElem;
+        nsContentUtils::ASCIIToLower(elem, lowercaseElem);
+        RefPtr<nsAtom> elAsAtom = NS_Atomize(lowercaseElem);
+        elems->Insert(elAsAtom);
+      }
+      nsAutoString attrName;
+      nsContentUtils::ASCIIToLower(entries.mKey, attrName);
+      RefPtr<nsAtom> attrAtom = NS_Atomize(attrName);
+      mAllowedAttributes->InsertOrUpdate(attrAtom, std::move(elems));
+    }
+  } else {
+    mAllowedAttributes = nullptr;
+  }
+  if (aOptions.mDropAttributes.WasPassed()) {
+    mIsCustomized = true;
+    const Record<nsString, Sequence<nsString>>& droppedAttributes =
+        aOptions.mDropAttributes.Value();
+    mDroppedAttributes = MakeUnique<
+        nsTHashMap<RefPtr<nsAtom>, mozilla::UniquePtr<DynamicAtomsTable>>>();
+    nsAutoString name;
+    for (const auto& entries : droppedAttributes.Entries()) {
+      UniquePtr<DynamicAtomsTable> elems =
+          MakeUnique<DynamicAtomsTable>(droppedAttributes.Entries().Length());
+      for (const auto& elem : entries.mValue) {
+        nsAutoString lowercaseElem;
+        nsContentUtils::ASCIIToLower(elem, lowercaseElem);
+        RefPtr<nsAtom> elAsAtom = NS_Atomize(lowercaseElem);
+        elems->Insert(elAsAtom);
+      }
+      nsAutoString attrName;
+      nsContentUtils::ASCIIToLower(entries.mKey, attrName);
+      RefPtr<nsAtom> attrAtom = NS_Atomize(attrName);
+      mDroppedAttributes->InsertOrUpdate(attrAtom, std::move(elems));
+    }
+  } else {
+    mDroppedAttributes = nullptr;
+  }
+  // TODO(freddy) Add handling of other keys in SanitizerConfig
 }
