@@ -460,7 +460,7 @@ size_t env_func_sig_index(const CraneliftModuleEnvironment* env,
 }
 bool env_is_func_valid_for_ref(const CraneliftModuleEnvironment* env,
                                uint32_t index) {
-  return env->env->validForRefFunc.getBit(index);
+  return env->env->funcs[index].canRefFunc();
 }
 
 size_t env_func_import_tls_offset(const CraneliftModuleEnvironment* env,
