@@ -1885,8 +1885,10 @@ def _generateMessageConstructor(md, segmentSize, protocol, forReply=False):
         prioEnum = "INPUT_PRIORITY"
     elif prio == ipdl.ast.VSYNC_PRIORITY:
         prioEnum = "VSYNC_PRIORITY"
-    else:
+    elif prio == ipdl.ast.MEDIUMHIGH_PRIORITY:
         prioEnum = "MEDIUMHIGH_PRIORITY"
+    else:
+        prioEnum = "CONTROL_PRIORITY"
 
     if md.decl.type.isSync():
         syncEnum = "SYNC"

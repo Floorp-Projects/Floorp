@@ -1249,7 +1249,7 @@ class GatherDecls(TcheckVisitor):
             {
                 "Tainted": None,
                 "Compress": (None, "all"),
-                "Priority": ("normal", "input", "vsync", "mediumhigh"),
+                "Priority": ("normal", "input", "vsync", "mediumhigh", "control"),
                 "Nested": ("not", "inside_sync", "inside_cpow"),
             },
         )
