@@ -200,6 +200,7 @@ struct MOZ_STACK_CLASS DebuggerObject::CallData {
   bool setPropertyMethod();
   bool getOwnPropertyNamesMethod();
   bool getOwnPropertySymbolsMethod();
+  bool getOwnPrivatePropertiesMethod();
   bool getOwnPropertyDescriptorMethod();
   bool preventExtensionsMethod();
   bool sealMethod();
@@ -788,6 +789,21 @@ bool DebuggerObject::CallData::getOwnPropertyNamesMethod() {
 bool DebuggerObject::CallData::getOwnPropertySymbolsMethod() {
   Rooted<IdVector> ids(cx, IdVector(cx));
   if (!DebuggerObject::getOwnPropertySymbols(cx, object, &ids)) {
+    return false;
+  }
+
+  RootedObject obj(cx, IdVectorToArray(cx, ids));
+  if (!obj) {
+    return false;
+  }
+
+  args.rval().setObject(*obj);
+  return true;
+}
+
+bool DebuggerObject::CallData::getOwnPrivatePropertiesMethod() {
+  Rooted<IdVector> ids(cx, IdVector(cx));
+  if (!DebuggerObject::getOwnPrivateProperties(cx, object, &ids)) {
     return false;
   }
 
@@ -1576,6 +1592,7 @@ const JSFunctionSpec DebuggerObject::methods_[] = {
     JS_DEBUG_FN("setProperty", setPropertyMethod, 0),
     JS_DEBUG_FN("getOwnPropertyNames", getOwnPropertyNamesMethod, 0),
     JS_DEBUG_FN("getOwnPropertySymbols", getOwnPropertySymbolsMethod, 0),
+    JS_DEBUG_FN("getOwnPrivateProperties", getOwnPrivatePropertiesMethod, 0),
     JS_DEBUG_FN("getOwnPropertyDescriptor", getOwnPropertyDescriptorMethod, 1),
     JS_DEBUG_FN("preventExtensions", preventExtensionsMethod, 0),
     JS_DEBUG_FN("seal", sealMethod, 0),
@@ -2047,24 +2064,37 @@ bool DebuggerObject::getOwnPropertyNames(JSContext* cx,
   return result.append(ids.begin(), ids.end());
 }
 
-/* static */
-bool DebuggerObject::getOwnPropertySymbols(JSContext* cx,
-                                           HandleDebuggerObject object,
-                                           MutableHandle<IdVector> result) {
+bool GetSymbolPropertyKeys(JSContext* cx, HandleDebuggerObject object,
+                           JS::MutableHandleIdVector props,
+                           bool includePrivate) {
   RootedObject referent(cx, object->referent());
 
-  RootedIdVector ids(cx);
   {
     Maybe<AutoRealm> ar;
     EnterDebuggeeObjectRealm(cx, ar, referent);
 
     ErrorCopier ec(ar);
-    if (!GetPropertyKeys(cx, referent,
-                         JSITER_OWNONLY | JSITER_HIDDEN | JSITER_SYMBOLS |
-                             JSITER_SYMBOLSONLY,
-                         &ids)) {
+
+    unsigned flags =
+        JSITER_OWNONLY | JSITER_HIDDEN | JSITER_SYMBOLS | JSITER_SYMBOLSONLY;
+    if (includePrivate) {
+      flags = flags | JSITER_PRIVATE;
+    }
+    if (!GetPropertyKeys(cx, referent, flags, props)) {
       return false;
     }
+  }
+
+  return true;
+}
+
+/* static */
+bool DebuggerObject::getOwnPropertySymbols(JSContext* cx,
+                                           HandleDebuggerObject object,
+                                           MutableHandle<IdVector> result) {
+  RootedIdVector ids(cx);
+  if (!GetSymbolPropertyKeys(cx, object, &ids, false)) {
+    return false;
   }
 
   for (size_t i = 0; i < ids.length(); i++) {
@@ -2072,6 +2102,42 @@ bool DebuggerObject::getOwnPropertySymbols(JSContext* cx,
   }
 
   return result.append(ids.begin(), ids.end());
+}
+
+/* static */
+bool DebuggerObject::getOwnPrivateProperties(JSContext* cx,
+                                             HandleDebuggerObject object,
+                                             MutableHandle<IdVector> result) {
+  RootedIdVector ids(cx);
+  if (!GetSymbolPropertyKeys(cx, object, &ids, true)) {
+    return false;
+  }
+
+  for (size_t i = 0; i < ids.length(); i++) {
+    PropertyKey id = ids[i];
+
+    if (id.isPrivateName()) {
+      // Private *methods* create a Private Brand, a special private name
+      // stamped onto the symbol, to indicate it is possible to execute private
+      // methods from the class on this object. We don't want to return such
+      // items here, so we check if we're dealing with a private property, e.g.
+      // the Symbol description starts with a "#" character
+      JSAtom* privateDescription = id.toSymbol()->description();
+      char16_t firstChar;
+      if (!privateDescription->getChar(cx, 0, &firstChar)) {
+        return false;
+      }
+
+      if (firstChar == '#') {
+        cx->markId(id);
+        if (!result.append(id)) {
+          return false;
+        }
+      }
+    }
+  }
+
+  return true;
 }
 
 /* static */
