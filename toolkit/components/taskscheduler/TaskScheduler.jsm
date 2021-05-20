@@ -112,6 +112,13 @@ var TaskScheduler = {
    *            If true the task will be created disabled, so that it will not be run.
    *            Ignored on macOS: see comments in TaskSchedulerMacOSImpl.jsm.
    *            Default false, intended for tests.
+   *
+   *          executionTimeoutSec
+   *            Specifies how long (in seconds) the scheduled task can execute for before it is
+   *            automatically stopped by the task scheduler. If a value <= 0 is given, it will be
+   *            ignored.
+   *            This is not currently implemented on macOS.
+   *            On Windows, the default timeout is 72 hours.
    *        }
    * }
    */
