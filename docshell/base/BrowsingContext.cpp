@@ -58,6 +58,7 @@
 #include "mozilla/StaticPrefs_fission.h"
 #include "mozilla/StaticPrefs_page_load.h"
 #include "mozilla/StaticPtr.h"
+#include "mozilla/URLQueryStringStripper.h"
 #include "nsIURIFixup.h"
 #include "nsIXULRuntime.h"
 
@@ -1908,6 +1909,10 @@ nsresult BrowsingContext::LoadURI(nsDocShellLoadState* aLoadState,
       wgc->SendLoadURI(this, aLoadState, aSetNavigating);
     }
   } else if (XRE_IsParentProcess()) {
+    // Strip the target query parameters before loading the URI in the parent.
+    // The loading in content will be handled in nsDocShell.
+    aLoadState->MaybeStripTrackerQueryStrings(this);
+
     if (Canonical()->LoadInParent(aLoadState, aSetNavigating)) {
       return NS_OK;
     }
