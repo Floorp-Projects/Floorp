@@ -30,44 +30,44 @@ binutils-2.31.1:
         strip-components: 1
         add-prefix: binutils-source/
 
-gcc-6.4.0:
-    description: GCC 6.4.0 source code
+gcc-6.5.0:
+    description: GCC 6.5.0 source code
     fetch:
         type: static-url
-        url: ftp://ftp.gnu.org/gnu/gcc/gcc-6.4.0/gcc-6.4.0.tar.xz
-        sha256: 850bf21eafdfe5cd5f6827148184c08c4a0852a37ccf36ce69855334d2c914d4
-        size: 76156220
-        gpg-signature:
-            sig-url: "{url}.sig"
-            key-path: build/unix/build-gcc/13975A70E63C361C73AE69EF6EEB81F8981C74C7.key
-        artifact-name: gcc-source.tar.zst
-        strip-components: 1
-        add-prefix: gcc-source/
-
-gcc-7.4.0:
-    description: GCC 7.4.0 source code
-    fetch:
-        type: static-url
-        url: ftp://ftp.gnu.org/gnu/gcc/gcc-7.4.0/gcc-7.4.0.tar.xz
-        sha256: eddde28d04f334aec1604456e536416549e9b1aa137fc69204e65eb0c009fe51
-        size: 62601888
-        gpg-signature:
-            sig-url: "{url}.sig"
-            key-path: build/unix/build-gcc/13975A70E63C361C73AE69EF6EEB81F8981C74C7.key
-        artifact-name: gcc-source.tar.zst
-        strip-components: 1
-        add-prefix: gcc-source/
-
-gcc-8.3.0:
-    description: GCC 8.3.0 source code
-    fetch:
-        type: static-url
-        url: ftp://ftp.gnu.org/gnu/gcc/gcc-8.3.0/gcc-8.3.0.tar.xz
-        sha256: 64baadfe6cc0f4947a84cb12d7f0dfaf45bb58b7e92461639596c21e02d97d2c
-        size: 63694700
+        url: ftp://ftp.gnu.org/gnu/gcc/gcc-6.5.0/gcc-6.5.0.tar.xz
+        sha256: 7ef1796ce497e89479183702635b14bb7a46b53249209a5e0f999bebf4740945
+        size: 74355588
         gpg-signature:
             sig-url: "{url}.sig"
             key-path: build/unix/build-gcc/33C235A34C46AA3FFB293709A328C3A2C3C45C06.key
+        artifact-name: gcc-source.tar.zst
+        strip-components: 1
+        add-prefix: gcc-source/
+
+gcc-7.5.0:
+    description: GCC 7.5.0 source code
+    fetch:
+        type: static-url
+        url: ftp://ftp.gnu.org/gnu/gcc/gcc-7.5.0/gcc-7.5.0.tar.xz
+        sha256: b81946e7f01f90528a1f7352ab08cc602b9ccc05d4e44da4bd501c5a189ee661
+        size: 62783088
+        gpg-signature:
+            sig-url: "{url}.sig"
+            key-path: build/unix/build-gcc/7F74F97C103468EE5D750B583AB00996FC26A641.key
+        artifact-name: gcc-source.tar.zst
+        strip-components: 1
+        add-prefix: gcc-source/
+
+gcc-8.5.0:
+    description: GCC 8.5.0 source code
+    fetch:
+        type: static-url
+        url: ftp://ftp.gnu.org/gnu/gcc/gcc-8.5.0/gcc-8.5.0.tar.xz
+        sha256: d308841a511bb830a6100397b0042db24ce11f642dab6ea6ee44842e5325ed50
+        size: 63841008
+        gpg-signature:
+            sig-url: "{url}.sig"
+            key-path: build/unix/build-gcc/D3A93CAD751C2AF4F8C7AD516C35B99309B5FA62.key
         artifact-name: gcc-source.tar.zst
         strip-components: 1
         add-prefix: gcc-source/

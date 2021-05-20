@@ -24,7 +24,7 @@ linux64-mingw32-gcc:
     fetches:
         fetch:
             - binutils-2.27
-            - gcc-6.4.0
+            - gcc-6.5.0
             - gmp-5.1.3
             - isl-0.15
             - mpc-0.8.2
