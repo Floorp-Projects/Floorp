@@ -68,7 +68,6 @@
 #include "GeckoTelemetryDelegate.h"
 #include "GeckoVRManager.h"
 #include "ImageDecoderSupport.h"
-#include "PrefsHelper.h"
 #include "ScreenHelperAndroid.h"
 #include "Telemetry.h"
 #include "WebExecutorSupport.h"
@@ -410,7 +409,6 @@ nsAppShell::nsAppShell()
     mozilla::GeckoProcessManager::Init();
     mozilla::GeckoScreenOrientation::Init();
     mozilla::GeckoSystemStateListener::Init();
-    mozilla::PrefsHelper::Init();
     mozilla::widget::Telemetry::Init();
     mozilla::widget::ImageDecoderSupport::Init();
     mozilla::widget::WebExecutorSupport::Init();
@@ -561,11 +559,6 @@ nsAppShell::Observe(nsISupports* aSubject, const char* aTopic,
       }
     }
     removeObserver = true;
-
-  } else if (!strcmp(aTopic, "nsPref:changed")) {
-    if (jni::IsAvailable()) {
-      mozilla::PrefsHelper::OnPrefChange(aData);
-    }
 
   } else if (!strcmp(aTopic, "content-document-global-created")) {
     // Associate the PuppetWidget of the newly-created BrowserChild with a
