@@ -14,6 +14,10 @@
 #customizationui-widget-panel[viewId="PanelUI-profiler"][type="arrow"][side="right"] {
   margin-block: -13px;
 }
+
+#notification-popup {
+  margin-block: -4px;
+}
 } /** END Proton **/
 
 #BMB_bookmarksPopup menupopup {
