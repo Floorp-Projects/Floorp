@@ -602,7 +602,7 @@ void nsHttpTransaction::OnActivated() {
 
   if (mConnection && mRequestHead &&
       mConnection->Version() >= HttpVersion::v2_0) {
-    // So this is fun. On http/2, we want to send TE: Trailers, to be
+    // So this is fun. On http/2, we want to send TE: trailers, to be
     // spec-compliant. So we add it to the request head here. The fun part
     // is that adding a header to the request head at this point has no
     // effect on what we send on the wire, as the headers are already
@@ -610,7 +610,7 @@ void nsHttpTransaction::OnActivated() {
     // of the header happens in the h2 compression code. We still have to
     // add the header to the request head here, though, so that devtools can
     // show that we sent the header. FUN!
-    Unused << mRequestHead->SetHeader(nsHttp::TE, "Trailers"_ns);
+    Unused << mRequestHead->SetHeader(nsHttp::TE, "trailers"_ns);
   }
 
   mActivated = true;
