@@ -1302,6 +1302,8 @@ class MOZ_STACK_CLASS mozInlineSpellChecker::SpellCheckerSlice {
 
   bool ShouldSpellCheckRange(const nsRange& aRange) const;
 
+  bool IsInNoCheckRange(const nsINode& aNode, int32_t aOffset) const;
+
   mozInlineSpellChecker& mInlineSpellChecker;
   mozInlineSpellWordUtil& mWordUtil;
   mozilla::dom::Selection& mSpellCheckSelection;
@@ -1322,6 +1324,13 @@ bool mozInlineSpellChecker::SpellCheckerSlice::ShouldSpellCheckRange(
   return beginNode->IsInComposedDoc() && endNode->IsInComposedDoc() &&
          beginNode->IsShadowIncludingInclusiveDescendantOf(rootNode) &&
          endNode->IsShadowIncludingInclusiveDescendantOf(rootNode);
+}
+
+bool mozInlineSpellChecker::SpellCheckerSlice::IsInNoCheckRange(
+    const nsINode& aNode, int32_t aOffset) const {
+  ErrorResult erv;
+  return mStatus->GetNoCheckRange() &&
+         mStatus->GetNoCheckRange()->IsPointInRange(aNode, aOffset, erv);
 }
 
 void mozInlineSpellChecker::SpellCheckerSlice::RemoveRanges(
@@ -1489,9 +1498,7 @@ nsresult mozInlineSpellChecker::SpellCheckerSlice::Execute() {
     // We do a simple check to see if the beginning of our word is in the
     // exclusion range. Because the exclusion range is a multiple of a word,
     // this is sufficient.
-    if (mStatus->GetNoCheckRange() &&
-        mStatus->GetNoCheckRange()->IsPointInRange(*beginNode, beginOffset,
-                                                   erv)) {
+    if (IsInNoCheckRange(*beginNode, beginOffset)) {
       continue;
     }
 
