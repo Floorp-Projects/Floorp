@@ -20,6 +20,7 @@ from mozcrash import mozcrash
 
 from .base import (Browser,
                    ExecutorBrowser,
+                   NullBrowser,
                    OutputHandler,
                    OutputHandlerState,
                    browser_command,
@@ -39,7 +40,8 @@ here = os.path.dirname(__file__)
 
 __wptrunner__ = {"product": "firefox",
                  "check_args": "check_args",
-                 "browser": "FirefoxBrowser",
+                 "browser": {None: "FirefoxBrowser",
+                             "wdspec": "NullBrowser"},
                  "executor": {"crashtest": "MarionetteCrashtestExecutor",
                               "testharness": "MarionetteTestharnessExecutor",
                               "reftest": "MarionetteRefTestExecutor",
