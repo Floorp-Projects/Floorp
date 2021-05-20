@@ -233,8 +233,8 @@ class mozInlineSpellChecker final : public nsIInlineSpellChecker,
   // examines the dom node in question and returns true if the inline spell
   // checker should skip the node (i.e. the text is inside of a block quote
   // or an e-mail signature...)
-  bool ShouldSpellCheckNode(mozilla::TextEditor* aTextEditor,
-                            nsINode* aNode) const;
+  static bool ShouldSpellCheckNode(mozilla::TextEditor* aTextEditor,
+                                   nsINode* aNode);
 
   // spell check the text contained within aRange, potentially scheduling
   // another check in the future if the time threshold is reached
