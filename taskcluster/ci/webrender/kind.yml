@@ -221,7 +221,7 @@ jobs:
         worker:
             max-run-time: 5400
             env:
-                TOOLTOOL_MANIFEST: 'browser/config/tooltool-manifests/win64/vs2017.manifest'
+                TOOLTOOL_MANIFEST: 'browser/config/tooltool-manifests/vs2017-15.8.manifest'
         fetches:
             toolchain:
                 - win64-rust

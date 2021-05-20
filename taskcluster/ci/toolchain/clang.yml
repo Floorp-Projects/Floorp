@@ -321,7 +321,7 @@ win64-clang-11:
     worker-type: b-win2012
     worker:
         env:
-            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/vs2017.manifest"
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.8.manifest"
         max-run-time: 9000
     run-on-projects:
         - trunk
@@ -347,7 +347,7 @@ win64-clang-11-2stage:
     worker-type: b-win2012
     worker:
         env:
-            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/vs2017.manifest"
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.8.manifest"
     run:
         script: build-clang.sh
         arguments:
@@ -545,7 +545,7 @@ win64-clang-12:
     worker-type: b-win2012
     worker:
         env:
-            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/vs2017.manifest"
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.8.manifest"
         max-run-time: 9000
     run-on-projects:
         - trunk
@@ -572,7 +572,7 @@ win64-clang-12-2stage:
     worker-type: b-win2012
     worker:
         env:
-            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/vs2017.manifest"
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.8.manifest"
     run:
         script: build-clang.sh
         arguments:

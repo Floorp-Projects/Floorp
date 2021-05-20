@@ -189,7 +189,7 @@ jobs:
         worker:
             docker-image: {in-tree: debian10-amd64-build}
             env:
-                TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win32/releng.manifest"
+                TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.8.manifest"
         run:
             options: [append-env-variables-from-configs]
             mozconfig-variant: profile-generate
@@ -232,7 +232,7 @@ jobs:
         worker:
             docker-image: {in-tree: debian10-amd64-build}
             env:
-                TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/releng.manifest"
+                TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.8.manifest"
         run:
             options: [append-env-variables-from-configs]
             mozconfig-variant: profile-generate
