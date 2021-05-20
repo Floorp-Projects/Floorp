@@ -12,17 +12,16 @@ ChromeUtils.defineModuleGetter(
 const kPrefHomePage = "browser.startup.homepage";
 const kPrefExtensionControlled =
   "browser.startup.homepage_override.extensionControlled";
-const kPrefProtonToolbarEnabled = "browser.proton.enabled";
 const kPrefHomeButtonRemoved = "browser.engagement.home-button.has-removed";
 const kHomeButtonId = "home-button";
 const kUrlbarWidgetId = "urlbar-container";
 
-async function withTestSetup({ protonEnabled = true } = {}, testFn) {
+// eslint-disable-next-line no-empty-pattern
+async function withTestSetup({} = {}, testFn) {
   CustomizableUI.removeWidgetFromArea(kHomeButtonId);
 
   await SpecialPowers.pushPrefEnv({
     set: [
-      [kPrefProtonToolbarEnabled, protonEnabled],
       [kPrefHomeButtonRemoved, false],
       [kPrefHomePage, "about:home"],
       [kPrefExtensionControlled, false],
@@ -59,26 +58,19 @@ function assertHasRemovedPref(val) {
   );
 }
 
-async function runAddButtonTest(protonEnabled) {
+async function runAddButtonTest() {
   await withTestSetup({}, async () => {
-    Services.prefs.setBoolPref(kPrefProtonToolbarEnabled, protonEnabled);
-
     // Setting the homepage once should add to the toolbar.
     assertHasRemovedPref(false);
     assertHomeButtonNotPlaced();
 
     await HomePage.set("https://example.com/");
 
-    if (protonEnabled) {
-      assertHomeButtonInArea("nav-bar");
-    } else {
-      assertHomeButtonNotPlaced();
-    }
+    assertHomeButtonInArea("nav-bar");
     assertHasRemovedPref(false);
 
     // After removing the home button, a new homepage shouldn't add it.
     CustomizableUI.removeWidgetFromArea(kHomeButtonId);
-    assertHasRemovedPref(protonEnabled);
 
     await HomePage.set("https://mozilla.org/");
     assertHomeButtonNotPlaced();
@@ -86,11 +78,7 @@ async function runAddButtonTest(protonEnabled) {
 }
 
 add_task(async function testAddHomeButtonOnSet() {
-  await runAddButtonTest(true);
-});
-
-add_task(async function testHomeButtonOnSetProtonOff() {
-  await runAddButtonTest(false);
+  await runAddButtonTest();
 });
 
 add_task(async function testHomeButtonDoesNotMove() {

@@ -10,12 +10,6 @@ const { ASRouter } = ChromeUtils.import(
 const { BrowserWindowTracker } = ChromeUtils.import(
   "resource:///modules/BrowserWindowTracker.jsm"
 );
-XPCOMUtils.defineLazyPreferenceGetter(
-  this,
-  "PROTON_ENABLED",
-  "browser.proton.enabled",
-  false
-);
 
 add_task(async function show_and_send_telemetry() {
   let message = (await CFRMessageProvider.getMessages()).find(
@@ -105,9 +99,7 @@ add_task(async function react_to_trigger() {
     "Notification id should match"
   );
 
-  let defaultPriority = PROTON_ENABLED
-    ? notificationStack.PRIORITY_SYSTEM
-    : notificationStack.PRIORITY_INFO_MEDIUM;
+  let defaultPriority = notificationStack.PRIORITY_SYSTEM;
   Assert.ok(
     notificationStack.currentNotification.priority === defaultPriority,
     "Notification has default priority"

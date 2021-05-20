@@ -155,7 +155,6 @@ async function openMultiStageWithUserAgentAttribution() {
   const TEST_PROTON_JSON = JSON.stringify(TEST_PROTON_CONTENT);
 
   await setAboutWelcomePref(true);
-  await setProton(true);
   await pushPrefs(["browser.aboutwelcome.screens", TEST_PROTON_JSON]);
 
   let tab = await BrowserTestUtils.openNewForegroundTab(

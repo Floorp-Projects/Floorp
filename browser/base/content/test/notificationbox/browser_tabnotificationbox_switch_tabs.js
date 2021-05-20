@@ -44,12 +44,6 @@ function createNotification({ browser, label, value, priority }) {
   return notification;
 }
 
-add_task(async function setup() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.proton.enabled", true]],
-  });
-});
-
 add_task(async function testNotificationInBackgroundTab() {
   let firstTab = gBrowser.selectedTab;
 

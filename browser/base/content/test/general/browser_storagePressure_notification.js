@@ -27,166 +27,156 @@ function openAboutPrefPromise(win) {
   ];
   return Promise.all(promises);
 }
+add_task(async function setup() {
+  let win = await BrowserTestUtils.openNewWindowWithFlushedXULCacheForMozSupports();
+  // Open a new tab to keep the window open.
+  await BrowserTestUtils.openNewForegroundTab(
+    win.gBrowser,
+    "https://example.com"
+  );
+});
 
-for (let protonEnabled of [true, false]) {
-  add_task(async function setup() {
-    await SpecialPowers.pushPrefEnv({
-      set: [["browser.proton.enabled", protonEnabled]],
-    });
-    let win = await BrowserTestUtils.openNewWindowWithFlushedXULCacheForMozSupports();
-    // Open a new tab to keep the window open.
-    await BrowserTestUtils.openNewForegroundTab(
-      win.gBrowser,
-      "https://example.com"
-    );
-  });
-
-  // Test only displaying notification once within the given interval
-  add_task(async function() {
-    const win = Services.wm.getMostRecentWindow("navigator:browser");
-    const TEST_NOTIFICATION_INTERVAL_MS = 2000;
-    await SpecialPowers.pushPrefEnv({
-      set: [
-        [
-          "browser.storageManager.pressureNotification.minIntervalMS",
-          TEST_NOTIFICATION_INTERVAL_MS,
-        ],
+// Test only displaying notification once within the given interval
+add_task(async function() {
+  const win = Services.wm.getMostRecentWindow("navigator:browser");
+  const TEST_NOTIFICATION_INTERVAL_MS = 2000;
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      [
+        "browser.storageManager.pressureNotification.minIntervalMS",
+        TEST_NOTIFICATION_INTERVAL_MS,
       ],
-    });
-    // Commenting this to see if we really need it
-    // await SpecialPowers.pushPrefEnv({set: [["privacy.reduceTimerPrecision", false]]});
-
-    await notifyStoragePressure();
-    await TestUtils.waitForCondition(() =>
-      win.gHighPriorityNotificationBox.getNotificationWithValue(
-        "storage-pressure-notification"
-      )
-    );
-    let notification = win.gHighPriorityNotificationBox.getNotificationWithValue(
-      "storage-pressure-notification"
-    );
-    is(
-      notification.localName,
-      protonEnabled ? "notification-message" : "notification",
-      "Should display storage pressure notification"
-    );
-    notification.close();
-
-    await notifyStoragePressure();
-    notification = win.gHighPriorityNotificationBox.getNotificationWithValue(
-      "storage-pressure-notification"
-    );
-    is(
-      notification,
-      null,
-      "Should not display storage pressure notification more than once within the given interval"
-    );
-
-    await new Promise(resolve =>
-      setTimeout(resolve, TEST_NOTIFICATION_INTERVAL_MS + 1)
-    );
-    await notifyStoragePressure();
-    await TestUtils.waitForCondition(() =>
-      win.gHighPriorityNotificationBox.getNotificationWithValue(
-        "storage-pressure-notification"
-      )
-    );
-    notification = win.gHighPriorityNotificationBox.getNotificationWithValue(
-      "storage-pressure-notification"
-    );
-    is(
-      notification.localName,
-      protonEnabled ? "notification-message" : "notification",
-      "Should display storage pressure notification after the given interval"
-    );
-    notification.close();
+    ],
   });
+  // Commenting this to see if we really need it
+  // await SpecialPowers.pushPrefEnv({set: [["privacy.reduceTimerPrecision", false]]});
 
-  // Test guiding user to the about:preferences when usage exceeds the given threshold
-  add_task(async function() {
-    const win = Services.wm.getMostRecentWindow("navigator:browser");
-    await SpecialPowers.pushPrefEnv({
-      set: [["browser.storageManager.pressureNotification.minIntervalMS", 0]],
-    });
-    let tab = await BrowserTestUtils.openNewForegroundTab(
-      win.gBrowser,
-      "https://example.com"
-    );
-
-    const BYTES_IN_GIGABYTE = 1073741824;
-    const USAGE_THRESHOLD_BYTES =
-      BYTES_IN_GIGABYTE *
-      Services.prefs.getIntPref(
-        "browser.storageManager.pressureNotification.usageThresholdGB"
-      );
-    await notifyStoragePressure(USAGE_THRESHOLD_BYTES);
-    await TestUtils.waitForCondition(() =>
-      win.gHighPriorityNotificationBox.getNotificationWithValue(
-        "storage-pressure-notification"
-      )
-    );
-    let notification = win.gHighPriorityNotificationBox.getNotificationWithValue(
+  await notifyStoragePressure();
+  await TestUtils.waitForCondition(() =>
+    win.gHighPriorityNotificationBox.getNotificationWithValue(
       "storage-pressure-notification"
-    );
-    is(
-      notification.localName,
-      protonEnabled ? "notification-message" : "notification",
-      "Should display storage pressure notification"
-    );
-    await new Promise(r => setTimeout(r, 1000));
+    )
+  );
+  let notification = win.gHighPriorityNotificationBox.getNotificationWithValue(
+    "storage-pressure-notification"
+  );
+  is(
+    notification.localName,
+    "notification-message",
+    "Should display storage pressure notification"
+  );
+  notification.close();
 
-    let prefBtn = notification.buttonContainer.getElementsByTagName(
-      "button"
-    )[0];
-    ok(prefBtn, "Should have an open preferences button");
-    let aboutPrefPromise = openAboutPrefPromise(win);
-    EventUtils.synthesizeMouseAtCenter(prefBtn, {}, win);
-    await aboutPrefPromise;
-    let aboutPrefTab = win.gBrowser.selectedTab;
-    let prefDoc = win.gBrowser.selectedBrowser.contentDocument;
-    let siteDataGroup = prefDoc.getElementById("siteDataGroup");
-    is_element_visible(
-      siteDataGroup,
-      "Should open to the siteDataGroup section in about:preferences"
-    );
-    BrowserTestUtils.removeTab(aboutPrefTab);
-    BrowserTestUtils.removeTab(tab);
+  await notifyStoragePressure();
+  notification = win.gHighPriorityNotificationBox.getNotificationWithValue(
+    "storage-pressure-notification"
+  );
+  is(
+    notification,
+    null,
+    "Should not display storage pressure notification more than once within the given interval"
+  );
+
+  await new Promise(resolve =>
+    setTimeout(resolve, TEST_NOTIFICATION_INTERVAL_MS + 1)
+  );
+  await notifyStoragePressure();
+  await TestUtils.waitForCondition(() =>
+    win.gHighPriorityNotificationBox.getNotificationWithValue(
+      "storage-pressure-notification"
+    )
+  );
+  notification = win.gHighPriorityNotificationBox.getNotificationWithValue(
+    "storage-pressure-notification"
+  );
+  is(
+    notification.localName,
+    "notification-message",
+    "Should display storage pressure notification after the given interval"
+  );
+  notification.close();
+});
+
+// Test guiding user to the about:preferences when usage exceeds the given threshold
+add_task(async function() {
+  const win = Services.wm.getMostRecentWindow("navigator:browser");
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.storageManager.pressureNotification.minIntervalMS", 0]],
   });
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    win.gBrowser,
+    "https://example.com"
+  );
 
-  // Test not displaying the 2nd notification if one is already being displayed
-  add_task(async function() {
-    const win = Services.wm.getMostRecentWindow("navigator:browser");
-    const TEST_NOTIFICATION_INTERVAL_MS = 0;
-    await SpecialPowers.pushPrefEnv({
-      set: [
-        [
-          "browser.storageManager.pressureNotification.minIntervalMS",
-          TEST_NOTIFICATION_INTERVAL_MS,
-        ],
+  const BYTES_IN_GIGABYTE = 1073741824;
+  const USAGE_THRESHOLD_BYTES =
+    BYTES_IN_GIGABYTE *
+    Services.prefs.getIntPref(
+      "browser.storageManager.pressureNotification.usageThresholdGB"
+    );
+  await notifyStoragePressure(USAGE_THRESHOLD_BYTES);
+  await TestUtils.waitForCondition(() =>
+    win.gHighPriorityNotificationBox.getNotificationWithValue(
+      "storage-pressure-notification"
+    )
+  );
+  let notification = win.gHighPriorityNotificationBox.getNotificationWithValue(
+    "storage-pressure-notification"
+  );
+  is(
+    notification.localName,
+    "notification-message",
+    "Should display storage pressure notification"
+  );
+  await new Promise(r => setTimeout(r, 1000));
+
+  let prefBtn = notification.buttonContainer.getElementsByTagName("button")[0];
+  ok(prefBtn, "Should have an open preferences button");
+  let aboutPrefPromise = openAboutPrefPromise(win);
+  EventUtils.synthesizeMouseAtCenter(prefBtn, {}, win);
+  await aboutPrefPromise;
+  let aboutPrefTab = win.gBrowser.selectedTab;
+  let prefDoc = win.gBrowser.selectedBrowser.contentDocument;
+  let siteDataGroup = prefDoc.getElementById("siteDataGroup");
+  is_element_visible(
+    siteDataGroup,
+    "Should open to the siteDataGroup section in about:preferences"
+  );
+  BrowserTestUtils.removeTab(aboutPrefTab);
+  BrowserTestUtils.removeTab(tab);
+});
+
+// Test not displaying the 2nd notification if one is already being displayed
+add_task(async function() {
+  const win = Services.wm.getMostRecentWindow("navigator:browser");
+  const TEST_NOTIFICATION_INTERVAL_MS = 0;
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      [
+        "browser.storageManager.pressureNotification.minIntervalMS",
+        TEST_NOTIFICATION_INTERVAL_MS,
       ],
-    });
-
-    await notifyStoragePressure();
-    await notifyStoragePressure();
-    let allNotifications = win.gHighPriorityNotificationBox.allNotifications;
-    let pressureNotificationCount = 0;
-    allNotifications.forEach(notification => {
-      if (
-        notification.getAttribute("value") == "storage-pressure-notification"
-      ) {
-        pressureNotificationCount++;
-      }
-    });
-    is(
-      pressureNotificationCount,
-      1,
-      "Should not display the 2nd notification when there is already one"
-    );
-    win.gHighPriorityNotificationBox.removeAllNotifications();
+    ],
   });
 
-  add_task(async function cleanup() {
-    const win = Services.wm.getMostRecentWindow("navigator:browser");
-    await BrowserTestUtils.closeWindow(win);
+  await notifyStoragePressure();
+  await notifyStoragePressure();
+  let allNotifications = win.gHighPriorityNotificationBox.allNotifications;
+  let pressureNotificationCount = 0;
+  allNotifications.forEach(notification => {
+    if (notification.getAttribute("value") == "storage-pressure-notification") {
+      pressureNotificationCount++;
+    }
   });
-}
+  is(
+    pressureNotificationCount,
+    1,
+    "Should not display the 2nd notification when there is already one"
+  );
+  win.gHighPriorityNotificationBox.removeAllNotifications();
+});
+
+add_task(async function cleanup() {
+  const win = Services.wm.getMostRecentWindow("navigator:browser");
+  await BrowserTestUtils.closeWindow(win);
+});

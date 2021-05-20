@@ -168,11 +168,6 @@ add_task(async function bookmark() {
 });
 
 add_task(async function test_disabledPageAction_hidden_in_protonOverflowMenu() {
-  // Make sure that proton is enabled for this test (indipendently from its
-  // default value set on the current build).
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.proton.enabled", true]],
-  });
   // Make sure the overflow menu urlbar button is visible (indipendently from
   // the current size of the Firefox window).
   BrowserPageActions.mainButtonNode.style.visibility = "visible";
