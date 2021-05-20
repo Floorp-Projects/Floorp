@@ -38,4 +38,5 @@ BROWSER_CHROME_MANIFESTS += [
     "https-first/browser.ini",
     "https-only/browser.ini",
     "mixedcontentblocker/browser.ini",
+    "sec-fetch/browser.ini",
 ]
