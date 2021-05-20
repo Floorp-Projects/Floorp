@@ -118,7 +118,8 @@ parent:
   // principals collected. In order to be compatible with that API, we need to
   // update the document's principal. This is only allowed if the principals are
   // `equals` to each other.
-  async UpdateDocumentPrincipal(nsIPrincipal aPrincipal);
+  async UpdateDocumentPrincipal(nsIPrincipal aPrincipal,
+                                nsIPrincipal aStoragePrincipal);
 
   // Update document's `documentHasLoaded` bit in this WindowGlobal.
   async UpdateDocumentHasLoaded(bool aDocumentHasLoaded);
