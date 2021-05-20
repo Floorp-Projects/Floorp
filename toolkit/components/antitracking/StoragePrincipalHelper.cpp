@@ -387,4 +387,30 @@ bool StoragePrincipalHelper::GetOriginAttributesForHTTPSRR(
   return GetOriginAttributesWithScheme(aChannel, aAttributes, HTTPS);
 }
 
+// static
+bool StoragePrincipalHelper::GetOriginAttributes(
+    const mozilla::ipc::PrincipalInfo& aPrincipalInfo,
+    OriginAttributes& aAttributes) {
+  aAttributes = mozilla::OriginAttributes();
+
+  using Type = ipc::PrincipalInfo;
+  switch (aPrincipalInfo.type()) {
+    case Type::TContentPrincipalInfo:
+      aAttributes = aPrincipalInfo.get_ContentPrincipalInfo().attrs();
+      break;
+    case Type::TNullPrincipalInfo:
+      aAttributes = aPrincipalInfo.get_NullPrincipalInfo().attrs();
+      break;
+    case Type::TExpandedPrincipalInfo:
+      aAttributes = aPrincipalInfo.get_ExpandedPrincipalInfo().attrs();
+      break;
+    case Type::TSystemPrincipalInfo:
+      break;
+    default:
+      return false;
+  }
+
+  return true;
+}
+
 }  // namespace mozilla
