@@ -13,6 +13,7 @@ NORMAL_PRIORITY = 1
 INPUT_PRIORITY = 2
 VSYNC_PRIORITY = 3
 MEDIUMHIGH_PRIORITY = 4
+CONTROL_PRIORITY = 5
 
 
 class Visitor:
@@ -351,6 +352,7 @@ class MessageDecl(Node):
             "input": INPUT_PRIORITY,
             "vsync": VSYNC_PRIORITY,
             "mediumhigh": MEDIUMHIGH_PRIORITY,
+            "control": CONTROL_PRIORITY,
         }[self.attributes["Priority"].value]
 
 
