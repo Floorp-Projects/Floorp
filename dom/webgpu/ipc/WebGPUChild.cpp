@@ -4,9 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "WebGPUChild.h"
-#include "js/Warnings.h"  // JS::WarnUTF8
 #include "mozilla/EnumTypeTraits.h"
-#include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/WebGPUBinding.h"
 #include "mozilla/dom/GPUUncapturedErrorEvent.h"
 #include "mozilla/webgpu/ValidationError.h"
@@ -19,19 +17,6 @@ namespace webgpu {
 NS_IMPL_CYCLE_COLLECTION(WebGPUChild)
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(WebGPUChild, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(WebGPUChild, Release)
-
-void WebGPUChild::JsWarning(nsIGlobalObject* aGlobal,
-                            const nsACString& aMessage) {
-  dom::AutoJSAPI api;
-  if (aGlobal) {
-    if (!api.Init(aGlobal)) {
-      return;
-    }
-  } else {
-    api.Init();
-  }
-  JS::WarnUTF8(api.cx(), "%s", PromiseFlatCString(aMessage).get());
-}
 
 static ffi::WGPUCompareFunction ConvertCompareFunction(
     const dom::GPUCompareFunction& aCompare) {
@@ -805,14 +790,16 @@ RawId WebGPUChild::DeviceCreateRenderPipeline(
 
 ipc::IPCResult WebGPUChild::RecvError(RawId aDeviceId,
                                       const nsACString& aMessage) {
-  auto targetIter = mDeviceMap.find(aDeviceId);
-  if (!aDeviceId || targetIter == mDeviceMap.end()) {
-    JsWarning(nullptr, aMessage);
+  if (!aDeviceId) {
+    // TODO: figure out how to report these kinds of errors
+    printf_stderr("Validation error without device target: %s\n",
+                  PromiseFlatCString(aMessage).get());
+  } else if (mDeviceMap.find(aDeviceId) == mDeviceMap.end()) {
+    printf_stderr("Validation error on a dropped device: %s\n",
+                  PromiseFlatCString(aMessage).get());
   } else {
-    auto* target = targetIter->second;
+    auto* target = mDeviceMap[aDeviceId];
     MOZ_ASSERT(target);
-    JsWarning(target->GetOwnerGlobal(), aMessage);
-
     dom::GPUUncapturedErrorEventInit init;
     init.mError.SetAsGPUValidationError() =
         new ValidationError(target, aMessage);
