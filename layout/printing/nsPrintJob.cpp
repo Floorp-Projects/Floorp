@@ -613,7 +613,7 @@ nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
       !mDisallowSelectionPrint && printData->mSelectionRoot);
 
   bool printingViaParent =
-      XRE_IsContentProcess() && Preferences::GetBool("print.print_via_parent");
+      XRE_IsContentProcess() && StaticPrefs::print_print_via_parent();
   nsCOMPtr<nsIDeviceContextSpec> devspec;
   if (printingViaParent) {
     devspec = new nsDeviceContextSpecProxy();
