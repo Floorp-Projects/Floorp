@@ -165,6 +165,8 @@ var _TaskSchedulerWinImpl = {
 
     const execAction = doc.querySelector("Actions Exec");
 
+    const settings = doc.querySelector("Settings");
+
     const commandNode = doc.createElementNS(xmlns, "Command");
     commandNode.textContent = command;
     execAction.appendChild(commandNode);
@@ -184,13 +186,18 @@ var _TaskSchedulerWinImpl = {
     if (options?.disabled) {
       const enabled = doc.createElementNS(xmlns, "Enabled");
       enabled.textContent = "false";
-      doc.querySelector("Settings").appendChild(enabled);
+      settings.appendChild(enabled);
+    }
+
+    if (options?.executionTimeoutSec && options.executionTimeoutSec > 0) {
+      const timeout = doc.createElementNS(xmlns, "ExecutionTimeLimit");
+      timeout.textContent = `PT${options.executionTimeoutSec}S`;
+      settings.appendChild(timeout);
     }
 
     // Other settings to consider for the future:
     // Idle
     // Battery
-    // Max run time
 
     doc.querySelector("RegistrationInfo Author").textContent =
       Services.appinfo.vendor;

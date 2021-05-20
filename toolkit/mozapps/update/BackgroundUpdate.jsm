@@ -50,6 +50,15 @@ XPCOMUtils.defineLazyServiceGetter(
 
 Cu.importGlobalProperties(["Glean"]);
 
+// We may want to change the definition of the task over time. When we do this,
+// we need to remove and re-register the task. We will make sure this happens
+// by storing the installed version number of the task to a pref and comparing
+// that version number to the current version. If they aren't equal, we know
+// that we have to re-register the task.
+const TASK_DEF_CURRENT_VERSION = 2;
+const TASK_INSTALLED_VERSION_PREF =
+  "app.update.background.lastInstalledTaskVersion";
+
 var BackgroundUpdate = {
   _initialized: false,
 
@@ -269,6 +278,10 @@ var BackgroundUpdate = {
       "backgroundupdate-task-description"
     );
 
+    // Let the task run for a maximum of 20 minutes before the task scheduler
+    // stops it.
+    let executionTimeoutSec = 20 * 60;
+
     let result = await TaskScheduler.registerTask(
       taskId,
       binary.path,
@@ -278,7 +291,13 @@ var BackgroundUpdate = {
         workingDirectory,
         args,
         description,
+        executionTimeoutSec,
       }
+    );
+
+    Services.prefs.setIntPref(
+      TASK_INSTALLED_VERSION_PREF,
+      TASK_DEF_CURRENT_VERSION
     );
 
     return result;
@@ -463,11 +482,27 @@ var BackgroundUpdate = {
       }
 
       if (successfullyReadPrevious && previousEnabled) {
-        log.info(
-          `${SLUG}: background update was previously enabled; not registering task.`
+        let taskInstalledVersion = Services.prefs.getIntPref(
+          TASK_INSTALLED_VERSION_PREF,
+          1
         );
+        if (taskInstalledVersion == TASK_DEF_CURRENT_VERSION) {
+          log.info(
+            `${SLUG}: background update was previously enabled; not registering task.`
+          );
 
-        return true;
+          return true;
+        }
+        log.info(
+          `${SLUG}: Detected task version change from ` +
+            `${taskInstalledVersion} to ${TASK_DEF_CURRENT_VERSION}. ` +
+            `Removing task so the new version can be registered`
+        );
+        try {
+          await TaskScheduler.deleteTask(this.taskId);
+        } catch (e) {
+          log.error(`${SLUG}: Error removing old task: ${e}`);
+        }
       }
 
       log.info(
