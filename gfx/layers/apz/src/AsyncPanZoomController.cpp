@@ -3561,11 +3561,11 @@ ScrollDirections AsyncPanZoomController::GetOverscrollableDirections() const {
     return result;
   }
 
-  if (mX.CanScroll() && mX.OverscrollBehaviorAllowsOverscrollEffect()) {
+  if (mX.AllowOverscroll()) {
     result += ScrollDirection::eHorizontal;
   }
 
-  if (mY.CanScroll() && mY.OverscrollBehaviorAllowsOverscrollEffect()) {
+  if (mY.AllowOverscroll()) {
     result += ScrollDirection::eVertical;
   }
 
