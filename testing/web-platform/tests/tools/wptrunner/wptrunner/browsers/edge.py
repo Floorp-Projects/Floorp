@@ -2,6 +2,7 @@ from __future__ import print_function
 import time
 import subprocess
 from .base import Browser, ExecutorBrowser, require_arg
+from .base import NullBrowser  # noqa: F401
 from ..webdriver_server import EdgeDriverServer
 from ..executors import executor_kwargs as base_executor_kwargs
 from ..executors.executorselenium import (SeleniumTestharnessExecutor,  # noqa: F401
@@ -10,7 +11,8 @@ from ..executors.executoredge import EdgeDriverWdspecExecutor  # noqa: F401
 
 __wptrunner__ = {"product": "edge",
                  "check_args": "check_args",
-                 "browser": "EdgeBrowser",
+                 "browser": {None: "EdgeBrowser",
+                             "wdspec": "NullBrowser"},
                  "executor": {"testharness": "SeleniumTestharnessExecutor",
                               "reftest": "SeleniumRefTestExecutor",
                               "wdspec": "EdgeDriverWdspecExecutor"},
