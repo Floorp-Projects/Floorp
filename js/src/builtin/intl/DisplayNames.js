@@ -5,25 +5,25 @@
 /**
  * Intl.DisplayNames internal properties.
  */
+function displayNamesInternalProperties_localeFn() {
+    // Intl.DisplayNames doesn't support any extension keys.
+    return {};
+}
 var displayNamesInternalProperties = {
-    localeData: function() // eslint-disable-line object-shorthand
-    {
-        // Intl.DisplayNames doesn't support any extension keys.
-        return {};
-    },
+    localeData: displayNamesInternalProperties_localeFn,
     relevantExtensionKeys: []
 };
 
+function mozDisplayNamesInternalProperties_localeFn() {
+    return {
+        ca: intl_availableCalendars,
+        default: {
+            ca: intl_defaultCalendar,
+        },
+    };
+}
 var mozDisplayNamesInternalProperties = {
-    localeData: function() // eslint-disable-line object-shorthand
-    {
-        return {
-            ca: intl_availableCalendars,
-            default: {
-                ca: intl_defaultCalendar,
-            },
-        };
-    },
+    localeData: mozDisplayNamesInternalProperties_localeFn,
     relevantExtensionKeys: ["ca"]
 };
 
