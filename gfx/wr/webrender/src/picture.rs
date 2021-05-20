@@ -147,7 +147,7 @@ use crate::scene_builder_thread::InternerUpdates;
 #[cfg(any(feature = "capture", feature = "replay"))]
 use crate::intern::{Internable, UpdateList};
 #[cfg(any(feature = "capture", feature = "replay"))]
-use crate::clip::ClipIntern;
+use crate::clip::{ClipIntern, PolygonIntern};
 #[cfg(any(feature = "capture", feature = "replay"))]
 use crate::filterdata::FilterDataIntern;
 #[cfg(any(feature = "capture", feature = "replay"))]

@@ -90,9 +90,11 @@ impl HitTestClipNode {
             ClipItemKind::RoundedRectangle { rect, radius, mode } => {
                 HitTestRegion::RoundedRectangle(rect, radius, mode)
             }
-            ClipItemKind::Image { rect, polygon, .. } => {
-                if polygon.point_count > 0 {
-                    HitTestRegion::Polygon(rect, polygon)
+            ClipItemKind::Image { rect, polygon_handle, .. } => {
+                if let Some(handle) = polygon_handle {
+                    // Retrieve the polygon data from the interner.
+                    let polygon = &interners.polygon[handle];
+                    HitTestRegion::Polygon(rect, *polygon)
                 } else {
                     HitTestRegion::Rectangle(rect, ClipMode::Clip)
                 }
