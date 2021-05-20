@@ -367,6 +367,11 @@ pref("browser.urlbar.quicksuggest.shouldShowOnboardingDialog", true);
 // Show QuickSuggest onboarding dialog on the nth browser restarts.
 pref("browser.urlbar.quicksuggest.showOnboardingDialogAfterNRestarts", 2);
 
+// The indexes of the sponsored and non-sponsored quick suggest results within
+// the general results group.
+pref("browser.urlbar.quicksuggest.sponsoredIndex", -1);
+pref("browser.urlbar.quicksuggest.nonSponsoredIndex", -1);
+
 // Whether unit conversion is enabled.
 #ifdef NIGHTLY_BUILD
 pref("browser.urlbar.unitConversion.enabled", true);
