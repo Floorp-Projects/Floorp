@@ -20,4 +20,8 @@ interface nsISessionStoreFunctions : nsISupports {
   void UpdateSessionStoreForWindow(
     in Element aBrowser, in BrowsingContext aBrowsingContext,
     in uint32_t aEpoch, in jsval aData);
+
+  void UpdateSessionStoreForStorage(
+    in Element aBrowser, in BrowsingContext aBrowsingContext,
+    in uint32_t aEpoch, in jsval aData);
 };
