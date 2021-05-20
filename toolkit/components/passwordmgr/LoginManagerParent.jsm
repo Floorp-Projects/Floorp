@@ -335,9 +335,8 @@ class LoginManagerParent extends JSWindowActorParent {
         const profiles = await migrator.getSourceProfiles();
         if (
           profiles.length == 1 &&
-          NimbusFeatures["password-autocomplete"].getVariable(
-            "directMigrateSingleProfile"
-          )
+          NimbusFeatures["password-autocomplete"].getValue()
+            ?.directMigrateSingleProfile
         ) {
           const loginAdded = new Promise(resolve => {
             const obs = (subject, topic, data) => {
