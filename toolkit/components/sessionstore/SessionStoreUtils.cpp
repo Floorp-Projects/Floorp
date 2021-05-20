@@ -24,6 +24,8 @@
 #include "mozilla/dom/XPathResult.h"
 #include "mozilla/dom/XPathEvaluator.h"
 #include "mozilla/dom/XPathExpression.h"
+#include "mozilla/dom/PBackgroundSessionStorageCache.h"
+#include "mozilla/ipc/BackgroundUtils.h"
 #include "mozilla/ReverseIterator.h"
 #include "mozilla/UniquePtr.h"
 #include "nsCharSeparatedTokenizer.h"
@@ -1262,105 +1264,6 @@ void SessionStoreUtils::RestoreFormData(
   }
 }
 
-/* Read entries in the session storage data contained in a tab's history. */
-static void ReadAllEntriesFromStorage(nsPIDOMWindowOuter* aWindow,
-                                      nsTArray<nsCString>& aOrigins,
-                                      nsTArray<nsString>& aKeys,
-                                      nsTArray<nsString>& aValues) {
-  BrowsingContext* const browsingContext = aWindow->GetBrowsingContext();
-  if (!browsingContext) {
-    return;
-  }
-
-  Document* doc = aWindow->GetDoc();
-  if (!doc) {
-    return;
-  }
-
-  nsCOMPtr<nsIPrincipal> principal = doc->NodePrincipal();
-  if (!principal) {
-    return;
-  }
-
-  nsCOMPtr<nsIPrincipal> storagePrincipal = doc->EffectiveStoragePrincipal();
-  if (!storagePrincipal) {
-    return;
-  }
-
-  nsAutoCString origin;
-  nsresult rv = storagePrincipal->GetOrigin(origin);
-  if (NS_FAILED(rv) || aOrigins.Contains(origin)) {
-    // Don't read a host twice.
-    return;
-  }
-
-  /* Completed checking for recursion and is about to read storage*/
-  const RefPtr<SessionStorageManager> storageManager =
-      browsingContext->GetSessionStorageManager();
-  if (!storageManager) {
-    return;
-  }
-  RefPtr<Storage> storage;
-  storageManager->GetStorage(aWindow->GetCurrentInnerWindow(), principal,
-                             storagePrincipal, false, getter_AddRefs(storage));
-  if (!storage) {
-    return;
-  }
-  mozilla::IgnoredErrorResult result;
-  uint32_t len = storage->GetLength(*principal, result);
-  if (result.Failed() || len == 0) {
-    return;
-  }
-  int64_t storageUsage = storage->GetOriginQuotaUsage();
-  if (storageUsage > StaticPrefs::browser_sessionstore_dom_storage_limit()) {
-    return;
-  }
-
-  for (uint32_t i = 0; i < len; i++) {
-    nsString key, value;
-    mozilla::IgnoredErrorResult res;
-    storage->Key(i, key, *principal, res);
-    if (res.Failed()) {
-      continue;
-    }
-
-    storage->GetItem(key, value, *principal, res);
-    if (res.Failed()) {
-      continue;
-    }
-
-    aKeys.AppendElement(key);
-    aValues.AppendElement(value);
-    aOrigins.AppendElement(origin);
-  }
-}
-
-/* Collect Collect session storage from current frame and all child frame */
-/* static */
-void SessionStoreUtils::CollectedSessionStorage(
-    BrowsingContext* aBrowsingContext, nsTArray<nsCString>& aOrigins,
-    nsTArray<nsString>& aKeys, nsTArray<nsString>& aValues) {
-  /* Collect session store from current frame */
-  nsPIDOMWindowOuter* window = aBrowsingContext->GetDOMWindow();
-  if (!window) {
-    return;
-  }
-  ReadAllEntriesFromStorage(window, aOrigins, aKeys, aValues);
-
-  /* Collect session storage from all child frame */
-  if (!window->GetDocShell()) {
-    return;
-  }
-
-  // This is not going to work for fission. Bug 1572084 for tracking it.
-  for (BrowsingContext* child : aBrowsingContext->Children()) {
-    if (!child->CreatedDynamically()) {
-      SessionStoreUtils::CollectedSessionStorage(child, aOrigins, aKeys,
-                                                 aValues);
-    }
-  }
-}
-
 /* static */
 void SessionStoreUtils::RestoreSessionStorage(
     const GlobalObject& aGlobal, nsIDocShell* aDocShell,
@@ -1799,6 +1702,83 @@ nsresult SessionStoreUtils::ConstructFormDataValues(
     }
 
     entry->mKey = value.id();
+  }
+
+  return NS_OK;
+}
+
+static nsresult ConstructSessionStorageValue(
+    const nsTArray<SSSetItemInfo>& aValues,
+    Record<nsString, nsString>& aRecord) {
+  auto& entries = aRecord.Entries();
+  for (const auto& value : aValues) {
+    auto entry = entries.AppendElement();
+    entry->mKey = value.key();
+    entry->mValue = value.value();
+  }
+
+  return NS_OK;
+}
+
+/* static */
+nsresult SessionStoreUtils::ConstructSessionStorageValues(
+    CanonicalBrowsingContext* aBrowsingContext,
+    const nsTArray<SSCacheCopy>& aValues,
+    Record<nsCString, Record<nsString, nsString>>& aRecord) {
+  if (!aRecord.Entries().SetCapacity(aValues.Length(), fallible)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  // We wish to remove this step of mapping originAttributes+originKey
+  // to a storage principal in Bug 1711886 by consolidating the
+  // storage format in SessionStorageManagerBase and Session Store.
+  nsTHashMap<nsCStringHashKey, nsIPrincipal*> storagePrincipalList;
+  aBrowsingContext->PreOrderWalk([&storagePrincipalList](
+                                     BrowsingContext* aContext) {
+    WindowGlobalParent* windowParent =
+        aContext->Canonical()->GetCurrentWindowGlobal();
+    if (!windowParent) {
+      return;
+    }
+
+    nsIPrincipal* storagePrincipal = windowParent->DocumentStoragePrincipal();
+    if (!storagePrincipal) {
+      return;
+    }
+
+    const OriginAttributes& originAttributes =
+        storagePrincipal->OriginAttributesRef();
+    nsAutoCString originAttributesSuffix;
+    originAttributes.CreateSuffix(originAttributesSuffix);
+
+    nsAutoCString originKey;
+    storagePrincipal->GetStorageOriginKey(originKey);
+
+    storagePrincipalList.InsertOrUpdate(originAttributesSuffix + originKey,
+                                        storagePrincipal);
+  });
+
+  for (const auto& value : aValues) {
+    nsIPrincipal* storagePrincipal =
+        storagePrincipalList.Get(value.originAttributes() + value.originKey());
+    if (!storagePrincipal) {
+      continue;
+    }
+
+    auto entry = aRecord.Entries().AppendElement();
+
+    if (!entry->mValue.Entries().SetCapacity(
+            value.defaultData().Length() + value.sessionData().Length(),
+            fallible)) {
+      return NS_ERROR_FAILURE;
+    }
+
+    if (NS_FAILED(storagePrincipal->GetOrigin(entry->mKey))) {
+      return NS_ERROR_FAILURE;
+    }
+
+    ConstructSessionStorageValue(value.defaultData(), entry->mValue);
+    ConstructSessionStorageValue(value.sessionData(), entry->mValue);
   }
 
   return NS_OK;

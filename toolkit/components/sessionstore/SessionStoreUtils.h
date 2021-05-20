@@ -25,6 +25,8 @@ namespace dom {
 class CanonicalBrowsingContext;
 class GlobalObject;
 struct SSScrollPositionDict;
+class SSCacheCopy;
+class SSSetItemInfo;
 
 namespace sessionstore {
 class DocShellRestoreState;
@@ -104,11 +106,6 @@ class SessionStoreUtils {
       Document& aDocument, const nsString& aInnerHTML,
       const nsTArray<SessionStoreRestoreData::Entry>& aEntries);
 
-  static void CollectedSessionStorage(BrowsingContext* aBrowsingContext,
-                                      nsTArray<nsCString>& aOrigins,
-                                      nsTArray<nsString>& aKeys,
-                                      nsTArray<nsString>& aValues);
-
   static void RestoreSessionStorage(
       const GlobalObject& aGlobal, nsIDocShell* aDocShell,
       const Record<nsString, Record<nsString, nsString>>& aData);
@@ -137,6 +134,11 @@ class SessionStoreUtils {
       nsTArray<Record<nsString, OwningStringOrBooleanOrObject>::EntryType>&
           aEntries,
       bool aParseSessionData = false);
+
+  static nsresult ConstructSessionStorageValues(
+      CanonicalBrowsingContext* aBrowsingContext,
+      const nsTArray<SSCacheCopy>& aValues,
+      Record<nsCString, Record<nsString, nsString>>& aStorage);
 
   static void ResetSessionStore(BrowsingContext* aContext);
 

@@ -563,8 +563,6 @@ parent:
     async NavigationFinished();
 
     async SessionStoreUpdate(nsCString? aDocShellCaps, bool? aPrivatedMode,
-                             nsCString[] aOrigins, nsString[] aKeys,
-                             nsString[] aValues, bool aIsFullStorage,
                              bool aNeedCollectSHistory,
                              bool aIsFinal, uint32_t aEpoch);
 
