@@ -31,8 +31,10 @@ void RenderPipeline::Cleanup() {
     auto bridge = mParent->GetBridge();
     if (bridge && bridge->IsOpen()) {
       bridge->SendRenderPipelineDestroy(mId);
-      bridge->SendImplicitLayoutDestroy(mImplicitPipelineLayoutId,
-                                        mImplicitBindGroupLayoutIds);
+      if (mImplicitPipelineLayoutId) {
+        bridge->SendImplicitLayoutDestroy(mImplicitPipelineLayoutId,
+                                          mImplicitBindGroupLayoutIds);
+      }
     }
   }
 }
