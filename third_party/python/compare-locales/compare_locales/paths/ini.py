@@ -203,8 +203,6 @@ class EnumerateApp(object):
                 'l10n': mozpath.normpath('{l10n_base}/{locale}/%s/**' %
                                          module)
             }
-            if module == 'mobile/android/base':
-                paths['test'] = ['android-dtd']
             projectconfig.add_paths(paths)
         for child in aConfig.children:
             self._config_for_ini(projectconfig, child)

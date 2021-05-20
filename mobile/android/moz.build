@@ -8,6 +8,44 @@ with Files("**"):
     BUG_COMPONENT = ("GeckoView", "General")
     SCHEDULES.exclusive = ["android"]
 
+# The recursive make backend treats the first output specially: it's passed as
+# an open FileAvoidWrite to the invoked script.  That doesn't work well with
+# the Gradle task that generates all of the outputs, so we add a dummy first
+# output.
+t = ("android_apks",)
+
+GENERATED_FILES += [t]
+GENERATED_FILES[t].force = True
+GENERATED_FILES[t].script = "/mobile/android/gradle.py:assemble_app"
+
+# The Android APKs are assembled in the `export` tier, which usually occurs
+# before the following files are generated. However, mechanisms in `recurse.mk`
+# are used to pull the generated files into the `pre-export` tier, so do not
+# require an explicit dependency here.
+config_keys = (
+    "MOZ_ANDROID_CONTENT_SERVICE_COUNT",
+    "MOZ_ANDROID_CONTENT_SERVICE_ISOLATED_PROCESS",
+)
+flags = ["%s=%s" % (k, CONFIG[k] if CONFIG[k] else "") for k in config_keys]
+
+GeneratedFile(
+    ("geckoview/src/main/AndroidManifest_overlay.xml",),
+    script="gen_from_jinja.py",
+    inputs=["geckoview/src/main/AndroidManifest_overlay.jinja"],
+    flags=flags,
+)
+
+GeneratedFile(
+    (
+        "geckoview/src/main/java/org/mozilla/gecko/process/GeckoChildProcessServices.java",
+    ),
+    script="gen_from_jinja.py",
+    inputs=[
+        "geckoview/src/main/java/org/mozilla/gecko/process/GeckoChildProcessServices.jinja"
+    ],
+    flags=flags,
+)
+
 CONFIGURE_SUBST_FILES += ["installer/Makefile"]
 
 DIRS += [
@@ -17,7 +55,6 @@ DIRS += [
 
 DIRS += [
     "actors",
-    "base",
     "chrome",
     "components",
     "modules",
