@@ -599,9 +599,13 @@ nsresult GfxInfo::GetFeatureStatusImpl(
       const nsCString& gpu = mGLStrings->Renderer();
       NS_LossyConvertUTF16toASCII model(mModel);
 
-      // Enable Webrender on all Adreno 3xx, 4xx, and 6xx GPUs
-      isUnblocked |= gpu.Find("Adreno (TM) 3", /*ignoreCase*/ true) >= 0 ||
-                     gpu.Find("Adreno (TM) 4", /*ignoreCase*/ true) >= 0 ||
+      // Enable Webrender on all Adreno 3xx GPUs, excluding Android 9 and later
+      // due to reports of flashing black rectangles. See bug 1712148.
+      isUnblocked |= gpu.Find("Adreno (TM) 3", /*ignoreCase*/ true) >= 0 &&
+                     mSDKVersion < 28;
+
+      // Enable Webrender on all Adreno 4xx and 6xx GPUs
+      isUnblocked |= gpu.Find("Adreno (TM) 4", /*ignoreCase*/ true) >= 0 ||
                      gpu.Find("Adreno (TM) 6", /*ignoreCase*/ true) >= 0;
 
       // Enable Webrender on all Adreno 5xx GPUs...
