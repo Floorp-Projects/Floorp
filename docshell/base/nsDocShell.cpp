@@ -11662,8 +11662,6 @@ nsresult nsDocShell::AddToSessionHistory(
   bool expired = false;  // by default the page is not expired
   bool discardLayoutState = false;
   nsCOMPtr<nsICacheInfoChannel> cacheChannel;
-  bool userActivation = false;
-
   if (aChannel) {
     cacheChannel = do_QueryInterface(aChannel);
 
@@ -11703,8 +11701,6 @@ nsresult nsDocShell::AddToSessionHistory(
     }
 
     loadInfo->GetResultPrincipalURI(getter_AddRefs(resultPrincipalURI));
-
-    userActivation = loadInfo->GetHasValidUserGestureActivation();
 
     // For now keep storing just the principal in the SHEntry.
     if (!principalToInherit) {
@@ -11774,7 +11770,7 @@ nsresult nsDocShell::AddToSessionHistory(
                 principalToInherit, partitionedPrincipalToInherit, csp,
                 HistoryID(), GetCreatedDynamically(), originalURI,
                 resultPrincipalURI, loadReplace, referrerInfo, srcdoc,
-                srcdocEntry, baseURI, saveLayoutState, expired, userActivation);
+                srcdocEntry, baseURI, saveLayoutState, expired);
 
   if (mBrowsingContext->IsTop() && GetSessionHistory()) {
     bool shouldPersist = ShouldAddToSessionHistory(aURI, aChannel);
@@ -11887,8 +11883,7 @@ nsresult nsDocShell::LoadHistoryEntry(nsISHEntry* aEntry, uint32_t aLoadType,
   // in case.
   nsCOMPtr<nsISHEntry> kungFuDeathGrip(aEntry);
 
-  loadState->SetHasValidUserGestureActivation(
-      loadState->HasValidUserGestureActivation() || aUserActivation);
+  loadState->SetHasValidUserGestureActivation(aUserActivation);
 
   return LoadHistoryEntry(loadState, aLoadType, aEntry == mOSHE);
 }
@@ -11897,8 +11892,7 @@ nsresult nsDocShell::LoadHistoryEntry(const LoadingSessionHistoryInfo& aEntry,
                                       uint32_t aLoadType,
                                       bool aUserActivation) {
   RefPtr<nsDocShellLoadState> loadState = aEntry.CreateLoadInfo();
-  loadState->SetHasValidUserGestureActivation(
-      loadState->HasValidUserGestureActivation() || aUserActivation);
+  loadState->SetHasValidUserGestureActivation(aUserActivation);
 
   return LoadHistoryEntry(loadState, aLoadType,
                           aEntry.mLoadingCurrentActiveEntry);
