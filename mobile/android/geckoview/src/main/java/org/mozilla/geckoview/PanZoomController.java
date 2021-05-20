@@ -6,7 +6,6 @@
 package org.mozilla.geckoview;
 
 import org.mozilla.gecko.GeckoAppShell;
-import org.mozilla.gecko.PrefsHelper;
 import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.mozglue.JNIObject;
 import org.mozilla.gecko.util.GeckoBundle;
@@ -37,7 +36,6 @@ public class PanZoomController {
     private static final int EVENT_SOURCE_SCROLL = 0;
     private static final int EVENT_SOURCE_MOTION = 1;
     private static final int EVENT_SOURCE_MOUSE = 2;
-    private static final String PREF_MOUSE_AS_TOUCH = "ui.android.mouse_as_touch";
     private static boolean sTreatMouseAsTouch = true;
 
     private final GeckoSession mSession;
@@ -438,26 +436,10 @@ public class PanZoomController {
     }
 
     private static void initMouseAsTouch() {
-        final PrefsHelper.PrefHandler prefHandler = new PrefsHelper.PrefHandlerBase() {
-            @Override
-            public void prefValue(final String pref, final int value) {
-                if (!PREF_MOUSE_AS_TOUCH.equals(pref)) {
-                    return;
-                }
-                if (value == 0) {
-                    sTreatMouseAsTouch = false;
-                } else if (value == 1) {
-                    sTreatMouseAsTouch = true;
-                } else if (value == 2) {
-                    final Context c = GeckoAppShell.getApplicationContext();
-                    final UiModeManager m = (UiModeManager)c.getSystemService(Context.UI_MODE_SERVICE);
-                    // on TV devices, treat mouse as touch. everywhere else, don't
-                    sTreatMouseAsTouch = (m.getCurrentModeType() == Configuration.UI_MODE_TYPE_TELEVISION);
-                }
-            }
-        };
-        PrefsHelper.addObserver(new String[] { PREF_MOUSE_AS_TOUCH }, prefHandler);
-        PrefsHelper.getPref(PREF_MOUSE_AS_TOUCH, prefHandler);
+        final Context c = GeckoAppShell.getApplicationContext();
+        final UiModeManager m = (UiModeManager)c.getSystemService(Context.UI_MODE_SERVICE);
+        // on TV devices, treat mouse as touch. everywhere else, don't
+        sTreatMouseAsTouch = (m.getCurrentModeType() == Configuration.UI_MODE_TYPE_TELEVISION);
     }
 
     /**
