@@ -521,6 +521,9 @@ class AsyncPanZoomController {
   // Return the directions in which this APZC allows overscrolling.
   ScrollDirections GetOverscrollableDirections() const;
 
+  // Return the directions in which this APZC allows scrolling.
+  ScrollDirections GetScrollableDirections() const;
+
   // Return whether or not a scroll delta will be able to scroll in either
   // direction.
   bool CanScroll(const ParentLayerPoint& aDelta) const;
