@@ -230,11 +230,6 @@ ContentSandboxLevel:
     Content sandbox level.
   type: integer
 
-ContentSandboxWin32kState:
-  description: >
-    Content sandbox Win32k state
-  type: string
-
 CoUnmarshalInterfaceResult:
   description: >
     Annotation describing the error returned by trying to unmarshal an object
