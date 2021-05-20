@@ -103,6 +103,7 @@ class SourceSurfaceBlobImage final : public gfx::SourceSurface {
   void SizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
                            SizeOfInfo& aInfo) const override {
     aInfo.AddType(gfx::SurfaceType::BLOB_IMAGE);
+    aInfo.mHeapBytes += mKeys.ShallowSizeOfExcludingThis(aMallocSizeOf);
   }
 
  private:

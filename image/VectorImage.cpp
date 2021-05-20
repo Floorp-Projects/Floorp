@@ -375,6 +375,7 @@ void VectorImage::CollectSizeOfSurfaces(
     nsTArray<SurfaceMemoryCounter>& aCounters,
     MallocSizeOf aMallocSizeOf) const {
   SurfaceCache::CollectSizeOfSurfaces(ImageKey(this), aCounters, aMallocSizeOf);
+  ImageResource::CollectSizeOfSurfaces(aCounters, aMallocSizeOf);
 }
 
 nsresult VectorImage::OnImageDataComplete(nsIRequest* aRequest,

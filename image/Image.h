@@ -6,6 +6,7 @@
 #ifndef mozilla_image_Image_h
 #define mozilla_image_Image_h
 
+#include "mozilla/Attributes.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/ProfilerMarkers.h"
@@ -84,14 +85,15 @@ struct MemoryCounter {
   uint32_t mSurfaceTypes;
 };
 
-enum class SurfaceMemoryCounterType { NORMAL, COMPOSITING, COMPOSITING_PREV };
+enum class SurfaceMemoryCounterType { NORMAL, CONTAINER };
 
 struct SurfaceMemoryCounter {
   SurfaceMemoryCounter(
-      const SurfaceKey& aKey, bool aIsLocked, bool aCannotSubstitute,
-      bool aIsFactor2, bool aFinished,
+      const SurfaceKey& aKey, const gfx::SourceSurface* aSurface,
+      bool aIsLocked, bool aCannotSubstitute, bool aIsFactor2, bool aFinished,
       SurfaceMemoryCounterType aType = SurfaceMemoryCounterType::NORMAL)
       : mKey(aKey),
+        mSurface(aSurface),
         mType(aType),
         mIsLocked(aIsLocked),
         mCannotSubstitute(aCannotSubstitute),
@@ -99,6 +101,7 @@ struct SurfaceMemoryCounter {
         mFinished(aFinished) {}
 
   const SurfaceKey& Key() const { return mKey; }
+  const gfx::SourceSurface* Surface() const { return mSurface; }
   MemoryCounter& Values() { return mValues; }
   const MemoryCounter& Values() const { return mValues; }
   SurfaceMemoryCounterType Type() const { return mType; }
@@ -109,6 +112,7 @@ struct SurfaceMemoryCounter {
 
  private:
   const SurfaceKey mKey;
+  const gfx::SourceSurface* MOZ_NON_OWNING_REF mSurface;
   MemoryCounter mValues;
   const SurfaceMemoryCounterType mType;
   const bool mIsLocked;
@@ -318,6 +322,14 @@ class ImageResource : public Image {
    * Illegal to use off-main-thread.
    */
   nsIURI* GetURI() const override { return mURI; }
+
+  /*
+   * Should be called by its subclasses after they populate @aCounters so that
+   * we can cross reference against any of our ImageContainers that contain
+   * surfaces not in the cache.
+   */
+  void CollectSizeOfSurfaces(nsTArray<SurfaceMemoryCounter>& aCounters,
+                             MallocSizeOf aMallocSizeOf) const override;
 
  protected:
   explicit ImageResource(nsIURI* aURI);
