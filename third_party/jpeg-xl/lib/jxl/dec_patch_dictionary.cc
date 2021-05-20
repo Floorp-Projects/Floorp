@@ -193,8 +193,6 @@ Status PatchDictionary::AddTo(Image3F* opsin, const Rect& opsin_rect,
   size_t num_ec = shared_->metadata->m.num_extra_channels;
   std::vector<const float*> fg_ptrs(3 + num_ec);
   std::vector<float*> bg_ptrs(3 + num_ec);
-  BlendingInfo color_blending;
-  std::vector<BlendingInfo> ec_blending(num_ec);
   for (size_t y = image_rect.y0(); y < image_rect.y0() + image_rect.ysize();
        y++) {
     if (y + 1 >= patch_starts_.size()) continue;
