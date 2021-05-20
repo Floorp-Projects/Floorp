@@ -33,8 +33,7 @@ NSString* const openSharingSubpaneProtocolValue = @"com.apple.share-services";
 // Filter providers that we do not want to expose to the user, because they are duplicates or do not
 // work correctly within the context
 static bool ShouldIgnoreProvider(NSString* aProviderName) {
-  return [aProviderName isEqualToString:@"com.apple.share.System.add-to-safari-reading-list"] ||
-         [aProviderName isEqualToString:@"com.apple.share.Mail.compose"];
+  return [aProviderName isEqualToString:@"com.apple.share.System.add-to-safari-reading-list"];
 }
 
 // Clean up the activity once the share is complete
