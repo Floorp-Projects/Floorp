@@ -2161,7 +2161,8 @@ void nsPresContext::NotifyDidPaintForSubtree(
         nsCOMPtr<nsIRunnable> ev = new DelayedFireDOMPaintEvent(
             this, std::move(mTransactions[i].mInvalidations),
             mTransactions[i].mTransactionId, aTimeStamp);
-        nsContentUtils::AddScriptRunner(ev);
+        NS_DispatchToCurrentThreadQueue(ev.forget(),
+                                        EventQueuePriority::MediumHigh);
         sent = true;
       }
       mTransactions.RemoveElementAt(i);
@@ -2172,7 +2173,8 @@ void nsPresContext::NotifyDidPaintForSubtree(
         nsCOMPtr<nsIRunnable> ev = new DelayedFireDOMPaintEvent(
             this, std::move(mTransactions[i].mInvalidations),
             mTransactions[i].mTransactionId, aTimeStamp);
-        nsContentUtils::AddScriptRunner(ev);
+        NS_DispatchToCurrentThreadQueue(ev.forget(),
+                                        EventQueuePriority::MediumHigh);
         sent = true;
         mTransactions.RemoveElementAt(i);
         continue;
@@ -2185,7 +2187,8 @@ void nsPresContext::NotifyDidPaintForSubtree(
     nsTArray<nsRect> dummy;
     nsCOMPtr<nsIRunnable> ev = new DelayedFireDOMPaintEvent(
         this, std::move(dummy), aTransactionId, aTimeStamp);
-    nsContentUtils::AddScriptRunner(ev);
+    NS_DispatchToCurrentThreadQueue(ev.forget(),
+                                    EventQueuePriority::MediumHigh);
   }
 
   auto recurse = [&aTransactionId, &aTimeStamp](dom::Document& aSubDoc) {
