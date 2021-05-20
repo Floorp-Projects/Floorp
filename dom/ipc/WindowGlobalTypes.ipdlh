@@ -24,6 +24,7 @@ struct WindowGlobalInit
 
   // Private fields only shared with the parent process.
   nsIPrincipal principal;
+  nsIPrincipal storagePrincipal;
   nsIURI documentURI;
 
   bool blockAllMixedContent;
