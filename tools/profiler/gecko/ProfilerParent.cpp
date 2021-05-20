@@ -143,9 +143,7 @@ class ProfilerParentTracker final {
   ~ProfilerParentTracker();
 
  private:
-  // Create/get a singleton instance that will live until XPCOMShutdownThreads,
-  // null past that point.
-  static ProfilerParentTracker* GetInstance();
+  static void EnsureInstance();
 
   // List of parents for currently-connected child processes.
   nsTArray<ProfilerParent*> mProfilerParents;
@@ -158,6 +156,10 @@ class ProfilerParentTracker final {
   // When the profiler is running and there is at least one parent-child
   // connection, this is the controller that should receive chunk updates.
   Maybe<ProfileBufferGlobalController> mMaybeController;
+
+  // Singleton instance, created when first needed, destroyed at Firefox
+  // shutdown.
+  static UniquePtr<ProfilerParentTracker> sInstance;
 };
 
 ProfileBufferGlobalController::ProfileBufferGlobalController(
@@ -384,95 +386,86 @@ void ProfileBufferGlobalController::HandleChunkManagerNonFinalUpdate(
   }
 }
 
+UniquePtr<ProfilerParentTracker> ProfilerParentTracker::sInstance;
+
 /* static */
-ProfilerParentTracker* ProfilerParentTracker::GetInstance() {
-  if (PastShutdownPhase(ShutdownPhase::XPCOMShutdownThreads)) {
-    return nullptr;
-  }
-
+void ProfilerParentTracker::EnsureInstance() {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
-
-  // The main instance pointer, it will be initialized at most once.
-  static UniquePtr<ProfilerParentTracker> instance = nullptr;
-  if (MOZ_UNLIKELY(!instance)) {
-    instance = MakeUnique<ProfilerParentTracker>();
-
-    // The tracker should get destroyed before threads are shutdown, because its
-    // destruction closes extant channels, which could trigger promise
-    // rejections that need to be dispatched to other threads.
-    ClearOnShutdown(&instance, ShutdownPhase::XPCOMShutdownThreads);
+  if (sInstance) {
+    return;
   }
 
-  return instance.get();
+  sInstance = MakeUnique<ProfilerParentTracker>();
+
+  // The tracker should get destroyed before threads are shutdown, because its
+  // destruction closes extant channels, which could trigger promise rejections
+  // that need to be dispatched to other threads.
+  ClearOnShutdown(&sInstance, ShutdownPhase::XPCOMShutdownThreads);
 }
 
 /* static */
 void ProfilerParentTracker::StartTracking(ProfilerParent* aProfilerParent) {
-  ProfilerParentTracker* tracker = GetInstance();
-  if (!tracker) {
-    return;
-  }
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+  EnsureInstance();
 
-  if (tracker->mMaybeController.isNothing() && tracker->mEntries != 0) {
+  if (sInstance->mMaybeController.isNothing() && sInstance->mEntries != 0) {
     // There is no controller yet, but the profiler has started.
     // Since we're adding a ProfilerParent, it's a good time to start
     // controlling the global memory usage of the profiler.
     // (And this helps delay the Controller startup, because the parent profiler
     // can start *very* early in the process, when some resources like threads
     // are not ready yet.)
-    tracker->mMaybeController.emplace(size_t(tracker->mEntries) * 8u);
+    sInstance->mMaybeController.emplace(size_t(sInstance->mEntries) * 8u);
   }
 
-  tracker->mProfilerParents.AppendElement(aProfilerParent);
+  sInstance->mProfilerParents.AppendElement(aProfilerParent);
 }
 
 /* static */
 void ProfilerParentTracker::StopTracking(ProfilerParent* aParent) {
-  ProfilerParentTracker* tracker = GetInstance();
-  if (!tracker) {
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+  if (!sInstance) {
     return;
   }
 
-  tracker->mProfilerParents.RemoveElement(aParent);
+  sInstance->mProfilerParents.RemoveElement(aParent);
 }
 
 /* static */
 void ProfilerParentTracker::ProfilerStarted(uint32_t aEntries) {
-  ProfilerParentTracker* tracker = GetInstance();
-  if (!tracker) {
-    return;
-  }
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+  EnsureInstance();
 
-  tracker->mEntries = aEntries;
+  sInstance->mEntries = aEntries;
 
-  if (tracker->mMaybeController.isNothing() &&
-      !tracker->mProfilerParents.IsEmpty()) {
+  if (sInstance->mMaybeController.isNothing() &&
+      !sInstance->mProfilerParents.IsEmpty()) {
     // We are already tracking child processes, so it's a good time to start
     // controlling the global memory usage of the profiler.
-    tracker->mMaybeController.emplace(size_t(tracker->mEntries) * 8u);
+    sInstance->mMaybeController.emplace(size_t(sInstance->mEntries) * 8u);
   }
 }
 
 /* static */
 void ProfilerParentTracker::ProfilerWillStopIfStarted() {
-  ProfilerParentTracker* tracker = GetInstance();
-  if (!tracker) {
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+  if (!sInstance) {
     return;
   }
 
-  tracker->mEntries = 0;
-  tracker->mMaybeController = Nothing{};
+  sInstance->mEntries = 0;
+  sInstance->mMaybeController = Nothing{};
 }
 
 template <typename FuncType>
 /* static */
 void ProfilerParentTracker::Enumerate(FuncType&& aIterFunc) {
-  ProfilerParentTracker* tracker = GetInstance();
-  if (!tracker) {
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+  if (!sInstance) {
     return;
   }
 
-  for (ProfilerParent* profilerParent : tracker->mProfilerParents) {
+  for (ProfilerParent* profilerParent : sInstance->mProfilerParents) {
     if (!profilerParent->mDestroyed) {
       aIterFunc(profilerParent);
     }
@@ -483,12 +476,12 @@ template <typename FuncType>
 /* static */
 void ProfilerParentTracker::ForChild(base::ProcessId aChildPid,
                                      FuncType&& aIterFunc) {
-  ProfilerParentTracker* tracker = GetInstance();
-  if (!tracker) {
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+  if (!sInstance) {
     return;
   }
 
-  for (ProfilerParent* profilerParent : tracker->mProfilerParents) {
+  for (ProfilerParent* profilerParent : sInstance->mProfilerParents) {
     if (profilerParent->mChildPid == aChildPid) {
       if (!profilerParent->mDestroyed) {
         std::forward<FuncType>(aIterFunc)(profilerParent);
@@ -502,15 +495,15 @@ void ProfilerParentTracker::ForChild(base::ProcessId aChildPid,
 void ProfilerParentTracker::ForwardChildChunkManagerUpdate(
     base::ProcessId aProcessId,
     ProfileBufferControlledChunkManager::Update&& aUpdate) {
-  ProfilerParentTracker* tracker = GetInstance();
-  if (!tracker || tracker->mMaybeController.isNothing()) {
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+  if (!sInstance || sInstance->mMaybeController.isNothing()) {
     return;
   }
 
   MOZ_ASSERT(!aUpdate.IsNotUpdate(),
              "No process should ever send a non-update");
-  tracker->mMaybeController->HandleChildChunkManagerUpdate(aProcessId,
-                                                           std::move(aUpdate));
+  sInstance->mMaybeController->HandleChildChunkManagerUpdate(
+      aProcessId, std::move(aUpdate));
 }
 
 ProfilerParentTracker::ProfilerParentTracker() {
