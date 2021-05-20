@@ -114,6 +114,7 @@
 #include "HttpChannelParent.h"
 #include "HttpTransactionParent.h"
 #include "ParentChannelListener.h"
+#include "ThirdPartyUtil.h"
 #include "InterceptedHttpChannel.h"
 #include "../../cache2/CacheFileUtils.h"
 #include "nsIMultiplexInputStream.h"
@@ -131,6 +132,7 @@
 #include "js/Conversions.h"
 #include "mozilla/dom/SecFetch.h"
 #include "mozilla/net/TRRService.h"
+#include "mozilla/URLQueryStringStripper.h"
 
 #ifdef MOZ_TASK_TRACER
 #  include "GeckoTaskTracer.h"
@@ -4998,6 +5000,26 @@ nsresult nsHttpChannel::AsyncProcessRedirection(uint32_t redirectType) {
   if (NS_FAILED(rv)) {
     LOG(("Invalid URI for redirect: Location: %s\n", location.get()));
     return NS_ERROR_CORRUPTED_CONTENT;
+  }
+
+  // Perform the URL query string stripping for redirects. We will only strip
+  // the query string if it is redirecting to a third-party URI in the top
+  // level.
+  if (StaticPrefs::privacy_query_stripping_redirect()) {
+    ThirdPartyUtil* thirdPartyUtil = ThirdPartyUtil::GetInstance();
+    bool isThirdPartyRedirectURI = true;
+    thirdPartyUtil->IsThirdPartyURI(mURI, mRedirectURI,
+                                    &isThirdPartyRedirectURI);
+
+    if (isThirdPartyRedirectURI && mLoadInfo->GetExternalContentPolicyType() ==
+                                       ExtContentPolicy::TYPE_DOCUMENT) {
+      Unused << URLQueryStringStripper::Strip(mRedirectURI, mRedirectURI);
+    }
+  }
+
+  if (NS_WARN_IF(!mRedirectURI)) {
+    LOG(("Invalid redirect URI after performaing query string stripping"));
+    return NS_ERROR_FAILURE;
   }
 
   return ContinueProcessRedirectionAfterFallback(NS_OK);
