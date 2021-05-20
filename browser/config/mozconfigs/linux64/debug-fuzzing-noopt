@@ -1,0 +1,30 @@
+ac_add_options --enable-debug
+
+. $topsrcdir/build/mozconfig.wasm-sandboxing
+. $topsrcdir/build/unix/mozconfig.linux
+
+export LLVM_SYMBOLIZER="$MOZ_FETCHES_DIR/llvm-symbolizer/llvm-symbolizer"
+
+# Package js shell.
+export MOZ_PACKAGE_JSSHELL=1
+
+ac_add_options --enable-fuzzing
+ac_add_options --enable-linker=gold
+unset MOZ_STDCXX_COMPAT
+
+# Even in fuzzing builds without sanitizers, the UBSan runtime is pulled
+# in as a dependency to allow libFuzzer to have rudimentary stacks.
+# Hence we need to disable jemalloc until bug 1435148 is fully resolved.
+ac_add_options --disable-jemalloc
+
+# Also, for consistency we disable the crash reporter and solely rely
+# on libFuzzer to provide stacks both in the browser fuzzing case as
+# well as for libFuzzer targets. See also bug 1649062.
+ac_add_options --disable-crashreporter
+ac_add_options --disable-install-strip
+ac_add_options --disable-optimize
+
+# Need this to prevent name conflicts with the normal nightly build packages
+export MOZ_PKG_SPECIAL=fuzzing
+
+. "$topsrcdir/build/mozconfig.common.override"
