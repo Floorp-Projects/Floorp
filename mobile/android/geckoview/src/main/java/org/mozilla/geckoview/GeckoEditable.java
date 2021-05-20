@@ -18,7 +18,6 @@ import org.mozilla.gecko.GeckoEditableChild;
 import org.mozilla.gecko.IGeckoEditableChild;
 import org.mozilla.gecko.IGeckoEditableParent;
 import org.mozilla.gecko.InputMethods;
-import org.mozilla.gecko.util.GamepadUtils;
 import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.util.ThreadUtils.AssertBehavior;
@@ -46,6 +45,7 @@ import android.text.method.KeyListener;
 import android.text.method.TextKeyListener;
 import android.text.style.CharacterStyle;
 import android.util.Log;
+import android.view.InputDevice;
 import android.view.KeyCharacterMap;
 import android.view.KeyEvent;
 import android.view.View;
@@ -1091,9 +1091,63 @@ import android.view.inputmethod.EditorInfo;
         return false;
     }
 
+    private static KeyEvent translateSonyXperiaGamepadKeys(final int keyCode, final KeyEvent event) {
+        // The cross and circle button mappings may be swapped in the different regions so
+        // determine if they are swapped so the proper key codes can be mapped to the keys
+        final boolean areKeysSwapped = areSonyXperiaGamepadKeysSwapped();
+
+        int translatedKeyCode = keyCode;
+        // If a Sony Xperia, remap the cross and circle buttons to buttons
+        // A and B for the gamepad API
+        switch (keyCode) {
+            case KeyEvent.KEYCODE_BACK:
+                translatedKeyCode = (areKeysSwapped ? KeyEvent.KEYCODE_BUTTON_A
+                        : KeyEvent.KEYCODE_BUTTON_B);
+                break;
+
+            case KeyEvent.KEYCODE_DPAD_CENTER:
+                translatedKeyCode = (areKeysSwapped ? KeyEvent.KEYCODE_BUTTON_B
+                        : KeyEvent.KEYCODE_BUTTON_A);
+                break;
+
+            default:
+                return event;
+        }
+
+        return new KeyEvent(event.getAction(), translatedKeyCode);
+    }
+
+    private static final int SONY_XPERIA_GAMEPAD_DEVICE_ID = 196611;
+
+    private static boolean isSonyXperiaGamepadKeyEvent(final KeyEvent event) {
+        return (event.getDeviceId() == SONY_XPERIA_GAMEPAD_DEVICE_ID &&
+                "Sony Ericsson".equals(Build.MANUFACTURER) &&
+                ("R800".equals(Build.MODEL) || "R800i".equals(Build.MODEL)));
+    }
+
+    private static boolean areSonyXperiaGamepadKeysSwapped() {
+        // The cross and circle buttons on Sony Xperia phones are swapped
+        // in different regions
+        // http://developer.sonymobile.com/2011/02/13/xperia-play-game-keys/
+        final char DEFAULT_O_BUTTON_LABEL = 0x25CB;
+
+        boolean swapped = false;
+        final int[] deviceIds = InputDevice.getDeviceIds();
+
+        for (int i = 0; deviceIds != null && i < deviceIds.length; i++) {
+            final KeyCharacterMap keyCharacterMap = KeyCharacterMap.load(deviceIds[i]);
+            if (keyCharacterMap != null && DEFAULT_O_BUTTON_LABEL ==
+                    keyCharacterMap.getDisplayLabel(KeyEvent.KEYCODE_DPAD_CENTER)) {
+                swapped = true;
+                break;
+            }
+        }
+        return swapped;
+    }
+
     private KeyEvent translateKey(final int keyCode, final @NonNull KeyEvent event) {
-        if (GamepadUtils.isSonyXperiaGamepadKeyEvent(event)) {
-            return GamepadUtils.translateSonyXperiaGamepadKeys(keyCode, event);
+        if (isSonyXperiaGamepadKeyEvent(event)) {
+            return translateSonyXperiaGamepadKeys(keyCode, event);
         }
         return event;
     }
