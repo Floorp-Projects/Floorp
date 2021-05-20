@@ -1,0 +1,20 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta charset="utf8">
+<script>
+  onmessage = event => {
+    switch (event.data.type) {
+      case "window-open":
+        window.open(event.data.url);
+        break;
+      case "script":
+        window.location.href = event.data.url;
+        break
+    }
+  };
+</script>
+</head>
+<body>
+</body>
+</html>
