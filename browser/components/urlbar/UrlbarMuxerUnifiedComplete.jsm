@@ -74,8 +74,8 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
     // Do the first pass over all results to build some state.
     for (let result of context.results) {
       if (result.providerName == "UrlbarProviderQuickSuggest") {
-        // Quick suggest results are handled specially and always come at the
-        // end of the general bucket.
+        // Quick suggest results are handled specially and are inserted at a
+        // Nimbus-configurable position within the general bucket.
         // TODO (Bug 1710518): Come up with a more general solution.
         state.quickSuggestResult = result;
         this._updateStatePreAdd(result, state);
@@ -313,7 +313,25 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
     if (addQuickSuggest) {
       let { quickSuggestResult } = state;
       state.quickSuggestResult = null;
-      addedResults.push(quickSuggestResult);
+      // Determine the index within the general bucket to insert the quick
+      // suggest result. There are separate Nimbus variables for the sponsored
+      // and non-sponsored types. If `payload.sponsoredText` is defined, then
+      // the result is a non-sponsored type; otherwise it's a sponsored type.
+      // (Yes, correct -- the name of that payload property is misleading, so
+      // just ignore it for now. See bug 1695302.)
+      let index = UrlbarPrefs.get(
+        quickSuggestResult.payload.sponsoredText
+          ? "quickSuggestNonSponsoredIndex"
+          : "quickSuggestSponsoredIndex"
+      );
+      // A negative index means insertion relative to the end of the bucket,
+      // similar to `suggestedIndex`.
+      if (index < 0) {
+        index = Math.max(index + addedResults.length + 1, 0);
+      } else {
+        index = Math.min(index, addedResults.length);
+      }
+      addedResults.splice(index, 0, quickSuggestResult);
       state.totalResultCount++;
       this._updateStatePostAdd(quickSuggestResult, state);
     }

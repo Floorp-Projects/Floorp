@@ -14,14 +14,23 @@ const FeatureManifest = {
   urlbar: {
     description: "The Address Bar",
     variables: {
-      quickSuggestEnabled: {
-        type: "boolean",
-        fallbackPref: "browser.urlbar.quicksuggest.enabled",
-      },
       firefoxSuggestLabelsEnabled: {
         type: "boolean",
         fallbackPref:
           "browser.urlbar.experimental.firefoxSuggestLabels.enabled",
+        description:
+          "Whether to show the Firefox Suggest label above the general group in the urlbar view",
+      },
+      quickSuggestEnabled: {
+        type: "boolean",
+        fallbackPref: "browser.urlbar.quicksuggest.enabled",
+        description: "Global toggle for the QuickSuggest feature",
+      },
+      quickSuggestNonSponsoredIndex: {
+        type: "int",
+        fallbackPref: "browser.urlbar.quicksuggest.nonSponsoredIndex",
+        description:
+          "The index of non-sponsored QuickSuggest results within the general group. A negative index is relative to the end of the group",
       },
       quickSuggestShouldShowOnboardingDialog: {
         type: "boolean",
@@ -35,6 +44,12 @@ const FeatureManifest = {
           "browser.urlbar.quicksuggest.showOnboardingDialogAfterNRestarts",
         description:
           "Show QuickSuggest onboarding dialog after N browser restarts",
+      },
+      quickSuggestSponsoredIndex: {
+        type: "int",
+        fallbackPref: "browser.urlbar.quicksuggest.sponsoredIndex",
+        description:
+          "The index of sponsored QuickSuggest results within the general group. A negative index is relative to the end of the group",
       },
     },
   },

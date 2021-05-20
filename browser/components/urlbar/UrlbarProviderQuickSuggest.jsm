@@ -148,6 +148,9 @@ class ProviderQuickSuggest extends UrlbarProvider {
     };
 
     if (!suggestion.isSponsored) {
+      // In addition to the view, we also use `sponsoredText` in the muxer to
+      // tell whether the result is sponsored or non-sponsored, so be careful
+      // about changing it. See also bug 1695302 re: these property names.
       payload.sponsoredText = NONSPONSORED_ACTION_TEXT;
     }
 
@@ -192,7 +195,8 @@ class ProviderQuickSuggest extends UrlbarProvider {
 
     // Get the index of the quick suggest result. Usually it will be last, so to
     // avoid an O(n) lookup in the common case, check the last result first. It
-    // may not be last if `browser.urlbar.showSearchSuggestionsFirst` is false.
+    // may not be last if `browser.urlbar.showSearchSuggestionsFirst` is false
+    // or its position is configured differently via Nimbus.
     let resultIndex = queryContext.results.length - 1;
     let result = queryContext.results[resultIndex];
     if (result.providerName != this.name) {
