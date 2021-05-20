@@ -116,6 +116,10 @@ already_AddRefed<WindowGlobalParent> WindowGlobalParent::CreateDisconnected(
                                       getter_AddRefs(wgp->mCookieJarSettings));
   MOZ_RELEASE_ASSERT(wgp->mDocumentPrincipal, "Must have a valid principal");
 
+  nsresult rv = wgp->SetDocumentStoragePrincipal(aInit.storagePrincipal());
+  MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv),
+                     "Must succeed in setting storage principal");
+
   return wgp.forget();
 }
 
@@ -370,14 +374,55 @@ IPCResult WindowGlobalParent::RecvUpdateDocumentURI(nsIURI* aURI) {
   return IPC_OK();
 }
 
+nsresult WindowGlobalParent::SetDocumentStoragePrincipal(
+    nsIPrincipal* aNewDocumentStoragePrincipal) {
+  if (mDocumentPrincipal->Equals(aNewDocumentStoragePrincipal)) {
+    mDocumentStoragePrincipal = mDocumentPrincipal;
+    return NS_OK;
+  }
+
+  // Compare originNoSuffix to ensure it's equal.
+  nsCString noSuffix;
+  nsresult rv = mDocumentPrincipal->GetOriginNoSuffix(noSuffix);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  nsCString storageNoSuffix;
+  rv = aNewDocumentStoragePrincipal->GetOriginNoSuffix(storageNoSuffix);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  if (noSuffix != storageNoSuffix) {
+    return NS_ERROR_FAILURE;
+  }
+
+  if (!mDocumentPrincipal->OriginAttributesRef().EqualsIgnoringPartitionKey(
+          aNewDocumentStoragePrincipal->OriginAttributesRef())) {
+    return NS_ERROR_FAILURE;
+  }
+
+  mDocumentStoragePrincipal = aNewDocumentStoragePrincipal;
+  return NS_OK;
+}
+
 IPCResult WindowGlobalParent::RecvUpdateDocumentPrincipal(
-    nsIPrincipal* aNewDocumentPrincipal) {
+    nsIPrincipal* aNewDocumentPrincipal,
+    nsIPrincipal* aNewDocumentStoragePrincipal) {
   if (!mDocumentPrincipal->Equals(aNewDocumentPrincipal)) {
     return IPC_FAIL(this,
                     "Trying to reuse WindowGlobalParent but the principal of "
                     "the new document does not match the old one");
   }
   mDocumentPrincipal = aNewDocumentPrincipal;
+
+  if (NS_FAILED(SetDocumentStoragePrincipal(aNewDocumentStoragePrincipal))) {
+    return IPC_FAIL(this,
+                    "Trying to reuse WindowGlobalParent but the principal of "
+                    "the new document does not match the storage principal");
+  }
+
   return IPC_OK();
 }
 mozilla::ipc::IPCResult WindowGlobalParent::RecvUpdateDocumentTitle(
