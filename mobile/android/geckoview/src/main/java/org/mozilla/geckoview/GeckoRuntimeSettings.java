@@ -531,6 +531,7 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
 
     /* package */ int mPreferredColorScheme = COLOR_SCHEME_SYSTEM;
 
+    /* package */ boolean mForceEnableAccessibility;
     /* package */ boolean mDebugPause;
     /* package */ boolean mUseMaxScreenDepth;
     /* package */ float mDisplayDensityOverride = -1.0f;
@@ -585,6 +586,7 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
         mContentBlocking = new ContentBlocking.Settings(
                 this /* parent */, settings.mContentBlocking);
 
+        mForceEnableAccessibility = settings.mForceEnableAccessibility;
         mDebugPause = settings.mDebugPause;
         mUseMaxScreenDepth = settings.mUseMaxScreenDepth;
         mDisplayDensityOverride = settings.mDisplayDensityOverride;
@@ -701,6 +703,29 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
      */
     public boolean getPauseForDebuggerEnabled() {
         return mDebugPause;
+    }
+
+    /**
+     * Gets whether accessibility is force enabled or not.
+     *
+     * @return true if accessibility is force enabled.
+     */
+    public boolean getForceEnableAccessibility() {
+        return mForceEnableAccessibility;
+    }
+
+    /**
+     * Sets whether accessibility is force enabled or not.
+     *
+     * Useful when testing accessibility.
+     *
+     * @param value whether accessibility is force enabled or not
+     * @return this GeckoRuntimeSettings instance.
+     */
+    public @NonNull GeckoRuntimeSettings setForceEnableAccessibility(final boolean value) {
+        mForceEnableAccessibility = value;
+        SessionAccessibility.setForceEnabled(value);
+        return this;
     }
 
     /**
@@ -1261,6 +1286,7 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
 
         out.writeStringArray(mArgs);
         mExtras.writeToParcel(out, flags);
+        ParcelableUtils.writeBoolean(out, mForceEnableAccessibility);
         ParcelableUtils.writeBoolean(out, mDebugPause);
         ParcelableUtils.writeBoolean(out, mUseMaxScreenDepth);
         out.writeFloat(mDisplayDensityOverride);
@@ -1279,6 +1305,7 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
 
         mArgs = source.createStringArray();
         mExtras.readFromParcel(source);
+        mForceEnableAccessibility = ParcelableUtils.readBoolean(source);
         mDebugPause = ParcelableUtils.readBoolean(source);
         mUseMaxScreenDepth = ParcelableUtils.readBoolean(source);
         mDisplayDensityOverride = source.readFloat();

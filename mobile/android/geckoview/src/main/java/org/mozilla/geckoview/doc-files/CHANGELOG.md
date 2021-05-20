@@ -20,12 +20,16 @@ exclude: true
   ([bug 1696145]({{bugzilla}}1696145))
 - ⚠️ Deprecated [`GeckoRuntime.getProfileDir`][90.5], the API is being kept for
   compatibility but it always returns null.
+- Added [`forceEnableAccessibility`][90.6] runtime setting to enable
+  accessibility during testing.
+  ([bug 1701269]({{bugzilla}}1701269))
 
 [90.1]: {{javadoc_uri}}/WebNotification.html#silent
 [90.2]: {{javadoc_uri}}/WebNotification.html#vibrate
 [90.3]: https://developer.mozilla.org/en-US/docs/Web/API/Notification/silent
 [90.4]: https://developer.mozilla.org/en-US/docs/Web/API/Notification/vibrate
 [90.5]: {{javadoc_uri}}/GeckoRuntime.html#getProfileDir--
+[90.6]: {{javadoc_uri}}/GeckoRuntimeSettings.html#setForceEnableAccessibility-boolean-
 
 ## v89
 - Added [`ContentPermission`][89.1], which is used to report what permissions content
@@ -993,4 +997,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 599ceb11d5142c22816a4ef904d4d46b30f25914
+[api-version]: 2d4d7d8da89dbf91c92ba946c33961487685a99c
