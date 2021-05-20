@@ -200,33 +200,34 @@ pub const INTERNED_CONIC_GRADIENTS: usize = 70;
 pub const INTERNED_PICTURES: usize = 71;
 pub const INTERNED_FILTER_DATA: usize = 72;
 pub const INTERNED_BACKDROPS: usize = 73;
+pub const INTERNED_POLYGONS: usize = 74;
 
-pub const TEXTURE_CACHE_RGBA8_GLYPHS_PIXELS: usize = 74;
-pub const TEXTURE_CACHE_RGBA8_GLYPHS_TEXTURES: usize = 75;
-pub const TEXTURE_CACHE_A8_GLYPHS_PIXELS: usize = 76;
-pub const TEXTURE_CACHE_A8_GLYPHS_TEXTURES: usize = 77;
+pub const TEXTURE_CACHE_RGBA8_GLYPHS_PIXELS: usize = 75;
+pub const TEXTURE_CACHE_RGBA8_GLYPHS_TEXTURES: usize = 76;
+pub const TEXTURE_CACHE_A8_GLYPHS_PIXELS: usize = 77;
+pub const TEXTURE_CACHE_A8_GLYPHS_TEXTURES: usize = 78;
 
-pub const CPU_TEXTURE_ALLOCATION_TIME: usize = 78;
-pub const STAGING_TEXTURE_ALLOCATION_TIME: usize = 79;
-pub const UPLOAD_CPU_COPY_TIME: usize = 80;
-pub const UPLOAD_GPU_COPY_TIME: usize = 81;
-pub const UPLOAD_TIME: usize = 82;
-pub const UPLOAD_NUM_COPY_BATCHES: usize = 83;
-pub const TOTAL_UPLOAD_TIME: usize = 84;
-pub const CREATE_CACHE_TEXTURE_TIME: usize = 85;
-pub const DELETE_CACHE_TEXTURE_TIME: usize = 86;
+pub const CPU_TEXTURE_ALLOCATION_TIME: usize = 79;
+pub const STAGING_TEXTURE_ALLOCATION_TIME: usize = 80;
+pub const UPLOAD_CPU_COPY_TIME: usize = 81;
+pub const UPLOAD_GPU_COPY_TIME: usize = 82;
+pub const UPLOAD_TIME: usize = 83;
+pub const UPLOAD_NUM_COPY_BATCHES: usize = 84;
+pub const TOTAL_UPLOAD_TIME: usize = 85;
+pub const CREATE_CACHE_TEXTURE_TIME: usize = 86;
+pub const DELETE_CACHE_TEXTURE_TIME: usize = 87;
 
-pub const TEXTURE_CACHE_COLOR8_LINEAR_PRESSURE: usize = 87;
-pub const TEXTURE_CACHE_COLOR8_NEAREST_PRESSURE: usize = 88;
-pub const TEXTURE_CACHE_COLOR8_GLYPHS_PRESSURE: usize = 89;
-pub const TEXTURE_CACHE_ALPHA8_PRESSURE: usize = 90;
-pub const TEXTURE_CACHE_ALPHA8_GLYPHS_PRESSURE: usize = 91;
-pub const TEXTURE_CACHE_ALPHA16_PRESSURE: usize = 92;
-pub const TEXTURE_CACHE_STANDALONE_PRESSURE: usize = 93;
-pub const TEXTURE_CACHE_EVICTION_COUNT: usize = 94;
-pub const TEXTURE_CACHE_YOUNGEST_EVICTION: usize = 95;
+pub const TEXTURE_CACHE_COLOR8_LINEAR_PRESSURE: usize = 88;
+pub const TEXTURE_CACHE_COLOR8_NEAREST_PRESSURE: usize = 89;
+pub const TEXTURE_CACHE_COLOR8_GLYPHS_PRESSURE: usize = 90;
+pub const TEXTURE_CACHE_ALPHA8_PRESSURE: usize = 91;
+pub const TEXTURE_CACHE_ALPHA8_GLYPHS_PRESSURE: usize = 92;
+pub const TEXTURE_CACHE_ALPHA16_PRESSURE: usize = 93;
+pub const TEXTURE_CACHE_STANDALONE_PRESSURE: usize = 94;
+pub const TEXTURE_CACHE_EVICTION_COUNT: usize = 95;
+pub const TEXTURE_CACHE_YOUNGEST_EVICTION: usize = 96;
 
-pub const NUM_PROFILER_EVENTS: usize = 96;
+pub const NUM_PROFILER_EVENTS: usize = 97;
 
 pub struct Profiler {
     counters: Vec<Counter>,
@@ -353,6 +354,7 @@ impl Profiler {
             int("Interned pictures", "", INTERNED_PICTURES, Expected::none()),
             int("Interned filter data", "", INTERNED_FILTER_DATA, Expected::none()),
             int("Interned backdrops", "", INTERNED_BACKDROPS, Expected::none()),
+            int("Interned polygons", "", INTERNED_POLYGONS, Expected::none()),
 
             int("Texture cache RGBA8 glyphs pixels", "px", TEXTURE_CACHE_RGBA8_GLYPHS_PIXELS, expected(0..4_000_000)),
             int("Texture cache RGBA8 glyphs textures", "", TEXTURE_CACHE_RGBA8_GLYPHS_TEXTURES, expected(0..2)),
