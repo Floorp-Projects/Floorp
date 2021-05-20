@@ -84,8 +84,6 @@ class WebGPUChild final : public PWebGPUChild, public SupportsWeakPtr {
  private:
   virtual ~WebGPUChild();
 
-  void JsWarning(nsIGlobalObject* aGlobal, const nsACString& aMessage);
-
   // AddIPDLReference and ReleaseIPDLReference are only to be called by
   // CompositorBridgeChild's AllocPWebGPUChild and DeallocPWebGPUChild methods
   // respectively. We intentionally make them private to prevent misuse.
