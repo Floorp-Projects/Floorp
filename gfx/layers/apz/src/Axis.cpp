@@ -147,7 +147,8 @@ ParentLayerCoord Axis::ApplyResistance(
 }
 
 void Axis::OverscrollBy(ParentLayerCoord aOverscroll) {
-  MOZ_ASSERT(CanScroll());
+  MOZ_ASSERT(AllowOverscroll());
+
   // We can get some spurious calls to OverscrollBy() with near-zero values
   // due to rounding error. Ignore those (they might trip the asserts below.)
   if (FuzzyEqualsAdditive(aOverscroll.value, 0.0f, COORDINATE_EPSILON)) {
@@ -470,6 +471,13 @@ bool Axis::OverscrollBehaviorAllowsOverscrollEffect() const {
   // An overscroll effect is a "local" overscroll behavior, so it's allowed
   // with "auto" and "contain" and disallowed with "none".
   return GetOverscrollBehavior() != OverscrollBehavior::None;
+}
+
+bool Axis::AllowOverscroll() const {
+  // We allow overscrolling on the root content scroller even if it's not
+  // scrollable.
+  return (CanScroll() || mAsyncPanZoomController->IsRootContent()) &&
+         OverscrollBehaviorAllowsOverscrollEffect();
 }
 
 AxisX::AxisX(AsyncPanZoomController* aAsyncPanZoomController)
