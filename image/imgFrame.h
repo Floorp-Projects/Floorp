@@ -187,6 +187,7 @@ class imgFrame {
     AddSizeOfCbData()
         : SourceSurface::SizeOfInfo(), mIndex(0), mFinished(false) {}
 
+    const gfx::SourceSurface* mSurface;
     size_t mIndex;
     bool mFinished;
   };
