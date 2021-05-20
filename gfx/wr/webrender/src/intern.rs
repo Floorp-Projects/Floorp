@@ -395,6 +395,7 @@ macro_rules! enumerate_interners {
             text_run: TextRun,
             filter_data: FilterDataIntern,
             backdrop: Backdrop,
+            polygon: PolygonIntern,
         }
     }
 }
