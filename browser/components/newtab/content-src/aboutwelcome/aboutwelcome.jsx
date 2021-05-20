@@ -111,10 +111,10 @@ function ComputeTelemetryInfo(welcomeContent, experimentId, branchId) {
 }
 
 async function retrieveRenderContent() {
-  // Feature config includes:
+  // Feature config includes RTAMO attribution data if exists
+  // else below data in order specified
   // user prefs
   // experiment data
-  // attribution data
   // defaults
   let featureConfig = await window.AWGetFeatureConfig();
 
