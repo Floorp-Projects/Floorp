@@ -136,7 +136,6 @@ var BrowserUtils = {
       "about" == scheme ||
       "resource" == scheme ||
       "chrome" == scheme ||
-      "wyciwyg" == scheme ||
       "blob" == scheme ||
       "moz-extension" == scheme
     );
