@@ -13,6 +13,8 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  Services: "resource://gre/modules/Services.jsm",
+
   action: "chrome://marionette/content/action.js",
   atom: "chrome://marionette/content/atom.js",
   element: "chrome://marionette/content/element.js",
@@ -69,6 +71,7 @@ class MarionetteCommandsChild extends JSWindowActorChild {
 
     try {
       let result;
+      let waitForNextTick = false;
 
       const { name, data: serializedData } = msg;
       const data = evaluate.fromJSON(
@@ -80,12 +83,15 @@ class MarionetteCommandsChild extends JSWindowActorChild {
       switch (name) {
         case "MarionetteCommandsParent:clearElement":
           this.clearElement(data);
+          waitForNextTick = true;
           break;
         case "MarionetteCommandsParent:clickElement":
           result = await this.clickElement(data);
+          waitForNextTick = true;
           break;
         case "MarionetteCommandsParent:executeScript":
           result = await this.executeScript(data);
+          waitForNextTick = true;
           break;
         case "MarionetteCommandsParent:findElement":
           result = await this.findElement(data);
@@ -131,22 +137,33 @@ class MarionetteCommandsChild extends JSWindowActorChild {
           break;
         case "MarionetteCommandsParent:performActions":
           result = await this.performActions(data);
+          waitForNextTick = true;
           break;
         case "MarionetteCommandsParent:releaseActions":
           result = await this.releaseActions();
           break;
         case "MarionetteCommandsParent:sendKeysToElement":
           result = await this.sendKeysToElement(data);
+          waitForNextTick = true;
           break;
         case "MarionetteCommandsParent:singleTap":
           result = await this.singleTap(data);
+          waitForNextTick = true;
           break;
         case "MarionetteCommandsParent:switchToFrame":
           result = await this.switchToFrame(data);
+          waitForNextTick = true;
           break;
         case "MarionetteCommandsParent:switchToParentFrame":
           result = await this.switchToParentFrame();
+          waitForNextTick = true;
           break;
+      }
+
+      // Inform the content process that the command has completed. It allows
+      // it to process async follow-up tasks before the reply is sent.
+      if (waitForNextTick) {
+        await new Promise(resolve => Services.tm.dispatchToMainThread(resolve));
       }
 
       // The element reference store lives in the parent process. Calling
