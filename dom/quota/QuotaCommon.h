@@ -872,6 +872,22 @@ class NotNull;
     return orElseFunc(firstRes);                                               \
   })
 
+/**
+ * QM_OR_ELSE_LOG is like QM_OR_ELSE_WARN. The only difference is that
+ * failures are reported using the lowest severity which is currently ignored
+ * in LogError, so nothing goes to the console, browser console and telemetry.
+ * Since nothing goes to the telemetry, the macro can't signal the end of the
+ * underlying error stack or change the type of the error stack in the
+ * telemetry. For that reason, the expression shouldn't contain nested QM_TRY
+ * macro uses.
+ */
+#define QM_OR_ELSE_LOG(expr, orElseFunc)                                      \
+  (expr).orElse([&](const auto& firstRes) {                                   \
+    mozilla::dom::quota::QM_HANDLE_ERROR(#expr, firstRes,                     \
+                                         mozilla::dom::quota::Severity::Log); \
+    return orElseFunc(firstRes);                                              \
+  })
+
 // Telemetry probes to collect number of failure during the initialization.
 #ifdef NIGHTLY_BUILD
 #  define RECORD_IN_NIGHTLY(_recorder, _status) \
@@ -1202,6 +1218,7 @@ enum class Severity {
   Error,
   Warning,
   Note,
+  Log,
 };
 
 void LogError(const nsACString& aExpr, Maybe<nsresult> aRv,
