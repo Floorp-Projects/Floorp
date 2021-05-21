@@ -788,14 +788,6 @@ impl Type {
             array_sizes: None,
         }
     }
-
-    pub fn new_array(kind: TypeKind, size: i32) -> Self {
-        Type {
-            kind,
-            precision: None,
-            array_sizes: Some(Box::new(ArraySizes { sizes: vec![make_const(TypeKind::Int, size)] })),
-        }
-    }
 }
 
 impl LiftFrom<&syntax::FullySpecifiedType> for Type {
@@ -969,8 +961,6 @@ pub struct State {
     modified_globals: RefCell<Vec<SymRef>>,
     pub used_globals: RefCell<Vec<SymRef>>,
     pub texel_fetches: HashMap<(SymRef, SymRef), TexelFetchOffsets>,
-    clip_dist_sym: SymRef,
-    pub used_clip_dist: u32,
 }
 
 impl State {
@@ -986,8 +976,6 @@ impl State {
             modified_globals: RefCell::new(Vec::new()),
             used_globals: RefCell::new(Vec::new()),
             texel_fetches: HashMap::new(),
-            clip_dist_sym: SymRef(0),
-            used_clip_dist: 0,
         }
     }
 
@@ -2229,18 +2217,6 @@ fn translate_expression(state: &mut State, e: &syntax::Expr) -> Expr {
                 let mut globals = state.modified_globals.borrow_mut();
                 if !globals.contains(&global) {
                     globals.push(global);
-                }
-                if global == state.clip_dist_sym {
-                    if let ExprKind::Bracket(_, idx) = &lhs.kind {
-                        // Get the constant array index used for gl_ClipDistance and add it to the used mask.
-                        let idx = match idx.kind {
-                            ExprKind::IntConst(idx) => idx,
-                            ExprKind::UIntConst(idx) => idx as i32,
-                            _ => panic!("bad index for gl_ClipDistance"),
-                        };
-                        assert!(idx >= 0 && idx < 4);
-                        state.used_clip_dist |= 1 << idx;
-                    }
                 }
             }
             Expr {
@@ -3765,10 +3741,6 @@ pub fn ast_to_hir(state: &mut State, tu: &syntax::TranslationUnit) -> Translatio
         "gl_Position",
         SymDecl::Global(StorageClass::Out, None, Type::new(Vec4), RunClass::Vector),
     );
-    state.clip_dist_sym = state.declare(
-        "gl_ClipDistance",
-        SymDecl::Global(StorageClass::Out, None, Type::new_array(Float, 4), RunClass::Vector),
-    );
 
     state.declare(
         "swgl_SpanLength",
@@ -3874,13 +3846,6 @@ pub fn ast_to_hir(state: &mut State, tu: &syntax::TranslationUnit) -> Translatio
     );
     declare_function(
         state,
-        "swgl_blendSubpixelText",
-        None,
-        Type::new(Void),
-        vec![Type::new(Vec4)],
-    );
-    declare_function(
-        state,
         "swgl_clipMask",
         None,
         Type::new(Void),
@@ -3978,13 +3943,6 @@ pub fn ast_to_hir(state: &mut State, tu: &syntax::TranslationUnit) -> Translatio
         );
         declare_function(
             state,
-            "swgl_commitTextureLinearR8ToRGBA8",
-            None,
-            Type::new(Void),
-            vec![Type::new(*s), Type::new(Vec2), Type::new(Vec4)],
-        );
-        declare_function(
-            state,
             "swgl_commitPartialTextureLinearR8",
             None,
             Type::new(Void),
@@ -4017,13 +3975,6 @@ pub fn ast_to_hir(state: &mut State, tu: &syntax::TranslationUnit) -> Translatio
             None,
             Type::new(Void),
             vec![Type::new(*s), Type::new(Vec2), Type::new(Vec4), Type::new(Float)],
-        );
-        declare_function(
-            state,
-            "swgl_commitTextureLinearColorR8ToRGBA8",
-            None,
-            Type::new(Void),
-            vec![Type::new(*s), Type::new(Vec2), Type::new(Vec4), Type::new(Vec4)],
         );
 
         declare_function(
