@@ -39,7 +39,6 @@ FEATURE_CHECK_NEEDED = {
 }
 RELEASE_OR_BETA = set(
     [
-        "Intl.DateTimeFormat-dayPeriod",
         "Intl.DateTimeFormat-formatRange",
     ]
 )
