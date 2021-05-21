@@ -10,8 +10,7 @@ add_task(async function() {
 
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, null, false);
 
-  let browser = tab.linkedBrowser;
-  browser.stop(); // stop the about:blank load
+  tab.linkedBrowser.stop(); // stop the about:blank load
 
   let writeDomainURL = encodeURI(
     "data:text/html,<script>document.write(document.domain);</script>"
@@ -36,12 +35,11 @@ add_task(async function() {
           }
         );
       },
-      verify() {
-        return SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function(
-          arg
-        ) {
-          Assert.ok(
-            !content.document.body.textContent,
+      verify(browser) {
+        return SpecialPowers.spawn(browser, [], async function(arg) {
+          Assert.equal(
+            content.document.body.textContent,
+            "",
             "no domain was inherited for view image with background image"
           );
         });
@@ -68,12 +66,11 @@ add_task(async function() {
           }
         );
       },
-      verify() {
-        return SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function(
-          arg
-        ) {
-          Assert.ok(
-            !content.document.body.textContent,
+      verify(browser) {
+        return SpecialPowers.spawn(browser, [], async function(arg) {
+          Assert.equal(
+            content.document.body.textContent,
+            "",
             "no domain was inherited for view image"
           );
         });
@@ -107,12 +104,11 @@ add_task(async function() {
           }
         );
       },
-      verify() {
-        return SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function(
-          arg
-        ) {
-          Assert.ok(
-            !content.document.body.textContent,
+      verify(browser) {
+        return SpecialPowers.spawn(browser, [], async function(arg) {
+          Assert.equal(
+            content.document.body.textContent,
+            "",
             "no domain was inherited for 'show only this frame'"
           );
         });
@@ -172,9 +168,11 @@ add_task(async function() {
       ? BrowserTestUtils.waitForNewTab(gBrowser, null, true)
       : BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
     document.getElementById(commandToRun).click();
-    await loadedAfterCommandPromise;
+    let result = await loadedAfterCommandPromise;
 
-    await test.verify();
+    await test.verify(
+      test.opensNewTab ? result.linkedBrowser : gBrowser.selectedBrowser
+    );
 
     let popupHiddenPromise = BrowserTestUtils.waitForEvent(
       contentAreaContextMenu,

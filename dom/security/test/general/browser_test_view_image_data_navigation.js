@@ -23,15 +23,15 @@ add_task(async function test_principal_right_click_open_link_in_new_tab() {
       { type: "contextmenu", button: 2 },
       gBrowser.selectedBrowser
     );
-    await loadPromise;
+    let tab = await loadPromise;
 
-    let spec = gBrowser.selectedBrowser.currentURI.spec;
+    let spec = tab.linkedBrowser.currentURI.spec;
     ok(
       spec.startsWith("data:image/svg+xml;"),
       "data:image/svg navigation allowed through right-click view-image"
     );
 
-    gBrowser.removeCurrentTab();
+    gBrowser.removeTab(tab);
   });
 });
 
@@ -58,14 +58,14 @@ add_task(async function test_right_click_open_bg_image() {
       { type: "contextmenu", button: 2 },
       gBrowser.selectedBrowser
     );
-    await loadPromise;
+    let tab = await loadPromise;
 
-    let spec = gBrowser.selectedBrowser.currentURI.spec;
+    let spec = tab.linkedBrowser.currentURI.spec;
     ok(
       spec.startsWith("data:image/svg+xml;"),
       "data:image/svg navigation allowed through right-click view-image with background image"
     );
 
-    gBrowser.removeCurrentTab();
+    gBrowser.removeTab(tab);
   });
 });
