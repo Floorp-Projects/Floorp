@@ -112,7 +112,7 @@ class AboutConfigTest {
   }
 
   get bypassWarningButton() {
-    return this.document.querySelector("button[autofocus]");
+    return this.document.getElementById("warningButton");
   }
 
   get searchInput() {
