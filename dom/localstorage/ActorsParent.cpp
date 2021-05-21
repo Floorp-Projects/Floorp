@@ -473,6 +473,12 @@ Result<nsCOMPtr<mozIStorageConnection>, nsresult> CreateStorageConnection(
             if (IsDatabaseCorruptionError(rv)) {
               // Remove the usage file first (it might not exist at all due
               // to corrupted state, which is ignored here).
+
+              // Usually we only use QM_OR_ELSE_LOG/QM_OR_ELSE_LOG_IF with
+              // Remove and
+              // NS_ERROR_FILE_NOT_FOUND/NS_ERROR_FILE_TARGET_DOES_NOT_EXIST
+              // check, but we're already in the rare case of corruption here,
+              // so the use of QM_OR_ELSE_WARN is ok here.
               QM_TRY(QM_OR_ELSE_WARN(
                   ToResult(aUsageFile.Remove(false)),
                   ([](const nsresult rv) -> Result<Ok, nsresult> {
