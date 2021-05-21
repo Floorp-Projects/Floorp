@@ -3978,6 +3978,13 @@ pub fn ast_to_hir(state: &mut State, tu: &syntax::TranslationUnit) -> Translatio
         );
         declare_function(
             state,
+            "swgl_commitTextureLinearR8ToRGBA8",
+            None,
+            Type::new(Void),
+            vec![Type::new(*s), Type::new(Vec2), Type::new(Vec4)],
+        );
+        declare_function(
+            state,
             "swgl_commitPartialTextureLinearR8",
             None,
             Type::new(Void),
@@ -4010,6 +4017,13 @@ pub fn ast_to_hir(state: &mut State, tu: &syntax::TranslationUnit) -> Translatio
             None,
             Type::new(Void),
             vec![Type::new(*s), Type::new(Vec2), Type::new(Vec4), Type::new(Float)],
+        );
+        declare_function(
+            state,
+            "swgl_commitTextureLinearColorR8ToRGBA8",
+            None,
+            Type::new(Void),
+            vec![Type::new(*s), Type::new(Vec2), Type::new(Vec4), Type::new(Vec4)],
         );
 
         declare_function(
