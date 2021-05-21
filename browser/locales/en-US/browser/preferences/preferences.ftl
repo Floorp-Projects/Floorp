@@ -167,8 +167,8 @@ warn-on-open-many-tabs =
     .label = Warn you when opening multiple tabs might slow down { -brand-short-name }
     .accesskey = d
 
-switch-to-new-tabs =
-    .label = When you open a link, image or media in a new tab, switch to it immediately
+switch-links-to-new-tabs =
+    .label = When you open a link in a new tab, switch to it immediately
     .accesskey = h
 
 show-tabs-in-taskbar =
