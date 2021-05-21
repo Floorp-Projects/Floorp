@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Print an Error message if `set -eE` causes the script to exit due to a failed command
-trap 'echo "*** ERROR *** Generation did not complete successfully!"' ERR 
+trap 'echo "*** ERROR *** $? $LINENO Generation did not complete successfully!"' ERR 
 
 # If DEBUG_GEN is set all commands should be printed as they are executed
 if [ ! "x$DEBUG_GEN" = "x" ]; then
