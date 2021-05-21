@@ -283,11 +283,6 @@ class StoragePrincipalHelper final {
   // ensure that all HTTPS RRs in DNS cache are accessed by HTTPS requests only.
   static bool GetOriginAttributesForHTTPSRR(nsIChannel* aChannel,
                                             OriginAttributes& aAttributes);
-
-  // Get the origin attributes from a PrincipalInfo
-  static bool GetOriginAttributes(
-      const mozilla::ipc::PrincipalInfo& aPrincipalInfo,
-      OriginAttributes& aAttributes);
 };
 
 }  // namespace mozilla

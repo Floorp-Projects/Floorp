@@ -3025,14 +3025,6 @@ void BrowsingContext::DidSet(FieldIndex<IDX_CurrentInnerWindowId>) {
         prevWindowContext->Canonical()->DidBecomeCurrentWindowGlobal(false);
       }
       if (mCurrentWindowContext) {
-        // We set a timer when we set the current inner window. This
-        // will then flush the session storage to session store to
-        // make sure that we don't miss to store session storage to
-        // session store that is a result of navigation. This is due
-        // to Bug 1700623. We wish to fix this in Bug 1711886, where
-        // making sure to store everything would make this timer
-        // unnecessary.
-        Canonical()->MaybeScheduleSessionStoreUpdate();
         mCurrentWindowContext->Canonical()->DidBecomeCurrentWindowGlobal(true);
       }
     }
