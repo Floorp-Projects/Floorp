@@ -619,7 +619,8 @@ struct Program {
   macro(GL_HSL_SATURATION_KHR, 0, 0, 0)                                        \
   macro(GL_HSL_COLOR_KHR, 0, 0, 0)                                             \
   macro(GL_HSL_LUMINOSITY_KHR, 0, 0, 0)                                        \
-  macro(SWGL_BLEND_DROP_SHADOW, 0, 0, 0)
+  macro(SWGL_BLEND_DROP_SHADOW, 0, 0, 0)                                       \
+  macro(SWGL_BLEND_SUBPIXEL_TEXT, 0, 0, 0)
 
 #define DEFINE_BLEND_KEY(...) BLEND_KEY(__VA_ARGS__),
 #define DEFINE_MASK_BLEND_KEY(...) MASK_BLEND_KEY(__VA_ARGS__),
