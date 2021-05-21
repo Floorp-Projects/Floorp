@@ -312,7 +312,7 @@ pub enum ShaderColorMode {
     SubpixelWithBgColorPass1 = 4,
     SubpixelWithBgColorPass2 = 5,
     SubpixelDualSource = 6,
-    Bitmap = 7,
+    BitmapShadow = 7,
     ColorBitmap = 8,
     Image = 9,
     MultiplyDualSource = 10,
@@ -321,11 +321,12 @@ pub enum ShaderColorMode {
 impl From<GlyphFormat> for ShaderColorMode {
     fn from(format: GlyphFormat) -> ShaderColorMode {
         match format {
-            GlyphFormat::Alpha | GlyphFormat::TransformedAlpha => ShaderColorMode::Alpha,
+            GlyphFormat::Alpha |
+            GlyphFormat::TransformedAlpha |
+            GlyphFormat::Bitmap => ShaderColorMode::Alpha,
             GlyphFormat::Subpixel | GlyphFormat::TransformedSubpixel => {
                 panic!("Subpixel glyph formats must be handled separately.");
             }
-            GlyphFormat::Bitmap => ShaderColorMode::Bitmap,
             GlyphFormat::ColorBitmap => ShaderColorMode::ColorBitmap,
         }
     }
