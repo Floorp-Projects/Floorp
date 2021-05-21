@@ -11,6 +11,7 @@
 #include "nsLeafFrame.h"
 
 class nsFontMetrics;
+class nsPageContentFrame;
 class nsSharedPageData;
 
 namespace mozilla {
@@ -66,6 +67,8 @@ class nsPageFrame final : public nsContainerFrame {
   }
 
   ComputeTransformFunction GetTransformGetter() const override;
+
+  nsPageContentFrame* PageContentFrame();
 
  protected:
   explicit nsPageFrame(ComputedStyle* aStyle, nsPresContext* aPresContext);
