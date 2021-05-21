@@ -340,7 +340,7 @@ Object.assign(Assert, {
    *
    * Note that you'll need to use Assert inside this function.
    */
-  objectContains(object, properties) {
+  objectContains(object, expectedProperties) {
     // Basic tests: we don't want to run other assertions if these tests fail.
     if (typeof object !== "object") {
       this.ok(
@@ -350,18 +350,23 @@ Object.assign(Assert, {
       return;
     }
 
-    if (typeof properties !== "object") {
+    if (typeof expectedProperties !== "object") {
       this.ok(
         false,
-        `The second parameter should be an object, but found: ${properties}.`
+        `The second parameter should be an object, but found: ${expectedProperties}.`
       );
       return;
     }
 
-    for (const key of Object.keys(properties)) {
-      const expected = properties[key];
+    for (const key of Object.keys(expectedProperties)) {
+      const expected = expectedProperties[key];
       if (!(key in object)) {
-        this.ok(false, `The object should contain the property ${key}`);
+        this.report(
+          true,
+          object,
+          expectedProperties,
+          `The object should contain the property "${key}", but it's missing.`
+        );
         continue;
       }
 
@@ -375,7 +380,7 @@ Object.assign(Assert, {
         // Otherwise, we check for equality.
         this.equal(
           object[key],
-          properties[key],
+          expectedProperties[key],
           `The object should contain the property "${key}" with an expected value.`
         );
       }
@@ -387,7 +392,7 @@ Object.assign(Assert, {
    * at the number of the objects' properties. Thus this will fail if the
    * objects don't have the same properties exactly.
    */
-  objectContainsOnly(object, properties) {
+  objectContainsOnly(object, expectedProperties) {
     // Basic tests: we don't want to run other assertions if these tests fail.
     if (typeof object !== "object") {
       this.ok(
@@ -397,20 +402,40 @@ Object.assign(Assert, {
       return;
     }
 
-    if (typeof properties !== "object") {
+    if (typeof expectedProperties !== "object") {
       this.ok(
         false,
-        `The second parameter should be an object but found: ${properties}.`
+        `The second parameter should be an object but found: ${expectedProperties}.`
       );
       return;
     }
 
-    this.equal(
-      Object.keys(object).length,
-      Object.keys(properties).length,
-      "The 2 objects should have the same number of properties."
-    );
-    this.objectContains(object, properties);
+    // In objectContainsOnly, we specifically want to check if all properties
+    // from the fixture object are expected.
+    // We'll be failing a test only for the specific properties that weren't
+    // expected, and only fail with one message, so that the test outputs aren't
+    // spammed.
+    const extraProperties = [];
+    for (const fixtureKey of Object.keys(object)) {
+      if (!(fixtureKey in expectedProperties)) {
+        extraProperties.push(fixtureKey);
+      }
+    }
+
+    if (extraProperties.length) {
+      // Some extra properties have been found.
+      this.report(
+        true,
+        object,
+        expectedProperties,
+        `These properties are present, but shouldn't: "${extraProperties.join(
+          '", "'
+        )}".`
+      );
+    }
+
+    // Now, let's carry on the rest of our work.
+    this.objectContains(object, expectedProperties);
   },
 });
 
