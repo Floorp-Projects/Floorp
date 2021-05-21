@@ -511,26 +511,6 @@ public class PanZoomController {
      * {@link #onTouchEvent(MotionEvent)}.
      *
      * @param event MotionEvent to process.
-     * @return A GeckoResult resolving to one of the
-     *         {@link PanZoomController#INPUT_RESULT_UNHANDLED INPUT_RESULT_*}) constants indicating
-     *         how the event was handled.
-     */
-    @Deprecated @DeprecationSchedule(version = 90, id = "on-touch-event-for-result")
-    public @NonNull GeckoResult<Integer> onTouchEventForResult(final @NonNull MotionEvent event) {
-        return onTouchEventForDetailResult(event).map(detail -> detail.handledResult());
-    }
-
-    /**
-     * Process a touch event through the pan-zoom controller. Treat any mouse events as
-     * "touch" rather than as "mouse". Pointer coordinates should be relative to the
-     * display surface.
-     *
-     * NOTE: It is highly recommended to only call this with ACTION_DOWN or in otherwise
-     * limited capacity. Returning a GeckoResult for every touch event will generate
-     * a lot of allocations and unnecessary GC pressure. Instead, prefer to call
-     * {@link #onTouchEvent(MotionEvent)}.
-     *
-     * @param event MotionEvent to process.
      * @return A GeckoResult resolving to {@link PanZoomController.InputResultDetail}).
      */
     public @NonNull GeckoResult<InputResultDetail> onTouchEventForDetailResult(final @NonNull MotionEvent event) {

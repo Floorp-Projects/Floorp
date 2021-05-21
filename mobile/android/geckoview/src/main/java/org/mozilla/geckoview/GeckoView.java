@@ -736,30 +736,6 @@ public class GeckoView extends FrameLayout {
     }
 
     /**
-     * @deprecated Use {@link #onTouchEventForDetailResult(MotionEvent)} instead.
-     *
-     * Dispatches a {@link MotionEvent} to the {@link PanZoomController}. This is the same as
-     * {@link #onTouchEvent(MotionEvent)}, but instead returns a {@link PanZoomController.InputResult}
-     * indicating how the event was handled.
-     *
-     * NOTE: It is highly recommended to only call this with ACTION_DOWN or in otherwise
-     * limited capacity. Returning a GeckoResult for every touch event will generate
-     * a lot of allocations and unnecessary GC pressure.
-     *
-     * @param event A {@link MotionEvent}
-     * @return One of the {@link PanZoomController#INPUT_RESULT_UNHANDLED INPUT_RESULT_*} indicating how the event was handled.
-     */
-    @Deprecated @DeprecationSchedule(version = 90, id = "on-touch-event-for-result")
-    public @NonNull GeckoResult<Integer> onTouchEventForResult(final @NonNull MotionEvent event) {
-        if (mSession == null) {
-            return GeckoResult.fromValue(PanZoomController.INPUT_RESULT_UNHANDLED);
-        }
-
-        return mSession.getPanZoomController().onTouchEventForDetailResult(event)
-                       .map(detail -> detail.handledResult());
-    }
-
-    /**
      * Dispatches a {@link MotionEvent} to the {@link PanZoomController}. This is the same as
      * {@link #onTouchEvent(MotionEvent)}, but instead returns a {@link PanZoomController.InputResult}
      * indicating how the event was handled.
