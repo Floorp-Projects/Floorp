@@ -43,6 +43,8 @@ class ChromiumCDMCallbackProxy : public ChromiumCDMCallback {
 
   void SessionClosed(const nsCString& aSessionId) override;
 
+  void QueryOutputProtectionStatus() override;
+
   void Terminated() override;
 
   void Shutdown() override;
