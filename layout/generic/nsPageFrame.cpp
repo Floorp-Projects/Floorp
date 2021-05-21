@@ -53,11 +53,7 @@ nsReflowStatus nsPageFrame::ReflowPageContent(
   //
   // Reflow our ::-moz-page-content frame, allowing it only to be as big as we
   // are (minus margins).
-  if (mFrames.IsEmpty()) {
-    return {};
-  }
-
-  nsIFrame* frame = mFrames.FirstChild();
+  nsIFrame* const frame = PageContentFrame();
   nsSize maxSize = aPresContext->GetPageSize();
   float scale = aPresContext->GetPageScale();
   // When the reflow size is NS_UNCONSTRAINEDSIZE it means we are reflowing
@@ -167,10 +163,6 @@ void nsPageFrame::Reflow(nsPresContext* aPresContext,
   DISPLAY_REFLOW(aPresContext, this, aReflowInput, aReflowOutput, aStatus);
   MOZ_ASSERT(aStatus.IsEmpty(), "Caller should pass a fresh reflow status!");
   MOZ_ASSERT(mPD, "Need a pointer to nsSharedPageData before reflow starts");
-
-  NS_ASSERTION(
-      mFrames.FirstChild() && mFrames.FirstChild()->IsPageContentFrame(),
-      "pageFrame must have a pageContentFrame child");
 
   // Our status is the same as our child's.
   aStatus = ReflowPageContent(aPresContext, aReflowInput);
@@ -529,6 +521,14 @@ nsIFrame::ComputeTransformFunction nsPageFrame::GetTransformGetter() const {
   return ComputePagesPerSheetTransform;
 }
 
+nsPageContentFrame* nsPageFrame::PageContentFrame() {
+  nsIFrame* const frame = mFrames.FirstChild();
+  MOZ_ASSERT(frame, "pageFrame must have one child");
+  MOZ_ASSERT(frame->IsPageContentFrame(),
+             "pageFrame must have pageContentFrame as the first child");
+  return static_cast<nsPageContentFrame*>(frame);
+}
+
 void nsPageFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
                                    const nsDisplayListSet& aLists) {
   nsPresContext* pc = PresContext();
@@ -616,11 +616,7 @@ void nsPageFrame::PaintHeaderFooter(gfxContext& aRenderingContext, nsPoint aPt,
 void nsPageFrame::SetSharedPageData(nsSharedPageData* aPD) {
   mPD = aPD;
   // Set the shared data into the page frame before reflow
-  nsPageContentFrame* pcf =
-      static_cast<nsPageContentFrame*>(mFrames.FirstChild());
-  if (pcf) {
-    pcf->SetSharedPageData(mPD);
-  }
+  PageContentFrame()->SetSharedPageData(mPD);
 }
 
 nsIFrame* NS_NewPageBreakFrame(PresShell* aPresShell, ComputedStyle* aStyle) {
