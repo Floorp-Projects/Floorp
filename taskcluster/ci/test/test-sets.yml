@@ -79,13 +79,6 @@ talos-ref-hw:
     - talos-webgl
 
 raptor-firefox:
-    - raptor-speedometer-firefox
-    - raptor-stylebench-firefox
-    - raptor-motionmark-htmlsuite-firefox
-    - raptor-motionmark-animometer-firefox
-    - raptor-webaudio-firefox
-    - raptor-sunspider-firefox
-    - raptor-wasm-godot-firefox
     - raptor-youtube-playback-av1-sfr-firefox
     - raptor-youtube-playback-h264-sfr-firefox
     - raptor-youtube-playback-hfr-firefox
@@ -93,19 +86,8 @@ raptor-firefox:
     - raptor-youtube-playback-widevine-hfr-firefox
     - raptor-youtube-playback-widevine-h264-sfr-firefox
     - raptor-youtube-playback-widevine-vp9-sfr-firefox
-    - raptor-ares6-firefox
-    - raptor-jetstream2-firefox
 
 raptor-chrome:
-    - raptor-speedometer-chrome
-    - raptor-stylebench-chrome
-    - raptor-motionmark-htmlsuite-chrome
-    - raptor-motionmark-animometer-chrome
-    - raptor-webaudio-chrome
-    - raptor-sunspider-chrome
-    - raptor-wasm-godot-chrome
-    - raptor-ares6-chrome
-    - raptor-jetstream2-chrome
     - raptor-youtube-playback-av1-sfr-chrome
     - raptor-youtube-playback-h264-sfr-chrome
     - raptor-youtube-playback-hfr-chrome
@@ -113,54 +95,6 @@ raptor-chrome:
     - raptor-youtube-playback-widevine-hfr-chrome
     - raptor-youtube-playback-widevine-h264-sfr-chrome
     - raptor-youtube-playback-widevine-vp9-sfr-chrome
-
-raptor-profiling:
-    - raptor-speedometer-firefox-profiling
-    - raptor-stylebench-firefox-profiling
-    - raptor-motionmark-htmlsuite-firefox-profiling
-    - raptor-motionmark-animometer-firefox-profiling
-    - raptor-webaudio-firefox-profiling
-    - raptor-sunspider-firefox-profiling
-    - raptor-wasm-godot-firefox-profiling
-    - raptor-ares6-firefox-profiling
-    - raptor-jetstream2-firefox-profiling
-
-raptor-chromium:
-    - raptor-speedometer-chromium
-    - raptor-stylebench-chromium
-    - raptor-motionmark-htmlsuite-chromium
-    - raptor-motionmark-animometer-chromium
-    - raptor-webaudio-chromium
-    - raptor-sunspider-chromium
-    - raptor-wasm-godot-chromium
-    - raptor-ares6-chromium
-    - raptor-jetstream2-chromium
-
-# Fetch tasks are only supported on Linux for now,
-# so these need to be separate sets.
-raptor-fetch-firefox:
-    - raptor-unity-webgl-firefox
-    - raptor-wasm-misc-firefox
-    - raptor-wasm-misc-baseline-firefox
-    - raptor-wasm-misc-optimizing-firefox
-    - raptor-wasm-godot-baseline-firefox
-    - raptor-wasm-godot-optimizing-firefox
-    - raptor-assorted-dom-firefox
-
-raptor-fetch-profiling:
-    - raptor-unity-webgl-firefox-profiling
-    - raptor-wasm-misc-firefox-profiling
-    - raptor-wasm-misc-baseline-firefox-profiling
-    - raptor-wasm-misc-optimizing-firefox-profiling
-    - raptor-wasm-godot-baseline-firefox-profiling
-    - raptor-wasm-godot-optimizing-firefox-profiling
-    - raptor-assorted-dom-firefox-profiling
-
-raptor-fetch-chromium:
-    - raptor-unity-webgl-chromium
-    - raptor-wasm-misc-chromium
-    - raptor-assorted-dom-chromium
-    - raptor-jetstream2-chromium
 
 browsertime:
     - browsertime-tp6

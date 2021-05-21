@@ -185,11 +185,11 @@ def test_get_raptor_test_list_firefox(create_args):
 
 
 def test_get_raptor_test_list_chrome(create_args):
-    args = create_args(app="chrome", test="raptor-speedometer", browser_cycles=1)
+    args = create_args(app="chrome", test="speedometer", browser_cycles=1)
 
     test_list = get_raptor_test_list(args, mozinfo.os)
     assert len(test_list) == 1
-    assert test_list[0]["name"] == "raptor-speedometer-chrome"
+    assert test_list[0]["name"] == "speedometer"
 
 
 def test_get_raptor_test_list_geckoview(create_args):
