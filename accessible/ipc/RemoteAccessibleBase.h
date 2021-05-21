@@ -46,6 +46,9 @@ class RemoteAccessibleBase : public Accessible {
     return mChildren.Length() ? mChildren[mChildren.Length() - 1] : nullptr;
   }
   Derived* RemotePrevSibling() const {
+    // This doesn't work for documents because the parent might be a local
+    // OuterDoc, but IndexInParent() will return 1.
+    MOZ_ASSERT(!IsDoc());
     int32_t idx = IndexInParent();
     if (idx == -1) {
       return nullptr;  // No parent.
@@ -53,6 +56,9 @@ class RemoteAccessibleBase : public Accessible {
     return idx > 0 ? RemoteParent()->mChildren[idx - 1] : nullptr;
   }
   Derived* RemoteNextSibling() const {
+    // This doesn't work for documents because the parent might be a local
+    // OuterDoc, but IndexInParent() will return 1.
+    MOZ_ASSERT(!IsDoc());
     int32_t idx = IndexInParent();
     if (idx == -1) {
       return nullptr;  // No parent.

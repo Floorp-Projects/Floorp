@@ -214,17 +214,9 @@ LocalAccessible* OuterDocAccessible::RemoteChildDocAccessible() const {
   return nullptr;
 }
 
-// On Windows e10s, since we don't cache in the chrome process, these next two
-// functions must be implemented so that we properly cross the chrome-to-content
+// On Windows e10s, since we don't cache in the chrome process, LocalChildAt
+// must be implemented so that we properly cross the chrome-to-content
 // boundary when traversing.
-
-uint32_t OuterDocAccessible::ChildCount() const {
-  uint32_t result = mChildren.Length();
-  if (!result && RemoteChildDocAccessible()) {
-    result = 1;
-  }
-  return result;
-}
 
 LocalAccessible* OuterDocAccessible::LocalChildAt(uint32_t aIndex) const {
   LocalAccessible* result = AccessibleWrap::LocalChildAt(aIndex);
@@ -240,19 +232,29 @@ LocalAccessible* OuterDocAccessible::LocalChildAt(uint32_t aIndex) const {
 
 // Accessible
 
+uint32_t OuterDocAccessible::ChildCount() const {
+  uint32_t result = mChildren.Length();
+  if (!result &&
+#if defined(XP_WIN)
+      // On Windows, as well as returning 1 for a remote document in the parent
+      // process, we also need to return 1 in a content process for an OOP
+      // iframe.
+      RemoteChildDocAccessible()
+#else
+      RemoteChildDoc()
+#endif
+  ) {
+    result = 1;
+  }
+  return result;
+}
+
 Accessible* OuterDocAccessible::ChildAt(uint32_t aIndex) const {
+  // We deliberately bypass OuterDocAccessible::LocalChildAt on Windows because
+  // it will return a RemoteAccessibleWrap for a remote document.
   LocalAccessible* result = AccessibleWrap::LocalChildAt(aIndex);
   if (result || aIndex) {
-#if defined(XP_WIN)
-    // On Windows, AccessibleWrap::LocalChildAt can return a proxy wrapper
-    // for a remote document. These aren't real Accessibles so we skip this
-    // block and retrieve the remote child doc.
-    if (!result || !result->IsProxy()) {
-      return result;
-    }
-#else
     return result;
-#endif  // defined(XP_WIN)
   }
 
   return RemoteChildDoc();
