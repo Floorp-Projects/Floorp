@@ -1140,13 +1140,14 @@ class SearchMiddlewareTest {
         // Verify initial state
         // ///////////////////////////////////////////////////////////////////////////////////////////
 
-        assertEquals(5, store.state.search.regionSearchEngines.size)
+        assertEquals(6, store.state.search.regionSearchEngines.size)
 
         assertEquals("Google", store.state.search.regionSearchEngines[0].name)
         assertEquals("Bing", store.state.search.regionSearchEngines[1].name)
         assertEquals("Amazon.com", store.state.search.regionSearchEngines[2].name)
         assertEquals("DuckDuckGo", store.state.search.regionSearchEngines[3].name)
         assertEquals("Wikipedia", store.state.search.regionSearchEngines[4].name)
+        assertEquals("eBay", store.state.search.regionSearchEngines[5].name)
 
         assertEquals("Google", store.state.search.selectedOrDefaultSearchEngine!!.name)
 
@@ -1162,11 +1163,12 @@ class SearchMiddlewareTest {
         // Verify after hiding search engines
         // ///////////////////////////////////////////////////////////////////////////////////////////
 
-        assertEquals(3, store.state.search.regionSearchEngines.size)
+        assertEquals(4, store.state.search.regionSearchEngines.size)
 
         assertEquals("Bing", store.state.search.regionSearchEngines[0].name)
         assertEquals("Amazon.com", store.state.search.regionSearchEngines[1].name)
         assertEquals("Wikipedia", store.state.search.regionSearchEngines[2].name)
+        assertEquals("eBay", store.state.search.regionSearchEngines[3].name)
 
         assertEquals("Bing", store.state.search.selectedOrDefaultSearchEngine!!.name)
 
@@ -1184,13 +1186,14 @@ class SearchMiddlewareTest {
         // Verify state after adding search engines back
         // ///////////////////////////////////////////////////////////////////////////////////////////
 
-        assertEquals(5, store.state.search.regionSearchEngines.size)
+        assertEquals(6, store.state.search.regionSearchEngines.size)
 
         assertEquals("Google", store.state.search.regionSearchEngines[0].name)
         assertEquals("Bing", store.state.search.regionSearchEngines[1].name)
         assertEquals("Amazon.com", store.state.search.regionSearchEngines[2].name)
         assertEquals("DuckDuckGo", store.state.search.regionSearchEngines[3].name)
         assertEquals("Wikipedia", store.state.search.regionSearchEngines[4].name)
+        assertEquals("eBay", store.state.search.regionSearchEngines[5].name)
 
         assertEquals("Google", store.state.search.selectedOrDefaultSearchEngine!!.name)
     }
