@@ -83,32 +83,25 @@ toolbarpaletteitem > #downloads-button > .toolbarbutton-badge-stack > #downloads
 
 #downloads-button[attention="warning"] > .toolbarbutton-badge-stack > .toolbarbutton-badge,
 #downloads-button[attention="severe"] > .toolbarbutton-badge-stack > .toolbarbutton-badge {
-  display: -moz-box;
-  height: 8px;
-  width: 8px;
-  min-width: 0;
-  border-radius: 50%;
+  display: block;
+  box-shadow: none;
   /* "!important" is necessary to override the rule in toolbarbutton.css */
-  margin-top: -1px !important;
-  margin-inline-end: -2px !important;
-}
-
-#downloads-button[cui-areatype="toolbar"] > .toolbarbutton-badge-stack > .toolbarbutton-badge {
-  height: 7px;
-  width: 7px;
-}
-
-#downloads-button[attention="severe"] > .toolbarbutton-badge-stack > .toolbarbutton-badge {
-  background: #D90000;
+  margin: -7px 0 0 !important;
+  margin-inline-end: -4px !important;
+  min-width: 12px;
+  min-height: 12px;
+  -moz-context-properties: fill;
+  background-size: 12px;
 }
 
 #downloads-button[attention="warning"] > .toolbarbutton-badge-stack > .toolbarbutton-badge {
-  background: #FFBF00;
+  background: url(chrome://global/skin/icons/warning-fill-12.svg) no-repeat center;
+  fill: var(--panel-banner-item-warning-icon-bgcolor);
 }
 
-#downloads-button[attention="severe"] > .toolbarbutton-badge-stack > .toolbarbutton-badge:-moz-window-inactive,
-#downloads-button[attention="warning"] > .toolbarbutton-badge-stack > .toolbarbutton-badge:-moz-window-inactive {
-  filter: none;
+#downloads-button[attention="severe"] > .toolbarbutton-badge-stack > .toolbarbutton-badge {
+  background: url(chrome://browser/skin/notification-fill-12.svg) no-repeat center;
+  fill: var(--input-error-border-color, #E22850);
 }
 
 /*** Download notifications (transitions between downloading states) ***/
