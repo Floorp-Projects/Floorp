@@ -24,7 +24,7 @@ UNIFIED_SOURCES += [
     "WMFDecoderModule.cpp",
     "WMFEncoderModule.cpp",
     "WMFMediaDataDecoder.cpp",
-    'WMFMediaDataEncoder.cpp',
+    "WMFMediaDataEncoder.cpp",
     "WMFVideoMFTManager.cpp",
 ]
 
