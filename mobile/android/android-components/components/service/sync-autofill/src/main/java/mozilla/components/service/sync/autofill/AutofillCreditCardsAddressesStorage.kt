@@ -6,6 +6,7 @@ package mozilla.components.service.sync.autofill
 
 import android.content.Context
 import androidx.annotation.GuardedBy
+import androidx.annotation.VisibleForTesting
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.withContext
@@ -22,6 +23,7 @@ import mozilla.components.concept.storage.UpdatableCreditCardFields
 import mozilla.components.concept.sync.SyncableStore
 import mozilla.components.lib.dataprotect.SecureAbove22Preferences
 import mozilla.components.support.base.log.logger.Logger
+import mozilla.components.support.utils.logElapsedTime
 import java.io.Closeable
 import mozilla.appservices.autofill.Store as RustAutofillStorage
 
@@ -45,9 +47,18 @@ class AutofillCreditCardsAddressesStorage(
 
     val crypto by lazy { AutofillCrypto(context, securePrefs.value, this) }
 
-    private val conn by lazy {
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal val conn by lazy {
         AutofillStorageConnection.init(dbPath = context.getDatabasePath(AUTOFILL_DB_NAME).absolutePath)
         AutofillStorageConnection
+    }
+
+    /**
+     * "Warms up" this storage layer by establishing the database connection.
+     */
+    suspend fun warmUp() = withContext(coroutineContext) {
+        logElapsedTime(logger, "Warming up storage") { conn }
+        Unit
     }
 
     override fun recoverFromBadKey(reason: KeyGenerationReason.RecoveryNeeded) {

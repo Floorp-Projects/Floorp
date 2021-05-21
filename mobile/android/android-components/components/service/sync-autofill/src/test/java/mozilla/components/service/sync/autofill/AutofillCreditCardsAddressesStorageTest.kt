@@ -21,6 +21,8 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mockito.spy
+import org.mockito.Mockito.verify
 
 @RunWith(AndroidJUnit4::class)
 class AutofillCreditCardsAddressesStorageTest {
@@ -410,5 +412,13 @@ class AutofillCreditCardsAddressesStorageTest {
         val isDeleteSuccessful = storage.deleteAddress(address.guid)
         assertTrue(isDeleteSuccessful)
         assertNull(storage.getAddress(address.guid))
+    }
+
+    @Test
+    fun `WHEN warmUp method is called THEN the database connection is established`(): Unit = runBlocking {
+        val storageSpy = spy(storage)
+        storageSpy.warmUp()
+
+        verify(storageSpy).conn
     }
 }
