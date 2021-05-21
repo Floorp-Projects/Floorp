@@ -759,14 +759,22 @@ pub enum GlyphFormat {
 }
 
 impl GlyphFormat {
+    pub fn ignore_color(self) -> Self {
+        match self {
+            GlyphFormat::ColorBitmap => GlyphFormat::Bitmap,
+            _ => self,
+        }
+    }
+
     /// Returns the ImageFormat that a glyph should be stored as in the texture cache.
     /// can_use_r8_format should be set false on platforms where we have encountered
     /// issues with R8 textures, so that we do not use them for glyphs.
     pub fn image_format(&self, can_use_r8_format: bool) -> ImageFormat {
         match *self {
-            GlyphFormat::Alpha |
-            GlyphFormat::TransformedAlpha |
-            GlyphFormat::Bitmap => {
+            // GlyphFormat::Bitmap glyphs could be stored in an R8 texture. However, we currently
+            // support drawing ColorBitmap glyphs (stored in a BGRA8 texture) in Bitmap mode, and
+            // currently the text shader cannot differentiate between the two cases.
+            GlyphFormat::Alpha | GlyphFormat::TransformedAlpha => {
                 if can_use_r8_format {
                     ImageFormat::R8
                 } else {
@@ -775,6 +783,7 @@ impl GlyphFormat {
             }
             GlyphFormat::Subpixel |
             GlyphFormat::TransformedSubpixel |
+            GlyphFormat::Bitmap |
             GlyphFormat::ColorBitmap => ImageFormat::BGRA8,
         }
     }

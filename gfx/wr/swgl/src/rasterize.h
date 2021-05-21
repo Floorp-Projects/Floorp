@@ -561,36 +561,6 @@ static ALWAYS_INLINE IntRange aa_span(P* buf, const E& left, const E& right,
   return {leftAA.start, rightAA.end};
 }
 
-// Calculate the span the user clip distances occupy from the left and right
-// edges at the current row.
-template <typename E>
-static ALWAYS_INLINE IntRange clip_distance_range(const E& left,
-                                                  const E& right) {
-  Float leftClip = get_clip_distances(left.interp);
-  Float rightClip = get_clip_distances(right.interp);
-  // Get the change in clip dist per X step.
-  Float clipStep = (rightClip - leftClip) / (right.cur_x() - left.cur_x());
-  // Find the zero intercepts starting from the left edge.
-  Float clipDist = left.cur_x() - leftClip * recip(clipStep);
-  // Find the distance to the start of the span for any clip distances that
-  // are increasing in value. If the clip distance is constant or decreasing
-  // in value, then check if it starts outside the clip volume.
-  Float start = if_then_else(clipStep > 0.0f, clipDist,
-                             if_then_else(leftClip < 0.0f, 1.0e6f, 0.0f));
-  // Find the distance to the end of the span for any clip distances that are
-  // decreasing in value. If the clip distance is constant or increasing in
-  // value, then check if it ends inside the clip volume.
-  Float end = if_then_else(clipStep < 0.0f, clipDist,
-                           if_then_else(rightClip >= 0.0f, 1.0e6f, 0.0f));
-  // Find the furthest start offset.
-  start = max(start, start.zwxy);
-  // Find the closest end offset.
-  end = min(end, end.zwxy);
-  // Finally, round the offsets to an integer span that can be used to bound
-  // the current span.
-  return FloatRange{max(start.x, start.y), min(end.x, end.y)}.round();
-}
-
 // Converts a run array into a flattened array of depth samples. This just
 // walks through every run and fills the samples with the depth value from
 // the run.
@@ -946,11 +916,6 @@ static inline void draw_quad_spans(int nump, Point2D p[4], uint32_t z,
     // Calculate a potentially AA'd span and check if it is non-empty.
     IntRange span = aa_span(fbuf, left, right, clipSpan);
     if (span.len() > 0) {
-      // If user clip planes are enabled, use them to bound the current span.
-      if (vertex_shader->use_clip_distance()) {
-        span = span.intersect(clip_distance_range(left, right));
-        if (span.len() <= 0) goto next_span;
-      }
       ctx->shaded_rows++;
       ctx->shaded_pixels += span.len();
       // Advance color/depth buffer pointers to the start of the span.
@@ -1196,11 +1161,6 @@ static inline void draw_perspective_spans(int nump, Point3D* p,
     // Calculate a potentially AA'd span and check if it is non-empty.
     IntRange span = aa_span(fbuf, left, right, clipSpan);
     if (span.len() > 0) {
-      // If user clip planes are enabled, use them to bound the current span.
-      if (vertex_shader->use_clip_distance()) {
-        span = span.intersect(clip_distance_range(left, right));
-        if (span.len() <= 0) goto next_span;
-      }
       ctx->shaded_rows++;
       ctx->shaded_pixels += span.len();
       // Advance color/depth buffer pointers to the start of the span.
@@ -1257,7 +1217,6 @@ static inline void draw_perspective_spans(int nump, Point3D* p,
         draw_span<true, true>(buf, depth, span.len(), packDepth);
       }
     }
-  next_span:
     // Advance Y and edge interpolants to next row.
     y++;
     left.nextRow();
