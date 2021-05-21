@@ -15,19 +15,16 @@
   --date-picker-item-height: 2.5rem;
   --date-picker-item-width: 3.3rem;
 
-  --border: 0.1rem solid ThreeDShadow;
   --border-radius: 0.3rem;
-  --border-active-color: ButtonShadow;
 
-  --font-color: ButtonText;
-  --fill-color: ThreeDFace;
-
-  --today-fill-color: ThreeDShadow;
+  --border: 0.1rem solid FieldText;
+  --border-active-color: FieldText;
+  --fill-color: color-mix(in srgb, FieldText 20%, transparent);
+  --today-fill-color: color-mix(in srgb, FieldText 10%, transparent);
+  --button-fill-color-active: color-mix(in srgb, FieldText 20%, transparent);
 
   --selected-font-color: HighlightText;
   --selected-fill-color: Highlight;
-
-  --button-fill-color-active: ButtonFace;
 
   /* Use -moz-activehyperlinktext to get a system color that
      by default will be closest to Red */
@@ -42,15 +39,26 @@
   scrollbar-width: none;
 }
 
+@media not (prefers-contrast) {
+  :root {
+    --border: 0.1rem solid color-mix(in srgb, FieldText 65%, transparent);
+    --border-active-color: color-mix(in srgb, FieldText 80%, transparent);
+    --fill-color: color-mix(in srgb, FieldText 20%, transparent);
+    --today-fill-color: color-mix(in srgb, FieldText 30%, transparent);
+    --button-fill-color-active: color-mix(in srgb, FieldText 30%, transparent);
+  }
+}
+
 html {
   font-size: 10px;
 }
 
 body {
   margin: 0;
-  color: var(--font-color);
   font: message-box;
   font-size: var(--font-size-default);
+  background: Field;
+  color: FieldText;
 }
 
 button {
@@ -71,7 +79,7 @@ button {
   width: 3rem;
   height: var(--date-picker-item-height);
   -moz-context-properties: fill, fill-opacity;
-  fill: var(--font-color);
+  fill: FieldText;
   fill-opacity: .5;
 }
 
@@ -108,6 +116,7 @@ button {
 button.month-year {
   font-size: 1.3rem;
   border: var(--border);
+  color: inherit;
   border-radius: 0.3rem;
   padding-block: 0.2rem;
   padding-inline: 1.2rem 2.6rem;
@@ -129,7 +138,7 @@ button.month-year::after {
   height: 1.6rem;
   background: url("chrome://global/skin/icons/arrow-dropdown-16.svg") no-repeat 50% 50%;
   -moz-context-properties: fill, fill-opacity;
-  fill: var(--font-color);
+  fill: FieldText;
   fill-opacity: .5;
 }
 
@@ -145,7 +154,8 @@ button.month-year.active::after {
   left: 0;
   bottom: 0;
   width: var(--calendar-width);
-  background: window;
+  background-color: window;
+  color: windowtext;
   opacity: 1;
   transition: opacity 0.15s;
 }
@@ -277,7 +287,7 @@ button.month-year.active::after {
 .spinner-container > button {
   height: var(--spinner-button-height);
   -moz-context-properties: fill, fill-opacity;
-  fill: var(--font-color);
+  fill: FieldText;
   fill-opacity: .5;
 }
 
@@ -338,7 +348,14 @@ button.month-year.active::after {
 
 .calendar-container .days-view > div.today::before {
   background: var(--today-fill-color);
+  border: var(--border);
   content: "";
+}
+
+@media not (prefers-contrast) {
+  .calendar-container .days-view > div.today::before {
+    border-width: 0;
+  }
 }
 
 .spinner-container > .spinner:not(.scrolling) > div.selection,
