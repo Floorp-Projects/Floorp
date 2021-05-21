@@ -155,21 +155,16 @@ static ALWAYS_INLINE P applyColor(P src, InvertColor) {
 
 template <typename P>
 static ALWAYS_INLINE P applyColor(P src, P color) {
-  return muldiv256(src, color);
+  return muldiv255(color, src);
 }
 
 static ALWAYS_INLINE WideRGBA8 applyColor(PackedRGBA8 src, WideRGBA8 color) {
-  return muldiv256(unpack(src), color);
+  return applyColor(unpack(src), color);
 }
 
-// Packs a color on a scale of 0..256 rather than 0..255 to allow faster scale
-// math with muldiv256. Note that this can cause a slight rounding difference in
-// the result versus the 255 scale. To alleviate this we scale by 256.49, so
-// that the color rounds slightly up and in turn causes the the value it scales
-// to round slightly up as well.
 template <typename P, typename C>
 static ALWAYS_INLINE auto packColor(P* buf, C color) {
-  return pack_span(buf, color, 256.49f);
+  return pack_span(buf, color, 255.0f);
 }
 
 template <typename P>
@@ -347,11 +342,10 @@ static void* swgl_SpanBuf = nullptr;
 // A pointer into the clip mask for the start of the span.
 static uint8_t* swgl_ClipMaskBuf = nullptr;
 
-static ALWAYS_INLINE WideR8 expand_clip_mask(UNUSED uint8_t* buf, WideR8 mask) {
+static ALWAYS_INLINE WideR8 expand_mask(UNUSED uint8_t* buf, WideR8 mask) {
   return mask;
 }
-static ALWAYS_INLINE WideRGBA8 expand_clip_mask(UNUSED uint32_t* buf,
-                                                WideR8 mask) {
+static ALWAYS_INLINE WideRGBA8 expand_mask(UNUSED uint32_t* buf, WideR8 mask) {
   WideRG8 maskRG = zip(mask, mask);
   return zip(maskRG, maskRG);
 }
@@ -367,9 +361,9 @@ static ALWAYS_INLINE uint8_t* get_clip_mask(P* buf) {
 
 template <typename P>
 static ALWAYS_INLINE auto load_clip_mask(P* buf, int span)
-    -> decltype(expand_clip_mask(buf, 0)) {
-  return expand_clip_mask(
-      buf, unpack(load_span<PackedR8>(get_clip_mask(buf), span)));
+    -> decltype(expand_mask(buf, 0)) {
+  return expand_mask(buf,
+                     unpack(load_span<PackedR8>(get_clip_mask(buf), span)));
 }
 
 // Temporarily removes masking from the blend stage, assuming the caller will

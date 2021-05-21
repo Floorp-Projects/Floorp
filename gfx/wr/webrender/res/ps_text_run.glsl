@@ -326,4 +326,24 @@ void main() {
     #endif
 }
 
+#if defined(SWGL_DRAW_SPAN) && defined(SWGL_BLEND) && defined(SWGL_CLIP_DIST)
+void swgl_drawSpanRGBA8() {
+    // Only support simple swizzles for now. More complex swizzles must either
+    // be handled by blend overrides or the slow path.
+    if (v_mask_swizzle.x != 0.0 && v_mask_swizzle.x != 1.0) {
+        return;
+    }
+
+    #ifdef WR_FEATURE_DUAL_SOURCE_BLENDING
+        swgl_commitTextureLinearRGBA8(sColor0, v_uv, v_uv_bounds);
+    #else
+        if (swgl_isTextureR8(sColor0)) {
+            swgl_commitTextureLinearColorR8ToRGBA8(sColor0, v_uv, v_uv_bounds, v_color);
+        } else {
+            swgl_commitTextureLinearColorRGBA8(sColor0, v_uv, v_uv_bounds, v_color);
+        }
+    #endif
+}
+#endif
+
 #endif // WR_FRAGMENT_SHADER
