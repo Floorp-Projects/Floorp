@@ -213,6 +213,12 @@ export class BaseContent extends React.PureComponent {
       .filter(v => v)
       .join(" ");
 
+    const hasSnippet =
+      enabledSections.snippetsEnabled &&
+      this.props.adminContent &&
+      this.props.adminContent.message &&
+      this.props.adminContent.message.id;
+
     return (
       <div>
         {canShowCustomizationMenu ? (
@@ -231,7 +237,7 @@ export class BaseContent extends React.PureComponent {
         )}
         {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions*/}
         <div className={outerClassName} onClick={this.closeCustomizationMenu}>
-          <main>
+          <main className={hasSnippet ? "has-snippet" : ""}>
             {prefs.showSearch && (
               <div className="non-collapsible-section">
                 <ErrorBoundary>
