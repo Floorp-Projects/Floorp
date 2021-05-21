@@ -1762,7 +1762,7 @@ StartupCache = {
 
       result = aomStartup.decodeBlob(buffer);
     } catch (e) {
-      if (typeof e !== DOMException || e.name !== "NotFoundError") {
+      if (!(e instanceof DOMException) || e.name !== "NotFoundError") {
         Cu.reportError(e);
       }
     }
