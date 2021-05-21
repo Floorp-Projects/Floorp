@@ -732,6 +732,11 @@ void SurfaceTextureHost::PushDisplayItems(wr::DisplayListBuilder& aBuilder,
   }
 }
 
+bool SurfaceTextureHost::SupportsExternalCompositing(
+    WebRenderBackend aBackend) {
+  return aBackend == WebRenderBackend::SOFTWARE;
+}
+
 ////////////////////////////////////////////////////////////////////////
 // AndroidHardwareBufferTextureHost
 
