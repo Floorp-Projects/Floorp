@@ -88,11 +88,13 @@ add_task(async function resetToDefaultConfig() {
       ContentTaskUtils.is_visible(prefResetButton),
       "prefResetButton should be visible"
     );
-    is(
-      prefResetButton.getAttribute("autofocus"),
-      "true",
-      "prefResetButton has autofocus"
-    );
+
+    if (!Services.focus.focusedElement == prefResetButton) {
+      await ContentTaskUtils.waitForEvent(prefResetButton, "focus");
+    }
+
+    Assert.ok(true, "prefResetButton has focus");
+
     prefResetButton.click();
   });
 
