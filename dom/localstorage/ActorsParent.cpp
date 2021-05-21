@@ -960,24 +960,25 @@ Result<bool, nsresult> ExistsAsFile(nsIFile& aFile) {
   enum class ExistsAsFileResult { DoesNotExist, IsDirectory, IsFile };
 
   // This is an optimization to check both properties in one OS case, rather
-  // than calling Exists first, and then IsDirectory. IsDirectory also checks if
-  // the path exists. QM_OR_ELSE_WARN is not used here since we want to ignore
-  // NS_ERROR_FILE_NOT_FOUND/NS_ERROR_FILE_TARGET_DOES_NOT_EXIST completely.
+  // than calling Exists first, and then IsDirectory. IsDirectory also checks
+  // if the path exists. QM_OR_ELSE_WARN is not used here since we just want to
+  // log NS_ERROR_FILE_NOT_FOUND/NS_ERROR_FILE_TARGET_DOES_NOT_EXIST result and
+  // not spam the reports.
   QM_TRY_INSPECT(
       const auto& res,
-      MOZ_TO_RESULT_INVOKE(aFile, IsDirectory)
-          .map([](const bool isDirectory) {
-            return isDirectory ? ExistsAsFileResult::IsDirectory
-                               : ExistsAsFileResult::IsFile;
-          })
-          .orElse(
-              [](const nsresult rv) -> Result<ExistsAsFileResult, nsresult> {
-                if (rv != NS_ERROR_FILE_NOT_FOUND &&
-                    rv != NS_ERROR_FILE_TARGET_DOES_NOT_EXIST) {
-                  return Err(rv);
-                }
-                return ExistsAsFileResult::DoesNotExist;
-              }));
+      QM_OR_ELSE_LOG(
+          MOZ_TO_RESULT_INVOKE(aFile, IsDirectory)
+              .map([](const bool isDirectory) {
+                return isDirectory ? ExistsAsFileResult::IsDirectory
+                                   : ExistsAsFileResult::IsFile;
+              }),
+          ([](const nsresult rv) -> Result<ExistsAsFileResult, nsresult> {
+            if (rv != NS_ERROR_FILE_NOT_FOUND &&
+                rv != NS_ERROR_FILE_TARGET_DOES_NOT_EXIST) {
+              return Err(rv);
+            }
+            return ExistsAsFileResult::DoesNotExist;
+          })));
 
   QM_TRY(OkIf(res != ExistsAsFileResult::IsDirectory), Err(NS_ERROR_FAILURE));
 

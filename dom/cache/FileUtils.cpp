@@ -89,10 +89,11 @@ Result<NotNull<nsCOMPtr<nsIFile>>, nsresult> BodyGetCacheDir(nsIFile& aBaseDir,
   QM_TRY(cacheDir->Append(IntToString(aId.m3[7])));
 
   // Callers call this function without checking if the directory already
-  // exists (idempotent usage). QM_OR_ELSE_WARN is not used here since we want
-  // to ignore NS_ERROR_FILE_ALREADY_EXISTS completely.
-  QM_TRY(ToResult(cacheDir->Create(nsIFile::DIRECTORY_TYPE, 0755))
-             .orElse(ErrToDefaultOkOrErr<NS_ERROR_FILE_ALREADY_EXISTS>));
+  // exists (idempotent usage). QM_OR_ELSE_WARN is not used here since we just
+  // want to log NS_ERROR_FILE_ALREADY_EXISTS result and not spam the reports.
+  QM_TRY(
+      QM_OR_ELSE_LOG(ToResult(cacheDir->Create(nsIFile::DIRECTORY_TYPE, 0755)),
+                     (ErrToDefaultOkOrErr<NS_ERROR_FILE_ALREADY_EXISTS>)));
 
   return WrapNotNullUnchecked(std::move(cacheDir));
 }
@@ -104,10 +105,11 @@ nsresult BodyCreateDir(nsIFile& aBaseDir) {
                  CloneFileAndAppend(aBaseDir, kMorgueDirectory));
 
   // Callers call this function without checking if the directory already
-  // exists (idempotent usage). QM_OR_ELSE_WARN is not used here since we want
-  // to ignore NS_ERROR_FILE_ALREADY_EXISTS completely.
-  QM_TRY(ToResult(bodyDir->Create(nsIFile::DIRECTORY_TYPE, 0755))
-             .orElse(ErrToDefaultOkOrErr<NS_ERROR_FILE_ALREADY_EXISTS>));
+  // exists (idempotent usage). QM_OR_ELSE_WARN is not used here since we just
+  // want to log NS_ERROR_FILE_ALREADY_EXISTS result and not spam the reports.
+  QM_TRY(
+      QM_OR_ELSE_LOG(ToResult(bodyDir->Create(nsIFile::DIRECTORY_TYPE, 0755)),
+                     (ErrToDefaultOkOrErr<NS_ERROR_FILE_ALREADY_EXISTS>)));
 
   return NS_OK;
 }
@@ -380,22 +382,23 @@ nsresult BodyDeleteOrphanedFiles(const QuotaInfo& aQuotaInfo, nsIFile& aBaseDir,
               return false;
             };
 
-            // QM_OR_ELSE_WARN is not used here since we want ignore
-            // NS_ERROR_FILE_FS_CORRUPTED completely (even a warning is not
-            // desired).
-            QM_TRY(ToResult(BodyTraverseFiles(aQuotaInfo, *subdir,
-                                              removeOrphanedFiles,
-                                              /* aCanRemoveFiles */ true,
-                                              /* aTrackQuota */ true))
-                       .orElse([](const nsresult rv) -> Result<Ok, nsresult> {
-                         // We treat NS_ERROR_FILE_FS_CORRUPTED as if the
-                         // directory did not exist at all.
-                         if (rv == NS_ERROR_FILE_FS_CORRUPTED) {
-                           return Ok{};
-                         }
+            // QM_OR_ELSE_WARN is not used here since we just want to log
+            // NS_ERROR_FILE_FS_CORRUPTED result and not spam the reports (even
+            // a warning in the reports is not desired).
+            QM_TRY(QM_OR_ELSE_LOG(
+                ToResult(BodyTraverseFiles(aQuotaInfo, *subdir,
+                                           removeOrphanedFiles,
+                                           /* aCanRemoveFiles */ true,
+                                           /* aTrackQuota */ true)),
+                ([](const nsresult rv) -> Result<Ok, nsresult> {
+                  // We treat NS_ERROR_FILE_FS_CORRUPTED as if the
+                  // directory did not exist at all.
+                  if (rv == NS_ERROR_FILE_FS_CORRUPTED) {
+                    return Ok{};
+                  }
 
-                         return Err(rv);
-                       }));
+                  return Err(rv);
+                })));
             break;
           }
 
