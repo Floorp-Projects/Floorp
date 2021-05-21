@@ -246,7 +246,7 @@ void brush_vs(
 
     switch (color_mode) {
         case COLOR_MODE_ALPHA:
-        case COLOR_MODE_BITMAP:
+        case COLOR_MODE_BITMAP_SHADOW:
             #ifdef SWGL_BLEND
                 swgl_blendDropShadow(image_data.color);
                 v_mask_swizzle = vec2(1.0, 0.0);

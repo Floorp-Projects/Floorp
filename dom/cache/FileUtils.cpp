@@ -89,10 +89,11 @@ Result<NotNull<nsCOMPtr<nsIFile>>, nsresult> BodyGetCacheDir(nsIFile& aBaseDir,
   QM_TRY(cacheDir->Append(IntToString(aId.m3[7])));
 
   // Callers call this function without checking if the directory already
-  // exists (idempotent usage). QM_OR_ELSE_WARN is not used here since we want
-  // to ignore NS_ERROR_FILE_ALREADY_EXISTS completely.
-  QM_TRY(ToResult(cacheDir->Create(nsIFile::DIRECTORY_TYPE, 0755))
-             .orElse(ErrToDefaultOkOrErr<NS_ERROR_FILE_ALREADY_EXISTS>));
+  // exists (idempotent usage). QM_OR_ELSE_WARN is not used here since we just
+  // want to log NS_ERROR_FILE_ALREADY_EXISTS result and not spam the reports.
+  QM_TRY(
+      QM_OR_ELSE_LOG(ToResult(cacheDir->Create(nsIFile::DIRECTORY_TYPE, 0755)),
+                     (ErrToDefaultOkOrErr<NS_ERROR_FILE_ALREADY_EXISTS>)));
 
   return WrapNotNullUnchecked(std::move(cacheDir));
 }
@@ -104,10 +105,11 @@ nsresult BodyCreateDir(nsIFile& aBaseDir) {
                  CloneFileAndAppend(aBaseDir, kMorgueDirectory));
 
   // Callers call this function without checking if the directory already
-  // exists (idempotent usage). QM_OR_ELSE_WARN is not used here since we want
-  // to ignore NS_ERROR_FILE_ALREADY_EXISTS completely.
-  QM_TRY(ToResult(bodyDir->Create(nsIFile::DIRECTORY_TYPE, 0755))
-             .orElse(ErrToDefaultOkOrErr<NS_ERROR_FILE_ALREADY_EXISTS>));
+  // exists (idempotent usage). QM_OR_ELSE_WARN is not used here since we just
+  // want to log NS_ERROR_FILE_ALREADY_EXISTS result and not spam the reports.
+  QM_TRY(
+      QM_OR_ELSE_LOG(ToResult(bodyDir->Create(nsIFile::DIRECTORY_TYPE, 0755)),
+                     (ErrToDefaultOkOrErr<NS_ERROR_FILE_ALREADY_EXISTS>)));
 
   return NS_OK;
 }
@@ -380,22 +382,23 @@ nsresult BodyDeleteOrphanedFiles(const QuotaInfo& aQuotaInfo, nsIFile& aBaseDir,
               return false;
             };
 
-            // QM_OR_ELSE_WARN is not used here since we want ignore
-            // NS_ERROR_FILE_FS_CORRUPTED completely (even a warning is not
-            // desired).
-            QM_TRY(ToResult(BodyTraverseFiles(aQuotaInfo, *subdir,
-                                              removeOrphanedFiles,
-                                              /* aCanRemoveFiles */ true,
-                                              /* aTrackQuota */ true))
-                       .orElse([](const nsresult rv) -> Result<Ok, nsresult> {
-                         // We treat NS_ERROR_FILE_FS_CORRUPTED as if the
-                         // directory did not exist at all.
-                         if (rv == NS_ERROR_FILE_FS_CORRUPTED) {
-                           return Ok{};
-                         }
+            // QM_OR_ELSE_WARN is not used here since we just want to log
+            // NS_ERROR_FILE_FS_CORRUPTED result and not spam the reports (even
+            // a warning in the reports is not desired).
+            QM_TRY(QM_OR_ELSE_LOG(
+                ToResult(BodyTraverseFiles(aQuotaInfo, *subdir,
+                                           removeOrphanedFiles,
+                                           /* aCanRemoveFiles */ true,
+                                           /* aTrackQuota */ true)),
+                ([](const nsresult rv) -> Result<Ok, nsresult> {
+                  // We treat NS_ERROR_FILE_FS_CORRUPTED as if the
+                  // directory did not exist at all.
+                  if (rv == NS_ERROR_FILE_FS_CORRUPTED) {
+                    return Ok{};
+                  }
 
-                         return Err(rv);
-                       }));
+                  return Err(rv);
+                })));
             break;
           }
 
@@ -434,9 +437,23 @@ Result<nsCOMPtr<nsIFile>, nsresult> GetMarkerFileHandle(
 nsresult CreateMarkerFile(const QuotaInfo& aQuotaInfo) {
   QM_TRY_INSPECT(const auto& marker, GetMarkerFileHandle(aQuotaInfo));
 
+  // Callers call this function without checking if the file already exists
+  // (idempotent usage). QM_OR_ELSE_WARN is not used here since we just want
+  // to log NS_ERROR_FILE_ALREADY_EXISTS result and not spam the reports.
+  //
+  // TODO: In theory if this file exists, then Context::~Context should have
+  // cleaned it up, but obviously we can crash and not clean it up, which is
+  // the whole point of the marker file. In that case, we'll realize the marker
+  // file exists in SetupAction::RunSyncWithDBOnTarget and do some cleanup, but
+  // we won't delete the marker file, so if we see this marker file, it is part
+  // of our standard operating procedure to redundantly try and create the
+  // marker here. We currently treat this as idempotent usage, but we could
+  // make sure to delete the marker file when handling the existing marker
+  // file in SetupAction::RunSyncWithDBOnTarget and change QM_OR_ELSE_LOG to
+  // QM_OR_ELSE_WARN in the end.
   QM_TRY(
-      QM_OR_ELSE_WARN(ToResult(marker->Create(nsIFile::NORMAL_FILE_TYPE, 0644)),
-                      MapAlreadyExistsToDefault));
+      QM_OR_ELSE_LOG(ToResult(marker->Create(nsIFile::NORMAL_FILE_TYPE, 0644)),
+                     MapAlreadyExistsToDefault));
 
   // Note, we don't need to fsync here.  We only care about actually
   // writing the marker if later modifications to the Cache are

@@ -36,15 +36,15 @@ using hwy::HWY_NAMESPACE::CombineShiftRightBytes;
 
 class TwoArray {
  public:
-  // Passed to ctor as a value NOT known to the compiler. Must be a multiple of
-  // the vector lane count * 8.
+  // Must be a multiple of the vector lane count * 8.
   static size_t NumItems() { return 3456; }
 
-  explicit TwoArray(const size_t num_items)
-      : a_(AllocateAligned<float>(num_items * 2)), b_(a_.get() + num_items) {
-    const float init = num_items / NumItems();  // 1, but compiler doesn't know
-    std::iota(a_.get(), a_.get() + num_items, init);
-    std::iota(b_, b_ + num_items, init);
+  TwoArray()
+      : a_(AllocateAligned<float>(NumItems() * 2)), b_(a_.get() + NumItems()) {
+    // = 1, but compiler doesn't know
+    const float init = static_cast<float>(Unpredictable1());
+    std::iota(a_.get(), a_.get() + NumItems(), init);
+    std::iota(b_, b_ + NumItems(), init);
   }
 
  protected:
@@ -61,7 +61,7 @@ void RunBenchmark(const char* caption) {
   const FuncInput inputs[kNumInputs] = {num_items};
   Result results[kNumInputs];
 
-  Benchmark benchmark(num_items);
+  Benchmark benchmark;
 
   Params p;
   p.verbose = false;
@@ -100,7 +100,7 @@ void Intro() {
 // 0.4 cyc/float = bronze, 0.25 = silver, 0.15 = gold!
 class BenchmarkDot : public TwoArray {
  public:
-  explicit BenchmarkDot(size_t num_items) : TwoArray(num_items), dot_{-1.0f} {}
+  BenchmarkDot() : dot_{-1.0f} {}
 
   FuncOutput operator()(const size_t num_items) {
     HWY_FULL(float) d;
@@ -131,7 +131,8 @@ class BenchmarkDot : public TwoArray {
         sum[i] += sum[i + power];
       }
     }
-    return dot_ = GetLane(SumOfLanes(sum[0]));
+    dot_ = GetLane(SumOfLanes(sum[0]));
+    return static_cast<FuncOutput>(dot_);
   }
   void Verify(size_t num_items) {
     if (dot_ == -1.0f) {
@@ -156,8 +157,6 @@ class BenchmarkDot : public TwoArray {
 // INTERMEDIATE: delta coding
 // 1.0 cycles/float = bronze, 0.7 = silver, 0.4 = gold!
 struct BenchmarkDelta : public TwoArray {
-  explicit BenchmarkDelta(size_t num_items) : TwoArray(num_items) {}
-
   FuncOutput operator()(const size_t num_items) const {
 #if HWY_TARGET == HWY_SCALAR
     b_[0] = a_[0];
@@ -196,7 +195,7 @@ struct BenchmarkDelta : public TwoArray {
       Store(a - shifted, df, &b_[i]);
     }
 #endif
-    return b_[num_items - 1];
+    return static_cast<FuncOutput>(b_[num_items - 1]);
   }
 
   void Verify(size_t num_items) {

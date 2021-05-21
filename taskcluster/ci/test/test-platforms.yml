@@ -53,7 +53,6 @@ linux1804-64/opt:
         - linux-talos-flex
         - raptor-firefox
         - browsertime
-        - raptor-fetch-firefox
 
 linux1804-64/debug:
     build-platform: linux64/debug
@@ -77,13 +76,8 @@ linux1804-64-shippable/opt:
         - talos
         - linux-talos-flex
         - raptor-chrome
-        - raptor-chromium
-        - raptor-fetch-chromium
         - raptor-firefox
         - browsertime
-        - raptor-fetch-firefox
-        - raptor-profiling
-        - raptor-fetch-profiling
         - talos-profiling
 
 linux1804-64-devedition/opt:
@@ -116,7 +110,6 @@ linux1804-64-qr/opt:
         - talos
         - raptor-firefox
         - browsertime
-        - raptor-fetch-firefox
 
 linux1804-64-shippable-qr/opt:
     build-platform: linux64-shippable/opt
@@ -129,7 +122,6 @@ linux1804-64-shippable-qr/opt:
         - talos-profiling
         - raptor-firefox
         - browsertime
-        - raptor-fetch-firefox
 
 linux1804-64-qr/debug:
     build-platform: linux64/debug
@@ -205,7 +197,6 @@ windows10-32-shippable/opt:
         - browsertime
         - desktop-screenshot-capture
         - raptor-chrome
-        - raptor-chromium
         - raptor-firefox
         - web-platform-tests
         - web-platform-tests-wdspec-headless
@@ -290,10 +281,8 @@ windows10-64-shippable/opt:
         - web-platform-tests-backlog
         - web-platform-tests-wdspec-headless
         - raptor-chrome
-        - raptor-chromium
         - raptor-firefox
         - browsertime
-        - raptor-profiling
         - talos-profiling
         - mochitest-webgpu
 
@@ -403,10 +392,8 @@ macosx1015-64-shippable-qr/opt:
         - awsy
         - browsertime
         - raptor-chrome
-        - raptor-chromium
         - raptor-firefox
         - raptor-firefox-power
-        - raptor-profiling
         - talos-profiling
         - macosx1015-64-qr-tests
         - web-platform-tests

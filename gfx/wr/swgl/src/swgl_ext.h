@@ -14,10 +14,10 @@ static void commit_masked_solid_span(P* buf, C color, int len) {
   for (P* end = &buf[len]; buf < end; buf += 4, mask += 4) {
     commit_span(
         buf,
-        blend_span(buf,
-                   applyColor(expand_clip_mask(
-                                  buf, unpack(unaligned_load<PackedR8>(mask))),
-                              color)));
+        blend_span(
+            buf,
+            applyColor(expand_mask(buf, unpack(unaligned_load<PackedR8>(mask))),
+                       color)));
   }
   restore_clip_mask();
 }
@@ -613,6 +613,44 @@ static inline LinearFilter needsTextureLinear(S sampler, T P, int span) {
   swgl_commitTextureLinear(RGBA8, s, p, uv_rect, color, swgl_SpanLength)
 #define swgl_commitTextureLinearColorR8(s, p, uv_rect, color) \
   swgl_commitTextureLinear(R8, s, p, uv_rect, color, swgl_SpanLength)
+
+// Helper function that samples from an R8 texture while expanding it to support
+// a differing framebuffer format.
+template <bool BLEND, typename S, typename C, typename P>
+static inline int blendTextureLinearR8(S sampler, vec2 uv, int span,
+                                       const vec4_scalar& uv_rect, C color,
+                                       P* buf) {
+  if (!swgl_isTextureR8(sampler)) {
+    return 0;
+  }
+  LINEAR_QUANTIZE_UV(sampler, uv, uv_step, uv_rect, min_uv, max_uv);
+  for (P* end = buf + span; buf < end; buf += swgl_StepSize, uv += uv_step) {
+    commit_blend_span<BLEND>(
+        buf, applyColor(expand_mask(buf, textureLinearUnpackedR8(
+                                             sampler,
+                                             ivec2(clamp(uv, min_uv, max_uv)))),
+                        color));
+  }
+  return span;
+}
+
+// Commit an entire span with linear filtering while expanding from R8 to RGBA8
+#define swgl_commitTextureLinearColorR8ToRGBA8(s, p, uv_rect, color)      \
+  do {                                                                    \
+    auto packed_color = packColor(swgl_OutRGBA8, color);                  \
+    int drawn = 0;                                                        \
+    if (blend_key) {                                                      \
+      drawn = blendTextureLinearR8<true>(s, p, swgl_SpanLength, uv_rect,  \
+                                         packed_color, swgl_OutRGBA8);    \
+    } else {                                                              \
+      drawn = blendTextureLinearR8<false>(s, p, swgl_SpanLength, uv_rect, \
+                                          packed_color, swgl_OutRGBA8);   \
+    }                                                                     \
+    swgl_OutRGBA8 += drawn;                                               \
+    swgl_SpanLength -= drawn;                                             \
+  } while (0)
+#define swgl_commitTextureLinearR8ToRGBA8(s, p, uv_rect) \
+  swgl_commitTextureLinearColorR8ToRGBA8(s, p, uv_rect, NoColor())
 
 // Compute repeating UVs, possibly constrained by tile repeat limits
 static inline vec2 tileRepeatUV(vec2 uv, const vec2_scalar& tile_repeat) {
@@ -1763,6 +1801,14 @@ static ALWAYS_INLINE int calcAAEdgeMask(bvec4_scalar mask) {
     swgl_ClipFlags |= SWGL_CLIP_FLAG_BLEND_OVERRIDE;        \
     swgl_BlendOverride = BLEND_KEY(SWGL_BLEND_DROP_SHADOW); \
     swgl_BlendColorRGBA8 = packColor<uint32_t>(color);      \
+  } while (0)
+
+#define swgl_blendSubpixelText(color)                         \
+  do {                                                        \
+    swgl_ClipFlags |= SWGL_CLIP_FLAG_BLEND_OVERRIDE;          \
+    swgl_BlendOverride = BLEND_KEY(SWGL_BLEND_SUBPIXEL_TEXT); \
+    swgl_BlendColorRGBA8 = packColor<uint32_t>(color);        \
+    swgl_BlendAlphaRGBA8 = alphas(swgl_BlendColorRGBA8);      \
   } while (0)
 
 // Dispatch helper used by the GLSL translator to swgl_drawSpan functions.

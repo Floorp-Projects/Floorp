@@ -17,14 +17,12 @@ registerCleanupFunction(async function resetToolbar() {
 });
 
 add_task(async function setupHomeButton() {
-  if (CustomizableUI.protonToolbarEnabled) {
-    // Put the home button in the pre-proton placement to test focus states.
-    CustomizableUI.addWidgetToArea(
-      "home-button",
-      "nav-bar",
-      CustomizableUI.getPlacementOfWidget("stop-reload-button").position + 1
-    );
-  }
+  // Put the home button in the pre-proton placement to test focus states.
+  CustomizableUI.addWidgetToArea(
+    "home-button",
+    "nav-bar",
+    CustomizableUI.getPlacementOfWidget("stop-reload-button").position + 1
+  );
 });
 
 function synthesizeKeyAndWaitForFocus(element, keyCode, options) {

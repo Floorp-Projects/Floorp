@@ -460,6 +460,12 @@ void MacroAssembler::mul64(const Register64& src, const Register64& dest,
       ARMRegister(src.reg, 64));
 }
 
+void MacroAssembler::mul64(const Register64& src1, const Register64& src2,
+                           const Register64& dest) {
+  Mul(ARMRegister(dest.reg, 64), ARMRegister(src1.reg, 64),
+      ARMRegister(src2.reg, 64));
+}
+
 void MacroAssembler::mulBy3(Register src, Register dest) {
   ARMRegister xdest(dest, 64);
   ARMRegister xsrc(src, 64);

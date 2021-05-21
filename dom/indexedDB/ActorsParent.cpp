@@ -5728,6 +5728,14 @@ nsresult DeleteFile(nsIFile& aFile, QuotaManager* const aQuotaManager,
   MOZ_ASSERT(!NS_IsMainThread());
   MOZ_ASSERT(!IsOnBackgroundThread());
 
+  // Callers which pass Idempotency::Yes call this function without checking if
+  // the file already exists (idempotent usage). QM_OR_ELSE_WARN is not used
+  // here since we just want to log NS_ERROR_FILE_NOT_FOUND and
+  // NS_ERROR_FILE_TARGET_DOES_NOT_EXIST results and not spam the reports.
+  // Theoretically, there should be no QM_OR_ELSE_(WARN|LOG) when a caller
+  // passes Idempotency::No, but it's simpler when the orElse function just
+  // always propagates the passed error.
+
   QM_TRY_INSPECT(
       const auto& fileSize,
       ([aQuotaManager, &aFile,
@@ -5735,7 +5743,7 @@ nsresult DeleteFile(nsIFile& aFile, QuotaManager* const aQuotaManager,
         if (aQuotaManager) {
           QM_TRY_INSPECT(
               const Maybe<int64_t>& fileSize,
-              QM_OR_ELSE_WARN(
+              QM_OR_ELSE_LOG(
                   MOZ_TO_RESULT_INVOKE(aFile, GetFileSize)
                       .map([](const int64_t val) { return Some(val); }),
                   MakeMaybeIdempotentFilter<int64_t>(aIdempotent)));
@@ -5756,8 +5764,8 @@ nsresult DeleteFile(nsIFile& aFile, QuotaManager* const aQuotaManager,
   }
 
   QM_TRY_INSPECT(const auto& didExist,
-                 QM_OR_ELSE_WARN(ToResult(aFile.Remove(false)).map(Some<Ok>),
-                                 MakeMaybeIdempotentFilter<Ok>(aIdempotent)));
+                 QM_OR_ELSE_LOG(ToResult(aFile.Remove(false)).map(Some<Ok>),
+                                MakeMaybeIdempotentFilter<Ok>(aIdempotent)));
 
   if (!didExist) {
     // XXX If we get here, this means that the file still existed when we
@@ -5790,6 +5798,10 @@ nsresult DeleteFile(nsIFile& aDirectory, const nsAString& aFilename,
                     aIdempotent);
 }
 
+// Delete files in a directory that you think exists. If the directory doesn't
+// exist, an error will not be returned, but warning telemetry will be
+// generated! So only call this on directories that you know exist (idempotent
+// usage, but it's not recommended).
 nsresult DeleteFilesNoQuota(nsIFile* aDirectory, const nsAString& aFilename) {
   AssertIsOnIOThread();
   MOZ_ASSERT(aDirectory);
@@ -5825,7 +5837,24 @@ Result<nsCOMPtr<nsIFile>, nsresult> CreateMarkerFile(
       CloneFileAndAppend(aBaseDirectory,
                          kIdbDeletionMarkerFilePrefix + aDatabaseNameBase));
 
-  QM_TRY(QM_OR_ELSE_WARN(
+  // Callers call this function without checking if the file already exists
+  // (idempotent usage). QM_OR_ELSE_WARN is not used here since we just want
+  // to log NS_ERROR_FILE_ALREADY_EXISTS result and not spam the reports.
+  //
+  // TODO: In theory if this file exists, then RemoveDatabaseFilesAndDirectory
+  // should have cleaned it up, but obviously we can crash and not clean it up,
+  // which is the whole point of the marker file. In that case, we'll realize
+  // the marker file exists in OpenDatabaseOp::DoDatabaseWork or
+  // GetUsageForOriginInternal and resume the removal by calling
+  // RemoveDatabaseFilesAndDirectory again, but we will also try to create the
+  // marker file again, so if we see this marker file, it is part
+  // of our standard operating procedure to redundantly try and create the
+  // marker here. We currently treat this as idempotent usage, but we could
+  // add an additional argument to RemoveDatabaseFilesAndDirectory which would
+  // indicate that we are resuming an unfinished removal, so the marker already
+  // exists and doesn't have to be created, and change QM_OR_ELSE_LOG to
+  // QM_OR_ELSE_WARN in the end.
+  QM_TRY(QM_OR_ELSE_LOG(
       ToResult(markerFile->Create(nsIFile::NORMAL_FILE_TYPE, 0644)),
       ErrToDefaultOkOrErr<NS_ERROR_FILE_ALREADY_EXISTS>));
 
@@ -12428,6 +12457,11 @@ Result<FileUsageType, nsresult> FileManager::GetUsage(nsIFile* aDirectory) {
         nsresult rv;
         leafName.ToInteger64(&rv);
         if (NS_SUCCEEDED(rv)) {
+          // Usually we only use QM_OR_ELSE_LOG/QM_OR_ELSE_LOG_IF with Remove
+          // and NS_ERROR_FILE_NOT_FOUND/NS_ERROR_FILE_TARGET_DOES_NOT_EXIST
+          // check, but the file was found by a directory traversal and
+          // ToInteger on the name succeeded, so it should be our file and if
+          // the file disappears, the use of QM_OR_ELSE_WARN is ok here.
           QM_TRY_INSPECT(
               const auto& thisUsage,
               QM_OR_ELSE_WARN(
@@ -12863,17 +12897,19 @@ nsresult QuotaClient::GetUsageForOriginInternal(
                        CloneFileAndAppend(*directory,
                                           databaseFilename + kSQLiteWALSuffix));
 
-        // QM_OR_ELSE_WARN is not used here since we want to ignore
+        // QM_OR_ELSE_WARN is not used here since we just want to log
         // NS_ERROR_FILE_NOT_FOUND/NS_ERROR_FILE_TARGET_DOES_NOT_EXIST
-        // completely (the -wal file doesn't have to exist).
-        QM_TRY_INSPECT(const int64_t& walFileSize,
-                       MOZ_TO_RESULT_INVOKE(walFile, GetFileSize)
-                           .orElse([](const nsresult rv) {
+        // result and not spam the reports (the -wal file doesn't have to
+        // exist).
+        QM_TRY_INSPECT(
+            const int64_t& walFileSize,
+            QM_OR_ELSE_LOG(MOZ_TO_RESULT_INVOKE(walFile, GetFileSize),
+                           ([](const nsresult rv) {
                              return (rv == NS_ERROR_FILE_NOT_FOUND ||
                                      rv == NS_ERROR_FILE_TARGET_DOES_NOT_EXIST)
                                         ? Result<int64_t, nsresult>{0}
                                         : Err(rv);
-                           }));
+                           })));
         MOZ_ASSERT(walFileSize >= 0);
         *aUsageInfo += DatabaseUsageType(Some(uint64_t(walFileSize)));
       }
@@ -14606,7 +14642,9 @@ nsresult DatabaseOperationBase::InsertIndexTableRows(
     QM_TRY(aObjectStoreKey.BindToStatement(&*borrowedStmt,
                                            kStmtParamNameObjectDataKey));
 
-    QM_TRY(QM_OR_ELSE_WARN(
+    // QM_OR_ELSE_WARN is not used here since we just want to log the
+    // collision and not spam the reports.
+    QM_TRY(QM_OR_ELSE_LOG(
         ToResult(borrowedStmt->Execute()),
         ([&info, index, &aIndexValues](nsresult rv) -> Result<Ok, nsresult> {
           if (rv == NS_ERROR_STORAGE_CONSTRAINT && info.mUnique) {

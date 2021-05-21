@@ -384,9 +384,9 @@ menupopup::part(drop-indicator) {
 /* Override theme colors since the picker uses extra colors that
    themes cannot set */
 #DateTimePickerPanel {
-  --arrowpanel-background: var(--default-arrowpanel-background);
-  --arrowpanel-color: var(--default-arrowpanel-color);
-  --arrowpanel-border-color: var(--default-arrowpanel-border-color);
+  --arrowpanel-background: Field;
+  --arrowpanel-color: FieldText;
+  --arrowpanel-border-color: ThreeDShadow;
 }
 
 #DateTimePickerPanel[side="top"],

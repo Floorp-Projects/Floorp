@@ -45,9 +45,7 @@ add_task(async function test_help_menu_app_menu() {
   menuButton.click();
   await BrowserTestUtils.waitForEvent(window.PanelUI.mainView, "ViewShown");
 
-  let helpButtonId = PanelUI.protonAppMenuEnabled
-    ? "appMenu-help-button2"
-    : "appMenu-help-button";
+  let helpButtonId = "appMenu-help-button2";
   document.getElementById(helpButtonId).click();
   await BrowserTestUtils.waitForEvent(
     document.getElementById("PanelUI-helpView"),

@@ -132,6 +132,28 @@
 // HWY_TARGET_STR remains undefined so HWY_ATTR is a no-op.
 
 //-----------------------------------------------------------------------------
+// SVE[2]
+#elif HWY_TARGET == HWY_SVE2 || HWY_TARGET == HWY_SVE
+
+// SVE only requires lane alignment, not natural alignment of the entire vector.
+#define HWY_ALIGN alignas(8)
+// Upper bound, not the actual lane count!
+#define HWY_LANES(T) (256 / sizeof(T))
+
+#define HWY_CAP_INTEGER64 1
+#define HWY_CAP_FLOAT64 1
+#define HWY_CAP_GE256 0
+#define HWY_CAP_GE512 0
+
+#if HWY_TARGET == HWY_SVE2
+#define HWY_NAMESPACE N_SVE2
+#else
+#define HWY_NAMESPACE N_SVE
+#endif
+
+// HWY_TARGET_STR remains undefined - TODO(janwas): attribute for SVE?
+
+//-----------------------------------------------------------------------------
 // WASM
 #elif HWY_TARGET == HWY_WASM
 
@@ -175,6 +197,7 @@
 #elif HWY_TARGET == HWY_SCALAR
 
 #define HWY_ALIGN
+// For internal use only; use Lanes(d) instead.
 #define HWY_LANES(T) 1
 
 #define HWY_CAP_INTEGER64 1

@@ -192,36 +192,16 @@ struct TestNaN {
     HWY_ASSERT(AllFalse(Lt(nan, v1)));
     HWY_ASSERT(AllFalse(Ge(nan, v1)));
     HWY_ASSERT(AllFalse(Le(nan, v1)));
-  }
-};
 
-// For functions only available for float32
-struct TestF32NaN {
-  template <class T, class D>
-  HWY_NOINLINE void operator()(T /*unused*/, D d) {
-    const auto v1 = Set(d, T(Unpredictable1()));
-    const auto nan = IfThenElse(Eq(v1, Set(d, T(1))), NaN(d), v1);
-    HWY_ASSERT_NAN(d, ApproximateReciprocal(nan));
-    HWY_ASSERT_NAN(d, ApproximateReciprocalSqrt(nan));
-    HWY_ASSERT_NAN(d, AbsDiff(nan, v1));
-    HWY_ASSERT_NAN(d, AbsDiff(v1, nan));
-  }
-};
-
-// TODO(janwas): move to TestNaN once supported for partial vectors
-struct TestFullNaN {
-  template <class T, class D>
-  HWY_NOINLINE void operator()(T /*unused*/, D d) {
-    const auto v1 = Set(d, T(Unpredictable1()));
-    const auto nan = IfThenElse(Eq(v1, Set(d, T(1))), NaN(d), v1);
-
+    // Reduction
     HWY_ASSERT_NAN(d, SumOfLanes(nan));
-// Reduction (pending clarification on RVV)
+// TODO(janwas): re-enable after QEMU is fixed
 #if HWY_TARGET != HWY_RVV
     HWY_ASSERT_NAN(d, MinOfLanes(nan));
     HWY_ASSERT_NAN(d, MaxOfLanes(nan));
 #endif
 
+    // Min
 #if HWY_ARCH_X86 && HWY_TARGET != HWY_SCALAR
     // x86 SIMD returns the second operand if any input is NaN.
     HWY_ASSERT_VEC_EQ(d, v1, Min(nan, v1));
@@ -257,10 +237,22 @@ struct TestFullNaN {
   }
 };
 
+// For functions only available for float32
+struct TestF32NaN {
+  template <class T, class D>
+  HWY_NOINLINE void operator()(T /*unused*/, D d) {
+    const auto v1 = Set(d, T(Unpredictable1()));
+    const auto nan = IfThenElse(Eq(v1, Set(d, T(1))), NaN(d), v1);
+    HWY_ASSERT_NAN(d, ApproximateReciprocal(nan));
+    HWY_ASSERT_NAN(d, ApproximateReciprocalSqrt(nan));
+    HWY_ASSERT_NAN(d, AbsDiff(nan, v1));
+    HWY_ASSERT_NAN(d, AbsDiff(v1, nan));
+  }
+};
+
 HWY_NOINLINE void TestAllNaN() {
   ForFloatTypes(ForPartialVectors<TestNaN>());
   ForPartialVectors<TestF32NaN>()(float());
-  ForFloatTypes(ForFullVectors<TestFullNaN>());
 }
 
 struct TestCopyAndAssign {

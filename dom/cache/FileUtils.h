@@ -76,6 +76,10 @@ bool MarkerFileExists(const QuotaInfo& aQuotaInfo);
 nsresult RemoveNsIFileRecursively(const QuotaInfo& aQuotaInfo, nsIFile& aFile,
                                   bool aTrackQuota = true);
 
+// Delete a file that you think exists. If the file doesn't exist, an error
+// will not be returned, but warning telemetry will be generated! So only call
+// this on files that you know exist (idempotent usage, but it's not
+// recommended).
 nsresult RemoveNsIFile(const QuotaInfo& aQuotaInfo, nsIFile& aFile,
                        bool aTrackQuota = true);
 

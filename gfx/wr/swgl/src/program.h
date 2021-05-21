@@ -12,6 +12,12 @@ namespace glsl {
 // to operate in Float-sized chunks.
 typedef vec3 Interpolants;
 
+// Clip distances, if enabled, are always stored in the first SIMD chunk of the
+// interpolants.
+static ALWAYS_INLINE Float get_clip_distances(const Interpolants& interp) {
+  return interp.x;
+}
+
 struct VertexShaderImpl;
 struct FragmentShaderImpl;
 
@@ -27,6 +33,9 @@ struct ProgramImpl {
 };
 
 typedef ProgramImpl* (*ProgramLoader)();
+
+// The maximum size of the gl_ClipDistance array.
+constexpr int32_t gl_MaxClipDistances = 4;
 
 struct VertexShaderImpl {
   typedef void (*SetUniform1iFunc)(VertexShaderImpl*, int index, int value);
@@ -47,7 +56,17 @@ struct VertexShaderImpl {
   LoadAttribsFunc load_attribs_func = nullptr;
   RunPrimitiveFunc run_primitive_func = nullptr;
 
+  enum FLAGS {
+    CLIP_DISTANCE = 1 << 0,
+  };
+  int flags = 0;
+  void enable_clip_distance() { flags |= CLIP_DISTANCE; }
+  ALWAYS_INLINE bool use_clip_distance() const {
+    return (flags & CLIP_DISTANCE) != 0;
+  }
+
   vec4 gl_Position;
+  Float gl_ClipDistance[gl_MaxClipDistances];
 
   void set_uniform_1i(int index, int value) {
     (*set_uniform_1i_func)(this, index, value);

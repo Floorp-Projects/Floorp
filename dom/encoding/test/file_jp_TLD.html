@@ -1,0 +1,9 @@
+<!DOCTYPE html>
+<title>Это тест кодировки символов</title>
+<script>
+function report() {
+  window.parent.postMessage(document.characterSet, "*");
+}
+</script>
+<body onload="report();">
+<p>Это тест кодировки символов.</p>

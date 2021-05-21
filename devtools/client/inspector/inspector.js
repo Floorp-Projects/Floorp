@@ -1875,7 +1875,7 @@ Inspector.prototype = {
       "devtools.screenshot.clipboard.enabled"
     );
     const args = {
-      file: true,
+      file: !clipboardEnabled,
       nodeActorID: this.selection.nodeFront.actorID,
       clipboard: clipboardEnabled,
     };

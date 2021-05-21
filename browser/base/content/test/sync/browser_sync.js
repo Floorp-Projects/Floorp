@@ -12,16 +12,13 @@ let gCUITestUtils = new CustomizableUITestUtils(window);
 add_task(async function setup() {
   // gSync.init() is called in a requestIdleCallback. Force its initialization.
   gSync.init();
-  if (PanelUI.protonAppMenuEnabled) {
-    // This preference gets set the very first time that the FxA menu gets opened,
-    // which can cause a state write to occur, which can confuse this test in the
-    // Proton AppMenu case, since when in the signed-out state, we need to set
-    // the state _before_ opening the FxA menu (since the panel cannot be opened)
-    // in the signed out state.
-    await SpecialPowers.pushPrefEnv({
-      set: [["identity.fxaccounts.toolbar.accessed", true]],
-    });
-  }
+  // This preference gets set the very first time that the FxA menu gets opened,
+  // which can cause a state write to occur, which can confuse this test, since
+  // when in the signed-out state, we need to set the state _before_ opening
+  // the FxA menu (since the panel cannot be opened) in the signed out state.
+  await SpecialPowers.pushPrefEnv({
+    set: [["identity.fxaccounts.toolbar.accessed", true]],
+  });
 });
 
 add_task(async function test_ui_state_notification_calls_updateAllUI() {
@@ -39,8 +36,6 @@ add_task(async function test_ui_state_notification_calls_updateAllUI() {
 
 add_task(async function test_navBar_button_visibility() {
   const button = document.getElementById("fxa-toolbar-menu-button");
-  info("proton enabled: " + CustomizableUI.protonToolbarEnabled);
-
   ok(button.closest("#nav-bar"), "button is in the #nav-bar");
 
   const state = {
@@ -48,10 +43,9 @@ add_task(async function test_navBar_button_visibility() {
     syncEnabled: true,
   };
   gSync.updateAllUI(state);
-  is(
-    BrowserTestUtils.is_visible(button),
-    !CustomizableUI.protonToolbarEnabled,
-    "Check button visibility with STATUS_NOT_CONFIGURED"
+  ok(
+    BrowserTestUtils.is_hidden(button),
+    "Button should be hidden with STATUS_NOT_CONFIGURED"
   );
 
   state.status = UIState.STATUS_NOT_VERIFIED;
@@ -86,7 +80,6 @@ add_task(async function test_navBar_button_visibility() {
 
 add_task(async function test_overflow_navBar_button_visibility() {
   const button = document.getElementById("fxa-toolbar-menu-button");
-  info("proton enabled: " + CustomizableUI.protonToolbarEnabled);
 
   let overflowPanel = document.getElementById("widget-overflow");
   overflowPanel.setAttribute("animate", "false");
@@ -122,11 +115,11 @@ add_task(async function test_overflow_navBar_button_visibility() {
   };
   gSync.updateAllUI(state);
 
-  is(
-    BrowserTestUtils.is_visible(button),
-    !CustomizableUI.protonToolbarEnabled,
-    "Check button visibility with STATUS_NOT_CONFIGURED"
+  ok(
+    BrowserTestUtils.is_hidden(button),
+    "Button should be hidden with STATUS_NOT_CONFIGURED"
   );
+
   let hidePanelPromise = BrowserTestUtils.waitForEvent(
     overflowPanel,
     "popuphidden"
@@ -157,12 +150,6 @@ add_task(async function setupForPanelTests() {
 add_task(async function test_ui_state_signedin() {
   await BrowserTestUtils.openNewForegroundTab(gBrowser, "https://example.com/");
 
-  if (!PanelUI.protonAppMenuEnabled) {
-    // If the Proton AppMenu is not enabled, then the Firefox Accounts panel
-    // can be opened while in the signed-out state.
-    await openFxaPanel();
-  }
-
   const relativeDateAnchor = new Date();
   let state = {
     status: UIState.STATUS_SIGNED_IN,
@@ -185,11 +172,7 @@ add_task(async function test_ui_state_signedin() {
 
   gSync.updateAllUI(state);
 
-  if (PanelUI.protonAppMenuEnabled) {
-    // If the Proton AppMenu is enabled, then at this point we can open the
-    // Firefox Accounts panel.
-    await openFxaPanel();
-  }
+  await openFxaPanel();
 
   checkMenuBarItem("sync-syncnowitem");
   checkPanelHeader();
@@ -333,58 +316,19 @@ add_task(async function test_ui_state_panel_open_after_syncing() {
 add_task(async function test_ui_state_unconfigured() {
   await BrowserTestUtils.openNewForegroundTab(gBrowser, "https://example.com/");
 
-  if (!PanelUI.protonAppMenuEnabled) {
-    // If the Proton AppMenu is not enabled, then the Firefox Accounts panel
-    // can be opened while in the signed-out state.
-    await openFxaPanel();
-  }
-
   let state = {
     status: UIState.STATUS_NOT_CONFIGURED,
   };
 
   gSync.updateAllUI(state);
 
-  let appMenuStatusID = PanelUI.protonAppMenuEnabled
-    ? "appMenu-fxa-status2"
-    : "appMenu-fxa-status";
-  let appMenuStatus = PanelMultiView.getViewNode(document, appMenuStatusID);
-
   checkMenuBarItem("sync-setup");
 
-  // With Proton not enabled, it's possible to open the FxA Panel to see the
-  // signed out state.
-  if (!PanelUI.protonAppMenuEnabled) {
-    let signedOffLabel = appMenuStatus.getAttribute("defaultlabel");
-    checkPanelUIStatusBar({
-      description: signedOffLabel,
-    });
-    checkFxaToolbarButtonPanel({
-      headerTitle: signedOffLabel,
-      headerDescription: "Turn on Sync",
-      enabledItems: [
-        "PanelUI-fxa-menu-sendtab-button",
-        "PanelUI-fxa-menu-setup-sync-button",
-        "PanelUI-fxa-menu-account-signout-button",
-      ],
-      disabledItems: ["PanelUI-fxa-menu-connect-device-button"],
-      hiddenItems: [
-        "PanelUI-fxa-menu-syncnow-button",
-        "PanelUI-fxa-menu-sync-prefs-button",
-      ],
-    });
-  }
   checkFxAAvatar("not_configured");
 
-  let signedOffLabel;
-  if (!PanelUI.protonAppMenuEnabled) {
-    await closeFxaPanel();
-    signedOffLabel = appMenuStatus.getAttribute("defaultlabel");
-  } else {
-    signedOffLabel = gSync.fluentStrings.formatValueSync(
-      "appmenu-fxa-signed-in-label"
-    );
-  }
+  let signedOffLabel = gSync.fluentStrings.formatValueSync(
+    "appmenu-fxa-signed-in-label"
+  );
 
   await openMainPanel();
 
@@ -399,12 +343,6 @@ add_task(async function test_ui_state_unconfigured() {
 add_task(async function test_ui_state_syncdisabled() {
   await BrowserTestUtils.openNewForegroundTab(gBrowser, "https://example.com/");
 
-  if (!PanelUI.protonAppMenuEnabled) {
-    // If the Proton AppMenu is not enabled, then the Firefox Accounts panel
-    // can be opened while in the signed-out state.
-    await openFxaPanel();
-  }
-
   let state = {
     status: UIState.STATUS_SIGNED_IN,
     syncEnabled: false,
@@ -415,11 +353,7 @@ add_task(async function test_ui_state_syncdisabled() {
 
   gSync.updateAllUI(state);
 
-  if (PanelUI.protonAppMenuEnabled) {
-    // If Proton AppMenu is enabled, we can now open the panel now that
-    // it thinks we're signed in.
-    await openFxaPanel();
-  }
+  await openFxaPanel();
 
   checkMenuBarItem("sync-enable");
   checkPanelHeader();
@@ -455,12 +389,6 @@ add_task(async function test_ui_state_syncdisabled() {
 add_task(async function test_ui_state_unverified() {
   await BrowserTestUtils.openNewForegroundTab(gBrowser, "https://example.com/");
 
-  if (!PanelUI.protonAppMenuEnabled) {
-    // If the Proton AppMenu is not enabled, then the Firefox Accounts panel
-    // can be opened while in the signed-out state.
-    await openFxaPanel();
-  }
-
   let state = {
     status: UIState.STATUS_NOT_VERIFIED,
     email: "foo@bar.com",
@@ -469,11 +397,7 @@ add_task(async function test_ui_state_unverified() {
 
   gSync.updateAllUI(state);
 
-  if (PanelUI.protonAppMenuEnabled) {
-    // If Proton AppMenu is enabled, we can now open the panel now that
-    // it thinks we're signed in.
-    await openFxaPanel();
-  }
+  await openFxaPanel();
 
   const expectedLabel = gSync.fluentStrings.formatValueSync(
     "account-finish-account-setup"
@@ -500,7 +424,7 @@ add_task(async function test_ui_state_unverified() {
   await openMainPanel();
 
   checkPanelUIStatusBar({
-    description: PanelUI.protonAppMenuEnabled ? state.email : expectedLabel,
+    description: state.email,
     title: expectedLabel,
     titleHidden: false,
     hideFxAText: true,
@@ -512,12 +436,6 @@ add_task(async function test_ui_state_unverified() {
 add_task(async function test_ui_state_loginFailed() {
   await BrowserTestUtils.openNewForegroundTab(gBrowser, "https://example.com/");
 
-  if (!PanelUI.protonAppMenuEnabled) {
-    // If the Proton AppMenu is not enabled, then the Firefox Accounts panel
-    // can be opened while in the signed-out state.
-    await openFxaPanel();
-  }
-
   let state = {
     status: UIState.STATUS_LOGIN_FAILED,
     email: "foo@bar.com",
@@ -525,11 +443,7 @@ add_task(async function test_ui_state_loginFailed() {
 
   gSync.updateAllUI(state);
 
-  if (PanelUI.protonAppMenuEnabled) {
-    // If Proton AppMenu is enabled, we can now open the panel now that
-    // it thinks we're signed in.
-    await openFxaPanel();
-  }
+  await openFxaPanel();
 
   const expectedLabel = gSync.fluentStrings.formatValueSync(
     "account-disconnected2"
@@ -556,7 +470,7 @@ add_task(async function test_ui_state_loginFailed() {
   await openMainPanel();
 
   checkPanelUIStatusBar({
-    description: PanelUI.protonAppMenuEnabled ? state.email : expectedLabel,
+    description: state.email,
     title: expectedLabel,
     titleHidden: false,
     hideFxAText: true,
@@ -574,17 +488,6 @@ add_task(async function test_app_menu_fxa_disabled() {
   let menuButton = newWin.document.getElementById("PanelUI-menu-button");
   menuButton.click();
   await BrowserTestUtils.waitForEvent(newWin.PanelUI.mainView, "ViewShown");
-
-  // With Proton disabled, when signed out, the appMenu-fxa-status is hidden.
-  // With Proton enabled, it's re-purposed as a "Sign in" button.
-  if (!PanelUI.protonAppMenuEnabled) {
-    ok(
-      BrowserTestUtils.is_hidden(
-        newWin.document.getElementById("appMenu-fxa-status")
-      ),
-      "Fxa status is hidden"
-    );
-  }
 
   [...newWin.document.querySelectorAll(".sync-ui-item")].forEach(
     e => (e.hidden = false)
@@ -606,37 +509,23 @@ function checkPanelUIStatusBar({
   titleHidden,
   hideFxAText,
 }) {
-  if (PanelUI.protonAppMenuEnabled) {
-    checkAppMenuFxAText(hideFxAText);
-    let appMenuHeaderTitle = PanelMultiView.getViewNode(
-      document,
-      "appMenu-header-title"
-    );
-    let appMenuHeaderDescription = PanelMultiView.getViewNode(
-      document,
-      "appMenu-header-description"
-    );
-    is(
-      appMenuHeaderDescription.value,
-      description,
-      "app menu description has correct value"
-    );
-    is(
-      appMenuHeaderTitle.hidden,
-      titleHidden,
-      "title has correct hidden status"
-    );
-    if (!titleHidden) {
-      is(appMenuHeaderTitle.value, title, "title has correct value");
-    }
-  } else {
-    let labelID = "appMenu-fxa-label";
-    let labelNode = PanelMultiView.getViewNode(document, labelID);
-    is(
-      labelNode.getAttribute("label"),
-      description,
-      "fxa label has the right value"
-    );
+  checkAppMenuFxAText(hideFxAText);
+  let appMenuHeaderTitle = PanelMultiView.getViewNode(
+    document,
+    "appMenu-header-title"
+  );
+  let appMenuHeaderDescription = PanelMultiView.getViewNode(
+    document,
+    "appMenu-header-description"
+  );
+  is(
+    appMenuHeaderDescription.value,
+    description,
+    "app menu description has correct value"
+  );
+  is(appMenuHeaderTitle.hidden, titleHidden, "title has correct hidden status");
+  if (!titleHidden) {
+    is(appMenuHeaderTitle.value, title, "title has correct value");
   }
 }
 

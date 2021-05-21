@@ -2134,10 +2134,8 @@ void CodeGenerator::visitCtzI64(LCtzI64* ins) {
 void CodeGenerator::visitMulI64(LMulI64* lir) {
   const Register64 lhs = ToRegister64(lir->getInt64Operand(LMulI64::Lhs));
   const Register64 rhs = ToRegister64(lir->getInt64Operand(LMulI64::Rhs));
-  const mozilla::DebugOnly<Register64> output = ToOutRegister64(lir);
-  MOZ_ASSERT(lhs == output);
-
-  masm.mul64(rhs, lhs, Register::Invalid());
+  const Register64 output = ToOutRegister64(lir);
+  masm.mul64(lhs, rhs, output);
 }
 
 void CodeGenerator::visitNotI64(LNotI64* lir) {
