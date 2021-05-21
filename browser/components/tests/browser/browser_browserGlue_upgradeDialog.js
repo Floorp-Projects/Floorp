@@ -296,6 +296,26 @@ add_task(async function quit_app() {
   );
 });
 
+add_task(async function window_warning() {
+  // Dismiss the alert when it opens.
+  const warning = BrowserTestUtils.promiseAlertDialog("cancel");
+
+  await showAndWaitForDialog(async win => {
+    await BrowserTestUtils.waitForEvent(win, "ready");
+
+    // Show close warning without blocking to allow this callback to complete.
+    setTimeout(() => gBrowser.warnAboutClosingTabs());
+  });
+  await warning;
+
+  AssertEvents(
+    "Dialog closed when close warning wants to open",
+    ["content", "show", "2-screens"],
+    ["content", "show", "upgrade-dialog-new-primary-default-button"],
+    ["content", "close", "external"]
+  );
+});
+
 add_task(async function not_major_upgrade() {
   await BROWSER_GLUE._maybeShowDefaultBrowserPrompt();
 

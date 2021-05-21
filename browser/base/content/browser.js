@@ -9416,6 +9416,7 @@ TabModalPromptBox.prototype = {
 // tab-modal prompts.
 var gDialogBox = {
   _dialog: null,
+  _nextOpenJumpsQueue: false,
   _queued: [],
 
   // Used to wait for a `close` event from the HTML
@@ -9436,12 +9437,21 @@ var gDialogBox = {
     return !!this._dialog;
   },
 
+  replaceDialogIfOpen() {
+    this._dialog?.close();
+    this._nextOpenJumpsQueue = true;
+  },
+
   async open(uri, args) {
+    // If we need to queue, some callers indicate they should go first.
+    const queueMethod = this._nextOpenJumpsQueue ? "unshift" : "push";
+    this._nextOpenJumpsQueue = false;
+
     // If we already have a dialog opened and are trying to open another,
     // queue the next one to be opened later.
     if (this.isOpen) {
       return new Promise((resolve, reject) => {
-        this._queued.push({ resolve, reject, uri, args });
+        this._queued[queueMethod]({ resolve, reject, uri, args });
       });
     }
 
