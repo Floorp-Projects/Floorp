@@ -30,3 +30,28 @@ interface TabsTrayInteractor {
      */
     fun onDeleteTabs(tabs: Collection<Tab>)
 }
+
+/**
+ * Interactor to be called for any tabs tray user actions.
+ *
+ * @property controller [TabsTrayController] to which user actions can be delegated for actual app update.
+ */
+class DefaultTabsTrayInteractor(
+    private val controller: TabsTrayController
+) : TabsTrayInteractor {
+    override fun onTrayPositionSelected(position: Int, smoothScroll: Boolean) {
+        controller.handleTrayScrollingToPosition(position, smoothScroll)
+    }
+
+    override fun onBrowserTabSelected() {
+        controller.handleNavigateToBrowser()
+    }
+
+    override fun onDeleteTab(tabId: String) {
+        controller.handleTabDeletion(tabId)
+    }
+
+    override fun onDeleteTabs(tabs: Collection<Tab>) {
+        controller.handleMultipleTabsDeletion(tabs)
+    }
+}

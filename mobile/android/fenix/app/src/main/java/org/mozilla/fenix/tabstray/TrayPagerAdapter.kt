@@ -7,6 +7,7 @@ package org.mozilla.fenix.tabstray
 import android.content.Context
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.annotation.VisibleForTesting
 import androidx.recyclerview.widget.RecyclerView
 import mozilla.components.browser.state.selector.normalTabs
 import mozilla.components.browser.state.selector.privateTabs
@@ -22,12 +23,12 @@ import org.mozilla.fenix.tabstray.viewholders.PrivateBrowserPageViewHolder
 import org.mozilla.fenix.tabstray.viewholders.SyncedTabsPageViewHolder
 
 class TrayPagerAdapter(
-    private val context: Context,
-    private val store: TabsTrayStore,
-    private val browserInteractor: BrowserTrayInteractor,
-    private val navInteractor: NavigationInteractor,
-    private val interactor: TabsTrayInteractor,
-    private val browserStore: BrowserStore
+    @VisibleForTesting internal val context: Context,
+    @VisibleForTesting internal val store: TabsTrayStore,
+    @VisibleForTesting internal val browserInteractor: BrowserTrayInteractor,
+    @VisibleForTesting internal val navInteractor: NavigationInteractor,
+    @VisibleForTesting internal val interactor: TabsTrayInteractor,
+    @VisibleForTesting internal val browserStore: BrowserStore
 ) : RecyclerView.Adapter<AbstractPageViewHolder>() {
 
     private val normalAdapter by lazy { BrowserTabsAdapter(context, browserInteractor, store) }

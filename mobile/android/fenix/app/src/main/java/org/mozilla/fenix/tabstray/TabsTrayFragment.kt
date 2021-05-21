@@ -10,6 +10,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.annotation.VisibleForTesting
 import androidx.appcompat.app.AppCompatDialogFragment
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.isVisible
@@ -17,7 +18,7 @@ import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.bottomsheet.BottomSheetBehavior
-import kotlinx.android.synthetic.main.component_tabstray.view.*
+import com.google.android.material.tabs.TabLayout
 import kotlinx.android.synthetic.main.component_tabstray2.*
 import kotlinx.android.synthetic.main.component_tabstray2.view.*
 import kotlinx.android.synthetic.main.component_tabstray2.view.tab_tray_overflow
@@ -26,14 +27,10 @@ import kotlinx.android.synthetic.main.component_tabstray_fab.*
 import kotlinx.android.synthetic.main.fragment_tab_tray_dialog.*
 import kotlinx.android.synthetic.main.tabs_tray_tab_counter2.*
 import kotlinx.android.synthetic.main.tabstray_multiselect_items.*
-import kotlinx.android.synthetic.main.tabstray_multiselect_items.view.*
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import mozilla.components.browser.state.selector.findTab
-import mozilla.components.browser.state.selector.getNormalOrPrivateTabs
 import mozilla.components.browser.state.selector.normalTabs
 import mozilla.components.browser.state.selector.privateTabs
-import mozilla.components.concept.tabstray.Tab
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.NavGraphDirections
@@ -44,7 +41,6 @@ import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.navigateBlockingForAsyncNavGraph
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.settings
-import org.mozilla.fenix.home.HomeFragment
 import org.mozilla.fenix.home.HomeScreenViewModel
 import org.mozilla.fenix.tabstray.browser.BrowserTrayInteractor
 import org.mozilla.fenix.tabstray.browser.DefaultBrowserTrayInteractor
@@ -56,11 +52,12 @@ import org.mozilla.fenix.utils.allowUndo
 import kotlin.math.max
 
 @Suppress("TooManyFunctions", "LargeClass")
-class TabsTrayFragment : AppCompatDialogFragment(), TabsTrayInteractor {
+class TabsTrayFragment : AppCompatDialogFragment() {
 
     private var fabView: View? = null
-    private lateinit var tabsTrayStore: TabsTrayStore
+    @VisibleForTesting internal lateinit var tabsTrayStore: TabsTrayStore
     private lateinit var browserTrayInteractor: BrowserTrayInteractor
+    private lateinit var tabsTrayInteractor: TabsTrayInteractor
     private lateinit var tabsTrayController: DefaultTabsTrayController
     private lateinit var behavior: BottomSheetBehavior<ConstraintLayout>
 
@@ -123,16 +120,25 @@ class TabsTrayFragment : AppCompatDialogFragment(), TabsTrayInteractor {
             )
 
         tabsTrayController = DefaultTabsTrayController(
+            trayStore = tabsTrayStore,
+            browserStore = requireComponents.core.store,
             browsingModeManager = activity.browsingModeManager,
             navController = findNavController(),
+            navigateToHomeAndDeleteSession = ::navigateToHomeAndDeleteSession,
             navigationInteractor = navigationInteractor,
             profiler = requireComponents.core.engine.profiler,
             metrics = requireComponents.analytics.metrics,
+            tabsUseCases = requireComponents.useCases.tabsUseCases,
+            selectTabPosition = ::selectTabPosition,
+            dismissTray = ::dismissTabsTray,
+            showUndoSnackbarForTab = ::showUndoSnackbarForTab
         )
+
+        tabsTrayInteractor = DefaultTabsTrayInteractor(tabsTrayController)
 
         browserTrayInteractor = DefaultBrowserTrayInteractor(
             tabsTrayStore,
-            this@TabsTrayFragment,
+            tabsTrayInteractor,
             tabsTrayController,
             requireComponents.useCases.tabsUseCases.selectTab,
             requireComponents.settings,
@@ -143,7 +149,7 @@ class TabsTrayFragment : AppCompatDialogFragment(), TabsTrayInteractor {
         setupPager(
             view.context,
             tabsTrayStore,
-            this,
+            tabsTrayInteractor,
             browserTrayInteractor,
             navigationInteractor
         )
@@ -183,7 +189,7 @@ class TabsTrayFragment : AppCompatDialogFragment(), TabsTrayInteractor {
         tabLayoutMediator.set(
             feature = TabLayoutMediator(
                 tabLayout = tab_layout,
-                interactor = this,
+                interactor = tabsTrayInteractor,
                 browsingModeManager = activity.browsingModeManager,
                 tabsTrayStore = tabsTrayStore,
                 metrics = requireComponents.analytics.metrics
@@ -227,7 +233,7 @@ class TabsTrayFragment : AppCompatDialogFragment(), TabsTrayInteractor {
                 context = requireContext(),
                 store = tabsTrayStore,
                 navInteractor = navigationInteractor,
-                tabsTrayInteractor = this,
+                tabsTrayInteractor = tabsTrayInteractor,
                 containerView = view,
                 backgroundView = topBar,
                 showOnSelectViews = VisibilityModifier(
@@ -258,60 +264,8 @@ class TabsTrayFragment : AppCompatDialogFragment(), TabsTrayInteractor {
         )
     }
 
-    override fun onTrayPositionSelected(position: Int, smoothScroll: Boolean) {
-        tabsTray.setCurrentItem(position, smoothScroll)
-        tab_layout.getTabAt(position)?.select()
-        tabsTrayStore.dispatch(TabsTrayAction.PageSelected(Page.positionToPage(position)))
-    }
-
-    override fun onBrowserTabSelected() {
-        dismissTabsTray()
-
-        val navController = findNavController()
-
-        if (navController.currentDestination?.id == R.id.browserFragment) {
-            return
-        }
-
-        if (!navController.popBackStack(R.id.browserFragment, false)) {
-            navController.navigateBlockingForAsyncNavGraph(R.id.browserFragment)
-        }
-    }
-
-    override fun onDeleteTab(tabId: String) {
-        val browserStore = requireComponents.core.store
-        val tab = browserStore.state.findTab(tabId)
-
-        tab?.let {
-            if (browserStore.state.getNormalOrPrivateTabs(it.content.private).size != 1) {
-                requireComponents.useCases.tabsUseCases.removeTab(tabId)
-                showUndoSnackbarForTab(it.content.private)
-            } else {
-                dismissTabsTrayAndNavigateHome(tabId)
-            }
-        }
-    }
-
-    @OptIn(ExperimentalCoroutinesApi::class)
-    override fun onDeleteTabs(tabs: Collection<Tab>) {
-
-        val browserStore = requireComponents.core.store
-        val isPrivate = tabs.any { it.private }
-
-        // If user closes all the tabs from selected tabs page dismiss tray and navigate home.
-        if (tabs.size == browserStore.state.getNormalOrPrivateTabs(isPrivate).size) {
-            dismissTabsTrayAndNavigateHome(
-                if (isPrivate) HomeFragment.ALL_PRIVATE_TABS else HomeFragment.ALL_NORMAL_TABS
-            )
-        } else {
-            tabs.map { it.id }.let {
-                requireComponents.useCases.tabsUseCases.removeTabs(it)
-            }
-        }
-        showUndoSnackbarForTab(isPrivate)
-    }
-
-    private fun showUndoSnackbarForTab(isPrivate: Boolean) {
+    @VisibleForTesting
+    internal fun showUndoSnackbarForTab(isPrivate: Boolean) {
         val snackbarMessage =
             when (isPrivate) {
                 true -> getString(R.string.snackbar_private_tab_closed)
@@ -334,7 +288,8 @@ class TabsTrayFragment : AppCompatDialogFragment(), TabsTrayInteractor {
         )
     }
 
-    private fun setupPager(
+    @VisibleForTesting
+    internal fun setupPager(
         context: Context,
         store: TabsTrayStore,
         trayInteractor: TabsTrayInteractor,
@@ -354,12 +309,13 @@ class TabsTrayFragment : AppCompatDialogFragment(), TabsTrayInteractor {
         }
     }
 
-    private fun setupMenu(view: View, navigationInteractor: NavigationInteractor) {
+    @VisibleForTesting
+    internal fun setupMenu(view: View, navigationInteractor: NavigationInteractor) {
         view.tab_tray_overflow.setOnClickListener { anchor ->
 
             requireComponents.analytics.metrics.track(Event.TabsTrayMenuOpened)
 
-            val menu = MenuIntegration(
+            val menu = getTrayMenu(
                 context = requireContext(),
                 browserStore = requireComponents.core.store,
                 tabsTrayStore = tabsTrayStore,
@@ -371,21 +327,44 @@ class TabsTrayFragment : AppCompatDialogFragment(), TabsTrayInteractor {
         }
     }
 
-    private fun setupBackgroundDismissalListener(block: (View) -> Unit) {
+    @VisibleForTesting
+    internal fun getTrayMenu(
+        context: Context,
+        browserStore: BrowserStore,
+        tabsTrayStore: TabsTrayStore,
+        tabLayout: TabLayout,
+        navigationInteractor: NavigationInteractor
+    ) = MenuIntegration(context, browserStore, tabsTrayStore, tabLayout, navigationInteractor)
+
+    @VisibleForTesting
+    internal fun setupBackgroundDismissalListener(block: (View) -> Unit) {
         tabLayout.setOnClickListener(block)
         handle.setOnClickListener(block)
     }
 
-    private val homeViewModel: HomeScreenViewModel by activityViewModels()
-
-    private fun dismissTabsTrayAndNavigateHome(sessionId: String) {
-        homeViewModel.sessionToDelete = sessionId
-        val directions = NavGraphDirections.actionGlobalHome()
-        findNavController().navigateBlockingForAsyncNavGraph(directions)
+    @VisibleForTesting
+    internal fun dismissTabsTrayAndNavigateHome(sessionId: String) {
+        navigateToHomeAndDeleteSession(sessionId)
         dismissTabsTray()
     }
 
-    private fun dismissTabsTray() {
+    internal val homeViewModel: HomeScreenViewModel by activityViewModels()
+
+    @VisibleForTesting
+    internal fun navigateToHomeAndDeleteSession(sessionId: String) {
+        homeViewModel.sessionToDelete = sessionId
+        val directions = NavGraphDirections.actionGlobalHome()
+        findNavController().navigateBlockingForAsyncNavGraph(directions)
+    }
+
+    @VisibleForTesting
+    internal fun selectTabPosition(position: Int, smoothScroll: Boolean) {
+        tabsTray.setCurrentItem(position, smoothScroll)
+        tab_layout.getTabAt(position)?.select()
+    }
+
+    @VisibleForTesting
+    internal fun dismissTabsTray() {
         dismissAllowingStateLoss()
         requireComponents.analytics.metrics.track(Event.TabsTrayClosed)
     }
@@ -398,6 +377,7 @@ class TabsTrayFragment : AppCompatDialogFragment(), TabsTrayInteractor {
         private const val EXPAND_AT_GRID_SIZE = 3
 
         // Elevation for undo toasts
-        private const val ELEVATION = 80f
+        @VisibleForTesting
+        internal const val ELEVATION = 80f
     }
 }
