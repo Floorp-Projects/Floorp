@@ -145,8 +145,7 @@ void SessionStoreDataCollector::Collect() {
 
   if (RefPtr<WindowGlobalParent> windowParent =
           mWindowChild->GetParentActor()) {
-    windowParent->WriteFormDataAndScrollToSessionStore(maybeFormData,
-                                                       maybeScroll, mEpoch);
+    windowParent->UpdateSessionStore(maybeFormData, maybeScroll, mEpoch);
   } else {
     mWindowChild->SendUpdateSessionStore(maybeFormData, maybeScroll, mEpoch);
   }
