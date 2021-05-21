@@ -12,12 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "contrib/image/image.h"
+#include "hwy/contrib/image/image.h"
 
 #include <cstddef>
 
 #undef HWY_TARGET_INCLUDE
-#define HWY_TARGET_INCLUDE "contrib/image/image.cc"
+#define HWY_TARGET_INCLUDE "hwy/contrib/image/image.cc"
 
 #include <algorithm>  // swap
 

@@ -25,10 +25,10 @@
 
 namespace hwy {
 
-// API version (https://semver.org/)
+// API version (https://semver.org/); keep in sync with CMakeLists.txt.
 #define HWY_MAJOR 0
 #define HWY_MINOR 12
-#define HWY_PATCH 0
+#define HWY_PATCH 1
 
 //------------------------------------------------------------------------------
 // Shorthand for descriptors (defined in shared-inl.h) used to select overloads.
@@ -49,7 +49,7 @@ namespace hwy {
   HWY_FULL_RECOMPOSER((__VA_ARGS__, HWY_FULL2, HWY_FULL1, ))
 #define HWY_FULL(...) HWY_CHOOSE_FULL(__VA_ARGS__())(__VA_ARGS__)
 
-// Vector of up to MAX_N lanes.
+// Vector of up to MAX_N lanes. Discouraged, when possible, use Half<> instead.
 #define HWY_CAPPED(T, MAX_N) \
   hwy::HWY_NAMESPACE::Simd<T, HWY_MIN(MAX_N, HWY_LANES(T))>
 
@@ -75,6 +75,10 @@ namespace hwy {
 #define HWY_STATIC_DISPATCH(FUNC_NAME) N_WASM::FUNC_NAME
 #elif HWY_STATIC_TARGET == HWY_NEON
 #define HWY_STATIC_DISPATCH(FUNC_NAME) N_NEON::FUNC_NAME
+#elif HWY_STATIC_TARGET == HWY_SVE
+#define HWY_STATIC_DISPATCH(FUNC_NAME) N_SVE::FUNC_NAME
+#elif HWY_STATIC_TARGET == HWY_SVE2
+#define HWY_STATIC_DISPATCH(FUNC_NAME) N_SVE2::FUNC_NAME
 #elif HWY_STATIC_TARGET == HWY_PPC8
 #define HWY_STATIC_DISPATCH(FUNC_NAME) N_PPC8::FUNC_NAME
 #elif HWY_STATIC_TARGET == HWY_SSE4
@@ -141,6 +145,18 @@ FunctionCache<RetType, Args...> FunctionCacheFactory(RetType (*)(Args...)) {
 #define HWY_CHOOSE_NEON(FUNC_NAME) &N_NEON::FUNC_NAME
 #else
 #define HWY_CHOOSE_NEON(FUNC_NAME) nullptr
+#endif
+
+#if HWY_TARGETS & HWY_SVE
+#define HWY_CHOOSE_SVE(FUNC_NAME) &N_SVE::FUNC_NAME
+#else
+#define HWY_CHOOSE_SVE(FUNC_NAME) nullptr
+#endif
+
+#if HWY_TARGETS & HWY_SVE2
+#define HWY_CHOOSE_SVE2(FUNC_NAME) &N_SVE2::FUNC_NAME
+#else
+#define HWY_CHOOSE_SVE2(FUNC_NAME) nullptr
 #endif
 
 #if HWY_TARGETS & HWY_PPC8
@@ -261,8 +277,11 @@ FunctionCache<RetType, Args...> FunctionCacheFactory(RetType (*)(Args...)) {
 #elif HWY_TARGET == HWY_AVX3
 #include "hwy/ops/x86_512-inl.h"
 #elif HWY_TARGET == HWY_PPC8
+#error "PPC is not yet supported"
 #elif HWY_TARGET == HWY_NEON
 #include "hwy/ops/arm_neon-inl.h"
+#elif HWY_TARGET == HWY_SVE || HWY_TARGET == HWY_SVE2
+#include "hwy/ops/arm_sve-inl.h"
 #elif HWY_TARGET == HWY_WASM
 #include "hwy/ops/wasm_128-inl.h"
 #elif HWY_TARGET == HWY_RVV

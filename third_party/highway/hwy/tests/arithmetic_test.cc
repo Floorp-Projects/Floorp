@@ -172,16 +172,8 @@ struct TestFloatAbs {
 };
 
 HWY_NOINLINE void TestAllAbs() {
-  const ForPartialVectors<TestAbs> test;
-  test(int8_t());
-  test(int16_t());
-  test(int32_t());
-
-  const ForPartialVectors<TestFloatAbs> test_float;
-  test_float(float());
-#if HWY_CAP_FLOAT64
-  test_float(double());
-#endif
+  ForSignedTypes(ForPartialVectors<TestAbs>());
+  ForFloatTypes(ForPartialVectors<TestFloatAbs>());
 }
 
 template <bool kSigned>
@@ -1094,8 +1086,7 @@ struct TestSumOfLanes {
 };
 
 HWY_NOINLINE void TestAllSumOfLanes() {
-  // Only full vectors because lanes in partial vectors are undefined.
-  const ForFullVectors<TestSumOfLanes> sum;
+  const ForPartialVectors<TestSumOfLanes> sum;
 
   // No u8/u16/i8/i16.
   sum(uint32_t());
@@ -1161,9 +1152,8 @@ struct TestMaxOfLanes {
 };
 
 HWY_NOINLINE void TestAllMinMaxOfLanes() {
-  // Only full vectors because lanes in partial vectors are undefined.
-  const ForFullVectors<TestMinOfLanes> min;
-  const ForFullVectors<TestMaxOfLanes> max;
+  const ForPartialVectors<TestMinOfLanes> min;
+  const ForPartialVectors<TestMaxOfLanes> max;
 
   // No u8/u16/i8/i16.
   min(uint32_t());
