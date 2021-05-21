@@ -602,6 +602,30 @@ InterceptedHttpChannel::ResetInterception(void) {
     return mStatus;
   }
 
+#ifdef MOZ_GECKO_PROFILER
+  if (profiler_can_accept_markers()) {
+    nsAutoCString requestMethod;
+    GetRequestMethod(requestMethod);
+
+    int32_t priority = PRIORITY_NORMAL;
+    GetPriority(&priority);
+
+    uint64_t size = 0;
+    GetEncodedBodySize(&size);
+
+    nsAutoCString contentType;
+    if (mResponseHead) {
+      mResponseHead->ContentType(contentType);
+    }
+
+    profiler_add_network_marker(
+        mURI, requestMethod, priority, mChannelId,
+        NetworkLoadType::LOAD_REDIRECT, mAsyncOpenTime, TimeStamp::Now(), size,
+        kCacheUnknown, mLoadInfo->GetInnerWindowID(), &mTransactionTimings,
+        mURI, std::move(mSource), Some(nsDependentCString(contentType.get())));
+  }
+#endif
+
   uint32_t flags = nsIChannelEventSink::REDIRECT_INTERNAL;
 
   nsCOMPtr<nsIChannel> newChannel;
