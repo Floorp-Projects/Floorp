@@ -29,6 +29,10 @@ interface nsIRunnablePriority : nsISupports
     const unsigned short PRIORITY_MEDIUMHIGH = 4;
     const unsigned short PRIORITY_INPUT_HIGH = 5;
     const unsigned short PRIORITY_VSYNC = 6;
+    // INPUT_HIGHEST is InputTaskManager's internal priority
+    //const unsigned short PRIORITY_INPUT_HIGHEST = 7;
+    const unsigned short PRIORITY_CONTROL = 8;
+
     readonly attribute unsigned long priority;
 };
 
