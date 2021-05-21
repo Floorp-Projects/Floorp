@@ -46,6 +46,8 @@ class ChromiumCDMCallback {
 
   virtual void SessionClosed(const nsCString& aSessionId) = 0;
 
+  virtual void QueryOutputProtectionStatus() = 0;
+
   virtual void Terminated() = 0;
 
   virtual void Shutdown() = 0;
