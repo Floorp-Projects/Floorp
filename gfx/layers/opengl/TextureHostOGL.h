@@ -452,6 +452,8 @@ class SurfaceTextureHost : public TextureHost {
                         const Range<wr::ImageKey>& aImageKeys,
                         PushDisplayItemFlagSet aFlags) override;
 
+  bool SupportsExternalCompositing(WebRenderBackend aBackend) override;
+
   // gecko does not need deferred deletion with WebRender
   // GPU/hardware task end could be checked by android fence.
   // SurfaceTexture uses android fence internally,
