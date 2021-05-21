@@ -142,7 +142,7 @@ function getInflatedNetworkMarkers(thread) {
       m.data.type === "Network" &&
       // We filter out network markers that aren't related to the test, to
       // avoid intermittents.
-      m.data.URI.includes("/browser/tools/profiler/")
+      m.data.URI.includes("/tools/profiler/")
   );
 }
 
