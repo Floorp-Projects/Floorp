@@ -153,11 +153,9 @@ those span boundary pixels to estimate the coverage based on edge slope.
 ```
 void swgl_commitTextureLinearRGBA8(sampler, vec2 uv, vec4 uv_bounds);
 void swgl_commitTextureLinearR8(sampler, vec2 uv, vec4 uv_bounds);
-void swgl_commitTextureLinearR8ToRGBA8(sampler, vec2 uv, vec4 uv_bounds);
 
 void swgl_commitTextureLinearColorRGBA8(sampler, vec2 uv, vec4 uv_bounds, vec4|float color);
 void swgl_commitTextureLinearColorR8(sampler, vec2 uv, vec4 uv_bounds, vec4|float color);
-void swgl_commitTextureLinearColorR8ToRGBA8(sampler, vec2 uv, vec4 uv_bounds, vec4|float color);
 
 void swgl_commitTextureLinearRepeatRGBA8(sampler, vec2 uv, vec2 tile_repeat, vec4 uv_repeat, vec4 uv_bounds);
 void swgl_commitTextureLinearRepeatColorRGBA8(sampler, vec2 uv, vec2 tile_repeat, vec4 uv_repeat, vec4 uv_bounds, vec4|float color);
@@ -183,9 +181,7 @@ within the supplied uv bounds. The color variations also accept a supplied color
 that modulates the result.
 
 The RGBA8 versions may only be used to commit within `swgl_drawSpanRGBA8`, and
-the R8 versions may only be used to commit within `swgl_drawSpanR8`. The R8ToRGBA8
-versions may be used to sample from an R8 source while committing to an RGBA8
-framebuffer.
+the R8 versions may only be used to commit within `swgl_drawSpanR8`.
 
 The Linear variations use a linear filter that bilinearly interpolates between
 the four samples near the pixel. The Nearest variations use a nearest filter
@@ -208,8 +204,6 @@ useful for implementing clip-out modes by inverting the source texture value.
 ```
 // Premultiplied alpha over blend, but with source color set to source alpha modulated with a constant color.
 void swgl_blendDropShadow(vec4 color);
-// Premultiplied alpha over blend, but treats the source as a subpixel mask modulated with a constant color.
-void swgl_blendSubpixelText(vec4 color);
 ```
 
 SWGL allows overriding the blend mode per-primitive by calling `swgl_blend`

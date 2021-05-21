@@ -1271,8 +1271,13 @@ impl BatchBuilder {
                     &glyph_keys,
                     &mut self.glyph_fetch_buffer,
                     gpu_cache,
-                    |texture_id, glyph_format, glyphs| {
+                    |texture_id, mut glyph_format, glyphs| {
                         debug_assert_ne!(texture_id, TextureSource::Invalid);
+
+                        // Ignore color and only sample alpha when shadowing.
+                        if run.shadow {
+                            glyph_format = glyph_format.ignore_color();
+                        }
 
                         let subpx_dir = subpx_dir.limit_by(glyph_format);
 
@@ -1304,22 +1309,22 @@ impl BatchBuilder {
                                 }
                             }
                             GlyphFormat::Alpha |
-                            GlyphFormat::TransformedAlpha |
-                            GlyphFormat::Bitmap => {
+                            GlyphFormat::TransformedAlpha => {
                                 (
                                     BlendMode::PremultipliedAlpha,
                                     ShaderColorMode::Alpha,
                                 )
                             }
+                            GlyphFormat::Bitmap => {
+                                (
+                                    BlendMode::PremultipliedAlpha,
+                                    ShaderColorMode::Bitmap,
+                                )
+                            }
                             GlyphFormat::ColorBitmap => {
                                 (
                                     BlendMode::PremultipliedAlpha,
-                                    if run.shadow {
-                                        // Ignore color and only sample alpha when shadowing.
-                                        ShaderColorMode::BitmapShadow
-                                    } else {
-                                        ShaderColorMode::ColorBitmap
-                                    },
+                                    ShaderColorMode::ColorBitmap,
                                 )
                             }
                         };

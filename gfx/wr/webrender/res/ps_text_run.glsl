@@ -13,7 +13,7 @@ flat varying vec4 v_uv_bounds;
 varying vec2 v_uv;
 
 
-#if defined(WR_FEATURE_GLYPH_TRANSFORM) && !defined(SWGL_CLIP_DIST)
+#ifdef WR_FEATURE_GLYPH_TRANSFORM
 varying vec4 v_uv_clip;
 #endif
 
@@ -214,14 +214,7 @@ void main() {
 
 #ifdef WR_FEATURE_GLYPH_TRANSFORM
     vec2 f = (glyph_transform * vi.local_pos - glyph_rect.p0) / glyph_rect.size;
-    #ifdef SWGL_CLIP_DIST
-        gl_ClipDistance[0] = f.x;
-        gl_ClipDistance[1] = f.y;
-        gl_ClipDistance[2] = 1.0 - f.x;
-        gl_ClipDistance[3] = 1.0 - f.y;
-    #else
-        v_uv_clip = vec4(f, 1.0 - f);
-    #endif
+    v_uv_clip = vec4(f, 1.0 - f);
 #else
     vec2 f = (vi.local_pos - glyph_rect.p0) / glyph_rect.size;
 #endif
@@ -233,15 +226,9 @@ void main() {
             v_mask_swizzle = vec3(0.0, 1.0, 1.0);
             v_color = text.color;
             break;
-        case COLOR_MODE_BITMAP_SHADOW:
-            #ifdef SWGL_BLEND
-                swgl_blendDropShadow(text.color);
-                v_mask_swizzle = vec3(1.0, 0.0, 0.0);
-                v_color = vec4(1.0);
-            #else
-                v_mask_swizzle = vec3(0.0, 1.0, 0.0);
-                v_color = text.color;
-            #endif
+        case COLOR_MODE_BITMAP:
+            v_mask_swizzle = vec3(0.0, 1.0, 0.0);
+            v_color = text.color;
             break;
         case COLOR_MODE_SUBPX_BG_PASS2:
             v_mask_swizzle = vec3(1.0, 0.0, 0.0);
@@ -258,14 +245,8 @@ void main() {
             v_color = vec4(text.color.a) * text.bg_color;
             break;
         case COLOR_MODE_SUBPX_DUAL_SOURCE:
-            #ifdef SWGL_BLEND
-                swgl_blendSubpixelText(text.color);
-                v_mask_swizzle = vec3(1.0, 0.0, 0.0);
-                v_color = vec4(1.0);
-            #else
-                v_mask_swizzle = vec3(text.color.a, 0.0, 0.0);
-                v_color = text.color;
-            #endif
+            v_mask_swizzle = vec3(text.color.a, 0.0, 0.0);
+            v_color = text.color;
             break;
         default:
             v_mask_swizzle = vec3(0.0, 0.0, 0.0);
@@ -296,13 +277,13 @@ Fragment text_fs(void) {
         mask.rgb = mask.rgb * v_mask_swizzle.x + mask.aaa * v_mask_swizzle.y;
     #endif
 
-    #if defined(WR_FEATURE_GLYPH_TRANSFORM) && !defined(SWGL_CLIP_DIST)
+    #ifdef WR_FEATURE_GLYPH_TRANSFORM
         mask *= float(all(greaterThanEqual(v_uv_clip, vec4(0.0))));
     #endif
 
     frag.color = v_color * mask;
 
-    #if defined(WR_FEATURE_DUAL_SOURCE_BLENDING) && !defined(SWGL_BLEND)
+    #ifdef WR_FEATURE_DUAL_SOURCE_BLENDING
         frag.blend = mask * v_mask_swizzle.x + mask.aaaa * v_mask_swizzle.y;
     #endif
 
@@ -318,32 +299,12 @@ void main() {
 
     #if defined(WR_FEATURE_DEBUG_OVERDRAW)
         oFragColor = WR_DEBUG_OVERDRAW_COLOR;
-    #elif defined(WR_FEATURE_DUAL_SOURCE_BLENDING) && !defined(SWGL_BLEND)
+    #elif defined(WR_FEATURE_DUAL_SOURCE_BLENDING)
         oFragColor = frag.color;
         oFragBlend = frag.blend * clip_mask;
     #else
         write_output(frag.color);
     #endif
 }
-
-#if defined(SWGL_DRAW_SPAN) && defined(SWGL_BLEND) && defined(SWGL_CLIP_DIST)
-void swgl_drawSpanRGBA8() {
-    // Only support simple swizzles for now. More complex swizzles must either
-    // be handled by blend overrides or the slow path.
-    if (v_mask_swizzle.x != 0.0 && v_mask_swizzle.x != 1.0) {
-        return;
-    }
-
-    #ifdef WR_FEATURE_DUAL_SOURCE_BLENDING
-        swgl_commitTextureLinearRGBA8(sColor0, v_uv, v_uv_bounds);
-    #else
-        if (swgl_isTextureR8(sColor0)) {
-            swgl_commitTextureLinearColorR8ToRGBA8(sColor0, v_uv, v_uv_bounds, v_color);
-        } else {
-            swgl_commitTextureLinearColorRGBA8(sColor0, v_uv, v_uv_bounds, v_color);
-        }
-    #endif
-}
-#endif
 
 #endif // WR_FRAGMENT_SHADER
