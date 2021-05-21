@@ -438,6 +438,7 @@ if (!Preferences.get("browser.aboutConfig.showWarning")) {
   document.addEventListener("DOMContentLoaded", function() {
     let warningButton = document.getElementById("warningButton");
     warningButton.addEventListener("click", onWarningButtonClick);
+    warningButton.focus({ preventFocusRing: true });
   });
 }
 

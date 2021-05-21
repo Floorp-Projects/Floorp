@@ -34,11 +34,11 @@ add_task(async function checkCaptivePortalCertErrorUI() {
       "Captive portal error page UI is visible"
     );
 
-    is(
-      loginButton.getAttribute("autofocus"),
-      "true",
-      "openPortalLoginPageButton has autofocus"
-    );
+    if (!Services.focus.focusedElement == loginButton) {
+      await ContentTaskUtils.waitForEvent(loginButton, "focus");
+    }
+
+    Assert.ok(true, "openPortalLoginPageButton has focus");
     info("Clicking the Open Login Page button");
     await EventUtils.synthesizeMouseAtCenter(loginButton, {}, content);
   });
