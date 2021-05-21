@@ -3058,6 +3058,88 @@ void CodeGenerator::visitWasmShuffleSimd128(LWasmShuffleSimd128* ins) {
 #endif
 }
 
+#ifdef ENABLE_WASM_SIMD
+
+enum PermuteX64I16x8Action : uint16_t {
+  UNAVAILABLE = 0,
+  SWAP_QWORDS = 1,  // Swap qwords first
+  PERM_LOW = 2,     // Permute low qword by control_[0..3]
+  PERM_HIGH = 4     // Permute high qword by control_[4..7]
+};
+
+// Skip lanes that equal v starting at i, returning the index just beyond the
+// last of those.  There is no requirement that the initial lanes[i] == v.
+template <typename T>
+static int ScanConstant(const T* lanes, int v, int i) {
+  int len = int(16 / sizeof(T));
+  MOZ_ASSERT(i <= len);
+  while (i < len && lanes[i] == v) {
+    i++;
+  }
+  return i;
+}
+
+// Apply a transformation to each lane value.
+template <typename T>
+static void MapLanes(T* result, const T* input, int (*f)(int)) {
+  int len = int(16 / sizeof(T));
+  for (int i = 0; i < len; i++) {
+    result[i] = f(input[i]);
+  }
+}
+
+// Recognize part of an identity permutation starting at start, with
+// the first value of the permutation expected to be bias.
+template <typename T>
+static bool IsIdentity(const T* lanes, int start, int len, int bias) {
+  if (lanes[start] != bias) {
+    return false;
+  }
+  for (int i = start + 1; i < start + len; i++) {
+    if (lanes[i] != lanes[i - 1] + 1) {
+      return false;
+    }
+  }
+  return true;
+}
+
+// We can permute by words if the mask is reducible to a word mask, but the x64
+// lowering is only efficient if we can permute the high and low quadwords
+// separately, possibly after swapping quadwords.
+static PermuteX64I16x8Action CalculateX64Permute16x8(SimdConstant* control) {
+  const SimdConstant::I16x8& lanes = control->asInt16x8();
+  SimdConstant::I16x8 mapped;
+  MapLanes(mapped, lanes, [](int x) -> int { return x < 4 ? 0 : 1; });
+  int i = ScanConstant(mapped, mapped[0], 0);
+  if (i != 4) {
+    return PermuteX64I16x8Action::UNAVAILABLE;
+  }
+  i = ScanConstant(mapped, mapped[4], 4);
+  if (i != 8) {
+    return PermuteX64I16x8Action::UNAVAILABLE;
+  }
+  // Now compute the operation bits.  `mapped` holds the adjusted lane mask.
+  memcpy(mapped, lanes, sizeof(mapped));
+  uint16_t op = 0;
+  if (mapped[0] > mapped[4]) {
+    op |= PermuteX64I16x8Action::SWAP_QWORDS;
+  }
+  for (auto& m : mapped) {
+    m &= 3;
+  }
+  if (!IsIdentity(mapped, 0, 4, 0)) {
+    op |= PermuteX64I16x8Action::PERM_LOW;
+  }
+  if (!IsIdentity(mapped, 4, 4, 0)) {
+    op |= PermuteX64I16x8Action::PERM_HIGH;
+  }
+  MOZ_ASSERT(op != PermuteX64I16x8Action::UNAVAILABLE);
+  *control = SimdConstant::CreateX8(mapped);
+  return (PermuteX64I16x8Action)op;
+}
+
+#endif
+
 void CodeGenerator::visitWasmPermuteSimd128(LWasmPermuteSimd128* ins) {
 #ifdef ENABLE_WASM_SIMD
   FloatRegister src = ToFloatRegister(ins->src());
@@ -3107,9 +3189,7 @@ void CodeGenerator::visitWasmPermuteSimd128(LWasmPermuteSimd128* ins) {
       break;
     }
     case LWasmPermuteSimd128::MOVE: {
-      if (src != dest) {
-        masm.moveSimd128(src, dest);
-      }
+      masm.moveSimd128(src, dest);
       break;
     }
     case LWasmPermuteSimd128::PERMUTE_8x16: {
@@ -3124,31 +3204,39 @@ void CodeGenerator::visitWasmPermuteSimd128(LWasmPermuteSimd128* ins) {
       break;
     }
     case LWasmPermuteSimd128::PERMUTE_16x8: {
-      const SimdConstant::I16x8& mask = control.asInt16x8();
 #  ifdef DEBUG
+      const SimdConstant::I16x8& mask = control.asInt16x8();
       DebugOnly<int> i;
       for (i = 0; i < 8 && mask[i] == i; i++) {
       }
       MOZ_ASSERT(i < 8, "Should have been a MOVE operation");
 #  endif
-      uint16_t op = mask[0] >> 8;
-      MOZ_ASSERT(op != 0);
-      if (op & LWasmPermuteSimd128::SWAP_QWORDS) {
-        uint32_t dwordMask[4] = {2, 3, 0, 1};
-        masm.permuteInt32x4(dwordMask, src, dest);
-        src = dest;
-      }
-      if (op & LWasmPermuteSimd128::PERM_LOW) {
-        uint16_t control[4];
-        memcpy(control, mask, sizeof(control));
-        control[0] &= 15;
-        masm.permuteLowInt16x8(control, src, dest);
-        src = dest;
-      }
-      if (op & LWasmPermuteSimd128::PERM_HIGH) {
-        masm.permuteHighInt16x8(reinterpret_cast<const uint16_t*>(mask) + 4,
-                                src, dest);
-        src = dest;
+      PermuteX64I16x8Action op = CalculateX64Permute16x8(&control);
+      if (op != PermuteX64I16x8Action::UNAVAILABLE) {
+        const SimdConstant::I16x8& mask = control.asInt16x8();
+        if (op & PermuteX64I16x8Action::SWAP_QWORDS) {
+          uint32_t dwordMask[4] = {2, 3, 0, 1};
+          masm.permuteInt32x4(dwordMask, src, dest);
+          src = dest;
+        }
+        if (op & PermuteX64I16x8Action::PERM_LOW) {
+          masm.permuteLowInt16x8(reinterpret_cast<const uint16_t*>(mask) + 0,
+                                 src, dest);
+          src = dest;
+        }
+        if (op & PermuteX64I16x8Action::PERM_HIGH) {
+          masm.permuteHighInt16x8(reinterpret_cast<const uint16_t*>(mask) + 4,
+                                  src, dest);
+          src = dest;
+        }
+      } else {
+        const SimdConstant::I16x8& wmask = control.asInt16x8();
+        uint8_t mask[16];
+        for (unsigned i = 0; i < 16; i += 2) {
+          mask[i] = wmask[i / 2] * 2;
+          mask[i + 1] = wmask[i / 2] * 2 + 1;
+        }
+        masm.permuteInt8x16(mask, src, dest);
       }
       break;
     }

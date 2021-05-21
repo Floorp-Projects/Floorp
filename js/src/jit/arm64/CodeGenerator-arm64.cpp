@@ -3461,25 +3461,7 @@ void CodeGenerator::visitWasmPermuteSimd128(LWasmPermuteSimd128* ins) {
       }
       MOZ_ASSERT(i < 8, "Should have been a MOVE operation");
 #  endif
-      uint16_t op = mask[0] >> 8;
-      MOZ_ASSERT(op != 0);
-      if (op & LWasmPermuteSimd128::SWAP_QWORDS) {
-        uint32_t dwordMask[4] = {2, 3, 0, 1};
-        masm.permuteInt32x4(dwordMask, src, dest);
-        src = dest;
-      }
-      if (op & LWasmPermuteSimd128::PERM_LOW) {
-        uint16_t control[4];
-        memcpy(control, mask, sizeof(control));
-        control[0] &= 15;
-        masm.permuteLowInt16x8(control, src, dest);
-        src = dest;
-      }
-      if (op & LWasmPermuteSimd128::PERM_HIGH) {
-        masm.permuteHighInt16x8(reinterpret_cast<const uint16_t*>(mask) + 4,
-                                src, dest);
-        src = dest;
-      }
+      masm.permuteInt16x8(reinterpret_cast<const uint16_t*>(mask), src, dest);
       break;
     }
     case LWasmPermuteSimd128::PERMUTE_32x4: {
