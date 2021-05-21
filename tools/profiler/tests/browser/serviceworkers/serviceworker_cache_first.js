@@ -2,6 +2,7 @@ const files = ["serviceworker_page.html", "firefox-logo-nightly.svg"];
 const cacheName = "v1";
 
 self.addEventListener("install", event => {
+  performance.mark("__serviceworker_event");
   console.log("[SW]:", "Install event");
 
   event.waitUntil(cacheAssets());
@@ -13,6 +14,7 @@ async function cacheAssets() {
 }
 
 self.addEventListener("fetch", event => {
+  performance.mark("__serviceworker_event");
   console.log("Handling fetch event for", event.request.url);
   event.respondWith(handleFetch(event.request));
 });

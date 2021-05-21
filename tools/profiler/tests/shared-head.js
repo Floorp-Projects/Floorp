@@ -43,7 +43,10 @@ function startProfiler(callersSettings) {
 }
 
 function startProfilerForMarkerTests() {
-  startProfiler({ features: ["threads", "nostacksampling"] });
+  startProfiler({
+    features: ["threads", "nostacksampling"],
+    threads: ["GeckoMain", "DOM Worker"],
+  });
 }
 
 /**
