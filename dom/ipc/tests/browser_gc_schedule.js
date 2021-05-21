@@ -124,24 +124,24 @@ function checkAllCompleted(events, expectTabsCompleted) {
 }
 
 async function setupTabs(num_tabs) {
-  var tabs = [];
   var pids = [];
 
   const parent_pid = getProcessID();
   info("Parent process PID is " + parent_pid);
 
-  for (var i = 0; i < num_tabs; i++) {
-    var newTabPromise = BrowserTestUtils.waitForNewTab(gBrowser, null, true);
-    const tab = await BrowserTestUtils.openNewForegroundTab({
-      gBrowser,
-      opening: TEST_PAGE,
-      forceNewProcess: true,
-    });
-    // Make sure the tab is ready
-    await newTabPromise;
+  const tabs = await Promise.all(
+    Array(num_tabs)
+      .fill()
+      .map(_ => {
+        return BrowserTestUtils.openNewForegroundTab({
+          gBrowser,
+          opening: TEST_PAGE,
+          forceNewProcess: true,
+        });
+      })
+  );
 
-    tabs[i] = tab;
-
+  for (const [i, tab] of Object.entries(tabs)) {
     const tab_pid = await SpecialPowers.spawn(
       tab.linkedBrowser,
       [],
