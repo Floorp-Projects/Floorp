@@ -101,6 +101,15 @@ else
   exit 1
 fi
 
+# Erase content of third_party/libwebrtc/moz.build to help with generating
+# files that may conflict with current moz.build files.  Each config calls
+# ./mach configure.  If there are conflicts in any moz.build files under
+# third_party/libwebrtc, it would keep our configure step from completing
+# successfully.  Since this file will be regenerated at the end of this
+# process, we can make it an empty file to avoid conflicts during the
+# configure step.
+echo "" > third_party/libwebrtc/moz.build
+
 # For now, only macOS, Windows, and Linux (including Android builds) are supported here.
 if [ "x$SYS_NAME" = "xDarwin" ]; then
   CONFIGS="x64_False_arm64_mac x64_True_arm64_mac x64_False_x64_mac x64_True_x64_mac"
