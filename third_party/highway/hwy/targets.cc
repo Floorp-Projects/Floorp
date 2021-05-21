@@ -32,8 +32,8 @@
 #include <intrin.h>
 #else  // HWY_COMPILER_MSVC
 #include <cpuid.h>
-#endif // HWY_COMPILER_MSVC
-#endif
+#endif  // HWY_COMPILER_MSVC
+#endif  // HWY_ARCH_X86
 
 namespace hwy {
 namespace {
@@ -126,7 +126,7 @@ constexpr uint32_t kAVX512VL = 1u << 13;
 constexpr uint32_t kAVX512DQ = 1u << 14;
 constexpr uint32_t kAVX512BW = 1u << 15;
 constexpr uint32_t kGroupAVX3 = kAVX512F | kAVX512VL | kAVX512DQ | kAVX512BW;
-#endif
+#endif  // HWY_ARCH_X86
 
 }  // namespace
 

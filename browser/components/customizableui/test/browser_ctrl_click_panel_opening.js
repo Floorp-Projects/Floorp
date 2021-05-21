@@ -13,9 +13,7 @@ add_task(async function test_appMenu_mainView() {
     return;
   }
 
-  let mainViewID = PanelUI.protonAppMenuEnabled
-    ? "appMenu-protonMainView"
-    : "appMenu-mainView";
+  let mainViewID = "appMenu-protonMainView";
   const mainView = document.getElementById(mainViewID);
 
   let shownPromise = BrowserTestUtils.waitForEvent(mainView, "ViewShown");
@@ -40,9 +38,7 @@ add_task(async function test_appMenu_libraryView() {
     return;
   }
 
-  if (CustomizableUI.protonToolbarEnabled) {
-    CustomizableUI.addWidgetToArea("library-button", "nav-bar");
-  }
+  CustomizableUI.addWidgetToArea("library-button", "nav-bar");
   const button = document.getElementById("library-button");
   await waitForElementShown(button);
 

@@ -35,7 +35,6 @@ jobs-from:
     - mochitest.yml
     - raptor.yml
     - raptor-chrome.yml
-    - raptor-chromium.yml
     - raptor-gve.yml
     - raptor-refbrow.yml
     - reftest.yml

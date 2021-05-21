@@ -158,6 +158,11 @@ class nsHttpConnectionInfo final : public ARefBase {
   }
   bool GetAnonymousAllowClientCert() const { return mHashKey.CharAt(7) == 'B'; }
 
+  void SetFallbackConnection(bool aFallback) {
+    mHashKey.SetCharAt(aFallback ? 'F' : '.', 8);
+  }
+  bool GetFallbackConnection() const { return mHashKey.CharAt(8) == 'F'; }
+
   void SetTlsFlags(uint32_t aTlsFlags);
   uint32_t GetTlsFlags() const { return mTlsFlags; }
 

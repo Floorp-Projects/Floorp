@@ -15,12 +15,10 @@ const { TabStateFlusher } = ChromeUtils.import(
 );
 
 add_task(function addHomeButton() {
-  if (CustomizableUI.protonToolbarEnabled) {
-    CustomizableUI.addWidgetToArea("home-button", "nav-bar");
-    registerCleanupFunction(() =>
-      CustomizableUI.removeWidgetFromArea("home-button")
-    );
-  }
+  CustomizableUI.addWidgetToArea("home-button", "nav-bar");
+  registerCleanupFunction(() =>
+    CustomizableUI.removeWidgetFromArea("home-button")
+  );
 });
 
 /**

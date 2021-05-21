@@ -165,26 +165,25 @@ Result<nsCOMPtr<nsIFile>, nsresult> CloneFileAndAppend(
 
 Result<nsIFileKind, nsresult> GetDirEntryKind(nsIFile& aFile) {
   // Callers call this function without checking if the directory already
-  // exists (idempotent usage). QM_OR_ELSE_WARN is not used here since we want
-  // to ignore NS_ERROR_FILE_NOT_FOUND, NS_ERROR_FILE_TARGET_DOES_NOT_EXIST and
-  // NS_ERROR_FILE_FS_CORRUPTED completely.
-  QM_TRY_RETURN(
-      MOZ_TO_RESULT_INVOKE(aFile, IsDirectory)
-          .map([](const bool isDirectory) {
-            return isDirectory ? nsIFileKind::ExistsAsDirectory
-                               : nsIFileKind::ExistsAsFile;
-          })
-          .orElse([](const nsresult rv) -> Result<nsIFileKind, nsresult> {
-            if (rv == NS_ERROR_FILE_NOT_FOUND ||
-                rv == NS_ERROR_FILE_TARGET_DOES_NOT_EXIST ||
-                // We treat NS_ERROR_FILE_FS_CORRUPTED as if the file did not
-                // exist at all.
-                rv == NS_ERROR_FILE_FS_CORRUPTED) {
-              return nsIFileKind::DoesNotExist;
-            }
+  // exists (idempotent usage). QM_OR_ELSE_WARN is not used here since we just
+  // want to log NS_ERROR_FILE_NOT_FOUND, NS_ERROR_FILE_TARGET_DOES_NOT_EXIST
+  // and NS_ERROR_FILE_FS_CORRUPTED results and not spam the reports.
+  QM_TRY_RETURN(QM_OR_ELSE_LOG(
+      MOZ_TO_RESULT_INVOKE(aFile, IsDirectory).map([](const bool isDirectory) {
+        return isDirectory ? nsIFileKind::ExistsAsDirectory
+                           : nsIFileKind::ExistsAsFile;
+      }),
+      ([](const nsresult rv) -> Result<nsIFileKind, nsresult> {
+        if (rv == NS_ERROR_FILE_NOT_FOUND ||
+            rv == NS_ERROR_FILE_TARGET_DOES_NOT_EXIST ||
+            // We treat NS_ERROR_FILE_FS_CORRUPTED as if the file did not
+            // exist at all.
+            rv == NS_ERROR_FILE_FS_CORRUPTED) {
+          return nsIFileKind::DoesNotExist;
+        }
 
-            return Err(rv);
-          }));
+        return Err(rv);
+      })));
 }
 
 Result<nsCOMPtr<mozIStorageStatement>, nsresult> CreateStatement(
@@ -406,6 +405,14 @@ nsDependentCSubstring MakeSourceFileRelativePath(
 void LogError(const nsACString& aExpr, const Maybe<nsresult> aRv,
               const nsACString& aSourceFilePath, const int32_t aSourceFileLine,
               const Severity aSeverity) {
+  // TODO: Add MOZ_LOG support, bug 1711661.
+
+  // We have to ignore failures with the Log severity. until we have support
+  // for MOZ_LOG.
+  if (aSeverity == Severity::Log) {
+    return;
+  }
+
 #if defined(EARLY_BETA_OR_EARLIER) || defined(DEBUG)
   nsAutoCString extraInfosString;
 
@@ -435,6 +442,8 @@ void LogError(const nsACString& aExpr, const Maybe<nsresult> aRv,
         return "WARNING"_ns;
       case Severity::Note:
         return "NOTE"_ns;
+      case Severity::Log:
+        return "LOG"_ns;
     }
     MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("Bad severity value!");
   }();

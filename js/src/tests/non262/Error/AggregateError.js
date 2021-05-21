@@ -1,5 +1,3 @@
-// |reftest| skip-if(release_or_beta)
-
 assertEq(typeof AggregateError, "function");
 assertEq(Object.getPrototypeOf(AggregateError), Error);
 assertEq(AggregateError.name, "AggregateError");

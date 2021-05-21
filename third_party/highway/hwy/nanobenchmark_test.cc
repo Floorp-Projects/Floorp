@@ -15,10 +15,10 @@
 #include "hwy/nanobenchmark.h"
 
 #include <stdio.h>
-#include <stdlib.h>  // strtol
-#include <unistd.h>  // sleep
 
 #include <random>
+
+#include "hwy/tests/test_util-inl.h"
 
 namespace hwy {
 namespace {
@@ -31,6 +31,7 @@ FuncOutput Div(const void*, FuncInput in) {
 
 template <size_t N>
 void MeasureDiv(const FuncInput (&inputs)[N]) {
+  printf("Measuring integer division (output on final two lines)\n");
   Result results[N];
   Params params;
   params.max_evals = 4;  // avoid test timeout
@@ -66,39 +67,14 @@ void MeasureRandom(const FuncInput (&inputs)[N]) {
   }
 }
 
-template <size_t N>
-void EnsureLongMeasurementFails(const FuncInput (&inputs)[N]) {
-  printf("Expect a 'measurement failed' below:\n");
-  Result results[N];
-
-  const size_t num_results = Measure(
-      [](const void*, const FuncInput input) -> FuncOutput {
-        // Loop until the sleep succeeds (not interrupted by signal). We assume
-        // >= 512 MHz, so 2 seconds will exceed the 1 << 30 tick safety limit.
-        while (sleep(2) != 0) {
-        }
-        return input;
-      },
-      nullptr, inputs, N, results);
-  NANOBENCHMARK_CHECK(num_results == 0);
-  (void)num_results;
-}
-
-void RunAll(const int argc, char** /*argv*/) {
-  // unpredictable == 1 but the compiler doesn't know that.
-  const int unpredictable = argc != 999;
+TEST(NanobenchmarkTest, RunAll) {
+  const int unpredictable = Unpredictable1();  // == 1, unknown to compiler.
   static const FuncInput inputs[] = {static_cast<FuncInput>(unpredictable) + 2,
                                      static_cast<FuncInput>(unpredictable + 9)};
 
   MeasureDiv(inputs);
   MeasureRandom(inputs);
-  EnsureLongMeasurementFails(inputs);
 }
 
 }  // namespace
 }  // namespace hwy
-
-int main(int argc, char* argv[]) {
-  hwy::RunAll(argc, argv);
-  return 0;
-}

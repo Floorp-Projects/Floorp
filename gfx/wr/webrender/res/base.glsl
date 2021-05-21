@@ -39,6 +39,7 @@
     #define SWGL_CLIP_MASK
     #define SWGL_ANTIALIAS
     #define SWGL_BLEND
+    #define SWGL_CLIP_DIST
 #endif
 
 #ifdef WR_VERTEX_SHADER

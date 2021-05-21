@@ -57,8 +57,8 @@ class OuterDocAccessible final : public AccessibleWrap {
   virtual bool RemoveChild(LocalAccessible* aAccessible) override;
   virtual bool IsAcceptableChild(nsIContent* aEl) const override;
 
-#if defined(XP_WIN)
   virtual uint32_t ChildCount() const override;
+#if defined(XP_WIN)
   virtual LocalAccessible* LocalChildAt(uint32_t aIndex) const override;
 #endif  // defined(XP_WIN)
 

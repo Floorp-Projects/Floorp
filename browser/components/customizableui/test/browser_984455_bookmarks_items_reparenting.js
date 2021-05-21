@@ -212,12 +212,10 @@ add_task(async function testOverflowingBookmarksButtonContextMenu() {
   // The DevEdition has the DevTools button in the toolbar by default. Remove it
   // to prevent branch-specific available toolbar space.
   CustomizableUI.removeWidgetFromArea("developer-button");
-  if (CustomizableUI.protonToolbarEnabled) {
-    CustomizableUI.removeWidgetFromArea(
-      "library-button",
-      CustomizableUI.AREA_NAVBAR
-    );
-  }
+  CustomizableUI.removeWidgetFromArea(
+    "library-button",
+    CustomizableUI.AREA_NAVBAR
+  );
   CustomizableUI.addWidgetToArea(kBookmarksButton, CustomizableUI.AREA_NAVBAR);
   ok(
     !gNavBar.hasAttribute("overflowing"),

@@ -710,39 +710,3 @@ add_task(async function testQuickSwitchTabAfterTogglingTPSwitch() {
   // Finally, clear the tracking database.
   await TrackingDBService.clearAll();
 });
-
-// Test that the "Privacy Protections" button in the app menu loads about:protections
-// and has appropriate telemetry
-add_task(async function testProtectionsButton() {
-  // This item does not exist when using the Proton AppMenu.
-  if (PanelUI.protonAppMenuEnabled) {
-    Assert.ok(
-      true,
-      "Skipping test since this item does not exist in the Proton AppMenu"
-    );
-    return;
-  }
-
-  let gCUITestUtils = new CustomizableUITestUtils(window);
-
-  await BrowserTestUtils.withNewTab(gBrowser, async function(browser) {
-    await gCUITestUtils.openMainMenu();
-
-    let loaded = TestUtils.waitForCondition(
-      () => gBrowser.currentURI.spec == "about:protections",
-      "Should open about:protections"
-    );
-    document.getElementById("appMenu-protection-report-button").click();
-    await loaded;
-
-    // When the graph is built it means any messaging has finished,
-    // we can close the tab.
-    await SpecialPowers.spawn(browser, [], async function() {
-      await ContentTaskUtils.waitForCondition(() => {
-        let bars = content.document.querySelectorAll(".graph-bar");
-        return bars.length;
-      }, "The graph has been built");
-    });
-  });
-  checkClickTelemetry("open_full_report", undefined, "app_menu");
-});

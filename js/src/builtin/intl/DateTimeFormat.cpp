@@ -1160,12 +1160,7 @@ static FieldType GetFieldTypeForFormatField(UDateFormatField fieldName) {
       return &JSAtomState::fractionalSecond;
 
     case UDAT_FLEXIBLE_DAY_PERIOD_FIELD:
-#ifdef NIGHTLY_BUILD
       return &JSAtomState::dayPeriod;
-#else
-      // Currently restricted to Nightly.
-      return &JSAtomState::unknown;
-#endif
 
 #ifndef U_HIDE_INTERNAL_API
     case UDAT_RELATED_YEAR_FIELD:

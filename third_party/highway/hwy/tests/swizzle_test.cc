@@ -223,6 +223,7 @@ struct TestTableLookupBytes {
 HWY_NOINLINE void TestAllTableLookupBytes() {
   ForIntegerTypes(ForPartialVectors<TestTableLookupBytes>());
 }
+
 struct TestTableLookupLanes {
 #if HWY_TARGET == HWY_RVV
   using Index = uint32_t;
@@ -242,12 +243,13 @@ struct TestTableLookupLanes {
     if (N <= 8) {  // Test all permutations
       for (size_t i0 = 0; i0 < N; ++i0) {
         idx[0] = static_cast<Index>(i0);
+
         for (size_t i1 = 0; i1 < N; ++i1) {
-          idx[1] = static_cast<Index>(i1);
+          if (N >= 2) idx[1] = static_cast<Index>(i1);
           for (size_t i2 = 0; i2 < N; ++i2) {
-            idx[2] = static_cast<Index>(i2);
+            if (N >= 4) idx[2] = static_cast<Index>(i2);
             for (size_t i3 = 0; i3 < N; ++i3) {
-              idx[3] = static_cast<Index>(i3);
+              if (N >= 4) idx[3] = static_cast<Index>(i3);
 
               for (size_t i = 0; i < N; ++i) {
                 expected[i] = static_cast<T>(idx[i] + 1);  // == v[idx[i]]
@@ -286,7 +288,7 @@ struct TestTableLookupLanes {
 };
 
 HWY_NOINLINE void TestAllTableLookupLanes() {
-  const ForFullVectors<TestTableLookupLanes> test;
+  const ForPartialVectors<TestTableLookupLanes> test;
   test(uint32_t());
   test(int32_t());
   test(float());
