@@ -57,58 +57,13 @@ component("absl") {
 
 group("absl_component_deps") {
   public_deps = [
-    "//third_party/abseil-cpp/absl/algorithm:container",
-    "//third_party/abseil-cpp/absl/base",
-    "//third_party/abseil-cpp/absl/base:config",
-    "//third_party/abseil-cpp/absl/base:core_headers",
-    "//third_party/abseil-cpp/absl/container:btree",
-    "//third_party/abseil-cpp/absl/container:fixed_array",
-    "//third_party/abseil-cpp/absl/container:flat_hash_map",
-    "//third_party/abseil-cpp/absl/container:flat_hash_set",
-    "//third_party/abseil-cpp/absl/container:inlined_vector",
-    "//third_party/abseil-cpp/absl/container:node_hash_map",
-    "//third_party/abseil-cpp/absl/container:node_hash_set",
-    "//third_party/abseil-cpp/absl/debugging:failure_signal_handler",
-    "//third_party/abseil-cpp/absl/debugging:stacktrace",
-    "//third_party/abseil-cpp/absl/debugging:symbolize",
-    "//third_party/abseil-cpp/absl/functional:bind_front",
-    "//third_party/abseil-cpp/absl/hash",
-    "//third_party/abseil-cpp/absl/memory",
-    "//third_party/abseil-cpp/absl/meta:type_traits",
-    "//third_party/abseil-cpp/absl/numeric:int128",
-    "//third_party/abseil-cpp/absl/status",
-    "//third_party/abseil-cpp/absl/status:statusor",
-    "//third_party/abseil-cpp/absl/strings",
-    "//third_party/abseil-cpp/absl/strings:str_format",
-    "//third_party/abseil-cpp/absl/synchronization",
-    "//third_party/abseil-cpp/absl/time",
-    "//third_party/abseil-cpp/absl/types:optional",
-    "//third_party/abseil-cpp/absl/types:span",
-    "//third_party/abseil-cpp/absl/types:variant",
   ]
-
-  # The following dependencies currently don't build with NaCl.
-  # TODO(https://crbug.com/1114625): Fix build errors and remove this section.
-  if (is_nacl) {
-    public_deps -= [
-      "//third_party/abseil-cpp/absl/container:flat_hash_map",
-      "//third_party/abseil-cpp/absl/container:flat_hash_set",
-      "//third_party/abseil-cpp/absl/container:node_hash_map",
-      "//third_party/abseil-cpp/absl/container:node_hash_set",
-      "//third_party/abseil-cpp/absl/debugging:failure_signal_handler",
-    ]
-  }
 
   visibility = [ ":absl" ]
 }
 
 group("default") {
   deps = [
-    "absl/types:any",
-    "absl/types:bad_any_cast",
-    "absl/types:bad_optional_access",
-    "absl/types:optional",
-    "absl/types:span",
   ]
 }
 
@@ -185,7 +140,6 @@ if (false) {
       "absl/algorithm:algorithm_test",
       "absl/algorithm:container_test",
       "absl/base:config_test",
-      "absl/container:inlined_vector_test",
       "absl/memory:memory_test",
       "absl/meta:type_traits_test",
       "absl/strings:ascii_test",
@@ -206,8 +160,6 @@ if (build_with_chromium) {
     deps = [
       "//base/test:run_all_unittests",
       "//third_party/abseil-cpp/absl/base:config",
-      "//third_party/abseil-cpp/absl/container:fixed_array",
-      "//third_party/abseil-cpp/absl/container:inlined_vector",
       "//third_party/abseil-cpp/absl/strings",
       "//third_party/abseil-cpp/absl/types:optional",
       "//third_party/abseil-cpp/absl/types:span",

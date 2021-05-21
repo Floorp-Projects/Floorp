@@ -12,7 +12,7 @@ absl_source_set("memory") {
   ]
 }
 
-if (false) {
+if (!moz_webrtc_build) {
   absl_source_set("memory_test") {
     testonly = true
 
