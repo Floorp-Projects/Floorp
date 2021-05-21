@@ -111,7 +111,7 @@ pref(layout.display-list.improve-fragmentation,false) fuzzy-if(OSX,23-23,1-1) ==
 == 115199-2b.html 115199-2-ref.html
 == 652178-1.html 652178-1-ref2.html
 fuzzy-if(cocoaWidget,0-1,0-5000) fuzzy-if(webrender&&swgl,0-1,0-9) == 745025-1.html 745025-1-ref.html
-fuzzy-if(cocoaWidget&&swgl,1-1,21-21) == 820496-1.html 820496-1-ref.html
+== 820496-1.html 820496-1-ref.html
 
 # NOTE: These tests don't yet rigorously test what they're
 # trying to test (shrink-to-fit behavior), due to bug 967311.
@@ -133,7 +133,7 @@ fuzzy-if(cocoaWidget&&swgl,1-1,21-21) == 820496-1.html 820496-1-ref.html
 == 1468654-1.html 1468654-1-ref.html
 == 1596310.html 1596310-ref.html
 
-fuzzy-if(cocoaWidget&&swgl,1-1,21-23) == content-url-element.html image.html
+== content-url-element.html image.html
 fuzzy-if(cocoaWidget&&swgl,0-1,0-23) == content-url-pseudo.html content-url-pseudo-ref.html
 
 == quirks.html quirks-ref.html
@@ -163,7 +163,7 @@ fuzzy-if(cocoaWidget&&swgl,0-1,0-23) == content-url-pseudo.html content-url-pseu
 == fieldset-00J.html fieldset-00J-ref.html
 == fieldset-00J-grid.html fieldset-00J-ref.html
 == fieldset-00K.html fieldset-00K-ref.html
-fuzzy-if(cocoaWidget&&swgl,1-1,21-21) == fieldset-00L.html fieldset-00L-ref.html
+== fieldset-00L.html fieldset-00L-ref.html
 
 == block-max-height-001.html block-max-height-001-ref.html
 == block-max-height-002.html block-max-height-001-ref.html

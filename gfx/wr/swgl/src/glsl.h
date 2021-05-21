@@ -696,6 +696,8 @@ Float ceil(Float v) {
 SI int32_t roundeven(float v, float scale) {
 #if USE_SSE2
   return _mm_cvtss_si32(_mm_set_ss(v * scale));
+#elif USE_NEON
+  return vcvtns_s32_f32(v * scale);
 #else
   return bit_cast<int32_t>(v * scale + float(0xC00000)) - 0x4B400000;
 #endif
@@ -704,6 +706,8 @@ SI int32_t roundeven(float v, float scale) {
 SI I32 roundeven(Float v, Float scale) {
 #if USE_SSE2
   return _mm_cvtps_epi32(v * scale);
+#elif USE_NEON
+  return vcvtnq_s32_f32(v * scale);
 #else
   // Magic number implementation of round-to-nearest-even
   // see http://stereopsis.com/sree/fpu2006.html
@@ -720,6 +724,8 @@ SI I32 roundzero(Float v, Float scale) { return cast(v * scale); }
 SI I32 roundfast(Float v, Float scale) {
 #if USE_SSE2
   return _mm_cvtps_epi32(v * scale);
+#elif USE_NEON
+  return vcvtnq_s32_f32(v * scale);
 #else
   return cast(v * scale + 0.5f);
 #endif
