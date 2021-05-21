@@ -9,18 +9,5 @@
             <source src="../resources/videoSample.webm">
     </video>
 </div>
-<div class="playbackState">
-</div>
-<script>
-        const video = document.querySelector('video');
-
-        video.addEventListener('playing', (event) => {
-          document.querySelector('.playbackState').innerText="Media file is playing";
-        });
-
-		video.addEventListener('pause', (event) => {
-          document.querySelector('.playbackState').innerHTML="Media file is paused";
-        });
-</script>
 </body>
 </html>

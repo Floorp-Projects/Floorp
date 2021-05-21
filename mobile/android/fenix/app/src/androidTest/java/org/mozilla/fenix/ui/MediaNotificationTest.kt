@@ -4,13 +4,15 @@
 
 package org.mozilla.fenix.ui
 
-import androidx.test.uiautomator.UiSelector
+import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.concept.engine.mediasession.MediaSession
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
 import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.HomeActivityTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper
@@ -33,9 +35,14 @@ class MediaNotificationTest {
 
     @get:Rule
     val activityTestRule = HomeActivityTestRule()
+    private lateinit var browserStore: BrowserStore
 
     @Before
     fun setUp() {
+        // Initializing this as part of class construction, below the rule would throw a NPE
+        // So we are initializing this here instead of in all tests.
+        browserStore = activityTestRule.activity.components.core.store
+
         mockWebServer = MockWebServer().apply {
             dispatcher = AndroidAssetDispatcher()
             start()
@@ -45,16 +52,10 @@ class MediaNotificationTest {
     @After
     fun tearDown() {
         mockWebServer.shutdown()
-        // verify if the notification tray is expanded and should be closed before the next test
-        val notificationShade =
-            mDevice.findObject(UiSelector().resourceId("com.android.systemui:id/notification_stack_scroller"))
-
-        if (notificationShade.exists())
-            mDevice.pressBack()
     }
 
+    @Ignore("Still failing, due to https://github.com/mozilla-mobile/android-components/issues/9748")
     @Test
-    @Ignore("https://github.com/mozilla-mobile/fenix/issues/15754")
     fun videoPlaybackSystemNotificationTest() {
         val videoTestPage = TestAssetHelper.getVideoPageAsset(mockWebServer)
 
@@ -62,7 +63,7 @@ class MediaNotificationTest {
         }.enterURLAndEnterToBrowser(videoTestPage.url) {
             mDevice.waitForIdle()
             clickMediaPlayerPlayButton()
-            waitForPlaybackToStart()
+            assertPlaybackState(browserStore, MediaSession.PlaybackState.PLAYING)
         }.openNotificationShade {
             verifySystemNotificationExists(videoTestPage.title)
             clickMediaSystemNotificationControlButton("Pause")
@@ -72,7 +73,7 @@ class MediaNotificationTest {
         mDevice.pressBack()
 
         browserScreen {
-            verifyMediaIsPaused()
+            assertPlaybackState(browserStore, MediaSession.PlaybackState.PAUSED)
         }.openTabDrawer {
             closeTab()
         }
@@ -88,7 +89,6 @@ class MediaNotificationTest {
     }
 
     @Test
-    @Ignore("https://github.com/mozilla-mobile/fenix/issues/15754")
     fun audioPlaybackSystemNotificationTest() {
         val audioTestPage = TestAssetHelper.getAudioPageAsset(mockWebServer)
 
@@ -96,7 +96,7 @@ class MediaNotificationTest {
         }.enterURLAndEnterToBrowser(audioTestPage.url) {
             mDevice.waitForIdle()
             clickMediaPlayerPlayButton()
-            waitForPlaybackToStart()
+            assertPlaybackState(browserStore, MediaSession.PlaybackState.PLAYING)
         }.openNotificationShade {
             verifySystemNotificationExists(audioTestPage.title)
             clickMediaSystemNotificationControlButton("Pause")
@@ -106,7 +106,7 @@ class MediaNotificationTest {
         mDevice.pressBack()
 
         browserScreen {
-            verifyMediaIsPaused()
+            assertPlaybackState(browserStore, MediaSession.PlaybackState.PAUSED)
         }.openTabDrawer {
             closeTab()
         }
@@ -122,7 +122,6 @@ class MediaNotificationTest {
     }
 
     @Test
-    @Ignore("https://github.com/mozilla-mobile/fenix/issues/15754")
     fun tabMediaControlButtonTest() {
         val audioTestPage = TestAssetHelper.getAudioPageAsset(mockWebServer)
 
@@ -130,18 +129,17 @@ class MediaNotificationTest {
         }.enterURLAndEnterToBrowser(audioTestPage.url) {
             mDevice.waitForIdle()
             clickMediaPlayerPlayButton()
-            waitForPlaybackToStart()
+            assertPlaybackState(browserStore, MediaSession.PlaybackState.PLAYING)
         }.openTabDrawer {
             verifyTabMediaControlButtonState("Pause")
             clickTabMediaControlButton()
             verifyTabMediaControlButtonState("Play")
         }.openTab(audioTestPage.title) {
-            verifyMediaIsPaused()
+            assertPlaybackState(browserStore, MediaSession.PlaybackState.PAUSED)
         }
     }
 
     @Test
-    @Ignore("https://github.com/mozilla-mobile/fenix/issues/15754")
     fun mediaSystemNotificationInPrivateModeTest() {
         val audioTestPage = TestAssetHelper.getAudioPageAsset(mockWebServer)
 
@@ -151,7 +149,7 @@ class MediaNotificationTest {
         }.enterURLAndEnterToBrowser(audioTestPage.url) {
             mDevice.waitForIdle()
             clickMediaPlayerPlayButton()
-            waitForPlaybackToStart()
+            assertPlaybackState(browserStore, MediaSession.PlaybackState.PLAYING)
         }.openNotificationShade {
             verifySystemNotificationExists("A site is playing media")
             clickMediaSystemNotificationControlButton("Pause")
@@ -161,7 +159,7 @@ class MediaNotificationTest {
         mDevice.pressBack()
 
         browserScreen {
-            verifyMediaIsPaused()
+            assertPlaybackState(browserStore, MediaSession.PlaybackState.PAUSED)
         }.openTabDrawer {
             closeTab()
             verifySnackBarText("Private tab closed")

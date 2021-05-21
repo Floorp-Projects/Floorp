@@ -9,6 +9,7 @@ package org.mozilla.fenix.ui.robots
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.os.SystemClock
 import android.widget.EditText
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.Espresso.pressBack
@@ -33,10 +34,13 @@ import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.UiSelector
 import androidx.test.uiautomator.Until
 import mozilla.components.browser.state.selector.selectedTab
+import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.concept.engine.mediasession.MediaSession
 import org.hamcrest.CoreMatchers.allOf
 import org.hamcrest.CoreMatchers.containsString
 import org.hamcrest.Matchers.not
 import org.junit.Assert.assertTrue
+import org.junit.Assert.fail
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.helpers.Constants.LONG_CLICK_DURATION
@@ -371,14 +375,33 @@ class BrowserRobot {
         mediaPlayerPlayButton().click()
     }
 
-    fun waitForPlaybackToStart() {
-        val playStateMessage = mDevice.findObject(UiSelector().text("Media file is playing"))
-        assertTrue(playStateMessage.waitForExists(waitingTime))
+    /**
+     * Get the current playback state of the currently selected tab.
+     * The result may be null if there if the currently playing media tab cannot be found in [store]
+     *
+     * @param store [BrowserStore] from which to get data about the current tab's state.
+     * @return nullable [MediaSession.PlaybackState] indicating the media playback state for the current tab.
+     */
+    private fun getCurrentPlaybackState(store: BrowserStore): MediaSession.PlaybackState? {
+        return store.state.selectedTab?.mediaSessionState?.playbackState
     }
 
-    fun verifyMediaIsPaused() {
-        val pausedStateMessage = mDevice.findObject(UiSelector().text("Media file is paused"))
-        assertTrue(pausedStateMessage.waitForExists(waitingTime))
+    /**
+     * Asserts that in [waitingTime] the playback state of the current tab will be [expectedState].
+     *
+     * @param store [BrowserStore] from which to get data about the current tab's state.
+     * @param expectedState [MediaSession.PlaybackState] the playback state that will be asserted
+     * @param waitingTime maximum time the test will wait for the playback state to become [expectedState]
+     * before failing the assertion.
+     */
+    fun assertPlaybackState(store: BrowserStore, expectedState: MediaSession.PlaybackState) {
+        val startMills = SystemClock.uptimeMillis()
+        var currentMills: Long = 0
+        while (currentMills <= waitingTime) {
+            if (expectedState == getCurrentPlaybackState(store)) return
+            currentMills = SystemClock.uptimeMillis() - startMills
+        }
+        fail("Playback did not moved to state: $expectedState")
     }
 
     fun swipeNavBarRight(tabUrl: String) {

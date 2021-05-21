@@ -9,18 +9,5 @@
         <source src="../resources/audioSample.mp3">
     </audio>
 </div>
-<div class="playbackState">
-</div>
-<script>
-        const audio = document.querySelector('audio');
-
-        audio.addEventListener('playing', (event) => {
-          document.querySelector('.playbackState').innerText="Media file is playing"
-        });
-
-		audio.addEventListener('pause', (event) => {
-          document.querySelector('.playbackState').innerText="Media file is paused"
-        });
-</script>
 </body>
 </html>
