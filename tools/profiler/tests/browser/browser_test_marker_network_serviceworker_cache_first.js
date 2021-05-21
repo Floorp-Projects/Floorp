@@ -4,7 +4,9 @@
 
 /**
  * Test that we emit network markers accordingly.
- * In this file we'll test a few service worker cases.
+ * In this file we'll test a caching service worker. This service worker will
+ * fetch and store requests at install time, and serve them when the page
+ * requests them.
  */
 
 const serviceWorkerFileName = "serviceworker_cache_first.js";
@@ -100,7 +102,13 @@ add_task(async function test_network_markers_service_worker_register() {
     );
 
     // Now let's check the marker payloads.
-    const parentNetworkMarkers = getInflatedNetworkMarkers(parentThread);
+    const parentNetworkMarkers = getInflatedNetworkMarkers(parentThread)
+      // When we load a page, Firefox will check the service worker freshness
+      // after a few seconds. So when the test lasts a long time (with some test
+      // environments) we might see spurious markers about that that we're not
+      // interesting in in this part of the test. They're only present in the
+      // parent process.
+      .filter(marker => !marker.data.URI.includes(serviceWorkerFileName));
     const contentNetworkMarkers = getInflatedNetworkMarkers(contentThread);
     const serviceWorkerNetworkMarkers = getInflatedNetworkMarkers(
       serviceWorkerThread
