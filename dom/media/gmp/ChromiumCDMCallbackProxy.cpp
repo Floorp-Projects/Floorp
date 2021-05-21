@@ -141,11 +141,6 @@ void ChromiumCDMCallbackProxy::SessionClosed(const nsCString& aSessionId) {
                        NS_ConvertUTF8toUTF16(aSessionId));
 }
 
-void ChromiumCDMCallbackProxy::QueryOutputProtectionStatus() {
-  DispatchToMainThread("ChromiumCDMProxy::QueryOutputProtectionStatus",
-                       &ChromiumCDMProxy::QueryOutputProtectionStatus);
-}
-
 void ChromiumCDMCallbackProxy::Terminated() {
   DispatchToMainThread("ChromiumCDMProxy::Terminated",
                        &ChromiumCDMProxy::Terminated);

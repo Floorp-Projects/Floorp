@@ -999,8 +999,6 @@ class CDMStorageTest {
 
     void SessionClosed(const nsCString& aSessionId) override {}
 
-    void QueryOutputProtectionStatus() override {}
-
     void Terminated() override { mRunner->Terminated(); }
 
     void Shutdown() override { mRunner->Shutdown(); }
