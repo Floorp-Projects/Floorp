@@ -13,7 +13,7 @@ flat varying vec4 v_uv_bounds;
 varying vec2 v_uv;
 
 
-#ifdef WR_FEATURE_GLYPH_TRANSFORM
+#if defined(WR_FEATURE_GLYPH_TRANSFORM) && !defined(SWGL_CLIP_DIST)
 varying vec4 v_uv_clip;
 #endif
 
@@ -214,7 +214,14 @@ void main() {
 
 #ifdef WR_FEATURE_GLYPH_TRANSFORM
     vec2 f = (glyph_transform * vi.local_pos - glyph_rect.p0) / glyph_rect.size;
-    v_uv_clip = vec4(f, 1.0 - f);
+    #ifdef SWGL_CLIP_DIST
+        gl_ClipDistance[0] = f.x;
+        gl_ClipDistance[1] = f.y;
+        gl_ClipDistance[2] = 1.0 - f.x;
+        gl_ClipDistance[3] = 1.0 - f.y;
+    #else
+        v_uv_clip = vec4(f, 1.0 - f);
+    #endif
 #else
     vec2 f = (vi.local_pos - glyph_rect.p0) / glyph_rect.size;
 #endif
@@ -283,7 +290,7 @@ Fragment text_fs(void) {
         mask.rgb = mask.rgb * v_mask_swizzle.x + mask.aaa * v_mask_swizzle.y;
     #endif
 
-    #ifdef WR_FEATURE_GLYPH_TRANSFORM
+    #if defined(WR_FEATURE_GLYPH_TRANSFORM) && !defined(SWGL_CLIP_DIST)
         mask *= float(all(greaterThanEqual(v_uv_clip, vec4(0.0))));
     #endif
 
