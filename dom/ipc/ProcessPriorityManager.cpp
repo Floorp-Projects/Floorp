@@ -408,9 +408,7 @@ ProcessPriorityManagerImpl::GetParticularProcessPriorityManager(
 void ProcessPriorityManagerImpl::SetProcessPriority(
     ContentParent* aContentParent, ProcessPriority aPriority) {
   MOZ_ASSERT(aContentParent);
-  RefPtr<ParticularProcessPriorityManager> pppm =
-      GetParticularProcessPriorityManager(aContentParent);
-  if (pppm) {
+  if (RefPtr pppm = GetParticularProcessPriorityManager(aContentParent)) {
     pppm->SetPriorityNow(aPriority);
   }
 }
@@ -462,8 +460,7 @@ void ProcessPriorityManagerImpl::ActivityChanged(
   aBC->PreOrderWalk([&](BrowsingContext* aContext) {
     CanonicalBrowsingContext* canonical = aContext->Canonical();
     if (ContentParent* cp = canonical->GetContentParent()) {
-      if (RefPtr<ParticularProcessPriorityManager> pppm =
-              GetParticularProcessPriorityManager(cp)) {
+      if (RefPtr pppm = GetParticularProcessPriorityManager(cp)) {
         pppm->ActivityChanged(canonical->GetBrowserParent(), aIsActive);
       }
     }
@@ -472,26 +469,20 @@ void ProcessPriorityManagerImpl::ActivityChanged(
 
 void ProcessPriorityManagerImpl::ActivityChanged(BrowserParent* aBrowserParent,
                                                  bool aIsActive) {
-  RefPtr<ParticularProcessPriorityManager> pppm =
-      GetParticularProcessPriorityManager(aBrowserParent->Manager());
-  if (!pppm) {
-    return;
+  if (RefPtr pppm =
+          GetParticularProcessPriorityManager(aBrowserParent->Manager())) {
+    Telemetry::ScalarAdd(
+        Telemetry::ScalarID::DOM_CONTENTPROCESS_OS_PRIORITY_CHANGE_CONSIDERED,
+        1);
+
+    pppm->ActivityChanged(aBrowserParent, aIsActive);
   }
-
-  Telemetry::ScalarAdd(
-      Telemetry::ScalarID::DOM_CONTENTPROCESS_OS_PRIORITY_CHANGE_CONSIDERED, 1);
-
-  pppm->ActivityChanged(aBrowserParent, aIsActive);
 }
 
 void ProcessPriorityManagerImpl::ResetPriority(ContentParent* aContentParent) {
-  RefPtr<ParticularProcessPriorityManager> pppm =
-      GetParticularProcessPriorityManager(aContentParent);
-  if (!pppm) {
-    return;
+  if (RefPtr pppm = GetParticularProcessPriorityManager(aContentParent)) {
+    pppm->ResetPriority();
   }
-
-  pppm->ResetPriority();
 }
 
 NS_IMPL_ISUPPORTS(ParticularProcessPriorityManager, nsITimerCallback,
