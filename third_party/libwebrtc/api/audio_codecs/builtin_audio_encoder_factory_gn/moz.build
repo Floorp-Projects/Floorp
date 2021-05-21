@@ -71,7 +71,6 @@ if CONFIG["OS_TARGET"] == "Darwin":
 
 if CONFIG["OS_TARGET"] == "Linux":
 
-    DEFINES["CR_SYSROOT_HASH"] = "5f64b417e1018dcf8fcc81dc2714e0f264b9b911"
     DEFINES["USE_AURA"] = "1"
     DEFINES["USE_GLIB"] = "1"
     DEFINES["USE_NSS_CERTS"] = "1"
@@ -120,6 +119,13 @@ if CONFIG["CPU_ARCH"] == "x86":
         "-msse2"
     ]
 
+if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "Android":
+
+    DEFINES["WEBRTC_USE_BUILTIN_ISAC_FIX"] = "0"
+    DEFINES["WEBRTC_USE_BUILTIN_ISAC_FLOAT"] = "1"
+
+if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "Android":
+
     DEFINES["WEBRTC_USE_BUILTIN_ISAC_FIX"] = "0"
     DEFINES["WEBRTC_USE_BUILTIN_ISAC_FLOAT"] = "1"
 
@@ -127,14 +133,17 @@ if CONFIG["CPU_ARCH"] == "x86":
         "android_support"
     ]
 
-if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "Android":
-
-    DEFINES["WEBRTC_USE_BUILTIN_ISAC_FIX"] = "0"
-    DEFINES["WEBRTC_USE_BUILTIN_ISAC_FLOAT"] = "1"
-
 if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "Android":
 
     DEFINES["WEBRTC_USE_BUILTIN_ISAC_FIX"] = "0"
     DEFINES["WEBRTC_USE_BUILTIN_ISAC_FLOAT"] = "1"
+
+if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "Linux":
+
+    DEFINES["CR_SYSROOT_HASH"] = "d967bcef40477dbc39acef141ff22bf73f3e7cdb"
+
+if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "Linux":
+
+    DEFINES["CR_SYSROOT_HASH"] = "5f64b417e1018dcf8fcc81dc2714e0f264b9b911"
 
 Library("builtin_audio_encoder_factory_gn")
