@@ -4,6 +4,14 @@
 
 "use strict";
 
+/**
+ * Bug 1606448 - Shim CoreMetrics Eluminate analytics
+ *
+ * Sites may rely on eluminate.js tracking in ways which cause breakage,
+ * which has been seen on shopping sites such as Vans.com, where the
+ * search filtering UX is broken. This shim mitigates such breakage.
+ */
+
 if (!window.CM_DDX) {
   window.CM_DDX = {
     domReadyFired: false,
@@ -32,7 +40,6 @@ if (!window.CM_DDX) {
     },
     setSubCookie: () => {},
   };
-
   const noopfn = () => {};
   const w = window;
   w.cmAddShared = noopfn;
@@ -42,6 +49,7 @@ if (!window.CM_DDX) {
   w.cmCreateManualPageviewTag = noopfn;
   w.cmCreateOrderTag = noopfn;
   w.cmCreatePageviewTag = noopfn;
+  w.cmExecuteTagQueue = noopfn;
   w.cmRetrieveUserID = noopfn;
   w.cmSetClientID = noopfn;
   w.cmSetCurrencyCode = noopfn;
@@ -51,18 +59,4 @@ if (!window.CM_DDX) {
   w.cmSetupNormalization = noopfn;
   w.cmSetupOther = noopfn;
   w.cmStartTagSet = noopfn;
-
-  function cmExecuteTagQueue() {
-    var b = window.cmTagQueue;
-    if (b) {
-      if (!Array.isArray(b)) {
-        return undefined;
-      }
-      for (var a = 0; a < b.length; ++a) {
-        window[b[a][0]].apply(window, b[a].slice(1));
-      }
-    }
-    return true;
-  }
-  cmExecuteTagQueue();
 }
