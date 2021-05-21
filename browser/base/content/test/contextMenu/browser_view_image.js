@@ -54,35 +54,14 @@ async function test_view_image_works({ page, selector }) {
         return BrowserTestUtils.closeWindow(browser.ownerGlobal);
       },
     },
-    tab_default: {
+    self: {
       modifiers: {},
       async loadedPromise() {
         return BrowserTestUtils.waitForNewTab(
           gBrowser,
           url => url.startsWith("blob"),
           true
-        ).then(t => {
-          is(t.selected, false, "Tab should not be selected.");
-          return t.linkedBrowser;
-        });
-      },
-      cleanup(browser) {
-        is(gBrowser.tabs.length, 3, "number of tabs");
-        BrowserTestUtils.removeTab(gBrowser.getTabForBrowser(browser));
-      },
-    },
-    tab_default_flip_bg_pref: {
-      prefs: [["browser.tabs.loadInBackground", false]],
-      modifiers: {},
-      async loadedPromise() {
-        return BrowserTestUtils.waitForNewTab(
-          gBrowser,
-          url => url.startsWith("blob"),
-          true
-        ).then(t => {
-          is(t.selected, true, "Tab should be selected with pref flipped.");
-          return t.linkedBrowser;
-        });
+        ).then(t => t.linkedBrowser);
       },
       cleanup(browser) {
         is(gBrowser.tabs.length, 3, "number of tabs");
@@ -97,9 +76,6 @@ async function test_view_image_works({ page, selector }) {
       );
     });
     for (let [testLabel, test] of Object.entries(tests)) {
-      if (test.prefs) {
-        await SpecialPowers.pushPrefEnv({ set: test.prefs });
-      }
       let contextMenu = document.getElementById("contentAreaContextMenu");
       is(
         contextMenu.state,
@@ -146,9 +122,6 @@ async function test_view_image_works({ page, selector }) {
         );
       });
       await test.cleanup(newBrowser);
-      if (test.prefs) {
-        await SpecialPowers.popPrefEnv();
-      }
     }
   });
 }
