@@ -2265,21 +2265,30 @@ void MacroAssembler::shuffleInt8x16(const uint8_t lanes[16], FloatRegister rhs,
 
 void MacroAssembler::blendInt8x16(const uint8_t lanes[16], FloatRegister lhs,
                                   FloatRegister rhs, FloatRegister dest) {
-  uint8_t lanes_[16];
-  for (unsigned i = 0; i < 16; i++) {
-    lanes_[i] = lanes[i] == 0 ? i : 16 + i;
+  ScratchSimd128Scope scratch(*this);
+  int8_t lanes_[16];
+
+  if (rhs == dest) {
+    for (unsigned i = 0; i < 16; i++) {
+      lanes_[i] = lanes[i] == 0 ? i : 16 + i;
+    }
+    loadConstantSimd128(SimdConstant::CreateX16(lanes_), scratch);
+    Tbx(Simd16B(dest), Simd16B(lhs), Simd16B(scratch));
+    return;
   }
-  shuffleInt8x16(lanes_, lhs, rhs, dest);
+
+  moveSimd128(lhs, dest);
+  for (unsigned i = 0; i < 16; i++) {
+    lanes_[i] = lanes[i] != 0 ? i : 16 + i;
+  }
+  loadConstantSimd128(SimdConstant::CreateX16(lanes_), scratch);
+  Tbx(Simd16B(dest), Simd16B(rhs), Simd16B(scratch));
 }
 
 void MacroAssembler::blendInt16x8(const uint16_t lanes[8], FloatRegister lhs,
                                   FloatRegister rhs, FloatRegister dest) {
-  uint8_t lanes_[16];
-  for (unsigned i = 0; i < 16; i += 2) {
-    lanes_[i] = lanes[i / 2] == 0 ? i : 16 + i;
-    lanes_[i + 1] = lanes[i / 2] == 0 ? i + 1 : 16 + i + 1;
-  }
-  shuffleInt8x16(lanes_, lhs, rhs, dest);
+  static_assert(sizeof(const uint16_t /*lanes*/[8]) == sizeof(uint8_t[16]));
+  blendInt8x16(reinterpret_cast<const uint8_t*>(lanes), lhs, rhs, dest);
 }
 
 void MacroAssembler::interleaveHighInt16x8(FloatRegister lhs, FloatRegister rhs,
@@ -2329,52 +2338,19 @@ void MacroAssembler::permuteInt8x16(const uint8_t lanes[16], FloatRegister src,
   Tbl(Simd16B(dest), Simd16B(src), Simd16B(scratch));
 }
 
-void MacroAssembler::permuteLowInt16x8(const uint16_t lanes[4],
-                                       FloatRegister src, FloatRegister dest) {
-  MOZ_ASSERT(lanes[0] < 4 && lanes[1] < 4 && lanes[2] < 4 && lanes[3] < 4);
+void MacroAssembler::permuteInt16x8(const uint16_t lanes[8], FloatRegister src,
+                                    FloatRegister dest) {
+  MOZ_ASSERT(lanes[0] < 8 && lanes[1] < 8 && lanes[2] < 8 && lanes[3] < 8 &&
+             lanes[4] < 8 && lanes[5] < 8 && lanes[6] < 8 && lanes[7] < 8);
   const int8_t lanes_[16] = {
-      (int8_t)(lanes[0] << 1),
-      (int8_t)((lanes[0] << 1) + 1),
-      (int8_t)(lanes[1] << 1),
-      (int8_t)((lanes[1] << 1) + 1),
-      (int8_t)(lanes[2] << 1),
-      (int8_t)((lanes[2] << 1) + 1),
-      (int8_t)(lanes[3] << 1),
-      (int8_t)((lanes[3] << 1) + 1),
-      8,
-      9,
-      10,
-      11,
-      12,
-      13,
-      14,
-      15,
-  };
-  ScratchSimd128Scope scratch(*this);
-  loadConstantSimd128(SimdConstant::CreateX16(lanes_), scratch);
-  Tbl(Simd16B(dest), Simd16B(src), Simd16B(scratch));
-}
-
-void MacroAssembler::permuteHighInt16x8(const uint16_t lanes[4],
-                                        FloatRegister src, FloatRegister dest) {
-  MOZ_ASSERT(lanes[0] < 4 && lanes[1] < 4 && lanes[2] < 4 && lanes[3] < 4);
-  const int8_t lanes_[16] = {
-      0,
-      1,
-      2,
-      3,
-      4,
-      5,
-      6,
-      7,
-      (int8_t)((lanes[0] << 1) + 8),
-      (int8_t)((lanes[0] << 1) + 9),
-      (int8_t)((lanes[1] << 1) + 8),
-      (int8_t)((lanes[1] << 1) + 9),
-      (int8_t)((lanes[2] << 1) + 8),
-      (int8_t)((lanes[2] << 1) + 9),
-      (int8_t)((lanes[3] << 1) + 8),
-      (int8_t)((lanes[3] << 1) + 9),
+      (int8_t)(lanes[0] << 1), (int8_t)((lanes[0] << 1) + 1),
+      (int8_t)(lanes[1] << 1), (int8_t)((lanes[1] << 1) + 1),
+      (int8_t)(lanes[2] << 1), (int8_t)((lanes[2] << 1) + 1),
+      (int8_t)(lanes[3] << 1), (int8_t)((lanes[3] << 1) + 1),
+      (int8_t)(lanes[4] << 1), (int8_t)((lanes[4] << 1) + 1),
+      (int8_t)(lanes[5] << 1), (int8_t)((lanes[5] << 1) + 1),
+      (int8_t)(lanes[6] << 1), (int8_t)((lanes[6] << 1) + 1),
+      (int8_t)(lanes[7] << 1), (int8_t)((lanes[7] << 1) + 1),
   };
   ScratchSimd128Scope scratch(*this);
   loadConstantSimd128(SimdConstant::CreateX16(lanes_), scratch);
