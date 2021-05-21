@@ -1069,5 +1069,23 @@ ShaderProgramOGL* ShaderProgramOGLsHolder::GetShaderProgramFor(
 
 void ShaderProgramOGLsHolder::Clear() { mPrograms.clear(); }
 
+ShaderProgramOGL* ShaderProgramOGLsHolder::ActivateProgram(
+    const ShaderConfigOGL& aConfig) {
+  ShaderProgramOGL* program = GetShaderProgramFor(aConfig);
+  MOZ_DIAGNOSTIC_ASSERT(program);
+  if (!program) {
+    return nullptr;
+  }
+  if (mCurrentProgram != program) {
+    mGL->fUseProgram(program->GetProgram());
+    mCurrentProgram = program;
+  }
+  return program;
+}
+
+void ShaderProgramOGLsHolder::ResetCurrentProgram() {
+  mCurrentProgram = nullptr;
+}
+
 }  // namespace layers
 }  // namespace mozilla

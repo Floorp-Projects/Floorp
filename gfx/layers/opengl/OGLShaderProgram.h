@@ -416,12 +416,15 @@ class ShaderProgramOGLsHolder final {
 
   ShaderProgramOGL* GetShaderProgramFor(const ShaderConfigOGL& aConfig);
   void Clear();
+  ShaderProgramOGL* ActivateProgram(const ShaderConfigOGL& aConfig);
+  void ResetCurrentProgram();
 
  protected:
   ~ShaderProgramOGLsHolder();
 
   const RefPtr<gl::GLContext> mGL;
   std::map<ShaderConfigOGL, UniquePtr<ShaderProgramOGL>> mPrograms;
+  ShaderProgramOGL* mCurrentProgram = nullptr;
 };
 
 }  // namespace layers
