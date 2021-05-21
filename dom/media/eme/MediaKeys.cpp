@@ -9,7 +9,6 @@
 #include "ChromiumCDMProxy.h"
 #include "GMPCrashHelper.h"
 #include "mozilla/EMEUtils.h"
-#include "mozilla/JSONWriter.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/dom/DOMException.h"
 #include "mozilla/dom/Document.h"
@@ -67,7 +66,7 @@ NS_IMPL_CYCLE_COLLECTING_ADDREF(MediaKeys)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(MediaKeys)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(MediaKeys)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
-  NS_INTERFACE_MAP_ENTRY(nsIObserver)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
 MediaKeys::MediaKeys(nsPIDOMWindowInner* aParent, const nsAString& aKeySystem,
@@ -86,43 +85,6 @@ MediaKeys::~MediaKeys() {
   DisconnectInnerWindow();
   Shutdown();
   EME_LOG("MediaKeys[%p] destroyed", this);
-}
-
-NS_IMETHODIMP MediaKeys::Observe(nsISupports* aSubject, const char* aTopic,
-                                 const char16_t* aData) {
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(!strcmp(aTopic, kMediaKeysResponseTopic),
-             "Should only listen for responses to MediaKey requests");
-  EME_LOG("MediaKeys[%p] observing message with aTopic=%s aData=%s", this,
-          aTopic, NS_ConvertUTF16toUTF8(aData).get());
-  if (!strcmp(aTopic, kMediaKeysResponseTopic)) {
-    if (!mProxy) {
-      // This may happen if we're notified during shutdown or startup. If this
-      // is happening outside of those scenarios there's a bug.
-      EME_LOG(
-          "MediaKeys[%p] can't notify CDM of observed message as mProxy is "
-          "unset",
-          this);
-      return NS_OK;
-    }
-
-    if (u"capture-possible"_ns.Equals(aData)) {
-      mProxy->NotifyOutputProtectionStatus(
-          CDMProxy::OutputProtectionCheckStatus::CheckSuccessful,
-          CDMProxy::OutputProtectionCaptureStatus::CapturePossilbe);
-    } else if (u"capture-not-possible"_ns.Equals(aData)) {
-      mProxy->NotifyOutputProtectionStatus(
-          CDMProxy::OutputProtectionCheckStatus::CheckSuccessful,
-          CDMProxy::OutputProtectionCaptureStatus::CaptureNotPossible);
-    } else {
-      MOZ_ASSERT_UNREACHABLE("No code paths should lead to the failure case");
-      // This should be unreachable, but gracefully handle in case.
-      mProxy->NotifyOutputProtectionStatus(
-          CDMProxy::OutputProtectionCheckStatus::CheckFailed,
-          CDMProxy::OutputProtectionCaptureStatus::Unused);
-    }
-  }
-  return NS_OK;
 }
 
 void MediaKeys::ConnectInnerWindow() {
@@ -190,12 +152,6 @@ void MediaKeys::Shutdown() {
   if (mProxy) {
     mProxy->Shutdown();
     mProxy = nullptr;
-  }
-
-  nsCOMPtr<nsIObserverService> observerService =
-      mozilla::services::GetObserverService();
-  if (observerService && mObserverAdded) {
-    observerService->RemoveObserver(this, kMediaKeysResponseTopic);
   }
 
   // Hold a self reference to keep us alive after we clear the self reference
@@ -713,64 +669,6 @@ nsresult MediaKeys::Bind(HTMLMediaElement* aElement) {
 void MediaKeys::Unbind() {
   MOZ_ASSERT(NS_IsMainThread());
   mElement = nullptr;
-}
-
-struct StringWriteFunc : public JSONWriteFunc {
-  nsString& mString;
-  explicit StringWriteFunc(nsString& aString) : mString(aString) {}
-  void Write(const Span<const char>& aStr) override {
-    mString.Append(NS_ConvertUTF8toUTF16(aStr.data(), aStr.size()));
-  }
-};
-
-void MediaKeys::CheckIsElementCapturePossible() {
-  MOZ_ASSERT(NS_IsMainThread());
-  EME_LOG("MediaKeys[%p]::IsElementCapturePossible()", this);
-  // Note, HTMLMediaElement prevents capture of its content via Capture APIs
-  // on the element if it has a media keys attached (see bug 1071482). So we
-  // don't need to check those cases here (they are covered by tests).
-
-  nsCOMPtr<nsIObserverService> observerService =
-      mozilla::services::GetObserverService();
-
-  if (!observerService) {
-    // This can happen if we're in shutdown which means we may be going away
-    // soon anyway, but respond saying capture is possible since we can't
-    // forward the check further.
-    if (mProxy) {
-      mProxy->NotifyOutputProtectionStatus(
-          CDMProxy::OutputProtectionCheckStatus::CheckFailed,
-          CDMProxy::OutputProtectionCaptureStatus::Unused);
-    }
-    return;
-  }
-  if (!mObserverAdded) {
-    nsresult rv =
-        observerService->AddObserver(this, kMediaKeysResponseTopic, false);
-    if (NS_FAILED(rv)) {
-      if (mProxy) {
-        mProxy->NotifyOutputProtectionStatus(
-            CDMProxy::OutputProtectionCheckStatus::CheckFailed,
-            CDMProxy::OutputProtectionCaptureStatus::Unused);
-      }
-      return;
-    }
-    mObserverAdded = true;
-  }
-
-  if (mCaptureCheckRequestJson.IsEmpty()) {
-    // Lazily populate the JSON the first time we need it.
-    JSONWriter jw{MakeUnique<StringWriteFunc>(mCaptureCheckRequestJson)};
-    jw.Start();
-    jw.StringProperty("status", "is-capture-possible");
-    jw.StringProperty("keySystem", NS_ConvertUTF16toUTF8(mKeySystem));
-    jw.End();
-  }
-
-  constexpr const char* kMediaKeysRequestTopic = "mediakeys-request";
-  MOZ_DIAGNOSTIC_ASSERT(!mCaptureCheckRequestJson.IsEmpty());
-  observerService->NotifyObservers(mParent.get(), kMediaKeysRequestTopic,
-                                   mCaptureCheckRequestJson.get());
 }
 
 void MediaKeys::GetSessionsInfo(nsString& sessionsInfo) {
