@@ -7,6 +7,7 @@
  * In this file we'll test a few service worker cases.
  */
 
+const serviceWorkerFileName = "serviceworker_cache_first.js";
 registerCleanupFunction(() => SpecialPowers.removeAllServiceWorkerData());
 
 add_task(async function test_network_markers_service_worker_setup() {
@@ -42,9 +43,15 @@ add_task(async function test_network_markers_service_worker_register() {
       () => Services.appinfo.processID
     );
 
-    await SpecialPowers.spawn(contentBrowser, [], async function() {
-      await content.wrappedJSObject.registerServiceWorkerAndWait();
-    });
+    await SpecialPowers.spawn(
+      contentBrowser,
+      [serviceWorkerFileName],
+      async function(serviceWorkerFileName) {
+        await content.wrappedJSObject.registerServiceWorkerAndWait(
+          serviceWorkerFileName
+        );
+      }
+    );
 
     const {
       parentThread,
