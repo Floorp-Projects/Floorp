@@ -183,8 +183,7 @@ void WindowGlobalChild::OnNewDocument(Document* aDocument) {
 
   // FIXME: Perhaps these should be combined into a smaller number of messages?
   SetDocumentURI(aDocument->GetDocumentURI());
-  SetDocumentPrincipal(aDocument->NodePrincipal(),
-                       aDocument->EffectiveStoragePrincipal());
+  SetDocumentPrincipal(aDocument->NodePrincipal());
 
   nsCOMPtr<nsITransportSecurityInfo> securityInfo;
   if (nsCOMPtr<nsIChannel> channel = aDocument->GetChannel()) {
@@ -612,12 +611,10 @@ void WindowGlobalChild::SetDocumentURI(nsIURI* aDocumentURI) {
 }
 
 void WindowGlobalChild::SetDocumentPrincipal(
-    nsIPrincipal* aNewDocumentPrincipal,
-    nsIPrincipal* aNewDocumentStoragePrincipal) {
+    nsIPrincipal* aNewDocumentPrincipal) {
   MOZ_ASSERT(mDocumentPrincipal->Equals(aNewDocumentPrincipal));
   mDocumentPrincipal = aNewDocumentPrincipal;
-  SendUpdateDocumentPrincipal(aNewDocumentPrincipal,
-                              aNewDocumentStoragePrincipal);
+  SendUpdateDocumentPrincipal(aNewDocumentPrincipal);
 }
 
 const nsACString& WindowGlobalChild::GetRemoteType() {

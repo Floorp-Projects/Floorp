@@ -66,13 +66,10 @@ include MIDITypes;
 
 include "mozilla/dom/cache/IPCUtils.h";
 include "mozilla/dom/quota/SerializationHelpers.h";
-include "mozilla/dom/PermissionMessageUtils.h";
 include "mozilla/layers/LayersMessageUtils.h";
 
 using mozilla::dom::cache::Namespace
   from "mozilla/dom/cache/Types.h";
-
-using class mozilla::dom::SSCacheCopy from "mozilla/dom/PBackgroundSessionStorageCache.h";
 
 namespace mozilla {
 namespace ipc {
@@ -209,10 +206,6 @@ parent:
   async PropagateBackgroundSessionStorageManager(uint64_t currentTopContextId, uint64_t targetTopContextId);
 
   async RemoveBackgroundSessionStorageManager(uint64_t topContextId);
-
-  async GetSessionStorageManagerData(
-      uint64_t aTopContextId, uint32_t aSizeLimit, bool aCancelSessionStoreTimer)
-      returns(SSCacheCopy[] aCacheCopy);
 
   async PFileSystemRequest(FileSystemParams params);
 

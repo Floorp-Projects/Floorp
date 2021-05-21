@@ -67,8 +67,6 @@
 #include "nsIXPConnect.h"
 #include "nsImportModule.h"
 
-#include "mozilla/dom/PBackgroundSessionStorageCache.h"
-
 using namespace mozilla::ipc;
 using namespace mozilla::dom::ipc;
 
@@ -117,10 +115,6 @@ already_AddRefed<WindowGlobalParent> WindowGlobalParent::CreateDisconnected(
   net::CookieJarSettings::Deserialize(aInit.cookieJarSettings(),
                                       getter_AddRefs(wgp->mCookieJarSettings));
   MOZ_RELEASE_ASSERT(wgp->mDocumentPrincipal, "Must have a valid principal");
-
-  nsresult rv = wgp->SetDocumentStoragePrincipal(aInit.storagePrincipal());
-  MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv),
-                     "Must succeed in setting storage principal");
 
   return wgp.forget();
 }
@@ -376,55 +370,14 @@ IPCResult WindowGlobalParent::RecvUpdateDocumentURI(nsIURI* aURI) {
   return IPC_OK();
 }
 
-nsresult WindowGlobalParent::SetDocumentStoragePrincipal(
-    nsIPrincipal* aNewDocumentStoragePrincipal) {
-  if (mDocumentPrincipal->Equals(aNewDocumentStoragePrincipal)) {
-    mDocumentStoragePrincipal = mDocumentPrincipal;
-    return NS_OK;
-  }
-
-  // Compare originNoSuffix to ensure it's equal.
-  nsCString noSuffix;
-  nsresult rv = mDocumentPrincipal->GetOriginNoSuffix(noSuffix);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  nsCString storageNoSuffix;
-  rv = aNewDocumentStoragePrincipal->GetOriginNoSuffix(storageNoSuffix);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  if (noSuffix != storageNoSuffix) {
-    return NS_ERROR_FAILURE;
-  }
-
-  if (!mDocumentPrincipal->OriginAttributesRef().EqualsIgnoringPartitionKey(
-          aNewDocumentStoragePrincipal->OriginAttributesRef())) {
-    return NS_ERROR_FAILURE;
-  }
-
-  mDocumentStoragePrincipal = aNewDocumentStoragePrincipal;
-  return NS_OK;
-}
-
 IPCResult WindowGlobalParent::RecvUpdateDocumentPrincipal(
-    nsIPrincipal* aNewDocumentPrincipal,
-    nsIPrincipal* aNewDocumentStoragePrincipal) {
+    nsIPrincipal* aNewDocumentPrincipal) {
   if (!mDocumentPrincipal->Equals(aNewDocumentPrincipal)) {
     return IPC_FAIL(this,
                     "Trying to reuse WindowGlobalParent but the principal of "
                     "the new document does not match the old one");
   }
   mDocumentPrincipal = aNewDocumentPrincipal;
-
-  if (NS_FAILED(SetDocumentStoragePrincipal(aNewDocumentStoragePrincipal))) {
-    return IPC_FAIL(this,
-                    "Trying to reuse WindowGlobalParent but the principal of "
-                    "the new document does not match the storage principal");
-  }
-
   return IPC_OK();
 }
 mozilla::ipc::IPCResult WindowGlobalParent::RecvUpdateDocumentTitle(
@@ -1246,7 +1199,7 @@ Element* WindowGlobalParent::GetRootOwnerElement() {
   return nullptr;
 }
 
-nsresult WindowGlobalParent::WriteFormDataAndScrollToSessionStore(
+nsresult WindowGlobalParent::UpdateSessionStore(
     const Maybe<FormData>& aFormData, const Maybe<nsPoint>& aScrollPosition,
     uint32_t aEpoch) {
   if (!aFormData && !aScrollPosition) {
@@ -1344,8 +1297,7 @@ nsresult WindowGlobalParent::ResetSessionStore(uint32_t aEpoch) {
 mozilla::ipc::IPCResult WindowGlobalParent::RecvUpdateSessionStore(
     const Maybe<FormData>& aFormData, const Maybe<nsPoint>& aScrollPosition,
     uint32_t aEpoch) {
-  if (NS_FAILED(WriteFormDataAndScrollToSessionStore(aFormData, aScrollPosition,
-                                                     aEpoch))) {
+  if (NS_FAILED(UpdateSessionStore(aFormData, aScrollPosition, aEpoch))) {
     MOZ_LOG(BrowsingContext::GetLog(), LogLevel::Debug,
             ("ParentIPC: Failed to update session store entry."));
   }

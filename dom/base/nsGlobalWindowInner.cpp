@@ -7570,14 +7570,6 @@ void nsGlobalWindowInner::StorageAccessPermissionGranted() {
   // Reset the active storage principal
   if (mDoc) {
     mDoc->ClearActiveStoragePrincipal();
-    if (mWindowGlobalChild) {
-      // XXX(farre): This is a bit backwards, but clearing the storage
-      // principal might make us end up with a new effective storage
-      // principal on the child side than on the parent side, which
-      // means that we need to sync it. See bug 1705359.
-      mWindowGlobalChild->SetDocumentPrincipal(
-          mDoc->NodePrincipal(), mDoc->EffectiveStoragePrincipal());
-    }
   }
 }
 

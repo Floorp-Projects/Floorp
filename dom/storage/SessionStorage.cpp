@@ -235,7 +235,7 @@ void SessionStorage::StableStateCallback() {
   mHasPendingStableStateCallback = false;
 
   if (mManager->CanLoadData()) {
-    mManager->CheckpointData(*StoragePrincipal(), *mCache);
+    mManager->CheckpointData(*Principal(), *mCache);
   }
 }
 
@@ -258,7 +258,7 @@ nsresult SessionStorage::EnsureCacheLoadedOrCloned() const {
     return NS_OK;
   }
 
-  return mManager->LoadData(*StoragePrincipal(), *mCache);
+  return mManager->LoadData(*Principal(), *mCache);
 }
 
 }  // namespace dom
