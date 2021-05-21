@@ -6,9 +6,6 @@
 
 :root {
   /* ::::: Variables ::::: */
-  --default-arrowpanel-background: #fff;
-  --default-arrowpanel-color: hsl(0,0%,10%);
-  --default-arrowpanel-border-color: hsla(210,4%,10%,.05);
   --panel-description-color: hsl(0,0%,50%);
 
   --focus-ring-box-shadow: 0 0 0 1px -moz-mac-focusring inset, 0 0 0 1px -moz-mac-focusring;
