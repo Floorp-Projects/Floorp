@@ -205,8 +205,7 @@ CompositorOGL::CompositorOGL(CompositorBridgeParent* aParent,
       mUseExternalSurfaceSize(aUseExternalSurfaceSize),
       mFrameInProgress(false),
       mDestroyed(false),
-      mViewportSize(0, 0),
-      mCurrentProgram(nullptr) {
+      mViewportSize(0, 0) {
   if (aWidget->GetNativeLayerRoot()) {
     // We can only render into native layers, our GLContext won't have a usable
     // default framebuffer.
@@ -1334,14 +1333,7 @@ ShaderProgramOGL* CompositorOGL::GetShaderProgramFor(
   return shader;
 }
 
-void CompositorOGL::ActivateProgram(ShaderProgramOGL* aProg) {
-  if (mCurrentProgram != aProg) {
-    gl()->fUseProgram(aProg->GetProgram());
-    mCurrentProgram = aProg;
-  }
-}
-
-void CompositorOGL::ResetProgram() { mCurrentProgram = nullptr; }
+void CompositorOGL::ResetProgram() { mProgramsHolder->ResetCurrentProgram(); }
 
 static bool SetBlendMode(GLContext* aGL, gfx::CompositionOp aBlendMode,
                          bool aIsPremultiplied = true) {
@@ -1554,12 +1546,10 @@ void CompositorOGL::DrawGeometry(const Geometry& aGeometry,
   config.SetOpacity(aOpacity != 1.f);
   ApplyPrimitiveConfig(config, aGeometry);
 
-  ShaderProgramOGL* program = GetShaderProgramFor(config);
-  MOZ_DIAGNOSTIC_ASSERT(program);
+  ShaderProgramOGL* program = mProgramsHolder->ActivateProgram(config);
   if (!program) {
     return;
   }
-  ActivateProgram(program);
   program->SetProjectionMatrix(mProjMatrix);
   program->SetLayerTransform(aTransform);
   LayerScope::SetLayerTransform(aTransform);
