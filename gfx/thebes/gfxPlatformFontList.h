@@ -170,12 +170,14 @@ class gfxPlatformFontList : public gfxFontInfoLoader {
   typedef nsTArray<FontFamily> PrefFontList;
 
   static gfxPlatformFontList* PlatformFontList() {
-    if (sPlatformFontList->IsInitialized()) {
-      return sPlatformFontList;
-    }
-    // Currently, only macOS uses OMT font-list initialization; on other
-    // platforms we initialize it directly during gfxPlatform::Init().
+    // If there is a font-list initialization thread, we need to let it run
+    // to completion before the font list can be used for anything else.
     if (sInitFontListThread) {
+      // If we're currently on the initialization thread, just continue;
+      // otherwise wait for it to finish.
+      if (IsInitFontListThread()) {
+        return sPlatformFontList;
+      }
       PR_JoinThread(sInitFontListThread);
       sInitFontListThread = nullptr;
       // If font-list initialization failed, the thread will have cleared
@@ -185,8 +187,10 @@ class gfxPlatformFontList : public gfxFontInfoLoader {
         MOZ_CRASH("Could not initialize gfxPlatformFontList");
       }
     }
-    if (!sPlatformFontList->InitFontList()) {
-      MOZ_CRASH("Could not initialize gfxPlatformFontList");
+    if (!sPlatformFontList->IsInitialized()) {
+      if (!sPlatformFontList->InitFontList()) {
+        MOZ_CRASH("Could not initialize gfxPlatformFontList");
+      }
     }
     return sPlatformFontList;
   }

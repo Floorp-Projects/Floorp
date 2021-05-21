@@ -464,7 +464,7 @@ bool gfxPlatformFontList::InitFontList() {
     LOG_FONTINIT(("(fontinit) system fontlist initialization\n"));
   }
 
-  if (mFontlistInitCount) {
+  if (IsInitialized()) {
     // Font-list reinitialization always occurs on the main thread, in response
     // to a change notification; it's only the initial creation during startup
     // that may be on another thread.
