@@ -23,6 +23,8 @@ exclude: true
 - Added [`forceEnableAccessibility`][90.6] runtime setting to enable
   accessibility during testing.
   ([bug 1701269]({{bugzilla}}1701269))
+- Removed deprecated [`GeckoView.onTouchEventForResult`][88.4].
+  ([bug 1706403]({{bugzilla}}1706403))
 
 [90.1]: {{javadoc_uri}}/WebNotification.html#silent
 [90.2]: {{javadoc_uri}}/WebNotification.html#vibrate
@@ -997,4 +999,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 2d4d7d8da89dbf91c92ba946c33961487685a99c
+[api-version]: 2d5e889898a86955980ea9f802f734da5848d730
