@@ -1980,6 +1980,11 @@
       return !aTab.closing;
     }
 
+    /**
+     * Returns the panel associated with a tab if it has a connected browser
+     * and/or it is the selected tab.
+     * For background lazy browsers, this will return null.
+     */
     getRelatedElement(aTab) {
       if (!aTab) {
         return null;
@@ -1992,8 +1997,12 @@
 
       // If the tab's browser is lazy, we need to `_insertBrowser` in order
       // to have a linkedPanel.  This will also serve to bind the browser
-      // and make it ready to use when the tab is selected.
-      gBrowser._insertBrowser(aTab);
+      // and make it ready to use. We only do this if the tab is selected
+      // because otherwise, callers might end up unintentionally binding the
+      // browser for lazy background tabs.
+      if (aTab.selected) {
+        gBrowser._insertBrowser(aTab);
+      }
       return document.getElementById(aTab.linkedPanel);
     }
 
