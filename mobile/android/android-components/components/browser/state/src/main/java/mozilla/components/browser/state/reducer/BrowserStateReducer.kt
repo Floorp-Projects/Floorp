@@ -12,6 +12,7 @@ import mozilla.components.browser.state.action.CrashAction
 import mozilla.components.browser.state.action.CustomTabListAction
 import mozilla.components.browser.state.action.DownloadAction
 import mozilla.components.browser.state.action.EngineAction
+import mozilla.components.browser.state.action.HistoryMetadataAction
 import mozilla.components.browser.state.action.InitAction
 import mozilla.components.browser.state.action.LastAccessAction
 import mozilla.components.browser.state.action.MediaSessionAction
@@ -61,6 +62,7 @@ internal object BrowserStateReducer {
             is UndoAction -> UndoReducer.reduce(state, action)
             is ShareInternetResourceAction -> ShareInternetResourceStateReducer.reduce(state, action)
             is LocaleAction -> LocaleStateReducer.reduce(state, action)
+            is HistoryMetadataAction -> HistoryMetadataReducer.reduce(state, action)
         }
     }
 }

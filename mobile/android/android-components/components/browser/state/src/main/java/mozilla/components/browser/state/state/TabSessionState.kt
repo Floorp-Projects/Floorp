@@ -7,6 +7,7 @@ package mozilla.components.browser.state.state
 import android.graphics.Bitmap
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSessionState
+import mozilla.components.concept.storage.HistoryMetadataKey
 import java.util.UUID
 
 /**
@@ -36,7 +37,8 @@ data class TabSessionState(
     override val source: SessionState.Source = SessionState.Source.NONE,
     val parentId: String? = null,
     val lastAccess: Long = 0L,
-    val readerState: ReaderState = ReaderState()
+    val readerState: ReaderState = ReaderState(),
+    val historyMetadata: HistoryMetadataKey? = null
 ) : SessionState {
 
     override fun createCopy(

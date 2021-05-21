@@ -45,6 +45,7 @@ import mozilla.components.concept.engine.search.SearchRequest
 import mozilla.components.concept.engine.webextension.WebExtensionBrowserAction
 import mozilla.components.concept.engine.webextension.WebExtensionPageAction
 import mozilla.components.concept.engine.window.WindowRequest
+import mozilla.components.concept.storage.HistoryMetadataKey
 import mozilla.components.lib.state.Action
 import mozilla.components.support.base.android.Clock
 import java.util.Locale
@@ -1040,6 +1041,20 @@ sealed class ContainerAction : BrowserAction() {
      * Removes all state of the removed container from [BrowserState.containers].
      */
     data class RemoveContainerAction(val contextId: String) : ContainerAction()
+}
+
+/**
+ * [BrowserAction] implementations related to updating [TabSessionState.historyMetadata].
+ */
+sealed class HistoryMetadataAction : BrowserAction() {
+
+    /**
+     * Associates a tab with a history metadata record described by the provided [historyMetadataKey].
+     */
+    data class SetHistoryMetadataKeyAction(
+        val tabId: String,
+        val historyMetadataKey: HistoryMetadataKey
+    ) : HistoryMetadataAction()
 }
 
 /**

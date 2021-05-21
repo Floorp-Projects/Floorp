@@ -30,6 +30,7 @@ dependencies {
     api project(':lib-state')
 
     implementation project(':concept-engine')
+    implementation project(':concept-storage')
     implementation project(':support-utils')
     implementation project(':support-ktx')
 
