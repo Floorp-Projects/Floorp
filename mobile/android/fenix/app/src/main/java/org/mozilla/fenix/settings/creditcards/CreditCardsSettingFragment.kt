@@ -10,6 +10,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.VisibleForTesting
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.NavController
 import androidx.navigation.fragment.findNavController
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
@@ -21,7 +22,6 @@ import mozilla.components.lib.state.ext.consumeFrom
 import mozilla.components.service.fxa.SyncEngine
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.StoreProvider
-import org.mozilla.fenix.ext.getPreferenceKey
 import org.mozilla.fenix.ext.navigateBlockingForAsyncNavGraph
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.showToolbar
@@ -62,7 +62,7 @@ class CreditCardsSettingFragment : PreferenceFragmentCompat() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         consumeFrom(creditCardsStore) { state ->
-            updateCardManagementPreferencesVisibility(state.creditCards)
+            updateCardManagementPreference(state.creditCards.isNotEmpty(), findNavController())
         }
     }
 
@@ -98,39 +98,39 @@ class CreditCardsSettingFragment : PreferenceFragmentCompat() {
         )
     }
 
-    override fun onPreferenceTreeClick(preference: Preference): Boolean {
-        when (preference.key) {
-            getPreferenceKey(R.string.pref_key_credit_cards_add_credit_card) -> {
-                val directions =
-                    CreditCardsSettingFragmentDirections
-                        .actionCreditCardsSettingFragmentToCreditCardEditorFragment()
-                findNavController().navigateBlockingForAsyncNavGraph(directions)
-            }
-            getPreferenceKey(R.string.pref_key_credit_cards_manage_saved_cards) -> {
-                val directions =
-                    CreditCardsSettingFragmentDirections
-                        .actionCreditCardsSettingFragmentToCreditCardsManagementFragment()
-                findNavController().navigateBlockingForAsyncNavGraph(directions)
-            }
-        }
-
-        return super.onPreferenceTreeClick(preference)
-    }
-
     /**
      * Updates preferences visibility depending on credit cards being already saved or not.
      */
     @VisibleForTesting
-    internal fun updateCardManagementPreferencesVisibility(creditCardsList: List<CreditCard>) {
-        val hasCreditCards = creditCardsList.isNotEmpty()
-
+    internal fun updateCardManagementPreference(
+        hasCreditCards: Boolean,
+        navController: NavController
+    ) {
         val manageSavedCardsPreference =
-            requirePreference<Preference>(R.string.pref_key_credit_cards_manage_saved_cards)
-        val addCreditCardsPreference =
-            requirePreference<Preference>(R.string.pref_key_credit_cards_add_credit_card)
+            requirePreference<Preference>(R.string.pref_key_credit_cards_manage_cards)
 
-        manageSavedCardsPreference.isVisible = hasCreditCards
-        addCreditCardsPreference.isVisible = !hasCreditCards
+        val directions = if (hasCreditCards) {
+            CreditCardsSettingFragmentDirections
+                .actionCreditCardsSettingFragmentToCreditCardsManagementFragment()
+        } else {
+            CreditCardsSettingFragmentDirections
+                .actionCreditCardsSettingFragmentToCreditCardEditorFragment()
+        }
+
+        if (hasCreditCards) {
+            manageSavedCardsPreference.icon = null
+            manageSavedCardsPreference.title =
+                getString(R.string.preferences_credit_cards_manage_saved_cards)
+        } else {
+            manageSavedCardsPreference.setIcon(R.drawable.ic_new)
+            manageSavedCardsPreference.title =
+                getString(R.string.preferences_credit_cards_add_credit_card)
+        }
+
+        manageSavedCardsPreference.setOnPreferenceClickListener {
+            navController.navigateBlockingForAsyncNavGraph(directions)
+            super.onPreferenceTreeClick(it)
+        }
     }
 
     /**

@@ -15,13 +15,7 @@
         app:singleLineTitle="false"
         app:allowDividerBelow="true" />
     <Preference
-        android:icon="@drawable/ic_new"
-        android:key="@string/pref_key_credit_cards_add_credit_card"
-        android:title="@string/preferences_credit_cards_add_credit_card"
-        app:isPreferenceVisible="false"
-        app:allowDividerAbove="true" />
-    <Preference
-        android:key="@string/pref_key_credit_cards_manage_saved_cards"
+        android:key="@string/pref_key_credit_cards_manage_cards"
         android:title="@string/preferences_credit_cards_manage_saved_cards"
         app:isPreferenceVisible="false"
         app:allowDividerAbove="true" />
