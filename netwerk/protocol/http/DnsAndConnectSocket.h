@@ -178,6 +178,7 @@ class DnsAndConnectSocket final : public nsIOutputStreamCallback,
                        HttpConnectionBase** connection);
     [[nodiscard]] nsresult SetupStreams(DnsAndConnectSocket* dnsAndSock);
     nsresult ResolveHost(DnsAndConnectSocket* dnsAndSock);
+    bool ShouldRetryDNS();
     nsresult OnLookupComplete(DnsAndConnectSocket* dnsAndSock,
                               nsIDNSRecord* rec, nsresult status);
     nsresult CheckConnectedResult(DnsAndConnectSocket* dnsAndSock);
