@@ -113,8 +113,8 @@ public class NestedGeckoView extends GeckoView implements NestedScrollingChild {
     }
 
     private void updateInputResult(MotionEvent event) {
-      super.onTouchEventForResult(event).accept(inputResult -> {
-          mInputResult = inputResult;
+      super.onTouchEventForDetailResult(event).accept(inputResult -> {
+          mInputResult = inputResult.handledResult();
           startNestedScroll(ViewCompat.SCROLL_AXIS_VERTICAL);
       });
     }
