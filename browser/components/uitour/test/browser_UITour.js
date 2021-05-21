@@ -190,17 +190,13 @@ var tests = [
         true,
         "Highlight should be rounded-rectangle styled"
       );
-      if (CustomizableUI.protonToolbarEnabled) {
-        CustomizableUI.removeWidgetFromArea("home-button");
-      }
+      CustomizableUI.removeWidgetFromArea("home-button");
       done();
     }
-    if (CustomizableUI.protonToolbarEnabled) {
-      info("Adding home button.");
-      CustomizableUI.addWidgetToArea("home-button", "nav-bar");
-      // Force the button to get layout so we can show the highlight.
-      document.getElementById("home-button").clientHeight;
-    }
+    info("Adding home button.");
+    CustomizableUI.addWidgetToArea("home-button", "nav-bar");
+    // Force the button to get layout so we can show the highlight.
+    document.getElementById("home-button").clientHeight;
     let highlight = document.getElementById("UITourHighlight");
     is_element_hidden(highlight, "Highlight should initially be hidden");
 

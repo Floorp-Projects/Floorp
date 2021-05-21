@@ -56,24 +56,14 @@ add_task(async function test_support_separator_properties() {
   );
 
   let panelUIButton = document.querySelector("#PanelUI-button");
-  if (CustomizableUI.protonToolbarEnabled) {
-    // XXX: This should test bookmark item toolbar separators instead
-    Assert.equal(
-      window
-        .getComputedStyle(panelUIButton)
-        .getPropertyValue("border-image-source"),
-      "none",
-      "No vertical separator on app menu"
-    );
-  } else {
-    Assert.ok(
-      window
-        .getComputedStyle(panelUIButton)
-        .getPropertyValue("border-image-source")
-        .includes(`rgb(${hexToRGB(SEPARATOR_VERTICAL_COLOR).join(", ")})`),
-      "Vertical separator color properly set"
-    );
-  }
+  // Bug 1712334: This should test bookmark item toolbar separators instead
+  Assert.equal(
+    window
+      .getComputedStyle(panelUIButton)
+      .getPropertyValue("border-image-source"),
+    "none",
+    "No vertical separator on app menu"
+  );
 
   let toolbox = document.querySelector("#navigator-toolbox");
   Assert.equal(

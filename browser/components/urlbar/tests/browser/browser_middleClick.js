@@ -8,9 +8,7 @@
  */
 
 add_task(function test_setup() {
-  if (CustomizableUI.protonToolbarEnabled) {
-    CustomizableUI.addWidgetToArea("home-button", "nav-bar");
-  }
+  CustomizableUI.addWidgetToArea("home-button", "nav-bar");
 
   registerCleanupFunction(() => {
     Services.prefs.clearUserPref("middlemouse.paste");
@@ -20,9 +18,7 @@ add_task(function test_setup() {
     Services.prefs.clearUserPref("browser.tabs.loadBookmarksInBackground");
     SpecialPowers.clipboardCopyString("");
 
-    if (CustomizableUI.protonToolbarEnabled) {
-      CustomizableUI.removeWidgetFromArea("home-button");
-    }
+    CustomizableUI.removeWidgetFromArea("home-button");
   });
 });
 
