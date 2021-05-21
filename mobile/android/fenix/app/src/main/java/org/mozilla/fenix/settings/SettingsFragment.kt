@@ -37,6 +37,7 @@ import mozilla.components.concept.sync.Profile
 import mozilla.components.support.ktx.android.view.showKeyboard
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.Config
+import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
@@ -439,7 +440,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
         with(requireContext().settings()) {
             findPreference<Preference>(
                 getPreferenceKey(R.string.pref_key_credit_cards)
-            )?.isVisible = creditCardsFeature
+            )?.isVisible = FeatureFlags.creditCardsFeature
             findPreference<Preference>(
                 getPreferenceKey(R.string.pref_key_nimbus_experiments)
             )?.isVisible = showSecretDebugMenuThisSession

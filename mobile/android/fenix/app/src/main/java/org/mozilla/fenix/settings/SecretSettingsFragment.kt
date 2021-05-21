@@ -30,12 +30,6 @@ class SecretSettingsFragment : PreferenceFragmentCompat() {
             onPreferenceChangeListener = SharedPreferenceUpdater()
         }
 
-        requirePreference<SwitchPreference>(R.string.pref_key_show_credit_cards_feature).apply {
-            isVisible = FeatureFlags.creditCardsFeature
-            isChecked = context.settings().creditCardsFeature
-            onPreferenceChangeListener = SharedPreferenceUpdater()
-        }
-
         requirePreference<SwitchPreference>(R.string.pref_key_new_tabs_tray).apply {
             isVisible = FeatureFlags.tabsTrayRewrite
             isChecked = context.settings().tabsTrayRewrite
