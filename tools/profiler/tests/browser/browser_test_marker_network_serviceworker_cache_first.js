@@ -67,20 +67,21 @@ add_task(async function test_network_markers_service_worker_register() {
     // this may change in the future and we may have to adapt this function.
     // Also please note this isn't necessarily the same content process as the
     // ones for the tab.
-    const serviceWorkerThread = findContentThreadWithNetworkMarkerForFilename(
-      profile,
-      "firefox-logo-nightly.svg"
-    );
+    const { serviceWorkerParentThread } = findServiceWorkerThreads(profile);
 
     // Here are a few sanity checks.
-    ok(serviceWorkerThread, "We should find a thread for the service worker.");
+    ok(
+      serviceWorkerParentThread,
+      "We should find a thread for the service worker."
+    );
+
     Assert.notEqual(
-      serviceWorkerThread.pid,
+      serviceWorkerParentThread.pid,
       parentThread.pid,
       "We should have a different pid than the parent thread."
     );
     Assert.notEqual(
-      serviceWorkerThread.tid,
+      serviceWorkerParentThread.tid,
       parentThread.tid,
       "We should have a different tid than the parent thread."
     );
@@ -97,8 +98,8 @@ add_task(async function test_network_markers_service_worker_register() {
     logInformationForThread("parentThread information", parentThread);
     logInformationForThread("contentThread information", contentThread);
     logInformationForThread(
-      "serviceWorkerThread information",
-      serviceWorkerThread
+      "serviceWorkerParentThread information",
+      serviceWorkerParentThread
     );
 
     // Now let's check the marker payloads.
@@ -111,7 +112,7 @@ add_task(async function test_network_markers_service_worker_register() {
       .filter(marker => !marker.data.URI.includes(serviceWorkerFileName));
     const contentNetworkMarkers = getInflatedNetworkMarkers(contentThread);
     const serviceWorkerNetworkMarkers = getInflatedNetworkMarkers(
-      serviceWorkerThread
+      serviceWorkerParentThread
     );
 
     // Some more logs for debugging purposes.
