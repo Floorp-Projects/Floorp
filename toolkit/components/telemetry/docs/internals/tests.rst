@@ -15,7 +15,7 @@ Mochitest
 ---------
 :Location: ``t/c/t/t/browser/``
 :Language: Javascript
-  (`mochitest <https://developer.mozilla.org/en-US/docs/Mozilla/Projects/Mochitest>`_)
+  (`mochitest <https://developer.mozilla.org/en-US/docs/Mozilla/Projects/Mochitest>`__)
 
 This test harness runs nearly the entire Firefox and gives access to multiple tabs and browser chrome APIs.
 It requires window focus to complete correctly,
@@ -37,7 +37,7 @@ Integration Tests (telemetry-tests-client and telemetry-integration-tests)
 --------------------------------------------------------------------------
 :Location: ``t/c/t/t/marionette/tests/client`` and ``t/c/t/t/integration/``
 :Language: Python
-  (`unittest <https://docs.python.org/3/library/unittest.html>`_,
+  (`unittest <https://docs.python.org/3/library/unittest.html>`__,
   `pytest <https://docs.pytest.org/en/latest/>`_)
 
 The most modern of the test harnesses,
@@ -50,11 +50,13 @@ Prefer writing new tests in telemetry-tests-client
 (the unittest-based one in ``t/c/t/t/marionette/tests/client``)
 while we evaluate CI support for telemetry-integration-tests.
 
+More info: :doc:`./integration_tests/index`
+
 Definitions Files Tests
 -----------------------
 :Location: ``t/c/t/t/python``
 :Language: Python
-  (`unittest <https://docs.python.org/3/library/unittest.html>`_)
+  (`unittest <https://docs.python.org/3/library/unittest.html>`__)
 
 This harness pulls in the parsers and scripts used to turn JSON and YAML probe definitions into code.
 It should be used to test the build scripts and formats of the definitions files
@@ -66,7 +68,7 @@ xpcshell
 --------
 :Location: ``t/c/t/t/unit``
 :Language: Javascript
-  (`xpcshell <https://developer.mozilla.org/en-US/docs/Mozilla/QA/Writing_xpcshell-based_unit_tests>`_)
+  (`xpcshell <https://developer.mozilla.org/en-US/docs/Mozilla/QA/Writing_xpcshell-based_unit_tests>`__)
 
 This test harness uses a stripped-down shell of the Firefox browser to run privileged Javascript.
 It should be used to write unit tests for the Javascript API and app-level logic of Firefox Telemetry.
@@ -84,8 +86,8 @@ Instrumentation Tests
 ---------------------
 :Location: Various
 :Language: Usually Javascript
-  (`xpcshell <https://developer.mozilla.org/en-US/docs/Mozilla/QA/Writing_xpcshell-based_unit_tests>`_ or
-  `mochitest <https://developer.mozilla.org/en-US/docs/Mozilla/Projects/Mochitest>`_)
+  (`xpcshell <https://developer.mozilla.org/en-US/docs/Mozilla/QA/Writing_xpcshell-based_unit_tests>`__ or
+  `mochitest <https://developer.mozilla.org/en-US/docs/Mozilla/Projects/Mochitest>`__)
 
 In addition to the tests of Firefox Telemetry,
 other code owners have written tests that ensure that their code records appropriate values to Telemetry.
