@@ -26,9 +26,7 @@
 main {
   margin: auto;
   width: $wrapper-default-width;
-  // Offset the snippets container so things at the bottom of the page are still
-  // visible when snippets are visible. Adjust for other spacing.
-  padding-bottom: $snippets-container-height - $section-spacing - $base-gutter;
+  padding: 0;
 
   section {
     margin-bottom: $section-spacing;
@@ -51,6 +49,11 @@ main {
     width: $wrapper-max-width-widest;
   }
 
+  &.has-snippet {
+    // Offset the snippets container so things at the bottom of the page are still
+    // visible when snippets are visible. Adjust for other spacing.
+    padding-bottom: $snippets-container-height - $section-spacing - $base-gutter;
+  }
 }
 
 .below-search-snippet.withButton {
@@ -69,7 +72,7 @@ main {
 .ds-outer-wrapper-breakpoint-override {
   main {
     width: 266px;
-    padding-bottom: 68px;
+    padding-bottom: 0;
 
     @media (min-width: $break-point-medium) {
       width: 510px;
@@ -81,6 +84,12 @@ main {
 
     @media (min-width: $break-point-widest) {
       width: 986px;
+    }
+
+    &.has-snippet {
+      // Offset the snippets container so things at the bottom of the page are still
+      // visible when snippets are visible. Adjust for other spacing.
+      padding-bottom: $snippets-container-height - $section-spacing - $base-gutter;
     }
   }
 }
