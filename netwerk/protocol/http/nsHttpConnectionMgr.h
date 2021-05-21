@@ -123,6 +123,7 @@ class nsHttpConnectionMgr final : public HttpConnectionMgrShell,
     return mCurrentTopBrowsingContextId;
   }
 
+  void DoFallbackConnection(SpeculativeTransaction* aTrans, bool aFetchHTTPSRR);
   void DoSpeculativeConnection(SpeculativeTransaction* aTrans,
                                bool aFetchHTTPSRR);
 
@@ -170,6 +171,10 @@ class nsHttpConnectionMgr final : public HttpConnectionMgrShell,
 
   already_AddRefed<PendingTransactionInfo> FindTransactionHelper(
       bool removeWhenFound, ConnectionEntry* aEnt, nsAHttpTransaction* aTrans);
+
+  void DoSpeculativeConnectionInternal(ConnectionEntry* aEnt,
+                                       SpeculativeTransaction* aTrans,
+                                       bool aFetchHTTPSRR);
 
  public:
   static nsAHttpConnection* MakeConnectionHandle(HttpConnectionBase* aWrapped);
@@ -261,9 +266,9 @@ class nsHttpConnectionMgr final : public HttpConnectionMgrShell,
   void StartedConnect();
   void RecvdConnect();
 
-  ConnectionEntry* GetOrCreateConnectionEntry(nsHttpConnectionInfo*,
-                                              bool allowWildCard, bool aNoHttp2,
-                                              bool aNoHttp3);
+  ConnectionEntry* GetOrCreateConnectionEntry(
+      nsHttpConnectionInfo*, bool allowWildCard, bool aNoHttp2, bool aNoHttp3,
+      bool* aAvailableForDispatchNow = nullptr);
 
   [[nodiscard]] nsresult MakeNewConnection(
       ConnectionEntry* ent, PendingTransactionInfo* pendingTransInfo);

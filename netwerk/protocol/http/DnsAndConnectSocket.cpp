@@ -721,6 +721,11 @@ DnsAndConnectSocket::OnTransportStatus(nsITransport* trans, nsresult status,
         } else {
           newKey->AppendLiteral("~.:");
         }
+        if (mEnt->mConnInfo->GetFallbackConnection()) {
+          newKey->AppendLiteral("~F:");
+        } else {
+          newKey->AppendLiteral("~.:");
+        }
         newKey->AppendInt(mEnt->mConnInfo->OriginPort());
         newKey->AppendLiteral("/[");
         nsAutoCString suffix;

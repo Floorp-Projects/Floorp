@@ -3266,6 +3266,7 @@ void nsHttpTransaction::OnBackupConnectionReady(bool aTriggeredByHTTPSRR) {
 static void CreateBackupConnection(
     nsHttpConnectionInfo* aBackupConnInfo, nsIInterfaceRequestor* aCallbacks,
     uint32_t aCaps, std::function<void(bool)>&& aResultCallback) {
+  aBackupConnInfo->SetFallbackConnection(true);
   RefPtr<SpeculativeTransaction> trans = new SpeculativeTransaction(
       aBackupConnInfo, aCallbacks, aCaps | NS_HTTP_DISALLOW_HTTP3,
       std::move(aResultCallback));
@@ -3275,7 +3276,7 @@ static void CreateBackupConnection(
     trans->SetParallelSpeculativeConnectLimit(limit);
     trans->SetIgnoreIdle(true);
   }
-  gHttpHandler->ConnMgr()->DoSpeculativeConnection(trans, false);
+  gHttpHandler->ConnMgr()->DoFallbackConnection(trans, false);
 }
 
 void nsHttpTransaction::OnHttp3BackupTimer() {
