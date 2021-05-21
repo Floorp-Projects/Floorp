@@ -204,6 +204,8 @@ useful for implementing clip-out modes by inverting the source texture value.
 ```
 // Premultiplied alpha over blend, but with source color set to source alpha modulated with a constant color.
 void swgl_blendDropShadow(vec4 color);
+// Premultiplied alpha over blend, but treats the source as a subpixel mask modulated with a constant color.
+void swgl_blendSubpixelText(vec4 color);
 ```
 
 SWGL allows overriding the blend mode per-primitive by calling `swgl_blend`
