@@ -1,4 +1,4 @@
-// Test TDZ for short-circutir compound assignments.
+// Test TDZ for short-circuit compound assignments.
 
 // TDZ for lexical |let| bindings.
 {
@@ -26,6 +26,30 @@
   assertThrowsInstanceOf(() => { class a extends (a &&= 0) {} }, ReferenceError);
   assertThrowsInstanceOf(() => { class a extends (a ||= 0) {} }, ReferenceError);
   assertThrowsInstanceOf(() => { class a extends (a ??= 0) {} }, ReferenceError);
+}
+
+// TDZ for lexical |let| bindings with conditional assignment.
+{
+  assertThrowsInstanceOf(() => {
+    const False = false;
+    False &&= b;
+    b = 2;
+    let b;
+  }, ReferenceError);
+
+  assertThrowsInstanceOf(() => {
+    const True = true;
+    True ||= b;
+    b = 2;
+    let b;
+  }, ReferenceError);
+
+  assertThrowsInstanceOf(() => {
+    const NonNull = {};
+    NonNull ??= b;
+    b = 2;
+    let b;
+  }, ReferenceError);
 }
 
 if (typeof reportCompare === "function")
