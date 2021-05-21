@@ -180,6 +180,10 @@ struct IntRange {
   int end;
 
   int len() const { return end - start; }
+
+  IntRange intersect(IntRange r) const {
+    return {max(start, r.start), min(end, r.end)};
+  }
 };
 
 struct FloatRange {
