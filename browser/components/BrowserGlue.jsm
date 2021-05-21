@@ -2736,6 +2736,9 @@ BrowserGlue.prototype = {
 
     let win = BrowserWindowTracker.getTopWindow();
 
+    // Our prompt for quitting is most important, so replace others.
+    win.gDialogBox.replaceDialogIfOpen();
+
     let warningMessage;
     // More than 1 window. Compose our own message.
     if (windowcount > 1) {

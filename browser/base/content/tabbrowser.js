@@ -3132,6 +3132,9 @@
         return true;
       }
 
+      // Our prompt to close this window is most important, so replace others.
+      gDialogBox.replaceDialogIfOpen();
+
       var ps = Services.prompt;
 
       // default to true: if it were false, we wouldn't get this far
