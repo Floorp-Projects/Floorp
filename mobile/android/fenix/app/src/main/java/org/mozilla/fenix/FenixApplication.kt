@@ -243,6 +243,7 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
                         components.core.historyStorage.warmUp()
                         components.core.bookmarksStorage.warmUp()
                         components.core.passwordsStorage.warmUp()
+                        components.core.autofillStorage.warmUp()
                     }
 
                     SecurePrefsTelemetry(this@FenixApplication, components.analytics.experiments).startTests()
