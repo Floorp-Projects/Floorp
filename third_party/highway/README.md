@@ -15,7 +15,7 @@ applying the same operation to 'lanes'.
 ## Current status
 
 Supported targets: scalar, SSE4, AVX2, AVX-512, NEON (ARMv7 and v8), WASM SIMD.
-A port to RVV is in progress.
+Ports to RVV and SVE/SVE2 are in progress.
 
 Version 0.11 is considered stable enough to use in other projects, and is
 expected to remain backwards compatible unless serious issues are discovered
@@ -23,8 +23,11 @@ while implementing SVE/RVV targets. After these targets are added, Highway will
 reach version 1.0.
 
 Continuous integration tests build with a recent version of Clang (running on
-x86 and QEMU for ARM) and MSVC from VS2015 (running on x86). Also periodically
-tested on x86 with Clang 7-11 and GCC 8, 9 and 10.2.1.
+x86 and QEMU for ARM) and MSVC from VS2015 (running on x86).
+
+Before releases, we also test on x86 with Clang and GCC, and ARMv7/8 via
+GCC cross-compile and QEMU. See the
+[testing process](g3doc/release_testing_process.md) for details.
 
 The `contrib` directory contains SIMD-related utilities: an image class with
 aligned rows, and a math library (16 functions already implemented, mostly
@@ -62,6 +65,8 @@ To test on all the attainable targets for your platform, use
 `cmake .. -DCMAKE_CXX_FLAGS="-DHWY_COMPILE_ALL_ATTAINABLE"`. Otherwise, the
 default configuration skips baseline targets (e.g. scalar) that are superseded
 by another baseline target.
+
+Bazel is also supported for building, but it is not as widely used/tested.
 
 ## Quick start
 

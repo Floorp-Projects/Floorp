@@ -223,6 +223,11 @@ Vec1<T> VecFromMask(Sisd<T> /* tag */, const Mask1<T> mask) {
   return v;
 }
 
+template <typename T>
+HWY_INLINE Mask1<T> FirstN(Sisd<T> /*tag*/, size_t n) {
+  return Mask1<T>::FromBool(n != 0);
+}
+
 // Returns mask ? yes : no.
 template <typename T>
 HWY_INLINE Vec1<T> IfThenElse(const Mask1<T> mask, const Vec1<T> yes,
@@ -643,7 +648,7 @@ HWY_INLINE Vec1<int32_t> NearestInt(const Vec1<float> v) {
   const TI rounded = static_cast<TI>(v.raw + bias);
   if (rounded == 0) return Vec1<int32_t>(0);
   // Round to even
-  if ((rounded & 1) && std::abs(rounded - v.raw) == T(0.5)) {
+  if ((rounded & 1) && std::abs(static_cast<T>(rounded) - v.raw) == T(0.5)) {
     return Vec1<TI>(rounded - (signbit ? -1 : 1));
   }
   return Vec1<TI>(rounded);
@@ -904,8 +909,12 @@ HWY_INLINE Vec1<ToT> DemoteTo(Sisd<ToT> /* tag */, Vec1<FromT> from) {
 
 static HWY_INLINE Vec1<float> PromoteTo(Sisd<float> /* tag */,
                                         const Vec1<float16_t> v) {
+#if HWY_NATIVE_FLOAT16
   uint16_t bits16;
   CopyBytes<2>(&v.raw, &bits16);
+#else
+  const uint16_t bits16 = v.raw.bits;
+#endif
   const uint32_t sign = bits16 >> 15;
   const uint32_t biased_exp = (bits16 >> 10) & 0x1F;
   const uint32_t mantissa = bits16 & 0x3FF;
@@ -939,8 +948,12 @@ static HWY_INLINE Vec1<float16_t> DemoteTo(Sisd<float16_t> /* tag */,
   // Tiny or zero => zero.
   Vec1<float16_t> out;
   if (exp < -24) {
-    bits32 = 0;
-    CopyBytes<2>(&bits32, &out);
+#if HWY_NATIVE_FLOAT16
+    const uint16_t zero = 0;
+    CopyBytes<2>(&zero, &out.raw);
+#else
+    out.raw.bits = 0;
+#endif
     return out;
   }
 
@@ -962,7 +975,12 @@ static HWY_INLINE Vec1<float16_t> DemoteTo(Sisd<float16_t> /* tag */,
   HWY_DASSERT(mantissa16 < 1024);
   const uint32_t bits16 = (sign << 15) | (biased_exp16 << 10) | mantissa16;
   HWY_DASSERT(bits16 < 0x10000);
-  CopyBytes<2>(&bits16, &out);
+#if HWY_NATIVE_FLOAT16
+  const uint16_t narrowed = static_cast<uint16_t>(bits16);  // big-endian safe
+  CopyBytes<2>(&narrowed, &out.raw);
+#else
+  out.raw.bits = static_cast<uint16_t>(bits16);
+#endif
   return out;
 }
 

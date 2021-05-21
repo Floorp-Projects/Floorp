@@ -13,12 +13,12 @@
 // limitations under the License.
 
 // Include guard (still compiled once per target)
-#if defined(HIGHWAY_CONTRIB_MATH_MATH_INL_H_) == \
+#if defined(HIGHWAY_HWY_CONTRIB_MATH_MATH_INL_H_) == \
     defined(HWY_TARGET_TOGGLE)
-#ifdef HIGHWAY_CONTRIB_MATH_MATH_INL_H_
-#undef HIGHWAY_CONTRIB_MATH_MATH_INL_H_
+#ifdef HIGHWAY_HWY_CONTRIB_MATH_MATH_INL_H_
+#undef HIGHWAY_HWY_CONTRIB_MATH_MATH_INL_H_
 #else
-#define HIGHWAY_CONTRIB_MATH_MATH_INL_H_
+#define HIGHWAY_HWY_CONTRIB_MATH_MATH_INL_H_
 #endif
 
 #include "hwy/highway.h"
@@ -907,7 +907,7 @@ HWY_INLINE V Log(const D d, V x) {
 }  // namespace impl
 
 template <class D, class V>
-HWY_NOINLINE V Acos(const D d, V x) {
+HWY_INLINE V Acos(const D d, V x) {
   using LaneType = LaneType<V>;
 
   const V kZero = Zero(d);
@@ -931,7 +931,7 @@ HWY_NOINLINE V Acos(const D d, V x) {
 }
 
 template <class D, class V>
-HWY_NOINLINE V Acosh(const D d, V x) {
+HWY_INLINE V Acosh(const D d, V x) {
   const V kLarge = Set(d, 268435456.0);
   const V kLog2 = Set(d, 0.693147180559945286227);
   const V kOne = Set(d, +1.0);
@@ -955,7 +955,7 @@ HWY_NOINLINE V Acosh(const D d, V x) {
 }
 
 template <class D, class V>
-HWY_NOINLINE V Asin(const D d, V x) {
+HWY_INLINE V Asin(const D d, V x) {
   using LaneType = LaneType<V>;
 
   const V kHalf = Set(d, +0.5);
@@ -976,7 +976,7 @@ HWY_NOINLINE V Asin(const D d, V x) {
 }
 
 template <class D, class V>
-HWY_NOINLINE V Asinh(const D d, V x) {
+HWY_INLINE V Asinh(const D d, V x) {
   const V kSmall = Set(d, 1.0 / 268435456.0);
   const V kLarge = Set(d, 268435456.0);
   const V kLog2 = Set(d, 0.693147180559945286227);
@@ -1007,7 +1007,7 @@ HWY_NOINLINE V Asinh(const D d, V x) {
 }
 
 template <class D, class V>
-HWY_NOINLINE V Atan(const D d, V x) {
+HWY_INLINE V Atan(const D d, V x) {
   using LaneType = LaneType<V>;
 
   const V kOne = Set(d, +1.0);
@@ -1024,7 +1024,7 @@ HWY_NOINLINE V Atan(const D d, V x) {
 }
 
 template <class D, class V>
-HWY_NOINLINE V Atanh(const D d, V x) {
+HWY_INLINE V Atanh(const D d, V x) {
   const V kHalf = Set(d, +0.5);
   const V kOne = Set(d, +1.0);
 
@@ -1034,7 +1034,7 @@ HWY_NOINLINE V Atanh(const D d, V x) {
 }
 
 template <class D, class V>
-HWY_NOINLINE V Cos(const D d, V x) {
+HWY_INLINE V Cos(const D d, V x) {
   using LaneType = LaneType<V>;
   impl::CosSinImpl<LaneType> impl;
 
@@ -1057,7 +1057,7 @@ HWY_NOINLINE V Cos(const D d, V x) {
 }
 
 template <class D, class V>
-HWY_NOINLINE V Exp(const D d, V x) {
+HWY_INLINE V Exp(const D d, V x) {
   using LaneType = LaneType<V>;
 
   // clang-format off
@@ -1081,7 +1081,7 @@ HWY_NOINLINE V Exp(const D d, V x) {
 }
 
 template <class D, class V>
-HWY_NOINLINE V Expm1(const D d, V x) {
+HWY_INLINE V Expm1(const D d, V x) {
   using LaneType = LaneType<V>;
 
   // clang-format off
@@ -1108,17 +1108,17 @@ HWY_NOINLINE V Expm1(const D d, V x) {
 }
 
 template <class D, class V>
-HWY_NOINLINE V Log(const D d, V x) {
+HWY_INLINE V Log(const D d, V x) {
   return impl::Log<D, V, /*kAllowSubnormals=*/true>(d, x);
 }
 
 template <class D, class V>
-HWY_NOINLINE V Log10(const D d, V x) {
+HWY_INLINE V Log10(const D d, V x) {
   return Log(d, x) * Set(d, 0.4342944819032518276511);
 }
 
 template <class D, class V>
-HWY_NOINLINE V Log1p(const D d, V x) {
+HWY_INLINE V Log1p(const D d, V x) {
   const V kOne = Set(d, +1.0);
 
   const V y = x + kOne;
@@ -1130,12 +1130,12 @@ HWY_NOINLINE V Log1p(const D d, V x) {
 }
 
 template <class D, class V>
-HWY_NOINLINE V Log2(const D d, V x) {
+HWY_INLINE V Log2(const D d, V x) {
   return Log(d, x) * Set(d, 1.44269504088896340735992);
 }
 
 template <class D, class V>
-HWY_NOINLINE V Sin(const D d, V x) {
+HWY_INLINE V Sin(const D d, V x) {
   using LaneType = LaneType<V>;
   impl::CosSinImpl<LaneType> impl;
 
@@ -1159,7 +1159,7 @@ HWY_NOINLINE V Sin(const D d, V x) {
 }
 
 template <class D, class V>
-HWY_NOINLINE V Sinh(const D d, V x) {
+HWY_INLINE V Sinh(const D d, V x) {
   const V kHalf = Set(d, +0.5);
   const V kOne = Set(d, +1.0);
   const V kTwo = Set(d, +2.0);
@@ -1172,7 +1172,7 @@ HWY_NOINLINE V Sinh(const D d, V x) {
 }
 
 template <class D, class V>
-HWY_NOINLINE V Tanh(const D d, V x) {
+HWY_INLINE V Tanh(const D d, V x) {
   const V kLimit = Set(d, 18.714973875);
   const V kOne = Set(d, +1.0);
   const V kTwo = Set(d, +2.0);
@@ -1189,4 +1189,4 @@ HWY_NOINLINE V Tanh(const D d, V x) {
 }  // namespace hwy
 HWY_AFTER_NAMESPACE();
 
-#endif  // HIGHWAY_CONTRIB_MATH_MATH_INL_H_
+#endif  // HIGHWAY_HWY_CONTRIB_MATH_MATH_INL_H_
