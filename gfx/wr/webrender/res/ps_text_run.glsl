@@ -245,8 +245,14 @@ void main() {
             v_color = vec4(text.color.a) * text.bg_color;
             break;
         case COLOR_MODE_SUBPX_DUAL_SOURCE:
-            v_mask_swizzle = vec3(text.color.a, 0.0, 0.0);
-            v_color = text.color;
+            #ifdef SWGL_BLEND
+                swgl_blendSubpixelText(text.color);
+                v_mask_swizzle = vec3(1.0, 0.0, 0.0);
+                v_color = vec4(1.0);
+            #else
+                v_mask_swizzle = vec3(text.color.a, 0.0, 0.0);
+                v_color = text.color;
+            #endif
             break;
         default:
             v_mask_swizzle = vec3(0.0, 0.0, 0.0);
@@ -283,7 +289,7 @@ Fragment text_fs(void) {
 
     frag.color = v_color * mask;
 
-    #ifdef WR_FEATURE_DUAL_SOURCE_BLENDING
+    #if defined(WR_FEATURE_DUAL_SOURCE_BLENDING) && !defined(SWGL_BLEND)
         frag.blend = mask * v_mask_swizzle.x + mask.aaaa * v_mask_swizzle.y;
     #endif
 
@@ -299,7 +305,7 @@ void main() {
 
     #if defined(WR_FEATURE_DEBUG_OVERDRAW)
         oFragColor = WR_DEBUG_OVERDRAW_COLOR;
-    #elif defined(WR_FEATURE_DUAL_SOURCE_BLENDING)
+    #elif defined(WR_FEATURE_DUAL_SOURCE_BLENDING) && !defined(SWGL_BLEND)
         oFragColor = frag.color;
         oFragBlend = frag.blend * clip_mask;
     #else
