@@ -11,11 +11,9 @@ add_task(async function test_setup() {
   // by sending it directly to the Hub bypassing targeting.
   registerCleanupFunction(() => {
     // Clicking on the Firefox Accounts button while in the signed out
-    // state opens a new tab for signing in when the Proton AppMenu is
-    // enabled. We'll clean those up here for now.
-    if (PanelUI.protonAppMenuEnabled) {
-      gBrowser.removeAllTabsBut(gBrowser.tabs[0]);
-    }
+    // state opens a new tab for signing in.
+    // We'll clean those up here for now.
+    gBrowser.removeAllTabsBut(gBrowser.tabs[0]);
     Services.prefs.clearUserPref("identity.fxaccounts.toolbar.accessed");
   });
 });

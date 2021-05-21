@@ -586,9 +586,7 @@ add_task(async function dont_consume_clicks() {
 
 // Dropping text to the searchbar should open the popup
 add_task(async function drop_opens_popup() {
-  if (CustomizableUI.protonToolbarEnabled) {
-    CustomizableUI.addWidgetToArea("home-button", "nav-bar");
-  }
+  CustomizableUI.addWidgetToArea("home-button", "nav-bar");
   // The previous task leaves focus in the URL bar. However, in that case drags
   // can be interpreted as being selection drags by the drag manager, which
   // breaks the drag synthesis from EventUtils.js below. To avoid this, focus
@@ -628,9 +626,7 @@ add_task(async function drop_opens_popup() {
   await promise;
 
   textbox.value = "";
-  if (CustomizableUI.protonToolbarEnabled) {
-    CustomizableUI.removeWidgetFromArea("home-button");
-  }
+  CustomizableUI.removeWidgetFromArea("home-button");
 });
 
 // Moving the caret using the cursor keys should not close the popup.

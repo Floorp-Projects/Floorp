@@ -15,14 +15,12 @@ add_task(async function init() {
 
   registerCleanupFunction(PlacesUtils.history.clear);
 
-  if (CustomizableUI.protonToolbarEnabled) {
-    CustomizableUI.addWidgetToArea("home-button", "nav-bar", 0);
-    CustomizableUI.addWidgetToArea("sidebar-button", "nav-bar");
-    registerCleanupFunction(() => {
-      CustomizableUI.removeWidgetFromArea("home-button");
-      CustomizableUI.removeWidgetFromArea("sidebar-button");
-    });
-  }
+  CustomizableUI.addWidgetToArea("home-button", "nav-bar", 0);
+  CustomizableUI.addWidgetToArea("sidebar-button", "nav-bar");
+  registerCleanupFunction(() => {
+    CustomizableUI.removeWidgetFromArea("home-button");
+    CustomizableUI.removeWidgetFromArea("sidebar-button");
+  });
 });
 
 add_task(async function tabWithSearchString() {
