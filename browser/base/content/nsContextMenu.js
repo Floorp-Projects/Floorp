@@ -1403,7 +1403,7 @@ class nsContextMenu {
     let systemPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
     if (this.onCanvas) {
       this._canvasToBlobURL(this.targetIdentifier).then(function(blobURL) {
-        openLinkIn(blobURL, where, {
+        openUILinkIn(blobURL, where, {
           referrerInfo,
           triggeringPrincipal: systemPrincipal,
         });
@@ -1416,7 +1416,7 @@ class nsContextMenu {
       );
 
       // Default to opening in a new tab.
-      openLinkIn(this.mediaURL, where, {
+      openUILinkIn(this.mediaURL, where, {
         referrerInfo,
         forceAllowDataURI: true,
         triggeringPrincipal: this.principal,
