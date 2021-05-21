@@ -563,10 +563,13 @@ exports.ToolboxButtons = [
       const clipboardEnabled = Services.prefs.getBoolPref(
         "devtools.screenshot.clipboard.enabled"
       );
-      const args = { fullpage: true, file: true };
-      if (clipboardEnabled) {
-        args.clipboard = true;
-      }
+
+      // When screenshot to clipboard is enabled disabling saving to file
+      const args = {
+        fullpage: true,
+        file: !clipboardEnabled,
+        clipboard: clipboardEnabled,
+      };
 
       const messages = await captureAndSaveScreenshot(
         toolbox.target,
