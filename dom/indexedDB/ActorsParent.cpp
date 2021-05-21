@@ -5798,6 +5798,10 @@ nsresult DeleteFile(nsIFile& aDirectory, const nsAString& aFilename,
                     aIdempotent);
 }
 
+// Delete files in a directory that you think exists. If the directory doesn't
+// exist, an error will not be returned, but warning telemetry will be
+// generated! So only call this on directories that you know exist (idempotent
+// usage, but it's not recommended).
 nsresult DeleteFilesNoQuota(nsIFile* aDirectory, const nsAString& aFilename) {
   AssertIsOnIOThread();
   MOZ_ASSERT(aDirectory);
@@ -12453,6 +12457,11 @@ Result<FileUsageType, nsresult> FileManager::GetUsage(nsIFile* aDirectory) {
         nsresult rv;
         leafName.ToInteger64(&rv);
         if (NS_SUCCEEDED(rv)) {
+          // Usually we only use QM_OR_ELSE_LOG/QM_OR_ELSE_LOG_IF with Remove
+          // and NS_ERROR_FILE_NOT_FOUND/NS_ERROR_FILE_TARGET_DOES_NOT_EXIST
+          // check, but the file was found by a directory traversal and
+          // ToInteger on the name succeeded, so it should be our file and if
+          // the file disappears, the use of QM_OR_ELSE_WARN is ok here.
           QM_TRY_INSPECT(
               const auto& thisUsage,
               QM_OR_ELSE_WARN(
