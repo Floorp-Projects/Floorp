@@ -34,7 +34,7 @@ import org.mozilla.fenix.components.settings.counterPreference
 import org.mozilla.fenix.components.settings.featureFlagPreference
 import org.mozilla.fenix.components.toolbar.ToolbarPosition
 import org.mozilla.fenix.experiments.ExperimentBranch
-import org.mozilla.fenix.experiments.Experiments
+import org.mozilla.fenix.experiments.FeatureId
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getPreferenceKey
 import org.mozilla.fenix.ext.withExperiment
@@ -312,10 +312,10 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         val browsers = BrowsersCache.all(appContext)
         val experiments = appContext.components.analytics.experiments
         val isExperimentBranch =
-            experiments.withExperiment(Experiments.DEFAULT_BROWSER) { experimentBranch ->
+            experiments.withExperiment(FeatureId.DEFAULT_BROWSER) { experimentBranch ->
                 (experimentBranch == ExperimentBranch.DEFAULT_BROWSER_NEW_TAB_BANNER)
             }
-        return isExperimentBranch &&
+        return isExperimentBranch == true &&
                 !userDismissedExperimentCard &&
                 !browsers.isFirefoxDefaultBrowser &&
                 numberOfAppLaunches > APP_LAUNCHES_TO_SHOW_DEFAULT_BROWSER_CARD

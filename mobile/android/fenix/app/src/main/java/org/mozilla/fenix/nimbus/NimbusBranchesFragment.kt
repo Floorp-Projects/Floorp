@@ -79,7 +79,7 @@ class NimbusBranchesFragment : Fragment() {
             try {
                 val experiments = requireContext().components.analytics.experiments
                 val branches = experiments.getExperimentBranches(args.experimentId) ?: emptyList()
-                val selectedBranch = experiments.withExperiment(args.experimentId) ?: ""
+                val selectedBranch = experiments.getExperimentBranch(args.experimentId) ?: ""
 
                 nimbusBranchesStore.dispatch(
                     NimbusBranchesAction.UpdateBranches(

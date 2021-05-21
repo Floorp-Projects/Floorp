@@ -42,7 +42,7 @@ import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.experiments.ExperimentBranch
-import org.mozilla.fenix.experiments.Experiments
+import org.mozilla.fenix.experiments.FeatureId
 import org.mozilla.fenix.ext.application
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getPreferenceKey
@@ -52,6 +52,7 @@ import org.mozilla.fenix.ext.navigateToNotificationsSettings
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.REQUEST_CODE_BROWSER_ROLE
+import org.mozilla.fenix.ext.getVariables
 import org.mozilla.fenix.ext.openSetDefaultBrowserOption
 import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.ext.withExperiment
@@ -161,7 +162,13 @@ class SettingsFragment : PreferenceFragmentCompat() {
     override fun onResume() {
         super.onResume()
 
-        showToolbar(getString(R.string.settings_title))
+        // Use nimbus to set the title, and a trivial addition
+        val experiments = requireContext().components.analytics.experiments
+        val variables = experiments.getVariables(FeatureId.NIMBUS_VALIDATION)
+        val title = variables.getText("settings-title") ?: getString(R.string.settings_title)
+        val suffix = variables.getString("settings-title-punctuation") ?: ""
+
+        showToolbar("$title$suffix")
 
         // Account UI state is updated as part of `onCreate`. To not do it twice in a row, we only
         // update it here if we're not going through the `onCreate->onStart->onResume` lifecycle chain.
@@ -589,7 +596,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
 
     private fun isDefaultBrowserExperimentBranch(): Boolean {
         val experiments = context?.components?.analytics?.experiments
-        return experiments?.withExperiment(Experiments.DEFAULT_BROWSER) { experimentBranch ->
+        return experiments?.withExperiment(FeatureId.DEFAULT_BROWSER) { experimentBranch ->
             (experimentBranch == ExperimentBranch.DEFAULT_BROWSER_SETTINGS_MENU)
         } == true
     }

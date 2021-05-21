@@ -41,7 +41,7 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.components.accounts.FenixAccountManager
 import org.mozilla.fenix.experiments.ExperimentBranch
-import org.mozilla.fenix.experiments.Experiments
+import org.mozilla.fenix.experiments.FeatureId
 import org.mozilla.fenix.ext.asActivity
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
@@ -632,7 +632,7 @@ open class DefaultToolbarMenu(
         val experiments = context.components.analytics.experiments
         val browsers = BrowsersCache.all(context)
 
-        return experiments.withExperiment(Experiments.DEFAULT_BROWSER) { experimentBranch ->
+        return experiments.withExperiment(FeatureId.DEFAULT_BROWSER) { experimentBranch ->
             if (experimentBranch == ExperimentBranch.DEFAULT_BROWSER_TOOLBAR_MENU &&
                 !browsers.isFirefoxDefaultBrowser
             ) {

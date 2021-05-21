@@ -9,7 +9,7 @@ import android.os.Build
 import mozilla.components.lib.dataprotect.SecurePrefsReliabilityExperiment
 import mozilla.components.service.nimbus.NimbusApi
 import org.mozilla.fenix.experiments.ExperimentBranch
-import org.mozilla.fenix.experiments.Experiments
+import org.mozilla.fenix.experiments.FeatureId
 import org.mozilla.fenix.ext.withExperiment
 
 /**
@@ -24,7 +24,7 @@ class SecurePrefsTelemetry(
         // The Android Keystore is used to secure the shared prefs only on API 23+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             // These tests should run only if the experiment is live
-            experiments.withExperiment(Experiments.ANDROID_KEYSTORE) { experimentBranch ->
+            experiments.withExperiment(FeatureId.ANDROID_KEYSTORE) { experimentBranch ->
                 // .. and this device is not in the control group.
                 if (experimentBranch == ExperimentBranch.TREATMENT) {
                         SecurePrefsReliabilityExperiment(appContext)()

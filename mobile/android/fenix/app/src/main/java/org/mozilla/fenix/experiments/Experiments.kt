@@ -4,14 +4,23 @@
 
 package org.mozilla.fenix.experiments
 
-class Experiments {
-    companion object {
-        const val A_A_NIMBUS_VALIDATION = "fenix-nimbus-validation-v3"
-        const val ANDROID_KEYSTORE = "fenix-android-keystore"
-        const val DEFAULT_BROWSER = "fenix-default-browser"
-    }
+/**
+ * Enums to identify features in the app. These will likely grow and shrink depending
+ * on the experiments we want to perform.
+ *
+ * @property jsonName the kebab-case version of the feature id as represented in the Nimbus
+ * experiment JSON.
+ */
+enum class FeatureId(val jsonName: String) {
+    NIMBUS_VALIDATION("nimbus-validation"),
+    ANDROID_KEYSTORE("fenix-android-keystore"),
+    DEFAULT_BROWSER("fenix-default-browser")
 }
 
+/**
+ * Experiment branches are becoming less interesting, though we collect some well
+ * defined ones here.
+ */
 class ExperimentBranch {
     companion object {
         const val TREATMENT = "treatment"

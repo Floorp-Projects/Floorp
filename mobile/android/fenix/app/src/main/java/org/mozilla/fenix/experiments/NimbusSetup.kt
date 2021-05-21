@@ -15,6 +15,7 @@ import mozilla.components.service.nimbus.NimbusDisabled
 import mozilla.components.service.nimbus.NimbusServerSettings
 import mozilla.components.support.base.log.logger.Logger
 import org.mozilla.fenix.BuildConfig
+import org.mozilla.fenix.R
 import org.mozilla.fenix.components.isSentryEnabled
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
@@ -64,6 +65,10 @@ fun createNimbus(context: Context, url: String?): NimbusApi =
                 // This opts out of nimbus experiments. It involves writing to disk, so does its
                 // work on the db thread.
                 globalUserParticipation = enabled
+            }
+
+            if (url.isNullOrBlank()) {
+                setExperimentsLocally(R.raw.initial_experiments)
             }
 
             // We may have downloaded experiments on a previous run, so let's start using them
