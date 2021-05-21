@@ -66,7 +66,6 @@ WindowGlobalInit WindowGlobalActor::AboutBlankInitializer(
                       nsContentUtils::GenerateWindowId());
 
   init.principal() = aPrincipal;
-  init.storagePrincipal() = aPrincipal;
   Unused << NS_NewURI(getter_AddRefs(init.documentURI()), "about:blank");
 
   return init;
@@ -79,7 +78,6 @@ WindowGlobalInit WindowGlobalActor::WindowInitializer(
                       aWindow->GetOuterWindow()->WindowID());
 
   init.principal() = aWindow->GetPrincipal();
-  init.storagePrincipal() = aWindow->GetEffectiveStoragePrincipal();
   init.documentURI() = aWindow->GetDocumentURI();
 
   Document* doc = aWindow->GetDocument();

@@ -30,7 +30,6 @@ class nsSHistory;
 class nsBrowserStatusFilter;
 class nsSecureBrowserUI;
 class CallerWillNotifyHistoryIndexAndLengthChanges;
-class nsITimer;
 
 namespace mozilla {
 enum class CallState;
@@ -48,7 +47,6 @@ struct LoadURIOptions;
 class MediaController;
 struct LoadingSessionHistoryInfo;
 class SessionHistoryEntry;
-class SSCacheCopy;
 class WindowGlobalParent;
 
 // RemotenessChangeOptions is passed through the methods to store the state
@@ -294,13 +292,6 @@ class CanonicalBrowsingContext final : public BrowsingContext {
   void RequestRestoreTabContent(WindowGlobalParent* aWindow);
   already_AddRefed<Promise> GetRestorePromise();
 
-  nsresult WriteSessionStorageToSessionStore(
-      const nsTArray<SSCacheCopy>& aSesssionStorage, uint32_t aEpoch);
-
-  void UpdateSessionStoreSessionStorage(const std::function<void()>& aDone);
-
-  static void UpdateSessionStoreForStorage(uint64_t aBrowsingContextId);
-
   // Called when a BrowserParent for this BrowsingContext has been fully
   // destroyed (i.e. `ActorDestroy` was called).
   void BrowserParentDestroyed(BrowserParent* aBrowserParent,
@@ -414,10 +405,6 @@ class CanonicalBrowsingContext final : public BrowsingContext {
   // has become unloaded for one reason or another.
   void ShowSubframeCrashedUI(BrowserBridgeParent* aBridge);
 
-  void MaybeScheduleSessionStoreUpdate();
-
-  void CancelSessionStoreUpdate();
-
   // XXX(farre): Store a ContentParent pointer here rather than mProcessId?
   // Indicates which process owns the docshell.
   uint64_t mProcessId;
@@ -471,8 +458,6 @@ class CanonicalBrowsingContext final : public BrowsingContext {
   // If this is a top level context, this is true if our browser ID is marked as
   // active in the process priority manager.
   bool mPriorityActive = false;
-
-  nsCOMPtr<nsITimer> mSessionStoreSessionStorageUpdateTimer;
 };
 
 }  // namespace dom
