@@ -535,6 +535,9 @@ fn write_load_attribs(state: &mut OutputState, attribs: &[hir::SymRef]) {
 fn write_store_outputs(state: &mut OutputState, outputs: &[hir::SymRef]) {
     let is_scalar = state.is_scalar.replace(true);
     write!(state, "public:\nstruct InterpOutputs {{\n");
+    if state.hir.used_clip_dist != 0 {
+       state.write(" Float swgl_ClipDistance;\n");
+    }
     for i in outputs {
         let sym = state.hir.sym(*i);
         match &sym.decl {
@@ -560,6 +563,15 @@ fn write_store_outputs(state: &mut OutputState, outputs: &[hir::SymRef]) {
         state,
         "    auto* dest = reinterpret_cast<InterpOutputs*>(dest_ptr);\n"
     );
+    if state.hir.used_clip_dist != 0 {
+        for (i, comp) in "xyzw".chars().enumerate() {
+            if (state.hir.used_clip_dist & (1 << i)) != 0 {
+                write!(state, "    dest->swgl_ClipDistance.{} = get_nth(gl_ClipDistance[{}], n);\n", comp, i);
+            } else {
+                write!(state, "    dest->swgl_ClipDistance.{} = 0.0f;\n", comp);
+            }
+        }
+    }
     for i in outputs {
         let sym = state.hir.sym(*i);
         match &sym.decl {
@@ -3631,6 +3643,9 @@ fn write_abi(state: &mut OutputState) {
             state.write(" init_batch_func = (InitBatchFunc)&init_batch;\n");
             state.write(" load_attribs_func = (LoadAttribsFunc)&load_attribs;\n");
             state.write(" run_primitive_func = (RunPrimitiveFunc)&run;\n");
+            if state.hir.used_clip_dist != 0 {
+                state.write(" enable_clip_distance();\n");
+            }
         }
     }
     state.write("}\n");
