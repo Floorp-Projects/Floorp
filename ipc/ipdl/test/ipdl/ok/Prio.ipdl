@@ -5,4 +5,5 @@ child:
   [Priority=vsync] async VsyncPrio();
   [Priority=input] async InputPrio();
   [Priority=mediumhigh] async MediumHighPrio();
+  [Priority=control] async ControlPrio();
 };
