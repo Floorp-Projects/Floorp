@@ -152,11 +152,9 @@ void LIRGeneratorARM64::lowerForALUInt64(
 
 void LIRGeneratorARM64::lowerForMulInt64(LMulI64* ins, MMul* mir,
                                          MDefinition* lhs, MDefinition* rhs) {
-  ins->setInt64Operand(0, useInt64RegisterAtStart(lhs));
-  ins->setInt64Operand(INT64_PIECES, (lhs != rhs)
-                                         ? useInt64Register(rhs)
-                                         : useInt64RegisterAtStart(rhs));
-  defineInt64ReuseInput(ins, mir, 0);
+  ins->setInt64Operand(LMulI64::Lhs, useInt64RegisterAtStart(lhs));
+  ins->setInt64Operand(LMulI64::Rhs, useInt64RegisterAtStart(rhs));
+  defineInt64(ins, mir);
 }
 
 template <size_t Temps>
