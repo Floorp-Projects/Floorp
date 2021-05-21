@@ -159,7 +159,7 @@ do
   ./$CONFIG_DIR/fixup_json.py $CONFIG_DIR/$THIS_CONFIG.json
   if [ "$IS_WIN" == 1 ]; then
     # Use Linux/UNIX line endings
-    dos2unix $file
+    dos2unix $CONFIG_DIR/$THIS_CONFIG.json
   fi
 done
 
