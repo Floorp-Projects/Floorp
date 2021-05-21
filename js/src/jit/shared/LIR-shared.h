@@ -9258,12 +9258,6 @@ class LWasmPermuteSimd128 : public LInstructionHelper<1, 1, 0> {
     SHIFT_LEFT_8x16,
   };
 
-  enum Perm16x8Action {
-    SWAP_QWORDS = 1,  // Swap qwords first
-    PERM_LOW = 2,     // Permute low qword by control_[0..3]
-    PERM_HIGH = 4     // Permute high qword by control_[4..7]
-  };
-
  private:
   Op op_;
   SimdConstant control_;

@@ -528,43 +528,13 @@ static bool TryRotateRight8x16(SimdConstant* control) {
   return ScanIncreasingMasked(lanes, i) == 16;
 }
 
-// We can permute by words if the mask is reducible to a word mask, but the x64
-// lowering is only efficient if we can permute the high and low quadwords
-// separately, possibly after swapping quadwords.
+// We can permute by words if the mask is reducible to a word mask.
 static bool TryPermute16x8(SimdConstant* control) {
   SimdConstant tmp = *control;
   if (!ByteMaskToWordMask(&tmp)) {
     return false;
   }
-  const SimdConstant::I16x8& lanes = tmp.asInt16x8();
-  SimdConstant::I16x8 mapped;
-  MapLanes(mapped, lanes, [](int x) -> int { return x < 4 ? 0 : 1; });
-  int i = ScanConstant(mapped, mapped[0], 0);
-  if (i != 4) {
-    return false;
-  }
-  i = ScanConstant(mapped, mapped[4], 4);
-  if (i != 8) {
-    return false;
-  }
-  // Now compute the operation bits.  `mapped` holds the adjusted lane mask.
-  memcpy(mapped, lanes, sizeof(mapped));
-  int16_t op = 0;
-  if (mapped[0] > mapped[4]) {
-    op |= LWasmPermuteSimd128::SWAP_QWORDS;
-  }
-  for (int i = 0; i < 8; i++) {
-    mapped[i] &= 3;
-  }
-  if (!IsIdentity(mapped, 0, 4, 0)) {
-    op |= LWasmPermuteSimd128::PERM_LOW;
-  }
-  if (!IsIdentity(mapped, 4, 4, 0)) {
-    op |= LWasmPermuteSimd128::PERM_HIGH;
-  }
-  MOZ_ASSERT(op != 0);
-  mapped[0] |= op << 8;
-  *control = SimdConstant::CreateX8(mapped);
+  *control = tmp;
   return true;
 }
 
@@ -627,11 +597,11 @@ static LWasmPermuteSimd128::Op AnalyzePermute(SimdConstant* control) {
   if (TryRotateRight8x16(control)) {
     return LWasmPermuteSimd128::ROTATE_RIGHT_8x16;
   }
-  if (TryPermute16x8(control)) {
-    return LWasmPermuteSimd128::PERMUTE_16x8;
-  }
   if (TryBroadcast16x8(control)) {
     return LWasmPermuteSimd128::BROADCAST_16x8;
+  }
+  if (TryPermute16x8(control)) {
+    return LWasmPermuteSimd128::PERMUTE_16x8;
   }
   if (TryBroadcast8x16(control)) {
     return LWasmPermuteSimd128::BROADCAST_8x16;
@@ -1022,16 +992,9 @@ void LIRGeneratorShared::ReportShuffleSpecialization(const Shuffle& s) {
         case LWasmPermuteSimd128::PERMUTE_8x16:
           js::wasm::ReportSimdAnalysis("shuffle -> permute 8x16");
           break;
-        case LWasmPermuteSimd128::PERMUTE_16x8: {
-          int op = s.control.asInt16x8()[0] >> 8;
-          char buf[256];
-          sprintf(buf, "shuffle -> permute 16x8%s%s%s",
-                  op & LWasmPermuteSimd128::SWAP_QWORDS ? " swap" : "",
-                  op & LWasmPermuteSimd128::PERM_HIGH ? " high" : "",
-                  op & LWasmPermuteSimd128::PERM_LOW ? " low" : "");
-          js::wasm::ReportSimdAnalysis(buf);
+        case LWasmPermuteSimd128::PERMUTE_16x8:
+          js::wasm::ReportSimdAnalysis("shuffle -> permute 16x8");
           break;
-        }
         case LWasmPermuteSimd128::PERMUTE_32x4:
           js::wasm::ReportSimdAnalysis("shuffle -> permute 32x4");
           break;

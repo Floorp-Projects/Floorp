@@ -84,7 +84,7 @@ let perm32x4_pattern = [4, 5, 6, 7, 12, 13, 14, 15, 8, 9, 10, 11, 0, 1, 2, 3];
   (func $f (param v128) (result v128)
     (i8x16.shuffle ${perm16x8_pattern.join(' ')} (local.get 0) (local.get 0))))`);
 
-    assertEq(wasmSimdAnalysis(), "shuffle -> permute 16x8 swap high low");
+    assertEq(wasmSimdAnalysis(), "shuffle -> permute 16x8");
 
     let mem = new Int8Array(ins.exports.mem.buffer);
     set(mem, 16, iota(16));
@@ -104,7 +104,7 @@ let perm32x4_pattern = [4, 5, 6, 7, 12, 13, 14, 15, 8, 9, 10, 11, 0, 1, 2, 3];
   (func $f (param v128) (result v128)
     (i8x16.shuffle ${perm16x8_pattern.join(' ')} (local.get 0) (local.get 0))))`);
 
-    assertEq(wasmSimdAnalysis(), "shuffle -> permute 16x8 high low");
+    assertEq(wasmSimdAnalysis(), "shuffle -> permute 16x8");
 
     let mem = new Int8Array(ins.exports.mem.buffer);
     set(mem, 16, iota(16));
@@ -124,7 +124,7 @@ let perm32x4_pattern = [4, 5, 6, 7, 12, 13, 14, 15, 8, 9, 10, 11, 0, 1, 2, 3];
   (func $f (param v128) (result v128)
     (i8x16.shuffle ${perm16x8_pattern.join(' ')} (local.get 0) (local.get 0))))`);
 
-    assertEq(wasmSimdAnalysis(), "shuffle -> permute 16x8 low");
+    assertEq(wasmSimdAnalysis(), "shuffle -> permute 16x8");
 
     let mem = new Int8Array(ins.exports.mem.buffer);
     set(mem, 16, iota(16));
@@ -144,7 +144,7 @@ let perm32x4_pattern = [4, 5, 6, 7, 12, 13, 14, 15, 8, 9, 10, 11, 0, 1, 2, 3];
   (func $f (param v128) (result v128)
     (i8x16.shuffle ${perm16x8_pattern.join(' ')} (local.get 0) (local.get 0))))`);
 
-    assertEq(wasmSimdAnalysis(), "shuffle -> permute 16x8 high");
+    assertEq(wasmSimdAnalysis(), "shuffle -> permute 16x8");
 
     let mem = new Int8Array(ins.exports.mem.buffer);
     set(mem, 16, iota(16));
@@ -678,7 +678,7 @@ for ( let byte of [3, 11, 8, 2] ) {
   (func $f (param v128) (result v128)
     (i8x16.shuffle ${rev16x8_pattern.join(' ')} (local.get 0) (local.get 0))))`);
 
-    assertEq(wasmSimdAnalysis(), "shuffle -> permute 16x8 swap high low");
+    assertEq(wasmSimdAnalysis(), "shuffle -> permute 16x8");
 
     let mem = new Int8Array(ins.exports.mem.buffer);
     set(mem, 16, iota(16));
