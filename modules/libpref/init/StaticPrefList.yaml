@@ -5528,7 +5528,7 @@
 # Whether the new encoding detector is enabled for the .jp TLD.
 - name: intl.charset.detector.ng.jp.enabled
   type: bool
-  value: false
+  value: true
   mirror: always
 
 # Whether the new encoding detector is enabled for the .in TLD.
