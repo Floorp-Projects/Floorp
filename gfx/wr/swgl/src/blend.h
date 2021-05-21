@@ -340,6 +340,7 @@ enum SWGLClipFlag {
 static int swgl_ClipFlags = 0;
 static BlendKey swgl_BlendOverride = BLEND_KEY_NONE;
 static WideRGBA8 swgl_BlendColorRGBA8 = {0};
+static WideRGBA8 swgl_BlendAlphaRGBA8 = {0};
 
 // A pointer into the color buffer for the start of the span.
 static void* swgl_SpanBuf = nullptr;
@@ -688,6 +689,12 @@ static PREFER_INLINE WideRGBA8 blend_pixels(uint32_t* buf, PackedRGBA8 pdst,
     WideRGBA8 color = applyColor(alphas(src), swgl_BlendColorRGBA8);
     return color + dst - muldiv255(dst, alphas(color));
   }
+
+  BLEND_CASE(SWGL_BLEND_SUBPIXEL_TEXT):
+    // Premultiplied alpha over blend, but treats the source as a subpixel mask
+    // modulated with a constant color.
+    return applyColor(src, swgl_BlendColorRGBA8) + dst -
+           muldiv255(dst, applyColor(src, swgl_BlendAlphaRGBA8));
 
   default:
     UNREACHABLE;
