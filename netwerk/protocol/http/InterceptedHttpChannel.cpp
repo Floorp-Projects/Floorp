@@ -1084,8 +1084,6 @@ InterceptedHttpChannel::OnStopRequest(nsIRequest* aRequest, nsresult aStatus) {
     nsAutoCString requestMethod;
     GetRequestMethod(requestMethod);
 
-    nsCOMPtr<nsIURI> uri;
-    GetURI(getter_AddRefs(uri));
     int32_t priority = PRIORITY_NORMAL;
     GetPriority(&priority);
 
@@ -1097,7 +1095,7 @@ InterceptedHttpChannel::OnStopRequest(nsIRequest* aRequest, nsresult aStatus) {
       mResponseHead->ContentType(contentType);
     }
     profiler_add_network_marker(
-        uri, requestMethod, priority, mChannelId, NetworkLoadType::LOAD_STOP,
+        mURI, requestMethod, priority, mChannelId, NetworkLoadType::LOAD_STOP,
         mAsyncOpenTime, TimeStamp::Now(), size, kCacheUnknown,
         mLoadInfo->GetInnerWindowID(), &mTransactionTimings, nullptr,
         std::move(mSource), Some(nsDependentCString(contentType.get())));
