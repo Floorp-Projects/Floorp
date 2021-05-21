@@ -1449,7 +1449,7 @@ NS_IMETHODIMP nsExternalAppHandler::GetContentLength(int64_t* aContentLength) {
 
 NS_IMETHODIMP nsExternalAppHandler::GetBrowsingContextId(
     uint64_t* aBrowsingContextId) {
-  *aBrowsingContextId = mBrowsingContext->Id();
+  *aBrowsingContextId = mBrowsingContext ? mBrowsingContext->Id() : 0;
   return NS_OK;
 }
 
