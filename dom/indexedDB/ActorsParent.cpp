@@ -12863,17 +12863,19 @@ nsresult QuotaClient::GetUsageForOriginInternal(
                        CloneFileAndAppend(*directory,
                                           databaseFilename + kSQLiteWALSuffix));
 
-        // QM_OR_ELSE_WARN is not used here since we want to ignore
+        // QM_OR_ELSE_WARN is not used here since we just want to log
         // NS_ERROR_FILE_NOT_FOUND/NS_ERROR_FILE_TARGET_DOES_NOT_EXIST
-        // completely (the -wal file doesn't have to exist).
-        QM_TRY_INSPECT(const int64_t& walFileSize,
-                       MOZ_TO_RESULT_INVOKE(walFile, GetFileSize)
-                           .orElse([](const nsresult rv) {
+        // result and not spam the reports (the -wal file doesn't have to
+        // exist).
+        QM_TRY_INSPECT(
+            const int64_t& walFileSize,
+            QM_OR_ELSE_LOG(MOZ_TO_RESULT_INVOKE(walFile, GetFileSize),
+                           ([](const nsresult rv) {
                              return (rv == NS_ERROR_FILE_NOT_FOUND ||
                                      rv == NS_ERROR_FILE_TARGET_DOES_NOT_EXIST)
                                         ? Result<int64_t, nsresult>{0}
                                         : Err(rv);
-                           }));
+                           })));
         MOZ_ASSERT(walFileSize >= 0);
         *aUsageInfo += DatabaseUsageType(Some(uint64_t(walFileSize)));
       }

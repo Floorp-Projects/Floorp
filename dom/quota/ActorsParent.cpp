@@ -2392,13 +2392,14 @@ Result<bool, nsresult> EnsureDirectory(nsIFile& aDirectory) {
   AssertIsOnIOThread();
 
   // Callers call this function without checking if the directory already
-  // exists (idempotent usage). QM_OR_ELSE_WARN is not used here since we want
-  // to ignore NS_ERROR_FILE_ALREADY_EXISTS completely.
+  // exists (idempotent usage). QM_OR_ELSE_WARN is not used here since we just
+  // want to log NS_ERROR_FILE_ALREADY_EXISTS result and not spam the reports.
   QM_TRY_INSPECT(
       const auto& exists,
-      MOZ_TO_RESULT_INVOKE(aDirectory, Create, nsIFile::DIRECTORY_TYPE, 0755)
-          .map([](Ok) { return false; })
-          .orElse(ErrToOkOrErr<NS_ERROR_FILE_ALREADY_EXISTS, true>));
+      QM_OR_ELSE_LOG(MOZ_TO_RESULT_INVOKE(aDirectory, Create,
+                                          nsIFile::DIRECTORY_TYPE, 0755)
+                         .map([](Ok) { return false; }),
+                     (ErrToOkOrErr<NS_ERROR_FILE_ALREADY_EXISTS, true>)));
 
   if (exists) {
     QM_TRY_INSPECT(const bool& isDirectory,
@@ -10556,10 +10557,10 @@ nsresult CreateOrUpgradeDirectoryMetadataHelper::MaybeUpgradeOriginDirectory(
     QM_TRY_INSPECT(const auto& idbDirectory,
                    CloneFileAndAppend(*aDirectory, idbDirectoryName));
 
-    // Usually we don't use QM_OR_ELSE_WARN with Create and
-    // NS_ERROR_FILE_ALREADY_EXISTS check, but normally the idb directory
-    // shouldn't exist during the upgrade and the upgrade normally runs only
-    // once.
+    // Usually we only use QM_OR_ELSE_LOG/QM_OR_ELSE_LOG_IF with Create and
+    // NS_ERROR_FILE_ALREADY_EXISTS check, but typically the idb directory
+    // shouldn't exist during the upgrade and the upgrade runs only once in
+    // most of the cases, so the use of QM_OR_ELSE_WARN is ok here.
     QM_TRY(QM_OR_ELSE_WARN(
         ToResult(idbDirectory->Create(nsIFile::DIRECTORY_TYPE, 0755)),
         ([&idbDirectory](const nsresult rv) -> Result<Ok, nsresult> {
