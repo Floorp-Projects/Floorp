@@ -73,34 +73,77 @@ async function stopProfilerAndGetThreads(contentPid) {
   return stopProfilerNowAndGetThreads(contentPid);
 }
 
-/**
- * This finds a thread with a specific network marker. This is useful to find
- * the thread for a service worker.
+/** This tries to find the service worker thread by targeting a very specific
+ * UserTiming marker. Indeed we use performance.mark to add this marker from the
+ * service worker's events.
+ * Then from this thread we get its parent thread. Indeed the parent thread is
+ * where all network stuff happens, so this is useful for network marker tests.
  *
  * @param {Object} profile
- * @param {string} filename
- * @returns {Object | null} the found thread
+ * @returns {{ serviceWorkerThread: Object, serviceWorkerParentThread: Object }} the found threads
  */
-function findContentThreadWithNetworkMarkerForFilename(profile, filename) {
+function findServiceWorkerThreads(profile) {
   const allThreads = [
     profile.threads,
     ...profile.processes.map(process => process.threads),
   ].flat();
 
-  const thread = allThreads.find(
+  const serviceWorkerThread = allThreads.find(
     ({ processType, markers }) =>
       processType === "tab" &&
       markers.data.some(markerTuple => {
         const data = markerTuple[markers.schema.data];
         return (
           data &&
-          data.type === "Network" &&
-          data.URI &&
-          data.URI.endsWith(filename)
+          data.type === "UserTiming" &&
+          data.name === "__serviceworker_event"
         );
       })
   );
-  return thread || null;
+
+  if (!serviceWorkerThread) {
+    info(
+      "We couldn't find a service worker thread. Here are all the threads in this profile:"
+    );
+    allThreads.forEach(logInformationForThread.bind(null, ""));
+    return null;
+  }
+
+  const serviceWorkerParentThread = allThreads.find(
+    ({ name, pid }) => pid === serviceWorkerThread.pid && name === "GeckoMain"
+  );
+
+  if (!serviceWorkerParentThread) {
+    info(
+      `We couldn't find a parent thread for the service worker thread (pid: ${serviceWorkerThread.pid}, tid: ${serviceWorkerThread.tid}).`
+    );
+    info("Here are all the threads in this profile:");
+    allThreads.forEach(logInformationForThread.bind(null, ""));
+
+    // Let's write the profile on disk if MOZ_UPLOAD_DIR is present
+    const env = Cc["@mozilla.org/process/environment;1"].getService(
+      Ci.nsIEnvironment
+    );
+    const path = env.get("MOZ_UPLOAD_DIR");
+    if (path) {
+      const profileName = `profile_${Date.now()}.json`;
+      const profilePath = PathUtils.join(path, profileName);
+      info(
+        `We wrote down the profile on disk as an artifact, with name ${profileName}.`
+      );
+      // This function returns a Promise, but we're not waiting on it because
+      // we're in a synchronous function. Hopefully writing will be finished
+      // when the process ends.
+      IOUtils.writeJSON(profilePath, profile).catch(err =>
+        console.error("An error happened when writing the profile on disk", err)
+      );
+    }
+    throw new Error(
+      "We couldn't find a parent thread for the service worker thread. Please read logs to find more information."
+    );
+  }
+
+  return { serviceWorkerThread, serviceWorkerParentThread };
 }
 
 /**
@@ -110,6 +153,11 @@ function findContentThreadWithNetworkMarkerForFilename(profile, filename) {
  * @param {Object} thread
  */
 function logInformationForThread(prefix, thread) {
+  if (!thread) {
+    info(prefix + ": thread is null or undefined.");
+    return;
+  }
+
   const { name, pid, tid, processName, processType } = thread;
   info(
     `${prefix}: ` +
