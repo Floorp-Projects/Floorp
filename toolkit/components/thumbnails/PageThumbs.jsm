@@ -33,7 +33,6 @@ XPCOMUtils.defineLazyGlobalGetters(this, ["FileReader"]);
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   Services: "resource://gre/modules/Services.jsm",
-  AsyncShutdown: "resource://gre/modules/AsyncShutdown.jsm",
   PageThumbUtils: "resource://gre/modules/PageThumbUtils.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
 });
@@ -686,12 +685,12 @@ var PageThumbsStorage = {
     //    which will eventually be fixed by bug 965309)
     //
 
-    let blocker = () => promise;
+    let blocker = () => undefined;
 
     // The following operation will rise an error if we have already
     // reached profileBeforeChange, in which case it is too late
     // to clear the thumbnail wipe.
-    AsyncShutdown.profileBeforeChange.addBlocker(
+    IOUtils.profileBeforeChange.addBlocker(
       "PageThumbs: removing all thumbnails",
       blocker
     );
@@ -707,12 +706,7 @@ var PageThumbsStorage = {
     } finally {
       // Generally, we will be done much before profileBeforeChange,
       // so let's not hoard blockers.
-      if ("removeBlocker" in AsyncShutdown.profileBeforeChange) {
-        // `removeBlocker` was added with bug 985655. In the interest
-        // of backporting, let's degrade gracefully if `removeBlocker`
-        // doesn't exist.
-        AsyncShutdown.profileBeforeChange.removeBlocker(blocker);
-      }
+      IOUtils.profileBeforeChange.removeBlocker(blocker);
     }
   },
 
