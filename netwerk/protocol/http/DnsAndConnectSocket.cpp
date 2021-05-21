@@ -1254,21 +1254,32 @@ nsresult DnsAndConnectSocket::TransportSetup::ResolveHost(
         nullptr, NS_NET_STATUS_RESOLVING_HOST, 0);
   }
 
-  nsresult rv = dns->AsyncResolveNative(
-      mHost, nsIDNSService::RESOLVE_TYPE_DEFAULT, mDnsFlags, nullptr,
-      dnsAndSock, gSocketTransportService,
-      dnsAndSock->mEnt->mConnInfo->GetOriginAttributes(),
-      getter_AddRefs(mDNSRequest));
-  if (NS_FAILED(rv) && (mDnsFlags & nsIDNSService::RESOLVE_IP_HINT)) {
-    mDnsFlags &= ~nsIDNSService::RESOLVE_IP_HINT;
-    return dns->AsyncResolveNative(
+  nsresult rv = NS_OK;
+  do {
+    rv = dns->AsyncResolveNative(
         mHost, nsIDNSService::RESOLVE_TYPE_DEFAULT, mDnsFlags, nullptr,
         dnsAndSock, gSocketTransportService,
         dnsAndSock->mEnt->mConnInfo->GetOriginAttributes(),
         getter_AddRefs(mDNSRequest));
-  }
+  } while (NS_FAILED(rv) && ShouldRetryDNS());
 
   return rv;
+}
+
+bool DnsAndConnectSocket::TransportSetup::ShouldRetryDNS() {
+  if (mDnsFlags & nsIDNSService::RESOLVE_IP_HINT) {
+    mDnsFlags &= ~nsIDNSService::RESOLVE_IP_HINT;
+    return true;
+  }
+
+  if (mRetryWithDifferentIPFamily) {
+    mRetryWithDifferentIPFamily = false;
+    mDnsFlags ^= (nsIDNSService::RESOLVE_DISABLE_IPV6 |
+                  nsIDNSService::RESOLVE_DISABLE_IPV4);
+    mResetFamilyPreference = true;
+    return true;
+  }
+  return false;
 }
 
 nsresult DnsAndConnectSocket::TransportSetup::OnLookupComplete(
@@ -1295,19 +1306,7 @@ nsresult DnsAndConnectSocket::TransportSetup::OnLookupComplete(
 
   // DNS lookup status failed
 
-  bool retry = false;
-  if (mDnsFlags & nsIDNSService::RESOLVE_IP_HINT) {
-    mDnsFlags &= ~nsIDNSService::RESOLVE_IP_HINT;
-    retry = true;
-  } else if ((status == NS_ERROR_UNKNOWN_HOST) && mRetryWithDifferentIPFamily) {
-    mRetryWithDifferentIPFamily = false;
-    mDnsFlags ^= (nsIDNSService::RESOLVE_DISABLE_IPV6 |
-                  nsIDNSService::RESOLVE_DISABLE_IPV4);
-    mResetFamilyPreference = true;
-    retry = true;
-  }
-
-  if (retry) {
+  if (ShouldRetryDNS()) {
     mState = TransportSetup::TransportSetupState::RETRY_RESOLVING;
     nsresult rv = ResolveHost(dnsAndSock);
     if (NS_FAILED(rv)) {
