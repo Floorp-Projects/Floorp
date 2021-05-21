@@ -213,3 +213,4 @@ typedef intptr_t GLintptr;
 #define GL_HSL_LUMINOSITY_KHR 0x92B0
 
 #define SWGL_BLEND_DROP_SHADOW 0xB001
+#define SWGL_BLEND_SUBPIXEL_TEXT 0xB002

@@ -46,6 +46,12 @@ class RemoteAccessibleBase : public Accessible {
     return mChildren.Length() ? mChildren[mChildren.Length() - 1] : nullptr;
   }
   Derived* RemotePrevSibling() const {
+    if (IsDoc()) {
+      // The normal code path doesn't work for documents because the parent
+      // might be a local OuterDoc, but IndexInParent() will return 1.
+      // A document is always a single child of an OuterDoc anyway.
+      return nullptr;
+    }
     int32_t idx = IndexInParent();
     if (idx == -1) {
       return nullptr;  // No parent.
@@ -53,6 +59,12 @@ class RemoteAccessibleBase : public Accessible {
     return idx > 0 ? RemoteParent()->mChildren[idx - 1] : nullptr;
   }
   Derived* RemoteNextSibling() const {
+    if (IsDoc()) {
+      // The normal code path doesn't work for documents because the parent
+      // might be a local OuterDoc, but IndexInParent() will return 1.
+      // A document is always a single child of an OuterDoc anyway.
+      return nullptr;
+    }
     int32_t idx = IndexInParent();
     if (idx == -1) {
       return nullptr;  // No parent.

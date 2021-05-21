@@ -1,4 +1,4 @@
-// |reftest| skip-if(!this.hasOwnProperty("Intl")||release_or_beta)
+// |reftest| skip-if(!this.hasOwnProperty("Intl"))
 
 // Tests using various locales to cover all day period types:
 // "midnight", "noon", "morning1", "morning2", "afternoon1", "afternoon2",

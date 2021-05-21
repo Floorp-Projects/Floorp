@@ -720,7 +720,7 @@ void BasicTableLayoutStrategy::DistributeISizeToColumns(
       if (val < min_iSize) {
         val = min_iSize;
       }
-      guess_min_pct += val;
+      guess_min_pct = NSCoordSaturatingAdd(guess_min_pct, val);
       guess_pref = NSCoordSaturatingAdd(guess_pref, val);
     } else {
       nscoord pref_iSize = colFrame->GetPrefCoord();
@@ -728,7 +728,7 @@ void BasicTableLayoutStrategy::DistributeISizeToColumns(
         ++numInfiniteISizeCols;
       }
       guess_pref = NSCoordSaturatingAdd(guess_pref, pref_iSize);
-      guess_min_pct += min_iSize;
+      guess_min_pct = NSCoordSaturatingAdd(guess_min_pct, min_iSize);
       if (colFrame->GetHasSpecifiedCoord()) {
         // we'll add on the rest of guess_min_spec outside the
         // loop
@@ -849,7 +849,8 @@ void BasicTableLayoutStrategy::DistributeISizeToColumns(
           if (pct_minus_min > 0) {
             float c = float(space) / float(basis.c);
             basis.c -= pct_minus_min;
-            col_iSize += NSToCoordRound(float(pct_minus_min) * c);
+            col_iSize = NSCoordSaturatingAdd(
+                col_iSize, NSToCoordRound(float(pct_minus_min) * c));
           }
         }
         break;
@@ -864,7 +865,8 @@ void BasicTableLayoutStrategy::DistributeISizeToColumns(
             if (pref_minus_min != 0) {
               float c = float(space) / float(basis.c);
               basis.c -= pref_minus_min;
-              col_iSize += NSToCoordRound(float(pref_minus_min) * c);
+              col_iSize = NSCoordSaturatingAdd(
+                  col_iSize, NSToCoordRound(float(pref_minus_min) * c));
             }
           } else
             col_iSize = col_iSize_before_adjust = colFrame->GetMinCoord();
@@ -898,7 +900,8 @@ void BasicTableLayoutStrategy::DistributeISizeToColumns(
             }
             basis.c =
                 NSCoordSaturatingSubtract(basis.c, pref_minus_min, nscoord_MAX);
-            col_iSize += NSToCoordRound(float(pref_minus_min) * c);
+            col_iSize = NSCoordSaturatingAdd(
+                col_iSize, NSToCoordRound(float(pref_minus_min) * c));
           }
         }
         break;
@@ -913,7 +916,8 @@ void BasicTableLayoutStrategy::DistributeISizeToColumns(
             } else {
               float c = float(space) / float(basis.c);
               basis.c -= col_iSize;
-              col_iSize += NSToCoordRound(float(col_iSize) * c);
+              col_iSize = NSCoordSaturatingAdd(
+                  col_iSize, NSToCoordRound(float(col_iSize) * c));
             }
           }
         }
@@ -940,7 +944,8 @@ void BasicTableLayoutStrategy::DistributeISizeToColumns(
           if (col_iSize != 0) {
             float c = float(space) / float(basis.c);
             basis.c -= col_iSize;
-            col_iSize += NSToCoordRound(float(col_iSize) * c);
+            col_iSize = NSCoordSaturatingAdd(
+                col_iSize, NSToCoordRound(float(col_iSize) * c));
           }
         }
         break;
@@ -949,13 +954,13 @@ void BasicTableLayoutStrategy::DistributeISizeToColumns(
                      "wrong case");
         if (pct != 0.0f) {
           float c = float(space) / basis.f;
-          col_iSize += NSToCoordRound(pct * c);
+          col_iSize = NSCoordSaturatingAdd(col_iSize, NSToCoordRound(pct * c));
           basis.f -= pct;
         }
         break;
       case FLEX_ALL_LARGE: {
         float c = float(space) / float(basis.c);
-        col_iSize += NSToCoordRound(c);
+        col_iSize = NSCoordSaturatingAdd(col_iSize, NSToCoordRound(c));
         --basis.c;
       } break;
     }

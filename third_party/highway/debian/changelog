@@ -1,3 +1,11 @@
+highway (0.12.1-1) UNRELEASED; urgency=medium
+
+  * doc updates, ARM GCC support, fix s390/ppc, complete partial vectors
+  * fix warnings, faster ARM div/sqrt, separate hwy_contrib library
+  * add Abs(i64)/FirstN/Pause, enable AVX2 on MSVC
+
+ -- Jan Wassenberg <janwas@google.com>  Wed, 19 May 2021 15:00:00 +0200
+
 highway (0.12.0-1) UNRELEASED; urgency=medium
 
   * Add Shift*8, Compress16, emulated Scatter/Gather, StoreInterleaved3/4

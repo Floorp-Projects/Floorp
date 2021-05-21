@@ -27,9 +27,6 @@
     --checkbox-checked-hover-bgcolor: var(--button-primary-hover-bgcolor);
     --checkbox-checked-active-bgcolor: var(--button-primary-active-bgcolor);
 
-    --default-arrowpanel-background: #fff;
-    --default-arrowpanel-color: rgb(21,20,26);
-
     --arrowpanel-dimmed: color-mix(in srgb, currentColor 12%, transparent);
     --arrowpanel-dimmed-further: color-mix(in srgb, currentColor 20%, transparent);
     --arrowpanel-dimmed-even-further: color-mix(in srgb, currentColor 27%, transparent);

@@ -134,7 +134,7 @@ function test() {
   let springs = navbarPlacements.filter(id => id.includes("spring"));
   is(springs.length, 2, "Should have 2 toolbarsprings in placements now");
   navbarPlacements = navbarPlacements.filter(id => !id.includes("spring"));
-  let expectedItemLength = CustomizableUI.protonToolbarEnabled ? 6 : 9;
+  let expectedItemLength = 6;
   is(
     navbarPlacements.length,
     expectedItemLength,
@@ -155,13 +155,6 @@ function test() {
     "stop-reload-button",
     "Stop/reload button is in the right place."
   );
-  if (!CustomizableUI.protonToolbarEnabled) {
-    is(
-      navbarPlacements.shift(),
-      "home-button",
-      "Home button is in the right place."
-    );
-  }
   is(
     navbarPlacements.shift(),
     "urlbar-container",
@@ -172,18 +165,6 @@ function test() {
     "downloads-button",
     "Downloads button is in the right place."
   );
-  if (!CustomizableUI.protonToolbarEnabled) {
-    is(
-      navbarPlacements.shift(),
-      "library-button",
-      "Library button is in the right place."
-    );
-    is(
-      navbarPlacements.shift(),
-      "sidebar-button",
-      "Sidebar button is in the right place."
-    );
-  }
   is(
     navbarPlacements.shift(),
     "fxa-toolbar-menu-button",

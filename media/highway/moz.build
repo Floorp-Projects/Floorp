@@ -9,8 +9,8 @@ LOCAL_INCLUDES += [
 ]
 
 SOURCES += [
-    "/third_party/highway/contrib/image/image.cc",
     "/third_party/highway/hwy/aligned_allocator.cc",
+    "/third_party/highway/hwy/contrib/image/image.cc",
     "/third_party/highway/hwy/targets.cc",
 ]
 

@@ -79,8 +79,9 @@ function makeChan(url) {
   return chan;
 }
 
-function channelOpenPromise(chan, flags) {
-  return new Promise(resolve => {
+function channelOpenPromise(chan, flags, delay) {
+  // eslint-disable-next-line no-async-promise-executor
+  return new Promise(async resolve => {
     function finish(req, buffer) {
       resolve([req, buffer]);
       certOverrideService.setDisableAllSecurityChecksAndLetAttackersInterceptMyData(
@@ -92,6 +93,9 @@ function channelOpenPromise(chan, flags) {
     certOverrideService.setDisableAllSecurityChecksAndLetAttackersInterceptMyData(
       true
     );
+    if (delay) {
+      await new Promise(r => setTimeout(r, delay));
+    }
     chan.asyncOpen(new ChannelListener(finish, null, flags));
   });
 }
@@ -763,6 +767,67 @@ add_task(async function testTwoFastFallbackTimers() {
   Services.prefs.setIntPref("network.http.http3.backup_timer_delay", 10);
 
   await createChannelAndStartTest();
+
+  await trrServer.stop();
+});
+
+add_task(async function testH3FastFallbackWithMultipleTransactions() {
+  trrServer = new TRRServer();
+  await trrServer.start();
+  Services.prefs.setBoolPref("network.dns.upgrade_with_https_rr", true);
+  Services.prefs.setBoolPref("network.dns.use_https_rr_as_altsvc", true);
+  Services.prefs.setBoolPref("network.dns.echconfig.enabled", false);
+
+  Services.prefs.setIntPref("network.trr.mode", 3);
+  Services.prefs.setCharPref(
+    "network.trr.uri",
+    `https://foo.example.com:${trrServer.port}/dns-query`
+  );
+  Services.prefs.setBoolPref("network.http.http3.enabled", true);
+
+  Services.prefs.clearUserPref("network.http.speculative-parallel-limit");
+  Services.prefs.clearUserPref(
+    "network.http.http3.parallel_fallback_conn_limit"
+  );
+
+  Services.prefs.setIntPref("network.http.http3.backup_timer_delay", 500);
+
+  Services.prefs.setCharPref(
+    "network.http.http3.alt-svc-mapping-for-testing",
+    "test.multiple_fallback_trans.org;h3-27=:" + h3Port
+  );
+
+  await trrServer.registerDoHAnswers("test.multiple_fallback_trans.org", "A", {
+    answers: [
+      {
+        name: "test.multiple_fallback_trans.org",
+        ttl: 55,
+        type: "A",
+        flush: false,
+        data: "127.0.0.1",
+      },
+    ],
+  });
+
+  let promises = [];
+  for (let i = 0; i < 3; ++i) {
+    let chan = makeChan(
+      `https://test.multiple_fallback_trans.org:${h2Port}/server-timing`
+    );
+    if (i == 0) {
+      promises.push(channelOpenPromise(chan));
+    } else {
+      promises.push(channelOpenPromise(chan, null, 500));
+    }
+  }
+
+  let res = await Promise.all(promises);
+  res.forEach(function(e) {
+    let [req] = e;
+    Assert.equal(req.protocolVersion, "h2");
+    let internal = req.QueryInterface(Ci.nsIHttpChannelInternal);
+    Assert.equal(internal.remotePort, h2Port);
+  });
 
   await trrServer.stop();
 });

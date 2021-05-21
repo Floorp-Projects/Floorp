@@ -8,9 +8,7 @@ const { PanelView } = ChromeUtils.import(
   "resource:///modules/PanelMultiView.jsm",
   null
 );
-const kHelpButtonId = PanelUI.protonAppMenuEnabled
-  ? "appMenu-help-button2"
-  : "appMenu-help-button";
+const kHelpButtonId = "appMenu-help-button2";
 
 function getEnabledNavigableElementsForView(panelView) {
   return Array.from(
@@ -159,9 +157,7 @@ add_task(async function testEnterKeyBehaviors() {
 
   // Let's test a 'normal' command button.
   focusedElement = document.commandDispatcher.focusedElement;
-  const kFindButtonId = PanelUI.protonAppMenuEnabled
-    ? "appMenu-find-button2"
-    : "appMenu-find-button";
+  const kFindButtonId = "appMenu-find-button2";
   while (
     !focusedElement ||
     !focusedElement.id ||

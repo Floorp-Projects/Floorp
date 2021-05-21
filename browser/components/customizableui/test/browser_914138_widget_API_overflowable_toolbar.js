@@ -33,10 +33,8 @@ add_task(async function subsequent_widget() {
     CustomizableUI.inDefaultState,
     "Should start subsequent_widget in default state."
   );
-  if (CustomizableUI.protonToolbarEnabled) {
-    CustomizableUI.addWidgetToArea(kSidebarBtn, "nav-bar");
-    await waitForElementShown(document.getElementById(kSidebarBtn));
-  }
+  CustomizableUI.addWidgetToArea(kSidebarBtn, "nav-bar");
+  await waitForElementShown(document.getElementById(kSidebarBtn));
 
   window.resizeTo(kForceOverflowWidthPx, window.outerHeight);
   await TestUtils.waitForCondition(() => {
@@ -118,9 +116,7 @@ add_task(async function subsequent_widget() {
     CustomizableUI.removeWidgetFromArea(kTestBtn1);
     el.remove();
   }
-  if (CustomizableUI.protonToolbarEnabled) {
-    CustomizableUI.removeWidgetFromArea(kSidebarBtn);
-  }
+  CustomizableUI.removeWidgetFromArea(kSidebarBtn);
   window.resizeTo(originalWindowWidth, window.outerHeight);
   await TestUtils.waitForCondition(() => !navbar.hasAttribute("overflowing"));
 });
@@ -196,10 +192,8 @@ add_task(async function construct_widget() {
     "Should start construct_widget in default state."
   );
 
-  if (CustomizableUI.protonToolbarEnabled) {
-    CustomizableUI.addWidgetToArea(kSidebarBtn, "nav-bar");
-    await waitForElementShown(document.getElementById(kSidebarBtn));
-  }
+  CustomizableUI.addWidgetToArea(kSidebarBtn, "nav-bar");
+  await waitForElementShown(document.getElementById(kSidebarBtn));
 
   window.resizeTo(kForceOverflowWidthPx, window.outerHeight);
   await TestUtils.waitForCondition(() => {
@@ -250,9 +244,7 @@ add_task(async function construct_widget() {
   testNode = document.getElementById(kTestBtn3);
   ok(!testNode, "Test button should be gone");
   CustomizableUI.destroyWidget(kTestBtn3);
-  if (CustomizableUI.protonToolbarEnabled) {
-    CustomizableUI.removeWidgetFromArea(kSidebarBtn);
-  }
+  CustomizableUI.removeWidgetFromArea(kSidebarBtn);
   window.resizeTo(originalWindowWidth, window.outerHeight);
   await TestUtils.waitForCondition(() => !navbar.hasAttribute("overflowing"));
 });
@@ -269,15 +261,13 @@ add_task(async function insertBeforeFirstItemInOverflow() {
     "Should start insertBeforeFirstItemInOverflow in default state."
   );
 
-  if (CustomizableUI.protonToolbarEnabled) {
-    CustomizableUI.addWidgetToArea(
-      kLibraryButton,
-      "nav-bar",
-      CustomizableUI.getWidgetIdsInArea("nav-bar").indexOf(
-        "save-to-pocket-button"
-      )
-    );
-  }
+  CustomizableUI.addWidgetToArea(
+    kLibraryButton,
+    "nav-bar",
+    CustomizableUI.getWidgetIdsInArea("nav-bar").indexOf(
+      "save-to-pocket-button"
+    )
+  );
   let libraryButton = document.getElementById(kLibraryButton);
   await waitForElementShown(libraryButton);
   // Ensure nothing flexes to make the resize predictable:

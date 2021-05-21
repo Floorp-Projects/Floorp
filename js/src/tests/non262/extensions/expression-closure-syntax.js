@@ -1,4 +1,3 @@
-// |reftest| skip-if(!xulRuntime.shell) -- needs getBuildConfiguration
 // Any copyright is dedicated to the Public Domain.
 // http://creativecommons.org/licenses/publicdomain/
 
@@ -15,7 +14,6 @@ print(BUGNUMBER + ": " + summary);
  * BEGIN TEST *
  **************/
 
-if (getBuildConfiguration().release_or_beta)
 {
   function assertThrowsSyntaxError(code)
   {

@@ -40,12 +40,10 @@ add_task(async function test_setup() {
     });
   }
 
-  if (CustomizableUI.protonToolbarEnabled) {
-    CustomizableUI.addWidgetToArea("sidebar-button", "nav-bar");
-    registerCleanupFunction(() =>
-      CustomizableUI.removeWidgetFromArea("sidebar-button")
-    );
-  }
+  CustomizableUI.addWidgetToArea("sidebar-button", "nav-bar");
+  registerCleanupFunction(() =>
+    CustomizableUI.removeWidgetFromArea("sidebar-button")
+  );
 });
 
 // New Window Button opens any link.
