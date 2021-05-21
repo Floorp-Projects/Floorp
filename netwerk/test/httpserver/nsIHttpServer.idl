@@ -42,6 +42,25 @@ interface nsIHttpServer : nsISupports
   void start(in long port);
 
   /**
+   * Starts up this server, listening upon the given port on a ipv6 adddress.
+   *
+   * @param port
+   *   the port upon which listening should happen, or -1 if no specific port is
+   *   desired
+   * @throws NS_ERROR_ALREADY_INITIALIZED
+   *   if this server is already started
+   * @throws NS_ERROR_NOT_AVAILABLE
+   *   if the server is not started and cannot be started on the desired port
+   *   (perhaps because the port is already in use or because the process does
+   *   not have privileges to do so)
+   * @note
+   *   Behavior is undefined if this method is called after stop() has been
+   *   called on this but before the provided callback function has been
+   *   called.
+   */
+  void start_ipv6(in long port);
+
+  /**
    * Shuts down this server if it is running (including the period of time after
    * stop() has been called but before the provided callback has been called).
    *
