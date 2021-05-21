@@ -134,18 +134,16 @@ var Agent = {
 
   async wipe(path) {
     let children = await IOUtils.getChildren(path);
-    for (let entry of children) {
-      try {
-        await IOUtils.remove(entry);
-      } catch (ex) {
-        // If a file cannot be removed, we should still continue.
-        // This can happen at least for any of the following reasons:
-        // - access denied;
-        // - file has been removed recently during a previous wipe
-        //  and the file system has not flushed that yet (yes, this
-        //  can happen under Windows);
-        // - file has been removed by the user or another process.
-      }
+    try {
+      await Promise.all(children.map(entry => IOUtils.remove(entry)));
+    } catch (ex) {
+      // If a file cannot be removed, we should still continue.
+      // This can happen at least for any of the following reasons:
+      // - access denied;
+      // - file has been removed recently during a previous wipe
+      //  and the file system has not flushed that yet (yes, this
+      //  can happen under Windows);
+      // - file has been removed by the user or another process.
     }
   },
 
