@@ -174,7 +174,7 @@ class SessionLifecycleTest : BaseSessionTest() {
 
         var rafRate = computeRequestAnimationFrameRate(mainSession)
         assertThat("requestAnimationFrame should be called about once a second",
-            rafRate, greaterThan(500.0))
+            rafRate, greaterThan(450.0))
         assertThat("requestAnimationFrame should be called about once a second",
                 rafRate, lessThan(10000.0))
 
