@@ -1767,6 +1767,9 @@
     <!-- Content description radio buttons with a link to more information -->
     <string name="radio_preference_info_content_description">Kliknutím zobrazíte viac podrobností</string>
 
+    <!-- Content description for the action bar "up" button -->
+    <string name="action_bar_up_description">Prejsť nahor</string>
+
     <!-- Content description for privacy content close button -->
     <string name="privacy_content_close_button_content_description">Zavrieť</string>
 
