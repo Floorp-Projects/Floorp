@@ -437,9 +437,23 @@ Result<nsCOMPtr<nsIFile>, nsresult> GetMarkerFileHandle(
 nsresult CreateMarkerFile(const QuotaInfo& aQuotaInfo) {
   QM_TRY_INSPECT(const auto& marker, GetMarkerFileHandle(aQuotaInfo));
 
+  // Callers call this function without checking if the file already exists
+  // (idempotent usage). QM_OR_ELSE_WARN is not used here since we just want
+  // to log NS_ERROR_FILE_ALREADY_EXISTS result and not spam the reports.
+  //
+  // TODO: In theory if this file exists, then Context::~Context should have
+  // cleaned it up, but obviously we can crash and not clean it up, which is
+  // the whole point of the marker file. In that case, we'll realize the marker
+  // file exists in SetupAction::RunSyncWithDBOnTarget and do some cleanup, but
+  // we won't delete the marker file, so if we see this marker file, it is part
+  // of our standard operating procedure to redundantly try and create the
+  // marker here. We currently treat this as idempotent usage, but we could
+  // make sure to delete the marker file when handling the existing marker
+  // file in SetupAction::RunSyncWithDBOnTarget and change QM_OR_ELSE_LOG to
+  // QM_OR_ELSE_WARN in the end.
   QM_TRY(
-      QM_OR_ELSE_WARN(ToResult(marker->Create(nsIFile::NORMAL_FILE_TYPE, 0644)),
-                      MapAlreadyExistsToDefault));
+      QM_OR_ELSE_LOG(ToResult(marker->Create(nsIFile::NORMAL_FILE_TYPE, 0644)),
+                     MapAlreadyExistsToDefault));
 
   // Note, we don't need to fsync here.  We only care about actually
   // writing the marker if later modifications to the Cache are
