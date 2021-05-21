@@ -233,9 +233,15 @@ void main() {
             v_mask_swizzle = vec3(0.0, 1.0, 1.0);
             v_color = text.color;
             break;
-        case COLOR_MODE_BITMAP:
-            v_mask_swizzle = vec3(0.0, 1.0, 0.0);
-            v_color = text.color;
+        case COLOR_MODE_BITMAP_SHADOW:
+            #ifdef SWGL_BLEND
+                swgl_blendDropShadow(text.color);
+                v_mask_swizzle = vec3(1.0, 0.0, 0.0);
+                v_color = vec4(1.0);
+            #else
+                v_mask_swizzle = vec3(0.0, 1.0, 0.0);
+                v_color = text.color;
+            #endif
             break;
         case COLOR_MODE_SUBPX_BG_PASS2:
             v_mask_swizzle = vec3(1.0, 0.0, 0.0);
