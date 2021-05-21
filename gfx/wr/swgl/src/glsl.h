@@ -720,8 +720,6 @@ SI I32 roundzero(Float v, Float scale) { return cast(v * scale); }
 SI I32 roundfast(Float v, Float scale) {
 #if USE_SSE2
   return _mm_cvtps_epi32(v * scale);
-#elif USE_NEON
-  return vcvtq_s32_f32(vmlaq_f32(v, scale, 0.5f));
 #else
   return cast(v * scale + 0.5f);
 #endif
