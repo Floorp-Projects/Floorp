@@ -559,12 +559,12 @@ bool js::MappedArgSetter(JSContext* cx, HandleObject obj, HandleId id,
     return false;
   }
   MOZ_ASSERT(desc.isSome());
-  unsigned attrs = desc->attributes();
-  MOZ_ASSERT(!(attrs & JSPROP_READONLY));
-  attrs &= (JSPROP_ENUMERATE | JSPROP_PERMANENT); /* only valid attributes */
+  MOZ_ASSERT(desc->isDataDescriptor());
+  MOZ_ASSERT(desc->writable());
+  MOZ_ASSERT(!desc->resolving());
 
-  if (JSID_IS_INT(id)) {
-    unsigned arg = unsigned(JSID_TO_INT(id));
+  if (id.isInt()) {
+    unsigned arg = unsigned(id.toInt());
     if (arg < argsobj->initialLength() && !argsobj->isElementDeleted(arg)) {
       argsobj->setElement(arg, v);
       return result.succeed();
@@ -581,9 +581,11 @@ bool js::MappedArgSetter(JSContext* cx, HandleObject obj, HandleId id,
    * the user has changed the prototype to an object that has a setter for
    * this id.
    */
+  Rooted<PropertyDescriptor> desc_(cx, *desc);
+  desc_.setValue(v);
   ObjectOpResult ignored;
   return NativeDeleteProperty(cx, argsobj, id, ignored) &&
-         NativeDefineDataProperty(cx, argsobj, id, v, attrs, result);
+         NativeDefineProperty(cx, argsobj, id, desc_, result);
 }
 
 /* static */
@@ -901,12 +903,12 @@ bool js::UnmappedArgSetter(JSContext* cx, HandleObject obj, HandleId id,
     return false;
   }
   MOZ_ASSERT(desc.isSome());
-  unsigned attrs = desc->attributes();
-  MOZ_ASSERT(!(attrs & JSPROP_READONLY));
-  attrs &= (JSPROP_ENUMERATE | JSPROP_PERMANENT); /* only valid attributes */
+  MOZ_ASSERT(desc->isDataDescriptor());
+  MOZ_ASSERT(desc->writable());
+  MOZ_ASSERT(!desc->resolving());
 
-  if (JSID_IS_INT(id)) {
-    unsigned arg = unsigned(JSID_TO_INT(id));
+  if (id.isInt()) {
+    unsigned arg = unsigned(id.toInt());
     if (arg < argsobj->initialLength()) {
       argsobj->setElement(arg, v);
       return result.succeed();
@@ -920,9 +922,11 @@ bool js::UnmappedArgSetter(JSContext* cx, HandleObject obj, HandleId id,
    * simple data property. Note that we rely on ArgumentsObject::obj_delProperty
    * to set the corresponding override-bit.
    */
+  Rooted<PropertyDescriptor> desc_(cx, *desc);
+  desc_.setValue(v);
   ObjectOpResult ignored;
   return NativeDeleteProperty(cx, argsobj, id, ignored) &&
-         NativeDefineDataProperty(cx, argsobj, id, v, attrs, result);
+         NativeDefineProperty(cx, argsobj, id, desc_, result);
 }
 
 /* static */
