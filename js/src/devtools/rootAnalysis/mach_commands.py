@@ -125,7 +125,7 @@ class MachCommands(MachCommandBase):
         orig_dir = os.getcwd()
         os.chdir(self.ensure_dir_exists(self.tools_dir))
         try:
-            kwargs["from_build"] = ("linux64-gcc-sixgill", "linux64-gcc-8")
+            kwargs["from_build"] = ("linux64-gcc-sixgill", "linux64-gcc-9")
             self._mach_context.commands.dispatch(
                 "artifact", self._mach_context, subcommand="toolchain", **kwargs
             )
