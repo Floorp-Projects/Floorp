@@ -338,10 +338,15 @@ struct JS_PUBLIC_API PropertyDescriptor {
     attrs_ |= JSPROP_SETTER;
   }
 
+  // Non-standard flag, which is set when defining properties in a resolve hook.
+  bool resolving() const { return has(JSPROP_RESOLVING); }
+  void setResolving(bool resolving) {
+    attrs_ = (attrs_ & ~JSPROP_RESOLVING) | (resolving ? JSPROP_RESOLVING : 0);
+  }
+
   bool hasGetterOrSetter() const { return getter_ || setter_; }
 
-  unsigned attributes() const { return attrs_; }
-
+  unsigned attributesDoNotUse() const { return attrs_; }
   Value* valueDoNotUse() { return &value_; }
   Value const* valueDoNotUse() const { return &value_; }
   JSObject** getterDoNotUse() { return &getter_; }
@@ -353,12 +358,11 @@ struct JS_PUBLIC_API PropertyDescriptor {
 
   void assertValid() const {
 #ifdef DEBUG
-    MOZ_ASSERT(
-        (attributes() &
-         ~(JSPROP_ENUMERATE | js::JSPROP_IGNORE_ENUMERATE | JSPROP_PERMANENT |
-           js::JSPROP_IGNORE_PERMANENT | JSPROP_READONLY |
-           js::JSPROP_IGNORE_READONLY | js::JSPROP_IGNORE_VALUE |
-           JSPROP_GETTER | JSPROP_SETTER | JSPROP_RESOLVING)) == 0);
+    MOZ_ASSERT((attrs_ & ~(JSPROP_ENUMERATE | js::JSPROP_IGNORE_ENUMERATE |
+                           JSPROP_PERMANENT | js::JSPROP_IGNORE_PERMANENT |
+                           JSPROP_READONLY | js::JSPROP_IGNORE_READONLY |
+                           js::JSPROP_IGNORE_VALUE | JSPROP_GETTER |
+                           JSPROP_SETTER | JSPROP_RESOLVING)) == 0);
     MOZ_ASSERT(!hasAll(js::JSPROP_IGNORE_ENUMERATE | JSPROP_ENUMERATE));
     MOZ_ASSERT(!hasAll(js::JSPROP_IGNORE_PERMANENT | JSPROP_PERMANENT));
     if (isAccessorDescriptor()) {
@@ -383,9 +387,9 @@ struct JS_PUBLIC_API PropertyDescriptor {
   void assertComplete() const {
 #ifdef DEBUG
     assertValid();
-    MOZ_ASSERT((attributes() &
-                ~(JSPROP_ENUMERATE | JSPROP_PERMANENT | JSPROP_READONLY |
-                  JSPROP_GETTER | JSPROP_SETTER | JSPROP_RESOLVING)) == 0);
+    MOZ_ASSERT(
+        (attrs_ & ~(JSPROP_ENUMERATE | JSPROP_PERMANENT | JSPROP_READONLY |
+                    JSPROP_GETTER | JSPROP_SETTER | JSPROP_RESOLVING)) == 0);
     MOZ_ASSERT_IF(isAccessorDescriptor(),
                   has(JSPROP_GETTER) && has(JSPROP_SETTER));
 #endif
@@ -433,12 +437,12 @@ class WrappedPtrOperations<JS::PropertyDescriptor, Wrapper> {
   }
 
   bool hasGetterOrSetter() const { return desc().hasGetterObject(); }
-
-  unsigned attributes() const { return desc().attributes(); }
+  bool resolving() const { return desc().resolving(); }
 
   void assertValid() const { desc().assertValid(); }
-
   void assertComplete() const { desc().assertComplete(); }
+
+  unsigned attributesDoNotUse() { return desc().attributesDoNotUse(); }
 };
 
 template <typename Wrapper>
@@ -472,6 +476,8 @@ class MutableWrappedPtrOperations<JS::PropertyDescriptor, Wrapper>
     return JS::MutableHandle<JSObject*>::fromMarkedLocation(
         desc().setterDoNotUse());
   }
+
+  void setResolving(bool resolving) { desc().setResolving(resolving); }
 };
 
 }  // namespace js

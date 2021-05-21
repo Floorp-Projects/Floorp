@@ -10780,8 +10780,8 @@ class CGResolveHook(CGAbstractClassHook):
             // define it.
             MOZ_ASSERT(desc->isDataDescriptor());
             if (!desc->value().isUndefined()) {
-              JS::Rooted<JS::PropertyDescriptor> defineDesc(cx,
-                JS::PropertyDescriptor::Data(desc->value(), desc->attributes() | JSPROP_RESOLVING));
+              JS::Rooted<JS::PropertyDescriptor> defineDesc(cx, *desc);
+              defineDesc.setResolving(true);
               if (!JS_DefinePropertyById(cx, obj, id, defineDesc)) {
                 return false;
               }
