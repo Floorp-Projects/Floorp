@@ -80,5 +80,12 @@ void SpeculativeTransaction::Close(nsresult aReason) {
   }
 }
 
+void SpeculativeTransaction::InvokeCallback() {
+  if (mCloseCallback) {
+    mCloseCallback(true);
+    mCloseCallback = nullptr;
+  }
+}
+
 }  // namespace net
 }  // namespace mozilla

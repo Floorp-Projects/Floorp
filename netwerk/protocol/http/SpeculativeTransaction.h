@@ -49,6 +49,7 @@ class SpeculativeTransaction : public NullHttpTransaction {
   void Close(nsresult aReason) override;
   nsresult ReadSegments(nsAHttpSegmentReader* aReader, uint32_t aCount,
                         uint32_t* aCountRead) override;
+  void InvokeCallback();
 
  protected:
   virtual ~SpeculativeTransaction();
