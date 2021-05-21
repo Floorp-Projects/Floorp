@@ -25,7 +25,6 @@ enum class EventQueuePriority {
   InputHigh,
   Vsync,
   InputHighest,
-  Control,
 
   Count
 };
