@@ -68,8 +68,7 @@ class WindowGlobalChild final : public WindowGlobalActor,
   void SetDocumentURI(nsIURI* aDocumentURI);
   // See the corresponding comment for `UpdateDocumentPrincipal` in
   // PWindowGlobal on why and when this is allowed
-  void SetDocumentPrincipal(nsIPrincipal* aNewDocumentPrincipal,
-                            nsIPrincipal* aNewDocumentStoragePrincipal);
+  void SetDocumentPrincipal(nsIPrincipal* aNewDocumentPrincipal);
 
   nsIPrincipal* DocumentPrincipal() { return mDocumentPrincipal; }
 

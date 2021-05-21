@@ -314,6 +314,8 @@ class BrowserParent final : public PBrowserParent,
 
   mozilla::ipc::IPCResult RecvSessionStoreUpdate(
       const Maybe<nsCString>& aDocShellCaps, const Maybe<bool>& aPrivatedMode,
+      nsTArray<nsCString>&& aOrigins, nsTArray<nsString>&& aKeys,
+      nsTArray<nsString>&& aValues, const bool aIsFullStorage,
       const bool aNeedCollectSHistory, const bool& aIsFinal,
       const uint32_t& aEpoch);
 
