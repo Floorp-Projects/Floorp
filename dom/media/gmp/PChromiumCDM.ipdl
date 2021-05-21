@@ -49,6 +49,12 @@ child:
   async RemoveSession(uint32_t aPromiseId,
                       nsCString aSessionId);
 
+  // This is called after the parent has verified the protection status and
+  // round tripped the call back to the child.
+  async CompleteQueryOutputProtectionStatus(bool aSuccess,
+                                            uint32_t aLinkMask,
+                                            uint32_t aProtectionMask);
+
   async Decrypt(uint32_t aId, CDMInputBuffer aBuffer);
 
   async InitializeVideoDecoder(CDMVideoDecoderConfig aConfig);
@@ -94,6 +100,8 @@ parent:
                            double aSecondsSinceEpoch);
 
   async OnSessionClosed(nsCString aSessionId);
+
+  async OnQueryOutputProtectionStatus();
 
   async ResolveLoadSessionPromise(uint32_t aPromiseId, bool aSuccessful);
 

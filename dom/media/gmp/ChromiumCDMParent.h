@@ -15,6 +15,7 @@
 #include "nsTHashMap.h"
 #include "PlatformDecoderModule.h"
 #include "ImageContainer.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/Span.h"
 #include "ReorderQueue.h"
 
@@ -67,6 +68,12 @@ class ChromiumCDMParent final : public PChromiumCDMParent,
 
   void RemoveSession(const nsCString& aSessionId, uint32_t aPromiseId);
 
+  // Notifies this parent of the current output protection status. This will
+  // update cached status and resolve outstanding queries from the CDM if one
+  // exists.
+  void NotifyOutputProtectionStatus(bool aSuccess, uint32_t aLinkMask,
+                                    uint32_t aProtectionMask);
+
   void GetStatusForPolicy(uint32_t aPromiseId,
                           const nsCString& aMinHdcpVersion);
 
@@ -112,6 +119,7 @@ class ChromiumCDMParent final : public PChromiumCDMParent,
   ipc::IPCResult RecvOnExpirationChange(const nsCString& aSessionId,
                                         const double& aSecondsSinceEpoch);
   ipc::IPCResult RecvOnSessionClosed(const nsCString& aSessionId);
+  ipc::IPCResult RecvOnQueryOutputProtectionStatus();
   ipc::IPCResult RecvDecrypted(const uint32_t& aId, const uint32_t& aStatus,
                                ipc::Shmem&& aData);
   ipc::IPCResult RecvDecryptFailed(const uint32_t& aId,
@@ -141,6 +149,11 @@ class ChromiumCDMParent final : public PChromiumCDMParent,
   // message.
   void RejectPromiseWithStateError(uint32_t aPromiseId,
                                    const nsCString& aErrorMessage);
+
+  // Complete the CDMs request for us to check protection status by responding
+  // to the CDM child with the requested info.
+  void CompleteQueryOutputProtectionStatus(bool aSuccess, uint32_t aLinkMask,
+                                           uint32_t aProtectionMask);
 
   bool InitCDMInputBuffer(gmp::CDMInputBuffer& aBuffer, MediaRawData* aSample);
 
@@ -175,6 +188,16 @@ class ChromiumCDMParent final : public PChromiumCDMParent,
   uint32_t mVideoShmemsActive = 0;
   // Maximum number of shmems to use to return decoded video frames.
   uint32_t mVideoShmemLimit;
+
+  // Tracks if we have an outstanding request for output protection information.
+  // This will be set to true if the CDM requests the information and we haven't
+  // yet received it from up the stack and need to query up.
+  bool mAwaitingOutputProtectionInformation = false;
+  // The cached link mask for QueryOutputProtectionStatus related calls. If
+  // this isn't set we'll call up the stack to MediaKeys to request the
+  // information, otherwise we'll use the cached value and rely on MediaKeys
+  // to notify us if the mask changes.
+  Maybe<uint32_t> mOutputProtectionLinkMask;
 
   bool mIsShutdown = false;
   bool mVideoDecoderInitialized = false;

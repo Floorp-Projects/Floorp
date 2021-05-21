@@ -69,6 +69,14 @@ class MediaKeys final : public nsISupports,
   nsresult Bind(HTMLMediaElement* aElement);
   void Unbind();
 
+  // Checks if there's any activity happening that could capture the media
+  // the keys are associated with and then expose that media outside of the
+  // origin it is in.
+  //
+  // This method does not return the results of the check, but the MediaKeys
+  // will notify mProxy of the results using `NotifyOutputProtectionStatus`.
+  void CheckIsElementCapturePossible();
+
   // Javascript: readonly attribute DOMString keySystem;
   void GetKeySystem(nsString& retval) const;
 
