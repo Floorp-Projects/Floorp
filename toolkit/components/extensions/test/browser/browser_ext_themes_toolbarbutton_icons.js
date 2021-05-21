@@ -4,12 +4,10 @@
 // icon color properties
 
 add_task(async function setup_home_button() {
-  if (CustomizableUI.protonToolbarEnabled) {
-    CustomizableUI.addWidgetToArea("home-button", "nav-bar");
-    registerCleanupFunction(() =>
-      CustomizableUI.removeWidgetFromArea("home-button")
-    );
-  }
+  CustomizableUI.addWidgetToArea("home-button", "nav-bar");
+  registerCleanupFunction(() =>
+    CustomizableUI.removeWidgetFromArea("home-button")
+  );
 });
 
 add_task(async function test_icons_properties() {

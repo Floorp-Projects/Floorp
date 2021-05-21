@@ -8,12 +8,10 @@ add_task(async function() {
   await BrowserTestUtils.withNewTab(TEST_HTTP, async function(browser) {
     info("Tab ready");
 
-    if (CustomizableUI.protonToolbarEnabled) {
-      CustomizableUI.addWidgetToArea("home-button", "nav-bar");
-      registerCleanupFunction(() =>
-        CustomizableUI.removeWidgetFromArea("home-button")
-      );
-    }
+    CustomizableUI.addWidgetToArea("home-button", "nav-bar");
+    registerCleanupFunction(() =>
+      CustomizableUI.removeWidgetFromArea("home-button")
+    );
 
     document.getElementById("home-button").click();
     await BrowserTestUtils.browserLoaded(browser, false, HomePage.get());
