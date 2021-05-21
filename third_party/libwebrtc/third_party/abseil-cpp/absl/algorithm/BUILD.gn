@@ -18,7 +18,7 @@ absl_source_set("container") {
   ]
 }
 
-if (false) {
+if (!moz_webrtc_build) {
   absl_source_set("algorithm_test") {
     testonly = true
     sources = [ "algorithm_test.cc" ]
