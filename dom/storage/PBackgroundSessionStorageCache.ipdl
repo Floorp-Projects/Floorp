@@ -5,8 +5,6 @@
 include protocol PBackground;
 include protocol PBackgroundSessionStorageManager;
 
-include PBackgroundSharedTypes;
-
 namespace mozilla {
 namespace dom {
 
@@ -33,13 +31,6 @@ union SSWriteInfo
   SSSetItemInfo;
   SSRemoveItemInfo;
   SSClearInfo;
-};
-
-struct SSCacheCopy {
-  nsCString originKey;
-  nsCString originAttributes;
-  SSSetItemInfo[] defaultData;
-  SSSetItemInfo[] sessionData;
 };
 
 sync refcounted protocol PBackgroundSessionStorageCache
