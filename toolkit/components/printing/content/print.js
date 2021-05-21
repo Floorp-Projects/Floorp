@@ -66,7 +66,7 @@ function serializeSettings(settings, logPrefix) {
       logger.warn("Exception accessing setting: ", key, e);
     }
   }
-  return nameValues;
+  return JSON.stringify(nameValues, null, 2);
 }
 
 let printPending = false;
@@ -1031,6 +1031,7 @@ var PrintEventHandler = {
   },
 
   reportPrintingError(aMessage) {
+    logger.debug("reportPrintingError:", aMessage);
     Services.telemetry.keyedScalarAdd("printing.error", aMessage, 1);
   },
 
@@ -1260,6 +1261,7 @@ var PrintSettingsViewProxy = {
 
     // The printer properties don't change, mark this as resolved for next time
     printerInfo._resolved = true;
+    logger.debug("Resolved printerInfo:", printerInfo);
     return printerInfo;
   },
 
