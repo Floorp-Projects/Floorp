@@ -516,20 +516,6 @@ struct ForExtendableVectors {
   }
 };
 
-// Calls Test for full vectors only.
-template <class Test>
-struct ForFullVectors {
-  template <typename T>
-  void operator()(T t) const {
-#if HWY_TARGET == HWY_RVV
-    ForeachSizeR<T, 8, HWY_LANES(T), Test>::Do();
-    (void)t;
-#else
-    Test()(t, HWY_FULL(T)());
-#endif
-  }
-};
-
 // Type lists to shorten call sites:
 
 template <class Func>

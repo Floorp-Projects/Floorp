@@ -108,7 +108,7 @@ HWY_INLINE HWY_MAYBE_UNUSED constexpr size_t MaxLanes(Simd<T, N>) {
 }
 
 // Targets with non-constexpr Lanes define this themselves.
-#if HWY_TARGET != HWY_RVV
+#if HWY_TARGET != HWY_RVV && HWY_TARGET != HWY_SVE2 && HWY_TARGET != HWY_SVE
 
 // (Potentially) non-constant actual size of the vector at runtime, subject to
 // the limit imposed by the Simd. Useful for advancing loop counters.
