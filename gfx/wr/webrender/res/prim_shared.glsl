@@ -32,7 +32,7 @@ varying vec2 vClipMaskUv;
 #define COLOR_MODE_SUBPX_BG_PASS1       4
 #define COLOR_MODE_SUBPX_BG_PASS2       5
 #define COLOR_MODE_SUBPX_DUAL_SOURCE    6
-#define COLOR_MODE_BITMAP               7
+#define COLOR_MODE_BITMAP_SHADOW        7
 #define COLOR_MODE_COLOR_BITMAP         8
 #define COLOR_MODE_IMAGE                9
 #define COLOR_MODE_MULTIPLY_DUAL_SOURCE 10
