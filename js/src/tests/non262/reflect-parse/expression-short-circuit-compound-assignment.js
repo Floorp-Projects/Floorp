@@ -1,4 +1,4 @@
-// |reftest| skip-if(!xulRuntime.shell||release_or_beta)
+// |reftest| skip-if(!xulRuntime.shell)
 
 function test() {
 
