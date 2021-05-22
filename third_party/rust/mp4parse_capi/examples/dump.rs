@@ -6,6 +6,7 @@ extern crate log;
 
 extern crate env_logger;
 
+use mp4parse::ParseStrictness;
 use mp4parse_capi::*;
 use std::env;
 use std::fs::File;
@@ -20,7 +21,7 @@ extern "C" fn buf_read(buf: *mut u8, size: usize, userdata: *mut std::os::raw::c
     }
 }
 
-fn dump_avif(filename: &str) {
+fn dump_avif(filename: &str, strictness: ParseStrictness) {
     let mut file = File::open(filename).expect("Unknown file");
     let io = Mp4parseIo {
         read: Some(buf_read),
@@ -29,12 +30,12 @@ fn dump_avif(filename: &str) {
 
     unsafe {
         let mut parser = std::ptr::null_mut();
-        let rv = mp4parse_avif_new(&io, &mut parser);
+        let rv = mp4parse_avif_new(&io, strictness, &mut parser);
         println!("mp4parse_avif_new -> {:?}", rv);
     }
 }
 
-fn dump_file(filename: &str) {
+fn dump_file(filename: &str, strictness: ParseStrictness) {
     let mut file = File::open(filename).expect("Unknown file");
     let io = Mp4parseIo {
         read: Some(buf_read),
@@ -49,7 +50,7 @@ fn dump_file(filename: &str) {
             Mp4parseStatus::Ok => (),
             Mp4parseStatus::Invalid => {
                 println!("-- failed to parse as mp4 video, trying AVIF");
-                dump_avif(filename);
+                dump_avif(filename, strictness);
             }
             _ => {
                 println!("-- fail to parse: {:?}, '-v' for more info", rv);
@@ -158,17 +159,31 @@ fn dump_file(filename: &str) {
 }
 
 fn main() {
-    let args: Vec<String> = env::args().collect();
-    if args.len() < 2 {
+    let mut dump_func: fn(&str, ParseStrictness) = dump_file;
+    let mut verbose = false;
+    let mut strictness = ParseStrictness::Normal;
+    let mut filenames = Vec::new();
+    for arg in env::args().skip(1) {
+        match arg.as_str() {
+            "--avif" => dump_func = dump_avif,
+            "--strict" => strictness = ParseStrictness::Strict,
+            "--permissive" => strictness = ParseStrictness::Permissive,
+            "-v" | "--verbose" => verbose = true,
+            _ => {
+                if let Some("-") = arg.get(0..1) {
+                    eprintln!("Ignoring unknown switch {:?}", arg);
+                } else {
+                    filenames.push(arg)
+                }
+            }
+        }
+    }
+
+    if filenames.is_empty() {
+        eprintln!("No files to dump, exiting...");
         return;
     }
 
-    // Initialize logging, setting the log level if requested.
-    let (skip, verbose) = if args[1] == "-v" {
-        (2, true)
-    } else {
-        (1, false)
-    };
     let env = env_logger::Env::default();
     let mut logger = env_logger::Builder::from_env(env);
     if verbose {
@@ -176,9 +191,9 @@ fn main() {
     }
     logger.init();
 
-    for filename in args.iter().skip(skip) {
+    for filename in filenames {
         info!("-- dump of '{}' --", filename);
-        dump_file(filename);
+        dump_func(filename.as_str(), strictness);
         info!("-- end of '{}' --", filename);
     }
 }

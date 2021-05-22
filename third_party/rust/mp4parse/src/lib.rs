@@ -4,6 +4,14 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+// `clippy::upper_case_acronyms` is a nightly-only lint as of 2021-03-15, so we
+// allow `clippy::unknown_clippy_lints` to ignore it on stable - but
+// `clippy::unknown_clippy_lints` has been renamed in nightly, so we need to
+// allow `renamed_and_removed_lints` to ignore a warning for that.
+#![allow(renamed_and_removed_lints)]
+#![allow(clippy::unknown_clippy_lints)]
+#![allow(clippy::upper_case_acronyms)]
+
 #[macro_use]
 extern crate log;
 
@@ -31,6 +39,9 @@ use boxes::{BoxType, FourCC};
 #[cfg(test)]
 mod tests;
 
+#[cfg(feature = "unstable-api")]
+pub mod unstable;
+
 // Arbitrary buffer size limit used for raw read_bufs on a box.
 const BUF_SIZE_LIMIT: u64 = 10 * 1024 * 1024;
 
@@ -38,9 +49,15 @@ const BUF_SIZE_LIMIT: u64 = 10 * 1024 * 1024;
 // frame per table entry in 30 fps.
 const TABLE_SIZE_LIMIT: u32 = 30 * 60 * 60 * 24 * 7;
 
+/// The 'mif1' brand indicates structural requirements on files
+/// See HEIF (ISO 23008-12:2017) § 10.2.1
+const MIF1_BRAND: FourCC = FourCC { value: *b"mif1" };
+
 /// A trait to indicate a type can be infallibly converted to `u64`.
 /// This should only be implemented for infallible conversions, so only unsigned types are valid.
 trait ToU64 {
+    // Remove when https://github.com/rust-lang/rust-clippy/issues/6727 is resolved
+    #[allow(clippy::wrong_self_convention)]
     fn to_u64(self) -> u64;
 }
 
@@ -59,6 +76,8 @@ impl ToU64 for usize {
 /// A trait to indicate a type can be infallibly converted to `usize`.
 /// This should only be implemented for infallible conversions, so only unsigned types are valid.
 pub trait ToUsize {
+    // Remove when https://github.com/rust-lang/rust-clippy/issues/6727 is resolved
+    #[allow(clippy::wrong_self_convention)]
     fn to_usize(self) -> usize;
 }
 
@@ -399,6 +418,8 @@ pub enum AudioCodecSpecific {
     ALACSpecificBox(ALACSpecificBox),
     MP3,
     LPCM,
+    #[cfg(feature = "3gpp")]
+    AMRSpecificBox(TryVec<u8>),
 }
 
 #[derive(Debug)]
@@ -459,6 +480,7 @@ pub struct VPxConfigBox {
     pub codec_init: TryVec<u8>,
 }
 
+/// See AV1-ISOBMFF § 2.3.3 https://aomediacodec.github.io/av1-isobmff/#av1codecconfigurationbox-syntax
 #[derive(Debug)]
 pub struct AV1ConfigBox {
     pub profile: u8,
@@ -737,6 +759,19 @@ pub struct MetadataBox {
     pub sort_album_artist: Option<TryString>,
     /// The name of the composer to sort by 'soco'
     pub sort_composer: Option<TryString>,
+    /// Metadata
+    #[cfg(feature = "meta-xml")]
+    pub xml: Option<XmlBox>,
+}
+
+/// See ISOBMFF (ISO 14496-12:2015) § 8.11.2.1
+#[cfg(feature = "meta-xml")]
+#[derive(Debug)]
+pub enum XmlBox {
+    /// XML metadata
+    StringXmlBox(TryString),
+    /// Binary XML metadata
+    BinaryXmlBox(TryVec<u8>),
 }
 
 /// Internal data structures.
@@ -748,6 +783,8 @@ pub struct MediaContext {
     pub mvex: Option<MovieExtendsBox>,
     pub psshs: TryVec<ProtectionSystemSpecificHeaderBox>,
     pub userdata: Option<Result<UserdataBox>>,
+    #[cfg(feature = "meta-xml")]
+    pub metadata: Option<Result<MetadataBox>>,
 }
 
 /// An ISOBMFF item as described by an iloc box. For the sake of avoiding copies,
@@ -801,7 +838,7 @@ impl AvifContext {
                     "AvifItem::Location requires the location exists in AvifContext::item_storage"
                 );
             }
-            AvifItem::Data(data) => return data.as_slice(),
+            AvifItem::Data(data) => data.as_slice(),
         }
     }
 }
@@ -1018,7 +1055,7 @@ enum IlocFieldSize {
 }
 
 impl IlocFieldSize {
-    fn to_bits(&self) -> u8 {
+    fn as_bits(&self) -> u8 {
         match self {
             IlocFieldSize::Zero => 0,
             IlocFieldSize::Four => 32,
@@ -1107,6 +1144,25 @@ impl Default for TrackType {
     }
 }
 
+// This type is used by mp4parse_capi since it needs to be passed from FFI consumers
+// The C-visible struct is renamed via mp4parse_capi/cbindgen.toml to match naming conventions
+#[repr(C)]
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum ParseStrictness {
+    Permissive, // Error only on ambiguous inputs
+    Normal,     // Error on "shall" directives, log warnings for "should"
+    Strict,     // Error on "should" directives
+}
+
+fn fail_if(violation: bool, message: &'static str) -> Result<()> {
+    if violation {
+        Err(Error::InvalidData(message))
+    } else {
+        warn!("{}", message);
+        Ok(())
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum CodecType {
     Unknown,
@@ -1124,6 +1180,10 @@ pub enum CodecType {
     LPCM, // QT
     ALAC,
     H263,
+    #[cfg(feature = "3gpp")]
+    AMRNB,
+    #[cfg(feature = "3gpp")]
+    AMRWB,
 }
 
 impl Default for CodecType {
@@ -1367,8 +1427,10 @@ fn skip_box_remain<T: Read>(src: &mut BMFFBox<T>) -> Result<()> {
 }
 
 /// Read the contents of an AVIF file
-pub fn read_avif<T: Read>(f: &mut T) -> Result<AvifContext> {
+pub fn read_avif<T: Read>(f: &mut T, strictness: ParseStrictness) -> Result<AvifContext> {
     let _ = env_logger::try_init();
+
+    debug!("read_avif(strictness: {:?})", strictness);
 
     let mut f = OffsetReader::new(f);
 
@@ -1378,8 +1440,16 @@ pub fn read_avif<T: Read>(f: &mut T) -> Result<AvifContext> {
     if let Some(mut b) = iter.next_box()? {
         if b.head.name == BoxType::FileTypeBox {
             let ftyp = read_ftyp(&mut b)?;
-            if !ftyp.compatible_brands.contains(&FourCC::from(*b"mif1")) {
-                return Err(Error::InvalidData("compatible_brands must contain 'mif1'"));
+            if !ftyp.compatible_brands.contains(&MIF1_BRAND) {
+                // This mandatory inclusion of this brand is in the process of being changed
+                // to optional. In anticipation of that, only give an error in strict mode
+                // See https://github.com/MPEGGroup/MIAF/issues/5
+                // and https://github.com/MPEGGroup/FileFormat/issues/23
+                fail_if(
+                    strictness == ParseStrictness::Strict,
+                    "The FileTypeBox should contain 'mif1' in the compatible_brands list \
+                     per MIAF (ISO 23000-22:2019) § 7.2.1.2",
+                )?;
             }
         } else {
             return Err(Error::InvalidData("'ftyp' box must occur first"));
@@ -1398,7 +1468,7 @@ pub fn read_avif<T: Read>(f: &mut T) -> Result<AvifContext> {
                         "There should be zero or one meta boxes per ISOBMFF (ISO 14496-12:2015) § 8.11.1.1",
                     ));
                 }
-                meta = Some(read_avif_meta(&mut b)?);
+                meta = Some(read_avif_meta(&mut b, strictness)?);
             }
             BoxType::MediaDataBox => {
                 if b.bytes_left() > 0 {
@@ -1508,8 +1578,31 @@ pub fn read_avif<T: Read>(f: &mut T) -> Result<AvifContext> {
         assert!(item.is_some());
     }
 
-    let primary_item =
-        primary_item.ok_or(Error::InvalidData("Required primary item data not found"))?;
+    let primary_item = primary_item.ok_or(Error::InvalidData(
+        "Missing 'pitm' box, required per HEIF (ISO/IEC 23008-12:2017) § 10.2.1",
+    ))?;
+
+    let mut has_primary_pixi = false;
+    let mut has_alpha_pixi = false;
+
+    for assoc_prop in meta.properties {
+        if let ItemProperty::Channels(_) = assoc_prop.property {
+            if assoc_prop.item_id == meta.primary_item_id {
+                has_primary_pixi = true;
+            } else if Some(assoc_prop.item_id) == alpha_item_id {
+                has_alpha_pixi = true;
+            }
+        }
+    }
+
+    if !has_primary_pixi || (alpha_item.is_some() && !has_alpha_pixi) {
+        fail_if(
+            strictness != ParseStrictness::Permissive,
+            "The pixel information property shall be associated with every image \
+             that is displayable (not hidden) \
+             per MIAF (ISO/IEC 23000-22:2019) specification § 7.3.6.6",
+        )?;
+    }
 
     // We could potentially optimize memory usage by trying to avoid reading
     // or storing mdat boxes which aren't used by our API, but for now it seems
@@ -1526,13 +1619,17 @@ pub fn read_avif<T: Read>(f: &mut T) -> Result<AvifContext> {
 /// Currently requires the primary item to be an av01 item type and generates
 /// an error otherwise.
 /// See ISOBMFF (ISO 14496-12:2015) § 8.11.1
-fn read_avif_meta<T: Read + Offset>(src: &mut BMFFBox<T>) -> Result<AvifMeta> {
+fn read_avif_meta<T: Read + Offset>(
+    src: &mut BMFFBox<T>,
+    strictness: ParseStrictness,
+) -> Result<AvifMeta> {
     let version = read_fullbox_version_no_flags(src)?;
 
     if version != 0 {
         return Err(Error::Unsupported("unsupported meta version"));
     }
 
+    let mut read_handler_box = false;
     let mut primary_item_id = None;
     let mut item_infos = None;
     let mut iloc_items = None;
@@ -1542,19 +1639,44 @@ fn read_avif_meta<T: Read + Offset>(src: &mut BMFFBox<T>) -> Result<AvifMeta> {
     let mut iter = src.box_iter();
     while let Some(mut b) = iter.next_box()? {
         trace!("read_avif_meta parsing {:?} box", b.head.name);
+
+        if !read_handler_box && b.head.name != BoxType::HandlerBox {
+            fail_if(
+                strictness != ParseStrictness::Permissive,
+                "The HandlerBox shall be the first contained box within the MetaBox \
+                 per MIAF (ISO 23000-22:2019) § 7.2.1.5",
+            )?;
+        }
+
         match b.head.name {
+            BoxType::HandlerBox => {
+                if read_handler_box {
+                    return Err(Error::InvalidData(
+                        "There shall be exactly one hdlr box per ISOBMFF (ISO 14496-12:2015) § 8.4.3.1",
+                    ));
+                }
+                let HandlerBox { handler_type } = read_hdlr(&mut b)?;
+                if handler_type != b"pict" {
+                    fail_if(
+                        strictness != ParseStrictness::Permissive,
+                        "The HandlerBox handler_type must be 'pict' \
+                         per MIAF (ISO 23000-22:2019) § 7.2.1.5",
+                    )?;
+                }
+                read_handler_box = true;
+            }
             BoxType::ItemInfoBox => {
                 if item_infos.is_some() {
                     return Err(Error::InvalidData(
-                        "There should be zero or one iinf boxes per ISOBMFF (ISO 14496-12:2015) § 8.11.6.1",
+                        "There shall be zero or one iinf boxes per ISOBMFF (ISO 14496-12:2015) § 8.11.6.1",
                     ));
                 }
-                item_infos = Some(read_iinf(&mut b)?);
+                item_infos = Some(read_iinf(&mut b, strictness)?);
             }
             BoxType::ItemLocationBox => {
                 if iloc_items.is_some() {
                     return Err(Error::InvalidData(
-                        "There should be zero or one iloc boxes per ISOBMFF (ISO 14496-12:2015) § 8.11.3.1",
+                        "There shall be zero or one iloc boxes per ISOBMFF (ISO 14496-12:2015) § 8.11.3.1",
                     ));
                 }
                 iloc_items = Some(read_iloc(&mut b)?);
@@ -1562,22 +1684,22 @@ fn read_avif_meta<T: Read + Offset>(src: &mut BMFFBox<T>) -> Result<AvifMeta> {
             BoxType::PrimaryItemBox => {
                 if primary_item_id.is_some() {
                     return Err(Error::InvalidData(
-                        "There should be zero or one pitm boxes per ISOBMFF (ISO 14496-12:2015) § 8.11.4.1",
+                        "There shall be zero or one pitm boxes per ISOBMFF (ISO 14496-12:2015) § 8.11.4.1",
                     ));
                 }
                 primary_item_id = Some(read_pitm(&mut b)?);
             }
-            BoxType::ImageReferenceBox => {
+            BoxType::ItemReferenceBox => {
                 if item_references.is_some() {
-                    return Err(Error::InvalidData("There should be zero or one iref boxes"));
+                    return Err(Error::InvalidData("There shall be zero or one iref boxes per ISOBMFF (ISO 14496-12:2015) § 8.11.12.1"));
                 }
                 item_references = Some(read_iref(&mut b)?);
             }
-            BoxType::ImagePropertiesBox => {
+            BoxType::ItemPropertiesBox => {
                 if properties.is_some() {
-                    return Err(Error::InvalidData("There should be zero or one iprp boxes"));
+                    return Err(Error::InvalidData("There shall be zero or one iprp boxes per HEIF (ISO 23008-12:2017) § 9.3.1"));
                 }
-                properties = Some(read_iprp(&mut b)?);
+                properties = Some(read_iprp(&mut b, MIF1_BRAND, strictness)?);
             }
             _ => skip_box_content(&mut b)?,
         }
@@ -1626,7 +1748,10 @@ fn read_pitm<T: Read>(src: &mut BMFFBox<T>) -> Result<u32> {
 
 /// Parse an Item Information Box
 /// See ISOBMFF (ISO 14496-12:2015) § 8.11.6
-fn read_iinf<T: Read>(src: &mut BMFFBox<T>) -> Result<TryVec<ItemInfoEntry>> {
+fn read_iinf<T: Read>(
+    src: &mut BMFFBox<T>,
+    strictness: ParseStrictness,
+) -> Result<TryVec<ItemInfoEntry>> {
     let version = read_fullbox_version_no_flags(src)?;
 
     match version {
@@ -1645,11 +1770,11 @@ fn read_iinf<T: Read>(src: &mut BMFFBox<T>) -> Result<TryVec<ItemInfoEntry>> {
     while let Some(mut b) = iter.next_box()? {
         if b.head.name != BoxType::ItemInfoEntry {
             return Err(Error::InvalidData(
-                "iinf box should contain only infe boxes",
+                "iinf box shall contain only infe boxes per ISOBMFF (ISO 14496-12:2015) § 8.11.6.2",
             ));
         }
 
-        item_infos.push(read_infe(&mut b)?)?;
+        item_infos.push(read_infe(&mut b, strictness)?)?;
 
         check_parser_state!(b.content);
     }
@@ -1672,10 +1797,19 @@ impl std::fmt::Display for U32BE {
 
 /// Parse an Item Info Entry
 /// See ISOBMFF (ISO 14496-12:2015) § 8.11.6.2
-fn read_infe<T: Read>(src: &mut BMFFBox<T>) -> Result<ItemInfoEntry> {
-    // According to the standard, it seems the flags field should be 0, but
-    // at least one sample AVIF image has a nonzero value.
-    let (version, _) = read_fullbox_extra(src)?;
+fn read_infe<T: Read>(src: &mut BMFFBox<T>, strictness: ParseStrictness) -> Result<ItemInfoEntry> {
+    let (version, flags) = read_fullbox_extra(src)?;
+
+    // According to the standard, it seems the flags field shall be 0, but at
+    // least one sample AVIF image has a nonzero value.
+    // See https://github.com/AOMediaCodec/av1-avif/issues/146
+    if flags != 0 {
+        fail_if(
+            strictness == ParseStrictness::Strict,
+            "'infe' flags field shall be 0 \
+             per ISOBMFF (ISO 14496-12:2015) § 8.11.6.2",
+        )?;
+    }
 
     // mif1 brand (see HEIF (ISO 23008-12:2017) § 10.2.1) only requires v2 and 3
     let item_id = match version {
@@ -1744,7 +1878,11 @@ fn read_iref<T: Read>(src: &mut BMFFBox<T>) -> Result<TryVec<SingleItemTypeRefer
 
 /// Parse an Item Properties Box
 /// See HEIF (ISO 23008-12:2017) § 9.3.1
-fn read_iprp<T: Read>(src: &mut BMFFBox<T>) -> Result<TryVec<AssociatedProperty>> {
+fn read_iprp<T: Read>(
+    src: &mut BMFFBox<T>,
+    brand: FourCC,
+    strictness: ParseStrictness,
+) -> Result<TryVec<AssociatedProperty>> {
     let mut iter = src.box_iter();
 
     let mut properties = match iter.next_box()? {
@@ -1753,9 +1891,6 @@ fn read_iprp<T: Read>(src: &mut BMFFBox<T>) -> Result<TryVec<AssociatedProperty>
         None => Err(Error::UnexpectedEOF),
     }?;
 
-    // Per HEIF (ISO 23008-12:2017) § 9.3.1: There can be zero or more ipma boxes
-    // but "There shall be at most one ItemPropertyAssociationbox with a given
-    // pair of values of version and flags"
     let mut ipma_version_and_flag_values_seen = TryVec::with_capacity(1)?;
     let mut associated = TryVec::new();
 
@@ -1766,22 +1901,57 @@ fn read_iprp<T: Read>(src: &mut BMFFBox<T>) -> Result<TryVec<AssociatedProperty>
 
         let (version, flags) = read_fullbox_extra(&mut b)?;
         if ipma_version_and_flag_values_seen.contains(&(version, flags)) {
-            return Err(Error::InvalidData("Duplicate ipma with same version/flags"));
+            fail_if(
+                strictness != ParseStrictness::Permissive,
+                "There shall be at most one ItemPropertyAssociationbox with a given pair of \
+                 values of version and flags \
+                 per HEIF (ISO 23008-12:2017) § 9.3.1",
+            )?;
         }
         if flags != 0 && properties.len() <= 127 {
-            return Err(Error::InvalidData("flags should be equal to 0 unless there are more than 127 properties in the ItemPropertyContainerBox"));
+            fail_if(
+                strictness == ParseStrictness::Strict,
+                "Unless there are more than 127 properties in the ItemPropertyContainerBox, \
+                 flags should be equal to 0 \
+                 per HEIF (ISO 23008-12:2017) § 9.3.1",
+            )?;
         }
         ipma_version_and_flag_values_seen.push((version, flags))?;
-        let associations = read_ipma(&mut b, version, flags)?;
+        let associations = read_ipma(&mut b, strictness, version, flags)?;
         for a in associations {
             if a.property_index == 0 {
                 if a.essential {
-                    return Err(Error::InvalidData("0 property index can't be essential"));
+                    fail_if(
+                        strictness != ParseStrictness::Permissive,
+                        "the essential indicator shall be 0 for property index 0 \
+                         per HEIF (ISO 23008-12:2017) § 9.3.3",
+                    )?;
                 }
                 continue;
             }
 
             if let Some(property) = properties.remove(&a.property_index) {
+                if brand == MIF1_BRAND {
+                    match property {
+                        ItemProperty::AV1Config(_)
+                        | ItemProperty::CleanAperture(_)
+                        | ItemProperty::Mirroring(_)
+                        | ItemProperty::Rotation(_) => {
+                            if !a.essential {
+                                fail_if(
+                                    strictness == ParseStrictness::Strict,
+                                    "All transformative properties associated with coded and \
+                                     derived images required or conditionally required by this \
+                                     document shall be marked as essential \
+                                     per MIAF (ISO 23000-22:2019) § 7.3.9",
+                                )?;
+                            }
+                        }
+                        _ => {}
+                    }
+                } else {
+                    unreachable!("read_iprp expects mif1 brand")
+                }
                 associated.push(AssociatedProperty {
                     item_id: a.item_id,
                     property,
@@ -1796,10 +1966,14 @@ fn read_iprp<T: Read>(src: &mut BMFFBox<T>) -> Result<TryVec<AssociatedProperty>
 }
 
 /// See HEIF (ISO 23008-12:2017) § 9.3.1
-#[derive(Debug, PartialEq)]
+#[derive(Debug)]
 pub enum ItemProperty {
-    Channels(TryVec<u8>),
     AuxiliaryType(AuxiliaryTypeProperty),
+    AV1Config(AV1ConfigBox),
+    CleanAperture(CleanApertureBox),
+    Channels(TryVec<u8>),
+    Mirroring(ImageMirror),
+    Rotation(ImageRotation),
 }
 
 /// For storing ItemPropertyAssociation data
@@ -1855,7 +2029,7 @@ macro_rules! impl_bounded_product {
 
         impl $name {
             pub fn new(value: $inner) -> Self {
-                assert!(<$inner>::from(value) <= Self::MAX);
+                assert!(value <= Self::MAX);
                 Self(value)
             }
 
@@ -1917,8 +2091,8 @@ impl std::ops::Add<U32MulU16> for U32MulU8 {
 
     fn add(self, rhs: U32MulU16) -> Self::Output {
         static_assertions::const_assert!(U32MulU8::MAX + U32MulU16::MAX < U64::MAX);
-        let lhs: u64 = self.get().into();
-        let rhs: u64 = rhs.get().into();
+        let lhs: u64 = self.get();
+        let rhs: u64 = rhs.get();
         Self::Output::new(lhs.checked_add(rhs).expect("infallible"))
     }
 }
@@ -1974,6 +2148,7 @@ fn calculate_ipma_total_associations(
 /// See HEIF (ISO 23008-12:2017) § 9.3.1
 fn read_ipma<T: Read>(
     src: &mut BMFFBox<T>,
+    strictness: ParseStrictness,
     version: u8,
     flags: u32,
 ) -> Result<TryVec<Association>> {
@@ -1997,6 +2172,7 @@ fn read_ipma<T: Read>(
         };
 
         if let Some(previous_association) = associations.last() {
+            #[allow(clippy::comparison_chain)]
             if previous_association.item_id > item_id {
                 return Err(Error::InvalidData(
                     "Each ItemPropertyAssociation box shall be ordered by increasing item_ID",
@@ -2031,9 +2207,11 @@ fn read_ipma<T: Read>(
         }) = associations.last()
         {
             if *max_item_id <= u16::MAX.into() {
-                return Err(Error::InvalidData(
-                    "The version 0 should be used unless 32-bit item_ID values are needed",
-                ));
+                fail_if(
+                    strictness == ParseStrictness::Strict,
+                    "The ipma version 0 should be used unless 32-bit item_ID values are needed \
+                     per HEIF (ISO 23008-12:2017) § 9.3.1",
+                )?;
             }
         }
     }
@@ -2050,8 +2228,12 @@ fn read_ipco<T: Read>(src: &mut BMFFBox<T>) -> Result<TryHashMap<u16, ItemProper
     let mut iter = src.box_iter();
     while let Some(mut b) = iter.next_box()? {
         if let Some(property) = match b.head.name {
-            BoxType::PixelInformationBox => Some(ItemProperty::Channels(read_pixi(&mut b)?)),
             BoxType::AuxiliaryTypeProperty => Some(ItemProperty::AuxiliaryType(read_auxc(&mut b)?)),
+            BoxType::AV1CodecConfigurationBox => Some(ItemProperty::AV1Config(read_av1c(&mut b)?)),
+            BoxType::CleanApertureBox => Some(ItemProperty::CleanAperture(read_clap(&mut b)?)),
+            BoxType::ImageMirror => Some(ItemProperty::Mirroring(read_imir(&mut b)?)),
+            BoxType::ImageRotation => Some(ItemProperty::Rotation(read_irot(&mut b)?)),
+            BoxType::PixelInformationBox => Some(ItemProperty::Channels(read_pixi(&mut b)?)),
             _ => {
                 skip_box_remain(&mut b)?;
                 None
@@ -2082,12 +2264,104 @@ fn read_pixi<T: Read>(src: &mut BMFFBox<T>) -> Result<TryVec<u8>> {
     let mut channels = TryVec::with_capacity(num_channels)?;
     let num_channels_read = src.try_read_to_end(&mut channels)?;
 
-    if num_channels_read != num_channels.into() {
+    if num_channels_read != num_channels {
         return Err(Error::InvalidData("invalid num_channels"));
     }
 
     check_parser_state!(src.content);
     Ok(channels)
+}
+
+#[derive(Debug)]
+pub struct U32Fraction {
+    numerator: u32,
+    denominator: u32,
+}
+
+fn read_u32_fraction<T: Read>(src: &mut BMFFBox<T>) -> Result<U32Fraction> {
+    let numerator = be_u32(src)?;
+    let denominator = be_u32(src)?;
+
+    Ok(U32Fraction {
+        numerator,
+        denominator,
+    })
+}
+
+#[derive(Debug)]
+pub struct CleanApertureBox {
+    width: U32Fraction,
+    height: U32Fraction,
+    horizontal_offset: U32Fraction,
+    vertical_offset: U32Fraction,
+}
+
+/// Parse clean aperture box
+/// See HEIF (ISO 23008-12:2017) § 6.5.9
+fn read_clap<T: Read>(src: &mut BMFFBox<T>) -> Result<CleanApertureBox> {
+    let width = read_u32_fraction(src)?;
+    let height = read_u32_fraction(src)?;
+    let horizontal_offset = read_u32_fraction(src)?;
+    let vertical_offset = read_u32_fraction(src)?;
+
+    check_parser_state!(src.content);
+
+    Ok(CleanApertureBox {
+        width,
+        height,
+        horizontal_offset,
+        vertical_offset,
+    })
+}
+
+#[derive(Debug)]
+pub enum ImageRotation {
+    Zero,
+    AntiClockwise90Degrees,
+    AntiClockwise180Degrees,
+    AntiClockwise270Degrees,
+}
+
+/// Parse image rotation box
+/// See HEIF (ISO 23008-12:2017) § 6.5.10
+fn read_irot<T: Read>(src: &mut BMFFBox<T>) -> Result<ImageRotation> {
+    let irot = src.read_into_try_vec()?;
+    let mut irot = BitReader::new(&irot);
+    let _reserved = irot.read_u8(6)?;
+    let image_rotation = match irot.read_u8(2)? {
+        0 => ImageRotation::Zero,
+        1 => ImageRotation::AntiClockwise90Degrees,
+        2 => ImageRotation::AntiClockwise180Degrees,
+        3 => ImageRotation::AntiClockwise270Degrees,
+        _ => unreachable!(),
+    };
+
+    check_parser_state!(src.content);
+
+    Ok(image_rotation)
+}
+
+#[derive(Debug)]
+pub enum ImageMirror {
+    Vertical,
+    Horizontal,
+}
+
+/// Parse image mirroring box
+/// See HEIF (ISO 23008-12:2017) § 6.5.12
+fn read_imir<T: Read>(src: &mut BMFFBox<T>) -> Result<ImageMirror> {
+    let imir = src.read_into_try_vec()?;
+    let mut imir = BitReader::new(&imir);
+    let _reserved = imir.read_u8(7)?;
+    let image_mirror = match imir.read_u8(1)? {
+        0 => ImageMirror::Vertical,
+        1 => ImageMirror::Horizontal,
+        _ => unreachable!(),
+    };
+
+    check_parser_state!(src.content);
+
+    Ok(image_mirror)
 }
 
 /// See HEIF (ISO 23008-12:2017) § 6.5.8
@@ -2183,7 +2457,7 @@ fn read_iloc<T: Read>(src: &mut BMFFBox<T>) -> Result<TryHashMap<u32, ItemLocati
             ));
         }
 
-        let base_offset = iloc.read_u64(base_offset_size.to_bits())?;
+        let base_offset = iloc.read_u64(base_offset_size.as_bits())?;
         let extent_count = iloc.read_u16(16)?;
 
         if extent_count < 1 {
@@ -2210,7 +2484,7 @@ fn read_iloc<T: Read>(src: &mut BMFFBox<T>) -> Result<TryHashMap<u32, ItemLocati
                 None | Some(IlocFieldSize::Zero) => None,
                 Some(index_size) => {
                     debug_assert!(version == IlocVersion::One || version == IlocVersion::Two);
-                    Some(iloc.read_u64(index_size.to_bits())?)
+                    Some(iloc.read_u64(index_size.as_bits())?)
                 }
             };
 
@@ -2218,8 +2492,8 @@ fn read_iloc<T: Read>(src: &mut BMFFBox<T>) -> Result<TryHashMap<u32, ItemLocati
             // "If the offset is not identified (the field has a length of zero), then the
             //  beginning of the source (offset 0) is implied"
             // This behavior will follow from BitReader::read_u64(0) -> 0.
-            let extent_offset = iloc.read_u64(offset_size.to_bits())?;
-            let extent_length = iloc.read_u64(length_size.to_bits())?.try_into()?;
+            let extent_offset = iloc.read_u64(offset_size.as_bits())?;
+            let extent_length = iloc.read_u64(length_size.as_bits())?.try_into()?;
 
             // "If the length is not specified, or specified as zero, then the entire length of
             //  the source is implied" (ibid)
@@ -2287,6 +2561,12 @@ pub fn read_mp4<T: Read>(f: &mut T) -> Result<MediaContext> {
             BoxType::MovieBox => {
                 context = Some(read_moov(&mut b, context)?);
             }
+            #[cfg(feature = "meta-xml")]
+            BoxType::MetadataBox => {
+                if let Some(ctx) = &mut context {
+                    ctx.metadata = Some(read_meta(&mut b));
+                }
+            }
             _ => skip_box_content(&mut b)?,
         };
         check_parser_state!(b.content);
@@ -2332,6 +2612,8 @@ fn read_moov<T: Read>(f: &mut BMFFBox<T>, context: Option<MediaContext>) -> Resu
         mut mvex,
         mut psshs,
         mut userdata,
+        #[cfg(feature = "meta-xml")]
+        metadata,
     } = context.unwrap_or_default();
 
     let mut iter = f.box_iter();
@@ -2374,6 +2656,8 @@ fn read_moov<T: Read>(f: &mut BMFFBox<T>, context: Option<MediaContext>) -> Resu
         mvex,
         psshs,
         userdata,
+        #[cfg(feature = "meta-xml")]
+        metadata,
     })
 }
 
@@ -3027,6 +3311,7 @@ fn read_vpcc<T: Read>(src: &mut BMFFBox<T>) -> Result<VPxConfigBox> {
     })
 }
 
+/// See AV1-ISOBMFF § 2.3.3 https://aomediacodec.github.io/av1-isobmff/#av1codecconfigurationbox-syntax
 fn read_av1c<T: Read>(src: &mut BMFFBox<T>) -> Result<AV1ConfigBox> {
     // We want to store the raw config as well as a structured (parsed) config, so create a copy of
     // the raw config so we have it later, and then parse the structured data from that.
@@ -3541,7 +3826,8 @@ fn read_alac<T: Read>(src: &mut BMFFBox<T>) -> Result<ALACSpecificBox> {
     Ok(ALACSpecificBox { version, data })
 }
 
-/// Parse a hdlr box.
+/// Parse a Handler Reference Box.
+/// See ISOBMFF (ISO 14496-12:2015) § 8.4.3
 fn read_hdlr<T: Read>(src: &mut BMFFBox<T>) -> Result<HandlerBox> {
     let (_, _) = read_fullbox_extra(src)?;
 
@@ -3705,7 +3991,7 @@ fn read_qt_wave_atom<T: Read>(src: &mut BMFFBox<T>) -> Result<ES_Descriptor> {
         }
     }
 
-    codec_specific.ok_or_else(|| Error::InvalidData("malformed audio sample entry"))
+    codec_specific.ok_or(Error::InvalidData("malformed audio sample entry"))
 }
 
 /// Parse an audio description inside an stsd box.
@@ -3759,6 +4045,18 @@ fn read_audio_sample_entry<T: Read>(src: &mut BMFFBox<T>) -> Result<SampleEntry>
     let (mut codec_type, mut codec_specific) = match name {
         BoxType::MP3AudioSampleEntry => (CodecType::MP3, Some(AudioCodecSpecific::MP3)),
         BoxType::LPCMAudioSampleEntry => (CodecType::LPCM, Some(AudioCodecSpecific::LPCM)),
+        // Some mp4 file with AMR doesn't have AMRSpecificBox "damr" in followed while loop,
+        // we use empty box by default.
+        #[cfg(feature = "3gpp")]
+        BoxType::AMRNBSampleEntry => (
+            CodecType::AMRNB,
+            Some(AudioCodecSpecific::AMRSpecificBox(Default::default())),
+        ),
+        #[cfg(feature = "3gpp")]
+        BoxType::AMRWBSampleEntry => (
+            CodecType::AMRWB,
+            Some(AudioCodecSpecific::AMRSpecificBox(Default::default())),
+        ),
         _ => (CodecType::Unknown, None),
     };
     let mut protection_info = TryVec::new();
@@ -3817,6 +4115,20 @@ fn read_audio_sample_entry<T: Read>(src: &mut BMFFBox<T>) -> Result<SampleEntry>
                 debug!("{:?} (sinf)", sinf);
                 codec_type = CodecType::EncryptedAudio;
                 protection_info.push(sinf)?;
+            }
+            #[cfg(feature = "3gpp")]
+            BoxType::AMRSpecificBox => {
+                if codec_type != CodecType::AMRNB && codec_type != CodecType::AMRWB {
+                    return Err(Error::InvalidData("malformed audio sample entry"));
+                }
+                let amr_dec_spec_struc_size = b
+                    .head
+                    .size
+                    .checked_sub(b.head.offset)
+                    .expect("offset invalid");
+                let amr_dec_spec_struc = read_buf(&mut b.content, amr_dec_spec_struc_size)?;
+                debug!("{:?} (AMRDecSpecStruc)", amr_dec_spec_struc);
+                codec_specific = Some(AudioCodecSpecific::AMRSpecificBox(amr_dec_spec_struc));
             }
             _ => {
                 debug!("Unsupported audio codec, box {:?} found", b.head.name);
@@ -4002,7 +4314,8 @@ fn read_udta<T: Read>(src: &mut BMFFBox<T>) -> Result<UserdataBox> {
     Ok(udta)
 }
 
-/// Parse a metadata box inside a udta box
+/// Parse the meta box
+/// See ISOBMFF (ISO 14496-12:2015) § 8.111.
 fn read_meta<T: Read>(src: &mut BMFFBox<T>) -> Result<MetadataBox> {
     let (_, _) = read_fullbox_extra(src)?;
     let mut iter = src.box_iter();
@@ -4010,11 +4323,37 @@ fn read_meta<T: Read>(src: &mut BMFFBox<T>) -> Result<MetadataBox> {
     while let Some(mut b) = iter.next_box()? {
         match b.head.name {
             BoxType::MetadataItemListEntry => read_ilst(&mut b, &mut meta)?,
+            #[cfg(feature = "meta-xml")]
+            BoxType::MetadataXMLBox => read_xml_(&mut b, &mut meta)?,
+            #[cfg(feature = "meta-xml")]
+            BoxType::MetadataBXMLBox => read_bxml(&mut b, &mut meta)?,
             _ => skip_box_content(&mut b)?,
         };
         check_parser_state!(b.content);
     }
     Ok(meta)
+}
+
+/// Parse a XML box inside a meta box
+/// See ISOBMFF (ISO 14496-12:2015) § 8.11.2
+#[cfg(feature = "meta-xml")]
+fn read_xml_<T: Read>(src: &mut BMFFBox<T>, meta: &mut MetadataBox) -> Result<()> {
+    if read_fullbox_version_no_flags(src)? != 0 {
+        return Err(Error::Unsupported("unsupported XmlBox version"));
+    }
+    meta.xml = Some(XmlBox::StringXmlBox(src.read_into_try_vec()?));
+    Ok(())
+}
+
+/// Parse a Binary XML box inside a meta box
+/// See ISOBMFF (ISO 14496-12:2015) § 8.11.2
+#[cfg(feature = "meta-xml")]
+fn read_bxml<T: Read>(src: &mut BMFFBox<T>, meta: &mut MetadataBox) -> Result<()> {
+    if read_fullbox_version_no_flags(src)? != 0 {
+        return Err(Error::Unsupported("unsupported XmlBox version"));
+    }
+    meta.xml = Some(XmlBox::BinaryXmlBox(src.read_into_try_vec()?));
+    Ok(())
 }
 
 /// Parse a metadata box inside a udta box
