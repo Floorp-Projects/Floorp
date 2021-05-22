@@ -145,6 +145,17 @@ class Components(
     val crashReporter: CrashReporter by lazy { createCrashReporter(context) }
 
     val metrics: GleanMetricsService by lazy { GleanMetricsService(context) }
+
+    fun migrateTrackingProtectionExceptions(context: Context) {
+        if (engineOverride != null) {
+            // If there's an engine override (for testing) then we do not want to migrate any
+            // exceptions and potentially try to launch GeckoView on a plain JVM (which will blow up).
+            return
+        }
+
+        val exceptionsMigrator = EngineProvider.provideTrackingProtectionMigrator(context)
+        exceptionsMigrator.start(context)
+    }
 }
 
 private fun determineInitialScreen(context: Context): Screen {

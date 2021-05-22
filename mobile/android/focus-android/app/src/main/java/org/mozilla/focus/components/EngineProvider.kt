@@ -11,6 +11,7 @@ import mozilla.components.concept.engine.DefaultSettings
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.fetch.Client
 import mozilla.components.lib.crash.handler.CrashHandlerService
+import org.mozilla.focus.exceptions.GeckoExceptionsMigrator
 import org.mozilla.geckoview.GeckoRuntime
 import org.mozilla.geckoview.GeckoRuntimeSettings
 
@@ -40,5 +41,9 @@ object EngineProvider {
     fun createClient(context: Context): Client {
         val runtime = getOrCreateRuntime(context)
         return GeckoViewFetchClient(context, runtime)
+    }
+
+    fun provideTrackingProtectionMigrator(context: Context): GeckoExceptionsMigrator {
+        return GeckoExceptionsMigrator(getOrCreateRuntime(context))
     }
 }
