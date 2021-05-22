@@ -27,8 +27,12 @@ travis-ci = { repository = "https://github.com/mozilla/mp4parse-rust" }
 byteorder = "1.2.1"
 fallible_collections = { version = "0.3", features = ["std_io"] }
 log = "0.4"
-mp4parse = {version = "0.11.5", path = "../mp4parse"}
+mp4parse = { version = "0.11.5", path = "../mp4parse", features = ["unstable-api"] }
 num-traits = "0.2.14"
 
 [dev-dependencies]
 env_logger = "0.8"
+
+[features]
+3gpp = ["mp4parse/3gpp"]
+meta-xml = ["mp4parse/meta-xml"]

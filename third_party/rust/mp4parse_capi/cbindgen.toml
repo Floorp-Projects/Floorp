@@ -15,3 +15,17 @@ cpp_compat = true
 
 [enum]
 rename_variants = "QualifiedScreamingSnakeCase"
+
+[defines]
+"feature = 3gpp" = "MP4PARSE_FEATURE_3GPP"
+"feature = meta-xml" = "MP4PARSE_FEATURE_META_XML"
+
+[parse]
+parse_deps = true
+include = ["mp4parse"]
+
+[export.rename]
+# We need to declare this type in mp4parse, but we rename it in the generated
+# header to match mp4parse_capi naming conventions
+"ParseStrictness" = "Mp4parseStrictness"
+"Indice" = "Mp4parseIndice"

@@ -69,7 +69,7 @@ class AVIFParser {
           mp4parse_avif_get_image(mParser.get(), mAvifImage.ptr());
       MOZ_LOG(sAVIFLog, LogLevel::Debug,
               ("[this=%p] mp4parse_avif_get_image -> %d; primary_item length: "
-               "%u, alpha_item length: %u",
+               "%zu, alpha_item length: %zu",
                this, status, mAvifImage->primary_item.length,
                mAvifImage->alpha_item.length));
       if (status != MP4PARSE_STATUS_OK) {
@@ -83,14 +83,20 @@ class AVIFParser {
  private:
   explicit AVIFParser(const Mp4parseIo* aIo) : mIo(aIo) {
     MOZ_ASSERT(mIo);
-    MOZ_LOG(sAVIFLog, LogLevel::Debug, ("Create AVIFParser=%p", this));
+    MOZ_LOG(sAVIFLog, LogLevel::Debug,
+            ("Create AVIFParser=%p, image.avif.compliance_strictness: %d", this,
+             StaticPrefs::image_avif_compliance_strictness()));
   }
 
   bool Init() {
     MOZ_ASSERT(!mParser);
 
     Mp4parseAvifParser* parser = nullptr;
-    Mp4parseStatus status = mp4parse_avif_new(mIo, &parser);
+    Mp4parseStatus status =
+        mp4parse_avif_new(mIo,
+                          static_cast<enum Mp4parseStrictness>(
+                              StaticPrefs::image_avif_compliance_strictness()),
+                          &parser);
     MOZ_LOG(sAVIFLog, LogLevel::Debug,
             ("[this=%p] mp4parse_avif_new status: %d", this, status));
     if (status != MP4PARSE_STATUS_OK) {

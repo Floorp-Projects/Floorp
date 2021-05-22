@@ -8,7 +8,7 @@ use criterion::{criterion_group, criterion_main, Criterion};
 use std::fs::File;
 
 fn criterion_benchmark(c: &mut Criterion) {
-    c.bench_function("avif_largest", |b| b.iter(|| avif_largest()));
+    c.bench_function("avif_largest", |b| b.iter(avif_largest));
 }
 
 criterion_group!(benches, criterion_benchmark);
@@ -19,5 +19,5 @@ fn avif_largest() {
         "av1-avif/testFiles/Netflix/avif/cosmos_frame05000_yuv444_12bpc_bt2020_pq_qlossless.avif",
     )
     .expect("Unknown file");
-    assert!(mp4::read_avif(input).is_ok());
+    assert!(mp4::read_avif(input, mp4::ParseStrictness::Normal).is_ok());
 }
