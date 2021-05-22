@@ -577,18 +577,26 @@ Status DecodeImagePSD(const Span<const uint8_t> bytes, ThreadPool* pool,
     std::vector<int> chan_id(real_nb_channels);
     std::iota(chan_id.begin(), chan_id.end(), 0);
     std::vector<bool> invert(real_nb_channels, false);
+    if (static_cast<int>(spotcolor.size()) + colormodel + 1 <
+        real_nb_channels) {
+      return JXL_FAILURE("Inconsistent layer configuration");
+    }
     if (!merged_has_alpha) {
+      if (colormodel <= real_nb_channels) {
+        return JXL_FAILURE("Inconsistent layer configuration");
+      }
       chan_id.erase(chan_id.begin() + colormodel);
       invert.erase(invert.begin() + colormodel);
-    } else
+    } else {
       colormodel++;
+    }
     for (size_t i = colormodel; i < invert.size(); i++) {
       if (spotcolor[i - colormodel][5] == 2) invert[i] = true;
       if (spotcolor[i - colormodel][5] == 0) invert[i] = true;
     }
-    JXL_RETURN_IF_ERROR(decode_layer(pos, maxpos, layer, chan_id, invert,
-                                     layer.xsize(), layer.ysize(), version,
-                                     (have_only_merged ? 0 : colormodel), false, bitdepth));
+    JXL_RETURN_IF_ERROR(decode_layer(
+        pos, maxpos, layer, chan_id, invert, layer.xsize(), layer.ysize(),
+        version, (have_only_merged ? 0 : colormodel), false, bitdepth));
   }
 
   if (io->frames.empty()) return JXL_FAILURE("PSD: no layers");

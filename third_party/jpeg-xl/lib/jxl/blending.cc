@@ -161,38 +161,23 @@ ImageBlender::RectBlender ImageBlender::PrepareRect(
     return blender;
   }
 
-  const Rect actual_input_rect(
-      input_rect.x0() + (blender.current_overlap_.x0() - rect.x0()),
-      input_rect.y0() + (blender.current_overlap_.y0() - rect.y0()),
-      blender.current_overlap_.xsize(), blender.current_overlap_.ysize());
-
   blender.current_cropbox_ =
       Rect(o_.x0 + blender.current_overlap_.x0(),
            o_.y0 + blender.current_overlap_.y0(),
            blender.current_overlap_.xsize(), blender.current_overlap_.ysize());
-  Image3F cropped_foreground(actual_input_rect.xsize(),
-                             actual_input_rect.ysize());
-  CopyImageTo(actual_input_rect, foreground, &cropped_foreground);
-  blender.foreground_ = ImageBundle(dest_->metadata());
-  blender.foreground_.SetFromImage(
-      std::move(cropped_foreground),
-      ColorEncoding::LinearSRGB() /* likely incorrect but unused anyway */);
-  if (!extra_channels.empty()) {
-    std::vector<ImageF> ec;
-    for (const auto& extra_channel : extra_channels) {
-      ImageF ec_image(actual_input_rect.xsize(), actual_input_rect.ysize());
-      CopyImageTo(actual_input_rect, extra_channel, &ec_image);
-      ec.push_back(std::move(ec_image));
-    }
-    blender.foreground_.SetExtraChannels(std::move(ec));
-  }
 
   // Turn current_overlap_ from being relative to the full foreground to being
-  // relative to the rect.
+  // relative to the rect or input_rect.
   blender.current_overlap_ =
       Rect(blender.current_overlap_.x0() - rect.x0(),
            blender.current_overlap_.y0() - rect.y0(),
            blender.current_overlap_.xsize(), blender.current_overlap_.ysize());
+
+  // And this one is relative to the `foreground` subimage.
+  const Rect input_overlap(blender.current_overlap_.x0() + input_rect.x0(),
+                           blender.current_overlap_.y0() + input_rect.y0(),
+                           blender.current_overlap_.xsize(),
+                           blender.current_overlap_.ysize());
 
   blender.blending_info_.resize(extra_channels.size() + 1);
   auto make_blending = [&](const BlendingInfo& info, PatchBlending* pb) {
@@ -222,11 +207,31 @@ ImageBlender::RectBlender ImageBlender::PrepareRect(
       default: {
         JXL_ABORT("Invalid blend mode");  // should have failed to decode
       }
-    };
+    }
   };
   make_blending(info_, &blender.blending_info_[0]);
   for (size_t i = 0; i < extra_channels.size(); i++) {
     make_blending((*ec_info_)[i], &blender.blending_info_[1 + i]);
+  }
+
+  Rect cropbox_row = blender.current_cropbox_.Line(0);
+  Rect overlap_row = input_overlap.Line(0);
+  const auto num_ptrs = 3 + extra_channels.size();
+  blender.fg_ptrs_.reserve(num_ptrs);
+  blender.fg_strides_.reserve(num_ptrs);
+  blender.bg_ptrs_.reserve(num_ptrs);
+  blender.bg_strides_.reserve(num_ptrs);
+  for (size_t c = 0; c < 3; c++) {
+    blender.fg_ptrs_.push_back(overlap_row.ConstPlaneRow(foreground, c, 0));
+    blender.fg_strides_.push_back(foreground.PixelsPerRow());
+    blender.bg_ptrs_.push_back(cropbox_row.PlaneRow(dest_->color(), c, 0));
+    blender.bg_strides_.push_back(dest_->color()->PixelsPerRow());
+  }
+  for (size_t c = 0; c < extra_channels.size(); c++) {
+    blender.fg_ptrs_.push_back(overlap_row.ConstRow(extra_channels[c], 0));
+    blender.fg_strides_.push_back(extra_channels[c].PixelsPerRow());
+    blender.bg_ptrs_.push_back(cropbox_row.Row(&dest_->extra_channels()[c], 0));
+    blender.bg_strides_.push_back(dest_->extra_channels()[c].PixelsPerRow());
   }
 
   return blender;
@@ -355,21 +360,15 @@ Status ImageBlender::RectBlender::DoBlending(size_t y) {
     return true;
   }
   y -= current_overlap_.y0();
-  Rect cropbox_row = current_cropbox_.Line(y);
-  Rect overlap_row = Rect(0, y, current_overlap_.xsize(), 1);
-  fg_ptrs_.resize(3 + foreground_.extra_channels().size());
-  bg_ptrs_.resize(3 + foreground_.extra_channels().size());
-  for (size_t c = 0; c < 3; c++) {
-    fg_ptrs_[c] = overlap_row.ConstPlaneRow(*foreground_.color(), c, 0);
-    bg_ptrs_[c] = cropbox_row.PlaneRow(dest_->color(), c, 0);
+  fg_row_ptrs_.resize(fg_ptrs_.size());
+  bg_row_ptrs_.resize(bg_ptrs_.size());
+  for (size_t c = 0; c < fg_row_ptrs_.size(); c++) {
+    fg_row_ptrs_[c] = fg_ptrs_[c] + y * fg_strides_[c];
+    bg_row_ptrs_[c] = bg_ptrs_[c] + y * bg_strides_[c];
   }
-  for (size_t c = 0; c < foreground_.extra_channels().size(); c++) {
-    fg_ptrs_[c + 3] = overlap_row.ConstRow(foreground_.extra_channels()[c], 0);
-    bg_ptrs_[c + 3] = cropbox_row.Row(&dest_->extra_channels()[c], 0);
-  }
-  return PerformBlending(bg_ptrs_.data(), fg_ptrs_.data(), bg_ptrs_.data(),
-                         current_overlap_.xsize(), blending_info_[0],
-                         blending_info_.data() + 1,
+  return PerformBlending(bg_row_ptrs_.data(), fg_row_ptrs_.data(),
+                         bg_row_ptrs_.data(), current_overlap_.xsize(),
+                         blending_info_[0], blending_info_.data() + 1,
                          dest_->metadata()->extra_channel_info);
 }
 

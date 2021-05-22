@@ -135,10 +135,14 @@ typedef enum {
    */
   JXL_DEC_ERROR = 1,
 
-  /** The decoder needs more input bytes to continue. In the next
-   * JxlDecoderProcessInput call, next_in and avail_in must point to more
-   * bytes to continue. If *avail_in is not 0, the new bytes must be appended to
-   * the *avail_in last previous bytes.
+  /** The decoder needs more input bytes to continue. Before the next
+   * JxlDecoderProcessInput call, more input data must be set, by calling
+   * JxlDecoderReleaseInput (if input was set previously) and then calling
+   * JxlDecoderSetInput. JxlDecoderReleaseInput returns how many bytes are
+   * not yet processed, before a next call to JxlDecoderProcessInput all
+   * unprocessed bytes must be provided again (the address need not match, but
+   * the contents must), and more bytes must be concatenated after the
+   * unprocessed bytes.
    */
   JXL_DEC_NEED_MORE_INPUT = 2,
 
@@ -277,8 +281,8 @@ JxlDecoderSetParallelRunner(JxlDecoder* dec, JxlParallelRunner parallel_runner,
  * Returns a hint indicating how many more bytes the decoder is expected to
  * need to make JxlDecoderGetBasicInfo available after the next
  * JxlDecoderProcessInput call. This is a suggested large enough value for
- * the *avail_in parameter, but it is not guaranteed to be an upper bound nor
- * a lower bound.
+ * the amount of bytes to provide in the next JxlDecoderSetInput call, but it is
+ * not guaranteed to be an upper bound nor a lower bound.
  * Can be used before the first JxlDecoderProcessInput call, and is correct
  * the first time in most cases. If not, JxlDecoderSizeHintBasicInfo can be
  * called again to get an updated hint.

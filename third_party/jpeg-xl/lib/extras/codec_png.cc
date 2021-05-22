@@ -790,6 +790,7 @@ Status DecodeImagePNG(const Span<const uint8_t> bytes, ThreadPool* pool,
   JXL_RETURN_IF_ERROR(ok);
   io->dec_pixels = w * h;
   io->metadata.m.bit_depth.bits_per_sample = io->Main().DetectRealBitdepth();
+  io->metadata.m.xyb_encoded = false;
   SetIntensityTarget(io);
   if (!reader.HaveColorProfile()) {
     JXL_RETURN_IF_ERROR(ApplyHints(is_gray, io));

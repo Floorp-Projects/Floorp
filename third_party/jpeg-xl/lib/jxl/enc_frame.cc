@@ -340,11 +340,13 @@ Status MakeFrameHeader(const CompressParams& cparams,
   // Resized frames.
   if (frame_info.frame_type != FrameType::kDCFrame) {
     frame_header->frame_origin = ib.origin;
-    frame_header->frame_size.xsize = ib.xsize();
-    frame_header->frame_size.ysize = ib.ysize();
+    size_t ups = 1;
+    if (cparams.already_downsampled) ups = cparams.resampling;
+    frame_header->frame_size.xsize = ib.xsize() * ups;
+    frame_header->frame_size.ysize = ib.ysize() * ups;
     if (ib.origin.x0 != 0 || ib.origin.y0 != 0 ||
-        ib.xsize() != frame_header->default_xsize() ||
-        ib.ysize() != frame_header->default_ysize()) {
+        frame_header->frame_size.xsize != frame_header->default_xsize() ||
+        frame_header->frame_size.ysize != frame_header->default_ysize()) {
       frame_header->custom_size_or_origin = true;
     }
   }
@@ -1055,9 +1057,7 @@ Status EncodeFrame(const CompressParams& cparams_orig,
     cparams.modular_mode = false;
   }
 
-  const size_t xsize = ib.xsize();
-  const size_t ysize = ib.ysize();
-  if (xsize == 0 || ysize == 0) return JXL_FAILURE("Empty image");
+  if (ib.xsize() == 0 || ib.ysize() == 0) return JXL_FAILURE("Empty image");
 
   // Assert that this metadata is correctly set up for the compression params,
   // this should have been done by enc_file.cc
@@ -1184,7 +1184,7 @@ Status EncodeFrame(const CompressParams& cparams_orig,
       JXL_RETURN_IF_ERROR(lossy_frame_encoder.ComputeEncodingData(
           ib_or_linear, &opsin, pool, modular_frame_encoder.get(), writer,
           frame_header.get()));
-    } else if (frame_header->upsampling != 1) {
+    } else if (frame_header->upsampling != 1 && !cparams.already_downsampled) {
       // In VarDCT mode, LossyFrameHeuristics takes care of running downsampling
       // after noise, if necessary.
       DownsampleImage(&opsin, frame_header->upsampling);
@@ -1194,7 +1194,7 @@ Status EncodeFrame(const CompressParams& cparams_orig,
         &ib, &opsin, pool, modular_frame_encoder.get(), writer,
         frame_header.get()));
   }
-  if (cparams.ec_resampling != 1) {
+  if (cparams.ec_resampling != 1 && !cparams.already_downsampled) {
     extra_channels = &extra_channels_storage;
     for (size_t i = 0; i < ib.extra_channels().size(); i++) {
       extra_channels_storage.emplace_back(CopyImage(ib.extra_channels()[i]));
