@@ -233,12 +233,16 @@ MR_ANCESTOR_SHA=""
 # Populate MR_HEAD_SHA and MR_ANCESTOR_SHA.
 merge_request_commits() {
   { set +x; } 2>/dev/null
-  # CI_BUILD_REF is the reference currently being build in the CI workflow.
-  MR_HEAD_SHA=$(git -C "${MYDIR}" rev-parse -q "${CI_BUILD_REF:-HEAD}")
-  if [[ -z "${CI_MERGE_REQUEST_IID:-}" ]]; then
-    # We are in a local branch, not a merge request.
-    MR_ANCESTOR_SHA=$(git -C "${MYDIR}" rev-parse -q HEAD@{upstream} || true)
+  # GITHUB_SHA is the current reference being build in GitHub Actions.
+  if [[ -n "${GITHUB_SHA:-}" ]]; then
+    git -C "${MYDIR}" fetch -q origin "${GITHUB_SHA}"
+    MR_HEAD_SHA="${GITHUB_SHA}"
   else
+    # CI_BUILD_REF is the reference currently being build in the CI workflow.
+    MR_HEAD_SHA=$(git -C "${MYDIR}" rev-parse -q "${CI_BUILD_REF:-HEAD}")
+  fi
+
+  if [[ -n "${CI_MERGE_REQUEST_IID:-}" ]]; then
     # Merge request pipeline in CI. In this case the upstream is called "origin"
     # but it refers to the forked project that's the source of the merge
     # request. We need to get the target of the merge request, for which we need
@@ -248,14 +252,27 @@ merge_request_commits() {
     git -C "${MYDIR}" fetch "${CI_MERGE_REQUEST_PROJECT_URL}" \
       "${CI_MERGE_REQUEST_TARGET_BRANCH_NAME}"
     MR_ANCESTOR_SHA=$(git -C "${MYDIR}" rev-parse -q FETCH_HEAD)
+  elif [[ -n "${GITHUB_BASE_REF:-}" ]]; then
+    # Pull request workflow in GitHub Actions. GitHub checkout action uses
+    # "origin" as the remote for the git checkout.
+    git -C "${MYDIR}" fetch -q origin "${GITHUB_BASE_REF}"
+    MR_ANCESTOR_SHA=$(git -C "${MYDIR}" rev-parse -q FETCH_HEAD)
+  else
+    # We are in a local branch, not a merge request.
+    MR_ANCESTOR_SHA=$(git -C "${MYDIR}" rev-parse -q HEAD@{upstream} || true)
   fi
+
   if [[ -z "${MR_ANCESTOR_SHA}" ]]; then
     echo "Warning, not tracking any branch, using the last commit in HEAD.">&2
     # This prints the return value with just HEAD.
     MR_ANCESTOR_SHA=$(git -C "${MYDIR}" rev-parse -q "${MR_HEAD_SHA}^")
   else
-    MR_ANCESTOR_SHA=$(git -C "${MYDIR}" merge-base --all \
-      "${MR_ANCESTOR_SHA}" "${MR_HEAD_SHA}")
+    # GitHub runs the pipeline on a merge commit, no need to look for the common
+    # ancestor in that case.
+    if [[ -z "${GITHUB_BASE_REF:-}" ]]; then
+      MR_ANCESTOR_SHA=$(git -C "${MYDIR}" merge-base \
+        "${MR_ANCESTOR_SHA}" "${MR_HEAD_SHA}")
+    fi
   fi
   set -x
 }

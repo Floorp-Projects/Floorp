@@ -74,7 +74,7 @@ void PerformAlphaBlending(const float* bg, const float* bga, const float* fg,
 void PerformAlphaWeightedAdd(const float* bg, const float* fg, const float* fga,
                              float* out, size_t num_pixels, bool clamp) {
   if (fg == fga) {
-    memcpy(out, bg, num_pixels * sizeof(out));
+    memcpy(out, bg, num_pixels * sizeof(*out));
   } else {
     for (size_t x = 0; x < num_pixels; ++x) {
       out[x] = bg[x] + fg[x] * Clamp(fga[x]);

@@ -87,7 +87,7 @@ constexpr size_t kGroupDimInBlocks = kGroupDim / kBlockDim;
 constexpr size_t kMaxNumPasses = 11;
 
 // Maximum number of reference frames.
-constexpr size_t kMaxNumReferenceFrames = 3;
+constexpr size_t kMaxNumReferenceFrames = 4;
 
 // Dimensions of a frame, in pixels, and other derived dimensions.
 // Computed from FrameHeader.

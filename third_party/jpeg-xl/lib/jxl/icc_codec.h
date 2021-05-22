@@ -25,6 +25,7 @@
 #include "lib/jxl/base/compiler_specific.h"
 #include "lib/jxl/base/padded_bytes.h"
 #include "lib/jxl/base/status.h"
+#include "lib/jxl/dec_ans.h"
 #include "lib/jxl/dec_bit_reader.h"
 #include "lib/jxl/enc_bit_writer.h"
 
@@ -33,6 +34,26 @@ namespace jxl {
 // Should still be called if `icc.empty()` - if so, writes only 1 bit.
 Status WriteICC(const PaddedBytes& icc, BitWriter* JXL_RESTRICT writer,
                 size_t layer, AuxOut* JXL_RESTRICT aux_out);
+
+struct ICCReader {
+  Status Init(BitReader* reader, size_t output_limit);
+  Status Process(BitReader* reader, PaddedBytes* icc);
+  void Reset() {
+    bits_to_skip_ = 0;
+    decompressed_.clear();
+  }
+
+ private:
+  Status CheckEOI(BitReader* reader);
+  size_t i_ = 0;
+  size_t bits_to_skip_ = 0;
+  size_t used_bits_base_ = 0;
+  uint64_t enc_size_ = 0;
+  std::vector<uint8_t> context_map_;
+  ANSCode code_;
+  ANSSymbolReader ans_reader_;
+  PaddedBytes decompressed_;
+};
 
 // `icc` may be empty afterwards - if so, call CreateProfile. Does not append,
 // clears any original data that was in icc.

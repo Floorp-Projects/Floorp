@@ -195,5 +195,95 @@ TEST(ANSTest, UintConfigRoundtrip) {
   }
 }
 
+void TestCheckpointing(bool ans, bool lz77) {
+  std::vector<std::vector<Token>> input_values(1);
+  for (size_t i = 0; i < 1024; i++) {
+    input_values[0].push_back(Token(0, i % 4));
+  }
+  // up to lz77 window size.
+  for (size_t i = 0; i < (1 << 20) - 1022; i++) {
+    input_values[0].push_back(Token(0, (i % 5) + 4));
+  }
+  // Ensure that when the window wraps around, new values are different.
+  input_values[0].push_back(Token(0, 0));
+  for (size_t i = 0; i < 1024; i++) {
+    input_values[0].push_back(Token(0, i % 4));
+  }
+
+  std::vector<uint8_t> context_map;
+  EntropyEncodingData codes;
+  HistogramParams params;
+  params.lz77_method = lz77 ? HistogramParams::LZ77Method::kLZ77
+                            : HistogramParams::LZ77Method::kNone;
+  params.force_huffman = !ans;
+
+  BitWriter writer;
+  {
+    auto input_values_copy = input_values;
+    BuildAndEncodeHistograms(params, 1, input_values_copy, &codes, &context_map,
+                             &writer, 0, nullptr);
+    WriteTokens(input_values_copy[0], codes, context_map, &writer, 0, nullptr);
+    writer.ZeroPadToByte();
+  }
+
+  // We do not truncate the output. Reading past the end reads out zeroes
+  // anyway.
+  BitReader br(writer.GetSpan());
+  Status status = true;
+  {
+    BitReaderScopedCloser bc(&br, &status);
+
+    std::vector<uint8_t> dec_context_map;
+    ANSCode decoded_codes;
+    ASSERT_TRUE(DecodeHistograms(&br, 1, &decoded_codes, &dec_context_map));
+    ASSERT_EQ(dec_context_map, context_map);
+    ANSSymbolReader reader(&decoded_codes, &br);
+
+    ANSSymbolReader::Checkpoint checkpoint;
+    size_t br_pos;
+    constexpr size_t kInterval = ANSSymbolReader::kMaxCheckpointInterval - 2;
+    for (size_t i = 0; i < input_values[0].size(); i++) {
+      if (i % kInterval == 0 && i > 0) {
+        reader.Restore(checkpoint);
+        ASSERT_TRUE(br.Close());
+        br = BitReader(writer.GetSpan());
+        br.SkipBits(br_pos);
+        for (size_t j = i - kInterval; j < i; j++) {
+          Token symbol = input_values[0][j];
+          uint32_t read_symbol =
+              reader.ReadHybridUint(symbol.context, &br, dec_context_map);
+          ASSERT_EQ(read_symbol, symbol.value) << "j = " << j;
+        }
+      }
+      if (i % kInterval == 0) {
+        reader.Save(&checkpoint);
+        br_pos = br.TotalBitsConsumed();
+      }
+      Token symbol = input_values[0][i];
+      uint32_t read_symbol =
+          reader.ReadHybridUint(symbol.context, &br, dec_context_map);
+      ASSERT_EQ(read_symbol, symbol.value) << "i = " << i;
+    }
+    ASSERT_TRUE(reader.CheckANSFinalState());
+  }
+  EXPECT_TRUE(status);
+}
+
+TEST(ANSTest, TestCheckpointingANS) {
+  TestCheckpointing(/*ans=*/true, /*lz77=*/false);
+}
+
+TEST(ANSTest, TestCheckpointingPrefix) {
+  TestCheckpointing(/*ans=*/false, /*lz77=*/false);
+}
+
+TEST(ANSTest, TestCheckpointingANSLZ77) {
+  TestCheckpointing(/*ans=*/true, /*lz77=*/true);
+}
+
+TEST(ANSTest, TestCheckpointingPrefixLZ77) {
+  TestCheckpointing(/*ans=*/false, /*lz77=*/true);
+}
+
 }  // namespace
 }  // namespace jxl

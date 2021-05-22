@@ -154,9 +154,16 @@ Status UndoXYBInPlace(Image3F* idct, const Rect& rect,
             FastPowf(d, v, Set(d, output_encoding_info.inverse_gamma)));
       };
       for (size_t x = 0; x < rect.xsize(); x += Lanes(d)) {
+#if MEMORY_SANITIZER
+        const auto mask = Iota(d, x) < Set(d, rect.xsize());
+        const auto in_opsin_x = IfThenElseZero(mask, Load(d, row0 + x));
+        const auto in_opsin_y = IfThenElseZero(mask, Load(d, row1 + x));
+        const auto in_opsin_b = IfThenElseZero(mask, Load(d, row2 + x));
+#else
         const auto in_opsin_x = Load(d, row0 + x);
         const auto in_opsin_y = Load(d, row1 + x);
         const auto in_opsin_b = Load(d, row2 + x);
+#endif
         JXL_COMPILER_FENCE;
         auto linear_r = Undefined(d);
         auto linear_g = Undefined(d);
@@ -973,7 +980,10 @@ Status FinalizeFrameDecoding(ImageBundle* decoded,
                              1 << frame_header.chroma_subsampling.VShift(c)));
       for (size_t i = 0; i < frame_header.chroma_subsampling.HShift(c); i++) {
         plane.InitializePaddingForUnalignedAccesses();
-        plane = UpsampleH2(plane, pool);
+        const size_t output_xsize =
+            DivCeil(frame_dim.xsize_padded,
+                    1 << (frame_header.chroma_subsampling.HShift(c) - i - 1));
+        plane = UpsampleH2(plane, output_xsize, pool);
       }
       for (size_t i = 0; i < frame_header.chroma_subsampling.VShift(c); i++) {
         plane.InitializePaddingForUnalignedAccesses();
