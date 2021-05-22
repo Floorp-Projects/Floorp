@@ -87,6 +87,7 @@ TEST_F(ImageLoader, DetectAVIFCompatibleBrand) {
   CheckMimeType(buffer, sizeof(buffer), IMAGE_AVIF);
 }
 
+#ifdef MOZ_JXL
 TEST_F(ImageLoader, DetectJXLCodestream) {
   const char buffer[] = "\xff\x0a";
   CheckMimeType(buffer, sizeof(buffer), IMAGE_JXL);
@@ -99,6 +100,7 @@ TEST_F(ImageLoader, DetectJXLContainer) {
       "\x0d\x0a\x87\x0a";
   CheckMimeType(buffer, sizeof(buffer), IMAGE_JXL);
 }
+#endif
 
 TEST_F(ImageLoader, DetectNonImageMP4) {
   const char buffer[] =

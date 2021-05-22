@@ -58,10 +58,8 @@ nsresult mozilla::image::EnsureModuleInitialized() {
 
   static ImageEnablementCookie kAVIFCookie = {
       mozilla::StaticPrefs::image_avif_enabled, "image/avif"_ns};
-#ifdef MOZ_JXL
   static ImageEnablementCookie kJXLCookie = {
       mozilla::StaticPrefs::image_jxl_enabled, "image/jxl"_ns};
-#endif
   static ImageEnablementCookie kWebPCookie = {
       mozilla::StaticPrefs::image_webp_enabled, "image/webp"_ns};
   Preferences::RegisterCallbackAndCall(UpdateContentViewerRegistration,

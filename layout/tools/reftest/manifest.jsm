@@ -528,7 +528,7 @@ function BuildConditionSandbox(aURL) {
     // that isn't available to drawSnapshot (like any sort of
     // compositor feature such as async scrolling).
     sandbox.unsupportedWithDrawSnapshot = g.useDrawSnapshot;
-    
+
     sandbox.retainedDisplayList =
       prefs.getBoolPref("layout.display-list.retain") && !sandbox.useDrawSnapshot;
 
@@ -567,6 +567,12 @@ function BuildConditionSandbox(aURL) {
     sandbox.webrtc = true;
 #else
     sandbox.webrtc = false;
+#endif
+
+#if MOZ_JXL
+    sandbox.jxl = true;
+#else
+    sandbox.jxl = false;
 #endif
 
     let retainedDisplayListsEnabled = prefs.getBoolPref("layout.display-list.retain", false);

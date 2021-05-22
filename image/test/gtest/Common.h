@@ -476,7 +476,6 @@ ImageTestCase GreenICOTestCase();
 ImageTestCase GreenIconTestCase();
 ImageTestCase GreenWebPTestCase();
 ImageTestCase GreenAVIFTestCase();
-ImageTestCase GreenJXLTestCase();
 
 ImageTestCase Transparent10bit420AVIFTestCase();
 ImageTestCase Transparent10bit422AVIFTestCase();
@@ -516,7 +515,6 @@ ImageTestCase Gray12bitFullRangeGrayscaleAVIFTestCase();
 ImageTestCase StackCheckAVIFTestCase();
 
 ImageTestCase LargeWebPTestCase();
-ImageTestCase LargeJXLTestCase();
 ImageTestCase GreenWebPIccSrgbTestCase();
 
 ImageTestCase GreenFirstFrameAnimatedGIFTestCase();
@@ -536,7 +534,6 @@ ImageTestCase CorruptICOWithBadBppTestCase();
 ImageTestCase TransparentPNGTestCase();
 ImageTestCase TransparentGIFTestCase();
 ImageTestCase TransparentWebPTestCase();
-ImageTestCase TransparentJXLTestCase();
 ImageTestCase TransparentNoAlphaHeaderWebPTestCase();
 ImageTestCase FirstFramePaddingGIFTestCase();
 ImageTestCase TransparentIfWithinICOBMPTestCase(TestCaseFlags aFlags);
@@ -554,7 +551,6 @@ ImageTestCase DownscaledBMPTestCase();
 ImageTestCase DownscaledICOTestCase();
 ImageTestCase DownscaledIconTestCase();
 ImageTestCase DownscaledWebPTestCase();
-ImageTestCase DownscaledJXLTestCase();
 ImageTestCase DownscaledTransparentICOWithANDMaskTestCase();
 
 ImageTestCase TruncatedSmallGIFTestCase();
@@ -581,6 +577,13 @@ ImageTestCase DownscaledAVIFTestCase();
 ImageTestCase LargeAVIFTestCase();
 ImageTestCase MultiLayerAVIFTestCase();
 ImageTestCase TransparentAVIFTestCase();
+
+#ifdef MOZ_JXL
+ImageTestCase GreenJXLTestCase();
+ImageTestCase DownscaledJXLTestCase();
+ImageTestCase LargeJXLTestCase();
+ImageTestCase TransparentJXLTestCase();
+#endif
 
 ImageTestCase ExifResolutionTestCase();
 
