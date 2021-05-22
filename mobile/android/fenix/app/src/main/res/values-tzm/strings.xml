@@ -105,6 +105,9 @@
     <!-- Preference for notifications -->
     <string name="preferences_notifications">Tineɣmisin</string>
 
+    <!-- Button caption to confirm the add-on collection configuration -->
+    <string name="customize_addon_collection_ok">WAXXA</string>
+
     <!-- Preference for syncing logins -->
     <string name="preferences_sync_logins">Inekcam</string>
     <!-- Preference for signing out -->
@@ -283,6 +286,9 @@
 
     <!-- Title text displayed in the rename top site dialog. -->
 	<string name="top_sites_rename_dialog_title">Isem</string>
+
+    <!-- Button caption to confirm the renaming of the top site. -->
+	<string name="top_sites_rename_dialog_ok">WAXXA</string>
 
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Kkes</string>

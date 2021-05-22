@@ -1494,6 +1494,8 @@
     <string name="preferences_passwords_autofill">Nunojisaj pa ruyonil</string>
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">Sync tikirisanïk molojri\'ïl</string>
+    <!-- Preference for syncing saved logins in Fenix, when not signed in-->
+    <string name="preferences_passwords_sync_logins_across_devices">Sync rutikirib\'al molojri\'ïl rik\'in okisaxel</string>
     <!-- Syncing saved logins in Fenix needs reconnect to sync -->
     <string name="preferences_passwords_sync_logins_reconnect">Tok chik</string>
     <!-- Syncing saved logins in Fenix needs login -->
@@ -1598,6 +1600,8 @@
     <string name="preferences_credit_cards_save_and_autofill_cards_summary">Ewan kisik\'ixik ri taq tzij</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
     <string name="preferences_credit_cards_sync_cards_across_devices">Sync tarjeta\' chi kikojol okisab\'äl</string>
+    <!-- Preference option for syncing credit cards across devices. This is displayed when the user is signed into sync -->
+    <string name="preferences_credit_cards_sync_cards">Sync taq tarjeta\'</string>
     <!-- Preference option for adding a credit card -->
     <string name="preferences_credit_cards_add_credit_card">Titz\'aqatisäx rutarjeta\' kre\'ito\'</string>
 
@@ -1629,6 +1633,9 @@
     <string name="credit_cards_cancel_button">Tiq\'at</string>
     <!-- Title of the "Saved cards" screen -->
     <string name="credit_cards_saved_cards">Keyak tarjeta\'</string>
+
+    <!-- Error message for credit card number validation -->
+    <string name="credit_cards_number_validation_error_message">Titz\'ib\'äx jun okel rajilab\'al rutarjeta\' kre\'ito\'</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Titz\'aqatisäx kanob\'äl</string>
@@ -1799,6 +1806,9 @@ Achi\'el: \nhttps://www.google.com/search?q=%s</string>
 
     <!-- Content description radio buttons with a link to more information -->
     <string name="radio_preference_info_content_description">Tipitz\' richin ch\'aqa\' rub\'anikil</string>
+
+    <!-- Content description for the action bar "up" button -->
+    <string name="action_bar_up_description">Tib\'an okem ajsik</string>
 
     <!-- Content description for privacy content close button -->
     <string name="privacy_content_close_button_content_description">Titz\'apïx</string>
