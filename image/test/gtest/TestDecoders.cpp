@@ -680,7 +680,9 @@ IMAGE_GTEST_DECODER_BASE_F(BMP)
 IMAGE_GTEST_DECODER_BASE_F(ICO)
 IMAGE_GTEST_DECODER_BASE_F(Icon)
 IMAGE_GTEST_DECODER_BASE_F(WebP)
+#ifdef MOZ_JXL
 IMAGE_GTEST_DECODER_BASE_F(JXL)
+#endif
 
 TEST_F(ImageDecoders, ICOWithANDMaskDownscaleDuringDecode) {
   CheckDownscaleDuringDecode(DownscaledTransparentICOWithANDMaskTestCase());
@@ -865,9 +867,11 @@ TEST_F(ImageDecoders, AVIFDownscaleDuringDecode) {
   CheckDownscaleDuringDecode(DownscaledAVIFTestCase());
 }
 
+#ifdef MOZ_JXL
 TEST_F(ImageDecoders, JXLLargeMultiChunk) {
   CheckDecoderMultiChunk(LargeJXLTestCase(), /* aChunkSize */ 64);
 }
+#endif
 
 TEST_F(ImageDecoders, AnimatedGIFSingleChunk) {
   CheckDecoderSingleChunk(GreenFirstFrameAnimatedGIFTestCase());

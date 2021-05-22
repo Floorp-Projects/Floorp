@@ -29,7 +29,7 @@ skip-if(Android&&webrender) include ico/reftest.list
 include jpeg/reftest.list
 
 # JXL tests
-skip-if(Android) include jxl/reftest.list
+skip-if(Android||!jxl) include jxl/reftest.list
 
 # GIF tests
 include gif/reftest.list
