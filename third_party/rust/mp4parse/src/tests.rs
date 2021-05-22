@@ -426,7 +426,7 @@ fn read_vpcc_version_0() {
 
 // TODO: it'd be better to find a real sample here.
 #[test]
-#[allow(clippy::inconsistent_digit_grouping)] // Allow odd grouping for test readability.
+#[allow(clippy::unusual_byte_groupings)] // Allow odd grouping for test readability.
 fn read_vpcc_version_1() {
     let data_length = 12u16;
     let mut stream = make_fullbox(BoxSize::Auto, b"vpcC", 1, |s| {
