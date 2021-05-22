@@ -95,4 +95,14 @@
     <string name="mozac_feature_prompt_repost_positive_button_text">Titaq chik tzij</string>
     <!-- Pressing this will dismiss the dialog and not refresh the webpage -->
     <string name="mozac_feature_prompt_repost_negative_button_text">Tiq\'at</string>
+
+    <!-- Credit Card Autofill -->
+    <!-- Header for the select credit card prompt to allow users to fill a form with a saved credit card. -->
+    <string name="mozac_feature_prompts_select_credit_card">Ticha\' rutarjeta\' kre\'ito\'</string>
+    <!-- Content description for expanding the select credit card options in the select credit card prompt. -->
+    <string name="mozac_feature_prompts_expand_credit_cards_content_description">Kerik\' ri chilab\'en rutarjeta\' kre\ito\'</string>
+    <!-- Content description for collapsing the select credit card options in the select credit prompt. -->
+    <string name="mozac_feature_prompts_collapse_credit_cards_content_description">Kek\'ol ri chilab\'en rutarjeta\' kre\ito\'</string>
+    <!-- Option in the expanded select credit card prompt that links to credit cards settings -->
+    <string name="mozac_feature_prompts_manage_credit_cards">Kenuk\'samajïx kikre\'ito\' taq tarjeta\'</string>
 </resources>
