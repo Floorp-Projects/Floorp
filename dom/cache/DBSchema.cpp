@@ -520,14 +520,15 @@ nsresult CreateOrMigrateSchema(mozIStorageConnection& aConn) {
     // if a new migration is incorrect by fast failing on the corruption.
     // Unfortunately, this must be performed outside of the transaction.
 
-    QM_TRY(ToResult(aConn.ExecuteSimpleSQL("VACUUM"_ns))
-               .orElse([&aConn](const nsresult rv) -> Result<Ok, nsresult> {
-                 if (rv == NS_ERROR_STORAGE_CONSTRAINT) {
-                   QM_TRY(IntegrityCheck(aConn));
-                 }
+    QM_TRY(
+        QM_OR_ELSE_WARN(ToResult(aConn.ExecuteSimpleSQL("VACUUM"_ns)),
+                        ([&aConn](const nsresult rv) -> Result<Ok, nsresult> {
+                          if (rv == NS_ERROR_STORAGE_CONSTRAINT) {
+                            QM_TRY(IntegrityCheck(aConn));
+                          }
 
-                 return Err(rv);
-               }));
+                          return Err(rv);
+                        })));
   }
 
   return NS_OK;
