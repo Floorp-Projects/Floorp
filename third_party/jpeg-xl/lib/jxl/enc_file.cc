@@ -124,8 +124,10 @@ Status PrepareCodecMetadataFromIO(const CompressParams& cparams,
                                   const CodecInOut* io,
                                   CodecMetadata* metadata) {
   *metadata = io->metadata;
+  size_t ups = 1;
+  if (cparams.already_downsampled) ups = cparams.resampling;
 
-  JXL_RETURN_IF_ERROR(metadata->size.Set(io->xsize(), io->ysize()));
+  JXL_RETURN_IF_ERROR(metadata->size.Set(io->xsize() * ups, io->ysize() * ups));
 
   // Keep ICC profile in lossless modes because a reconstructed profile may be
   // slightly different (quantization).

@@ -46,7 +46,7 @@ int PrintBasicInfo(FILE* file) {
   int seen_basic_info = 0;
 
   for (;;) {
-    // The firs time, this will output JXL_DEC_NEED_MORE_INPUT because no
+    // The first time, this will output JXL_DEC_NEED_MORE_INPUT because no
     // input is set yet, this is ok since the input is set when handling this
     // event.
     JxlDecoderStatus status = JxlDecoderProcessInput(dec);
@@ -55,7 +55,7 @@ int PrintBasicInfo(FILE* file) {
       fprintf(stderr, "Decoder error\n");
       break;
     } else if (status == JXL_DEC_NEED_MORE_INPUT) {
-      // The firstt time there is nothing to release and it returns 0, but that
+      // The first time there is nothing to release and it returns 0, but that
       // is ok.
       size_t remaining = JxlDecoderReleaseInput(dec);
       // move any remaining bytes to the front if necessary
@@ -67,6 +67,10 @@ int PrintBasicInfo(FILE* file) {
       data = (uint8_t*)realloc(data, remaining + chunk_size);
       // append bytes read from the file behind the remaining bytes
       size_t read_size = fread(data + remaining, 1, chunk_size, file);
+      if (read_size == 0 && feof(file)) {
+        fprintf(stderr, "Unexpected EOF\n");
+        break;
+      }
       data_size = remaining + read_size;
       JxlDecoderSetInput(dec, data, data_size);
     } else if (status == JXL_DEC_SUCCESS) {

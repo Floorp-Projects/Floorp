@@ -45,10 +45,13 @@ class ImageBlender {
     bool done_;
     Rect current_overlap_;
     Rect current_cropbox_;
-    ImageBundle foreground_;
     ImageBundle* dest_;
     std::vector<const float*> fg_ptrs_;
+    std::vector<size_t> fg_strides_;
     std::vector<float*> bg_ptrs_;
+    std::vector<size_t> bg_strides_;
+    std::vector<const float*> fg_row_ptrs_;
+    std::vector<float*> bg_row_ptrs_;
     std::vector<PatchBlending> blending_info_;
   };
 

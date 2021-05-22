@@ -59,8 +59,6 @@ void FloatToU32(const float* in, uint32_t* out, size_t num, float mul,
   const auto scale = Set(d, mul);
   for (size_t x = 0; x < vec_num; x += Lanes(d)) {
     auto v = Load(d, in + x);
-    // Check for NaNs.
-    JXL_DASSERT(AllTrue(v == v));
     // Clamp turns NaN to 'min'.
     v = Clamp(v, Zero(d), one);
     auto i = NearestInt(v * scale);
@@ -68,7 +66,6 @@ void FloatToU32(const float* in, uint32_t* out, size_t num, float mul,
   }
   for (size_t x = vec_num; x < num; x++) {
     float v = in[x];
-    JXL_DASSERT(!std::isnan(v));
     // Inverted condition grants that NaN is mapped to 0.0f.
     v = (v >= 0.0f) ? (v > 1.0f ? mul : (v * mul)) : 0.0f;
     out[x] = static_cast<uint32_t>(v + 0.5f);
