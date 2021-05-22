@@ -1929,6 +1929,10 @@ void nsBlockFrame::ComputeFinalSize(const ReflowInput& aReflowInput,
     aMetrics.mCarriedOutBEndMargin.Zero();
     autoBSize += borderPadding.BStartEnd(wm);
     finalSize.BSize(wm) = autoBSize;
+  } else if (aState.mReflowStatus.IsInlineBreakBefore()) {
+    // Our parent is expected to push this frame to the next page/column so what
+    // size we set here doesn't really matter.
+    finalSize.BSize(wm) = aReflowInput.AvailableBSize();
   } else if (aState.mReflowStatus.IsComplete()) {
     nscoord contentBSize = blockEndEdgeOfChildren - borderPadding.BStart(wm);
     nscoord lineClampedContentBSize =
@@ -1945,9 +1949,14 @@ void nsBlockFrame::ComputeFinalSize(const ReflowInput& aReflowInput,
                      bSize > aReflowInput.AvailableBSize() &&
                      aReflowInput.AvailableBSize() != NS_UNCONSTRAINEDSIZE)) {
       // Applying `min-size` made us overflow our available size.
-      // Clamp it and report that we're Incomplete.
+      // Clamp it and report that we're Incomplete, or BreakBefore if we have
+      // 'break-inside: avoid' that is applicable.
       bSize = aReflowInput.AvailableBSize();
-      aState.mReflowStatus.SetIncomplete();
+      if (ShouldAvoidBreakInside(aReflowInput)) {
+        aState.mReflowStatus.SetInlineLineBreakBeforeAndReset();
+      } else {
+        aState.mReflowStatus.SetIncomplete();
+      }
     }
     finalSize.BSize(wm) = bSize;
   } else {
