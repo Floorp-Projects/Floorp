@@ -47,9 +47,11 @@ AutoInitializeImageLib::AutoInitializeImageLib() {
   rv = Preferences::SetBool("image.avif.enabled", true);
   EXPECT_TRUE(rv == NS_OK);
 
+#ifdef MOZ_JXL
   // Ensure JXL is enabled to run decoder tests.
   rv = Preferences::SetBool("image.jxl.enabled", true);
   EXPECT_TRUE(rv == NS_OK);
+#endif
 
   // Ensure that ImageLib services are initialized.
   nsCOMPtr<imgITools> imgTools =
@@ -442,10 +444,6 @@ ImageTestCase GreenAVIFTestCase() {
       .WithSurfaceFlags(SurfaceFlags::TO_SRGB_COLORSPACE);
 }
 
-ImageTestCase GreenJXLTestCase() {
-  return ImageTestCase("green.jxl", "image/jxl", IntSize(100, 100));
-}
-
 // Forcing sRGB is required until nsAVIFDecoder supports ICC profiles
 // See bug 1634741
 ImageTestCase Transparent10bit420AVIFTestCase() {
@@ -824,11 +822,6 @@ ImageTestCase LargeAVIFTestCase() {
                        TEST_CASE_IGNORE_OUTPUT);
 }
 
-ImageTestCase LargeJXLTestCase() {
-  return ImageTestCase("large.jxl", "image/jxl", IntSize(1200, 660),
-                       TEST_CASE_IGNORE_OUTPUT);
-}
-
 ImageTestCase GreenWebPIccSrgbTestCase() {
   return ImageTestCase("green.icc_srgb.webp", "image/webp", IntSize(100, 100));
 }
@@ -925,11 +918,6 @@ ImageTestCase TransparentWebPTestCase() {
   return test;
 }
 
-ImageTestCase TransparentJXLTestCase() {
-  return ImageTestCase("transparent.jxl", "image/jxl", IntSize(1200, 1200),
-                       TEST_CASE_IS_TRANSPARENT);
-}
-
 ImageTestCase TransparentNoAlphaHeaderWebPTestCase() {
   ImageTestCase test("transparent-no-alpha-header.webp", "image/webp",
                      IntSize(100, 100), TEST_CASE_IS_FUZZY);
@@ -1019,11 +1007,6 @@ ImageTestCase DownscaledAVIFTestCase() {
                        IntSize(20, 20));
 }
 
-ImageTestCase DownscaledJXLTestCase() {
-  return ImageTestCase("downscaled.jxl", "image/jxl", IntSize(100, 100),
-                       IntSize(20, 20));
-}
-
 ImageTestCase DownscaledTransparentICOWithANDMaskTestCase() {
   // This test case is an ICO with AND mask transparency. We want to ensure that
   // we can downscale it without crashing or triggering ASAN failures, but its
@@ -1105,6 +1088,27 @@ ImageTestCase PerfRgbAlphaLossyWebPTestCase() {
 ImageTestCase PerfRgbGIFTestCase() {
   return ImageTestCase("perf_srgb.gif", "image/gif", IntSize(1000, 1000));
 }
+
+#ifdef MOZ_JXL
+ImageTestCase GreenJXLTestCase() {
+  return ImageTestCase("green.jxl", "image/jxl", IntSize(100, 100));
+}
+
+ImageTestCase DownscaledJXLTestCase() {
+  return ImageTestCase("downscaled.jxl", "image/jxl", IntSize(100, 100),
+                       IntSize(20, 20));
+}
+
+ImageTestCase LargeJXLTestCase() {
+  return ImageTestCase("large.jxl", "image/jxl", IntSize(1200, 660),
+                       TEST_CASE_IGNORE_OUTPUT);
+}
+
+ImageTestCase TransparentJXLTestCase() {
+  return ImageTestCase("transparent.jxl", "image/jxl", IntSize(1200, 1200),
+                       TEST_CASE_IS_TRANSPARENT);
+}
+#endif
 
 ImageTestCase ExifResolutionTestCase() {
   return ImageTestCase("exif_resolution.jpg", "image/jpeg", IntSize(100, 50));
