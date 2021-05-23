@@ -12,13 +12,15 @@
     <androidx.appcompat.widget.Toolbar
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:background="@color/photonInk90"/>
 
     <FrameLayout
         android:id="@android:id/list_container"
         android:layout_width="match_parent"
         android:layout_height="0px"
         android:layout_weight="1"
+        android:background="@color/photonInk80"
         tools:targetApi="n" />
 
 </LinearLayout>
