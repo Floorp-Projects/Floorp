@@ -9,10 +9,10 @@ package org.mozilla.fenix.ui.robots
 import android.content.pm.PackageManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.espresso.Espresso.onView
-import androidx.test.espresso.action.ViewActions
-import androidx.test.espresso.contrib.RecyclerViewActions
 import androidx.test.espresso.ViewInteraction
+import androidx.test.espresso.action.ViewActions
 import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.contrib.RecyclerViewActions
 import androidx.test.espresso.intent.Intents.intended
 import androidx.test.espresso.intent.matcher.IntentMatchers
 import androidx.test.espresso.intent.matcher.IntentMatchers.toPackage
@@ -70,6 +70,7 @@ class SettingsRobot {
     fun verifyDeleteBrowsingDataOnQuitButton() = assertDeleteBrowsingDataOnQuitButton()
     fun verifyDeleteBrowsingDataOnQuitValue(state: String) =
         assertDeleteBrowsingDataValue(state)
+    fun verifyNotificationsButton() = assertNotificationsButton()
     fun verifyDataCollectionButton() = assertDataCollectionButton()
     fun verifyOpenLinksInAppsButton() = assertOpenLinksInAppsButton()
     fun verifyOpenLinksInAppsSwitchDefault() = assertOpenLinksInAppsValue()
@@ -215,6 +216,15 @@ class SettingsRobot {
 
             SettingsSubMenuDeleteBrowsingDataOnQuitRobot().interact()
             return SettingsSubMenuDeleteBrowsingDataOnQuitRobot.Transition()
+        }
+
+        fun openSettingsSubMenuNotifications(interact: SystemSettingsRobot.() -> Unit): SystemSettingsRobot.Transition {
+            scrollToElementByText("Notifications")
+            fun notificationsButton() = mDevice.findObject(textContains("Notifications"))
+            notificationsButton().click()
+
+            SystemSettingsRobot().interact()
+            return SystemSettingsRobot.Transition()
         }
 
         fun openSettingsSubMenuDataCollection(interact: SettingsSubMenuDataCollectionRobot.() -> Unit): SettingsSubMenuDataCollectionRobot.Transition {
@@ -365,8 +375,17 @@ private fun assertDeleteBrowsingDataValue(state: String) {
     onView(withText(state)).check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 }
 
-private fun assertDataCollectionButton() = onView(withText("Data collection"))
+private fun assertNotificationsButton() {
+    scrollToElementByText("Notifications")
+    onView(withText("Notifications"))
+        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+}
+
+private fun assertDataCollectionButton() {
+    scrollToElementByText("Data collection")
+    onView(withText("Data collection"))
     .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+}
 
 private fun openLinksInAppsButton() = onView(withText("Open links in apps"))
 

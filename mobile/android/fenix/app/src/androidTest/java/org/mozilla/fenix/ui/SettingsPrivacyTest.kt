@@ -147,6 +147,12 @@ class SettingsPrivacyTest {
             verifyDeleteBrowsingDataOnQuitSubMenuItems()
         }.goBack {
 
+            // NOTIFICATIONS
+            verifyNotificationsButton()
+        }.openSettingsSubMenuNotifications {
+            verifySystemNotificationsView()
+        }.goBack {
+
             // DATA COLLECTION
             verifyDataCollectionButton()
         }.openSettingsSubMenuDataCollection {

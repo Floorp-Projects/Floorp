@@ -6,8 +6,12 @@ package org.mozilla.fenix.ui.robots
 
 import androidx.test.espresso.intent.Intents
 import androidx.test.espresso.intent.matcher.IntentMatchers.hasAction
+import androidx.test.uiautomator.UiSelector
+import org.junit.Assert.assertTrue
+import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 
 class SystemSettingsRobot {
+    fun verifySystemNotificationsView() = assertSystemNotificationsView()
     fun verifyNotifications() {
         Intents.intended(hasAction("android.settings.APP_NOTIFICATION_SETTINGS"))
     }
@@ -18,10 +22,24 @@ class SystemSettingsRobot {
 
     class Transition {
         // Difficult to know where this will go
+        fun goBack(interact: SettingsRobot.() -> Unit): SettingsRobot.Transition {
+            mDevice.pressBack()
+
+            SettingsRobot().interact()
+            return SettingsRobot.Transition()
+        }
     }
 }
 
 fun systemSettings(interact: SystemSettingsRobot.() -> Unit): SystemSettingsRobot.Transition {
     SystemSettingsRobot().interact()
     return SystemSettingsRobot.Transition()
+}
+
+private fun assertSystemNotificationsView() {
+    mDevice.findObject(UiSelector().resourceId("com.android.settings:id/list"))
+        .waitForExists(waitingTime)
+    assertTrue(mDevice.findObject(UiSelector().textContains("Show notifications"))
+        .waitForExists(waitingTime)
+    )
 }
