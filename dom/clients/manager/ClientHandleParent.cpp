@@ -68,9 +68,13 @@ void ClientHandleParent::Init(const IPCClientInfo& aClientInfo) {
   mService->FindSource(aClientInfo.id(), aClientInfo.principalInfo())
       ->Then(
           GetCurrentSerialEventTarget(), __func__,
-          [this](ClientSourceParent* aSource) {
+          [this](bool) {
             mSourcePromiseRequestHolder.Complete();
-            FoundSource(aSource);
+            ClientSourceParent* source =
+                mService->FindExistingSource(mClientId, mPrincipalInfo);
+            if (source) {
+              FoundSource(source);
+            }
           },
           [this](const CopyableErrorResult&) {
             mSourcePromiseRequestHolder.Complete();
@@ -105,7 +109,7 @@ void ClientHandleParent::FoundSource(ClientSourceParent* aSource) {
 
   mSource = aSource;
   mSource->AttachHandle(this);
-  mSourcePromiseHolder.ResolveIfExists(aSource, __func__);
+  mSourcePromiseHolder.ResolveIfExists(true, __func__);
 }
 
 }  // namespace mozilla::dom

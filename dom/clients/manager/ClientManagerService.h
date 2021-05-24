@@ -59,9 +59,8 @@ class ClientManagerService final {
       return mPromiseHolder.Ensure(__func__);
     }
 
-    void ResolvePromiseIfExists(ClientSourceParent* aSource) {
-      MOZ_ASSERT(aSource);
-      mPromiseHolder.ResolveIfExists(aSource, __func__);
+    void ResolvePromiseIfExists() {
+      mPromiseHolder.ResolveIfExists(true, __func__);
     }
 
     void RejectPromiseIfExists(const CopyableErrorResult& aRv) {
@@ -101,11 +100,6 @@ class ClientManagerService final {
   ClientSourceParent* MaybeUnwrapAsExistingSource(
       const SourceTableEntry& aEntry) const;
 
-  // Returns nullptr if the ClientSourceParent doesn't exist yet (i.e. it's a
-  // FutureClientSourceParent or has already been destroyed) or is frozen.
-  ClientSourceParent* FindExistingSource(
-      const nsID& aID, const mozilla::ipc::PrincipalInfo& aPrincipalInfo) const;
-
  public:
   static already_AddRefed<ClientManagerService> GetOrCreateInstance();
 
@@ -123,8 +117,17 @@ class ClientManagerService final {
   // no longer exists.
   void ForgetFutureSource(const IPCClientInfo& aClientInfo);
 
+  // Returns a promise that resolves if/when the ClientSourceParent exists and
+  // rejects if/when it's known that the ClientSourceParent will never exist or
+  // if it's frozen. Note that the ClientSourceParent may not exist anymore
+  // by the time promise callbacks run.
   RefPtr<SourcePromise> FindSource(
       const nsID& aID, const mozilla::ipc::PrincipalInfo& aPrincipalInfo);
+
+  // Returns nullptr if the ClientSourceParent doesn't exist yet (i.e. it's a
+  // FutureClientSourceParent or has already been destroyed) or is frozen.
+  ClientSourceParent* FindExistingSource(
+      const nsID& aID, const mozilla::ipc::PrincipalInfo& aPrincipalInfo) const;
 
   void AddManager(ClientManagerParent* aManager);
 

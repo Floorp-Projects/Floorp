@@ -266,7 +266,7 @@ bool ClientManagerService::AddSource(ClientSourceParent* aSource) {
       return false;
     }
 
-    placeHolder.ResolvePromiseIfExists(aSource);
+    placeHolder.ResolvePromiseIfExists();
     *entry = AsVariant(aSource);
     return true;
   }
@@ -363,7 +363,7 @@ RefPtr<SourcePromise> ClientManagerService::FindSource(
     return SourcePromise::CreateAndReject(rv, __func__);
   }
 
-  return SourcePromise::CreateAndResolve(source, __func__);
+  return SourcePromise::CreateAndResolve(true, __func__);
 }
 
 void ClientManagerService::AddManager(ClientManagerParent* aManager) {

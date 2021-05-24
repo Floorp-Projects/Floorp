@@ -14,8 +14,7 @@ namespace dom {
 class ClientManagerService;
 class ClientSourceParent;
 
-typedef MozPromise<ClientSourceParent*, CopyableErrorResult,
-                   /* IsExclusive = */ false>
+typedef MozPromise<bool, CopyableErrorResult, /* IsExclusive = */ false>
     SourcePromise;
 
 class ClientHandleParent final : public PClientHandleParent {
@@ -54,6 +53,7 @@ class ClientHandleParent final : public PClientHandleParent {
 
   void FoundSource(ClientSourceParent* aSource);
 
+  // Should be called only once EnsureSource() has resolved. May return nullptr.
   ClientSourceParent* GetSource() const;
 
   RefPtr<SourcePromise> EnsureSource();
