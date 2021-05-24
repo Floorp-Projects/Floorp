@@ -44,9 +44,9 @@ HarAutomation.prototype = {
 
   initialize: function(toolbox) {
     this.toolbox = toolbox;
+    this.commands = toolbox.commands;
 
-    const { target } = toolbox;
-    this.startMonitoring(target.client);
+    this.startMonitoring(this.commands.client);
   },
 
   destroy: function() {
@@ -69,7 +69,7 @@ HarAutomation.prototype = {
     this.devToolsClient = client;
     this.webConsoleFront = await this.toolbox.target.getFront("console");
 
-    this.tabWatcher = new TabWatcher(this.toolbox, this);
+    this.tabWatcher = new TabWatcher(this.commands, this);
     this.tabWatcher.connect();
   },
 
@@ -86,7 +86,7 @@ HarAutomation.prototype = {
     // data from events sent from the backend.
     this.collector = new HarCollector({
       webConsoleFront: this.webConsoleFront,
-      resourceCommand: this.toolbox.resourceCommand,
+      commands: this.commands,
     });
 
     this.collector.start();
@@ -160,7 +160,7 @@ HarAutomation.prototype = {
    */
   executeExport: async function(data) {
     const items = this.collector.getItems();
-    const { title } = this.toolbox.target;
+    const { title } = this.commands.targetCommand.targetFront;
 
     const netMonitor = await this.toolbox.getNetMonitorAPI();
     const connector = await netMonitor.getHarExportConnector();
@@ -208,8 +208,8 @@ HarAutomation.prototype = {
 
 // Helpers
 
-function TabWatcher(toolbox, listener) {
-  this.target = toolbox.target;
+function TabWatcher(commands, listener) {
+  this.target = commands.targetCommand.targetFront;
   this.listener = listener;
 
   this.onNavigate = this.onNavigate.bind(this);
