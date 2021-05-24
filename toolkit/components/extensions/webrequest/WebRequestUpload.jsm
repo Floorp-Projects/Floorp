@@ -351,9 +351,21 @@ function parseFormData(stream, channel, lenient = false) {
         );
       }
 
+      // Decode the percent-escapes in the name. Unlike with decodeURIComponent,
+      // partial percent-escapes are passed through as is rather than throwing
+      // exceptions.
+      name = name.replace(/(%[0-9A-Fa-f]{2})+/g, match => {
+        const bytes = new Uint8Array(match.length / 3);
+        for (let i = 0; i < match.length / 3; i++) {
+          bytes[i] = parseInt(match.substring(i * 3 + 1, (i + 1) * 3), 16);
+        }
+        return new TextDecoder("utf-8").decode(bytes);
+      });
+
       if (headers.has("content-type")) {
         // For file upload fields, we return the filename, rather than the
-        // file data.
+        // file data. We're following Chrome in not percent-decoding the
+        // filename.
         let filename = headers.getParam("content-disposition", "filename");
         content = filename || "";
       }
