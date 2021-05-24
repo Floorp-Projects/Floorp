@@ -58,6 +58,7 @@ add_task(async function test_initialization() {
     // In other parts of this test, this value is not checked any more.
     // test_blocklist_telemetry.js already checks lastModified_rs_addons_mlbf.
     "blocklist.lastModified_rs_addons_mlbf": undefined,
+    "blocklist.mlbf_source": undefined,
     "blocklist.mlbf_generation_time": undefined,
     "blocklist.mlbf_stash_time_oldest": undefined,
     "blocklist.mlbf_stash_time_newest": undefined,
@@ -73,6 +74,7 @@ add_task(async function test_without_mlbf() {
   assertTelemetryScalars({
     "blocklist.mlbf_enabled": true,
     "blocklist.mlbf_stashes": true,
+    "blocklist.mlbf_source": "unknown",
     "blocklist.mlbf_generation_time": "Missing Date",
     "blocklist.mlbf_stash_time_oldest": "Missing Date",
     "blocklist.mlbf_stash_time_newest": "Missing Date",
@@ -93,6 +95,7 @@ add_task(async function test_common_good_case_with_stashes() {
   assertTelemetryScalars({
     "blocklist.mlbf_enabled": true,
     "blocklist.mlbf_stashes": true,
+    "blocklist.mlbf_source": "cache_match",
     "blocklist.mlbf_generation_time": toUTC(MLBF_RECORD.generation_time),
     "blocklist.mlbf_stash_time_oldest": toUTC(OLDEST_STASH.stash_time),
     "blocklist.mlbf_stash_time_newest": toUTC(NEWEST_STASH.stash_time),
@@ -114,6 +117,7 @@ add_task(async function test_toggle_stash_pref() {
   assertTelemetryScalars({
     "blocklist.mlbf_enabled": true,
     "blocklist.mlbf_stashes": false,
+    "blocklist.mlbf_source": "cache_match",
     "blocklist.mlbf_generation_time": toUTC(MLBF_RECORD.generation_time),
     "blocklist.mlbf_stash_time_oldest": "Missing Date",
     "blocklist.mlbf_stash_time_newest": "Missing Date",
@@ -129,6 +133,7 @@ add_task(async function test_toggle_stash_pref() {
   assertTelemetryScalars({
     "blocklist.mlbf_enabled": true,
     "blocklist.mlbf_stashes": true,
+    "blocklist.mlbf_source": "cache_match",
     "blocklist.mlbf_generation_time": toUTC(MLBF_RECORD.generation_time),
     "blocklist.mlbf_stash_time_oldest": toUTC(OLDEST_STASH.stash_time),
     "blocklist.mlbf_stash_time_newest": toUTC(NEWEST_STASH.stash_time),
@@ -141,6 +146,21 @@ add_task(async function test_without_stashes() {
   assertTelemetryScalars({
     "blocklist.mlbf_enabled": true,
     "blocklist.mlbf_stashes": true,
+    "blocklist.mlbf_source": "cache_match",
+    "blocklist.mlbf_generation_time": toUTC(MLBF_RECORD.generation_time),
+    "blocklist.mlbf_stash_time_oldest": "Missing Date",
+    "blocklist.mlbf_stash_time_newest": "Missing Date",
+  });
+});
+
+// Test what happens when the collection was inadvertently emptied,
+// but still with a cached mlbf from before.
+add_task(async function test_without_collection_but_cache() {
+  await AddonTestUtils.loadBlocklistRawData({ extensionsMLBF: [] });
+  assertTelemetryScalars({
+    "blocklist.mlbf_enabled": true,
+    "blocklist.mlbf_stashes": true,
+    "blocklist.mlbf_source": "cache_fallback",
     "blocklist.mlbf_generation_time": toUTC(MLBF_RECORD.generation_time),
     "blocklist.mlbf_stash_time_oldest": "Missing Date",
     "blocklist.mlbf_stash_time_newest": "Missing Date",
