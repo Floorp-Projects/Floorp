@@ -544,6 +544,8 @@ var AddonUpdateChecker = {
    *
    * @param  aUpdates
    *         An array of update objects
+   * @param  aAddon
+   *         The add-on that is being updated.
    * @param  aAppVersion
    *         The version of the application or null to use the current version
    * @param  aPlatformVersion
@@ -556,6 +558,7 @@ var AddonUpdateChecker = {
    */
   async getNewestCompatibleUpdate(
     aUpdates,
+    aAddon,
     aAppVersion,
     aPlatformVersion,
     aIgnoreMaxVersion,
@@ -568,9 +571,14 @@ var AddonUpdateChecker = {
       aPlatformVersion = Services.appinfo.platformVersion;
     }
 
+    let newestVersion = aAddon.version;
     let newest = null;
     for (let update of aUpdates) {
       if (!update.updateURL) {
+        continue;
+      }
+      if (Services.vc.compare(newestVersion, update.version) >= 0) {
+        // Update older than add-on version or older than previous result.
         continue;
       }
       let state = await Blocklist.getAddonBlocklistState(
@@ -582,9 +590,7 @@ var AddonUpdateChecker = {
         continue;
       }
       if (
-        (newest == null ||
-          Services.vc.compare(newest.version, update.version) < 0) &&
-        matchesVersions(
+        !matchesVersions(
           update,
           aAppVersion,
           aPlatformVersion,
@@ -592,8 +598,10 @@ var AddonUpdateChecker = {
           aIgnoreStrictCompat
         )
       ) {
-        newest = update;
+        continue;
       }
+      newest = update;
+      newestVersion = update.version;
     }
     return newest;
   },
