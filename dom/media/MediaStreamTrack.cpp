@@ -118,12 +118,12 @@ class MediaStreamTrack::MTGListener : public MediaTrackListener {
       return;
     }
 
-    if (!mTrack->GetOwner()) {
+    if (!mTrack->GetParentObject()) {
       return;
     }
 
     AbstractThread* mainThread =
-        nsGlobalWindowInner::Cast(mTrack->GetOwner())
+        nsGlobalWindowInner::Cast(mTrack->GetParentObject())
             ->AbstractMainThreadFor(TaskCategory::Other);
     mainThread->Dispatch(NewRunnableMethod("MediaStreamTrack::OverrideEnded",
                                            mTrack.get(),
@@ -186,7 +186,7 @@ MediaStreamTrack::MediaStreamTrack(nsPIDOMWindowInner* aWindow,
                                    MediaStreamTrackState aReadyState,
                                    bool aMuted,
                                    const MediaTrackConstraints& aConstraints)
-    : DOMEventTargetHelper(aWindow),
+    : mWindow(aWindow),
       mInputTrack(aInputTrack),
       mSource(aSource),
       mSink(MakeUnique<TrackSink>(this)),
@@ -204,7 +204,7 @@ MediaStreamTrack::MediaStreamTrack(nsPIDOMWindowInner* aWindow,
     // MediaStreamTrackSource soon enough.
     auto graph = mInputTrack->IsDestroyed()
                      ? MediaTrackGraph::GetInstanceIfExists(
-                           GetOwner(), mInputTrack->mSampleRate,
+                           mWindow, mInputTrack->mSampleRate,
                            MediaTrackGraph::DEFAULT_OUTPUT_DEVICE)
                      : mInputTrack->Graph();
     MOZ_DIAGNOSTIC_ASSERT(graph,
@@ -252,6 +252,7 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(MediaStreamTrack)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(MediaStreamTrack,
                                                 DOMEventTargetHelper)
   tmp->Destroy();
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mWindow)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mSource)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mPrincipal)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mPendingPrincipal)
@@ -260,6 +261,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(MediaStreamTrack,
                                                   DOMEventTargetHelper)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mWindow)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSource)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPrincipal)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPendingPrincipal)
@@ -339,7 +341,7 @@ already_AddRefed<Promise> MediaStreamTrack::ApplyConstraints(
                          this, NS_ConvertUTF16toUTF8(str).get()));
   }
 
-  nsIGlobalObject* go = GetOwner() ? GetOwner()->AsGlobal() : nullptr;
+  nsIGlobalObject* go = mWindow ? mWindow->AsGlobal() : nullptr;
 
   RefPtr<Promise> promise = Promise::Create(go, aRv);
   if (aRv.Failed()) {
@@ -359,18 +361,18 @@ already_AddRefed<Promise> MediaStreamTrack::ApplyConstraints(
       ->Then(
           GetCurrentSerialEventTarget(), __func__,
           [this, self, promise, aConstraints](bool aDummy) {
-            if (!GetOwner() || !GetOwner()->IsCurrentInnerWindow()) {
+            if (!mWindow || !mWindow->IsCurrentInnerWindow()) {
               return;  // Leave Promise pending after navigation by design.
             }
             mConstraints = aConstraints;
             promise->MaybeResolve(false);
           },
           [this, self, promise](const RefPtr<MediaMgrError>& aError) {
-            if (!GetOwner() || !GetOwner()->IsCurrentInnerWindow()) {
+            if (!mWindow || !mWindow->IsCurrentInnerWindow()) {
               return;  // Leave Promise pending after navigation by design.
             }
             promise->MaybeReject(
-                MakeRefPtr<MediaStreamError>(GetOwner(), *aError));
+                MakeRefPtr<MediaStreamError>(mWindow, *aError));
           });
   return promise.forget();
 }
