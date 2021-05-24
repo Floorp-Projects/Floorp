@@ -37,7 +37,7 @@ add_task(async function test_basic_update() {
   let updates = await checkUpdates("updatecheck1@tests.mozilla.org");
 
   equal(updates.length, 5);
-  let update = await AddonUpdateChecker.getNewestCompatibleUpdate(updates);
+  let update = await AddonUpdateChecker.getNewestCompatibleUpdate(updates, {});
   notEqual(update, null);
   equal(update.version, "3.0");
   update = AddonUpdateChecker.getCompatibilityUpdate(updates, "2");
@@ -45,6 +45,25 @@ add_task(async function test_basic_update() {
   equal(update.version, "2.0");
   equal(update.targetApplications[0].minVersion, "1");
   equal(update.targetApplications[0].maxVersion, "2");
+});
+
+// Test that only newer versions are considered.
+add_task(async function test_update_newer_versions_only() {
+  let updates = await checkUpdates("updatecheck1@tests.mozilla.org");
+
+  // This should be an AddonWrapper instance, but for the purpose of this test,
+  // an object with the version property suffices.
+  let addon = { version: "2.0" };
+  let update = await AddonUpdateChecker.getNewestCompatibleUpdate(
+    updates,
+    addon
+  );
+  notEqual(update, null);
+  equal(update.version, "3.0");
+
+  addon = { version: "3.0" };
+  update = await AddonUpdateChecker.getNewestCompatibleUpdate(updates, addon);
+  equal(update, null);
 });
 
 /*
@@ -124,6 +143,7 @@ add_task(async function test_ignore_compat() {
   equal(updates.length, 3);
   let update = await AddonUpdateChecker.getNewestCompatibleUpdate(
     updates,
+    {}, // dummy value instead of addon.
     null,
     null,
     true
@@ -137,6 +157,7 @@ add_task(async function test_strict_compat() {
   equal(updates.length, 1);
   let update = await AddonUpdateChecker.getNewestCompatibleUpdate(
     updates,
+    {}, // dummy value instead of addon.
     null,
     null,
     true,

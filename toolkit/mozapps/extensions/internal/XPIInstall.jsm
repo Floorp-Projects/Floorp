@@ -2911,17 +2911,14 @@ UpdateChecker.prototype = {
 
     let update = await AUC.getNewestCompatibleUpdate(
       aUpdates,
+      this.addon,
       this.appVersion,
       this.platformVersion,
       ignoreMaxVersion,
       ignoreStrictCompat
     );
 
-    if (
-      update &&
-      Services.vc.compare(this.addon.version, update.version) < 0 &&
-      !this.addon.location.locked
-    ) {
+    if (update && !this.addon.location.locked) {
       for (let currentInstall of XPIInstall.installs) {
         // Skip installs that don't match the available update
         if (
