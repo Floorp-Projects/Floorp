@@ -320,10 +320,9 @@ void ChromiumCDMChild::OnSessionClosed(const char* aSessionId,
 
 void ChromiumCDMChild::QueryOutputProtectionStatus() {
   GMP_LOG_DEBUG("ChromiumCDMChild::QueryOutputProtectionStatus()");
-  if (mCDM) {
-    mCDM->OnQueryOutputProtectionStatus(cdm::kQuerySucceeded, uint32_t{},
-                                        uint32_t{});
-  }
+  // We'll handle the response in `CompleteQueryOutputProtectionStatus`.
+  CallOnMessageLoopThread("gmp::ChromiumCDMChild::QueryOutputProtectionStatus",
+                          &ChromiumCDMChild::SendOnQueryOutputProtectionStatus);
 }
 
 void ChromiumCDMChild::OnInitialized(bool aSuccess) {
@@ -502,6 +501,26 @@ mozilla::ipc::IPCResult ChromiumCDMChild::RecvRemoveSession(
   if (mCDM) {
     mCDM->RemoveSession(aPromiseId, aSessionId.get(), aSessionId.Length());
   }
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
+ChromiumCDMChild::RecvCompleteQueryOutputProtectionStatus(
+    const bool& aSuccess, const uint32_t& aLinkMask,
+    const uint32_t& aProtectionMask) {
+  MOZ_ASSERT(IsOnMessageLoopThread());
+  GMP_LOG_DEBUG(
+      "ChromiumCDMChild::RecvCompleteQueryOutputProtectionStatus(aSuccess=%s, "
+      "aLinkMask=%" PRIu32 ", aProtectionMask=%" PRIu32 ")",
+      aSuccess ? "true" : "false", aLinkMask, aProtectionMask);
+
+  if (mCDM) {
+    cdm::QueryResult queryResult = aSuccess ? cdm::QueryResult::kQuerySucceeded
+                                            : cdm::QueryResult::kQueryFailed;
+    mCDM->OnQueryOutputProtectionStatus(queryResult, aLinkMask,
+                                        aProtectionMask);
+  }
+
   return IPC_OK();
 }
 

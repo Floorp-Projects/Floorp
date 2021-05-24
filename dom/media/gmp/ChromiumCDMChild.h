@@ -94,6 +94,9 @@ class ChromiumCDMChild : public PChromiumCDMChild, public cdm::Host_10 {
                                   const nsCString& aSessionId) override;
   ipc::IPCResult RecvRemoveSession(const uint32_t& aPromiseId,
                                    const nsCString& aSessionId) override;
+  ipc::IPCResult RecvCompleteQueryOutputProtectionStatus(
+      const bool& aSuccess, const uint32_t& aLinkMask,
+      const uint32_t& aProtectionMask) override;
   ipc::IPCResult RecvGetStatusForPolicy(
       const uint32_t& aPromiseId,
       const cdm::HdcpVersion& aMinHdcpVersion) override;

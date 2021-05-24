@@ -151,6 +151,43 @@ class CDMProxy {
                              PromiseId aPromiseId) = 0;
 
   // Main thread only.
+  // Called to signal a request for output protection information from the CDM.
+  // This should forward the call up the stack where the query should be
+  // performed and then responded to via `NotifyOutputProtectionStatus`.
+  virtual void QueryOutputProtectionStatus() = 0;
+
+  // NotifyOutputProtectionStatus enums. Explicit values are specified to make
+  // it easy to match values in logs.
+  enum class OutputProtectionCheckStatus : uint8_t {
+    CheckFailed = 0,
+    CheckSuccessful = 1,
+  };
+
+  enum class OutputProtectionCaptureStatus : uint8_t {
+    CapturePossilbe = 0,
+    CaptureNotPossible = 1,
+    Unused = 2,
+  };
+  // End NotifyOutputProtectionStatus enums
+
+  // Main thread only.
+  // Notifies this proxy of the protection status for the media the CDM is
+  // associated with. This can be called in response to
+  // `QueryOutputProtectionStatus`, but can also be called without an
+  // associated query. In both cases the information will be forwarded to
+  // the CDM host machinery and used to handle requests from the CDM.
+  // @param aCheckStatus did the check succeed or not.
+  // @param aCaptureStatus if the check succeeded, this reflects if capture
+  // of media could take place. This doesn't mean capture is taking place.
+  // Callers should be conservative with this value such that it's okay to pass
+  // CapturePossilbe even if capture is not happening, but should never pass
+  // CaptureNotPossible if it could happen. If the check failed, this value is
+  // not used, and callers should pass Unused to indicate this.
+  virtual void NotifyOutputProtectionStatus(
+      OutputProtectionCheckStatus aCheckStatus,
+      OutputProtectionCaptureStatus aCaptureStatus) = 0;
+
+  // Main thread only.
   virtual void Shutdown() = 0;
 
   // Main thread only.
