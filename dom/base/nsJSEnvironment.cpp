@@ -1805,7 +1805,8 @@ void nsJSContext::RunNextCollectorTimer(JS::GCReason aReason,
     // happened yet. If there was no PokeGC reason (ie, this is an
     // internally-generated GC), then do not override the reason (which will be
     // INTER_SLICE_GC).
-    if (!sScheduler.InIncrementalGC() && sScheduler.mMajorGCReason != JS::GCReason::INTER_SLICE_GC) {
+    if (!sScheduler.InIncrementalGC() &&
+        sScheduler.mMajorGCReason != JS::GCReason::INTER_SLICE_GC) {
       sScheduler.SetWantMajorGC(aReason);
     }
     sGCRunner->SetIdleDeadline(aDeadline);

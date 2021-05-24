@@ -144,7 +144,8 @@ bool nsStyleDisplay::IsFixedPosContainingBlock(
 
 bool nsStyleDisplay::IsAbsPosContainingBlock(
     const nsIFrame* aContextFrame) const {
-  NS_ASSERTION(aContextFrame->StyleDisplay() == this, "unexpected aContextFrame");
+  NS_ASSERTION(aContextFrame->StyleDisplay() == this,
+               "unexpected aContextFrame");
   if (IsFixedPosContainingBlock(aContextFrame)) {
     return true;
   }

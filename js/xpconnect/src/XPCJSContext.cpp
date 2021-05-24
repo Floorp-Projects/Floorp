@@ -849,9 +849,8 @@ static void LoadStartupJSPrefs(XPCJSContext* xpccx) {
     JS_SetGlobalJitCompilerOption(
         cx, JSJITCOMPILER_NATIVE_REGEXP_ENABLE,
         StaticPrefs::javascript_options_native_regexp_DoNotUseDirectly());
-    sSelfHostedUseSharedMemory =
-        StaticPrefs::
-            javascript_options_self_hosted_use_shared_memory_DoNotUseDirectly();
+    sSelfHostedUseSharedMemory = StaticPrefs::
+        javascript_options_self_hosted_use_shared_memory_DoNotUseDirectly();
   }
 
   JS_SetOffthreadIonCompilationEnabled(

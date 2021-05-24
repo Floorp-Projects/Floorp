@@ -93,17 +93,17 @@ static_assert(F_GET_SEALS == (F_LINUX_SPECIFIC_BASE + 10));
 #endif
 
 namespace {
-  static const unsigned long kIoctlTypeMask = _IOC_TYPEMASK << _IOC_TYPESHIFT;
-  static const unsigned long kTtyIoctls = TIOCSTI & kIoctlTypeMask;
-  // On some older architectures (but not x86 or ARM), ioctls are
-  // assigned type fields differently, and the TIOC/TC/FIO group
-  // isn't all the same type.  If/when we support those archs,
-  // this would need to be revised (but really this should be a
-  // default-deny policy; see below).
-  static_assert(kTtyIoctls == (TCSETA & kIoctlTypeMask) &&
-      kTtyIoctls == (FIOASYNC & kIoctlTypeMask),
-      "tty-related ioctls use the same type");
-};
+static const unsigned long kIoctlTypeMask = _IOC_TYPEMASK << _IOC_TYPESHIFT;
+static const unsigned long kTtyIoctls = TIOCSTI & kIoctlTypeMask;
+// On some older architectures (but not x86 or ARM), ioctls are
+// assigned type fields differently, and the TIOC/TC/FIO group
+// isn't all the same type.  If/when we support those archs,
+// this would need to be revised (but really this should be a
+// default-deny policy; see below).
+static_assert(kTtyIoctls == (TCSETA & kIoctlTypeMask) &&
+                  kTtyIoctls == (FIOASYNC & kIoctlTypeMask),
+              "tty-related ioctls use the same type");
+};  // namespace
 
 // This file defines the seccomp-bpf system call filter policies.
 // See also SandboxFilterUtil.h, for the CASES_FOR_* macros and
@@ -1713,9 +1713,8 @@ class RDDSandboxPolicy final : public SandboxPolicyCommon {
         Arg<unsigned long> request(1);
         // ffmpeg, and anything else that calls isatty(), will be told
         // that nothing is a typewriter:
-        return If(request == TCGETS, Error(ENOTTY))
-            .Else(InvalidSyscall());
-       }
+        return If(request == TCGETS, Error(ENOTTY)).Else(InvalidSyscall());
+      }
       // Pass through the common policy.
       default:
         return SandboxPolicyCommon::EvaluateSyscall(sysno);

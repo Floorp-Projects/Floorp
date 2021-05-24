@@ -199,7 +199,8 @@ bool nsDisplayFieldSetBorder::CreateWebRenderCommands(
 
       auto rect_clip = aBuilder.DefineRectClip(layoutRect);
       auto complex_clip = aBuilder.DefineRoundedRectClip(region);
-      auto clipChain = aBuilder.DefineClipChain({rect_clip, complex_clip}, true);
+      auto clipChain =
+          aBuilder.DefineClipChain({rect_clip, complex_clip}, true);
       clipOut.emplace(aBuilder, clipChain);
     }
   } else {
