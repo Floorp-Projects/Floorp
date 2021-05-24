@@ -294,6 +294,50 @@ bool ClientManagerService::RemoveSource(ClientSourceParent* aSource) {
   return true;
 }
 
+bool ClientManagerService::ExpectFutureSource(
+    const IPCClientInfo& aClientInfo) {
+  AssertIsOnBackgroundThread();
+
+  if (!mSourceTable.WithEntryHandle(
+          aClientInfo.id(), [&aClientInfo](auto&& entry) {
+            // Prevent overwrites.
+            if (entry.HasEntry()) {
+              return false;
+            }
+            entry.Insert(SourceTableEntry(
+                VariantIndex<0>(), FutureClientSourceParent(aClientInfo)));
+            return true;
+          })) {
+    return false;
+  }
+
+  return true;
+}
+
+void ClientManagerService::ForgetFutureSource(
+    const IPCClientInfo& aClientInfo) {
+  AssertIsOnBackgroundThread();
+
+  auto entry = mSourceTable.Lookup(aClientInfo.id());
+
+  if (entry) {
+    if (entry.Data().is<ClientSourceParent*>()) {
+      return;
+    }
+
+    if (!XRE_IsE10sParentProcess() &&
+        entry.Data().as<FutureClientSourceParent>().IsAssociated()) {
+      return;
+    }
+
+    CopyableErrorResult rv;
+    rv.ThrowInvalidStateError("Client creation aborted.");
+    entry.Data().as<FutureClientSourceParent>().RejectPromiseIfExists(rv);
+
+    entry.Remove();
+  }
+}
+
 RefPtr<SourcePromise> ClientManagerService::FindSource(
     const nsID& aID, const PrincipalInfo& aPrincipalInfo) {
   AssertIsOnBackgroundThread();
@@ -306,6 +350,7 @@ RefPtr<SourcePromise> ClientManagerService::FindSource(
   }
 
   if (entry.Data().is<FutureClientSourceParent>()) {
+    entry.Data().as<FutureClientSourceParent>().SetAsAssociated();
     return entry.Data().as<FutureClientSourceParent>().Promise();
   }
 
