@@ -2535,7 +2535,11 @@ NSEvent* gLastDragMouseDownEvent = nil;  // [strong]
   nsIRollupListener* rollupListener = nsBaseWidget::GetActiveRollupListener();
   NS_ENSURE_TRUE(rollupListener, false);
 
-  if (rollupListener->RollupNativeMenu()) {
+  BOOL isWheelTypeEvent = [theEvent type] == NSEventTypeScrollWheel ||
+                          [theEvent type] == NSEventTypeMagnify ||
+                          [theEvent type] == NSEventTypeSmartMagnify;
+
+  if (!isWheelTypeEvent && rollupListener->RollupNativeMenu()) {
     // A native menu was rolled up.
     // Don't consume this event; if the menu wanted to consume this event it would already have done
     // so and we wouldn't even get here. For example, we won't get here for left clicks that close
@@ -2552,8 +2556,7 @@ NSEvent* gLastDragMouseDownEvent = nil;  // [strong]
       bool shouldRollup = true;
 
       // check to see if scroll/zoom events should roll up the popup
-      if ([theEvent type] == NSEventTypeScrollWheel || [theEvent type] == NSEventTypeMagnify ||
-          [theEvent type] == NSEventTypeSmartMagnify) {
+      if (isWheelTypeEvent) {
         shouldRollup = rollupListener->ShouldRollupOnMouseWheelEvent();
         // consume scroll events that aren't over the popup
         // unless the popup is an arrow panel
