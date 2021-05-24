@@ -49,6 +49,12 @@ class ChromiumCDMProxy : public CDMProxy {
   void RemoveSession(const nsAString& aSessionId,
                      PromiseId aPromiseId) override;
 
+  void QueryOutputProtectionStatus() override;
+
+  void NotifyOutputProtectionStatus(
+      OutputProtectionCheckStatus aCheckStatus,
+      OutputProtectionCaptureStatus aCaptureStatus) override;
+
   void Shutdown() override;
 
   void Terminated() override;

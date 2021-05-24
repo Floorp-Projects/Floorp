@@ -206,6 +206,60 @@ void ChromiumCDMParent::RemoveSession(const nsCString& aSessionId,
   }
 }
 
+void ChromiumCDMParent::NotifyOutputProtectionStatus(bool aSuccess,
+                                                     uint32_t aLinkMask,
+                                                     uint32_t aProtectionMask) {
+  GMP_LOG_DEBUG("ChromiumCDMParent::NotifyOutputProtectionStatus(this=%p)",
+                this);
+  if (mIsShutdown) {
+    return;
+  }
+  const bool haveCachedValue = mOutputProtectionLinkMask.isSome();
+  if (mAwaitingOutputProtectionInformation && !aSuccess) {
+    MOZ_DIAGNOSTIC_ASSERT(
+        !haveCachedValue,
+        "Should not have a cached value if we're still awaiting infomation");
+    // We're awaiting info and don't yet have a cached value, and the check
+    // failed, don't cache the result, just forward the failure.
+    CompleteQueryOutputProtectionStatus(false, aLinkMask, aProtectionMask);
+    return;
+  }
+  if (!mAwaitingOutputProtectionInformation && haveCachedValue && !aSuccess) {
+    // We're not awaiting info, already have a cached value, and the check
+    // failed. Ignore this, we'll update our info from any future successful
+    // checks.
+    return;
+  }
+  MOZ_ASSERT(aSuccess, "Failed checks should be handled by this point");
+  // Update our protection information.
+  mOutputProtectionLinkMask = Some(aLinkMask);
+
+  if (mAwaitingOutputProtectionInformation) {
+    // If we have an outstanding query, service that query with this
+    // information.
+    mAwaitingOutputProtectionInformation = false;
+    MOZ_ASSERT(!haveCachedValue,
+               "If we were waiting on information, we shouldn't have yet "
+               "cached a value");
+    CompleteQueryOutputProtectionStatus(true, mOutputProtectionLinkMask.value(),
+                                        aProtectionMask);
+  }
+}
+
+void ChromiumCDMParent::CompleteQueryOutputProtectionStatus(
+    bool aSuccess, uint32_t aLinkMask, uint32_t aProtectionMask) {
+  GMP_LOG_DEBUG(
+      "ChromiumCDMParent::CompleteQueryOutputProtectionStatus(this=%p) "
+      "mIsShutdown=%s aSuccess=%s aLinkMask=%" PRIu32,
+      this, mIsShutdown ? "true" : "false", aSuccess ? "true" : "false",
+      aLinkMask);
+  if (mIsShutdown) {
+    return;
+  }
+  Unused << SendCompleteQueryOutputProtectionStatus(aSuccess, aLinkMask,
+                                                    aProtectionMask);
+}
+
 // See
 // https://cs.chromium.org/chromium/src/media/blink/webcontentdecryptionmodule_impl.cc?l=33-66&rcl=d49aa59ac8c2925d5bec229f3f1906537b6b4547
 static Result<cdm::HdcpVersion, nsresult> ToCDMHdcpVersion(
@@ -549,6 +603,40 @@ ipc::IPCResult ChromiumCDMParent::RecvOnSessionClosed(
   }
 
   mCDMCallback->SessionClosed(aSessionId);
+  return IPC_OK();
+}
+
+ipc::IPCResult ChromiumCDMParent::RecvOnQueryOutputProtectionStatus() {
+  GMP_LOG_DEBUG(
+      "ChromiumCDMParent::RecvOnQueryOutputProtectionStatus(this=%p) "
+      "mIsShutdown=%s mCDMCallback=%s mAwaitingOutputProtectionInformation=%s",
+      this, mIsShutdown ? "true" : "false", mCDMCallback ? "true" : "false",
+      mAwaitingOutputProtectionInformation ? "true" : "false");
+  if (mIsShutdown) {
+    // We're shutdown, don't try to service the query.
+    return IPC_OK();
+  }
+  if (!mCDMCallback) {
+    // We don't have a callback. We're not yet outputting anything so can report
+    // we're safe.
+    CompleteQueryOutputProtectionStatus(true, uint32_t{}, uint32_t{});
+    return IPC_OK();
+  }
+
+  if (mOutputProtectionLinkMask.isSome()) {
+    MOZ_DIAGNOSTIC_ASSERT(
+        !mAwaitingOutputProtectionInformation,
+        "If we have a cached value we should not be awaiting information");
+    // We have a cached value, use that.
+    CompleteQueryOutputProtectionStatus(true, mOutputProtectionLinkMask.value(),
+                                        uint32_t{});
+    return IPC_OK();
+  }
+
+  // We need to call up the stack to get the info. The CDM proxy will finish
+  // the request via `NotifyOutputProtectionStatus`.
+  mAwaitingOutputProtectionInformation = true;
+  mCDMCallback->QueryOutputProtectionStatus();
   return IPC_OK();
 }
 
