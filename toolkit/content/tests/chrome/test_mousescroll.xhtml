@@ -147,13 +147,14 @@ function* testRichListbox(id)
 
 function* testArrowScrollbox(id)
 {
-  var scrollbox = document.getElementById(id).scrollbox;
+  var arrowscrollbox = document.getElementById(id);
+  var scrollbox = arrowscrollbox.scrollbox;
   var orient = scrollbox.getAttribute("orient");
+  var orientIsHorizontal = (orient == "horizontal");
 
   function* helper(aStart, aDelta, aDeltaMode, aExpected)
   {
     var lineOrPageDelta = (aDeltaMode == WheelEvent.DOM_DELTA_PIXEL) ? aDelta / 10 : aDelta;
-    var orientIsHorizontal = (orient == "horizontal");
 
     scrollbox.scrollTo(aStart, aStart);
     for (let i = orientIsHorizontal ? 2 : 0; i >= 0; i--) {
@@ -221,15 +222,25 @@ function* testArrowScrollbox(id)
     }
   }
 
+  var line = arrowscrollbox.lineScrollAmount;
   var scrolledWidth = scrollbox.scrollWidth;
   var scrolledHeight = scrollbox.scrollHeight;
   var scrollMaxX = scrolledWidth - scrollbox.getBoundingClientRect().width;
   var scrollMaxY = scrolledHeight - scrollbox.getBoundingClientRect().height;
-  var scrollMax = orient == "horizontal" ? scrollMaxX : scrollMaxY;
+  var scrollMax = orientIsHorizontal ? scrollMaxX : scrollMaxY;
 
-  for (let i = 0; i < deltaModes.length; i++) {
-    yield* helper(50, -1000, deltaModes[i], 0);
-    yield* helper(50,  1000, deltaModes[i], scrollMax);
+  for (let deltaMode of deltaModes) {
+    const start = 50;
+    const delta = 1000;
+    let expectedNegative = 0;
+    let expectedPositive = scrollMax;
+    if (deltaMode == WheelEvent.DOM_DELTA_LINE) {
+      let maxDelta = Math.floor(Math.max(1, arrowscrollbox.scrollClientSize / line)) * line;
+      expectedNegative = Math.max(0, start - maxDelta);
+      expectedPositive = Math.min(scrollMax, start + maxDelta);
+    }
+    yield* helper(start, -delta, deltaMode, expectedNegative);
+    yield* helper(start,  delta, deltaMode, expectedPositive);
   }
 }
 

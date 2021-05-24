@@ -686,15 +686,25 @@
       }
 
       if (doScroll) {
+        let direction = scrollAmount < 0 ? -1 : 1;
+
         if (deltaMode == event.DOM_DELTA_PAGE) {
           scrollAmount *= this.scrollClientSize;
         } else if (deltaMode == event.DOM_DELTA_LINE) {
-          scrollAmount *= this.lineScrollAmount;
+          // Try to not scroll by more than one page when using line scrolling,
+          // so that all elements are scrollable.
+          let lineAmount = this.lineScrollAmount;
+          let clientSize = this.scrollClientSize;
+          if (Math.abs(scrollAmount * lineAmount) > clientSize) {
+            // NOTE: This still tries to scroll a non-fractional amount of
+            // items per line scrolled.
+            scrollAmount =
+              Math.max(1, Math.floor(clientSize / lineAmount)) * direction;
+          }
+          scrollAmount *= lineAmount;
         } else {
           // DOM_DELTA_PIXEL, leave scrollAmount untouched.
         }
-
-        let direction = scrollAmount < 0 ? -1 : 1;
         let startPos = this.scrollPosition;
 
         if (!this._isScrolling || this._direction != direction) {
