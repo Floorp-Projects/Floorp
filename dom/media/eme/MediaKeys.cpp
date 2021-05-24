@@ -671,6 +671,21 @@ void MediaKeys::Unbind() {
   mElement = nullptr;
 }
 
+void MediaKeys::CheckIsElementCapturePossible() {
+  MOZ_ASSERT(NS_IsMainThread());
+  EME_LOG("MediaKeys[%p]::IsElementCapturePossible()", this);
+  // Note, HTMLMediaElement prevents capture of its content via Capture APIs
+  // on the element if it has a media keys attached (see bug 1071482). So we
+  // don't need to check those cases here (they are covered by tests).
+
+  // TODO(bryce): check for screen and window capture.
+  if (mProxy) {
+    mProxy->NotifyOutputProtectionStatus(
+        CDMProxy::OutputProtectionCheckStatus::CheckSuccessful,
+        CDMProxy::OutputProtectionCaptureStatus::CaptureNotPossible);
+  }
+}
+
 void MediaKeys::GetSessionsInfo(nsString& sessionsInfo) {
   for (const auto& keySession : mKeySessions.Values()) {
     nsString sessionID;
