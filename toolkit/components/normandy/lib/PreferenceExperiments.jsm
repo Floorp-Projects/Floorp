@@ -792,10 +792,17 @@ var PreferenceExperiments = {
     }
 
     if (resetValue) {
-      for (const [preferenceName, prefInfo] of Object.entries(
-        experiment.preferences
-      )) {
-        const { previousPreferenceValue, preferenceBranchType } = prefInfo;
+      for (const [
+        preferenceName,
+        { previousPreferenceValue, preferenceBranchType, overridden },
+      ] of Object.entries(experiment.preferences)) {
+        // Overridden user prefs should keep their new value, even if that value
+        // is the same as the experimental value, since it is the value the user
+        // chose.
+        if (overridden && preferenceBranchType === "user") {
+          continue;
+        }
+
         const preferences = PreferenceBranchType[preferenceBranchType];
 
         if (previousPreferenceValue !== null) {
