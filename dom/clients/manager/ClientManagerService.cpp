@@ -110,6 +110,10 @@ RefPtr<GenericPromise> OnShutdown() {
 
 }  // anonymous namespace
 
+ClientManagerService::FutureClientSourceParent::FutureClientSourceParent(
+    const IPCClientInfo& aClientInfo)
+    : mPrincipalInfo(aClientInfo.principalInfo()), mAssociated(false) {}
+
 ClientManagerService::ClientManagerService() : mShutdown(false) {
   AssertIsOnBackgroundThread();
 

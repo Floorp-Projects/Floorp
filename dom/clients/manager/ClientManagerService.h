@@ -6,13 +6,14 @@
 #ifndef _mozilla_dom_ClientManagerService_h
 #define _mozilla_dom_ClientManagerService_h
 
-#include "mozilla/dom/ClientIPCTypes.h"
-#include "mozilla/dom/ipc/IdType.h"
+#include "ClientHandleParent.h"
 #include "ClientOpPromise.h"
 #include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/MozPromise.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/Variant.h"
 #include "mozilla/dom/ClientIPCTypes.h"
 #include "mozilla/dom/ipc/IdType.h"
 #include "nsTHashMap.h"
@@ -40,6 +41,47 @@ class ClientHandleParent;
 // browser.  This service runs on the PBackground thread.  To interact
 // it with it please use the ClientManager and ClientHandle classes.
 class ClientManagerService final {
+  // Placeholder type that represents a ClientSourceParent that may be created
+  // in the future (e.g. while a redirect chain is being resolved).
+  //
+  // Each FutureClientSourceParent has a promise that callbacks may be chained
+  // to; the promise will be resolved when the associated ClientSourceParent is
+  // created or rejected when it's known that it'll never be created.
+  class FutureClientSourceParent {
+   public:
+    explicit FutureClientSourceParent(const IPCClientInfo& aClientInfo);
+
+    const mozilla::ipc::PrincipalInfo& PrincipalInfo() const {
+      return mPrincipalInfo;
+    }
+
+    already_AddRefed<SourcePromise> Promise() {
+      return mPromiseHolder.Ensure(__func__);
+    }
+
+    void ResolvePromiseIfExists(ClientSourceParent* aSource) {
+      MOZ_ASSERT(aSource);
+      mPromiseHolder.ResolveIfExists(aSource, __func__);
+    }
+
+    void RejectPromiseIfExists(const CopyableErrorResult& aRv) {
+      MOZ_ASSERT(aRv.Failed());
+      mPromiseHolder.RejectIfExists(aRv, __func__);
+    }
+
+    void SetAsAssociated() { mAssociated = true; }
+
+    bool IsAssociated() const { return mAssociated; }
+
+   private:
+    const mozilla::ipc::PrincipalInfo mPrincipalInfo;
+    MozPromiseHolder<SourcePromise> mPromiseHolder;
+    bool mAssociated;
+  };
+
+  using SourceTableEntry =
+      Variant<FutureClientSourceParent, ClientSourceParent*>;
+
   // Store the ClientSourceParent objects in a hash table.  We want to
   // optimize for insertion, removal, and lookup by UUID.
   nsTHashMap<nsIDHashKey, ClientSourceParent*> mSourceTable;
