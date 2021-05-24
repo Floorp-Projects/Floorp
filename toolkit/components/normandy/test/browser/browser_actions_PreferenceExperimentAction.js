@@ -845,3 +845,70 @@ decorate_task(
     );
   }
 );
+
+// Unenrolling from an experiment where a user has changed some prefs should not override user choice
+decorate_task(
+  withStudiesEnabled(),
+  withMockPreferences(),
+  PreferenceExperiments.withMockExperiments(),
+  async function testUserPrefNoReset({ mockPreferences }) {
+    mockPreferences.set("test.pref.should-reset", "builtin value", "default");
+    mockPreferences.set("test.pref.user-override", "builtin value", "default");
+
+    await PreferenceExperiments.start({
+      slug: "test-experiment",
+      actionName: "PreferenceExperimentAction",
+      isHighPopulation: false,
+      isEnrollmentPaused: false,
+      userFacingName: "Test Experiment",
+      userFacingDescription: "Test description",
+      branch: "test",
+      preferences: {
+        "test.pref.should-reset": {
+          preferenceValue: "experiment value",
+          preferenceType: "string",
+          previousPreferenceValue: "builtin value",
+          preferenceBranchType: "user",
+          overridden: false,
+        },
+        "test.pref.user-override": {
+          preferenceValue: "experiment value",
+          preferenceType: "string",
+          previousPreferenceValue: "builtin value",
+          preferenceBranchType: "user",
+          overridden: false,
+        },
+      },
+    });
+
+    mockPreferences.set("test.pref.user-override", "user value", "user");
+
+    let exp = await PreferenceExperiments.get("test-experiment");
+    is(
+      exp.preferences["test.pref.user-override"].overridden,
+      true,
+      "Changed pref should be marked as overridden"
+    );
+    is(
+      exp.preferences["test.pref.should-reset"].overridden,
+      false,
+      "Unchanged pref should not be marked as overridden"
+    );
+
+    await PreferenceExperiments.stop("test-experiment", {
+      resetValue: true,
+      reason: "test-reason",
+    });
+
+    is(
+      Services.prefs.getCharPref("test.pref.should-reset"),
+      "builtin value",
+      "pref that was not overridden should reset to builtin"
+    );
+    is(
+      Services.prefs.getCharPref("test.pref.user-override"),
+      "user value",
+      "pref that was overridden should keep user value"
+    );
+  }
+);
