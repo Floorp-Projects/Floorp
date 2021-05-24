@@ -183,6 +183,9 @@ class TextControlState final : public SupportsWeakPtr {
     // The value is changed by changing value attribute of the element or
     // something like setRangeText().
     ByContentAPI,
+    // The value is changed by setRangeText(). Intended to prevent silent
+    // selection range change.
+    BySetRangeTextAPI,
     // Whether SetValueChanged should be called as a result of this value
     // change.
     SetValueChanged,
