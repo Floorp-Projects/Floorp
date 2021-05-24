@@ -1,13 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- The default document title of an error page (i.e., the contents of the `<title>` tag). -->
-    <string name="mozac_browser_errorpages_page_title">ਸਫ਼ਾ ਲੋਡ ਕਰਨ ‘ਚ ਸਮੱਸਿਆ</string>
 
     <!-- The button that appears at the bottom of an error page. -->
     <string name="mozac_browser_errorpages_page_refresh">ਮੁੜ-ਕੋਸ਼ਿਸ਼ ਕਰੋ</string>
-
-    <!-- The button that appears at the bottom of an error page. -->
-    <string name="mozac_browser_errorpages_page_go_back">ਪਿੱਛੇ ਜਾਓ</string>
 
     <!-- The document title and heading of an error page shown when a website cannot be loaded for an unknown reason. -->
     <string name="mozac_browser_errorpages_generic_title">ਬੇਨਤੀ ਪੂਰੀ ਨਹੀਂ ਕੀਤੀ ਜਾ ਸਕਦੀ</string>
@@ -18,7 +13,7 @@
     ]]></string>
 
     <!-- The document title and heading of the error page shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
-    <string name="mozac_browser_errorpages_security_ssl_title">ਸੁਰੱਖਿਅਤ ਕਨੈਕਸ਼ਨ ਅਸਫ਼ਲ ਹੈ</string>
+    <string name="mozac_browser_errorpages_security_ssl_title">ਸੁਰੱਖਿਅਤ ਕੁਨੈਕਸ਼ਨ ਫੇਲ੍ਹ ਹੋਇਆ</string>
 
     <!-- The error message shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
     <string name="mozac_browser_errorpages_security_ssl_message"><![CDATA[
@@ -29,7 +24,7 @@
         ]]></string>
 
     <!-- The document title and heading of the error page shown when a website sends has an invalid or expired SSL certificate. -->
-    <string name="mozac_browser_errorpages_security_bad_cert_title">ਸੁਰੱਖਿਅਤ ਕਨੈਕਸ਼ਨ ਅਸਫ਼ਲ ਹੈ</string>
+    <string name="mozac_browser_errorpages_security_bad_cert_title">ਸੁਰੱਖਿਅਤ ਕੁਨੈਕਸ਼ਨ ਫੇਲ੍ਹ ਹੋਇਆ</string>
 
     <!-- The error message shown when a website sends has an invalid or expired SSL certificate. -->
     <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[
@@ -209,7 +204,7 @@
       <p>ਦਿੱਤੇ ਐਡਰੈੱਸ ਦਾ ਫਾਰਮੈਟ ਪਛਾਣਿਆ ਨਹੀਂ ਜਾ ਸਕਦਾ ਹੈ। ਗਲਤੀਆਂ ਲਈ ਟਿਕਾਣਾ ਪੱਟੀ ਦੀ ਜਾਂਚ ਕਰੋ ਤੇ ਫੇਰ ਕੋਸ਼ਿਸ਼ ਕਰੋ ਜੀ।</p>
     ]]></string>
     <!-- The document title and heading of an error page. -->
-    <string name="mozac_browser_errorpages_malformed_uri_title_alternative">ਸਿਰਨਾਵਾਂ ਢੁੱਕਵਾਂ ਨਹੀਂ ਹੈ</string>
+    <string name="mozac_browser_errorpages_malformed_uri_title_alternative">ਸਿਰਨਾਵਾਂ ਵਾਜਬ ਨਹੀਂ ਹੈ</string>
 
     <!-- This string contains markup. The URL should not be localized. -->
     <string name="mozac_browser_errorpages_malformed_uri_message_alternative"><![CDATA[
