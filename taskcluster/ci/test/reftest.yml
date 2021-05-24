@@ -163,7 +163,8 @@ reftest:
             macosx101.*-64/debug: 4
             macosx101.*-64(-ccov.*|-qr)/debug: 6
             windows.*/opt: 2
-            windows.*/debug: 4
+            windows10-64.*/debug: 4
+            windows10-32.*/debug: 6
             windows10-64-asan/opt: 3
             windows10-64-ccov-qr/opt: 9
             default: 8
