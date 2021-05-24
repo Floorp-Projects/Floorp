@@ -18,6 +18,7 @@
 #include "mozilla/dom/Promise.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
+#include "nsIObserver.h"
 #include "nsRefPtrHashtable.h"
 #include "nsWrapperCache.h"
 
@@ -46,7 +47,7 @@ typedef uint32_t PromiseId;
 
 // This class is used on the main thread only.
 // Note: its addref/release is not (and can't be) thread safe!
-class MediaKeys final : public nsISupports,
+class MediaKeys final : public nsIObserver,
                         public nsWrapperCache,
                         public SupportsWeakPtr,
                         public DecoderDoctorLifeLogger<MediaKeys> {
@@ -55,6 +56,8 @@ class MediaKeys final : public nsISupports,
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(MediaKeys)
+
+  NS_DECL_NSIOBSERVER
 
   MediaKeys(nsPIDOMWindowInner* aParentWindow, const nsAString& aKeySystem,
             const MediaKeySystemConfiguration& aConfig);
@@ -209,6 +212,17 @@ class MediaKeys final : public nsISupports,
   const MediaKeySystemConfiguration mConfig;
 
   PendingPromiseIdTokenHashMap mPromiseIdToken;
+
+  // The topic a MediaKeys instance will observe to receive updates from
+  // EncryptedMediaChild.
+  constexpr static const char* kMediaKeysResponseTopic = "mediakeys-response";
+  // Tracks if we've added an observer for responses from the associated
+  // EncryptedMediaChild. When true an observer is already in place, otherwise
+  // the observer has not yet been added.
+  bool mObserverAdded = false;
+  // Stores the json request we will send to EncryptedMediaChild when querying
+  // output protection. Lazily populated upon first use.
+  nsString mCaptureCheckRequestJson;
 };
 
 }  // namespace dom
