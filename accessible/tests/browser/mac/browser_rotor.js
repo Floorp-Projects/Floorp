@@ -1088,7 +1088,7 @@ addAccessibleTask(
   `,
   async (browser, accDoc) => {
     const searchPred = {
-      AXSearchKey: "AXCheckboxSearchKey",
+      AXSearchKey: "AXCheckBoxSearchKey",
       AXImmediateDescendantsOnly: 0,
       AXResultsLimit: -1,
       AXDirection: "AXDirectionNext",
