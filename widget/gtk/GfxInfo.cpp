@@ -645,9 +645,9 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
 
     APPEND_TO_DRIVER_BLOCKLIST2(
         OperatingSystem::Linux, DeviceFamily::IntelGen7Baytrail,
-        nsIGfxInfo::FEATURE_WEBRENDER,
-        nsIGfxInfo::FEATURE_BLOCKED_DEVICE, DRIVER_COMPARISON_IGNORED,
-        V(0, 0, 0, 0), "FEATURE_FAILURE_BUG_1708682");
+        nsIGfxInfo::FEATURE_WEBRENDER, nsIGfxInfo::FEATURE_BLOCKED_DEVICE,
+        DRIVER_COMPARISON_IGNORED, V(0, 0, 0, 0),
+        "FEATURE_FAILURE_BUG_1708682");
 
     // Nvidia Mesa baseline, see bug 1563859.
     APPEND_TO_DRIVER_BLOCKLIST_EXT(

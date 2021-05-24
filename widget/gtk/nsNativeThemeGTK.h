@@ -18,7 +18,6 @@
 
 class nsNativeThemeGTK final : public nsNativeBasicThemeGTK {
  public:
-
   // The nsITheme interface.
   NS_IMETHOD DrawWidgetBackground(gfxContext* aContext, nsIFrame* aFrame,
                                   StyleAppearance aAppearance,

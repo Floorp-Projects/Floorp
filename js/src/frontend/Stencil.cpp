@@ -3117,10 +3117,12 @@ bool CompilationState::appendGCThings(
 }
 
 CompilationState::CompilationStatePosition CompilationState::getPosition() {
-  return CompilationStatePosition{scriptData.length(), asmJS ? asmJS->moduleMap.count() : 0};
+  return CompilationStatePosition{scriptData.length(),
+                                  asmJS ? asmJS->moduleMap.count() : 0};
 }
 
-void CompilationState::rewind(const CompilationState::CompilationStatePosition& pos) {
+void CompilationState::rewind(
+    const CompilationState::CompilationStatePosition& pos) {
   if (asmJS && asmJS->moduleMap.count() != pos.asmJSCount) {
     for (size_t i = pos.scriptDataLength; i < scriptData.length(); i++) {
       asmJS->moduleMap.remove(ScriptIndex(i));
@@ -3135,7 +3137,8 @@ void CompilationState::rewind(const CompilationState::CompilationStatePosition& 
   scriptData.shrinkTo(pos.scriptDataLength);
 }
 
-void CompilationState::markGhost(const CompilationState::CompilationStatePosition& pos) {
+void CompilationState::markGhost(
+    const CompilationState::CompilationStatePosition& pos) {
   for (size_t i = pos.scriptDataLength; i < scriptData.length(); i++) {
     scriptData[i].setIsGhost();
   }

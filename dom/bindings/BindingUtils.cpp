@@ -1814,9 +1814,8 @@ static bool ResolvePrototypeOrConstructor(
         return false;
       }
 
-      desc.set(
-        Some(JS::PropertyDescriptor::Data(JS::StringValue(nameStr),
-          { JS::PropertyAttribute::Configurable })));
+      desc.set(Some(JS::PropertyDescriptor::Data(
+          JS::StringValue(nameStr), {JS::PropertyAttribute::Configurable})));
       return true;
     }
 
