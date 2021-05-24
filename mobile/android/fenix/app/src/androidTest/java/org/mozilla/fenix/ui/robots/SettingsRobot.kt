@@ -155,6 +155,24 @@ class SettingsRobot {
             return SettingsSubMenuAccessibilityRobot.Transition()
         }
 
+        fun openLanguageSubMenu(interact: SettingsSubMenuLanguageRobot.() -> Unit): SettingsSubMenuLanguageRobot.Transition {
+
+            fun languageButton() = onView(withText("Language"))
+            languageButton().click()
+
+            SettingsSubMenuLanguageRobot().interact()
+            return SettingsSubMenuLanguageRobot.Transition()
+        }
+
+        fun openSetDefaultBrowserSubMenu(interact: SettingsSubMenuSetDefaultBrowserRobot.() -> Unit): SettingsSubMenuSetDefaultBrowserRobot.Transition {
+            scrollToElementByText("Set as default browser")
+            fun setDefaultBrowserButton() = onView(withText("Set as default browser"))
+            setDefaultBrowserButton().click()
+
+            SettingsSubMenuSetDefaultBrowserRobot().interact()
+            return SettingsSubMenuSetDefaultBrowserRobot.Transition()
+        }
+
         fun openEnhancedTrackingProtectionSubMenu(interact: SettingsSubMenuEnhancedTrackingProtectionRobot.() -> Unit): SettingsSubMenuEnhancedTrackingProtectionRobot.Transition {
             scrollToElementByText("Enhanced Tracking Protection")
             fun enhancedTrackingProtectionButton() =

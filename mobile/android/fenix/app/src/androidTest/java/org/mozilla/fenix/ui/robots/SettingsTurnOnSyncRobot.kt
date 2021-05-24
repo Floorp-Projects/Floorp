@@ -36,11 +36,11 @@ class SettingsTurnOnSyncRobot {
     class Transition {
         val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
 
-        fun goBack(interact: SettingsSubMenuLoginsAndPasswordRobot.() -> Unit): SettingsSubMenuLoginsAndPasswordRobot.Transition {
+        fun goBack(interact: SettingsSubMenuLoginsAndPasswordRobot.() -> Unit): SettingsRobot.Transition {
             goBackButton().perform(ViewActions.click())
 
             SettingsSubMenuLoginsAndPasswordRobot().interact()
-            return SettingsSubMenuLoginsAndPasswordRobot.Transition()
+            return SettingsRobot.Transition()
         }
     }
 }
