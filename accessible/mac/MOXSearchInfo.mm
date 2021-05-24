@@ -364,7 +364,7 @@ using namespace mozilla::a11y;
       [matches addObjectsFromArray:[self getMatchesForRule:rule]];
     }
 
-    if ([key isEqualToString:@"AXCheckboxSearchKey"]) {
+    if ([key isEqualToString:@"AXCheckBoxSearchKey"]) {
       RotorRoleRule rule = mImmediateDescendantsOnly
                                ? RotorRoleRule(roles::CHECKBUTTON, geckoRootAcc)
                                : RotorRoleRule(roles::CHECKBUTTON);
