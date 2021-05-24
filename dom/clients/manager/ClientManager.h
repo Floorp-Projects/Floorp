@@ -8,6 +8,7 @@
 
 #include "mozilla/dom/ClientOpPromise.h"
 #include "mozilla/dom/ClientThing.h"
+#include "mozilla/dom/PClientManagerChild.h"
 
 class nsIPrincipal;
 
@@ -73,7 +74,29 @@ class ClientManager final : public ClientThing<ClientManagerChild> {
   // Private methods called by ClientSource
   mozilla::dom::WorkerPrivate* GetWorkerPrivate() const;
 
+  // Don't use - use {Expect,Forget}FutureSource instead.
+  static bool ExpectOrForgetFutureSource(
+      const ClientInfo& aClientInfo,
+      bool (PClientManagerChild::*aMethod)(const IPCClientInfo&));
+
  public:
+  // Asynchronously declare that a ClientSource will possibly be constructed
+  // from an equivalent ClientInfo in the future. This must be called before any
+  // any ClientHandles are created with the ClientInfo to avoid race conditions
+  // when ClientHandles query the ClientManagerService.
+  //
+  // This method exists so that the ClientManagerService can determine if a
+  // particular ClientSource can be expected to exist in the future or has
+  // already existed and been destroyed.
+  //
+  // If it's later known that the expected ClientSource will not be
+  // constructed, ForgetFutureSource must be called.
+  static bool ExpectFutureSource(const ClientInfo& aClientInfo);
+
+  // May also be called even when the "future" source has become a "real"
+  // source, in which case this is a no-op.
+  static bool ForgetFutureSource(const ClientInfo& aClientInfo);
+
   // Initialize the ClientManager at process start.  This
   // does book-keeping like creating a TLS identifier, etc.
   // This should only be called by process startup code.
