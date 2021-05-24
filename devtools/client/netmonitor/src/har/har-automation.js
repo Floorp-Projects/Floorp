@@ -35,9 +35,7 @@ const trace = {
  * If the default log directory preference isn't set the following
  * directory is used by default: <profile>/har/logs
  */
-function HarAutomation(toolbox) {
-  this.initialize(toolbox);
-}
+function HarAutomation() {}
 
 HarAutomation.prototype = {
   // Initialization
