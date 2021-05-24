@@ -28,6 +28,7 @@ class CSSMediaRule final : public css::ConditionRule {
 #endif
 
   RawServoMediaRule* Raw() const { return mRawRule; }
+  void SetRawAfterClone(RefPtr<RawServoMediaRule>);
 
   // WebIDL interface
   uint16_t Type() const override { return CSSRule_Binding::MEDIA_RULE; }

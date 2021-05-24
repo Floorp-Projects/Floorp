@@ -47,6 +47,9 @@ class MediaList final : public nsISupports, public nsWrapperCache {
   bool Matches(const Document&) const;
 
   void SetStyleSheet(StyleSheet* aSheet);
+  void SetRawAfterClone(RefPtr<RawServoMediaList> aRaw) {
+    mRawList = std::move(aRaw);
+  }
 
   // WebIDL
   void GetMediaText(nsACString& aMediaText);
