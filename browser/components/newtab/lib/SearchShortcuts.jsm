@@ -64,8 +64,8 @@ this.getSearchFormURL = getSearchFormURL;
 // Check topsite against predefined list of valid search engines
 // https://searchfox.org/mozilla-central/rev/ca869724246f4230b272ed1c8b9944596e80d920/toolkit/components/search/nsSearchService.js#939
 async function checkHasSearchEngine(keyword) {
-  return (await Services.search.getAppProvidedEngines()).find(e =>
-    e.aliases.includes(keyword)
+  return (await Services.search.getAppProvidedEngines()).find(
+    e => e.aliases.includes(keyword) && !e.hidden
   );
 }
 this.checkHasSearchEngine = checkHasSearchEngine;
