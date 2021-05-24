@@ -28,8 +28,16 @@ void ClientHandleOpParent::Init(ClientOpConstructorArgs&& aArgs) {
   handle->EnsureSource()
       ->Then(
           GetCurrentSerialEventTarget(), __func__,
-          [this, args = std::move(aArgs)](ClientSourceParent* source) mutable {
+          [this, handle, args = std::move(aArgs)](bool) mutable {
             mSourcePromiseRequestHolder.Complete();
+
+            auto source = handle->GetSource();
+            if (!source) {
+              CopyableErrorResult rv;
+              rv.ThrowAbortError("Client has been destroyed");
+              Unused << PClientHandleOpParent::Send__delete__(this, rv);
+              return;
+            }
             RefPtr<ClientOpPromise> p;
 
             // ClientPostMessageArgs can contain PBlob actors.  This means we
