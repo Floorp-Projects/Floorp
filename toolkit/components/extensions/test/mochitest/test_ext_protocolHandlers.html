@@ -69,9 +69,6 @@ add_task(async function test_protocolHandler() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["extensions.allowPrivateBrowsingByDefault", false],
-      // Disabling the external protocol permission prompt. We don't need it
-      // for this test.
-      ["security.external_protocol_requires_permission", false],
     ],
   });
   let extensionData = {
@@ -101,6 +98,7 @@ add_task(async function test_protocolHandler() {
     files: {
       "foo.js": function() {
         browser.test.sendMessage("test-query", location.search);
+        browser.tabs.getCurrent().then(tab => browser.test.sendMessage("test-tab", tab.id));
       },
       "foo.html": `<!DOCTYPE html>
         <html>
@@ -161,9 +159,61 @@ add_task(async function test_protocolHandler() {
 
   let query = await extension.awaitMessage("test-query");
   is(query, "?val=ext%2Bfoo%3Atest", "test query ok");
+  is(id, await extension.awaitMessage("test-tab"), "id should match opened tab");
 
   extension.sendMessage("close", id);
   await extension.awaitMessage("closed");
+
+  // Test that handling a URL from the commandline works.
+  chromeScript = SpecialPowers.loadChromeScript(() => {
+    let cmdLineHandler = Cc["@mozilla.org/browser/final-clh;1"].getService(
+      Ci.nsICommandLineHandler
+    );
+    let fakeCmdLine = {
+      length: 1,
+      _arg: "ext+foo:cmdline",
+
+      getArgument(index) {
+        if (index == 0) {
+          return this._arg;
+        }
+        throw Components.Exception("", Cr.NS_ERROR_INVALID_ARG);
+      },
+
+      findFlag() {
+        return -1;
+      },
+
+      handleFlagWithParam() {
+        if (this._argCount) {
+          this._argCount = 0;
+          return this._arg;
+        }
+
+        return "";
+      },
+
+      state: 2,
+
+      STATE_INITIAL_LAUNCH: 0,
+      STATE_REMOTE_AUTO: 1,
+      STATE_REMOTE_EXPLICIT: 2,
+
+      preventDefault: false,
+
+      resolveURI() {
+        return Services.io.newURI(this._arg);
+      },
+      QueryInterface: ChromeUtils.generateQI(["nsICommandLine"]),
+    };
+    cmdLineHandler.handle(fakeCmdLine);
+  });
+  query = await extension.awaitMessage("test-query");
+  is(query, "?val=ext%2Bfoo%3Acmdline", "cmdline query ok");
+  id = await extension.awaitMessage("test-tab");
+  extension.sendMessage("close", id);
+  await extension.awaitMessage("closed");
+  chromeScript.destroy();
 
   // Test the protocol in a private window, watch for the
   // console error.
