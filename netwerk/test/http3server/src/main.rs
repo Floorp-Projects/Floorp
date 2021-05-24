@@ -113,7 +113,7 @@ impl HttpServer for Http3TestServer {
                                             ),
                                             (
                                                 String::from("content-type"),
-                                                String::from("text/plain")
+                                                String::from("text/plain"),
                                             ),
                                             (
                                                 String::from("content-length"),
@@ -206,7 +206,7 @@ impl HttpServer for Http3TestServer {
                                             ),
                                             (
                                                 String::from("content-type"),
-                                                String::from("text/plain")
+                                                String::from("text/plain"),
                                             ),
                                             (String::from("content-length"), 4000.to_string()),
                                         ],
@@ -228,7 +228,7 @@ impl HttpServer for Http3TestServer {
                                                 ),
                                                 (
                                                     String::from("content-type"),
-                                                    String::from("text/plain")
+                                                    String::from("text/plain"),
                                                 ),
                                                 (String::from("content-length"), v.to_string()),
                                             ],
