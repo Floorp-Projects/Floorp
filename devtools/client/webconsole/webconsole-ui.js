@@ -212,6 +212,7 @@ class WebConsoleUI {
         resourceCommand.TYPES.PLATFORM_MESSAGE,
         resourceCommand.TYPES.NETWORK_EVENT,
         resourceCommand.TYPES.NETWORK_EVENT_STACKTRACE,
+        resourceCommand.TYPES.CLONED_CONTENT_PROCESS_MESSAGE,
       ],
       {
         onAvailable: this._onResourceAvailable,

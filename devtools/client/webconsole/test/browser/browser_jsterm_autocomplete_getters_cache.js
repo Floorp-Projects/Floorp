@@ -108,11 +108,9 @@ add_task(async function() {
     "Reload the page to ensure asking for autocomplete again show the confirm dialog"
   );
   onPopupClose = autocompletePopup.once("popup-closed");
-  EventUtils.synthesizeKey("KEY_Escape");
-  await onPopupClose;
-
   await refreshTab();
   info("tab reloaded, waiting for the popup to close");
+  await onPopupClose;
 
   info("Press Ctrl+Space to open the confirm dialog again");
   EventUtils.synthesizeKey(" ", { ctrlKey: true });
