@@ -35,6 +35,11 @@ class RenderCompositorOGLSWGL : public RenderCompositorLayersSWGL {
   bool BeginFrame() override;
   RenderedFrameId EndFrame(const nsTArray<DeviceIntRect>& aDirtyRects) override;
 
+  // Returns true for requesting rendering during readback.
+  // RenderCompositorOGLSWGL::MaybeReadback() requests rendering.
+  // This value is not used by WebRender, since native compositor API is used
+  // for sw-wr.
+  bool UsePartialPresent() override { return true; }
   bool RequestFullRender() override;
 
   void Pause() override;
