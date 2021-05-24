@@ -5441,6 +5441,7 @@ void HTMLInputElement::GetValueFromSetRangeText(nsAString& aValue) {
 
 nsresult HTMLInputElement::SetValueFromSetRangeText(const nsAString& aValue) {
   return SetValueInternal(aValue, {ValueSetterOption::ByContentAPI,
+                                   ValueSetterOption::BySetRangeTextAPI,
                                    ValueSetterOption::SetValueChanged});
 }
 

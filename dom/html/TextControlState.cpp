@@ -2338,7 +2338,10 @@ void TextControlState::SetRangeText(const nsAString& aReplacement,
   }
 
   SetSelectionRange(selectionStart, selectionEnd, Optional<nsAString>(), aRv);
-  // The instance may have already been deleted here.
+  if (IsSelectionCached()) {
+    // SetValueFromSetRangeText skipped SetMaxLength, set it here properly
+    GetSelectionProperties().SetMaxLength(value.Length());
+  }
 }
 
 void TextControlState::DestroyEditor() {
@@ -2902,7 +2905,13 @@ bool TextControlState::SetValueWithoutTextEditor(
             aHandlingSetValue.ValueSetterOptionsRef()));
 
         SelectionProperties& props = GetSelectionProperties();
-        props.SetMaxLength(aHandlingSetValue.GetSettingValue().Length());
+        // Setting a max length and thus capping selection range early prevents
+        // selection change detection in setRangeText. Temporarily disable
+        // capping here with UINT32_MAX, and set it later in ::SetRangeText().
+        props.SetMaxLength(aHandlingSetValue.ValueSetterOptionsRef().contains(
+                               ValueSetterOption::BySetRangeTextAPI)
+                               ? UINT32_MAX
+                               : aHandlingSetValue.GetSettingValue().Length());
         if (aHandlingSetValue.ValueSetterOptionsRef().contains(
                 ValueSetterOption::MoveCursorToEndIfValueChanged)) {
           props.SetStart(aHandlingSetValue.GetSettingValue().Length());

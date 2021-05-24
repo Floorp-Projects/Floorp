@@ -660,6 +660,7 @@ void HTMLTextAreaElement::GetValueFromSetRangeText(nsAString& aValue) {
 nsresult HTMLTextAreaElement::SetValueFromSetRangeText(
     const nsAString& aValue) {
   return SetValueInternal(aValue, {ValueSetterOption::ByContentAPI,
+                                   ValueSetterOption::BySetRangeTextAPI,
                                    ValueSetterOption::SetValueChanged});
 }
 
