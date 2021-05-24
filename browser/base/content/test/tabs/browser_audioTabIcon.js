@@ -80,9 +80,7 @@ async function test_tooltip(icon, expectedTooltip, isActiveTab, tab) {
   let tooltip = document.getElementById("tabbrowser-tab-tooltip");
 
   let tabContent = tab.querySelector(".tab-content");
-  if (gProton) {
-    await hover_icon(tabContent, tooltip);
-  }
+  await hover_icon(tabContent, tooltip);
 
   await hover_icon(icon, tooltip);
   if (isActiveTab) {

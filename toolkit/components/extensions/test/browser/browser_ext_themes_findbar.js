@@ -53,10 +53,8 @@ add_task(async function test_support_toolbar_properties_on_findbar() {
   );
   Assert.equal(
     window.getComputedStyle(findbar_button).color,
-    gProton ? rgbColor.replace(/(\([^)]+)/, "a$1, 0.7") : rgbColor,
-    gProton
-      ? "Findbar checkbox text color should be faded toolbar text color."
-      : "Findbar checkbox text color should be same as toolbar text color."
+    rgbColor.replace(/(\([^)]+)/, "a$1, 0.7"),
+    "Findbar checkbox text color should be faded toolbar text color."
   );
 
   // Open a new window to check frame_inactive
@@ -75,10 +73,8 @@ add_task(async function test_support_toolbar_field_properties_on_findbar() {
   let findbar_prev_button = gFindBar.getElement("find-previous");
   let findbar_next_button = gFindBar.getElement("find-next");
 
-  if (gProton) {
-    assertHasNoBorders(findbar_prev_button);
-    assertHasNoBorders(findbar_next_button);
-  }
+  assertHasNoBorders(findbar_prev_button);
+  assertHasNoBorders(findbar_next_button);
 
   const TOOLBAR_FIELD_COLOR = "#ff00ff";
   const TOOLBAR_FIELD_TEXT_COLOR = "#9400ff";
@@ -121,13 +117,9 @@ add_task(async function test_support_toolbar_field_properties_on_findbar() {
     "Findbar textbox text color should be the same as toolbar field text color."
   );
   testBorderColor(findbar_textbox, TOOLBAR_FIELD_BORDER_COLOR);
-  if (gProton) {
-    assertHasNoBorders(findbar_prev_button);
-    assertHasNoBorders(findbar_next_button);
-  } else {
-    testBorderColor(findbar_prev_button, TOOLBAR_FIELD_BORDER_COLOR);
-    testBorderColor(findbar_next_button, TOOLBAR_FIELD_BORDER_COLOR);
-  }
+
+  assertHasNoBorders(findbar_prev_button);
+  assertHasNoBorders(findbar_next_button);
 
   await extension.unload();
 });

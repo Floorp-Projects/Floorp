@@ -40,24 +40,17 @@ add_task(async function() {
     "We expect this notification to have the type of 'info'."
   );
 
-  if (gProton) {
-    // Make sure the CSS is fully loaded...
-    ok(
-      await TestUtils.waitForCondition(
-        () =>
-          notification.ownerGlobal.getComputedStyle(
-            notification.messageImage,
-            "::after"
-          ).content == 'url("chrome://global/skin/icons/info-filled.svg")'
-      ),
-      "We expect this notification to have an icon."
-    );
-  } else {
-    ok(
-      notification.messageImage.getAttribute("src"),
-      "We expect this notification to have an icon."
-    );
-  }
+  // Make sure the CSS is fully loaded...
+  ok(
+    await TestUtils.waitForCondition(
+      () =>
+        notification.ownerGlobal.getComputedStyle(
+          notification.messageImage,
+          "::after"
+        ).content == 'url("chrome://global/skin/icons/info-filled.svg")'
+    ),
+    "We expect this notification to have an icon."
+  );
 
   let buttons = notification.buttonContainer.getElementsByClassName(
     "notification-button"

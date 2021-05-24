@@ -19,13 +19,6 @@ function getExpectedTargets() {
     "library",
     "logins",
     "pageAction-bookmark",
-    ...(gProton
-      ? []
-      : [
-          "pageAction-copyURL",
-          "pageAction-emailLink",
-          "pageAction-sendToDevice",
-        ]),
     ...(hasPocket ? ["pocket"] : []),
     "privateWindow",
     ...(hasQuit ? ["quit"] : []),

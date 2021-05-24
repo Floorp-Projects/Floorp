@@ -79,7 +79,7 @@ add_task(async function simple() {
 
   Assert.equal(action.getIconURL(), iconURL, "iconURL");
   Assert.equal(action.id, id, "id");
-  Assert.equal(action.pinnedToUrlbar, gProton, "pinnedToUrlbar");
+  Assert.equal(action.pinnedToUrlbar, true, "pinnedToUrlbar");
   Assert.equal(action.getDisabled(), false, "disabled");
   Assert.equal(action.getDisabled(window), false, "disabled in window");
   Assert.equal(action.getTitle(), title, "title");
@@ -105,7 +105,7 @@ add_task(async function simple() {
   );
   Assert.equal(
     onPlacedInUrlbarCallCount,
-    gProton ? 1 : 0,
+    1,
     "onPlacedInUrlbarCallCount after adding the action"
   );
   Assert.equal(
@@ -178,7 +178,7 @@ add_task(async function simple() {
 
   Assert.deepEqual(
     PageActions.actionsInUrlbar(window),
-    (gProton ? [action] : []).concat(initialActionsInUrlbar),
+    [action].concat(initialActionsInUrlbar),
     "Actions in urlbar after adding the action"
   );
 
@@ -223,7 +223,7 @@ add_task(async function simple() {
   );
 
   let urlbarButtonNode = document.getElementById(urlbarButtonID);
-  Assert.equal(!!urlbarButtonNode, gProton, "urlbarButtonNode");
+  Assert.equal(!!urlbarButtonNode, true, "urlbarButtonNode");
 
   // Open the panel, click the action's button.
   await promiseOpenPageActionPanel();
@@ -729,9 +729,6 @@ add_task(async function insertBeforeActionID() {
   let initialActions = PageActions.actionsInPanel(window);
   let initialBuiltInActions = PageActions._builtInActions.slice();
   let initialNonBuiltInActions = PageActions._nonBuiltInActions.slice();
-  let initialBookmarkSeparatorIndex = initialActions.findIndex(a => {
-    return a.id == PageActions.ACTION_ID_BOOKMARK_SEPARATOR;
-  });
 
   let action = PageActions.addAction(
     new PageActions.Action({
@@ -773,37 +770,6 @@ add_task(async function insertBeforeActionID() {
   // The action's panel button should have been created.
   let panelButtonNode = document.getElementById(panelButtonID);
   Assert.notEqual(panelButtonNode, null, "panelButtonNode");
-
-  if (!gProton) {
-    let actionIndex = newActions.findIndex(a => a.id == id);
-    Assert.equal(
-      initialBookmarkSeparatorIndex,
-      actionIndex,
-      "initialBookmarkSeparatorIndex"
-    );
-    let newBookmarkSeparatorIndex = newActions.findIndex(a => {
-      return a.id == PageActions.ACTION_ID_BOOKMARK_SEPARATOR;
-    });
-    Assert.equal(
-      newBookmarkSeparatorIndex,
-      initialBookmarkSeparatorIndex + 1,
-      "newBookmarkSeparatorIndex"
-    );
-
-    // The button's next sibling should be the bookmark separator.
-    Assert.notEqual(
-      panelButtonNode.nextElementSibling,
-      null,
-      "panelButtonNode.nextElementSibling"
-    );
-    Assert.equal(
-      panelButtonNode.nextElementSibling.id,
-      BrowserPageActions.panelButtonNodeIDForActionID(
-        PageActions.ACTION_ID_BOOKMARK_SEPARATOR
-      ),
-      "panelButtonNode.nextElementSibling.id"
-    );
-  }
 
   // The separator between the built-in and non-built-in actions should not have
   // been created.
