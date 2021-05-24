@@ -294,40 +294,31 @@ bool ClientManagerService::RemoveSource(ClientSourceParent* aSource) {
   return true;
 }
 
-ClientSourceParent* ClientManagerService::FindSource(
+RefPtr<SourcePromise> ClientManagerService::FindSource(
     const nsID& aID, const PrincipalInfo& aPrincipalInfo) {
   AssertIsOnBackgroundThread();
 
   auto entry = mSourceTable.Lookup(aID);
   if (!entry) {
-    return nullptr;
+    CopyableErrorResult rv;
+    rv.ThrowInvalidStateError("Unknown client.");
+    return SourcePromise::CreateAndReject(rv, __func__);
   }
 
   if (entry.Data().is<FutureClientSourceParent>()) {
-    return nullptr;
+    return entry.Data().as<FutureClientSourceParent>().Promise();
   }
 
   ClientSourceParent* source = entry.Data().as<ClientSourceParent*>();
   if (source->IsFrozen() ||
       NS_WARN_IF(!ClientMatchPrincipalInfo(source->Info().PrincipalInfo(),
                                            aPrincipalInfo))) {
-    return nullptr;
+    CopyableErrorResult rv;
+    rv.ThrowInvalidStateError("Unknown client.");
+    return SourcePromise::CreateAndReject(rv, __func__);
   }
 
-  return source;
-}
-
-void ClientManagerService::WaitForSource(ClientHandleParent* aHandle,
-                                         const nsID& aID) {
-  auto& entry = mPendingHandles.LookupOrInsert(aID);
-  entry.AppendElement(aHandle);
-}
-
-void ClientManagerService::StopWaitingForSource(ClientHandleParent* aHandle,
-                                                const nsID& aID) {
-  if (auto entry = mPendingHandles.Lookup(aID)) {
-    entry->RemoveElement(aHandle);
-  }
+  return SourcePromise::CreateAndResolve(source, __func__);
 }
 
 void ClientManagerService::AddManager(ClientManagerParent* aManager) {
