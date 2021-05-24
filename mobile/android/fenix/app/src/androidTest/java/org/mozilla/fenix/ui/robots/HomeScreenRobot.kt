@@ -335,7 +335,11 @@ class HomeScreenRobot {
         }
 
         fun togglePrivateBrowsingMode() {
-            onView(ViewMatchers.withResourceName("privateBrowsingButton"))
+            mDevice.findObject(UiSelector().resourceId("$packageName:id/privateBrowsingButton"))
+                .waitForExists(
+                    waitingTime
+                )
+            privateBrowsingButton()
                 .perform(click())
         }
 
@@ -344,10 +348,10 @@ class HomeScreenRobot {
             for (i in 1..5) {
                 mDevice.findObject(UiSelector().resourceId("$packageName:id/privateBrowsingButton"))
                     .waitForExists(
-                            waitingTime
+                        waitingTime
                     )
 
-                onView(ViewMatchers.withResourceName("privateBrowsingButton"))
+                privateBrowsingButton()
                     .perform(click())
             }
 
@@ -502,8 +506,8 @@ private fun assertHomeMenu() = onView(ViewMatchers.withResourceName("menuButton"
     .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
 private fun assertHomePrivateBrowsingButton() =
-    onView(ViewMatchers.withResourceName("privateBrowsingButton"))
-        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+    privateBrowsingButton()
+        .check(matches(isDisplayed()))
 
 private fun assertHomeWordmark() = onView(ViewMatchers.withResourceName("wordmark"))
     .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
@@ -717,6 +721,8 @@ private fun assertShareTabsOverlay() {
     onView(withId(R.id.share_tab_favicon)).check(matches(isDisplayed()))
     onView(withId(R.id.share_tab_url)).check(matches(isDisplayed()))
 }
+
+private fun privateBrowsingButton() = onView(withId(R.id.privateBrowsingButton))
 
 private fun tabMediaControlButton() = onView(withId(R.id.play_pause_button))
 
