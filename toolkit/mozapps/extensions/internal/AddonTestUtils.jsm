@@ -1494,17 +1494,25 @@ var AddonTestUtils = {
   promiseCompleteInstall(install) {
     let listener;
     return new Promise(resolve => {
+      let installPromise;
       listener = {
         onDownloadFailed: resolve,
         onDownloadCancelled: resolve,
         onInstallFailed: resolve,
         onInstallCancelled: resolve,
-        onInstallEnded: resolve,
+        onInstallEnded() {
+          // onInstallEnded is called right when an add-on has been installed.
+          // install() may still be pending, e.g. for updates, and be awaiting
+          // the completion of the update, part of which is the removal of the
+          // temporary XPI file of the downloaded update. To avoid intermittent
+          // test failures due to lingering temporary files, await install().
+          resolve(installPromise);
+        },
         onInstallPostponed: resolve,
       };
 
       install.addListener(listener);
-      install.install();
+      installPromise = install.install();
     }).then(() => {
       install.removeListener(listener);
       return install;
