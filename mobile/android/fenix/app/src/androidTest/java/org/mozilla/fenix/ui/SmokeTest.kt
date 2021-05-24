@@ -155,7 +155,6 @@ class SmokeTest {
     }
 
     @Test
-    @Ignore("https://github.com/mozilla-mobile/fenix/issues/18603")
     // Verifies the functionality of the onboarding Start Browsing button
     fun startBrowsingButtonTest() {
         homeScreen {

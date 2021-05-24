@@ -11,7 +11,6 @@ import android.widget.EditText
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.NoMatchingViewException
-import androidx.test.espresso.ViewInteraction
 import androidx.test.espresso.action.ViewActions
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.action.ViewActions.swipeLeft
@@ -33,10 +32,12 @@ import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.By.text
 import androidx.test.uiautomator.UiDevice
+import androidx.test.uiautomator.UiObject
 import androidx.test.uiautomator.UiScrollable
 import androidx.test.uiautomator.UiSelector
 import androidx.test.uiautomator.Until
 import androidx.test.uiautomator.Until.findObject
+import junit.framework.TestCase.assertTrue
 import mozilla.components.browser.state.state.searchEngines
 import mozilla.components.support.ktx.android.content.appName
 import org.hamcrest.CoreMatchers.allOf
@@ -327,7 +328,6 @@ class HomeScreenRobot {
         }
 
         fun clickStartBrowsingButton(interact: SearchRobot.() -> Unit): SearchRobot.Transition {
-            scrollToElementByText("Start browsing")
             startBrowsingButton().click()
 
             SearchRobot().interact()
@@ -465,6 +465,13 @@ fun homeScreen(interact: HomeScreenRobot.() -> Unit): HomeScreenRobot.Transition
 
 val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
 val appContext = InstrumentationRegistry.getInstrumentation().targetContext
+
+private fun homeScreenList() =
+    UiScrollable(
+        UiSelector()
+            .resourceId("$packageName:id/sessionControlRecyclerView")
+            .scrollable(true)
+    ).setAsVerticalList()
 
 private fun assertKeyboardVisibility(isExpectedToBeVisible: Boolean) =
     Assert.assertEquals(
@@ -646,9 +653,7 @@ private fun assertPrivacyNoticeButton() {
 }
 
 private fun assertStartBrowsingButton() {
-    scrollToElementByText("Start browsing")
-    onView(withId(R.id.finish_button))
-        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+    assertTrue(startBrowsingButton().waitForExists(waitingTime))
 }
 
 // Pick your toolbar placement
@@ -740,7 +745,11 @@ private fun tab(title: String) =
         )
     )
 
-private fun startBrowsingButton(): ViewInteraction {
-    scrollToElementByText("Start browsing")
-    return onView(allOf(withText("Start browsing")))
+private fun startBrowsingButton(): UiObject {
+    val startBrowsingButton = mDevice.findObject(UiSelector().resourceId("$packageName:id/finish_button"))
+    homeScreenList()
+        .scrollIntoView(startBrowsingButton)
+    homeScreenList()
+        .ensureFullyVisible(startBrowsingButton)
+    return startBrowsingButton
 }
