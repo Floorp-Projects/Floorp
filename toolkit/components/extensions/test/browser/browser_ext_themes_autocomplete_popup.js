@@ -8,10 +8,10 @@ const POPUP_TEXT_COLOR_BRIGHT = "#ffffff";
 const POPUP_SELECTED_COLOR = "#9400ff";
 const POPUP_SELECTED_TEXT_COLOR = "#09b9a6";
 
-const POPUP_URL_COLOR_DARK = gProton ? "#0061e0" : "#1c78d4";
-const POPUP_ACTION_COLOR_DARK = gProton ? "#5b5b66" : "#008f8a";
-const POPUP_URL_COLOR_BRIGHT = gProton ? "#00ddff" : "#74c0ff";
-const POPUP_ACTION_COLOR_BRIGHT = gProton ? "#bfbfc9" : "#30e60b";
+const POPUP_URL_COLOR_DARK = "#0061e0";
+const POPUP_ACTION_COLOR_DARK = "#5b5b66";
+const POPUP_URL_COLOR_BRIGHT = "#00ddff";
+const POPUP_ACTION_COLOR_BRIGHT = "#bfbfc9";
 
 const SEARCH_TERM = "urlbar-reflows-" + Date.now();
 

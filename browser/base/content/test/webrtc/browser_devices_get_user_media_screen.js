@@ -45,12 +45,6 @@ var gTests = [
       checkDeviceSelectors(false, false, true);
       let notification = PopupNotifications.panel.firstElementChild;
 
-      // With Proton enabled, the icon does not appear in the panel.
-      if (!gProtonDoorhangers) {
-        let iconclass = notification.getAttribute("iconclass");
-        ok(iconclass.includes("screen-icon"), "panel using screen icon");
-      }
-
       let menulist = document.getElementById("webRTC-selectWindow-menulist");
       let count = menulist.itemCount;
       ok(
@@ -218,12 +212,6 @@ var gTests = [
       );
       checkDeviceSelectors(false, false, true);
       let notification = PopupNotifications.panel.firstElementChild;
-
-      // With Proton enabled, the icon does not appear in the panel.
-      if (!gProtonDoorhangers) {
-        let iconclass = notification.getAttribute("iconclass");
-        ok(iconclass.includes("screen-icon"), "panel using screen icon");
-      }
 
       let menulist = document.getElementById("webRTC-selectWindow-menulist");
       let count = menulist.itemCount;
@@ -431,14 +419,6 @@ var gTests = [
         "anchored to device icon"
       );
       checkDeviceSelectors(true, false, true);
-
-      // With Proton enabled, the icon does not appear in the panel.
-      if (!gProtonDoorhangers) {
-        let iconclass = PopupNotifications.panel.firstElementChild.getAttribute(
-          "iconclass"
-        );
-        ok(iconclass.includes("screen-icon"), "panel using screen icon");
-      }
 
       let menulist = document.getElementById("webRTC-selectWindow-menulist");
       let count = menulist.itemCount;

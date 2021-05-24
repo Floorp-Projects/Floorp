@@ -114,14 +114,12 @@ add_task(async function setup() {
     children: bookmarks,
   });
 
-  // In Proton the page actions button is not normally visible, so we must
+  // The page actions button is not normally visible, so we must
   // unhide it.
-  if (gProton) {
-    BrowserPageActions.mainButtonNode.style.visibility = "visible";
-    registerCleanupFunction(() => {
-      BrowserPageActions.mainButtonNode.style.removeProperty("visibility");
-    });
-  }
+  BrowserPageActions.mainButtonNode.style.visibility = "visible";
+  registerCleanupFunction(() => {
+    BrowserPageActions.mainButtonNode.style.removeProperty("visibility");
+  });
 });
 
 // Test tab stops with no page loaded.

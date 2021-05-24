@@ -99,7 +99,7 @@ async function test_decoder_doctor_notification(
 
         is(
           notification.messageText.textContent,
-          notificationMessage + (gProton && isLink && label ? " " : ""),
+          notificationMessage + (isLink && label ? " " : ""),
           "notification message should match expectation"
         );
 

@@ -328,12 +328,10 @@ async function initPageActionsTest() {
   const addon = await AddonManager.getAddonByID("screenshots@mozilla.org");
   await addon.disable({ allowSystemAddons: true });
 
-  if (gProton) {
-    // Make the main button visible. It's not unless the window is narrow. This
-    // test isn't concerned with that behavior. We have other tests for that.
-    BrowserPageActions.mainButtonNode.style.visibility = "visible";
-    registerCleanupFunction(() => {
-      BrowserPageActions.mainButtonNode.style.removeProperty("visibility");
-    });
-  }
+  // Make the main button visible. It's not unless the window is narrow. This
+  // test isn't concerned with that behavior. We have other tests for that.
+  BrowserPageActions.mainButtonNode.style.visibility = "visible";
+  registerCleanupFunction(() => {
+    BrowserPageActions.mainButtonNode.style.removeProperty("visibility");
+  });
 }
