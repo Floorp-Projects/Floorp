@@ -126,6 +126,7 @@ uint16_t RotorControlRule::Match(const AccessibleOrProxy& aAccOrProxy) {
       case roles::ENTRY:
       case roles::OUTLINE:
       case roles::PASSWORD_TEXT:
+      case roles::BUTTONMENU:
         return result;
 
       case roles::DATE_EDITOR:
