@@ -59,6 +59,7 @@ class Components(private val context: Context) {
             core.lazyBookmarksStorage,
             core.lazyPasswordsStorage,
             core.lazyRemoteTabsStorage,
+            core.lazyAutofillStorage,
             strictMode
         )
     }
