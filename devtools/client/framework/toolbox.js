@@ -959,7 +959,7 @@ Toolbox.prototype = {
         await performanceFrontConnection;
       }
 
-      this.initHarAutomation();
+      await this.initHarAutomation();
 
       this.emit("ready");
       this._resolveIsOpen();
@@ -3967,13 +3967,13 @@ Toolbox.prototype = {
 
   // HAR Automation
 
-  initHarAutomation() {
+  async initHarAutomation() {
     const autoExport = Services.prefs.getBoolPref(
       "devtools.netmonitor.har.enableAutoExportToFile"
     );
     if (autoExport) {
       this.harAutomation = new HarAutomation();
-      this.harAutomation.initialize(this);
+      await this.harAutomation.initialize(this);
     }
   },
   destroyHarAutomation() {
