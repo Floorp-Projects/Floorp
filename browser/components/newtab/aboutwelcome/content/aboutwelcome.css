@@ -510,13 +510,9 @@ body {
     .onboardingContainer.proton .screen-0 {
       min-width: 700px; }
       .onboardingContainer.proton .screen-0 .section-left {
-        width: 50%;
         display: flex;
         flex-direction: column;
-        margin-inline-start: 101px; }
-        @media (max-width: 1122px) {
-          .onboardingContainer.proton .screen-0 .section-left {
-            margin-inline-start: 71px; } }
+        margin-inline-start: 6vw; }
         .onboardingContainer.proton .screen-0 .section-left .message-text {
           flex-grow: 1;
           display: flex;
@@ -529,27 +525,12 @@ body {
           .onboardingContainer.proton .screen-0 .section-left .message-text h1 {
             color: #FFF;
             font-weight: bold;
-            font-size: 104px;
-            line-height: 104px;
+            font-size: clamp(48px, 7vw, 104px);
+            line-height: 1em;
             margin: 0 6px;
-            width: 517px;
+            max-width: 5em;
             text-align: initial;
             white-space: pre-wrap; }
-            @media (max-width: 1122px) {
-              .onboardingContainer.proton .screen-0 .section-left .message-text h1 {
-                width: 300px;
-                font-size: 48px;
-                line-height: 56px; } }
-            @media (max-width: 866px) {
-              .onboardingContainer.proton .screen-0 .section-left .message-text h1 {
-                width: 284px;
-                font-size: 48px;
-                line-height: 56px; } }
-            @media (max-width: 610px) {
-              .onboardingContainer.proton .screen-0 .section-left .message-text h1 {
-                width: 208px;
-                font-size: 48px;
-                line-height: 56px; } }
         .onboardingContainer.proton .screen-0 .section-left .attrib-text {
           height: 18px;
           margin-bottom: 25px;
@@ -559,16 +540,10 @@ body {
           color: #F9F9FB;
           text-shadow: 0 0 7px rgba(0, 0, 0, 0.6);
           transition-delay: 0.5s; }
-          @media (max-width: 900px) {
-            .onboardingContainer.proton .screen-0 .section-left .attrib-text {
-              width: 200px; } }
-          @media (max-width: 750px) {
-            .onboardingContainer.proton .screen-0 .section-left .attrib-text {
-              width: 200px;
-              margin-inline-start: -50px; } }
       .onboardingContainer.proton .screen-0 .section-main {
-        z-index: 1;
-        width: 50%; }
+        flex-shrink: 0;
+        width: 490px;
+        z-index: 1; }
         .onboardingContainer.proton .screen-0 .section-main .main-content {
           background: transparent;
           display: block;
