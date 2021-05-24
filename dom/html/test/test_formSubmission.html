@@ -609,11 +609,14 @@ function checkMPSubmission(sub, expected, test) {
     for (x in o) ++l;
     return l;
   }
-  function mpquote(s) {
-    return s.replace(/\r\n/g, " ")
-            .replace(/\r/g, " ")
-            .replace(/\n/g, " ")
-            .replace(/\"/g, "\\\"");
+  function mpquote_name(s) {
+    return s.replace(/\r?\n|\r/g, "%0D%0A")
+            .replace(/\"/g, "%22");
+  }
+  function mpquote_filename(s) {
+    return s.replace(/\r/g, "%0D")
+            .replace(/\n/g, "%0A")
+            .replace(/\"/g, "%22");
   }
 
   is(sub.length, expected.length,
@@ -627,7 +630,7 @@ function checkMPSubmission(sub, expected, test) {
   for (i = 0; i < expected.length; ++i) {
     if (!("fileName" in expected[i])) {
       is(sub[i].headers["Content-Disposition"],
-         "form-data; name=\"" + mpquote(expected[i].name) + "\"",
+         "form-data; name=\"" + mpquote_name(expected[i].name) + "\"",
          "Correct name in " + test);
       is (getPropCount(sub[i].headers), 1,
           "Wrong number of headers in " + test);
@@ -637,8 +640,8 @@ function checkMPSubmission(sub, expected, test) {
     }
     else {
       is(sub[i].headers["Content-Disposition"],
-         "form-data; name=\"" + mpquote(expected[i].name) + "\"; filename=\"" +
-           mpquote(expected[i].fileName) + "\"",
+         "form-data; name=\"" + mpquote_name(expected[i].name) + "\"; filename=\"" +
+           mpquote_filename(expected[i].fileName) + "\"",
          "Correct name in " + test);
       is(sub[i].headers["Content-Type"],
          expected[i].contentType,
