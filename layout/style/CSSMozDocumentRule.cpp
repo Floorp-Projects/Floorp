@@ -108,13 +108,6 @@ void CSSMozDocumentRule::List(FILE* out, int32_t aIndent) const {
 }
 #endif
 
-void CSSMozDocumentRule::SetRawAfterClone(
-    RefPtr<RawServoMozDocumentRule> aRaw) {
-  mRawRule = std::move(aRaw);
-  css::ConditionRule::SetRawAfterClone(
-      Servo_MozDocumentRule_GetRules(mRawRule).Consume());
-}
-
 void CSSMozDocumentRule::GetConditionText(nsACString& aConditionText) {
   Servo_MozDocumentRule_GetConditionText(mRawRule, &aConditionText);
 }
