@@ -28,11 +28,11 @@ void VideoStreamTrack::Destroy() {
 }
 
 void VideoStreamTrack::AddVideoOutput(VideoFrameContainer* aSink) {
-  if (Ended()) {
+  if (Ended() || !GetOwner()) {
     return;
   }
   auto output = MakeRefPtr<VideoOutput>(
-      aSink, nsGlobalWindowInner::Cast(GetParentObject())
+      aSink, nsGlobalWindowInner::Cast(GetOwner())
                  ->AbstractMainThreadFor(TaskCategory::Other));
   AddVideoOutput(output);
 }
@@ -81,7 +81,7 @@ void VideoStreamTrack::GetLabel(nsAString& aLabel, CallerType aCallerType) {
 }
 
 already_AddRefed<MediaStreamTrack> VideoStreamTrack::CloneInternal() {
-  return do_AddRef(new VideoStreamTrack(mWindow, mInputTrack, mSource,
+  return do_AddRef(new VideoStreamTrack(GetOwner(), mInputTrack, mSource,
                                         ReadyState(), Muted(), mConstraints));
 }
 

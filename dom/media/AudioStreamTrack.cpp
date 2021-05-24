@@ -52,7 +52,7 @@ void AudioStreamTrack::GetLabel(nsAString& aLabel, CallerType aCallerType) {
 }
 
 already_AddRefed<MediaStreamTrack> AudioStreamTrack::CloneInternal() {
-  return do_AddRef(new AudioStreamTrack(mWindow, mInputTrack, mSource,
+  return do_AddRef(new AudioStreamTrack(GetOwner(), mInputTrack, mSource,
                                         ReadyState(), Muted(), mConstraints));
 }
 
@@ -78,7 +78,7 @@ RefPtr<GenericPromise> AudioStreamTrack::SetAudioOutputDevice(
   }
 
   UniquePtr<CrossGraphPort> manager =
-      CrossGraphPort::Connect(this, aSink, mWindow);
+      CrossGraphPort::Connect(this, aSink, GetOwner());
   if (!manager) {
     // We are setting the default output device.
     auto entry = mCrossGraphs.Lookup(key);
