@@ -16,7 +16,6 @@ const trace = {
  * HTTP requests executed by the page (including inner iframes).
  */
 function HarCollector(options) {
-  this.webConsoleFront = options.webConsoleFront;
   this.commands = options.commands;
 
   this.onResourceAvailable = this.onResourceAvailable.bind(this);
@@ -297,29 +296,28 @@ HarCollector.prototype = {
     }
   },
 
-  getData: function(actor, method, callback) {
-    return new Promise(resolve => {
-      if (!this.webConsoleFront[method]) {
-        console.error("HarCollector.getData: ERROR Unknown method!");
-        resolve();
-      }
+  async getData(actor, method, callback) {
+    const file = this.getFile(actor);
 
-      const file = this.getFile(actor);
+    trace.log(
+      "HarCollector.getData; REQUEST " + method + ", " + file.url,
+      file
+    );
 
-      trace.log(
-        "HarCollector.getData; REQUEST " + method + ", " + file.url,
-        file
-      );
+    // Bug 1519082: We don't create fronts for NetworkEvent actors,
+    // so that we have to do the request manually via DevToolsClient.request()
+    const packet = {
+      to: actor,
+      type: method,
+    };
+    const response = await this.commands.client.request(packet);
 
-      this.webConsoleFront[method](actor, response => {
-        trace.log(
-          "HarCollector.getData; RESPONSE " + method + ", " + file.url,
-          response
-        );
-        callback(response);
-        resolve(response);
-      });
-    });
+    trace.log(
+      "HarCollector.getData; RESPONSE " + method + ", " + file.url,
+      response
+    );
+    callback(response);
+    return response;
   },
 
   /**
@@ -442,6 +440,10 @@ HarCollector.prototype = {
     }
   },
 
+  async getWebConsoleFront() {
+    return this.commands.targetCommand.targetFront.getFront("console");
+  },
+
   /**
    * Fetches the full text of a string.
    *
@@ -453,8 +455,9 @@ HarCollector.prototype = {
    *         A promise that is resolved when the full string contents
    *         are available, or rejected if something goes wrong.
    */
-  getString: function(stringGrip) {
-    const promise = this.webConsoleFront.getString(stringGrip);
+  getString: async function(stringGrip) {
+    const webConsoleFront = await this.getWebConsoleFront();
+    const promise = webConsoleFront.getString(stringGrip);
     this.requests.push(promise);
     return promise;
   },
