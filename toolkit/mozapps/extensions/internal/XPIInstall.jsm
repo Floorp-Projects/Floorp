@@ -705,6 +705,15 @@ var loadManifest = async function(aPackage, aLocation, aOldAddon) {
 
     await addon.updateBlocklistState();
     addon.appDisabled = !XPIDatabase.isUsableAddon(addon);
+
+    // Always report when there is an attempt to install a blocked add-on.
+    // (transitions from STATE_BLOCKED to STATE_NOT_BLOCKED are checked
+    //  in the individual AddonInstall subclasses).
+    if (addon.blocklistState == nsIBlocklistService.STATE_BLOCKED) {
+      addon.recordAddonBlockChangeTelemetry(
+        aOldAddon ? "addon_update" : "addon_install"
+      );
+    }
   }
 
   defineSyncGUID(addon);
@@ -2055,6 +2064,14 @@ var LocalAddonInstall = class extends AddonInstall {
     this.addon.updateDate = Date.now();
     this.addon.installDate = addon ? addon.installDate : this.addon.updateDate;
 
+    // Report if blocked add-on becomes unblocked through this install.
+    if (
+      addon?.blocklistState === nsIBlocklistService.STATE_BLOCKED &&
+      this.addon.blocklistState === nsIBlocklistService.STATE_NOT_BLOCKED
+    ) {
+      this.addon.recordAddonBlockChangeTelemetry("addon_install");
+    }
+
     if (!this.addon.isCompatible) {
       this.state = AddonManager.STATE_CHECKING_UPDATE;
 
@@ -2510,6 +2527,7 @@ var DownloadAddonInstall = class extends AddonInstall {
    * Notify listeners that the download completed.
    */
   async downloadCompleted() {
+    let wasUpdate = !!this.existingAddon;
     let aAddon = await XPIDatabase.getVisibleAddonForID(this.addon.id);
     if (aAddon) {
       this.existingAddon = aAddon;
@@ -2526,6 +2544,16 @@ var DownloadAddonInstall = class extends AddonInstall {
     }
     this.addon.propagateDisabledState(this.existingAddon);
     await this.addon.updateBlocklistState();
+
+    // Report if blocked add-on becomes unblocked through this install/update.
+    if (
+      aAddon?.blocklistState === nsIBlocklistService.STATE_BLOCKED &&
+      this.addon.blocklistState === nsIBlocklistService.STATE_NOT_BLOCKED
+    ) {
+      this.addon.recordAddonBlockChangeTelemetry(
+        wasUpdate ? "addon_update" : "addon_install"
+      );
+    }
 
     if (this._callInstallListeners("onDownloadEnded")) {
       // If a listener changed our state then do not proceed with the install

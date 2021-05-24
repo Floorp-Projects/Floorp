@@ -209,6 +209,8 @@ class MockBlocklist {
     }
     return null;
   }
+
+  recordAddonBlockChangeTelemetry(addon, reason) {}
 }
 
 MockBlocklist.prototype.QueryInterface = ChromeUtils.generateQI([
@@ -305,6 +307,7 @@ var AddonTestUtils = {
   testUnpacked: false,
   useRealCertChecks: false,
   usePrivilegedSignatures: true,
+  certSignatureDate: null,
   overrideEntry: null,
 
   maybeInit(testScope) {
@@ -698,6 +701,12 @@ var AddonTestUtils = {
             } else if (privileged) {
               fakeCert.organizationalUnit = "Mozilla Extensions";
             }
+          }
+          if (this.certSignatureDate) {
+            // addon.signedDate is derived from this, used by the blocklist.
+            fakeCert.validity = {
+              notBefore: this.certSignatureDate * 1000,
+            };
           }
 
           return [callback, Cr.NS_OK, fakeCert];
