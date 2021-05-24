@@ -17,6 +17,5 @@
     <Preference
         android:key="@string/pref_key_credit_cards_manage_cards"
         android:title="@string/preferences_credit_cards_manage_saved_cards"
-        app:isPreferenceVisible="false"
         app:allowDividerAbove="true" />
 </PreferenceScreen>
