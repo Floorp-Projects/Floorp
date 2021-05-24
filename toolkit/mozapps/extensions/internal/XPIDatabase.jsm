@@ -621,6 +621,10 @@ class AddonInternal {
     }
   }
 
+  recordAddonBlockChangeTelemetry(reason) {
+    Blocklist.recordAddonBlockChangeTelemetry(this.wrapper, reason);
+  }
+
   async setUserDisabled(val, allowSystemAddons = false) {
     if (val == (this.userDisabled || this.softDisabled)) {
       return;
@@ -3401,10 +3405,21 @@ this.XPIDatabaseReconcile = {
             addonsToCheckAgainstBlocklist
           );
           await Promise.all(
-            addons.map(addon => {
-              return (
-                addon && addon.updateBlocklistState({ updateDatabase: false })
-              );
+            addons.map(async addon => {
+              if (!addon) {
+                return;
+              }
+              let oldState = addon.blocklistState;
+              // TODO 1712316: updateBlocklistState with object parameter only
+              // works if addon is an AddonInternal instance. But addon is an
+              // AddonWrapper instead. Consequently updateDate:false is ignored.
+              await addon.updateBlocklistState({ updateDatabase: false });
+              if (oldState !== addon.blocklistState) {
+                Blocklist.recordAddonBlockChangeTelemetry(
+                  addon,
+                  "addon_db_modified"
+                );
+              }
             })
           );
 
