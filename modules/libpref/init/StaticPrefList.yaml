@@ -1121,6 +1121,16 @@
   value: 2000
   mirror: always
 
+#ifdef XP_WIN
+  # Notify TabUnloader or send the memory pressure if the memory resource
+  # notification is signaled AND the available commit space is lower than
+  # this value.
+-   name: browser.low_commit_space_threshold_mb
+    type: RelaxedAtomicUint32
+    value: 200
+    mirror: always
+#endif
+
 # Render animations and videos as a solid color
 - name: browser.measurement.render_anims_and_video_solid
   type: RelaxedAtomicBool
