@@ -32,7 +32,6 @@ class CSSKeyframeRule final : public css::Rule {
 #endif
 
   RawServoKeyframe* Raw() const { return mRaw; }
-  void SetRawAfterClone(RefPtr<RawServoKeyframe>);
 
   // WebIDL interface
   uint16_t Type() const final { return CSSRule_Binding::KEYFRAME_RULE; }
