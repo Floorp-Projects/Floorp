@@ -175,10 +175,6 @@ loader.lazyGetter(this, "DEBUG_TARGET_TYPES", () => {
     .DEBUG_TARGET_TYPES;
 });
 
-loader.lazyGetter(this, "registerHarOverlay", () => {
-  return require("devtools/client/netmonitor/src/har/toolbox-overlay").register;
-});
-
 loader.lazyRequireGetter(
   this,
   "NodeFront",
@@ -196,6 +192,13 @@ loader.lazyRequireGetter(
   this,
   "getF12SessionId",
   "devtools/client/framework/enable-devtools-popup",
+  true
+);
+
+loader.lazyRequireGetter(
+  this,
+  "HarAutomation",
+  "devtools/client/netmonitor/src/har/har-automation",
   true
 );
 
@@ -850,7 +853,6 @@ Toolbox.prototype = {
       this._applyJavascriptEnabledSettings();
       this._addWindowListeners();
       this._addChromeEventHandlerEvents();
-      this._registerOverlays();
 
       // Get the tab bar of the ToolboxController to attach the "keypress" event listener to.
       this._tabBar = this.doc.querySelector(".devtools-tabbar");
@@ -956,6 +958,8 @@ Toolbox.prototype = {
       if (flags.testing) {
         await performanceFrontConnection;
       }
+
+      this.initHarAutomation();
 
       this.emit("ready");
       this._resolveIsOpen();
@@ -1626,10 +1630,6 @@ Toolbox.prototype = {
     if (event.data && event.data.name === "switched-host") {
       this._onSwitchedHost(event.data);
     }
-  },
-
-  _registerOverlays: function() {
-    registerHarOverlay(this);
   },
 
   _saveSplitConsoleHeight: function() {
@@ -3735,6 +3735,7 @@ Toolbox.prototype = {
       this._nodePicker.stop();
       this._nodePicker = null;
     }
+    this.destroyHarAutomation();
 
     const outstanding = [];
     for (const [id, panel] of this._toolPanels) {
@@ -3962,6 +3963,23 @@ Toolbox.prototype = {
     }
 
     this._preferenceFront = null;
+  },
+
+  // HAR Automation
+
+  initHarAutomation() {
+    const autoExport = Services.prefs.getBoolPref(
+      "devtools.netmonitor.har.enableAutoExportToFile"
+    );
+    if (autoExport) {
+      this.harAutomation = new HarAutomation();
+      this.harAutomation.initialize(this);
+    }
+  },
+  destroyHarAutomation() {
+    if (this.harAutomation) {
+      this.harAutomation.destroy();
+    }
   },
 
   /**
