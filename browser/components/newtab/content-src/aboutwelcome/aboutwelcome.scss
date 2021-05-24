@@ -6,9 +6,7 @@
 
 $break-point-medium: 610px;
 $break-point-large: 866px;
-$break-point-widest: 1122px;
 $logo-size: 112px;
-$proton-break-point-smallest: 690px;
 
 html {
   height: 100%;
@@ -761,14 +759,9 @@ body {
       min-width: 700px;
 
       .section-left {
-        width: 50%;
         display: flex;
         flex-direction: column;
-        margin-inline-start: 101px;
-
-        @media (max-width: $break-point-widest) {
-          margin-inline-start: 71px;
-        }
+        margin-inline-start: 6vw;
 
         .message-text {
           flex-grow: 1;
@@ -787,30 +780,12 @@ body {
           h1 {
             color: #FFF;
             font-weight: bold;
-            font-size: 104px;
-            line-height: 104px;
+            font-size: clamp(48px, 7vw, 104px);
+            line-height: 1em;
             margin: 0 6px;
-            width: 517px;
+            max-width: 5em;
             text-align: initial;
             white-space: pre-wrap;
-
-            @media (max-width: $break-point-widest) {
-              width: 300px;
-              font-size: 48px;
-              line-height: 56px;
-            }
-
-            @media (max-width: $break-point-large) {
-              width: 284px;
-              font-size: 48px;
-              line-height: 56px;
-            }
-
-            @media (max-width: $break-point-medium) {
-              width: 208px;
-              font-size: 48px;
-              line-height: 56px;
-            }
           }
         }
 
@@ -823,21 +798,13 @@ body {
           color: #F9F9FB;
           text-shadow: 0 0 7px rgba(0, 0, 0, 0.6);
           transition-delay: 0.5s;
-
-          @media (max-width: 900px) {
-            width: 200px;
-          }
-
-          @media (max-width: 750px) {
-            width: 200px;
-            margin-inline-start: -50px;
-          }
         }
       }
 
       .section-main {
+        flex-shrink: 0;
+        width: 490px;
         z-index: 1;
-        width: 50%;
 
         .main-content {
           background: transparent;
