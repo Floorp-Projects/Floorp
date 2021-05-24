@@ -1365,6 +1365,7 @@ var Policies = {
   OfferToSaveLogins: {
     onBeforeUIStartup(manager, param) {
       setAndLockPref("signon.rememberSignons", param);
+      setAndLockPref("services.passwordSavingEnabled", param);
     },
   },
 
