@@ -263,7 +263,15 @@ class nsContentDispatchChooser {
 
     // Force showing the dialog for links passed from outside the application.
     // This avoids infinite loops, see bug 1678255, bug 1667468, etc.
-    if (aTriggeredExternally && gPrefs.promptForExternal) {
+    if (
+      aTriggeredExternally &&
+      gPrefs.promptForExternal &&
+      // ... unless we intend to open the link with a website or extension:
+      !(
+        aHandler.preferredAction == Ci.nsIHandlerInfo.useHelperApp &&
+        aHandler.preferredApplicationHandler instanceof Ci.nsIWebHandlerApp
+      )
+    ) {
       aHandler.alwaysAskBeforeHandling = true;
     }
 
