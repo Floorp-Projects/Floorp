@@ -134,9 +134,9 @@ class MOZ_STACK_CLASS frontend::SourceAwareCompiler {
 
   bool canHandleParseFailure(const Directives& newDirectives);
 
-  void handleParseFailure(const Directives& newDirectives,
-                          TokenStreamPosition& startPosition,
-                          CompilationState::CompilationStatePosition& startStatePosition);
+  void handleParseFailure(
+      const Directives& newDirectives, TokenStreamPosition& startPosition,
+      CompilationState::CompilationStatePosition& startStatePosition);
 
  public:
   CompilationState& compilationState() { return compilationState_; };

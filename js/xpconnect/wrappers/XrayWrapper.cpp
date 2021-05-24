@@ -1610,7 +1610,7 @@ bool XrayTraits::resolveOwnProperty(
           {PropertyAttribute::Configurable, PropertyAttribute::Writable})));
     } else if (id == GetJSIDByIndex(cx, XPCJSContext::IDX_INFINITY)) {
       desc.set(Some(PropertyDescriptor::Data(
-        DoubleValue(PositiveInfinity<double>()), {})));
+          DoubleValue(PositiveInfinity<double>()), {})));
     } else if (id == GetJSIDByIndex(cx, XPCJSContext::IDX_NAN)) {
       desc.set(Some(PropertyDescriptor::Data(NaNValue(), {})));
     }
