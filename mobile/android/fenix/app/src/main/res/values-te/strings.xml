@@ -396,6 +396,11 @@
         and the third is the device model. -->
     <string name="default_device_name_2">%2$s %3$sలో %1$s</string>
 
+    <!-- Preference for syncing credit cards -->
+    <string name="preferences_sync_credit_cards">క్రెడిట్ కార్డులు</string>
+    <!-- Preference for syncing addresses -->
+    <string name="preferences_sync_address">చిరునామాలు</string>
+
     <!-- Send Tab -->
     <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="fxa_received_tab_channel_name">అందుకన్న ట్యాబులు</string>
@@ -426,9 +431,6 @@
     <string name="exceptions_empty_message_description">మినహాయింపులు మీరు ఎంచుకున్న సైట్లకు ట్రాకింగ్ సంరక్షణను అచేతనం చేసుకోనిస్తాయి.</string>
     <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
     <string name="exceptions_empty_message_learn_more_link">ఇంకా తెలుసుకోండి</string>
-
-    <!-- Description in Quick Settings that tells user tracking protection is off globally for all sites, and links to Settings to turn it on -->
-    <string name="preferences_tracking_protection_turned_off_globally">సర్వత్రా అచేనంగా ఉంది, దీన్ని చేతనించుకోడానికి అమరికలకు వెళ్ళండి.</string>
 
     <!-- Preference switch for Telemetry -->
     <string name="preferences_telemetry">టెలీమెట్రీ</string>
@@ -780,8 +782,6 @@
     <string name="bookmark_delete_folder_snackbar">%1$s తొలగించబడింది</string>
     <!-- Screen title for adding a bookmarks folder -->
     <string name="bookmark_add_folder">సంచయం చేర్చు</string>
-    <!-- deprecated: Snackbar title shown after a bookmark has been created. -->
-    <string name="bookmark_created_snackbar">ఇష్టాంశం సృష్టించబడింది.</string>
     <!-- Snackbar title shown after a bookmark has been created. -->
     <string name="bookmark_saved_snackbar">ఇష్టాంశం భద్రమయింది!</string>
     <!-- Snackbar edit button shown after a bookmark has been created. -->
@@ -1420,10 +1420,6 @@
     <string name="preferences_passwords_autofill">స్వయంపూరణ</string>
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">ప్రవేశాలను సింక్ చేయి</string>
-    <!-- Syncing saved logins in Fenix is on -->
-    <string name="preferences_passwords_sync_logins_on">చేతనం</string>
-    <!-- Syncing saved logins in Fenix is off -->
-    <string name="preferences_passwords_sync_logins_off">అచేతనం</string>
     <!-- Syncing saved logins in Fenix needs reconnect to sync -->
     <string name="preferences_passwords_sync_logins_reconnect">మళ్లీ అనుసంధానించు</string>
     <!-- Syncing saved logins in Fenix needs login -->
@@ -1714,18 +1710,10 @@
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">తొలగించు</string>
 
-    <!-- Deprecated: text for the firefox account onboarding card header
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_firefox_account_header">%s నుండి ఎక్కువగా పొందండి.</string>
-
     <!-- Content description radio buttons with a link to more information -->
     <string name="radio_preference_info_content_description">మరిన్ని వివరాలకు నొక్కండి</string>
 
-    <!-- Deprecated: No Open Tabs Message Header -->
-    <string name="no_collections_header1">మీకు ముఖ్యమైన విషయాలను సేకరించండి</string>
-    <!-- Deprecated: text for the firefox account onboarding card header when we detect you're already signed in to -->
-    <string name="onboarding_firefox_account_auto_signin_header_2">ఈ ఫోను లోని మరో Firefox విహారిణిలో మీరు %s‌గా ప్రవేశించారు. మీరు అదే ఖాతాతో ప్రవేశించాలనుకుంటున్నారా?</string>
-    <!-- Deprecated: Describes the add to homescreen functionality -->
-    <string name="add_to_homescreen_description">తక్షణం చేరుకొని, అనువర్తనం-వంటి అనుభూతితో వేగంగా విహరించడానికి, ఈ వెబ్‌సైటును మీ చరవాణి ముంగిలి తెరకు తేలికగా చేర్చుకోవచ్చు.</string>
+    <!-- Content description for privacy content close button -->
+    <string name="privacy_content_close_button_content_description">మూసివేయి</string>
 
-    </resources>
+</resources>
