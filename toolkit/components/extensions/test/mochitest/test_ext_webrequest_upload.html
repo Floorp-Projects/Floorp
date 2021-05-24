@@ -15,7 +15,7 @@
   target="_blank"
   enctype="multipart/form-data"
   >
-<input type="text" name="&quot;special&quot; ch�rs" value="sp�cial">
+<input type="text" name="&quot;special&quot; &#x0D;&#x0A; ch�rs" value="sp�cial">
 <input type="file" name="testFile">
 <input type="file" name="emptyFile">
 <input type="text" name="textInput1" value="value1">
@@ -204,6 +204,58 @@ add_task(async function test_xhr_forms() {
     let byteLength = 16;
     action.searchParams.set("upload", `${byteLength} bytes`);
     await post(new ArrayBuffer(byteLength));
+  }
+
+  // Testing the decoding of percent escapes even in cases where the
+  // multipart/form-data serializer won't emit them.
+  {
+    let boundary = "-".repeat(27);
+    for (let i = 0; i < 3; i++) {
+      const randomNumber = Math.floor(Math.random() * (2 ** 32));
+      boundary += String(randomNumber);
+    }
+
+    const formPayload = [
+      `--${boundary}`,
+      'Content-Disposition: form-data; name="percent escapes other than%20quotes and newlines"',
+      "",
+      "",
+      `--${boundary}`,
+      'Content-Disposition: form-data; name="valid UTF-8: %F0%9F%92%A9"',
+      "",
+      "",
+      `--${boundary}`,
+      'Content-Disposition: form-data; name="broken UTF-8: %F0%9F %92%A9"',
+      "",
+      "",
+      `--${boundary}`,
+      'Content-Disposition: form-data; name="percent escapes aren\'t decoded in filenames"; filename="%0D%0A%22"',
+      "Content-Type: application/octet-stream",
+      "",
+      "",
+      `--${boundary}--`,
+      ""
+    ].join("\r\n");
+
+    const action = new URL("file_WebRequest_page3.html?trigger=form", document.location.href);
+    action.searchParams.set("xhr", "1");
+    action.searchParams.set("upload", JSON.stringify({
+      "percent escapes other than quotes and newlines": [""],
+      "valid UTF-8: 💩": [""],
+      "broken UTF-8: � ��": [""],
+      "percent escapes aren't decoded in filenames": ["%0D%0A%22"]
+    }));
+    action.searchParams.set("enctype", "multipart/form-data");
+
+    await fetch(
+      action.href,
+      {
+        method: "POST",
+        headers: {"Content-Type": `multipart/form-data; boundary=${boundary}`},
+        body: formPayload
+      },
+    );
+    await doneAndTabClosed();
   }
 
   await extension.unload();
