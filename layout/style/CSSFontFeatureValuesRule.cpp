@@ -28,6 +28,11 @@ void CSSFontFeatureValuesRule::List(FILE* out, int32_t aIndent) const {
 }
 #endif
 
+void CSSFontFeatureValuesRule::SetRawAfterClone(
+    RefPtr<RawServoFontFeatureValuesRule> aRaw) {
+  mRawRule = std::move(aRaw);
+}
+
 /* CSSRule implementation */
 
 void CSSFontFeatureValuesRule::GetCssText(nsACString& aCssText) const {
