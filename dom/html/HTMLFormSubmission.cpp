@@ -320,18 +320,11 @@ nsresult FSURLEncoded::GetEncodedSubmission(nsIURI* aURI,
 
 // i18n helper routines
 nsresult FSURLEncoded::URLEncode(const nsAString& aStr, nsACString& aEncoded) {
-  // convert to CRLF breaks
-  int32_t convertedBufLength = 0;
-  char16_t* convertedBuf = nsLinebreakConverter::ConvertUnicharLineBreaks(
-      aStr.BeginReading(), nsLinebreakConverter::eLinebreakAny,
-      nsLinebreakConverter::eLinebreakNet, aStr.Length(), &convertedBufLength);
-  NS_ENSURE_TRUE(convertedBuf, NS_ERROR_OUT_OF_MEMORY);
-
-  nsAutoString convertedString;
-  convertedString.Adopt(convertedBuf, convertedBufLength);
-
   nsAutoCString encodedBuf;
-  nsresult rv = EncodeVal(convertedString, encodedBuf, false);
+  // We encode with eValueEncode because the urlencoded format needs the newline
+  // normalizations but percent-escapes characters that eNameEncode doesn't,
+  // so calling NS_Escape would still be needed.
+  nsresult rv = EncodeVal(aStr, encodedBuf, EncodeType::eValueEncode);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (NS_WARN_IF(!NS_Escape(encodedBuf, aEncoded, url_XPAlphas))) {
@@ -382,30 +375,19 @@ nsIInputStream* FSMultipartFormData::GetSubmissionBody(
 
 nsresult FSMultipartFormData::AddNameValuePair(const nsAString& aName,
                                                const nsAString& aValue) {
-  nsCString valueStr;
   nsAutoCString encodedVal;
-  nsresult rv = EncodeVal(aValue, encodedVal, false);
+  nsresult rv = EncodeVal(aValue, encodedVal, EncodeType::eValueEncode);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  int32_t convertedBufLength = 0;
-  char* convertedBuf = nsLinebreakConverter::ConvertLineBreaks(
-      encodedVal.get(), nsLinebreakConverter::eLinebreakAny,
-      nsLinebreakConverter::eLinebreakNet, encodedVal.Length(),
-      &convertedBufLength);
-  valueStr.Adopt(convertedBuf, convertedBufLength);
-
   nsAutoCString nameStr;
-  rv = EncodeVal(aName, nameStr, true);
+  rv = EncodeVal(aName, nameStr, EncodeType::eNameEncode);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Make MIME block for name/value pair
 
-  // XXX: name parameter should be encoded per RFC 2231
-  // RFC 2388 specifies that RFC 2047 be used, but I think it's not
-  // consistent with MIME standard.
   mPostDataChunk += "--"_ns + mBoundary + nsLiteralCString(CRLF) +
                     "Content-Disposition: form-data; name=\""_ns + nameStr +
-                    nsLiteralCString("\"" CRLF CRLF) + valueStr +
+                    nsLiteralCString("\"" CRLF CRLF) + encodedVal +
                     nsLiteralCString(CRLF);
 
   return NS_OK;
@@ -417,7 +399,7 @@ nsresult FSMultipartFormData::AddNameBlobPair(const nsAString& aName,
 
   // Encode the control name
   nsAutoCString nameStr;
-  nsresult rv = EncodeVal(aName, nameStr, true);
+  nsresult rv = EncodeVal(aName, nameStr, EncodeType::eNameEncode);
   NS_ENSURE_SUCCESS(rv, rv);
 
   ErrorResult error;
@@ -442,7 +424,7 @@ nsresult FSMultipartFormData::AddNameBlobPair(const nsAString& aName,
     }
   }
 
-  rv = EncodeVal(filename16, filename, true);
+  rv = EncodeVal(filename16, filename, EncodeType::eFilenameEncode);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Get content type
@@ -495,7 +477,7 @@ nsresult FSMultipartFormData::AddNameDirectoryPair(const nsAString& aName,
 
   // Encode the control name
   nsAutoCString nameStr;
-  nsresult rv = EncodeVal(aName, nameStr, true);
+  nsresult rv = EncodeVal(aName, nameStr, EncodeType::eNameEncode);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsAutoCString dirname;
@@ -514,7 +496,7 @@ nsresult FSMultipartFormData::AddNameDirectoryPair(const nsAString& aName,
     RetrieveDirectoryName(aDirectory, dirname16);
   }
 
-  rv = EncodeVal(dirname16, dirname, true);
+  rv = EncodeVal(dirname16, dirname, EncodeType::eFilenameEncode);
   NS_ENSURE_SUCCESS(rv, rv);
 
   AddDataChunk(nameStr, dirname, "application/octet-stream"_ns, nullptr, 0);
@@ -531,9 +513,6 @@ void FSMultipartFormData::AddDataChunk(const nsACString& aName,
   //
   // more appropriate than always using binary?
   mPostDataChunk += "--"_ns + mBoundary + nsLiteralCString(CRLF);
-  // XXX: name/filename parameter should be encoded per RFC 2231
-  // RFC 2388 specifies that RFC 2047 be used, but I think it's not
-  // consistent with the MIME standard.
   mPostDataChunk += "Content-Disposition: form-data; name=\""_ns + aName +
                     "\"; filename=\""_ns + aFilename +
                     nsLiteralCString("\"" CRLF) + "Content-Type: "_ns +
@@ -675,20 +654,13 @@ nsresult FSTextPlain::GetEncodedSubmission(nsIURI* aURI,
     rv = NS_MutateURI(aURI).SetPathQueryRef(path).Finalize(aOutURI);
   } else {
     // Create data stream.
-    // We do want to send the data through the charset encoder and we want to
-    // normalize linebreaks to use the "standard net" format (\r\n), but we
-    // don't want to perform any other encoding. This means that names and
-    // values which contains '=' or newlines are potentially ambigiously
-    // encoded, but that how text/plain is specced.
+    // We use eValueEncode to send the data through the charset encoder and to
+    // normalize linebreaks to use the "standard net" format (\r\n), but not
+    // perform any other escaping. This means that names and values which
+    // contain '=' or newlines are potentially ambiguously encoded, but that is
+    // how text/plain is specced.
     nsCString cbody;
-    EncodeVal(mBody, cbody, false);
-
-    int32_t convertedBufLength = 0;
-    char* convertedBuf = nsLinebreakConverter::ConvertLineBreaks(
-        cbody.get(), nsLinebreakConverter::eLinebreakAny,
-        nsLinebreakConverter::eLinebreakNet, cbody.Length(),
-        &convertedBufLength);
-    cbody.Adopt(convertedBuf, convertedBufLength);
+    EncodeVal(mBody, cbody, EncodeType::eValueEncode);
 
     nsCOMPtr<nsIInputStream> bodyStream;
     rv = NS_NewCStringInputStream(getter_AddRefs(bodyStream), std::move(cbody));
@@ -743,7 +715,7 @@ EncodingFormSubmission::~EncodingFormSubmission() = default;
 // i18n helper routines
 nsresult EncodingFormSubmission::EncodeVal(const nsAString& aStr,
                                            nsCString& aOut,
-                                           bool aHeaderEncode) {
+                                           EncodeType aEncodeType) {
   nsresult rv;
   const Encoding* ignored;
   Tie(rv, ignored) = mEncoding->Encode(aStr, aOut);
@@ -751,14 +723,32 @@ nsresult EncodingFormSubmission::EncodeVal(const nsAString& aStr,
     return rv;
   }
 
-  if (aHeaderEncode) {
+  if (aEncodeType != EncodeType::eFilenameEncode) {
+    // Normalize newlines
     int32_t convertedBufLength = 0;
     char* convertedBuf = nsLinebreakConverter::ConvertLineBreaks(
         aOut.get(), nsLinebreakConverter::eLinebreakAny,
-        nsLinebreakConverter::eLinebreakSpace, aOut.Length(),
+        nsLinebreakConverter::eLinebreakNet, (int32_t)aOut.Length(),
         &convertedBufLength);
     aOut.Adopt(convertedBuf, convertedBufLength);
-    aOut.ReplaceSubstring("\""_ns, "\\\""_ns);
+  }
+
+  if (aEncodeType != EncodeType::eValueEncode) {
+    // Percent-escape LF, CR and double quotes.
+    int32_t offset = 0;
+    while ((offset = aOut.FindCharInSet("\n\r\"", offset)) != kNotFound) {
+      if (aOut[offset] == '\n') {
+        aOut.ReplaceLiteral(offset, 1, "%0A");
+      } else if (aOut[offset] == '\r') {
+        aOut.ReplaceLiteral(offset, 1, "%0D");
+      } else if (aOut[offset] == '"') {
+        aOut.ReplaceLiteral(offset, 1, "%22");
+      } else {
+        MOZ_ASSERT(false);
+        offset++;
+        continue;
+      }
+    }
   }
 
   return NS_OK;

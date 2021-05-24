@@ -147,17 +147,30 @@ class EncodingFormSubmission : public HTMLFormSubmission {
 
   virtual ~EncodingFormSubmission();
 
+  // Indicates the type of newline normalization and escaping to perform in
+  // `EncodeVal`, in addition to encoding the string into bytes.
+  enum EncodeType {
+    // Normalizes newlines to CRLF and then escapes for use in
+    // `Content-Disposition`. (Useful for `multipart/form-data` entry names.)
+    eNameEncode,
+    // Escapes for use in `Content-Disposition`. (Useful for
+    // `multipart/form-data` filenames.)
+    eFilenameEncode,
+    // Normalizes newlines to CRLF.
+    eValueEncode,
+  };
+
   /**
-   * Encode a Unicode string to bytes using the encoder (or just copy the input
-   * if there is no encoder).
+   * Encode a Unicode string to bytes, additionally performing escapes or
+   * normalizations.
    * @param aStr the string to encode
-   * @param aResult the encoded string [OUT]
-   * @param aHeaderEncode If true, turns all linebreaks into spaces and escapes
-   *                      all quotes
+   * @param aOut the encoded string [OUT]
+   * @param aEncodeType The type of escapes or normalizations to perform on the
+   *                    encoded string.
    * @throws an error if UnicodeToNewBytes fails
    */
-  nsresult EncodeVal(const nsAString& aStr, nsCString& aResult,
-                     bool aHeaderEncode);
+  nsresult EncodeVal(const nsAString& aStr, nsCString& aOut,
+                     EncodeType aEncodeType);
 };
 
 class DialogFormSubmission final : public HTMLFormSubmission {
