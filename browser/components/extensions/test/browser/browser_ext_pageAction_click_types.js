@@ -3,23 +3,18 @@
 "use strict";
 
 add_task(async function setup() {
-  // The page action button is hidden by default for proton.
+  // The page action button is hidden by default.
   // This tests the use of pageAction when the button is visible.
   //
   // TODO(Bug 1704171): this should technically be removed in a follow up
   // and the tests in this file adapted to keep into account that:
-  // - in Proton the pageAction is pinned on the urlbar by default
+  // - The pageAction is pinned on the urlbar by default
   //   when shown, and hidden when is not available (same for the
   //   overflow menu when enabled)
-  // - with Proton disabled, the pageAction is always part of the overflow
-  //   panel (either if the pageAction is enabled or disabled) and on the urlbar
-  //   only if explicitly pinned.
-  if (gProton) {
-    BrowserPageActions.mainButtonNode.style.visibility = "visible";
-    registerCleanupFunction(() => {
-      BrowserPageActions.mainButtonNode.style.removeProperty("visibility");
-    });
-  }
+  BrowserPageActions.mainButtonNode.style.visibility = "visible";
+  registerCleanupFunction(() => {
+    BrowserPageActions.mainButtonNode.style.removeProperty("visibility");
+  });
 });
 
 add_task(async function test_clickData() {

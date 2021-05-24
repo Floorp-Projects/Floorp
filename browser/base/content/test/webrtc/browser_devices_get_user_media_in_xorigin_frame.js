@@ -98,12 +98,6 @@ async function promptNoDelegateScreenSharing(aThirdPartyOrgin) {
   checkDeviceSelectors(false, false, true);
   const notification = PopupNotifications.panel.firstElementChild;
 
-  // With Proton enabled, the icon does not appear in the panel.
-  if (!gProtonDoorhangers) {
-    const iconclass = notification.getAttribute("iconclass");
-    ok(iconclass.includes("screen-icon"), "panel using screen icon");
-  }
-
   // The 'Remember this decision' checkbox is hidden.
   const checkbox = notification.checkbox;
   ok(!!checkbox, "checkbox is present");
@@ -226,12 +220,6 @@ var gTests = [
 
       checkDeviceSelectors(false, false, true);
       const notification = PopupNotifications.panel.firstElementChild;
-
-      // With Proton enabled, the icon does not appear in the panel.
-      if (!gProtonDoorhangers) {
-        const iconclass = notification.getAttribute("iconclass");
-        ok(iconclass.includes("screen-icon"), "panel using screen icon");
-      }
 
       // The 'Remember this decision' checkbox is visible.
       const checkbox = notification.checkbox;

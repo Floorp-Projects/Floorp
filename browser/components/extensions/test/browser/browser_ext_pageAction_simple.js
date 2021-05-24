@@ -111,12 +111,11 @@ add_task(async function test_pageAction_pinned() {
 
   // There are plenty of tests for the main action button, we just verify
   // that we've properly set the pinned value.
+  // This test used to check that the button was not pinned, but that is no
+  // longer supported.
+  // TODO bug 1703537: consider removal of the pinned property.
   let action = PageActions.actionForID(makeWidgetId(extension.id));
-  Assert.equal(
-    action && action.pinnedToUrlbar,
-    gProton,
-    "Check pageAction pinning"
-  );
+  ok(action && action.pinnedToUrlbar, "Check pageAction pinning");
 
   await extension.unload();
 });

@@ -164,17 +164,14 @@ async function runTest(i, forward) {
     "identity UI header shows the host for test " + testDesc
   );
 
-  let securityButton;
-  if (gProtonDoorhangers) {
-    securityButton = gBrowser.ownerDocument.querySelector(
-      "#identity-popup-security-button"
-    );
-    is(
-      securityButton.disabled,
-      !currentTest.hasSubview,
-      "Security button has correct disabled state"
-    );
-  }
+  let securityButton = gBrowser.ownerDocument.querySelector(
+    "#identity-popup-security-button"
+  );
+  is(
+    securityButton.disabled,
+    !currentTest.hasSubview,
+    "Security button has correct disabled state"
+  );
   if (currentTest.hasSubview) {
     // Show the subview, which is an easy way in automation to reproduce
     // Bug 1207542, where the CC wouldn't close on navigation.
@@ -182,12 +179,7 @@ async function runTest(i, forward) {
       gIdentityHandler._identityPopup,
       "ViewShown"
     );
-    let subviewButton = gProtonDoorhangers
-      ? securityButton
-      : gBrowser.ownerDocument.querySelector(
-          "#identity-popup-security-expander"
-        );
-    subviewButton.click();
+    securityButton.click();
     await promiseViewShown;
   }
 }

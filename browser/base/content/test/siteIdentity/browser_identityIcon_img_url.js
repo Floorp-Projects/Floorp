@@ -35,11 +35,9 @@ const TEST_CASES = [
   {
     type: "chrome about page",
     testURL: "about:preferences",
-    img_url: gProton
-      ? `url("chrome://branding/content/icon${
-          window.devicePixelRatio > 1 ? 32 : 16
-        }.png")`
-      : `url("chrome://branding/content/identity-icons-brand.svg")`,
+    img_url: `url("chrome://branding/content/icon${
+      window.devicePixelRatio > 1 ? 32 : 16
+    }.png")`,
   },
   {
     type: "file",

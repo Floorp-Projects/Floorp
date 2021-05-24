@@ -446,18 +446,6 @@ add_UITour_task(
     let appMenu = window.PanelUI.panel;
     let pageActionPanel = BrowserPageActions.panelNode;
 
-    if (!gProton) {
-      // Test explicity asking for opening the page action panel
-      let pageActionPanelShownPromise = promisePanelElementShown(
-        window,
-        pageActionPanel
-      );
-      gContentAPI.showMenu("pageActionPanel");
-      await pageActionPanelShownPromise;
-      is(appMenu.state, "closed", "Shouldn't open the app menu");
-      is(pageActionPanel.state, "open", "Should open the page action panel");
-    }
-
     // Test showing info tooltip on the privateWindow button on the app menu
     let appMenuShownPromise = promisePanelElementShown(window, appMenu);
     let tooltipVisiblePromise = elementVisiblePromise(
@@ -474,7 +462,7 @@ add_UITour_task(
     );
     is(
       pageActionPanel.state,
-      gProton ? "closed" : "open",
+      "closed",
       "Check state of the page action panel if it was opened explictly by api user."
     );
     is(
@@ -483,15 +471,6 @@ add_UITour_task(
       "Should show info tooltip on the privateWindow button on the app menu"
     );
 
-    if (!gProton) {
-      // Test hiding the page action panel wouldn't affect the info tooltip on the app menu
-      let pageActionPanelHiddenPromise = promisePanelElementHidden(
-        window,
-        pageActionPanel
-      );
-      gContentAPI.hideMenu("pageActionPanel");
-      await pageActionPanelHiddenPromise;
-    }
     is_element_visible(tooltip, "Tooltip should still be visible");
     is(appMenu.state, "open", "Shouldn't close the app menu");
     is(

@@ -3,8 +3,7 @@
 
 "use strict";
 
-const kDevPanelID =
-  gProton && gProtonDoorhangers ? "appmenu-moreTools" : "PanelUI-developer";
+const kDevPanelID = "appmenu-moreTools";
 
 /**
  * Test the behavior of key presses on various toolbar buttons.
@@ -117,14 +116,12 @@ add_task(async function testDeveloperButtonWrongKey() {
 // Test activation of the Page actions button from the keyboard.
 // The Page Actions menu should appear and focus should move inside it.
 add_task(async function testPageActionsButtonPress() {
-  // In Proton the page actions button is not normally visible, so we must
+  // The page actions button is not normally visible, so we must
   // unhide it.
-  if (gProton) {
-    BrowserPageActions.mainButtonNode.style.visibility = "visible";
-    registerCleanupFunction(() => {
-      BrowserPageActions.mainButtonNode.style.removeProperty("visibility");
-    });
-  }
+  BrowserPageActions.mainButtonNode.style.visibility = "visible";
+  registerCleanupFunction(() => {
+    BrowserPageActions.mainButtonNode.style.removeProperty("visibility");
+  });
   await BrowserTestUtils.withNewTab("https://example.com", async function() {
     let button = document.getElementById("pageActionButton");
     forceFocus(button);
@@ -160,36 +157,6 @@ add_task(async function testBackForwardButtonPress() {
     EventUtils.synthesizeKey(" ");
     await onLocationChange;
     ok(true, "Location changed after forward button pressed");
-  });
-});
-
-// Test activation of the Send Tab to Device button from the keyboard.
-// This is a page action button built at runtime by PageActions.
-// The Send Tab to Device menu should appear and focus should move inside it.
-add_task(async function testSendTabToDeviceButtonPress() {
-  // There's no Send to Device page action in proton.
-  if (gProton) {
-    return;
-  }
-  await BrowserTestUtils.withNewTab("https://example.com", async function() {
-    PageActions.actionForID("sendToDevice").pinnedToUrlbar = true;
-    let button = document.getElementById("pageAction-urlbar-sendToDevice");
-    forceFocus(button);
-    let mainPopupSet = document.getElementById("mainPopupSet");
-    let focused = BrowserTestUtils.waitForEvent(mainPopupSet, "focus", true);
-    EventUtils.synthesizeKey(" ");
-    await focused;
-    let view = document.getElementById(
-      "pageAction-urlbar-sendToDevice-subview"
-    );
-    ok(
-      view.contains(document.activeElement),
-      "Focus inside Page Actions menu after toolbar button pressed"
-    );
-    let hidden = BrowserTestUtils.waitForEvent(document, "popuphidden", true);
-    view.closest("panel").hidePopup();
-    await hidden;
-    PageActions.actionForID("sendToDevice").pinnedToUrlbar = false;
   });
 });
 
