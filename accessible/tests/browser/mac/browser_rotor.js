@@ -825,6 +825,8 @@ addAccessibleTask(
     <li role="treeitem">item1</li>
     <li role="treeitem">item1</li>
   </ul>
+
+  <a id="buttonMenu" role="button">Click Me</a>
   `,
   async (browser, accDoc) => {
     const searchPred = {
@@ -847,7 +849,7 @@ addAccessibleTask(
       "AXUIElementCountForSearchPredicate",
       NSDictionary(searchPred)
     );
-    is(3, controlsCount, "Found 3 controls");
+    is(4, controlsCount, "Found 4 controls");
 
     const controls = webArea.getParameterizedAttributeValue(
       "AXUIElementsForSearchPredicate",
@@ -857,6 +859,7 @@ addAccessibleTask(
     const spin = getNativeInterface(accDoc, "spinbutton");
     const details = getNativeInterface(accDoc, "details");
     const tree = getNativeInterface(accDoc, "tree");
+    const buttonMenu = getNativeInterface(accDoc, "buttonMenu");
 
     is(
       spin.getAttributeValue("AXRole"),
@@ -872,6 +875,11 @@ addAccessibleTask(
       tree.getAttributeValue("AXRole"),
       controls[2].getAttributeValue("AXRole"),
       "Found correct tree"
+    );
+    is(
+      buttonMenu.getAttributeValue("AXRole"),
+      controls[3].getAttributeValue("AXRole"),
+      "Found correct button menu"
     );
   }
 );
