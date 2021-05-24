@@ -179,7 +179,7 @@ void TestSlowStart(const TrackRate aRate) MOZ_CAN_RUN_SCRIPT_FOR_DEFINITION {
   RefPtr<SmartMockCubebStream> stream = WaitFor(cubeb->StreamInitEvent());
   cubeb->SetStreamStartFreezeEnabled(false);
 
-  const int fallbackIterations = 3;
+  const size_t fallbackIterations = 3;
   WaitUntil(graph->FramesIteratedEvent(), [&](uint32_t aFrames) {
     const GraphTime tenMillis = aRate / 100;
     // An iteration is always rounded upwards to the next full block.
