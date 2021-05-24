@@ -1158,10 +1158,7 @@ class Matrix4x4Typed {
 
   bool operator!=(const Matrix4x4Typed& o) const { return !((*this) == o); }
 
-  Matrix4x4Typed& operator=(const Matrix4x4Typed& aOther) {
-    memcpy(components, aOther.components, sizeof(components));
-    return *this;
-  }
+  Matrix4x4Typed& operator=(const Matrix4x4Typed& aOther) = default;
 
   template <typename NewTargetUnits>
   Matrix4x4Typed<SourceUnits, NewTargetUnits, T> operator*(
