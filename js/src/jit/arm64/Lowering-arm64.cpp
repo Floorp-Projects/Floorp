@@ -838,7 +838,7 @@ void LIRGenerator::visitWasmLoad(MWasmLoad* ins) {
   MDefinition* base = ins->base();
   MOZ_ASSERT(base->type() == MIRType::Int32);
 
-  LAllocation ptr = useRegisterAtStart(base);
+  LAllocation ptr = useRegisterOrConstantAtStart(base);
 
   if (ins->type() == MIRType::Int64) {
     auto* lir = new (alloc()) LWasmLoadI64(ptr);
@@ -856,14 +856,14 @@ void LIRGenerator::visitWasmStore(MWasmStore* ins) {
   MDefinition* value = ins->value();
 
   if (ins->access().type() == Scalar::Int64) {
-    LAllocation baseAlloc = useRegisterAtStart(base);
+    LAllocation baseAlloc = useRegisterOrConstantAtStart(base);
     LInt64Allocation valueAlloc = useInt64RegisterAtStart(value);
     auto* lir = new (alloc()) LWasmStoreI64(baseAlloc, valueAlloc);
     add(lir, ins);
     return;
   }
 
-  LAllocation baseAlloc = useRegisterAtStart(base);
+  LAllocation baseAlloc = useRegisterOrConstantAtStart(base);
   LAllocation valueAlloc = useRegisterAtStart(value);
   auto* lir = new (alloc()) LWasmStore(baseAlloc, valueAlloc);
   add(lir, ins);

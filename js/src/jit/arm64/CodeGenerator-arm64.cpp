@@ -28,7 +28,10 @@ using namespace js::jit;
 
 using JS::GenericNaN;
 using mozilla::FloorLog2;
+using mozilla::Maybe;
 using mozilla::NegativeInfinity;
+using mozilla::Nothing;
+using mozilla::Some;
 
 // shared
 CodeGeneratorARM64::CodeGeneratorARM64(MIRGenerator* gen, LIRGraph* graph,
@@ -2291,8 +2294,31 @@ void CodeGenerator::visitWasmHeapBase(LWasmHeapBase* ins) {
   masm.movePtr(HeapReg, ToRegister(ins->output()));
 }
 
+// If we have a constant base ptr, try to add the offset to it, to generate
+// better code when the full address is known.  The addition may overflow past
+// 32 bits because the front end does nothing special if the base is a large
+// constant and base+offset overflows; sidestep this by performing the addition
+// anyway, overflowing to 64-bit.
+
+static Maybe<uint64_t> IsAbsoluteAddress(const LAllocation* ptr,
+                                         const wasm::MemoryAccessDesc& access) {
+  if (ptr->isConstant()) {
+    uint64_t base_address = uint32_t(ToInt32(ptr));
+    uint64_t offset = access.offset();
+    return Some(base_address + offset);
+  }
+  return Nothing();
+}
+
 void CodeGenerator::visitWasmLoad(LWasmLoad* lir) {
   const MWasmLoad* mir = lir->mir();
+
+  if (Maybe<uint64_t> absAddr = IsAbsoluteAddress(lir->ptr(), mir->access())) {
+    masm.wasmLoadAbsolute(mir->access(), HeapReg, absAddr.value(),
+                          ToAnyRegister(lir->output()), Register64::Invalid());
+    return;
+  }
+
   masm.wasmLoad(mir->access(), HeapReg, ToRegister(lir->ptr()),
                 ToAnyRegister(lir->output()));
 }
@@ -2351,6 +2377,13 @@ void CodeGenerator::visitRotateI64(LRotateI64* lir) {
 
 void CodeGenerator::visitWasmStore(LWasmStore* lir) {
   const MWasmStore* mir = lir->mir();
+
+  if (Maybe<uint64_t> absAddr = IsAbsoluteAddress(lir->ptr(), mir->access())) {
+    masm.wasmStoreAbsolute(mir->access(), ToAnyRegister(lir->value()),
+                           Register64::Invalid(), HeapReg, absAddr.value());
+    return;
+  }
+
   masm.wasmStore(mir->access(), ToAnyRegister(lir->value()), HeapReg,
                  ToRegister(lir->ptr()));
 }
@@ -2443,12 +2476,27 @@ void CodeGenerator::visitWasmSelect(LWasmSelect* lir) {
 
 void CodeGenerator::visitWasmLoadI64(LWasmLoadI64* lir) {
   const MWasmLoad* mir = lir->mir();
+
+  if (Maybe<uint64_t> absAddr = IsAbsoluteAddress(lir->ptr(), mir->access())) {
+    masm.wasmLoadAbsolute(mir->access(), HeapReg, absAddr.value(),
+                          AnyRegister(), ToOutRegister64(lir));
+    return;
+  }
+
   masm.wasmLoadI64(mir->access(), HeapReg, ToRegister(lir->ptr()),
                    ToOutRegister64(lir));
 }
 
 void CodeGenerator::visitWasmStoreI64(LWasmStoreI64* lir) {
   const MWasmStore* mir = lir->mir();
+
+  if (Maybe<uint64_t> absAddr = IsAbsoluteAddress(lir->ptr(), mir->access())) {
+    masm.wasmStoreAbsolute(mir->access(), AnyRegister(),
+                           ToRegister64(lir->value()), HeapReg,
+                           absAddr.value());
+    return;
+  }
+
   masm.wasmStoreI64(mir->access(), ToRegister64(lir->value()), HeapReg,
                     ToRegister(lir->ptr()));
 }
