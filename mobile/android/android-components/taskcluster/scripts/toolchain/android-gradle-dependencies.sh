@@ -30,7 +30,7 @@ TEST_COMMANDS=$(echo "$FIRST_PASS_COMPONENTS" | sed "s/$/:test/g")
 LINT_COMMANDS=$(echo "$FIRST_PASS_COMPONENTS" | sed "s/$/:lintRelease/g")
 
 NEXUS_PREFIX='http://localhost:8081/nexus/content/repositories'
-REPOS="-PgoogleRepo=$NEXUS_PREFIX/google/ -PjcenterRepo=$NEXUS_PREFIX/jcenter/ -PcentralRepo=$NEXUS_PREFIX/central/"
+REPOS="-PgoogleRepo=$NEXUS_PREFIX/google/ -PcentralRepo=$NEXUS_PREFIX/central/"
 GRADLE_ARGS="--parallel $REPOS"
 
 # Before building anything we explicitly build one component that contains Glean and initializes

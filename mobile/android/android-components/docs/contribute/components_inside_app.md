@@ -117,7 +117,7 @@ In your app project locate the `repositories` block inside your build.gradle and
 repositories {
     mavenLocal()
     google()
-    jcenter()
+    mavenCentral()
 }
 ```
 

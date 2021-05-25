@@ -32,7 +32,7 @@ The *Android components* team releases frequently (currently weekly) and the pro
 
 #### Publishing
 
-Release artifacts are automatically published on jcenter and are immediately available to consumers.
+Release artifacts are automatically published on maven.mozilla.org and are immediately available to consumers.
 
 The *Android components* team is planning to release SNAPSHOT builds for every successfull *master* merge. This will allow consuming apps to test approved changes immediately after merge without needing to wait for a release.
 

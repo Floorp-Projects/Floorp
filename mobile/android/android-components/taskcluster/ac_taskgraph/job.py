@@ -67,7 +67,7 @@ def _extract_command(run, fetches_dir):
         "-P{repo_name}Repo=file://{dir}/{repo_name}".format(
             dir=maven_dependencies_dir, repo_name=repo_name
         )
-        for repo_name in ("google", "jcenter", "central")
+        for repo_name in ("google", "central")
     ]
     gradle_command = ["./gradlew"] + gradle_repos_args + ["listRepositories"] + run.pop("gradlew")
     post_gradle_commands = run.pop("post-gradlew", [])
