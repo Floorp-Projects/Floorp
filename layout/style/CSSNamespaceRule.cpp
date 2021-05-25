@@ -38,10 +38,6 @@ void CSSNamespaceRule::GetCssText(nsACString& aCssText) const {
   Servo_NamespaceRule_GetCssText(mRawRule, &aCssText);
 }
 
-void CSSNamespaceRule::SetRawAfterClone(RefPtr<RawServoNamespaceRule> aRaw) {
-  mRawRule = std::move(aRaw);
-}
-
 size_t CSSNamespaceRule::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const {
   return aMallocSizeOf(this);
 }
