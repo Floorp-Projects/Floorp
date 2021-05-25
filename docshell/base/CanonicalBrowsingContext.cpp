@@ -2178,12 +2178,15 @@ bool CanonicalBrowsingContext::AllowedInBFCache(
   // subframes, so it's OK to allow those few about:* pages enter BFCache.
   MOZ_ASSERT(IsTop(), "Trying to put a non top level BC into BFCache");
 
-  nsCOMPtr<nsIURI> currentURI = GetCurrentURI();
-  // Exempt about:* pages from bfcache, with the exception of about:blank
-  if (currentURI && currentURI->SchemeIs("about") &&
-      !currentURI->GetSpecOrDefault().EqualsLiteral("about:blank")) {
-    bfcacheCombo |= BFCacheStatus::ABOUT_PAGE;
-    MOZ_LOG(gSHIPBFCacheLog, LogLevel::Debug, (" * about:* page"));
+  WindowGlobalParent* wgp = GetCurrentWindowGlobal();
+  if (wgp && wgp->GetDocumentURI()) {
+    nsCOMPtr<nsIURI> currentURI = wgp->GetDocumentURI();
+    // Exempt about:* pages from bfcache, with the exception of about:blank
+    if (currentURI->SchemeIs("about") &&
+        !currentURI->GetSpecOrDefault().EqualsLiteral("about:blank")) {
+      bfcacheCombo |= BFCacheStatus::ABOUT_PAGE;
+      MOZ_LOG(gSHIPBFCacheLog, LogLevel::Debug, (" * about:* page"));
+    }
   }
 
   // For telemetry we're collecting all the flags for all the BCs hanging
