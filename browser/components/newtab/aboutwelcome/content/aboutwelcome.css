@@ -435,6 +435,9 @@ body {
       z-index: 2; }
       .onboardingContainer.proton .secondary-cta.top button {
         color: #FFF !important; }
+        .onboardingContainer.proton .secondary-cta.top button:hover {
+          background-color: #5B5B66;
+          color: #E0E0E6 !important; }
     .onboardingContainer.proton .steps {
       margin-top: 0;
       padding-bottom: 0;
