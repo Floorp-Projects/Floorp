@@ -368,6 +368,11 @@ void LIRGeneratorARM::lowerDivI(MDiv* div) {
   defineReturn(lir, div);
 }
 
+void LIRGeneratorARM::lowerNegI(MInstruction* ins, MDefinition* input,
+                                int32_t inputNo) {
+  define(new (alloc()) LNegI(useRegisterAtStart(input)), ins);
+}
+
 void LIRGeneratorARM::lowerMulI(MMul* mul, MDefinition* lhs, MDefinition* rhs) {
   LMulI* lir = new (alloc()) LMulI;
   if (mul->fallible()) {

@@ -84,6 +84,7 @@ class LIRGeneratorARM : public LIRGeneratorShared {
   void lowerWasmBuiltinModI64(MWasmBuiltinModI64* mod);
   void lowerUDivI64(MDiv* div);
   void lowerUModI64(MMod* mod);
+  void lowerNegI(MInstruction* ins, MDefinition* input, int32_t inputNo);
   void lowerMulI(MMul* mul, MDefinition* lhs, MDefinition* rhs);
   void lowerUDiv(MDiv* div);
   void lowerUMod(MMod* mod);
