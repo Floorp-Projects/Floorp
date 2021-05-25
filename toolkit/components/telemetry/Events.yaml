@@ -2793,11 +2793,14 @@ dom.quota.try:
     record_in_processes: ["main", "content"]
     extra_keys:
       context: The context in which the error occurred, e.g. during a storage initialization. Telemetry events are only emitted for selected contexts.
+      frame_id: Optionally, the frame within stack_id.
+      process_id: Optionally, the process in which the error occured.
       result: Optionally, the name of the error that occurred.
       seq: Sequence number.
       severity: One of WARNING or ERROR.
       source_file: The name of the source code file where the error occurred.
       source_line: The line within source_file where the error occurred.
+      stack_id: Optionally, the stack within process_id.
 
 zero_byte_load:
   load:

@@ -514,14 +514,24 @@ void LogError(const nsACString& aExpr, const ResultType& aResult,
     // match locations across versions, but they might be large.
     auto extra = Some([&] {
       auto res = CopyableTArray<EventExtraEntry>{};
-      res.SetCapacity(6);
+      res.SetCapacity(9);
 
       res.AppendElement(EventExtraEntry{
           "context"_ns, nsPromiseFlatCString{*contextIt->second}});
 
+      if (!frameIdStr.IsEmpty()) {
+        res.AppendElement(
+            EventExtraEntry{"frame_id"_ns, nsCString{frameIdStr}});
+      }
+
       // TODO We could still fill the module field, based on the source
       // directory, but we probably don't need to.
       // res.AppendElement(EventExtraEntry{"module"_ns, aModule});
+
+      if (!processIdStr.IsEmpty()) {
+        res.AppendElement(
+            EventExtraEntry{"process_id"_ns, nsCString{processIdStr}});
+      }
 
       if (!rvName.IsEmpty()) {
         res.AppendElement(EventExtraEntry{"result"_ns, nsCString{rvName}});
@@ -545,6 +555,11 @@ void LogError(const nsACString& aExpr, const ResultType& aResult,
 
       res.AppendElement(
           EventExtraEntry{"source_line"_ns, IntToCString(aSourceFileLine)});
+
+      if (!stackIdStr.IsEmpty()) {
+        res.AppendElement(
+            EventExtraEntry{"stack_id"_ns, nsCString{stackIdStr}});
+      }
 
       return res;
     }());
