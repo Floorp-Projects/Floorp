@@ -757,7 +757,7 @@
 #urlbar .search-panel-one-offs-header-label {
   white-space: nowrap;
   margin: 0;
-  padding-inline: 8px 2px;
+  padding-inline: 8px 12px;
 }
 
 #urlbar .searchbar-engine-one-off-item {
