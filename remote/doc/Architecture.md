@@ -1,4 +1,4 @@
-Remote agent overall architecture
+Remote Agent overall architecture
 =================================
 
 This document will cover the Remote Agent architecture by following the sequence of steps needed to start the agent, connect a client and debug a target.
@@ -114,8 +114,8 @@ right session when you are using flatten session.
 Cross Process / Layers
 ----------------------
 
-Because targets may runs in different contexts, the remote agent code runs in different processes.
-The main and startup code of the Remote agent code runs in the parent process.
+Because targets may runs in different contexts, the Remote Agent code runs in different processes.
+The main and startup code of the Remote Agent code runs in the parent process.
 The handling of the command line as well as all the HTTP and WebSocket work is all done in the parent process.
 The browser target is also all implemented in the parent process.
 But when it comes to a tab target, as the tab runs in the content process, we have to run code there as well.

@@ -2,7 +2,7 @@ Style guide
 ===========
 
 Like other projects, we also have some guidelines to keep to the code.
-For the overall remote agent project, a few rough rules are:
+For the overall Remote Agent project, a few rough rules are:
 
   * Make your code readable and sensible, and don’t try to be
     clever.  Prefer simple and easy solutions over more convoluted
@@ -44,7 +44,7 @@ The documentation can be built locally this way:
 Linting
 -------
 
-The remote agent consists mostly of JavaScript code, and we lint that
+The Remote Agent consists mostly of JavaScript code, and we lint that
 using [mozlint], which is harmonises different linters including [eslint].
 
 To run the linter and get sensible output:
