@@ -229,7 +229,8 @@ void gfxPlatformGtk::InitWebRenderConfig() {
 
   FeatureState& feature = gfxConfig::GetFeature(Feature::WEBRENDER_COMPOSITOR);
   if (feature.IsEnabled()) {
-    if (!gfxConfig::IsEnabled(Feature::WEBRENDER)) {
+    if (!(gfxConfig::IsEnabled(Feature::WEBRENDER) ||
+          gfxConfig::IsEnabled(Feature::WEBRENDER_SOFTWARE))) {
       feature.ForceDisable(FeatureStatus::Unavailable, "WebRender disabled",
                            "FEATURE_FAILURE_WR_DISABLED"_ns);
     } else if (!IsWaylandDisplay()) {

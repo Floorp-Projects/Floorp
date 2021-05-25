@@ -15,8 +15,9 @@
 #include "mozilla/layers/SurfacePoolWayland.h"
 #include "mozilla/widget/MozContainerWayland.h"
 #include "mozilla/widget/WaylandShmBuffer.h"
-#include "nsRegion.h"
 #include "nsISupportsImpl.h"
+#include "nsRegion.h"
+#include "nsTArray.h"
 
 namespace mozilla::layers {
 
@@ -62,7 +63,7 @@ class NativeLayerRootWayland : public NativeLayerRoot {
   ~NativeLayerRootWayland() = default;
 
   void EnsureSurfaceInitialized();
-  void EnsureShowLayer(const RefPtr<NativeLayerWayland>& aLayer);
+  bool EnsureShowLayer(const RefPtr<NativeLayerWayland>& aLayer);
   void EnsureHideLayer(const RefPtr<NativeLayerWayland>& aLayer);
   void UnmapLayer(const RefPtr<NativeLayerWayland>& aLayer);
 
