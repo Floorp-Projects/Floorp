@@ -6,10 +6,13 @@
 
 #include "QMResult.h"
 
-#include "mozilla/Atomics.h"
+#ifdef QM_ERROR_STACKS_ENABLED
+#  include "mozilla/Atomics.h"
+#endif
 
 namespace mozilla {
 
+#ifdef QM_ERROR_STACKS_ENABLED
 namespace {
 
 static Atomic<uint64_t> gLastStackId{0};
@@ -18,5 +21,6 @@ static Atomic<uint64_t> gLastStackId{0};
 
 QMResult::QMResult(nsresult aNSResult)
     : mStackId(++gLastStackId), mFrameId(1), mNSResult(aNSResult) {}
+#endif
 
 }  // namespace mozilla
