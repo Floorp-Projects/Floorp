@@ -6,6 +6,7 @@
 
 #include "QuotaCommon.h"
 
+#include "base/process_util.h"
 #include "mozIStorageConnection.h"
 #include "mozIStorageStatement.h"
 #include "mozilla/ErrorNames.h"
@@ -402,7 +403,7 @@ nsDependentCSubstring MakeSourceFileRelativePath(
 
 }  // namespace detail
 
-void LogError(const nsACString& aExpr, const Maybe<nsresult> aRv,
+void LogError(const nsACString& aExpr, const ResultType& aResult,
               const nsACString& aSourceFilePath, const int32_t aSourceFileLine,
               const Severity aSeverity) {
   // TODO: Add MOZ_LOG support, bug 1711661.
@@ -417,18 +418,40 @@ void LogError(const nsACString& aExpr, const Maybe<nsresult> aRv,
   nsAutoCString extraInfosString;
 
   nsAutoCString rvName;
-  if (aRv) {
-    if (NS_ERROR_GET_MODULE(*aRv) == NS_ERROR_MODULE_WIN32) {
-      // XXX We could also try to get the Win32 error name here.
-      rvName = nsPrintfCString("WIN32(0x%" PRIX16 ")", NS_ERROR_GET_CODE(*aRv));
+  nsAutoCString frameIdStr;
+  nsAutoCString stackIdStr;
+  nsAutoCString processIdStr;
+
+  if (aResult.is<QMResult>() || aResult.is<nsresult>()) {
+    nsresult rv;
+
+    if (aResult.is<QMResult>()) {
+      const QMResult& result = aResult.as<QMResult>();
+      rv = result.NSResult();
+      frameIdStr.AppendInt(result.FrameId());
+      stackIdStr.AppendInt(result.StackId());
+      processIdStr.AppendInt(static_cast<uint32_t>(base::GetCurrentProcId()));
     } else {
-      rvName = mozilla::GetStaticErrorName(*aRv);
+      rv = aResult.as<nsresult>();
     }
+
+    if (NS_ERROR_GET_MODULE(rv) == NS_ERROR_MODULE_WIN32) {
+      // XXX We could also try to get the Win32 error name here.
+      rvName = nsPrintfCString("WIN32(0x%" PRIX16 ")", NS_ERROR_GET_CODE(rv));
+    } else {
+      rvName = mozilla::GetStaticErrorName(rv);
+    }
+
     extraInfosString.AppendPrintf(
         " failed with "
         "result 0x%" PRIX32 "%s%s%s",
-        static_cast<uint32_t>(*aRv), !rvName.IsEmpty() ? " (" : "",
+        static_cast<uint32_t>(rv), !rvName.IsEmpty() ? " (" : "",
         !rvName.IsEmpty() ? rvName.get() : "", !rvName.IsEmpty() ? ")" : "");
+
+    if (aResult.is<QMResult>()) {
+      extraInfosString.Append(", frameId="_ns + frameIdStr + ", stackId="_ns +
+                              stackIdStr + ", processId="_ns + processIdStr);
+    }
   }
 
   const auto sourceFileRelativePath =

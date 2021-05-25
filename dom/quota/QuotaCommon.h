@@ -23,6 +23,7 @@
 #include "mozilla/Result.h"
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/ThreadLocal.h"
+#include "mozilla/dom/QMResult.h"
 #include "mozilla/ipc/ProtocolUtils.h"
 #include "nsCOMPtr.h"
 #include "nsDebug.h"
@@ -1225,7 +1226,9 @@ enum class Severity {
   Log,
 };
 
-void LogError(const nsACString& aExpr, Maybe<nsresult> aRv,
+using ResultType = Variant<QMResult, nsresult, Nothing>;
+
+void LogError(const nsACString& aExpr, const ResultType& aResult,
               const nsACString& aSourceFilePath, int32_t aSourceFileLine,
               Severity aSeverity);
 
@@ -1307,14 +1310,14 @@ template <typename T>
 MOZ_COLD void HandleError(const char* aExpr, const T& aRv,
                           const char* aSourceFilePath, int32_t aSourceFileLine,
                           const Severity aSeverity) {
-  if constexpr (std::is_same_v<T, nsresult>) {
-    mozilla::dom::quota::LogError(nsDependentCString(aExpr), Some(aRv),
+  if constexpr (std::is_same_v<T, QMResult> || std::is_same_v<T, nsresult>) {
+    mozilla::dom::quota::LogError(nsDependentCString(aExpr), ResultType(aRv),
                                   nsDependentCString(aSourceFilePath),
                                   aSourceFileLine, aSeverity);
   } else {
-    mozilla::dom::quota::LogError(nsDependentCString(aExpr), Nothing{},
-                                  nsDependentCString(aSourceFilePath),
-                                  aSourceFileLine, aSeverity);
+    mozilla::dom::quota::LogError(
+        nsDependentCString(aExpr), ResultType(Nothing{}),
+        nsDependentCString(aSourceFilePath), aSourceFileLine, aSeverity);
   }
 }
 #else
