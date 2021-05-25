@@ -4,114 +4,23 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use super::super::{Connection, Output};
+use super::super::Output;
 use super::{
-    assert_full_cwnd, connect_rtt_idle, cwnd_packets, default_client, default_server, fill_cwnd,
-    send_something, AT_LEAST_PTO, DEFAULT_RTT, FORCE_IDLE_CLIENT_1RTT_PACKETS, POST_HANDSHAKE_CWND,
+    ack_bytes, assert_full_cwnd, connect_rtt_idle, cwnd, cwnd_avail, cwnd_packets, default_client,
+    default_server, fill_cwnd, induce_persistent_congestion, send_something, DEFAULT_RTT,
+    FORCE_IDLE_CLIENT_1RTT_PACKETS, POST_HANDSHAKE_CWND,
 };
-use crate::cc::{CWND_MIN, MAX_DATAGRAM_SIZE};
+use crate::cc::MAX_DATAGRAM_SIZE;
 use crate::packet::PacketNumber;
 use crate::recovery::{ACK_ONLY_SIZE_LIMIT, PACKET_THRESHOLD};
 use crate::sender::PACING_BURST_SIZE;
-use crate::stats::MAX_PTO_COUNTS;
 use crate::stream_id::StreamType;
-use crate::tracking::MAX_UNACKED_PKTS;
+use crate::tracking::DEFAULT_ACK_PACKET_TOLERANCE;
 
-use neqo_common::{qdebug, qinfo, qtrace, Datagram};
+use neqo_common::{qdebug, qinfo, Datagram};
 use std::convert::TryFrom;
 use std::mem;
-use std::time::{Duration, Instant};
-
-// Get the current congestion window for the connection.
-fn cwnd(c: &Connection) -> usize {
-    c.paths.primary().borrow().sender().cwnd()
-}
-fn cwnd_avail(c: &Connection) -> usize {
-    c.paths.primary().borrow().sender().cwnd_avail()
-}
-
-fn induce_persistent_congestion(
-    client: &mut Connection,
-    server: &mut Connection,
-    mut now: Instant,
-) -> Instant {
-    // Note: wait some arbitrary time that should be longer than pto
-    // timer. This is rather brittle.
-    now += AT_LEAST_PTO;
-
-    let mut pto_counts = [0; MAX_PTO_COUNTS];
-    assert_eq!(client.stats.borrow().pto_counts, pto_counts);
-
-    qtrace!([client], "first PTO");
-    let (c_tx_dgrams, next_now) = fill_cwnd(client, 0, now);
-    now = next_now;
-    assert_eq!(c_tx_dgrams.len(), 2); // Two PTO packets
-
-    pto_counts[0] = 1;
-    assert_eq!(client.stats.borrow().pto_counts, pto_counts);
-
-    qtrace!([client], "second PTO");
-    now += AT_LEAST_PTO * 2;
-    let (c_tx_dgrams, next_now) = fill_cwnd(client, 0, now);
-    now = next_now;
-    assert_eq!(c_tx_dgrams.len(), 2); // Two PTO packets
-
-    pto_counts[0] = 0;
-    pto_counts[1] = 1;
-    assert_eq!(client.stats.borrow().pto_counts, pto_counts);
-
-    qtrace!([client], "third PTO");
-    now += AT_LEAST_PTO * 4;
-    let (c_tx_dgrams, next_now) = fill_cwnd(client, 0, now);
-    now = next_now;
-    assert_eq!(c_tx_dgrams.len(), 2); // Two PTO packets
-
-    pto_counts[1] = 0;
-    pto_counts[2] = 1;
-    assert_eq!(client.stats.borrow().pto_counts, pto_counts);
-
-    // Generate ACK
-    let s_tx_dgram = ack_bytes(server, 0, c_tx_dgrams, now);
-
-    // An ACK for the third PTO causes persistent congestion.
-    for dgram in s_tx_dgram {
-        client.process_input(dgram, now);
-    }
-
-    assert_eq!(cwnd(client), CWND_MIN);
-    now
-}
-
-// Receive multiple packets and generate an ack-only packet.
-fn ack_bytes<D>(dest: &mut Connection, stream: u64, in_dgrams: D, now: Instant) -> Vec<Datagram>
-where
-    D: IntoIterator<Item = Datagram>,
-    D::IntoIter: ExactSizeIterator,
-{
-    let mut srv_buf = [0; 4_096];
-
-    let in_dgrams = in_dgrams.into_iter();
-    qdebug!([dest], "ack_bytes {} datagrams", in_dgrams.len());
-    for dgram in in_dgrams {
-        dest.process_input(dgram, now);
-    }
-
-    loop {
-        let (bytes_read, _fin) = dest.stream_recv(stream, &mut srv_buf).unwrap();
-        qtrace!([dest], "ack_bytes read {} bytes", bytes_read);
-        if bytes_read == 0 {
-            break;
-        }
-    }
-
-    let mut tx_dgrams = Vec::new();
-    while let Output::Datagram(dg) = dest.process_output(now) {
-        tx_dgrams.push(dg);
-    }
-
-    assert!((tx_dgrams.len() == 1) || (tx_dgrams.len() == 2));
-    tx_dgrams
-}
+use std::time::Duration;
 
 #[test]
 /// Verify initial CWND is honored.
@@ -148,7 +57,7 @@ fn cc_slow_start_to_cong_avoidance_recovery_period() {
 
     // Server: Receive and generate ack
     now += DEFAULT_RTT / 2;
-    let s_tx_dgram = ack_bytes(&mut server, 0, c_tx_dgrams, now);
+    let s_ack = ack_bytes(&mut server, 0, c_tx_dgrams, now);
     assert_eq!(
         server.stats().frame_tx.largest_acknowledged,
         flight1_largest
@@ -156,9 +65,7 @@ fn cc_slow_start_to_cong_avoidance_recovery_period() {
 
     // Client: Process ack
     now += DEFAULT_RTT / 2;
-    for dgram in s_tx_dgram {
-        client.process_input(dgram, now);
-    }
+    client.process_input(s_ack, now);
     assert_eq!(
         client.stats().frame_rx.largest_acknowledged,
         flight1_largest
@@ -172,7 +79,7 @@ fn cc_slow_start_to_cong_avoidance_recovery_period() {
     // Server: Receive and generate ack again, but drop first packet
     now += DEFAULT_RTT / 2;
     c_tx_dgrams.remove(0);
-    let s_tx_dgram = ack_bytes(&mut server, 0, c_tx_dgrams, now);
+    let s_ack = ack_bytes(&mut server, 0, c_tx_dgrams, now);
     assert_eq!(
         server.stats().frame_tx.largest_acknowledged,
         flight2_largest
@@ -180,9 +87,7 @@ fn cc_slow_start_to_cong_avoidance_recovery_period() {
 
     // Client: Process ack
     now += DEFAULT_RTT / 2;
-    for dgram in s_tx_dgram {
-        client.process_input(dgram, now);
-    }
+    client.process_input(s_ack, now);
     assert_eq!(
         client.stats().frame_rx.largest_acknowledged,
         flight2_largest
@@ -210,20 +115,16 @@ fn cc_cong_avoidance_recovery_period_unchanged() {
     let c_tx_dgrams2 = c_tx_dgrams.split_off(5);
 
     // Server: Receive and generate ack
-    let s_tx_dgram = ack_bytes(&mut server, 0, c_tx_dgrams, now);
-    for dgram in s_tx_dgram {
-        client.process_input(dgram, now);
-    }
+    let s_ack = ack_bytes(&mut server, 0, c_tx_dgrams, now);
+    client.process_input(s_ack, now);
 
     let cwnd1 = cwnd(&client);
 
     // Generate ACK for more received packets
-    let s_tx_dgram = ack_bytes(&mut server, 0, c_tx_dgrams2, now);
+    let s_ack = ack_bytes(&mut server, 0, c_tx_dgrams2, now);
 
     // ACK more packets but they were sent before end of recovery period
-    for dgram in s_tx_dgram {
-        client.process_input(dgram, now);
-    }
+    client.process_input(s_ack, now);
 
     // cwnd should not have changed since ACKed packets were sent before
     // recovery period expired
@@ -284,13 +185,11 @@ fn cc_cong_avoidance_recovery_period_to_cong_avoidance() {
 
     // Server: Receive and generate ack
     now += DEFAULT_RTT / 2;
-    let s_tx_dgram = ack_bytes(&mut server, 0, c_tx_dgrams, now);
+    let s_ack = ack_bytes(&mut server, 0, c_tx_dgrams, now);
 
     // Client: Process ack
     now += DEFAULT_RTT / 2;
-    for dgram in s_tx_dgram {
-        client.process_input(dgram, now);
-    }
+    client.process_input(s_ack, now);
 
     // Should be in CARP now.
     now += DEFAULT_RTT / 2;
@@ -321,25 +220,23 @@ fn cc_cong_avoidance_recovery_period_to_cong_avoidance() {
         // Until we process all the packets, the congestion window remains the same.
         // Note that we need the client to process ACK frames in stages, so split the
         // datagrams into two, ensuring that we allow for an ACK for each batch.
-        let most = c_tx_dgrams.len() - MAX_UNACKED_PKTS - 1;
-        let s_tx_dgram = ack_bytes(&mut server, 0, c_tx_dgrams.drain(..most), now);
-        for dgram in s_tx_dgram {
-            assert_eq!(cwnd(&client), expected_cwnd);
-            client.process_input(dgram, now);
-            // make sure to fill cwnd again.
-            let (mut new_pkts, next_now) = fill_cwnd(&mut client, 0, now);
-            now = next_now;
-            next_c_tx_dgrams.append(&mut new_pkts);
-        }
-        let s_tx_dgram = ack_bytes(&mut server, 0, c_tx_dgrams, now);
-        for dgram in s_tx_dgram {
-            assert_eq!(cwnd(&client), expected_cwnd);
-            client.process_input(dgram, now);
-            // make sure to fill cwnd again.
-            let (mut new_pkts, next_now) = fill_cwnd(&mut client, 0, now);
-            now = next_now;
-            next_c_tx_dgrams.append(&mut new_pkts);
-        }
+        let most = c_tx_dgrams.len() - usize::try_from(DEFAULT_ACK_PACKET_TOLERANCE).unwrap() - 1;
+        let s_ack = ack_bytes(&mut server, 0, c_tx_dgrams.drain(..most), now);
+        assert_eq!(cwnd(&client), expected_cwnd);
+        client.process_input(s_ack, now);
+        // make sure to fill cwnd again.
+        let (mut new_pkts, next_now) = fill_cwnd(&mut client, 0, now);
+        now = next_now;
+        next_c_tx_dgrams.append(&mut new_pkts);
+
+        let s_ack = ack_bytes(&mut server, 0, c_tx_dgrams, now);
+        assert_eq!(cwnd(&client), expected_cwnd);
+        client.process_input(s_ack, now);
+        // make sure to fill cwnd again.
+        let (mut new_pkts, next_now) = fill_cwnd(&mut client, 0, now);
+        now = next_now;
+        next_c_tx_dgrams.append(&mut new_pkts);
+
         expected_cwnd += MAX_DATAGRAM_SIZE;
         assert_eq!(cwnd(&client), expected_cwnd);
         c_tx_dgrams = next_c_tx_dgrams;
@@ -354,7 +251,7 @@ fn cc_slow_start_to_persistent_congestion_no_acks() {
     let now = connect_rtt_idle(&mut client, &mut server, DEFAULT_RTT);
 
     // Create stream 0
-    assert_eq!(client.stream_create(StreamType::BiDi).unwrap(), 0);
+    let stream = client.stream_create(StreamType::BiDi).unwrap();
 
     // Buffer up lot of data and generate packets
     let (c_tx_dgrams, mut now) = fill_cwnd(&mut client, 0, now);
@@ -365,7 +262,7 @@ fn cc_slow_start_to_persistent_congestion_no_acks() {
     mem::drop(ack_bytes(&mut server, 0, c_tx_dgrams, now));
 
     // ACK lost.
-    induce_persistent_congestion(&mut client, &mut server, now);
+    induce_persistent_congestion(&mut client, &mut server, stream, now);
 }
 
 #[test]
@@ -376,7 +273,7 @@ fn cc_slow_start_to_persistent_congestion_some_acks() {
     let now = connect_rtt_idle(&mut client, &mut server, DEFAULT_RTT);
 
     // Create stream 0
-    assert_eq!(client.stream_create(StreamType::BiDi).unwrap(), 0);
+    let stream = client.stream_create(StreamType::BiDi).unwrap();
 
     // Buffer up lot of data and generate packets
     let (c_tx_dgrams, mut now) = fill_cwnd(&mut client, 0, now);
@@ -384,18 +281,16 @@ fn cc_slow_start_to_persistent_congestion_some_acks() {
 
     // Server: Receive and generate ack
     now += Duration::from_millis(100);
-    let s_tx_dgram = ack_bytes(&mut server, 0, c_tx_dgrams, now);
+    let s_ack = ack_bytes(&mut server, 0, c_tx_dgrams, now);
 
     now += Duration::from_millis(100);
-    for dgram in s_tx_dgram {
-        client.process_input(dgram, now);
-    }
+    client.process_input(s_ack, now);
 
     // send bytes that will be lost
     let (_, next_now) = fill_cwnd(&mut client, 0, now);
     now = next_now + Duration::from_millis(100);
 
-    induce_persistent_congestion(&mut client, &mut server, now);
+    induce_persistent_congestion(&mut client, &mut server, stream, now);
 }
 
 #[test]
@@ -407,7 +302,7 @@ fn cc_persistent_congestion_to_slow_start() {
     let now = connect_rtt_idle(&mut client, &mut server, DEFAULT_RTT);
 
     // Create stream 0
-    assert_eq!(client.stream_create(StreamType::BiDi).unwrap(), 0);
+    let stream = client.stream_create(StreamType::BiDi).unwrap();
 
     // Buffer up lot of data and generate packets
     let (c_tx_dgrams, mut now) = fill_cwnd(&mut client, 0, now);
@@ -419,7 +314,7 @@ fn cc_persistent_congestion_to_slow_start() {
 
     // ACK lost.
 
-    now = induce_persistent_congestion(&mut client, &mut server, now);
+    now = induce_persistent_congestion(&mut client, &mut server, stream, now);
 
     // New part of test starts here
 
@@ -431,13 +326,11 @@ fn cc_persistent_congestion_to_slow_start() {
 
     // Server: Receive and generate ack
     now = next_now + Duration::from_millis(100);
-    let s_tx_dgram = ack_bytes(&mut server, 0, c_tx_dgrams, now);
+    let s_ack = ack_bytes(&mut server, 0, c_tx_dgrams, now);
 
     // No longer in CARP. (pkts acked from after start of CARP)
     // Should be in slow start now.
-    for dgram in s_tx_dgram {
-        client.process_input(dgram, now);
-    }
+    client.process_input(s_ack, now);
 
     // ACKing 2 packets should let client send 4.
     let (c_tx_dgrams, _) = fill_cwnd(&mut client, 0, now);

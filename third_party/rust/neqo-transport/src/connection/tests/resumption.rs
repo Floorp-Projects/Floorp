@@ -40,10 +40,22 @@ fn remember_smoothed_rtt() {
     let mut client = default_client();
     let mut server = default_server();
 
-    let now = connect_with_rtt(&mut client, &mut server, now(), RTT1);
+    let mut now = connect_with_rtt(&mut client, &mut server, now(), RTT1);
     assert_eq!(client.paths.rtt(), RTT1);
 
-    let token = exchange_ticket(&mut client, &mut server, now);
+    // We can't use exchange_ticket here because it doesn't respect RTT.
+    // Also, connect_with_rtt() ends with the server receiving a packet it
+    // wants to acknowledge; so the ticket will include an ACK frame too.
+    let validation = AddressValidation::new(now, ValidateAddress::NoToken).unwrap();
+    let validation = Rc::new(RefCell::new(validation));
+    server.set_validation(Rc::clone(&validation));
+    server.send_ticket(now, &[]).expect("can send ticket");
+    let ticket = server.process_output(now).dgram();
+    assert!(ticket.is_some());
+    now += RTT1 / 2;
+    client.process_input(ticket.unwrap(), now);
+    let token = get_tokens(&mut client).pop().unwrap();
+
     let mut client = default_client();
     let mut server = default_server();
     client.enable_resumption(now, token).unwrap();

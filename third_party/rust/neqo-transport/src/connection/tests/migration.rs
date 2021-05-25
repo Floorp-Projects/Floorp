@@ -6,8 +6,8 @@
 
 use super::super::{Connection, Output, State, StreamType};
 use super::{
-    connect_fail, connect_force_idle, default_client, default_server, maybe_authenticate,
-    new_client, new_server, send_something,
+    connect_fail, connect_force_idle, connect_rtt_idle, default_client, default_server,
+    maybe_authenticate, new_client, new_server, send_something,
 };
 use crate::path::{PATH_MTU_V4, PATH_MTU_V6};
 use crate::tparams::{self, PreferredAddress, TransportParameter};
@@ -15,10 +15,14 @@ use crate::{ConnectionError, ConnectionParameters, EmptyConnectionIdGenerator, E
 
 use neqo_common::Datagram;
 use std::cell::RefCell;
-use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr};
+use std::net::{IpAddr, Ipv6Addr, SocketAddr};
 use std::rc::Rc;
 use std::time::{Duration, Instant};
-use test_fixture::{self, addr, fixture_init, now};
+use test_fixture::{
+    self, addr, addr_v4,
+    assertions::{assert_v4_path, assert_v6_path},
+    fixture_init, now,
+};
 
 /// This should be a valid-seeming transport parameter.
 /// And it should have different values to `addr` and `addr_v4`.
@@ -33,10 +37,6 @@ const SAMPLE_PREFERRED_ADDRESS: &[u8] = &[
 // Migrations move to a path with the same IPv4 address on both ends.
 // This simplifies validation as the same assertions can be used for client and server.
 // The risk is that there is a place where source/destination local/remote is inverted.
-fn addr_v4() -> SocketAddr {
-    let localhost_v4 = IpAddr::V4(Ipv4Addr::from(0xc000_0201));
-    SocketAddr::new(localhost_v4, addr().port())
-}
 
 fn loopback() -> SocketAddr {
     SocketAddr::new(IpAddr::V6(Ipv6Addr::from(1)), 443)
@@ -53,25 +53,6 @@ fn new_port(a: SocketAddr) -> SocketAddr {
 
 fn change_source_port(d: &Datagram) -> Datagram {
     Datagram::new(new_port(d.source()), d.destination(), &d[..])
-}
-
-fn assert_path(dgram: &Datagram, path_addr: SocketAddr) {
-    assert_eq!(dgram.source(), path_addr);
-    assert_eq!(dgram.destination(), path_addr);
-}
-
-fn assert_v4_path(dgram: &Datagram, padded: bool) {
-    assert_path(dgram, addr_v4());
-    if padded {
-        assert_eq!(dgram.len(), PATH_MTU_V4);
-    }
-}
-
-fn assert_v6_path(dgram: &Datagram, padded: bool) {
-    assert_path(dgram, addr());
-    if padded {
-        assert_eq!(dgram.len(), PATH_MTU_V6);
-    }
 }
 
 /// As these tests use a new path, that path often has a non-zero RTT.
@@ -220,6 +201,23 @@ fn migrate_immediate() {
     now = skip_pacing(&mut client, now);
     let client3 = send_something(&mut client, now);
     assert_v4_path(&client3, false);
+}
+
+/// RTT estimates for paths should be preserved across migrations.
+#[test]
+fn migrate_rtt() {
+    const RTT: Duration = Duration::from_millis(20);
+    let mut client = default_client();
+    let mut server = default_server();
+    let now = connect_rtt_idle(&mut client, &mut server, RTT);
+
+    client
+        .migrate(Some(addr_v4()), Some(addr_v4()), true, now)
+        .unwrap();
+    // The RTT might be increased for the new path, so allow a little flexibility.
+    let rtt = client.paths.rtt();
+    assert!(rtt > RTT);
+    assert!(rtt < RTT * 2);
 }
 
 #[test]

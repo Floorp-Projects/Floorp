@@ -47,6 +47,8 @@ pub struct FrameStats {
     pub connection_close: usize,
     pub handshake_done: usize,
     pub new_token: usize,
+
+    pub ack_frequency: usize,
 }
 
 impl Debug for FrameStats {
@@ -83,7 +85,8 @@ impl Debug for FrameStats {
             self.retire_connection_id,
             self.path_challenge,
             self.path_response,
-        )
+        )?;
+        writeln!(f, "    ack_frequency {} ", self.ack_frequency)
     }
 }
 

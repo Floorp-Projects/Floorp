@@ -10,10 +10,11 @@ use super::{
     Connection, ConnectionError, ConnectionId, ConnectionIdRef, Output, State, LOCAL_IDLE_TIMEOUT,
 };
 use crate::addr_valid::{AddressValidation, ValidateAddress};
-use crate::cc::CWND_INITIAL_PKTS;
+use crate::cc::{CWND_INITIAL_PKTS, CWND_MIN};
 use crate::events::ConnectionEvent;
 use crate::path::PATH_MTU_V6;
 use crate::recovery::ACK_ONLY_SIZE_LIMIT;
+use crate::stats::MAX_PTO_COUNTS;
 use crate::{ConnectionIdDecoder, ConnectionIdGenerator, ConnectionParameters, Error, StreamType};
 
 use std::cell::RefCell;
@@ -27,6 +28,7 @@ use neqo_crypto::{random, AllowZeroRtt, AuthenticationStatus, ResumptionToken};
 use test_fixture::{self, addr, fixture_init, now};
 
 // All the tests.
+mod ackrate;
 mod cc;
 mod close;
 mod fuzzing;
@@ -164,7 +166,9 @@ fn handshake(
         now += rtt / 2;
         mem::swap(&mut a, &mut b);
     }
-    let _ = a.process(input, now);
+    if let Some(d) = input {
+        a.process_input(d, now);
+    }
     now
 }
 
@@ -278,21 +282,8 @@ fn connect_force_idle(client: &mut Connection, server: &mut Connection) {
     connect_rtt_idle(client, server, Duration::new(0, 0));
 }
 
-/// This fills the congestion window from a single source.
-/// As the pacer will interfere with this, this moves time forward
-/// as `Output::Callback` is received.  Because it is hard to tell
-/// from the return value whether a timeout is an ACK delay, PTO, or
-/// pacing, this looks at the congestion window to tell when to stop.
-/// Returns a list of datagrams and the new time.
-fn fill_cwnd(c: &mut Connection, stream: u64, mut now: Instant) -> (Vec<Datagram>, Instant) {
+fn fill_stream(c: &mut Connection, stream: u64) {
     const BLOCK_SIZE: usize = 4_096;
-    // Train wreck function to get the remaining congestion window on the primary path.
-    fn cwnd(c: &Connection) -> usize {
-        c.paths.primary().borrow().sender().cwnd_avail()
-    }
-
-    qtrace!("fill_cwnd starting cwnd: {}", cwnd(c));
-
     loop {
         let bytes_sent = c.stream_send(stream, &[0x42; BLOCK_SIZE]).unwrap();
         qtrace!("fill_cwnd wrote {} bytes", bytes_sent);
@@ -300,6 +291,22 @@ fn fill_cwnd(c: &mut Connection, stream: u64, mut now: Instant) -> (Vec<Datagram
             break;
         }
     }
+}
+
+/// This fills the congestion window from a single source.
+/// As the pacer will interfere with this, this moves time forward
+/// as `Output::Callback` is received.  Because it is hard to tell
+/// from the return value whether a timeout is an ACK delay, PTO, or
+/// pacing, this looks at the congestion window to tell when to stop.
+/// Returns a list of datagrams and the new time.
+fn fill_cwnd(c: &mut Connection, stream: u64, mut now: Instant) -> (Vec<Datagram>, Instant) {
+    // Train wreck function to get the remaining congestion window on the primary path.
+    fn cwnd(c: &Connection) -> usize {
+        c.paths.primary().borrow().sender().cwnd_avail()
+    }
+
+    qtrace!("fill_cwnd starting cwnd: {}", cwnd(c));
+    fill_stream(c, stream);
 
     let mut total_dgrams = Vec::new();
     loop {
@@ -324,6 +331,126 @@ fn fill_cwnd(c: &mut Connection, stream: u64, mut now: Instant) -> (Vec<Datagram
         total_dgrams.iter().map(|d| d.len()).sum::<usize>()
     );
     (total_dgrams, now)
+}
+
+/// This function is like the combination of `fill_cwnd` and `ack_bytes`.
+/// However, it acknowledges everything inline and preserves an RTT of `DEFAULT_RTT`.
+fn increase_cwnd(
+    sender: &mut Connection,
+    receiver: &mut Connection,
+    stream: u64,
+    mut now: Instant,
+) -> Instant {
+    fill_stream(sender, stream);
+    loop {
+        let pkt = sender.process_output(now);
+        match pkt {
+            Output::Datagram(dgram) => {
+                receiver.process_input(dgram, now + DEFAULT_RTT / 2);
+            }
+            Output::Callback(t) => {
+                if t < DEFAULT_RTT {
+                    now += t;
+                } else {
+                    break; // We're on PTO now.
+                }
+            }
+            Output::None => panic!(),
+        }
+    }
+
+    // Now acknowledge all those packets at once.
+    now += DEFAULT_RTT / 2;
+    let ack = receiver.process_output(now).dgram();
+    now += DEFAULT_RTT / 2;
+    sender.process_input(ack.unwrap(), now);
+    now
+}
+
+/// Receive multiple packets and generate an ack-only packet.
+/// # Panics
+/// The caller is responsible for ensuring that `dest` has received
+/// enough data that it wants to generate an ACK.  This panics if
+/// no ACK frame is generated.
+fn ack_bytes<D>(dest: &mut Connection, stream: u64, in_dgrams: D, now: Instant) -> Datagram
+where
+    D: IntoIterator<Item = Datagram>,
+    D::IntoIter: ExactSizeIterator,
+{
+    let mut srv_buf = [0; 4_096];
+
+    let in_dgrams = in_dgrams.into_iter();
+    qdebug!([dest], "ack_bytes {} datagrams", in_dgrams.len());
+    for dgram in in_dgrams {
+        dest.process_input(dgram, now);
+    }
+
+    loop {
+        let (bytes_read, _fin) = dest.stream_recv(stream, &mut srv_buf).unwrap();
+        qtrace!([dest], "ack_bytes read {} bytes", bytes_read);
+        if bytes_read == 0 {
+            break;
+        }
+    }
+
+    dest.process_output(now).dgram().unwrap()
+}
+
+// Get the current congestion window for the connection.
+fn cwnd(c: &Connection) -> usize {
+    c.paths.primary().borrow().sender().cwnd()
+}
+fn cwnd_avail(c: &Connection) -> usize {
+    c.paths.primary().borrow().sender().cwnd_avail()
+}
+
+fn induce_persistent_congestion(
+    client: &mut Connection,
+    server: &mut Connection,
+    stream: u64,
+    mut now: Instant,
+) -> Instant {
+    // Note: wait some arbitrary time that should be longer than pto
+    // timer. This is rather brittle.
+    qtrace!([client], "induce_persistent_congestion");
+    now += AT_LEAST_PTO;
+
+    let mut pto_counts = [0; MAX_PTO_COUNTS];
+    assert_eq!(client.stats.borrow().pto_counts, pto_counts);
+
+    qtrace!([client], "first PTO");
+    let (c_tx_dgrams, next_now) = fill_cwnd(client, stream, now);
+    now = next_now;
+    assert_eq!(c_tx_dgrams.len(), 2); // Two PTO packets
+
+    pto_counts[0] = 1;
+    assert_eq!(client.stats.borrow().pto_counts, pto_counts);
+
+    qtrace!([client], "second PTO");
+    now += AT_LEAST_PTO * 2;
+    let (c_tx_dgrams, next_now) = fill_cwnd(client, stream, now);
+    now = next_now;
+    assert_eq!(c_tx_dgrams.len(), 2); // Two PTO packets
+
+    pto_counts[0] = 0;
+    pto_counts[1] = 1;
+    assert_eq!(client.stats.borrow().pto_counts, pto_counts);
+
+    qtrace!([client], "third PTO");
+    now += AT_LEAST_PTO * 4;
+    let (c_tx_dgrams, next_now) = fill_cwnd(client, stream, now);
+    now = next_now;
+    assert_eq!(c_tx_dgrams.len(), 2); // Two PTO packets
+
+    pto_counts[1] = 0;
+    pto_counts[2] = 1;
+    assert_eq!(client.stats.borrow().pto_counts, pto_counts);
+
+    // An ACK for the third PTO causes persistent congestion.
+    let s_ack = ack_bytes(server, stream, c_tx_dgrams, now);
+    client.process_input(s_ack, now);
+    assert_eq!(cwnd(client), CWND_MIN);
+    now
 }
 
 /// This magic number is the size of the client's CWND after the handshake completes.

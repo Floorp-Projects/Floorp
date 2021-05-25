@@ -47,6 +47,7 @@ tpids! {
     INITIAL_SOURCE_CONNECTION_ID = 0x0f,
     RETRY_SOURCE_CONNECTION_ID = 0x10,
     GREASE_QUIC_BIT = 0x2ab2,
+    MIN_ACK_DELAY = 0xff02_de1a,
 }
 
 #[derive(Clone, Debug)]
@@ -245,6 +246,11 @@ impl TransportParameter {
 
             PREFERRED_ADDRESS => Self::decode_preferred_address(&mut d)?,
 
+            MIN_ACK_DELAY => match d.decode_varint() {
+                Some(v) if v < (1 << 24) => Self::Integer(v),
+                _ => return Err(Error::TransportParameterError),
+            },
+
             // Skip.
             _ => return Ok(None),
         };
@@ -310,6 +316,7 @@ impl TransportParameters {
             ACK_DELAY_EXPONENT => 3,
             MAX_ACK_DELAY => 25,
             ACTIVE_CONNECTION_ID_LIMIT => 2,
+            MIN_ACK_DELAY => 0,
             _ => panic!("Transport parameter not known or not an Integer"),
         };
         match self.params.get(&tp) {
@@ -332,7 +339,8 @@ impl TransportParameters {
             | MAX_UDP_PAYLOAD_SIZE
             | ACK_DELAY_EXPONENT
             | MAX_ACK_DELAY
-            | ACTIVE_CONNECTION_ID_LIMIT => {
+            | ACTIVE_CONNECTION_ID_LIMIT
+            | MIN_ACK_DELAY => {
                 self.set(tp, TransportParameter::Integer(value));
             }
             _ => panic!("Transport parameter not known"),
@@ -407,7 +415,13 @@ impl TransportParameters {
             if let Some(v_self) = self.params.get(k) {
                 match (v_self, v_rem) {
                     (TransportParameter::Integer(i_self), TransportParameter::Integer(i_rem)) => {
-                        if *i_self < *i_rem {
+                        if *k == MIN_ACK_DELAY {
+                            // MIN_ACK_DELAY is backwards:
+                            // it can only be reduced safely.
+                            if *i_self > *i_rem {
+                                return false;
+                            }
+                        } else if *i_self < *i_rem {
                             return false;
                         }
                     }
@@ -436,9 +450,8 @@ impl TransportParameters {
         }
     }
 
-    #[cfg(test)]
     #[must_use]
-    fn was_sent(&self, tp: TransportParameterId) -> bool {
+    pub fn has_value(&self, tp: TransportParameterId) -> bool {
         self.params.contains_key(&tp)
     }
 }
@@ -584,10 +597,10 @@ mod tests {
         assert_eq!(tps2.get_bytes(ORIGINAL_DESTINATION_CONNECTION_ID), None);
         assert_eq!(tps2.get_bytes(INITIAL_SOURCE_CONNECTION_ID), None);
         assert_eq!(tps2.get_bytes(RETRY_SOURCE_CONNECTION_ID), None);
-        assert_eq!(tps2.was_sent(ORIGINAL_DESTINATION_CONNECTION_ID), false);
-        assert_eq!(tps2.was_sent(INITIAL_SOURCE_CONNECTION_ID), false);
-        assert_eq!(tps2.was_sent(RETRY_SOURCE_CONNECTION_ID), false);
-        assert_eq!(tps2.was_sent(STATELESS_RESET_TOKEN), true);
+        assert_eq!(tps2.has_value(ORIGINAL_DESTINATION_CONNECTION_ID), false);
+        assert_eq!(tps2.has_value(INITIAL_SOURCE_CONNECTION_ID), false);
+        assert_eq!(tps2.has_value(RETRY_SOURCE_CONNECTION_ID), false);
+        assert_eq!(tps2.has_value(STATELESS_RESET_TOKEN), true);
 
         let mut enc = Encoder::default();
         tps.encode(&mut enc);
@@ -840,6 +853,7 @@ mod tests {
             INITIAL_MAX_STREAMS_BIDI,
             INITIAL_MAX_STREAMS_UNI,
             MAX_UDP_PAYLOAD_SIZE,
+            MIN_ACK_DELAY,
         ];
         for i in INTEGER_KEYS {
             tps_a.set(*i, TransportParameter::Integer(12));
@@ -849,17 +863,20 @@ mod tests {
         assert!(tps_a.ok_for_0rtt(&tps_b));
         assert!(tps_b.ok_for_0rtt(&tps_a));
 
-        // For each integer key, increase the value by one.
+        // For each integer key, choose a new value that will be accepted.
         for i in INTEGER_KEYS {
             let mut tps_b = tps_a.clone();
-            tps_b.set(*i, TransportParameter::Integer(13));
-            // If an increased value is remembered, then we can't attempt 0-RTT with these parameters.
+            // Set a safe new value; reducing MIN_ACK_DELAY instead.
+            let safe_value = if *i == MIN_ACK_DELAY { 11 } else { 13 };
+            tps_b.set(*i, TransportParameter::Integer(safe_value));
+            // If the new value is not safe relative to the remembered value,
+            // then we can't attempt 0-RTT with these parameters.
             assert!(!tps_a.ok_for_0rtt(&tps_b));
-            // If an increased value is lower, then we can attempt 0-RTT with these parameters.
+            // The opposite situation is fine.
             assert!(tps_b.ok_for_0rtt(&tps_a));
         }
 
-        // Drop integer values and check.
+        // Drop integer values and check that that is OK.
         for i in INTEGER_KEYS {
             let mut tps_b = tps_a.clone();
             tps_b.remove(*i);
@@ -870,8 +887,9 @@ mod tests {
         }
     }
 
+    /// `ACTIVE_CONNECTION_ID_LIMIT` can't be less than 2.
     #[test]
-    fn active_connection_id_limit_lt_2_is_error() {
+    fn active_connection_id_limit_min_2() {
         let mut tps = TransportParameters::default();
 
         // Intentionally set an invalid value for the ACTIVE_CONNECTION_ID_LIMIT transport parameter.

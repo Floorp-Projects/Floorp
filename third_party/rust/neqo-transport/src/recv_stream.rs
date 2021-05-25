@@ -39,14 +39,13 @@ impl RecvStreams {
         builder: &mut PacketBuilder,
         tokens: &mut Vec<RecoveryToken>,
         stats: &mut FrameStats,
-    ) -> Res<()> {
+    ) {
         for stream in self.0.values_mut() {
-            stream.write_frame(builder, tokens, stats)?;
-            if builder.remaining() < 2 {
-                return Ok(());
+            stream.write_frame(builder, tokens, stats);
+            if builder.is_full() {
+                return;
             }
         }
-        Ok(())
     }
 
     pub fn insert(&mut self, id: StreamId, stream: RecvStream) {
@@ -590,17 +589,17 @@ impl RecvStream {
         builder: &mut PacketBuilder,
         tokens: &mut Vec<RecoveryToken>,
         stats: &mut FrameStats,
-    ) -> Res<()> {
+    ) {
         match &mut self.state {
             // Maybe send MAX_STREAM_DATA
-            RecvStreamState::Recv { fc, .. } => fc.write_frames(builder, tokens, stats)?,
+            RecvStreamState::Recv { fc, .. } => fc.write_frames(builder, tokens, stats),
             // Maybe send STOP_SENDING
             RecvStreamState::AbortReading { frame_needed, err } => {
                 if *frame_needed
                     && write_varint_frame(
                         builder,
                         &[FRAME_TYPE_STOP_SENDING, self.stream_id.as_u64(), *err],
-                    )?
+                    )
                 {
                     tokens.push(RecoveryToken::StopSending {
                         stream_id: self.stream_id,
@@ -611,7 +610,6 @@ impl RecvStream {
             }
             _ => {}
         }
-        Ok(())
     }
 
     pub fn max_stream_data_lost(&mut self, maximum_data: u64) {
@@ -1087,8 +1085,7 @@ mod tests {
         // consume it
         let mut builder = PacketBuilder::short(Encoder::new(), false, &[]);
         let mut token = Vec::new();
-        s.write_frame(&mut builder, &mut token, &mut FrameStats::default())
-            .unwrap();
+        s.write_frame(&mut builder, &mut token, &mut FrameStats::default());
 
         // it should be gone
         s.maybe_send_flowc_update();

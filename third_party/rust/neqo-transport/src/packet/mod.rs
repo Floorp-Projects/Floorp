@@ -276,6 +276,13 @@ impl PacketBuilder {
         self.limit.saturating_sub(self.encoder.len())
     }
 
+    /// Returns true if the packet has no more space for frames.
+    #[must_use]
+    pub fn is_full(&self) -> bool {
+        // No useful frame is smaller than 2 bytes long.
+        self.limit < self.encoder.len() + 2
+    }
+
     /// Mark the packet as needing padding (or not).
     pub fn enable_padding(&mut self, needs_padding: bool) {
         self.padding = needs_padding;
