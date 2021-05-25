@@ -565,6 +565,7 @@ android-hw-browsertime:
     - browsertime-unity-webgl-mobile
 
 linux-tsan-tests:
+    - crashtest
     - mochitest-a11y
     - mochitest-browser-chrome
     - mochitest-media
