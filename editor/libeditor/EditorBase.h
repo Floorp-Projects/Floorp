@@ -685,6 +685,32 @@ class EditorBase : public nsIEditor,
                           nsIEditor::EStripWrappers aStripWrappers,
                           nsIPrincipal* aPrincipal = nullptr);
 
+  enum class AllowBeforeInputEventCancelable {
+    No,
+    Yes,
+  };
+
+  /**
+   * Replace text in aReplaceRange or all text in this editor with aString and
+   * treat the change as inserting the string.
+   *
+   * @param aString             The string to set.
+   * @param aReplaceRange       The range to be replaced.
+   *                            If nullptr, all contents will be replaced.
+   *                            NOTE: Currently, nullptr is not allowed if
+   *                                  the editor is an HTMLEditor.
+   * @param aAllowBeforeInputEventCancelable
+   *                            Whether `beforeinput` event which will be
+   *                            dispatched for this can be cancelable or not.
+   * @param aPrincipal          Set subject principal if it may be called by
+   *                            JS.  If set to nullptr, will be treated as
+   *                            called by system.
+   */
+  MOZ_CAN_RUN_SCRIPT nsresult ReplaceTextAsAction(
+      const nsAString& aString, nsRange* aReplaceRange,
+      AllowBeforeInputEventCancelable aAllowBeforeInputEventCancelable,
+      nsIPrincipal* aPrincipal = nullptr);
+
  protected:  // May be used by friends.
   class AutoEditActionDataSetter;
 
@@ -1933,6 +1959,14 @@ class EditorBase : public nsIEditor,
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT virtual EditActionResult
   HandleDeleteSelection(nsIEditor::EDirection aDirectionAndAmount,
                         nsIEditor::EStripWrappers aStripWrappers) = 0;
+
+  /**
+   * ReplaceSelectionAsSubAction() replaces selection with aString.
+   *
+   * @param aString    The string to replace.
+   */
+  MOZ_CAN_RUN_SCRIPT nsresult
+  ReplaceSelectionAsSubAction(const nsAString& aString);
 
  protected:  // Called by helper classes.
   /**
