@@ -80,16 +80,12 @@ pub struct DocumentView {
 pub struct SceneView {
     pub device_rect: DeviceIntRect,
     pub device_pixel_ratio: f32,
-    pub page_zoom_factor: f32,
     pub quality_settings: QualitySettings,
 }
 
 impl SceneView {
     pub fn accumulated_scale_factor_for_snapping(&self) -> DevicePixelScale {
-        DevicePixelScale::new(
-            self.device_pixel_ratio *
-            self.page_zoom_factor
-        )
+        DevicePixelScale::new(self.device_pixel_ratio)
     }
 }
 
@@ -106,7 +102,6 @@ impl DocumentView {
     pub fn accumulated_scale_factor(&self) -> DevicePixelScale {
         DevicePixelScale::new(
             self.scene.device_pixel_ratio *
-            self.scene.page_zoom_factor *
             self.frame.pinch_zoom_factor
         )
     }
@@ -488,7 +483,6 @@ impl Document {
             view: DocumentView {
                 scene: SceneView {
                     device_rect: size.into(),
-                    page_zoom_factor: 1.0,
                     device_pixel_ratio: default_device_pixel_ratio,
                     quality_settings: QualitySettings::default(),
                 },

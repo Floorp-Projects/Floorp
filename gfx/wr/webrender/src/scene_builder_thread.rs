@@ -215,7 +215,6 @@ impl Document {
             view: SceneView {
                 device_rect,
                 device_pixel_ratio,
-                page_zoom_factor: 1.0,
                 quality_settings: QualitySettings::default(),
             },
         }
@@ -514,9 +513,6 @@ impl SceneBuilderThread {
             match message {
                 SceneMsg::UpdateEpoch(pipeline_id, epoch) => {
                     scene.update_epoch(pipeline_id, epoch);
-                }
-                SceneMsg::SetPageZoom(factor) => {
-                    doc.view.page_zoom_factor = factor.get();
                 }
                 SceneMsg::SetQualitySettings { settings } => {
                     doc.view.quality_settings = settings;

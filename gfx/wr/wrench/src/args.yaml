@@ -12,11 +12,6 @@ args:
       short: v
       long: verbose
       help: Enable verbose display
-  - zoom:
-      short: z
-      long: zoom
-      help: Set zoom factor
-      takes_value: true
   - shaders:
       long: shaders
       help: Override path for shaders
