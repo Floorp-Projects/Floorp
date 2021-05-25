@@ -632,9 +632,6 @@ class TextEditor : public EditorBase, public nsITimerCallback, public nsINamed {
 
   bool IsCopyToClipboardAllowedInternal() const final;
 
-  bool FireClipboardEvent(EventMessage aEventMessage, int32_t aSelectionType,
-                          bool* aActionTaken = nullptr);
-
   MOZ_CAN_RUN_SCRIPT bool UpdateMetaCharset(Document& aDocument,
                                             const nsACString& aCharacterSet);
 

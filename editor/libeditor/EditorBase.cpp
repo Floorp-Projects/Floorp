@@ -83,6 +83,7 @@
 #include "nsCharTraits.h"              // for NS_IS_HIGH_SURROGATE, etc.
 #include "nsComponentManagerUtils.h"   // for do_CreateInstance
 #include "nsContentUtils.h"            // for nsContentUtils
+#include "nsCopySupport.h"             // for nsCopySupport
 #include "nsDOMString.h"               // for DOMStringIsNull
 #include "nsDebug.h"                   // for NS_WARNING, etc.
 #include "nsError.h"                   // for NS_OK, etc.
@@ -1467,6 +1468,37 @@ bool EditorBase::CheckForClipboardCommandListener(
   }
 
   return false;
+}
+
+bool EditorBase::FireClipboardEvent(EventMessage aEventMessage,
+                                    int32_t aClipboardType,
+                                    bool* aActionTaken) {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+
+  if (aEventMessage == ePaste) {
+    CommitComposition();
+  }
+
+  RefPtr<PresShell> presShell = GetPresShell();
+  if (NS_WARN_IF(!presShell)) {
+    return false;
+  }
+
+  RefPtr<Selection> sel = &SelectionRef();
+  if (IsHTMLEditor() && aEventMessage == eCopy && sel->IsCollapsed()) {
+    // If we don't have a usable selection for copy and we're an HTML editor
+    // (which is global for the document) try to use the last focused selection
+    // instead.
+    sel = nsCopySupport::GetSelectionForCopy(GetDocument());
+  }
+
+  const bool clipboardEventCanceled = !nsCopySupport::FireClipboardEvent(
+      aEventMessage, aClipboardType, presShell, sel, aActionTaken);
+  NotifyOfDispatchingClipboardEvent();
+
+  // If the event handler caused the editor to be destroyed, return false.
+  // Otherwise return true if the event was not cancelled.
+  return !clipboardEventCanceled && !mDidPreDestroy;
 }
 
 NS_IMETHODIMP EditorBase::Cut() {
