@@ -958,6 +958,9 @@ NS_IMETHODIMP AppWindow::SetVisibility(bool aVisibility) {
   if (mDebuting) {
     return NS_OK;
   }
+
+  NS_ENSURE_STATE(mDocShell);
+
   mDebuting = true;  // (Show / Focus is recursive)
 
   // XXXTAB Do we really need to show docshell and the window?  Isn't
