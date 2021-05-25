@@ -25,8 +25,6 @@ object StartupTimelineStateMachine {
      * The states the application passes through during startup. We define these states to help us
      * better understand Android startup. Note that these states are not 100% correlated to the
      * cold/warm/hot states Google Play Vitals uses.
-     *
-     * TODO: link to extensive documentation on cold/warm/hot states when completed.
      */
     sealed class StartupState {
         /** The state when the application is starting up but is not in memory. */

@@ -7,8 +7,8 @@
 package org.mozilla.fenix.detektrules.perf
 
 import io.gitlab.arturbosch.detekt.api.Config
-import io.gitlab.arturbosch.detekt.api.YamlConfig
 import io.gitlab.arturbosch.detekt.test.lint
+import io.gitlab.arturbosch.detekt.test.yamlConfig
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
@@ -26,7 +26,8 @@ internal class MozillaBannedPropertyAccessTest {
 
     @BeforeEach
     fun setup() {
-        config = YamlConfig.loadResource(this.javaClass.getResource("/config.yml"))
+        config = yamlConfig("/config.yml")
+
     }
 
     @Test
