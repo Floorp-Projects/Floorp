@@ -95,14 +95,12 @@ impl SceneView {
 #[derive(Copy, Clone)]
 pub struct FrameView {
     pan: DeviceIntPoint,
-    pinch_zoom_factor: f32,
 }
 
 impl DocumentView {
     pub fn accumulated_scale_factor(&self) -> DevicePixelScale {
         DevicePixelScale::new(
-            self.scene.device_pixel_ratio *
-            self.frame.pinch_zoom_factor
+            self.scene.device_pixel_ratio
         )
     }
 }
@@ -488,7 +486,6 @@ impl Document {
                 },
                 frame: FrameView {
                     pan: DeviceIntPoint::new(0, 0),
-                    pinch_zoom_factor: 1.0,
                 },
             },
             stamp: FrameStamp::first(id),
@@ -575,12 +572,6 @@ impl Document {
             }
             FrameMsg::AppendDynamicTransformProperties(property_bindings) => {
                 self.dynamic_properties.add_transforms(property_bindings);
-            }
-            FrameMsg::SetPinchZoom(factor) => {
-                if self.view.frame.pinch_zoom_factor != factor.get() {
-                    self.view.frame.pinch_zoom_factor = factor.get();
-                    self.frame_is_valid = false;
-                }
             }
             FrameMsg::SetIsTransformAsyncZooming(is_zooming, animation_id) => {
                 let node = self.scene.spatial_tree.spatial_nodes.iter_mut()

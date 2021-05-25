@@ -14,7 +14,7 @@ use time::precise_time_ns;
 //use crate::api::peek_poke::PeekPoke;
 use crate::api::channel::{Sender, single_msg_channel, unbounded_channel};
 use crate::api::{ColorF, BuiltDisplayList, IdNamespace, ExternalScrollId};
-use crate::api::{SharedFontInstanceMap, FontKey, FontInstanceKey, NativeFontHandle, ZoomFactor};
+use crate::api::{SharedFontInstanceMap, FontKey, FontInstanceKey, NativeFontHandle};
 use crate::api::{BlobImageData, BlobImageKey, ImageData, ImageDescriptor, ImageKey, Epoch, QualitySettings};
 use crate::api::{BlobImageParams, BlobImageRequest, BlobImageResult, AsyncBlobImageRasterizer, BlobImageHandler};
 use crate::api::{DocumentId, PipelineId, PropertyBindingId, PropertyBindingKey, ExternalEvent};
@@ -352,11 +352,6 @@ impl Transaction {
     /// Set the current quality / performance settings for this document.
     pub fn set_quality_settings(&mut self, settings: QualitySettings) {
         self.scene_ops.push(SceneMsg::SetQualitySettings { settings });
-    }
-
-    ///
-    pub fn set_pinch_zoom(&mut self, pinch_zoom: ZoomFactor) {
-        self.frame_ops.push(FrameMsg::SetPinchZoom(pinch_zoom));
     }
 
     ///
@@ -819,8 +814,6 @@ pub enum FrameMsg {
     ///
     AppendDynamicTransformProperties(Vec<PropertyValue<LayoutTransform>>),
     ///
-    SetPinchZoom(ZoomFactor),
-    ///
     SetIsTransformAsyncZooming(bool, PropertyBindingId),
 }
 
@@ -848,7 +841,6 @@ impl fmt::Debug for FrameMsg {
             FrameMsg::GetScrollNodeState(..) => "FrameMsg::GetScrollNodeState",
             FrameMsg::UpdateDynamicProperties(..) => "FrameMsg::UpdateDynamicProperties",
             FrameMsg::AppendDynamicTransformProperties(..) => "FrameMsg::AppendDynamicTransformProperties",
-            FrameMsg::SetPinchZoom(..) => "FrameMsg::SetPinchZoom",
             FrameMsg::SetIsTransformAsyncZooming(..) => "FrameMsg::SetIsTransformAsyncZooming",
         })
     }
