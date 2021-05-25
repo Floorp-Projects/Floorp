@@ -305,9 +305,10 @@ var BackgroundUpdate = {
 
   async _mirrorToPerInstallationPref() {
     try {
-      let scheduling = Services.prefs
-        .getDefaultBranch("")
-        .getBoolPref("app.update.background.scheduling.enabled");
+      let scheduling = Services.prefs.getBoolPref(
+        "app.update.background.scheduling.enabled",
+        true
+      );
       await UpdateUtils.writeUpdateConfigSetting(
         "app.update.background.enabled",
         scheduling,
