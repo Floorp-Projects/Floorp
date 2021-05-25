@@ -32,6 +32,7 @@ import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.helpers.TestHelper
 import org.mozilla.fenix.helpers.TestHelper.createCustomTabIntent
 import org.mozilla.fenix.helpers.TestHelper.deleteDownloadFromStorage
+import org.mozilla.fenix.helpers.TestHelper.scrollToElementByText
 import org.mozilla.fenix.helpers.ViewVisibilityIdlingResource
 import org.mozilla.fenix.ui.robots.browserScreen
 import org.mozilla.fenix.ui.robots.clickTabCrashedRestoreButton
@@ -1076,34 +1077,6 @@ class SmokeTest {
         }.openTabsListThreeDotMenu {
             verifyTabSettingsButton()
             verifyRecentlyClosedTabsButton()
-        }
-    }
-
-    @Ignore("Feature is temporarily removed; disabling test. See https://github.com/mozilla-mobile/fenix/issues/18656")
-    @Test
-    fun selectTabsButtonVisibilityTest() {
-        homeScreen {
-        }.dismissOnboarding()
-
-        val firstWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
-        val secondWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 2)
-
-        navigationToolbar {
-        }.enterURLAndEnterToBrowser(firstWebPage.url) {
-            mDevice.waitForIdle()
-        }.openTabDrawer {
-        }.openNewTab {
-        }.submitQuery(secondWebPage.url.toString()) {
-            mDevice.waitForIdle()
-        }.openTabDrawer {
-        }.toggleToPrivateTabs {
-        }.openNewTab {
-        }.dismissSearchBar { }
-
-        homeScreen {
-        }.openTabDrawer {
-        }.toggleToNormalTabs {
-            verifySelectTabsButton()
         }
     }
 

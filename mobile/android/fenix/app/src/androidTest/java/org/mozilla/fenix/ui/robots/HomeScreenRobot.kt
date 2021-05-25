@@ -23,7 +23,6 @@ import androidx.test.espresso.matcher.ViewMatchers.Visibility
 import androidx.test.espresso.matcher.ViewMatchers.hasDescendant
 import androidx.test.espresso.matcher.ViewMatchers.hasSibling
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
-import androidx.test.espresso.matcher.ViewMatchers.withContentDescription
 import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
 import androidx.test.espresso.matcher.ViewMatchers.withHint
 import androidx.test.espresso.matcher.ViewMatchers.withId
@@ -241,12 +240,6 @@ class HomeScreenRobot {
         }
     }
 
-    fun scrollToElementByText(text: String): UiScrollable {
-        val appView = UiScrollable(UiSelector().scrollable(true))
-        appView.scrollTextIntoView(text)
-        return appView
-    }
-
     fun togglePrivateBrowsingModeOnOff() {
         onView(ViewMatchers.withResourceName("privateBrowsingButton"))
             .perform(click())
@@ -256,12 +249,6 @@ class HomeScreenRobot {
 
     fun swipeToTop() =
         onView(withId(R.id.sessionControlRecyclerView)).perform(ViewActions.swipeDown())
-
-    fun swipeTabRight(title: String) =
-        tab(title).perform(ViewActions.swipeRight())
-
-    fun swipeTabLeft(title: String) =
-        tab(title).perform(ViewActions.swipeLeft())
 
     fun verifySnackBarText(expectedText: String) {
         val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
@@ -273,21 +260,6 @@ class HomeScreenRobot {
             matches(withEffectiveVisibility(Visibility.VISIBLE))
         ).perform(click())
     }
-
-    fun verifyTabMediaControlButtonState(action: String) {
-        mDevice.waitNotNull(
-            findObject(
-                By
-                    .res("org.mozilla.fenix.debug:id/play_pause_button")
-                    .desc(action)
-            ),
-            waitingTime
-        )
-
-        tabMediaControlButton().check(matches(withContentDescription(action)))
-    }
-
-    fun clickTabMediaControlButton() = tabMediaControlButton().click()
 
     class Transition {
         val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
@@ -361,22 +333,6 @@ class HomeScreenRobot {
 
         fun pressBack() {
             onView(ViewMatchers.isRoot()).perform(ViewActions.pressBack())
-        }
-
-        fun openTabsListThreeDotMenu(interact: ThreeDotMenuMainRobot.() -> Unit): ThreeDotMenuMainRobot.Transition {
-//            tabsListThreeDotButton().perform(click())
-
-            ThreeDotMenuMainRobot().interact()
-            return ThreeDotMenuMainRobot.Transition()
-        }
-
-        fun closeAllPrivateTabs(interact: HomeScreenRobot.() -> Unit): Transition {
-            onView(withId(R.id.close_tabs_button))
-                .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
-                .perform(click())
-
-            HomeScreenRobot().interact()
-            return Transition()
         }
 
         fun openNavigationToolbar(interact: NavigationToolbarRobot.() -> Unit): NavigationToolbarRobot.Transition {
@@ -486,8 +442,6 @@ private fun assertKeyboardVisibility(isExpectedToBeVisible: Boolean) =
     )
 
 private fun navigationToolbar() = onView(withId(R.id.toolbar))
-
-private fun closeTabButton() = onView(withId(R.id.close_tab_button))
 
 private fun assertNavigationToolbar() =
     navigationToolbar().check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
@@ -724,8 +678,6 @@ private fun assertShareTabsOverlay() {
 
 private fun privateBrowsingButton() = onView(withId(R.id.privateBrowsingButton))
 
-private fun tabMediaControlButton() = onView(withId(R.id.play_pause_button))
-
 private fun collectionItem(title: String) =
     onView(allOf(withId(R.id.label), withText(title)))
 
@@ -742,14 +694,6 @@ private fun removeTabFromCollectionButton(title: String) =
     )
 
 private fun tabsCounter() = onView(withId(R.id.tab_button))
-
-private fun tab(title: String) =
-    onView(
-        allOf(
-            withId(R.id.tab_title),
-            withText(title)
-        )
-    )
 
 private fun startBrowsingButton(): UiObject {
     val startBrowsingButton = mDevice.findObject(UiSelector().resourceId("$packageName:id/finish_button"))
