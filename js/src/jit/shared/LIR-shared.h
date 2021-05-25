@@ -9150,6 +9150,22 @@ class LWasmConstantShiftSimd128 : public LInstructionHelper<1, 1, 0> {
   wasm::SimdOp simdOp() const { return mir_->toWasmShiftSimd128()->simdOp(); }
 };
 
+// (v128) -> v128 sign replication operation.
+class LWasmSignReplicationSimd128 : public LInstructionHelper<1, 1, 0> {
+ public:
+  LIR_HEADER(WasmSignReplicationSimd128)
+
+  static constexpr uint32_t Src = 0;
+
+  explicit LWasmSignReplicationSimd128(const LAllocation& src)
+      : LInstructionHelper(classOpcode) {
+    setOperand(Src, src);
+  }
+
+  const LAllocation* src() { return getOperand(Src); }
+  wasm::SimdOp simdOp() const { return mir_->toWasmShiftSimd128()->simdOp(); }
+};
+
 // (v128, v128, imm_simd) -> v128 effect-free operation.
 // temp is FPR (and always in use).
 class LWasmShuffleSimd128 : public LInstructionHelper<1, 2, 1> {

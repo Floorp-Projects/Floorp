@@ -1066,31 +1066,56 @@ void LIRGenerator::visitWasmShiftSimd128(MWasmShiftSimd128* ins) {
   MOZ_ASSERT(ins->type() == MIRType::Simd128);
 
   if (rhs->isConstant()) {
-    int32_t shiftCount = rhs->toConstant()->toInt32();
+    int32_t shiftCountMask;
     switch (ins->simdOp()) {
       case wasm::SimdOp::I8x16Shl:
       case wasm::SimdOp::I8x16ShrU:
       case wasm::SimdOp::I8x16ShrS:
-        shiftCount &= 7;
+        shiftCountMask = 7;
         break;
       case wasm::SimdOp::I16x8Shl:
       case wasm::SimdOp::I16x8ShrU:
       case wasm::SimdOp::I16x8ShrS:
-        shiftCount &= 15;
+        shiftCountMask = 15;
         break;
       case wasm::SimdOp::I32x4Shl:
       case wasm::SimdOp::I32x4ShrU:
       case wasm::SimdOp::I32x4ShrS:
-        shiftCount &= 31;
+        shiftCountMask = 31;
         break;
       case wasm::SimdOp::I64x2Shl:
       case wasm::SimdOp::I64x2ShrU:
       case wasm::SimdOp::I64x2ShrS:
-        shiftCount &= 63;
+        shiftCountMask = 63;
         break;
       default:
         MOZ_CRASH("Unexpected shift operation");
     }
+
+    int32_t shiftCount = rhs->toConstant()->toInt32() & shiftCountMask;
+    if (shiftCount == shiftCountMask) {
+      // Check if possible to apply sign replication optimization.
+      // For some ops the input shall be reused.
+      switch (ins->simdOp()) {
+        case wasm::SimdOp::I8x16ShrS: {
+          auto* lir =
+              new (alloc()) LWasmSignReplicationSimd128(useRegister(lhs));
+          define(lir, ins);
+          return;
+        }
+        case wasm::SimdOp::I16x8ShrS:
+        case wasm::SimdOp::I32x4ShrS:
+        case wasm::SimdOp::I64x2ShrS: {
+          auto* lir = new (alloc())
+              LWasmSignReplicationSimd128(useRegisterAtStart(lhs));
+          defineReuseInput(lir, ins, LWasmConstantShiftSimd128::Src);
+          return;
+        }
+        default:
+          break;
+      }
+    }
+
 #  ifdef DEBUG
     js::wasm::ReportSimdAnalysis("shift -> constant shift");
 #  endif
