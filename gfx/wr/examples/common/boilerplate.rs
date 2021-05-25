@@ -162,7 +162,6 @@ pub fn main_wrapper<E: Example>(
     let opts = webrender::RendererOptions {
         resource_override_path: res_path,
         precache_flags: E::PRECACHE_SHADER_FLAGS,
-        device_pixel_ratio,
         clear_color: Some(ColorF::new(0.3, 0.0, 0.0, 1.0)),
         debug_flags,
         //allow_texture_swizzling: false,
@@ -259,14 +258,6 @@ pub fn main_wrapper<E: Example>(
                     DebugFlags::GPU_TIME_QUERIES | DebugFlags::GPU_SAMPLE_QUERIES
                 ),
                 winit::VirtualKeyCode::G => debug_flags.toggle(DebugFlags::GPU_CACHE_DBG),
-                winit::VirtualKeyCode::Key1 => txn.set_document_view(
-                    device_size.into(),
-                    1.0
-                ),
-                winit::VirtualKeyCode::Key2 => txn.set_document_view(
-                    device_size.into(),
-                    2.0
-                ),
                 winit::VirtualKeyCode::M => api.notify_memory_pressure(),
                 winit::VirtualKeyCode::C => {
                     let path: PathBuf = "../captures/example".into();

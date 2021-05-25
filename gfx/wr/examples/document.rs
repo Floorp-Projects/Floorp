@@ -66,7 +66,6 @@ impl App {
 
             let document_id = api.add_document(size);
             let mut txn = Transaction::new();
-            txn.set_document_view(bounds, device_pixel_ratio);
             txn.set_root_pipeline(pipeline_id);
             api.send_transaction(document_id, txn);
 

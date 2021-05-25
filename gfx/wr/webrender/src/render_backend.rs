@@ -79,13 +79,12 @@ pub struct DocumentView {
 #[derive(Copy, Clone)]
 pub struct SceneView {
     pub device_rect: DeviceIntRect,
-    pub device_pixel_ratio: f32,
     pub quality_settings: QualitySettings,
 }
 
 impl SceneView {
     pub fn accumulated_scale_factor_for_snapping(&self) -> DevicePixelScale {
-        DevicePixelScale::new(self.device_pixel_ratio)
+        DevicePixelScale::new(1.0)
     }
 }
 
@@ -99,9 +98,7 @@ pub struct FrameView {
 
 impl DocumentView {
     pub fn accumulated_scale_factor(&self) -> DevicePixelScale {
-        DevicePixelScale::new(
-            self.scene.device_pixel_ratio
-        )
+        DevicePixelScale::new(1.0)
     }
 }
 
@@ -473,7 +470,6 @@ impl Document {
     pub fn new(
         id: DocumentId,
         size: DeviceIntSize,
-        default_device_pixel_ratio: f32,
     ) -> Self {
         Document {
             id,
@@ -481,7 +477,6 @@ impl Document {
             view: DocumentView {
                 scene: SceneView {
                     device_rect: size.into(),
-                    device_pixel_ratio: default_device_pixel_ratio,
                     quality_settings: QualitySettings::default(),
                 },
                 frame: FrameView {
@@ -784,7 +779,6 @@ static NEXT_NAMESPACE_ID: AtomicUsize = AtomicUsize::new(1);
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 struct PlainRenderBackend {
-    default_device_pixel_ratio: f32,
     frame_config: FrameBuilderConfig,
     documents: FastHashMap<DocumentId, DocumentView>,
     resource_sequence_id: u32,
@@ -798,8 +792,6 @@ pub struct RenderBackend {
     api_rx: Receiver<ApiMsg>,
     result_tx: Sender<ResultMsg>,
     scene_tx: Sender<SceneBuilderRequest>,
-
-    default_device_pixel_ratio: f32,
 
     gpu_cache: GpuCache,
     resource_cache: ResourceCache,
@@ -841,7 +833,6 @@ impl RenderBackend {
         api_rx: Receiver<ApiMsg>,
         result_tx: Sender<ResultMsg>,
         scene_tx: Sender<SceneBuilderRequest>,
-        default_device_pixel_ratio: f32,
         resource_cache: ResourceCache,
         notifier: Box<dyn RenderNotifier>,
         blob_image_handler: Option<Box<dyn BlobImageHandler>>,
@@ -855,7 +846,6 @@ impl RenderBackend {
             api_rx,
             result_tx,
             scene_tx,
-            default_device_pixel_ratio,
             resource_cache,
             gpu_cache: GpuCache::new(),
             frame_config,
@@ -1069,7 +1059,6 @@ impl RenderBackend {
                 let document = Document::new(
                     document_id,
                     initial_size,
-                    self.default_device_pixel_ratio,
                 );
                 let old = self.documents.insert(document_id, document);
                 debug_assert!(old.is_none());
@@ -1669,7 +1658,6 @@ impl RenderBackend {
             let deferred = self.resource_cache.save_capture_sequence(config);
 
             let backend = PlainRenderBackend {
-                default_device_pixel_ratio: self.default_device_pixel_ratio,
                 frame_config: self.frame_config.clone(),
                 resource_sequence_id: config.resource_id,
                 documents: self.documents
@@ -1798,7 +1786,6 @@ impl RenderBackend {
 
         info!("\tbackend");
         let backend = PlainRenderBackend {
-            default_device_pixel_ratio: self.default_device_pixel_ratio,
             frame_config: self.frame_config.clone(),
             resource_sequence_id: 0,
             documents: self.documents
@@ -1902,7 +1889,6 @@ impl RenderBackend {
             };
         }
 
-        self.default_device_pixel_ratio = backend.default_device_pixel_ratio;
         self.frame_config = backend.frame_config;
 
         let mut scenes_to_build = Vec::new();

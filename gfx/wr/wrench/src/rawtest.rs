@@ -275,8 +275,6 @@ impl<'a> RawtestHarness<'a> {
     fn test_very_large_blob(&mut self) {
         println!("\tvery large blob...");
 
-        assert_eq!(self.wrench.device_pixel_ratio, 1.);
-
         let window_size = self.window.get_inner_size();
 
         let test_size = FramebufferIntSize::new(800, 800);
@@ -365,8 +363,6 @@ impl<'a> RawtestHarness<'a> {
 
     fn test_blob_visible_area(&mut self) {
         println!("\tblob visible area...");
-
-        assert_eq!(self.wrench.device_pixel_ratio, 1.0);
 
         let window_size = self.window.get_inner_size();
         let test_size = FramebufferIntSize::new(800, 800);
@@ -461,8 +457,6 @@ impl<'a> RawtestHarness<'a> {
         // then change the visible area without updating the blob image.
 
         println!("\tblob visible area update...");
-
-        assert_eq!(self.wrench.device_pixel_ratio, 1.0);
 
         let window_size = self.window.get_inner_size();
         let test_size = FramebufferIntSize::new(800, 800);
@@ -616,8 +610,6 @@ impl<'a> RawtestHarness<'a> {
 
     fn test_offscreen_blob(&mut self) {
         println!("\toffscreen blob update...");
-
-        assert_eq!(self.wrench.device_pixel_ratio, 1.);
 
         let window_size = self.window.get_inner_size();
 
