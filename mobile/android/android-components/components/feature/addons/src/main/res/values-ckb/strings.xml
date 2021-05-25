@@ -24,6 +24,18 @@
     <string name="mozac_feature_addons_permissions_extra_domains_description_plural" tools:ignore="PluralsCandidate">چوونەناو زانیارییەکانت لە %1$d دۆمەینی تر</string>
     <!-- Description for tabs add-on permission. -->
     <string name="mozac_feature_addons_permissions_tabs_description">بچۆناو بازدەرەکانی وێبگەڕ</string>
+    <!-- Description for bookmarks permission. -->
+    <string name="mozac_feature_addons_permissions_bookmarks_description">خوێندنەوە و دەستکاریکردنی نیشانکراوەکان</string>
+    <!-- Description for browser_setting permission. -->
+    <string name="mozac_feature_addons_permissions_browser_setting_description">خوێندنەوە و دەستکاریکردنی ڕێکخستنەکانی وێبگەڕ</string>
+    <!-- Description for browser_data permission. -->
+    <string name="mozac_feature_addons_permissions_browser_data_description">کۆتا مێژووی کار، شەکرۆکە، و زانیاری وابەستە پاکبکەرەوە</string>
+    <!-- Description for clipboard_read permission. -->
+    <string name="mozac_feature_addons_permissions_clipboard_read_description">زانیاری بەدەستبێنە لە گرتەتەختەوە(لەبەرگرەوە)</string>
+    <!-- Description for downloads_open permission. -->
+    <string name="mozac_feature_addons_permissions_downloads_open_description">ئەو پەڕگانە بکەرەوە کە داگیراوە بۆ سەر ئامێرەکەت</string>
+    <!-- Description for find permission. -->
+    <string name="mozac_feature_addons_permissions_find_description">دەقی هەموو بازدەرە کراوەکان بخوێنەرەوە</string>
     <!-- Description for geolocation permission. -->
     <string name="mozac_feature_addons_permissions_geolocation_description">زانینی شوێنەکەت</string>
     <!-- Description for history permission. -->

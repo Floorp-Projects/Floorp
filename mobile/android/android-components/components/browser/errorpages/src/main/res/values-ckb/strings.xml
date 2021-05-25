@@ -35,11 +35,19 @@
     <!-- The document title and heading of the error page shown when a website responds in an unexpected way and the browser cannot continue. -->
     <string name="mozac_browser_errorpages_unknown_socket_type_title">وەڵامێکی چاوەڕواننەکراو لە ڕاژەوە</string>
 
+    <!-- The error message shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_message"><![CDATA[
+      <p>ماڵپەڕ بە شێوەیەکی نائاسایی وەڵامی دایەوە بۆیە وێبگەڕ بەردەوام نابێت.</p>
+    ]]></string>
+
     <!-- The document title and heading of the error page shown when the browser gets stuck in an infinite loop when loading a website. -->
     <string name="mozac_browser_errorpages_redirect_loop_title">پەڕە بەشێوەیەکی ڕاست دووبارە ناردنەوە ئەنجام نادات</string>
 
     <!-- The document title and heading of the error page shown when a website cannot be loaded because the browser is in offline mode. -->
     <string name="mozac_browser_errorpages_offline_title">دۆخی دەرهێڵ</string>
+
+    <!-- The document title and heading of the error page shown when the browser prevents loading a website on a restricted port. -->
+    <string name="mozac_browser_errorpages_port_blocked_title">دەرەچە ڕێگەپێنەدراوە لەبەر هۆکاری پاراستن</string>
 
     <!-- The document title and heading of the error page shown when the Internet connection is disrupted while loading a website. -->
     <string name="mozac_browser_errorpages_net_reset_title">پەیوەندی نوێکرایەوە</string>
@@ -56,11 +64,33 @@
     <!-- The document title and heading of the error page shown when a file cannot be loaded because of a detected data corruption. -->
     <string name="mozac_browser_errorpages_corrupted_content_title">هەڵەی ناوەڕۆکی تێکشکاو</string>
 
+    <!-- The error message shown when shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_message"><![CDATA[
+      <p>ئەو پەڕەیەیی کە دەتەوێت بیبینیت ناتوانرێت پیشانبدرێت لەبەرئەوەی گواستنەوەی زانیاری تێدا بە دیدەکرێت.</p>
+      <ul>
+        <li>تکایە پەیوەندی بکە بە خاوەنی ماڵپەڕەکەوە و کێشەکەیان پێ ڕابگەیەنە.</li>
+      </ul>
+    ]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_content_crashed_title">ناوەڕۆک تێکشکا</string>
 
+    <string name="mozac_browser_errorpages_content_crashed_message"><![CDATA[
+      <p>ئەو پەڕەیەیی کە دەتەوێت بیبینیت ناتوانرێت پیشانبدرێت لەبەرئەوەی گواستنەوەی زانیاری تێدا بە دیدەکرێت.</p>
+      <ul>
+        <li>تکایە پەیوەندی بکە بە خاوەنی ماڵپەڕەکەوە و کێشەکەیان پێ ڕابگەیەنە.</li>
+      </ul>
+    ]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_invalid_content_encoding_title">هەڵەی کۆدکردنی ناوەڕۆک</string>
+
+    <string name="mozac_browser_errorpages_invalid_content_encoding_message"><![CDATA[
+      <p>ئەو پەڕەیەیی کە دەتەوێت بیبینیت ناتوانرێت پیشانبدرێت لەبەرئەوەی فۆرمێکی هەڵە یان پشتگیر نەکراو بەکرادێنێت بۆ پەستاندن  .</p>
+      <ul>
+        <li>تکایە پەیوەندی بکە بە خاوەنی ماڵپەڕەکەوە و کێشەکەیان پێ ڕابگەیەنە.</li>
+      </ul>
+    ]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_host_title">ناونیشان نەدۆزرایەوە</string>
@@ -77,6 +107,14 @@
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_malformed_uri_title_alternative">ناونیشان گونجاو نیە</string>
 
+    <!-- This string contains markup. The URL should not be localized. -->
+    <string name="mozac_browser_errorpages_malformed_uri_message_alternative"><![CDATA[
+      <ul>
+        <li>ناونیشانی ماڵپەڕ بەم شێوەیە دەنووسرێت <strong>http://www.example.com/</strong></li>
+        <li>دڵنیابە کە لارەهێڵی ڕاست بەکاردێنیت (بۆ نموونە <strong>/</strong>).</li>
+      </ul>
+    ]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_protocol_title">پرۆتۆکۆڵی نەناسراو</string>
 
@@ -90,9 +128,14 @@
     <string name="mozac_browser_errorpages_unknown_proxy_host_title">ڕاژەخوازی پرۆکسی نەدۆزرایەوە</string>
 
     <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">گرفتی ماڵپەڕی داوانامەی خراپ</string>
+
+    <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_title">گرفتی ماڵپەڕی نەویستراو</string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_safe_harmful_uri_title">گرفتی ماڵپەڕی بەزیان</string>
 
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_title">گرفتی ماڵپەڕی فێڵاوی</string>
     </resources>
