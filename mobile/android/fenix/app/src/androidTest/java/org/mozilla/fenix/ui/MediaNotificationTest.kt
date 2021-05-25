@@ -89,57 +89,6 @@ class MediaNotificationTest {
     }
 
     @Test
-    fun audioPlaybackSystemNotificationTest() {
-        val audioTestPage = TestAssetHelper.getAudioPageAsset(mockWebServer)
-
-        navigationToolbar {
-        }.enterURLAndEnterToBrowser(audioTestPage.url) {
-            mDevice.waitForIdle()
-            clickMediaPlayerPlayButton()
-            assertPlaybackState(browserStore, MediaSession.PlaybackState.PLAYING)
-        }.openNotificationShade {
-            verifySystemNotificationExists(audioTestPage.title)
-            clickMediaSystemNotificationControlButton("Pause")
-            verifyMediaSystemNotificationButtonState("Play")
-        }
-
-        mDevice.pressBack()
-
-        browserScreen {
-            assertPlaybackState(browserStore, MediaSession.PlaybackState.PAUSED)
-        }.openTabDrawer {
-            closeTab()
-        }
-
-        mDevice.openNotification()
-
-        notificationShade {
-            verifySystemNotificationGone(audioTestPage.title)
-        }
-
-        // close notification shade before the next test
-        mDevice.pressBack()
-    }
-
-    @Test
-    fun tabMediaControlButtonTest() {
-        val audioTestPage = TestAssetHelper.getAudioPageAsset(mockWebServer)
-
-        navigationToolbar {
-        }.enterURLAndEnterToBrowser(audioTestPage.url) {
-            mDevice.waitForIdle()
-            clickMediaPlayerPlayButton()
-            assertPlaybackState(browserStore, MediaSession.PlaybackState.PLAYING)
-        }.openTabDrawer {
-            verifyTabMediaControlButtonState("Pause")
-            clickTabMediaControlButton()
-            verifyTabMediaControlButtonState("Play")
-        }.openTab(audioTestPage.title) {
-            assertPlaybackState(browserStore, MediaSession.PlaybackState.PAUSED)
-        }
-    }
-
-    @Test
     fun mediaSystemNotificationInPrivateModeTest() {
         val audioTestPage = TestAssetHelper.getAudioPageAsset(mockWebServer)
 

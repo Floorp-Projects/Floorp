@@ -12,6 +12,8 @@ import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.rule.ActivityTestRule
 import androidx.test.rule.GrantPermissionRule
 import androidx.test.uiautomator.UiDevice
+import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.concept.engine.mediasession.MediaSession
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
@@ -21,6 +23,7 @@ import org.junit.Test
 import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.IntentReceiverActivity
 import org.mozilla.fenix.R
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.HomeActivityTestRule
@@ -39,6 +42,7 @@ import org.mozilla.fenix.ui.robots.downloadRobot
 import org.mozilla.fenix.ui.robots.enhancedTrackingProtection
 import org.mozilla.fenix.ui.robots.homeScreen
 import org.mozilla.fenix.ui.robots.navigationToolbar
+import org.mozilla.fenix.ui.robots.notificationShade
 import org.mozilla.fenix.ui.robots.tabDrawer
 import org.mozilla.fenix.ui.util.STRING_ONBOARDING_TRACKING_PROTECTION_HEADER
 
@@ -71,6 +75,7 @@ class SmokeTest {
 
     @get:Rule
     val activityTestRule = HomeActivityTestRule()
+    private lateinit var browserStore: BrowserStore
 
     @get: Rule
     val intentReceiverActivityTestRule = ActivityTestRule(
@@ -85,6 +90,10 @@ class SmokeTest {
 
     @Before
     fun setUp() {
+        // Initializing this as part of class construction, below the rule would throw a NPE
+        // So we are initializing this here instead of in all related tests.
+        browserStore = activityTestRule.activity.components.core.store
+
         mockWebServer = MockWebServer().apply {
             dispatcher = AndroidAssetDispatcher()
             start()
@@ -1285,6 +1294,57 @@ class SmokeTest {
         }.openMainMenu {
         }.clickOpenInBrowserButton {
             verifyTabCounter("1")
+        }
+    }
+
+    @Test
+    fun audioPlaybackSystemNotificationTest() {
+        val audioTestPage = TestAssetHelper.getAudioPageAsset(mockWebServer)
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(audioTestPage.url) {
+            mDevice.waitForIdle()
+            clickMediaPlayerPlayButton()
+            assertPlaybackState(browserStore, MediaSession.PlaybackState.PLAYING)
+        }.openNotificationShade {
+            verifySystemNotificationExists(audioTestPage.title)
+            clickMediaSystemNotificationControlButton("Pause")
+            verifyMediaSystemNotificationButtonState("Play")
+        }
+
+        mDevice.pressBack()
+
+        browserScreen {
+            assertPlaybackState(browserStore, MediaSession.PlaybackState.PAUSED)
+        }.openTabDrawer {
+            closeTab()
+        }
+
+        mDevice.openNotification()
+
+        notificationShade {
+            verifySystemNotificationGone(audioTestPage.title)
+        }
+
+        // close notification shade before the next test
+        mDevice.pressBack()
+    }
+
+    @Test
+    fun tabMediaControlButtonTest() {
+        val audioTestPage = TestAssetHelper.getAudioPageAsset(mockWebServer)
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(audioTestPage.url) {
+            mDevice.waitForIdle()
+            clickMediaPlayerPlayButton()
+            assertPlaybackState(browserStore, MediaSession.PlaybackState.PLAYING)
+        }.openTabDrawer {
+            verifyTabMediaControlButtonState("Pause")
+            clickTabMediaControlButton()
+            verifyTabMediaControlButtonState("Play")
+        }.openTab(audioTestPage.title) {
+            assertPlaybackState(browserStore, MediaSession.PlaybackState.PAUSED)
         }
     }
 }
