@@ -147,11 +147,7 @@ allprojects {
                     ////////////////////////////////////////////////////////////////////////////////
 
                     // Fastlane
-                    // Doesn't seem to be available on Maven Central yet, and I couldn't find an issue for it
-                    // https://github.com/fastlane/fastlane/issues/18174
-                    includeVersion("tools.fastlane", "screengrab", "2.0.0")
-                    // https://github.com/jraska/Falcon/issues/52
-                    includeVersion("com.jraska", "falcon", "2.1.1")
+                    // Both Screengrab and falcon are available on Maven Central
                 }
             }
         }
