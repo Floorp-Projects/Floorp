@@ -11,7 +11,7 @@ platform(linux,mac) fuzzy(3,8100) == prim-suite.yaml prim-suite.png
 fuzzy-if(platform(swgl),1,2) == segments-bug.yaml segments-bug-ref.yaml
 platform(linux,mac) == content-offset.yaml content-offset.png
 platform(linux,mac) == coord-system.yaml coord-system.png
-platform(linux,mac) fuzzy(1,15) zoom(4) == border-zoom.yaml border-zoom.png
+platform(linux,mac) fuzzy(1,15) == border-zoom.yaml border-zoom.png
 platform(linux) fuzzy(1,520) == perspective-origin.yaml perspective-origin.png
 platform(linux,mac) color_targets(3) alpha_targets(0) fuzzy(1,180) == screen-space-blit.yaml screen-space-blit.png
 platform(linux,mac) fuzzy(1,346) color_targets(2) alpha_targets(0) == screen-space-blit-trivial.yaml screen-space-blit-trivial.png

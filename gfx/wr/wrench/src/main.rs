@@ -582,7 +582,6 @@ fn main() {
             DeviceIntSize::new(w, h)
         })
         .unwrap_or(DeviceIntSize::new(1920, 1080));
-    let zoom_factor = args.value_of("zoom").map(|z| z.parse::<f32>().unwrap());
     let chase_primitive = match args.value_of("chase") {
         Some(s) => {
             match s.find(',') {
@@ -670,7 +669,6 @@ fn main() {
         args.is_present("no_batch"),
         args.is_present("precache"),
         args.is_present("slow_subpixel"),
-        zoom_factor.unwrap_or(1.0),
         chase_primitive,
         dump_shader_source,
         notifier,
@@ -920,10 +918,6 @@ fn render<'a>(
 
                             do_frame = true;
                         }
-                        VirtualKeyCode::R => {
-                            wrench.set_page_zoom(ZoomFactor::new(1.0));
-                            do_frame = true;
-                        }
                         VirtualKeyCode::M => {
                             wrench.api.notify_memory_pressure();
                             do_render = true;
@@ -947,18 +941,6 @@ fn render<'a>(
                         VirtualKeyCode::C => {
                             let path = PathBuf::from("../captures/wrench");
                             wrench.api.save_capture(path, CaptureBits::all());
-                        }
-                        VirtualKeyCode::Add => {
-                            let current_zoom = wrench.get_page_zoom();
-                            let new_zoom_factor = ZoomFactor::new(current_zoom.get() + 0.1);
-                            wrench.set_page_zoom(new_zoom_factor);
-                            do_frame = true;
-                        }
-                        VirtualKeyCode::Subtract => {
-                            let current_zoom = wrench.get_page_zoom();
-                            let new_zoom_factor = ZoomFactor::new((current_zoom.get() - 0.1).max(0.1));
-                            wrench.set_page_zoom(new_zoom_factor);
-                            do_frame = true;
                         }
                         VirtualKeyCode::X => {
                             let results = wrench.api.hit_test(
