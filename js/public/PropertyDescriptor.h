@@ -360,8 +360,6 @@ class JS_PUBLIC_API PropertyDescriptor {
   bool resolving() const { return resolving_; }
   void setResolving(bool resolving) { resolving_ = resolving; }
 
-  bool hasGetterOrSetter() const { return getter_ || setter_; }
-
   Value* valueDoNotUse() { return &value_; }
   Value const* valueDoNotUse() const { return &value_; }
   JSObject** getterDoNotUse() { return &getter_; }
@@ -446,7 +444,6 @@ class WrappedPtrOperations<JS::PropertyDescriptor, Wrapper> {
     return JS::Handle<JSObject*>::fromMarkedLocation(desc().setterDoNotUse());
   }
 
-  bool hasGetterOrSetter() const { return desc().hasGetterObject(); }
   bool resolving() const { return desc().resolving(); }
 
   void assertValid() const { desc().assertValid(); }
