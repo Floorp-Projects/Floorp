@@ -1,7 +1,7 @@
 Preferences
 ===========
 
-There are a couple of preferences associated with the remote agent:
+There are a couple of preferences associated with the Remote Agent:
 
 
 Configurable preferences
@@ -9,7 +9,7 @@ Configurable preferences
 
 ### `remote.force-local`
 
-Limits the remote agent to be allowed to listen on loopback devices,
+Limits the Remote Agent to be allowed to listen on loopback devices,
 e.g. 127.0.0.1, localhost, and ::1.
 
 ### `remote.log.level`
