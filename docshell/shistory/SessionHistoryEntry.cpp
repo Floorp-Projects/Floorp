@@ -48,6 +48,7 @@ SessionHistoryInfo::SessionHistoryInfo(nsDocShellLoadState* aLoadState,
       /* FIXME Should this be aLoadState->IsSrcdocLoad()? */
       mIsSrcdocEntry(!aLoadState->SrcdocData().IsEmpty()),
       mHasUserInteraction(false),
+      mHasUserActivation(aLoadState->HasValidUserGestureActivation()),
       mSharedState(SharedState::Create(
           aLoadState->TriggeringPrincipal(), aLoadState->PrincipalToInherit(),
           aLoadState->PartitionedPrincipalToInherit(), aLoadState->Csp(),
@@ -140,6 +141,7 @@ void SessionHistoryInfo::Reset(nsIURI* aURI, const nsID& aDocShellID,
   mScrollRestorationIsManual = false;
   mPersist = false;
   mHasUserInteraction = false;
+  mHasUserActivation = false;
 
   mSharedState.Get()->mTriggeringPrincipal = aTriggeringPrincipal;
   mSharedState.Get()->mPrincipalToInherit = aPrincipalToInherit;
@@ -549,6 +551,18 @@ SessionHistoryEntry::SetHasUserInteraction(bool aFlag) {
     nsCOMPtr<nsISHEntry> root = nsSHistory::GetRootSHEntry(this);
     root->SetHasUserInteraction(aFlag);
   }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+SessionHistoryEntry::GetHasUserActivation(bool* aFlag) {
+  *aFlag = mInfo->mHasUserActivation;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+SessionHistoryEntry::SetHasUserActivation(bool aFlag) {
+  mInfo->mHasUserActivation = aFlag;
   return NS_OK;
 }
 
@@ -979,7 +993,8 @@ SessionHistoryEntry::Create(
     nsIContentSecurityPolicy* aCsp, const nsID& aDocshellID,
     bool aDynamicCreation, nsIURI* aOriginalURI, nsIURI* aResultPrincipalURI,
     bool aLoadReplace, nsIReferrerInfo* aReferrerInfo, const nsAString& aSrcdoc,
-    bool aSrcdocEntry, nsIURI* aBaseURI, bool aSaveLayoutState, bool aExpired) {
+    bool aSrcdocEntry, nsIURI* aBaseURI, bool aSaveLayoutState, bool aExpired,
+    bool aUserActivation) {
   MOZ_CRASH("Might need to implement this");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -1433,6 +1448,7 @@ void IPDLParamTraits<dom::SessionHistoryInfo>::Write(
   WriteIPDLParam(aMsg, aActor, aParam.mScrollRestorationIsManual);
   WriteIPDLParam(aMsg, aActor, aParam.mPersist);
   WriteIPDLParam(aMsg, aActor, aParam.mHasUserInteraction);
+  WriteIPDLParam(aMsg, aActor, aParam.mHasUserActivation);
   WriteIPDLParam(aMsg, aActor, aParam.mSharedState.Get()->mId);
   WriteIPDLParam(aMsg, aActor, aParam.mSharedState.Get()->mTriggeringPrincipal);
   WriteIPDLParam(aMsg, aActor, aParam.mSharedState.Get()->mPrincipalToInherit);
@@ -1470,6 +1486,7 @@ bool IPDLParamTraits<dom::SessionHistoryInfo>::Read(
                      &aResult->mScrollRestorationIsManual) ||
       !ReadIPDLParam(aMsg, aIter, aActor, &aResult->mPersist) ||
       !ReadIPDLParam(aMsg, aIter, aActor, &aResult->mHasUserInteraction) ||
+      !ReadIPDLParam(aMsg, aIter, aActor, &aResult->mHasUserActivation) ||
       !ReadIPDLParam(aMsg, aIter, aActor, &sharedId)) {
     aActor->FatalError("Error reading fields for SessionHistoryInfo");
     return false;
