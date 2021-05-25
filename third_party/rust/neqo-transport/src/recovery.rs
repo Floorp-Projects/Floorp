@@ -18,6 +18,7 @@ use smallvec::{smallvec, SmallVec};
 
 use neqo_common::{qdebug, qlog::NeqoQlog, qtrace, qwarn};
 
+use crate::ackrate::AckRate;
 use crate::cid::ConnectionIdEntry;
 use crate::connection::LOCAL_IDLE_TIMEOUT;
 use crate::crypto::CryptoRecoveryToken;
@@ -78,6 +79,7 @@ pub enum RecoveryToken {
         stream_type: StreamType,
         max_streams: u64,
     },
+    AckFrequency(AckRate),
 }
 
 impl RecoveryToken {

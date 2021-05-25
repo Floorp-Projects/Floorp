@@ -241,9 +241,9 @@ impl<T: WindowAdjustment> CongestionControl for ClassicCongestionControl<T> {
         prev_largest_acked_sent: Option<Instant>,
         pto: Duration,
         lost_packets: &[SentPacket],
-    ) {
+    ) -> bool {
         if lost_packets.is_empty() {
-            return;
+            return false;
         }
 
         for pkt in lost_packets.iter().filter(|pkt| pkt.cc_in_flight()) {
@@ -257,13 +257,14 @@ impl<T: WindowAdjustment> CongestionControl for ClassicCongestionControl<T> {
 
         qdebug!([self], "Pkts lost {}", lost_packets.len());
 
-        self.on_congestion_event(lost_packets.last().unwrap());
-        self.detect_persistent_congestion(
+        let congestion = self.on_congestion_event(lost_packets.last().unwrap());
+        let persistent_congestion = self.detect_persistent_congestion(
             first_rtt_sample_time,
             prev_largest_acked_sent,
             pto,
             lost_packets,
         );
+        congestion || persistent_congestion
     }
 
     fn discard(&mut self, pkt: &SentPacket) {
@@ -382,9 +383,9 @@ impl<T: WindowAdjustment> ClassicCongestionControl<T> {
         prev_largest_acked_sent: Option<Instant>,
         pto: Duration,
         lost_packets: &[SentPacket],
-    ) {
+    ) -> bool {
         if first_rtt_sample_time.is_none() {
-            return;
+            return false;
         }
 
         let pc_period = pto * PERSISTENT_CONG_THRESH;
@@ -420,12 +421,13 @@ impl<T: WindowAdjustment> ClassicCongestionControl<T> {
                         &mut self.qlog,
                         &[QlogMetric::CongestionWindow(self.congestion_window)],
                     );
-                    return;
+                    return true;
                 }
             } else {
                 start = Some(p.time_sent);
             }
         }
+        false
     }
 
     #[must_use]
@@ -437,32 +439,36 @@ impl<T: WindowAdjustment> ClassicCongestionControl<T> {
     }
 
     /// Handle a congestion event.
-    fn on_congestion_event(&mut self, last_packet: &SentPacket) {
+    /// Returns true if this was a true congestion event.
+    fn on_congestion_event(&mut self, last_packet: &SentPacket) -> bool {
         // Start a new congestion event if lost packet was sent after the start
         // of the previous congestion recovery period.
-        if self.after_recovery_start(last_packet) {
-            let (cwnd, acked_bytes) = self
-                .cc_algorithm
-                .reduce_cwnd(self.congestion_window, self.acked_bytes);
-            self.congestion_window = max(cwnd, CWND_MIN);
-            self.acked_bytes = acked_bytes;
-            self.ssthresh = self.congestion_window;
-            qinfo!(
-                [self],
-                "Cong event -> recovery; cwnd {}, ssthresh {}",
-                self.congestion_window,
-                self.ssthresh
-            );
-            qlog::metrics_updated(
-                &mut self.qlog,
-                &[
-                    QlogMetric::CongestionWindow(self.congestion_window),
-                    QlogMetric::SsThresh(self.ssthresh),
-                    QlogMetric::InRecovery(true),
-                ],
-            );
-            self.set_state(State::RecoveryStart);
+        if !self.after_recovery_start(last_packet) {
+            return false;
         }
+
+        let (cwnd, acked_bytes) = self
+            .cc_algorithm
+            .reduce_cwnd(self.congestion_window, self.acked_bytes);
+        self.congestion_window = max(cwnd, CWND_MIN);
+        self.acked_bytes = acked_bytes;
+        self.ssthresh = self.congestion_window;
+        qinfo!(
+            [self],
+            "Cong event -> recovery; cwnd {}, ssthresh {}",
+            self.congestion_window,
+            self.ssthresh
+        );
+        qlog::metrics_updated(
+            &mut self.qlog,
+            &[
+                QlogMetric::CongestionWindow(self.congestion_window),
+                QlogMetric::SsThresh(self.ssthresh),
+                QlogMetric::InRecovery(true),
+            ],
+        );
+        self.set_state(State::RecoveryStart);
+        true
     }
 
     #[allow(clippy::unused_self)]

@@ -42,13 +42,14 @@ pub trait CongestionControl: Display + Debug {
 
     fn on_packets_acked(&mut self, acked_pkts: &[SentPacket], min_rtt: Duration, now: Instant);
 
+    /// Returns true if the congestion window was reduced.
     fn on_packets_lost(
         &mut self,
         first_rtt_sample_time: Option<Instant>,
         prev_largest_acked_sent: Option<Instant>,
         pto: Duration,
         lost_packets: &[SentPacket],
-    );
+    ) -> bool;
 
     #[must_use]
     fn recovery_packet(&self) -> bool;

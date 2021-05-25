@@ -679,13 +679,13 @@ impl SendStream {
         builder: &mut PacketBuilder,
         tokens: &mut Vec<RecoveryToken>,
         stats: &mut FrameStats,
-    ) -> Res<()> {
+    ) {
         let retransmission = if priority == self.priority {
             false
         } else if priority == self.priority + self.retransmission_priority {
             true
         } else {
-            return Ok(());
+            return;
         };
 
         let id = self.stream_id;
@@ -700,14 +700,14 @@ impl SendStream {
                 };
             if overhead > builder.remaining() {
                 qtrace!([self], "write_frame no space for header");
-                return Ok(());
+                return;
             }
 
             let (length, fill) = Self::length_and_fill(data.len(), builder.remaining() - overhead);
             let fin = final_size.map_or(false, |fs| fs == offset + u64::try_from(length).unwrap());
             if length == 0 && !fin {
                 qtrace!([self], "write_frame no data, no fin");
-                return Ok(());
+                return;
             }
 
             // Write the stream out.
@@ -721,10 +721,7 @@ impl SendStream {
             } else {
                 builder.encode_vvec(&data[..length]);
             }
-
-            if builder.len() > builder.limit() {
-                return Err(Error::InternalError(23));
-            }
+            debug_assert!(builder.len() <= builder.limit());
 
             self.mark_as_sent(offset, length, fin);
             tokens.push(RecoveryToken::Stream(StreamRecoveryToken {
@@ -735,7 +732,6 @@ impl SendStream {
             }));
             stats.stream += 1;
         }
-        Ok(())
     }
 
     pub fn reset_acked(&mut self) {
@@ -770,7 +766,7 @@ impl SendStream {
         builder: &mut PacketBuilder,
         tokens: &mut Vec<RecoveryToken>,
         stats: &mut FrameStats,
-    ) -> Res<bool> {
+    ) -> bool {
         if let SendStreamState::ResetSent {
             final_size,
             err,
@@ -778,7 +774,7 @@ impl SendStream {
         } = self.state
         {
             if *priority != Some(p) {
-                return Ok(false);
+                return false;
             }
             if write_varint_frame(
                 builder,
@@ -788,18 +784,18 @@ impl SendStream {
                     err,
                     final_size,
                 ],
-            )? {
+            ) {
                 tokens.push(RecoveryToken::ResetStream {
                     stream_id: self.stream_id,
                 });
                 stats.reset_stream += 1;
                 *priority = None;
-                Ok(true)
+                true
             } else {
-                Ok(false)
+                false
             }
         } else {
-            Ok(false)
+            false
         }
     }
 
@@ -820,18 +816,14 @@ impl SendStream {
         builder: &mut PacketBuilder,
         tokens: &mut Vec<RecoveryToken>,
         stats: &mut FrameStats,
-    ) -> Res<()> {
+    ) {
         // Send STREAM_DATA_BLOCKED at normal priority always.
         if priority == self.priority {
             if let SendStreamState::Ready { fc, .. } | SendStreamState::Send { fc, .. } =
                 &mut self.state
             {
-                fc.write_frames(builder, tokens, stats)
-            } else {
-                Ok(())
+                fc.write_frames(builder, tokens, stats);
             }
-        } else {
-            Ok(())
         }
     }
 
@@ -1135,15 +1127,14 @@ impl SendStreams {
         builder: &mut PacketBuilder,
         tokens: &mut Vec<RecoveryToken>,
         stats: &mut FrameStats,
-    ) -> Res<()> {
+    ) {
         qtrace!("write STREAM frames at priority {:?}", priority);
         for stream in self.0.values_mut() {
-            if !stream.write_reset_frame(priority, builder, tokens, stats)? {
-                stream.write_blocked_frame(priority, builder, tokens, stats)?;
-                stream.write_stream_frame(priority, builder, tokens, stats)?;
+            if !stream.write_reset_frame(priority, builder, tokens, stats) {
+                stream.write_blocked_frame(priority, builder, tokens, stats);
+                stream.write_stream_frame(priority, builder, tokens, stats);
             }
         }
-        Ok(())
     }
 
     pub fn update_initial_limit(&mut self, remote: &TransportParameters) {
@@ -1607,8 +1598,7 @@ mod tests {
             &mut builder,
             &mut tokens,
             &mut FrameStats::default(),
-        )
-        .unwrap();
+        );
         assert_eq!(builder.len(), written + 6);
         assert_eq!(tokens.len(), 1);
         let f1_token = tokens.remove(0);
@@ -1622,8 +1612,7 @@ mod tests {
             &mut builder,
             &mut tokens,
             &mut FrameStats::default(),
-        )
-        .unwrap();
+        );
         assert_eq!(builder.len(), written + 10);
         assert_eq!(tokens.len(), 1);
         let f2_token = tokens.remove(0);
@@ -1636,8 +1625,7 @@ mod tests {
             &mut builder,
             &mut tokens,
             &mut FrameStats::default(),
-        )
-        .unwrap();
+        );
         assert_eq!(builder.len(), written);
         assert!(tokens.is_empty());
 
@@ -1656,8 +1644,7 @@ mod tests {
             &mut builder,
             &mut tokens,
             &mut FrameStats::default(),
-        )
-        .unwrap();
+        );
         assert_eq!(builder.len(), written + 7); // Needs a length this time.
         assert_eq!(tokens.len(), 1);
         let f4_token = tokens.remove(0);
@@ -1677,8 +1664,7 @@ mod tests {
             &mut builder,
             &mut tokens,
             &mut FrameStats::default(),
-        )
-        .unwrap();
+        );
         assert_eq!(builder.len(), written + 10);
         assert_eq!(tokens.len(), 1);
         let f5_token = tokens.remove(0);
@@ -1705,8 +1691,7 @@ mod tests {
             &mut builder,
             &mut tokens,
             &mut FrameStats::default(),
-        )
-        .unwrap();
+        );
         let f1_token = tokens.remove(0);
         assert!(matches!(&f1_token, RecoveryToken::Stream(x) if x.offset == 0));
         assert!(matches!(&f1_token, RecoveryToken::Stream(x) if x.length == 10));
@@ -1718,8 +1703,7 @@ mod tests {
             &mut builder,
             &mut tokens,
             &mut FrameStats::default(),
-        )
-        .unwrap();
+        );
         assert!(tokens.is_empty());
 
         ss.get_mut(StreamId::from(0)).unwrap().close();
@@ -1729,8 +1713,7 @@ mod tests {
             &mut builder,
             &mut tokens,
             &mut FrameStats::default(),
-        )
-        .unwrap();
+        );
         let f2_token = tokens.remove(0);
         assert!(matches!(&f2_token, RecoveryToken::Stream(x) if x.offset == 10));
         assert!(matches!(&f2_token, RecoveryToken::Stream(x) if x.length == 0));
@@ -1749,8 +1732,7 @@ mod tests {
             &mut builder,
             &mut tokens,
             &mut FrameStats::default(),
-        )
-        .unwrap();
+        );
         let f3_token = tokens.remove(0);
         assert!(matches!(&f3_token, RecoveryToken::Stream(x) if x.offset == 10));
         assert!(matches!(&f3_token, RecoveryToken::Stream(x) if x.length == 0));
@@ -1769,8 +1751,7 @@ mod tests {
             &mut builder,
             &mut tokens,
             &mut FrameStats::default(),
-        )
-        .unwrap();
+        );
         let f4_token = tokens.remove(0);
         assert!(matches!(&f4_token, RecoveryToken::Stream(x) if x.offset == 0));
         assert!(matches!(&f4_token, RecoveryToken::Stream(x) if x.length == 10));
@@ -1798,8 +1779,7 @@ mod tests {
             &mut builder,
             &mut tokens,
             &mut stats,
-        )
-        .unwrap();
+        );
         assert_eq!(stats.stream_data_blocked, 0);
 
         // Blocking is reported after sending the last available credit.
@@ -1809,8 +1789,7 @@ mod tests {
             &mut builder,
             &mut tokens,
             &mut stats,
-        )
-        .unwrap();
+        );
         assert_eq!(stats.stream_data_blocked, 1);
 
         // Now increase the stream limit and test the connection limit.
@@ -1821,16 +1800,14 @@ mod tests {
         // DATA_BLOCKED is not sent yet.
         conn_fc
             .borrow_mut()
-            .write_frames(&mut builder, &mut tokens, &mut stats)
-            .unwrap();
+            .write_frames(&mut builder, &mut tokens, &mut stats);
         assert_eq!(stats.data_blocked, 0);
 
         // DATA_BLOCKED is queued once bytes using all credit are sent.
         s.mark_as_sent(2, 3, false);
         conn_fc
             .borrow_mut()
-            .write_frames(&mut builder, &mut tokens, &mut stats)
-            .unwrap();
+            .write_frames(&mut builder, &mut tokens, &mut stats);
         assert_eq!(stats.data_blocked, 1);
     }
 
@@ -1855,8 +1832,7 @@ mod tests {
             &mut builder,
             &mut tokens,
             &mut stats,
-        )
-        .unwrap();
+        );
         assert_eq!(stats.stream_data_blocked, 1);
 
         // Assert that a non-atomic write works.
@@ -1873,8 +1849,7 @@ mod tests {
         // Assert that DATA_BLOCKED is sent.
         conn_fc
             .borrow_mut()
-            .write_frames(&mut builder, &mut tokens, &mut stats)
-            .unwrap();
+            .write_frames(&mut builder, &mut tokens, &mut stats);
         assert_eq!(stats.data_blocked, 1);
 
         // Check that a non-atomic write works.
@@ -1944,8 +1919,7 @@ mod tests {
             &mut builder,
             &mut tokens,
             &mut stats,
-        )
-        .unwrap();
+        );
         assert_eq!(stats.stream, 0);
     }
 
@@ -1999,8 +1973,7 @@ mod tests {
             &mut builder,
             &mut tokens,
             &mut stats,
-        )
-        .unwrap();
+        );
         qtrace!("STREAM frame: {}", hex_with_len(&builder[header_len..]));
         stats.stream > 0
     }
@@ -2101,8 +2074,7 @@ mod tests {
             &mut builder,
             &mut tokens,
             &mut stats,
-        )
-        .unwrap();
+        );
         assert_eq!(stats.stream, 1);
         // Expect STREAM + FIN only.
         assert_eq!(&builder[header_len..header_len + 2], &[0b1001, 0]);
@@ -2122,8 +2094,7 @@ mod tests {
             &mut builder,
             &mut tokens,
             &mut stats,
-        )
-        .unwrap();
+        );
         assert_eq!(stats.stream, 2);
         // Expect STREAM + LEN + FIN.
         assert_eq!(
@@ -2156,8 +2127,7 @@ mod tests {
             &mut builder,
             &mut tokens,
             &mut stats,
-        )
-        .unwrap();
+        );
         assert_eq!(stats.stream, 1);
         // Expect STREAM + FIN only.
         assert_eq!(&builder[header_len..header_len + 2], &[0b1001, 0]);
@@ -2173,8 +2143,7 @@ mod tests {
             &mut builder,
             &mut tokens,
             &mut stats,
-        )
-        .unwrap();
+        );
         assert_eq!(stats.stream, 2);
         // Expect STREAM + LEN, not FIN.
         assert_eq!(&builder[header_len..header_len + 3], &[0b1010, 0, 63]);

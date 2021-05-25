@@ -53,7 +53,6 @@ impl PacketSender {
         self.cc.set_qlog(qlog);
     }
 
-    #[cfg(test)]
     #[must_use]
     pub fn cwnd(&self) -> usize {
         self.cc.cwnd()
@@ -68,19 +67,20 @@ impl PacketSender {
         self.cc.on_packets_acked(acked_pkts, min_rtt, now);
     }
 
+    /// Called when packets are lost.  Returns true if the congestion window was reduced.
     pub fn on_packets_lost(
         &mut self,
         first_rtt_sample_time: Option<Instant>,
         prev_largest_acked_sent: Option<Instant>,
         pto: Duration,
         lost_packets: &[SentPacket],
-    ) {
+    ) -> bool {
         self.cc.on_packets_lost(
             first_rtt_sample_time,
             prev_largest_acked_sent,
             pto,
             lost_packets,
-        );
+        )
     }
 
     pub fn discard(&mut self, pkt: &SentPacket) {
