@@ -64,7 +64,6 @@ class GtkCompositorWidget : public CompositorWidget,
   CompositorWidgetDelegate* AsDelegate() override { return this; }
 
   EGLNativeWindowType GetEGLNativeWindow();
-  int32_t GetDepth();
 
   LayoutDeviceIntRegion GetTransparentRegion() override;
 
@@ -97,8 +96,6 @@ class GtkCompositorWidget : public CompositorWidget,
 #if defined(MOZ_X11)
   Window mXWindow = {};
 #endif
-  int32_t mDepth = {};
-
 #ifdef MOZ_WAYLAND
   RefPtr<mozilla::layers::NativeLayerRootWayland> mNativeLayerRoot;
 #endif

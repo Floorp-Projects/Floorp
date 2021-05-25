@@ -226,11 +226,10 @@ static EGLSurface CreateSurfaceFromNativeWindow(
 class GLContextEGLFactory {
  public:
   static already_AddRefed<GLContext> Create(EGLNativeWindowType aWindow,
-                                            bool aHardwareWebRender,
-                                            int32_t aDepth);
+                                            bool aHardwareWebRender);
   static already_AddRefed<GLContext> CreateImpl(EGLNativeWindowType aWindow,
                                                 bool aHardwareWebRender,
-                                                bool aUseGles, int32_t aDepth);
+                                                bool aUseGles);
 
  private:
   GLContextEGLFactory() = default;
@@ -238,8 +237,7 @@ class GLContextEGLFactory {
 };
 
 already_AddRefed<GLContext> GLContextEGLFactory::CreateImpl(
-    EGLNativeWindowType aWindow, bool aHardwareWebRender, bool aUseGles,
-    int32_t aDepth) {
+    EGLNativeWindowType aWindow, bool aHardwareWebRender, bool aUseGles) {
   nsCString failureId;
   const auto lib = gl::DefaultEglLibrary(&failureId);
   if (!lib) {
@@ -280,20 +278,20 @@ already_AddRefed<GLContext> GLContextEGLFactory::CreateImpl(
       gfxCriticalNote << "Failed to create EGLConfig for WebRender ANGLE!";
       return nullptr;
     }
+  } else if (aHardwareWebRender && (kIsWayland || kIsX11)) {
+    const int bpp = 32;
+    const bool enableDepthBuffer = gfx::gfxVars::UseWebRenderCompositor();
+    if (!CreateConfig(*egl, &config, bpp, enableDepthBuffer, aUseGles,
+                      visualID)) {
+      gfxCriticalNote << "Failed to create EGLConfig for WebRender!";
+      return nullptr;
+    }
   } else {
-    if (aDepth) {
-      if (!CreateConfig(*egl, &config, aDepth, false, aUseGles, visualID)) {
-        gfxCriticalNote
-            << "Failed to create EGLConfig for WebRender with depth!";
-        return nullptr;
-      }
-    } else {
-      if (!CreateConfigScreen(*egl, &config,
-                              /* aEnableDepthBuffer */ false, aUseGles,
-                              visualID)) {
-        gfxCriticalNote << "Failed to create EGLConfig!";
-        return nullptr;
-      }
+    if (!CreateConfigScreen(*egl, &config,
+                            /* aEnableDepthBuffer */ false, aUseGles,
+                            visualID)) {
+      gfxCriticalNote << "Failed to create EGLConfig!";
+      return nullptr;
     }
   }
 
@@ -344,16 +342,14 @@ already_AddRefed<GLContext> GLContextEGLFactory::CreateImpl(
 }
 
 already_AddRefed<GLContext> GLContextEGLFactory::Create(
-    EGLNativeWindowType aWindow, bool aHardwareWebRender, int32_t aDepth) {
+    EGLNativeWindowType aWindow, bool aHardwareWebRender) {
   RefPtr<GLContext> glContext;
 #if !defined(MOZ_WIDGET_ANDROID)
-  glContext =
-      CreateImpl(aWindow, aHardwareWebRender, /* aUseGles */ false, aDepth);
+  glContext = CreateImpl(aWindow, aHardwareWebRender, /* aUseGles */ false);
 #endif  // !defined(MOZ_WIDGET_ANDROID)
 
   if (!glContext) {
-    glContext =
-        CreateImpl(aWindow, aHardwareWebRender, /* aUseGles */ true, aDepth);
+    glContext = CreateImpl(aWindow, aHardwareWebRender, /* aUseGles */ true);
   }
   return glContext.forget();
 }
@@ -1004,18 +1000,10 @@ already_AddRefed<GLContext> GLContextProviderEGL::CreateForCompositorWidget(
     CompositorWidget* aCompositorWidget, bool aHardwareWebRender,
     bool /*aForceAccelerated*/) {
   EGLNativeWindowType window = nullptr;
-  int32_t depth = 0;
   if (aCompositorWidget) {
     window = GET_NATIVE_WINDOW_FROM_COMPOSITOR_WIDGET(aCompositorWidget);
-#if defined(MOZ_WIDGET_GTK)
-    depth = aCompositorWidget->AsGTK()->GetDepth();
-#endif
-  } else {
-#if defined(MOZ_WIDGET_GTK)
-    depth = 32;
-#endif
   }
-  return GLContextEGLFactory::Create(window, aHardwareWebRender, depth);
+  return GLContextEGLFactory::Create(window, aHardwareWebRender);
 }
 
 EGLSurface GLContextEGL::CreateCompatibleSurface(void* aWindow) const {
