@@ -1226,11 +1226,13 @@ enum class Severity {
   Log,
 };
 
+#if defined(EARLY_BETA_OR_EARLIER) || defined(DEBUG)
 using ResultType = Variant<QMResult, nsresult, Nothing>;
 
 void LogError(const nsACString& aExpr, const ResultType& aResult,
               const nsACString& aSourceFilePath, int32_t aSourceFileLine,
               Severity aSeverity);
+#endif
 
 #ifdef DEBUG
 Result<bool, nsresult> WarnIfFileIsUnknown(nsIFile& aFile,

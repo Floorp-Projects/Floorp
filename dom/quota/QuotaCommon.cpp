@@ -403,6 +403,7 @@ nsDependentCSubstring MakeSourceFileRelativePath(
 
 }  // namespace detail
 
+#if defined(EARLY_BETA_OR_EARLIER) || defined(DEBUG)
 void LogError(const nsACString& aExpr, const ResultType& aResult,
               const nsACString& aSourceFilePath, const int32_t aSourceFileLine,
               const Severity aSeverity) {
@@ -414,7 +415,6 @@ void LogError(const nsACString& aExpr, const ResultType& aResult,
     return;
   }
 
-#if defined(EARLY_BETA_OR_EARLIER) || defined(DEBUG)
   nsAutoCString extraInfosString;
 
   nsAutoCString rvName;
@@ -470,17 +470,16 @@ void LogError(const nsACString& aExpr, const ResultType& aResult,
     }
     MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("Bad severity value!");
   }();
-#endif
 
-#ifdef QM_ENABLE_SCOPED_LOG_EXTRA_INFO
+#  ifdef QM_ENABLE_SCOPED_LOG_EXTRA_INFO
   const auto& extraInfos = ScopedLogExtraInfo::GetExtraInfoMap();
   for (const auto& item : extraInfos) {
     extraInfosString.Append(", "_ns + nsDependentCString(item.first) + "="_ns +
                             *item.second);
   }
-#endif
+#  endif
 
-#ifdef DEBUG
+#  ifdef DEBUG
   NS_DebugBreak(
       NS_DEBUG_WARNING,
       nsAutoCString("QM_TRY failure ("_ns + severityString + ")"_ns).get(),
@@ -489,9 +488,8 @@ void LogError(const nsACString& aExpr, const ResultType& aResult,
                                         aExpr + extraInfosString)))
           .get(),
       nsPromiseFlatCString(sourceFileRelativePath).get(), aSourceFileLine);
-#endif
+#  endif
 
-#if defined(EARLY_BETA_OR_EARLIER) || defined(DEBUG)
   nsCOMPtr<nsIConsoleService> console =
       do_GetService(NS_CONSOLESERVICE_CONTRACTID);
   if (console) {
@@ -568,8 +566,8 @@ void LogError(const nsACString& aExpr, const ResultType& aResult,
                            Nothing(), extra);
   }
 #  endif
-#endif
 }
+#endif
 
 #ifdef DEBUG
 Result<bool, nsresult> WarnIfFileIsUnknown(nsIFile& aFile,
