@@ -26,12 +26,6 @@ add_task(async function() {
   );
   ok(tabDescriptor, "Should have a descriptor actor for the tab");
 
-  is(
-    target.descriptorFront,
-    tabDescriptor,
-    "The toolbox target descriptor is the same as the descriptor returned by list tab"
-  );
-
   info("Retrieve the target corresponding to the TabDescriptor");
   const comTabTarget = await tabDescriptor.getTarget();
   is(
@@ -52,12 +46,6 @@ add_task(async function() {
   );
 
   const newTarget = toolbox.target;
-  const newTabDescriptor = newTarget.descriptorFront;
-  is(
-    newTabDescriptor,
-    tabDescriptor,
-    "The same tab descriptor instance is reused after navigating"
-  );
 
   if (isFissionEnabled()) {
     is(

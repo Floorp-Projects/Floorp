@@ -61,11 +61,7 @@ add_task(async function() {
       .filter(a => a.debuggable)
       .map(async addonDescriptorFront => {
         const addonFront = await addonDescriptorFront.getTarget();
-        is(
-          addonFront.descriptorFront,
-          addonDescriptorFront,
-          "Got the correct descriptorFront from the addon target."
-        );
+        ok(addonFront, "Got the addon target");
       })
   );
 
@@ -79,15 +75,14 @@ add_task(async function() {
   const mainRoot = client.mainRoot;
 
   const { workers } = await mainRoot.listWorkers();
-  await Promise.all(
-    workers.map(workerTargetFront => {
-      is(
-        workerTargetFront.descriptorFront,
-        workerTargetFront,
-        "For now, worker descriptors and targets are the same object (see bug 1667404)"
-      );
-    })
-  );
+  for (const workerDescriptorFront of workers) {
+    const targetFront = await workerDescriptorFront.getTarget();
+    is(
+      workerDescriptorFront,
+      targetFront,
+      "For now, worker descriptors and targets are the same object (see bug 1667404)"
+    );
+  }
 
   await client.close();
 });
@@ -119,11 +114,6 @@ async function testGetTargetWithConcurrentCalls(descriptors, isTargetAttached) {
         }
         promises.push(
           targetPromise.then(target => {
-            is(
-              target.descriptorFront,
-              descriptor,
-              "Got the correct descriptorFront from the frame target."
-            );
             ok(isTargetAttached(target), "The target is attached");
             return target;
           })

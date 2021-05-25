@@ -45,7 +45,7 @@ add_task(async function() {
     "Stylesheet is now empty, as expected"
   );
 
-  await target.destroy();
+  await commands.destroy();
 });
 
 async function getStyleSheetText(styleSheetsFront, resourceId) {
