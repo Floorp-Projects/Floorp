@@ -2559,12 +2559,7 @@ bool nsIFrame::DisplayBackgroundUnconditional(nsDisplayListBuilder* aBuilder,
   // true.
   if (hitTesting || aForceBackground ||
       !StyleBackground()->IsTransparent(this) ||
-      StyleDisplay()->HasAppearance() ||
-      // We do forcibly create a display item for background color animations
-      // even if the current background-color is transparent so that we can
-      // run the animations on the compositor.
-      EffectCompositor::HasAnimationsForCompositor(
-          this, DisplayItemType::TYPE_BACKGROUND_COLOR)) {
+      StyleDisplay()->HasAppearance()) {
     result = nsDisplayBackgroundImage::AppendBackgroundItemsToTop(
         aBuilder, this,
         GetRectRelativeToSelf() + aBuilder->ToReferenceFrame(this),
