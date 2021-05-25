@@ -732,20 +732,34 @@ let BrowserUsageTelemetry = {
     return this._getWidgetID(node.parentElement);
   },
 
+  _getBrowserWidgetContainer(node) {
+    // Find the container holding this element.
+    for (let containerId of Object.keys(BROWSER_UI_CONTAINER_IDS)) {
+      let container = node.ownerDocument.getElementById(containerId);
+      if (container && container.contains(node)) {
+        return BROWSER_UI_CONTAINER_IDS[containerId];
+      }
+    }
+    // Treat toolbar context menu items that relate to tabs as the tab menu:
+    if (
+      node.closest("#toolbar-context-menu") &&
+      node.getAttribute("contexttype") == "tabbar"
+    ) {
+      return BROWSER_UI_CONTAINER_IDS.tabContextMenu;
+    }
+    return null;
+  },
+
   _getWidgetContainer(node) {
     if (node.localName == "key") {
       return "keyboard";
     }
 
-    if (node.ownerDocument.URL == AppConstants.BROWSER_CHROME_URL) {
-      // Find the container holding this element.
-      for (let containerId of Object.keys(BROWSER_UI_CONTAINER_IDS)) {
-        let container = node.ownerDocument.getElementById(containerId);
-        if (container && container.contains(node)) {
-          return BROWSER_UI_CONTAINER_IDS[containerId];
-        }
-      }
-    } else if (node.ownerDocument.URL.startsWith("about:preferences")) {
+    const { URL } = node.ownerDocument;
+    if (URL == AppConstants.BROWSER_CHROME_URL) {
+      return this._getBrowserWidgetContainer(node);
+    }
+    if (URL.startsWith("about:preferences")) {
       // Find the element's category.
       let container = node.closest("[data-category]");
       if (!container) {

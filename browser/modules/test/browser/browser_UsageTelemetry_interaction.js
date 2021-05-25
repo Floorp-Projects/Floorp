@@ -158,6 +158,34 @@ add_task(async function contextMenu() {
         "context-toggleMuteTab": 1,
       },
     });
+
+    // Check that tab-related items in the toolbar menu also register telemetry:
+    context = elem("toolbar-context-menu");
+    shown = BrowserTestUtils.waitForEvent(context, "popupshown");
+    let scrollbox = elem("tabbrowser-arrowscrollbox");
+    EventUtils.synthesizeMouse(
+      scrollbox,
+      // offset within the scrollbox - somewhere near the end:
+      scrollbox.getBoundingClientRect().width - 20,
+      5,
+      { type: "contextmenu", button: 2 },
+      window
+    );
+    await shown;
+
+    hidden = BrowserTestUtils.waitForEvent(context, "popuphidden");
+    context.activateItem(
+      document.getElementById("toolbar-context-selectAllTabs")
+    );
+    await hidden;
+
+    assertInteractionScalars({
+      tabs_context: {
+        "toolbar-context-selectAllTabs": 1,
+      },
+    });
+    // tidy up:
+    gBrowser.clearMultiSelectedTabs();
   });
 });
 
