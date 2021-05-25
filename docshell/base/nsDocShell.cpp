@@ -1216,6 +1216,7 @@ void nsDocShell::FirePageHideShowNonRecursive(bool aShow) {
 
       nsCOMPtr<nsIChannel> channel = doc->GetChannel();
       if (channel) {
+        SetLoadType(LOAD_HISTORY);
         SetCurrentURI(doc->GetDocumentURI(), channel,
                       /* aFireOnLocationChange */ true,
                       /* aIsInitialAboutBlank */ false, /* aLocationFlags */ 0);
