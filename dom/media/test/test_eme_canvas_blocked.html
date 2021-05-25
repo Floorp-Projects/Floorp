@@ -27,13 +27,15 @@ function startTest(test, token)
     canvas.height = video.videoHeight;
     document.body.appendChild(canvas);
     var ctx = canvas.getContext("2d");
-    var threwError = false;
-    try {
-      ctx.drawImage(video, 0, 0);
-    } catch (ex) {
-      threwError = true;
+    ctx.drawImage(video, 0, 0);
+    if (canvas.width || canvas.height) {
+      let pixels = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+      for (let byte of pixels) {
+        if (byte != 0) {
+          ok(false, "Should not draw EME video to canvas");
+        }
+      }
     }
-    ok(threwError, TimeStamp(token) + " - Should throw an error when trying to draw EME video to canvas.");
     p1.resolve();
   });
 
