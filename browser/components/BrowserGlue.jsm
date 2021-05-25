@@ -2402,15 +2402,6 @@ BrowserGlue.prototype = {
         },
       },
 
-      // request startup of Chromium remote debugging protocol
-      // (observer will only be notified when --remote-debugging-port is passed)
-      {
-        condition: AppConstants.ENABLE_REMOTE_AGENT,
-        task: () => {
-          Services.obs.notifyObservers(null, "remote-startup-requested");
-        },
-      },
-
       // Run TRR performance measurements for DoH.
       {
         task: () => {
@@ -2510,8 +2501,10 @@ BrowserGlue.prototype = {
         },
       },
 
-      // Marionette needs to be initialized as very last step
+      // WebDriver components (Remote Agent and Marionette) need to be
+      // initialized as very last step.
       {
+        condition: AppConstants.ENABLE_WEBDRIVER,
         task: () => {
           // Use idleDispatch a second time to run this after the per-window
           // idle tasks.
@@ -2520,11 +2513,15 @@ BrowserGlue.prototype = {
               null,
               "browser-startup-idle-tasks-finished"
             );
+
+            // Request startup of the Remote Agent (support for WebDriver BiDi
+            // and the partial Chrome DevTools protocol) before Marionette.
+            Services.obs.notifyObservers(null, "remote-startup-requested");
             Services.obs.notifyObservers(null, "marionette-startup-requested");
           });
         },
       },
-      // Do NOT add anything after marionette initialization.
+      // Do NOT add anything after WebDriver initialization.
     ];
 
     for (let task of idleTasks) {

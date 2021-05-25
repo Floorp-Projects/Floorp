@@ -160,11 +160,9 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk':
         '/toolkit/system/gnome',
     ]
 
-if CONFIG['ENABLE_REMOTE_AGENT']:
-    DIRS += ['/remote']
-
-if CONFIG['ENABLE_MARIONETTE']:
+if CONFIG['ENABLE_WEBDRIVER']:
     DIRS += [
+        '/remote',
         '/testing/firefox-ui',
         '/testing/marionette',
         '/toolkit/components/telemetry/tests/marionette',
