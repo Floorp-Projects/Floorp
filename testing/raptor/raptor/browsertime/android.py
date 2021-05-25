@@ -90,14 +90,6 @@ class BrowsertimeAndroid(PerftestAndroid, Browsertime):
                     activity,
                 ]
             )
-            if self.browsertime_geckodriver:
-                args_list.extend(
-                    [
-                        # Set geckoprofile location to internal so we are able to get crashes
-                        '--firefox.geckodriverArgs="--android-storage"',
-                        "--firefox.geckodriverArgs=internal",
-                    ]
-                )
 
         # Setup power testing
         if self.config["power_test"]:
@@ -180,7 +172,15 @@ class BrowsertimeAndroid(PerftestAndroid, Browsertime):
         self.clear_app_data()
         self.set_debug_app_flag()
         self.device.run_as_package = self.config["binary"]
-        self.remote_test_root = self.device.test_root
+        external_storage = self.device.shell_output("echo $EXTERNAL_STORAGE")
+        self.remote_test_root = os.path.join(
+            external_storage,
+            "Android",
+            "data",
+            self.config["binary"],
+            "files",
+            "test_root",
+        )
         self.geckodriver_profile = os.path.join(
             self.remote_test_root, "%s-geckodriver-profile" % self.config["binary"]
         )
