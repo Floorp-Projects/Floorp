@@ -18,9 +18,6 @@ mk_add_options AUTOCLOBBER=1
 
 ac_add_options --enable-crashreporter
 
-# Disable enforcing that add-ons are signed by the trusted root
-MOZ_REQUIRE_SIGNING=${MOZ_REQUIRE_SIGNING-0}
-
 ac_add_options --enable-js-shell
 
 . "$topsrcdir/build/mozconfig.automation"

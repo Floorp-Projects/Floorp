@@ -29,19 +29,6 @@ config = {
             "browser/config/mozconfigs/win64-aarch64/l10n-mozconfig",
             "browser/config/mozconfigs/macosx64/l10n-mozconfig",
         ]
-    ]
-    + [
-        # File, from, to
-        (
-            "build/mozconfig.common",
-            "MOZ_REQUIRE_SIGNING=${MOZ_REQUIRE_SIGNING-0}",
-            "MOZ_REQUIRE_SIGNING=${MOZ_REQUIRE_SIGNING-1}",
-        ),
-        (
-            "build/mozconfig.common",
-            "# Disable enforcing that add-ons are signed by the trusted root",
-            "# Enable enforcing that add-ons are signed by the trusted root",
-        ),
     ],
     "vcs_share_base": os.path.join(ABS_WORK_DIR, "hg-shared"),
     # "hg_share_base": None,
