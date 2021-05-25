@@ -3,7 +3,7 @@ ac_add_options --disable-debug
 ac_add_options --enable-optimize="-O2 -gline-tables-only"
 
 #add-on signing is checked but not enforced
-MOZ_REQUIRE_SIGNING=0
+MOZ_REQUIRE_SIGNING=
 
 . $topsrcdir/build/mozconfig.wasm-sandboxing
 
