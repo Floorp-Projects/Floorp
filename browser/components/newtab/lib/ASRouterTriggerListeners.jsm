@@ -468,10 +468,6 @@ this.ASRouterTriggerListeners = new Map([
     },
   ],
 
-  /**
-   * Attach listener to count location changes and notify the trigger handler
-   * on content blocked event
-   */
   [
     "contentBlocking",
     {
