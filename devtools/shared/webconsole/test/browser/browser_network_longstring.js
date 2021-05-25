@@ -64,7 +64,7 @@ add_task(async function() {
   const eventTimings = await webConsoleFront.getEventTimings(netActor);
   assertEventTimings(eventTimings);
 
-  await target.destroy();
+  await commands.destroy();
 
   DevToolsServer.LONG_STRING_LENGTH = ORIGINAL_LONG_STRING_LENGTH;
   DevToolsServer.LONG_STRING_INITIAL_LENGTH = ORIGINAL_LONG_STRING_INITIAL_LENGTH;
