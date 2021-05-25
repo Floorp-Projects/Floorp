@@ -515,16 +515,13 @@ void LogError(const nsACString& aExpr, const ResultType& aResult,
     auto extra = Some([&] {
       auto res = CopyableTArray<EventExtraEntry>{};
       res.SetCapacity(6);
+
+      res.AppendElement(EventExtraEntry{
+          "context"_ns, nsPromiseFlatCString{*contextIt->second}});
+
       // TODO We could still fill the module field, based on the source
       // directory, but we probably don't need to.
       // res.AppendElement(EventExtraEntry{"module"_ns, aModule});
-      res.AppendElement(
-          EventExtraEntry{"source_file"_ns, nsCString(sourceFileRelativePath)});
-      res.AppendElement(
-          EventExtraEntry{"source_line"_ns, IntToCString(aSourceFileLine)});
-      res.AppendElement(EventExtraEntry{
-          "context"_ns, nsPromiseFlatCString{*contextIt->second}});
-      res.AppendElement(EventExtraEntry{"severity"_ns, severityString});
 
       if (!rvName.IsEmpty()) {
         res.AppendElement(EventExtraEntry{"result"_ns, nsCString{rvName}});
@@ -540,6 +537,14 @@ void LogError(const nsACString& aExpr, const ResultType& aResult,
 
       res.AppendElement(
           EventExtraEntry{"seq"_ns, IntToCString(++sSequenceNumber)});
+
+      res.AppendElement(EventExtraEntry{"severity"_ns, severityString});
+
+      res.AppendElement(
+          EventExtraEntry{"source_file"_ns, nsCString(sourceFileRelativePath)});
+
+      res.AppendElement(
+          EventExtraEntry{"source_line"_ns, IntToCString(aSourceFileLine)});
 
       return res;
     }());
