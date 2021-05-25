@@ -5871,22 +5871,13 @@
 
 - name: javascript.options.wasm_optimizingjit
   type: bool
-#if defined(MOZ_AARCH64) && !defined(NIGHTLY_BUILD)
-  value: false
-#else
   value: true
-#endif
   mirror: always
 
-# SIMD is supported only on x86 and x64, with arm64 support imminent.
 #if defined(ENABLE_WASM_SIMD)
 -   name: javascript.options.wasm_simd
     type: bool
-#if defined(MOZ_AARCH64)
-    value: @IS_NIGHTLY_BUILD@
-#else
     value: true
-#endif
     mirror: always
 #endif  // defined(ENABLE_WASM_SIMD)
 
