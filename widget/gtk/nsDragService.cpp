@@ -576,9 +576,13 @@ nsDragService::GetNumDropItems(uint32_t* aNumItems) {
   }
 
   bool isList = IsTargetContextList();
-  if (isList)
+  if (isList) {
+    if (!mSourceDataItems) {
+      *aNumItems = 0;
+      return NS_OK;
+    }
     mSourceDataItems->GetLength(aNumItems);
-  else {
+  } else {
     GdkAtom gdkFlavor = gdk_atom_intern(gTextUriListType, FALSE);
     GetTargetDragData(gdkFlavor);
     if (mTargetDragData) {
