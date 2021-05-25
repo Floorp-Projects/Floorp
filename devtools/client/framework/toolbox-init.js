@@ -105,26 +105,20 @@ async function initToolbox(url, host) {
       }
     }
 
-    const options = { customIframe: host };
-    const newToolbox = await gDevTools.showToolbox(descriptor, {
-      toolId: tool,
-      hostType: Toolbox.HostType.PAGE,
-      hostOptions: options,
-    });
-
-    // TODO: We should use an event from the descriptor instead, in order to
-    // attach to it before the toolbox was opened. Otherwise if a target
-    // disconnects before the toolbox was fully displayed, we will not navigate
-    // to the error page. See https://bugzilla.mozilla.org/show_bug.cgi?id=1695929
-    const target = newToolbox.target;
     // Display an error page if we are connected to a remote target and we lose it
-    const { descriptorFront } = target;
-    descriptorFront.once("descriptor-destroyed", function() {
+    descriptor.once("descriptor-destroyed", function() {
       // Prevent trying to display the error page if the toolbox tab is being destroyed
       if (host.contentDocument) {
         const error = new Error("Debug target was disconnected");
         showErrorPage(host.contentDocument, `${error}`);
       }
+    });
+
+    const options = { customIframe: host };
+    await gDevTools.showToolbox(descriptor, {
+      toolId: tool,
+      hostType: Toolbox.HostType.PAGE,
+      hostOptions: options,
     });
   } catch (error) {
     // When an error occurs, show error page with message.
