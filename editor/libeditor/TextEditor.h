@@ -62,20 +62,6 @@ class TextEditor : public EditorBase, public nsITimerCallback, public nsINamed {
   NS_IMETHOD GetTextLength(int32_t* aCount) override;
 
   /**
-   * Do "undo" or "redo".
-   *
-   * @param aCount              How many count of transactions should be
-   *                            handled.
-   * @param aPrincipal          Set subject principal if it may be called by
-   *                            JS.  If set to nullptr, will be treated as
-   *                            called by system.
-   */
-  MOZ_CAN_RUN_SCRIPT nsresult UndoAsAction(uint32_t aCount,
-                                           nsIPrincipal* aPrincipal = nullptr);
-  MOZ_CAN_RUN_SCRIPT nsresult RedoAsAction(uint32_t aCount,
-                                           nsIPrincipal* aPrincipal = nullptr);
-
-  /**
    * Do "cut".
    *
    * @param aPrincipal          If you know current context is subject

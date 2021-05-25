@@ -275,7 +275,7 @@ bool UndoCommand::IsCommandEnabled(Command aCommand,
 nsresult UndoCommand::DoCommand(Command aCommand, TextEditor& aTextEditor,
                                 nsIPrincipal* aPrincipal) const {
   nsresult rv = aTextEditor.UndoAsAction(1, aPrincipal);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "TextEditor::UndoAsAction() failed");
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "EditorBase::UndoAsAction() failed");
   return rv;
 }
 
@@ -303,7 +303,7 @@ bool RedoCommand::IsCommandEnabled(Command aCommand,
 nsresult RedoCommand::DoCommand(Command aCommand, TextEditor& aTextEditor,
                                 nsIPrincipal* aPrincipal) const {
   nsresult rv = aTextEditor.RedoAsAction(1, aPrincipal);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "TextEditor::RedoAsAction() failed");
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "EditorBase::RedoAsAction() failed");
   return rv;
 }
 
