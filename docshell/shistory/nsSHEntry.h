@@ -65,6 +65,7 @@ class nsSHEntry : public nsISHEntry {
   bool mLoadedInThisProcess;
   bool mPersist;
   bool mHasUserInteraction;
+  bool mHasUserActivation;
 };
 
 #endif /* nsSHEntry_h */
