@@ -7,6 +7,7 @@
 #include "gtest/gtest.h"
 
 #include "mozilla/dom/QMResult.h"
+#include "mozilla/dom/QMResultInlines.h"
 
 using namespace mozilla;
 
@@ -50,4 +51,31 @@ TEST(DOM_Quota_QMResult, ToQMResult)
   ASSERT_EQ(res.StackId(), 4u);
   ASSERT_EQ(res.FrameId(), 1u);
   ASSERT_EQ(res.NSResult(), NS_ERROR_FAILURE);
+}
+
+TEST(DOM_Quota_QMResult, ToResult)
+{
+  // copy
+  {
+    const auto res = ToQMResult(NS_ERROR_FAILURE);
+    auto valOrErr = ToResult(res);
+    static_assert(std::is_same_v<decltype(valOrErr), Result<Ok, QMResult>>);
+    ASSERT_TRUE(valOrErr.isErr());
+    auto err = valOrErr.unwrapErr();
+    ASSERT_EQ(err.StackId(), 5u);
+    ASSERT_EQ(err.FrameId(), 1u);
+    ASSERT_EQ(err.NSResult(), NS_ERROR_FAILURE);
+  }
+
+  // move
+  {
+    auto res = ToQMResult(NS_ERROR_FAILURE);
+    auto valOrErr = ToResult(std::move(res));
+    static_assert(std::is_same_v<decltype(valOrErr), Result<Ok, QMResult>>);
+    ASSERT_TRUE(valOrErr.isErr());
+    auto err = valOrErr.unwrapErr();
+    ASSERT_EQ(err.StackId(), 6u);
+    ASSERT_EQ(err.FrameId(), 1u);
+    ASSERT_EQ(err.NSResult(), NS_ERROR_FAILURE);
+  }
 }

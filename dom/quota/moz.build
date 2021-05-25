@@ -20,6 +20,7 @@ XPIDL_MODULE = "dom_quota"
 
 EXPORTS.mozilla.dom += [
     "QMResult.h",
+    "QMResultInlines.h",
     "StorageManager.h",
 ]
 
