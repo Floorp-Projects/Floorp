@@ -424,6 +424,20 @@ class EditorBase : public nsIEditor,
   }
 
   /**
+   * IsCutCommandEnabled() returns whether cut command can be enabled or
+   * disabled.  This always returns true if we're in non-chrome HTML/XHTML
+   * document.  Otherwise, same as the result of `IsCopyToClipboardAllowed()`.
+   */
+  MOZ_CAN_RUN_SCRIPT bool IsCutCommandEnabled() const;
+
+  /**
+   * IsCopyCommandEnabled() returns copy command can be enabled or disabled.
+   * This always returns true if we're in non-chrome HTML/XHTML document.
+   * Otherwise, same as the result of `IsCopyToClipboardAllowed()`.
+   */
+  MOZ_CAN_RUN_SCRIPT bool IsCopyCommandEnabled() const;
+
+  /**
    * IsCopyToClipboardAllowed() returns true if the selected content can
    * be copied into the clipboard.  This returns true when:
    * - `Selection` is not collapsed and we're not a password editor.
@@ -2383,6 +2397,13 @@ class EditorBase : public nsIEditor,
     MOZ_ASSERT(IsEditActionDataAvailable());
     return !SelectionRef().IsCollapsed();
   }
+
+  /**
+   * Helper for Is{Cut|Copy}CommandEnabled.
+   * Look for a listener for the given command, including up the target chain.
+   */
+  MOZ_CAN_RUN_SCRIPT bool CheckForClipboardCommandListener(
+      nsAtom* aCommand, EventMessage aEventMessage) const;
 
  private:
   nsCOMPtr<nsISelectionController> mSelectionController;

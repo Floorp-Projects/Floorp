@@ -30,12 +30,14 @@
 #include "mozilla/BasePrincipal.h"            // for BasePrincipal
 #include "mozilla/CheckedInt.h"               // for CheckedInt
 #include "mozilla/ComposerCommandsUpdater.h"  // for ComposerCommandsUpdater
+#include "mozilla/ContentEvents.h"            // for InternalClipboardEvent
 #include "mozilla/CSSEditUtils.h"             // for CSSEditUtils
 #include "mozilla/EditAction.h"               // for EditSubAction
 #include "mozilla/EditorDOMPoint.h"           // for EditorDOMPoint
 #include "mozilla/EditorSpellCheck.h"         // for EditorSpellCheck
 #include "mozilla/EditorUtils.h"              // for various helper classes.
 #include "mozilla/EditTransactionBase.h"      // for EditTransactionBase
+#include "mozilla/EventDispatcher.h"          // for EventChainPreVisitor, etc.
 #include "mozilla/FlushType.h"                // for FlushType::Frames
 #include "mozilla/HTMLEditor.h"               // for HTMLEditor
 #include "mozilla/IMEContentObserver.h"       // for IMEContentObserver
@@ -61,12 +63,13 @@
 #include "mozilla/TextEvents.h"
 #include "mozilla/TransactionManager.h"  // for TransactionManager
 #include "mozilla/Tuple.h"
-#include "mozilla/dom/AbstractRange.h"  // for AbstractRange
-#include "mozilla/dom/Attr.h"           // for Attr
-#include "mozilla/dom/CharacterData.h"  // for CharacterData
-#include "mozilla/dom/DataTransfer.h"   // for DataTransfer
-#include "mozilla/dom/Element.h"        // for Element, nsINode::AsElement
-#include "mozilla/dom/EventTarget.h"    // for EventTarget
+#include "mozilla/dom/AbstractRange.h"    // for AbstractRange
+#include "mozilla/dom/Attr.h"             // for Attr
+#include "mozilla/dom/CharacterData.h"    // for CharacterData
+#include "mozilla/dom/DataTransfer.h"     // for DataTransfer
+#include "mozilla/dom/DocumentInlines.h"  // for GetObservingPresShell
+#include "mozilla/dom/Element.h"          // for Element, nsINode::AsElement
+#include "mozilla/dom/EventTarget.h"      // for EventTarget
 #include "mozilla/dom/HTMLBodyElement.h"
 #include "mozilla/dom/HTMLBRElement.h"
 #include "mozilla/dom/Selection.h"    // for Selection, etc.
@@ -1418,6 +1421,49 @@ NS_IMETHODIMP EditorBase::SetDocumentCharacterSet(
   return NS_OK;
 }
 
+bool EditorBase::CheckForClipboardCommandListener(
+    nsAtom* aCommand, EventMessage aEventMessage) const {
+  RefPtr<Document> document = GetDocument();
+  if (!document) {
+    return false;
+  }
+
+  // We exclude XUL and chrome docs here to maintain current behavior where
+  // in these cases the editor element alone is expected to handle clipboard
+  // command availability.
+  if (!document->AreClipboardCommandsUnconditionallyEnabled()) {
+    return false;
+  }
+
+  // So in web content documents, "unconditionally" enabled Cut/Copy are not
+  // really unconditional; they're enabled if there is a listener that wants
+  // to handle them. What they're not conditional on here is whether there is
+  // currently a selection in the editor.
+  RefPtr<PresShell> presShell = document->GetObservingPresShell();
+  if (!presShell) {
+    return false;
+  }
+  RefPtr<nsPresContext> presContext = presShell->GetPresContext();
+  if (!presContext) {
+    return false;
+  }
+
+  RefPtr<EventTarget> et = GetDOMEventTarget();
+  while (et) {
+    EventListenerManager* elm = et->GetExistingListenerManager();
+    if (elm && elm->HasListenersFor(aCommand)) {
+      return true;
+    }
+    InternalClipboardEvent event(true, aEventMessage);
+    EventChainPreVisitor visitor(presContext, &event, nullptr,
+                                 nsEventStatus_eIgnore, false, et);
+    et->GetEventTargetParent(visitor);
+    et = visitor.GetParentTarget();
+  }
+
+  return false;
+}
+
 NS_IMETHODIMP EditorBase::Cut() {
   nsresult rv = MOZ_KnownLive(AsTextEditor())->CutAsAction();
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "TextEditor::CutAsAction() failed");
@@ -1428,8 +1474,25 @@ NS_IMETHODIMP EditorBase::CanCut(bool* aCanCut) {
   if (NS_WARN_IF(!aCanCut)) {
     return NS_ERROR_INVALID_ARG;
   }
-  *aCanCut = MOZ_KnownLive(AsTextEditor())->IsCutCommandEnabled();
+  *aCanCut = IsCutCommandEnabled();
   return NS_OK;
+}
+
+bool EditorBase::IsCutCommandEnabled() const {
+  AutoEditActionDataSetter editActionData(*this, EditAction::eNotEditing);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return false;
+  }
+
+  if (IsModifiable() && IsCopyToClipboardAllowedInternal()) {
+    return true;
+  }
+
+  // If there's an event listener for "cut", we always enable the command
+  // as we don't really know what the listener may want to do in response.
+  // We look up the event target chain for a possible listener on a parent
+  // in addition to checking the immediate target.
+  return CheckForClipboardCommandListener(nsGkAtoms::oncut, eCut);
 }
 
 NS_IMETHODIMP EditorBase::Copy() { return NS_ERROR_NOT_IMPLEMENTED; }
@@ -1438,8 +1501,22 @@ NS_IMETHODIMP EditorBase::CanCopy(bool* aCanCopy) {
   if (NS_WARN_IF(!aCanCopy)) {
     return NS_ERROR_INVALID_ARG;
   }
-  *aCanCopy = MOZ_KnownLive(AsTextEditor())->IsCopyCommandEnabled();
+  *aCanCopy = IsCopyCommandEnabled();
   return NS_OK;
+}
+
+bool EditorBase::IsCopyCommandEnabled() const {
+  AutoEditActionDataSetter editActionData(*this, EditAction::eNotEditing);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return false;
+  }
+
+  if (IsCopyToClipboardAllowedInternal()) {
+    return true;
+  }
+
+  // Like "cut", always enable "copy" if there's a listener.
+  return CheckForClipboardCommandListener(nsGkAtoms::oncopy, eCopy);
 }
 
 NS_IMETHODIMP EditorBase::Paste(int32_t aClipboardType) {
