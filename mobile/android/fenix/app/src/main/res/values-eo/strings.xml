@@ -411,6 +411,11 @@
         and the third is the device model. -->
     <string name="default_device_name_2">%1$s en %2$s %3$s</string>
 
+    <!-- Preference for syncing credit cards -->
+    <string name="preferences_sync_credit_cards">Kreditkartoj</string>
+    <!-- Preference for syncing addresses -->
+    <string name="preferences_sync_address">Adresoj</string>
+
     <!-- Send Tab -->
     <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="fxa_received_tab_channel_name">Ricevitaj langetoj</string>
@@ -442,9 +447,6 @@
     <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
     <string name="exceptions_empty_message_learn_more_link">Pli da informo</string>
 
-    <!-- Description in Quick Settings that tells user tracking protection is off globally for all sites, and links to Settings to turn it on -->
-    <string name="preferences_tracking_protection_turned_off_globally">Malŝaltita ĝenerale, iru al Agordoj por ŝalti ĝin.</string>
-
     <!-- Preference switch for Telemetry -->
     <string name="preferences_telemetry">Telemezuro</string>
     <!-- Preference switch for usage and technical data collection -->
@@ -455,6 +457,8 @@
     <string name="preferences_marketing_data">Merkatikaj datumoj</string>
     <!-- Preference description for marketing data collection, parameter is the app name (e.g. Firefox) -->
     <string name="preferences_marketing_data_description">Divido de datumoj pri la trajtoj, kiujn vi uzas en %1$s kun Leanplum, nia poŝaparata merkatika provizanto.</string>
+    <!-- Preference description for marketing data collection -->
+    <string name="preferences_marketing_data_description2">Divido de informoj kun Adjust, nia provizanto de marketiko poŝaparata</string>
     <!-- Title for studies preferences -->
     <string name="preference_experiments_2">Studoj</string>
     <!-- Summary for studies preferences -->
@@ -798,8 +802,6 @@
     <string name="bookmark_delete_folder_snackbar">%1$s forigita</string>
     <!-- Screen title for adding a bookmarks folder -->
     <string name="bookmark_add_folder">Aldoni dosierujon</string>
-    <!-- deprecated: Snackbar title shown after a bookmark has been created. -->
-    <string name="bookmark_created_snackbar">Legosigno kreita.</string>
     <!-- Snackbar title shown after a bookmark has been created. -->
     <string name="bookmark_saved_snackbar">Legosigno konservita!</string>
     <!-- Snackbar edit button shown after a bookmark has been created. -->
@@ -1460,10 +1462,8 @@
     <string name="preferences_passwords_autofill">Aŭtomata plenigo</string>
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">Speguli legitimilojn</string>
-    <!-- Syncing saved logins in Fenix is on -->
-    <string name="preferences_passwords_sync_logins_on">Ŝaltita</string>
-    <!-- Syncing saved logins in Fenix is off -->
-    <string name="preferences_passwords_sync_logins_off">Malŝaltita</string>
+    <!-- Preference for syncing saved logins in Fenix, when not signed in-->
+    <string name="preferences_passwords_sync_logins_across_devices">Speguli legitimilojn inter aparatoj</string>
     <!-- Syncing saved logins in Fenix needs reconnect to sync -->
     <string name="preferences_passwords_sync_logins_reconnect">Rekonekti</string>
     <!-- Syncing saved logins in Fenix needs login -->
@@ -1565,6 +1565,8 @@
     <string name="preferences_credit_cards_save_and_autofill_cards_summary">La datumoj estas ĉifritaj</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
     <string name="preferences_credit_cards_sync_cards_across_devices">Speguli kreditkartojn inter aparatoj</string>
+    <!-- Preference option for syncing credit cards across devices. This is displayed when the user is signed into sync -->
+    <string name="preferences_credit_cards_sync_cards">Speguli kreditkartojn</string>
     <!-- Preference option for adding a credit card -->
     <string name="preferences_credit_cards_add_credit_card">Aldoni kreditkarton</string>
     <!-- Preference option for managing saved credit cards -->
@@ -1594,6 +1596,9 @@
     <string name="credit_cards_cancel_button">Nuligi</string>
     <!-- Title of the "Saved cards" screen -->
     <string name="credit_cards_saved_cards">Konservitaj kreditkartoj</string>
+
+    <!-- Error message for credit card number validation -->
+    <string name="credit_cards_number_validation_error_message">Bonvolu tajpi validan kreditkaran numeron</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Aldoni serĉilon</string>
@@ -1761,20 +1766,13 @@
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Forigi</string>
 
-    <!-- Deprecated: text for the firefox account onboarding card header
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_firefox_account_header">Eltiru la maksimumon el %s.</string>
-
     <!-- Content description radio buttons with a link to more information -->
     <string name="radio_preference_info_content_description">Alklaku por havi pli da informo</string>
 
-    <!-- Deprecated: No Open Tabs Message Header -->
-    <string name="no_collections_header1">Kolekti la aferojn kiu gravas por vi</string>
-    <!-- Deprecated: Label to describe what collections are to a new user without any collections -->
-    <string name="no_collections_description1">Grupigi similajn serĉojn, retejojn kaj langetojn por pli rapida posta aliro.</string>
-    <!-- Deprecated: text for the firefox account onboarding card header when we detect you're already signed in to -->
-    <string name="onboarding_firefox_account_auto_signin_header_2">Vi komencis seancon kiel %s en alia retumilo Firefox en tiu ĉi poŝaparato. Ĉu vi ŝatus komenci seancon per tiu konto?</string>
-    <!-- Deprecated: Describes the add to homescreen functionality -->
-    <string name="add_to_homescreen_description">Vi povas facile aldoni tiun ĉi retejon al la hejmpaĝo de via telefono, por havi tujan aliron kaj retumi pli rapide per kvazaŭprograma sperto.</string>
+    <!-- Content description for the action bar "up" button -->
+    <string name="action_bar_up_description">Iri supren</string>
 
-    </resources>
+    <!-- Content description for privacy content close button -->
+    <string name="privacy_content_close_button_content_description">Fermi</string>
+
+</resources>

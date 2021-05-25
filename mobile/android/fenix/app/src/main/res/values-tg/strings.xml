@@ -214,7 +214,7 @@
     <!-- Button in the search suggestions onboarding that does not allow search suggestions in private sessions -->
     <string name="search_suggestions_onboarding_do_not_allow_button">Иҷозат дода нашавад</string>
     <!-- Search suggestion onboarding hint title text -->
-    <string name="search_suggestions_onboarding_title">Ба пешниҳодҳои ҷустуҷӯ дар ҷаласаҳои махфӣ иҷозат диҳед?</string>
+    <string name="search_suggestions_onboarding_title">Ба пешниҳодҳои ҷустуҷӯ дар ҷаласаҳои махфӣ иҷозат медиҳед?</string>
     <!-- Search suggestion onboarding hint description text, first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="search_suggestions_onboarding_text">%s ба низоми ҷустуҷӯии пешфарз ҳамаи он чизеро, ки шумо ба навори нишонӣ ворид мекунед, мефиристонад.</string>
     <!-- Search suggestion onboarding hint Learn more link text -->

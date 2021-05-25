@@ -439,6 +439,8 @@
     <string name="preferences_telemetry">پێوانەی دووری</string>
     <!-- Preference switch for usage and technical data collection -->
     <string name="preference_usage_data">بەکارهێنان و زانیاری تەکنیکی</string>
+    <!-- Preference description for usage and technical data collection -->
+    <string name="preferences_usage_data_description">چوستی وێبگەڕ، بەکارهێنانی و زانیاری خوازراوی وێبگەڕەکەت بڵاوەپێدەکات لەگەڵ مۆزیلا بۆ ئەوەی یارمەتیمان بدات %1$s باشتر بکەین</string>
     <!-- Preference switch for marketing data collection -->
     <string name="preferences_marketing_data">زانیاری بازاڕیکردن</string>
     <!-- Preference description for marketing data collection, parameter is the app name (e.g. Firefox) -->
@@ -499,7 +501,7 @@
 
     <!-- Gestures Preferences-->
     <!-- Preferences for using pull to refresh in a webpage -->
-    <string name="preference_gestures_website_pull_to_refresh">ڕایکێشە بۆ نوێکردنەوە</string>
+    <string name="preference_gestures_website_pull_to_refresh">بیخزێنە بۆ نوێکردنەوە</string>
     <!-- Preference for using the dynamic toolbar -->
     <string name="preference_gestures_dynamic_toolbar">بیخزێنە بۆ شاردنەوەی توڵامراز</string>
     <!-- Preference for switching tabs by swiping horizontally on the toolbar -->
@@ -1101,6 +1103,12 @@
     <string name="preferences_delete_browsing_data_downloads">داگرتنەکان</string>
     <!-- Text for the button to delete browsing data -->
     <string name="preferences_delete_browsing_data_button">سڕینەوەی زانیاری گەڕان</string>
+    <!-- Title for the Delete browsing data on quit preference -->
+    <string name="preferences_delete_browsing_data_on_quit">سڕێنەوەی زانیاری گەڕان دووای دەرچوون</string>
+    <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
+    <string name="preference_summary_delete_browsing_data_on_quit">خۆکارانەوە زانیارییەکانی گەڕان دەسڕێتەوە کاتێک دەردەچیت لە پێڕستی سەرەکیەوە</string>
+    <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
+    <string name="preference_summary_delete_browsing_data_on_quit_2">خۆکارانەوە زانیارییەکانی گەڕان دەسڕێتەوە کاتێک دەردەچیت لە پێڕستی سەرەکیەوە</string>
     <!-- Action item in menu for the Delete browsing data on quit feature -->
     <string name="delete_browsing_data_on_quit_action">وازهێنان</string>
 
@@ -1149,6 +1157,8 @@
     <string name="onboarding_whats_new_description_linktext">وەڵامەکان لێرە بەدەست بهێنە</string>
     <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
     <string name="onboarding_account_sign_in_header_1">فایەرفۆکس هاوکاتگەری پێبکە لە نێوان ئامێرەکان</string>
+    <!-- Text for the button to learn more about signing in to your Firefox account -->
+    <string name="onboarding_manual_sign_in_description">نیشانکراوەکان، مێژووی کار، و وشەی تێپەڕەکان بهێنە بۆ ئەم ئامێرە.</string>
     <!-- text for the button to confirm automatic sign-in -->
     <string name="onboarding_firefox_account_auto_signin_confirm">بەڵێ، بمکە ژوورەوە</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
@@ -1251,6 +1261,8 @@
     <string name="preference_enhanced_tracking_protection">باشترکردنی پارێزگاری لە چاودێریکردن</string>
     <!-- Title for the description of enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_title">بگەڕێ بێئەوەی چاودێری بکرێیت</string>
+    <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
+    <string name="preference_enhanced_tracking_protection_explanation">زانیارییەکانت بپارێزە. %s دەتپارێزێت لە زۆرێک لەو پەیگرانەی کە شوێنپێت هەڵ دەگرن لە سەرهێڵ.</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">زیاتر بزانە</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
@@ -1305,6 +1317,12 @@
     <string name="etp_fingerprinters_title">پەنجەمۆرەکان</string>
     <!-- Category of trackers (tracking content) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_title">چاودێریکردنی ناوەڕۆک</string>
+    <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
+    <string name="etp_panel_on">پاراستن کارایە بۆ ئەم ماڵپەڕە</string>
+    <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
+    <string name="etp_panel_off">پاراستن ناکارایە بۆ ئەم ماڵپەڕە</string>
+    <!-- Header for exceptions list for which sites enhanced tracking protection is always off -->
+    <string name="enhanced_tracking_protection_exceptions">پاراستنی چاودێری پێشکەوتوو ناکارایە بۆ ئەم ماڵپەڕانە</string>
     <!-- Content description (not visible, for screen readers etc.): Navigate
     back from ETP details (Ex: Tracking content) -->
     <string name="etp_back_button_content_description">بچۆ دواوە</string>
@@ -1317,6 +1335,9 @@
     <!-- Open source licenses page title
     The first parameter is the app name -->
     <string name="open_source_licenses_title">%s | کتێبخانەی سەرچاوە کراوە</string>
+
+    <!-- Category of trackers (redirect trackers) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_redirect_trackers_title">چاودێریکەر بنێرەوە</string>
 
     <!-- About page link text to open support link -->
     <string name="about_support">پشتگیری</string>
@@ -1450,6 +1471,8 @@
     <string name="logins_biometric_prompt_message_pin">ئامێرەکەت بکەرەوە</string>
     <!-- Title for Accessibility Force Enable Zoom Preference -->
     <string name="preference_accessibility_force_enable_zoom">هێنانە پێش لە هەموو ماڵپەڕەکان</string>
+    <!-- Summary for Accessibility Force Enable Zoom Preference -->
+    <string name="preference_accessibility_force_enable_zoom_summary">کارای بکە بۆ ئەوەی ڕێگە بدات نزیککردنەوە و دوورکردنەوە، لەکاتێکا ئەگەر ماڵپەڕەکەش رێگەت پێ نەدات.</string>
     <!-- Saved logins sorting strategy menu item -by name- (if selected, it will sort saved logins alphabetically) -->
     <string name="saved_logins_sort_strategy_alphabetically">ناو(A-Z)</string>
     <!-- Saved logins sorting strategy menu item -by last used- (if selected, it will sort saved logins by last used) -->
