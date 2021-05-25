@@ -135,8 +135,7 @@ class Message;
 
 namespace JS {
 class Value;
-
-struct PropertyDescriptor;
+class PropertyDescriptor;
 }  // namespace JS
 
 namespace mozilla {

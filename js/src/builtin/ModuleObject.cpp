@@ -558,15 +558,10 @@ bool ModuleNamespaceObject::ProxyHandler::getOwnPropertyDescriptor(
     JSContext* cx, HandleObject proxy, HandleId id,
     MutableHandle<mozilla::Maybe<PropertyDescriptor>> desc) const {
   Rooted<ModuleNamespaceObject*> ns(cx, &proxy->as<ModuleNamespaceObject>());
-  if (JSID_IS_SYMBOL(id)) {
-    if (JSID_TO_SYMBOL(id) == cx->wellKnownSymbols().toStringTag) {
-      RootedValue value(cx, StringValue(cx->names().Module));
-      Rooted<PropertyDescriptor> desc_(cx);
-      desc_.setWritable(false);
-      desc_.setEnumerable(false);
-      desc_.setConfigurable(false);
-      desc_.setValue(value);
-      desc.set(mozilla::Some(desc_.get()));
+  if (id.isSymbol()) {
+    if (id.isWellKnownSymbol(JS::SymbolCode::toStringTag)) {
+      desc.set(mozilla::Some(
+          PropertyDescriptor::Data(StringValue(cx->names().Module))));
       return true;
     }
 
@@ -589,11 +584,9 @@ bool ModuleNamespaceObject::ProxyHandler::getOwnPropertyDescriptor(
     return false;
   }
 
-  Rooted<PropertyDescriptor> desc_(cx);
-  desc_.setConfigurable(false);
-  desc_.setEnumerable(true);
-  desc_.setValue(value);
-  desc.set(mozilla::Some(desc_.get()));
+  desc.set(mozilla::Some(PropertyDescriptor::Data(
+      value,
+      {JS::PropertyAttribute::Enumerable, JS::PropertyAttribute::Writable})));
   return true;
 }
 
