@@ -9,7 +9,7 @@ pub struct AliasSectionReader<'a> {
     count: u32,
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub enum Alias<'a> {
     OuterType {
         relative_depth: u32,

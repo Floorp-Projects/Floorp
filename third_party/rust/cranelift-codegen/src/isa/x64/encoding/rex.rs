@@ -28,8 +28,9 @@ pub(crate) fn low8_will_sign_extend_to_32(x: u32) -> bool {
     xs == ((xs << 24) >> 24)
 }
 
+/// Encode the ModR/M byte.
 #[inline(always)]
-pub(crate) fn encode_modrm(m0d: u8, enc_reg_g: u8, rm_e: u8) -> u8 {
+pub fn encode_modrm(m0d: u8, enc_reg_g: u8, rm_e: u8) -> u8 {
     debug_assert!(m0d < 4);
     debug_assert!(enc_reg_g < 8);
     debug_assert!(rm_e < 8);
@@ -153,9 +154,38 @@ impl From<(OperandSize, Reg)> for RexFlags {
     }
 }
 
+/// Allows using the same opcode byte in different "opcode maps" to allow for more instruction
+/// encodings. See appendix A in the Intel Software Developer's Manual, volume 2A, for more details.
+#[allow(missing_docs)]
+pub enum OpcodeMap {
+    None,
+    _0F,
+    _0F38,
+    _0F3A,
+}
+
+impl OpcodeMap {
+    /// Normally the opcode map is specified as bytes in the instruction, but some x64 encoding
+    /// formats pack this information as bits in a prefix (e.g. EVEX).
+    pub(crate) fn bits(&self) -> u8 {
+        match self {
+            OpcodeMap::None => 0b00,
+            OpcodeMap::_0F => 0b01,
+            OpcodeMap::_0F38 => 0b10,
+            OpcodeMap::_0F3A => 0b11,
+        }
+    }
+}
+
+impl Default for OpcodeMap {
+    fn default() -> Self {
+        Self::None
+    }
+}
+
 /// We may need to include one or more legacy prefix bytes before the REX prefix.  This enum
 /// covers only the small set of possibilities that we actually need.
-pub(crate) enum LegacyPrefixes {
+pub enum LegacyPrefixes {
     /// No prefix bytes.
     None,
     /// Operand Size Override -- here, denoting "16-bit operation".
@@ -173,25 +203,46 @@ pub(crate) enum LegacyPrefixes {
 }
 
 impl LegacyPrefixes {
+    /// Emit the legacy prefix as bytes (e.g. in REX instructions).
     #[inline(always)]
     pub(crate) fn emit(&self, sink: &mut MachBuffer<Inst>) {
         match self {
-            LegacyPrefixes::_66 => sink.put1(0x66),
-            LegacyPrefixes::_F0 => sink.put1(0xF0),
-            LegacyPrefixes::_66F0 => {
+            Self::_66 => sink.put1(0x66),
+            Self::_F0 => sink.put1(0xF0),
+            Self::_66F0 => {
                 // I don't think the order matters, but in any case, this is the same order that
                 // the GNU assembler uses.
                 sink.put1(0x66);
                 sink.put1(0xF0);
             }
-            LegacyPrefixes::_F2 => sink.put1(0xF2),
-            LegacyPrefixes::_F3 => sink.put1(0xF3),
-            LegacyPrefixes::_66F3 => {
+            Self::_F2 => sink.put1(0xF2),
+            Self::_F3 => sink.put1(0xF3),
+            Self::_66F3 => {
                 sink.put1(0x66);
                 sink.put1(0xF3);
             }
-            LegacyPrefixes::None => (),
+            Self::None => (),
         }
+    }
+
+    /// Emit the legacy prefix as bits (e.g. for EVEX instructions).
+    #[inline(always)]
+    pub(crate) fn bits(&self) -> u8 {
+        match self {
+            Self::None => 0b00,
+            Self::_66 => 0b01,
+            Self::_F3 => 0b10,
+            Self::_F2 => 0b11,
+            _ => panic!(
+                "VEX and EVEX bits can only be extracted from single prefixes: None, 66, F3, F2"
+            ),
+        }
+    }
+}
+
+impl Default for LegacyPrefixes {
+    fn default() -> Self {
+        Self::None
     }
 }
 

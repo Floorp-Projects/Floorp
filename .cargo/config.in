@@ -115,7 +115,7 @@ rev = "be19a243b86e0bafb9937d661fc8eabb3e42b44e"
 [source."https://github.com/bytecodealliance/wasmtime"]
 git = "https://github.com/bytecodealliance/wasmtime"
 replace-with = "vendored-sources"
-rev = "6b77786a6e758e91da9484a1c80b6fa5f88e1b3d"
+rev = "824fa69756523f2b6d49029fe25de94130b1f144"
 
 [source."https://github.com/PLSysSec/rlbox_lucet_sandbox/"]
 git = "https://github.com/PLSysSec/rlbox_lucet_sandbox/"

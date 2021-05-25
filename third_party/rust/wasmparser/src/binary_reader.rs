@@ -1864,10 +1864,7 @@ impl<'a> BinaryReader<'a> {
             0 => Ok(NameType::Module),
             1 => Ok(NameType::Function),
             2 => Ok(NameType::Local),
-            _ => Err(BinaryReaderError::new(
-                "Invalid name type",
-                self.original_position() - 1,
-            )),
+            _ => Ok(NameType::Unknown(code)),
         }
     }
 
