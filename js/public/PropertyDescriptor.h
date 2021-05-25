@@ -404,6 +404,8 @@ class JS_PUBLIC_API PropertyDescriptor {
   void assertComplete() const {
 #ifdef DEBUG
     assertValid();
+    MOZ_ASSERT(hasConfigurable());
+    MOZ_ASSERT(hasEnumerable());
     MOZ_ASSERT(!isGenericDescriptor());
     MOZ_ASSERT_IF(isDataDescriptor(), hasValue() && hasWritable());
     MOZ_ASSERT_IF(isAccessorDescriptor(),
