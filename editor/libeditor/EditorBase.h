@@ -1525,6 +1525,14 @@ class EditorBase : public nsIEditor,
   bool IsSelectionRangeContainerNotContent() const;
 
   /**
+   * OnInputText() is called when user inputs text with keyboard or something.
+   *
+   * @param aStringToInsert     The string to insert.
+   */
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
+  OnInputText(const nsAString& aStringToInsert);
+
+  /**
    * InsertTextAsSubAction() inserts aStringToInsert at selection.  This
    * should be used for handling it as an edit sub-action.
    *
