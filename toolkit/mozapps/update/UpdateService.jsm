@@ -39,7 +39,14 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   WindowsRegistry: "resource://gre/modules/WindowsRegistry.jsm",
 });
 
-if (AppConstants.ENABLE_REMOTE_AGENT) {
+if (AppConstants.ENABLE_WEBDRIVER) {
+  XPCOMUtils.defineLazyServiceGetter(
+    this,
+    "Marionette",
+    "@mozilla.org/remote/marionette;1",
+    "nsIMarionette"
+  );
+
   XPCOMUtils.defineLazyServiceGetter(
     this,
     "RemoteAgent",
@@ -47,6 +54,7 @@ if (AppConstants.ENABLE_REMOTE_AGENT) {
     "nsIRemoteAgent"
   );
 } else {
+  this.Marionette = { running: false };
   this.RemoteAgent = { listening: false };
 }
 
@@ -3654,16 +3662,8 @@ UpdateService.prototype = {
   },
 
   get disabledForTesting() {
-    let marionetteRunning = false;
-
-    if ("nsIMarionette" in Ci) {
-      marionetteRunning = Cc["@mozilla.org/remote/marionette;1"].createInstance(
-        Ci.nsIMarionette
-      ).running;
-    }
-
     return (
-      (Cu.isInAutomation || marionetteRunning || RemoteAgent.listening) &&
+      (Cu.isInAutomation || Marionette.running || RemoteAgent.listening) &&
       Services.prefs.getBoolPref(PREF_APP_UPDATE_DISABLEDFORTESTING, false)
     );
   },

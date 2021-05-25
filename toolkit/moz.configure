@@ -1053,62 +1053,61 @@ set_config("FT2_LIBS", ft2_info.libs)
 add_old_configure_assignment("FT2_LIBS", ft2_info.libs)
 add_old_configure_assignment("FT2_CFLAGS", ft2_info.cflags)
 
-
-# Remote agent
-# (partial implementation of Chromium Remote Debugging Protocol)
+# WebDriver (HTTP / BiDi)
 # ==============================================================
 #
-# See https://firefox-source-docs.mozilla.org/remote/ for more.
-# The source code lives under ../remote.
-
-
-@depends(build_project)
-def remote_default(build_project):
-    # enable for Firefox and Thunderbird only
-    return build_project in ("browser", "comm/mail", "mobile/android")
-
-
-option("--enable-cdp", default=remote_default, help="{Enable|Disable} remote agent")
-
-
-@depends("--enable-cdp")
-def remote(value):
-    if value:
-        return True
-
-
-set_config("ENABLE_REMOTE_AGENT", remote)
-set_define("ENABLE_REMOTE_AGENT", remote)
-
-
+# WebDriver is a remote control interface that enables introspection and
+# control of user agents. It provides a platform- and language-neutral wire
+# protocol as a way for out-of-process programs to remotely instruct the
+# behavior of web browsers.
+#
+# The Gecko implementation is backed by Marionette and Remote Agent.
+# Both protocols are not really toolkit features, as much as Gecko engine
+# features. But they are enabled based on the toolkit, so here it lives.
+#
 # Marionette remote protocol
-# ==============================================================
+# -----------------------------------------------------------
 #
 # Marionette is the Gecko remote protocol used for various remote control,
-# automation, and testing purposes throughout Gecko, Firefox, and Fennec.
-# Marionette lives in ../testing/marionette.
-#
-# Marionette is not really a toolkit feature, as much as a Gecko
-# engine feature.  But it is enabled based on the toolkit, so here it
-# lives.
+# automation, and testing purposes throughout Gecko-based applications like
+# Firefox, Thunderbird, and any mobile browser built upon GeckoView.
 #
 # It also backs ../testing/geckodriver, which is Mozilla's WebDriver
 # implementation.
 #
-# For more information, see
-# https://developer.mozilla.org/en-US/docs/Mozilla/QA/Marionette.
+# The source of Marionette lives in ../testing/marionette.
+#
+# For more information, see:
+# https://firefox-source-docs.mozilla.org/testing/marionette/index.html
+#
+# Remote Agent (WebDriver BiDi / partial CDP)
+# -----------------------------------------------------------
+#
+# The primary purpose is the implementation of the WebDriver BiDi specification.
+# But it also complements the existing Firefox Developer Tools Remote Debugging
+# Protocol (RDP) by implementing a subset of the Chrome DevTools Protocol (CDP).
+#
+# The source of Remote Agent lives in ../remote.
+#
+# For more information, see:
+# https://firefox-source-docs.mozilla.org/remote/index.html
 
-option("--disable-marionette", help="Disable Marionette remote protocol")
+
+option(
+    "--disable-webdriver",
+    help="Disable support for WebDriver remote protocols",
+)
 
 
-@depends("--disable-marionette")
-def marionette(value):
-    if value:
+@depends("--disable-webdriver")
+def webdriver(enabled):
+    if enabled:
         return True
 
 
-set_config("ENABLE_MARIONETTE", marionette)
-set_define("ENABLE_MARIONETTE", marionette)
+set_config("ENABLE_WEBDRIVER", webdriver)
+set_define("ENABLE_WEBDRIVER", webdriver)
+
 
 # geckodriver WebDriver implementation
 # ==============================================================

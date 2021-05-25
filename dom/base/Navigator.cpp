@@ -70,8 +70,9 @@
 #include "nsICookieManager.h"
 #include "nsICookieService.h"
 #include "nsIHttpChannel.h"
-#ifdef ENABLE_MARIONETTE
+#ifdef ENABLE_WEBDRIVER
 #  include "nsIMarionette.h"
+#  include "nsIRemoteAgent.h"
 #endif
 #include "nsStreamUtils.h"
 #include "WidgetUtils.h"
@@ -2134,16 +2135,27 @@ webgpu::Instance* Navigator::Gpu() {
 
 /* static */
 bool Navigator::Webdriver() {
-  bool marionetteRunning = false;
-
-#ifdef ENABLE_MARIONETTE
+#ifdef ENABLE_WEBDRIVER
   nsCOMPtr<nsIMarionette> marionette = do_GetService(NS_MARIONETTE_CONTRACTID);
   if (marionette) {
+    bool marionetteRunning = false;
     marionette->GetRunning(&marionetteRunning);
+    if (marionetteRunning) {
+      return true;
+    }
+  }
+
+  nsCOMPtr<nsIRemoteAgent> agent = do_GetService(NS_REMOTEAGENT_CONTRACTID);
+  if (agent) {
+    bool remoteAgentListening = false;
+    agent->GetListening(&remoteAgentListening);
+    if (remoteAgentListening) {
+      return true;
+    }
   }
 #endif
 
-  return marionetteRunning;
+  return false;
 }
 
 }  // namespace mozilla::dom
