@@ -1295,7 +1295,6 @@ static unsigned ComputeAttributes(const PropertyDescriptor& desc) {
     attrs |= JSPROP_RESOLVING;
   }
 
-  MOZ_ASSERT(attrs == desc.attributesDoNotUse());
   return attrs;
 }
 

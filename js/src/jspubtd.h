@@ -89,7 +89,7 @@ JS_FRIEND_API bool CurrentThreadIsPerformingGC();
 
 namespace JS {
 
-struct JS_PUBLIC_API PropertyDescriptor;
+class JS_PUBLIC_API PropertyDescriptor;
 
 // Decorates the Unlinking phase of CycleCollection so that accidental use
 // of barriered accessors results in assertions instead of leaks.
