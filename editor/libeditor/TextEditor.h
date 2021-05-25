@@ -75,21 +75,7 @@ class TextEditor : public EditorBase, public nsITimerCallback, public nsINamed {
    */
   bool AreClipboardCommandsUnconditionallyEnabled() const;
 
-  /**
-   * IsCutCommandEnabled() returns whether cut command can be enabled or
-   * disabled.  This always returns true if we're in non-chrome HTML/XHTML
-   * document.  Otherwise, same as the result of `IsCopyToClipboardAllowed()`.
-   */
-  MOZ_CAN_RUN_SCRIPT bool IsCutCommandEnabled() const;
-
   NS_IMETHOD Copy() override;
-
-  /**
-   * IsCopyCommandEnabled() returns copy command can be enabled or disabled.
-   * This always returns true if we're in non-chrome HTML/XHTML document.
-   * Otherwise, same as the result of `IsCopyToClipboardAllowed()`.
-   */
-  MOZ_CAN_RUN_SCRIPT bool IsCopyCommandEnabled() const;
 
   /**
    * CanDeleteSelection() returns true if `Selection` is not collapsed and
@@ -670,13 +656,6 @@ class TextEditor : public EditorBase, public nsITimerCallback, public nsINamed {
                                                      uint32_t aTimeout,
                                                      bool aNotify,
                                                      bool aForceStartMasking);
-
-  /**
-   * Helper for Is{Cut|Copy}CommandEnabled.
-   * Look for a listener for the given command, including up the target chain.
-   */
-  MOZ_CAN_RUN_SCRIPT bool CheckForClipboardCommandListener(
-      nsAtom* aCommand, EventMessage aEventMessage) const;
 
  protected:
   mutable nsCOMPtr<nsIDocumentEncoder> mCachedDocumentEncoder;

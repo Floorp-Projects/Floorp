@@ -13,11 +13,9 @@
 #include "PlaceholderTransaction.h"
 #include "gfxFontUtils.h"
 #include "mozilla/Assertions.h"
-#include "mozilla/ContentEvents.h"
 #include "mozilla/ContentIterator.h"
 #include "mozilla/EditAction.h"
 #include "mozilla/EditorDOMPoint.h"
-#include "mozilla/EventDispatcher.h"
 #include "mozilla/HTMLEditor.h"
 #include "mozilla/IMEStateManager.h"
 #include "mozilla/LookAndFeel.h"
@@ -28,7 +26,6 @@
 #include "mozilla/TextComposition.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/TextServicesDocument.h"
-#include "mozilla/dom/DocumentInlines.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Selection.h"
@@ -667,66 +664,6 @@ bool TextEditor::AreClipboardCommandsUnconditionallyEnabled() const {
   return document && document->AreClipboardCommandsUnconditionallyEnabled();
 }
 
-bool TextEditor::CheckForClipboardCommandListener(
-    nsAtom* aCommand, EventMessage aEventMessage) const {
-  RefPtr<Document> document = GetDocument();
-  if (!document) {
-    return false;
-  }
-
-  // We exclude XUL and chrome docs here to maintain current behavior where
-  // in these cases the editor element alone is expected to handle clipboard
-  // command availability.
-  if (!document->AreClipboardCommandsUnconditionallyEnabled()) {
-    return false;
-  }
-
-  // So in web content documents, "unconditionally" enabled Cut/Copy are not
-  // really unconditional; they're enabled if there is a listener that wants
-  // to handle them. What they're not conditional on here is whether there is
-  // currently a selection in the editor.
-  RefPtr<PresShell> presShell = document->GetObservingPresShell();
-  if (!presShell) {
-    return false;
-  }
-  RefPtr<nsPresContext> presContext = presShell->GetPresContext();
-  if (!presContext) {
-    return false;
-  }
-
-  RefPtr<EventTarget> et = GetDOMEventTarget();
-  while (et) {
-    EventListenerManager* elm = et->GetExistingListenerManager();
-    if (elm && elm->HasListenersFor(aCommand)) {
-      return true;
-    }
-    InternalClipboardEvent event(true, aEventMessage);
-    EventChainPreVisitor visitor(presContext, &event, nullptr,
-                                 nsEventStatus_eIgnore, false, et);
-    et->GetEventTargetParent(visitor);
-    et = visitor.GetParentTarget();
-  }
-
-  return false;
-}
-
-bool TextEditor::IsCutCommandEnabled() const {
-  AutoEditActionDataSetter editActionData(*this, EditAction::eNotEditing);
-  if (NS_WARN_IF(!editActionData.CanHandle())) {
-    return false;
-  }
-
-  if (IsModifiable() && IsCopyToClipboardAllowedInternal()) {
-    return true;
-  }
-
-  // If there's an event listener for "cut", we always enable the command
-  // as we don't really know what the listener may want to do in response.
-  // We look up the event target chain for a possible listener on a parent
-  // in addition to checking the immediate target.
-  return CheckForClipboardCommandListener(nsGkAtoms::oncut, eCut);
-}
-
 NS_IMETHODIMP TextEditor::Copy() {
   AutoEditActionDataSetter editActionData(*this, EditAction::eCopy);
   if (NS_WARN_IF(!editActionData.CanHandle())) {
@@ -738,20 +675,6 @@ NS_IMETHODIMP TextEditor::Copy() {
 
   return EditorBase::ToGenericNSResult(
       actionTaken ? NS_OK : NS_ERROR_EDITOR_ACTION_CANCELED);
-}
-
-bool TextEditor::IsCopyCommandEnabled() const {
-  AutoEditActionDataSetter editActionData(*this, EditAction::eNotEditing);
-  if (NS_WARN_IF(!editActionData.CanHandle())) {
-    return false;
-  }
-
-  if (IsCopyToClipboardAllowedInternal()) {
-    return true;
-  }
-
-  // Like "cut", always enable "copy" if there's a listener.
-  return CheckForClipboardCommandListener(nsGkAtoms::oncopy, eCopy);
 }
 
 bool TextEditor::CanDeleteSelection() const {
