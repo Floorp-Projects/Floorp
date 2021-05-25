@@ -1076,6 +1076,10 @@ class MOZ_MUST_USE_TYPE GenericErrorResult<mozilla::ipc::IPCResult> {
     MOZ_ASSERT(!aErrorValue);
   }
 
+  GenericErrorResult(mozilla::ipc::IPCResult aErrorValue,
+                     const ErrorPropagationTag&)
+      : GenericErrorResult(aErrorValue) {}
+
   operator mozilla::ipc::IPCResult() const { return mErrorValue; }
 };
 

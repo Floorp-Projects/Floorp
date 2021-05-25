@@ -79,3 +79,24 @@ TEST(DOM_Quota_QMResult, ToResult)
     ASSERT_EQ(err.NSResult(), NS_ERROR_FAILURE);
   }
 }
+
+TEST(DOM_Quota_QMResult, ErrorPropagation)
+{
+  Result<Ok, QMResult> valOrErr1 = ToResult(ToQMResult(NS_ERROR_FAILURE));
+  const auto& err1 = valOrErr1.inspectErr();
+  ASSERT_EQ(err1.StackId(), 7u);
+  ASSERT_EQ(err1.FrameId(), 1u);
+  ASSERT_EQ(err1.NSResult(), NS_ERROR_FAILURE);
+
+  Result<Ok, QMResult> valOrErr2 = valOrErr1.propagateErr();
+  const auto& err2 = valOrErr2.inspectErr();
+  ASSERT_EQ(err2.StackId(), 7u);
+  ASSERT_EQ(err2.FrameId(), 2u);
+  ASSERT_EQ(err2.NSResult(), NS_ERROR_FAILURE);
+
+  Result<Ok, QMResult> valOrErr3 = valOrErr2.propagateErr();
+  const auto& err3 = valOrErr3.inspectErr();
+  ASSERT_EQ(err3.StackId(), 7u);
+  ASSERT_EQ(err3.FrameId(), 3u);
+  ASSERT_EQ(err3.NSResult(), NS_ERROR_FAILURE);
+}
