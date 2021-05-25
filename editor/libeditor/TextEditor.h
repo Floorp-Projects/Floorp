@@ -633,14 +633,6 @@ class TextEditor : public EditorBase, public nsITimerCallback, public nsINamed {
   MOZ_CAN_RUN_SCRIPT virtual nsresult SelectEntireDocument() override;
 
   /**
-   * OnInputText() is called when user inputs text with keyboard or something.
-   *
-   * @param aStringToInsert     The string to insert.
-   */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
-  OnInputText(const nsAString& aStringToInsert);
-
-  /**
    * PrepareInsertContent() is a helper method of InsertTextAt(),
    * HTMLEditor::DoInsertHTMLWithContext().  They insert content coming from
    * clipboard or drag and drop.  Before that, they may need to remove selected

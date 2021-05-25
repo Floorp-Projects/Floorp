@@ -4273,6 +4273,31 @@ nsresult EditorBase::HandleKeyPressEvent(WidgetKeyboardEvent* aKeyboardEvent) {
   return NS_OK;
 }
 
+nsresult EditorBase::OnInputText(const nsAString& aStringToInsert) {
+  AutoEditActionDataSetter editActionData(*this, EditAction::eInsertText);
+  MOZ_ASSERT(!aStringToInsert.IsVoid());
+  editActionData.SetData(aStringToInsert);
+  // FYI: For conforming to current UI Events spec, we should dispatch
+  //      "beforeinput" event before "keypress" event, but here is in a
+  //      "keypress" event listener.  However, the other browsers dispatch
+  //      "beforeinput" event after "keypress" event.  Therefore, it makes
+  //      sense to follow the other browsers.  Spec issue:
+  //      https://github.com/w3c/uievents/issues/220
+  nsresult rv = editActionData.CanHandleAndMaybeDispatchBeforeInputEvent();
+  if (NS_FAILED(rv)) {
+    NS_WARNING_ASSERTION(rv == NS_ERROR_EDITOR_ACTION_CANCELED,
+                         "CanHandleAndMaybeDispatchBeforeInputEvent() failed");
+    return EditorBase::ToGenericNSResult(rv);
+  }
+
+  AutoPlaceholderBatch treatAsOneTransaction(*this, *nsGkAtoms::TypingTxnName,
+                                             ScrollSelectionIntoView::Yes);
+  rv = InsertTextAsSubAction(aStringToInsert);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                       "EditorBase::InsertTextAsSubAction() failed");
+  return EditorBase::ToGenericNSResult(rv);
+}
+
 nsresult EditorBase::HandleInlineSpellCheck(
     const EditorDOMPoint& aPreviouslySelectedStart,
     const AbstractRange* aRange) {
