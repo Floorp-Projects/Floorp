@@ -3766,7 +3766,10 @@ nsresult BrowserChild::PrepareProgressListenerData(
   }
 
   aWebProgressData.browsingContext() = docShell->GetBrowsingContext();
-  nsresult rv = aWebProgress->GetLoadType(&aWebProgressData.loadType());
+  nsresult rv =
+      aWebProgress->GetIsLoadingDocument(&aWebProgressData.isLoadingDocument());
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = aWebProgress->GetLoadType(&aWebProgressData.loadType());
   NS_ENSURE_SUCCESS(rv, rv);
 
   return PrepareRequestData(aRequest, aRequestData);
