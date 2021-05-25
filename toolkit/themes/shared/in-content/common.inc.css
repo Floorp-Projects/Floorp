@@ -535,6 +535,14 @@ xul|button.primary:not([disabled="true"]):hover {
   color: var(--in-content-primary-button-text-color-hover);
 }
 
+html|button[autofocus]:enabled:hover:active,
+html|button[type="submit"]:enabled:hover:active,
+html|button.primary:enabled:hover:active,
+xul|button[default]:not([disabled="true"]):hover:active,
+xul|button.primary:not([disabled="true"]):hover:active {
+  background-color: var(--in-content-primary-button-background-active);
+}
+
 @media (prefers-contrast) {
   html|button[autofocus]:enabled:hover,
   html|button[type="submit"]:enabled:hover,
@@ -543,14 +551,17 @@ xul|button.primary:not([disabled="true"]):hover {
   xul|button.primary:not([disabled="true"]):hover {
     border-color: currentColor;
   }
-}
 
-html|button[autofocus]:enabled:hover:active,
-html|button[type="submit"]:enabled:hover:active,
-html|button.primary:enabled:hover:active,
-xul|button[default]:not([disabled="true"]):hover:active,
-xul|button.primary:not([disabled="true"]):hover:active {
-  background-color: var(--in-content-primary-button-background-active);
+  button:focus {
+    color: var(--in-content-button-text-color);
+  }
+
+  html|button[autofocus]:focus,
+  html|button[type="submit"]:focus,
+  xul|button[default]:focus,
+  button.primary:focus {
+    color: var(--in-content-primary-button-text-color);
+  }
 }
 
 .danger-button {
