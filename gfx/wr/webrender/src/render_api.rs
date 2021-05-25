@@ -356,11 +356,6 @@ impl Transaction {
         self.frame_ops.push(FrameMsg::SetIsTransformAsyncZooming(is_zooming, animation_id));
     }
 
-    ///
-    pub fn set_pan(&mut self, pan: DeviceIntPoint) {
-        self.frame_ops.push(FrameMsg::SetPan(pan));
-    }
-
     /// Generate a new frame. When it's done and a RenderNotifier has been set
     /// in `webrender::Renderer`, [new_frame_ready()][notifier] gets called.
     /// Note that the notifier is called even if the frame generation was a
@@ -799,8 +794,6 @@ pub enum FrameMsg {
     ///
     RequestHitTester(Sender<Arc<dyn ApiHitTester>>),
     ///
-    SetPan(DeviceIntPoint),
-    ///
     ScrollNodeWithId(LayoutPoint, ExternalScrollId, ScrollClamping),
     ///
     GetScrollNodeState(Sender<Vec<ScrollNodeState>>),
@@ -831,7 +824,6 @@ impl fmt::Debug for FrameMsg {
             FrameMsg::UpdateEpoch(..) => "FrameMsg::UpdateEpoch",
             FrameMsg::HitTest(..) => "FrameMsg::HitTest",
             FrameMsg::RequestHitTester(..) => "FrameMsg::RequestHitTester",
-            FrameMsg::SetPan(..) => "FrameMsg::SetPan",
             FrameMsg::ScrollNodeWithId(..) => "FrameMsg::ScrollNodeWithId",
             FrameMsg::GetScrollNodeState(..) => "FrameMsg::GetScrollNodeState",
             FrameMsg::UpdateDynamicProperties(..) => "FrameMsg::UpdateDynamicProperties",

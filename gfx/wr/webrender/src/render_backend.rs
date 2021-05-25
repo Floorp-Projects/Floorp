@@ -70,7 +70,6 @@ use crate::util::{Recycler, VecHelper, drain_filter};
 #[derive(Copy, Clone)]
 pub struct DocumentView {
     scene: SceneView,
-    frame: FrameView,
 }
 
 /// Some rendering parameters applying at the scene level.
@@ -86,14 +85,6 @@ impl SceneView {
     pub fn accumulated_scale_factor_for_snapping(&self) -> DevicePixelScale {
         DevicePixelScale::new(1.0)
     }
-}
-
-/// Some rendering parameters applying at the frame level.
-#[cfg_attr(feature = "capture", derive(Serialize))]
-#[cfg_attr(feature = "replay", derive(Deserialize))]
-#[derive(Copy, Clone)]
-pub struct FrameView {
-    pan: DeviceIntPoint,
 }
 
 impl DocumentView {
@@ -479,9 +470,6 @@ impl Document {
                     device_rect: size.into(),
                     quality_settings: QualitySettings::default(),
                 },
-                frame: FrameView {
-                    pan: DeviceIntPoint::new(0, 0),
-                },
             },
             stamp: FrameStamp::first(id),
             scene: BuiltScene::empty(),
@@ -538,13 +526,6 @@ impl Document {
             FrameMsg::RequestHitTester(tx) => {
                 tx.send(self.shared_hit_tester.clone()).unwrap();
             }
-            FrameMsg::SetPan(pan) => {
-                if self.view.frame.pan != pan {
-                    self.view.frame.pan = pan;
-                    self.hit_tester_is_valid = false;
-                    self.frame_is_valid = false;
-                }
-            }
             FrameMsg::ScrollNodeWithId(origin, id, clamp) => {
                 profile_scope!("ScrollNodeWithScrollId");
 
@@ -595,7 +576,6 @@ impl Document {
         let frame_build_start_time = precise_time_ns();
 
         let accumulated_scale_factor = self.view.accumulated_scale_factor();
-        let pan = self.view.frame.pan.to_f32() / accumulated_scale_factor;
 
         // Advance to the next frame.
         self.stamp.advance();
@@ -612,7 +592,6 @@ impl Document {
                 self.stamp,
                 accumulated_scale_factor,
                 self.view.scene.device_rect.origin,
-                pan,
                 &self.dynamic_properties,
                 &mut self.data_stores,
                 &mut self.scratch,
@@ -651,10 +630,8 @@ impl Document {
 
     fn rebuild_hit_tester(&mut self) {
         let accumulated_scale_factor = self.view.accumulated_scale_factor();
-        let pan = self.view.frame.pan.to_f32() / accumulated_scale_factor;
 
         self.scene.spatial_tree.update_tree(
-            pan,
             accumulated_scale_factor,
             &self.dynamic_properties,
         );

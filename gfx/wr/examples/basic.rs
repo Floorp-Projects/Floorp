@@ -13,137 +13,18 @@ mod boilerplate;
 
 use crate::boilerplate::{Example, HandyDandyRectBuilder};
 use euclid::vec2;
-use winit::TouchPhase;
-use std::collections::HashMap;
 use webrender::ShaderPrecacheFlags;
 use webrender::api::*;
 use webrender::render_api::*;
 use webrender::api::units::*;
 
-
-#[derive(Debug)]
-enum Gesture {
-    None,
-    Pan,
-}
-
-#[derive(Debug)]
-struct Touch {
-    id: u64,
-    start_x: f32,
-    start_y: f32,
-    current_x: f32,
-    current_y: f32,
-}
-
-fn dist(x0: f32, y0: f32, x1: f32, y1: f32) -> f32 {
-    let dx = x0 - x1;
-    let dy = y0 - y1;
-    ((dx * dx) + (dy * dy)).sqrt()
-}
-
-impl Touch {
-    fn distance_from_start(&self) -> f32 {
-        dist(self.start_x, self.start_y, self.current_x, self.current_y)
-    }
-}
-
-struct TouchState {
-    active_touches: HashMap<u64, Touch>,
-    current_gesture: Gesture,
-    start_pan: DeviceIntPoint,
-    current_pan: DeviceIntPoint,
-}
-
-enum TouchResult {
-    None,
-    Pan(DeviceIntPoint),
-}
-
-impl TouchState {
-    fn new() -> TouchState {
-        TouchState {
-            active_touches: HashMap::new(),
-            current_gesture: Gesture::None,
-            start_pan: DeviceIntPoint::zero(),
-            current_pan: DeviceIntPoint::zero(),
-        }
-    }
-
-    fn handle_event(&mut self, touch: winit::Touch) -> TouchResult {
-        match touch.phase {
-            TouchPhase::Started => {
-                debug_assert!(!self.active_touches.contains_key(&touch.id));
-                self.active_touches.insert(
-                    touch.id,
-                    Touch {
-                        id: touch.id,
-                        start_x: touch.location.x as f32,
-                        start_y: touch.location.y as f32,
-                        current_x: touch.location.x as f32,
-                        current_y: touch.location.y as f32,
-                    },
-                );
-                self.current_gesture = Gesture::None;
-            }
-            TouchPhase::Moved => {
-                match self.active_touches.get_mut(&touch.id) {
-                    Some(active_touch) => {
-                        active_touch.current_x = touch.location.x as f32;
-                        active_touch.current_y = touch.location.y as f32;
-                    }
-                    None => panic!("move touch event with unknown touch id!"),
-                }
-
-                match self.current_gesture {
-                    Gesture::None => {
-                        let mut over_threshold_count = 0;
-                        let active_touch_count = self.active_touches.len();
-
-                        for (_, touch) in &self.active_touches {
-                            if touch.distance_from_start() > 8.0 {
-                                over_threshold_count += 1;
-                            }
-                        }
-
-                        if active_touch_count == over_threshold_count {
-                            if active_touch_count == 1 {
-                                self.start_pan = self.current_pan;
-                                self.current_gesture = Gesture::Pan;
-                            }
-                        }
-                    }
-                    Gesture::Pan => {
-                        let keys: Vec<u64> = self.active_touches.keys().cloned().collect();
-                        debug_assert!(keys.len() == 1);
-                        let active_touch = &self.active_touches[&keys[0]];
-                        let x = active_touch.current_x - active_touch.start_x;
-                        let y = active_touch.current_y - active_touch.start_y;
-                        self.current_pan.x = self.start_pan.x + x.round() as i32;
-                        self.current_pan.y = self.start_pan.y + y.round() as i32;
-                        return TouchResult::Pan(self.current_pan);
-                    }
-                }
-            }
-            TouchPhase::Ended | TouchPhase::Cancelled => {
-                self.active_touches.remove(&touch.id).unwrap();
-                self.current_gesture = Gesture::None;
-            }
-        }
-
-        TouchResult::None
-    }
-}
-
 fn main() {
     let mut app = App {
-        touch_state: TouchState::new(),
     };
     boilerplate::main_wrapper(&mut app, None);
 }
 
 struct App {
-    touch_state: TouchState,
 }
 
 impl Example for App {
@@ -265,25 +146,5 @@ impl Example for App {
         }
 
         builder.pop_stacking_context();
-    }
-
-    fn on_event(&mut self, event: winit::WindowEvent, api: &mut RenderApi, document_id: DocumentId) -> bool {
-        let mut txn = Transaction::new();
-        match event {
-            winit::WindowEvent::Touch(touch) => match self.touch_state.handle_event(touch) {
-                TouchResult::Pan(pan) => {
-                    txn.set_pan(pan);
-                }
-                TouchResult::None => {}
-            },
-            _ => (),
-        }
-
-        if !txn.is_empty() {
-            txn.generate_frame(0);
-            api.send_transaction(document_id, txn);
-        }
-
-        false
     }
 }
