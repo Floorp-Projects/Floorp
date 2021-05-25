@@ -29,6 +29,7 @@
 #include "mozilla/dom/PointerEventHandler.h"
 #include "mozilla/dom/BrowserBridgeParent.h"
 #include "mozilla/dom/RemoteDragStartData.h"
+#include "mozilla/dom/RemoteWebProgress.h"
 #include "mozilla/dom/RemoteWebProgressRequest.h"
 #include "mozilla/dom/SessionHistoryEntry.h"
 #include "mozilla/dom/SessionStoreUtils.h"
@@ -2682,17 +2683,14 @@ mozilla::ipc::IPCResult BrowserParent::RecvOnStateChange(
     const WebProgressData& aWebProgressData, const RequestData& aRequestData,
     const uint32_t aStateFlags, const nsresult aStatus,
     const Maybe<WebProgressStateChangeData>& aStateChangeData) {
-  RefPtr<CanonicalBrowsingContext> browsingContext =
-      BrowsingContextForWebProgress(aWebProgressData);
-  if (!browsingContext) {
-    return IPC_OK();
-  }
-
+  nsCOMPtr<nsIWebProgress> webProgress;
   nsCOMPtr<nsIRequest> request;
-  if (aRequestData.requestURI()) {
-    request = MakeAndAddRef<RemoteWebProgressRequest>(
-        aRequestData.requestURI(), aRequestData.originalRequestURI(),
-        aRequestData.matchedList());
+  RefPtr<CanonicalBrowsingContext> browsingContext;
+
+  if (!ReconstructWebProgressAndRequest(
+          aWebProgressData, aRequestData, getter_AddRefs(webProgress),
+          getter_AddRefs(request), getter_AddRefs(browsingContext))) {
+    return IPC_OK();
   }
 
   if (aStateChangeData.isSome()) {
@@ -2714,8 +2712,9 @@ mozilla::ipc::IPCResult BrowserParent::RecvOnStateChange(
     }
   }
 
-  if (auto* listener = browsingContext->GetWebProgress()) {
-    listener->OnStateChange(listener, request, aStateFlags, aStatus);
+  if (nsCOMPtr<nsIWebProgressListener> listener =
+          GetBrowsingContext()->Top()->GetWebProgress()) {
+    listener->OnStateChange(webProgress, request, aStateFlags, aStatus);
   }
 
   return IPC_OK();
@@ -2743,17 +2742,14 @@ mozilla::ipc::IPCResult BrowserParent::RecvOnLocationChange(
     nsIURI* aLocation, const uint32_t aFlags, const bool aCanGoBack,
     const bool aCanGoForward,
     const Maybe<WebProgressLocationChangeData>& aLocationChangeData) {
-  RefPtr<CanonicalBrowsingContext> browsingContext =
-      BrowsingContextForWebProgress(aWebProgressData);
-  if (!browsingContext) {
-    return IPC_OK();
-  }
-
+  nsCOMPtr<nsIWebProgress> webProgress;
   nsCOMPtr<nsIRequest> request;
-  if (aRequestData.requestURI()) {
-    request = MakeAndAddRef<RemoteWebProgressRequest>(
-        aRequestData.requestURI(), aRequestData.originalRequestURI(),
-        aRequestData.matchedList());
+  RefPtr<CanonicalBrowsingContext> browsingContext;
+
+  if (!ReconstructWebProgressAndRequest(
+          aWebProgressData, aRequestData, getter_AddRefs(webProgress),
+          getter_AddRefs(request), getter_AddRefs(browsingContext))) {
+    return IPC_OK();
   }
 
   browsingContext->SetCurrentRemoteURI(aLocation);
@@ -2788,8 +2784,9 @@ mozilla::ipc::IPCResult BrowserParent::RecvOnLocationChange(
     }
   }
 
-  if (auto* listener = browsingContext->GetWebProgress()) {
-    listener->OnLocationChange(listener, request, aLocation, aFlags);
+  if (nsCOMPtr<nsIWebProgressListener> listener =
+          browsingContext->Top()->GetWebProgress()) {
+    listener->OnLocationChange(webProgress, request, aLocation, aFlags);
   }
 
   // Since we've now changed Documents, notify the BrowsingContext that we've
@@ -2892,13 +2889,20 @@ already_AddRefed<nsIBrowser> BrowserParent::GetBrowser() {
   return browser.forget();
 }
 
-already_AddRefed<CanonicalBrowsingContext>
-BrowserParent::BrowsingContextForWebProgress(
-    const WebProgressData& aWebProgressData) {
+bool BrowserParent::ReconstructWebProgressAndRequest(
+    const WebProgressData& aWebProgressData, const RequestData& aRequestData,
+    nsIWebProgress** aOutWebProgress, nsIRequest** aOutRequest,
+    CanonicalBrowsingContext** aOutBrowsingContext) {
+  MOZ_DIAGNOSTIC_ASSERT(aOutWebProgress,
+                        "aOutWebProgress should never be null");
+  MOZ_DIAGNOSTIC_ASSERT(aOutRequest, "aOutRequest should never be null");
+  MOZ_DIAGNOSTIC_ASSERT(aOutBrowsingContext,
+                        "aOutBrowsingContext should never be null");
+
   // Look up the BrowsingContext which this notification was fired for.
   if (aWebProgressData.browsingContext().IsNullOrDiscarded()) {
     NS_WARNING("WebProgress Ignored: BrowsingContext is null or discarded");
-    return nullptr;
+    return false;
   }
   RefPtr<CanonicalBrowsingContext> browsingContext =
       aWebProgressData.browsingContext().get_canonical();
@@ -2911,7 +2915,7 @@ BrowserParent::BrowsingContextForWebProgress(
     WindowGlobalParent* embedder = browsingContext->GetParentWindowContext();
     if (!embedder || embedder->GetBrowserParent() != this) {
       NS_WARNING("WebProgress Ignored: wrong embedder process");
-      return nullptr;
+      return false;
     }
   }
 
@@ -2922,15 +2926,26 @@ BrowserParent::BrowsingContextForWebProgress(
           browsingContext->GetCurrentWindowGlobal();
       current && current->GetBrowserParent() != this) {
     NS_WARNING("WebProgress Ignored: no longer current window global");
-    return nullptr;
+    return false;
   }
 
-  if (RefPtr<BrowsingContextWebProgress> progress =
-          browsingContext->GetWebProgress()) {
-    progress->SetLoadType(aWebProgressData.loadType());
+  // Construct a temporary RemoteWebProgress and RemoteWebProgressRequest which
+  // contains relevant state used by our in-parent callbacks.
+  nsCOMPtr<nsIWebProgress> webProgress = MakeAndAddRef<RemoteWebProgress>(
+      aWebProgressData.loadType(), aWebProgressData.isLoadingDocument(),
+      browsingContext->IsTopContent());
+
+  nsCOMPtr<nsIRequest> request;
+  if (aRequestData.requestURI()) {
+    request = MakeAndAddRef<RemoteWebProgressRequest>(
+        aRequestData.requestURI(), aRequestData.originalRequestURI(),
+        aRequestData.matchedList());
   }
 
-  return browsingContext.forget();
+  webProgress.forget(aOutWebProgress);
+  request.forget(aOutRequest);
+  browsingContext.forget(aOutBrowsingContext);
+  return true;
 }
 
 mozilla::ipc::IPCResult BrowserParent::RecvSessionStoreUpdate(

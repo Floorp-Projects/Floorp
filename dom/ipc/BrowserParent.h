@@ -307,8 +307,10 @@ class BrowserParent final : public PBrowserParent,
 
   already_AddRefed<nsIBrowser> GetBrowser();
 
-  already_AddRefed<CanonicalBrowsingContext> BrowsingContextForWebProgress(
-      const WebProgressData& aWebProgressData);
+  bool ReconstructWebProgressAndRequest(
+      const WebProgressData& aWebProgressData, const RequestData& aRequestData,
+      nsIWebProgress** aOutWebProgress, nsIRequest** aOutRequest,
+      CanonicalBrowsingContext** aOutBrowsingContext);
 
   mozilla::ipc::IPCResult RecvSessionStoreUpdate(
       const Maybe<nsCString>& aDocShellCaps, const Maybe<bool>& aPrivatedMode,

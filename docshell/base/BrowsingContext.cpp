@@ -779,10 +779,8 @@ void BrowsingContext::Attach(bool aFromIPC, ContentParent* aOriginProcess) {
       }
     });
 
-    // We want to create a BrowsingContextWebProgress for all content
-    // BrowsingContexts.
-    if (IsContent() && !Canonical()->mWebProgress) {
-      Canonical()->mWebProgress = new BrowsingContextWebProgress(Canonical());
+    if (IsTopContent() && !Canonical()->GetWebProgress()) {
+      Canonical()->mWebProgress = new BrowsingContextWebProgress();
     }
   }
 
