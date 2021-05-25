@@ -183,7 +183,7 @@ reftest:
                     default: built-projects
     max-run-time:
         by-test-platform:
-            windows7-32-mingwclang/debug: 5400
+            windows10-32-mingwclang/debug: 5400
             windows10-64-ccov.*/.*: 5400
             windows10-64-asan/opt: 5400
             macosx.*64-ccov.*/.*: 5400
