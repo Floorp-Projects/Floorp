@@ -1,23 +1,25 @@
-// Scaffolding for testing x64 Ion code generation patterns (currently mostly
-// for wasm SIMD).  See ../tests/wasm/simd/README-codegen.md for general
-// information, and the *codegen.js tests in that directory for specifics.
+// Scaffolding for testing x64 Ion code generation patterns).  See
+// ../tests/wasm/README-codegen.md for general information, and the *codegen.js
+// tests in that directory and its subdirectories for specifics.
 //
 // The structure of the inputs can vary for the different testing predicates but
-// each case generally has an operator name and an expected-pattern; the latter is a
-// string that represents a regular expression, possibly with newlines,
-// representing the instruction or instructions we are looking for for the operator.
-// Spaces in the expected-pattern are arbitrary, we preprocess the pattern to
-// replace any space string with \s+.  Lines are separated by newlines and leading
-// and trailing spaces are currently stripped.
+// each case generally has an operator name and an expected-pattern; the latter
+// is a string that represents a regular expression, possibly with newlines,
+// representing the instruction or instructions we are looking for for the
+// operator.  Spaces in the expected-pattern are arbitrary, we preprocess the
+// pattern to replace any space string with \s+.  Lines are separated by
+// newlines and leading and trailing spaces are currently stripped.
 //
-// The testers additionally take an optional options bag with the following optional
-// entries:
+// The testers additionally take an optional options bag with the following
+// optional entries:
 //  features: if present, an object to pass as the last argument to functions
 //            that compile wasm bytecode
-//  instanceBox: if present, an object with a `value` property that will receive
-//               the constructed instance
-//  no_prefix: if true, do not add a prefix string (normally the end of the prologue)
-//  no_suffix: if true, do not add a suffix string (normally the start of the epilogue)
+//  instanceBox: if present, an object with a `value` property that will
+//               receive the constructed instance
+//  no_prefix: if true, do not add a prefix string (normally the end of the
+//             prologue)
+//  no_suffix: if true, do not add a suffix string (normally the start of the
+//             epilogue)
 //  memory: if present, add a memory of length given by this property
 //  log: for debugging -- print the disassembly, then the preprocessed pattern
 

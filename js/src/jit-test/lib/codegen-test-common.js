@@ -15,7 +15,7 @@ function fixlines(s) {
     return s.split(/\n+/)
         .map(strip)
         .filter(x => x.length > 0)
-        .map(x => HEXES + ' ' + x)
+        .map(x => '(?:0x)?' + HEXES + ' ' + x)
         .map(spaces)
         .join('\n');
 }
