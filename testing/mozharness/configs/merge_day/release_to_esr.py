@@ -13,8 +13,7 @@ config = {
     "version_files": [
         {"file": "browser/config/version_display.txt", "suffix": "esr"},
     ],
-    "replacements": [
-    ],
+    "replacements": [],
     "vcs_share_base": os.path.join(ABS_WORK_DIR, "hg-shared"),
     # Pull from ESR repo, since we have already branched it and have landed esr-specific patches on it
     # We will need to manually merge mozilla-release into before runnning this.
