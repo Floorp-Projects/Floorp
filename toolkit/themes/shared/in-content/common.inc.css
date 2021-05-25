@@ -543,16 +543,6 @@ xul|button.primary:not([disabled="true"]):hover {
   xul|button.primary:not([disabled="true"]):hover {
     border-color: currentColor;
   }
-
-  html|input[type="checkbox"]:not(:checked):enabled:hover {
-    color: var(--checkbox-checked-border-color);
-  }
-
-  html|input[type="checkbox"]:checked:enabled {
-    /* color sets the border color in HCM */
-    color: var(--checkbox-checked-border-color);
-    fill: var(--checkbox-checked-color);
-  }
 }
 
 html|button[autofocus]:enabled:hover:active,
@@ -891,6 +881,30 @@ html|input[type="checkbox"]:enabled:checked:hover {
 
 html|input[type="checkbox"]:enabled:checked:hover:active {
   background-color: var(--checkbox-checked-active-bgcolor);
+}
+
+@media (prefers-contrast) {
+  html|input[type="checkbox"] {
+    /* Normalize the border-color to the in-content version following color */
+    border-color: currentColor;
+    color: var(--checkbox-border-color);
+  }
+
+  html|input[type="checkbox"]:not(:checked):enabled:hover {
+    /* color sets the border color in HCM in-content */
+    color: var(--checkbox-checked-border-color);
+  }
+
+  html|input[type="checkbox"]:checked:enabled {
+    /* color sets the border color in HCM in-content */
+    color: var(--checkbox-checked-bgcolor);
+    fill: var(--checkbox-checked-color);
+  }
+
+  html|input[type="checkbox"]:checked:enabled:hover {
+    fill: var(--checkbox-checked-bgcolor);
+  }
+}
 }
 } /** END Proton **/
 
