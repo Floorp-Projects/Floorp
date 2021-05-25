@@ -23,9 +23,7 @@ class CreditCardItemViewHolder(
 ) : ViewHolder(view) {
 
     fun bind(creditCard: CreditCard) {
-        // TODO this should be last4 instead...
-        //  and option to explicitly decrypt if necessary to show full number
-        credit_card_number.text = creditCard.encryptedCardNumber.number
+        credit_card_number.text = creditCard.obfuscatedCardNumber
 
         bindCreditCardExpiryDate(creditCard)
 

@@ -50,7 +50,7 @@ class CreditCardItemViewHolderTest {
     fun `GIVEN a new credit card item on bind THEN set the card number and expiry date text`() {
         CreditCardItemViewHolder(view, interactor).bind(creditCard)
 
-        assertEquals(creditCard.encryptedCardNumber.number, view.credit_card_number.text)
+        assertEquals(creditCard.obfuscatedCardNumber, view.credit_card_number.text)
         assertEquals("0${creditCard.expiryMonth}/${creditCard.expiryYear}", view.expiry_date.text)
     }
 
