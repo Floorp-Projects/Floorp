@@ -71,9 +71,28 @@ void CSSImportRule::List(FILE* out, int32_t aIndent) const {
 }
 #endif
 
-dom::MediaList* CSSImportRule::GetMedia() const {
+void CSSImportRule::SetRawAfterClone(RefPtr<RawServoImportRule> aRaw) {
+  mRawRule = std::move(aRaw);
+  mChildSheet =
+      const_cast<StyleSheet*>(Servo_ImportRule_GetSheet(mRawRule.get()));
+}
+
+StyleSheet* CSSImportRule::GetStyleSheetForBindings() {
+  // FIXME(emilio): This is needed to make sure we don't expose shared sheets to
+  // the OM (see wpt /css/cssom/cssimportrule-sheet-identity.html for example).
+  //
+  // Perhaps instead we could create a clone of the stylesheet and keep it in
+  // mChildSheet, without calling EnsureUniqueInner(), or something like that?
+  if (StyleSheet* parent = GetParentStyleSheet()) {
+    parent->EnsureUniqueInner();
+  }
+  return mChildSheet;
+}
+
+dom::MediaList* CSSImportRule::GetMedia() {
+  auto* sheet = GetStyleSheetForBindings();
   // When Bug 1326509 is fixed, we can assert mChildSheet instead.
-  return mChildSheet ? mChildSheet->Media() : nullptr;
+  return sheet ? sheet->Media() : nullptr;
 }
 
 void CSSImportRule::DropSheetReference() {

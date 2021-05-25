@@ -942,6 +942,13 @@ void ServoStyleSet::RuleChanged(StyleSheet& aSheet, css::Rule* aRule,
   }
 }
 
+void ServoStyleSet::SheetCloned(StyleSheet& aSheet) {
+  mNeedsRestyleAfterEnsureUniqueInner = true;
+  if (mStyleRuleMap) {
+    mStyleRuleMap->SheetCloned(aSheet);
+  }
+}
+
 #ifdef DEBUG
 void ServoStyleSet::AssertTreeIsClean() {
   DocumentStyleRootIterator iter(mDocument);

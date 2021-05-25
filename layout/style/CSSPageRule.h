@@ -43,6 +43,8 @@ class CSSPageRuleDeclaration final : public nsDOMCSSDeclaration {
 
   explicit CSSPageRuleDeclaration(
       already_AddRefed<RawServoDeclarationBlock> aDecls);
+  void SetRawAfterClone(RefPtr<RawServoDeclarationBlock>);
+
   ~CSSPageRuleDeclaration();
 
   inline CSSPageRule* Rule();
@@ -62,6 +64,7 @@ class CSSPageRule final : public css::Rule {
   bool IsCCLeaf() const final;
 
   RawServoPageRule* Raw() const { return mRawRule; }
+  void SetRawAfterClone(RefPtr<RawServoPageRule>);
 
   // WebIDL interfaces
   uint16_t Type() const final { return CSSRule_Binding::PAGE_RULE; }

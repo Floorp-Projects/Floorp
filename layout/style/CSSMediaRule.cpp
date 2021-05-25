@@ -56,6 +56,15 @@ void CSSMediaRule::DropSheetReference() {
   ConditionRule::DropSheetReference();
 }
 
+void CSSMediaRule::SetRawAfterClone(RefPtr<RawServoMediaRule> aRaw) {
+  mRawRule = std::move(aRaw);
+  if (mMediaList) {
+    mMediaList->SetRawAfterClone(Servo_MediaRule_GetMedia(mRawRule).Consume());
+  }
+  css::ConditionRule::SetRawAfterClone(
+      Servo_MediaRule_GetRules(mRawRule).Consume());
+}
+
 #ifdef DEBUG
 /* virtual */
 void CSSMediaRule::List(FILE* out, int32_t aIndent) const {
