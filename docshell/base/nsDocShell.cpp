@@ -1190,6 +1190,7 @@ void nsDocShell::FirePageHideShowNonRecursive(bool aShow) {
   // For pagehide, set mFiredUnloadEvent to true, so that unload doesn't fire.
   nsCOMPtr<nsIContentViewer> contentViewer(mContentViewer);
   if (aShow) {
+    contentViewer->SetIsHidden(false);
     mRefreshURIList = std::move(mBFCachedRefreshURIList);
     RefreshURIFromQueue();
     mFiredUnloadEvent = false;
