@@ -1061,4 +1061,15 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         appContext.getPreferenceKey(R.string.pref_key_fxa_signed_in),
         default = false
     )
+
+    /**
+     * Storing the user choice from the "Credit cards" settings for whether save and autofill cards
+     * should be enabled or not.
+     * If set to `true` when the user focuses on credit card fields in the webpage an Android prompt letting her
+     * select the card details to be automatically filled will appear.
+     */
+    var shouldAutofillCreditCardDetails by booleanPreference(
+        appContext.getPreferenceKey(R.string.pref_key_credit_cards_save_and_autofill_cards),
+        default = true
+    )
 }

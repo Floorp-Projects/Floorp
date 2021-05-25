@@ -16,6 +16,7 @@ import mozilla.components.service.sync.autofill.GeckoCreditCardsAddressesStorage
 import mozilla.components.service.sync.logins.GeckoLoginStorageDelegate
 import org.mozilla.fenix.Config
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.ext.settings
 import org.mozilla.geckoview.ContentBlocking
 import org.mozilla.geckoview.ContentBlocking.SafeBrowsingProvider
 import org.mozilla.geckoview.GeckoRuntime
@@ -91,7 +92,9 @@ object GeckoProvider {
         val geckoRuntime = GeckoRuntime.create(context, runtimeSettings)
 
         geckoRuntime.autocompleteStorageDelegate = GeckoAutocompleteStorageDelegate(
-            GeckoCreditCardsAddressesStorageDelegate(autofillStorage),
+            GeckoCreditCardsAddressesStorageDelegate(autofillStorage) {
+                context.settings().shouldAutofillCreditCardDetails
+            },
             GeckoLoginStorageDelegate(loginStorage)
         )
 

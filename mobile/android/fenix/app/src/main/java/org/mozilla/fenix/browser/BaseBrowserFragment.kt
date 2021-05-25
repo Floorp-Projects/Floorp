@@ -545,6 +545,9 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Activit
                 isSaveLoginEnabled = {
                     context.settings().shouldPromptToSaveLogins
                 },
+                isCreditCardAutofillEnabled = {
+                    context.settings().shouldAutofillCreditCardDetails
+                },
                 loginExceptionStorage = context.components.core.loginExceptionStorage,
                 shareDelegate = object : ShareDelegate {
                     override fun showShareSheet(
