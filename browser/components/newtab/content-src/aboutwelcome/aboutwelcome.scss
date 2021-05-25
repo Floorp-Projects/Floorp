@@ -630,6 +630,11 @@ body {
 
       button {
         color: #FFF !important; // sass-lint:disable-line no-important
+
+        &:hover {
+          background-color: #5B5B66;
+          color: #E0E0E6 !important; // sass-lint:disable-line no-important
+        }
       }
     }
 
