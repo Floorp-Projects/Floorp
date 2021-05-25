@@ -123,3 +123,97 @@ addAccessibleTask(
     ok(link3.attributeNames.includes("AXURL"), "Link has URL attribute");
   }
 );
+
+/**
+ * Test anchors and linked ui elements attr
+ */
+addAccessibleTask(
+  `
+  <a id="link0" href="http://example.com">I am a link</a>
+  <a id="link1" href="#">I am a link with an empty anchor</a>
+  <a id="link2" href="#hello">I am a link with no corresponding element</a>
+  <a id="link3" href="#world">I am a link with a corresponding element</a>
+  <a id="link4" href="#empty">I jump to an empty element</a>
+  <a id="link5" href="#namedElem">I jump to a named element</a>
+  <a id="link6" href="#emptyNamed">I jump to an empty named element</a>
+  <h1 id="world">I am that element</h1>
+  <h2 id="empty"></h2>
+  <a name="namedElem">I have a name</a>
+  <a name="emptyNamed"></a>
+  <h3>I have no name and no ID</h3>
+  <h4></h4>
+  `,
+  async (browser, accDoc) => {
+    let link0 = getNativeInterface(accDoc, "link0");
+    let link1 = getNativeInterface(accDoc, "link1");
+    let link2 = getNativeInterface(accDoc, "link2");
+    let link3 = getNativeInterface(accDoc, "link3");
+    let link4 = getNativeInterface(accDoc, "link4");
+    let link5 = getNativeInterface(accDoc, "link5");
+    let link6 = getNativeInterface(accDoc, "link6");
+
+    is(
+      link0.getAttributeValue("AXLinkedUIElements").length,
+      0,
+      "Link 0 has no linked UI elements"
+    );
+    is(
+      link1.getAttributeValue("AXLinkedUIElements").length,
+      0,
+      "Link 1 has no linked UI elements"
+    );
+    is(
+      link2.getAttributeValue("AXLinkedUIElements").length,
+      0,
+      "Link 2 has no linked UI elements"
+    );
+    is(
+      link3.getAttributeValue("AXLinkedUIElements").length,
+      1,
+      "Link 3 has one linked UI element"
+    );
+    is(
+      link3
+        .getAttributeValue("AXLinkedUIElements")[0]
+        .getAttributeValue("AXTitle"),
+      "I am that element",
+      "Link 3 is linked to the heading"
+    );
+    is(
+      link4.getAttributeValue("AXLinkedUIElements").length,
+      1,
+      "Link 4 has one linked UI element"
+    );
+    is(
+      link4
+        .getAttributeValue("AXLinkedUIElements")[0]
+        .getAttributeValue("AXTitle"),
+      "",
+      "Link 4 is linked to the heading"
+    );
+    is(
+      link5.getAttributeValue("AXLinkedUIElements").length,
+      1,
+      "Link 5 has one linked UI element"
+    );
+    is(
+      link5
+        .getAttributeValue("AXLinkedUIElements")[0]
+        .getAttributeValue("AXTitle"),
+      "I have a name",
+      "Link 5 is linked to a named element"
+    );
+    is(
+      link6.getAttributeValue("AXLinkedUIElements").length,
+      1,
+      "Link 6 has one linked UI element"
+    );
+    is(
+      link6
+        .getAttributeValue("AXLinkedUIElements")[0]
+        .getAttributeValue("AXTitle"),
+      "",
+      "Link 6 is linked to an empty named element"
+    );
+  }
+);
