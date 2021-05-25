@@ -627,11 +627,6 @@ class TestBackForwardNavigation(BaseNavigationTestCase):
         )
         self.assertEqual(delay.text, "4")
 
-    @skip_unless_browser_pref(
-        "Bug 1710380 - Fails when session history in the parent for fission is enabled",
-        "fission.bfcacheInParent",
-        lambda value: value is False,
-    )
     def test_certificate_error(self):
         test_pages = [
             {
