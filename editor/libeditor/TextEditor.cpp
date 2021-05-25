@@ -572,7 +572,7 @@ NS_IMETHODIMP TextEditor::GetTextLength(int32_t* aCount) {
 
 bool TextEditor::IsCopyToClipboardAllowedInternal() const {
   MOZ_ASSERT(IsEditActionDataAvailable());
-  if (SelectionRef().IsCollapsed()) {
+  if (!EditorBase::IsCopyToClipboardAllowedInternal()) {
     return false;
   }
 

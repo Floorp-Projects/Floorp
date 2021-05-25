@@ -92,21 +92,6 @@ class TextEditor : public EditorBase, public nsITimerCallback, public nsINamed {
   MOZ_CAN_RUN_SCRIPT bool IsCopyCommandEnabled() const;
 
   /**
-   * IsCopyToClipboardAllowed() returns true if the selected content can
-   * be copied into the clipboard.  This returns true when:
-   * - `Selection` is not collapsed and we're not a password editor.
-   * - `Selection` is not collapsed and we're a password editor but selection
-   *   range is in unmasked range.
-   */
-  bool IsCopyToClipboardAllowed() const {
-    AutoEditActionDataSetter editActionData(*this, EditAction::eNotEditing);
-    if (NS_WARN_IF(!editActionData.CanHandle())) {
-      return false;
-    }
-    return IsCopyToClipboardAllowedInternal();
-  }
-
-  /**
    * CanDeleteSelection() returns true if `Selection` is not collapsed and
    * it's allowed to be removed.
    */
@@ -664,10 +649,7 @@ class TextEditor : public EditorBase, public nsITimerCallback, public nsINamed {
   nsresult SharedOutputString(uint32_t aFlags, bool* aIsCollapsed,
                               nsAString& aResult) const;
 
-  /**
-   * See comment of IsCopyToClipboardAllowed() for the detail.
-   */
-  bool IsCopyToClipboardAllowedInternal() const;
+  bool IsCopyToClipboardAllowedInternal() const final;
 
   bool FireClipboardEvent(EventMessage aEventMessage, int32_t aSelectionType,
                           bool* aActionTaken = nullptr);
