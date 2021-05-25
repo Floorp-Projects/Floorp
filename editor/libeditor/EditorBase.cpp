@@ -1069,7 +1069,9 @@ NS_IMETHODIMP EditorBase::SetShouldTxnSetSelection(bool aShould) {
 }
 
 NS_IMETHODIMP EditorBase::GetDocumentIsEmpty(bool* aDocumentIsEmpty) {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  MOZ_ASSERT(aDocumentIsEmpty);
+  *aDocumentIsEmpty = IsEmpty();
+  return NS_OK;
 }
 
 // XXX: The rule system should tell us which node to select all on (ie, the

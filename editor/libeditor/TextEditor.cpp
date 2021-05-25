@@ -532,12 +532,6 @@ bool TextEditor::IsEmpty() const {
          !anonymousDivElement->GetFirstChild()->Length();
 }
 
-NS_IMETHODIMP TextEditor::GetDocumentIsEmpty(bool* aDocumentIsEmpty) {
-  MOZ_ASSERT(aDocumentIsEmpty);
-  *aDocumentIsEmpty = IsEmpty();
-  return NS_OK;
-}
-
 NS_IMETHODIMP TextEditor::GetTextLength(int32_t* aCount) {
   MOZ_ASSERT(aCount);
 
