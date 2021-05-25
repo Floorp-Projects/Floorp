@@ -11,6 +11,10 @@
 
 namespace mozilla {
 
+struct Ok;
+template <typename V, typename E>
+class Result;
+
 // A wrapped nsresult, primarily intended for use along with mozilla::Result
 // and QM_TRY macros. The wrapper contains stack id and frame id which are
 // reported in LogError besides the error result itself.
@@ -50,6 +54,10 @@ class QMResult {
 };
 
 inline QMResult ToQMResult(nsresult aValue) { return QMResult(aValue); }
+
+inline Result<Ok, QMResult> ToResult(const QMResult& aValue);
+
+inline Result<Ok, QMResult> ToResult(QMResult&& aValue);
 
 }  // namespace mozilla
 
