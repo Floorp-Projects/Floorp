@@ -3503,13 +3503,12 @@ bool JS::OwningCompileOptions::copy(JSContext* cx,
 }
 
 JS::CompileOptions::CompileOptions(JSContext* cx) : ReadOnlyCompileOptions() {
-  discardSource = cx->realm()->behaviors().discardSource();
   if (!js::IsAsmJSCompilationAvailable(cx)) {
     // Distinguishing the cases is just for error reporting.
     asmJSOption = !cx->options().asmJS()
                       ? AsmJSOption::DisabledByAsmJSPref
                       : AsmJSOption::DisabledByNoWasmCompiler;
-  } else if (cx->realm()->debuggerObservesAsmJS()) {
+  } else if (cx->realm() && cx->realm()->debuggerObservesAsmJS()) {
     asmJSOption = AsmJSOption::DisabledByDebugger;
   } else {
     asmJSOption = AsmJSOption::Enabled;
@@ -3531,10 +3530,16 @@ JS::CompileOptions::CompileOptions(JSContext* cx) : ReadOnlyCompileOptions() {
   // Certain modes of operation disallow syntax parsing in general.
   forceFullParse_ = coverage::IsLCovEnabled();
 
-  // If instrumentation is enabled in the realm, the compiler should insert the
-  // requested kinds of instrumentation into all scripts.
-  instrumentationKinds =
-      RealmInstrumentation::getInstrumentationKinds(cx->global());
+  // Note: If we parse outside of a specific realm, we do not inherit any realm
+  // behaviours. These can still be set manually on the options though.
+  if (cx->realm()) {
+    discardSource = cx->realm()->behaviors().discardSource();
+
+    // If instrumentation is enabled in the realm, the compiler should insert
+    // the requested kinds of instrumentation into all scripts.
+    instrumentationKinds =
+        RealmInstrumentation::getInstrumentationKinds(cx->global());
+  }
 }
 
 CompileOptions& CompileOptions::setIntroductionInfoToCaller(
