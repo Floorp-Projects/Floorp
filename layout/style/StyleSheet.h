@@ -501,7 +501,7 @@ class StyleSheet final : public nsICSSLoaderObserver, public nsWrapperCache {
 
   // Take the recently cloned sheets from the `@import` rules, and reparent them
   // correctly to `aPrimarySheet`.
-  void FixUpAfterInnerClone();
+  void BuildChildListAfterInnerClone();
 
   void DropRuleList();
 

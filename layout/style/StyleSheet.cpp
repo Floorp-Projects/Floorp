@@ -537,14 +537,13 @@ void StyleSheet::EnsureUniqueInner() {
 
   StyleSheetInfo* clone = mInner->CloneFor(this);
   MOZ_ASSERT(clone);
-
   mInner->RemoveSheet(this);
   mInner = clone;
 
   // Fixup the child lists and parent links in the Servo sheet. This is done
   // here instead of in StyleSheetInner::CloneFor, because it's just more
   // convenient to do so instead.
-  FixUpAfterInnerClone();
+  BuildChildListAfterInnerClone();
 
   // let our containing style sets know that if we call
   // nsPresContext::EnsureSafeToHandOutCSSRules we will need to restyle the
@@ -817,8 +816,6 @@ void StyleSheet::RuleRemoved(css::Rule& aRule) {
 }
 
 void StyleSheet::RuleChanged(css::Rule* aRule, StyleRuleChangeKind aKind) {
-  MOZ_ASSERT(!aRule || HasUniqueInner(),
-             "Shouldn't have mutated a shared sheet");
   SetModifiedRules();
   NOTIFY(RuleChanged, (*this, aRule, aKind));
 }
@@ -1109,17 +1106,13 @@ JSObject* StyleSheet::WrapObject(JSContext* aCx,
   return dom::CSSStyleSheet_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-void StyleSheet::FixUpAfterInnerClone() {
+void StyleSheet::BuildChildListAfterInnerClone() {
   MOZ_ASSERT(Inner().mSheets.Length() == 1, "Should've just cloned");
   MOZ_ASSERT(Inner().mSheets[0] == this);
   MOZ_ASSERT(Inner().mChildren.IsEmpty());
 
   auto* contents = Inner().mContents.get();
   RefPtr<ServoCssRules> rules = Servo_StyleSheet_GetRules(contents).Consume();
-
-  if (mRuleList) {
-    mRuleList->SetRawAfterClone(rules);
-  }
 
   uint32_t index = 0;
   while (true) {
@@ -1387,6 +1380,8 @@ already_AddRefed<StyleSheet> StyleSheet::CloneAdoptedSheet(
 
 ServoCSSRuleList* StyleSheet::GetCssRulesInternal() {
   if (!mRuleList) {
+    EnsureUniqueInner();
+
     RefPtr<ServoCssRules> rawRules =
         Servo_StyleSheet_GetRules(Inner().mContents).Consume();
     MOZ_ASSERT(rawRules);
