@@ -340,13 +340,9 @@ class JS_PUBLIC_API PropertyDescriptor {
     return getter_;
   }
   void setGetterObject(JSObject* obj) {
+    MOZ_ASSERT(!isDataDescriptor());
     hasGetter_ = true;
     getter_ = obj;
-    // SpiderMonkey special behavior: remove [[Value]] and [[Writable]].
-    hasValue_ = false;
-    value_.setUndefined();
-    hasWritable_ = false;
-    writable_ = false;
   }
 
   bool hasSetterObject() const { return hasSetter_; }
@@ -355,13 +351,9 @@ class JS_PUBLIC_API PropertyDescriptor {
     return setter_;
   }
   void setSetterObject(JSObject* obj) {
+    MOZ_ASSERT(!isDataDescriptor());
     hasSetter_ = true;
     setter_ = obj;
-    // SpiderMonkey special behavior: remove [[Value]] and [[Writable]].
-    hasValue_ = false;
-    value_.setUndefined();
-    hasWritable_ = false;
-    writable_ = false;
   }
 
   // Non-standard flag, which is set when defining properties in a resolve hook.

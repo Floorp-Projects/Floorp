@@ -368,15 +368,16 @@ bool js::ToPropertyDescriptor(JSContext* cx, HandleValue descval,
   if (!GetPropertyIfPresent(cx, obj, id, &v, &hasGet)) {
     return false;
   }
+  RootedObject getter(cx);
   if (hasGet) {
     if (v.isObject()) {
       if (checkAccessors) {
         JS_TRY_OR_RETURN_FALSE(cx,
                                CheckCallable(cx, &v.toObject(), js_getter_str));
       }
-      desc.setGetterObject(&v.toObject());
+      getter = &v.toObject();
     } else if (v.isUndefined()) {
-      desc.setGetterObject(nullptr);
+      getter = nullptr;
     } else {
       JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                                 JSMSG_BAD_GET_SET_FIELD, js_getter_str);
@@ -390,15 +391,16 @@ bool js::ToPropertyDescriptor(JSContext* cx, HandleValue descval,
   if (!GetPropertyIfPresent(cx, obj, id, &v, &hasSet)) {
     return false;
   }
+  RootedObject setter(cx);
   if (hasSet) {
     if (v.isObject()) {
       if (checkAccessors) {
         JS_TRY_OR_RETURN_FALSE(cx,
                                CheckCallable(cx, &v.toObject(), js_setter_str));
       }
-      desc.setSetterObject(&v.toObject());
+      setter = &v.toObject();
     } else if (v.isUndefined()) {
-      desc.setSetterObject(nullptr);
+      setter = nullptr;
     } else {
       JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                                 JSMSG_BAD_GET_SET_FIELD, js_setter_str);
@@ -408,12 +410,19 @@ bool js::ToPropertyDescriptor(JSContext* cx, HandleValue descval,
 
   // Step 15.
   if (hasGet || hasSet) {
-    // We can't do desc.hasValue() or hasWritable() here, because
-    // setGetterObject and setSetterObject will always remove those fields.
     if (hasValue || hasWritable) {
       JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                                 JSMSG_INVALID_DESCRIPTOR);
       return false;
+    }
+
+    // We delay setGetterObject/setSetterObject after the previous check,
+    // because otherwise we would assert.
+    if (hasGet) {
+      desc.setGetterObject(getter);
+    }
+    if (hasSet) {
+      desc.setSetterObject(setter);
     }
   }
 
