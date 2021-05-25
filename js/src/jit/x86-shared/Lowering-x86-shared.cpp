@@ -161,6 +161,12 @@ void LIRGeneratorX86Shared::lowerForBitAndAndBranch(LBitAndAndBranch* baab,
   add(baab, mir);
 }
 
+void LIRGeneratorX86Shared::lowerNegI(MInstruction* ins, MDefinition* input,
+                                      int32_t inputNo) {
+  defineReuseInput(new (alloc()) LNegI(useRegisterAtStart(input)), ins,
+                   inputNo);
+}
+
 void LIRGeneratorX86Shared::lowerMulI(MMul* mul, MDefinition* lhs,
                                       MDefinition* rhs) {
   // Note: If we need a negative zero check, lhs is used twice.

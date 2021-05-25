@@ -42,6 +42,7 @@ class LIRGeneratorX86Shared : public LIRGeneratorShared {
                    MDefinition* lhs, MDefinition* rhs);
   void lowerForBitAndAndBranch(LBitAndAndBranch* baab, MInstruction* mir,
                                MDefinition* lhs, MDefinition* rhs);
+  void lowerNegI(MInstruction* ins, MDefinition* input, int32_t inputNo);
   void lowerMulI(MMul* mul, MDefinition* lhs, MDefinition* rhs);
   void lowerDivI(MDiv* div);
   void lowerModI(MMod* mod);
