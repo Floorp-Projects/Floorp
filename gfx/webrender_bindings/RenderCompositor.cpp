@@ -160,6 +160,10 @@ UniquePtr<RenderCompositor> RenderCompositor::Create(
     if (!gfxPlatform::IsHeadless()) {
       return RenderCompositorNativeSWGL::Create(aWidget, aError);
     }
+#elif defined(MOZ_WAYLAND)
+    if (gfx::gfxVars::UseWebRenderCompositor()) {
+      return RenderCompositorNativeSWGL::Create(aWidget, aError);
+    }
 #endif
     UniquePtr<RenderCompositor> comp =
         RenderCompositorLayersSWGL::Create(aWidget, aError);

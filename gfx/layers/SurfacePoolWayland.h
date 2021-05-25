@@ -10,30 +10,85 @@
 
 #include "mozilla/layers/SurfacePool.h"
 #include "mozilla/widget/nsWaylandDisplay.h"
+#include "mozilla/widget/WaylandShmBuffer.h"
 
 namespace mozilla::layers {
 
+using gfx::DrawTarget;
+using gfx::IntRegion;
 using gfx::IntSize;
 using gl::GLContext;
+using widget::nsWaylandDisplay;
+using widget::WaylandShmBuffer;
 
 class NativeSurfaceWayland {
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(NativeSurfaceWayland);
 
-  EGLSurface GetEGLSurface() { return mEGLSurface; }
+  static RefPtr<NativeSurfaceWayland> Create(const IntSize& aSize,
+                                             GLContext* aGL);
+
+  virtual Maybe<GLuint> GetAsFramebuffer() { return Nothing(); };
+  virtual RefPtr<DrawTarget> GetAsDrawTarget() { return nullptr; };
+
+  virtual void Commit(const IntRegion& aInvalidRegion) = 0;
+  virtual void NotifySurfaceReady(){};
+  virtual void DestroyGLResources(){};
 
   struct wl_surface* mWlSurface = nullptr;
   struct wl_subsurface* mWlSubsurface = nullptr;
   struct wp_viewport* mViewport = nullptr;
 
+ protected:
+  explicit NativeSurfaceWayland(
+      const RefPtr<nsWaylandDisplay>& aWaylandDisplay);
+  virtual ~NativeSurfaceWayland();
+
+  RefPtr<nsWaylandDisplay> mWaylandDisplay;
+};
+
+class NativeSurfaceWaylandEGL final : public NativeSurfaceWayland {
+ public:
+  Maybe<GLuint> GetAsFramebuffer() override;
+  void Commit(const IntRegion& aInvalidRegion) override;
+  void NotifySurfaceReady() override;
+  void DestroyGLResources() override;
+
  private:
-  friend class SurfacePoolWayland;
-  NativeSurfaceWayland(const IntSize& aSize, GLContext* aGL);
-  ~NativeSurfaceWayland();
+  friend RefPtr<NativeSurfaceWayland> NativeSurfaceWayland::Create(
+      const IntSize& aSize, GLContext* aGL);
+
+  NativeSurfaceWaylandEGL(const RefPtr<nsWaylandDisplay>& aWaylandDisplay,
+                          GLContext* aGL);
+  ~NativeSurfaceWaylandEGL();
 
   GLContext* mGL = nullptr;
   struct wl_egl_window* mEGLWindow = nullptr;
   EGLSurface mEGLSurface = nullptr;
+};
+
+class NativeSurfaceWaylandSHM final : public NativeSurfaceWayland {
+ public:
+  RefPtr<DrawTarget> GetAsDrawTarget() override;
+  void Commit(const IntRegion& aInvalidRegion) override;
+  static void BufferReleaseCallbackHandler(void* aData, wl_buffer* aBuffer);
+
+ private:
+  friend RefPtr<NativeSurfaceWayland> NativeSurfaceWayland::Create(
+      const IntSize& aSize, GLContext* aGL);
+
+  NativeSurfaceWaylandSHM(const RefPtr<nsWaylandDisplay>& aWaylandDisplay,
+                          const IntSize& aSize);
+
+  RefPtr<WaylandShmBuffer> ObtainBufferFromPool();
+  void ReturnBufferToPool(const RefPtr<WaylandShmBuffer>& aBuffer);
+  void EnforcePoolSizeLimit();
+  void BufferReleaseCallbackHandler(wl_buffer* aBuffer);
+
+  IntSize mSize;
+  nsTArray<RefPtr<WaylandShmBuffer>> mInUseBuffers;
+  nsTArray<RefPtr<WaylandShmBuffer>> mAvailableBuffers;
+  RefPtr<WaylandShmBuffer> mCurrentBuffer;
 };
 
 class SurfacePoolWayland final : public SurfacePool {
@@ -58,6 +113,8 @@ class SurfacePoolWayland final : public SurfacePool {
   struct SurfacePoolEntry {
     IntSize mSize;
     RefPtr<NativeSurfaceWayland> mNativeSurface;  // non-null
+    GLContext* mGLContext;
+    bool mRecycle;
   };
 
   bool CanRecycleSurfaceForRequest(const SurfacePoolEntry& aEntry,
