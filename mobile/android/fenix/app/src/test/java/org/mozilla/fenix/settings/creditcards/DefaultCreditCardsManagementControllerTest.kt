@@ -61,4 +61,15 @@ class DefaultCreditCardsManagementControllerTest {
             )
         }
     }
+
+    @Test
+    fun handleAddCreditCardClicked() {
+        controller.handleAddCreditCard()
+
+        verify {
+            navController.navigate(
+                CreditCardsManagementFragmentDirections.actionCreditCardsManagementFragmentToCreditCardEditorFragment()
+            )
+        }
+    }
 }

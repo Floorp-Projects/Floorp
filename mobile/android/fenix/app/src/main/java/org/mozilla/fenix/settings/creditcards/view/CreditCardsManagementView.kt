@@ -31,6 +31,8 @@ class CreditCardsManagementView(
             adapter = creditCardsAdapter
             layoutManager = LinearLayoutManager(containerView.context)
         }
+
+        add_credit_card_button.setOnClickListener { interactor.onClickAddCreditCard() }
     }
 
     /**

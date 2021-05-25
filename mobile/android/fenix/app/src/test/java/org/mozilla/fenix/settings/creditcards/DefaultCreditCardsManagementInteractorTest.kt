@@ -29,4 +29,10 @@ class DefaultCreditCardsManagementInteractorTest {
         interactor.onSelectCreditCard(creditCard)
         verify { controller.handleCreditCardClicked(creditCard) }
     }
+
+    @Test
+    fun onClickAddCreditCard() {
+        interactor.onClickAddCreditCard()
+        verify { controller.handleAddCreditCard() }
+    }
 }
