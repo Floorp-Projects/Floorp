@@ -16,6 +16,8 @@
 
 namespace mozilla {
 
+struct ErrorPropagationTag;
+
 // Allow nsresult errors to automatically convert to nsresult values, so MOZ_TRY
 // can be used in XPCOM methods with Result<T, nserror> results.
 template <>
@@ -29,6 +31,9 @@ class MOZ_MUST_USE_TYPE GenericErrorResult<nsresult> {
   explicit GenericErrorResult(nsresult aErrorValue) : mErrorValue(aErrorValue) {
     MOZ_ASSERT(NS_FAILED(aErrorValue));
   }
+
+  GenericErrorResult(nsresult aErrorValue, const ErrorPropagationTag&)
+      : GenericErrorResult(aErrorValue) {}
 
   operator nsresult() const { return mErrorValue; }
 };
