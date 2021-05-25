@@ -2135,7 +2135,8 @@ bool nsContentUtils::IsCallerChromeOrErrorPage(JSContext* aCx,
   if (ThreadsafeIsSystemCaller(aCx)) {
     return true;
   }
-  nsGlobalWindowInner* win = xpc::WindowGlobalOrNull(aObject);
+  nsGlobalWindowInner* win =
+      xpc::WindowGlobalOrNull(js::UncheckedUnwrap(aObject));
   if (!win) {
     return false;
   }
