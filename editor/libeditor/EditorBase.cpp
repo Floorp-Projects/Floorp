@@ -1421,6 +1421,11 @@ NS_IMETHODIMP EditorBase::SetDocumentCharacterSet(
   return NS_OK;
 }
 
+bool EditorBase::AreClipboardCommandsUnconditionallyEnabled() const {
+  Document* document = GetDocument();
+  return document && document->AreClipboardCommandsUnconditionallyEnabled();
+}
+
 bool EditorBase::CheckForClipboardCommandListener(
     nsAtom* aCommand, EventMessage aEventMessage) const {
   RefPtr<Document> document = GetDocument();
