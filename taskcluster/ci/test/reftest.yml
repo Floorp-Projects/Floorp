@@ -54,6 +54,7 @@ crashtest:
     chunks:
         by-test-platform:
             android-em-7.*: 1
+            linux.*64-tsan/opt: 8
             default: 1
     e10s: true
     run-on-projects:
