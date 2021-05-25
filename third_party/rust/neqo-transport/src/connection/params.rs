@@ -6,14 +6,21 @@
 
 use crate::connection::{ConnectionIdManager, Role, LOCAL_ACTIVE_CID_LIMIT, LOCAL_IDLE_TIMEOUT};
 use crate::recv_stream::RECV_BUFFER_SIZE;
+use crate::rtt::GRANULARITY;
 use crate::stream_id::StreamType;
 use crate::tparams::{self, PreferredAddress, TransportParameter, TransportParametersHandler};
+use crate::tracking::DEFAULT_ACK_DELAY;
 use crate::{CongestionControlAlgorithm, QuicVersion, Res};
 use std::convert::TryFrom;
 
 const LOCAL_MAX_DATA: u64 = 0x3FFF_FFFF_FFFF_FFFF; // 2^62-1
 const LOCAL_STREAM_LIMIT_BIDI: u64 = 16;
 const LOCAL_STREAM_LIMIT_UNI: u64 = 16;
+/// See `ConnectionParameters.ack_ratio` for a discussion of this value.
+pub const ACK_RATIO_SCALE: u8 = 10;
+/// By default, aim to have the peer acknowledge 4 times per round trip time.
+/// See `ConnectionParameters.ack_ratio` for more.
+const DEFAULT_ACK_RATIO: u8 = 4 * ACK_RATIO_SCALE;
 
 /// What to do with preferred addresses.
 #[derive(Debug, Clone)]
@@ -45,6 +52,13 @@ pub struct ConnectionParameters {
     max_streams_bidi: u64,
     /// Initial limit on unidirectional streams that this endpoint creates.
     max_streams_uni: u64,
+    /// The ACK ratio determines how many acknowledgements we will request as a
+    /// fraction of both the current congestion window (expressed in packets) and
+    /// as a fraction of the current round trip time.  This value is scaled by
+    /// `ACK_RATIO_SCALE`; that is, if the goal is to have at least five
+    /// acknowledgments every round trip, set the value to `5 * ACK_RATIO_SCALE`.
+    /// Values less than `ACK_RATIO_SCALE` are clamped to `ACK_RATIO_SCALE`.
+    ack_ratio: u8,
     preferred_address: PreferredAddressConfig,
 }
 
@@ -59,6 +73,7 @@ impl Default for ConnectionParameters {
             max_stream_data_uni: u64::try_from(RECV_BUFFER_SIZE).unwrap(),
             max_streams_bidi: LOCAL_STREAM_LIMIT_BIDI,
             max_streams_uni: LOCAL_STREAM_LIMIT_UNI,
+            ack_ratio: DEFAULT_ACK_RATIO,
             preferred_address: PreferredAddressConfig::Default,
         }
     }
@@ -161,6 +176,15 @@ impl ConnectionParameters {
         &self.preferred_address
     }
 
+    pub fn ack_ratio(mut self, ack_ratio: u8) -> Self {
+        self.ack_ratio = ack_ratio;
+        self
+    }
+
+    pub fn get_ack_ratio(&self) -> u8 {
+        self.ack_ratio
+    }
+
     pub fn create_transport_parameter(
         &self,
         role: Role,
@@ -178,6 +202,14 @@ impl ConnectionParameters {
         );
         tps.local.set_empty(tparams::DISABLE_MIGRATION);
         tps.local.set_empty(tparams::GREASE_QUIC_BIT);
+        tps.local.set_integer(
+            tparams::MAX_ACK_DELAY,
+            u64::try_from(DEFAULT_ACK_DELAY.as_millis()).unwrap(),
+        );
+        tps.local.set_integer(
+            tparams::MIN_ACK_DELAY,
+            u64::try_from(GRANULARITY.as_micros()).unwrap(),
+        );
 
         // set configurable parameters
         tps.local

@@ -13,7 +13,7 @@ use crate::events::ConnectionEvent;
 use crate::recv_stream::RECV_BUFFER_SIZE;
 use crate::send_stream::{SendStreamState, SEND_BUFFER_SIZE};
 use crate::tparams::{self, TransportParameter};
-use crate::tracking::MAX_UNACKED_PKTS;
+use crate::tracking::DEFAULT_ACK_PACKET_TOLERANCE;
 use crate::ConnectionParameters;
 use crate::{Error, StreamId, StreamType};
 
@@ -83,7 +83,7 @@ fn transfer() {
         let out = server.process(Some(d), now());
         assert_eq!(
             out.as_dgram_ref().is_some(),
-            (d_num + 1) % (MAX_UNACKED_PKTS + 1) == 0
+            (d_num + 1) % usize::try_from(DEFAULT_ACK_PACKET_TOLERANCE + 1).unwrap() == 0
         );
         qdebug!("Output={:0x?}", out.as_dgram_ref());
     }

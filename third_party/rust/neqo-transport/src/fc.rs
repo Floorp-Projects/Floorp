@@ -132,15 +132,14 @@ impl SenderFlowControl<()> {
         builder: &mut PacketBuilder,
         tokens: &mut Vec<RecoveryToken>,
         stats: &mut FrameStats,
-    ) -> Res<()> {
+    ) {
         if let Some(limit) = self.blocked_needed() {
-            if write_varint_frame(builder, &[FRAME_TYPE_DATA_BLOCKED, limit])? {
+            if write_varint_frame(builder, &[FRAME_TYPE_DATA_BLOCKED, limit]) {
                 stats.data_blocked += 1;
                 tokens.push(RecoveryToken::DataBlocked(limit));
                 self.blocked_sent();
             }
         }
-        Ok(())
     }
 }
 
@@ -150,12 +149,12 @@ impl SenderFlowControl<StreamId> {
         builder: &mut PacketBuilder,
         tokens: &mut Vec<RecoveryToken>,
         stats: &mut FrameStats,
-    ) -> Res<()> {
+    ) {
         if let Some(limit) = self.blocked_needed() {
             if write_varint_frame(
                 builder,
                 &[FRAME_TYPE_STREAM_DATA_BLOCKED, self.subject.as_u64(), limit],
-            )? {
+            ) {
                 stats.stream_data_blocked += 1;
                 tokens.push(RecoveryToken::StreamDataBlocked {
                     stream_id: self.subject,
@@ -164,7 +163,6 @@ impl SenderFlowControl<StreamId> {
                 self.blocked_sent();
             }
         }
-        Ok(())
     }
 }
 
@@ -174,14 +172,14 @@ impl SenderFlowControl<StreamType> {
         builder: &mut PacketBuilder,
         tokens: &mut Vec<RecoveryToken>,
         stats: &mut FrameStats,
-    ) -> Res<()> {
+    ) {
         if let Some(limit) = self.blocked_needed() {
             let frame = if self.subject == StreamType::BiDi {
                 FRAME_TYPE_STREAMS_BLOCKED_BIDI
             } else {
                 FRAME_TYPE_STREAMS_BLOCKED_UNIDI
             };
-            if write_varint_frame(builder, &[frame, limit])? {
+            if write_varint_frame(builder, &[frame, limit]) {
                 stats.streams_blocked += 1;
                 tokens.push(RecoveryToken::StreamsBlocked {
                     stream_type: self.subject,
@@ -190,7 +188,6 @@ impl SenderFlowControl<StreamType> {
                 self.blocked_sent();
             }
         }
-        Ok(())
     }
 }
 
@@ -287,15 +284,14 @@ impl ReceiverFlowControl<()> {
         builder: &mut PacketBuilder,
         tokens: &mut Vec<RecoveryToken>,
         stats: &mut FrameStats,
-    ) -> Res<()> {
+    ) {
         if let Some(max_allowed) = self.frame_needed() {
-            if write_varint_frame(builder, &[FRAME_TYPE_MAX_DATA, max_allowed])? {
+            if write_varint_frame(builder, &[FRAME_TYPE_MAX_DATA, max_allowed]) {
                 stats.max_data += 1;
                 tokens.push(RecoveryToken::MaxData(max_allowed));
                 self.frame_sent(max_allowed);
             }
         }
-        Ok(())
     }
 }
 
@@ -305,7 +301,7 @@ impl ReceiverFlowControl<StreamId> {
         builder: &mut PacketBuilder,
         tokens: &mut Vec<RecoveryToken>,
         stats: &mut FrameStats,
-    ) -> Res<()> {
+    ) {
         if let Some(max_allowed) = self.frame_needed() {
             if write_varint_frame(
                 builder,
@@ -314,7 +310,7 @@ impl ReceiverFlowControl<StreamId> {
                     self.subject.as_u64(),
                     max_allowed,
                 ],
-            )? {
+            ) {
                 stats.max_stream_data += 1;
                 tokens.push(RecoveryToken::MaxStreamData {
                     stream_id: self.subject,
@@ -323,7 +319,6 @@ impl ReceiverFlowControl<StreamId> {
                 self.frame_sent(max_allowed);
             }
         }
-        Ok(())
     }
 }
 
@@ -333,14 +328,14 @@ impl ReceiverFlowControl<StreamType> {
         builder: &mut PacketBuilder,
         tokens: &mut Vec<RecoveryToken>,
         stats: &mut FrameStats,
-    ) -> Res<()> {
+    ) {
         if let Some(max_streams) = self.frame_needed() {
             let frame = if self.subject == StreamType::BiDi {
                 FRAME_TYPE_MAX_STREAMS_BIDI
             } else {
                 FRAME_TYPE_MAX_STREAMS_UNIDI
             };
-            if write_varint_frame(builder, &[frame, max_streams])? {
+            if write_varint_frame(builder, &[frame, max_streams]) {
                 stats.max_streams += 1;
                 tokens.push(RecoveryToken::MaxStreams {
                     stream_type: self.subject,
@@ -349,7 +344,6 @@ impl ReceiverFlowControl<StreamType> {
                 self.frame_sent(max_streams);
             }
         }
-        Ok(())
     }
 
     /// Retire given amount of additional data.
@@ -714,9 +708,7 @@ mod test {
         // consume the frame
         let mut builder = PacketBuilder::short(Encoder::new(), false, &[]);
         let mut tokens = Vec::new();
-        fc[StreamType::BiDi]
-            .write_frames(&mut builder, &mut tokens, &mut FrameStats::default())
-            .unwrap();
+        fc[StreamType::BiDi].write_frames(&mut builder, &mut tokens, &mut FrameStats::default());
         assert_eq!(tokens.len(), 1);
 
         // Now 9 can be a new StreamId.
@@ -736,9 +728,7 @@ mod test {
         fc[StreamType::UniDi].add_retired(1);
         fc[StreamType::UniDi].send_flowc_update();
         // consume the frame
-        fc[StreamType::UniDi]
-            .write_frames(&mut builder, &mut tokens, &mut FrameStats::default())
-            .unwrap();
+        fc[StreamType::UniDi].write_frames(&mut builder, &mut tokens, &mut FrameStats::default());
         assert_eq!(tokens.len(), 2);
 
         // Now 7 can be a new StreamId.

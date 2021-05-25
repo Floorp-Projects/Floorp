@@ -45,6 +45,7 @@ use crate::packet::{
 use crate::path::{Path, PathRef, Paths};
 use crate::qlog;
 use crate::recovery::{LossRecovery, RecoveryToken, SendProfile};
+use crate::rtt::GRANULARITY;
 pub use crate::send_stream::{RetransmissionPriority, TransmissionPriority};
 use crate::stats::{Stats, StatsCell};
 use crate::stream_id::StreamType;
@@ -60,8 +61,8 @@ mod state;
 
 use idle::IdleTimeout;
 pub use idle::LOCAL_IDLE_TIMEOUT;
-pub use params::ConnectionParameters;
 use params::PreferredAddressConfig;
+pub use params::{ConnectionParameters, ACK_RATIO_SCALE};
 use saved::SavedDatagrams;
 use state::StateSignaling;
 pub use state::{ClosingFrame, State};
@@ -1722,7 +1723,7 @@ impl Connection {
                 self.loss_recovery.largest_acknowledged_pn(*space),
             );
             // The builder will set the limit to 0 if there isn't enough space for the header.
-            if builder.remaining() < 2 {
+            if builder.is_full() {
                 encoder = builder.abort();
                 break;
             }
@@ -1765,36 +1766,36 @@ impl Connection {
         }
 
         self.streams
-            .write_frames(TransmissionPriority::Critical, builder, tokens, stats)?;
-        if builder.remaining() < 2 {
+            .write_frames(TransmissionPriority::Critical, builder, tokens, stats);
+        if builder.is_full() {
             return Ok(());
         }
 
         self.streams
-            .write_frames(TransmissionPriority::Important, builder, tokens, stats)?;
-        if builder.remaining() < 2 {
+            .write_frames(TransmissionPriority::Important, builder, tokens, stats);
+        if builder.is_full() {
             return Ok(());
         }
 
-        // NEW_CONNECTION_ID and RETIRE_CONNECTION_ID.
+        // NEW_CONNECTION_ID, RETIRE_CONNECTION_ID, and ACK_FREQUENCY.
         self.cid_manager.write_frames(builder, tokens, stats)?;
-        if builder.remaining() < 2 {
+        if builder.is_full() {
             return Ok(());
         }
         self.paths.write_frames(builder, tokens, stats)?;
-        if builder.remaining() < 2 {
+        if builder.is_full() {
             return Ok(());
         }
 
         self.streams
-            .write_frames(TransmissionPriority::High, builder, tokens, stats)?;
-        if builder.remaining() < 2 {
+            .write_frames(TransmissionPriority::High, builder, tokens, stats);
+        if builder.is_full() {
             return Ok(());
         }
 
         self.streams
-            .write_frames(TransmissionPriority::Normal, builder, tokens, stats)?;
-        if builder.remaining() < 2 {
+            .write_frames(TransmissionPriority::Normal, builder, tokens, stats);
+        if builder.is_full() {
             return Ok(());
         }
 
@@ -1802,16 +1803,16 @@ impl Connection {
         // Both of these are only used for resumption and so can be relatively low priority.
         self.crypto
             .write_frame(PacketNumberSpace::ApplicationData, builder, tokens, stats)?;
-        if builder.remaining() < 2 {
+        if builder.is_full() {
             return Ok(());
         }
         self.new_token.write_frames(builder, tokens, stats)?;
-        if builder.remaining() < 2 {
+        if builder.is_full() {
             return Ok(());
         }
 
         self.streams
-            .write_frames(TransmissionPriority::Low, builder, tokens, stats)?;
+            .write_frames(TransmissionPriority::Low, builder, tokens, stats);
         Ok(())
     }
 
@@ -1953,7 +1954,7 @@ impl Connection {
                 self.loss_recovery.largest_acknowledged_pn(*space),
             );
             // The builder will set the limit to 0 if there isn't enough space for the header.
-            if builder.remaining() < 2 {
+            if builder.is_full() {
                 encoder = builder.abort();
                 break;
             }
@@ -1963,7 +1964,7 @@ impl Connection {
             builder.set_limit(profile.limit() - aead_expansion);
             builder.enable_padding(needs_padding);
             debug_assert!(builder.limit() <= 2048);
-            if builder.remaining() < 2 {
+            if builder.is_full() {
                 encoder = builder.abort();
                 break;
             }
@@ -2139,8 +2140,19 @@ impl Connection {
                 .borrow_mut()
                 .set_reset_token(reset_token);
 
-            let mad = Duration::from_millis(remote.get_integer(tparams::MAX_ACK_DELAY));
-            self.paths.primary().borrow_mut().set_max_ack_delay(mad);
+            let max_ad = Duration::from_millis(remote.get_integer(tparams::MAX_ACK_DELAY));
+            let min_ad = if remote.has_value(tparams::MIN_ACK_DELAY) {
+                Some(Duration::from_micros(
+                    remote.get_integer(tparams::MIN_ACK_DELAY),
+                ))
+            } else {
+                None
+            };
+            self.paths.primary().borrow_mut().set_ack_delay(
+                max_ad,
+                min_ad,
+                self.conn_params.get_ack_ratio(),
+            );
 
             let max_active_cids = remote.get_integer(tparams::ACTIVE_CONNECTION_ID_LIMIT);
             self.cid_manager.set_limit(max_active_cids);
@@ -2303,6 +2315,10 @@ impl Connection {
                 // prepare to resend them.
                 self.stats.borrow_mut().frame_rx.ping += 1;
                 self.crypto.resend_unacked(space);
+                if space == PacketNumberSpace::ApplicationData {
+                    // Send an ACK immediately if we might not otherwise do so.
+                    self.acks.immediate_ack(now);
+                }
             }
             Frame::Ack {
                 largest_acknowledged,
@@ -2415,6 +2431,20 @@ impl Connection {
                 self.discard_keys(PacketNumberSpace::Handshake, now);
                 self.migrate_to_preferred_address(now)?;
             }
+            Frame::AckFrequency {
+                seqno,
+                tolerance,
+                delay,
+                ignore_order,
+            } => {
+                self.stats.borrow_mut().frame_rx.ack_frequency += 1;
+                let delay = Duration::from_micros(delay);
+                if delay < GRANULARITY {
+                    return Err(Error::ProtocolViolation);
+                }
+                self.acks
+                    .ack_freq(seqno, tolerance - 1, delay, ignore_order);
+            }
             _ => unreachable!("All other frames are for streams"),
         };
 
@@ -2430,18 +2460,17 @@ impl Connection {
                 qdebug!([self], "Lost: {:?}", token);
                 if token.is_stream() {
                     self.streams.lost(token);
-                } else {
-                    match token {
-                        RecoveryToken::Ack(_) => {}
-                        RecoveryToken::Crypto(ct) => self.crypto.lost(&ct),
-                        RecoveryToken::HandshakeDone => self.state_signaling.handshake_done(),
-                        RecoveryToken::NewToken(seqno) => self.new_token.lost(*seqno),
-                        RecoveryToken::NewConnectionId(ncid) => self.cid_manager.lost(ncid),
-                        RecoveryToken::RetireConnectionId(seqno) => {
-                            self.paths.lost_retire_cid(*seqno)
-                        }
-                        _ => unreachable!("The rest of tokens are for streams"),
-                    }
+                    continue;
+                }
+                match token {
+                    RecoveryToken::Ack(_) => {}
+                    RecoveryToken::Crypto(ct) => self.crypto.lost(&ct),
+                    RecoveryToken::HandshakeDone => self.state_signaling.handshake_done(),
+                    RecoveryToken::NewToken(seqno) => self.new_token.lost(*seqno),
+                    RecoveryToken::NewConnectionId(ncid) => self.cid_manager.lost(ncid),
+                    RecoveryToken::RetireConnectionId(seqno) => self.paths.lost_retire_cid(*seqno),
+                    RecoveryToken::AckFrequency(rate) => self.paths.lost_ack_frequency(rate),
+                    _ => unreachable!("All other tokens are for streams"),
                 }
             }
         }
@@ -2483,19 +2512,18 @@ impl Connection {
             for token in &acked.tokens {
                 if token.is_stream() {
                     self.streams.acked(token);
-                } else {
-                    match token {
-                        RecoveryToken::Ack(at) => self.acks.acked(at),
-                        RecoveryToken::Crypto(ct) => self.crypto.acked(ct),
-                        RecoveryToken::NewToken(seqno) => self.new_token.acked(*seqno),
-                        RecoveryToken::NewConnectionId(entry) => self.cid_manager.acked(entry),
-                        RecoveryToken::RetireConnectionId(seqno) => {
-                            self.paths.acked_retire_cid(*seqno)
-                        }
-                        // We only worry when these are lost
-                        RecoveryToken::HandshakeDone => (),
-                        _ => unreachable!("These are stream RecoveryTokens"),
-                    }
+                    continue;
+                }
+                match token {
+                    RecoveryToken::Ack(at) => self.acks.acked(at),
+                    RecoveryToken::Crypto(ct) => self.crypto.acked(ct),
+                    RecoveryToken::NewToken(seqno) => self.new_token.acked(*seqno),
+                    RecoveryToken::NewConnectionId(entry) => self.cid_manager.acked(entry),
+                    RecoveryToken::RetireConnectionId(seqno) => self.paths.acked_retire_cid(*seqno),
+                    RecoveryToken::AckFrequency(rate) => self.paths.acked_ack_frequency(rate),
+                    // We only worry when these are lost
+                    RecoveryToken::HandshakeDone => (),
+                    _ => unreachable!("All other tokens are for streams"),
                 }
             }
         }
