@@ -17,9 +17,6 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/StaticPtr.h"
 
-#define FOCUSMETHOD_MASK 0xF000
-#define FOCUSMETHODANDRING_MASK 0xF0F000
-
 #define FOCUSMANAGER_CONTRACTID "@mozilla.org/focus-manager;1"
 
 class nsIContent;
@@ -474,13 +471,12 @@ class nsFocusManager final : public nsIFocusManager,
    * event queue if the document is suppressing events.
    *
    * aEventMessage should be either eFocus or eBlur.
-   * For blur events, aFocusMethod should normally be non-zero.
    *
    * aWindowRaised should only be true if called from WindowRaised.
    */
   void SendFocusOrBlurEvent(
       mozilla::EventMessage aEventMessage, mozilla::PresShell* aPresShell,
-      Document* aDocument, nsISupports* aTarget, uint32_t aFocusMethod,
+      Document* aDocument, nsISupports* aTarget,
       bool aWindowRaised, bool aIsRefocus = false,
       mozilla::dom::EventTarget* aRelatedTarget = nullptr);
   /**
