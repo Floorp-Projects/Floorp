@@ -565,7 +565,7 @@ load 986899.html
 load 1001233.html
 load 1001258-1.html
 load 1001994.html
-load chrome://reftest/content/crashtests/layout/generic/crashtests/1003441.xhtml
+skip-if(ThreadSanitizer) load chrome://reftest/content/crashtests/layout/generic/crashtests/1003441.xhtml
 load 1015562.html
 asserts(1-2) load 1015563-1.html
 asserts(1-2) load 1015563-2.html

@@ -1,4 +1,4 @@
-load 104310-1.html
+skip-if(ThreadSanitizer) load 104310-1.html
 load 116206-1.html
 load 135345-1.html
 load 457776-1.html

@@ -224,7 +224,7 @@ load 1406109-1.html
 load 1411473.html
 load 1413815.html
 load 1419799.html
-skip-if(!browserIsRemote) skip-if(geckoview&&webrender) skip-if(geckoview&&isDebugBuild) skip-if(AddressSanitizer) pref(dom.disable_open_during_load,false) load 1419902.html # skip on non e10s loads, Bug 1419902. Bug 1563013 for GV+WR. Bug 1524493 GV+debug. Bug 1573281 asan
+skip-if(!browserIsRemote) skip-if(geckoview&&webrender) skip-if(geckoview&&isDebugBuild) skip-if(AddressSanitizer) skip-if(ThreadSanitizer) pref(dom.disable_open_during_load,false) load 1419902.html # skip on non e10s loads, Bug 1419902. Bug 1563013 for GV+WR. Bug 1524493 GV+debug. Bug 1573281 asan
 load 1422883.html
 load 1428053.html
 load 1441029.html
@@ -244,7 +244,7 @@ skip-if(Android) pref(javascript.options.dynamicImport,true) pref(dom.disable_op
 skip-if(Android) pref(dom.disable_open_during_load,false) pref(browser.link.open_newwindow,2) load 1529203-3.html
 load 1528675.html
 load 1566310.html
-skip-if(Android) pref(dom.disable_open_during_load,false) pref(browser.link.open_newwindow,2) load 1588259.html
+skip-if(Android) skip-if(ThreadSanitizer) pref(dom.disable_open_during_load,false) pref(browser.link.open_newwindow,2) load 1588259.html
 load structured_clone_container_throws.html
 load xhr_empty_datauri.html
 load xhr_html_nullresponse.html
