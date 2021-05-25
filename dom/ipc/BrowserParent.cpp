@@ -1184,6 +1184,7 @@ mozilla::ipc::IPCResult BrowserParent::RecvPDocAccessibleConstructor(
   }
 
   if (aParentDoc) {
+    // Iframe document rendered in the same process as its embedder.
     // A document should never directly be the parent of another document.
     // There should always be an outer doc accessible child of the outer
     // document containing the child.
@@ -1193,6 +1194,15 @@ mozilla::ipc::IPCResult BrowserParent::RecvPDocAccessibleConstructor(
     }
 
     auto parentDoc = static_cast<a11y::DocAccessibleParent*>(aParentDoc);
+    if (parentDoc->IsShutdown()) {
+      // This can happen if parentDoc is an OOP iframe, but its embedder has
+      // been destroyed. (DocAccessibleParent::Destroy destroys any child
+      // documents.) The OOP iframe (and anything it embeds) will die soon
+      // anyway, so mark this document as shutdown and ignore it.
+      doc->MarkAsShutdown();
+      return IPC_OK();
+    }
+
     mozilla::ipc::IPCResult added = parentDoc->AddChildDoc(doc, aParentID);
     if (!added) {
 #  ifdef DEBUG
