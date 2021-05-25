@@ -486,10 +486,8 @@ describe("ToolbarPanelHub", () => {
       );
     });
     it("should set state values as data-attribute", async () => {
-      const [message] = (await PanelTestProvider.getMessages()).filter(
-        m =>
-          m.template === "whatsnew_panel_message" &&
-          m.content.layout === "tracking-protections"
+      const message = (await PanelTestProvider.getMessages()).find(
+        m => m.template === "whatsnew_panel_message"
       );
       getMessagesStub.returns([message]);
       instance.state.contentArguments = { foo: "foo", bar: "bar" };
