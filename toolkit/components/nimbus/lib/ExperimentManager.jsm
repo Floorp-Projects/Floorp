@@ -261,7 +261,15 @@ class _ExperimentManager {
 
     recipe.userFacingName = `${recipe.userFacingName} - Forced enrollment`;
 
-    return this._enroll(recipe, branch, source, { force: true });
+    return this._enroll(
+      {
+        ...recipe,
+        slug: `optin-${recipe.slug}`,
+      },
+      branch,
+      source,
+      { force: true }
+    );
   }
 
   /**
@@ -276,11 +284,6 @@ class _ExperimentManager {
     // Don't update experiments that were already unenrolled.
     if (experiment.active === false) {
       log.debug(`Enrollment ${recipe.slug} has expired, aborting.`);
-      return;
-    }
-
-    // Don't check forced enrollments
-    if (experiment.force) {
       return;
     }
 

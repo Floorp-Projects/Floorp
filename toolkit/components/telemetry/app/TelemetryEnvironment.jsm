@@ -336,6 +336,7 @@ const DEFAULT_ENVIRONMENT_PREFS = new Map([
     { what: RECORD_DEFAULTPREF_VALUE },
   ],
   ["xpinstall.signatures.required", { what: RECORD_PREF_VALUE }],
+  ["nimbus.debug", { what: RECORD_PREF_VALUE }],
 ]);
 
 const LOGGER_NAME = "Toolkit.Telemetry";
