@@ -154,12 +154,7 @@ enum class RelationType {
    */
   ERRORMSG_FOR = 0x18,
 
-  /**
-   * The target object is the anchor referenced by this link.
-   */
-  LINKS_TO = 0x19,
-
-  LAST = LINKS_TO
+  LAST = ERRORMSG_FOR
 };
 
 }  // namespace a11y
