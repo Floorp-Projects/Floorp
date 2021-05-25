@@ -10,6 +10,7 @@ use regalloc::{
     PrettyPrint, PrettyPrintSized, RealRegUniverse, Reg, RegClass, RegUsageCollector,
     RegUsageMapper, Writable,
 };
+use smallvec::{smallvec, SmallVec};
 use std::fmt;
 use std::string::String;
 
@@ -411,12 +412,12 @@ pub enum UnaryRmROpcode {
 }
 
 impl UnaryRmROpcode {
-    pub(crate) fn available_from(&self) -> Option<InstructionSet> {
+    pub(crate) fn available_from(&self) -> SmallVec<[InstructionSet; 2]> {
         match self {
-            UnaryRmROpcode::Bsr | UnaryRmROpcode::Bsf => None,
-            UnaryRmROpcode::Lzcnt => Some(InstructionSet::Lzcnt),
-            UnaryRmROpcode::Tzcnt => Some(InstructionSet::BMI1),
-            UnaryRmROpcode::Popcnt => Some(InstructionSet::Popcnt),
+            UnaryRmROpcode::Bsr | UnaryRmROpcode::Bsf => smallvec![],
+            UnaryRmROpcode::Lzcnt => smallvec![InstructionSet::Lzcnt],
+            UnaryRmROpcode::Tzcnt => smallvec![InstructionSet::BMI1],
+            UnaryRmROpcode::Popcnt => smallvec![InstructionSet::Popcnt],
         }
     }
 }
@@ -447,6 +448,7 @@ pub enum CmpOpcode {
     Test,
 }
 
+#[derive(Debug)]
 pub(crate) enum InstructionSet {
     SSE,
     SSE2,
@@ -458,6 +460,9 @@ pub(crate) enum InstructionSet {
     BMI1,
     #[allow(dead_code)] // never constructed (yet).
     BMI2,
+    AVX512F,
+    AVX512VL,
+    AVX512DQ,
 }
 
 /// Some SSE operations requiring 2 operands r/m and r.
@@ -473,6 +478,7 @@ pub enum SseOpcode {
     Andnps,
     Andnpd,
     Blendvpd,
+    Blendvps,
     Comiss,
     Comisd,
     Cmpps,
@@ -542,6 +548,7 @@ pub enum SseOpcode {
     Pandn,
     Pavgb,
     Pavgw,
+    Pblendvb,
     Pcmpeqb,
     Pcmpeqw,
     Pcmpeqd,
@@ -764,8 +771,10 @@ impl SseOpcode {
             | SseOpcode::Pshufb => SSSE3,
 
             SseOpcode::Blendvpd
+            | SseOpcode::Blendvps
             | SseOpcode::Insertps
             | SseOpcode::Packusdw
+            | SseOpcode::Pblendvb
             | SseOpcode::Pcmpeqq
             | SseOpcode::Pextrb
             | SseOpcode::Pextrd
@@ -823,6 +832,7 @@ impl fmt::Debug for SseOpcode {
             SseOpcode::Andnps => "andnps",
             SseOpcode::Andnpd => "andnpd",
             SseOpcode::Blendvpd => "blendvpd",
+            SseOpcode::Blendvps => "blendvps",
             SseOpcode::Cmpps => "cmpps",
             SseOpcode::Cmppd => "cmppd",
             SseOpcode::Cmpss => "cmpss",
@@ -892,6 +902,7 @@ impl fmt::Debug for SseOpcode {
             SseOpcode::Pandn => "pandn",
             SseOpcode::Pavgb => "pavgb",
             SseOpcode::Pavgw => "pavgw",
+            SseOpcode::Pblendvb => "pblendvb",
             SseOpcode::Pcmpeqb => "pcmpeqb",
             SseOpcode::Pcmpeqw => "pcmpeqw",
             SseOpcode::Pcmpeqd => "pcmpeqd",
@@ -987,9 +998,47 @@ impl fmt::Display for SseOpcode {
     }
 }
 
+#[derive(Clone)]
+pub enum Avx512Opcode {
+    Vcvtudq2ps,
+    Vpabsq,
+    Vpmullq,
+}
+
+impl Avx512Opcode {
+    /// Which `InstructionSet`s support the opcode?
+    pub(crate) fn available_from(&self) -> SmallVec<[InstructionSet; 2]> {
+        match self {
+            Avx512Opcode::Vcvtudq2ps => {
+                smallvec![InstructionSet::AVX512F, InstructionSet::AVX512VL]
+            }
+            Avx512Opcode::Vpabsq => smallvec![InstructionSet::AVX512F, InstructionSet::AVX512VL],
+            Avx512Opcode::Vpmullq => smallvec![InstructionSet::AVX512VL, InstructionSet::AVX512DQ],
+        }
+    }
+}
+
+impl fmt::Debug for Avx512Opcode {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        let name = match self {
+            Avx512Opcode::Vcvtudq2ps => "vcvtudq2ps",
+            Avx512Opcode::Vpabsq => "vpabsq",
+            Avx512Opcode::Vpmullq => "vpmullq",
+        };
+        write!(fmt, "{}", name)
+    }
+}
+
+impl fmt::Display for Avx512Opcode {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        fmt::Debug::fmt(self, f)
+    }
+}
+
 /// This defines the ways a value can be extended: either signed- or zero-extension, or none for
 /// types that are not extended. Contrast with [ExtMode], which defines the widths from and to which
 /// values can be extended.
+#[allow(dead_code)]
 #[derive(Clone, PartialEq)]
 pub enum ExtKind {
     None,

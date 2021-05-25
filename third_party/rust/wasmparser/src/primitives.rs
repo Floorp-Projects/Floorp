@@ -192,25 +192,25 @@ pub struct ExportType<'a> {
     pub ty: ImportSectionEntryType,
 }
 
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub struct ResizableLimits {
     pub initial: u32,
     pub maximum: Option<u32>,
 }
 
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub struct ResizableLimits64 {
     pub initial: u64,
     pub maximum: Option<u64>,
 }
 
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub struct TableType {
     pub element_type: Type,
     pub limits: ResizableLimits,
 }
 
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub enum MemoryType {
     M32 {
         limits: ResizableLimits,
@@ -236,7 +236,7 @@ impl MemoryType {
     }
 }
 
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub struct GlobalType {
     pub content_type: Type,
     pub mutable: bool,
@@ -272,6 +272,7 @@ pub enum NameType {
     Module,
     Function,
     Local,
+    Unknown(u32),
 }
 
 #[derive(Debug, Copy, Clone)]

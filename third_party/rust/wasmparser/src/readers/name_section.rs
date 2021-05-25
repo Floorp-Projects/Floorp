@@ -176,6 +176,16 @@ pub enum Name<'a> {
     Module(ModuleName<'a>),
     Function(FunctionName<'a>),
     Local(LocalName<'a>),
+    /// An unknown [name subsection](https://webassembly.github.io/spec/core/appendix/custom.html#subsections).
+    Unknown {
+        /// The identifier for this subsection.
+        ty: u32,
+        /// The contents of this subsection.
+        data: &'a [u8],
+        /// The range of bytes, relative to the start of the original data
+        /// stream, that the contents of this subsection reside in.
+        range: Range,
+    },
 }
 
 pub struct NameSectionReader<'a> {
@@ -223,6 +233,11 @@ impl<'a> NameSectionReader<'a> {
             NameType::Module => Name::Module(ModuleName { data, offset }),
             NameType::Function => Name::Function(FunctionName { data, offset }),
             NameType::Local => Name::Local(LocalName { data, offset }),
+            NameType::Unknown(ty) => Name::Unknown {
+                ty,
+                data,
+                range: Range::new(offset, offset + payload_len),
+            },
         })
     }
 }
