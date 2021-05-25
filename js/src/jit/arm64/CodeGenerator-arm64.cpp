@@ -2132,52 +2132,10 @@ void CodeGenerator::visitCtzI64(LCtzI64* ins) {
 }
 
 void CodeGenerator::visitMulI64(LMulI64* lir) {
-  const LInt64Allocation lhs = lir->getInt64Operand(LMulI64::Lhs);
-  const LInt64Allocation rhs = lir->getInt64Operand(LMulI64::Rhs);
+  const Register64 lhs = ToRegister64(lir->getInt64Operand(LMulI64::Lhs));
+  const Register64 rhs = ToRegister64(lir->getInt64Operand(LMulI64::Rhs));
   const Register64 output = ToOutRegister64(lir);
-
-  if (IsConstant(rhs)) {
-    int64_t constant = ToInt64(rhs);
-    // Ad-hoc strength reduction, cf the x64 code as well as the 32-bit code
-    // higher up in this file.  Bug 1712298 will lift this code to the MIR
-    // constant folding pass, or to lowering.
-    //
-    // This is for wasm integers only, so no input guards or overflow checking
-    // are needed.
-    switch (constant) {
-      case -1:
-        masm.Neg(ARMRegister(output.reg, 64),
-                 ARMRegister(ToRegister64(lhs).reg, 64));
-        break;
-      case 0:
-        masm.Mov(ARMRegister(output.reg, 64), xzr);
-        break;
-      case 1:
-        if (ToRegister64(lhs) != output) {
-          masm.move64(ToRegister64(lhs), output);
-        }
-        break;
-      case 2:
-        masm.Add(ARMRegister(output.reg, 64),
-                 ARMRegister(ToRegister64(lhs).reg, 64),
-                 ARMRegister(ToRegister64(lhs).reg, 64));
-        break;
-      default:
-        // Use shift if constant is nonnegative power of 2.
-        if (constant > 0) {
-          int32_t shift = mozilla::FloorLog2(constant);
-          if (int64_t(1) << shift == constant) {
-            masm.Lsl(ARMRegister(output.reg, 64),
-                     ARMRegister(ToRegister64(lhs).reg, 64), shift);
-            break;
-          }
-        }
-        masm.mul64(Imm64(constant), ToRegister64(lhs), output);
-        break;
-    }
-  } else {
-    masm.mul64(ToRegister64(lhs), ToRegister64(rhs), output);
-  }
+  masm.mul64(lhs, rhs, output);
 }
 
 void CodeGenerator::visitNotI64(LNotI64* lir) {

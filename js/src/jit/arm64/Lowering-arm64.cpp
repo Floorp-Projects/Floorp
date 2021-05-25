@@ -153,7 +153,7 @@ void LIRGeneratorARM64::lowerForALUInt64(
 void LIRGeneratorARM64::lowerForMulInt64(LMulI64* ins, MMul* mir,
                                          MDefinition* lhs, MDefinition* rhs) {
   ins->setInt64Operand(LMulI64::Lhs, useInt64RegisterAtStart(lhs));
-  ins->setInt64Operand(LMulI64::Rhs, useInt64RegisterOrConstantAtStart(rhs));
+  ins->setInt64Operand(LMulI64::Rhs, useInt64RegisterAtStart(rhs));
   defineInt64(ins, mir);
 }
 
@@ -266,11 +266,6 @@ void LIRGeneratorARM64::lowerDivI(MDiv* div) {
     assignSnapshot(lir, div->bailoutKind());
   }
   define(lir, div);
-}
-
-void LIRGeneratorARM64::lowerNegI(MInstruction* ins, MDefinition* input,
-                                  int32_t inputNo) {
-  define(new (alloc()) LNegI(useRegisterAtStart(input)), ins);
 }
 
 void LIRGeneratorARM64::lowerMulI(MMul* mul, MDefinition* lhs,
