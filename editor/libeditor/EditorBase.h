@@ -424,6 +424,11 @@ class EditorBase : public nsIEditor,
   }
 
   /**
+   * See Document::AreClipboardCommandsUnconditionallyEnabled.
+   */
+  bool AreClipboardCommandsUnconditionallyEnabled() const;
+
+  /**
    * IsCutCommandEnabled() returns whether cut command can be enabled or
    * disabled.  This always returns true if we're in non-chrome HTML/XHTML
    * document.  Otherwise, same as the result of `IsCopyToClipboardAllowed()`.
