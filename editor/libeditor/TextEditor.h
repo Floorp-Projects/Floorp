@@ -269,30 +269,6 @@ class TextEditor : public EditorBase, public nsITimerCallback, public nsINamed {
       nsIPrincipal* aPrincipal = nullptr);
 
   /**
-   * OnCompositionStart() is called when editor receives eCompositionStart
-   * event which should be handled in this editor.
-   */
-  nsresult OnCompositionStart(WidgetCompositionEvent& aCompositionStartEvent);
-
-  /**
-   * OnCompositionChange() is called when editor receives an eCompositioChange
-   * event which should be handled in this editor.
-   *
-   * @param aCompositionChangeEvent     eCompositionChange event which should
-   *                                    be handled in this editor.
-   */
-  MOZ_CAN_RUN_SCRIPT nsresult
-  OnCompositionChange(WidgetCompositionEvent& aCompositionChangeEvent);
-
-  /**
-   * OnCompositionEnd() is called when editor receives an eCompositionChange
-   * event and it's followed by eCompositionEnd event and after
-   * OnCompositionChange() is called.
-   */
-  MOZ_CAN_RUN_SCRIPT void OnCompositionEnd(
-      WidgetCompositionEvent& aCompositionEndEvent);
-
-  /**
    * OnDrop() is called from EditorEventListener::Drop that is handler of drop
    * event.
    */
@@ -759,18 +735,6 @@ class TextEditor : public EditorBase, public nsITimerCallback, public nsINamed {
 
   MOZ_CAN_RUN_SCRIPT bool UpdateMetaCharset(Document& aDocument,
                                             const nsACString& aCharacterSet);
-
-  /**
-   * EnsureComposition() should be called by composition event handlers.  This
-   * tries to get the composition for the event and set it to mComposition.
-   * However, this may fail because the composition may be committed before
-   * the event comes to the editor.
-   *
-   * @return            true if there is a composition.  Otherwise, for example,
-   *                    a composition event handler in web contents moved focus
-   *                    for committing the composition, returns false.
-   */
-  bool EnsureComposition(WidgetCompositionEvent& aCompositionEvent);
 
   virtual already_AddRefed<Element> GetInputEventTargetElement() const override;
 
