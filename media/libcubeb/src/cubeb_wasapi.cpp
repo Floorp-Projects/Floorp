@@ -277,8 +277,10 @@ struct cubeb_stream {
   com_ptr<IAudioClient> output_client;
   /* Interface pointer to use the event-driven interface. */
   com_ptr<IAudioRenderClient> render_client;
+#ifdef CUBEB_WASAPI_USE_IAUDIOSTREAMVOLUME
   /* Interface pointer to use the volume facilities. */
   com_ptr<IAudioStreamVolume> audio_stream_volume;
+#endif
   /* Interface pointer to use the stream audio clock. */
   com_ptr<IAudioClock> audio_clock;
   /* Frames written to the stream since it was opened. Reset on device
@@ -821,9 +823,11 @@ refill(cubeb_stream * stm, void * input_buffer, long input_frames_count,
   /* TODO: Report out_frames < 0 as an error via the API. */
   XASSERT(out_frames >= 0);
 
+  float volume = 1.0;
   {
     auto_lock lock(stm->stream_reset_lock);
     stm->frames_written += out_frames;
+    volume = stm->volume;
   }
 
   /* Go in draining mode if we got fewer frames than requested. If the stream
@@ -838,6 +842,36 @@ refill(cubeb_stream * stm, void * input_buffer, long input_frames_count,
   /* If this is not true, there will be glitches.
      It is alright to have produced less frames if we are draining, though. */
   XASSERT(out_frames == output_frames_needed || stm->draining || !has_output(stm) || stm->has_dummy_output);
+
+#ifndef CUBEB_WASAPI_USE_IAUDIOSTREAMVOLUME
+  if (has_output(stm) && !stm->has_dummy_output && volume != 1.0) {
+    // Adjust the output volume.
+    // Note: This could be integrated with the remixing below.
+    long out_samples = out_frames * stm->output_stream_params.channels;
+    if (volume == 0.0) {
+      memset(dest, 0, out_samples * stm->bytes_per_sample);
+    } else {
+      switch (stm->output_stream_params.format) {
+      case CUBEB_SAMPLE_FLOAT32NE: {
+        float * buf = static_cast<float *>(dest);
+        for (long i = 0; i < out_samples; ++i) {
+          buf[i] *= volume;
+        }
+        break;
+      }
+      case CUBEB_SAMPLE_S16NE: {
+        short * buf = static_cast<short *>(dest);
+        for (long i = 0; i < out_samples; ++i) {
+          buf[i] = static_cast<short>(static_cast<float>(buf[i]) * volume);
+        }
+        break;
+      }
+      default:
+        XASSERT(false);
+      }
+    }
+  }
+#endif
 
   // We don't bother mixing dummy output as it will be silenced, otherwise mix output if needed
   if (!stm->has_dummy_output && has_output(stm) && stm->output_mixer) {
@@ -1488,6 +1522,7 @@ current_stream_delay(cubeb_stream * stm)
   return delay;
 }
 
+#ifdef CUBEB_WASAPI_USE_IAUDIOSTREAMVOLUME
 int
 stream_set_volume(cubeb_stream * stm, float volume)
 {
@@ -1522,6 +1557,7 @@ stream_set_volume(cubeb_stream * stm, float volume)
 
   return CUBEB_OK;
 }
+#endif
 } // namespace anonymous
 
 extern "C" {
@@ -2322,12 +2358,15 @@ int setup_wasapi_stream(cubeb_stream * stm)
       return rv;
     }
 
-    HRESULT hr = stm->output_client->GetService(__uuidof(IAudioStreamVolume),
-                                                stm->audio_stream_volume.receive_vpp());
+    HRESULT hr = 0;
+#ifdef CUBEB_WASAPI_USE_IAUDIOSTREAMVOLUME
+    hr = stm->output_client->GetService(__uuidof(IAudioStreamVolume),
+                                        stm->audio_stream_volume.receive_vpp());
     if (FAILED(hr)) {
       LOG("Could not get the IAudioStreamVolume: %lx", hr);
       return CUBEB_ERROR;
     }
+#endif
 
     XASSERT(stm->frames_written == 0);
     hr = stm->output_client->GetService(__uuidof(IAudioClock),
@@ -2337,11 +2376,13 @@ int setup_wasapi_stream(cubeb_stream * stm)
       return CUBEB_ERROR;
     }
 
+#ifdef CUBEB_WASAPI_USE_IAUDIOSTREAMVOLUME
     /* Restore the stream volume over a device change. */
     if (stream_set_volume(stm, stm->volume) != CUBEB_OK) {
       LOG("Could not set the volume.");
       return CUBEB_ERROR;
     }
+#endif
   }
 
   /* If we have both input and output, we resample to
@@ -2569,7 +2610,9 @@ void close_wasapi_stream(cubeb_stream * stm)
   stm->output_device = nullptr;
   stm->input_device = nullptr;
 
+#ifdef CUBEB_WASAPI_USE_IAUDIOSTREAMVOLUME
   stm->audio_stream_volume = nullptr;
+#endif
 
   stm->audio_clock = nullptr;
   stm->total_frames_written += static_cast<UINT64>(round(stm->frames_written * stream_to_mix_samplerate_ratio(stm->output_stream_params, stm->output_mix_params)));
@@ -2850,9 +2893,11 @@ int wasapi_stream_set_volume(cubeb_stream * stm, float volume)
     return CUBEB_ERROR;
   }
 
+#ifdef CUBEB_WASAPI_USE_IAUDIOSTREAMVOLUME
   if (stream_set_volume(stm, volume) != CUBEB_OK) {
     return CUBEB_ERROR;
   }
+#endif
 
   stm->volume = volume;
 
