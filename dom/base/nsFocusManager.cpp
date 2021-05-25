@@ -478,7 +478,7 @@ nsFocusManager::GetLastFocusMethod(mozIDOMWindowProxy* aWindow,
 
   *aLastFocusMethod = window ? window->GetFocusMethod() : 0;
 
-  NS_ASSERTION((*aLastFocusMethod & FOCUSMETHOD_MASK) == *aLastFocusMethod,
+  NS_ASSERTION((*aLastFocusMethod & METHOD_MASK) == *aLastFocusMethod,
                "invalid focus method");
   return NS_OK;
 }
@@ -527,7 +527,7 @@ nsFocusManager::MoveFocus(mozIDOMWindowProxy* aWindow, Element* aStartElement,
   // the other focus methods is already set, or we're just moving to the root
   // or caret position.
   if (aType != MOVEFOCUS_ROOT && aType != MOVEFOCUS_CARET &&
-      (aFlags & FOCUSMETHOD_MASK) == 0) {
+      (aFlags & METHOD_MASK) == 0) {
     aFlags |= FLAG_BYMOVEFOCUS;
   }
 
@@ -1062,7 +1062,7 @@ void nsFocusManager::WindowHidden(mozIDOMWindowProxy* aWindow,
     if (presShell) {
       SendFocusOrBlurEvent(eBlur, presShell,
                            oldFocusedElement->GetComposedDoc(),
-                           oldFocusedElement, 1, false);
+                           oldFocusedElement, false);
     }
   }
 
@@ -1746,7 +1746,7 @@ void nsFocusManager::SetFocusInner(Element* aNewContent, int32_t aFlags,
 
     // set the focus node and method as needed
     uint32_t focusMethod =
-        aFocusChanged ? aFlags & FOCUSMETHODANDRING_MASK
+        aFocusChanged ? aFlags & METHODANDRING_MASK
                       : newWindow->GetFocusMethod() |
                             (aFlags & (FLAG_SHOWRING | FLAG_NOSHOWRING));
     newWindow->SetFocusedElement(elementToFocus, focusMethod);
@@ -2346,7 +2346,7 @@ bool nsFocusManager::BlurImpl(BrowsingContext* aBrowsingContextToClear,
     }
 
     SendFocusOrBlurEvent(eBlur, presShell, element->GetComposedDoc(), element,
-                         1, false, false, aElementToFocus);
+                         false, false, aElementToFocus);
   }
 
   // if we are leaving the document or the window was lowered, make the caret
@@ -2387,16 +2387,13 @@ bool nsFocusManager::BlurImpl(BrowsingContext* aBrowsingContextToClear,
     SetFocusedWindowInternal(nullptr, aActionId);
     mFocusedElement = nullptr;
 
-    // pass 1 for the focus method when calling SendFocusOrBlurEvent just so
-    // that the check is made for suppressed documents. Check to ensure that
-    // the document isn't null in case someone closed it during the blur above
     Document* doc = window->GetExtantDoc();
     if (doc) {
-      SendFocusOrBlurEvent(eBlur, presShell, doc, ToSupports(doc), 1, false);
+      SendFocusOrBlurEvent(eBlur, presShell, doc, ToSupports(doc), false);
     }
     if (!GetFocusedBrowsingContext()) {
       SendFocusOrBlurEvent(eBlur, presShell, doc,
-                           window->GetCurrentInnerWindow(), 1, false);
+                           window->GetCurrentInnerWindow(), false);
     }
 
     // check if a different window was focused
@@ -2486,7 +2483,7 @@ void nsFocusManager::Focus(
   // Otherwise, just get the current focus method and use that. This ensures
   // that the method is set during the document and window focus events.
   uint32_t focusMethod = aFocusChanged
-                             ? aFlags & FOCUSMETHODANDRING_MASK
+                             ? aFlags & METHODANDRING_MASK
                              : aWindow->GetFocusMethod() |
                                    (aFlags & (FLAG_SHOWRING | FLAG_NOSHOWRING));
 
@@ -2561,13 +2558,13 @@ void nsFocusManager::Focus(
     }
     if (doc && !focusInOtherContentProcess) {
       SendFocusOrBlurEvent(eFocus, presShell, doc, ToSupports(doc),
-                           aFlags & FOCUSMETHOD_MASK, aWindowRaised);
+                           aWindowRaised);
     }
     if (GetFocusedBrowsingContext() == aWindow->GetBrowsingContext() &&
         !mFocusedElement && !focusInOtherContentProcess) {
       SendFocusOrBlurEvent(eFocus, presShell, doc,
                            aWindow->GetCurrentInnerWindow(),
-                           aFlags & FOCUSMETHOD_MASK, aWindowRaised);
+                           aWindowRaised);
     }
   }
 
@@ -2616,7 +2613,7 @@ void nsFocusManager::Focus(
       if (!focusInOtherContentProcess) {
         SendFocusOrBlurEvent(
             eFocus, presShell, aElement->GetComposedDoc(), aElement,
-            aFlags & FOCUSMETHOD_MASK, aWindowRaised, isRefocus,
+            aWindowRaised, isRefocus,
             aBlurredElementInfo ? aBlurredElementInfo->mElement.get()
                                 : nullptr);
       }
@@ -2747,7 +2744,7 @@ void nsFocusManager::FireFocusInOrOutEvent(
 
 void nsFocusManager::SendFocusOrBlurEvent(
     EventMessage aEventMessage, PresShell* aPresShell, Document* aDocument,
-    nsISupports* aTarget, uint32_t aFocusMethod, bool aWindowRaised,
+    nsISupports* aTarget, bool aWindowRaised,
     bool aIsRefocus, EventTarget* aRelatedTarget) {
   NS_ASSERTION(aEventMessage == eFocus || aEventMessage == eBlur,
                "Wrong event type for SendFocusOrBlurEvent");
