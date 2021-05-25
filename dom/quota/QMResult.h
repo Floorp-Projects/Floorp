@@ -9,8 +9,13 @@
 
 #include "ErrorList.h"
 
+#if defined(EARLY_BETA_OR_EARLIER) || defined(DEBUG)
+#  define QM_ERROR_STACKS_ENABLED
+#endif
+
 namespace mozilla {
 
+#ifdef QM_ERROR_STACKS_ENABLED
 struct Ok;
 template <typename V, typename E>
 class Result;
@@ -52,12 +57,17 @@ class QMResult {
   QMResult(uint64_t aStackId, uint32_t aFrameId, nsresult aNSResult)
       : mStackId(aStackId), mFrameId(aFrameId), mNSResult(aNSResult) {}
 };
+#else
+using QMResult = nsresult;
+#endif
 
 inline QMResult ToQMResult(nsresult aValue) { return QMResult(aValue); }
 
+#ifdef QM_ERROR_STACKS_ENABLED
 inline Result<Ok, QMResult> ToResult(const QMResult& aValue);
 
 inline Result<Ok, QMResult> ToResult(QMResult&& aValue);
+#endif
 
 }  // namespace mozilla
 
