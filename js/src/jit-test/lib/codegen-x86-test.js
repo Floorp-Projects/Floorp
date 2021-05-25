@@ -1,6 +1,5 @@
-// Scaffolding for testing x64 Ion code generation patterns (currently mostly
-// for wasm SIMD).  See codegen-x64-test.js in this directory for more
-// information.
+// Scaffolding for testing x86 Ion code generation patterns .  See
+// codegen-x64-test.js in this directory for more information.
 
 load(libdir + "codegen-test-common.js");
 
