@@ -12,9 +12,9 @@
 #endif
 
 #ifdef QM_ERROR_STACKS_ENABLED
-#include "mozilla/Result.h"
-#include "mozilla/ResultVariant.h"
-#include "nsError.h"
+#  include "mozilla/Result.h"
+#  include "mozilla/ResultVariant.h"
+#  include "nsError.h"
 #endif
 
 namespace mozilla {
