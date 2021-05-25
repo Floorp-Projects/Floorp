@@ -448,6 +448,30 @@ class EditorBase : public nsIEditor,
   virtual dom::EventTarget* GetDOMEventTarget() const = 0;
 
   /**
+   * OnCompositionStart() is called when editor receives eCompositionStart
+   * event which should be handled in this editor.
+   */
+  nsresult OnCompositionStart(WidgetCompositionEvent& aCompositionStartEvent);
+
+  /**
+   * OnCompositionChange() is called when editor receives an eCompositioChange
+   * event which should be handled in this editor.
+   *
+   * @param aCompositionChangeEvent     eCompositionChange event which should
+   *                                    be handled in this editor.
+   */
+  MOZ_CAN_RUN_SCRIPT nsresult
+  OnCompositionChange(WidgetCompositionEvent& aCompositionChangeEvent);
+
+  /**
+   * OnCompositionEnd() is called when editor receives an eCompositionChange
+   * event and it's followed by eCompositionEnd event and after
+   * OnCompositionChange() is called.
+   */
+  MOZ_CAN_RUN_SCRIPT void OnCompositionEnd(
+      WidgetCompositionEvent& aCompositionEndEvent);
+
+  /**
    * Similar to the setter for wrapWidth, but just sets the editor
    * internal state without actually changing the content being edited
    * to wrap at that column.  This should only be used by callers who
@@ -2261,6 +2285,18 @@ class EditorBase : public nsIEditor,
   Tuple<EditorDOMPointInText, EditorDOMPointInText> ComputeInsertedRange(
       const EditorDOMPointInText& aInsertedPoint,
       const nsAString& aInsertedString) const;
+
+  /**
+   * EnsureComposition() should be called by composition event handlers.  This
+   * tries to get the composition for the event and set it to mComposition.
+   * However, this may fail because the composition may be committed before
+   * the event comes to the editor.
+   *
+   * @return            true if there is a composition.  Otherwise, for example,
+   *                    a composition event handler in web contents moved focus
+   *                    for committing the composition, returns false.
+   */
+  bool EnsureComposition(WidgetCompositionEvent& aCompositionEvent);
 
  private:
   nsCOMPtr<nsISelectionController> mSelectionController;

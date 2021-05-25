@@ -1047,17 +1047,17 @@ nsresult EditorEventListener::HandleStartComposition(
   if (DetachedFromEditor()) {
     return NS_OK;
   }
-  RefPtr<TextEditor> textEditor = mEditorBase->AsTextEditor();
-  if (!textEditor->IsAcceptableInputEvent(aCompositionStartEvent)) {
+  RefPtr<EditorBase> editorBase(mEditorBase);
+  if (!editorBase->IsAcceptableInputEvent(aCompositionStartEvent)) {
     return NS_OK;
   }
   // Although, "compositionstart" should be cancelable, but currently,
   // eCompositionStart event coming from widget is not cancelable.
   MOZ_ASSERT(!aCompositionStartEvent->DefaultPrevented(),
              "eCompositionStart shouldn't be cancelable");
-  nsresult rv = textEditor->OnCompositionStart(*aCompositionStartEvent);
+  nsresult rv = editorBase->OnCompositionStart(*aCompositionStartEvent);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "TextEditor::OnCompositionStart() failed");
+                       "EditorBase::OnCompositionStart() failed");
   return rv;
 }
 
@@ -1071,19 +1071,19 @@ nsresult EditorEventListener::HandleChangeComposition(
   if (DetachedFromEditor()) {
     return NS_OK;
   }
-  RefPtr<TextEditor> textEditor = mEditorBase->AsTextEditor();
-  if (!textEditor->IsAcceptableInputEvent(aCompositionChangeEvent)) {
+  RefPtr<EditorBase> editorBase(mEditorBase);
+  if (!editorBase->IsAcceptableInputEvent(aCompositionChangeEvent)) {
     return NS_OK;
   }
 
   // if we are readonly, then do nothing.
-  if (textEditor->IsReadonly()) {
+  if (editorBase->IsReadonly()) {
     return NS_OK;
   }
 
-  nsresult rv = textEditor->OnCompositionChange(*aCompositionChangeEvent);
+  nsresult rv = editorBase->OnCompositionChange(*aCompositionChangeEvent);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "TextEditor::OnCompositionChange() failed");
+                       "EditorBase::OnCompositionChange() failed");
   return rv;
 }
 
@@ -1092,14 +1092,14 @@ void EditorEventListener::HandleEndComposition(
   if (NS_WARN_IF(!aCompositionEndEvent) || DetachedFromEditor()) {
     return;
   }
-  RefPtr<TextEditor> textEditor = mEditorBase->AsTextEditor();
-  if (!textEditor->IsAcceptableInputEvent(aCompositionEndEvent)) {
+  RefPtr<EditorBase> editorBase(mEditorBase);
+  if (!editorBase->IsAcceptableInputEvent(aCompositionEndEvent)) {
     return;
   }
   MOZ_ASSERT(!aCompositionEndEvent->DefaultPrevented(),
              "eCompositionEnd shouldn't be cancelable");
 
-  textEditor->OnCompositionEnd(*aCompositionEndEvent);
+  editorBase->OnCompositionEnd(*aCompositionEndEvent);
 }
 
 nsresult EditorEventListener::Focus(InternalFocusEvent* aFocusEvent) {
