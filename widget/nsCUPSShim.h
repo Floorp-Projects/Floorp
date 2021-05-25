@@ -58,8 +58,6 @@ class nsCUPSShim {
   X(Optional::No, cupsGetDests)             \
   X(Optional::No, cupsGetNamedDest)         \
   X(Optional::No, cupsGetOption)            \
-  X(Optional::No, cupsPrintFile)            \
-  X(Optional::No, cupsTempFd)               \
   X(Optional::No, httpClose)                \
   X(Optional::No, ippAddString)             \
   X(Optional::No, ippAddStrings)            \
