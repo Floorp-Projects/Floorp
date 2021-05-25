@@ -435,111 +435,6 @@ nsresult TextEditor::SetTextAsAction(
   return EditorBase::ToGenericNSResult(rv);
 }
 
-nsresult TextEditor::ReplaceTextAsAction(
-    const nsAString& aString, nsRange* aReplaceRange,
-    AllowBeforeInputEventCancelable aAllowBeforeInputEventCancelable,
-    nsIPrincipal* aPrincipal) {
-  MOZ_ASSERT(aString.FindChar(nsCRT::CR) == kNotFound);
-
-  AutoEditActionDataSetter editActionData(*this, EditAction::eReplaceText,
-                                          aPrincipal);
-  if (NS_WARN_IF(!editActionData.CanHandle())) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
-  if (aAllowBeforeInputEventCancelable == AllowBeforeInputEventCancelable::No) {
-    editActionData.MakeBeforeInputEventNonCancelable();
-  }
-
-  if (!AsHTMLEditor()) {
-    editActionData.SetData(aString);
-  } else {
-    editActionData.InitializeDataTransfer(aString);
-    RefPtr<StaticRange> targetRange;
-    if (aReplaceRange) {
-      // Compute offset of the range before dispatching `beforeinput` event
-      // because it may be referred after the DOM tree is changed and the
-      // range may have not computed the offset yet.
-      targetRange = StaticRange::Create(
-          aReplaceRange->GetStartContainer(), aReplaceRange->StartOffset(),
-          aReplaceRange->GetEndContainer(), aReplaceRange->EndOffset(),
-          IgnoreErrors());
-      NS_WARNING_ASSERTION(targetRange && targetRange->IsPositioned(),
-                           "StaticRange::Create() failed");
-    } else {
-      Element* editingHost = AsHTMLEditor()->GetActiveEditingHost();
-      NS_WARNING_ASSERTION(editingHost,
-                           "No active editing host, no target ranges");
-      if (editingHost) {
-        targetRange = StaticRange::Create(
-            editingHost, 0, editingHost, editingHost->Length(), IgnoreErrors());
-        NS_WARNING_ASSERTION(targetRange && targetRange->IsPositioned(),
-                             "StaticRange::Create() failed");
-      }
-    }
-    if (targetRange && targetRange->IsPositioned()) {
-      editActionData.AppendTargetRange(*targetRange);
-    }
-  }
-
-  nsresult rv = editActionData.MaybeDispatchBeforeInputEvent();
-  if (NS_FAILED(rv)) {
-    NS_WARNING_ASSERTION(rv == NS_ERROR_EDITOR_ACTION_CANCELED,
-                         "MaybeDispatchBeforeInputEvent() failed");
-    return EditorBase::ToGenericNSResult(rv);
-  }
-
-  AutoPlaceholderBatch treatAsOneTransaction(*this,
-                                             ScrollSelectionIntoView::Yes);
-
-  // This should emulates inserting text for better undo/redo behavior.
-  IgnoredErrorResult ignoredError;
-  AutoEditSubActionNotifier startToHandleEditSubAction(
-      *this, EditSubAction::eInsertText, nsIEditor::eNext, ignoredError);
-  if (NS_WARN_IF(ignoredError.ErrorCodeIs(NS_ERROR_EDITOR_DESTROYED))) {
-    return EditorBase::ToGenericNSResult(ignoredError.StealNSResult());
-  }
-  NS_WARNING_ASSERTION(
-      !ignoredError.Failed(),
-      "TextEditor::OnStartToHandleTopLevelEditSubAction() failed, but ignored");
-
-  if (!aReplaceRange) {
-    nsresult rv = SetTextAsSubAction(aString);
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                         "TextEditor::SetTextAsSubAction() failed");
-    return EditorBase::ToGenericNSResult(rv);
-  }
-
-  if (aString.IsEmpty() && aReplaceRange->Collapsed()) {
-    NS_WARNING("Setting value was empty and replaced range was empty");
-    return NS_OK;
-  }
-
-  // Note that do not notify selectionchange caused by selecting all text
-  // because it's preparation of our delete implementation so web apps
-  // shouldn't receive such selectionchange before the first mutation.
-  AutoUpdateViewBatch preventSelectionChangeEvent(*this);
-
-  // Select the range but as far as possible, we should not create new range
-  // even if it's part of special Selection.
-  ErrorResult error;
-  SelectionRef().RemoveAllRanges(error);
-  if (error.Failed()) {
-    NS_WARNING("Selection::RemoveAllRanges() failed");
-    return error.StealNSResult();
-  }
-  SelectionRef().AddRangeAndSelectFramesAndNotifyListeners(*aReplaceRange,
-                                                           error);
-  if (error.Failed()) {
-    NS_WARNING("Selection::AddRangeAndSelectFramesAndNotifyListeners() failed");
-    return error.StealNSResult();
-  }
-
-  rv = ReplaceSelectionAsSubAction(aString);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "TextEditor::ReplaceSelectionAsSubAction() failed");
-  return EditorBase::ToGenericNSResult(rv);
-}
-
 nsresult TextEditor::SetTextAsSubAction(const nsAString& aString) {
   MOZ_ASSERT(IsEditActionDataAvailable());
   MOZ_ASSERT(mPlaceholderBatch);
@@ -605,30 +500,12 @@ nsresult TextEditor::SetTextAsSubAction(const nsAString& aString) {
       DebugOnly<nsresult> rvIgnored = ReplaceSelectionAsSubAction(aString);
       NS_WARNING_ASSERTION(
           NS_SUCCEEDED(rvIgnored),
-          "TextEditor::ReplaceSelectionAsSubAction() failed, but ignored");
+          "EditorBase::ReplaceSelectionAsSubAction() failed, but ignored");
     }
   }
 
   // Destroying AutoUpdateViewBatch may cause destroying us.
   return NS_WARN_IF(Destroyed()) ? NS_ERROR_EDITOR_DESTROYED : NS_OK;
-}
-
-nsresult TextEditor::ReplaceSelectionAsSubAction(const nsAString& aString) {
-  // TODO: Move this method to `EditorBase`.
-  if (aString.IsEmpty()) {
-    nsresult rv = DeleteSelectionAsSubAction(
-        nsIEditor::eNone,
-        IsTextEditor() ? nsIEditor::eNoStrip : nsIEditor::eStrip);
-    NS_WARNING_ASSERTION(
-        NS_SUCCEEDED(rv),
-        "EditorBase::DeleteSelectionAsSubAction(eNone) failed");
-    return rv;
-  }
-
-  nsresult rv = InsertTextAsSubAction(aString);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "EditorBase::InsertTextAsSubAction() failed");
-  return rv;
 }
 
 already_AddRefed<Element> TextEditor::GetInputEventTargetElement() const {

@@ -216,11 +216,6 @@ class TextEditor : public EditorBase, public nsITimerCallback, public nsINamed {
   int32_t MaxTextLength() const { return mMaxTextLength; }
   void SetMaxTextLength(int32_t aLength) { mMaxTextLength = aLength; }
 
-  enum class AllowBeforeInputEventCancelable {
-    No,
-    Yes,
-  };
-
   /**
    * Replace existed string with a string.
    * This is fast path to replace all string when using single line control.
@@ -235,25 +230,6 @@ class TextEditor : public EditorBase, public nsITimerCallback, public nsINamed {
    */
   MOZ_CAN_RUN_SCRIPT nsresult SetTextAsAction(
       const nsAString& aString,
-      AllowBeforeInputEventCancelable aAllowBeforeInputEventCancelable,
-      nsIPrincipal* aPrincipal = nullptr);
-
-  /**
-   * Replace text in aReplaceRange or all text in this editor with aString and
-   * treat the change as inserting the string.
-   *
-   * @param aString             The string to set.
-   * @param aReplaceRange       The range to be replaced.
-   *                            If nullptr, all contents will be replaced.
-   * @param aAllowBeforeInputEventCancelable
-   *                            Whether `beforeinput` event which will be
-   *                            dispatched for this can be cancelable or not.
-   * @param aPrincipal          Set subject principal if it may be called by
-   *                            JS.  If set to nullptr, will be treated as
-   *                            called by system.
-   */
-  MOZ_CAN_RUN_SCRIPT nsresult ReplaceTextAsAction(
-      const nsAString& aString, nsRange* aReplaceRange,
       AllowBeforeInputEventCancelable aAllowBeforeInputEventCancelable,
       nsIPrincipal* aPrincipal = nullptr);
 
@@ -366,14 +342,6 @@ class TextEditor : public EditorBase, public nsITimerCallback, public nsINamed {
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
   SetTextAsSubAction(const nsAString& aString);
-
-  /**
-   * ReplaceSelectionAsSubAction() replaces selection with aString.
-   *
-   * @param aString    The string to replace.
-   */
-  MOZ_CAN_RUN_SCRIPT nsresult
-  ReplaceSelectionAsSubAction(const nsAString& aString);
 
   /**
    * MaybeDoAutoPasswordMasking() may mask password if we're doing auto-masking.
