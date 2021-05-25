@@ -640,6 +640,7 @@ impl<'a> FunctionBuilder<'a> {
         dest_align: u8,
         src_align: u8,
         non_overlapping: bool,
+        mut flags: MemFlags,
     ) {
         // Currently the result of guess work, not actual profiling.
         const THRESHOLD: u64 = 4;
@@ -676,7 +677,6 @@ impl<'a> FunctionBuilder<'a> {
             return;
         }
 
-        let mut flags = MemFlags::new();
         flags.set_aligned();
 
         // Load all of the memory first. This is necessary in case `dest` overlaps.
@@ -732,6 +732,7 @@ impl<'a> FunctionBuilder<'a> {
         ch: u8,
         size: u64,
         buffer_align: u8,
+        mut flags: MemFlags,
     ) {
         // Currently the result of guess work, not actual profiling.
         const THRESHOLD: u64 = 4;
@@ -763,14 +764,13 @@ impl<'a> FunctionBuilder<'a> {
             let size = self.ins().iconst(config.pointer_type(), size as i64);
             self.call_memset(config, buffer, ch, size);
         } else {
-            let mut flags = MemFlags::new();
             flags.set_aligned();
 
             let ch = u64::from(ch);
             let raw_value = if int_type == types::I64 {
-                (ch << 32) | (ch << 16) | (ch << 8) | ch
+                ch * 0x0101010101010101_u64
             } else if int_type == types::I32 {
-                (ch << 16) | (ch << 8) | ch
+                ch * 0x01010101_u64
             } else if int_type == types::I16 {
                 (ch << 8) | ch
             } else {
@@ -851,7 +851,9 @@ mod tests {
     use alloc::string::ToString;
     use cranelift_codegen::entity::EntityRef;
     use cranelift_codegen::ir::types::*;
-    use cranelift_codegen::ir::{AbiParam, ExternalName, Function, InstBuilder, Signature};
+    use cranelift_codegen::ir::{
+        AbiParam, ExternalName, Function, InstBuilder, MemFlags, Signature,
+    };
     use cranelift_codegen::isa::CallConv;
     use cranelift_codegen::settings;
     use cranelift_codegen::verifier::verify_function;
@@ -1063,7 +1065,16 @@ block0:
             let src = builder.use_var(x);
             let dest = builder.use_var(y);
             let size = 8;
-            builder.emit_small_memory_copy(target.frontend_config(), dest, src, size, 8, 8, true);
+            builder.emit_small_memory_copy(
+                target.frontend_config(),
+                dest,
+                src,
+                size,
+                8,
+                8,
+                true,
+                MemFlags::new(),
+            );
             builder.ins().return_(&[dest]);
 
             builder.seal_all_blocks();
@@ -1121,7 +1132,16 @@ block0:
             let src = builder.use_var(x);
             let dest = builder.use_var(y);
             let size = 8192;
-            builder.emit_small_memory_copy(target.frontend_config(), dest, src, size, 8, 8, true);
+            builder.emit_small_memory_copy(
+                target.frontend_config(),
+                dest,
+                src,
+                size,
+                8,
+                8,
+                true,
+                MemFlags::new(),
+            );
             builder.ins().return_(&[dest]);
 
             builder.seal_all_blocks();
@@ -1179,7 +1199,7 @@ block0:
 
             let dest = builder.use_var(y);
             let size = 8;
-            builder.emit_small_memset(target.frontend_config(), dest, 1, size, 8);
+            builder.emit_small_memset(target.frontend_config(), dest, 1, size, 8, MemFlags::new());
             builder.ins().return_(&[dest]);
 
             builder.seal_all_blocks();
@@ -1192,7 +1212,7 @@ block0:
 block0:
     v2 = iconst.i64 0
     v0 -> v2
-    v1 = iconst.i64 0x0001_0001_0101
+    v1 = iconst.i64 0x0101_0101_0101_0101
     store aligned v1, v0
     return v0
 }
@@ -1232,7 +1252,7 @@ block0:
 
             let dest = builder.use_var(y);
             let size = 8192;
-            builder.emit_small_memset(target.frontend_config(), dest, 1, size, 8);
+            builder.emit_small_memset(target.frontend_config(), dest, 1, size, 8, MemFlags::new());
             builder.ins().return_(&[dest]);
 
             builder.seal_all_blocks();

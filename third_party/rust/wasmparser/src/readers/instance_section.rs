@@ -119,7 +119,7 @@ pub struct InstanceArgsReader<'a> {
     remaining: u32,
 }
 
-#[derive(Debug)]
+#[derive(Clone, Copy, Debug)]
 pub struct InstanceArg<'a> {
     pub name: &'a str,
     pub kind: ExternalKind,
