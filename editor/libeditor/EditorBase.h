@@ -2410,6 +2410,20 @@ class EditorBase : public nsIEditor,
   MOZ_CAN_RUN_SCRIPT bool CheckForClipboardCommandListener(
       nsAtom* aCommand, EventMessage aEventMessage) const;
 
+  /**
+   * FireClipboardEvent() may dispatch a clipboard event.
+   *
+   * @param aEventMessage       The event message which may be set to the
+   *                            dispatching event.
+   * @param aClipboardType      Working with global clipboard or selection.
+   * @param aActionTaken        [optional][out] If set to non-nullptr, will be
+   *                            set to true if the action for the event is
+   *                            handled or prevented default.
+   * @return                    false if dispatching event is canceled.
+   */
+  bool FireClipboardEvent(EventMessage aEventMessage, int32_t aClipboardType,
+                          bool* aActionTaken = nullptr);
+
  private:
   nsCOMPtr<nsISelectionController> mSelectionController;
   RefPtr<Document> mDocument;
