@@ -424,6 +424,21 @@ class EditorBase : public nsIEditor,
   }
 
   /**
+   * IsCopyToClipboardAllowed() returns true if the selected content can
+   * be copied into the clipboard.  This returns true when:
+   * - `Selection` is not collapsed and we're not a password editor.
+   * - `Selection` is not collapsed and we're a password editor but selection
+   *   range is in unmasked range.
+   */
+  bool IsCopyToClipboardAllowed() const {
+    AutoEditActionDataSetter editActionData(*this, EditAction::eNotEditing);
+    if (NS_WARN_IF(!editActionData.CanHandle())) {
+      return false;
+    }
+    return IsCopyToClipboardAllowedInternal();
+  }
+
+  /**
    * Adds or removes transaction listener to or from the transaction manager.
    * Note that TransactionManager does not check if the listener is in the
    * array.  So, caller of AddTransactionListener() needs to manage if it's
@@ -2360,6 +2375,14 @@ class EditorBase : public nsIEditor,
    *                    for committing the composition, returns false.
    */
   bool EnsureComposition(WidgetCompositionEvent& aCompositionEvent);
+
+  /**
+   * See comment of IsCopyToClipboardAllowed() for the detail.
+   */
+  virtual bool IsCopyToClipboardAllowedInternal() const {
+    MOZ_ASSERT(IsEditActionDataAvailable());
+    return !SelectionRef().IsCollapsed();
+  }
 
  private:
   nsCOMPtr<nsISelectionController> mSelectionController;
