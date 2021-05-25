@@ -64,7 +64,7 @@ const FeatureManifest = {
       },
       isProton: {
         type: "boolean",
-        fallbackPref: "browser.proton.enabled",
+        fallbackPref: "browser.aboutwelcome.protonDesign",
       },
       skipFocus: {
         type: "boolean",
