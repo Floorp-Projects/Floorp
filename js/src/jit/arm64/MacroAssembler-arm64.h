@@ -2101,6 +2101,14 @@ class MacroAssemblerCompat : public vixl::MacroAssembler {
                      Register64 val64, Register memoryBase, Register ptr);
   void wasmStoreImpl(const wasm::MemoryAccessDesc& access, MemOperand destAddr,
                      AnyRegister valany, Register64 val64);
+  // The complete address is in `address`, and `access` is used for its type
+  // attributes only; its `offset` is ignored.
+  void wasmLoadAbsolute(const wasm::MemoryAccessDesc& access,
+                        Register memoryBase, uint64_t address, AnyRegister out,
+                        Register64 out64);
+  void wasmStoreAbsolute(const wasm::MemoryAccessDesc& access,
+                         AnyRegister value, Register64 value64,
+                         Register memoryBase, uint64_t address);
 
   // Emit a BLR or NOP instruction. ToggleCall can be used to patch
   // this instruction.
