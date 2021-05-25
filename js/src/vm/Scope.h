@@ -408,7 +408,7 @@ class Scope : public gc::TenuredCellWithNonGCPointer<BaseScopeData> {
 
   Scope* enclosing() const { return enclosingScope_; }
 
-  static bool hasEnvironment(ScopeKind kind, bool environmentShape) {
+  static bool hasEnvironment(ScopeKind kind, bool hasEnvironmentShape = false) {
     switch (kind) {
       case ScopeKind::With:
       case ScopeKind::Global:
@@ -416,12 +416,12 @@ class Scope : public gc::TenuredCellWithNonGCPointer<BaseScopeData> {
         return true;
       default:
         // If there's a shape, an environment must be created for this scope.
-        return environmentShape;
+        return hasEnvironmentShape;
     }
   }
 
   bool hasEnvironment() const {
-    return hasEnvironment(kind_, environmentShape());
+    return hasEnvironment(kind_, !!environmentShape());
   }
 
   uint32_t firstFrameSlot() const;

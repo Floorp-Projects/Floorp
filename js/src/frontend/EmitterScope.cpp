@@ -202,8 +202,7 @@ bool EmitterScope::internEmptyGlobalScopeAsBody(BytecodeEmitter* bce) {
   // update ScopeStencil::enclosing.
   MOZ_ASSERT(bce->emitterMode == BytecodeEmitter::SelfHosting);
 
-  Scope* scope = &bce->cx->global()->emptyGlobalScope();
-  hasEnvironment_ = scope->hasEnvironment();
+  hasEnvironment_ = Scope::hasEnvironment(ScopeKind::Global);
 
   bce->bodyScopeIndex =
       GCThingIndex(bce->perScriptData().gcThingList().length());
