@@ -71,7 +71,7 @@ if CONFIG['LIBFUZZER']:
 if CONFIG['MOZ_WEBRTC']:
     gkrust_features += ['webrtc']
 
-if CONFIG['ENABLE_REMOTE_AGENT']:
+if CONFIG['ENABLE_WEBDRIVER']:
     gkrust_features += ['remote_agent']
 
 # We need to tell Glean it is being built with Gecko.

@@ -286,18 +286,14 @@ if (AppConstants.MOZ_CRASHREPORTER) {
   );
 }
 
-if ("@mozilla.org/remote/marionette;1" in Cc) {
+if (AppConstants.ENABLE_WEBDRIVER) {
   XPCOMUtils.defineLazyServiceGetter(
     this,
     "Marionette",
     "@mozilla.org/remote/marionette;1",
     "nsIMarionette"
   );
-} else {
-  this.Marionette = { running: false };
-}
 
-if (AppConstants.ENABLE_REMOTE_AGENT) {
   XPCOMUtils.defineLazyServiceGetter(
     this,
     "RemoteAgent",
@@ -305,6 +301,7 @@ if (AppConstants.ENABLE_REMOTE_AGENT) {
     "nsIRemoteAgent"
   );
 } else {
+  this.Marionette = { running: false };
   this.RemoteAgent = { listening: false };
 }
 

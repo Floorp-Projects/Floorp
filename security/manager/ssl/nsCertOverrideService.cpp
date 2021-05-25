@@ -18,13 +18,13 @@
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsCRT.h"
 #include "nsILineInputStream.h"
-#ifdef ENABLE_MARIONETTE
+#ifdef ENABLE_WEBDRIVER
 #  include "nsIMarionette.h"
 #endif
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
 #include "nsIOutputStream.h"
-#ifdef ENABLE_REMOTE_AGENT
+#ifdef ENABLE_WEBDRIVER
 #  include "nsIRemoteAgent.h"
 #endif
 #include "nsISafeOutputStream.h"
@@ -722,24 +722,27 @@ nsCertOverrideService::IsCertUsedForOverrides(nsIX509Cert* aCert,
 }
 
 static bool IsDebugger() {
-  bool marionetteRunning = false;
-  bool remoteAgentListening = false;
-
-#ifdef ENABLE_MARIONETTE
+#ifdef ENABLE_WEBDRIVER
   nsCOMPtr<nsIMarionette> marionette = do_GetService(NS_MARIONETTE_CONTRACTID);
   if (marionette) {
+    bool marionetteRunning = false;
     marionette->GetRunning(&marionetteRunning);
+    if (marionetteRunning) {
+      return true;
+    }
   }
-#endif
 
-#ifdef ENABLE_REMOTE_AGENT
   nsCOMPtr<nsIRemoteAgent> agent = do_GetService(NS_REMOTEAGENT_CONTRACTID);
   if (agent) {
+    bool remoteAgentListening = false;
     agent->GetListening(&remoteAgentListening);
+    if (remoteAgentListening) {
+      return true;
+    }
   }
 #endif
 
-  return marionetteRunning || remoteAgentListening;
+  return false;
 }
 
 NS_IMETHODIMP

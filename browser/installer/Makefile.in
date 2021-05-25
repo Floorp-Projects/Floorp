@@ -185,6 +185,6 @@ package-compare::
 	-diff -u $(DIST)/pack-list.txt $(DIST)/bin-list.txt
 	rm -f $(DIST)/pack-list.txt $(DIST)/bin-list.txt
 
-ifdef ENABLE_MARIONETTE
-DEFINES += -DENABLE_MARIONETTE=1
+ifdef ENABLE_WEBDRIVER
+DEFINES += -DENABLE_WEBDRIVER=1
 endif
