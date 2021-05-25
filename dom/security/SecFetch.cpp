@@ -217,6 +217,11 @@ bool IsUserTriggeredForSecFetchSite(nsIHttpChannel* aHTTPChannel) {
     return false;
   }
 
+  // sec-fetch-site can only be user triggered if the load was user triggered.
+  if (!loadInfo->GetHasValidUserGestureActivation()) {
+    return false;
+  }
+
   // We can assert that the navigation must be "webby" if the load was triggered
   // by a meta refresh. See also Bug 1647128.
   if (loadInfo->GetIsMetaRefresh()) {
