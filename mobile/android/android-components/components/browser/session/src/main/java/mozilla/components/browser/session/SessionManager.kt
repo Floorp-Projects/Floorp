@@ -24,6 +24,7 @@ import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSessionState
+import mozilla.components.concept.storage.HistoryMetadataKey
 import mozilla.components.support.base.Component
 import mozilla.components.support.base.facts.Action
 import mozilla.components.support.base.facts.Fact
@@ -365,6 +366,7 @@ class SessionManager(
             val session: Session,
             val engineSessionState: EngineSessionState? = null,
             val readerState: ReaderState? = null,
+            val historyMetadata: HistoryMetadataKey? = null,
             val lastAccess: Long = 0
         )
 
@@ -458,7 +460,8 @@ private fun Session.toRestoredTabSessionState(snapshot: SessionManager.Snapshot.
     return toTabSessionState().copy(
         engineState = engineState,
         readerState = snapshot.readerState ?: ReaderState(),
-        lastAccess = snapshot.lastAccess
+        lastAccess = snapshot.lastAccess,
+        historyMetadata = snapshot.historyMetadata
     )
 }
 
@@ -476,6 +479,7 @@ private fun RecoverableTab.toSnapshotItem(): SessionManager.Snapshot.Item {
         },
         engineSessionState = state,
         readerState = readerState,
+        historyMetadata = historyMetadata,
         lastAccess = lastAccess
     )
 }

@@ -7,6 +7,7 @@ package mozilla.components.browser.state.state.recover
 import mozilla.components.browser.state.state.ReaderState
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.concept.engine.EngineSessionState
+import mozilla.components.concept.storage.HistoryMetadataKey
 
 /**
  * A tab that is no longer open and in the list of tabs, but that can be restored (recovered) at
@@ -35,7 +36,8 @@ data class RecoverableTab(
     val state: EngineSessionState? = null,
     val readerState: ReaderState = ReaderState(),
     val lastAccess: Long = 0,
-    val private: Boolean = false
+    val private: Boolean = false,
+    val historyMetadata: HistoryMetadataKey? = null
 )
 
 /**
@@ -50,7 +52,8 @@ fun TabSessionState.toRecoverableTab() = RecoverableTab(
     state = engineState.engineSessionState,
     readerState = readerState,
     lastAccess = lastAccess,
-    private = content.private
+    private = content.private,
+    historyMetadata = historyMetadata
 )
 
 /**

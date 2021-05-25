@@ -24,6 +24,10 @@ internal object Keys {
     const val SESSION_LAST_ACCESS = "lastAccess"
     const val SESSION_SOURCE_KEY = "source"
 
+    const val SESSION_HISTORY_METADATA_URL = "historyMetadataUrl"
+    const val SESSION_HISTORY_METADATA_SEARCH_TERM = "historyMetadataSearchTerm"
+    const val SESSION_HISTORY_METADATA_REFERRER_URL = "historyMetadataReferrerUrl"
+
     const val SESSION_KEY = "session"
     const val ENGINE_SESSION_KEY = "engineSession"
 

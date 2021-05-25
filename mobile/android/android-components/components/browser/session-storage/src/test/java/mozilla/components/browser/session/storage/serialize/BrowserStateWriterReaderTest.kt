@@ -14,6 +14,7 @@ import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSessionState
+import mozilla.components.concept.storage.HistoryMetadataKey
 import mozilla.components.support.ktx.util.streamJSON
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
@@ -111,6 +112,38 @@ class BrowserStateWriterReaderTest {
 
         assertEquals("https://www.mozilla.org", restoredTab.url)
         assertEquals("Mozilla", restoredTab.title)
+    }
+
+    @Test
+    fun `Read and write tab with history metadata`() {
+        val engineState = createFakeEngineState()
+        val engine = createFakeEngine(engineState)
+
+        val tab = createTab(
+            url = "https://www.mozilla.org",
+            title = "Mozilla",
+            contextId = "work",
+            historyMetadata = HistoryMetadataKey(
+                "https://www.mozilla.org",
+                searchTerm = "test",
+                referrerUrl = "https://firefox.com"
+            )
+        )
+
+        val writer = BrowserStateWriter()
+        val reader = BrowserStateReader()
+
+        val file = AtomicFile(
+            File.createTempFile(UUID.randomUUID().toString(), UUID.randomUUID().toString())
+        )
+
+        assertTrue(writer.writeTab(tab, file))
+
+        val restoredTab = reader.readTab(engine, file)
+        assertNotNull(restoredTab!!)
+
+        assertNotNull(restoredTab.historyMetadata)
+        assertEquals(tab.content.url, restoredTab.historyMetadata!!.url)
     }
 }
 

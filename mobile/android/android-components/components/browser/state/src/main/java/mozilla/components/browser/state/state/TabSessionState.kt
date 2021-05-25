@@ -79,7 +79,8 @@ fun createTab(
     engineSession: EngineSession? = null,
     engineSessionState: EngineSessionState? = null,
     crashed: Boolean = false,
-    mediaSessionState: MediaSessionState? = null
+    mediaSessionState: MediaSessionState? = null,
+    historyMetadata: HistoryMetadataKey? = null
 ): TabSessionState {
     return TabSessionState(
         id = id,
@@ -100,6 +101,7 @@ fun createTab(
             engineSessionState = engineSessionState,
             crashed = crashed
         ),
-        mediaSessionState = mediaSessionState
+        mediaSessionState = mediaSessionState,
+        historyMetadata = historyMetadata
     )
 }

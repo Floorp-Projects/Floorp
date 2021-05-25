@@ -96,6 +96,18 @@ private fun JsonWriter.tab(
             value(tab.readerState.activeUrl)
         }
 
+        val metadata = tab.historyMetadata
+        if (metadata != null) {
+            name(Keys.SESSION_HISTORY_METADATA_URL)
+            value(metadata.url)
+
+            name(Keys.SESSION_HISTORY_METADATA_SEARCH_TERM)
+            value(metadata.searchTerm)
+
+            name(Keys.SESSION_HISTORY_METADATA_REFERRER_URL)
+            value(metadata.referrerUrl)
+        }
+
         endObject()
     }
 
