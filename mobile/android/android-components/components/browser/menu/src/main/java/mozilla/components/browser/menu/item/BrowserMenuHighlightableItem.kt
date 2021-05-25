@@ -165,10 +165,14 @@ class BrowserMenuHighlightableItem(
         return when (highlight) {
             is BrowserMenuHighlight.HighPriority -> base.copy(
                 text = highlight.label ?: label,
-                end = if (highlight.endImageResource == NO_ID) null else DrawableMenuIcon(
-                    context,
-                    highlight.endImageResource
-                ),
+                end = if (highlight.endImageResource == NO_ID) {
+                    null
+                } else {
+                    DrawableMenuIcon(
+                        context,
+                        highlight.endImageResource
+                    )
+                },
                 effect = HighPriorityHighlightEffect(
                     backgroundTint = highlight.backgroundTint
                 )

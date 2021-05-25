@@ -102,10 +102,9 @@ interface DeviceConstellation : Observable<AccountEventsObserver> {
 
 /**
  * Describes current device and other devices in the constellation.
- *
- * TODO: currentDevice should not be nullable.
- * See https://github.com/mozilla-mobile/android-components/issues/8768
  */
+// N.B.: currentDevice should not be nullable.
+// See https://github.com/mozilla-mobile/android-components/issues/8768
 data class ConstellationState(val currentDevice: Device?, val otherDevices: List<Device>)
 
 /**

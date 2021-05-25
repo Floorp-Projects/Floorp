@@ -237,7 +237,7 @@ class MozillaSocorroService(
         return map
     }
 
-    @Suppress("LongParameterList", "LongMethod")
+    @Suppress("LongParameterList", "LongMethod", "ComplexMethod")
     private fun sendCrashData(
         os: OutputStream,
         boundary: String,

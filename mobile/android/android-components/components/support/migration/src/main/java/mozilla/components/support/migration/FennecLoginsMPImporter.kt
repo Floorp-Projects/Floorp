@@ -29,12 +29,14 @@ class FennecLoginsMPImporter(
         return if (!isFennecInstallation(browserDbPath)) {
             logger.info("Skipping MP check, not a Fennec install.")
             false
-        } else try {
-            // MP is set if default password doesn't work.
-            !FennecLoginsMigration.isMasterPasswordValid(FennecLoginsMigration.DEFAULT_MASTER_PASSWORD, key4DbPath)
-        } catch (e: Exception) {
-            logger.error("Failed to check MP validity", e)
-            false
+        } else {
+            try {
+                // MP is set if default password doesn't work.
+                !FennecLoginsMigration.isMasterPasswordValid(FennecLoginsMigration.DEFAULT_MASTER_PASSWORD, key4DbPath)
+            } catch (e: Exception) {
+                logger.error("Failed to check MP validity", e)
+                false
+            }
         }
     }
 

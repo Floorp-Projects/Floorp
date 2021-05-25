@@ -338,9 +338,13 @@ internal class SaveLoginDialogFragment : PromptDialogFragment() {
                     }
                     is Result.CanBeUpdated -> {
                         setViewState(
-                            headline = if (result.foundLogin.username.isEmpty()) context?.getString(
-                                R.string.mozac_feature_prompt_login_add_username_headline
-                            ) else context?.getString(R.string.mozac_feature_prompt_login_update_headline),
+                            headline = if (result.foundLogin.username.isEmpty()) {
+                                context?.getString(
+                                    R.string.mozac_feature_prompt_login_add_username_headline
+                                )
+                            } else {
+                                context?.getString(R.string.mozac_feature_prompt_login_update_headline)
+                            },
                             negativeText = context?.getString(R.string.mozac_feature_prompt_dont_update),
                             confirmText =
                             context?.getString(R.string.mozac_feature_prompt_update_confirmation)

@@ -57,7 +57,7 @@ class AppLinksInterceptor(
         alwaysDeniedSchemes = alwaysDeniedSchemes),
     private val launchFromInterceptor: Boolean = false
 ) : RequestInterceptor {
-
+    @Suppress("ComplexMethod")
     override fun onLoadRequest(
         engineSession: EngineSession,
         uri: String,
