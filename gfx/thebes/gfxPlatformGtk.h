@@ -75,7 +75,7 @@ class gfxPlatformGtk final : public gfxPlatform {
 #endif
 
 #ifdef MOZ_WAYLAND
-  bool UseDMABufWebGL() override { return mUseWebGLDmabufBackend; }
+  bool UseDMABufWebGL() override;
   void DisableDMABufWebGL() { mUseWebGLDmabufBackend = false; }
 #endif
 
