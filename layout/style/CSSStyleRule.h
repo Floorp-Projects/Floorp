@@ -49,8 +49,6 @@ class CSSStyleRuleDeclaration final : public nsDOMCSSDeclaration {
   inline CSSStyleRule* Rule();
   inline const CSSStyleRule* Rule() const;
 
-  void SetRawAfterClone(RefPtr<RawServoDeclarationBlock>);
-
   RefPtr<DeclarationBlock> mDecls;
 };
 
@@ -83,7 +81,6 @@ class CSSStyleRule final : public BindingStyleRule, public SupportsWeakPtr {
   nsICSSDeclaration* Style() final;
 
   RawServoStyleRule* Raw() const { return mRawRule; }
-  void SetRawAfterClone(RefPtr<RawServoStyleRule>);
 
   // Methods of mozilla::css::Rule
   size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const final;
