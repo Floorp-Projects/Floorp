@@ -595,22 +595,6 @@ pub enum ScrollLocation {
     End,
 }
 
-/// Represents a zoom factor.
-#[derive(Clone, Copy, Debug)]
-pub struct ZoomFactor(f32);
-
-impl ZoomFactor {
-    /// Construct a new zoom factor.
-    pub fn new(scale: f32) -> Self {
-        ZoomFactor(scale)
-    }
-
-    /// Get the zoom factor as an untyped float.
-    pub fn get(self) -> f32 {
-        self.0
-    }
-}
-
 /// Crash annotations included in crash reports.
 #[repr(C)]
 #[derive(Clone, Copy)]

@@ -170,12 +170,6 @@ impl Example for App {
                     winit::VirtualKeyCode::Left => Some(LayoutVector2D::new(10.0, 0.0)),
                     _ => None,
                 };
-                let zoom = match key {
-                    winit::VirtualKeyCode::Key0 => Some(1.0),
-                    winit::VirtualKeyCode::Minus => Some(0.8),
-                    winit::VirtualKeyCode::Equals => Some(1.25),
-                    _ => None,
-                };
 
                 if let Some(offset) = offset {
                     self.scroll_origin += offset;
@@ -185,10 +179,6 @@ impl Example for App {
                         ExternalScrollId(EXT_SCROLL_ID_CONTENT, PipelineId::dummy()),
                         ScrollClamping::ToContentBounds,
                     );
-                    txn.generate_frame(0);
-                }
-                if let Some(zoom) = zoom {
-                    txn.set_pinch_zoom(ZoomFactor::new(zoom));
                     txn.generate_frame(0);
                 }
             }
