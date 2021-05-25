@@ -236,11 +236,14 @@ interface nsIFocusManager : nsISupports
    */
   const unsigned long FLAG_BYTOUCH = 0x200000;
 
+  /** Focus is changing due to a JS focus() call or similar operation. */
+  const unsigned long FLAG_BYJS = 0x400000;
+
   /** Focus is changing due to a long press operation by touch or mouse. */
   const unsigned long FLAG_BYLONGPRESS = 0x800000;
 
   /** Mask with all the focus methods. */
-  const unsigned long METHOD_MASK = FLAG_BYMOUSE | FLAG_BYKEY | FLAG_BYMOVEFOCUS | FLAG_BYTOUCH | FLAG_BYLONGPRESS;
+  const unsigned long METHOD_MASK = FLAG_BYMOUSE | FLAG_BYKEY | FLAG_BYMOVEFOCUS | FLAG_BYTOUCH | FLAG_BYJS | FLAG_BYLONGPRESS;
 
   /** Mask with all the focus methods, plus the SHOW / NOSHOWRING flags. */
   const unsigned long METHODANDRING_MASK = METHOD_MASK | FLAG_SHOWRING | FLAG_NOSHOWRING;
