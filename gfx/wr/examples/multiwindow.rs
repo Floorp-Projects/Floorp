@@ -91,7 +91,6 @@ impl Window {
         let device_pixel_ratio = context.window().get_hidpi_factor() as f32;
 
         let opts = webrender::RendererOptions {
-            device_pixel_ratio,
             clear_color: Some(clear_color),
             ..webrender::RendererOptions::default()
         };
