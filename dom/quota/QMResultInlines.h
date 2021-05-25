@@ -17,6 +17,39 @@
 
 namespace mozilla {
 
+// Allow QMResult errors to use existing stack id and to increase the frame id
+// during error propagation.
+template <>
+class MOZ_MUST_USE_TYPE GenericErrorResult<QMResult> {
+  QMResult mErrorValue;
+
+  template <typename V, typename E2>
+  friend class Result;
+
+ public:
+  explicit GenericErrorResult(const QMResult& aErrorValue)
+      : mErrorValue(aErrorValue) {
+    MOZ_ASSERT(NS_FAILED(aErrorValue.NSResult()));
+  }
+
+  explicit GenericErrorResult(QMResult&& aErrorValue)
+      : mErrorValue(std::move(aErrorValue)) {
+    MOZ_ASSERT(NS_FAILED(aErrorValue.NSResult()));
+  }
+
+  explicit GenericErrorResult(const QMResult& aErrorValue,
+                              const ErrorPropagationTag&)
+      : GenericErrorResult(aErrorValue.Propagate()) {}
+
+  explicit GenericErrorResult(QMResult&& aErrorValue,
+                              const ErrorPropagationTag&)
+      : GenericErrorResult(aErrorValue.Propagate()) {}
+
+  operator QMResult() const { return mErrorValue; }
+
+  operator nsresult() const { return mErrorValue.NSResult(); }
+};
+
 inline Result<Ok, QMResult> ToResult(const QMResult& aValue) {
   if (NS_FAILED(aValue.NSResult())) {
     return Err(aValue);
