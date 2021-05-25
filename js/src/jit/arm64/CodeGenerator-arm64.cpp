@@ -3438,6 +3438,11 @@ void CodeGenerator::visitWasmConstantShiftSimd128(
 #endif
 }
 
+void CodeGenerator::visitWasmSignReplicationSimd128(
+    LWasmSignReplicationSimd128* ins) {
+  MOZ_CRASH("No SIMD");
+}
+
 void CodeGenerator::visitWasmShuffleSimd128(LWasmShuffleSimd128* ins) {
 #ifdef ENABLE_WASM_SIMD
   FloatRegister lhs = ToFloatRegister(ins->lhs());

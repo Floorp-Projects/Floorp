@@ -2162,6 +2162,25 @@ void MacroAssembler::unsignedRightShiftInt64x2(Imm32 count, FloatRegister src,
 
 // Sign replication operation
 
+void MacroAssembler::signReplicationInt8x16(FloatRegister src,
+                                            FloatRegister dest) {
+  MOZ_ASSERT(src != dest);
+  vpxor(Operand(dest), dest, dest);
+  vpcmpgtb(Operand(src), dest, dest);
+}
+
+void MacroAssembler::signReplicationInt16x8(FloatRegister src,
+                                            FloatRegister dest) {
+  moveSimd128(src, dest);
+  vpsraw(Imm32(15), dest, dest);
+}
+
+void MacroAssembler::signReplicationInt32x4(FloatRegister src,
+                                            FloatRegister dest) {
+  moveSimd128(src, dest);
+  vpsrad(Imm32(31), dest, dest);
+}
+
 void MacroAssembler::signReplicationInt64x2(FloatRegister src,
                                             FloatRegister dest) {
   vpshufd(ComputeShuffleMask(1, 1, 3, 3), src, dest);
