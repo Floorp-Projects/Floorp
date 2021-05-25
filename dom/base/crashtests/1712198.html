@@ -1,0 +1,9 @@
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  let a = document.documentElement
+  SpecialPowers.wrap(self).printPreview().document.adoptNode(a)
+  let b = document.createElementNS('http://www.w3.org/1999/xhtml', 'optgroup')
+  a.appendChild(b)
+  b.focus({ })
+})
+</script>
