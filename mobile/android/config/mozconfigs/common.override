@@ -5,6 +5,6 @@
 # This file is included at the bottom of all native android mozconfigs
 #
 # Disable enforcing that add-ons are signed by the trusted root
-MOZ_REQUIRE_SIGNING=0
+MOZ_REQUIRE_SIGNING=
 
 . "$topsrcdir/build/mozconfig.common.override"

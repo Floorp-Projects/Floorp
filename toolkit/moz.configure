@@ -1433,6 +1433,15 @@ add_old_configure_assignment("ACCESSIBILITY", accessibility)
 # ==============================================================
 
 option(
+    env="MOZ_REQUIRE_SIGNING",
+    default=milestone.is_release_or_beta,
+    help="Enforce that add-ons are signed by the trusted root",
+)
+
+set_config("MOZ_REQUIRE_SIGNING", True, when="MOZ_REQUIRE_SIGNING")
+set_define("MOZ_REQUIRE_SIGNING", True, when="MOZ_REQUIRE_SIGNING")
+
+option(
     "--with-unsigned-addon-scopes",
     nargs="+",
     choices=("app", "system"),
