@@ -50,6 +50,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   FxAccounts: "resource://gre/modules/FxAccounts.jsm",
   HomePage: "resource:///modules/HomePage.jsm",
   Integration: "resource://gre/modules/Integration.jsm",
+  Interactions: "resource:///modules/Interactions.jsm",
   Log: "resource://gre/modules/Log.jsm",
   LoginBreaches: "resource:///modules/LoginBreaches.jsm",
   NetUtil: "resource://gre/modules/NetUtil.jsm",
@@ -2109,6 +2110,7 @@ BrowserGlue.prototype = {
     BrowserUsageTelemetry.init();
     SearchSERPTelemetry.init();
 
+    Interactions.init();
     ExtensionsUI.init();
 
     let signingRequired;
