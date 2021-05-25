@@ -64,6 +64,7 @@ UNIFIED_SOURCES += [
 LOCAL_INCLUDES += [
     "/dom/base",
     "/layout/base",
+    "/layout/painting",
     "/layout/style",
 ]
 
