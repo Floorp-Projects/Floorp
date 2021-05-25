@@ -212,7 +212,7 @@ class nsDisplayCanvas final : public nsPaintedDisplayItem {
         const bool preferCompositorSurface = true;
         const wr::ImageDescriptor imageDesc(
             canvasSizeInPx, targetStride, canvasData->mFormat,
-            wr::OpacityType::Opaque, preferCompositorSurface);
+            wr::OpacityType::HasAlphaChannel, preferCompositorSurface);
 
         wr::ImageKey imageKey;
         auto imageKeyMaybe = canvasContext->GetImageKey();
