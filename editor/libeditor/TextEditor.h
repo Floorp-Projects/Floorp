@@ -70,11 +70,6 @@ class TextEditor : public EditorBase, public nsITimerCallback, public nsINamed {
    */
   MOZ_CAN_RUN_SCRIPT nsresult CutAsAction(nsIPrincipal* aPrincipal = nullptr);
 
-  /**
-   * See Document::AreClipboardCommandsUnconditionallyEnabled.
-   */
-  bool AreClipboardCommandsUnconditionallyEnabled() const;
-
   NS_IMETHOD Copy() override;
 
   /**

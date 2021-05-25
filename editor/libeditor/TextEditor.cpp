@@ -659,11 +659,6 @@ nsresult TextEditor::CutAsAction(nsIPrincipal* aPrincipal) {
   return EditorBase::ToGenericNSResult(rv);
 }
 
-bool TextEditor::AreClipboardCommandsUnconditionallyEnabled() const {
-  Document* document = GetDocument();
-  return document && document->AreClipboardCommandsUnconditionallyEnabled();
-}
-
 NS_IMETHODIMP TextEditor::Copy() {
   AutoEditActionDataSetter editActionData(*this, EditAction::eCopy);
   if (NS_WARN_IF(!editActionData.CanHandle())) {
