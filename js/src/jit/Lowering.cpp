@@ -1740,7 +1740,7 @@ void LIRGenerator::visitMul(MMul* ins) {
     // overflow, we can optimize to an LNegI.
     if (!ins->fallible() && rhs->isConstant() &&
         rhs->toConstant()->toInt32() == -1) {
-      lowerNegI(ins, lhs, 0);
+      defineReuseInput(new (alloc()) LNegI(useRegisterAtStart(lhs)), ins, 0);
     } else {
       lowerMulI(ins, lhs, rhs);
     }
