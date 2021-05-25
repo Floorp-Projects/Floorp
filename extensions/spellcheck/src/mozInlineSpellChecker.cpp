@@ -14,9 +14,7 @@
  * because the call might originate from a frame, and flushing the
  * notifications might cause that frame to be deleted.
  *
- * Using the WordUtil class to find words causes DOM notifications to be
- * flushed because it asks for style information. As a result, we post an event
- * and do all of the spellchecking in that event handler, which occurs later.
+ * We post an event and do all of the spellchecking in that event handler.
  * We store all DOM pointers in ranges because they are kept up-to-date with
  * DOM changes that may have happened while the event was on the queue.
  *
