@@ -579,6 +579,13 @@ class EditorBase : public nsIEditor,
   bool IsInEditSubAction() const { return mIsInEditSubAction; }
 
   /**
+   * IsEmpty() checks whether the editor is empty.  If editor has only padding
+   * <br> element for empty editor, returns true.  If editor's root element has
+   * non-empty text nodes or other nodes like <br>, returns false.
+   */
+  virtual bool IsEmpty() const = 0;
+
+  /**
    * SuppressDispatchingInputEvent() suppresses or unsuppresses dispatching
    * "input" event.
    */

@@ -56,8 +56,6 @@ class TextEditor : public EditorBase, public nsITimerCallback, public nsINamed {
   NS_DECL_NSINAMED
 
   // Overrides of nsIEditor
-  NS_IMETHOD GetDocumentIsEmpty(bool* aDocumentIsEmpty) override;
-
   MOZ_CAN_RUN_SCRIPT NS_IMETHOD
   SetDocumentCharacterSet(const nsACString& characterSet) override;
 
@@ -163,12 +161,7 @@ class TextEditor : public EditorBase, public nsITimerCallback, public nsINamed {
                                            uint32_t aFlags,
                                            const nsAString& aValue) override;
 
-  /**
-   * IsEmpty() checks whether the editor is empty.  If editor has only padding
-   * <br> element for empty editor, returns true.  If editor's root element has
-   * non-empty text nodes or other nodes like <br>, returns false.
-   */
-  virtual bool IsEmpty() const;
+  bool IsEmpty() const override;
 
   MOZ_CAN_RUN_SCRIPT virtual nsresult HandleKeyPressEvent(
       WidgetKeyboardEvent* aKeyboardEvent) override;
