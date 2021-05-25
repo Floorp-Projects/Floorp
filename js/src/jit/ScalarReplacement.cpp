@@ -1462,10 +1462,18 @@ bool ArgumentsReplacer::escapes(MInstruction* ins, bool guardedForMapped) {
         return true;
       }
 
+      case MDefinition::Opcode::ApplyArgsObj: {
+        if (ins == def->toApplyArgsObj()->getThis()) {
+          JitSpew(JitSpew_Escape, "is escaped as |this| arg of ApplyArgsObj\n");
+          return true;
+        }
+        MOZ_ASSERT(ins == def->toApplyArgsObj()->getArgsObj());
+        break;
+      }
+
       // This is a replaceable consumer.
       case MDefinition::Opcode::ArgumentsObjectLength:
       case MDefinition::Opcode::GetArgumentsObjectArg:
-      case MDefinition::Opcode::ApplyArgsObj:
       case MDefinition::Opcode::LoadArgumentsObjectArg:
         break;
 
