@@ -33,14 +33,13 @@ function onLoadedData_Audio(e) {
   is(t.mozPaintedFrames, 0, t.name + ": mozPaintedFrames should be zero when there is no video.");
   is(t.mozFrameDelay, 0, t.name + ": mozFrameDelay should be zero when there is no video.");
   var c = document.getElementsByTagName("canvas")[0].getContext("2d");
+  var threw = false;
   try {
     c.drawImage(t, 0, 0, t.videoHeight, t.videoWidth);
   } catch (ex) {
-    ok(true, t.name + ": Trying to draw to a canvas should throw, since we don't have a frame anymore");
-    finish(t);
-    return;
+    threw = true;
   }
-  ok(false, t.name + ": We should not succeed to draw a video frame on the canvas.");
+  ok(!threw, t.name + ": Even though we don't succeed to draw a video frame on the canvas, we shouldn't throw.");
   finish(t);
 }
 
