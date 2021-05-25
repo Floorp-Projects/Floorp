@@ -49,6 +49,7 @@ class nsPIDOMWindowOuter;
 namespace mozilla {
 
 class OriginAttributes;
+class QMResult;
 
 namespace ipc {
 
@@ -463,7 +464,7 @@ class QuotaManager final : public BackgroundThreadObject {
 
   nsresult MaybeCreateOrUpgradeStorage(mozIStorageConnection& aConnection);
 
-  nsresult MaybeRemoveLocalStorageArchiveTmpFile();
+  Result<Ok, QMResult> MaybeRemoveLocalStorageArchiveTmpFile();
 
   nsresult MaybeRemoveLocalStorageDataAndArchive(nsIFile& aLsArchiveFile);
 
