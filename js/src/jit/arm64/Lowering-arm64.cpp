@@ -153,7 +153,7 @@ void LIRGeneratorARM64::lowerForALUInt64(
 void LIRGeneratorARM64::lowerForMulInt64(LMulI64* ins, MMul* mir,
                                          MDefinition* lhs, MDefinition* rhs) {
   ins->setInt64Operand(LMulI64::Lhs, useInt64RegisterAtStart(lhs));
-  ins->setInt64Operand(LMulI64::Rhs, useInt64RegisterAtStart(rhs));
+  ins->setInt64Operand(LMulI64::Rhs, useInt64RegisterOrConstantAtStart(rhs));
   defineInt64(ins, mir);
 }
 

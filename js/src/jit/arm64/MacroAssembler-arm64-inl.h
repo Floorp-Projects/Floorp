@@ -466,6 +466,15 @@ void MacroAssembler::mul64(const Register64& src1, const Register64& src2,
       ARMRegister(src2.reg, 64));
 }
 
+void MacroAssembler::mul64(Imm64 src1, const Register64& src2,
+                           const Register64& dest) {
+  vixl::UseScratchRegisterScope temps(this);
+  const ARMRegister scratch64 = temps.AcquireX();
+  MOZ_ASSERT(dest.reg != scratch64.asUnsized());
+  mov(ImmWord(src1.value), scratch64.asUnsized());
+  Mul(ARMRegister(dest.reg, 64), ARMRegister(src2.reg, 64), scratch64);
+}
+
 void MacroAssembler::mulBy3(Register src, Register dest) {
   ARMRegister xdest(dest, 64);
   ARMRegister xsrc(src, 64);

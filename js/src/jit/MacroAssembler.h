@@ -1072,6 +1072,8 @@ class MacroAssembler : public MacroAssemblerSpecific {
                     const Register temp) PER_ARCH;
   inline void mul64(const Register64& src1, const Register64& src2,
                     const Register64& dest) DEFINED_ON(arm64);
+  inline void mul64(Imm64 src1, const Register64& src2, const Register64& dest)
+      DEFINED_ON(arm64);
 
   inline void mulBy3(Register src, Register dest) PER_ARCH;
 
