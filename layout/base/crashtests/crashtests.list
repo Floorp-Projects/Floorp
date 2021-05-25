@@ -399,7 +399,7 @@ load 836990-1.html
 load 840480.html
 load 842114.html
 load 847242.html
-pref(layers.progressive-paint,false) pref(layers.low-precision-buffer,false) load 852293.html
+skip-if(ThreadSanitizer) pref(layers.progressive-paint,false) pref(layers.low-precision-buffer,false) load 852293.html
 pref(layers.force-active,true) load 859526-1.html
 pref(layers.force-active,true) load 859630-1.html
 load 860579-1.html

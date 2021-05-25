@@ -12,11 +12,11 @@ load 743499-negative-size.html
 load 745818-large-source.html
 load 767337-1.html
 load 779426.html
-load 780392-1.html
-skip-if(gtkWidget&&isDebugBuild) load 789933-1.html # bug 1155252 for linux
-load 794463-1.html
-load 802926-1.html
-skip-if(winWidget&&isDebugBuild&&/^Windows\x20NT\x206\.1/.test(http.oscpu)) load 844280.html # intermittent OOMs on Win7 debug
+skip-if(ThreadSanitizer) load 780392-1.html
+skip-if(ThreadSanitizer) skip-if(gtkWidget&&isDebugBuild) load 789933-1.html # bug 1155252 for linux
+skip-if(ThreadSanitizer) load 794463-1.html
+skip-if(ThreadSanitizer) load 802926-1.html
+skip-if(ThreadSanitizer) skip-if(winWidget&&isDebugBuild&&/^Windows\x20NT\x206\.1/.test(http.oscpu)) load 844280.html # intermittent OOMs on Win7 debug
 load 896047-1.html
 load 916128-1.html
 load 934939-1.html
@@ -48,7 +48,7 @@ load 1305850.html
 load 1334366-1.html
 load 1334647-1.html
 skip-if(geckoview&&webrender) load 1349067.html # Bug 1563214 for GV+WR
-pref(gfx.offscreencanvas.enabled,true) load 1348976-1.html
+skip-if(ThreadSanitizer) pref(gfx.offscreencanvas.enabled,true) load 1348976-1.html
 load 1357092.html
 load 1441613.html
 pref(gfx.offscreencanvas.enabled,true) load 1443671.html

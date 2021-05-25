@@ -123,7 +123,7 @@ load 783041-3.html
 load 783041-4.html
 load 798853.html # bug 868792
 load 805760-1.html
-load 815489.html
+skip-if(ThreadSanitizer) load 815489.html
 load 812826.html
 load 836225-1.html
 load 839745-1.html
