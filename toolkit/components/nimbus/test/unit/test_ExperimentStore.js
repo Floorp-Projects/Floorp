@@ -303,6 +303,26 @@ add_task(async function test_sync_features_only() {
   Assert.equal(store.getAll().length, 0, "cfr is not a sync access experiment");
 });
 
+add_task(async function test_sync_features_remotely() {
+  cleanupStorePrefCache();
+
+  let store = ExperimentFakes.store();
+  let experiment = ExperimentFakes.experiment("foo", {
+    feature: { featureId: "cfr", enabled: true, isEarlyStartup: true },
+  });
+
+  await store.init();
+
+  store.addExperiment(experiment);
+  store = ExperimentFakes.store();
+
+  Assert.ok(
+    Services.prefs.prefHasUserValue("nimbus.syncdatastore.cfr"),
+    "The cfr feature was stored as early access in prefs"
+  );
+  Assert.equal(store.getAll().length, 0, "Featre restored from prefs");
+});
+
 add_task(async function test_sync_access_unenroll() {
   cleanupStorePrefCache();
 
