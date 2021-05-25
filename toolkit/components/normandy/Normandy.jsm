@@ -51,12 +51,15 @@ var Normandy = {
 
   async init({ runAsync = true } = {}) {
     // Initialization that needs to happen before the first paint on startup.
+
+    // Listen for when Telemetry is disabled or re-enabled.
     Services.obs.addObserver(
       this,
       TelemetryUtils.TELEMETRY_UPLOAD_DISABLED_TOPIC
     );
 
-    await NormandyMigrations.applyAll();
+    // It is important this happens before the first `await`. Note that this
+    // also happens before migrations are applied.
     this.rolloutPrefsChanged = this.applyStartupPrefs(
       STARTUP_ROLLOUT_PREFS_BRANCH
     );
@@ -64,6 +67,8 @@ var Normandy = {
       STARTUP_EXPERIMENT_PREFS_BRANCH
     );
     this.defaultPrefsHaveBeenApplied.resolve();
+
+    await NormandyMigrations.applyAll();
 
     if (runAsync) {
       Services.obs.addObserver(this, UI_AVAILABLE_NOTIFICATION);
@@ -179,12 +184,16 @@ var Normandy = {
    * Copy a preference subtree from one branch to another, being careful about
    * types, and return the values the target branch originally had. Prefs will
    * be read from the user branch and applied to the default branch.
+   *
    * @param sourcePrefix
    *   The pref prefix to read prefs from.
    * @returns
    *   The original values that each pref had on the default branch.
    */
   applyStartupPrefs(sourcePrefix) {
+    // Note that this is called before Normandy's migrations are applied. This
+    // currently has no effect, but future changes should be careful to be
+    // backwards compatible.
     const originalValues = {};
     const sourceBranch = Services.prefs.getBranch(sourcePrefix);
     const targetBranch = Services.prefs.getDefaultBranch("");
