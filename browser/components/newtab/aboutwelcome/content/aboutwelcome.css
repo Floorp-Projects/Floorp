@@ -144,13 +144,11 @@ body {
       height: 1px;
       width: 1px; }
   .onboardingContainer .tiles-theme-section {
-    display: grid;
-    grid-gap: 21px;
-    grid-template-columns: repeat(4, auto);
-    border: 0; }
-    @media (max-width: 610px) {
-      .onboardingContainer .tiles-theme-section {
-        grid-template-columns: repeat(2, auto); } }
+    border: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 21px;
+    justify-content: space-evenly; }
     .onboardingContainer .tiles-theme-section:hover, .onboardingContainer .tiles-theme-section:active, .onboardingContainer .tiles-theme-section:focus-within {
       outline: 1px #0090ED solid;
       border-radius: 10px; }
@@ -440,7 +438,7 @@ body {
           color: #E0E0E6 !important; }
     .onboardingContainer.proton .steps {
       margin-top: 0;
-      padding-bottom: 0;
+      padding-block: 16px 0;
       transition: var(--transition); }
       .onboardingContainer.proton .steps .indicator {
         width: 6px;
@@ -451,14 +449,15 @@ body {
     .onboardingContainer.proton .tiles-theme-container {
       margin: auto 0; }
     .onboardingContainer.proton .tiles-theme-section {
-      transition: var(--transition);
-      margin: 10px;
-      padding: 12px; }
+      gap: 5px;
+      margin-inline: 10px;
+      padding: 10px;
+      transition: var(--transition); }
       .onboardingContainer.proton .tiles-theme-section:hover, .onboardingContainer.proton .tiles-theme-section:active, .onboardingContainer.proton .tiles-theme-section:focus-within {
         outline-color: var(--in-content-primary-button-background); }
     .onboardingContainer.proton .theme {
       align-items: center;
-      width: auto;
+      flex: 1;
       min-width: 50px;
       height: initial;
       background-color: inherit;
@@ -469,12 +468,12 @@ body {
       .onboardingContainer.proton .theme .text {
         color: var(--in-content-page-color);
         font-weight: normal;
-        line-height: 20px; }
+        line-height: 20px;
+        margin-inline-start: 0; }
       .onboardingContainer.proton .theme .icon {
         width: 40px;
         height: 40px;
         border-radius: 40px;
-        margin-inline-start: 12px;
         outline: 1px solid var(--in-content-border-color);
         outline-offset: -0.5px; }
         .onboardingContainer.proton .theme .icon:focus, .onboardingContainer.proton .theme .icon:active, .onboardingContainer.proton .theme .icon.selected {
