@@ -169,14 +169,11 @@ body {
   }
 
   .tiles-theme-section {
-    display: grid;
-    grid-gap: 21px;
-    grid-template-columns: repeat(4, auto);
     border: 0;
-
-    @media (max-width: $break-point-medium) {
-      grid-template-columns: repeat(2, auto);
-    }
+    display: flex;
+    flex-wrap: wrap;
+    gap: 21px; // sass-lint:disable-line no-misspelled-properties
+    justify-content: space-evenly;
 
     &:hover,
     &:active,
@@ -640,7 +637,7 @@ body {
 
     .steps {
       margin-top: 0;
-      padding-bottom: 0;
+      padding-block: 16px 0;
       transition: var(--transition);
 
       .indicator {
@@ -659,9 +656,10 @@ body {
     }
 
     .tiles-theme-section {
+      gap: 5px; // sass-lint:disable-line no-misspelled-properties
+      margin-inline: 10px;
+      padding: 10px;
       transition: var(--transition);
-      margin: 10px;
-      padding: 12px;
 
       &:hover,
       &:active,
@@ -672,7 +670,7 @@ body {
 
     .theme {
       align-items: center;
-      width: auto;
+      flex: 1;
       min-width: 50px;
       height: initial;
       background-color: inherit;
@@ -688,13 +686,13 @@ body {
         color: var(--in-content-page-color);
         font-weight: normal;
         line-height: 20px;
+        margin-inline-start: 0;
       }
 
       .icon {
         width: 40px;
         height: 40px;
         border-radius: 40px;
-        margin-inline-start: 12px;
         outline: 1px solid var(--in-content-border-color);
         outline-offset: -0.5px;
 
