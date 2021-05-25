@@ -11,12 +11,15 @@
 #  error Must include QMResult.h first
 #endif
 
+#ifdef QM_ERROR_STACKS_ENABLED
 #include "mozilla/Result.h"
 #include "mozilla/ResultVariant.h"
 #include "nsError.h"
+#endif
 
 namespace mozilla {
 
+#ifdef QM_ERROR_STACKS_ENABLED
 // Allow QMResult errors to use existing stack id and to increase the frame id
 // during error propagation.
 template <>
@@ -63,6 +66,7 @@ inline Result<Ok, QMResult> ToResult(QMResult&& aValue) {
   }
   return Ok();
 }
+#endif
 
 }  // namespace mozilla
 

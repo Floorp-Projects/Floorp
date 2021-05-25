@@ -6,7 +6,9 @@
 
 #include "QuotaCommon.h"
 
-#include "base/process_util.h"
+#ifdef QM_ERROR_STACKS_ENABLED
+#  include "base/process_util.h"
+#endif
 #include "mozIStorageConnection.h"
 #include "mozIStorageStatement.h"
 #include "mozilla/ErrorNames.h"
@@ -418,6 +420,7 @@ void LogError(const nsACString& aExpr, const ResultType& aResult,
   nsAutoCString extraInfosString;
 
   nsAutoCString rvName;
+#  ifdef QM_ERROR_STACKS_ENABLED
   nsAutoCString frameIdStr;
   nsAutoCString stackIdStr;
   nsAutoCString processIdStr;
@@ -434,6 +437,10 @@ void LogError(const nsACString& aExpr, const ResultType& aResult,
     } else {
       rv = aResult.as<nsresult>();
     }
+#  else
+  if (aResult) {
+    nsresult rv = *aResult;
+#  endif
 
     if (NS_ERROR_GET_MODULE(rv) == NS_ERROR_MODULE_WIN32) {
       // XXX We could also try to get the Win32 error name here.
@@ -448,10 +455,12 @@ void LogError(const nsACString& aExpr, const ResultType& aResult,
         static_cast<uint32_t>(rv), !rvName.IsEmpty() ? " (" : "",
         !rvName.IsEmpty() ? rvName.get() : "", !rvName.IsEmpty() ? ")" : "");
 
+#  ifdef QM_ERROR_STACKS_ENABLED
     if (aResult.is<QMResult>()) {
       extraInfosString.Append(", frameId="_ns + frameIdStr + ", stackId="_ns +
                               stackIdStr + ", processId="_ns + processIdStr);
     }
+#  endif
   }
 
   const auto sourceFileRelativePath =
@@ -517,19 +526,23 @@ void LogError(const nsACString& aExpr, const ResultType& aResult,
       res.AppendElement(EventExtraEntry{
           "context"_ns, nsPromiseFlatCString{*contextIt->second}});
 
+#    ifdef QM_ERROR_STACKS_ENABLED
       if (!frameIdStr.IsEmpty()) {
         res.AppendElement(
             EventExtraEntry{"frame_id"_ns, nsCString{frameIdStr}});
       }
+#    endif
 
       // TODO We could still fill the module field, based on the source
       // directory, but we probably don't need to.
       // res.AppendElement(EventExtraEntry{"module"_ns, aModule});
 
+#    ifdef QM_ERROR_STACKS_ENABLED
       if (!processIdStr.IsEmpty()) {
         res.AppendElement(
             EventExtraEntry{"process_id"_ns, nsCString{processIdStr}});
       }
+#    endif
 
       if (!rvName.IsEmpty()) {
         res.AppendElement(EventExtraEntry{"result"_ns, nsCString{rvName}});
@@ -554,10 +567,12 @@ void LogError(const nsACString& aExpr, const ResultType& aResult,
       res.AppendElement(
           EventExtraEntry{"source_line"_ns, IntToCString(aSourceFileLine)});
 
+#    ifdef QM_ERROR_STACKS_ENABLED
       if (!stackIdStr.IsEmpty()) {
         res.AppendElement(
             EventExtraEntry{"stack_id"_ns, nsCString{stackIdStr}});
       }
+#    endif
 
       return res;
     }());
