@@ -530,7 +530,6 @@ impl FrameBuilder {
         stamp: FrameStamp,
         global_device_pixel_scale: DevicePixelScale,
         device_origin: DeviceIntPoint,
-        pan: WorldPoint,
         scene_properties: &SceneProperties,
         data_stores: &mut DataStores,
         scratch: &mut ScratchBuffer,
@@ -551,7 +550,6 @@ impl FrameBuilder {
         self.globals.update(gpu_cache);
 
         scene.spatial_tree.update_tree(
-            pan,
             global_device_pixel_scale,
             scene_properties,
         );

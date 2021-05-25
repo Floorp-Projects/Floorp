@@ -980,7 +980,7 @@ fn test_cst_perspective_relative_scroll() {
         pipeline_id,
     );
 
-    cst.update_tree(WorldPoint::zero(), DevicePixelScale::new(1.0), &SceneProperties::new());
+    cst.update_tree(DevicePixelScale::new(1.0), &SceneProperties::new());
 
     let scroll_offset = compute_offset_from(
         cst.spatial_nodes[ref_frame.0 as usize].parent,
