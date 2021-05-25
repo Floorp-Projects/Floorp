@@ -44,10 +44,10 @@ GtkCompositorWidget::GtkCompositorWidget(
     }
 
     Visual* visual = windowAttrs.visual;
-    mDepth = windowAttrs.depth;
+    int depth = windowAttrs.depth;
 
     // Initialize the window surface provider
-    mProvider.Initialize(mXWindow, visual, mDepth, aInitData.Shaped());
+    mProvider.Initialize(mXWindow, visual, depth, aInitData.Shaped());
   }
 #endif
   auto size = mClientSize.Lock();
@@ -101,8 +101,6 @@ EGLNativeWindowType GtkCompositorWidget::GetEGLNativeWindow() {
 #endif
   return nullptr;
 }
-
-int32_t GtkCompositorWidget::GetDepth() { return mDepth; }
 
 #if defined(MOZ_WAYLAND)
 void GtkCompositorWidget::SetEGLNativeWindowSize(
