@@ -661,6 +661,20 @@ class EditorBase : public nsIEditor,
   MOZ_CAN_RUN_SCRIPT void ReinitializeSelection(Element& aElement);
 
   /**
+   * Do "undo" or "redo".
+   *
+   * @param aCount              How many count of transactions should be
+   *                            handled.
+   * @param aPrincipal          Set subject principal if it may be called by
+   *                            JS.  If set to nullptr, will be treated as
+   *                            called by system.
+   */
+  MOZ_CAN_RUN_SCRIPT nsresult UndoAsAction(uint32_t aCount,
+                                           nsIPrincipal* aPrincipal = nullptr);
+  MOZ_CAN_RUN_SCRIPT nsresult RedoAsAction(uint32_t aCount,
+                                           nsIPrincipal* aPrincipal = nullptr);
+
+  /**
    * InsertTextAsAction() inserts aStringToInsert at selection.
    * Although this method is implementation of nsIEditor.insertText(),
    * this treats the input is an edit action.  If you'd like to insert text
