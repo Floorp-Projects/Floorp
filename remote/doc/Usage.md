@@ -1,7 +1,7 @@
 Usage
 =====
 
-When using the CDP-based remote agent in Firefox, there are
+When using the CDP-based Remote Agent in Firefox, there are
 three different programs/components running simultaneously:
 
   * the __client__, being the out-of-process script or library
@@ -14,19 +14,19 @@ three different programs/components running simultaneously:
 
   * and the __target__, which is the web document being debugging.
 
-Since Firefox 86 the remote agent ships in all Firefox releases by default.
+Since Firefox 86 the Remote Agent ships in all Firefox releases by default.
 
-To check if your Firefox binary has the remote agent enabled, you
+To check if your Firefox binary has the Remote Agent enabled, you
 can look in its help message for this:
 
 	% ./firefox -h
 	…
-	  --remote-debugging-port [<port>] Start the Firefox remote agent, which is
+	  --remote-debugging-port [<port>] Start the Firefox Remote Agent, which is
 	                     a low-level debugging interface based on the CDP protocol.
 	                     Defaults to listen on localhost:9222.
 	…
 
-When used, the remote agent will start an HTTP server and print a
+When used, the Remote Agent will start an HTTP server and print a
 message on stderr with the location of the main target’s WebSocket
 listener:
 
@@ -37,7 +37,7 @@ listener:
 
 	[<port>]
 
-You can use this to instruct the remote agent to bind to a particular
+You can use this to instruct the Remote Agent to bind to a particular
 port on your system.  port is optional,
 which means `firefox --remote-debugging-port` will bind the HTTPD to
 the default `localhost:9222`.
@@ -47,7 +47,7 @@ If port has been specified the default port will be overridden:
 	% firefox --remote-debugging-port 9989
     DevTools listening on ws://localhost:9989/devtools/browser/b49481af-8ad3-9b4d-b1bf-bb0cdb9a0620
 
-When you ask the remote agent to listen on port 0,
+When you ask the Remote Agent to listen on port 0,
 the system will atomically allocate an arbitrary free port:
 
     % firefox --remote-debugging-port 0

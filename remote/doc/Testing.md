@@ -1,7 +1,7 @@
 Testing
 =======
 
-The remote agent has unit- and functional tests located under different folders:
+The Remote Agent has unit- and functional tests located under different folders:
 
   - Shared Modules: `remote/shared/test/xpcshell`
   - CDP: `remote/cdp/test/{xpcshell,browser}`.
@@ -49,7 +49,7 @@ display.
 
 The `add_task()` function used for writing [asynchronous tests] is
 replaced to provide some additional test setup and teardown useful
-for writing tests against the remote agent and the targets.
+for writing tests against the Remote Agent and the targets.
 
 Before the task is run, the `nsIRemoteAgent` listener is started
 and a [CDP client] is connected.  You will use this CDP client for

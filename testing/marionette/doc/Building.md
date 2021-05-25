@@ -1,7 +1,7 @@
 Building
 ========
 
-Marionette is built in to Firefox and ships in the official
+Marionette is built into Firefox by default and ships in the official
 Firefox binary.  As Marionette is written in [XPCOM] flavoured
 JavaScript, you may choose to rely on so called [artifact builds],
 which will download pre-compiled Firefox blobs to your computer.
@@ -33,7 +33,7 @@ Occasionally a clean build will be required after you fetch the
 latest changes from mozilla-central.  You will find that the the
 build will error when this is the case.  To automatically do clean
 builds when this happens you may optionally add this line to the
-_mozconfig_ file in your top source directory:
+[mozconfig] file in your top source directory:
 
 	mk_add_options AUTOCLOBBER=1
 
@@ -44,7 +44,14 @@ If you compile Firefox frequently you will also want to enable
 	mk_add_options 'export CCACHE_CPP2=yes'
 	ac_add_options --with-ccache
 
+You may also opt out of building all the WebDriver specific components
+(Marionette, and the [Remote Agent]) by setting the following flag:
+
+    ac_add_options --disable-webdriver
+
 [mozilla-unified]: https://mozilla-version-control-tools.readthedocs.io/en/latest/hgmozilla/unifiedrepo.html
 [artifact builds]: https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Build_Instructions/Artifact_builds
+[mozconfig]: ../build/buildsystem/mozconfigs.html
 [ccache]: https://ccache.samba.org/
 [sccache]: https://github.com/mozilla/sccache
+[Remote Agent]: ../remote/index.html
