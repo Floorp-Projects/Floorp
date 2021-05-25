@@ -108,6 +108,9 @@ internal const val FRAGMENT_TAG = "mozac_feature_prompt_dialog"
  * 'save login'prompts will not be shown.
  * @property isSaveLoginEnabled A callback invoked when a login prompt is triggered. If false,
  * 'save login'prompts will not be shown.
+ * @property isCreditCardAutofillEnabled A callback invoked when credit card fields are detected in the webpage.
+ * If this resolves to `true` a prompt allowing the user to select the credit card details to be autocompleted
+ * will be shown.
  * @property loginExceptionStorage An implementation of [LoginExceptions] that saves and checks origins
  * the user does not want to see a save login dialog for.
  * @property loginPickerView The [SelectablePromptView] used for [LoginPicker] to display a
@@ -131,6 +134,7 @@ class PromptFeature private constructor(
     private val shareDelegate: ShareDelegate,
     override val loginValidationDelegate: LoginValidationDelegate? = null,
     private val isSaveLoginEnabled: () -> Boolean = { false },
+    private val isCreditCardAutofillEnabled: () -> Boolean = { false },
     override val loginExceptionStorage: LoginExceptions? = null,
     private val loginPickerView: SelectablePromptView<Login>? = null,
     private val onManageLogins: () -> Unit = {},
@@ -160,6 +164,7 @@ class PromptFeature private constructor(
         shareDelegate: ShareDelegate = DefaultShareDelegate(),
         loginValidationDelegate: LoginValidationDelegate? = null,
         isSaveLoginEnabled: () -> Boolean = { false },
+        isCreditCardAutofillEnabled: () -> Boolean = { false },
         loginExceptionStorage: LoginExceptions? = null,
         loginPickerView: SelectablePromptView<Login>? = null,
         onManageLogins: () -> Unit = {},
@@ -174,6 +179,7 @@ class PromptFeature private constructor(
         shareDelegate = shareDelegate,
         loginValidationDelegate = loginValidationDelegate,
         isSaveLoginEnabled = isSaveLoginEnabled,
+        isCreditCardAutofillEnabled = isCreditCardAutofillEnabled,
         loginExceptionStorage = loginExceptionStorage,
         onNeedToRequestPermissions = onNeedToRequestPermissions,
         loginPickerView = loginPickerView,
@@ -190,6 +196,7 @@ class PromptFeature private constructor(
         shareDelegate: ShareDelegate = DefaultShareDelegate(),
         loginValidationDelegate: LoginValidationDelegate? = null,
         isSaveLoginEnabled: () -> Boolean = { false },
+        isCreditCardAutofillEnabled: () -> Boolean = { false },
         loginExceptionStorage: LoginExceptions? = null,
         loginPickerView: SelectablePromptView<Login>? = null,
         onManageLogins: () -> Unit = {},
@@ -204,6 +211,7 @@ class PromptFeature private constructor(
         shareDelegate = shareDelegate,
         loginValidationDelegate = loginValidationDelegate,
         isSaveLoginEnabled = isSaveLoginEnabled,
+        isCreditCardAutofillEnabled = isCreditCardAutofillEnabled,
         loginExceptionStorage = loginExceptionStorage,
         onNeedToRequestPermissions = onNeedToRequestPermissions,
         loginPickerView = loginPickerView,
@@ -369,7 +377,7 @@ class PromptFeature private constructor(
                 is File -> filePicker.handleFileRequest(promptRequest)
                 is Share -> handleShareRequest(promptRequest, session)
                 is SelectCreditCard -> {
-                    if (promptRequest.creditCards.isNotEmpty()) {
+                    if (isCreditCardAutofillEnabled() && promptRequest.creditCards.isNotEmpty()) {
                         creditCardPicker?.handleSelectCreditCardRequest(promptRequest)
                     }
                 }

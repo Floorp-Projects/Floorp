@@ -44,6 +44,8 @@ import mozilla.components.concept.engine.prompt.PromptRequest.SingleChoice
 import mozilla.components.concept.engine.prompt.PromptRequest.TextPrompt
 import mozilla.components.concept.engine.prompt.ShareData
 import mozilla.components.concept.storage.Login
+import mozilla.components.feature.prompts.concept.SelectablePromptView
+import mozilla.components.feature.prompts.creditcard.CreditCardPicker
 import mozilla.components.feature.prompts.dialog.ChoiceDialogFragment
 import mozilla.components.feature.prompts.dialog.ConfirmDialogFragment
 import mozilla.components.feature.prompts.dialog.MultiButtonDialogFragment
@@ -51,8 +53,6 @@ import mozilla.components.feature.prompts.dialog.PromptDialogFragment
 import mozilla.components.feature.prompts.dialog.SaveLoginDialogFragment
 import mozilla.components.feature.prompts.file.FilePicker.Companion.FILE_PICKER_ACTIVITY_REQUEST_CODE
 import mozilla.components.feature.prompts.login.LoginPicker
-import mozilla.components.feature.prompts.concept.SelectablePromptView
-import mozilla.components.feature.prompts.creditcard.CreditCardPicker
 import mozilla.components.feature.prompts.share.ShareDelegate
 import mozilla.components.support.test.any
 import mozilla.components.support.test.eq
@@ -1282,7 +1282,8 @@ class PromptFeatureTest {
                 activity = mock(),
                 store = store,
                 fragmentManager = fragmentManager,
-                creditCardPickerView = creditCardPickerView
+                creditCardPickerView = creditCardPickerView,
+                isCreditCardAutofillEnabled = { true }
             ) { }
         feature.creditCardPicker = creditCardPicker
         val onDismiss: () -> Unit = {}
@@ -1340,6 +1341,75 @@ class PromptFeatureTest {
             onDismiss = any(),
             onSuccess = any()
         )
+    }
+
+    @Test
+    fun `GIVEN credit card autofill enabled and cards available WHEN getting a SelectCreditCard request THEN that request is handled`() {
+        val feature = spy(
+            PromptFeature(
+                mock<Activity>(),
+                store,
+                customTabId = "custom-tab",
+                fragmentManager = fragmentManager,
+                isCreditCardAutofillEnabled = { true }
+            ) { }
+        )
+        feature.creditCardPicker = creditCardPicker
+        feature.start()
+        val selectCreditCardRequest = PromptRequest.SelectCreditCard(listOf(mock()), {}, {})
+
+        store.dispatch(ContentAction.UpdatePromptRequestAction("custom-tab", selectCreditCardRequest))
+            .joinBlocking()
+        testDispatcher.advanceUntilIdle()
+
+        verify(feature).onPromptRequested(store.state.customTabs.first())
+        verify(creditCardPicker).handleSelectCreditCardRequest(selectCreditCardRequest)
+    }
+
+    @Test
+    fun `GIVEN credit card autofill enabled but no cards available WHEN getting a SelectCreditCard request THEN that request is not acted upon`() {
+        val feature = spy(
+            PromptFeature(
+                mock<Activity>(),
+                store,
+                customTabId = "custom-tab",
+                fragmentManager = fragmentManager,
+                isCreditCardAutofillEnabled = { true }
+            ) { }
+        )
+        feature.creditCardPicker = creditCardPicker
+        feature.start()
+        val selectCreditCardRequest = PromptRequest.SelectCreditCard(emptyList(), {}, {})
+
+        store.dispatch(ContentAction.UpdatePromptRequestAction("custom-tab", selectCreditCardRequest))
+            .joinBlocking()
+        testDispatcher.advanceUntilIdle()
+
+        verify(feature).onPromptRequested(store.state.customTabs.first())
+        verify(creditCardPicker, never()).handleSelectCreditCardRequest(selectCreditCardRequest)
+    }
+
+    @Test
+    fun `GIVEN credit card autofill disabled and cards available WHEN getting a SelectCreditCard request THEN that request is handled`() {
+        val feature = spy(
+            PromptFeature(
+                mock<Activity>(),
+                store,
+                customTabId = "custom-tab",
+                fragmentManager = fragmentManager,
+                isCreditCardAutofillEnabled = { false }
+            ) { }
+        )
+        feature.creditCardPicker = creditCardPicker
+        feature.start()
+        val selectCreditCardRequest = PromptRequest.SelectCreditCard(listOf(mock()), {}, {})
+
+        store.dispatch(ContentAction.UpdatePromptRequestAction("custom-tab", selectCreditCardRequest))
+            .joinBlocking()
+        testDispatcher.advanceUntilIdle()
+
+        verify(feature).onPromptRequested(store.state.customTabs.first())
+        verify(creditCardPicker, never()).handleSelectCreditCardRequest(selectCreditCardRequest)
     }
 
     @Test

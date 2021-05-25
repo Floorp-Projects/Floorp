@@ -9,14 +9,17 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.TestCoroutineScope
+import mozilla.components.concept.storage.CreditCard
 import mozilla.components.concept.storage.CreditCardNumber
 import mozilla.components.concept.storage.NewCreditCardFields
 import mozilla.components.lib.dataprotect.SecureAbove22Preferences
+import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 
@@ -70,10 +73,32 @@ class GeckoCreditCardsAddressesStorageDelegateTest {
     }
 
     @Test
-    fun `onCreditCardFetch`() {
+    fun `GIVEN autofill enabled WHEN onCreditCardsFetch is called THEN it returns all stored cards`() {
         scope.launch {
-            delegate.onCreditCardsFetch()
+            val storage: AutofillCreditCardsAddressesStorage = mock()
+            val storedCards = listOf<CreditCard>(mock())
+            doReturn(storedCards).`when`(storage).getAllCreditCards()
+            delegate = GeckoCreditCardsAddressesStorageDelegate(lazy { storage }, scope) { true }
+
+            val result = delegate.onCreditCardsFetch()
+
             verify(storage, times(1)).getAllCreditCards()
+            assertEquals(storedCards, result)
+        }
+    }
+
+    @Test
+    fun `GIVEN autofill disabled WHEN onCreditCardsFetch is called THEN it returns an empty list of cards`() {
+        scope.launch {
+            val storage: AutofillCreditCardsAddressesStorage = mock()
+            val storedCards = listOf<CreditCard>(mock())
+            doReturn(storedCards).`when`(storage).getAllCreditCards()
+            delegate = GeckoCreditCardsAddressesStorageDelegate(lazy { storage }, scope) { false }
+
+            val result = delegate.onCreditCardsFetch()
+
+            verify(storage, times(1)).getAllCreditCards()
+            assertEquals(emptyList<CreditCard>(), result)
         }
     }
 }
