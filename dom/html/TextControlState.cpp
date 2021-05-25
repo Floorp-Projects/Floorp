@@ -2762,7 +2762,7 @@ bool TextControlState::SetValueWithTextEditor(
             : TextEditor::AllowBeforeInputEventCancelable::No,
         nullptr);
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                         "TextEditor::ReplaceTextAsAction() failed");
+                         "EditorBase::ReplaceTextAsAction() failed");
     return rv != NS_ERROR_OUT_OF_MEMORY;
   }
 
