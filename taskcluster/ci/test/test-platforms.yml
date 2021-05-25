@@ -335,12 +335,12 @@ windows10-64-mingwclang/opt:
     test-sets:
         - mingwclang-tests-opt
 
-windows7-32-mingwclang/debug:
+windows10-32-mingwclang/debug:
     build-platform: win32-mingwclang/debug
     test-sets:
-        - mingwclang-win7-tests-debug
+        - mingwclang-win32-tests-debug
 
-windows7-32-mingwclang/opt:
+windows10-32-mingwclang/opt:
     build-platform: win32-mingwclang/opt
     test-sets:
         - mingwclang-tests-opt
