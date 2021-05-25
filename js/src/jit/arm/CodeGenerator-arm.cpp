@@ -3154,6 +3154,11 @@ void CodeGenerator::visitWasmConstantShiftSimd128(
   MOZ_CRASH("No SIMD");
 }
 
+void CodeGenerator::visitWasmSignReplicationSimd128(
+    LWasmSignReplicationSimd128* ins) {
+  MOZ_CRASH("No SIMD");
+}
+
 void CodeGenerator::visitWasmShuffleSimd128(LWasmShuffleSimd128* ins) {
   MOZ_CRASH("No SIMD");
 }

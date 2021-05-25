@@ -2873,6 +2873,15 @@ class MacroAssembler : public MacroAssemblerSpecific {
 
   // Sign replication operation
 
+  inline void signReplicationInt8x16(FloatRegister src, FloatRegister dest)
+      DEFINED_ON(x86_shared);
+
+  inline void signReplicationInt16x8(FloatRegister src, FloatRegister dest)
+      DEFINED_ON(x86_shared);
+
+  inline void signReplicationInt32x4(FloatRegister src, FloatRegister dest)
+      DEFINED_ON(x86_shared);
+
   inline void signReplicationInt64x2(FloatRegister src, FloatRegister dest)
       DEFINED_ON(x86_shared);
 
