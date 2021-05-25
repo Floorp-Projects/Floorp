@@ -6,12 +6,21 @@
 
 XPCSHELL_TESTS_MANIFESTS += ["tests/unit/xpcshell.ini"]
 MOCHITEST_CHROME_MANIFESTS += ["tests/chrome/chrome.ini"]
-BROWSER_CHROME_MANIFESTS += ["tests/browser/browser.ini"]
+BROWSER_CHROME_MANIFESTS += [
+    "tests/browser/browser.ini",
+    "tests/browser/interactions/browser.ini",
+]
 
 JAR_MANIFESTS += ["jar.mn"]
 
 EXTRA_JS_MODULES += [
+    "Interactions.jsm",
     "PlacesUIUtils.jsm",
+]
+
+FINAL_TARGET_FILES.actors += [
+    "InteractionsChild.jsm",
+    "InteractionsParent.jsm",
 ]
 
 with Files("**"):
