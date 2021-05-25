@@ -84,9 +84,9 @@ WINDOWS_WORKER_TYPES = {
         "virtual-with-gpu": "t-win7-32-gpu",
         "hardware": "t-win10-64-1803-hw",
     },
-    "windows7-32-mingwclang": {
-        "virtual": "t-win7-32",
-        "virtual-with-gpu": "t-win7-32-gpu",
+    "windows10-32-mingwclang": {
+        "virtual": "t-win10-64",
+        "virtual-with-gpu": "t-win10-64-gpu-s",
         "hardware": "t-win10-64-1803-hw",
     },
     "windows7-32-qr": {

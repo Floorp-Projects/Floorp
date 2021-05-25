@@ -345,7 +345,7 @@ mingwclang-tests-debug:
 # The following is the same as the above block, minus reftests.
 # Reftests were disabled due to frequent hangs; see bug 1642719
 # for re-enabling.
-mingwclang-win7-tests-debug:
+mingwclang-win32-tests-debug:
     - cppunit
     - firefox-ui-functional-local
     - firefox-ui-functional-remote
