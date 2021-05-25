@@ -106,7 +106,6 @@ pub struct Reftest {
     extra_checks: Vec<ExtraCheck>,
     disable_dual_source_blending: bool,
     allow_mipmaps: bool,
-    zoom_factor: f32,
     force_subpixel_aa_where_possible: Option<bool>,
 }
 
@@ -365,16 +364,11 @@ impl ReftestManifest {
             let mut font_render_mode = None;
             let mut extra_checks = vec![];
             let mut disable_dual_source_blending = false;
-            let mut zoom_factor = 1.0;
             let mut allow_mipmaps = false;
             let mut force_subpixel_aa_where_possible = None;
 
             let mut parse_command = |token: &str| -> bool {
                 match token {
-                   function if function.starts_with("zoom(") => {
-                        let (_, args, _) = parse_function(function);
-                        zoom_factor = args[0].parse().unwrap();
-                    }
                     function if function.starts_with("force_subpixel_aa_where_possible(") => {
                         let (_, args, _) = parse_function(function);
                         force_subpixel_aa_where_possible = Some(args[0].parse().unwrap());
@@ -552,7 +546,6 @@ impl ReftestManifest {
                 extra_checks,
                 disable_dual_source_blending,
                 allow_mipmaps,
-                zoom_factor,
                 force_subpixel_aa_where_possible,
             });
         }
@@ -761,7 +754,6 @@ impl<'a> ReftestHarness<'a> {
         };
 
         self.wrench.set_quality_settings(quality_settings);
-        self.wrench.set_page_zoom(ZoomFactor::new(t.zoom_factor));
 
         if t.disable_dual_source_blending {
             self.wrench

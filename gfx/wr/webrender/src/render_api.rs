@@ -355,11 +355,6 @@ impl Transaction {
     }
 
     ///
-    pub fn set_page_zoom(&mut self, page_zoom: ZoomFactor) {
-        self.scene_ops.push(SceneMsg::SetPageZoom(page_zoom));
-    }
-
-    ///
     pub fn set_pinch_zoom(&mut self, pinch_zoom: ZoomFactor) {
         self.frame_ops.push(FrameMsg::SetPinchZoom(pinch_zoom));
     }
@@ -773,8 +768,6 @@ pub enum SceneMsg {
     ///
     UpdateEpoch(PipelineId, Epoch),
     ///
-    SetPageZoom(ZoomFactor),
-    ///
     SetRootPipeline(PipelineId),
     ///
     RemovePipeline(PipelineId),
@@ -836,7 +829,6 @@ impl fmt::Debug for SceneMsg {
         f.write_str(match *self {
             SceneMsg::UpdateEpoch(..) => "SceneMsg::UpdateEpoch",
             SceneMsg::SetDisplayList { .. } => "SceneMsg::SetDisplayList",
-            SceneMsg::SetPageZoom(..) => "SceneMsg::SetPageZoom",
             SceneMsg::RemovePipeline(..) => "SceneMsg::RemovePipeline",
             SceneMsg::SetDocumentView { .. } => "SceneMsg::SetDocumentView",
             SceneMsg::SetRootPipeline(..) => "SceneMsg::SetRootPipeline",
