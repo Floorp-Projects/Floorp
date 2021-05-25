@@ -36,7 +36,7 @@
 #  define LTI_DUMP(rgn, label)                                                \
     if (!(rgn).IsEmpty())                                                     \
       printf_stderr("%s%p: " label " portion is %s\n", aPrefix, mLayer.get(), \
-                    Stringify(rgn).c_str());
+                    ToString(rgn).c_str());
 #  define LTI_LOG(...) printf_stderr(__VA_ARGS__)
 #else
 #  define LTI_DEEPER(aPrefix) nullptr
@@ -467,7 +467,7 @@ struct ContainerLayerProperties : public LayerPropertiesBase {
             if (!region.IsEmpty()) {
               LTI_LOG("%s%p: child %p produced %s\n", aPrefix, mLayer.get(),
                       mChildren[childsOldIndex]->mLayer.get(),
-                      Stringify(region).c_str());
+                      ToString(region).c_str());
               AddRegion(result, region);
               childrenChanged |= true;
             }
