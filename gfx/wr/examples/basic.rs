@@ -25,7 +25,6 @@ use webrender::api::units::*;
 enum Gesture {
     None,
     Pan,
-    Zoom,
 }
 
 #[derive(Debug)]
@@ -47,26 +46,11 @@ impl Touch {
     fn distance_from_start(&self) -> f32 {
         dist(self.start_x, self.start_y, self.current_x, self.current_y)
     }
-
-    fn initial_distance_from_other(&self, other: &Touch) -> f32 {
-        dist(self.start_x, self.start_y, other.start_x, other.start_y)
-    }
-
-    fn current_distance_from_other(&self, other: &Touch) -> f32 {
-        dist(
-            self.current_x,
-            self.current_y,
-            other.current_x,
-            other.current_y,
-        )
-    }
 }
 
 struct TouchState {
     active_touches: HashMap<u64, Touch>,
     current_gesture: Gesture,
-    start_zoom: f32,
-    current_zoom: f32,
     start_pan: DeviceIntPoint,
     current_pan: DeviceIntPoint,
 }
@@ -74,7 +58,6 @@ struct TouchState {
 enum TouchResult {
     None,
     Pan(DeviceIntPoint),
-    Zoom(f32),
 }
 
 impl TouchState {
@@ -82,8 +65,6 @@ impl TouchState {
         TouchState {
             active_touches: HashMap::new(),
             current_gesture: Gesture::None,
-            start_zoom: 1.0,
-            current_zoom: 1.0,
             start_pan: DeviceIntPoint::zero(),
             current_pan: DeviceIntPoint::zero(),
         }
@@ -129,9 +110,6 @@ impl TouchState {
                             if active_touch_count == 1 {
                                 self.start_pan = self.current_pan;
                                 self.current_gesture = Gesture::Pan;
-                            } else if active_touch_count == 2 {
-                                self.start_zoom = self.current_zoom;
-                                self.current_gesture = Gesture::Zoom;
                             }
                         }
                     }
@@ -144,16 +122,6 @@ impl TouchState {
                         self.current_pan.x = self.start_pan.x + x.round() as i32;
                         self.current_pan.y = self.start_pan.y + y.round() as i32;
                         return TouchResult::Pan(self.current_pan);
-                    }
-                    Gesture::Zoom => {
-                        let keys: Vec<u64> = self.active_touches.keys().cloned().collect();
-                        debug_assert!(keys.len() == 2);
-                        let touch0 = &self.active_touches[&keys[0]];
-                        let touch1 = &self.active_touches[&keys[1]];
-                        let initial_distance = touch0.initial_distance_from_other(touch1);
-                        let current_distance = touch0.current_distance_from_other(touch1);
-                        self.current_zoom = self.start_zoom * current_distance / initial_distance;
-                        return TouchResult::Zoom(self.current_zoom);
                     }
                 }
             }
@@ -305,9 +273,6 @@ impl Example for App {
             winit::WindowEvent::Touch(touch) => match self.touch_state.handle_event(touch) {
                 TouchResult::Pan(pan) => {
                     txn.set_pan(pan);
-                }
-                TouchResult::Zoom(zoom) => {
-                    txn.set_pinch_zoom(ZoomFactor::new(zoom));
                 }
                 TouchResult::None => {}
             },

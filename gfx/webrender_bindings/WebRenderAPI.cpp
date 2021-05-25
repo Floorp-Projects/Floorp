@@ -348,10 +348,6 @@ void TransactionWrapper::UpdateScrollPosition(
   wr_transaction_scroll_layer(mTxn, aPipelineId, aScrollId, aScrollPosition);
 }
 
-void TransactionWrapper::UpdatePinchZoom(float aZoom) {
-  wr_transaction_pinch_zoom(mTxn, aZoom);
-}
-
 void TransactionWrapper::UpdateIsTransformAsyncZooming(uint64_t aAnimationId,
                                                        bool aIsZooming) {
   wr_transaction_set_is_transform_async_zooming(mTxn, aAnimationId, aIsZooming);
