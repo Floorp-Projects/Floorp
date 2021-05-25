@@ -271,6 +271,9 @@ class DocAccessibleParent : public RemoteAccessible,
     return RemoteAccessible::IndexInParent();
   }
 
+  void RemovePendingChildDoc(DocAccessibleParent* aChildDoc,
+                             uint64_t aParentID);
+
  private:
   ~DocAccessibleParent() {
     LiveDocs().Remove(mActorID);
