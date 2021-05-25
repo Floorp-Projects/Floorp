@@ -88,6 +88,7 @@ const PINNED_FAVICON_PROPS_TO_MIGRATE = [
 const SECTION_ID = "topsites";
 const ROWS_PREF = "topSitesRows";
 const SHOW_SPONSORED_PREF = "showSponsoredTopSites";
+const MAX_NUM_SPONSORED = 2;
 
 // Search experiment stuff
 const FILTER_DEFAULT_SEARCH_PREF = "improvesearch.noDefaultSearchTile";
@@ -163,6 +164,12 @@ class ContileIntegration {
 
       const body = await response.json();
       if (Array.isArray(body)) {
+        if (body.length > MAX_NUM_SPONSORED) {
+          Cu.reportError(
+            `Contile provided more links than permitted. (${body.length} received, limit is ${MAX_NUM_SPONSORED})`
+          );
+          body.length = MAX_NUM_SPONSORED;
+        }
         this._sites = body;
         return true;
       }
