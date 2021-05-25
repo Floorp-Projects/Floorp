@@ -362,27 +362,6 @@ class _ToolbarPanelHub {
       })
     );
 
-    switch (content.layout) {
-      case "tracking-protections":
-        wrapperEl.appendChild(
-          RemoteL10n.createElement(doc, "h4", {
-            classList: "whatsNew-message-subtitle",
-            content: content.subtitle,
-            attributes: this.state.contentArguments,
-          })
-        );
-        wrapperEl.appendChild(
-          RemoteL10n.createElement(doc, "h2", {
-            classList: "whatsNew-message-title-large",
-            content: this.state.contentArguments[
-              content.layout_title_content_variable
-            ],
-            attributes: this.state.contentArguments,
-          })
-        );
-        break;
-    }
-
     wrapperEl.appendChild(
       RemoteL10n.createElement(doc, "p", {
         content: content.body,

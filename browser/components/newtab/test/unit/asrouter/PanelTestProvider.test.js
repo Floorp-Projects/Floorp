@@ -11,7 +11,7 @@ describe("PanelTestProvider", () => {
   it("should have a message", () => {
     // Careful: when changing this number make sure that new messages also go
     // through schema verifications.
-    assert.lengthOf(messages, 12);
+    assert.lengthOf(messages, 11);
   });
   it("should be a valid message", () => {
     const fxaMessages = messages.filter(
