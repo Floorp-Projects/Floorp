@@ -36,6 +36,7 @@ UNIFIED_SOURCES += [
     "/third_party/libwebrtc/rtc_base/crypt_string.cc",
     "/third_party/libwebrtc/rtc_base/data_rate_limiter.cc",
     "/third_party/libwebrtc/rtc_base/file_rotating_stream.cc",
+    "/third_party/libwebrtc/rtc_base/ifaddrs_converter.cc",
     "/third_party/libwebrtc/rtc_base/ip_address.cc",
     "/third_party/libwebrtc/rtc_base/log_sinks.cc",
     "/third_party/libwebrtc/rtc_base/message_handler.cc",
@@ -141,6 +142,10 @@ if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "Android":
     OS_LIBS += [
         "android_support"
     ]
+
+if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "Linux":
+
+    DEFINES["CR_SYSROOT_HASH"] = "ef67b6ca8fd6e2e51515a243d043d1ea4caf45e6"
 
 if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "Linux":
 
