@@ -64,40 +64,18 @@ const MESSAGES = () => [
     trigger: { id: "momentsUpdate" },
   },
   {
-    id: "WHATS_NEW_FINGERPRINTER_COUNTER_72",
-    template: "whatsnew_panel_message",
-    order: 6,
-    content: {
-      bucket_id: "WHATS_NEW_72",
-      published_date: 1574776601000,
-      layout: "tracking-protections",
-      layout_title_content_variable: "fingerprinterCount",
-      title: { string_id: "cfr-whatsnew-fingerprinter-counter-header" },
-      subtitle: { string_id: "cfr-whatsnew-tracking-blocked-subtitle" },
-      icon_url:
-        "chrome://activity-stream/content/data/content/assets/protection-report-icon.png",
-      icon_alt: "",
-      body: { string_id: "cfr-whatsnew-fingerprinter-counter-body" },
-      link_text: { string_id: "cfr-whatsnew-tracking-blocked-link-text" },
-      cta_url: "",
-      cta_type: "OPEN_PROTECTION_REPORT",
-    },
-    targeting: `firefoxVersion >= 72`,
-    trigger: { id: "whatsNewPanelOpened" },
-  },
-  {
     id: "WHATS_NEW_FINGERPRINTER_COUNTER_ALT",
     template: "whatsnew_panel_message",
     order: 6,
     content: {
       bucket_id: "WHATS_NEW_72",
       published_date: 1574776601000,
-      title: { string_id: "cfr-whatsnew-fingerprinter-counter-header-alt" },
+      title: "Title",
       icon_url:
         "chrome://activity-stream/content/data/content/assets/protection-report-icon.png",
-      icon_alt: "",
-      body: { string_id: "cfr-whatsnew-fingerprinter-counter-body-alt" },
-      link_text: { string_id: "cfr-whatsnew-tracking-blocked-link-text" },
+      icon_alt: { string_id: "cfr-badge-reader-label-newfeature" },
+      body: "Message body",
+      link_text: "Click here",
       cta_url: "",
       cta_type: "OPEN_PROTECTION_REPORT",
     },
@@ -147,22 +125,14 @@ const MESSAGES = () => [
     content: {
       bucket_id: "WHATS_NEW_SEARCH_SHORTCUTS_84",
       published_date: 1560969794394,
-      title: {
-        string_id: "cfr-whatsnew-search-shortcuts-header",
-      },
+      title: "Title",
       icon_url: "chrome://global/skin/icons/success.svg",
-      icon_alt: {
-        string_id: "cfr-whatsnew-searchbar-icon-alt-text",
-      },
-      body: {
-        string_id: "cfr-whatsnew-search-shortcuts-body",
-      },
+      icon_alt: "",
+      body: "Message content",
       cta_url:
         "https://support.mozilla.org/1/firefox/%VERSION%/%OS%/%LOCALE%/search-shortcuts",
       cta_type: "OPEN_URL",
-      link_text: {
-        string_id: "cfr-whatsnew-pip-cta",
-      },
+      link_text: "Click here",
     },
     targeting: "firefoxVersion >= 84",
     trigger: {
@@ -198,18 +168,12 @@ const MESSAGES = () => [
     content: {
       bucket_id: "WHATS_NEW_MEDIA_SESSION_82",
       published_date: 1603152000000,
-      title: {
-        string_id: "cfr-whatsnew-media-keys-header",
-      },
-      body: {
-        string_id: "cfr-whatsnew-media-keys-body",
-      },
+      title: "Title",
+      body: "Message content",
       cta_url:
         "https://support.mozilla.org/1/firefox/%VERSION%/%OS%/%LOCALE%/media-keyboard-control",
       cta_type: "OPEN_URL",
-      link_text: {
-        string_id: "cfr-whatsnew-media-keys-button",
-      },
+      link_text: "Click here",
     },
     targeting: "firefoxVersion >= 82",
     trigger: {
