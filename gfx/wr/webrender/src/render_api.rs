@@ -317,14 +317,11 @@ impl Transaction {
     pub fn set_document_view(
         &mut self,
         device_rect: DeviceIntRect,
-        device_pixel_ratio: f32,
     ) {
-        assert!(device_pixel_ratio > 0.0);
         window_size_sanity_check(device_rect.size);
         self.scene_ops.push(
             SceneMsg::SetDocumentView {
                 device_rect,
-                device_pixel_ratio,
             },
         );
     }
@@ -785,8 +782,6 @@ pub enum SceneMsg {
     SetDocumentView {
         ///
         device_rect: DeviceIntRect,
-        ///
-        device_pixel_ratio: f32,
     },
     /// Set the current quality / performance configuration for this document.
     SetQualitySettings {

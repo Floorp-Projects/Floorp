@@ -318,7 +318,6 @@ fn make_software_context() -> swgl::Context {
 
 fn make_window(
     size: DeviceIntSize,
-    dp_ratio: Option<f32>,
     vsync: bool,
     events_loop: &Option<winit::EventsLoop>,
     angle: bool,
@@ -423,11 +422,9 @@ fn make_window(
     let gl_version = gl.get_string(gl::VERSION);
     let gl_renderer = gl.get_string(gl::RENDERER);
 
-    let dp_ratio = dp_ratio.unwrap_or(wrapper.hidpi_factor());
     println!("OpenGL version {}, {}", gl_version, gl_renderer);
     println!(
-        "hidpi factor: {} (native {})",
-        dp_ratio,
+        "hidpi factor: {}",
         wrapper.hidpi_factor()
     );
 
@@ -565,7 +562,6 @@ fn main() {
 
     // handle some global arguments
     let res_path = args.value_of("shaders").map(|s| PathBuf::from(s));
-    let dp_ratio = args.value_of("dp_ratio").map(|v| v.parse::<f32>().unwrap());
     let size = args.value_of("size")
         .map(|s| if s == "720p" {
             DeviceIntSize::new(1280, 720)
@@ -635,14 +631,12 @@ fn main() {
 
     let mut window = make_window(
         size,
-        dp_ratio,
         args.is_present("vsync"),
         &events_loop,
         args.is_present("angle"),
         gl_request,
         software,
     );
-    let dp_ratio = dp_ratio.unwrap_or(window.hidpi_factor());
     let dim = window.get_inner_size();
 
     let needs_frame_notifier = ["perf", "reftest", "png", "rawtest", "test_invalidation"]
@@ -660,7 +654,6 @@ fn main() {
         events_loop.as_mut().map(|el| el.create_proxy()),
         res_path,
         !args.is_present("use_unoptimized_shaders"),
-        dp_ratio,
         dim,
         args.is_present("rebuild"),
         args.is_present("no_subpixel_aa"),
@@ -855,8 +848,8 @@ fn render<'a>(
                         cursor_position = WorldPoint::new(x as f32, y as f32);
                         wrench.renderer.set_cursor_position(
                             DeviceIntPoint::new(
-                                (cursor_position.x * wrench.device_pixel_ratio).round() as i32,
-                                (cursor_position.y * wrench.device_pixel_ratio).round() as i32,
+                                cursor_position.x.round() as i32,
+                                cursor_position.y.round() as i32,
                             ),
                         );
                         do_render = true;

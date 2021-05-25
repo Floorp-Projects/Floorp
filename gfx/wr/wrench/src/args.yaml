@@ -39,11 +39,6 @@ args:
   - software:
       long: software
       help: Enable software rendering
-  - dp_ratio:
-      short: p
-      long: device-pixel-ratio
-      help: Device pixel ratio
-      takes_value: true
   - size:
       short: s
       long: size

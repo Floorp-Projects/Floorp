@@ -200,7 +200,6 @@ impl WrenchThing for CapturedSequence {
 
 pub struct Wrench {
     window_size: DeviceIntSize,
-    pub device_pixel_ratio: f32,
 
     pub renderer: webrender::Renderer,
     pub api: RenderApi,
@@ -225,7 +224,6 @@ impl Wrench {
         proxy: Option<EventsLoopProxy>,
         shader_override_path: Option<PathBuf>,
         use_optimized_shaders: bool,
-        dp_ratio: f32,
         size: DeviceIntSize,
         do_rebuild: bool,
         no_subpixel_aa: bool,
@@ -251,7 +249,6 @@ impl Wrench {
         };
 
         let opts = webrender::RendererOptions {
-            device_pixel_ratio: dp_ratio,
             resource_override_path: shader_override_path,
             use_optimized_shaders,
             enable_subpixel_aa: !no_subpixel_aa,
@@ -306,7 +303,6 @@ impl Wrench {
 
             rebuild_display_lists: do_rebuild,
             verbose,
-            device_pixel_ratio: dp_ratio,
 
             root_pipeline_id: PipelineId(0, 0),
 
@@ -399,9 +395,8 @@ impl Wrench {
 
     pub fn set_title(&mut self, extra: &str) {
         self.window_title_to_set = Some(format!(
-            "Wrench: {} ({}x) - {} - {}",
+            "Wrench: {} - {} - {}",
             extra,
-            self.device_pixel_ratio,
             self.graphics_api.renderer,
             self.graphics_api.version
         ));
@@ -636,11 +631,11 @@ impl Wrench {
         let dr = self.renderer.debug_renderer().unwrap();
 
         for ref co in &color_and_offset {
-            let x = self.device_pixel_ratio * (15.0 + co.1);
-            let mut y = self.device_pixel_ratio * (15.0 + co.1 + dr.line_height());
+            let x = 15.0 + co.1;
+            let mut y = 15.0 + co.1 + dr.line_height();
             for ref line in &help_lines {
                 dr.add_text(x, y, line, co.0.into(), None);
-                y += self.device_pixel_ratio * dr.line_height();
+                y += dr.line_height();
             }
         }
         self.renderer.device.end_frame();

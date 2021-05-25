@@ -1862,7 +1862,7 @@ pub extern "C" fn wr_transaction_set_display_list(
 
 #[no_mangle]
 pub extern "C" fn wr_transaction_set_document_view(txn: &mut Transaction, doc_rect: &DeviceIntRect) {
-    txn.set_document_view(*doc_rect, 1.0);
+    txn.set_document_view(*doc_rect);
 }
 
 #[no_mangle]
