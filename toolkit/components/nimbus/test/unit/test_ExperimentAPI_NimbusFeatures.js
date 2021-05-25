@@ -217,3 +217,28 @@ add_task(async function test_getValue_no_mutation() {
 
   sandbox.restore();
 });
+
+add_task(async function remote_isEarlyStartup_config() {
+  let { manager } = await setupForExperimentFeature();
+  let feature = new ExperimentFeature("password-autocomplete");
+
+  manager.store.updateRemoteConfigs("password-autocomplete", {
+    slug: "remote-config-isEarlyStartup",
+    description: "This feature normally is not marked isEarlyStartup",
+    variables: { remote: true },
+    isEarlyStartup: true,
+  });
+
+  await feature.ready();
+
+  Assert.ok(
+    Services.prefs.prefHasUserValue(
+      "nimbus.syncdefaultsstore.password-autocomplete"
+    ),
+    "Configuration is marked early startup"
+  );
+
+  Services.prefs.clearUserPref(
+    "nimbus.syncdefaultsstore.password-autocomplete"
+  );
+});
