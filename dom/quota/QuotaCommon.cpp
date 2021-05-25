@@ -531,13 +531,7 @@ void LogError(const nsACString& aExpr, const ResultType& aResult,
         res.AppendElement(
             EventExtraEntry{"frame_id"_ns, nsCString{frameIdStr}});
       }
-#    endif
 
-      // TODO We could still fill the module field, based on the source
-      // directory, but we probably don't need to.
-      // res.AppendElement(EventExtraEntry{"module"_ns, aModule});
-
-#    ifdef QM_ERROR_STACKS_ENABLED
       if (!processIdStr.IsEmpty()) {
         res.AppendElement(
             EventExtraEntry{"process_id"_ns, nsCString{processIdStr}});
