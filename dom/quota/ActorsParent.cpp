@@ -77,6 +77,8 @@
 #include "mozilla/dom/indexedDB/ActorsParent.h"
 #include "mozilla/dom/ipc/IdType.h"
 #include "mozilla/dom/localstorage/ActorsParent.h"
+#include "mozilla/dom/QMResult.h"
+#include "mozilla/dom/QMResultInlines.h"
 #include "mozilla/dom/quota/CheckedUnsafePtr.h"
 #include "mozilla/dom/quota/Client.h"
 #include "mozilla/dom/quota/DirectoryLock.h"
@@ -5823,20 +5825,22 @@ nsresult QuotaManager::MaybeCreateOrUpgradeStorage(
   return NS_OK;
 }
 
-nsresult QuotaManager::MaybeRemoveLocalStorageArchiveTmpFile() {
+Result<Ok, QMResult> QuotaManager::MaybeRemoveLocalStorageArchiveTmpFile() {
   AssertIsOnIOThread();
 
-  QM_TRY_INSPECT(const auto& lsArchiveTmpFile,
-                 GetLocalStorageArchiveTmpFile(*mStoragePath));
+  QM_TRY_INSPECT(
+      const auto& lsArchiveTmpFile,
+      GetLocalStorageArchiveTmpFile(*mStoragePath).mapErr(ToQMResult));
 
-  QM_TRY_INSPECT(const bool& exists,
-                 MOZ_TO_RESULT_INVOKE(lsArchiveTmpFile, Exists));
+  QM_TRY_INSPECT(
+      const bool& exists,
+      MOZ_TO_RESULT_INVOKE(lsArchiveTmpFile, Exists).mapErr(ToQMResult));
 
   if (exists) {
-    QM_TRY(lsArchiveTmpFile->Remove(false));
+    QM_TRY(ToQMResult(lsArchiveTmpFile->Remove(false)));
   }
 
-  return NS_OK;
+  return Ok{};
 }
 
 Result<Ok, nsresult> QuotaManager::MaybeCreateOrUpgradeLocalStorageArchive(
