@@ -93,7 +93,7 @@ void ClipManager::PushOverrideForASR(const ActiveScrolledRoot* aASR,
   MOZ_ASSERT(spaceAndClip.isSome());
 
   CLIP_LOG("Pushing %p override %zu -> %s\n", aASR, spaceAndClip->space.id,
-           Stringify(aSpatialId.id).c_str());
+           ToString(aSpatialId.id).c_str());
 
   auto it =
       mASROverride.insert({spaceAndClip->space, std::stack<wr::WrSpatialId>()});
@@ -112,7 +112,7 @@ void ClipManager::PopOverrideForASR(const ActiveScrolledRoot* aASR) {
 
   auto it = mASROverride.find(spaceAndClip->space);
   CLIP_LOG("Popping %p override %zu -> %s\n", aASR, spaceAndClip->space.id,
-           Stringify(it->second.top().id).c_str());
+           ToString(it->second.top().id).c_str());
 
   it->second.pop();
   if (it->second.empty()) {
@@ -128,7 +128,7 @@ wr::WrSpatialId ClipManager::SpatialIdAfterOverride(
   }
   MOZ_ASSERT(!it->second.empty());
   CLIP_LOG("Overriding %zu with %s\n", aSpatialId.id,
-           Stringify(it->second.top().id).c_str());
+           ToString(it->second.top().id).c_str());
 
   return it->second.top();
 }

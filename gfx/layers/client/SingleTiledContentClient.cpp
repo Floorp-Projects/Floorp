@@ -187,7 +187,7 @@ void ClientSingleTiledLayerBuffer::PaintThebes(
       }
 
       TILING_LOG("TILING %p: Region copied from discarded frontbuffer %s\n",
-                 &mPaintedLayer, Stringify(copyableRegion).c_str());
+                 &mPaintedLayer, ToString(copyableRegion).c_str());
 
       // We don't need to repaint valid content that was just copied.
       paintRegion.SubOut(copyableRegion);
