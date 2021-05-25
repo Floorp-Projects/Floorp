@@ -39,15 +39,10 @@ def num_content_services(value):
 set_config("MOZ_ANDROID_CONTENT_SERVICE_COUNT", num_content_services)
 set_define("MOZ_ANDROID_CONTENT_SERVICE_COUNT", num_content_services)
 
-option(
-    "--enable-isolated-process",
-    env="MOZ_ANDROID_CONTENT_SERVICE_ISOLATED_PROCESS",
-    help="Enable generating content process services with isolatedProcess=true",
-    default=False,
-)
-set_config(
+project_flag(
     "MOZ_ANDROID_CONTENT_SERVICE_ISOLATED_PROCESS",
-    depends_if("MOZ_ANDROID_CONTENT_SERVICE_ISOLATED_PROCESS")(lambda x: True),
+    help="Whether to generate content process services with isolatedProcess=true",
+    default=False,
 )
 
 imply_option("MOZ_NORMANDY", False)
