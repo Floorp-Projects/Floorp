@@ -119,7 +119,8 @@ pub fn read_ec_sig_point<'a>(signature: &'a [u8]) -> Result<(&'a [u8], &'a [u8])
 }
 
 /// Given a slice of DER bytes representing an X.509 certificate, extracts the encoded serial
-/// number. Does not verify that the remainder of the certificate is in any way well-formed.
+/// number, issuer, and subject. Does not verify that the remainder of the certificate is in any
+/// way well-formed.
 ///   Certificate  ::=  SEQUENCE  {
 ///           tbsCertificate       TBSCertificate,
 ///           signatureAlgorithm   AlgorithmIdentifier,
@@ -128,15 +129,36 @@ pub fn read_ec_sig_point<'a>(signature: &'a [u8]) -> Result<(&'a [u8], &'a [u8])
 ///   TBSCertificate  ::=  SEQUENCE  {
 ///           version         [0]  EXPLICIT Version DEFAULT v1,
 ///           serialNumber         CertificateSerialNumber,
+///           signature            AlgorithmIdentifier,
+///           issuer               Name,
+///           validity             Validity,
+///           subject              Name,
 ///           ...
 ///
 ///   CertificateSerialNumber  ::=  INTEGER
-pub fn read_encoded_serial_number(certificate: &[u8]) -> Result<Vec<u8>, ()> {
+///
+///   Name ::= CHOICE { -- only one possibility for now --
+///     rdnSequence  RDNSequence }
+///
+///   RDNSequence ::= SEQUENCE OF RelativeDistinguishedName
+///
+///   Validity ::= SEQUENCE {
+///        notBefore      Time,
+///        notAfter       Time  }
+pub fn read_encoded_certificate_identifiers(
+    certificate: &[u8],
+) -> Result<(Vec<u8>, Vec<u8>, Vec<u8>), ()> {
     let mut certificate_sequence = Sequence::new(certificate)?;
     let mut tbs_certificate_sequence = certificate_sequence.read_sequence()?;
     let _version = tbs_certificate_sequence.read_tagged_value(0)?;
     let serial_number = tbs_certificate_sequence.read_encoded_sequence_component(INTEGER)?;
-    Ok(serial_number)
+    let _signature = tbs_certificate_sequence.read_sequence()?;
+    let issuer =
+        tbs_certificate_sequence.read_encoded_sequence_component(SEQUENCE | CONSTRUCTED)?;
+    let _validity = tbs_certificate_sequence.read_sequence()?;
+    let subject =
+        tbs_certificate_sequence.read_encoded_sequence_component(SEQUENCE | CONSTRUCTED)?;
+    Ok((serial_number, issuer, subject))
 }
 
 /// Helper macro for reading some bytes from a slice while checking the slice is long enough.
@@ -434,7 +456,7 @@ mod tests {
         assert!(read_rsa_modulus(&empty).is_err());
         #[cfg(target_os = "macos")]
         assert!(read_ec_sig_point(&empty).is_err());
-        assert!(read_encoded_serial_number(&empty).is_err());
+        assert!(read_encoded_certificate_identifiers(&empty).is_err());
     }
 
     #[test]
@@ -443,7 +465,7 @@ mod tests {
         assert!(read_rsa_modulus(&empty).is_err());
         #[cfg(target_os = "macos")]
         assert!(read_ec_sig_point(&empty).is_err());
-        assert!(read_encoded_serial_number(&empty).is_err());
+        assert!(read_encoded_certificate_identifiers(&empty).is_err());
     }
 
     #[test]
@@ -456,16 +478,30 @@ mod tests {
     }
 
     #[test]
-    fn test_read_serial_number() {
+    fn test_read_certificate_identifiers() {
         let certificate = include_bytes!("../test/certificate.bin");
-        let result = read_encoded_serial_number(certificate);
+        let result = read_encoded_certificate_identifiers(certificate);
         assert!(result.is_ok());
-        let serial_number = result.unwrap();
+        let (serial_number, issuer, subject) = result.unwrap();
         assert_eq!(
             serial_number,
             &[
                 0x02, 0x14, 0x3f, 0xed, 0x7b, 0x43, 0x47, 0x8a, 0x53, 0x42, 0x5b, 0x0d, 0x50, 0xe1,
                 0x37, 0x88, 0x2a, 0x20, 0x3f, 0x31, 0x17, 0x20
+            ]
+        );
+        assert_eq!(
+            issuer,
+            &[
+                0x30, 0x12, 0x31, 0x10, 0x30, 0x0e, 0x06, 0x03, 0x55, 0x04, 0x03, 0x0c, 0x07, 0x54,
+                0x65, 0x73, 0x74, 0x20, 0x43, 0x41
+            ]
+        );
+        assert_eq!(
+            subject,
+            &[
+                0x30, 0x1a, 0x31, 0x18, 0x30, 0x16, 0x06, 0x03, 0x55, 0x04, 0x03, 0x0c, 0x0f, 0x54,
+                0x65, 0x73, 0x74, 0x20, 0x45, 0x6e, 0x64, 0x2d, 0x65, 0x6e, 0x74, 0x69, 0x74, 0x79
             ]
         );
     }
