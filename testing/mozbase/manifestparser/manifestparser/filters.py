@@ -460,7 +460,11 @@ class failures(InstanceFilter):
                 if key not in test:
                     continue
 
-                matched = [self.keyword in e for e in test[key].splitlines() if e]
+                matched = [
+                    self.keyword in e and parse(e, **values)
+                    for e in test[key].splitlines()
+                    if e
+                ]
                 if any(matched):
                     test["expected"] = "fail"
                     yield test
