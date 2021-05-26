@@ -272,7 +272,7 @@ class Clobber(MachCommandBase):
             from mozbuild.controller.clobber import Clobberer
 
             try:
-                Clobberer(self.topsrcdir, self.topobjdir, self.substs).remove_objdir(
+                Clobberer(self.topsrcdir, self.topobjdir, self.substs()).remove_objdir(
                     full
                 )
             except OSError as e:
@@ -336,7 +336,6 @@ class Clobber(MachCommandBase):
 
         return ret
 
-    @property
     def substs(self):
         try:
             return super(Clobber, self).substs
@@ -412,15 +411,13 @@ class Logs(MachCommandBase):
 class Warnings(MachCommandBase):
     """Provide commands for inspecting warnings."""
 
-    @property
     def database_path(self):
         return self._get_state_filename("warnings.json")
 
-    @property
     def database(self):
         from mozbuild.compilation.warnings import WarningsDatabase
 
-        path = self.database_path
+        path = self.database_path()
 
         database = WarningsDatabase()
 
@@ -448,7 +445,7 @@ class Warnings(MachCommandBase):
         "recent report.",
     )
     def summary(self, command_context, directory=None, report=None):
-        database = self.database
+        database = self.database()
 
         if directory:
             dirpath = self.join_ensure_dir(self.topsrcdir, directory)
@@ -489,7 +486,7 @@ class Warnings(MachCommandBase):
         "recent report.",
     )
     def list(self, command_context, directory=None, flags=None, report=None):
-        database = self.database
+        database = self.database()
 
         by_name = sorted(database.warnings)
 
