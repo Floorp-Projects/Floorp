@@ -10255,6 +10255,12 @@
   value: true
   mirror: always
 
+# the list which contains sites where should exempt from query stripping
+- name: privacy.query_stripping.allow_list
+  type: String
+  value: ""
+  mirror: never
+
 #---------------------------------------------------------------------------
 # Prefs starting with "prompts."
 #---------------------------------------------------------------------------
