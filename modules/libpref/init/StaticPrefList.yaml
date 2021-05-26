@@ -1241,7 +1241,7 @@
 
 # Minimal interval between two save operations in milliseconds (while the user is active).
 - name: browser.sessionstore.interval
-  type: uint32_t
+  type: RelaxedAtomicUint32
   value: 15000
   mirror: always
 
@@ -1249,7 +1249,7 @@
 # browser tabs that were not caused by a flush from the parent.
 # This is a testing flag and should not be used by end-users.
 - name: browser.sessionstore.debug.no_auto_updates
-  type: bool
+  type: RelaxedAtomicBool
   value: false
   mirror: always
 
