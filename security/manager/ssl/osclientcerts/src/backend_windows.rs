@@ -96,15 +96,7 @@ impl Cert {
         let value = value.to_vec();
         let id = Sha256::digest(&value).to_vec();
         let label = get_cert_subject_dn(&cert_info)?;
-        let issuer = unsafe {
-            slice::from_raw_parts(cert_info.Issuer.pbData, cert_info.Issuer.cbData as usize)
-        };
-        let issuer = issuer.to_vec();
-        let serial_number = read_encoded_serial_number(&value)?;
-        let subject = unsafe {
-            slice::from_raw_parts(cert_info.Subject.pbData, cert_info.Subject.cbData as usize)
-        };
-        let subject = subject.to_vec();
+        let (serial_number, issuer, subject) = read_encoded_certificate_identifiers(&value)?;
         Ok(Cert {
             class: serialize_uint(CKO_CERTIFICATE)?,
             token: serialize_uint(CK_TRUE)?,
