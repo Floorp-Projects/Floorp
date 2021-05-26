@@ -1,5 +1,45 @@
 // |jit-test| skip-if: !hasDisassembler() || wasmCompileMode() != "ion" || !getBuildConfiguration().arm64; include:codegen-arm64-test.js
 
+// Basic constant folding tests
+
+for ( [op, lhs, rhs, expect] of
+      [['add',   5,    8,    'd28001a0  mov     x0, #0xd'],
+       ['sub',   4,    5,    '92800000  mov     x0, #0xffffffffffffffff'],
+       ['mul',   8,    3,    'd2800300  mov     x0, #0x18'],
+       ['div_s', -8,   3,    '92800020  mov     x0, #0xfffffffffffffffe'],
+       ['div_u', 8,    3,    'd2800040  mov     x0, #0x2'],
+       ['rem_s', 8,    5,    'd2800060  mov     x0, #0x3'],
+       ['rem_u', -7,   4,    'd2800020  mov     x0, #0x1'],
+       ['and',   0xfe, 0x77, 'd2800ec0  mov     x0, #0x76'],
+       ['or',    0xfe, 0x77, 'd2801fe0  mov     x0, #0xff'],
+       ['xor',   0xfe, 0x77, 'd2801120  mov     x0, #0x89'],
+       ['shl',   3,    4,    'd2800600  mov     x0, #0x30'],
+       ['shr_s', -8,   1,    '92800060  mov     x0, #0xfffffffffffffffc'],
+       ['shr_u', -8,   1,    'b27ef3e0  mov     x0, #0x7ffffffffffffffc']] ) {
+    codegenTestARM64_adhoc(`
+(module
+  (func (export "f") (result i64)
+    (i64.${op} (i64.const ${lhs}) (i64.const ${rhs}))))`,
+                           'f',
+                           expect);
+}
+
+// Basic tests that addition and multiplication identities are collapsed, use
+// arg 1 here to force an explicit move to be emitted.
+
+for ( [op, args, expect] of
+      [['add',   '(local.get 1) (i64.const 0)', 'aa0103e0  mov     x0, x1'],
+       ['add',   '(i64.const 0) (local.get 1)', 'aa0103e0  mov     x0, x1'],
+       ['mul',   '(local.get 1) (i64.const 1)', 'aa0103e0  mov     x0, x1'],
+       ['mul',   '(i64.const 1) (local.get 1)', 'aa0103e0  mov     x0, x1']] ) {
+    codegenTestARM64_adhoc(`
+(module
+  (func (export "f") (param i64) (param i64) (result i64)
+    (i64.${op} ${args})))`,
+                           'f',
+                           expect);
+}
+
 // Test that multiplication by -1 yields negation.
 
 let neg32 =
@@ -46,7 +86,8 @@ codegenTestARM64_adhoc(
 assertEq(wasmEvalText(zero64).exports.f(-37000000000n), 0n)
 assertEq(wasmEvalText(zero64).exports.f(42000000000n), 0n)
 
-// Test that multiplication by one yields no code
+// Test that multiplication by one yields no code (this optimization currently
+// exists both in constant folding and in lowering).
 
 let one32 =
     `(module
