@@ -595,38 +595,6 @@ bool TextEditor::IsCopyToClipboardAllowedInternal() const {
   return mUnmaskedStart <= selectionStart && UnmaskedEnd() >= selectionEnd;
 }
 
-nsresult TextEditor::CutAsAction(nsIPrincipal* aPrincipal) {
-  // TODO: Move this method to `EditorBase`.
-  AutoEditActionDataSetter editActionData(*this, EditAction::eCut, aPrincipal);
-  if (NS_WARN_IF(!editActionData.CanHandle())) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
-
-  bool actionTaken = false;
-  if (!FireClipboardEvent(eCut, nsIClipboard::kGlobalClipboard, &actionTaken)) {
-    return EditorBase::ToGenericNSResult(
-        actionTaken ? NS_OK : NS_ERROR_EDITOR_ACTION_CANCELED);
-  }
-
-  // Dispatch "beforeinput" event after dispatching "cut" event.
-  nsresult rv = editActionData.MaybeDispatchBeforeInputEvent();
-  if (NS_FAILED(rv)) {
-    NS_WARNING_ASSERTION(rv == NS_ERROR_EDITOR_ACTION_CANCELED,
-                         "MaybeDispatchBeforeInputEvent() failed");
-    return EditorBase::ToGenericNSResult(rv);
-  }
-  // XXX This transaction name is referred by PlaceholderTransaction::Merge()
-  //     so that we need to keep using it here.
-  AutoPlaceholderBatch treatAsOneTransaction(*this, *nsGkAtoms::DeleteTxnName,
-                                             ScrollSelectionIntoView::Yes);
-  rv = DeleteSelectionAsSubAction(
-      eNone, IsTextEditor() ? nsIEditor::eNoStrip : nsIEditor::eStrip);
-  NS_WARNING_ASSERTION(
-      NS_SUCCEEDED(rv),
-      "EditorBase::DeleteSelectionAsSubAction(eNone) failed, but ignored");
-  return EditorBase::ToGenericNSResult(rv);
-}
-
 NS_IMETHODIMP TextEditor::Copy() {
   AutoEditActionDataSetter editActionData(*this, EditAction::eCopy);
   if (NS_WARN_IF(!editActionData.CanHandle())) {

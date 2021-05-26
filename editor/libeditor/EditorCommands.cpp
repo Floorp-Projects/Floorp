@@ -332,7 +332,7 @@ bool CutCommand::IsCommandEnabled(Command aCommand,
 nsresult CutCommand::DoCommand(Command aCommand, TextEditor& aTextEditor,
                                nsIPrincipal* aPrincipal) const {
   nsresult rv = aTextEditor.CutAsAction(aPrincipal);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "TextEditor::CutAsAction() failed");
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "EditorBase::CutAsAction() failed");
   return rv;
 }
 
@@ -369,7 +369,7 @@ nsresult CutOrDeleteCommand::DoCommand(Command aCommand,
     return rv;
   }
   nsresult rv = aTextEditor.CutAsAction(aPrincipal);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "TextEditor::CutAsAction() failed");
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "EditorBase::CutAsAction() failed");
   return rv;
 }
 
