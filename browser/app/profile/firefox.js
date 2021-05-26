@@ -1067,6 +1067,14 @@ pref("places.frecency.defaultVisitBonus", 0);
 pref("places.frecency.unvisitedBookmarkBonus", 140);
 pref("places.frecency.unvisitedTypedBonus", 200);
 
+#ifdef NIGHTLY_BUILD
+  // Clear data by base domain (including partitioned storage) when the user
+  // selects "Forget About This Site".
+  pref("places.forgetThisSite.clearByBaseDomain", true);
+#else
+  pref("places.forgetThisSite.clearByBaseDomain", false);
+#endif
+
 // Controls behavior of the "Add Exception" dialog launched from SSL error pages
 // 0 - don't pre-populate anything
 // 1 - pre-populate site URL, but don't fetch certificate

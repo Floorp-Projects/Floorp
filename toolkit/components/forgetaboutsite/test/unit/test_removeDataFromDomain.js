@@ -250,6 +250,15 @@ async function test_history_not_cleared_with_uri_contains_domain() {
   await PlacesUtils.history.clear();
 }
 
+async function test_history_cleared_base_domain() {
+  const TEST_URI = Services.io.newURI("http://mozilla.org/foo");
+  Assert.equal(false, await PlacesUtils.history.hasVisits(TEST_URI));
+  await PlacesTestUtils.addVisits(TEST_URI);
+  Assert.ok(await PlacesUtils.history.hasVisits(TEST_URI));
+  await ForgetAboutSite.removeDataFromBaseDomain("mozilla.org");
+  Assert.equal(false, await PlacesUtils.history.hasVisits(TEST_URI));
+}
+
 // Cookie Service
 async function test_cookie_cleared_with_direct_match() {
   const TEST_DOMAIN = "mozilla.org";
@@ -270,6 +279,13 @@ async function test_cookie_not_cleared_with_uri_contains_domain() {
   add_cookie(TEST_DOMAIN);
   await ForgetAboutSite.removeDataFromDomain("mozilla.org");
   check_cookie_exists(TEST_DOMAIN, true);
+}
+
+async function test_cookie_cleared_base_domain() {
+  const TEST_DOMAIN = "mozilla.org";
+  add_cookie(TEST_DOMAIN);
+  await ForgetAboutSite.removeDataFromBaseDomain("mozilla.org");
+  check_cookie_exists(TEST_DOMAIN, false);
 }
 
 // Login Manager
@@ -322,6 +338,13 @@ async function test_login_manager_logins_not_cleared_with_uri_contains_domain() 
   check_login_exists(TEST_HOST, false);
 }
 
+async function test_login_manager_disabled_hosts_cleared_base_domain() {
+  const TEST_HOST = "http://mozilla.org";
+  add_disabled_host(TEST_HOST);
+  await ForgetAboutSite.removeDataFromBaseDomain("mozilla.org");
+  check_disabled_host(TEST_HOST, false);
+}
+
 // Permission Manager
 async function test_permission_manager_cleared_with_direct_match() {
   const TEST_URI = Services.io.newURI("http://mozilla.org");
@@ -345,6 +368,13 @@ async function test_permission_manager_not_cleared_with_uri_contains_domain() {
 
   // Reset state
   Services.perms.removeAll();
+  check_permission_exists(TEST_URI, false);
+}
+
+async function test_permission_manager_cleared_base_domain() {
+  const TEST_URI = Services.io.newURI("http://mozilla.org");
+  add_permission(TEST_URI);
+  await ForgetAboutSite.removeDataFromBaseDomain("mozilla.org");
   check_permission_exists(TEST_URI, false);
 }
 
@@ -380,8 +410,25 @@ async function test_content_preferences_not_cleared_with_uri_contains_domain() {
   Assert.equal(false, await preference_exists(TEST_URI));
 }
 
+async function test_content_preferences_cleared_base_domain() {
+  const TEST_URI = Services.io.newURI("http://mozilla.org");
+  Assert.equal(false, await preference_exists(TEST_URI));
+  await add_preference(TEST_URI);
+  Assert.ok(await preference_exists(TEST_URI));
+  await ForgetAboutSite.removeDataFromBaseDomain("mozilla.org");
+  Assert.equal(false, await preference_exists(TEST_URI));
+}
+
 // Push
 async function test_push_cleared() {
+  return helper_push_cleared(false);
+}
+
+async function test_push_cleared_base_domain() {
+  return helper_push_cleared(true);
+}
+
+async function helper_push_cleared(aBaseDomainTest) {
   let ps;
   try {
     ps = Cc["@mozilla.org/push/Service;1"].getService(Ci.nsIPushService);
@@ -404,7 +451,7 @@ async function test_push_cleared() {
   // Otherwise, tear down the old one and replace it with our mock backend,
   // so that we don't have to initialize an entire mock WebSocket only to
   // test clearing data.
-  await pushImpl.service.uninit();
+  await pushImpl.service.uninit?.();
   let wasCleared = false;
   pushImpl.service = {
     async clear({ domain } = {}) {
@@ -418,12 +465,25 @@ async function test_push_cleared() {
   };
   Services.prefs.setBoolPref("dom.push.enabled", true);
 
-  await ForgetAboutSite.removeDataFromDomain("mozilla.org");
+  if (aBaseDomainTest) {
+    await ForgetAboutSite.removeDataFromBaseDomain("mozilla.org");
+  } else {
+    await ForgetAboutSite.removeDataFromDomain("mozilla.org");
+  }
+
   Assert.ok(wasCleared, "Should have cleared push data");
 }
 
 // Cache
-async function test_cache_cleared() {
+function test_cache_cleared() {
+  return helper_cache_cleared(false);
+}
+
+function test_cache_cleared_base_domain() {
+  return helper_cache_cleared(true);
+}
+
+async function helper_cache_cleared(aBaseDomainTest) {
   // Because this test is asynchronous, it should be the last test
   Assert.ok(tests[tests.length - 1] == test_cache_cleared);
 
@@ -441,11 +501,24 @@ async function test_cache_cleared() {
     },
   };
   Services.obs.addObserver(observer, "cacheservice:empty-cache");
-  await ForgetAboutSite.removeDataFromDomain("mozilla.org");
+
+  if (aBaseDomainTest) {
+    await ForgetAboutSite.removeDataFromBaseDomain("mozilla.org");
+  } else {
+    await ForgetAboutSite.removeDataFromDomain("mozilla.org");
+  }
+
   do_test_pending();
 }
 
-async function test_storage_cleared() {
+function test_storage_cleared() {
+  return helper_storage_cleared(false);
+}
+function test_storage_cleared_base_domain() {
+  return helper_storage_cleared(true);
+}
+
+async function helper_storage_cleared(aBaseDomainTest) {
   function getStorageForURI(aURI) {
     let principal = Services.scriptSecurityManager.createContentPrincipal(
       aURI,
@@ -476,7 +549,11 @@ async function test_storage_cleared() {
     Assert.equal(storage.getItem("test"), "value" + i);
   }
 
-  await ForgetAboutSite.removeDataFromDomain("mozilla.org");
+  if (aBaseDomainTest) {
+    await ForgetAboutSite.removeDataFromBaseDomain("mozilla.org");
+  } else {
+    await ForgetAboutSite.removeDataFromDomain("mozilla.org");
+  }
 
   Assert.equal(s[0].getItem("test"), null);
   Assert.equal(s[0].length, 0);
@@ -491,11 +568,13 @@ var tests = [
   test_history_cleared_with_direct_match,
   test_history_cleared_with_subdomain,
   test_history_not_cleared_with_uri_contains_domain,
+  test_history_cleared_base_domain,
 
   // Cookie Service
   test_cookie_cleared_with_direct_match,
   test_cookie_cleared_with_subdomain,
   test_cookie_not_cleared_with_uri_contains_domain,
+  test_cookie_cleared_base_domain,
 
   // Login Manager
   test_login_manager_disabled_hosts_cleared_with_direct_match,
@@ -504,22 +583,27 @@ var tests = [
   test_login_manager_logins_cleared_with_direct_match,
   test_login_manager_logins_cleared_with_subdomain,
   test_login_manager_logins_not_cleared_with_uri_contains_domain,
+  test_login_manager_disabled_hosts_cleared_base_domain,
 
   // Permission Manager
   test_permission_manager_cleared_with_direct_match,
   test_permission_manager_cleared_with_subdomain,
   test_permission_manager_not_cleared_with_uri_contains_domain,
+  test_permission_manager_cleared_base_domain,
 
   // Content Preferences
   test_content_preferences_cleared_with_direct_match,
   test_content_preferences_cleared_with_subdomain,
   test_content_preferences_not_cleared_with_uri_contains_domain,
+  test_content_preferences_cleared_base_domain,
 
   // Push
   test_push_cleared,
+  test_push_cleared_base_domain,
 
   // Storage
   test_storage_cleared,
+  test_storage_cleared_base_domain,
 ];
 
 // Cache
