@@ -19,6 +19,7 @@ from manifestparser.filters import (
     skip_if,
     subsuite,
     tags,
+    failures,
 )
 
 here = os.path.dirname(os.path.abspath(__file__))
@@ -160,14 +161,17 @@ def create_tests():
 def tests(create_tests):
     return create_tests(
         "test0",
-        ("test1", {"skip-if": "foo == 'bar'"}),
+        ("test1", {"skip-if": "foo == 'bar'\nintermittent&&!debug"}),
         ("test2", {"run-if": "foo == 'bar'"}),
         ("test3", {"fail-if": "foo == 'bar'"}),
         ("test4", {"disabled": "some reason"}),
         ("test5", {"subsuite": "baz"}),
         ("test6", {"subsuite": "baz,foo == 'bar'"}),
         ("test7", {"tags": "foo bar"}),
-        ("test8", {"skip-if": "\nbaz\nfoo == 'bar'\nfoo == 'baz'"}),
+        (
+            "test8",
+            {"skip-if": "\nbaz\nfoo == 'bar'\nfoo == 'baz'\nintermittent && debug"},
+        ),
     )
 
 
@@ -252,6 +256,25 @@ def test_tags(tests):
     tests = list(ftags2(tests, {}))
     assert len(tests) == 1
     assert ref[7] in tests
+
+
+def test_failures(tests):
+    ref = deepcopy(tests)
+    fail1 = failures("intermittent")
+    tests = list(fail1(tests, {"intermittent": True, "debug": True}))
+    assert len(tests) == 1
+
+    tests = deepcopy(ref)
+    tests = list(fail1(tests, {"intermittent": True}))
+    assert len(tests) == 1
+
+    tests = deepcopy(ref)
+    tests = list(fail1(tests, {}))
+    assert len(tests) == 0
+
+    tests = deepcopy(ref)
+    tests = list(fail1(tests, {"intermittent": False, "debug": True}))
+    assert len(tests) == 0
 
 
 def test_pathprefix(create_tests):
