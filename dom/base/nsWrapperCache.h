@@ -85,7 +85,7 @@ static_assert(sizeof(void*) == 4, "Only support 32-bit and 64-bit");
  * codebase. Include nsWrapperCacheInlines.h if you need to call those methods.
  */
 
-class nsWrapperCache {
+class JS_HAZ_ROOTED nsWrapperCache {
  public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_WRAPPERCACHE_IID)
 
