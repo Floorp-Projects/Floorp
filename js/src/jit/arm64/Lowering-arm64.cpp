@@ -173,8 +173,8 @@ void LIRGeneratorARM64::lowerForShiftInt64(
   static_assert(LRotateI64::Count == INT64_PIECES,
                 "Assume Count is located at INT64_PIECES.");
 
-  ins->setOperand(INT64_PIECES, useRegisterOrConstant(rhs));
-  defineInt64ReuseInput(ins, mir, 0);
+  ins->setOperand(INT64_PIECES, useRegisterOrConstantAtStart(rhs));
+  defineInt64(ins, mir);
 }
 
 template void LIRGeneratorARM64::lowerForShiftInt64(

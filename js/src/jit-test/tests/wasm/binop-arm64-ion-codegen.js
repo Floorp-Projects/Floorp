@@ -176,3 +176,24 @@ for ( [op, imm, expectVar, expectImm] of
                            'f',
                            expectImm);
 }
+
+// Test that shifts and rotates with a constant don't need to reuse their input
+// register.  The proof here is that the destination register does not equal any
+// of the input registers.
+//
+// We have adequate functionality tests for these elsewhere, so test only
+// codegen here.
+
+for ( [op, expect] of
+      [['shl',   'd37ef420  lsl     x0, x1, #2'],
+       ['shr_s', '9342fc20  asr     x0, x1, #2'],
+       ['shr_u', 'd342fc20  lsr     x0, x1, #2'],
+       ['rotl',  '93c1f820  ror     x0, x1, #62'],
+       ['rotr',  '93c10820  ror     x0, x1, #2']] ) {
+    codegenTestARM64_adhoc(`
+(module
+  (func (export "f") (param i64) (param i64) (result i64)
+    (i64.${op} (local.get 1) (i64.const 2))))`,
+                           'f',
+                           expect);
+}
