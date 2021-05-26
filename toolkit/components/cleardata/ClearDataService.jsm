@@ -1039,9 +1039,36 @@ const SecuritySettingsCleaner = {
     return this.deleteByHost(aPrincipal.host, aPrincipal.originAttributes);
   },
 
-  deleteByBaseDomain(aBaseDomain) {
-    // TODO: Bug 1705035
-    return this.deleteByHost(aBaseDomain, {});
+  async deleteByBaseDomain(aDomain) {
+    let sss = Cc["@mozilla.org/ssservice;1"].getService(
+      Ci.nsISiteSecurityService
+    );
+
+    // Remove HSTS information by enumerating entries of the site security
+    // service.
+    Array.from(sss.enumerate(Ci.nsISiteSecurityService.HEADER_HSTS))
+      .filter(({ hostname, originAttributes }) =>
+        hasBaseDomain({ host: hostname, originAttributes }, aDomain)
+      )
+      .forEach(({ hostname, originAttributes }) => {
+        // This uri is used as a key to reset the state.
+        let uri = Services.io.newURI("https://" + hostname);
+        sss.resetState(
+          Ci.nsISiteSecurityService.HEADER_HSTS,
+          uri,
+          0,
+          originAttributes
+        );
+      });
+
+    let cars = Cc[
+      "@mozilla.org/security/clientAuthRememberService;1"
+    ].getService(Ci.nsIClientAuthRememberService);
+
+    cars
+      .getDecisions()
+      .filter(({ asciiHost }) => hasBaseDomain({ host: asciiHost }, aDomain))
+      .forEach(({ entryKey }) => cars.forgetRememberedDecision(entryKey));
   },
 
   async deleteAll() {
