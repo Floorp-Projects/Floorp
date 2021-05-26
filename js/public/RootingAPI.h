@@ -583,6 +583,8 @@ class MOZ_NONHEAP_CLASS Handle : public js::HandleBase<T, Handle<T>> {
  public:
   using ElementType = T;
 
+  Handle(const Handle<T>&) = default;
+
   /* Creates a handle from a handle of a type convertible to T. */
   template <typename S>
   MOZ_IMPLICIT Handle(
@@ -687,6 +689,7 @@ class MOZ_STACK_CLASS MutableHandle
   MutableHandle(decltype(nullptr)) = delete;
 
  public:
+  MutableHandle(const MutableHandle<T>&) = default;
   void set(const T& v) {
     *ptr = v;
     MOZ_ASSERT(GCPolicy<T>::isValid(*ptr));
