@@ -72,6 +72,7 @@
   :root {
     --autocomplete-popup-separator-color: color-mix(in srgb, currentColor 86%, transparent);
     --urlbar-icon-fill-opacity: 1;
+    --checkbox-checked-border-color: var(--checkbox-checked-bgcolor);
   }
 }
 
