@@ -91,6 +91,7 @@ class nsTDependentSubstring : public nsTSubstring<T> {
 
   // auto-generated copy-constructor OK (XXX really?? what about base class
   // copy-ctor?)
+  nsTDependentSubstring(const nsTDependentSubstring&) = default;
 
  private:
   // NOT USED
