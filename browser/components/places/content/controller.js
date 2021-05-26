@@ -81,6 +81,13 @@ function PlacesController(aView) {
   XPCOMUtils.defineLazyGetter(this, "profileName", function() {
     return Services.dirsvc.get("ProfD", Ci.nsIFile).leafName;
   });
+
+  XPCOMUtils.defineLazyPreferenceGetter(
+    this,
+    "forgetSiteClearByBaseDomain",
+    "places.forgetThisSite.clearByBaseDomain",
+    false
+  );
 }
 
 PlacesController.prototype = {
@@ -269,6 +276,10 @@ PlacesController.prototype = {
         let { ForgetAboutSite } = ChromeUtils.import(
           "resource://gre/modules/ForgetAboutSite.jsm"
         );
+        if (this.forgetSiteClearByBaseDomain) {
+          ForgetAboutSite.removeDataFromBaseDomain(host).catch(Cu.reportError);
+          break;
+        }
         ForgetAboutSite.removeDataFromDomain(host).catch(Cu.reportError);
         break;
       case "cmd_selectAll":
