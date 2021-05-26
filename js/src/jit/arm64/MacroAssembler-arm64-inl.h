@@ -2158,24 +2158,10 @@ void MacroAssembler::replaceLaneInt8x16(unsigned lane, Register rhs,
   Mov(Simd16B(lhsDest), lane, ARMRegister(rhs, 32));
 }
 
-void MacroAssembler::replaceLaneInt8x16(unsigned lane, FloatRegister lhs,
-                                        Register rhs, FloatRegister dest) {
-  MOZ_ASSERT(lane < 16);
-  moveSimd128(lhs, dest);
-  Mov(Simd16B(dest), lane, ARMRegister(rhs, 32));
-}
-
 void MacroAssembler::replaceLaneInt16x8(unsigned lane, Register rhs,
                                         FloatRegister lhsDest) {
   MOZ_ASSERT(lane < 8);
   Mov(Simd8H(lhsDest), lane, ARMRegister(rhs, 32));
-}
-
-void MacroAssembler::replaceLaneInt16x8(unsigned lane, FloatRegister lhs,
-                                        Register rhs, FloatRegister dest) {
-  MOZ_ASSERT(lane < 8);
-  moveSimd128(lhs, dest);
-  Mov(Simd8H(dest), lane, ARMRegister(rhs, 32));
 }
 
 void MacroAssembler::replaceLaneInt32x4(unsigned lane, Register rhs,
@@ -2184,24 +2170,10 @@ void MacroAssembler::replaceLaneInt32x4(unsigned lane, Register rhs,
   Mov(Simd4S(lhsDest), lane, ARMRegister(rhs, 32));
 }
 
-void MacroAssembler::replaceLaneInt32x4(unsigned lane, FloatRegister lhs,
-                                        Register rhs, FloatRegister dest) {
-  MOZ_ASSERT(lane < 4);
-  moveSimd128(lhs, dest);
-  Mov(Simd4S(dest), lane, ARMRegister(rhs, 32));
-}
-
 void MacroAssembler::replaceLaneInt64x2(unsigned lane, Register64 rhs,
                                         FloatRegister lhsDest) {
   MOZ_ASSERT(lane < 2);
   Mov(Simd2D(lhsDest), lane, ARMRegister(rhs.reg, 64));
-}
-
-void MacroAssembler::replaceLaneInt64x2(unsigned lane, FloatRegister lhs,
-                                        Register64 rhs, FloatRegister dest) {
-  MOZ_ASSERT(lane < 2);
-  moveSimd128(lhs, dest);
-  Mov(Simd2D(dest), lane, ARMRegister(rhs.reg, 64));
 }
 
 void MacroAssembler::replaceLaneFloat32x4(unsigned lane, FloatRegister rhs,
@@ -2210,26 +2182,10 @@ void MacroAssembler::replaceLaneFloat32x4(unsigned lane, FloatRegister rhs,
   Mov(Simd4S(lhsDest), lane, ARMFPRegister(rhs).V4S(), 0);
 }
 
-void MacroAssembler::replaceLaneFloat32x4(unsigned lane, FloatRegister lhs,
-                                          FloatRegister rhs,
-                                          FloatRegister dest) {
-  MOZ_ASSERT(lane < 4);
-  moveSimd128(lhs, dest);
-  Mov(Simd4S(dest), lane, ARMFPRegister(rhs).V4S(), 0);
-}
-
 void MacroAssembler::replaceLaneFloat64x2(unsigned lane, FloatRegister rhs,
                                           FloatRegister lhsDest) {
   MOZ_ASSERT(lane < 2);
   Mov(Simd2D(lhsDest), lane, ARMFPRegister(rhs).V2D(), 0);
-}
-
-void MacroAssembler::replaceLaneFloat64x2(unsigned lane, FloatRegister lhs,
-                                          FloatRegister rhs,
-                                          FloatRegister dest) {
-  MOZ_ASSERT(lane < 2);
-  moveSimd128(lhs, dest);
-  Mov(Simd2D(dest), lane, ARMFPRegister(rhs).V2D(), 0);
 }
 
 // Shuffle - blend and permute with immediate indices, and its many
