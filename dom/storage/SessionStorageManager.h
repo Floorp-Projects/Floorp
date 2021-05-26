@@ -15,6 +15,11 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsHashKeys.h"
 
+#include "mozilla/ipc/PBackgroundChild.h"
+#include "mozilla/ipc/PBackgroundParent.h"
+
+class nsIPrincipal;
+
 namespace mozilla {
 class OriginAttributesPattern;
 
@@ -24,6 +29,11 @@ bool RecvShutdownBackgroundSessionStorageManagers();
 void RecvPropagateBackgroundSessionStorageManager(uint64_t aCurrentTopContextId,
                                                   uint64_t aTargetTopContextId);
 bool RecvRemoveBackgroundSessionStorageManager(uint64_t aTopContextId);
+
+bool RecvGetSessionStorageData(
+    uint64_t aTopContextId, uint32_t aSizeLimit,
+    ::mozilla::ipc::PBackgroundParent::GetSessionStorageManagerDataResolver&&
+        aResolver);
 
 class BrowsingContext;
 class ContentParent;
@@ -168,6 +178,13 @@ class BackgroundSessionStorageManager final : public SessionStorageManagerBase {
   // Only called by CanonicalBrowsingContext::CanonicalDiscard on parent
   // process.
   static void RemoveManager(uint64_t aTopContextId);
+
+  using DataPromise =
+      ::mozilla::ipc::PBackgroundChild::GetSessionStorageManagerDataPromise;
+  static RefPtr<DataPromise> GetData(BrowsingContext* aContext,
+                                     uint32_t aSizeLimit);
+
+  void GetData(uint32_t aSizeLimit, nsTArray<SSCacheCopy>& aCacheCopyList);
 
   void CopyDataToContentProcess(const nsACString& aOriginAttrs,
                                 const nsACString& aOriginKey,
