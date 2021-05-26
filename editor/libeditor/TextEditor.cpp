@@ -595,19 +595,6 @@ bool TextEditor::IsCopyToClipboardAllowedInternal() const {
   return mUnmaskedStart <= selectionStart && UnmaskedEnd() >= selectionEnd;
 }
 
-NS_IMETHODIMP TextEditor::Copy() {
-  AutoEditActionDataSetter editActionData(*this, EditAction::eCopy);
-  if (NS_WARN_IF(!editActionData.CanHandle())) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
-
-  bool actionTaken = false;
-  FireClipboardEvent(eCopy, nsIClipboard::kGlobalClipboard, &actionTaken);
-
-  return EditorBase::ToGenericNSResult(
-      actionTaken ? NS_OK : NS_ERROR_EDITOR_ACTION_CANCELED);
-}
-
 bool TextEditor::CanDeleteSelection() const {
   AutoEditActionDataSetter editActionData(*this, EditAction::eNotEditing);
   if (NS_WARN_IF(!editActionData.CanHandle())) {
