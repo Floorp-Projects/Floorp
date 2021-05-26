@@ -32,13 +32,14 @@ class Gatherer(object):
     and can obtain manifest-based test lists. Used by the Verifier.
     """
 
-    def __init__(self, workspace_dir):
+    def __init__(self, workspace_dir, taskgraph=None):
         """
         Initialzie the Gatherer.
 
         :param str workspace_dir: Path to the gecko checkout.
         """
         self.workspace_dir = workspace_dir
+        self.taskgraph = taskgraph
         self._perfdocs_tree = []
         self._test_list = []
         self.framework_gatherers = {}
@@ -136,7 +137,7 @@ class Gatherer(object):
 
         # Get and then store the frameworks tests
         self.framework_gatherers[framework["name"]] = frameworks[framework["name"]](
-            framework["yml_path"], self.workspace_dir
+            framework["yml_path"], self.workspace_dir, self.taskgraph
         )
 
         if not yaml_content["static-only"]:
