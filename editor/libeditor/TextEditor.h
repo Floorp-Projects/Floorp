@@ -56,9 +56,6 @@ class TextEditor : public EditorBase, public nsITimerCallback, public nsINamed {
   NS_DECL_NSINAMED
 
   // Overrides of nsIEditor
-  MOZ_CAN_RUN_SCRIPT NS_IMETHOD
-  SetDocumentCharacterSet(const nsACString& characterSet) override;
-
   NS_IMETHOD GetTextLength(int32_t* aCount) override;
 
   // Shouldn't be used internally, but we need these using declarations for
@@ -567,9 +564,6 @@ class TextEditor : public EditorBase, public nsITimerCallback, public nsINamed {
                               nsAString& aResult) const;
 
   bool IsCopyToClipboardAllowedInternal() const final;
-
-  MOZ_CAN_RUN_SCRIPT bool UpdateMetaCharset(Document& aDocument,
-                                            const nsACString& aCharacterSet);
 
   virtual already_AddRefed<Element> GetInputEventTargetElement() const override;
 

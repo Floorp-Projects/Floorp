@@ -151,6 +151,10 @@ class HTMLEditor final : public TextEditor,
   MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHOD BeginningOfDocument() override;
   MOZ_CAN_RUN_SCRIPT NS_IMETHOD SetFlags(uint32_t aFlags) override;
 
+  NS_IMETHOD GetDocumentCharacterSet(nsACString& aCharacterSet) final;
+  MOZ_CAN_RUN_SCRIPT NS_IMETHOD
+  SetDocumentCharacterSet(const nsACString& aCharacterSet) final;
+
   bool IsEmpty() const final;
 
   bool CanPaste(int32_t aClipboardType) const final;
@@ -3258,6 +3262,15 @@ class HTMLEditor final : public TextEditor,
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT EditActionResult OutdentAsSubAction();
 
   MOZ_CAN_RUN_SCRIPT nsresult LoadHTML(const nsAString& aInputString);
+
+  /**
+   * UpdateMetaCharsetWithTransaction() scans all <meta> elements in the
+   * document and if and only if there is a <meta> element having `httpEquiv`
+   * attribute and whose value includes `content-type`, updates its `content`
+   * attribute value to aCharacterSet.
+   */
+  MOZ_CAN_RUN_SCRIPT bool UpdateMetaCharsetWithTransaction(
+      Document& aDocument, const nsACString& aCharacterSet);
 
   /**
    * SetInlinePropertyInternal() stores new style with `mTypeInState` if

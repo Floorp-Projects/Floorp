@@ -160,8 +160,12 @@ interface nsIEditor  : nsISupports
   /** Returns true if the document is modifed and needs saving */
   readonly attribute boolean documentModified;
 
-  /** Sets the current 'Save' document character set */
-  [can_run_script]  // setter only
+  /**
+   * Sets document's character set.  This is available only when the editor
+   * instance is an HTMLEditor since it's odd to change character set of
+   * parent document of `<input>` and `<textarea>`.
+   */
+  [setter_can_run_script]
   attribute ACString documentCharacterSet;
 
   /** to be used ONLY when we need to override the doc's modification
