@@ -27,11 +27,33 @@ add_task(async function() {
 
   let searchPopup = document.getElementById("PopupSearchAutoComplete");
 
-  let shownPromise = BrowserTestUtils.waitForEvent(searchPopup, "popupshown");
   // Open popup of the searchbar
-  EventUtils.synthesizeKey("KEY_F4");
-  await shownPromise;
-  await new Promise(r => setTimeout(r, 0));
+  // Oddly, F4 key press is sometimes not handled by the search bar.
+  // It's out of scope of this test, so, let's retry to open it if failed.
+  await (async () => {
+    async function tryToOpen() {
+      try {
+        BrowserSearch.searchBar.focus();
+        EventUtils.synthesizeKey("KEY_F4");
+        await TestUtils.waitForCondition(
+          () => searchPopup.state == "open",
+          "The popup isn't opened",
+          5,
+          100
+        );
+      } catch (e) {
+        // timed out, let's just return false without asserting the failure.
+        return false;
+      }
+      return true;
+    }
+    for (let i = 0; i < 5; i++) {
+      if (await tryToOpen()) {
+        return;
+      }
+    }
+    ok(false, "Failed to open the popup of searchbar");
+  })();
 
   is(
     DOMWindowUtils.IMEStatus,
@@ -40,6 +62,7 @@ add_task(async function() {
   );
 
   // Activate the menubar, then, the popup should be closed
+  is(searchPopup.state, "open", "The popup of searchbar shouldn't be closed");
   let hiddenPromise = BrowserTestUtils.waitForEvent(searchPopup, "popuphidden");
   EventUtils.synthesizeKey("KEY_Alt");
   await hiddenPromise;
