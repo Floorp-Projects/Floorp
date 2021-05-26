@@ -23,6 +23,31 @@ class TypeData {
   bool hasData() const { return type_ != JSVAL_TYPE_UNKNOWN; }
 };
 
+class TypeDataList {
+  const static size_t MaxLength = 6;
+
+  uint8_t count_ = 0;
+  TypeData typeData_[MaxLength];
+
+ public:
+  TypeDataList() {}
+
+  uint8_t count() const { return count_; }
+
+  void addTypeData(TypeData data) {
+    MOZ_ASSERT(count_ < MaxLength);
+    MOZ_ASSERT(!typeData_[count_].hasData());
+    typeData_[count_++] = data;
+  }
+  TypeData get(uint32_t idx) const {
+    MOZ_ASSERT(idx < count_);
+    return typeData_[idx];
+  }
+
+  const TypeData* begin() const { return &typeData_[0]; }
+  const TypeData* end() const { return begin() + count_; }
+};
+
 }  // namespace jit
 }  // namespace js
 
