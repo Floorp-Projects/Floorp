@@ -56,7 +56,6 @@ UNIFIED_SOURCES += [
     "nsImageToPixbuf.cpp",
     "nsLookAndFeel.cpp",
     "nsNativeBasicThemeGTK.cpp",
-    "nsNativeThemeGTK.cpp",
     "nsSound.cpp",
     "nsToolkit.cpp",
     "nsWidgetFactory.cpp",
@@ -71,6 +70,7 @@ UNIFIED_SOURCES += [
 
 SOURCES += [
     "MediaKeysEventSourceFactory.cpp",
+    "nsNativeThemeGTK.cpp",  # conflicts with X11 headers
     "nsWindow.cpp",  # conflicts with X11 headers
     "WaylandVsyncSource.cpp",  # conflicts with X11 headers
 ]
