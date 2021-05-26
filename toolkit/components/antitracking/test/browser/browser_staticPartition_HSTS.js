@@ -140,7 +140,8 @@ add_task(async function test_subresource() {
         Ci.nsIContentPolicy.TYPE_INTERNAL_IMAGE
       );
 
-      // Load a secure subresource to activate HSTS.
+      // Load a secure subresource. HSTS won't be activated, since third
+      // parties can't set HSTS.
       await SpecialPowers.spawn(
         tab.linkedBrowser,
         [secureImgURL],
@@ -162,7 +163,7 @@ add_task(async function test_subresource() {
         Ci.nsIContentPolicy.TYPE_INTERNAL_IMAGE
       );
 
-      // Load a unsecure subresource, this should be upgraded to https.
+      // Load an unsecure subresource. It should not be upgraded to https.
       await SpecialPowers.spawn(
         tab.linkedBrowser,
         [unsecureImgURL],
@@ -173,7 +174,7 @@ add_task(async function test_subresource() {
         }
       );
 
-      is(await finalURL, secureImgURL, "HSTS works for 3rd parties");
+      is(await finalURL, unsecureImgURL, "HSTS isn't set for 3rd parties");
 
       // Load the secure page with a different origin as first party.
       await promiseTabLoadEvent(
@@ -198,11 +199,7 @@ add_task(async function test_subresource() {
         }
       );
 
-      if (networkIsolation) {
-        is(await finalURL, unsecureImgURL, "HSTS doesn't work for 3rd parties");
-      } else {
-        is(await finalURL, secureImgURL, "HSTS works for 3rd parties");
-      }
+      is(await finalURL, unsecureImgURL, "HSTS isn't set for 3rd parties");
 
       gBrowser.removeCurrentTab();
       cleanupHSTS(networkIsolation, partitionPerSite);
