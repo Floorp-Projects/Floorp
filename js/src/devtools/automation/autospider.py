@@ -455,7 +455,7 @@ CONFIGURE_ARGS += " --prefix={OBJDIR}/dist".format(OBJDIR=quote(OBJDIR))
 with open(mozconfig, "wt") as fh:
     if AUTOMATION and platform.system() == "Windows":
         fh.write('. "$topsrcdir/build/%s/mozconfig.vs-latest"\n' % variant_platform)
-    fh.write("ac_add_options --with-project=js\n")
+    fh.write("ac_add_options --enable-project=js\n")
     fh.write("ac_add_options " + CONFIGURE_ARGS + "\n")
     fh.write("mk_add_options MOZ_OBJDIR=" + quote(OBJDIR) + "\n")
 

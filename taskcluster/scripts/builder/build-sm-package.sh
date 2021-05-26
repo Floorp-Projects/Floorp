@@ -27,16 +27,6 @@ status=0
     # Build the freshly extracted, packaged SpiderMonkey.
     cd ./mozjs-*
 
-    # MOZ_AUTOMATION enforces certain requirements that don't apply to
-    # packaged builds. Unset it.
-    unset MOZ_AUTOMATION
-    # Unsetting MOZ_AUTOMATION prevents this to be set automatically:
-    export PATH="$MOZ_FETCHES_DIR/clang/bin:$PATH"
-    export SYSROOT="$MOZ_FETCHES_DIR/sysroot"
-    export RUSTC="$MOZ_FETCHES_DIR/rustc/bin/rustc"
-    export CARGO="$MOZ_FETCHES_DIR/rustc/bin/cargo"
-    export CBINDGEN="$MOZ_FETCHES_DIR/cbindgen/cbindgen"
-
     ./mach create-mach-environment
     AUTOMATION=1 $PYTHON3 js/src/devtools/automation/autospider.py --skip-tests=checks $SPIDERMONKEY_VARIANT
 ) || status=$?
