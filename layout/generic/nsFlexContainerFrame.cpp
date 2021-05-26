@@ -4657,7 +4657,10 @@ void nsFlexContainerFrame::Reflow(nsPresContext* aPresContext,
     ConsiderChildOverflow(aReflowOutput.mOverflowAreas, childFrame);
   }
 
-  if (Style()->GetPseudoType() == PseudoStyleType::scrolledContent) {
+  MOZ_ASSERT(!lines.IsEmpty(),
+             "Flex container should have at least one FlexLine!");
+  if (Style()->GetPseudoType() == PseudoStyleType::scrolledContent &&
+      !lines.IsEmpty() && !lines[0].IsEmpty()) {
     MOZ_ASSERT(aReflowInput.ComputedLogicalBorderPadding(wm) ==
                    aReflowInput.ComputedLogicalPadding(wm),
                "A scrolled inner frame shouldn't have any border!");
