@@ -2122,6 +2122,27 @@ waitForAllPaints(() => {
        'should not be throttled if root is animating opacity');
     await ensureElementRemoval(container);
   });
+
+  add_task_if_omta_enabled(async function transparent_background_color_animations() {
+    const div = addDiv(null);
+    const animation =
+      div.animate({ backgroundColor: [ 'rgb(0, 200, 0, 0)',
+                                       'rgb(200, 0, 0, 0.1)' ] },
+                  { duration: 100 * MS_PER_SEC,
+                    // An easing function producing zero in the first half of
+                    // the duration.
+                    easing: 'cubic-bezier(1, 0, 1, 0)' });
+    await waitForAnimationReadyToRestyle(animation);
+
+    ok(SpecialPowers.wrap(animation).isRunningOnCompositor);
+
+    const markers = await observeStyling(5);
+    is(markers.length, 0,
+       'transparent background-color animation should not update styles on ' +
+       'the main thread');
+
+    await ensureElementRemoval(div);
+  });
 });
 
 </script>
