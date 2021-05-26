@@ -61,34 +61,14 @@ class TextEditor : public EditorBase, public nsITimerCallback, public nsINamed {
 
   NS_IMETHOD GetTextLength(int32_t* aCount) override;
 
-  virtual bool CanPaste(int32_t aClipboardType) const;
-
   // Shouldn't be used internally, but we need these using declarations for
   // avoiding warnings of clang.
   using EditorBase::CanCopy;
   using EditorBase::CanCut;
   using EditorBase::CanPaste;
 
-  /**
-   * Paste aTransferable at Selection.
-   *
-   * @param aTransferable       Must not be nullptr.
-   * @param aPrincipal          Set subject principal if it may be called by
-   *                            JS.  If set to nullptr, will be treated as
-   *                            called by system.
-   */
-  MOZ_CAN_RUN_SCRIPT virtual nsresult PasteTransferableAsAction(
-      nsITransferable* aTransferable, nsIPrincipal* aPrincipal = nullptr);
-
   NS_IMETHOD OutputToString(const nsAString& aFormatType, uint32_t aFlags,
                             nsAString& aOutputString) override;
-
-  /** Can we paste |aTransferable| or, if |aTransferable| is null, will a call
-   * to pasteTransferable later possibly succeed if given an instance of
-   * nsITransferable then? True if the doc is modifiable, and, if
-   * |aTransfeable| is non-null, we have pasteable data in |aTransfeable|.
-   */
-  virtual bool CanPasteTransferable(nsITransferable* aTransferable);
 
   // Overrides of EditorBase
   MOZ_CAN_RUN_SCRIPT virtual nsresult Init(Document& aDoc, Element* aRoot,
@@ -97,6 +77,14 @@ class TextEditor : public EditorBase, public nsITimerCallback, public nsINamed {
                                            const nsAString& aValue) override;
 
   bool IsEmpty() const override;
+
+  bool CanPaste(int32_t aClipboardType) const override;
+
+  MOZ_CAN_RUN_SCRIPT nsresult
+  PasteTransferableAsAction(nsITransferable* aTransferable,
+                            nsIPrincipal* aPrincipal = nullptr) override;
+
+  virtual bool CanPasteTransferable(nsITransferable* aTransferable) override;
 
   MOZ_CAN_RUN_SCRIPT virtual nsresult HandleKeyPressEvent(
       WidgetKeyboardEvent* aKeyboardEvent) override;
@@ -120,22 +108,9 @@ class TextEditor : public EditorBase, public nsITimerCallback, public nsINamed {
                                             bool aDispatchPasteEvent,
                                             nsIPrincipal* aPrincipal = nullptr);
 
-  /**
-   * PasteAsQuotationAsAction() pastes content in clipboard as quotation.
-   * If the editor is TextEditor or in plaintext mode, will paste the content
-   * with appending ">" to start of each line.
-   *
-   * @param aClipboardType      nsIClipboard::kGlobalClipboard or
-   *                            nsIClipboard::kSelectionClipboard.
-   * @param aDispatchPasteEvent true if this should dispatch ePaste event
-   *                            before pasting.  Otherwise, false.
-   * @param aPrincipal          Set subject principal if it may be called by
-   *                            JS.  If set to nullptr, will be treated as
-   *                            called by system.
-   */
-  MOZ_CAN_RUN_SCRIPT virtual nsresult PasteAsQuotationAsAction(
-      int32_t aClipboardType, bool aDispatchPasteEvent,
-      nsIPrincipal* aPrincipal = nullptr);
+  MOZ_CAN_RUN_SCRIPT nsresult
+  PasteAsQuotationAsAction(int32_t aClipboardType, bool aDispatchPasteEvent,
+                           nsIPrincipal* aPrincipal = nullptr) override;
 
   /**
    * The maximum number of characters allowed.
@@ -161,16 +136,8 @@ class TextEditor : public EditorBase, public nsITimerCallback, public nsINamed {
       AllowBeforeInputEventCancelable aAllowBeforeInputEventCancelable,
       nsIPrincipal* aPrincipal = nullptr);
 
-  /**
-   * InsertLineBreakAsAction() is called when user inputs a line break with
-   * Enter or something.
-   *
-   * @param aPrincipal          Set subject principal if it may be called by
-   *                            JS.  If set to nullptr, will be treated as
-   *                            called by system.
-   */
-  MOZ_CAN_RUN_SCRIPT virtual nsresult InsertLineBreakAsAction(
-      nsIPrincipal* aPrincipal = nullptr);
+  MOZ_CAN_RUN_SCRIPT nsresult
+  InsertLineBreakAsAction(nsIPrincipal* aPrincipal = nullptr) override;
 
   /**
    * OnDrop() is called from EditorEventListener::Drop that is handler of drop
@@ -412,15 +379,8 @@ class TextEditor : public EditorBase, public nsITimerCallback, public nsINamed {
    */
   void HandleNewLinesInStringForSingleLineEditor(nsString& aString) const;
 
-  /**
-   * HandleInsertText() handles inserting text at selection.
-   *
-   * @param aEditSubAction      Must be EditSubAction::eInsertText or
-   *                            EditSubAction::eInsertTextComingFromIME.
-   * @param aInsertionString    String to be inserted at selection.
-   */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT virtual EditActionResult HandleInsertText(
-      EditSubAction aEditSubAction, const nsAString& aInsertionString);
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT EditActionResult HandleInsertText(
+      EditSubAction aEditSubAction, const nsAString& aInsertionString) override;
 
   /**
    * HandleDeleteSelectionInternal() is a helper method of
@@ -555,15 +515,8 @@ class TextEditor : public EditorBase, public nsITimerCallback, public nsINamed {
                                            const EditorDOMPoint& aPointToInsert,
                                            bool aDoDeleteSelection);
 
-  /**
-   * InsertWithQuotationsAsSubAction() inserts aQuotedText with appending ">"
-   * to start of every line.
-   *
-   * @param aQuotedText         String to insert.  This will be quoted by ">"
-   *                            automatically.
-   */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT virtual nsresult
-  InsertWithQuotationsAsSubAction(const nsAString& aQuotedText);
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
+  InsertWithQuotationsAsSubAction(const nsAString& aQuotedText) override;
 
   /**
    * Return true if the data is safe to insert as the source and destination

@@ -153,12 +153,11 @@ class HTMLEditor final : public TextEditor,
 
   bool IsEmpty() const final;
 
-  virtual bool CanPaste(int32_t aClipboardType) const override;
+  bool CanPaste(int32_t aClipboardType) const final;
   using EditorBase::CanPaste;
 
-  MOZ_CAN_RUN_SCRIPT virtual nsresult PasteTransferableAsAction(
-      nsITransferable* aTransferable,
-      nsIPrincipal* aPrincipal = nullptr) override;
+  MOZ_CAN_RUN_SCRIPT nsresult PasteTransferableAsAction(
+      nsITransferable* aTransferable, nsIPrincipal* aPrincipal = nullptr) final;
 
   MOZ_CAN_RUN_SCRIPT NS_IMETHOD DeleteNode(nsINode* aNode) override;
 
@@ -213,41 +212,14 @@ class HTMLEditor final : public TextEditor,
   MOZ_CAN_RUN_SCRIPT nsresult PasteNoFormattingAsAction(
       int32_t aSelectionType, nsIPrincipal* aPrincipal = nullptr);
 
-  /**
-   * PasteAsQuotationAsAction() pastes content in clipboard with newly created
-   * blockquote element.  If the editor is in plaintext mode, will paste the
-   * content with appending ">" to start of each line.
-   *
-   * @param aClipboardType      nsIClipboard::kGlobalClipboard or
-   *                            nsIClipboard::kSelectionClipboard.
-   * @param aDispatchPasteEvent true if this should dispatch ePaste event
-   *                            before pasting.  Otherwise, false.
-   * @param aPrincipal          Set subject principal if it may be called by
-   *                            JS.  If set to nullptr, will be treated as
-   *                            called by system.
-   */
-  MOZ_CAN_RUN_SCRIPT virtual nsresult PasteAsQuotationAsAction(
-      int32_t aClipboardType, bool aDispatchPasteEvent,
-      nsIPrincipal* aPrincipal = nullptr) override;
+  MOZ_CAN_RUN_SCRIPT nsresult
+  PasteAsQuotationAsAction(int32_t aClipboardType, bool aDispatchPasteEvent,
+                           nsIPrincipal* aPrincipal = nullptr) final;
 
-  /**
-   * Can we paste |aTransferable| or, if |aTransferable| is null, will a call
-   * to pasteTransferable later possibly succeed if given an instance of
-   * nsITransferable then? True if the doc is modifiable, and, if
-   * |aTransfeable| is non-null, we have pasteable data in |aTransfeable|.
-   */
-  virtual bool CanPasteTransferable(nsITransferable* aTransferable) override;
+  bool CanPasteTransferable(nsITransferable* aTransferable) final;
 
-  /**
-   * InsertLineBreakAsAction() is called when user inputs a line break with
-   * Shift + Enter or something.
-   *
-   * @param aPrincipal          Set subject principal if it may be called by
-   *                            JS.  If set to nullptr, will be treated as
-   *                            called by system.
-   */
-  MOZ_CAN_RUN_SCRIPT virtual nsresult InsertLineBreakAsAction(
-      nsIPrincipal* aPrincipal = nullptr) override;
+  MOZ_CAN_RUN_SCRIPT nsresult
+  InsertLineBreakAsAction(nsIPrincipal* aPrincipal = nullptr) final;
 
   /**
    * InsertParagraphSeparatorAsAction() is called when user tries to separate
@@ -980,14 +952,7 @@ class HTMLEditor final : public TextEditor,
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult PrepareInlineStylesForCaret();
 
-  /**
-   * HandleInsertText() handles inserting text at selection.
-   *
-   * @param aEditSubAction      Must be EditSubAction::eInsertText or
-   *                            EditSubAction::eInsertTextComingFromIME.
-   * @param aInsertionString    String to be inserted at selection.
-   */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT virtual EditActionResult HandleInsertText(
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT EditActionResult HandleInsertText(
       EditSubAction aEditSubAction, const nsAString& aInsertionString) final;
 
   /**
@@ -3145,14 +3110,7 @@ class HTMLEditor final : public TextEditor,
    */
   MOZ_CAN_RUN_SCRIPT nsresult PasteInternal(int32_t aClipboardType);
 
-  /**
-   * InsertWithQuotationsAsSubAction() inserts aQuotedText with appending ">"
-   * to start of every line.
-   *
-   * @param aQuotedText         String to insert.  This will be quoted by ">"
-   *                            automatically.
-   */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT virtual nsresult
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
   InsertWithQuotationsAsSubAction(const nsAString& aQuotedText) final;
 
   /**
