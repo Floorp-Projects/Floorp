@@ -95,6 +95,82 @@ void MDefinition::PrintOpcodeName(GenericPrinter& out, Opcode op) {
 }
 #endif
 
+static MConstant* EvaluateInt64ConstantOperands(TempAllocator& alloc,
+                                                MBinaryInstruction* ins) {
+  MDefinition* left = ins->getOperand(0);
+  MDefinition* right = ins->getOperand(1);
+
+  if (!left->isConstant() || !right->isConstant()) {
+    return nullptr;
+  }
+
+  MOZ_ASSERT(left->type() == MIRType::Int64);
+  MOZ_ASSERT(right->type() == MIRType::Int64);
+
+  int64_t lhs = left->toConstant()->toInt64();
+  int64_t rhs = right->toConstant()->toInt64();
+  int64_t ret;
+
+  switch (ins->op()) {
+    case MDefinition::Opcode::BitAnd:
+      ret = lhs & rhs;
+      break;
+    case MDefinition::Opcode::BitOr:
+      ret = lhs | rhs;
+      break;
+    case MDefinition::Opcode::BitXor:
+      ret = lhs ^ rhs;
+      break;
+    case MDefinition::Opcode::Lsh:
+      ret = lhs << (rhs & 0x3F);
+      break;
+    case MDefinition::Opcode::Rsh:
+      ret = lhs >> (rhs & 0x3F);
+      break;
+    case MDefinition::Opcode::Ursh:
+      ret = uint64_t(lhs) >> (uint64_t(rhs) & 0x3F);
+      break;
+    case MDefinition::Opcode::Add:
+      ret = lhs + rhs;
+      break;
+    case MDefinition::Opcode::Sub:
+      ret = lhs - rhs;
+      break;
+    case MDefinition::Opcode::Mul:
+      ret = lhs * rhs;
+      break;
+    case MDefinition::Opcode::Div:
+      if (rhs == 0) {
+        // Division by zero will trap at runtime.
+        return nullptr;
+      }
+      if (ins->toDiv()->isUnsigned()) {
+        ret = int64_t(uint64_t(lhs) / uint64_t(rhs));
+      } else if (lhs == INT64_MIN || rhs == -1) {
+        // Overflow will trap at runtime.
+        return nullptr;
+      } else {
+        ret = lhs / rhs;
+      }
+      break;
+    case MDefinition::Opcode::Mod:
+      if (rhs == 0) {
+        // Division by zero will trap at runtime.
+        return nullptr;
+      }
+      if (!ins->toMod()->isUnsigned() && (lhs < 0 || rhs < 0)) {
+        // Handle all negative values at runtime, for simplicity.
+        return nullptr;
+      }
+      ret = int64_t(uint64_t(lhs) % uint64_t(rhs));
+      break;
+    default:
+      MOZ_CRASH("NYI");
+  }
+
+  return MConstant::NewInt64(alloc, ret);
+}
+
 static MConstant* EvaluateConstantOperands(TempAllocator& alloc,
                                            MBinaryInstruction* ins,
                                            bool* ptypeChange = nullptr) {
@@ -1978,18 +2054,26 @@ static inline bool IsConstant(MDefinition* def, double v) {
 }
 
 MDefinition* MBinaryBitwiseInstruction::foldsTo(TempAllocator& alloc) {
-  if (type() != MIRType::Int32) {
-    return this;
-  }
+  // Identity operations are removed (for int32 only) in foldUnnecessaryBitop.
 
-  if (MDefinition* folded = EvaluateConstantOperands(alloc, this)) {
-    return folded;
+  if (type() == MIRType::Int32) {
+    if (MDefinition* folded = EvaluateConstantOperands(alloc, this)) {
+      return folded;
+    }
+  } else if (type() == MIRType::Int64) {
+    if (MDefinition* folded = EvaluateInt64ConstantOperands(alloc, this)) {
+      return folded;
+    }
   }
 
   return this;
 }
 
 MDefinition* MBinaryBitwiseInstruction::foldUnnecessaryBitop() {
+  // It's probably OK to perform this optimization only for int32, as it will
+  // have the greatest effect for asm.js code that is compiled with the JS
+  // pipeline, and that code will not see int64 values.
+
   if (type() != MIRType::Int32) {
     return this;
   }
@@ -2243,6 +2327,10 @@ MDefinition* MRsh::foldsTo(TempAllocator& alloc) {
   MDefinition* lhs = getOperand(0);
   MDefinition* rhs = getOperand(1);
 
+  // It's probably OK to perform this optimization only for int32, as it will
+  // have the greatest effect for asm.js code that is compiled with the JS
+  // pipeline, and that code will not see int64 values.
+
   if (!lhs->isLsh() || !rhs->isConstant() || rhs->type() != MIRType::Int32) {
     return this;
   }
@@ -2273,12 +2361,32 @@ MDefinition* MRsh::foldsTo(TempAllocator& alloc) {
 MDefinition* MBinaryArithInstruction::foldsTo(TempAllocator& alloc) {
   MOZ_ASSERT(IsNumberType(type()));
 
+  MDefinition* lhs = getOperand(0);
+  MDefinition* rhs = getOperand(1);
+
   if (type() == MIRType::Int64) {
+    MOZ_ASSERT(!isTruncated());
+
+    if (MConstant* folded = EvaluateInt64ConstantOperands(alloc, this)) {
+      if (!folded->block()) {
+        block()->insertBefore(this, folded);
+      }
+      return folded;
+    }
+    if (isSub() || isDiv() || isMod()) {
+      return this;
+    }
+    if (rhs->isConstant() &&
+        rhs->toConstant()->toInt64() == int64_t(getIdentity())) {
+      return lhs;
+    }
+    if (lhs->isConstant() &&
+        lhs->toConstant()->toInt64() == int64_t(getIdentity())) {
+      return rhs;
+    }
     return this;
   }
 
-  MDefinition* lhs = getOperand(0);
-  MDefinition* rhs = getOperand(1);
   if (MConstant* folded = EvaluateConstantOperands(alloc, this)) {
     if (isTruncated()) {
       if (!folded->block()) {
@@ -2317,7 +2425,7 @@ MDefinition* MBinaryArithInstruction::foldsTo(TempAllocator& alloc) {
     if (isTruncated()) {
       return MTruncateToInt32::New(alloc, rhs);
     }
-    return rhs;  // x op id => x
+    return rhs;  // id op x => x
   }
 
   return this;
@@ -2595,6 +2703,9 @@ MDefinition* MDiv::foldsTo(TempAllocator& alloc) {
   MOZ_ASSERT(IsNumberType(type()));
 
   if (type() == MIRType::Int64) {
+    if (MDefinition* folded = EvaluateInt64ConstantOperands(alloc, this)) {
+      return folded;
+    }
     return this;
   }
 
@@ -2659,13 +2770,14 @@ MDefinition* MMod::foldsTo(TempAllocator& alloc) {
   MOZ_ASSERT(IsNumberType(type()));
 
   if (type() == MIRType::Int64) {
-    return this;
+    if (MDefinition* folded = EvaluateInt64ConstantOperands(alloc, this)) {
+      return folded;
+    }
+  } else {
+    if (MDefinition* folded = EvaluateConstantOperands(alloc, this)) {
+      return folded;
+    }
   }
-
-  if (MDefinition* folded = EvaluateConstantOperands(alloc, this)) {
-    return folded;
-  }
-
   return this;
 }
 
@@ -4739,7 +4851,7 @@ MDefinition* MLoadElement::foldsTo(TempAllocator& alloc) {
 }
 
 MDefinition* MWasmUnsignedToDouble::foldsTo(TempAllocator& alloc) {
-  if (input()->isConstant() && input()->type() == MIRType::Int32) {
+  if (input()->isConstant()) {
     return MConstant::New(
         alloc, DoubleValue(uint32_t(input()->toConstant()->toInt32())));
   }
@@ -4748,7 +4860,7 @@ MDefinition* MWasmUnsignedToDouble::foldsTo(TempAllocator& alloc) {
 }
 
 MDefinition* MWasmUnsignedToFloat32::foldsTo(TempAllocator& alloc) {
-  if (input()->isConstant() && input()->type() == MIRType::Int32) {
+  if (input()->isConstant()) {
     double dval = double(uint32_t(input()->toConstant()->toInt32()));
     if (IsFloat32Representable(dval)) {
       return MConstant::NewFloat32(alloc, float(dval));
