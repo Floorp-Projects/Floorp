@@ -1607,10 +1607,9 @@ NS_IMETHODIMP EditorBase::Paste(int32_t aClipboardType) {
 }
 
 NS_IMETHODIMP EditorBase::PasteTransferable(nsITransferable* aTransferable) {
-  nsresult rv =
-      MOZ_KnownLive(AsTextEditor())->PasteTransferableAsAction(aTransferable);
+  nsresult rv = PasteTransferableAsAction(aTransferable);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "TextEditor::PasteTransferableAsAction() failed");
+                       "EditorBase::PasteTransferableAsAction() failed");
   return rv;
 }
 
@@ -1618,7 +1617,7 @@ NS_IMETHODIMP EditorBase::CanPaste(int32_t aClipboardType, bool* aCanPaste) {
   if (NS_WARN_IF(!aCanPaste)) {
     return NS_ERROR_INVALID_ARG;
   }
-  *aCanPaste = AsTextEditor()->CanPaste(aClipboardType);
+  *aCanPaste = CanPaste(aClipboardType);
   return NS_OK;
 }
 
@@ -5610,11 +5609,9 @@ nsresult EditorBase::InsertTextAsSubAction(const nsAString& aStringToInsert) {
       !ignoredError.Failed(),
       "TextEditor::OnStartToHandleTopLevelEditSubAction() failed, but ignored");
 
-  EditActionResult result =
-      MOZ_KnownLive(AsTextEditor())
-          ->HandleInsertText(editSubAction, aStringToInsert);
+  EditActionResult result = HandleInsertText(editSubAction, aStringToInsert);
   NS_WARNING_ASSERTION(result.Succeeded(),
-                       "TextEditor::HandleInsertText() failed");
+                       "EditorBase::HandleInsertText() failed");
   return result.Rv();
 }
 
