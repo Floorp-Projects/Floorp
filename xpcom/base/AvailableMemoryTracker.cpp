@@ -10,6 +10,7 @@
 #  include "mozilla/StaticPrefs_browser.h"
 #  include "mozilla/WindowsVersion.h"
 #  include "nsExceptionHandler.h"
+#  include "nsICrashReporter.h"
 #  include "nsIMemoryReporter.h"
 #  include "nsMemoryPressure.h"
 #  include "memoryapi.h"
@@ -108,6 +109,7 @@ class nsAvailableMemoryWatcher final : public nsIObserver,
   bool mPolling;
   bool mInteracting;
   bool mUnderMemoryPressure;
+  bool mSavedReport;
 };
 
 const char* const nsAvailableMemoryWatcher::kObserverTopics[] = {
@@ -125,7 +127,8 @@ nsAvailableMemoryWatcher::nsAvailableMemoryWatcher()
       mWaitHandle(nullptr),
       mPolling(false),
       mInteracting(false),
-      mUnderMemoryPressure(false) {}
+      mUnderMemoryPressure(false),
+      mSavedReport(false) {}
 
 nsresult nsAvailableMemoryWatcher::Init() {
   mTimer = NS_NewTimer();
@@ -240,6 +243,20 @@ void nsAvailableMemoryWatcher::OnLowMemory(const MutexAutoLock&) {
   // pressure event.  So we trigger the event only when the available commit
   // space is low.
   if (IsCommitSpaceLow()) {
+    if (!mSavedReport) {
+      // SaveMemoryReport needs to be run in the main thread
+      // (See nsMemoryReporterManager::GetReportsForThisProcessExtended)
+      NS_DispatchToMainThread(NS_NewRunnableFunction(
+          "nsAvailableMemoryWatcher::SaveMemoryReport",
+          [self = RefPtr{this}]() {
+            if (nsCOMPtr<nsICrashReporter> cr =
+                    do_GetService("@mozilla.org/toolkit/crash-reporter;1")) {
+              MutexAutoLock lock(self->mMutex);
+              self->mSavedReport = NS_SUCCEEDED(cr->SaveMemoryReport());
+            }
+          }));
+    }
+
     RecordLowMemoryEvent();
     NS_DispatchEventualMemoryPressure(MemPressure_New);
   }
@@ -249,6 +266,7 @@ void nsAvailableMemoryWatcher::OnLowMemory(const MutexAutoLock&) {
 
 void nsAvailableMemoryWatcher::OnHighMemory(const MutexAutoLock&) {
   mUnderMemoryPressure = false;
+  mSavedReport = false;  // Will save a new report if memory gets low again
   NS_DispatchEventualMemoryPressure(MemPressure_Stopping);
   StopPolling();
   ListenForLowMemory();
