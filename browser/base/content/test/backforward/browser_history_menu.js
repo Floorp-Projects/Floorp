@@ -25,7 +25,11 @@ async function testBackForwardMenu(useContextMenu) {
       iterChild
     ) {
       if (iterChild == 4) {
+        let popStatePromise = new Promise(function(resolve) {
+          content.onpopstate = resolve;
+        });
         content.history.back();
+        await popStatePromise;
       } else {
         content.history.pushState({}, "" + iterChild, iterChild + ".html");
       }
